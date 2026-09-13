@@ -281,6 +281,226 @@ impl FlowRetirement {
         }
     }
 
+    /// 🧩️ One owner family's retirement step, `None` when the family blocked on its grant. Every
+    /// family owns a SEPARATE function on purpose: `FlowOwner` is `size_of` 3160 bytes (its
+    /// `SetCursor`/`LayoutCursor`/`NodeCursor` payloads inline `Retirement<V>`'s
+    /// `MAX_AVL_HEIGHT + 3` slot array), and an unoptimised build gives every `install([…])`
+    /// temporary of every arm its own slot in the enclosing frame — one flat `match` compiled to a
+    /// 518 KiB `close_step` frame, two of which overflow a 2 MiB test thread mid-teardown and abort
+    /// the binary under whichever test happened to be running
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    fn retire_owner(&mut self, owner: FlowOwner, maximum_bytes: usize) -> Option<usize> {
+        match owner {
+            FlowOwner::Bytes(_) => unreachable!("byte backing is released before logical dispatch"),
+            FlowOwner::Strings(values) => self.strings(values),
+            FlowOwner::Set(values) => self.set(values),
+            FlowOwner::SetCursor(values) => self.set_cursor(values, maximum_bytes),
+            FlowOwner::Dictionary(value) => self.dictionary(value),
+            FlowOwner::Value(value) => self.value(value),
+            FlowOwner::Neural(value) => self.neural(value, maximum_bytes),
+            FlowOwner::Fixture(value) => self.fixture(value),
+            FlowOwner::Widget(value) => {
+                self.widget(value);
+                Some(0)
+            }
+            FlowOwner::Widgets(values) => self.widgets(values),
+            FlowOwner::Specs(values) => self.specs(values),
+            FlowOwner::Layouts(values) => self.layouts(values),
+            FlowOwner::LayoutCursor(values) => self.layout_cursor(values, maximum_bytes),
+            FlowOwner::Tree(value) => self.tree(value),
+            FlowOwner::Neurons(values) => self.neurons(values),
+            FlowOwner::Synapses(values) => self.synapses(values),
+            FlowOwner::Gui(value) => self.gui(value),
+            FlowOwner::Nodes(values) => self.nodes(values),
+            FlowOwner::NodeCursor(values) => self.node_cursor(values, maximum_bytes),
+            FlowOwner::Previews(values) => self.previews(values),
+            FlowOwner::Layout(values) => self.layout(values),
+            FlowOwner::Chrome(value) => {
+                self.chrome(value);
+                Some(0)
+            }
+        }
+    }
+
+    fn strings(&mut self, mut values: Vec<String>) -> Option<usize> {
+        let value = values.pop().expect("nonempty string owner");
+        self.install([Some(FlowOwner::Strings(values)), Some(FlowOwner::Bytes(value.into_bytes()))]);
+        Some(0)
+    }
+
+    fn set(&mut self, values: OrderedSet) -> Option<usize> {
+        self.install([Some(FlowOwner::SetCursor(values.retire()))]);
+        Some(0)
+    }
+
+    fn set_cursor(&mut self, mut values: Retirement<()>, maximum_bytes: usize) -> Option<usize> {
+        let step = values.advance(Grant { maximum_items: 1, maximum_bytes });
+        let pending = !values.is_empty();
+        let blocked = matches!(step, RetirementStep::Blocked);
+        let mut released_bytes = 0;
+        match step {
+            RetirementStep::Progress { released_bytes: bytes, .. } => released_bytes = bytes,
+            RetirementStep::OwnedValue(()) | RetirementStep::Complete | RetirementStep::Blocked => {}
+        }
+        if pending {
+            self.install([Some(FlowOwner::SetCursor(values))]);
+        }
+        (!blocked).then_some(released_bytes)
+    }
+
+    fn dictionary(&mut self, value: neural::Dictionary) -> Option<usize> {
+        self.install([Some(FlowOwner::Neural(neural::ValueRetirement::from_dictionary(value)))]);
+        Some(0)
+    }
+
+    fn value(&mut self, value: neural::Value) -> Option<usize> {
+        self.install([Some(FlowOwner::Neural(neural::ValueRetirement::from_value(value)))]);
+        Some(0)
+    }
+
+    fn neural(&mut self, mut value: neural::ValueRetirement, maximum_bytes: usize) -> Option<usize> {
+        let step = value.close_step(1, maximum_bytes);
+        let blocked = matches!(step, neural::ValueRetirementStep::Blocked);
+        let mut released_bytes = 0;
+        match step {
+            neural::ValueRetirementStep::Pending { released_bytes: bytes, .. } => released_bytes = bytes,
+            neural::ValueRetirementStep::Blocked | neural::ValueRetirementStep::Complete => {}
+        }
+        if !value.terminal_is_empty() {
+            self.install([Some(FlowOwner::Neural(value))]);
+        }
+        (!blocked).then_some(released_bytes)
+    }
+
+    fn fixture(&mut self, value: FlowFixture) -> Option<usize> {
+        self.install([
+            Some(FlowOwner::Bytes(value.schema.into_bytes())),
+            Some(FlowOwner::Widgets(value.widgets)),
+            Some(FlowOwner::Specs(value.synapses)),
+            Some(FlowOwner::Layouts(value.layout)),
+        ]);
+        Some(0)
+    }
+
+    fn widgets(&mut self, mut values: Vec<Widget>) -> Option<usize> {
+        let value = values.pop().expect("nonempty widget owner");
+        self.install([Some(FlowOwner::Widgets(values)), Some(FlowOwner::Widget(value))]);
+        Some(0)
+    }
+
+    fn specs(&mut self, mut values: Vec<SynapseSpec>) -> Option<usize> {
+        let value = values.pop().expect("nonempty specification owner");
+        self.install([
+            Some(FlowOwner::Specs(values)),
+            Some(FlowOwner::Bytes(value.id.into_bytes())),
+            Some(FlowOwner::Bytes(value.from.into_bytes())),
+            Some(FlowOwner::Bytes(value.to.into_bytes())),
+            Some(FlowOwner::Bytes(value.from_port.into_bytes())),
+            Some(FlowOwner::Bytes(value.to_port.into_bytes())),
+        ]);
+        Some(0)
+    }
+
+    fn layouts(&mut self, values: OrderedMap<WidgetLayout>) -> Option<usize> {
+        self.install([Some(FlowOwner::LayoutCursor(values.retire()))]);
+        Some(0)
+    }
+
+    fn layout_cursor(&mut self, mut values: Retirement<WidgetLayout>, maximum_bytes: usize) -> Option<usize> {
+        let step = values.advance(Grant { maximum_items: 1, maximum_bytes });
+        let pending = !values.is_empty();
+        let blocked = matches!(step, RetirementStep::Blocked);
+        let mut released_bytes = 0;
+        match step {
+            RetirementStep::Progress { released_bytes: bytes, .. } => released_bytes = bytes,
+            RetirementStep::OwnedValue(_) | RetirementStep::Complete | RetirementStep::Blocked => {}
+        }
+        if pending {
+            self.install([Some(FlowOwner::LayoutCursor(values))]);
+        }
+        (!blocked).then_some(released_bytes)
+    }
+
+    fn tree(&mut self, value: neural::Tree) -> Option<usize> {
+        self.install([Some(FlowOwner::Neurons(value.neurons)), Some(FlowOwner::Synapses(value.synapses))]);
+        Some(0)
+    }
+
+    fn neurons(&mut self, mut values: Vec<neural::Neuron>) -> Option<usize> {
+        let value = values.pop().expect("nonempty neuron owner");
+        self.install([
+            Some(FlowOwner::Neurons(values)),
+            Some(FlowOwner::Bytes(value.id.into_bytes())),
+            Some(FlowOwner::Bytes(value.kind.into_bytes())),
+            Some(FlowOwner::Dictionary(value.params)),
+            value.tree.map(|tree| FlowOwner::Tree(*tree)),
+        ]);
+        Some(0)
+    }
+
+    fn synapses(&mut self, mut values: Vec<neural::Synapse>) -> Option<usize> {
+        let value = values.pop().expect("nonempty synapse owner");
+        self.install([
+            Some(FlowOwner::Synapses(values)),
+            Some(FlowOwner::Bytes(value.id.into_bytes())),
+            Some(FlowOwner::Bytes(value.from.into_bytes())),
+            Some(FlowOwner::Bytes(value.to.into_bytes())),
+            Some(FlowOwner::Bytes(value.from_port.into_bytes())),
+            Some(FlowOwner::Bytes(value.to_port.into_bytes())),
+        ]);
+        Some(0)
+    }
+
+    fn gui(&mut self, value: FlowGui) -> Option<usize> {
+        self.install([Some(FlowOwner::Nodes(value.nodes)), Some(FlowOwner::Previews(value.previews))]);
+        Some(0)
+    }
+
+    fn nodes(&mut self, values: OrderedMap<FlowNodeGui>) -> Option<usize> {
+        self.install([Some(FlowOwner::NodeCursor(values.retire()))]);
+        Some(0)
+    }
+
+    fn node_cursor(&mut self, mut values: Retirement<FlowNodeGui>, maximum_bytes: usize) -> Option<usize> {
+        let step = values.advance(Grant { maximum_items: 1, maximum_bytes });
+        let pending = !values.is_empty();
+        let blocked = matches!(step, RetirementStep::Blocked);
+        let mut released_bytes = 0;
+        match step {
+            RetirementStep::Progress { released_bytes: bytes, .. } => released_bytes = bytes,
+            RetirementStep::OwnedValue(value) => self.install([Some(FlowOwner::Chrome(value.chrome))]),
+            RetirementStep::Complete | RetirementStep::Blocked => {}
+        }
+        if pending {
+            self.install([Some(FlowOwner::NodeCursor(values))]);
+        }
+        (!blocked).then_some(released_bytes)
+    }
+
+    fn previews(&mut self, mut values: Vec<FlowPreviewGui>) -> Option<usize> {
+        let value = values.pop().expect("nonempty preview owner");
+        let (neuron, channel) = value.source.map_or((None, None), |source| {
+            (Some(FlowOwner::Bytes(source.neuron.into_bytes())), Some(FlowOwner::Bytes(source.channel.into_bytes())))
+        });
+        self.install([
+            Some(FlowOwner::Previews(values)),
+            Some(FlowOwner::Bytes(value.id.into_bytes())),
+            Some(FlowOwner::Bytes(value.mode.into_bytes())),
+            Some(FlowOwner::Dictionary(value.preview)),
+            Some(FlowOwner::Set(value.expanded)),
+            neuron,
+            channel,
+            None,
+        ]);
+        Some(0)
+    }
+
+    fn layout(&mut self, mut values: Vec<FlowLayoutEntry>) -> Option<usize> {
+        let value = values.pop().expect("nonempty layout owner");
+        self.install([Some(FlowOwner::Layout(values)), Some(FlowOwner::Bytes(value.id.into_bytes()))]);
+        Some(0)
+    }
+
     fn release_root_backing(&mut self, maximum_bytes: usize) -> Result<Option<usize>, &'static str> {
         let Some(owner) = self.root.as_mut() else {
             return Ok(None);
@@ -344,137 +564,9 @@ impl ErasedSnapshotRetirement for FlowRetirement {
             return Ok(Step::Pending { released_items: 1, released_bytes: release.released_allocation_bytes });
         }
         let owner = self.root.take().expect("nonempty Flow retirement");
-        let mut released_bytes = 0;
-        match owner {
-            FlowOwner::Bytes(_) => unreachable!("byte backing is released before logical dispatch"),
-            FlowOwner::Strings(mut values) => {
-                let value = values.pop().expect("nonempty string owner");
-                self.install([Some(FlowOwner::Strings(values)), Some(FlowOwner::Bytes(value.into_bytes()))]);
-            }
-            FlowOwner::Set(values) => self.install([Some(FlowOwner::SetCursor(values.retire()))]),
-            FlowOwner::SetCursor(mut values) => {
-                let step = values.advance(Grant { maximum_items: 1, maximum_bytes });
-                let pending = !values.is_empty();
-                let blocked = matches!(step, RetirementStep::Blocked);
-                match step {
-                    RetirementStep::Progress { released_bytes: bytes, .. } => released_bytes = bytes,
-                    RetirementStep::OwnedValue(()) | RetirementStep::Complete | RetirementStep::Blocked => {}
-                }
-                if pending {
-                    self.install([Some(FlowOwner::SetCursor(values))]);
-                }
-                if blocked { return Ok(Step::Blocked); }
-            }
-            FlowOwner::Dictionary(value) => self.install([Some(FlowOwner::Neural(neural::ValueRetirement::from_dictionary(value)))]),
-            FlowOwner::Value(value) => self.install([Some(FlowOwner::Neural(neural::ValueRetirement::from_value(value)))]),
-            FlowOwner::Neural(mut value) => {
-                let step = value.close_step(1, maximum_bytes);
-                let blocked = matches!(step, neural::ValueRetirementStep::Blocked);
-                match step {
-                    neural::ValueRetirementStep::Pending { released_bytes: bytes, .. } => released_bytes = bytes,
-                    neural::ValueRetirementStep::Blocked | neural::ValueRetirementStep::Complete => {}
-                }
-                if !value.terminal_is_empty() {
-                    self.install([Some(FlowOwner::Neural(value))]);
-                }
-                if blocked { return Ok(Step::Blocked); }
-            }
-            FlowOwner::Fixture(value) => self.install([
-                Some(FlowOwner::Bytes(value.schema.into_bytes())),
-                Some(FlowOwner::Widgets(value.widgets)),
-                Some(FlowOwner::Specs(value.synapses)),
-                Some(FlowOwner::Layouts(value.layout)),
-            ]),
-            FlowOwner::Widget(value) => self.widget(value),
-            FlowOwner::Widgets(mut values) => {
-                let value = values.pop().expect("nonempty widget owner");
-                self.install([Some(FlowOwner::Widgets(values)), Some(FlowOwner::Widget(value))]);
-            }
-            FlowOwner::Specs(mut values) => {
-                let value = values.pop().expect("nonempty specification owner");
-                self.install([
-                    Some(FlowOwner::Specs(values)),
-                    Some(FlowOwner::Bytes(value.id.into_bytes())),
-                    Some(FlowOwner::Bytes(value.from.into_bytes())),
-                    Some(FlowOwner::Bytes(value.to.into_bytes())),
-                    Some(FlowOwner::Bytes(value.from_port.into_bytes())),
-                    Some(FlowOwner::Bytes(value.to_port.into_bytes())),
-                ]);
-            }
-            FlowOwner::Layouts(values) => self.install([Some(FlowOwner::LayoutCursor(values.retire()))]),
-            FlowOwner::LayoutCursor(mut values) => {
-                let step = values.advance(Grant { maximum_items: 1, maximum_bytes });
-                let pending = !values.is_empty();
-                let blocked = matches!(step, RetirementStep::Blocked);
-                match step {
-                    RetirementStep::Progress { released_bytes: bytes, .. } => released_bytes = bytes,
-                    RetirementStep::OwnedValue(_) | RetirementStep::Complete | RetirementStep::Blocked => {}
-                }
-                if pending {
-                    self.install([Some(FlowOwner::LayoutCursor(values))]);
-                }
-                if blocked { return Ok(Step::Blocked); }
-            }
-            FlowOwner::Tree(value) => self.install([Some(FlowOwner::Neurons(value.neurons)), Some(FlowOwner::Synapses(value.synapses))]),
-            FlowOwner::Neurons(mut values) => {
-                let value = values.pop().expect("nonempty neuron owner");
-                self.install([
-                    Some(FlowOwner::Neurons(values)),
-                    Some(FlowOwner::Bytes(value.id.into_bytes())),
-                    Some(FlowOwner::Bytes(value.kind.into_bytes())),
-                    Some(FlowOwner::Dictionary(value.params)),
-                    value.tree.map(|tree| FlowOwner::Tree(*tree)),
-                ]);
-            }
-            FlowOwner::Synapses(mut values) => {
-                let value = values.pop().expect("nonempty synapse owner");
-                self.install([
-                    Some(FlowOwner::Synapses(values)),
-                    Some(FlowOwner::Bytes(value.id.into_bytes())),
-                    Some(FlowOwner::Bytes(value.from.into_bytes())),
-                    Some(FlowOwner::Bytes(value.to.into_bytes())),
-                    Some(FlowOwner::Bytes(value.from_port.into_bytes())),
-                    Some(FlowOwner::Bytes(value.to_port.into_bytes())),
-                ]);
-            }
-            FlowOwner::Gui(value) => self.install([Some(FlowOwner::Nodes(value.nodes)), Some(FlowOwner::Previews(value.previews))]),
-            FlowOwner::Nodes(values) => self.install([Some(FlowOwner::NodeCursor(values.retire()))]),
-            FlowOwner::NodeCursor(mut values) => {
-                let step = values.advance(Grant { maximum_items: 1, maximum_bytes });
-                let pending = !values.is_empty();
-                let blocked = matches!(step, RetirementStep::Blocked);
-                match step {
-                    RetirementStep::Progress { released_bytes: bytes, .. } => released_bytes = bytes,
-                    RetirementStep::OwnedValue(value) => self.install([Some(FlowOwner::Chrome(value.chrome))]),
-                    RetirementStep::Complete | RetirementStep::Blocked => {}
-                }
-                if pending {
-                    self.install([Some(FlowOwner::NodeCursor(values))]);
-                }
-                if blocked { return Ok(Step::Blocked); }
-            }
-            FlowOwner::Previews(mut values) => {
-                let value = values.pop().expect("nonempty preview owner");
-                let (neuron, channel) = value.source.map_or((None, None), |source| {
-                    (Some(FlowOwner::Bytes(source.neuron.into_bytes())), Some(FlowOwner::Bytes(source.channel.into_bytes())))
-                });
-                self.install([
-                    Some(FlowOwner::Previews(values)),
-                    Some(FlowOwner::Bytes(value.id.into_bytes())),
-                    Some(FlowOwner::Bytes(value.mode.into_bytes())),
-                    Some(FlowOwner::Dictionary(value.preview)),
-                    Some(FlowOwner::Set(value.expanded)),
-                    neuron,
-                    channel,
-                    None,
-                ]);
-            }
-            FlowOwner::Layout(mut values) => {
-                let value = values.pop().expect("nonempty layout owner");
-                self.install([Some(FlowOwner::Layout(values)), Some(FlowOwner::Bytes(value.id.into_bytes()))]);
-            }
-            FlowOwner::Chrome(value) => self.chrome(value),
-        }
+        let Some(released_bytes) = self.retire_owner(owner, maximum_bytes) else {
+            return Ok(Step::Blocked);
+        };
         Ok(Step::Pending { released_items: 1, released_bytes })
     }
 

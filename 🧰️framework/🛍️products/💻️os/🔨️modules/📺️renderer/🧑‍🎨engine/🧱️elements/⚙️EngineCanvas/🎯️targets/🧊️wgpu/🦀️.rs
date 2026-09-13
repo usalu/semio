@@ -2757,11 +2757,15 @@ pub fn node_graph_pointer_down_into(
     space_pressed: bool,
     input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
 ) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
-    let mut reservation = input.reserve_actions(3, 3 * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
     let pan = node_graph_pan_gesture(button, alt, space_pressed);
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
-    let planned = plan_node_graph_pointer(surface_id, flow::dag::DagPointerIntent { phase: flow::dag::DagPointerPhase::Down, x: sx, y: sy, button: button.max(0) as u8, shift, ctrl_or_meta: ctrl, alt, pan })?;
+    let intent = flow::dag::DagPointerIntent { phase: flow::dag::DagPointerPhase::Down, x: sx, y: sy, button: button.max(0) as u8, shift, ctrl_or_meta: ctrl, alt, pan };
+    if node_graph_gesture_is_screen_path(surface_id, Some((sx, sy))) {
+        return node_graph_screen_pointer_into(surface_id, controller_id, intent, input);
+    }
+    let mut reservation = input.reserve_actions(3, 3 * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
+    let planned = plan_node_graph_pointer(surface_id, intent)?;
     let Some((plan, snapshot)) = planned else {
         return Ok(false);
     };
@@ -2771,10 +2775,14 @@ pub fn node_graph_pointer_down_into(
 }
 
 pub fn node_graph_pointer_move_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl: bool, alt: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
-    let mut reservation = input.reserve_actions(3, 3 * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
-    let planned = plan_node_graph_pointer(surface_id, flow::dag::DagPointerIntent { phase: flow::dag::DagPointerPhase::Move, x: sx, y: sy, button: 0, shift, ctrl_or_meta: ctrl, alt, pan: false })?;
+    let intent = flow::dag::DagPointerIntent { phase: flow::dag::DagPointerPhase::Move, x: sx, y: sy, button: 0, shift, ctrl_or_meta: ctrl, alt, pan: false };
+    if node_graph_gesture_is_screen_path(surface_id, None) {
+        return node_graph_screen_pointer_into(surface_id, controller_id, intent, input);
+    }
+    let mut reservation = input.reserve_actions(3, 3 * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
+    let planned = plan_node_graph_pointer(surface_id, intent)?;
     let Some((plan, snapshot)) = planned else {
         return Ok(false);
     };
@@ -2784,10 +2792,14 @@ pub fn node_graph_pointer_move_into(surface_id: &str, controller_id: &str, inner
 }
 
 pub fn node_graph_pointer_up_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl: bool, alt: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
-    let mut reservation = input.reserve_actions(3, 3 * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
-    let planned = plan_node_graph_pointer(surface_id, flow::dag::DagPointerIntent { phase: flow::dag::DagPointerPhase::Up, x: sx, y: sy, button: 0, shift, ctrl_or_meta: ctrl, alt, pan: false })?;
+    let intent = flow::dag::DagPointerIntent { phase: flow::dag::DagPointerPhase::Up, x: sx, y: sy, button: 0, shift, ctrl_or_meta: ctrl, alt, pan: false };
+    if node_graph_gesture_is_screen_path(surface_id, None) {
+        return node_graph_screen_pointer_into(surface_id, controller_id, intent, input);
+    }
+    let mut reservation = input.reserve_actions(3, 3 * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
+    let planned = plan_node_graph_pointer(surface_id, intent)?;
     let Some((plan, snapshot)) = planned else {
         return Ok(false);
     };
@@ -2865,6 +2877,165 @@ fn graph_hovered_handle(engine: &NodeGraphEngine, sx: f64, sy: f64) -> Option<St
     let rows = serde_json::from_str::<Vec<Value>>(&targets).ok()?;
     rows.iter().find(|row| row.get("domain").and_then(Value::as_str) == Some("handle")).and_then(|row| row.get("id").and_then(Value::as_str)).map(str::to_owned)
 }
+
+//#region 🔗️NodeGraphScreenPointer
+// 🖱️ The SECOND pointer path a node-graph surface needs, and the one wgpu did not have.
+//
+// `DagHost` exposes two pointer entries. `derive_pointer_plan`/`apply_pointer_plan` is the bounded,
+// atomically-admitted one — a fixed-capacity projection planned before it is committed — and its
+// whole gesture vocabulary is `Idle | Pan | Drag | Select`. `pointer_down_screen`/`_move_screen`/
+// `_up_screen` is the one React drives (`🕸️NodeGraph/🟦️.tsx`'s `pointerDownScreen`), and it is the
+// only one that hit-tests PORTS and HANDLES (entering `InteractionMode::DrawEdge`), the minimap
+// widget, port insertion targets and inline widget sliders.
+//
+// 🩸️ wgpu called ONLY the bounded entry, whose `bounded_node_hit_index` answers
+// `DagInteractionPlanFault::Unsupported` for exactly those four hits — so a press on a port aborted
+// the dispatch with a `Structure` fault instead of starting a wire, and clicking the minimap
+// navigated nowhere. Wire creation, wire deletion and minimap click-to-navigate were unreachable
+// from wgpu's side (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+// `📓️audit-wgpu-parity-2026-09-13.md` gaps #2/#5).
+//
+// So the discriminator below routes precisely those gestures — and every follow-up move/up while one
+// is in flight — through the screen entry, and dispatches what the host did afterwards: the same
+// `interactionSelect`/`interactionHover`/`nodeGraphViewport` triple the bounded path publishes, plus
+// a `nodeGraphEdit` carrying the wire edits the gesture actually made. React reaches the same end by
+// re-publishing the WHOLE fixture after every gesture (`commitFixture`); a fixture JSON does not fit
+// a 16 KiB bounded action, and it does not have to — `FlowNodeGraphEditOp` already declares the
+// narrow `connect` operation, four ids wide.
+
+/// 🩺️ Console line for a screen-path gesture. `eprintln!` is a no-op inside a
+/// `wasm32-unknown-unknown` Worker, so a wire drawn there would otherwise leave no trace at all.
+fn engine_canvas_debug_log(line: &str) {
+    #[cfg(target_arch = "wasm32")]
+    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(line));
+    #[cfg(not(target_arch = "wasm32"))]
+    eprintln!("{line}");
+}
+
+/// 🖱️ Whether this surface's gesture belongs to the screen pointer path: one is already in flight,
+/// or a press at `down_at` would begin one.
+fn node_graph_gesture_is_screen_path(surface_id: &str, down_at: Option<(f64, f64)>) -> bool {
+    ENGINE_SURFACES.with(|cell| {
+        let map = cell.borrow();
+        let Some(engine) = map.get(surface_id).and_then(|entry| entry.node_graph.as_ref()) else { return false };
+        let dag = match engine {
+            NodeGraphEngine::Flow(host) => &host.dag,
+            NodeGraphEngine::Dag(host) => &host.dag,
+        };
+        dag.screen_pointer_gesture_active() || down_at.is_some_and(|(sx, sy)| dag.screen_pointer_gesture_begins_at(sx, sy))
+    })
+}
+
+/// 🔗️ What one screen-path gesture left behind: the wire edits it performed and the interaction
+/// state to publish alongside them.
+struct GraphScreenPointerOutcome {
+    edits: Vec<flow::dag::DagGraphEdit>,
+    snapshot: GraphInteractionSnapshot,
+}
+
+/// 🖱️ Runs one gesture through `DagHost`'s screen pointer entry — the same one React drives — and
+/// reads back what it did. The mutation happens INSIDE the caller's reservation window, so the
+/// action credits a dispatch needs are already held before the host is allowed to change.
+fn apply_node_graph_screen_pointer(surface_id: &str, intent: flow::dag::DagPointerIntent) -> Result<Option<GraphScreenPointerOutcome>, ui_wgpu::wgpu::BoundedActionFault> {
+    ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let Some(engine) = map.get_mut(surface_id).and_then(|entry| entry.node_graph.as_mut()) else {
+            return Ok(None);
+        };
+        match engine {
+            NodeGraphEngine::Flow(host) => match intent.phase {
+                flow::dag::DagPointerPhase::Down => host.pointer_down_screen(intent.x, intent.y, intent.button, intent.shift, intent.ctrl_or_meta, intent.alt, intent.pan),
+                flow::dag::DagPointerPhase::Move => host.pointer_move_screen(intent.x, intent.y, intent.shift, intent.ctrl_or_meta, intent.alt),
+                flow::dag::DagPointerPhase::Up | flow::dag::DagPointerPhase::Leave => host.pointer_up_screen(intent.x, intent.y, intent.shift, intent.ctrl_or_meta, intent.alt),
+            },
+            NodeGraphEngine::Dag(host) => match intent.phase {
+                flow::dag::DagPointerPhase::Down => host.pointer_down_screen([intent.x, intent.y], intent.button, intent.shift, intent.ctrl_or_meta, intent.alt, intent.pan),
+                flow::dag::DagPointerPhase::Move => host.pointer_move_screen(intent.x, intent.y, intent.shift, intent.ctrl_or_meta, intent.alt),
+                flow::dag::DagPointerPhase::Up | flow::dag::DagPointerPhase::Leave => {
+                    host.pointer_up_screen(intent.x, intent.y, intent.shift, intent.ctrl_or_meta, intent.alt);
+                    // 🎯️ The gather is this host's own per-gesture pick batch; the selection action
+                    // written below reports the SAME live selection, so leaving it queued would only
+                    // let a later caller dispatch the gesture twice.
+                    let _ = host.take_selection_gather();
+                }
+            },
+        }
+        let hovered_handle = graph_hovered_handle(engine, intent.x, intent.y);
+        let (edits, node_ids, hovered_id, camera) = match engine {
+            NodeGraphEngine::Flow(host) => {
+                host.resync_interaction_projection();
+                let edits = host.dag.take_graph_edits();
+                let camera = &host.dag.fixture.camera;
+                (edits, host.dag.selected_node_ids(), host.dag.hovered_node_id_ref().map(str::to_owned), [camera.x, camera.y, camera.zoom])
+            }
+            NodeGraphEngine::Dag(host) => {
+                host.resync_interaction_projection();
+                let edits = host.dag.take_graph_edits();
+                let camera = &host.dag.fixture.camera;
+                (edits, host.dag.selected_node_ids(), host.dag.hovered_node_id_ref().map(str::to_owned), [camera.x, camera.y, camera.zoom])
+            }
+        };
+        Ok(Some(GraphScreenPointerOutcome { edits, snapshot: graph_projection_snapshot(node_ids, hovered_id, hovered_handle, camera)? }))
+    })
+}
+
+/// 🔗️ Writes the `nodeGraphEdit` one gesture's wire edits ask for, in the guest's own operation
+/// vocabulary — the very shape React's own `onConnect` dispatches
+/// (`{operations: [{operation: "connect", sourceNodeId, sourcePortId, targetNodeId, targetPortId}]}`).
+fn write_graph_edit_action(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, controller_id: &str, edits: &[flow::dag::DagGraphEdit]) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    if edits.is_empty() {
+        return Ok(());
+    }
+    let edit_action = "nodeGraphEdit";
+    let mut parts: Vec<&str> = vec![controller_id, edit_action, "operations", "operation", "connect", "disconnect", "sourceNodeId", "sourcePortId", "targetNodeId", "targetPortId", "edgeId"];
+    for edit in edits {
+        match edit {
+            flow::dag::DagGraphEdit::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => parts.extend([source_node_id.as_str(), source_port_id.as_str(), target_node_id.as_str(), target_port_id.as_str()]),
+            flow::dag::DagGraphEdit::Disconnect { edge_id } => parts.push(edge_id.as_str()),
+        }
+    }
+    let edit_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&parts)?;
+    batch.action(controller_id, edit_action, edit_bytes, |builder| {
+        builder.begin_object(None)?;
+        builder.begin_array(Some("operations"))?;
+        for edit in edits {
+            builder.begin_object(None)?;
+            match edit {
+                flow::dag::DagGraphEdit::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => {
+                    builder.string(Some("operation"), "connect")?;
+                    builder.string(Some("sourceNodeId"), source_node_id)?;
+                    builder.string(Some("sourcePortId"), source_port_id)?;
+                    builder.string(Some("targetNodeId"), target_node_id)?;
+                    builder.string(Some("targetPortId"), target_port_id)?;
+                }
+                flow::dag::DagGraphEdit::Disconnect { edge_id } => {
+                    builder.string(Some("operation"), "disconnect")?;
+                    builder.string(Some("edgeId"), edge_id)?;
+                }
+            }
+            builder.end_container()?;
+        }
+        builder.end_container()?;
+        builder.end_container()
+    })
+}
+
+/// 🖱️ One gesture on the screen pointer path, dispatched whole: interaction state plus any wire
+/// edit. Four action credits — the same three the bounded path publishes, plus the edit.
+fn node_graph_screen_pointer_into(surface_id: &str, controller_id: &str, intent: flow::dag::DagPointerIntent, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let mut reservation = input.reserve_actions(4, 4 * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
+    let Some(outcome) = apply_node_graph_screen_pointer(surface_id, intent)? else {
+        return Ok(false);
+    };
+    if !outcome.edits.is_empty() {
+        engine_canvas_debug_log(&format!("[DEBUG] wgpu node-graph screen gesture surface={surface_id} edits={:?}", outcome.edits));
+    }
+    write_graph_interaction_actions(&mut reservation, surface_id, controller_id, outcome.snapshot)?;
+    write_graph_edit_action(&mut reservation, controller_id, &outcome.edits)?;
+    reservation.publish_partial()?;
+    Ok(true)
+}
+//#endregion 🔗️NodeGraphScreenPointer
 
 fn plan_node_graph_pointer(surface_id: &str, intent: flow::dag::DagPointerIntent) -> Result<Option<(NodeGraphPointerPlan, GraphInteractionSnapshot)>, ui_wgpu::wgpu::BoundedActionFault> {
     ENGINE_SURFACES.with(|cell| {

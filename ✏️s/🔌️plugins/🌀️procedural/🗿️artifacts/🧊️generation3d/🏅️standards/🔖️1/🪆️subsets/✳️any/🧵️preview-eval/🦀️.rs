@@ -913,9 +913,17 @@ pub fn preview_progress_status_json_for(session: Option<&FlowEvalSession>, addre
 }
 
 /// 🐞️ The observable counters a preview window stamps onto its status so the browser probe can read
-/// back off `data-status-json` what actually reached the scene, without a screenshot.
+/// back off `data-status-json` what actually reached the SCENE, without a screenshot.
+///
+/// 🧹️ `eval_json` is deliberately absent. It used to ride along as `evalLen` plus an `evalHead` of
+/// the first 240 characters of the raw evaluation text — on EVERY status frame of every preview
+/// window, in the payload `World3dHost` renders progress chrome from. Neither is a fact about the
+/// scene: the evaluation's own failures are already projected as `error`/`widgetErrors` by
+/// [`preview_status_json`], and its progress as `phase`/`progress` by
+/// [`preview_progress_status_json`], so the pair was pure debug spill that also leaked document text
+/// into view state (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️audit-user-journey-gaps-2026-09-13.md` §9 item 17).
 pub struct PreviewStatusDebug<'a> {
-    pub eval_json: &'a str,
     pub meshes_json: &'a str,
     pub instances_json: &'a str,
 }
@@ -927,10 +935,8 @@ pub fn preview_window_status_json(session: Option<&FlowEvalSession>, widget_stat
     let base = preview_scene_status_json(session, widget_status);
     let mut object = base.as_deref().and_then(|text| dsl::json::parse(text).ok()).and_then(|value| value.as_object().cloned()).unwrap_or_else(dsl::json::Object::new);
     let mut debug_object = dsl::json::Object::new();
-    debug_object.insert("evalLen", dsl::json::Value::from(debug.eval_json.len()));
     debug_object.insert("meshesLen", dsl::json::Value::from(debug.meshes_json.len()));
     debug_object.insert("instancesLen", dsl::json::Value::from(debug.instances_json.len()));
-    debug_object.insert("evalHead", dsl::json::Value::String(debug.eval_json.chars().take(240).collect::<String>()));
     object.insert("debug", dsl::json::Value::Object(debug_object));
     if let Some(hint) = hint {
         object.insert("hint", dsl::json::Value::String(hint.to_string()));

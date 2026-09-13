@@ -191,12 +191,21 @@ pub(crate) mod context {
         })
     }
     
-    /// 🔍️ Depth-first search for a `WindowMeasure::Slider`'s presence by id, descending into groups.
-    pub fn has_measure_slider(measures: &[WindowMeasure], slider_id: &str) -> bool {
-        measures.iter().any(|measure| match measure {
-            WindowMeasure::Slider { id, .. } => id == slider_id,
-            WindowMeasure::Group { children, .. } => has_measure_slider(children, slider_id),
-            _ => false,
+    /// 🔢️ Finds one `WindowMeasure::Number` leaf anywhere in a measure tree, descending into groups.
+    pub fn find_measure_number<'a>(measures: &'a [WindowMeasure], number_id: &str) -> Option<&'a WindowMeasure> {
+        measures.iter().find_map(|measure| match measure {
+            WindowMeasure::Number { id, .. } if id == number_id => Some(measure),
+            WindowMeasure::Group { children, .. } => find_measure_number(children, number_id),
+            _ => None,
+        })
+    }
+
+    /// ⏳️ Finds one `WindowMeasure::Progress` leaf anywhere in a measure tree.
+    pub fn find_measure_progress<'a>(measures: &'a [WindowMeasure], progress_id: &str) -> Option<&'a WindowMeasure> {
+        measures.iter().find_map(|measure| match measure {
+            WindowMeasure::Progress { id, .. } if id == progress_id => Some(measure),
+            WindowMeasure::Group { children, .. } => find_measure_progress(children, progress_id),
+            _ => None,
         })
     }
 }
@@ -843,7 +852,7 @@ async fn fill_and_brush_params_are_tagged_utility_options_not_engagement_control
     for window in [board2d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID] {
         let measures = if window == board2d::WINDOW_KIND_ID { board2d::window_measures(&fill_scene, &session, labels) } else { world3d::window_measures(&fill_scene, &session, labels) };
         assert_eq!(measure_group_tag(&measures, "puzzle5d-play-utility-options-fill"), Some(Some("fill".into())), "{window} fill Utility Options must be tagged for the fill utility");
-        assert!(has_measure_slider(&measures, "puzzle5d-fill-count"), "{window} fill Utility Options must carry the fill-count slider");
+        assert!(find_measure_number(&measures, "puzzle5d-fill-count").is_some(), "{window} fill Utility Options must carry the fill-count entry");
         let fill_hud = edit::puzzle5d_engagement(&fill_scene, window, labels);
         assert!(fill_hud.control.is_none() && fill_hud.controls.is_none(), "{window} fill engagement HUD must no longer carry the relocated control");
     }
@@ -856,6 +865,79 @@ async fn fill_and_brush_params_are_tagged_utility_options_not_engagement_control
         let brush_hud = edit::puzzle5d_engagement(&brush_scene, window, labels);
         assert!(brush_hud.control.is_none() && brush_hud.controls.is_none(), "{window} brush engagement HUD must no longer carry the relocated control");
     }
+}
+
+/// ♾️ The fill count is an unbounded `Number` defaulting to 100 — the deleted `PUZZLE5D_FILL_COUNT_MAX`
+/// pin must not come back anywhere on the path from runtime default to rendered measure.
+#[semio_framework_async_macros::async_test]
+async fn fill_count_entry_is_unbounded_and_defaults_to_one_hundred() {
+    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::default()).expect("admitted host axis");
+    let session = Puzzle5dPrecomputeSession::new();
+    assert_eq!(PUZZLE5D_DEFAULT_FILL_COUNT, 100);
+    assert_eq!(Puzzle5dRuntime::default().fill_count, 100);
+    assert_eq!(crate::editor::puzzle5d::window::Puzzle5dWindowConfig::default().fill_count, 100);
+
+    let default_scene = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime::default(), active_utility: "fill".into() };
+    let measures = board2d::window_measures(&default_scene, &session, labels);
+    assert!(matches!(find_measure_number(&measures, "puzzle5d-fill-count"), Some(WindowMeasure::Number { value, .. }) if *value == 100.0));
+
+    let large_scene = Puzzle5dScene { runtime: Puzzle5dRuntime { fill_count: 5_000, ..Default::default() }, ..default_scene };
+    let measures = world3d::window_measures(&large_scene, &session, labels);
+    let Some(WindowMeasure::Number { value, min, max, step, .. }) = find_measure_number(&measures, "puzzle5d-fill-count") else { panic!("fill count entry") };
+    assert_eq!(*value, 5_000.0);
+    assert_eq!(*min, Some(0.0));
+    assert_eq!(*max, None, "the fill count must carry no ceiling");
+    assert_eq!(*step, Some(1.0));
+}
+
+/// 🧮️ A count far past the deleted 1000-pin survives the dispatch verbatim, and the planner is
+/// retargeted to it rather than merely projected onto a plan held to its own target.
+#[semio_framework_async_macros::async_test]
+async fn set_fill_count_carries_a_large_count_and_retargets_the_planner() {
+    let mut app = app_with_registry();
+    dispatch(&mut app, "setFillCount", Some(&dsl::json!({ "count": 5_000 })), Some(board2d::WINDOW_KIND_ID)).expect("a count far past the deleted 1000-pin must not be refused");
+    let mut session = Puzzle5dPrecomputeSession::new();
+    session.set_fill_requested_count(5_000);
+    assert_eq!(session.fill_requested_count(), 5_000, "the planner is retargeted, not merely projected onto");
+}
+
+/// ⏳️ The 5d fill progress row is the wrapped 3d session's own summary — same locked count, same
+/// requested count, same stage — and it disappears exactly when that session reports itself done.
+#[semio_framework_async_macros::async_test]
+async fn fill_progress_row_reflects_the_wrapped_session_summary() {
+    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::default()).expect("admitted host axis");
+    let idle = Puzzle5dPrecomputeSession::new();
+    assert!(idle.fill_progress().done, "a session with no scene has nothing to report");
+    assert!(crate::editor::puzzle5d::modes::edit::options::fill::fill_progress_measure(&idle, labels).is_none(), "a done session must not publish a progress row");
+
+    let scene = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime { fill_count: 40, ..Default::default() }, active_utility: "fill".into() };
+    let mut live = Puzzle5dPrecomputeSession::new();
+    live.set_scene(&scene_config_json(&scene)).expect("scene");
+    live.set_fill_requested_count(40);
+    live.precompute_step(8);
+    let progress = live.fill_progress();
+    match crate::editor::puzzle5d::modes::edit::options::fill::fill_progress_measure(&live, labels) {
+        Some(WindowMeasure::Progress { id, completed, total, stage, cancel, loading, .. }) => {
+            assert!(!progress.done, "a published row implies the planner still has work");
+            assert_eq!(id, "puzzle5d-play-fill-progress");
+            assert_eq!(completed, progress.applied_count as f64);
+            assert_eq!(total, Some(progress.requested_count as f64));
+            assert_eq!(stage, Some(crate::editor::puzzle5d::terminology::puzzle5d_fill_stage_label(labels, progress.stage.as_str(), progress.stall_reason.as_deref())));
+            assert_eq!(cancel.map(|cancel| cancel.action), Some("cancelFillBuild".to_string()));
+            assert_eq!(loading, Some(true));
+        }
+        Some(other) => panic!("fill progress row must be a Progress measure, found {other:?}"),
+        None => assert!(progress.done, "a withheld row implies the planner is done"),
+    }
+}
+
+/// 🛑️ Cancelling pins the requested count to what the document already holds, so the operator keeps
+/// exactly the parts they can see; a stale identity kills nothing.
+#[semio_framework_async_macros::async_test]
+async fn cancel_fill_build_pins_the_count_to_what_is_locked() {
+    let mut app = app_with_registry();
+    dispatch(&mut app, "setFillCount", Some(&dsl::json!({ "count": 12 })), Some(board2d::WINDOW_KIND_ID)).expect("setFillCount");
+    dispatch(&mut app, "cancelFillBuild", Some(&dsl::json!({ "job": 0, "operation": 0, "generation": 0 })), Some(board2d::WINDOW_KIND_ID)).expect("cancelFillBuild");
 }
 
 #[semio_framework_async_macros::async_test]

@@ -15,17 +15,25 @@ use crate::editor::puzzle3d::precompute::geometry::{
     CollisionIndexRemoval, CollisionMutationStep, CollisionOverlapState, CollisionQueryCursor, CollisionQueryStep, CollisionSpatialIndex, CollisionStepResult, FixedOwnerMap, FixedOwnerMapInsert, FixedOwnerSet, FixedOwnerSetInsert, FixedOwnerVec,
     Pose3d, DOCUMENT_ATTRACTION_SLOTS, DOCUMENT_CANDIDATE_SLOTS, DOCUMENT_KIND_SLOTS, DOCUMENT_OBJECT_SLOTS, DOCUMENT_OWNER_PAGE_BYTES, DOCUMENT_VOLUME_SLOTS, DOCUMENT_VORTEX_SLOTS,
 };
-use crate::editor::puzzle3d::precompute::FILL_COUNT_MAX;
 use crate::standards::v1::subsets::any::schema::{
-    puzzle3d_vortex_full_id, AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushPlacePayload, BrushPreviewState, CableKindCatalog, FillBuildPreview, FillBuildProgress, Fixture, FixtureObject, KindCompatEntry, ObjectKind, SceneConfig,
-    VortexKindCatalog, VortexProps, WorldVolumeProps,
+    puzzle3d_vortex_full_id, AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushPlacePayload, BrushPreviewState, CableKindCatalog, FillBuildPreview, FillBuildProgress, FillCandidateVerdict, FillTriedCandidate, Fixture, FixtureObject,
+    KindCompatEntry, ObjectKind, SceneConfig, VortexKindCatalog, VortexProps, WorldVolumeProps, FILL_TRIED_RING,
 };
 use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, Operation, StepContext, StepOutcome};
 use std::collections::HashMap;
 use std::sync::Arc;
 
+/// 🕳️ The round enumerated no open vortex at all — every vortex is blocked or zero-weighted.
+pub(crate) const FILL_STALL_NO_OPEN_VORTEX: &str = "no-open-vortex";
+/// 🧩️ Open vortices existed, but no catalog kind is compatible with any of them.
+pub(crate) const FILL_STALL_NO_COMPATIBLE_KIND: &str = "no-compatible-kind";
+/// 🚧️ Candidates were built and every one of them was refused — the document has no room left.
+pub(crate) const FILL_STALL_NO_FREE_PLACEMENT: &str = "no-free-placement";
+/// 📄️ A fixed document page refused an owner: a visible stall, never a fault.
+pub(crate) const FILL_STALL_DOCUMENT_CAPACITY: &str = "document-capacity";
+
 //#region 🔭️RetainedPreviewJson
-pub(crate) const FILL_PREVIEW_JSON_MAX_BYTES: usize = 4 * 1024;
+pub(crate) const FILL_PREVIEW_JSON_MAX_BYTES: usize = 16 * 1024;
 pub(crate) const FILL_PREVIEW_JSON_MAX_COLOR_BYTES: usize = 128;
 pub(crate) const FILL_PREVIEW_JSON_MAX_STATUS_LABEL_BYTES: usize = 256;
 pub(crate) const FILL_PREVIEW_JSON_MAX_SOURCE_VORTEX_INDEX: u64 = 9_007_199_254_740_991;
@@ -77,6 +85,12 @@ impl FillPreviewJsonSourceAuthority {
         };
         Ok(Some(Self { root: Self::field(ghost.source_vortex_index)?, candidate_ghost: Self::field(ghost.source_vortex_index)? }))
     }
+
+    /// 🔁️ One tried ring entry's wire-safe source index — the ring carries ghosts the root never
+    /// republishes, so each slot answers for its own index instead of borrowing the live ghost's.
+    fn tried(preview: &FillBuildPreview, index: usize) -> Result<u64, ()> {
+        Self::field(preview.tried.get(index).and_then(Option::as_ref).ok_or(())?.ghost.source_vortex_index)
+    }
 }
 
 struct FillPreviewJsonDiagnosticAuthority;
@@ -94,9 +108,16 @@ impl FillPreviewJsonDiagnosticAuthority {
         preview_json_wire_usize(preview.target_cursor)?;
         preview_json_wire_usize(preview.candidate_cursor)?;
         preview_json_wire_usize(preview.accepted_count)?;
-        preview_json_wire_usize(preview.total_count)?;
+        preview_json_wire_usize(preview.requested_count)?;
         preview_json_wire_u64(preview.search_count, 0)?;
         preview_json_wire_u64(preview.rejected_count, 0)?;
+        preview_json_wire_u64(preview.tested_count, 0)?;
+        for index in 0..preview.tried.len() {
+            if preview.tried[index].is_some() {
+                preview_json_wire_u64(preview.tried[index].as_ref().ok_or(())?.sequence, 0)?;
+                FillPreviewJsonSourceAuthority::tried(preview, index)?;
+            }
+        }
         Ok(Self)
     }
 }
@@ -110,7 +131,11 @@ impl FillPreviewJsonAdmission {
         if color.len() > FILL_PREVIEW_JSON_MAX_COLOR_BYTES || status_label.is_empty() || status_label.len() > FILL_PREVIEW_JSON_MAX_STATUS_LABEL_BYTES {
             return Err(());
         }
-        if preview.candidate_ghost.as_ref().is_some_and(|ghost| ghost.origin.into_iter().chain(ghost.orientation).any(|value| !value.is_finite())) || preview.last_sample.is_some_and(|sample| sample.into_iter().any(|value| !value.is_finite())) {
+        let unfinished = |ghost: &BrushPreviewState| ghost.origin.into_iter().chain(ghost.orientation).any(|value| !value.is_finite());
+        if preview.candidate_ghost.as_ref().is_some_and(unfinished) || preview.last_sample.is_some_and(|sample| sample.into_iter().any(|value| !value.is_finite())) {
+            return Err(());
+        }
+        if preview.tried.iter().flatten().any(|entry| unfinished(&entry.ghost)) {
             return Err(());
         }
         fill_preview_json_wire_bytes(preview, color, status_label)?;
@@ -157,6 +182,11 @@ enum FillPreviewString {
     CurrentPair,
     CandidatePage(usize),
     Rejection,
+    Stall,
+    TriedReason(usize),
+    TriedGhostTarget(usize),
+    TriedGhostKind(usize),
+    TriedGhostMesh(usize),
 }
 
 #[derive(Default)]
@@ -291,6 +321,11 @@ fn preview_json_quat(prefix: &str, value: [f64; 4]) -> Result<FillPreviewJsonUni
     Ok(unit)
 }
 
+/// 🔁️ The occupied tried-ring slot at `index`, or nothing when the ring has not wrapped that far.
+fn tried_entry(preview: &FillBuildPreview, index: usize) -> Option<&FillTriedCandidate> {
+    preview.tried.get(index).and_then(Option::as_ref)
+}
+
 impl FillPreviewJsonPass {
     fn advance_field(&mut self) {
         self.field = self.field.saturating_add(1);
@@ -314,6 +349,11 @@ impl FillPreviewJsonPass {
             FillPreviewString::CurrentPair => preview.current_pair_object_id.as_deref(),
             FillPreviewString::CandidatePage(index) => preview.candidate_page.get(index).and_then(Option::as_deref),
             FillPreviewString::Rejection => preview.rejection_reason.as_deref(),
+            FillPreviewString::Stall => preview.stall_reason.as_deref(),
+            FillPreviewString::TriedReason(index) => tried_entry(preview, index).and_then(|entry| entry.reason.as_deref()),
+            FillPreviewString::TriedGhostTarget(index) => tried_entry(preview, index).map(|entry| entry.ghost.target_vortex_full_id.as_str()),
+            FillPreviewString::TriedGhostKind(index) => tried_entry(preview, index).map(|entry| entry.ghost.object_kind_id.as_str()),
+            FillPreviewString::TriedGhostMesh(index) => tried_entry(preview, index).map(|entry| entry.ghost.mesh_url.as_str()),
         }
     }
 
@@ -412,11 +452,76 @@ impl FillPreviewJsonPass {
         Ok(unit)
     }
 
+    /// 🔁️ One fixed-width ring of tried candidates, one grant at a time: `item` walks the slots,
+    /// `subfield` walks one slot's own fields, and an empty slot publishes `null` in place.
+    fn tried(&mut self, preview: &FillBuildPreview, color: &str, status_label: &str) -> Result<FillPreviewJsonUnit, ()> {
+        if self.subfield == 0 {
+            self.subfield = 1;
+            return FillPreviewJsonUnit::bytes(b",\"tried\":[");
+        }
+        if self.item >= preview.tried.len() {
+            self.advance_field();
+            return FillPreviewJsonUnit::bytes(b"]");
+        }
+        let index = self.item;
+        let separator: &'static [u8] = if index == 0 { b"" } else { b"," };
+        let Some(entry) = tried_entry(preview, index) else {
+            self.item += 1;
+            let mut unit = FillPreviewJsonUnit::bytes(separator)?;
+            unit.extend(b"null")?;
+            return Ok(unit);
+        };
+        let active_subfield = self.subfield;
+        let unit = match active_subfield {
+            1 => {
+                self.subfield = 2;
+                let sequence = preview_json_wire_u64(entry.sequence, 0)?;
+                let mut unit = FillPreviewJsonUnit::bytes(separator)?;
+                std::fmt::write(&mut unit, format_args!("{{\"sequence\":{sequence}")).map_err(|_| ())?;
+                Ok(unit)
+            }
+            2 => {
+                self.subfield = 3;
+                FillPreviewJsonUnit::formatted(format_args!(",\"verdict\":\"{}\"", entry.verdict.wire()))
+            }
+            3 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"reason\":", source: FillPreviewString::TriedReason(index), optional: true, advance: false }),
+            4 => {
+                self.subfield = 5;
+                FillPreviewJsonUnit::bytes(b",\"ghost\":{")
+            }
+            5 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b"\"targetVortexFullId\":", source: FillPreviewString::TriedGhostTarget(index), optional: false, advance: false }),
+            6 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"objectKindId\":", source: FillPreviewString::TriedGhostKind(index), optional: false, advance: false }),
+            7 => {
+                self.subfield = 8;
+                let source_vortex_index = FillPreviewJsonSourceAuthority::tried(preview, index)?;
+                FillPreviewJsonUnit::formatted(format_args!(",\"sourceVortexIndex\":{source_vortex_index}"))
+            }
+            8 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"meshUrl\":", source: FillPreviewString::TriedGhostMesh(index), optional: false, advance: false }),
+            9 => {
+                self.subfield = 10;
+                preview_json_vec3(",\"origin\":", entry.ghost.origin)
+            }
+            10 => {
+                self.subfield = 11;
+                preview_json_quat(",\"orientation\":", entry.ghost.orientation)
+            }
+            _ => {
+                self.subfield = 1;
+                self.item += 1;
+                FillPreviewJsonUnit::bytes(b"}}")
+            }
+        }?;
+        if self.string_phase == 0 && matches!(active_subfield, 3 | 5 | 6 | 8) {
+            self.subfield += 1;
+        }
+        Ok(unit)
+    }
+
     fn next_unit(&mut self, preview: &FillBuildPreview, color: &str, status_label: &str) -> Result<Option<FillPreviewJsonUnit>, ()> {
         let ghost = preview.candidate_ghost.as_ref();
         let unit = match self.field {
             0 => {
-                self.field = if ghost.is_some() { 1 } else { 9 };
+                self.field = if ghost.is_some() { 1 } else { 10 };
                 FillPreviewJsonUnit::bytes(b"{")?
             }
             1 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b"\"targetVortexFullId\":", source: FillPreviewString::RootTarget, optional: false, advance: true })?,
@@ -442,82 +547,100 @@ impl FillPreviewJsonPass {
             }
             9 => {
                 self.advance_field();
-                FillPreviewJsonUnit::bytes(if ghost.is_some() { b",\"fillBuildPreview\":{" } else { b"\"fillBuildPreview\":{" })?
+                FillPreviewJsonUnit::formatted(format_args!(",\"verdict\":\"{}\"", preview.verdict.wire()))?
             }
             10 => {
                 self.advance_field();
-                FillPreviewJsonUnit::formatted(format_args!("\"operation\":{}", preview.operation))?
+                FillPreviewJsonUnit::bytes(if ghost.is_some() { b",\"fillBuildPreview\":{" } else { b"\"fillBuildPreview\":{" })?
             }
             11 => {
                 self.advance_field();
-                FillPreviewJsonUnit::formatted(format_args!(",\"baseRevision\":{}", preview.base_revision))?
+                FillPreviewJsonUnit::formatted(format_args!("\"operation\":{}", preview.operation))?
             }
             12 => {
                 self.advance_field();
-                FillPreviewJsonUnit::formatted(format_args!(",\"registryGeneration\":{}", preview.registry_generation))?
+                FillPreviewJsonUnit::formatted(format_args!(",\"baseRevision\":{}", preview.base_revision))?
             }
             13 => {
                 self.advance_field();
-                FillPreviewJsonUnit::formatted(format_args!(",\"sequence\":{}", preview.sequence))?
+                FillPreviewJsonUnit::formatted(format_args!(",\"registryGeneration\":{}", preview.registry_generation))?
             }
             14 => {
                 self.advance_field();
+                FillPreviewJsonUnit::formatted(format_args!(",\"sequence\":{}", preview.sequence))?
+            }
+            15 => {
+                self.advance_field();
                 FillPreviewJsonUnit::formatted(format_args!(",\"generation\":{}", preview.generation))?
             }
-            15 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"stage\":", source: FillPreviewString::Stage, optional: false, advance: true })?,
-            16 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"statusLabel\":", source: FillPreviewString::StatusLabel, optional: false, advance: true })?,
-            17 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"targetVortexFullId\":", source: FillPreviewString::Target, optional: true, advance: true })?,
-            18 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"candidateObjectKindId\":", source: FillPreviewString::Candidate, optional: true, advance: true })?,
-            19 => self.candidate_ghost(preview, color, status_label)?,
-            20 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"currentPairObjectId\":", source: FillPreviewString::CurrentPair, optional: true, advance: true })?,
-            21 => {
+            16 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"stage\":", source: FillPreviewString::Stage, optional: false, advance: true })?,
+            17 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"statusLabel\":", source: FillPreviewString::StatusLabel, optional: false, advance: true })?,
+            18 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"targetVortexFullId\":", source: FillPreviewString::Target, optional: true, advance: true })?,
+            19 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"candidateObjectKindId\":", source: FillPreviewString::Candidate, optional: true, advance: true })?,
+            20 => self.candidate_ghost(preview, color, status_label)?,
+            21 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"currentPairObjectId\":", source: FillPreviewString::CurrentPair, optional: true, advance: true })?,
+            22 => {
                 self.advance_field();
                 FillPreviewJsonUnit::formatted(format_args!(",\"collisionCount\":{}", preview.collision_count))?
             }
-            22 => {
+            23 => {
                 self.advance_field();
                 FillPreviewJsonUnit::formatted(format_args!(",\"sampleCursor\":{}", preview.sample_cursor))?
             }
-            23 => {
+            24 => {
                 self.advance_field();
                 FillPreviewJsonUnit::formatted(format_args!(",\"insideBoth\":{}", preview.inside_both))?
             }
-            24 => {
+            25 => {
                 self.advance_field();
                 match preview.last_sample {
                     Some(value) => preview_json_vec3(",\"lastSample\":", value.map(f64::from))?,
                     None => FillPreviewJsonUnit::bytes(b",\"lastSample\":null")?,
                 }
             }
-            25 => self.candidate_page(preview, color, status_label)?,
-            26 => {
+            26 => self.candidate_page(preview, color, status_label)?,
+            27 => {
                 self.advance_field();
                 FillPreviewJsonUnit::bytes(if preview.truncated { b",\"truncated\":true" } else { b",\"truncated\":false" })?
             }
-            27 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"rejectionReason\":", source: FillPreviewString::Rejection, optional: true, advance: true })?,
-            28 => {
+            28 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"rejectionReason\":", source: FillPreviewString::Rejection, optional: true, advance: true })?,
+            29 => {
                 self.advance_field();
                 FillPreviewJsonUnit::formatted(format_args!(",\"targetCursor\":{}", preview.target_cursor))?
             }
-            29 => {
+            30 => {
                 self.advance_field();
                 FillPreviewJsonUnit::formatted(format_args!(",\"candidateCursor\":{}", preview.candidate_cursor))?
             }
-            30 => {
+            31 => {
                 self.advance_field();
                 FillPreviewJsonUnit::formatted(format_args!(",\"acceptedCount\":{}", preview.accepted_count))?
             }
-            31 => {
-                self.advance_field();
-                FillPreviewJsonUnit::formatted(format_args!(",\"totalCount\":{}", preview.total_count))?
-            }
             32 => {
                 self.advance_field();
-                FillPreviewJsonUnit::formatted(format_args!(",\"searchCount\":{}", preview.search_count))?
+                FillPreviewJsonUnit::formatted(format_args!(",\"requestedCount\":{}", preview.requested_count))?
             }
             33 => {
                 self.advance_field();
-                FillPreviewJsonUnit::formatted(format_args!(",\"rejectedCount\":{}}}}}", preview.rejected_count))?
+                FillPreviewJsonUnit::formatted(format_args!(",\"searchCount\":{}", preview.search_count))?
+            }
+            34 => {
+                self.advance_field();
+                FillPreviewJsonUnit::formatted(format_args!(",\"rejectedCount\":{}", preview.rejected_count))?
+            }
+            35 => {
+                self.advance_field();
+                FillPreviewJsonUnit::formatted(format_args!(",\"verdict\":\"{}\"", preview.verdict.wire()))?
+            }
+            36 => {
+                self.advance_field();
+                FillPreviewJsonUnit::formatted(format_args!(",\"testedCount\":{}", preview_json_wire_u64(preview.tested_count, 0)?))?
+            }
+            37 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"stallReason\":", source: FillPreviewString::Stall, optional: true, advance: true })?,
+            38 => self.tried(preview, color, status_label)?,
+            39 => {
+                self.advance_field();
+                FillPreviewJsonUnit::bytes(b"}}")?
             }
             _ => return Ok(None),
         };
@@ -1025,7 +1148,6 @@ impl PreparationCapacityBranch {
 struct PreparationCapacityRefusal {
     branch: PreparationCapacityBranch,
     omitted_index: usize,
-    diagnostic_published: bool,
 }
 
 impl PreparationCapacityRefusal {
@@ -1038,7 +1160,7 @@ impl PreparationCapacityRefusal {
 
 /// 🚧️ Preflights every document-scale owner the preparation stages install into, each against the
 /// capacity its own fixed page declares — objects and attractions at `DOCUMENT_OBJECT_SLOTS` /
-/// `DOCUMENT_ATTRACTION_SLOTS` (scene plus a full `FILL_COUNT_MAX` plan), catalogs, compatibility
+/// `DOCUMENT_ATTRACTION_SLOTS` (the scene plus the room a plan can still claim), catalogs, compatibility
 /// rows, mesh urls and kind weights at `DOCUMENT_KIND_SLOTS`. The refusal carries that capacity so
 /// the published diagnostic names the branch and the limit it exceeded.
 fn preparation_capacity_refusal(roots: &FillPreparationRoots) -> Option<PreparationCapacityRefusal> {
@@ -1057,7 +1179,7 @@ fn preparation_capacity_refusal(roots: &FillPreparationRoots) -> Option<Preparat
     ]
     .into_iter()
     .find_map(|(branch, len, capacity)| (len > capacity).then_some((branch, capacity)))?;
-    Some(PreparationCapacityRefusal { branch, omitted_index: capacity, diagnostic_published: false })
+    Some(PreparationCapacityRefusal { branch, omitted_index: capacity })
 }
 
 pub(crate) struct FillBuilder {
@@ -1084,6 +1206,22 @@ pub(crate) struct FillBuilder {
     pub(crate) rng_state: u32,
     pub(crate) stalled: bool,
     pub(crate) max_count: usize,
+    /// 🪜️ Where a running tail discard stops: the applied prefix for a weight replan, the newly
+    /// requested count for a lowered ask.
+    tail_floor: usize,
+    /// 🔁️ Next tried-ring slot a constructed preview claims; the ring wraps, newest over oldest.
+    tried_cursor: usize,
+    /// 👻️ The slot the live ghost owns, so a verdict rewrites its own entry and no other.
+    tried_current: Option<usize>,
+    /// 🕰️ The slot written this turn — [`FillBuilder::publish_preview`] stamps it with the sequence
+    /// the verdict actually reaches the host under.
+    tried_dirty: Option<usize>,
+    pub(crate) tested_count: u64,
+    pub(crate) collisions: u64,
+    /// 🔎️ Whether this target round ever built a pose, which tells a bare document apart from one
+    /// whose every candidate was refused.
+    round_constructed: bool,
+    capacity_stall_published: bool,
     pub(crate) operation: Operation,
     pub(crate) stage: FillJobStage,
     pub(crate) preview: FillBuildPreview,
@@ -1225,6 +1363,7 @@ enum FillDslOwnerRoot {
     PendingPayload,
     PendingObject,
     PreviewGhost,
+    TriedGhost(usize),
 }
 
 struct FillDslOwnerCensusCursor {
@@ -1257,6 +1396,7 @@ impl FillDslOwnerCensusCursor {
             FillDslOwnerRoot::PendingPayload => fill.pending_payload.as_ref()?.scale.as_ref(),
             FillDslOwnerRoot::PendingObject => fill.pending_object.as_ref()?.scale.as_ref(),
             FillDslOwnerRoot::PreviewGhost => fill.preview.candidate_ghost.as_ref()?.scale.as_ref(),
+            FillDslOwnerRoot::TriedGhost(index) => tried_entry(&fill.preview, index)?.ghost.scale.as_ref(),
         }
     }
 
@@ -2193,7 +2333,14 @@ impl FillBuilderOwnerCensusCursor {
         match self.section {
             0 => {
                 self.section = 1;
-                Self::credit(fill_owner_strings([Some(&preview.stage), preview.target_vortex_full_id.as_ref(), preview.candidate_object_kind_id.as_ref(), preview.current_pair_object_id.as_ref(), preview.rejection_reason.as_ref()]))
+                Self::credit(fill_owner_strings([
+                    Some(&preview.stage),
+                    preview.target_vortex_full_id.as_ref(),
+                    preview.candidate_object_kind_id.as_ref(),
+                    preview.current_pair_object_id.as_ref(),
+                    preview.rejection_reason.as_ref(),
+                    preview.stall_reason.as_ref(),
+                ]))
             }
             1 => match preview.candidate_ghost.as_ref() {
                 Some(value) => match self.preview_state_unit(value, FillDslOwnerRoot::PreviewGhost) {
@@ -2219,7 +2366,27 @@ impl FillBuilderOwnerCensusCursor {
                     FillOwnerCensusUnit::Advance
                 }
             },
-            3 => self.finish_field(),
+            3 => {
+                if self.index >= preview.tried.len() {
+                    return self.finish_field();
+                }
+                let Some(entry) = tried_entry(preview, self.index) else {
+                    self.index += 1;
+                    return FillOwnerCensusUnit::Advance;
+                };
+                if self.inner != 0 {
+                    self.inner = 0;
+                    self.index += 1;
+                    return Self::credit(fill_owner_strings([entry.reason.as_ref()]));
+                }
+                match self.preview_state_unit(&entry.ghost, FillDslOwnerRoot::TriedGhost(self.index)) {
+                    Some(unit) => unit,
+                    None => {
+                        self.inner = 1;
+                        FillOwnerCensusUnit::Advance
+                    }
+                }
+            }
             _ => self.finish_field(),
         }
     }
@@ -2394,7 +2561,15 @@ fn retire_fill_preview(value: &mut FillBuildPreview) -> bool {
             return false;
         }
     }
-    if !retire_option_string(&mut value.current_pair_object_id) || !retire_option_string(&mut value.rejection_reason) {
+    for tried in &mut value.tried {
+        let Some(entry) = tried.as_mut() else { continue };
+        if !retire_preview_state(&mut entry.ghost) || !retire_option_string(&mut entry.reason) {
+            return false;
+        }
+        tried.take();
+        return false;
+    }
+    if !retire_option_string(&mut value.current_pair_object_id) || !retire_option_string(&mut value.rejection_reason) || !retire_option_string(&mut value.stall_reason) {
         return false;
     }
     true
@@ -3025,7 +3200,9 @@ impl FillBuilder {
         self.terminal_owner_debt().is_none()
     }
 
-    pub(crate) fn begin_preparation(roots: FillPreparationRoots, operation: Operation) -> Self {
+    /// 🎯️ Seeds a planner that targets exactly what was requested — there is no hidden ceiling it
+    /// races toward in the background, so every placement the user sees was asked for.
+    pub(crate) fn begin_preparation(roots: FillPreparationRoots, operation: Operation, requested_count: usize) -> Self {
         let seed = roots.scene.seed;
         let preparation_capacity_refusal = preparation_capacity_refusal(&roots);
         let rejection_reason = preparation_capacity_refusal.map(PreparationCapacityRefusal::diagnostic);
@@ -3047,7 +3224,15 @@ impl FillBuilder {
             seed_object_ids: FixedOwnerSet::new(),
             rng_state: seed,
             stalled: false,
-            max_count: FILL_COUNT_MAX,
+            max_count: requested_count,
+            tail_floor: 0,
+            tried_cursor: 0,
+            tried_current: None,
+            tried_dirty: None,
+            tested_count: 0,
+            collisions: 0,
+            round_constructed: false,
+            capacity_stall_published: false,
             operation,
             stage: FillJobStage::PrepareFixture,
             preview: FillBuildPreview {
@@ -3071,9 +3256,13 @@ impl FillBuilder {
                 target_cursor: 0,
                 candidate_cursor: 0,
                 accepted_count: 0,
-                total_count: FILL_COUNT_MAX,
+                requested_count,
                 search_count: 0,
                 rejected_count: 0,
+                verdict: FillCandidateVerdict::Testing,
+                tried: std::array::from_fn(|_| None),
+                tested_count: 0,
+                stall_reason: None,
             },
             preview_json: FillPreviewJsonCursor::default(),
             catalogs: FixedCatalogOwner::new(),
@@ -3315,9 +3504,46 @@ impl FillBuilder {
             let _ = self.weights.vortex_weights.try_insert(id.clone(), *weight);
         }
         self.applied_count = self.applied_count.min(self.sequence.len());
+        self.tail_floor = self.applied_count;
         self.stalled = false;
         self.last_rejection = None;
         self.preview.rejection_reason = None;
+        self.preview.stall_reason = None;
+        self.stage = FillJobStage::DiscardTail;
+    }
+
+    /// 🎯️ What the user is asking for right now.
+    pub(crate) fn requested_count(&self) -> usize {
+        self.max_count
+    }
+
+    /// 🎚️ Retargets the live plan without ever rewinding its RNG stream. Raising simply lifts the
+    /// ceiling and wakes a planner that had reached it, so the longer plan keeps the shorter one as
+    /// its exact prefix. Lowering hands the surplus tail back through the same one-placement-per-turn
+    /// [`FillJobStage::DiscardTail`] walk that a weight replan uses, stopping at whatever is already
+    /// applied to the document.
+    pub(crate) fn set_requested_count(&mut self, requested: usize) {
+        if requested == self.max_count {
+            return;
+        }
+        let raising = requested > self.max_count;
+        self.max_count = requested;
+        self.preview.requested_count = requested;
+        if raising {
+            if self.stage == FillJobStage::Complete && self.sequence.len() < self.max_count {
+                self.stalled = false;
+                self.preview.stall_reason = None;
+                self.stage = FillJobStage::PrepareTargets;
+            }
+            return;
+        }
+        if self.sequence.len() <= self.max_count {
+            return;
+        }
+        self.applied_count = self.applied_count.min(self.sequence.len());
+        self.tail_floor = self.max_count.max(self.applied_count);
+        self.stalled = false;
+        self.preview.stall_reason = None;
         self.stage = FillJobStage::DiscardTail;
     }
 
@@ -3337,7 +3563,7 @@ impl FillBuilder {
             }
             return;
         }
-        if self.appended_objects.len() <= self.applied_count {
+        if self.appended_objects.len() <= self.tail_floor {
             self.targets.clear();
             self.target_cursor = 0;
             self.target_rotation = 0;
@@ -3347,7 +3573,7 @@ impl FillBuilder {
             self.reset_collision(true);
             self.reset_acceptance();
             self.preview.accepted_count = self.sequence.len();
-            self.stage = FillJobStage::PrepareTargets;
+            self.stage = if self.sequence.len() >= self.max_count { FillJobStage::Complete } else { FillJobStage::PrepareTargets };
             return;
         }
         let Some(object) = self.appended_objects.pop() else {
@@ -3370,8 +3596,7 @@ impl FillBuilder {
         if self.collection_over_capacity {
             self.last_rejection = Some("preparation-capacity".into());
             self.preview.rejection_reason = self.last_rejection.clone();
-            self.stalled = true;
-            self.stage = FillJobStage::Complete;
+            self.stall(FILL_STALL_DOCUMENT_CAPACITY);
             return;
         }
         match self.stage {
@@ -3681,8 +3906,7 @@ impl FillBuilder {
             }
             TargetPreparePhase::Finish => {
                 if self.targets.is_empty() {
-                    self.stalled = true;
-                    self.stage = FillJobStage::Complete;
+                    self.stall(FILL_STALL_NO_OPEN_VORTEX);
                     return;
                 }
                 self.target_rotation = self.sequence.len() % self.targets.len();
@@ -3692,16 +3916,26 @@ impl FillBuilder {
         }
     }
 
+    /// 🛑️ Why a round that walked every target placed nothing: a document with no candidate pose at
+    /// all is a compatibility gap, one where every pose was refused has simply run out of room.
+    fn exhausted_targets_stall(&self) -> &'static str {
+        if self.targets.is_empty() {
+            FILL_STALL_NO_OPEN_VORTEX
+        } else if self.round_constructed {
+            FILL_STALL_NO_FREE_PLACEMENT
+        } else {
+            FILL_STALL_NO_COMPATIBLE_KIND
+        }
+    }
+
     fn select_target(&mut self) {
         if self.target_cursor >= self.targets.len() {
-            self.stalled = true;
-            self.stage = FillJobStage::Complete;
+            self.stall(self.exhausted_targets_stall());
             return;
         }
         let index = self.target_rotation.checked_add(self.target_cursor).map(|value| value % self.targets.len().max(1));
         let Some(target) = index.and_then(|index| self.targets.get(index)).cloned() else {
-            self.stalled = true;
-            self.stage = FillJobStage::Complete;
+            self.stall(self.exhausted_targets_stall());
             return;
         };
         self.preview.target_vortex_full_id = Some(target.full_id.clone());
@@ -3871,8 +4105,10 @@ impl FillBuilder {
         }
         self.current_preview = Some(preview);
         self.last_rejection = None;
+        self.round_constructed = true;
         self.preview.rejection_reason = None;
         self.preview.candidate_ghost = self.current_preview.clone();
+        self.push_tried(self.current_preview.clone().expect("constructed preview"));
         self.preview.current_pair_object_id = None;
         self.preview.collision_count = 0;
         self.preview.candidate_page = std::array::from_fn(|_| None);
@@ -3922,6 +4158,7 @@ impl FillBuilder {
     fn test_collision(&mut self, context: &mut StepContext<'_>) -> Option<StepOutcome> {
         let Some(pair_id) = self.broad_phase_query.as_ref().and_then(|query| query.candidate(self.broad_phase_cursor)).cloned() else {
             self.preview.current_pair_object_id = None;
+            self.record_verdict(FillCandidateVerdict::Free, None);
             self.stage = FillJobStage::AcceptCandidate;
             return None;
         };
@@ -4139,6 +4376,7 @@ impl FillBuilder {
                 self.appended_objects.push(placed_object);
                 self.appended_attractions.push(attraction);
                 self.preview.accepted_count = self.sequence.len();
+                self.record_verdict(FillCandidateVerdict::Accepted, None);
                 self.reset_candidate();
                 self.stage = if self.sequence.len() >= self.max_count { FillJobStage::Complete } else { FillJobStage::PrepareTargets };
                 if self.stage == FillJobStage::Complete {
@@ -4149,11 +4387,57 @@ impl FillBuilder {
         }
     }
 
+    /// 👻️ Publishes a constructed pose as the live ghost and claims it a ring slot under
+    /// [`FillCandidateVerdict::Testing`] — every later verdict rewrites that same slot, so a
+    /// candidate occupies exactly one entry from the moment it exists.
+    fn push_tried(&mut self, ghost: BrushPreviewState) {
+        let slot = self.tried_cursor % FILL_TRIED_RING;
+        self.tried_cursor = slot + 1;
+        self.tried_current = Some(slot);
+        self.tried_dirty = Some(slot);
+        self.tested_count = self.tested_count.saturating_add(1);
+        self.preview.tested_count = self.tested_count;
+        self.preview.verdict = FillCandidateVerdict::Testing;
+        self.preview.tried[slot] = Some(FillTriedCandidate { sequence: self.preview.sequence, verdict: FillCandidateVerdict::Testing, reason: None, ghost });
+    }
+
+    /// ⚖️ The one place a verdict is written: the live preview always, and the candidate's own ring
+    /// slot whenever a pose was actually built for it.
+    fn record_verdict(&mut self, verdict: FillCandidateVerdict, reason: Option<&str>) {
+        self.preview.verdict = verdict;
+        if verdict == FillCandidateVerdict::Collision {
+            self.collisions = self.collisions.saturating_add(1);
+        }
+        let Some(slot) = self.tried_current else { return };
+        let Some(entry) = self.preview.tried.get_mut(slot).and_then(Option::as_mut) else { return };
+        entry.verdict = verdict;
+        entry.reason = reason.map(str::to_string);
+        self.tried_dirty = Some(slot);
+    }
+
+    /// 🚩️ A solid overlap is its own visible verdict; every other refusal is a plain rejection.
+    fn verdict_for(reason: &str) -> FillCandidateVerdict {
+        if reason == "solid-overlap" {
+            FillCandidateVerdict::Collision
+        } else {
+            FillCandidateVerdict::Rejected
+        }
+    }
+
+    /// 🛑️ Stops the planner below its requested count with a reason the HUD can name, instead of
+    /// leaving the user with a silently finished plan.
+    fn stall(&mut self, reason: &'static str) {
+        self.stalled = true;
+        self.preview.stall_reason = Some(reason.to_string());
+        self.stage = FillJobStage::Complete;
+    }
+
     fn reject_candidate(&mut self, reason: &str) {
         self.last_rejection = Some(reason.to_string());
         self.preview.rejection_reason = self.last_rejection.clone();
         self.rejected_count += 1;
         self.preview.rejected_count = self.rejected_count;
+        self.record_verdict(Self::verdict_for(reason), Some(reason));
         self.candidate_cursor += 1;
         self.reset_acceptance();
         self.reset_collision(false);
@@ -4165,6 +4449,7 @@ impl FillBuilder {
         self.preview.rejection_reason = self.last_rejection.clone();
         self.rejected_count += 1;
         self.preview.rejected_count = self.rejected_count;
+        self.record_verdict(Self::verdict_for(reason), Some(reason));
         self.target_cursor += 1;
         self.current_target = None;
         self.reset_candidate_preparation();
@@ -4180,6 +4465,7 @@ impl FillBuilder {
         self.broad_phase_bounds = None;
         self.collision = None;
         if clear_preview {
+            self.tried_current = None;
             self.preview.candidate_ghost = None;
             self.preview.current_pair_object_id = None;
             self.preview.collision_count = 0;
@@ -4192,6 +4478,7 @@ impl FillBuilder {
     }
 
     fn reset_candidate(&mut self) {
+        self.round_constructed = false;
         self.targets.clear();
         self.target_cursor = 0;
         self.target_rotation = 0;
@@ -4253,7 +4540,34 @@ impl FillBuilder {
         self.preview.candidate_cursor = self.candidate_cursor;
         self.preview.search_count = self.transition_count;
         self.preview.rejected_count = self.rejected_count;
+        self.preview.tested_count = self.tested_count;
+        self.preview.requested_count = self.max_count;
+        if let Some(entry) = self.tried_dirty.take().and_then(|slot| self.preview.tried.get_mut(slot)).and_then(Option::as_mut) {
+            entry.sequence = self.preview.sequence;
+        }
         StepOutcome::PreviewReady(semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Preview))
+    }
+
+    /// 📄️ Which fixed document page refused an owner, if any — the preparation preflight names its
+    /// branch and limit, a page that filled mid-plan names itself.
+    fn capacity_diagnostic(&self) -> Option<String> {
+        self.preparation_capacity_refusal
+            .map(PreparationCapacityRefusal::diagnostic)
+            .or_else(|| (self.collection_over_capacity || self.fixed_rejection.is_some()).then(|| "fill-fixed-collection-capacity".to_string()))
+    }
+
+    /// 🚧️ A full document page stops the plan where the user can see it: one published diagnostic
+    /// carrying the `document-capacity` stall, then a plain completion. Faults stay reserved for
+    /// invariant breaks — running out of document room is a limit, not a bug.
+    fn stall_on_capacity(&mut self, context: &mut StepContext<'_>, diagnostic: String) -> StepOutcome {
+        self.stall(FILL_STALL_DOCUMENT_CAPACITY);
+        if self.capacity_stall_published {
+            return self.complete();
+        }
+        self.capacity_stall_published = true;
+        self.preview.candidate_ghost = None;
+        self.preview.rejection_reason = Some(diagnostic);
+        self.publish_preview(context)
     }
 
     fn complete(&self) -> StepOutcome {
@@ -4263,7 +4577,7 @@ impl FillBuilder {
         })
     }
 
-    fn stage_label(&self) -> &'static str {
+    pub(crate) fn stage_label(&self) -> &'static str {
         match self.stage {
             FillJobStage::DiscardTail => "discard-tail",
             FillJobStage::PrepareFixture => "prepare-fixture",
@@ -4295,19 +4609,8 @@ impl InteractiveJob for FillBuilder {
             let detail = context.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, b"stale-fill-operation").unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
             return StepOutcome::Fault(JobFault { detail });
         }
-        if let Some(refusal) = self.preparation_capacity_refusal.as_mut() {
-            if !refusal.diagnostic_published {
-                refusal.diagnostic_published = true;
-                self.preview.candidate_ghost = None;
-                self.preview.rejection_reason = Some(refusal.diagnostic());
-                return self.publish_preview(context);
-            }
-            let detail = context.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, b"fill-preparation-capacity").unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
-            return StepOutcome::Fault(JobFault { detail });
-        }
-        if self.collection_over_capacity || self.fixed_rejection.is_some() {
-            let detail = context.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, b"fill-fixed-collection-capacity").unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
-            return StepOutcome::Fault(JobFault { detail });
+        if let Some(diagnostic) = self.capacity_diagnostic() {
+            return self.stall_on_capacity(context, diagnostic);
         }
         if context.should_yield() {
             return StepOutcome::Yield;

@@ -14,7 +14,7 @@ import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-js";
 import { PLUGIN_CATALOG } from "../🔌️plugin/📇️registry/🟦️.ts";
 import { PLAYGROUND_SESSION } from "virtual:semio-playground-session";
 import { resolveShellBrandById } from "./🏷️brand/🟦️.ts";
-import { resolveBootQueryAppRole } from "./🔗️boot-query/🟦️.ts";
+import { resolveBootQueryAppRole, resolveBootQueryExampleId } from "./🔗️boot-query/🟦️.ts";
 
 const renderer = import.meta.env.VITE_SEMIO_RENDERER ?? import.meta.env.SEMIO_RENDERER ?? "react";
 const boot = resolvePlaygroundBoot(PLUGIN_CATALOG, import.meta.env.VITE_SEMIO_PLUGIN || PLAYGROUND_SESSION.variant, PLAYGROUND_SESSION);
@@ -43,9 +43,12 @@ const locks = {
   appearance: import.meta.env.VITE_SEMIO_LOCKED_APPEARANCE || undefined,
 };
 
-/** @emoji 🎛️ Boot-time shell preference defaults — seed values that keep their in-app switcher visible. */
+/** @emoji 🎛️ Boot-time shell preference defaults — seed values that keep their in-app switcher visible.
+ * `?example=` is the per-navigation axis over the `VITE_SEMIO_DEFAULT_EXAMPLE` per-server seed, the
+ * React half of the axis the wgpu browser boot reads into its own `active_example_id`, so one url opens
+ * the same document on 6018 and 6118. It seeds a DEFAULT, never a lock: the picker stays live. */
 const defaults = {
-  exampleId: import.meta.env.VITE_SEMIO_DEFAULT_EXAMPLE || undefined,
+  exampleId: typeof window === "undefined" ? import.meta.env.VITE_SEMIO_DEFAULT_EXAMPLE || undefined : resolveBootQueryExampleId(window.location.search, import.meta.env.VITE_SEMIO_DEFAULT_EXAMPLE || undefined),
 };
 
 if (typeof document !== "undefined" && document.getElementById("root") != null && !import.meta.vitest) {

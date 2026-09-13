@@ -1,7 +1,7 @@
 //! 🧊️ Puzzle 3d play app — the one `World3d` window kind. Owns the viewport's whole scene
 //! projection: the instance/mesh/vortex/attraction/target-volume/reference payloads, the selection
 //! and gumball descriptor, the LOD/chunking/environment blocks and the interaction channel (active
-//! utility, suggestion popup, fill-build progress, reveal cutoffs) the host renderer reads. Also
+//! utility, suggestion popup, fill-build progress) the host renderer reads. Also
 //! owns the engagement HUD and collects its chrome measures from the mode's `☑️options/*` and its own
 //! `🪛️utilities/*`.
 //!
@@ -13,7 +13,7 @@ use crate::editor::puzzle3d::config::Puzzle3dRuntime;
 use crate::editor::puzzle3d::modes::edit::options;
 use crate::editor::puzzle3d::modes::edit::windows::main::utilities;
 use crate::editor::puzzle3d::precompute::Puzzle3dPrecomputeSession;
-use crate::editor::puzzle3d::terminology::{puzzle3d_localized, Puzzle3dLabels};
+use crate::editor::puzzle3d::terminology::{puzzle3d_fill_stage_label, puzzle3d_localized, Puzzle3dLabels};
 use crate::editor::puzzle3d::{
     collect_mesh_urls, object_scale_json, puzzle3d_action, puzzle3d_vortex_full_id, quat_rotate_vector, target_volume_scale_json, Puzzle3dFixture, Puzzle3dFixtureMeta, Puzzle3dInteractionSnapshot, Puzzle3dKindMeshIndex, Puzzle3dObject,
     Puzzle3dScene, Puzzle3dVortex, PUZZLE3D_FALLBACK_MESH_KIND, PUZZLE3D_INTERACTION_DOMAIN, PUZZLE3D_VORTEX_SHOW_ALWAYS,
@@ -22,6 +22,7 @@ use semio_framework_plugin::{
     world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_fit_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, World3dScene, world3d_selection_json, SurfaceKind, WindowEngagement,
     WindowEngagementInput, WindowEngagementOption, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions,
 };
+use crate::standards::v1::subsets::any::schema::{BrushPreviewState, FillCandidateVerdict};
 use semio_framework_ui_contract::BuiltNode;
 use serde_json::{json, Value};
 use std::hash::{Hash, Hasher};
@@ -201,7 +202,6 @@ pub fn frame_unset_camera(scene: &mut Puzzle3dScene, window_id: &str) {
 }
 
 /// 🙈️ Hidden objects stay in the emitted array — `worldPick`'s `id` arg is the array index into it — but render at zero scale so they're effectively invisible without shifting any other object's index.
-/// `revealIndex` is omitted entirely for untagged objects rather than emitted as `null`: the host's reveal cutoff (`framework/renderer/react`'s `applyRevealCutoff`) only skips instances with no reveal index, and a JSON `null` would coerce to `0` and hide every ordinary object behind the boot cutoff.
 /// Selection/hover paint is driven by `selectionJson` on the host — never baked here so instance geometry stays stable across picks.
 pub fn world_instances_geometry_json(fixture: &Puzzle3dFixture) -> String {
     let mut residency = Puzzle3dInstanceResidency::default();
@@ -228,9 +228,6 @@ fn instance_record_json(object: &Puzzle3dObject, mesh_id: &str) -> String {
     if let Some(kind) = &object.object_kind {
         instance["objectKind"] = json!(kind);
     }
-    if let Some(reveal_index) = object.reveal_index {
-        instance["revealIndex"] = json!(reveal_index);
-    }
     serde_json::to_string(&instance).unwrap_or_else(|_| "{}".into())
 }
 
@@ -255,7 +252,6 @@ fn instance_record_fingerprint(object: &Puzzle3dObject, mesh_id: &str) -> u64 {
     object.object_kind.hash(&mut hasher);
     object.hidden.hash(&mut hasher);
     object.locked.hash(&mut hasher);
-    object.reveal_index.hash(&mut hasher);
     hasher.finish()
 }
 
@@ -555,7 +551,6 @@ fn hash_object<H: Hasher>(object: &Puzzle3dObject, hasher: &mut H) {
     object.mesh_url.hash(hasher);
     object.hidden.hash(hasher);
     object.locked.hash(hasher);
-    object.reveal_index.hash(hasher);
     object.vortices.len().hash(hasher);
     for vortex in &object.vortices {
         vortex.id.hash(hasher);
@@ -753,7 +748,12 @@ pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecom
                     .collect();
                 (result.unknown_pending, candidates)
             } else { (false, Vec::new()) };
-        eprintln!("[DEBUG] puzzle3d.openVortex.cache menu vortex={} pending={pending} candidates={}", menu.vortex_full_id, candidates.len());
+        // 🔎️ The popup publishes the SEARCH, not only its outcome: `candidates` is whatever is free
+        // so far (it grows tick by tick), and `progress` says how much of the compatible list has
+        // been tested, how much was refused on overlap, what is under test right now and with which
+        // verdict. Machine identities only — the localized sentence for the same state is the brush
+        // utility's `WindowMeasure::Progress` stage caption.
+        let progress = session.brush_search_progress(&menu.vortex_full_id);
         json!({
             "open": true,
             "x": menu.x,
@@ -762,19 +762,34 @@ pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecom
             "vortexFullId": menu.vortex_full_id,
             "pending": pending,
             "candidates": candidates,
+            "progress": {
+                "tested": progress.tested,
+                "free": progress.free,
+                "blocked": progress.blocked,
+                "totalCandidates": progress.total_candidates,
+                "done": progress.done,
+                "currentCandidateKind": progress.current_candidate_kind,
+                "currentVerdict": progress.current_verdict.wire(),
+            },
         })
     });
+    // 🪣️ The live fill run, as counters only: `count` planned, `appliedCount` already locked into the
+    // document, `requestedCount` what the user asked for, and the tested/rejected/collisions triple that
+    // makes the search itself visible. `stage`/`stallReason` travel as the planner's own machine strings —
+    // the localized sentence for the same state rides the ghost's `statusLabel` (`world_fill_preview_json`),
+    // so a probe reads identities here and a person reads words there.
     let fill_build = session.fill_progress_summary();
     let fill_build = json!({
         "count": fill_build.count,
         "appliedCount": fill_build.applied_count,
-        "maxCount": fill_build.max_count,
+        "requestedCount": fill_build.max_count,
+        "tested": fill_build.tested,
+        "rejected": fill_build.rejected,
+        "collisions": fill_build.collisions,
         "done": fill_build.done,
+        "stage": fill_build.stage,
+        "stallReason": fill_build.stall_reason,
     });
-    // 🪣️ Committed fill count as a viewport reveal cutoff — instances tagged `revealIndex` (see
-    // `world_instances_geometry_json`) below this value are shown, the rest (already planned, not yet
-    // committed) stay hidden until the host commits a higher value or the live drag store overrides
-    // it locally. Keyed so future reveal-driven measures/tools can share the same channel.
     // 🥽️ Brush-mesh residency, the client's only handle on the fact that what a guest instantiation
     // holds does not outlive that instantiation: `meshResidency` is the guest's monotone install
     // counter (a lower value than the client last saw proves a restart, so its "already uploaded"
@@ -788,7 +803,6 @@ pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecom
         "gridFactor": runtime.grid_spacing,
         "suggestionMenu": suggestion_menu,
         "fillBuild": fill_build,
-        "revealCutoffs": { "puzzle3d-fill": runtime.fill_count },
         "meshResidency": crate::editor::puzzle3d::precompute::shared_brush_mesh_installs(),
         "meshReuploadUrls": session.mesh_reupload_requests(),
     });
@@ -829,47 +843,50 @@ pub fn world_brush_preview_target(session: &Puzzle3dPrecomputeSession, envelope:
         .or_else(|| session.brush_live_target().map(str::to_string))
 }
 
+/// 👻️ The brush ghost — and, while the candidate search is running, the ghost of the candidate it is
+/// looking at RIGHT NOW rather than the settled pick. It carries the same `"verdict"` wire key as the
+/// fill ghost (`testing` | `free` | `collision`, master plan §2.1), so the host renderer paints a
+/// refused candidate with the danger token and a free one highlighted without knowing which lane
+/// produced it. Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS wave G.
 pub fn world_brush_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene, interaction: &Puzzle3dInteractionSnapshot) -> Option<String> {
     let brush = envelope.active_utility == utilities::brush::UTILITY_ID;
     let menu = envelope.runtime.suggestion_menu.is_some();
     if !brush && !menu {
         return None;
     }
-    let vortex_id = world_brush_preview_target(session, envelope, interaction);
-    eprintln!("[DEBUG] puzzle3d.brushPreview.hover utility={} brush={brush} menu={menu} vortex={:?}", envelope.active_utility, vortex_id);
-    let Some(vortex_id) = vortex_id else {
-        eprintln!("[DEBUG] puzzle3d.brushPreview.gate reason=no-target utility={} brush={brush} menu={menu}", envelope.active_utility);
-        return None;
-    };
-    let cache = session.brush_candidates(&vortex_id);
-    eprintln!("[DEBUG] puzzle3d.brushPreview.cache vortex={vortex_id} free={} pending={} resume={}", cache.free.len(), cache.unknown_pending, cache.resume_candidate_index);
-    let Some(preview) = session.brush_preview(&vortex_id, envelope.runtime.brush_candidate_index) else {
-        eprintln!(
-            "[DEBUG] puzzle3d.brushPreview.gate reason=no-free-candidate vortex={vortex_id} free={} pending={} index={}",
-            cache.free.len(),
-            cache.unknown_pending,
-            envelope.runtime.brush_candidate_index
-        );
-        return None;
+    let vortex_id = world_brush_preview_target(session, envelope, interaction)?;
+    let progress = session.brush_search_progress(&vortex_id);
+    let renderable = |ghost: Option<BrushPreviewState>| ghost.filter(|ghost| session.has_mesh(&ghost.mesh_url));
+    let live = (!progress.done).then(|| renderable(progress.current_ghost.clone())).flatten();
+    let (preview, verdict) = match live {
+        Some(ghost) => (ghost, progress.current_verdict),
+        None => match session.brush_preview(&vortex_id, envelope.runtime.brush_candidate_index) {
+            Some(settled) => (settled, FillCandidateVerdict::Free),
+            None => (renderable(progress.current_ghost)?, progress.current_verdict),
+        },
     };
     let color = object_kind_color(&envelope.fixture.meta, Some(preview.object_kind_id.as_str()));
     let mut value = dsl::ToValue::to_value(&preview);
     if let dsl::DslValue::Object(entries) = &mut value {
         entries.push(("color".to_string(), dsl::DslValue::String(color)));
+        entries.push(("verdict".to_string(), dsl::DslValue::String(verdict.wire().to_string())));
     }
-    let json = dsl::json::to_json_string(&value);
-    eprintln!("[DEBUG] puzzle3d.brushPreview.compute vortex={vortex_id} bytes={}", json.len());
-    Some(json)
+    Some(dsl::json::to_json_string(&value))
 }
 
-/// 🪣️ Latest-wins bounded fill diagnostic, with an optional ghost projection.
+/// 🪣️ Latest-wins bounded fill diagnostic, with an optional ghost projection. The `statusLabel` it
+/// carries is the LIVE phase in the reader's own language — `puzzle3d_fill_stage_label` over the
+/// planner's current stage and stall reason — not a fixed "Fill progress" caption: the HUD's job is to
+/// say what the algorithm is doing right now, and a constant string says nothing.
 pub fn world_fill_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> Option<String> {
     if envelope.active_utility != "fill" {
         return None;
     }
     let object_kind = session.fill_preview_object_kind();
     let color = object_kind_color(&envelope.fixture.meta, object_kind.as_deref());
-    session.fill_preview_json_page(&color, labels.fill_progress.as_str())
+    let progress = session.fill_progress_summary();
+    let status_label = puzzle3d_fill_stage_label(labels, progress.stage.as_str(), progress.stall_reason.as_deref());
+    session.fill_preview_json_page(&color, &status_label)
 }
 
 /// 🕹️ The host's `WorldSelectionRecord` (`World3dHost/🟦️.tsx` `parseSelection`) for this window: the
@@ -949,12 +966,6 @@ pub fn render(
 ) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let brush_preview = world_fill_preview_json(precompute, envelope, labels).or_else(|| world_brush_preview_json(precompute, envelope, interaction));
     let vortices = world_vortices_json(&envelope.fixture, &envelope.runtime, interaction, envelope.active_utility.as_str());
-    eprintln!(
-        "[DEBUG] puzzle3d.brushPreview.lane utility={} preview={} vortices={}",
-        envelope.active_utility,
-        brush_preview.as_ref().map(String::len).unwrap_or(0),
-        vortices.len()
-    );
     eprintln!("[DEBUG] puzzle3d.vortices.publish utility={} bytes={} brush_or_volume={}", envelope.active_utility, vortices.len(), matches!(envelope.active_utility.as_str(), "brush" | "volumeBrush"));
     let mut scene = World3dScene::base(camera_json(&envelope.runtime), meshes_json, instances_json, world_selection_json(envelope, interaction));
     scene.instances_delta_json = instances_delta_json;

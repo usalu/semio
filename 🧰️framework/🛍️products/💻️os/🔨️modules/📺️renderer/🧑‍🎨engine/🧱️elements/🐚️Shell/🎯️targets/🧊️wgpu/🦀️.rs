@@ -2394,6 +2394,10 @@ pub struct ShellState {
     /// here and from nowhere else, so the shell offers a stop affordance without ever learning a
     /// domain verb from code — see `world3d_cancel_affordance`.
     pub world3d_status: HashMap<String, String>,
+    /// ⏳️ The last compute-status pill label announced per World3d surface, so the trace prints once
+    /// per CHANGE rather than once per frame — the pill itself is recomputed from `world3d_status`
+    /// every grant and holds no state of its own.
+    pub world3d_status_pill_trace: HashMap<String, String>,
     pub node_graph_states: AdmittedSurfaceMap<NodeGraphSurface>,
     /// 🛍️ The active app instance's APP-STATIC operator/palette catalogue, fetched once per instance
     /// from the reserved `framework.section.catalogue` retained surface and pushed into every live
@@ -2813,6 +2817,32 @@ fn save_panel_layout_to_store(layout: &PanelLayoutPersisted) {
 
 //#endregion 🧭️PanelAnchorModel
 
+//#region 🛍️AppCatalogueAttempt
+/// 🛍️ The "fetch the app-static catalogue once per app instance" rule, owned in ONE place because it
+/// has to hold on BOTH outcomes.
+///
+/// `recorded` is the instance the catalogue was last ATTEMPTED for, not the one it last succeeded
+/// for. `true` means the caller now owns that attempt and must perform the fetch; every later call
+/// for the same instance answers `false` whether the fetch succeeded, faulted or never published.
+/// Recording only successes made a failed catalogue re-fetch once per settled command, and the
+/// second fetch of `framework.section.catalogue` never returned from its own turn — which wedged
+/// `boot_shell` before the canvas ever bound a pointer listener
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-input-hit-runtime-2026-09-13.md`).
+///
+/// A new instance always re-claims, so switching app instance still refetches exactly once.
+fn claim_app_catalogue_fetch(recorded: &mut Option<u32>, instance_id: u32) -> bool {
+    if *recorded == Some(instance_id) {
+        return false;
+    }
+    *recorded = Some(instance_id);
+    true
+}
+//#endregion 🛍️AppCatalogueAttempt
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../🧪️tests/🛍️app-catalogue-attempt/🦀️.rs"]
+mod app_catalogue_attempt_tests;
+
 impl ShellState {
     #[cfg(not(target_arch = "wasm32"))]
     #[cfg(test)]
@@ -2961,6 +2991,7 @@ impl ShellState {
             screen_h: 720.0,
             world3d_states: AdmittedSurfaceMap::default(),
             world3d_status: HashMap::new(),
+            world3d_status_pill_trace: HashMap::new(),
             node_graph_states: AdmittedSurfaceMap::default(),
             app_catalogue_json: String::new(),
             app_catalogue_instance: None,
@@ -3247,7 +3278,7 @@ impl ShellState {
     /// 🧯 Records one plugin's boot activation fault and refreshes the shell's status line. The shell
     /// stays alive: a trapped guest is that plugin's failure, not the renderer's.
     fn record_plugin_fault(&mut self, plugin_id: &str, app_id: &str, detail: String) {
-        eprintln!("[DEBUG] wgpu shell boot: plugin {plugin_id} app {app_id} faulted: {detail}");
+        Self::debug_log(&format!("[DEBUG] wgpu shell boot: plugin {plugin_id} app {app_id} faulted: {detail}"));
         self.plugin_faults.push(ShellPluginFault { plugin_id: plugin_id.to_string(), app_id: app_id.to_string(), detail });
         self.error = self.fault_status();
     }
@@ -3255,8 +3286,10 @@ impl ShellState {
     /// 🧯 Records one surface's render fault and refreshes the shell's status line, WITHOUT failing the
     /// refresh. A surface repeats across refreshes, so the same surface never accumulates two entries.
     fn record_surface_fault(&mut self, surface_id: &str, body_key: &str, detail: String) {
-        // 📣️ `eprintln!` is a no-op in a `wasm32-unknown-unknown` Worker — a surface fault recorded
-        // there left no trace at all, which is why a blank body read as "nothing happened".
+        // 📣️ `eprintln!` is a no-op in a `wasm32-unknown-unknown` Worker — a fault recorded there
+        // left no trace at all, which is why a blank body read as "nothing happened". `debug_log` is
+        // this type's ONE trace sink for exactly that reason; no diagnostic in this file may use
+        // `eprintln!` except `debug_log`'s own native arm.
         Self::debug_log(&format!("[DEBUG] wgpu-shell surface fault surface={surface_id} body={body_key} detail={detail}"));
         if let Some(existing) = self.surface_faults.iter_mut().find(|fault| fault.surface_id == surface_id) {
             existing.body_key = body_key.to_string();
@@ -3563,6 +3596,7 @@ impl ShellState {
         // preview window with no tick and no chain to re-arm
         // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         self.push_contributions().await?;
+        self.apply_boot_example().await?;
         Self::declare_boot_subphase("shell-boot:refresh-ui", "enter", 0.0);
         let refresh_started = Self::instant_now_ms();
         self.refresh_ui().await?;
@@ -3572,6 +3606,28 @@ impl ShellState {
         self.flush_deferred_actions().await?;
         Self::declare_boot_subphase("shell-boot:flush-deferred", "leave", (Self::instant_now_ms() - flush_started).max(0.0));
         Ok(())
+    }
+
+    /// 📚️ Applies the boot-requested example (`?example=`) to the session the boot just opened: the id
+    /// becomes the picker's selection AND `setActiveExample` is dispatched, exactly as
+    /// `handle_control_command`'s `shell.example.*` arm does for a click, so the guest opens that
+    /// document rather than the dialect's first. It runs AFTER `push_contributions` and before the
+    /// first `refresh_ui`, so the guest's flow-extension registry is already armed when the document
+    /// changes — the ordering `settle_boot`'s own comment records. An id the open dialect does not
+    /// author is ignored (`boot_example_selection`), never a boot failure.
+    async fn apply_boot_example(&mut self) -> Result<(), String> {
+        let Some(requested) = crate::boot_app_example() else {
+            return Ok(());
+        };
+        let Some(example_id) = self.active_example_id.clone().filter(|resolved| *resolved == requested) else {
+            Self::debug_log(&format!("[DEBUG] wgpu-shell boot example {requested:?} is not authored by the open dialect — keeping {:?}", self.active_example_id));
+            return Ok(());
+        };
+        let Some(controller_id) = self.session.as_ref().map(|session| session.app.controller_id.clone()) else {
+            return Ok(());
+        };
+        Self::debug_log(&format!("[DEBUG] wgpu-shell boot example {}", serde_json::json!({ "exampleId": example_id, "controller": controller_id })));
+        self.dispatch_action(ActionDescriptor { controller_id, action: "setActiveExample".into(), args: crate::action_args_json!({ "exampleId": example_id }) }).await
     }
 
     /// 📚️ The examples the OPEN surface offers, resolved by DIALECT through the one shared predicate
@@ -3598,12 +3654,8 @@ impl ShellState {
             .find(|entry| entry.plugin_id == session.plugin_id)
             .map(|entry| semio_framework::manifest::examples_for_app(&entry.manifest.examples, &session.app).into_iter().map(|example| example.id.clone()).collect())
             .unwrap_or_default();
-        if examples.is_empty() {
-            self.active_example_id = None;
-        } else {
-            let current = self.active_example_id.clone();
-            self.active_example_id = current.filter(|id| examples.iter().any(|candidate| candidate == id)).or_else(|| examples.first().cloned());
-        }
+        let resolved = resolve_boot_example_id(self.active_example_id.as_deref().unwrap_or(""), &examples, crate::boot_app_example().as_deref());
+        self.active_example_id = (!resolved.is_empty()).then_some(resolved);
     }
 
 
@@ -3908,8 +3960,15 @@ impl ShellState {
     /// ordinary `SurfaceVisible` → `AdvanceRetained` protocol every window body already uses — no
     /// second channel, and no `UiDirtyScope` concept the native shell does not have. A fetch that
     /// fails leaves the previous catalogue in place rather than blanking the palette.
+    ///
+    /// ⚠️ The instance is marked ATTEMPTED before the fetch, not after a successful one: the refresh
+    /// that calls this runs on every settled command, so recording only successes turned one failed
+    /// catalogue into a re-fetch per refresh. The second such fetch never returned from its own
+    /// `submit_turn`, which wedged `boot_shell` itself and took every later pointer event with it
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-input-hit-runtime-2026-09-13.md`). "Once
+    /// per app instance" is what the first line of this doc promises; the failure path now keeps it.
     async fn refresh_app_catalogue(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel) {
-        if self.app_catalogue_instance == Some(instance_id) {
+        if !claim_app_catalogue_fetch(&mut self.app_catalogue_instance, instance_id) {
             self.publish_app_catalogue();
             return;
         }
@@ -3917,7 +3976,7 @@ impl ShellState {
         let document = match program.render_with_document(instance_id, body_key, body_key, view_state, None, None).await {
             Ok(document) => document,
             Err(error) => {
-                eprintln!("[DEBUG] wgpu shell app catalogue fetch failed: {error}");
+                Self::debug_log(&format!("[DEBUG] wgpu shell app catalogue fetch failed: {error}"));
                 return;
             }
         };
@@ -3927,11 +3986,11 @@ impl ShellState {
         }
         match payload {
             Ok(payload) => {
+                Self::debug_log(&format!("[DEBUG] wgpu shell app catalogue ready bytes={}", payload.len()));
                 self.app_catalogue_json = payload;
-                self.app_catalogue_instance = Some(instance_id);
                 self.publish_app_catalogue();
             }
-            Err(error) => eprintln!("[DEBUG] wgpu shell app catalogue reassembly failed: {error}"),
+            Err(error) => Self::debug_log(&format!("[DEBUG] wgpu shell app catalogue reassembly failed: {error}")),
         }
     }
 
@@ -4133,7 +4192,7 @@ impl ShellState {
                             let instance_id = session.instance_id;
                             crate::spawn_app_task(async move {
                                 if let Err(error) = plugin.load_app_document_pack(instance_id, &pack, &spr).await {
-                                    eprintln!("[DEBUG] wgpu shell loadDocument effect failed: {error}");
+                                    Self::debug_log(&format!("[DEBUG] wgpu shell loadDocument effect failed: {error}"));
                                 }
                             });
                         }
@@ -4470,7 +4529,7 @@ impl ShellState {
                         // change this call site needs (`pump_sync_events` was already `async fn`).
                         match plugin.apply_mutations(instance_id, &operations).await {
                             Ok(()) => changed = true,
-                            Err(error) => eprintln!("[DEBUG] wgpu shell apply_mutations failed: {error}"),
+                            Err(error) => Self::debug_log(&format!("[DEBUG] wgpu shell apply_mutations failed: {error}")),
                         }
                     }
                 }
@@ -4480,13 +4539,13 @@ impl ShellState {
                         let archive = match protocol::decode_document_archive_bytes(&archive).await {
                             Ok(archive) => archive,
                             Err(error) => {
-                                eprintln!("[DEBUG] wgpu shell recursive document archive decode failed: {error}");
+                                Self::debug_log(&format!("[DEBUG] wgpu shell recursive document archive decode failed: {error}"));
                                 continue;
                             }
                         };
                         match plugin.load_app_document_archive(instance_id, &archive).await {
                             Ok(()) => changed = true,
-                            Err(error) => eprintln!("[DEBUG] wgpu shell load_app_document_archive failed: {error}"),
+                            Err(error) => Self::debug_log(&format!("[DEBUG] wgpu shell load_app_document_archive failed: {error}")),
                         }
                     }
                 }
@@ -4603,7 +4662,7 @@ impl ShellState {
                 fold_history_patch(&mut self.history_entries, &mut self.history_cursor, &patch, true);
                 self.history_current_checkpoint_id = patch.current_checkpoint_id;
             }
-            Err(error) => eprintln!("[DEBUG] wgpu shell read_history failed: {error}"),
+            Err(error) => Self::debug_log(&format!("[DEBUG] wgpu shell read_history failed: {error}")),
         }
     }
 
@@ -4685,7 +4744,7 @@ impl ShellState {
         // `"framework.sync"`), but the async-fn state machine's size is inferred statically regardless
         // of which branch executes.
         if let Err(error) = Box::pin(self.dispatch_action(action)).await {
-            eprintln!("[DEBUG] wgpu shell check-in checkpoint dispatch failed: {error}");
+            Self::debug_log(&format!("[DEBUG] wgpu shell check-in checkpoint dispatch failed: {error}"));
             self.checkpoint_dispatched = false;
         }
     }
@@ -4740,7 +4799,7 @@ impl ShellState {
             };
             let command_json = dsl::os_pack::json::to_json_string(&invocation);
             if let Err(error) = program.handle_command(session.instance_id, &command_json, &session.view_state).await {
-                eprintln!("[DEBUG] wgpu shell touchArtifact (live session) failed: {error}");
+                Self::debug_log(&format!("[DEBUG] wgpu shell touchArtifact (live session) failed: {error}"));
             }
             return;
         }
@@ -4749,7 +4808,7 @@ impl ShellState {
         // showing "index" for a DIFFERENT space would silently sever that live session's own backbone
         // (`ArtifactHost::open`'s own "idempotent per id" contract). Skip rather than risk it.
         if self.sync_channel.as_ref().map(|channel| channel.document_id.as_str()) == Some(S_SPACE_INDEX_DOCUMENT_ID) {
-            eprintln!("[DEBUG] wgpu shell touchArtifact skipped: main session already holds the shared \"index\" actor for a different space");
+            Self::debug_log(&format!("[DEBUG] wgpu shell touchArtifact skipped: main session already holds the shared \"index\" actor for a different space"));
             return;
         }
         let Some(program) = self.plugins.iter().find(|entry| find_dialect_app(entry, &space_index_dialect(), semio_framework::manifest::AppRole::Editor).is_some()).cloned() else { return };
@@ -4757,7 +4816,7 @@ impl ShellState {
         let instance_id = match program.create_app(&app.id).await {
             Ok(id) => id,
             Err(error) => {
-                eprintln!("[DEBUG] wgpu shell touchArtifact background instance failed: {error}");
+                Self::debug_log(&format!("[DEBUG] wgpu shell touchArtifact background instance failed: {error}"));
                 return;
             }
         };
@@ -4772,13 +4831,13 @@ impl ShellState {
         let bindings = default_persistence_bindings(self.identity.as_ref(), Some(space_id), data_dir, Some(surface.as_str()));
         let actor_uri = format!("actor://{S_SPACE_INDEX_DOCUMENT_ID}");
         if let Err(error) = bind_wgpu_document_socket_surface(&self.document_host, S_SPACE_INDEX_DOCUMENT_ID, S_SPACE_INDEX_DOCUMENT_SCHEMA, &bindings, &program, &app, &app.window_kinds.first().id) {
-            eprintln!("[DEBUG] wgpu shell touchArtifact document admission failed: {error}");
+            Self::debug_log(&format!("[DEBUG] wgpu shell touchArtifact document admission failed: {error}"));
             program.destroy_app(instance_id);
             return;
         }
         let channels = self.document_host.open(ArtifactActorConfig { document_id: S_SPACE_INDEX_DOCUMENT_ID.to_string(), schema: S_SPACE_INDEX_DOCUMENT_SCHEMA.to_string(), bindings, watch_external: true, actor: actor.clone() }).await;
         if let Err(error) = program.attach_backbone(instance_id, &actor_uri) {
-            eprintln!("[DEBUG] wgpu shell touchArtifact attach_backbone failed: {error}");
+            Self::debug_log(&format!("[DEBUG] wgpu shell touchArtifact attach_backbone failed: {error}"));
             self.document_host.close_key(&channels.document_key);
             program.destroy_app(instance_id);
             return;
@@ -4791,7 +4850,7 @@ impl ShellState {
         let command_json = dsl::os_pack::json::to_json_string(&invocation);
         let view_state = ViewModel { locale: self.active_locale(), terminology: self.active_terminology(), ..Default::default() };
         if let Err(error) = program.handle_command(instance_id, &command_json, &view_state).await {
-            eprintln!("[DEBUG] wgpu shell touchArtifact dispatch failed: {error}");
+            Self::debug_log(&format!("[DEBUG] wgpu shell touchArtifact dispatch failed: {error}"));
         }
         self.document_host.close_key(&channels.document_key);
         program.destroy_app(instance_id);
@@ -4862,7 +4921,7 @@ impl ShellState {
             self.sync_status = Some(ArtifactSyncStatus::default());
             self.sync_backbone_uri = Some(uri);
             self.sync_card_kind = None;
-            eprintln!("[DEBUG] wgpu shell attached backbone {}", self.sync_backbone_uri.as_deref().unwrap_or_default());
+            Self::debug_log(&format!("[DEBUG] wgpu shell attached backbone {}", self.sync_backbone_uri.as_deref().unwrap_or_default()));
             self.refresh_history_snapshot().await;
             self.refresh_ui().await?;
             Ok(())
@@ -5149,7 +5208,7 @@ impl ShellState {
                 semio_framework::kernel::Effect::Navigate { uri } => {
                     self.push_uri(uri.clone());
                     if let Err(error) = self.apply_shell_uri(uri).await {
-                        eprintln!("[DEBUG] wgpu shell navigate effect failed: {error}");
+                        Self::debug_log(&format!("[DEBUG] wgpu shell navigate effect failed: {error}"));
                     }
                 }
                 semio_framework::kernel::Effect::LoadDocument { pack, spr } => {
@@ -5157,7 +5216,7 @@ impl ShellState {
                         if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) {
                             // 🎠️ H3-wgpu-native — `load_app_document_pack` is now async.
                             if let Err(error) = plugin.load_app_document_pack(session.instance_id, pack, spr).await {
-                                eprintln!("[DEBUG] wgpu shell loadDocument effect failed: {error}");
+                                Self::debug_log(&format!("[DEBUG] wgpu shell loadDocument effect failed: {error}"));
                             }
                         }
                     }
@@ -5379,7 +5438,7 @@ impl ShellState {
         let target = match open_artifact_relay_target(action_id, args) {
             Ok(target) => target,
             Err(error) => {
-                eprintln!("[DEBUG] wgpu shell os.open-artifact relay rejected: {error}");
+                Self::debug_log(&format!("[DEBUG] wgpu shell os.open-artifact relay rejected: {error}"));
                 return;
             }
         };
@@ -5391,7 +5450,7 @@ impl ShellState {
         };
         let (bindings, surface) = self.default_bindings_for_current_session();
         if let Err(error) = self.open_document(document_id, schema, bindings, surface).await {
-            eprintln!("[DEBUG] wgpu shell os.open-artifact relay failed: {error}");
+            Self::debug_log(&format!("[DEBUG] wgpu shell os.open-artifact relay failed: {error}"));
         }
     }
 
@@ -5707,7 +5766,7 @@ impl ShellState {
             }
             Ok(Err(error)) => {
                 self.identity_bootstrap_task.take();
-                eprintln!("[DEBUG] wgpu shell identity bootstrap failed: {error}");
+                Self::debug_log(&format!("[DEBUG] wgpu shell identity bootstrap failed: {error}"));
                 self.identity_bootstrap_rx = None;
             }
             Err(std::sync::mpsc::TryRecvError::Empty) => {}
@@ -6283,7 +6342,7 @@ impl ShellState {
                 .and_then(|program| find_dialect_app(program, &space_index_dialect(), semio_framework::manifest::AppRole::Editor).or_else(|| find_dialect_app(program, &space_index_dialect(), semio_framework::manifest::AppRole::Viewer)))
                 .cloned();
             let Some(space_app) = space_app else {
-                eprintln!("[DEBUG] wgpu shell apply_shell_uri: no app registered for dialect s.space.space@1/* — s.space (lane 1-E) not loaded yet");
+                Self::debug_log(&format!("[DEBUG] wgpu shell apply_shell_uri: no app registered for dialect s.space.space@1/* — s.space (lane 1-E) not loaded yet"));
                 return Ok(());
             };
             self.switch_to_app(cfg.plugin_id, space_app).await?;
@@ -6428,7 +6487,7 @@ impl ShellState {
                 if drag_target.as_deref().is_some_and(|id| id.starts_with("dock.split.") || id.starts_with("dock.corner.")) {
                     self.persist_dock_layout();
                     if let Some(controller_id) = self.host_controller_id() {
-                        let note = Self::note_shell_command_action(&controller_id, "shell.windowResize", "Resize Window", None);
+                        let note = Self::note_shell_command_action(&controller_id, "shell.windowResize", shell_chrome_string("command.resizeWindow", self.locale_id == "de"), None);
                         self.dispatch_action(note).await?;
                     }
                 }
@@ -6623,6 +6682,8 @@ impl ShellState {
             crate::engine_canvas::node_graph_sync_flow_widget_ghost(x, y, &drag_data, &graph_surfaces);
             drop(graph_surfaces);
             self.sync_world3d_catalogue_drop_preview(x, y, &drag_data);
+        } else {
+            self.sync_world3d_catalogue_drop_preview_from_retained_ui();
         }
         if let Some(drag) = &mut self.tree_drag {
             if let Some(hit) = input.hit_at(x, y) {
@@ -6721,7 +6782,7 @@ impl ShellState {
                 self.dock.sync_active_window(&drag.payload.window_id);
                 self.persist_dock_layout();
                 if let Some(controller_id) = self.host_controller_id() {
-                    let note = Self::note_shell_command_action(&controller_id, "shell.windowMove", "Move Window", Some(serde_json::json!({ "windowId": drag.payload.window_id })));
+                    let note = Self::note_shell_command_action(&controller_id, "shell.windowMove", shell_chrome_string("command.moveWindow", self.locale_id == "de"), Some(serde_json::json!({ "windowId": drag.payload.window_id })));
                     self.dispatch_action(note).await?;
                 }
             } else {
@@ -6766,7 +6827,11 @@ impl ShellState {
     /// per-surface `UiCommand::Scene` lane. Coordinates are window-local, because the retained tree's
     /// root sits at its own origin while the flat registry above is page-space.
     fn route_retained_pointer_move(&mut self, x: f32, y: f32, input: &mut InputState<ActionDescriptor>) {
-        let Some((window_id, body)) = input.hit_at(x, y).cloned().and_then(|hit| self.retained_hit_window(&hit)) else { return };
+        // 🖱️ A live gesture keeps its window until release, the way a browser keeps a captured
+        // pointer with the element that captured it — otherwise a `Slider`/`Ring` drag froze the
+        // instant the pointer left the control's own rect and the registry answered something else.
+        let captured = crate::interpreter::retained_pointer_capture_window().and_then(|window_id| self.retained_window_body_rect(&window_id).map(|body| (window_id, body)));
+        let Some((window_id, body)) = captured.or_else(|| input.hit_at(x, y).cloned().and_then(|hit| self.retained_hit_window(&hit))) else { return };
         let _ = crate::interpreter::dispatch_ui_event(&window_id, ui_wgpu::wgpu::UiEvent::PointerMove { x: x - body.x, y: y - body.y }, input);
     }
 
@@ -6776,7 +6841,13 @@ impl ShellState {
     /// same `dispatch_action` funnel every chrome hit uses, so a document row and a chrome row are
     /// one dispatch path.
     async fn route_retained_pointer_press(&mut self, window_id: &str, body: Rect, x: f32, y: f32, down: bool, button: i16, kind: HitKind, action: Option<ActionDescriptor>, input: &mut InputState<ActionDescriptor>) -> Result<(), String> {
-        if matches!(kind, HitKind::Input | HitKind::Select) {
+        // 🎛️ EVERY value-carrying control kind routes into the retained router, which is the ONE
+        // authority that turns a press on one into its own guest action (`events`' 🔖️Commit region).
+        // Restricting this to `Input`/`Select` left a `Toggle`/`Slider`/`NumberStepper`/`Ring`/
+        // `IconSelect` press falling into the `action`-dispatch branch below with `action: None` —
+        // i.e. dispatching nothing at all (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+        // `📓️audit-wgpu-parity-2026-09-13.md` gaps #1/#6).
+        if matches!(kind, HitKind::Input | HitKind::Select | HitKind::Toggle | HitKind::Slider | HitKind::NumberStepper | HitKind::Ring | HitKind::IconSelect) {
             let event = if down {
                 ui_wgpu::wgpu::UiEvent::PointerDown { x: x - body.x, y: y - body.y, button: Self::retained_pointer_button(button) }
             } else {
@@ -7441,6 +7512,25 @@ impl ShellState {
         }
     }
 
+    fn retained_window_body_rect(&self, window_id: &str) -> Option<Rect> {
+        self.retained_hit_windows.values().find_map(|(owner, body)| (owner == window_id).then_some(*body))
+    }
+
+    /// 👻️ Catalogue ghosts while dragging from a retained document tree (panel catalogue) — not shell `tree_drag`.
+    fn sync_world3d_catalogue_drop_preview_from_retained_ui(&mut self) {
+        let sessions = crate::interpreter::active_retained_drag_sessions();
+        if sessions.is_empty() {
+            if self.tree_drag.is_none() && self.pending_tree_drag.is_none() {
+                self.clear_world3d_catalogue_drop_previews();
+            }
+            return;
+        }
+        for (window_id, local_x, local_y, drag_data) in sessions {
+            let Some(body) = self.retained_window_body_rect(&window_id) else { continue };
+            self.sync_world3d_catalogue_drop_preview(body.x + local_x, body.y + local_y, &drag_data);
+        }
+    }
+
     fn clear_world3d_catalogue_drop_previews(&mut self) {
         for state in self.world3d_states.values_mut() {
             world3d_clear_catalogue_drop_preview(state);
@@ -7616,7 +7706,14 @@ impl ShellState {
             scope_context_menu_items(&mut items, window_id);
         }
         if let Some(controller_id) = self.host_controller_id() {
-            items.push(ContextMenuItem { id: "shell.context.home".into(), label: "Go Home".into(), icon: None, destructive: false, action: Some(ActionDescriptor { controller_id, action: "goHome".into(), args: None }), ..Default::default() });
+            items.push(ContextMenuItem {
+                id: "shell.context.home".into(),
+                label: shell_chrome_string("contextMenu.goHome", is_de).to_string(),
+                icon: None,
+                destructive: false,
+                action: Some(ActionDescriptor { controller_id, action: "goHome".into(), args: None }),
+                ..Default::default()
+            });
         }
         self.context_menu = Some(ContextMenuState { x, y, items, active: Vec::new(), submenu_collapsed_at: None, scroll_offset: 0.0 });
         self.overlay_state = OverlayState::None;
@@ -8676,6 +8773,7 @@ fn render_sync_status_and_checkin(
     progress: Option<&(u64, u64, u32, u32)>,
     session: Option<&ActiveSession>,
     uncommitted_count: u32,
+    is_de: bool,
     x: f32,
     btn_y: f32,
     btn_h: f32,
@@ -8707,7 +8805,8 @@ fn render_sync_status_and_checkin(
         return Ok(Some(cursor.x));
     }
     if cursor.window.is_none() {
-        let label = if uncommitted_count > 0 { format!("Check In ({uncommitted_count})") } else { "Check In".to_string() };
+        let checkin = shell_chrome_string("command.checkIn", is_de);
+        let label = if uncommitted_count > 0 { format!("{checkin} ({uncommitted_count})") } else { checkin.to_string() };
         cursor.window = Some(UiText::try_from_string(label).map_err(|_| ())?);
     }
     let Some(label) = cursor.window.as_ref() else { return Err(()) };
@@ -9144,6 +9243,26 @@ pub(crate) fn shell_example_rows(examples: &[semio_framework::manifest::ExampleD
         .collect()
 }
 
+/// 📚️ The example a fresh session announces — the Rust twin of React's `resolveBootExampleId`
+/// (`🐚️Shell/🟦️.tsx`), pinned row-for-row by the shared `🐚️Shell/🧫️fixtures/📚️boot-example/🔣️.json`.
+///
+/// A still-authored live selection outranks everything; then the declared default — which on this
+/// target is `?example=`'s value and on React the `VITE_SEMIO_DEFAULT_EXAMPLE` seed or the same query;
+/// then the dialect's first example, so a navbar never boots on "No example" while the guest's own
+/// default document is already that first fixture. An id the open dialect does not author falls back
+/// rather than faulting: a url is not a place to hard-fail a shell, the rule `?role=` and `?mode=`
+/// already follow. A dialect that authored no example answers `""`.
+pub(crate) fn resolve_boot_example_id(active_example_id: &str, example_ids: &[String], default_example_id: Option<&str>) -> String {
+    let authored = |candidate: &str| !candidate.is_empty() && example_ids.iter().any(|id| id == candidate);
+    if authored(active_example_id) {
+        return active_example_id.to_string();
+    }
+    if let Some(default_example_id) = default_example_id.filter(|candidate| authored(candidate)) {
+        return default_example_id.to_string();
+    }
+    example_ids.first().cloned().unwrap_or_default()
+}
+
 /// 📚️ The `playground.navbar.fixture` trigger, or `None` when the open dialect authored no example —
 /// React's `exampleOptions.length > 0` render gate, verbatim. The label is the SELECTED row's own
 /// label (a select shows its value), falling back to the localized noun when nothing is picked yet.
@@ -9257,15 +9376,123 @@ pub(crate) fn shell_mode_step_chord(action: &ui_wgpu::wgpu::KeyAction, modifiers
     }
 }
 
-/// 🛑️ The declared shape of a `World3dScene.statusJson` cancel affordance — the Rust twin of
-/// `world3dComputeStatusV1` (`🔨️modules/🖱️ui/🎬️scene/🟦️.ts`). Total by construction: malformed JSON,
-/// a missing field or a hostile type degrades to "no affordance" rather than throwing inside a
-/// render, and `cancellable` is honoured only alongside a non-empty `cancelAction` — a button with
-/// nothing to dispatch is worse than no button.
+/// 🛑️ The declared shape of a `World3dScene.statusJson` cancel affordance — the projection of
+/// [`World3dComputeStatus`] the overlay control layer needs and nothing more.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub(crate) struct World3dCancelAffordance {
     pub cancellable: bool,
     pub cancel_action: String,
+}
+
+/// ⏳️ The FULL declared shape of a `World3dScene.statusJson` — the Rust twin of
+/// `World3dComputeStatusV1`/`world3dComputeStatusV1` (`🔨️modules/🖱️ui/🎬️scene/🟦️.ts`), field for
+/// field, so the wgpu World3d surface reads exactly what React's `WorldComputeStatusPane`
+/// (`🌐️World3dHost/🟦️.tsx`) reads. Total by construction: malformed JSON, a missing field or a
+/// hostile type degrades to the neutral status rather than throwing inside a render — a status
+/// overlay must never be able to blank the viewport it annotates.
+///
+/// 🌍️ `phase_label` is the PRODUCER's own `{en, de}` pair; the shell never invents phase text and
+/// never picks a default language — an absent pair falls back to the shell's own bilingual
+/// `common.loading`, exactly as React's pane does.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct World3dComputeStatus {
+    pub computing: bool,
+    pub phase: String,
+    pub phase_label: Option<(String, String)>,
+    pub units_done: f64,
+    pub units_total: f64,
+    pub faces_done: f64,
+    pub faces_total: f64,
+    pub in_flight: f64,
+    pub ratio: f64,
+    pub cancellable: bool,
+    pub cancel_action: String,
+}
+
+impl Default for World3dComputeStatus {
+    fn default() -> Self {
+        Self { computing: false, phase: "idle".to_string(), phase_label: None, units_done: 0.0, units_total: 0.0, faces_done: 0.0, faces_total: 0.0, in_flight: 0.0, ratio: 1.0, cancellable: false, cancel_action: String::new() }
+    }
+}
+
+/// ⏳️🖼️ What the World3d compute-status pill says on ONE surface: the phase in the reader's own
+/// language, the producer's own `unitsDone/unitsTotal` count, and the fraction its bar fills to.
+/// `ratio` is `None` for an indeterminate producer (one reporting no `unitsTotal`), which paints a
+/// bare track rather than a lie about how far along the work is.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct World3dStatusPill {
+    pub surface_id: String,
+    pub phase: String,
+    pub phase_text: String,
+    pub progress_text: Option<String>,
+    pub ratio: Option<f32>,
+    pub computing: bool,
+}
+
+impl World3dStatusPill {
+    /// 🏷️ The one text run the pill paints — React renders the same two pieces as two adjacent
+    /// spans, this target has one glyph run per label, so they join with a separator.
+    pub fn label(&self) -> String {
+        match self.progress_text.as_deref() {
+            Some(progress) => format!("{} · {progress}", self.phase_text),
+            None => self.phase_text.clone(),
+        }
+    }
+}
+
+/// ⏳️ Whether a status is worth annotating a viewport with at all — byte-for-byte React's own
+/// `WorldComputeStatusPane` gate (`if (!computing && !cancellable && phase !== "cancelled") return
+/// null`): a settled producer paints nothing, so an idle preview is never covered by chrome.
+pub(crate) fn world3d_status_is_visible(status: &World3dComputeStatus) -> bool {
+    status.computing || status.cancellable || status.phase == "cancelled"
+}
+
+/// ⏳️🖼️ The pill one surface's published status asks for, or `None` when the status is settled.
+pub(crate) fn world3d_status_pill_for(surface_id: &str, status: &World3dComputeStatus, is_de: bool) -> Option<World3dStatusPill> {
+    if !world3d_status_is_visible(status) {
+        return None;
+    }
+    let phase_text = match (status.phase_label.as_ref(), is_de) {
+        (Some((_, de)), true) => de.clone(),
+        (Some((en, _)), false) => en.clone(),
+        (None, _) => shell_chrome_string("common.loading", is_de).to_string(),
+    };
+    let (progress_text, ratio) = if status.units_total > 0.0 {
+        let percent = (status.ratio * 100.0).round() as i64;
+        (Some(format!("{}/{} ({percent}%)", status.units_done as i64, status.units_total as i64)), Some(status.ratio as f32))
+    } else {
+        (None, None)
+    };
+    Some(World3dStatusPill { surface_id: surface_id.to_string(), phase: status.phase.clone(), phase_text, progress_text, ratio, computing: status.computing })
+}
+
+/// 📏️ How wide a pill's own row is, on the same metric `retained_chrome_group_item_width` prices a
+/// chrome control's label at — so the cancel control that follows it on the same row can be anchored
+/// without measuring a glyph.
+pub(crate) fn world3d_status_pill_width(theme: &Theme, pill: &World3dStatusPill) -> f32 {
+    theme.padding_standard * 2.0 + pill.label().len() as f32 * theme.font_size_small * 0.6
+}
+
+/// 🖼️ Whether a surface is big enough to carry an overlay row at all — a collapsed dock pane paints
+/// no chrome over its whole body.
+fn surface_fits_overlay(theme: &Theme, bounds: Rect) -> bool {
+    bounds.w >= theme.control_height * 4.0 && bounds.h >= theme.control_height * 2.0
+}
+
+/// ⏳️🖼️ The compute-status pills a set of live World3d surfaces asks for, each with the rect it is
+/// painted in — pure over the surfaces' own bounds and status, so the laws drive it without a
+/// `ShellState`. The pill leads the surface's overlay row; `surface_overlay_controls_for` anchors
+/// the cancel control after it, which is the same left-to-right order React's pane lays out.
+pub(crate) fn surface_status_pills_for(worlds: &[(&str, Rect, Option<&str>)], theme: &Theme, is_de: bool) -> Vec<(World3dStatusPill, Rect)> {
+    worlds
+        .iter()
+        .filter(|(_, bounds, _)| surface_fits_overlay(theme, *bounds))
+        .filter_map(|(surface_id, bounds, status_json)| {
+            let pill = world3d_status_pill_for(surface_id, &world3d_compute_status(*status_json), is_de)?;
+            let width = world3d_status_pill_width(theme, &pill).min((bounds.w - theme.gap_standard * 2.0).max(theme.control_height));
+            Some((pill, Rect::new(bounds.x + theme.gap_standard, bounds.y + theme.gap_standard, width, theme.control_height)))
+        })
+        .collect()
 }
 
 /// 🛑️🖼️ The overlay controls a set of live engine surfaces offers, with the anchor each is painted
@@ -9273,15 +9500,19 @@ pub(crate) struct World3dCancelAffordance {
 /// A surface too small to carry a control offers none, which is what keeps a collapsed dock pane from
 /// painting chrome over its whole body.
 pub(crate) fn surface_overlay_controls_for(graphs: &[(&str, Rect)], worlds: &[(&str, Rect, Option<&str>)], theme: &Theme, is_de: bool) -> Vec<(ShellNavbarControl, [f32; 2])> {
-    let fits_control = |bounds: Rect| bounds.w >= theme.control_height * 4.0 && bounds.h >= theme.control_height * 2.0;
     let mut controls = Vec::new();
-    for (surface_id, bounds) in graphs.iter().filter(|(_, bounds)| fits_control(*bounds)) {
+    for (surface_id, bounds) in graphs.iter().filter(|(_, bounds)| surface_fits_overlay(theme, *bounds)) {
         let control = ShellNavbarControl { control_id: format!("shell.nodeGraph.fit::{surface_id}"), icon_id: Some("maximize-2"), label: shell_chrome_string("nodeGraph.fitGraph", is_de).to_string(), active: false };
         controls.push((control, [bounds.x + theme.gap_standard, bounds.y + theme.gap_standard]));
     }
-    for (surface_id, bounds, status_json) in worlds.iter().filter(|(_, bounds, status_json)| fits_control(*bounds) && world3d_cancel_affordance(*status_json).cancellable) {
+    for (surface_id, bounds, status_json) in worlds.iter().filter(|(_, bounds, _)| surface_fits_overlay(theme, *bounds)) {
+        let status = world3d_compute_status(*status_json);
+        if !status.cancellable {
+            continue;
+        }
+        let lead = world3d_status_pill_for(surface_id, &status, is_de).map(|pill| world3d_status_pill_width(theme, &pill) + theme.gap_standard).unwrap_or(0.0);
         let control = ShellNavbarControl { control_id: format!("shell.world3d.cancel::{surface_id}"), icon_id: Some("x"), label: shell_chrome_string("common.cancel", is_de).to_string(), active: false };
-        controls.push((control, [bounds.x + theme.gap_standard, bounds.y + theme.gap_standard]));
+        controls.push((control, [bounds.x + theme.gap_standard + lead, bounds.y + theme.gap_standard]));
     }
     controls
 }
@@ -9289,14 +9520,58 @@ pub(crate) fn surface_overlay_controls_for(graphs: &[(&str, Rect)], worlds: &[(&
 /// 🛑️ Reads the cancel contract out of one `statusJson`. The shell learns no domain verb from code:
 /// whatever id `cancelAction` names is what the control dispatches.
 pub(crate) fn world3d_cancel_affordance(status_json: Option<&str>) -> World3dCancelAffordance {
+    let status = world3d_compute_status(status_json);
+    World3dCancelAffordance { cancellable: status.cancellable, cancel_action: status.cancel_action }
+}
+
+/// ⏳️ A producer's own non-negative finite count, or `0` — the Rust twin of the TypeScript
+/// `world3dComputeNumber`.
+fn world3d_status_number(value: Option<&Value>) -> f64 {
+    value.and_then(Value::as_f64).filter(|number| number.is_finite() && *number >= 0.0).unwrap_or(0.0)
+}
+
+/// 🌍️ A producer's `{en, de}` phase label, honoured only when BOTH tongues carry text — a pair with
+/// one empty half would make one language silently fall back to the other, which is exactly the
+/// default-language rule this codebase forbids.
+fn world3d_status_label(value: Option<&Value>) -> Option<(String, String)> {
+    let row = value?.as_object()?;
+    let en = row.get("en").and_then(Value::as_str).filter(|text| !text.is_empty())?;
+    let de = row.get("de").and_then(Value::as_str).filter(|text| !text.is_empty())?;
+    Some((en.to_string(), de.to_string()))
+}
+
+/// ⏳️ The ONE reader of `World3dScene.statusJson` on this target — the Rust twin of
+/// `world3dComputeStatusV1`, answering the same shared `🛑️surface-controls/🔣️.json` fixture.
+pub(crate) fn world3d_compute_status(status_json: Option<&str>) -> World3dComputeStatus {
     let Some(raw) = status_json.filter(|json| !json.is_empty()) else {
-        return World3dCancelAffordance::default();
+        return World3dComputeStatus::default();
     };
     let Ok(Value::Object(row)) = serde_json::from_str::<Value>(raw) else {
-        return World3dCancelAffordance::default();
+        return World3dComputeStatus::default();
     };
+    let progress = row.get("progress").and_then(Value::as_object);
+    let field = |name: &str| progress.and_then(|progress| progress.get(name));
     let cancel_action = row.get("cancelAction").and_then(Value::as_str).unwrap_or_default().to_string();
-    World3dCancelAffordance { cancellable: row.get("cancellable") == Some(&Value::Bool(true)) && !cancel_action.is_empty(), cancel_action }
+    let units_total = world3d_status_number(field("unitsTotal"));
+    let units_done = if units_total == 0.0 { world3d_status_number(field("unitsDone")) } else { world3d_status_number(field("unitsDone")).min(units_total) };
+    let declared_ratio = field("ratio").and_then(Value::as_f64).filter(|ratio| ratio.is_finite());
+    World3dComputeStatus {
+        computing: row.get("computing") == Some(&Value::Bool(true)),
+        phase: row.get("phase").and_then(Value::as_str).filter(|phase| !phase.is_empty()).unwrap_or("idle").to_string(),
+        phase_label: world3d_status_label(row.get("phaseLabel")),
+        units_done,
+        units_total,
+        faces_done: world3d_status_number(field("facesDone")),
+        faces_total: world3d_status_number(field("facesTotal")),
+        in_flight: world3d_status_number(field("inFlight")),
+        ratio: match declared_ratio {
+            Some(ratio) => ratio.clamp(0.0, 1.0),
+            None if units_total > 0.0 => units_done / units_total,
+            None => 1.0,
+        },
+        cancellable: row.get("cancellable") == Some(&Value::Bool(true)) && !cancel_action.is_empty(),
+        cancel_action,
+    }
 }
 //#endregion 🔀️ChromeParity
 
@@ -9599,39 +9874,43 @@ impl ShellState {
     pub(crate) fn build_os_commands(&self) -> Vec<semio_framework::CommandDefinition> {
         use semio_framework::manifest::Platform;
         use semio_framework::{ActionArgDef, ActionArgOption, ActionKind, CommandDefinition, PlatformKeybinding};
-        let terminology_options: Vec<ActionArgOption> = self.active_terminologies().into_iter().map(|id| ActionArgOption { label: if id == "native" { LocalizedLabel::data("Native") } else { LocalizedLabel::data(id.clone()) }, value: id }).collect();
+        let terminology_options: Vec<ActionArgOption> =
+            self.active_terminologies().into_iter().map(|id| ActionArgOption { label: if id == "native" { LocalizedLabel::native("Native", "Nativ") } else { LocalizedLabel::data(id.clone()) }, value: id }).collect();
         vec![
             CommandDefinition::new("os.toggleFullscreen", LocalizedLabel::native("Toggle Full Screen", "Vollbild umschalten"), "window", "code", ActionKind::Shell)
                 .with_keybinding(PlatformKeybinding::for_platform("f11", Platform::Windows))
                 .with_keybinding(PlatformKeybinding::for_platform("f11", Platform::Linux))
                 .with_keybinding(PlatformKeybinding::for_platform("control+meta+f", Platform::MacOs)),
-            CommandDefinition::new("os.setAppearance", LocalizedLabel::data("Set Appearance"), "appearance", "settings", ActionKind::Shell).with_args([ActionArgDef::select(
+            CommandDefinition::new("os.setAppearance", LocalizedLabel::native("Set Appearance", "Erscheinungsbild festlegen"), "appearance", "settings", ActionKind::Shell).with_args([ActionArgDef::select(
                 "value",
-                LocalizedLabel::data("Appearance"),
+                LocalizedLabel::native("Appearance", "Erscheinungsbild"),
                 vec![
-                    ActionArgOption { value: "system".into(), label: LocalizedLabel::data("System") },
-                    ActionArgOption { value: "light".into(), label: LocalizedLabel::data("Light") },
-                    ActionArgOption { value: "dark".into(), label: LocalizedLabel::data("Dark") },
+                    ActionArgOption { value: "system".into(), label: LocalizedLabel::native("System", "System") },
+                    ActionArgOption { value: "light".into(), label: LocalizedLabel::native("Light", "Hell") },
+                    ActionArgOption { value: "dark".into(), label: LocalizedLabel::native("Dark", "Dunkel") },
                 ],
             )
             .required()]),
-            CommandDefinition::new("os.setDriver", LocalizedLabel::data("Set Driver"), "layout", "settings", ActionKind::Shell).with_args([ActionArgDef::select(
+            CommandDefinition::new("os.setDriver", LocalizedLabel::native("Set Driver", "Treiber festlegen"), "layout", "settings", ActionKind::Shell).with_args([ActionArgDef::select(
                 "value",
-                LocalizedLabel::data("Driver"),
-                vec![ActionArgOption { value: "default".into(), label: LocalizedLabel::data("Default") }, ActionArgOption { value: "compact".into(), label: LocalizedLabel::data("Compact") }],
+                LocalizedLabel::native("Driver", "Treiber"),
+                vec![
+                    ActionArgOption { value: "default".into(), label: LocalizedLabel::native("Default", "Standard") },
+                    ActionArgOption { value: "compact".into(), label: LocalizedLabel::native("Compact", "Kompakt") },
+                ],
             )
             .required()]),
-            CommandDefinition::new("os.setLocale", LocalizedLabel::data("Set Locale"), "language", "settings", ActionKind::Shell).with_args([ActionArgDef::select(
+            CommandDefinition::new("os.setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"), "language", "settings", ActionKind::Shell).with_args([ActionArgDef::select(
                 "value",
-                LocalizedLabel::data("Locale"),
+                LocalizedLabel::native("Locale", "Sprache"),
                 vec![ActionArgOption { value: "en".into(), label: LocalizedLabel::data("English") }, ActionArgOption { value: "de".into(), label: LocalizedLabel::data("Deutsch") }],
             )
             .required()]),
-            CommandDefinition::new("os.setTerminology", LocalizedLabel::data("Set Terminology"), "language", "settings", ActionKind::Shell)
-                .with_args([ActionArgDef::select("value", LocalizedLabel::data("Terminology"), terminology_options).required()]),
-            CommandDefinition::new("os.setThemeId", LocalizedLabel::data("Set Theme"), "appearance", "settings", ActionKind::Shell).with_args([ActionArgDef::select(
+            CommandDefinition::new("os.setTerminology", LocalizedLabel::native("Set Terminology", "Terminologie festlegen"), "language", "settings", ActionKind::Shell)
+                .with_args([ActionArgDef::select("value", LocalizedLabel::native("Terminology", "Terminologie"), terminology_options).required()]),
+            CommandDefinition::new("os.setThemeId", LocalizedLabel::native("Set Theme", "Design festlegen"), "appearance", "settings", ActionKind::Shell).with_args([ActionArgDef::select(
                 "value",
-                LocalizedLabel::data("Theme"),
+                LocalizedLabel::native("Theme", "Design"),
                 std::iter::once(ActionArgOption { value: "semio".into(), label: LocalizedLabel::data("Semio") })
                     .chain(std::iter::once(ActionArgOption { value: "mono".into(), label: LocalizedLabel::data("Mono") }))
                     .chain(self.chrome_build.preferences.custom_themes.keys().cloned().map(|id| {
@@ -9641,7 +9920,7 @@ impl ShellState {
                     .collect(),
             )
             .required()]),
-            CommandDefinition::new("os.resetDock", LocalizedLabel::data("Reset Dock Layout"), "layout", "panel-left", ActionKind::Shell),
+            CommandDefinition::new("os.resetDock", LocalizedLabel::native("Reset Dock Layout", "Dock-Layout zurücksetzen"), "layout", "panel-left", ActionKind::Shell),
         ]
     }
 
@@ -9772,13 +10051,13 @@ impl ShellState {
     /// covered; everything else is `None` (`handle_shell_hit` keeps its existing behavior either way).
     fn shell_command_for_control(control_id: &str, is_de: bool) -> Option<(&'static str, String)> {
         if control_id.starts_with("dock.tab.") && control_id.ends_with(".close") {
-            return Some(("shell.windowClose", "Close".to_string()));
+            return Some(("shell.windowClose", shell_chrome_string("common.close", is_de).to_string()));
         }
         if control_id.starts_with("dock.tab.") && control_id.ends_with(".focus") {
-            return Some(("shell.windowMaximize", "Focus".to_string()));
+            return Some(("shell.windowMaximize", shell_chrome_string("common.focus", is_de).to_string()));
         }
         if control_id.starts_with("shell.layout.") {
-            return Some(("shell.applyNamedLayout", "Apply Layout".to_string()));
+            return Some(("shell.applyNamedLayout", shell_chrome_string("command.applyLayout", is_de).to_string()));
         }
         if control_id == "ui.panelToggle.details" {
             return Some(("shell.panelToggle", shell_chrome_string("panelToggle.details", is_de).to_string()));
@@ -10846,7 +11125,7 @@ impl ShellState {
             // 🚧️ No "load example by id" plugin-bridge primitive is reachable from here without
             // duplicating `apply_shell_uri`'s example-switch machinery — scoped out; the tutorial plays
             // over whichever document is already loaded instead of sandboxing a fresh example copy.
-            eprintln!("[DEBUG] tutorial base.exampleId `{example_id}` sandbox load not wired (no base.documentJson) — playing over the live document");
+            Self::debug_log(&format!("[DEBUG] tutorial base.exampleId `{example_id}` sandbox load not wired (no base.documentJson) — playing over the live document"));
         }
         tutorial_apply_ui_snapshot(self, &definition.base.ui);
         for keyframe in &definition.base.cameras {
@@ -10884,7 +11163,7 @@ impl ShellState {
         let now = chrome_now_ms();
         let definition = semio_framework::TutorialDefinition {
             id: format!("recording-{}", tutorial_recorded_at_iso().replace(['-', ':'], "")),
-            title: LocalizedLabel::data("Recording"),
+            title: LocalizedLabel::native("Recording", "Aufnahme"),
             description: None,
             duration_ms: 0,
             chapters: Vec::new(),
@@ -10922,7 +11201,7 @@ impl ShellState {
                 definition.recorded_at = Some(tutorial_recorded_at_iso());
                 match serde_json::to_string_pretty(&definition) {
                     Ok(json) => tutorial_save_recording(&definition.id, &json),
-                    Err(err) => eprintln!("[DEBUG] tutorial recording serialize failed: {err}"),
+                    Err(err) => Self::debug_log(&format!("[DEBUG] tutorial recording serialize failed: {err}")),
                 }
             }
             _ => {
@@ -11127,18 +11406,18 @@ impl ShellState {
                 // dsl-text conversion this plan's B5 tutorial-track bullet scopes separately, not a
                 // whole-envelope JSON reader (deleted with `PluginApp::load_document`/`document_dsl`).
                 TutorialPendingDocOp::LoadArtifactDsl(_json) => {
-                    eprintln!("[DEBUG] tutorial load document (json) not wired to the pack-only plugin bridge");
+                    Self::debug_log(&format!("[DEBUG] tutorial load document (json) not wired to the pack-only plugin bridge"));
                 }
                 TutorialPendingDocOp::ApplyOperations(operations) => {
                     if let Err(err) = self.apply_mutations(&operations).await {
-                        eprintln!("[DEBUG] tutorial apply operations failed: {err}");
+                        Self::debug_log(&format!("[DEBUG] tutorial apply operations failed: {err}"));
                     }
                 }
                 TutorialPendingDocOp::HistoryAction { action_id, args } => {
                     if let Some(session) = self.session.clone() {
                         let descriptor = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: action_id, args: semio_framework::optional_json_to_dsl(args) };
                         if let Err(err) = self.dispatch_action(descriptor).await {
-                            eprintln!("[DEBUG] tutorial history action failed: {err}");
+                            Self::debug_log(&format!("[DEBUG] tutorial history action failed: {err}"));
                         }
                     }
                 }
@@ -12146,8 +12425,46 @@ impl ShellState {
     /// `shell.<surface-kind>.<verb>::<surfaceId>` control-id grammar.
     fn surface_overlay_controls(&self, theme: &Theme) -> Vec<(ShellNavbarControl, [f32; 2])> {
         let graphs: Vec<(&str, Rect)> = self.node_graph_states.iter().map(|(surface_id, surface)| (surface_id.as_str(), surface.bounds)).collect();
-        let worlds: Vec<(&str, Rect, Option<&str>)> = self.world3d_states.iter().map(|(surface_id, world)| (surface_id.as_str(), world.bounds, self.world3d_status.get(surface_id).map(String::as_str))).collect();
+        let worlds = self.world3d_status_rows();
+        let worlds: Vec<(&str, Rect, Option<&str>)> = worlds.iter().map(|(id, bounds, status)| (*id, *bounds, *status)).collect();
         surface_overlay_controls_for(&graphs, &worlds, theme, self.locale_id == "de")
+    }
+
+    /// ⏳️🖼️ Each live World3d surface with the compute-status document it published — the one input
+    /// both the status pill and the cancel control read.
+    fn world3d_status_rows(&self) -> Vec<(&str, Rect, Option<&str>)> {
+        self.world3d_states.iter().map(|(surface_id, world)| (surface_id.as_str(), world.bounds, self.world3d_status.get(surface_id).map(String::as_str))).collect()
+    }
+
+    /// ⏳️🖼️ The compute-status pills each LIVE World3d surface asks for — the wgpu twin of React's
+    /// `WorldComputeStatusPane` (`🌐️World3dHost/🟦️.tsx`): the producer's own phase label in the
+    /// reader's language, its `unitsDone/unitsTotal` count and the fraction the bar fills to, painted
+    /// exactly while the scene's own status document is unsettled.
+    fn surface_status_pills(&mut self, theme: &Theme) -> Vec<(World3dStatusPill, Rect)> {
+        let worlds = self.world3d_status_rows();
+        let worlds: Vec<(&str, Rect, Option<&str>)> = worlds.iter().map(|(id, bounds, status)| (*id, *bounds, *status)).collect();
+        let pills = surface_status_pills_for(&worlds, theme, self.locale_id == "de");
+        let live: Vec<&str> = pills.iter().map(|(pill, _)| pill.surface_id.as_str()).collect();
+        for (pill, rect) in &pills {
+            let label = pill.label();
+            if self.world3d_status_pill_trace.get(&pill.surface_id) == Some(&label) {
+                continue;
+            }
+            Self::debug_log(&format!(
+                "[DEBUG] wgpu world3d status pill surface={} phase={} label={label:?} ratio={:?} computing={} rect={}x{}+{},{}",
+                pill.surface_id,
+                pill.phase,
+                pill.ratio,
+                pill.computing,
+                rect.w.round(),
+                rect.h.round(),
+                rect.x.round(),
+                rect.y.round()
+            ));
+            self.world3d_status_pill_trace.insert(pill.surface_id.clone(), label);
+        }
+        self.world3d_status_pill_trace.retain(|surface_id, _| live.contains(&surface_id.as_str()));
+        pills
     }
 
     /// 🎛️ Paints ONE centre-cluster navbar control per grant, left-to-right from `cursor.x`, and
@@ -12413,7 +12730,7 @@ impl ShellState {
                 {
                     let count = uncommitted_edit_count(&self.history_entries);
                     let x = cursor.x;
-                    match render_sync_status_and_checkin(cursor, draw, atlas, icons, input, theme, self.sync_status.as_ref(), self.sync_bootstrap_progress.as_ref(), self.session.as_ref(), count, x, btn_y, btn_h) {
+                    match render_sync_status_and_checkin(cursor, draw, atlas, icons, input, theme, self.sync_status.as_ref(), self.sync_bootstrap_progress.as_ref(), self.session.as_ref(), count, self.locale_id == "de", x, btn_y, btn_h) {
                         Ok(Some(next_x)) => cursor.x = next_x,
                         Ok(None) => return false,
                         Err(()) => {
@@ -12444,8 +12761,8 @@ impl ShellState {
             1 => {
                 let is_de = self.locale_id == "de";
                 let label = match &self.overlay_state {
-                    OverlayState::Search => Some(("Search", self.search_query.as_str())),
-                    OverlayState::Find => Some(("Find in page", self.find_query.as_str())),
+                    OverlayState::Search => Some((shell_chrome_string("overlay.search.title", is_de), self.search_query.as_str())),
+                    OverlayState::Find => Some((shell_chrome_string("overlay.find.title", is_de), self.find_query.as_str())),
                     OverlayState::Dropdown(id) if id == "example" => Some((shell_chrome_string("example.overlay.title", is_de), "")),
                     _ => None,
                 };
@@ -12531,18 +12848,74 @@ impl ShellState {
                     return false;
                 }
                 cursor.item = 0;
+                cursor.scalar = 0;
                 cursor.phase = 7;
+            }
+            // ⏳️🖼️ Per-surface World3d compute-status pills — the wgpu twin of React's
+            // `WorldComputeStatusPane`: a glass row carrying the producer's own phase label, its
+            // `unitsDone/unitsTotal` count and a bar filled to the published ratio. Painted BEFORE the
+            // overlay controls so the cancel control the same row carries registers its hit last and
+            // wins `InputState::hit_at`'s reverse-order resolution. Non-interactive by construction:
+            // a pill registers no hit at all, so it never steals a press from the surface beneath it.
+            7 => {
+                let pills = self.surface_status_pills(theme);
+                let Some((pill, rect)) = pills.get(cursor.item) else {
+                    cursor.item = 0;
+                    cursor.scalar = 0;
+                    cursor.phase = 8;
+                    return false;
+                };
+                let (pill, rect) = (pill.clone(), *rect);
+                match cursor.scalar {
+                    0 => {
+                        overlay.push_glass([rect.x, rect.y, rect.w, rect.h], theme.border_radius, theme.glass(Level::Pane));
+                        cursor.scalar = 1;
+                        return false;
+                    }
+                    1 => {
+                        let track = Rect::new(rect.x + theme.padding_standard, rect.y + rect.h - theme.stroke_hairline * 3.0, (rect.w - theme.padding_standard * 2.0).max(0.0), theme.stroke_hairline * 2.0);
+                        overlay.push_solid([track.x, track.y, track.w, track.h], theme.text_muted);
+                        if let Some(ratio) = pill.ratio {
+                            overlay.push_solid([track.x, track.y, track.w * ratio.clamp(0.0, 1.0), track.h], theme.accent);
+                        }
+                        cursor.scalar = 2;
+                        return false;
+                    }
+                    _ => {}
+                }
+                let label = pill.label();
+                match chrome_text_complete_step(
+                    overlay,
+                    atlas,
+                    &label,
+                    rect.x + theme.padding_standard,
+                    rect.y + (rect.h + theme.font_size_small) * 0.5 - 2.0,
+                    (rect.w - theme.padding_standard * 2.0).max(1.0),
+                    theme.font_size_small,
+                    if pill.computing { theme.text } else { theme.text_muted },
+                    &mut cursor.glyph,
+                ) {
+                    Ok(false) => return false,
+                    Ok(true) => {}
+                    Err(()) => {
+                        self.error = Some("Shell world3d status pill exceeded the retained glyph boundary".to_string());
+                        cursor.glyph.reset();
+                    }
+                }
+                cursor.item += 1;
+                cursor.scalar = 0;
+                return false;
             }
             // 🛑️🖼️ Per-surface overlay controls — the World3d compute cancel and the node-graph
             // `Fit graph`. Painted last so they sit above the surface they annotate, and registered
             // last so `InputState::hit_at` (reverse order) resolves them over the surface's own hit.
             // Each grant recomputes its own rect from the live surface bounds, so nothing survives
             // between grants and a surface that stopped painting stops offering its control.
-            7 => {
+            8 => {
                 let controls = self.surface_overlay_controls(theme);
                 let Some((control, anchor)) = controls.get(cursor.item) else {
                     cursor.item = 0;
-                    cursor.phase = 8;
+                    cursor.phase = 9;
                     return false;
                 };
                 let item = ChromeGroupItem { control_id: control.control_id.as_str(), icon_id: control.icon_id, label: Some(control.label.as_str()), active: control.active, disabled: false, kind: HitKind::NavbarItem };
@@ -12560,7 +12933,7 @@ impl ShellState {
                 cursor.item += 1;
                 return false;
             }
-            8 => return true,
+            9 => return true,
             _ => return false,
         }
         false
@@ -13998,6 +14371,24 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("surfaceRole.group", true) => "Oberflächenrolle",
         ("mode.group", false) => "Mode",
         ("mode.group", true) => "Modus",
+        ("contextMenu.goHome", false) => "Go Home",
+        ("contextMenu.goHome", true) => "Zur Startseite",
+        ("common.loading", false) => "Loading",
+        ("common.loading", true) => "Wird geladen",
+        ("overlay.search.title", false) => "Search",
+        ("overlay.search.title", true) => "Suchen",
+        ("overlay.find.title", false) => "Find in page",
+        ("overlay.find.title", true) => "Auf Seite suchen",
+        ("common.close", false) => "Close",
+        ("common.close", true) => "Schliessen",
+        ("command.applyLayout", false) => "Apply Layout",
+        ("command.applyLayout", true) => "Layout anwenden",
+        ("command.checkIn", false) => "Check In",
+        ("command.checkIn", true) => "Einchecken",
+        ("command.moveWindow", false) => "Move Window",
+        ("command.moveWindow", true) => "Fenster verschieben",
+        ("command.resizeWindow", false) => "Resize Window",
+        ("command.resizeWindow", true) => "Fenster anpassen",
         (other, _) => other,
     }
 }

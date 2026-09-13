@@ -13,7 +13,9 @@ use crate::wgpu::arena::NodeId;
 use crate::wgpu::component::layout::ActionDescriptor;
 use crate::wgpu::component::ui::{SurfaceKind, UiNode, UiTreeItemNode, UiTreeSectionNode};
 use crate::wgpu::geometry::Rect;
+use crate::wgpu::layout::{number_stepper_segments, ring_t_at, slider_value_at};
 use crate::wgpu::tree::{EditState, Node, NodeFlags, NodeKey, UiTree};
+use dsl::DslValue;
 
 //#region 🔖️UiEvent
 /// 🖱️ Mouse button identity for `UiEvent::{PointerDown,PointerUp}`.
@@ -315,16 +317,27 @@ impl FocusState {
     /// (no flag churn) when `node` already matches the current focus. Also owns `EditState`'s
     /// lifecycle: blurring a node clears its `WidgetState::edit` (the buffer relinquishes control,
     /// so the node's declarative `value` governs again on the next `apply_tree`); focusing a
-    /// `UiNode::Input` for the first time seeds `edit` from that declarative `value` with the caret
+    /// editable node for the first time seeds `edit` from that declarative `value` with the caret
     /// at the end — see `tree::WidgetState`'s own doc comment for why reconcile never clobbers this.
-    fn set_focus(&mut self, tree: &mut UiTree, node: Option<NodeId>) {
+    ///
+    /// 🎬️ Returns the BLURRED node's commit action when that node commits on blur
+    /// (`commits_on_blur` — React's `commitOnBlur`), so the caller can turn it into a
+    /// `UiCommand::App`. Losing focus is the only moment such a node's typed value is ever
+    /// dispatched, and this is the one place blur happens.
+    fn set_focus(&mut self, tree: &mut UiTree, node: Option<NodeId>) -> Option<ActionDescriptor> {
         if self.focused == node {
-            return;
+            return None;
         }
+        let mut committed = None;
         if let Some(previous) = self.focused {
             if let Some(previous_node) = tree.node_mut(previous) {
                 previous_node.flags.set(NodeFlags::FOCUSED, false);
-                previous_node.state.edit = None;
+                let buffer = previous_node.state.edit.take();
+                if let Some(edit) = buffer {
+                    if commits_on_blur(&previous_node.spec.0) {
+                        committed = edit_commit_action(previous_node, &edit.text);
+                    }
+                }
             }
             tree.mark_dirty(previous, NodeFlags::DIRTY_PAINT);
         }
@@ -332,19 +345,20 @@ impl FocusState {
             if let Some(next_node) = tree.node_mut(next) {
                 next_node.flags.set(NodeFlags::FOCUSED, true);
                 if next_node.state.edit.is_none() {
-                    if let UiNode::Input(input) = &next_node.spec.0 {
-                        let caret = input.value.len();
-                        next_node.state.edit = Some(EditState { text: input.value.clone(), caret, anchor: caret, composition: None, scroll_x: 0.0 });
+                    if let Some(value) = editable_value(&next_node.spec.0) {
+                        let caret = value.len();
+                        next_node.state.edit = Some(EditState { text: value.to_string(), caret, anchor: caret, composition: None, scroll_x: 0.0 });
                     }
                 }
             }
             tree.mark_dirty(next, NodeFlags::DIRTY_PAINT);
         }
         self.focused = node;
+        committed
     }
 
-    fn clear_focus(&mut self, tree: &mut UiTree) {
-        self.set_focus(tree, None);
+    fn clear_focus(&mut self, tree: &mut UiTree) -> Option<ActionDescriptor> {
+        self.set_focus(tree, None)
     }
 
     fn rebuild_tab_order(&mut self, tree: &UiTree, root: NodeId) {
@@ -352,33 +366,153 @@ impl FocusState {
         collect_focusable(tree, root, &mut self.tab_order);
     }
 
-    fn focus_next(&mut self, tree: &mut UiTree, root: NodeId) {
+    fn focus_next(&mut self, tree: &mut UiTree, root: NodeId) -> Option<ActionDescriptor> {
         self.rebuild_tab_order(tree, root);
         if self.tab_order.is_empty() {
-            self.set_focus(tree, None);
-            return;
+            return self.set_focus(tree, None);
         }
         let next_index = match self.focused.and_then(|id| self.tab_order.iter().position(|&candidate| candidate == id)) {
             Some(index) => (index + 1) % self.tab_order.len(),
             None => 0,
         };
-        self.set_focus(tree, Some(self.tab_order[next_index]));
+        self.set_focus(tree, Some(self.tab_order[next_index]))
     }
 
-    fn focus_prev(&mut self, tree: &mut UiTree, root: NodeId) {
+    fn focus_prev(&mut self, tree: &mut UiTree, root: NodeId) -> Option<ActionDescriptor> {
         self.rebuild_tab_order(tree, root);
         if self.tab_order.is_empty() {
-            self.set_focus(tree, None);
-            return;
+            return self.set_focus(tree, None);
         }
         let previous_index = match self.focused.and_then(|id| self.tab_order.iter().position(|&candidate| candidate == id)) {
             Some(index) => (index + self.tab_order.len() - 1) % self.tab_order.len(),
             None => self.tab_order.len() - 1,
         };
-        self.set_focus(tree, Some(self.tab_order[previous_index]));
+        self.set_focus(tree, Some(self.tab_order[previous_index]))
     }
 }
 //#endregion 🔖️Focus
+
+//#region 🔖️Commit
+// 🎬️ THE ONE commit authority for a retained document's form controls. Every `UiNode` variant that
+// carries a value — `Input`, `Toggle`, `Slider`, `NumberStepper`, `Ring`, `IconSelect` — turns its
+// own gesture into the `ActionDescriptor` its spec declared, merged with the gesture's payload, and
+// hands it to the host as `UiCommand::App`. The host's `publish_retained_action` then stamps
+// `windowId` and reserves it, exactly as it already does for `Button`/`Select`.
+//
+// 🩸️ Before this region the retained router documented "committing the edited value via `on_change`
+// is not implemented", and the shell's own immediate-mode `commit_focused_input`/`stepper_metas`
+// system (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`) only ever saw ids minted by the CHROME's immediate-mode
+// widget walk — never a retained document's. Editing a generation's parameters on wgpu was therefore
+// fully cosmetic: a live caret, a live knob, and nothing reaching the guest (ticket
+// 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️audit-wgpu-parity-2026-09-13.md` gaps #1/#6).
+//
+// Parity reference — React's own retained interpreter, NOT its older declarative-control path:
+// `🗣️Interpreter/🟦️.tsx`'s `dispatchTrigger` → `UiDocumentStore::emitIntent` → `🛠️ShellHelpers/🟦️.tsx`'s
+// `uiIntentPayload`/`uiInputField`. Two rules come from there and are reproduced verbatim below:
+// a scalar payload is NAMED by its trigger (`delta` for `Trigger::Delta`, `value` for every other),
+// and it is MERGED OVER the node's authored args rather than replacing them.
+
+/// 🏷️ The argument field a trigger's scalar payload travels under — React's `uiInputField`.
+const COMMIT_VALUE_FIELD: &str = "value";
+const COMMIT_DELTA_FIELD: &str = "delta";
+
+/// 🎬️ One gesture's dispatchable action: the node's AUTHORED args with the gesture's own scalar
+/// merged over them under `field` (React's `uiIntentPayload`). `None` when the node declares no
+/// binding for this trigger — `reconcile::record_action_or_inert` marks that by an EMPTY action
+/// name, which is exactly the condition React's `emitIntent` answers `undefined` for (and the same
+/// condition its `NumberStepperView` tests before it supplies `onDelta` at all).
+fn commit_action(action: &ActionDescriptor, field: &str, value: DslValue) -> Option<ActionDescriptor> {
+    if action.action.is_empty() {
+        return None;
+    }
+    let mut args: Vec<(String, DslValue)> = match action.args.as_ref() {
+        Some(DslValue::Object(entries)) => entries.iter().filter(|(key, _)| key != field).cloned().collect(),
+        _ => Vec::new(),
+    };
+    args.push((field.to_string(), value));
+    Some(ActionDescriptor { controller_id: action.controller_id.clone(), action: action.action.clone(), args: Some(DslValue::Object(args)) })
+}
+
+/// ✍️ Which `UiNode` variants own a live `EditState` text buffer. `Input` is the obvious one;
+/// `IconSelect`'s value IS its icon string, which React edits through the `IconSelector`'s own
+/// textarea (`🎴️IconSelector/🟦️.tsx`'s `onEditorChange`), so the retained target edits it the same
+/// way rather than inventing a second gesture for it.
+fn editable_value(node: &UiNode) -> Option<&str> {
+    match node {
+        UiNode::Input(input) => Some(input.value.as_str()),
+        UiNode::IconSelect(select) => Some(select.value.as_str()),
+        _ => None,
+    }
+}
+
+/// ⏎️ Whether an editable node commits only on Enter/blur (`Trigger::Commit`, `commit == "blur"`)
+/// rather than on every keystroke (`Trigger::Change`) — React's `InputView`'s own `commitOnBlur`.
+fn commits_on_blur(node: &UiNode) -> bool {
+    matches!(node, UiNode::Input(input) if input.commit.as_deref() == Some("blur"))
+}
+
+/// ✍️ The action an editable node's CURRENT buffer commits: `{value: <text>}`, numeric for a
+/// `Component::Input` of kind `number` (React's `InputView`: `kind === "number" ? Number(raw) : raw`).
+fn edit_commit_action(node: &Node, text: &str) -> Option<ActionDescriptor> {
+    match &node.spec.0 {
+        UiNode::Input(input) => {
+            let value = if input.input_kind == "number" { DslValue::float(text.parse::<f64>().unwrap_or(f64::NAN)) } else { DslValue::String(text.to_string()) };
+            commit_action(&input.on_change, COMMIT_VALUE_FIELD, value)
+        }
+        UiNode::IconSelect(select) => commit_action(&select.on_change, COMMIT_VALUE_FIELD, DslValue::String(text.to_string())),
+        _ => None,
+    }
+}
+
+/// 👆️ The action a press/drag at `(x, y)` over `bounds` commits for a pointer-valued control —
+/// `Toggle` flips its own `presence.selected`, `Slider`/`Ring` read the gesture position off the
+/// same geometry `paint` drew them at (`layout::{slider_value_at, ring_t_at}`), and a
+/// `NumberStepper`'s outer thirds step its value (relative through `on_delta` when that binding
+/// exists, absolute through `on_absolute` otherwise — React's `NumberStepperView` makes exactly that
+/// choice). `None` for the stepper's own value segment, for an unbound trigger, and for every
+/// variant whose press means something else (`Button`/`Select`/`Stack`, handled by the caller).
+fn pointer_commit_action(node: &UiNode, bounds: Rect, x: f32, y: f32) -> Option<ActionDescriptor> {
+    match node {
+        UiNode::Toggle(toggle) => commit_action(&toggle.on_change, COMMIT_VALUE_FIELD, DslValue::Bool(!toggle.presence.selected)),
+        UiNode::Slider(slider) => commit_action(&slider.on_change, COMMIT_VALUE_FIELD, DslValue::float(slider_value_at(bounds, x, slider.min, slider.max, slider.step))),
+        UiNode::Ring(ring) => commit_action(&ring.on_change, COMMIT_VALUE_FIELD, DslValue::float(ring_t_at(bounds, x, y))),
+        UiNode::NumberStepper(stepper) => {
+            let [decrement, _value, increment] = number_stepper_segments(bounds);
+            let sign = if decrement.contains(x, y) {
+                -1.0
+            } else if increment.contains(x, y) {
+                1.0
+            } else {
+                return None;
+            };
+            commit_action(&stepper.on_delta, COMMIT_DELTA_FIELD, DslValue::float(sign * stepper.step)).or_else(|| commit_action(&stepper.on_absolute, COMMIT_VALUE_FIELD, DslValue::float(stepper.value + sign * stepper.step)))
+        }
+        _ => None,
+    }
+}
+
+/// 🎚️ Whether a press on this variant keeps committing while the pointer drags — React delegates
+/// `Slider`/`Ring` to controls that report every intermediate value, not only the release.
+fn commits_while_dragging(node: &UiNode) -> bool {
+    matches!(node, UiNode::Slider(_) | UiNode::Ring(_))
+}
+/// 📐️ One node's absolute painted rect: its own accepted layout plus every ancestor's origin — the
+/// same accumulation `scene_slots::collect_scene_slots`/`hit_test_node`/`paint::paint_node` each
+/// walk independently, resolved once here at dispatch time rather than by a whole-tree pass.
+fn absolute_rect(tree: &UiTree, id: NodeId) -> Option<Rect> {
+    let layout = tree.accepted_layout(id)?;
+    let mut x = layout.x;
+    let mut y = layout.y;
+    let mut current = tree.node(id)?.parent;
+    while let Some(parent_id) = current {
+        let parent_layout = tree.accepted_layout(parent_id)?;
+        x += parent_layout.x;
+        y += parent_layout.y;
+        current = tree.node(parent_id)?.parent;
+    }
+    Some(Rect::new(x, y, layout.width, layout.height))
+}
+//#endregion 🔖️Commit
 
 //#region 🔖️Bubble
 /// 🫧️ Walks from `from` up through `parent` links (including `from` itself), calling `handler(id)`
@@ -888,7 +1022,9 @@ impl EventRouter {
         let mut out = vec![UiCommand::OverlayClosed { window_id: self.window_id.clone(), root: overlay.root, kind: overlay.kind }];
         if let Some(focused) = self.focus.focused {
             if is_descendant(tree, focused, overlay.root) {
-                self.focus.clear_focus(tree);
+                if let Some(action) = self.focus.clear_focus(tree) {
+                    out.push(UiCommand::App { window_id: self.window_id.clone(), action });
+                }
                 out.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
             }
         }
@@ -947,7 +1083,6 @@ impl EventRouter {
         self.drop_accept.insert(node, Box::new(predicate));
     }
 
-    #[allow(dead_code, reason = "drag-drop registry accessor, not yet called; likely wired by a later events-integration milestone")]
     pub(crate) fn drag_session(&self) -> Option<&DragSession> {
         self.drag.as_ref()
     }
@@ -1030,28 +1165,65 @@ impl EventRouter {
     //#endregion 🔖️ScrollApi
 
     //#region 🔖️EditApi
-    fn route_text_insert(&mut self, tree: &mut UiTree, text: &str) {
-        let Some(id) = self.focus.focused else { return };
-        let Some(node) = tree.node_mut(id) else { return };
-        let Some(edit) = node.state.edit.as_mut() else { return };
-        insert_at_caret(edit, text);
-        tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+    /// 🎬️ The focused editable node's buffer as a dispatchable action, for a node that commits on
+    /// every keystroke (`Trigger::Change` — React's `InputView` with no `commit: "blur"`, and its
+    /// `IconSelector` editor, both of which fire per change). `None` for a blur-committing node,
+    /// whose one dispatch moment is `FocusState::set_focus`.
+    fn changed_buffer_action(&self, tree: &UiTree) -> Option<ActionDescriptor> {
+        let node = tree.node(self.focus.focused?)?;
+        if commits_on_blur(&node.spec.0) {
+            return None;
+        }
+        edit_commit_action(node, &node.state.edit.as_ref()?.text)
     }
 
-    fn route_ime(&mut self, tree: &mut UiTree, event: &ImeEvent) {
-        let Some(id) = self.focus.focused else { return };
-        let Some(node) = tree.node_mut(id) else { return };
-        let Some(edit) = node.state.edit.as_mut() else { return };
-        match event {
-            ImeEvent::Start => edit.composition = Some(String::new()),
-            ImeEvent::Update { text, .. } => edit.composition = Some(text.clone()),
+    /// 🎬️ Wraps `changed_buffer_action` for a caller that already owns the command list.
+    fn push_buffer_change(&self, tree: &UiTree, out: &mut Vec<UiCommand>) {
+        if let Some(action) = self.changed_buffer_action(tree) {
+            out.push(UiCommand::App { window_id: self.window_id.clone(), action });
+        }
+    }
+
+    fn route_text_insert(&mut self, tree: &mut UiTree, text: &str) -> Vec<UiCommand> {
+        let mut out = Vec::new();
+        let Some(id) = self.focus.focused else { return out };
+        let Some(node) = tree.node_mut(id) else { return out };
+        let Some(edit) = node.state.edit.as_mut() else { return out };
+        insert_at_caret(edit, text);
+        tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+        self.push_buffer_change(tree, &mut out);
+        out
+    }
+
+    fn route_ime(&mut self, tree: &mut UiTree, event: &ImeEvent) -> Vec<UiCommand> {
+        let mut out = Vec::new();
+        let Some(id) = self.focus.focused else { return out };
+        let Some(node) = tree.node_mut(id) else { return out };
+        let Some(edit) = node.state.edit.as_mut() else { return out };
+        let mutated = match event {
+            ImeEvent::Start => {
+                edit.composition = Some(String::new());
+                false
+            }
+            ImeEvent::Update { text, .. } => {
+                edit.composition = Some(text.clone());
+                false
+            }
             ImeEvent::Commit { text } => {
                 edit.composition = None;
                 insert_at_caret(edit, text);
+                true
             }
-            ImeEvent::Cancel => edit.composition = None,
-        }
+            ImeEvent::Cancel => {
+                edit.composition = None;
+                false
+            }
+        };
         tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+        if mutated {
+            self.push_buffer_change(tree, &mut out);
+        }
+        out
     }
 
     /// ⌨️ Caret motion (with `Shift` extending the selection), `Home`/`End`, `Backspace`/`Delete`,
@@ -1061,6 +1233,20 @@ impl EventRouter {
     fn route_edit_key(&mut self, tree: &mut UiTree, key: &str, modifiers: EventModifiers) -> Vec<UiCommand> {
         let mut out = Vec::new();
         let Some(id) = self.focus.focused else { return out };
+        // ⏎️ Enter is the other half of a blur-committing node's contract (`Trigger::Commit`, which
+        // `🖼️semantic-ui/🦀️.rs`'s own docstring names "Enter / blur") — the gesture generation3d's
+        // inline rename editor is built on. A change-committing node already dispatched every
+        // keystroke, so Enter adds nothing there and must not double-fire.
+        if matches!(key, "Enter" | "NumpadEnter") {
+            if let Some(node) = tree.node(id) {
+                if commits_on_blur(&node.spec.0) {
+                    if let Some(action) = node.state.edit.as_ref().and_then(|edit| edit_commit_action(node, &edit.text)) {
+                        out.push(UiCommand::App { window_id: self.window_id.clone(), action });
+                    }
+                }
+            }
+            return out;
+        }
         let Some(node) = tree.node_mut(id) else { return out };
         let Some(edit) = node.state.edit.as_mut() else { return out };
         let has_selection = edit.anchor != edit.caret;
@@ -1138,6 +1324,7 @@ impl EventRouter {
             _ => return out,
         }
         tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+        self.push_buffer_change(tree, &mut out);
         out
     }
     //#endregion 🔖️EditApi
@@ -1148,7 +1335,8 @@ impl EventRouter {
         self.hovered
     }
 
-    #[allow(dead_code, reason = "cursor-state accessor, not yet called; likely wired by a later events-integration milestone")]
+    /// 🖱️ What this window's retained content currently holds pointer capture on — read by
+    /// `engine::Ui::window_with_pointer_capture` so a host keeps feeding a live drag its moves.
     pub(crate) fn capture(&self) -> Option<(NodeId, CaptureKind)> {
         self.capture.target
     }
@@ -1182,6 +1370,13 @@ impl EventRouter {
                 match self.capture.target {
                     Some((_, CaptureKind::Drag)) => self.update_drag(tree, root, *x, *y),
                     Some((scrollable, CaptureKind::ScrollThumb(axis))) => self.update_scroll_thumb(tree, scrollable, axis, *x, *y),
+                    // 🎚️ A captured `Slider`/`Ring` reports EVERY intermediate value, not only the
+                    // release — Radix's own behaviour, which React's `SliderView`/`RingView` delegate to.
+                    Some((pressed, CaptureKind::Press)) => {
+                        if tree.node(pressed).is_some_and(|node| commits_while_dragging(&node.spec.0)) {
+                            commands.extend(self.pointer_commit(tree, pressed, *x, *y));
+                        }
+                    }
                     _ => {}
                 }
                 let target = self.resolve_target(tree, root, *x, *y);
@@ -1216,7 +1411,9 @@ impl EventRouter {
                         self.capture.target = Some((id, CaptureKind::Press));
                         let focusable = tree.node(id).is_some_and(|node| is_focusable(&node.spec.0));
                         if focusable {
-                            self.focus.set_focus(tree, Some(id));
+                            if let Some(action) = self.focus.set_focus(tree, Some(id)) {
+                                commands.push(UiCommand::App { window_id: self.window_id.clone(), action });
+                            }
                             commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: Some(id) });
                         }
                         // 🫳️ W2 wiring: a `Tree` row's `draggable`/`drag_data` (re-derived by key —
@@ -1228,9 +1425,14 @@ impl EventRouter {
                                 self.set_drag_payload(id, item.drag_data.clone().unwrap_or_default());
                             }
                         }
+                        if tree.node(id).is_some_and(|node| commits_while_dragging(&node.spec.0)) {
+                            commands.extend(self.pointer_commit(tree, id, *x, *y));
+                        }
                     }
                 } else {
-                    self.focus.clear_focus(tree);
+                    if let Some(action) = self.focus.clear_focus(tree) {
+                        commands.push(UiCommand::App { window_id: self.window_id.clone(), action });
+                    }
                     commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
                 }
             }
@@ -1268,6 +1470,11 @@ impl EventRouter {
                                                 commands.extend(self.close_topmost_overlay(tree));
                                             }
                                         }
+                                    } else {
+                                        // 🎬️ Every other value-carrying kind — `Toggle`, `Slider`,
+                                        // `NumberStepper`, `Ring` — commits its own gesture here, through
+                                        // the same one authority (see 🔖️Commit).
+                                        commands.extend(self.pointer_commit(tree, active_id, *x, *y));
                                     }
                                 }
                             }
@@ -1302,10 +1509,9 @@ impl EventRouter {
                     commands.extend(self.close_topmost_overlay(tree));
                 } else if key == "Tab" {
                     let scope = self.overlays.topmost_focus_trap_root().unwrap_or(root);
-                    if modifiers.shift {
-                        self.focus.focus_prev(tree, scope);
-                    } else {
-                        self.focus.focus_next(tree, scope);
+                    let committed = if modifiers.shift { self.focus.focus_prev(tree, scope) } else { self.focus.focus_next(tree, scope) };
+                    if let Some(action) = committed {
+                        commands.push(UiCommand::App { window_id: self.window_id.clone(), action });
                     }
                     commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: self.focus.focused });
                 } else {
@@ -1313,9 +1519,9 @@ impl EventRouter {
                 }
             }
             UiEvent::KeyUp { .. } => {}
-            UiEvent::TextInput { text } => self.route_text_insert(tree, text),
-            UiEvent::Paste { text } => self.route_text_insert(tree, text),
-            UiEvent::Ime(ime_event) => self.route_ime(tree, ime_event),
+            UiEvent::TextInput { text } => commands.extend(self.route_text_insert(tree, text)),
+            UiEvent::Paste { text } => commands.extend(self.route_text_insert(tree, text)),
+            UiEvent::Ime(ime_event) => commands.extend(self.route_ime(tree, ime_event)),
             UiEvent::Scroll { x, y, delta_x, delta_y } => {
                 if let Some(id) = hit_test(tree, root, *x, *y) {
                     if let Some(cmd) = self.scene_command(tree, id, event) {
@@ -1335,19 +1541,18 @@ impl EventRouter {
     /// `UiCommand::Scene` the host should route into that surface's per-`SurfaceKind` input handler.
     fn scene_command(&self, tree: &UiTree, id: NodeId, event: &UiEvent) -> Option<UiCommand> {
         let node = tree.node(id)?;
-        let layout = tree.accepted_layout(id)?;
         let UiNode::ComponentScene(scene) = &node.spec.0 else { return None };
-        let mut x = layout.x;
-        let mut y = layout.y;
-        let mut current = node.parent;
-        while let Some(parent_id) = current {
-            let parent = tree.node(parent_id)?;
-            let parent_layout = tree.accepted_layout(parent_id)?;
-            x += parent_layout.x;
-            y += parent_layout.y;
-            current = parent.parent;
-        }
-        Some(UiCommand::Scene { window_id: self.window_id.clone(), node: id, surface_id: scene.surface_id.clone(), kind: scene.component_kind, rect: Rect::new(x, y, layout.width, layout.height), event: event.clone() })
+        let rect = absolute_rect(tree, id)?;
+        Some(UiCommand::Scene { window_id: self.window_id.clone(), node: id, surface_id: scene.surface_id.clone(), kind: scene.component_kind, rect, event: event.clone() })
+    }
+
+    /// 👆️ The `UiCommand::App` a press/drag at `(x, y)` over `id` commits, for the pointer-valued
+    /// control kinds — see `pointer_commit_action`. The rect it measures the gesture against is the
+    /// node's own absolute painted rect, the same one `paint` drew the knob/segments at.
+    fn pointer_commit(&self, tree: &UiTree, id: NodeId, x: f32, y: f32) -> Option<UiCommand> {
+        let node = tree.node(id)?;
+        let action = pointer_commit_action(&node.spec.0, absolute_rect(tree, id)?, x, y)?;
+        Some(UiCommand::App { window_id: self.window_id.clone(), action })
     }
 }
 //#endregion 🔖️UiCommand
@@ -1355,4 +1560,8 @@ impl EventRouter {
 #[cfg(test)]
 #[path = "../../../🧪️tests/🔬️targets-wgpu-events-unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "../../../🧪️tests/🎛️retained-control-commit/🦀️.rs"]
+mod control_commit_tests;
 // #endregion events

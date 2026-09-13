@@ -57,6 +57,9 @@ pub enum HitKind {
     Input,
     Select,
     Slider,
+    NumberStepper,
+    Ring,
+    IconSelect,
     TreeItem,
     TreeDropTarget,
     PanelTab,
@@ -658,6 +661,13 @@ pub fn retained_hit_registration(tree: &crate::wgpu::tree::UiTree, id: crate::wg
         UiNode::Select(select) => entry(HitKind::Select, select.id.clone(), None, rect),
         UiNode::Toggle(toggle) => entry(HitKind::Toggle, toggle.id.clone(), None, rect),
         UiNode::Slider(slider) => Some(RetainedHitRegistration { node: id, rect, kind: HitKind::Slider, control_id: slider.id.clone(), action: None, drag_axis: Some(DragAxis::Horizontal), drag_data: None }),
+        // 🎛️ The three kinds a retained body used to register NOTHING for — so a press on a
+        // generation's stepper, ring or icon field resolved the WINDOW beneath it and the retained
+        // router never saw the gesture at all, which is half of why those kinds could not commit
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️audit-wgpu-parity-2026-09-13.md` gap #6).
+        UiNode::NumberStepper(stepper) => entry(HitKind::NumberStepper, stepper.id.clone(), None, rect),
+        UiNode::Ring(ring) => Some(RetainedHitRegistration { node: id, rect, kind: HitKind::Ring, control_id: ring.id.clone(), action: None, drag_axis: Some(DragAxis::Both), drag_data: None }),
+        UiNode::IconSelect(select) => entry(HitKind::IconSelect, select.id.clone(), None, rect),
         UiNode::ComponentScene(scene) => {
             let (kind, control_id) = retained_scene_hit(scene);
             entry(kind, control_id, None, rect)

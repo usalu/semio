@@ -64,9 +64,9 @@ pub fn resolve_semio_cursor<E>(hit: Option<&HitTarget<E>>, drag: CursorDragState
         }
     }
     match hit.kind {
-        HitKind::Input => SemioCursor::Text,
+        HitKind::Input | HitKind::IconSelect => SemioCursor::Text,
         HitKind::Select => SemioCursor::Foldable,
-        HitKind::Slider => SemioCursor::Grab,
+        HitKind::Slider | HitKind::Ring => SemioCursor::Grab,
         HitKind::Window => SemioCursor::Grab,
         HitKind::TreeItem => {
             if hit.drag_data.is_some() {
@@ -77,7 +77,7 @@ pub fn resolve_semio_cursor<E>(hit: Option<&HitTarget<E>>, drag: CursorDragState
         }
         HitKind::TreeDropTarget => SemioCursor::Move,
         HitKind::World3d => SemioCursor::Default,
-        HitKind::Button | HitKind::Toggle | HitKind::PanelTab | HitKind::NavbarItem | HitKind::ContextMenu | HitKind::DropdownItem => SemioCursor::Selectable,
+        HitKind::Button | HitKind::Toggle | HitKind::NumberStepper | HitKind::PanelTab | HitKind::NavbarItem | HitKind::ContextMenu | HitKind::DropdownItem => SemioCursor::Selectable,
         HitKind::ScrollRegion | HitKind::PanelResize | HitKind::DockSplit | HitKind::DockJoinCorner => SemioCursor::Default,
         HitKind::Generic => SemioCursor::Selectable,
     }
@@ -85,7 +85,7 @@ pub fn resolve_semio_cursor<E>(hit: Option<&HitTarget<E>>, drag: CursorDragState
 
 fn cursor_for_active_drag(kind: Option<HitKind>, axis: Option<DragAxis>) -> SemioCursor {
     match kind {
-        Some(HitKind::Slider) => SemioCursor::Grabbing,
+        Some(HitKind::Slider) | Some(HitKind::Ring) => SemioCursor::Grabbing,
         Some(HitKind::PanelResize) => SemioCursor::EwResize,
         Some(HitKind::DockSplit) => axis.map_or(SemioCursor::Default, axis_cursor),
         Some(HitKind::DockJoinCorner) => SemioCursor::Move,

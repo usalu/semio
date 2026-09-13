@@ -520,6 +520,15 @@ impl GraphHost {
         true
     }
 
+    /// 🖱️ Re-seeds the bounded pointer-plan projection after a SCREEN-path gesture mutated this host
+    /// directly (drawing a wire, dragging the minimap viewport, dragging an inline widget) — without
+    /// it `plan_pointer` answers `Unsupported` for the rest of the session, because its stored
+    /// projection is a revision behind and nothing else on that path bumps it back into step.
+    pub fn resync_interaction_projection(&mut self) {
+        self.interaction_revision = self.interaction_revision.wrapping_add(1);
+        self.refresh_interaction_projection();
+    }
+
     pub fn plan_pointer(&self, intent: dag::DagPointerIntent) -> Result<dag::DagPointerPlan, dag::DagInteractionPlanFault> {
         let projection = self.interaction_projection.ok_or(dag::DagInteractionPlanFault::NodeCredits)?;
         if projection.revision() != self.interaction_revision {

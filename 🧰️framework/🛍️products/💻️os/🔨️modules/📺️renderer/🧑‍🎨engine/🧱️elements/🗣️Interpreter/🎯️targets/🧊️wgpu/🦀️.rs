@@ -407,6 +407,17 @@ pub fn register_retained_hit_targets(window_id: &str, input: &mut ui_wgpu::wgpu:
     })
 }
 
+/// 🖱️ The retained window whose content holds pointer capture right now — a host routes every move
+/// there until release, so a `Slider`/`Ring` drag survives leaving the control's own rect.
+pub fn retained_pointer_capture_window() -> Option<String> {
+    UI_ENGINE.with(|cell| cell.borrow().window_with_pointer_capture().map(str::to_owned))
+}
+
+/// 🫳️ Retained panel/catalogue drags (`EventRouter::DragSession`) the legacy shell `tree_drag` path never sees.
+pub fn active_retained_drag_sessions() -> Vec<(String, f32, f32, std::collections::HashMap<String, String>)> {
+    UI_ENGINE.with(|cell| cell.borrow().active_drag_sessions())
+}
+
 pub fn dispatch_ui_event(window_id: &str, event: ui_wgpu::wgpu::UiEvent, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ui_wgpu::wgpu::UiCommand> {
     #[cfg(all(not(target_arch = "wasm32"), not(test)))]
     pump_clipboard_io_one();
@@ -1748,6 +1759,19 @@ struct DumpStructure {
     nodes: Vec<DumpNode>,
 }
 
+/// ♿️ The wire shape `dumpAccessibility()` answers: one window's accessibility tree in reading
+/// order, plus the windows a caller could ask for instead. `nodes` is `ui_contract`'s own
+/// `AccessibilityProjectionNode` verbatim — the host mirror consumes the CONTRACT's shape, not a
+/// renderer-private one, so a second renderer publishing the same tree needs no new consumer.
+#[cfg(target_arch = "wasm32")]
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DumpAccessibility {
+    window_id: Option<String>,
+    window_ids: Vec<String>,
+    nodes: Vec<ui_contract::AccessibilityProjectionNode>,
+}
+
 #[cfg(target_arch = "wasm32")]
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -2040,6 +2064,19 @@ fn is_glyph_instance(instance: &ui_wgpu::wgpu::draw::UiInstance) -> bool {
     instance.params[2] == ui_wgpu::wgpu::draw::KIND_GLYPH
 }
 
+/// ♿️ The accessibility tree ONE window publishes, plus the windows a caller could ask for instead —
+/// the same window-selection rule `build_structure_dump` uses, so a two-pane mode layout is
+/// addressable pane by pane rather than only by its largest.
+#[cfg(target_arch = "wasm32")]
+fn build_accessibility_dump(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> DumpAccessibility {
+    let window_ids = dump_window_ids(engine);
+    let Some(window_id) = dump_window_id(engine, requested) else {
+        return DumpAccessibility { window_id: None, window_ids, nodes: Vec::new() };
+    };
+    let nodes = engine.tree(&window_id).map(ui_wgpu::wgpu::accessibility::accessibility_projection).unwrap_or_default();
+    DumpAccessibility { window_id: Some(window_id), window_ids, nodes }
+}
+
 #[cfg(target_arch = "wasm32")]
 fn build_frame_stats(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> DumpFrameStats {
     let window_ids = dump_window_ids(engine);
@@ -2115,6 +2152,24 @@ pub fn dump_structure(window_id: Option<String>) -> String {
 pub fn dump_frame_stats(window_id: Option<String>) -> String {
     let stats = UI_ENGINE.with(|cell| build_frame_stats(&cell.borrow(), window_id.as_deref()));
     serde_json::to_string(&stats).unwrap_or_else(|_| "{}".to_string())
+}
+
+/// ♿️📤️ `dumpAccessibility()` — the accessibility tree of one window, for the host to MIRROR into a
+/// real ARIA subtree beside the canvas (`🚀️browser-boot/🟦️.ts`'s `accessibilityMirror`).
+///
+/// This is not a test probe like its two neighbours: it is the wgpu target's production
+/// accessibility path. A DOM renderer gets `aria-label`/`aria-describedby`/`aria-live` for free,
+/// because React's Interpreter writes them onto the element it renders per record; a GPU canvas has
+/// no elements, so the same information has to leave the isolate as data and be given elements on
+/// the other side. `ui_wgpu::wgpu::accessibility::accessibility_projection` builds it from the very
+/// retained document the paint walk consumes, so what is announced is always what is on screen.
+///
+/// Ticket 26/09/09/PROCEDURAL-3D-END-TO-END, gap #3 of `📓️audit-wgpu-parity-2026-09-13.md`.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = dumpAccessibility)]
+pub fn dump_accessibility(window_id: Option<String>) -> String {
+    let dump = UI_ENGINE.with(|cell| build_accessibility_dump(&cell.borrow(), window_id.as_deref()));
+    serde_json::to_string(&dump).unwrap_or_else(|_| "{}".to_string())
 }
 //#endregion 🔬️IntrospectionExports
 

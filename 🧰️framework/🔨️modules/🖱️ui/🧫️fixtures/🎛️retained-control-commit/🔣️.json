@@ -1,0 +1,162 @@
+{
+  "provenance": {
+    "what": "The language-neutral oracle for what ONE gesture on a retained form control dispatches to the guest: an authored control node + the rect it is painted at + a gesture -> the exact action name and the exact argument map, or nothing.",
+    "why": "On the wgpu target the retained event router documented 'committing the edited value via on_change is not implemented', and only Button/Select/Stack were concretely wired. Toggle/Slider/NumberStepper/Ring/IconSelect appeared solely in is_focusable, and Input's typed value reached no guest at all: the shell's own immediate-mode commit system (commit_focused_input + stepper_metas) is keyed by ids the CHROME's immediate-mode widget walk mints, never a retained document's. Editing a generation's parameters was therefore fully cosmetic — a live caret, a live knob, and nothing dispatched. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END, 📓️audit-wgpu-parity-2026-09-13.md gaps #1 and #6.",
+    "rule": "ONE commit authority per target. The retained router owns what a press or an edit on a value-carrying node means, and every kind commits through the same two rules React's own retained interpreter commits through.",
+    "implementations": {
+      "rust": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🎛️retained-control-commit/🦀️.rs",
+      "typescript": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎛️retained-control-commit/🟦️.ts"
+    },
+    "reference": "React's retained path — 🗣️Interpreter/🟦️.tsx (dispatchTrigger per view), 📃️UiDocumentStore/🟦️.tsx (emitIntent: no binding for the trigger => no dispatch), 🛠️ShellHelpers/🟦️.tsx (uiInputField + uiIntentPayload)."
+  },
+  "rules": {
+    "namedByTrigger": "A gesture's scalar payload is named by its TRIGGER, never by the control that fired it: 'delta' for Trigger::Delta, 'value' for every other trigger (uiInputField).",
+    "mergedOverArgs": "The named payload is MERGED OVER the node's authored args, never substituted for them — {...args, ...named} (uiIntentPayload). A payload that replaced the args would throw away the very ids (generationId, questionId, windowId) that tell the guest WHAT the value belongs to.",
+    "unboundIsSilent": "A node that declares no binding for the trigger a gesture would fire dispatches NOTHING (emitIntent answers undefined). On the retained wgpu node an unbound trigger is carried as an EMPTY action name, so the same silence is required of it — this is what keeps a NumberStepper with no 'delta' binding falling back to its absolute 'change' instead of swallowing the gesture.",
+    "inputTriggerByCommitPolicy": "An Input whose commit policy is 'blur' commits through Trigger::Commit, on Enter and on blur only. Every other Input commits through Trigger::Change, on every keystroke — React's InputView makes exactly this choice (commitOnBlur ? 'commit' : 'change').",
+    "inputNumberIsNumeric": "An Input of kind 'number' commits a NUMBER, every other kind commits the raw string (InputView: kind === 'number' ? Number(raw) : raw).",
+    "toggleCommitsTheFlip": "A Toggle commits the value it is moving TO, not the one it is leaving — the pressed state after the press.",
+    "sliderReadsItsOwnTrack": "A Slider's press/drag value is read off the same full-width track paint draws (x = bounds.x + bounds.w * t), snapped onto step and clamped into min..=max.",
+    "ringReadsItsOwnCircle": "A Ring's press/drag t is the turn fraction of the angle from the centre of its own bounds, normalised into [0, 1).",
+    "stepperThirds": "A NumberStepper's box is three equal segments — decrement, value, increment. The outer two step by 'step'; a press on the value segment commits nothing.",
+    "dragReportsEveryValue": "A Slider and a Ring report every intermediate value while the pointer is down, not only the release. Every other kind commits on release inside its own bounds."
+  },
+  "cases": [
+    {
+      "name": "input-change-per-keystroke",
+      "why": "The generation3d Form field the whole gap was measured on: ui::input(...).try_on_with(Trigger::Change, 'updateGenerationValues', {generationId, questionId}).",
+      "node": { "kind": "input", "id": "generate.form.width.input", "inputKind": "text", "value": "12", "commit": null },
+      "binding": { "trigger": "change", "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "width" } },
+      "bounds": [0.0, 0.0, 160.0, 24.0],
+      "gesture": { "kind": "type", "at": [0.5, 0.5], "text": "5" },
+      "expected": { "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "width", "value": "125" } }
+    },
+    {
+      "name": "input-number-commits-a-number",
+      "why": "A numeric field must not hand the guest a string — dsl::DslValue::Number, never String.",
+      "node": { "kind": "input", "id": "generate.form.count.input", "inputKind": "number", "value": "3", "commit": null },
+      "binding": { "trigger": "change", "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "count" } },
+      "bounds": [0.0, 0.0, 160.0, 24.0],
+      "gesture": { "kind": "type", "at": [0.5, 0.5], "text": "7" },
+      "expected": { "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "count", "value": 37.0 } }
+    },
+    {
+      "name": "input-blur-policy-is-silent-while-typing",
+      "why": "generation3d's inline rename editor binds Trigger::Commit ('Enter / blur'); a keystroke must not dispatch a half-typed name.",
+      "node": { "kind": "input", "id": "generation.rename.input", "inputKind": "text", "value": "Gen", "commit": "blur" },
+      "binding": { "trigger": "commit", "action": "renameGeneration", "args": { "generationId": "g1" } },
+      "bounds": [0.0, 0.0, 160.0, 24.0],
+      "gesture": { "kind": "type", "at": [0.5, 0.5], "text": "A" },
+      "expected": null
+    },
+    {
+      "name": "input-blur-policy-commits-on-enter",
+      "why": "The other half of the same control — Enter is the gesture that ends an inline rename.",
+      "node": { "kind": "input", "id": "generation.rename.input", "inputKind": "text", "value": "Gen", "commit": "blur" },
+      "binding": { "trigger": "commit", "action": "renameGeneration", "args": { "generationId": "g1" } },
+      "bounds": [0.0, 0.0, 160.0, 24.0],
+      "gesture": { "kind": "typeThenEnter", "at": [0.5, 0.5], "text": "A" },
+      "expected": { "action": "renameGeneration", "args": { "generationId": "g1", "value": "GenA" } }
+    },
+    {
+      "name": "input-blur-policy-commits-on-blur",
+      "why": "Losing focus is the only OTHER moment a blur-committing field's value is ever dispatched.",
+      "node": { "kind": "input", "id": "generation.rename.input", "inputKind": "text", "value": "Gen", "commit": "blur" },
+      "binding": { "trigger": "commit", "action": "renameGeneration", "args": { "generationId": "g1" } },
+      "bounds": [0.0, 0.0, 160.0, 24.0],
+      "gesture": { "kind": "typeThenBlur", "at": [0.5, 0.5], "text": "A" },
+      "expected": { "action": "renameGeneration", "args": { "generationId": "g1", "value": "GenA" } }
+    },
+    {
+      "name": "input-unbound-is-silent",
+      "why": "emitIntent answers undefined for a node with no binding — the retained node carries that as an empty action name.",
+      "node": { "kind": "input", "id": "orphan.input", "inputKind": "text", "value": "", "commit": null },
+      "binding": null,
+      "bounds": [0.0, 0.0, 160.0, 24.0],
+      "gesture": { "kind": "type", "at": [0.5, 0.5], "text": "x" },
+      "expected": null
+    },
+    {
+      "name": "toggle-commits-the-flip",
+      "why": "A press reports the state it moves TO — React's onPressedChange(pressed).",
+      "node": { "kind": "toggle", "id": "preview.grid", "on": false },
+      "binding": { "trigger": "change", "action": "setGridVisible", "args": { "windowId": "w1" } },
+      "bounds": [0.0, 0.0, 32.0, 24.0],
+      "gesture": { "kind": "press", "at": [0.5, 0.5] },
+      "expected": { "action": "setGridVisible", "args": { "windowId": "w1", "value": true } }
+    },
+    {
+      "name": "toggle-already-on-commits-false",
+      "why": "The symmetric half — a pressed toggle reports false, so the guest is never told to re-apply what it already has.",
+      "node": { "kind": "toggle", "id": "preview.grid", "on": true },
+      "binding": { "trigger": "change", "action": "setGridVisible", "args": { "windowId": "w1" } },
+      "bounds": [0.0, 0.0, 32.0, 24.0],
+      "gesture": { "kind": "press", "at": [0.5, 0.5] },
+      "expected": { "action": "setGridVisible", "args": { "windowId": "w1", "value": false } }
+    },
+    {
+      "name": "slider-reads-its-own-track",
+      "why": "Three quarters along a 0..10 track with step 1 is 8 (7.5 snapped) — read off the very rect paint drew the track at.",
+      "node": { "kind": "slider", "id": "generate.form.radius.slider", "value": 0.0, "min": 0.0, "max": 10.0, "step": 1.0 },
+      "binding": { "trigger": "change", "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "radius" } },
+      "bounds": [20.0, 0.0, 100.0, 24.0],
+      "gesture": { "kind": "press", "at": [0.75, 0.5] },
+      "expected": { "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "radius", "value": 8.0 } }
+    },
+    {
+      "name": "slider-clamps-past-its-end",
+      "why": "A drag that leaves the track still reports a legal value, never one outside min..=max — and the pointer keeps its capture while it is off the control, exactly as it does in a browser.",
+      "node": { "kind": "slider", "id": "generate.form.radius.slider", "value": 0.0, "min": 2.0, "max": 6.0, "step": 2.0 },
+      "binding": { "trigger": "change", "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "radius" } },
+      "bounds": [20.0, 0.0, 100.0, 24.0],
+      "gesture": { "kind": "drag", "at": [0.9, 0.5], "to": [1.4, 0.5] },
+      "expected": { "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "radius", "value": 6.0 } }
+    },
+    {
+      "name": "stepper-increment-falls-back-to-absolute",
+      "why": "No 'delta' binding, so the increment third commits the ABSOLUTE next value — React's NumberStepperView supplies onDelta only when that binding exists.",
+      "node": { "kind": "numberStepper", "id": "settings.spacing", "value": 2.0, "step": 0.5, "uniform": true },
+      "binding": { "trigger": "change", "action": "setGridSpacing", "args": { "windowId": "w1" } },
+      "bounds": [0.0, 0.0, 90.0, 24.0],
+      "gesture": { "kind": "press", "at": [0.85, 0.5] },
+      "expected": { "action": "setGridSpacing", "args": { "windowId": "w1", "value": 2.5 } }
+    },
+    {
+      "name": "stepper-decrement-prefers-the-delta-binding",
+      "why": "With a 'delta' binding the outer thirds report a RELATIVE step, named 'delta' — the one trigger whose payload field is not 'value'.",
+      "node": { "kind": "numberStepper", "id": "settings.spacing", "value": 2.0, "step": 0.5, "uniform": true },
+      "binding": { "trigger": "change", "action": "setGridSpacing", "args": { "windowId": "w1" } },
+      "deltaBinding": { "trigger": "delta", "action": "bumpGridSpacing", "args": { "windowId": "w1" } },
+      "bounds": [0.0, 0.0, 90.0, 24.0],
+      "gesture": { "kind": "press", "at": [0.15, 0.5] },
+      "expected": { "action": "bumpGridSpacing", "args": { "windowId": "w1", "delta": -0.5 } }
+    },
+    {
+      "name": "stepper-value-segment-commits-nothing",
+      "why": "The middle third is the value readout, not a button — pressing it must not step.",
+      "node": { "kind": "numberStepper", "id": "settings.spacing", "value": 2.0, "step": 0.5, "uniform": true },
+      "binding": { "trigger": "change", "action": "setGridSpacing", "args": { "windowId": "w1" } },
+      "bounds": [0.0, 0.0, 90.0, 24.0],
+      "gesture": { "kind": "press", "at": [0.5, 0.5] },
+      "expected": null
+    },
+    {
+      "name": "ring-reads-its-own-circle",
+      "why": "Straight below the centre is a quarter turn — the same angle paint puts the knob at. The point stops just short of the bottom edge because a rect owns its top-left edges and not its bottom-right ones.",
+      "node": { "kind": "ring", "id": "sun.orbit", "orbId": "sun", "t": 0.0 },
+      "binding": { "trigger": "change", "action": "setSunOrbit", "args": { "windowId": "w1" } },
+      "bounds": [0.0, 0.0, 100.0, 100.0],
+      "gesture": { "kind": "press", "at": [0.5, 0.99] },
+      "expected": { "action": "setSunOrbit", "args": { "windowId": "w1", "value": 0.25 } }
+    },
+    {
+      "name": "icon-select-edits-its-icon-string",
+      "why": "An IconSelect's value IS its icon string, which React edits as text in the IconSelector's own editor.",
+      "node": { "kind": "iconSelect", "id": "widget.icon", "value": "circle", "uniform": true, "classifierKind": "icon" },
+      "binding": { "trigger": "change", "action": "setWidgetIcon", "args": { "widgetId": "n1" } },
+      "bounds": [0.0, 0.0, 80.0, 24.0],
+      "gesture": { "kind": "type", "at": [0.5, 0.5], "text": "-dot" },
+      "expected": { "action": "setWidgetIcon", "args": { "widgetId": "n1", "value": "circle-dot" } }
+    }
+  ]
+}

@@ -2003,6 +2003,8 @@ pub mod editor {
             pub mod set_camera_2d;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎦️set-camera-3d/🦀️.rs"]
             pub mod set_camera_3d;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🛑️cancel-fill-build/🦀️.rs"]
+            pub mod cancel_fill_build;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️set-fill-count/🦀️.rs"]
             pub mod set_fill_count;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️set-fixture-json/🦀️.rs"]

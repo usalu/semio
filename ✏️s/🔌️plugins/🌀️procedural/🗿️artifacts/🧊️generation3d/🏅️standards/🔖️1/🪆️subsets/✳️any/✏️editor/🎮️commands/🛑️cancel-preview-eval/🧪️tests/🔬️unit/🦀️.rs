@@ -225,3 +225,28 @@ fn an_unaddressable_kernel_cancels_locally_and_emits_nothing() {
     assert!(session.preview_cancelled());
     retire_flow_eval_session(session);
 }
+
+/// ⚖️ LAW: every preview window this EDITOR owns offers the cancel verb on the window kind itself,
+/// not only app-wide. `ShellHost` resolves a `cancelAction` against the focused window kind's own
+/// `actions`, so a window that publishes `cancellable:true` + `cancelAction` while withholding the
+/// verb paints a button whose click is dropped by the `declaredAction` gate before
+/// `plugin.handleAction` ever runs — which is exactly what both editor previews did
+/// (`📓️audit-user-journey-gaps-2026-09-13.md` §5, "dispatchable but not offered").
+/// The fixture's `statusContract.surfaces` is the language-agnostic half; the TypeScript twin at
+/// `🧪️tests/🔬️status-contract/🟦️.ts` reads the same rows.
+#[test]
+fn both_editor_preview_windows_offer_the_cancel_verb_the_fixture_names() {
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let fixture: serde_json::Value = serde_json::from_str(PREVIEW_CANCEL_FIXTURE_JSON).expect("preview-cancel fixture");
+    let definition = crate::editor::generation3d::create_generation3d_app();
+    let surfaces = fixture["statusContract"]["surfaces"].as_array().expect("surfaces");
+    let editor_surfaces: Vec<&serde_json::Value> = surfaces.iter().filter(|row| row["surface"] != "viewer").collect();
+    assert_eq!(editor_surfaces.len(), 2, "the editor owns the edit and generate preview windows");
+    for row in editor_surfaces {
+        let window_kind_id = row["windowKindId"].as_str().expect("window kind id");
+        let verb = row["cancelAction"].as_str().expect("cancel action");
+        assert_eq!(row["offersCancelOnWindow"].as_bool(), Some(true), "{window_kind_id}: the fixture must claim the window offers it");
+        let window = definition.window_kinds.iter().find(|window| window.id == window_kind_id).unwrap_or_else(|| panic!("{window_kind_id} is a declared window kind"));
+        assert!(window.actions.iter().any(|action| action.id == verb), "{window_kind_id} must offer {verb}: {:?}", window.actions.iter().map(|action| action.id.as_str()).collect::<Vec<_>>());
+    }
+}

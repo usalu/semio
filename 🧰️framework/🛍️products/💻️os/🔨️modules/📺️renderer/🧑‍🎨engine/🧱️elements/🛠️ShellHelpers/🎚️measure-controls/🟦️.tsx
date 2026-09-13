@@ -1,11 +1,11 @@
-/** 🎚️ The two measures-rail controls that carry their own in-flight state.
+/** 🎚️ The measures-rail controls that carry their own in-flight state, plus the read-only process view.
  *
  * 🪟️ Split out of `🛠️ShellHelpers/🟦️.tsx` so a law can mount them without importing that module's
  * whole shell surface (which cycles through `🏛️ShellHost`/`🐚️Shell`).
  */
 import { useEffect, useState } from "react";
-import type { ActionDescriptor, WindowMeasure } from "@semio-tech/framework";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, TreeCheckbox, uiDataLabel } from "@semio-tech/ui-react";
+import type { ActionDescriptor, MeasureProgressStep, MeasureProgressStepKind, WindowMeasure } from "@semio-tech/framework";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Stepper, TreeCheckbox, uiDataLabel, useLabel } from "@semio-tech/ui-react";
 
 /**
  * 🕰️ The value a measures-rail control shows while its own dispatch is still in flight.
@@ -90,3 +90,120 @@ export function WindowMeasureToggle({ measure, onAction }: { readonly measure: E
   );
 }
 
+
+/** @emoji 🚦️ Kind → semantic palette token. Never a literal color: the four tokens are the same
+ * `info`/`success`/`warning`/`danger` the wgpu target paints `MeasureProgressStepKind` with. */
+const MEASURE_PROGRESS_STEP_CLASS: Readonly<Record<MeasureProgressStepKind, string>> = {
+  info: "bg-info",
+  success: "bg-success",
+  warning: "bg-warning",
+  danger: "bg-danger",
+};
+
+/** @emoji 🪜️ How many trailing step lines the rail shows — mirrors the wgpu `MEASURE_PROGRESS_STEPS_SHOWN`. */
+export const MEASURE_PROGRESS_STEPS_SHOWN = 4;
+
+/** @emoji ♾️ Share of the track an indeterminate (`total` absent) bar fills — mirrors the wgpu constant. */
+const MEASURE_PROGRESS_INDETERMINATE_SHARE = 0.35;
+
+/**
+ * @emoji 🔢️ A measures-rail number entry — unbounded unless the measure declares `min`/`max`.
+ *
+ * Typing and stepper clicks move a DRAFT only; the action dispatches once the entry commits (blur,
+ * Enter, or the release of a `+`/`−` press — `Stepper` funnels all three through `onPointerUp`), so a
+ * count of 250 is one action, not the 1/2/25/250 prefix storm a per-keystroke dispatch would send.
+ * The draft retires exactly as {@link WindowMeasureSelect}'s does, the moment the program publishes.
+ */
+export function WindowMeasureNumber({ measure, onAction }: { readonly measure: Extract<WindowMeasure, { kind: "number" }>; readonly onAction: (action: ActionDescriptor) => unknown }) {
+  const [value, setValue] = useWindowMeasureDraft(measure.value);
+  const disabled = measure.disabled === true;
+  const floor = measure.min ?? 0;
+  const span = measure.max === undefined ? 0 : measure.max - floor;
+  const readyPercent = measure.ready === undefined || span <= 0 ? null : Math.min(100, Math.max(0, ((measure.ready - floor) / span) * 100));
+  return (
+    <div className="flex w-full min-w-0 flex-col gap-tiny" data-slot="window-measure-number" {...{ [PUBLISHED_VALUE_ATTRIBUTE]: String(measure.value) }}>
+      <Stepper
+        id={measure.id}
+        value={value}
+        min={measure.min}
+        max={measure.max}
+        step={measure.step ?? 1}
+        onChange={(next) => {
+          if (!disabled) setValue(next);
+        }}
+        onPointerUp={() => {
+          if (disabled || value === measure.value) return;
+          onAction({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), value } });
+        }}
+      />
+      {readyPercent === null ? null : (
+        <div data-slot="window-measure-number-ready" className="h-hairline w-full overflow-hidden rounded-full bg-muted">
+          <div className="h-full bg-accent" style={{ width: `${readyPercent}%` }} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * @emoji ⏳️ A measures-rail progress view — read-only except for its cancel button.
+ *
+ * Determinate while `total` is known (`role="progressbar"` with `aria-valuenow`/`aria-valuemax`),
+ * indeterminate otherwise (`aria-busy`, no value to announce, a fixed sweep instead of a fraction).
+ * The stage caption and the last {@link MEASURE_PROGRESS_STEPS_SHOWN} step lines come from the
+ * program already localized; only the cancel button's own copy is framework-owned, and it comes from
+ * the `ui.common.cancel` bundle (EN + DE, no default language).
+ */
+export function WindowMeasureProgress({ measure, onAction }: { readonly measure: Extract<WindowMeasure, { kind: "progress" }>; readonly onAction: (action: ActionDescriptor) => unknown }) {
+  const cancelLabel = useLabel("ui.common.cancel");
+  const determinate = measure.total !== undefined && measure.total > 0;
+  const percent = determinate ? Math.min(100, Math.max(0, (measure.completed / (measure.total as number)) * 100)) : MEASURE_PROGRESS_INDETERMINATE_SHARE * 100;
+  const steps = measure.steps.slice(-MEASURE_PROGRESS_STEPS_SHOWN);
+  const accessibleName = uiDataLabel(measure.label ?? measure.stage ?? measure.id);
+  return (
+    <div className="flex w-full min-w-0 flex-col gap-tiny" data-slot="window-measure-progress" data-measure-id={measure.id}>
+      {measure.stage === undefined ? null : (
+        <span data-slot="window-measure-progress-stage" className="text-muted-foreground truncate text-xs">
+          {measure.stage}
+        </span>
+      )}
+      <div
+        data-slot="window-measure-progress-bar"
+        role={determinate ? "progressbar" : undefined}
+        aria-label={accessibleName}
+        aria-valuenow={determinate ? measure.completed : undefined}
+        aria-valuemin={determinate ? 0 : undefined}
+        aria-valuemax={determinate ? measure.total : undefined}
+        aria-busy={determinate ? undefined : true}
+        data-completed={String(measure.completed)}
+        data-total={measure.total === undefined ? undefined : String(measure.total)}
+        className="h-tiny w-full overflow-hidden rounded-full bg-muted"
+      >
+        <div className={measure.loading === true && !determinate ? "h-full animate-pulse bg-accent" : "h-full bg-accent"} style={{ width: `${percent}%` }} />
+      </div>
+      {steps.length === 0 ? null : (
+        <ul data-slot="window-measure-progress-steps" className="flex flex-col gap-tiny">
+          {steps.map((step: MeasureProgressStep, index: number) => (
+            <li key={`${measure.id}.step.${index}`} data-step-kind={step.kind} className="flex min-w-0 items-center gap-tiny">
+              <span aria-hidden="true" className={`size-tiny shrink-0 rounded-full ${MEASURE_PROGRESS_STEP_CLASS[step.kind]}`} />
+              <span className="text-muted-foreground truncate text-xs">{step.text}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {measure.cancel === undefined ? null : (
+        <button
+          type="button"
+          id={`${measure.id}.cancel`}
+          data-slot="window-measure-progress-cancel"
+          className="border-border text-element hover:bg-muted rounded-sm border px-half py-0 text-xs"
+          onClick={() => {
+            if (measure.cancel !== undefined) onAction(measure.cancel);
+          }}
+        >
+          {cancelLabel}
+        </button>
+      )}
+    </div>
+  );
+}

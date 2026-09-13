@@ -10,11 +10,15 @@ use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-/// 🧾️ Resets the ephemeral generation-preview to match a freshly-loaded example, keeping every other
-/// display option (preview camera, LOD, show mode, and sun)
-/// unchanged. `graph`'s selection resets on its own — the framework prunes it against the new
-/// fixture's `interaction_topology` (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-fn config_after_example_load(previous: &Generation3dConfig, flow_camera: &CameraJson) -> Generation3dConfig {
+/// 🧾️ Resets the ephemeral generation-preview to match a freshly-loaded document — a bundled example
+/// here, an imported file in `📥️import-document` — keeping every other display option (preview
+/// camera, LOD, show mode, and sun) unchanged. `graph`'s selection resets on its own — the framework
+/// prunes it against the new fixture's `interaction_topology`
+/// (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+///
+/// 📥️ Shared with `📥️import-document` rather than copied: loading an example and importing a file
+/// are the SAME whole-document replacement, and the repeated code must live in one place.
+pub fn config_after_document_load(previous: &Generation3dConfig, flow_camera: &CameraJson) -> Generation3dConfig {
     Generation3dConfig {
         camera: flow_camera.clone(),
         selected_generation_id: None,
@@ -55,7 +59,7 @@ pub fn emit(payload: &SetActiveExample, doc: &ArtifactView<'_, Generation3dSnaps
     };
     let mut operations: Vec<Generation3dMutation> = doc.snapshot.generation.generations.iter().map(|generation| generation_mutation_to_generation3d(GenerationMutation::Remove { id: generation.id.clone() })).collect();
     operations.extend(generation3d_fixture_operations(fixture, &target.fixture));
-    let config = config_after_example_load(cfg.snapshot, &target.fixture.camera);
+    let config = config_after_document_load(cfg.snapshot, &target.fixture.camera);
     // 🧹️ The loaded example projection is dead once its operations and camera are read — close it
     // through its explicit ladder, never leave the fixture's ordered layout root to drop glue.
     target.retire_cold();

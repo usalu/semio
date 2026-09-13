@@ -21,6 +21,14 @@ fn parse_sub_operations(text: &str) -> Vec<dsl::json::Value> {
     dsl::json::parse(text).ok().and_then(|value| value.as_array().cloned()).unwrap_or_default()
 }
 
+/// 🧾️ The five sub-operations the node-graph surfaces actually dispatch, and who dispatches each:
+/// `setFixture` (the wasm flow canvas, after every committed gesture — `🕸️NodeGraph/🟦️.tsx`'s
+/// `onFixtureChanged`), `move` / `connect` (the SSR `Diagram` fallback's `onNodeDragStop` /
+/// `onConnect`), `disconnect` (a cut wire), and `deleteSelection` (the row/keyboard delete path).
+/// `move` and `disconnect` used to fall through the `_ => {}` arm, so a fallback node drag and every
+/// wire cut were silent no-ops that still spent a whole retained command
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, gaps #3/#10). `move` is also the ONE home of the node
+/// move verb now — the redundant `moveMediaNode` command it duplicated is gone.
 fn apply_operations(fixture: &FlowFixture, sub_operations: &[dsl::json::Value], selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
     let operations = with_host(fixture, |host| {
         for operation in sub_operations {
@@ -42,6 +50,19 @@ fn apply_operations(fixture: &FlowFixture, sub_operations: &[dsl::json::Value], 
                     let to_port = operation.get("targetPortId").and_then(|value| value.as_str());
                     if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (from, from_port, to, to_port) {
                         let _ = host.connect_ports(from, from_port, to, to_port);
+                    }
+                }
+                "disconnect" => {
+                    if let Some(synapse_id) = operation.get("synapseId").and_then(|value| value.as_str()) {
+                        let _ = host.disconnect(synapse_id);
+                    }
+                }
+                "move" => {
+                    let node_id = operation.get("nodeId").and_then(|value| value.as_str());
+                    let x = operation.get("x").and_then(dsl::json::Value::as_f64);
+                    let y = operation.get("y").and_then(dsl::json::Value::as_f64);
+                    if let (Some(node_id), Some(x), Some(y)) = (node_id, x, y) {
+                        let _ = host.move_widget(node_id, x, y);
                     }
                 }
                 _ => {}
@@ -84,3 +105,9 @@ pub(crate) fn apply_selected(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Gen
     let sub_operations = parse_sub_operations(&payload.operations_json);
     apply_operations(&doc.snapshot.fixture, &sub_operations, selected)
 }
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

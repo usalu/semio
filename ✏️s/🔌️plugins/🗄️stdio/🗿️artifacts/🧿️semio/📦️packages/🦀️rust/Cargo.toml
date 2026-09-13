@@ -41,7 +41,6 @@ semio-framework-hash = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-math = { workspace = true }
 semio-framework-mesh-engine = { workspace = true }
-semio-framework-number = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
@@ -86,6 +85,15 @@ semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"]
 # oracle. `🧲️procedural-example-booleans` measures the tessellated boolean result with parry3d's
 # own signed-volume integrator to cross-check this kernel's `solid_volume`.
 parry3d = "0.17"
+# 🔮 Test-only EXACT-ARITHMETIC oracle for `🧊️brep/…/➡️vector/⚖️predicates` (never a
+# `[dependencies]` entry, never reachable from a production target). The predicates' exact path is
+# nonoverlapping floating-point expansion arithmetic (Shewchuk error-free transformations); this
+# recomputes the SAME determinants in arbitrary-precision rationals — a completely different
+# representation and a completely different algorithm, written by someone else — so the claim "the
+# expansion path returns the exact sign" rests on an independent derivation rather than on the
+# expansion code agreeing with itself (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+# `📓️kernel-performance-2026-09-13.md`).
+num-rational = "0.4"
 semio-framework-async-macros = { workspace = true }
 semio-s-artifact-stdio-csv = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }

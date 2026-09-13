@@ -1511,6 +1511,16 @@ export function parseDagSliderOverlays(stateJson: string): readonly DagSliderOve
   }
 }
 
+/** @emoji 🔬️ One graph surface's geometry read-back, published as `window.__semioFlowGraphProbe[surfaceId]`.
+ * `entity` is {@link dagIntroductionResolver}'s own resolver — `"node"`, `"handle"` (a port), `"edge"`
+ * and `"slider"` all resolve to viewport pixels — so a scripted caller can aim a pointer gesture at a
+ * node or a port on a canvas that paints itself and has no per-entity DOM. */
+export type FlowGraphSurfaceProbe = {
+  readonly entity: (domain: string, id: string) => IntroductionResolvedGeometry | null;
+  readonly fixtureJson: () => string | null;
+  readonly rect: () => { readonly x: number; readonly y: number; readonly width: number; readonly height: number } | null;
+};
+
 /** @emoji 🎯️ The subset of `FlowWasmSession`/`FrameworkGraphSession` {@link dagIntroductionResolver} needs
  * — factored out because both session interfaces expose the same overlay/entity JSON shape and both host
  * components (`FlowGraphCanvasHost`, `WasmGraphSurface`) register the identical resolver logic. */
@@ -2169,6 +2179,33 @@ export function FlowGraphCanvasHost({
     if (!windowInstanceId) return;
     return registerIntroductionSurfaceResolver(windowElementId(windowInstanceId), dagIntroductionResolver(sessionRef, containerRef));
   }, [windowInstanceId]);
+
+  // 🔬️ `window.__semioFlowGraphProbe[surfaceId]` — the graph canvas's geometry read-back, modelled on
+  // `ShellHost`'s `__semioOsCatalogProbe`/`__semioMountedGisMapProbe`. The canvas paints ITSELF (wasm,
+  // one `<canvas>`, no per-node DOM), so a scripted or assistive caller has no way to find the screen
+  // position of a node or a port `handle` and therefore no way to drive the one gesture only this
+  // surface offers: dragging a wire from an output port to an input port. That gesture was the single
+  // interaction in this app with no runtime proof of any kind
+  // (`📓️audit-user-journey-gaps-2026-09-13.md` gap #3). Reuses `dagIntroductionResolver` verbatim —
+  // the same resolver demonstration targeting already registers — so there is ONE entity→screen
+  // implementation, not a probe-only second one. Warm-up is asynchronous (the first call for an entity
+  // starts the session read and returns `null`); callers poll.
+  useEffect(() => {
+    const resolver = dagIntroductionResolver(sessionRef, containerRef);
+    const host = window as unknown as { __semioFlowGraphProbe?: Record<string, FlowGraphSurfaceProbe> };
+    const registry = (host.__semioFlowGraphProbe ??= {});
+    registry[surfaceId] = {
+      entity: (domain, id) => resolver.entity?.(domain, id) ?? null,
+      fixtureJson: () => sceneRef.current.fixtureJson ?? null,
+      rect: () => {
+        const measured = containerRef.current?.getBoundingClientRect();
+        return measured ? { x: measured.x, y: measured.y, width: measured.width, height: measured.height } : null;
+      },
+    };
+    return () => {
+      delete registry[surfaceId];
+    };
+  }, [surfaceId]);
 
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {

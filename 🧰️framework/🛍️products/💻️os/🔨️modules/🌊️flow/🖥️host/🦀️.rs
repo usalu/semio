@@ -554,6 +554,15 @@ impl FlowHost {
         self.interaction_projection = self.dag.bounded_interaction_projection(self.interaction_revision).ok();
     }
 
+    /// 🖱️ Re-seeds the bounded pointer-plan projection after a SCREEN-path gesture mutated this host
+    /// directly (drawing a wire, dragging the minimap viewport, dragging an inline widget) — without
+    /// it `plan_pointer` answers `Unsupported` for the rest of the session, because its stored
+    /// projection is a revision behind and nothing else on that path bumps it back into step.
+    pub fn resync_interaction_projection(&mut self) {
+        self.interaction_revision = self.interaction_revision.wrapping_add(1);
+        self.refresh_interaction_projection();
+    }
+
     pub fn plan_wheel(&self, sx: f64, sy: f64, delta_x: f64, delta_y: f64, zoom_gesture: bool) -> FlowWheelPlan {
         let camera = &self.fixture.camera;
         let expected = [camera.x, camera.y, camera.zoom];
@@ -2348,6 +2357,12 @@ impl FlowHostRetirement {
     }
 
     /// 📏️ Advances one host owner with caller byte credit for its byte-backed retirement cursors.
+    ///
+    /// ⚠️ [`crate::retained::FlowRetirement`] is a RESERVE-then-CLOSE frontier: its `close_step`
+    /// answers `Blocked` — never an error — while `next_allocation_bytes` still names a page the
+    /// decomposition of the current owner needs, so a driver that only ever closes spins forever on
+    /// any fixture whose widgets claim continuation slots. This ladder therefore pays the
+    /// reservation first, exactly as [`crate::retained::FlowRetirement::retire_cold`] does.
     pub fn close_page(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<bool, FlowHostRetirementFault> {
         use crate::os_store::ErasedSnapshotRetirement;
         use crate::retained::FlowOwner;
@@ -2370,8 +2385,18 @@ impl FlowHostRetirement {
                 }
             }
         } else if !state.domain.is_empty() {
-            if state.domain.close_step(1, maximum_bytes).is_err() {
-                state.faulted = true;
+            match state.domain.next_allocation_bytes() {
+                Ok(Some(demand)) => {
+                    if state.domain.reserve_allocation(demand).is_err() {
+                        state.faulted = true;
+                    }
+                }
+                Ok(None) => {
+                    if state.domain.close_step(1, maximum_bytes).is_err() {
+                        state.faulted = true;
+                    }
+                }
+                Err(_) => state.faulted = true,
             }
         } else if !state.neural.terminal_is_empty() {
             state.neural.close_step(1, maximum_bytes);

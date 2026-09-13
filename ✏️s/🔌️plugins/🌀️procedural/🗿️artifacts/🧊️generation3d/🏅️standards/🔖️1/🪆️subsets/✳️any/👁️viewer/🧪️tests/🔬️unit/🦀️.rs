@@ -215,12 +215,20 @@ fn view_tessellate_envelope_fits_the_declared_wire_bound() {
 fn every_viewer_tool_id_is_declared_in_all_four_tables() {
     let commands: std::collections::BTreeSet<&str> = Generation3dViewCommand::TOOL_JOB_IDS.iter().copied().collect();
     let retained: std::collections::BTreeSet<&str> =
-        GENERATION3D_VIEW_TOOL_IDS.iter().chain(GENERATION3D_VIEW_CONTRIBUTIONS_TOOL_IDS.iter()).chain(GENERATION3D_VIEW_EXAMPLE_TOOL_IDS.iter()).chain(GENERATION3D_VIEW_FLOW_EVAL_TOOL_IDS.iter()).copied().collect();
+        GENERATION3D_VIEW_TOOL_IDS
+            .iter()
+            .chain(GENERATION3D_VIEW_CONTRIBUTIONS_TOOL_IDS.iter())
+            .chain(GENERATION3D_VIEW_EXAMPLE_TOOL_IDS.iter())
+            .chain(GENERATION3D_VIEW_FLOW_EVAL_TOOL_IDS.iter())
+            .chain(GENERATION3D_VIEW_DOCUMENT_IO_TOOL_IDS.iter())
+            .copied()
+            .collect();
     let published: std::collections::BTreeSet<&str> = <Generation3dViewBoundedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS
         .iter()
         .chain(<Generation3dViewContributionsJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter())
         .chain(<Generation3dViewExampleJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter())
         .chain(<Generation3dViewFlowEvalJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter())
+        .chain(<Generation3dViewDocumentIoJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter())
         .map(|contract| contract.tool_id)
         .collect();
     let proved: std::collections::BTreeSet<String> = <Generation3dViewer as ArtifactViewer>::bounded_first_step_tool_proofs().iter().map(|proof| proof.tool_id().to_string()).collect();
@@ -228,6 +236,35 @@ fn every_viewer_tool_id_is_declared_in_all_four_tables() {
     assert_eq!(commands, retained, "command enum ids and retained tool ids must be a bijection");
     assert_eq!(commands, published, "every tool needs an exact publication contract");
     assert_eq!(commands, proved, "every tool needs an exact bounded first-step proof");
+}
+
+/// ⚖️ LAW: a reader can take the document away with them. `📓️audit-user-journey-gaps-2026-09-13.md`
+/// §6 found this viewer's eight commands were all view-only and named none of the artifact's nine
+/// `🚪️io` leaves. The export verb is declared, palette-visible, keyboard-reachable, offers the io
+/// module's OWN format roster in both languages — and IMPORT is deliberately absent, because
+/// replacing a document is not something a read-only surface may do.
+#[test]
+fn the_viewer_offers_export_in_both_languages_and_never_offers_import() {
+    use crate::standards::v1::subsets::any::io::document_io;
+    use semio_framework_plugin::{ArgSchema, Locale, Terminology};
+    let definition = create_generation3d_viewer();
+    let window = definition.window_kinds.iter().find(|window| window.id == preview::WINDOW_KIND_ID).expect("the viewer declares its preview window kind");
+    let action = window.actions.iter().find(|action| action.id == "exportDocument").expect("the viewer declares exportDocument");
+    assert!(action.in_palette, "a reader has to be able to find it");
+    assert_eq!(action.kind, ActionKind::View, "ShellHost's read-only gate swallows a Mutation-kind action on a viewer session");
+    assert_eq!(action.label.resolve(Terminology::Native, Locale::En), "Export Document…");
+    assert_eq!(action.label.resolve(Terminology::Native, Locale::De), "Dokument exportieren…");
+    let arg = action.args.iter().find(|arg| arg.id == "format").expect("exportDocument carries a format arg");
+    let ArgSchema::String { options, .. } = &arg.schema else { panic!("the format arg is a string select") };
+    assert_eq!(options.iter().map(|option| option.value.as_str()).collect::<Vec<_>>(), document_io::EXPORT_FORMATS.iter().map(|row| row.id).collect::<Vec<_>>(), "the viewer's picker and the io roster are one list");
+    for (option, row) in options.iter().zip(document_io::EXPORT_FORMATS.iter()) {
+        assert_eq!(option.label.resolve(Terminology::Native, Locale::De), row.label_de, "{}: German option label", row.id);
+    }
+    assert!(definition.keybindings.iter().any(|binding| binding.keys == "mod+shift+e" && binding.action.action == "exportDocument"), "the export verb is keyboard-reachable, not mouse-only");
+    for forbidden in ["importDocument", "importDocumentRequest"] {
+        assert!(!window.actions.iter().any(|action| action.id == forbidden), "a viewer must never declare {forbidden}");
+        assert!(!Generation3dViewCommand::TOOL_JOB_IDS.contains(&forbidden), "a viewer must never own the {forbidden} tool");
+    }
 }
 
 /// 🔒️ The runtime half of the read-only guarantee: no viewer tool may publish on the document lane.
@@ -238,6 +275,9 @@ fn no_viewer_tool_publishes_on_the_artifact_lane() {
         .chain(<Generation3dViewContributionsJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter())
         .chain(<Generation3dViewExampleJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter())
         .chain(<Generation3dViewFlowEvalJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter())
+        // 📤️ The io route is in this law deliberately: `exportDocument` is the one io direction a
+        // viewer may own, and the reason it may is that it publishes on NO store lane at all.
+        .chain(<Generation3dViewDocumentIoJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter())
     {
         assert!(!contract.lanes.is_empty(), "{} declares no publication lane", contract.tool_id);
         assert!(!contract.lanes.contains(&ArtifactToolPublicationLane::Artifact), "viewer tool {} must never publish on the artifact lane", contract.tool_id);
@@ -256,7 +296,7 @@ fn no_viewer_tool_publishes_on_the_artifact_lane() {
 fn every_declared_viewer_action_is_migrated() {
     let def = create_generation3d_viewer();
     let window = def.window_kinds.iter().find(|window| window.id == preview::WINDOW_KIND_ID).expect("the viewer declares its preview window kind");
-    for tool_id in GENERATION3D_VIEW_TOOL_IDS.iter().chain(GENERATION3D_VIEW_EXAMPLE_TOOL_IDS.iter()) {
+    for tool_id in GENERATION3D_VIEW_TOOL_IDS.iter().chain(GENERATION3D_VIEW_EXAMPLE_TOOL_IDS.iter()).chain(GENERATION3D_VIEW_DOCUMENT_IO_TOOL_IDS.iter()) {
         let action = window.actions.iter().find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("tool {tool_id} has no declared action"));
         assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "action {tool_id} is not Migrated");
         assert_eq!(action.kind, ActionKind::View, "a viewer action must be a View action");

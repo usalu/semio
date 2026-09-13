@@ -32,7 +32,6 @@
                 .collect(),
             hidden: false,
             locked: false,
-            reveal_index: None,
         }
     }
 
@@ -83,4 +82,41 @@
         session.set_brush_live_target(Some("seed-left-001:v0".into()));
         let envelope = Puzzle3dScene { fixture: forest_store(), runtime: Puzzle3dRuntime::default(), active_utility: utilities::brush::UTILITY_ID.into() };
         assert_eq!(world_brush_preview_target(&session, &envelope, &Puzzle3dInteractionSnapshot::default()).as_deref(), Some("seed-left-001:v0"));
+    }
+
+    #[test]
+    fn world_interaction_json_publishes_fill_counters_and_no_reveal_cutoffs() {
+        let session = Puzzle3dPrecomputeSession::new();
+        let envelope = Puzzle3dScene { fixture: forest_store(), runtime: Puzzle3dRuntime::default(), active_utility: "fill".into() };
+        let value: Value = serde_json::from_str(&world_interaction_json(&envelope, &session, &Puzzle3dInteractionSnapshot::default(), None)).expect("interactionJson");
+        assert!(value.get("revealCutoffs").is_none(), "a locked piece is an ordinary document object now — there is no reveal cutoff channel left to publish");
+        let fill = value.get("fillBuild").and_then(Value::as_object).expect("fillBuild block");
+        let mut keys: Vec<&str> = fill.keys().map(String::as_str).collect();
+        keys.sort_unstable();
+        assert_eq!(keys, ["appliedCount", "collisions", "count", "done", "rejected", "requestedCount", "stage", "stallReason", "tested"]);
+        assert!(fill["stage"].is_string(), "stage travels as the planner's own machine identity");
+        assert!(fill["stallReason"].is_null() || fill["stallReason"].is_string());
+        assert!(fill["tested"].is_u64() && fill["rejected"].is_u64() && fill["collisions"].is_u64());
+    }
+
+    #[test]
+    fn fill_stage_labels_answer_in_english_and_german_with_no_default_locale() {
+        use crate::editor::puzzle3d::terminology::puzzle3d_fill_stage_label;
+        use semio_framework_plugin::{AppLabels, Locale, Terminology};
+        let english = Puzzle3dLabels::labels(Locale::En, Terminology::Native);
+        let german = Puzzle3dLabels::labels(Locale::De, Terminology::Native);
+        for stage in ["prepare-spatial", "select-target", "select-candidate", "test-collision", "accept-candidate", "complete"] {
+            let en = puzzle3d_fill_stage_label(english, stage, None);
+            let de = puzzle3d_fill_stage_label(german, stage, None);
+            assert!(!en.is_empty() && !de.is_empty(), "stage {stage} must answer in both authored locales");
+            assert_ne!(en, de, "stage {stage} must be translated, never an English fallback");
+        }
+        assert_eq!(
+            puzzle3d_fill_stage_label(english, "discard-tail", None),
+            puzzle3d_fill_stage_label(english, "prepare-fixture", None),
+            "every preparation stage reads as one phase"
+        );
+        assert!(puzzle3d_fill_stage_label(german, "select-target", Some("no-open-vortex")).contains("kein offener Vortex"));
+        assert!(puzzle3d_fill_stage_label(english, "select-target", Some("document-capacity")).contains("document capacity reached"));
+        assert!(puzzle3d_fill_stage_label(english, "select-target", Some("mystery")).contains("mystery"), "an unlabelled stall reason is surfaced verbatim, never swallowed");
     }

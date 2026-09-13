@@ -9087,6 +9087,8 @@
         "📽️set-projection",
         "🔁️cycle-brush-candidate",
         "🔁️cycle-candidate",
+        "🔁️cycle-show-mode",
+        "🔁️cycle-lod-mode",
         "🔂️engagement-repeat-last",
         "🔄️redraw-handles",
         "🔎️zoom-to-selection",

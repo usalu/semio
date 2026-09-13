@@ -28,6 +28,11 @@ fn default_true() -> bool {
     true
 }
 
+/// 🪣️ The fill count a fresh 5d document offers — see `crate::editor::puzzle5d::PUZZLE5D_DEFAULT_FILL_COUNT`.
+fn default_fill_count() -> u32 {
+    crate::editor::puzzle5d::PUZZLE5D_DEFAULT_FILL_COUNT
+}
+
 //#endregion 🔖️Defaults
 
 //#region 🔖️Cameras
@@ -66,7 +71,7 @@ pub struct Puzzle5dRuntime {
     pub camera2d: Puzzle5dCamera2d,
     #[value(default)]
     pub camera3d: Puzzle5dCamera3d,
-    #[value(default)]
+    #[value(default = "default_fill_count")]
     pub fill_count: u32,
     #[value(default)]
     pub brush_candidate_index: usize,
@@ -96,7 +101,7 @@ impl Default for Puzzle5dRuntime {
         Self {
             camera2d: Puzzle5dCamera2d { x: 0.0, y: 0.0, zoom: 1.0 },
             camera3d: Puzzle5dCamera3d { position: [8.0, -8.0, 8.0], target: [0.0, 0.0, 0.0], zoom: 1.0 },
-            fill_count: 0,
+            fill_count: default_fill_count(),
             brush_candidate_index: 0,
             overlap_budget: default_overlap_budget(),
             lod_mode: default_lod_mode(),

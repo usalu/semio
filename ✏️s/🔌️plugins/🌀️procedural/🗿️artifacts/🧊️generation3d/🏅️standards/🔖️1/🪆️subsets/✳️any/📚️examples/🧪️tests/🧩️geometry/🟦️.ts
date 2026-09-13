@@ -22,7 +22,7 @@ export const EXAMPLE_GEOMETRY_FIXTURE_SCHEMA = "s.procedural.generation3d.exampl
  * geometry must be, and the Rust run keeps failing until the named defect is fixed. A fixed defect
  * takes its value out of this list with it.
  */
-export const EXAMPLE_GEOMETRY_KERNEL_STATUSES = ["green", "blocked-on-fillet-kernel"];
+export const EXAMPLE_GEOMETRY_KERNEL_STATUSES = ["green"];
 
 /** 📐️ One example's committed expected-geometry statement. */
 export type ExampleGeometryFixture = {
@@ -47,7 +47,27 @@ export type ExampleGeometryFixture = {
     kernelVolumeTolerance: number | null;
   };
   delivery: ExampleDeliveryExpectation;
+  budget: ExampleBudgetExpectation;
   kernelStatus: string;
+};
+
+/**
+ * ⏱️ What one example's chain is allowed to COST in wall microseconds on the Rust lane's own native
+ * `test` (unoptimized) profile. Geometry that is right and delivered but takes 78 s to appear is an
+ * example the user never sees converge, so this row sits beside the geometry and the delivery rather
+ * than in a separate performance suite (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+ * `📓️kernel-performance-2026-09-13.md`).
+ *
+ * These are CEILINGS with deliberate headroom over the measured value, meant to convict an
+ * algorithmic regression — the boolean kernel's face-stitch once spent 99% of
+ * `🍩️sphere-cut-with-torus`'s 61 s in arbitrary-precision rational predicates — never to police
+ * machine-to-machine variance. A number here is lowered after a measured improvement, never raised
+ * to admit a regression.
+ */
+export type ExampleBudgetExpectation = {
+  maxEvaluateMicros: number;
+  maxTessellateMicros: number;
+  maxPreviewTessellateMicros: number;
 };
 
 /**
@@ -96,7 +116,44 @@ export function assertFixtureContract(fixture: ExampleGeometryFixture, exampleId
   expect(fixture.expect.kernelVolumeTolerance === null || (fixture.expect.kernelVolumeTolerance as number) > 0).toBe(true);
   expect(EXAMPLE_GEOMETRY_KERNEL_STATUSES).toContain(fixture.kernelStatus);
   assertDeliveryContract(fixture);
+  assertBudgetContract(fixture);
 }
+
+/**
+ * ✅️ Every invariant the budget row states, derived here independently of the Rust run. A ceiling
+ * above {@link EXAMPLE_BUDGET_INTERACTIVE_CEILING_MICROS} (for a user-facing phase) or
+ * {@link EXAMPLE_BUDGET_FIDELITY_CEILING_MICROS} (for the fidelity phase) is not a budget at all —
+ * it is the absence of one — and the preview LOD is by construction coarser than the fixture's own
+ * tessellation tolerance, so its ceiling may never exceed the full-tolerance one.
+ */
+export function assertBudgetContract(fixture: ExampleGeometryFixture): void {
+  const budget = fixture.budget;
+  for (const micros of [budget.maxEvaluateMicros, budget.maxTessellateMicros, budget.maxPreviewTessellateMicros]) {
+    expect(Number.isInteger(micros)).toBe(true);
+    expect(micros).toBeGreaterThan(0);
+  }
+  for (const micros of [budget.maxEvaluateMicros, budget.maxPreviewTessellateMicros]) expect(micros).toBeLessThanOrEqual(EXAMPLE_BUDGET_INTERACTIVE_CEILING_MICROS);
+  expect(budget.maxTessellateMicros).toBeLessThanOrEqual(EXAMPLE_BUDGET_FIDELITY_CEILING_MICROS);
+  expect(budget.maxPreviewTessellateMicros).toBeLessThanOrEqual(budget.maxTessellateMicros);
+}
+
+/**
+ * ⏱️ The hard bound the two USER-FACING phases sit under: evaluating the op chain and tessellating at
+ * the LOD the live preview asks for are what the playground waits on, and neither may be allowed
+ * more than two seconds of the Rust lane's native `test`-profile wall time. The wasm guest runs the
+ * identical code at `opt-level = 2` (root `Cargo.toml`'s `[profile.wasm-dev.package]` overrides)
+ * inside a budgeted resumable job, so a phase over this bound cannot converge in the playground
+ * within the user-facing target the ticket set.
+ */
+export const EXAMPLE_BUDGET_INTERACTIVE_CEILING_MICROS = 2_000_000;
+
+/**
+ * ⏱️ The bound on the FIDELITY phase — tessellation at the fixture's own `tessellationTolerance`,
+ * far finer than any LOD the live preview requests, which exists so the committed geometry statement
+ * is measured on a converged mesh. Nobody waits on this number in the app, so its ceiling is a
+ * regression guard rather than a user-facing promise and is set looser.
+ */
+export const EXAMPLE_BUDGET_FIDELITY_CEILING_MICROS = 8_000_000;
 
 /**
  * ✅️ Every invariant the delivery row states, derived here independently of the Rust run:

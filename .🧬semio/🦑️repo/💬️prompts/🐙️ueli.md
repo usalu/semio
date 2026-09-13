@@ -584,7 +584,7 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
-All tools, commands and utlities () must be
+All tools, commands and utlities must be
 utilities can only be active when no tool or command is running.
 When a tool is active or  
 e.g.
@@ -597,6 +597,17 @@ Every tick one wave is tried.
 
 waves (optional) - amount of waves to complete
 max wave reiterations (optional) - amount of reiterations after a wave was passed
+
+---
+
+All tools that 
+
+---
+
+All tools must be interactive and the user must see how the algorithms think by seeing the process (this way the user can identify wrong settings faster and build up an intuition about how the algorithms work, etc). Every tool can show progress (different steps, percentage, status, etc)
+
+e.g. puzzle 3d: The current fill tool still follows the old logic (precompute secretly everything and then when modifying the slider works magically blazingly fast). The new logic is that nothing is hidden and precomputed and as much happens interactively showing the process.
+The fill tool count slider should not be bounded and arbitrarily settable and start with a default of 100. The ui then interactively builds up the solution by showing all objects that it tries and that it locks (color the mesh with danger when it collides, color highlighted when collision free). The user can see what objects are tested.
 
 ---
 

@@ -1,0 +1,76 @@
+{
+  "schema": "generation3d.document-io-surface.v1",
+  "note": "The USER-FACING law of this artifact's IO. `📓️io-codecs-2026-09-09.md` proved the nine leaves round-trip; `📓️audit-user-journey-gaps-2026-09-13.md` §6 found that nothing in the editor or the viewer named them, so a user could not import or export anything. This fixture states what the surface must offer: which formats the export picker lists, which extensions the file picker accepts, what filename and MIME each download carries, which leaves are deliberately withheld from import and why, and how one picked file is cut into the chunks the public-invocation envelope admits. Language-agnostic: an implementation in any language must publish the same roster, build the same download envelope and cut the same chunks. Rust drives these rows against the real `document_io` module and the real app manifests; the TypeScript twin re-derives every one of them from this file's own prose without importing the Rust implementation.",
+  "artifactKind": "s.procedural.generation3d",
+  "exportFormats": [
+    { "id": "stl", "labelEn": "STL Mesh", "labelDe": "STL-Netz", "kindId": "s.stdio.stl.standard.ascii.representation.document", "extension": ".stl", "mime": "model/stl", "binary": true, "filename": "generation3d.stl", "geometry": true },
+    { "id": "obj", "labelEn": "OBJ Mesh", "labelDe": "OBJ-Netz", "kindId": "s.stdio.obj.standard.3-0.representation.document", "extension": ".obj", "mime": "model/obj", "binary": false, "filename": "generation3d.obj", "geometry": true },
+    { "id": "ply", "labelEn": "PLY Mesh", "labelDe": "PLY-Netz", "kindId": "s.stdio.ply.standard.1-0.representation.document", "extension": ".ply", "mime": "model/ply", "binary": false, "filename": "generation3d.ply", "geometry": true },
+    { "id": "gltf", "labelEn": "glTF Mesh", "labelDe": "glTF-Netz", "kindId": "s.stdio.gltf.standard.2-0.representation.document", "extension": ".gltf", "mime": "model/gltf+json", "binary": false, "filename": "generation3d.gltf", "geometry": true },
+    { "id": "las", "labelEn": "LAS Point Cloud", "labelDe": "LAS-Punktwolke", "kindId": "s.stdio.las.standard.1-0.representation.document", "extension": ".las", "mime": "application/vnd.las", "binary": true, "filename": "generation3d.las", "geometry": true },
+    { "id": "dwg", "labelEn": "DWG Drawing", "labelDe": "DWG-Zeichnung", "kindId": "s.stdio.dwg.standard.ac1018.representation.document", "extension": ".dwg", "mime": "image/vnd.dwg", "binary": true, "filename": "generation3d.dwg", "geometry": true },
+    { "id": "txt", "labelEn": "Semio Text (whole document)", "labelDe": "Semio-Text (ganzes Dokument)", "kindId": "s.stdio.txt.standard.utf-8.representation.document", "extension": ".txt", "mime": "text/plain", "binary": false, "filename": "generation3d.txt", "geometry": false }
+  ],
+  "importFormats": [
+    { "id": "stl", "extension": ".stl" },
+    { "id": "obj", "extension": ".obj" },
+    { "id": "ply", "extension": ".ply" },
+    { "id": "gltf", "extension": ".gltf" },
+    { "id": "dwg", "extension": ".dwg" },
+    { "id": "json", "extension": ".json" },
+    { "id": "txt", "extension": ".txt" }
+  ],
+  "importWithheld": [
+    { "id": "las", "reason": "LAS is export-only in this artifact — its import leaf is an honest Err, so offering it in the picker could only ever fail." },
+    { "id": "png", "reason": "A raster carries no recoverable flow graph, so its import leaf is an honest Err." }
+  ],
+  "acceptFilter": ".stl,.obj,.ply,.gltf,.dwg,.json,.txt",
+  "editorActions": [
+    { "id": "importDocumentRequest", "kind": "Shell", "inPalette": true, "labelEn": "Import Document…", "labelDe": "Dokument importieren…", "chord": "mod+o" },
+    { "id": "exportDocument", "kind": "Shell", "inPalette": true, "labelEn": "Export Document…", "labelDe": "Dokument exportieren…", "chord": "mod+shift+e" },
+    { "id": "importDocument", "kind": "Mutation", "inPalette": false, "labelEn": "Import Document File", "labelDe": "Dokumentdatei importieren" }
+  ],
+  "viewerActions": [
+    { "id": "exportDocument", "kind": "View", "inPalette": true, "labelEn": "Export Document…", "labelDe": "Dokument exportieren…", "chord": "mod+shift+e" }
+  ],
+  "publicationLanes": {
+    "editor": { "importDocumentRequest": ["HostOnly"], "importDocument": ["Artifact", "Config"], "exportDocument": ["HostOnly"] },
+    "viewer": { "exportDocument": ["HostOnly"] }
+  },
+  "chunking": {
+    "note": "One chunk crosses as ONE `payload` string inside one public invocation, and the host's envelope validator refuses any string above its own cap BEFORE the addressed tool's contract is consulted — so the chunk extent IS that cap. `chunkCount` counts the chunks one payload is cut into; `chunk` is the zero-based position, and the run's chunks arrive in order. Two rules about an out-of-order arrival, and they are different: a chunk the run has ALREADY admitted (position above zero, below the cursor) is a RETRANSMISSION, acknowledged at the cursor it stands on rather than costing the whole upload; position ZERO is never a retransmission but a RESTART, because that is what re-picking the same file looks like, so the run reopens and the cursor returns to one. Anything ahead of the cursor is a gap and drops the run.",
+    "chunkBytes": 4096,
+    "cases": [
+      { "id": "empty", "payloadBytes": 0, "chunks": 1 },
+      { "id": "one-byte", "payloadBytes": 1, "chunks": 1 },
+      { "id": "exactly-one-chunk", "payloadBytes": 4096, "chunks": 1 },
+      { "id": "one-over", "payloadBytes": 4097, "chunks": 2 },
+      { "id": "three-chunks", "payloadBytes": 9000, "chunks": 3 }
+    ],
+    "staging": [
+      { "id": "single-chunk-completes", "events": [{ "chunk": 0, "chunkCount": 1 }], "outcome": "complete" },
+      { "id": "two-chunks-stage-then-complete", "events": [{ "chunk": 0, "chunkCount": 2 }, { "chunk": 1, "chunkCount": 2 }], "outcome": "complete" },
+      { "id": "open-run-emits-nothing", "events": [{ "chunk": 0, "chunkCount": 2 }], "outcome": "staged", "nextChunk": 1 },
+      { "id": "retransmission-is-acknowledged", "events": [{ "chunk": 0, "chunkCount": 3 }, { "chunk": 1, "chunkCount": 3 }, { "chunk": 1, "chunkCount": 3 }], "outcome": "staged", "nextChunk": 2 },
+      { "id": "restart-at-zero-reopens-the-run", "events": [{ "chunk": 0, "chunkCount": 3 }, { "chunk": 1, "chunkCount": 3 }, { "chunk": 0, "chunkCount": 3 }], "outcome": "staged", "nextChunk": 1 },
+      { "id": "gap-drops-the-run", "events": [{ "chunk": 0, "chunkCount": 3 }, { "chunk": 2, "chunkCount": 3 }], "outcome": "gap" },
+      { "id": "resume-without-an-open-run-is-a-gap", "events": [{ "chunk": 1, "chunkCount": 2 }], "outcome": "gap" },
+      { "id": "zero-chunk-count-is-an-envelope-fault", "events": [{ "chunk": 0, "chunkCount": 0 }], "outcome": "envelope" },
+      { "id": "chunk-beyond-its-count-is-an-envelope-fault", "events": [{ "chunk": 2, "chunkCount": 2 }], "outcome": "envelope" }
+    ]
+  },
+  "faultCodes": {
+    "envelope": "generation3d-import-envelope",
+    "chunk": "generation3d-import-chunk",
+    "gap": "generation3d-import-gap",
+    "capacity": "generation3d-import-capacity"
+  },
+  "dataUrl": {
+    "note": "`RequestFileOpen { read_as: \"dataUrl\" }` answers with a base64 data URL. A shell that answers with raw text instead is read as its own UTF-8 bytes, which is what every headless harness sends.",
+    "cases": [
+      { "id": "base64-data-url", "payload": "data:model/stl;base64,aGVsbG8=", "bytes": "hello" },
+      { "id": "plain-data-url", "payload": "data:text/plain,hello", "bytes": "hello" },
+      { "id": "raw-text", "payload": "hello", "bytes": "hello" }
+    ]
+  }
+}

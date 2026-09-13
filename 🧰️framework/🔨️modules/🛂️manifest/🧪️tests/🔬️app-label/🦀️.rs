@@ -1474,7 +1474,7 @@ fn action_semantics_defaults_match_language_neutral_fixture() {
 #[test]
 fn exports_typescript_bindings() {
     crate::schema_metadata::validate().unwrap();
-    assert_eq!(crate::schema_metadata::TYPES.len(), 184);
+    assert_eq!(crate::schema_metadata::TYPES.len(), 186);
     let rendered = crate::schema_metadata::render_typescript();
     if let Some(path) = std::env::var_os("SEMIO_TYPEGEN_OUT") {
         std::fs::write(path, &rendered).unwrap();

@@ -322,3 +322,20 @@ async fn a_viewer_cancel_dispatches_live_and_never_mutates_the_document() {
     eprintln!("[DEBUG] viewer cancel settled lanes={:?} effects={}", receipt.lanes, receipt.effects.len());
     let _ = app.pending_effects(None).await;
 }
+
+/// ⚖️ LAW: the viewer's preview window offers the cancel verb itself. This surface already declared
+/// the `cancelPreviewEval` COMMAND and already published `cancelAction` in its status, but the
+/// window kind withheld the verb — so `World3dHost`'s cancel button was dropped by `ShellHost`'s
+/// `declaredAction` gate and a long read-only evaluation had no cancel affordance at all
+/// (`📓️audit-user-journey-gaps-2026-09-13.md` §1.3 gap #9, §5 row "Flow eval (viewer)").
+#[test]
+fn the_viewer_preview_window_offers_the_cancel_verb_the_fixture_names() {
+    let fixture: serde_json::Value = serde_json::from_str(PREVIEW_CANCEL_FIXTURE_JSON).expect("preview-cancel fixture");
+    let row = fixture["statusContract"]["surfaces"].as_array().expect("surfaces").iter().find(|row| row["surface"] == "viewer").expect("the viewer surface row");
+    let window_kind_id = row["windowKindId"].as_str().expect("window kind id");
+    let verb = row["cancelAction"].as_str().expect("cancel action");
+    assert_eq!(row["offersCancelOnWindow"].as_bool(), Some(true), "the fixture must claim the viewer window offers it");
+    let definition = crate::viewer::generation3d::create_generation3d_viewer();
+    let window = definition.window_kinds.iter().find(|window| window.id == window_kind_id).unwrap_or_else(|| panic!("{window_kind_id} is a declared window kind"));
+    assert!(window.actions.iter().any(|action| action.id == verb), "{window_kind_id} must offer {verb}: {:?}", window.actions.iter().map(|action| action.id.as_str()).collect::<Vec<_>>());
+}

@@ -37,6 +37,7 @@ export default defineConfig({
       "../../../../🧱️elements/🔀️Toggle/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/🎛️ToggleGroup/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/🌳️Tree/🧪️tests/🧩️component/🟦️.tsx",
+      "../../../../🧱️elements/🦴️Skeletons/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/📑️Tabs/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🔨️modules/🕹️control-keybinding-context/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🔨️modules/🏷️class-name-composition/🧪️tests/🧩️slot/🟦️.tsx",

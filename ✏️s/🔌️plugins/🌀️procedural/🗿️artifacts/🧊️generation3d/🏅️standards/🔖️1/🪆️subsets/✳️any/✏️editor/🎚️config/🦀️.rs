@@ -43,6 +43,34 @@ pub fn default_show_mode() -> String {
     "shaded".into()
 }
 
+/// 👁️ The preview shading ladder, in the order the show-mode picker offers it and the order
+/// `cycleShowMode` walks it. ONE table: the window measure builds its `MeasureSelectItem` rows from
+/// it and `apply_show_mode_mesh` answers exactly these tags, so a keyboard cycle can never reach a
+/// mode the picker does not offer (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub const GENERATION_3D_SHOW_MODES: [&str; 4] = ["shaded", "shaded+edges", "wireframe", "points"];
+
+/// 🎚️ The level-of-detail ladder, same contract as [`GENERATION_3D_SHOW_MODES`] — coarsest first, so
+/// `cycleLodMode` reads as "more detail" until it wraps.
+pub const GENERATION_3D_LOD_MODES: [&str; 3] = ["coarse", "medium", "fine"];
+
+/// 🔁️ The ladder step: the entry after `current`, wrapping, and the first entry for anything the
+/// ladder does not name — including the empty string a never-set config carries.
+fn next_in_ladder(ladder: &[&str], current: &str) -> String {
+    let index = ladder.iter().position(|mode| *mode == current).map_or(0, |index| (index + 1) % ladder.len());
+    ladder[index].to_string()
+}
+
+/// 🔁️ The show mode one `cycleShowMode` after `current`.
+pub fn next_show_mode(current: &str) -> String {
+    next_in_ladder(&GENERATION_3D_SHOW_MODES, current)
+}
+
+/// 🔁️ The level of detail one `cycleLodMode` after `current`. An unset `lod_mode` reads as the
+/// `medium` the flow window's measure displays for it, so the first cycle lands on `fine`.
+pub fn next_lod_mode(current: &str) -> String {
+    next_in_ladder(&GENERATION_3D_LOD_MODES, if current.is_empty() { "medium" } else { current })
+}
+
 /// 🌞️ Serialized default [`semio_framework_plugin::WorldSunConfig`] — the sun toggle/azimuth/
 /// elevation/intensity display options, stored as raw JSON since `WorldSunConfig` is a framework type
 /// without a `dsl::DslRecord` impl (see [`Generation3dConfig::sun`]).

@@ -165,6 +165,9 @@ export type BrowserFrameWorkerBoot = {
   readonly appRole: string;
   /** @emoji 🎭️ `?mode=`'s value, or `""` when the url named none — the boot-time mode axis beside `appRole`. */
   readonly appMode: string;
+  /** @emoji 📚️ `?example=`'s value, or `""` when the url named none — the boot-time example axis. An id
+   * the open dialect does not author is dropped by the shell, never a boot failure. */
+  readonly appExample: string;
   readonly hub?: { readonly hubUrl: string; readonly user: string; readonly dataDir: string };
 };
 
@@ -185,8 +188,13 @@ export type BrowserFrameWireLosslessEvent =
 /** @emoji 🔬️ The renderer's `#[wasm_bindgen]` introspection exports (`🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs`
  * region `🔬️IntrospectionExports`) read `UI_ENGINE`, a thread-local that lives inside `semio-frame-worker`.
  * The UI isolate therefore cannot call them directly and asks across the same fail-closed seam every other
- * frame message uses. Read-only by construction: no probe mutates renderer state. */
-export type BrowserFrameIntrospectionProbe = "structure" | "frame-stats";
+ * frame message uses. Read-only by construction: no probe mutates renderer state.
+ *
+ * ♿️ `accessibility` is the one probe that is NOT a test hook: it carries the window's accessibility
+ * tree out of the isolate so the UI thread can mirror it into a real ARIA subtree beside the canvas.
+ * A DOM renderer writes those attributes onto the elements it already renders; a GPU canvas has no
+ * elements, so the tree has to cross this seam as data (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+export type BrowserFrameIntrospectionProbe = "structure" | "frame-stats" | "accessibility";
 
 export type BrowserFrameWorkerIntrospect = { readonly kind: "introspect"; readonly lifecycle: number; readonly requestId: number; readonly probe: BrowserFrameIntrospectionProbe; readonly windowId?: string };
 

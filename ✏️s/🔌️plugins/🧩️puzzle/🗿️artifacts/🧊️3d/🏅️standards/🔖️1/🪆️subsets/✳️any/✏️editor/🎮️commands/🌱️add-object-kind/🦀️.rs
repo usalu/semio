@@ -33,7 +33,6 @@ pub fn add_object_kind(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
         vortices,
         hidden: false,
         locked: false,
-        reveal_index: None,
     });
     resolve_puzzle3d_attractions(&mut ctx.scene.fixture);
     ctx.replace_selection(PUZZLE3D_GRANULARITY_OBJECT, [id]);

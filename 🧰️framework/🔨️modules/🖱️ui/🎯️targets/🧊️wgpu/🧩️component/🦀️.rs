@@ -1037,6 +1037,27 @@ pub mod layout {
         pub label: String,
     }
 
+    /// 🚦️ Severity tint of one [`MeasureProgressStep`], mirroring `semio_framework_job::DiagnosticKind`
+    /// so a job's progress vocabulary projects onto the semantic `info`/`success`/`warning`/`danger` tokens.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+    #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
+    pub enum MeasureProgressStepKind {
+        Info,
+        Success,
+        Warning,
+        Danger,
+    }
+
+    /// 🪜️ One line of the "what the algorithm just did" log carried by [`WindowMeasure::Progress`].
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+    #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
+    pub struct MeasureProgressStep {
+        pub kind: MeasureProgressStepKind,
+        pub text: String,
+    }
+
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
     #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
@@ -1080,6 +1101,67 @@ pub mod layout {
             #[value(default, skip_serializing_if = "Option::is_none")]
             reveal: Option<String>,
             on_change: ActionDescriptor,
+        },
+        /// 🔢️ Unbounded numeric entry — the measure-overlay sibling of `UiNumberStepperNode`.
+        /// Both bounds are optional: `max: None` means "no ceiling, type any value", which a
+        /// [`WindowMeasure::Slider`] can never express because its `min`/`max` are mandatory.
+        Number {
+            id: String,
+            label: Option<String>,
+            value: f64,
+            /// ⬇️ Inclusive floor; `None` leaves the value unbounded below.
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            #[value(default, skip_serializing_if = "Option::is_none")]
+            min: Option<f64>,
+            /// ⬆️ Inclusive ceiling; `None` leaves the value unbounded above — renderers must not clamp.
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            #[value(default, skip_serializing_if = "Option::is_none")]
+            max: Option<f64>,
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            #[value(default, skip_serializing_if = "Option::is_none")]
+            step: Option<f64>,
+            /// 🎚️ Absolute value already prepared/committed, drawn as a soft extent behind the entry.
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            #[value(default, skip_serializing_if = "Option::is_none")]
+            ready: Option<f64>,
+            /// 🌀️ When true, the measure tree leaf shows a loading ring while work continues.
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            #[value(default, skip_serializing_if = "Option::is_none")]
+            loading: Option<bool>,
+            /// 🌀️ When true, the measure tree leaf shows a dashed, slower waiting ring; `loading` takes precedence when both are set.
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            #[value(default, skip_serializing_if = "Option::is_none")]
+            waiting: Option<bool>,
+            /// 🚫️ When true, the entry is inert.
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            #[value(default, skip_serializing_if = "Option::is_none")]
+            disabled: Option<bool>,
+            on_change: ActionDescriptor,
+        },
+        /// ⏳️ Read-only view of running work: a stage caption, a determinate-or-indeterminate bar and the
+        /// last few [`MeasureProgressStep`] lines, with an optional cancel action. Mirrors
+        /// `semio_framework_job::ProgressEvent` so a job's own progress vocabulary reaches the UI unchanged.
+        Progress {
+            id: String,
+            label: Option<String>,
+            /// 🧭️ Localized caption of the phase the work is in, mirroring `ProgressEvent::StageChanged`.
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            #[value(default, skip_serializing_if = "Option::is_none")]
+            stage: Option<String>,
+            completed: f64,
+            /// ♾️ Total units of work; `None` means indeterminate — renderers show a busy bar, never a percentage.
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            #[value(default, skip_serializing_if = "Option::is_none")]
+            total: Option<f64>,
+            steps: Vec<MeasureProgressStep>,
+            /// 🛑️ Dispatched when the user cancels; absent means the work cannot be cancelled.
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            #[value(default, skip_serializing_if = "Option::is_none")]
+            cancel: Option<ActionDescriptor>,
+            /// 🌀️ When true, the measure tree leaf shows a loading ring while work continues.
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            #[value(default, skip_serializing_if = "Option::is_none")]
+            loading: Option<bool>,
         },
         Toggle {
             id: String,
@@ -1129,6 +1211,25 @@ pub mod layout {
         },
     }
     //#endregion 🔖️WindowMeasure
+
+    /// 🛑️ Framework-owned copy of [`WindowMeasure::Progress`]'s cancel affordance. Callers resolve it
+    /// against their own `(Terminology, Locale)` — there is no default locale, so no renderer may bake
+    /// one of the two strings in. See [`crate::wgpu::LocalizedLabel::native`].
+    pub fn measure_progress_cancel_label() -> crate::wgpu::LocalizedLabel {
+        crate::wgpu::LocalizedLabel::native("Cancel", "Abbrechen")
+    }
+
+    impl MeasureProgressStepKind {
+        /// 🔤️ Wire tag of this kind — the same string serde writes, for renderers that key styling off it.
+        pub fn as_str(self) -> &'static str {
+            match self {
+                Self::Info => "info",
+                Self::Success => "success",
+                Self::Warning => "warning",
+                Self::Danger => "danger",
+            }
+        }
+    }
 
     impl WindowMeasure {
         /// 🌳️ Builds a measure group with default slider/header fields unset.

@@ -147,6 +147,217 @@ pub mod mesh_bridge {
 pub use mesh_bridge::io_error;
 //#endregion 🔺️MeshBridge
 
+//#region 📄️DocumentIo
+/// 📄️ The USER-facing half of this artifact's IO — the roster the editor's and the viewer's
+/// `exportDocument`/`importDocument` commands pick from, the filename and MIME every download
+/// carries, and the two byte-level entry points those commands call.
+///
+/// 🐛️ Until ticket 26/09/09/PROCEDURAL-3D-END-TO-END's io-surface lane the nine leaves below
+/// `📤️export`/`📥️import` were round-trip tested and **unreachable**: no command, menu item, button
+/// or keybinding in `✏️editor` or `👁️viewer` named them, so a user could not import or export
+/// anything (`📓️audit-user-journey-gaps-2026-09-13.md` §6, P0 #1). This module is the composition
+/// point that closed that gap; it re-implements no leaf and spells no file grammar.
+///
+/// 🏷️ A row's `id` is what the user picks (the `format` `ActionArgDef::select` option); its
+/// `kind_id` is the owning `s.stdio.<format>` artifact's OWN representation id, and the extension,
+/// MIME and binary-ness come from THAT artifact's `formats()` — this module never restates a
+/// format's file facts, so a format that renames its extension cannot drift from the download.
+///
+/// @see ../../../../../../🗄️stdio/🗿️artifacts — every row's owning artifact and its `formats()`.
+/// @see ../✏️editor/🎮️commands/📤️export-document, ../✏️editor/🎮️commands/📥️import-document.
+pub mod document_io {
+    use super::mesh_bridge::io_error;
+    use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export_leaves;
+    use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import_leaves;
+    use crate::Generation3dSnapshot;
+    use semio_framework_plugin::io::FormatDescriptor;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+
+    /// 🏷️ One row of the user-facing format roster: the id the user picks, the two labels the picker
+    /// shows, and the owning stdio artifact's representation this artifact's leaf writes or reads.
+    ///
+    /// 🗣️ English first, German second, with NO default: `LocalizedLabel::native` takes both and a
+    /// locale resolves one, so a row cannot exist in one language only.
+    #[derive(Debug)]
+    pub struct Generation3dFormatRow {
+        pub id: &'static str,
+        pub label_en: &'static str,
+        pub label_de: &'static str,
+        pub kind_id: &'static str,
+        pub descriptors: fn() -> Result<Vec<FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError>,
+    }
+
+    /// 📤️ Every format `exportDocument` offers, in menu order. Exactly [`super::export_stdio_kinds`]
+    /// — `json`/`png` are absent because generation2d owns those EXPORT claims (see `🚪️IoRegistry`),
+    /// and offering a user a format this artifact does not claim would be a lie in the picker.
+    pub const EXPORT_FORMATS: [Generation3dFormatRow; 7] = [
+        Generation3dFormatRow { id: "stl", label_en: "STL Mesh", label_de: "STL-Netz", kind_id: "s.stdio.stl.standard.ascii.representation.document", descriptors: semio_s_artifact_stdio_stl::formats },
+        Generation3dFormatRow { id: "obj", label_en: "OBJ Mesh", label_de: "OBJ-Netz", kind_id: "s.stdio.obj.standard.3-0.representation.document", descriptors: semio_s_artifact_stdio_obj::formats },
+        Generation3dFormatRow { id: "ply", label_en: "PLY Mesh", label_de: "PLY-Netz", kind_id: "s.stdio.ply.standard.1-0.representation.document", descriptors: semio_s_artifact_stdio_ply::formats },
+        Generation3dFormatRow { id: "gltf", label_en: "glTF Mesh", label_de: "glTF-Netz", kind_id: "s.stdio.gltf.standard.2-0.representation.document", descriptors: semio_s_artifact_stdio_gltf::formats },
+        Generation3dFormatRow { id: "las", label_en: "LAS Point Cloud", label_de: "LAS-Punktwolke", kind_id: "s.stdio.las.standard.1-0.representation.document", descriptors: semio_s_artifact_stdio_las::formats },
+        Generation3dFormatRow { id: "dwg", label_en: "DWG Drawing", label_de: "DWG-Zeichnung", kind_id: "s.stdio.dwg.standard.ac1018.representation.document", descriptors: semio_s_artifact_stdio_dwg::formats },
+        Generation3dFormatRow { id: "txt", label_en: "Semio Text (whole document)", label_de: "Semio-Text (ganzes Dokument)", kind_id: "s.stdio.txt.standard.utf-8.representation.document", descriptors: semio_s_artifact_stdio_txt::formats },
+    ];
+
+    /// 📥️ Every format `importDocument` accepts, in picker order — the SEVEN of
+    /// [`super::import_stdio_kinds`]'s nine whose deserializer really reconstructs a document.
+    /// `las` and `png` are deliberately absent: their import leaves are honest `Err`s (LAS is
+    /// export-only, PNG carries no recoverable graph), and an `accept` filter that offered them
+    /// would put files in the picker that can only fail. `no_import_formats_can_be_deserialized`
+    /// pins that, so a leaf that later gains a real decoder cannot stay silently out of the picker.
+    pub const IMPORT_FORMATS: [Generation3dFormatRow; 7] = [
+        Generation3dFormatRow { id: "stl", label_en: "STL Mesh", label_de: "STL-Netz", kind_id: "s.stdio.stl.standard.ascii.representation.document", descriptors: semio_s_artifact_stdio_stl::formats },
+        Generation3dFormatRow { id: "obj", label_en: "OBJ Mesh", label_de: "OBJ-Netz", kind_id: "s.stdio.obj.standard.3-0.representation.document", descriptors: semio_s_artifact_stdio_obj::formats },
+        Generation3dFormatRow { id: "ply", label_en: "PLY Mesh", label_de: "PLY-Netz", kind_id: "s.stdio.ply.standard.1-0.representation.document", descriptors: semio_s_artifact_stdio_ply::formats },
+        Generation3dFormatRow { id: "gltf", label_en: "glTF Mesh", label_de: "glTF-Netz", kind_id: "s.stdio.gltf.standard.2-0.representation.document", descriptors: semio_s_artifact_stdio_gltf::formats },
+        Generation3dFormatRow { id: "dwg", label_en: "DWG Drawing", label_de: "DWG-Zeichnung", kind_id: "s.stdio.dwg.standard.ac1018.representation.document", descriptors: semio_s_artifact_stdio_dwg::formats },
+        Generation3dFormatRow { id: "json", label_en: "Generation JSON", label_de: "Generation-JSON", kind_id: "s.stdio.json.standard.rfc8259.representation.document", descriptors: semio_s_artifact_stdio_json::formats },
+        Generation3dFormatRow { id: "txt", label_en: "Semio Text (whole document)", label_de: "Semio-Text (ganzes Dokument)", kind_id: "s.stdio.txt.standard.utf-8.representation.document", descriptors: semio_s_artifact_stdio_txt::formats },
+    ];
+
+    /// 🚫️ The two [`super::import_stdio_kinds`] rows [`IMPORT_FORMATS`] withholds, with the reason
+    /// each is withheld — read by the law that keeps the picker and the leaves honest.
+    pub const IMPORT_ONLY_IN_REGISTRY: [(&str, &str); 2] = [("las", "s.stdio.las"), ("png", "s.stdio.png")];
+
+    /// 🏷️ The owning artifact's own descriptor for one row — the single source of extension, MIME
+    /// and binary-ness.
+    pub fn descriptor_of(row: &Generation3dFormatRow) -> Result<FormatDescriptor, store::TextError> {
+        let descriptors = (row.descriptors)().map_err(|error| io_error(format!("generation3d io: format `{}` has no readable descriptor set ({error})", row.id)))?;
+        descriptors
+            .into_iter()
+            .find(|descriptor| descriptor.kind_id == row.kind_id)
+            .ok_or_else(|| io_error(format!("generation3d io: format `{}` declares representation `{}`, which its owning artifact does not publish", row.id, row.kind_id)))
+    }
+
+    fn row_of(rows: &'static [Generation3dFormatRow], id: &str) -> Result<&'static Generation3dFormatRow, store::TextError> {
+        rows.iter()
+            .find(|row| row.id == id)
+            .ok_or_else(|| io_error(format!("generation3d io: `{id}` is not one of this artifact's formats ({})", rows.iter().map(|row| row.id).collect::<Vec<_>>().join(", "))))
+    }
+
+    /// 🗣️ One `ActionArgOption` per [`EXPORT_FORMATS`] row, in table order — the editor's picker and
+    /// the viewer's are THE SAME list, built once here rather than spelled twice, so a format this
+    /// artifact stops claiming disappears from both surfaces at once.
+    pub fn export_format_options() -> Vec<semio_framework_plugin::ActionArgOption> {
+        EXPORT_FORMATS.iter().map(|row| semio_framework_plugin::ActionArgOption::new(row.id, semio_framework_plugin::LocalizedLabel::native(row.label_en, row.label_de))).collect()
+    }
+
+    /// 🗂️ The file picker's `accept` filter — every importable extension, comma-joined, exactly the
+    /// shape `Effect::RequestFileOpen` carries.
+    pub fn import_accept_filter() -> Result<String, store::TextError> {
+        let mut extensions = Vec::new();
+        for row in IMPORT_FORMATS.iter() {
+            extensions.extend(descriptor_of(row)?.extensions);
+        }
+        Ok(extensions.join(","))
+    }
+
+    /// 📤️ One finished export, ready to become an `Effect::DownloadMediaExport`.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct Generation3dDocumentExport {
+        pub filename: String,
+        pub data: String,
+        pub mime_type: String,
+        pub encoding: Option<String>,
+    }
+
+    /// 📤️ The MESH half of every geometry export, isolated exactly as each leaf's own
+    /// `serialize_mesh_bytes` is: it needs no flow evaluator, so the format table, the filename and
+    /// the wire envelope are all provable natively against the committed unit-cube fixture.
+    pub fn export_mesh_bytes(mesh: &SemioMeshSnapshot, format: &str) -> Result<Vec<u8>, store::TextError> {
+        match format {
+            "stl" => export_leaves::stl::v_ascii::any::serialize_mesh_bytes(mesh),
+            "obj" => export_leaves::obj::v3_0::any::serialize_mesh_bytes(mesh),
+            "ply" => export_leaves::ply::v1_0::any::serialize_mesh_bytes(mesh),
+            "gltf" => export_leaves::gltf::v2_0::any::serialize_mesh_bytes(mesh),
+            "las" => export_leaves::las::v1_0::any::serialize_mesh_bytes(mesh),
+            "dwg" => export_leaves::dwg::v_ac1018::any::serialize_mesh_bytes(mesh),
+            "txt" => Err(io_error("generation3d export: `txt` is the whole document's own text, not a mesh — it has no mesh-only half")),
+            other => Err(io_error(format!("generation3d export: `{other}` is not one of this artifact's formats"))),
+        }
+    }
+
+    /// 📤️ The bytes one export writes. `txt` is the document's own DSL text (the one full-fidelity
+    /// target); every other row is the EVALUATED preview mesh through that leaf's own bridge.
+    pub fn export_document_bytes(snapshot: &Generation3dSnapshot, format: &str) -> Result<Vec<u8>, store::TextError> {
+        if format == "txt" {
+            return export_leaves::txt::v_utf_8::any::serialize_bytes(snapshot);
+        }
+        export_mesh_bytes(&super::mesh_bridge::preview_semio_mesh(snapshot)?, format)
+    }
+
+    /// 📦️ Wraps raw export bytes in the wire envelope `Effect::DownloadMediaExport` expects: the
+    /// owning artifact's extension and MIME, and base64 exactly when that artifact calls itself
+    /// binary. A row that claims to be text and hands back bytes that are not UTF-8 is a typed
+    /// error, never a lossy `from_utf8_lossy` download.
+    pub fn document_export_envelope(row: &Generation3dFormatRow, bytes: Vec<u8>) -> Result<Generation3dDocumentExport, store::TextError> {
+        let descriptor = descriptor_of(row)?;
+        let extension = descriptor.extensions.first().cloned().ok_or_else(|| io_error(format!("generation3d export: format `{}` claims no extension", row.id)))?;
+        let mime_type = descriptor.mimes.first().cloned().ok_or_else(|| io_error(format!("generation3d export: format `{}` claims no MIME type", row.id)))?;
+        let filename = format!("generation3d{extension}");
+        if descriptor.is_binary {
+            return Ok(Generation3dDocumentExport { filename, data: super::mesh_bridge::base64_encode(&bytes), mime_type, encoding: Some("base64".into()) });
+        }
+        let data = String::from_utf8(bytes).map_err(|error| io_error(format!("generation3d export: format `{}` is declared textual but its bytes are not UTF-8 ({error})", row.id)))?;
+        Ok(Generation3dDocumentExport { filename, data, mime_type, encoding: None })
+    }
+
+    /// 📤️ The whole export, from a document to a download.
+    pub fn export_document(snapshot: &Generation3dSnapshot, format: &str) -> Result<Generation3dDocumentExport, store::TextError> {
+        let row = row_of(&EXPORT_FORMATS, format)?;
+        document_export_envelope(row, export_document_bytes(snapshot, row.id)?)
+    }
+
+    /// 📦️ Decodes what `Effect::RequestFileOpen { read_as: Some("dataUrl") }` hands back. A shell
+    /// that answers with the raw text instead (the `read_as: None` case, and every test harness) is
+    /// read as its own UTF-8 bytes.
+    pub fn import_payload_bytes(payload: &str) -> Result<Vec<u8>, store::TextError> {
+        if let Some((header, encoded)) = payload.split_once(',') {
+            if header.starts_with("data:") {
+                return if header.ends_with(";base64") { super::mesh_bridge::base64_decode(encoded) } else { Ok(encoded.as_bytes().to_vec()) };
+            }
+        }
+        Ok(payload.as_bytes().to_vec())
+    }
+
+    /// 🏷️ The roster row a picked file's name resolves to, by the owning artifact's OWN extension
+    /// claim — never a hand-written extension table.
+    pub fn import_row_for_name(name: &str) -> Result<&'static Generation3dFormatRow, store::TextError> {
+        let lowered = name.to_ascii_lowercase();
+        for row in IMPORT_FORMATS.iter() {
+            for extension in descriptor_of(row)?.extensions {
+                if lowered.ends_with(&extension.to_ascii_lowercase()) {
+                    return Ok(row);
+                }
+            }
+        }
+        Err(io_error(format!("generation3d import: `{name}` is not one of this artifact's importable formats ({})", IMPORT_FORMATS.iter().map(|row| row.id).collect::<Vec<_>>().join(", "))))
+    }
+
+    /// 📥️ The bytes of one picked file as a real document, through that format's own leaf.
+    pub fn import_document_bytes(format: &str, bytes: &[u8]) -> Result<Generation3dSnapshot, store::TextError> {
+        match format {
+            "stl" => import_leaves::stl::v_ascii::any::deserialize_bytes(bytes),
+            "obj" => import_leaves::obj::v3_0::any::deserialize_bytes(bytes),
+            "ply" => import_leaves::ply::v1_0::any::deserialize_bytes(bytes),
+            "gltf" => import_leaves::gltf::v2_0::any::deserialize_bytes(bytes),
+            "dwg" => import_leaves::dwg::v_ac1018::any::deserialize_bytes(bytes),
+            "json" => import_leaves::json::v_rfc8259::any::deserialize_bytes(bytes),
+            "txt" => import_leaves::txt::v_utf_8::any::deserialize_bytes(bytes),
+            other => Err(io_error(format!("generation3d import: `{other}` is not one of this artifact's importable formats"))),
+        }
+    }
+
+    /// 📥️ The whole import, from a picked file to a document.
+    pub fn import_document(name: &str, payload: &str) -> Result<Generation3dSnapshot, store::TextError> {
+        let row = import_row_for_name(name)?;
+        import_document_bytes(row.id, &import_payload_bytes(payload)?)
+    }
+}
+pub use document_io::{export_document, import_document as import_picked_document, Generation3dDocumentExport};
+//#endregion 📄️DocumentIo
+
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v1::subsets::any::schema::Generation3dAnalyzer;

@@ -1838,7 +1838,7 @@ fn generation2d_render_body(
             let window_config = edit_preview::config::current(cfg);
             edit_preview::render(document, config, &window_config, session)
         }
-        generations::GENERATION2D_PLAY_BODY_GENERATIONS => generations::render(&document.generation, view_state.locale, view_state.terminology),
+        generations::GENERATION2D_PLAY_BODY_GENERATIONS => generations::render(&document.generation, config.selected_generation_id.as_deref(), view_state.locale, view_state.terminology),
         form::GENERATION2D_PLAY_BODY_GENERATE_FORM => form::render(document, &document.generation, labels),
         generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW => {
             let window_config = generate_preview::config::current(cfg);

@@ -1,0 +1,74 @@
+{
+  "provenance": {
+    "what": "The language-neutral oracle for node-graph WIRE editing and minimap navigation: an authored port graph + a pointer gesture named in port terms -> the wire edits the host journals for the guest, and the camera a minimap click moves to.",
+    "why": "`DagHost` has had port/handle hit-testing and an `InteractionMode::DrawEdge` since it was written, but only its `pointer_*_screen` entry reaches them. The wgpu renderer called ONLY the bounded `plan_pointer`/`commit_pointer` entry, whose gesture vocabulary is Idle|Pan|Drag|Select and whose `bounded_node_hit_index` answers `Unsupported` for exactly the port, handle, widget and minimap hits — so a press on a port aborted the dispatch instead of starting a wire, and a minimap click navigated nowhere. Port-to-port wire creation, wire removal and minimap click-to-navigate were dead from wgpu's side. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END, 📓️audit-wgpu-parity-2026-09-13.md gaps #2 and #5.",
+    "rule": "A completed gesture journals what it did to the GRAPH in the guest's own vocabulary — never in engine handle or edge ids, and never as a whole re-serialised fixture.",
+    "implementations": {
+      "rust": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧪️tests/🔗️wire-edit/🦀️.rs",
+      "typescript": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔗️node-graph-wire-edit/🟦️.ts"
+    },
+    "reference": "React dispatches the same vocabulary from ReactFlow's own `onConnect` (🕸️NodeGraph/🟦️.tsx), and the guest decodes it as `FlowNodeGraphEditOp` (✏️s/🔌️plugins/🌊️flow/…/🎮️commands/✏️node-graph-edit/🦀️.rs)."
+  },
+  "rules": {
+    "portGrammar": "A wire endpoint is named '<nodeId>@<portId>' — the same pick/hover channel grammar the graph already reports hover targets in, so a journalled edit is a lookup on what the host already knows, not a second derivation.",
+    "connectIsFourIds": "A created wire dispatches ONE narrow operation carrying four ids: {operation: 'connect', sourceNodeId, sourcePortId, targetNodeId, targetPortId}. Re-publishing the whole fixture instead (React's own `commitFixture`) cannot fit a bounded action and is not required — the guest already declares this operation.",
+    "targetPortHoldsOne": "An input port holds at most one incoming wire: connecting a second one removes the first, and BOTH halves are journalled — the removal as {operation: 'disconnect', edgeId} naming the synapse id the guest knows, the creation as its own connect.",
+    "unknownEdgeIsSilent": "A removed edge the guest never learned about (one this very gesture created) carries no synapse id and is not journalled — there is nothing for the guest to remove.",
+    "drainedOnce": "The journal is drained by the renderer after each gesture; a second drain of the same gesture yields nothing, so one wire is never dispatched twice.",
+    "minimapClickNavigates": "A press inside the minimap panel but outside its viewport rectangle re-centres the camera on the world point under the pointer. A press inside the viewport rectangle instead begins a drag of that rectangle, leaving the camera where it was until the pointer moves.",
+    "screenPathOwnsTheGesture": "While any of these interactions is in flight the bounded plan path must not claim the follow-up move/up — the host answers `screenPointerGestureActive` for exactly that window."
+  },
+  "graph": {
+    "why": "Two computation nodes far enough apart that no proximity connection fires on its own, so every wire in this oracle is one the gesture actually drew.",
+    "nodes": [
+      { "id": "src", "label": "Src", "inputs": [], "outputs": ["out"], "x": 0.0, "y": 0.0 },
+      { "id": "tgt", "label": "Tgt", "inputs": ["in"], "outputs": ["out"], "x": 420.0, "y": 0.0 },
+      { "id": "alt", "label": "Alt", "inputs": [], "outputs": ["out"], "x": 0.0, "y": 260.0 }
+    ],
+    "viewport": { "width": 1280, "height": 800, "dpr": 1.0 }
+  },
+  "cases": [
+    {
+      "name": "drag-output-port-to-input-port-creates-a-wire",
+      "why": "The whole gap, stated once: this gesture is what a user does to wire two operators together, and on wgpu it did nothing at all.",
+      "gesture": { "kind": "wire", "from": "src@out", "to": "tgt@in" },
+      "expectedEdits": [{ "operation": "connect", "sourceNodeId": "src", "sourcePortId": "out", "targetNodeId": "tgt", "targetPortId": "in" }],
+      "expectedEdges": [{ "source": "src@out", "target": "tgt@in" }]
+    },
+    {
+      "name": "a-second-wire-into-the-same-input-replaces-the-first",
+      "why": "An input port holds one wire — the replaced one must reach the guest as a disconnect, or the guest's graph keeps an edge the user can no longer see.",
+      "setup": [{ "kind": "wire", "from": "src@out", "to": "tgt@in" }],
+      "gesture": { "kind": "wire", "from": "alt@out", "to": "tgt@in" },
+      "expectedEdits": [{ "operation": "connect", "sourceNodeId": "alt", "sourcePortId": "out", "targetNodeId": "tgt", "targetPortId": "in" }],
+      "expectedEdges": [{ "source": "alt@out", "target": "tgt@in" }]
+    },
+    {
+      "name": "the-journal-drains-once",
+      "why": "The renderer drains after every gesture; a wire dispatched twice would ask the guest to connect what it already connected.",
+      "gesture": { "kind": "wire", "from": "src@out", "to": "tgt@in" },
+      "expectedEdits": [{ "operation": "connect", "sourceNodeId": "src", "sourcePortId": "out", "targetNodeId": "tgt", "targetPortId": "in" }],
+      "expectedSecondDrain": []
+    },
+    {
+      "name": "a-press-on-a-port-belongs-to-the-screen-path",
+      "why": "The discriminator itself: the bounded plan path must hand this gesture over instead of faulting on it.",
+      "gesture": { "kind": "probe", "at": "src@out" },
+      "expectedScreenPath": true
+    },
+    {
+      "name": "a-press-on-empty-canvas-stays-on-the-bounded-path",
+      "why": "The other half — marquee selection and node dragging must keep their atomically-admitted plan/commit path.",
+      "gesture": { "kind": "probeScreenPoint", "x": 8.0, "y": 8.0 },
+      "expectedScreenPath": false
+    }
+  ],
+  "minimap": {
+    "why": "`minimap_widget_pointer_hit` is reached only from `pointer_down_screen`/`pointer_move_screen`, so it inherited the wire gap rather than being a separate one.",
+    "camera": { "x": 0.0, "y": 0.0, "zoom": 3.0 },
+    "cases": [
+      { "name": "click-outside-the-viewport-rect-recentres", "at": "panelTopLeftQuarter", "expectedCameraMoves": true },
+      { "name": "press-on-the-viewport-rect-grabs-instead", "at": "viewportCentre", "expectedCameraMoves": false }
+    ]
+  }
+}

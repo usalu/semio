@@ -30,7 +30,7 @@ pub fn generation_command_result(action: &str, args: Option<&dsl::DslValue>, pro
         }
         operations
     };
-    let preview_fixture = selected_generation(&state).map(|_| generation_fixture_for(&projection.fixture, &state));
+    let preview_fixture = selected_generation(&state).map(|_| generation_fixture_for(&projection.fixture, &state, state.selected_generation_id.as_deref()));
     Some(Generation3dGenerationCommandResult {
         emit: Emit {
             artifact_mutations: operations.into_iter().map(generation_mutation_to_generation3d).collect(),

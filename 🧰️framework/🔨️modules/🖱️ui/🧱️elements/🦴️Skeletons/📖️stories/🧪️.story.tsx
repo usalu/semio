@@ -65,7 +65,7 @@ export const Scene: Story = {
 export const Canvas: Story = {
   name: "CanvasSkeleton",
   render: () => (
-    <div className="h-64 w-full">
+    <div className="h-96 w-full">
       <CanvasSkeleton label="Loading plugins…" />
     </div>
   ),

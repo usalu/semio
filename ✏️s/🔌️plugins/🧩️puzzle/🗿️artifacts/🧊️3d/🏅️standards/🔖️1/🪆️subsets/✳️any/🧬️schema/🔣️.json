@@ -484,7 +484,7 @@
     },
     "Puzzle3dFillPreviewJson": {
       "type": "object",
-      "x-semio-maxEncodedUtf8Bytes": 4096,
+      "x-semio-maxEncodedUtf8Bytes": 16384,
       "additionalProperties": false,
       "properties": {
         "targetVortexFullId": {
@@ -515,6 +515,9 @@
         "opacity": {
           "const": 0.35
         },
+        "verdict": {
+          "$ref": "#/$defs/Puzzle3dFillPreviewVerdict"
+        },
         "fillBuildPreview": {
           "$ref": "#/$defs/Puzzle3dFillPreviewDiagnostic"
         }
@@ -524,6 +527,48 @@
       ],
       "title": "Puzzle3dFillPreviewJson",
       "description": "The retained fill-preview JSON page of `s.puzzle3d`'s ⏳️precompute/🪣️fill builder: one encoded page never exceeds `x-semio-maxEncodedUtf8Bytes`, and every diagnostic integer, colour and status label carries the builder's own byte and index ceilings.",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    },
+    "Puzzle3dFillPreviewVerdict": {
+      "type": "string",
+      "enum": [
+        "testing",
+        "free",
+        "collision",
+        "rejected",
+        "accepted"
+      ],
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    },
+    "Puzzle3dFillPreviewTried": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "verdict": {
+          "$ref": "#/$defs/Puzzle3dFillPreviewVerdict"
+        },
+        "reason": {
+          "$ref": "#/$defs/Puzzle3dFillPreviewNullableString"
+        },
+        "ghost": {
+          "$ref": "#/$defs/Puzzle3dFillPreviewGhost"
+        }
+      },
+      "required": [
+        "sequence",
+        "verdict",
+        "reason",
+        "ghost"
+      ],
       "x-semio-formats": [
         "🔣️jsonschema"
       ]
@@ -707,7 +752,7 @@
           "minimum": 0,
           "maximum": 9007199254740991
         },
-        "totalCount": {
+        "requestedCount": {
           "type": "integer",
           "minimum": 0,
           "maximum": 9007199254740991
@@ -721,6 +766,32 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 9007199254740991
+        },
+        "verdict": {
+          "$ref": "#/$defs/Puzzle3dFillPreviewVerdict"
+        },
+        "testedCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "stallReason": {
+          "$ref": "#/$defs/Puzzle3dFillPreviewNullableString"
+        },
+        "tried": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/Puzzle3dFillPreviewTried"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "minItems": 12,
+          "maxItems": 12
         }
       },
       "required": [
@@ -745,9 +816,13 @@
         "targetCursor",
         "candidateCursor",
         "acceptedCount",
-        "totalCount",
+        "requestedCount",
         "searchCount",
-        "rejectedCount"
+        "rejectedCount",
+        "verdict",
+        "testedCount",
+        "stallReason",
+        "tried"
       ],
       "x-semio-formats": [
         "🔣️jsonschema"

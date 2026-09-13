@@ -29,7 +29,7 @@ impl Default for Puzzle2dWindowConfig {
             camera_y: 0.0,
             camera_zoom: 1.0,
             lod_mode: crate::editor::puzzle2d::PUZZLE2D_LOD_MODE_AUTOMATIC.into(),
-            fill_count: 0,
+            fill_count: crate::editor::puzzle2d::modes::edit::tools::fill::PUZZLE2D_DEFAULT_FILL_COUNT,
             grid_snap_enabled: false,
             grid_factor: 1.0,
             suggestion_offset: crate::editor::puzzle2d::config::PUZZLE2D_DEFAULT_SUGGESTION_OFFSET,

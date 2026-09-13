@@ -1,0 +1,86 @@
+{
+  "$comment": "🛍️ The app-static catalogue is fetched ONCE PER APP INSTANCE. This fixture pins the rule on the failure path, where it used to be dropped: the shell recorded the instance only after a successful reassembly, so a catalogue that failed was re-fetched by every later refresh — and a refresh runs on every settled command. The second fetch of `framework.section.catalogue` never returned from its own turn, so `boot_shell` never returned either and the canvas never bound a pointer listener. Language-agnostic: `expectedFetchIndices` is what the rule must produce, `baselineFetchIndices` is what recording-only-successes produced, and a case where they differ is a case this fixture discriminates.",
+  "rule": {
+    "id": "claimAppCatalogueFetch",
+    "statement": "A refresh claims the fetch when the recorded instance differs from the refresh's instance; claiming records the instance immediately, before the fetch runs, so the outcome of that fetch can never change how many fetches happen.",
+    "recordedIsAttemptNotSuccess": true,
+    "rust": "🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs::claim_app_catalogue_fetch",
+    "productionCaller": "ShellState::refresh_app_catalogue",
+    "ticket": "26/09/09/PROCEDURAL-3D-END-TO-END"
+  },
+  "outcomes": ["succeeded", "fetch-failed", "reassembly-failed"],
+  "cases": [
+    {
+      "name": "a-catalogue-that-reassembles-is-fetched-once",
+      "why": "The unbroken path, unchanged by the fix — five refreshes of one instance, one fetch.",
+      "refreshes": [
+        { "instanceId": 1, "outcome": "succeeded" },
+        { "instanceId": 1 },
+        { "instanceId": 1 },
+        { "instanceId": 1 },
+        { "instanceId": 1 }
+      ],
+      "expectedFetchIndices": [0],
+      "baselineFetchIndices": [0],
+      "discriminates": false,
+      "recordedAfter": 1
+    },
+    {
+      "name": "a-catalogue-whose-reassembly-fails-is-still-fetched-once",
+      "why": "The defect. The live target's own boot: the first fetch published a document whose payload did not reassemble, and every later refresh re-entered the fetch. The second one wedged boot.",
+      "refreshes": [
+        { "instanceId": 1, "outcome": "reassembly-failed" },
+        { "instanceId": 1 },
+        { "instanceId": 1 },
+        { "instanceId": 1 }
+      ],
+      "expectedFetchIndices": [0],
+      "baselineFetchIndices": [0, 1, 2, 3],
+      "discriminates": true,
+      "recordedAfter": 1
+    },
+    {
+      "name": "a-catalogue-whose-fetch-faults-is-still-fetched-once",
+      "why": "The other failure arm — `render_with_document` itself errors — must claim the attempt exactly as the reassembly arm does.",
+      "refreshes": [
+        { "instanceId": 1, "outcome": "fetch-failed" },
+        { "instanceId": 1 },
+        { "instanceId": 1 }
+      ],
+      "expectedFetchIndices": [0],
+      "baselineFetchIndices": [0, 1, 2],
+      "discriminates": true,
+      "recordedAfter": 1
+    },
+    {
+      "name": "a-new-app-instance-refetches-exactly-once",
+      "why": "The cache key is the instance, so switching session must refetch — the fix must not turn 'once per instance' into 'once per process'.",
+      "refreshes": [
+        { "instanceId": 1, "outcome": "succeeded" },
+        { "instanceId": 1 },
+        { "instanceId": 2, "outcome": "succeeded" },
+        { "instanceId": 2 },
+        { "instanceId": 2 }
+      ],
+      "expectedFetchIndices": [0, 2],
+      "baselineFetchIndices": [0, 2],
+      "discriminates": false,
+      "recordedAfter": 2
+    },
+    {
+      "name": "a-new-instance-refetches-once-even-after-a-failure",
+      "why": "A failed instance must not poison the next one, and must not earn the next one a second attempt either.",
+      "refreshes": [
+        { "instanceId": 1, "outcome": "reassembly-failed" },
+        { "instanceId": 1 },
+        { "instanceId": 2, "outcome": "reassembly-failed" },
+        { "instanceId": 2 },
+        { "instanceId": 1 }
+      ],
+      "expectedFetchIndices": [0, 2, 4],
+      "baselineFetchIndices": [0, 1, 2, 3, 4],
+      "discriminates": true,
+      "recordedAfter": 1
+    }
+  ]
+}

@@ -469,6 +469,12 @@ class TestScript extends BundleScript {
       await runTransactionV2(this.repoRoot, segments);
       return;
     }
+    if (segments[0] === "marker-only-folders") {
+      if (segments.length !== 1) throw new Error("Expected test marker-only-folders");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️marker-only-folders/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
+      return;
+    }
     const { rest } = resolveTestLevel(segments);
     await runTestBudgeted(process.execPath, ["test", "../../🧪️tests/🔬️workspace-contract/🟦️.ts", ...rest], { cwd: this.root, env: repoTestArtifactEnvironment(this.repoRoot, "workspace-contract") });
   }

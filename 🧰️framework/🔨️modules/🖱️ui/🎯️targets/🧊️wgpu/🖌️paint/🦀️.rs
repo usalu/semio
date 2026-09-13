@@ -220,6 +220,13 @@ fn retained_fixed_output(draw: &mut DrawList, paint: impl FnOnce(&mut DrawList))
     draw.finish_retained_output().map(|_| ())
 }
 
+/// ➖️➕️ Where one stepper segment's glyph run starts: padded in, and dropped to the baseline the
+/// segment's own vertical centre asks for (`paint_retained_glyph_step` puts the baseline at
+/// `bounds.y + size`). Keeps the three runs on ONE line across the composite's segments.
+fn stepper_glyph_rect(segment: Rect, theme: &Theme) -> Rect {
+    Rect::new(segment.x + theme.padding_standard, segment.y + (segment.h - theme.font_size_body) * 0.5, (segment.w - theme.padding_standard * 2.0).max(1.0), segment.h)
+}
+
 fn retained_presence_step(draw: &mut DrawList, bounds: Rect, theme: &Theme, presence: &UiPresence) -> RetainedNodePaintStep {
     if retained_fixed_output(draw, |draw| presence_overlay(draw, bounds, theme, presence)).is_err() {
         RetainedNodePaintStep::Fault
@@ -867,28 +874,53 @@ pub(crate) fn paint_node_step(
             }
             _ => retained_presence_step(draw, bounds, theme, presence),
         },
-        UiNode::NumberStepper(stepper) => match cursor.phase {
-            0 => {
-                let result = retained_fixed_output(draw, |draw| push_control_border(draw, bounds, theme, theme.border_normal, theme.input_bg));
-                cursor.advance(1);
-                if result.is_err() {
-                    RetainedNodePaintStep::Fault
-                } else {
-                    RetainedNodePaintStep::Pending
+        // ➖️🔢️➕️ Three segments, painted at exactly the rects `events`' press routing hit-tests
+        // (`layout::number_stepper_segments`). Before this the streaming paint drew only the outer
+        // border and the value, so a user had no `−`/`+` to aim at even once the press routing existed
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️audit-wgpu-parity-2026-09-13.md` gap #6).
+        UiNode::NumberStepper(stepper) => {
+            let [decrement, value_segment, increment] = crate::wgpu::layout::number_stepper_segments(bounds);
+            match cursor.phase {
+                0 => {
+                    let result = retained_fixed_output(draw, |draw| {
+                        push_control_border(draw, bounds, theme, if flags.contains(NodeFlags::FOCUSED) { theme.border_emphasized } else { theme.border_normal }, if flags.contains(NodeFlags::HOVERED) { theme.button_hover } else { theme.input_bg });
+                        push_control_border(draw, value_segment, theme, theme.border_normal, theme.input_bg);
+                    });
+                    cursor.advance(1);
+                    if result.is_err() {
+                        RetainedNodePaintStep::Fault
+                    } else {
+                        RetainedNodePaintStep::Pending
+                    }
                 }
-            }
-            1 => {
-                let label = if stepper.uniform { format!("{:.3}", stepper.value) } else { UI_INSPECTOR_MIXED_PLACEHOLDER.to_string() };
-                match retained_text_node_step(&label, bounds, theme.font_size_body, theme.text, atlas, draw, cursor) {
+                1 => match retained_text_node_step("−", stepper_glyph_rect(decrement, theme), theme.font_size_body, theme.text, atlas, draw, cursor) {
                     RetainedNodePaintStep::Complete => {
                         cursor.advance(2);
                         RetainedNodePaintStep::Pending
                     }
                     step => step,
+                },
+                2 => {
+                    let label = if stepper.uniform { format!("{:.3}", stepper.value) } else { UI_INSPECTOR_MIXED_PLACEHOLDER.to_string() };
+                    let color = if stepper.uniform { theme.text } else { theme.text_muted };
+                    match retained_text_node_step(&label, stepper_glyph_rect(value_segment, theme), theme.font_size_body, color, atlas, draw, cursor) {
+                        RetainedNodePaintStep::Complete => {
+                            cursor.advance(3);
+                            RetainedNodePaintStep::Pending
+                        }
+                        step => step,
+                    }
                 }
+                3 => match retained_text_node_step("+", stepper_glyph_rect(increment, theme), theme.font_size_body, theme.text, atlas, draw, cursor) {
+                    RetainedNodePaintStep::Complete => {
+                        cursor.advance(4);
+                        RetainedNodePaintStep::Pending
+                    }
+                    step => step,
+                },
+                _ => retained_presence_step(draw, bounds, theme, presence),
             }
-            _ => retained_presence_step(draw, bounds, theme, presence),
-        },
+        }
         UiNode::Ring(ring) => {
             let segments = 48usize;
             if cursor.item < segments {
@@ -932,7 +964,10 @@ pub(crate) fn paint_node_step(
                     RetainedNodePaintStep::Pending
                 }
             }
-            1 => match retained_text_node_step(select.value.as_str(), bounds, theme.font_size_body, theme.text, atlas, draw, cursor) {
+            // ✍️ A focused `IconSelect` shows its LIVE buffer, not the declarative value —
+            // `events`' `editable_value` seeds one for this kind exactly as it does for `Input`,
+            // mirroring React's `IconSelector` editing its icon string in a textarea.
+            1 => match retained_text_node_step(node.state.edit.as_ref().map_or(select.value.as_str(), |edit| edit.text.as_str()), bounds, theme.font_size_body, theme.text, atlas, draw, cursor) {
                 RetainedNodePaintStep::Complete => {
                     cursor.advance(2);
                     RetainedNodePaintStep::Pending
@@ -1991,9 +2026,7 @@ fn paint_slider(node: &UiSliderNode, bounds: Rect, theme: &Theme, atlas: &mut Fo
 #[cfg(test)]
 fn paint_number_stepper(node: &UiNumberStepperNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     let seg = bounds.w / 3.0;
-    let minus = Rect::new(bounds.x, bounds.y, seg, bounds.h);
-    let center = Rect::new(bounds.x + seg, bounds.y, seg, bounds.h);
-    let plus = Rect::new(bounds.x + seg * 2.0, bounds.y, seg, bounds.h);
+    let [minus, center, plus] = crate::wgpu::layout::number_stepper_segments(bounds);
     let hair = theme.stroke_hairline;
     // 🖱️ `Stepper`'s minus/plus `<Button variant="outline">`s (`ui/js/react/index.tsx`) each carry
     // their own `hover:bg-muted`/`focus-visible:bg-muted`/`formControlFocusBorderClass`; this retained

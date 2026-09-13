@@ -502,8 +502,9 @@ fn overlap_sample_steps_stay_within_interaction_watchdog() {
 }
 
 #[test]
-fn document_scale_capacities_are_derived_from_the_fill_ceiling_not_the_bookkeeping_batch() {
-    assert!(DOCUMENT_OBJECT_SLOTS >= crate::editor::puzzle3d::precompute::FILL_COUNT_MAX + 1024, "objects must hold a full plan on top of a large scene");
+fn document_scale_capacities_are_derived_from_the_flagship_fixture_not_the_bookkeeping_batch() {
+    assert!(DOCUMENT_OBJECT_SLOTS >= NAKAGIN_DOCUMENT_OBJECTS + DOCUMENT_FILL_HEADROOM_SLOTS, "objects must hold the flagship fixture plus its declared fill headroom");
+    assert!(DOCUMENT_ATTRACTION_SLOTS >= NAKAGIN_DOCUMENT_OBJECTS + DOCUMENT_FILL_HEADROOM_SLOTS, "one attraction per placement shares the object headroom");
     assert_eq!((DOCUMENT_VORTEX_SLOTS, DOCUMENT_ATTRACTION_SLOTS, DOCUMENT_CELL_SLOTS), (2 * DOCUMENT_OBJECT_SLOTS, DOCUMENT_OBJECT_SLOTS, 4 * DOCUMENT_OBJECT_SLOTS));
     assert_eq!((DOCUMENT_VOLUME_SLOTS, DOCUMENT_CANDIDATE_SLOTS), (DOCUMENT_KIND_SLOTS, 4 * DOCUMENT_KIND_SLOTS));
     for (slots, page) in [

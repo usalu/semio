@@ -34,7 +34,27 @@ struct ExampleGeometryFixture {
     tessellation_tolerance: f64,
     expect: Expectation,
     delivery: DeliveryExpectation,
+    budget: BudgetExpectation,
     kernel_status: String,
+}
+
+/// ⏱️ What this example's chain is allowed to COST, in wall microseconds measured on this lane's own
+/// native `test` (unoptimized) profile — the third half of "the example works": geometry that is
+/// right and delivered but takes 78 s to appear is an example the user never sees converge
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️kernel-performance-2026-09-13.md`).
+///
+/// ⚖️ These are CEILINGS with deliberate headroom over the measured value, not targets: the point is
+/// to convict an algorithmic regression of the class this ticket removed (the boolean kernel's
+/// face-stitch spent 99% of `🍩️sphere-cut-with-torus`'s 61 s in arbitrary-precision rational
+/// predicates — a 14-35x penalty), never to police a few percent of machine-to-machine variance.
+/// A number here is only ever lowered after a measured improvement, never raised to admit a
+/// regression.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct BudgetExpectation {
+    max_evaluate_micros: u64,
+    max_tessellate_micros: u64,
+    max_preview_tessellate_micros: u64,
 }
 
 /// 🚚️ What this example's preview must DELIVER across the extension boundary, at the LOD the live
@@ -82,6 +102,36 @@ struct Expectation {
 }
 
 const FIXTURE_SCHEMA: &str = "s.procedural.generation3d.example-geometry/v1";
+
+/// ⏱️ The hard bound the two USER-FACING phases sit under — mirrors the TypeScript twin's
+/// `EXAMPLE_BUDGET_INTERACTIVE_CEILING_MICROS`. Evaluating the op chain and tessellating at the LOD
+/// the live preview asks for are what the playground waits on, and neither may claim more than two
+/// seconds of this lane's native `test`-profile wall time: the wasm guest runs the identical code at
+/// `opt-level = 2` (root `Cargo.toml`'s `[profile.wasm-dev.package]` overrides) inside a budgeted
+/// resumable job, so a phase over this bound cannot converge in the playground within the
+/// user-facing target ticket 26/09/09/PROCEDURAL-3D-END-TO-END set.
+const BUDGET_INTERACTIVE_CEILING_MICROS: u64 = 2_000_000;
+
+/// ⏱️ The bound on the FIDELITY phase — `tessellate_geometry` at the fixture's own
+/// `tessellationTolerance`, which is far finer than any LOD the live preview requests and exists so
+/// the committed geometry statement is measured on a converged mesh. Nobody waits on this number in
+/// the app, so its ceiling is a regression guard rather than a user-facing promise and is set
+/// looser; it still convicts the class of defect this ticket removed, which cost 14-35x.
+const BUDGET_FIDELITY_CEILING_MICROS: u64 = 8_000_000;
+
+/// ✅️ Every invariant the `budget` row states about ITSELF, checked before any timing is compared
+/// against it — a ceiling nobody bounded is the absence of a budget, and the preview LOD is by
+/// construction coarser than the fixture's own tessellation tolerance.
+fn assert_budget_contract(fixture: &ExampleGeometryFixture) {
+    let budget = &fixture.budget;
+    for micros in [budget.max_evaluate_micros, budget.max_preview_tessellate_micros] {
+        assert!(micros > 0, "{}: a budget of zero is not a budget", fixture.example);
+        assert!(micros <= BUDGET_INTERACTIVE_CEILING_MICROS, "{}: a {micros} us ceiling exceeds the {BUDGET_INTERACTIVE_CEILING_MICROS} us bound every user-facing phase sits under", fixture.example);
+    }
+    assert!(budget.max_tessellate_micros > 0, "{}: a budget of zero is not a budget", fixture.example);
+    assert!(budget.max_tessellate_micros <= BUDGET_FIDELITY_CEILING_MICROS, "{}: a {} us ceiling exceeds the {BUDGET_FIDELITY_CEILING_MICROS} us bound the fidelity phase sits under", fixture.example, budget.max_tessellate_micros);
+    assert!(budget.max_preview_tessellate_micros <= budget.max_tessellate_micros, "{}: the preview LOD is coarser than the fixture tolerance, so its ceiling may never exceed the full-tolerance one", fixture.example);
+}
 
 /// 🚧️ The machine-readable kernel standings a fixture may declare. Each `blocked-*` value names one
 /// SPECIFIC located kernel defect that this lane's run reproduced, never a licence to relax an
@@ -165,6 +215,8 @@ struct ExampleRun {
     oracle_bounding_box_min: [f64; 3],
     oracle_bounding_box_max: [f64; 3],
     kernel_volume: Option<f64>,
+    evaluate_micros: u64,
+    tessellate_micros: u64,
 }
 
 /// 🚦 Reads a node's output channel out of the flow host's evaluation JSON, naming the node's own
@@ -271,13 +323,18 @@ fn run_example(dsl: &str, fixture: &ExampleGeometryFixture) -> ExampleRun {
     generation.retire_cold();
     let mut host = FlowHost::from_fixture(graph);
     host.set_neuron_kind_info_map(flow_neuron_kind_info_map());
+    let started = std::time::Instant::now();
     let eval_json = host.evaluate().expect("example evaluates");
+    let evaluate_micros = started.elapsed().as_micros() as u64;
     let eval: serde_json::Value = serde_json::from_str(&eval_json).expect("evaluation json");
     let geometry = output_channel(&eval, &fixture.preview.node, &fixture.preview.channel);
     assert_eq!(geometry.get("$schema").and_then(serde_json::Value::as_str), Some("geometry"), "{} preview channel is not a geometry handle: {geometry}", fixture.example);
     assert_eq!(geometry.get("kind").and_then(serde_json::Value::as_str), Some(fixture.preview.kind.as_str()), "{} preview geometry kind", fixture.example);
     let handle = geometry.get("handle").and_then(serde_json::Value::as_str).expect("geometry handle").to_string();
+    semio_framework_os_flow::brep_geometry::evict_mesh_cache_for_handle(&handle);
+    let started = std::time::Instant::now();
     let mesh = tessellate_geometry(&handle, fixture.tessellation_tolerance).expect("preview tessellates");
+    let tessellate_micros = started.elapsed().as_micros() as u64;
     let incidence = edge_incidence(&mesh.positions, &mesh.indices);
     let (surface_min, surface_max) = bounds(if mesh.positions.is_empty() { &mesh.edge_positions } else { &mesh.positions });
     let signed_volume = signed_divergence_volume(&mesh.positions, &mesh.indices);
@@ -298,7 +355,7 @@ fn run_example(dsl: &str, fixture: &ExampleGeometryFixture) -> ExampleRun {
     let (oracle_volume, oracle_bounding_box_min, oracle_bounding_box_max) = parry_oracle(&mesh.positions, &mesh.indices);
     let kernel_volume = fixture.expect.kernel_volume_node.as_ref().zip(fixture.expect.kernel_volume_channel.as_ref()).map(|(node, channel)| output_channel(&eval, node, channel).get("value").and_then(serde_json::Value::as_f64).expect("kernel volume value"));
     retire_host(host);
-    ExampleRun { eval, handle, stats, oracle_volume, oracle_bounding_box_min, oracle_bounding_box_max, kernel_volume }
+    ExampleRun { eval, handle, stats, oracle_volume, oracle_bounding_box_min, oracle_bounding_box_max, kernel_volume, evaluate_micros, tessellate_micros }
 }
 
 /// 🕰️ A frozen clock for the retirement budget — this lane grants the whole close in one page and
@@ -327,6 +384,7 @@ fn assert_example(dsl: &str, fixture_json: &str) {
     let _guard = exclusive();
     let fixture: ExampleGeometryFixture = serde_json::from_str(fixture_json).expect("expected-stats fixture parses");
     assert_eq!(fixture.schema, FIXTURE_SCHEMA, "{} fixture schema", fixture.example);
+    assert_budget_contract(&fixture);
     for kind in &fixture.op_chain {
         assert!(dsl.contains(kind.as_str()), "{}: op chain step {kind:?} absent from the dsl", fixture.example);
     }
@@ -361,6 +419,34 @@ fn assert_example(dsl: &str, fixture_json: &str) {
     }
     assert!(!run.eval.as_object().map(|entries| entries.is_empty()).unwrap_or(true), "{}: evaluation json is empty", fixture.example);
     assert!(KERNEL_STATUSES.contains(&fixture.kernel_status.as_str()), "{}: unknown kernel status {:?}", fixture.example, fixture.kernel_status);
+    let (evaluate_micros, tessellate_micros) = best_timings(dsl, &fixture, run.evaluate_micros, run.tessellate_micros);
+    println!("[BUDGET] {} evaluateMicros={} budget={} tessellateMicros={} budget={}", fixture.example, evaluate_micros, fixture.budget.max_evaluate_micros, tessellate_micros, fixture.budget.max_tessellate_micros);
+    assert!(evaluate_micros <= fixture.budget.max_evaluate_micros, "{}: FlowHost::evaluate took {evaluate_micros} us (best of {TIMING_ATTEMPTS}) against a {} us ceiling — the op chain regressed algorithmically, see 📓️kernel-performance-2026-09-13.md", fixture.example, fixture.budget.max_evaluate_micros);
+    assert!(tessellate_micros <= fixture.budget.max_tessellate_micros, "{}: tessellate_geometry took {tessellate_micros} us (best of {TIMING_ATTEMPTS}) against a {} us ceiling — the tessellator regressed algorithmically, see 📓️kernel-performance-2026-09-13.md", fixture.example, fixture.budget.max_tessellate_micros);
+}
+
+/// ⏱️ How many times a phase that overran its ceiling is re-measured before the overrun is believed.
+/// The quantity a budget law is about is what the CODE costs, and a wall clock on a shared build
+/// machine measures the code plus whatever else was resident — this repository's fleet routinely
+/// holds the load average above 50 while peers compile, which inflates a single reading of a
+/// single-threaded phase two- to fourfold. The LEAST contended observation is the honest estimate,
+/// so an overrun is retried and the minimum is what the ceiling judges: contention is retried away,
+/// an algorithmic regression fails every attempt.
+const TIMING_ATTEMPTS: usize = 3;
+
+/// ⏱️ The first run's timings, improved by re-running only the phases that overran — a lane where
+/// nothing is over its ceiling pays for exactly one run.
+fn best_timings(dsl: &str, fixture: &ExampleGeometryFixture, evaluate_micros: u64, tessellate_micros: u64) -> (u64, u64) {
+    let (mut evaluate, mut tessellate) = (evaluate_micros, tessellate_micros);
+    for _ in 1..TIMING_ATTEMPTS {
+        if evaluate <= fixture.budget.max_evaluate_micros && tessellate <= fixture.budget.max_tessellate_micros {
+            break;
+        }
+        let retry = run_example(dsl, fixture);
+        evaluate = evaluate.min(retry.evaluate_micros);
+        tessellate = tessellate.min(retry.tessellate_micros);
+    }
+    (evaluate, tessellate)
 }
 //#endregion 🔖️Harness
 
@@ -598,6 +684,7 @@ fn run_delivery(dsl: &str, fixture: &ExampleGeometryFixture, lod_mode: &str) -> 
 fn assert_delivery(dsl: &str, fixture_json: &str) {
     let _guard = exclusive();
     let fixture: ExampleGeometryFixture = serde_json::from_str(fixture_json).expect("expected-stats fixture parses");
+    assert_budget_contract(&fixture);
     let run = run_delivery(dsl, &fixture, &fixture.delivery.lod_mode.clone());
     println!("[DELIVERY] {} roundTrips={} chunks={} packBase64Bytes={} triangles={} edgeSegments={} phase={} diagnostics={:?} payloadMeshes={} payloadInstances={} payloadTriangles={} payloadEdgeSegments={} stepMicros={:?} totalMicros={}", fixture.example, run.round_trips, run.chunks, run.pack_base64_bytes, run.triangles, run.edge_segments, run.phase, run.diagnostics, run.payload_meshes, run.payload_instances, run.payload_triangles, run.payload_edge_segments, run.step_micros, run.step_micros.iter().sum::<u64>());
     let delivery = &fixture.delivery;
@@ -614,6 +701,14 @@ fn assert_delivery(dsl: &str, fixture_json: &str) {
     assert!(run.payload_edge_segments >= delivery.min_edge_segments, "{}: the published payload carries {} edge segments, expected at least {}", fixture.example, run.payload_edge_segments, delivery.min_edge_segments);
     assert!(run.chunks <= delivery.max_chunks, "{}: the mesh body crossed in {} chunks, budget {}", fixture.example, run.chunks, delivery.max_chunks);
     assert!(run.round_trips <= delivery.max_round_trips, "{}: the preview cost {} tessellate round trips, budget {} — one round trip is one whole flowEvalTick", fixture.example, run.round_trips, delivery.max_round_trips);
+    let mut preview_micros = run.step_micros.iter().sum::<u64>();
+    for _ in 1..TIMING_ATTEMPTS {
+        if preview_micros <= fixture.budget.max_preview_tessellate_micros {
+            break;
+        }
+        preview_micros = preview_micros.min(run_delivery(dsl, &fixture, &fixture.delivery.lod_mode.clone()).step_micros.iter().sum::<u64>());
+    }
+    assert!(preview_micros <= fixture.budget.max_preview_tessellate_micros, "{}: the preview LOD tessellation took {preview_micros} us (best of {TIMING_ATTEMPTS}) against a {} us ceiling — a step that overruns the kernel's own budget here is seconds in a served wasm build, see 📓️kernel-performance-2026-09-13.md", fixture.example, fixture.budget.max_preview_tessellate_micros);
 }
 
 #[test]

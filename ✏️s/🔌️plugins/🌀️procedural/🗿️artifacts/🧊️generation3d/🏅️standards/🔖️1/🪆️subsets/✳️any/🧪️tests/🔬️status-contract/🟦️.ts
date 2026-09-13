@@ -56,7 +56,7 @@ interface StatusContract {
   debugKeys: string[];
   evaluateFaultCode: string;
   addressMissCode: string;
-  surfaces: Array<{ surface: string; windowKindId: string; cancelAction: string; declaresCancelCommand: boolean }>;
+  surfaces: Array<{ surface: string; windowKindId: string; cancelAction: string; declaresCancelCommand: boolean; offersCancelOnWindow: boolean }>;
   states: StatusState[];
 }
 
@@ -159,6 +159,12 @@ export function testGeneration3dPreviewStatusContract(): void {
   for (const surface of contract.surfaces) {
     assert.equal(surface.cancelAction, fixture.cancelAction, `${surface.surface}: every surface names the same cancel verb`);
     assert.equal(surface.declaresCancelCommand, true, `${surface.surface}: a surface that publishes cancelAction must declare that command or the gesture is dropped`);
+    // 🛑️ Declaring the COMMAND is only half of it: `ShellHost`'s `declaredAction` gate resolves the
+    // verb against the FOCUSED window kind's own action refs, so a window that publishes
+    // `cancelAction` without listing the verb paints a button whose click is dropped before
+    // `plugin.handleAction` runs — which is what all three preview windows did
+    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    assert.equal(surface.offersCancelOnWindow, true, `${surface.surface}: the window kind itself must offer the cancel verb`);
     assert.ok(surface.windowKindId.length > 0, `${surface.surface}: a window kind id is the address the status is published under`);
   }
   assert.equal(new Set(contract.surfaces.map((row) => row.windowKindId)).size, contract.surfaces.length, "each preview window kind appears once");
@@ -215,8 +221,15 @@ export function testGeneration3dPreviewStatusContract(): void {
   for (const key of ["unitsDone", "unitsTotal", "facesDone", "facesTotal", "inFlight", "ratio"]) {
     assert.ok(contract.progressKeys.includes(key), `progress must declare ${key}`);
   }
-  for (const key of ["evalLen", "meshesLen", "instancesLen", "evalHead"]) {
+  // 🧹️ `debug` names what reached the SCENE and nothing else. `evalLen`/`evalHead` — a length and
+  // the first 240 characters of the raw evaluation text — were spilled onto every status frame of
+  // every preview window and are gone (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+  // `📓️audit-user-journey-gaps-2026-09-13.md` §9 item 17).
+  for (const key of ["meshesLen", "instancesLen"]) {
     assert.ok(contract.debugKeys.includes(key), `debug must declare ${key}`);
+  }
+  for (const key of ["evalLen", "evalHead"]) {
+    assert.ok(!contract.debugKeys.includes(key), `debug must not carry the retired ${key}`);
   }
 
   // 🛑️ A declared `cancellable` with no action to dispatch is a dead button — worse than none.

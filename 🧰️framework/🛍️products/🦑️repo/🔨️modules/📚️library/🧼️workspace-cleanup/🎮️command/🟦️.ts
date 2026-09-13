@@ -1,12 +1,14 @@
 import { existsSync, rmSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join, relative, resolve } from "node:path";
 import { coverageDir } from "../../🟦️.ts";
 import { repoCacheDirectory } from "../../⚡️caching/🟦️.ts";
 import { loadCatalogTaxonomy } from "../../🔍️discovery/🟦️.ts";
 import { orchestratorBudgetOpts, runCmd, runCmdStatus } from "../../🏃️process/🟦️.ts";
 import { Script } from "../../🏃️process/🧭️routing/🟦️.ts";
 import { runTaxonomyCliWorkflow } from "../../🧹️normalization/🎮️command-contract/🔁️workflow/🟦️.ts";
-import { runWorkspaceClean } from "../🗑️removal/🟦️.ts";
+import { cleanCollectMarkerOnlyFolderRemovals } from "../🔍️marker-only-folders/🟦️.ts";
+import { cleanProtectedPrefixes, cleanProjectRemovals, CLEAN_PROTECTION_VIEW } from "../🛡️protection/🟦️.ts";
+import { cleanRemovePath, runWorkspaceClean } from "../🗑️removal/🟦️.ts";
 
 /**
  * 🧹Workspace cleaner: misplaced emoji mounts, ticket junk, oversized build artifacts — never
@@ -24,6 +26,21 @@ export class CleanScript extends Script {
       return;
     }
     const dry = segments.includes("--dry") || segments.includes("dry");
+    if (segments[0] === "marker-only-folders") {
+      const protectedPrefixes = cleanProtectedPrefixes(this.root);
+      const pending = cleanCollectMarkerOnlyFolderRemovals(this.root, protectedPrefixes);
+      const blocked: string[] = [];
+      const removals = cleanProjectRemovals(this.root, pending, protectedPrefixes, CLEAN_PROTECTION_VIEW, (path) => blocked.push(path));
+      let bytes = 0;
+      for (const row of removals) {
+        if (cleanRemovePath(this.root, resolve(this.root, row.path), dry, protectedPrefixes)) bytes += row.bytes;
+        else blocked.push(row.path);
+      }
+      console.log(`[clean marker-only-folders] ${dry ? "dry-run" : "applied"} removals=${removals.length} bytes=${bytes}`);
+      for (const row of removals) console.log(`[clean marker-only-folders] ${dry ? "would-remove" : "removed"} ${row.path} (${row.bytes})`);
+      for (const path of blocked) console.log(`[clean marker-only-folders] protected ${path}`);
+      return;
+    }
     if (segments[0] === "test") {
       // 🧪️ Marker-guarded removal of generated test state, delegated to its owner. Never descends
       // into `compose/`, never follows a symlink, never deletes an unmarked directory.

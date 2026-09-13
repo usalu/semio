@@ -9,6 +9,9 @@
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { loadingBorderClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
+import { shellFloorFillClass } from "../../🔨️modules/🏠️shell-floor-presentation/🟦️.ts";
+import { WindowChrome, windowBodyFrameClass, windowChromeTitleChipClass } from "../../🎯️targets/⚛️react/🟦️.tsx";
+import { LevelProvider, SurfaceScope, useSurface } from "../🌈️Surface/🟦️.tsx";
 import { SceneSkeleton } from "../🎬️Scene/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -127,18 +130,46 @@ export const PanelTreeSkeleton: React.FC<{ className?: string }> = ({ className 
   </div>
 );
 
-/** @emoji 🦴 Full canvas placeholder while the primary plugin session boots. */
-export const CanvasSkeleton: React.FC<{ className?: string; label?: string }> = ({ className = "", label }) => (
-  <div className={cn("relative flex h-full min-h-0 w-full flex-col overflow-hidden", className)} role="status" aria-busy="true" aria-label={label}>
-    <div className="flex h-medium w-full shrink-0 gap-single p-single">
-      <SkeletonBlock className="h-full w-28" />
-      <SkeletonBlock className="h-full flex-1" />
-      <SkeletonBlock className="h-full w-16" />
-    </div>
-    <div className="min-h-0 flex-1 p-double">
-      <SkeletonBlock className="h-full w-full" />
-    </div>
-  </div>
+const CanvasSkeletonWindow: React.FC<{ active?: boolean }> = ({ active = false }) => (
+  <SurfaceScope level="window">
+    <WindowChrome
+      level="window"
+      active={active}
+      stackSlot="canvas-skeleton-stack"
+      silhouetteSlot="canvas-skeleton-silhouette-border"
+      stackClassName="relative z-window h-full min-h-0 w-full min-w-0 overflow-hidden"
+      bodyClassName={cn("flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-single", windowBodyFrameClass)}
+      bodySurfaceClassName={windowBodyFrameClass}
+      bodySurfaceLevel="base"
+      titleChips={
+        <span className={cn(windowChromeTitleChipClass, "flex items-center gap-single px-single")} aria-hidden>
+          <SkeletonBlock className="size-small shrink-0 rounded-sm" />
+          <SkeletonBlock className="h-3 w-14 max-w-full" />
+        </span>
+      }
+      body={<WindowBodySkeleton />}
+    />
+  </SurfaceScope>
 );
+
+/** @emoji 🦴 Full canvas placeholder while the primary plugin session boots — two even mode-dock windows with U-cutout silhouettes. */
+export const CanvasSkeleton: React.FC<{ className?: string; label?: string }> = ({ className = "", label }) => {
+  const parent = useSurface();
+  const floorClass = shellFloorFillClass(parent);
+  return (
+    <LevelProvider level="base">
+      <div className={cn("box-border flex h-full min-h-0 w-full flex-col overflow-hidden p-single", floorClass, className)} role="status" aria-busy="true" aria-label={label}>
+        <div className="flex h-full min-h-0 w-full flex-row gap-single">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+            <CanvasSkeletonWindow active />
+          </div>
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+            <CanvasSkeletonWindow />
+          </div>
+        </div>
+      </div>
+    </LevelProvider>
+  );
+};
 
 // #endregion 🦴️Skeletons

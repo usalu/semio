@@ -866,6 +866,23 @@ logos: Array<IntroductionLogo>,
 demonstrations?: Array<IntroductionDemonstration>, };"####,
         },
         SchemaMetadata { name: "Keybinding", version: 1, typescript: r####"export type Keybinding = { keys: string, action: ActionDescriptor, };"#### },
+        SchemaMetadata {
+            name: "MeasureProgressStep",
+            version: 1,
+            typescript: r####"/**
+ * 🪜️ One line of the "what the algorithm just did" log carried by `WindowMeasure::Progress`.
+ */
+export type MeasureProgressStep = { kind: MeasureProgressStepKind, text: string, };"####,
+        },
+        SchemaMetadata {
+            name: "MeasureProgressStepKind",
+            version: 1,
+            typescript: r####"/**
+ * 🚦️ Severity tint of one `MeasureProgressStep`, mirroring `semio_framework_job::DiagnosticKind`
+ * so a job's progress vocabulary projects onto the semantic `info`/`success`/`warning`/`danger` tokens.
+ */
+export type MeasureProgressStepKind = "info" | "success" | "warning" | "danger";"####,
+        },
         SchemaMetadata { name: "MeasureSelectItem", version: 1, typescript: r####"export type MeasureSelectItem = { id: string, value: string, label: string, };"#### },
         SchemaMetadata {
             name: "MediaClass",
@@ -1824,7 +1841,47 @@ disabled?: boolean,
  * instances tagged with this reveal group's id instead. See `WorldInstancesLayer`'s reveal
  * cutoff store and `revealCutoffs` in `World3dScene.interaction_json`.
  */
-reveal?: string, onChange: ActionDescriptor, } | { "kind": "toggle", id: string, iconId: IconName, label?: string, pressed: boolean, text?: string, onChange: ActionDescriptor, } | { "kind": "group", id: string, label: string, defaultOpen?: boolean,
+reveal?: string, onChange: ActionDescriptor, } | { "kind": "number", id: string, label?: string, value: number,
+/**
+ * ⬇️ Inclusive floor; `None` leaves the value unbounded below.
+ */
+min?: number,
+/**
+ * ⬆️ Inclusive ceiling; `None` leaves the value unbounded above — renderers must not clamp.
+ */
+max?: number, step?: number,
+/**
+ * 🎚️ Absolute value already prepared/committed, drawn as a soft extent behind the entry.
+ */
+ready?: number,
+/**
+ * 🌀️ When true, the measure tree leaf shows a loading ring while work continues.
+ */
+loading?: boolean,
+/**
+ * 🌀️ When true, the measure tree leaf shows a dashed, slower waiting ring; `loading` takes precedence when both are set.
+ */
+waiting?: boolean,
+/**
+ * 🚫️ When true, the entry is inert.
+ */
+disabled?: boolean, onChange: ActionDescriptor, } | { "kind": "progress", id: string, label?: string,
+/**
+ * 🧭️ Localized caption of the phase the work is in, mirroring `ProgressEvent::StageChanged`.
+ */
+stage?: string, completed: number,
+/**
+ * ♾️ Total units of work; `None` means indeterminate — renderers show a busy bar, never a percentage.
+ */
+total?: number, steps: Array<MeasureProgressStep>,
+/**
+ * 🛑️ Dispatched when the user cancels; absent means the work cannot be cancelled.
+ */
+cancel?: ActionDescriptor,
+/**
+ * 🌀️ When true, the measure tree leaf shows a loading ring while work continues.
+ */
+loading?: boolean, } | { "kind": "toggle", id: string, iconId: IconName, label?: string, pressed: boolean, text?: string, onChange: ActionDescriptor, } | { "kind": "group", id: string, label: string, defaultOpen?: boolean,
 /**
  * 🎯️ When `Some(utility_id)`, this group is *utility-scoped chrome*: the shell surfaces it only while
  * `ViewModel.active_utility_id == utility_id`, and renders it in the dedicated "Utility Options" rail

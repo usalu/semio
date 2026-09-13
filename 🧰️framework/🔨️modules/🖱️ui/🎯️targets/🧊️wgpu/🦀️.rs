@@ -70,6 +70,13 @@ pub mod tree;
 #[path = "🔀️reconcile/🦀️.rs"]
 pub mod reconcile;
 
+/// ♿️ The accessibility tree this target publishes from the retained document, for a host to mirror
+/// into a real ARIA subtree — the GPU-canvas answer to React's `aria-*` attributes, which a canvas
+/// has no elements to carry. See the module's own docstring.
+#[cfg(feature = "wgpu-engine")]
+#[path = "♿️accessibility/🦀️.rs"]
+pub mod accessibility;
+
 #[cfg(feature = "wgpu-engine")]
 #[path = "🖥️chrome/🦀️.rs"]
 pub mod chrome;
@@ -232,7 +239,8 @@ pub mod host;
 // 🧩️ Always available: declarative component types + engine-agnostic primitives (default features).
 pub use component::layout::{
     build_shell_context_menu_specs, collect_window_kind_ids_from_layout, create_default_layout, create_named_layout, create_stack_layout, create_tab_stack_layout, create_window_layout, default_viewport_engagement, even_window_layout,
-    framework_panel_tab_label, merge_named_layouts, organize_context_menu, partition_window_measures, ribbon_parent_label, ActionDescriptor, MeasureSelectItem, NamedLayout, ShellMenuAction, StyleSpec, WindowEngagement, WindowEngagementControl,
+    framework_panel_tab_label, measure_progress_cancel_label, merge_named_layouts, organize_context_menu, partition_window_measures, ribbon_parent_label, ActionDescriptor, MeasureProgressStep, MeasureProgressStepKind, MeasureSelectItem, NamedLayout,
+    ShellMenuAction, StyleSpec, WindowEngagement, WindowEngagementControl,
     WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementSlot, WindowEngagementStatus, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
     WindowMeasure, WindowOptions, WindowStackCorner, FRAMEWORK_HISTORY_BODY_KEY, FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HISTORY_ICON_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_HISTORY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,

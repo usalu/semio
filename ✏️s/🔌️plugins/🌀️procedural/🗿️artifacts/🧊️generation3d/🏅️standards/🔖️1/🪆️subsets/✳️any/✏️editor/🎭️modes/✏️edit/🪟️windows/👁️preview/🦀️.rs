@@ -36,6 +36,18 @@ pub fn definition() -> WindowKindDefinition {
     }
 }
 
+/// 👁️ One show-mode row's picker id and human label. Keyed off the tag so
+/// [`crate::editor::generation3d::config::GENERATION_3D_SHOW_MODES`] stays the single ladder both
+/// this picker and `cycleShowMode` walk.
+fn show_mode_row(mode: &str) -> (&'static str, &'static str) {
+    match mode {
+        "shaded+edges" => ("generation3d-measure-show-edges", "Shaded + edges"),
+        "wireframe" => ("generation3d-measure-show-wireframe", "Wireframe"),
+        "points" => ("generation3d-measure-show-points", "Points"),
+        _ => ("generation3d-measure-show-shaded", "Shaded"),
+    }
+}
+
 /// 👁️ Preview shading mode for the world-3d window.
 pub fn show_mode_measure(show_mode: &str, procedural_action: impl Fn(&str, Option<serde_json::Value>) -> ActionDescriptor) -> WindowMeasure {
     let current = if show_mode.is_empty() { "shaded" } else { show_mode };
@@ -43,12 +55,13 @@ pub fn show_mode_measure(show_mode: &str, procedural_action: impl Fn(&str, Optio
         id: "generation3d-measure-show".into(),
         label: Some("Show".into()),
         value: current.into(),
-        items: vec![
-            MeasureSelectItem { id: "generation3d-measure-show-shaded".into(), value: "shaded".into(), label: "Shaded".into() },
-            MeasureSelectItem { id: "generation3d-measure-show-edges".into(), value: "shaded+edges".into(), label: "Shaded + edges".into() },
-            MeasureSelectItem { id: "generation3d-measure-show-wireframe".into(), value: "wireframe".into(), label: "Wireframe".into() },
-            MeasureSelectItem { id: "generation3d-measure-show-points".into(), value: "points".into(), label: "Points".into() },
-        ],
+        items: crate::editor::generation3d::config::GENERATION_3D_SHOW_MODES
+            .iter()
+            .map(|mode| {
+                let (id, label) = show_mode_row(mode);
+                MeasureSelectItem { id: id.into(), value: (*mode).into(), label: label.into() }
+            })
+            .collect(),
         on_change: procedural_action("setShowMode", None),
     }
 }
@@ -69,7 +82,7 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, prev
     let (meshes_json, instances_json) = (payload.meshes_json, payload.instances_json);
     let preview_status = preview_status_json(&eval_json, &document.fixture);
     let sun = config.sun();
-    let status_json = preview_window_status_json(Some(session), preview_status, &PreviewStatusDebug { eval_json: &eval_json, meshes_json: &meshes_json, instances_json: &instances_json }, None);
+    let status_json = preview_window_status_json(Some(session), preview_status, &PreviewStatusDebug { meshes_json: &meshes_json, instances_json: &instances_json }, None);
     let _ = GENERATION_3D_PLAY_APP_ID;
     crate::scene_surface(
         GENERATION_3D_PLAY_SURFACE_PREVIEW,

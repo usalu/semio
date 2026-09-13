@@ -552,6 +552,16 @@ fn tree_item_control(record: &UiNodeRecord, controller: &str) -> Option<UiContro
     })
 }
 
+/// ⌨️ Which trigger an `Input`'s value commits through — `InputProps`' own doc names the pair
+/// (`Trigger::Change`/`Trigger::Commit`), and `commit == "blur"` is what picks between them, exactly
+/// as React's `InputView` picks `commitOnBlur ? "commit" : "change"`. Resolving it HERE keeps the
+/// retained node's single `on_change` field the one descriptor `events`' commit authority
+/// dispatches, whichever trigger the guest actually bound.
+fn input_commit_action(record: &UiNodeRecord, props: &ui_contract::InputProps, controller: &str) -> ActionDescriptor {
+    let trigger = if props.commit.as_ref().is_some_and(|value| value.as_str() == "blur") { ui_contract::Trigger::Commit } else { ui_contract::Trigger::Change };
+    record_action_or_inert(record, trigger, controller)
+}
+
 fn input_node(record: &UiNodeRecord, controller: &str) -> UiNode {
     let ui_contract::Component::Input(props) = &record.component else { return UiNode::Separator(UiSeparatorNode { presence: record_presence(record), menu: menu_ref(record) }) };
     UiNode::Input(UiInputNode {
@@ -564,7 +574,7 @@ fn input_node(record: &UiNodeRecord, controller: &str) -> UiNode {
         max: props.max,
         step: props.step,
         accept: props.accept.as_ref().map(|value| value.as_str().to_string()),
-        on_change: record_action_or_inert(record, ui_contract::Trigger::Change, controller),
+        on_change: input_commit_action(record, props, controller),
         presence: record_presence(record),
         menu: menu_ref(record),
     })

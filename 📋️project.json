@@ -274,6 +274,20 @@
         "command": "bun ./📜️script.ts verify cad-document-contract native"
       }
     },
+    "generation3d-document-io": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify generation3d-document-io"
+      }
+    },
+    "generation3d-document-io-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify generation3d-document-io native"
+      }
+    },
     "generation3d-preview-window-transient": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -1044,6 +1058,15 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts clean coverage",
+        "forwardAllArgs": true
+      }
+    },
+    "clean-marker-only-folders": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts clean marker-only-folders",
         "forwardAllArgs": true
       }
     },

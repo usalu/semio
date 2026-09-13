@@ -1,6 +1,7 @@
 
 use super::*;
-use crate::standards::v1::subsets::any::schema::ObjectKindRepresentation;
+use crate::editor::puzzle3d::precompute::{Puzzle3dCollision, Puzzle3dPrecomputeSession};
+use crate::standards::v1::subsets::any::schema::{BrushSearchProgress, FillCandidateVerdict, ObjectKindRepresentation, SceneConfig};
 
 #[test]
 fn fill_distribution_excludes_zero_weight_vortices() {
@@ -513,3 +514,198 @@ fn apply_brush_placement_to_fixture_rejects_duplicate_attraction_target() {
     let next = apply_brush_placement_to_fixture(&fixture, &payload, &catalogs);
     assert_eq!(next.objects.len(), 0, "a target vortex that is already attracting must reject the placement");
 }
+
+//#region 🔎️BrushSearchVisibleProcess
+/// 🔎️ Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS wave G — the candidate search is a process
+/// the user watches, not an outcome that appears. These laws pin the readout it publishes.
+const BRUSH_SEARCH_TARGET: &str = "host:v0";
+
+fn brush_search_cube() -> (Vec<f32>, Vec<u32>) {
+    (
+        vec![-4.0, -4.0, -4.0, 4.0, -4.0, -4.0, 4.0, 4.0, -4.0, -4.0, 4.0, -4.0, -4.0, -4.0, 4.0, 4.0, -4.0, 4.0, 4.0, 4.0, 4.0, -4.0, 4.0, 4.0],
+        vec![0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 0, 4, 5, 0, 5, 1, 2, 6, 7, 2, 7, 3, 0, 3, 7, 0, 7, 4, 1, 5, 6, 1, 6, 2],
+    )
+}
+
+fn brush_search_kind(id: &str, url: &str) -> ObjectKind {
+    ObjectKind {
+        id: id.to_string(),
+        representations: vec![ObjectKindRepresentation { id: id.to_lowercase(), name: String::new(), url: url.to_string(), mime: String::new(), tags: vec![], lod: None, description: String::new() }],
+        scale: None,
+        vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("port-b".to_string()), point: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]), ..Default::default() }],
+    }
+}
+
+/// 🧪️ Two compatible kinds on one host vortex. `blocker` parks a registered body exactly where both
+/// candidates dock, so every candidate reaches a `collision` verdict; `late_mesh` decides whether the
+/// second kind's geometry has arrived yet, which is how a search is held open mid-list.
+fn brush_search_scene(blocker: bool) -> SceneConfig {
+    let mut objects = vec![FixtureObject {
+        id: "host".to_string(),
+        object_kind: Some("Host".to_string()),
+        anchor: Default::default(),
+        mesh_url: Some("/test/unregistered.glb".to_string()),
+        origin: [12.0, 0.0, 0.0],
+        orientation: Some([0.0, 0.0, 0.0, 1.0]),
+        scale: None,
+        vortices: vec![VortexProps { id: "v0".to_string(), vortex_kind: Some("port-a".to_string()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) }],
+        reveal_index: None,
+    }];
+    if blocker {
+        objects.push(FixtureObject {
+            id: "blocker".to_string(),
+            object_kind: Some("Host".to_string()),
+            anchor: Default::default(),
+            mesh_url: Some("/test/blocker.glb".to_string()),
+            origin: [12.0, 0.0, 0.0],
+            orientation: Some([0.0, 0.0, 0.0, 1.0]),
+            scale: None,
+            vortices: vec![],
+            reveal_index: None,
+        });
+    }
+    SceneConfig {
+        fixture: Fixture { attractions: vec![], target_volumes: vec![], objects },
+        kind_catalogs: Some(KindCatalogBundle {
+            objects: vec![brush_search_kind("Near", "/test/near.glb"), brush_search_kind("Late", "/test/late.glb")],
+            vortices: vec![VortexKindCatalog { id: "port-a".to_string(), default_cable_kind: None, ..Default::default() }, VortexKindCatalog { id: "port-b".to_string(), default_cable_kind: None, ..Default::default() }],
+            cables: vec![CableKindCatalog { id: "cable.link".to_string(), default_attraction_kind: None, ..Default::default() }],
+        }),
+        kind_compatibility: vec![KindCompatEntry { source: "port-b".to_string(), target: "port-a".to_string(), bidirectional: true, important: false, specificity: Some("vortex".to_string()) }],
+        overlap_budget: 0.02,
+        seed: 1,
+        host_rules: BrushHostRules::default(),
+        weights: BrushKindWeights::default(),
+    }
+}
+
+fn brush_search_engine(blocker: bool, late_mesh: bool) -> Puzzle3dCollision {
+    let (positions, indices) = brush_search_cube();
+    let mut engine = Puzzle3dCollision::new();
+    engine.register_mesh("/test/near.glb".to_string(), &positions, &indices);
+    engine.register_mesh("/test/blocker.glb".to_string(), &positions, &indices);
+    if late_mesh {
+        engine.register_mesh("/test/late.glb".to_string(), &positions, &indices);
+    }
+    engine.scene = Some(std::sync::Arc::new(brush_search_scene(blocker)));
+    engine
+}
+
+/// 🧪️ The same fixture behind the public session surface the window layer reads.
+fn brush_search_session(blocker: bool) -> Puzzle3dPrecomputeSession {
+    let (positions, indices) = brush_search_cube();
+    let mut session = Puzzle3dPrecomputeSession::new();
+    session.register_mesh("/test/near.glb", &positions, &indices);
+    session.register_mesh("/test/blocker.glb", &positions, &indices);
+    session.register_mesh("/test/late.glb", &positions, &indices);
+    assert!(session.set_scene_config(brush_search_scene(blocker)).is_ok(), "the brush search fixture is a valid scene");
+    session
+}
+
+/// 🔁️ Drives the lane the way one `suggestionsTick` does and keeps every readout it passed through.
+fn brush_search_trace(engine: &mut Puzzle3dCollision, slices: usize) -> Vec<BrushSearchProgress> {
+    let mut seen = Vec::new();
+    for _ in 0..slices {
+        engine.refresh_brush_candidates(BRUSH_SEARCH_TARGET);
+        let progress = engine.brush_search_progress(BRUSH_SEARCH_TARGET);
+        let done = progress.done;
+        seen.push(progress);
+        if done {
+            break;
+        }
+    }
+    seen
+}
+
+fn assert_brush_search_never_regresses(seen: &[BrushSearchProgress]) {
+    for pair in seen.windows(2) {
+        assert!(pair[1].tested >= pair[0].tested, "tested went backwards: {:?} then {:?}", pair[0].tested, pair[1].tested);
+        assert!(pair[1].free >= pair[0].free, "free went backwards: {:?} then {:?}", pair[0].free, pair[1].free);
+        assert!(pair[1].blocked >= pair[0].blocked, "blocked went backwards: {:?} then {:?}", pair[0].blocked, pair[1].blocked);
+        assert!(!pair[0].done || pair[1].done, "done never un-flips inside one search");
+    }
+}
+
+#[test]
+fn brush_search_progress_counts_every_free_candidate_and_flips_done_when_the_list_is_exhausted() {
+    let mut engine = brush_search_engine(false, true);
+    let seen = brush_search_trace(&mut engine, 8);
+    assert_brush_search_never_regresses(&seen);
+    let last = seen.last().expect("at least one slice");
+    assert!(last.done, "a search with every mesh resident owes nothing after eight slices");
+    assert_eq!(last.target_vortex_full_id, BRUSH_SEARCH_TARGET);
+    assert_eq!(last.total_candidates, 2, "both compatible kinds are counted, not only the surviving ones");
+    assert_eq!(last.free, 2);
+    assert_eq!(last.blocked, 0);
+    assert_eq!(last.tested, last.free + last.blocked, "tested is exactly what reached a verdict");
+    assert_eq!(last.current_verdict, FillCandidateVerdict::Free);
+}
+
+#[test]
+fn brush_search_progress_counts_blocked_candidates_as_a_verdict_not_a_silence() {
+    let mut engine = brush_search_engine(true, true);
+    let seen = brush_search_trace(&mut engine, 8);
+    assert_brush_search_never_regresses(&seen);
+    let last = seen.last().expect("at least one slice");
+    assert!(last.done);
+    assert_eq!(last.free, 0, "every candidate docks into the parked body");
+    assert_eq!(last.blocked, 2);
+    assert_eq!(last.tested, 2);
+    assert_eq!(last.current_verdict, FillCandidateVerdict::Collision);
+    assert!(last.current_ghost.is_some(), "a refused candidate stays paintable — that is the whole point of showing it");
+}
+
+#[test]
+fn brush_search_publishes_free_candidates_before_the_search_is_done() {
+    let mut engine = brush_search_engine(false, false);
+    let seen = brush_search_trace(&mut engine, 8);
+    assert_brush_search_never_regresses(&seen);
+    let partial = seen.last().expect("at least one slice");
+    assert!(!partial.done, "a candidate whose mesh has not arrived leaves the search owed");
+    assert_eq!(partial.free, 1, "the resolved candidate is published while the other is still unknown");
+    assert_eq!(partial.total_candidates, 2);
+    assert_eq!(engine.brush_cache.get(BRUSH_SEARCH_TARGET).expect("cache entry").free.len(), 1, "the picker's own list already holds the partial result");
+    let (positions, indices) = brush_search_cube();
+    engine.register_mesh("/test/late.glb".to_string(), &positions, &indices);
+    let complete = brush_search_trace(&mut engine, 8);
+    let complete = complete.last().expect("at least one slice");
+    assert!(complete.done, "the late mesh completes the search");
+    assert_eq!(complete.free, 2, "the list grew instead of starting over");
+}
+
+#[test]
+fn brush_ghost_json_carries_the_verdict_of_the_candidate_it_shows() {
+    use crate::editor::puzzle3d::config::Puzzle3dRuntime;
+    use crate::editor::puzzle3d::modes::edit::windows::main::world_brush_preview_json;
+    use crate::editor::puzzle3d::{empty_fixture, Puzzle3dInteractionSnapshot, Puzzle3dScene};
+    let ghost_verdict = |blocker: bool| {
+        let mut session = brush_search_session(blocker);
+        session.set_brush_live_target(Some(BRUSH_SEARCH_TARGET.to_string()));
+        session.advance_brush_search(BRUSH_SEARCH_TARGET);
+        let envelope = Puzzle3dScene { fixture: empty_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: "brush".to_string() };
+        let json = world_brush_preview_json(&session, &envelope, &Puzzle3dInteractionSnapshot::default()).expect("a hovered vortex always publishes a ghost once its search ran");
+        let value: serde_json::Value = serde_json::from_str(&json).expect("ghost json");
+        value.get("verdict").and_then(serde_json::Value::as_str).map(str::to_string).expect("every ghost carries a verdict")
+    };
+    assert_eq!(ghost_verdict(false), "free", "a collision-free pick is published as free, which the host paints highlighted");
+    assert_eq!(ghost_verdict(true), "collision", "a vortex where everything collides shows the refused candidate, not nothing");
+}
+
+#[test]
+fn brush_search_captions_answer_in_english_and_german_with_no_default_locale() {
+    use crate::editor::puzzle3d::modes::edit::windows::main::utilities::brush::{brush_search_stage, brush_search_summary};
+    use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
+    use semio_framework_plugin::{AppLabels, Locale, Terminology};
+    let english = Puzzle3dLabels::labels(Locale::En, Terminology::Native);
+    let german = Puzzle3dLabels::labels(Locale::De, Terminology::Native);
+    let running = BrushSearchProgress { target_vortex_full_id: BRUSH_SEARCH_TARGET.to_string(), tested: 7, free: 3, blocked: 4, total_candidates: 12, done: false, ..Default::default() };
+    assert_eq!(brush_search_summary(&running, english), "3 free · 7 / 12 tested");
+    assert_eq!(brush_search_summary(&running, german), "3 frei · 7 / 12 getestet");
+    assert!(brush_search_stage(&running, english).contains("4 blocked"));
+    assert!(brush_search_stage(&running, german).contains("4 blockiert"));
+    let done = BrushSearchProgress { done: true, ..running };
+    assert!(brush_search_stage(&done, english).starts_with("Search complete"));
+    assert!(brush_search_stage(&done, german).starts_with("Suche abgeschlossen"));
+    assert_ne!(brush_search_stage(&done, english), brush_search_stage(&done, german), "every caption is translated, never an English fallback");
+}
+//#endregion 🔎️BrushSearchVisibleProcess

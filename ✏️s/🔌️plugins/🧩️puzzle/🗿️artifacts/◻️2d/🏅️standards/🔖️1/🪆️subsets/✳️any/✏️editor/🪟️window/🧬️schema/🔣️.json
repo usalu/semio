@@ -11,7 +11,7 @@
         "cameraY": {"type": "number", "x-semio-state": "window-config"},
         "cameraZoom": {"type": "number", "x-semio-state": "window-config"},
         "lodMode": {"type": "string", "x-semio-state": "window-config"},
-        "fillCount": {"type": "integer", "minimum": 0, "x-semio-state": "window-config"},
+        "fillCount": {"type": "integer", "minimum": 0, "default": 100, "x-semio-state": "window-config"},
         "gridSnapEnabled": {"type": "boolean", "x-semio-state": "window-config"},
         "gridFactor": {"type": "number", "x-semio-state": "window-config"},
         "suggestionOffset": {"type": "number", "x-semio-state": "window-config"}

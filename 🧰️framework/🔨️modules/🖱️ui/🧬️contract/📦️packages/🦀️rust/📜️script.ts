@@ -13,6 +13,8 @@ import { BundleScript, ScriptRouter, buildBudgetMs, resolveTestLevel, runBundleS
 import { testBuiltTreeRetirementFixture } from "../../♻️retirement/🌲️built/🧪️tests/🔬️built-tree-retirement/🟦️.ts";
 import { fixedListStorageSelfTests } from "../../🧪️tests/🔬️fixed-list-storage/🟦️.ts";
 import { conformanceCorpusSelfTests } from "../../🧪️tests/🔬️conformance-corpus/🟦️.ts";
+import { accessibilityProjectionSelfTests } from "../../🧪️tests/🔬️accessibility-projection/🟦️.ts";
+import { catalogueCarrierMapSelfTests } from "../../🧪️tests/🛍️catalogue-carrier-map/🟦️.ts";
 
 const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
 
@@ -39,6 +41,8 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     console.log(`[DEBUG] fixed-list-page-oracle checks=${fixedListStorageSelfTests()}`);
+    console.log(`[DEBUG] accessibility-projection-twin checks=${accessibilityProjectionSelfTests()}`);
+    console.log(`[DEBUG] catalogue-carrier-map-twin checks=${catalogueCarrierMapSelfTests()}`);
     await runCargoTestBudgeted([], packageRoot, ["--all-features", ...rest]);
   }
 }

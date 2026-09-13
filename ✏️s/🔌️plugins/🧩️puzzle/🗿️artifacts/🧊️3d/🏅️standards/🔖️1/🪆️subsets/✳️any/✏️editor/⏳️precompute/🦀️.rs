@@ -13,10 +13,29 @@ pub use crate::editor::puzzle3d::precompute::brush::apply_brush_placement_to_fix
 //#endregion 🔖️Reexports
 
 //#region 🔖️Constants
-/// ⏳️ Default cap on how many objects one fill session may plan — was `⚙️engine`'s own
-/// `FILL_COUNT_MAX`; distinct from (and not to be confused with) the UI-facing
-/// `crate::editor::puzzle3d::PUZZLE3D_FILL_COUNT_MAX` slider clamp.
-pub(crate) const FILL_COUNT_MAX: usize = 1000;
+/// 🎚️ The count a session plans toward until the app syncs `runtime.fill_count` into it through
+/// [`Puzzle3dPrecomputeSession::set_fill_requested_count`]. It mirrors `Puzzle3dConfig::fill_count`'s
+/// own default, and it is a SEED, never a ceiling: there is no hidden plan-ahead constant left — the
+/// planner targets exactly what was requested, and a request above what the fixed document pages hold
+/// is reported as a visible `stall_reason`, never clamped.
+pub(crate) const FILL_REQUESTED_COUNT_DEFAULT: usize = 100;
+
+/// 🔒️ Placements one `fillBuildTick` commits to the document: locking IS committing, so each tick
+/// turns at most this many planned placements into real `create_object`/`connect_vortices` mutations
+/// (or deletes that many document-tail objects when the count moved down). Eight keeps one tick's
+/// mutation batch inside the interactive budget while filling a hundred placements in ~1.5 s at the
+/// host's 120 ms cadence.
+pub(crate) const FILL_LOCK_PLACEMENTS_PER_TICK: usize = 8;
+
+/// 🖌️ Slices ONE command may spend advancing the hovered vortex's candidate search inside its own
+/// turn. Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS wave G.
+pub const BRUSH_SEARCH_SLICES_PER_TICK: u32 = 8;
+
+/// ⏱️ …and the wall clock those slices may not run past, whatever their count. The audited
+/// user-visible lane budget is 2 000 µs (`INTERACTIVE_LANE_WALL_US`'s sibling,
+/// `📓️audit-progress-primitives.md` §3.1) and the hard interactive ceiling is 8 000 µs, so a tick
+/// that finds eight cheap slices still leaves three quarters of its step to the rest of the turn.
+pub const BRUSH_SEARCH_WALL_BUDGET_US: u64 = 2_000;
 //#endregion 🔖️Constants
 
 use crate::editor::puzzle3d::precompute::brush::{
@@ -28,8 +47,8 @@ use crate::editor::puzzle3d::precompute::geometry::{
     CollisionStepResult,
 };
 use crate::standards::v1::subsets::any::schema::{
-    puzzle3d_vortex_full_id, BrushCollisionFreeResult, BrushCompatibleCandidate, BrushPlacePayload, BrushPreviewState, FillBuildProgress, FillProgressSummary, Fixture, FixtureObject, KindCatalogBundle, PrecomputeLane, Puzzle3dEngineCommand,
-    Puzzle3dEngineOutcome, SceneConfig,
+    puzzle3d_vortex_full_id, BrushCollisionFreeResult, BrushCompatibleCandidate, BrushPlacePayload, BrushPreviewState, BrushSearchProgress, FillBuildProgress, FillCandidateVerdict, FillProgressSummary, Fixture, FixtureObject, KindCatalogBundle,
+    PrecomputeLane, Puzzle3dEngineCommand, Puzzle3dEngineOutcome, SceneConfig,
 };
 use crate::Puzzle3dError;
 use semio_framework_job::{default_now_us, root_cancel_token, CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, InteractiveStage, Operation, RevisionId, StepOutcome};
@@ -165,12 +184,129 @@ struct FillWorkerMesh {
     fallback: bool,
 }
 
+/// 👁️ Everything the app may learn about an ISOLATED plan without reading the builder: the identity
+/// tuple, the plan length, and the process counters the HUD shows. It stays a fixed `Copy` struct of
+/// scalars — one is stored per envelope slot and diffed on every 120 ms poll, so no field may own a
+/// heap allocation. The stage and stall reason travel as small codes
+/// ([`fill_stage_code`]/[`fill_stall_code`]) and are read back as the wire labels they came from.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 struct FillObservation {
     generation: u64,
     sequence: u64,
     available: u32,
     done: bool,
+    tested: u64,
+    rejected: u64,
+    collisions: u64,
+    stage: u8,
+    stall: u8,
+}
+
+/// 🏷️ The planner stage labels, in the order their codes are assigned. Code 0 is "no stage yet", so a
+/// default observation reports nothing rather than the first stage.
+const FILL_STAGE_LABELS: [&str; 17] = [
+    "discard-tail",
+    "prepare-fixture",
+    "prepare-catalogs",
+    "prepare-meshes",
+    "prepare-entries",
+    "prepare-spatial",
+    "prepare-lookup",
+    "prepare-configuration",
+    "prepare-targets",
+    "select-target",
+    "prepare-candidates",
+    "select-candidate",
+    "construct-preview",
+    "query-broad-phase",
+    "test-collision",
+    "accept-candidate",
+    "complete",
+];
+
+/// 🚧️ The stall reasons a plan may report, in the order their codes are assigned. Code 0 is "not
+/// stalled". A reason the planner publishes that is not declared here travels as [`FILL_STALL_OTHER`]
+/// and reads back as `"stalled"` — a stall is always visible, even when its cause is new.
+const FILL_STALL_LABELS: [&str; 3] = ["no-open-vortex", "document-capacity", "no-compatible-kind"];
+const FILL_STALL_OTHER: u8 = FILL_STALL_LABELS.len() as u8 + 1;
+
+/// 🚧️ The one stall a refused fixed document page reports. A document that cannot hold another
+/// placement is a VISIBLE limit the user can act on (lower the count, split the document), never the
+/// fault notice it used to raise.
+const FILL_STALL_DOCUMENT_CAPACITY: &str = "document-capacity";
+
+/// 🧯️ The two builder fault payloads that mean "a fixed document page refused a row", which
+/// [`drive_fill_envelope`] turns into a reportable stall instead of a fault.
+const FILL_CAPACITY_FAULTS: [&[u8]; 2] = [b"fill-preparation-capacity", b"fill-fixed-collection-capacity"];
+
+fn fill_stage_code(label: &str) -> u8 {
+    FILL_STAGE_LABELS.iter().position(|stage| *stage == label).map_or(0, |index| index as u8 + 1)
+}
+
+fn fill_stage_label(code: u8) -> String {
+    usize::from(code).checked_sub(1).and_then(|index| FILL_STAGE_LABELS.get(index)).map_or(String::new(), |label| (*label).to_string())
+}
+
+fn fill_stall_code(reason: Option<&str>) -> u8 {
+    let Some(reason) = reason else { return 0 };
+    FILL_STALL_LABELS.iter().position(|stall| *stall == reason).map_or(FILL_STALL_OTHER, |index| index as u8 + 1)
+}
+
+fn fill_stall_label(code: u8) -> Option<String> {
+    if code == 0 {
+        return None;
+    }
+    Some(usize::from(code).checked_sub(1).and_then(|index| FILL_STALL_LABELS.get(index)).map_or_else(|| "stalled".to_string(), |label| (*label).to_string()))
+}
+
+/// 👁️ The one place a [`FillObservation`] is minted from a live builder, so the admission census,
+/// the isolated drive and the local lane can never publish three different readings of the same plan.
+fn fill_observation_of(fill: &FillBuilder) -> FillObservation {
+    FillObservation {
+        generation: fill.preview.generation,
+        sequence: fill.preview.sequence,
+        available: fill.sequence.len() as u32,
+        done: fill.stalled || fill.sequence.len() >= fill.requested_count(),
+        tested: fill.tested_count,
+        rejected: fill.preview.rejected_count,
+        collisions: fill.collisions,
+        stage: fill_stage_code(&fill.preview.stage),
+        stall: fill_stall_code(fill.preview.stall_reason.as_deref()),
+    }
+}
+
+/// 📊️ The progress readout of a builder this process can still read. Both cursors are the SESSION's:
+/// the document-side applied count, and the requested count — which during a downward move is already
+/// the new, lower target while the builder is still being walked down to it. `max_count` IS that
+/// requested count; there is no ceiling above it left to report.
+fn fill_progress_summary_of(fill: &FillBuilder, requested: usize, applied: usize) -> FillProgressSummary {
+    FillProgressSummary {
+        count: fill.sequence.len(),
+        applied_count: applied.min(fill.sequence.len()),
+        max_count: requested,
+        done: fill.stalled || fill.sequence.len() >= requested,
+        tested: fill.tested_count,
+        rejected: fill.preview.rejected_count,
+        collisions: fill.collisions,
+        stage: fill.preview.stage.clone(),
+        stall_reason: fill.preview.stall_reason.clone(),
+    }
+}
+
+/// 📊️ The same readout for an ISOLATED plan, from the fixed observation its worker publishes.
+fn fill_progress_summary_of_observation(observation: &FillObservation, requested: usize, applied: usize) -> FillProgressSummary {
+    let count = observation.available as usize;
+    FillProgressSummary {
+        count,
+        applied_count: applied.min(count),
+        max_count: requested,
+        done: observation.done,
+        tested: observation.tested,
+        rejected: observation.rejected,
+        collisions: observation.collisions,
+        stage: fill_stage_label(observation.stage),
+        stall_reason: fill_stall_label(observation.stall),
+    }
 }
 
 struct FillJobSlice {
@@ -373,6 +509,12 @@ struct FillEnvelopeAuthority {
     steps_remaining: usize,
     preview_sequence: u64,
     observation: FillObservation,
+    /// 🎚️ The count the app currently asks this plan for. The builder lives inside the envelope and
+    /// the isolated worker is the only thing that steps it, so a slider move cannot reach it directly:
+    /// the app writes the new target HERE, and [`drive_fill_envelope`] forwards it to the builder
+    /// before every step. Re-published on every poll, so a contended registry only ever delays a
+    /// target, never loses it.
+    requested_count: usize,
     phase: FillEnvelopePhase,
     token_page: Option<Box<[u8; FILL_ENVELOPE_PAGE_BYTES]>>,
     token_len: usize,
@@ -550,6 +692,7 @@ fn decode_fill_envelope_token(bytes: &[u8]) -> Option<FillJobRequest> {
 impl FillEnvelopeRegistry {
     fn begin_measurement(&mut self, request: FillEnvelopeMeasurementRequest) -> Result<FillJobRequest, FillEnvelopeMeasurementOwners> {
         let FillEnvelopeMeasurementRequest { job, operation, fill, worker, cancel, steps_remaining, preview_sequence, observation } = request;
+        let requested_count = fill.try_lock().map_or(0, |fill| fill.requested_count());
         let candidates = [self.next_slot, (self.next_slot + 1) % FILL_ENVELOPE_MAX_OPERATIONS, (self.next_slot + 2) % FILL_ENVELOPE_MAX_OPERATIONS, (self.next_slot + 3) % FILL_ENVELOPE_MAX_OPERATIONS];
         let Some(slot) = candidates.into_iter().find(|slot| self.slots[*slot].is_none() && self.generations[*slot] != u64::MAX) else {
             return Err(FillEnvelopeMeasurementOwners { fill, worker });
@@ -570,6 +713,7 @@ impl FillEnvelopeRegistry {
             steps_remaining,
             preview_sequence,
             observation,
+            requested_count,
             phase: FillEnvelopePhase::Measuring,
             token_page: None,
             token_len: 0,
@@ -954,6 +1098,14 @@ fn drive_fill_envelope(request: &FillJobRequest) -> FillEnvelopeDrive {
             return FillEnvelopeDrive::Stale;
         }
     }
+    {
+        let requested = authority.requested_count;
+        if let Some(mut fill) = authority.fill.as_ref().and_then(|fill| fill.try_lock().ok()) {
+            if fill.requested_count() != requested {
+                fill.set_requested_count(requested);
+            }
+        }
+    }
     let previous = authority.observation;
     if let Some(outcome) = authority.worker_outcome.as_mut() {
         let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
@@ -996,10 +1148,14 @@ fn drive_fill_envelope(request: &FillJobRequest) -> FillEnvelopeDrive {
                         authority.worker_terminal = true;
                         authority.phase = FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Cancelled);
                     }
-                    StepOutcome::Fault(_) => {
+                    StepOutcome::Fault(fault) => {
                         authority.steps_remaining = 0;
                         authority.worker_terminal = true;
-                        authority.phase = FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Fault);
+                        let capacity = fault.detail.single_page().is_some_and(|page| FILL_CAPACITY_FAULTS.contains(&page));
+                        authority.phase = FillEnvelopePhase::Terminal(if capacity { FillEnvelopeTerminalReason::Complete } else { FillEnvelopeTerminalReason::Fault });
+                        if capacity {
+                            authority.observation.stall = fill_stall_code(Some(FILL_STALL_DOCUMENT_CAPACITY));
+                        }
                     }
                     StepOutcome::Yield | StepOutcome::PreviewReady(_) => {}
                 }
@@ -1012,18 +1168,20 @@ fn drive_fill_envelope(request: &FillJobRequest) -> FillEnvelopeDrive {
             }
         }
     }
-    let Some((generation, sequence, available, fill_done)) = authority.fill.as_ref().and_then(|fill| {
-        let fill = fill.try_lock().ok()?;
-        Some((fill.preview.generation, fill.preview.sequence, fill.sequence.len() as u32, fill.stalled || fill.sequence.len() >= fill.max_count))
-    }) else {
+    let capacity_stall = authority.observation.stall == fill_stall_code(Some(FILL_STALL_DOCUMENT_CAPACITY));
+    let Some(mut observed) = authority.fill.as_ref().and_then(|fill| fill.try_lock().ok()).map(|fill| fill_observation_of(&fill)) else {
         return FillEnvelopeDrive::Advanced(FillJobSlice { progress: None, done: authority.observation.done });
     };
-    let done = fill_done;
+    if capacity_stall {
+        observed.stall = authority.observation.stall;
+        observed.done = true;
+    }
+    let done = observed.done;
     if done && matches!(authority.phase, FillEnvelopePhase::Admitted) {
         authority.phase = FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Complete);
         authority.worker_terminal = true;
     }
-    authority.observation = FillObservation { generation, sequence, available, done };
+    authority.observation = observed;
     let progress = (authority.observation != previous).then_some(authority.observation);
     FillEnvelopeDrive::Advanced(FillJobSlice { progress, done })
 }
@@ -1647,6 +1805,10 @@ pub(crate) struct Puzzle3dCollision {
     /// set is empty in every steady state and a refusal can never become a standing request.
     mesh_reupload_requests: Vec<String>,
     pub(crate) brush_cache: HashMap<String, BrushCollisionFreeResult>,
+    /// 🔎️ Live per-target readout of the candidate search the cache only ever shows the OUTCOME of.
+    /// Written by every `brush_collision_free_until` slice, dropped together with the cache entry it
+    /// describes. Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS wave G.
+    brush_progress: HashMap<String, BrushSearchProgress>,
     pub(crate) brush_queue: VecDeque<String>,
     brush_prepare_object_cursor: usize,
     brush_prepare_vortex_cursor: usize,
@@ -1662,6 +1824,11 @@ pub(crate) struct Puzzle3dCollision {
     /// and mesh in constant time instead of a scan over the fixture.
     brush_placed: HashMap<String, PlacedCollisionEntry>,
     fill_steps_remaining: usize,
+    /// 🎚️ The count every fresh [`FillBuilder`] this engine mints is seeded with, and the target a
+    /// live one is held to. It is the app's `runtime.fill_count`, pushed in through
+    /// [`Puzzle3dPrecomputeSession::set_fill_requested_count`] and carried across dispatches by
+    /// [`Puzzle3dFillSession`]; [`FILL_REQUESTED_COUNT_DEFAULT`] is only what an unsynced engine plans.
+    fill_requested_count: usize,
     pub(crate) fill: Option<SharedFillBuilder>,
     fill_worker: Option<OwnedFillWorker>,
     fill_rejected_worker: Option<Box<RejectedFillWorker>>,
@@ -1695,6 +1862,7 @@ impl Puzzle3dCollision {
             mesh_sources: HashMap::new(),
             mesh_reupload_requests: Vec::new(),
             brush_cache: HashMap::new(),
+            brush_progress: HashMap::new(),
             brush_queue: VecDeque::new(),
             brush_prepare_object_cursor: 0,
             brush_prepare_vortex_cursor: 0,
@@ -1705,6 +1873,7 @@ impl Puzzle3dCollision {
             brush_index_ready: false,
             brush_placed: HashMap::new(),
             fill_steps_remaining: 0,
+            fill_requested_count: FILL_REQUESTED_COUNT_DEFAULT,
             fill: None,
             fill_worker: None,
             fill_rejected_worker: None,
@@ -1877,6 +2046,7 @@ impl Puzzle3dCollision {
     fn rebuild_queue(&mut self) {
         self.brush_queue.clear();
         self.brush_cache.clear();
+        self.brush_progress.clear();
         self.re_enqueue_brush_targets();
         self.start_fill_preparation(true);
     }
@@ -1897,9 +2067,9 @@ impl Puzzle3dCollision {
         self.fill_preview_sequence = 0;
         self.fill_steps_remaining = 0;
         if let Some(scene) = self.scene.clone() {
-            self.fill_steps_remaining = FILL_COUNT_MAX;
+            self.fill_steps_remaining = self.fill_requested_count;
             let operation = Operation::new(semio_framework_job::allocate_operation_id(), revision, generation, scene.seed as u64);
-            let fill = FillBuilder::begin_preparation(FillPreparationRoots::new(scene, self.meshes.clone()), operation);
+            let fill = FillBuilder::begin_preparation(FillPreparationRoots::new(scene, self.meshes.clone()), operation, self.fill_requested_count);
             self.fill = Some(Arc::new(Mutex::new(fill)));
             let fill = Arc::clone(self.fill.as_ref().expect("fresh fill owner"));
             match mount_fill_worker(fill, operation, self.fill_cancel.clone()) {
@@ -1940,9 +2110,22 @@ impl Puzzle3dCollision {
             return;
         };
         fill.begin_soft_replan(&scene.weights.object_weights, &scene.weights.vortex_weights);
-        self.fill_steps_remaining = fill.max_count.saturating_sub(fill.applied_count);
+        self.fill_steps_remaining = fill.requested_count().saturating_sub(fill.applied_count);
         drop(fill);
         self.re_enqueue_brush_targets();
+    }
+
+    /// 🎚️ Records the new target and holds a builder this engine still owns to it. An ADMITTED plan
+    /// lives in the envelope registry instead, and reaches its worker through
+    /// [`FillEnvelopeAuthority::requested_count`] — see
+    /// [`Puzzle3dPrecomputeSession::set_fill_requested_count`], the one entry point the app calls.
+    fn set_fill_requested_count(&mut self, count: usize) {
+        self.fill_requested_count = count;
+        let applied = self.fill.as_ref().and_then(|fill| fill.try_lock().ok()).map_or(0, |mut fill| {
+            fill.set_requested_count(count);
+            fill.applied_count
+        });
+        self.fill_steps_remaining = count.saturating_sub(applied);
     }
 
     fn refresh_fill_job(&mut self, _refresh_meshes: bool) {
@@ -1957,6 +2140,7 @@ impl Puzzle3dCollision {
             self.scene_synced = Some(Arc::new(scene.clone()));
         }
         self.brush_cache.clear();
+        self.brush_progress.clear();
         if self.fill.is_none() {
             self.rebuild_queue();
         } else {
@@ -2035,6 +2219,7 @@ impl Puzzle3dCollision {
     fn invalidate_scene_objects(&mut self, invalidation: Puzzle3dSceneInvalidation) {
         for full_id in &invalidation.stale {
             self.brush_cache.remove(full_id);
+            self.brush_progress.remove(full_id);
         }
         self.brush_queue.retain(|full_id| !invalidation.stale.contains(full_id));
         self.brush_queue.extend(invalidation.pending);
@@ -2161,6 +2346,7 @@ impl Puzzle3dCollision {
         }
         self.brush_queue.clear();
         self.brush_cache.clear();
+        self.brush_progress.clear();
         if self.fill.is_none() {
             self.rebuild_queue();
         } else {
@@ -2190,6 +2376,7 @@ impl Puzzle3dCollision {
     /// suggestion popup is not stuck on a stale empty / pending result.
     pub(crate) fn invalidate_brush_target(&mut self, vortex_full_id: &str) {
         self.brush_cache.remove(vortex_full_id);
+        self.brush_progress.remove(vortex_full_id);
         self.brush_queue.retain(|id| id != vortex_full_id);
         self.brush_queue.push_front(vortex_full_id.to_string());
     }
@@ -2259,9 +2446,33 @@ impl Puzzle3dCollision {
         Some(false)
     }
 
+    /// 📣️ Latest-wins publication of one target's search readout — the ONE place a slice's counters
+    /// become observable, so no caller has to remember to mirror them.
+    fn publish_brush_progress(&mut self, progress: BrushSearchProgress) {
+        self.brush_progress.insert(progress.target_vortex_full_id.clone(), progress);
+    }
+
+    /// 🔎️ What the brush lane currently knows about one target's search — empty (and not `done`) for a
+    /// vortex no slice has touched yet, which reads as "still to come" rather than "nothing here".
+    pub(crate) fn brush_search_progress(&self, target_full_id: &str) -> BrushSearchProgress {
+        self.brush_progress.get(target_full_id).cloned().unwrap_or_else(|| BrushSearchProgress::begin(target_full_id))
+    }
+
+    /// 🔎️ One resumable slice of ONE vortex's collision-free search, publishing what it saw as it
+    /// goes: every candidate that reaches a verdict updates the target's [`BrushSearchProgress`]
+    /// before the slice returns, so the picker streams partial `free` results and the viewport can
+    /// paint the candidate under test with its verdict instead of waiting for the whole list. A
+    /// candidate already held free is never pushed twice, so a pass that restarts at 0 (a mesh only
+    /// arrived later) refines the same list instead of duplicating it.
     fn brush_collision_free_until(&mut self, target_full_id: &str, candidates: &[BrushCompatibleCandidate], overlap_budget: f64, resume_from: usize, mut free: Vec<BrushCompatibleCandidate>, deadline_us: u64) -> BrushCollisionFreeResult {
+        let mut progress = if resume_from == 0 { BrushSearchProgress::begin(target_full_id) } else { self.brush_progress.get(target_full_id).cloned().unwrap_or_else(|| BrushSearchProgress::begin(target_full_id)) };
+        progress.total_candidates = candidates.len();
+        progress.free = free.len();
+        progress.tested = progress.free + progress.blocked;
+        progress.done = false;
         self.reconcile_brush_index_until(deadline_us);
         let Some(scene) = self.scene.clone() else {
+            self.publish_brush_progress(progress);
             return BrushCollisionFreeResult { free: vec![], unknown_pending: true, resume_candidate_index: resume_from };
         };
         let empty_catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
@@ -2277,35 +2488,56 @@ impl Puzzle3dCollision {
             })
         });
         let Some((host, vortex_index, _)) = target_obj else {
+            self.publish_brush_progress(BrushSearchProgress { done: true, ..BrushSearchProgress::begin(target_full_id) });
             return BrushCollisionFreeResult { free: vec![], unknown_pending: false, resume_candidate_index: 0 };
         };
         let Some((position, direction)) = vortex_world_from_object(host, vortex_index) else {
+            self.publish_brush_progress(BrushSearchProgress { done: true, ..BrushSearchProgress::begin(target_full_id) });
             return BrushCollisionFreeResult { free: vec![], unknown_pending: false, resume_candidate_index: 0 };
         };
         let target_ctx = AttractionVortexContext { object_kind: host.object_kind.clone(), vortex_kind: host.vortices[vortex_index].vortex_kind.clone() };
         let host_id = host.id.clone();
         if !self.brush_index_ready {
+            self.publish_brush_progress(progress);
             return BrushCollisionFreeResult { free, unknown_pending: true, resume_candidate_index: resume_from };
         }
         let mut unknown_pending = false;
         for (index, candidate) in candidates.iter().enumerate().skip(resume_from) {
             if default_now_us().is_none_or(|now| now >= deadline_us) {
+                self.publish_brush_progress(progress);
                 return BrushCollisionFreeResult { free, unknown_pending: true, resume_candidate_index: index };
             }
             let world = TargetVortexWorld { position, direction, reference_orientation: host.orientation };
             let Some(preview) = brush_preview_from_candidate(target_full_id, candidate, &target_ctx, world, catalogs, &scene.fixture) else {
                 continue;
             };
+            progress.current_candidate_kind = Some(candidate.object_kind_id.clone());
+            progress.current_verdict = FillCandidateVerdict::Testing;
+            progress.current_ghost = Some(preview.clone());
             if !self.meshes.contains_key(&preview.mesh_url) {
                 unknown_pending = true;
                 continue;
             }
             match self.preview_collides_indexed(&preview, &host_id, overlap_budget, 1024, deadline_us) {
                 None => unknown_pending = true,
-                Some(true) => {}
-                Some(false) => free.push(candidate.clone()),
+                Some(true) => {
+                    progress.current_verdict = FillCandidateVerdict::Collision;
+                    progress.blocked += 1;
+                }
+                Some(false) => {
+                    progress.current_verdict = FillCandidateVerdict::Free;
+                    if !free.iter().any(|held| held.object_kind_id == candidate.object_kind_id && held.source_vortex_index == candidate.source_vortex_index) {
+                        free.push(candidate.clone());
+                    }
+                }
             }
+            progress.free = free.len();
+            progress.tested = progress.free + progress.blocked;
         }
+        progress.free = free.len();
+        progress.tested = progress.free + progress.blocked;
+        progress.done = !unknown_pending;
+        self.publish_brush_progress(progress);
         BrushCollisionFreeResult { free, unknown_pending, resume_candidate_index: 0 }
     }
 
@@ -2516,12 +2748,11 @@ impl Puzzle3dCollision {
 
     #[cfg(test)]
     pub(crate) fn fill_progress_summary(&self) -> FillProgressSummary {
-        self.fill.as_ref().and_then(|fill| fill.try_lock().ok()).map_or(FillProgressSummary { count: 0, applied_count: 0, max_count: FILL_COUNT_MAX, done: true }, |fill| FillProgressSummary {
-            count: fill.sequence.len(),
-            applied_count: fill.applied_count,
-            max_count: fill.max_count,
-            done: fill.stalled || fill.sequence.len() >= fill.max_count,
-        })
+        let requested = self.fill_requested_count;
+        self.fill
+            .as_ref()
+            .and_then(|fill| fill.try_lock().ok())
+            .map_or_else(|| fill_progress_summary_of_observation(&FillObservation { done: true, ..FillObservation::default() }, requested, 0), |fill| fill_progress_summary_of(&fill, requested, fill.applied_count))
     }
 
     #[cfg(test)]
@@ -2700,6 +2931,10 @@ pub(crate) struct Puzzle3dFillSession {
     fill_terminal: Option<FillEnvelopeTerminalHandle>,
     fill_observation: FillObservation,
     fill_applied_count: u32,
+    /// 🎚️ The requested count travels with the cursor for the same reason the cancel token does: the
+    /// per-call `Puzzle3dCollision` is rebuilt on every dispatch, and a target that lived only there
+    /// was re-seeded to [`FILL_REQUESTED_COUNT_DEFAULT`] on the very next action.
+    fill_requested_count: u32,
     fill_faulted: bool,
     fill_fault_notice: bool,
     /// 🛑 The cancel token the admitted envelope holds a clone of. It has to travel WITH the cursor:
@@ -2719,6 +2954,7 @@ impl Default for Puzzle3dFillSession {
             fill_terminal: None,
             fill_observation: FillObservation::default(),
             fill_applied_count: 0,
+            fill_requested_count: FILL_REQUESTED_COUNT_DEFAULT as u32,
             fill_faulted: false,
             fill_fault_notice: false,
             fill_cancel: None,
@@ -2906,6 +3142,7 @@ impl Puzzle3dPrecomputeSession {
             fill_terminal: self.fill_terminal.take(),
             fill_observation: self.fill_observation,
             fill_applied_count: self.fill_applied_count,
+            fill_requested_count: self.engine.fill_requested_count as u32,
             fill_faulted: self.fill_faulted,
             fill_fault_notice: self.fill_fault_notice,
             fill_cancel: Some(std::mem::replace(&mut self.engine.fill_cancel, root_cancel_token())),
@@ -2922,6 +3159,7 @@ impl Puzzle3dPrecomputeSession {
         self.fill_terminal = session.fill_terminal.take();
         self.fill_observation = std::mem::take(&mut session.fill_observation);
         self.fill_applied_count = session.fill_applied_count;
+        self.engine.fill_requested_count = session.fill_requested_count as usize;
         self.fill_faulted = session.fill_faulted;
         self.fill_fault_notice = session.fill_fault_notice;
         if let Some(cancel) = session.fill_cancel.take() {
@@ -2972,8 +3210,33 @@ impl Puzzle3dPrecomputeSession {
     }
 
     pub fn refresh_brush_candidates(&mut self, vortex_full_id: &str) {
-        eprintln!("[DEBUG] puzzle3d.brushPreview.cache refresh vortex={vortex_full_id}");
         self.engine.refresh_brush_candidates(vortex_full_id);
+    }
+
+    /// 🔎️ The brush lane's live search readout for one target — tested/free/blocked out of the whole
+    /// compatible list, plus the candidate the last slice was looking at and the verdict it reached.
+    /// This is what turns the suggestion picker from an outcome into a visible process.
+    pub fn brush_search_progress(&self, vortex_full_id: &str) -> BrushSearchProgress {
+        self.engine.brush_search_progress(vortex_full_id)
+    }
+
+    /// ⏱️ Advances ONE target's candidate search inside the caller's own turn, bounded twice over:
+    /// at most [`BRUSH_SEARCH_SLICES_PER_TICK`] slices, and never past
+    /// [`BRUSH_SEARCH_WALL_BUDGET_US`] of wall clock. It no longer stops at the first free candidate
+    /// — the whole point is that the user watches the list fill in — but a finished search costs
+    /// nothing, so a resolved target is free to re-drive every tick.
+    pub fn advance_brush_search(&mut self, vortex_full_id: &str) -> BrushSearchProgress {
+        let deadline = default_now_us().map(|now| now.saturating_add(BRUSH_SEARCH_WALL_BUDGET_US));
+        for _ in 0..BRUSH_SEARCH_SLICES_PER_TICK {
+            if self.engine.brush_search_progress(vortex_full_id).done {
+                break;
+            }
+            self.engine.refresh_brush_candidates(vortex_full_id);
+            if deadline.is_none_or(|deadline| default_now_us().is_none_or(|now| now >= deadline)) {
+                break;
+            }
+        }
+        self.engine.brush_search_progress(vortex_full_id)
     }
 
     /// 🎯️ Typed readout — was a JSON string before the headless-engine-law fix; the app now reads
@@ -2991,32 +3254,99 @@ impl Puzzle3dPrecomputeSession {
     }
 
     pub fn brush_preview(&self, vortex_full_id: &str, candidate_index: usize) -> Option<BrushPreviewState> {
-        let cached = self.engine.brush_cache.get(vortex_full_id);
-        eprintln!(
-            "[DEBUG] puzzle3d.brushPreview.compute lookup vortex={vortex_full_id} hit={} free={} pending={}",
-            cached.is_some(),
-            cached.map(|entry| entry.free.len()).unwrap_or(0),
-            cached.map(|entry| entry.unknown_pending).unwrap_or(true)
-        );
         self.engine.brush_preview(vortex_full_id, candidate_index)
     }
 
     pub fn fill_progress(&self) -> FillBuildProgress {
-        self.read_fill(FillBuilder::progress).map_or(FillBuildProgress { count: 0, applied_count: 0, max_count: FILL_COUNT_MAX, done: true, appended_objects: vec![], appended_attractions: vec![], sequence: vec![], preview: None }, |mut progress| {
-            progress.applied_count = (self.fill_applied_count as usize).min(progress.count);
-            progress
-        })
+        let requested = self.engine.fill_requested_count;
+        self.read_fill(FillBuilder::progress).map_or(
+            FillBuildProgress { count: 0, applied_count: 0, max_count: requested, done: true, appended_objects: vec![], appended_attractions: vec![], sequence: vec![], preview: None },
+            |mut progress| {
+                progress.applied_count = (self.fill_applied_count as usize).min(progress.count);
+                progress
+            },
+        )
     }
 
+    /// 📊️ What the HUD reads: locked / planned / requested plus the process counters and the reason a
+    /// plan stopped short. Answered from the builder while this process can still read it, and from the
+    /// isolated worker's observation otherwise — never from a constant.
     pub fn fill_progress_summary(&self) -> FillProgressSummary {
-        if let Some(summary) = self.read_fill(|fill| FillProgressSummary { count: fill.sequence.len(), applied_count: (self.fill_applied_count as usize).min(fill.sequence.len()), max_count: fill.max_count, done: fill.stalled || fill.sequence.len() >= fill.max_count }) {
+        let applied = self.fill_applied_count as usize;
+        let requested = self.engine.fill_requested_count;
+        if let Some(summary) = self.read_fill(|fill| fill_progress_summary_of(fill, requested, applied)) {
             return summary;
         }
-        if self.fill_job.is_some() {
-            let count = self.fill_observation.available as usize;
-            return FillProgressSummary { count, applied_count: (self.fill_applied_count as usize).min(count), max_count: FILL_COUNT_MAX, done: self.fill_observation.done };
+        fill_progress_summary_of_observation(&self.fill_observation, self.engine.fill_requested_count, applied)
+    }
+
+    /// 🎚️ The count the plan is currently held to — `runtime.fill_count`, as last synced in.
+    pub fn fill_requested_count(&self) -> u32 {
+        self.engine.fill_requested_count as u32
+    }
+
+    /// 🎚️ Retargets the plan, idempotently. Raising continues the SAME deterministic sequence from
+    /// what is already locked (the plan for any count is the prefix of the plan for a larger one) and
+    /// revives a run that already reported itself done; lowering arms the document-tail deletion
+    /// [`Self::take_fill_locked_chunk`] spends, and only once the document is back at the requested
+    /// count does the builder discard its planned tail — deleting the plan first would leave objects in
+    /// the document that nothing could name any more.
+    pub fn set_fill_requested_count(&mut self, count: u32) {
+        if self.fill_requested_count() == count {
+            self.publish_fill_requested_count();
+            return;
         }
-        FillProgressSummary { count: 0, applied_count: 0, max_count: FILL_COUNT_MAX, done: true }
+        self.engine.set_fill_requested_count(count as usize);
+        self.publish_fill_requested_count();
+    }
+
+    /// 🎚️ Hands the live target to whoever owns the builder: the envelope authority the isolated
+    /// worker reads before every step, and — while this process can still write it — the builder
+    /// itself. The target is floored at the LOCKED count: a plan may only discard a tail the document
+    /// no longer shows, so a lowered ask reaches the builder one locked chunk at a time, as
+    /// [`Self::take_fill_locked_chunk`] deletes the document tail in front of it. Idempotent and
+    /// cheap, so every poll and every locked chunk may re-publish and a contended registry can never
+    /// strand a target.
+    fn publish_fill_requested_count(&mut self) {
+        let target = self.engine.fill_requested_count.max(self.fill_applied_count as usize);
+        if let Some(request) = self.fill_job.clone() {
+            if let Ok(mut registry) = fill_envelope_registry().try_lock() {
+                if let Some(authority) = registry.authority_mut(&request) {
+                    authority.requested_count = target;
+                }
+            }
+        }
+        self.write_fill(|fill| {
+            if fill.requested_count() != target {
+                fill.set_requested_count(target);
+            }
+        });
+    }
+
+    /// 🔒️ The document-side delta toward the requested count: the next planned placements to commit as
+    /// real objects and attractions, or — when the count moved down — the document tail to delete,
+    /// newest first. At most `max_delta` per call (production spends
+    /// [`FILL_LOCK_PLACEMENTS_PER_TICK`]). A plan that has not caught up yet yields nothing rather than
+    /// walking the locked cursor backwards.
+    pub(crate) fn take_fill_locked_chunk(&mut self, max_delta: usize) -> Option<FillApplyChunk> {
+        let requested = self.engine.fill_requested_count;
+        let applied = self.fill_applied_count as usize;
+        let chunk = self.read_fill(|fill| {
+            let available = fill.sequence.len();
+            if applied > requested {
+                let next = applied.saturating_sub(max_delta).max(requested);
+                let to = applied.min(available);
+                let from = next.min(to);
+                return FillApplyChunk { applied_count: next as u32, added_objects: Vec::new(), added_attractions: Vec::new(), removed_object_ids: fill.appended_objects[from..to].iter().rev().map(|object| object.id.clone()).collect() };
+            }
+            if applied < requested && applied < available {
+                let next = applied.saturating_add(max_delta).min(requested).min(available);
+                return FillApplyChunk { applied_count: next as u32, added_objects: fill.appended_objects[applied..next].to_vec(), added_attractions: fill.appended_attractions[applied..next].to_vec(), removed_object_ids: Vec::new() };
+            }
+            FillApplyChunk { applied_count: applied as u32, added_objects: Vec::new(), added_attractions: Vec::new(), removed_object_ids: Vec::new() }
+        })?;
+        self.set_fill_applied_count(chunk.applied_count);
+        Some(chunk)
     }
 
     /// 🔭️ Advances a fixed number of one-unit preview JSON grants and returns the retained last
@@ -3056,37 +3386,22 @@ impl Puzzle3dPrecomputeSession {
         self.read_fill(|fill| fill.sequence.len() as u32).unwrap_or_else(|| self.fill_job.as_ref().map_or(0, |_| self.fill_observation.available))
     }
 
-    /// 🪣️ Restores the small persisted cursor independently of the immutable fill-plan checkpoint.
+    /// 🪣️ Restores the small persisted cursor independently of the immutable fill-plan checkpoint, and
+    /// keeps the builder's own `applied_count` on it: the builder refuses to discard a planned tail it
+    /// believes the document still shows, so a locked cursor that only moved HERE would stall every
+    /// downward move at the old count.
     pub(crate) fn set_fill_applied_count(&mut self, count: u32) {
         self.fill_applied_count = count.min(self.fill_available_count());
-    }
-
-    /// 🧵️ Advances only one bounded plan-prefix delta and checkpoints the new applied cursor.
-    pub(crate) fn apply_fill_count_chunk(&mut self, requested: u32, max_delta: usize) -> Option<FillApplyChunk> {
-        let current = self.fill_applied_count;
-        let Some(chunk) = self.read_fill(|fill| {
-            let target = (requested as usize).min(fill.sequence.len());
-            let current = (current as usize).min(fill.sequence.len());
-            let next = if target > current { current.saturating_add(max_delta).min(target) } else { current.saturating_sub(max_delta).max(target) };
-            let (added_objects, added_attractions, removed_object_ids) = if next > current {
-                (fill.appended_objects[current..next].to_vec(), fill.appended_attractions[current..next].to_vec(), Vec::new())
-            } else {
-                (Vec::new(), Vec::new(), fill.appended_objects[next..current].iter().rev().map(|object| object.id.clone()).collect())
-            };
-            FillApplyChunk { applied_count: next as u32, added_objects, added_attractions, removed_object_ids }
-        }) else {
-            self.fill_applied_count = 0;
-            return Some(FillApplyChunk { applied_count: 0, added_objects: Vec::new(), added_attractions: Vec::new(), removed_object_ids: Vec::new() });
-        };
-        self.fill_applied_count = chunk.applied_count;
-        Some(chunk)
+        let applied = self.fill_applied_count as usize;
+        self.write_fill(|fill| fill.applied_count = applied.min(fill.sequence.len()));
+        self.publish_fill_requested_count();
     }
 
     pub fn fill_is_done(&self) -> bool {
         if self.fill_job.is_some() {
             return self.fill_observation.done;
         }
-        if let Some(done) = self.read_fill(|fill| fill.stalled || fill.sequence.len() >= fill.max_count) {
+        if let Some(done) = self.read_fill(|fill| fill.stalled || fill.sequence.len() >= fill.requested_count()) {
             return done;
         }
         let Ok(registry) = fill_envelope_registry().try_lock() else {
@@ -3141,10 +3456,12 @@ impl Puzzle3dPrecomputeSession {
         let steps_remaining = authority.steps_remaining;
         let preview_sequence = authority.preview_sequence;
         let observation = authority.observation;
+        let requested_count = authority.requested_count;
         self.engine.fill = None;
         self.engine.fill_cancel = cancel;
         self.engine.fill_steps_remaining = steps_remaining;
         self.engine.fill_preview_sequence = preview_sequence;
+        self.engine.fill_requested_count = requested_count;
         self.fill_job = Some(request);
         self.fill_admission = None;
         self.fill_observation = observation;
@@ -3169,6 +3486,38 @@ impl Puzzle3dPrecomputeSession {
         self.enqueue_fill_job_spending(FILL_ENVELOPE_CENSUS_UNITS_PER_TURN)
     }
 
+    /// ▶️ Restarts a plan that already reported itself done because the count went UP. The envelope is
+    /// still standing — a `Complete` terminal is deliberately never reaped, it is what the HUD reads —
+    /// so the builder, its spatial index and its whole locked prefix are still there: the run resumes
+    /// on the SAME envelope token and the same job id (the reactor drops a bounded job's slot the turn
+    /// it reports terminal, so re-spawning that id binds this very authority again), and the sequence
+    /// continues deterministically instead of replanning from zero.
+    fn resume_completed_fill_job(&mut self, request: &FillJobRequest) -> Option<(u64, Vec<u8>)> {
+        let requested = self.engine.fill_requested_count.max(self.fill_applied_count as usize);
+        let mut registry = fill_envelope_registry().try_lock().ok()?;
+        let authority = registry.authority_mut(request)?;
+        if !matches!(authority.phase, FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Complete)) || authority.checked_out.load(Ordering::Acquire) {
+            return None;
+        }
+        authority.requested_count = requested;
+        let observation = {
+            let mut fill = authority.fill.as_ref()?.try_lock().ok()?;
+            if fill.requested_count() != requested {
+                fill.set_requested_count(requested);
+            }
+            if fill.stalled || fill.sequence.len() >= fill.requested_count() {
+                return None;
+            }
+            fill_observation_of(&fill)
+        };
+        let token = authority.token_page.as_ref().map(|page| page[..authority.token_len].to_vec())?;
+        authority.steps_remaining = requested.saturating_sub(observation.available as usize);
+        authority.worker_terminal = false;
+        authority.observation = observation;
+        authority.phase = FillEnvelopePhase::Admitted;
+        Some((request.job, token))
+    }
+
     /// 🧮 One admission-census grant. Production spends [`FILL_ENVELOPE_CENSUS_UNITS_PER_TURN`];
     /// tests that pin mid-census fairness spend exactly one unit.
     pub(crate) fn enqueue_fill_job_spending(&mut self, census_units: usize) -> Option<(u64, Vec<u8>)> {
@@ -3176,11 +3525,14 @@ impl Puzzle3dPrecomputeSession {
             return None;
         }
         if self.fill_admission.is_none() {
-            if let Some(request) = &self.fill_job {
+            if let Some(request) = self.fill_job.clone() {
+                if let Some(resumed) = self.resume_completed_fill_job(&request) {
+                    return Some(resumed);
+                }
                 let Ok(registry) = fill_envelope_registry().try_lock() else {
                     return None;
                 };
-                if registry.observation(request).is_some() {
+                if registry.observation(&request).is_some() {
                     return None;
                 }
                 self.fill_job = None;
@@ -3196,7 +3548,7 @@ impl Puzzle3dPrecomputeSession {
             let fill = self.engine.fill.take()?;
             let observed = {
                 match fill.try_lock() {
-                    Ok(fill) => Some((fill.operation, FillObservation { generation: fill.preview.generation, sequence: fill.preview.sequence, available: fill.sequence.len() as u32, done: fill.stalled || fill.sequence.len() >= fill.max_count })),
+                    Ok(fill) => Some((fill.operation, fill_observation_of(&fill))),
                     Err(_) => None,
                 }
             };
@@ -3427,15 +3779,6 @@ impl Puzzle3dPrecomputeSession {
         let fixture = self.compose_fill_projection(visible, true)?;
         self.fill_applied_count = visible as u32;
         Some(fixture)
-    }
-
-    /// 🪣️ Read-only prefix of the precomputed fill plan for live viewport show/hide — a query, so it
-    /// stays a plain `&self` method rather than routing through `dispatch` (which is `&mut self`,
-    /// uniform for the small number of genuinely mutating actions). `Puzzle3dEngineCommand::
-    /// ComposeFillDisplay` still exists as a `dispatch`-able alias of this same call for command-log/
-    /// wasm-bindgen-wrapper callers that only ever hold `&mut Puzzle3dPrecomputeSession`.
-    pub fn compose_fill_display(&self, count: u32) -> Option<Fixture> {
-        self.compose_fill_projection(count as usize, false)
     }
 
     /// 🎯️ Single typed entry point for every mutating (or JSON-carrying-before-this-fix) engine

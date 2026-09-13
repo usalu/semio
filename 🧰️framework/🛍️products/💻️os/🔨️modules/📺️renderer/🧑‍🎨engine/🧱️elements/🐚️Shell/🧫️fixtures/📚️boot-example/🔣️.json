@@ -1,0 +1,68 @@
+{
+  "note": "📚️ The ONE boot-example rule both shells answer. React: `🐚️Shell/🟦️.tsx` `resolveBootExampleId`. wgpu: `🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs` `resolve_boot_example_id`, driven from `sync_session_chrome`. `defaultExampleId` is the per-server seed (`VITE_SEMIO_DEFAULT_EXAMPLE`) OR the per-navigation `?example=` query, which is why an id no option carries must fall back rather than fault: a url is not a place to hard-fail a shell.",
+  "bootQueryParam": "example",
+  "rows": [
+    {
+      "id": "first-option-seeds-a-fresh-session",
+      "activeExampleId": "",
+      "options": ["hexagonal-mushroom-column", "rectangle-extrude-volume", "sphere-cut-with-torus"],
+      "defaultExampleId": null,
+      "expected": "hexagonal-mushroom-column"
+    },
+    {
+      "id": "a-declared-default-outranks-the-first-option",
+      "activeExampleId": "",
+      "options": ["hexagonal-mushroom-column", "rectangle-extrude-volume", "sphere-cut-with-torus"],
+      "defaultExampleId": "sphere-cut-with-torus",
+      "expected": "sphere-cut-with-torus"
+    },
+    {
+      "id": "a-live-selection-outranks-the-default",
+      "activeExampleId": "rectangle-extrude-volume",
+      "options": ["hexagonal-mushroom-column", "rectangle-extrude-volume", "sphere-cut-with-torus"],
+      "defaultExampleId": "sphere-cut-with-torus",
+      "expected": "rectangle-extrude-volume"
+    },
+    {
+      "id": "an-active-id-the-dialect-does-not-author-falls-back",
+      "activeExampleId": "missing",
+      "options": ["hexagonal-mushroom-column", "rectangle-extrude-volume", "sphere-cut-with-torus"],
+      "defaultExampleId": null,
+      "expected": "hexagonal-mushroom-column"
+    },
+    {
+      "id": "a-default-the-dialect-does-not-author-falls-back-to-the-first",
+      "activeExampleId": "",
+      "options": ["hexagonal-mushroom-column", "rectangle-extrude-volume"],
+      "defaultExampleId": "sphere-cut-with-torus",
+      "expected": "hexagonal-mushroom-column"
+    },
+    {
+      "id": "an-active-id-the-dialect-does-not-author-still-honours-a-valid-default",
+      "activeExampleId": "missing",
+      "options": ["hexagonal-mushroom-column", "rectangle-extrude-volume"],
+      "defaultExampleId": "rectangle-extrude-volume",
+      "expected": "rectangle-extrude-volume"
+    },
+    {
+      "id": "a-dialect-with-no-example-answers-nothing",
+      "activeExampleId": "",
+      "options": [],
+      "defaultExampleId": null,
+      "expected": ""
+    },
+    {
+      "id": "a-dialect-with-no-example-answers-nothing-even-when-one-was-asked-for",
+      "activeExampleId": "rectangle-extrude-volume",
+      "options": [],
+      "defaultExampleId": "sphere-cut-with-torus",
+      "expected": ""
+    }
+  ],
+  "bootQuery": [
+    { "id": "absent", "search": "?plugin=generation3d", "expected": null },
+    { "id": "named", "search": "?plugin=generation3d&example=sphere-cut-with-torus", "expected": "sphere-cut-with-torus" },
+    { "id": "empty-is-absent", "search": "?plugin=generation3d&example=", "expected": null },
+    { "id": "beside-role-and-mode", "search": "?plugin=generation3d&role=viewer&mode=view&example=rectangle-extrude-volume", "expected": "rectangle-extrude-volume" }
+  ]
+}

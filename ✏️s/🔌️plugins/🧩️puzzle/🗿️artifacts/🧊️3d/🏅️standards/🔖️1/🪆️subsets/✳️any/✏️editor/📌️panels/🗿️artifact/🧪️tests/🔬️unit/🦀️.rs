@@ -88,7 +88,6 @@ fn scaled_fixture(objects: usize, vortices: usize) -> crate::editor::puzzle3d::P
             vortices: (0..vortices).map(|slot| crate::editor::puzzle3d::Puzzle3dVortex { id: format!("vortex-{slot}"), vortex_kind: Some("edge".into()), ..Default::default() }).collect(),
             hidden: false,
             locked: false,
-            reveal_index: None,
         })
         .collect();
     fixture
@@ -260,7 +259,6 @@ fn outliner_hide_and_lock_rows_dispatch_the_inverse_of_the_current_flag() {
             vortices: Vec::new(),
             hidden: flagged,
             locked: flagged,
-            reveal_index: None,
         });
         fixture.references.push(crate::editor::puzzle3d::Puzzle3dReference {
             id: "reference-1".into(),
@@ -310,7 +308,6 @@ fn an_outliner_flag_row_undoes_itself_on_the_second_click() {
         vortices: Vec::new(),
         hidden: false,
         locked: false,
-        reveal_index: None,
     });
     let requested = |fixture: &crate::editor::puzzle3d::Puzzle3dFixture, flag: &str| {
         drain_retired_ui_owners();

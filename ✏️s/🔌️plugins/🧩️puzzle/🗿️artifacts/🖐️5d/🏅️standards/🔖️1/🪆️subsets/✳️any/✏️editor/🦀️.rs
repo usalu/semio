@@ -15,7 +15,7 @@
 use crate::standards::v1::subsets::any::schema::mutations::text::{puzzle5d_document_delta_operations, Puzzle5dMutation, Puzzle5dPlaySnapshot};
 use crate::Puzzle5dSnapshot;
 use crate::editor::puzzle5d::commands::{
-    add_brush_part, add_node, add_part_kind, apply_board_events, apply_sun, create_fastener, cycle_brush_candidate, delete_fastener, delete_selection, duplicate_selection, edit_fastener, engagement_abort, engagement_control_select, engagement_input,
+    add_brush_part, add_node, add_part_kind, apply_board_events, apply_sun, cancel_fill_build, create_fastener, cycle_brush_candidate, delete_fastener, delete_selection, duplicate_selection, edit_fastener, engagement_abort, engagement_control_select, engagement_input,
     engagement_submit, patch_fastener, patch_grip, patch_part, proximity_connect, register_brush_mesh, retarget_fastener, rotate_selection, scale_selection, select_same_kind, set_active_example, set_brush_placement_overlap_budget,
     set_camera, set_camera_2d, set_camera_3d, set_fill_count, set_fixture_json, set_grid_factor, set_grid_snap_enabled, set_kind_weight, set_lod_mode, set_selection_flag, set_suggestion_offset, translate_selection, world_relocate, zoom_to_selection,
 };
@@ -59,7 +59,10 @@ pub const PUZZLE5D_EXAMPLE_CAPSULE_DREAM: &str = "capsule-dream";
 pub const PUZZLE5D_FALLBACK_MESH_KIND: &str = "box";
 /// 🧰️ Active utility fallback when the host `ViewModel` has not selected one yet.
 pub const PUZZLE5D_DEFAULT_UTILITY: &str = "select";
-pub const PUZZLE5D_FILL_COUNT_MAX: u32 = 1000;
+/// 🎯️ The fill count a fresh 5d document offers. There is no ceiling to pair it with: the wrapped 3d
+/// planner plans toward whatever the operator types and reports a stall reason when the document
+/// cannot hold that many.
+pub const PUZZLE5D_DEFAULT_FILL_COUNT: u32 = 100;
 pub const PUZZLE5D_LOD_MODE_AUTOMATIC: &str = "automatic";
 pub const PUZZLE5D_SUGGESTION_OFFSET_MIN: f64 = 0.0;
 pub const PUZZLE5D_SUGGESTION_OFFSET_MAX: f64 = 160.0;
@@ -3868,6 +3871,7 @@ puzzle5d_command_variants! {
     FocusSelection = "focusSelection",
     EngagementSubmit = "engagementSubmit",
     SetFillCount = "setFillCount",
+    CancelFillBuild = "cancelFillBuild",
     PatchPart = "patchPart",
     PatchGrip = "patchGrip",
     PatchFastener = "patchFastener",
@@ -4261,6 +4265,7 @@ fn dispatch_puzzle5d_action(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args:
         "engagementControlSelect" => engagement_control_select::engagement_control_select(ctx, args),
         "setSuggestionOffset" => set_suggestion_offset::set_suggestion_offset(ctx, args),
         "setFillCount" => set_fill_count::set_fill_count(ctx, args),
+        "cancelFillBuild" => cancel_fill_build::cancel_fill_build(ctx, args),
         "engagementInput" => engagement_input::engagement_input(ctx, args),
         "engagementSubmit" => engagement_submit::engagement_submit(ctx, args),
         "engagementAbort" => engagement_abort::engagement_abort(ctx, args),
@@ -8467,6 +8472,7 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             .mutation("focusSelection", LocalizedLabel::native("Focus Selection", "Auswahl fokussieren"))
             .mutation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
             .mutation("setFillCount", LocalizedLabel::native("Set Fill Count", "Füllanzahl festlegen"))
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("cancelFillBuild", LocalizedLabel::native("Cancel Fill", "Füllen abbrechen"), ActionKind::Mutation, "circle-stop") })
             .mutation("patchPart", LocalizedLabel::native("Patch Part", "Teil aktualisieren"))
             .mutation("patchGrip", LocalizedLabel::native("Patch Grip", "Griff aktualisieren"))
             .mutation("patchFastener", LocalizedLabel::native("Patch Fastener", "Verbinder aktualisieren"))
@@ -8537,6 +8543,7 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setCamera", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("setCamera2d", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("setCamera3d", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("cancelFillBuild", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("setFillCount", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("setFixtureJson", InteractiveJobClassification::Migrated)
             .action_interactive_job("setGridFactor", InteractiveJobClassification::BatchOnlyPendingRewrite)

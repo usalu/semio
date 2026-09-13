@@ -142,6 +142,10 @@ pub struct Theme {
     /// ⏳️ Still-running outcome paint (queued, applying, awaiting a decision) — the neutral third
     /// state between [`Theme::success`] and [`Theme::error`].
     pub progress: Rgba,
+    /// ⚠️ Degraded-but-not-failed outcome paint (stalled, retried, partially rejected) — the wgpu
+    /// counterpart of the `--color-warning` palette token, sitting between [`Theme::progress`]
+    /// and [`Theme::error`].
+    pub warning: Rgba,
     /// 🪜️ Plain per-level fill, indexed by `Level::index` — `ui-surface`'s wgpu counterpart, backing
     /// `Theme::surface`/`glass`. Populated from the generated `levelBase..levelMenu`
     /// chrome paints (see `from_chrome` below).
@@ -253,6 +257,7 @@ fn from_chrome(chrome: &ChromePalette, presence_appearance: PresenceAppearance) 
         error: Rgba::new(0.95, 0.35, 0.35, 1.0),
         success: Rgba::from_srgb8(36, 158, 91, 255),
         progress: Rgba::from_srgb8(67, 132, 245, 255),
+        warning: Rgba::from_srgb8(252, 207, 5, 255),
         level_bg: [
             Rgba::from_chrome(&chrome.level_base),
             Rgba::from_chrome(&chrome.level_window),

@@ -29,10 +29,18 @@ pub(crate) const FIXED_OWNER_PAGE_BYTES: usize = 16 * 1024;
 /// envelope reserves `FILL_ENVELOPE_MAX_BYTES` (256 × 16 KiB) for every page of one session
 /// together, so a single page may claim at most a quarter of that reservation.
 pub(crate) const DOCUMENT_OWNER_PAGE_BYTES: usize = 64 * FIXED_OWNER_PAGE_BYTES;
-/// 🧊️ Objects one fill session owns: the scene it starts from plus a full `FILL_COUNT_MAX` (1000)
-/// plan. The Nakagin capsule tower carries 180 objects, so its worst case is 1180; 2048 is the next
-/// power of two above it and also bounds `placed`/`placed_lookup`/the spatial entry map.
-pub(crate) const DOCUMENT_OBJECT_SLOTS: usize = 2048;
+/// 🏢️ Objects the flagship fixture carries — the Nakagin capsule tower, the largest real document
+/// this artifact plans against. Every document-scale page is sized from it plus
+/// [`DOCUMENT_FILL_HEADROOM_SLOTS`], never from a plan ceiling: the planner has none any more.
+pub(crate) const NAKAGIN_DOCUMENT_OBJECTS: usize = 180;
+/// 🧊️ Fill placements a document page keeps free above the flagship fixture. It is a DOCUMENT
+/// capacity, not a request ceiling — the count the user asks for is unbounded, and a plan that
+/// exhausts these slots reports `stall_reason = "document-capacity"` and stops, visibly, instead of
+/// being clamped or faulting.
+pub(crate) const DOCUMENT_FILL_HEADROOM_SLOTS: usize = 1024;
+/// 🧊️ Objects one fill session owns: the flagship fixture plus its fill headroom — 1204 — rounded up
+/// to the next power of two, 2048, which also bounds `placed`/`placed_lookup`/the spatial entry map.
+pub(crate) const DOCUMENT_OBJECT_SLOTS: usize = (NAKAGIN_DOCUMENT_OBJECTS + DOCUMENT_FILL_HEADROOM_SLOTS).next_power_of_two();
 /// 🔘️ Vortices one fill session reasons about: Nakagin measures 358 vortices over 180 objects (≈2
 /// per object, at most 10 on one object), so two per object slot bounds the blocked-vortex and
 /// seen-candidate sets at document scale.

@@ -43,7 +43,6 @@
                 vortices: Vec::new(),
                 hidden: false,
                 locked: false,
-                reveal_index: None,
             })
             .collect();
         let mut runtime = Puzzle3dRuntime::default();

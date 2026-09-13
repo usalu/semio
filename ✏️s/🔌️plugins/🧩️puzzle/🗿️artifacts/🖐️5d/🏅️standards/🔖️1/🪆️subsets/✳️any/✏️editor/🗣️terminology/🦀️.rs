@@ -18,6 +18,20 @@ semio_framework_plugin::app_labels! {
         brush: native_en "Brush", native_de "Pinsel", reuse_en "Brush", reuse_de "Pinsel";
         fill: native_en "Fill", native_de "Füllen", reuse_en "Fill", reuse_de "Füllen";
         fill_progress: native_en "Fill progress", native_de "Füllfortschritt", reuse_en "Fill progress", reuse_de "Füllfortschritt";
+        fill_stage_preparing: native_en "Preparing", native_de "Vorbereiten", reuse_en "Preparing", reuse_de "Vorbereiten";
+        fill_stage_selecting_target: native_en "Selecting grip", native_de "Griff wählen", reuse_en "Selecting connection point", reuse_de "Verbindungspunkt wählen";
+        fill_stage_selecting_candidate: native_en "Selecting part", native_de "Teil wählen", reuse_en "Selecting building component", reuse_de "Baukomponente wählen";
+        fill_stage_testing_collision: native_en "Testing collision", native_de "Kollision prüfen", reuse_en "Testing collision", reuse_de "Kollision prüfen";
+        fill_stage_locking: native_en "Locking", native_de "Festsetzen", reuse_en "Locking", reuse_de "Festsetzen";
+        fill_stage_done: native_en "Done", native_de "Fertig", reuse_en "Done", reuse_de "Fertig";
+        fill_stage_stalled: native_en "Stalled", native_de "Angehalten", reuse_en "Stalled", reuse_de "Angehalten";
+        fill_stall_no_open_vortex: native_en "no open grip", native_de "kein offener Griff", reuse_en "no open connection point", reuse_de "kein offener Verbindungspunkt";
+        fill_stall_document_capacity: native_en "document capacity reached", native_de "Dokumentkapazität erreicht", reuse_en "document capacity reached", reuse_de "Dokumentkapazität erreicht";
+        fill_stall_no_compatible_kind: native_en "no compatible kind", native_de "keine passende Art", reuse_en "no compatible building component", reuse_de "keine passende Baukomponente";
+        fill_tested: native_en "tested", native_de "getestet", reuse_en "tested", reuse_de "getestet";
+        fill_locked: native_en "locked", native_de "festgesetzt", reuse_en "locked", reuse_de "festgesetzt";
+        fill_rejected: native_en "rejected", native_de "abgelehnt", reuse_en "rejected", reuse_de "abgelehnt";
+        fill_collision: native_en "collision", native_de "Kollision", reuse_en "collision", reuse_de "Kollision";
         count: native_en "Count", native_de "Anzahl", reuse_en "Count", reuse_de "Anzahl";
         placement: native_en "Placement", native_de "Platzierung", reuse_en "Placement", reuse_de "Platzierung";
         duplicate: native_en "Duplicate", native_de "Duplizieren", reuse_en "Duplicate", reuse_de "Duplizieren";
@@ -100,6 +114,39 @@ pub fn puzzle5d_localized(field: fn(&Puzzle5dLabels) -> LabelText) -> LocalizedL
     LocalizedLabel::from_fn(move |terminology, locale| field(Puzzle5dLabels::labels(locale, terminology)).as_str().to_string())
 }
 //#endregion 🔖️Locale
+
+//#region 🔖️FillStage
+/// 🧭️ The phase caption of a fill run, in the reader's own language. 5d's fill IS the 3d planner, so
+/// the machine tokens it reports are the 3d planner's own — mapped here to 5d's part/grip vocabulary
+/// rather than to the 3d artifact's object/vortex one.
+pub fn puzzle5d_fill_stage_label(labels: &Puzzle5dLabels, stage: &str, stall_reason: Option<&str>) -> String {
+    if let Some(reason) = stall_reason {
+        return format!("{} — {}", labels.fill_stage_stalled.as_str(), puzzle5d_fill_stall_reason_label(labels, reason));
+    }
+    match stage {
+        "select-target" => labels.fill_stage_selecting_target,
+        "prepare-candidates" | "select-candidate" => labels.fill_stage_selecting_candidate,
+        "construct-preview" | "query-broad-phase" | "test-collision" => labels.fill_stage_testing_collision,
+        "accept-candidate" => labels.fill_stage_locking,
+        "complete" => labels.fill_stage_done,
+        _ => labels.fill_stage_preparing,
+    }
+    .as_str()
+    .to_string()
+}
+
+/// 🛑️ The user-facing reason a fill run stopped short of the requested count. An unknown reason is
+/// surfaced verbatim rather than swallowed: a visible machine token beats a silently wrong sentence,
+/// and it names exactly the string the planner has to grow a label for.
+pub fn puzzle5d_fill_stall_reason_label(labels: &Puzzle5dLabels, reason: &str) -> String {
+    match reason {
+        "no-open-vortex" => labels.fill_stall_no_open_vortex.as_str().to_string(),
+        "document-capacity" => labels.fill_stall_document_capacity.as_str().to_string(),
+        "no-compatible-kind" => labels.fill_stall_no_compatible_kind.as_str().to_string(),
+        other => other.to_string(),
+    }
+}
+//#endregion 🔖️FillStage
 
 //#region 🧪️Tests
 #[cfg(test)]

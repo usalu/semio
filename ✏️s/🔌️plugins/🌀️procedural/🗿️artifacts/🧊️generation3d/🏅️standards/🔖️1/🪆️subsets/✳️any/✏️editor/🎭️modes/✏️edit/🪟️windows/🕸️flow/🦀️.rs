@@ -50,11 +50,19 @@ pub fn window_measures(lod_mode: &str, on_change: impl Fn(&str, Option<serde_jso
         id: "generation3d-measure-lod".into(),
         label: Some("LOD".into()),
         value: current.into(),
-        items: vec![
-            semio_framework_plugin::MeasureSelectItem { id: "generation3d-measure-lod-coarse".into(), value: "coarse".into(), label: "Coarse".into() },
-            semio_framework_plugin::MeasureSelectItem { id: "generation3d-measure-lod-medium".into(), value: "medium".into(), label: "Medium".into() },
-            semio_framework_plugin::MeasureSelectItem { id: "generation3d-measure-lod-fine".into(), value: "fine".into(), label: "Fine".into() },
-        ],
+        // 🎚️ Rows come from the ONE ladder `cycleLodMode` walks, so the keyboard cycle and the
+        // picker can never disagree (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        items: crate::editor::generation3d::config::GENERATION_3D_LOD_MODES
+            .iter()
+            .map(|mode| {
+                let label = match *mode {
+                    "coarse" => "Coarse",
+                    "fine" => "Fine",
+                    _ => "Medium",
+                };
+                semio_framework_plugin::MeasureSelectItem { id: format!("generation3d-measure-lod-{mode}"), value: (*mode).into(), label: label.into() }
+            })
+            .collect(),
         on_change: on_change("setLodMode", None),
     }]
 }

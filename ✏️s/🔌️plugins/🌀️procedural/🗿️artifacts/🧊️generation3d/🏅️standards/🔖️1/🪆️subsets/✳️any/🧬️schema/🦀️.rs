@@ -6,7 +6,6 @@ use crate::standards::v1::subsets::any::schema::snapshot::text::{
 };
 use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshot;
 use crate::widget_id;
-use semio_framework_artifact_playbook_playbook::selected_generation;
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_os_flow::forms_bridge::apply_generation_values_to_fixture as apply_generation_values_to_fixture_json;
@@ -310,8 +309,24 @@ fn generation_values_to_pack_object(values: &semio_framework_artifact_playbook_p
     }
 }
 
-pub fn generation_fixture_for(fixture: &FlowFixture, generation: &GenerationPlayState) -> FlowFixture {
-    let Some(selected) = selected_generation(generation) else {
+/// 🎯️ The roster entry `selected_id` names — the ONE lookup every generate-mode surface resolves its
+/// "current generation" through.
+///
+/// 🐛️ Why not `playbook::selected_generation(state)`: that reads `GenerationPlayState.selected_generation_id`,
+/// which the ARTIFACT only ever writes from `CreateGeneration`/`DeleteGeneration` replay — `selectGeneration`
+/// emits no artifact mutation at all, only `Generation3dConfigMutation::SetSelectedGeneration`. The
+/// evaluation path already resolved the selection off the CONFIG (`flow_eval_tick::evaluate`,
+/// `generation_command_result`) while the three generate-mode window bodies still resolved it off the
+/// artifact, so clicking a generation row moved the evaluation and moved nothing a user could see
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, gap #7). The config is the single authority now, and this
+/// function is where it is read.
+pub fn generation_by_id<'a>(generation: &'a GenerationPlayState, selected_id: Option<&str>) -> Option<&'a semio_framework_artifact_playbook_playbook::FormGeneration> {
+    let selected_id = selected_id?;
+    generation.generations.iter().find(|entry| entry.id == selected_id)
+}
+
+pub fn generation_fixture_for(fixture: &FlowFixture, generation: &GenerationPlayState, selected_id: Option<&str>) -> FlowFixture {
+    let Some(selected) = generation_by_id(generation, selected_id) else {
         return fixture.clone();
     };
     let mut patched = fixture.clone();

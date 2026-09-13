@@ -250,14 +250,16 @@ fn fill_control_verbs_are_pure_runtime_transitions() {
 
     assert_eq!(fill_session_control("setFillCount", Some(&serde_json::json!({ "count": 3 })), &mut runtime, &mut effects), Ok(Some((3, 1))));
     assert_eq!(effects.len(), 1);
-    assert_eq!(fill_session_control("setFillCount", Some(&serde_json::json!({ "count": f64::from(fill::PUZZLE2D_FILL_COUNT_MAX) + 1.0 })), &mut runtime, &mut effects), Err("puzzle2d-fill-count-capacity"));
+    assert_eq!(fill_session_control("setFillCount", Some(&serde_json::json!({ "count": 5_000 })), &mut runtime, &mut effects), Ok(Some((5_000, 1))), "the count carries no ceiling");
+    assert_eq!(runtime.fill_count, 5_000);
+    assert_eq!(fill_session_control("setFillCount", Some(&serde_json::json!({ "count": -1 })), &mut runtime, &mut effects), Err("puzzle2d-fill-count"));
     assert_eq!(fill_session_control("setFillCount", None, &mut runtime, &mut effects), Err("puzzle2d-fill-count"));
     assert_eq!(fill_session_control("brushFillSessionBegin", Some(&serde_json::json!({ "maxCount": 2 })), &mut runtime, &mut effects), Err("puzzle2d-fill-start-seed"));
     assert_eq!(fill_session_control("brushFillSessionBegin", Some(&serde_json::json!({ "maxCount": 2, "seed": 9 })), &mut runtime, &mut effects), Ok(Some((2, 9))));
 }
 
 /// 📐️ A control verb declares four work items; a search verb declares its exact per-stage chunk
-/// ceilings, and an over-count request is refused at preflight rather than mid-run.
+/// ceilings — the same ceilings whatever count is asked for, because the count has none.
 #[test]
 fn fill_session_extent_is_the_enforced_budget() {
     use crate::retained_command::PuzzleCommandWork;
@@ -274,8 +276,8 @@ fn fill_session_extent_is_the_enforced_budget() {
     let command = crate::editor::puzzle2d::Puzzle2dCommand::from_action("setFillCount", Some(serde_json::json!({ "count": 8 })), None);
     assert_eq!(fill.extent(&command, &snapshot, &interaction), Some(search_budget));
 
-    let over = crate::editor::puzzle2d::Puzzle2dCommand::from_action("setFillCount", Some(serde_json::json!({ "count": u64::from(fill::PUZZLE2D_FILL_COUNT_MAX) + 1 })), None);
-    assert_eq!(fill.extent(&over, &snapshot, &interaction), None);
+    let large = crate::editor::puzzle2d::Puzzle2dCommand::from_action("setFillCount", Some(serde_json::json!({ "count": 5_000 })), None);
+    assert_eq!(fill.extent(&large, &snapshot, &interaction), Some(search_budget), "a large count is planned, never refused at preflight");
 
     let foreign = crate::editor::puzzle2d::Puzzle2dCommand::from_action("addNode", None, None);
     assert_eq!(fill.extent(&foreign, &snapshot, &interaction), None);

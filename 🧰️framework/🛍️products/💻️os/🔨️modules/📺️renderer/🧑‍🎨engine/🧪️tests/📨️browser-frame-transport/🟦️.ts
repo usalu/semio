@@ -56,6 +56,8 @@ function transport(worker: FakeWorker, hooks: { directives?: number[]; faults?: 
       pluginVariant: "s",
       locale: "en",
       appRole: "editor",
+      appMode: "",
+      appExample: "",
     },
     setTimer: () => 1,
     clearTimer: () => {},
@@ -246,7 +248,7 @@ describe("browser frame worker transport", () => {
     let now = 0;
     const subject = new BrowserFrameTransport({
       worker,
-      boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, pluginVariant: "s", locale: "en", appRole: "editor" },
+      boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, pluginVariant: "s", locale: "en", appRole: "editor", appMode: "", appExample: "" },
       now: () => now,
       setTimer: () => 1,
       clearTimer: () => {},
@@ -266,7 +268,7 @@ describe("browser frame worker transport", () => {
     const faults: string[] = [];
     const subject = new BrowserFrameTransport({
       worker,
-      boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, pluginVariant: "s", locale: "en", appRole: "editor" },
+      boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, pluginVariant: "s", locale: "en", appRole: "editor", appMode: "", appExample: "" },
       now: () => 0,
       setTimer: () => 1,
       clearTimer: () => {},
@@ -289,7 +291,7 @@ describe("browser frame worker transport", () => {
     };
     const subject = new BrowserFrameTransport({
       worker,
-      boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, pluginVariant: "s", locale: "en", appRole: "editor" },
+      boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, pluginVariant: "s", locale: "en", appRole: "editor", appMode: "", appExample: "" },
       now: () => now,
       setTimer: () => 1,
       clearTimer: () => {},
@@ -397,7 +399,7 @@ function bootHarness(tongue: "en" | "de" = "en") {
   let nowMs = 0;
   const subject = new BrowserFrameTransport({
     worker,
-    boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer_bg.wasm", canvas: {} as OffscreenCanvas, width: 8, height: 8, dpr: 1, pluginVariant: "generation3d", locale: tongue, appRole: "editor" },
+    boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer_bg.wasm", canvas: {} as OffscreenCanvas, width: 8, height: 8, dpr: 1, pluginVariant: "generation3d", locale: tongue, appRole: "editor", appMode: "", appExample: "" },
     now: () => nowMs,
     setTimer: (callback, delayMs) => {
       const id = nextTimerId++;
@@ -536,7 +538,7 @@ describe("wgpu boot liveness watchdog, replayed on a third-party clock", () => {
       const faults: string[] = [];
       const subject = new BrowserFrameTransport({
         worker,
-        boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer_bg.wasm", canvas: {} as OffscreenCanvas, width: 8, height: 8, dpr: 1, pluginVariant: "generation3d", locale: "en", appRole: "editor" },
+        boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer_bg.wasm", canvas: {} as OffscreenCanvas, width: 8, height: 8, dpr: 1, pluginVariant: "generation3d", locale: "en", appRole: "editor", appMode: "", appExample: "" },
         now: () => Date.now(),
         setTimer: (callback, delayMs) => setTimeout(callback, delayMs) as unknown as number,
         clearTimer: (handle) => clearTimeout(handle),

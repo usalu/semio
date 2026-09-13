@@ -638,6 +638,94 @@ pub struct BrushCollisionFreeResult {
     pub resume_candidate_index: usize,
 }
 
+//#region 🔖️BrushSearchProgress
+/// 🔎️ Live readout of ONE vortex's collision-free candidate search — the observable that turns the
+/// brush's hidden precompute into a visible process. Counters describe the CURRENT pass over the
+/// compatible list: `free` is cumulative (partial results survive a resumed pass and are published
+/// the moment they are known), `blocked` counts the candidates this pass refused on overlap, and
+/// `tested = free + blocked` is how many reached a verdict out of `total_candidates`. `done` flips
+/// the instant a pass exhausts the list with nothing left owed. `current_*` is whatever the last
+/// slice was looking at, so the viewport can paint that one candidate as a ghost with its verdict —
+/// and it SURVIVES completion, so a vortex where everything collided keeps showing the refused ghost
+/// instead of falling silently back to nothing.
+/// Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS wave G.
+#[derive(Debug, Clone, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct BrushSearchProgress {
+    pub target_vortex_full_id: String,
+    pub tested: usize,
+    pub free: usize,
+    pub blocked: usize,
+    pub total_candidates: usize,
+    pub done: bool,
+    #[value(default)]
+    pub current_candidate_kind: Option<String>,
+    /// ⚖️ Shares the fill planner's verdict vocabulary on purpose: one `"verdict"` wire spelling for
+    /// every ghost the viewport paints, so `testing`/`free`/`collision` mean the same thing whether
+    /// the brush or the fill lane produced them (master plan §2.1). The brush never reaches
+    /// `Rejected`/`Accepted` — accepting a candidate is a document mutation, not a search verdict.
+    #[value(default)]
+    pub current_verdict: FillCandidateVerdict,
+    #[value(default)]
+    pub current_ghost: Option<BrushPreviewState>,
+}
+
+impl BrushSearchProgress {
+    /// 🌱️ A pass that has not decided anything yet for `target_vortex_full_id`.
+    pub fn begin(target_vortex_full_id: &str) -> Self {
+        Self { target_vortex_full_id: target_vortex_full_id.to_string(), ..Self::default() }
+    }
+}
+//#endregion 🔖️BrushSearchProgress
+
+/// 🔟️ How many tried candidates the fill preview keeps alive at once — a ring, newest replacing
+/// oldest, so the viewport can paint the recent search instead of only the one live ghost. Fixed
+/// like the sibling `candidate_page`, so the whole preview stays one bounded owner.
+pub const FILL_TRIED_RING: usize = 12;
+
+/// ⚖️ What the planner currently knows about one candidate placement: it is being tested, it came
+/// through broad and narrow phase clean, it overlapped a placed body beyond the budget, it was
+/// refused for another reason, or it became a real placement.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+pub enum FillCandidateVerdict {
+    #[default]
+    Testing,
+    Free,
+    Collision,
+    Rejected,
+    Accepted,
+}
+
+impl FillCandidateVerdict {
+    /// 🔤️ The one wire spelling of a verdict — the retained preview-JSON cursor and every consumer
+    /// read this, so the camelCase `value` rename and the hand-written encoder never drift apart.
+    pub fn wire(self) -> &'static str {
+        match self {
+            Self::Testing => "testing",
+            Self::Free => "free",
+            Self::Collision => "collision",
+            Self::Rejected => "rejected",
+            Self::Accepted => "accepted",
+        }
+    }
+}
+
+/// 👻️ One entry of the tried ring: the ghost the planner built, the verdict it reached, the reason
+/// behind a refusal, and the preview sequence the verdict was published under.
+#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+pub struct FillTriedCandidate {
+    pub sequence: u64,
+    pub verdict: FillCandidateVerdict,
+    pub reason: Option<String>,
+    pub ghost: BrushPreviewState,
+}
+
 #[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
@@ -677,15 +765,32 @@ pub struct FillBuildPreview {
     pub target_cursor: usize,
     pub candidate_cursor: usize,
     pub accepted_count: usize,
+    /// 🎯️ What the user asked for, never a hidden planner ceiling.
     #[value(default)]
     #[cfg_attr(test, serde(default))]
-    pub total_count: usize,
+    pub requested_count: usize,
     #[value(default)]
     #[cfg_attr(test, serde(default))]
     pub search_count: u64,
     #[value(default)]
     #[cfg_attr(test, serde(default))]
     pub rejected_count: u64,
+    /// ⚖️ Verdict of `candidate_ghost`.
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
+    pub verdict: FillCandidateVerdict,
+    /// 🔁️ Newest-replaces-oldest ring of tried candidates; slot order, ordered by `sequence`.
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
+    pub tried: [Option<FillTriedCandidate>; FILL_TRIED_RING],
+    /// 🔢️ Constructed previews so far — accepted plus rejected plus the one under test.
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
+    pub tested_count: u64,
+    /// 🛑️ Why a planner that stopped below `requested_count` cannot continue.
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
+    pub stall_reason: Option<String>,
 }
 
 #[derive(Debug, Clone, value_derive::ToValue, value_derive::FromValue)]
@@ -710,8 +815,14 @@ pub struct FillBuildProgress {
 pub struct FillProgressSummary {
     pub count: usize,
     pub applied_count: usize,
+    /// 🎯️ The live requested count — what the user asked for, not a planner ceiling.
     pub max_count: usize,
     pub done: bool,
+    pub tested: u64,
+    pub rejected: u64,
+    pub collisions: u64,
+    pub stage: String,
+    pub stall_reason: Option<String>,
 }
 
 /// 🪪️ `objectId:vortexId`, unless the vortex id already carries its owner's prefix.

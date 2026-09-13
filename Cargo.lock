@@ -7888,6 +7888,7 @@ dependencies = [
 name = "semio-s-artifact-stdio-semio"
 version = "0.1.0"
 dependencies = [
+ "num-rational",
  "parry3d",
  "semio-framework",
  "semio-framework-3d",
@@ -7898,7 +7899,6 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-math",
  "semio-framework-mesh-engine",
- "semio-framework-number",
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-plugin",

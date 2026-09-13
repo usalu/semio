@@ -19,6 +19,10 @@ path = "../../🦀️.rs"
 name = "typegen_export"
 path = "../../🧪️tests/🧬️typegen-export/🦀️.rs"
 
+[[test]]
+name = "catalogue_carrier_map"
+path = "../../🧪️tests/🛍️catalogue-carrier-map/🦀️.rs"
+
 [features]
 default = []
 # 🧬️ TypeScript mirror rendered from the contract's versioned owned schema metadata.

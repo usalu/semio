@@ -56,7 +56,7 @@ pub fn evaluate(
             session.note_window_tick_outcome(window_id, false);
             return Ok((Emit::default(), session.eval_publication_for(retained_eval)));
         }
-        patched = Some(crate::standards::v1::subsets::any::schema::generation_fixture_for(&doc.snapshot.fixture, &state));
+        patched = Some(crate::standards::v1::subsets::any::schema::generation_fixture_for(&doc.snapshot.fixture, &state, state.selected_generation_id.as_deref()));
     }
     let fixture = patched.as_ref().unwrap_or(&doc.snapshot.fixture);
     let outcome = preview_eval::evaluate_tick(window_id, window_kind_id, fixture, preview_eval::preview_tolerance(&cfg.snapshot.lod_mode), session, retained_eval);

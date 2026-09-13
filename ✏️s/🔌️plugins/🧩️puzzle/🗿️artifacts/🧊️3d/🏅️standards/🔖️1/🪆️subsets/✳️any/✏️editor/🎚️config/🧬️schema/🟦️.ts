@@ -5,6 +5,9 @@ export interface Puzzle3dConfig {
   /** @state config */ vortexKindWeights: Record<string, number>;
   /** @state config */ activeExampleId: string;
 }
+/** 🪣️ Schema default for `fillCount` (`🔣️.json`) — a fresh document asks for a hundred placements, and
+ * the planner plans toward exactly that number: there is no ceiling to clamp against. */
+export const PUZZLE3D_CONFIG_FILL_COUNT_DEFAULT = 100;
 export class Puzzle3dConfigGuardRefusal extends Error { constructor(readonly at: string, readonly why: string) { super(`${at}: ${why}`); } }
 const record = (value: unknown, at: string): Readonly<Record<string, unknown>> => {
   if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Puzzle3dConfigGuardRefusal(at, "value is not an object");

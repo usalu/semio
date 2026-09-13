@@ -1,0 +1,10 @@
+{
+  "title": "Interactive Tools With Visible Process",
+  "emoji": "🪣️",
+  "status": "open",
+  "description": "All tools must be interactive and the user must see how the algorithms think by seeing the process, so wrong settings are spotted faster and intuition builds. Every tool can show progress (steps, percentage, status). Puzzle 3d fill tool first: drop the hidden precompute-everything-then-reveal logic; nothing is hidden or precomputed, the solution builds up interactively in front of the user. The fill count slider is unbounded, arbitrarily settable and defaults to 100. The UI shows every object it tries and locks: danger-colored mesh on collision, highlighted when collision free.\n\nCoordination: Fable 5.1 High main chat plans; Opus 5 High agents execute; Sonnet 5 High agents explore/audit read-only. Maximum parallel fleet. Other agents work concurrently on the same files; do not stop, work in conjunction. Bookkeeping is manual on disk because the repo MCP failed to connect (invalid initialize params) at session start.",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪56bdc3994da04fe19656b3ee2b3671d8"
+  ]
+}

@@ -25,6 +25,21 @@ semio_framework_plugin::app_labels! {
         fill_progress: native_en "Fill progress", native_de "Füllfortschritt", reuse_en "Fill progress", reuse_de "Füllfortschritt";
         fill_cancel: native_en "Cancel fill", native_de "Füllen abbrechen", reuse_en "Cancel fill", reuse_de "Füllen abbrechen";
         fill_planned: native_en "planned", native_de "geplant", reuse_en "planned", reuse_de "geplant";
+        fill_stage_preparing: native_en "Preparing", native_de "Vorbereiten", reuse_en "Preparing", reuse_de "Vorbereiten";
+        fill_stage_selecting_target: native_en "Selecting vortex", native_de "Vortex wählen", reuse_en "Selecting connection point", reuse_de "Verbindungspunkt wählen";
+        fill_stage_selecting_candidate: native_en "Selecting object", native_de "Objekt wählen", reuse_en "Selecting building component", reuse_de "Baukomponente wählen";
+        fill_stage_testing_collision: native_en "Testing collision", native_de "Kollision prüfen", reuse_en "Testing collision", reuse_de "Kollision prüfen";
+        fill_stage_locking: native_en "Locking", native_de "Festsetzen", reuse_en "Locking", reuse_de "Festsetzen";
+        fill_stage_done: native_en "Done", native_de "Fertig", reuse_en "Done", reuse_de "Fertig";
+        fill_stage_stalled: native_en "Stalled", native_de "Angehalten", reuse_en "Stalled", reuse_de "Angehalten";
+        fill_stall_no_open_vortex: native_en "no open vortex", native_de "kein offener Vortex", reuse_en "no open connection point", reuse_de "kein offener Verbindungspunkt";
+        fill_stall_document_capacity: native_en "document capacity reached", native_de "Dokumentkapazität erreicht", reuse_en "document capacity reached", reuse_de "Dokumentkapazität erreicht";
+        fill_stall_no_compatible_kind: native_en "no compatible kind", native_de "keine passende Art", reuse_en "no compatible building component", reuse_de "keine passende Baukomponente";
+        fill_tested: native_en "tested", native_de "getestet", reuse_en "tested", reuse_de "getestet";
+        fill_locked: native_en "locked", native_de "festgesetzt", reuse_en "locked", reuse_de "festgesetzt";
+        fill_rejected: native_en "rejected", native_de "abgelehnt", reuse_en "rejected", reuse_de "abgelehnt";
+        fill_collision: native_en "collision", native_de "Kollision", reuse_en "collision", reuse_de "Kollision";
+        fill_requested: native_en "requested", native_de "angefordert", reuse_en "requested", reuse_de "angefordert";
         fill_failed: native_en "Fill planning stopped — the background job failed", native_de "Füllplanung gestoppt — der Hintergrundauftrag ist fehlgeschlagen", reuse_en "Fill planning stopped — the background job failed", reuse_de "Füllplanung gestoppt — der Hintergrundauftrag ist fehlgeschlagen";
         count: native_en "Count", native_de "Anzahl", reuse_en "Count", reuse_de "Anzahl";
         brush: native_en "Brush", native_de "Pinsel", reuse_en "Brush", reuse_de "Pinsel";
@@ -109,6 +124,11 @@ semio_framework_plugin::app_labels! {
         chunk_size: native_en "Chunk Size", native_de "Blockgröße", reuse_en "Chunk Size", reuse_de "Blockgröße";
         schema: native_en "Schema", native_de "Schema", reuse_en "Schema", reuse_de "Schema";
         domain: native_en "Domain", native_de "Domäne", reuse_en "Domain", reuse_de "Domäne";
+        brush_search: native_en "Candidate search", native_de "Kandidatensuche", reuse_en "Candidate search", reuse_de "Kandidatensuche";
+        brush_search_free: native_en "free", native_de "frei", reuse_en "free", reuse_de "frei";
+        brush_search_tested: native_en "tested", native_de "getestet", reuse_en "tested", reuse_de "getestet";
+        brush_search_blocked: native_en "blocked", native_de "blockiert", reuse_en "blocked", reuse_de "blockiert";
+        brush_search_done: native_en "Search complete", native_de "Suche abgeschlossen", reuse_en "Search complete", reuse_de "Suche abgeschlossen";
     }
 }
 //#endregion 🔖️Labels
@@ -154,6 +174,42 @@ pub fn puzzle3d_localized_phrase(field: impl Fn(&Puzzle3dLabels) -> LabelText, e
     })
 }
 //#endregion 🔖️Locale
+
+//#region 🔖️FillStage
+/// 🧭️ The user-facing caption for ONE fill-planner stage. The planner's own `stage` vocabulary
+/// (`FillProgressSummary::stage`, machine strings such as `prepare-spatial`/`test-collision`) is a wire
+/// identity, never UI text — this folds it onto the phases a person can act on and answers in both
+/// authored locales, so the viewport HUD and the progress measure read the same words. A stalled run
+/// reports the stall instead of the phase it froze in, because that is the only state that asks the
+/// user for a decision (see [`puzzle3d_fill_stall_reason_label`]).
+pub fn puzzle3d_fill_stage_label(labels: &Puzzle3dLabels, stage: &str, stall_reason: Option<&str>) -> String {
+    if let Some(reason) = stall_reason {
+        return format!("{} — {}", labels.fill_stage_stalled.as_str(), puzzle3d_fill_stall_reason_label(labels, reason));
+    }
+    match stage {
+        "select-target" => labels.fill_stage_selecting_target,
+        "prepare-candidates" | "select-candidate" => labels.fill_stage_selecting_candidate,
+        "construct-preview" | "query-broad-phase" | "test-collision" => labels.fill_stage_testing_collision,
+        "accept-candidate" => labels.fill_stage_locking,
+        "complete" => labels.fill_stage_done,
+        _ => labels.fill_stage_preparing,
+    }
+    .as_str()
+    .to_string()
+}
+
+/// 🛑️ The user-facing reason a fill run stopped short of the requested count. An unknown reason is
+/// surfaced verbatim rather than swallowed: a visible machine token beats a silently wrong sentence,
+/// and it names exactly the string the planner has to grow a label for.
+pub fn puzzle3d_fill_stall_reason_label(labels: &Puzzle3dLabels, reason: &str) -> String {
+    match reason {
+        "no-open-vortex" => labels.fill_stall_no_open_vortex.as_str().to_string(),
+        "document-capacity" => labels.fill_stall_document_capacity.as_str().to_string(),
+        "no-compatible-kind" => labels.fill_stall_no_compatible_kind.as_str().to_string(),
+        other => other.to_string(),
+    }
+}
+//#endregion 🔖️FillStage
 
 //#region 🧪️Tests
 #[cfg(test)]

@@ -40,8 +40,12 @@
       "id": "s.stdio.txt.standard.utf-8.representation.document",
       "standard": "s.stdio.txt.standard.utf-8",
       "representation": "document",
-      "mimes": ["text/plain"],
-      "extensions": [".txt"],
+      "mimes": [
+        "text/plain"
+      ],
+      "extensions": [
+        ".txt"
+      ],
       "is_binary": false,
       "aliases": [],
       "neutral": true,
@@ -81,7 +85,23 @@
       "fixtures": []
     }
   ],
-  "runtime_capabilities": [],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.txt.standard.utf-8.representation.mime-text-plain-extension-txt",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:text/plain|extension:.txt",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "text/plain"
+        },
+        {
+          "namespace": "extension",
+          "value": ".txt"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

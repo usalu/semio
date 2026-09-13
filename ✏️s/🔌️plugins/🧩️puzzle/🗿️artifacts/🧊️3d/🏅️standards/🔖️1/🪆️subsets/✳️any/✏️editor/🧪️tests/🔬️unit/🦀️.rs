@@ -967,6 +967,30 @@ pub(crate) mod context {
         })
     }
     
+    pub fn find_measure_number(measures: &[WindowMeasure], number_id: &str) -> Option<f64> {
+        measures.iter().find_map(|measure| match measure {
+            WindowMeasure::Number { id, value, .. } if id == number_id => Some(*value),
+            WindowMeasure::Group { children, .. } => find_measure_number(children, number_id),
+            _ => None,
+        })
+    }
+    
+    pub fn find_measure_number_max(measures: &[WindowMeasure], number_id: &str) -> Option<Option<f64>> {
+        measures.iter().find_map(|measure| match measure {
+            WindowMeasure::Number { id, max, .. } if id == number_id => Some(*max),
+            WindowMeasure::Group { children, .. } => find_measure_number_max(children, number_id),
+            _ => None,
+        })
+    }
+    
+    pub fn find_measure_number_ready(measures: &[WindowMeasure], number_id: &str) -> Option<f64> {
+        measures.iter().find_map(|measure| match measure {
+            WindowMeasure::Number { id, ready, .. } if id == number_id => *ready,
+            WindowMeasure::Group { children, .. } => find_measure_number_ready(children, number_id),
+            _ => None,
+        })
+    }
+    
     pub fn find_measure_select(measures: &[WindowMeasure], select_id: &str) -> Option<String> {
         measures.iter().find_map(|measure| match measure {
             WindowMeasure::Select { id, value, .. } if id == select_id => Some(value.clone()),
@@ -991,10 +1015,12 @@ pub(crate) mod context {
         })
     }
     
-    /// 🪣️ How far background fill planning has preloaded, read off the fill tool's own count slider.
+    /// 🪣️ How many fill placements the DOCUMENT already holds, read off the fill tool's own count
+    /// entry. Locking is committing, so the entry's `ready` extent is the locked count — there is no
+    /// planned-but-invisible prefix to read any more.
     pub async fn fill_ready(app: &mut Puzzle3dApp) -> f64 {
         let view = app.window_view(main::WINDOW_KIND_ID);
-        app.tool_measures(&view).await.get(fill_tool::TOOL_ID).and_then(|tool_measures| find_measure_slider_ready(tool_measures, "puzzle3d-fill-count")).unwrap_or(0.0)
+        app.tool_measures(&view).await.get(fill_tool::TOOL_ID).and_then(|tool_measures| find_measure_number_ready(tool_measures, "puzzle3d-fill-count")).unwrap_or(0.0)
     }
     
     /// 🛑 The `(job, operation, generation)` triple the Fill panel's own `Cancel fill` affordance carries,
@@ -1047,7 +1073,7 @@ pub(crate) mod context {
         *live = still;
     }
     
-    /// 📑️ Drives `fillBuildTick` plus the isolated bounded fill job until planning has reached `target` placements (or the budget runs out).
+    /// 📑️ Drives `fillBuildTick` plus the isolated bounded fill job until the document holds `target` locked placements (or the budget runs out).
     pub async fn drive_fill_until_ready(app: &mut Puzzle3dApp, target: f64) -> f64 {
         let mut live = Vec::new();
         for _ in 0..256 {
@@ -1974,7 +2000,7 @@ async fn set_fill_count_dispatches_through_the_tool_job_path_and_updates_the_req
     async fn fill_count_slider(app: &mut Puzzle3dApp) -> Option<f64> {
         let view = app.window_view(main::WINDOW_KIND_ID);
         let measures = app.tool_measures(&view).await;
-        find_measure_slider(measures.get(fill_tool::TOOL_ID).expect("fill tool measures"), "puzzle3d-fill-count")
+        find_measure_number(measures.get(fill_tool::TOOL_ID).expect("fill tool measures"), "puzzle3d-fill-count")
     }
     assert_eq!(fill_count_slider(&mut app).await, Some(0.0), "fill count starts at zero before any request");
     dispatch(&mut app, "setFillCount", Some(&json!({ "value": 3 })), None).await.expect("dispatch setFillCount through the migrated tool-job path");
@@ -4109,9 +4135,9 @@ const FILL_TICK_JOB_BUDGET: semio_framework_plugin::reactor::jobs::JobBudget = s
 //#region 🪣️FillJobLifetime
 /// 🧵️ Slices the long-plan owner spends before it terminalizes on its OWN report. Deliberately above
 /// the 65 536-step lifetime cap the React host used to impose on every bounded job
-/// (`🔌️PluginRuntime/🟦️.tsx`'s deleted `PLUGIN_JOB_STEP_LIMIT`): a real fill plan places up to
-/// [`PUZZLE3D_FILL_COUNT_MAX`] pieces over the census of a whole document, and the host that cancels
-/// it at a constant is the host that trapped the guest mid-run.
+/// (`🔌️PluginRuntime/🟦️.tsx`'s deleted `PLUGIN_JOB_STEP_LIMIT`): a real fill plan places however many
+/// pieces the user asked for over the census of a whole document, and the host that cancels it at a
+/// constant is the host that trapped the guest mid-run.
 const LONG_PLAN_SLICES: u32 = 70_000;
 
 /// 🧪️ A bounded owner whose only property is length — the shortest statement of "larger than one host
@@ -4459,139 +4485,110 @@ async fn no_document_scale_turn_retires_a_live_fill_plan_inside_itself() {
 }
 //#endregion 🪣️FillJobLifetime
 
+/// 🪣️ Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS §1 decision 2 — locking IS committing. Every
+/// candidate the planner accepts becomes a real `create_object`/`connect_vortices` on the NEXT
+/// `fillBuildTick`, at most [`FILL_LOCK_PLACEMENTS_PER_TICK`] per tick, and the viewport shows exactly
+/// the document: there is no planned-but-ungrafted tail and no render-time ghost any more.
 #[semio_framework_async_macros::async_test]
-async fn fill_build_tick_only_plans_available_slider_range() {
+async fn fill_build_tick_locks_planned_placements_into_the_document_in_bounded_chunks() {
+    use crate::editor::puzzle3d::precompute::FILL_LOCK_PLACEMENTS_PER_TICK;
     let _guard = crate::editor::puzzle3d::precompute::fill_envelope_test_guard();
     crate::editor::puzzle3d::precompute::initialize();
-    // 🐢️ `drive_precompute` is bounded to a small per-call budget (the fix for the UI-freeze bug:
-    // a single action must never grind the whole precompute queue synchronously), so the build
-    // converges over several ticks — exactly like the real 120ms `fillBuildTick` loop.
     let mut app = app().await;
     let object_count_before = object_count(&app);
     dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("select fill tool");
-    drive_fill_until_ready(&mut app, 4.0).await;
-    let view = app.window_view(main::WINDOW_KIND_ID);
-    let measures = app.tool_measures(&view).await;
-    let tool_measures = measures.get(fill_tool::TOOL_ID).expect("fill tool measures");
-    match find_measure_slider(tool_measures, "puzzle3d-fill-count") {
-        Some(value) => assert_eq!(value, 0.0, "background planning must not change the selected fill count"),
-        None => panic!("expected a fill-count slider in the fill tool measures"),
+    set_fill_count_and_finish(&mut app, 12, None).await;
+    let mut live = Vec::new();
+    let mut previous = object_count(&app);
+    let mut biggest_step = 0_usize;
+    for _ in 0..256 {
+        let result = dispatch(&mut app, "fillBuildTick", None, None).await.expect("fillBuildTick");
+        step_spawned_fill_jobs(&result.requested_effects, &mut live).await;
+        let now = object_count(&app);
+        assert!(now >= previous, "a raising fill run may only grow the document: {previous} -> {now}");
+        biggest_step = biggest_step.max(now - previous);
+        previous = now;
+        if now >= object_count_before + 12 {
+            break;
+        }
     }
-    assert_eq!(object_count(&app), object_count_before, "background planning must not append generated objects below the slider count");
-    assert_eq!(find_measure_slider_max(tool_measures, "puzzle3d-fill-count"), Some(PUZZLE3D_FILL_COUNT_MAX as f64), "fill slider range stays fixed at the fill count max");
-    let available_count = find_measure_slider_ready(tool_measures, "puzzle3d-fill-count").expect("expected a fill-count slider ready extent") as usize;
-    assert!(available_count > 0, "the fill slider ready extent must expose collision-free compatible placements");
-    let begin = dispatch(&mut app, "setFillCount", Some(&json!({ "value": available_count })), None).await.expect("setFillCount");
-    assert_eq!(object_count(&app), object_count_before + available_count, "the retained setFillCount command materializes the clamped ready prefix during settle");
-    let immediate = render_composite(&mut app).await;
-    assert_eq!(instance_count(&immediate), object_count_before + available_count, "the complete planned prefix is previewed immediately before document continuations finish");
-    assert_eq!(interaction_of(&immediate).pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64), Some(available_count as u64), "the reveal cutoff updates in the initiating interaction step");
-    let (_, max_step) = finish_fill_count(&mut app, begin).await;
-    assert!(max_step < std::time::Duration::from_millis(8), "every fill-count continuation must remain below the hard 8 ms interaction ceiling");
-    assert_eq!(object_count(&app), object_count_before + available_count, "the fill slider must materialize exactly its available placement count");
-    assert_eq!(instance_count(&render_composite(&mut app).await), object_count_before + available_count, "the viewport must show every materialized fill object immediately");
-    let initial_fill_ids: HashSet<String> = projection_of(&app).get("objects").and_then(Value::as_array).into_iter().flatten().skip(object_count_before).filter_map(|object| object.get("id").and_then(Value::as_str).map(str::to_string)).collect();
-    // 🪪️ Incidental actions re-sync the applied document into the precompute session. That used to
-    // rebuild `fill.base` around the materialized objects, after which the slider could neither
-    // remove them nor replan — reproduce with a hover sync before clearing.
-    let hovered_id = first_object_id(&app);
-    hover_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, Some(&hovered_id)).await.expect("interactionHover after fill");
-    let reduced = available_count / 2;
-    set_fill_count_and_finish(&mut app, reduced as u32, None).await;
-    assert_eq!(object_count(&app), object_count_before + reduced, "sliding down after an incidental sync must still remove fill objects from the document");
-    let reduced_render = render_composite(&mut app).await;
-    // 🪣️ The viewport keeps showing the FULL available plan (tagged revealIndex) even after
-    // reducing — hiding is a client-side reveal-cutoff concern now, not a server-side instance
-    // count concern; only the document (checked above) and the committed cutoff actually shrink.
-    assert_eq!(instance_count(&reduced_render), object_count_before + available_count, "the viewport still exposes the full plan for instant re-reveal — nothing was discarded");
-    assert_eq!(interaction_of(&reduced_render).pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64), Some(reduced as u64), "the committed reveal cutoff tracks the reduced count");
-    // 🔽️🔼️ Prefix-stable plan: moving back up to a count that was already planned before must be
-    // INSTANT — no replanning, no `fillBuildTick` catch-up dispatch.
-    set_fill_count_and_finish(&mut app, available_count as u32, None).await;
-    assert_eq!(object_count(&app), object_count_before + available_count, "moving back up within the preserved plan is instant, not gated on another fillBuildTick");
-    let view = app.window_view(main::WINDOW_KIND_ID);
-    let target_measures = app.tool_measures(&view).await;
-    let target_tool_measures = target_measures.get(fill_tool::TOOL_ID).expect("fill tool measures");
-    assert_eq!(find_measure_slider(target_tool_measures, "puzzle3d-fill-count"), Some(available_count as f64));
-    let restored_fill_ids: HashSet<String> = projection_of(&app).get("objects").and_then(Value::as_array).into_iter().flatten().skip(object_count_before).filter_map(|object| object.get("id").and_then(Value::as_str).map(str::to_string)).collect();
-    assert_eq!(restored_fill_ids, initial_fill_ids, "up-down-up restores the exact same planned objects — the plan is prefix-stable, never discarded and re-rolled");
-    set_fill_count_and_finish(&mut app, 0, None).await;
-    assert_eq!(object_count(&app), object_count_before, "moving the fill slider to zero must remove every generated object");
+    let locked = object_count(&app) - object_count_before;
+    assert!(locked > 0, "the fill tick never committed a single locked placement into the document");
+    assert!(locked <= 12, "the tick may never commit more than the requested count: {locked}");
+    assert!(biggest_step <= FILL_LOCK_PLACEMENTS_PER_TICK, "one tick committed {biggest_step} placements, above the {FILL_LOCK_PLACEMENTS_PER_TICK} per-tick lock chunk");
+    assert_eq!(fill_ready(&mut app).await as usize, locked, "the count entry's ready extent is the LOCKED count — what the document actually holds");
+    let rendered = render_composite(&mut app).await;
+    assert_eq!(instance_count(&rendered), object_count(&app), "what the viewport shows is exactly the document — no render-time ghost tail");
 }
 
+/// 🧺️ One fill run is ONE undo entry: `setFillCount` and every `fillBuildTick` chunk carry the same
+/// `fill-count` coalesce key, so the whole run amends a single edit.
 #[semio_framework_async_macros::async_test]
-async fn set_fill_count_clamps_to_available_and_no_longer_dispatches_catch_up() {
+async fn a_whole_fill_run_coalesces_into_one_undo_entry() {
     let _guard = crate::editor::puzzle3d::precompute::fill_envelope_test_guard();
     crate::editor::puzzle3d::precompute::initialize();
-    // 🔒️ Requesting more than is currently planned must clamp (never leave `runtime.fill_count`
-    // and the applied document disagreeing), and `fillBuildTick` must never self-dispatch another
-    // `setFillCount` — the viewport already shows every planned piece (tagged `revealIndex`), so
-    // there is nothing left for a catch-up round trip to accomplish.
     let mut app = app().await;
     let object_count_before = object_count(&app);
     dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("select fill tool");
-    let available_count = drive_fill_until_ready(&mut app, PUZZLE3D_FILL_COUNT_MAX as f64).await as u32;
-    assert!(available_count > 0, "the maximum-delta timing proof requires a planned prefix");
-    // Request far beyond what a single tick could have planned.
-    let (steps, max_step) = set_fill_count_and_finish(&mut app, PUZZLE3D_FILL_COUNT_MAX, None).await;
-    assert!(steps <= available_count.div_ceil(set_fill_count::MAX_PLACEMENTS_PER_STEP as u32) as usize, "a maximum slider request must use only fixed-size continuation chunks");
-    assert!(max_step < std::time::Duration::from_millis(8), "maximum-delta fill materialization measured {max_step:?}; every continuation must remain below 8 ms");
+    set_fill_count_and_finish(&mut app, 6, None).await;
+    drive_fill_until_ready(&mut app, 2.0).await;
+    assert!(object_count(&app) > object_count_before, "the run must have committed something to have anything to undo");
+    dispatch(&mut app, "undo", None, None).await.expect("undo");
+    assert_eq!(object_count(&app), object_count_before, "one undo restores the whole coalesced fill run");
+}
+
+/// 🔽️ Lowering the count deletes the document tail immediately — the command itself emits the
+/// `delete_object` mutations through `take_fill_locked_chunk`, so the document visibly shrinks instead
+/// of waiting for a background tick — and publishes the new requested count on the config lane.
+#[semio_framework_async_macros::async_test]
+async fn lowering_the_fill_count_deletes_the_committed_tail_and_publishes_the_count() {
+    let _guard = crate::editor::puzzle3d::precompute::fill_envelope_test_guard();
+    crate::editor::puzzle3d::precompute::initialize();
+    let mut app = app().await;
+    let object_count_before = object_count(&app);
+    dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("select fill tool");
+    set_fill_count_and_finish(&mut app, 8, None).await;
+    let locked = drive_fill_until_ready(&mut app, 4.0).await as usize;
+    assert!(locked >= 2, "need a committed tail to delete, got {locked}");
+    let target = locked / 2;
+    set_fill_count_and_finish(&mut app, target as u32, None).await;
+    for _ in 0..64 {
+        if object_count(&app) <= object_count_before + target {
+            break;
+        }
+        set_fill_count_and_finish(&mut app, target as u32, None).await;
+    }
+    assert_eq!(object_count(&app), object_count_before + target, "lowering must delete the committed tail from the document");
     let view = app.window_view(main::WINDOW_KIND_ID);
     let measures = app.tool_measures(&view).await;
     let tool_measures = measures.get(fill_tool::TOOL_ID).expect("fill tool measures");
-    let clamped = find_measure_slider(tool_measures, "puzzle3d-fill-count").expect("fill-count slider value");
-    assert!(clamped <= available_count as f64, "runtime.fill_count must clamp to what's actually planned, not the raw request");
-    assert_eq!(clamped as usize, object_count(&app) - object_count_before, "the clamped measure value must match what the document actually materialized");
-    let tick = dispatch(&mut app, "fillBuildTick", None, None).await.expect("fillBuildTick after an above-ready request");
-    assert!(
-        !tick.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "setFillCount")),
-        "fillBuildTick must never self-dispatch setFillCount — the clamp at commit time means fill_count can never run ahead of what's planned"
-    );
+    assert_eq!(find_measure_number(tool_measures, "puzzle3d-fill-count"), Some(target as f64), "the config lane carries the lowered request verbatim");
+    let rendered = render_composite(&mut app).await;
+    assert_eq!(instance_count(&rendered), object_count(&app), "a lowered run leaves no ghost behind in the viewport either");
 }
 
+/// ♾️ Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS §1 decisions 1 and 4 — the count is any `u32`.
+/// Nothing clamps a request against a planner ceiling; a document that cannot hold the ask reports a
+/// stall reason instead.
 #[semio_framework_async_macros::async_test]
-async fn fill_render_reveals_the_full_available_plan_tagged_with_reveal_index() {
+async fn the_fill_count_has_no_ceiling_and_the_entry_declares_none() {
     let _guard = crate::editor::puzzle3d::precompute::fill_envelope_test_guard();
     crate::editor::puzzle3d::precompute::initialize();
-    // 🪣️ `render()` composes EVERY currently-planned piece (not just the committed `fill_count`),
-    // each tagged `revealIndex` — the viewport applies its own live, main-thread cutoff to show or
-    // hide them per drag value with zero WASM round trips. The committed cutoff is separately
-    // exposed as `interactionJson.revealCutoffs["puzzle3d-fill"]`.
     let mut app = app().await;
-    let object_count_before = object_count(&app);
     dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("select fill tool");
-    let ready = drive_fill_until_ready(&mut app, 3.0).await as usize;
-    assert!(ready >= 3, "fill planning must expose at least three ready placements");
-    assert_eq!(object_count(&app), object_count_before, "background planning must not mutate the document before setFillCount");
-
-    let rendered = render_composite(&mut app).await;
-    assert_eq!(instance_count(&rendered), object_count_before + ready, "render must already expose every planned piece, tagged for client-side reveal");
-    let instances = instances_of(&rendered);
-    let reveal_indices: Vec<u64> = instances.iter().skip(object_count_before).filter_map(|instance| instance.get("revealIndex").and_then(Value::as_u64)).collect();
-    assert_eq!(reveal_indices.len(), ready, "every planned (not-yet-committed) instance must carry revealIndex");
-    let mut sorted_indices = reveal_indices.clone();
-    sorted_indices.sort_unstable();
-    assert_eq!(sorted_indices, (0..ready as u64).collect::<Vec<_>>(), "revealIndex is a dense 0-based sequence matching plan order");
-    // 🪣️ Untagged objects omit the `revealIndex` key entirely — a `null` would compare as `0`
-    // against the host's boot cutoff and hide every ordinary object.
-    let base_reveal_keys = instances.iter().take(object_count_before).filter(|instance| instance.get("revealIndex").is_some()).count();
-    assert_eq!(base_reveal_keys, 0, "base (non-plan) objects never carry a revealIndex key, not even a null one");
-    let interaction = interaction_of(&rendered);
-    assert_eq!(interaction.pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64), Some(0), "nothing committed yet — the reveal cutoff mirrors runtime.fill_count (0)");
-    assert_eq!(interaction.pointer("/fillBuild/appliedCount").and_then(Value::as_u64), Some(0));
-
-    set_fill_count_and_finish(&mut app, ready as u32, None).await;
-    let after_commit = render_composite(&mut app).await;
-    assert_eq!(instance_count(&after_commit), object_count_before + ready, "instance count is unchanged by commit — only the cutoff (and document) advanced");
-    let committed_interaction = interaction_of(&after_commit);
-    assert_eq!(committed_interaction.pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64), Some(ready as u64));
-    assert_eq!(committed_interaction.pointer("/fillBuild/appliedCount").and_then(Value::as_u64), Some(ready as u64));
+    set_fill_count_and_finish(&mut app, 5_000, None).await;
+    let view = app.window_view(main::WINDOW_KIND_ID);
+    let measures = app.tool_measures(&view).await;
+    let tool_measures = measures.get(fill_tool::TOOL_ID).expect("fill tool measures");
+    assert_eq!(find_measure_number(tool_measures, "puzzle3d-fill-count"), Some(5_000.0), "a request far above anything planned is kept verbatim — no clamp");
+    assert_eq!(find_measure_number_max(tool_measures, "puzzle3d-fill-count"), Some(None), "the count entry declares no maximum");
+    assert_eq!(crate::editor::puzzle3d::commands::set_fill_count::parse_count(Some(&json!({ "value": 4_000_000_000u32 }))), 4_000_000_000, "parse_count carries the whole u32 range");
 }
 
-/// 🪣️ Fill count drives the shared document + reveal cutoff — split top/perspective panes must
-/// never disagree about which planned objects are visible after a slider commit on either pane.
+/// 🪣️ Fill is document-global: split top/perspective panes must show the exact same committed objects
+/// after a commit on either pane.
 #[semio_framework_async_macros::async_test]
-async fn fill_count_is_shared_across_split_panes_reveal_cutoffs_and_instances() {
+async fn fill_count_is_shared_across_split_panes() {
     let _guard = crate::editor::puzzle3d::precompute::fill_envelope_test_guard();
     crate::editor::puzzle3d::precompute::initialize();
     let mut app = app().await;
@@ -4599,61 +4596,86 @@ async fn fill_count_is_shared_across_split_panes_reveal_cutoffs_and_instances() 
     let perspective = main::WINDOW_INSTANCE_PERSPECTIVE;
     dispatch(&mut app, "worldPointerDown", None, Some(perspective)).await.expect("register perspective");
     dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), Some(top)).await.expect("select fill tool");
-    let ready = drive_fill_until_ready(&mut app, 3.0).await as u32;
-    assert!(ready >= 3, "need a planned fill prefix to assert cross-pane sync");
-
-    // Commit from the top pane only — the perspective pane must still track the same cutoff.
-    let committed = ready.min(3);
-    set_fill_count_and_finish(&mut app, committed as u32, Some(top)).await;
+    set_fill_count_and_finish(&mut app, 6, Some(top)).await;
+    let locked = drive_fill_until_ready(&mut app, 3.0).await as u32;
+    assert!(locked >= 1, "need a committed fill prefix to assert cross-pane sync");
 
     let top_render = render_window(&mut app, top).await;
     let perspective_render = render_window(&mut app, perspective).await;
-    assert_eq!(interaction_of(&top_render).pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64), Some(committed as u64), "top pane reveal cutoff must track the committed fill count");
-    assert_eq!(interaction_of(&perspective_render).pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64), Some(committed as u64), "perspective pane must share the same reveal cutoff — fill is document-global, not per-window");
-    assert_eq!(instance_count(&top_render), instance_count(&perspective_render), "both panes must emit the same instance list for the shared fill plan");
-
+    assert_eq!(instance_count(&top_render), instance_count(&perspective_render), "both panes must emit the same instance list for the shared document");
     let instance_ids = |node: &Value| -> Vec<String> { instances_of(node).iter().filter_map(|instance| instance.get("id").and_then(Value::as_str).map(str::to_string)).collect() };
-    assert_eq!(instance_ids(&top_render), instance_ids(&perspective_render), "top and perspective must show the exact same object ids after a fill slider commit");
+    assert_eq!(instance_ids(&top_render), instance_ids(&perspective_render), "top and perspective must show the exact same object ids after a fill commit");
 
-    // Sliding from the other pane must keep both panes in lockstep.
-    let reduced = committed.saturating_sub(1);
-    set_fill_count_and_finish(&mut app, reduced as u32, Some(perspective)).await;
+    let reduced = locked.saturating_sub(1);
+    set_fill_count_and_finish(&mut app, reduced, Some(perspective)).await;
     let top_after = render_window(&mut app, top).await;
     let perspective_after = render_window(&mut app, perspective).await;
-    assert_eq!(interaction_of(&top_after).pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64), Some(reduced as u64));
-    assert_eq!(interaction_of(&perspective_after).pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64), Some(reduced as u64));
     assert_eq!(instance_count(&top_after), instance_count(&perspective_after));
+    assert_eq!(instance_ids(&top_after), instance_ids(&perspective_after));
 }
 
+/// 🔢️ The count control is an unbounded `Number` entry whose `ready` extent is the locked count and
+/// whose loading ring tracks a live run — the slider's fixed `max` and its client-side `reveal` key are
+/// both gone.
 #[semio_framework_async_macros::async_test]
-async fn seeded_objects_omit_reveal_index_so_the_boot_cutoff_cannot_hide_them() {
-    let mut app = app().await;
-    let rendered = render_composite(&mut app).await;
-    let instances = instances_of(&rendered);
-    assert!(!instances.is_empty(), "the default fixture seeds at least one object");
-    for instance in &instances {
-        assert!(instance.get("revealIndex").is_none(), "seeded object {} must omit revealIndex — a null coerces to 0 and the boot cutoff would hide its mesh", instance.get("id").and_then(Value::as_str).unwrap_or("?"));
-    }
-    assert_eq!(interaction_of(&rendered).pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64), Some(0), "the boot cutoff really is 0 — this is the value that hid every mesh while revealIndex serialized as null");
-}
-
-#[semio_framework_async_macros::async_test]
-async fn fill_count_measure_shows_planning_progress_while_precompute_incomplete() {
+async fn fill_count_measure_is_an_unbounded_number_entry_reporting_the_locked_count() {
     let mut session = Puzzle3dPrecomputeSession::new();
     let scene = Puzzle3dScene { fixture: nakagin_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: fill_tool::TOOL_ID.into() };
     sync_precompute_session(&mut session, &scene);
     session.precompute_step(1);
     match fill_tool::count_measure(&scene, &session, &Puzzle3dLabels::NATIVE_EN) {
-        WindowMeasure::Slider { label: Some(label), max, ready, loading, .. } => {
+        WindowMeasure::Number { label: Some(label), value, min, max, ready, .. } => {
             assert_eq!(label, Puzzle3dLabels::NATIVE_EN.count.as_str(), "fill count label stays fixed as Count while planning");
-            assert_eq!(max, PUZZLE3D_FILL_COUNT_MAX as f64, "fill slider max stays fixed while planning");
-            let ready = ready.expect("planning must expose a ready extent");
-            assert!(ready >= 0.0 && ready <= max, "ready extent must lie on the fixed range");
-            assert_eq!(loading, Some(true), "planning must mark the measure tree leaf as loading");
+            assert_eq!(value, scene.runtime.fill_count as f64, "the entry shows the REQUESTED count, verbatim");
+            assert_eq!(min, Some(0.0));
+            assert_eq!(max, None, "the count has no ceiling — a document that cannot hold the ask stalls visibly instead");
+            let ready = ready.expect("the entry must expose the locked extent");
+            assert!(ready >= 0.0 && ready <= value, "the locked extent can never exceed what was requested");
         }
-        other => panic!("expected a slider measure, got {other:?}"),
+        other => panic!("expected a Number measure, got {other:?}"),
     }
 }
+
+/// 🎚️ `runtime.fill_count` is the single source of truth for what the planner is held to, and
+/// `sync_precompute_session` is the ONE place it reaches the live session (wave B1 report §2/§6):
+/// `SceneConfig` carries no count, so a session nobody tells plans toward the seed default forever and
+/// never learns a persisted per-document ask. Idempotent, because every render, every measure pass and
+/// every `drive_precompute` re-asserts it.
+#[semio_framework_async_macros::async_test]
+async fn scene_sync_holds_the_live_planner_to_the_config_fill_count() {
+    let mut session = Puzzle3dPrecomputeSession::new();
+    let mut scene = Puzzle3dScene { fixture: nakagin_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: fill_tool::TOOL_ID.into() };
+    assert_eq!(scene.runtime.fill_count, 100, "a fresh runtime asks for the schema default");
+    sync_precompute_session(&mut session, &scene);
+    assert_eq!(session.fill_requested_count(), 100, "the sync pushes the config count into the live session");
+    scene.runtime.fill_count = 250;
+    sync_precompute_session(&mut session, &scene);
+    assert_eq!(session.fill_requested_count(), 250, "a raised persisted count reaches the planner on the next sync");
+    sync_precompute_session(&mut session, &scene);
+    assert_eq!(session.fill_requested_count(), 250, "re-asserting the same count is a no-op, not a retarget");
+    scene.runtime.fill_count = 40;
+    sync_precompute_session(&mut session, &scene);
+    assert_eq!(session.fill_requested_count(), 40, "a lowered persisted count reaches the planner too");
+}
+
+/// 🔁️ A committed `setFillCount` survives the renders that follow it: the config mutation IS the count,
+/// and every later sync re-asserts the same number rather than downgrading it to a stale one.
+#[semio_framework_async_macros::async_test]
+async fn a_committed_fill_count_survives_the_renders_that_follow_it() {
+    let _guard = crate::editor::puzzle3d::precompute::fill_envelope_test_guard();
+    crate::editor::puzzle3d::precompute::initialize();
+    let mut app = app().await;
+    dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("select fill tool");
+    set_fill_count_and_finish(&mut app, 250, None).await;
+    for _ in 0..3 {
+        render_composite(&mut app).await;
+    }
+    let view = app.window_view(main::WINDOW_KIND_ID);
+    let measures = app.tool_measures(&view).await;
+    let tool_measures = measures.get(fill_tool::TOOL_ID).expect("fill tool measures");
+    assert_eq!(find_measure_number(tool_measures, "puzzle3d-fill-count"), Some(250.0), "three renders later the requested count is still what the user asked for");
+}
+
 //#endregion 🔖️Fill
 
 //#region 🔖️Distribution
@@ -4823,7 +4845,7 @@ async fn fill_and_brush_params_are_tagged_utility_options_not_engagement_control
     );
     assert!(find_measure_toggle(&fill_measures, "puzzle3d-edit-volumes").is_none(), "fill must not carry edit-volumes toggle");
     assert!(find_measure_slider(&fill_measures, "puzzle3d-voxel-w").is_none(), "fill must not carry voxel-dimension sliders");
-    assert!(find_measure_slider(&fill_measures, "puzzle3d-fill-count").is_some(), "fill-count slider always lives in the fill tool measures");
+    assert!(find_measure_number(&fill_measures, "puzzle3d-fill-count").is_some(), "the fill-count entry always lives in the fill tool measures");
     assert!(
         !main::window_measures(&fill_scene, &session, labels, &Puzzle3dInteractionSnapshot::default()).iter().any(|measure| matches!(measure, WindowMeasure::Group { id, .. } if id.contains("fill"))),
         "fill must no longer surface in window_measures — it is a mode-level tool, not a window utility"
@@ -7529,7 +7551,6 @@ fn leftover_copy_paste_clones_selected_object() {
         vortices: Vec::new(),
         hidden: false,
         locked: false,
-        reveal_index: None,
     });
     let marks = Puzzle3dInteractionSnapshot {
         granularity: PUZZLE3D_GRANULARITY_VORTEX.into(),
@@ -7579,7 +7600,6 @@ fn leftover_copy_paste_clones_object_from_selected_vortex_uuid() {
         }],
         hidden: false,
         locked: false,
-        reveal_index: None,
     });
     let marks = Puzzle3dInteractionSnapshot {
         granularity: PUZZLE3D_GRANULARITY_VORTEX.into(),

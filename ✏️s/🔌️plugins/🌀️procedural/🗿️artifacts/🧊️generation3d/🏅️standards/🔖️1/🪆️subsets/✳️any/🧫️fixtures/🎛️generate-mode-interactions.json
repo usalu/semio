@@ -1,0 +1,74 @@
+{
+  "format": "semio.generation3d.generate-mode-interactions",
+  "version": 1,
+  "notes": "The user-reachable interaction surface of generate mode plus the node-graph edit verbs, as one language-agnostic table. Rust law: ✏️editor/🧪️tests/🔬️generate-interactions/🦀️.rs. TypeScript twin: the sibling 🟦️.ts, which re-derives the same invariants from this table alone.",
+  "windows": [
+    {
+      "id": "generation3d-generations",
+      "bodyKey": "procedural.play.generations",
+      "surfaceKind": "canvas2d",
+      "actions": ["addGeneration", "selectGeneration", "renameGeneration", "removeGeneration"],
+      "utilities": [],
+      "rowVerbs": [
+        { "verb": "selectGeneration", "affordance": "rowActivate", "onlyWhenSelected": false },
+        { "verb": "removeGeneration", "affordance": "rowActionButton", "onlyWhenSelected": false },
+        { "verb": "renameGeneration", "affordance": "inlineEditorCommit", "onlyWhenSelected": true },
+        { "verb": "addGeneration", "affordance": "rowActivate", "onlyWhenSelected": false }
+      ]
+    },
+    {
+      "id": "generation3d-generate-form",
+      "bodyKey": "procedural.play.generate-form",
+      "surfaceKind": "canvas2d",
+      "actions": ["updateGenerationValues"],
+      "utilities": [],
+      "rowVerbs": []
+    },
+    {
+      "id": "generation3d-generate-preview",
+      "bodyKey": "procedural.play.generate-preview",
+      "surfaceKind": "world3d",
+      "actions": ["setCamera", "setShowMode", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity", "translateSelection", "rotateSelection", "scaleSelection"],
+      "utilities": ["move", "rotate", "scale"],
+      "rowVerbs": []
+    },
+    {
+      "id": "procedural-preview",
+      "bodyKey": "procedural.play.preview",
+      "surfaceKind": "world3d",
+      "actions": ["setCamera", "setShowMode", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity", "translateSelection", "rotateSelection", "scaleSelection"],
+      "utilities": ["move", "rotate", "scale"],
+      "rowVerbs": []
+    },
+    {
+      "id": "procedural-main",
+      "bodyKey": "procedural.play.main",
+      "surfaceKind": "canvas2d",
+      "actions": ["nodeGraphEdit", "nodeGraphViewport", "setLodMode"],
+      "utilities": [],
+      "rowVerbs": []
+    }
+  ],
+  "previewParity": ["procedural-preview", "generation3d-generate-preview"],
+  "gumballVerbs": ["translateSelection", "rotateSelection", "scaleSelection"],
+  "nodeGraphEditOperations": [
+    { "operation": "setFixture", "dispatchedBy": "flowCanvasCommit", "required": ["fixtureJson"] },
+    { "operation": "deleteSelection", "dispatchedBy": "deleteKey", "required": [] },
+    { "operation": "connect", "dispatchedBy": "portDrag", "required": ["sourceNodeId", "sourcePortId", "targetNodeId", "targetPortId"] },
+    { "operation": "disconnect", "dispatchedBy": "wireCut", "required": ["synapseId"] },
+    { "operation": "move", "dispatchedBy": "nodeDrag", "required": ["nodeId", "x", "y"] }
+  ],
+  "commandTriggers": [
+    { "command": "reorganize", "triggers": ["contextMenu", "keybinding", "commandPalette"], "keys": "mod+alt+l" },
+    { "command": "cancelPreviewEval", "triggers": ["statusChrome", "keybinding", "commandPalette"], "keys": "mod+period" },
+    { "command": "deleteSelection", "triggers": ["contextMenu", "keybinding", "commandPalette"], "keys": "delete,backspace" },
+    { "command": "selectGeneration", "triggers": ["treeRow"], "keys": null },
+    { "command": "renameGeneration", "triggers": ["treeRow", "contextMenu", "commandPalette"], "keys": null },
+    { "command": "removeGeneration", "triggers": ["treeRow", "contextMenu", "commandPalette"], "keys": null },
+    { "command": "updateGenerationValues", "triggers": ["formControl", "contextMenu", "commandPalette"], "keys": null }
+  ],
+  "removedCommands": [
+    { "command": "moveMediaNode", "reason": "no dispatcher in any renderer; the node move verb is nodeGraphEdit's `move` sub-operation" }
+  ],
+  "renameCommitArgument": { "authored": ["id"], "fromTrigger": "value", "guestReads": ["name", "value"] }
+}

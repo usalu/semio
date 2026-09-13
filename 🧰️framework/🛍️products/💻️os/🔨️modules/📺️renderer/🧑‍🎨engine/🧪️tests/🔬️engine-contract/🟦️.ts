@@ -31,6 +31,8 @@ import { FRAMEWORK_HISTORY_BODY_KEY, resolveUiDirtyScope, type UiDirtyScope } fr
 import { hostArmedViewContext, panelViewContext, parseResolvedPluginViewState, windowViewContext } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 import { world3dComputeStatusV1 } from "../../../../../../../🔨️modules/🖱️ui/🎬️scene/🟦️.ts";
 import surfaceControlsFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/🛑️surface-controls/🔣️.json";
+import bootExampleFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/📚️boot-example/🔣️.json";
+import { BOOT_QUERY_CAPACITY, BOOT_QUERY_EXAMPLE_PARAM, resolveBootQueryExampleId } from "../../../../🧑‍💻dev/🔗️boot-query/🟦️.ts";
 import { createContinuationScheduler, createVirtualContinuationHost } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
 import { SHARD_RUNTIME_DIAGNOSTICS_KEY, SHARD_WORKER_DIAGNOSTICS_PARAM, SHARD_WORKER_URL, shardWorkerUrl } from "../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
 /** 🗣️ The resolver every `makeEffectDispatchOne` owner passes — the shell's `resolvedTargetViewState`, reduced to what a test session needs: both host preferences always stamped. */
@@ -1943,11 +1945,6 @@ import {
   createDirectionalAsyncDispatcher,
   createInFlightSkippingInterval,
   createCoalescingActionDispatcher,
-  createRevealCutoffStore,
-  worldRevealCutoffStore,
-  reconcileCommittedRevealCutoffs,
-  isRevealCutoffHidden,
-  PUZZLE3D_FILL_REVEAL_GROUP_ID,
   dispatchOsCommand,
   classifyWindowLayoutChange,
   buildNoteShellCommandAction,
@@ -2281,59 +2278,6 @@ describe("live measure dispatch", () => {
     // Never more than 3 total dispatches (the in-flight one plus at most the capped 2 queued) despite
     // 40 requested reversals.
     expect(values).toHaveLength(3);
-  });
-});
-
-describe("reveal cutoff store", () => {
-  it("notifies only same-group subscribers and reflects the latest set value", () => {
-    const store = createRevealCutoffStore();
-    const seen: Array<number | undefined> = [];
-    const unsubscribe = store.subscribe("puzzle3d-fill", (value) => seen.push(value));
-    expect(store.get("puzzle3d-fill")).toBeUndefined();
-
-    store.set("puzzle3d-fill", 5);
-    expect(store.get("puzzle3d-fill")).toBe(5);
-    expect(seen).toEqual([5]);
-
-    store.set("other-group", 9);
-    expect(seen, "an unrelated group id must not notify").toEqual([5]);
-
-    unsubscribe();
-    store.set("puzzle3d-fill", 12);
-    expect(seen, "an unsubscribed listener must not fire again").toEqual([5]);
-    expect(store.get("puzzle3d-fill")).toBe(12);
-  });
-
-  it("isRevealCutoffHidden hides instances at or past the live cutoff, and never instances without a revealIndex", () => {
-    worldRevealCutoffStore.set(PUZZLE3D_FILL_REVEAL_GROUP_ID, 5);
-    expect(isRevealCutoffHidden({})).toBe(false);
-    expect(isRevealCutoffHidden({ revealIndex: 4 })).toBe(false);
-    expect(isRevealCutoffHidden({ revealIndex: 5 })).toBe(true);
-    expect(isRevealCutoffHidden({ revealIndex: 9 })).toBe(true);
-
-    worldRevealCutoffStore.set(PUZZLE3D_FILL_REVEAL_GROUP_ID, 100);
-    expect(isRevealCutoffHidden({ revealIndex: 9 })).toBe(false);
-  });
-
-  it("isRevealCutoffHidden treats a JSON null revealIndex as untagged, even at the boot cutoff of 0", () => {
-    worldRevealCutoffStore.set(PUZZLE3D_FILL_REVEAL_GROUP_ID, 0);
-    expect(isRevealCutoffHidden({ revealIndex: null as unknown as undefined })).toBe(false);
-    expect(isRevealCutoffHidden({})).toBe(false);
-    expect(isRevealCutoffHidden({ revealIndex: 0 })).toBe(true);
-  });
-
-  it("committed reveal cutoff reconciliation ignores same-value identity churn so a live fill drag is not reset by fillBuildTick", () => {
-    const committedRef: { current: Readonly<Record<string, number>> } = { current: {} };
-
-    reconcileCommittedRevealCutoffs(worldRevealCutoffStore, committedRef, { [PUZZLE3D_FILL_REVEAL_GROUP_ID]: 0 });
-    expect(worldRevealCutoffStore.get(PUZZLE3D_FILL_REVEAL_GROUP_ID)).toBe(0);
-
-    worldRevealCutoffStore.set(PUZZLE3D_FILL_REVEAL_GROUP_ID, 17);
-    reconcileCommittedRevealCutoffs(worldRevealCutoffStore, committedRef, { [PUZZLE3D_FILL_REVEAL_GROUP_ID]: 0 });
-    expect(worldRevealCutoffStore.get(PUZZLE3D_FILL_REVEAL_GROUP_ID), "fillBuildTick must not clobber a live slider drag back to the still-committed 0").toBe(17);
-
-    reconcileCommittedRevealCutoffs(worldRevealCutoffStore, committedRef, { [PUZZLE3D_FILL_REVEAL_GROUP_ID]: 17 });
-    expect(worldRevealCutoffStore.get(PUZZLE3D_FILL_REVEAL_GROUP_ID)).toBe(17);
   });
 });
 
@@ -5633,7 +5577,12 @@ describe("framework renderer hosts", () => {
       statusLabel: "Fill progress",
       targetVortexFullId: "host:v0",
       candidateObjectKindId: "candidate",
+      verdict: "collision",
       candidateGhost: null,
+      tried: [],
+      testedCount: 13,
+      requestedCount: 100,
+      stallReason: null,
       currentPairObjectId: "obstacle-1",
       collisionCount: 1,
       sampleCursor: 4,
@@ -5645,7 +5594,6 @@ describe("framework renderer hosts", () => {
       targetCursor: 6,
       candidateCursor: 7,
       acceptedCount: 8,
-      totalCount: 1000,
       searchCount: 23,
       rejectedCount: 4,
     };
@@ -5676,23 +5624,26 @@ describe("framework renderer hosts", () => {
       "targetCursor",
       "candidateCursor",
       "acceptedCount",
-      "totalCount",
+      "testedCount",
+      "requestedCount",
       "searchCount",
       "rejectedCount",
     ]) {
       expect(parseWorldBrushPreview(page("Fill progress", { [field]: Number.MAX_SAFE_INTEGER }))).not.toBeNull();
       expect(parseWorldBrushPreview(page("Fill progress", { [field]: Number.MAX_SAFE_INTEGER + 1 }))).toBeNull();
     }
+    // 📏️ The ghost envelope carries a ring of tried candidates beside the live one, so the cap is 16 KiB —
+    // still a hard refusal one byte past it, never a budget the producer may plan around.
     const emptyStagePage = page("Fill progress", { stage: "" });
-    const exactWirePage = page("Fill progress", { stage: "x".repeat(4096 - emptyStagePage.length) });
-    const plusOneWirePage = page("Fill progress", { stage: "x".repeat(4096 - emptyStagePage.length + 1) });
-    expect(exactWirePage).toHaveLength(4096);
-    expect(plusOneWirePage).toHaveLength(4097);
+    const exactWirePage = page("Fill progress", { stage: "x".repeat(16384 - emptyStagePage.length) });
+    const plusOneWirePage = page("Fill progress", { stage: "x".repeat(16384 - emptyStagePage.length + 1) });
+    expect(exactWirePage).toHaveLength(16384);
+    expect(plusOneWirePage).toHaveLength(16385);
     expect(parseWorldBrushPreview(exactWirePage)).not.toBeNull();
     expect(parseWorldBrushPreview(plusOneWirePage)).toBeNull();
-    const oversizedOrdinaryBrushPage = JSON.stringify({ meshUrl: "x".repeat(4097) });
-    expect(oversizedOrdinaryBrushPage.length).toBeGreaterThan(4096);
-    expect(parseWorldBrushPreview(oversizedOrdinaryBrushPage)?.meshUrl).toHaveLength(4097);
+    const oversizedOrdinaryBrushPage = JSON.stringify({ meshUrl: "x".repeat(16385) });
+    expect(oversizedOrdinaryBrushPage.length).toBeGreaterThan(16384);
+    expect(parseWorldBrushPreview(oversizedOrdinaryBrushPage)?.meshUrl).toHaveLength(16385);
     expect(parseWorldBrushPreview(JSON.stringify({ fillBuildPreview: { ...diagnostic, statusLabel: 7 } }))).toBeNull();
     expect(parseWorldBrushPreview("{")).toBeNull();
     expect(parseWorldBrushPreview(page("Fill progress", { candidatePage: diagnostic.candidatePage.slice(0, 7) }))).toBeNull();
@@ -5709,10 +5660,11 @@ describe("framework renderer hosts", () => {
       origin: [1, 2, 3],
       orientation: [0, 0, 0, 1],
     };
-    const ghostRoot = { ...ghost, color: "#38bdf8", opacity: 0.35 };
-    const fullNineKeyGhostRoot = page("Fill progress", { candidateGhost: ghost }, ghostRoot);
-    expect(Object.keys(JSON.parse(fullNineKeyGhostRoot))).toHaveLength(9);
-    expect(parseWorldBrushPreview(fullNineKeyGhostRoot)).not.toBeNull();
+    const ghostRoot = { ...ghost, color: "#38bdf8", opacity: 0.35, verdict: "collision" };
+    const fullGhostRoot = page("Fill progress", { candidateGhost: ghost }, ghostRoot);
+    expect(Object.keys(JSON.parse(fullGhostRoot))).toHaveLength(10);
+    expect(parseWorldBrushPreview(fullGhostRoot)?.verdict).toBe("collision");
+    expect(parseWorldBrushPreview(page("Fill progress", {}, { verdict: "nonsense" }))).toBeNull();
     expect(parseWorldBrushPreview(page("Fill progress", {}, { color: "x".repeat(128) }))).not.toBeNull();
     for (const malformedRoot of [
       { targetVortexFullId: 7 },
@@ -5762,6 +5714,128 @@ describe("framework renderer hosts", () => {
     }
   });
 
+  it("parses the tried-candidate ring and the per-candidate verdicts, and refuses an unbounded one", () => {
+    const ghost = (index: number) => ({ targetVortexFullId: `host:v${index}`, objectKindId: "candidate", sourceVortexIndex: index, meshUrl: "/candidate.glb", origin: [index, 2, 3], orientation: [0, 0, 0, 1] });
+    const tried = (count: number) => Array.from({ length: count }, (_unused, index) => ({ sequence: index, verdict: index % 2 === 0 ? "collision" : "accepted", reason: index % 2 === 0 ? "solid-overlap" : null, ghost: ghost(index) }));
+    const diagnostic = (override: Record<string, unknown> = {}) => ({
+      operation: 41,
+      baseRevision: 7,
+      registryGeneration: 11,
+      sequence: 5,
+      generation: 3,
+      stage: "test-collision",
+      statusLabel: "Testing collision",
+      targetVortexFullId: "host:v0",
+      candidateObjectKindId: "candidate",
+      verdict: "testing",
+      candidateGhost: null,
+      tried: tried(12),
+      testedCount: 13,
+      requestedCount: 100,
+      stallReason: null,
+      currentPairObjectId: null,
+      collisionCount: 6,
+      sampleCursor: 0,
+      insideBoth: 0,
+      lastSample: null,
+      candidatePage: [null, null, null, null, null, null, null, null],
+      truncated: false,
+      rejectionReason: null,
+      targetCursor: 0,
+      candidateCursor: 0,
+      acceptedCount: 6,
+      searchCount: 23,
+      rejectedCount: 6,
+      ...override,
+    });
+    const page = (override: Record<string, unknown> = {}) => JSON.stringify({ fillBuildPreview: diagnostic(override) });
+
+    const parsed = parseWorldBrushPreview(page())?.fillBuildPreview;
+    expect(parsed?.tried).toHaveLength(12);
+    expect(parsed?.tried[0]?.verdict).toBe("collision");
+    expect(parsed?.tried[0]?.reason).toBe("solid-overlap");
+    expect(parsed?.tried[1]?.ghost.sourceVortexIndex).toBe(1);
+    expect(parsed?.testedCount).toBe(13);
+    expect(parsed?.requestedCount).toBe(100);
+    expect(parsed?.stallReason).toBeNull();
+
+    // 🕯️ Twelve is the producer's ring; a thirteenth entry is an unbounded payload, not a richer one.
+    expect(parseWorldBrushPreview(page({ tried: tried(13) }))).toBeNull();
+    expect(parseWorldBrushPreview(page({ tried: [] }))?.fillBuildPreview?.tried).toEqual([]);
+    expect(parseWorldBrushPreview(page({ tried: "12" }))).toBeNull();
+    expect(parseWorldBrushPreview(page({ tried: [{ sequence: 0, verdict: "collision", ghost: ghost(0), extra: true }] }))).toBeNull();
+    expect(parseWorldBrushPreview(page({ tried: [{ sequence: 0, verdict: "exploded", ghost: ghost(0) }] }))).toBeNull();
+    expect(parseWorldBrushPreview(page({ tried: [{ sequence: -1, verdict: "collision", ghost: ghost(0) }] }))).toBeNull();
+    expect(parseWorldBrushPreview(page({ tried: [{ sequence: 0, verdict: "collision", ghost: { ...ghost(0), origin: [1, 2] } }] }))).toBeNull();
+    expect(parseWorldBrushPreview(page({ tried: [{ sequence: 0, verdict: "collision", reason: 7, ghost: ghost(0) }] }))).toBeNull();
+    expect(parseWorldBrushPreview(page({ tried: [null] }))).toBeNull();
+    expect(parseWorldBrushPreview(page({ verdict: "elsewhere" }))).toBeNull();
+    expect(parseWorldBrushPreview(page({ stallReason: "document-capacity" }))?.fillBuildPreview?.stallReason).toBe("document-capacity");
+    expect(parseWorldBrushPreview(page({ stallReason: 7 }))).toBeNull();
+    // ⚖️ A verdict rides the tried ghost too, so the viewport can paint each remembered pose on its own.
+    expect(parseWorldBrushPreview(page({ tried: [{ sequence: 0, verdict: "collision", ghost: { ...ghost(0), verdict: "collision" } }] }))?.fillBuildPreview?.tried[0]?.ghost.verdict).toBe("collision");
+  });
+
+  it("reads tested · locked / requested, the verdict and the stall reason off the fill overlay probe attributes", () => {
+    const markup = renderToStaticMarkup(
+      createElement(World3dHost, {
+        node: {
+          type: "componentScene",
+          surfaceId: "puzzle.3d.play.viewport",
+          controllerId: "puzzle3d-play",
+          componentKind: "world-3d",
+          world3d: {
+            cameraJson: '{"position":[4,4,4],"target":[0,0,0],"zoom":1}',
+            meshesJson: "[]",
+            instancesJson: "[]",
+            selectionJson: "{}",
+            brushPreviewJson: JSON.stringify({
+              fillBuildPreview: {
+                operation: 1,
+                baseRevision: 1,
+                registryGeneration: 1,
+                sequence: 2,
+                generation: 1,
+                stage: "select-target",
+                statusLabel: "Angehalten — kein offener Vortex",
+                targetVortexFullId: null,
+                candidateObjectKindId: null,
+                verdict: "rejected",
+                candidateGhost: null,
+                tried: [{ sequence: 1, verdict: "collision", reason: "solid-overlap", ghost: { targetVortexFullId: "host:v1", objectKindId: "candidate", sourceVortexIndex: 1, meshUrl: "/candidate.glb", origin: [1, 2, 3], orientation: [0, 0, 0, 1] } }],
+                testedCount: 37,
+                requestedCount: 250,
+                stallReason: "no-open-vortex",
+                currentPairObjectId: null,
+                collisionCount: 9,
+                sampleCursor: 0,
+                insideBoth: 0,
+                lastSample: null,
+                candidatePage: [null, null, null, null, null, null, null, null],
+                truncated: false,
+                rejectionReason: null,
+                targetCursor: 0,
+                candidateCursor: 0,
+                acceptedCount: 12,
+                searchCount: 0,
+                rejectedCount: 25,
+              },
+            }),
+          },
+        },
+        onAction: noopAction,
+      }),
+    );
+    expect(markup).toContain('data-fill-tested="37"');
+    expect(markup).toContain('data-fill-locked="12"');
+    expect(markup).toContain('data-fill-requested="250"');
+    expect(markup).toContain('data-fill-verdict="rejected"');
+    expect(markup).toContain('data-fill-tried-count="1"');
+    expect(markup).toContain('data-fill-stall-reason="no-open-vortex"');
+    expect(markup).toContain("<span>Angehalten — kein offener Vortex</span>");
+    expect(markup).toContain("37 · 12 / 250");
+  });
+
   it.each(["Fill progress", "Füllfortschritt"])("renders the %s fill label with visible and ARIA parity", (statusLabel) => {
     const brushPreviewJson = JSON.stringify({
       fillBuildPreview: {
@@ -5774,7 +5848,12 @@ describe("framework renderer hosts", () => {
         statusLabel,
         targetVortexFullId: null,
         candidateObjectKindId: null,
+        verdict: "testing",
         candidateGhost: null,
+        tried: [],
+        testedCount: 0,
+        requestedCount: 1,
+        stallReason: null,
         currentPairObjectId: null,
         collisionCount: 0,
         sampleCursor: 0,
@@ -5786,7 +5865,6 @@ describe("framework renderer hosts", () => {
         targetCursor: 0,
         candidateCursor: 0,
         acceptedCount: 0,
-        totalCount: 1,
         searchCount: 0,
         rejectedCount: 0,
       },
@@ -5809,7 +5887,7 @@ describe("framework renderer hosts", () => {
         onAction: noopAction,
       }),
     );
-    expect(markup).toContain(`aria-label="${statusLabel}; census; 0/1;`);
+    expect(markup).toContain(`aria-label="${statusLabel}; census; 0 · 0 / 1; testing;`);
     expect(markup).toContain(`<span>${statusLabel}</span>`);
   });
 
@@ -11414,6 +11492,70 @@ describe("node-graph opening camera (renderer twin)", () => {
 });
 //#endregion 📷️CameraAndLabelFitTwins
 
+//#region 📚️BootExampleTwin
+/** 📚️ The TypeScript half of the boot-example law: the SAME
+ * `🐚️Shell/🧫️fixtures/📚️boot-example/🔣️.json` rows the Rust `🔬️wgpu-shell-chrome-parity` law answers
+ * through `resolve_boot_example_id`, answered here by the shipped `resolveBootExampleId` — two
+ * independent implementations, one fixture, so the two shells cannot drift on which document a url
+ * opens. The `bootQuery` half pins the `?example=` axis itself against the shipped
+ * `resolveBootQueryExampleId`, the parser both entries spell the query with.
+ * Ticket 26/09/09/PROCEDURAL-3D-END-TO-END. */
+describe("📚️ boot example contract", () => {
+  const ajv = new Ajv({ allErrors: true, strict: false });
+  const validate = ajv.compile({
+    type: "object",
+    required: ["note", "bootQueryParam", "rows", "bootQuery"],
+    properties: {
+      note: { type: "string" },
+      bootQueryParam: { type: "string", minLength: 1 },
+      rows: {
+        type: "array",
+        minItems: 8,
+        items: {
+          type: "object",
+          required: ["id", "activeExampleId", "options", "defaultExampleId", "expected"],
+          properties: {
+            id: { type: "string" },
+            activeExampleId: { type: "string" },
+            options: { type: "array", items: { type: "string" } },
+            defaultExampleId: { type: ["string", "null"] },
+            expected: { type: "string" },
+          },
+        },
+      },
+      bootQuery: {
+        type: "array",
+        minItems: 4,
+        items: { type: "object", required: ["id", "search", "expected"], properties: { id: { type: "string" }, search: { type: "string" }, expected: { type: ["string", "null"] } } },
+      },
+    },
+  });
+
+  it("validates the shared fixture against its own declared schema", () => {
+    expect(validate(bootExampleFixture)).toBe(true);
+    expect(bootExampleFixture.bootQueryParam).toBe(BOOT_QUERY_EXAMPLE_PARAM);
+  });
+
+  it("resolves every shared fixture row the way the wgpu shell does", () => {
+    for (const row of bootExampleFixture.rows) {
+      const options = row.options.map((id: string) => ({ id }));
+      expect(resolveBootExampleId(row.activeExampleId, options, row.defaultExampleId ?? undefined), row.id).toBe(row.expected);
+    }
+    console.log("[DEBUG] boot example contract reproduced all %s shared fixture rows", bootExampleFixture.rows.length);
+  });
+
+  it("reads the `?example=` axis the same way on both entries", () => {
+    for (const row of bootExampleFixture.bootQuery) {
+      expect(resolveBootQueryExampleId(row.search, undefined) ?? null, row.id).toBe(row.expected);
+    }
+    expect(resolveBootQueryExampleId("?plugin=generation3d", "seeded"), "an absent query keeps the per-server seed").toBe("seeded");
+    expect(resolveBootQueryExampleId("?plugin=generation3d&example=", "seeded"), "an empty value is the same as no value at all").toBe("seeded");
+    expect(() => resolveBootQueryExampleId("?example=" + "x".repeat(BOOT_QUERY_CAPACITY), undefined)).toThrow(/boot-query-overflow/);
+    console.log("[DEBUG] boot example contract reproduced all %s shared `?example=` rows", bootExampleFixture.bootQuery.length);
+  });
+});
+//#endregion 📚️BootExampleTwin
+
 //#region 🛑️SurfaceControlCancelTwin
 /** 🛑️ The TypeScript half of the surface-control laws: the SAME
  * `🐚️Shell/🧫️fixtures/🛑️surface-controls/🔣️.json` rows the Rust
@@ -11476,3 +11618,75 @@ describe("🛑️ world3d cancel contract", () => {
   });
 });
 //#endregion 🛑️SurfaceControlCancelTwin
+
+//#region ⏳️ComputeStatusPaneTwin
+/** ⏳️ The TypeScript half of the World3d compute-status PROGRESS laws: the same
+ * `🐚️Shell/🧫️fixtures/🛑️surface-controls/🔣️.json` `statusPane` rows the Rust
+ * `🔬️wgpu-shell-chrome-parity` laws answer through `world3d_compute_status`/`world3d_status_pill_for`,
+ * answered here by the shipped `world3dComputeStatusV1` parser React's own `WorldComputeStatusPane`
+ * reads. Two independent implementations, one fixture — which is what makes "wgpu shows the same
+ * progress React shows" a law rather than a claim. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END. */
+describe("⏳️ world3d compute status pane", () => {
+  type StatusPaneRow = {
+    readonly id: string;
+    readonly statusJson: string | null;
+    readonly expected: {
+      readonly visible: boolean;
+      readonly computing: boolean;
+      readonly phase: string;
+      readonly phaseLabel: { readonly en: string; readonly de: string } | null;
+      readonly unitsDone: number;
+      readonly unitsTotal: number;
+      readonly facesDone: number;
+      readonly facesTotal: number;
+      readonly inFlight: number;
+      readonly ratio: number;
+      readonly progressText: string | null;
+    };
+  };
+  const rows = surfaceControlsFixture.statusPane as readonly StatusPaneRow[];
+
+  /** ⏳️ React's own pane gate — a settled producer annotates nothing, so an idle viewport is never
+   * covered by chrome (`🌐️World3dHost/🟦️.tsx`'s `WorldComputeStatusPane` first line). */
+  const isVisible = (status: ReturnType<typeof world3dComputeStatusV1>) => status.computing || status.cancellable || status.phase === "cancelled";
+  /** 📈️ The count React renders beside the phase, and the wgpu pill joins into its one glyph run. */
+  const progressText = (status: ReturnType<typeof world3dComputeStatusV1>) => (status.unitsTotal > 0 ? `${status.unitsDone}/${status.unitsTotal} (${Math.round(status.ratio * 100)}%)` : null);
+
+  it("reads every declared field of the shared status rows", () => {
+    for (const row of rows) {
+      const status = world3dComputeStatusV1(row.statusJson);
+      expect(status.computing, row.id).toBe(row.expected.computing);
+      expect(status.phase, row.id).toBe(row.expected.phase);
+      expect(status.phaseLabel, row.id).toEqual(row.expected.phaseLabel);
+      expect(status.unitsDone, row.id).toBe(row.expected.unitsDone);
+      expect(status.unitsTotal, row.id).toBe(row.expected.unitsTotal);
+      expect(status.facesDone, row.id).toBe(row.expected.facesDone);
+      expect(status.facesTotal, row.id).toBe(row.expected.facesTotal);
+      expect(status.inFlight, row.id).toBe(row.expected.inFlight);
+      expect(status.ratio, row.id).toBeCloseTo(row.expected.ratio, 9);
+    }
+    console.log("[DEBUG] world3d status pane reproduced all %s shared fixture rows", rows.length);
+  });
+
+  it("shows the pane for exactly the unsettled rows, with exactly the declared progress text", () => {
+    let painted = 0;
+    for (const row of rows) {
+      const status = world3dComputeStatusV1(row.statusJson);
+      expect(isVisible(status), row.id).toBe(row.expected.visible);
+      if (!row.expected.visible) continue;
+      expect(progressText(status), row.id).toBe(row.expected.progressText);
+      painted += 1;
+    }
+    expect(painted).toBeGreaterThan(0);
+    console.log("[DEBUG] world3d status pane: %s of %s rows are unsettled and paint a pane", painted, rows.length);
+  });
+
+  it("never defaults to one language: a half-translated phase label is no label at all", () => {
+    const halved = rows.find((row) => row.id === "a-half-translated-phase-label-is-no-label-at-all");
+    expect(halved, "the fixture declares the half-translated row").toBeTruthy();
+    expect(world3dComputeStatusV1(halved!.statusJson).phaseLabel).toBeNull();
+    const paired = world3dComputeStatusV1(rows[0].statusJson).phaseLabel;
+    expect(paired?.en).not.toBe(paired?.de);
+  });
+});
+//#endregion ⏳️ComputeStatusPaneTwin

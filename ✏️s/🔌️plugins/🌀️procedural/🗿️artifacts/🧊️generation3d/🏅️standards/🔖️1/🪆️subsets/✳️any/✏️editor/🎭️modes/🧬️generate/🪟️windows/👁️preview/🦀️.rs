@@ -6,9 +6,9 @@ use crate::editor::generation3d::modes::edit::windows::preview::show_mode_measur
 use crate::editor::generation3d::terminology::Generation3dLabels;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
 use crate::editor::generation3d::{preview_camera_json, preview_payload, preview_selection_json, preview_status_json, preview_window_status_json, PreviewInteractionMarks, PreviewPayload, PreviewStatusDebug, GENERATION_3D_INTERACTION_DOMAIN, GENERATION_3D_INTERACTION_GRANULARITY};
-use crate::standards::v1::subsets::any::schema::generation_fixture_for;
+use crate::standards::v1::subsets::any::schema::{generation_by_id, generation_fixture_for};
 use semio_framework_artifact_flow_flow::FlowFixture;
-use semio_framework_artifact_playbook_playbook::{selected_generation, GenerationPlayState};
+use semio_framework_artifact_playbook_playbook::GenerationPlayState;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{world3d_scene, world3d_sun_measures, BuiltNode, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowMeasure, WindowOptions};
 
@@ -60,13 +60,14 @@ pub fn window_measures(config: &Generation3dConfig, procedural_action: impl Fn(&
 /// `[data-status-json]`-less generate mode (`🗑️generated/journey-3/results.json`, ticket
 /// 26/09/09/PROCEDURAL-3D-END-TO-END). A hint is a state of this window, not a different window.
 fn generate_preview_status_json(session: &FlowEvalSession, eval_json: &str, payload: &PreviewPayload, preview_status: Option<String>, hint: Option<&str>) -> Option<String> {
-    preview_window_status_json(Some(session), preview_status, &PreviewStatusDebug { eval_json, meshes_json: &payload.meshes_json, instances_json: &payload.instances_json }, hint)
+    preview_window_status_json(Some(session), preview_status, &PreviewStatusDebug { meshes_json: &payload.meshes_json, instances_json: &payload.instances_json }, hint)
 }
 
 //#region 🔖️Render
 pub fn render(
     fixture: &FlowFixture,
     generation: &GenerationPlayState,
+    selected_id: Option<&str>,
     generation_preview_text: Option<&str>,
     cfg: &Generation3dConfig,
     labels: &Generation3dLabels,
@@ -75,14 +76,14 @@ pub fn render(
     session: &FlowEvalSession,
 ) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let eval_json = generation_preview_text.unwrap_or_default();
-    let (payload, preview_status) = match selected_generation(generation) {
+    let (payload, preview_status) = match generation_by_id(generation, selected_id) {
         // 🧹️ `generation_fixture_for` CLONES the document fixture, so the patched copy owns its own
         // `layout` ordered-map root and must be retired before it leaves scope — a bare drop aborts the
         // plugin actor with `ordered-map root must be explicitly retired before drop`. Reachable only
         // once a generation is selected, which is why no earlier render test ever hit it
         // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         Some(_) => {
-            let gen_fixture = generation_fixture_for(fixture, generation);
+            let gen_fixture = generation_fixture_for(fixture, generation, selected_id);
             let payload = preview_payload(eval_json, &gen_fixture, cfg, Some(session), marks);
             let preview_status = preview_status_json(eval_json, &gen_fixture);
             gen_fixture.retire_cold();

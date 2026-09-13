@@ -149,6 +149,38 @@ pub fn tree_row_control_rect(row_width: f32, metrics: &TreeRowMetrics) -> Rect {
 }
 //#endregion 🌳️TreeRowGeometry
 
+//#region 🎛️ControlGeometry
+/// ➖️🔢️➕️ A `NumberStepper`'s three segments — decrement, value, increment — as thirds of its own
+/// box. ONE definition: `paint`'s stepper chrome draws these rects and `events`' press routing
+/// hit-tests the same three, so the `−` a user sees and the `−` a press resolves can never drift.
+pub fn number_stepper_segments(bounds: Rect) -> [Rect; 3] {
+    let segment = bounds.w / 3.0;
+    [Rect::new(bounds.x, bounds.y, segment, bounds.h), Rect::new(bounds.x + segment, bounds.y, segment, bounds.h), Rect::new(bounds.x + segment * 2.0, bounds.y, segment, bounds.h)]
+}
+
+/// 🎚️ The value a `Slider` press/drag at `x` reports, on the same full-width track
+/// `paint`'s slider arm draws (`bounds.x + bounds.w * t`), snapped onto `step` and clamped into
+/// `min..=max` — Radix's own `Slider` semantics, which React's `SliderView` delegates to.
+pub fn slider_value_at(bounds: Rect, x: f32, min: f64, max: f64, step: f64) -> f64 {
+    let span = max - min;
+    if !span.is_finite() || span <= 0.0 {
+        return min;
+    }
+    let ratio = if bounds.w > 0.0 { f64::from((x - bounds.x) / bounds.w).clamp(0.0, 1.0) } else { 0.0 };
+    let raw = min + ratio * span;
+    let snapped = if step.is_finite() && step > 0.0 { min + ((raw - min) / step).round() * step } else { raw };
+    snapped.clamp(min, max)
+}
+
+/// 💍️ The normalised `t` a `Ring` press/drag at `(x, y)` reports, on the same circle `paint`'s ring
+/// arm draws its knob at (`angle = TAU * t`, centre of `bounds`, radius `min(w, h) * 0.4`).
+pub fn ring_t_at(bounds: Rect, x: f32, y: f32) -> f64 {
+    let angle = f64::from(y - (bounds.y + bounds.h * 0.5)).atan2(f64::from(x - (bounds.x + bounds.w * 0.5)));
+    let turns = angle / std::f64::consts::TAU;
+    turns - turns.floor()
+}
+//#endregion 🎛️ControlGeometry
+
 #[cfg(test)]
 #[path = "../../../🧪️tests/🔬️targets-wgpu-layout-unit/🦀️.rs"]
 mod tests;

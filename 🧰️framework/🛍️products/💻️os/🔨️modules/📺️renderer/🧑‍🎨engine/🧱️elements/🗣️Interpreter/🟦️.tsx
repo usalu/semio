@@ -250,6 +250,28 @@ export function uiTreeNodeToTreePanelConfig(treeNode: PanelTreeNode, onAction: (
   };
 }
 
+/** @emoji 🖱️ First catalogue-transfer MIME on a declarative {@link Tree} document, if any row carries drag data. */
+function treeSectionsCatalogueDragMime(sections: readonly TreeDataSection[]): string | undefined {
+  const visit = (items: readonly TreeDataItem[]): string | undefined => {
+    for (const item of items) {
+      if (item.dragData) {
+        const mime = Object.keys(item.dragData).find((key) => key === "application/x-semio-catalogue-item");
+        if (mime) return mime;
+      }
+      if (item.items?.length) {
+        const nested = visit(item.items);
+        if (nested) return nested;
+      }
+    }
+    return undefined;
+  };
+  for (const section of sections) {
+    const mime = visit(section.items);
+    if (mime) return mime;
+  }
+  return undefined;
+}
+
 function panelTreeDragMime(treeNode: PanelTreeNode): string | undefined {
   const visit = (items: readonly PanelTreeItem[]): string | undefined => {
     for (const item of items) {
@@ -1340,9 +1362,14 @@ function TreeView({ store, record, context }: { readonly store: UiDocumentStore;
   }, [store, record, revision, context, overlay, leftoverIds]);
   const dragController: TreeDragAndDropController | undefined = useMemo(() => {
     const dropBinding = (record.bindings ?? []).find((b) => b.trigger === "drop");
-    if (!dropBinding) return undefined;
-    return { handleDrop: () => dispatchTrigger(context, record, "drop") };
-  }, [record, context]);
+    const catalogueMime = treeSectionsCatalogueDragMime(sections);
+    const catalogue = catalogueMime ? catalogueTreeDragController(catalogueMime) : undefined;
+    if (!dropBinding && !catalogue) return undefined;
+    return {
+      ...(catalogue ?? {}),
+      ...(dropBinding ? { handleDrop: () => dispatchTrigger(context, record, "drop") } : {}),
+    };
+  }, [record, context, sections]);
   return (
     <Tree
       className="min-h-0 min-w-0 flex-1 overflow-auto"

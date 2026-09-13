@@ -14,6 +14,28 @@ use crate::Puzzle5dError;
 //#region 🔖️BrushEngine
 pub use semio_s_artifact_puzzle_3d::BrushPlacePayload;
 
+/// ⏳️ What the wrapped 3d fill run has done so far, in puzzle-5d's own vocabulary. Declared here
+/// rather than re-exported from the 3d artifact so 5d's public surface names only 5d types: the 3d
+/// summary is an implementation detail of the engine this node delegates to, and a caller that had
+/// to name it would be coupled to a crate it never asked for.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Puzzle5dFillProgress {
+    /// 🎯️ Placements the planner has accepted.
+    pub count: usize,
+    /// 📦️ Placements already in the document.
+    pub applied_count: usize,
+    /// 🙋️ What the operator asked for — never a planner ceiling.
+    pub requested_count: usize,
+    pub done: bool,
+    pub tested: u64,
+    pub rejected: u64,
+    pub collisions: u64,
+    /// 🧭️ Machine token of the phase the run is in; `terminology::puzzle5d_fill_stage_label` localizes it.
+    pub stage: String,
+    /// 🛑️ Machine token of why the run stopped short of the requested count, when it did.
+    pub stall_reason: Option<String>,
+}
+
 /// 🧠️ A puzzle-5d brush/fill precompute session over the 3d app's retained solver and preview page.
 pub struct Puzzle5dPrecomputeSession {
     inner: semio_s_artifact_puzzle_3d::Puzzle3dPrecomputeSession,
@@ -55,6 +77,49 @@ impl Puzzle5dPrecomputeSession {
 
     pub fn fill_preview_object_kind(&self) -> Option<String> {
         self.inner.fill_preview_object_kind()
+    }
+
+    /// ⏳️ The wrapped 3d run's live progress, projected onto 5d's own vocabulary. 5d's fill is the
+    /// 3d planner — so the option panel reads the very same counters the 3d tool does instead of
+    /// publishing an empty slider beside a solver that knows exactly where it is.
+    pub fn fill_progress(&self) -> Puzzle5dFillProgress {
+        let summary = self.inner.fill_progress_summary();
+        Puzzle5dFillProgress {
+            count: summary.count,
+            applied_count: summary.applied_count,
+            requested_count: summary.max_count,
+            done: summary.done,
+            tested: summary.tested,
+            rejected: summary.rejected,
+            collisions: summary.collisions,
+            stage: summary.stage,
+            stall_reason: summary.stall_reason,
+        }
+    }
+
+    /// 🎚️ The count the wrapped plan is currently held to.
+    pub fn fill_requested_count(&self) -> u32 {
+        self.inner.fill_requested_count()
+    }
+
+    /// 🎚️ Retargets the wrapped plan, idempotently. Raising continues the same deterministic sequence
+    /// from what is already locked and revives a run that reported itself done; lowering arms the
+    /// document-tail deletion. Without this the 5d session only ever *projected* a count onto a plan
+    /// the planner was still holding to its own target.
+    pub fn set_fill_requested_count(&mut self, count: u32) {
+        self.inner.set_fill_requested_count(count);
+    }
+
+    /// 🪪️ `(job, operation, generation)` of the live fill run, when one exists — the identity a
+    /// cancel has to carry so a late click cannot kill the run that superseded the one it was
+    /// rendered for.
+    pub fn fill_job_identity(&self) -> Option<(u64, u64, u64)> {
+        self.inner.fill_job_identity()
+    }
+
+    /// 🛑️ Cancels the identified fill run; a mismatched identity is a no-op, not a kill.
+    pub fn cancel_fill_job_for(&mut self, job: u64, operation: u64, generation: u64) -> bool {
+        self.inner.cancel_fill_job_for(job, operation, generation)
     }
 
     pub fn fill_preview_json_page(&self, color: &str, status_label: &str) -> Option<String> {

@@ -53,6 +53,47 @@ mod value_round_trip_tests {
     }
 
     #[semio_framework_async_macros::async_test]
+    async fn window_measure_number_and_progress_round_trip() {
+        let measures = [
+            WindowMeasure::Number {
+                id: "count".into(),
+                label: Some("Count".into()),
+                value: 100.0,
+                min: Some(0.0),
+                max: None,
+                step: Some(1.0),
+                ready: Some(42.0),
+                loading: Some(true),
+                waiting: None,
+                disabled: Some(false),
+                on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "setFillCount".into(), args: None },
+            },
+            WindowMeasure::Progress {
+                id: "fill".into(),
+                label: None,
+                stage: Some("locking".into()),
+                completed: 12.0,
+                total: Some(100.0),
+                steps: vec![MeasureProgressStep { kind: MeasureProgressStepKind::Warning, text: "no-open-vortex".into() }],
+                cancel: Some(ActionDescriptor { controller_id: "ctrl".into(), action: "cancelFill".into(), args: None }),
+                loading: None,
+            },
+        ];
+        for measure in measures {
+            assert_eq!(WindowMeasure::from_value(measure.to_value()).expect("valid DslValue decodes"), measure);
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn measure_progress_step_round_trips() {
+        for kind in [MeasureProgressStepKind::Info, MeasureProgressStepKind::Success, MeasureProgressStepKind::Warning, MeasureProgressStepKind::Danger] {
+            let step = MeasureProgressStep { kind, text: format!("{} step", kind.as_str()) };
+            assert_eq!(MeasureProgressStep::from_value(step.to_value()).expect("valid DslValue decodes"), step);
+            assert_eq!(MeasureProgressStepKind::from_value(kind.to_value()).expect("valid DslValue decodes"), kind);
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
     async fn surface_kind_round_trips() {
         // 🔀️ `SurfaceKind` lives in the sibling `pub mod ui`, not here in `layout` —
         // imported explicitly rather than via `use super::*` to avoid pulling that whole

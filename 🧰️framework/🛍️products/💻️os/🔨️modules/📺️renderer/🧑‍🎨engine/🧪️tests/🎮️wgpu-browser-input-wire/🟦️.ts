@@ -54,7 +54,7 @@ class FakeWorker implements BrowserFrameWorkerPort {
 function readyTransport(worker: FakeWorker): BrowserFrameTransport {
   const transport = new BrowserFrameTransport({
     worker,
-    boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer_bg.wasm", canvas: {} as OffscreenCanvas, width: 1434, height: 836, dpr: 1, pluginVariant: "generation3d", locale: "en", appRole: "editor", appMode: "generate" },
+    boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer_bg.wasm", canvas: {} as OffscreenCanvas, width: 1434, height: 836, dpr: 1, pluginVariant: "generation3d", locale: "en", appRole: "editor", appMode: "generate", appExample: "" },
     setTimer: () => 1,
     clearTimer: () => {},
     now: () => 0,

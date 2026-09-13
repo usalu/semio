@@ -1,3 +1,5 @@
+const KEYBOARD_REACHABILITY_FIXTURE_JSON: &str = include_str!("../../../🧫️fixtures/⌨️keyboard-reachability.json");
+
 pub(crate) mod context {
     use super::super::*;
     use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry, settle_registered_typed_operation, TypedOperationFixtureReceipt};
@@ -644,10 +646,14 @@ fn command_ids_are_unique_and_cover_every_row() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), GENERATION3D_RETAINED_TOOL_IDS.len() + GENERATION3D_FLOW_EVAL_TOOL_IDS.len() + GENERATION3D_CONTRIBUTIONS_TOOL_IDS.len(), "every Generation3dCommand row must be covered by every_command()");
+    assert_eq!(
+        ids.len(),
+        GENERATION3D_RETAINED_TOOL_IDS.len() + GENERATION3D_FLOW_EVAL_TOOL_IDS.len() + GENERATION3D_CONTRIBUTIONS_TOOL_IDS.len() + GENERATION3D_DOCUMENT_IO_TOOL_IDS.len(),
+        "every Generation3dCommand row must be covered by every_command()"
+    );
 }
 
-/// ⚖️ LAW: every one of the 30 declared `Generation3dCommand` rows is retained-owned by EXACTLY one
+/// ⚖️ LAW: every one of the 29 declared `Generation3dCommand` rows is retained-owned by EXACTLY one
 /// of the three factories — the gesture route, the preview chain's own route and the contributions
 /// route — with an exact, nonempty publication-lane contract, the shape
 /// `ArtifactToolFactoryRegistry::register` itself enforces
@@ -660,22 +666,26 @@ fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
     use semio_framework_plugin::ArtifactOwnedToolJobFactory;
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
-    assert_eq!(GENERATION3D_RETAINED_TOOL_IDS.len(), 24);
+    assert_eq!(GENERATION3D_RETAINED_TOOL_IDS.len(), 25);
     assert_eq!(GENERATION3D_FLOW_EVAL_TOOL_IDS.len(), 5);
     assert_eq!(GENERATION3D_CONTRIBUTIONS_TOOL_IDS.len(), 1);
-    assert_eq!(<Generation3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 30, "all three factories' proofs, aggregated");
-    assert_eq!(Generation3dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 24);
+    assert_eq!(GENERATION3D_DOCUMENT_IO_TOOL_IDS.len(), 3);
+    assert_eq!(<Generation3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 34, "all four factories' proofs, aggregated");
+    assert_eq!(Generation3dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 25);
     assert_eq!(Generation3dFlowEvalJobFactory::PUBLICATION_CONTRACTS.len(), 5);
     assert_eq!(Generation3dContributionsJobFactory::PUBLICATION_CONTRACTS.len(), 1);
+    assert_eq!(Generation3dDocumentIoJobFactory::PUBLICATION_CONTRACTS.len(), 3);
     assert_eq!(generation3d_bounded_contract().shape, ToolExecutionShape::BoundedFirstStep);
     assert_eq!(generation3d_bounded_contract().cancellation, ToolCancellationPolicy::PerOperation);
     assert_eq!(generation3d_flow_eval_contract().shape, ToolExecutionShape::BoundedFirstStep);
     assert_eq!(generation3d_flow_eval_contract().cancellation, ToolCancellationPolicy::PerOperation);
     assert!(GENERATION3D_RETAINED_TOOL_IDS.iter().all(|tool_id| Generation3dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.iter().any(|contract| contract.tool_id == *tool_id)));
     assert!(GENERATION3D_FLOW_EVAL_TOOL_IDS.iter().all(|tool_id| Generation3dFlowEvalJobFactory::PUBLICATION_CONTRACTS.iter().any(|contract| contract.tool_id == *tool_id)));
+    assert!(GENERATION3D_DOCUMENT_IO_TOOL_IDS.iter().all(|tool_id| Generation3dDocumentIoJobFactory::PUBLICATION_CONTRACTS.iter().any(|contract| contract.tool_id == *tool_id)));
     let mut sorted_ids = GENERATION3D_RETAINED_TOOL_IDS.to_vec();
     sorted_ids.extend_from_slice(GENERATION3D_FLOW_EVAL_TOOL_IDS);
     sorted_ids.extend_from_slice(GENERATION3D_CONTRIBUTIONS_TOOL_IDS);
+    sorted_ids.extend_from_slice(GENERATION3D_DOCUMENT_IO_TOOL_IDS);
     let declared = sorted_ids.len();
     sorted_ids.sort_unstable();
     sorted_ids.dedup();
@@ -683,7 +693,7 @@ fn retained_route_dispositions_are_exact_and_exhaustive() {
     for command in every_command() {
         assert!(
             sorted_ids.contains(&command.command_id()),
-            "command {} is owned by none of Generation3dBoundedCommandJobFactory, Generation3dFlowEvalJobFactory or Generation3dContributionsJobFactory",
+            "command {} is owned by none of Generation3dBoundedCommandJobFactory, Generation3dFlowEvalJobFactory, Generation3dContributionsJobFactory or Generation3dDocumentIoJobFactory",
             command.command_id()
         );
     }
@@ -798,7 +808,6 @@ fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         "graph-edit",
         "delete-selection",
         "remove-widget",
-        "move-node",
         "add-widget",
         "patch-flow-widgets",
         "reorganize",
@@ -824,6 +833,9 @@ fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         "cancel-preview-eval",
         "flow-tessellate-cancel-resolve",
         "set-contributions",
+        "import-document-request",
+        "import-document",
+        "export-document",
     ];
     let commands = every_command();
     assert_eq!(commands.len(), expected_keywords.len(), "every_command() and expected_keywords must stay in the same declaration order");
@@ -833,6 +845,13 @@ fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
     }
 }
 
+/// 🚚️ The `nodeGraphEdit` payload one node move travels as — the ONE spelling of the verb since the
+/// duplicate `moveMediaNode` command was deleted, and exactly what the `Diagram` fallback's
+/// `onNodeDragStop` dispatches (`🕸️NodeGraph/🟦️.tsx`).
+pub(crate) fn node_move_operations_json(node_id: &str, x: f64, y: f64) -> String {
+    serde_json::json!([{ "operation": "move", "nodeId": node_id, "x": x, "y": y }]).to_string()
+}
+
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
 pub(super) fn every_command() -> Vec<Generation3dCommand> {
     vec![
@@ -840,7 +859,6 @@ pub(super) fn every_command() -> Vec<Generation3dCommand> {
         Generation3dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }),
         Generation3dCommand::DeleteSelection(delete_selection::DeleteSelection {}),
         Generation3dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: "extrude".into() }),
-        Generation3dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: "extrude".into(), x: 1.0, y: 2.0 }),
         Generation3dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), x: Some(10.0), y: None }),
         Generation3dCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["height".into()], field: "value".into(), value: Some(9.5) }),
         Generation3dCommand::Reorganize(reorganize::Reorganize {}),
@@ -866,8 +884,263 @@ pub(super) fn every_command() -> Vec<Generation3dCommand> {
         Generation3dCommand::CancelPreviewEval(cancel_preview_eval::CancelPreviewEval { window_id: "w1".into(), window_kind_id: "procedural-preview".into() }),
         Generation3dCommand::FlowTessellateCancelResolve(flow_tessellate_cancel_resolve::FlowTessellateCancelResolve { window_id: "w1".into(), window_kind_id: "procedural-preview".into(), output_json: "{\"ok\":true,\"retired\":1}".into(), ok: true }),
         Generation3dCommand::SetContributions(set_contributions::SetContributions { json: "[]".into(), page: 0, page_count: 1 }),
+        Generation3dCommand::ImportDocumentRequest(import_document_request::ImportDocumentRequest {}),
+        Generation3dCommand::ImportDocument(import_document::ImportDocument { name: "cube.stl".into(), payload: "data:model/stl;base64,aGVsbG8=".into(), chunk: 0, chunk_count: 1 }),
+        Generation3dCommand::ExportDocument(export_document::ExportDocument { format: "stl".into() }),
+        Generation3dCommand::CycleShowMode(cycle_show_mode::CycleShowMode {}),
+        Generation3dCommand::CycleLodMode(cycle_lod_mode::CycleLodMode {}),
     ]
 }
+
+//#region 📄️DocumentIoSurface
+/// 🧫️ The language-agnostic law both implementations drive — see the fixture's own `note`, and the
+/// TypeScript twin at `🚪️io/🧪️tests/📄️document-surface/🟦️.ts`.
+fn document_io_fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../../🧫️fixtures/🚪️io/📄️document-surface.json")).expect("the document-surface fixture is valid json")
+}
+
+fn fixture_rows(value: &serde_json::Value, key: &str) -> Vec<serde_json::Value> {
+    value[key].as_array().unwrap_or_else(|| panic!("fixture has a `{key}` array")).clone()
+}
+
+/// 📇️ Every action this app declares. `AppDefinition` keeps no app-level `actions` list: the
+/// builder distributes an app-declared action onto every window kind that does not explicitly own
+/// its own set, so the assembled manifest's actions are read off the windows.
+fn declared_editor_action(definition: &semio_framework_plugin::AppDefinition, id: &str) -> semio_framework_plugin::ActionDefinition {
+    definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == id).unwrap_or_else(|| panic!("{id} is declared by no generation3d editor window")).clone()
+}
+
+/// 📝️ A declared action's `select` options, in declaration order.
+fn declared_select_options(action: &semio_framework_plugin::ActionDefinition, arg_id: &str) -> Vec<semio_framework_plugin::ActionArgOption> {
+    let arg = action.args.iter().find(|arg| arg.id == arg_id).unwrap_or_else(|| panic!("{} carries no `{arg_id}` arg", action.id));
+    match &arg.schema {
+        semio_framework_plugin::ArgSchema::String { options, .. } => options.clone(),
+        other => panic!("{}'s `{arg_id}` is not a string select, it is {other:?}", action.id),
+    }
+}
+
+/// ⚖️ LAW: the document-IO route's wire ceiling is DERIVED from the bounds that actually bind, and
+/// each one is reachable.
+///
+/// One import chunk crosses as a single `payload` string, and `validate_public_json_envelope`
+/// refuses any string above `PUBLIC_INVOCATION_STRING_BYTES` BEFORE the addressed tool's contract is
+/// consulted — so the chunk extent IS that cap and no tool contract can widen it. The whole run is
+/// bounded by one Artifact-lane edit, because an imported file is planted in the graph as an
+/// `InputNote`'s text: a run allowed to grow past that would stage bytes only to be refused by the
+/// store at the very last chunk.
+#[test]
+fn document_io_route_declares_a_reachable_wire_ceiling() {
+    use crate::editor::generation3d::commands::import_document::{GENERATION3D_IMPORT_CHUNK_BYTES, GENERATION3D_IMPORT_MAXIMUM_CHUNKS, GENERATION3D_IMPORT_TOTAL_BYTES};
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    assert_eq!(GENERATION3D_IMPORT_CHUNK_BYTES, semio_framework::PUBLIC_INVOCATION_STRING_BYTES, "the chunk extent is the string cap the host applies, never a literal");
+    assert_eq!(GENERATION3D_IMPORT_TOTAL_BYTES, GENERATION3D_ARTIFACT_STORE_MAXIMUM_BYTES, "the run budget is one Artifact-lane edit, never a literal");
+    assert_eq!(GENERATION3D_IMPORT_MAXIMUM_CHUNKS, GENERATION3D_IMPORT_TOTAL_BYTES.div_ceil(GENERATION3D_IMPORT_CHUNK_BYTES));
+    assert_eq!(GENERATION3D_DOCUMENT_IO_RAW_BYTES, semio_framework::PUBLIC_INVOCATION_BODY_BYTES);
+    assert_eq!(generation3d_document_io_contract().max_raw_wire_bytes, GENERATION3D_DOCUMENT_IO_RAW_BYTES, "the registered contract and the factory-side cap are one bound");
+    assert!(GENERATION3D_IMPORT_CHUNK_BYTES < GENERATION3D_DOCUMENT_IO_RAW_BYTES, "one chunk plus its envelope has to fit the route's body");
+    assert!(GENERATION3D_IMPORT_CHUNK_BYTES > GENERATION3D_RETAINED_RAW_BYTES / 4, "a chunk this small would need a route of its own for no reason");
+    assert_eq!(generation3d_document_io_contract().shape, semio_framework::ToolExecutionShape::BoundedFirstStep);
+    assert_eq!(generation3d_document_io_contract().cancellation, semio_framework::ToolCancellationPolicy::PerOperation, "an import run is cancellable per operation");
+}
+
+/// ⚖️ LAW: the editor really OFFERS import and export — the exact finding
+/// `📓️audit-user-journey-gaps-2026-09-13.md` §6 raised was that nothing did. Every row the fixture
+/// names is a declared action with the declared kind, palette visibility and BOTH labels, and the
+/// two user-facing verbs carry the fixture's keyboard chord, so neither is mouse-only.
+#[test]
+fn the_editor_declares_every_io_action_and_chord_the_fixture_names() {
+    use semio_framework_plugin::{Locale, Terminology};
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let definition = create_generation3d_app();
+    for row in fixture_rows(&document_io_fixture(), "editorActions") {
+        let id = row["id"].as_str().expect("action id");
+        let action = declared_editor_action(&definition, id);
+        assert_eq!(format!("{:?}", action.kind), row["kind"].as_str().expect("kind"), "{id}: action kind");
+        assert_eq!(action.in_palette, row["inPalette"].as_bool().expect("palette flag"), "{id}: palette visibility");
+        assert_eq!(action.label.resolve(Terminology::Native, Locale::En), row["labelEn"].as_str().expect("en label"), "{id}: English label");
+        assert_eq!(action.label.resolve(Terminology::Native, Locale::De), row["labelDe"].as_str().expect("de label"), "{id}: German label");
+        if let Some(chord) = row["chord"].as_str() {
+            let bound = definition.keybindings.iter().find(|binding| binding.keys == chord).unwrap_or_else(|| panic!("{id}: no keybinding on {chord}"));
+            assert_eq!(bound.action.action, id, "{chord} must reach {id}");
+        }
+    }
+}
+
+/// ⚖️ LAW: every keyboard verb `🧫️fixtures/⌨️keyboard-reachability.json` names is really bound, to
+/// really that action, and — unless the fixture marks the row `staged` — that action takes NO
+/// required argument. `ShellHost`'s keybinding loop fires an arg-free action straight through
+/// `onAction`; anything with a required arg opens a staged form instead, which is slower than the
+/// control the chord replaced. Before this, the thirty editor verbs had exactly two chords between
+/// them (`mod+z`/`mod+shift+z`) and everything else was mouse-only
+/// (`📓️audit-user-journey-gaps-2026-09-13.md` §3). The fixture is the language-agnostic statement;
+/// this test is one implementation's reading of it.
+#[test]
+fn the_editor_binds_every_keyboard_verb_the_fixture_names() {
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let fixture: serde_json::Value = serde_json::from_str(KEYBOARD_REACHABILITY_FIXTURE_JSON).expect("keyboard fixture");
+    let definition = create_generation3d_app();
+    let rows = fixture["bindings"].as_array().expect("bindings");
+    // 🧾️ Exactness, expressed against the APP-AUTHORED chords only: `build_definition` also mints a
+    // keybinding for every framework `History`/`Clipboard` action that carries its own `keys`, and
+    // those are never a plugin's to declare.
+    let named: std::collections::BTreeSet<&str> = rows.iter().map(|row| row["chord"].as_str().expect("chord")).collect();
+    for binding in &definition.keybindings {
+        if named.contains(binding.keys.as_str()) {
+            continue;
+        }
+        let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == binding.action.action);
+        let framework_minted = action.is_some_and(|action| matches!(action.kind, semio_framework_plugin::ActionKind::History | semio_framework_plugin::ActionKind::Clipboard));
+        assert!(framework_minted, "{} reaches {} but the fixture never names it — the fixture is the WHOLE app keyboard surface", binding.keys, binding.action.action);
+    }
+    for row in rows {
+        let chord = row["chord"].as_str().expect("chord");
+        let id = row["action"].as_str().expect("action");
+        let bound = definition.keybindings.iter().find(|binding| binding.keys == chord).unwrap_or_else(|| panic!("{id}: nothing is bound to {chord}"));
+        assert_eq!(bound.action.action, id, "{chord} must reach {id}");
+        if row["framework"].as_bool() == Some(true) {
+            continue;
+        }
+        let requires_argument = definition
+            .window_kinds
+            .iter()
+            .flat_map(|window| window.actions.iter())
+            .find(|action| action.id == id)
+            .map(|action| action.args.iter().any(|arg| arg.required))
+            .or_else(|| definition.commands.iter().find(|command| command.id == id).map(|command| command.args.iter().any(|arg| arg.required)))
+            .unwrap_or_else(|| panic!("{id} is offered by no generation3d editor window and declared by no command"));
+        assert_eq!(requires_argument, row["staged"].as_bool().unwrap_or(false), "{id}: a chord may only reach a required-argument verb when the fixture marks it staged");
+    }
+    for row in fixture["shellChrome"].as_array().expect("shellChrome") {
+        let chord = row["chord"].as_str().expect("chord");
+        assert!(!definition.keybindings.iter().any(|binding| binding.keys == chord), "{chord} belongs to the shell's own chrome; the app must not re-bind it");
+    }
+}
+
+/// ⚖️ LAW: the example picker offers exactly the eight flow-fixture examples, and never the
+/// `✏️editor/📚️examples/🎬️demo-session` leaf. That leaf is a `.cmd.semio` command REPLAY, not a
+/// document carrier, and `setActiveExample`'s only vocabulary is "load a registered example
+/// document" — the same reason `🖨️raster` and `🧩️puzzle` mount and test their `demo-session` leaves
+/// without registering them. `📓️audit-user-journey-gaps-2026-09-13.md` §9 item 12 read the omission
+/// as an oversight; this law makes it a statement.
+#[test]
+fn the_example_picker_offers_the_flow_examples_and_never_the_command_session() {
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let offered: Vec<String> = examples().iter().map(|example| example.id().to_string()).collect();
+    assert_eq!(offered.len(), 8, "eight bundled flow examples: {offered:?}");
+    assert!(!offered.iter().any(|id| id == crate::editor::generation3d::examples::demo_session::ID), "the command-replay leaf is not a document example");
+    for id in &offered {
+        assert!(crate::standards::v1::subsets::any::schema::is_generation3d_example_id(id), "{id} must be a registered generation3d example id");
+    }
+    let definition = create_generation3d_app();
+    let action = declared_editor_action(&definition, "setActiveExample");
+    assert_eq!(declared_select_options(&action, "exampleId").iter().map(|option| option.value.clone()).collect::<Vec<_>>(), offered, "the picker's options are `examples()`, in its order");
+}
+
+/// ⚖️ LAW: the export picker's options are the io module's OWN roster, in its order, with both
+/// labels — not a second list that can drift from the formats this artifact actually writes.
+#[test]
+fn the_export_action_offers_every_declared_format_in_both_languages() {
+    use crate::standards::v1::subsets::any::io::document_io;
+    use semio_framework_plugin::{Locale, Terminology};
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let definition = create_generation3d_app();
+    let action = declared_editor_action(&definition, "exportDocument");
+    let options = declared_select_options(&action, "format");
+    let offered: Vec<&str> = options.iter().map(|option| option.value.as_str()).collect();
+    let declared: Vec<&str> = document_io::EXPORT_FORMATS.iter().map(|row| row.id).collect();
+    assert_eq!(offered, declared, "the picker and the io roster are one list");
+    for (option, row) in options.iter().zip(document_io::EXPORT_FORMATS.iter()) {
+        assert_eq!(option.label.resolve(Terminology::Native, Locale::En), row.label_en, "{}: English option label", row.id);
+        assert_eq!(option.label.resolve(Terminology::Native, Locale::De), row.label_de, "{}: German option label", row.id);
+    }
+    for row in fixture_rows(&document_io_fixture(), "exportFormats") {
+        assert!(declared.contains(&row["id"].as_str().expect("id")), "the fixture's {} is offered", row["id"]);
+    }
+}
+
+/// ⚖️ LAW: the guest cuts a payload into exactly the chunks the fixture declares — the same slicing
+/// the host's own `importPayloadChunks` performs, so the guest's laws exercise the real wire rather
+/// than a shape only tests use.
+#[test]
+fn one_payload_is_cut_into_the_fixtures_chunks() {
+    use crate::editor::generation3d::commands::import_document::{generation3d_import_chunks, GENERATION3D_IMPORT_CHUNK_BYTES};
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let fixture = document_io_fixture();
+    assert_eq!(fixture["chunking"]["chunkBytes"].as_u64().expect("chunkBytes") as usize, GENERATION3D_IMPORT_CHUNK_BYTES);
+    for row in fixture_rows(&fixture["chunking"], "cases") {
+        let id = row["id"].as_str().expect("case id");
+        let payload: String = std::iter::repeat_n('x', row["payloadBytes"].as_u64().expect("payloadBytes") as usize).collect();
+        let chunks = generation3d_import_chunks(&payload);
+        assert_eq!(chunks.len(), row["chunks"].as_u64().expect("chunks") as usize, "{id}: chunk count");
+        assert!(chunks.iter().all(|chunk| chunk.len() <= GENERATION3D_IMPORT_CHUNK_BYTES), "{id}: no chunk exceeds the extent");
+        assert_eq!(chunks.concat(), payload, "{id}: the chunks reassemble the payload exactly");
+    }
+}
+
+/// ⚖️ LAW: the staging ledger answers every declared arrival the fixture describes — an open run
+/// stages and emits nothing, a retransmission is acknowledged at the cursor it stands on rather than
+/// costing the whole upload, and a gap drops the run instead of resuming into bytes nobody can
+/// account for. This IS the progress and cancellation contract of an import: `next_chunk` of
+/// `chunk_count` is what a surface reports, and an abandoned run is what cancelling looks like.
+#[test]
+fn import_staging_answers_every_declared_arrival() {
+    use crate::editor::generation3d::commands::import_document::{Generation3dImportEnvelope, Generation3dImportFault, Generation3dImportStaging, Generation3dImportStep};
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let fixture = document_io_fixture();
+    let codes = &fixture["faultCodes"];
+    for row in fixture_rows(&fixture["chunking"], "staging") {
+        let id = row["id"].as_str().expect("case id");
+        let mut staging = Generation3dImportStaging::default();
+        let events = row["events"].as_array().expect("events").clone();
+        let mut last: Option<Result<Generation3dImportStep, Generation3dImportFault>> = None;
+        for event in &events {
+            let envelope = Generation3dImportEnvelope {
+                name: "cube.stl".into(),
+                chunk: event["chunk"].as_u64().expect("chunk") as usize,
+                chunk_count: event["chunkCount"].as_u64().expect("chunkCount") as usize,
+            };
+            last = Some(staging.admit(&envelope, "x"));
+        }
+        let outcome = last.expect("every case declares at least one event");
+        match row["outcome"].as_str().expect("outcome") {
+            "complete" => {
+                let Ok(Generation3dImportStep::Complete(pages)) = outcome else { panic!("{id}: expected a closed run, got {outcome:?}") };
+                assert_eq!(pages.len(), events.len(), "{id}: one page per admitted chunk");
+                assert!(staging.open_runs().is_empty(), "{id}: a closed run holds no slot");
+            }
+            "staged" => {
+                let Ok(Generation3dImportStep::Staged { next_chunk, chunk_count }) = outcome else { panic!("{id}: expected an open run, got {outcome:?}") };
+                assert_eq!(next_chunk, row["nextChunk"].as_u64().expect("nextChunk") as usize, "{id}: the progress cursor");
+                assert_eq!(chunk_count, events[0]["chunkCount"].as_u64().expect("chunkCount") as usize, "{id}: the run's declared length");
+                assert_eq!(staging.open_runs().len(), 1, "{id}: exactly one run stays open");
+            }
+            expected_fault => {
+                let Err(fault) = outcome else { panic!("{id}: expected {expected_fault}, got {outcome:?}") };
+                assert_eq!(fault.code(), codes[expected_fault].as_str().expect("fault code"), "{id}: fault code");
+                assert!(staging.open_runs().is_empty(), "{id}: a refused run keeps no slot");
+            }
+        }
+    }
+}
+
+/// ⚖️ LAW: a chunk wider than one public invocation string is refused BY the guest, and an
+/// abandoned run is swept — the memory half of cancellation.
+#[test]
+fn an_oversized_chunk_is_refused_and_an_abandoned_run_is_swept() {
+    use crate::editor::generation3d::commands::import_document::{Generation3dImportEnvelope, Generation3dImportFault, Generation3dImportStaging, GENERATION3D_IMPORT_CHUNK_BYTES};
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let mut staging = Generation3dImportStaging::default();
+    let envelope = Generation3dImportEnvelope { name: "cube.stl".into(), chunk: 0, chunk_count: 2 };
+    let oversized: String = std::iter::repeat_n('x', GENERATION3D_IMPORT_CHUNK_BYTES + 1).collect();
+    assert_eq!(staging.admit(&envelope, &oversized), Err(Generation3dImportFault::Chunk));
+    assert!(staging.admit(&envelope, "x").is_ok(), "an in-extent chunk opens the run");
+    assert_eq!(staging.open_runs().len(), 1);
+    staging.retire_abandoned();
+    staging.retire_abandoned();
+    assert!(staging.open_runs().is_empty(), "a run that did not advance across a sweep cycle is dropped");
+}
+//#endregion 📄️DocumentIoSurface
+
 //#endregion 🔖️CommandSurface
 
 #[semio_framework_async_macros::async_test]
@@ -951,6 +1224,11 @@ async fn undo_redo_round_trips_flow_graph_edits() {
         before + 1,
     )
     .await;
+    // 🧹️ `undo`/`redo` run a framework-RESERVED spawn job, and a fixture that ran one has to be
+    // drained through the registered close ladder rather than the plain `close_step` loop the
+    // fixture's own `Drop` runs — the same reason every `select_graph` test ends this way
+    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -968,8 +1246,8 @@ async fn two_instances_converge_disjoint_widget_moves() {
     semio_framework_plugin::artifact_app_laws::assert_two_registered_instances_converge::<EditorApp<Generation3dPlayApp>, (Option<f64>, Option<f64>), _, _>(
         "mem://generation3d-convergence",
         || async { context::generation3d_app_manifest_for_tests() },
-        Generation3dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: w0.clone(), x: 111.0, y: 5.0 }),
-        Generation3dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: w1.clone(), x: 222.0, y: 6.0 }),
+        Generation3dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: node_move_operations_json(&w0, 111.0, 5.0) }),
+        Generation3dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: node_move_operations_json(&w1, 222.0, 6.0) }),
         move |app| {
             let layout = &context::snapshot(&app).fixture.layout;
             (layout.get(&w0).map(|entry| entry.x), layout.get(&w1).map(|entry| entry.x))

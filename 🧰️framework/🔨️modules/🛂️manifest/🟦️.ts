@@ -74,6 +74,8 @@ import type {
   Platform as GeneratedPlatform,
   PlatformKeybinding as GeneratedPlatformKeybinding,
   WindowMeasure as GeneratedWindowMeasure,
+  MeasureProgressStep as GeneratedMeasureProgressStep,
+  MeasureProgressStepKind as GeneratedMeasureProgressStepKind,
   WindowEngagementOption as GeneratedWindowEngagementOption,
   WindowEngagementInput as GeneratedWindowEngagementInput,
   WindowEngagementStatus as GeneratedWindowEngagementStatus,
@@ -1185,6 +1187,8 @@ if (import.meta.vitest) {
 //#region AppManifestProtocol
 /** 🧬️ Generated from Rust `WindowMeasure`/`WindowEngagement*` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
 export type WindowMeasure = GeneratedWindowMeasure;
+export type MeasureProgressStep = GeneratedMeasureProgressStep;
+export type MeasureProgressStepKind = GeneratedMeasureProgressStepKind;
 export type WindowEngagementOption = GeneratedWindowEngagementOption;
 export type WindowEngagementInput = GeneratedWindowEngagementInput;
 export type WindowEngagementStatus = GeneratedWindowEngagementStatus;

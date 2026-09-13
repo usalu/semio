@@ -2,6 +2,7 @@
 //! terminology×locale combination is compile-checked by `semio_framework_plugin::app_labels!`
 //! (see ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND).
 
+use crate::editor::puzzle2d::config::Puzzle2dFillLifecycle;
 use semio_framework_plugin::{AppLabels, LabelText, Locale, LocalizedLabel};
 
 //#region 🔖️Labels
@@ -48,7 +49,15 @@ semio_framework_plugin::app_labels! {
         fill_cancel: native_en "Cancel fill", native_de "Füllen abbrechen", reuse_en "Cancel fill", reuse_de "Füllen abbrechen";
         fill_retry: native_en "Retry fill", native_de "Füllen erneut versuchen", reuse_en "Retry fill", reuse_de "Füllen erneut versuchen";
         fill_fault: native_en "Fill failed", native_de "Füllen fehlgeschlagen", reuse_en "Fill failed", reuse_de "Füllen fehlgeschlagen";
-        fill_result: native_en "Fill result", native_de "Füllergebnis", reuse_en "Fill result", reuse_de "Füllergebnis";
+        fill_cancelled: native_en "Fill cancelled", native_de "Füllen abgebrochen", reuse_en "Fill cancelled", reuse_de "Füllen abgebrochen";
+        fill_stage_capturing: native_en "Capturing", native_de "Erfassen", reuse_en "Capturing", reuse_de "Erfassen";
+        fill_stage_queued: native_en "Queued", native_de "In Warteschlange", reuse_en "Queued", reuse_de "In Warteschlange";
+        fill_stage_searching: native_en "Searching", native_de "Suchen", reuse_en "Searching", reuse_de "Suchen";
+        fill_stage_applying: native_en "Applying", native_de "Anwenden", reuse_en "Applying", reuse_de "Anwenden";
+        fill_stage_closing: native_en "Closing", native_de "Abschließen", reuse_en "Closing", reuse_de "Abschließen";
+        fill_stage_done: native_en "Done", native_de "Fertig", reuse_en "Done", reuse_de "Fertig";
+        fill_tested: native_en "tested", native_de "getestet", reuse_en "tested", reuse_de "getestet";
+        fill_accepted: native_en "accepted", native_de "angenommen", reuse_en "accepted", reuse_de "angenommen";
         // example picker
         example_concrete_forest: native_en "Concrete Forest", native_de "Betonwald", reuse_en "Abbau Aufbau", reuse_de "Abbau Aufbau";
     }
@@ -81,6 +90,27 @@ pub fn puzzle2d_localized_phrase(field: impl Fn(&Puzzle2dLabels) -> LabelText, e
     })
 }
 //#endregion 🔖️Locale
+
+//#region 🔖️FillStage
+/// 🧭️ The phase caption of a fill run, in the reader's own language. A fault keeps the machine code
+/// visible beside the sentence: a code nobody translated yet is still a code the dev can act on,
+/// whereas a swallowed one leaves the operator with a stopped run and no reason.
+pub fn puzzle2d_fill_stage_label(labels: &Puzzle2dLabels, lifecycle: Puzzle2dFillLifecycle, fault_code: Option<&str>) -> String {
+    match lifecycle {
+        Puzzle2dFillLifecycle::Faulted => match fault_code {
+            Some(code) => format!("{} — {}", labels.fill_fault.as_str(), code),
+            None => labels.fill_fault.as_str().to_string(),
+        },
+        Puzzle2dFillLifecycle::Cancelled => labels.fill_cancelled.as_str().to_string(),
+        Puzzle2dFillLifecycle::Completed => labels.fill_stage_done.as_str().to_string(),
+        Puzzle2dFillLifecycle::Capturing => labels.fill_stage_capturing.as_str().to_string(),
+        Puzzle2dFillLifecycle::Queued | Puzzle2dFillLifecycle::CheckpointReady => labels.fill_stage_queued.as_str().to_string(),
+        Puzzle2dFillLifecycle::Applying => labels.fill_stage_applying.as_str().to_string(),
+        Puzzle2dFillLifecycle::AwaitingAdoption | Puzzle2dFillLifecycle::Closing => labels.fill_stage_closing.as_str().to_string(),
+        Puzzle2dFillLifecycle::Running | Puzzle2dFillLifecycle::Idle | Puzzle2dFillLifecycle::Discarded => labels.fill_stage_searching.as_str().to_string(),
+    }
+}
+//#endregion 🔖️FillStage
 
 //#region 🧪️Tests
 #[cfg(test)]

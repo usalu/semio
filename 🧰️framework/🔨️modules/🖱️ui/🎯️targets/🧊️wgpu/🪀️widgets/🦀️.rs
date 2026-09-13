@@ -198,6 +198,17 @@ pub(crate) const TREE_TOGGLE_WIDTH: f32 = (ui_styling::metrics::chrome::UI_SPACI
 pub(crate) const TREE_ICON_SIZE: f32 = 14.0;
 pub(crate) const TREE_SECTION_GAP: f32 = 8.0;
 
+/// 📏️ Track thickness of the `WindowMeasure::Progress` bar.
+pub const MEASURE_PROGRESS_BAR_HEIGHT: f32 = 6.0;
+/// 🪜️ How many trailing `MeasureProgressStep` lines a progress leaf paints — the rest stay in the payload.
+pub const MEASURE_PROGRESS_STEPS_SHOWN: usize = 4;
+/// ♾️ Share of the track an indeterminate (`total: None`) progress bar fills.
+pub const MEASURE_PROGRESS_INDETERMINATE_SHARE: f32 = 0.35;
+/// 🚦️ Edge length of one step line's kind-tinted marker.
+pub const MEASURE_PROGRESS_MARKER_SIZE: f32 = 8.0;
+/// 🛑️ Widest the cancel button grows before the leaf's own width caps it.
+pub const MEASURE_PROGRESS_CANCEL_WIDTH: f32 = 96.0;
+
 pub fn measure_widget<E>(atlas: &mut FontAtlas, theme: &Theme, node: &WidgetNode<E>) -> (f32, f32) {
     match node {
         WidgetNode::Stack { direction, gap, padding, children } => {
@@ -454,6 +465,109 @@ pub fn render_window_measure_slider<E: Clone>(id: &str, value: f64, min: f64, ma
 
 pub fn render_window_measure_toggle<E: Clone>(id: &str, icon_id: IconName, pressed: bool, text: Option<&str>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     render_toggle(id, icon_id, pressed, text, bounds, ctx);
+}
+
+/// 🔢️ `WindowMeasure::Number` leaf — the `NumberStepper` control with the slider's `ready` extent
+/// convention: when a ceiling exists, the already-prepared share is a soft bar under the entry.
+/// `max: None` is genuinely unbounded, so no extent is drawn and nothing is clamped above.
+/// `loading`/`waiting` stay a measure-tree-leaf ring, exactly as for `render_window_measure_slider`.
+#[allow(clippy::too_many_arguments, reason = "one field per retained measure leaf")]
+pub fn render_window_measure_number<E: Clone>(id: &str, value: f64, min: Option<f64>, max: Option<f64>, step: Option<f64>, ready: Option<f64>, disabled: bool, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+    let floor = min.unwrap_or(0.0);
+    let extent_h = 3.0f32;
+    let entry = Rect::new(bounds.x, bounds.y, bounds.w, (bounds.h - extent_h).max(1.0));
+    render_number_stepper(id, value.max(floor), step.unwrap_or(1.0), false, None, None, entry, ctx);
+    let track_y = bounds.y + bounds.h - extent_h;
+    if let (Some(ceiling), Some(extent)) = (max, ready) {
+        let span = (ceiling - floor).max(f64::EPSILON);
+        let dim = |color: Rgba| if disabled { color.with_alpha(color.a * 0.5) } else { color };
+        ctx.draw.push_rounded([bounds.x, track_y, bounds.w, extent_h], dim(ctx.theme.separator), extent_h * 0.5);
+        let t = ((extent.clamp(floor, ceiling) - floor) / span).clamp(0.0, 1.0) as f32;
+        ctx.draw.push_rounded([bounds.x, track_y, bounds.w * t, extent_h], dim(ctx.theme.progress), extent_h * 0.5);
+    }
+}
+
+/// ⏳️ `WindowMeasure::Progress` leaf — a read-only process view: optional label, optional stage
+/// caption, one bar (determinate `completed / total`, or an indeterminate sweep when `total` is
+/// `None`), the last [`MEASURE_PROGRESS_STEPS_SHOWN`] step lines tinted by
+/// `MeasureProgressStepKind`, and an optional cancel button whose label the caller resolves from
+/// `measure_progress_cancel_label()` — the framework never picks a locale here.
+#[allow(clippy::too_many_arguments, reason = "one field per retained measure leaf")]
+pub fn render_window_measure_progress<E: Clone>(
+    id: &str,
+    label: Option<&str>,
+    stage: Option<&str>,
+    completed: f64,
+    total: Option<f64>,
+    steps: &[crate::wgpu::component::layout::MeasureProgressStep],
+    cancel: Option<(&str, E)>,
+    bounds: Rect,
+    ctx: &mut WidgetContext<'_, E>,
+) {
+    let theme_text = ctx.theme.text;
+    let theme_muted = ctx.theme.text_muted;
+    let caption = ctx.theme.font_size_small;
+    let body = ctx.theme.font_size_body;
+    let row = caption * 1.6;
+    let mut y = bounds.y;
+    if let Some(label) = label {
+        draw_text(ctx, label, bounds.x, y + body, body, theme_text);
+        y += body * 1.5;
+    }
+    if let Some(stage) = stage {
+        draw_text(ctx, stage, bounds.x, y + caption, caption, theme_muted);
+        y += row;
+    }
+    let bar = Rect::new(bounds.x, y, bounds.w, MEASURE_PROGRESS_BAR_HEIGHT);
+    let radius = MEASURE_PROGRESS_BAR_HEIGHT * 0.5;
+    ctx.draw.push_rounded([bar.x, bar.y, bar.w, bar.h], ctx.theme.separator, radius);
+    match total {
+        Some(total) if total > 0.0 => {
+            let t = (completed / total).clamp(0.0, 1.0) as f32;
+            if t > 0.0 {
+                ctx.draw.push_rounded([bar.x, bar.y, bar.w * t, bar.h], ctx.theme.progress, radius);
+            }
+            let readout = format!("{completed} / {total}", completed = format_measure_units(completed), total = format_measure_units(total));
+            draw_text(ctx, &readout, bar.x, bar.y + bar.h + caption + 2.0, caption, theme_muted);
+        }
+        _ => {
+            let sweep = (bar.w * MEASURE_PROGRESS_INDETERMINATE_SHARE).max(1.0);
+            ctx.draw.push_rounded([bar.x, bar.y, sweep, bar.h], ctx.theme.progress, radius);
+            draw_text(ctx, &format_measure_units(completed), bar.x, bar.y + bar.h + caption + 2.0, caption, theme_muted);
+        }
+    }
+    y = bar.y + bar.h + caption + 6.0;
+    let marker = MEASURE_PROGRESS_MARKER_SIZE;
+    for step in steps.iter().rev().take(MEASURE_PROGRESS_STEPS_SHOWN).collect::<Vec<_>>().into_iter().rev() {
+        ctx.draw.push_rounded([bounds.x, y + (row - marker) * 0.5, marker, marker], measure_progress_step_color(ctx.theme, step.kind), marker * 0.5);
+        draw_text(ctx, &step.text, bounds.x + marker + 6.0, y + caption, caption, theme_muted);
+        y += row;
+    }
+    if let Some((cancel_label, event)) = cancel {
+        let cancel_id = format!("{id}.cancel");
+        let button = Rect::new(bounds.x, y + 2.0, bounds.w.min(MEASURE_PROGRESS_CANCEL_WIDTH), ctx.theme.control_height_small);
+        render_button(Some(&cancel_id), None, cancel_label, Some(event), button, ctx);
+    }
+}
+
+/// 🚦️ Semantic paint of one progress step kind — never an inline color.
+pub fn measure_progress_step_color(theme: &Theme, kind: crate::wgpu::component::layout::MeasureProgressStepKind) -> Rgba {
+    use crate::wgpu::component::layout::MeasureProgressStepKind as Kind;
+    match kind {
+        Kind::Info => theme.progress,
+        Kind::Success => theme.success,
+        Kind::Warning => theme.warning,
+        Kind::Danger => theme.error,
+    }
+}
+
+/// 🔢️ Whole counts print without a decimal tail; fractional units keep three digits.
+fn format_measure_units(value: f64) -> String {
+    if value.fract() == 0.0 && value.abs() < 1e15 {
+        format!("{:.0}", value)
+    } else {
+        format!("{value:.3}")
+    }
 }
 //#endregion 🔖️WindowMeasureBorrowedControls
 use crate::wgpu::toggle::render_toggle;

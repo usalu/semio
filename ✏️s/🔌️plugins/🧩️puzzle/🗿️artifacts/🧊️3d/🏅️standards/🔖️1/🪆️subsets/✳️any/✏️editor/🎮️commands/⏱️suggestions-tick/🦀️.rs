@@ -25,6 +25,14 @@ use crate::editor::puzzle3d::Puzzle3dActionCtx;
 /// pane stayed armed (measured live in wave B33, `suggestionsTick.enter … target=None` against renders
 /// asking for `seed-left-001:v3`). Warming whatever the render asks for is the invariant; the utility
 /// gate stays on the two speculative legs so plain select-mode hovering still costs no slices.
+///
+/// 🔎️ Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS wave G: the slices no longer stop at the
+/// first collision-free candidate and no longer report themselves through `[DEBUG] eprintln!`. Each
+/// tick spends at most `BRUSH_SEARCH_SLICES_PER_TICK` slices and never more than
+/// `BRUSH_SEARCH_WALL_BUDGET_US` of wall clock on the target, and what those slices saw —
+/// tested/free/blocked out of the whole compatible list, plus the candidate under test and its
+/// verdict — is published as `BrushSearchProgress`, which the placement picker, the suggestion popup
+/// and the ghost all read. Watching the search IS the feature; finishing it silently was the bug.
 pub fn suggestions_tick(ctx: &mut Puzzle3dActionCtx<'_>) {
     let brush_armed = ctx.scene.active_utility == brush::UTILITY_ID;
     let target = ctx
@@ -36,28 +44,11 @@ pub fn suggestions_tick(ctx: &mut Puzzle3dActionCtx<'_>) {
         .filter(|id| !id.is_empty())
         .or_else(|| brush_armed.then(|| puzzle3d_brush_target_vortex(ctx.scene, ctx.interaction)).flatten())
         .or_else(|| brush_armed.then(|| ctx.app.precompute.borrow().brush_live_target().map(str::to_string)).flatten());
-    eprintln!("[DEBUG] puzzle3d.suggestionsTick.enter utility={} menu={} target={:?}", ctx.scene.active_utility, ctx.scene.runtime.suggestion_menu.is_some(), target);
     drive_precompute(&mut ctx.app.precompute.borrow_mut(), ctx.scene);
-    let mut slices = 0_u32;
-    if let Some(target) = target.as_deref() {
-        let mut precompute = ctx.app.precompute.borrow_mut();
-        precompute.set_brush_live_target(Some(target.to_string()));
-        let before = precompute.brush_candidates(target);
-        eprintln!("[DEBUG] puzzle3d.brushPreview.cache tick-before vortex={target} free={} pending={}", before.free.len(), before.unknown_pending);
-        if before.free.is_empty() {
-            precompute.refresh_brush_candidates(target);
-            slices += 1;
-            for _ in 0..7 {
-                let status = precompute.brush_candidates(target);
-                if !status.unknown_pending || !status.free.is_empty() {
-                    break;
-                }
-                precompute.refresh_brush_candidates(target);
-                slices += 1;
-            }
-        }
-        let after = precompute.brush_candidates(target);
-        eprintln!("[DEBUG] puzzle3d.brushPreview.cache tick-after vortex={target} free={} pending={} slices={slices}", after.free.len(), after.unknown_pending);
-    }
-    eprintln!("[DEBUG] puzzle3d.suggestionsTick.exit target={:?} slices={slices}", target);
+    let Some(target) = target else {
+        return;
+    };
+    let mut precompute = ctx.app.precompute.borrow_mut();
+    precompute.set_brush_live_target(Some(target.clone()));
+    precompute.advance_brush_search(&target);
 }

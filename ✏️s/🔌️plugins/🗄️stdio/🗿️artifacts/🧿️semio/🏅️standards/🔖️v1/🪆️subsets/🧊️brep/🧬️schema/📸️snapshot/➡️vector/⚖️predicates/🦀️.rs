@@ -1,17 +1,28 @@
 //! 🎯️ Robust geometric predicates: a cheap `f64` evaluation plus a conservative forward
 //! error bound decides the sign whenever possible; only when the true value could be smaller
-//! than the accumulated roundoff does the predicate escalate to exact [`semio_framework_number::Rational`]
-//! arithmetic (lossless for any finite `f64`, per `Rational::from_f64`). This is deliberately
-//! simpler than Shewchuk-style adaptive expansions — the exact path is cold, so raw simplicity
-//! beats squeezing out its last microsecond. The hard invariant: a predicate here never returns a
-//! wrong sign, only (rarely) pays for a certain one.
+//! than the accumulated roundoff does the predicate escalate to the EXACT path below. The hard
+//! invariant: a predicate here never returns a wrong sign, only (rarely) pays for a certain one.
+//!
+//! ⚡️ The exact path is nonoverlapping floating-point EXPANSION arithmetic (Shewchuk's error-free
+//! transformations), not arbitrary-precision rationals. It was rationals until ticket
+//! 26/09/09/PROCEDURAL-3D-END-TO-END profiled `🍩️sphere-cut-with-torus`: 99% of that example's
+//! 61 s native evaluate sat under `mass_properties::ear_clip`, and nearly all of that self time was
+//! `semio_framework_number::Natural`'s `gcd`/`normalize`/`checked_sub` plus the malloc traffic of
+//! the limb vectors each `Rational` op allocates. The premise the rational path rested on — "the
+//! exact path is cold" — is FALSE for any polygon produced by a dense curve discretisation, because
+//! every exactly-collinear sample triple drives the filter's `None` branch deterministically, so the
+//! filter never fires there and the exact path runs on EVERY call. Expansions answer the identical
+//! sign (both are exact) with zero allocation and no bignum normalisation.
+//!
+//! @see https://www.cs.cmu.edu/~quake/robust.html — Shewchuk, "Adaptive Precision Floating-Point
+//! Arithmetic and Fast Robust Geometric Predicates", the source of `two_sum`/`two_product`/
+//! `fast_expansion_sum_zeroelim`/`scale_expansion_zeroelim`.
 //!
 //! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚖️predicates` in ticket
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave PEEL4, mounted locally
 //! under `➡️vector` (its sole dependency) since no target stub was pre-mounted for it.
 
 use super::{Pnt2, Pnt3, Vec3};
-use semio_framework_number::Rational;
 use std::cmp::Ordering;
 
 // #region 🔖️Filtered
@@ -51,17 +62,176 @@ fn filtered_sign(value: f64, terms: &[f64]) -> Option<Orient> {
     }
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn to_rational(v: f64) -> Rational {
-    Rational::from_f64(v).expect("finite f64 is always exactly representable as a Rational")
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn rational_sign(v: &Rational) -> Orient {
-    Orient::from(v.cmp(&Rational::zero()))
-}
-
 // #endregion 🔖️Filtered
+
+// #region 🔖️Expansion
+
+/// ➗️ Dekker's splitter `2^27 + 1`, which cuts a 53-bit significand into two 26-bit halves whose
+/// pairwise products are each exactly representable.
+const SPLITTER: f64 = 134_217_729.0;
+
+/// ✂️ Splits `value` into a high and a low half with no rounding error.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn split(value: f64) -> (f64, f64) {
+    let c = SPLITTER * value;
+    let big = c - value;
+    let high = c - big;
+    (high, value - high)
+}
+
+/// ➕️ `a + b` as an exact two-term expansion — the rounded sum and the roundoff it discarded.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn two_sum(a: f64, b: f64) -> (f64, f64) {
+    let x = a + b;
+    let b_virtual = x - a;
+    let a_virtual = x - b_virtual;
+    (x, (a - a_virtual) + (b - b_virtual))
+}
+
+/// ➕️ `a + b` when `|a| >= |b|` is already known, which saves the two virtual reconstructions.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn fast_two_sum(a: f64, b: f64) -> (f64, f64) {
+    let x = a + b;
+    (x, b - (x - a))
+}
+
+/// ➖️ `a - b` as an exact two-term expansion.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn two_diff(a: f64, b: f64) -> [f64; 2] {
+    let x = a - b;
+    let b_virtual = a - x;
+    let a_virtual = x + b_virtual;
+    [(a - a_virtual) + (b_virtual - b), x]
+}
+
+/// ✖️ `a * b` against a pre-split `b`, as an exact two-term expansion.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn two_product_presplit(a: f64, b: f64, b_high: f64, b_low: f64) -> (f64, f64) {
+    let x = a * b;
+    let (a_high, a_low) = split(a);
+    let error = x - a_high * b_high;
+    let error = error - a_low * b_high;
+    let error = error - a_high * b_low;
+    (x, a_low * b_low - error)
+}
+
+/// ➕️ Exact sum of two nonoverlapping increasing-magnitude expansions into `out`, dropping zero
+/// components; returns the component count written.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn expansion_sum(left: &[f64], right: &[f64], out: &mut [f64]) -> usize {
+    let (mut li, mut ri, mut len) = (0usize, 0usize, 0usize);
+    let mut carry = 0.0;
+    let mut started = false;
+    while li < left.len() || ri < right.len() {
+        let take_left = ri >= right.len() || (li < left.len() && (right[ri] > left[li]) == (right[ri] > -left[li]));
+        let value = if take_left { left[li] } else { right[ri] };
+        if take_left {
+            li += 1;
+        } else {
+            ri += 1;
+        }
+        if !started {
+            carry = value;
+            started = true;
+            continue;
+        }
+        let (sum, remainder) = two_sum(carry, value);
+        carry = sum;
+        if remainder != 0.0 {
+            out[len] = remainder;
+            len += 1;
+        }
+    }
+    if carry != 0.0 || len == 0 {
+        out[len] = carry;
+        len += 1;
+    }
+    len
+}
+
+/// ✖️ Exact product of an expansion by a single `f64` into `out`, dropping zero components;
+/// returns the component count written (at most `2 * expansion.len()`).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn scale_expansion(expansion: &[f64], factor: f64, out: &mut [f64]) -> usize {
+    let (factor_high, factor_low) = split(factor);
+    let (mut carry, first) = two_product_presplit(expansion[0], factor, factor_high, factor_low);
+    let mut len = 0usize;
+    if first != 0.0 {
+        out[len] = first;
+        len += 1;
+    }
+    for &term in &expansion[1..] {
+        let (product_high, product_low) = two_product_presplit(term, factor, factor_high, factor_low);
+        let (sum, remainder) = two_sum(carry, product_low);
+        if remainder != 0.0 {
+            out[len] = remainder;
+            len += 1;
+        }
+        let (next, remainder) = fast_two_sum(product_high, sum);
+        carry = next;
+        if remainder != 0.0 {
+            out[len] = remainder;
+            len += 1;
+        }
+    }
+    if carry != 0.0 || len == 0 {
+        out[len] = carry;
+        len += 1;
+    }
+    len
+}
+
+/// ✖️ Exact product of two expansions into `out`; returns the component count written (at most
+/// `2 * left.len() * right.len()`). Scratch is taken from `out`'s own tail, so the caller sizes one
+/// array rather than three.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn multiply_expansion<const N: usize>(left: &[f64], right: &[f64]) -> ([f64; N], usize) {
+    let mut total = [0.0; N];
+    let mut total_len = 0usize;
+    let mut partial = [0.0; N];
+    let mut accumulator = [0.0; N];
+    for &factor in right {
+        let partial_len = scale_expansion(left, factor, &mut partial);
+        if total_len == 0 {
+            total[..partial_len].copy_from_slice(&partial[..partial_len]);
+            total_len = partial_len;
+            continue;
+        }
+        let merged = expansion_sum(&total[..total_len], &partial[..partial_len], &mut accumulator);
+        total[..merged].copy_from_slice(&accumulator[..merged]);
+        total_len = merged;
+    }
+    (total, total_len)
+}
+
+/// ➖️ Component-wise negation, which is exact and preserves the nonoverlapping ordering.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn negate_expansion<const N: usize>(expansion: &[f64]) -> [f64; N] {
+    let mut out = [0.0; N];
+    for (slot, &term) in out.iter_mut().zip(expansion) {
+        *slot = -term;
+    }
+    out
+}
+
+/// 🎯️ The certain sign of a nonoverlapping increasing-magnitude expansion: its largest component
+/// dominates every other, so that component's sign IS the expansion's. A non-finite leading
+/// component means a caller handed a predicate a non-finite coordinate, which is a defect rather
+/// than a geometric answer, so it fails loudly here instead of silently reporting `Zero`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn expansion_sign(expansion: &[f64]) -> Orient {
+    let leading = *expansion.last().expect("a zero-eliminated expansion always keeps one component");
+    if leading > 0.0 {
+        Orient::Positive
+    } else if leading < 0.0 {
+        Orient::Negative
+    } else {
+        assert!(leading == 0.0, "an exact predicate requires finite coordinates, got {leading}");
+        Orient::Zero
+    }
+}
+
+// #endregion 🔖️Expansion
 
 // #region 🔖️Exact
 
@@ -81,15 +251,16 @@ pub fn orient2d(a: Pnt2, b: Pnt2, c: Pnt2) -> Orient {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn orient2d_exact(a: Pnt2, b: Pnt2, c: Pnt2) -> Orient {
-    let (ax, ay) = (to_rational(a.x), to_rational(a.y));
-    let (bx, by) = (to_rational(b.x), to_rational(b.y));
-    let (cx, cy) = (to_rational(c.x), to_rational(c.y));
-    let acx = bx.sub(&ax);
-    let acy = by.sub(&ay);
-    let bcx = cx.sub(&ax);
-    let bcy = cy.sub(&ay);
-    let det = acx.mul(&bcy).sub(&acy.mul(&bcx));
-    rational_sign(&det)
+    let acx = two_diff(b.x, a.x);
+    let acy = two_diff(b.y, a.y);
+    let bcx = two_diff(c.x, a.x);
+    let bcy = two_diff(c.y, a.y);
+    let (left, left_len) = multiply_expansion::<8>(&acx, &bcy);
+    let (right, right_len) = multiply_expansion::<8>(&acy, &bcx);
+    let negated = negate_expansion::<8>(&right[..right_len]);
+    let mut det = [0.0; 16];
+    let len = expansion_sum(&left[..left_len], &negated[..right_len], &mut det);
+    expansion_sign(&det[..len])
 }
 
 /// 🎯️ Orientation of four 3D points via the signed volume of tetrahedron `(a,b,c,d)`, computed as
@@ -112,26 +283,34 @@ pub fn orient3d(a: Pnt3, b: Pnt3, c: Pnt3, d: Pnt3) -> Orient {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn orient3d_exact(a: Pnt3, b: Pnt3, c: Pnt3, d: Pnt3) -> Orient {
-    let ax = to_rational(a.x);
-    let ay = to_rational(a.y);
-    let az = to_rational(a.z);
-    let ux = to_rational(b.x).sub(&ax);
-    let uy = to_rational(b.y).sub(&ay);
-    let uz = to_rational(b.z).sub(&az);
-    let vx = to_rational(c.x).sub(&ax);
-    let vy = to_rational(c.y).sub(&ay);
-    let vz = to_rational(c.z).sub(&az);
-    let wx = to_rational(d.x).sub(&ax);
-    let wy = to_rational(d.y).sub(&ay);
-    let wz = to_rational(d.z).sub(&az);
-    let t1 = ux.mul(&vy).mul(&wz);
-    let t2 = ux.mul(&vz).mul(&wy);
-    let t3 = uy.mul(&vz).mul(&wx);
-    let t4 = uy.mul(&vx).mul(&wz);
-    let t5 = uz.mul(&vx).mul(&wy);
-    let t6 = uz.mul(&vy).mul(&wx);
-    let det = t1.sub(&t2).add(&t3).sub(&t4).add(&t5).sub(&t6);
-    rational_sign(&det)
+    let ux = two_diff(b.x, a.x);
+    let uy = two_diff(b.y, a.y);
+    let uz = two_diff(b.z, a.z);
+    let vx = two_diff(c.x, a.x);
+    let vy = two_diff(c.y, a.y);
+    let vz = two_diff(c.z, a.z);
+    let wx = two_diff(d.x, a.x);
+    let wy = two_diff(d.y, a.y);
+    let wz = two_diff(d.z, a.z);
+    let triple = |p: &[f64; 2], q: &[f64; 2], r: &[f64; 2]| {
+        let (pair, pair_len) = multiply_expansion::<8>(p, q);
+        multiply_expansion::<32>(&pair[..pair_len], r)
+    };
+    let (t1, t1_len) = triple(&ux, &vy, &wz);
+    let (t2, t2_len) = triple(&ux, &vz, &wy);
+    let (t3, t3_len) = triple(&uy, &vz, &wx);
+    let (t4, t4_len) = triple(&uy, &vx, &wz);
+    let (t5, t5_len) = triple(&uz, &vx, &wy);
+    let (t6, t6_len) = triple(&uz, &vy, &wx);
+    let mut det = [0.0; 192];
+    let mut scratch = [0.0; 192];
+    let mut len = expansion_sum(&t1[..t1_len], &negate_expansion::<32>(&t2[..t2_len])[..t2_len], &mut det);
+    for (term, term_len) in [(t3, t3_len), (negate_expansion::<32>(&t4[..t4_len]), t4_len), (t5, t5_len), (negate_expansion::<32>(&t6[..t6_len]), t6_len)] {
+        let merged = expansion_sum(&det[..len], &term[..term_len], &mut scratch);
+        det[..merged].copy_from_slice(&scratch[..merged]);
+        len = merged;
+    }
+    expansion_sign(&det[..len])
 }
 
 /// 🎯️ The incircle test: [`Orient::Positive`] when `d` lies strictly inside the circle through
@@ -157,22 +336,43 @@ pub fn in_circle2d(a: Pnt2, b: Pnt2, c: Pnt2, d: Pnt2) -> Orient {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn in_circle2d_exact(a: Pnt2, b: Pnt2, c: Pnt2, d: Pnt2) -> Orient {
-    let dx = to_rational(d.x);
-    let dy = to_rational(d.y);
-    let adx = to_rational(a.x).sub(&dx);
-    let ady = to_rational(a.y).sub(&dy);
-    let bdx = to_rational(b.x).sub(&dx);
-    let bdy = to_rational(b.y).sub(&dy);
-    let cdx = to_rational(c.x).sub(&dx);
-    let cdy = to_rational(c.y).sub(&dy);
-    let ad2 = adx.mul(&adx).add(&ady.mul(&ady));
-    let bd2 = bdx.mul(&bdx).add(&bdy.mul(&bdy));
-    let cd2 = cdx.mul(&cdx).add(&cdy.mul(&cdy));
-    let t1 = adx.mul(&bdy.mul(&cd2).sub(&cdy.mul(&bd2)));
-    let t2 = ady.mul(&bdx.mul(&cd2).sub(&cdx.mul(&bd2)));
-    let t3 = ad2.mul(&bdx.mul(&cdy).sub(&cdx.mul(&bdy)));
-    let det = t1.sub(&t2).add(&t3);
-    rational_sign(&det)
+    let adx = two_diff(a.x, d.x);
+    let ady = two_diff(a.y, d.y);
+    let bdx = two_diff(b.x, d.x);
+    let bdy = two_diff(b.y, d.y);
+    let cdx = two_diff(c.x, d.x);
+    let cdy = two_diff(c.y, d.y);
+    let square_sum = |u: &[f64; 2], v: &[f64; 2]| {
+        let (uu, uu_len) = multiply_expansion::<8>(u, u);
+        let (vv, vv_len) = multiply_expansion::<8>(v, v);
+        let mut out = [0.0; 16];
+        let len = expansion_sum(&uu[..uu_len], &vv[..vv_len], &mut out);
+        (out, len)
+    };
+    let (ad2, ad2_len) = square_sum(&adx, &ady);
+    let (bd2, bd2_len) = square_sum(&bdx, &bdy);
+    let (cd2, cd2_len) = square_sum(&cdx, &cdy);
+    let cross = |p: &[f64], p_len: usize, q: &[f64; 2], r: &[f64], r_len: usize, s: &[f64; 2]| {
+        let (left, left_len) = multiply_expansion::<64>(&p[..p_len], q);
+        let (right, right_len) = multiply_expansion::<64>(&r[..r_len], s);
+        let mut out = [0.0; 128];
+        let len = expansion_sum(&left[..left_len], &negate_expansion::<64>(&right[..right_len])[..right_len], &mut out);
+        (out, len)
+    };
+    let (bc, bc_len) = cross(&cd2, cd2_len, &bdy, &bd2, bd2_len, &cdy);
+    let (cb, cb_len) = cross(&cd2, cd2_len, &bdx, &bd2, bd2_len, &cdx);
+    let (bcx, bcx_len) = multiply_expansion::<8>(&bdx, &cdy);
+    let (cbx, cbx_len) = multiply_expansion::<8>(&cdx, &bdy);
+    let mut area = [0.0; 16];
+    let area_len = expansion_sum(&bcx[..bcx_len], &negate_expansion::<8>(&cbx[..cbx_len])[..cbx_len], &mut area);
+    let (t1, t1_len) = multiply_expansion::<512>(&bc[..bc_len], &adx);
+    let (t2, t2_len) = multiply_expansion::<512>(&cb[..cb_len], &ady);
+    let (t3, t3_len) = multiply_expansion::<512>(&area[..area_len], &ad2[..ad2_len]);
+    let mut partial = [0.0; 1024];
+    let partial_len = expansion_sum(&t1[..t1_len], &negate_expansion::<512>(&t2[..t2_len])[..t2_len], &mut partial);
+    let mut det = [0.0; 1536];
+    let len = expansion_sum(&partial[..partial_len], &t3[..t3_len], &mut det);
+    expansion_sign(&det[..len])
 }
 
 /// 🎯️ True when `a, b, c` are collinear within the exact predicate (i.e. `orient2d` is exactly zero).
@@ -200,11 +400,14 @@ pub fn sign_of_dot(u: Vec3, v: Vec3) -> Orient {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn sign_of_dot_exact(u: Vec3, v: Vec3) -> Orient {
-    let tx = to_rational(u.x).mul(&to_rational(v.x));
-    let ty = to_rational(u.y).mul(&to_rational(v.y));
-    let tz = to_rational(u.z).mul(&to_rational(v.z));
-    let dot = tx.add(&ty).add(&tz);
-    rational_sign(&dot)
+    let (tx, tx_len) = multiply_expansion::<2>(&[u.x], &[v.x]);
+    let (ty, ty_len) = multiply_expansion::<2>(&[u.y], &[v.y]);
+    let (tz, tz_len) = multiply_expansion::<2>(&[u.z], &[v.z]);
+    let mut partial = [0.0; 4];
+    let partial_len = expansion_sum(&tx[..tx_len], &ty[..ty_len], &mut partial);
+    let mut dot = [0.0; 6];
+    let len = expansion_sum(&partial[..partial_len], &tz[..tz_len], &mut dot);
+    expansion_sign(&dot[..len])
 }
 
 // #endregion 🔖️Exact

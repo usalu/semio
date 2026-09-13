@@ -56,7 +56,7 @@ function harness(options: { now?: () => number; onProgress?: (stage: string) => 
   const continuations: Array<() => void> = [];
   const transport = new BrowserFrameTransport({
     worker,
-    boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, pluginVariant: "generation3d", locale: "en", appRole: "editor" },
+    boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, pluginVariant: "generation3d", locale: "en", appRole: "editor", appMode: "", appExample: "" },
     ...(options.now ? { now: options.now } : {}),
     setTimer: (callback, delayMs) => (delayMs === 0 ? continuations.push(callback) : 0),
     clearTimer: () => {},

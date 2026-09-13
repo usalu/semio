@@ -1,6 +1,7 @@
 //! 🪣️ `fill-build-tick` command.
 
 use dsl::os_pack::json::Value;
+use crate::editor::puzzle3d::commands::set_fill_count;
 use crate::editor::puzzle3d::precompute::FILL_JOB_KIND;
 use crate::editor::puzzle3d::puzzle3d_fill_build_scope;
 use crate::editor::puzzle3d::puzzle3d_fill_tool_active;
@@ -8,11 +9,14 @@ use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::{Effect, JobPlacement};
 
-/// 🪣️ No catch-up `setFillCount` dispatch here: `apply_puzzle3d_fill_count` always clamps the
-/// committed count to what's available at commit time, so `fill_count` can never run ahead of
-/// `applied_count` — a slider can only request what `render`'s reveal-tagged instances already show.
-/// Each tick only observes the latest worker publication and, when no fill job is live, requests one
-/// isolated shared-pool job. Solver work is exclusively driven by `fill_job`.
+/// 🪣️ Locking IS committing: every candidate the planner accepted since the last tick becomes a real
+/// `create_object` + `connect_vortices` on the document here, at most
+/// [`crate::editor::puzzle3d::precompute::FILL_LOCK_PLACEMENTS_PER_TICK`] per tick, coalesced with
+/// `setFillCount`'s own delta under the `fill-count` history key so one fill run is one undo entry.
+/// There is no render-time ghost tail any more — what the viewport shows is exactly the document
+/// (`26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS` master plan §1 decision 2). Each tick also observes
+/// the latest worker publication and, when no fill job is live, requests one isolated shared-pool job;
+/// solver work itself stays exclusively on `fill_job`.
 pub fn fill_build_tick(ctx: &mut Puzzle3dActionCtx<'_>) {
     if !puzzle3d_fill_tool_active(ctx.config) {
         *ctx.ui_scope = UiDirtyScope::None;
@@ -20,6 +24,7 @@ pub fn fill_build_tick(ctx: &mut Puzzle3dActionCtx<'_>) {
     }
     let mut precompute = ctx.app.precompute.borrow_mut();
     let changed = precompute.poll_fill_job();
+    let committed = set_fill_count::take_locked_into_fixture(&mut precompute, &mut ctx.scene.fixture);
     let spawn = precompute.enqueue_fill_job();
     let faulted = precompute.take_fill_fault_notice();
     drop(precompute);
@@ -30,7 +35,7 @@ pub fn fill_build_tick(ctx: &mut Puzzle3dActionCtx<'_>) {
     if faulted {
         ctx.notice(|labels| labels.fill_failed.as_str());
     }
-    *ctx.ui_scope = if changed || spawned || faulted { puzzle3d_fill_build_scope() } else { UiDirtyScope::None };
+    *ctx.ui_scope = if changed || committed || spawned || faulted { puzzle3d_fill_build_scope() } else { UiDirtyScope::None };
 }
 
 /// 🛑 `cancelFillBuild` — stops the live background fill job, and only that one: the action carries the

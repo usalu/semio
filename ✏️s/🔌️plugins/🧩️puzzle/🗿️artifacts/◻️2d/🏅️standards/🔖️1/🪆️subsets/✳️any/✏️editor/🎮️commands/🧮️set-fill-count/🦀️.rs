@@ -791,9 +791,6 @@ impl Puzzle2dFillSessionWork {
     }
 
     fn begin_search(&mut self, count: u32, seed: u64) -> Result<(), Fault> {
-        if count > fill::PUZZLE2D_FILL_COUNT_MAX {
-            return self.fault("puzzle2d-fill-count-capacity");
-        }
         self.maximum_count = count;
         self.operation = semio_framework_job::Operation::new(self.operation.operation, self.operation.base_revision, self.operation.generation, seed);
         self.suggestion_offset = self.window_config.suggestion_offset;
@@ -1486,9 +1483,6 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
         if snapshot.0.get("schema").and_then(Value::as_str) != Some(crate::PUZZLE_2D_SCHEMA) {
             return None;
         }
-        if requested_fill_count(self.tool_id, command.args()).is_some_and(|count| count > fill::PUZZLE2D_FILL_COUNT_MAX) {
-            return None;
-        }
         let items = PUZZLE2D_FILL_CAPTURE_CHUNKS.checked_add(PUZZLE2D_FILL_SEARCH_CHUNKS)?.checked_add(PUZZLE2D_FILL_APPLY_CHUNKS)?.checked_add(PUZZLE2D_FILL_CONTROL_CHUNKS)?;
         (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
@@ -1612,21 +1606,6 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
 }
 
 //#region 🎛️Control
-/// 🔢️ The count a search verb asks for, when the verb carries one in its arguments.
-fn requested_fill_count(action: &str, args: Option<&Value>) -> Option<u32> {
-    match action {
-        "setFillCount" => {
-            let value = args.and_then(|args| args.get("count").or_else(|| args.get("value"))).and_then(Value::as_f64)?;
-            if !value.is_finite() || value < 0.0 {
-                return None;
-            }
-            u32::try_from(value.round() as i64).ok()
-        }
-        "brushFillSessionBegin" => args.and_then(|args| args.get("maxCount")).and_then(Value::as_u64).and_then(|count| u32::try_from(count).ok()),
-        _ => None,
-    }
-}
-
 /// 🧹️ Returns the fill runtime to its idle shape, keeping the requested count.
 fn discard_runtime(runtime: &mut Puzzle2dFillRuntime) {
     runtime.fill_job_operation = 0;
@@ -1661,8 +1640,8 @@ fn fill_session_control(action: &str, args: Option<&Value>, runtime: &mut Puzzle
             let Some(value) = args.and_then(|args| args.get("count").or_else(|| args.get("value"))).and_then(Value::as_f64) else {
                 return Err("puzzle2d-fill-count");
             };
-            if !value.is_finite() || value < 0.0 || value.round() > f64::from(fill::PUZZLE2D_FILL_COUNT_MAX) {
-                return Err("puzzle2d-fill-count-capacity");
+            if !value.is_finite() || value < 0.0 || value.round() > f64::from(u32::MAX) {
+                return Err("puzzle2d-fill-count");
             }
             let count = value.round() as u32;
             runtime.fill_count = count;

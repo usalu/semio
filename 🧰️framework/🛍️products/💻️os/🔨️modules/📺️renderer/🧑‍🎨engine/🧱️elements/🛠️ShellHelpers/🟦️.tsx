@@ -206,7 +206,7 @@ import {
   type WorldInstanceRecord,
 } from "../🌐️World3dHost/🟦️.tsx";
 import { groupUtilityNodesByCategory, UTILITY_CATEGORIES, UtilityTree } from "../🎛️UtilityTree/🟦️.tsx";
-import { WindowMeasureSelect, WindowMeasureToggle } from "./🎚️measure-controls/🟦️.tsx";
+import { WindowMeasureNumber, WindowMeasureProgress, WindowMeasureSelect, WindowMeasureToggle } from "./🎚️measure-controls/🟦️.tsx";
 import { loadPluginModule, pluginLoadProgressAt, SHARD_LIVENESS_POLICY, type PluginWasmHandle } from "../🔌️PluginRuntime/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -2775,76 +2775,6 @@ export function createDirectionalAsyncDispatcher(dispatchValue: (value: number) 
   };
 }
 
-//#region RevealCutoffStore
-/**
- * @emoji 🪣️ Live per-gesture visibility cutoff for reveal-tagged instances (`WorldInstanceRecord.revealIndex`,
- * set by a `WindowMeasure.Slider.reveal` group). Main-thread-only and never dispatched: a slider drag writes
- * here directly, `WorldInstancesLayer` subscribes and imperatively toggles `Object3D.visible` — zero React
- * re-render, zero WASM round trip. Reconciled from the plugin's committed `WorldInteractionRecord.revealCutoffs`
- * whenever that value changes (a no-operation during a live drag, since the committed value only changes on commit).
- */
-export type RevealCutoffStore = {
-  get(groupId: string): number | undefined;
-  set(groupId: string, value: number): void;
-  subscribe(groupId: string, listener: (value: number | undefined) => void): () => void;
-};
-
-export function createRevealCutoffStore(): RevealCutoffStore {
-  const values = new Map<string, number>();
-  const listeners = new Map<string, Set<(value: number | undefined) => void>>();
-  return {
-    get: (groupId) => values.get(groupId),
-    set: (groupId, value) => {
-      values.set(groupId, value);
-      for (const listener of listeners.get(groupId) ?? []) listener(value);
-    },
-    subscribe: (groupId, listener) => {
-      let group = listeners.get(groupId);
-      if (!group) {
-        group = new Set();
-        listeners.set(groupId, group);
-      }
-      group.add(listener);
-      return () => {
-        group!.delete(listener);
-      };
-    },
-  };
-}
-
-/** Shared instance — a reveal group id is app-instance-global in v1; namespace by app instance id if a second concurrent document instance ever needs independent cutoffs. */
-export const worldRevealCutoffStore = createRevealCutoffStore();
-
-/** The only reveal group that exists today — puzzle3d's fill-plan slider. */
-export const PUZZLE3D_FILL_REVEAL_GROUP_ID = "puzzle3d-fill";
-
-/**
- * @emoji 🪣️ Writes committed reveal cutoffs into `store` only when the numeric value for a group changes.
- * Ignores object-identity churn from `fillBuildTick` refreshes so a live slider drag is not reset mid-gesture.
- */
-export function reconcileCommittedRevealCutoffs(
-  store: RevealCutoffStore,
-  committedRef: { current: Readonly<Record<string, number>> },
-  revealCutoffs: Readonly<Record<string, number>>,
-): void {
-  for (const [groupId, value] of Object.entries(revealCutoffs)) {
-    if (committedRef.current[groupId] === value) continue;
-    committedRef.current = { ...committedRef.current, [groupId]: value };
-    store.set(groupId, value);
-  }
-}
-
-/** @emoji 🙈️ True for a reveal-tagged instance beyond the live cutoff — `WorldInstancesLayer` already
- * hides its root imperatively, but pure functions that read `instances` data directly (marquee hit
- * testing) don't see three.js `Object3D.visible` and need this check instead. Untagged instances are
- * never cutoff-hidden: the nullish guard also rejects a JSON `null`, which would otherwise compare as `0`
- * and hide every ordinary object while the cutoff sits at its boot value. */
-export function isRevealCutoffHidden(instance: Pick<WorldInstanceRecord, "revealIndex">): boolean {
-  if (instance.revealIndex == null) return false;
-  const cutoff = worldRevealCutoffStore.get(PUZZLE3D_FILL_REVEAL_GROUP_ID);
-  return cutoff !== undefined && instance.revealIndex >= cutoff;
-}
-
 /** @emoji 🖱️ Overlay chrome for a world-3d marquee method. `rectangle` draws a box; `lasso` draws a
  * polygon; `pick` has no drag chrome. */
 export function world3dMarqueeOverlayShape(method: string): "rect" | "polygon" | null {
@@ -2852,7 +2782,6 @@ export function world3dMarqueeOverlayShape(method: string): "rect" | "polygon" |
   if (method === "rectangle") return "rect";
   return null;
 }
-//#endregion RevealCutoffStore
 
 //#region 🛑️ExtensionRequestCancellation
 /**
@@ -3318,11 +3247,6 @@ function WindowMeasureSlider({ measure, onAction }: { readonly measure: Extract<
   );
   const formatDisplayValue = windowMeasureUsesProbabilityReadout(measure) ? windowMeasureProbabilityReadout : undefined;
   const disabled = measure.disabled === true;
-  // 🪣️ A reveal-group measure (e.g. puzzle3d's fill-count slider) must not round-trip through WASM on
-  // every drag value — the plugin already rendered every planned piece tagged with its reveal index, so
-  // dragging only needs to move a main-thread visibility cutoff. Only the final value round-trips, once,
-  // on gesture release.
-  const revealGroupId = measure.reveal;
 
   return (
     <Slider
@@ -3336,28 +3260,11 @@ function WindowMeasureSlider({ measure, onAction }: { readonly measure: Extract<
       waiting={measure.waiting === true}
       step={measure.step}
       disabled={disabled}
-      clampToReady={Boolean(revealGroupId)}
       formatDisplayValue={formatDisplayValue}
       onValueChange={(values) => {
         if (disabled) return;
-        const value = values[0] ?? measure.value;
-        if (revealGroupId) {
-          worldRevealCutoffStore.set(revealGroupId, value);
-          return;
-        }
-        dispatchValue(value);
+        dispatchValue(values[0] ?? measure.value);
       }}
-      onValueCommit={
-        revealGroupId
-          ? (values) => {
-              if (disabled) return;
-              const value = values[0] ?? measure.value;
-              worldRevealCutoffStore.set(revealGroupId, value);
-              onAction({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), value } });
-            }
-          : undefined
-      }
-      onPointerCancel={revealGroupId ? () => worldRevealCutoffStore.set(revealGroupId, measure.value) : undefined}
     />
   );
 }
@@ -3386,6 +3293,14 @@ function windowMeasureSelectControl(measure: Extract<WindowMeasure, { kind: "sel
 
 function windowMeasureToggleControl(measure: Extract<WindowMeasure, { kind: "toggle" }>, onAction: (action: ActionDescriptor) => unknown): ReactNode {
   return <WindowMeasureToggle measure={measure} onAction={onAction} />;
+}
+
+function windowMeasureNumberControl(measure: Extract<WindowMeasure, { kind: "number" }>, onAction: (action: ActionDescriptor) => unknown): ReactNode {
+  return <WindowMeasureNumber measure={measure} onAction={onAction} />;
+}
+
+function windowMeasureProgressControl(measure: Extract<WindowMeasure, { kind: "progress" }>, onAction: (action: ActionDescriptor) => unknown): ReactNode {
+  return <WindowMeasureProgress measure={measure} onAction={onAction} />;
 }
 
 function windowMeasureToggleIcon(measure: Extract<WindowMeasure, { kind: "toggle" }>): ReactNode {
@@ -3424,6 +3339,23 @@ function windowMeasuresToTreeItems(measures: readonly WindowMeasure[], onAction:
         control: windowMeasureSelectControl(measure, onAction),
       };
     }
+    if (measure.kind === "number") {
+      return {
+        id: measure.id,
+        label: measure.label ?? "",
+        control: windowMeasureNumberControl(measure, onAction),
+        loading: measure.loading,
+        waiting: measure.waiting,
+      };
+    }
+    if (measure.kind === "progress") {
+      return {
+        id: measure.id,
+        label: measure.label ?? "",
+        control: windowMeasureProgressControl(measure, onAction),
+        loading: measure.loading,
+      };
+    }
     return {
       id: measure.id,
       label: measure.label ?? measure.text ?? "",
@@ -3454,6 +3386,20 @@ function renderWindowMeasure(measure: WindowMeasure, onAction: (action: ActionDe
     return (
       <WindowMeasureTreeLeaf key={measure.id} label={measure.label === undefined ? undefined : uiDataLabel(measure.label)}>
         <WindowMeasureSlider measure={measure} onAction={onAction} />
+      </WindowMeasureTreeLeaf>
+    );
+  }
+  if (measure.kind === "number") {
+    return (
+      <WindowMeasureTreeLeaf key={measure.id} label={measure.label === undefined ? undefined : uiDataLabel(measure.label)}>
+        {windowMeasureNumberControl(measure, onAction)}
+      </WindowMeasureTreeLeaf>
+    );
+  }
+  if (measure.kind === "progress") {
+    return (
+      <WindowMeasureTreeLeaf key={measure.id} label={measure.label === undefined ? undefined : uiDataLabel(measure.label)}>
+        {windowMeasureProgressControl(measure, onAction)}
       </WindowMeasureTreeLeaf>
     );
   }

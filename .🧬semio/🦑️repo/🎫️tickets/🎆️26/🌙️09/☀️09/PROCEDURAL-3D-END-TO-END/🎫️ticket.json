@@ -6,10 +6,11 @@
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
   "sessions": [
     "⚪9f5f6952-6c25-4056-a743-773b3668812e",
-    "⚪42c503b8-6ddf-447a-a5db-b8e4e531bf94"
+    "⚪42c503b8-6ddf-447a-a5db-b8e4e531bf94",
+    "⚪0c45de74-d4c4-44b7-a006-ce44ad732eca"
   ],
   "client": "claude-code",
   "llm": "fable-5-1",
-  "note": "Ticket bookkeeping done manually on disk: repo MCP CONNECT_TIMEOUT at session start (2026-09-09); repo MCP -32602 invalid initialize params (2026-09-12, session 3). Closed on disk 2026-09-12 (repo MCP -32602). Re-closed 2026-09-13 after the wgpu tree-row hit-test lane.",
+  "note": "Ticket bookkeeping done manually on disk: repo MCP CONNECT_TIMEOUT at session start (2026-09-09); repo MCP -32602 invalid initialize params (2026-09-12, session 3). Closed on disk 2026-09-12 (repo MCP -32602). Re-closed 2026-09-13 after the wgpu tree-row hit-test lane. Reopened on disk 2026-09-13 12:10 (session 4, repo MCP -32602): React setContributions hang regression + wgpu journey/input hops open.",
   "summary": "Procedural 3d (generation3d) works end to end from a user perspective in the React playground and the wgpu renderer: every window renders (Flow with a painted node graph, Preview with status/progress/cancel, Generations/Form/Generate preview, Viewer preview), all 8 examples load with live 3d preview (hex column converges in ~12 s, was never), hover/selection/orbit round-trip, role and mode switching by click and keyboard. Root causes fixed: missing extension invoke door on both sides, contributions push starvation, tick storms, a :root CSS animation style-recalc storm (10 s per hop), example-switch livelock, un-budgeted boolean evaluate killing the worker, view-state carriage over the 64 KiB cap, node-graph paint/camera/captions, mesh delivery round trips, close ladder 2052→125 turns, wgpu dock/reconcile/witness/framing/settle. Dev tooling: vite watcher wedge, one plugin-module staging root, wasm-dev opt-level overrides. See 📓️summary-2026-09-12.md and the 📓️*-2026-09-12.md lane reports."
 }

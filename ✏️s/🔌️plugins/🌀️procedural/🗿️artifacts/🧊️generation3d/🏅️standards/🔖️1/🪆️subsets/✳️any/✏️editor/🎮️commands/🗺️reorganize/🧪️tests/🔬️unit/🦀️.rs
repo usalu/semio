@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::generation3d::commands::move_media_node::MoveMediaNode;
+use crate::editor::generation3d::commands::node_graph_edit::NodeGraphEdit;
 use crate::editor::generation3d::unit_tests::context::{app, dispatch};
 use crate::editor::generation3d::Generation3dCommand;
 use crate::editor::generation3d::unit_tests::context;
@@ -12,11 +12,11 @@ async fn overlap_every_widget(app: &mut crate::editor::generation3d::unit_tests:
     let widget_ids: Vec<String> = context::snapshot(&app).fixture.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
     assert!(widget_ids.len() >= 2, "the reorganize fixture needs at least two widgets to be meaningfully overlapped");
     for id in &widget_ids {
-        dispatch(app, Generation3dCommand::MoveMediaNode(MoveMediaNode { node_id: id.clone(), x: OVERLAPPED.0, y: OVERLAPPED.1 })).await;
+        dispatch(app, Generation3dCommand::NodeGraphEdit(NodeGraphEdit { operations_json: crate::editor::generation3d::unit_tests::node_move_operations_json(id, OVERLAPPED.0, OVERLAPPED.1) })).await;
     }
     let layout = &context::snapshot(&app).fixture.layout;
     for id in &widget_ids {
-        let position = layout.get(id).unwrap_or_else(|| panic!("widget {id} must have a pinned layout after moveMediaNode"));
+        let position = layout.get(id).unwrap_or_else(|| panic!("widget {id} must have a pinned layout after a nodeGraphEdit move"));
         assert_eq!((position.x, position.y), OVERLAPPED, "widget {id} must start out overlapped");
     }
     widget_ids
@@ -57,4 +57,35 @@ async fn reorganize_leaves_no_two_widgets_sharing_one_position() {
         assert!(seen.insert(key), "reorganize left widget {id} sharing a position with another widget");
     }
     assert!(!seen.is_empty(), "reorganize must leave a real layout behind");
+}
+
+/// ⚖️ LAW: `reorganize` is reachable by BOTH hands. It is a top-level item of the flow canvas's
+/// context menu (mouse) and it carries an app keybinding (keyboard), with an en+de label on the
+/// action itself — no default language.
+///
+/// 🐛️ Before this law `reorganize` had exactly one trigger, the right-click menu, so a keyboard-only
+/// user could not reach it at all and no report could cite a proof of it firing
+/// (`📓️audit-user-journey-gaps-2026-09-13.md` gap #10).
+#[test]
+fn reorganize_is_reachable_by_menu_and_by_keyboard_in_both_languages() {
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let definition = crate::editor::generation3d::create_generation3d_app();
+    let action = definition.window_kinds.iter().flat_map(|kind| kind.actions.iter()).find(|action| action.id == "reorganize").expect("reorganize action");
+    let label = serde_json::to_string(&action.label).expect("reorganize label json");
+    assert!(label.contains("Reorganize") && label.contains("Neu anordnen"), "reorganize needs both declared languages: {label}");
+    let chords: Vec<&str> = definition.keybindings.iter().filter(|binding| binding.action.action == "reorganize").map(|binding| binding.keys.as_str()).collect();
+    assert_eq!(chords, vec!["mod+alt+l"], "reorganize must carry exactly its declared keyboard chord");
+    eprintln!("[DEBUG] reorganize chords={chords:?} label={label}");
+}
+
+/// ⚖️ LAW: the context menu still offers `reorganize` as its top-level layout verb — the mouse half of
+/// the law above, asserted against the built menu rather than against the builder.
+#[semio_framework_async_macros::async_test]
+async fn reorganize_is_the_context_menus_top_level_layout_verb() {
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let mut app = app().await;
+    let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
+    let menu = semio_framework_plugin::PluginApp::context_menu(&mut *app, &request, &semio_framework_plugin::ViewModel::default()).await;
+    let ids: Vec<String> = menu.iter().map(|item| item.id.clone()).collect();
+    assert!(ids.iter().any(|id| id == "reorganize"), "the flow canvas context menu must offer reorganize at top level: {ids:?}");
 }

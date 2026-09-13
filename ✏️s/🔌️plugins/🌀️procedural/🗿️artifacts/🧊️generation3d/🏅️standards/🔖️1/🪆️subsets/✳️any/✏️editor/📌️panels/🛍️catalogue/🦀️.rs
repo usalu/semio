@@ -59,14 +59,49 @@ fn catalogue_row(item: &semio_framework_os_flow::CatalogueItem) -> semio_framewo
     Ok(node)
 }
 
+/// 🧮️ The operators this render materialised as rows, and the operators it did not. Their sum is
+/// `flow_palette_catalogue_sections()`'s whole roster by construction, which
+/// `the_catalogue_panel_accounts_for_every_registered_operator` asserts — a group the row budget
+/// dropped WHOLE used to vanish with no count at all, so the panel silently understated the
+/// catalogue by however many sections did not fit (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️audit-user-journey-gaps-2026-09-13.md` §9 item 11).
+pub struct CataloguePage {
+    pub shown: usize,
+    pub omitted: usize,
+}
+
+/// 🧮️ [`render`]'s own accounting, without building any UI — the law reads this rather than
+/// re-deriving the page's arithmetic from a rendered tree it would have to parse.
+pub fn catalogue_page() -> CataloguePage {
+    let sections = semio_framework_os_flow::flow_palette_catalogue_sections();
+    let budget = &mut PanelRowBudget::new(panel_page_rows());
+    let mut shown = 0;
+    let total = sections.len();
+    for (index, section) in sections.iter().enumerate() {
+        let before = budget.remaining();
+        let _ = budget.nested(total.saturating_sub(index + 1), |share| paged_panel_section(&group_id(section), &section.items, CATALOGUE_GROUP_ROWS, share, |item, _| catalogue_row(item)));
+        shown += before.saturating_sub(budget.remaining());
+    }
+    let roster = sections.iter().map(|section| section.items.len()).sum::<usize>();
+    CataloguePage { shown, omitted: roster.saturating_sub(shown) }
+}
+
+fn group_id(section: &semio_framework_os_flow::CatalogueSection) -> String {
+    format!("procedural-play-catalogue.{}", section.id)
+}
+
 pub fn render(labels: &Generation3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let sections = semio_framework_os_flow::flow_palette_catalogue_sections();
+    let roster = sections.iter().map(|section| section.items.len()).sum::<usize>();
     let budget = &mut PanelRowBudget::new(panel_page_rows());
     let mut groups = UiFixedList::default();
     let total = sections.len();
+    let mut shown = 0;
     for (index, section) in sections.iter().enumerate() {
-        let group_id = format!("procedural-play-catalogue.{}", section.id);
+        let group_id = group_id(section);
+        let before = budget.remaining();
         let items = budget.nested(total.saturating_sub(index + 1), |share| paged_panel_section(&group_id, &section.items, CATALOGUE_GROUP_ROWS, share, |item, _| catalogue_row(item)))?;
+        let placed = before.saturating_sub(budget.remaining());
         if items.is_empty() {
             continue;
         }
@@ -74,13 +109,18 @@ pub fn render(labels: &Generation3dLabels) -> semio_framework_plugin::UiAssembly
         if groups.try_push(group).is_err() {
             break;
         }
+        shown += placed;
     }
-    // 🛟️ A spent page is still a correct page: when the process-wide argument arena has no credit left
-    // (another panel in this same process already holds it), the listing degrades to a single
-    // continuation row naming the omitted count instead of refusing the whole panel — the law
-    // `ui_value_headroom`'s own docstring states.
-    if groups.is_empty() {
-        let omitted = sections.iter().map(|section| section.items.len()).sum::<usize>();
+    // 🛟️ The page ALWAYS states what it left out, whether the arena trimmed a group's tail or dropped
+    // whole sections (or the whole listing — another panel in this process may already hold the
+    // argument arena's credit, which `ui_value_headroom`'s own docstring calls a correct page). A
+    // truncated group carries its own `+n`; this row carries the panel total, so `shown + omitted`
+    // is the registered roster and the reader is never shown a silently short catalogue. Every
+    // omitted operator is still reachable: `flow_app_catalogue` publishes the FULL roster on the
+    // reserved `framework.section.catalogue` surface the canvas spotlight browses, which
+    // `the_spotlight_catalogue_offers_every_operator_the_panel_omits` asserts.
+    let omitted = roster.saturating_sub(shown);
+    if omitted > 0 {
         groups.try_push(panel_continuation_row("procedural-play-catalogue.widgets", omitted)?).map_err(|_| PluginAssemblyError::new("ui.catalogue.items", "fixed UI catalogue admission failed"))?;
     }
     PanelTreeBuilder::new("procedural-play-catalogue")?.section("procedural-play-catalogue.widgets", Some(crate::ui_label(labels.widgets.as_str())?), true, groups)?.build()

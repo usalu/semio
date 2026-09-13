@@ -591,6 +591,67 @@ impl<V> UiFixedMap<V> {
         self.entries.try_push((key, value))
     }
 
+    /// 🗂️ Admits one entry at its SORTED position instead of requiring the caller to arrive in order.
+    ///
+    /// ⚖️ A `UiFixedMap`'s wire form is a JSON object, and object key order carries no meaning: the
+    /// wgpu bridge hands the guest's document to `JSON.stringify`, and every ECMAScript engine emits
+    /// array-index-like keys (`"10".."32"`) first in numeric order and the remaining string keys
+    /// (`"01".."09"`) after. Decoding through [`Self::try_push`] therefore refused the whole
+    /// app-static catalogue document on the wgpu renderer while React's reader — which sorts the
+    /// object's keys itself — read the same bytes. This is that reader's Rust half. One displaced
+    /// payload is carried through the tail rather than copied, so admission allocates nothing beyond
+    /// the list's own page grant. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
+    #[expect(clippy::result_large_err, reason = "Sorted fixed-map admission returns both original inputs when duplication or capacity rejects them.")]
+    pub fn try_insert(&mut self, key: UiText, value: V) -> Result<(), (UiText, V)> {
+        let Err(position) = self.search(&key) else { return Err((key, value)) };
+        if self.entries.len() == UI_FIXED_LIST_ITEMS || self.entries.try_reserve().is_err() {
+            return Err((key, value));
+        }
+        let mut carry = (key, value);
+        for index in position..self.entries.len() {
+            let Some(slot) = self.entries.get_mut(index) else { return Err(carry) };
+            std::mem::swap(slot, &mut carry);
+        }
+        self.entries.try_push_reserved(carry)
+    }
+
+    /// 🔎️ Whether a key is already admitted, so a decoder can tell duplication from capacity.
+    pub fn contains(&self, key: &UiText) -> bool {
+        self.search(key).is_ok()
+    }
+
+    /// 🩺️ Names WHY [`Self::try_insert`] refused, for a decoder that can only report a string.
+    ///
+    /// ⚖️ The two refusals are different defects with different owners and a bare "requires at most N
+    /// entries" hid one behind the other: a map at capacity is a producer publishing too many keys,
+    /// while a map refused below capacity is the aggregate `ui_value_headroom` page grant running out
+    /// mid-document — a whole-document budget question. The wgpu bridge surfaces this text verbatim in
+    /// `renderDocument result parse failed`, which was the only evidence available for two generation3d
+    /// examples whose preview document the shell refused (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub fn refusal(&self) -> String {
+        let length = self.entries.len();
+        if length >= UI_FIXED_LIST_ITEMS {
+            format!("UiFixedMap is full at its {UI_FIXED_LIST_ITEMS}-entry capacity")
+        } else {
+            format!("UiFixedMap admission ran out of page grant at entry {} of at most {UI_FIXED_LIST_ITEMS}", length + 1)
+        }
+    }
+
+    fn search(&self, key: &UiText) -> Result<usize, usize> {
+        let mut low = 0;
+        let mut high = self.entries.len();
+        while low < high {
+            let middle = low + (high - low) / 2;
+            let Some((candidate, _)) = self.entries.get(middle) else { return Err(low) };
+            match candidate.cmp(key) {
+                std::cmp::Ordering::Less => low = middle + 1,
+                std::cmp::Ordering::Greater => high = middle,
+                std::cmp::Ordering::Equal => return Ok(middle),
+            }
+        }
+        Err(low)
+    }
+
     pub fn pop(&mut self) -> Option<(UiText, V)> {
         self.entries.pop()
     }
@@ -635,14 +696,17 @@ impl<'de, V: Deserialize<'de>> Deserialize<'de> for UiFixedMap<V> {
             type Value = UiFixedMap<V>;
 
             fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-                formatter.write_str("an ascending bounded fixed UI map")
+                formatter.write_str("a bounded fixed UI map of unique keys, in any order")
             }
 
             fn visit_map<A: MapAccess<'de>>(self, mut access: A) -> Result<Self::Value, A::Error> {
                 let mut values = UiFixedMap::default();
                 while let Some((key, value)) = access.next_entry::<UiText, V>()? {
-                    if values.try_push(key, value).is_err() {
-                        return Err(serde::de::Error::custom(format!("UiFixedMap requires at most {UI_FIXED_LIST_ITEMS} ascending unique entries")));
+                    if values.contains(&key) {
+                        return Err(serde::de::Error::custom(format!("UiFixedMap keys must be unique; '{key}' arrived twice")));
+                    }
+                    if values.try_insert(key, value).is_err() {
+                        return Err(serde::de::Error::custom(values.refusal()));
                     }
                 }
                 Ok(values)
@@ -671,8 +735,11 @@ impl<V: ::protocol::value::FromValue> ::protocol::value::FromValue for UiFixedMa
         for (key, value) in entries {
             let key = UiText::try_from_string(key).map_err(|value| ::protocol::value::ValueError::new(format!("UiFixedMap key exceeds {UI_TEXT_MAX_BYTES} bytes with {}", value.len())))?;
             let value = <V as ::protocol::value::FromValue>::from_value(value)?;
-            if values.try_push(key, value).is_err() {
-                return Err(::protocol::value::ValueError::new(format!("UiFixedMap requires at most {UI_FIXED_LIST_ITEMS} ascending unique entries")));
+            if values.contains(&key) {
+                return Err(::protocol::value::ValueError::new(format!("UiFixedMap keys must be unique; '{key}' arrived twice")));
+            }
+            if values.try_insert(key, value).is_err() {
+                return Err(::protocol::value::ValueError::new(values.refusal()));
             }
         }
         Ok(values)
@@ -967,6 +1034,79 @@ impl UiValueArena {
             self.pages[tail].next = page;
         }
         self.collections[handle.slot].tail = page;
+        self.collections[handle.slot].items = collection_items;
+        self.collections[handle.slot].bytes = collection_bytes;
+        self.items = next_items;
+        self.bytes = next_bytes;
+        Ok(())
+    }
+
+    fn search_map_key(&self, handle: UiCollectionHandle, key: &UiText) -> Result<usize, usize> {
+        let Some(collection) = self.collection(handle) else { return Err(0) };
+        let mut page = collection.head;
+        let mut position = 0;
+        while page != UI_VALUE_NONE {
+            let Some(slot) = self.pages.get(page) else { return Err(position) };
+            let Some(UiPageValue::Map(candidate, _)) = slot.value.as_ref() else { return Err(position) };
+            match candidate.cmp(key) {
+                std::cmp::Ordering::Equal => return Ok(page),
+                std::cmp::Ordering::Greater => return Err(position),
+                std::cmp::Ordering::Less => {
+                    position += 1;
+                    page = slot.next;
+                }
+            }
+        }
+        Err(position)
+    }
+
+    fn map_prev_at_position(&self, handle: UiCollectionHandle, position: usize) -> Option<usize> {
+        let Some(collection) = self.collection(handle) else { return None };
+        if position == 0 {
+            return Some(UI_VALUE_NONE);
+        }
+        let mut page = collection.head;
+        for _ in 0..position - 1 {
+            if page == UI_VALUE_NONE {
+                return None;
+            }
+            page = self.pages[page].next;
+        }
+        Some(page)
+    }
+
+    #[expect(clippy::result_large_err, reason = "Rejected arena admission returns the exact key and value credits without allocating.")]
+    fn try_insert_map_page(&mut self, handle: UiCollectionHandle, prev: usize, key: UiText, value: UiValue) -> Result<(), (UiText, UiValue)> {
+        let bytes = size_of::<UiPageSlot>();
+        let Some(free_page_count) = self.free_page_count.checked_sub(1) else { return Err((key, value)) };
+        let page = self.free_pages[free_page_count];
+        let Some(epoch) = self.pages[page].epoch.checked_add(1) else { return Err((key, value)) };
+        let Some(next_items) = self.items.checked_add(1).filter(|items| *items <= UI_VALUE_AGGREGATE_ITEMS) else { return Err((key, value)) };
+        let Some(next_bytes) = self.bytes.checked_add(bytes).filter(|bytes| *bytes <= UI_VALUE_AGGREGATE_BYTES) else { return Err((key, value)) };
+        let Some(collection) = self.collection_mut(handle) else { return Err((key, value)) };
+        if collection.retiring {
+            return Err((key, value));
+        }
+        let Some(collection_items) = collection.items.checked_add(1) else { return Err((key, value)) };
+        let Some(collection_bytes) = collection.bytes.checked_add(bytes) else { return Err((key, value)) };
+        self.free_page_count = free_page_count;
+        let next = if prev == UI_VALUE_NONE {
+            collection.head
+        } else {
+            self.pages.get(prev).map(|slot| slot.next).unwrap_or(UI_VALUE_NONE)
+        };
+        self.pages[page] = UiPageSlot { epoch, next, value: Some(UiPageValue::Map(key, value)) };
+        if prev == UI_VALUE_NONE {
+            self.collections[handle.slot].head = page;
+            if self.collections[handle.slot].tail == UI_VALUE_NONE {
+                self.collections[handle.slot].tail = page;
+            }
+        } else {
+            self.pages[prev].next = page;
+            if self.collections[handle.slot].tail == prev {
+                self.collections[handle.slot].tail = page;
+            }
+        }
         self.collections[handle.slot].items = collection_items;
         self.collections[handle.slot].bytes = collection_bytes;
         self.items = next_items;
@@ -1378,6 +1518,49 @@ impl UiMapBuilder {
         Some(Self { handle: Some(handle), len: 0, last_key: None })
     }
 
+    /// 🔎️ Whether a key is already admitted, so a decoder can tell duplication from capacity.
+    pub fn contains(&self, key: &UiText) -> bool {
+        let Some(handle) = self.handle else { return false };
+        with_ui_value_arena(|arena| arena.search_map_key(handle, key).is_ok())
+    }
+
+    /// 🗂️ Admits one entry at its SORTED position instead of requiring the caller to arrive in order.
+    ///
+    /// ⚖️ A `UiMap`'s wire form is a JSON object, and object key order carries no meaning: the wgpu
+    /// bridge hands the guest's document to `JSON.stringify`, and every ECMAScript engine emits
+    /// array-index-like keys first in numeric order and the remaining string keys after. Decoding
+    /// through [`Self::push`] therefore refused whole documents on the wgpu renderer while React's
+    /// reader — which sorts the object's keys itself — read the same bytes. One displaced page is
+    /// spliced into the arena-backed chain rather than buffered into a vector.
+    #[expect(clippy::result_large_err, reason = "Map admission preserves the original key allocation and value owner for retry when duplication or credits reject them.")]
+    pub fn try_insert(&mut self, key: String, value: UiValue) -> Result<(), (String, UiValue)> {
+        let Some(handle) = self.handle else { return Err((key, value)) };
+        let Some(fixed_key) = UiText::try_from_str(&key) else { return Err((key, value)) };
+        let Some(next_len) = self.len.checked_add(1).filter(|len| *len <= UI_VALUE_MAX_ITEMS) else { return Err((key, value)) };
+        let insert = with_ui_value_arena(|arena| match arena.search_map_key(handle, &fixed_key) {
+            Ok(_) => Err((key, value)),
+            Err(position) => {
+                let Some(prev) = arena.map_prev_at_position(handle, position) else { return Err((key, value)) };
+                arena.try_insert_map_page(handle, prev, fixed_key, value).map_err(|(key, value)| (key.as_str().to_string(), value))
+            }
+        });
+        if let Err(pair) = insert {
+            return Err(pair);
+        }
+        self.last_key = None;
+        self.len = next_len;
+        Ok(())
+    }
+
+    /// 🩺️ Names WHY [`Self::try_insert`] refused, for a decoder that can only report a string.
+    pub fn refusal(&self) -> String {
+        if self.len >= UI_VALUE_MAX_ITEMS {
+            format!("UiMap is full at its {UI_VALUE_MAX_ITEMS}-entry capacity")
+        } else {
+            format!("UiMap admission ran out of page grant at entry {} of at most {UI_VALUE_MAX_ITEMS}", self.len + 1)
+        }
+    }
+
     #[expect(clippy::result_large_err, reason = "Map admission preserves the original key allocation and value owner for retry when ordering or credits reject them.")]
     pub fn push(&mut self, key: String, value: UiValue) -> Result<(), (String, UiValue)> {
         let Some(handle) = self.handle else { return Err((key, value)) };
@@ -1439,14 +1622,18 @@ impl<'de> Deserialize<'de> for UiMap {
             type Value = UiMap;
 
             fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-                formatter.write_str("a fixed-page UI value map")
+                formatter.write_str("a fixed-page UI value map of unique keys, in any order")
             }
 
             fn visit_map<A: MapAccess<'de>>(self, mut access: A) -> Result<Self::Value, A::Error> {
                 let Some(mut builder) = UiMapBuilder::try_new() else { return Err(serde::de::Error::custom("UiMap admission failed")) };
                 while let Some((key, value)) = access.next_entry::<String, UiValue>()? {
-                    if builder.push(key, value).is_err() {
-                        return Err(serde::de::Error::custom(format!("UiMap requires at most {UI_VALUE_MAX_ITEMS} ascending unique entries within the aggregate page budget")));
+                    let fixed_key = UiText::try_from_str(&key).ok();
+                    if fixed_key.as_ref().is_some_and(|fixed_key| builder.contains(fixed_key)) {
+                        return Err(serde::de::Error::custom(format!("UiMap keys must be unique; '{key}' arrived twice")));
+                    }
+                    if builder.try_insert(key, value).is_err() {
+                        return Err(serde::de::Error::custom(builder.refusal()));
                     }
                 }
                 Ok(builder.finish())

@@ -363,10 +363,8 @@
       "ratio"
     ],
     "debugKeys": [
-      "evalLen",
       "meshesLen",
-      "instancesLen",
-      "evalHead"
+      "instancesLen"
     ],
     "ratioLaw": "ratio = (unitsDone + chunksDone) / (unitsTotal + chunksTotal); a zero total is 1 when nothing is in flight and 0 otherwise.",
     "evaluateFaultCode": "flow.extension-evaluate-failed",
@@ -376,19 +374,22 @@
         "surface": "editor",
         "windowKindId": "procedural-preview",
         "cancelAction": "cancelPreviewEval",
-        "declaresCancelCommand": true
+        "declaresCancelCommand": true,
+        "offersCancelOnWindow": true
       },
       {
         "surface": "generate",
         "windowKindId": "generation3d-generate-preview",
         "cancelAction": "cancelPreviewEval",
-        "declaresCancelCommand": true
+        "declaresCancelCommand": true,
+        "offersCancelOnWindow": true
       },
       {
         "surface": "viewer",
         "windowKindId": "procedural-view-preview",
         "cancelAction": "cancelPreviewEval",
-        "declaresCancelCommand": true
+        "declaresCancelCommand": true,
+        "offersCancelOnWindow": true
       }
     ],
     "states": [

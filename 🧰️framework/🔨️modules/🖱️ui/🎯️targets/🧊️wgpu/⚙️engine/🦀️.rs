@@ -13,7 +13,7 @@ use crate::wgpu::component::layout::WindowLayout;
 #[cfg(any(test, feature = "testkit"))]
 use crate::wgpu::component::ui::UiNode;
 use crate::wgpu::draw::{DrawList, IconAtlas};
-use crate::wgpu::events::{EventRouter, UiCommand, UiEvent};
+use crate::wgpu::events::{DragPayload, EventRouter, UiCommand, UiEvent};
 use crate::wgpu::input::{retained_hit_registration, RetainedHitRegistration};
 use crate::wgpu::layout::TreeRowMetrics;
 use crate::wgpu::flex::{LayoutJobStage, LayoutJobStep};
@@ -1723,6 +1723,18 @@ impl Ui {
     pub fn drain_commands(&mut self) -> Vec<UiCommand> {
         std::mem::take(&mut self.pending_commands)
     }
+
+    /// 🫳️ Every retained-ui drag in flight (`EventRouter::DragSession`), keyed by window id with pointer in that window's local coordinates.
+    pub fn active_drag_sessions(&self) -> Vec<(String, f32, f32, DragPayload)> {
+        let mut sessions = Vec::new();
+        for window_id in self.window_ids() {
+            let Some(window) = self.windows.get(window_id) else { continue };
+            if let Some(drag) = window.router.drag_session() {
+                sessions.push((window_id.to_string(), drag.pointer_x, drag.pointer_y, drag.payload.clone()));
+            }
+        }
+        sessions
+    }
 }
 
 impl Default for Ui {
@@ -1785,6 +1797,18 @@ impl Ui {
     /// same pass — both purely additive reads, no change to `dispatch_event`'s own focus logic.
     pub fn window_has_focus(&self, window_id: &str) -> bool {
         self.windows.get(window_id).is_some_and(|window| window.router.is_focused())
+    }
+
+    /// 🖱️ The window whose retained content currently holds pointer capture, if any — a host routes
+    /// every pointer move THERE while a gesture is live, regardless of what its own flat hit
+    /// registry answers for the current point.
+    ///
+    /// 🩸️ Without it a `Slider` (or `Ring`) drag died the instant the pointer left the control's own
+    /// rect: the host resolved the point to some other target, stopped feeding the router moves, and
+    /// the value froze mid-drag — while a browser keeps the gesture with the element that captured
+    /// it until release (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub fn window_with_pointer_capture(&self) -> Option<&str> {
+        self.windows.ids().map(AsRef::as_ref).find(|window_id| self.windows.get(window_id).is_some_and(|window| window.router.capture().is_some()))
     }
 }
 //#endregion 🔬️Introspection

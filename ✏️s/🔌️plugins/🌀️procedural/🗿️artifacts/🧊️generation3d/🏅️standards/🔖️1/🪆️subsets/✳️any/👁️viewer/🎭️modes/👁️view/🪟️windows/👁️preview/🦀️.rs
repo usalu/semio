@@ -368,7 +368,7 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, 
     let status_json = preview_eval::preview_window_status_json(
         session,
         preview_eval::preview_status_json(eval_json, &document.fixture),
-        &preview_eval::PreviewStatusDebug { eval_json, meshes_json: &payload.meshes_json, instances_json: &payload.instances_json },
+        &preview_eval::PreviewStatusDebug { meshes_json: &payload.meshes_json, instances_json: &payload.instances_json },
         None,
     );
     let sun = config.sun();

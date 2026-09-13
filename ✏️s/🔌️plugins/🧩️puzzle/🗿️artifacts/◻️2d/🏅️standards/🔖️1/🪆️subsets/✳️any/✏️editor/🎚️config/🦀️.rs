@@ -32,6 +32,11 @@ fn default_camera_zoom() -> f64 {
     1.0
 }
 
+/// 🪣️ The fill count a fresh board offers — see `modes::edit::tools::fill`.
+fn default_fill_count() -> u32 {
+    crate::editor::puzzle2d::modes::edit::tools::fill::PUZZLE2D_DEFAULT_FILL_COUNT
+}
+
 //#endregion 🔖️Defaults
 
 //#region 🧵️FillLifecycle
@@ -170,7 +175,7 @@ pub struct Puzzle2dPlayRuntime {
     pub brush_candidates: Vec<dsl::DslValue>,
     #[value(default)]
     pub brush_candidate_source_handle_id: String,
-    #[value(default)]
+    #[value(default = "default_fill_count")]
     pub fill_count: u32,
     #[value(default)]
     pub fill_job_operation: u64,
@@ -215,7 +220,7 @@ impl Default for Puzzle2dPlayRuntime {
             brush_candidate_index: 0,
             brush_candidates: Vec::new(),
             brush_candidate_source_handle_id: String::new(),
-            fill_count: 0,
+            fill_count: default_fill_count(),
             fill_job_operation: 0,
             fill_job_generation: 0,
             fill_job_seed: 1,

@@ -20,6 +20,14 @@ fn default_overlap_budget() -> f64 {
     0.02
 }
 
+/// 🪣️ The fill count a fresh document asks for. Unbounded above — the planner plans toward exactly
+/// this number and reports a document it cannot fill as a visible stall, never as a clamp
+/// (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS master plan §1 decisions 1 and 4). A hundred is
+/// a run a person watches happen rather than a silent nothing at zero.
+fn default_fill_count() -> u32 {
+    100
+}
+
 fn default_manual_lod() -> f64 {
     100.0
 }
@@ -146,7 +154,7 @@ pub struct Puzzle3dRuntime {
     pub suggestion_menu: Option<Puzzle3dSuggestionMenu>,
     #[value(default = "default_overlap_budget")]
     pub overlap_budget: f64,
-    #[value(default)]
+    #[value(default = "default_fill_count")]
     pub fill_count: u32,
     #[value(default)]
     pub brush_candidate_index: usize,
@@ -224,7 +232,7 @@ impl Default for Puzzle3dRuntime {
         Self {
             suggestion_menu: None,
             overlap_budget: default_overlap_budget(),
-            fill_count: 0,
+            fill_count: default_fill_count(),
             brush_candidate_index: 0,
             object_kind_weights: HashMap::new(),
             vortex_kind_weights: HashMap::new(),
@@ -257,7 +265,7 @@ impl Default for Puzzle3dRuntime {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dConfig {
-    #[value(default)]
+    #[value(default = "default_fill_count")]
     pub fill_count: u32,
     #[value(default = "default_overlap_budget")]
     pub overlap_budget: f64,
@@ -279,7 +287,7 @@ pub struct Puzzle3dConfig {
 
 impl Default for Puzzle3dConfig {
     fn default() -> Self {
-        Self { fill_count: 0, overlap_budget: default_overlap_budget(), object_kind_weights: HashMap::new(), vortex_kind_weights: HashMap::new(), active_example_id: default_active_example_id() }
+        Self { fill_count: default_fill_count(), overlap_budget: default_overlap_budget(), object_kind_weights: HashMap::new(), vortex_kind_weights: HashMap::new(), active_example_id: default_active_example_id() }
     }
 }
 

@@ -92,7 +92,7 @@ fn set_active_example_artifact_gesture_fits_its_declared_fold_envelope_for_every
         assert_eq!(base.fixture.widgets, target.fixture.widgets, "example {example_id}: replaying the authored gesture against the running post root does not reach the example's own widgets — in THIS order");
         assert_eq!(base.fixture.synapses, target.fixture.synapses, "example {example_id}: the replayed gesture does not reach the example's own synapses");
         assert_eq!(base.fixture.layout, target.fixture.layout, "example {example_id}: the replayed gesture leaves the PREVIOUS example's orphaned layout overrides behind");
-        assert_eq!(base.fixture.camera, Generation3dSnapshotRead::new(example_snapshot(previous).expect("bundled example snapshot")).fixture.camera, "example {example_id}: the artifact lane must NOT author the camera (`mutations::tests::fixture_ops_ignore_camera`) — `config_after_example_load` carries it on the Config lane");
+        assert_eq!(base.fixture.camera, Generation3dSnapshotRead::new(example_snapshot(previous).expect("bundled example snapshot")).fixture.camera, "example {example_id}: the artifact lane must NOT author the camera (`mutations::tests::fixture_ops_ignore_camera`) — `config_after_document_load` carries it on the Config lane");
         assert_eq!(base.fixture.schema, target.fixture.schema, "example {example_id}: the replayed gesture does not reach the example's own schema");
         let (rows, declared) = folded_rows_against_declaration(&items);
         assert!(rows <= declared, "example {example_id}: the staged gesture folds {rows} rows against a declared envelope of {declared}");

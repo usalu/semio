@@ -6866,6 +6866,25 @@ pub mod app {
             (a, b)
         }
 
+        /// ⏪️ Drives ONE framework-reserved history verb the whole way a shell does: `handle_action`
+        /// only ADMITS `"undo"`/`"redo"` — they are `framework_reserved_job!` routes
+        /// (`FrameworkUndoJob`/`FrameworkRedoJob`), so the admission comes back as an
+        /// `Effect::SpawnJob { kind: FRAMEWORK_RESERVED_JOB_KIND }` the caller has to run before the
+        /// store ever sees `ArtifactCommand::Undo`. Dropping that receipt and pumping only the typed
+        /// publication left every retained app's undo a no-op, which read as a flaky
+        /// `undo did not revert to the expected snapshot` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        /// A non-retained app admits no spawn job and
+        /// [`super::settle_framework_reserved_admission`] hands the same result straight back.
+        pub async fn settle_history_verb<A, M>(app: &mut VcsArtifactApp<A, M>, action: &str, receiver: u32)
+        where
+            A: ArtifactApp,
+            M: super::SpaceMember + super::MemberFactory + Send + 'static,
+        {
+            let admitted = app.handle_action(action, None, &meta("local")).await.unwrap_or_else(|fault| panic!("history verb {action} admission: {fault:?}"));
+            super::settle_framework_reserved_admission(app, admitted).await.unwrap_or_else(|fault| panic!("history verb {action} reserved-job commit: {fault:?}"));
+            settle_registered_typed_operation(app, receiver).await.unwrap_or_else(|fault| panic!("history verb {action} publication: {fault:?}"));
+        }
+
         /// 🧪️ Runs `command` once via the typed channel, asserts `probe(app)` matches `after`, undoes (still
         /// the framework-reserved `"undo"` action) and asserts `before`, redoes and asserts `after` again — the
         /// repeated undo/redo round-trip test body. B1: takes a typed `A::Command` value (`dispatch_typed`) —
@@ -6884,11 +6903,9 @@ pub mod app {
             app.dispatch_typed(command, &meta("local")).await.expect("apply command");
             settle_registered_typed_operation(app, receiver).await.expect("apply command publication");
             assert_eq!(probe(app), after, "command did not produce the expected snapshot");
-            app.handle_action("undo", None, &meta("local")).await.expect("undo");
-            settle_registered_typed_operation(app, receiver).await.expect("undo publication");
+            settle_history_verb(app, "undo", receiver).await;
             assert_eq!(probe(app), before, "undo did not revert to the expected snapshot");
-            app.handle_action("redo", None, &meta("local")).await.expect("redo");
-            settle_registered_typed_operation(app, receiver).await.expect("redo publication");
+            settle_history_verb(app, "redo", receiver).await;
             assert_eq!(probe(app), after, "redo did not reapply the expected snapshot");
         }
 
@@ -26290,6 +26307,7 @@ pub mod app {
 
     /// 🐞️ `[DEBUG]` last maintenance stage entered — temporary, ticket 26/09/02/PUZZLE-3D-END-TO-END.
     pub(crate) static LAST_MAINTENANCE_STAGE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 
     impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
         #[inline(never)]

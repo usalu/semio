@@ -1929,7 +1929,26 @@ pub struct DagHost {
     minimap_widget_visible: bool,
     minimap_widget_hovered: bool,
     minimap_widget_drag: Option<(f64, f64)>,
+    /// 🔗️ Wire edits this host performed on its OWN geometry since the last drain, for a renderer to
+    /// forward to the guest that owns the graph — see [`DagGraphEdit`].
+    pending_graph_edits: Vec<DagGraphEdit>,
 }
+
+/// 🔗️ One wire edit a completed pointer gesture performed on this host's own graph, in the guest's
+/// own vocabulary (`FlowNodeGraphEditOp`'s `connect`, and the synapse id a `disconnect` names) rather
+/// than in engine handle/edge ids. The renderer drains these after a gesture and dispatches them as
+/// a `nodeGraphEdit`, which is how a wire the user drew survives the guest's next fixture push —
+/// React reaches the same end by re-publishing the WHOLE fixture (`commitFixture`), a payload no
+/// bounded-action budget on the wgpu target can carry.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum DagGraphEdit {
+    Connect { source_node_id: String, source_port_id: String, target_node_id: String, target_port_id: String },
+    Disconnect { edge_id: String },
+}
+
+/// 📏️ How many wire edits one drain may carry. A single pointer gesture completes at most one wire,
+/// so this is slack for a gesture that also removes the edge it replaced, never a growth path.
+pub const DAG_GRAPH_EDIT_CAPACITY: usize = 8;
 
 /// 🧮️ One retained retirement turn; `credited_bytes` never exceeds the current grant,
 /// while `released_bytes` is the physical backing freed after enough credits were retained.
@@ -2489,6 +2508,7 @@ pub struct DagHostRetirementState {
     ghost_node: Option<DagNodeSpec>,
     pending_cluster_explode: Option<String>,
     pending_export_click: Option<String>,
+    pending_graph_edits: Vec<DagGraphEdit>,
     pending_open_instance_id: Option<String>,
     last_pointer_down_node_id: Option<String>,
     computing_active: Option<NodeId>,
@@ -2569,6 +2589,7 @@ impl DagHostRetirement {
             minimap_widget_visible: _,
             minimap_widget_hovered: _,
             minimap_widget_drag: _,
+            pending_graph_edits,
         } = host;
         Self {
             state: std::mem::ManuallyDrop::new(DagHostRetirementState {
@@ -2587,6 +2608,7 @@ impl DagHostRetirement {
                 ghost_node,
                 pending_cluster_explode,
                 pending_export_click,
+                pending_graph_edits,
                 pending_open_instance_id,
                 last_pointer_down_node_id,
                 computing_active,
@@ -2689,6 +2711,16 @@ impl DagHostRetirement {
         }
         if let Some(value) = self.pending_export_click.take() {
             return self.credit_owner(DagRetirementOwner::Text(value), maximum_items, maximum_bytes);
+        }
+        // 🔗️ An undrained wire edit still owns its ids; retire them through the same string ladder
+        // every other owned id goes through rather than dropping them in one unbounded free.
+        if let Some(edit) = self.pending_graph_edits.pop() {
+            let values = match edit {
+                DagGraphEdit::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => vec![source_node_id, source_port_id, target_node_id, target_port_id],
+                DagGraphEdit::Disconnect { edge_id } => vec![edge_id],
+            };
+            let remaining_backing_bytes = dag_vec_backing_bytes(&values);
+            return self.credit_owner(DagRetirementOwner::Strings { values, remaining_backing_bytes }, maximum_items, maximum_bytes);
         }
         if let Some(value) = self.pending_open_instance_id.take() {
             return self.credit_owner(DagRetirementOwner::Text(value), maximum_items, maximum_bytes);
@@ -2799,6 +2831,7 @@ impl DagHostRetirement {
             && self.ghost_node.is_none()
             && self.pending_cluster_explode.is_none()
             && self.pending_export_click.is_none()
+            && self.pending_graph_edits.is_empty()
             && self.pending_open_instance_id.is_none()
             && self.last_pointer_down_node_id.is_none()
             && self.computing_active.is_none()
@@ -2968,6 +3001,7 @@ impl DagHost {
             minimap_widget_visible: false,
             minimap_widget_hovered: false,
             minimap_widget_drag: None,
+            pending_graph_edits: Vec::new(),
         };
         host.rebuild_engine_with_layout(apply_layout);
         host
@@ -4561,10 +4595,12 @@ impl DagHost {
                 BoardEvent::EdgeConnected { id, source, target } => {
                     wired = true;
                     dag_debug_log(&format!("[DEBUG] dag edge connected id={id} source={source} target={target}"));
+                    self.journal_connect(source, target);
                 }
                 BoardEvent::EdgeRemoved { id } => {
                     wired = true;
                     dag_debug_log(&format!("[DEBUG] dag edge removed id={id}"));
+                    self.journal_disconnect(id);
                 }
                 BoardEvent::SelectionChanged { node_ids, .. } => {
                     let ids: Vec<String> = node_ids.iter().filter_map(|&nid| self.widget_id_for_node_id(nid)).collect();
@@ -4592,6 +4628,58 @@ impl DagHost {
     pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
         self.fixture.camera = DagCamera { x, y, zoom };
         self.engine.set_camera(x, y, zoom);
+    }
+
+    /// 🔗️ Records one completed connection in the guest's own vocabulary. `handle_key_map` already
+    /// keys every handle as `"{nodeId}@{portId}"` — the same grammar the pick-target/hover channel
+    /// uses — so this is a lookup, never a second derivation of what a port is.
+    fn journal_connect(&mut self, source: HandleId, target: HandleId) {
+        let Some((source_node_id, source_port_id)) = self.handle_key_map.get(&source).and_then(|key| key.split_once('@')) else { return };
+        let Some((target_node_id, target_port_id)) = self.handle_key_map.get(&target).and_then(|key| key.split_once('@')) else { return };
+        let edit = DagGraphEdit::Connect { source_node_id: source_node_id.to_string(), source_port_id: source_port_id.to_string(), target_node_id: target_node_id.to_string(), target_port_id: target_port_id.to_string() };
+        self.push_graph_edit(edit);
+    }
+
+    /// 🔗️ Records one removed wire by the SYNAPSE id the guest knows it as. An edge the engine
+    /// created in this same gesture has no synapse id yet and is simply not journalled — the guest
+    /// never learned about it, so it has nothing to remove.
+    fn journal_disconnect(&mut self, edge: EdgeId) {
+        let Some(edge_id) = self.edge_id_map.get(&edge).cloned() else { return };
+        self.push_graph_edit(DagGraphEdit::Disconnect { edge_id });
+    }
+
+    /// 🔗️ Bounded push: the journal never grows past [`DAG_GRAPH_EDIT_CAPACITY`], and a duplicate of
+    /// an edit already pending is dropped rather than dispatched twice.
+    fn push_graph_edit(&mut self, edit: DagGraphEdit) {
+        if self.pending_graph_edits.len() >= DAG_GRAPH_EDIT_CAPACITY || self.pending_graph_edits.contains(&edit) {
+            return;
+        }
+        self.pending_graph_edits.push(edit);
+    }
+
+    /// 🔗️ Drains the wire edits this host performed since the last call — the renderer's one read
+    /// point after a completed pointer gesture.
+    pub fn take_graph_edits(&mut self) -> Vec<DagGraphEdit> {
+        std::mem::take(&mut self.pending_graph_edits)
+    }
+
+    /// 🖱️ Whether a screen-space interaction only `pointer_*_screen` implements is already in flight
+    /// — drawing/reconnecting a wire, dragging the minimap viewport, panning, or dragging an inline
+    /// widget. While one is, the bounded `derive_pointer_plan` path (whose gesture vocabulary is
+    /// `Idle | Pan | Drag | Select`) must not claim the follow-up move/up and cancel it.
+    pub fn screen_pointer_gesture_active(&self) -> bool {
+        !matches!(self.engine.interaction, InteractionMode::Idle) || self.minimap_widget_drag.is_some() || self.pan_anchor.is_some() || self.widget_drag.is_some() || self.pending_port_insert.is_some()
+    }
+
+    /// 🖱️ Whether a press at this SCREEN point begins such an interaction: the minimap widget, a
+    /// wire handle, a port insertion target, or an inline widget. Exactly the four hits
+    /// `bounded_node_hit_index` answers `Unsupported` for, asked as a question instead of as a fault.
+    pub fn screen_pointer_gesture_begins_at(&self, sx: f64, sy: f64) -> bool {
+        if self.minimap_widget_pointer_hit(sx, sy).is_some() {
+            return true;
+        }
+        let world = self.screen_to_world_point(sx, sy);
+        self.port_insert_hit(world.x, world.y, self.fixture.camera.zoom).is_some() || self.world_hits_handle(world.x, world.y) || self.widget_hit_at(world.x, world.y).is_some()
     }
 
     fn handle_id_for_port(&self, node_id: &str, port_id: &str) -> Option<HandleId> {
@@ -6432,6 +6520,10 @@ pub use wasm_session::DagSession;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔗️wire-edit/🦀️.rs"]
+mod wire_edit_tests;
 // #endregion 🔖️Tests
 
 //#region 🔖️WasmBridge

@@ -10,7 +10,8 @@
       "expected": {
         "pluginVariant": "s",
         "appRole": "editor",
-        "appMode": ""
+        "appMode": "",
+        "appExample": ""
       }
     },
     {
@@ -18,7 +19,8 @@
       "expected": {
         "pluginVariant": "note",
         "appRole": "viewer",
-        "appMode": ""
+        "appMode": "",
+        "appExample": ""
       }
     },
     {
@@ -26,7 +28,8 @@
       "expected": {
         "pluginVariant": "puzzle3d",
         "appRole": "editor",
-        "appMode": ""
+        "appMode": "",
+        "appExample": ""
       }
     },
     {
@@ -34,7 +37,8 @@
       "expected": {
         "pluginVariant": "note",
         "appRole": "editor",
-        "appMode": ""
+        "appMode": "",
+        "appExample": ""
       }
     },
     {
@@ -47,7 +51,8 @@
           "user": "Fixture User",
           "dataDir": "fixture"
         },
-        "appMode": ""
+        "appMode": "",
+        "appExample": ""
       }
     },
     {
@@ -55,7 +60,8 @@
       "expected": {
         "pluginVariant": "generation3d",
         "appRole": "editor",
-        "appMode": "generate"
+        "appMode": "generate",
+        "appExample": ""
       }
     },
     {
@@ -63,7 +69,8 @@
       "expected": {
         "pluginVariant": "generation3d",
         "appRole": "viewer",
-        "appMode": "view"
+        "appMode": "view",
+        "appExample": ""
       }
     },
     {
@@ -72,7 +79,8 @@
       "expected": {
         "pluginVariant": "note",
         "appRole": "editor",
-        "appMode": ""
+        "appMode": "",
+        "appExample": ""
       }
     },
     {
@@ -81,7 +89,35 @@
       "expected": {
         "pluginVariant": "puzzle3d",
         "appRole": "editor",
-        "appMode": ""
+        "appMode": "",
+        "appExample": ""
+      }
+    },
+    {
+      "search": "?plugin=generation3d&example=%F0%9F%8D%84%EF%B8%8Fhexagonal-mushroom-column",
+      "expected": {
+        "pluginVariant": "generation3d",
+        "appRole": "editor",
+        "appMode": "",
+        "appExample": "🍄️hexagonal-mushroom-column"
+      }
+    },
+    {
+      "search": "?plugin=generation3d&role=viewer&mode=view&example=%F0%9F%93%A6%EF%B8%8Frectangle-extrude-volume",
+      "expected": {
+        "pluginVariant": "generation3d",
+        "appRole": "viewer",
+        "appMode": "view",
+        "appExample": "📦️rectangle-extrude-volume"
+      }
+    },
+    {
+      "search": "?plugin=generation3d&example=",
+      "expected": {
+        "pluginVariant": "generation3d",
+        "appRole": "editor",
+        "appMode": "",
+        "appExample": ""
       }
     }
   ],

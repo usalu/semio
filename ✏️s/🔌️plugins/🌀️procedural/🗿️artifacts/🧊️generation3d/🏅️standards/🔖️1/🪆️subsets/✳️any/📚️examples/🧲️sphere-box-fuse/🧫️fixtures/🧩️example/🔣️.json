@@ -43,5 +43,10 @@
     "maxRoundTrips": 2,
     "maxChunks": 1
   },
+  "budget": {
+    "maxEvaluateMicros": 87000,
+    "maxTessellateMicros": 845000,
+    "maxPreviewTessellateMicros": 44000
+  },
   "kernelStatus": "green"
 }

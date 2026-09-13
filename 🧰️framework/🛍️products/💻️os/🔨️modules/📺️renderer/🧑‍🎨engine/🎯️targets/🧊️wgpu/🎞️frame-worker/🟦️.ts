@@ -41,8 +41,11 @@ type RendererBindings = {
   default?: (moduleOrPath?: WebAssembly.Module | RequestInfo | URL) => Promise<unknown>;
   dumpStructure?: (windowId?: string) => string;
   dumpFrameStats?: (windowId?: string) => string;
+  /** ♿️ The window's accessibility tree, for the UI isolate's ARIA mirror — production, not a probe. */
+  dumpAccessibility?: (windowId?: string) => string;
   semioWgpuSetAppRole?: (role: string) => void;
   semioWgpuSetBootMode?: (mode: string) => void;
+  semioWgpuSetBootExample?: (exampleId: string) => void;
   semioWgpuSetHubEnv?: (hubUrl: string, user: string, dataDir: string) => void;
   semioWgpuWorkerBootstrap?: (
     canvas: OffscreenCanvas,
@@ -313,7 +316,7 @@ function answerIntrospection(message: Extract<BrowserFrameUiMessage, { kind: "in
     respond(null, "renderer bindings are not mounted in this Worker");
     return;
   }
-  const hook = message.probe === "structure" ? bindings.dumpStructure : bindings.dumpFrameStats;
+  const hook = message.probe === "structure" ? bindings.dumpStructure : message.probe === "accessibility" ? bindings.dumpAccessibility : bindings.dumpFrameStats;
   if (!hook) {
     respond(null, `renderer bindings expose no ${message.probe} introspection export`);
     return;
@@ -478,6 +481,7 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
     ownedStep("runtime-environment", () => {
       loaded.semioWgpuSetAppRole?.(message.appRole);
       loaded.semioWgpuSetBootMode?.(message.appMode ?? "");
+      loaded.semioWgpuSetBootExample?.(message.appExample ?? "");
       if (message.hub) loaded.semioWgpuSetHubEnv?.(message.hub.hubUrl, message.hub.user, message.hub.dataDir);
     }, suspensionLedger);
     progress("plugin-graph", 0.25);

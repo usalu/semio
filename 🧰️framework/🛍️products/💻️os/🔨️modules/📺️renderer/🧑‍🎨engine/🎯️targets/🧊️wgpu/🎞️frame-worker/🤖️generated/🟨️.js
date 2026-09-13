@@ -26135,7 +26135,7 @@ function answerIntrospection(message) {
     respond(null, "renderer bindings are not mounted in this Worker");
     return;
   }
-  const hook = message.probe === "structure" ? bindings.dumpStructure : bindings.dumpFrameStats;
+  const hook = message.probe === "structure" ? bindings.dumpStructure : message.probe === "accessibility" ? bindings.dumpAccessibility : bindings.dumpFrameStats;
   if (!hook) {
     respond(null, `renderer bindings expose no ${message.probe} introspection export`);
     return;
@@ -26274,6 +26274,7 @@ async function boot(message) {
     ownedStep("runtime-environment", () => {
       loaded.semioWgpuSetAppRole?.(message.appRole);
       loaded.semioWgpuSetBootMode?.(message.appMode ?? "");
+      loaded.semioWgpuSetBootExample?.(message.appExample ?? "");
       if (message.hub)
         loaded.semioWgpuSetHubEnv?.(message.hub.hubUrl, message.hub.user, message.hub.dataDir);
     }, suspensionLedger);

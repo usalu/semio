@@ -70,7 +70,6 @@ pub const PUZZLE3D_FALLBACK_MESH_KIND: &str = "box";
 /// pressed explicitly; an unset/cleared utility must not fall back to `transform` or the gumball
 /// appears without an active transform tool.
 pub const PUZZLE3D_DEFAULT_UTILITY: &str = "";
-pub const PUZZLE3D_FILL_COUNT_MAX: u32 = 1000;
 /// 🌀️ Window option: emit every object's vortices into the 3D scene.
 pub const PUZZLE3D_VORTEX_SHOW_ALWAYS: &str = "always";
 /// 🌀️ Window option: emit vortices only for hovered/selected objects (and vortex-only hover/selection).
@@ -205,10 +204,6 @@ pub struct Puzzle3dObject {
     pub hidden: bool,
     #[value(default)]
     pub locked: bool,
-    /// 🪣️ Live-viewport-only tag from `compose_fill_display` — this object's 0-based position in the
-    /// fill plan's sequence, never persisted to the committed document.
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub reveal_index: Option<usize>,
 }
 
 /// 🗂️ The editor-side, untyped twin of the persisted `Puzzle3dMeta`: both catalog members stay
@@ -559,7 +554,7 @@ fn snapshot_reference_from_fixture(reference: &Puzzle3dReference) -> crate::Puzz
     }
 }
 
-fn fixture_object_from_snapshot(object: &crate::Puzzle3dObject) -> Puzzle3dObject {
+pub(crate) fn fixture_object_from_snapshot(object: &crate::Puzzle3dObject) -> Puzzle3dObject {
     Puzzle3dObject {
         id: object.id.clone(),
         label: object.label.clone(),
@@ -571,7 +566,6 @@ fn fixture_object_from_snapshot(object: &crate::Puzzle3dObject) -> Puzzle3dObjec
         vortices: object.vortices.iter().map(fixture_vortex_from_snapshot).collect(),
         hidden: object.hidden,
         locked: object.locked,
-        reveal_index: None,
     }
 }
 
@@ -721,6 +715,7 @@ fn puzzle3d_action_document_intent(action: &str) -> bool {
             | "addBrushObject"
             | "acceptSuggestion"
             | "importFixture"
+            | "fillBuildTick"
     )
 }
 
@@ -1519,7 +1514,7 @@ fn engine_fixture_object(object: &Puzzle3dObject) -> crate::standards::v1::subse
         orientation: object.orientation,
         scale: object.scale.clone(),
         vortices: object.vortices.iter().map(engine_vortex_props).collect(),
-        reveal_index: object.reveal_index,
+        reveal_index: None,
     }
 }
 
@@ -1620,9 +1615,20 @@ pub fn seed_one_precompute_mesh_fallback(session: &mut Puzzle3dPrecomputeSession
 
 /// 🧊️ The whole sync, for the callers that are not themselves step-bounded (render, the restored
 /// session, the brush lane driver): every owed mesh fallback, then the scene.
+/// 🎚️ `runtime.fill_count` is the ONE source of truth for what the planner is held to, and this is the
+/// ONE place it reaches the live session: `SceneConfig` carries no count, so a session that is never
+/// told plans toward [`crate::editor::puzzle3d::precompute::FILL_REQUESTED_COUNT_DEFAULT`] and never
+/// learns a persisted per-document ask (wave B1 report §2/§6). The call is idempotent, so every render,
+/// every tool/window measure pass and every `drive_precompute` may re-assert it for free.
+///
+/// 🏃️ A retained `setFillCount` run re-asserts its OWN target inside each locked-chunk turn
+/// (`Puzzle3dPrecomputeCommandStage::FillLock`), because until its `SetFillCount` config mutation
+/// lands, an interleaved render still carries the PRE-gesture count — re-asserting per chunk is what
+/// keeps a lowering run from being raised back under itself between two of its own turns.
 pub fn sync_precompute_session(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) {
     while seed_one_precompute_mesh_fallback(session, envelope) {}
     sync_precompute_scene(session, envelope);
+    session.set_fill_requested_count(envelope.runtime.fill_count);
 }
 
 pub fn sync_precompute_weights(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) {
@@ -1650,57 +1656,6 @@ pub fn fixture_from_engine_fixture(envelope: &Puzzle3dScene, fixture: &crate::st
     next.fixture.attractions = parsed.get("attractions").and_then(|v| dsl::FromValue::from_value(v.clone()).ok()).unwrap_or_default();
     next.fixture.target_volumes = parsed.get("targetVolumes").and_then(|v| dsl::FromValue::from_value(v.clone()).ok()).unwrap_or_default();
     Some(next)
-}
-
-#[derive(Clone, value_derive::FromValue)]
-struct Puzzle3dFillDisplayPayload {
-    #[value(default)]
-    objects: Vec<Puzzle3dObject>,
-    #[value(default)]
-    attractions: Vec<Puzzle3dAttraction>,
-}
-
-#[derive(Clone)]
-struct FillDisplayMemo {
-    plan_count: u32,
-    available_count: u32,
-    applied_count: u32,
-    payload: Puzzle3dFillDisplayPayload,
-}
-
-fn fill_display_payload_from_fixture(fixture: &crate::standards::v1::subsets::any::schema::Fixture) -> Option<Puzzle3dFillDisplayPayload> {
-    dsl::FromValue::from_value(dsl::ToValue::to_value(fixture)).ok()
-}
-
-fn append_fill_display_tail(fixture: &mut Puzzle3dFixture, payload: &Puzzle3dFillDisplayPayload, applied_count: u32, available_count: u32) {
-    let reveal_count = (available_count - applied_count) as usize;
-    let objects_tail_start = payload.objects.len().saturating_sub(reveal_count);
-    fixture.objects.extend(payload.objects.iter().skip(objects_tail_start).cloned());
-    let attractions_tail_start = payload.attractions.len().saturating_sub(reveal_count);
-    fixture.attractions.extend(payload.attractions.iter().skip(attractions_tail_start).cloned());
-}
-
-fn puzzle3d_fixture_with_fill_display_memo(mut fixture: Puzzle3dFixture, precompute: &Puzzle3dPrecomputeSession, applied_count: u32, available_count: u32, memo: &Mutex<Option<FillDisplayMemo>>) -> Puzzle3dFixture {
-    if available_count <= applied_count {
-        return fixture;
-    }
-    let plan_count: u32 = precompute.fill_progress_summary().count as u32;
-    let cached = memo.lock().ok().and_then(|guard| guard.as_ref().filter(|entry| entry.plan_count == plan_count && entry.available_count == available_count && entry.applied_count == applied_count).cloned());
-    let payload = if let Some(entry) = cached {
-        entry.payload
-    } else {
-        let payload = precompute.compose_fill_display(available_count).and_then(|engine_fixture| fill_display_payload_from_fixture(&engine_fixture));
-        if let Some(payload) = payload {
-            if let Ok(mut guard) = memo.lock() {
-                *guard = Some(FillDisplayMemo { plan_count, available_count, applied_count, payload: payload.clone() });
-            }
-            payload
-        } else {
-            return fixture;
-        }
-    };
-    append_fill_display_tail(&mut fixture, &payload, applied_count, available_count);
-    fixture
 }
 
 //#endregion 🔖️EngineBridge
@@ -2942,7 +2897,6 @@ struct Puzzle3dSessionState {
     /// has survives a dispatch and a worker hop exactly as the whole-set blob used to.
     instances: Option<Box<main::Puzzle3dInstanceResidency>>,
     meshes: Option<(u64, String)>,
-    fill_display: Option<FillDisplayMemo>,
     document_tree: Option<(Puzzle3dDocumentTreeKey, Box<BuiltNode>)>,
     collision: Option<Puzzle3dCollisionSession>,
     fill: Option<Puzzle3dFillSession>,
@@ -2955,7 +2909,6 @@ impl Puzzle3dSessionState {
             .as_ref()
             .map_or(0, |residency| residency.bytes())
             .saturating_add(self.meshes.as_ref().map_or(0, |(_, meshes)| meshes.len()))
-            .saturating_add(self.fill_display.as_ref().map_or(0, |_| size_of::<FillDisplayMemo>()))
             .saturating_add(self.document_tree.as_ref().map_or(0, |_| size_of::<BuiltNode>()))
             .saturating_add(self.collision.as_ref().map_or(0, Puzzle3dCollisionSession::bytes))
             .saturating_add(self.fill.as_ref().map_or(0, Puzzle3dFillSession::bytes))
@@ -3101,7 +3054,6 @@ fn puzzle3d_session_check_out(app_instance_id: u32, document_id: Option<&str>, a
     let (lease, state) = puzzle3d_session_registry().try_lock().ok()?.check_out(app_instance_id, document_id)?;
     *app.instance_residency.lock().expect("instance residency") = state.instances;
     *app.mesh_cache.lock().expect("mesh cache") = state.meshes;
-    *app.fill_display_memo.lock().expect("fill display memo") = state.fill_display;
     *app.document_tree_cache.lock().expect("document cache") = state.document_tree;
     {
         let mut session = app.precompute.borrow_mut();
@@ -3126,7 +3078,6 @@ fn puzzle3d_session_check_in(lease: Puzzle3dSessionLease, app: &Puzzle3dPlayApp)
     let state = Puzzle3dSessionState {
         instances: app.instance_residency.lock().expect("instance residency").take(),
         meshes: app.mesh_cache.lock().expect("mesh cache").take(),
-        fill_display: app.fill_display_memo.lock().expect("fill display memo").take(),
         document_tree: app.document_tree_cache.lock().expect("document cache").take(),
         collision,
         fill,
@@ -3150,7 +3101,7 @@ fn puzzle3d_view_session_key(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>) -> Op
 
 /// 🧠 One document instance's play session. `ArtifactApp` methods are associated fns (no `&self`), so
 /// every dispatch still builds a fresh app object — but its caches are now checked out of, and back
-/// into, a process-global slot keyed by `app_instance_id`, so `geometry_cache`/`fill_display_memo`/
+/// into, a process-global slot keyed by `app_instance_id`, so `geometry_cache`/`instance_residency`/
 /// registered brush meshes/the brush broad-phase index survive a call and a worker hop. The fill
 /// envelope stays inside the retained session and is never copied into app or window configuration.
 fn with_puzzle3d_app_for<R>(session: Option<(u32, Option<String>)>, config: &Puzzle3dRuntime, f: impl FnOnce(&Puzzle3dPlayApp) -> R) -> R {
@@ -3195,7 +3146,6 @@ thread_local! {
 
 pub struct Puzzle3dPlayApp {
     pub(crate) precompute: std::cell::RefCell<Box<Puzzle3dPrecomputeSession>>,
-    fill_display_memo: Mutex<Option<FillDisplayMemo>>,
     /// 🚚️ Wave B44: per-object instance residency — the ONE owner of the published instance text, and
     /// the source of the changed/removed id delta the world lane rides with.
     pub(crate) instance_residency: Mutex<Option<Box<main::Puzzle3dInstanceResidency>>>,
@@ -3210,7 +3160,6 @@ impl Default for Puzzle3dPlayApp {
     fn default() -> Self {
         Self {
             precompute: std::cell::RefCell::new(Box::new(Puzzle3dPrecomputeSession::new())),
-            fill_display_memo: Mutex::new(None),
             instance_residency: Mutex::new(None),
             mesh_cache: Mutex::new(None),
             document_tree_cache: Mutex::new(None),
@@ -3395,7 +3344,6 @@ impl Puzzle3dActionPrologue {
         if !puzzle3d_action_uses_precompute(action) {
             return false;
         }
-        let applied_count = config.fill_count;
         let stage = match self.sync_stage {
             Puzzle3dPrologueSyncStage::Done => return false,
             Puzzle3dPrologueSyncStage::Meshes => {
@@ -3418,7 +3366,6 @@ impl Puzzle3dActionPrologue {
                 if let Some(built) = self.built.take() {
                     push_precompute_scene(&mut precompute, built);
                 }
-                precompute.set_fill_applied_count(applied_count);
                 Puzzle3dPrologueSyncStage::Done
             }
         };
@@ -3477,7 +3424,7 @@ impl Puzzle3dActionPrologue {
             "translateSelection" => Some("gumball-translate".to_string()),
             "rotateSelection" => Some("gumball-rotate".to_string()),
             "scaleSelection" => Some("gumball-scale".to_string()),
-            "setFillCount" => Some("fill-count".to_string()),
+            "setFillCount" | "fillBuildTick" => Some("fill-count".to_string()),
             _ => None,
         };
         // 🧰️🛠️ Programmatic utility/tool switches push the host session. `setActiveTool` itself never
@@ -6768,9 +6715,7 @@ enum Puzzle3dPrecomputeCommandStage {
     CatalogVortices,
     Positions,
     Indices,
-    FillPrepare,
-    FillPlan,
-    FillApply,
+    FillLock,
     PrologueScene,
     PrologueSync,
     Publish,
@@ -6798,7 +6743,6 @@ struct Puzzle3dPrecomputeCommandWork {
     window_config: Option<semio_framework_plugin::WindowConfigSnapshot>,
     window_transient: Option<semio_framework_plugin::WindowTransientSnapshot>,
     ephemeral: Option<EphemeralEmit<EditorApp<Puzzle3dPlayApp>>>,
-    fill_precompute: Option<Puzzle3dPrecomputeSession>,
     fill_mutations: Vec<Puzzle3dMutation>,
     prologue: Puzzle3dActionPrologue,
 }
@@ -6827,7 +6771,6 @@ impl Puzzle3dPrecomputeCommandWork {
             window_config: None,
             window_transient: None,
             ephemeral: None,
-            fill_precompute: None,
             fill_mutations: Vec::new(),
             prologue: Puzzle3dActionPrologue::default(),
         }
@@ -6835,6 +6778,15 @@ impl Puzzle3dPrecomputeCommandWork {
 
     fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
         crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+
+    /// 🪟️ The exact window owner's composed runtime for this turn — the fill stages read the live
+    /// session through it, and a work whose admission carried no `ViewModel` has no window to address.
+    fn runtime_for(&self, config: &Puzzle3dConfig) -> Result<Puzzle3dRuntime, Fault> {
+        let view = self.view_state.as_ref().ok_or_else(|| Fault::from("puzzle3d-fill-window-context-required"))?;
+        let window_config = window_ownership::config_from_snapshot(self.window_config.as_ref());
+        let window_transient = window_ownership::transient_from_snapshot(self.window_transient.as_ref());
+        Ok(window_ownership::runtime(config, &window_config, &window_transient, Some(view)))
     }
 
     /// 🔤️ Validates one bounded slice of a `registerBrushMesh` page's base64 payload — the alphabet and,
@@ -6960,7 +6912,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     self.catalog_vortex_cursor += 1;
                     return Ok(Self::progress("puzzle3d-precompute-catalog-vortex", "Scanning one vortex kind", "Eine Vortexart wird geprüft"));
                 }
-                self.stage = if self.tool_id == "setFillCount" { Puzzle3dPrecomputeCommandStage::FillPrepare } else { Puzzle3dPrecomputeCommandStage::PrologueScene };
+                self.stage = if self.tool_id == "setFillCount" { Puzzle3dPrecomputeCommandStage::FillLock } else { Puzzle3dPrecomputeCommandStage::PrologueScene };
                 Ok(Self::progress("puzzle3d-precompute-transfer", "Transferring precompute census", "Vorberechnungszensus wird übertragen"))
             }
             Puzzle3dPrecomputeCommandStage::Positions => {
@@ -6983,46 +6935,21 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 self.stage = Puzzle3dPrecomputeCommandStage::PrologueScene;
                 Ok(Self::progress("puzzle3d-register-mesh-transfer", "Transferring validated mesh owner", "Geprüfter Mesh-Inhaber wird übertragen"))
             }
-            Puzzle3dPrecomputeCommandStage::FillPrepare => {
-                let view = self.view_state.as_ref().ok_or_else(|| Fault::from("puzzle3d-fill-window-context-required"))?;
-                let window_config = window_ownership::config_from_snapshot(self.window_config.as_ref());
-                let window_transient = window_ownership::transient_from_snapshot(self.window_transient.as_ref());
-                let runtime = window_ownership::runtime(config, &window_config, &window_transient, Some(view));
-                let window_id = puzzle3d_addressed_window_id(Some(view), None, command.window_id(), &runtime.window_ids);
-                let active_utility = puzzle3d_scene_active_utility(&runtime, Some(view), Some(window_id));
-                let scene = scene_from_projection(&puzzle3d_projection_value(snapshot.value()), runtime, &active_utility);
-                let mut precompute = Puzzle3dPrecomputeSession::new();
-                sync_precompute_session(&mut precompute, &scene);
-                precompute.set_fill_applied_count(config.fill_count);
-                self.fill_precompute = Some(precompute);
-                self.stage = Puzzle3dPrecomputeCommandStage::FillPlan;
-                Ok(Self::progress("puzzle3d-fill-plan", "Preparing retained fill plan", "Beibehaltener Füllplan wird vorbereitet"))
-            }
-            Puzzle3dPrecomputeCommandStage::FillPlan => {
-                let precompute = self.fill_precompute.as_mut().ok_or_else(|| Fault::from("puzzle3d-fill-plan-owner"))?;
-                let available = precompute.fill_available_count();
-                if available > 0 || precompute.fill_is_done() {
-                    self.requested_count = self.requested_count.min(available);
-                    self.stage = Puzzle3dPrecomputeCommandStage::FillApply;
-                } else {
-                    precompute.precompute_step_lane(crate::standards::v1::subsets::any::schema::PrecomputeLane::Fill, 1);
-                    let required = self.requested_count.max(config.fill_count);
-                    if precompute.fill_available_count() >= required || precompute.fill_is_done() {
-                        self.requested_count = self.requested_count.min(precompute.fill_available_count());
-                        self.stage = Puzzle3dPrecomputeCommandStage::FillApply;
-                    }
-                }
-                Ok(Self::progress("puzzle3d-fill-plan", "Advancing retained fill plan", "Beibehaltener Füllplan wird fortgesetzt"))
-            }
-            Puzzle3dPrecomputeCommandStage::FillApply => {
-                let precompute = self.fill_precompute.as_mut().ok_or_else(|| Fault::from("puzzle3d-fill-apply-owner"))?;
-                let (applied, mutations) = set_fill_count::apply_chunk(precompute, self.requested_count).ok_or_else(|| Fault::from("puzzle3d-fill-apply-unavailable"))?;
-                let progressed = !mutations.is_empty();
-                self.fill_mutations.extend(mutations);
-                if applied == self.requested_count || !progressed {
+            Puzzle3dPrecomputeCommandStage::FillLock => {
+                let runtime = self.runtime_for(config)?;
+                let session = self.session();
+                let requested = self.requested_count;
+                let mutations = with_puzzle3d_app_for(session, &runtime, |app| {
+                    let mut precompute = app.precompute.borrow_mut();
+                    precompute.set_fill_requested_count(requested);
+                    set_fill_count::take_locked_mutations(&mut precompute)
+                });
+                if mutations.is_empty() {
                     self.stage = Puzzle3dPrecomputeCommandStage::Publish;
+                } else {
+                    self.fill_mutations.extend(mutations);
                 }
-                Ok(Self::progress("puzzle3d-fill-apply", "Applying one retained fill placement", "Eine beibehaltene Füllplatzierung wird angewendet"))
+                Ok(Self::progress("puzzle3d-fill-lock", "Committing one locked fill chunk", "Ein festgelegter Füllabschnitt wird übernommen"))
             }
             Puzzle3dPrecomputeCommandStage::PrologueScene => {
                 let view = self.view_state.as_ref().ok_or_else(|| Fault::from("puzzle3d-precompute-window-context-required"))?;
@@ -7089,7 +7016,6 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             || self.window_transient.take().is_some()
             || self.ephemeral.take().is_some()
             || self.session.take().is_some()
-            || self.fill_precompute.take().is_some()
             || self.fill_mutations.pop().is_some()
             || self.prologue.close_one()
         {
@@ -7105,7 +7031,6 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             && self.window_transient.is_none()
             && self.ephemeral.is_none()
             && self.session.is_none()
-            && self.fill_precompute.is_none()
             && self.fill_mutations.is_empty()
             && self.prologue.is_empty()
     }
@@ -7212,7 +7137,7 @@ impl ArtifactOwnedToolJobFactory for Puzzle3dRetainedCommandJobFactory {
         ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "engagementRepeatLast", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::WindowTransient, ArtifactToolPublicationLane::Interaction] },
-        ArtifactToolPublicationContract { tool_id: "fillBuildTick", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "fillBuildTick", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "cancelFillBuild", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "focusSelection", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "hoverSuggestion", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
@@ -8232,7 +8157,6 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             {
                 let mut precompute = app.precompute.borrow_mut();
                 sync_precompute_session(&mut precompute, &envelope);
-                precompute.set_fill_applied_count(runtime.fill_count);
             }
             let precompute = app.precompute.borrow();
             HashMap::from([(fill_tool::TOOL_ID.to_string(), fill_tool::measures(&envelope, &precompute, labels))])
@@ -8292,14 +8216,11 @@ impl Puzzle3dPlayApp {
             {
                 let mut precompute = app.precompute.borrow_mut();
                 sync_precompute_session(&mut precompute, &precompute_scene);
-                precompute.set_fill_applied_count(config.fill_count);
             }
             let precompute = app.precompute.borrow();
-            // 🪣️ Additive-only: appends just the not-yet-committed fill-plan tail onto the live fixture —
-            // safe even during a live gumball scratch drag, since it never touches/replaces any
-            // already-present object (the dragged one included).
-            let fill_available = precompute.fill_available_count();
-            let fixture = puzzle3d_fixture_with_fill_display_memo(app.render_fixture(&puzzle3d_projection_value(doc.snapshot.value())), &precompute, config.fill_count, fill_available, &app.fill_display_memo);
+            // 🪣️ What the viewport shows is exactly the document: a locked fill placement is a real
+            // `create_object`/`connect_vortices` the tick already committed, never a render-time ghost.
+            let fixture = app.render_fixture(&puzzle3d_projection_value(doc.snapshot.value()));
             let mut envelope = Puzzle3dScene { fixture, runtime: config.clone(), active_utility };
             main::frame_unset_camera(&mut envelope, wid);
             let labels = puzzle3d_labels(view_state).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.localization.unsupported", "puzzle3d has no authored label set for the host's locale/terminology axes"))?;
@@ -8332,7 +8253,6 @@ impl Puzzle3dPlayApp {
             {
                 let mut precompute = app.precompute.borrow_mut();
                 sync_precompute_session(&mut precompute, &envelope);
-                precompute.set_fill_applied_count(config.fill_count);
             }
             let precompute = app.precompute.borrow();
             HashMap::from([(window_id.to_string(), main::window_measures(&envelope, &precompute, labels, interaction))])

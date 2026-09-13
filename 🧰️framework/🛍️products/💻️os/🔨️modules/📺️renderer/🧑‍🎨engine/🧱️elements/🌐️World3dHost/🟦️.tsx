@@ -119,7 +119,7 @@ import { CAMERA_SYNC_DEBOUNCE_MS } from "../📐️Canvas2dHost/🟦️.tsx";
 import { openSurfaceContextMenu, useShellContextMenuFallback, wireLabel, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
 import { WorldTerrainLayer } from "../🗺️WorldTerrainLayer/🟦️.tsx";
 import { base64ToBytes } from "../🖌️Paint2dHost/🟦️.tsx";
-import { contextMenuGroupLabel, createCoalescingActionDispatcher, declareSurfaceCancelAction, createInFlightSkippingInterval, isolatedJobDriveIsActive, takeIsolatedJobUiPoll, isRevealCutoffHidden, world3dMarqueeOverlayShape, type Puzzle3dBrushMeshPage, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, drainPuzzle3dBrushMeshQueue, PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES, puzzle3dBrushMeshRegistry, NOTE_WORLD_NAVIGATION_ACTION_ID, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, worldRevealCutoffStore, shellLabel, leftoverWorldGumballPoseV1 } from "../🛠️ShellHelpers/🟦️.tsx";
+import { contextMenuGroupLabel, createCoalescingActionDispatcher, declareSurfaceCancelAction, createInFlightSkippingInterval, isolatedJobDriveIsActive, takeIsolatedJobUiPoll, world3dMarqueeOverlayShape, type Puzzle3dBrushMeshPage, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, drainPuzzle3dBrushMeshQueue, PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES, puzzle3dBrushMeshRegistry, NOTE_WORLD_NAVIGATION_ACTION_ID, shellLabel, leftoverWorldGumballPoseV1 } from "../🛠️ShellHelpers/🟦️.tsx";
 import { SetWindowIconContext, SetWindowTitleContext, useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -175,8 +175,6 @@ export type WorldInstanceRecord = {
   /** 🎨️ Non-interactive/locked state — resolves to the muted "disabled" mesh style at reduced opacity. */
   readonly disabled?: boolean;
   readonly smoothShading?: boolean;
-  /** 🪣️ 0-based position in a background-planned sequence (e.g. puzzle3d's fill plan) — see `RevealCutoffStore`. Absent for ordinary (non-planned) instances. */
-  readonly revealIndex?: number;
   readonly objectKind?: string;
   /** 🎯️ The framework interaction target this instance stands for, when it differs from `id`.
    * `id` must stay unique per rendered instance, but an app's interaction TOPOLOGY may only declare
@@ -246,11 +244,20 @@ type WorldSuggestionMenuRecord = {
   readonly candidates: readonly WorldSuggestionCandidateRecord[];
 };
 
+/** 🪣️ The live fill run as counters: `count` planned, `appliedCount` locked into the document,
+ * `requestedCount` what the user asked for, and the tested/rejected/collisions triple that makes the
+ * search visible. `stage`/`stallReason` are the planner's machine identities — the localized sentence
+ * for the same state rides `WorldFillDiagnosticRecord.statusLabel`. */
 type WorldFillBuildRecord = {
   readonly count: number;
   readonly appliedCount: number;
-  readonly maxCount: number;
+  readonly requestedCount: number;
+  readonly tested: number;
+  readonly rejected: number;
+  readonly collisions: number;
   readonly done: boolean;
+  readonly stage: string;
+  readonly stallReason: string | null;
 };
 
 type WorldInteractionRecord = {
@@ -262,9 +269,6 @@ type WorldInteractionRecord = {
   readonly gridFactor?: number;
   readonly suggestionMenu?: WorldSuggestionMenuRecord | null;
   readonly fillBuild?: WorldFillBuildRecord;
-  /** 🪣️ Committed reveal cutoff per reveal group id (see `WindowMeasure.Slider.reveal`) — instances
-   * tagged `revealIndex` below this value are shown. Seeds `RevealCutoffStore` when no drag is live. */
-  readonly revealCutoffs?: Readonly<Record<string, number>>;
   /** 🔢️ The guest's monotone brush-mesh install counter. Climbs inside one guest instantiation and
    * starts at zero in a fresh one, so a value below the last one this page read proves the guest was
    * restarted and holds nothing this page uploaded — see {@link Puzzle3dBrushMeshRegistry}. */
@@ -323,6 +327,14 @@ type WorldReferenceRecord = World3dMarkerInteractionFields & {
   readonly opacity?: number;
 };
 
+/** ⚖️ What the planner decided about ONE candidate pose. `testing` is still being examined, `free`
+ * passed broad phase, `collision` overlaps beyond the budget, `rejected` failed for another reason,
+ * `accepted` became a real document object. Absent means `testing` — a brush ghost is pre-filtered
+ * collision-free and never carries a verdict. */
+type WorldBrushVerdict = "testing" | "free" | "collision" | "rejected" | "accepted";
+
+const WORLD_BRUSH_VERDICTS: ReadonlySet<string> = new Set<WorldBrushVerdict>(["testing", "free", "collision", "rejected", "accepted"]);
+
 type WorldBrushPreviewRecord = {
   readonly targetVortexFullId?: string;
   readonly objectKindId?: string;
@@ -333,7 +345,18 @@ type WorldBrushPreviewRecord = {
   readonly scale?: readonly [number, number, number] | number;
   readonly color?: string;
   readonly opacity?: number;
+  readonly verdict?: WorldBrushVerdict;
   readonly fillBuildPreview?: WorldFillDiagnosticRecord;
+};
+
+/** 🕯️ One already-tried candidate, kept so the viewport can show the search itself rather than only its
+ * winner. `sequence` is the planner's monotone try counter — the newest entry has the highest one, which
+ * is what {@link FillTriedGhosts} fades by. */
+type WorldFillTriedRecord = {
+  readonly sequence: number;
+  readonly verdict: WorldBrushVerdict;
+  readonly reason?: string | null;
+  readonly ghost: WorldBrushPreviewRecord;
 };
 
 type WorldFillDiagnosticRecord = {
@@ -346,7 +369,17 @@ type WorldFillDiagnosticRecord = {
   readonly statusLabel: string;
   readonly targetVortexFullId: string | null;
   readonly candidateObjectKindId: string | null;
+  /** ⚖️ Verdict of {@link WorldFillDiagnosticRecord.candidateGhost}. */
+  readonly verdict: WorldBrushVerdict;
   readonly candidateGhost: WorldBrushPreviewRecord | null;
+  /** 🕯️ The last candidates the planner tried, oldest first, bounded by the producer's ring. */
+  readonly tried: readonly WorldFillTriedRecord[];
+  /** 🔬️ Candidate poses constructed so far — accepted plus rejected plus the one under test. */
+  readonly testedCount: number;
+  /** 🎯️ The count the user asked for. Never a ceiling the planner imposed. */
+  readonly requestedCount: number;
+  /** 🛑️ Why the run stopped short of {@link requestedCount}; `null` while it is still making progress. */
+  readonly stallReason: string | null;
   readonly currentPairObjectId: string | null;
   readonly collisionCount: number;
   readonly sampleCursor: number;
@@ -358,15 +391,19 @@ type WorldFillDiagnosticRecord = {
   readonly targetCursor: number;
   readonly candidateCursor: number;
   readonly acceptedCount: number;
-  readonly totalCount: number;
   readonly searchCount: number;
   readonly rejectedCount: number;
 };
 
 const WORLD_FILL_STATUS_LABEL_MAX_BYTES = 256;
 const WORLD_FILL_COLOR_MAX_BYTES = 128;
-const WORLD_FILL_PREVIEW_JSON_MAX_BYTES = 4 * 1024;
-const WORLD_FILL_ROOT_KEYS: ReadonlySet<string> = new Set(["targetVortexFullId", "objectKindId", "sourceVortexIndex", "meshUrl", "origin", "orientation", "color", "opacity", "fillBuildPreview"]);
+/** 📏️ The ghost envelope now carries a whole ring of tried candidates beside the live one, so the cap
+ * that used to fit one pose has to fit thirteen. 16 KiB is half the fixed 32 KiB scene surface — still a
+ * hard refusal of an unbounded payload, never a budget the producer may plan around. */
+const WORLD_FILL_PREVIEW_JSON_MAX_BYTES = 16 * 1024;
+/** 🕯️ The most tried candidates one diagnostic may carry (the producer's `FILL_TRIED_RING`). */
+const WORLD_FILL_TRIED_MAX = 12;
+const WORLD_FILL_ROOT_KEYS: ReadonlySet<string> = new Set(["targetVortexFullId", "objectKindId", "sourceVortexIndex", "meshUrl", "origin", "orientation", "color", "opacity", "verdict", "fillBuildPreview"]);
 const WORLD_FILL_DIAGNOSTIC_KEYS: ReadonlySet<string> = new Set([
   "operation",
   "baseRevision",
@@ -377,7 +414,12 @@ const WORLD_FILL_DIAGNOSTIC_KEYS: ReadonlySet<string> = new Set([
   "statusLabel",
   "targetVortexFullId",
   "candidateObjectKindId",
+  "verdict",
   "candidateGhost",
+  "tried",
+  "testedCount",
+  "requestedCount",
+  "stallReason",
   "currentPairObjectId",
   "collisionCount",
   "sampleCursor",
@@ -389,11 +431,11 @@ const WORLD_FILL_DIAGNOSTIC_KEYS: ReadonlySet<string> = new Set([
   "targetCursor",
   "candidateCursor",
   "acceptedCount",
-  "totalCount",
   "searchCount",
   "rejectedCount",
 ]);
-const WORLD_FILL_GHOST_KEYS: ReadonlySet<string> = new Set(["targetVortexFullId", "objectKindId", "sourceVortexIndex", "meshUrl", "origin", "orientation"]);
+const WORLD_FILL_GHOST_KEYS: ReadonlySet<string> = new Set(["targetVortexFullId", "objectKindId", "sourceVortexIndex", "meshUrl", "origin", "orientation", "verdict"]);
+const WORLD_FILL_TRIED_KEYS: ReadonlySet<string> = new Set(["sequence", "verdict", "reason", "ghost"]);
 
 function censusAllowedOwnKeys(value: object, allowed: ReadonlySet<string>): number {
   let count = 0;
@@ -448,7 +490,7 @@ type WorldEngagementPreviewItem = WorldEngagementPreviewPoint | WorldEngagementP
 
 //#region WorldMeshPaint
 /** 🎨️ Mesh style kinds, in {@link resolveMeshStyle} priority order (highest first). */
-type MeshStyleKind = "disabled" | "celebrated" | "selected" | "highlighted" | "hovered" | "neutral";
+type MeshStyleKind = "disabled" | "danger" | "celebrated" | "selected" | "highlighted" | "hovered" | "neutral";
 
 type MeshStyleColors = {
   readonly meshColor: string;
@@ -466,6 +508,9 @@ const MESH_STYLE_PAINT: Readonly<Record<MeshStyleKind, { readonly fill: string; 
   selected: { fill: tokenVar("primary"), line: tokenVar("primary"), emissiveIntensity: 0.35, opacity: 1 },
   highlighted: { fill: tokenVar("secondary"), line: tokenVar("secondary"), emissiveIntensity: 0.2, opacity: 1 },
   // 🎉️ Transient drop/completion paint — solid fallback for lines; shaded meshes use {@link CelebratingConicMaterial}.
+  // 🛑️ Refusal paint — a pose the algorithm just proved impossible (a fill candidate that collides).
+  // It outranks every other kind because "this cannot be" is the one thing a viewer must not misread.
+  danger: { fill: tokenVar("danger"), line: tokenVar("danger"), emissiveIntensity: 0.35, opacity: 0.72 },
   celebrated: { fill: tokenVar("primary"), line: tokenVar("primary"), emissiveIntensity: 0.55, opacity: 1 },
   disabled: { fill: "color-mix(in oklab, var(--color-muted-foreground) 55%, var(--panel))", line: themeColorVar("muted-foreground"), emissiveIntensity: 0, opacity: 0.45 },
 };
@@ -505,15 +550,17 @@ export function worldMeshMaterialRevision(kind: MeshStyleKind): MeshStyleKind {
   return kind;
 }
 
-/** 🎨️ Resolves the effective style kind for an instance/component, priority: disabled → celebrated → selected → highlighted → hovered → neutral. */
+/** 🎨️ Resolves the effective style kind for an instance/component, priority: disabled → danger → celebrated → selected → highlighted → hovered → neutral. */
 export function resolveMeshStyle(state: {
   readonly disabled?: boolean;
+  readonly danger?: boolean;
   readonly celebrating?: boolean;
   readonly selected?: boolean;
   readonly highlighted?: boolean;
   readonly hovered?: boolean;
 }): MeshStyleKind {
   if (state.disabled) return "disabled";
+  if (state.danger) return "danger";
   if (state.celebrating) return "celebrated";
   if (state.selected) return "selected";
   if (state.highlighted) return "highlighted";
@@ -1670,23 +1717,45 @@ export function parseWorldBrushPreview(brushPreviewJson: string | undefined): Wo
       (Object.prototype.hasOwnProperty.call(parsed, "origin") && !finiteTuple(parsed.origin, 3)) ||
       (Object.prototype.hasOwnProperty.call(parsed, "orientation") && !finiteTuple(parsed.orientation, 4)) ||
       (Object.prototype.hasOwnProperty.call(parsed, "color") && (typeof parsed.color !== "string" || !boundedUtf8(parsed.color, WORLD_FILL_COLOR_MAX_BYTES))) ||
+      (Object.prototype.hasOwnProperty.call(parsed, "verdict") && !WORLD_BRUSH_VERDICTS.has(parsed.verdict as string)) ||
       (Object.prototype.hasOwnProperty.call(parsed, "opacity") && parsed.opacity !== 0.35)
     ) {
       return null;
     }
+    const ghostPose = (ghost: unknown): ghost is WorldBrushPreviewRecord =>
+      typeof ghost === "object" &&
+      ghost !== null &&
+      !Array.isArray(ghost) &&
+      censusAllowedOwnKeys(ghost, WORLD_FILL_GHOST_KEYS) >= 0 &&
+      typeof (ghost as WorldBrushPreviewRecord).targetVortexFullId === "string" &&
+      typeof (ghost as WorldBrushPreviewRecord).objectKindId === "string" &&
+      nonnegativeInteger((ghost as WorldBrushPreviewRecord).sourceVortexIndex) &&
+      typeof (ghost as WorldBrushPreviewRecord).meshUrl === "string" &&
+      finiteTuple((ghost as WorldBrushPreviewRecord).origin, 3) &&
+      finiteTuple((ghost as WorldBrushPreviewRecord).orientation, 4) &&
+      (!Object.prototype.hasOwnProperty.call(ghost, "verdict") || WORLD_BRUSH_VERDICTS.has((ghost as WorldBrushPreviewRecord).verdict as string));
     const candidateGhost = diagnostic?.candidateGhost;
-    const candidateGhostRecord =
-      candidateGhost === null ||
-      (typeof candidateGhost === "object" &&
-        !Array.isArray(candidateGhost) &&
-        censusAllowedOwnKeys(candidateGhost, WORLD_FILL_GHOST_KEYS) === WORLD_FILL_GHOST_KEYS.size &&
-        typeof candidateGhost.targetVortexFullId === "string" &&
-        typeof candidateGhost.objectKindId === "string" &&
-        nonnegativeInteger(candidateGhost.sourceVortexIndex) &&
-        typeof candidateGhost.meshUrl === "string" &&
-        finiteTuple(candidateGhost.origin, 3) &&
-        finiteTuple(candidateGhost.orientation, 4));
+    const candidateGhostRecord = candidateGhost === null || ghostPose(candidateGhost);
+    const triedRecords =
+      Array.isArray(diagnostic.tried) &&
+      diagnostic.tried.length <= WORLD_FILL_TRIED_MAX &&
+      diagnostic.tried.every(
+        (entry) =>
+          typeof entry === "object" &&
+          entry !== null &&
+          !Array.isArray(entry) &&
+          censusAllowedOwnKeys(entry, WORLD_FILL_TRIED_KEYS) >= 0 &&
+          nonnegativeInteger(entry.sequence) &&
+          WORLD_BRUSH_VERDICTS.has(entry.verdict as string) &&
+          (!Object.prototype.hasOwnProperty.call(entry, "reason") || nullableString(entry.reason)) &&
+          ghostPose(entry.ghost),
+      );
     if (
+      !triedRecords ||
+      !WORLD_BRUSH_VERDICTS.has(diagnostic.verdict as string) ||
+      !nonnegativeInteger(diagnostic.testedCount) ||
+      !nonnegativeInteger(diagnostic.requestedCount) ||
+      !nullableString(diagnostic.stallReason) ||
       !Number.isSafeInteger(diagnostic.operation) ||
       diagnostic.operation <= 0 ||
       !Number.isSafeInteger(diagnostic.baseRevision) ||
@@ -1711,7 +1780,6 @@ export function parseWorldBrushPreview(brushPreviewJson: string | undefined): Wo
       !nonnegativeInteger(diagnostic.targetCursor) ||
       !nonnegativeInteger(diagnostic.candidateCursor) ||
       !nonnegativeInteger(diagnostic.acceptedCount) ||
-      !nonnegativeInteger(diagnostic.totalCount) ||
       !nonnegativeInteger(diagnostic.searchCount) ||
       !nonnegativeInteger(diagnostic.rejectedCount) ||
       typeof diagnostic.truncated !== "boolean" ||
@@ -2944,7 +3012,6 @@ function WorldInstancesLayer({
   mergedInstanceIds,
   blockPick,
   environment,
-  revealCutoffs,
 }: {
   readonly instances: readonly WorldInstanceRecord[];
   readonly meshes: readonly WorldMeshRecord[];
@@ -2974,8 +3041,6 @@ function WorldInstancesLayer({
   /** Disables instance picking; passed for fill and brush engagements so a click meant for a vortex marker can't fall through and select/gumball the underlying object instead. */
   readonly blockPick?: boolean;
   readonly environment?: WorldEnvironmentRecord | null;
-  /** 🪣️ Committed reveal cutoffs (`WorldInteractionRecord.revealCutoffs`) — reconciles `worldRevealCutoffStore` whenever the committed value changes; a live drag already wrote the store directly and this is then a same-value no-operation. */
-  readonly revealCutoffs?: Readonly<Record<string, number>>;
 }) {
   const meshById = useMemo(() => new Map(meshes.map((mesh) => [mesh.id, mesh])), [meshes]);
   const geometries = useMemo(() => {
@@ -3071,40 +3136,6 @@ function WorldInstancesLayer({
     if (group) instanceRootsRef.current.set(id, group);
     else instanceRootsRef.current.delete(id);
   }, []);
-
-  /** 🪣️ Imperatively shows/hides reveal-tagged instance roots per the live cutoff — zero React re-render,
-   * zero WASM round trip. Re-runs on every instance-list change (new roots to tag) and on every live
-   * cutoff update from `worldRevealCutoffStore` (a slider drag, or the commit reconciliation below). */
-  const applyRevealCutoff = useCallback(() => {
-    const cutoff = worldRevealCutoffStore.get(PUZZLE3D_FILL_REVEAL_GROUP_ID) ?? revealCutoffs?.[PUZZLE3D_FILL_REVEAL_GROUP_ID];
-    let changed = false;
-    for (const instance of instances) {
-      if (instance.revealIndex == null) continue;
-      const root = instanceRootsRef.current.get(instance.id);
-      if (!root) continue;
-      const visible = cutoff === undefined || instance.revealIndex < cutoff;
-      if (root.visible !== visible) {
-        root.visible = visible;
-        changed = true;
-      }
-    }
-    if (changed) invalidate();
-  }, [instances, revealCutoffs, invalidate]);
-
-  useLayoutEffect(() => {
-    applyRevealCutoff();
-    return worldRevealCutoffStore.subscribe(PUZZLE3D_FILL_REVEAL_GROUP_ID, applyRevealCutoff);
-  }, [applyRevealCutoff]);
-
-  /** 🪣️ Reconciles the shared store from the plugin's committed cutoff — only when the *committed*
-   * value itself changes. A live slider drag already wrote the store directly; fillBuildTick refreshes
-   * rewrite `interactionJson` (and a new `revealCutoffs` object identity) with the same committed count,
-   * and must not clobber the in-progress drag back to that stale value (which hid fill objects mid-gesture). */
-  const committedRevealCutoffsRef = useRef<Readonly<Record<string, number>>>({});
-  useEffect(() => {
-    if (!revealCutoffs) return;
-    reconcileCommittedRevealCutoffs(worldRevealCutoffStore, committedRevealCutoffsRef, revealCutoffs);
-  }, [revealCutoffs]);
 
   const writeGumballPreviewPoses = useCallback(
     (poses: ReadonlyMap<string, WorldGumballLivePose>) => {
@@ -3664,51 +3695,92 @@ function CatalogueDropPreviewInvalidate({ preview }: { readonly preview: Puzzle3
   return null;
 }
 
-function BrushPreviewGhost({ preview, meshes, palette }: { readonly preview: WorldBrushPreviewRecord; readonly meshes: readonly WorldMeshRecord[]; readonly palette: MeshStylePalette }) {
+/** 👻️ The style ONE ghost is painted in. A collision is the single verdict that overrides the object
+ * kind's own catalogue colour: a refusal the viewer might read as "a piece of that kind goes here" is
+ * worse than no ghost at all, so danger red wins over the hue. Everything else keeps today's
+ * highlighted paint, tinted by the kind. */
+function brushGhostPaint(preview: WorldBrushPreviewRecord, palette: MeshStylePalette): { readonly style: MeshStyleColors; readonly meshColor: string; readonly revision: MeshStyleKind } {
+  const danger = preview.verdict === "collision";
+  const style = danger ? palette.danger : palette.highlighted;
+  return { style, meshColor: danger ? style.meshColor : (preview.color ?? style.meshColor), revision: danger ? "danger" : "highlighted" };
+}
+
+function BrushPreviewGhost({
+  preview,
+  meshes,
+  palette,
+  opacityScale = 1,
+}: {
+  readonly preview: WorldBrushPreviewRecord;
+  readonly meshes: readonly WorldMeshRecord[];
+  readonly palette: MeshStylePalette;
+  readonly opacityScale?: number;
+}) {
   if (!preview.origin) return null;
-  const style = palette.highlighted;
-  const meshColor = preview.color ?? style.meshColor;
+  const { style, meshColor, revision } = brushGhostPaint(preview, palette);
   const url = brushPreviewGhostMeshUrl(preview, meshes);
   const position = preview.origin as [number, number, number];
   const rotation = preview.orientation as [number, number, number, number] | undefined;
   const scale = scaleTuple(preview.scale);
   const quaternion = rotation ? new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]) : undefined;
-  const invalidateToken = `${preview.objectKindId ?? ""}:${preview.targetVortexFullId ?? ""}:${preview.sourceVortexIndex ?? 0}:${url ?? ""}:${position.join(",")}`;
+  const invalidateToken = `${preview.objectKindId ?? ""}:${preview.targetVortexFullId ?? ""}:${preview.sourceVortexIndex ?? 0}:${url ?? ""}:${position.join(",")}:${revision}`;
   return (
     <group position={position} scale={scale} quaternion={quaternion} raycast={() => null}>
       <DemandInvalidateOnToken token={invalidateToken} />
       {url ? (
         <Suspense fallback={null}>
-          <GlbInstanceMesh url={url} color={meshColor} emissive={meshColor} emissiveIntensity={0.6} opacity={0.72} borderColor={palette.neutral.lineColor} revision="highlighted" />
+          <GlbInstanceMesh url={url} color={meshColor} emissive={meshColor} emissiveIntensity={style.emissiveIntensity + 0.25} opacity={0.72 * opacityScale} borderColor={palette.neutral.lineColor} revision={revision} pickEnabled={false} />
         </Suspense>
       ) : (
         <mesh raycast={() => null}>
           <boxGeometry args={[1, 1, 1]} />
-          <meshBasicMaterial color={meshColor} transparent opacity={0.42} depthWrite={false} />
+          <meshBasicMaterial color={meshColor} transparent opacity={0.42 * opacityScale} depthWrite={false} />
         </mesh>
       )}
     </group>
   );
 }
 
-/** @emoji 🪣️ Bounded fill progress/rejection readout; it is deliberately independent from the optional placement ghost. */
+/** 🕯️ How faint the OLDEST kept try is drawn, relative to the newest. */
+const WORLD_FILL_TRIED_FAINTEST = 0.25;
+
+/** 🕯️ The ring of already-tried candidates, so the viewport shows the SEARCH and not only its winner:
+ * every collision stays visible in danger red, every accepted pose in the highlighted paint, and both
+ * fade with age by their distance from the newest `sequence`. A rejected-for-another-reason try is
+ * muted rather than red — it was not impossible, only not chosen. Rendered as ordinary ghosts inside
+ * the fill dirty scope: the diagnostic that carries them already re-renders per tick, so this layer
+ * adds no React work of its own. */
+function FillTriedGhosts({ tried, meshes, palette }: { readonly tried: readonly WorldFillTriedRecord[]; readonly meshes: readonly WorldMeshRecord[]; readonly palette: MeshStylePalette }) {
+  if (tried.length === 0) return null;
+  const newest = tried.reduce((highest, entry) => Math.max(highest, entry.sequence), 0);
+  const span = Math.max(1, newest - tried.reduce((lowest, entry) => Math.min(lowest, entry.sequence), newest));
+  return (
+    <>
+      {tried.map((entry) => {
+        const age = (newest - entry.sequence) / span;
+        const freshness = 1 - age * (1 - WORLD_FILL_TRIED_FAINTEST);
+        const muted = entry.verdict !== "collision" && entry.verdict !== "accepted" && entry.verdict !== "free";
+        // ⚖️ The ENTRY's verdict is the authority, not the pose's own optional one: the ring records what the
+        // planner decided about that try, and a ghost the producer left unmarked must still paint that verdict.
+        return <BrushPreviewGhost key={`${entry.sequence}:${entry.ghost.targetVortexFullId ?? ""}`} preview={{ ...entry.ghost, verdict: entry.verdict }} meshes={meshes} palette={palette} opacityScale={(muted ? 0.4 : 0.6) * freshness} />;
+      })}
+    </>
+  );
+}
+
+/** @emoji 🪣️ Bounded fill progress/rejection readout; it is deliberately independent from the optional
+ * placement ghost. It reads `tested · locked / requested` — the three numbers that answer "is it working,
+ * how hard is it working, and how far has it got" — beside the producer's own localized phase sentence
+ * (`statusLabel`, never invented here) and, when the run froze, the reason it froze. The `data-fill-*`
+ * attributes are the browser probe's only contract with this overlay. */
 function FillDiagnosticOverlay({ diagnostic }: { readonly diagnostic: WorldFillDiagnosticRecord }) {
   const target = diagnostic.targetVortexFullId ?? "—";
   const candidate = diagnostic.candidateObjectKindId ?? "—";
   const rejection = diagnostic.rejectionReason ?? "—";
   const page = diagnostic.candidatePage.filter((value): value is string => typeof value === "string").join(", ");
   const sample = diagnostic.lastSample?.join(",") ?? "—";
-  const label = [
-    diagnostic.statusLabel,
-    diagnostic.stage,
-    String(diagnostic.acceptedCount) + "/" + String(diagnostic.totalCount),
-    target,
-    candidate,
-    String(diagnostic.collisionCount),
-    rejection,
-    page || "—",
-    sample,
-  ].join("; ");
+  const counts = `${diagnostic.testedCount} · ${diagnostic.acceptedCount} / ${diagnostic.requestedCount}`;
+  const label = [diagnostic.statusLabel, diagnostic.stage, counts, diagnostic.verdict, diagnostic.stallReason ?? "—", target, candidate, String(diagnostic.collisionCount), rejection, page || "—", sample].join("; ");
   return (
     <div
       className={cn("pointer-events-none absolute bottom-3 left-3 max-w-[28rem] rounded px-2 py-1 text-xs shadow-sm", glassClass)}
@@ -3718,6 +3790,12 @@ function FillDiagnosticOverlay({ diagnostic }: { readonly diagnostic: WorldFillD
       data-fill-generation={diagnostic.generation}
       data-fill-sequence={diagnostic.sequence}
       data-fill-stage={diagnostic.stage}
+      data-fill-tested={diagnostic.testedCount}
+      data-fill-locked={diagnostic.acceptedCount}
+      data-fill-requested={diagnostic.requestedCount}
+      data-fill-verdict={diagnostic.verdict}
+      data-fill-tried-count={diagnostic.tried.length}
+      data-fill-stall-reason={diagnostic.stallReason ?? undefined}
       data-fill-target-cursor={diagnostic.targetCursor}
       data-fill-candidate-cursor={diagnostic.candidateCursor}
       data-fill-search-count={diagnostic.searchCount}
@@ -3731,11 +3809,8 @@ function FillDiagnosticOverlay({ diagnostic }: { readonly diagnostic: WorldFillD
       aria-label={label}
     >
       <span>{diagnostic.statusLabel}</span>
-      <span className="ml-2">{diagnostic.stage}</span>
-      <span className="ml-2">
-        {diagnostic.acceptedCount}/{diagnostic.totalCount}
-      </span>
-      <span className="ml-2">{diagnostic.rejectionReason ?? String(diagnostic.collisionCount)}</span>
+      <span className="ml-2">{counts}</span>
+      {diagnostic.stallReason ? <span className="ml-2">{diagnostic.stallReason}</span> : <span className="ml-2">{diagnostic.rejectionReason ?? String(diagnostic.collisionCount)}</span>}
       {diagnostic.truncated ? <span className="ml-2">…</span> : null}
     </div>
   );
@@ -4081,7 +4156,6 @@ function resolveMarqueeInstanceIds(
   const meshById = new Map(meshes.map((mesh) => [mesh.id, mesh]));
   const hits: string[] = [];
   instances.forEach((instance, index) => {
-    if (isRevealCutoffHidden(instance)) return;
     const meshId = instance.meshId ?? instance.id;
     const meshData = meshById.get(meshId)?.data;
     const position = (instance.position ?? [instance.x ?? index, instance.y ?? 0, instance.z ?? 0]) as [number, number, number];
@@ -4151,7 +4225,6 @@ function resolveClickInstanceId(
   const cam = camera.position;
   const candidates: { id: string; corners: readonly (readonly [number, number])[]; depth: number }[] = [];
   instances.forEach((instance, index) => {
-    if (isRevealCutoffHidden(instance)) return;
     const meshId = instance.meshId ?? instance.id;
     const meshData = meshById.get(meshId)?.data;
     const position = (instance.position ?? [instance.x ?? index, instance.y ?? 0, instance.z ?? 0]) as [number, number, number];
@@ -4267,7 +4340,7 @@ function IntroductionWorldResolverBridge({
           return projected.visible ? { point: projected, visible: true } : null;
         }
         if (domain === "object") {
-          const visibleInstances = liveInstances.filter((instance) => !isRevealCutoffHidden(instance));
+          const visibleInstances = liveInstances;
           if (entity === "*") {
             const nearest = nearestToCenter(visibleInstances, instancePosition);
             return nearest ? { point: nearest.projected, visible: true } : null;
@@ -6992,7 +7065,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
                 mergedInstanceIds={visibleSelectionPreview.mergedInstanceIds}
                 blockPick={worldInstancePickBlocked(activeUtility)}
                 environment={environment}
-                revealCutoffs={interaction.revealCutoffs}
               />
             </group>
             <WorldVortexMarkers
@@ -7013,6 +7085,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
             {connectDragSource && connectDragHoverPosition ? <WorldConnectRubberBand from={connectDragSource.position} to={connectDragHoverPosition} /> : null}
             <WorldAttractionLines attractions={previewAttractions} />
             {catalogueDropPreview ? <CatalogueDropGhost preview={catalogueDropPreview} meshes={meshes} palette={meshStylePalette} /> : visibleBrushPreview ? <BrushPreviewGhost preview={visibleBrushPreview} meshes={meshes} palette={meshStylePalette} /> : null}
+            {fillMode && fillDiagnostic ? <FillTriedGhosts tried={fillDiagnostic.tried} meshes={meshes} palette={meshStylePalette} /> : null}
             {engagementPreview.length > 0 ? <EngagementPreviewLayer items={engagementPreview} color={colors.hover} /> : null}
             <WorldVolumeLayer
               volumes={targetVolumes

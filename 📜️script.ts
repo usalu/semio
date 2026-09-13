@@ -7790,6 +7790,18 @@ export class VerifyScript extends Script {
       }
       return;
     }
+    if (segments[0] === "generation3d-document-io") {
+      const testRoot = join(this.root, "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io");
+      const { testGeneration3dDocumentIoSurface } = await import(`${testRoot}/🧪️tests/📄️document-surface/🟦️.ts`);
+      testGeneration3dDocumentIoSurface();
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🧪️tests/📄️document-surface/🟦️.ts`], { cwd: this.root });
+      if (segments[1] === "native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation3d", "--test", "io-round-trip", "document_surface", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation3d", "--features", "component-app-assembly", "--lib", "document_io", "--", "--nocapture"], this.root);
+      }
+      return;
+    }
     if (segments[0] === "generation3d-preview-window-transient") {
       const testRoot = join(this.root, "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🫧️transient");
       const { testGeneration3dPreviewWindowTransientContract } = await import(`${testRoot}/🧪️tests/🔬️contract/🟦️.ts`);

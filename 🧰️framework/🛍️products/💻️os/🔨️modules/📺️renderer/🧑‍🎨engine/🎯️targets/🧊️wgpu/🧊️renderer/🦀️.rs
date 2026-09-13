@@ -14447,6 +14447,35 @@ pub fn boot_app_mode() -> Option<String> {
 }
 //#endregion 🎭️ModeBoot
 
+//#region 📚️ExampleBoot
+// 📚️ The boot-time EXAMPLE, the third axis `?example=` carries beside `?role=` and `?mode=`. Same
+// idiom as the two above for the same reason: a `thread_local` a caller opts into reading, set once
+// from the boot descriptor before the shell opens its session. Without it a wgpu url could only ever
+// open the FIRST example of the open dialect (`sync_session_chrome`'s `examples.first()`), so no
+// example but one had a reachable entry on this target that did not go through a pointer gesture
+// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). The React half of the axis is
+// `🧑‍💻dev/🔗️boot-query/🟦️.ts` `resolveBootQueryExampleId`, so one url opens the same document on
+// both ports.
+thread_local! {
+    static BOOT_APP_EXAMPLE: RefCell<Option<String>> = const { RefCell::new(None) };
+}
+
+/// 🌐️ wasm boot hook — `🟦️.ts` calls this once, before/at mount time, with `?example=`'s value when
+/// the url carries one. An empty string clears it, so a url without `example` keeps the dialect's own
+/// first example.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = semioWgpuSetBootExample)]
+pub fn semio_wgpu_set_boot_example(example_id: String) {
+    BOOT_APP_EXAMPLE.with(|cell| *cell.borrow_mut() = (!example_id.is_empty()).then_some(example_id));
+}
+
+/// 📚️ The boot-requested example id, or `None` when the url named none. An id the open DIALECT does
+/// not author is ignored by the reader (`ShellState::apply_boot_example`), never a boot failure.
+pub fn boot_app_example() -> Option<String> {
+    BOOT_APP_EXAMPLE.with(|cell| cell.borrow().clone())
+}
+//#endregion 📚️ExampleBoot
+
 /// 👁️✏️ The boot-resolved role, contract freeze §5 — `SemioApp`'s session/window-open path is meant
 /// to read this to call `Shell::set_window_role`/`set_locale`; wiring that specific call site is
 /// this lease's documented gap (see `📓️w1-d-report.md` — this crate's own build break blocks

@@ -52,15 +52,42 @@ pub(crate) fn scene_surface<T: semio_framework_ui::wgpu::SceneDoc>(id: impl Into
     semio_framework_plugin::scene_surface(&id, kind, scene)
 }
 
+/// 🖊️ The SELECTED generation's inline name editor: a text `input` seeded with the current name
+/// whose `Trigger::Commit` (Enter / blur — `InputProps::commit == "blur"`) dispatches
+/// `renameGeneration{id}`, the typed text arriving as the framework's scalar `value` argument
+/// (`uiIntentPayload`,
+/// `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🟦️.tsx`).
+///
+/// 🐛️ Why an editor and not the old row action: rename used to be a `RowActionPlacement::Menu`
+/// affordance — right-click only — dispatching a HARDCODED `"{name} copy"`, so a user could reach the
+/// verb but never choose a name (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, gap #7).
+fn generation_rename_field(factory: &ActionFactory, surface_prefix: &str, id: &str, name: &str, placeholder: &str) -> UiAssemblyResult<BuiltNode> {
+    let (action, args) = factory.action("renameGeneration", Some(ui_value_map([("id", ui_value_text(id)?)])?))?;
+    let editor = input(InputKind::Text).value(ui_text(name)?).placeholder(ui_label(placeholder)?).commit(ui_text("blur")?);
+    let editor = ui_id(editor, format!("{surface_prefix}.generation.{id}.rename"))?;
+    let editor = match args {
+        Some(args) => editor.try_on_with(Trigger::Commit, action, args).map_err(|_| ui_assembly_error("ui.generation.rename.binding"))?,
+        None => editor.try_on(Trigger::Commit, action).map_err(|_| ui_assembly_error("ui.generation.rename.binding"))?,
+    };
+    ui_build(editor)
+}
+
 /// 📖 Renders the shared generation list without routing through Flow's legacy renderer node.
-pub(crate) fn generation_tree(controller_id: &'static str, surface_prefix: &str, generation: &semio_framework_artifact_playbook_playbook::GenerationPlayState, locale: Locale, terminology: Terminology) -> UiAssemblyResult<BuiltNode> {
+///
+/// 🖱️ The three row verbs a user meets, in reach order: the row itself activates
+/// `selectGeneration{id}`; the selected row carries [`generation_rename_field`]'s inline name editor
+/// (`renameGeneration`); every row carries a `RowActionPlacement::Row` delete button
+/// (`removeGeneration{id}`) painted ON the row rather than folded into its right-click menu, which is
+/// what `RowActionPlacement::Menu` meant (`🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx`'s
+/// `mergeTreeRowContextMenu`).
+pub(crate) fn generation_tree(controller_id: &'static str, surface_prefix: &str, generation: &semio_framework_artifact_playbook_playbook::GenerationPlayState, selected_id: Option<&str>, locale: Locale, terminology: Terminology) -> UiAssemblyResult<BuiltNode> {
     let _ = terminology;
     let label = |key: &str| {
         match (key, locale) {
             ("remove", Locale::De) => "Entfernen",
             ("remove", _) => "Remove",
-            ("rename", Locale::De) => "Umbenennen",
-            ("rename", _) => "Rename",
+            ("rename", Locale::De) => "Generierung umbenennen",
+            ("rename", _) => "Rename generation",
             ("generations", Locale::De) => "Generierungen",
             ("generations", _) => "Generations",
             ("add", Locale::De) => "Generierung hinzufügen",
@@ -81,16 +108,6 @@ pub(crate) fn generation_tree(controller_id: &'static str, surface_prefix: &str,
         if let Component::TreeItem(props) = &mut item.component {
             props.icon = Some(ui_text("layers")?);
             let mut row_actions = UiFixedList::default();
-            let rename_args = ui_value_map([("id", ui_value_text(&entry.id)?), ("name", ui_value_text(format!("{} copy", entry.name))?)])?;
-            let (rename_action, rename_args) = factory.action("renameGeneration", Some(rename_args))?;
-            row_actions
-                .try_push(RowAction {
-                    icon: ui_text("pencil")?,
-                    label: Some(ui_label(label("rename"))?),
-                    action: ActionBinding { trigger: Trigger::Activate, action: rename_action, args: rename_args, capability: None },
-                    placement: RowActionPlacement::Menu,
-                })
-                .map_err(|_| ui_assembly_error("ui.generation.row-actions"))?;
             let remove_args = ui_value_map([("id", ui_value_text(&entry.id)?)])?;
             let (remove_action, remove_args) = factory.action("removeGeneration", Some(remove_args))?;
             row_actions
@@ -98,10 +115,13 @@ pub(crate) fn generation_tree(controller_id: &'static str, surface_prefix: &str,
                     icon: ui_text("trash-2")?,
                     label: Some(ui_label(label("remove"))?),
                     action: ActionBinding { trigger: Trigger::Activate, action: remove_action, args: remove_args, capability: None },
-                    placement: RowActionPlacement::Menu,
+                    placement: RowActionPlacement::Row,
                 })
                 .map_err(|_| ui_assembly_error("ui.generation.row-actions"))?;
             props.row_actions = row_actions;
+        }
+        if selected_id == Some(entry.id.as_str()) {
+            item = item.try_with_children([generation_rename_field(&factory, surface_prefix, &entry.id, &entry.name, &label("rename"))?]).map_err(|_| ui_assembly_error("ui.generation.rename"))?;
         }
         items.try_push(item).map_err(|_| ui_assembly_error("ui.generation.items"))?;
     }

@@ -1,0 +1,107 @@
+{
+  "note": "♿️ The language-neutral accessibility projection every renderer publishes from a UiNodeRecord. `roles` pins the role a Component IMPLIES — AccessibilitySpec deliberately carries no `role` field, so this table is the ONE place that implication is written down, and React reaches the same roles implicitly through the HTML element each component view renders. `document` is one real flat snapshot plus the pre-order projection it must produce, so a renderer that walks a tree (the wgpu target, which has no DOM to carry aria-* attributes) is measured on order, depth and reach as well as per-node fields. Answered in Rust by `accessibility_role`/`accessibility_is_focusable`/`accessibility_projection_node`, in TypeScript by `uiAccessibilityRoleV1`/`uiAccessibilityIsFocusableV1`/`uiAccessibilityProjectionNodeV1`, and walked by the wgpu target's own `accessibility_projection`. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.",
+  "roles": [
+    { "id": "a-plain-container-is-a-group", "component": { "type": "container" }, "activatable": false, "role": "group", "focusable": false },
+    { "id": "a-container-you-can-press-is-a-button", "component": { "type": "container" }, "activatable": true, "role": "button", "focusable": true },
+    { "id": "a-section-container-is-a-region", "component": { "type": "container", "role": "section" }, "activatable": false, "role": "region", "focusable": false },
+    { "id": "a-group-container-is-a-group", "component": { "type": "container", "role": "group" }, "activatable": false, "role": "group", "focusable": false },
+    { "id": "a-field-container-is-a-group-not-a-landmark", "component": { "type": "container", "role": "field" }, "activatable": false, "role": "group", "focusable": false },
+    { "id": "a-form-container-stays-a-form-even-when-pressable", "component": { "type": "container", "role": "form" }, "activatable": true, "role": "form", "focusable": true },
+    { "id": "a-toolbar-container-stays-a-toolbar-even-when-pressable", "component": { "type": "container", "role": "toolbar" }, "activatable": true, "role": "toolbar", "focusable": true },
+    { "id": "text-is-a-paragraph", "component": { "type": "text", "value": "Generations" }, "activatable": false, "role": "paragraph", "focusable": false },
+    { "id": "a-button-is-a-button", "component": { "type": "button", "icon": "plus", "label": "Add Generation" }, "activatable": false, "role": "button", "focusable": true },
+    { "id": "a-separator-is-a-separator", "component": { "type": "separator" }, "activatable": false, "role": "separator", "focusable": false },
+    { "id": "an-input-is-a-textbox", "component": { "type": "input", "value": "12" }, "activatable": false, "role": "textbox", "focusable": true },
+    { "id": "a-select-is-a-combobox", "component": { "type": "select", "value": "a", "items": [{ "value": "a", "label": "Option A" }] }, "activatable": false, "role": "combobox", "focusable": true },
+    { "id": "a-toggle-is-a-switch", "component": { "type": "toggle", "on": true, "icon": "toggle" }, "activatable": false, "role": "switch", "focusable": true },
+    { "id": "a-key-value-list-is-a-list", "component": { "type": "keyValueList", "entries": [{ "label": "Author", "value": "Ada" }] }, "activatable": false, "role": "list", "focusable": false },
+    { "id": "a-slider-is-a-slider", "component": { "type": "slider", "value": 0.4, "min": 0, "max": 1, "step": 0.1 }, "activatable": false, "role": "slider", "focusable": true },
+    { "id": "a-number-stepper-is-a-spinbutton", "component": { "type": "numberStepper", "value": 2, "step": 1, "uniform": false }, "activatable": false, "role": "spinbutton", "focusable": true },
+    { "id": "a-ring-is-a-slider-too", "component": { "type": "ring", "orbId": "orb-1", "t": 0.6 }, "activatable": false, "role": "slider", "focusable": true },
+    { "id": "an-icon-select-is-a-radiogroup", "component": { "type": "iconSelect", "value": "circle", "uniform": true, "classifierKind": "shape" }, "activatable": false, "role": "radiogroup", "focusable": true },
+    { "id": "a-tree-is-a-tree", "component": { "type": "tree", "interactionDomain": "selection" }, "activatable": false, "role": "tree", "focusable": false },
+    { "id": "a-tree-section-is-a-group", "component": { "type": "treeSection", "label": "Section" }, "activatable": false, "role": "group", "focusable": false },
+    { "id": "a-tree-item-is-a-treeitem", "component": { "type": "treeItem", "label": "First item" }, "activatable": false, "role": "treeitem", "focusable": true },
+    { "id": "an-image-is-an-img", "component": { "type": "image", "src": "atlas://logo", "alt": "Company logo" }, "activatable": false, "role": "img", "focusable": false },
+    { "id": "a-surface-is-an-application", "component": { "type": "surface", "surfaceId": "surf-1", "controllerId": "ctrl", "kind": "world-3d", "docSchema": "world3d@1", "doc": { "bytes": [1, 2, 3] } }, "activatable": false, "role": "application", "focusable": false },
+    { "id": "an-extension-slot-is-a-region", "component": { "type": "extension", "extension": "plugin.app.slot", "props": { "id": "widget" } }, "activatable": false, "role": "region", "focusable": false }
+  ],
+  "documentNote": "🌳️ A generation editor's Form window in miniature: a section holding a labelled numeric field, a decorative (aria-hidden) ornament, a live status line, and a pressable card. `expected` is the FULL pre-order projection — a renderer that reorders, loses depth, or drops the hidden node disagrees with the DOM renderer about what exists.",
+  "document": {
+    "surface": "conformance.a11y.projection",
+    "revision": 0,
+    "root": 0,
+    "layoutEpoch": 0,
+    "nodes": [
+      {
+        "id": 0,
+        "key": "#root",
+        "component": { "type": "container", "role": "section", "label": "Generation parameters" },
+        "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
+        "style": {},
+        "activity": "idle",
+        "accessibility": { "label": "Generation parameters" },
+        "children": [1, 3, 4, 5]
+      },
+      {
+        "id": 1,
+        "key": "#field",
+        "component": { "type": "container", "role": "field", "label": "Width" },
+        "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
+        "style": {},
+        "activity": "idle",
+        "accessibility": {},
+        "children": [2]
+      },
+      {
+        "id": 2,
+        "key": "#width",
+        "component": { "type": "numberStepper", "value": 12, "step": 1, "uniform": true },
+        "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
+        "style": {},
+        "activity": "idle",
+        "accessibility": { "label": "Width", "description": "Millimetres along X", "shortcut": "Alt+W" },
+        "bindings": [{ "trigger": "change", "action": { "scope": "procedural", "name": "setWidth", "version": 1 } }]
+      },
+      {
+        "id": 3,
+        "key": "#ornament",
+        "component": { "type": "image", "src": "atlas://rule", "alt": "Rule" },
+        "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
+        "style": {},
+        "activity": "idle",
+        "accessibility": { "hidden": true }
+      },
+      {
+        "id": 4,
+        "key": "#status",
+        "component": { "type": "text", "value": "Meshing faces" },
+        "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
+        "style": {},
+        "activity": "loading",
+        "accessibility": { "label": "Evaluation status", "live": "polite" }
+      },
+      {
+        "id": 5,
+        "key": "#card",
+        "component": { "type": "container" },
+        "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
+        "style": {},
+        "activity": "idle",
+        "disabled": true,
+        "accessibility": { "label": "Open generation" },
+        "bindings": [{ "trigger": "activate", "action": { "scope": "procedural", "name": "openGeneration", "version": 1 } }]
+      }
+    ]
+  },
+  "expected": [
+    { "nodeId": 0, "key": "#root", "depth": 0, "role": "region", "label": "Generation parameters", "description": null, "live": "off", "shortcut": null, "hidden": false, "disabled": false, "focusable": false, "actionable": false },
+    { "nodeId": 1, "key": "#field", "depth": 1, "role": "group", "label": null, "description": null, "live": "off", "shortcut": null, "hidden": false, "disabled": false, "focusable": false, "actionable": false },
+    { "nodeId": 2, "key": "#width", "depth": 2, "role": "spinbutton", "label": "Width", "description": "Millimetres along X", "live": "off", "shortcut": "Alt+W", "hidden": false, "disabled": false, "focusable": true, "actionable": true },
+    { "nodeId": 3, "key": "#ornament", "depth": 1, "role": "img", "label": null, "description": null, "live": "off", "shortcut": null, "hidden": true, "disabled": false, "focusable": false, "actionable": false },
+    { "nodeId": 4, "key": "#status", "depth": 1, "role": "paragraph", "label": "Evaluation status", "description": null, "live": "polite", "shortcut": null, "hidden": false, "disabled": false, "focusable": false, "actionable": false },
+    { "nodeId": 5, "key": "#card", "depth": 1, "role": "button", "label": "Open generation", "description": null, "live": "off", "shortcut": null, "hidden": false, "disabled": true, "focusable": true, "actionable": true }
+  ],
+  "announcedNote": "🏷️ The subset a reader can reach BY NAME: not hidden, focusable or actionable, and carrying a label of its own. The mirror still exposes the whole projection — a live region is announced without ever being reachable — so this is the reach law, not the exposure law.",
+  "announced": [2, 5]
+}

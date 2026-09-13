@@ -1,0 +1,20 @@
+{
+  "format": "semio.generation3d.keyboard-reachability",
+  "version": 1,
+  "note": "⌨️ The keyboard path of every generation3d editor verb a user repeats. A chord here MUST reach an ARG-FREE declared action: `ShellHost`'s keybinding loop fires an arg-free action straight through `onAction`, and opens a staged argument form for anything else — which is slower than the control the chord was meant to replace. `fitGraph` is deliberately absent: it is shell chrome over the node-graph surface, not an app action, and the shell binds `F` to it itself. Driven by `✏️editor/🧪️tests/🔬️unit/🦀️.rs` `the_editor_binds_every_keyboard_verb_the_fixture_names`; this file, not that test, is the statement.",
+  "bindings": [
+    { "chord": "mod+z", "action": "undo", "framework": true, "why": "History — the framework's own reserved verb." },
+    { "chord": "mod+shift+z", "action": "redo", "framework": true, "why": "History — the framework's own reserved verb." },
+    { "chord": "delete,backspace", "action": "deleteSelection", "framework": false, "why": "Graph — remove what is selected, the chord three sibling artifacts already declare." },
+    { "chord": "mod+alt+l", "action": "reorganize", "framework": false, "why": "Graph — auto-layout, previously right-click only." },
+    { "chord": "mod+period", "action": "cancelPreviewEval", "framework": false, "why": "Preview — stop a running evaluation, the cancel chord the simulation surface declares." },
+    { "chord": "mod+alt+d", "action": "cycleShowMode", "framework": false, "why": "Preview — step the shading ladder without reaching for the picker." },
+    { "chord": "mod+alt+k", "action": "cycleLodMode", "framework": false, "why": "Graph/preview — step the level-of-detail ladder." },
+    { "chord": "mod+shift+g", "action": "addGeneration", "framework": false, "why": "Generate — add a generation, the mode's primary create verb." },
+    { "chord": "mod+o", "action": "importDocumentRequest", "framework": false, "why": "IO — the chord every application in the world uses to open a file." },
+    { "chord": "mod+shift+e", "action": "exportDocument", "framework": false, "why": "IO — export; carries a required format, so this chord opens the staged form on purpose.", "staged": true }
+  ],
+  "shellChrome": [
+    { "control": "fitGraph", "chord": "f", "why": "Painted by the shell over any node-graph surface, not declared by this app — the app must NOT re-bind it." }
+  ]
+}

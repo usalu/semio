@@ -116,7 +116,6 @@
           "routes": [
             "cancelFillBuild",
             "exportFixture",
-            "fillBuildTick",
             "openAddObjectDialog",
             "openImportFixture",
             "registerBrushMesh",
@@ -157,6 +156,7 @@
             "createAttraction",
             "deleteAttraction",
             "deleteTargetVolume",
+            "fillBuildTick",
             "importFixture",
             "patchInspector",
             "relocateTargetVolume",

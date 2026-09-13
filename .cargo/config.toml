@@ -40,3 +40,16 @@ rustflags = ["-C", "link-arg=-fuse-ld=mold"]
 
 [target.aarch64-unknown-linux-gnu]
 rustflags = ["-C", "link-arg=-fuse-ld=mold"]
+
+# 🧵️ The NATIVE test thread's stack. `libtest` spawns every test on a thread whose default stack is
+# 2 MiB, and an unoptimised build of an artifact app overruns it before the first assertion: the async
+# state machines of `context::app_with_registry` → `new_app_with_registry` → `VcsArtifactApp::open`
+# are materialised inline by `block_on`, measured at 325 KiB, 227 KiB and 221 KiB of frame each, and
+# one `procedural generation3d` fixture boot alone lands on 2_096_176 bytes — 976 bytes under the
+# default. A stack overflow ABORTS the process instead of failing the test, so the run dies under
+# whichever test the allocator happened to be in: that is the whole of the "9 generation3d `--lib`
+# reds that swap between runs" (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+# `📓️editor-verbs-cancel-undo-2026-09-13.md`). Thread stacks are reserved, not committed, so the
+# headroom costs address space only. Same defect class as the wasm `-zstack-size` bump above.
+[env]
+RUST_MIN_STACK = "67108864"

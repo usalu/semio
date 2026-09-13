@@ -1,18 +1,18 @@
 {
   "schema": "semio.puzzle3d.fill-preview-json.v1",
   "limits": {
-    "maximumBytes": 4096,
+    "maximumBytes": 16384,
     "maximumColorBytes": 128,
     "maximumStatusLabelBytes": 256,
     "maximumSourceVortexIndex": 9007199254740991,
     "maximumDiagnosticInteger": 9007199254740991,
-    "candidateItems": 8
+    "candidateItems": 8,
+    "triedItems": 12
   },
   "documentCapacities": {
     "bookkeepingSlots": 32,
     "bookkeepingPageBytes": 16384,
     "documentPageBytes": 1048576,
-    "fillCountMax": 1000,
     "objectSlots": 2048,
     "attractionSlots": 2048,
     "vortexSlots": 4096,
@@ -20,33 +20,111 @@
     "kindSlots": 256,
     "candidateSlots": 1024,
     "cellSlots": 8192,
-    "nakagin": { "objects": 180, "vortices": 358, "objectKinds": 12, "vortexKinds": 18, "compatibilityRows": 14, "attractions": 358 }
+    "nakagin": {
+      "objects": 180,
+      "vortices": 358,
+      "objectKinds": 12,
+      "vortexKinds": 18,
+      "compatibilityRows": 14,
+      "attractions": 358
+    }
   },
   "boundaryLaws": {
     "sourceVortexIndex": [
-      { "name": "safe-maximum", "value": 9007199254740991, "admitted": true },
-      { "name": "safe-maximum-plus-one", "value": 9007199254740992, "admitted": false }
+      {
+        "name": "safe-maximum",
+        "value": 9007199254740991,
+        "admitted": true
+      },
+      {
+        "name": "safe-maximum-plus-one",
+        "value": 9007199254740992,
+        "admitted": false
+      }
     ],
     "color": [
-      { "name": "ascii-maximum", "unit": "x", "repeat": 128, "utf8Bytes": 128, "admitted": true },
-      { "name": "ascii-maximum-plus-one", "unit": "x", "repeat": 129, "utf8Bytes": 129, "admitted": false },
-      { "name": "multibyte-maximum", "unit": "ü", "repeat": 64, "utf8Bytes": 128, "admitted": true },
-      { "name": "multibyte-maximum-plus-one", "unit": "ü", "repeat": 65, "utf8Bytes": 130, "admitted": false }
+      {
+        "name": "ascii-maximum",
+        "unit": "x",
+        "repeat": 128,
+        "utf8Bytes": 128,
+        "admitted": true
+      },
+      {
+        "name": "ascii-maximum-plus-one",
+        "unit": "x",
+        "repeat": 129,
+        "utf8Bytes": 129,
+        "admitted": false
+      },
+      {
+        "name": "multibyte-maximum",
+        "unit": "ü",
+        "repeat": 64,
+        "utf8Bytes": 128,
+        "admitted": true
+      },
+      {
+        "name": "multibyte-maximum-plus-one",
+        "unit": "ü",
+        "repeat": 65,
+        "utf8Bytes": 130,
+        "admitted": false
+      }
     ],
     "statusLabel": [
-      { "name": "ascii-maximum", "unit": "x", "repeat": 256, "utf8Bytes": 256, "admitted": true },
-      { "name": "ascii-maximum-plus-one", "unit": "x", "repeat": 257, "utf8Bytes": 257, "admitted": false },
-      { "name": "multibyte-maximum", "unit": "ü", "repeat": 128, "utf8Bytes": 256, "admitted": true },
-      { "name": "multibyte-maximum-plus-one", "unit": "ü", "repeat": 129, "utf8Bytes": 258, "admitted": false }
+      {
+        "name": "ascii-maximum",
+        "unit": "x",
+        "repeat": 256,
+        "utf8Bytes": 256,
+        "admitted": true
+      },
+      {
+        "name": "ascii-maximum-plus-one",
+        "unit": "x",
+        "repeat": 257,
+        "utf8Bytes": 257,
+        "admitted": false
+      },
+      {
+        "name": "multibyte-maximum",
+        "unit": "ü",
+        "repeat": 128,
+        "utf8Bytes": 256,
+        "admitted": true
+      },
+      {
+        "name": "multibyte-maximum-plus-one",
+        "unit": "ü",
+        "repeat": 129,
+        "utf8Bytes": 258,
+        "admitted": false
+      }
     ],
     "fullWire": [
-      { "name": "maximum", "sourceField": "stage", "utf8Bytes": 4096, "admitted": true, "oracle": "serde_json" },
+      {
+        "name": "maximum",
+        "sourceField": "stage",
+        "utf8Bytes": 16384,
+        "admitted": true,
+        "oracle": "serde_json"
+      },
       {
         "name": "maximum-plus-one",
         "sourceField": "stage",
-        "utf8Bytes": 4097,
+        "utf8Bytes": 16385,
         "admitted": false,
-        "preserves": ["fuel", "checkpoint", "phase", "ready", "readyIdentity", "colorOwner", "statusLabelOwner", "transientOwners"]
+        "preserves": [
+          "fuel",
+          "checkpoint",
+          "phase",
+          "ready",
+          "readyIdentity",
+          "colorOwner",
+          "statusLabelOwner",
+          "transientOwners"
+        ]
       }
     ],
     "aggregateSourceStrings": [
@@ -59,25 +137,107 @@
       "currentPairObjectId",
       "candidatePage[0]",
       "rejectionReason",
+      "stallReason",
+      "tried[0].reason",
+      "tried[0].ghost.targetVortexFullId",
+      "tried[0].ghost.objectKindId",
+      "tried[0].ghost.meshUrl",
       "color",
       "statusLabel"
+    ],
+    "verdicts": [
+      "testing",
+      "free",
+      "collision",
+      "rejected",
+      "accepted"
+    ],
+    "triedRing": [
+      {
+        "name": "ring-maximum",
+        "items": 12,
+        "admitted": true
+      },
+      {
+        "name": "ring-maximum-plus-one",
+        "items": 13,
+        "admitted": false
+      }
+    ],
+    "requestedCount": [
+      {
+        "name": "unbounded-ask",
+        "value": 1000000,
+        "admitted": true
+      },
+      {
+        "name": "safe-maximum",
+        "value": 9007199254740991,
+        "admitted": true
+      }
     ]
   },
   "diagnosticNumericFields": [
-    { "field": "operation", "minimum": 1 },
-    { "field": "baseRevision", "minimum": 1 },
-    { "field": "registryGeneration", "minimum": 1 },
-    { "field": "sequence", "minimum": 0 },
-    { "field": "generation", "minimum": 1 },
-    { "field": "collisionCount", "minimum": 0 },
-    { "field": "sampleCursor", "minimum": 0 },
-    { "field": "insideBoth", "minimum": 0 },
-    { "field": "targetCursor", "minimum": 0 },
-    { "field": "candidateCursor", "minimum": 0 },
-    { "field": "acceptedCount", "minimum": 0 },
-    { "field": "totalCount", "minimum": 0 },
-    { "field": "searchCount", "minimum": 0 },
-    { "field": "rejectedCount", "minimum": 0 }
+    {
+      "field": "operation",
+      "minimum": 1
+    },
+    {
+      "field": "baseRevision",
+      "minimum": 1
+    },
+    {
+      "field": "registryGeneration",
+      "minimum": 1
+    },
+    {
+      "field": "sequence",
+      "minimum": 0
+    },
+    {
+      "field": "generation",
+      "minimum": 1
+    },
+    {
+      "field": "collisionCount",
+      "minimum": 0
+    },
+    {
+      "field": "sampleCursor",
+      "minimum": 0
+    },
+    {
+      "field": "insideBoth",
+      "minimum": 0
+    },
+    {
+      "field": "targetCursor",
+      "minimum": 0
+    },
+    {
+      "field": "candidateCursor",
+      "minimum": 0
+    },
+    {
+      "field": "acceptedCount",
+      "minimum": 0
+    },
+    {
+      "field": "searchCount",
+      "minimum": 0
+    },
+    {
+      "field": "rejectedCount",
+      "minimum": 0
+    },
+    {
+      "field": "requestedCount",
+      "minimum": 0
+    },
+    {
+      "field": "testedCount",
+      "minimum": 0
+    }
   ],
   "color": "#38bdf8",
   "preview": {
@@ -94,32 +254,323 @@
       "objectKindId": "candidate",
       "sourceVortexIndex": 2,
       "meshUrl": "/candidate.glb",
-      "origin": [1.0, 2.0, 3.0],
-      "orientation": [0.0, 0.0, 0.0, 1.0]
+      "origin": [
+        1.0,
+        2.0,
+        3.0
+      ],
+      "orientation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
     },
     "currentPairObjectId": "obstacle-1",
     "collisionCount": 1,
     "sampleCursor": 4,
     "insideBoth": 2,
-    "lastSample": [0.25, -0.5, 1.0],
-    "candidatePage": ["a", "b", null, null, null, null, null, null],
+    "lastSample": [
+      0.25,
+      -0.5,
+      1.0
+    ],
+    "candidatePage": [
+      "a",
+      "b",
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
     "truncated": false,
     "rejectionReason": "solid-overlap",
     "targetCursor": 6,
     "candidateCursor": 7,
     "acceptedCount": 8,
-    "totalCount": 1000,
+    "requestedCount": 150,
     "searchCount": 23,
-    "rejectedCount": 4
+    "rejectedCount": 4,
+    "verdict": "collision",
+    "testedCount": 37,
+    "stallReason": null,
+    "tried": [
+      {
+        "sequence": 100,
+        "verdict": "testing",
+        "reason": null,
+        "ghost": {
+          "targetVortexFullId": "host:v0",
+          "objectKindId": "candidate-00",
+          "sourceVortexIndex": 0,
+          "meshUrl": "/candidate-00.glb",
+          "origin": [
+            0.25,
+            1.0,
+            2.5
+          ],
+          "orientation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        }
+      },
+      {
+        "sequence": 101,
+        "verdict": "free",
+        "reason": null,
+        "ghost": {
+          "targetVortexFullId": "host:v1",
+          "objectKindId": "candidate-01",
+          "sourceVortexIndex": 1,
+          "meshUrl": "/candidate-01.glb",
+          "origin": [
+            1.25,
+            2.0,
+            3.5
+          ],
+          "orientation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        }
+      },
+      {
+        "sequence": 102,
+        "verdict": "collision",
+        "reason": "solid-overlap",
+        "ghost": {
+          "targetVortexFullId": "host:v2",
+          "objectKindId": "candidate-02",
+          "sourceVortexIndex": 2,
+          "meshUrl": "/candidate-02.glb",
+          "origin": [
+            2.25,
+            3.0,
+            4.5
+          ],
+          "orientation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        }
+      },
+      {
+        "sequence": 103,
+        "verdict": "rejected",
+        "reason": "outside-target-volume",
+        "ghost": {
+          "targetVortexFullId": "host:v3",
+          "objectKindId": "candidate-03",
+          "sourceVortexIndex": 3,
+          "meshUrl": "/candidate-03.glb",
+          "origin": [
+            3.25,
+            4.0,
+            5.5
+          ],
+          "orientation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        }
+      },
+      {
+        "sequence": 104,
+        "verdict": "accepted",
+        "reason": null,
+        "ghost": {
+          "targetVortexFullId": "host:v4",
+          "objectKindId": "candidate-04",
+          "sourceVortexIndex": 4,
+          "meshUrl": "/candidate-04.glb",
+          "origin": [
+            4.25,
+            5.0,
+            6.5
+          ],
+          "orientation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        }
+      },
+      {
+        "sequence": 105,
+        "verdict": "testing",
+        "reason": null,
+        "ghost": {
+          "targetVortexFullId": "host:v5",
+          "objectKindId": "candidate-05",
+          "sourceVortexIndex": 5,
+          "meshUrl": "/candidate-05.glb",
+          "origin": [
+            5.25,
+            6.0,
+            7.5
+          ],
+          "orientation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        }
+      },
+      {
+        "sequence": 106,
+        "verdict": "free",
+        "reason": null,
+        "ghost": {
+          "targetVortexFullId": "host:v6",
+          "objectKindId": "candidate-06",
+          "sourceVortexIndex": 6,
+          "meshUrl": "/candidate-06.glb",
+          "origin": [
+            6.25,
+            7.0,
+            8.5
+          ],
+          "orientation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        }
+      },
+      {
+        "sequence": 107,
+        "verdict": "collision",
+        "reason": "solid-overlap",
+        "ghost": {
+          "targetVortexFullId": "host:v7",
+          "objectKindId": "candidate-07",
+          "sourceVortexIndex": 7,
+          "meshUrl": "/candidate-07.glb",
+          "origin": [
+            7.25,
+            8.0,
+            9.5
+          ],
+          "orientation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        }
+      },
+      {
+        "sequence": 108,
+        "verdict": "rejected",
+        "reason": "outside-target-volume",
+        "ghost": {
+          "targetVortexFullId": "host:v8",
+          "objectKindId": "candidate-08",
+          "sourceVortexIndex": 8,
+          "meshUrl": "/candidate-08.glb",
+          "origin": [
+            8.25,
+            9.0,
+            10.5
+          ],
+          "orientation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        }
+      },
+      {
+        "sequence": 109,
+        "verdict": "accepted",
+        "reason": null,
+        "ghost": {
+          "targetVortexFullId": "host:v9",
+          "objectKindId": "candidate-09",
+          "sourceVortexIndex": 9,
+          "meshUrl": "/candidate-09.glb",
+          "origin": [
+            9.25,
+            10.0,
+            11.5
+          ],
+          "orientation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        }
+      },
+      {
+        "sequence": 110,
+        "verdict": "testing",
+        "reason": null,
+        "ghost": {
+          "targetVortexFullId": "host:v10",
+          "objectKindId": "candidate-10",
+          "sourceVortexIndex": 10,
+          "meshUrl": "/candidate-10.glb",
+          "origin": [
+            10.25,
+            11.0,
+            12.5
+          ],
+          "orientation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        }
+      },
+      {
+        "sequence": 111,
+        "verdict": "free",
+        "reason": null,
+        "ghost": {
+          "targetVortexFullId": "host:v11",
+          "objectKindId": "candidate-11",
+          "sourceVortexIndex": 11,
+          "meshUrl": "/candidate-11.glb",
+          "origin": [
+            11.25,
+            12.0,
+            13.5
+          ],
+          "orientation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        }
+      }
+    ]
   },
   "locales": {
     "en": {
       "statusLabel": "Fill progress",
-      "expected": "{\"targetVortexFullId\":\"host:v0\",\"objectKindId\":\"candidate\",\"sourceVortexIndex\":2,\"meshUrl\":\"/candidate.glb\",\"origin\":[1.0,2.0,3.0],\"orientation\":[0.0,0.0,0.0,1.0],\"color\":\"#38bdf8\",\"opacity\":0.35,\"fillBuildPreview\":{\"operation\":41,\"baseRevision\":7,\"registryGeneration\":11,\"sequence\":5,\"generation\":3,\"stage\":\"test-collision\",\"statusLabel\":\"Fill progress\",\"targetVortexFullId\":\"host:v0\",\"candidateObjectKindId\":\"candidate\",\"candidateGhost\":{\"targetVortexFullId\":\"host:v0\",\"objectKindId\":\"candidate\",\"sourceVortexIndex\":2,\"meshUrl\":\"/candidate.glb\",\"origin\":[1.0,2.0,3.0],\"orientation\":[0.0,0.0,0.0,1.0]},\"currentPairObjectId\":\"obstacle-1\",\"collisionCount\":1,\"sampleCursor\":4,\"insideBoth\":2,\"lastSample\":[0.25,-0.5,1.0],\"candidatePage\":[\"a\",\"b\",null,null,null,null,null,null],\"truncated\":false,\"rejectionReason\":\"solid-overlap\",\"targetCursor\":6,\"candidateCursor\":7,\"acceptedCount\":8,\"totalCount\":1000,\"searchCount\":23,\"rejectedCount\":4}}"
+      "expected": "{\"targetVortexFullId\":\"host:v0\",\"objectKindId\":\"candidate\",\"sourceVortexIndex\":2,\"meshUrl\":\"/candidate.glb\",\"origin\":[1.0,2.0,3.0],\"orientation\":[0.0,0.0,0.0,1.0],\"color\":\"#38bdf8\",\"opacity\":0.35,\"verdict\":\"collision\",\"fillBuildPreview\":{\"operation\":41,\"baseRevision\":7,\"registryGeneration\":11,\"sequence\":5,\"generation\":3,\"stage\":\"test-collision\",\"statusLabel\":\"Fill progress\",\"targetVortexFullId\":\"host:v0\",\"candidateObjectKindId\":\"candidate\",\"candidateGhost\":{\"targetVortexFullId\":\"host:v0\",\"objectKindId\":\"candidate\",\"sourceVortexIndex\":2,\"meshUrl\":\"/candidate.glb\",\"origin\":[1.0,2.0,3.0],\"orientation\":[0.0,0.0,0.0,1.0]},\"currentPairObjectId\":\"obstacle-1\",\"collisionCount\":1,\"sampleCursor\":4,\"insideBoth\":2,\"lastSample\":[0.25,-0.5,1.0],\"candidatePage\":[\"a\",\"b\",null,null,null,null,null,null],\"truncated\":false,\"rejectionReason\":\"solid-overlap\",\"targetCursor\":6,\"candidateCursor\":7,\"acceptedCount\":8,\"requestedCount\":150,\"searchCount\":23,\"rejectedCount\":4,\"verdict\":\"collision\",\"testedCount\":37,\"stallReason\":null,\"tried\":[{\"sequence\":100,\"verdict\":\"testing\",\"reason\":null,\"ghost\":{\"targetVortexFullId\":\"host:v0\",\"objectKindId\":\"candidate-00\",\"sourceVortexIndex\":0,\"meshUrl\":\"/candidate-00.glb\",\"origin\":[0.25,1.0,2.5],\"orientation\":[0.0,0.0,0.0,1.0]}},{\"sequence\":101,\"verdict\":\"free\",\"reason\":null,\"ghost\":{\"targetVortexFullId\":\"host:v1\",\"objectKindId\":\"candidate-01\",\"sourceVortexIndex\":1,\"meshUrl\":\"/candidate-01.glb\",\"origin\":[1.25,2.0,3.5],\"orientation\":[0.0,0.0,0.0,1.0]}},{\"sequence\":102,\"verdict\":\"collision\",\"reason\":\"solid-overlap\",\"ghost\":{\"targetVortexFullId\":\"host:v2\",\"objectKindId\":\"candidate-02\",\"sourceVortexIndex\":2,\"meshUrl\":\"/candidate-02.glb\",\"origin\":[2.25,3.0,4.5],\"orientation\":[0.0,0.0,0.0,1.0]}},{\"sequence\":103,\"verdict\":\"rejected\",\"reason\":\"outside-target-volume\",\"ghost\":{\"targetVortexFullId\":\"host:v3\",\"objectKindId\":\"candidate-03\",\"sourceVortexIndex\":3,\"meshUrl\":\"/candidate-03.glb\",\"origin\":[3.25,4.0,5.5],\"orientation\":[0.0,0.0,0.0,1.0]}},{\"sequence\":104,\"verdict\":\"accepted\",\"reason\":null,\"ghost\":{\"targetVortexFullId\":\"host:v4\",\"objectKindId\":\"candidate-04\",\"sourceVortexIndex\":4,\"meshUrl\":\"/candidate-04.glb\",\"origin\":[4.25,5.0,6.5],\"orientation\":[0.0,0.0,0.0,1.0]}},{\"sequence\":105,\"verdict\":\"testing\",\"reason\":null,\"ghost\":{\"targetVortexFullId\":\"host:v5\",\"objectKindId\":\"candidate-05\",\"sourceVortexIndex\":5,\"meshUrl\":\"/candidate-05.glb\",\"origin\":[5.25,6.0,7.5],\"orientation\":[0.0,0.0,0.0,1.0]}},{\"sequence\":106,\"verdict\":\"free\",\"reason\":null,\"ghost\":{\"targetVortexFullId\":\"host:v6\",\"objectKindId\":\"candidate-06\",\"sourceVortexIndex\":6,\"meshUrl\":\"/candidate-06.glb\",\"origin\":[6.25,7.0,8.5],\"orientation\":[0.0,0.0,0.0,1.0]}},{\"sequence\":107,\"verdict\":\"collision\",\"reason\":\"solid-overlap\",\"ghost\":{\"targetVortexFullId\":\"host:v7\",\"objectKindId\":\"candidate-07\",\"sourceVortexIndex\":7,\"meshUrl\":\"/candidate-07.glb\",\"origin\":[7.25,8.0,9.5],\"orientation\":[0.0,0.0,0.0,1.0]}},{\"sequence\":108,\"verdict\":\"rejected\",\"reason\":\"outside-target-volume\",\"ghost\":{\"targetVortexFullId\":\"host:v8\",\"objectKindId\":\"candidate-08\",\"sourceVortexIndex\":8,\"meshUrl\":\"/candidate-08.glb\",\"origin\":[8.25,9.0,10.5],\"orientation\":[0.0,0.0,0.0,1.0]}},{\"sequence\":109,\"verdict\":\"accepted\",\"reason\":null,\"ghost\":{\"targetVortexFullId\":\"host:v9\",\"objectKindId\":\"candidate-09\",\"sourceVortexIndex\":9,\"meshUrl\":\"/candidate-09.glb\",\"origin\":[9.25,10.0,11.5],\"orientation\":[0.0,0.0,0.0,1.0]}},{\"sequence\":110,\"verdict\":\"testing\",\"reason\":null,\"ghost\":{\"targetVortexFullId\":\"host:v10\",\"objectKindId\":\"candidate-10\",\"sourceVortexIndex\":10,\"meshUrl\":\"/candidate-10.glb\",\"origin\":[10.25,11.0,12.5],\"orientation\":[0.0,0.0,0.0,1.0]}},{\"sequence\":111,\"verdict\":\"free\",\"reason\":null,\"ghost\":{\"targetVortexFullId\":\"host:v11\",\"objectKindId\":\"candidate-11\",\"sourceVortexIndex\":11,\"meshUrl\":\"/candidate-11.glb\",\"origin\":[11.25,12.0,13.5],\"orientation\":[0.0,0.0,0.0,1.0]}}]}}"
     },
     "de": {
       "statusLabel": "Füllfortschritt",
-      "expected": "{\"targetVortexFullId\":\"host:v0\",\"objectKindId\":\"candidate\",\"sourceVortexIndex\":2,\"meshUrl\":\"/candidate.glb\",\"origin\":[1.0,2.0,3.0],\"orientation\":[0.0,0.0,0.0,1.0],\"color\":\"#38bdf8\",\"opacity\":0.35,\"fillBuildPreview\":{\"operation\":41,\"baseRevision\":7,\"registryGeneration\":11,\"sequence\":5,\"generation\":3,\"stage\":\"test-collision\",\"statusLabel\":\"Füllfortschritt\",\"targetVortexFullId\":\"host:v0\",\"candidateObjectKindId\":\"candidate\",\"candidateGhost\":{\"targetVortexFullId\":\"host:v0\",\"objectKindId\":\"candidate\",\"sourceVortexIndex\":2,\"meshUrl\":\"/candidate.glb\",\"origin\":[1.0,2.0,3.0],\"orientation\":[0.0,0.0,0.0,1.0]},\"currentPairObjectId\":\"obstacle-1\",\"collisionCount\":1,\"sampleCursor\":4,\"insideBoth\":2,\"lastSample\":[0.25,-0.5,1.0],\"candidatePage\":[\"a\",\"b\",null,null,null,null,null,null],\"truncated\":false,\"rejectionReason\":\"solid-overlap\",\"targetCursor\":6,\"candidateCursor\":7,\"acceptedCount\":8,\"totalCount\":1000,\"searchCount\":23,\"rejectedCount\":4}}"
+      "expected": "{\"targetVortexFullId\":\"host:v0\",\"objectKindId\":\"candidate\",\"sourceVortexIndex\":2,\"meshUrl\":\"/candidate.glb\",\"origin\":[1.0,2.0,3.0],\"orientation\":[0.0,0.0,0.0,1.0],\"color\":\"#38bdf8\",\"opacity\":0.35,\"verdict\":\"collision\",\"fillBuildPreview\":{\"operation\":41,\"baseRevision\":7,\"registryGeneration\":11,\"sequence\":5,\"generation\":3,\"stage\":\"test-collision\",\"statusLabel\":\"Füllfortschritt\",\"targetVortexFullId\":\"host:v0\",\"candidateObjectKindId\":\"candidate\",\"candidateGhost\":{\"targetVortexFullId\":\"host:v0\",\"objectKindId\":\"candidate\",\"sourceVortexIndex\":2,\"meshUrl\":\"/candidate.glb\",\"origin\":[1.0,2.0,3.0],\"orientation\":[0.0,0.0,0.0,1.0]},\"currentPairObjectId\":\"obstacle-1\",\"collisionCount\":1,\"sampleCursor\":4,\"insideBoth\":2,\"lastSample\":[0.25,-0.5,1.0],\"candidatePage\":[\"a\",\"b\",null,null,null,null,null,null],\"truncated\":false,\"rejectionReason\":\"solid-overlap\",\"targetCursor\":6,\"candidateCursor\":7,\"acceptedCount\":8,\"requestedCount\":150,\"searchCount\":23,\"rejectedCount\":4,\"verdict\":\"collision\",\"testedCount\":37,\"stallReason\":null,\"tried\":[{\"sequence\":100,\"verdict\":\"testing\",\"reason\":null,\"ghost\":{\"targetVortexFullId\":\"host:v0\",\"objectKindId\":\"candidate-00\",\"sourceVortexIndex\":0,\"meshUrl\":\"/candidate-00.glb\",\"origin\":[0.25,1.0,2.5],\"orientation\":[0.0,0.0,0.0,1.0]}},{\"sequence\":101,\"verdict\":\"free\",\"reason\":null,\"ghost\":{\"targetVortexFullId\":\"host:v1\",\"objectKindId\":\"candidate-01\",\"sourceVortexIndex\":1,\"meshUrl\":\"/candidate-01.glb\",\"origin\":[1.25,2.0,3.5],\"orientation\":[0.0,0.0,0.0,1.0]}},{\"sequence\":102,\"verdict\":\"collision\",\"reason\":\"solid-overlap\",\"ghost\":{\"targetVortexFullId\":\"host:v2\",\"objectKindId\":\"candidate-02\",\"sourceVortexIndex\":2,\"meshUrl\":\"/candidate-02.glb\",\"origin\":[2.25,3.0,4.5],\"orientation\":[0.0,0.0,0.0,1.0]}},{\"sequence\":103,\"verdict\":\"rejected\",\"reason\":\"outside-target-volume\",\"ghost\":{\"targetVortexFullId\":\"host:v3\",\"objectKindId\":\"candidate-03\",\"sourceVortexIndex\":3,\"meshUrl\":\"/candidate-03.glb\",\"origin\":[3.25,4.0,5.5],\"orientation\":[0.0,0.0,0.0,1.0]}},{\"sequence\":104,\"verdict\":\"accepted\",\"reason\":null,\"ghost\":{\"targetVortexFullId\":\"host:v4\",\"objectKindId\":\"candidate-04\",\"sourceVortexIndex\":4,\"meshUrl\":\"/candidate-04.glb\",\"origin\":[4.25,5.0,6.5],\"orientation\":[0.0,0.0,0.0,1.0]}},{\"sequence\":105,\"verdict\":\"testing\",\"reason\":null,\"ghost\":{\"targetVortexFullId\":\"host:v5\",\"objectKindId\":\"candidate-05\",\"sourceVortexIndex\":5,\"meshUrl\":\"/candidate-05.glb\",\"origin\":[5.25,6.0,7.5],\"orientation\":[0.0,0.0,0.0,1.0]}},{\"sequence\":106,\"verdict\":\"free\",\"reason\":null,\"ghost\":{\"targetVortexFullId\":\"host:v6\",\"objectKindId\":\"candidate-06\",\"sourceVortexIndex\":6,\"meshUrl\":\"/candidate-06.glb\",\"origin\":[6.25,7.0,8.5],\"orientation\":[0.0,0.0,0.0,1.0]}},{\"sequence\":107,\"verdict\":\"collision\",\"reason\":\"solid-overlap\",\"ghost\":{\"targetVortexFullId\":\"host:v7\",\"objectKindId\":\"candidate-07\",\"sourceVortexIndex\":7,\"meshUrl\":\"/candidate-07.glb\",\"origin\":[7.25,8.0,9.5],\"orientation\":[0.0,0.0,0.0,1.0]}},{\"sequence\":108,\"verdict\":\"rejected\",\"reason\":\"outside-target-volume\",\"ghost\":{\"targetVortexFullId\":\"host:v8\",\"objectKindId\":\"candidate-08\",\"sourceVortexIndex\":8,\"meshUrl\":\"/candidate-08.glb\",\"origin\":[8.25,9.0,10.5],\"orientation\":[0.0,0.0,0.0,1.0]}},{\"sequence\":109,\"verdict\":\"accepted\",\"reason\":null,\"ghost\":{\"targetVortexFullId\":\"host:v9\",\"objectKindId\":\"candidate-09\",\"sourceVortexIndex\":9,\"meshUrl\":\"/candidate-09.glb\",\"origin\":[9.25,10.0,11.5],\"orientation\":[0.0,0.0,0.0,1.0]}},{\"sequence\":110,\"verdict\":\"testing\",\"reason\":null,\"ghost\":{\"targetVortexFullId\":\"host:v10\",\"objectKindId\":\"candidate-10\",\"sourceVortexIndex\":10,\"meshUrl\":\"/candidate-10.glb\",\"origin\":[10.25,11.0,12.5],\"orientation\":[0.0,0.0,0.0,1.0]}},{\"sequence\":111,\"verdict\":\"free\",\"reason\":null,\"ghost\":{\"targetVortexFullId\":\"host:v11\",\"objectKindId\":\"candidate-11\",\"sourceVortexIndex\":11,\"meshUrl\":\"/candidate-11.glb\",\"origin\":[11.25,12.0,13.5],\"orientation\":[0.0,0.0,0.0,1.0]}}]}}"
     }
   }
 }

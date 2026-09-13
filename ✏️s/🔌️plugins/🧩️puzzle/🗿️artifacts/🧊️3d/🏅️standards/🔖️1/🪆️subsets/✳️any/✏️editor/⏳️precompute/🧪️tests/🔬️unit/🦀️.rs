@@ -51,13 +51,17 @@ fn fill_capable_engine() -> Puzzle3dCollision {
         weights: BrushKindWeights::default(),
     };
     engine.set_scene(&serde_json::to_string(&scene).expect("fill scene")).expect("set fill scene");
-    engine.fill.as_ref().expect("fill").lock().expect("fill lock").max_count = 1;
+    engine.set_fill_requested_count(1);
     engine
 }
 
+/// 🎚️ What a hand-built test plan is requested to reach. Every law below either stays under it or
+/// retargets the builder explicitly — there is no planner ceiling constant left to inherit.
+const FILL_TEST_REQUESTED_COUNT: usize = 1000;
+
 fn fill_builder_for_test(base: Fixture, seed: u32, catalogs: &KindCatalogBundle) -> FillBuilder {
     let scene = Arc::new(SceneConfig { fixture: base, kind_catalogs: Some(catalogs.clone()), kind_compatibility: Vec::new(), overlap_budget: 0.0, seed, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() });
-    let mut fill = FillBuilder::begin_preparation(FillPreparationRoots::new(scene, Arc::new(HashMap::new())), Operation::new(semio_framework_job::allocate_operation_id(), RevisionId(1), Generation(1), seed as u64));
+    let mut fill = FillBuilder::begin_preparation(FillPreparationRoots::new(scene, Arc::new(HashMap::new())), Operation::new(semio_framework_job::allocate_operation_id(), RevisionId(1), Generation(1), seed as u64), FILL_TEST_REQUESTED_COUNT);
     while matches!(
         fill.stage,
         FillJobStage::PrepareFixture | FillJobStage::PrepareCatalogs | FillJobStage::PrepareMeshes | FillJobStage::PrepareEntries | FillJobStage::PrepareSpatial | FillJobStage::PrepareLookup | FillJobStage::PrepareConfiguration
@@ -187,47 +191,107 @@ fn fill_options_paths_are_millisecond_scale() {
     assert_eq!(fill.applied_count, 5, "applied fill objects must survive weight edits");
 }
 
-#[test]
-fn apply_fill_count_downward_move_keeps_the_plan_intact() {
-    // 🔽️ Moving the count DOWN must never discard the already-planned sequence/appended objects/
-    // placed entries or re-enqueue FillSteps — only `applied_count` (and the returned document-prefix
-    // fixture) may change. Otherwise a jittery drag forces expensive replanning on every dip.
+/// 🧾️ A session whose plan is already `plan` placements long and whose document holds none of them —
+/// where every locked-chunk law starts. The plan rows are hand-built so the law describes the cursor
+/// arithmetic between document and plan, never the planner's own choices.
+fn session_with_planned_fill(plan: usize, requested: u32) -> Puzzle3dPrecomputeSession {
     let base = Fixture { objects: vec![fill_plan_object("base")], attractions: vec![], target_volumes: vec![] };
     let catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
     let mut fill = fill_builder_for_test(base.clone(), 7, &catalogs);
-    fill.applied_count = 0;
-    fill.sequence = (0..10).map(fill_plan_payload).collect();
-    fill.appended_objects = (0..10).map(|index| fill_plan_object(&format!("p{index}"))).collect();
-    fill.appended_attractions = (0..10).map(fill_plan_attraction).collect();
-    fill.placed = fill
-        .appended_objects
-        .iter()
-        .map(|object| PlacedCollisionEntry { object_id: object.id.clone(), mesh_url: "/test/placed.glb".into(), world: pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale) })
-        .collect();
-
+    fill.sequence = (0..plan).map(fill_plan_payload).collect();
+    fill.appended_objects = (0..plan).map(|index| fill_plan_object(&format!("p{index}"))).collect();
+    fill.appended_attractions = (0..plan).map(fill_plan_attraction).collect();
     let mut engine = Puzzle3dCollision::new();
-    let base_scene = SceneConfig { fixture: base.clone(), kind_catalogs: Some(catalogs), kind_compatibility: vec![], overlap_budget: 0.0, seed: 7, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() };
-    engine.set_scene(&serde_json::to_string(&base_scene).unwrap()).expect("seed");
+    let scene = SceneConfig { fixture: base, kind_catalogs: Some(catalogs), kind_compatibility: vec![], overlap_budget: 0.0, seed: 7, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() };
+    engine.set_scene(&serde_json::to_string(&scene).expect("scene json")).expect("seed scene");
     engine.fill = Some(Arc::new(Mutex::new(fill)));
+    let mut session = Puzzle3dPrecomputeSession {
+        engine,
+        fill_job: None,
+        fill_admission: None,
+        fill_terminal: None,
+        fill_observation: FillObservation::default(),
+        fill_applied_count: 0,
+        fill_faulted: false,
+        fill_fault_notice: false,
+        last_emitted_fill_checkpoint: RefCell::new(Vec::new()),
+        brush_live_target: None,
+    };
+    session.set_fill_requested_count(requested);
+    session
+}
 
-    engine.apply_fill_count(8).expect("apply up to 8");
-    let queue_before = engine.work_pending_for_test();
-    let placed_before = engine.fill.as_ref().unwrap().lock().expect("fill lock").placed.len();
-    let sequence_before = engine.fill.as_ref().unwrap().lock().expect("fill lock").sequence.len();
+/// 🔽️ Moving the count DOWN deletes the document tail FIRST and only then lets the builder discard
+/// the plan rows behind it. The order is the whole law: a plan row is the only thing that can name
+/// the document object it produced, so discarding the plan first would strand those objects, and
+/// truncating the plan on a jittery dip would force a replan on the way back up.
+#[test]
+fn apply_fill_count_downward_move_keeps_the_plan_intact() {
+    let mut session = session_with_planned_fill(10, 8);
+    let locked = session.take_fill_locked_chunk(FILL_LOCK_PLACEMENTS_PER_TICK).expect("first locked chunk");
+    assert_eq!(locked.applied_count, 8);
+    assert_eq!(locked.added_objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["p0", "p1", "p2", "p3", "p4", "p5", "p6", "p7"]);
+    assert_eq!(locked.added_attractions.len(), 8, "every locked placement commits its attraction in the same chunk");
+    let planned = session.fill_available_count();
 
-    engine.apply_fill_count(3).expect("apply down to 3");
-    let fill_owner = engine.fill.as_ref().expect("fill").clone();
-    let fill = fill_owner.lock().expect("fill lock");
-    assert_eq!(fill.applied_count, 3);
-    assert_eq!(fill.sequence.len(), sequence_before, "the plan is prefix-stable — downward moves never truncate it");
-    assert_eq!(fill.appended_objects.len(), sequence_before);
-    assert_eq!(fill.appended_attractions.len(), sequence_before);
-    assert_eq!(fill.placed.len(), placed_before, "placed collision entries survive a downward move");
-    drop(fill);
-    assert_eq!(engine.work_pending_for_test(), queue_before, "no FillSteps get re-enqueued on a downward move");
+    session.set_fill_requested_count(3);
+    assert_eq!(
+        session.read_fill(|fill| (fill.requested_count(), fill.applied_count)).expect("builder"),
+        (8, 8),
+        "the builder is held at the LOCKED count while the document still shows it — the plan tail it may discard stops there"
+    );
 
-    let fixture = engine.apply_fill_count(7).expect("apply back up to 7");
-    assert_eq!(fixture.objects.len(), base.objects.len() + 7, "moving back up is instant — the plan was never discarded");
+    let removed = session.take_fill_locked_chunk(FILL_LOCK_PLACEMENTS_PER_TICK).expect("downward chunk");
+    assert_eq!(removed.applied_count, 3);
+    assert_eq!(removed.removed_object_ids, vec!["p7", "p6", "p5", "p4", "p3"], "the document tail is deleted newest first");
+    assert!(removed.added_objects.is_empty() && removed.added_attractions.is_empty());
+    assert_eq!(session.fill_available_count(), planned, "deleting from the document never truncates the plan under it");
+    assert_eq!(
+        session.read_fill(|fill| (fill.requested_count(), fill.applied_count, fill.stage)).expect("builder"),
+        (3, 3, FillJobStage::DiscardTail),
+        "only once the document is back at the requested count is the builder told to discard its planned tail"
+    );
+
+    session.set_fill_requested_count(8);
+    let relocked = session.take_fill_locked_chunk(FILL_LOCK_PLACEMENTS_PER_TICK).expect("upward chunk");
+    assert_eq!(relocked.applied_count, 8, "moving back up is instant — the plan was never discarded");
+    assert_eq!(relocked.added_objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["p3", "p4", "p5", "p6", "p7"]);
+}
+
+/// 🔒️ One tick commits at most [`FILL_LOCK_PLACEMENTS_PER_TICK`] placements, and repeated ticks reach
+/// the requested count exactly — locking IS committing, so this is the whole pace at which a plan
+/// becomes a document.
+#[test]
+fn take_fill_locked_chunk_commits_eight_placements_per_tick_up_to_the_requested_count() {
+    let mut session = session_with_planned_fill(20, 20);
+    let mut committed = Vec::new();
+    for _ in 0..8 {
+        let chunk = session.take_fill_locked_chunk(FILL_LOCK_PLACEMENTS_PER_TICK).expect("locked chunk");
+        assert!(chunk.added_objects.len() <= FILL_LOCK_PLACEMENTS_PER_TICK, "a tick may never commit more than its declared batch");
+        committed.extend(chunk.added_objects.into_iter().map(|object| object.id));
+        if session.fill_progress_summary().applied_count == 20 {
+            break;
+        }
+    }
+    assert_eq!(committed.len(), 20, "three ticks of eight reach the requested count and stop there");
+    assert_eq!(committed.first().map(String::as_str), Some("p0"));
+    assert_eq!(committed.last().map(String::as_str), Some("p19"));
+    let settled = session.take_fill_locked_chunk(FILL_LOCK_PLACEMENTS_PER_TICK).expect("settled chunk");
+    assert!(settled.added_objects.is_empty() && settled.removed_object_ids.is_empty(), "a document already at the requested count owes nothing");
+    assert_eq!(session.fill_progress_summary().max_count, 20, "the summary reports the requested count, never a planner ceiling");
+}
+
+/// 🚧️ A stall is always visible: the declared reasons survive the fixed observation channel
+/// round-trip, and one nobody declared still reads back AS a stall instead of vanishing.
+#[test]
+fn every_stall_reason_survives_the_fixed_observation_channel() {
+    for reason in ["no-open-vortex", "document-capacity", "no-compatible-kind"] {
+        assert_eq!(fill_stall_label(fill_stall_code(Some(reason))).as_deref(), Some(reason));
+    }
+    assert_eq!(fill_stall_label(fill_stall_code(None)), None);
+    assert_eq!(fill_stall_label(fill_stall_code(Some("brand-new-reason"))).as_deref(), Some("stalled"));
+    assert_eq!(fill_stage_label(fill_stage_code("test-collision")), "test-collision");
+    assert_eq!(fill_stage_label(fill_stage_code("not-a-stage")), "");
 }
 
 #[test]
@@ -240,7 +304,7 @@ fn update_kind_weights_soft_replans_tail_without_rebuilding_queue() {
     engine.precompute_step(8);
     let queue_len_after_step = engine.work_pending_for_test();
     assert!(engine.precompute_progress_for_test() > progress_after_seed, "a precompute turn must complete work in at least one lane");
-    assert_eq!(queue_len_after_seed, FILL_COUNT_MAX, "the seed arms one fill step per planned placement");
+    assert_eq!(queue_len_after_seed, FILL_REQUESTED_COUNT_DEFAULT, "the seed arms one fill step per REQUESTED placement — no plan-ahead constant");
 
     let mut object_weights = std::collections::BTreeMap::new();
     object_weights.insert("Host".to_string(), 0.25);
@@ -292,38 +356,27 @@ fn a_scene_sync_invalidates_the_brush_derivation_per_object() {
     assert_eq!(engine.work_pending_for_test(), engine.fill_steps_pending_for_test(), "a fill-plan member change invalidates every candidate and clears the queue for a whole-scene rebuild");
 }
 
+/// 🔽️ A downward move never rewinds the random stream: the plan for any count is the prefix of the
+/// plan for a larger one, so lowering is a document edit plus an armed tail discard — never a replan.
 #[test]
 fn decreasing_fill_count_keeps_the_plan_intact_and_does_not_replan() {
-    // 🔽️ Downward moves are prefix-stable (see `apply_fill_count`) — the plan/sequence/appended
-    // objects/queue must never be discarded or re-enqueued just because the applied prefix shrank;
-    // that used to force expensive replanning on every jittery drag dip.
-    let base = Fixture { objects: vec![fill_plan_object("base")], attractions: vec![], target_volumes: vec![] };
-    let catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
-    let mut fill = fill_builder_for_test(base, 7, &catalogs);
-    fill.applied_count = 3;
-    fill.sequence = (0..3).map(fill_plan_payload).collect();
-    fill.appended_objects = (0..3).map(|index| fill_plan_object(&format!("p{index}"))).collect();
-    fill.appended_attractions = (0..3).map(fill_plan_attraction).collect();
-    fill.stalled = true;
-    let rng_state = fill.rng_state;
-    let mut engine = Puzzle3dCollision::new();
-    engine.fill = Some(Arc::new(Mutex::new(fill)));
+    let mut session = session_with_planned_fill(3, 3);
+    session.take_fill_locked_chunk(FILL_LOCK_PLACEMENTS_PER_TICK).expect("lock the whole plan");
+    let rng_state = session.read_fill(|fill| fill.rng_state).expect("builder");
 
-    let fixture = engine.apply_fill_count(1).expect("fill session");
-    assert_eq!(fixture.objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["base", "p0"], "the returned document prefix reflects the new applied count");
-    let fill_owner = engine.fill.as_ref().expect("fill builder").clone();
-    let fill = fill_owner.lock().expect("fill lock");
-    assert_eq!(fill.appended_objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["p0", "p1", "p2"], "the full plan survives — a downward move never discards the tail");
-    assert_eq!(fill.sequence.len(), 3, "the planned sequence is never truncated by a downward move");
-    assert_eq!(fill.applied_count, 1);
-    assert!(fill.stalled, "apply_fill_count never touches stalled — only actual planning does");
-    assert_eq!(fill.rng_state, rng_state, "no replanning happens, so the random stream is untouched");
-    assert_eq!(engine.fill_steps_pending_for_test(), 0, "no FillSteps get enqueued by a downward move");
-    drop(fill);
+    session.set_fill_requested_count(1);
+    let removed = session.take_fill_locked_chunk(FILL_LOCK_PLACEMENTS_PER_TICK).expect("downward chunk");
+    assert_eq!(removed.removed_object_ids, vec!["p2", "p1"]);
+    assert_eq!(session.fill_progress_summary().applied_count, 1);
+    assert_eq!(session.read_fill(|fill| fill.appended_objects.iter().map(|object| object.id.clone()).collect::<Vec<_>>()).expect("builder"), vec!["p0", "p1", "p2"], "the planned tail is still there until the builder spends its own discard turns");
+    assert_eq!(session.read_fill(|fill| fill.rng_state).expect("builder"), rng_state, "no replanning happens, so the random stream is untouched");
+    assert_eq!(session.read_fill(|fill| (fill.requested_count(), fill.stage)).expect("builder"), (1, FillJobStage::DiscardTail));
 
-    let fixture = engine.apply_fill_count(0).expect("zero fill count");
-    assert_eq!(fixture.objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["base"], "zero applies nothing to the document");
-    assert_eq!(engine.fill.as_ref().expect("fill builder").lock().expect("fill lock").sequence.len(), 3, "even at count 0, the plan is preserved for instant re-apply");
+    session.set_fill_requested_count(0);
+    let cleared = session.take_fill_locked_chunk(FILL_LOCK_PLACEMENTS_PER_TICK).expect("zero chunk");
+    assert_eq!(cleared.removed_object_ids, vec!["p0"], "zero applies nothing to the document");
+    assert_eq!(session.fill_progress_summary().applied_count, 0);
+    assert_eq!(session.fill_available_count(), 3, "even at count 0 the plan is preserved for instant re-apply");
 }
 
 #[test]
@@ -435,7 +488,9 @@ fn precompute_session_native_wrapper_exercises_public_methods() {
     let _candidates: BrushCollisionFreeResult = session.brush_candidates("host:v0");
     assert!(session.brush_preview("host:v0", 0).is_none());
 
-    assert_eq!(session.fill_progress().max_count, FILL_COUNT_MAX);
+    assert_eq!(session.fill_requested_count(), FILL_REQUESTED_COUNT_DEFAULT as u32, "an unsynced session plans toward the config default, never a planner ceiling");
+    session.set_fill_requested_count(37);
+    assert_eq!((session.fill_requested_count(), session.fill_progress().max_count, session.fill_progress_summary().max_count), (37, 37, 37));
     assert_eq!(session.fill_available_count(), 0);
 
     let mut object_weights = std::collections::BTreeMap::new();
@@ -488,7 +543,7 @@ fn fill_worker_session(seed: u32) -> Puzzle3dPrecomputeSession {
         engine.set_scene(&serde_json::to_string(&scene).expect("scene json")).expect("reseed scene");
     }
     drive_fill_preparation(&mut engine);
-    engine.fill.as_ref().expect("fill").lock().expect("fill lock").max_count = FILL_COUNT_MAX;
+    engine.set_fill_requested_count(FILL_TEST_REQUESTED_COUNT);
     Puzzle3dPrecomputeSession { engine, fill_job: None, fill_admission: None, fill_terminal: None, fill_observation: FillObservation::default(), fill_applied_count: 0, fill_faulted: false, fill_fault_notice: false, last_emitted_fill_checkpoint: RefCell::new(Vec::new()), brush_live_target: None }
 }
 
@@ -544,6 +599,42 @@ fn drain_orphaned_fill_envelope(request: &FillJobRequest) {
     let standing = fill_envelope_registry().lock().expect("registry").slots[usize::from(request.slot)].is_some();
     assert!(!standing, "the granted reaper retires the exact orphan to terminal empty within {grants} grants");
     assert!(crate::editor::puzzle3d::precompute::fill_envelope_terminal_is_empty(), "the same terminal intent cannot mount twice after readiness is cleared");
+}
+
+/// 🧾️ An admitted session whose plan is already exactly as long as it was asked for — the state a
+/// completed run leaves behind, built without waiting on the planner's own choices.
+fn admitted_completed_fill_session(plan: usize) -> Puzzle3dPrecomputeSession {
+    let mut session = session_with_planned_fill(plan, plan as u32);
+    let Ok(mounted) = mount_fill_worker(Arc::clone(session.engine.fill.as_ref().expect("fill owner")), session.read_fill(|fill| fill.operation).expect("operation"), session.engine.fill_cancel.clone()) else {
+        panic!("the hand-built plan must admit its own worker");
+    };
+    session.engine.fill_worker = Some(mounted);
+    session
+}
+
+/// ▶️ Raising the count past a plan that already reported itself done RESUMES that very run: the
+/// envelope, its builder and its whole locked prefix are still standing, so the deterministic sequence
+/// continues instead of replanning from zero — and the `done` the HUD reads flips back through the
+/// ordinary poll, not through a side channel.
+#[test]
+fn raising_the_requested_count_resumes_a_completed_fill_job_on_its_own_envelope() {
+    let _guard = fill_envelope_test_guard();
+    let mut session = admitted_completed_fill_session(4);
+    let (job, _) = enqueue_measured_fill_job(&mut session).expect("fill job");
+    let request = session.fill_job.clone().expect("admitted request");
+    session.drive_enqueued_fill_job_for_test(1);
+    session.poll_fill_job();
+    assert!(session.fill_progress_summary().done, "a plan that reached the requested count is done");
+
+    session.set_fill_requested_count(6);
+    let (resumed_job, token) = session.enqueue_fill_job().expect("a completed plan resumes on its own envelope");
+    assert_eq!((resumed_job, token.len()), (job, FILL_ENVELOPE_TOKEN_BYTES), "the resumed run keeps its envelope identity instead of admitting a fresh plan");
+    assert!(session.poll_fill_job(), "poll_fill_job reports the resumed observation");
+    let summary = session.fill_progress_summary();
+    assert!(!summary.done, "the done observation flips back to false the moment the ask grows past the plan");
+    assert_eq!((summary.max_count, summary.count), (6, 4), "the locked prefix survives — only the target moved");
+    assert_eq!(fill_envelope_registry().lock().expect("registry").slots[usize::from(request.slot)].as_ref().map(|authority| authority.requested_count), Some(6), "the worker reads the new target off the envelope authority");
+    close_fill_envelope(&mut session);
 }
 
 #[test]

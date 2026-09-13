@@ -3,7 +3,7 @@
 use crate::editor::generation3d::terminology::Generation3dLabels;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
 use semio_framework_artifact_flow_flow::FlowFixture;
-use semio_framework_artifact_playbook_playbook::{selected_generation, GenerationPlayState};
+use semio_framework_artifact_playbook_playbook::GenerationPlayState;
 use semio_framework_os_flow::forms_bridge::flow_fixture_to_form_spec;
 use semio_framework_plugin::{built_text_node, BuiltNode, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 
@@ -34,9 +34,9 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowFixture, generation: &GenerationPlayState, labels: &Generation3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(fixture: &FlowFixture, generation: &GenerationPlayState, selected_id: Option<&str>, labels: &Generation3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let spec = flow_fixture_to_form_spec(fixture);
-    let Some(current) = selected_generation(generation) else {
+    let Some(current) = crate::standards::v1::subsets::any::schema::generation_by_id(generation, selected_id) else {
         return built_text_node(semio_framework_plugin::Label::data(labels.generate_hint.as_str())).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.generate-form.hint", "fixed UI hint admission failed"));
     };
     crate::generation_form(&spec, &current.values, GENERATION_3D_PLAY_APP_ID, "updateGenerationValues", &current.id)
