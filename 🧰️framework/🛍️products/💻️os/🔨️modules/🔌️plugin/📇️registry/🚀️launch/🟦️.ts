@@ -18,6 +18,15 @@ import { join } from "node:path";
 import type { PlaygroundEntry } from "../🎮️playground/🔎️discovery/🟦️.ts";
 
 const SEED_REL_PATH = ".vscode/🧩️launch.seed.jsonc";
+/** @emoji 🖼️ The renderers whose `serve`/`dev` browser listeners every playground variant owns a
+ * `0_dev` launcher for. `⚛️react` serves `🎯️targets/⚛️react`'s Vite host; `🧊️wgpu` serves
+ * `🎯️targets/🧊️wgpu/🌐️server`'s, the one browser listener that consumes Nx-completed WGPU artifacts
+ * (`@semio-tech/framework-os-dev:serve-<variant>-wgpu-<profile>`). Both target families are inferred
+ * per variant from the playground registry, so a new plugin gets both rows with no seed edit. */
+const RENDERER_ROWS = [
+  { id: "react", badge: "⚛️react" },
+  { id: "wgpu", badge: "🧊️wgpu" },
+] as const;
 /** @emoji 📄️ Repo-relative path of the generated output, shared with `📜️script.ts`'s freshness gate. */
 export const LAUNCH_OUTPUT_REL_PATH = ".vscode/launch.json";
 const DEV_LAUNCHERS_MARKER =
@@ -113,7 +122,7 @@ function renderDiscoveredEntry(playground: PlaygroundEntry, namePrefix: string, 
       name: `🛠️dev${namePrefix}🧊️wgpu🖥️native`,
       type: "node-terminal",
       request: "launch",
-      command: `bun nx run @semio-tech/framework-renderer-wgpu:native -- ${playground.variant}`,
+      command: `bun nx run @semio-tech/framework-os-dev:run-${playground.variant}-native-dev`,
       cwd: "${workspaceFolder}",
       env: { SEMIO_PLUGIN: playground.pluginId, ...(playground.app ? { SEMIO_APP: playground.app } : {}) },
       presentation: { group: "3_dev", order },
@@ -237,9 +246,14 @@ export function generateLaunchJson(repoRoot: string, playgrounds: readonly Playg
   ordered.forEach((playground, index) => {
     synthesized.push({ name: `🎮️generate🧩️${playground.variant} session`, type: "node-terminal", request: "launch", command: `bun nx run @semio-tech/plugin-registry:session-${playground.variant}`, cwd: "${workspaceFolder}", presentation: { group: "4_build", order: Math.round((350 + index * 0.001) * 1000) / 1000 } });
     for (const [offset, profile] of ["dev", "release"].entries()) synthesized.push({ name: `🎮️prepare🧩️${playground.variant}⚛️react ${profile}`, type: "node-terminal", request: "launch", command: `bun nx run @semio-tech/framework-os-dev:prepare-${playground.variant}-react-${profile}`, cwd: "${workspaceFolder}", presentation: { group: "4_build", order: Math.round((360 + index * 0.01 + offset * 0.001) * 1000) / 1000 } });
+    for (const [offset, profile] of ["dev", "release"].entries()) for (const [commandIndex, command] of ["prepare", "run", "smoke"].entries()) synthesized.push({
+      name: `🎮️${command}🧩️${playground.variant}🖥️native ${profile}`, type: "node-terminal", request: "launch",
+      command: `bun nx run @semio-tech/framework-os-dev:${command}-${playground.variant}-native-${profile}`, cwd: "${workspaceFolder}",
+      presentation: { group: command === "prepare" ? "4_build" : command === "smoke" ? "3_test" : "0_dev", order: Math.round((365 + index * 0.01 + offset * 0.003 + commandIndex * 0.001) * 1000) / 1000 },
+    });
     synthesized.push({ name: `🎮️build🧩️${playground.variant}⚛️react release`, type: "node-terminal", request: "launch", command: `bun nx run @semio-tech/framework-os-dev:build-${playground.variant}-react-release`, cwd: "${workspaceFolder}", presentation: { group: "4_build", order: Math.round((362 + index * 0.001) * 1000) / 1000 } });
     for (const [offset, profile] of ["dev", "release"].entries()) synthesized.push({ name: `🎮️activate🧩️${playground.variant}⚛️react ${profile}`, type: "node-terminal", request: "launch", command: `bun nx run @semio-tech/framework-os-dev:activate-${playground.variant}-react-${profile}`, cwd: "${workspaceFolder}", presentation: { group: "4_build", order: Math.round((361 + index * 0.01 + offset * 0.001) * 1000) / 1000 } });
-    for (const [offset, profile] of ["dev", "release"].entries()) for (const [commandIndex, command] of ["serve", "dev"].entries()) synthesized.push({ name: `🎮️${command}🧩️${playground.variant}⚛️react ${profile}`, type: "node-terminal", request: "launch", command: `bun nx run @semio-tech/framework-os-dev:${command}-${playground.variant}-react-${profile}`, cwd: "${workspaceFolder}", presentation: { group: "0_dev", order: Math.round((380 + index * 0.1 + offset * 0.01 + commandIndex * 0.001) * 1000) / 1000 } });
+    for (const [rendererIndex, renderer] of RENDERER_ROWS.entries()) for (const [offset, profile] of ["dev", "release"].entries()) for (const [commandIndex, command] of ["serve", "dev"].entries()) synthesized.push({ name: `🎮️${command}🧩️${playground.variant}${renderer.badge} ${profile}`, type: "node-terminal", request: "launch", command: `bun nx run @semio-tech/framework-os-dev:${command}-${playground.variant}-${renderer.id}-${profile}`, cwd: "${workspaceFolder}", presentation: { group: "0_dev", order: Math.round((380 + index * 0.1 + rendererIndex * 0.05 + offset * 0.01 + commandIndex * 0.001) * 1000) / 1000 } });
     const launcher = devLaunchers[playground.variant];
     const prefix = launcher?.namePrefix ?? `🧩️${playground.variant}`;
     const order = Math.round((390 + index * 0.01) * 1_000) / 1_000;

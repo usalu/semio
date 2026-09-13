@@ -26,10 +26,6 @@ message SpaceConfig {
   // @state config
   optional string space_id = 12;
   // @state config
-  optional string client_id = 13;
-  // @state config
-  optional string client_name = 14;
-  // @state config
 }
 
 message SpaceWindowCamera {

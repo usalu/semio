@@ -139,7 +139,7 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                     artifact_app_laws::decode_fixture_scene(&json).map_err(|error| format!("{error}: {json}"))
                 }
 
-                async fn expect_retained_rejection(view: Option<ViewModel>, expected: &str) -> Result<(), String> {
+                async fn retained_rejection(view: Option<ViewModel>) -> (Box<TestApp>, String) {
                     let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<Generation2dPlayApp>>(manifest).await);
                     app.bind_instance_id(71).await;
                     let meta = ActionMeta { instance_id: 71, view_state: view, ..artifact_app_laws::meta("generation2d-window-rejection") };
@@ -151,9 +151,7 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                             Ok(receipt) => format!("unexpected receipt: {:?}", receipt.lanes),
                         },
                     };
-                    artifact_app_laws::close_registered_fixture_app(&mut *app);
-                    if !observed.contains(expected) { return Err(format!("expected {expected}, observed {observed}")); }
-                    Ok(())
+                    (app, observed)
                 }
 
                 let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("neutral runtime fixture");
@@ -186,9 +184,11 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                     load_exact::<edit_preview::config::Generation2dEditPreviewWindowConfigOwner>(&mut app, "edit-right", edit_preview::config::Generation2dEditPreviewWindowConfig { viewport: edit_right_value }).await?;
                     load_exact::<generate_preview::config::Generation2dGeneratePreviewWindowConfigOwner>(&mut app, "generate-left", generate_preview::config::Generation2dGeneratePreviewWindowConfig { viewport: generate_left_value }).await?;
                     load_exact::<generate_preview::config::Generation2dGeneratePreviewWindowConfigOwner>(&mut app, "generate-right", generate_preview::config::Generation2dGeneratePreviewWindowConfig { viewport: generate_right_value }).await?;
+                    eprintln!("[DEBUG] Generation2d exact-window law loaded four preview owners");
 
                     let preview_receipt = dispatch(&mut app, Some(&generate_left), Generation2dCommand::AddGeneration(add_generation::AddGeneration {})).await?;
                     if preview_receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::Transient).count() != 1 { return Err("AddGeneration did not populate the app preview transient".into()); }
+                    drop(preview_receipt);
                     let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                     let app_before = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
 
@@ -217,6 +217,7 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                             }
                         }
                     }
+                    eprintln!("[DEBUG] Generation2d exact-window law settled camera and Canvas command lanes");
 
                     let document_after = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                     let app_after = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -225,13 +226,20 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
 
                     let left_graph = main_scene(&mut app, &main_left).await?.viewport.ok_or("main-left viewport missing")?;
                     let right_graph = main_scene(&mut app, &main_right).await?.viewport.ok_or("main-right viewport missing")?;
+                    eprintln!("[DEBUG] Generation2d exact-window law rendered two main scenes");
                     if left_graph != main_left_value || right_graph != main_right_value { return Err("Generation2d main renderer crossed exact instances".into()); }
-                    let edit_scenes = [canvas_scene(&mut app, edit_preview::GENERATION2D_PLAY_BODY_PREVIEW, &edit_left).await?, canvas_scene(&mut app, edit_preview::GENERATION2D_PLAY_BODY_PREVIEW, &edit_right).await?];
-                    if (edit_scenes[0].camera_x, edit_scenes[0].camera_y, edit_scenes[0].zoom) != (edit_left_value.x, edit_left_value.y, edit_left_value.zoom)
-                        || (edit_scenes[1].camera_x, edit_scenes[1].camera_y, edit_scenes[1].zoom) != (edit_right_value.x, edit_right_value.y, edit_right_value.zoom) { return Err("Generation2d edit-preview renderer crossed exact instances".into()); }
-                    let generate_scenes = [canvas_scene(&mut app, generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW, &generate_left).await?, canvas_scene(&mut app, generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW, &generate_right).await?];
-                    if (generate_scenes[0].camera_x, generate_scenes[0].camera_y, generate_scenes[0].zoom) != (generate_left_value.x, generate_left_value.y, generate_left_value.zoom)
-                        || (generate_scenes[1].camera_x, generate_scenes[1].camera_y, generate_scenes[1].zoom) != (generate_right_value.x, generate_right_value.y, generate_right_value.zoom) { return Err("Generation2d generate-preview renderer crossed exact instances".into()); }
+                    {
+                        let edit_scenes = [canvas_scene(&mut app, edit_preview::GENERATION2D_PLAY_BODY_PREVIEW, &edit_left).await?, canvas_scene(&mut app, edit_preview::GENERATION2D_PLAY_BODY_PREVIEW, &edit_right).await?];
+                        eprintln!("[DEBUG] Generation2d exact-window law rendered two edit-preview scenes");
+                        if (edit_scenes[0].camera_x, edit_scenes[0].camera_y, edit_scenes[0].zoom) != (edit_left_value.x, edit_left_value.y, edit_left_value.zoom)
+                            || (edit_scenes[1].camera_x, edit_scenes[1].camera_y, edit_scenes[1].zoom) != (edit_right_value.x, edit_right_value.y, edit_right_value.zoom) { return Err("Generation2d edit-preview renderer crossed exact instances".into()); }
+                    }
+                    {
+                        let generate_scenes = [canvas_scene(&mut app, generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW, &generate_left).await?, canvas_scene(&mut app, generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW, &generate_right).await?];
+                        eprintln!("[DEBUG] Generation2d exact-window law rendered two generate-preview scenes");
+                        if (generate_scenes[0].camera_x, generate_scenes[0].camera_y, generate_scenes[0].zoom) != (generate_left_value.x, generate_left_value.y, generate_left_value.zoom)
+                            || (generate_scenes[1].camera_x, generate_scenes[1].camera_y, generate_scenes[1].zoom) != (generate_right_value.x, generate_right_value.y, generate_right_value.zoom) { return Err("Generation2d generate-preview renderer crossed exact instances".into()); }
+                    }
 
                     let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
                     if packs.len() != 6 { return Err(format!("expected six exact Generation2d packs, got {}", packs.len())); }
@@ -240,8 +248,13 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                     reopened.bind_instance_id(71).await;
                     reopened.load_document_pack(&document_after).await.map_err(|error| format!("{error:?}"))?;
                     reopened.load_config_pack(&app_after).await.map_err(|error| format!("{error:?}"))?;
+                    drop(document_before);
+                    drop(app_before);
+                    drop(document_after);
+                    drop(app_after);
                     for pack in packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }
                     let restored = reopened.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
+                    eprintln!("[DEBUG] Generation2d exact-window law reopened six owner packs");
                     let restored: std::collections::BTreeMap<_, _> = restored.into_iter().map(|pack| ((pack.window_id, pack.window_kind_id), (pack.files.pack, pack.files.spr))).collect();
                     if restored != expected { return Err("Generation2d exact window Pack or SPR bytes changed during reopen".into()); }
                     let reopened_left = main_scene(&mut reopened, &main_left).await?.viewport.ok_or("reopened main-left viewport missing")?;
@@ -249,19 +262,54 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                     if reopened_left != main_left_value || (reopened_edit.camera_x, reopened_edit.camera_y, reopened_edit.zoom) != (edit_right_value.x, edit_right_value.y, edit_right_value.zoom) { return Err("Generation2d reopened renderer lost exact viewports".into()); }
                     let second_preview = dispatch(&mut reopened, Some(&generate_right), Generation2dCommand::AddGeneration(add_generation::AddGeneration {})).await?;
                     if second_preview.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::Transient).count() != 1 { return Err("reopened Generation2d preview transient did not repopulate".into()); }
+                    drop(second_preview);
                     let reopened_generate = canvas_scene(&mut reopened, generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW, &generate_right).await?;
+                    eprintln!("[DEBUG] Generation2d exact-window law rendered reopened scenes");
                     if (reopened_generate.camera_x, reopened_generate.camera_y, reopened_generate.zoom) != (generate_right_value.x, generate_right_value.y, generate_right_value.zoom) { return Err("Generation2d reopened generate-preview lost exact viewport".into()); }
+                    drop(reopened_generate);
+                    drop(restored);
+                    drop(expected);
+                    eprintln!("[DEBUG] Generation2d exact-window law closing reopened app");
                     artifact_app_laws::close_registered_fixture_app(&mut *reopened);
+                    eprintln!("[DEBUG] Generation2d exact-window law closed reopened app");
+                    let reopened_terminal_empty = reopened.close_terminal_is_empty();
+                    drop(reopened);
+                    if !reopened_terminal_empty { return Err("reopened Generation2d app was not terminal-empty after close".into()); }
 
-                    if flow::config::addressed(&ViewModel { window_id: None, window_instances: all.window_instances.clone(), ..Default::default() }, Default::default()).is_ok() { return Err("Generation2d accepted missing main window identity".into()); }
-                    if flow::config::addressed(&ViewModel { window_id: Some("missing".into()), window_instances: all.window_instances.clone(), ..Default::default() }, Default::default()).is_ok() { return Err("Generation2d accepted stale main window identity".into()); }
-                    if flow::config::addressed(&foreign, Default::default()).is_ok() { return Err("Generation2d accepted wrong main window kind".into()); }
-                    expect_retained_rejection(None, "generation2d-main-window-view-required").await?;
-                    expect_retained_rejection(Some(ViewModel { window_id: Some("missing".into()), window_instances: all.window_instances.clone(), ..Default::default() }), "generation2d-main-window-stale").await?;
-                    expect_retained_rejection(Some(foreign.clone()), "generation2d-main-window-kind-required").await?;
+                    let exact_rejections = [
+                        (flow::config::addressed(&ViewModel { window_id: None, window_instances: all.window_instances.clone(), ..Default::default() }, Default::default()), "generation2d-main-window-required"),
+                        (flow::config::addressed(&ViewModel { window_id: Some("missing".into()), window_instances: all.window_instances.clone(), ..Default::default() }, Default::default()), "generation2d-main-window-stale"),
+                        (flow::config::addressed(&foreign, Default::default()), "generation2d-main-window-kind-required"),
+                    ];
+                    for (observed, expected) in exact_rejections {
+                        if observed.is_ok() || !format!("{observed:?}").contains(expected) { return Err(format!("exact address did not reject with {expected}: {observed:?}")); }
+                    }
+                    let mut rejection_faults = Vec::with_capacity(6);
+                    for (view, case, public_fault) in [
+                        (None, "generation2d-main-window-view-required", "registered fixture typed operation fault: retained command reducer rejected operation"),
+                        (Some(ViewModel { window_id: Some("missing".into()), window_instances: all.window_instances.clone(), ..Default::default() }), "generation2d-main-window-stale", "window-config.window-context"),
+                        (Some(foreign.clone()), "generation2d-main-window-kind-required", "registered fixture typed operation fault: retained command reducer rejected operation"),
+                    ] {
+                        let (mut rejected, observed) = Box::pin(retained_rejection(view)).await;
+                        let rejected_as_expected = !observed.starts_with("unexpected receipt:") && observed.contains(public_fault);
+                        eprintln!("[DEBUG] Generation2d exact-window law observed and is closing rejection app for {case}");
+                        artifact_app_laws::close_registered_fixture_app(&mut *rejected);
+                        eprintln!("[DEBUG] Generation2d exact-window law closed rejection app for {case}");
+                        let terminal_empty = rejected.close_terminal_is_empty();
+                        drop(rejected);
+                        if !terminal_empty { rejection_faults.push(format!("rejection app for {case} was not terminal-empty after close")); }
+                        if !rejected_as_expected { rejection_faults.push(format!("expected retained rejection for {case}, observed {observed}")); }
+                    }
+                    if !rejection_faults.is_empty() { return Err(rejection_faults.join("; ")); }
                     Ok(())
                 }).await;
+                if let Err(error) = &outcome { eprintln!("[DEBUG] Generation2d exact-window runtime failure before primary close: {error}"); }
+                eprintln!("[DEBUG] Generation2d exact-window law closing primary app");
                 artifact_app_laws::close_registered_fixture_app(&mut *app);
+                eprintln!("[DEBUG] Generation2d exact-window law closed primary app");
+                let primary_terminal_empty = app.close_terminal_is_empty();
+                drop(app);
+                assert!(primary_terminal_empty, "Generation2d primary app was not terminal-empty after close");
                 outcome.expect("Generation2d exact-window ownership runtime law");
                 eprintln!("[DEBUG] Generation2d isolated six exact camera owners, verified retained/raw route separation, rendered/reopened every kind, preserved document/app Pack+SPR, rejected invalid contexts, and closed on a 2 MiB stack");
             }))

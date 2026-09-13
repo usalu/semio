@@ -10,14 +10,14 @@ After these repairs, `bun nx run @semio-tech/repo-lib:test-taxonomy-leading-grap
 
 The parent's current global census reports six independent emoji-oracle disagreements. These are not included in the completed per-tree naming claims from the core statute because that implementation currently accepts the repeated presentation selectors inside these ZWJ identities. The parent explicitly deferred root renaming while producers are active.
 
-| Current physical path | Candidate identity correction |
-| --- | --- |
-| 🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev | 🧑‍💻dev |
-| 🧰️framework/🔨️modules/🖼️assets/🔣️icons/🧑️‍💻️development | 🧑‍💻development |
-| 🧰️framework/🔨️modules/🖼️assets/🪧️logos/🧑️‍💻️codeicon | 🧑‍💻codeicon |
-| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine | 🧑‍🎨engine |
-| 🧰️framework/🔨️modules/🖼️assets/🔣️icons/📚️documents/👨️‍💻️file-code.svg | 👨‍💻file-code.svg |
-| 🧰️framework/🔨️modules/🖼️assets/🔣️icons/🧑️‍💻️development/🧑️‍💻️code.svg | 🧑‍💻development/🧑‍💻code.svg |
+| Current physical path                                                 | Candidate identity correction |
+| --------------------------------------------------------------------- | ----------------------------- |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev                        | 🧑‍💻dev                         |
+| 🧰️framework/🔨️modules/🖼️assets/🔣️icons/🧑️‍💻️development               | 🧑‍💻development                 |
+| 🧰️framework/🔨️modules/🖼️assets/🪧️logos/🧑️‍💻️codeicon                  | 🧑‍💻codeicon                    |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine          | 🧑‍🎨engine                      |
+| 🧰️framework/🔨️modules/🖼️assets/🔣️icons/📚️documents/👨️‍💻️file-code.svg | 👨‍💻file-code.svg               |
+| 🧰️framework/🔨️modules/🖼️assets/🔣️icons/🧑️‍💻️development/🧑️‍💻️code.svg | 🧑‍💻development/🧑‍💻code.svg      |
 
 The installed independent `emoji-regex` implementation was run on each current identity and candidate: the current developer/artist/man-technologist names match their two constituent emojis separately, while the selector-free candidates match one complete joined sequence. Intl.Segmenter treats both forms as one grapheme, explaining why a grapheme-only check misses this disagreement. This is observed local-library behavior, not a claim that the central statute has already been corrected.
 
@@ -27,15 +27,15 @@ No listed path, central identity, or incoming reference was changed during the i
 
 Seven identities were then reviewed and moved individually, after confirming every destination was absent. The first six are the oracle disagreements above; the seventh is the same malformed joined-sequence problem in the DSL recipe family.
 
-| Old path | New path | Preserved evidence |
-| --- | --- | --- |
-| `🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev` | `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev` | 4,579-file tree moved intact before its canonical producers ran. |
-| `🧰️framework/🔨️modules/🖼️assets/🔣️icons/🧑️‍💻️development` | `🧰️framework/🔨️modules/🖼️assets/🔣️icons/🧑‍💻development` | Seven-file content multiset remains `0a6487701a452aef2e9468fb48cd1e3225311d64818aaa5105e7a7f6d441333f`. |
-| `🧰️framework/🔨️modules/🖼️assets/🪧️logos/🧑️‍💻️codeicon` | `🧰️framework/🔨️modules/🖼️assets/🪧️logos/🧑‍💻codeicon` | Three-file content multiset remains `796d79f660eaac5e86845cbd0b3ce74bfb4b7370a90a969e5d7ad6dec7c7b6fd`. |
-| `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine` | `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine` | 9,237-file tree moved intact before canonical worker regeneration. |
-| `🧰️framework/🔨️modules/🖼️assets/🔣️icons/📚️documents/👨️‍💻️file-code.svg` | `🧰️framework/🔨️modules/🖼️assets/🔣️icons/📚️documents/👨‍💻file-code.svg` | SHA-256 `0f82bb834c8ce2dda64c05b79bbdf51db7e7483ad5e9e1b224c7681ffde2ab7d`. |
-| `🧰️framework/🔨️modules/🖼️assets/🔣️icons/🧑‍💻development/🧑️‍💻️code.svg` | `🧰️framework/🔨️modules/🖼️assets/🔣️icons/🧑‍💻development/🧑‍💻code.svg` | SHA-256 `c7e94ebd2fecd46c155920041c6e9cdd27a70bb913f9a93ba152fd68c0b07595`. |
-| `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🧑️‍🍳️recipe` | `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🧑‍🍳recipe` | Grammar SHA-256 `68bd8f98595192f01e03b398e25f79e7e8c91bcf4b5a0d3e787605d1e985bad4`; Rust SHA-256 `000f940529f2c4929d6d6900f7723fc801a6a6215ef2ff4c4d5bcb474f90b11e`. |
+| Old path                                                                | New path                                                             | Preserved evidence                                                                                                                                                   |
+| ----------------------------------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev`                        | `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev`                        | 4,579-file tree moved intact before its canonical producers ran.                                                                                                     |
+| `🧰️framework/🔨️modules/🖼️assets/🔣️icons/🧑️‍💻️development`               | `🧰️framework/🔨️modules/🖼️assets/🔣️icons/🧑‍💻development`               | Seven-file content multiset remains `0a6487701a452aef2e9468fb48cd1e3225311d64818aaa5105e7a7f6d441333f`.                                                              |
+| `🧰️framework/🔨️modules/🖼️assets/🪧️logos/🧑️‍💻️codeicon`                  | `🧰️framework/🔨️modules/🖼️assets/🪧️logos/🧑‍💻codeicon`                  | Three-file content multiset remains `796d79f660eaac5e86845cbd0b3ce74bfb4b7370a90a969e5d7ad6dec7c7b6fd`.                                                              |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine`          | `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine`          | 9,237-file tree moved intact before canonical worker regeneration.                                                                                                   |
+| `🧰️framework/🔨️modules/🖼️assets/🔣️icons/📚️documents/👨️‍💻️file-code.svg` | `🧰️framework/🔨️modules/🖼️assets/🔣️icons/📚️documents/👨‍💻file-code.svg` | SHA-256 `0f82bb834c8ce2dda64c05b79bbdf51db7e7483ad5e9e1b224c7681ffde2ab7d`.                                                                                          |
+| `🧰️framework/🔨️modules/🖼️assets/🔣️icons/🧑‍💻development/🧑️‍💻️code.svg`    | `🧰️framework/🔨️modules/🖼️assets/🔣️icons/🧑‍💻development/🧑‍💻code.svg`    | SHA-256 `c7e94ebd2fecd46c155920041c6e9cdd27a70bb913f9a93ba152fd68c0b07595`.                                                                                          |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🧑️‍🍳️recipe`      | `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🧑‍🍳recipe`      | Grammar SHA-256 `68bd8f98595192f01e03b398e25f79e7e8c91bcf4b5a0d3e787605d1e985bad4`; Rust SHA-256 `000f940529f2c4929d6d6900f7723fc801a6a6215ef2ff4c4d5bcb474f90b11e`. |
 
 The discovery parser now admits one NFC `RGI_Emoji` sequence, while retaining the established explicit-presentation case for a single pictograph. Directory canonicalization adds a presentation selector only to a bare single pictograph; it does not corrupt selector-free joined sequences. The language-neutral statute fixture covers selector-free `🧑‍🎨` and `👨‍💻`, rejects the selector-polluted `🧑️‍🎨️`, rejects legacy keycap `1⃣`, and lists all seven exact current/legacy physical owners. Its third-party oracle uses the installed `emoji-regex` implementation and explicitly rejects the legacy keycap sequence rather than inheriting its permissive match.
 
@@ -43,13 +43,13 @@ The fourteen emoji identity cases are injected into one isolated taxonomy valida
 
 The five selector-free semantic directories resolve exactly in context:
 
-| Directory | Parent kind | Resolved registry kind |
-| --- | --- | --- |
-| `🧑‍💻codeicon` | `members-of-assets` | `asset-logo-group-members` |
-| `🧑‍💻development` | `members-of-assets` | `asset-icon-group-members` |
-| `🧑‍🍳recipe` | `members-of-members-of-modules` | `members-of-members-of-members-of-modules` |
-| `🧑‍🎨engine` | `members-of-modules` | `members-of-members-of-modules` |
-| `🧑‍💻dev` | `modules` | `members-of-modules` |
+| Directory       | Parent kind                     | Resolved registry kind                     |
+| --------------- | ------------------------------- | ------------------------------------------ |
+| `🧑‍💻codeicon`    | `members-of-assets`             | `asset-logo-group-members`                 |
+| `🧑‍💻development` | `members-of-assets`             | `asset-icon-group-members`                 |
+| `🧑‍🍳recipe`      | `members-of-members-of-modules` | `members-of-members-of-members-of-modules` |
+| `🧑‍🎨engine`      | `members-of-modules`            | `members-of-members-of-modules`            |
+| `🧑‍💻dev`         | `modules`                       | `members-of-modules`                       |
 
 Full sibling inventories report zero findings involving the two asset groups, the two SVG leaves, Renderer engine, or DSL recipe. Their old physical spellings are absent. Exact live consumers, Cargo/Nx paths, source comments, root script/dependency declarations and launch seed were updated; retained nested-Cargo and remaining-package purity documents remain byte-preserved historical coordinate evidence. Current-source scans distinguish those frozen records and the statute's intentional hostile/legacy cases from live authorities.
 

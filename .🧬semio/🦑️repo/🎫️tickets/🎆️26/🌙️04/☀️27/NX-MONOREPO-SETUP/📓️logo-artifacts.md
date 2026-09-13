@@ -4,18 +4,18 @@ Nx restored both the generated SVG and encoded MP4 after the complete outputs we
 
 ```json
 {
-  "programs": [],
-  "stream_groups": [],
-  "streams": [
-    {
-      "codec_name": "h264",
-      "width": 410,
-      "height": 140,
-      "nb_frames": "1441"
-    }
-  ],
-  "format": {
-    "duration": "24.016667"
+ "programs": [],
+ "stream_groups": [],
+ "streams": [
+  {
+   "codec_name": "h264",
+   "width": 410,
+   "height": 140,
+   "nb_frames": "1441"
   }
+ ],
+ "format": {
+  "duration": "24.016667"
+ }
 }
 ```

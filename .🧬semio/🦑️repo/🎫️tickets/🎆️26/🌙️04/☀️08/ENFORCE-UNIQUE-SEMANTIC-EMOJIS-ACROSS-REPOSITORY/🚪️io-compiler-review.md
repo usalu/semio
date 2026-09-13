@@ -6,14 +6,14 @@ IO's existing names distinguish artifact/dialect schema from the strict RFC4648 
 
 Compiler's root directories already distinguish syntax, font world, text shaping, mathematical layout, SVG output, and package glue. Its font directory contained five identical font emojis and two identical license emojis. The exact reserved-name contracts were checked before editing: `LibertinusOFL.txt` and `NotoOFL.txt` are already registered literal font-license names. No replacement license convention or unnecessary family-directory grouping was introduced.
 
-| Old name under compiler/world/fonts | New name | Handpicked meaning |
-| --- | --- | --- |
-| 🔤️LibertinusMath-Regular.otf | 🧮️LibertinusMath-Regular.otf | Mathematical glyphs and OpenType MATH tables |
-| 🔤️LibertinusMono-Regular.otf | ⌨️LibertinusMono-Regular.otf | Monospaced code/typewriter text |
-| 🔤️LibertinusSerif-Regular.otf | 📖️LibertinusSerif-Regular.otf | Upright serif reading text |
-| 🔤️LibertinusSerif-Italic.otf | 🖋️LibertinusSerif-Italic.otf | Italic emphasis/scripted letterforms |
-| 📜️LibertinusOFL.txt | LibertinusOFL.txt | Existing reserved license filename |
-| 📜️NotoOFL.txt | NotoOFL.txt | Existing reserved license filename |
+| Old name under compiler/world/fonts | New name                      | Handpicked meaning                           |
+| ----------------------------------- | ----------------------------- | -------------------------------------------- |
+| 🔤️LibertinusMath-Regular.otf        | 🧮️LibertinusMath-Regular.otf  | Mathematical glyphs and OpenType MATH tables |
+| 🔤️LibertinusMono-Regular.otf        | ⌨️LibertinusMono-Regular.otf  | Monospaced code/typewriter text              |
+| 🔤️LibertinusSerif-Regular.otf       | 📖️LibertinusSerif-Regular.otf | Upright serif reading text                   |
+| 🔤️LibertinusSerif-Italic.otf        | 🖋️LibertinusSerif-Italic.otf  | Italic emphasis/scripted letterforms         |
+| 📜️LibertinusOFL.txt                 | LibertinusOFL.txt             | Existing reserved license filename           |
+| 📜️NotoOFL.txt                       | NotoOFL.txt                   | Existing reserved license filename           |
 
 The sole remaining `🔤️NotoColorEmoji-subset.ttf` keeps its meaningful font marker and is now sibling-unique. SFNT name tables confirmed all five actual font families/styles before the choices; Libertinus Math has MATH, while Noto has CBDT/CBLC bitmap-color tables. The two distinct copyright/license headers were inspected. All five font files and both license texts retain their original SHA-256 values across the six exact non-overwriting moves. Four exact `include_bytes!` paths changed; FontRole identities and embedded bytes did not. A stale syntax-documentation link was corrected to its existing `📖️.grammar.semio` sibling.
 

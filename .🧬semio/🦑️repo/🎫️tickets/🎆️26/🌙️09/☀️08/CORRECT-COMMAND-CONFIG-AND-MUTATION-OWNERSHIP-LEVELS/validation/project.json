@@ -1,6 +1,34 @@
 {
   "name": "abstraction-ownership-validation",
   "targets": {
+    "fem-pcg-publication-owners": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts fem-pcg-publication-owners"
+      }
+    },
+    "fem-pcg-publication-owners-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts fem-pcg-publication-owners native"
+      }
+    },
+    "fem-assembly-physical-owners": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts fem-assembly-physical-owners"
+      }
+    },
+    "fem-assembly-physical-owners-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts fem-assembly-physical-owners native"
+      }
+    },
     "fem-numerical-page-owners": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -1103,6 +1131,34 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts framework-retained-pack-ownership value-native"
+      }
+    },
+    "framework-retained-pack-diagnostic": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts framework-retained-pack-ownership diagnostic"
+      }
+    },
+    "framework-retained-pack-diagnostic-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts framework-retained-pack-ownership diagnostic-native"
+      }
+    },
+    "framework-retained-pack-inflater": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts framework-retained-pack-ownership inflater"
+      }
+    },
+    "framework-retained-pack-inflater-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts framework-retained-pack-ownership inflater-native"
       }
     },
     "node-graph-viewport-ownership": {

@@ -1,5 +1,17 @@
 # FEM Mounted Model Physical Owner Next Slice
 
+## Current Implementation — 2026-09-13
+
+Focused native-green1 now passes9/9 on2MiB in2m52 Nx. Metadata is208bytes; node/element/support real backings each reconcile exactly, including maximum7296/36224/2944bytes and fifteen partial-admission cleanup cases. Every physical allocation is at most4096bytes, and logical admission advances separately. The full FEM3D numerical-child integration is the active follow-up; generic allocation-failure injection and process-wide memory-credit unification remain outside this selected result.
+
+The baseline now executed: native-red2 observes41528 inline bytes against the4096 metadata limit, while the two assembly inline-accounting repairs pass. The replacement is applied and awaiting native-green1. Nodes/elements/supports use three shared PagedList owners behind a private engine item-owner abstraction. Admission queries and steps accept explicit physical byte grants, allocate at most one backing, distinguish Capacity/Allocation/Closing faults and retain the first fault. Logical admitted counts stay separate from PagedList's initialized length and cannot advance during a physical allocation. Initial backing is zero; the logical limits remain128/128/64.
+
+All mounted construction/job owner variants now move the model directly. The FEM3D child transfers its Option without Arc allocation; genuine cold AnalysisModel sharing is unchanged and its root accounting remains separate. Each item retires its strings before removal; admitted slots and physical pages then drain separately. Allocation totals report each PagedList's actual backing. No model decoder, authored document or window-config schema is changed.
+
+The focused native route selects nine assembly laws, including three owner kinds × empty/one/maximum cases, zero/subexact/exact physical admission, exact per-step conservation, and fifteen partial-admission first-fault/close cases. It also repeats the earlier paged assembly/CSR behavior and both inline-byte laws. After the lower route passes, the full FEM3D numerical child must rerun with the moved paged model. This slice does not finish process-wide credit accounting, scalar identity allocation or other preparation owners.
+
+## Earlier Source Review
+
 The mounted model is engine-level execution state. It belongs in the FEM engine and must not become window configuration or authored document state. Current source uses three large inline fixed arrays in `MountedAnalysisModel`; the admitted-slot counters are logical authority only. FEM3D later moves the complete model into an `Arc`, allocating the whole inline object in one operation. The assembly construction and job variants retain that Arc until their own teardown. This is a remaining physical-ownership gap, separate from the current element-string cleanup repair.
 
 Observed consumers are the FEM3D numerical child and engine assembly tests. The native construction moves the Arc into the completed assembly job; it does not introduce another retained model Arc clone on that path. Accordingly, the current cleanup stall is not evidence of a reference cycle. The string owners must first pass their concrete cleanup regression.

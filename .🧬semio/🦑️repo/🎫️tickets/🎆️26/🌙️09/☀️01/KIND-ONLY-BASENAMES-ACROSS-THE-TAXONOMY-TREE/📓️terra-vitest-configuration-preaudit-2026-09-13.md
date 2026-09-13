@@ -1,7 +1,7 @@
 # Vitest Configuration Consumer Pre-Audit
 
 Date: 2026-09-13  
-Status: **pre-extraction requirements recorded; no configuration move or runtime route is claimed.**
+Status: **accepted for the bounded ownership and native configuration-loading evidence; historical pre-extraction findings and runtime limits are retained below.**
 
 ## Current Authority
 

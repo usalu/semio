@@ -52,9 +52,7 @@ Discovery now computes command inputs only after identifying an actual canonical
 
 Root setup already contains a Trunk 0.21.14 pin in its wasm dependency branch, alongside wasm-pack 0.15.0, lock-selected wasm-bindgen and both Rust wasm targets. A future Trunk prerequisite refactor should reuse that existing authority instead of inventing a separate version.
 
-
 The corrected empty-checkout bootstrap test passed in 9.4 seconds, preserving foreign graph/cache storage, acquiring only pinned tooling and using the repository plugins to synchronize its private application fixture. The ownership, projection and six-artifact native restoration tests passed again in 17.1 seconds with the participant-scoped validation. A complete `repo:test` rerun is active. The remaining build-contract report now records an additional confirmed compiler-output defect: the real WGPU wasm target is cacheable with an empty output list despite writing Trunk deliverables. This is outside the completed generator partition and keeps the overall goal open.
-
 
 The complete retry passed all native command, WGPU restoration, inferred Rust input/hot-reload, dependency bootstrap, cancellation and inventory checks, then failed in editor/playground verification because the registry command router no longer exports `generatePlaygroundRegistry`. The test now imports the current playground discovery and session modules directly and shares one discovered playground list across its assertions. No registry compatibility export was introduced. Another full run is active; the 3m35s preceding run is not an overall pass.
 

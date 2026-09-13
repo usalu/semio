@@ -189,7 +189,7 @@ pub struct Generation3dPlayApp;
 
 /// 🎥️ Parses the flow-graph camera out of `command_from_action`'s JSON args — either a nested
 /// `{camera: {...}}` object or flat `x`/`y`/`zoom` keys.
-fn parse_flow_viewport(args: &dsl::DslValue) -> Result<semio_framework::Viewport2d, Fault> {
+fn parse_flow_viewport(args: &dsl::DslValue) -> Result<semio_framework_os_kernel::Viewport2d, Fault> {
     let value = args.get("viewport").cloned().ok_or_else(|| Fault::from("nodeGraphViewport requires viewport"))?;
     dsl::from_dsl_value(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))
 }

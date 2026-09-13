@@ -7,6 +7,7 @@ import { join } from "node:path";
 import Ajv, { type ValidateFunction } from "ajv";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo, resolveTestLevel, runCargoTestBudgeted, runExactCargoLaws } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { runNestedCargoPackageAdapter } from "../../../🦑️repo/🔨️modules/📚️library/📽️projection/🧩️package-adapter/📦️publication/🟦️.ts";
+import { blake3Hex } from "../../../../🔨️modules/🔏️hash/🟦️.ts";
 
 //#region 🧬️OwnedSchemaExports
 const OS_MODULE_SCHEMAS = {
@@ -1492,7 +1493,6 @@ class WalRecoveryCheckScript extends BundleScript {
     );
     const { default: crc } = await import("crc-32/crc32c.js");
     const leb = await import("@webassemblyjs/leb128");
-    const { blake3Hex } = await import("../../🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");
     const { inspectRetainedSprNeutral } = await import(join(this.repoRoot, "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts"));
     const checksum = (bytes: Uint8Array) => crc.buf(bytes) >>> 0;
     const fragmented = Buffer.from(Array.from({ length: 49152 }, (_, index) => (index * 17 + 3) % 251));

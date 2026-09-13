@@ -1,0 +1,207 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio-tech.com/schema/os-dev-composition-ownership.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contractContext",
+    "routerPath",
+    "owners",
+    "contextChains",
+    "ownerImporterPath",
+    "consumers",
+    "projectInputs",
+    "generatorContracts",
+    "generatedBoundaries",
+    "routerForbiddenSymbols",
+    "registration"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "contractContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "kind", "parentKinds"],
+      "properties": {
+        "name": { "const": "🧑‍💻os-dev-composition-ownership" },
+        "kind": { "const": "os-dev-composition-ownership" },
+        "parentKinds": { "const": ["fixtures", "schema", "tests"] }
+      }
+    },
+    "routerPath": {
+      "const": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
+    },
+    "owners": {
+      "type": "array",
+      "minItems": 49,
+      "maxItems": 49,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "path",
+          "exports"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "path": {
+            "type": "string",
+            "pattern": "/🟦️\\.ts$"
+          },
+          "exports": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "contextChains": {
+      "type": "array",
+      "minItems": 49,
+      "maxItems": 49,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["owner", "parentKind", "members"],
+        "properties": {
+          "owner": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "parentKind": { "type": "string", "minLength": 1 },
+          "members": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "kind"],
+              "properties": {
+                "name": { "type": "string", "minLength": 2 },
+                "kind": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ownerImporterPath": {
+      "const": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts"
+    },
+    "consumers": {
+      "type": "array",
+      "minItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "mode", "path", "requiredTokens", "forbiddenTokens"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "mode": { "enum": ["direct-import", "dynamic-import", "source-data", "detached-import"] },
+          "path": { "type": "string", "minLength": 1 },
+          "requiredTokens": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+          "forbiddenTokens": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "minimumOccurrences": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "projectInputs": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["project", "inputs"],
+        "properties": {
+          "project": { "type": "string", "pattern": "/📋️\\.project\\.json$|/📋️project\\.json$" },
+          "inputs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+        }
+      }
+    },
+    "generatorContracts": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "ownerPath", "ownerIds"],
+        "properties": {
+          "id": { "enum": ["dev-distribution-bundle", "playground-session", "scale-fixture"] },
+          "ownerPath": { "type": "string", "minLength": 1 },
+          "ownerIds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" } }
+        }
+      }
+    },
+    "generatedBoundaries": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "filename", "constant", "authorityPath", "producerOwner", "producerToken"],
+        "properties": {
+          "id": { "enum": ["shard-worker", "module-bridge"] },
+          "filename": { "type": "string", "pattern": "\\.js$" },
+          "constant": { "enum": ["SHARD_WORKER_FILE", "MODULE_BRIDGE_FILE"] },
+          "authorityPath": { "type": "string", "pattern": "/🟦️\\.ts$" },
+          "producerOwner": { "const": "browser-host-staging" },
+          "producerToken": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "routerForbiddenSymbols": {
+      "type": "array",
+      "minItems": 49,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "registration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target",
+        "name",
+        "command",
+        "packagePath",
+        "projectPath",
+        "seedLaunchPath",
+        "derivedLaunchPath"
+      ],
+      "properties": {
+        "target": {
+          "const": "test-os-dev-composition-ownership"
+        },
+        "name": {
+          "const": "🧹clean🧩️taxonomy🧑‍💻os-dev-composition-ownership"
+        },
+        "command": {
+          "const": "bun nx run @semio-tech/repo-lib:test-os-dev-composition-ownership"
+        },
+        "packagePath": {
+          "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"
+        },
+        "projectPath": {
+          "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json"
+        },
+        "seedLaunchPath": {
+          "const": ".vscode/🧩️launch.seed.jsonc"
+        },
+        "derivedLaunchPath": {
+          "const": ".vscode/launch.json"
+        }
+      }
+    }
+  }
+}

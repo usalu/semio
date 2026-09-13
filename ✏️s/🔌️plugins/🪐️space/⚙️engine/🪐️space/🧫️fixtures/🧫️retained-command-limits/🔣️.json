@@ -27,7 +27,7 @@
     {
       "toolId": "presenceHeartbeat",
       "lanes": [
-        "Config"
+        "HostOnly"
       ]
     },
     {
@@ -247,7 +247,7 @@
       "id": "presenceHeartbeat",
       "execution": "bounded",
       "status": "Migrated",
-      "feature": "publish one capped Config mutation through two checkpointed Store preparation phases"
+      "feature": "validate the current host session identity and publish no app config copy"
     },
     {
       "id": "workflowEngagementInput",

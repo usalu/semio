@@ -8,9 +8,9 @@ All four slots are occupied: Astra coordinator plus two Sol Extra High executors
 
 | Worker | Current bounded task | Next task |
 | --- | --- | --- |
-| `sol_root_workflow_resume` | Cache audit/artifact command ownership; repo-test composition is accepted. | Cargo API and library transaction/Go commands. |
-| `sol_print_staging_resume` | Final non-Vitest attribution and configuration remainder. | OS dev composition after this slice. |
-| `terra_publication_resume` | OS dev current composition preaudit and cache owner audit. | OS dev/cache independent acceptance. |
+| `sol_root_workflow_resume` | Hub bootstrap/credential/process foundations owner plan; workspace publication/FEM retirement is accepted. | Remaining Hub domain proofs, native owners and small router grammar. |
+| `sol_print_staging_resume` | Flow browser/host/declaration producer binding plan; PostCSS and bounded OS composition are accepted. | Distribution/JCO physical producer identities and remaining print/tooling owners. |
+| `terra_publication_resume` | Workspace/historical-input acceptance and current Flow read-only audit. | Hub prerequisite and next native/producer audits. |
 
 App checkpoint: root fully read final `📓️sol-app-verification-extraction-2026-09-12.md` and its report corrections. Current13leaves/fourrouters have direct6/188 (8.27s) and actual isolated registered Nx6/188 (target5.2s,cache skipped). Registered Math/source-GIS/VCS-oracle checks pass; native VCS two codec laws plus one identity law pass after11m54s of shared Cargo contention with exact names/targets and executable digests retained. Prepared Energy Nx11/0 passes without provisioning or simulation; root's generic registry and semantic pin projection pass. Thirty-eight exact paths are present as36live and the two intended removed Energy predecessors. GIS native red/source-only limits remain explicit. The lane is complete; final Terra report delta is being retained.
 
@@ -42,10 +42,10 @@ Surface/abstraction is accepted:17 owners/21 contexts/35edges, zero cycles/rootb
 
 Each packet requires current-source rereading, schema/portable fixtures first, exact consumer/input/producer closure, every ancestor context, actual native/runtime evidence, direct and registered routes, and a retained exact ownership report. Mandatory `📜️script.ts` files retain routing, not hidden domain implementations. Do not relocate monoliths to anonymous generic helpers.
 
-1. Vitest, repo-test composition and Norm are accepted; finish non-Vitest exact attribution, then continue cache and OS dev composition. Artifact schema, surface/abstraction and all four graph/schema/UI/actor generator renderer slices are accepted.
+1. Vitest, non-Vitest configurations, repo-test/cache composition, Norm, Cargo/transaction/Go and bounded OS dev composition are accepted; continue PostCSS, workspace publication/historical FEM retirement and Hub composition. Artifact schema, surface/abstraction and all four graph/schema/UI/actor generator renderer slices are accepted.
 2. Generator renderers are accepted in the Sol generator report and final coordinator generator review: graph/schema/UI/actor semantic owners, all exact data/producer/consumer inputs and native limits. Do not repeat completed generator extraction.
 3. Inference laws are accepted in the coordinator inference review; retain the historical extraction packet: `📓️root-schema-inference-law-extraction-packet-2026-09-12.md`. Artifact and surface/abstraction slices are accepted; the completed separate inference slice uses shared discovery and already-owned field parsers. Current native abstraction controls pass18Ajv vectors/104contracts. Current artifact192owners/2000findings and latest app aggregate600findings are diagnostics to preserve honestly, not extraction failures or permanent expected counts.
-4. OS dev and Hub composition: `📓️large-composition-script-extraction-packet-2026-09-12.md` and `📓️composition-current-declaration-closures-2026-09-12.md`. Two bounded lanes after app owners settle; close source-as-data/native subprocess consumers, use actual hash/publication owners.
+4. Hub composition and remaining OS integration/runtime closure: `📓️large-composition-script-extraction-packet-2026-09-12.md` and `📓️composition-current-declaration-closures-2026-09-12.md`. Two bounded lanes after app owners settle; close source-as-data/native subprocess consumers, use actual hash/publication owners.
 5. Other command bodies: `📓️repo-test-cache-script-extraction-packet-2026-09-12.md`, `📓️os-native-proof-script-extraction-packet-2026-09-12.md`, and `📓️root-script-region-ownership-map-2026-09-12.md`. Repo test/cache/library Cargo orchestration, seven concrete OS/kernel/host/renderer/MCP/browser proof owners, root interactivity/tool jobs, graph export and remaining specific law domains. Re-review small routers with the precise grammar packet after larger owners move.
 6. Authored plugin leaves and Stdio package composition: `📓️plugin-source-followup-packet-2026-09-12.md`. Sequence, Norm875, Trinity shell, BREP and Puzzle icons; also the substantive Stdio root package-contract/DAG/build/proof command body and its package caller. Use actual semantic owners with existing generic routing, no product-specific terminal whitelist. Energy Python is owned by the app lane; do not duplicate it. No invented DWG behavior.
 7. Package/persistent generated bindings: `📓️package-metadata-followup-packet-2026-09-12.md`, `📓️flow-browser-ownership-prerequisites-2026-09-12.md`, `📓️cargo-entry-and-shortcode-extraction-packet-2026-09-12.md`. Flow browser/host/declaration producer, generated chunks, JCO, Cargo selectors/shortcodes and worker output identity.
@@ -57,7 +57,7 @@ Each packet requires current-source rereading, schema/portable fixtures first, e
 
 ## Current Coverage and Final Acceptance
 
-Latest focused filename census is wave seven:138744paths,199kind-only findings, zero vanished directories, zero added findings and two removed Rust source identities relative to wave six. It does not measure mandatory script bodies, all contextual placement, omitted producer outputs or runtime behavior. See `📓️current-filename-census-wave-seven-2026-09-13.md`.
+Latest focused filename census is wave eight: 139193 paths, 163 kind-only findings, zero vanished directories, zero added findings and 36 removed finding identities relative to wave seven. It does not measure mandatory script bodies, every ancestor context, omitted producer outputs or runtime behavior. The full exact current/removed rows are retained in `📓️current-filename-census-wave-eight-2026-09-13.md`.
 
 Expanded script review covered455scripts rather than the earlier138package-only population. Earlier178unresolved dispositions include valid routing syntax and are not178proven violations. Preserve fixed-script read-failure enforcement and precise accepted routing forms; use `📓️small-router-grammar-execution-packet-2026-09-12.md` for remaining small syntax cases.
 
@@ -94,3 +94,73 @@ Repository-test command composition is accepted in `📓️coordinator-repo-test
 
 
 Norm oracle ownership is accepted in `📓️coordinator-norm-oracle-source-ownership-2026-09-13.md`: one semantic Python engine,15rebound adapters,799unchanged distinct registrations, exact17input closure, direct6/137 and actual isolated Nx6/137/16.3s, including65real EN1991 CLI scenario passes. Exact27current+1removed product identities are retained. The stale vector URI stem is repaired. Generic host changes belong to Sol’s composition lane; DIN16798 duplicate identity remains a separate contract finding. No full15-standard parity claim.
+
+
+Non-Vitest configuration ownership is accepted in `📓️coordinator-tool-configuration-ownership-review-2026-09-13.md`:11owners/22consumers/eight input bindings, final direct7/134 and actual isolated Nx7/134/29.8s, cache skipped. Root checked64unique product identities:51current and13intended removals, with all native-loader/editor/source-token limits retained. PostCSS remains queued with the current loader intake. Sol now owns OS dev composition. Root separately repairs the missed HTML normalization reader; follow its repair report for current registered status.
+
+Sequence current intake is retained in `📓️coordinator-sequence-source-current-intake-2026-09-13.md`:the two Rust sources are mounted only for wasm32, the JS protocol oracle injects a bridge, and the handwritten browser declaration has native same-stem type-resolution consumers. These observations constrain the pending source move; they are not runtime acceptance.
+
+
+HTML normalization reader repair is accepted in `📓️coordinator-html-normalization-reader-repair-2026-09-13.md`:the missed schema parser now uses the shared primary renderer. Actual16leafinventory,12/271direct, registeredHTML4/256(Nx1m28), finalregisteredpackagepolicy121/530(Nx2m8),3explicitreaderinputsandunchanged17pairinputs pass. Seven exact current product identities are retained; no removed source. Earlier quick-level budget and Go5s case timeout are accurately retained as failed attempts, with existing long-level and boundednativecases used for finalacceptance.
+
+
+Cache command ownership is accepted in `📓️coordinator-cache-command-ownership-review-2026-09-13.md`:13owners/22contexts/14acyclicedges, direct/ordinary/registered11/169, actualNx21.9s cache-skipped, private prune oracle and observed POSIX descendant cleanup. Windows branch is source-checked, not runtime-tested. Root checked24unique paths allpresent (23product+report); own scratch removed. CargoAPI and librarytransaction/Go are now active; use Terra's current14-consumer map and actual neutral transaction fixture paths rather than the old12-consumer packet snapshot.
+
+
+Misplaced Nx output disposition is complete for the exact six inventoried files in `📓️coordinator-misplaced-nx-output-disposition-2026-09-13.md`:230739336generatedbytes removed after installed Nx producer/format verification, a current-source reference scan, three native open-handle checks and exact final inode/size/mtime/SHA identity checks. Five empty parents includingTwere removed; the now-nonemptyroot `🗑️generated` was preserved. This does not authorize deletion of newly present or unrelated output.
+
+
+## Preserved Router Probe Closure
+
+`📓️coordinator-router-probe-input-preservation-2026-09-13.md` records the completed byte-identical preservation of the inactive authored probe at `📋️router-grammar-inputs/🧭️body-classification/🟦️.ts`, including installed-TypeScript parsing with zero diagnostics. The old root probe and its generated JSON were removed after all four historical result rows were retained in Markdown. The empty root `🗑️generated` is absent. Attribute the exact created and removed identities from that report; the report itself is retained authored evidence. This is provenance and placement work, not a current router classification or runtime result.
+
+
+Hub current intake is retained in `📓️coordinator-hub-composition-current-intake-2026-09-13.md`: 52 registrations and the complete 435-statement/1526-edge native-checker graph, existing bootstrap/publication fixture authorities, current source-as-data boundaries and the concrete duplicated MCP runner-path selection. This is read-only preparation for the next composition slice, with no native runtime or product change claim.
+
+
+Current package discovery is retained in `📓️coordinator-package-discovery-wave-eight-2026-09-13.md`: 223 marked packages, 58 implementation diagnostics, six unresolved, 185 structural, 169 unmarked manifests, four unknown roles and one unknown language. These are exact current diagnostics, not 423 mandatory source moves or full-body/context/runtime acceptance. OS/library were in flight. Library workspaces publication and historical FEM handoff generation remain explicit separate responsibilities after the nine-owner slice.
+
+
+The remaining library workspace publication and historical FEM report reconstruction are now scoped in `📓️library-workspaces-historical-handoff-followup-2026-09-13.md`. Reuse the existing workspace discovery owner, verify publication only on private fixtures, and retire permanent historical report regeneration while preserving all five archived input/evidence files byte-identically. Current source/target/fixture/launch relationships are enumerated. No product change or historical execution occurred for this packet.
+
+
+PostCSS native prerequisites are now executed in `📓️coordinator-postcss-loader-current-intake-2026-09-13.md`: two portable vectors agree byte-for-byte through fixed/anonymous loaders under Bun and Node, anonymous .mts package resolution works, and actual Vite write:false proves filename-string selection leaves @apply unchanged while explicit inline plugins transform correctly. Two authored JSON control files are retained. This is native preparation, not the pending PostCSS source move or full application build.
+
+
+## OS And Cargo Bounded Acceptance
+
+`📓️coordinator-os-dev-composition-ownership-review-2026-09-13.md` records accepted 49-owner taxonomy/API/consumer/generator/input/routing closure, final 11/565 direct and actual Nx, focused 17-pass/72-skipped owner semantics, and 80 independently verified unique product paths. Browser-host private receipt/no-follow, hostile distribution publication/check, and activation lease/cancellation controls remain unrun. The broad OS quick case still names absent WGPU historical Rust command, HTML and Trunk coordinates; repair its actual current source selection and inputs before using that route as acceptance. Producer filenames remain a separate lane.
+
+`📓️coordinator-library-cargo-transaction-ownership-review-2026-09-13.md` records accepted nine owners/twelve contexts/seven edges, final direct/ordinary/actual Nx 10/270, private native publication/preparation, Go projection/dispatcher cancellation and exact esbuild input closure. Root verified 39 unique product paths, all present. Full Git-mutating transaction and Windows runtime remain unrun. Workspace publication and historical FEM reconstruction retirement are active; do not mistake this bounded result for a thin whole-library router.
+
+
+The OS missing-WGPU staging selector is repaired in `📓️coordinator-os-staging-root-source-repair-2026-09-13.md`: 63 current sources, 65 exact additional Nx source inputs on five existing routes, 37 passing/119 skipped focused cases directly and through actual cache-skipped Nx (6.1s), and one generated editor selection. The unfiltered quick and remaining OS private/lifecycle controls remain unrun. Root attributes exactly five product paths; acceptance awaits a bounded read-only audit.
+
+
+PostCSS is accepted in `📓️coordinator-postcss-loader-ownership-review-2026-09-13.md`: anonymous semantic owner/package glue, standalone explicit search place, Vite inline plugins, current12/22/8contract, direct and actualNx9/171 (19.3s), two native Bun/Node Tailwind vectors. Root verified thirteen exact map identities: nine present product files, one removed product path, two updated authored controls and report. Flow is now active; no full application/browser claim.
+
+The root OS staging repair is independently accepted in `📓️terra-os-staging-root-source-repair-audit-2026-09-13.md`, closing the missing historical WGPU source-selector issue at the selected37case boundary. Remaining unfiltered quick and OS runtime controls are still explicit. Root native/whitespace/editor proof and exact five-path attribution are retained in its repair report.
+
+
+Fresh small-router evidence is in `📓️coordinator-small-router-current-intake-2026-09-13.md`: the same four body forms remain unresolved with zero native TypeScript syntax diagnostics; Puzzle's in-memory literal alone remains unresolved. Current production/oracle predicate locations and bounded execution constraints are retained. Do not count four unresolved forms as four proved implementation bodies.
+
+
+Hub source-proof follow-up is concrete in `📓️coordinator-hub-credential-source-proof-intake-2026-09-13.md`: repair both stale selectors and the actual semantic call/order predicates when extracting the proof owners. A WGPU path-only substitution and MCP duplicate-array-only change are each insufficient. Bounded current helper invocation was read-only through TypeScript+node:vm under Bun, with no native child/server/security result.
+
+
+Workspace publication/FEM retirement is accepted in `📓️coordinator-library-workspace-publication-review-2026-09-13.md`: five owners/five edges/five contexts; direct and actualNx8/123 (2.3s), preview inventory1/55 with eighteen exact IDs, preserved historical five byte identities and absent malformed paths. Root verified sixteen product files plus report, all present. Live root freshness still stops at the duplicate surface Rust/bindings package identity; root investigates that separate membership/producer boundary. Hub foundations is now active.
+
+## Flow and Workspace Payload Continuation — 2026-09-13
+
+Flow bounded ownership is accepted: see `📓️coordinator-flow-browser-ownership-review-2026-09-13.md` (48 exact product paths;39 current/9 removed) and Sol/Terra reports. Native Flow reachability remains unexecuted due to the missing WindowConfig retained pack-load owner after the justified store ArtifactPack prerequisite. Publication evidence is staged success and pre-promotion missing-companion preservation, not general filesystem rollback atomicity.
+
+Root's generic workspace payload membership repair is green directly (9 tests/170 assertions,1.221s) and through actual isolated cache-skipped Nx (9/170,1.175s,target1.6s,critical1.4s). Twenty portable cases are paired with installed package resolution/file discovery oracles. Source acceptance is distinct from pending live root membership publication: Sol is giving Actor/Puzzle ignored compiler manifests stable authored parent wrappers first. See `📓️coordinator-workspace-payload-membership-2026-09-13.md`. Sol Hub foundations execution and Terra read-only audit remain active; all four available fleet slots are occupied.
+
+## Accepted Continuation and Current Fleet — 2026-09-13
+
+- Workspace payload membership and live publication accepted: `📓️coordinator-workspace-payload-membership-2026-09-13.md`. Root9product paths;20payload cases+2observable-change controls;actualNx10/176. Actual write88→123,+35/-0,unrelatedfields preserved;registered check123fresh. Root private933files/281187721bytes removed after no-open-handle check.
+- Bound-router and environment grammar accepted: `📓️coordinator-bound-router-environment-grammar-2026-09-13.md` and Terra audit. Root5product paths(overlapsworkspace project);26new/36totalportable fixed cases;finalactualNx121/65135.18s,target35.6s. Print/Puzzle now tool-metadata body-only;Demonstrator/Stdio remain unresolved. NativeNode/TypeScript4-case constant parity;no productnativecommand. Rootprivate925files/281015834bytes removed.
+- Stable Actor/Puzzle wrappers accepted: `📓️coordinator-wasm-package-wrappers-review-2026-09-13.md`,10product paths,Sol/Terra8/59 directordinary+Nx,25exactinputs;no build/install/Wasm initialization.
+- Hub foundations accepted: `📓️coordinator-hub-foundations-review-2026-09-13.md`,23product paths;10owners47declarations7edges33rootimports26contexts27inputentries;direct/Nx11/259,syn1/1. NormalHubCargo blocked before tests at WindowConfigE0308/E0616. SharedCargo intermediate-cache boundary is explicitly retained;futureprivate runs also override CARGO_BUILD_BUILD_DIR.
+
+Current fleet: SolRoot continues a coherent Hub phase-two command-ownership plan;SolPrint executes the approved7-owner Stdio plan;Terra audits both read-only;Root coordinates and advances remaining grammar/taxonomy work. All4slots occupied. Goal/ticket remain active;do not close them. Other queued bodies/context/native/producer/input-disposition work remains required.

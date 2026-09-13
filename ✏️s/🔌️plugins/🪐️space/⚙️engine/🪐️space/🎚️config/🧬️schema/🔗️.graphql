@@ -11,8 +11,6 @@ type SpaceConfig {
   pendingImportFormat: String @state(class: CONFIG)
   activePanelTab: String! @state(class: CONFIG)
   spaceId: String @state(class: CONFIG)
-  clientId: String @state(class: CONFIG)
-  clientName: String @state(class: CONFIG)
 }
 
 type SpaceWindowCameraEntry {

@@ -1,0 +1,34 @@
+{
+  "name": "@semio-tech/puzzle-wasm",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./pkg/semio_puzzle.js",
+  "module": "./pkg/semio_puzzle.js",
+  "types": "./pkg/semio_puzzle.d.ts",
+  "files": [
+    "pkg/semio_puzzle.js",
+    "pkg/semio_puzzle.d.ts",
+    "pkg/semio_puzzle_bg.wasm",
+    "pkg/semio_puzzle_bg.wasm.d.ts"
+  ],
+  "exports": {
+    ".": {
+      "types": "./pkg/semio_puzzle.d.ts",
+      "import": "./pkg/semio_puzzle.js"
+    },
+    "./semio_puzzle.js": {
+      "types": "./pkg/semio_puzzle.d.ts",
+      "import": "./pkg/semio_puzzle.js"
+    },
+    "./semio_puzzle_bg.wasm": {
+      "types": "./pkg/semio_puzzle_bg.wasm.d.ts",
+      "default": "./pkg/semio_puzzle_bg.wasm"
+    }
+  },
+  "bundleKind": "library",
+  "nx": {
+    "name": "@semio-tech/puzzle-plugin",
+    "includedScripts": []
+  }
+}

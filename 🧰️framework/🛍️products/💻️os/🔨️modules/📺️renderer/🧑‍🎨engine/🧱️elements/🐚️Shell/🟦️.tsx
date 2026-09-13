@@ -147,20 +147,7 @@ export type SpaceProgramEntry = {
   readonly yields: string;
 };
 
-export type SpawnedAppEntry = {
-  readonly id: string;
-  readonly pluginId: string;
-  readonly instanceId: number;
-  readonly appId: string;
-  readonly label: string;
-  readonly breadcrumb: readonly string[];
-};
-
-export type SpacePanelState = {
-  readonly activePanelTab: string;
-  readonly spawnedApps: readonly SpawnedAppEntry[];
-  readonly activeSpawnedId?: string;
-};
+export type { SpacePanelState, SpawnedAppEntry } from "../🛠️ShellHelpers/📌️panel/🟦️.ts";
 
 export type FrameworkOsBootOptions = {
   readonly surfaceSessionFactories?: readonly import("../🪪️WasmSessionLoader/🟦️.tsx").AppSurfaceSessionFactory[];

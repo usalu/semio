@@ -314,7 +314,7 @@ struct PatchTrackerState {
     /// with a clean slot (`--R:ack1/rev1:outNone`) that `reserve_mounted` nonetheless refused, and no
     /// record anywhere of which predicate refused them (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B48
     /// §6.4).
-    reserve_refusal: Option<(u8, &'static str)>,
+    reserve_refusal: Option<(u8, &'static str, bool)>,
 }
 
 impl Default for PatchTrackerState {
@@ -432,7 +432,7 @@ impl PatchTracker {
     fn refuse_reserve(&self, surface: ui_contract::SurfaceId, reason: &'static str) -> ui_contract::SurfaceId {
         let mut state = self.state.borrow_mut();
         let index = refused_slot_index(&state, &surface);
-        state.reserve_refusal = Some((index, reason));
+        state.reserve_refusal = Some((index, reason, false));
         surface
     }
 
@@ -441,7 +441,7 @@ impl PatchTracker {
         let mut state = self.state.borrow_mut();
         let refuse = |state: &mut PatchTrackerState, surface: ui_contract::SurfaceId, reason: &'static str| -> ui_contract::SurfaceId {
             let index = refused_slot_index(state, &surface);
-            state.reserve_refusal = Some((index, reason));
+            state.reserve_refusal = Some((index, reason, false));
             surface
         };
         if state.closing_instances.iter().flatten().any(|closing| surface_instance(surface.as_ref()) == Some(closing.instance)) {
@@ -513,6 +513,20 @@ impl PatchTracker {
         state.unadmitted[index] = Some(UnadmittedSlot { key, generation });
         drop(state);
         Ok(MountedReconcileGrant { key, output_index, state: self.state.clone(), index, surface_index, rejected_index, generation, owner: MountedReconcileOwner::Live { reconciler, reservation }, active: true })
+    }
+
+    /// 🩺️ The refusal reason of the LAST mounted render reservation, answered once, so the turn that
+    /// deferred that render can name the process-wide table holding it instead of deferring in silence. The
+    /// census field itself is retained for [`PatchTracker::debug_state`] — only the "already reported" mark
+    /// moves (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B58; wave B56 named the reasons, this reports them).
+    pub fn take_unreported_reserve_refusal(&self) -> Option<&'static str> {
+        let mut state = self.state.borrow_mut();
+        let (_, reason, reported) = state.reserve_refusal.as_mut()?;
+        if *reported {
+            return None;
+        }
+        *reported = true;
+        Some(*reason)
     }
 
     pub fn drive_one(&self) -> bool {
@@ -657,7 +671,7 @@ impl PatchTracker {
             state.output_fault.as_ref().map_or("none", |fault| fault.1),
             state.reserve_refusal.as_ref().map_or_else(
                 || "none".to_string(),
-                |(index, reason)| format!("{}:{reason}", state.slots.get(usize::from(*index)).and_then(Option::as_ref).map_or("unmounted", |slot| slot.surface.as_ref())),
+                |(index, reason, _)| format!("{}:{reason}", state.slots.get(usize::from(*index)).and_then(Option::as_ref).map_or("unmounted", |slot| slot.surface.as_ref())),
             ),
             registry_census_line(),
             state.generation_exhausted,

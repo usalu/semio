@@ -4,7 +4,7 @@ use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
 use crate::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
-use semio_framework::Viewport2d;
+use semio_framework_os_kernel::Viewport2d;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

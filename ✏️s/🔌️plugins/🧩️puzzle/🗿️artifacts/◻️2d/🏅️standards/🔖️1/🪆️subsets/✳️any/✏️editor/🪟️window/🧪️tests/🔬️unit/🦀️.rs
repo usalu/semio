@@ -194,3 +194,26 @@ use super::*;
             retire_returned_puzzle2d_transient(returned);
         }
     }
+
+    /// 🎒️ Every persisted pane option survives one pack and one text round trip — the record-backed
+    /// codecs this owner gained when `WindowConfigOwner::State` grew its `DslField` bound.
+    #[test]
+    fn window_config_pack_round_trips_every_persisted_option() {
+        let original = Puzzle2dWindowConfig {
+            camera_x: 3.5,
+            camera_y: -7.25,
+            camera_zoom: 2.5,
+            lod_mode: "manual".into(),
+            fill_count: 17,
+            grid_snap_enabled: true,
+            grid_factor: 0.25,
+            suggestion_offset: 4.75,
+        };
+        assert_ne!(original, Puzzle2dWindowConfig::default(), "the fixture must differ from the default in every field it asserts");
+        let bytes = store::ArtifactPack::encode_pack(&original);
+        let decoded = <Puzzle2dWindowConfig as store::ArtifactPack>::decode_pack(&bytes).expect("window config pack decodes");
+        assert_eq!(decoded, original, "one pack round trip must preserve every persisted pane option");
+        let printed = store::ArtifactDsl::print_dsl(&original);
+        let parsed = <Puzzle2dWindowConfig as store::ArtifactDsl>::parse_dsl(&printed).expect("window config text parses");
+        assert_eq!(parsed, original, "one text round trip must preserve every persisted pane option");
+    }

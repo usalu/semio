@@ -28,7 +28,7 @@ pub enum Profile {
 
 /// 📋️ Decoded from the `instance-open` event's `config` pack — JSON, not `store::pack_rt` (this
 /// crate has no dependency on the kernel pack codec; see the module doc). The generator
-/// (`🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts`'s `#region 🔖️ScaleFixture`) writes this exact
+/// (`🧫️fixtures/⚖️scale/📽️projection/🟦️.ts`) writes this exact
 /// shape into each generated manifest's `scaleFixture` field.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", default)]

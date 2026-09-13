@@ -3,9 +3,7 @@
   "title": "RemoveLineMutation",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "index"
-  ],
+  "required": ["index"],
   "properties": {
     "index": {
       "type": "integer",

@@ -12,6 +12,34 @@
     "default": ["{projectRoot}/**/*", "{workspaceRoot}/🧪️tests/🎚️config/🟦️.ts", "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧪️tests/🎚️config/🟦️.ts"]
   },
   "targets": {
+    "fem-pcg-publication-owners": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify fem-pcg-publication-owners"
+      }
+    },
+    "fem-pcg-publication-owners-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify fem-pcg-publication-owners native"
+      }
+    },
+    "fem-assembly-physical-owners": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify fem-assembly-physical-owners"
+      }
+    },
+    "fem-assembly-physical-owners-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify fem-assembly-physical-owners native"
+      }
+    },
     "fem-numerical-page-owners": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -76,6 +104,13 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts verify home-host-panel-owner oracle"
+      }
+    },
+    "home-host-panel-owner-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify home-host-panel-owner native"
       }
     },
     "window-config-pack-identity": {
@@ -2206,6 +2241,48 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts verify framework-retained-pack-ownership value-native"
+      }
+    },
+    "framework-retained-pack-diagnostic": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify framework-retained-pack-ownership diagnostic"
+      }
+    },
+    "framework-retained-pack-diagnostic-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify framework-retained-pack-ownership diagnostic-native"
+      }
+    },
+    "framework-retained-pack-inflater": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify framework-retained-pack-ownership inflater"
+      }
+    },
+    "framework-retained-pack-inflater-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify framework-retained-pack-ownership inflater-native"
+      }
+    },
+    "framework-flow-physical-retirement": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify framework-flow-physical-retirement"
+      }
+    },
+    "framework-flow-physical-retirement-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify framework-flow-physical-retirement native"
       }
     },
     "framework-paged-list-ownership": {

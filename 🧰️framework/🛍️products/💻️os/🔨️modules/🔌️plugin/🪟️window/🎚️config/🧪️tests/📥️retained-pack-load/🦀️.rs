@@ -2,6 +2,17 @@
 
 use super::*;
 
+fn block_on_retained_window_load<F: std::future::Future>(mut future: std::pin::Pin<Box<F>>) -> F::Output {
+    let waker = std::task::Waker::noop();
+    let mut context = std::task::Context::from_waker(waker);
+    loop {
+        match future.as_mut().poll(&mut context) {
+            std::task::Poll::Ready(output) => return output,
+            std::task::Poll::Pending => std::thread::yield_now(),
+        }
+    }
+}
+
 struct RetainedLoadOwnerA;
 struct RetainedLoadOwnerB;
 
@@ -60,7 +71,7 @@ fn window_config_retained_pack_load_current_registry_identity_and_reopen_baselin
             let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📥️retained-pack-load/🔣️.json")).expect("retained-load fixture");
             assert_eq!(fixture["budgets"]["typedMutationBytes"], 4_096);
             assert_eq!(fixture["requiredScenarios"].as_array().expect("required scenarios").len(), 9);
-            semio_framework_async::block_on(async {
+            block_on_retained_window_load(Box::pin(async {
                 let mut source = WindowConfigOwnerRegistry::default();
                 register_retained_load_owners(&mut source);
                 for (kind, id) in [("retained-load-a", "left"), ("retained-load-a", "right"), ("retained-load-b", "other")] {
@@ -86,7 +97,7 @@ fn window_config_retained_pack_load_current_registry_identity_and_reopen_baselin
                 let after_invalid = reopened.packs().await.expect("packs after malformed load").into_iter().map(|pack| ((pack.window_kind_id, pack.window_id), pack.files)).collect::<std::collections::BTreeMap<_, _>>();
                 assert_eq!(after_invalid, restored_bytes, "malformed load leaves existing owners unchanged and the absent target unmaterialized");
                 close_retained_load_registry(&mut reopened);
-            });
+            }));
             eprintln!("[DEBUG] Window retained-load baseline: owners=2 packs=3 sameKind=2 crossKind=1 malformedAtomic=1 stackBytes=2097152");
         })
         .expect("spawn retained-load baseline")

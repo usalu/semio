@@ -2,6 +2,14 @@
 use super::*;
 
 #[test]
+fn puzzle3d_catalogue_drag_payload_parses_object_kind_and_mesh_url() {
+    let (kind, mesh) = puzzle3d_catalogue_drag_payload_json(r#"{"objectKind":"Capsule","meshUrl":"puzzle3d://capsule"}"#).unwrap();
+    assert_eq!(kind, "Capsule");
+    assert_eq!(mesh.as_deref(), Some("puzzle3d://capsule"));
+    assert!(puzzle3d_catalogue_drag_payload_json(r#"{"meshUrl":"puzzle3d://capsule"}"#).is_none());
+}
+
+#[test]
 fn catalogue_ghost_prefers_label_then_app_id() {
     let with_label = catalogue_ghost_descriptor_json(r#"{"pluginId":"draw","appId":"draw","label":"Draw"}"#).unwrap();
     assert_eq!(serde_json::from_str::<Value>(&with_label).unwrap(), json!({ "kind": "neuron", "neuronKind": "Draw" }));

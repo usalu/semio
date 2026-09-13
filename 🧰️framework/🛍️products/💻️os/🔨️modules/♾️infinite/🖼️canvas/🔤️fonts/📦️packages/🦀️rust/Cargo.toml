@@ -1,0 +1,16 @@
+[package]
+name = "semio-framework-os-font-assets"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Packed font assets for OS hosts"
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "dump-guestslim-typst-fonts"
+path = "../../🦀️.rs"
+
+[dependencies]
+typst-assets = { version = "=0.14.2", features = ["fonts"] }

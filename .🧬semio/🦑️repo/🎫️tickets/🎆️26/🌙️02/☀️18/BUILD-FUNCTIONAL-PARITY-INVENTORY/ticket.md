@@ -479,9 +479,9 @@ Other chains build independently in parallel:
 
 | Workspace                            | Preflight Command                     | Effect                    |
 | ------------------------------------ | ------------------------------------- | ------------------------- |
-| `@semio-tech/logo`             | `tsc --noEmit`                        | TypeScript type-check     |
-| `@semio-tech/icons`            | `echo` (no-op)                        | —                         |
-| `@semio-tech/assets`           | `echo` (no-op)                        | —                         |
+| `@semio-tech/logo`                   | `tsc --noEmit`                        | TypeScript type-check     |
+| `@semio-tech/icons`                  | `echo` (no-op)                        | —                         |
+| `@semio-tech/assets`                 | `echo` (no-op)                        | —                         |
 | `@semio-tech/compose-py`             | `ruff format . && ruff check --fix .` | Python format + lint      |
 | `@semio-tech/compose-engine`         | `ruff format . && ruff check --fix .` | Python format + lint      |
 | `@semio-tech/compose-js`             | `prettier --write . && tsc --noEmit`  | JS format + TS type-check |

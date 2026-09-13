@@ -20,4 +20,3 @@
 - Central taxonomy validation: `[]`.
 - TypeScript package test: passed (`[DEBUG] procedural ts ok`).
 - Rust quick test: running at the time this note was first written; its final result is appended below when available.
-

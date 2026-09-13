@@ -6,15 +6,15 @@ Scope: `🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻
 
 Paths are relative to the development-host root; the parent is its current name after any preceding move.
 
-| Parent | Old | New | Meaning |
-| --- | --- | --- | --- |
-| . | 🔌️extension-modules | 🧩️extension-modules | Installed extensions, distinct from built plugin modules. |
-| . | 🧪️fixtures | 🧫️fixtures | Committed development specimens, distinct from tests. |
-| 🧫️fixtures | 🔣️engine-publication.json | 📢️engine-publication.json | Engine publication cases. |
-| 🧫️fixtures | 🔣️linked-session-engines.json | 🔗️linked-session-engines.json | Explicit session/engine links. |
-| 📦️packages/🟦️typescript | 🧪️fixtures | 🧫️fixtures | Package source specimens, distinct from tests. |
-| 📦️packages/🟦️typescript | 🧪️config.test.ts | 🧹️config.test.ts | Leading Bun shebang removal tests. |
-| 📦️packages/🟦️typescript | 🧪️bench-web-harness.ts | 📊️bench-web-harness.ts | Browser benchmark measurements. |
+| Parent                  | Old                           | New                           | Meaning                                                   |
+| ----------------------- | ----------------------------- | ----------------------------- | --------------------------------------------------------- |
+| .                       | 🔌️extension-modules           | 🧩️extension-modules           | Installed extensions, distinct from built plugin modules. |
+| .                       | 🧪️fixtures                    | 🧫️fixtures                    | Committed development specimens, distinct from tests.     |
+| 🧫️fixtures              | 🔣️engine-publication.json     | 📢️engine-publication.json     | Engine publication cases.                                 |
+| 🧫️fixtures              | 🔣️linked-session-engines.json | 🔗️linked-session-engines.json | Explicit session/engine links.                            |
+| 📦️packages/🟦️typescript | 🧪️fixtures                    | 🧫️fixtures                    | Package source specimens, distinct from tests.            |
+| 📦️packages/🟦️typescript | 🧪️config.test.ts              | 🧹️config.test.ts              | Leading Bun shebang removal tests.                        |
+| 📦️packages/🟦️typescript | 🧪️bench-web-harness.ts        | 📊️bench-web-harness.ts        | Browser benchmark measurements.                           |
 
 Exact producer/readers were patched together: the extension-store install root, development script fixture paths and benchmark entry, package Vitest include, and registry launch-test fixture root. Public plugin/extension IDs are unchanged. Frozen remaining-package-purity coordinates remain unchanged.
 

@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "wrappers", "registration", "inputs"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "wrappers": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "ownerPath", "payloadManifestPath", "packageName", "projectName", "projectPath", "producerTarget", "producerCommand", "producerOutput", "module", "types", "wasm", "wasmTypes", "manifest"],
+        "properties": {
+          "id": { "enum": ["actor", "puzzle"] },
+          "ownerPath": { "type": "string", "pattern": "package\\.json$" },
+          "payloadManifestPath": { "type": "string", "pattern": "/pkg/package\\.json$" },
+          "packageName": { "type": "string", "pattern": "^@semio-tech/" },
+          "projectName": { "type": "string", "pattern": "^@semio-tech/" },
+          "projectPath": { "type": "string", "pattern": "📋️project\\.json$" },
+          "producerTarget": { "const": "wasm" },
+          "producerCommand": { "const": "bun ./📜️script.ts wasm" },
+          "producerOutput": { "const": "{projectRoot}/pkg" },
+          "module": { "type": "string", "pattern": "^[a-z0-9_]+\\.js$" },
+          "types": { "type": "string", "pattern": "^[a-z0-9_]+\\.d\\.ts$" },
+          "wasm": { "type": "string", "pattern": "^[a-z0-9_]+_bg\\.wasm$" },
+          "wasmTypes": { "type": "string", "pattern": "^[a-z0-9_]+_bg\\.wasm\\.d\\.ts$" },
+          "manifest": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "version", "private", "type", "main", "module", "types", "files", "exports", "bundleKind", "nx"],
+            "properties": {
+              "name": { "type": "string", "pattern": "^@semio-tech/" },
+              "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+              "private": { "const": true },
+              "type": { "const": "module" },
+              "main": { "type": "string", "pattern": "^\\./pkg/[a-z0-9_]+\\.js$" },
+              "module": { "type": "string", "pattern": "^\\./pkg/[a-z0-9_]+\\.js$" },
+              "types": { "type": "string", "pattern": "^\\./pkg/[a-z0-9_]+\\.d\\.ts$" },
+              "files": { "type": "array", "minItems": 4, "maxItems": 4, "uniqueItems": true, "items": { "type": "string", "pattern": "^pkg/" } },
+              "exports": { "type": "object", "minProperties": 3 },
+              "bundleKind": { "const": "library" },
+              "nx": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["includedScripts"],
+                "properties": { "includedScripts": { "type": "array", "maxItems": 0 } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "registration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["projectPath", "packagePath", "target", "packageScript", "launchSeedPath", "launchPath", "launchName", "launchCommand"],
+      "properties": {
+        "projectPath": { "type": "string" },
+        "packagePath": { "type": "string" },
+        "target": { "const": "test-wasm-package-wrappers" },
+        "packageScript": { "const": "test-wasm-package-wrappers" },
+        "launchSeedPath": { "const": ".vscode/🧩️launch.seed.jsonc" },
+        "launchPath": { "const": ".vscode/launch.json" },
+        "launchName": { "const": "🧱️test📦️wasm-package-wrappers" },
+        "launchCommand": { "const": "bun nx run @semio-tech/repo-lib:test-wasm-package-wrappers" }
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string" }
+    }
+  }
+}

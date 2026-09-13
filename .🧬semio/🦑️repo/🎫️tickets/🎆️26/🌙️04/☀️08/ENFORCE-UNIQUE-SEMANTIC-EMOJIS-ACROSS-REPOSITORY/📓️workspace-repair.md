@@ -10,14 +10,14 @@ The repair corrected exact path references, generator declarations, test imports
 
 ### Executed Verification
 
-| Scope | Final executed evidence |
-| --- | --- |
-| Shared naming statutes | 38 tests / 1,356 assertions pass; independent leading-grapheme suite 9 tests / 33,713 assertions across 5,375 catalog members passes; five focused Go regression functions pass. |
-| Semio | All 625 production fixture URIs across 19 cases resolve; 286 fixture records have zero file problems. Independent Mesh TypeScript/Three.js execution passes 52 scenarios. Python executes 640: 610 pass, six fail, 24 error; limits below remain explicit. |
-| Norm and smaller plugins | Norm resolves 6,971 Rust mounts and 1,583 production fixture URIs; Python passes 796 with four retained refusals, and 30 JS examples pass. Ten smaller plugin trees resolve 6,251 Rust paths and 1,417 production fixture URIs; all 22 JS examples pass. |
+| Scope                                  | Final executed evidence                                                                                                                                                                                                                                                          |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Shared naming statutes                 | 38 tests / 1,356 assertions pass; independent leading-grapheme suite 9 tests / 33,713 assertions across 5,375 catalog members passes; five focused Go regression functions pass.                                                                                                 |
+| Semio                                  | All 625 production fixture URIs across 19 cases resolve; 286 fixture records have zero file problems. Independent Mesh TypeScript/Three.js execution passes 52 scenarios. Python executes 640: 610 pass, six fail, 24 error; limits below remain explicit.                       |
+| Norm and smaller plugins               | Norm resolves 6,971 Rust mounts and 1,583 production fixture URIs; Python passes 796 with four retained refusals, and 30 JS examples pass. Ten smaller plugin trees resolve 6,251 Rust paths and 1,417 production fixture URIs; all 22 JS examples pass.                         |
 | Block, Procedural, FEM, Puzzle and CAD | Block passes 15 JS tests plus publication-authority checks; Procedural passes 11 JS examples and 77 Python vectors; FEM passes 252 Python scenarios and four demos; Puzzle passes 16 JS tests; CAD passes 41 Python scenarios, two demos and two pinned-authority/binding tests. |
-| OS and small framework scopes | OS quick passes 255 tests with two skipped; OS dev quick passes 60 with 28 skipped; administration pane passes eight React tests and focused dev catalog passes six. Energy and Demonstrator each execute and pass their existing demo. |
-| Report and image assets | All three uncached native MIT PDF report builds pass. Country assets retain all 752 PNG hashes; named source and generated-file proofs remain in their reports. |
+| OS and small framework scopes          | OS quick passes 255 tests with two skipped; OS dev quick passes 60 with 28 skipped; administration pane passes eight React tests and focused dev catalog passes six. Energy and Demonstrator each execute and pass their existing demo.                                          |
+| Report and image assets                | All three uncached native MIT PDF report builds pass. Country assets retain all 752 PNG hashes; named source and generated-file proofs remain in their reports.                                                                                                                  |
 
 These are scoped results, not a whole-repository runtime pass. The CAD recovery restored only 155 proven contaminated source-coordinate strings and reproduced the original pinned digest; the 209 fixture bindings and all 20 additional current-only members are checked without changing the golden baseline. FEM's 27 provenance repairs reproduce the original pinned metric digests. Presentation's two polluted `🎞️slide` properties were restored to the schema's literal `slide`, without changing their values.
 
@@ -125,6 +125,7 @@ The five handpicked framework module-root moves and five mesh-fixture moves are 
 Shared naming tests now pass 11 cases, covering handpicked projected scenario names, exact owner-specific oracle discovery, graph-manifest discovery, single-emoji preservation, and reserved documentation. Next's literal `page.tsx`, `layout.tsx`, and `route.ts` identities are tested against its installed matcher, while its entire `app` subtree is no longer blanket-exempt. URL route-directory contracts still need exact review before any route-name change.
 
 Kernel and framework-manifest repair checks pass, replication's TypeScript test passes, renderer's React long suite passes 537 tests, and the OS TypeScript suite passes 237 tests. Native checks and canonical generator projection-contract drift remain separately documented by their owners. No old full-suite failure count is being represented as a current passing suite.
+
 # Concurrent Diagnostic Cleanup Incident
 
 On 2026-09-04, the separate **Clean workspace artifacts** task (`01a06c98-e3a2-7d02-9309-b29e0dc7cb1e`) completed a root clean command that reported removing this ticket's `🗑️generated` directory (49,171,518,812 bytes) and the workspace `target`. Its output simultaneously listed this ticket as protected. The active repair agents did not initiate that cleanup. Three native test runs lost their logs/caches while still running; no passing result is inferred for unfinished or unread output.

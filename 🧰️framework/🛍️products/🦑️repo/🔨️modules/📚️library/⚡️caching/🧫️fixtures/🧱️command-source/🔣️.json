@@ -3,7 +3,10 @@
   "owners": [
     { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🎫️output/🟦️.ts", "declarations": ["TicketOutputOperations", "ticketOutput"] },
     { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔍️discovery/📂️source/🟦️.ts", "declarations": ["CACHE_POLICY", "CACHE_POLICY_PATH", "CacheSourceEntry", "CacheSourceOperations", "slash", "sourceFiles"] },
-    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📇️inventory/🧮️composition/🟦️.ts", "declarations": ["CACHE_BOOTSTRAP_EXECUTABLE", "CacheInventory", "CacheInventoryFinding", "CacheInventoryOperations", "composeInventory", "inventory"] },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📇️inventory/🧮️composition/🟦️.ts",
+      "declarations": ["CACHE_BOOTSTRAP_EXECUTABLE", "CacheInventory", "CacheInventoryFinding", "CacheInventoryOperations", "composeInventory", "inventory"]
+    },
     { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📇️inventory/📋️orchestration/🟦️.ts", "declarations": ["AuditScript", "PolicyScript"] },
     { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/✅️verification/🟦️.ts", "declarations": ["GraphScript"] },
     { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/📊️report/🟦️.ts", "declarations": ["DiskScript"] },
@@ -42,11 +45,23 @@
   "consumers": [
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts",
-      "owners": ["📇️inventory/📋️orchestration/🟦️.ts", "🕸️graph/✅️verification/🟦️.ts", "💾️storage/📊️report/🟦️.ts", "🩺️environment/📋️inspection/🟦️.ts", "🔁️verification/📋️orchestration/🟦️.ts", "🧹️pruning/📋️orchestration/🟦️.ts", "📦️artifacts/📋️package-orchestration/🟦️.ts"]
+      "owners": [
+        "📇️inventory/📋️orchestration/🟦️.ts",
+        "🕸️graph/✅️verification/🟦️.ts",
+        "💾️storage/📊️report/🟦️.ts",
+        "🩺️environment/📋️inspection/🟦️.ts",
+        "🔁️verification/📋️orchestration/🟦️.ts",
+        "🧹️pruning/📋️orchestration/🟦️.ts",
+        "📦️artifacts/📋️package-orchestration/🟦️.ts"
+      ]
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🟦️.ts",
       "owners": ["🎫️output/🟦️.ts", "🔍️discovery/📂️source/🟦️.ts", "📇️inventory/🧮️composition/🟦️.ts"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+      "owners": ["🔁️verification/📋️orchestration/🟦️.ts"]
     }
   ],
   "inventory": {

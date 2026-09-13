@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://fem/engine/analyses/physical-owners",
+  "title": "FEM Assembly Physical Owners",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "oracle",
+    "mountedModel",
+    "inlineOwners",
+    "cases",
+    "grants",
+    "release"
+  ],
+  "properties": {
+    "mountedModel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximumInlineBytes", "maximumBackingBytes", "initialAllocationBytes", "logicalLimits", "targets", "allocationFaultOwner", "modelTransfer"],
+      "properties": {
+        "maximumInlineBytes": { "const": 4096 },
+        "maximumBackingBytes": { "const": 4096 },
+        "initialAllocationBytes": { "const": 0 },
+        "logicalLimits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["node", "element", "support"],
+          "properties": { "node": { "const": 128 }, "element": { "const": 128 }, "support": { "const": 64 } }
+        },
+        "targets": { "type": "array", "minItems": 3, "maxItems": 3, "uniqueItems": true, "items": { "enum": ["empty", "one", "maximum"] } },
+        "allocationFaultOwner": { "const": "retained" },
+        "modelTransfer": { "const": "move" }
+      }
+    },
+    "oracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "package",
+        "version"
+      ],
+      "properties": {
+        "package": {
+          "const": "fast-json-patch"
+        },
+        "version": {
+          "const": "3.1.1"
+        }
+      }
+    },
+    "inlineOwners": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "assembly",
+          "matrix"
+        ]
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "backingCount"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "backingCount": {
+            "enum": [
+              0,
+              3
+            ]
+          }
+        }
+      }
+    },
+    "grants": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "relativeBytes",
+          "releasedBackings"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "zero",
+              "subexact",
+              "exact"
+            ]
+          },
+          "relativeBytes": {
+            "enum": [
+              "zero",
+              "one-less",
+              "next-backing"
+            ]
+          },
+          "releasedBackings": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "inlineOwnerBytes",
+        "maximumOwnersPerStep",
+        "allocationLedger"
+      ],
+      "properties": {
+        "inlineOwnerBytes": {
+          "const": 0
+        },
+        "maximumOwnersPerStep": {
+          "const": 1
+        },
+        "allocationLedger": {
+          "const": "actual-capacity"
+        }
+      }
+    }
+  }
+}

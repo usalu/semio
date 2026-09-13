@@ -32,7 +32,7 @@ describe("plugin registry generated preview launchers", () => {
       ["playground-session", 206.057],
       ["plugin-registry", 206.06], ["print-latex-tokens", 206.07], ["report-actor-network", 206.075], ["scale-fixture", 206.08],
       ["schema-entity-catalog", 206.09], ["shell-typegen", 206.1], ["styling-tokens", 206.11],
-      ["ticket-important-fem-handoff", 206.115], ["ui-axes", 206.12], ["ui-contract", 206.13],
+      ["ui-axes", 206.12], ["ui-contract", 206.13],
       ["wgpu-frame-worker", 206.14],
     ] as const;
     expect(expected.map(([contractId]) => contractId)).toEqual(previewOrder.map(([contractId]) => contractId));

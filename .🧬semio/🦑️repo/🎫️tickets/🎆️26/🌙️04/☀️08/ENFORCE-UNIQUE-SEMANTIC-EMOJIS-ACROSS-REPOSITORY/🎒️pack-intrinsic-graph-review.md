@@ -20,17 +20,17 @@ The initial graph output root had 22 files and 19 sibling-duplicate emoji findin
 
 Each of the following manually reviewed owners contains the explicitly selected language leaves `🦀️.rs` and `🟦️.ts`:
 
-| Manifest identity | Directory | Content basis |
-| --- | --- | --- |
-| drawing-layers | 🖌️drawing-layers | Shape, path, text, image, group, boolean, and trace layers |
-| flow-dag | 🌊️flow-dag | Computation, controls, preview, action, and app-instance nodes |
-| nakagin | 🏢️nakagin | Nakagin Capsule Tower pieces, connectors, and building relationships |
-| puzzle2d-default | ◻️puzzle2d-default | Planar puzzle ports and links |
-| puzzle3d-default | 🧊️puzzle3d-default | Spatial vortex, cable, and attraction relationships |
-| puzzle5d-default | 🖐️puzzle5d-default | Combined port/vortex and link/cable/attraction catalog |
-| rewrite-lhs | 🫲️rewrite-lhs | Left-hand-side match/where rewrite patterns |
-| wires | 🧠️wires | Mindmap ownership, identity, references, and possession relations |
-| writer-languages | 🗣️writer-languages | Jack, Wire, plaintext, and Markdown languages |
+| Manifest identity | Directory          | Content basis                                                        |
+| ----------------- | ------------------ | -------------------------------------------------------------------- |
+| drawing-layers    | 🖌️drawing-layers   | Shape, path, text, image, group, boolean, and trace layers           |
+| flow-dag          | 🌊️flow-dag         | Computation, controls, preview, action, and app-instance nodes       |
+| nakagin           | 🏢️nakagin          | Nakagin Capsule Tower pieces, connectors, and building relationships |
+| puzzle2d-default  | ◻️puzzle2d-default | Planar puzzle ports and links                                        |
+| puzzle3d-default  | 🧊️puzzle3d-default | Spatial vortex, cable, and attraction relationships                  |
+| puzzle5d-default  | 🖐️puzzle5d-default | Combined port/vortex and link/cable/attraction catalog               |
+| rewrite-lhs       | 🫲️rewrite-lhs      | Left-hand-side match/where rewrite patterns                          |
+| wires             | 🧠️wires            | Mindmap ownership, identity, references, and possession relations    |
+| writer-languages  | 🗣️writer-languages | Jack, Wire, plaintext, and Markdown languages                        |
 
 The root's shared files are `🦀️registry.rs`, `🟦️.ts`, `🔠️types.ts`, and `🔣️manifest.schema.json`. Their sibling emojis are distinct. Registry attributes, TypeScript exports/imports, nested type imports, preview nodes, freshness membership, and normal writer parent-directory handling all consume the declared paths. Cargo watches the two authority files. Existing graph test commands now run the neutral output tests before their native tests; no separate permanent script was introduced.
 

@@ -1051,97 +1051,36 @@ pub fn filter_plugins(entries: Vec<ProgramBridgeEntry>, _plugin_filter: &str) ->
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-/// 🎠️ H3-wgpu-native, item 3 ("no eager loading") — used to `WasmPluginRuntime::load(&path)` every
-/// plugin here, which instantiated the FULL component (engine + linker + `Store`) just to read its
-/// manifest, at boot, for every plugin `is_space_mode` finds. Now: a registry scan that reads a
-/// build-time `🔣️.json` (`📓️design-abi.md` §3's `PackageDescriptor`, packet E1-describe's
-/// emitter — not yet wired, no plugin crate emits one yet) when present, and otherwise records the
-/// plugin as a lazy `ProgramBridgeEntry` with an honest empty manifest and a `[DEBUG]` seam note —
-/// never instantiating. `create_app` (`crate::kernel_runtime::KernelClient::create_app`) is the
-/// first point ANY wasm actually gets read/compiled, and only for the plugin the caller opens.
+/// 📋️ Loads only the completed components named by the Nx runtime manifest.
 pub async fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Path) -> Result<Vec<ProgramBridgeEntry>, String> {
-    let space_mode = is_space_mode(plugin_filter);
-    let mut plugin_dirs = if space_mode {
-        match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ScanDirectory { path: modules_root.to_path_buf(), directories_only: true, extension: None, first_only: false }).await? {
-            semio_framework_os_services::NativeIoValue::Paths(paths) => paths,
-            _ => return Err("plugin scan returned the wrong native I/O value".into()),
-        }
-    } else {
-        let mut paths = semio_framework_os_services::NativePathSet::new();
-        paths.try_push(modules_root.join(resolve_registry_plugin_id(plugin_filter))).map_err(|_| "single plugin path exceeded fixed native I/O credits")?;
-        paths
+    use crate::native_runtime_modules::{NativeJsonPages, NativeRuntimeManifest};
+    let mut payload = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(modules_root.join("🔣️runtime.json"))).await? {
+        semio_framework_os_services::NativeIoValue::Bytes(bytes) => bytes,
+        _ => return Err("Native runtime manifest returned the wrong I/O value".into()),
     };
+    let runtime = NativeRuntimeManifest::read(NativeJsonPages::new((0..payload.page_count()).filter_map(|index| payload.page(index))), plugin_filter);
+    while !matches!(payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) {}
     let mut entries = Vec::new();
-    while let Some(plugin_dir) = plugin_dirs.pop() {
-        let plugin_id = plugin_dir.file_name().and_then(|name| name.to_str()).ok_or_else(|| format!("{}: plugin directory name is not UTF-8", plugin_dir.display()))?.to_string();
-        let wasm_path = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ScanDirectory { path: plugin_dir.clone(), directories_only: false, extension: Some("wasm".into()), first_only: true }).await? {
-            semio_framework_os_services::NativeIoValue::Paths(mut paths) => paths.pop(),
-            _ => return Err("plugin artifact scan returned the wrong native I/O value".into()),
-        };
-        // 🧾️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END — discovered live: one stale
-        // (pre-compose, never-adapted) `.core.wasm` artifact anywhere under a space-mode `modules_root`
-        // (~54+ plugin directories — the "13 of 33 plugin crates still fail to build for wasm" attributed
-        // in `📓️w4-e-report.md`) used to fail the WHOLE batch via `?`, with no indication of which
-        // directory was at fault (the path was dropped from the error entirely). A single-plugin
-        // (non-space-mode) load still hard-fails outright — there's no other plugin to fall back to —
-        // but space mode now skips a broken plugin with a loud warning and keeps loading the rest,
-        // exactly like the real `run_native`/`--smoke` boot path needs: 53 good plugins must not be
-        // held hostage by one bad one. The check moved from "wasm fails to instantiate" (old, eager)
-        // to "no wasm artifact exists at all" (new, lazy) — same skip-vs-hard-fail split.
-        let Some(path) = wasm_path else {
-            if space_mode {
-                eprintln!("[DEBUG] load_wasm_plugins: skipping {plugin_id}: no .wasm artifact under {}", plugin_dir.display());
-                continue;
-            }
-            return Err(format!("{}: no .wasm artifact found", plugin_dir.display()));
-        };
-        let (manifest, package_id) = read_descriptor_manifest(&plugin_dir, &plugin_id).await;
-        match ProgramBridgeEntry::from_wasm(plugin_id.clone(), package_id, path, manifest) {
-            Ok(entry) => entries.push(entry),
-            Err(error) if space_mode => eprintln!("[DEBUG] load_wasm_plugins: skipping {plugin_id}: {error}"),
-            Err(error) => return Err(error),
-        }
-    }
-    if entries.is_empty() {
-        return Err(format!("[DEBUG] no wasm programs found under {}", modules_root.display()));
+    for module in runtime?.modules {
+        let descriptor = read_descriptor_manifest(&modules_root.join(module.descriptor_path), &module.plugin_id, &module.wasm_sha256).await?;
+        entries.push(ProgramBridgeEntry::from_wasm(module.plugin_id, Some(descriptor.package_id), modules_root.join(module.wasm_path), descriptor.manifest)?);
     }
     Ok(entries)
 }
 
-/// 🎠️ H3-wgpu-native — reads `🔣️.json` (`design-abi.md` §3) next to the plugin's wasm
-/// artifact when packet E1-describe has emitted one; otherwise returns an honest EMPTY manifest
-/// (zero apps) rather than instantiating the wasm to ask it, and logs the seam once per plugin.
-/// This is the real, structural consequence of "no eager loading" — no app can be found/opened for
-/// a plugin without a descriptor until E1 lands and W3 migrates real plugins to emit one; nothing in
-/// this repo does yet (`WasmtimeRuntime`'s own tests confirm no `.wasm` here exports `world actor`).
+/// 🧾️ Reads the matching completed descriptor across borrowed native payload pages.
 #[cfg(not(target_arch = "wasm32"))]
-async fn read_descriptor_manifest(plugin_dir: &std::path::Path, plugin_id: &str) -> (PluginManifest, Option<String>) {
-    let descriptor_path = plugin_dir.join("🔣️.json");
-    if let Ok(semio_framework_os_services::NativeIoValue::Bytes(mut bytes)) = crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(descriptor_path.clone())).await {
-        if let Some(page) = bytes.single_page() {
-            let descriptor = serde_json::from_slice::<semio_framework::manifest::PackageDescriptor>(page);
-            let _ = bytes.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-            if let Ok(descriptor) = descriptor {
-                return (descriptor.manifest, Some(descriptor.package_id));
-            }
-        }
-        eprintln!("[DEBUG] load_wasm_plugins: {} exists but failed to parse as PackageDescriptor", descriptor_path.display());
+async fn read_descriptor_manifest(path: &std::path::Path, plugin_id: &str, wasm_sha256: &str) -> Result<semio_framework::manifest::PackageDescriptor, String> {
+    use crate::native_runtime_modules::NativeJsonPages;
+    let mut payload = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(path.to_path_buf())).await? {
+        semio_framework_os_services::NativeIoValue::Bytes(bytes) => bytes,
+        _ => return Err("Native descriptor returned the wrong I/O value".into()),
+    };
+    let descriptor = serde_json::from_reader::<_, semio_framework::manifest::PackageDescriptor>(NativeJsonPages::new((0..payload.page_count()).filter_map(|index| payload.page(index))));
+    while !matches!(payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) {}
+    let descriptor = descriptor.map_err(|error| format!("Native descriptor {}: {error}", path.display()))?;
+    if descriptor.manifest.plugin_id != plugin_id || descriptor.hashes.wasm_sha256 != wasm_sha256 {
+        return Err(format!("Native descriptor identity mismatch: {plugin_id}"));
     }
-    eprintln!("[DEBUG] load_wasm_plugins: no descriptor for {plugin_id} yet (packet E1-describe/W3 seam) — loading with an empty manifest, no eager instantiation");
-    (
-        PluginManifest {
-            plugin_id: plugin_id.to_string(),
-            label: plugin_id.to_string(),
-            version: String::new(),
-            apps: Vec::new(),
-            examples: Vec::new(),
-            capabilities: Vec::new(),
-            topic_contributions: Vec::new(),
-            commands: Vec::new(),
-            artifact_kinds: Vec::new(),
-            dependencies: Vec::new(),
-            contributions: Vec::new(),
-        },
-        None,
-    )
+    Ok(descriptor)
 }

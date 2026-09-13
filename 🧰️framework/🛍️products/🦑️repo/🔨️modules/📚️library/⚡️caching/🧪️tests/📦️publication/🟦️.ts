@@ -5,7 +5,7 @@ import { createRequire } from "node:module";
 import { runInNewContext } from "node:vm";
 import { stageArtifacts } from "../../📦️artifacts/🟦️.ts";
 import { acquireResourceLease } from "../../🔒️leases/🟦️.ts";
-import { buildCargoArtifacts } from "../../🦀️cargo/📜️script.ts";
+import { buildCargoArtifacts } from "../../📦️artifacts/🏗️native-build/🟦️.ts";
 
 /** 📦️ Verifies contended publication, cancellation and complete output against Python file reads. */
 export async function testArtifactPublication(output: string): Promise<void> {

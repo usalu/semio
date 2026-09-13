@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "variant",
+    "profile",
+    "modules"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "variant": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "profile": {
+      "enum": [
+        "dev",
+        "release"
+      ]
+    },
+    "modules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "pluginId",
+          "wasmSha256",
+          "wasmPath",
+          "descriptorPath"
+        ],
+        "properties": {
+          "pluginId": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "wasmSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "wasmPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "pattern": "^(?!/)(?!.*//)(?!.*(?:^|/)\\.(?:/|$))(?!.*/$)[^\\\\:<>\"|?*\\u0000-\\u001f]+$"
+          },
+          "descriptorPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "pattern": "^(?!/)(?!.*//)(?!.*(?:^|/)\\.(?:/|$))(?!.*/$)[^\\\\:<>\"|?*\\u0000-\\u001f]+$"
+          }
+        }
+      },
+      "maxItems": 1024,
+      "uniqueItems": true
+    }
+  }
+}

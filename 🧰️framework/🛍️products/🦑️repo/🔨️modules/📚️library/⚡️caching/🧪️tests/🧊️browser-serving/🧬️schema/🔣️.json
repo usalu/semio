@@ -21,7 +21,7 @@
     },
     "routes": {
       "type": "array",
-      "minItems": 5,
+      "minItems": 6,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -42,7 +42,8 @@
               "worker",
               "compiler",
               "modules",
-              "extensions"
+              "extensions",
+              "fonts"
             ]
           },
           "file": {

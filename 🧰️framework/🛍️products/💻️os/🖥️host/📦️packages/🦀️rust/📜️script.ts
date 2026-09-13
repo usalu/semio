@@ -14,6 +14,7 @@ import {
   resolveTestLevel,
   runExactCargoLaws,
 } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { blake3Hex } from "../../../../../🔨️modules/🔏️hash/🟦️.ts";
 
 class MediaProjectionScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -337,7 +338,6 @@ class MemberHistoryInputScript extends BundleScript {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("member-history-input-check accepts only --oracle-only");
     const leb = await import("@webassemblyjs/leb128");
     const { default: crc } = await import("crc-32/crc32c.js");
-    const { blake3Hex } = await import("../../../🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");
     const { inspectRetainedSprNeutral } = await import(join(this.repoRoot, "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts"));
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
@@ -626,7 +626,6 @@ class MemberHistoryDictionaryScript extends BundleScript {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("member-history-dictionary-check accepts only --oracle-only");
     const leb = await import("@webassemblyjs/leb128");
     const { default: crc } = await import("crc-32/crc32c.js");
-    const { blake3Hex } = await import("../../../🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");
     const { inspectRetainedSprNeutral } = await import(join(this.repoRoot, "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts"));
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));

@@ -802,12 +802,15 @@ export type PluginViewState = {
    * `setContributions` command run (`🛠️ShellHelpers/🧩️contributions/🟦️.ts`), which the guest folds
    * into its own registry, so a refresh crosses a reference-free, bounded context. */
   readonly panelJson?: string;
+  /** 🪪️ Current authenticated OS session identity for this call. Plugins consume this
+   * ephemeral value directly and never persist an app/document copy. */
+  readonly sessionIdentity?: Readonly<{ readonly userId: string; readonly displayName: string }>;
   readonly locale?: string;
   readonly terminology?: string;
   /** 🪟️ The window instance a render/action call targets — programs key per-window option state off this, never off `activeWindowKindId`. */
   readonly windowId?: string;
   /** 🎯️ The window instance the user is LOOKING at — the shell's own last-focused pane, sent on every
-   * call and deliberately surviving {@link panelViewContext}. It is never the render target
+   * call and deliberately surviving {@link panelViewContext} while it names a live instance. It is never the render target
    * (`windowId` is); it is what lets an app-level panel that authors per-window settings address the
    * pane the user last touched instead of the roster's first entry. */
   readonly focusedWindowId?: string;
@@ -900,10 +903,16 @@ export function parseResolvedPluginViewState(value: unknown): ResolvedPluginView
   const row = object(value);
   const short = ["activeModeId", "activeWindowKindId", "activeUtilityId", "activeToolId", "windowId", "focusedWindowId"];
   const long = VIEW_CONTEXT_LONG_STRING_FIELDS;
-  const allowed = new Set([...short, ...long, "locale", "terminology", "activeUtilityByWindowId", "windowInstances"]);
+  const allowed = new Set([...short, ...long, "locale", "terminology", "sessionIdentity", "activeUtilityByWindowId", "windowInstances"]);
   if (Object.keys(row).some((key) => !allowed.has(key)) || !["en", "de"].includes(row.locale as string) || !["native", "reuse"].includes(row.terminology as string)) throw new Error("view context: explicit supported preferences required");
   for (const key of short) if (row[key] !== undefined) identifier(row[key]);
   for (const key of long) if (row[key] !== undefined && (typeof row[key] !== "string" || Array.from(row[key]).length > VIEW_CONTEXT_LONG_STRING_CHARS)) throw new Error(`view context: invalid panel data at ${key}`);
+  if (row.sessionIdentity !== undefined) {
+    const identity = object(row.sessionIdentity);
+    if (Object.keys(identity).sort().join(",") !== "displayName,userId") throw new Error("view context: invalid session identity fields");
+    identifier(identity.userId);
+    identifier(identity.displayName);
+  }
   if (row.activeUtilityByWindowId !== undefined) {
     const entries = Object.entries(object(row.activeUtilityByWindowId));
     if (entries.length > 64) throw new Error("view context: utility capacity exceeded");
@@ -935,9 +944,17 @@ export function windowViewContext(view: PluginViewState, windowId: string): Plug
 /** 📌️ Projects app-level panels without binding their controls to a window. `focusedWindowId`
  * deliberately survives: the panel is not RENDERED FOR a window, but a panel that authors per-window
  * settings still has to know which pane the user is looking at, or its controls silently retune the
- * roster's first entry (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B12 §5.1 measured exactly that). */
+ * roster's first entry (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B12 §5.1 measured exactly that).
+ *
+ * 🎯️ It survives only while it names a pane the roster actually carries. A shell publishes the new
+ * mode's window roster before it refocuses, and the guest's window-config capture faults on a focused
+ * pane the roster does not list — BEFORE the panel's body key is matched — so every app panel
+ * published nothing at all (`wgpu-ui.surface-not-published:framework.panel.*` on the wgpu shell in
+ * generate mode, ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Exact twin of `ViewModel::for_panel`
+ * (`🛂️manifest/🦀️.rs`). */
 export function panelViewContext(view: PluginViewState): PluginViewState {
-  return { ...view, windowId: undefined, activeWindowKindId: undefined, activeUtilityId: undefined };
+  const focused = view.windowInstances?.some((window) => window.id === view.focusedWindowId) ? view.focusedWindowId : undefined;
+  return { ...view, windowId: undefined, activeWindowKindId: undefined, activeUtilityId: undefined, focusedWindowId: focused };
 }
 
 /** 🛠️ Overlays the host-owned mode tool, then binds the view to a window or the panel.

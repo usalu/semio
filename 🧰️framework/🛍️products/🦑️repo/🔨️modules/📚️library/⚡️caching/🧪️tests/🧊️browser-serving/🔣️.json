@@ -34,6 +34,12 @@
       "root": "extensions",
       "file": "sample/🔣️.json",
       "content": "{\"manifest\":{\"pluginId\":\"sample\"}}"
+    },
+    {
+      "url": "/🔌️plugin-modules/🪞️vendor/🔤️guestslim-typst-fonts.bin",
+      "root": "fonts",
+      "file": "🔤️guestslim-typst-fonts.bin",
+      "content": "completed font producer bytes"
     }
   ],
   "missing": "/🔌️plugin-modules/missing/🔣️.json",

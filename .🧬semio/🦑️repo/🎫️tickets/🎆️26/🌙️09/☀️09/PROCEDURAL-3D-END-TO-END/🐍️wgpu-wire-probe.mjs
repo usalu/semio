@@ -38,7 +38,10 @@ await page.addInitScript(() => {
   Worker.prototype.postMessage = function (message, transfer) {
     const kind = message && typeof message === "object" ? String(message.kind ?? "?") : typeof message;
     bump(wire.sent, kind);
-    if (wire.sentLog.length < 400) wire.sentLog.push({ t: Math.round(performance.now()), kind, seq: message?.sequence, gen: message?.generation, replaceable: message?.replaceable?.map((e) => e.kind), lossless: message?.lossless?.map((e) => e.kind ?? e.event?.kind) });
+    if (kind !== "batch" || message?.replaceable?.length || message?.lossless?.length) {
+      wire.sentLog.push({ t: Math.round(performance.now()), kind, seq: message?.sequence, gen: message?.generation, replaceable: message?.replaceable?.map((e) => e.kind), lossless: message?.lossless?.map((e) => e.kind ?? e.event?.kind) });
+      if (wire.sentLog.length > 120) wire.sentLog.shift();
+    }
     return originalPost.call(this, message, transfer);
   };
   const OriginalWorker = Worker;
@@ -49,7 +52,11 @@ await page.addInitScript(() => {
       instance.addEventListener("message", (event) => {
         const kind = event.data && typeof event.data === "object" ? String(event.data.kind ?? "?") : typeof event.data;
         bump(wire.received, kind);
-        if (wire.receivedLog.length < 400) wire.receivedLog.push({ t: Math.round(performance.now()), kind, seq: event.data?.sequence, gen: event.data?.generation, requestFrame: event.data?.requestFrame, quarantined: event.data?.quarantined });
+        wire.lastFrame = kind === "frame" ? { t: Math.round(performance.now()), seq: event.data?.sequence, gen: event.data?.generation, requestFrame: event.data?.requestFrame, quarantined: event.data?.quarantined, faultCode: event.data?.faultCode, faultDetail: event.data?.faultDetail, verdict: event.data?.workerStepVerdict, ms: event.data?.workerExecutingMs } : wire.lastFrame;
+        if (kind !== "frame" && kind !== "heartbeat") {
+          wire.receivedLog.push({ t: Math.round(performance.now()), kind, seq: event.data?.sequence, gen: event.data?.generation, code: event.data?.code, detail: String(event.data?.detail ?? "").slice(0, 200) });
+          if (wire.receivedLog.length > 120) wire.receivedLog.shift();
+        }
       });
       return instance;
     },
@@ -129,5 +136,5 @@ await page.screenshot({ path: join(outDir, "shot.png"), type: "png" }).catch(() 
 const verdict = { url, windowIds, plan, rows, target, settled, afterSettleWire, afterHover, afterClick, afterAll, final, renderBegin: has("render begin").length, consoleTail: lines.slice(-25) };
 writeFileSync(join(outDir, "console.txt"), lines.join("\n"));
 writeFileSync(join(outDir, "wire.json"), JSON.stringify(verdict, null, 2));
-console.log("DONE", JSON.stringify({ windowIds, target, rows, sent: final.sent, received: final.received, raf: { scheduled: final.rafScheduled, fired: final.rafFired }, listeners: final.listeners, domEvents: final.domEvents, lastPoint: final.lastPoint, lastKey: final.lastKey, workers: final.workers, renderBegin: verdict.renderBegin }, null, 2));
+console.log("DONE", JSON.stringify({ windowIds, target, rows, stages: [["settled", settled], ["afterHover", afterHover], ["afterClick", afterClick], ["afterAll", afterAll], ["final", final]].map(([name, w]) => ({ name, batches: w.sent?.batch, frames: w.received?.frame, lastFrame: w.lastFrame })), sentLog: final.sentLog, receivedLog: final.receivedLog, domEvents: final.domEvents, lastPoint: final.lastPoint, lastKey: final.lastKey, renderBegin: verdict.renderBegin }, null, 2));
 await browser.close();

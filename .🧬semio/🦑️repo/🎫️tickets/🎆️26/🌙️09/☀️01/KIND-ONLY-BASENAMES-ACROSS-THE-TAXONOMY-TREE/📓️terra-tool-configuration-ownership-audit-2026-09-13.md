@@ -1,6 +1,6 @@
 # Tool Configuration Ownership — Independent Audit
 
-> **Current status — accepted.** The final isolated, cache-skipped registered route is 7/131 in 10.03 seconds (Nx 10.4 seconds), after the final semantic Vite-runner selector repair. Earlier 7/127 and pending-registration wording below is historical evidence retained for chronology; [Final scoped acceptance](#final-scoped-acceptance) is authoritative.
+> **Current status — accepted.** The final source map has 11 owners, 22 consumers, and eight project-input bindings. The isolated, cache-skipped current Nx route is 7/134 in 29.11 seconds (29.8 seconds Nx). Earlier 7/127, 7/131, and 7/132 records are historical.
 
 ## Scope
 
@@ -49,4 +49,15 @@ I accept this bounded extraction. It proves configuration selection, source-data
 
 ## Final selector delta
 
-The final owner closure repaired the shared `runViteBunxDev` fallback so configuration is required and all three callers provide a semantic owner, including the OS runtime configuration. The portable map consequently has 11 owners, 20 source-data consumers, and eight project-input bindings. Current direct evidence is 7/131 in 12.20 seconds; the current isolated cache-skipped Nx target is 7/131 in 10.03 seconds (Nx 10.4 seconds). The earlier independent 19-consumer static control remains an accurately labelled pre-delta checkpoint; it is not evidence for the additional final consumer.
+The final owner closure repaired the shared `runViteBunxDev` fallback so configuration is required and all three callers provide a semantic owner, including the OS runtime configuration. The portable map consequently has 11 owners, 20 source-data consumers, and eight project-input bindings. The final direct evidence is 7/132 in 11.46 seconds; the final isolated cache-skipped Nx target is 7/132 in 33.44 seconds (Nx 35.5 seconds). The earlier independent 19-consumer static control remains an accurately labelled pre-delta checkpoint; it is not evidence for the additional final consumer.
+
+
+## Historical 20th-Consumer Check
+
+I re-read the current ownership test and fixture after the final selector repair. The shared Vite helper is the twentieth explicit consumer: the control requires every fixture consumer token, fixes the cardinality at exactly 20, and separately asserts that the helper contains the required \`config: string;\` contract while no longer containing \`resolveViteConfigFileName\`. The installed Vite loader call remains correctly native at argument six. That direct/Nx 7/132 evidence establishes the Vite-selector repair but is now historical because the final source-data map has two further VS Code consumer rows.
+
+## Final 22-Consumer Closure
+
+I re-read the two rows added after the Vite-selector checkpoint. The VS Code README names the moved extension-test configuration in its current configuration documentation. ShellHost names the OS development Vite owner as the source of the VITE_S compile-time definitions it reads. These are precise current source/document references, so both belong in the 22-row source-data map rather than being silently ignored.
+
+The current portable test fixes the consumer cardinality at 22 and checks every required token. The final executor evidence is direct 7/134 in 22.17 seconds and isolated cache-skipped Nx 7/134 in 29.11 seconds (29.8 seconds Nx). The final report records a deduplicated 64 production/removal-coordinate union; including the retained report makes 65 coordinates. This audit accepts the bounded 11-owner configuration extraction with the same loader limits already stated above.

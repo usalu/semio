@@ -36,7 +36,7 @@ async fn node_graph_viewport_writes_config_not_mutations() {
     };
     let result = app
         .dispatch_typed(
-            EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework::Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom } }),
+            EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom } }),
             &semio_framework_plugin::ActionMeta { view_state: Some(view), ..semio_framework_plugin::artifact_app_laws::meta("local") },
         )
         .await

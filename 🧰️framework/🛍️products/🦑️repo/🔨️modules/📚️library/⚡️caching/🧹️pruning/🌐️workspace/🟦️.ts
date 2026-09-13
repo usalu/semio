@@ -1,15 +1,7 @@
 import { repoCacheDirectory } from "../../🟦️.ts";
 import { cargoDirectories } from "../../🦀️cargo/🟦️.ts";
 import { CACHE_POLICY } from "../../🔍️discovery/📂️source/🟦️.ts";
-import {
-  scanCargoBuildUnits,
-  scanCargoIncrementalUnits,
-  scanCargoTargetUnits,
-  scanDirectoryUnits,
-  type CacheAreaInput,
-  type CacheUnit,
-  type CargoIncrementalScan,
-} from "../🟦️.ts";
+import { scanCargoBuildUnits, scanCargoIncrementalUnits, scanCargoTargetUnits, scanDirectoryUnits, type CacheAreaInput, type CacheUnit, type CargoIncrementalScan } from "../🟦️.ts";
 
 export interface CacheAreaScanOperations {
   cargoDirectories(repoRoot: string): { readonly build: string; readonly target: string };
@@ -59,12 +51,7 @@ export function scanCacheAreas(
 }
 
 /** 🗺️ Resolves the real directory a scanned unit's relative path was measured against. */
-export function areaUnitRoot(
-  repoRoot: string,
-  area: string,
-  unit: CacheUnit,
-  operations: Pick<CacheAreaScanOperations, "cargoDirectories" | "cacheDirectory"> = { cargoDirectories, cacheDirectory: repoCacheDirectory },
-): string {
+export function areaUnitRoot(repoRoot: string, area: string, unit: CacheUnit, operations: Pick<CacheAreaScanOperations, "cargoDirectories" | "cacheDirectory"> = { cargoDirectories, cacheDirectory: repoCacheDirectory }): string {
   if (["cargo", "cargo-incremental", "cargo-incremental-sessions"].includes(area)) {
     const dirs = operations.cargoDirectories(repoRoot);
     return unit.kind === "cargo-target-file" ? dirs.target : dirs.build;

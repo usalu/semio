@@ -14,19 +14,12 @@ id = "os-infinite"
 workspace = true
 
 [features]
-default = ["render"]
 typegen = []
-render = ["dep:typst-assets"]
 # 🌉️ Declared (but never enabled) so `🗺️surface/🏔️terrain/🦀️.rs`'s path-mounted
 # `#[cfg(feature = "session-bindgen")]` wasm bridge doesn't trip `unexpected_cfgs` here — this
 # crate path-mounts that file without the surface crate's own `session-bindgen` default, by design
 # (avoids duplicate `TerrainSession` symbols linking surface+infinite into one cdylib).
 session-bindgen = []
-
-[[bin]]
-name = "dump-guestslim-typst-fonts"
-path = "../../🖼️canvas/🔤️fonts/🦀️.rs"
-required-features = ["render"]
 
 [lib]
 name = "semio_framework_os_infinite"
@@ -93,8 +86,7 @@ semio-framework-pixels = { path = "../../../../../../🔨️modules/🔲️pixel
 # path generation, so `semio-framework-geometry` now keeps `kurbo` only as a test oracle and no
 # longer brings `kurbo` or its transitive tail into `wasm32-wasip2`.
 #
-# 🔤️ `typst-assets` (fonts blob for `dump-guestslim-typst-fonts`, a native dev-tool `[[bin]]` never
-# built as part of the wasip2 component) lives here too, same reasoning. `typst`/`typst-svg`
+# 🔤️ `typst-assets` belongs to the standalone font tool. `typst`/`typst-svg`
 # themselves were deleted outright (not narrowed) — grepped zero usage anywhere in this crate's
 # source on ANY target, native included; they dragged in `usvg@0.45.1`/`biblatex`/`citationberg`/
 # `comemo`/`ciborium`/… (100+ crates) for nothing. `usvg@0.46.0` (via `vello_svg`) is used by
@@ -121,7 +113,6 @@ vello_svg = { version = "0.10.0", default-features = true, features = ["wgpu"] }
 # ARTIFACTS (26/09/01), `🔍️research/📓️kurbo-peniko-first-party.md`.
 kurbo = "0.13.1"
 peniko = "0.6.1"
-typst-assets = { version = "0.14.2", features = ["fonts"], optional = true }
 # 🖼️ Real pixel decode for `icon_codec::decode_raster_icon_bytes`'s host/browser arm and
 # `IconPaintCache::get_or_build`'s icon-painting path — both host-only on `wasm32-wasip2` (see
 # `🖼️canvas/🦀️.rs`'s `raster_icon_bytes_to_rgba` and `➡️directed/🦀️.rs`'s

@@ -6,37 +6,37 @@ The two unclear operation owners become `📋️duplicate-block` and `🧹️del
 
 ## Handpicked fixture identities
 
-| Fixture subject | Exact chosen name |
-| --- | --- |
-| Remove math block | ➖️removes-the-math-block |
-| Delete two blocks | 🗑️removes-the-ink-and-image-blocks |
-| Change image dimensions | 📐️enlarges-the-image-block |
-| Rename table block | 🏷️renames-the-table-block |
-| Move math block | 📍️repositions-the-math-block |
-| Duplicate two blocks | 👥️copies-ink-and-table-with-shifting-indices |
-| Insert photo | 📷️inserts-a-photo-block-at-root-index-2 |
-| Duplicate math block | 📋️copies-the-math-block-right-after-its-source |
-| Hide image | 🙈️hides-the-image-block |
-| Drag a subtree | 🤏️nudges-ink-and-the-whole-group-subtree |
-| Reparent into a group | 📥️reparents-ink-into-the-callout-group |
-| Append column | ➡️appends-the-lettered-column-c |
-| Append row | ⬇️appends-a-blank-third-row |
-| Remove trailing row | ⬆️drops-the-trailing-blank-row |
-| Remove trailing column | ⬅️drops-the-trailing-column-b |
-| Add image asset | ➕️adds-a-second-image-asset |
-| Change snap-grid spacing | 📐️halves-snap-grid-spacing |
-| Hide grid | 🙈️hides-the-grid |
-| Change grid opacity | 🌫️raises-grid-opacity |
-| Enable snap | 🧲️enables-snap |
-| Change grid subdivisions | 🔢️doubles-grid-subdivisions |
-| Change grid spacing | 📏️widens-grid-spacing |
-| Pythagorean formula | 📐️replaces-the-tex-with-pythagoras |
-| Rename document | 🏷️retitles-the-document |
-| Change stroke width | 🖊️thickens-the-sketch-stroke |
-| Change eraser radius | 🧽️enlarges-eraser |
-| Change pencil width | ✏️thickens-pencil |
-| Replace stroke polyline | 🎨️redraws-the-sketch-polyline |
-| Replace paragraphs | 📝️replaces-the-intro-paragraphs |
+| Fixture subject          | Exact chosen name                              |
+| ------------------------ | ---------------------------------------------- |
+| Remove math block        | ➖️removes-the-math-block                       |
+| Delete two blocks        | 🗑️removes-the-ink-and-image-blocks             |
+| Change image dimensions  | 📐️enlarges-the-image-block                     |
+| Rename table block       | 🏷️renames-the-table-block                      |
+| Move math block          | 📍️repositions-the-math-block                   |
+| Duplicate two blocks     | 👥️copies-ink-and-table-with-shifting-indices   |
+| Insert photo             | 📷️inserts-a-photo-block-at-root-index-2        |
+| Duplicate math block     | 📋️copies-the-math-block-right-after-its-source |
+| Hide image               | 🙈️hides-the-image-block                        |
+| Drag a subtree           | 🤏️nudges-ink-and-the-whole-group-subtree       |
+| Reparent into a group    | 📥️reparents-ink-into-the-callout-group         |
+| Append column            | ➡️appends-the-lettered-column-c                |
+| Append row               | ⬇️appends-a-blank-third-row                    |
+| Remove trailing row      | ⬆️drops-the-trailing-blank-row                 |
+| Remove trailing column   | ⬅️drops-the-trailing-column-b                  |
+| Add image asset          | ➕️adds-a-second-image-asset                    |
+| Change snap-grid spacing | 📐️halves-snap-grid-spacing                     |
+| Hide grid                | 🙈️hides-the-grid                               |
+| Change grid opacity      | 🌫️raises-grid-opacity                          |
+| Enable snap              | 🧲️enables-snap                                 |
+| Change grid subdivisions | 🔢️doubles-grid-subdivisions                    |
+| Change grid spacing      | 📏️widens-grid-spacing                          |
+| Pythagorean formula      | 📐️replaces-the-tex-with-pythagoras             |
+| Rename document          | 🏷️retitles-the-document                        |
+| Change stroke width      | 🖊️thickens-the-sketch-stroke                   |
+| Change eraser radius     | 🧽️enlarges-eraser                              |
+| Change pencil width      | ✏️thickens-pencil                              |
+| Replace stroke polyline  | 🎨️redraws-the-sketch-polyline                  |
+| Replace paragraphs       | 📝️replaces-the-intro-paragraphs                |
 
 The font-size, lock, delete-asset and replace-payload fixture identities are already meaningful and remain unchanged. Existing editor action cases are distinct, meaningful and retained. No reserved file or directory name is changed.
 

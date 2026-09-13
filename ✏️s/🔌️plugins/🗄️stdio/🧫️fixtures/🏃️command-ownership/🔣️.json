@@ -1,0 +1,224 @@
+{
+  "schemaVersion": 1,
+  "owners": [
+    {
+      "id": "artifact-inventory",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📇️inventory/🟦️.ts",
+      "exports": [
+        "stdioArtifactDefinitionPaths",
+        "stdioArtifactPackageContract"
+      ]
+    },
+    {
+      "id": "artifact-contract",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🛂️contract/🟦️.ts",
+      "exports": [
+        "assertStdioArtifactSchema",
+        "assertStdioArtifactSourceContract"
+      ]
+    },
+    {
+      "id": "artifact-graph",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🕸️graph/🟦️.ts",
+      "exports": [
+        "assertStdioArtifactCargoMetadata",
+        "assertStdioArtifactNxGraph",
+        "stdioCargoMetadata"
+      ]
+    },
+    {
+      "id": "artifact-proof-commands",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏃️commands/🟦️.ts",
+      "exports": [
+        "StdioArtifactPackageContractScript",
+        "StdioArtifactPackageGraphScript"
+      ]
+    },
+    {
+      "id": "composition-build",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🧩️composition/🏗️build/🟦️.ts",
+      "exports": [
+        "buildStdioComposition",
+        "checkStdioComposition",
+        "testStdioComposition"
+      ]
+    },
+    {
+      "id": "composition-commands",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🧩️composition/🏃️commands/🟦️.ts",
+      "exports": [
+        "StdioCompositionBuildScript",
+        "StdioCompositionCheckScript",
+        "StdioCompositionTestScript"
+      ]
+    },
+    {
+      "id": "test-orchestration",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🧪️tests/📦️artifact-package-graph/🟦️.ts",
+      "exports": [
+        "testStdioArtifactPackageContract",
+        "testStdioArtifactPackageGraph",
+        "verifyStdioCommandOwnership"
+      ]
+    }
+  ],
+  "routers": [
+    {
+      "id": "root",
+      "path": "✏️s/🔌️plugins/🗄️stdio/📜️script.ts",
+      "defaultCommand": "package-contract",
+      "commands": [
+        "package-contract",
+        "package-graph"
+      ]
+    },
+    {
+      "id": "composition-package",
+      "path": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/📜️script.ts",
+      "defaultCommand": "test",
+      "commands": [
+        "build",
+        "check",
+        "test",
+        "package-contract",
+        "package-graph"
+      ]
+    }
+  ],
+  "artifactDefinitions": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📜️artifact-definition.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📜️artifact-definition.json"
+  ],
+  "inputs": {
+    "build": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📜️script.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/📋️project.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏃️commands/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📇️inventory/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🕸️graph/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🛂️contract/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧩️composition/🏃️commands/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧩️composition/🏗️build/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/🏃️command-ownership/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/📦️artifact-package-graph/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧫️fixtures/🏃️command-ownership/🔣️.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧬️schema/🏃️command-ownership/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts"
+    ],
+    "contract": [
+      "{workspaceRoot}/.vscode/launch.json",
+      "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📜️script.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/📋️project.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📜️artifact-definition.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🟦️typescript/📋️project.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🦀️rust/Cargo.toml",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🦀️rust/📋️project.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🦀️rust/📜️script.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏃️commands/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📇️inventory/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🕸️graph/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🛂️contract/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧩️composition/🏃️commands/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧩️composition/🏗️build/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/🏃️command-ownership/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/📦️artifact-package-graph/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧫️fixtures/🏃️command-ownership/🔣️.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧫️fixtures/📦️artifact-package/🔣️.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧬️schema/🏃️command-ownership/🔣️.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts"
+    ],
+    "graph": [
+      "{workspaceRoot}/.vscode/launch.json",
+      "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📜️script.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/📋️project.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/Cargo.toml",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📜️artifact-definition.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🟦️typescript/📋️project.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🦀️rust/Cargo.toml",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🦀️rust/📋️project.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🦀️rust/📜️script.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏃️commands/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📇️inventory/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🕸️graph/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🛂️contract/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧩️composition/🏃️commands/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧩️composition/🏗️build/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/🏃️command-ownership/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/📦️artifact-package-graph/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧫️fixtures/🏃️command-ownership/🔣️.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧫️fixtures/📦️artifact-package/🔣️.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧬️schema/🏃️command-ownership/🔣️.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts"
+    ]
+  },
+  "registration": {
+    "projectPath": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/📋️project.json",
+    "packagePath": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/package.json",
+    "launchSeedPath": ".vscode/🧩️launch.seed.jsonc",
+    "launchPath": ".vscode/launch.json",
+    "projectName": "@semio-tech/stdio-js"
+  }
+}

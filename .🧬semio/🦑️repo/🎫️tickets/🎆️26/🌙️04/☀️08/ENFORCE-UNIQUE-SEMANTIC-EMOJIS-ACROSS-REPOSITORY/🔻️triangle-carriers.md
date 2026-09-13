@@ -4,15 +4,15 @@ Twenty-two physical foreign STL carrier directories were individually reviewed a
 
 Each exact carrier below lives under `✏️s/🔌️plugins/<plugin>/🗿️artifacts/<artifact>/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io`, in both `📤️export/🧵️serializers/🗿️artifacts/🟪️stl` and `📥️import/🧩️deserializers/🗿️artifacts/🟪️stl`. Both final basenames are now `🔺️stl`.
 
-| Plugin | Artifact owners |
-| --- | --- |
-| `🌍️gis` | `🏔️gisterrain` |
-| `🏗️fem` | `◻️2d`, `🧊️3d` |
-| `💠️lowpoly` | `💠️lowpoly` |
-| `🏭️process` | `🧊️process3d` |
-| `🧩️puzzle` | `🖐️5d`, `🧊️3d` |
-| `🧱️block` | `◻️2d`, `🖐️5d`, `🧊️3d` |
-| `📸️remodel` | `📸️remodeling` |
+| Plugin      | Artifact owners        |
+| ----------- | ---------------------- |
+| `🌍️gis`     | `🏔️gisterrain`         |
+| `🏗️fem`     | `◻️2d`, `🧊️3d`         |
+| `💠️lowpoly` | `💠️lowpoly`            |
+| `🏭️process` | `🧊️process3d`          |
+| `🧩️puzzle`  | `🖐️5d`, `🧊️3d`         |
+| `🧱️block`   | `◻️2d`, `🖐️5d`, `🧊️3d` |
+| `📸️remodel` | `📸️remodeling`         |
 
 The two real FEM exports triangulate each region/solid footprint, extrude using its own thickness/height, and bridge through the Semio mesh to ASCII STL. Lowpoly's documented incomplete bridge remains intact. No codec body, current async implementation, semantic ID, byte payload, reserved filename, or empty-scaffold behavior changed.
 

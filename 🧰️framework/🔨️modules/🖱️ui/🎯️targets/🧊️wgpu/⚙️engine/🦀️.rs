@@ -14,6 +14,8 @@ use crate::wgpu::component::layout::WindowLayout;
 use crate::wgpu::component::ui::UiNode;
 use crate::wgpu::draw::{DrawList, IconAtlas};
 use crate::wgpu::events::{EventRouter, UiCommand, UiEvent};
+use crate::wgpu::input::{retained_hit_registration, RetainedHitRegistration};
+use crate::wgpu::layout::TreeRowMetrics;
 use crate::wgpu::flex::{LayoutJobStage, LayoutJobStep};
 use crate::wgpu::mounted_layout::{MountedLayoutIdentity, MountedLayoutJob, MountedLayoutResult, RetainedGlyphPreview};
 #[cfg(test)]
@@ -62,6 +64,10 @@ struct UiWindow {
     paint_frame: Option<RetainedPaintFrame>,
     retiring_draw: Option<DrawList>,
     paint_census: UiFramePaintCensus,
+    /// 🎯️ Every interactive node of the last published paint, at the rect that paint drew it at.
+    /// The host pushes these into its own `InputState` each frame build — see
+    /// `input::RetainedHitRegistration`.
+    hit_registry: Vec<RetainedHitRegistration>,
 }
 
 impl UiWindow {
@@ -89,6 +95,7 @@ impl UiWindow {
             paint_frame: None,
             retiring_draw: None,
             paint_census: UiFramePaintCensus::default(),
+            hit_registry: Vec::new(),
         }
     }
 
@@ -100,6 +107,11 @@ impl UiWindow {
 }
 
 const RETAINED_PAINT_DEPTH_CREDITS: usize = 64;
+
+/// 🎯️ Fixed ceiling on one window's pointer registry — well under `input`'s own
+/// `HIT_TARGET_CAPACITY`, so a hostile document can never crowd the chrome out of the shell's
+/// registry.
+const RETAINED_HIT_REGISTRY_CAPACITY: usize = 4_096;
 
 #[derive(Clone, Copy)]
 struct RetainedPaintVisit {
@@ -143,7 +155,12 @@ impl RetainedPaintWalk {
                 return RetainedPaintWalkStep::DepthFault;
             }
             let Some(layout) = tree.accepted_layout(visit.node) else { return RetainedPaintWalkStep::DepthFault };
-            let child_visit = RetainedPaintVisit { node: child, origin_x: visit.origin_x + layout.x, origin_y: visit.origin_y + layout.y, next_child: tree.node(child).and_then(|node| node.first_child), entered: false };
+            // 📜️ The ONE child-origin rule of this target: parent-relative layout offset minus the
+            // parent's own live scroll offset when it owns a scrollable viewport. Both the paint
+            // phase and the hit-registry phase walk through here, so a scrolled container can never
+            // paint its children at one origin and register them at another.
+            let (scroll_x, scroll_y) = tree.node(visit.node).filter(|node| node.flags.contains(NodeFlags::SCROLLABLE)).map_or((0.0, 0.0), |node| node.state.scroll_offset);
+            let child_visit = RetainedPaintVisit { node: child, origin_x: visit.origin_x + layout.x - scroll_x, origin_y: visit.origin_y + layout.y - scroll_y, next_child: tree.node(child).and_then(|node| node.first_child), entered: false };
             self.visits[self.len] = Some(child_visit);
             self.len += 1;
             return RetainedPaintWalkStep::Scalar;
@@ -159,6 +176,10 @@ enum RetainedPaintPhase {
     Synchronize,
     Paint,
     Scenes,
+    /// 🎯️ Re-derives this window's pointer registry from the SAME walk, and therefore the same
+    /// accumulated origin, the paint phase just drew from — one geometry for what is painted and
+    /// what is hit (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    Hits,
     Publish,
     Complete,
     Fault,
@@ -222,6 +243,19 @@ impl UiFramePaintCensus {
     }
 }
 
+/// 🎯️ Appends `node`'s registry entry, if it has one, at the ABSOLUTE rect the paint walk just
+/// painted it at — `origin` is that walk's own accumulated offset, so the two can never diverge.
+fn register_retained_hit(tree: &UiTree, theme: &Theme, node: crate::wgpu::arena::NodeId, origin_x: f32, origin_y: f32, out: &mut Vec<RetainedHitRegistration>) {
+    if out.len() >= RETAINED_HIT_REGISTRY_CAPACITY {
+        return;
+    }
+    let Some(layout) = tree.accepted_layout(node) else { return };
+    let rect = crate::wgpu::geometry::Rect::new(origin_x + layout.x, origin_y + layout.y, layout.width, layout.height);
+    if let Some(registration) = retained_hit_registration(tree, node, rect, &TreeRowMetrics::from_theme(theme)) {
+        out.push(registration);
+    }
+}
+
 struct RetainedPaintFrame {
     phase: RetainedPaintPhase,
     walk: RetainedPaintWalk,
@@ -236,6 +270,7 @@ struct RetainedPaintFrame {
     theme_revision: u64,
     viewport_revision: u64,
     baseline: UiFramePaintCensus,
+    hit_candidates: Vec<RetainedHitRegistration>,
     /// 🩺️ Which sub-step drove this frame terminal — a `UiFrameStep::Fault` is otherwise
     /// undiagnosable from outside the engine.
     fault_site: Option<&'static str>,
@@ -1192,6 +1227,7 @@ impl Ui {
                 theme_revision: window.theme_revision,
                 viewport_revision: window.viewport_revision,
                 baseline: UiFramePaintCensus::default(),
+                hit_candidates: Vec::new(),
                 fault_site: None,
             });
             return UiFrameStep::Pending;
@@ -1311,6 +1347,23 @@ impl Ui {
                 }
                 RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
                 RetainedPaintWalkStep::Complete => {
+                    frame.phase = RetainedPaintPhase::Hits;
+                    frame.walk = RetainedPaintWalk::new(&window.tree, root);
+                    frame.hit_candidates.clear();
+                    UiFrameStep::Pending
+                }
+                RetainedPaintWalkStep::DepthFault => {
+                    frame.phase = RetainedPaintPhase::Fault;
+                    UiFrameStep::Fault
+                }
+            },
+            RetainedPaintPhase::Hits => match frame.walk.step(&window.tree) {
+                RetainedPaintWalkStep::Visit(node, origin_x, origin_y) => {
+                    register_retained_hit(&window.tree, &theme, node, origin_x, origin_y, &mut frame.hit_candidates);
+                    UiFrameStep::Pending
+                }
+                RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
+                RetainedPaintWalkStep::Complete => {
                     frame.phase = RetainedPaintPhase::Publish;
                     UiFrameStep::Pending
                 }
@@ -1320,6 +1373,7 @@ impl Ui {
                 }
             },
             RetainedPaintPhase::Publish => {
+                window.hit_registry = std::mem::take(&mut frame.hit_candidates);
                 std::mem::swap(&mut window.draw, &mut frame.candidate);
                 window.retiring_draw = Some(std::mem::take(&mut frame.candidate));
                 frame.phase = RetainedPaintPhase::Complete;
@@ -1368,6 +1422,7 @@ impl Ui {
                 theme_revision: window.theme_revision,
                 viewport_revision: window.viewport_revision,
                 baseline: UiFramePaintCensus::of(target),
+                hit_candidates: Vec::new(),
                 fault_site: None,
             });
             return UiFrameStep::Pending;
@@ -1496,7 +1551,9 @@ impl Ui {
                 }
                 RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
                 RetainedPaintWalkStep::Complete => {
-                    frame.phase = RetainedPaintPhase::Publish;
+                    frame.phase = RetainedPaintPhase::Hits;
+                    frame.walk = RetainedPaintWalk::new(&window.tree, root);
+                    frame.hit_candidates.clear();
                     UiFrameStep::Pending
                 }
                 RetainedPaintWalkStep::DepthFault => {
@@ -1505,7 +1562,24 @@ impl Ui {
                     UiFrameStep::Fault
                 }
             },
+            RetainedPaintPhase::Hits => match frame.walk.step(&window.tree) {
+                RetainedPaintWalkStep::Visit(node, origin_x, origin_y) => {
+                    register_retained_hit(&window.tree, &theme, node, origin_x + offset_x, origin_y + offset_y, &mut frame.hit_candidates);
+                    UiFrameStep::Pending
+                }
+                RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
+                RetainedPaintWalkStep::Complete => {
+                    frame.phase = RetainedPaintPhase::Publish;
+                    UiFrameStep::Pending
+                }
+                RetainedPaintWalkStep::DepthFault => {
+                    frame.phase = RetainedPaintPhase::Fault;
+                    frame.fault_site = Some("walk-depth-hits");
+                    UiFrameStep::Fault
+                }
+            },
             RetainedPaintPhase::Publish => {
+                window.hit_registry = std::mem::take(&mut frame.hit_candidates);
                 frame.phase = RetainedPaintPhase::Complete;
                 window.paint_census = UiFramePaintCensus::of(target).since(frame.baseline);
                 UiFrameStep::Pending
@@ -1601,11 +1675,19 @@ impl Ui {
             RetainedPaintPhase::Synchronize => "synchronize",
             RetainedPaintPhase::Paint => "paint",
             RetainedPaintPhase::Scenes => "scenes",
+            RetainedPaintPhase::Hits => "hits",
             RetainedPaintPhase::Publish => "publish",
             RetainedPaintPhase::Complete => "complete",
             RetainedPaintPhase::Fault => "fault",
             },
         })
+    }
+
+    /// 🎯️ `window_id`'s pointer registry as of its last published paint — one entry per interactive
+    /// retained node, at the rect that paint drew it at. A host pushes these into its own
+    /// `InputState` every frame build; see [`RetainedHitRegistration`].
+    pub fn window_hit_targets(&self, window_id: &str) -> &[RetainedHitRegistration] {
+        self.windows.get(window_id).map_or(&[], |window| window.hit_registry.as_slice())
     }
 
     /// 📊️ What `window_id`'s own retained paint contributed to the LAST frame it completed — the

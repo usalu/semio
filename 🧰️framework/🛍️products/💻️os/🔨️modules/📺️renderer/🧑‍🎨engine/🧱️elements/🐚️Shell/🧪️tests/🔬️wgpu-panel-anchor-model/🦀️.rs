@@ -1,11 +1,148 @@
 
 use super::*;
+// 🩹️ `PanelTabKind` stopped being reachable through the shell module's own `use` list, and the
+// `📌️panel-state` fixture moved from `🧑‍🎨engine/🧫️fixtures/` into this element's own `🧫️fixtures/`
+// (panel-tab lane, 2026-09-13) — both are re-pointed here so the crate's test target builds again.
+use semio_framework::PanelTabKind;
 
 fn fresh_state() -> ShellState {
     // 🧪️ `ShellState::new` calls `load_persisted_panel_layout`, which — on native — reads whatever
     // happens to be at `~/.semio/panel-layout.json` on the machine running the test. Every assertion
     // below explicitly sets the fields it exercises afterward, so the outcome never depends on that.
     ShellState::new(Vec::new(), String::new())
+}
+
+fn host_test_apps() -> (AppDefinition, AppDefinition) {
+    let mut home = super::command_registry_tests::test_app(Vec::new(), Vec::new());
+    home.id = "home".into();
+    home.controller_id = "space.home".into();
+    home.panel_tabs = vec![PanelTabDefinition { kind: PanelTabKind::App("home-library".into()), label: LocalizedLabel::data("Home Library"), group: PanelGroup::Display, body_key: Some("home.library".into()), children: vec![] }];
+    let mut studio = super::command_registry_tests::test_app(Vec::new(), Vec::new());
+    studio.id = "studio".into();
+    studio.controller_id = "space.studio".into();
+    studio.panel_tabs = vec![
+        PanelTabDefinition { kind: PanelTabKind::App("s-play-catalogue".into()), label: LocalizedLabel::data("Catalogue"), group: PanelGroup::Workbench, body_key: Some("s.play.catalogue".into()), children: vec![] },
+        PanelTabDefinition { kind: PanelTabKind::App("s-play-inspector".into()), label: LocalizedLabel::data("Inspector"), group: PanelGroup::Details, body_key: Some("s.play.inspector".into()), children: vec![] },
+        PanelTabDefinition {
+            kind: PanelTabKind::App("studio-settings".into()),
+            label: LocalizedLabel::data("Studio Settings"),
+            group: PanelGroup::Settings,
+            body_key: None,
+            children: vec![PanelTabDefinition { kind: PanelTabKind::App("studio-settings-leaf".into()), label: LocalizedLabel::data("Settings"), group: PanelGroup::Settings, body_key: Some("studio.settings".into()), children: vec![] }],
+        },
+    ];
+    (home, studio)
+}
+
+fn host_test_shell() -> ShellState {
+    let (home, studio) = host_test_apps();
+    let manifest = semio_framework::PluginManifest {
+        plugin_id: "space".into(),
+        label: "Space".into(),
+        version: "1".into(),
+        apps: vec![home, studio.clone()],
+        examples: vec![],
+        capabilities: vec![],
+        topic_contributions: vec![],
+        commands: vec![],
+        artifact_kinds: vec![],
+        dependencies: vec![],
+        contributions: vec![],
+    };
+    let bridge = ProgramBridgeEntry::from_wasm("space".into(), None, std::path::PathBuf::from("missing-host-panel-guest.wasm"), manifest).expect("nonrunnable host bridge");
+    let mut shell = ShellState::new(vec![bridge], "space".into());
+    let base = SpacePanelState {
+        active_panel_tab: "s-play-catalogue".into(),
+        spawned_apps: vec![
+            SpawnedAppEntry { id: "spawned-model".into(), plugin_id: "model".into(), instance_id: 41, app_id: "model@1/any#editor".into(), label: "Model".into(), breadcrumb: vec!["Workspace".into(), "Model".into()] },
+            SpawnedAppEntry { id: "spawned-note".into(), plugin_id: "note".into(), instance_id: 42, app_id: "note@1/any#editor".into(), label: "Note".into(), breadcrumb: vec!["Workspace".into(), "Note".into()] },
+        ],
+        active_spawned_id: Some("spawned-model".into()),
+    };
+    let mut view_state = ViewModel::default();
+    view_state.active_mode_id = Some(studio.default_mode_id.clone());
+    view_state.active_window_kind_id = Some(studio.window_kinds.first().id.clone());
+    view_state.panel_json = Some(ShellState::panel_json(&base).expect("strict base panel"));
+    shell.session = Some(ActiveSession { plugin_id: "space".into(), instance_id: 77, app: studio, view_state });
+    shell
+}
+
+#[test]
+fn host_panel_json_codec_matches_the_neutral_fixture_and_rejects_invalid_carriage() {
+    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/📌️panel-state/🔣️.json")).expect("panel fixture");
+    let base: SpacePanelState = serde_json::from_value(fixture["base"].clone()).expect("fixture base");
+    let encoded = ShellState::panel_json(&base).expect("strict panel JSON");
+    assert!(encoded.starts_with('{'));
+    let mut view = ViewModel::default();
+    view.panel_json = Some(encoded.clone());
+    assert_eq!(ShellState::panel_state_from_view(&view).expect("strict decode"), Some(base.clone()));
+    view.panel_json = Some(serde_json::json!({ "activePanelTab": "s-play-catalogue", "spawnedApps": [], "programs": [] }).to_string());
+    assert_eq!(ShellState::panel_state_from_view(&view).unwrap_err(), "host-panel.invalid-json");
+    let mut duplicate = base.clone();
+    duplicate.spawned_apps.push(base.spawned_apps[0].clone());
+    assert_eq!(ShellState::panel_json(&duplicate).unwrap_err(), "host-panel.duplicate-spawned-identity");
+    let mut missing_focus = base;
+    missing_focus.active_spawned_id = Some("spawned-missing".into());
+    assert_eq!(ShellState::panel_json(&missing_focus).unwrap_err(), "host-panel.invalid-active-spawned");
+}
+
+#[test]
+fn host_panel_action_is_claimed_before_guest_and_preserves_the_session_roster_and_home_projection() {
+    let mut shell = host_test_shell();
+    let before = ShellState::panel_state_from_view(&shell.session.as_ref().unwrap().view_state).unwrap().unwrap();
+    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "s-play-inspector" }) })).expect("configured leaf is host-owned");
+    let after = ShellState::panel_state_from_view(&shell.session.as_ref().unwrap().view_state).unwrap().unwrap();
+    assert_eq!(after.active_panel_tab, "s-play-inspector");
+    assert_eq!(after.spawned_apps, before.spawned_apps);
+    assert_eq!(after.active_spawned_id, before.active_spawned_id);
+    assert!(shell.right_panel_open);
+    assert_eq!(shell.active_right_kind, RightPanelKind::Details);
+    assert_eq!(shell.active_right_tab.as_deref(), Some("s-play-inspector"));
+
+    let accepted_json = shell.session.as_ref().unwrap().view_state.panel_json.clone();
+    let container_error = semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "studio-settings" }) })).unwrap_err();
+    assert_eq!(container_error, "host-panel.tab-is-not-configured-leaf");
+    assert_eq!(shell.session.as_ref().unwrap().view_state.panel_json, accepted_json);
+    let stale_error = semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "missing" }) })).unwrap_err();
+    assert_eq!(stale_error, "host-panel.tab-is-not-configured-leaf");
+    let missing_error = semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: None })).unwrap_err();
+    assert_eq!(missing_error, "host-panel.invalid-tab-id");
+
+    let guest_error = semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "foreign.controller".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "s-play-inspector" }) })).expect_err("unclaimed controller reaches the missing guest fixture");
+    assert!(!guest_error.starts_with("host-panel."), "unclaimed route must expose the actual missing guest failure: {guest_error}");
+
+    let (home, _) = host_test_apps();
+    let home_panel = SpacePanelState { active_panel_tab: "s-play-catalogue".into(), spawned_apps: after.spawned_apps.clone(), active_spawned_id: after.active_spawned_id.clone() };
+    let mut home_view = ViewModel::default();
+    home_view.active_mode_id = Some(home.default_mode_id.clone());
+    home_view.active_window_kind_id = Some(home.window_kinds.first().id.clone());
+    home_view.panel_json = Some(ShellState::panel_json(&home_panel).unwrap());
+    shell.directory_home = Some(DirectoryHomeProjection::new("space".into(), 88, home.clone(), home_view.clone()).expect("directory home projection"));
+    shell.session = Some(ActiveSession { plugin_id: "space".into(), instance_id: 88, app: home, view_state: home_view });
+    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "space.home".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "home-library" }) })).expect("active host session owns its configured leaf");
+    let restored = shell.directory_home.as_ref().unwrap().active_session();
+    let restored_panel = ShellState::panel_state_from_view(&restored.view_state).unwrap().unwrap();
+    assert_eq!(restored_panel.active_panel_tab, "home-library");
+    assert_eq!(restored_panel.spawned_apps, after.spawned_apps);
+    assert_eq!(restored_panel.active_spawned_id, after.active_spawned_id);
+    assert!(shell.left_panel_open);
+    assert_eq!(shell.active_left_kind, LeftPanelKind::Display);
+    assert_eq!(shell.active_left_tab.as_deref(), Some("home-library"));
+    eprintln!("[DEBUG] native host panel action stayed in session ownership, rejected invalid claimed routes before the missing guest, and restored DirectoryHomeProjection state");
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn host_panel_view_context_replaces_stale_session_identity_for_every_native_call() {
+    let mut shell = host_test_shell();
+    let session = shell.session.as_mut().expect("session");
+    session.view_state.session_identity = Some(ViewSessionIdentity { user_id: "stale".into(), display_name: "Stale".into() });
+    let session = shell.session.as_ref().expect("session").clone();
+    assert_eq!(shell.live_view_state(&session).session_identity, None, "an unauthenticated host must remove a persisted stale identity");
+    shell.identity = Some(Identity { user_id: "user-a".into(), email: "a@example.test".into(), display_name: "Ada".into(), hub_base_url: "https://hub.example".into(), issued_at_ms: 1 });
+    assert_eq!(shell.live_view_state(&session).session_identity, Some(ViewSessionIdentity { user_id: "user-a".into(), display_name: "Ada".into() }));
+    shell.identity = Some(Identity { user_id: "user-b".into(), email: "b@example.test".into(), display_name: "Berta".into(), hub_base_url: "https://hub.example".into(), issued_at_ms: 2 });
+    assert_eq!(shell.live_view_state(&session).session_identity, Some(ViewSessionIdentity { user_id: "user-b".into(), display_name: "Berta".into() }));
 }
 
 #[test]

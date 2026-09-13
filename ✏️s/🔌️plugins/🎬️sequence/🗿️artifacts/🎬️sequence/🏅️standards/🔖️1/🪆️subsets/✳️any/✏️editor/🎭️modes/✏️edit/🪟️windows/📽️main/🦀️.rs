@@ -3,7 +3,8 @@
 use super::config::SequenceMainWindowConfig;
 use crate::editor::sequence::host_from_fixture;
 use crate::SequenceFixture;
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, Viewport2d, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_os_kernel::Viewport2d;
 
 //#region 🔖️Constants
 pub const SEQUENCE_PLAY_WINDOW_MAIN: &str = "sequence-main";

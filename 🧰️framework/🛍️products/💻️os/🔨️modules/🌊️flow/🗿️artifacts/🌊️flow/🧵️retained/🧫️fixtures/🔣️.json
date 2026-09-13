@@ -5,6 +5,51 @@
     1,
     4096
   ],
+  "physicalRetirement": {
+    "directOwners": [
+      "bytes",
+      "strings",
+      "widgets",
+      "specs",
+      "neurons",
+      "synapses",
+      "previews",
+      "layout"
+    ],
+    "nestedOwners": [
+      "orderedSet",
+      "orderedLayoutMap",
+      "orderedNodeMap",
+      "dynamicDictionary",
+      "dynamicValue",
+      "frontierMetadata",
+      "frontierPayload"
+    ],
+    "oversizedMinimumBytes": 4097,
+    "subexactMaximumBytes": 4096,
+    "multiRootIngress": {
+      "firstCapacityBytes": 8193,
+      "secondCapacityBytes": 12289,
+      "ownerCount": 2,
+      "laws": {
+        "missingAdmissionReturnsOwner": true,
+        "subexactAdmissionUnchanged": true,
+        "preflightBeforeMovement": true,
+        "retryTransfersOnce": true,
+        "explicitCloseReleasesAll": true
+      }
+    },
+    "laws": {
+      "checkedCapacityBytes": true,
+      "childrenBeforeBacking": true,
+      "zeroGrantUnchanged": true,
+      "subexactGrantUnchanged": true,
+      "exactCapacityReleasedOnce": true,
+      "frontierReleasedLast": true,
+      "terminalLedgerZero": true,
+      "coldUsesDemand": true
+    }
+  },
   "fixture": {
     "schema": "flow.fixture",
     "camera": {

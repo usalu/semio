@@ -54,5 +54,11 @@
         "build"
       ]
     }
+  },
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts"
+    ]
   }
 }

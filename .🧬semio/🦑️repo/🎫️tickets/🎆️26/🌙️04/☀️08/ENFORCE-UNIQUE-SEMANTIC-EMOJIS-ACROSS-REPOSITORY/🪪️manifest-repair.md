@@ -8,13 +8,13 @@ The authored tree has ten files. Its six neutral fixture/schema files formerly s
 
 All six paths are relative to `🧪️fixtures` under this manifest root.
 
-| Original | Handpicked | Meaning |
-| --- | --- | --- |
-| `🔣️action-semantics.json` | `⚖️action-semantics.json` | Action effects, permissions, and reversibility |
-| `🔣️action-semantics.schema.json` | `📜️action-semantics.schema.json` | Formal action-policy contract |
-| `🔣️tutorial-document-track.json` | `🎞️tutorial-document-track.json` | Recorded document-event sequence |
-| `🔣️tutorial-document-track.schema.json` | `🛤️tutorial-document-track.schema.json` | Document timeline track shape |
-| `🔣️tutorial-local-interaction.json` | `🖱️tutorial-local-interaction.json` | Recorded local selection and interaction state |
+| Original                                   | Handpicked                                 | Meaning                                        |
+| ------------------------------------------ | ------------------------------------------ | ---------------------------------------------- |
+| `🔣️action-semantics.json`                  | `⚖️action-semantics.json`                  | Action effects, permissions, and reversibility |
+| `🔣️action-semantics.schema.json`           | `📜️action-semantics.schema.json`           | Formal action-policy contract                  |
+| `🔣️tutorial-document-track.json`           | `🎞️tutorial-document-track.json`           | Recorded document-event sequence               |
+| `🔣️tutorial-document-track.schema.json`    | `🛤️tutorial-document-track.schema.json`    | Document timeline track shape                  |
+| `🔣️tutorial-local-interaction.json`        | `🖱️tutorial-local-interaction.json`        | Recorded local selection and interaction state |
 | `🔣️tutorial-local-interaction.schema.json` | `🎛️tutorial-local-interaction.schema.json` | Allowed local interaction axes and their shape |
 
 ## Verification
@@ -42,11 +42,11 @@ Only two Rust `include_str!` paths in this tree's `🦀️.rs`, four incoming im
 
 All paths below are relative to `🤖️generated` under the manifest root. All three were exact no-clobber moves after inspecting their owning exporters.
 
-| Original | Handpicked | Meaning |
-| --- | --- | --- |
-| `🟦️manifest.ts` | `🪪️manifest.ts` | Declared framework boundary identities and descriptors |
-| `🟦️ui-axes.ts` | `🎚️ui-axes.ts` | Configurable locale and terminology axes |
-| `🟦️ui-contract.ts` | `📜️ui-contract.ts` | Renderer-neutral UI wire contract |
+| Original           | Handpicked         | Meaning                                                |
+| ------------------ | ------------------ | ------------------------------------------------------ |
+| `🟦️manifest.ts`    | `🪪️manifest.ts`    | Declared framework boundary identities and descriptors |
+| `🟦️ui-axes.ts`     | `🎚️ui-axes.ts`     | Configurable locale and terminology axes               |
+| `🟦️ui-contract.ts` | `📜️ui-contract.ts` | Renderer-neutral UI wire contract                      |
 
 The framework Rust generator output path and its two generated import strings, UI-axes generator target, UI-contract generator target, and their exact byte-comparison test paths now use these names. Direct imports were updated only in manifest, kernel, interaction, and mesh. The parent updated the exact central `generatorContracts` references. Relevant owning generator documentation was updated without a global basename replacement.
 

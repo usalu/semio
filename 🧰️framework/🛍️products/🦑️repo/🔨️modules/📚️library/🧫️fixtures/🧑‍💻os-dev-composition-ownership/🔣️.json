@@ -1,0 +1,1432 @@
+{
+  "schemaVersion": 1,
+  "contractContext": {
+    "name": "🧑‍💻os-dev-composition-ownership",
+    "kind": "os-dev-composition-ownership",
+    "parentKinds": [
+      "fixtures",
+      "schema",
+      "tests"
+    ]
+  },
+  "routerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+  "owners": [
+    {
+      "id": "playground-session-execution",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🏃️execution/🟦️.ts",
+      "exports": [
+        "PlaygroundSessionGenerateScript",
+        "PlaygroundSessionPreviewScript"
+      ]
+    },
+    {
+      "id": "plugin-catalog-refresh",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔄️refresh/🟦️.ts",
+      "exports": [
+        "ensurePluginRegistry"
+      ]
+    },
+    {
+      "id": "plugin-build-plan",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📋️plan/🟦️.ts",
+      "exports": [
+        "pluginCargoArgs",
+        "resolvePluginBuildTargets"
+      ]
+    },
+    {
+      "id": "plugin-build-materialization",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📦️materialization/🟦️.ts",
+      "exports": [
+        "buildPluginCargo",
+        "materializePlugin"
+      ]
+    },
+    {
+      "id": "plugin-build-descriptor",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🛂️descriptor/🟦️.ts",
+      "exports": [
+        "stagePluginDescriptor",
+        "describeBuiltPlugin"
+      ]
+    },
+    {
+      "id": "plugin-build-installation",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📥️installation/🟦️.ts",
+      "exports": [
+        "syncBuiltExtensionsToInstallRoot"
+      ]
+    },
+    {
+      "id": "plugin-build-execution",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🏃️execution/🟦️.ts",
+      "exports": [
+        "PluginBuildScript",
+        "buildPlugins",
+        "buildPluginsStreaming"
+      ]
+    },
+    {
+      "id": "plugin-build-watch",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/👁️watch/🟦️.ts",
+      "exports": [
+        "PluginWatchScript"
+      ]
+    },
+    {
+      "id": "plugin-size",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📊️size/🟦️.ts",
+      "exports": [
+        "PluginSizeScript"
+      ]
+    },
+    {
+      "id": "browser-host-staging",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/🏗️staging/🟦️.ts",
+      "exports": [
+        "stageTestBrowserHostV1"
+      ]
+    },
+    {
+      "id": "engine-selection",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚙️engine/🧭️selection/🟦️.ts",
+      "exports": [
+        "linkedSessionEngines"
+      ]
+    },
+    {
+      "id": "engine-publication",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚙️engine/📤️publication/🟦️.ts",
+      "exports": [
+        "buildEngineWasm"
+      ]
+    },
+    {
+      "id": "activation-lease",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🔐️lease/🟦️.ts",
+      "exports": [
+        "acquirePluginBuildLease"
+      ]
+    },
+    {
+      "id": "activation-readiness",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🩺️readiness/🟦️.ts",
+      "exports": [
+        "awaitTcpReady",
+        "awaitHttpOk",
+        "awaitChildExit"
+      ]
+    },
+    {
+      "id": "activation-installation",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/📥️installation/🟦️.ts",
+      "exports": [
+        "publishActivatedExtension"
+      ]
+    },
+    {
+      "id": "activation-freshness",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🔍️freshness/🟦️.ts",
+      "exports": [
+        "collectStagedModuleFacts",
+        "reportStagedModuleFreshness"
+      ]
+    },
+    {
+      "id": "activation-preparation",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧰️preparation/🟦️.ts",
+      "exports": [
+        "PreparationScript"
+      ]
+    },
+    {
+      "id": "activation-execution",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🏃️execution/🟦️.ts",
+      "exports": [
+        "ActivationScript"
+      ]
+    },
+    {
+      "id": "activation-serve",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️serve/🟦️.ts",
+      "exports": [
+        "ServeScript"
+      ]
+    },
+    {
+      "id": "capability-policy",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧹️capability-policy/🟦️.ts",
+      "exports": [
+        "PluginCapabilityLintScript"
+      ]
+    },
+    {
+      "id": "layering-policy",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧹️layering-policy/🟦️.ts",
+      "exports": [
+        "CapabilityLayeringLintScript"
+      ]
+    },
+    {
+      "id": "export-path-policy",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧹️export-path-policy/🟦️.ts",
+      "exports": [
+        "PluginIndexExportPathLintScript"
+      ]
+    },
+    {
+      "id": "host-handle-policy",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧹️host-handle-policy/🟦️.ts",
+      "exports": [
+        "HostHandleReachLintScript"
+      ]
+    },
+    {
+      "id": "package-test-execution",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🏃️execution/🟦️.ts",
+      "exports": [
+        "TestScript"
+      ]
+    },
+    {
+      "id": "studio-verification",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🎬️studio/🟦️.ts",
+      "exports": [
+        "runStudioE2eVerify"
+      ]
+    },
+    {
+      "id": "catalog-smoke",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🔬️catalog-smoke/🟦️.ts",
+      "exports": [
+        "runCatalogSmokeVerify"
+      ]
+    },
+    {
+      "id": "collaboration-verification",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🤝️collaboration/🟦️.ts",
+      "exports": [
+        "runCollabE2eVerify"
+      ]
+    },
+    {
+      "id": "verification-execution",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/✅️verification/🟦️.ts",
+      "exports": [
+        "VerifyScript"
+      ]
+    },
+    {
+      "id": "parity-structure",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/⚖️parity/🏗️structure/🟦️.ts",
+      "exports": [
+        "compareParityStructural"
+      ]
+    },
+    {
+      "id": "parity-pixels",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/⚖️parity/🖼️pixels/🟦️.ts",
+      "exports": [
+        "compareOwnedParityPixels"
+      ]
+    },
+    {
+      "id": "parity-probe",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/⚖️parity/🔬️probe/🟦️.ts",
+      "exports": [
+        "stateProbeSnapshot",
+        "stateProbeChangedPaths"
+      ]
+    },
+    {
+      "id": "parity-server-pool",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/⚖️parity/🌐️server-pool/🟦️.ts",
+      "exports": [
+        "findFreeParityPortPair",
+        "startParityDevServer",
+        "stopParityDevServer"
+      ]
+    },
+    {
+      "id": "parity-report",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/⚖️parity/📊️report/🟦️.ts",
+      "exports": [
+        "writeParityReport"
+      ]
+    },
+    {
+      "id": "parity-execution",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/⚖️parity/🏃️execution/🟦️.ts",
+      "exports": [
+        "ParityProbeScript",
+        "ParitySmokeScript",
+        "ParitySweepScript",
+        "ParityTriageScript",
+        "ParityVerifyScript"
+      ]
+    },
+    {
+      "id": "distribution-source",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📥️source/🟦️.ts",
+      "exports": [
+        "distributionStaticSourcePaths",
+        "distributionFileWitness",
+        "distributionPathOrder"
+      ]
+    },
+    {
+      "id": "distribution-plan",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📋️plan/🟦️.ts",
+      "exports": [
+        "DistributionBundlePlan"
+      ]
+    },
+    {
+      "id": "distribution-compiler",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🏗️compiler/🟦️.ts",
+      "exports": [
+        "materializeDistributionBundle"
+      ]
+    },
+    {
+      "id": "distribution-publication",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📤️publication/🟦️.ts",
+      "exports": [
+        "publishDistributionBundle"
+      ]
+    },
+    {
+      "id": "distribution-freshness",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🔍️freshness/🟦️.ts",
+      "exports": [
+        "checkDistributionBundle"
+      ]
+    },
+    {
+      "id": "distribution-execution",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🏃️execution/🟦️.ts",
+      "exports": [
+        "DistributionBundleScript"
+      ]
+    },
+    {
+      "id": "scale-fixture-projection",
+      "path": "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📽️projection/🟦️.ts",
+      "exports": [
+        "renderScaleFixtureArtifacts"
+      ]
+    },
+    {
+      "id": "scale-fixture-publication",
+      "path": "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📤️publication/🟦️.ts",
+      "exports": [
+        "ScaleFixtureGenerateScript",
+        "ScaleFixturePreviewGeneratedScript",
+        "ScaleFixtureCheckScript"
+      ]
+    },
+    {
+      "id": "benchmark-plan",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/📋️plan/🟦️.ts",
+      "exports": [
+        "BENCH_BUDGETS"
+      ]
+    },
+    {
+      "id": "benchmark-host",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/🖥️host/🟦️.ts",
+      "exports": [
+        "benchNativeRows"
+      ]
+    },
+    {
+      "id": "benchmark-browser",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/🌐️browser/🟦️.ts",
+      "exports": [
+        "benchWebRows"
+      ]
+    },
+    {
+      "id": "benchmark-stub",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/🧪️stub/🟦️.ts",
+      "exports": [
+        "BENCH_WEB_STUB_STATUS",
+        "benchWebMeasuredRow"
+      ]
+    },
+    {
+      "id": "benchmark-execution",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/🏃️execution/🟦️.ts",
+      "exports": [
+        "BenchPluginsScript"
+      ]
+    },
+    {
+      "id": "contract-validation",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧬️schema/🛂️validation/🟦️.ts",
+      "exports": [
+        "DEV_SCHEMA_URL",
+        "devContract"
+      ]
+    },
+    {
+      "id": "canonical-bootstrap-verification",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/📇️canonical-bootstrap-folder-mirror/🟦️.ts",
+      "exports": [
+        "CanonicalBootstrapFolderMirrorCheckScript"
+      ]
+    }
+  ],
+  "routerForbiddenSymbols": [
+    "PlaygroundSessionGenerateScript",
+    "PlaygroundSessionPreviewScript",
+    "ensurePluginRegistry",
+    "pluginCargoArgs",
+    "resolvePluginBuildTargets",
+    "buildPluginCargo",
+    "materializePlugin",
+    "stagePluginDescriptor",
+    "describeBuiltPlugin",
+    "syncBuiltExtensionsToInstallRoot",
+    "PluginBuildScript",
+    "buildPlugins",
+    "buildPluginsStreaming",
+    "PluginWatchScript",
+    "PluginSizeScript",
+    "stageTestBrowserHostV1",
+    "linkedSessionEngines",
+    "buildEngineWasm",
+    "acquirePluginBuildLease",
+    "awaitTcpReady",
+    "awaitHttpOk",
+    "awaitChildExit",
+    "publishActivatedExtension",
+    "collectStagedModuleFacts",
+    "reportStagedModuleFreshness",
+    "PreparationScript",
+    "ActivationScript",
+    "ServeScript",
+    "PluginCapabilityLintScript",
+    "CapabilityLayeringLintScript",
+    "PluginIndexExportPathLintScript",
+    "HostHandleReachLintScript",
+    "TestScript",
+    "runStudioE2eVerify",
+    "runCatalogSmokeVerify",
+    "runCollabE2eVerify",
+    "VerifyScript",
+    "compareParityStructural",
+    "compareOwnedParityPixels",
+    "stateProbeSnapshot",
+    "stateProbeChangedPaths",
+    "ParityServerPool",
+    "writeParityReport",
+    "ParityVerifyScript",
+    "ParitySweepScript",
+    "distributionStaticSourcePaths",
+    "distributionFileWitness",
+    "distributionPathOrder",
+    "DistributionBundlePlan",
+    "materializeDistributionBundle",
+    "publishDistributionBundle",
+    "checkDistributionBundle",
+    "DistributionBundleScript",
+    "renderScaleFixtureArtifacts",
+    "ScaleFixtureGenerateScript",
+    "ScaleFixtureCheckScript",
+    "BENCH_BUDGETS",
+    "benchNativeRows",
+    "benchWebRows",
+    "benchStubRows",
+    "BenchPluginsScript",
+    "DEV_SCHEMA_URL",
+    "devContract",
+    "CanonicalBootstrapFolderMirrorCheckScript"
+  ],
+  "registration": {
+    "target": "test-os-dev-composition-ownership",
+    "name": "🧹clean🧩️taxonomy🧑‍💻os-dev-composition-ownership",
+    "command": "bun nx run @semio-tech/repo-lib:test-os-dev-composition-ownership",
+    "packagePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
+    "projectPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+    "seedLaunchPath": ".vscode/🧩️launch.seed.jsonc",
+    "derivedLaunchPath": ".vscode/launch.json"
+  },
+  "contextChains": [
+    {
+      "owner": "playground-session-execution",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🎮️playground-session",
+          "kind": "os-dev-playground-session"
+        },
+        {
+          "name": "🏃️execution",
+          "kind": "os-dev-playground-session-execution"
+        }
+      ]
+    },
+    {
+      "owner": "plugin-catalog-refresh",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "📇️registry",
+          "kind": "registry"
+        },
+        {
+          "name": "🔄️refresh",
+          "kind": "plugin-registry-refresh"
+        }
+      ]
+    },
+    {
+      "owner": "plugin-build-plan",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🏗️build",
+          "kind": "plugin-build"
+        },
+        {
+          "name": "📋️plan",
+          "kind": "plugin-build-plan"
+        }
+      ]
+    },
+    {
+      "owner": "plugin-build-materialization",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🏗️build",
+          "kind": "plugin-build"
+        },
+        {
+          "name": "📦️materialization",
+          "kind": "plugin-build-materialization"
+        }
+      ]
+    },
+    {
+      "owner": "plugin-build-descriptor",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🏗️build",
+          "kind": "plugin-build"
+        },
+        {
+          "name": "🛂️descriptor",
+          "kind": "plugin-build-descriptor"
+        }
+      ]
+    },
+    {
+      "owner": "plugin-build-installation",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🏗️build",
+          "kind": "plugin-build"
+        },
+        {
+          "name": "📥️installation",
+          "kind": "plugin-build-installation"
+        }
+      ]
+    },
+    {
+      "owner": "plugin-build-execution",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🏗️build",
+          "kind": "plugin-build"
+        },
+        {
+          "name": "🏃️execution",
+          "kind": "plugin-build-execution"
+        }
+      ]
+    },
+    {
+      "owner": "plugin-build-watch",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🏗️build",
+          "kind": "plugin-build"
+        },
+        {
+          "name": "👁️watch",
+          "kind": "plugin-build-watch"
+        }
+      ]
+    },
+    {
+      "owner": "plugin-size",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "📊️size",
+          "kind": "plugin-size"
+        }
+      ]
+    },
+    {
+      "owner": "browser-host-staging",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "♻️activation",
+          "kind": "os-dev-activation"
+        },
+        {
+          "name": "🌐️browser-host",
+          "kind": "browser-host"
+        },
+        {
+          "name": "🏗️staging",
+          "kind": "browser-host-staging"
+        }
+      ]
+    },
+    {
+      "owner": "engine-selection",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "⚙️engine",
+          "kind": "engine"
+        },
+        {
+          "name": "🧭️selection",
+          "kind": "os-dev-engine-selection"
+        }
+      ]
+    },
+    {
+      "owner": "engine-publication",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "⚙️engine",
+          "kind": "engine"
+        },
+        {
+          "name": "📤️publication",
+          "kind": "os-dev-engine-publication"
+        }
+      ]
+    },
+    {
+      "owner": "activation-lease",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "♻️activation",
+          "kind": "os-dev-activation"
+        },
+        {
+          "name": "🔐️lease",
+          "kind": "os-dev-activation-lease"
+        }
+      ]
+    },
+    {
+      "owner": "activation-readiness",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "♻️activation",
+          "kind": "os-dev-activation"
+        },
+        {
+          "name": "🩺️readiness",
+          "kind": "os-dev-activation-readiness"
+        }
+      ]
+    },
+    {
+      "owner": "activation-installation",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "♻️activation",
+          "kind": "os-dev-activation"
+        },
+        {
+          "name": "📥️installation",
+          "kind": "os-dev-activation-installation"
+        }
+      ]
+    },
+    {
+      "owner": "activation-freshness",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "♻️activation",
+          "kind": "os-dev-activation"
+        },
+        {
+          "name": "🔍️freshness",
+          "kind": "os-dev-activation-freshness"
+        }
+      ]
+    },
+    {
+      "owner": "activation-preparation",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "♻️activation",
+          "kind": "os-dev-activation"
+        },
+        {
+          "name": "🧰️preparation",
+          "kind": "os-dev-activation-preparation"
+        }
+      ]
+    },
+    {
+      "owner": "activation-execution",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "♻️activation",
+          "kind": "os-dev-activation"
+        },
+        {
+          "name": "🏃️execution",
+          "kind": "os-dev-activation-execution"
+        }
+      ]
+    },
+    {
+      "owner": "activation-serve",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "♻️activation",
+          "kind": "os-dev-activation"
+        },
+        {
+          "name": "🌐️serve",
+          "kind": "os-dev-activation-serve"
+        }
+      ]
+    },
+    {
+      "owner": "capability-policy",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🧪️tests",
+          "kind": "tests"
+        },
+        {
+          "name": "🧹️capability-policy",
+          "kind": "os-dev-capability-policy-tests"
+        }
+      ]
+    },
+    {
+      "owner": "layering-policy",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🧪️tests",
+          "kind": "tests"
+        },
+        {
+          "name": "🧹️layering-policy",
+          "kind": "os-dev-layering-policy-tests"
+        }
+      ]
+    },
+    {
+      "owner": "export-path-policy",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🧪️tests",
+          "kind": "tests"
+        },
+        {
+          "name": "🧹️export-path-policy",
+          "kind": "os-dev-export-path-policy-tests"
+        }
+      ]
+    },
+    {
+      "owner": "host-handle-policy",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🧪️tests",
+          "kind": "tests"
+        },
+        {
+          "name": "🧹️host-handle-policy",
+          "kind": "os-dev-host-handle-policy-tests"
+        }
+      ]
+    },
+    {
+      "owner": "package-test-execution",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🧪️tests",
+          "kind": "tests"
+        },
+        {
+          "name": "🏃️execution",
+          "kind": "os-dev-test-execution"
+        }
+      ]
+    },
+    {
+      "owner": "studio-verification",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🧪️tests",
+          "kind": "tests"
+        },
+        {
+          "name": "🎬️studio",
+          "kind": "os-dev-studio-tests"
+        }
+      ]
+    },
+    {
+      "owner": "catalog-smoke",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🧪️tests",
+          "kind": "tests"
+        },
+        {
+          "name": "🔬️catalog-smoke",
+          "kind": "os-dev-catalog-smoke-tests"
+        }
+      ]
+    },
+    {
+      "owner": "collaboration-verification",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🧪️tests",
+          "kind": "tests"
+        },
+        {
+          "name": "🤝️collaboration",
+          "kind": "os-dev-collaboration-tests"
+        }
+      ]
+    },
+    {
+      "owner": "verification-execution",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🧪️tests",
+          "kind": "tests"
+        },
+        {
+          "name": "✅️verification",
+          "kind": "os-dev-verification-tests"
+        }
+      ]
+    },
+    {
+      "owner": "parity-structure",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🧪️tests",
+          "kind": "tests"
+        },
+        {
+          "name": "⚖️parity",
+          "kind": "os-dev-parity-tests"
+        },
+        {
+          "name": "🏗️structure",
+          "kind": "os-dev-parity-structure"
+        }
+      ]
+    },
+    {
+      "owner": "parity-pixels",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🧪️tests",
+          "kind": "tests"
+        },
+        {
+          "name": "⚖️parity",
+          "kind": "os-dev-parity-tests"
+        },
+        {
+          "name": "🖼️pixels",
+          "kind": "os-dev-parity-pixels"
+        }
+      ]
+    },
+    {
+      "owner": "parity-probe",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🧪️tests",
+          "kind": "tests"
+        },
+        {
+          "name": "⚖️parity",
+          "kind": "os-dev-parity-tests"
+        },
+        {
+          "name": "🔬️probe",
+          "kind": "os-dev-parity-probe"
+        }
+      ]
+    },
+    {
+      "owner": "parity-server-pool",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🧪️tests",
+          "kind": "tests"
+        },
+        {
+          "name": "⚖️parity",
+          "kind": "os-dev-parity-tests"
+        },
+        {
+          "name": "🌐️server-pool",
+          "kind": "os-dev-parity-server-pool"
+        }
+      ]
+    },
+    {
+      "owner": "parity-report",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🧪️tests",
+          "kind": "tests"
+        },
+        {
+          "name": "⚖️parity",
+          "kind": "os-dev-parity-tests"
+        },
+        {
+          "name": "📊️report",
+          "kind": "os-dev-parity-report"
+        }
+      ]
+    },
+    {
+      "owner": "parity-execution",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🧪️tests",
+          "kind": "tests"
+        },
+        {
+          "name": "⚖️parity",
+          "kind": "os-dev-parity-tests"
+        },
+        {
+          "name": "🏃️execution",
+          "kind": "os-dev-parity-execution"
+        }
+      ]
+    },
+    {
+      "owner": "distribution-source",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🚚️distribution",
+          "kind": "dev-distribution-authority"
+        },
+        {
+          "name": "📥️source",
+          "kind": "os-dev-distribution-source"
+        }
+      ]
+    },
+    {
+      "owner": "distribution-plan",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🚚️distribution",
+          "kind": "dev-distribution-authority"
+        },
+        {
+          "name": "📋️plan",
+          "kind": "os-dev-distribution-plan"
+        }
+      ]
+    },
+    {
+      "owner": "distribution-compiler",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🚚️distribution",
+          "kind": "dev-distribution-authority"
+        },
+        {
+          "name": "🏗️compiler",
+          "kind": "os-dev-distribution-compiler"
+        }
+      ]
+    },
+    {
+      "owner": "distribution-publication",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🚚️distribution",
+          "kind": "dev-distribution-authority"
+        },
+        {
+          "name": "📤️publication",
+          "kind": "os-dev-distribution-publication"
+        }
+      ]
+    },
+    {
+      "owner": "distribution-freshness",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🚚️distribution",
+          "kind": "dev-distribution-authority"
+        },
+        {
+          "name": "🔍️freshness",
+          "kind": "os-dev-distribution-freshness"
+        }
+      ]
+    },
+    {
+      "owner": "distribution-execution",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🚚️distribution",
+          "kind": "dev-distribution-authority"
+        },
+        {
+          "name": "🏃️execution",
+          "kind": "os-dev-distribution-execution"
+        }
+      ]
+    },
+    {
+      "owner": "scale-fixture-projection",
+      "parentKind": "test-fixture-member",
+      "members": [
+        {
+          "name": "📽️projection",
+          "kind": "os-scale-fixture-projection"
+        }
+      ]
+    },
+    {
+      "owner": "scale-fixture-publication",
+      "parentKind": "test-fixture-member",
+      "members": [
+        {
+          "name": "📤️publication",
+          "kind": "os-scale-fixture-publication"
+        }
+      ]
+    },
+    {
+      "owner": "benchmark-plan",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "📊️benchmarks",
+          "kind": "os-dev-benchmarks"
+        },
+        {
+          "name": "🔌️plugins",
+          "kind": "plugins"
+        },
+        {
+          "name": "📋️plan",
+          "kind": "os-dev-benchmark-plan"
+        }
+      ]
+    },
+    {
+      "owner": "benchmark-host",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "📊️benchmarks",
+          "kind": "os-dev-benchmarks"
+        },
+        {
+          "name": "🔌️plugins",
+          "kind": "plugins"
+        },
+        {
+          "name": "🖥️host",
+          "kind": "os-dev-benchmark-host"
+        }
+      ]
+    },
+    {
+      "owner": "benchmark-browser",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "📊️benchmarks",
+          "kind": "os-dev-benchmarks"
+        },
+        {
+          "name": "🔌️plugins",
+          "kind": "plugins"
+        },
+        {
+          "name": "🌐️browser",
+          "kind": "os-dev-benchmark-browser"
+        }
+      ]
+    },
+    {
+      "owner": "benchmark-stub",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "📊️benchmarks",
+          "kind": "os-dev-benchmarks"
+        },
+        {
+          "name": "🔌️plugins",
+          "kind": "plugins"
+        },
+        {
+          "name": "🧪️stub",
+          "kind": "os-dev-benchmark-stub"
+        }
+      ]
+    },
+    {
+      "owner": "benchmark-execution",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "📊️benchmarks",
+          "kind": "os-dev-benchmarks"
+        },
+        {
+          "name": "🔌️plugins",
+          "kind": "plugins"
+        },
+        {
+          "name": "🏃️execution",
+          "kind": "os-dev-benchmark-execution"
+        }
+      ]
+    },
+    {
+      "owner": "contract-validation",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🧬️schema",
+          "kind": "schema"
+        },
+        {
+          "name": "🛂️validation",
+          "kind": "os-dev-schema-validation"
+        }
+      ]
+    },
+    {
+      "owner": "canonical-bootstrap-verification",
+      "parentKind": "members-of-modules",
+      "members": [
+        {
+          "name": "🧪️tests",
+          "kind": "tests"
+        },
+        {
+          "name": "📇️canonical-bootstrap-folder-mirror",
+          "kind": "os-dev-canonical-bootstrap-tests"
+        }
+      ]
+    }
+  ],
+  "ownerImporterPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+  "consumers": [
+    {
+      "id": "hub-browser-host-staging",
+      "mode": "direct-import",
+      "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+      "requiredTokens": [
+        "stageTestBrowserHostV1",
+        "♻️activation/🌐️browser-host/🏗️staging/🟦️.ts"
+      ],
+      "forbiddenTokens": [
+        "const devScript = await import(join(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts\"))",
+        "devScript.stageTestBrowserHostV1"
+      ]
+    },
+    {
+      "id": "hub-hash",
+      "mode": "direct-import",
+      "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+      "requiredTokens": [
+        "blake3Hex",
+        "🧰️framework/🔨️modules/🔏️hash/🟦️.ts"
+      ],
+      "forbiddenTokens": [
+        "const { blake3Hex } = await import(join(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts\"))"
+      ]
+    },
+    {
+      "id": "registry-playground-source-fixture",
+      "mode": "source-data",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧫️fixtures/🎮️playground-session/🔣️.json",
+      "requiredTokens": [
+        "producerSource",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔄️refresh/🟦️.ts"
+      ],
+      "forbiddenTokens": [
+        "\"producerSource\": \"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts\""
+      ]
+    },
+    {
+      "id": "registry-playground-source-reader",
+      "mode": "source-data",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🎮️playground-session/🟦️.ts",
+      "requiredTokens": [
+        "fixture.default.producerSource",
+        "export async function ensurePluginRegistry",
+        "export { assertPluginCatalogComplete, buildPluginCatalog }"
+      ],
+      "forbiddenTokens": [
+        "fixture.default.producerScript), \"utf8\""
+      ]
+    },
+    {
+      "id": "browser-host-owner-importer",
+      "mode": "direct-import",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+      "requiredTokens": [
+        "../../♻️activation/🌐️browser-host/🏗️staging/🟦️.ts",
+        "../../🚚️distribution/🏗️compiler/🟦️.ts",
+        "../../🧬️schema/🛂️validation/🟦️.ts"
+      ],
+      "forbiddenTokens": [
+        "../📦️packages/🟦️typescript/📜️script.ts"
+      ]
+    },
+    {
+      "id": "distribution-detached-compiler",
+      "mode": "detached-import",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🏃️execution/🟦️.ts",
+      "requiredTokens": [
+        "new URL(\"../🏗️compiler/🟦️.ts\", import.meta.url).href",
+        "materializeDistributionBundle"
+      ],
+      "forbiddenTokens": [
+        "new URL(import.meta.url)"
+      ]
+    },
+    {
+      "id": "os-root-hash",
+      "mode": "direct-import",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "requiredTokens": [
+        "blake3Hex",
+        "🔏️hash/🟦️.ts"
+      ],
+      "forbiddenTokens": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
+      ]
+    },
+    {
+      "id": "os-host-hash",
+      "mode": "direct-import",
+      "path": "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📜️script.ts",
+      "requiredTokens": [
+        "blake3Hex",
+        "🔏️hash/🟦️.ts"
+      ],
+      "forbiddenTokens": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
+      ]
+    },
+    {
+      "id": "store-initial-child-hash",
+      "mode": "direct-import",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🪪️initial-child-identity/🟦️.ts",
+      "requiredTokens": [
+        "blake3Hex",
+        "🔏️hash/🟦️.ts"
+      ],
+      "forbiddenTokens": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
+      ]
+    },
+    {
+      "id": "fresh-component-hash",
+      "mode": "direct-import",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts",
+      "requiredTokens": [
+        "blake3Hex",
+        "🔏️hash/🟦️.ts"
+      ],
+      "forbiddenTokens": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
+      ]
+    },
+    {
+      "id": "replication-hash",
+      "mode": "direct-import",
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
+      "requiredTokens": [
+        "blake3Hex",
+        "🔏️hash/🟦️.ts"
+      ],
+      "forbiddenTokens": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
+      ]
+    },
+    {
+      "id": "scale-profile-source-doc",
+      "mode": "source-data",
+      "path": "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/🎭️profile/🦀️.rs",
+      "requiredTokens": [
+        "🧫️fixtures/⚖️scale/📽️projection/🟦️.ts"
+      ],
+      "forbiddenTokens": [
+        "🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
+      ]
+    }
+  ],
+  "projectInputs": [
+    {
+      "project": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/{📇️registry/🔄️refresh,🏗️build,📊️size}/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/{📽️projection,📤️publication}/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts"
+      ]
+    },
+    {
+      "project": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/{🟦️.ts,🏗️staging/🟦️.ts}",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts"
+      ]
+    },
+    {
+      "project": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📋️project.json",
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔄️refresh/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/{🎮️playground-session/🏃️execution/🟦️.ts,📦️packages/🟦️typescript/📜️script.ts}"
+      ]
+    },
+    {
+      "project": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts"
+      ]
+    },
+    {
+      "project": "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📋️project.json",
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts"
+      ]
+    },
+    {
+      "project": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json",
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts"
+      ]
+    },
+    {
+      "project": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📋️project.json",
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts"
+      ]
+    },
+    {
+      "project": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📋️project.json",
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts"
+      ]
+    }
+  ],
+  "generatorContracts": [
+    {
+      "id": "dev-distribution-bundle",
+      "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+      "ownerIds": [
+        "distribution-source",
+        "distribution-plan",
+        "distribution-compiler",
+        "distribution-publication",
+        "distribution-freshness",
+        "distribution-execution"
+      ]
+    },
+    {
+      "id": "playground-session",
+      "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+      "ownerIds": [
+        "playground-session-execution"
+      ]
+    },
+    {
+      "id": "scale-fixture",
+      "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+      "ownerIds": [
+        "scale-fixture-projection",
+        "scale-fixture-publication"
+      ]
+    }
+  ],
+  "generatedBoundaries": [
+    {
+      "id": "shard-worker",
+      "filename": "🟨️shard-worker.js",
+      "constant": "SHARD_WORKER_FILE",
+      "authorityPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts",
+      "producerOwner": "browser-host-staging",
+      "producerToken": "join(shardRoot, SHARD_WORKER_FILE)"
+    },
+    {
+      "id": "module-bridge",
+      "filename": "🌉️bridge.js",
+      "constant": "MODULE_BRIDGE_FILE",
+      "authorityPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts",
+      "producerOwner": "browser-host-staging",
+      "producerToken": "join(outDir, MODULE_BRIDGE_FILE)"
+    }
+  ]
+}

@@ -10,7 +10,7 @@ import { runArtifactRustPackageMain } from "../../../../../../../🧰️framewor
  * test`, `bun ./📜️script.ts test` and the launch.json entries that call them all inherit it on every
  * platform without a per-developer environment step. A value already present in the environment wins.
  */
-process.env.RUST_MIN_STACK ??= String(128 * 1024 * 1024);
+process.env.RUST_MIN_STACK ??= "134217728";
 
 /**
  * 🎛️ The whole `editor` tree is `#[cfg(feature = "component-app-assembly")]` (crate root `🦀️.rs:14-21`),

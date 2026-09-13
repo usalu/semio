@@ -1,5 +1,25 @@
 # Shared Numerical Checkpoint Restore Owner Plan
 
+## Current Acceptance — 2026-09-13
+
+The lower package of canonical combined native green2 passed **35/35**, 940 filtered, 118.34s Rust, normal 2 MiB stack. All fifteen numerical/checkpoint/resume/replay laws are included and green. This freshly accepts the shared sequential LDLT and Subspace close owners, sticky public restore faults, delegated modal stiffness cleanup, and the twelve-value solver-only work record. Fields 522/534 have identical bytes for local retirement positions 0/11; the thirteen-value hostile control rejects with Truncated and its retained 32-byte backing closes.
+
+Actual conservation: LDLT close 144/144 bytes; Subspace close 120/120; modal complete owner 64/64. Zero and subexact grants retain backing; exact grants retire one owner. All three matrix shapes, five scalar-page cases, twenty entry-width boundaries and nine hostile pages pass. The maximum admitted LDLT remains 40 rows/820 values; private larger scalar fixtures do not raise that limit.
+
+The combined upper FEM3D package also passed **20/20**, 829 filtered, 1.52s Rust. The entire registered run exited zero in 12m55s, zero cache hits. The full numerical child reaches ready static/modal output and exact logical terminal cleanup. Log: `🗑️generated/fem3d-canonical-physical-green-2.log`. The same run passes both stories, all embedded oracles and strict TypeScript. This does not accept the separate mounted-model physical backing and assembly accounting gaps.
+
+Remaining numerical work includes canonical control conversions/ranges/reserved-header admission and cold PCG checkpoint/output serialization. Mounted model paging, real assembly allocation accounting and parent diagnostics are separate open owners.
+
+## Earlier Evidence and Development Record
+
+Mixed3 completed with12passed/3failed,960filtered,219.74s Rust,13m18s Nx, normal2MiB. Its three failures are exactly the Subspace grant, modal backing and physical work-control regressions recorded below; all four checkpoint/resume/replay filters pass. The three production repairs were applied after their runtime RED and are not present in that compiled binary. The canonical combined native run is next.
+
+Mixed3 actually starts all fifteen native laws on2MiB. Its recorded observations confirm the applied LDLT close repair: zero/subexact grants retain both inner backings, exact grant retires one, all three cases conserve144bytes. Both parents now preserve Admission and Stale across repeated steps with unchanged coordinates and terminal cleanup. The three pre-fix regressions fail as designed: Subspace zero/subexact grants discard120bytes while reporting0; modal completed-state cleanup discards all64bytes under every grant while reporting0; both work fields522/534 persist13controls and change bytes with close_lane, and a supplied lane11 returns terminal while32bytes remain. Fixtures recover and release their retained test backing before assertions.
+
+After these actual RED observations, all three repairs are applied. Subspace job and restore now share checkpoint-level sequential close. Modal cleanup always delegates to the stiffness owner's terminal result before mass. Both work-control writer forms share one twelve-value solver record; both readers enforce that exact count, reject thirteen values, and initialize local retirement at zero. Rustfmt parse and scoped diff checks pass. The still-running mixed3 binary uses pre-fix compiled source; a fresh canonical combined native route is required for acceptance.
+
+At 01:10 UTC the fresh mixed3 native route was started after the Pack caller run was confirmed interrupted with no final verdict. Mixed3 runs the latest expanded oracle/strict TS and all numerical_page plus existing LDLT/subspace checkpoint/replay filters. Expected native count is fifteen: LDLT cleanup and first-fault fixes are applied; Subspace grant, modal backing and local work-control cursor regressions remain deliberately pre-fix. Root has only this single Cargo validation active. Native counts and outcomes must come from its eventual log.
+
 Mixed2 native was deliberately cancelled before tests at 01:04 UTC to consolidate overlapping root FEM package builds. No new native assertions executed. The earlier broader FEM3D contract run remains active; a fresh numerical native attempt must follow it. Expanded-neutral2 is green; all applied repairs and new native regressions remain pending. See process-budget-source-observation.md for the verified owned PID and lock-wait sample.
 
 Fresh expanded-neutral2 passed in 8.1s through registered Nx, zero cache hits, including strict TypeScript. It executes all five scalar cases, twenty width boundaries, nine hostile pages, three matrix shapes, three cleanup grants, two sticky first-fault cases and the two local cleanup positions projected to the same persisted solver record. This is independent expectation validation; Subspace/modal/control native regressions remain unaccepted until the pending native route returns.

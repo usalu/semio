@@ -866,7 +866,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "migrated",
+                    "interactiveJob": "batchOnlyPendingRewrite",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -907,7 +907,7 @@
                     "class": "interactive",
                     "expectedRevision": false,
                     "idempotency": "none",
-                    "interactiveJob": "migrated",
+                    "interactiveJob": "batchOnlyPendingRewrite",
                     "preview": "none",
                     "undo": {
                       "kind": "none"
@@ -951,7 +951,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "migrated",
+                    "interactiveJob": "batchOnlyPendingRewrite",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -1077,7 +1077,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "migrated",
+                    "interactiveJob": "batchOnlyPendingRewrite",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -1128,51 +1128,6 @@
                     "approval": "never",
                     "scopes": [
                       "shell.navigate"
-                    ]
-                  }
-                }
-              },
-              {
-                "args": [],
-                "iconId": "panel-left",
-                "id": "setActivePanelTab",
-                "inPalette": true,
-                "kind": "view",
-                "label": {
-                  "native": {
-                    "de": "Aktiven Panel-Tab festlegen",
-                    "en": "Set Active Panel Tab"
-                  },
-                  "reuse": {
-                    "de": "Aktiven Panel-Tab festlegen",
-                    "en": "Set Active Panel Tab"
-                  }
-                },
-                "semantics": {
-                  "effects": {
-                    "destructive": false,
-                    "external": false,
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "reversible": false
-                  },
-                  "execution": {
-                    "cancellable": false,
-                    "class": "interactive",
-                    "expectedRevision": false,
-                    "idempotency": "none",
-                    "interactiveJob": "migrated",
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    }
-                  },
-                  "policy": {
-                    "approval": "never",
-                    "scopes": [
-                      "documents.read",
-                      "shell.observe"
                     ]
                   }
                 }
@@ -1286,7 +1241,7 @@
                     "class": "interactive",
                     "expectedRevision": false,
                     "idempotency": "none",
-                    "interactiveJob": "migrated",
+                    "interactiveJob": "batchOnlyPendingRewrite",
                     "preview": "none",
                     "undo": {
                       "kind": "none"
@@ -1453,7 +1408,7 @@
                     "class": "interactive",
                     "expectedRevision": false,
                     "idempotency": "none",
-                    "interactiveJob": "migrated",
+                    "interactiveJob": "batchOnlyPendingRewrite",
                     "preview": "none",
                     "undo": {
                       "kind": "none"
@@ -1498,7 +1453,7 @@
                     "class": "interactive",
                     "expectedRevision": false,
                     "idempotency": "none",
-                    "interactiveJob": "migrated",
+                    "interactiveJob": "batchOnlyPendingRewrite",
                     "preview": "none",
                     "undo": {
                       "kind": "none"
@@ -1527,51 +1482,6 @@
                   "reuse": {
                     "de": "Präsenz-Heartbeat",
                     "en": "Presence Heartbeat"
-                  }
-                },
-                "semantics": {
-                  "effects": {
-                    "destructive": false,
-                    "external": false,
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "reversible": false
-                  },
-                  "execution": {
-                    "cancellable": false,
-                    "class": "interactive",
-                    "expectedRevision": false,
-                    "idempotency": "none",
-                    "interactiveJob": "migrated",
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    }
-                  },
-                  "policy": {
-                    "approval": "never",
-                    "scopes": [
-                      "documents.read",
-                      "shell.observe"
-                    ]
-                  }
-                }
-              },
-              {
-                "args": [],
-                "iconId": "eye",
-                "id": "setClient",
-                "inPalette": true,
-                "kind": "view",
-                "label": {
-                  "native": {
-                    "de": "Client setzen",
-                    "en": "Set Client"
-                  },
-                  "reuse": {
-                    "de": "Client setzen",
-                    "en": "Set Client"
                   }
                 },
                 "semantics": {

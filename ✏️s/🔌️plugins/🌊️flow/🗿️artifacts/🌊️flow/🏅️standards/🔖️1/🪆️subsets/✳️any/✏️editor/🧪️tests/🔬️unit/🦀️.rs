@@ -432,7 +432,7 @@ pub(super) fn every_command() -> Vec<FlowCommand> {
         FlowCommand::RunExtensionAction(run_extension_action::RunExtensionAction { action_id: "flow.extension.reorganize".into() }),
         FlowCommand::Evaluate(evaluate::Evaluate {}),
         FlowCommand::FocusSelection(focus_selection::FocusSelection {}),
-        FlowCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework::Viewport2d { x: 1.0, y: 2.0, zoom: 1.5 } }),
+        FlowCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 1.0, y: 2.0, zoom: 1.5 } }),
         FlowCommand::SetLodMode(set_lod_mode::SetLodMode { value: "micro".into() }),
         FlowCommand::SetProximityDistance(set_proximity_distance::SetProximityDistance { value: 48.0 }),
         FlowCommand::SetGridVisible(set_grid_visible::SetGridVisible { pressed: Some(true) }),

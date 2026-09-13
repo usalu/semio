@@ -67,7 +67,7 @@ pub(super) fn every_command() -> Vec<DagCommand> {
         DagCommand::RenameDagNode(rename_dag_node::RenameDagNode { old_id: "n1".into(), value: "renamed".into() }),
         DagCommand::Reorganize(reorganize::Reorganize {}),
         DagCommand::PatchDagNodes(patch_dag_nodes::PatchDagNodes { node_ids: vec!["n1".into(), "n2".into()], field: "value".into(), value: "5".into() }),
-        DagCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework::Viewport2d { x: 1.0, y: 2.0, zoom: 1.5 } }),
+        DagCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 1.0, y: 2.0, zoom: 1.5 } }),
         DagCommand::GraphPointerDown(graph_pointer_down::GraphPointerDown {}),
     ]
 }
@@ -108,7 +108,7 @@ async fn every_printed_op_line_starts_with_the_rows_declared_wire_keyword() {
         ("rename-dag-node", DagCommand::RenameDagNode(rename_dag_node::RenameDagNode { old_id: "n1".into(), value: "renamed".into() })),
         ("reorganize", DagCommand::Reorganize(reorganize::Reorganize {})),
         ("patch-dag-nodes", DagCommand::PatchDagNodes(patch_dag_nodes::PatchDagNodes { node_ids: vec!["n1".into()], field: "value".into(), value: "5".into() })),
-        ("node-graph-viewport", DagCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework::Viewport2d { x: 1.0, y: 2.0, zoom: 1.0 } })),
+        ("node-graph-viewport", DagCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 1.0, y: 2.0, zoom: 1.0 } })),
         ("graph-pointer-down", DagCommand::GraphPointerDown(graph_pointer_down::GraphPointerDown {})),
     ];
     for (expected_keyword, command) in expectations {

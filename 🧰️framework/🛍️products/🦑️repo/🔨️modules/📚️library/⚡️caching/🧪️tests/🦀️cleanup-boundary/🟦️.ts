@@ -10,11 +10,14 @@ export async function testCargoCleanupBoundary(workspace: string, output: string
   const project = JSON.parse(readFileSync(join(import.meta.dir, "../../📋️project.json"), "utf8")), [owner, target] = fixture.rootTarget.split(":");
   assert.equal(project.name, owner); assert.equal(project.targets[target].cache, false);
   assert.equal(project.targets[target].options.command, "bun ./📜️script.ts cache-prune");
-  const source = readFileSync(join(workspace, fixture.implementation), "utf8"), ts = require("typescript");
-  const syntax = ts.createSourceFile(fixture.implementation, source, ts.ScriptTarget.Latest, true);
-  const native = syntax.statements.find((node: any) => ts.isClassDeclaration(node) && node.name?.text === "NativeScript");
-  assert.ok(native);
-  const code = ts.transpileModule(native.getText(syntax), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  const ts = require("typescript");
+  const graph = await require("esbuild").build({ absWorkingDir: workspace, entryPoints: [fixture.implementation], bundle: true, write: false, metafile: true, platform: "node", packages: "external", format: "esm", logLevel: "silent" });
+  const definitions = Object.keys(graph.metafile.inputs).flatMap(file => {
+    const syntax = ts.createSourceFile(file, readFileSync(join(workspace, file), "utf8"), ts.ScriptTarget.Latest, true);
+    return syntax.statements.filter((node: any) => ts.isClassDeclaration(node) && node.name?.text === "NativeScript").map((node: any) => node.getText(syntax));
+  });
+  assert.equal(definitions.length, 1, "The Cargo command import closure must contain one native owner");
+  const code = ts.transpileModule(definitions[0], { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
   const { runTool } = await import("../../🚀️bootstrap/📦️dependencies/📜️script.ts");
   const root = mkdtempSync(join(output, "cargo-cleanup-")), controller = new AbortController(), signal = AbortSignal.any([controller.signal, AbortSignal.timeout(60000)]);
   const stop = (): void => controller.abort();
@@ -25,7 +28,6 @@ export async function testCargoCleanupBoundary(workspace: string, output: string
     for (const [path, contents] of Object.entries(cargo.files)) writeFileSync(join(root, path), contents as string);
     writeFileSync(join(root, "package.json"), JSON.stringify({ name: "workspace", private: true }));
     writeFileSync(join(root, "nx.json"), "{}");
-    const graph = await require("esbuild").build({ absWorkingDir: workspace, entryPoints: [fixture.implementation], bundle: true, write: false, metafile: true, platform: "node", packages: "external", format: "esm", logLevel: "silent" });
     for (const source of Object.keys(graph.metafile.inputs)) {
       const destination = join(root, source); mkdirSync(dirname(destination), { recursive: true }); copyFileSync(join(workspace, source), destination);
     }

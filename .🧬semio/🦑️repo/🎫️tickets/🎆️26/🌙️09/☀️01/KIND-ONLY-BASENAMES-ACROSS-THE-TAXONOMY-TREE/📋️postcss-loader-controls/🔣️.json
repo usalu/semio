@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 2,
+  "frozenOwner": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/postcss.config.ts",
+  "currentOwner": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🎨️styling/🟦️.ts",
+  "packageEntry": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.mts",
+  "loaderBoundaries": {
+    "standalone": {
+      "kind": "explicit-search-place",
+      "searchPlace": "🟦️.mts"
+    },
+    "vite": {
+      "kind": "inline-plugin-array",
+      "exportName": "uiPostcssInlinePlugins"
+    }
+  },
+  "configuration": {
+    "plugins": {
+      "@tailwindcss/postcss": {}
+    }
+  },
+  "cases": [
+    {
+      "id": "utility-application",
+      "source": ".probe { @apply underline; }\n",
+      "expectedDeclarations": [
+        {
+          "selector": ".probe",
+          "property": "text-decoration-line",
+          "value": "underline"
+        }
+      ]
+    },
+    {
+      "id": "inline-theme-application",
+      "source": "@theme inline { --color-taxonomy: #123456; }\n.probe { @apply text-taxonomy; }\n",
+      "expectedDeclarations": [
+        {
+          "selector": ".probe",
+          "property": "color",
+          "value": "#123456"
+        }
+      ]
+    }
+  ]
+}

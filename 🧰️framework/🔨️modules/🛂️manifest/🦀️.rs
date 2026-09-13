@@ -4386,6 +4386,12 @@ pub struct ViewModel {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub panel_json: Option<String>,
+    /// 🪪️ Current host session identity for this call. This is ephemeral OS/session context:
+    /// plugins may use it to qualify authored work and presentation, but must not persist a copy in
+    /// app or document configuration.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub session_identity: Option<ViewSessionIdentity>,
     /// 🗣️ Active UI locale; plugins resolve their own label set from this via `resolve_labels`/
     /// `app_labels!`. Non-optional — the shell always resolves one (see `initUiLocaleSync`/
     /// `detectShellLocale`) before the first `render`, so "nobody set the locale" is unrepresentable.
@@ -4399,7 +4405,8 @@ pub struct ViewModel {
     #[value(skip_serializing_if = "Option::is_none")]
     pub window_id: Option<String>,
     /// 🎯️ The window instance the user is LOOKING at — the shell's own last-focused pane. Sent on
-    /// every call and, unlike [`Self::window_id`], deliberately kept by [`Self::for_panel`]: an
+    /// every call and, unlike [`Self::window_id`], deliberately kept by [`Self::for_panel`] while it
+    /// names a live [`Self::window_instances`] entry: an
     /// app-level panel is not rendered FOR a window, but a panel that authors per-window settings
     /// still has to address the pane the user last touched instead of the roster's first entry
     /// (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B12 §5.1 measured a Settings edit landing on the
@@ -4426,10 +4433,31 @@ pub struct ViewWindowInstance {
     pub window_kind_id: String,
 }
 
+/// 🪪️ The authenticated OS session identity projected into every guest call while available.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ViewSessionIdentity {
+    pub user_id: String,
+    pub display_name: String,
+}
+
 impl ViewModel {
     /// 📌️ Projects app-level panels without binding their controls to a window.
+    ///
+    /// 🎯️ [`Self::focused_window_id`] survives — that is the whole point of the field — but only while
+    /// it names a pane the host actually carries. A shell publishes the new mode's roster before it
+    /// refocuses (the wgpu shell boots straight into `generate` with the edit-mode `procedural-main`
+    /// still focused), and a focused pane the roster does not list made
+    /// `WindowConfigOwnerRegistry::capture` fault before the panel's body key was ever matched — so
+    /// every app panel published NOTHING and reached the user as three
+    /// `wgpu-ui.surface-not-published:framework.panel.*` fault cards, while the framework-rendered
+    /// History panel (served before that capture) published fine
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). A stale focus is a mode-switch race; a panel
+    /// answers it by authoring against no pane, never by publishing nothing.
     pub fn for_panel(&self) -> Self {
-        Self { window_id: None, active_window_kind_id: None, active_utility_id: None, ..self.clone() }
+        let focused_window_id = self.focused_window_id.clone().filter(|id| self.window_instances.iter().any(|window| &window.id == id));
+        Self { window_id: None, active_window_kind_id: None, active_utility_id: None, focused_window_id, ..self.clone() }
     }
 
     /// 🎯️ Projects host-owned context onto one concrete window without borrowing the focused window's utility.
@@ -4472,6 +4500,8 @@ pub const VIEW_CONTEXT_WINDOW_INSTANCES: usize = 64;
 /// 🔢️ `Identifier`-typed scalar fields: `activeModeId`, `activeWindowKindId`, `activeUtilityId`,
 /// `activeToolId`, `windowId`, `focusedWindowId`.
 pub const VIEW_CONTEXT_IDENTIFIER_FIELDS: usize = 6;
+/// 🪪️ Identifier-shaped fields nested in `sessionIdentity`: `userId` and `displayName`.
+pub const VIEW_CONTEXT_SESSION_IDENTITY_FIELDS: usize = 2;
 /// 🔢️ Long-string fields: `panelJson` — the only one. Contributions cross by their own paged
 /// `setContributions` run, never inside a view context.
 pub const VIEW_CONTEXT_LONG_STRING_FIELDS: usize = 1;
@@ -4484,7 +4514,7 @@ const VIEW_CONTEXT_FRAMING_BYTES_PER_VALUE: usize = 64;
 /// 🔢️ Encoded values a maximal view context carries: every scalar field, the two enums, both
 /// collections and each of their entries' fields.
 const VIEW_CONTEXT_ENCODED_VALUES: usize =
-    VIEW_CONTEXT_IDENTIFIER_FIELDS + VIEW_CONTEXT_LONG_STRING_FIELDS + 2 + 1 + VIEW_CONTEXT_UTILITY_ENTRIES * 2 + 1 + VIEW_CONTEXT_WINDOW_INSTANCES * 2;
+    VIEW_CONTEXT_IDENTIFIER_FIELDS + VIEW_CONTEXT_SESSION_IDENTITY_FIELDS + VIEW_CONTEXT_LONG_STRING_FIELDS + 2 + 1 + VIEW_CONTEXT_UTILITY_ENTRIES * 2 + 1 + VIEW_CONTEXT_WINDOW_INSTANCES * 2;
 
 /// 📏️ Largest wire-encoded surface view context the contract can produce — the admission bound
 /// `plugin_mount_surface` holds `Event::SurfaceVisible`'s `view_state` to.
@@ -4496,6 +4526,7 @@ const VIEW_CONTEXT_ENCODED_VALUES: usize =
 /// `plugin.internal: surface context exceeds its wire bound` and every window body of the affected
 /// app was replaced by that fault card (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 pub const MAX_SURFACE_VIEW_CONTEXT_BYTES: usize = (VIEW_CONTEXT_IDENTIFIER_FIELDS * VIEW_CONTEXT_IDENTIFIER_CHARS
+    + VIEW_CONTEXT_SESSION_IDENTITY_FIELDS * VIEW_CONTEXT_IDENTIFIER_CHARS
     + VIEW_CONTEXT_LONG_STRING_FIELDS * VIEW_CONTEXT_LONG_STRING_CHARS
     + VIEW_CONTEXT_UTILITY_ENTRIES * 2 * VIEW_CONTEXT_IDENTIFIER_CHARS
     + VIEW_CONTEXT_WINDOW_INSTANCES * 2 * VIEW_CONTEXT_IDENTIFIER_CHARS)

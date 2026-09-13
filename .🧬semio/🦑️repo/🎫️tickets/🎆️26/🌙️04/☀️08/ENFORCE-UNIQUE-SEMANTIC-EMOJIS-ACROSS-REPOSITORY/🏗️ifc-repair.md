@@ -28,4 +28,3 @@ Hand-repaired `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc` 
 - Resolved 28 fixture manifests and 56 fixture files; byte counts and SHA-256 digests all match.
 - `validateTaxonomy()` returned `[]`.
 - `bun nx run @semio-tech/repo-test-domain:test-fixture-verify -- --artifact s.stdio.ifc`: 28 fixtures, 0 file problems.
-

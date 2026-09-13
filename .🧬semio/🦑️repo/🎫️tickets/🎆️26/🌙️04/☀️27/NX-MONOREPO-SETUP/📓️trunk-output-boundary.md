@@ -41,3 +41,7 @@ The actual repository WGPU wasm target passed after the native dependency bounda
 - semio-framework-os-renderer-wgpu_bg.wasm: 79294972 bytes; 24277dd1a99cfa9af412c01ed8a0476c9ac7c281519ac591b57593c9fc6db7ab
 
 An actual HTTP consumer and a repeated invocation are being checked separately. Release-profile publication has not been run at this checkpoint.
+
+The actual HTTP consumer passed in 8.4 seconds after canonical publication. It served the published compiler, browser boot and frame worker bytes and closed its owned listener. The repeated repository invocation overlapped active source edits, rebuilt native dependencies and failed after 3m 26s; it is not an identical-input warm-cache measurement. Diagnostic details follow when reviewed.
+
+The repeated repository build failed on two E0603 errors: ArtifactDialect was private in the concurrently changing renderer source. A follow-up comparison found the live WASM identity had changed during overlapping work, so the shared output cannot serve as an isolated failure-preservation witness. No current-source warm-cache or byte-preservation claim is made for that run. Controlled compiler failure-preservation remains covered by the native fixture. Native library incrementality passed independently (📓️native-incremental-publication.md).

@@ -20,7 +20,7 @@ import { isGeneratedPath, repoCacheDirectory } from "./⚡️caching/🟦️.ts"
 import { canonicalFilenameForKind, fixedContractFilename, loadCatalogTaxonomy, loadTaxonomy, taxonomyRelativePathIsExcluded } from "./🔍️discovery/🟦️.ts";
 //#endregion 🔌️Adapters
 
-import type { PlaygroundSelection as PlaygroundVariant } from "./🎮️playground/🟦️.ts";
+import type { PlaygroundSelection as PlaygroundVariant } from "./🎮️playground/🧭️selection/🟦️.ts";
 
 import { loadFrameworkOsPlaygroundCatalog } from "./🎮️playground/🟦️.ts";
 import { getWorkspaceRoot } from "./🗂️workspaces/🟦️.ts";
@@ -6560,4 +6560,5 @@ export * from "./🏃️process/🟦️.ts";
 /** 🎮️ Generated playground catalog, dev/test port table and locked-example define — owned by
  * `📚️library/🎮️playground/🟦️.ts` so port consumers need no taxonomy walk. */
 export * from "./🎮️playground/🟦️.ts";
+export { loadFrameworkOsPlaygroundSelections } from "./🎮️playground/🧭️selection/🟦️.ts";
 //#endregion 🎮️Playground

@@ -1,0 +1,284 @@
+{
+  "schemaVersion": 1,
+  "owners": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+      "declarations": ["runOwnedCommand", "startNativeProgress"],
+      "contextChain": ["repo-process-owned-execution"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🎛️native-input/🟦️.ts",
+      "declarations": ["artifactRustCargoArguments", "validateNativeCargoArguments"],
+      "contextChain": ["repo-cache-artifact-native-input"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts",
+      "declarations": ["buildCargoArtifacts"],
+      "contextChain": ["repo-cache-artifact-native-build"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts",
+      "declarations": ["NativeScript"],
+      "contextChain": ["repo-cache-artifact-native-orchestration"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/📁️run-allocation/🟦️.ts",
+      "declarations": ["TRANSACTION_V2_RUN_OWNER_RELATIVE", "transactionV2BundleRoot"],
+      "contextChain": ["repo-library-transactions", "repo-library-transaction-verification", "repo-library-transaction-run-allocation"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/🧾️provenance/🟦️.ts",
+      "declarations": ["retainTransactionV2Record", "transactionV2Identities", "transactionV2IdentityPaths"],
+      "contextChain": ["repo-library-transactions", "repo-library-transaction-verification", "repo-library-transaction-provenance"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/🏃️shard-execution/🟦️.ts",
+      "declarations": ["TRANSACTION_V2_DEFAULT_FILTER_WAVES", "TransactionV2ShardOptions", "TransactionV2ShardOutcome", "TransactionV2ShardResult", "runTransactionV2Shards"],
+      "contextChain": ["repo-library-transactions", "repo-library-transaction-verification", "repo-library-transaction-shard-execution"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/📋️orchestration/🟦️.ts",
+      "declarations": ["runTransactionV2"],
+      "contextChain": ["repo-library-transactions", "repo-library-transaction-verification", "repo-library-transaction-orchestration"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️execution/🐹️go/🟦️.ts",
+      "declarations": ["GoInputSelectionOperations", "GoTestScript", "projectGoInputPackages"],
+      "contextChain": ["repo-library-test-execution", "repo-library-go-test-execution"]
+    }
+  ],
+  "contexts": [
+    {
+      "directoryName": "🎛️owned-execution",
+      "parentKindId": "repo-process",
+      "kindId": "repo-process-owned-execution"
+    },
+    {
+      "directoryName": "🎛️native-input",
+      "parentKindId": "repo-cache-artifacts",
+      "kindId": "repo-cache-artifact-native-input"
+    },
+    {
+      "directoryName": "🏗️native-build",
+      "parentKindId": "repo-cache-artifacts",
+      "kindId": "repo-cache-artifact-native-build"
+    },
+    {
+      "directoryName": "📋️native-orchestration",
+      "parentKindId": "repo-cache-artifacts",
+      "kindId": "repo-cache-artifact-native-orchestration"
+    },
+    {
+      "directoryName": "🔄️transactions",
+      "parentKindId": "repo-server-library",
+      "kindId": "repo-library-transactions"
+    },
+    {
+      "directoryName": "🧪️verification",
+      "parentKindId": "repo-library-transactions",
+      "kindId": "repo-library-transaction-verification"
+    },
+    {
+      "directoryName": "📁️run-allocation",
+      "parentKindId": "repo-library-transaction-verification",
+      "kindId": "repo-library-transaction-run-allocation"
+    },
+    {
+      "directoryName": "🧾️provenance",
+      "parentKindId": "repo-library-transaction-verification",
+      "kindId": "repo-library-transaction-provenance"
+    },
+    {
+      "directoryName": "🏃️shard-execution",
+      "parentKindId": "repo-library-transaction-verification",
+      "kindId": "repo-library-transaction-shard-execution"
+    },
+    {
+      "directoryName": "📋️orchestration",
+      "parentKindId": "repo-library-transaction-verification",
+      "kindId": "repo-library-transaction-orchestration"
+    },
+    {
+      "directoryName": "🧪️execution",
+      "parentKindId": "repo-server-library",
+      "kindId": "repo-library-test-execution"
+    },
+    {
+      "directoryName": "🐹️go",
+      "parentKindId": "repo-library-test-execution",
+      "kindId": "repo-library-go-test-execution"
+    }
+  ],
+  "consumers": [
+    {
+      "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+      "owners": ["⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/📜️script.ts",
+      "owners": ["⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
+      "owners": ["⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust/📜️script.ts",
+      "owners": ["⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📜️script.ts",
+      "owners": ["⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📦️packages/🦀️rust/📜️script.ts",
+      "owners": ["⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/📜️script.ts",
+      "owners": ["⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️compiler/🦀️native/📜️script.ts",
+      "owners": ["⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts",
+      "owners": ["⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/📜️script.ts",
+      "owners": ["⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/📜️script.ts",
+      "owners": ["🏃️process/🎛️owned-execution/🟦️.ts", "⚡️caching/📦️artifacts/🎛️native-input/🟦️.ts", "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/📜️script.ts",
+      "owners": ["🏃️process/🎛️owned-execution/🟦️.ts"]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🔷️dotnet/📜️script.ts",
+      "owners": ["🏃️process/🎛️owned-execution/🟦️.ts"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts",
+      "owners": ["🏃️process/🎛️owned-execution/🟦️.ts"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts",
+      "owners": ["⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "owners": ["🔄️transactions/🧪️verification/📋️orchestration/🟦️.ts", "🧪️execution/🐹️go/🟦️.ts"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️publication/🟦️.ts",
+      "owners": ["⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🟦️.ts",
+      "owners": ["🏃️process/🎛️owned-execution/🟦️.ts", "⚡️caching/📦️artifacts/🎛️native-input/🟦️.ts", "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"]
+    }
+  ],
+  "routes": {
+    "source": {
+      "target": "test-cargo-transaction-command-source",
+      "command": "bun ./📜️script.ts test cargo-transaction-command-source",
+      "launchName": "🧪️test🦀️cargo-transaction-command-source",
+      "launchCommand": "bun nx run @semio-tech/repo-lib:test-cargo-transaction-command-source"
+    },
+    "go": {
+      "target": "go-test",
+      "command": "bun ./📜️script.ts go-test",
+      "launchName": "⚖️gate🐹️test-dispatch",
+      "launchCommand": "bun nx run @semio-tech/repo-lib:test-go-dispatch"
+    },
+    "goProjection": {
+      "target": "test-go-input-projection",
+      "command": "bun ./📜️script.ts test go-input-projection",
+      "launchName": "⚖️gate🐹️compiler-input-projection",
+      "launchCommand": "bun nx run @semio-tech/repo-lib:test-go-input-projection"
+    },
+    "goDispatch": {
+      "target": "test-go-dispatch",
+      "command": "bun ./📜️script.ts test go-test-dispatch",
+      "launchName": "⚖️gate🐹️test-dispatch",
+      "launchCommand": "bun nx run @semio-tech/repo-lib:test-go-dispatch"
+    },
+    "transaction": {
+      "target": "test-transaction-v2",
+      "command": "bun ./📜️script.ts test transaction-v2",
+      "launchName": "🧹clean🧩️taxonomy🧪️transaction-v2",
+      "launchCommand": "bun nx run @semio-tech/repo-lib:test-transaction-v2"
+    }
+  },
+  "nativeArguments": [
+    {
+      "operation": "build",
+      "args": ["--release", "--bin", "owned"],
+      "valid": true
+    },
+    {
+      "operation": "test",
+      "args": ["--", "--nocapture"],
+      "valid": true
+    },
+    {
+      "operation": "build",
+      "args": ["--workspace"],
+      "valid": false
+    },
+    {
+      "operation": "check",
+      "args": ["--package", "foreign"],
+      "valid": false
+    },
+    {
+      "operation": "build",
+      "args": ["--tests"],
+      "valid": false
+    }
+  ],
+  "goSelection": {
+    "packages": [".", "./virtual", "./native"],
+    "replacements": {
+      "virtual/🟦️.go": "/repo/source/🟦️.go"
+    },
+    "cases": [
+      {
+        "input": "-",
+        "directories": [],
+        "accepted": true
+      },
+      {
+        "input": "/repo/source/🟦️.go",
+        "directories": [],
+        "accepted": true,
+        "expected": ["./virtual"]
+      },
+      {
+        "input": "/repo/native",
+        "directories": ["/repo/native"],
+        "accepted": true,
+        "expected": ["./native"]
+      },
+      {
+        "input": "/outside/🟦️.go",
+        "directories": [],
+        "accepted": false
+      }
+    ]
+  },
+  "transaction": {
+    "runOwnerPath": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE/🗑️generated/repo-lib-test-artifacts/transaction-v2/🧾️runs",
+    "ledgerBoundaries": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/📒️transaction-ledger-boundaries/🔣️.json",
+    "harness": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🪢️transaction-harness-retention/🔣️.json",
+    "suite": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/🟦️.ts",
+    "normalization": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts",
+    "taxonomy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+    "discovery": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts"
+  }
+}

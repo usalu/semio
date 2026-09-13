@@ -1,5 +1,11 @@
 {
   "name": "@semio-tech/trinity-jack-lsp",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./pkg/trinity_jack_lsp.d.ts",
+      "import": "./pkg/trinity_jack_lsp.js"
+    }
+  }
 }

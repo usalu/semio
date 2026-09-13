@@ -85,10 +85,11 @@ impl ArtifactViewer for HomeViewer {
     /// has no such field to carry one in). `Noop` returns the empty emit; `FoldDirectoryEvents` folds
     /// each event into `HomeConfigMutation::FoldDirectoryEvent`, the SAME config-only writer the editor
     /// uses — never an optimistic mutation, never a document edit.
-    fn handle(command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    fn handle(command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, view_state: Option<&semio_framework_plugin::ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         match command {
             HomeViewCommand::Noop => Ok(ViewEmit::default()),
             HomeViewCommand::FoldDirectoryEvents { events_json } => {
+                view_state.and_then(crate::home_session_identity).ok_or_else(|| Fault::from("s.home.session-identity-required"))?;
                 let events: Vec<store::os_directory::DirectoryEvent> = pack::from_json_str(events_json).unwrap_or_default();
                 let config_mutations = events.iter().map(pack::to_json_string).map(|event_json| HomeConfigMutation::FoldDirectoryEvent { event_json }).collect();
                 Ok(ViewEmit::config(config_mutations))
@@ -102,7 +103,7 @@ impl ArtifactViewer for HomeViewer {
         let root = match body_key {
             main::S_HOME_VIEW_BODY => {
                 let directory = cfg.snapshot.directory().map_err(|_| PluginAssemblyError::new("s.home.directory-projection-malformed", "Home directory projection is invalid"))?;
-                main::render(&directory, view_state, &cfg.snapshot.client_id)?
+                main::render(&directory, view_state)?
             }
             _ => {
                 semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}"))).map_err(|_| PluginAssemblyError::new("s.home.viewer.render.unknown-body", "unknown body key text admission failed"))?

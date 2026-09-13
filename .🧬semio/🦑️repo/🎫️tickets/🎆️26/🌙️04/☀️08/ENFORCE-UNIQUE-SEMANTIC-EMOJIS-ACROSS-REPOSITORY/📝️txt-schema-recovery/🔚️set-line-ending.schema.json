@@ -3,16 +3,11 @@
   "title": "SetLineEndingMutation",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "value"
-  ],
+  "required": ["value"],
   "properties": {
     "value": {
       "type": "string",
-      "enum": [
-        "Lf",
-        "CrLf"
-      ]
+      "enum": ["Lf", "CrLf"]
     }
   }
 }

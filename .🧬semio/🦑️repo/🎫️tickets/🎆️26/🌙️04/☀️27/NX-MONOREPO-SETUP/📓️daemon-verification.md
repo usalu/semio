@@ -11,11 +11,13 @@ The repository configuration now enables the daemon; full-repository qualificati
 The full graph contained all 306 resolved projects and 1,222 edges, but the Bun graph-check task stayed alive after printing success. Its direct `createProjectGraphAsync()` call retained a daemon client socket. The check now reads the graph that its outer Nx invocation already resolved (`readCachedProjectGraph()`), avoiding a redundant recomputation and a second live daemon client. The initial check was cancelled through its own public wrapper before rerunning.
 
 The repeated full-repository graph check completed with exit 0 using the daemon: 306 projects and 1,222 edges. Exact normalized target cache/output/dependency contracts matched Nx's resolved graph. This verifies graph generation and finite task shutdown on macOS, while Windows/Linux execution remains unclaimed.
+
 # Nx Daemon and Watch Qualification
 
 Nx 21.6.11 on darwin/arm64 passed an isolated workspace using a copy of the actual repository discovery plugin and policy. The graph retained exact emoji project roots, a warm run reused task results, and changing an emoji-path dependency triggered a successful watch rebuild with the exact path preserved. The experiment daemon and watcher were stopped afterward. The root wrapper class was also exercised against a real Nx watcher callback that ignored SIGTERM; cancellation must close descendant pipes and terminate the child. Windows/Linux runtime remains unclaimed.
 
 References: [Nx workspace watching](https://nx.dev/docs/kb/workspace-watching), [Nx daemon](https://nx.dev/docs/reference/nx-daemon). Installed Nx 21 source was used to resolve flag and daemon differences from current documentation.
+
 # Nx Daemon and Watch Qualification
 
 Nx 21.6.11 on darwin/arm64 passed an isolated workspace using a copy of the actual repository discovery plugin and policy. The graph retained exact emoji project roots, a warm run reused task results, and changing an emoji-path dependency triggered a successful watch rebuild with the exact path preserved. The experiment daemon and watcher were stopped afterward. The root wrapper class was also exercised against a real Nx watcher callback that ignored SIGTERM; cancellation must close descendant pipes and terminate the child. Windows/Linux runtime remains unclaimed.
@@ -27,6 +29,7 @@ References: [Nx workspace watching](https://nx.dev/docs/kb/workspace-watching), 
 The running Nx 21.6.11 daemon retained the old in-process graph plugin after its authored source changed; a newly inferred component target was absent from the real graph although direct plugin tests passed. An isolated daemon regression reproduced this by changing the actual copied plugin and observing missing updated metadata. The plugin now hashes its implementation and cache policy before graph callbacks, reloads changed ESM through a content-versioned URL, and leaves task scheduling and caching to Nx. The regression passed both source and policy changes without stopping the fixture daemon, followed by Unicode watch rebuilding and cancellation of a stubborn callback. One daemon-only reset activated the updated callback wrapper in the previously running real daemon; it preserved Nx task results. A pending repo:test had passed its assertions but ended with EPIPE during that reset and is rerun separately.
 
 Primary references: [Nx daemon](https://nx.dev/docs/reference/nx-daemon), [Nx 21.6.11 get-plugins source](https://github.com/nrwl/nx/blob/21.6.11/packages/nx/src/project-graph/plugins/get-plugins.ts). The installed in-process loader retains plugin instances when configuration is unchanged, while daemon staleness checks cover Nx version and lockfiles.
+
 # Nx Daemon and Watch Qualification
 
 Nx 21.6.11 on darwin/arm64 passed an isolated workspace using a copy of the actual repository discovery plugin and policy. The graph retained exact emoji project roots, a warm run reused task results, and changing an emoji-path dependency triggered a successful watch rebuild with the exact path preserved. The experiment daemon and watcher were stopped afterward. The root wrapper class was also exercised against a real Nx watcher callback that ignored SIGTERM; cancellation must close descendant pipes and terminate the child. Windows/Linux runtime remains unclaimed.
@@ -36,6 +39,7 @@ References: [Nx workspace watching](https://nx.dev/docs/kb/workspace-watching), 
 ## Shared Workspace State
 
 A second live-workspace issue involved clients using different NX_WORKSPACE_DATA_DIRECTORY values with the same workspace-derived daemon socket. Nx records task details in the client database and task histories through the daemon; differing databases produced a foreign-key failure after an otherwise successful generator, and caller-specific directories also lost warm cache reuse. Root Nx execution now always uses the workspace .nx/workspace-data directory and a stable short OS-temporary socket path derived from that same directory. No task/agent/timestamp namespace is created. The isolated regression deliberately changed the caller data directory: it failed with unnecessary rebuilds before the change, then passed warm cache reuse after the change, along with live source/policy reload and watch cancellation. The previously active default socket was left alone so existing commands can finish.
+
 # Nx Daemon and Watch Qualification
 
 Nx 21.6.11 on darwin/arm64 passed an isolated workspace using a copy of the actual repository discovery plugin and policy. The graph retained exact emoji project roots, a warm run reused task results, and changing an emoji-path dependency triggered a successful watch rebuild with the exact path preserved. The experiment daemon and watcher were stopped afterward. The root wrapper class was also exercised against a real Nx watcher callback that ignored SIGTERM; cancellation must close descendant pipes and terminate the child. Windows/Linux runtime remains unclaimed.
@@ -49,11 +53,13 @@ The first canonical-state wrapper selected a socket from the workspace-data path
 The wrapper now clears caller socket overrides and lets Nx select its native socket while continuing to pin `.nx/workspace-data`. The isolated regression test first failed because switching from native Nx to the public wrapper changed the daemon PID. After the fix, both entry points preserved that PID, the poisoned workspace-data override reused cached output, live plugin/policy reload passed, and the real Unicode watcher/callback cancellation checks passed. The default is still daemon-enabled. Only this qualification’s outer `nx exec` disabled its daemon to avoid interference from old already-running clients.
 
 The old WGPU restoration invocation had finished its compiler child but remained stuck in the displaced Nx client. It was cancelled without touching other contributors’ processes or Cargo state and must be rerun after the socket correction.
+
 # Nx Daemon and Watch Qualification
 
 Nx 21.6.11 on darwin/arm64 passed an isolated workspace using a copy of the actual repository discovery plugin and policy. The graph retained exact emoji project roots, a warm run reused task results, and changing an emoji-path dependency triggered a successful watch rebuild with the exact path preserved. The experiment daemon and watcher were stopped afterward. The root wrapper class was also exercised against a real Nx watcher callback that ignored SIGTERM; cancellation must close descendant pipes and terminate the child. Windows/Linux runtime remains unclaimed.
 
 References: [Nx workspace watching](https://nx.dev/docs/kb/workspace-watching), [Nx daemon](https://nx.dev/docs/reference/nx-daemon). Installed Nx 21 source was used to resolve flag and daemon differences from current documentation.
+
 # Nx Daemon and Watch Qualification
 
 Nx 21.6.11 on darwin/arm64 passed an isolated workspace using a copy of the actual repository discovery plugin and policy. The graph retained exact emoji project roots, a warm run reused task results, and changing an emoji-path dependency triggered a successful watch rebuild with the exact path preserved. The experiment daemon and watcher were stopped afterward. The root wrapper class was also exercised against a real Nx watcher callback that ignored SIGTERM; cancellation must close descendant pipes and terminate the child. Windows/Linux runtime remains unclaimed.

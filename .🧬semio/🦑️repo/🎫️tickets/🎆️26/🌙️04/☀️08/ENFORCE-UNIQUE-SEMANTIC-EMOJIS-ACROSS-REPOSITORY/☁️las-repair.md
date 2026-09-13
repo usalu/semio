@@ -16,4 +16,3 @@ Verification:
 - Focused Nx Rust verification reached only the unrelated concurrent Semio missing-old-path failure documented in the STEP evidence.
 
 The Stdio Rust package sibling collision was also repaired by hand as `🧫️fixture` → `🧭️wiring-fixture`, with its exact script reference updated. Its scoped audit now reports 21 governed entries and all eight violation categories at 0.
-

@@ -10,20 +10,20 @@ The initial physical audit included three old Cargo output caches (`target-root-
 
 Under `📦️packages/🦀️rust`, each former `🦀️<name>.rs` becomes the exact meaningful name below; `🦀️.rs` remains the single format entry.
 
-| Module | Exact new basename | Responsibility |
-| --- | --- | --- |
-| accessibility | `♿️accessibility.rs` | Accessible node properties |
-| action | `🎬️action.rs` | Versioned actions, triggers, intents |
-| builder | `🏗️builder.rs` | Semantic UI construction |
-| component | `🧩️component.rs` | Closed component vocabulary |
-| conformance | `🔬️conformance.rs` | Cross-implementation corpus assertions |
-| document | `📃️document.rs` | Flat revisioned UI documents |
-| layout | `📐️layout.rs` | Renderer-neutral geometry |
-| limits | `🛡️limits.rs` | Quotas and transactional validation |
-| presence | `👥️presence.rs` | Multi-user ephemeral presence |
-| style | `🎨️style.rs` | Token-based visual style |
-| surface | `🗺️surface.rs` | Embedded product surfaces |
-| text_edit | `🪢️text_edit.rs` | Immutable paged text editing |
+| Module        | Exact new basename   | Responsibility                         |
+| ------------- | -------------------- | -------------------------------------- |
+| accessibility | `♿️accessibility.rs` | Accessible node properties             |
+| action        | `🎬️action.rs`        | Versioned actions, triggers, intents   |
+| builder       | `🏗️builder.rs`       | Semantic UI construction               |
+| component     | `🧩️component.rs`     | Closed component vocabulary            |
+| conformance   | `🔬️conformance.rs`   | Cross-implementation corpus assertions |
+| document      | `📃️document.rs`      | Flat revisioned UI documents           |
+| layout        | `📐️layout.rs`        | Renderer-neutral geometry              |
+| limits        | `🛡️limits.rs`        | Quotas and transactional validation    |
+| presence      | `👥️presence.rs`      | Multi-user ephemeral presence          |
+| style         | `🎨️style.rs`         | Token-based visual style               |
+| surface       | `🗺️surface.rs`       | Embedded product surfaces              |
+| text_edit     | `🪢️text_edit.rs`     | Immutable paged text editing           |
 
 The explicit integration target leaf `tests/typegen_export.rs` becomes `tests/🧬️typegen_export.rs`; Cargo's conventional `tests` directory stays literal. The empty non-reserved `bindings` directory becomes `🔗️bindings`.
 
@@ -55,36 +55,36 @@ Other exact choices: root fixtures `🔣️presence-overlay.json` → `👥️pr
 Under `🧵️retained/🧪️fixtures`, each named data/schema pair now has a case-owned directory below with `🔣️.json` and `🧬️.schema.json`. This keeps the actual data and schema roles distinct without arbitrary glyph palettes. Existing tests refer to these exact paths, not a guessed prefix.
 
 | Existing `🔣️<stem>.json` / `🔣️<stem>.schema.json` stem | Handpicked case directory |
-| --- | --- |
-| instance-close | `🚪️instance-close` |
-| instance-maintenance | `🛠️instance-maintenance` |
-| instance-owner | `🪪️instance-owner` |
-| intake-close-fault | `🚨️intake-close-fault` |
-| intake-notification | `🔔️intake-notification` |
-| intake | `📥️intake` |
-| native-child | `👶️native-child` |
-| owned-hash | `🔏️owned-hash` |
-| owned-nodes | `🌳️owned-nodes` |
-| owned-operations | `⚙️owned-operations` |
-| owned-scene | `🎬️owned-scene` |
-| owned-surface | `🗺️owned-surface` |
-| owned-validation | `🛡️owned-validation` |
-| patch | `🩹️patch` |
-| read-lease | `🎟️read-lease` |
-| read-publication | `📤️read-publication` |
-| resident | `💾️resident` |
-| root-source | `🌱️root-source` |
-| scene-binding | `🔗️scene-binding` |
-| scene-generic-pack | `📦️scene-generic-pack` |
-| scene-json-document | `📃️scene-json-document` |
-| scene-json-string | `🧵️scene-json-string` |
-| scene-json | `🔣️scene-json` |
-| scene-numeric | `🔢️scene-numeric` |
-| scene-pack-field | `🧳️scene-pack-field` |
-| scene-text-bytes | `🔤️scene-text-bytes` |
-| surface-child | `🪆️surface-child` |
-| typed-scene | `🧾️typed-scene` |
-| wire-operations | `📨️wire-operations` |
+| ------------------------------------------------------ | ------------------------- |
+| instance-close                                         | `🚪️instance-close`        |
+| instance-maintenance                                   | `🛠️instance-maintenance`  |
+| instance-owner                                         | `🪪️instance-owner`        |
+| intake-close-fault                                     | `🚨️intake-close-fault`    |
+| intake-notification                                    | `🔔️intake-notification`   |
+| intake                                                 | `📥️intake`                |
+| native-child                                           | `👶️native-child`          |
+| owned-hash                                             | `🔏️owned-hash`            |
+| owned-nodes                                            | `🌳️owned-nodes`           |
+| owned-operations                                       | `⚙️owned-operations`      |
+| owned-scene                                            | `🎬️owned-scene`           |
+| owned-surface                                          | `🗺️owned-surface`         |
+| owned-validation                                       | `🛡️owned-validation`      |
+| patch                                                  | `🩹️patch`                 |
+| read-lease                                             | `🎟️read-lease`            |
+| read-publication                                       | `📤️read-publication`      |
+| resident                                               | `💾️resident`              |
+| root-source                                            | `🌱️root-source`           |
+| scene-binding                                          | `🔗️scene-binding`         |
+| scene-generic-pack                                     | `📦️scene-generic-pack`    |
+| scene-json-document                                    | `📃️scene-json-document`   |
+| scene-json-string                                      | `🧵️scene-json-string`     |
+| scene-json                                             | `🔣️scene-json`            |
+| scene-numeric                                          | `🔢️scene-numeric`         |
+| scene-pack-field                                       | `🧳️scene-pack-field`      |
+| scene-text-bytes                                       | `🔤️scene-text-bytes`      |
+| surface-child                                          | `🪆️surface-child`         |
+| typed-scene                                            | `🧾️typed-scene`           |
+| wire-operations                                        | `📨️wire-operations`       |
 
 The resident pair's relative capacity-source reference gained one additional `../` after this relocation; its data and schema constant changed together. The other payloads moved unchanged.
 

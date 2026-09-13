@@ -2,37 +2,37 @@
 
 Each choice below follows the actual language-neutral mutation payload, reviewed before moving the path. Geometry dimension suites use `🌀️mutate-procedural-2d-1`, `🧊️mutate-procedural-3d-1` and `🧩️mutate-assembly-1`. The assembly compatibility-rule creator will use `🚦️create-rule`, reflecting allowed/forbidden adjacency rather than a measuring ruler. Existing meaningful command and operation identities are otherwise retained.
 
-| Artifact / operation | Old scenario | Handpicked scenario | Evidence |
-| --- | --- | --- | --- |
-| 🧩️assembly / 🔢️change-weight | 🔌️raises-the-wall-module-selection-bias | ⚖️raises-the-wall-module-selection-bias | Raises the module selection weight. |
-| 🧩️assembly / ✂️disconnect-slots | 🤖️severs-edge-ab-leaving-both-slots | ✂️severs-edge-ab-leaving-both-slots | Cuts only the connecting edge. |
-| 🧩️assembly / 🔗️connect-slots | 🚪️joins-slot-b-to-slot-c-at-index-1 | 🔗️joins-slot-b-to-slot-c-at-index-1 | Connects the two assembly slots. |
-| 🧩️assembly / 📏️create-rule | 🦅️appends-a-rule-forbidding-roof-over-wall | ⛔️appends-a-rule-forbidding-roof-over-wall | Creates a forbidden adjacency rule. |
-| 🧩️assembly / 🧩️create-slot | 🚪️appends-slot-c-at-index-2 | 🧩️appends-slot-c-at-index-2 | Creates an assembly slot. |
-| 🧩️assembly / 🎲️change-seed | 🌴️reseeds-the-solve-from-7-to-99 | 🎲️reseeds-the-solve-from-7-to-99 | Changes the random seed. |
-| 🧩️assembly / 🪶️remove-weight | 🔌️drops-the-wall-module-weight-override | 🪶️drops-the-wall-module-weight-override | Removes a selection weight override. |
-| 🧊️generation3d / 🔤️change-schema | 🧫️restamps-the-fixture-schema-id | 🏷️restamps-the-fixture-schema-id | Replaces the schema identifier string. |
-| 🧊️generation3d / ✂️disconnect-synapse | 🤖️cuts-wire-ab-leaving-both-nodes | ✂️cuts-wire-ab-leaving-both-nodes | Disconnects the wire. |
-| 🧊️generation3d / 🩹update-widget | 🎞️retunes-the-knob-slider-value | 🎚️retunes-the-knob-slider-value | Changes the input slider value. |
-| 🧊️generation3d / 🔗️connect-synapse | 🚪️wires-node-b-to-node-c-at-index-1 | 🔌️wires-node-b-to-node-c-at-index-1 | Connects the declared graph ports. |
-| 🧊️generation3d / 📍️move-widget | 🌳️repositions-node-a-in-the-graph | 📍️repositions-node-a-in-the-graph | Changes graph layout coordinates. |
-| 🧊️generation3d / 🏷️rename-generation | 🌱️retitles-generation-1-via-new-name | 🏷️retitles-generation-1-via-new-name | Renames an existing generation. |
-| 🧊️generation3d / 📷️update-camera | 🌳️frames-the-graph-at-double-zoom | 🔍️frames-the-graph-at-double-zoom | Changes graph camera zoom to two. |
-| 🧊️generation3d / ➕create-generation | 🎨️appends-generation-2-and-moves-the-selection | 🌱️appends-generation-2-and-moves-the-selection | Creates and selects a new generation. |
-| 🧊️generation3d / 🔧️change-generation-value | 🍎️raises-the-storeys-answer-in-generation-1 | 🏢️raises-the-storeys-answer-in-generation-1 | Changes the storey-count answer. |
-| 🧊️generation3d / 🌱️create-widget | 🚪️inserts-node-c-at-index-2 | 📝️inserts-node-c-at-index-2 | Inserts an inputNote widget. |
-| 🧊️generation3d / 🧹️delete-widget-position | 🌵️unpins-the-node-a-position | 🧹️unpins-the-node-a-position | Clears an explicit node position. |
-| 🌀️generation2d / 🔤️change-schema | 🧫️restamps-the-fixture-schema | 🏷️restamps-the-fixture-schema | Replaces the schema identifier string. |
-| 🌀️generation2d / ✂️disconnect-synapse | 🤖️severs-link-ab-leaving-both-notes | ✂️severs-link-ab-leaving-both-notes | Disconnects the link. |
-| 🌀️generation2d / 🔗️connect-synapse | 🚪️joins-note-b-to-note-c-at-index-1 | 🔗️joins-note-b-to-note-c-at-index-1 | Connects two note nodes. |
-| 🌀️generation2d / 🎛️set-camera | 🌳️pans-and-zooms-the-graph-camera | 📷️pans-and-zooms-the-graph-camera | Changes graph camera transform. |
-| 🌀️generation2d / 📍️move-widget | 🦁️repositions-note-a-on-the-canvas | 📍️repositions-note-a-on-the-canvas | Changes canvas coordinates. |
-| 🌀️generation2d / 🏷️rename-generation | 🦁️retitles-generation-1 | 🏷️retitles-generation-1 | Renames the generation. |
-| 🌀️generation2d / 🔢️change-generation-value | 🐸️raises-the-height-answer-in-generation-1 | 📏️raises-the-height-answer-in-generation-1 | Changes the height answer. |
-| 🌀️generation2d / 🧹clear-widget-layout | 🚪️drops-the-note-a-layout-entry | 🧹️drops-the-note-a-layout-entry | Clears the note layout. |
-| 🌀️generation2d / ➕create-generation | 🟪️appends-generation-2-and-selects-it | 🌱️appends-generation-2-and-selects-it | Creates and selects a new generation. |
-| 🌀️generation2d / 🔁️replace-widget | 🛟️rewrites-the-note-b-body-in-place | ✍️rewrites-the-note-b-body-in-place | Rewrites note text. |
-| 🌀️generation2d / 🌱️create-widget | 🚪️inserts-note-c-at-index-2 | 📝️inserts-note-c-at-index-2 | Inserts an inputNote widget. |
+| Artifact / operation                       | Old scenario                                   | Handpicked scenario                            | Evidence                               |
+| ------------------------------------------ | ---------------------------------------------- | ---------------------------------------------- | -------------------------------------- |
+| 🧩️assembly / 🔢️change-weight               | 🔌️raises-the-wall-module-selection-bias        | ⚖️raises-the-wall-module-selection-bias        | Raises the module selection weight.    |
+| 🧩️assembly / ✂️disconnect-slots            | 🤖️severs-edge-ab-leaving-both-slots            | ✂️severs-edge-ab-leaving-both-slots            | Cuts only the connecting edge.         |
+| 🧩️assembly / 🔗️connect-slots               | 🚪️joins-slot-b-to-slot-c-at-index-1            | 🔗️joins-slot-b-to-slot-c-at-index-1            | Connects the two assembly slots.       |
+| 🧩️assembly / 📏️create-rule                 | 🦅️appends-a-rule-forbidding-roof-over-wall     | ⛔️appends-a-rule-forbidding-roof-over-wall     | Creates a forbidden adjacency rule.    |
+| 🧩️assembly / 🧩️create-slot                 | 🚪️appends-slot-c-at-index-2                    | 🧩️appends-slot-c-at-index-2                    | Creates an assembly slot.              |
+| 🧩️assembly / 🎲️change-seed                 | 🌴️reseeds-the-solve-from-7-to-99               | 🎲️reseeds-the-solve-from-7-to-99               | Changes the random seed.               |
+| 🧩️assembly / 🪶️remove-weight               | 🔌️drops-the-wall-module-weight-override        | 🪶️drops-the-wall-module-weight-override        | Removes a selection weight override.   |
+| 🧊️generation3d / 🔤️change-schema           | 🧫️restamps-the-fixture-schema-id               | 🏷️restamps-the-fixture-schema-id               | Replaces the schema identifier string. |
+| 🧊️generation3d / ✂️disconnect-synapse      | 🤖️cuts-wire-ab-leaving-both-nodes              | ✂️cuts-wire-ab-leaving-both-nodes              | Disconnects the wire.                  |
+| 🧊️generation3d / 🩹update-widget           | 🎞️retunes-the-knob-slider-value                | 🎚️retunes-the-knob-slider-value                | Changes the input slider value.        |
+| 🧊️generation3d / 🔗️connect-synapse         | 🚪️wires-node-b-to-node-c-at-index-1            | 🔌️wires-node-b-to-node-c-at-index-1            | Connects the declared graph ports.     |
+| 🧊️generation3d / 📍️move-widget             | 🌳️repositions-node-a-in-the-graph              | 📍️repositions-node-a-in-the-graph              | Changes graph layout coordinates.      |
+| 🧊️generation3d / 🏷️rename-generation       | 🌱️retitles-generation-1-via-new-name           | 🏷️retitles-generation-1-via-new-name           | Renames an existing generation.        |
+| 🧊️generation3d / 📷️update-camera           | 🌳️frames-the-graph-at-double-zoom              | 🔍️frames-the-graph-at-double-zoom              | Changes graph camera zoom to two.      |
+| 🧊️generation3d / ➕create-generation       | 🎨️appends-generation-2-and-moves-the-selection | 🌱️appends-generation-2-and-moves-the-selection | Creates and selects a new generation.  |
+| 🧊️generation3d / 🔧️change-generation-value | 🍎️raises-the-storeys-answer-in-generation-1    | 🏢️raises-the-storeys-answer-in-generation-1    | Changes the storey-count answer.       |
+| 🧊️generation3d / 🌱️create-widget           | 🚪️inserts-node-c-at-index-2                    | 📝️inserts-node-c-at-index-2                    | Inserts an inputNote widget.           |
+| 🧊️generation3d / 🧹️delete-widget-position  | 🌵️unpins-the-node-a-position                   | 🧹️unpins-the-node-a-position                   | Clears an explicit node position.      |
+| 🌀️generation2d / 🔤️change-schema           | 🧫️restamps-the-fixture-schema                  | 🏷️restamps-the-fixture-schema                  | Replaces the schema identifier string. |
+| 🌀️generation2d / ✂️disconnect-synapse      | 🤖️severs-link-ab-leaving-both-notes            | ✂️severs-link-ab-leaving-both-notes            | Disconnects the link.                  |
+| 🌀️generation2d / 🔗️connect-synapse         | 🚪️joins-note-b-to-note-c-at-index-1            | 🔗️joins-note-b-to-note-c-at-index-1            | Connects two note nodes.               |
+| 🌀️generation2d / 🎛️set-camera              | 🌳️pans-and-zooms-the-graph-camera              | 📷️pans-and-zooms-the-graph-camera              | Changes graph camera transform.        |
+| 🌀️generation2d / 📍️move-widget             | 🦁️repositions-note-a-on-the-canvas             | 📍️repositions-note-a-on-the-canvas             | Changes canvas coordinates.            |
+| 🌀️generation2d / 🏷️rename-generation       | 🦁️retitles-generation-1                        | 🏷️retitles-generation-1                        | Renames the generation.                |
+| 🌀️generation2d / 🔢️change-generation-value | 🐸️raises-the-height-answer-in-generation-1     | 📏️raises-the-height-answer-in-generation-1     | Changes the height answer.             |
+| 🌀️generation2d / 🧹clear-widget-layout     | 🚪️drops-the-note-a-layout-entry                | 🧹️drops-the-note-a-layout-entry                | Clears the note layout.                |
+| 🌀️generation2d / ➕create-generation       | 🟪️appends-generation-2-and-selects-it          | 🌱️appends-generation-2-and-selects-it          | Creates and selects a new generation.  |
+| 🌀️generation2d / 🔁️replace-widget          | 🛟️rewrites-the-note-b-body-in-place            | ✍️rewrites-the-note-b-body-in-place            | Rewrites note text.                    |
+| 🌀️generation2d / 🌱️create-widget           | 🚪️inserts-note-c-at-index-2                    | 📝️inserts-note-c-at-index-2                    | Inserts an inputNote widget.           |
 
 ## Verification
 

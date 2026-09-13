@@ -1,0 +1,600 @@
+{
+  "schemaVersion": 1,
+  "owners": [
+    {
+      "path": "🌎️hub/🚀️local-relay/🧭️routing/🟦️.ts",
+      "language": "typescript",
+      "declarations": [
+        "localRelayExecutionTargetAsset",
+        "localRelaySpaceArtifactCreationPath",
+        "localRelayInferencePath",
+        "localRelayUpstreamPath"
+      ],
+      "imports": [],
+      "rootImports": [
+        "localRelayExecutionTargetAsset",
+        "localRelaySpaceArtifactCreationPath",
+        "localRelayInferencePath",
+        "localRelayUpstreamPath"
+      ],
+      "contextChain": [
+        "hub-local-relay",
+        "hub-local-relay-routing"
+      ]
+    },
+    {
+      "path": "🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧭️decision/🟦️.ts",
+      "language": "typescript",
+      "declarations": [
+        "DirectorySocketScope",
+        "DirectorySocketMessage",
+        "DirectorySocketGrantVector",
+        "DirectorySocketGrantDecision",
+        "directorySocketGrantDecision"
+      ],
+      "imports": [],
+      "rootImports": [],
+      "contextChain": [
+        "hub-directory",
+        "hub-directory-authorization",
+        "hub-directory-socket-grant",
+        "hub-directory-socket-grant-decision"
+      ]
+    },
+    {
+      "path": "🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🧾️fixture-verification/🟦️.ts",
+      "language": "typescript",
+      "declarations": [
+        "proveScopedDirectorySocketRevocationFixture"
+      ],
+      "imports": [
+        "🌎️hub/🚀️local-relay/🧭️routing/🟦️.ts",
+        "🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧭️decision/🟦️.ts"
+      ],
+      "rootImports": [
+        "proveScopedDirectorySocketRevocationFixture"
+      ],
+      "contextChain": [
+        "hub-directory",
+        "hub-directory-authorization",
+        "hub-directory-socket-grant",
+        "hub-directory-socket-grant-tests",
+        "hub-directory-socket-grant-fixture-verification"
+      ]
+    },
+    {
+      "path": "🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/📋️native-law-plan/🟦️.ts",
+      "language": "typescript",
+      "declarations": [
+        "SocketGrantNativeStage",
+        "socketGrantNativeLawPlan",
+        "assertSocketGrantNativeLawSources"
+      ],
+      "imports": [],
+      "rootImports": [],
+      "contextChain": [
+        "hub-directory",
+        "hub-directory-authorization",
+        "hub-directory-socket-grant",
+        "hub-directory-socket-grant-tests",
+        "hub-directory-socket-grant-native-law-plan"
+      ]
+    },
+    {
+      "path": "🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🏃️execution/🟦️.ts",
+      "language": "typescript",
+      "declarations": [
+        "SocketGrantNativeRunner",
+        "runSocketGrantCheck",
+        "SocketGrantCheckScript"
+      ],
+      "imports": [
+        "🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🧾️fixture-verification/🟦️.ts",
+        "🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/📋️native-law-plan/🟦️.ts"
+      ],
+      "rootImports": [
+        "SocketGrantCheckScript"
+      ],
+      "contextChain": [
+        "hub-directory",
+        "hub-directory-authorization",
+        "hub-directory-socket-grant",
+        "hub-directory-socket-grant-tests",
+        "hub-directory-socket-grant-execution"
+      ]
+    },
+    {
+      "path": "🌎️hub/🧪️tests/🧱️socket-grant-command-source/🏃️execution/🟦️.ts",
+      "language": "typescript",
+      "declarations": [
+        "HubSocketGrantCommandSourceScript"
+      ],
+      "imports": [],
+      "rootImports": [
+        "HubSocketGrantCommandSourceScript"
+      ],
+      "contextChain": [
+        "hub-tests",
+        "hub-socket-grant-command-source-test",
+        "hub-socket-grant-command-source-execution"
+      ]
+    },
+    {
+      "path": "🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🔮️oracles/🦀️.rs",
+      "language": "rust",
+      "declarations": [
+        "hub_socket_grant_fixture_serde_parity"
+      ],
+      "imports": [],
+      "rootImports": [],
+      "contextChain": [
+        "hub-directory",
+        "hub-directory-authorization",
+        "hub-directory-socket-grant",
+        "hub-directory-socket-grant-tests",
+        "hub-directory-socket-grant-oracles"
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "directoryName": "🚀️local-relay",
+      "parentKindId": "hub",
+      "kindId": "hub-local-relay"
+    },
+    {
+      "directoryName": "🧭️routing",
+      "parentKindId": "hub-local-relay",
+      "kindId": "hub-local-relay-routing"
+    },
+    {
+      "directoryName": "📇️directory",
+      "parentKindId": "hub",
+      "kindId": "hub-directory"
+    },
+    {
+      "directoryName": "🔐️authorization",
+      "parentKindId": "hub-directory",
+      "kindId": "hub-directory-authorization"
+    },
+    {
+      "directoryName": "🔌️socket-grant",
+      "parentKindId": "hub-directory-authorization",
+      "kindId": "hub-directory-socket-grant"
+    },
+    {
+      "directoryName": "🧭️decision",
+      "parentKindId": "hub-directory-socket-grant",
+      "kindId": "hub-directory-socket-grant-decision"
+    },
+    {
+      "directoryName": "🧪️tests",
+      "parentKindId": "hub-directory-socket-grant",
+      "kindId": "hub-directory-socket-grant-tests"
+    },
+    {
+      "directoryName": "🧾️fixture-verification",
+      "parentKindId": "hub-directory-socket-grant-tests",
+      "kindId": "hub-directory-socket-grant-fixture-verification"
+    },
+    {
+      "directoryName": "📋️native-law-plan",
+      "parentKindId": "hub-directory-socket-grant-tests",
+      "kindId": "hub-directory-socket-grant-native-law-plan"
+    },
+    {
+      "directoryName": "🏃️execution",
+      "parentKindId": "hub-directory-socket-grant-tests",
+      "kindId": "hub-directory-socket-grant-execution"
+    },
+    {
+      "directoryName": "🔮️oracles",
+      "parentKindId": "hub-directory-socket-grant-tests",
+      "kindId": "hub-directory-socket-grant-oracles"
+    },
+    {
+      "directoryName": "🧪️tests",
+      "parentKindId": "hub",
+      "kindId": "hub-tests"
+    },
+    {
+      "directoryName": "🧱️socket-grant-command-source",
+      "parentKindId": "hub-tests",
+      "kindId": "hub-socket-grant-command-source-test"
+    },
+    {
+      "directoryName": "🏃️execution",
+      "parentKindId": "hub-socket-grant-command-source-test",
+      "kindId": "hub-socket-grant-command-source-execution"
+    },
+    {
+      "directoryName": "🧬️schema",
+      "parentKindId": "hub",
+      "kindId": "hub-schema"
+    },
+    {
+      "directoryName": "🧱️socket-grant-command-source",
+      "parentKindId": "hub-schema",
+      "kindId": "hub-socket-grant-command-source-schema"
+    },
+    {
+      "directoryName": "🧫️fixtures",
+      "parentKindId": "hub",
+      "kindId": "hub-fixtures"
+    },
+    {
+      "directoryName": "🧱️socket-grant-command-source",
+      "parentKindId": "hub-fixtures",
+      "kindId": "hub-socket-grant-command-source-fixture"
+    }
+  ],
+  "routes": {
+    "source": {
+      "command": "socket-grant-command-source-check",
+      "target": "socket-grant-command-source-check",
+      "launchName": "⚖️gate🔌️socket-grant📐️source",
+      "launchCommand": "bun nx run os-hub:socket-grant-command-source-check",
+      "launchGroup": "4_gate",
+      "launchOrder": 411.09999,
+      "inputs": [
+        "{workspaceRoot}/🌎️hub/🚀️local-relay/🧭️routing/🟦️.ts",
+        "{workspaceRoot}/🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧭️decision/🟦️.ts",
+        "{workspaceRoot}/🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🧾️fixture-verification/🟦️.ts",
+        "{workspaceRoot}/🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/📋️native-law-plan/🟦️.ts",
+        "{workspaceRoot}/🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🏃️execution/🟦️.ts",
+        "{workspaceRoot}/🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🔮️oracles/🦀️.rs",
+        "{workspaceRoot}/🌎️hub/🧪️tests/🧱️socket-grant-command-source/🏃️execution/🟦️.ts",
+        "{workspaceRoot}/🌎️hub/🧬️schema/🧱️socket-grant-command-source/🔣️.json",
+        "{workspaceRoot}/🌎️hub/🧫️fixtures/🧱️socket-grant-command-source/🔣️.json",
+        "{workspaceRoot}/🌎️hub/🧪️tests/🧱️socket-grant-command-source/🟦️.ts",
+        "{workspaceRoot}/🌎️hub/📇️directory/🧬️schema/🔣️.json",
+        "{workspaceRoot}/🌎️hub/📇️directory/🧫️fixtures/🔌️scoped-socket-revocation-v1/🔣️.json",
+        "{workspaceRoot}/🌎️hub/🤝️integration-harness/🟦️.ts",
+        "{workspaceRoot}/🌎️hub/🏗️build/🛂staging-environment/🟦️.ts",
+        "{workspaceRoot}/🌎️hub/🔐️auth/🧪️tests/🧭️credential-source-order/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+        "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+        "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/🦀️.rs",
+        "{workspaceRoot}/Cargo.lock",
+        "{workspaceRoot}/🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+        "{workspaceRoot}/🌎️hub/📇️directory/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspaceRoot}/🌎️hub/📇️directory/🪶️sqlite/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspaceRoot}/🌎️hub/🏗️bootstrap/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
+        "{workspaceRoot}/.vscode/launch.json"
+      ]
+    },
+    "native": {
+      "command": "socket-grant-check",
+      "target": "socket-grant-check",
+      "launchName": "⚖️gate🔌️socket-grant🛡️server",
+      "launchCommand": "bun nx run os-hub:socket-grant-check",
+      "launchGroup": "4_gate",
+      "launchOrder": 411.1,
+      "inputs": [
+        "hubSocketGrantCommandSources"
+      ]
+    }
+  },
+  "nativeStages": [
+    {
+      "id": "scoped-directory-socket-ledger-indexes-and-invalidates-exact-membership",
+      "args": [
+        "test",
+        "--manifest-path",
+        "Cargo.toml",
+        "--all-features",
+        "--bin",
+        "os-hub",
+        "tests::scoped_directory_socket_ledger_indexes_and_invalidates_exact_membership",
+        "--",
+        "--exact",
+        "--test-threads=1"
+      ],
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "declaration": "scoped_directory_socket_ledger_indexes_and_invalidates_exact_membership"
+    },
+    {
+      "id": "scoped-directory-socket-message-matching-is-body-exact-and-removal-private",
+      "args": [
+        "test",
+        "--manifest-path",
+        "Cargo.toml",
+        "--all-features",
+        "--bin",
+        "os-hub",
+        "tests::scoped_directory_socket_message_matching_is_body_exact_and_removal_private",
+        "--",
+        "--exact",
+        "--test-threads=1"
+      ],
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "declaration": "scoped_directory_socket_message_matching_is_body_exact_and_removal_private"
+    },
+    {
+      "id": "scoped-directory-socket-admin-removal-uses-the-same-membership-fence",
+      "args": [
+        "test",
+        "--manifest-path",
+        "Cargo.toml",
+        "--all-features",
+        "--bin",
+        "os-hub",
+        "tests::scoped_directory_socket_admin_removal_uses_the_same_membership_fence",
+        "--",
+        "--exact",
+        "--test-threads=1"
+      ],
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "declaration": "scoped_directory_socket_admin_removal_uses_the_same_membership_fence"
+    },
+    {
+      "id": "scoped-directory-socket-route-rejects-scope-substitution-and-rest-removal-closes-without-event",
+      "args": [
+        "test",
+        "--manifest-path",
+        "Cargo.toml",
+        "--all-features",
+        "--bin",
+        "os-hub",
+        "tests::scoped_directory_socket_route_rejects_scope_substitution_and_rest_removal_closes_without_event",
+        "--",
+        "--exact",
+        "--test-threads=1"
+      ],
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "declaration": "scoped_directory_socket_route_rejects_scope_substitution_and_rest_removal_closes_without_event"
+    },
+    {
+      "id": "scoped-directory-socket-removal-and-delivery-have-one-total-membership-order",
+      "args": [
+        "test",
+        "--manifest-path",
+        "Cargo.toml",
+        "--all-features",
+        "--bin",
+        "os-hub",
+        "tests::scoped_directory_socket_removal_and_delivery_have_one_total_membership_order",
+        "--",
+        "--exact",
+        "--test-threads=1"
+      ],
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "declaration": "scoped_directory_socket_removal_and_delivery_have_one_total_membership_order"
+    },
+    {
+      "id": "socket-admin-user-gate-rejects-a-late-same-user-grant-after-batch-revoke",
+      "args": [
+        "test",
+        "--manifest-path",
+        "Cargo.toml",
+        "--all-features",
+        "--bin",
+        "os-hub",
+        "tests::socket_admin_user_gate_rejects_a_late_same_user_grant_after_batch_revoke",
+        "--",
+        "--exact",
+        "--test-threads=1"
+      ],
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "declaration": "socket_admin_user_gate_rejects_a_late_same_user_grant_after_batch_revoke"
+    },
+    {
+      "id": "socket-directory-revoke-after-admission-suppresses-replay-without-deadlock",
+      "args": [
+        "test",
+        "--manifest-path",
+        "Cargo.toml",
+        "--all-features",
+        "--bin",
+        "os-hub",
+        "tests::socket_directory_revoke_after_admission_suppresses_replay_without_deadlock",
+        "--",
+        "--exact",
+        "--test-threads=1"
+      ],
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "declaration": "socket_directory_revoke_after_admission_suppresses_replay_without_deadlock"
+    },
+    {
+      "id": "socket-directory-visibility-requires-membership-even-for-public-spaces",
+      "args": [
+        "test",
+        "--manifest-path",
+        "Cargo.toml",
+        "--all-features",
+        "--bin",
+        "os-hub",
+        "tests::socket_directory_visibility_requires_membership_even_for_public_spaces",
+        "--",
+        "--exact",
+        "--test-threads=1"
+      ],
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "declaration": "socket_directory_visibility_requires_membership_even_for_public_spaces"
+    },
+    {
+      "id": "socket-grant-directory-route-uses-credential-free-hello-and-revokes-live",
+      "args": [
+        "test",
+        "--manifest-path",
+        "Cargo.toml",
+        "--all-features",
+        "--bin",
+        "os-hub",
+        "tests::socket_grant_directory_route_uses_credential_free_hello_and_revokes_live",
+        "--",
+        "--exact",
+        "--test-threads=1"
+      ],
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "declaration": "socket_grant_directory_route_uses_credential_free_hello_and_revokes_live"
+    },
+    {
+      "id": "socket-grant-document-route-is-exact-replay-safe-actor-bound-and-revoke-live",
+      "args": [
+        "test",
+        "--manifest-path",
+        "Cargo.toml",
+        "--all-features",
+        "--bin",
+        "os-hub",
+        "tests::socket_grant_document_route_is_exact_replay_safe_actor_bound_and_revoke_live",
+        "--",
+        "--exact",
+        "--test-threads=1"
+      ],
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "declaration": "socket_grant_document_route_is_exact_replay_safe_actor_bound_and_revoke_live"
+    },
+    {
+      "id": "socket-grant-ledger-is-bounded-single-consume-restart-scoped-and-revoke-race-safe",
+      "args": [
+        "test",
+        "--manifest-path",
+        "Cargo.toml",
+        "--all-features",
+        "--bin",
+        "os-hub",
+        "tests::socket_grant_ledger_is_bounded_single_consume_restart_scoped_and_revoke_race_safe",
+        "--",
+        "--exact",
+        "--test-threads=1"
+      ],
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "declaration": "socket_grant_ledger_is_bounded_single_consume_restart_scoped_and_revoke_race_safe"
+    },
+    {
+      "id": "socket-grant-revoke-and-welcome-have-a-bounded-binding-linearization",
+      "args": [
+        "test",
+        "--manifest-path",
+        "Cargo.toml",
+        "--all-features",
+        "--bin",
+        "os-hub",
+        "tests::socket_grant_revoke_and_welcome_have_a_bounded_binding_linearization",
+        "--",
+        "--exact",
+        "--test-threads=1"
+      ],
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "declaration": "socket_grant_revoke_and_welcome_have_a_bounded_binding_linearization"
+    },
+    {
+      "id": "socket-grant-revoke-before-broadcast-authorization-suppresses-frame",
+      "args": [
+        "test",
+        "--manifest-path",
+        "Cargo.toml",
+        "--all-features",
+        "--bin",
+        "os-hub",
+        "tests::socket_grant_revoke_before_broadcast_authorization_suppresses_frame",
+        "--",
+        "--exact",
+        "--test-threads=1"
+      ],
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "declaration": "socket_grant_revoke_before_broadcast_authorization_suppresses_frame"
+    },
+    {
+      "id": "socket-grant-revoke-before-command-admission-has-no-storage-effect",
+      "args": [
+        "test",
+        "--manifest-path",
+        "Cargo.toml",
+        "--all-features",
+        "--bin",
+        "os-hub",
+        "tests::socket_grant_revoke_before_command_admission_has_no_storage_effect",
+        "--",
+        "--exact",
+        "--test-threads=1"
+      ],
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "declaration": "socket_grant_revoke_before_command_admission_has_no_storage_effect"
+    },
+    {
+      "id": "socket-grant-revoke-before-lag-authorization-reads-no-private-control",
+      "args": [
+        "test",
+        "--manifest-path",
+        "Cargo.toml",
+        "--all-features",
+        "--bin",
+        "os-hub",
+        "tests::socket_grant_revoke_before_lag_authorization_reads_no_private_control",
+        "--",
+        "--exact",
+        "--test-threads=1"
+      ],
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "declaration": "socket_grant_revoke_before_lag_authorization_reads_no_private_control"
+    },
+    {
+      "id": "typed-capabilities",
+      "args": [
+        "test",
+        "--manifest-path",
+        "Cargo.toml",
+        "--all-features",
+        "--lib",
+        "typed_capabilities_match_neutral_sha256_vectors_and_fixed_boundaries",
+        "--",
+        "--test-threads=1"
+      ],
+      "source": "🌎️hub/📇️directory/🧪️tests/🔬️unit/🦀️.rs",
+      "declaration": "typed_capabilities_match_neutral_sha256_vectors_and_fixed_boundaries"
+    },
+    {
+      "id": "socket-binding-reads",
+      "args": [
+        "test",
+        "--manifest-path",
+        "Cargo.toml",
+        "--all-features",
+        "--lib",
+        "socket_binding_reads_are_exact_id_generation_selector_scope_and_status",
+        "--",
+        "--test-threads=1"
+      ],
+      "source": "🌎️hub/📇️directory/🪶️sqlite/🧪️tests/🔬️unit/🦀️.rs",
+      "declaration": "socket_binding_reads_are_exact_id_generation_selector_scope_and_status"
+    },
+    {
+      "id": "client-frame-socket-hello",
+      "args": [
+        "test",
+        "--manifest-path",
+        "Cargo.toml",
+        "--all-features",
+        "-p",
+        "semio-framework-replication",
+        "client_frame_socket_hello_v1_round_trips_without_credentials",
+        "--",
+        "--test-threads=1"
+      ],
+      "source": "🧰️framework/🔨️modules/📡️replication/📡️wire/🧪️tests/🔬️unit/🦀️.rs",
+      "declaration": "client_frame_socket_hello_v1_round_trips_without_credentials"
+    },
+    {
+      "id": "hub-binary-check",
+      "args": [
+        "check",
+        "--manifest-path",
+        "Cargo.toml",
+        "--all-features",
+        "--bin",
+        "os-hub"
+      ],
+      "source": null,
+      "declaration": null
+    }
+  ]
+}

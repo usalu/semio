@@ -10,25 +10,25 @@ The read-only Unicode grapheme/sibling check found one missing prefix (`derive/.
 
 Paths below are relative to the scope root. A directory rename also changes the corresponding prefix of its descendants.
 
-| Old Path | New Path | Reason |
-| --- | --- | --- |
-| `✨️derive/📦️packages/🦀️rust/tests` | `✨️derive/📦️packages/🦀️rust/🧪️tests` | Integration tests are explicitly registered in Cargo.toml, so this directory is configurable. |
-| `✨️derive/📦️packages/🦀️rust/🧪️tests/🌾flatten-with-skip.rs` | `✨️derive/📦️packages/🦀️rust/🧪️tests/🪗️flatten-with-skip.rs` | The accordion represents flattening and expansion of nested fields. |
-| `🗂️ordered/🧪️fixtures` | `🗂️ordered/🧫️fixtures` | Specimen data differs from executable tests. |
-| `🗂️ordered/🧫️fixtures/🔣️.schema.json` | `🗂️ordered/🧫️fixtures/🧬️.schema.json` | Schema structure differs from its JSON specimen. |
-| `🗂️ordered/🧫️fixtures/🧪️shared-owner` | `🗂️ordered/🧫️fixtures/👥️shared-owner` | Multiple owners share retained values. |
-| `🗂️ordered/🧫️fixtures/👥️shared-owner/🔣️.schema.json` | `🗂️ordered/🧫️fixtures/👥️shared-owner/🧬️.schema.json` | Schema structure differs from its JSON specimen. |
-| `🗂️ordered/🧺️set/🧪️fixtures` | `🗂️ordered/🧺️set/🧫️fixtures` | Set specimens differ from executable tests. |
-| `🗂️ordered/🔢️numeric/🧪️fixtures/🔣️numeric-index.json` | `🗂️ordered/🔢️numeric/🧪️fixtures/🔢️numeric-index.json` | Numeric ordering cases. |
-| `🗂️ordered/🔢️numeric/🧪️fixtures/🔣️numeric-index.schema.json` | `🗂️ordered/🔢️numeric/🧪️fixtures/🧬️numeric-index.schema.json` | Numeric specimen structure. |
-| `🗂️ordered/🔢️numeric/🧪️fixtures/🔣️references.json` | `🗂️ordered/🔢️numeric/🧪️fixtures/🔗️references.json` | Reference capture and ownership cases. |
-| `🗂️ordered/🔢️numeric/🧪️fixtures/🔣️references.schema.json` | `🗂️ordered/🔢️numeric/🧪️fixtures/🛡️references.schema.json` | Guards exact rejection/preservation contract. |
-| `💾️resident/🧪️fixture` | `💾️resident/🧫️fixture` | Resident specimen data. |
-| `💾️resident/🧪️schema` | `💾️resident/📐️schema` | Structure constraints for the resident test fixture. |
-| `💾️resident/🧬️contract.json` | `💾️resident/🤝️contract.json` | Ownership agreement differs from capacity schema. |
-| `💾️resident/📨️admission/🧪️fixture` | `💾️resident/📨️admission/🧫️fixture` | Admission specimen data. |
-| `💾️resident/📨️admission/🧪️schema` | `💾️resident/📨️admission/📐️schema` | Structure constraints for admission test fixture. |
-| `💾️resident/📨️admission/🧬️contract.json` | `💾️resident/📨️admission/🤝️contract.json` | Admission agreement differs from contract schema. |
+| Old Path                                                     | New Path                                                     | Reason                                                                                        |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| `✨️derive/📦️packages/🦀️rust/tests`                           | `✨️derive/📦️packages/🦀️rust/🧪️tests`                         | Integration tests are explicitly registered in Cargo.toml, so this directory is configurable. |
+| `✨️derive/📦️packages/🦀️rust/🧪️tests/🌾flatten-with-skip.rs`  | `✨️derive/📦️packages/🦀️rust/🧪️tests/🪗️flatten-with-skip.rs`  | The accordion represents flattening and expansion of nested fields.                           |
+| `🗂️ordered/🧪️fixtures`                                       | `🗂️ordered/🧫️fixtures`                                       | Specimen data differs from executable tests.                                                  |
+| `🗂️ordered/🧫️fixtures/🔣️.schema.json`                        | `🗂️ordered/🧫️fixtures/🧬️.schema.json`                        | Schema structure differs from its JSON specimen.                                              |
+| `🗂️ordered/🧫️fixtures/🧪️shared-owner`                        | `🗂️ordered/🧫️fixtures/👥️shared-owner`                        | Multiple owners share retained values.                                                        |
+| `🗂️ordered/🧫️fixtures/👥️shared-owner/🔣️.schema.json`         | `🗂️ordered/🧫️fixtures/👥️shared-owner/🧬️.schema.json`         | Schema structure differs from its JSON specimen.                                              |
+| `🗂️ordered/🧺️set/🧪️fixtures`                                 | `🗂️ordered/🧺️set/🧫️fixtures`                                 | Set specimens differ from executable tests.                                                   |
+| `🗂️ordered/🔢️numeric/🧪️fixtures/🔣️numeric-index.json`        | `🗂️ordered/🔢️numeric/🧪️fixtures/🔢️numeric-index.json`        | Numeric ordering cases.                                                                       |
+| `🗂️ordered/🔢️numeric/🧪️fixtures/🔣️numeric-index.schema.json` | `🗂️ordered/🔢️numeric/🧪️fixtures/🧬️numeric-index.schema.json` | Numeric specimen structure.                                                                   |
+| `🗂️ordered/🔢️numeric/🧪️fixtures/🔣️references.json`           | `🗂️ordered/🔢️numeric/🧪️fixtures/🔗️references.json`           | Reference capture and ownership cases.                                                        |
+| `🗂️ordered/🔢️numeric/🧪️fixtures/🔣️references.schema.json`    | `🗂️ordered/🔢️numeric/🧪️fixtures/🛡️references.schema.json`    | Guards exact rejection/preservation contract.                                                 |
+| `💾️resident/🧪️fixture`                                       | `💾️resident/🧫️fixture`                                       | Resident specimen data.                                                                       |
+| `💾️resident/🧪️schema`                                        | `💾️resident/📐️schema`                                        | Structure constraints for the resident test fixture.                                          |
+| `💾️resident/🧬️contract.json`                                 | `💾️resident/🤝️contract.json`                                 | Ownership agreement differs from capacity schema.                                             |
+| `💾️resident/📨️admission/🧪️fixture`                           | `💾️resident/📨️admission/🧫️fixture`                           | Admission specimen data.                                                                      |
+| `💾️resident/📨️admission/🧪️schema`                            | `💾️resident/📨️admission/📐️schema`                            | Structure constraints for admission test fixture.                                             |
+| `💾️resident/📨️admission/🧬️contract.json`                     | `💾️resident/📨️admission/🤝️contract.json`                     | Admission agreement differs from contract schema.                                             |
 
 ## Verification
 

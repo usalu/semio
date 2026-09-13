@@ -25,4 +25,3 @@ All PDF-local owner IDs, directory-name fields, generator commands, reader execu
 - `@semio-tech/repo-test-domain:test-fixture-verify -- --artifact s.stdio.pdf` reports 105 fixtures and zero file problems.
 - All 283 PDF JSON files parse with `jq`.
 - Central taxonomy validation returns an empty error list after adding the ten exact PDF subset oracle overrides.
-

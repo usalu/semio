@@ -125,7 +125,7 @@ fn retained_resident_permit_contention_keeps_authority_and_deferred_return_does_
     assert_eq!(UiResidentPermit::snapshot().unwrap().bytes, empty_snapshot().bytes + 65536);
     drain();
     assert_eq!(UiResidentPermit::snapshot().unwrap().bytes, empty_snapshot().bytes + 65536);
-    assert!(root.try_shrink(UiResidentLimits { items: 3, bytes: 4096 }).unwrap());
+    assert!(root.try_reprice(UiResidentLimits { items: 3, bytes: 4096 }).unwrap());
     assert_eq!(close(&mut root).returned_bytes, 4096);
     drain();
     assert_eq!(UiResidentPermit::snapshot().unwrap(), empty_snapshot());

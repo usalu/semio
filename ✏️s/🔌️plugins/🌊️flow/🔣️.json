@@ -201,12 +201,12 @@
   "descriptorVersion": 1,
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 16
+    "appChannelVersion": 17
   },
   "hashes": {
-    "coreWasmSha256": "89f562474dea7142b26b6bc52e5c635ba7b21b8e89c321739a84990e21b9eab7",
-    "descriptorSha256": "f0cfc1fceb13803ac1beab922a023c4e3b36d9fd601c0e023899e0cba8f1beb7",
-    "wasmSha256": "24317b0ea6481e09b2e01b7b9c841dd6496657a95893650c092f92fde6ed55ac"
+    "coreWasmSha256": "4e90b1b318fa30a22208afce0ac4801b728152eac3c6aae52eb28223a4aecf7a",
+    "descriptorSha256": "e93eb2ee1836412fcc2be1eec58d2cdce4d9409b7ee472a33fd06ecab4d534a6",
+    "wasmSha256": "8d64af7c1f2c54bc796db94a9f15305bac064f16d1649610f087bfef1f03fb55"
   },
   "manifest": {
     "apps": [

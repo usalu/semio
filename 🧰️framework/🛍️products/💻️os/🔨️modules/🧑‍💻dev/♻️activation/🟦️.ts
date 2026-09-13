@@ -61,16 +61,17 @@ export function readActivationReceipt(directory: string): ActivationReceipt {
   return parseActivationReceipt(JSON.parse(readFileSync(join(directory, ACTIVATION_RECEIPT_FILE), "utf8")));
 }
 
-/** 🗂️ Separates each variant/profile's ephemeral activation and installations from cached artifacts. */
-export function developmentRuntimeRoot(packageRoot: string, variant: string, profile: "dev" | "release"): string {
+/** 🗂️ Separates each renderer, variant and profile's activation and installations from compiled artifacts. */
+export function developmentRuntimeRoot(packageRoot: string, variant: string, profile: "dev" | "release", renderer: "react" | "wgpu"): string {
+  if (!["react", "wgpu"].includes(renderer)) throw new Error("Select a development renderer: react or wgpu");
   parseActivationReceipt({ schema: "semio.dev.activation/v1", variant, profile, plugins: [] });
-  return join(packageRoot, "dist", "runtime", profile, variant);
+  return join(packageRoot, "dist", "runtime", renderer, profile, variant);
 }
 
 /** 🔌️ THE staging root for a profile — the ONE directory every producer writes and every consumer
  * reads: `@semio-tech/framework-plugin-web:support-<profile>`, every crate's `materialize-<profile>`
  * and `@semio-tech/framework-os-dev:plugin` write it; the react Vite `/🔌️plugin-modules` mount, the
- * wgpu trunk bundle's `copy-dir`, the wgpu native runner's `SEMIO_PLUGIN_MODULES`, `prepare`/`activate`
+ * WGPU browser host, the native runner's `SEMIO_PLUGIN_MODULES`, `prepare`/`activate`
  * and the production distribution copy read it. Derived from this module's own location — never from a
  * workspace walk — so Vite's config bundler resolves it without pulling repository discovery in, and so
  * no caller can pick a second root. Two roots is what this function replaces: a `🧑‍💻dev/🔌️plugin-modules`
@@ -137,8 +138,8 @@ export const COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES = 20_000;
 export type StagedModuleFacts = Readonly<{
   pluginId: string;
   role: "plugin" | "extension";
-  /** 🧾️ `true` for a lane governed by an activation receipt (the react dev server), `false` for one that
-   * reads the staging root directly (the wgpu trunk bundle and native runner) — the receipt-derived
+  /** 🧾️ `true` for a lane governed by an activation receipt, `false` for one that
+   * reads the staging root directly without a receipt — the receipt-derived
    * verdicts are simply not askable there, and inventing an empty receipt would report every extension
    * as unpublished. */
   activationTracked: boolean;

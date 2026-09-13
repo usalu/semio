@@ -10,23 +10,23 @@ The existing canonical mutation taxonomy check passed before changes: **392 payl
 
 These choices follow the actual local artifact declarations and schemas, not a reusable emoji palette. Each is distinct among the fifteen sibling artifact owners. The parent approved the plan provisionally; each move still needs its exact reference batch and verification.
 
-| Current | Planned | Domain rationale |
-| --- | --- | --- |
-| `📕️din4108` | `🌡️din4108` | Thermal protection and building-envelope heat/moisture |
-| `📗️din16798` | `🌬️din16798` | Ventilation and indoor environment |
-| `📙️din18599` | `⚡️din18599` | Building energy demand |
-| `📘️en1990` | `⚖️en1990` | Structural design basis and safety combinations |
-| `📘️en1991` | `🏋️en1991` | Actions and loads on structures |
-| `📘️en1992` | `🏗️en1992` | Reinforced concrete design |
-| `📘️en1993` | `🔩️en1993` | Steel members and connections |
-| `📘️en1994` | `🧩️en1994` | Composite steel/concrete design |
-| `📘️en1995` | `🪵️en1995` | Timber design |
-| `📘️en1996` | `🧱️en1996` | Masonry design |
-| `📘️en1997` | `🌍️en1997` | Geotechnical design |
-| `📘️en1998` | `🌋️en1998` | Seismic design |
-| `📘️en1999` | `🪶️en1999` | Lightweight aluminium structural design |
-| `📓️iso16757` | `📇️iso16757` | Building-services product catalogue |
-| `📔️vdi3805` | `🏭️vdi3805` | Manufacturer product data exchange |
+| Current      | Planned      | Domain rationale                                       |
+| ------------ | ------------ | ------------------------------------------------------ |
+| `📕️din4108`  | `🌡️din4108`  | Thermal protection and building-envelope heat/moisture |
+| `📗️din16798` | `🌬️din16798` | Ventilation and indoor environment                     |
+| `📙️din18599` | `⚡️din18599` | Building energy demand                                 |
+| `📘️en1990`   | `⚖️en1990`   | Structural design basis and safety combinations        |
+| `📘️en1991`   | `🏋️en1991`   | Actions and loads on structures                        |
+| `📘️en1992`   | `🏗️en1992`   | Reinforced concrete design                             |
+| `📘️en1993`   | `🔩️en1993`   | Steel members and connections                          |
+| `📘️en1994`   | `🧩️en1994`   | Composite steel/concrete design                        |
+| `📘️en1995`   | `🪵️en1995`   | Timber design                                          |
+| `📘️en1996`   | `🧱️en1996`   | Masonry design                                         |
+| `📘️en1997`   | `🌍️en1997`   | Geotechnical design                                    |
+| `📘️en1998`   | `🌋️en1998`   | Seismic design                                         |
+| `📘️en1999`   | `🪶️en1999`   | Lightweight aluminium structural design                |
+| `📓️iso16757` | `📇️iso16757` | Building-services product catalogue                    |
+| `📔️vdi3805`  | `🏭️vdi3805`  | Manufacturer product data exchange                     |
 
 The package's explicit Rust mounts and mutation `descriptor.owner` values are real source authorities. They cannot be blindly replaced or left as old aliases. The existing mutation taxonomy generator may refresh its own declared report only after source metadata is coherent; it is not a rename/migration engine.
 
@@ -76,18 +76,18 @@ The fresh native run completed without missing-path errors but failed with **3,9
 
 Each of these ten operation descriptors and payload schemas was inspected. Their current animal sequence encodes no operation meaning. The following explicit choices are unique among the complete mutation owner siblings, including binary/text facets and language leaves. Public semantic kinds and enum variants remain unchanged.
 
-| Current operation directory | Selected operation directory | Meaning |
-| --- | --- | --- |
-| `🐷change-annex` | `🌍️change-annex` | National annex jurisdiction |
-| `🐑change-consequence-class` | `⚠️change-consequence-class` | Consequence/risk category |
-| `🐐change-permanent-action` | `⚓️change-permanent-action` | Permanent dead load |
-| `🐘change-resistance` | `🛡️change-resistance` | Design resistance |
-| `🦄change-seismic-action` | `🌋️change-seismic-action` | Seismic loading |
+| Current operation directory         | Selected operation directory        | Meaning                        |
+| ----------------------------------- | ----------------------------------- | ------------------------------ |
+| `🐷change-annex`                    | `🌍️change-annex`                    | National annex jurisdiction    |
+| `🐑change-consequence-class`        | `⚠️change-consequence-class`        | Consequence/risk category      |
+| `🐐change-permanent-action`         | `⚓️change-permanent-action`         | Permanent dead load            |
+| `🐘change-resistance`               | `🛡️change-resistance`               | Design resistance              |
+| `🦄change-seismic-action`           | `🌋️change-seismic-action`           | Seismic loading                |
 | `🐮change-variable-action-category` | `🏷️change-variable-action-category` | Variable-action classification |
-| `🦌change-variable-action-value` | `🏋️change-variable-action-value` | Variable load magnitude |
-| `🐴insert-variable-action` | `➕️insert-variable-action` | Insertion of a variable action |
-| `🐎remove-variable-action` | `🗑️remove-variable-action` | Removal of a variable action |
-| `🐗reorder-variable-actions` | `🔀️reorder-variable-actions` | Ordering of variable actions |
+| `🦌change-variable-action-value`    | `🏋️change-variable-action-value`    | Variable load magnitude        |
+| `🐴insert-variable-action`          | `➕️insert-variable-action`          | Insertion of a variable action |
+| `🐎remove-variable-action`          | `🗑️remove-variable-action`          | Removal of a variable action   |
+| `🐗reorder-variable-actions`        | `🔀️reorder-variable-actions`        | Ordering of variable actions   |
 
 This is a reviewed decision table, not executable migration data. No operation directory has moved as of this section's creation. Exact incoming mounts, oracle metadata, two fixture tables and the native/Python adapters must change with each physical operation move.
 
@@ -213,25 +213,25 @@ The current family traversal covers **613 physical entries** and reports zero no
 
 Each committed mutation payload and its named scenario was read before choosing the following identities. They describe structural purpose rather than sequence, file format or an arbitrary palette. This is a review record, not an executable rename plan; none of these operation or case moves is claimed complete by this section.
 
-| Current operation | Reviewed operation | Purpose | Current scenario | Reviewed scenario |
-| --- | --- | --- | --- | --- |
-| `⚡update-tension-component-inputs` | `🪢️update-tension-component-inputs` | Tension rod/component | `🔮️derates-the-tension-rod-to-a-400-kn-characteristic-strength` | `📉️derates-the-tension-rod-to-a-400-kn-characteristic-strength` |
-| `❄️update-fatigue-inputs` | `🔁️update-fatigue-inputs` | Cyclic fatigue assessment | `🌵️drops-to-detail-category-56-under-a-safe-life-assessment` | `🔁️drops-to-detail-category-56-under-a-safe-life-assessment` |
-| `🌗update-tower-inputs` | `🗼️update-tower-inputs` | Steel tower | `🟪️raises-the-tower-wind-factor-and-leg-force` | `🌬️raises-the-tower-wind-factor-and-leg-force` |
-| `🌞update-bolt-inputs` | `🔩️update-bolt-inputs` | Bolted connection | `🦉️moves-the-connection-to-four-m24-grade-10-9-bolts` | `🔩️moves-the-connection-to-four-m24-grade-10-9-bolts` |
-| `🌡️update-crane-inputs` | `🏗️update-crane-inputs` | Crane wheel loading | `🔀️widens-the-crane-wheel-contact-patch-under-a-heavier-wheel` | `🏋️widens-the-crane-wheel-contact-patch-under-a-heavier-wheel` |
-| `🌬️update-through-thickness-inputs` | `↕️update-through-thickness-inputs` | Through-thickness plate behaviour | `🦅️upgrades-the-subgrade-to-k2-for-a-thicker-plate-at-minus-20c` | `🥶️upgrades-the-subgrade-to-k2-for-a-thicker-plate-at-minus-20c` |
-| `🎚️update-stainless-inputs` | `✨️update-stainless-inputs` | Stainless/duplex steel | `📐️upsizes-the-stainless-section-to-a-duplex-grade` | `✨️upsizes-the-stainless-section-to-a-duplex-grade` |
-| `🎢change-annex` | `🌍️change-annex` | National annex/jurisdiction | `🍎️switches-the-national-annex-from-de-to-en` | `🌐️switches-the-national-annex-from-de-to-en` |
-| `🏗️update-bridge-inputs` | `🌉️update-bridge-inputs` | Bridge loading/fatigue | `🖱️raises-the-bridge-damage-equivalence-and-dynamic-factors` | `🌉️raises-the-bridge-damage-equivalence-and-dynamic-factors` |
-| `💧update-hss-inputs` | `⬜️update-hss-inputs` | Hollow structural section | `🟪️reclassifies-the-hollow-section-to-class-3-in-s355` | `⬜️reclassifies-the-hollow-section-to-class-3-in-s355` |
-| `🔆update-fire-inputs` | `🔥️update-fire-inputs` | Structural fire design | `🦀️raises-the-fire-protection-to-r90` | `🧯️raises-the-fire-protection-to-r90` |
-| `🔥update-cold-formed-inputs` | `🥶️update-cold-formed-inputs` | Cold-formed steel | `🐙️thickens-the-cold-formed-flange-and-reverses-its-stress-gradient` | `↪️thickens-the-cold-formed-flange-and-reverses-its-stress-gradient` |
-| `🗺️update-pile-inputs` | `🪵️update-pile-inputs` | Driven steel pile | `🏔️derates-the-driven-pile-for-hard-driving` | `🔨️derates-the-driven-pile-for-hard-driving` |
-| `🧊update-member-properties` | `📊️update-member-properties` | Combined member geometry, load and strength | `🟣️re-grades-the-base-member-to-s460-under-a-heavier-load` | `🏋️re-grades-the-base-member-to-s460-under-a-heavier-load` |
-| `🧭update-plated-inputs` | `🧱️update-plated-inputs` | Slender plate panel | `📌️makes-the-plate-panel-more-slender-and-more-stressed` | `📈️makes-the-plate-panel-more-slender-and-more-stressed` |
-| `🧱update-weld-inputs` | `🧲️update-weld-inputs` | Welded joint | `💎️lengthens-the-fillet-weld-and-re-grades-it-to-s460` | `🧲️lengthens-the-fillet-weld-and-re-grades-it-to-s460` |
-| `🪟update-silo-shell-inputs` | `🛢️update-silo-shell-inputs` | Cylindrical silo shell | `🐚️deepens-the-silo-and-thickens-its-shell` | `🛢️deepens-the-silo-and-thickens-its-shell` |
+| Current operation                   | Reviewed operation                  | Purpose                                     | Current scenario                                                     | Reviewed scenario                                                    |
+| ----------------------------------- | ----------------------------------- | ------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `⚡update-tension-component-inputs` | `🪢️update-tension-component-inputs` | Tension rod/component                       | `🔮️derates-the-tension-rod-to-a-400-kn-characteristic-strength`      | `📉️derates-the-tension-rod-to-a-400-kn-characteristic-strength`      |
+| `❄️update-fatigue-inputs`           | `🔁️update-fatigue-inputs`           | Cyclic fatigue assessment                   | `🌵️drops-to-detail-category-56-under-a-safe-life-assessment`         | `🔁️drops-to-detail-category-56-under-a-safe-life-assessment`         |
+| `🌗update-tower-inputs`             | `🗼️update-tower-inputs`             | Steel tower                                 | `🟪️raises-the-tower-wind-factor-and-leg-force`                       | `🌬️raises-the-tower-wind-factor-and-leg-force`                       |
+| `🌞update-bolt-inputs`              | `🔩️update-bolt-inputs`              | Bolted connection                           | `🦉️moves-the-connection-to-four-m24-grade-10-9-bolts`                | `🔩️moves-the-connection-to-four-m24-grade-10-9-bolts`                |
+| `🌡️update-crane-inputs`             | `🏗️update-crane-inputs`             | Crane wheel loading                         | `🔀️widens-the-crane-wheel-contact-patch-under-a-heavier-wheel`       | `🏋️widens-the-crane-wheel-contact-patch-under-a-heavier-wheel`       |
+| `🌬️update-through-thickness-inputs` | `↕️update-through-thickness-inputs` | Through-thickness plate behaviour           | `🦅️upgrades-the-subgrade-to-k2-for-a-thicker-plate-at-minus-20c`     | `🥶️upgrades-the-subgrade-to-k2-for-a-thicker-plate-at-minus-20c`     |
+| `🎚️update-stainless-inputs`         | `✨️update-stainless-inputs`         | Stainless/duplex steel                      | `📐️upsizes-the-stainless-section-to-a-duplex-grade`                  | `✨️upsizes-the-stainless-section-to-a-duplex-grade`                  |
+| `🎢change-annex`                    | `🌍️change-annex`                    | National annex/jurisdiction                 | `🍎️switches-the-national-annex-from-de-to-en`                        | `🌐️switches-the-national-annex-from-de-to-en`                        |
+| `🏗️update-bridge-inputs`            | `🌉️update-bridge-inputs`            | Bridge loading/fatigue                      | `🖱️raises-the-bridge-damage-equivalence-and-dynamic-factors`         | `🌉️raises-the-bridge-damage-equivalence-and-dynamic-factors`         |
+| `💧update-hss-inputs`               | `⬜️update-hss-inputs`               | Hollow structural section                   | `🟪️reclassifies-the-hollow-section-to-class-3-in-s355`               | `⬜️reclassifies-the-hollow-section-to-class-3-in-s355`               |
+| `🔆update-fire-inputs`              | `🔥️update-fire-inputs`              | Structural fire design                      | `🦀️raises-the-fire-protection-to-r90`                                | `🧯️raises-the-fire-protection-to-r90`                                |
+| `🔥update-cold-formed-inputs`       | `🥶️update-cold-formed-inputs`       | Cold-formed steel                           | `🐙️thickens-the-cold-formed-flange-and-reverses-its-stress-gradient` | `↪️thickens-the-cold-formed-flange-and-reverses-its-stress-gradient` |
+| `🗺️update-pile-inputs`              | `🪵️update-pile-inputs`              | Driven steel pile                           | `🏔️derates-the-driven-pile-for-hard-driving`                         | `🔨️derates-the-driven-pile-for-hard-driving`                         |
+| `🧊update-member-properties`        | `📊️update-member-properties`        | Combined member geometry, load and strength | `🟣️re-grades-the-base-member-to-s460-under-a-heavier-load`           | `🏋️re-grades-the-base-member-to-s460-under-a-heavier-load`           |
+| `🧭update-plated-inputs`            | `🧱️update-plated-inputs`            | Slender plate panel                         | `📌️makes-the-plate-panel-more-slender-and-more-stressed`             | `📈️makes-the-plate-panel-more-slender-and-more-stressed`             |
+| `🧱update-weld-inputs`              | `🧲️update-weld-inputs`              | Welded joint                                | `💎️lengthens-the-fillet-weld-and-re-grades-it-to-s460`               | `🧲️lengthens-the-fillet-weld-and-re-grades-it-to-s460`               |
+| `🪟update-silo-shell-inputs`        | `🛢️update-silo-shell-inputs`        | Cylindrical silo shell                      | `🐚️deepens-the-silo-and-thickens-its-shell`                          | `🛢️deepens-the-silo-and-thickens-its-shell`                          |
 
 The first three reviewed operation/scenario pairs are now physically current: tension component `🪢️` with the `📉️` derating case, fatigue `🔁️` with its cyclic safe-life case, and tower `🗼️` with the `🌬️` wind/load case. Each exact descriptor, three Rust mounts, aggregate fixture mount, four common fixture reads, Python/Gherkin coordinates, oracle source/scenario declarations and central operation/test memberships changed with its two directory moves. Each eleven-file subtree retains **nine byte-identical files** from the initial inventory; only the descriptor identity and explanatory fixture heading changed. The normal catalogue generation/freshness check still passes all **392 payloads** with Ajv and hostile vectors. Fourteen EN 1993 operation identities remain pending.
 
@@ -249,30 +249,30 @@ Final EN 1993 evidence covers all **613 physical entries** with zero missing, mu
 
 EN 1994 is the composite steel/concrete family, so its reviewed family identity is `🧩️en1994`. Before any operation move, all 22 committed mutations were read with their mutation, before, after and outcome payloads. The following choices distinguish every operation sibling by actual engineering role. Each scenario has one physical sibling, but its marker is still chosen from the asserted change rather than retained from the existing arbitrary nature/animal palette.
 
-| Current operation | Reviewed operation | Purpose | Current scenario | Reviewed scenario |
-| --- | --- | --- | --- | --- |
-| `🏞️change-annex` | `🌍️change-annex` | National annex/jurisdiction | `🐯️switches-national-annex-to-en` | `🌐️switches-national-annex-to-en` |
-| `🌰change-d-mm` | `⭕️change-d-mm` | Shear-stud shank diameter | `🎯️thickens-stud-shank-to-22-mm` | `⭕️thickens-stud-shank-to-22-mm` |
-| `🐝change-deck-type` | `🪜️change-deck-type` | Profiled composite deck shape | `🦁️switches-deck-to-re-entrant` | `↩️switches-deck-to-re-entrant` |
-| `🌏️change-delta-sigma-mpa` | `📊️change-delta-sigma-mpa` | Steel fatigue stress range | `⛵️raises-steel-stress-range-to-96-mpa` | `📈️raises-steel-stress-range-to-96-mpa` |
-| `🌎️change-delta-tau-stud-mpa` | `🔩️change-delta-tau-stud-mpa` | Stud shear-stress range | `🐝️raises-stud-shear-stress-range-to-110-mpa` | `🔩️raises-stud-shear-stress-range-to-110-mpa` |
-| `🌍️change-e-cm-mpa` | `🪨️change-e-cm-mpa` | Concrete elastic modulus | `🦁️raises-concrete-modulus-to-35000-mpa` | `🪨️raises-concrete-modulus-to-35000-mpa` |
-| `🏕️change-eta` | `🤝️change-eta` | Degree of shear connection | `🪄️raises-shear-connection-degree-to-0-875` | `🤝️raises-shear-connection-degree-to-0-875` |
-| `🪵change-f-ck-mpa` | `🧱️change-f-ck-mpa` | Concrete cylinder strength | `🐞️upgrades-concrete-cylinder-strength-to-40-mpa` | `🧱️upgrades-concrete-cylinder-strength-to-40-mpa` |
-| `⛰️change-fatigue-detail` | `🔁️change-fatigue-detail` | Cyclic fatigue detail | `🌲️switches-fatigue-detail-to-flange-butt-weld` | `🪡️switches-fatigue-detail-to-flange-butt-weld` |
-| `🏟️change-fire-rating` | `🔥️change-fire-rating` | Structural fire rating | `🟥️upgrades-fire-rating-to-r90` | `🧯️upgrades-fire-rating-to-r90` |
-| `🪨change-fu-mpa` | `💪️change-fu-mpa` | Stud ultimate strength | `🔵️upgrades-stud-ultimate-strength-to-500-mpa` | `💪️upgrades-stud-ultimate-strength-to-500-mpa` |
-| `🌼change-fy-mpa` | `🏋️change-fy-mpa` | Structural-steel yield strength | `🟪️upgrades-steel-yield-to-460-mpa` | `🏋️upgrades-steel-yield-to-460-mpa` |
-| `🌐change-h-sc-mm` | `↕️change-h-sc-mm` | Shear-stud height | `🐬️lengthens-stud-to-125-mm` | `📏️lengthens-stud-to-125-mm` |
-| `🏖️change-insulation-thickness-mm` | `🧯️change-insulation-thickness-mm` | Fire-insulation thickness | `🔵️thickens-fire-insulation-to-40-mm` | `🧣️thickens-fire-insulation-to-40-mm` |
-| `🗻change-m-ed-knm` | `🌀️change-m-ed-knm` | Design bending moment | `🐞️raises-design-moment-to-320-knm` | `🌀️raises-design-moment-to-320-knm` |
-| `🐚change-m-pl-rd` | `🛡️change-m-pl-rd` | Plastic moment resistance | `🐞️raises-plastic-moment-resistance-to-375-knm` | `🛡️raises-plastic-moment-resistance-to-375-knm` |
-| `🏝️change-m-pla` | `🦾️change-m-pla` | Steel component plastic moment | `🌳️raises-steel-plastic-moment-to-128-knm` | `🦾️raises-steel-plastic-moment-to-128-knm` |
-| `🏔️change-n-cycles-stud` | `🔄️change-n-cycles-stud` | Stud fatigue cycle count | `🔢️raises-stud-cycle-count-to-5000000` | `🔢️raises-stud-cycle-count-to-5000000` |
-| `🌊change-span-m` | `📏️change-span-m` | Composite-member span | `🌷️lengthens-span-to-12-m` | `📏️lengthens-span-to-12-m` |
-| `🍄change-v-ed-kn` | `✂️change-v-ed-kn` | Design shear force | `🌾️raises-design-shear-to-225-kn` | `⬆️raises-design-shear-to-225-kn` |
-| `🏜️change-v-ed-per-stud-kn` | `📌️change-v-ed-per-stud-kn` | Design shear per connector stud | `🛰️raises-per-stud-shear-to-62-5-kn` | `📌️raises-per-stud-shear-to-62-5-kn` |
-| `🐞change-vl-rd` | `↔️change-vl-rd` | Longitudinal shear resistance | `🌷️raises-longitudinal-shear-resistance-to-240-kn` | `↔️raises-longitudinal-shear-resistance-to-240-kn` |
+| Current operation                  | Reviewed operation                 | Purpose                         | Current scenario                                   | Reviewed scenario                                  |
+| ---------------------------------- | ---------------------------------- | ------------------------------- | -------------------------------------------------- | -------------------------------------------------- |
+| `🏞️change-annex`                   | `🌍️change-annex`                   | National annex/jurisdiction     | `🐯️switches-national-annex-to-en`                  | `🌐️switches-national-annex-to-en`                  |
+| `🌰change-d-mm`                    | `⭕️change-d-mm`                    | Shear-stud shank diameter       | `🎯️thickens-stud-shank-to-22-mm`                   | `⭕️thickens-stud-shank-to-22-mm`                   |
+| `🐝change-deck-type`               | `🪜️change-deck-type`               | Profiled composite deck shape   | `🦁️switches-deck-to-re-entrant`                    | `↩️switches-deck-to-re-entrant`                    |
+| `🌏️change-delta-sigma-mpa`         | `📊️change-delta-sigma-mpa`         | Steel fatigue stress range      | `⛵️raises-steel-stress-range-to-96-mpa`            | `📈️raises-steel-stress-range-to-96-mpa`            |
+| `🌎️change-delta-tau-stud-mpa`      | `🔩️change-delta-tau-stud-mpa`      | Stud shear-stress range         | `🐝️raises-stud-shear-stress-range-to-110-mpa`      | `🔩️raises-stud-shear-stress-range-to-110-mpa`      |
+| `🌍️change-e-cm-mpa`                | `🪨️change-e-cm-mpa`                | Concrete elastic modulus        | `🦁️raises-concrete-modulus-to-35000-mpa`           | `🪨️raises-concrete-modulus-to-35000-mpa`           |
+| `🏕️change-eta`                     | `🤝️change-eta`                     | Degree of shear connection      | `🪄️raises-shear-connection-degree-to-0-875`        | `🤝️raises-shear-connection-degree-to-0-875`        |
+| `🪵change-f-ck-mpa`                | `🧱️change-f-ck-mpa`                | Concrete cylinder strength      | `🐞️upgrades-concrete-cylinder-strength-to-40-mpa`  | `🧱️upgrades-concrete-cylinder-strength-to-40-mpa`  |
+| `⛰️change-fatigue-detail`          | `🔁️change-fatigue-detail`          | Cyclic fatigue detail           | `🌲️switches-fatigue-detail-to-flange-butt-weld`    | `🪡️switches-fatigue-detail-to-flange-butt-weld`    |
+| `🏟️change-fire-rating`             | `🔥️change-fire-rating`             | Structural fire rating          | `🟥️upgrades-fire-rating-to-r90`                    | `🧯️upgrades-fire-rating-to-r90`                    |
+| `🪨change-fu-mpa`                  | `💪️change-fu-mpa`                  | Stud ultimate strength          | `🔵️upgrades-stud-ultimate-strength-to-500-mpa`     | `💪️upgrades-stud-ultimate-strength-to-500-mpa`     |
+| `🌼change-fy-mpa`                  | `🏋️change-fy-mpa`                  | Structural-steel yield strength | `🟪️upgrades-steel-yield-to-460-mpa`                | `🏋️upgrades-steel-yield-to-460-mpa`                |
+| `🌐change-h-sc-mm`                 | `↕️change-h-sc-mm`                 | Shear-stud height               | `🐬️lengthens-stud-to-125-mm`                       | `📏️lengthens-stud-to-125-mm`                       |
+| `🏖️change-insulation-thickness-mm` | `🧯️change-insulation-thickness-mm` | Fire-insulation thickness       | `🔵️thickens-fire-insulation-to-40-mm`              | `🧣️thickens-fire-insulation-to-40-mm`              |
+| `🗻change-m-ed-knm`                | `🌀️change-m-ed-knm`                | Design bending moment           | `🐞️raises-design-moment-to-320-knm`                | `🌀️raises-design-moment-to-320-knm`                |
+| `🐚change-m-pl-rd`                 | `🛡️change-m-pl-rd`                 | Plastic moment resistance       | `🐞️raises-plastic-moment-resistance-to-375-knm`    | `🛡️raises-plastic-moment-resistance-to-375-knm`    |
+| `🏝️change-m-pla`                   | `🦾️change-m-pla`                   | Steel component plastic moment  | `🌳️raises-steel-plastic-moment-to-128-knm`         | `🦾️raises-steel-plastic-moment-to-128-knm`         |
+| `🏔️change-n-cycles-stud`           | `🔄️change-n-cycles-stud`           | Stud fatigue cycle count        | `🔢️raises-stud-cycle-count-to-5000000`             | `🔢️raises-stud-cycle-count-to-5000000`             |
+| `🌊change-span-m`                  | `📏️change-span-m`                  | Composite-member span           | `🌷️lengthens-span-to-12-m`                         | `📏️lengthens-span-to-12-m`                         |
+| `🍄change-v-ed-kn`                 | `✂️change-v-ed-kn`                 | Design shear force              | `🌾️raises-design-shear-to-225-kn`                  | `⬆️raises-design-shear-to-225-kn`                  |
+| `🏜️change-v-ed-per-stud-kn`        | `📌️change-v-ed-per-stud-kn`        | Design shear per connector stud | `🛰️raises-per-stud-shear-to-62-5-kn`               | `📌️raises-per-stud-shear-to-62-5-kn`               |
+| `🐞change-vl-rd`                   | `↔️change-vl-rd`                   | Longitudinal shear resistance   | `🌷️raises-longitudinal-shear-resistance-to-240-kn` | `↔️raises-longitudinal-shear-resistance-to-240-kn` |
 
 This table is a retained semantic review record, not an executable migration plan. Physical and source changes are applied only in individually checked batches below.
 
@@ -301,57 +301,57 @@ No compatibility alias, fallback directory, generated rename plan or broad repla
 
 EN 1998 is the Eurocode 8 seismic-design family, so the reviewed family identity is `🫨️en1998`. The committed mutation, before and after payloads were read for every one of its 49 scalar or enum operations. The current geography, animal and colour palette is unrelated to the engineering fields; the replacements below are distinct among the operation siblings and identify the actual parameter being changed.
 
-| Current operation | Reviewed operation | Purpose | Current scenario | Reviewed scenario |
-| --- | --- | --- | --- | --- |
-| `⛰️change-en-ground-type` | `🗺️change-en-ground-type` | EN ground classification | `🧬️switches-en-ground-type-to-e` | `🗺️switches-en-ground-type-to-e` |
-| `🌊change-structural-system` | `🏗️change-structural-system` | Lateral structural system | `⚙️switches-structural-system-to-wall-dcm` | `🏗️switches-structural-system-to-wall-dcm` |
-| `🌍️change-v-rd-kn` | `🛡️change-v-rd-kn` | General shear resistance | `🌴️raises-v-rd-kn-to-925-0` | `🛡️raises-v-rd-kn-to-925-0` |
-| `🌎️change-drift-mm` | `↔️change-drift-mm` | Lateral drift | `🦊️raises-drift-mm-to-33-5` | `↔️raises-drift-mm-to-33-5` |
-| `🌏️change-height-m` | `↕️change-height-m` | Structural height | `🟦️raises-height-m-to-18-75` | `↕️raises-height-m-to-18-75` |
-| `🌐change-multiple-resisting-systems` | `🕸️change-multiple-resisting-systems` | Coupled resisting-system topology | `⚙️turns-multiple-resisting-systems-off` | `🕸️turns-multiple-resisting-systems-off` |
-| `🌰change-importance-class` | `🏛️change-importance-class` | Consequence/importance class | `📥️switches-importance-class-to-cc3` | `🏛️switches-importance-class-to-cc3` |
-| `🌼change-seismic-zone` | `🫨️change-seismic-zone` | Seismic hazard zone | `🌷️raises-seismic-zone-to-4` | `🫨️raises-seismic-zone-to-4` |
-| `🍄change-ground-type` | `🪨️change-ground-type` | Ground material type | `🧬️switches-ground-type-to-c` | `🪨️switches-ground-type-to-c` |
-| `🏔️change-en-a-gr` | `🏎️change-en-a-gr` | Reference ground acceleration | `🟫️raises-en-a-gr-to-0-25` | `🏎️raises-en-a-gr-to-0-25` |
-| `🏕️change-en-spectrum-type` | `🌈️change-en-spectrum-type` | Response-spectrum family | `🧬️switches-en-spectrum-type-to-type2` | `🌈️switches-en-spectrum-type-to-type2` |
-| `🏖️change-period-ratio` | `⏱️change-period-ratio` | Vibration-period ratio | `🐼️raises-period-ratio-to-3-5` | `⏱️raises-period-ratio-to-3-5` |
-| `🏜️change-bridge-v-rd-kn` | `🌉️change-bridge-v-rd-kn` | Bridge shear resistance | `🌉️raises-bridge-v-rd-kn-to-725-0` | `🌉️raises-bridge-v-rd-kn-to-725-0` |
-| `🏝️change-bearing-d-ed-mm` | `🎯️change-bearing-d-ed-mm` | Bearing displacement demand | `💎️raises-bearing-d-ed-mm-to-165-5` | `🎯️raises-bearing-d-ed-mm-to-165-5` |
-| `🏞️change-bearing-d-rd-mm` | `🛑️change-bearing-d-rd-mm` | Bearing displacement resistance limit | `🦋️raises-bearing-d-rd-mm-to-312-5` | `🛑️raises-bearing-d-rd-mm-to-312-5` |
-| `🏟️change-retrofit-knowledge-level` | `🎓️change-retrofit-knowledge-level` | Retrofit knowledge level | `💎️switches-retrofit-knowledge-level-to-kl3` | `🎓️switches-retrofit-knowledge-level-to-kl3` |
-| `🐊change-tank-height-m` | `🛢️change-tank-height-m` | Storage-tank height | `🌷️raises-tank-height-m-to-11-5` | `🛢️raises-tank-height-m-to-11-5` |
-| `🐌change-silo-height-m` | `🌾️change-silo-height-m` | Silo height | `🟪️raises-silo-height-m-to-14-5` | `🌾️raises-silo-height-m-to-14-5` |
-| `🐍change-tank-mass-t` | `⚓️change-tank-mass-t` | Storage-tank mass | `⛵️raises-tank-mass-t-to-425-0` | `⚓️raises-tank-mass-t-to-425-0` |
-| `🐎change-foundation-h-rd-kn` | `🧲️change-foundation-h-rd-kn` | Foundation horizontal resistance | `🌱️raises-foundation-h-rd-kn-to-475-0` | `🧲️raises-foundation-h-rd-kn-to-475-0` |
-| `🐐change-wall-height-m` | `🧱️change-wall-height-m` | Retaining-wall height | `🟨️raises-wall-height-m-to-5-5` | `🧱️raises-wall-height-m-to-5-5` |
-| `🐑change-k-soil` | `🌱️change-k-soil` | Soil stiffness | `🛟️raises-k-soil-to-262500-0` | `🌱️raises-k-soil-to-262500-0` |
-| `🐗change-wall-r` | `🔢️change-wall-r` | Retaining-wall behaviour factor | `🔮️raises-wall-r-to-2-25` | `🔢️raises-wall-r-to-2-25` |
-| `🐚change-t1-s` | `🕐️change-t1-s` | Fundamental period | `🟤️raises-t1-s-to-0-75` | `🕐️raises-t1-s-to-0-75` |
-| `🐜change-tower-q-nominal` | `💨️change-tower-q-nominal` | Tower wind/seismic behaviour factor | `🍐️raises-tower-q-nominal-to-3-25` | `💨️raises-tower-q-nominal-to-3-25` |
-| `🐝change-retrofit-ed-kn` | `📥️change-retrofit-ed-kn` | Retrofit action effect/demand | `🟢️raises-retrofit-e-d-kn-to-337-5` | `📥️raises-retrofit-e-d-kn-to-337-5` |
-| `🐞change-retrofit-rk-kn` | `💪️change-retrofit-rk-kn` | Retrofit characteristic resistance | `🌲️raises-retrofit-r-k-kn-to-512-5` | `💪️raises-retrofit-r-k-kn-to-512-5` |
-| `🐢change-silo-radius-m` | `⭕️change-silo-radius-m` | Silo radius | `🛸️raises-silo-radius-m-to-6-25` | `⭕️raises-silo-radius-m-to-6-25` |
-| `🐬change-silo-n-rd-kn` | `🗜️change-silo-n-rd-kn` | Silo axial resistance | `🛸️raises-silo-n-rd-kn-to-640-0` | `🗜️raises-silo-n-rd-kn-to-640-0` |
-| `🐮change-wall-phi-deg` | `📐️change-wall-phi-deg` | Retaining-soil friction angle | `🛟️raises-wall-phi-deg-to-37-5` | `📐️raises-wall-phi-deg-to-37-5` |
-| `🐳change-silo-v-ed-kn` | `📉️change-silo-v-ed-kn` | Silo shear demand | `🟥️raises-silo-v-ed-kn-to-225-5` | `📉️raises-silo-v-ed-kn-to-225-5` |
-| `🐴change-foundation-h-ed-kn` | `➡️change-foundation-h-ed-kn` | Foundation horizontal demand | `🟥️raises-foundation-h-ed-kn-to-212-5` | `➡️raises-foundation-h-ed-kn-to-212-5` |
-| `🐷change-wall-soil-gamma-kn-m3` | `🧂️change-wall-soil-gamma-kn-m3` | Retaining-soil unit weight | `🍊️raises-wall-soil-gamma-kn-m3-to-20-5` | `🧂️raises-wall-soil-gamma-kn-m3-to-20-5` |
-| `🕷️change-tower-is-chimney` | `🏭️change-tower-is-chimney` | Chimney/tower classification | `🔴️turns-tower-is-chimney-off` | `🏭️turns-tower-is-chimney-off` |
-| `🗻change-annex` | `🌍️change-annex` | National annex/jurisdiction | `🧭️switches-annex-to-en` | `🌍️switches-annex-to-en` |
-| `🦂change-tank-v-rd-kn` | `🔰️change-tank-v-rd-kn` | Tank shear resistance | `🌾️raises-tank-v-rd-kn-to-537-5` | `🔰️raises-tank-v-rd-kn-to-537-5` |
-| `🦄change-k-foundation` | `🌀️change-k-foundation` | Foundation spring stiffness | `🌻️raises-k-foundation-to-640000-0` | `🌀️raises-k-foundation-to-640000-0` |
-| `🦇change-foundation-area-m2` | `🔲️change-foundation-area-m2` | Foundation plan area | `🔮️raises-foundation-area-m2-to-144-0` | `🔲️raises-foundation-area-m2-to-144-0` |
-| `🦈change-silo-v-rd-kn` | `🚧️change-silo-v-rd-kn` | Silo shear resistance | `🍋️raises-silo-v-rd-kn-to-412-5` | `🚧️raises-silo-v-rd-kn-to-412-5` |
-| `🦉change-foundation-p-rd-kpa` | `👇️change-foundation-p-rd-kpa` | Foundation bearing-pressure resistance | `🧭️raises-foundation-p-rd-kpa-to-625-0` | `👇️raises-foundation-p-rd-kpa-to-625-0` |
-| `🦋change-retrofit-gamma-el` | `✖️change-retrofit-gamma-el` | Retrofit confidence multiplier | `🐸️raises-retrofit-gamma-el-to-1-25` | `✖️raises-retrofit-gamma-el-to-1-25` |
-| `🦌change-wall-h-rd-kn` | `🏋️change-wall-h-rd-kn` | Retaining-wall horizontal resistance | `🎨️raises-wall-h-rd-kn-to-187-5` | `🏋️raises-wall-h-rd-kn-to-187-5` |
-| `🦎change-tank-radius-m` | `🥁️change-tank-radius-m` | Cylindrical tank radius | `🍊️raises-tank-radius-m-to-5-75` | `🥁️raises-tank-radius-m-to-5-75` |
-| `🦔change-tower-mass-t` | `🗼️change-tower-mass-t` | Tower mass | `🪻️raises-tower-mass-t-to-112-5` | `🗼️raises-tower-mass-t-to-112-5` |
-| `🦗change-tower-m-rd-knm` | `🦾️change-tower-m-rd-knm` | Tower bending resistance | `🌱️raises-tower-m-rd-knm-to-2812-5` | `🦾️raises-tower-m-rd-knm-to-2812-5` |
-| `🦟change-tower-m-ed-knm` | `↪️change-tower-m-ed-knm` | Tower design bending moment | `🪄️raises-tower-m-ed-knm-to-1562-5` | `↪️raises-tower-m-ed-knm-to-1562-5` |
-| `🦭change-silo-q-nominal` | `📊️change-silo-q-nominal` | Silo behaviour factor | `🎈️raises-silo-q-nominal-to-2-75` | `📊️raises-silo-q-nominal-to-2-75` |
-| `🪨change-mass-t` | `⚖️change-mass-t` | General seismic mass | `🟩️raises-mass-t-to-812-5` | `⚖️raises-mass-t-to-812-5` |
-| `🪵change-retrofit-limit-state` | `🚦️change-retrofit-limit-state` | Retrofit performance limit state | `🟡️switches-retrofit-limit-state-to-near-collapse` | `🚦️switches-retrofit-limit-state-to-near-collapse` |
+| Current operation                     | Reviewed operation                    | Purpose                                | Current scenario                                   | Reviewed scenario                                  |
+| ------------------------------------- | ------------------------------------- | -------------------------------------- | -------------------------------------------------- | -------------------------------------------------- |
+| `⛰️change-en-ground-type`             | `🗺️change-en-ground-type`             | EN ground classification               | `🧬️switches-en-ground-type-to-e`                   | `🗺️switches-en-ground-type-to-e`                   |
+| `🌊change-structural-system`          | `🏗️change-structural-system`          | Lateral structural system              | `⚙️switches-structural-system-to-wall-dcm`         | `🏗️switches-structural-system-to-wall-dcm`         |
+| `🌍️change-v-rd-kn`                    | `🛡️change-v-rd-kn`                    | General shear resistance               | `🌴️raises-v-rd-kn-to-925-0`                        | `🛡️raises-v-rd-kn-to-925-0`                        |
+| `🌎️change-drift-mm`                   | `↔️change-drift-mm`                   | Lateral drift                          | `🦊️raises-drift-mm-to-33-5`                        | `↔️raises-drift-mm-to-33-5`                        |
+| `🌏️change-height-m`                   | `↕️change-height-m`                   | Structural height                      | `🟦️raises-height-m-to-18-75`                       | `↕️raises-height-m-to-18-75`                       |
+| `🌐change-multiple-resisting-systems` | `🕸️change-multiple-resisting-systems` | Coupled resisting-system topology      | `⚙️turns-multiple-resisting-systems-off`           | `🕸️turns-multiple-resisting-systems-off`           |
+| `🌰change-importance-class`           | `🏛️change-importance-class`           | Consequence/importance class           | `📥️switches-importance-class-to-cc3`               | `🏛️switches-importance-class-to-cc3`               |
+| `🌼change-seismic-zone`               | `🫨️change-seismic-zone`               | Seismic hazard zone                    | `🌷️raises-seismic-zone-to-4`                       | `🫨️raises-seismic-zone-to-4`                       |
+| `🍄change-ground-type`                | `🪨️change-ground-type`                | Ground material type                   | `🧬️switches-ground-type-to-c`                      | `🪨️switches-ground-type-to-c`                      |
+| `🏔️change-en-a-gr`                    | `🏎️change-en-a-gr`                    | Reference ground acceleration          | `🟫️raises-en-a-gr-to-0-25`                         | `🏎️raises-en-a-gr-to-0-25`                         |
+| `🏕️change-en-spectrum-type`           | `🌈️change-en-spectrum-type`           | Response-spectrum family               | `🧬️switches-en-spectrum-type-to-type2`             | `🌈️switches-en-spectrum-type-to-type2`             |
+| `🏖️change-period-ratio`               | `⏱️change-period-ratio`               | Vibration-period ratio                 | `🐼️raises-period-ratio-to-3-5`                     | `⏱️raises-period-ratio-to-3-5`                     |
+| `🏜️change-bridge-v-rd-kn`             | `🌉️change-bridge-v-rd-kn`             | Bridge shear resistance                | `🌉️raises-bridge-v-rd-kn-to-725-0`                 | `🌉️raises-bridge-v-rd-kn-to-725-0`                 |
+| `🏝️change-bearing-d-ed-mm`            | `🎯️change-bearing-d-ed-mm`            | Bearing displacement demand            | `💎️raises-bearing-d-ed-mm-to-165-5`                | `🎯️raises-bearing-d-ed-mm-to-165-5`                |
+| `🏞️change-bearing-d-rd-mm`            | `🛑️change-bearing-d-rd-mm`            | Bearing displacement resistance limit  | `🦋️raises-bearing-d-rd-mm-to-312-5`                | `🛑️raises-bearing-d-rd-mm-to-312-5`                |
+| `🏟️change-retrofit-knowledge-level`   | `🎓️change-retrofit-knowledge-level`   | Retrofit knowledge level               | `💎️switches-retrofit-knowledge-level-to-kl3`       | `🎓️switches-retrofit-knowledge-level-to-kl3`       |
+| `🐊change-tank-height-m`              | `🛢️change-tank-height-m`              | Storage-tank height                    | `🌷️raises-tank-height-m-to-11-5`                   | `🛢️raises-tank-height-m-to-11-5`                   |
+| `🐌change-silo-height-m`              | `🌾️change-silo-height-m`              | Silo height                            | `🟪️raises-silo-height-m-to-14-5`                   | `🌾️raises-silo-height-m-to-14-5`                   |
+| `🐍change-tank-mass-t`                | `⚓️change-tank-mass-t`                | Storage-tank mass                      | `⛵️raises-tank-mass-t-to-425-0`                    | `⚓️raises-tank-mass-t-to-425-0`                    |
+| `🐎change-foundation-h-rd-kn`         | `🧲️change-foundation-h-rd-kn`         | Foundation horizontal resistance       | `🌱️raises-foundation-h-rd-kn-to-475-0`             | `🧲️raises-foundation-h-rd-kn-to-475-0`             |
+| `🐐change-wall-height-m`              | `🧱️change-wall-height-m`              | Retaining-wall height                  | `🟨️raises-wall-height-m-to-5-5`                    | `🧱️raises-wall-height-m-to-5-5`                    |
+| `🐑change-k-soil`                     | `🌱️change-k-soil`                     | Soil stiffness                         | `🛟️raises-k-soil-to-262500-0`                      | `🌱️raises-k-soil-to-262500-0`                      |
+| `🐗change-wall-r`                     | `🔢️change-wall-r`                     | Retaining-wall behaviour factor        | `🔮️raises-wall-r-to-2-25`                          | `🔢️raises-wall-r-to-2-25`                          |
+| `🐚change-t1-s`                       | `🕐️change-t1-s`                       | Fundamental period                     | `🟤️raises-t1-s-to-0-75`                            | `🕐️raises-t1-s-to-0-75`                            |
+| `🐜change-tower-q-nominal`            | `💨️change-tower-q-nominal`            | Tower wind/seismic behaviour factor    | `🍐️raises-tower-q-nominal-to-3-25`                 | `💨️raises-tower-q-nominal-to-3-25`                 |
+| `🐝change-retrofit-ed-kn`             | `📥️change-retrofit-ed-kn`             | Retrofit action effect/demand          | `🟢️raises-retrofit-e-d-kn-to-337-5`                | `📥️raises-retrofit-e-d-kn-to-337-5`                |
+| `🐞change-retrofit-rk-kn`             | `💪️change-retrofit-rk-kn`             | Retrofit characteristic resistance     | `🌲️raises-retrofit-r-k-kn-to-512-5`                | `💪️raises-retrofit-r-k-kn-to-512-5`                |
+| `🐢change-silo-radius-m`              | `⭕️change-silo-radius-m`              | Silo radius                            | `🛸️raises-silo-radius-m-to-6-25`                   | `⭕️raises-silo-radius-m-to-6-25`                   |
+| `🐬change-silo-n-rd-kn`               | `🗜️change-silo-n-rd-kn`               | Silo axial resistance                  | `🛸️raises-silo-n-rd-kn-to-640-0`                   | `🗜️raises-silo-n-rd-kn-to-640-0`                   |
+| `🐮change-wall-phi-deg`               | `📐️change-wall-phi-deg`               | Retaining-soil friction angle          | `🛟️raises-wall-phi-deg-to-37-5`                    | `📐️raises-wall-phi-deg-to-37-5`                    |
+| `🐳change-silo-v-ed-kn`               | `📉️change-silo-v-ed-kn`               | Silo shear demand                      | `🟥️raises-silo-v-ed-kn-to-225-5`                   | `📉️raises-silo-v-ed-kn-to-225-5`                   |
+| `🐴change-foundation-h-ed-kn`         | `➡️change-foundation-h-ed-kn`         | Foundation horizontal demand           | `🟥️raises-foundation-h-ed-kn-to-212-5`             | `➡️raises-foundation-h-ed-kn-to-212-5`             |
+| `🐷change-wall-soil-gamma-kn-m3`      | `🧂️change-wall-soil-gamma-kn-m3`      | Retaining-soil unit weight             | `🍊️raises-wall-soil-gamma-kn-m3-to-20-5`           | `🧂️raises-wall-soil-gamma-kn-m3-to-20-5`           |
+| `🕷️change-tower-is-chimney`           | `🏭️change-tower-is-chimney`           | Chimney/tower classification           | `🔴️turns-tower-is-chimney-off`                     | `🏭️turns-tower-is-chimney-off`                     |
+| `🗻change-annex`                      | `🌍️change-annex`                      | National annex/jurisdiction            | `🧭️switches-annex-to-en`                           | `🌍️switches-annex-to-en`                           |
+| `🦂change-tank-v-rd-kn`               | `🔰️change-tank-v-rd-kn`               | Tank shear resistance                  | `🌾️raises-tank-v-rd-kn-to-537-5`                   | `🔰️raises-tank-v-rd-kn-to-537-5`                   |
+| `🦄change-k-foundation`               | `🌀️change-k-foundation`               | Foundation spring stiffness            | `🌻️raises-k-foundation-to-640000-0`                | `🌀️raises-k-foundation-to-640000-0`                |
+| `🦇change-foundation-area-m2`         | `🔲️change-foundation-area-m2`         | Foundation plan area                   | `🔮️raises-foundation-area-m2-to-144-0`             | `🔲️raises-foundation-area-m2-to-144-0`             |
+| `🦈change-silo-v-rd-kn`               | `🚧️change-silo-v-rd-kn`               | Silo shear resistance                  | `🍋️raises-silo-v-rd-kn-to-412-5`                   | `🚧️raises-silo-v-rd-kn-to-412-5`                   |
+| `🦉change-foundation-p-rd-kpa`        | `👇️change-foundation-p-rd-kpa`        | Foundation bearing-pressure resistance | `🧭️raises-foundation-p-rd-kpa-to-625-0`            | `👇️raises-foundation-p-rd-kpa-to-625-0`            |
+| `🦋change-retrofit-gamma-el`          | `✖️change-retrofit-gamma-el`          | Retrofit confidence multiplier         | `🐸️raises-retrofit-gamma-el-to-1-25`               | `✖️raises-retrofit-gamma-el-to-1-25`               |
+| `🦌change-wall-h-rd-kn`               | `🏋️change-wall-h-rd-kn`               | Retaining-wall horizontal resistance   | `🎨️raises-wall-h-rd-kn-to-187-5`                   | `🏋️raises-wall-h-rd-kn-to-187-5`                   |
+| `🦎change-tank-radius-m`              | `🥁️change-tank-radius-m`              | Cylindrical tank radius                | `🍊️raises-tank-radius-m-to-5-75`                   | `🥁️raises-tank-radius-m-to-5-75`                   |
+| `🦔change-tower-mass-t`               | `🗼️change-tower-mass-t`               | Tower mass                             | `🪻️raises-tower-mass-t-to-112-5`                   | `🗼️raises-tower-mass-t-to-112-5`                   |
+| `🦗change-tower-m-rd-knm`             | `🦾️change-tower-m-rd-knm`             | Tower bending resistance               | `🌱️raises-tower-m-rd-knm-to-2812-5`                | `🦾️raises-tower-m-rd-knm-to-2812-5`                |
+| `🦟change-tower-m-ed-knm`             | `↪️change-tower-m-ed-knm`             | Tower design bending moment            | `🪄️raises-tower-m-ed-knm-to-1562-5`                | `↪️raises-tower-m-ed-knm-to-1562-5`                |
+| `🦭change-silo-q-nominal`             | `📊️change-silo-q-nominal`             | Silo behaviour factor                  | `🎈️raises-silo-q-nominal-to-2-75`                  | `📊️raises-silo-q-nominal-to-2-75`                  |
+| `🪨change-mass-t`                     | `⚖️change-mass-t`                     | General seismic mass                   | `🟩️raises-mass-t-to-812-5`                         | `⚖️raises-mass-t-to-812-5`                         |
+| `🪵change-retrofit-limit-state`       | `🚦️change-retrofit-limit-state`       | Retrofit performance limit state       | `🟡️switches-retrofit-limit-state-to-near-collapse` | `🚦️switches-retrofit-limit-state-to-near-collapse` |
 
 This is retained review evidence, not an executable migration plan. The operation paths will be changed only in explicit individually checked batches with their exact descriptors, package mounts, aggregate fixture mounts, common fixture readers, Python/Gherkin rows, oracle vectors and central memberships.
 
@@ -378,70 +378,70 @@ The scoped native command `NX_DAEMON=false NX_ISOLATE_PLUGINS=false bun nx run @
 
 DIN EN 16798 governs ventilation and indoor environmental performance, so the reviewed family identity is `🌬️din16798`. Each of the 62 committed mutation payloads and its before/after snapshots was read before selecting the following identities. The operation markers are distinct among their shared mutation parent and describe the changed physical quantity, class or system rather than retaining the existing plant/tool/animal palette.
 
-| Current operation | Reviewed operation | Committed change | Reviewed scenario |
-| --- | --- | --- | --- |
-| `🌊change-t-op-c` | `🌡️change-t-op-c` | Operative temperature 22 → 24.5 °C | `🌡️raises-the-operative-temperature-to-24-point-5-c` |
-| `🌍️change-theta-rm-c` | `🔄️change-theta-rm-c` | Running-mean outdoor temperature 15 → 18.5 °C | `🔄️raises-the-running-mean-outdoor-temperature-to-18-point-5-c` |
-| `🌎️change-theta-set-c` | `🎯️change-theta-set-c` | Cooling set point 26 → 25 °C | `🎯️lowers-the-cooling-set-point-to-25-c` |
-| `🌏️change-theta-st-c` | `🫙️change-theta-st-c` | Storage temperature 60 → 55 °C | `🫙️lowers-the-storage-temperature-to-55-c` |
-| `🌐change-ventilation-m3-h` | `💨️change-ventilation-m3-h` | Supply airflow 280 → 360 m³/h | `💨️raises-the-supply-airflow-to-360-m3-per-hour` |
-| `🌰change-system-type` | `⚙️change-system-type` | Central → decentral mechanical system | `⚙️switches-to-a-decentral-mechanical-system` |
-| `🌱change-persons` | `👥️change-persons` | Design occupancy 10 → 16 people | `👥️raises-the-design-occupancy-to-16-people` |
-| `🌲change-n50-h-inv` | `🏠️change-n50-h-inv` | Envelope blower-door result 1.5 → 2.5 h⁻¹ | `🏠️loosens-the-blower-door-result-to-2-point-5-per-hour` |
-| `🌳change-l-aeq-db` | `🔊️change-l-aeq-db` | Equivalent sound level 24 → 30 dB | `🔊️raises-the-equivalent-sound-level-to-30-db` |
-| `🌴change-infiltration-allowance-m3-h` | `🚪️change-infiltration-allowance-m3-h` | Infiltration allowance 45 → 52.5 m³/h | `🚪️raises-the-infiltration-allowance-to-52-point-5-m3-per-hour` |
-| `🌵change-ida-class` | `🫁️change-ida-class` | Indoor-air class 2 → 3 | `🫁️relaxes-the-indoor-air-class-to-ida-3` |
-| `🌷change-qc-kwh` | `❄️change-qc-kwh` | Annual cooling demand 1000 → 1250 kWh | `❄️raises-the-annual-cooling-demand-to-1250-kwh` |
-| `🌸change-residential-ventilation-m3-h` | `🏘️change-residential-ventilation-m3-h` | Residential airflow 80 → 110 m³/h | `🏘️raises-the-residential-airflow-to-110-m3-per-hour` |
-| `🌹change-rh-percent` | `💧️change-rh-percent` | Relative humidity 50 → 42.5% | `💧️drops-indoor-humidity-to-42-point-5-percent` |
-| `🌺change-sfp-required-class` | `🏷️change-sfp-required-class` | Required SFP class 4 → 3 | `🏷️tightens-the-required-sfp-class-to-3` |
-| `🌻change-sfp-wm3-s` | `🌀️change-sfp-wm3-s` | Specific fan power 1500 → 1250 W/(m³/s) | `🌀️improves-the-specific-fan-power-to-1250-w-per-m3-s` |
-| `🌼change-storage-allowance-kwh` | `📉️change-storage-allowance-kwh` | Storage-loss allowance 6 → 4.5 kWh | `📉️tightens-the-storage-loss-allowance-to-4-point-5-kwh` |
-| `🌾change-humidification-required-kg-h` | `☁️change-humidification-required-kg-h` | Required humidification 2 → 3.5 kg/h | `☁️raises-the-required-humidification-to-3-point-5-kg-per-hour` |
-| `🌿change-hr-th` | `⏳️change-hr-th` | Heat-recovery operating time 10 → 14 h | `⏳️extends-the-heat-recovery-operating-hours-to-14` |
-| `🍀change-humidification-provided-kg-h` | `💦️change-humidification-provided-kg-h` | Provided humidification 2 → 1.25 kg/h | `💦️drops-the-provided-humidification-to-1-point-25-kg-per-hour` |
-| `🍁change-night-setback-k` | `🌙️change-night-setback-k` | Night setback 3.5 → 5 K | `🌙️deepens-the-night-setback-to-5-kelvin` |
-| `🍂change-occupancy` | `🏢️change-occupancy` | Residential → office use | `🏢️reclassifies-the-space-as-office` |
-| `🍃change-occupants` | `👪️change-occupants` | Household occupants 3 → 5 | `👪️raises-the-household-to-five-occupants` |
-| `🍄change-storage-th` | `🕒️change-storage-th` | Storage standby period 24 → 18 h | `🕒️shortens-the-storage-standby-period-to-18-hours` |
-| `🏔️change-years-since-inspection` | `📅️change-years-since-inspection` | Inspection age 1 → 6 years | `📅️ages-the-last-inspection-to-six-years` |
-| `🏷️change-annex` | `🌍️change-annex` | German → EN annex | `🌍️switches-the-check-to-the-en-annex` |
-| `🐚change-theta-amb-c` | `🌬️change-theta-amb-c` | Storage-room ambient 20 → 18 °C | `🌬️lowers-the-storage-room-ambient-to-18-c` |
-| `🔀change-air-speed-ms` | `🪁️change-air-speed-ms` | Draught air speed 0.125 → 0.25 m/s | `🪁️doubles-the-draught-air-speed-to-0-point-25-ms` |
-| `🔢change-bedrooms` | `🛏️change-bedrooms` | Bedrooms 3 → 4 | `🛏️adds-a-fourth-bedroom` |
-| `🗻change-volume-m3` | `🧊️change-volume-m3` | Air volume 500 → 640 m³ | `🧊️grows-the-air-volume-to-640-m3` |
-| `🚨change-chiller-type` | `🥶️change-chiller-type` | Air-cooled → water-cooled chiller | `🥶️switches-to-a-water-cooled-chiller` |
-| `🚿change-hr-m-dot-kg-s` | `⚖️change-hr-m-dot-kg-s` | Heat-recovery mass flow 0.5 → 0.75 kg/s | `⚖️raises-the-heat-recovery-mass-flow-to-0-point-75-kg-per-second` |
-| `🛁change-hr-savings-reference-kwh` | `💡️change-hr-savings-reference-kwh` | Recovery savings reference 50 → 65 kWh | `💡️raises-the-heat-recovery-savings-reference-to-65-kwh` |
-| `🛋️change-hr-cp-j-kgk` | `🥵️change-hr-cp-j-kgk` | Air heat capacity 1005 → 1010 J/(kg·K) | `🥵️corrects-the-air-specific-heat-to-1010-j-per-kgk` |
-| `🛏️change-hr-delta-tc` | `↕️change-hr-delta-tc` | Recovery temperature lift 15 → 12.5 °C | `↕️drops-the-heat-recovery-temperature-lift-to-12-point-5-c` |
-| `🛠️change-co2-ppm` | `🌫️change-co2-ppm` | Measured CO₂ 800 → 950 ppm | `🌫️raises-the-measured-co2-to-950-ppm` |
-| `🛡️change-cellar-area-m2` | `🏚️change-cellar-area-m2` | Cellar floor area 50 → 62.5 m² | `🏚️grows-the-cellar-floor-area-to-62-point-5-m2` |
-| `🧯change-cellar-ventilation-m3-h` | `🪟️change-cellar-ventilation-m3-h` | Cellar airflow 15 → 22.5 m³/h | `🪟️raises-the-cellar-airflow-to-22-point-5-m3-per-hour` |
-| `🧰change-data-center-supply-c` | `🖥️change-data-center-supply-c` | Data-centre supply air 22 → 27 °C | `🖥️raises-the-data-centre-supply-air-to-27-c` |
-| `🧲change-dwelling-ventilation-m3-h` | `🏡️change-dwelling-ventilation-m3-h` | Dwelling airflow 64 → 96 m³/h | `🏡️raises-the-dwelling-airflow-to-96-m3-per-hour` |
-| `🧴change-fan-t-run-h` | `⏰️change-fan-t-run-h` | Daily fan runtime 8 → 12 h | `⏰️extends-the-daily-fan-runtime-to-12-hours` |
-| `🧵change-df-percent` | `☀️change-df-percent` | Daylight factor 2.5 → 3.75% | `☀️raises-the-daylight-factor-to-3-point-75-percent` |
-| `🧶change-dhw-delivery-c` | `🚿️change-dhw-delivery-c` | DHW delivery 58 → 60 °C | `🚿️raises-the-dhw-delivery-temperature-to-60-c` |
-| `🧷change-duct-test-pressure-pa` | `🧭️change-duct-test-pressure-pa` | Duct test pressure 400 → 500 Pa | `🧭️raises-the-duct-test-pressure-to-500-pa` |
-| `🧹change-h-tr-wk` | `🧱️change-h-tr-wk` | Transmission heat transfer 200 → 175 W/K | `🧱️improves-the-transmission-heat-transfer-to-175-w-per-k` |
-| `🧺change-h-ve-wk` | `🔃️change-h-ve-wk` | Ventilation heat transfer 100 → 125 W/K | `🔃️raises-the-ventilation-heat-transfer-to-125-w-per-k` |
-| `🧼change-floor-area-m2` | `📐️change-floor-area-m2` | Conditioned floor area 90 → 120 m² | `📐️grows-the-conditioned-floor-area-to-120-m2` |
-| `🧽change-generation-reference-kwh` | `⚡️change-generation-reference-kwh` | Generation reference 400 → 450 kWh | `⚡️raises-the-generation-reference-to-450-kwh` |
-| `🪑change-heat-recovery-eta` | `♻️change-heat-recovery-eta` | Achieved heat recovery 0.75 → 0.875 | `♻️raises-the-achieved-heat-recovery-to-0-point-875` |
-| `🪒change-fan-energy-reference-kwh` | `🔌️change-fan-energy-reference-kwh` | Fan-energy reference 15 → 18 kWh | `🔌️raises-the-fan-energy-reference-to-18-kwh` |
-| `🪚change-cooling-delta-th` | `⌛️change-cooling-delta-th` | Cooling period 10 → 12.5 h | `⌛️extends-the-cooling-period-to-12-point-5-hours` |
-| `🪛change-comfort-category` | `🛋️change-comfort-category` | Comfort category II → I | `🛋️tightens-the-comfort-category-to-i` |
-| `🪜change-cooling-gains-kwh` | `📈️change-cooling-gains-kwh` | Internal cooling gains 5 → 7.5 kWh | `📈️raises-the-internal-cooling-gains-to-7-point-5-kwh` |
-| `🪝change-cooling-reference-kwh` | `📊️change-cooling-reference-kwh` | Cooling reference 20 → 25 kWh | `📊️raises-the-cooling-reference-to-25-kwh` |
-| `🪞change-heat-recovery-eta-min` | `🚧️change-heat-recovery-eta-min` | Required recovery minimum 0.5 → 0.625 | `🚧️raises-the-required-heat-recovery-minimum-to-0-point-625` |
-| `🪠change-h-st-wk` | `🧮️change-h-st-wk` | Storage-loss coefficient 5 → 6.5 W/K | `🧮️raises-the-storage-loss-coefficient-to-6-point-5-w-per-k` |
-| `🪡change-duct-class` | `🛡️change-duct-class` | Duct tightness class C → D | `🛡️upgrades-the-duct-tightness-class-to-d` |
-| `🪢change-duct-leakage-m3-sm2` | `🕳️change-duct-leakage-m3-sm2` | Duct leakage 0.125 → 0.0625 m³/(s·m²) | `🕳️halves-the-measured-duct-leakage-to-0-point-0625` |
-| `🪣change-cooling-utilization-factor` | `🎚️change-cooling-utilization-factor` | Cooling utilization 0.75 → 0.875 | `🎚️raises-the-cooling-utilization-factor-to-0-point-875` |
-| `🪤change-eer-actual` | `✅️change-eer-actual` | Achieved EER 3 → 3.5 | `✅️raises-the-achieved-eer-to-3-point-5` |
-| `🪥change-fan-qvm3-s` | `🪭️change-fan-qvm3-s` | Fan volume flow 1 → 1.5 m³/s | `🪭️raises-the-fan-volume-flow-to-1-point-5-m3-per-second` |
-| `🪨change-theta-ec` | `🌤️change-theta-ec` | External design temperature 32 → 34.5 °C | `🌤️raises-the-external-design-temperature-to-34-point-5-c` |
+| Current operation                       | Reviewed operation                      | Committed change                              | Reviewed scenario                                                  |
+| --------------------------------------- | --------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------ |
+| `🌊change-t-op-c`                       | `🌡️change-t-op-c`                       | Operative temperature 22 → 24.5 °C            | `🌡️raises-the-operative-temperature-to-24-point-5-c`               |
+| `🌍️change-theta-rm-c`                   | `🔄️change-theta-rm-c`                   | Running-mean outdoor temperature 15 → 18.5 °C | `🔄️raises-the-running-mean-outdoor-temperature-to-18-point-5-c`    |
+| `🌎️change-theta-set-c`                  | `🎯️change-theta-set-c`                  | Cooling set point 26 → 25 °C                  | `🎯️lowers-the-cooling-set-point-to-25-c`                           |
+| `🌏️change-theta-st-c`                   | `🫙️change-theta-st-c`                   | Storage temperature 60 → 55 °C                | `🫙️lowers-the-storage-temperature-to-55-c`                         |
+| `🌐change-ventilation-m3-h`             | `💨️change-ventilation-m3-h`             | Supply airflow 280 → 360 m³/h                 | `💨️raises-the-supply-airflow-to-360-m3-per-hour`                   |
+| `🌰change-system-type`                  | `⚙️change-system-type`                  | Central → decentral mechanical system         | `⚙️switches-to-a-decentral-mechanical-system`                      |
+| `🌱change-persons`                      | `👥️change-persons`                      | Design occupancy 10 → 16 people               | `👥️raises-the-design-occupancy-to-16-people`                       |
+| `🌲change-n50-h-inv`                    | `🏠️change-n50-h-inv`                    | Envelope blower-door result 1.5 → 2.5 h⁻¹     | `🏠️loosens-the-blower-door-result-to-2-point-5-per-hour`           |
+| `🌳change-l-aeq-db`                     | `🔊️change-l-aeq-db`                     | Equivalent sound level 24 → 30 dB             | `🔊️raises-the-equivalent-sound-level-to-30-db`                     |
+| `🌴change-infiltration-allowance-m3-h`  | `🚪️change-infiltration-allowance-m3-h`  | Infiltration allowance 45 → 52.5 m³/h         | `🚪️raises-the-infiltration-allowance-to-52-point-5-m3-per-hour`    |
+| `🌵change-ida-class`                    | `🫁️change-ida-class`                    | Indoor-air class 2 → 3                        | `🫁️relaxes-the-indoor-air-class-to-ida-3`                          |
+| `🌷change-qc-kwh`                       | `❄️change-qc-kwh`                       | Annual cooling demand 1000 → 1250 kWh         | `❄️raises-the-annual-cooling-demand-to-1250-kwh`                   |
+| `🌸change-residential-ventilation-m3-h` | `🏘️change-residential-ventilation-m3-h` | Residential airflow 80 → 110 m³/h             | `🏘️raises-the-residential-airflow-to-110-m3-per-hour`              |
+| `🌹change-rh-percent`                   | `💧️change-rh-percent`                   | Relative humidity 50 → 42.5%                  | `💧️drops-indoor-humidity-to-42-point-5-percent`                    |
+| `🌺change-sfp-required-class`           | `🏷️change-sfp-required-class`           | Required SFP class 4 → 3                      | `🏷️tightens-the-required-sfp-class-to-3`                           |
+| `🌻change-sfp-wm3-s`                    | `🌀️change-sfp-wm3-s`                    | Specific fan power 1500 → 1250 W/(m³/s)       | `🌀️improves-the-specific-fan-power-to-1250-w-per-m3-s`             |
+| `🌼change-storage-allowance-kwh`        | `📉️change-storage-allowance-kwh`        | Storage-loss allowance 6 → 4.5 kWh            | `📉️tightens-the-storage-loss-allowance-to-4-point-5-kwh`           |
+| `🌾change-humidification-required-kg-h` | `☁️change-humidification-required-kg-h` | Required humidification 2 → 3.5 kg/h          | `☁️raises-the-required-humidification-to-3-point-5-kg-per-hour`    |
+| `🌿change-hr-th`                        | `⏳️change-hr-th`                        | Heat-recovery operating time 10 → 14 h        | `⏳️extends-the-heat-recovery-operating-hours-to-14`                |
+| `🍀change-humidification-provided-kg-h` | `💦️change-humidification-provided-kg-h` | Provided humidification 2 → 1.25 kg/h         | `💦️drops-the-provided-humidification-to-1-point-25-kg-per-hour`    |
+| `🍁change-night-setback-k`              | `🌙️change-night-setback-k`              | Night setback 3.5 → 5 K                       | `🌙️deepens-the-night-setback-to-5-kelvin`                          |
+| `🍂change-occupancy`                    | `🏢️change-occupancy`                    | Residential → office use                      | `🏢️reclassifies-the-space-as-office`                               |
+| `🍃change-occupants`                    | `👪️change-occupants`                    | Household occupants 3 → 5                     | `👪️raises-the-household-to-five-occupants`                         |
+| `🍄change-storage-th`                   | `🕒️change-storage-th`                   | Storage standby period 24 → 18 h              | `🕒️shortens-the-storage-standby-period-to-18-hours`                |
+| `🏔️change-years-since-inspection`       | `📅️change-years-since-inspection`       | Inspection age 1 → 6 years                    | `📅️ages-the-last-inspection-to-six-years`                          |
+| `🏷️change-annex`                        | `🌍️change-annex`                        | German → EN annex                             | `🌍️switches-the-check-to-the-en-annex`                             |
+| `🐚change-theta-amb-c`                  | `🌬️change-theta-amb-c`                  | Storage-room ambient 20 → 18 °C               | `🌬️lowers-the-storage-room-ambient-to-18-c`                        |
+| `🔀change-air-speed-ms`                 | `🪁️change-air-speed-ms`                 | Draught air speed 0.125 → 0.25 m/s            | `🪁️doubles-the-draught-air-speed-to-0-point-25-ms`                 |
+| `🔢change-bedrooms`                     | `🛏️change-bedrooms`                     | Bedrooms 3 → 4                                | `🛏️adds-a-fourth-bedroom`                                          |
+| `🗻change-volume-m3`                    | `🧊️change-volume-m3`                    | Air volume 500 → 640 m³                       | `🧊️grows-the-air-volume-to-640-m3`                                 |
+| `🚨change-chiller-type`                 | `🥶️change-chiller-type`                 | Air-cooled → water-cooled chiller             | `🥶️switches-to-a-water-cooled-chiller`                             |
+| `🚿change-hr-m-dot-kg-s`                | `⚖️change-hr-m-dot-kg-s`                | Heat-recovery mass flow 0.5 → 0.75 kg/s       | `⚖️raises-the-heat-recovery-mass-flow-to-0-point-75-kg-per-second` |
+| `🛁change-hr-savings-reference-kwh`     | `💡️change-hr-savings-reference-kwh`     | Recovery savings reference 50 → 65 kWh        | `💡️raises-the-heat-recovery-savings-reference-to-65-kwh`           |
+| `🛋️change-hr-cp-j-kgk`                  | `🥵️change-hr-cp-j-kgk`                  | Air heat capacity 1005 → 1010 J/(kg·K)        | `🥵️corrects-the-air-specific-heat-to-1010-j-per-kgk`               |
+| `🛏️change-hr-delta-tc`                  | `↕️change-hr-delta-tc`                  | Recovery temperature lift 15 → 12.5 °C        | `↕️drops-the-heat-recovery-temperature-lift-to-12-point-5-c`       |
+| `🛠️change-co2-ppm`                      | `🌫️change-co2-ppm`                      | Measured CO₂ 800 → 950 ppm                    | `🌫️raises-the-measured-co2-to-950-ppm`                             |
+| `🛡️change-cellar-area-m2`               | `🏚️change-cellar-area-m2`               | Cellar floor area 50 → 62.5 m²                | `🏚️grows-the-cellar-floor-area-to-62-point-5-m2`                   |
+| `🧯change-cellar-ventilation-m3-h`      | `🪟️change-cellar-ventilation-m3-h`      | Cellar airflow 15 → 22.5 m³/h                 | `🪟️raises-the-cellar-airflow-to-22-point-5-m3-per-hour`            |
+| `🧰change-data-center-supply-c`         | `🖥️change-data-center-supply-c`         | Data-centre supply air 22 → 27 °C             | `🖥️raises-the-data-centre-supply-air-to-27-c`                      |
+| `🧲change-dwelling-ventilation-m3-h`    | `🏡️change-dwelling-ventilation-m3-h`    | Dwelling airflow 64 → 96 m³/h                 | `🏡️raises-the-dwelling-airflow-to-96-m3-per-hour`                  |
+| `🧴change-fan-t-run-h`                  | `⏰️change-fan-t-run-h`                  | Daily fan runtime 8 → 12 h                    | `⏰️extends-the-daily-fan-runtime-to-12-hours`                      |
+| `🧵change-df-percent`                   | `☀️change-df-percent`                   | Daylight factor 2.5 → 3.75%                   | `☀️raises-the-daylight-factor-to-3-point-75-percent`               |
+| `🧶change-dhw-delivery-c`               | `🚿️change-dhw-delivery-c`               | DHW delivery 58 → 60 °C                       | `🚿️raises-the-dhw-delivery-temperature-to-60-c`                    |
+| `🧷change-duct-test-pressure-pa`        | `🧭️change-duct-test-pressure-pa`        | Duct test pressure 400 → 500 Pa               | `🧭️raises-the-duct-test-pressure-to-500-pa`                        |
+| `🧹change-h-tr-wk`                      | `🧱️change-h-tr-wk`                      | Transmission heat transfer 200 → 175 W/K      | `🧱️improves-the-transmission-heat-transfer-to-175-w-per-k`         |
+| `🧺change-h-ve-wk`                      | `🔃️change-h-ve-wk`                      | Ventilation heat transfer 100 → 125 W/K       | `🔃️raises-the-ventilation-heat-transfer-to-125-w-per-k`            |
+| `🧼change-floor-area-m2`                | `📐️change-floor-area-m2`                | Conditioned floor area 90 → 120 m²            | `📐️grows-the-conditioned-floor-area-to-120-m2`                     |
+| `🧽change-generation-reference-kwh`     | `⚡️change-generation-reference-kwh`     | Generation reference 400 → 450 kWh            | `⚡️raises-the-generation-reference-to-450-kwh`                     |
+| `🪑change-heat-recovery-eta`            | `♻️change-heat-recovery-eta`            | Achieved heat recovery 0.75 → 0.875           | `♻️raises-the-achieved-heat-recovery-to-0-point-875`               |
+| `🪒change-fan-energy-reference-kwh`     | `🔌️change-fan-energy-reference-kwh`     | Fan-energy reference 15 → 18 kWh              | `🔌️raises-the-fan-energy-reference-to-18-kwh`                      |
+| `🪚change-cooling-delta-th`             | `⌛️change-cooling-delta-th`             | Cooling period 10 → 12.5 h                    | `⌛️extends-the-cooling-period-to-12-point-5-hours`                 |
+| `🪛change-comfort-category`             | `🛋️change-comfort-category`             | Comfort category II → I                       | `🛋️tightens-the-comfort-category-to-i`                             |
+| `🪜change-cooling-gains-kwh`            | `📈️change-cooling-gains-kwh`            | Internal cooling gains 5 → 7.5 kWh            | `📈️raises-the-internal-cooling-gains-to-7-point-5-kwh`             |
+| `🪝change-cooling-reference-kwh`        | `📊️change-cooling-reference-kwh`        | Cooling reference 20 → 25 kWh                 | `📊️raises-the-cooling-reference-to-25-kwh`                         |
+| `🪞change-heat-recovery-eta-min`        | `🚧️change-heat-recovery-eta-min`        | Required recovery minimum 0.5 → 0.625         | `🚧️raises-the-required-heat-recovery-minimum-to-0-point-625`       |
+| `🪠change-h-st-wk`                      | `🧮️change-h-st-wk`                      | Storage-loss coefficient 5 → 6.5 W/K          | `🧮️raises-the-storage-loss-coefficient-to-6-point-5-w-per-k`       |
+| `🪡change-duct-class`                   | `🛡️change-duct-class`                   | Duct tightness class C → D                    | `🛡️upgrades-the-duct-tightness-class-to-d`                         |
+| `🪢change-duct-leakage-m3-sm2`          | `🕳️change-duct-leakage-m3-sm2`          | Duct leakage 0.125 → 0.0625 m³/(s·m²)         | `🕳️halves-the-measured-duct-leakage-to-0-point-0625`               |
+| `🪣change-cooling-utilization-factor`   | `🎚️change-cooling-utilization-factor`   | Cooling utilization 0.75 → 0.875              | `🎚️raises-the-cooling-utilization-factor-to-0-point-875`           |
+| `🪤change-eer-actual`                   | `✅️change-eer-actual`                   | Achieved EER 3 → 3.5                          | `✅️raises-the-achieved-eer-to-3-point-5`                           |
+| `🪥change-fan-qvm3-s`                   | `🪭️change-fan-qvm3-s`                   | Fan volume flow 1 → 1.5 m³/s                  | `🪭️raises-the-fan-volume-flow-to-1-point-5-m3-per-second`          |
+| `🪨change-theta-ec`                     | `🌤️change-theta-ec`                     | External design temperature 32 → 34.5 °C      | `🌤️raises-the-external-design-temperature-to-34-point-5-c`         |
 
 This table records the semantic decisions before source or path changes. It is not an executable rename plan; each operation and scenario is applied only with its exact descriptor, Rust mounts, aggregate fixture source, independent Python/Gherkin coordinates, oracle registration and vocabulary membership.
 
@@ -484,30 +484,30 @@ The family root is now `🧱️din4108`, identifying DIN 4108's building-envelop
 
 Every mutation and its oracle scenario was inspected from its descriptor, schema, before/after snapshots, diff and inverse before choosing its identity:
 
-| Prior operation | Current operation | Current scenario |
-| --- | --- | --- |
-| `🏷️change-solar-absorptance` | `☀️change-solar-absorptance` | `☀️lightens-the-facade-from-dark-to-pale` |
-| `🔀change-bb2-details-conform` | `✅️change-bb2-details-conform` | `❌️declares-the-beiblatt-details-non-conforming` |
-| `🔢insert-layer` | `➕️insert-layer` | `➕️inserts-an-interior-lining-layer` |
-| `🛡️remove-layer` | `➖️remove-layer` | `🚫️removes-the-load-bearing-masonry-layer` |
-| `🧯change-psi-times-l-sum` | `🌉️change-psi-times-l-sum` | `🌉️raises-the-thermal-bridge-psi-times-length-sum` |
-| `🚨change-t-int-c` | `🌡️change-t-int-c` | `🌡️raises-the-indoor-design-temperature` |
-| `🛠️change-climate` | `🌦️change-climate` | `🗺️moves-the-building-to-a-different-climate` |
-| `🪛change-moisture-mu-exterior` | `🌧️change-moisture-mu-exterior` | `🌧️raises-the-exterior-vapour-resistance-factor` |
-| `🪚change-airtightness-class` | `🔒️change-airtightness-class` | `🔒️upgrades-the-airtightness-class` |
-| `🪜change-category` | `🗂️change-category` | `🏢️retypes-the-assembly-category` |
-| `🪝change-moisture-mu-interior` | `💦️change-moisture-mu-interior` | `💦️raises-the-interior-vapour-resistance-factor` |
-| `🪣change-rh-int` | `💧️change-rh-int` | `💧️raises-indoor-relative-humidity` |
-| `🧰change-airtightness-n50` | `💨️change-airtightness-n50` | `💨️tightens-n50-to-zero-point-six-per-hour` |
-| `🧵change-catalog-id` | `📇️change-catalog-id` | `📇️repoints-the-catalogue-reference` |
-| `🧶change-declared-application-class` | `🏷️change-declared-application-class` | `🏷️declares-application-class-kh` |
-| `🪡change-layer-thickness` | `📏️change-layer-thickness` | `📏️thickens-the-insulation-layer` |
-| `🪢change-envelope-area-m2` | `📐️change-envelope-area-m2` | `📐️grows-the-envelope-area` |
-| `🧷reorder-layers` | `🔀️reorder-layers` | `🧭️moves-the-insulation-layer` |
-| `🧲change-irradiance-wm2` | `🔆️change-irradiance-wm2` | `🔆️raises-design-irradiance` |
-| `🪤change-application-type` | `🧩️change-application-type` | `🧩️reclassifies-the-application-type` |
-| `🪒change-layer-lambda` | `🧊️change-layer-lambda` | `🧊️degrades-the-masonry-lambda` |
-| `🪥change-material-id` | `🧽️change-material-id` | `🧽️swaps-the-insulation-material` |
+| Prior operation                       | Current operation                     | Current scenario                                   |
+| ------------------------------------- | ------------------------------------- | -------------------------------------------------- |
+| `🏷️change-solar-absorptance`          | `☀️change-solar-absorptance`          | `☀️lightens-the-facade-from-dark-to-pale`          |
+| `🔀change-bb2-details-conform`        | `✅️change-bb2-details-conform`        | `❌️declares-the-beiblatt-details-non-conforming`   |
+| `🔢insert-layer`                      | `➕️insert-layer`                      | `➕️inserts-an-interior-lining-layer`               |
+| `🛡️remove-layer`                      | `➖️remove-layer`                      | `🚫️removes-the-load-bearing-masonry-layer`         |
+| `🧯change-psi-times-l-sum`            | `🌉️change-psi-times-l-sum`            | `🌉️raises-the-thermal-bridge-psi-times-length-sum` |
+| `🚨change-t-int-c`                    | `🌡️change-t-int-c`                    | `🌡️raises-the-indoor-design-temperature`           |
+| `🛠️change-climate`                    | `🌦️change-climate`                    | `🗺️moves-the-building-to-a-different-climate`      |
+| `🪛change-moisture-mu-exterior`       | `🌧️change-moisture-mu-exterior`       | `🌧️raises-the-exterior-vapour-resistance-factor`   |
+| `🪚change-airtightness-class`         | `🔒️change-airtightness-class`         | `🔒️upgrades-the-airtightness-class`                |
+| `🪜change-category`                   | `🗂️change-category`                   | `🏢️retypes-the-assembly-category`                  |
+| `🪝change-moisture-mu-interior`       | `💦️change-moisture-mu-interior`       | `💦️raises-the-interior-vapour-resistance-factor`   |
+| `🪣change-rh-int`                     | `💧️change-rh-int`                     | `💧️raises-indoor-relative-humidity`                |
+| `🧰change-airtightness-n50`           | `💨️change-airtightness-n50`           | `💨️tightens-n50-to-zero-point-six-per-hour`        |
+| `🧵change-catalog-id`                 | `📇️change-catalog-id`                 | `📇️repoints-the-catalogue-reference`               |
+| `🧶change-declared-application-class` | `🏷️change-declared-application-class` | `🏷️declares-application-class-kh`                  |
+| `🪡change-layer-thickness`            | `📏️change-layer-thickness`            | `📏️thickens-the-insulation-layer`                  |
+| `🪢change-envelope-area-m2`           | `📐️change-envelope-area-m2`           | `📐️grows-the-envelope-area`                        |
+| `🧷reorder-layers`                    | `🔀️reorder-layers`                    | `🧭️moves-the-insulation-layer`                     |
+| `🧲change-irradiance-wm2`             | `🔆️change-irradiance-wm2`             | `🔆️raises-design-irradiance`                       |
+| `🪤change-application-type`           | `🧩️change-application-type`           | `🧩️reclassifies-the-application-type`              |
+| `🪒change-layer-lambda`               | `🧊️change-layer-lambda`               | `🧊️degrades-the-masonry-lambda`                    |
+| `🪥change-material-id`                | `🧽️change-material-id`                | `🧽️swaps-the-insulation-material`                  |
 
 The cutover updated the 22 descriptor owners and operation emoji, all 66 operation package mounts, 88 aggregate native fixture readers, 22 aggregate schema fixture mounts, 22 independent Python vectors, both 22-row Gherkin tables, the oracle source/output/scenario identities, 11 TypeScript exports, eight policy coordinates, the central artifact member and exact owner-scoped oracle override. Physical entries were moved one by one with non-overwriting exact renames; no aliases, symlinks, bulk basename replacement or migration tooling were introduced.
 
@@ -528,40 +528,40 @@ The family root is now `🏋️en1991`, identifying EN 1991's actions and loads 
 
 Every operation and scenario was selected from its committed descriptor, payload schema, before/after snapshots, mutation, outcome, diff and inverse rather than from a palette:
 
-| Prior operation | Current operation | Current scenario |
-| --- | --- | --- |
-| `🎚️change-accidental-mass-t` | `🚚️change-accidental-mass-t` | `🚚️lightens-impact-vehicle-to-12-5-t` |
-| `🕹️change-accidental-speed-km-h` | `🚗️change-accidental-speed-km-h` | `🚗️lowers-impact-speed-to-50-km-h` |
-| `🧫change-annex` | `🌍️change-annex` | `🌍️switches-national-annex-to-en` |
-| `🧪change-area-m2` | `📐️change-area-m2` | `📐️enlarges-loaded-area-to-360-m2` |
-| `🎢change-assumed-gk-kn-m2` | `⚖️change-assumed-gk-kn-m2` | `⚖️raises-assumed-gk-to-7-5-kn-m2` |
-| `❄️change-bridge-lane` | `🛣️change-bridge-lane` | `🛣️widens-carriageway-to-3-notional-lanes` |
-| `🗺️change-bridge-lane-width-m` | `↔️change-bridge-lane-width-m` | `↔️widens-notional-lane-to-3-5-m` |
-| `📡change-bridge-moment-resistance-knm` | `💪️change-bridge-moment-resistance-knm` | `💪️raises-bridge-moment-resistance-to-4500-knm` |
-| `🎯change-bridge-span-m` | `🌉️change-bridge-span-m` | `🌉️lengthens-bridge-span-to-36-m` |
-| `🧭change-category` | `🗂️change-category` | `🗂️reclassifies-imposed-load-to-category-d` |
-| `🔆change-cd` | `🌀️change-cd` | `🌀️lowers-dynamic-factor-cd-to-0-875` |
-| `🪟change-construction-activity` | `🚧️change-construction-activity` | `🚧️switches-construction-activity-to-concreting` |
-| `🔀change-crane-class` | `🏗️change-crane-class` | `🏗️upgrades-crane-to-class-hc3` |
-| `🔥change-cs` | `🔎️change-cs` | `🔎️raises-size-factor-cs-to-1-125` |
-| `⚡change-delta-tk` | `🌡️change-delta-tk` | `🌡️raises-thermal-delta-tk-to-45-k` |
-| `🏗️change-en-sk-kn-m2` | `❄️change-en-sk-kn-m2` | `❄️raises-en-characteristic-snow-load-to-1-25-kn-m2` |
-| `📈change-en-vbms` | `🌬️change-en-vbms` | `🌬️raises-en-basic-wind-speed-to-30-m-s` |
-| `🔭change-fire-curve` | `🔥️change-fire-curve` | `🔥️switches-fire-curve-to-hydrocarbon` |
-| `🏛️change-fire-member-capacity-c` | `🛡️change-fire-member-capacity-c` | `🛡️raises-fire-member-capacity-to-700-c` |
-| `🧱change-fire-resistance-min` | `⏱️change-fire-resistance-min` | `⏱️extends-fire-resistance-to-120-min` |
-| `🧊change-hoist-class` | `🏷️change-hoist-class` | `🏷️upgrades-hoist-to-class-hc4` |
-| `🌬️change-hoisting-speed-ms` | `🪝️change-hoisting-speed-ms` | `🪝️speeds-hoisting-to-1-25-m-s` |
-| `🏷️change-self-weight-material` | `🧱️change-self-weight-material` | `🧱️switches-self-weight-material-to-structural-steel` |
-| `🧮change-self-weight-thickness-m` | `📏️change-self-weight-thickness-m` | `📏️thickens-self-weight-layer-to-0-375-m` |
-| `🌗change-silo-bulk-density-kn-m3` | `🌾️change-silo-bulk-density-kn-m3` | `🌾️raises-silo-bulk-density-to-10-5-kn-m3` |
-| `🎛️change-silo-height-m` | `🗼️change-silo-height-m` | `🗼️raises-silo-to-18-m` |
-| `📊change-silo-hydraulic-radius-m` | `⭕️change-silo-hydraulic-radius-m` | `⭕️widens-silo-hydraulic-radius-to-2-25-m` |
-| `🔬change-silo-k` | `⚙️change-silo-k` | `⚙️raises-silo-lateral-pressure-ratio-k-to-0-625` |
-| `📉change-silo-mu` | `🧲️change-silo-mu` | `🧲️raises-silo-wall-friction-mu-to-0-625` |
-| `🌡️change-snow-altitude-m` | `🏔️change-snow-altitude-m` | `🏔️lifts-snow-altitude-to-780-m` |
-| `💧change-snow-zone` | `🗺️change-snow-zone` | `🗺️moves-site-to-snow-zone-3` |
-| `🌞change-wind-zone` | `🪁️change-wind-zone` | `🪁️moves-site-to-wind-zone-4` |
+| Prior operation                         | Current operation                       | Current scenario                                      |
+| --------------------------------------- | --------------------------------------- | ----------------------------------------------------- |
+| `🎚️change-accidental-mass-t`            | `🚚️change-accidental-mass-t`            | `🚚️lightens-impact-vehicle-to-12-5-t`                 |
+| `🕹️change-accidental-speed-km-h`        | `🚗️change-accidental-speed-km-h`        | `🚗️lowers-impact-speed-to-50-km-h`                    |
+| `🧫change-annex`                        | `🌍️change-annex`                        | `🌍️switches-national-annex-to-en`                     |
+| `🧪change-area-m2`                      | `📐️change-area-m2`                      | `📐️enlarges-loaded-area-to-360-m2`                    |
+| `🎢change-assumed-gk-kn-m2`             | `⚖️change-assumed-gk-kn-m2`             | `⚖️raises-assumed-gk-to-7-5-kn-m2`                    |
+| `❄️change-bridge-lane`                  | `🛣️change-bridge-lane`                  | `🛣️widens-carriageway-to-3-notional-lanes`            |
+| `🗺️change-bridge-lane-width-m`          | `↔️change-bridge-lane-width-m`          | `↔️widens-notional-lane-to-3-5-m`                     |
+| `📡change-bridge-moment-resistance-knm` | `💪️change-bridge-moment-resistance-knm` | `💪️raises-bridge-moment-resistance-to-4500-knm`       |
+| `🎯change-bridge-span-m`                | `🌉️change-bridge-span-m`                | `🌉️lengthens-bridge-span-to-36-m`                     |
+| `🧭change-category`                     | `🗂️change-category`                     | `🗂️reclassifies-imposed-load-to-category-d`           |
+| `🔆change-cd`                           | `🌀️change-cd`                           | `🌀️lowers-dynamic-factor-cd-to-0-875`                 |
+| `🪟change-construction-activity`        | `🚧️change-construction-activity`        | `🚧️switches-construction-activity-to-concreting`      |
+| `🔀change-crane-class`                  | `🏗️change-crane-class`                  | `🏗️upgrades-crane-to-class-hc3`                       |
+| `🔥change-cs`                           | `🔎️change-cs`                           | `🔎️raises-size-factor-cs-to-1-125`                    |
+| `⚡change-delta-tk`                     | `🌡️change-delta-tk`                     | `🌡️raises-thermal-delta-tk-to-45-k`                   |
+| `🏗️change-en-sk-kn-m2`                  | `❄️change-en-sk-kn-m2`                  | `❄️raises-en-characteristic-snow-load-to-1-25-kn-m2`  |
+| `📈change-en-vbms`                      | `🌬️change-en-vbms`                      | `🌬️raises-en-basic-wind-speed-to-30-m-s`              |
+| `🔭change-fire-curve`                   | `🔥️change-fire-curve`                   | `🔥️switches-fire-curve-to-hydrocarbon`                |
+| `🏛️change-fire-member-capacity-c`       | `🛡️change-fire-member-capacity-c`       | `🛡️raises-fire-member-capacity-to-700-c`              |
+| `🧱change-fire-resistance-min`          | `⏱️change-fire-resistance-min`          | `⏱️extends-fire-resistance-to-120-min`                |
+| `🧊change-hoist-class`                  | `🏷️change-hoist-class`                  | `🏷️upgrades-hoist-to-class-hc4`                       |
+| `🌬️change-hoisting-speed-ms`            | `🪝️change-hoisting-speed-ms`            | `🪝️speeds-hoisting-to-1-25-m-s`                       |
+| `🏷️change-self-weight-material`         | `🧱️change-self-weight-material`         | `🧱️switches-self-weight-material-to-structural-steel` |
+| `🧮change-self-weight-thickness-m`      | `📏️change-self-weight-thickness-m`      | `📏️thickens-self-weight-layer-to-0-375-m`             |
+| `🌗change-silo-bulk-density-kn-m3`      | `🌾️change-silo-bulk-density-kn-m3`      | `🌾️raises-silo-bulk-density-to-10-5-kn-m3`            |
+| `🎛️change-silo-height-m`                | `🗼️change-silo-height-m`                | `🗼️raises-silo-to-18-m`                               |
+| `📊change-silo-hydraulic-radius-m`      | `⭕️change-silo-hydraulic-radius-m`      | `⭕️widens-silo-hydraulic-radius-to-2-25-m`            |
+| `🔬change-silo-k`                       | `⚙️change-silo-k`                       | `⚙️raises-silo-lateral-pressure-ratio-k-to-0-625`     |
+| `📉change-silo-mu`                      | `🧲️change-silo-mu`                      | `🧲️raises-silo-wall-friction-mu-to-0-625`             |
+| `🌡️change-snow-altitude-m`              | `🏔️change-snow-altitude-m`              | `🏔️lifts-snow-altitude-to-780-m`                      |
+| `💧change-snow-zone`                    | `🗺️change-snow-zone`                    | `🗺️moves-site-to-snow-zone-3`                         |
+| `🌞change-wind-zone`                    | `🪁️change-wind-zone`                    | `🪁️moves-site-to-wind-zone-4`                         |
 
 The cutover updated all 32 descriptor owners and emoji, exact operation mounts in the Rust and TypeScript packages, aggregate Rust fixture readers, independent Python vectors, both Gherkin tables, oracle source/output/scenario identities, policy coordinates, central artifact/operation/test memberships and the exact owner-scoped oracle override. Every physical move was an individual non-overwriting rename. No alias, symlink, compatibility layer, generated rename plan or bulk basename replacement was introduced.
 
@@ -580,43 +580,43 @@ The current source authorities already named `🏛️en1992` and `🏛️mutate-
 
 All 35 descriptors and payload schemas were read together with their committed mutation/outcome/diff fixtures. Each fixture declares an applied single-field change. The field implementations distinguish concrete section properties, reinforcement, prestress, fire, liquid-retaining crack control and anchor resistance. The following case-by-case identities are selected for the remaining operation and case repair; this table is documentary, not an executable rename plan. Each scenario will use its operation's meaningful emoji except the already suitable bridge-compression scenario, whose bridge identity is retained.
 
-| Semantic kind | Chosen emoji | Meaning |
-| --- | --- | --- |
-| change-annex | 🌍️ | National design jurisdiction |
-| change-use-fem | 🕸️ | Finite-element mesh |
-| change-fire-rating | 🔥️ | Fire resistance |
-| change-tightness-class | 💧️ | Liquid tightness |
-| change-anchor-cracked | 💥️ | Cracked anchor substrate |
-| change-anchor-d-mm | ⭕️ | Circular anchor diameter |
-| change-anchor-c1-mm | 📍️ | Anchor position relative to edge |
-| change-anchor-h-ef-mm | ⚓️ | Anchor embedment |
-| change-anchor-f-uk-mpa | 💪️ | Ultimate anchor strength |
-| change-anchor-f-yk-mpa | 🛡️ | Anchor yield resistance |
-| change-anchor-as-mm2 | 🔩️ | Steel anchor cross-section |
-| change-anchor-n-ed-kn | 🪝️ | Anchor tensile pull |
-| change-anchor-v-ed-kn | ✂️ | Anchor shear action |
-| change-p-kn | 🏹️ | Prestressing force |
-| change-udl-kn-m | ⬇️ | Distributed downward loading |
-| change-f-yk | 🔧️ | Reinforcing-steel yield strength |
-| change-as-mm2 | 🪜️ | Reinforcement section |
-| change-ac-mm2 | 📐️ | Concrete section area |
-| change-d-mm | ↕️ | Effective section depth |
-| change-b-mm | ↔️ | Section width |
-| change-span-m | 🌉️ | Structural span |
-| change-m-ed-knm | ⤴️ | Bending moment |
-| change-v-ed-kn | 🪚️ | Section shear force |
-| change-n-ed-kn | 🏋️ | Axial design load |
-| change-f-ck | 🪨️ | Concrete compressive strength |
-| change-rho-l | 🧮️ | Longitudinal reinforcement ratio |
-| change-provided-axis-distance-mm | 📏️ | Measured reinforcement-axis distance |
-| change-bridge-sigma-c-mpa | 🛣️ | Bridge concrete stress |
-| change-bridge-delta-sigma-s-mpa | 🔁️ | Cyclic bridge reinforcement stress range |
-| change-hd-over-h | 🌊️ | Hydrostatic head-to-wall ratio |
-| change-liquid-f-ct-eff-mpa | 🧱️ | Effective concrete tension strength |
-| change-liquid-sigma-s-mpa | 🧲️ | Tensile reinforcement stress |
-| change-liquid-rho-p-eff | 🧷️ | Effective bonded reinforcement ratio |
-| change-liquid-es-mpa | 🌀️ | Elastic reinforcement stiffness |
-| change-liquid-sr-max-mm | 🕳️ | Maximum crack spacing |
+| Semantic kind                    | Chosen emoji | Meaning                                  |
+| -------------------------------- | ------------ | ---------------------------------------- |
+| change-annex                     | 🌍️           | National design jurisdiction             |
+| change-use-fem                   | 🕸️           | Finite-element mesh                      |
+| change-fire-rating               | 🔥️           | Fire resistance                          |
+| change-tightness-class           | 💧️           | Liquid tightness                         |
+| change-anchor-cracked            | 💥️           | Cracked anchor substrate                 |
+| change-anchor-d-mm               | ⭕️           | Circular anchor diameter                 |
+| change-anchor-c1-mm              | 📍️           | Anchor position relative to edge         |
+| change-anchor-h-ef-mm            | ⚓️           | Anchor embedment                         |
+| change-anchor-f-uk-mpa           | 💪️           | Ultimate anchor strength                 |
+| change-anchor-f-yk-mpa           | 🛡️           | Anchor yield resistance                  |
+| change-anchor-as-mm2             | 🔩️           | Steel anchor cross-section               |
+| change-anchor-n-ed-kn            | 🪝️           | Anchor tensile pull                      |
+| change-anchor-v-ed-kn            | ✂️           | Anchor shear action                      |
+| change-p-kn                      | 🏹️           | Prestressing force                       |
+| change-udl-kn-m                  | ⬇️           | Distributed downward loading             |
+| change-f-yk                      | 🔧️           | Reinforcing-steel yield strength         |
+| change-as-mm2                    | 🪜️           | Reinforcement section                    |
+| change-ac-mm2                    | 📐️           | Concrete section area                    |
+| change-d-mm                      | ↕️           | Effective section depth                  |
+| change-b-mm                      | ↔️           | Section width                            |
+| change-span-m                    | 🌉️           | Structural span                          |
+| change-m-ed-knm                  | ⤴️           | Bending moment                           |
+| change-v-ed-kn                   | 🪚️           | Section shear force                      |
+| change-n-ed-kn                   | 🏋️           | Axial design load                        |
+| change-f-ck                      | 🪨️           | Concrete compressive strength            |
+| change-rho-l                     | 🧮️           | Longitudinal reinforcement ratio         |
+| change-provided-axis-distance-mm | 📏️           | Measured reinforcement-axis distance     |
+| change-bridge-sigma-c-mpa        | 🛣️           | Bridge concrete stress                   |
+| change-bridge-delta-sigma-s-mpa  | 🔁️           | Cyclic bridge reinforcement stress range |
+| change-hd-over-h                 | 🌊️           | Hydrostatic head-to-wall ratio           |
+| change-liquid-f-ct-eff-mpa       | 🧱️           | Effective concrete tension strength      |
+| change-liquid-sigma-s-mpa        | 🧲️           | Tensile reinforcement stress             |
+| change-liquid-rho-p-eff          | 🧷️           | Effective bonded reinforcement ratio     |
+| change-liquid-es-mpa             | 🌀️           | Elastic reinforcement stiffness          |
+| change-liquid-sr-max-mm          | 🕳️           | Maximum crack spacing                    |
 
 All 35 listed EN 1992 operations and 34 case names are now physically current, with exact descriptor, Rust mount, Python vector, feature table, oracle-manifest and central-member references. The suitable bridge-compression case is retained. The liquid-retaining example and primary asset now share the domain identity `🛢️liquid-retaining-fem-anchor`. Current verification parses 256 JSON files, checks all 35 descriptor owner/emoji/schema agreements, and resolves 148 Rust/TypeScript mounts with zero issues. Canonical generation and the 392-payload Ajv/hostile freshness check pass. Fixture discovery remains running at this point; no runtime fixture pass is claimed yet.
 
@@ -624,28 +624,28 @@ All 35 listed EN 1992 operations and 34 case names are now physically current, w
 
 The root schema explicitly identifies timber. Its family is now `🪵️en1995`, aggregate tests `🪵️mutate-en1995-1`, and glulam footbridge example/primary-asset owner `🌉️glulam-footbridge`; exact authored references, live artifact policy coordinates and the owner-specific oracle override follow these physical moves. The twenty descriptors, schemas and applied mutation vectors were inspected. The following operation choices express distinct timber inputs; every renamed case uses its operation icon except the already suitable bridge-fatigue case, which retains its bridge.
 
-| Semantic kind | Chosen emoji | Meaning |
-| --- | --- | --- |
-| change-b-mm | ↔️ | Beam width |
-| change-a-mm2 | 📐️ | Gross section area |
-| change-load-duration | ⏳️ | Load-duration class |
-| change-a-vert-ms2 | 🦶️ | Footfall acceleration |
-| change-annex | 🌍️ | National design jurisdiction |
-| change-section-depth-mm | 📏️ | Size-effect depth |
-| change-w-mm3 | 📊️ | Section modulus |
-| change-service-class | 🌧️ | Environmental moisture exposure |
-| change-n-cycles-bridge | 🔁️ | Repeated fatigue cycles |
-| change-a-ef-mm2 | 🧩️ | Effective connection area |
-| change-h-mm | ↕️ | Beam height |
-| change-fvk | ✂️ | Shear resistance |
-| change-m-crit-knm | ⚠️ | Critical buckling threshold |
-| change-m-ed-knm | ⤴️ | Applied bending moment |
-| change-fc0-k | 🗜️ | Parallel compressive strength |
-| change-fmk | 🛡️ | Bending strength |
-| change-n-ed-kn | 🏋️ | Axial design force |
-| change-v-ed-kn | 🪚️ | Applied shear force |
-| change-fire-duration-min | 🔥️ | Fire exposure |
-| change-f-ed-kn | 🔩️ | Fastener design force |
+| Semantic kind            | Chosen emoji | Meaning                         |
+| ------------------------ | ------------ | ------------------------------- |
+| change-b-mm              | ↔️           | Beam width                      |
+| change-a-mm2             | 📐️           | Gross section area              |
+| change-load-duration     | ⏳️           | Load-duration class             |
+| change-a-vert-ms2        | 🦶️           | Footfall acceleration           |
+| change-annex             | 🌍️           | National design jurisdiction    |
+| change-section-depth-mm  | 📏️           | Size-effect depth               |
+| change-w-mm3             | 📊️           | Section modulus                 |
+| change-service-class     | 🌧️           | Environmental moisture exposure |
+| change-n-cycles-bridge   | 🔁️           | Repeated fatigue cycles         |
+| change-a-ef-mm2          | 🧩️           | Effective connection area       |
+| change-h-mm              | ↕️           | Beam height                     |
+| change-fvk               | ✂️           | Shear resistance                |
+| change-m-crit-knm        | ⚠️           | Critical buckling threshold     |
+| change-m-ed-knm          | ⤴️           | Applied bending moment          |
+| change-fc0-k             | 🗜️           | Parallel compressive strength   |
+| change-fmk               | 🛡️           | Bending strength                |
+| change-n-ed-kn           | 🏋️           | Axial design force              |
+| change-v-ed-kn           | 🪚️           | Applied shear force             |
+| change-fire-duration-min | 🔥️           | Fire exposure                   |
+| change-f-ed-kn           | 🔩️           | Fastener design force           |
 
 All twenty timber operations and nineteen unsuitable scenarios are physically current. The already suitable bridge-fatigue scenario keeps its bridge. Inspection of executable fixture declarations exposed additional stale coordinates: Python vector tuples and both Gherkin tables used unprefixed case names, while the oracle manifest invented test-tube-prefixed case names. Those exact fields now name the actual handpicked cases; semantic scenario IDs were preserved. Both EN 1992 and EN 1995 adapters now explicitly bind their existing `vector_root` parameter to the `asset://🧬️schema/🧬️mutations` namespace already declared by their Gherkin features.
 

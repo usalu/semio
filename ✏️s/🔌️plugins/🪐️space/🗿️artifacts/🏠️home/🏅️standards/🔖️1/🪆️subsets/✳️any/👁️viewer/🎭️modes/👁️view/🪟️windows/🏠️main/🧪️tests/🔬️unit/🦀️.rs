@@ -5,6 +5,13 @@ fn project(node: semio_framework_plugin::BuiltNode) -> String {
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("Home viewer tree projection")
 }
 
+fn host_view() -> semio_framework_plugin::ViewModel {
+    semio_framework_plugin::ViewModel {
+        session_identity: Some(semio_framework_plugin::ViewSessionIdentity { user_id: "u1".into(), display_name: "Ada".into() }),
+        ..Default::default()
+    }
+}
+
 fn observe<R>(node: semio_framework_plugin::BuiltNode, inspect: impl FnOnce(&semio_framework_plugin::BuiltNode) -> R) -> R {
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| inspect(&node)));
     let mut retirement = semio_framework_ui_contract::BuiltTreeRetirement::new(node);
@@ -82,7 +89,7 @@ async fn render_with_a_folded_space_renders_a_table_row() {
         recorded_at_ms: 1000,
     };
     let directory = store::os_directory::fold(store::os_directory::DirectoryReadModel::default(), &event);
-    let json = project(render(&directory, &semio_framework_plugin::ViewModel::default(), "u1").expect("folded Home viewer row"));
+    let json = project(render(&directory, &host_view()).expect("folded Home viewer row"));
     assert!(json.contains("Fabrication"), "the folded space renders: {json}");
     assert!(json.contains("hub"), "hub-folded spaces render origin=hub: {json}");
 }

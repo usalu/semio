@@ -5,7 +5,7 @@ import { dirname, join, relative, resolve, sep } from "node:path";
 import { createRequire } from "node:module";
 import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
 import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
-import { runOwnedCommand } from "../../🦀️cargo/📜️script.ts";
+import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 
 /** 🟦️ Builds and resolves a declaration-only TypeScript artifact package from its taxonomy source. */
 export async function runArtifactTypeScriptPackageMain(packageRoot: string, packageName: string): Promise<void> {

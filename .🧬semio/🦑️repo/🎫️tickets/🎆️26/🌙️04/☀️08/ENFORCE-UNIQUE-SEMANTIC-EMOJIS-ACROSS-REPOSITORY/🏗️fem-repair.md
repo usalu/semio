@@ -11,13 +11,13 @@ The final scoped read-only audit covers 1,251 files, 1,031 directories and 2,242
 Both FEM 2D and FEM 3D standards use the same complete logical-id to physical-directory roster:
 
 | Logical subset | Physical directory |
-| --- | --- |
-| `*` | `🌐️any` |
-| `analysis` | `📈️analysis` |
-| `boundary` | `🛡️boundary` |
-| `load` | `🏋️load` |
-| `material` | `🧱️material` |
-| `mesh` | `🕸️mesh` |
+| -------------- | ------------------ |
+| `*`            | `🌐️any`            |
+| `analysis`     | `📈️analysis`       |
+| `boundary`     | `🛡️boundary`       |
+| `load`         | `🏋️load`           |
+| `material`     | `🧱️material`       |
+| `mesh`         | `🕸️mesh`           |
 
 The combined subset content digest stayed `a303e424476ca04d414a857b8bb016117dc83ca02393fbe552e34d1253b33f14` across the twelve directory moves. All twelve subset oracle roots are `🔮️oracle`; the six editor/viewer option owners are `☑️options`.
 
@@ -80,6 +80,7 @@ The read-only naming audit reports 1,249 files, 1,013 directories, 2,242 governe
 Fixture-verifier reruns pass: `s.fem.2d` has 34 fixtures with zero file problems and `s.fem.3d` has 37 fixtures with zero file problems. The original pinned geometry baselines are preserved.
 
 The first native Nx check stopped before compilation because a shared external STEP generator contract still cited seven moved fixture paths. That independent owner corrected those paths; the native retry has reached `cargo-nextest ... list --list-type binaries-only --message-format json --profile fundamental -p semio-s-plugin-fem` and is still running. This report does not yet claim native test success.
+
 # Production Discovery and Independent Execution Follow-up
 
 The production feature parser exposed 150 old bare scenario URI paths across the subset suites. Exact feature tables now use the already handpicked physical directory names. Production plans resolved 174 fixture URIs across 22 suites and the committed Python host executed all 252 scenarios: 252 passed, zero failed. All test-child names are registered through the central tests member vocabulary; non-test schema, fixture, and command identities received exact reviewed registrations as well. Subset identity validation uses the existing owner-scoped subset overrides.

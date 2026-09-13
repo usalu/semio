@@ -4,6 +4,10 @@
 #[path = "../../../🧊️renderer/📇️registry/🦀️.rs"]
 mod renderer_registration;
 
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "../../../⌨️native-entrypoint/📦️modules/🦀️.rs"]
+mod native_runtime_modules;
+
 #[cfg(not(target_os = "wasi"))]
 include!("../../../🧊️renderer/🦀️.rs");
 

@@ -1,0 +1,188 @@
+{
+  "schemaVersion": 1,
+  "owners": [
+    {
+      "path": "🌎️hub/🏗️build/🛂staging-environment/🟦️.ts",
+      "declarations": ["CargoStageEnvironments", "exactCargoStageEnvironments"],
+      "imports": [],
+      "rootImports": ["exactCargoStageEnvironments"],
+      "contextChain": ["hub-build", "hub-build-staging-environment"]
+    },
+    {
+      "path": "🌎️hub/🧪️tests/🧬️schema/🛂expectation/🟦️.ts",
+      "declarations": ["HubFixtureExpectationV1", "assertHubFixtureExpectation"],
+      "imports": [],
+      "rootImports": ["assertHubFixtureExpectation", "HubFixtureExpectationV1"],
+      "contextChain": ["hub-tests", "hub-tests-schema", "hub-fixture-expectation"]
+    },
+    {
+      "path": "🌎️hub/🚀️local-bootstrap/📡️framing/🟦️.ts",
+      "declarations": ["LOCAL_BOOTSTRAP_FRAME_MAX", "LOCAL_BOOTSTRAP_DEADLINE_MS", "LocalFrameReader", "writeLocalFrame"],
+      "imports": [],
+      "rootImports": ["LOCAL_BOOTSTRAP_DEADLINE_MS", "LOCAL_BOOTSTRAP_FRAME_MAX", "LocalFrameReader", "writeLocalFrame"],
+      "contextChain": ["hub-local-bootstrap", "hub-local-bootstrap-framing"]
+    },
+    {
+      "path": "🌎️hub/🚀️local-bootstrap/🛂authentication/🟦️.ts",
+      "declarations": ["LOCAL_BOOTSTRAP_SCHEMA", "LocalClientClass", "LocalProfile", "hmacProof", "authenticatedFrame", "verifyAuthenticatedFrame"],
+      "imports": ["🌎️hub/🚀️local-bootstrap/📡️framing/🟦️.ts"],
+      "rootImports": ["authenticatedFrame", "LOCAL_BOOTSTRAP_SCHEMA", "LocalClientClass", "LocalProfile", "verifyAuthenticatedFrame"],
+      "contextChain": ["hub-local-bootstrap", "hub-local-bootstrap-authentication"]
+    },
+    {
+      "path": "🌎️hub/🚀️local-bootstrap/🏃️execution/🟦️.ts",
+      "declarations": [
+        "LOCAL_READINESS_DEADLINE_MS",
+        "LocalHubRun",
+        "LocalHubStartOptions",
+        "LocalHubRunAllocationOperations",
+        "allocateLocalHubRunRoot",
+        "freeLoopbackPort",
+        "hubBinaryPath",
+        "hubDevBinaryPath",
+        "startLocalHub",
+        "localHubReadinessAdmitted",
+        "waitForReadiness",
+        "waitForChildExit",
+        "finishLocalHub"
+      ],
+      "imports": ["🌎️hub/🚀️local-bootstrap/📡️framing/🟦️.ts", "🌎️hub/🚀️local-bootstrap/🛂authentication/🟦️.ts"],
+      "rootImports": ["finishLocalHub", "freeLoopbackPort", "hubBinaryPath", "hubDevBinaryPath", "LOCAL_READINESS_DEADLINE_MS", "LocalHubRun", "startLocalHub", "waitForChildExit", "waitForReadiness"],
+      "contextChain": ["hub-local-bootstrap", "hub-local-bootstrap-execution"]
+    },
+    {
+      "path": "🌎️hub/🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts",
+      "declarations": ["issueLocalCredential"],
+      "imports": ["🌎️hub/🚀️local-bootstrap/📡️framing/🟦️.ts", "🌎️hub/🚀️local-bootstrap/🛂authentication/🟦️.ts", "🌎️hub/🚀️local-bootstrap/🏃️execution/🟦️.ts"],
+      "rootImports": ["issueLocalCredential"],
+      "contextChain": ["hub-local-bootstrap", "hub-local-bootstrap-credential-issuance"]
+    },
+    {
+      "path": "🌎️hub/🔐️auth/📤️credential-delivery/🟦️.ts",
+      "declarations": [
+        "DIRECT_CHILD_BENIGN_ENV_KEY",
+        "DIRECT_CHILD_BENIGN_ENV_VALUE",
+        "CredentialChildLaunch",
+        "CredentialChildOperations",
+        "isProtectedDirectChildEnvironmentKey",
+        "sealedDirectChildEnvironment",
+        "directChildEnvironment",
+        "directChildLaunch",
+        "deliverCredentialEnvelopeToChild",
+        "deliverNativeCredentialEnvelope",
+        "deliverMcpCredentialEnvelope"
+      ],
+      "imports": ["🌎️hub/🚀️local-bootstrap/📡️framing/🟦️.ts"],
+      "rootImports": ["DIRECT_CHILD_BENIGN_ENV_KEY", "DIRECT_CHILD_BENIGN_ENV_VALUE", "deliverCredentialEnvelopeToChild", "deliverMcpCredentialEnvelope", "deliverNativeCredentialEnvelope", "directChildEnvironment", "sealedDirectChildEnvironment"],
+      "contextChain": ["hub-auth", "hub-auth-credential-delivery"]
+    },
+    {
+      "path": "🌎️hub/📇️directory/📣️publication/🧪️tests/🧾️ordered-append-broadcast/🟦️.ts",
+      "declarations": ["OrderedAppendBroadcastFixture", "orderedDirectoryPublicationOracle"],
+      "imports": [],
+      "rootImports": ["orderedDirectoryPublicationOracle"],
+      "contextChain": ["hub-directory", "hub-directory-publication", "hub-directory-publication-tests", "hub-directory-ordered-append-broadcast"]
+    },
+    {
+      "path": "🌎️hub/🔐️auth/🧪️tests/🧭️credential-source-order/🟦️.ts",
+      "declarations": ["sourceDefinitionBodies", "nativeCredentialSourceOrderConforms", "mcpCredentialSourceOrderConforms", "proveNativeCredentialSourceOrder", "proveMcpCredentialSourceOrder"],
+      "imports": [],
+      "rootImports": ["proveMcpCredentialSourceOrder", "proveNativeCredentialSourceOrder"],
+      "contextChain": ["hub-auth", "hub-auth-tests", "hub-auth-credential-source-order"]
+    },
+    {
+      "path": "🌎️hub/🧪️tests/🧱️foundation-source/🏃️execution/🟦️.ts",
+      "declarations": ["HubFoundationSourceScript"],
+      "imports": [],
+      "rootImports": ["HubFoundationSourceScript"],
+      "contextChain": ["hub-tests", "hub-foundation-source-test", "hub-foundation-source-execution"]
+    }
+  ],
+  "contexts": [
+    { "directoryName": "🏗️build", "parentKindId": "hub", "kindId": "hub-build" },
+    { "directoryName": "🛂staging-environment", "parentKindId": "hub-build", "kindId": "hub-build-staging-environment" },
+    { "directoryName": "🧪️tests", "parentKindId": "hub", "kindId": "hub-tests" },
+    { "directoryName": "🧬️schema", "parentKindId": "hub-tests", "kindId": "hub-tests-schema" },
+    { "directoryName": "🛂expectation", "parentKindId": "hub-tests-schema", "kindId": "hub-fixture-expectation" },
+    { "directoryName": "🚀️local-bootstrap", "parentKindId": "hub", "kindId": "hub-local-bootstrap" },
+    { "directoryName": "📡️framing", "parentKindId": "hub-local-bootstrap", "kindId": "hub-local-bootstrap-framing" },
+    { "directoryName": "🛂authentication", "parentKindId": "hub-local-bootstrap", "kindId": "hub-local-bootstrap-authentication" },
+    { "directoryName": "🏃️execution", "parentKindId": "hub-local-bootstrap", "kindId": "hub-local-bootstrap-execution" },
+    { "directoryName": "🔐️credential-issuance", "parentKindId": "hub-local-bootstrap", "kindId": "hub-local-bootstrap-credential-issuance" },
+    { "directoryName": "🔐️auth", "parentKindId": "hub", "kindId": "hub-auth" },
+    { "directoryName": "📤️credential-delivery", "parentKindId": "hub-auth", "kindId": "hub-auth-credential-delivery" },
+    { "directoryName": "📇️directory", "parentKindId": "hub", "kindId": "hub-directory" },
+    { "directoryName": "📣️publication", "parentKindId": "hub-directory", "kindId": "hub-directory-publication" },
+    { "directoryName": "🧪️tests", "parentKindId": "hub-directory-publication", "kindId": "hub-directory-publication-tests" },
+    { "directoryName": "🧾️ordered-append-broadcast", "parentKindId": "hub-directory-publication-tests", "kindId": "hub-directory-ordered-append-broadcast" },
+    { "directoryName": "🧱️foundation-source", "parentKindId": "hub-tests", "kindId": "hub-foundation-source-test" },
+    { "directoryName": "🏃️execution", "parentKindId": "hub-foundation-source-test", "kindId": "hub-foundation-source-execution" },
+    { "directoryName": "🧪️tests", "parentKindId": "hub-auth", "kindId": "hub-auth-tests" },
+    { "directoryName": "🧭️credential-source-order", "parentKindId": "hub-auth-tests", "kindId": "hub-auth-credential-source-order" },
+    { "directoryName": "💡️inference", "parentKindId": "hub", "kindId": "hub-inference" },
+    { "directoryName": "🧬️schema", "parentKindId": "hub-inference", "kindId": "hub-inference-schema" },
+    { "directoryName": "🧬️schema", "parentKindId": "hub", "kindId": "hub-schema" },
+    { "directoryName": "🧱️foundation-source", "parentKindId": "hub-schema", "kindId": "hub-foundation-source-schema" },
+    { "directoryName": "🧫️fixtures", "parentKindId": "hub", "kindId": "hub-fixtures" },
+    { "directoryName": "🧱️foundation-source", "parentKindId": "hub-fixtures", "kindId": "hub-foundation-source-fixture" }
+  ],
+  "route": {
+    "command": "foundation-source-check",
+    "target": "foundation-source-check",
+    "launchName": "⚖️gate🧱️hub-foundations📐️source",
+    "launchCommand": "bun nx run os-hub:foundation-source-check",
+    "launchGroup": "4_gate",
+    "launchOrder": 411.10755,
+    "inputs": [
+      "{workspaceRoot}/🌎️hub/🏗️build/🛂staging-environment/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🧪️tests/🧬️schema/🛂expectation/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/📡️framing/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/🛂authentication/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/🏃️execution/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🔐️auth/📤️credential-delivery/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/📇️directory/📣️publication/🧪️tests/🧾️ordered-append-broadcast/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🔐️auth/🧪️tests/🧭️credential-source-order/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🔐️auth/🧪️tests/🧭️credential-source-order/🔮️oracles/🦀️.rs",
+      "{workspaceRoot}/🌎️hub/🧪️tests/🧱️foundation-source/🏃️execution/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/💡️inference/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🧬️schema/🧱️foundation-source/🔣️.json",
+      "{workspaceRoot}/🌎️hub/🧫️fixtures/🧱️foundation-source/🔣️.json",
+      "{workspaceRoot}/🌎️hub/🧪️tests/🧱️foundation-source/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/🧫️fixtures/{🚇️pipe-v1,⏳️idle-admission-v1}/🔣️.json",
+      "{workspaceRoot}/🌎️hub/🔐️auth/{🧬️schema/🔣️.json,🧫️fixtures/🔑️capability-v1/🔣️.json}",
+      "{workspaceRoot}/🌎️hub/📇️directory/{🦀️.rs,🧫️fixtures/📣️ordered-append-broadcast-v1/🔣️.json}",
+      "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/{📜️script.ts,📋️project.json,Cargo.toml,🦀️.rs}",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/{🧭️routing/🟦️.ts,🎛️owned-execution/🟦️.ts}",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/{🦀️.rs,📜️script.ts}",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/{🏗️bootstrap/🦀️.rs,🏠️workspace/🦀️.rs,🏠️workspace/🔗️remote/🦀️.rs,📦️packages/🦀️rust/📜️script.ts}",
+      "{workspaceRoot}/.vscode/{🧩️launch.seed.jsonc,launch.json}"
+    ]
+  },
+  "limits": {
+    "localFrameBytes": 16384,
+    "gisControlFrameBytes": 256,
+    "profiles": 8,
+    "outstandingReads": 8,
+    "cargoBuildStack": "33554432",
+    "cargoNativeStack": "268435456"
+  },
+  "sourceBoundary": {
+    "typescript": {
+      "source": "class Runner { async run(): Promise<void> { const braces = \"{ ignored }\"; /* { ignored } */ if (true) { await first(); } await second(); } }\nfunction declaration(): void;",
+      "definition": "run",
+      "expectedBodies": 1,
+      "expectedCalls": ["first", "second"]
+    },
+    "rust": {
+      "source": "extern \"C\" { fn declaration(); }\nfn helper() { let _ = r###\"{ raw \\\"# delimiter }\"###; /* { ignored } */ }\nfn main() { let _ = r##\"{ quoted }\"##; // } ignored\nif true { first(); } second(); }",
+      "definition": "main",
+      "expectedBodies": 1,
+      "expectedCalls": ["first", "second"]
+    }
+  }
+}

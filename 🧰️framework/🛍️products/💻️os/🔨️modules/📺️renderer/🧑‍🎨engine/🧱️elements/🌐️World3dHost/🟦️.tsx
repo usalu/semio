@@ -3655,6 +3655,15 @@ function DemandInvalidateOnToken({ token }: { readonly token: string }) {
   return null;
 }
 
+/** @emoji 🎞️ Demand-frameloop kick when the shared catalogue-drop preview store changes — HTML5 drags never fire pointermove, so the ghost must invalidate on dragover-driven store updates alone. */
+function CatalogueDropPreviewInvalidate({ preview }: { readonly preview: Puzzle3dCatalogueDropPreview | null }) {
+  const invalidate = useThree((state) => state.invalidate);
+  useLayoutEffect(() => {
+    if (preview) invalidate();
+  }, [invalidate, preview]);
+  return null;
+}
+
 function BrushPreviewGhost({ preview, meshes, palette }: { readonly preview: WorldBrushPreviewRecord; readonly meshes: readonly WorldMeshRecord[]; readonly palette: MeshStylePalette }) {
   if (!preview.origin) return null;
   const style = palette.highlighted;
@@ -6688,9 +6697,12 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       if (!scene) return;
       if (!event.dataTransfer.types.includes(CATALOGUE_DRAG_MIME) && !getActiveCatalogueDragPayload()) return;
       event.preventDefault();
+      const encoded = getActiveCatalogueDragPayload();
+      if (encoded) catalogueDragEncodedRef.current = encoded;
       catalogueDragDepthRef.current += 1;
+      updateCatalogueDropPreviewAt(event.clientX, event.clientY);
     },
-    [scene],
+    [scene, updateCatalogueDropPreviewAt],
   );
 
   const onCatalogueDragLeave = useCallback(
@@ -6736,6 +6748,15 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   }, [node.controllerId, node.surfaceId, windowInstanceId]);
 
   useEffect(() => {
+    const onWindowDragOver = (event: DragEvent) => {
+      if (!getActiveCatalogueDragPayload() && !event.dataTransfer?.types.includes(CATALOGUE_DRAG_MIME)) return;
+      if (!parsePuzzle3dCatalogueDragPayload(getActiveCatalogueDragPayload()) && !event.dataTransfer?.types.includes(CATALOGUE_DRAG_MIME)) return;
+      event.preventDefault();
+      const encoded = getActiveCatalogueDragPayload();
+      if (encoded) catalogueDragEncodedRef.current = encoded;
+      updateCatalogueDropPreviewAt(event.clientX, event.clientY);
+    };
+
     const onPointerMove = (event: PointerEvent) => {
       const encoded = getActiveCatalogueDragPayload();
       if (!encoded) {
@@ -6768,10 +6789,12 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       });
     };
 
+    window.addEventListener("dragover", onWindowDragOver, true);
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp, true);
     window.addEventListener("dragend", onDragEnd);
     return () => {
+      window.removeEventListener("dragover", onWindowDragOver, true);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp, true);
       window.removeEventListener("dragend", onDragEnd);
@@ -6929,6 +6952,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
             )}
             {fit?.enabled ? <WorldAutoFit groupRef={instancesGroupRef} fitKey={`${fit.revision ?? 0}:${meshes.map((mesh) => mesh.url ?? mesh.id).join(",")}`} padding={fit.padding ?? 1.25} camera={cameraState} onFitted={handleAutoFitCameraChange} /> : null}
             <CameraRefBridge cameraRef={cameraRef} />
+            <CatalogueDropPreviewInvalidate preview={catalogueDropPreview} />
             <RaycasterPickTuning />
             <WorldVortexHitStamp vortices={previewVortices} hostRef={hostRef} />
             <WorldGumballHitStamp target={selection.gumballTarget} active={Boolean(selection.gumballActive) && isWorldTransformGumballMode(selection.transformMode)} hostRef={hostRef} />

@@ -4,7 +4,11 @@
   "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store",
   "projectType": "library",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/🧪️tests/🎚️config/🟦️.ts"]
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/🧪️tests/🎚️config/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts"
+    ]
   },
   "targets": {
     "test": {
@@ -24,5 +28,8 @@
       }
     }
   },
-  "tags": ["scope:framework", "type:plugin"]
+  "tags": [
+    "scope:framework",
+    "type:plugin"
+  ]
 }

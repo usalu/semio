@@ -15,68 +15,75 @@ Researched the complete policy/breach system in main.go: documented all 31 Breac
 `Statute` is a `string` type alias (L9666). All constants:
 
 **Code: Header** (prefix `code:header:`)
-| Constant | Value | Autofixable |
-|---|---|---|
-| `BreachCodeHeaderMissingRegion` | `code:header:missing-region` | No |
-| `BreachCodeHeaderWrongFileId` | `code:header:wrong-file-id` | **Yes** |
-| `BreachCodeHeaderMissingContributors` | `code:header:missing-contributors` | No |
-| `BreachCodeHeaderMissingSummary` | `code:header:missing-summary` | No |
-| `BreachCodeHeaderMissingLicense` | `code:header:missing-license` | No |
-| `BreachCodeHeaderMissingLicenseRegion` | `code:header:missing-license-region` | No |
-| `BreachCodeHeaderWrongLicense` | `code:header:wrong-license` | No |
-| `BreachCodeHeaderMissingRequirementsRegion` | `code:header:missing-requirements-region` | No |
+
+| Constant                                    | Value                                     | Autofixable |
+| ------------------------------------------- | ----------------------------------------- | ----------- |
+| `BreachCodeHeaderMissingRegion`             | `code:header:missing-region`              | No          |
+| `BreachCodeHeaderWrongFileId`               | `code:header:wrong-file-id`               | **Yes**     |
+| `BreachCodeHeaderMissingContributors`       | `code:header:missing-contributors`        | No          |
+| `BreachCodeHeaderMissingSummary`            | `code:header:missing-summary`             | No          |
+| `BreachCodeHeaderMissingLicense`            | `code:header:missing-license`             | No          |
+| `BreachCodeHeaderMissingLicenseRegion`      | `code:header:missing-license-region`      | No          |
+| `BreachCodeHeaderWrongLicense`              | `code:header:wrong-license`               | No          |
+| `BreachCodeHeaderMissingRequirementsRegion` | `code:header:missing-requirements-region` | No          |
 
 **Code: Section** (prefix `code:section:`)
-| Constant | Value | Autofixable |
-|---|---|---|
-| `BreachCodeSectionEmpty` | `code:section:empty` | **Yes** |
-| `BreachCodeSectionOrphanDefinition` | `code:section:orphan-definition` | No |
-| `BreachCodeSectionMissingStartName` | `code:section:missing-start-name` | No |
-| `BreachCodeSectionMissingEndName` | `code:section:missing-end-name` | **Yes** |
-| `BreachCodeSectionNameMismatch` | `code:section:name-mismatch` | **Yes** |
+
+| Constant                            | Value                             | Autofixable |
+| ----------------------------------- | --------------------------------- | ----------- |
+| `BreachCodeSectionEmpty`            | `code:section:empty`              | **Yes**     |
+| `BreachCodeSectionOrphanDefinition` | `code:section:orphan-definition`  | No          |
+| `BreachCodeSectionMissingStartName` | `code:section:missing-start-name` | No          |
+| `BreachCodeSectionMissingEndName`   | `code:section:missing-end-name`   | **Yes**     |
+| `BreachCodeSectionNameMismatch`     | `code:section:name-mismatch`      | **Yes**     |
 
 **Code: Comment** (prefix `code:comment:`)
-| Constant | Value | Autofixable |
-|---|---|---|
-| `BreachCodeCommentInline` | `code:comment:inline` | **Yes** |
-| `BreachCodeCommentBlock` | `code:comment:block` | **Yes** |
-| `BreachCodeCommentJSDoc` | `code:comment:jsdoc` | **Yes** |
+
+| Constant                  | Value                 | Autofixable |
+| ------------------------- | --------------------- | ----------- |
+| `BreachCodeCommentInline` | `code:comment:inline` | **Yes**     |
+| `BreachCodeCommentBlock`  | `code:comment:block`  | **Yes**     |
+| `BreachCodeCommentJSDoc`  | `code:comment:jsdoc`  | **Yes**     |
 
 **Code: Unicode**
-| Constant | Value | Autofixable |
-|---|---|---|
-| `BreachCodeUnicodeEmojiVariation` | `code:unicode:emoji-variation` | **Yes** |
+
+| Constant                          | Value                          | Autofixable |
+| --------------------------------- | ------------------------------ | ----------- |
+| `BreachCodeUnicodeEmojiVariation` | `code:unicode:emoji-variation` | **Yes**     |
 
 **Dev-Docs** (prefix `dev-docs:`)
-| Constant | Value | Autofixable |
-|---|---|---|
-| `BreachDevDocsMissingFile` | `dev-docs:missing-file` | Yes |
-| `BreachDevDocsMissingFolder` | `dev-docs:missing-folder` | Yes |
-| `BreachDevDocsWrongFilePath` | `dev-docs:wrong-file-path` | Yes |
-| `BreachDevDocsWrongFolderPath` | `dev-docs:wrong-folder-path` | Yes |
-| `BreachDevDocsWrongFileName` | `dev-docs:wrong-file-name` | Yes |
-| `BreachDevDocsWrongFolderName` | `dev-docs:wrong-folder-name` | Yes |
-| `BreachDevDocsWrongFileOrder` | `dev-docs:wrong-file-order` | Yes |
-| `BreachDevDocsWrongFolderOrder` | `dev-docs:wrong-folder-order` | Yes |
-| `BreachDevDocsMissingComponent` | `dev-docs:missing-component` | Yes |
-| `BreachDevDocsWrongComponentName` | `dev-docs:wrong-component-name` | Yes |
-| `BreachDevDocsWrongComponentOrder` | `dev-docs:wrong-component-order` | Yes |
+
+| Constant                           | Value                            | Autofixable |
+| ---------------------------------- | -------------------------------- | ----------- |
+| `BreachDevDocsMissingFile`         | `dev-docs:missing-file`          | Yes         |
+| `BreachDevDocsMissingFolder`       | `dev-docs:missing-folder`        | Yes         |
+| `BreachDevDocsWrongFilePath`       | `dev-docs:wrong-file-path`       | Yes         |
+| `BreachDevDocsWrongFolderPath`     | `dev-docs:wrong-folder-path`     | Yes         |
+| `BreachDevDocsWrongFileName`       | `dev-docs:wrong-file-name`       | Yes         |
+| `BreachDevDocsWrongFolderName`     | `dev-docs:wrong-folder-name`     | Yes         |
+| `BreachDevDocsWrongFileOrder`      | `dev-docs:wrong-file-order`      | Yes         |
+| `BreachDevDocsWrongFolderOrder`    | `dev-docs:wrong-folder-order`    | Yes         |
+| `BreachDevDocsMissingComponent`    | `dev-docs:missing-component`     | Yes         |
+| `BreachDevDocsWrongComponentName`  | `dev-docs:wrong-component-name`  | Yes         |
+| `BreachDevDocsWrongComponentOrder` | `dev-docs:wrong-component-order` | Yes         |
 
 **Sketchpad** (prefix `sketchpad:`)
-| Constant | Value | Autofixable |
-|---|---|---|
-| `BreachSketchpadImportThirdParty` | `sketchpad:import:third-party-outside-elements` | No |
-| `BreachSketchpadStateMultipleMachines` | `sketchpad:state:multiple-machines` | No |
-| `BreachSketchpadStateCreateActor` | `sketchpad:state:create-actor-usage` | No |
-| `BreachSketchpadStateYjsAppState` | `sketchpad:state:yjs-app-state` | No |
-| `BreachSketchpadStateForbiddenStore` | `sketchpad:state:forbidden-store` | No |
-| `BreachSketchpadHooksNonTriadic` | `sketchpad:hooks:non-triadic` | No |
+
+| Constant                               | Value                                           | Autofixable |
+| -------------------------------------- | ----------------------------------------------- | ----------- |
+| `BreachSketchpadImportThirdParty`      | `sketchpad:import:third-party-outside-elements` | No          |
+| `BreachSketchpadStateMultipleMachines` | `sketchpad:state:multiple-machines`             | No          |
+| `BreachSketchpadStateCreateActor`      | `sketchpad:state:create-actor-usage`            | No          |
+| `BreachSketchpadStateYjsAppState`      | `sketchpad:state:yjs-app-state`                 | No          |
+| `BreachSketchpadStateForbiddenStore`   | `sketchpad:state:forbidden-store`               | No          |
+| `BreachSketchpadHooksNonTriadic`       | `sketchpad:hooks:non-triadic`                   | No          |
 
 **Repo**
-| Constant | Value | Autofixable |
-|---|---|---|
-| `BreachRepoMissingCommand` | `repo:missing-command` | No |
-| `BreachRepoMissingTicketTracking` | `repo:missing-ticket-tracking` | No |
+
+| Constant                          | Value                          | Autofixable |
+| --------------------------------- | ------------------------------ | ----------- |
+| `BreachRepoMissingCommand`        | `repo:missing-command`         | No          |
+| `BreachRepoMissingTicketTracking` | `repo:missing-ticket-tracking` | No          |
 
 ### 2. Struct Definitions
 

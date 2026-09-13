@@ -1,0 +1,13 @@
+{
+  "name": "semio-framework-os-font-assets",
+  "projectType": "application",
+  "tags": ["language:cargo"],
+  "targets": {
+    "build": {
+      "cache": true,
+      "outputs": ["{projectRoot}/dist/build"],
+      "inputs": ["production", "^production"],
+      "options": { "command": "bun ./📜️script.ts build" }
+    }
+  }
+}

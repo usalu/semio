@@ -342,15 +342,28 @@ function ecmaDispositionOracle(content: string, analyzer: "typescript" | "javasc
       };
       return item.arguments?.every(inspect) !== false;
     };
-    const terminal = (statement: ts.Statement, scope: Scope): boolean => {
+    const terminal = (statement: ts.Statement, scope: Scope, mainGuard = false): boolean => {
       if (!ts.isExpressionStatement(statement)) return false;
       const expression = unwrap(statement.expression);
-      if (!ts.isCallExpression(expression) || !ts.isIdentifier(expression.expression)) return false;
+      if (!ts.isCallExpression(expression)) return false;
+      const callee = expression.expression;
+      if (mainGuard && ts.isPropertyAccessExpression(callee) && callee.name.text === "run" && ts.isIdentifier(callee.expression) && scope.resolve(callee.expression.text)?.kind === "router") {
+        const argument = expression.arguments.length === 1 ? unwrap(expression.arguments[0]!) : undefined;
+        if (!argument || !ts.isCallExpression(argument) || !ts.isPropertyAccessExpression(argument.expression) || argument.expression.name.text !== "slice" || !ts.isPropertyAccessExpression(argument.expression.expression) || argument.expression.expression.name.text !== "argv" || !ts.isIdentifier(argument.expression.expression.expression) || intrinsic(scope, argument.expression.expression.expression.text) !== "process" || argument.arguments.length !== 1 || !ts.isNumericLiteral(argument.arguments[0]!) || argument.arguments[0]!.getText(source) !== "2") return false;
+        terminals++;
+        return true;
+      }
+      if (!ts.isIdentifier(callee)) return false;
       const binding = scope.resolve(expression.expression.text);
       if (binding?.kind !== "import-value" || !["runBundleScriptMain", "runWorkspaceScriptMain", "runPolicyOnlyMain", "runArtifactRustPackageMain", "runArtifactTypeScriptPackageMain"].includes(binding.imported ?? "")) return false;
       if (!expression.arguments.every((row) => router(row, scope) || ["data", "finite"].includes(value(row, scope)))) return false;
       terminals++;
       return true;
+    };
+    const environmentDefault = (statement: ts.Statement, scope: Scope): boolean => {
+      if (!ts.isExpressionStatement(statement) || !ts.isBinaryExpression(statement.expression) || statement.expression.operatorToken.kind !== ts.SyntaxKind.QuestionQuestionEqualsToken) return false;
+      const { left, right } = statement.expression;
+      return ts.isPropertyAccessExpression(left) && /^[A-Z][A-Z0-9_]*$/u.test(left.name.text) && ts.isPropertyAccessExpression(left.expression) && left.expression.name.text === "env" && ts.isIdentifier(left.expression.expression) && intrinsic(scope, left.expression.expression.text) === "process" && (ts.isStringLiteral(right) || ts.isNumericLiteral(right));
     };
     const environmentGuard = (statement: ts.IfStatement, scope: Scope): boolean => {
       if (!ts.isBinaryExpression(statement.expression) || statement.expression.operatorToken.kind !== ts.SyntaxKind.EqualsEqualsEqualsToken || !ts.isElementAccessExpression(statement.expression.left) || !ts.isPropertyAccessExpression(statement.expression.left.expression) || statement.expression.left.expression.name.text !== "argv" || !ts.isIdentifier(statement.expression.left.expression.expression) || intrinsic(scope, statement.expression.left.expression.expression.text) !== "process" || !ts.isNumericLiteral(statement.expression.left.argumentExpression) || !ts.isStringLiteral(statement.expression.right) || statement.elseStatement) return false;
@@ -358,6 +371,38 @@ function ecmaDispositionOracle(content: string, analyzer: "typescript" | "javasc
       if (rows.length !== 1 || !ts.isExpressionStatement(rows[0]!) || !ts.isBinaryExpression(rows[0]!.expression) || rows[0]!.expression.operatorToken.kind !== ts.SyntaxKind.QuestionQuestionEqualsToken || !ts.isPropertyAccessExpression(rows[0]!.expression.left) || !/^[A-Z][A-Z0-9_]*$/u.test(rows[0]!.expression.left.name.text) || !ts.isPropertyAccessExpression(rows[0]!.expression.left.expression) || rows[0]!.expression.left.expression.name.text !== "env" || !ts.isIdentifier(rows[0]!.expression.left.expression.expression) || intrinsic(scope, rows[0]!.expression.left.expression.expression.text) !== "process") return false;
       return ts.isStringLiteral(rows[0]!.expression.right) || ts.isNumericLiteral(rows[0]!.expression.right);
     };
+    const importMetaMember = (expression: ts.Expression, member: string): boolean => ts.isPropertyAccessExpression(expression) && !expression.questionDotToken && expression.name.text === member && ts.isMetaProperty(expression.expression) && expression.expression.keywordToken === ts.SyntaxKind.ImportKeyword && expression.expression.name.text === "meta";
+    const testDependency = (expression: ts.Expression, scope: Scope): boolean => {
+      if (ts.isParenthesizedExpression(expression) || ts.isNonNullExpression(expression) || ts.isAsExpression(expression) || ts.isTypeAssertionExpression(expression)) return testDependency(expression.expression, scope);
+      if (ts.isStringLiteral(expression) || ts.isNumericLiteral(expression) || [ts.SyntaxKind.TrueKeyword, ts.SyntaxKind.FalseKeyword, ts.SyntaxKind.NullKeyword].includes(expression.kind)) return true;
+      if (ts.isIdentifier(expression)) {
+        const binding = scope.resolve(expression.text);
+        return binding?.kind === "import-value" && binding.module !== "dynamic-test";
+      }
+      if (importMetaMember(expression, "dir") || importMetaMember(expression, "url")) return true;
+      if (ts.isArrayLiteralExpression(expression)) return expression.elements.every((row) => testDependency(row, scope));
+      return ts.isObjectLiteralExpression(expression) && expression.properties.every((row) => ts.isShorthandPropertyAssignment(row) ? row.objectAssignmentInitializer === undefined && testDependency(row.name, scope) : ts.isPropertyAssignment(row) && !ts.isComputedPropertyName(row.name) && testDependency(row.initializer, scope));
+    };
+    const testRegistration = (statement: ts.IfStatement): boolean => {
+      if (statement.elseStatement || !ts.isBlock(statement.thenStatement) || statement.thenStatement.statements.length !== 2) return false;
+      const [declaration, invocation] = statement.thenStatement.statements;
+      if (!declaration || !ts.isVariableStatement(declaration) || (declaration.declarationList.flags & ts.NodeFlags.Const) === 0 || declaration.declarationList.declarations.length !== 1 || !invocation || !ts.isExpressionStatement(invocation)) return false;
+      const binding = declaration.declarationList.declarations[0]!;
+      if (!ts.isObjectBindingPattern(binding.name) || binding.name.elements.length !== 1 || !binding.initializer || !ts.isAwaitExpression(binding.initializer)) return false;
+      const member = binding.name.elements[0]!;
+      if (!ts.isIdentifier(member.name) || member.propertyName && !ts.isIdentifier(member.propertyName) || member.initializer || member.dotDotDotToken || top.resolve(member.name.text)) return false;
+      const module = binding.initializer.expression;
+      if (!ts.isCallExpression(module) || module.expression.kind !== ts.SyntaxKind.ImportKeyword || module.arguments.length !== 1 || !ts.isStringLiteral(module.arguments[0]!)) return false;
+      const literal = module.arguments[0]!, path = literal.text, segments = path.split("/");
+      if (!/^\.{1,2}\//u.test(path) || /[\\%?#]/u.test(literal.getText(source))) return false;
+      while (segments[0] === "." || segments[0] === "..") segments.shift();
+      if (segments.some((segment) => !segment || segment === "." || segment === "..") || !segments.slice(0, -1).some((segment) => segment === "🧪️tests" || segment === "🧪️")) return false;
+      if (!ts.isAwaitExpression(invocation.expression) || !ts.isCallExpression(invocation.expression.expression)) return false;
+      const call = invocation.expression.expression, nested = new Scope(top);
+      nested.define(member.name.text, { kind: "import-value", imported: member.propertyName?.text ?? member.name.text, module: "dynamic-test" });
+      return ts.isIdentifier(call.expression) && call.expression.text === member.name.text && call.arguments.length === 3 && importMetaMember(call.arguments[0]!, "vitest") && call.arguments.slice(1).every((argument) => testDependency(argument, nested));
+    };
+    let environmentDefaults = 0, testRegistrations = 0;
     if (!prebind(source.statements.filter((statement) => !ts.isImportDeclaration(statement)), top)) return "unresolved";
     for (const statement of source.statements) {
       if (ts.isImportDeclaration(statement)) continue;
@@ -379,22 +424,29 @@ function ecmaDispositionOracle(content: string, analyzer: "typescript" | "javasc
           if (!declaration.initializer) return "unresolved";
           if (router(declaration.initializer, top)) {
             if (!ts.isIdentifier(declaration.name) || !top.initialize(declaration.name.text, { kind: "router" })) return "unresolved";
-          } else if (!define(declaration, top)) return "unresolved";
+          } else if (value(declaration.initializer, top) === "module" || !define(declaration, top)) return "unresolved";
         }
         continue;
       }
-      if (ts.isIfStatement(statement) && ts.isPropertyAccessExpression(statement.expression) && statement.expression.name.text === "main" && ts.isMetaProperty(statement.expression.expression)) {
+      if (ts.isIfStatement(statement) && ts.isPropertyAccessExpression(statement.expression) && statement.expression.name.text === "main" && ts.isMetaProperty(statement.expression.expression) && statement.expression.expression.keywordToken === ts.SyntaxKind.ImportKeyword && statement.expression.expression.name.text === "meta") {
         if (statement.elseStatement) return "unresolved";
         const nested = new Scope(top), rows = ts.isBlock(statement.thenStatement) ? statement.thenStatement.statements : [statement.thenStatement];
         if (!prebind(rows, nested)) return "unresolved";
         for (const row of rows) {
           if (ts.isVariableStatement(row) && (row.declarationList.flags & ts.NodeFlags.Const) !== 0 && row.declarationList.declarations.length === 1 && row.declarationList.declarations[0]!.initializer && router(row.declarationList.declarations[0]!.initializer!, nested) && ts.isIdentifier(row.declarationList.declarations[0]!.name)) {
             if (!nested.initialize(row.declarationList.declarations[0]!.name.text, { kind: "router" })) return "unresolved";
-          } else if (!terminal(row, nested)) return "unresolved";
+          } else if (!terminal(row, nested, true)) return "unresolved";
         }
         continue;
       }
-      if (ts.isIfStatement(statement) && environmentGuard(statement, top)) continue;
+      if (ts.isIfStatement(statement) && importMetaMember(statement.expression, "vitest")) {
+        if (testRegistrations++ !== 0 || !testRegistration(statement)) return "unresolved";
+        continue;
+      }
+      if (ts.isIfStatement(statement) && environmentGuard(statement, top) || environmentDefault(statement, top)) {
+        if (environmentDefaults++ !== 0 || terminals !== 0) return "unresolved";
+        continue;
+      }
       if (!terminal(statement, top)) return "unresolved";
     }
     return terminals === 1 && [...classes].every((name) => wired.has(name)) ? "tool-metadata" : "unresolved";
@@ -441,11 +493,12 @@ function ecmaTypeScriptSemanticEvidence(rows: readonly { readonly id: string; re
   const options: ts.CompilerOptions = { allowImportingTsExtensions: true, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, noEmit: true, skipLibCheck: true, strict: true, target: ts.ScriptTarget.ESNext, types: [] };
   const sources = new Map(rows.map((row) => [`/${row.id}.ts`, row.content])), files = new Map<string, string>([
     ...sources,
-    ["/📜️script.ts", "export abstract class Script { abstract run(...args: any[]): unknown }\nexport abstract class BundleScript extends Script {}\nexport declare class ScriptRouter { constructor(...args: any[]); register(...args: any[]): this }\nexport declare function runBundleScriptMain(...args: any[]): Promise<void>;\nexport declare function runWorkspaceScriptMain(...args: any[]): Promise<void>;\nexport declare function runPolicyOnlyMain(...args: any[]): Promise<void>;\nexport declare function runArtifactRustPackageMain(...args: any[]): Promise<void>;\nexport declare function runArtifactTypeScriptPackageMain(...args: any[]): Promise<void>;\nexport declare function execute(...args: any[]): any;\n"],
-    ["/owner/🟦️.ts", "export abstract class Script { abstract run(...args: any[]): unknown }\nexport abstract class BundleScript extends Script {}\nexport declare class ScriptRouter { constructor(...args: any[]); register(...args: any[]): this }\nexport declare class MaterializeScript {}\nexport declare class SupportScript {}\nexport declare function runBundleScriptMain(...args: any[]): Promise<void>;\nexport declare function runWorkspaceScriptMain(...args: any[]): Promise<void>;\nexport declare function runArtifactTypeScriptPackageMain(...args: any[]): Promise<void>;\nexport declare function execute(...args: any[]): any;\nexport declare function prepare(...args: any[]): any;\nexport declare function dirname(value: string): string;\nexport declare function fileURLToPath(value: string): string;\n"],
+    ["/📜️script.ts", "export abstract class Script { abstract run(...args: any[]): unknown }\nexport abstract class BundleScript extends Script {}\nexport declare class ScriptRouter { constructor(...args: any[]); register(...args: any[]): this; run(segments: string[]): Promise<void> }\nexport declare function runBundleScriptMain(...args: any[]): Promise<void>;\nexport declare function runWorkspaceScriptMain(...args: any[]): Promise<void>;\nexport declare function runPolicyOnlyMain(...args: any[]): Promise<void>;\nexport declare function runArtifactRustPackageMain(...args: any[]): Promise<void>;\nexport declare function runArtifactTypeScriptPackageMain(...args: any[]): Promise<void>;\nexport declare function execute(...args: any[]): any;\n"],
+    ["/owner/🟦️.ts", "export abstract class Script { abstract run(...args: any[]): unknown }\nexport abstract class BundleScript extends Script {}\nexport declare class ScriptRouter { constructor(...args: any[]); register(...args: any[]): this; run(segments: string[]): Promise<void> }\nexport declare class MaterializeScript {}\nexport declare class SupportScript {}\nexport declare function runBundleScriptMain(...args: any[]): Promise<void>;\nexport declare function runWorkspaceScriptMain(...args: any[]): Promise<void>;\nexport declare function runArtifactRustPackageMain(...args: any[]): Promise<void>;\nexport declare function runArtifactTypeScriptPackageMain(...args: any[]): Promise<void>;\nexport declare function execute(...args: any[]): any;\nexport declare function prepare(...args: any[]): any;\nexport declare function dirname(value: string): string;\nexport declare function fileURLToPath(value: string): string;\n"],
+    ["/🧪️tests/🟦️.ts", "export declare function registerTests1(vitest: NonNullable<ImportMeta[\"vitest\"]>, dependencies: Readonly<Record<string, unknown>>, source: { readonly directory: string; readonly url: string }): Promise<void>;\n"],
     ["/node-path.d.ts", "export declare function dirname(value: string): string;\n"],
     ["/node-url.d.ts", "export declare function fileURLToPath(value: string): string;\n"],
-    ["/ambient.d.ts", "declare const console: { log(...values: unknown[]): void; error(...values: unknown[]): void };\ndeclare const process: { exit(value?: unknown): void; argv: string[]; env: Record<string, string | undefined> };\ninterface ImportMeta { readonly dir: string; readonly main: boolean; readonly url: string }\n"],
+    ["/ambient.d.ts", "declare const console: { log(...values: unknown[]): void; error(...values: unknown[]): void };\ndeclare const process: { exit(value?: unknown): void; argv: string[]; env: Record<string, string | undefined> };\ninterface ImportMeta { readonly dir: string; readonly main: boolean; readonly url: string; readonly vitest?: { readonly suite: string } }\n"],
   ]);
   const base = ts.createCompilerHost(options), normalize = (path: string): string => path.replaceAll("\\", "/");
   const host: ts.CompilerHost = {
@@ -456,7 +509,7 @@ function ecmaTypeScriptSemanticEvidence(rows: readonly { readonly id: string; re
       const value = files.get(normalize(path));
       return value === undefined ? base.getSourceFile(path, languageVersion) : ts.createSourceFile(path, value, languageVersion, true, ts.ScriptKind.TS);
     },
-    resolveModuleNames: (names, containingFile) => names.map((name) => name === "node:path" ? { resolvedFileName: "/node-path.d.ts", extension: ts.Extension.Dts, isExternalLibraryImport: true } : name === "node:url" ? { resolvedFileName: "/node-url.d.ts", extension: ts.Extension.Dts, isExternalLibraryImport: true } : name === "./owner/🟦️.ts" ? { resolvedFileName: "/owner/🟦️.ts", extension: ts.Extension.Ts, isExternalLibraryImport: false } : name === "./📜️script.ts" ? { resolvedFileName: "/📜️script.ts", extension: ts.Extension.Ts, isExternalLibraryImport: false } : ts.resolveModuleName(name, containingFile, options, host).resolvedModule),
+    resolveModuleNames: (names, containingFile) => names.map((name) => name === "./🧪️tests/🟦️.ts" ? { resolvedFileName: "/🧪️tests/🟦️.ts", extension: ts.Extension.Ts, isExternalLibraryImport: false } : name === "node:path" ? { resolvedFileName: "/node-path.d.ts", extension: ts.Extension.Dts, isExternalLibraryImport: true } : name === "node:url" ? { resolvedFileName: "/node-url.d.ts", extension: ts.Extension.Dts, isExternalLibraryImport: true } : name === "./owner/🟦️.ts" ? { resolvedFileName: "/owner/🟦️.ts", extension: ts.Extension.Ts, isExternalLibraryImport: false } : name === "./📜️script.ts" ? { resolvedFileName: "/📜️script.ts", extension: ts.Extension.Ts, isExternalLibraryImport: false } : ts.resolveModuleName(name, containingFile, options, host).resolvedModule),
     writeFile: () => {},
   };
   const program = ts.createProgram({ rootNames: [...files.keys()], options, host }), checker = program.getTypeChecker(), diagnostics = new Map<string, readonly number[]>(), executeBindings = new Map<string, readonly ("import" | "local")[]>();
@@ -549,6 +602,8 @@ describe("package boundary glue-content classification", () => {
       "📜️script.ts",
       "♻️mit-bestand/🧺️demonstrator/📜️script.ts",
       "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+      "🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog/📜️script.ts",
+      "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📜️script.ts",
     ] as const;
     for (const path of paths) {
       const content = readFileSync(join(repoRoot, path), "utf8");
@@ -612,7 +667,7 @@ describe("package boundary glue-content classification", () => {
       try { expect(nativeOracle(row, root)).toBe(row.expectedRole); }
       finally { rmSync(root, { recursive: true, force: true }); }
     }
-  });
+  }, row.oracle === "typescript-compiler" ? 5_000 : 30_000);
 
   test("runtime value imports, type-only imports, and later lexical bindings follow TypeScript semantics", () => {
     const rows = vectors.glueRoleCases.filter((row): row is typeof row & { expectedSemanticDiagnostics: readonly number[] } => row.expectedSemanticDiagnostics !== undefined);

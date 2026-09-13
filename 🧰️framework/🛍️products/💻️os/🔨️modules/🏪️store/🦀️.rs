@@ -48,6 +48,10 @@ pub use persisted_document_hydration::{
     PersistedDocumentHydrationOutput, PersistedDocumentHydrationProgress, PersistedDocumentHydrationStep, PersistedDocumentHydrationTarget, RetainedPersistedDocumentHydration,
 };
 
+#[path = "🎚️config/📥️retained/🦀️.rs"]
+mod retained_config_hydration;
+pub use retained_config_hydration::{ConfigStoreHydrationDiagnostic, ConfigStoreHydrationProgress, ConfigStoreHydrationStep, RetainedConfigStoreHydration};
+
 #[path = "🧩️composition/🗄️durable-group/🦀️.rs"]
 pub mod durable_group;
 
@@ -2205,6 +2209,21 @@ where
         Mutation: Send + 'static,
     {
         retire_document_envelope(envelope, self.initial_snapshot_retirement.clone(), self.mutation_retirement.clone())
+    }
+
+    pub fn retire_initial_snapshot_owned(&self, snapshot: P) -> Box<dyn ErasedSnapshotRetirement>
+    where
+        P: Send + 'static,
+    {
+        self.initial_snapshot_retirement.retire_owned(snapshot)
+    }
+
+    pub fn close_uninstalled_owners_step(&mut self, maximum_items: usize) -> Result<SnapshotRetirementStep, String> {
+        self.store_disposer.close_uninstalled_step(maximum_items)
+    }
+
+    pub fn uninstalled_owners_terminal_is_empty(&self) -> bool {
+        self.store_disposer.uninstalled_terminal_is_empty()
     }
 }
 
@@ -5467,6 +5486,7 @@ pub mod pack_rt {
 /// cursors and wire constants: batch `decode_document`, `decode_record_body`, `RecordValue`, and
 /// their allocation-oriented options are absent from this module's type-level reachability graph.
 pub mod mounted_pack_rt {
+    pub use crate::os_dsl::{DslField, DslValue, FieldValue, RecordLayout, RecordSpec, RecordValue, Shape};
     pub use crate::os_pack::{PackLimits, RetainedRecordBodyCursor, RetainedRecordBodyToken, RetainedValueContainer, RetainedValueCursor, RetainedValueRole, RetainedValueToken};
     pub use pack::{
         RetainedPackAnchorCursor, RetainedPackCatalog, RetainedPackCatalogAllocationError, RetainedPackCatalogAllocationStep, RetainedPackCatalogCursor, RetainedPackCatalogEvent, RetainedPackCatalogFault,
@@ -15013,6 +15033,55 @@ async fn validate_composition_pins(pins: &[crate::os_vcs::CompositionPin]) -> Re
     Ok(())
 }
 
+/// @emoji 🎚️ Atomically adopts a retained config runtime after typed Pack and history validation.
+pub fn config_store_from_initialized_runtime_with_owners<P, Mutation>(
+    mut envelope: ArtifactEnvelope<P, Mutation>,
+    runtime: ArtifactStoreInitializationRuntime<P>,
+    generation: u64,
+    owners: DocumentStoreOwners<P, Mutation>,
+) -> ConfigStore<P, Mutation>
+where
+    P: Clone + ToValue + FromValue,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
+{
+    let (current, applied_edit_ids, redo_edit_ids, cursor, local_actor_id, dag, edit_sequence, clock, initial_digest, revision_accumulator) = runtime.into_parts();
+    let current_checkpoint_id = cursor.checkpoint_id.clone();
+    envelope.cursor = Some(cursor);
+    let content_revision = revision_accumulator.revision(current_checkpoint_id.as_deref());
+    ArtifactStore {
+        envelope: std::mem::ManuallyDrop::new(envelope),
+        envelope_detached: false,
+        backbone: std::mem::ManuallyDrop::new(None),
+        dag: std::mem::ManuallyDrop::new(dag),
+        applied_edit_ids: std::mem::ManuallyDrop::new(applied_edit_ids),
+        redo_edit_ids: std::mem::ManuallyDrop::new(redo_edit_ids),
+        edit_sequence,
+        generation,
+        last_projection_cause: None,
+        current_checkpoint_id: std::mem::ManuallyDrop::new(current_checkpoint_id),
+        local_actor_id: std::mem::ManuallyDrop::new(local_actor_id),
+        merge_policy: crate::os_spr::MergePolicy::default(),
+        clock,
+        initial_digest,
+        content_revision,
+        revision_accumulator: std::mem::ManuallyDrop::new(revision_accumulator),
+        current: std::mem::ManuallyDrop::new(Arc::new(current)),
+        current_detached: false,
+        tail_undo_cache: std::mem::ManuallyDrop::new(None),
+        snapshot_retirement_factory: std::mem::ManuallyDrop::new(Some(owners.snapshot_retirement)),
+        initial_snapshot_retirement_factory: std::mem::ManuallyDrop::new(Some(owners.initial_snapshot_retirement)),
+        mutation_retirement_factory: std::mem::ManuallyDrop::new(Some(owners.mutation_retirement)),
+        snapshot_read_leases: std::mem::ManuallyDrop::new(Arc::new(SnapshotReadLeaseRegistry::new())),
+        displaced_retirements: std::mem::ManuallyDrop::new(ArtifactStoreDisplacedRetirements::new()),
+        owned_disposer: std::mem::ManuallyDrop::new(Some(owners.store_disposer)),
+        owned_disposer_terminal: false,
+        one_item_preparation_factory: std::mem::ManuallyDrop::new(owners.one_item_preparation),
+        one_item_wire_preparation_factory: std::mem::ManuallyDrop::new(owners.one_item_wire_preparation),
+        pending_report: std::mem::ManuallyDrop::new(PendingCommandReport::default()),
+        durable_group_root: std::mem::ManuallyDrop::new(None),
+    }
+}
+
 async fn checkpoint_identity(checkpoint: &Checkpoint, changes: &ArtifactHistoryLedger<Change>) -> String {
     content_addressed_checkpoint_id(checkpoint.parent_id.as_deref(), &checkpoint.change_ids, changes, checkpoint.message.as_deref(), &checkpoint.authors, &checkpoint.timestamp, &checkpoint.composition_pins).await
 }
@@ -15141,43 +15210,8 @@ where
     /// @emoji 🏗️ Atomically adopts a domain-validated initialization runtime. Every
     /// history/reference/snapshot owner was prepared under the caller's StepContext before this
     /// non-suspending move; no validation or collection traversal occurs at publication.
-    pub fn from_initialized_runtime_with_owners(mut envelope: ArtifactEnvelope<P, Mutation>, runtime: ArtifactStoreInitializationRuntime<P>, generation: u64, owners: DocumentStoreOwners<P, Mutation>) -> Self {
-        let (current, applied_edit_ids, redo_edit_ids, cursor, local_actor_id, dag, edit_sequence, clock, initial_digest, revision_accumulator) = runtime.into_parts();
-        let current_checkpoint_id = cursor.checkpoint_id.clone();
-        envelope.cursor = Some(cursor);
-        let content_revision = revision_accumulator.revision(current_checkpoint_id.as_deref());
-        Self {
-            envelope: std::mem::ManuallyDrop::new(envelope),
-            envelope_detached: false,
-            backbone: std::mem::ManuallyDrop::new(None),
-            dag: std::mem::ManuallyDrop::new(dag),
-            applied_edit_ids: std::mem::ManuallyDrop::new(applied_edit_ids),
-            redo_edit_ids: std::mem::ManuallyDrop::new(redo_edit_ids),
-            edit_sequence,
-            generation,
-            last_projection_cause: None,
-            current_checkpoint_id: std::mem::ManuallyDrop::new(current_checkpoint_id),
-            local_actor_id: std::mem::ManuallyDrop::new(local_actor_id),
-            merge_policy: crate::os_spr::MergePolicy::default(),
-            clock,
-            initial_digest,
-            content_revision,
-            revision_accumulator: std::mem::ManuallyDrop::new(revision_accumulator),
-            current: std::mem::ManuallyDrop::new(Arc::new(current)),
-            current_detached: false,
-            tail_undo_cache: std::mem::ManuallyDrop::new(None),
-            snapshot_retirement_factory: std::mem::ManuallyDrop::new(Some(owners.snapshot_retirement)),
-            initial_snapshot_retirement_factory: std::mem::ManuallyDrop::new(Some(owners.initial_snapshot_retirement)),
-            mutation_retirement_factory: std::mem::ManuallyDrop::new(Some(owners.mutation_retirement)),
-            snapshot_read_leases: std::mem::ManuallyDrop::new(Arc::new(SnapshotReadLeaseRegistry::new())),
-            displaced_retirements: std::mem::ManuallyDrop::new(ArtifactStoreDisplacedRetirements::new()),
-            owned_disposer: std::mem::ManuallyDrop::new(Some(owners.store_disposer)),
-            owned_disposer_terminal: false,
-            one_item_preparation_factory: std::mem::ManuallyDrop::new(owners.one_item_preparation),
-            one_item_wire_preparation_factory: std::mem::ManuallyDrop::new(owners.one_item_wire_preparation),
-            pending_report: std::mem::ManuallyDrop::new(PendingCommandReport::default()),
-            durable_group_root: std::mem::ManuallyDrop::new(None),
-        }
+    pub fn from_initialized_runtime_with_owners(envelope: ArtifactEnvelope<P, Mutation>, runtime: ArtifactStoreInitializationRuntime<P>, generation: u64, owners: DocumentStoreOwners<P, Mutation>) -> Self {
+        config_store_from_initialized_runtime_with_owners(envelope, runtime, generation, owners)
     }
 
     fn durable_group_read_root(&self) -> Option<&durable_group::ArtifactStoreDurableGroupRootV1<P>> {

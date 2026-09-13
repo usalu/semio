@@ -4,12 +4,12 @@ Status: naming review complete for the Flow tree; native implementation verifica
 
 ## Additional Decisions
 
-| Parent | Original | Handpicked | Reason |
-| --- | --- | --- | --- |
+| Parent                   | Original              | Handpicked          | Reason                                                                 |
+| ------------------------ | --------------------- | ------------------- | ---------------------------------------------------------------------- |
 | Flow mutation vocabulary | `🔀️🪟️reorder-widgets` | `🔢️reorder-widgets` | Changes the numerical widget order; distinct from reordering synapses. |
-| Flow mutation vocabulary | `🔗️connect-widgets` | `🔌️connect-widgets` | Connects widget ports; distinct from the sibling GraphQL leaf. |
-| Flow v1 any subset | `🧪️oracle` | `🔮️oracle` | Independent reference implementation, distinct from executable tests. |
-| Root action cohort | `🔣️.schema.json` | `🧬️.schema.json` | Schema for the sibling JSON data, not the data itself. |
+| Flow mutation vocabulary | `🔗️connect-widgets`   | `🔌️connect-widgets` | Connects widget ports; distinct from the sibling GraphQL leaf.         |
+| Flow v1 any subset       | `🧪️oracle`            | `🔮️oracle`          | Independent reference implementation, distinct from executable tests.  |
+| Root action cohort       | `🔣️.schema.json`      | `🧬️.schema.json`    | Schema for the sibling JSON data, not the data itself.                 |
 
 The two mutation descriptors retain their semantic IDs and payloads; only exact owner paths and their handpicked emoji metadata change. Rust module references and the oracle catalog point to the new names. The oracle name is registered for this exact owner so discovery does not silently drop it.
 

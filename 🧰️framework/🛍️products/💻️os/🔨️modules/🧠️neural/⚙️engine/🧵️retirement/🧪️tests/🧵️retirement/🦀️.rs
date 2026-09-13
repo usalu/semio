@@ -1,8 +1,65 @@
 //! 🧪️ Nested byte accounting, shared ownership, cold decoder errors, and explicit terminal guards.
 
 use super::*;
+use std::mem::size_of;
 
 //#region 🔣️FixtureLaws
+fn exact_backing(owner: Owner, expected_bytes: usize) {
+    assert!(expected_bytes > 4096);
+    let mut retirement = ValueRetirement::default();
+    retirement.owners.push_back(owner);
+    assert_eq!(retirement.allocated_bytes(), expected_bytes);
+    assert_eq!(retirement.next_close_byte_demand().unwrap(), expected_bytes);
+    assert_eq!(retirement.close_step(0, expected_bytes), ValueRetirementStep::Blocked);
+    assert_eq!(retirement.close_step(1, 0), ValueRetirementStep::Blocked);
+    assert_eq!(retirement.close_step(1, expected_bytes - 1), ValueRetirementStep::Blocked);
+    assert_eq!(retirement.allocated_bytes(), expected_bytes);
+    assert_eq!(retirement.close_step(1, expected_bytes), ValueRetirementStep::Pending { released_items: 1, released_bytes: expected_bytes });
+    assert_eq!(retirement.allocated_bytes(), 0);
+    assert_eq!(retirement.close_step(0, 0), ValueRetirementStep::Complete);
+    assert!(retirement.terminal_is_empty());
+}
+
+#[test]
+fn neural_physical_retirement_direct_string_and_vector_backings_release_exact_capacity_once() {
+    let mut bytes = Vec::with_capacity(8193);
+    bytes.push(1);
+    let capacity = bytes.capacity();
+    exact_backing(Owner::Bytes(bytes), capacity);
+
+    let strings = Vec::<String>::with_capacity(8193usize.div_ceil(size_of::<String>()));
+    let capacity = strings.capacity() * size_of::<String>();
+    exact_backing(Owner::Strings(strings), capacity);
+    let channels = Vec::<ChannelSpec>::with_capacity(8193usize.div_ceil(size_of::<ChannelSpec>()));
+    let capacity = channels.capacity() * size_of::<ChannelSpec>();
+    exact_backing(Owner::Channels(channels), capacity);
+    let fields = Vec::<FieldSpec>::with_capacity(8193usize.div_ceil(size_of::<FieldSpec>()));
+    let capacity = fields.capacity() * size_of::<FieldSpec>();
+    exact_backing(Owner::Fields(fields), capacity);
+}
+
+#[test]
+fn neural_physical_retirement_delegates_ordered_key_capacity_without_clamping() {
+    let mut key = String::with_capacity(8193);
+    key.push_str("nested-key");
+    let expected = key.capacity();
+    let mut retirement = ValueRetirement::from_dictionary(Dictionary::new().insert(key, Value::null()));
+    let mut released = 0;
+    for _ in 0..300 {
+        let demand = retirement.next_close_byte_demand().unwrap();
+        if demand == expected {
+            assert_eq!(retirement.close_step(1, expected - 1), ValueRetirementStep::Blocked);
+        }
+        match retirement.close_step(1, demand.max(1)) {
+            ValueRetirementStep::Pending { released_bytes, .. } => released += released_bytes,
+            ValueRetirementStep::Complete => break,
+            ValueRetirementStep::Blocked => panic!("exact nested neural demand blocked"),
+        }
+    }
+    assert_eq!(released, expected);
+    assert!(retirement.terminal_is_empty());
+}
+
 fn close(mut owner: ValueRetirement, maximum_bytes: usize) -> usize {
     let mut bytes = 0;
     assert_eq!(owner.close_step(0, maximum_bytes), ValueRetirementStep::Blocked);

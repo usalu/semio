@@ -71,5 +71,17 @@
       "activeToolId": null,
       "activeUtilityId": "pan"
     }
+  ],
+  "panelFocus": [
+    {
+      "id": "live",
+      "focusedWindowId": "right",
+      "keptFocusedWindowId": "right"
+    },
+    {
+      "id": "stale",
+      "focusedWindowId": "gone",
+      "keptFocusedWindowId": null
+    }
   ]
 }

@@ -14,6 +14,18 @@ pub const PUZZLE_COMMAND_OUTPUT_BYTES: usize = 262_144;
 pub const PUZZLE_COMMAND_STEP_MICROS: u32 = 7_500;
 pub const PUZZLE_COMMAND_CHECKPOINT_BYTES: usize = 120;
 
+/// 📏️ Bytes one `WireBytes` ladder step admits from the assembled wire owner.
+///
+/// 🧨️ Derived from the wire's OWN page extent ([`semio_framework::action_bus::TOOL_WIRE_PAGE_BYTES`]),
+/// never a literal, because the ladder exists to make the scan RESUMABLE at the granularity the pages
+/// arrived in — not to spend a host turn per byte. Before ticket 26/09/02/PUZZLE-3D-END-TO-END wave B59
+/// the stride was one byte AND every one of those steps published a checkpoint whose `input_hash`
+/// re-folded the whole buffer, so the ladder cost O(bytes²): a 160 314-byte `importFixture` (the browser's
+/// 145 924-byte Nakagin payload) reached scan cursor ≈28 000 in 60 s and the import never reached
+/// `Decode` at all — no document edit, no history row and no notice, which is exactly the silent
+/// `paneObjects=180→180` the live `import-distinct` verdict read.
+pub const PUZZLE_COMMAND_WIRE_SCAN_STRIDE_BYTES: usize = semio_framework::action_bus::TOOL_WIRE_PAGE_BYTES;
+
 pub fn puzzle_command_contract() -> semio_framework::ToolExecutionContract {
     semio_framework::ToolExecutionContract::resumable(PUZZLE_COMMAND_RAW_BYTES, PUZZLE_COMMAND_DECODED_ITEMS, 1, PUZZLE_COMMAND_OUTPUT_BYTES, PUZZLE_COMMAND_STEP_MICROS, 1, 1)
 }
@@ -245,8 +257,21 @@ impl PuzzleCommandCheckpointState {
     }
 }
 
+const PUZZLE_CHECKPOINT_HASH_SEED: u64 = 0xcbf29ce484222325;
+
+/// 🔢️ Folds one more slice into a running FNV-1a — the same walk [`puzzle_checkpoint_hash`] does, exposed
+/// so a paged ladder can fold each page exactly once instead of re-hashing everything it has admitted.
+fn puzzle_fold_checkpoint_hash(hash: u64, bytes: &[u8]) -> u64 {
+    let mut hash = hash;
+    for byte in bytes {
+        hash ^= u64::from(*byte);
+        hash = hash.wrapping_mul(0x100000001b3);
+    }
+    hash
+}
+
 fn puzzle_checkpoint_hash<'a>(parts: impl IntoIterator<Item = &'a [u8]>) -> u64 {
-    let mut hash = 0xcbf29ce484222325_u64;
+    let mut hash = PUZZLE_CHECKPOINT_HASH_SEED;
     for part in parts {
         for byte in part {
             hash ^= u64::from(*byte);
@@ -257,15 +282,12 @@ fn puzzle_checkpoint_hash<'a>(parts: impl IntoIterator<Item = &'a [u8]>) -> u64 
 }
 
 fn retained_input_hash(input: &RetainedToolWireInput) -> Option<u64> {
-    let mut hash = 0xcbf29ce484222325_u64;
+    let mut hash = PUZZLE_CHECKPOINT_HASH_SEED;
     let mut bytes = 0usize;
     for index in 0..input.page_count() {
         let page = input.page(index)?;
         bytes = bytes.checked_add(page.len())?;
-        for byte in page {
-            hash ^= u64::from(*byte);
-            hash = hash.wrapping_mul(0x100000001b3);
-        }
+        hash = puzzle_fold_checkpoint_hash(hash, page);
     }
     (bytes == input.declared_bytes()).then_some(hash)
 }
@@ -300,6 +322,10 @@ pub struct RetainedPuzzleCommandJob<A: ArtifactApp> {
     checkpoint_input: Option<RetainedToolWireInput>,
     raw: Vec<u8>,
     raw_len: usize,
+    /// 🔢️ FNV-1a over every wire byte admitted so far, folded page by page as the pages land — the
+    /// checkpoint authority `validate_wire_checkpoint` compares against `retained_input_hash`. Folded
+    /// incrementally, never recomputed: a re-fold per checkpoint is what made the ladder quadratic.
+    raw_hash: u64,
     raw_page_cursor: usize,
     raw_scan_cursor: usize,
     work_extent: usize,
@@ -382,6 +408,7 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
             checkpoint_input: None,
             raw,
             raw_len: 0,
+            raw_hash: PUZZLE_CHECKPOINT_HASH_SEED,
             raw_page_cursor: 0,
             raw_scan_cursor: 0,
             work_extent: 0,
@@ -408,7 +435,7 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
 
     fn checkpoint_state(&self) -> [u8; PUZZLE_COMMAND_CHECKPOINT_BYTES] {
         let tool_hash = self.work.as_ref().map_or(0, |work| puzzle_checkpoint_hash([work.tool_id().as_bytes()]));
-        let input_hash = puzzle_checkpoint_hash([&self.raw[..self.raw_len]]);
+        let input_hash = self.raw_hash;
         PuzzleCommandCheckpointState {
             phase: self.phase,
             operation: self.operation,
@@ -501,6 +528,7 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
                     let Some(end) = self.raw_len.checked_add(page.len()).filter(|end| *end <= self.raw.len()) else { return self.fault(cx, b"puzzle command wire input exceeds fixed byte capacity") };
                     self.raw[self.raw_len..end].copy_from_slice(page);
                     self.raw_len = end;
+                    self.raw_hash = puzzle_fold_checkpoint_hash(self.raw_hash, page);
                     self.raw_page_cursor = self.raw_page_cursor.saturating_add(1);
                     return self.preview(cx, "Reading command page", "Befehlsseite wird gelesen");
                 }
@@ -508,9 +536,9 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
                 self.checkpoint(cx)
             }
             PuzzleCommandPhase::WireBytes => {
-                cx.set_stage("puzzle-command-wire-byte");
+                cx.set_stage("puzzle-command-wire-page-scan");
                 if self.raw_scan_cursor < self.raw_len {
-                    self.raw_scan_cursor = self.raw_scan_cursor.saturating_add(1);
+                    self.raw_scan_cursor = self.raw_scan_cursor.saturating_add(PUZZLE_COMMAND_WIRE_SCAN_STRIDE_BYTES).min(self.raw_len);
                     return self.checkpoint(cx);
                 }
                 self.phase = PuzzleCommandPhase::Decode;

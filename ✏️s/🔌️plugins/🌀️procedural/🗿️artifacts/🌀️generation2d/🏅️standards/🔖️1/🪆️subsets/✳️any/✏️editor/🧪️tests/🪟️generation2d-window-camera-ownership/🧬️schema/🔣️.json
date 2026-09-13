@@ -3,7 +3,7 @@
   "$id": "https://semio.tech/test/procedural/generation2d/window-camera-ownership",
   "type": "object",
   "additionalProperties": false,
-  "required": ["document", "appConfig", "windowInstances", "baseConfigs", "mutations", "expected", "rejections", "canvasCommands"],
+  "required": ["document", "appConfig", "windowInstances", "baseConfigs", "renderers", "mutations", "expected", "rejections", "canvasCommands"],
   "properties": {
     "document": { "type": "object" },
     "appConfig": {
@@ -23,6 +23,16 @@
         "generation2d-generate-preview": { "$ref": "#/$defs/config" }
       }
     },
+    "renderers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["generation2d-main", "generation2d-preview", "generation2d-generate-preview"],
+      "properties": {
+        "generation2d-main": { "$ref": "#/$defs/renderer" },
+        "generation2d-preview": { "$ref": "#/$defs/renderer" },
+        "generation2d-generate-preview": { "$ref": "#/$defs/renderer" }
+      }
+    },
     "mutations": { "type": "array", "items": { "$ref": "#/$defs/addressedMutation" }, "minItems": 6 },
     "expected": { "type": "object", "additionalProperties": { "$ref": "#/$defs/config" } },
     "rejections": { "type": "array", "items": { "$ref": "#/$defs/rejection" }, "minItems": 3 },
@@ -34,6 +44,10 @@
       "properties": { "x": {"type":"number"}, "y": {"type":"number"}, "zoom": {"type":"number", "exclusiveMinimum":0} }
     },
     "config": { "type": "object", "additionalProperties": false, "required": ["viewport"], "properties": { "viewport": { "$ref": "#/$defs/viewport" } } },
+    "renderer": {
+      "type": "object", "additionalProperties": false, "required": ["bodyKey", "sceneSchema"],
+      "properties": { "bodyKey": { "type": "string" }, "sceneSchema": { "enum": ["node-graph@1", "canvas-2d@1"] } }
+    },
     "windowInstance": { "type": "object", "additionalProperties": false, "required": ["id", "windowKindId"], "properties": { "id": {"type":"string"}, "windowKindId": {"type":"string"} } },
     "addressedMutation": {
       "type": "object", "additionalProperties": false, "required": ["windowId", "windowKindId", "mutation"],

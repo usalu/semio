@@ -4,20 +4,20 @@ Scope: `🧰️framework/🔨️modules/🖱️ui/🎨️styling`, including ign
 
 ## Manual choices
 
-| Exact old path relative to scope | Exact new path | Inspected responsibility |
-| --- | --- | --- |
-| `🎨️tailwind` | `💨️tailwind` | Tailwind utility configuration |
-| `🎨️theme` | `🌓️theme` | Named appearance/theme preset |
-| `🎨️ui.css` | `🖌️ui.css` | Authored visual UI rules |
-| `🤖️generated.rs` | `🦀️tokens.generated.rs` | Generated Rust token definitions, distinct from generated directory |
-| `🤖️generated/palette-fonts.css` | `🤖️generated/🔤️palette-fonts.css` | Font-face definitions |
-| `🤖️generated/palette-🎨️theme.css` | `🤖️generated/🌓️palette-theme.css` | Theme variables; fixes emoji in the middle |
-| `🤖️generated/palette-presence.css` | `🤖️generated/🚦️palette-presence.css` | Multi-user presence colors |
-| `net` | `🔷️net` | .NET projection tree |
-| `net/Elements.Styling` | `🔷️net/🖌️Elements.Styling` | Styling projection namespace |
-| `net/Elements.Styling/Generated` | `🔷️net/🖌️Elements.Styling/🤖️Generated` | Generated C# output owner |
-| `net/Elements.Styling/Generated/Palette.g.cs` | `🔷️net/🖌️Elements.Styling/🤖️Generated/🎨️Palette.g.cs` | Color palette projection |
-| `📦️packages/🟦️typescript/🎨️tailwind.config.ts` | `📦️packages/🟦️typescript/tailwind.config.ts` | Literal tool-reserved package-root configuration |
+| Exact old path relative to scope               | Exact new path                                        | Inspected responsibility                                            |
+| ---------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------- |
+| `🎨️tailwind`                                   | `💨️tailwind`                                          | Tailwind utility configuration                                      |
+| `🎨️theme`                                      | `🌓️theme`                                             | Named appearance/theme preset                                       |
+| `🎨️ui.css`                                     | `🖌️ui.css`                                            | Authored visual UI rules                                            |
+| `🤖️generated.rs`                               | `🦀️tokens.generated.rs`                               | Generated Rust token definitions, distinct from generated directory |
+| `🤖️generated/palette-fonts.css`                | `🤖️generated/🔤️palette-fonts.css`                     | Font-face definitions                                               |
+| `🤖️generated/palette-🎨️theme.css`              | `🤖️generated/🌓️palette-theme.css`                     | Theme variables; fixes emoji in the middle                          |
+| `🤖️generated/palette-presence.css`             | `🤖️generated/🚦️palette-presence.css`                  | Multi-user presence colors                                          |
+| `net`                                          | `🔷️net`                                               | .NET projection tree                                                |
+| `net/Elements.Styling`                         | `🔷️net/🖌️Elements.Styling`                            | Styling projection namespace                                        |
+| `net/Elements.Styling/Generated`               | `🔷️net/🖌️Elements.Styling/🤖️Generated`                | Generated C# output owner                                           |
+| `net/Elements.Styling/Generated/Palette.g.cs`  | `🔷️net/🖌️Elements.Styling/🤖️Generated/🎨️Palette.g.cs` | Color palette projection                                            |
+| `📦️packages/🟦️typescript/🎨️tailwind.config.ts` | `📦️packages/🟦️typescript/tailwind.config.ts`          | Literal tool-reserved package-root configuration                    |
 
 The .NET chain contains only its generated palette, no csproj or fixed assembly filenames. `🎨️palette.css` retains the meaningful palette glyph; Rust/TS/Python format entry leaves and fixed package/tool names retain their identities. The existing taxonomy's package-root Tailwind contract requires the literal `tailwind.config.ts`; its non-package nested preset stays `💨️tailwind/🎨️tailwind.config.ts`. Names were picked individually before moves, not assigned by a palette or script.
 

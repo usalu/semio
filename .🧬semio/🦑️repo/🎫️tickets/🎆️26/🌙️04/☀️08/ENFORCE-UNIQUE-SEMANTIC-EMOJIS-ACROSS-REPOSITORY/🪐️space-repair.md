@@ -41,6 +41,7 @@ All exact Rust mounts, TypeScript imports, schema references, comments, oracle p
 The final full Space audit covers 439 files, 363 directories, and 796 governed entries. Missing, generic, presentation, spacing, duplicate, multiple, reserved-emoji, and oracle findings are all zero. Every physical Engine and Home command has an exact central membership, and `validateTaxonomy(loadCatalogTaxonomy())` returns `[]`.
 
 `bun nx run @semio-tech/space-js:test` exits 0. `bun nx run @semio-tech/space-plugin:home-directory-projection-persistence-check` exits 0 with 11 checks, including the committed schema through Ajv and hostile projection cases.
+
 # Final command correction (2026-09-05)
 
 - Handpicked `📬️apply-directory-event-page` for the Home command previously carrying generic `📄️`: the mailbox glyph expresses accepting a delivered directory-event page into the local projection and is distinct from sibling `📇️fold-directory-events`.

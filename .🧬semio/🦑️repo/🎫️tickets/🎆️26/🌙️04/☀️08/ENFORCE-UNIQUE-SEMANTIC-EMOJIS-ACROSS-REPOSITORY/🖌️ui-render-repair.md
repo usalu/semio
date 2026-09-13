@@ -6,55 +6,55 @@ Scope: `🧰️framework/🔨️modules/🖱️ui/🖌️render`, including the 
 
 Each old basename below starts with `🦀️`. The table specifies its exact replacement; extensions and module identifiers remain unchanged. Choices follow the inspected file's actual responsibility, independently checked against its siblings. The unique `🦀️.rs` Rust entry leaves, literal `Cargo.toml`, fixed `📋️project.json`, script, and already-unique fixtures remain unchanged.
 
-| Parent under scope | Old basename | New basename | Responsibility |
-| --- | --- | --- | --- |
-| `📦️packages/🦀️rust` | `🦀️backend.rs` | `🔌️backend.rs` | Backend interface and null implementation |
-| same | `🦀️dispatch.rs` | `🖱️dispatch.rs` | Pointer, focus and input dispatch |
-| same | `🦀️element.rs` | `🧱️element.rs` | Element trait and frame arena |
-| same | `🦀️frame.rs` | `🖼️frame.rs` | Atomic presented frame snapshots |
-| same | `🦀️layout.rs` | `📏️layout.rs` | Intrinsic measurement and layout |
-| same | `🦀️resource.rs` | `🗃️resource.rs` | Typed resource residency |
-| same | `🦀️scene.rs` | `🎬️scene.rs` | Display-list scene assembly |
-| same | `🦀️schedule.rs` | `⏱️schedule.rs` | Frame invalidation scheduling |
-| same | `🦀️shader_contract.rs` | `✨️shader_contract.rs` | Shader families and pipeline contract |
-| same | `🦀️surface.rs` | `🗺️surface.rs` | Embedded product surface placement |
-| same | `🦀️tessellate.rs` | `📐️tessellate.rs` | CPU tessellation geometry |
-| same | `🦀️text.rs` | `🖋️text.rs` | Text shaping and glyph atlas |
-| `🎯️targets/🌋️vulkan/📦️packages/🦀️rust` | `🦀️backend.rs` | `🌋️backend.rs` | Vulkan implementation |
-| same | `🦀️descriptor_layout.rs` | `🗺️descriptor_layout.rs` | Contract-to-Vulkan value mappings |
-| same | `🦀️memory.rs` | `💾️memory.rs` | Device memory allocation |
-| same | `🦀️resources.rs` | `🗃️resources.rs` | Resource residency and uploads |
-| same | `🦀️surface.rs` | `🪟️surface.rs` | Native window surface ABI |
-| same | `🦀️swapchain_support.rs` | `🔗️swapchain_support.rs` | Swapchain selection decisions |
-| same | `🦀️vk_error.rs` | `⚠️vk_error.rs` | Vulkan failure classification |
-| `🎯️targets/🍎️metal/📦️packages/🦀️rust` | `🦀️backend.rs` | `🍎️backend.rs` | Metal implementation |
-| same | `🦀️frame_buffers.rs` | `📬️frame_buffers.rs` | Per-frame upload buffers |
-| same | `🦀️msl.rs` | `✨️msl.rs` | Metal shader source |
-| same | `🦀️objective_c.rs` | `🧭️objective_c.rs` | Objective-C ownership and ABI boundary |
-| same | `🦀️pipelines.rs` | `🏗️pipelines.rs` | GPU pipeline construction |
-| same | `🦀️resources.rs` | `🗃️resources.rs` | Resource residency |
-| same | `🦀️scene_target.rs` | `🌫️scene_target.rs` | Offscreen mip-chain blur target |
-| same | `🦀️types.rs` | `🧱️types.rs` | GPU memory-layout structures |
-| same | `🦀️world3d.rs` | `🌐️world3d.rs` | World-space mesh and line encoding |
-| `🎯️targets/🧊️webgpu/📦️packages/🦀️rust` | `🦀️backend.rs` | `🌐️backend.rs` | Browser WebGPU implementation |
-| same | `🦀️buffers.rs` | `📈️buffers.rs` | Growable GPU buffers |
-| same | `🦀️frame.rs` | `🎞️frame.rs` | Frame command replay |
-| same | `🦀️gpu_context.rs` | `🔌️gpu_context.rs` | Device and surface construction |
-| same | `🦀️gpu_types.rs` | `🔤️gpu_types.rs` | Pure GPU enum translations |
-| same | `🦀️gpu_uniforms.rs` | `🧮️gpu_uniforms.rs` | Uniform numerical memory layouts |
-| same | `🦀️pipelines.rs` | `🧵️pipelines.rs` | Shader render pipelines |
-| same | `🦀️resources.rs` | `🗃️resources.rs` | Resource residency |
-| same | `🦀️scene_target.rs` | `🌆️scene_target.rs` | Scene-color offscreen target |
-| same | `🦀️surface_adapter.rs` | `🧊️surface_adapter.rs` | Owned WebGPU byte/page surface port |
-| same | `🦀️surface_state.rs` | `🚦️surface_state.rs` | Surface and device state machine |
-| `🎯️targets/🪟️d3d12/📦️packages/🦀️rust` | `🦀️backend.rs` | `🪟️backend.rs` | Direct3D implementation |
-| same | `🦀️frame_buffers.rs` | `📬️frame_buffers.rs` | Per-frame uploads and descriptors |
-| same | `🦀️hlsl.rs` | `✨️hlsl.rs` | HLSL shader source |
-| same | `🦀️pipelines.rs` | `🏗️pipelines.rs` | Root signature and pipeline construction |
-| same | `🦀️resources.rs` | `🗃️resources.rs` | Resource residency |
-| same | `🦀️scene_target.rs` | `🌫️scene_target.rs` | Offscreen mip-chain blur target |
-| same | `🦀️types.rs` | `🧱️types.rs` | GPU memory-layout structures |
-| same | `🦀️world3d.rs` | `🌐️world3d.rs` | World-space mesh and line encoding |
+| Parent under scope                     | Old basename             | New basename             | Responsibility                            |
+| -------------------------------------- | ------------------------ | ------------------------ | ----------------------------------------- |
+| `📦️packages/🦀️rust`                    | `🦀️backend.rs`           | `🔌️backend.rs`           | Backend interface and null implementation |
+| same                                   | `🦀️dispatch.rs`          | `🖱️dispatch.rs`          | Pointer, focus and input dispatch         |
+| same                                   | `🦀️element.rs`           | `🧱️element.rs`           | Element trait and frame arena             |
+| same                                   | `🦀️frame.rs`             | `🖼️frame.rs`             | Atomic presented frame snapshots          |
+| same                                   | `🦀️layout.rs`            | `📏️layout.rs`            | Intrinsic measurement and layout          |
+| same                                   | `🦀️resource.rs`          | `🗃️resource.rs`          | Typed resource residency                  |
+| same                                   | `🦀️scene.rs`             | `🎬️scene.rs`             | Display-list scene assembly               |
+| same                                   | `🦀️schedule.rs`          | `⏱️schedule.rs`          | Frame invalidation scheduling             |
+| same                                   | `🦀️shader_contract.rs`   | `✨️shader_contract.rs`   | Shader families and pipeline contract     |
+| same                                   | `🦀️surface.rs`           | `🗺️surface.rs`           | Embedded product surface placement        |
+| same                                   | `🦀️tessellate.rs`        | `📐️tessellate.rs`        | CPU tessellation geometry                 |
+| same                                   | `🦀️text.rs`              | `🖋️text.rs`              | Text shaping and glyph atlas              |
+| `🎯️targets/🌋️vulkan/📦️packages/🦀️rust` | `🦀️backend.rs`           | `🌋️backend.rs`           | Vulkan implementation                     |
+| same                                   | `🦀️descriptor_layout.rs` | `🗺️descriptor_layout.rs` | Contract-to-Vulkan value mappings         |
+| same                                   | `🦀️memory.rs`            | `💾️memory.rs`            | Device memory allocation                  |
+| same                                   | `🦀️resources.rs`         | `🗃️resources.rs`         | Resource residency and uploads            |
+| same                                   | `🦀️surface.rs`           | `🪟️surface.rs`           | Native window surface ABI                 |
+| same                                   | `🦀️swapchain_support.rs` | `🔗️swapchain_support.rs` | Swapchain selection decisions             |
+| same                                   | `🦀️vk_error.rs`          | `⚠️vk_error.rs`          | Vulkan failure classification             |
+| `🎯️targets/🍎️metal/📦️packages/🦀️rust`  | `🦀️backend.rs`           | `🍎️backend.rs`           | Metal implementation                      |
+| same                                   | `🦀️frame_buffers.rs`     | `📬️frame_buffers.rs`     | Per-frame upload buffers                  |
+| same                                   | `🦀️msl.rs`               | `✨️msl.rs`               | Metal shader source                       |
+| same                                   | `🦀️objective_c.rs`       | `🧭️objective_c.rs`       | Objective-C ownership and ABI boundary    |
+| same                                   | `🦀️pipelines.rs`         | `🏗️pipelines.rs`         | GPU pipeline construction                 |
+| same                                   | `🦀️resources.rs`         | `🗃️resources.rs`         | Resource residency                        |
+| same                                   | `🦀️scene_target.rs`      | `🌫️scene_target.rs`      | Offscreen mip-chain blur target           |
+| same                                   | `🦀️types.rs`             | `🧱️types.rs`             | GPU memory-layout structures              |
+| same                                   | `🦀️world3d.rs`           | `🌐️world3d.rs`           | World-space mesh and line encoding        |
+| `🎯️targets/🧊️webgpu/📦️packages/🦀️rust` | `🦀️backend.rs`           | `🌐️backend.rs`           | Browser WebGPU implementation             |
+| same                                   | `🦀️buffers.rs`           | `📈️buffers.rs`           | Growable GPU buffers                      |
+| same                                   | `🦀️frame.rs`             | `🎞️frame.rs`             | Frame command replay                      |
+| same                                   | `🦀️gpu_context.rs`       | `🔌️gpu_context.rs`       | Device and surface construction           |
+| same                                   | `🦀️gpu_types.rs`         | `🔤️gpu_types.rs`         | Pure GPU enum translations                |
+| same                                   | `🦀️gpu_uniforms.rs`      | `🧮️gpu_uniforms.rs`      | Uniform numerical memory layouts          |
+| same                                   | `🦀️pipelines.rs`         | `🧵️pipelines.rs`         | Shader render pipelines                   |
+| same                                   | `🦀️resources.rs`         | `🗃️resources.rs`         | Resource residency                        |
+| same                                   | `🦀️scene_target.rs`      | `🌆️scene_target.rs`      | Scene-color offscreen target              |
+| same                                   | `🦀️surface_adapter.rs`   | `🧊️surface_adapter.rs`   | Owned WebGPU byte/page surface port       |
+| same                                   | `🦀️surface_state.rs`     | `🚦️surface_state.rs`     | Surface and device state machine          |
+| `🎯️targets/🪟️d3d12/📦️packages/🦀️rust`  | `🦀️backend.rs`           | `🪟️backend.rs`           | Direct3D implementation                   |
+| same                                   | `🦀️frame_buffers.rs`     | `📬️frame_buffers.rs`     | Per-frame uploads and descriptors         |
+| same                                   | `🦀️hlsl.rs`              | `✨️hlsl.rs`              | HLSL shader source                        |
+| same                                   | `🦀️pipelines.rs`         | `🏗️pipelines.rs`         | Root signature and pipeline construction  |
+| same                                   | `🦀️resources.rs`         | `🗃️resources.rs`         | Resource residency                        |
+| same                                   | `🦀️scene_target.rs`      | `🌫️scene_target.rs`      | Offscreen mip-chain blur target           |
+| same                                   | `🦀️types.rs`             | `🧱️types.rs`             | GPU memory-layout structures              |
+| same                                   | `🦀️world3d.rs`           | `🌐️world3d.rs`           | World-space mesh and line encoding        |
 
 ## Verification
 

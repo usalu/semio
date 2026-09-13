@@ -423,8 +423,6 @@ pub mod editor {
             pub mod navigate_virtual_file_system_node;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌌️open-space/🦀️.rs"]
             pub mod open_space;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⚙️set-active-panel-tab/🦀️.rs"]
-            pub mod set_active_panel_tab;
             // 🐙️ Ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS — additive mounts
             // for the Home overview-table commands, mirroring the shape every sibling mount above uses.
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📋copy-invite-link/🦀️.rs"]

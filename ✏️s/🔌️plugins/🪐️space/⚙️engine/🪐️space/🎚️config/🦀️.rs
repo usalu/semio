@@ -74,9 +74,6 @@ pub struct SpaceConfig {
     pub active_panel_tab: String,
     /// 🌱️ The currently open studio document's catalog id.
     pub space_id: Option<String>,
-    /// 🫀️ This session's local presence identity.
-    pub client_id: Option<String>,
-    pub client_name: Option<String>,
 }
 
 //#region 🔖️ArtifactCodec
@@ -138,8 +135,6 @@ impl Default for SpaceConfig {
             pending_import_format: None,
             active_panel_tab: S_PLAY_CATALOGUE_TAB_ID.into(),
             space_id: None,
-            client_id: None,
-            client_name: None,
         }
     }
 }
@@ -191,8 +186,6 @@ pub enum SpaceConfigMutation {
     SetPendingImport { node_id: Option<String>, format: Option<String> },
     #[dsl(key = "space-id")]
     SetSpaceId { space_id: Option<String> },
-    #[dsl(key = "client")]
-    SetClient { client_id: Option<String>, client_name: Option<String> },
     #[dsl(key = "active-panel-tab")]
     SetActivePanelTab { tab_id: String },
 }
@@ -435,22 +428,6 @@ impl protocol::Mutation<SpaceConfig> for SpaceConfigMutation {
         },
         protocol::MutationLeafDescriptor {
             schema_version: 1,
-            owner: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎚️config/⚙️set-client",
-            semantic_kind: "set-client",
-            display_name: "Set Client",
-            emoji: "⚙️",
-            aggregate_variant: "SetClient",
-            payload_schema: "🧬️schema/🔣️.json",
-            text_opcode: None,
-            binary_tag: None,
-            invertibility: protocol::MutationInvertibility::ExplicitMutation,
-            diff_participation: protocol::MutationDiffParticipation::Detect,
-            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
-            composition: protocol::MutationComposition::Atomic,
-            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-        },
-        protocol::MutationLeafDescriptor {
-            schema_version: 1,
             owner: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎚️config/⚙️set-active-panel-tab",
             semantic_kind: "set-active-panel-tab",
             display_name: "Set Active Panel Tab",
@@ -480,8 +457,7 @@ impl protocol::Mutation<SpaceConfig> for SpaceConfigMutation {
             SpaceConfigMutation::SetCompiledDagEngagementInput { .. } => &Self::DESCRIPTORS[8],
             SpaceConfigMutation::SetPendingImport { .. } => &Self::DESCRIPTORS[9],
             SpaceConfigMutation::SetSpaceId { .. } => &Self::DESCRIPTORS[10],
-            SpaceConfigMutation::SetClient { .. } => &Self::DESCRIPTORS[11],
-            SpaceConfigMutation::SetActivePanelTab { .. } => &Self::DESCRIPTORS[12],
+            SpaceConfigMutation::SetActivePanelTab { .. } => &Self::DESCRIPTORS[11],
         }
     }
 
@@ -506,10 +482,6 @@ impl protocol::Mutation<SpaceConfig> for SpaceConfigMutation {
                 next.pending_import_format = format.clone();
             }
             SpaceConfigMutation::SetSpaceId { space_id } => next.space_id = space_id.clone(),
-            SpaceConfigMutation::SetClient { client_id, client_name } => {
-                next.client_id = client_id.clone();
-                next.client_name = client_name.clone();
-            }
             SpaceConfigMutation::SetActivePanelTab { tab_id } => next.active_panel_tab = tab_id.clone(),
         }
         protocol::MutationOutcome::new(next)

@@ -3,7 +3,7 @@
 use super::{Atom, ChannelSpec, Dictionary, EvalChannels, FieldSpec, NeuronSnapshot, OperatorInfo, Schema, TreeSnapshot, Value, ValueType};
 use protocol::value::ordered::{Grant, OrderedMap, Retirement, RetirementStep};
 use std::collections::{BTreeMap, LinkedList};
-use std::mem::ManuallyDrop;
+use std::mem::{size_of, ManuallyDrop};
 use std::sync::Arc;
 
 //#region 🧵️DomainRetirement
@@ -34,10 +34,33 @@ impl ValueRetirement {
     pub fn push_schema(&mut self, schema: Schema) { self.owners.push_back(Owner::Schema(schema)); }
     pub fn push_strings(&mut self, strings: Vec<String>) { self.owners.push_back(Owner::Strings(strings)); }
     pub fn terminal_is_empty(&self) -> bool { self.owners.is_empty() }
+    pub fn allocated_bytes(&self) -> usize {
+        self.owners.iter().fold(0usize, |total, owner| total.saturating_add(match owner {
+            Owner::Map(values) => values.allocated_bytes(),
+            Owner::Bytes(values) => values.capacity(),
+            Owner::Strings(values) => values.capacity().saturating_mul(size_of::<String>()),
+            Owner::Channels(values) => values.capacity().saturating_mul(size_of::<ChannelSpec>()),
+            Owner::Fields(values) => values.capacity().saturating_mul(size_of::<FieldSpec>()),
+            _ => 0,
+        }))
+    }
+    pub fn next_close_byte_demand(&self) -> Result<usize, &'static str> {
+        let bytes = match self.owners.front() {
+            Some(Owner::Map(values)) => values.next_close_byte_demand()?,
+            Some(Owner::Bytes(values)) => values.capacity(),
+            Some(Owner::Strings(values)) if values.is_empty() => values.capacity().checked_mul(size_of::<String>()).ok_or("neural string-vector backing byte count overflow")?,
+            Some(Owner::Channels(values)) if values.is_empty() => values.capacity().checked_mul(size_of::<ChannelSpec>()).ok_or("neural channel-vector backing byte count overflow")?,
+            Some(Owner::Fields(values)) if values.is_empty() => values.capacity().checked_mul(size_of::<FieldSpec>()).ok_or("neural field-vector backing byte count overflow")?,
+            Some(_) => 1,
+            None => 0,
+        };
+        Ok(bytes.max(usize::from(!self.owners.is_empty())))
+    }
     pub(crate) fn push_map(&mut self, map: OrderedMap<Value>) { let retirement = map.retire(); if !retirement.is_empty() { self.owners.push_back(Owner::Map(retirement)); } }
     pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> ValueRetirementStep {
+        if self.owners.is_empty() { return ValueRetirementStep::Complete; }
         if maximum_items == 0 || maximum_bytes == 0 { return ValueRetirementStep::Blocked; }
-        let Some(owner) = self.owners.pop_front() else { return ValueRetirementStep::Complete; };
+        let owner = self.owners.pop_front().expect("checked nonempty neural retirement");
         let mut released_bytes = 0;
         match owner {
             Owner::Map(mut map) => {
@@ -46,7 +69,7 @@ impl ValueRetirement {
                 match step {
                     RetirementStep::OwnedValue(value) => self.owners.push_front(Owner::Value(value)),
                     RetirementStep::Progress { released_bytes: bytes, .. } => released_bytes = bytes,
-                    RetirementStep::Blocked => unreachable!("positive domain retirement grant"),
+                    RetirementStep::Blocked => return ValueRetirementStep::Blocked,
                     RetirementStep::Complete => {}
                 }
             }
@@ -54,9 +77,15 @@ impl ValueRetirement {
             Owner::Value(Value::Dictionary(dictionary)) => self.push_dictionary(dictionary),
             Owner::Value(Value::Atom(Atom::String(text))) => self.owners.push_front(Owner::Bytes(text.into_bytes())),
             Owner::Value(Value::Atom(_)) => {}
-            Owner::Strings(mut values) => {
+            Owner::Strings(mut values) if !values.is_empty() => {
                 if let Some(value) = values.pop() { self.text(value); }
-                if !values.is_empty() { self.owners.push_front(Owner::Strings(values)); }
+                self.owners.push_front(Owner::Strings(values));
+            }
+            Owner::Strings(values) => {
+                let bytes = values.capacity().checked_mul(size_of::<String>()).expect("admitted neural string-vector backing remains addressable");
+                if bytes > maximum_bytes { self.owners.push_front(Owner::Strings(values)); return ValueRetirementStep::Blocked; }
+                released_bytes = bytes;
+                drop(values);
             }
             Owner::Dictionaries(mut values) => {
                 if let Some((key, value)) = values.pop_first() { self.text(key); self.push_dictionary(value); }
@@ -77,34 +106,47 @@ impl ValueRetirement {
                 if let Some(value) = value.variadic_input { self.text(value.slot_key); }
                 if let Some(value) = value.variadic_output { self.text(value.slot_key); }
             }
-            Owner::Channels(mut values) => {
+            Owner::Channels(mut values) if !values.is_empty() => {
                 if let Some(value) = values.pop() {
                     self.text(value.code); self.text(value.abbreviation); self.text(value.name); self.text(value.full_name);
                     if let Some(label) = value.label { self.text(label); }
                     if let Some(default) = value.default { self.push_value(default); }
                     self.owners.push_back(Owner::Strings(value.operators));
                 }
-                if !values.is_empty() { self.owners.push_front(Owner::Channels(values)); }
+                self.owners.push_front(Owner::Channels(values));
+            }
+            Owner::Channels(values) => {
+                let bytes = values.capacity().checked_mul(size_of::<ChannelSpec>()).expect("admitted neural channel-vector backing remains addressable");
+                if bytes > maximum_bytes { self.owners.push_front(Owner::Channels(values)); return ValueRetirementStep::Blocked; }
+                released_bytes = bytes;
+                drop(values);
             }
             Owner::Schema(value) => {
                 self.text(value.id); self.text(value.module); self.text(value.name); self.text(value.icon); self.text(value.summary);
                 self.owners.push_back(Owner::Fields(value.fields));
             }
-            Owner::Fields(mut values) => {
+            Owner::Fields(mut values) if !values.is_empty() => {
                 if let Some(value) = values.pop() {
                     self.text(value.key);
                     if let Some(label) = value.label { self.text(label); }
                     if let Some(default) = value.default { self.push_value(default); }
                     self.owners.push_back(Owner::Type(value.value));
                 }
-                if !values.is_empty() { self.owners.push_front(Owner::Fields(values)); }
+                self.owners.push_front(Owner::Fields(values));
+            }
+            Owner::Fields(values) => {
+                let bytes = values.capacity().checked_mul(size_of::<FieldSpec>()).expect("admitted neural field-vector backing remains addressable");
+                if bytes > maximum_bytes { self.owners.push_front(Owner::Fields(values)); return ValueRetirementStep::Blocked; }
+                released_bytes = bytes;
+                drop(values);
             }
             Owner::Type(ValueType::Schema(id)) => self.text(id),
             Owner::Type(ValueType::List(inner)) => self.owners.push_front(Owner::Type(*inner)),
             Owner::Type(_) => {}
-            Owner::Bytes(mut bytes) => {
-                released_bytes = maximum_bytes.min(bytes.len()); bytes.truncate(bytes.len() - released_bytes);
-                if !bytes.is_empty() { self.owners.push_front(Owner::Bytes(bytes)); }
+            Owner::Bytes(bytes) => {
+                released_bytes = bytes.capacity();
+                if released_bytes > maximum_bytes { self.owners.push_front(Owner::Bytes(bytes)); return ValueRetirementStep::Blocked; }
+                drop(bytes);
             }
         }
         ValueRetirementStep::Pending { released_items: 1, released_bytes }

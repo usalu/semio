@@ -8,34 +8,34 @@ All 249 source SVGs were moved individually with explicit commands. No script se
 
 The domain groups were chosen manually. Emojis describe the icon subject, not its SVG format. The projection family uses single keycap graphemes for one-, two-, and three-point perspectives; cabinet, cavalier, military and curvilinear projections have distinct subject-specific symbols. A second manual review separated time from people, used a brain for CPU, and gave puzzle and component their direct piece/brick symbols.
 
-| Group | Icons |
-| --- | ---: |
-| 🏗️construction | 4 |
-| 🛠️applications | 19 |
-| 📊️data | 13 |
-| 🪟️layout | 16 |
-| 📚️documents | 12 |
-| ✍️editing | 14 |
-| 🗂️filing | 4 |
-| 🎬️media | 11 |
-| 🔗️connections | 4 |
-| 👥️people | 4 |
-| 🕸️graphs | 18 |
-| 🔐️security | 3 |
-| 🧭️navigation | 14 |
-| 🕰️time | 5 |
-| 🖱️interaction | 7 |
-| 🧑️‍💻️development | 7 |
-| 📝️notes | 3 |
-| 🎛️controls | 8 |
-| 🔷️shapes | 11 |
-| 💻️devices | 7 |
-| 🎨️drawing | 10 |
-| 📐️projection | 15 |
-| 🔄️transforms | 9 |
-| 🔎️viewing | 12 |
-| 🚦️feedback | 13 |
-| 🌍️geography | 6 |
+| Group            | Icons |
+| ---------------- | ----: |
+| 🏗️construction   |     4 |
+| 🛠️applications   |    19 |
+| 📊️data           |    13 |
+| 🪟️layout         |    16 |
+| 📚️documents      |    12 |
+| ✍️editing        |    14 |
+| 🗂️filing         |     4 |
+| 🎬️media          |    11 |
+| 🔗️connections    |     4 |
+| 👥️people         |     4 |
+| 🕸️graphs         |    18 |
+| 🔐️security       |     3 |
+| 🧭️navigation     |    14 |
+| 🕰️time           |     5 |
+| 🖱️interaction    |     7 |
+| 🧑️‍💻️development |     7 |
+| 📝️notes          |     3 |
+| 🎛️controls       |     8 |
+| 🔷️shapes         |    11 |
+| 💻️devices        |     7 |
+| 🎨️drawing        |    10 |
+| 📐️projection     |    15 |
+| 🔄️transforms     |     9 |
+| 🔎️viewing        |    12 |
+| 🚦️feedback       |    13 |
+| 🌍️geography      |     6 |
 
 The canonical asset generator now reads source groups, keeps public IDs separate from paths, rejects duplicate IDs and linked source entries, and carries the exact handpicked source path into generated Rust SVG copies. It does not assign emojis. The generated mirror is `🖼️icon_svgs`; the shortcode implementation is `🔤️shortcodes.ts`. Incoming exports and current generator ownership fields were updated exactly. The source input pattern includes grouped SVGs but not generated mirrors.
 

@@ -99,6 +99,15 @@
       "effectiveRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
       "loader": "vscode-test",
       "mode": "test"
+    },
+    {
+      "id": "ui-react-postcss",
+      "tool": "postcss",
+      "previousPath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/postcss.config.ts",
+      "ownerPath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🎨️styling/🟦️.ts",
+      "effectiveRoot": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+      "loader": "postcss-load-config",
+      "mode": "build"
     }
   ],
   "removedShims": [
@@ -108,6 +117,7 @@
   "fixedContractIds": [
     "dependency-cruiser-config",
     "eslint-config",
+    "postcss-config",
     "root-eslint-config",
     "tailwind-config",
     "vscode-test-cli-config"
@@ -156,10 +166,9 @@
       ]
     },
     {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️serve/🟦️.ts",
       "tokens": [
-        "config: \"../../🏗️builder/🌐️vite/🟦️.ts\"",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"
+        "config: \"../../🏗️builder/🌐️vite/🟦️.ts\""
       ]
     },
     {
@@ -183,7 +192,10 @@
     {
       "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
       "tokens": [
-        "bun ./📜️script.ts lint"
+        "bun ./📜️script.ts lint",
+        "\"./postcss.config\": \"./🟦️.mts\"",
+        "\"@tailwindcss/postcss\"",
+        "\"postcss\""
       ]
     },
     {
@@ -204,6 +216,12 @@
       "tokens": [
         "../../🧪️tests/🧩️extension/🎚️config/🟨️.mjs",
         "../../../../🧹️lint/📐️source-policy/🟨️.mjs"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx",
+      "tokens": [
+        "💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"
       ]
     },
     {
@@ -241,6 +259,12 @@
       "tokens": [
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/📐️source-policy/🟨️.mjs",
         "🧰️framework/🔨️modules/🖱️ui/🎨️styling/💨️tailwind/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.mts",
+      "tokens": [
+        "export { default } from \"../../🛠️build-tooling/🎨️styling/🟦️.ts\";"
       ]
     }
   ],
@@ -285,7 +309,8 @@
     {
       "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json",
       "owners": [
-        "ui-react-eslint"
+        "ui-react-eslint",
+        "ui-react-postcss"
       ]
     },
     {
@@ -295,5 +320,46 @@
         "root-eslint"
       ]
     }
-  ]
+  ],
+  "postcss": {
+    "ownerId": "ui-react-postcss",
+    "packageManifestPath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+    "packageEntryPath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.mts",
+    "packageExport": "./postcss.config",
+    "packageExportTarget": "./🟦️.mts",
+    "standaloneLoader": {
+      "kind": "explicit-search-place",
+      "searchPlace": "🟦️.mts"
+    },
+    "viteLoader": {
+      "kind": "inline-plugin-array",
+      "exportName": "uiPostcssInlinePlugins"
+    },
+    "historicalFixturePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
+    "historicalOwnerPath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/postcss.config.ts",
+    "cases": [
+      {
+        "id": "utility-application",
+        "source": ".probe { @apply underline; }\n",
+        "expectedDeclarations": [
+          {
+            "selector": ".probe",
+            "property": "text-decoration-line",
+            "value": "underline"
+          }
+        ]
+      },
+      {
+        "id": "inline-theme-application",
+        "source": "@theme inline { --color-taxonomy: #123456; }\n.probe { @apply text-taxonomy; }\n",
+        "expectedDeclarations": [
+          {
+            "selector": ".probe",
+            "property": "color",
+            "value": "#123456"
+          }
+        ]
+      }
+    ]
+  }
 }

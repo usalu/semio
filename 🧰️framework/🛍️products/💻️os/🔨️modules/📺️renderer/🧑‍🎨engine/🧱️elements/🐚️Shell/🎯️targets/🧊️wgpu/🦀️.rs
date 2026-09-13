@@ -17,10 +17,10 @@ use crate::dock::{compute_dock_drop_zone, parse_path, DockDragKind, DockDragPayl
 use crate::interpreter::{begin_ui_document_opportunity, framework_widget_context, render_ui_document_step, UiDocumentFrameCursor};
 use crate::program_bridge::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, resolve_registry_plugin_id, PluginHostConfig, ProgramBridgeEntry};
 use crate::scenes::{toggle_vfs_row_expanded, vfs_selection_for_click, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
-use infinite_world::world::{enqueue_world3d_events, World3dState, WorldInteractionIntent, WorldInteractionPhase};
+use infinite_world::world::{enqueue_world3d_events, world3d_catalogue_drop_origin, world3d_clear_catalogue_drop_preview, world3d_update_catalogue_drop_preview, World3dState, WorldInteractionIntent, WorldInteractionPhase};
 #[cfg(test)]
 use ui_wgpu::wgpu::draw_text;
-use semio_framework::{AppDefinition, PanelGroup, PanelTabDefinition, ViewModel};
+use semio_framework::{AppDefinition, PanelGroup, PanelTabDefinition, ViewModel, ViewSessionIdentity};
 use semio_framework_os_config::opening_config::{
     apply_ui_preferences_config_mutation, decode_ui_preferences_config_mutation_json,
     mutations::{set_appearance, set_custom_driver, set_custom_theme, set_driver, set_keybinding_override, set_layout, set_locale, set_terminology, set_theme, UiPreferencesConfigMutation},
@@ -2389,6 +2389,11 @@ pub struct ShellState {
     pub screen_w: f32,
     pub screen_h: f32,
     pub world3d_states: AdmittedSurfaceMap<World3dState>,
+    /// 🛑️ Per-World3d-surface compute status, mirrored out of the scene by the same per-frame attach
+    /// walk that mirrors bounds. The CANCEL CONTRACT (`cancellable` + `cancelAction`) is read from
+    /// here and from nowhere else, so the shell offers a stop affordance without ever learning a
+    /// domain verb from code — see `world3d_cancel_affordance`.
+    pub world3d_status: HashMap<String, String>,
     pub node_graph_states: AdmittedSurfaceMap<NodeGraphSurface>,
     /// 🛍️ The active app instance's APP-STATIC operator/palette catalogue, fetched once per instance
     /// from the reserved `framework.section.catalogue` retained surface and pushed into every live
@@ -2614,6 +2619,13 @@ pub struct ShellState {
     /// 🖱️ Last-rendered full window content bounds per window id — used to apply the active utility's
     /// cursor while the pointer is inside that window's silhouette (Architecture Decision 8, P5).
     pub window_content_rects: HashMap<String, Rect>,
+    /// 🎯️ Control id → the retained body that minted it this frame build, and the rect that body was
+    /// painted into. The registry `InputState` keeps is flat and carries no owner, so this is what
+    /// tells a document hit (route it into that body's retained tree, in that body's own local
+    /// coordinates) from a chrome hit (route it through the shell's own handlers). Panels and dock
+    /// windows are one map: both paint a retained document, and only their rect differs
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub retained_hit_windows: HashMap<String, (String, Rect)>,
     /// 🪟️ Last-rendered dock-stack silhouette per active window id (tabs + gap cutout + controls + body).
     pub window_silhouettes: HashMap<String, WindowSilhouette>,
     /// 🎬️ Active tutorial playback/recording runtime, if any — see `//#region 🎬️Tutorial` (below
@@ -2948,6 +2960,7 @@ impl ShellState {
             screen_w: 1280.0,
             screen_h: 720.0,
             world3d_states: AdmittedSurfaceMap::default(),
+            world3d_status: HashMap::new(),
             node_graph_states: AdmittedSurfaceMap::default(),
             app_catalogue_json: String::new(),
             app_catalogue_instance: None,
@@ -3076,6 +3089,7 @@ impl ShellState {
             utility_collection_expanded: HashMap::new(),
             contributor_instances: HashMap::new(),
             window_content_rects: HashMap::new(),
+            retained_hit_windows: HashMap::new(),
             window_silhouettes: HashMap::new(),
             tutorial: None,
             tutorial_pending_document_ops: Vec::new(),
@@ -3357,6 +3371,7 @@ impl ShellState {
                 active_window_kind_id: Some(s_app.window_kinds.first().id.clone()),
                 active_utility_id: None,
                 panel_json: Some(Self::panel_json(&panel_state)?),
+                session_identity: None,
                 locale: self.active_locale(),
                 terminology: self.active_terminology(),
                 window_id: None,
@@ -3397,6 +3412,7 @@ impl ShellState {
                     active_window_kind_id: self.active_window_id.clone(),
                     active_utility_id: None,
                     panel_json: None,
+                    session_identity: None,
                     locale: self.active_locale(),
                     terminology: self.active_terminology(),
                     window_id: None,
@@ -3558,19 +3574,35 @@ impl ShellState {
         Ok(())
     }
 
+    /// 📚️ The examples the OPEN surface offers, resolved by DIALECT through the one shared predicate
+    /// (`manifest::examples_for_app`, twin of React's `examplesForApp`) rather than by plugin id: an
+    /// example is a document of the artifact's subset, so a plugin that publishes several dialects
+    /// must never offer another artifact's fixtures here (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    fn session_example_rows(&self) -> Vec<ShellExampleRow> {
+        let Some(session) = &self.session else {
+            return Vec::new();
+        };
+        let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) else {
+            return Vec::new();
+        };
+        shell_example_rows(&plugin.manifest.examples, &session.app, self.active_example_id.as_deref(), self.active_terminology(), self.active_locale())
+    }
+
     fn sync_session_chrome(&mut self) {
         let Some(session) = &self.session else {
             return;
         };
-        let examples = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id).map(|p| p.manifest.examples.as_slice()).unwrap_or(&[]);
+        let examples: Vec<String> = self
+            .plugins
+            .iter()
+            .find(|entry| entry.plugin_id == session.plugin_id)
+            .map(|entry| semio_framework::manifest::examples_for_app(&entry.manifest.examples, &session.app).into_iter().map(|example| example.id.clone()).collect())
+            .unwrap_or_default();
         if examples.is_empty() {
             self.active_example_id = None;
         } else {
             let current = self.active_example_id.clone();
-            self.active_example_id = current.filter(|id| examples.iter().any(|ex| &ex.id == id)).or_else(|| examples.first().map(|ex| ex.id.clone()));
-        }
-        if let Some(mode_id) = session.view_state.active_mode_id.clone() {
-            let _ = mode_id;
+            self.active_example_id = current.filter(|id| examples.iter().any(|candidate| candidate == id)).or_else(|| examples.first().cloned());
         }
     }
 
@@ -3666,19 +3698,55 @@ impl ShellState {
         }
     }
 
+    /// 🪟️ The window roster a `ViewModel` carries — the Rust twin of React's `sessionWindowInstances`
+    /// (`🛠️ShellHelpers/🟦️.tsx:4927`): EVERY window kind the open app declares, then the live dock
+    /// instances that are not one of those kinds (a spawned or duplicated pane).
+    ///
+    /// 🩸️ It used to be the dock alone. `focused_window_id` is seeded from `app.window_kinds.first()`
+    /// and a mode layout need not place that kind at all, so in generate mode the roster held only
+    /// `generation3d-{generations,generate-form,generate-preview}` while the focus named
+    /// `procedural-main` — and `WindowConfigOwnerRegistry::capture` (`🔌️plugin/🪟️window/🎚️config/🦀️.rs:541`)
+    /// answers a roster miss with `window-config.window-context`. That fault aborted the whole
+    /// `setContributions` crossing, so the guest's flow-extension registry stayed EMPTY and every
+    /// generate-mode preview faulted `flow.extension-not-contributed {"extensionId":"brep"}` with
+    /// `meshesHead="[]"` forever — measured verbatim on 6118
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-journey-probe-2026-09-13.md` §3).
+    fn session_window_instances(session: &ActiveSession, dock: &DockState) -> Vec<semio_framework::ViewWindowInstance> {
+        let mut instances: Vec<semio_framework::ViewWindowInstance> =
+            session.app.window_kinds.iter().map(|kind| semio_framework::ViewWindowInstance { id: kind.id.clone(), window_kind_id: kind.id.clone() }).collect();
+        for (id, window_kind_id) in dock.window_instances() {
+            if instances.iter().any(|instance| instance.id == id) {
+                continue;
+            }
+            instances.push(semio_framework::ViewWindowInstance { id, window_kind_id });
+        }
+        instances
+    }
+
     fn live_view_state(&self, session: &ActiveSession) -> ViewModel {
         let mut view_state = session.view_state.clone();
         view_state.locale = self.active_locale();
         view_state.terminology = self.active_terminology();
-        view_state.window_instances = self
-            .dock
-            .window_instances()
-            .into_iter()
-            .map(|(id, window_kind_id)| semio_framework::ViewWindowInstance { id, window_kind_id })
-            .collect();
+        view_state.window_instances = Self::session_window_instances(session, &self.dock);
         view_state.active_utility_by_window_id = self.active_utility_by_window.clone();
         view_state.focused_window_id = self.active_window_id.clone();
+        view_state.session_identity = self.session_identity_view();
         view_state
+    }
+
+    /// 🪪️ The session identity a `ViewModel` carries. `ShellState::identity` is native-only state
+    /// (the whole `🔖️Identity` region is `#[cfg(not(target_arch = "wasm32"))]`), so every browser
+    /// build reports `None` — one accessor rather than a cfg pair repeated at each construction
+    /// site, which is what made the un-gated one break `wasm32-unknown-unknown`.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn session_identity_view(&self) -> Option<ViewSessionIdentity> {
+        self.identity.as_ref().map(|identity| ViewSessionIdentity { user_id: identity.user_id.clone(), display_name: identity.display_name.clone() })
+    }
+
+    /// 🪪️ See the native twin — the browser shell mints no identity, so this is always `None`.
+    #[cfg(target_arch = "wasm32")]
+    fn session_identity_view(&self) -> Option<ViewSessionIdentity> {
+        None
     }
 
     fn live_window_kind_id<'a>(&'a self, session: &'a ActiveSession, window_id: &str) -> Option<&'a str> {
@@ -3784,6 +3852,7 @@ impl ShellState {
                                 active_window_kind_id: Some(app.window_kinds.first().id.clone()),
                                 active_utility_id: None,
                                 panel_json: None,
+                                session_identity: self.session_identity_view(),
                                 locale: self.active_locale(),
                                 terminology: self.active_terminology(),
                                 window_id: Some(spawned.id.clone()),
@@ -3917,9 +3986,16 @@ impl ShellState {
                         surface.fixture_json = fixture_json;
                     }
                 }
-                crate::engine_canvas::EngineSurfaceKindDetail::World3d => {}
+                crate::engine_canvas::EngineSurfaceKindDetail::World3d { status_json } => {
+                    match status_json {
+                        Some(status_json) => self.world3d_status.insert(surface_id, status_json),
+                        None => self.world3d_status.remove(&surface_id),
+                    };
+                }
             }
         }
+        let live: Vec<String> = self.world3d_states.keys().cloned().collect();
+        self.world3d_status.retain(|surface_id, _| live.contains(surface_id));
     }
 
     /// 🛍️ Installs the cached catalogue on every node-graph surface whose engine host does not
@@ -5495,10 +5571,12 @@ impl ShellState {
     #[cfg(not(target_arch = "wasm32"))]
     fn start_directory_home_publication(&mut self, page: CanonicalDirectoryEventPageV1) -> Result<(), String> {
         let canonical_json = page.canonical_json().to_string();
+        let session_identity = self.identity.as_ref().map(|identity| ViewSessionIdentity { user_id: identity.user_id.clone(), display_name: identity.display_name.clone() });
         let (epoch, instance_id, program, app, view_state, expected) = {
             let home = self.directory_home.as_mut().ok_or("retained Home projection is unavailable")?;
             let expected = home.bootstrap.present(page).map_err(|error| error.to_string())?;
-            let view_state = self.session.as_ref().filter(|session| home.is_instance(&session.plugin_id, session.instance_id)).map(|session| session.view_state.clone()).unwrap_or_else(|| home.view_state.clone());
+            let mut view_state = self.session.as_ref().filter(|session| home.is_instance(&session.plugin_id, session.instance_id)).map(|session| session.view_state.clone()).unwrap_or_else(|| home.view_state.clone());
+            view_state.session_identity = session_identity;
             let program = self.plugins.iter().find(|entry| entry.plugin_id == home.plugin_id).cloned().ok_or("retained Home program is unavailable")?;
             (home.bootstrap.bootstrap_epoch(), home.instance_id, program, home.app.clone(), view_state, expected)
         };
@@ -5998,6 +6076,7 @@ impl ShellState {
             active_window_kind_id: Some(app.window_kinds.first().id.clone()),
             active_utility_id: None,
             panel_json: Some(Self::panel_json(&panel_state)?),
+            session_identity: None,
             locale: self.active_locale(),
             terminology: self.active_terminology(),
             window_id: None,
@@ -6012,6 +6091,127 @@ impl ShellState {
             self.open_space_id = None;
         }
         self.session = Some(ActiveSession { plugin_id: semio_s_plugin_space.plugin_id.clone(), instance_id, app, view_state: next_view_state });
+        self.refresh_ui().await
+    }
+
+    /// 👁️✏️ Opens the sibling surface of the OPEN document's dialect — the wgpu twin of React's
+    /// `switchToSessionRole` (`🧱️elements/🏛️ShellHost/🟦️.tsx`). A role the dialect does not declare,
+    /// and the role already mounted, are both no-operations: `role_switch_target` answers `None` and
+    /// nothing is created, retired or refreshed.
+    pub(crate) async fn switch_to_session_role(&mut self, requested: semio_framework::manifest::AppRole) -> Result<(), String> {
+        let Some(session) = self.session.clone() else {
+            return Ok(());
+        };
+        let Some(program) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned() else {
+            return Ok(());
+        };
+        let Some(target) = role_switch_target(&program.manifest.apps, &session.app.dialect, session.app.role, requested).cloned() else {
+            return Ok(());
+        };
+        self.run_session_app_switch(&program, target).await
+    }
+
+    /// 🔀️ The ORDERED in-place session switch — `create → seal → retire → publish → seed → refresh`.
+    /// The successor instance exists before the predecessor is retired, so no render ever observes
+    /// two live instances of one plugin and no switch leaks a `create_app`. Twin of
+    /// `runSessionAppSwitchV1` (`🧱️elements/🏛️ShellHost/🔀️surface-switch/🟦️.ts`), whose `switch`
+    /// fixture rows pin both the order and the `created − retired === 0` invariant. "Seal" is this
+    /// target's own shape of React's close ladder: every retained surface document of the outgoing
+    /// app is driven to terminal before its instance goes, because the resident aggregate is a fixed
+    /// process-wide permit and a leaked root refuses every later surface with `Capacity`.
+    async fn run_session_app_switch(&mut self, program: &ProgramBridgeEntry, app: AppDefinition) -> Result<(), String> {
+        let Some(previous) = self.session.clone() else {
+            return Ok(());
+        };
+        let instance_id = program.create_app(&app.id).await?;
+        Self::debug_log(&format!("[DEBUG] shell session switch {}", serde_json::json!({ "step": "create", "plugin": program.plugin_id, "from": previous.app.id, "to": app.id, "instance": instance_id })));
+        self.retire_documents_outside(&[], true)?;
+        self.retire_documents_outside(&[], false)?;
+        Self::debug_log(&format!("[DEBUG] shell session switch {}", serde_json::json!({ "step": "seal", "instance": previous.instance_id })));
+        program.destroy_app(previous.instance_id);
+        Self::debug_log(&format!("[DEBUG] shell session switch {}", serde_json::json!({ "step": "retire", "instance": previous.instance_id })));
+        let landing_window_id = app.window_kinds.first().id.clone();
+        let view_state = ViewModel {
+            active_mode_id: Some(app.default_mode_id.clone()),
+            active_window_kind_id: Some(landing_window_id.clone()),
+            active_utility_id: None,
+            panel_json: None,
+            session_identity: None,
+            locale: self.active_locale(),
+            terminology: self.active_terminology(),
+            window_id: None,
+            focused_window_id: Some(landing_window_id.clone()),
+            window_instances: Vec::new(),
+            active_tool_id: None,
+            active_utility_by_window_id: HashMap::new(),
+        };
+        self.layout_override = None;
+        self.active_window_id = Some(landing_window_id);
+        self.session = Some(ActiveSession { plugin_id: previous.plugin_id.clone(), instance_id, app, view_state });
+        self.sync_session_chrome();
+        self.sync_dock();
+        self.push_contributions().await?;
+        Self::debug_log(&format!("[DEBUG] shell session switch {}", serde_json::json!({ "step": "publish", "app": self.session.as_ref().map(|session| session.app.id.clone()) })));
+        self.refresh_ui().await?;
+        Self::debug_log(&format!("[DEBUG] shell session switch {}", serde_json::json!({ "step": "refresh", "app": self.session.as_ref().map(|session| session.app.id.clone()), "role": self.session.as_ref().map(|session| session.app.role.as_str()) })));
+        Ok(())
+    }
+
+    /// 🖼️ Frames one node-graph surface's whole graph and persists the camera through
+    /// `nodeGraphViewport` — the same two steps React's `fitGraphToView` performs (`setCamera` on the
+    /// live host, then the ordinary gesture-persistence dispatch), so the next open honours the fit.
+    pub(crate) async fn fit_node_graph_camera(&mut self, surface_id: &str) -> Result<(), String> {
+        let Some(controller_id) = self.node_graph_states.get(surface_id).map(|surface| surface.controller_id.clone()) else {
+            return Ok(());
+        };
+        let Some(camera) = crate::engine_canvas::node_graph_fit_camera(surface_id) else {
+            return Ok(());
+        };
+        Self::debug_log(&format!("[DEBUG] shell node-graph fit {}", serde_json::json!({ "surface": surface_id, "x": camera[0], "y": camera[1], "zoom": camera[2] })));
+        self.dispatch_action(ActionDescriptor {
+            controller_id,
+            action: "nodeGraphViewport".into(),
+            args: crate::action_args_json!({ "surfaceId": surface_id, "viewport": { "x": camera[0], "y": camera[1], "zoom": camera[2] } }),
+        })
+        .await
+    }
+
+    /// 🖼️ The node-graph surface an `F` press addresses: the one under the pointer, or — when the
+    /// pointer is elsewhere — the only live one. Ambiguity is answered with `None` rather than a
+    /// guess, so a multi-graph layout never re-frames a pane the user was not pointing at.
+    fn keyboard_fit_surface_id(&self, pointer_x: f32, pointer_y: f32) -> Option<String> {
+        if let Some((surface_id, _)) = self.node_graph_states.iter().find(|(_, surface)| surface.bounds.contains(pointer_x, pointer_y)) {
+            return Some(surface_id.clone());
+        }
+        let mut live = self.node_graph_states.iter();
+        let (only, _) = live.next()?;
+        live.next().is_none().then(|| only.clone())
+    }
+
+    /// 🔁️ Steps the active mode one place along the app's declared order, wrapping — what the
+    /// `mod+alt+→`/`mod+alt+←` chords fire. Reuses the very same body as clicking a
+    /// `playground.navbar.modes.<id>` button, so keyboard and pointer cannot diverge.
+    pub(crate) async fn apply_mode_step(&mut self, step: i32) -> Result<(), String> {
+        let Some(session) = self.session.as_ref() else {
+            return Ok(());
+        };
+        let mode_ids: Vec<String> = session.app.modes.iter().map(|mode| mode.id.clone()).collect();
+        let Some(next) = step_mode_id(&mode_ids, session.view_state.active_mode_id.as_deref(), step) else {
+            return Ok(());
+        };
+        self.apply_navbar_mode(&next).await
+    }
+
+    /// 🎛️ The ONE body behind a mode change, whether a navbar button or a chord asked for it.
+    pub(crate) async fn apply_navbar_mode(&mut self, mode_id: &str) -> Result<(), String> {
+        if let Some(session) = self.session.as_mut() {
+            session.view_state.active_mode_id = Some(mode_id.to_string());
+            if let Some(layout) = semio_framework::resolve_layout_for_mode(&session.app, mode_id) {
+                self.layout_override = Some(layout);
+                self.sync_dock();
+                self.active_window_id = self.dock.active_window_id.clone();
+            }
+        }
         self.refresh_ui().await
     }
 
@@ -6038,6 +6238,7 @@ impl ShellState {
             active_window_kind_id: Some(app.window_kinds.first().id.clone()),
             active_utility_id: None,
             panel_json: None,
+            session_identity: None,
             locale: self.active_locale(),
             terminology: self.active_terminology(),
             window_id: None,
@@ -6232,6 +6433,11 @@ impl ShellState {
                     }
                 }
             }
+            if let Some(hit) = input.hit_at(x, y).cloned() {
+                if let Some((window_id, body)) = self.retained_hit_window(&hit) {
+                    self.route_retained_pointer_press(&window_id, body, x, y, false, button, hit.kind, hit.event.clone(), input).await?;
+                }
+            }
             return Ok(());
         }
         if button == 2 {
@@ -6244,6 +6450,13 @@ impl ShellState {
             return Ok(());
         }
         if let Some(hit) = input.hit_at(x, y).cloned() {
+            // 🎯️ A retained window body owns its own targets end to end: the node's declared action
+            // fires through `dispatch_action`, a focusable control is routed into that body's
+            // `events::EventRouter`, and none of the chrome id conventions below can claim it.
+            if let Some((window_id, body)) = self.retained_hit_window(&hit) {
+                self.route_retained_pointer_press(&window_id, body, x, y, true, button, hit.kind, hit.event.clone(), input).await?;
+                return Ok(());
+            }
             if hit.kind == HitKind::PanelResize {
                 if let Some(id) = hit.control_id.as_deref() {
                     if let Some(window_id) = id.strip_prefix("shell.measures.resize.") {
@@ -6384,6 +6597,7 @@ impl ShellState {
         input.pointer_y = y;
         input.pointer_down = down;
         input.update_hover(x, y);
+        self.route_retained_pointer_move(x, y, input);
         self.sync_context_menu_hover(input);
         self.update_tree_hover(input);
         if let Some((ref item_id, ref drag_data)) = self.pending_tree_drag {
@@ -6396,10 +6610,21 @@ impl ShellState {
                 }
             }
         }
-        if let Some(drag) = &mut self.tree_drag {
+        // 🖱️ The two ghost-preview syncs take `&mut self` (`sync_world3d_catalogue_drop_preview` walks
+        // `world3d_states`), so the drag's own payload is snapshotted first and the `&mut self.tree_drag`
+        // borrow is re-taken afterwards — the previous shape held both at once and did not compile.
+        let tree_drag_payload = self.tree_drag.as_mut().map(|drag| {
             drag.x = x;
             drag.y = y;
-            crate::engine_canvas::node_graph_sync_flow_widget_ghost(x, y, &drag.drag_data, &self.node_graph_states.iter().map(|(id, surface)| (id.as_str(), surface.bounds)).collect::<Vec<_>>());
+            drag.drag_data.clone()
+        });
+        if let Some(drag_data) = tree_drag_payload {
+            let graph_surfaces = self.node_graph_states.iter().map(|(id, surface)| (id.as_str(), surface.bounds)).collect::<Vec<_>>();
+            crate::engine_canvas::node_graph_sync_flow_widget_ghost(x, y, &drag_data, &graph_surfaces);
+            drop(graph_surfaces);
+            self.sync_world3d_catalogue_drop_preview(x, y, &drag_data);
+        }
+        if let Some(drag) = &mut self.tree_drag {
             if let Some(hit) = input.hit_at(x, y) {
                 if let Some(target_id) = hit.control_id.as_deref().and_then(|id| id.strip_prefix("tree.label.")) {
                     drag.drop_target_id = Some(target_id.to_string());
@@ -6510,6 +6735,64 @@ impl ShellState {
         Ok(())
     }
 
+    //#region 🎯️RetainedPointerRouting
+    /// 🎯️ The retained window body that minted `hit`, with the body rect the registry was minted
+    /// against — `None` for every chrome target. See `retained_hit_windows`.
+    fn retained_hit_window(&self, hit: &HitTarget<ActionDescriptor>) -> Option<(String, Rect)> {
+        self.retained_hit_windows.get(hit.control_id.as_deref()?).cloned()
+    }
+
+    /// 🎯️ Publishes one retained body's own registry into the host's `InputState` and remembers who
+    /// minted each id. Called by every body that paints a retained document — a dock window and a
+    /// panel alike — right after its paint, so the entries land above the window region the chrome
+    /// registered before it.
+    fn register_retained_body_hits(&mut self, window_id: &str, body: Rect, input: &mut InputState<ActionDescriptor>) {
+        for control_id in crate::interpreter::register_retained_hit_targets(window_id, input) {
+            self.retained_hit_windows.insert(control_id, (window_id.to_string(), body));
+        }
+    }
+
+    /// 🖱️ DOM-standard `MouseEvent.button` code onto the retained event's own button identity.
+    fn retained_pointer_button(button: i16) -> ui_wgpu::wgpu::PointerButton {
+        match button {
+            1 => ui_wgpu::wgpu::PointerButton::Middle,
+            2 => ui_wgpu::wgpu::PointerButton::Secondary,
+            _ => ui_wgpu::wgpu::PointerButton::Primary,
+        }
+    }
+
+    /// 👆️ Routes a pointer move over a retained window body into that body's own
+    /// `events::EventRouter` — the ONE owner of `NodeFlags::HOVERED`, the hover bubble chain and the
+    /// per-surface `UiCommand::Scene` lane. Coordinates are window-local, because the retained tree's
+    /// root sits at its own origin while the flat registry above is page-space.
+    fn route_retained_pointer_move(&mut self, x: f32, y: f32, input: &mut InputState<ActionDescriptor>) {
+        let Some((window_id, body)) = input.hit_at(x, y).cloned().and_then(|hit| self.retained_hit_window(&hit)) else { return };
+        let _ = crate::interpreter::dispatch_ui_event(&window_id, ui_wgpu::wgpu::UiEvent::PointerMove { x: x - body.x, y: y - body.y }, input);
+    }
+
+    /// 👆️ A press on a retained body target. A control the retained router itself owns (a text
+    /// `Input`'s focus, a `Select`'s popup) is routed there; everything else dispatches the action
+    /// the node's own spec declared — a tree row's `activate`, a button's `action` — through the
+    /// same `dispatch_action` funnel every chrome hit uses, so a document row and a chrome row are
+    /// one dispatch path.
+    async fn route_retained_pointer_press(&mut self, window_id: &str, body: Rect, x: f32, y: f32, down: bool, button: i16, kind: HitKind, action: Option<ActionDescriptor>, input: &mut InputState<ActionDescriptor>) -> Result<(), String> {
+        if matches!(kind, HitKind::Input | HitKind::Select) {
+            let event = if down {
+                ui_wgpu::wgpu::UiEvent::PointerDown { x: x - body.x, y: y - body.y, button: Self::retained_pointer_button(button) }
+            } else {
+                ui_wgpu::wgpu::UiEvent::PointerUp { x: x - body.x, y: y - body.y, button: Self::retained_pointer_button(button) }
+            };
+            let commands = crate::interpreter::dispatch_ui_event(window_id, event, input);
+            self.chrome_build.note_content_focus_commands(&commands);
+        } else if down {
+            if let Some(action) = action {
+                self.dispatch_action(action).await?;
+            }
+        }
+        self.flush_deferred_actions().await
+    }
+    //#endregion 🎯️RetainedPointerRouting
+
     fn scroll_region_is_scene_surface(control_id: &str) -> bool {
         control_id.ends_with(".pane") || control_id.ends_with(".map")
     }
@@ -6608,20 +6891,45 @@ impl ShellState {
                 return Ok(true);
             }
             "playground.navbar.fixture" => {
-                self.overlay_state = OverlayState::Dropdown("example".to_string());
+                let open = matches!(&self.overlay_state, OverlayState::Dropdown(id) if id == "example");
+                self.overlay_state = if open { OverlayState::None } else { OverlayState::Dropdown("example".to_string()) };
+                return Ok(true);
+            }
+            // 👁️✏️ The surface-role group. Switching roles is a TRANSACTIONAL session switch, not a
+            // view-state flip: the successor instance is created before the predecessor is retired,
+            // so no render ever observes two live instances of one plugin.
+            id if id.starts_with("playground.navbar.roles.") => {
+                let requested = match id.trim_start_matches("playground.navbar.roles.") {
+                    "editor" => semio_framework::manifest::AppRole::Editor,
+                    "viewer" => semio_framework::manifest::AppRole::Viewer,
+                    _ => return Ok(true),
+                };
+                self.switch_to_session_role(requested).await?;
                 return Ok(true);
             }
             id if id.starts_with("playground.navbar.modes.") => {
-                let mode_id = id.trim_start_matches("playground.navbar.modes.");
-                if let Some(session) = self.session.as_mut() {
-                    session.view_state.active_mode_id = Some(mode_id.to_string());
-                    if let Some(layout) = semio_framework::resolve_layout_for_mode(&session.app, mode_id) {
-                        self.layout_override = Some(layout);
-                        self.sync_dock();
-                        self.active_window_id = self.dock.active_window_id.clone();
-                    }
+                let mode_id = id.trim_start_matches("playground.navbar.modes.").to_string();
+                self.apply_navbar_mode(&mode_id).await?;
+                return Ok(true);
+            }
+            // 🖼️ `Fit graph` — frames the whole graph and persists the result through
+            // `nodeGraphViewport`, exactly the way a pan or a zoom gesture is persisted, so the next
+            // open honours it (React's `fitGraphToView` does the same two steps).
+            id if id.starts_with("shell.nodeGraph.fit::") => {
+                let surface_id = id.trim_start_matches("shell.nodeGraph.fit::").to_string();
+                self.fit_node_graph_camera(&surface_id).await?;
+                return Ok(true);
+            }
+            // 🛑️ The World3d compute cancel — dispatches whatever id the surface's own status
+            // document named, never a verb this shell knows.
+            id if id.starts_with("shell.world3d.cancel::") => {
+                let surface_id = id.trim_start_matches("shell.world3d.cancel::").to_string();
+                let action = world3d_cancel_affordance(self.world3d_status.get(&surface_id).map(String::as_str));
+                let controller_id = self.world3d_states.get(&surface_id).map(|world| world.controller_id.clone());
+                if let (true, Some(controller_id)) = (action.cancellable, controller_id) {
+                    Self::debug_log(&format!("[DEBUG] shell world3d cancel {}", serde_json::json!({ "surface": surface_id, "action": action.cancel_action })));
+                    self.dispatch_action(ActionDescriptor { controller_id, action: action.cancel_action, args: crate::action_args_json!({ "surfaceId": surface_id }) }).await?;
                 }
-                self.refresh_ui().await?;
                 return Ok(true);
             }
             id if id.starts_with("framework.utility.collection.") => {
@@ -7118,6 +7426,41 @@ impl ShellState {
         Ok(())
     }
 
+    fn sync_world3d_catalogue_drop_preview(&mut self, x: f32, y: f32, drag_data: &HashMap<String, String>) {
+        let Some((object_kind, mesh_url)) = crate::engine_canvas::puzzle3d_catalogue_drag_payload(drag_data) else {
+            self.clear_world3d_catalogue_drop_previews();
+            return;
+        };
+        let mesh_url_ref = mesh_url.as_deref();
+        for state in self.world3d_states.values_mut() {
+            if state.bounds.contains(x, y) {
+                world3d_update_catalogue_drop_preview(state, x, y, &object_kind, mesh_url_ref);
+            } else {
+                world3d_clear_catalogue_drop_preview(state);
+            }
+        }
+    }
+
+    fn clear_world3d_catalogue_drop_previews(&mut self) {
+        for state in self.world3d_states.values_mut() {
+            world3d_clear_catalogue_drop_preview(state);
+        }
+    }
+
+    fn world3d_catalogue_drop_action(&self, x: f32, y: f32, drag_data: &HashMap<String, String>) -> Option<ActionDescriptor> {
+        let (object_kind, _mesh_url) = crate::engine_canvas::puzzle3d_catalogue_drag_payload(drag_data)?;
+        for state in self.world3d_states.values() {
+            if !state.bounds.contains(x, y) {
+                continue;
+            }
+            let Some(origin) = world3d_catalogue_drop_origin(state, x, y) else {
+                return None;
+            };
+            return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "addObjectKind".into(), args: crate::action_args_json!({ "objectKind": object_kind, "origin": origin }) });
+        }
+        None
+    }
+
     async fn finish_tree_drag(&mut self, x: f32, y: f32, _input: &InputState<ActionDescriptor>) -> Result<(), String> {
         let Some(drag) = self.tree_drag.take() else {
             return Ok(());
@@ -7125,15 +7468,24 @@ impl ShellState {
         let surfaces = self.node_graph_states.iter().map(|(id, surface)| (id.as_str(), surface.bounds, surface.controller_id.as_str())).collect::<Vec<_>>();
         if let Some(action) = crate::engine_canvas::node_graph_flow_widget_drop_action(x, y, &drag.drag_data, &surfaces) {
             crate::engine_canvas::node_graph_clear_all_ghost_widgets();
+            self.clear_world3d_catalogue_drop_previews();
+            self.dispatch_action(action).await?;
+            return Ok(());
+        }
+        if let Some(action) = self.world3d_catalogue_drop_action(x, y, &drag.drag_data) {
+            crate::engine_canvas::node_graph_clear_all_ghost_widgets();
+            self.clear_world3d_catalogue_drop_previews();
             self.dispatch_action(action).await?;
             return Ok(());
         }
         if let Some(action) = crate::engine_canvas::node_graph_catalogue_drop_action(x, y, &drag.drag_data, &surfaces) {
             crate::engine_canvas::node_graph_clear_all_ghost_widgets();
+            self.clear_world3d_catalogue_drop_previews();
             self.dispatch_action(action).await?;
             return Ok(());
         }
         crate::engine_canvas::node_graph_clear_all_ghost_widgets();
+        self.clear_world3d_catalogue_drop_previews();
         Ok(())
     }
 
@@ -7816,6 +8168,20 @@ impl ShellState {
             }
         }
         let idle = input.focused_id.is_none() && self.overlay_state == OverlayState::None && self.sync_card_kind.is_none() && self.dock_drag.is_none();
+        // 👁️✏️🔁️ The two SHELL axes React declares in `SHELL_KEYBINDINGS` — `mod+alt+e`/`mod+alt+v`
+        // and `mod+alt+→`/`mod+alt+←`. Both are pure shell-state transitions that never reach the
+        // guest, so an app keybinding structurally could not express them; they are matched here,
+        // ahead of every app-declared chord, exactly as `is_reserved_shell_chord` reserves them.
+        if idle {
+            if let Some(role) = shell_role_chord(&action, modifiers) {
+                self.switch_to_session_role(role).await?;
+                return Ok(());
+            }
+            if let Some(step) = shell_mode_step_chord(&action, modifiers) {
+                self.apply_mode_step(step).await?;
+                return Ok(());
+            }
+        }
         let fullscreen_chord = matches!(action, ui_wgpu::wgpu::KeyAction::Function(11)) || matches!(&action, ui_wgpu::wgpu::KeyAction::Char(key) if key.eq_ignore_ascii_case("f") && modifiers.ctrl && modifiers.meta);
         if idle && fullscreen_chord {
             self.dispatch_command(semio_framework::manifest::CommandInvocation {
@@ -7864,6 +8230,16 @@ impl ShellState {
                         return Ok(());
                     }
                 }
+            }
+        }
+        // 🖼️ `F` frames the graph under the pointer — React's own `Fit graph` shortcut
+        // (`🧱️elements/🕸️NodeGraph/🟦️.tsx`, `aria-keyshortcuts="F"`), placed AFTER the content-focus
+        // routing above so a plain `f` typed into a focused note or field is never hijacked, and
+        // consumed only when a node-graph surface actually resolves.
+        if idle && !modifiers.meta && !modifiers.ctrl && !modifiers.alt && matches!(&action, ui_wgpu::wgpu::KeyAction::Char(key) if key.eq_ignore_ascii_case("f")) {
+            if let Some(surface_id) = self.keyboard_fit_surface_id(input.pointer_x, input.pointer_y) {
+                self.fit_node_graph_camera(&surface_id).await?;
+                return Ok(());
             }
         }
         // 🧰️ Escape deactivates the active utility for the focused window (P5).
@@ -8010,6 +8386,10 @@ fn chrome_text_complete_step(target: &mut DrawList, atlas: &mut FontAtlas, text:
 #[cfg(test)]
 #[path = "../../🧪️tests/🔬️wgpu-retained-chrome-text-laws/🦀️.rs"]
 mod retained_chrome_text_laws;
+
+#[cfg(test)]
+#[path = "../../🧪️tests/🔬️wgpu-shell-chrome-parity/🦀️.rs"]
+mod shell_chrome_parity_tests;
 
 fn chrome_icon(draw: &mut DrawList, icons: &IconAtlas, icon_id: &str, x: f32, y: f32, size: f32, color: Rgba) {
     if let Some(uv) = icons.icon_uv(icon_id) {
@@ -8701,8 +9081,13 @@ fn format_keybinding_shortcut(keys: &str) -> String {
     }
 }
 
-/// ⌨️ Whether a key event is one of the hardcoded shell chords (palette/find/panels/nav) that must win
-/// over app-declared keybindings (P4 — "reserved shell chords still win").
+/// ⌨️ Whether a key event is one of the hardcoded shell chords (palette/find/panels/nav/surface-role/
+/// mode-cycle) that must win over app-declared keybindings (P4 — "reserved shell chords still win").
+///
+/// The `mod+alt+e`/`mod+alt+v` and `mod+alt+←`/`mod+alt+→` rows are the wgpu twin of React's
+/// `SHELL_KEYBINDINGS` entries for `playground.navbar.roles.{editor,viewer}` and
+/// `ui.shell.mode.{next,previous}` — see `🧱️elements/🏛️ShellHost/🟦️.tsx` and
+/// `🏛️ShellHost/🧫️fixtures/🔀️surface-switch/🔣️.json`'s `keybindings` rows, which pin both spellings.
 pub(crate) fn is_reserved_shell_chord(action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> bool {
     if matches!(action, ui_wgpu::wgpu::KeyAction::Function(11)) || matches!(action, ui_wgpu::wgpu::KeyAction::Char(key) if key.eq_ignore_ascii_case("f") && modifiers.ctrl && modifiers.meta) {
         return true;
@@ -8711,12 +9096,209 @@ pub(crate) fn is_reserved_shell_chord(action: &ui_wgpu::wgpu::KeyAction, modifie
     if !accelerator {
         return false;
     }
+    if shell_role_chord(action, modifiers).is_some() || shell_mode_step_chord(action, modifiers).is_some() {
+        return true;
+    }
+    if modifiers.alt {
+        return false;
+    }
     match action {
         ui_wgpu::wgpu::KeyAction::Char(c) => matches!(c.to_ascii_lowercase().as_str(), "p" | "f" | "b" | "[" | "]"),
         ui_wgpu::wgpu::KeyAction::ArrowUp => true,
         _ => false,
     }
 }
+
+//#region 🔀️ChromeParity
+/// 🎛️ One navbar control of the shell's centre cluster, resolved before anything is painted so the
+/// laws below can assert "a hit target exists exactly when the app declares it" without a
+/// `ShellState` (90+ fields, several without `Default`). The control ids are React's `ShellHost`
+/// ids verbatim — one product across both renderers, one id for every probe.
+///
+/// @see `🧱️elements/🏛️ShellHost/🟦️.tsx` — `exampleSelectElement`/`modeSwitcherElement`/`roleSwitcherElement`
+/// @see `🧱️elements/🏛️ShellHost/🔀️surface-switch/🟦️.ts` — `SURFACE_ROLE_CONTROL_IDS`
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct ShellNavbarControl {
+    pub control_id: String,
+    pub icon_id: Option<&'static str>,
+    pub label: String,
+    pub active: bool,
+}
+
+/// 📚️ One row of the open `playground.navbar.fixture` dropdown. `control_id` is what the click
+/// handler's `shell.example.<id>` arm already dispatches `setActiveExample` for.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct ShellExampleRow {
+    pub control_id: String,
+    pub label: String,
+    pub selected: bool,
+}
+
+/// 📚️ The example rows one surface offers, by DIALECT — `manifest::examples_for_app` is THE
+/// predicate, shared with React's `examplesForApp` and pinned by
+/// `🛂️manifest/🧫️fixtures/📚️example-picker.json`. An editor and its viewer offer the same picker.
+pub(crate) fn shell_example_rows(examples: &[semio_framework::manifest::ExampleDefinition], app: &AppDefinition, active_example_id: Option<&str>, terminology: Terminology, locale: Locale) -> Vec<ShellExampleRow> {
+    semio_framework::manifest::examples_for_app(examples, app)
+        .into_iter()
+        .map(|example| ShellExampleRow { control_id: format!("shell.example.{}", example.id), label: example.label.resolve(terminology, locale).to_string(), selected: active_example_id == Some(example.id.as_str()) })
+        .collect()
+}
+
+/// 📚️ The `playground.navbar.fixture` trigger, or `None` when the open dialect authored no example —
+/// React's `exampleOptions.length > 0` render gate, verbatim. The label is the SELECTED row's own
+/// label (a select shows its value), falling back to the localized noun when nothing is picked yet.
+pub(crate) fn shell_example_control(rows: &[ShellExampleRow], open: bool, is_de: bool) -> Option<ShellNavbarControl> {
+    if rows.is_empty() {
+        return None;
+    }
+    let label = rows.iter().find(|row| row.selected).map_or_else(|| shell_chrome_string("example.picker", is_de).to_string(), |row| row.label.clone());
+    Some(ShellNavbarControl { control_id: "playground.navbar.fixture".to_string(), icon_id: Some("file"), label, active: open })
+}
+
+/// 🎛️ The `playground.navbar.modes.<id>` group — empty for a single-mode surface, exactly as React
+/// renders no mode switcher for one (the viewer of generation3d has one mode and shows none).
+pub(crate) fn shell_mode_controls(app: &AppDefinition, active_mode_id: Option<&str>, terminology: Terminology, locale: Locale) -> Vec<ShellNavbarControl> {
+    if app.modes.len() < 2 {
+        return Vec::new();
+    }
+    app.modes
+        .iter()
+        .map(|mode| ShellNavbarControl {
+            control_id: format!("playground.navbar.modes.{}", mode.id),
+            icon_id: None,
+            label: mode.label.resolve(terminology, locale).to_string(),
+            active: active_mode_id == Some(mode.id.as_str()),
+        })
+        .collect()
+}
+
+/// 👁️✏️ Both surfaces of ONE dialect, in `editor → viewer` focus order, or `None` when the plugin
+/// declares fewer than two — the roles group's whole render gate. Twin of `surfaceRoleAppsV1`
+/// (`🏛️ShellHost/🔀️surface-switch/🟦️.ts`), pinned by that lane's `group` fixture rows.
+pub(crate) fn surface_role_apps<'a>(apps: &'a [AppDefinition], dialect: &semio_framework::ArtifactDialect) -> Option<(&'a AppDefinition, &'a AppDefinition)> {
+    let editor = apps.iter().find(|app| &app.dialect == dialect && app.role == semio_framework::manifest::AppRole::Editor)?;
+    let viewer = apps.iter().find(|app| &app.dialect == dialect && app.role == semio_framework::manifest::AppRole::Viewer)?;
+    Some((editor, viewer))
+}
+
+/// 👁️✏️ The app a role switch would open, or `None` when the role is already mounted or the dialect
+/// declares no such sibling. Twin of `roleSwitchTargetV1`.
+pub(crate) fn role_switch_target<'a>(
+    apps: &'a [AppDefinition],
+    dialect: &semio_framework::ArtifactDialect,
+    current_role: semio_framework::manifest::AppRole,
+    requested: semio_framework::manifest::AppRole,
+) -> Option<&'a AppDefinition> {
+    if current_role == requested {
+        return None;
+    }
+    let (editor, viewer) = surface_role_apps(apps, dialect)?;
+    Some(match requested {
+        semio_framework::manifest::AppRole::Editor => editor,
+        semio_framework::manifest::AppRole::Viewer => viewer,
+    })
+}
+
+/// 👁️✏️ The `playground.navbar.roles.{editor,viewer}` group. Icons are fixed per role (`pencil`/`eye`),
+/// deliberately NOT each app's own `icon_id`: both surfaces of one artifact carry the same artifact
+/// icon, which would make the two buttons indistinguishable. Labels are each target
+/// `AppDefinition`'s own `LocalizedLabel` — no shell dictionary, no default language.
+pub(crate) fn shell_role_controls(apps: &[AppDefinition], app: &AppDefinition, terminology: Terminology, locale: Locale) -> Vec<ShellNavbarControl> {
+    let Some((editor, viewer)) = surface_role_apps(apps, &app.dialect) else {
+        return Vec::new();
+    };
+    [(editor, semio_framework::manifest::AppRole::Editor, "pencil"), (viewer, semio_framework::manifest::AppRole::Viewer, "eye")]
+        .into_iter()
+        .map(|(target, role, icon_id)| ShellNavbarControl {
+            control_id: format!("playground.navbar.roles.{}", role.as_str()),
+            icon_id: Some(icon_id),
+            label: target.label.resolve(terminology, locale).to_string(),
+            active: app.role == role,
+        })
+        .collect()
+}
+
+/// 🔁️ The wrapping mode cycle `mod+alt+→`/`mod+alt+←` steps through — `None` for a single-mode app
+/// (nothing to step to). An active id the app no longer declares steps from the first. Twin of
+/// `stepModeIdV1`, pinned by the `modeSteps` fixture rows.
+pub(crate) fn step_mode_id(mode_ids: &[String], active_mode_id: Option<&str>, step: i32) -> Option<String> {
+    if mode_ids.len() < 2 {
+        return None;
+    }
+    let index = active_mode_id.and_then(|id| mode_ids.iter().position(|candidate| candidate == id)).unwrap_or(0) as i32;
+    let len = mode_ids.len() as i32;
+    Some(mode_ids[(index + step).rem_euclid(len) as usize].clone())
+}
+
+/// 👁️✏️ The surface role a `mod+alt+e`/`mod+alt+v` chord asks for.
+pub(crate) fn shell_role_chord(action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> Option<semio_framework::manifest::AppRole> {
+    if !modifiers.alt || !(modifiers.meta || modifiers.ctrl) {
+        return None;
+    }
+    let ui_wgpu::wgpu::KeyAction::Char(key) = action else {
+        return None;
+    };
+    match key.to_ascii_lowercase().as_str() {
+        "e" => Some(semio_framework::manifest::AppRole::Editor),
+        "v" => Some(semio_framework::manifest::AppRole::Viewer),
+        _ => None,
+    }
+}
+
+/// 🔁️ The mode-cycle direction a `mod+alt+→`/`mod+alt+←` chord asks for.
+pub(crate) fn shell_mode_step_chord(action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> Option<i32> {
+    if !modifiers.alt || !(modifiers.meta || modifiers.ctrl) {
+        return None;
+    }
+    match action {
+        ui_wgpu::wgpu::KeyAction::ArrowRight => Some(1),
+        ui_wgpu::wgpu::KeyAction::ArrowLeft => Some(-1),
+        _ => None,
+    }
+}
+
+/// 🛑️ The declared shape of a `World3dScene.statusJson` cancel affordance — the Rust twin of
+/// `world3dComputeStatusV1` (`🔨️modules/🖱️ui/🎬️scene/🟦️.ts`). Total by construction: malformed JSON,
+/// a missing field or a hostile type degrades to "no affordance" rather than throwing inside a
+/// render, and `cancellable` is honoured only alongside a non-empty `cancelAction` — a button with
+/// nothing to dispatch is worse than no button.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub(crate) struct World3dCancelAffordance {
+    pub cancellable: bool,
+    pub cancel_action: String,
+}
+
+/// 🛑️🖼️ The overlay controls a set of live engine surfaces offers, with the anchor each is painted
+/// at — pure over the surfaces' own bounds and status, so the laws drive it without a `ShellState`.
+/// A surface too small to carry a control offers none, which is what keeps a collapsed dock pane from
+/// painting chrome over its whole body.
+pub(crate) fn surface_overlay_controls_for(graphs: &[(&str, Rect)], worlds: &[(&str, Rect, Option<&str>)], theme: &Theme, is_de: bool) -> Vec<(ShellNavbarControl, [f32; 2])> {
+    let fits_control = |bounds: Rect| bounds.w >= theme.control_height * 4.0 && bounds.h >= theme.control_height * 2.0;
+    let mut controls = Vec::new();
+    for (surface_id, bounds) in graphs.iter().filter(|(_, bounds)| fits_control(*bounds)) {
+        let control = ShellNavbarControl { control_id: format!("shell.nodeGraph.fit::{surface_id}"), icon_id: Some("maximize-2"), label: shell_chrome_string("nodeGraph.fitGraph", is_de).to_string(), active: false };
+        controls.push((control, [bounds.x + theme.gap_standard, bounds.y + theme.gap_standard]));
+    }
+    for (surface_id, bounds, status_json) in worlds.iter().filter(|(_, bounds, status_json)| fits_control(*bounds) && world3d_cancel_affordance(*status_json).cancellable) {
+        let control = ShellNavbarControl { control_id: format!("shell.world3d.cancel::{surface_id}"), icon_id: Some("x"), label: shell_chrome_string("common.cancel", is_de).to_string(), active: false };
+        controls.push((control, [bounds.x + theme.gap_standard, bounds.y + theme.gap_standard]));
+    }
+    controls
+}
+
+/// 🛑️ Reads the cancel contract out of one `statusJson`. The shell learns no domain verb from code:
+/// whatever id `cancelAction` names is what the control dispatches.
+pub(crate) fn world3d_cancel_affordance(status_json: Option<&str>) -> World3dCancelAffordance {
+    let Some(raw) = status_json.filter(|json| !json.is_empty()) else {
+        return World3dCancelAffordance::default();
+    };
+    let Ok(Value::Object(row)) = serde_json::from_str::<Value>(raw) else {
+        return World3dCancelAffordance::default();
+    };
+    let cancel_action = row.get("cancelAction").and_then(Value::as_str).unwrap_or_default().to_string();
+    World3dCancelAffordance { cancellable: row.get("cancellable") == Some(&Value::Bool(true)) && !cancel_action.is_empty(), cancel_action }
+}
+//#endregion 🔀️ChromeParity
 
 fn command_host_platform() -> semio_framework::manifest::Platform {
     #[cfg(target_os = "macos")]
@@ -10713,6 +11295,11 @@ impl ShellState {
                 match cursor.setup {
                     0 => {
                         draw.set_screen_height(h);
+                        // 🎯️ One chrome walk mints one pointer registry. `FrameBuildPhase::InputFrame`
+                        // has already drained `InputState::hit_targets` for this build, so the owner
+                        // map is dropped with them — otherwise a retired body's ids would keep
+                        // claiming document routing for points nothing paints any more.
+                        self.retained_hit_windows.clear();
                     }
                     1 => overlay.set_screen_height(h),
                     2 => draw.push_solid([0.0, 0.0, w, h], theme.background),
@@ -11250,6 +11837,11 @@ impl ShellState {
                 } else {
                     self.clear_document_paint_fault(&window_id);
                 }
+                // 🎯️ ONCE per body, when its paint is off this walk's critical path — a registration
+                // on every paint OPPORTUNITY would push the same entries again and again until the
+                // fixed registry filled. Pushed after the window's own `ScrollRegion`, so every child
+                // of the body outranks it in `InputState::hit_at`'s reverse scan.
+                self.register_retained_body_hits(&window_id, window_rect, input);
                 cursor.document = UiDocumentFrameCursor::default();
                 cursor.item += 1;
                 cursor.phase = 3;
@@ -11353,6 +11945,7 @@ impl ShellState {
                 } else {
                     self.clear_document_paint_fault(window.as_str());
                 }
+                self.register_retained_body_hits(window.as_str(), content, input);
                 cursor.phase = 9;
             }
             9 => {
@@ -11410,9 +12003,43 @@ impl ShellState {
                         cursor.glyph.reset();
                     }
                 }
+                cursor.x += atlas.measure_text(title, theme.font_size_body).0 + theme.gap_standard * 2.0;
+                cursor.item = 0;
+                cursor.rect = None;
                 cursor.phase = 4;
             }
+            // 📚️ The `playground.navbar.fixture` example picker — React's own control id, so the dead
+            // `shell.example.<id>` handler this shell already carried becomes reachable and one probe
+            // drives both renderers (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
             4 => {
+                let controls: Vec<ShellNavbarControl> = shell_example_control(&self.session_example_rows(), matches!(&self.overlay_state, OverlayState::Dropdown(id) if id == "example"), self.locale_id == "de").into_iter().collect();
+                if !self.render_navbar_cluster_step(cursor, draw, atlas, icons, input, theme, &controls, btn_y, btn_h) {
+                    return false;
+                }
+                cursor.phase = 5;
+            }
+            // 🎛️ `playground.navbar.modes.<id>` — the group React renders only for a multi-mode surface.
+            5 => {
+                let controls = self.session.as_ref().map(|session| shell_mode_controls(&session.app, session.view_state.active_mode_id.as_deref(), self.active_terminology(), self.active_locale())).unwrap_or_default();
+                if !self.render_navbar_cluster_step(cursor, draw, atlas, icons, input, theme, &controls, btn_y, btn_h) {
+                    return false;
+                }
+                cursor.phase = 6;
+            }
+            // 👁️✏️ `playground.navbar.roles.{editor,viewer}` — rendered only when the loaded plugin
+            // declares BOTH surfaces for the OPEN document's dialect.
+            6 => {
+                let controls = self
+                    .session
+                    .as_ref()
+                    .and_then(|session| self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).map(|entry| shell_role_controls(&entry.manifest.apps, &session.app, self.active_terminology(), self.active_locale())))
+                    .unwrap_or_default();
+                if !self.render_navbar_cluster_step(cursor, draw, atlas, icons, input, theme, &controls, btn_y, btn_h) {
+                    return false;
+                }
+                cursor.phase = 7;
+            }
+            7 => {
                 let is_de = self.locale_id == "de";
                 let item = ChromeGroupItem {
                     control_id: "ui.fullscreen.toggle",
@@ -11425,7 +12052,7 @@ impl ShellState {
                 if cursor.rect.is_none() {
                     let Some(item_w) = retained_chrome_group_item_width(theme, &item) else {
                         self.error = Some("Shell fullscreen item exceeded the retained chrome boundary".to_string());
-                        cursor.phase = 5;
+                        cursor.phase = 8;
                         return false;
                     };
                     cursor.right -= item_w;
@@ -11438,9 +12065,9 @@ impl ShellState {
                     RetainedChromeGroupStep::Fault => self.error = Some("Shell fullscreen item exceeded the retained glyph boundary".to_string()),
                 }
                 cursor.rect = None;
-                cursor.phase = 5;
+                cursor.phase = 8;
             }
-            5 => {
+            8 => {
                 let is_de = self.locale_id == "de";
                 let display = self.has_display_tabs();
                 let item = match (display, cursor.item) {
@@ -11482,7 +12109,7 @@ impl ShellState {
                     if cursor.rect.is_none() {
                         let Some(item_w) = retained_chrome_group_item_width(theme, &item) else {
                             self.error = Some("Shell panel toggle exceeded the retained chrome boundary".to_string());
-                            cursor.phase = 6;
+                            cursor.phase = 9;
                             return false;
                         };
                         cursor.right -= item_w;
@@ -11498,11 +12125,71 @@ impl ShellState {
                     cursor.item += 1;
                     return false;
                 }
-                cursor.phase = 6;
+                cursor.phase = 9;
             }
-            6 => return true,
+            9 => return true,
             _ => return false,
         }
+        false
+    }
+
+    /// 🛑️🖼️ The overlay controls each LIVE engine surface offers, with the anchor each is painted at.
+    ///
+    /// - node-graph → `Fit graph` at the pane's top-left, React's own placement
+    ///   (`🧱️elements/🕸️NodeGraph/🟦️.tsx`, `absolute left-2 top-2`);
+    /// - World3d → the compute CANCEL, offered exactly while the scene's own status document says
+    ///   `cancellable` AND names a non-empty `cancelAction`. The shell never learns `cancelPreviewEval`
+    ///   from code: it dispatches whatever id the surface's status contract published
+    ///   (`🌐️World3dHost/🟦️.tsx`'s `WorldComputeStatusPane` does exactly the same in React).
+    ///
+    /// Neither React twin carries a DOM id, so these follow this shell's own
+    /// `shell.<surface-kind>.<verb>::<surfaceId>` control-id grammar.
+    fn surface_overlay_controls(&self, theme: &Theme) -> Vec<(ShellNavbarControl, [f32; 2])> {
+        let graphs: Vec<(&str, Rect)> = self.node_graph_states.iter().map(|(surface_id, surface)| (surface_id.as_str(), surface.bounds)).collect();
+        let worlds: Vec<(&str, Rect, Option<&str>)> = self.world3d_states.iter().map(|(surface_id, world)| (surface_id.as_str(), world.bounds, self.world3d_status.get(surface_id).map(String::as_str))).collect();
+        surface_overlay_controls_for(&graphs, &worlds, theme, self.locale_id == "de")
+    }
+
+    /// 🎛️ Paints ONE centre-cluster navbar control per grant, left-to-right from `cursor.x`, and
+    /// answers `true` once the whole list is painted — the retained-chrome twin of React's navbar
+    /// centre cluster (`exampleSelectElement` + `modeSwitcherElement` + `roleSwitcherElement`).
+    /// An empty list paints nothing at all, which is exactly React's "no group" render gate.
+    #[allow(clippy::too_many_arguments)]
+    fn render_navbar_cluster_step(
+        &mut self,
+        cursor: &mut ShellChromeChildCursor,
+        draw: &mut DrawList,
+        atlas: &mut FontAtlas,
+        icons: &IconAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        controls: &[ShellNavbarControl],
+        btn_y: f32,
+        btn_h: f32,
+    ) -> bool {
+        let Some(control) = controls.get(cursor.item) else {
+            cursor.item = 0;
+            cursor.rect = None;
+            return true;
+        };
+        let item = ChromeGroupItem { control_id: control.control_id.as_str(), icon_id: control.icon_id, label: Some(control.label.as_str()), active: control.active, disabled: false, kind: HitKind::NavbarItem };
+        if cursor.rect.is_none() {
+            let Some(item_w) = retained_chrome_group_item_width(theme, &item) else {
+                self.error = Some("Shell navbar cluster item exceeded the retained chrome boundary".to_string());
+                cursor.item += 1;
+                return false;
+            };
+            cursor.rect = Some(Rect::new(cursor.x, btn_y, item_w.max(btn_h), btn_h));
+        }
+        let Some(rect) = cursor.rect else { return false };
+        match render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, true) {
+            RetainedChromeGroupStep::Pending => return false,
+            RetainedChromeGroupStep::Complete => {}
+            RetainedChromeGroupStep::Fault => self.error = Some("Shell navbar cluster item exceeded the retained glyph boundary".to_string()),
+        }
+        cursor.x += rect.w + theme.gap_standard;
+        cursor.rect = None;
+        cursor.item += 1;
         false
     }
 
@@ -11755,10 +12442,11 @@ impl ShellState {
                 cursor.phase = 1;
             }
             1 => {
+                let is_de = self.locale_id == "de";
                 let label = match &self.overlay_state {
                     OverlayState::Search => Some(("Search", self.search_query.as_str())),
                     OverlayState::Find => Some(("Find in page", self.find_query.as_str())),
-                    OverlayState::Dropdown(id) if id == "example" => Some(("Examples", "")),
+                    OverlayState::Dropdown(id) if id == "example" => Some((shell_chrome_string("example.overlay.title", is_de), "")),
                     _ => None,
                 };
                 if let (Some(rect), Some((title, query))) = (cursor.rect, label) {
@@ -11787,16 +12475,35 @@ impl ShellState {
                 cursor.item = 0;
                 cursor.phase = 2;
             }
+            // 📚️ One hit-testable row per example the OPEN dialect authored, each carrying the
+            // `shell.example.<id>` control id `handle_shell_hit` already dispatches `setActiveExample`
+            // for. The handler predates the dialect refactor and was unreachable code until this
+            // emission existed (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
             2 => {
-                if !self.render_context_menu_step(cursor, overlay, atlas, icons, input, theme, width, height) {
+                let rows = if matches!(&self.overlay_state, OverlayState::Dropdown(id) if id == "example") { self.session_example_rows() } else { Vec::new() };
+                let row_h = theme.control_height;
+                let placed = cursor.rect.and_then(|panel| {
+                    let row = rows.get(cursor.item)?;
+                    let rect = Rect::new(panel.x + theme.gap_standard, panel.y + theme.padding_standard * 2.0 + theme.font_size_body * 2.0 + cursor.item as f32 * row_h, (panel.w - theme.gap_standard * 2.0).max(1.0), row_h);
+                    (rect.y + rect.h <= panel.y + panel.h).then_some((row, rect))
+                });
+                let Some((row, rect)) = placed else {
+                    cursor.item = 0;
+                    cursor.rect = None;
+                    cursor.phase = 3;
                     return false;
+                };
+                let item = ChromeGroupItem { control_id: row.control_id.as_str(), icon_id: Some("file"), label: Some(row.label.as_str()), active: row.selected, disabled: false, kind: HitKind::DropdownItem };
+                match render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, overlay, atlas, icons, input, theme, rect, &item, true) {
+                    RetainedChromeGroupStep::Pending => return false,
+                    RetainedChromeGroupStep::Complete => {}
+                    RetainedChromeGroupStep::Fault => self.error = Some("Shell example row exceeded the retained glyph boundary".to_string()),
                 }
-                cursor.scalar = 0;
-                cursor.item = 0;
-                cursor.phase = 3;
+                cursor.item += 1;
+                return false;
             }
             3 => {
-                if !self.render_chrome_tooltip_step(cursor, overlay, atlas, input, theme, width, height) {
+                if !self.render_context_menu_step(cursor, overlay, atlas, icons, input, theme, width, height) {
                     return false;
                 }
                 cursor.scalar = 0;
@@ -11804,7 +12511,7 @@ impl ShellState {
                 cursor.phase = 4;
             }
             4 => {
-                if !self.render_chrome_dialog_step(cursor, overlay, atlas, input, theme, width, height) {
+                if !self.render_chrome_tooltip_step(cursor, overlay, atlas, input, theme, width, height) {
                     return false;
                 }
                 cursor.scalar = 0;
@@ -11812,12 +12519,48 @@ impl ShellState {
                 cursor.phase = 5;
             }
             5 => {
+                if !self.render_chrome_dialog_step(cursor, overlay, atlas, input, theme, width, height) {
+                    return false;
+                }
+                cursor.scalar = 0;
+                cursor.item = 0;
+                cursor.phase = 6;
+            }
+            6 => {
                 if !self.render_chrome_tour_step(cursor, overlay, atlas, input, theme, width, height) {
                     return false;
                 }
-                cursor.phase = 6;
+                cursor.item = 0;
+                cursor.phase = 7;
             }
-            6 => return true,
+            // 🛑️🖼️ Per-surface overlay controls — the World3d compute cancel and the node-graph
+            // `Fit graph`. Painted last so they sit above the surface they annotate, and registered
+            // last so `InputState::hit_at` (reverse order) resolves them over the surface's own hit.
+            // Each grant recomputes its own rect from the live surface bounds, so nothing survives
+            // between grants and a surface that stopped painting stops offering its control.
+            7 => {
+                let controls = self.surface_overlay_controls(theme);
+                let Some((control, anchor)) = controls.get(cursor.item) else {
+                    cursor.item = 0;
+                    cursor.phase = 8;
+                    return false;
+                };
+                let item = ChromeGroupItem { control_id: control.control_id.as_str(), icon_id: control.icon_id, label: Some(control.label.as_str()), active: control.active, disabled: false, kind: HitKind::NavbarItem };
+                let Some(item_w) = retained_chrome_group_item_width(theme, &item) else {
+                    self.error = Some("Shell surface control exceeded the retained chrome boundary".to_string());
+                    cursor.item += 1;
+                    return false;
+                };
+                let rect = Rect::new(anchor[0], anchor[1], item_w.max(theme.control_height), theme.control_height);
+                match render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, overlay, atlas, icons, input, theme, rect, &item, true) {
+                    RetainedChromeGroupStep::Pending => return false,
+                    RetainedChromeGroupStep::Complete => {}
+                    RetainedChromeGroupStep::Fault => self.error = Some("Shell surface control exceeded the retained glyph boundary".to_string()),
+                }
+                cursor.item += 1;
+                return false;
+            }
+            8 => return true,
             _ => return false,
         }
         false
@@ -13243,6 +13986,18 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("introduction.next", true) => "Weiter",
         ("introduction.done", false) => "Done",
         ("introduction.done", true) => "Fertig",
+        ("common.cancel", false) => "Cancel",
+        ("common.cancel", true) => "Abbrechen",
+        ("example.picker", false) => "Example",
+        ("example.picker", true) => "Beispiel",
+        ("example.overlay.title", false) => "Examples",
+        ("example.overlay.title", true) => "Beispiele",
+        ("nodeGraph.fitGraph", false) => "Fit graph",
+        ("nodeGraph.fitGraph", true) => "Graph einpassen",
+        ("surfaceRole.group", false) => "Surface role",
+        ("surfaceRole.group", true) => "Oberflächenrolle",
+        ("mode.group", false) => "Mode",
+        ("mode.group", true) => "Modus",
         (other, _) => other,
     }
 }

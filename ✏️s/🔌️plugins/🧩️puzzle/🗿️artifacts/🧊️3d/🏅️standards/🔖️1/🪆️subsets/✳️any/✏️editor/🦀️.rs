@@ -55,7 +55,7 @@ use dsl::json;
 use dsl::FromValue;
 use dsl::os_pack::json::{from_json_str, object, parse, to_json_string, to_string, Object, Value};
 use semio_framework_plugin::app::{EphemeralEmit, InteractionView};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{LazyLock, Mutex, OnceLock};
 
@@ -2973,7 +2973,7 @@ struct Puzzle3dDocumentTreeKey {
 }
 
 impl Puzzle3dDocumentTreeKey {
-    fn of(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels, pages: &HashMap<String, u32>) -> Self {
+    fn of(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels, pages: &BTreeMap<String, u32>) -> Self {
         let mut pages_digest = 0u64;
         let mut keys: Vec<&String> = pages.keys().collect();
         keys.sort();
@@ -3045,6 +3045,7 @@ impl Puzzle3dSessionRegistry {
         }
         self.generations[slot] = self.generations[slot].saturating_add(1);
         crate::editor::puzzle3d::precompute::retire_abandoned_brush_mesh_uploads();
+        crate::editor::puzzle3d::commands::import_fixture::retire_abandoned_import_runs();
     }
 
     fn resolve_slot(&mut self, app_instance_id: u32, document_id: Option<&str>) -> Option<usize> {
@@ -3250,10 +3251,10 @@ impl Puzzle3dPlayApp {
     /// pool or the value arena is saturated) is never fatal: the memo is simply dropped and the caller
     /// gets the freshly built tree — the pre-memo baseline.
     pub(crate) fn document_tree_cached(&self, fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-        self.document_tree_cached_from(fixture, labels, &HashMap::new())
+        self.document_tree_cached_from(fixture, labels, &BTreeMap::new())
     }
 
-    pub(crate) fn document_tree_cached_from(&self, fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels, pages: &HashMap<String, u32>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    pub(crate) fn document_tree_cached_from(&self, fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels, pages: &BTreeMap<String, u32>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
         let key = Puzzle3dDocumentTreeKey::of(fixture, labels, pages);
         let mut cache = self.document_tree_cache.lock().expect("document cache");
         if let Some(retained) = cache.as_ref().filter(|(cached, _)| *cached == key).and_then(|(_, node)| node.credited_clone()) {

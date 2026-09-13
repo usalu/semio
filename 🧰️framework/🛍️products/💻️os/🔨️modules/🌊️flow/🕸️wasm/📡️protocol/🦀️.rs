@@ -10,7 +10,7 @@ use std::rc::Rc;
 
 //#region 🧬️Contract
 
-pub const FLOW_ABI_SCHEMA: &str = include_str!("../🧬️schema/📡️abi.json");
+pub const FLOW_ABI_SCHEMA: &str = include_str!("../🧬️schema/📡️abi/🔣️.json");
 
 pub const FLOW_OPERATION_FIRST: u16 = 2_500;
 pub const FLOW_OPERATION_OPEN: u16 = 2_500;

@@ -2,7 +2,8 @@
 
 use crate::editor::jack::window_config::JackGraphWindowConfig;
 use crate::JackSnapshot;
-use semio_framework_plugin::{scene_surface, ActionDescriptor, BuiltNode, MeasureSelectItem, NodeGraphScene, Viewport2d, UiAssemblyResult, WindowMeasure};
+use semio_framework_plugin::{scene_surface, ActionDescriptor, BuiltNode, MeasureSelectItem, NodeGraphScene, UiAssemblyResult, WindowMeasure};
+use semio_framework_os_kernel::Viewport2d;
 use semio_framework_ui_contract::SurfaceKind;
 
 pub(crate) const TRINITY_LOD_MODE_AUTOMATIC: &str = "automatic";

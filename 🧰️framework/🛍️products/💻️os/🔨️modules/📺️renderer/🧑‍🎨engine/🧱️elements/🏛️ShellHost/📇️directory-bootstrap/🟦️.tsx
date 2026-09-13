@@ -85,14 +85,6 @@ function identityField(value: string): boolean {
   return value.length > 0 && value.length <= 256 && value.trim() === value && !/[\u0000-\u001f\u007f]/u.test(value);
 }
 
-function invocationTerminal(value: unknown): boolean {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
-  const response = value as Readonly<Record<string, unknown>>;
-  if (!Array.isArray(response.mutations) || response.inverseGroup === null || typeof response.inverseGroup !== "object" || Array.isArray(response.inverseGroup)) return false;
-  const inverse = response.inverseGroup as Readonly<Record<string, unknown>>;
-  return typeof inverse.invocationId === "string" && Array.isArray(inverse.mutations) && Array.isArray(inverse.inverseMutations);
-}
-
 function directoryActionInvocation(owner: DirectoryHomeOwnerV1, actionId: string, args: Readonly<Record<string, unknown>>): string {
   const windowInstanceId = owner.viewState.windowId ?? owner.app.windowKinds[0]!.id;
   return JSON.stringify({
@@ -108,7 +100,7 @@ function directoryActionInvocation(owner: DirectoryHomeOwnerV1, actionId: string
   });
 }
 
-/** 🪪️ Binds Hub identity to the visible landing instance before granting bootstrap ownership. */
+/** 🪪️ Opens one visible Home owner with the current host identity in its ephemeral view context. */
 export async function openDirectoryHomeOwnerV1(input: Readonly<{
   plugin: PluginWasmHandle;
   app: AppDefinition;
@@ -124,7 +116,7 @@ export async function openDirectoryHomeOwnerV1(input: Readonly<{
 }>): Promise<DirectoryHomeOwnerV1> {
   if (!Number.isSafeInteger(input.bootstrapEpoch) || input.bootstrapEpoch < 1) throw new Error("directory-bootstrap.epoch-invalid");
   if (!input.baseUrl || !input.locale || !input.terminology || !identityField(input.identity.userId) || !identityField(input.identity.displayName)) throw new Error("directory-bootstrap.identity-incomplete");
-  if (!actionAvailable(input.app, "setClient") || !actionAvailable(input.app, "applyDirectoryEventPage")) throw new Error("directory-bootstrap.home-action-unavailable");
+  if (!actionAvailable(input.app, "applyDirectoryEventPage")) throw new Error("directory-bootstrap.home-action-unavailable");
   const windowKindId = input.app.windowKinds[0]?.id;
   const modeId = input.app.defaultModeId ?? input.app.modes[0]?.id;
   if (!windowKindId || !modeId) throw new Error("directory-bootstrap.home-surface-incomplete");
@@ -154,6 +146,7 @@ export async function openDirectoryHomeOwnerV1(input: Readonly<{
     windowInstances: [{ id: windowKindId, windowKindId }],
     locale: input.locale,
     terminology: input.terminology,
+    sessionIdentity: { userId: input.identity.userId, displayName: input.identity.displayName },
   };
   const owner: DirectoryHomeOwnerV1 = {
     plugin: input.plugin,
@@ -170,12 +163,6 @@ export async function openDirectoryHomeOwnerV1(input: Readonly<{
     pending: null,
   };
   try {
-    const response = await owner.plugin.handleAction(
-      owner.instanceId,
-      directoryActionInvocation(owner, "setClient", { clientId: input.identity.userId, clientName: input.identity.displayName }),
-      owner.viewState,
-    );
-    if (!invocationTerminal(response)) throw new Error("directory-bootstrap.identity-terminal-invalid");
     if (owner.abort.signal.aborted) throw new Error("directory-bootstrap.stale-owner");
     await input.beforeBootstrap?.(owner);
     if (owner.abort.signal.aborted) throw new Error("directory-bootstrap.stale-owner");
@@ -230,7 +217,7 @@ export async function applyDirectoryEventPageBootstrapV1(
     throughSeqInclusive: page.throughSeqInclusive,
   };
   try {
-    const response = await owner.plugin.handleAction(owner.instanceId, directoryPageInvocation(owner, page.canonicalJson), owner.viewState);
+    const response = await owner.plugin.handleAction(owner.instanceId, directoryPageInvocation(owner, page.canonicalJson), { ...owner.viewState, sessionIdentity: { userId: owner.identity.userId, displayName: owner.identity.displayName } });
     if (owner.abort.signal.aborted || owner.pending?.receiptSha256 !== page.receiptSha256) return { state: { kind: "fault", code: "directory-bootstrap.cancelled" } };
     const receipt = parseDirectoryProjectionReceiptV1(response.output);
     if (!receipt || !receiptMatchesPage(receipt, page)) {

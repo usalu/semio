@@ -1,0 +1,978 @@
+{
+  "schemaVersion": 1,
+  "owners": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+      "declarations": [
+        "WorkspaceDiscoveryOptions",
+        "WorkspaceDiscoveryProgress",
+        "computeWorkspaces",
+        "diffWorkspaces",
+        "getWorkspaceRoot"
+      ],
+      "imports": [],
+      "contextChain": [
+        "repo-library-workspaces"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📄️manifest-projection/🟦️.ts",
+      "declarations": [
+        "WorkspaceRootDocument",
+        "parseWorkspaceRootDocument",
+        "renderWorkspaceRootDocument"
+      ],
+      "imports": [],
+      "contextChain": [
+        "repo-library-workspaces",
+        "repo-library-workspace-manifest-projection"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/⚖️membership-comparison/🟦️.ts",
+      "declarations": [
+        "WorkspaceMembershipComparison",
+        "compareWorkspaceMembership"
+      ],
+      "imports": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts"
+      ],
+      "contextChain": [
+        "repo-library-workspaces",
+        "repo-library-workspace-membership-comparison"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📣️publication/🟦️.ts",
+      "declarations": [
+        "WorkspacePublicationOperations",
+        "WorkspacePublicationResult",
+        "publishWorkspaceMembership"
+      ],
+      "imports": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📄️manifest-projection/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/⚖️membership-comparison/🟦️.ts"
+      ],
+      "contextChain": [
+        "repo-library-workspaces",
+        "repo-library-workspace-publication"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🏃️execution/🟦️.ts",
+      "declarations": [
+        "WorkspacePublicationScript",
+        "parseWorkspacePublicationArguments"
+      ],
+      "imports": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📣️publication/🟦️.ts"
+      ],
+      "contextChain": [
+        "repo-library-workspaces",
+        "repo-library-workspace-execution"
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "directoryName": "🗂️workspaces",
+      "parentKindId": "repo-server-library",
+      "kindId": "repo-library-workspaces"
+    },
+    {
+      "directoryName": "📄️manifest-projection",
+      "parentKindId": "repo-library-workspaces",
+      "kindId": "repo-library-workspace-manifest-projection"
+    },
+    {
+      "directoryName": "⚖️membership-comparison",
+      "parentKindId": "repo-library-workspaces",
+      "kindId": "repo-library-workspace-membership-comparison"
+    },
+    {
+      "directoryName": "📣️publication",
+      "parentKindId": "repo-library-workspaces",
+      "kindId": "repo-library-workspace-publication"
+    },
+    {
+      "directoryName": "🏃️execution",
+      "parentKindId": "repo-library-workspaces",
+      "kindId": "repo-library-workspace-execution"
+    }
+  ],
+  "routes": {
+    "source": {
+      "target": "test-workspace-publication-source",
+      "command": "bun ./📜️script.ts test workspace-publication-source",
+      "launchName": "🧪️test🗂️workspace-publication-source",
+      "launchCommand": "bun nx run @semio-tech/repo-lib:test-workspace-publication-source"
+    },
+    "check": {
+      "target": "workspaces-check",
+      "command": "bun ./📜️script.ts workspaces --check",
+      "launchName": "🔎️check🗂️workspace-membership",
+      "launchCommand": "bun nx run @semio-tech/repo-lib:workspaces-check"
+    },
+    "write": {
+      "target": "workspaces-write",
+      "command": "bun ./📜️script.ts workspaces --write",
+      "launchName": "📣️publish🗂️workspace-membership",
+      "launchCommand": "bun nx run @semio-tech/repo-lib:workspaces-write"
+    }
+  },
+  "inputs": {
+    "membership": [
+      "sharedGlobals",
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/**/package.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/**/*.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts"
+    ],
+    "source": [
+      "workspaceMembershipSources",
+      "{workspaceRoot}/.vscode/launch.json",
+      "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📋️project.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🚀️launch/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️workspace-publication-source/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧱️workspace-publication-source/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🏭️owned-generator-preview-inventory/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️workspace-publication-source/🟦️.ts",
+      "{workspaceRoot}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/FEM-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION/{🔧️write-handoff.mjs,🔧️update-handoff-tests.mjs,📋️registrar-handoff.json,📋️registrar-handoff.md,📌️important.md}"
+    ]
+  },
+  "arguments": [
+    {
+      "segments": [
+        "--check"
+      ],
+      "accepted": true,
+      "mode": "check"
+    },
+    {
+      "segments": [
+        "--write"
+      ],
+      "accepted": true,
+      "mode": "write"
+    },
+    {
+      "segments": [],
+      "accepted": false
+    },
+    {
+      "segments": [
+        "--check",
+        "--write"
+      ],
+      "accepted": false
+    },
+    {
+      "segments": [
+        "--write",
+        "extra"
+      ],
+      "accepted": false
+    },
+    {
+      "segments": [
+        "--unknown"
+      ],
+      "accepted": false
+    }
+  ],
+  "workspaceCase": {
+    "rootDocument": {
+      "name": "workspace",
+      "private": true,
+      "scripts": {
+        "test": "bun nx run-many -t test"
+      },
+      "custom": {
+        "preserved": [
+          1,
+          2,
+          3
+        ]
+      },
+      "workspaces": [
+        "obsolete"
+      ]
+    },
+    "packages": [
+      {
+        "directory": "alpha",
+        "name": "@fixture/alpha"
+      },
+      {
+        "directory": "beta/nested",
+        "name": "@fixture/beta"
+      },
+      {
+        "directory": "zeta",
+        "name": "@fixture/zeta"
+      }
+    ],
+    "ignoredPackages": [
+      {
+        "directory": ".hidden",
+        "name": "@fixture/hidden"
+      },
+      {
+        "directory": "node_modules/vendor",
+        "name": "@fixture/vendor"
+      }
+    ],
+    "expectedWorkspaces": [
+      "alpha",
+      "beta/nested",
+      "zeta"
+    ]
+  },
+  "retirement": {
+    "generatorId": "ticket-important-fem-handoff",
+    "commands": [
+      "check-ticket-important-fem-handoff",
+      "generate-ticket-important-fem-handoff",
+      "preview-generated"
+    ],
+    "targets": [
+      "check-ticket-important-fem-handoff",
+      "generate-ticket-important-fem-handoff",
+      "preview-generated"
+    ],
+    "launch": {
+      "name": "📦️preview🤖️ticket-important-fem-handoff",
+      "command": "bun nx run @semio-tech/repo-lib:preview-generated",
+      "order": 206.115
+    },
+    "historicalEvidence": [
+      {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/FEM-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION/🔧️write-handoff.mjs",
+        "bytes": 5411,
+        "sha256": "e18760f389273a8db1262c04e79a181e41a26adba2bbb753ac98c6a6d5c3c84b"
+      },
+      {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/FEM-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION/🔧️update-handoff-tests.mjs",
+        "bytes": 2428,
+        "sha256": "5dab8fd67e876c41b5ac411cf9b5f632bf301bef841a6f92f8e8eefddb971be5"
+      },
+      {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/FEM-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION/📋️registrar-handoff.json",
+        "bytes": 1558,
+        "sha256": "52e78199d6fc9c6001f70a87f050036adc687aa772182e81852f0a6777b230f0"
+      },
+      {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/FEM-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION/📋️registrar-handoff.md",
+        "bytes": 4863,
+        "sha256": "7262a2e4c601400531da691d1421f36677c42b085001a72dc1ec2ccabad8733f"
+      },
+      {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/FEM-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION/📌️important.md",
+        "bytes": 434,
+        "sha256": "ff261e39dfde4ced2b7e258ec380d4f12c6d2cbbed8df84f95c178fe423b44eb"
+      }
+    ],
+    "absentPaths": [
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/FEM-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION/📓️important/📝️.md",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/FEM-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION/�クレアregistrar-handoff.md"
+    ]
+  },
+  "payloadCases": [
+    {
+      "name": "explicit-payload",
+      "manifests": [
+        {
+          "directory": "owner",
+          "document": {
+            "name": "@fixture/owner",
+            "exports": "./payload/🟨️.js"
+          }
+        },
+        {
+          "directory": "owner/payload",
+          "document": {
+            "name": "@fixture/owner"
+          }
+        }
+      ],
+      "files": [
+        "owner/payload/🟨️.js"
+      ],
+      "links": [],
+      "expected": [
+        "owner"
+      ],
+      "duplicate": false,
+      "resolutions": [
+        {
+          "owner": "owner",
+          "entry": ".",
+          "conditions": [],
+          "targets": [
+            "./payload/🟨️.js"
+          ],
+          "payload": "owner/payload"
+        }
+      ],
+      "externalFiles": []
+    },
+    {
+      "name": "anonymous-renamed-output",
+      "manifests": [
+        {
+          "directory": "owner",
+          "document": {
+            "name": "@fixture/owner",
+            "exports": "./📦️delivery/🟨️.js"
+          }
+        },
+        {
+          "directory": "owner/📦️delivery",
+          "document": {
+            "name": "@fixture/owner"
+          }
+        }
+      ],
+      "files": [
+        "owner/📦️delivery/🟨️.js"
+      ],
+      "links": [],
+      "expected": [
+        "owner"
+      ],
+      "duplicate": false,
+      "resolutions": [
+        {
+          "owner": "owner",
+          "entry": ".",
+          "conditions": [],
+          "targets": [
+            "./📦️delivery/🟨️.js"
+          ],
+          "payload": "owner/📦️delivery"
+        }
+      ],
+      "externalFiles": []
+    },
+    {
+      "name": "conditional-payload",
+      "manifests": [
+        {
+          "directory": "owner",
+          "document": {
+            "name": "@fixture/owner",
+            "exports": {
+              ".": {
+                "types": "./payload/🟦️.d.ts",
+                "import": "./payload/🟨️.js"
+              }
+            }
+          }
+        },
+        {
+          "directory": "owner/payload",
+          "document": {
+            "name": "@fixture/owner"
+          }
+        }
+      ],
+      "files": [
+        "owner/payload/🟨️.js",
+        "owner/payload/🟦️.d.ts"
+      ],
+      "links": [],
+      "expected": [
+        "owner"
+      ],
+      "duplicate": false,
+      "resolutions": [
+        {
+          "owner": "owner",
+          "entry": ".",
+          "conditions": [],
+          "targets": [
+            "./payload/🟨️.js"
+          ],
+          "payload": "owner/payload"
+        },
+        {
+          "owner": "owner",
+          "entry": ".",
+          "conditions": [
+            "types"
+          ],
+          "targets": [
+            "./payload/🟦️.d.ts"
+          ],
+          "payload": "owner/payload"
+        }
+      ],
+      "externalFiles": []
+    },
+    {
+      "name": "subpath-payload",
+      "manifests": [
+        {
+          "directory": "owner",
+          "document": {
+            "name": "@fixture/owner",
+            "exports": {
+              ".": "./🟨️.js",
+              "./runtime": "./payload/🟨️.js"
+            }
+          }
+        },
+        {
+          "directory": "owner/payload",
+          "document": {
+            "name": "@fixture/owner"
+          }
+        }
+      ],
+      "files": [
+        "owner/🟨️.js",
+        "owner/payload/🟨️.js"
+      ],
+      "links": [],
+      "expected": [
+        "owner"
+      ],
+      "duplicate": false,
+      "resolutions": [
+        {
+          "owner": "owner",
+          "entry": "./runtime",
+          "conditions": [],
+          "targets": [
+            "./payload/🟨️.js"
+          ],
+          "payload": "owner/payload"
+        }
+      ],
+      "externalFiles": []
+    },
+    {
+      "name": "different-name-is-independent",
+      "manifests": [
+        {
+          "directory": "owner",
+          "document": {
+            "name": "@fixture/owner",
+            "exports": "./payload/🟨️.js"
+          }
+        },
+        {
+          "directory": "owner/payload",
+          "document": {
+            "name": "@fixture/child"
+          }
+        }
+      ],
+      "files": [
+        "owner/payload/🟨️.js"
+      ],
+      "links": [],
+      "expected": [
+        "owner",
+        "owner/payload"
+      ],
+      "duplicate": false,
+      "resolutions": [],
+      "externalFiles": []
+    },
+    {
+      "name": "unbound-duplicate",
+      "manifests": [
+        {
+          "directory": "owner",
+          "document": {
+            "name": "@fixture/owner"
+          }
+        },
+        {
+          "directory": "owner/payload",
+          "document": {
+            "name": "@fixture/owner"
+          }
+        }
+      ],
+      "files": [],
+      "links": [],
+      "expected": [],
+      "duplicate": true,
+      "resolutions": [],
+      "externalFiles": []
+    },
+    {
+      "name": "sibling-duplicate",
+      "manifests": [
+        {
+          "directory": "owner",
+          "document": {
+            "name": "@fixture/owner",
+            "exports": "./🟨️.js"
+          }
+        },
+        {
+          "directory": "sibling",
+          "document": {
+            "name": "@fixture/owner"
+          }
+        }
+      ],
+      "files": [
+        "owner/🟨️.js"
+      ],
+      "links": [],
+      "expected": [],
+      "duplicate": true,
+      "resolutions": [],
+      "externalFiles": []
+    },
+    {
+      "name": "path-prefix-is-not-ancestry",
+      "manifests": [
+        {
+          "directory": "owner",
+          "document": {
+            "name": "@fixture/owner",
+            "exports": "./payload-extra/🟨️.js"
+          }
+        },
+        {
+          "directory": "owner/payload",
+          "document": {
+            "name": "@fixture/owner"
+          }
+        }
+      ],
+      "files": [
+        "owner/payload-extra/🟨️.js"
+      ],
+      "links": [],
+      "expected": [],
+      "duplicate": true,
+      "resolutions": [],
+      "externalFiles": []
+    },
+    {
+      "name": "traversal-is-not-authority",
+      "manifests": [
+        {
+          "directory": "owner",
+          "document": {
+            "name": "@fixture/owner",
+            "exports": "./other/../payload/🟨️.js"
+          }
+        },
+        {
+          "directory": "owner/payload",
+          "document": {
+            "name": "@fixture/owner"
+          }
+        }
+      ],
+      "files": [
+        "owner/payload/🟨️.js"
+      ],
+      "links": [],
+      "expected": [],
+      "duplicate": true,
+      "resolutions": [],
+      "externalFiles": []
+    },
+    {
+      "name": "wildcard-is-not-concrete-payload-authority",
+      "manifests": [
+        {
+          "directory": "owner",
+          "document": {
+            "name": "@fixture/owner",
+            "exports": {
+              "./*": "./payload/*"
+            }
+          }
+        },
+        {
+          "directory": "owner/payload",
+          "document": {
+            "name": "@fixture/owner"
+          }
+        }
+      ],
+      "files": [
+        "owner/payload/🟨️.js"
+      ],
+      "links": [],
+      "expected": [],
+      "duplicate": true,
+      "resolutions": [],
+      "externalFiles": []
+    },
+    {
+      "name": "nearest-owner-binds-boundary",
+      "manifests": [
+        {
+          "directory": "owner",
+          "document": {
+            "name": "@fixture/owner",
+            "exports": "./middle/payload/🟨️.js"
+          }
+        },
+        {
+          "directory": "owner/middle",
+          "document": {
+            "name": "@fixture/middle"
+          }
+        },
+        {
+          "directory": "owner/middle/payload",
+          "document": {
+            "name": "@fixture/owner"
+          }
+        }
+      ],
+      "files": [
+        "owner/middle/payload/🟨️.js"
+      ],
+      "links": [],
+      "expected": [],
+      "duplicate": true,
+      "resolutions": [],
+      "externalFiles": []
+    },
+    {
+      "name": "symlink-entry-is-not-physical-authority",
+      "manifests": [
+        {
+          "directory": "owner",
+          "document": {
+            "name": "@fixture/owner",
+            "exports": "./payload/🟨️.js"
+          }
+        },
+        {
+          "directory": "owner/payload",
+          "document": {
+            "name": "@fixture/owner"
+          }
+        }
+      ],
+      "files": [
+        "owner/🟨️.js"
+      ],
+      "links": [
+        {
+          "path": "owner/payload/🟨️.js",
+          "target": "owner/🟨️.js",
+          "external": false,
+          "kind": "file"
+        }
+      ],
+      "expected": [],
+      "duplicate": true,
+      "resolutions": [],
+      "externalFiles": []
+    },
+    {
+      "name": "missing-entry-is-not-authority",
+      "manifests": [
+        {
+          "directory": "owner",
+          "document": {
+            "name": "@fixture/owner",
+            "exports": "./payload/🟨️.js"
+          }
+        },
+        {
+          "directory": "owner/payload",
+          "document": {
+            "name": "@fixture/owner"
+          }
+        }
+      ],
+      "files": [],
+      "links": [],
+      "expected": [],
+      "duplicate": true,
+      "resolutions": [],
+      "externalFiles": []
+    },
+    {
+      "name": "nested-independent-package-is-retained",
+      "manifests": [
+        {
+          "directory": "owner",
+          "document": {
+            "name": "@fixture/owner",
+            "exports": "./payload/🟨️.js"
+          }
+        },
+        {
+          "directory": "owner/payload",
+          "document": {
+            "name": "@fixture/owner"
+          }
+        },
+        {
+          "directory": "owner/payload/nested",
+          "document": {
+            "name": "@fixture/nested"
+          }
+        }
+      ],
+      "files": [
+        "owner/payload/🟨️.js"
+      ],
+      "links": [],
+      "expected": [
+        "owner",
+        "owner/payload/nested"
+      ],
+      "duplicate": false,
+      "resolutions": [
+        {
+          "owner": "owner",
+          "entry": ".",
+          "conditions": [],
+          "targets": [
+            "./payload/🟨️.js"
+          ],
+          "payload": "owner/payload"
+        }
+      ],
+      "externalFiles": []
+    },
+    {
+      "name": "main-without-exports-is-not-explicit-ownership",
+      "manifests": [
+        {
+          "directory": "owner",
+          "document": {
+            "name": "@fixture/owner",
+            "main": "./payload/🟨️.js"
+          }
+        },
+        {
+          "directory": "owner/payload",
+          "document": {
+            "name": "@fixture/owner"
+          }
+        }
+      ],
+      "files": [
+        "owner/payload/🟨️.js"
+      ],
+      "links": [],
+      "expected": [],
+      "duplicate": true,
+      "resolutions": [],
+      "externalFiles": []
+    },
+    {
+      "name": "pkg-is-an-ordinary-domain-directory",
+      "manifests": [
+        {
+          "directory": "owner",
+          "document": {
+            "name": "@fixture/owner"
+          }
+        },
+        {
+          "directory": "owner/pkg",
+          "document": {
+            "name": "@fixture/payload"
+          }
+        },
+        {
+          "directory": "owner/pkg/nested",
+          "document": {
+            "name": "@fixture/nested"
+          }
+        }
+      ],
+      "files": [],
+      "links": [],
+      "expected": [
+        "owner",
+        "owner/pkg",
+        "owner/pkg/nested"
+      ],
+      "duplicate": false,
+      "resolutions": [],
+      "externalFiles": []
+    },
+    {
+      "name": "intermediate-directory-link-is-not-physical-authority",
+      "manifests": [
+        {
+          "directory": "owner",
+          "document": {
+            "name": "@fixture/owner",
+            "exports": "./payload/link/🟨️.js"
+          }
+        },
+        {
+          "directory": "owner/payload",
+          "document": {
+            "name": "@fixture/owner"
+          }
+        }
+      ],
+      "files": [],
+      "externalFiles": [
+        "target/🟨️.js"
+      ],
+      "links": [
+        {
+          "path": "owner/payload/link",
+          "target": "target",
+          "external": true,
+          "kind": "directory"
+        }
+      ],
+      "expected": [],
+      "duplicate": true,
+      "resolutions": []
+    },
+    {
+      "name": "default-blocks-later-condition",
+      "manifests": [
+        {
+          "directory": "owner",
+          "document": {
+            "name": "@fixture/owner",
+            "exports": {
+              "default": "./🟨️.js",
+              "import": "./payload/🟨️.js"
+            }
+          }
+        },
+        {
+          "directory": "owner/payload",
+          "document": {
+            "name": "@fixture/owner"
+          }
+        }
+      ],
+      "files": [
+        "owner/🟨️.js",
+        "owner/payload/🟨️.js"
+      ],
+      "externalFiles": [],
+      "links": [],
+      "expected": [],
+      "duplicate": true,
+      "resolutions": [
+        {
+          "owner": "owner",
+          "entry": ".",
+          "conditions": [],
+          "targets": [
+            "./🟨️.js"
+          ],
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "name": "mixed-condition-subpath-map-is-not-authority",
+      "manifests": [
+        {
+          "directory": "owner",
+          "document": {
+            "name": "@fixture/owner",
+            "exports": {
+              ".": "./🟨️.js",
+              "import": "./payload/🟨️.js"
+            }
+          }
+        },
+        {
+          "directory": "owner/payload",
+          "document": {
+            "name": "@fixture/owner"
+          }
+        }
+      ],
+      "files": [
+        "owner/🟨️.js",
+        "owner/payload/🟨️.js"
+      ],
+      "externalFiles": [],
+      "links": [],
+      "expected": [],
+      "duplicate": true,
+      "resolutions": [
+        {
+          "owner": "owner",
+          "entry": ".",
+          "conditions": [],
+          "targets": [
+            "./🟨️.js"
+          ],
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "name": "numeric-condition-is-not-authority",
+      "manifests": [
+        {
+          "directory": "owner",
+          "document": {
+            "name": "@fixture/owner",
+            "exports": {
+              "0": "./payload/🟨️.js",
+              "default": "./🟨️.js"
+            }
+          }
+        },
+        {
+          "directory": "owner/payload",
+          "document": {
+            "name": "@fixture/owner"
+          }
+        }
+      ],
+      "files": [
+        "owner/🟨️.js",
+        "owner/payload/🟨️.js"
+      ],
+      "externalFiles": [],
+      "links": [],
+      "expected": [],
+      "duplicate": true,
+      "resolutions": [
+        {
+          "owner": "owner",
+          "entry": ".",
+          "conditions": [],
+          "targets": [
+            "./🟨️.js"
+          ],
+          "payload": ""
+        }
+      ]
+    }
+  ],
+  "publicationConflicts": [
+    {
+      "name": "source-changed-during-discovery",
+      "change": "source",
+      "expectedError": "Root package.json changed during workspace discovery"
+    },
+    {
+      "name": "file-kind-changed-during-discovery",
+      "change": "file-kind",
+      "expectedError": "Root package.json changed during workspace discovery"
+    }
+  ]
+}

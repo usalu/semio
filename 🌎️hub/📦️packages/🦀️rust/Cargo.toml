@@ -70,6 +70,7 @@ neo4rs = { version = "0.8", optional = true }
 
 [dev-dependencies]
 blake3 = "1"
+syn = { version = "2", features = ["full", "visit"] }
 # 🧬️ Test-only: the owned draft-07 structural validator the scope-owned `🧬️schema/🔣️.json` modules are
 # held against. It never enters a runtime build.
 semio-framework-schema = { workspace = true }

@@ -1,8 +1,12 @@
 // #region 🧲️Header
-/** @emoji 🎨️ `@semio-tech/ui-styling` centralizes palette CSS, Tailwind entry, and the shared typography preset for ui consumers. */
+/** @emoji 🎨️ `@semio-tech/ui-styling` centralizes palette CSS, theme tokens and the shared typography preset for ui consumers.
+ * Browser-only by construction: this barrel is served to the browser through `📦️packages/🟦️typescript/🟦️.ts`, so it MUST NOT
+ * reach `../💨️tailwind/🟦️.ts` (the build-time Tailwind config, whose `@tailwindcss/typography` → `@tailwindcss/node` →
+ * `@tailwindcss/oxide` closure ends at a `.node` binary Vite's dependency optimizer cannot load). Build tooling imports the
+ * config from its declared owner (`🖱️ui/🎨️styling/💨️tailwind/🟦️.ts`) directly.
+ * @see 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧹️config/🟦️.ts — "browser entry module graph" */
 // #endregion 🧲️Header
 
-export { tailwindConfig, tailwindConfig as default } from "../💨️tailwind/🟦️.ts";
 export {
   STYLING_BOARD_PALETTES,
   STYLING_CANVAS_FONTS,

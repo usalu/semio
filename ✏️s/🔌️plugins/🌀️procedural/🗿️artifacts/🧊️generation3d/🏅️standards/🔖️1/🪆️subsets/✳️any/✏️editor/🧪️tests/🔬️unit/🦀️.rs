@@ -851,7 +851,7 @@ pub(super) fn every_command() -> Vec<Generation3dCommand> {
         Generation3dCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: "generation-1".into() }),
         Generation3dCommand::RenameGeneration(rename_generation::RenameGeneration { id: "generation-1".into(), name: "Renamed".into() }),
         Generation3dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("generation-1".into()), question_id: "q1".into(), value: dsl::DslValue::float(5.0) }),
-        Generation3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework::Viewport2d { x: 1.0, y: 2.0, zoom: 3.0 } }),
+        Generation3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 1.0, y: 2.0, zoom: 3.0 } }),
         Generation3dCommand::SetLodMode(set_lod_mode::SetLodMode { value: "coarse".into() }),
         Generation3dCommand::SetShowMode(set_show_mode::SetShowMode { value: "wireframe".into() }),
         Generation3dCommand::ToggleSun(toggle_sun::ToggleSun {}),
@@ -1771,6 +1771,95 @@ async fn host_pushed_contribution_pages_install_the_registry_the_served_chain_ne
     semio_framework_os_flow::uninstall_flow_extension(context::CONTRIBUTIONS_WITNESS_EXTENSION_ID).expect("the witness leaves the process-wide registry as it found it");
 }
 
+/// 🪟️ The thirteen surfaces the SERVED shell mounts in one `surface-visible` burst, in the order the
+/// browser sends them (measured on 6018, `🗑️generated/fix-forward-contributions/bridge-trace4`): the
+/// eight app bodies, the framework History body and the four framework sections. A guest turn that
+/// cannot render all thirteen never hands its turn back, and the shard watchdog reads that as a dead
+/// worker (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+const GENERATION3D_SHELL_MOUNTED_BODY_KEYS: [&str; 13] = [
+    flow_window::GENERATION_3D_PLAY_BODY_MAIN,
+    edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW,
+    generations::GENERATION_3D_PLAY_BODY_GENERATIONS,
+    form::GENERATION_3D_PLAY_BODY_GENERATE_FORM,
+    generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW,
+    document_panel::GENERATION_3D_PLAY_BODY_DOCUMENT,
+    catalogue_panel::GENERATION_3D_PLAY_BODY_CATALOGUE,
+    inspection_panel::GENERATION_3D_PLAY_BODY_INSPECTION,
+    "framework.body.history",
+    "framework.section.engagements",
+    "framework.section.measures",
+    "framework.section.tools",
+    "framework.section.catalogue",
+];
+
+/// ⚖️ LAW: every surface the shell mounts in its boot burst renders, and the whole burst costs less
+/// than one interactive turn. The reactor renders every dirty surface inside ONE `reactor::poll`
+/// (`⚛️reactor/🔄️turn/🦀️.rs`, the `dirty.surfaces` loop between the `presence-clock` and `render`
+/// phases), so a single body that cannot finish takes the whole turn — and with it the worker's
+/// progress ticker, which the host then reads as `shard 0 terminated by the host watchdog`.
+#[semio_framework_async_macros::async_test]
+async fn the_shell_boot_surface_burst_renders_inside_one_turn() {
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let mut app = app_with_registry().await;
+    let (flow, preview) = context::shell_views("procedural-main", "procedural-preview-test");
+    let burst = std::time::Instant::now();
+    for body_key in GENERATION3D_SHELL_MOUNTED_BODY_KEYS {
+        let view = if body_key == flow_window::GENERATION_3D_PLAY_BODY_MAIN { flow.clone() } else { preview.clone() };
+        let started = std::time::Instant::now();
+        eprintln!("[STATS] shell burst rendering {body_key}");
+        let rendered = app.render(body_key, None, &view).await;
+        let elapsed = started.elapsed();
+        println!("[STATS] shell burst {body_key} ok={} elapsed_ms={}", rendered.is_ok(), elapsed.as_millis());
+        assert!(elapsed < std::time::Duration::from_secs(2), "surface {body_key} took {elapsed:?} to render, more than one interactive turn can afford");
+        if let Ok(tree) = rendered {
+            semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("a rendered shell surface projects");
+        }
+    }
+    let burst = burst.elapsed();
+    println!("[STATS] shell boot burst total_ms={}", burst.as_millis());
+    assert!(burst < std::time::Duration::from_secs(4), "the whole shell boot surface burst took {burst:?}, over the one-turn budget the reactor renders it in");
+}
+
+/// ⏱️ Native wall budget for ONE served `setContributions` crossing. The host's shard watchdog kills
+/// a worker that is silent for `SHARD_LIVENESS_POLICY`'s budget (18 s observed), and a debug wasm
+/// guest runs one to two orders of magnitude slower than this debug native build — so a native
+/// install that needs seconds is already a dead shard in the browser. Two seconds is the widest
+/// figure that still fails fast (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+const SERVED_CONTRIBUTIONS_INSTALL_BUDGET: std::time::Duration = std::time::Duration::from_secs(2);
+
+/// ⚖️ LAW: the crossing the SERVED shell actually performs. Since the pack-encoded command ingress
+/// replaced the 4 KiB string pager (`🏛️ShellHost/🟦️.tsx`, "One pack crossing"), the whole scoped
+/// closure arrives as page 0 of 1 — a single ~250 000-character `json` argument in ONE retained
+/// command — and the guest must fold it, rebuild the process-wide registry and hand its turn back
+/// inside the shard watchdog's silence budget.
+///
+/// The paged twin above proves delivery; this one proves the served SHAPE and its COST. A guest that
+/// installs the same closure correctly but takes 19 s to do it reads to the host as a worker that
+/// died (`shard 0 terminated by the host watchdog`, boot check #12), and every later boot repeats the
+/// loop for ever because the re-created actor is handed the same command again
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[semio_framework_async_macros::async_test]
+async fn the_served_one_page_contributions_crossing_installs_inside_the_watchdog_budget() {
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let contributions = context::staged_flow_extension_contributions_json(&[(context::CONTRIBUTIONS_WITNESS_PLUGIN_ID, context::contributions_witness_manifest_json())]);
+    assert!(contributions.len() > semio_framework::PUBLIC_INVOCATION_STRING_BYTES, "a one-page law proves nothing on a payload that would have fitted one 4 KiB string page");
+    let mut app = app_with_registry().await;
+    let started = std::time::Instant::now();
+    let receipt = context::dispatch(&mut app, Generation3dCommand::SetContributions(set_contributions::SetContributions { json: contributions.clone(), page: 0, page_count: 1 })).await;
+    let elapsed = started.elapsed();
+    println!("[STATS] served one-page contributions install chars={} elapsed_ms={}", contributions.len(), elapsed.as_millis());
+    assert!(!receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault), "the served one-page crossing faulted in the retained job ladder");
+    assert_eq!(
+        semio_framework_os_flow::flow_extension_invocation_address(context::CONTRIBUTIONS_WITNESS_EXTENSION_ID).expect("the witness must be addressable only because this run's single page carried it"),
+        context::CONTRIBUTIONS_WITNESS_PLUGIN_ID
+    );
+    assert_eq!(semio_framework_os_flow::host_flow_extension_contributions_pending_bytes(), 0, "a one-page run retains nothing once its only page lands");
+    semio_framework_os_flow::uninstall_flow_extension(context::CONTRIBUTIONS_WITNESS_EXTENSION_ID).expect("the witness leaves the process-wide registry as it found it");
+    assert!(
+        elapsed < SERVED_CONTRIBUTIONS_INSTALL_BUDGET,
+        "the served one-page contributions crossing took {elapsed:?} of native debug time, over the {SERVED_CONTRIBUTIONS_INSTALL_BUDGET:?} budget — the wasm guest pays this many times over and the shard watchdog kills it mid-turn"
+    );
+}
 
 /// ⚖️ LAW: the STEADY STATE holds. A served boot does not stop at the first mesh — the preview
 /// window re-arms `flowEvalTick` for as long as the tab is open, and the guest it runs in has ONE

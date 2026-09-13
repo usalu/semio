@@ -498,6 +498,13 @@ struct WorldReferenceRecord {
     hidden: Option<bool>,
 }
 
+#[derive(Clone, Debug)]
+pub struct WorldCatalogueDropPreviewRecord {
+    pub object_kind: String,
+    pub mesh_url: Option<String>,
+    pub origin: [f64; 3],
+}
+
 /// 🌉️ Hand-written, not derived: `scale: Option<serde_json::Value>` has no `ToValue`/`FromValue`
 /// for `serde_json::Value` (only the `DslValue <-> serde_json::Value` `From` bridges in
 /// `🌱️value/🦀️.rs` exist) — same reason as `graph::manifest::KindDef`.
@@ -1296,6 +1303,7 @@ pub struct World3dState {
     target_volumes: Vec<WorldTargetVolumeRecord>,
     references: Vec<WorldReferenceRecord>,
     brush_preview: Option<WorldBrushPreviewRecord>,
+    catalogue_drop_preview: Option<WorldCatalogueDropPreviewRecord>,
     active_utility: String,
     hovered_vortex_id: Option<String>,
     #[cfg(test)]
@@ -1448,6 +1456,7 @@ impl World3dState {
             target_volumes: Vec::new(),
             references: Vec::new(),
             brush_preview: None,
+            catalogue_drop_preview: None,
             active_utility: "select".into(),
             hovered_vortex_id: None,
             #[cfg(test)]
@@ -9944,6 +9953,31 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
     }
     let mut translucent_draws = Vec::new();
     append_component_face_translucent_overlays(state, gpu, &mut translucent_draws);
+    if let Some(preview) = state.catalogue_drop_preview.clone() {
+        let mesh_id = brush_preview_mesh_id(preview.mesh_url.as_deref());
+        if !state.meshes.contains_key(&mesh_id) {
+            begin_world_placeholder_mesh(state, &mesh_id, WorldPlaceholderKind::Box);
+        }
+        let mesh_version = *state.mesh_versions.get(&mesh_id).unwrap_or(&0);
+        if let Some(mesh) = state.meshes.get(&mesh_id) {
+            gpu.ensure_mesh(&mesh_id, mesh_version, *mesh);
+        }
+        translucent_draws.push(SceneDraw3d {
+            mesh_key: mesh_id,
+            mesh_version,
+            instances: vec![Instance3d {
+                id: "catalogue-drop-preview".into(),
+                model: Instance3d::model_from_trs([preview.origin[0] as f32, preview.origin[1] as f32, preview.origin[2] as f32], [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0]),
+                color: {
+                    let mut color = parse_color("#59bfff");
+                    color[3] = 0.55;
+                    color
+                },
+                selected: false,
+                hovered: false,
+            }],
+        });
+    }
     if let Some(preview) = state.brush_preview.clone() {
         // 👻️ Mirrors `BrushPreviewGhost`: renders whenever `origin` is present, regardless of
         // `meshUrl` — a translucent unit box is the fallback ghost when there's no mesh URL (or
@@ -10351,7 +10385,7 @@ fn handle_world3d_pointer_drag(state: &mut World3dState, x: f32, y: f32, dx: f32
             }
         }
         if state.drag_object_id.is_some() && inner.contains(x, y) {
-            if let Some(position) = ground_plane_pick(state, x, y, inner, state.drag_object_z) {
+            if let Some(position) = world3d_ground_plane_pick(state, x, y, state.drag_object_z) {
                 state.drag_last_position = Some(position);
                 if let Some(object_id) = state.drag_object_id.clone() {
                     update_dragged_instance_position(state, &object_id, position);
@@ -11312,8 +11346,8 @@ fn update_dragged_instance_position(state: &mut World3dState, object_id: &str, p
     }
 }
 
-#[cfg(test)]
-fn ground_plane_pick(state: &World3dState, x: f32, y: f32, _inner: Rect, plane_z: f32) -> Option<[f32; 3]> {
+/// 🎯️ Intersects the camera ray through a shell client point with the world Z=0 ground plane.
+pub fn world3d_ground_plane_pick(state: &World3dState, x: f32, y: f32, plane_z: f32) -> Option<[f32; 3]> {
     let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
     let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
@@ -11327,6 +11361,34 @@ fn ground_plane_pick(state: &World3dState, x: f32, y: f32, _inner: Rect, plane_z
     }
     let hit = origin.add(dir.scale(t));
     Some([hit.x, hit.y, hit.z])
+}
+
+fn snap_world_point_to_grid(point: [f32; 3], grid_factor: f64) -> [f64; 3] {
+    if grid_factor <= 0.0 {
+        return [point[0] as f64, point[1] as f64, point[2] as f64];
+    }
+    let snap = |value: f32| (value as f64 / grid_factor).round() * grid_factor;
+    [snap(point[0]), snap(point[1]), snap(point[2])]
+}
+
+/// 👻️ Updates the live catalogue-drop ghost for a wgpu `World3d` pane under the pointer.
+pub fn world3d_update_catalogue_drop_preview(state: &mut World3dState, client_x: f32, client_y: f32, object_kind: &str, mesh_url: Option<&str>) {
+    let Some(hit) = world3d_ground_plane_pick(state, client_x, client_y, 0.0) else {
+        state.catalogue_drop_preview = None;
+        return;
+    };
+    let origin = snap_world_point_to_grid(hit, state.lod.grid_factor);
+    state.catalogue_drop_preview = Some(WorldCatalogueDropPreviewRecord { object_kind: object_kind.to_string(), mesh_url: mesh_url.filter(|url| !url.is_empty()).map(str::to_string), origin });
+}
+
+/// 👻️ Clears the catalogue-drop ghost on one `World3d` pane.
+pub fn world3d_clear_catalogue_drop_preview(state: &mut World3dState) {
+    state.catalogue_drop_preview = None;
+}
+
+/// 🎯️ Grid-snapped ground origin for committing a catalogue drop on a wgpu `World3d` pane.
+pub fn world3d_catalogue_drop_origin(state: &World3dState, client_x: f32, client_y: f32) -> Option<[f64; 3]> {
+    world3d_ground_plane_pick(state, client_x, client_y, 0.0).map(|hit| snap_world_point_to_grid(hit, state.lod.grid_factor))
 }
 
 fn preview_scale(scale: Option<&serde_json::Value>) -> [f32; 3] {

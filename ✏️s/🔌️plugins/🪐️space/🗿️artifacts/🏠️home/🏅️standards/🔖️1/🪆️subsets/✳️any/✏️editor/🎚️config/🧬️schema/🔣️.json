@@ -5,19 +5,12 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "activePanelTab",
     "directoryJson",
     "directorySessionBindingSha256",
     "directoryAuthorizationGeneration",
-    "directoryReceiptSha256",
-    "clientId",
-    "clientName"
+    "directoryReceiptSha256"
   ],
   "properties": {
-    "activePanelTab": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
     "directoryJson": {
       "type": "string",
       "x-semio-state": "config"
@@ -33,14 +26,6 @@
       "x-semio-state": "config"
     },
     "directoryReceiptSha256": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "clientId": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "clientName": {
       "type": "string",
       "x-semio-state": "config"
     }

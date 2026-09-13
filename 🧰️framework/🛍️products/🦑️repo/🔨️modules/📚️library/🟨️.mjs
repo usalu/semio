@@ -13,10 +13,10 @@ const TEST_LEVELS = ["quick", "long", "exhaustive"];
 const LIBRARY_ROOT = dirname(fileURLToPath(import.meta.url));
 const RUNTIME_COMPONENT_MODULE = "🕸️dependencies/🧩️runtime/🟨️.mjs";
 const runtimeRevision = createHash("sha256").update(readFileSync(join(LIBRARY_ROOT, RUNTIME_COMPONENT_MODULE))).digest("hex");
-const { runtimeComponentClosure } = await import(new URL(`./${RUNTIME_COMPONENT_MODULE}?revision=${runtimeRevision}`, import.meta.url).href);
+const { runtimeComponentClosure } = await importRevision(new URL(`./${RUNTIME_COMPONENT_MODULE}`, import.meta.url), runtimeRevision);
 const SOURCE_INPUT_MODULE = "🕸️dependencies/🟦️typescript/🟨️.mjs";
 const sourceInputRevision = createHash("sha256").update(readFileSync(join(LIBRARY_ROOT, SOURCE_INPUT_MODULE))).digest("hex");
-const { readSourceInputContract, relativeSourceInputs } = await import(new URL(`./${SOURCE_INPUT_MODULE}?revision=${sourceInputRevision}`, import.meta.url).href);
+const { readSourceInputContract, relativeSourceInputs } = await importRevision(new URL(`./${SOURCE_INPUT_MODULE}`, import.meta.url), sourceInputRevision);
 const POLICY = JSON.parse(readFileSync(join(LIBRARY_ROOT, "⚡️caching/🔣️policy.json"), "utf8"));
 const TAXONOMY = JSON.parse(readFileSync(join(LIBRARY_ROOT, "🔣️taxonomy.json"), "utf8"));
 const IMPLEMENTATION_REVISION = new URL(import.meta.url).searchParams.get("revision") ?? implementationRevision();
@@ -472,7 +472,7 @@ function resolveOutputPath(output, root, workspaceRoot) {
  * `dependentTasksOutputFiles` input would, and this repo does not author that pairing for hand-written
  * `check-*`/`generate-*` pairs. `projectInputs` excludes every declared output from every named bucket
  * project-wide (`default`, `nativeSources`, …) to stop a producer from hashing its own freshly-written
- * output — but a proven Nx contract (see the `⚡️caching/📜️script.ts` `CacheVerifyScript` fixture family) is
+ * output — but a proven Nx contract (see the `⚡️caching/🔁️verification/📋️orchestration/🟦️.ts` `CacheVerifyScript` fixture family) is
  * that once a bucket carrying that exclusion is also referenced, a plain positive glob for the same exact
  * path added elsewhere in the same `inputs` array is suppressed too; only a `runtime` digest (immune to
  * fileset inclusion/exclusion entirely) reliably restores visibility. Reused here uniformly for tracked and
@@ -906,25 +906,35 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
     components.set(id, { ...metadata.semio, project: projectAt(root)?.name ?? manifest.package.name });
     for (const row of metadata.semio.playground ?? []) playgrounds.push({ ...row, pluginId: id });
   }
-  const composition = JSON.parse(readFileSync(join(workspaceRoot, projectRoot, "package.json"), "utf8"));
-  const baseline = ["🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust", "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust", "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust"];
-  const linked = (composition.semio?.browserSessionFactories ?? []).map((row) => row.engine);
   const wgpuRoot = nxPath("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"), wgpuProject = projectAt(wgpuRoot);
   if (!wgpuProject?.name || !wgpuProject.targets?.wasm || !wgpuProject.targets?.["wasm-release"]) throw new Error(`WGPU renderer must name both authored wasm profile producers: ${wgpuRoot}`);
   const result = {};
   for (const playground of playgrounds) {
-    const own = components.get(playground.pluginId), selected = runtimeComponentClosure([...components].map(([pluginId, row]) => ({ ...row, pluginId, dependsOn: [...(row.extends ? [row.extends] : []), ...(row["depends-on"] ?? [])] })), [playground.pluginId]);
-    const engines = new Set([...baseline, ...linked, ...(own.host ? playgrounds : [playground]).flatMap((row) => row.engines ?? [])].map((path) => {
+    const selected = runtimeComponentClosure([...components].map(([pluginId, row]) => ({ ...row, pluginId, dependsOn: [...(row.extends ? [row.extends] : []), ...(row["depends-on"] ?? [])] })), [playground.pluginId]);
+    const engines = new Set((playground.engines ?? []).map((path) => {
       const root = nxPath(relative(workspaceRoot, resolve(workspaceRoot, path))), project = projectAt(root);
       if (root.startsWith("../") || !project?.name || !project.targets?.wasm) throw new Error(`Playground engine must name an authored wasm producer: ${path}`);
       return `${project.name}:wasm`;
     }));
     for (const profile of ["dev", "release"]) {
+      const nativeScript = "bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📜️script.ts";
+      result[`prepare-${playground.variant}-native-${profile}`] = {
+        cache: true,
+        outputs: [`{projectRoot}/dist/runtime/native/${profile}/${playground.variant}`],
+        inputs: [{ dependentTasksOutputFiles: "**/*", transitive: true }],
+        dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, ...[...selected].sort().map(id => `${components.get(id).project}:materialize-${profile}`)],
+        options: { command: `bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/📜️script.ts publish ${playground.variant} ${profile}`, forwardAllArgs: false },
+      };
+      for (const operation of ["run", "smoke"]) result[`${operation}-${playground.variant}-native-${profile}`] = {
+        cache: false, continuous: operation === "run", outputs: [],
+        dependsOn: [`prepare-${playground.variant}-native-${profile}`, `${wgpuProject.name}:native-build${profile === "release" ? "-release" : ""}`],
+        options: { command: `${nativeScript} run ${playground.variant} ${profile}${operation === "smoke" ? " --smoke" : ""}`, forwardAllArgs: false },
+      };
       for (const command of ["serve", "dev"]) result[`${command}-${playground.variant}-react-${profile}`] = { cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-react-${profile}`], options: { command: `bun ./📜️script.ts serve ${playground.variant} react ${profile}` } };
       result[`activate-${playground.variant}-react-${profile}`] = {
       cache: true,
       parallelism: false,
-      outputs: [`{projectRoot}/dist/runtime/${profile}/${playground.variant}`],
+      outputs: [`{projectRoot}/dist/runtime/react/${profile}/${playground.variant}`],
       inputs: [{ dependentTasksOutputFiles: "**/*", transitive: true }],
       dependsOn: [`prepare-${playground.variant}-react-${profile}`],
       options: { command: `bun ./📜️script.ts activate ${playground.variant} react ${profile}` },
@@ -940,7 +950,7 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
       result[`activate-${playground.variant}-wgpu-${profile}`] = {
       cache: false,
       parallelism: false,
-      outputs: [],
+      outputs: [`{projectRoot}/dist/runtime/wgpu/${profile}/${playground.variant}`],
       inputs: [{ dependentTasksOutputFiles: "**/*", transitive: true }],
       dependsOn: [`prepare-${playground.variant}-wgpu-${profile}`],
       options: { command: `bun ./📜️script.ts activate ${playground.variant} wgpu ${profile}` },
@@ -1136,15 +1146,30 @@ function createDependenciesImplementation(_options, context) {
 
 /** ♻️ Reloads authored graph code and policy while retaining Nx's daemon and task cache. */
 function implementationRevision() {
-  return createHash("sha256").update(readFileSync(fileURLToPath(import.meta.url))).update(readFileSync(join(LIBRARY_ROOT, "⚡️caching/🔣️policy.json"))).update(readFileSync(join(LIBRARY_ROOT, RUNTIME_COMPONENT_MODULE))).update(readFileSync(join(LIBRARY_ROOT, SOURCE_INPUT_MODULE))).digest("hex");
+  return createHash("sha256").update(readFileSync(fileURLToPath(import.meta.url))).update(readFileSync(join(LIBRARY_ROOT, "⚡️caching/🔣️policy.json"))).update(readFileSync(join(LIBRARY_ROOT, "🔣️taxonomy.json"))).update(readFileSync(join(LIBRARY_ROOT, RUNTIME_COMPONENT_MODULE))).update(readFileSync(join(LIBRARY_ROOT, SOURCE_INPUT_MODULE))).digest("hex");
 }
+
+/** 🔁️ Evicts Bun's canonical module entry and retains Node's revision-specific ESM identity. */
+async function importRevision(source, revision) {
+  const require = createRequire(import.meta.url), url = new URL(source);
+  delete require.cache[require.resolve(fileURLToPath(url))];
+  url.searchParams.set("revision", revision);
+  return import(url.href);
+}
+
+let reloadedImplementation;
 
 function invokeCurrentImplementation(kind, args) {
   const revision = implementationRevision();
   if (revision === IMPLEMENTATION_REVISION) return kind === "nodes" ? emojiProjectJsonNodes(...args) : createDependenciesImplementation(...args);
-  const url = new URL(import.meta.url);
-  url.searchParams.set("revision", revision);
-  return import(url.href).then((module) => kind === "nodes" ? module.default.createNodesV2[1](...args) : module.createDependencies(...args));
+  if (reloadedImplementation?.revision !== revision) {
+    const entry = { revision, module: importRevision(import.meta.url, revision).catch((error) => { if (reloadedImplementation === entry) reloadedImplementation = undefined; throw error; }) };
+    reloadedImplementation = entry;
+  }
+  return reloadedImplementation.module.then((module) => {
+    if (module.cacheInternals === cacheInternals) throw new Error("Graph runtime retained an obsolete implementation");
+    return kind === "nodes" ? module.default.createNodesV2[1](...args) : module.createDependencies(...args);
+  });
 }
 
 export function createDependencies(...args) { return invokeCurrentImplementation("dependencies", args); }

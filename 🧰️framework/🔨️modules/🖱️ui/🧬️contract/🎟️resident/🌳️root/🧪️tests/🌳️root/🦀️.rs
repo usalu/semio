@@ -182,12 +182,12 @@ fn retained_document_root_permit_seal_transfers_output_without_detaching_root_cr
         let mut candidate = assembled(400, 65536);
         let mut output = None;
         let limits = UiResidentLimits { items: 16, bytes: sealed };
-        assert!(!candidate.shrink_resident(limits, 1, 0).unwrap().progressed);
-        assert!(candidate.shrink_resident(limits, 1, 32768).unwrap().progressed);
+        assert!(!candidate.reprice_resident(limits, 1, 0).unwrap().progressed);
+        assert!(candidate.reprice_resident(limits, 1, 32768).unwrap().progressed);
         assert!(!candidate.split_resident_output(&mut output, 1, 0).unwrap().progressed);
         assert!(output.is_none());
         assert!(candidate.split_resident_output(&mut output, 1, 32768).unwrap().progressed);
-        assert!(candidate.shrink_resident(limits, 1, 32768).is_err());
+        assert!(candidate.reprice_resident(limits, 1, 32768).is_err());
         assert!(!data["shrinkAfterSplit"].as_bool().unwrap());
         let mut lease = finish(&mut candidate);
         assert_eq!(lease.try_read().unwrap().resident_limits(), limits);

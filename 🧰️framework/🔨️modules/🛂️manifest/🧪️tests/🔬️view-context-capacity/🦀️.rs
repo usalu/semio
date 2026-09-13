@@ -4,7 +4,7 @@
 
 use super::{
     MAX_SURFACE_BODY_KEY_BYTES, MAX_SURFACE_VIEW_CONTEXT_BYTES, VIEW_CONTEXT_IDENTIFIER_CHARS, VIEW_CONTEXT_IDENTIFIER_FIELDS, VIEW_CONTEXT_LONG_STRING_CHARS, VIEW_CONTEXT_LONG_STRING_FIELDS,
-    VIEW_CONTEXT_UTILITY_ENTRIES, VIEW_CONTEXT_WINDOW_INSTANCES,
+    VIEW_CONTEXT_SESSION_IDENTITY_FIELDS, VIEW_CONTEXT_UTILITY_ENTRIES, VIEW_CONTEXT_WINDOW_INSTANCES,
 };
 
 fn schema() -> serde_json::Value {
@@ -19,6 +19,7 @@ async fn capacities_match_the_neutral_schema() {
     assert_eq!(properties["panelJson"]["maxLength"].as_u64().unwrap() as usize, VIEW_CONTEXT_LONG_STRING_CHARS);
     assert_eq!(properties["activeUtilityByWindowId"]["maxProperties"].as_u64().unwrap() as usize, VIEW_CONTEXT_UTILITY_ENTRIES);
     assert_eq!(properties["windowInstances"]["maxItems"].as_u64().unwrap() as usize, VIEW_CONTEXT_WINDOW_INSTANCES);
+    assert_eq!(schema["$defs"]["SessionIdentity"]["properties"].as_object().unwrap().len(), VIEW_CONTEXT_SESSION_IDENTITY_FIELDS);
 
     let identifier_fields = properties.as_object().unwrap().values().filter(|field| field["$ref"].as_str() == Some("#/$defs/Identifier")).count();
     assert_eq!(identifier_fields, VIEW_CONTEXT_IDENTIFIER_FIELDS);
@@ -29,6 +30,7 @@ async fn capacities_match_the_neutral_schema() {
 #[semio_framework_async_macros::async_test]
 async fn the_admission_bound_covers_every_schema_valid_context() {
     let content_chars = VIEW_CONTEXT_IDENTIFIER_FIELDS * VIEW_CONTEXT_IDENTIFIER_CHARS
+        + VIEW_CONTEXT_SESSION_IDENTITY_FIELDS * VIEW_CONTEXT_IDENTIFIER_CHARS
         + VIEW_CONTEXT_LONG_STRING_FIELDS * VIEW_CONTEXT_LONG_STRING_CHARS
         + VIEW_CONTEXT_UTILITY_ENTRIES * 2 * VIEW_CONTEXT_IDENTIFIER_CHARS
         + VIEW_CONTEXT_WINDOW_INSTANCES * 2 * VIEW_CONTEXT_IDENTIFIER_CHARS;
@@ -43,7 +45,7 @@ async fn the_admission_bound_covers_every_schema_valid_context() {
 /// escapes payload bytes), so passing here proves the pack-encoded context passes too.
 #[semio_framework_async_macros::async_test]
 async fn a_capacity_filled_context_fits_the_bound() {
-    use crate::{Locale, Terminology, ViewModel, ViewWindowInstance};
+    use crate::{Locale, Terminology, ViewModel, ViewSessionIdentity, ViewWindowInstance};
     let identifier = || "i".repeat(VIEW_CONTEXT_IDENTIFIER_CHARS);
     let long = || "l".repeat(VIEW_CONTEXT_LONG_STRING_CHARS);
     let view = ViewModel {
@@ -53,6 +55,7 @@ async fn a_capacity_filled_context_fits_the_bound() {
         active_utility_by_window_id: (0..VIEW_CONTEXT_UTILITY_ENTRIES).map(|index| (format!("{index}{}", identifier()), identifier())).collect(),
         active_tool_id: Some(identifier()),
         panel_json: Some(long()),
+        session_identity: Some(ViewSessionIdentity { user_id: identifier(), display_name: identifier() }),
         locale: Locale::En,
         terminology: Terminology::Native,
         window_id: Some(identifier()),

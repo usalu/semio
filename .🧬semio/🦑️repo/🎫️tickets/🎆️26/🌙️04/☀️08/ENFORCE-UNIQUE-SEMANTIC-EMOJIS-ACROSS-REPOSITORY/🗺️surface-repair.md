@@ -4,10 +4,10 @@
 
 Reviewed the complete physical `🧰️framework/🔨️modules/🗺️surface` tree, including ignored compiler output. Paint, terrain, node-graph, and tiled-map identities already describe their actual purpose and differ from their siblings. No nested AGENTS files exist here. No Git writes or bulk rename/replacement scripts were used.
 
-| Exact parent | Old name | Handpicked name | Purpose |
-| --- | --- | --- | --- |
-| `🗺️surface/🗺️tiled-map` | `🧪️oracle` | `🔮️oracle` | Independent Mercator reference contribution; distinguishes sibling `🧪️tests` |
-| `🗺️surface/📦️packages/🦀️rust` | `pkg` | `🕸️bindings` | Browser compiler-binding output owner |
+| Exact parent                  | Old name   | Handpicked name | Purpose                                                                      |
+| ----------------------------- | ---------- | --------------- | ---------------------------------------------------------------------------- |
+| `🗺️surface/🗺️tiled-map`       | `🧪️oracle` | `🔮️oracle`      | Independent Mercator reference contribution; distinguishes sibling `🧪️tests` |
+| `🗺️surface/📦️packages/🦀️rust` | `pkg`      | `🕸️bindings`    | Browser compiler-binding output owner                                        |
 
 The first choice is declared in the exact owner-scoped `testContributionDirectoryOverrides` entry. The already handpicked `🕸️web-mercator-tile-oracle` case was added to `members-of-tests`; its Rust fixture reader and the contribution's prose path now use that exact name. The Gherkin source description now points to the existing `🦀️.rs`, not nonexistent `🦀️component.rs`. No oracle IDs, vectors, behavior, or assertions changed.
 
@@ -19,13 +19,13 @@ The existing package script passes `outputDirectory: "🕸️bindings"` to the n
 
 All six moved compiler output/config files have the exact original SHA-256 values recorded before the move:
 
-| File | SHA-256 |
-| --- | --- |
-| `.gitignore` | `684888c0ebb17f374298b65ee2807526c066094c701bcc7ebbe1c1095f494fc1` |
-| `package.json` | `64a0cc537d6d9e03531366de5632ac291d797001131a53672179d75da5a2203d` |
-| `framework_surface.js` | `c92c5654803091cc531bac5554e51f6c716ae92b63b8cd908cc2fa5259455d8e` |
-| `framework_surface.d.ts` | `cd0a536a6fda697ee8c6f45361540434d4b7cd5cde503cbd064d705dc866cfff` |
-| `framework_surface_bg.wasm` | `f2b9021ea704b4b63f5445073bda7fadf3684f99ff2d0c62b03eb4bbd5c6e7af` |
+| File                             | SHA-256                                                            |
+| -------------------------------- | ------------------------------------------------------------------ |
+| `.gitignore`                     | `684888c0ebb17f374298b65ee2807526c066094c701bcc7ebbe1c1095f494fc1` |
+| `package.json`                   | `64a0cc537d6d9e03531366de5632ac291d797001131a53672179d75da5a2203d` |
+| `framework_surface.js`           | `c92c5654803091cc531bac5554e51f6c716ae92b63b8cd908cc2fa5259455d8e` |
+| `framework_surface.d.ts`         | `cd0a536a6fda697ee8c6f45361540434d4b7cd5cde503cbd064d705dc866cfff` |
+| `framework_surface_bg.wasm`      | `f2b9021ea704b4b63f5445073bda7fadf3684f99ff2d0c62b03eb4bbd5c6e7af` |
 | `framework_surface_bg.wasm.d.ts` | `25cfd3f39a9496533fdacb10e5cf6f8666c925c102d99b8d6875256ef722978b` |
 
 The frozen Mercator fixture remains SHA-256 `85ef2ebc0bc60345cc9d26ad4d580a047e27bdf69273eab8a8c77392400750d4`. The contribution JSON changed only its stale explanatory path after the move; it is not claimed byte-identical.

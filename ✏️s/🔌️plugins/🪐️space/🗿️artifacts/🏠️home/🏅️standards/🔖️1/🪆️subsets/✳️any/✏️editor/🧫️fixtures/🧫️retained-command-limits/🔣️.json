@@ -1,13 +1,13 @@
 {
   "version": 1,
   "owner": "HomeApp",
-  "controller": "s-home",
+  "controller": "s.space.home@1/*#editor",
   "documentSchema": "s.home",
   "factory": "HomeRetainedCommandJobFactory",
   "limits": {
     "rawBytes": 131072,
     "checkpointBytes": 512,
-    "configValueBytes": 512,
+    "scalarBytes": 4096,
     "configBaseBytes": 4194304,
     "commandStepBytes": 16777216,
     "storeStepBytes": 16777216,
@@ -17,35 +17,27 @@
   "routes": [
     {
       "id": "applyDirectoryEventPage",
-      "disposition": "Migrated",
-      "lanes": [
-        "Config"
-      ],
-      "blocker": ""
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "directory page decode, event fold, and projection replacement still execute in one direct handler"
     },
     {
       "id": "createStudio",
-      "disposition": "Migrated",
-      "lanes": [
-        "Artifact"
-      ],
-      "blocker": ""
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "filesystem or draft allocation and authored document creation still execute in one direct handler"
     },
     {
       "id": "bindSpaceFile",
-      "disposition": "Migrated",
-      "lanes": [
-        "HostOnly"
-      ],
-      "blocker": ""
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "filesystem binding and studio port registration still execute in one direct handler"
     },
     {
       "id": "importSpace",
-      "disposition": "Migrated",
-      "lanes": [
-        "Artifact"
-      ],
-      "blocker": ""
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "payload decode and authored document import still execute in one direct handler"
     },
     {
       "id": "openSpace",
@@ -65,25 +57,15 @@
     },
     {
       "id": "deleteVirtualFileSystemNode",
-      "disposition": "Migrated",
-      "lanes": [
-        "Artifact"
-      ],
-      "blocker": ""
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "filesystem deletion still executes in one direct handler"
     },
     {
       "id": "goHome",
       "disposition": "Migrated",
       "lanes": [
         "HostOnly"
-      ],
-      "blocker": ""
-    },
-    {
-      "id": "setActivePanelTab",
-      "disposition": "Migrated",
-      "lanes": [
-        "Config"
       ],
       "blocker": ""
     },
@@ -105,11 +87,9 @@
     },
     {
       "id": "renameSpace",
-      "disposition": "Migrated",
-      "lanes": [
-        "HostOnly"
-      ],
-      "blocker": ""
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "catalog mutation and filesystem rename still execute in one direct handler"
     },
     {
       "id": "shareSpace",
@@ -137,25 +117,15 @@
     },
     {
       "id": "foldDirectoryEvents",
-      "disposition": "Migrated",
-      "lanes": [
-        "Config"
-      ],
-      "blocker": ""
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "unbounded event-page parsing and full projection fold still execute in one direct handler"
     },
     {
       "id": "presenceHeartbeat",
       "disposition": "Migrated",
       "lanes": [
         "HostOnly"
-      ],
-      "blocker": ""
-    },
-    {
-      "id": "setClient",
-      "disposition": "Migrated",
-      "lanes": [
-        "Config"
       ],
       "blocker": ""
     }
@@ -167,13 +137,13 @@
       "accepted": true
     },
     {
-      "name": "config-value-limit",
-      "bytes": 512,
+      "name": "scalar-limit",
+      "bytes": 4096,
       "accepted": true
     },
     {
-      "name": "config-value-overflow",
-      "bytes": 513,
+      "name": "scalar-overflow",
+      "bytes": 4097,
       "accepted": false
     }
   ],

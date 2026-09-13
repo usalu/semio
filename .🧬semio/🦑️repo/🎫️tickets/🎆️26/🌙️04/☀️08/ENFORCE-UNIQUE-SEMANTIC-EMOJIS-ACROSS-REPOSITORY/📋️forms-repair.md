@@ -23,4 +23,3 @@ Hand-reviewed every strict path-statute finding under `✏️s/🔌️plugins/�
 - Window configuration: `⚙️config`, paired with retained `🎚️options`.
 - Oracle owners: `🔮️oracle` at root and subset levels.
 - Direct mutation schemas: `🧬️.schema.json`.
-

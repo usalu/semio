@@ -82,9 +82,9 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                 let outcome: Result<(), String> = async {
                     let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                     for (context, command) in [
-                        (&left, FlowCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework::Viewport2d { x: 12.0, y: -8.0, zoom: 2.0 } })),
+                        (&left, FlowCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 12.0, y: -8.0, zoom: 2.0 } })),
                         (&left, FlowCommand::SetGridVisible(set_grid_visible::SetGridVisible { pressed: Some(false) })),
-                        (&right, FlowCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework::Viewport2d { x: -21.0, y: 5.0, zoom: 0.75 } })),
+                        (&right, FlowCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: -21.0, y: 5.0, zoom: 0.75 } })),
                         (&right, FlowCommand::SetGridFactor(set_grid_factor::SetGridFactor { value: 20.0 })),
                     ] {
                         app.dispatch_typed(command, &ActionMeta { view_state: Some(context.clone()), ..artifact_app_laws::meta("flow-window-ownership") }).await.map_err(|error| format!("{error:?}"))?;

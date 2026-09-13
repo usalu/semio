@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/hub/socket-grant-command-source/schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "owners", "contexts", "routes", "nativeStages"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "owners": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "language", "declarations", "imports", "rootImports", "contextChain"],
+        "properties": {
+          "path": { "type": "string", "pattern": "^🌎️hub/.+/(?:🟦️\\.ts|🦀️\\.rs)$" },
+          "language": { "enum": ["typescript", "rust"] },
+          "declarations": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "imports": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^🌎️hub/.+/🟦️\\.ts$" } },
+          "rootImports": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "contextChain": { "type": "array", "minItems": 2, "uniqueItems": true, "items": { "type": "string", "pattern": "^hub-" } }
+        }
+      }
+    },
+    "contexts": {
+      "type": "array",
+      "minItems": 18,
+      "maxItems": 18,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["directoryName", "parentKindId", "kindId"],
+        "properties": {
+          "directoryName": { "type": "string", "minLength": 2 },
+          "parentKindId": { "type": "string", "minLength": 1 },
+          "kindId": { "type": "string", "pattern": "^hub-" }
+        }
+      }
+    },
+    "routes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "native"],
+      "properties": {
+        "source": { "$ref": "#/$defs/route" },
+        "native": { "$ref": "#/$defs/route" }
+      }
+    },
+    "nativeStages": {
+      "type": "array",
+      "minItems": 19,
+      "maxItems": 19,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "args", "source", "declaration"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "args": { "type": "array", "minItems": 5, "uniqueItems": false, "items": { "type": "string", "minLength": 1 } },
+          "source": { "type": ["string", "null"] },
+          "declaration": { "type": ["string", "null"] }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command", "target", "launchName", "launchCommand", "launchGroup", "launchOrder", "inputs"],
+      "properties": {
+        "command": { "type": "string", "minLength": 1 },
+        "target": { "type": "string", "minLength": 1 },
+        "launchName": { "type": "string", "minLength": 1 },
+        "launchCommand": { "type": "string", "minLength": 1 },
+        "launchGroup": { "const": "4_gate" },
+        "launchOrder": { "type": "number", "minimum": 411, "maximum": 412 },
+        "inputs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 2 } }
+      }
+    }
+  }
+}

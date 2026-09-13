@@ -1,9 +1,8 @@
 // #region input
 //! 🖱️ Pointer and keyboard input state for hit testing.
 
+use crate::wgpu::component::layout::ActionDescriptor;
 use crate::wgpu::geometry::Rect;
-#[cfg(test)]
-use crate::wgpu::ActionDescriptor;
 use crate::wgpu::{BoundedAction, BoundedActionBatchReservation, BoundedActionFault, BoundedActionQueue, BoundedActionReservation};
 use std::rc::Rc;
 
@@ -539,7 +538,140 @@ pub struct PointerCallbacks {
     pub on_context_menu: Rc<dyn Fn(f32, f32)>,
 }
 
+
+//#region 🎯️RetainedHitRegistry
+/// 🎯️ One interactive retained node, projected onto this region's flat pointer registry.
+///
+/// 🩸️ The shell's registry used to hold the chrome and NOTHING of any retained window body: a
+/// pointer inside a published `mounted_layout` row rect answered the WINDOW's
+/// `HitKind::ScrollRegion`, so no row action dispatched, no wheel reached a scene and no hover
+/// resolved (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md` §6). `rect` is minted by the SAME accumulated
+/// origin the retained paint walk paints at, so a row can never again be drawn at one rectangle and
+/// hit-tested at another.
+#[derive(Clone, Debug, PartialEq)]
+#[cfg(feature = "wgpu-engine")]
+pub struct RetainedHitRegistration {
+    pub node: crate::wgpu::arena::NodeId,
+    pub rect: Rect,
+    pub kind: HitKind,
+    pub control_id: String,
+    pub action: Option<ActionDescriptor>,
+    pub drag_axis: Option<DragAxis>,
+    pub drag_data: Option<HashMap<String, String>>,
+}
+
+#[cfg(feature = "wgpu-engine")]
+impl RetainedHitRegistration {
+    /// 🎯️ The registry entry a host pushes into its own `InputState`.
+    pub fn to_hit_target(&self) -> HitTarget<ActionDescriptor> {
+        HitTarget { rect: self.rect, event: self.action.clone(), control_id: Some(self.control_id.clone()), kind: self.kind, drag_axis: self.drag_axis, drag_data: self.drag_data.clone() }
+    }
+}
+
+/// 🌳️ Which row of its owning `Tree` a synthesized `Stack` is, re-derived from that tree's own
+/// still-intact spec by key — the same discriminator `mounted_layout::tree_row_kind` measures with,
+/// so the row a pointer resolves and the row the layout published are one classification.
+#[cfg(feature = "wgpu-engine")]
+enum RetainedTreeRow<'a> {
+    Section(&'a crate::wgpu::component::ui::UiTreeSectionNode),
+    Item(&'a crate::wgpu::component::ui::UiTreeItemNode),
+}
+
+#[cfg(feature = "wgpu-engine")]
+fn retained_tree_row<'a>(tree: &'a crate::wgpu::tree::UiTree, id: crate::wgpu::arena::NodeId) -> Option<RetainedTreeRow<'a>> {
+    let crate::wgpu::tree::NodeKey::Explicit(key) = &tree.node(id)?.key else { return None };
+    let owner = crate::wgpu::mounted_layout::owning_tree_spec(tree, id)?;
+    if let Some(section) = owner.sections.iter().find(|section| &section.id == key) {
+        return Some(RetainedTreeRow::Section(section));
+    }
+    owner.sections.iter().find_map(|section| crate::wgpu::mounted_layout::find_tree_item(&section.items, key, 0)).map(RetainedTreeRow::Item)
+}
+
+/// 🖱️ The `HitKind`/control id an engine surface canvas registers under. `World3d` is its own kind;
+/// every other bespoke-dispatch surface reuses the `ScrollRegion` + `.pane`/`.map` convention
+/// `ShellState::scroll_region_is_scene_surface` already reads, so a wheel over one propagates to the
+/// scene instead of scrolling the window that hosts it.
+#[cfg(feature = "wgpu-engine")]
+fn retained_scene_hit(scene: &crate::wgpu::component::ui::UiComponentSceneNode) -> (HitKind, String) {
+    use crate::wgpu::component::ui::SurfaceKind;
+    match scene.component_kind {
+        SurfaceKind::World3d => (HitKind::World3d, scene.surface_id.clone()),
+        SurfaceKind::NodeGraph | SurfaceKind::Board2d => (HitKind::ScrollRegion, format!("{}.pane", scene.surface_id)),
+        SurfaceKind::TiledMap => (HitKind::ScrollRegion, format!("{}.map", scene.surface_id)),
+        _ => (HitKind::Generic, scene.surface_id.clone()),
+    }
+}
+
+/// 🎯️ Projects ONE laid-out retained node onto a registry entry, or `None` for a node with no
+/// interaction semantics of its own (plain containers, text, separators, a `Tree`'s own frame —
+/// the rows carry that one). `rect` is the node's absolute painted rect; a tree row's entry is
+/// clipped to its OWN band (`metrics.row_height`) because a row's published height also covers the
+/// nested rows it reveals, and those register entries of their own.
+#[cfg(feature = "wgpu-engine")]
+pub fn retained_hit_registration(tree: &crate::wgpu::tree::UiTree, id: crate::wgpu::arena::NodeId, rect: Rect, metrics: &crate::wgpu::layout::TreeRowMetrics) -> Option<RetainedHitRegistration> {
+    use crate::wgpu::component::ui::UiNode;
+    let node = tree.node(id)?;
+    // 🕳️ A mounted-but-unplaced node (a collapsed branch's row, a `Tree` item action that the row
+    // geometry never gives a rect of its own) must never take the pointer from the node actually
+    // drawn there.
+    if !node.spec.0.presence().visible() || rect.w <= 0.0 || rect.h <= 0.0 {
+        return None;
+    }
+    let entry = |kind: HitKind, control_id: String, action: Option<ActionDescriptor>, rect: Rect| {
+        Some(RetainedHitRegistration { node: id, rect, kind, control_id, action, drag_axis: None, drag_data: None })
+    };
+    match &node.spec.0 {
+        UiNode::Stack(stack) => match retained_tree_row(tree, id) {
+            Some(RetainedTreeRow::Section(section)) => {
+                let band = Rect::new(rect.x, rect.y, rect.w, crate::wgpu::layout::tree_section_header_height(section, metrics).min(rect.h));
+                if band.h <= 0.0 {
+                    return None;
+                }
+                entry(HitKind::TreeItem, format!("section.chevron.{}", section.id), stack.activate.clone(), band)
+            }
+            Some(RetainedTreeRow::Item(item)) => {
+                let band = Rect::new(rect.x, rect.y, rect.w, metrics.row_height.min(rect.h));
+                if band.h <= 0.0 {
+                    return None;
+                }
+                let draggable = item.draggable.unwrap_or(false);
+                let drag_data = item.drag_data.clone().filter(|data| draggable && !data.is_empty());
+                Some(RetainedHitRegistration {
+                    node: id,
+                    rect: band,
+                    kind: HitKind::TreeItem,
+                    control_id: format!("tree.label.{}", item.id),
+                    action: stack.activate.clone().or_else(|| item.action.clone()),
+                    drag_axis: draggable.then_some(DragAxis::Both),
+                    drag_data,
+                })
+            }
+            None => {
+                let activate = stack.activate.clone()?;
+                let control_id = stack.id.clone().filter(|id| !id.is_empty()).unwrap_or_else(|| activate.action.clone());
+                entry(HitKind::Button, control_id, Some(activate), rect)
+            }
+        },
+        UiNode::Button(button) => entry(HitKind::Button, button.id.clone().unwrap_or_else(|| button.action.action.clone()), Some(button.action.clone()), rect),
+        UiNode::Input(input) => entry(HitKind::Input, input.id.clone(), None, rect),
+        UiNode::Select(select) => entry(HitKind::Select, select.id.clone(), None, rect),
+        UiNode::Toggle(toggle) => entry(HitKind::Toggle, toggle.id.clone(), None, rect),
+        UiNode::Slider(slider) => Some(RetainedHitRegistration { node: id, rect, kind: HitKind::Slider, control_id: slider.id.clone(), action: None, drag_axis: Some(DragAxis::Horizontal), drag_data: None }),
+        UiNode::ComponentScene(scene) => {
+            let (kind, control_id) = retained_scene_hit(scene);
+            entry(kind, control_id, None, rect)
+        }
+        _ => None,
+    }
+}
+//#endregion 🎯️RetainedHitRegistry
+
 #[cfg(test)]
 #[path = "../../../🧪️tests/🔬️targets-wgpu-input-unit/🦀️.rs"]
 mod tests;
+
+#[cfg(all(test, feature = "wgpu-engine"))]
+#[path = "../../../🧪️tests/🎯️retained-hit-targets/🦀️.rs"]
+mod retained_hit_target_tests;
 // #endregion input

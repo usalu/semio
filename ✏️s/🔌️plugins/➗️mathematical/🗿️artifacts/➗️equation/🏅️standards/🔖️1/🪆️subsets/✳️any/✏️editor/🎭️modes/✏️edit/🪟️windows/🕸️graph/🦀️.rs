@@ -2,7 +2,8 @@
 
 use crate::editor::equation::workflow_json;
 use crate::EquationGraph;
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphScene, Viewport2d, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphScene, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_os_kernel::Viewport2d;
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;

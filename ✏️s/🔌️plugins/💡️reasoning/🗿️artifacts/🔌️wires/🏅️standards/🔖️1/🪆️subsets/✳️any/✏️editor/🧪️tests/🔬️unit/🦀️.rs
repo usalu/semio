@@ -148,7 +148,7 @@ pub(super) fn every_command() -> Vec<WiresCommand> {
         WiresCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 1.5, y: -2.5 }),
         WiresCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }),
         WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}),
-        WiresCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework::Viewport2d { x: 1.0, y: 2.0, zoom: 1.5 } }),
+        WiresCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 1.0, y: 2.0, zoom: 1.5 } }),
     ]
 }
 //#endregion 🔖️CommandSurface

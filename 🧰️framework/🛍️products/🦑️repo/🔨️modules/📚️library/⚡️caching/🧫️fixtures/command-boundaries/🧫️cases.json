@@ -10,7 +10,7 @@
     },
     {
       "name": "native Cargo producer",
-      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts",
       "exports": [
         "buildCargoArtifacts"
       ],

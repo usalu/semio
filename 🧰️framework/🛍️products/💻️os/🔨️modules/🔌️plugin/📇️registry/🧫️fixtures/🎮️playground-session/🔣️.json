@@ -3,7 +3,8 @@
   "default": {
     "variant": "s",
     "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🎮️playground-session/🟦️.ts",
-    "producerScript": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
+    "producerScript": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+    "producerSource": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔄️refresh/🟦️.ts"
   },
   "isolation": {
     "canonicalOutputRoot": "default",

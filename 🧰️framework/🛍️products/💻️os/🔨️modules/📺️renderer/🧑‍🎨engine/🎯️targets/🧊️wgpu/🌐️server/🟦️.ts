@@ -1,4 +1,5 @@
 import { MODULE_ROUTES } from "../../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { FONT_ASSET } from "../../../../../♾️infinite/🖼️canvas/🔤️fonts/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { existsSync, readFileSync, watch, type FSWatcher } from "node:fs";
 import { basename, dirname, join } from "node:path";
@@ -13,6 +14,7 @@ export type WgpuBrowserConfiguration = {
   readonly compilerRoot: string;
   readonly moduleRoot: string;
   readonly extensionRoot: string;
+  readonly fontRoot: string;
   readonly bootRoot: string;
   readonly workerRoot: string;
   readonly reloadFile: string;
@@ -47,6 +49,7 @@ export function wgpuBrowserMounts(options: WgpuBrowserConfiguration): readonly (
     ["/renderer-modules/wgpu", options.compilerRoot],
     ["/🚀️boot.js", options.bootRoot],
     ["/🎞️frame-worker.js", options.workerRoot],
+    [MODULE_ROUTES.plugin + "/🪞️vendor", options.fontRoot],
     [MODULE_ROUTES.plugin, options.moduleRoot],
     [MODULE_ROUTES.extension, options.extensionRoot],
   ];
@@ -55,7 +58,7 @@ export function wgpuBrowserMounts(options: WgpuBrowserConfiguration): readonly (
 /** 🧊️ Mounts completed compiler/generator outputs and live modules without compiling or copying them. */
 export function createWgpuBrowserConfig(options: WgpuBrowserConfiguration): OwnedBuildConfig {
   if (!["dev", "release"].includes(options.profile)) throw new Error("Select a WGPU browser profile");
-  for (const [root, file] of [[options.compilerRoot, "semio-framework-os-renderer-wgpu.js"], [options.compilerRoot, "semio-framework-os-renderer-wgpu_bg.wasm"], [options.bootRoot, "🟨️.js"], [options.workerRoot, "🟨️.js"]]) if (!existsSync(join(root, file))) throw new Error("Missing prepared WGPU artifact: " + join(root, file));
+  for (const [root, file] of [[options.compilerRoot, "semio-framework-os-renderer-wgpu.js"], [options.compilerRoot, "semio-framework-os-renderer-wgpu_bg.wasm"], [options.bootRoot, "🟨️.js"], [options.workerRoot, "🟨️.js"], [options.fontRoot, FONT_ASSET]]) if (!existsSync(join(root, file))) throw new Error("Missing prepared WGPU artifact: " + join(root, file));
   const mounts = wgpuBrowserMounts(options);
   return {
     root: options.root,

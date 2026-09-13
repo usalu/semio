@@ -1,0 +1,84 @@
+{
+  "note": "🛑️🖼️ The two per-surface overlay controls the shell offers on top of a live engine surface: the World3d compute CANCEL, read out of the scene's own `statusJson` cancel contract (`cancellable` + `cancelAction`), and the node-graph `Fit graph`. Language-neutral: the Rust law answers it through `world3d_cancel_affordance`/`surface_overlay_controls_for`, the TypeScript twin through `world3dComputeStatusV1` (`🔨️modules/🖱️ui/🎬️scene/🟦️.ts`). Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.",
+  "controlHeightPx": 22.4,
+  "surfaceControlMinimum": { "widthControlHeights": 4, "heightControlHeights": 2 },
+  "cancelContract": [
+    {
+      "id": "a-cancellable-status-naming-an-action-offers-the-control",
+      "statusJson": "{\"computing\":true,\"phase\":\"meshingFaces\",\"cancellable\":true,\"cancelAction\":\"cancelPreviewEval\",\"progress\":{\"unitsDone\":3,\"unitsTotal\":8}}",
+      "expected": { "cancellable": true, "cancelAction": "cancelPreviewEval" }
+    },
+    {
+      "id": "a-cancellable-status-naming-no-action-offers-nothing",
+      "statusJson": "{\"computing\":true,\"phase\":\"meshingFaces\",\"cancellable\":true,\"cancelAction\":\"\"}",
+      "expected": { "cancellable": false, "cancelAction": "" }
+    },
+    {
+      "id": "a-producer-that-cannot-be-stopped-offers-nothing",
+      "statusJson": "{\"computing\":true,\"phase\":\"meshingFaces\",\"cancellable\":false,\"cancelAction\":\"cancelPreviewEval\"}",
+      "expected": { "cancellable": false, "cancelAction": "cancelPreviewEval" }
+    },
+    {
+      "id": "an-absent-cancellable-flag-offers-nothing",
+      "statusJson": "{\"computing\":true,\"phase\":\"meshingFaces\",\"cancelAction\":\"cancelPreviewEval\"}",
+      "expected": { "cancellable": false, "cancelAction": "cancelPreviewEval" }
+    },
+    {
+      "id": "a-hostile-cancellable-type-offers-nothing",
+      "statusJson": "{\"computing\":true,\"cancellable\":\"true\",\"cancelAction\":\"cancelPreviewEval\"}",
+      "expected": { "cancellable": false, "cancelAction": "cancelPreviewEval" }
+    },
+    {
+      "id": "malformed-json-degrades-to-the-neutral-status",
+      "statusJson": "{not json",
+      "expected": { "cancellable": false, "cancelAction": "" }
+    },
+    {
+      "id": "a-non-object-status-degrades-to-the-neutral-status",
+      "statusJson": "[1,2,3]",
+      "expected": { "cancellable": false, "cancelAction": "" }
+    },
+    {
+      "id": "an-empty-status-degrades-to-the-neutral-status",
+      "statusJson": "",
+      "expected": { "cancellable": false, "cancelAction": "" }
+    },
+    {
+      "id": "no-status-at-all-offers-nothing",
+      "statusJson": null,
+      "expected": { "cancellable": false, "cancelAction": "" }
+    }
+  ],
+  "surfaceControls": [
+    {
+      "id": "a-live-graph-pane-offers-fit-graph",
+      "graphs": [{ "surfaceId": "window:procedural-view-flow", "bounds": [0, 40, 480, 320] }],
+      "worlds": [],
+      "expected": ["shell.nodeGraph.fit::window:procedural-view-flow"]
+    },
+    {
+      "id": "a-computing-preview-offers-cancel-beside-the-graphs-fit",
+      "graphs": [{ "surfaceId": "window:procedural-view-flow", "bounds": [0, 40, 480, 320] }],
+      "worlds": [{ "surfaceId": "window:procedural-view-preview", "bounds": [480, 40, 480, 320], "statusJson": "{\"computing\":true,\"cancellable\":true,\"cancelAction\":\"cancelPreviewEval\"}" }],
+      "expected": ["shell.nodeGraph.fit::window:procedural-view-flow", "shell.world3d.cancel::window:procedural-view-preview"]
+    },
+    {
+      "id": "a-settled-preview-offers-no-cancel",
+      "graphs": [],
+      "worlds": [{ "surfaceId": "window:procedural-view-preview", "bounds": [480, 40, 480, 320], "statusJson": "{\"computing\":false,\"phase\":\"idle\",\"cancellable\":false,\"cancelAction\":\"\"}" }],
+      "expected": []
+    },
+    {
+      "id": "a-preview-with-no-status-offers-no-cancel",
+      "graphs": [],
+      "worlds": [{ "surfaceId": "window:procedural-view-preview", "bounds": [480, 40, 480, 320], "statusJson": null }],
+      "expected": []
+    },
+    {
+      "id": "a-pane-too-small-to-carry-a-control-offers-none",
+      "graphs": [{ "surfaceId": "window:procedural-view-flow", "bounds": [0, 40, 24, 12] }],
+      "worlds": [{ "surfaceId": "window:procedural-view-preview", "bounds": [24, 40, 24, 12], "statusJson": "{\"computing\":true,\"cancellable\":true,\"cancelAction\":\"cancelPreviewEval\"}" }],
+      "expected": []
+    }
+  ]
+}

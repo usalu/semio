@@ -10,24 +10,24 @@ The ticket's scoped read-only audit reported 331 files and 230 directories with 
 
 ## Handpicked identities
 
-| Meaning | Old identity | Current identity |
-| --- | --- | --- |
-| Baseline TIFF feature set | `✳️baseline` | `🧱️baseline` |
-| Structured IFD/tag document | `✳️document`, briefly rejected `📄️document` | `🧾️document` |
-| External truth implementation | `🧪️oracle` | `🔮️oracle` |
-| Editor/viewer options | `🎚️options` | `☑️options` |
-| Mutation regression guard | `🧬️mutation-regressions` | `🛡️mutation-regressions` |
-| Set photometric interpretation | `⚙set-photometric-interpretation` | `🌈️set-photometric-interpretation` |
-| Remove tile tags | `🏷remove-tile-tags` | `🗑️remove-tile-tags` |
-| Remove strip offsets | `📏remove-strip-offsets` | `✂️remove-strip-offsets` |
-| Set strip offsets | `📐set-strip-offsets` | `📍️set-strip-offsets` |
-| Insert tile tags | `🔖insert-tile-tags` | `🧱️insert-tile-tags` |
-| Set snapshot | `🔧set-snapshot` | `📸️set-snapshot` |
-| Set compression | `🔩set-compression` | `🗜️set-compression` |
-| Set bits per sample | `🧩set-bits-per-sample` | `🔢️set-bits-per-sample` |
-| Replace pixel buffer | `🟪️replace-pixels` | `🔲️replace-pixels` |
-| JSON Schema sidecars | repeated `🔣️.schema.json` | `🧬️.schema.json` |
-| Fixture input/output leaves | missing-emoji `before.*` / `after.*` | `⬅️before.*` / `➡️after.*` |
+| Meaning                        | Old identity                                | Current identity                   |
+| ------------------------------ | ------------------------------------------- | ---------------------------------- |
+| Baseline TIFF feature set      | `✳️baseline`                                | `🧱️baseline`                       |
+| Structured IFD/tag document    | `✳️document`, briefly rejected `📄️document` | `🧾️document`                       |
+| External truth implementation  | `🧪️oracle`                                  | `🔮️oracle`                         |
+| Editor/viewer options          | `🎚️options`                                 | `☑️options`                        |
+| Mutation regression guard      | `🧬️mutation-regressions`                    | `🛡️mutation-regressions`           |
+| Set photometric interpretation | `⚙set-photometric-interpretation`           | `🌈️set-photometric-interpretation` |
+| Remove tile tags               | `🏷remove-tile-tags`                         | `🗑️remove-tile-tags`               |
+| Remove strip offsets           | `📏remove-strip-offsets`                    | `✂️remove-strip-offsets`           |
+| Set strip offsets              | `📐set-strip-offsets`                       | `📍️set-strip-offsets`              |
+| Insert tile tags               | `🔖insert-tile-tags`                        | `🧱️insert-tile-tags`               |
+| Set snapshot                   | `🔧set-snapshot`                            | `📸️set-snapshot`                   |
+| Set compression                | `🔩set-compression`                         | `🗜️set-compression`                |
+| Set bits per sample            | `🧩set-bits-per-sample`                     | `🔢️set-bits-per-sample`            |
+| Replace pixel buffer           | `🟪️replace-pixels`                          | `🔲️replace-pixels`                 |
+| JSON Schema sidecars           | repeated `🔣️.schema.json`                   | `🧬️.schema.json`                   |
+| Fixture input/output leaves    | missing-emoji `before.*` / `after.*`        | `⬅️before.*` / `➡️after.*`         |
 
 The fourteen mutation fixture directories were aligned to their operation meaning: `🌈️set-photometric-interpretation`, `🗑️remove-tile-tags`, `🧱️insert-tile-tags`, `✂️remove-strip-offsets`, `📍️set-strip-offsets`, `📸️set-snapshot`, `🗜️set-compression`, `🔢️set-bits-per-sample`, `📥️insert-ifd-applied`, `📤️remove-ifd-applied`, `🏷️replace-tag-applied`, `🗑️remove-tag-applied`, `🔲️replace-pixels-applied`, and `🧭️change-byte-order`.
 

@@ -1,0 +1,91 @@
+{
+  "provenance": {
+    "what": "The language-neutral oracle for a retained window body's pointer registry: an authored document tree + the window body it is painted into -> one registry entry per interactive node (control id, hit kind, dispatched action, absolute rect), and the entry a pointer point resolves to.",
+    "why": "On the wgpu target the host's flat hit registry held the shell chrome and NOT ONE row of any retained window body: 31 targets, all chrome, so a pointer at (160.696, 138) — inside the published mounted_layout rect [0, 72, 315.392, 24] of the 'Add Generation' row — answered the WINDOW's HitKind::ScrollRegion. No row action dispatched, no NodeFlags::HOVERED was ever set, and a wheel over an engine surface never reached the scene. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END, 📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md §6.",
+    "rule": "A registry entry's rect is the rect the retained paint drew that node at — one geometry, never a second derivation — and a body child is registered after the window's own ScrollRegion, so the reverse-order scan answers the child.",
+    "implementations": {
+      "rust": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🎯️retained-hit-targets/🦀️.rs",
+      "typescript": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎯️retained-hit-targets/🟦️.ts"
+    }
+  },
+  "metrics": {
+    "source": "🖱️ui/🎨️styling/🔣️.json metrics.dom.treeRowUiSpacing x metrics.chrome.uiSpacingCompactPx",
+    "rowHeightPx": 24.0,
+    "sharedWith": "🧫️fixtures/🌳️tree-row-rects/🔣️.json — the same one row metric layout, paint and this registry all read"
+  },
+  "rules": {
+    "oneGeometry": "Every entry's rect is the absolute rect the retained paint walk painted that node at: the walk's accumulated parent origin plus the node's own published mounted_layout rect, minus a scrollable ancestor's live scroll offset. A registry that derives its own rectangles is the defect this fixture pins.",
+    "order": "The window's own ScrollRegion is registered before its body paints; every body entry follows it, and the registry is scanned in reverse, so a body entry always outranks the window beneath it. Within a body, entries follow the paint walk's pre-order, so a child outranks its parent.",
+    "treeItem": "A tree item row registers HitKind treeItem under 'tree.label.<item id>', dispatching that row's own activate action. Its band is exactly one rowHeightPx even when the row's published height also covers the nested rows it reveals — each nested row registers its own band.",
+    "treeSection": "A labelled tree section row registers HitKind treeItem under 'section.chevron.<section id>' over its header band of one rowHeightPx. An unlabelled section has no header band and registers nothing.",
+    "button": "A Button registers HitKind button under its own id, dispatching its action. A Stack that carries an activate action and is not a tree row registers the same way.",
+    "input": "An Input registers HitKind input, a Select select, a Toggle toggle, a Slider slider — each under the node's own id, with no dispatched action: the retained event router owns what a press on those means.",
+    "engineSurface": "A world-3d surface canvas registers HitKind world3d under its surface id. Every other bespoke-dispatch surface reuses the scrollRegion + '.pane' / '.map' convention the shell's scroll_region_is_scene_surface already reads, so a wheel over one propagates to the scene instead of scrolling the window that hosts it.",
+    "container": "A plain container (a Stack with no activate, a Section, a Group, a Field), a Text, a Separator and a Tree's own frame register nothing — they are pass-through, and the pointer falls to whatever is registered beneath them.",
+    "zeroArea": "An entry with no area is never registered: a mounted-but-unplaced node must not take the pointer from the node drawn there."
+  },
+  "cases": [
+    {
+      "name": "generate-mode-generations-window",
+      "why": "The exact window, the exact rows and the exact pointer point 📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md §6 measured answering ScrollRegion.",
+      "windowId": "generation3d-generations",
+      "body": { "x": 3.0, "y": 54.0, "w": 315.392, "h": 813.6 },
+      "tree": {
+        "kind": "tree",
+        "sections": [
+          {
+            "id": "procedural3d-play-generate.generations",
+            "label": "Generations",
+            "defaultOpen": true,
+            "items": [{ "id": "procedural3d-play-generate.generations.empty", "label": "(no generations)", "action": null }]
+          },
+          {
+            "id": "procedural3d-play-generate.actions",
+            "label": "Actions",
+            "defaultOpen": true,
+            "items": [{ "id": "procedural3d-play-generate.add-generation", "label": "Add Generation", "action": { "controller": "s.procedural.generation3d", "action": "addGeneration" } }]
+          }
+        ]
+      },
+      "expected": [
+        { "controlId": "section.chevron.procedural3d-play-generate.generations", "kind": "treeItem", "action": null, "rect": [3.0, 54.0, 315.392, 24.0] },
+        { "controlId": "tree.label.procedural3d-play-generate.generations.empty", "kind": "treeItem", "action": null, "rect": [3.0, 78.0, 315.392, 24.0] },
+        { "controlId": "section.chevron.procedural3d-play-generate.actions", "kind": "treeItem", "action": null, "rect": [3.0, 102.0, 315.392, 24.0] },
+        { "controlId": "tree.label.procedural3d-play-generate.add-generation", "kind": "treeItem", "action": "addGeneration", "rect": [3.0, 126.0, 315.392, 24.0] }
+      ],
+      "probes": [
+        { "why": "§6's own point, derived from the dock plan and the published rect", "x": 160.696, "y": 138.0, "controlId": "tree.label.procedural3d-play-generate.add-generation", "kind": "treeItem", "action": "addGeneration" },
+        { "why": "the first section's header band", "x": 160.696, "y": 66.0, "controlId": "section.chevron.procedural3d-play-generate.generations", "kind": "treeItem", "action": null },
+        { "why": "the placeholder row beneath it", "x": 160.696, "y": 90.0, "controlId": "tree.label.procedural3d-play-generate.generations.empty", "kind": "treeItem", "action": null },
+        { "why": "below the last row the window itself answers, exactly as it did for every point before this lane", "x": 160.696, "y": 600.0, "controlId": "generation3d-generations", "kind": "scrollRegion", "action": null }
+      ]
+    },
+    {
+      "name": "a-world-3d-canvas-takes-the-wheel",
+      "why": "AppFrameTransactionPhase::WheelStart gates on wheel_propagates_to_scene_surface(hit_at): a ScrollRegion answer ended every wheel before it reached the world.",
+      "windowId": "generation3d-generate-preview",
+      "body": { "x": 935.0, "y": 54.0, "w": 502.0, "h": 813.6 },
+      "tree": { "kind": "surface", "surfaceId": "generation3d-generate-preview", "controllerId": "s.procedural.generation3d", "surfaceKind": "world-3d" },
+      "expected": [{ "controlId": "generation3d-generate-preview", "kind": "world3d", "action": null, "rect": [935.0, 54.0, 502.0, 813.6] }],
+      "probes": [{ "why": "the middle of the preview canvas", "x": 1186.0, "y": 460.0, "controlId": "generation3d-generate-preview", "kind": "world3d", "action": null, "wheelPropagatesToScene": true }]
+    },
+    {
+      "name": "a-node-graph-canvas-takes-the-wheel-through-the-pane-convention",
+      "why": "A node graph's pan/zoom is persisted through nodeGraphViewport, and the same wheel gate stands in front of it.",
+      "windowId": "generation3d-flow",
+      "body": { "x": 3.0, "y": 54.0, "w": 600.0, "h": 400.0 },
+      "tree": { "kind": "surface", "surfaceId": "generation3d-flow", "controllerId": "s.procedural.generation3d", "surfaceKind": "node-graph" },
+      "expected": [{ "controlId": "generation3d-flow.pane", "kind": "scrollRegion", "action": null, "rect": [3.0, 54.0, 600.0, 400.0] }],
+      "probes": [{ "why": "the middle of the graph pane", "x": 303.0, "y": 254.0, "controlId": "generation3d-flow.pane", "kind": "scrollRegion", "action": null, "wheelPropagatesToScene": true }]
+    },
+    {
+      "name": "a-plain-container-never-takes-the-pointer",
+      "why": "A layout-only Stack has no interaction semantics of its own; the pointer must fall through to the window.",
+      "windowId": "generation3d-generate-form",
+      "body": { "x": 319.0, "y": 54.0, "w": 616.0, "h": 400.0 },
+      "tree": { "kind": "stack", "id": "generate.form.root", "children": [{ "kind": "text", "value": "Add a generation to edit input values." }] },
+      "expected": [],
+      "probes": [{ "why": "anywhere inside the body", "x": 600.0, "y": 200.0, "controlId": "generation3d-generate-form", "kind": "scrollRegion", "action": null }]
+    }
+  ]
+}

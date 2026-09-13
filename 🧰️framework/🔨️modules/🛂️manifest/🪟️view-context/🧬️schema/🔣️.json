@@ -31,6 +31,9 @@
       "type": "string",
       "maxLength": 65536
     },
+    "sessionIdentity": {
+      "$ref": "#/$defs/SessionIdentity"
+    },
     "locale": {
       "enum": [
         "en",
@@ -76,6 +79,22 @@
     }
   },
   "$defs": {
+    "SessionIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "userId",
+        "displayName"
+      ],
+      "properties": {
+        "userId": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "displayName": {
+          "$ref": "#/$defs/Identifier"
+        }
+      }
+    },
     "Identifier": {
       "type": "string",
       "minLength": 1,

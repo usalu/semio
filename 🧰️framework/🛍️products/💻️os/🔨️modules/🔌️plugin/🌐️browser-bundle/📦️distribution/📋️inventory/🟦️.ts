@@ -17,8 +17,9 @@ export function artifactFiles(root: string): Map<string, string> {
   return files;
 }
 
-export async function fileDigest(path: string): Promise<string> {
+export async function fileDigest(path: string, signal?: AbortSignal): Promise<string> {
+  signal?.throwIfAborted();
   const hash = createHash("sha256");
-  for await (const chunk of createReadStream(path)) hash.update(chunk);
+  for await (const chunk of createReadStream(path, { signal })) hash.update(chunk);
   return hash.digest("hex");
 }

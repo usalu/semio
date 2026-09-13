@@ -17,107 +17,11 @@ const TEXT_BYTE_CAPACITY: usize = 256 * 1024;
 const ICON_SOURCE_CAPACITY: usize = 512;
 
 //#region 📥️Wire
-#[derive(Deserialize)]
-struct BrowserBatch {
-    replaceable: Vec<BrowserWireEvent>,
-    lossless: Vec<BrowserWireEvent>,
-}
-
-#[derive(Deserialize)]
-#[serde(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase")]
-enum BrowserWireEvent {
-    PointerMove {
-        pointer_id: u64,
-        pointer_kind: BrowserPointerKind,
-        x: f32,
-        y: f32,
-        pressure: Option<f32>,
-        tilt_x: Option<f32>,
-        tilt_y: Option<f32>,
-    },
-    PointerDown {
-        pointer_id: u64,
-        pointer_kind: BrowserPointerKind,
-        x: f32,
-        y: f32,
-        pressure: Option<f32>,
-        tilt_x: Option<f32>,
-        tilt_y: Option<f32>,
-        button: BrowserPointerButton,
-    },
-    PointerUp {
-        pointer_id: u64,
-        pointer_kind: BrowserPointerKind,
-        x: f32,
-        y: f32,
-        pressure: Option<f32>,
-        tilt_x: Option<f32>,
-        tilt_y: Option<f32>,
-        button: BrowserPointerButton,
-    },
-    Wheel {
-        x: f32,
-        y: f32,
-        delta_x: f32,
-        delta_y: f32,
-    },
-    Resize {
-        width: u32,
-        height: u32,
-        dpr: f32,
-    },
-    KeyDown {
-        key: String,
-        shift: bool,
-        ctrl: bool,
-        alt: bool,
-        meta: bool,
-    },
-    KeyUp {
-        key: String,
-        shift: bool,
-        ctrl: bool,
-        alt: bool,
-        meta: bool,
-    },
-    ImeStart,
-    ImeCancel,
-    TextChunk {
-        stream_id: u64,
-        target: TextTarget,
-        text: String,
-        total_bytes: usize,
-        #[serde(rename = "final")]
-        final_: bool,
-        cursor: Option<usize>,
-    },
-}
-
-#[derive(Clone, Copy, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "kebab-case")]
-enum TextTarget {
-    Text,
-    Paste,
-    ImeUpdate,
-    ImeCommit,
-}
-
-#[derive(Clone, Copy, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-enum BrowserPointerKind {
-    Mouse,
-    Touch,
-    Pen,
-    Eraser,
-}
-
-#[derive(Clone, Copy, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-enum BrowserPointerButton {
-    Primary,
-    Secondary,
-    Middle,
-}
+/// 📥️ The wire vocabulary itself lives in `../🎮️input-wire/🦀️.rs` — platform-neutral declarations
+/// plus their stateless projection onto `DispatchEvent`, mounted natively so one language-neutral
+/// fixture can be answered by an ordinary `cargo test`. What stays HERE is everything that needs the
+/// Worker: its byte/item credits, its segmented text streams, and the `#[wasm_bindgen]` host.
+use crate::input_wire::{pointer, stateless_dispatch, BrowserBatch, BrowserPointerKind, BrowserWireEvent, TextTarget};
 
 struct PendingText {
     stream_id: u64,
@@ -307,7 +211,17 @@ impl BrowserRendererWorker {
             self.apply_wire_event(event)?;
         }
         if let Some(host) = self.host.as_mut() {
-            host.frame_generation = generation;
+            // 🔢️ The host's frame generation names ITS OWN input state and must be monotonic: every
+            // event in this batch already advanced it through `enqueue_host_event`, and a frame build,
+            // a presentation witness and a raster witness are all pinned to it.
+            //
+            // 🩸️ This used to ASSIGN the UI isolate's batch counter, which is a different sequence and
+            // routinely lower — so the host's generation moved backwards on most batches, the in-flight
+            // frame build was superseded against a generation it had never been admitted at, and no
+            // build ever completed. Measured on 6118 as `frame build superseded: session generation
+            // Generation(21) != requested Generation(20)` once per batch, with `render begin` frozen at
+            // its seven boot surfaces (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+            // `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
             host.scheduler.invalidate(InvalidationReason::INPUT_STATE);
         }
         Ok(())
@@ -340,7 +254,17 @@ impl BrowserRendererWorker {
         encode_tick(BrowserTickOutput {
             cursor: cursor_name(outcome.cursor),
             fullscreen: host.platform_fullscreen.take(),
-            request_frame: host.take_cursor_wake_directive().is_some() || host.scheduler.next_deadline().is_some() || host.runtime.has_pending_text_work() || host.runtime.has_pending_world3d_work() || host.presenter.has_pending_presentation(),
+            // 🎞️ A live frame build and an unapplied runtime completion each owe the shell another
+            // frame. Without them a settled browser shell ticks only on input, so a build that needed
+            // a second step never got one and a queued `DispatchEvents` was never pumped
+            // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
+            request_frame: host.take_cursor_wake_directive().is_some()
+                || host.scheduler.next_deadline().is_some()
+                || host.runtime.has_pending_text_work()
+                || host.runtime.has_pending_world3d_work()
+                || host.runtime.has_pending_applies()
+                || host.frame_build.has_live_session()
+                || host.presenter.has_pending_presentation(),
             progress: 1.0,
             quarantined: present_fault.is_some(),
             fault_code: present_fault.as_ref().map(|_| fault_code),
@@ -451,22 +375,13 @@ impl BrowserRendererWorker {
     }
 
     fn apply_wire_event(&mut self, event: BrowserWireEvent) -> Result<(), JsValue> {
+        if let Some(dispatch) = stateless_dispatch(&event) {
+            return self.dispatch(dispatch);
+        }
         match event {
-            BrowserWireEvent::PointerMove { pointer_id, pointer_kind, x, y, pressure, tilt_x, tilt_y } => self.dispatch(DispatchEvent::PointerMove { pointer: pointer(pointer_id, pointer_kind, pressure, tilt_x, tilt_y), x, y })?,
-            BrowserWireEvent::PointerDown { pointer_id, pointer_kind, x, y, pressure, tilt_x, tilt_y, button } => {
-                self.dispatch(DispatchEvent::PointerDown { pointer: pointer(pointer_id, pointer_kind, pressure, tilt_x, tilt_y), x, y, button: button.into() })?
-            }
-            BrowserWireEvent::PointerUp { pointer_id, pointer_kind, x, y, pressure, tilt_x, tilt_y, button } => {
-                self.dispatch(DispatchEvent::PointerUp { pointer: pointer(pointer_id, pointer_kind, pressure, tilt_x, tilt_y), x, y, button: button.into() })?
-            }
-            BrowserWireEvent::Wheel { x, y, delta_x, delta_y } => self.dispatch(DispatchEvent::Scroll { x, y, delta_x, delta_y })?,
             BrowserWireEvent::Resize { width, height, dpr } => {
                 self.host.as_mut().ok_or_else(|| js_error("worker-closed", "renderer host is unavailable"))?.handle_metrics(WindowMetrics { physical: PhysicalSize::new(width, height), scale_factor: dpr })
             }
-            BrowserWireEvent::KeyDown { key, shift, ctrl, alt, meta } => self.dispatch(DispatchEvent::KeyDown { key, modifiers: EventModifiers { shift, ctrl, alt, meta } })?,
-            BrowserWireEvent::KeyUp { key, shift, ctrl, alt, meta } => self.dispatch(DispatchEvent::KeyUp { key, modifiers: EventModifiers { shift, ctrl, alt, meta } })?,
-            BrowserWireEvent::ImeStart => self.dispatch(DispatchEvent::Ime(ImeEvent::Start))?,
-            BrowserWireEvent::ImeCancel => self.dispatch(DispatchEvent::Ime(ImeEvent::Cancel))?,
             BrowserWireEvent::TextChunk { stream_id, target, text, total_bytes, final_, cursor } => {
                 if text.len() > 4 * 1024 {
                     return Err(js_error("text-chunk-credits", "text chunk exceeds the Worker hard cap"));
@@ -530,6 +445,7 @@ impl BrowserRendererWorker {
                     }
                 }
             }
+            _ => {}
         }
         Ok(())
     }
@@ -713,6 +629,7 @@ impl BrowserRendererBootstrap {
                 frame_fault: None,
                 text_cancel_pending: false,
             }),
+            checkout: crate::runtime_mailbox_core::InteractionCheckoutLedger::default(),
             draw: DrawList::default(),
             overlay: DrawList::default(),
             pending_frame_deferred: None,
@@ -766,31 +683,6 @@ pub async fn semio_wgpu_worker_bootstrap(canvas: web_sys::OffscreenCanvas, plugi
     Ok(BrowserRendererBootstrap { gpu: Some(gpu), plugins, plugin_filter, width, height, wake, atlas: None, icons: None, entries: None, shell: None, phase: 0 })
 }
 //#endregion 🚀️Boot
-
-fn pointer(id: u64, kind: BrowserPointerKind, pressure: Option<f32>, tilt_x: Option<f32>, tilt_y: Option<f32>) -> PointerInfo {
-    PointerInfo { id: PointerId(id), kind: kind.into(), pressure, tilt: tilt_x.zip(tilt_y) }
-}
-
-impl From<BrowserPointerKind> for PointerKind {
-    fn from(value: BrowserPointerKind) -> Self {
-        match value {
-            BrowserPointerKind::Mouse => Self::Mouse,
-            BrowserPointerKind::Touch => Self::Touch,
-            BrowserPointerKind::Pen => Self::Pen,
-            BrowserPointerKind::Eraser => Self::Eraser,
-        }
-    }
-}
-
-impl From<BrowserPointerButton> for PointerButton {
-    fn from(value: BrowserPointerButton) -> Self {
-        match value {
-            BrowserPointerButton::Primary => Self::Primary,
-            BrowserPointerButton::Secondary => Self::Secondary,
-            BrowserPointerButton::Middle => Self::Middle,
-        }
-    }
-}
 
 fn cursor_name(cursor: CursorRequest) -> &'static str {
     match cursor {

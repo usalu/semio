@@ -168,27 +168,31 @@ Fixed right side panel default tab selection so selected Design elements show pr
 #### Panel Sections (addSection calls)
 
 **`"details"` panel:**
-| Section ID | Specificity | Order | Condition |
-|-----------|-------------|-------|-----------|
-| `compose.sketchpad.app.kit.properties` | 0 | 0 | Single kit selected |
-| `compose.sketchpad.app.home.kits.multiple` | 0 | 0 | Multiple kits selected |
+
+| Section ID                                 | Specificity | Order | Condition              |
+| ------------------------------------------ | ----------- | ----- | ---------------------- |
+| `compose.sketchpad.app.kit.properties`     | 0           | 0     | Single kit selected    |
+| `compose.sketchpad.app.home.kits.multiple` | 0           | 0     | Multiple kits selected |
 
 **`"chat"` panel:**
-| Section ID | Specificity | Order |
-|-----------|-------------|-------|
-| `compose.sketchpad.app.home.chat` | 0 | 0 |
+
+| Section ID                        | Specificity | Order |
+| --------------------------------- | ----------- | ----- |
+| `compose.sketchpad.app.home.chat` | 0           | 0     |
 
 **`"settings"` panel:**
-| Section ID | Specificity | Order |
-|-----------|-------------|-------|
-| `compose.sketchpad.app.home.settings` | 20 | 0 |
-| `compose.sketchpad.settings` | 0 | 0 |
+
+| Section ID                            | Specificity | Order |
+| ------------------------------------- | ----------- | ----- |
+| `compose.sketchpad.app.home.settings` | 20          | 0     |
+| `compose.sketchpad.settings`          | 0           | 0     |
 
 **`"toolbar"` panel:**
-| Section ID | Specificity | Order | Toolbar Group |
-|-----------|-------------|-------|---------------|
-| `compose.sketchpad.app.home.toolbar.filters` | 20 | 0 | `{ id: "filter", labelId: "compose.sketchpad.toolbar.parent.filter", order: 20 }` |
-| `compose.sketchpad.app.home.toolbar.create` | 20 | 0 | `{ id: "create", labelId: "compose.sketchpad.toolbar.parent.create", order: 30 }` |
+
+| Section ID                                   | Specificity | Order | Toolbar Group                                                                     |
+| -------------------------------------------- | ----------- | ----- | --------------------------------------------------------------------------------- |
+| `compose.sketchpad.app.home.toolbar.filters` | 20          | 0     | `{ id: "filter", labelId: "compose.sketchpad.toolbar.parent.filter", order: 20 }` |
+| `compose.sketchpad.app.home.toolbar.create`  | 20          | 0     | `{ id: "create", labelId: "compose.sketchpad.toolbar.parent.create", order: 30 }` |
 
 ---
 
@@ -211,37 +215,40 @@ Fixed right side panel default tab selection so selected Design elements show pr
 #### Panel Sections (addSection calls)
 
 **`"details"` panel:**
-| Section ID | Specificity | Order | Condition |
-|-----------|-------------|-------|-----------|
-| `compose.sketchpad.app.kit.artifacts.multiple` | 30 | 0 | totalSelectedKinds > 1 |
-| `compose.sketchpad.app.design.properties` | 30 | 10 | single design selected |
-| `compose.sketchpad.app.kit.designs.multipleTitle` | 30 | 10 | multiple designs selected |
-| `compose.sketchpad.app.type.properties` | 30 | 20 | single type selected |
-| `compose.sketchpad.app.kit.types.multipleTitle` | 30 | 20 | multiple types selected |
-| `compose.sketchpad.app.kit.port.properties` | 30 | 25 | single port selected |
-| `compose.sketchpad.app.kit.ports.multipleTitle` | 30 | 25 | multiple ports selected |
-| `compose.sketchpad.app.kit.tag.properties` | 30 | 26 | single tag selected |
-| `compose.sketchpad.app.kit.tags.multipleTitle` | 30 | 26 | multiple tags selected |
-| `compose.sketchpad.app.kit.concept.properties` | 30 | 27 | single concept selected |
-| `compose.sketchpad.app.kit.concepts.multipleTitle` | 30 | 27 | multiple concepts selected |
-| `compose.sketchpad.app.kit.file.properties` | 30 | 30 | single file selected |
-| `compose.sketchpad.app.kit.files.multipleTitle` | 30 | 30 | multiple files selected |
-| `compose.sketchpad.app.kit.folder.properties` | 30 | 40 | single folder selected |
-| `compose.sketchpad.app.kit.folders.multipleTitle` | 30 | 40 | multiple folders selected |
-| `compose.sketchpad.app.kit.properties` | 10 | 100 | always |
+
+| Section ID                                         | Specificity | Order | Condition                  |
+| -------------------------------------------------- | ----------- | ----- | -------------------------- |
+| `compose.sketchpad.app.kit.artifacts.multiple`     | 30          | 0     | totalSelectedKinds > 1     |
+| `compose.sketchpad.app.design.properties`          | 30          | 10    | single design selected     |
+| `compose.sketchpad.app.kit.designs.multipleTitle`  | 30          | 10    | multiple designs selected  |
+| `compose.sketchpad.app.type.properties`            | 30          | 20    | single type selected       |
+| `compose.sketchpad.app.kit.types.multipleTitle`    | 30          | 20    | multiple types selected    |
+| `compose.sketchpad.app.kit.port.properties`        | 30          | 25    | single port selected       |
+| `compose.sketchpad.app.kit.ports.multipleTitle`    | 30          | 25    | multiple ports selected    |
+| `compose.sketchpad.app.kit.tag.properties`         | 30          | 26    | single tag selected        |
+| `compose.sketchpad.app.kit.tags.multipleTitle`     | 30          | 26    | multiple tags selected     |
+| `compose.sketchpad.app.kit.concept.properties`     | 30          | 27    | single concept selected    |
+| `compose.sketchpad.app.kit.concepts.multipleTitle` | 30          | 27    | multiple concepts selected |
+| `compose.sketchpad.app.kit.file.properties`        | 30          | 30    | single file selected       |
+| `compose.sketchpad.app.kit.files.multipleTitle`    | 30          | 30    | multiple files selected    |
+| `compose.sketchpad.app.kit.folder.properties`      | 30          | 40    | single folder selected     |
+| `compose.sketchpad.app.kit.folders.multipleTitle`  | 30          | 40    | multiple folders selected  |
+| `compose.sketchpad.app.kit.properties`             | 10          | 100   | always                     |
 
 **`"settings"` panel:**
-| Section ID | Specificity | Order |
-|-----------|-------------|-------|
-| `compose.sketchpad.app.kit.settings` | 10 | 0 |
-| `compose.sketchpad.settings` | 0 | 0 |
+
+| Section ID                           | Specificity | Order |
+| ------------------------------------ | ----------- | ----- |
+| `compose.sketchpad.app.kit.settings` | 10          | 0     |
+| `compose.sketchpad.settings`         | 0           | 0     |
 
 **`"toolbar"` panel:**
-| Section ID | Specificity | Order | Toolbar Group |
-|-----------|-------------|-------|---------------|
-| `compose.sketchpad.app.kit.toolbar.selection` | 20 | 10 | `{ id: "selection", labelId: "compose.sketchpad.toolbar.parent.selection", order: 10, subToolId: "select", subToolLabelId: "compose.sketchpad.toolbar.subtool.select" }` |
-| `compose.sketchpad.app.kit.toolbar.filters` | 20 | 20 | `{ id: "filter", labelId: "compose.sketchpad.toolbar.parent.filter", order: 20 }` |
-| `compose.sketchpad.app.kit.toolbar.create` | 20 | 30 | `{ id: "create", labelId: "compose.sketchpad.toolbar.parent.create", order: 30 }` |
+
+| Section ID                                    | Specificity | Order | Toolbar Group                                                                                                                                                            |
+| --------------------------------------------- | ----------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `compose.sketchpad.app.kit.toolbar.selection` | 20          | 10    | `{ id: "selection", labelId: "compose.sketchpad.toolbar.parent.selection", order: 10, subToolId: "select", subToolLabelId: "compose.sketchpad.toolbar.subtool.select" }` |
+| `compose.sketchpad.app.kit.toolbar.filters`   | 20          | 20    | `{ id: "filter", labelId: "compose.sketchpad.toolbar.parent.filter", order: 20 }`                                                                                        |
+| `compose.sketchpad.app.kit.toolbar.create`    | 20          | 30    | `{ id: "create", labelId: "compose.sketchpad.toolbar.parent.create", order: 30 }`                                                                                        |
 
 ---
 
@@ -268,39 +275,44 @@ Fixed right side panel default tab selection so selected Design elements show pr
 #### Panel Sections (addSection calls)
 
 **`"details"` panel:**
-| Section ID | Specificity | Order | Condition |
-|-----------|-------------|-------|-----------|
-| `compose.sketchpad.app.design.properties` | 20 | 50 | no selection / always as fallback |
-| `compose.sketchpad.app.type.connector.properties` | 30 | 0 | port/connector selected |
-| `compose.sketchpad.app.design.panel.details.section.piece.properties` | 30 | 0 | single piece selected |
-| `compose.sketchpad.app.design.panel.details.section.piece.multipleTitle` | 30 | 0 | multiple pieces selected |
-| `compose.sketchpad.app.design.panel.details.section.connection.properties` | 30 | 10 | single connection selected |
-| `compose.sketchpad.app.design.panel.details.section.connection.multipleTitle` | 30 | 10 | multiple connections selected |
-| `compose.sketchpad.app.design.panel.details.section.selection.multipleTitle` | 30 | 20 | pieces AND connections selected |
-| `compose.sketchpad.app.kit.properties` | 10 | 100 | always |
+
+| Section ID                                                                    | Specificity | Order | Condition                         |
+| ----------------------------------------------------------------------------- | ----------- | ----- | --------------------------------- |
+| `compose.sketchpad.app.design.properties`                                     | 20          | 50    | no selection / always as fallback |
+| `compose.sketchpad.app.type.connector.properties`                             | 30          | 0     | port/connector selected           |
+| `compose.sketchpad.app.design.panel.details.section.piece.properties`         | 30          | 0     | single piece selected             |
+| `compose.sketchpad.app.design.panel.details.section.piece.multipleTitle`      | 30          | 0     | multiple pieces selected          |
+| `compose.sketchpad.app.design.panel.details.section.connection.properties`    | 30          | 10    | single connection selected        |
+| `compose.sketchpad.app.design.panel.details.section.connection.multipleTitle` | 30          | 10    | multiple connections selected     |
+| `compose.sketchpad.app.design.panel.details.section.selection.multipleTitle`  | 30          | 20    | pieces AND connections selected   |
+| `compose.sketchpad.app.kit.properties`                                        | 10          | 100   | always                            |
 
 **`"workbench"` panel:**
-| Section ID | Specificity | Order |
-|-----------|-------------|-------|
-| `compose.sketchpad.app.kit.pieces` | 20 | 0 |
-| `compose.sketchpad.app.design.windows` | 20 | 1 |
+
+| Section ID                             | Specificity | Order |
+| -------------------------------------- | ----------- | ----- |
+| `compose.sketchpad.app.kit.pieces`     | 20          | 0     |
+| `compose.sketchpad.app.design.windows` | 20          | 1     |
 
 **`"hud"` panel:**
-| Section ID | Specificity | Order |
-|-----------|-------------|-------|
-| `compose.sketchpad.app.design.hud.pieces` | 20 | 0 |
+
+| Section ID                                | Specificity | Order |
+| ----------------------------------------- | ----------- | ----- |
+| `compose.sketchpad.app.design.hud.pieces` | 20          | 0     |
 
 **`"settings"` panel:**
-| Section ID | Specificity | Order |
-|-----------|-------------|-------|
-| `compose.sketchpad.app.design.settings` | 30 | 0 |
-| `compose.sketchpad.app.kit.settings` | 10 | 0 |
-| `compose.sketchpad.settings` | 0 | 0 |
+
+| Section ID                              | Specificity | Order |
+| --------------------------------------- | ----------- | ----- |
+| `compose.sketchpad.app.design.settings` | 30          | 0     |
+| `compose.sketchpad.app.kit.settings`    | 10          | 0     |
+| `compose.sketchpad.settings`            | 0           | 0     |
 
 **`"toolbar"` panel (from DesignApp component):**
-| Section ID | Specificity | Order | Toolbar Group |
-|-----------|-------------|-------|---------------|
-| `compose.sketchpad.app.design.tools.select` | 20 | 0 | `{ id: "selection", labelId: "compose.sketchpad.toolbar.parent.selection", order: 10 }` |
+
+| Section ID                                  | Specificity | Order | Toolbar Group                                                                           |
+| ------------------------------------------- | ----------- | ----- | --------------------------------------------------------------------------------------- |
+| `compose.sketchpad.app.design.tools.select` | 20          | 0     | `{ id: "selection", labelId: "compose.sketchpad.toolbar.parent.selection", order: 10 }` |
 
 ---
 
@@ -325,25 +337,28 @@ Fixed right side panel default tab selection so selected Design elements show pr
 #### Panel Sections (addSection calls)
 
 **`"details"` panel:**
-| Section ID | Specificity | Order | Condition |
-|-----------|-------------|-------|-----------|
-| `compose.sketchpad.app.type.connector.properties` | 30 | 0 | single connector selected |
-| `compose.sketchpad.app.type.panel.details.section.connectors.multipleTitle` | 30 | 0 | multiple connectors selected |
-| `compose.sketchpad.app.type.properties` | 20 | 50 | always |
-| `compose.sketchpad.app.kit.properties` | 10 | 100 | always |
+
+| Section ID                                                                  | Specificity | Order | Condition                    |
+| --------------------------------------------------------------------------- | ----------- | ----- | ---------------------------- |
+| `compose.sketchpad.app.type.connector.properties`                           | 30          | 0     | single connector selected    |
+| `compose.sketchpad.app.type.panel.details.section.connectors.multipleTitle` | 30          | 0     | multiple connectors selected |
+| `compose.sketchpad.app.type.properties`                                     | 20          | 50    | always                       |
+| `compose.sketchpad.app.kit.properties`                                      | 10          | 100   | always                       |
 
 **`"settings"` panel:**
-| Section ID | Specificity | Order |
-|-----------|-------------|-------|
-| `compose.sketchpad.app.type.settings` | 30 | 0 |
-| `compose.sketchpad.app.kit.settings` | 10 | 0 |
-| `compose.sketchpad.settings` | 0 | 0 |
+
+| Section ID                            | Specificity | Order |
+| ------------------------------------- | ----------- | ----- |
+| `compose.sketchpad.app.type.settings` | 30          | 0     |
+| `compose.sketchpad.app.kit.settings`  | 10          | 0     |
+| `compose.sketchpad.settings`          | 0           | 0     |
 
 **`"toolbar"` panel:**
-| Section ID | Specificity | Order | Toolbar Group |
-|-----------|-------------|-------|---------------|
-| `compose.sketchpad.app.type.tools.selection` | 20 | 0 | `{ id: "selection", labelId: "compose.sketchpad.toolbar.parent.selection", order: 10, subToolId: ToolKind.SELECTION_NORMAL, subToolLabelId: "compose.sketchpad.toolbar.subtool.select" }` |
-| `compose.sketchpad.app.type.tools.connector` | 20 | 10 | `{ id: "create", labelId: "compose.sketchpad.toolbar.parent.create", order: 10, subToolId: ToolKind.CONNECTOR, subToolLabelId: "compose.sketchpad.toolbar.subtool.connector" }` |
+
+| Section ID                                   | Specificity | Order | Toolbar Group                                                                                                                                                                             |
+| -------------------------------------------- | ----------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `compose.sketchpad.app.type.tools.selection` | 20          | 0     | `{ id: "selection", labelId: "compose.sketchpad.toolbar.parent.selection", order: 10, subToolId: ToolKind.SELECTION_NORMAL, subToolLabelId: "compose.sketchpad.toolbar.subtool.select" }` |
+| `compose.sketchpad.app.type.tools.connector` | 20          | 10    | `{ id: "create", labelId: "compose.sketchpad.toolbar.parent.create", order: 10, subToolId: ToolKind.CONNECTOR, subToolLabelId: "compose.sketchpad.toolbar.subtool.connector" }`           |
 
 #### Initial PanelVisibility (from useTypeAppInitialize)
 
@@ -369,25 +384,29 @@ Fixed right side panel default tab selection so selected Design elements show pr
 #### Panel Sections (addSection calls)
 
 **`"workbench"` panel:**
-| Section ID | Specificity | Order |
-|-----------|-------------|-------|
-| `compose.sketchpad.app.docs.docs` | 20 | 1 |
-| `compose.sketchpad.app.docs.overview` | 20 | 2 |
+
+| Section ID                            | Specificity | Order |
+| ------------------------------------- | ----------- | ----- |
+| `compose.sketchpad.app.docs.docs`     | 20          | 1     |
+| `compose.sketchpad.app.docs.overview` | 20          | 2     |
 
 **`"details"` panel:**
-| Section ID | Specificity | Order |
-|-----------|-------------|-------|
-| `compose.sketchpad.app.docs.page` | 20 | 1 |
+
+| Section ID                        | Specificity | Order |
+| --------------------------------- | ----------- | ----- |
+| `compose.sketchpad.app.docs.page` | 20          | 1     |
 
 **`"settings"` panel:**
-| Section ID | Specificity | Order |
-|-----------|-------------|-------|
-| `compose.sketchpad.app.docs.settings` | 20 | 1 |
+
+| Section ID                            | Specificity | Order |
+| ------------------------------------- | ----------- | ----- |
+| `compose.sketchpad.app.docs.settings` | 20          | 1     |
 
 **`"toolbar"` panel:**
-| Section ID | Specificity | Order | Notes |
-|-----------|-------------|-------|-------|
-| `compose.sketchpad.app.docs.toolbar.empty` | 20 | 0 | `toolbarPlaceholder: true` |
+
+| Section ID                                 | Specificity | Order | Notes                      |
+| ------------------------------------------ | ----------- | ----- | -------------------------- |
+| `compose.sketchpad.app.docs.toolbar.empty` | 20          | 0     | `toolbarPlaceholder: true` |
 
 ---
 
@@ -407,9 +426,10 @@ Fixed right side panel default tab selection so selected Design elements show pr
 #### Panel Sections (addSection calls)
 
 **`"toolbar"` panel:**
-| Section ID | Specificity | Order | Toolbar Group |
-|-----------|-------------|-------|---------------|
-| `compose.sketchpad.app.feedback.toolbar.send` | 20 | 0 | `{ id: "actions", labelId: "compose.sketchpad.toolbar.parent.actions", order: 50 }` |
+
+| Section ID                                    | Specificity | Order | Toolbar Group                                                                       |
+| --------------------------------------------- | ----------- | ----- | ----------------------------------------------------------------------------------- |
+| `compose.sketchpad.app.feedback.toolbar.send` | 20          | 0     | `{ id: "actions", labelId: "compose.sketchpad.toolbar.parent.actions", order: 50 }` |
 
 ---
 

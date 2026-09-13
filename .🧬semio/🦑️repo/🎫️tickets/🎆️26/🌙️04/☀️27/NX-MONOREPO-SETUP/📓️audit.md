@@ -65,11 +65,9 @@ The independent fingerprint invocation exposed a missing framework-replication b
 
 The first restoration attempt's generated files were all restored or regenerated successfully, including on the failing assertion. Registry restoration is being rerun with the corrected contract.
 
-
 ## Registry Input Investigation
 
 Moving only the registry's declared outputs out and back produced no change across 46,872 discovered input records. The earlier restoration cache miss had different runtime fingerprints before/after, so it cannot establish an output-exclusion failure. A subsequent verification records exact per-path input differences across generation and restoration to distinguish source changes in this shared workspace from output-induced invalidation. No registry restoration success is claimed until that evidence passes.
-
 
 ## Registry Restoration Proven
 
@@ -79,11 +77,9 @@ The final controlled registry run restored all nine declared generated files (58
 
 A full authored `📋️project.json` command scan found three remaining script-boundary violations: coordinator dev/start execute `go run .` from the TypeScript package directory, and assets logo chains generator/export commands in the shell. These are the next bounded command corrections; the broader OS development and native artifact work remains open.
 
-
 ## Continuous Task Cancellation Failure
 
 The coordinator built and reached `/healthz` through `bun nx run @semio-tech/repo-coordinator:dev`. Sending SIGTERM to the public Bun wrapper left the Node Nx process orphaned (PPID 1), with the coordinator still running. Sending SIGTERM directly to that known test Nx process shut down both it and the coordinator; both PIDs were absent afterward. The root NxScript used blocking spawnSync and could not forward termination. This is the runtime red case for the asynchronous wrapper correction. The verification used a ticket-local database and an isolated ephemeral localhost port. No external notification configuration was enabled.
-
 
 ## Entrypoint and Launcher Verification
 
@@ -93,13 +89,11 @@ The launcher regression initially found that importing the new caching script th
 
 The coordinator executable built successfully and served its isolated health endpoint; cancellation initially failed as recorded above and its correction is being verified separately. The logo SVG and MP4 both restored from Nx after removal with identical contents/modes; independent FFprobe confirmed the restored H.264 video. See `📓️logo-artifacts.md`.
 
-
 ## Checkpoint After Bootstrap and Entrypoint Corrections
 
 Coordinator cancellation is now proven on macOS through the public Bun entrypoint, including no surviving health endpoint or child processes; see `📓️coordinator-cancellation.md`. Root NxScript retains optional budgets but now awaits Node asynchronously so cancellation can be forwarded.
 
 Fourteen explicit build-output contracts remain unresolved, plus the broader nested OS development/build orchestration, full CI/environment lifecycle migration, complete polyglot dependency provenance, and bounded owner-specific native/renderer storage retention. The goal and ticket remain active. Logo export's existing shared implementation still needs its cross-platform file URL and detailed progress/backpressure lifecycle reviewed alongside broader process handling; actual current-platform build and restoration are proven.
-
 
 The final post-cancellation `repo:test` invocation passed, and the launch file was regenerated again after the coordinator/logo entrypoints were added. `📓️coordinator-cancellation.md`, `📓️logo-artifacts.md`, `📓️dotnet-artifacts.md`, and `📓️generator-artifacts.md` retain the successful runtime evidence.
 
@@ -108,7 +102,6 @@ The final post-cancellation `repo:test` invocation passed, and the launch file w
 The remaining scale WASI target compiles with `cargo rustc --crate-type cdylib --target wasm32-wasip2 --profile wasm-dev --features component-guest`, verifies the component header, and leaves its only deliverable in Cargo's mutable target tree. Two consumers still build/read that tree: plugin-host UI patch native verification and the OS development native benchmark. The native verifier starts a nested Nx invocation with `--skip-nx-cache`; the benchmark invokes Cargo and the wgpu script directly. These consumers must move together with the staged scale artifact and outer prerequisite graph.
 
 The OS MCP build produces its debug executable through `buildMcpBinary`, which is also called by dev and explicit native conformance checks. Its public `resolveMcpBinaryPath`/`requireMcpBinary` helpers currently resolve Cargo target/debug by default. Any staged MCP build must update public consumers together; fresh conformance probes still require a distinct exact native-compiler path. The Hub build also duplicates its already-declared admin build prerequisite inside BuildScript.
-
 
 ## Development Graph Planning Constraint
 

@@ -270,7 +270,7 @@ pub(super) fn every_command() -> Vec<EquationCommand> {
         EquationCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: "bfs".into(), seed: Some("a".into()) }),
         EquationCommand::SetDirected(set_directed::SetDirected { directed: true }),
         EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: r#"[{"operation":"addNode","x":12.0,"y":34.0}]"#.into() }),
-        EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework::Viewport2d { x: 5.0, y: 6.0, zoom: 2.0 } }),
+        EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 5.0, y: 6.0, zoom: 2.0 } }),
         EquationCommand::SetPoints(set_points::SetPoints { geometry: EquationGeometry::default() }),
     ]
 }

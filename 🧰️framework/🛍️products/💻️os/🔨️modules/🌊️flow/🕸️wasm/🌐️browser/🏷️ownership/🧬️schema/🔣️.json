@@ -1,0 +1,359 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/flow/browser-ownership.json",
+  "title": "Flow Browser Source And Publication Ownership",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "owners",
+    "testContract",
+    "dataOwners",
+    "projections",
+    "predecessors",
+    "contexts",
+    "package",
+    "consumers",
+    "target",
+    "registration"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "owners": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/owner"
+      }
+    },
+    "testContract": {
+      "$ref": "#/$defs/testContract"
+    },
+    "dataOwners": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/path"
+      }
+    },
+    "projections": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sourceOwner",
+          "path",
+          "kind"
+        ],
+        "properties": {
+          "sourceOwner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "path": {
+            "$ref": "#/$defs/path"
+          },
+          "kind": {
+            "enum": [
+              "authored-declaration",
+              "published-browser",
+              "published-host"
+            ]
+          }
+        }
+      }
+    },
+    "predecessors": {
+      "type": "array",
+      "minItems": 6,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/path"
+      }
+    },
+    "contexts": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ownerId",
+          "parentKindId",
+          "segments"
+        ],
+        "properties": {
+          "ownerId": {
+            "type": "string"
+          },
+          "segments": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "kindId"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "kindId": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "parentKindId": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifestPath",
+        "name",
+        "files",
+        "exports"
+      ],
+      "properties": {
+        "manifestPath": {
+          "$ref": "#/$defs/path"
+        },
+        "name": {
+          "const": "@semio-tech/flow-core"
+        },
+        "files": {
+          "type": "array",
+          "minItems": 7,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "exports": {
+          "type": "object",
+          "required": [
+            ".",
+            "./🌐️flow-browser.js",
+            "./🖥️flow-host.js"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            ".": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "types",
+                "import"
+              ],
+              "properties": {
+                "types": {
+                  "const": "./flow_core.d.ts"
+                },
+                "import": {
+                  "const": "./flow_core.js"
+                }
+              }
+            },
+            "./🌐️flow-browser.js": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "types",
+                "import"
+              ],
+              "properties": {
+                "types": {
+                  "const": "./🌐️browser/🟦️.d.ts"
+                },
+                "import": {
+                  "const": "./🌐️browser/🟨️.js"
+                }
+              }
+            },
+            "./🖥️flow-host.js": {
+              "const": "./🖥️host/🟨️.js"
+            }
+          }
+        }
+      }
+    },
+    "consumers": {
+      "type": "array",
+      "minItems": 16,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/consumer"
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "projectPath",
+        "name",
+        "previewName",
+        "inputs"
+      ],
+      "properties": {
+        "projectPath": {
+          "$ref": "#/$defs/path"
+        },
+        "name": {
+          "const": "test-browser-ownership"
+        },
+        "previewName": {
+          "const": "preview-generated"
+        },
+        "inputs": {
+          "type": "array",
+          "minItems": 20,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "registration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "packagePath",
+        "packageScript",
+        "previewPackageScript",
+        "launchSeedPath",
+        "launchPath",
+        "launchCommand",
+        "previewLaunchCommand"
+      ],
+      "properties": {
+        "packagePath": {
+          "$ref": "#/$defs/path"
+        },
+        "packageScript": {
+          "const": "test:browser-ownership"
+        },
+        "previewPackageScript": {
+          "const": "preview:browser-package"
+        },
+        "launchSeedPath": {
+          "$ref": "#/$defs/path"
+        },
+        "launchPath": {
+          "$ref": "#/$defs/path"
+        },
+        "launchCommand": {
+          "const": "bun nx run semio-framework-os-flow-core:test-browser-ownership"
+        },
+        "previewLaunchCommand": {
+          "const": "bun nx run semio-framework-os-flow-core:preview-generated"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+    },
+    "owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "path",
+        "exports"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "$ref": "#/$defs/path"
+        },
+        "exports": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "testContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "exports"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/path"
+        },
+        "exports": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {
+            "const": "flowWasmContract"
+          }
+        }
+      }
+    },
+    "consumer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "tokens"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/path"
+        },
+        "tokens": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "forbiddenTokens": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

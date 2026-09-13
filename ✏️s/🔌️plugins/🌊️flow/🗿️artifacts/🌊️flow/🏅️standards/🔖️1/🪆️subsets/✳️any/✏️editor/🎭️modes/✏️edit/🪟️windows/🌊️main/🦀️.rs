@@ -9,7 +9,7 @@ use flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_artifact_infinite_dag::DagFixture;
 use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
 use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
-use semio_framework::Viewport2d;
+use semio_framework_os_kernel::Viewport2d;
 use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene};
 
 //#region 🔖️Constants

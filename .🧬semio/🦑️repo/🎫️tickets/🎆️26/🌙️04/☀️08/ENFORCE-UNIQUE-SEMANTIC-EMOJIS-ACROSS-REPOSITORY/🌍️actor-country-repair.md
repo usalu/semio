@@ -8,21 +8,21 @@ The actual print compiler-name function was executed: these carrier names stage 
 
 ## Completed Countries
 
-| Country | Entity directories per report | PNG files per report | Approved actor references |
-| --- | ---: | ---: | ---: |
-| Austria `🇦🇹AT` | 18 | 30 | 17 |
-| Finland `🇫🇮FI` | 25 | 39 | 25 |
-| Norway `🇳🇴NO` | 27 | 42 | 27 |
-| Sweden `🇸🇪SE` | 35 | 56 | 33 |
-| Denmark `🇩🇰DK` | 40 | 66 | 39 |
-| Belgium `🇧🇪BE` | 46 | 74 | 44 |
-| Switzerland `🇨🇭CH` | 47 | 70 | 46 |
-| France `🇫🇷FR` | 69 | 107 | 67 |
-| Great Britain `🇬🇧GB` | 60 | 96 | 60 |
-| Netherlands `🇳🇱NL` | 60 | 85 | 59 |
-| Total owned by this agent | 427 | 665 | 417 |
-| Germany, coordinating agent | 49 | 87 | 48 |
-| All eleven countries | 476 | 752 | 465 |
+| Country                     | Entity directories per report | PNG files per report | Approved actor references |
+| --------------------------- | ----------------------------: | -------------------: | ------------------------: |
+| Austria `🇦🇹AT`              |                            18 |                   30 |                        17 |
+| Finland `🇫🇮FI`              |                            25 |                   39 |                        25 |
+| Norway `🇳🇴NO`               |                            27 |                   42 |                        27 |
+| Sweden `🇸🇪SE`               |                            35 |                   56 |                        33 |
+| Denmark `🇩🇰DK`              |                            40 |                   66 |                        39 |
+| Belgium `🇧🇪BE`              |                            46 |                   74 |                        44 |
+| Switzerland `🇨🇭CH`          |                            47 |                   70 |                        46 |
+| France `🇫🇷FR`               |                            69 |                  107 |                        67 |
+| Great Britain `🇬🇧GB`        |                            60 |                   96 |                        60 |
+| Netherlands `🇳🇱NL`          |                            60 |                   85 |                        59 |
+| Total owned by this agent   |                           427 |                  665 |                       417 |
+| Germany, coordinating agent |                            49 |                   87 |                        48 |
+| All eleven countries        |                           476 |                  752 |                       465 |
 
 The exact same individually reviewed coordinates were used in the Zwischenbericht and Forschungsbericht copies. All 1,330 PNG files moved by this agent were preserved; together with the German repair, all 1,504 actor PNGs remain unchanged. Nothing was discarded or rewritten.
 

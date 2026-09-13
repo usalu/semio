@@ -1,6 +1,6 @@
 //! 🧵️ Mounted FEM3D visual publication on the shared bounded-job reactor.
 
-use crate::analyses::{AssemblyCsrBuild, AssemblyJob, AssemblyJobConstruction, MountedAnalysisModel, MountedAnalysisSupport};
+use crate::analyses::{AssemblyCsrBuild, AssemblyJob, AssemblyJobConstruction, MountedAnalysisModel, MountedAnalysisSupport, MOUNTED_ANALYSIS_BACKING_BYTES};
 use crate::elements3d::Tet4;
 use crate::mesh::{MeshJob, MeshOpts, MountedPlanarDomain};
 use crate::model::{Bar3, Dof, Element, Elements, Frame3, Node};
@@ -678,7 +678,7 @@ impl Fem3dNumericalChild {
     fn step_model(&mut self, doc: &Fem3dSnapshot) -> Result<bool, Vec<u8>> {
         match self.stage {
             Fem3dNumericalStage::ReserveNodes => {
-                if self.model.as_mut().ok_or_else(|| b"fem3d.numerical-model-owner".to_vec())?.admit_node_one(doc.nodes.len()).map_err(|_| b"fem3d.numerical-node-admission".to_vec())? {
+                if self.model.as_mut().ok_or_else(|| b"fem3d.numerical-model-owner".to_vec())?.admit_node_one(doc.nodes.len(), MOUNTED_ANALYSIS_BACKING_BYTES).map_err(|_| b"fem3d.numerical-node-admission".to_vec())?.complete {
                     self.stage = Fem3dNumericalStage::ReserveNodeIds;
                 }
             }
@@ -688,12 +688,12 @@ impl Fem3dNumericalChild {
                 }
             }
             Fem3dNumericalStage::ReserveElements => {
-                if self.model.as_mut().ok_or_else(|| b"fem3d.numerical-model-owner".to_vec())?.admit_element_one(doc.elements.len()).map_err(|_| b"fem3d.numerical-element-admission".to_vec())? {
+                if self.model.as_mut().ok_or_else(|| b"fem3d.numerical-model-owner".to_vec())?.admit_element_one(doc.elements.len(), MOUNTED_ANALYSIS_BACKING_BYTES).map_err(|_| b"fem3d.numerical-element-admission".to_vec())?.complete {
                     self.stage = Fem3dNumericalStage::ReserveSupports;
                 }
             }
             Fem3dNumericalStage::ReserveSupports => {
-                if self.model.as_mut().ok_or_else(|| b"fem3d.numerical-model-owner".to_vec())?.admit_support_one(doc.supports.len()).map_err(|_| b"fem3d.numerical-support-admission".to_vec())? {
+                if self.model.as_mut().ok_or_else(|| b"fem3d.numerical-model-owner".to_vec())?.admit_support_one(doc.supports.len(), MOUNTED_ANALYSIS_BACKING_BYTES).map_err(|_| b"fem3d.numerical-support-admission".to_vec())?.complete {
                     self.stage = Fem3dNumericalStage::ReserveMeshedSolids;
                 }
             }
@@ -891,9 +891,9 @@ impl Fem3dNumericalChild {
                 match self.point_cursor {
                     0 if self.solid_node_ids.admit_one(node_count).map_err(|_| b"fem3d.numerical-solid-node-id-admission".to_vec())? => self.point_cursor += 1,
                     1 if self.solid_node_analysis_indices.admit_one(node_count).map_err(|_| b"fem3d.numerical-solid-node-index-admission".to_vec())? => self.point_cursor += 1,
-                    2 if model.admit_node_one(model.nodes_len() + node_count).map_err(|_| b"fem3d.numerical-solid-node-admission".to_vec())? => self.point_cursor += 1,
+                    2 if model.admit_node_one(model.nodes_len() + node_count, MOUNTED_ANALYSIS_BACKING_BYTES).map_err(|_| b"fem3d.numerical-solid-node-admission".to_vec())?.complete => self.point_cursor += 1,
                     3 if self.analysis_node_ids.admit_one(self.analysis_node_ids.len() + node_count).map_err(|_| b"fem3d.numerical-solid-analysis-id-admission".to_vec())? => self.point_cursor += 1,
-                    4 if model.admit_element_one(model.elements_len() + tet_count).map_err(|_| b"fem3d.numerical-solid-tet-admission".to_vec())? => self.point_cursor += 1,
+                    4 if model.admit_element_one(model.elements_len() + tet_count, MOUNTED_ANALYSIS_BACKING_BYTES).map_err(|_| b"fem3d.numerical-solid-tet-admission".to_vec())?.complete => self.point_cursor += 1,
                     _ => {
                         if self.point_cursor < 5 {
                             return Ok(false);
@@ -1232,7 +1232,7 @@ impl Fem3dNumericalChild {
                 self.stage = Fem3dNumericalStage::MountAssembly;
             }
             Fem3dNumericalStage::MountAssembly => {
-                let model = Arc::new(self.model.take().ok_or_else(|| b"fem3d.numerical-model-owner".to_vec())?);
+                let model = self.model.take().ok_or_else(|| b"fem3d.numerical-model-owner".to_vec())?;
                 self.assembly_build = Some(AssemblyJobConstruction::new_mounted(model, operation, 1));
                 self.stage = Fem3dNumericalStage::PrepareAssembly;
             }

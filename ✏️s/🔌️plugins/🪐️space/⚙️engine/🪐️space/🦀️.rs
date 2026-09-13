@@ -364,7 +364,7 @@ fn space_bounded_reduce(
     history: &semio_framework_plugin::HistoryView,
     interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<SpaceApp>>,
+    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<SpaceApp>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<WorkflowMutation, SpaceConfigMutation, NoDraftMutation>, Fault> {
     if !SPACE_BOUNDED_TOOL_IDS.contains(&command.command_id()) {
@@ -377,6 +377,13 @@ fn space_bounded_reduce(
     if let SpaceCommand::OpenInstance(payload) = command {
         let selected = interaction.selection.get(S_PLAY_INTERACTION_DOMAIN).map_or_else(Vec::new, |selection| selection.ids.clone());
         return Ok(crate::engine::space::engine::resolve_future(open_instance::open_with_selection(payload, &doc, config, &selected)));
+    }
+    if let SpaceCommand::PresenceHeartbeat(payload) = command {
+        let identity = context
+            .and_then(|context| context.view_state.as_ref())
+            .and_then(crate::home_session_identity)
+            .ok_or_else(|| Fault::from("s.space.session-identity-required"))?;
+        return presence_heartbeat::handle_with_identity(payload, identity, &doc, &ConfigView { snapshot: config, window: None });
     }
     command.dispatch(&doc, &ConfigView { snapshot: config, window: None })
 }
@@ -436,7 +443,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SpaceCommandJobFact
     const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActivePanelTab", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "presenceHeartbeat", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "presenceHeartbeat", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "workflowEngagementInput", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "compiledDagEngagementInput", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "closeFocusedInstance", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
@@ -486,7 +493,7 @@ fn space_config_bytes(config: &SpaceConfig) -> Result<usize, String> {
     for value in config.camera.keys().chain(config.collapsed_node_ids.iter()).chain(config.preview_off_node_ids.iter()).chain(config.clipboard_node_ids.iter()) {
         bytes = bytes.saturating_add(value.len());
     }
-    for value in [&config.active_node_id, &config.focused_node_id, &config.pending_import_node_id, &config.pending_import_format, &config.space_id, &config.client_id, &config.client_name] {
+    for value in [&config.active_node_id, &config.focused_node_id, &config.pending_import_node_id, &config.pending_import_format, &config.space_id] {
         bytes = bytes.saturating_add(value.as_ref().map_or(0, String::len));
     }
     for value in [&config.workflow_engagement_input, &config.compiled_dag_engagement_input, &config.active_panel_tab] {
@@ -506,7 +513,6 @@ fn space_config_mutation_bytes(mutation: &SpaceConfigMutation) -> Result<usize, 
     let bytes = match mutation {
         SpaceConfigMutation::SetActivePanelTab { tab_id } => tab_id.len(),
         SpaceConfigMutation::SetCamera { window_id, .. } => window_id.len(),
-        SpaceConfigMutation::SetClient { client_id, client_name } => client_id.as_ref().map_or(0, String::len).saturating_add(client_name.as_ref().map_or(0, String::len)),
         SpaceConfigMutation::SetWorkflowEngagementInput { value } | SpaceConfigMutation::SetCompiledDagEngagementInput { value } => value.len(),
         SpaceConfigMutation::SetActiveNode { node_id } | SpaceConfigMutation::SetFocusedNode { node_id } => node_id.as_ref().map_or(0, String::len),
         SpaceConfigMutation::SetSpaceId { space_id } => space_id.as_ref().map_or(0, String::len),
@@ -535,11 +541,6 @@ fn prepare_space_config(base: &SpaceConfig, mutation: SpaceConfigMutation) -> Re
         SpaceConfigMutation::SetCamera { window_id, camera } => {
             post.camera.insert(window_id.clone(), *camera);
             base.camera.get(window_id).map_or_else(|| SpaceConfigMutation::Snapshot { config: base.clone() }, |camera| SpaceConfigMutation::SetCamera { window_id: window_id.clone(), camera: *camera })
-        }
-        SpaceConfigMutation::SetClient { client_id, client_name } => {
-            post.client_id = client_id.clone();
-            post.client_name = client_name.clone();
-            SpaceConfigMutation::SetClient { client_id: base.client_id.clone(), client_name: base.client_name.clone() }
         }
         SpaceConfigMutation::SetWorkflowEngagementInput { value } => {
             post.workflow_engagement_input = value.clone();
@@ -915,7 +916,7 @@ impl ArtifactApp for SpaceApp {
                 let viewport = dsl::from_dsl_value::<semio_framework_os::Viewport2d>(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))?;
                 Ok(SpaceCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport }))
             }
-            "presenceHeartbeat" => Ok(SpaceCommand::PresenceHeartbeat(presence_heartbeat::PresenceHeartbeat { client_id: str_field("clientId").or_else(|| str_field("client_id")).unwrap_or_default(), name: str_field("name").unwrap_or_default() })),
+            "presenceHeartbeat" => Ok(SpaceCommand::PresenceHeartbeat(presence_heartbeat::PresenceHeartbeat {})),
             "workflowEngagementInput" => Ok(SpaceCommand::WorkflowEngagementInput(workflow_engagement_input::WorkflowEngagementInput { value: str_field("value").unwrap_or_default() })),
             "compiledDagEngagementInput" => Ok(SpaceCommand::CompiledDagEngagementInput(compiled_dag_engagement_input::CompiledDagEngagementInput { value: str_field("value").unwrap_or_default() })),
             "setActiveExample" => Ok(SpaceCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_field("exampleId").or_else(|| str_field("example_id")).unwrap_or_default() })),
@@ -948,7 +949,7 @@ impl ArtifactApp for SpaceApp {
         doc: &ArtifactView<'_, WorkflowSnapshot>,
         cfg: &ConfigView<'_, SpaceConfig>,
         interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<WorkflowMutation, SpaceConfigMutation, Self::DraftMutation>, Fault> {
@@ -961,6 +962,12 @@ impl ArtifactApp for SpaceApp {
             SpaceCommand::RemoveAppInstance(payload) => remove_app_instance::apply(payload, doc, cfg, interaction).await,
             SpaceCommand::RenameAppInstance(payload) => rename_app_instance::apply(payload, doc, cfg, interaction).await,
             SpaceCommand::OpenInstance(payload) => open_instance::apply(payload, doc, cfg, interaction).await,
+            SpaceCommand::PresenceHeartbeat(payload) => {
+                let identity = view_state
+                    .and_then(crate::home_session_identity)
+                    .ok_or_else(|| Fault::from("s.space.session-identity-required"))?;
+                presence_heartbeat::handle_with_identity(payload, identity, doc, cfg)
+            }
             _ => command.dispatch(doc, cfg),
         }
     }

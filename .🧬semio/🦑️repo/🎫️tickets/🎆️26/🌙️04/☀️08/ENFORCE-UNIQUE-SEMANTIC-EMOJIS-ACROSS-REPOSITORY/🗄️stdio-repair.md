@@ -6,11 +6,11 @@ Four exact moves are complete: the B-rep timing source is `🏃️benches/⏱️
 
 Pre-edit byte evidence:
 
-| File | Bytes | SHA-256 |
-| --- | ---: | --- |
-| B-rep benchmark | 7408 | `6a3a553ea4f1f1189424e5657a2f18aa4b6f2eb0ee8732c163b54c23e6c7fc5a` |
-| Catalog specimen | 1013 | `1732e9fe60ab1218a17770e279c10cb6a0d06ec6f80c7e02d96a46399c5fb903` |
-| Catalog schema | 1757 | `17bdae6acbcdbcf0c144fac074f05e858059e05bfdfc9b3c96c4d45c6e7aaad1` |
+| File             | Bytes | SHA-256                                                            |
+| ---------------- | ----: | ------------------------------------------------------------------ |
+| B-rep benchmark  |  7408 | `6a3a553ea4f1f1189424e5657a2f18aa4b6f2eb0ee8732c163b54c23e6c7fc5a` |
+| Catalog specimen |  1013 | `1732e9fe60ab1218a17770e279c10cb6a0d06ec6f80c7e02d96a46399c5fb903` |
+| Catalog schema   |  1757 | `17bdae6acbcdbcf0c144fac074f05e858059e05bfdfc9b3c96c4d45c6e7aaad1` |
 
 No whole-plugin completion is claimed. Artifact format siblings, mutation owners and before/after specimens still require individual review.
 

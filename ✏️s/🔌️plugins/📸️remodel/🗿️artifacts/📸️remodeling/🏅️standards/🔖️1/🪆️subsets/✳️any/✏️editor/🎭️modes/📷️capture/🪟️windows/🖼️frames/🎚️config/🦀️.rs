@@ -2,13 +2,17 @@
 
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct RemodelingFrameCursor { pub stream_id: Option<String>, pub frame_index: u32 }
 
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase")]
-pub struct RemodelingFramesWindowConfig { pub frame_cursor: RemodelingFrameCursor }
+#[dsl(id = "s.remodel.remodeling.frameswindowconfig", extension = "remodelingframeswindowcfg", layout = "lines")]
+pub struct RemodelingFramesWindowConfig {
+    #[dsl(block)]
+    pub frame_cursor: RemodelingFrameCursor,
+}
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(tag = "kind", rename_all = "kebab-case")]
@@ -25,17 +29,45 @@ impl protocol::Mutation<RemodelingFramesWindowConfig> for RemodelingFramesWindow
 }
 
 macro_rules! impl_codecs { () => {
-    impl store::ArtifactDsl for RemodelingFramesWindowConfig {
-        const EXTENSION: &'static str = "remodelingframeswindowcfg";
-        fn envelope_id() -> &'static str { "s.remodel.remodeling.frameswindowconfig" }
-        fn parse_dsl(text: &str) -> Result<Self, store::TextError> { let body = store::semio_format::split_text_preamble(text).map_or(text, |(_, body)| body); let json: serde_json::Value = serde_json::from_str(body).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))?; dsl::FromValue::from_value(json.into()).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1))) }
-        fn print_dsl(&self) -> String { let value: serde_json::Value = dsl::ToValue::to_value(self).into(); let body = serde_json::to_string_pretty(&value).expect("Remodeling Frames window config JSON"); let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid Remodeling Frames window envelope"); store::semio_format::wrap_text(&envelope, &body) }
+    /// 📜️ Record-backed text form — the derived `__dsl_spec` grammar inside this window kind's semio
+/// text envelope, the same shape every sibling window config prints.
+impl store::ArtifactDsl for RemodelingFramesWindowConfig {
+    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
+    fn envelope_id() -> &'static str {
+        Self::__DSL_ENVELOPE_ID
     }
-    impl store::ArtifactPack for RemodelingFramesWindowConfig {
-        fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> { let value: serde_json::Value = dsl::ToValue::to_value(self).into(); let body = serde_json::to_vec(&value).map_err(|error| store::PackError::Schema(error.to_string()))?; let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?; Ok(store::semio_format::wrap_binary(&envelope, &body)) }
-        fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> { let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?; if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) { return Err(store::PackError::Schema("Remodeling Frames window pack envelope mismatch".into())); } let json: serde_json::Value = serde_json::from_slice(&body).map_err(|error| store::PackError::Schema(error.to_string()))?; dsl::FromValue::from_value(json.into()).map_err(|error| store::PackError::Schema(error.to_string())) }
-        fn record_spec() -> Option<dsl::RecordSpec> { None }
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        let body = store::semio_format::split_text_preamble(text).map_or(text, |(_, body)| body);
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        Self::__dsl_from_record(&record)
     }
+    fn print_dsl(&self) -> String {
+        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid Remodeling frames window envelope");
+        store::semio_format::wrap_text(&envelope, &body)
+    }
+}
+    /// 🎒️ Record-backed pack form. `record_spec` is what the retained window-config loader reads to
+/// decode a mounted pack field-by-field; returning `None` here would fail every retained load of
+/// this window kind with `WindowConfigPackLoadDiagnostic::TypedState`.
+impl store::ArtifactPack for RemodelingFramesWindowConfig {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        let body = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        Ok(store::semio_format::wrap_binary(&envelope, &body))
+    }
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+        }
+        let (record, _) = store::pack_rt::decode_document(&body, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+    }
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(Self::__dsl_spec())
+    }
+}
 } }
 impl_codecs!();
 store::impl_whole_record_config!(RemodelingFramesWindowConfig);

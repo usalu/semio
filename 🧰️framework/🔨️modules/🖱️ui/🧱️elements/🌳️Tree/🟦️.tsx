@@ -923,11 +923,13 @@ export function catalogueTreeDragController(mime: string = CATALOGUE_DRAG_MIME):
   return {
     pointerPaletteDrag: {
       readEncodedDragPayload: readEncoded,
-      begin: () => {
+      begin: (encoded) => {
         pointerRef.active = true;
+        activeCatalogueDragPayload.current = encoded;
       },
       cancel: () => {
         pointerRef.active = false;
+        activeCatalogueDragPayload.current = null;
       },
     },
     onDragStart: ({ sourceItem }) => {

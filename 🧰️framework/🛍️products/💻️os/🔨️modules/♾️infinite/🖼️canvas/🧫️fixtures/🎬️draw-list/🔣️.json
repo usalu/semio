@@ -4,7 +4,7 @@
     "what": "One node-graph picture — camera, grid, wires, node bodies, ports — described once, so every implementation that turns a canvas::Scene into draw calls can be measured against the same expectation.",
     "producers": [
       "rust: semio-framework-os-infinite, canvas::draw_list::scene_draw_list_json over a Scene built by 🧪️tests/🎬️draw-list/🦀️.rs::paint_fixture_scene",
-      "javascript: replayFlowDrawList in 🌊️flow/🕸️wasm/📦️packages/🟨️javascript/🖥️flow-host.js, recorded by 🌊️flow/🕸️wasm/🧪️tests/🎬️draw-list/🟨️.js"
+      "javascript: replayFlowDrawList in 🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js, recorded by 🌊️flow/🕸️wasm/🧪️tests/🎬️draw-list/🟨️.js"
     ],
     "paintOrder": "pushClipLayer(viewport) → grid lines → wires → node bodies (fill then stroke) → ports (fill then stroke) → popLayer",
     "cameraLaw": "Every command carries its own affine, already composed with canvas::camera::camera_content_affine(camera, viewport). A replayer applies the affine verbatim and adds only its own device-pixel base transform — it never re-derives the camera."

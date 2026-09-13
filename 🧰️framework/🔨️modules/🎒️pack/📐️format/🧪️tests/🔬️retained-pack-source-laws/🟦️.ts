@@ -92,5 +92,60 @@ export function testRetainedPackPhysicalOwnership(): void {
   ];
   const valueTerminal = applyPatch({ pending: true, stackFrames: 2, symbols: 3, scalars: 7, allocatedBytes: 32768, closed: false }, valueRelease, true).newDocument;
   assert.deepEqual(valueTerminal, corpus.retainedValue.terminal);
-  console.log("[DEBUG] Retained Pack physical source, catalog and value fixtures agree with Ajv 2020, fast-json-patch and platform UTF-8; value consumers=4 allocation-before-input=true terminal-ledgers=zero");
+  assert.deepEqual(corpus.retainedPipelineDiagnostic.stages, ["anchor", "segment", "retained-varint", "retained-deflate"]);
+  assert.equal(corpus.retainedPipelineDiagnostic.hotVariant, "retained-malformed-static");
+  assert.equal(corpus.retainedPipelineDiagnostic.storage, "inline");
+  assert.equal(corpus.retainedPipelineDiagnostic.heapBytes, 0);
+  assert.equal(corpus.retainedPipelineDiagnostic.publicStepAllocates, false);
+  assert.equal(corpus.retainedPipelineDiagnostic.firstFaultSticky, true);
+  assert.equal(corpus.retainedPipelineDiagnostic.laterIngress, "rejected");
+  assert.equal(corpus.retainedPipelineDiagnostic.close, "bounded-logical");
+  assert.equal(corpus.retainedPipelineDiagnostic.physicalScope, "existing-lower-owners-only");
+  assert.equal(corpus.retainedInflater.constructionAllocates, false);
+  assert.equal(corpus.retainedInflater.historyBytes, 32 * 1024);
+  assert.equal(corpus.retainedInflater.dynamicLengths, 286 + 32);
+  assert.equal(corpus.retainedInflater.huffmanSymbols, 288);
+  assert.deepEqual(corpus.retainedInflater.blocks, ["stored", "fixed", "dynamic", "window-wrap"]);
+  assert.deepEqual(corpus.retainedInflater.distances, [1, 32768]);
+  assert.deepEqual(corpus.retainedInflater.dynamicRepeatCodes, [16, 17, 18]);
+  assert.equal(corpus.retainedInflater.allocationBeforeInput, true);
+  assert.equal(corpus.retainedInflater.zeroOrSubexactMutates, false);
+  assert.equal(corpus.retainedInflater.actualBackingAccounted, true);
+  assert.equal(corpus.retainedInflater.reuseAcrossCompressedSegments, true);
+  assert.equal(corpus.retainedInflater.identityAllocationBytes, 0);
+  assert.deepEqual(corpus.retainedInflater.closeOrder, ["pending-input", "history-logical", "decoder-logical", "history-physical"]);
+  assert.deepEqual(corpus.retainedInflater.consumers, ["generation2-snapshot", "generation3-snapshot"]);
+  const inflaterRelease: Operation[] = [
+    { op: "replace", path: "/pending", value: false },
+    { op: "replace", path: "/historyLength", value: 0 },
+    { op: "replace", path: "/historyCapacity", value: 0 },
+    { op: "replace", path: "/allocatedBytes", value: 0 },
+    { op: "replace", path: "/inflaterPresent", value: false },
+    { op: "replace", path: "/closed", value: true },
+  ];
+  const inflaterTerminal = applyPatch({ pending: true, historyLength: 32768, historyCapacity: 32768, allocatedBytes: 32768, inflaterPresent: true, closed: false }, inflaterRelease, true).newDocument;
+  assert.deepEqual(inflaterTerminal, corpus.retainedInflater.terminal);
+  assert.equal(corpus.retainedTypedPersistence.status, "next-slice-contract");
+  assert.deepEqual(corpus.retainedTypedPersistence.implementationOrder, ["typed-snapshot-candidate", "typed-mutation-builder", "spr-history"]);
+  assert.equal(corpus.retainedTypedPersistence.constructionAllocates, false);
+  assert.equal(corpus.retainedTypedPersistence.allocationBeforeIngress, true);
+  assert(corpus.retainedTypedPersistence.limits.includes("actual-allocation-bytes"));
+  assert.deepEqual(corpus.retainedTypedPersistence.snapshotConsumers, ["generation2-snapshot", "generation3-snapshot"]);
+  assert.deepEqual(corpus.retainedTypedPersistence.mutationConsumers, ["generation2-mutation", "generation3-mutation"]);
+  assert.deepEqual(corpus.retainedTypedPersistence.handoff, { kind: "owner-and-ledger-atomic", plainValue: false, retirementOwnerTransferred: true });
+  assert.equal(corpus.retainedTypedPersistence.sprHistory.recordAtomic, true);
+  assert.equal(corpus.retainedTypedPersistence.sprHistory.batchDecode, false);
+  assert.deepEqual(corpus.retainedTypedPersistence.sprHistory.order, ["verify", "admit-record", "decode-record", "validate", "typed-replay", "retire-history"]);
+  assert.equal(corpus.retainedTypedPersistence.zeroOrSubexactMutates, false);
+  const typedRelease: Operation[] = [
+    { op: "replace", path: "/pending", value: false },
+    { op: "replace", path: "/typedItems", value: 0 },
+    { op: "replace", path: "/historyRecords", value: 0 },
+    { op: "replace", path: "/allocatedBytes", value: 0 },
+    { op: "replace", path: "/ownerTransferred", value: false },
+    { op: "replace", path: "/closed", value: true },
+  ];
+  const typedTerminal = applyPatch({ pending: true, typedItems: 9, historyRecords: 3, allocatedBytes: 65536, ownerTransferred: true, closed: false }, typedRelease, true).newDocument;
+  assert.deepEqual(typedTerminal, corpus.retainedTypedPersistence.terminal);
+  console.log("[DEBUG] Retained Pack physical source, catalog, value, diagnostic and inflater fixtures agree with Ajv 2020, fast-json-patch and platform UTF-8; history=32768 dynamic=318 distances=1,32768 terminal-ledgers=zero; typed-persistence=planned-owner-ledger-handoff");
 }

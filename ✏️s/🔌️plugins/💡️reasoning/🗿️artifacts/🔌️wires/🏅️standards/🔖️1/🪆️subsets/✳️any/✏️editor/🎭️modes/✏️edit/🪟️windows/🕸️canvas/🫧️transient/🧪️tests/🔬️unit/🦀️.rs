@@ -177,7 +177,7 @@ async fn wires_pointer_move_document_replacement_clears_only_successful_reload_p
             return Err("reload seed envelope did not retire".into());
         }
         app.dispatch_typed(
-            WiresCommand::NodeGraphViewport(NodeGraphViewport { viewport: semio_framework::Viewport2d { x: 12.0, y: -4.0, zoom: 2.0 } }),
+            WiresCommand::NodeGraphViewport(NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 12.0, y: -4.0, zoom: 2.0 } }),
             &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("reload-camera") },
         )
         .await

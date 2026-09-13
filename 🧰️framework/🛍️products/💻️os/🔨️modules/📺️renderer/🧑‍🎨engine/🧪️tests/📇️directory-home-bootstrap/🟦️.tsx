@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from "@semio-tech/ui-react/test";
 import Ajv from "ajv";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { AppDefinition } from "@semio-tech/framework";
+import type { AppDefinition, ViewModel } from "@semio-tech/framework";
 import type { BackboneWorkerRequest, BackboneWorkerResponse } from "@semio-tech/framework-os";
 import type { PluginWasmHandle } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 import {
@@ -22,7 +22,7 @@ const app = {
   controllerId: "home",
   defaultModeId: "explore",
   modes: [{ id: "explore" }],
-  windowKinds: [{ id: "main", actions: [{ id: "applyDirectoryEventPage" }, { id: "setClient" }] }],
+  windowKinds: [{ id: "main", actions: [{ id: "applyDirectoryEventPage" }] }],
 } as unknown as AppDefinition;
 
 const page = {
@@ -48,16 +48,17 @@ function terminal(output: unknown) {
   return { output, mutations: [], inverseGroup: { invocationId: "fixture", mutations: [], inverseMutations: [] } };
 }
 
-function handle(output: Promise<unknown> | unknown, calls: string[] = [], identityOutput: Promise<unknown> | unknown = terminal(null)): PluginWasmHandle {
+function handle(output: Promise<unknown> | unknown, calls: string[] = [], viewStates: ViewModel[] = []): PluginWasmHandle {
   return {
     pluginId: "space",
     manifest: { pluginId: "space", label: "Space", version: "1", apps: [app], examples: [] },
     createApp: async () => { calls.push("create"); return 41; },
     destroyApp: async () => { calls.push("destroy"); },
-    handleAction: async (_instance: number, invocation: string) => {
+    handleAction: async (_instance: number, invocation: string, viewState: ViewModel) => {
       const actionId = JSON.parse(invocation).address.actionId as string;
       calls.push(`action:${actionId}:${invocation}`);
-      return await (actionId === "setClient" ? identityOutput : Promise.resolve(output).then(terminal));
+      viewStates.push(structuredClone(viewState));
+      return await Promise.resolve(output).then(terminal);
     },
   } as unknown as PluginWasmHandle;
 }
@@ -99,15 +100,14 @@ describe("retained visible Home directory bootstrap", () => {
     }
   });
 
-  it("opens the worker epoch only after Hub identity reaches the owned Home instance", async () => {
+  it("opens the worker epoch with the exact host identity on the owned Home instance", async () => {
     const calls: string[] = [];
     const posts: BackboneWorkerRequest[] = [];
     const owner = await ownerFor(handle(fixture.receipt, calls), posts);
-    expect(calls.map((call) => call.split(":").slice(0, 2).join(":"))).toEqual(["create", "action:setClient"]);
-    const identityInvocation = JSON.parse(calls.find((call) => call.startsWith("action:setClient:"))!.split(":").slice(2).join(":"));
-    expect(identityInvocation).toMatchObject({ address: { pluginId: "space", appId: app.id, actionId: "setClient" }, arguments: { clientId: "user-a", clientName: "Ada Author", windowId: "main" } });
+    expect(calls).toEqual(["create"]);
     expect(posts).toEqual([{ kind: "directory-bootstrap-open", baseUrl: "https://hub.example", after: 0, bootstrapEpoch: 3 }]);
     expect(owner.viewState.locale).toBe("de-DE");
+    expect(owner.viewState.sessionIdentity).toEqual({ userId: "user-a", displayName: "Ada Author" });
     await closeDirectoryHomeOwnerV1(owner, (message) => posts.push(message));
     expect(calls.at(-1)).toBe("destroy");
   });
@@ -125,32 +125,32 @@ describe("retained visible Home directory bootstrap", () => {
     expect(owner.instanceId).toBe(77);
     expect(owner.ownsInstance).toBe(false);
     expect(calls.some((call) => call === "create")).toBe(false);
-    expect(calls.find((call) => call.startsWith("action:setClient:"))).toContain('"clientId":"user-a"');
+    expect(owner.viewState.sessionIdentity).toEqual({ userId: "user-a", displayName: "Ada Author" });
     expect(order).toEqual(["refresh", "directory-bootstrap-open"]);
     await closeDirectoryHomeOwnerV1(owner, (message) => posts.push(message));
     expect(calls).not.toContain("destroy");
   });
 
-  it("suppresses an obsolete identity terminal before replacing it on the same visible instance", async () => {
-    const firstTerminal = deferred<ReturnType<typeof terminal>>();
+  it("suppresses an obsolete owner before replacing its host identity on the same visible instance", async () => {
+    const firstRefresh = deferred<void>();
     const calls: string[] = [];
-    const plugin = handle(fixture.receipt, calls, firstTerminal.promise);
+    const plugin = handle(fixture.receipt, calls);
     const firstPosts: BackboneWorkerRequest[] = [];
     const firstAbort = new AbortController();
-    const first = ownerFor(plugin, firstPosts, { instance: { instanceId: 77, viewState: {} }, signal: firstAbort.signal });
+    const first = ownerFor(plugin, firstPosts, { instance: { instanceId: 77, viewState: {} }, signal: firstAbort.signal, beforeBootstrap: () => firstRefresh.promise });
     await Promise.resolve();
     firstAbort.abort("identity-replaced");
-    firstTerminal.resolve(terminal(null));
+    firstRefresh.resolve();
     await expect(first).rejects.toThrow("directory-bootstrap.stale-owner");
     expect(firstPosts).toEqual([]);
 
     const secondPosts: BackboneWorkerRequest[] = [];
     const secondPlugin = handle(fixture.receipt, calls);
     const second = await ownerFor(secondPlugin, secondPosts, { identity: fixture.identities.b, instance: { instanceId: 77, viewState: {} } });
-    const identities = calls.filter((call) => call.startsWith("action:setClient:")).map((call) => JSON.parse(call.split(":").slice(2).join(":")).arguments.clientId);
-    expect(identities).toEqual(["user-a", "user-b"]);
+    expect(calls).toEqual([]);
     expect(secondPosts).toHaveLength(1);
     expect(second.identity).toEqual(fixture.identities.b);
+    expect(second.viewState.sessionIdentity).toEqual({ userId: "user-b", displayName: "Bert Spectator" });
     await closeDirectoryHomeOwnerV1(second, (message) => secondPosts.push(message));
   });
 
@@ -158,7 +158,8 @@ describe("retained visible Home directory bootstrap", () => {
     const result = deferred<unknown>();
     const posts: BackboneWorkerRequest[] = [];
     const calls: string[] = [];
-    const owner = await ownerFor(handle(result.promise, calls), posts);
+    const viewStates: ViewModel[] = [];
+    const owner = await ownerFor(handle(result.promise, calls, viewStates), posts);
     posts.length = 0;
     const pending = applyDirectoryEventPageBootstrapV1(owner, page, (message) => posts.push(message));
     const duplicate = await applyDirectoryEventPageBootstrapV1(owner, page, (message) => posts.push(message));
@@ -172,6 +173,8 @@ describe("retained visible Home directory bootstrap", () => {
     });
     expect(posts).toEqual([]);
     expect(JSON.parse(calls.find((call) => call.startsWith("action:applyDirectoryEventPage:"))!.split(":").slice(2).join(":"))).toMatchObject({ address: { actionId: "applyDirectoryEventPage" }, arguments: { pageJson: page.canonicalJson } });
+    expect(viewStates).toHaveLength(1);
+    expect(viewStates[0]?.sessionIdentity).toEqual({ userId: "user-a", displayName: "Ada Author" });
     result.resolve(fixture.receipt);
     expect((await pending).receipt).toEqual(fixture.receipt);
     expect(posts).toEqual([{ kind: "directory-bootstrap-ack", bootstrapEpoch: 3, sessionBindingSha256: fixture.receipt.sessionBindingSha256, authorizationGeneration: 7, throughSeqInclusive: 11, receiptSha256: fixture.receipt.receiptSha256 }]);

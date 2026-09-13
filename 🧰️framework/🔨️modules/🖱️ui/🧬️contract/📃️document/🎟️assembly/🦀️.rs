@@ -221,8 +221,21 @@ impl UiDocumentAssembly {
         Ok(UiDocumentAssemblyProgress { progressed: step.progressed, metadata_items: usize::from(step.progressed), moved_bytes: step.placed_bytes, complete: source.is_none(), ..Default::default() })
     }
 
-    /// 📉️ A caller's complete resident census may return unused credit while the root remains owned here.
-    pub fn shrink_resident(&mut self, limits: UiResidentLimits, items: usize, bytes: usize) -> Result<UiDocumentAssemblyProgress, UiDocumentAssemblyError> {
+    /// 🔎️ What the root's credit currently holds, so a caller climbing toward the per-surface ceiling can
+    /// see whether it must reprice at all.
+    pub fn resident_limits(&self) -> Result<UiResidentLimits, UiDocumentAssemblyError> {
+        let handle = self.handle()?;
+        let arena = arena()?;
+        let slot = arena.slot(handle).ok_or_else(|| error(UiDocumentAssemblyErrorKind::Stale))?;
+        Ok(slot.resident.as_ref().ok_or_else(|| error(UiDocumentAssemblyErrorKind::Stale))?.limits())
+    }
+
+    /// ⚖️ A caller's running census reprices the root's credit in either direction — climbing while it
+    /// allocates, returning the unused remainder once the census is complete — while the root stays owned
+    /// here. Never below what the slot has already allocated, and never once the output obligation has been
+    /// split off (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B58: a reservation taken at the per-surface
+    /// ceiling admitted three surfaces of a thirteen-surface session).
+    pub fn reprice_resident(&mut self, limits: UiResidentLimits, items: usize, bytes: usize) -> Result<UiDocumentAssemblyProgress, UiDocumentAssemblyError> {
         let handle = self.handle()?;
         if items == 0 || bytes < size_of::<UiResidentPermit>() {
             return Ok(Default::default());
@@ -237,7 +250,7 @@ impl UiDocumentAssembly {
             return Err(error(UiDocumentAssemblyErrorKind::Allocation));
         }
         let permit = slot.resident.as_mut().ok_or_else(|| error(UiDocumentAssemblyErrorKind::Stale))?;
-        let progressed = permit.try_shrink(limits).map_err(resident_error)?;
+        let progressed = permit.try_reprice(limits).map_err(resident_error)?;
         Ok(UiDocumentAssemblyProgress { progressed, metadata_items: usize::from(progressed), complete: progressed, ..Default::default() })
     }
 

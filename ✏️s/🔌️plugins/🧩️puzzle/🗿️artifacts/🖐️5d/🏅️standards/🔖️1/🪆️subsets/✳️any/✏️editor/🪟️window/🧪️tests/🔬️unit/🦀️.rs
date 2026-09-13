@@ -87,3 +87,32 @@ use super::*;
         assert_eq!(transient.engagement_input.capacity(), capacity);
         retire_returned_puzzle5d_transient(transient);
     }
+
+    /// 🎒️ Both Puzzle 5D window kinds survive one pack and one text round trip — the record-backed
+    /// codecs they gained when `WindowConfigOwner::State` grew its `DslField` bound.
+    #[test]
+    fn window_configs_pack_round_trip_every_persisted_option() {
+        let board = Puzzle5dBoardWindowConfig {
+            camera2d: Puzzle5dCamera2d { x: 3.5, y: -7.25, zoom: 2.5 },
+            fill_count: 17,
+            lod_mode: "manual".into(),
+            suggestion_offset: 4.75,
+            grid_snap_enabled: false,
+            grid_factor: 0.25,
+        };
+        assert_ne!(board, Puzzle5dBoardWindowConfig::default(), "the board fixture must differ from the default");
+        let decoded = <Puzzle5dBoardWindowConfig as store::ArtifactPack>::decode_pack(&store::ArtifactPack::encode_pack(&board)).expect("board pack decodes");
+        assert_eq!(decoded, board, "one board pack round trip must preserve every persisted option");
+        let parsed = <Puzzle5dBoardWindowConfig as store::ArtifactDsl>::parse_dsl(&store::ArtifactDsl::print_dsl(&board)).expect("board text parses");
+        assert_eq!(parsed, board, "one board text round trip must preserve every persisted option");
+
+        let world = Puzzle5dWorldWindowConfig {
+            camera3d: Puzzle5dCamera3d { position: [1.0, 2.0, 3.0], target: [4.0, 5.0, 6.0], zoom: 2.5 },
+            sun: WorldSunConfig { enabled: true, azimuth: 12.5, elevation: 33.0, intensity: 0.5, color: "#102030".into() },
+        };
+        assert_ne!(world, Puzzle5dWorldWindowConfig::default(), "the world fixture must differ from the default");
+        let decoded = <Puzzle5dWorldWindowConfig as store::ArtifactPack>::decode_pack(&store::ArtifactPack::encode_pack(&world)).expect("world pack decodes");
+        assert_eq!(decoded, world, "one world pack round trip must preserve every persisted option");
+        let parsed = <Puzzle5dWorldWindowConfig as store::ArtifactDsl>::parse_dsl(&store::ArtifactDsl::print_dsl(&world)).expect("world text parses");
+        assert_eq!(parsed, world, "one world text round trip must preserve every persisted option");
+    }

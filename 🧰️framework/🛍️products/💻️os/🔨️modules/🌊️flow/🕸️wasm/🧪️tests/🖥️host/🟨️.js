@@ -1,8 +1,8 @@
-import { FLOW_MAX_REQUEST_BYTES, FlowOperation, attachFlowSurface, createFlowFeatures, createFlowHost, decodeFlowMessage } from "../../📦️packages/🟨️javascript/🖥️flow-host.js";
-import { createFlowBrowserRuntime } from "../../📦️packages/🟨️javascript/🌐️flow-browser.js";
-import * as flowBrowser from "../../📦️packages/🟨️javascript/🌐️flow-browser.js";
+import { FLOW_MAX_REQUEST_BYTES, FlowOperation, attachFlowSurface, createFlowFeatures, createFlowHost, decodeFlowMessage } from "../../🖥️host/🏃️runtime/🟨️.js";
+import { createFlowBrowserRuntime } from "../../🌐️browser/🏃️runtime/🟨️.js";
+import * as flowBrowser from "../../🌐️browser/🏃️runtime/🟨️.js";
 import { readFile } from "node:fs/promises";
-import { flowWasmContract } from "../../../🧪️tests/🌐️browser-declaration/🟦️.ts";
+import { flowWasmContract } from "../🧬️schema-oracle/🛂️admission/🟦️.ts";
 import { deepStrictEqual } from "node:assert";
 import { MockFlowBridge } from "../🎭️mock-flow-bridge/🟦️.ts";
 import { testFlowOpenOwnership } from "../🔓️open-ownership/🟦️.ts";

@@ -332,10 +332,15 @@
       "additionalProperties": false,
       "required": [
         "project",
+        "source",
         "keys",
         "platforms"
       ],
       "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
         "project": {
           "type": "string"
         },
@@ -715,7 +720,8 @@
         "tool",
         "producer",
         "toolOutput",
-        "output"
+        "output",
+        "toolProject"
       ],
       "properties": {
         "project": {
@@ -731,6 +737,9 @@
           "type": "string"
         },
         "output": {
+          "type": "string"
+        },
+        "toolProject": {
           "type": "string"
         }
       }
@@ -770,7 +779,6 @@
         "project",
         "renderer",
         "profiles",
-        "engines",
         "fonts"
       ],
       "properties": {
@@ -784,13 +792,6 @@
           "type": "string"
         },
         "profiles": {
-          "type": "array",
-          "minItems": 2,
-          "items": {
-            "type": "string"
-          }
-        },
-        "engines": {
           "type": "array",
           "minItems": 2,
           "items": {

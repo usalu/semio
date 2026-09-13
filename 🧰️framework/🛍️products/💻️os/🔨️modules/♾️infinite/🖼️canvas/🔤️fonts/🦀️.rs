@@ -1,8 +1,8 @@
 //! 🪶️ GUESTSLIM: writes the packed typst default font set to the path given as `argv[1]`, in the
 //! same `[u32le count][u32le len, bytes]*` wire format `infinite_canvas::host_asset::split_blobs`
 //! decodes guest-side and the native plugin host's `pack_asset_blobs` produces for `read-asset`.
-//! Invoked once (cached) by os-dev `📜️script.ts`'s `ensureGuestSlimTypstFontsAsset` so the browser
-//! dev pipeline can static-serve an identical blob for the jco/worker path.
+//! Nx builds this standalone tool, then `semio-framework-os-infinite:fonts` publishes the blob
+//! for browser and native hosts.
 use std::env;
 use std::fs;
 

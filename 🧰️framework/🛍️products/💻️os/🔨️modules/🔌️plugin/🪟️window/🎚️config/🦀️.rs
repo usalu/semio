@@ -9,12 +9,16 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 
+#[path = "📥️retained/🦀️.rs"]
+mod retained;
+pub use retained::{WindowConfigPackLoad, WindowConfigPackLoadDiagnostic, WindowConfigPackLoadGrant, WindowConfigPackLoadPhase, WindowConfigPackLoadProgress, WindowConfigPackLoadStep};
+
 /// 🪟️ Declares one concrete window kind's persisted-local configuration owner.
 pub trait WindowConfigOwner: Send + Sync + 'static {
     const WINDOW_KIND_ID: &'static str;
     const SCHEMA: &'static str;
     const MAXIMUM_PUBLICATION_BYTES: usize;
-    type State: Clone + Default + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ConfigRecord + store::ArtifactPack + 'static;
+    type State: Clone + Default + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ConfigRecord + store::ArtifactPack + store::mounted_pack_rt::DslField + 'static;
     type Mutation: protocol::Mutation<Self::State> + PartialEq + Send + protocol::OpText + protocol::OpBinary + 'static;
 
     fn build_store_owners() -> store::DocumentStoreOwners<Self::State, Self::Mutation>;
@@ -361,7 +365,8 @@ trait ErasedWindowConfigStoreOwner: Send {
     fn advance(&mut self, publication: &mut dyn ErasedWindowConfigPublication, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemAdvance, Fault>;
     fn refresh(&mut self, authority: &mut WindowConfigAuthority) -> Result<(), Fault>;
     fn packs<'a>(&'a self) -> Pin<Box<dyn Future<Output = Result<Vec<WindowConfigPack>, Fault>> + 'a>>;
-    fn load<'a>(&'a mut self, window_id: &'a str, files: store::ArtifactPackFiles) -> Pin<Box<dyn Future<Output = Result<(), Fault>> + 'a>>;
+    fn begin_retained_load(&mut self, registry_lifetime: u64, pack: WindowConfigPack) -> WindowConfigPackLoad;
+    fn commit_retained_load(&mut self, registry_lifetime: u64, load: &mut dyn retained::ErasedWindowConfigPackLoad) -> Result<WindowConfigPackLoadStep, WindowConfigPackLoadDiagnostic>;
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;
     fn terminal_is_empty(&self) -> bool;
 }
@@ -462,18 +467,13 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
         })
     }
 
-    fn load<'a>(&'a mut self, window_id: &'a str, files: store::ArtifactPackFiles) -> Pin<Box<dyn Future<Output = Result<(), Fault>> + 'a>> {
-        Box::pin(async move {
-            let parsed: store::ParsedDocumentText<O::State, O::Mutation> = store::parse_document_pack(&files.pack, &files.spr).await.map_err(|error| error.into_fault())?;
-            if parsed.envelope.schema != O::SCHEMA {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.schema"), "window config pack schema does not match its registered concrete window owner"));
-            }
-            let (applied, redo) = match &parsed.envelope.cursor {
-                Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
-                None => (parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
-            };
-            self.partition(window_id).await?.store.reset(parsed.into_envelope(), applied, redo).await.map(|_| ()).map_err(|error| error.into_fault())
-        })
+    fn begin_retained_load(&mut self, registry_lifetime: u64, pack: WindowConfigPack) -> WindowConfigPackLoad {
+        let partition_generation = self.partitions.get(&pack.window_id).map(|partition| partition.store.generation());
+        retained::begin_typed_window_config_pack_load::<O>(registry_lifetime, partition_generation, pack)
+    }
+
+    fn commit_retained_load(&mut self, registry_lifetime: u64, load: &mut dyn retained::ErasedWindowConfigPackLoad) -> Result<WindowConfigPackLoadStep, WindowConfigPackLoadDiagnostic> {
+        retained::commit_typed_window_config_pack_load::<O>(registry_lifetime, &mut self.partitions, load)
     }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
@@ -498,9 +498,16 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
 }
 
 /// 🗂️ Runtime registry of heterogeneous persisted-local window config schemas.
-#[derive(Default)]
 pub struct WindowConfigOwnerRegistry {
     owners: BTreeMap<&'static str, Box<dyn ErasedWindowConfigStoreOwner>>,
+    lifetime: u64,
+}
+
+impl Default for WindowConfigOwnerRegistry {
+    fn default() -> Self {
+        static NEXT_LIFETIME: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+        Self { owners: BTreeMap::new(), lifetime: NEXT_LIFETIME.fetch_add(1, std::sync::atomic::Ordering::Relaxed) }
+    }
 }
 
 impl WindowConfigOwnerRegistry {
@@ -570,7 +577,94 @@ impl WindowConfigOwnerRegistry {
     }
 
     pub async fn load(&mut self, pack: WindowConfigPack) -> Result<(), Fault> {
-        self.owners.get_mut(pack.window_kind_id.as_str()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.owner"), "window config pack has no registered concrete window owner"))?.load(&pack.window_id, pack.files).await
+        let mut load = self.begin_retained_load(pack)?;
+        let grant = WindowConfigPackLoadGrant::one_page();
+        let mut rejected = None;
+        for _ in 0..1_048_576 {
+            let step = if rejected.is_some() || matches!(load.phase(), WindowConfigPackLoadPhase::RetiringDisplacedStore) {
+                match self.close_retained_load_step(&mut load, grant)? {
+                    PluginCloseStep::Complete if load.terminal_is_empty() => break,
+                    _ => continue,
+                }
+            } else {
+                self.advance_retained_load(&mut load, grant)
+            };
+            match step {
+                WindowConfigPackLoadStep::Pending(_) => {}
+                WindowConfigPackLoadStep::Ready => match self.commit_retained_load(&mut load) {
+                    WindowConfigPackLoadStep::Rejected(diagnostic) => rejected = Some(diagnostic),
+                    _ => {}
+                },
+                WindowConfigPackLoadStep::Rejected(diagnostic) => rejected = Some(diagnostic),
+                WindowConfigPackLoadStep::Complete => break,
+            }
+        }
+        if !load.terminal_is_empty() {
+            load.request_cancel();
+            for _ in 0..1_048_576 {
+                if self.close_retained_load_step(&mut load, grant)? == PluginCloseStep::Complete && load.terminal_is_empty() {
+                    break;
+                }
+            }
+        }
+        if !load.terminal_is_empty() {
+            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.load-retirement"), "retained window config load did not reach terminal emptiness within its declared bound"));
+        }
+        if let Some(diagnostic) = rejected {
+            return Err(Self::load_fault(diagnostic));
+        }
+        Ok(())
+    }
+
+    /// 📥️ Begins a retained exact-partition Pack load without changing live authority.
+    pub fn begin_retained_load(&mut self, pack: WindowConfigPack) -> Result<WindowConfigPackLoad, Fault> {
+        let kind = pack.window_kind_id.clone();
+        self.owners
+            .get_mut(kind.as_str())
+            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.owner"), "window config pack has no registered concrete window owner"))
+            .map(|owner| owner.begin_retained_load(self.lifetime, pack))
+    }
+
+    /// 🧵️ Advances one bounded retained decode or hydration unit.
+    pub fn advance_retained_load(&mut self, load: &mut WindowConfigPackLoad, grant: WindowConfigPackLoadGrant) -> WindowConfigPackLoadStep {
+        if load.inner.registry_lifetime() != self.lifetime || !self.owners.contains_key(load.inner.window_kind_id()) {
+            return load.inner.reject_stale();
+        }
+        load.inner.advance(grant)
+    }
+
+    /// 🔐️ Publishes a ready candidate only if its registry and exact-partition witnesses remain current.
+    pub fn commit_retained_load(&mut self, load: &mut WindowConfigPackLoad) -> WindowConfigPackLoadStep {
+        if load.inner.registry_lifetime() != self.lifetime {
+            return load.inner.reject_stale();
+        }
+        let kind = load.inner.window_kind_id().to_string();
+        let Some(owner) = self.owners.get_mut(kind.as_str()) else { return load.inner.reject_stale() };
+        match owner.commit_retained_load(self.lifetime, load.inner.as_mut()) {
+            Ok(step) => step,
+            Err(_) => load.inner.reject_stale(),
+        }
+    }
+
+    /// ♻️ Retires a cancelled, rejected, committed, or displaced load candidate under an exact grant.
+    pub fn close_retained_load_step(&mut self, load: &mut WindowConfigPackLoad, grant: WindowConfigPackLoadGrant) -> Result<PluginCloseStep, Fault> {
+        load.inner.close_step(grant).map_err(|message| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.load-retirement"), message))
+    }
+
+    fn load_fault(diagnostic: WindowConfigPackLoadDiagnostic) -> Fault {
+        let code = match diagnostic {
+            WindowConfigPackLoadDiagnostic::EnvelopeIdentity => "window-config.pack-envelope",
+            WindowConfigPackLoadDiagnostic::Pack => "window-config.pack",
+            WindowConfigPackLoadDiagnostic::TypedState => "window-config.typed-state",
+            WindowConfigPackLoadDiagnostic::History => "window-config.history",
+            WindowConfigPackLoadDiagnostic::InnerIdentity => "window-config.inner-identity",
+            WindowConfigPackLoadDiagnostic::Replay => "window-config.replay",
+            WindowConfigPackLoadDiagnostic::Capacity => "window-config.capacity",
+            WindowConfigPackLoadDiagnostic::Stale => "window-config.stale",
+            WindowConfigPackLoadDiagnostic::Cancelled => "window-config.cancelled",
+            WindowConfigPackLoadDiagnostic::Retirement => "window-config.retirement",
+        };
+        Fault::new(FaultOrigin::Framework, FaultCode::new(code), "retained exact window config Pack load was rejected")
     }
 
     pub(crate) fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {

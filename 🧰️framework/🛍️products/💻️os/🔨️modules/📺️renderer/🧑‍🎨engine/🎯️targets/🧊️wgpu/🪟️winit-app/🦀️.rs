@@ -33,6 +33,9 @@ fn render_frame_operation_id() -> semio_framework_trace::OperationId {
     *ID.get_or_init(semio_framework_trace::allocate_operation_id)
 }
 
+/// 📮️ Runtime completions one host tick may apply before it must go on and present.
+const RUNTIME_APPLY_TICK_CREDITS: u32 = 8;
+
 /// 🔢️ Advances a mounted frame generation once and permanently refuses exhaustion.
 fn advance_frame_generation(generation: &mut u64) -> bool {
     let Some(next) = generation.checked_add(1) else { return false };
@@ -83,6 +86,7 @@ impl WindowDelegate for OsHost {
     // 🚫️async: U1 — the enqueue itself never awaits; the batched dispatch this feeds is the boundary-
     // async exception U1 itself carves out.
     fn handle_event(&mut self, event: DispatchEvent) {
+        crate::log_debug(&format!("[DEBUG] os_host handle_event {event:?} gen={}", self.frame_generation));
         if enqueue_host_event(&mut self.events, &mut self.scheduler, self.ui_token, &mut self.frame_generation, event) == ui_host::EnqueueOutcome::Overflow {
             crate::log_debug("os_host: discrete input queue overflow — a redraw has not drained in a while");
         }
@@ -125,9 +129,19 @@ impl OsHost {
 
     fn redraw_core(&mut self) -> RedrawOutcome {
         let _ = crate::surface_lane::MountedSurfaceResizeLane::close_abandoned_step();
+        // 🔢️ The frame generation names the INPUT STATE a build is answering, so it advances when input
+        // changes (`enqueue_host_event`/`enqueue_host_metrics`) and when a redraw finds no build to
+        // invalidate — never underneath a live one.
+        //
+        // 🩸️ `frame_ready` is only ever set by the native `HostUserEvent::FrameReady` proxy; the browser
+        // worker has no such proxy, so this used to renumber the inputs on EVERY tick. A build was
+        // therefore superseded one tick after it was admitted and could never take a second step: on
+        // 6118 exactly one build ever ran (`frame build admitted generation=Generation(3)`), the next
+        // tick superseded it, and the shell produced no further frame for the rest of the session
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
         if self.frame_ready {
             self.frame_ready = false;
-        } else {
+        } else if !self.frame_build.has_live_session() {
             if !advance_frame_generation(&mut self.frame_generation) {
                 self.present_fault = Some("frame generation exhausted".to_string());
             }
@@ -169,7 +183,9 @@ impl OsHost {
         if !self.events.is_empty() && self.runtime.has_lossless_capacity() {
             let generation = self.events.current_generation();
             let drained = self.events.drain_page(ui_host::WorkerContext::new(generation));
-            let _ = self.runtime.enqueue_apply(None, true, crate::RuntimeApply::DispatchEvents(Some(crate::RuntimeDispatchCursor::new(drained))));
+            let drained_shape = format!("move={} scroll={} metrics={} discrete={}", drained.pointer_move.is_some(), drained.scroll.is_some(), drained.metrics.is_some(), drained.discrete.iter().filter(|slot| slot.is_some()).count());
+            let admitted = self.runtime.enqueue_apply(None, true, crate::RuntimeApply::DispatchEvents(Some(crate::RuntimeDispatchCursor::new(drained))));
+            crate::log_debug(&format!("[DEBUG] os_host drain events generation={generation:?} {drained_shape} enqueue-apply={admitted}"));
         }
         // 🧵️ `poll_runtime_and_resubmit` never waits: it accepts a fresh completed frame or leaves the
         // last presentation in place, then schedules at most one worker-owned frame transaction.
@@ -177,7 +193,15 @@ impl OsHost {
         let build_operation = render_frame_operation_id();
         let build_generation = semio_framework_trace::Generation(self.frame_generation);
         self.runtime.observe_presentation_input_generation(build_generation.0);
+        // 📮️ One bounded mailbox share per host tick, taken BEFORE the presentation gate — a completion
+        // that arrives while no frame build can run (the interaction state is checked out, or a
+        // presentation is still pending) must still be applied within the next frame.
+        let _ = self.runtime.pump_pending_applies(RUNTIME_APPLY_TICK_CREDITS);
         let runtime = self.runtime.clone();
+        // 🩺️ The presentation gate decides whether a frame build runs at all, and a frame build is the
+        // ONLY thing that pumps the runtime mailbox — so a gate stuck shut is indistinguishable from
+        // "input never dispatched" unless it says who is holding it.
+        crate::log_debug_once_per_transition("frame-gate", self.presenter.has_pending_presentation(), &format!("[DEBUG] os_host frame gate blocked={} {} generation={build_generation:?}", self.presenter.has_pending_presentation(), self.presenter.presentation_gate_shape()));
         let frame_build = &mut self.frame_build;
         let _ = self.presenter.admit_next_frame(|| frame_build.poll_runtime_and_resubmit(runtime, build_inputs, build_operation, build_generation));
         // 🖼️ Drive the present cursor for the rest of this tick's interactive share instead of one
@@ -213,6 +237,7 @@ impl OsHost {
             Ok(crate::AppPresentStep::Pending) => self.scheduler.invalidate(InvalidationReason::RESOURCE_READY),
             Ok(crate::AppPresentStep::Idle) => return,
             Err(error) => {
+                crate::log_debug(&format!("[DEBUG] os_host present_step faulted: {error}"));
                 self.present_fault = Some(error);
                 if self.presenter.has_pending_presentation() {
                     self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
@@ -275,6 +300,7 @@ fn semio_cursor_to_request(cursor: ui_wgpu::wgpu::SemioCursor) -> CursorRequest 
 /// (`dispatch_actions`/world3d/graph/map/board call sites all branch on `0`/`1`/`2` verbatim).
 /// 📤️ P3a: the runtime mailbox invokes this for one retained cursor item per worker turn.
 pub(crate) async fn dispatch_normalized_event(app: &mut AppInteractionState, event: DispatchEvent) {
+    crate::log_debug(&format!("[DEBUG] os_host dispatch_normalized_event {event:?}"));
     match event {
         DispatchEvent::PointerMove { x, y, .. } => {
             let (down, button, modifiers) = (app.pointer_down, app.pointer_button, app.modifiers.clone());

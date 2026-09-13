@@ -6,35 +6,35 @@ The plugin's local AGENTS document defines shooting as turning 3D assets into ic
 
 The aggregate suite changes from unrelated penguin to `🎥️mutate-shooting-1`. The asset-creation owner changes from seedling to `➕️create-asset`; all other 30 mutation owners have meaningful, distinct subject/action identities and are retained.
 
-| Scenario | Chosen emoji | Meaning inspected in the payload |
-| --- | --- | --- |
-| appends-saved-camera-top | 🎥️ | Adds saved camera cam-top |
-| repositions-cam-close-view | 📍️ | Replaces camera position and view |
-| moves-cam-close-to-front | 🔁️ | Reorders saved cameras |
-| rewrites-cam-wide-through-shot-wide | 📷️ | Replaces the shot camera |
-| heightens-shot-close-to-768 | ↕️ | Changes vertical output resolution |
-| widens-shot-close-to-1024 | ↔️ | Changes horizontal output resolution |
-| moves-shot-close-to-front | ⬆️ | Moves the shot to index zero |
-| offsets-both-assets-and-skips-a-ghost | 🚚️ | Translates the two present assets |
-| activates-shot-close | 🎯️ | Selects the active shot |
-| rounds-shot-wide-to-ellipse | ⭕️ | Changes the crop to an ellipse |
-| switches-shot-wide-to-svg | 🎨️ | Selects SVG output |
-| appends-shot-macro | 📸️ | Creates a shot |
-| polishes-scene-material-to-quarter | ✨️ | Reduces material roughness |
-| dims-scene-ambient-to-quarter | 🔅️ | Reduces ambient lighting |
-| dims-scene-sun-to-half | 💡️ | Reduces direct-light intensity |
-| raises-scene-sun-to-60-degrees | 🌅️ | Raises solar elevation |
-| switches-scene-sun-off | ☀️ | Disables the sun |
-| switches-scene-shadows-off | 🌑️ | Disables shadows |
-| turns-scene-sun-to-315-degrees | 🧭️ | Changes solar azimuth |
-| doubles-asset-hero-scale | 📏️ | Doubles all scale factors |
-| renames-asset-hero-to-lead | 🏷️ | Changes the asset name |
-| moves-asset-hero-behind-asset-prop | 🔀️ | Reorders assets |
-| removes-trailing-asset-prop | 🗑️ | Deletes the asset |
-| spins-asset-hero-about-z | 🔄️ | Rotates about the Z axis |
-| activates-asset-prop | 📌️ | Selects the active asset |
-| appends-asset-detail | ➕️ | Adds the detail asset |
-| points-asset-prop-at-v2-mesh | 🌐️ | Replaces the asset URL |
+| Scenario                              | Chosen emoji | Meaning inspected in the payload     |
+| ------------------------------------- | ------------ | ------------------------------------ |
+| appends-saved-camera-top              | 🎥️           | Adds saved camera cam-top            |
+| repositions-cam-close-view            | 📍️           | Replaces camera position and view    |
+| moves-cam-close-to-front              | 🔁️           | Reorders saved cameras               |
+| rewrites-cam-wide-through-shot-wide   | 📷️           | Replaces the shot camera             |
+| heightens-shot-close-to-768           | ↕️           | Changes vertical output resolution   |
+| widens-shot-close-to-1024             | ↔️           | Changes horizontal output resolution |
+| moves-shot-close-to-front             | ⬆️           | Moves the shot to index zero         |
+| offsets-both-assets-and-skips-a-ghost | 🚚️           | Translates the two present assets    |
+| activates-shot-close                  | 🎯️           | Selects the active shot              |
+| rounds-shot-wide-to-ellipse           | ⭕️           | Changes the crop to an ellipse       |
+| switches-shot-wide-to-svg             | 🎨️           | Selects SVG output                   |
+| appends-shot-macro                    | 📸️           | Creates a shot                       |
+| polishes-scene-material-to-quarter    | ✨️           | Reduces material roughness           |
+| dims-scene-ambient-to-quarter         | 🔅️           | Reduces ambient lighting             |
+| dims-scene-sun-to-half                | 💡️           | Reduces direct-light intensity       |
+| raises-scene-sun-to-60-degrees        | 🌅️           | Raises solar elevation               |
+| switches-scene-sun-off                | ☀️           | Disables the sun                     |
+| switches-scene-shadows-off            | 🌑️           | Disables shadows                     |
+| turns-scene-sun-to-315-degrees        | 🧭️           | Changes solar azimuth                |
+| doubles-asset-hero-scale              | 📏️           | Doubles all scale factors            |
+| renames-asset-hero-to-lead            | 🏷️           | Changes the asset name               |
+| moves-asset-hero-behind-asset-prop    | 🔀️           | Reorders assets                      |
+| removes-trailing-asset-prop           | 🗑️           | Deletes the asset                    |
+| spins-asset-hero-about-z              | 🔄️           | Rotates about the Z axis             |
+| activates-asset-prop                  | 📌️           | Selects the active asset             |
+| appends-asset-detail                  | ➕️           | Adds the detail asset                |
+| points-asset-prop-at-v2-mesh          | 🌐️           | Replaces the asset URL               |
 
 The already meaningful two deletion/refusal symbols and two label-text symbols remain. These are exact handpicked names, not automatically selected labels. Stable scenario identifiers and all fixture payload content remain unchanged.
 

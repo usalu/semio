@@ -102,3 +102,99 @@ The taxonomy path already belongs to the root HTML map. Puzzle therefore adds tw
 
 Norm oracle ownership is accepted in `📓️coordinator-norm-oracle-source-ownership-2026-09-13.md`: one semantic Python engine,15rebound adapters,799unchanged distinct registrations, exact17input closure, direct6/137 and actual isolated Nx6/137/16.3s, including65real EN1991 CLI scenario passes. Exact27current+1removed product identities are retained. The stale vector URI stem is repaired. Generic host changes belong to Sol’s composition lane; DIN16798 duplicate identity remains a separate contract finding. No full15-standard parity claim.
 Use the exact28-path Norm map, preserving its overlaps with already-owned taxonomy, project and launch paths; do not add raw counts to the historical root ledger. This new report is retained authored evidence. The separate composition review attributes no root product change.
+
+
+## HTML Normalization Reader Repair
+
+The exact seven updated product identities are listed in `📓️coordinator-html-normalization-reader-repair-2026-09-13.md`; all are present. Several overlap prior HTML and shared-router/discovery work, so no arithmetic total is added here. Final exact union must deduplicate this report with the earlier mappings. The coordinator also retained the Sequence and PostCSS read-only intake reports and the non-Vitest configuration review/index entries.
+
+
+Misplaced Nx output disposition is complete for the exact six inventoried files in `📓️coordinator-misplaced-nx-output-disposition-2026-09-13.md`:230739336generatedbytes removed after installed Nx producer/format verification, a current-source reference scan, three native open-handle checks and exact final inode/size/mtime/SHA identity checks. Five empty parents includingTwere removed; the now-nonemptyroot `🗑️generated` was preserved. This does not authorize deletion of newly present or unrelated output.
+
+
+## Preserved Router Probe Closure
+
+`📓️coordinator-router-probe-input-preservation-2026-09-13.md` records the completed byte-identical preservation of the inactive authored probe at `📋️router-grammar-inputs/🧭️body-classification/🟦️.ts`, including installed-TypeScript parsing with zero diagnostics. The old root probe and its generated JSON were removed after all four historical result rows were retained in Markdown. The empty root `🗑️generated` is absent. Attribute the exact created and removed identities from that report; the report itself is retained authored evidence. This is provenance and placement work, not a current router classification or runtime result.
+
+
+Wave eight completed at 2026-09-13T01:44:09.717Z: 139193 classified paths, 163 filename findings, zero target-inside-package boundaries, zero vanished directories. Exactly 36 earlier finding identities disappeared and none were added. The retained `📓️current-filename-census-wave-eight-2026-09-13.md` contains every current and removed row. This census attributes only its report and coordination updates, with no product change or body/context/runtime acceptance.
+
+
+Hub current intake is retained in `📓️coordinator-hub-composition-current-intake-2026-09-13.md`: 52 registrations and the complete 435-statement/1526-edge native-checker graph, existing bootstrap/publication fixture authorities, current source-as-data boundaries and the concrete duplicated MCP runner-path selection. This is read-only preparation for the next composition slice, with no native runtime or product change claim.
+
+
+Current package discovery is retained in `📓️coordinator-package-discovery-wave-eight-2026-09-13.md`: 223 marked packages, 58 implementation diagnostics, six unresolved, 185 structural, 169 unmarked manifests, four unknown roles and one unknown language. These are exact current diagnostics, not 423 mandatory source moves or full-body/context/runtime acceptance. OS/library were in flight. Library workspaces publication and historical FEM handoff generation remain explicit separate responsibilities after the nine-owner slice.
+
+
+The remaining library workspace publication and historical FEM report reconstruction are now scoped in `📓️library-workspaces-historical-handoff-followup-2026-09-13.md`. Reuse the existing workspace discovery owner, verify publication only on private fixtures, and retire permanent historical report regeneration while preserving all five archived input/evidence files byte-identically. Current source/target/fixture/launch relationships are enumerated. No product change or historical execution occurred for this packet.
+
+
+PostCSS native prerequisites are now executed in `📓️coordinator-postcss-loader-current-intake-2026-09-13.md`: two portable vectors agree byte-for-byte through fixed/anonymous loaders under Bun and Node, anonymous .mts package resolution works, and actual Vite write:false proves filename-string selection leaves @apply unchanged while explicit inline plugins transform correctly. Two authored JSON control files are retained. This is native preparation, not the pending PostCSS source move or full application build.
+
+
+## OS And Cargo Acceptance Records
+
+Created retained `📓️coordinator-os-dev-composition-ownership-review-2026-09-13.md` and `📓️coordinator-library-cargo-transaction-ownership-review-2026-09-13.md`; updated this ledger, work queue and executor index. Root independently read final reports and verified all 80 OS and 39 Cargo product identities as regular files, retaining exact identity observations. No product mutation or repeated runtime check occurred. Private integrity JSON is disposable under `🗑️generated/coordinator/acceptance-2026-09-13`; the full rows are retained in the reviews.
+
+
+## OS Staging Source Repair
+
+Created `📓️coordinator-os-staging-root-source-repair-2026-09-13.md`; updated queue/index/this ledger. Exact changed product files:
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🔌️staging-root.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🔌️staging-root/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json`
+- `.vscode/🧩️launch.seed.jsonc`
+- `.vscode/launch.json`
+
+The first three repair source selection, portable URL/sandbox behavior, and exact cache inputs; launch adds one selector through the current producer. 37 focused cases pass directly and through actual registered Nx. All raw output is private and disposable under coordinator/os-staging-root-repair.
+
+
+Created retained `📓️coordinator-postcss-loader-ownership-review-2026-09-13.md`; updated queue/index/this ledger. Root verified PostCSS exact ten-product/three-ticket record union and fully read Sol/Terra final evidence; no additional product mutation. Read-only staging audit is accepted. Root native prerequisite and staging generated children have no active root sessions and are candidates for exact scoped cleanup only after native open-handle checks.
+
+
+At 2026-09-13T02:40:11.199Z, root removed only its two completed generated children after native lsof +D returned exit1 with no open-handle rows and all root sessions had ended. The complete accepted evidence, current authored controls, reports and product fixtures remain. Native no-follow inventory and final absence checks:
+
+| Owned generated child | Files | Directories | Symlinks | Bytes | Final state |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `🗑️generated/coordinator/postcss-loader` | 18 | 8 | 0 | 1008530 | absent |
+| `🗑️generated/coordinator/os-staging-root-repair` | 990 | 7 | 0 | 262544390 | absent |
+
+
+Created retained `📓️coordinator-small-router-current-intake-2026-09-13.md`; updated queue/index/this ledger. Fresh pure classifier and native syntax observations, no product or process/environment mutation. Raw observations under generated/coordinator/router-current-intake are disposable.
+
+
+Created retained `📓️coordinator-hub-credential-source-proof-intake-2026-09-13.md`; updated Hub intake, queue/index/this ledger. Root ran four isolated source-helper observations (two current and two in-memory diagnostic changes), zero product mutations. Raw results remain disposable under generated/coordinator/hub-source-proof-intake.
+
+
+Created retained `📓️coordinator-library-workspace-publication-review-2026-09-13.md`; updated queue/index/this ledger. Root checked the exact16product+report map and five original historical hashes plus two malformed absences. No product mutation or repeated runtime verification; raw integrity JSON is disposable under coordinator/acceptance-2026-09-13.
+
+## Flow and Workspace Payload Continuation — 2026-09-13
+
+Flow bounded ownership is accepted: see `📓️coordinator-flow-browser-ownership-review-2026-09-13.md` (48 exact product paths;39 current/9 removed) and Sol/Terra reports. Native Flow reachability remains unexecuted due to the missing WindowConfig retained pack-load owner after the justified store ArtifactPack prerequisite. Publication evidence is staged success and pre-promotion missing-companion preservation, not general filesystem rollback atomicity.
+
+Root's generic workspace payload membership repair is green directly (9 tests/170 assertions,1.221s) and through actual isolated cache-skipped Nx (9/170,1.175s,target1.6s,critical1.4s). Twenty portable cases are paired with installed package resolution/file discovery oracles. Source acceptance is distinct from pending live root membership publication: Sol is giving Actor/Puzzle ignored compiler manifests stable authored parent wrappers first. See `📓️coordinator-workspace-payload-membership-2026-09-13.md`. Sol Hub foundations execution and Terra read-only audit remain active; all four available fleet slots are occupied.
+
+## Accepted Continuation and Current Fleet — 2026-09-13
+
+- Workspace payload membership and live publication accepted: `📓️coordinator-workspace-payload-membership-2026-09-13.md`. Root9product paths;20payload cases+2observable-change controls;actualNx10/176. Actual write88→123,+35/-0,unrelatedfields preserved;registered check123fresh. Root private933files/281187721bytes removed after no-open-handle check.
+- Bound-router and environment grammar accepted: `📓️coordinator-bound-router-environment-grammar-2026-09-13.md` and Terra audit. Root5product paths(overlapsworkspace project);26new/36totalportable fixed cases;finalactualNx121/65135.18s,target35.6s. Print/Puzzle now tool-metadata body-only;Demonstrator/Stdio remain unresolved. NativeNode/TypeScript4-case constant parity;no productnativecommand. Rootprivate925files/281015834bytes removed.
+- Stable Actor/Puzzle wrappers accepted: `📓️coordinator-wasm-package-wrappers-review-2026-09-13.md`,10product paths,Sol/Terra8/59 directordinary+Nx,25exactinputs;no build/install/Wasm initialization.
+- Hub foundations accepted: `📓️coordinator-hub-foundations-review-2026-09-13.md`,23product paths;10owners47declarations7edges33rootimports26contexts27inputentries;direct/Nx11/259,syn1/1. NormalHubCargo blocked before tests at WindowConfigE0308/E0616. SharedCargo intermediate-cache boundary is explicitly retained;futureprivate runs also override CARGO_BUILD_BUILD_DIR.
+
+Current fleet: SolRoot continues a coherent Hub phase-two command-ownership plan;SolPrint executes the approved7-owner Stdio plan;Terra audits both read-only;Root coordinates and advances remaining grammar/taxonomy work. All4slots occupied. Goal/ticket remain active;do not close them. Other queued bodies/context/native/producer/input-disposition work remains required.
+
+## Completed Coordinator Nx Scratch Reclaim — 2026-09-13
+
+After ENOSPC on a new empty scratch directory, a fresh lsof +D inspection of the complete coordinator generated subtree returned no open handles. These six completed coordinator-owned directories each contained only the seven Nx graph/cache files (no source, authored controls, links or children). Exact contents were rechecked before removal. Raw test command logs and durable reports remain outside these directories. Shared Cargo output, active lane scratch and other agents’ cache directories were not touched.
+
+| Directory | Files | Bytes |
+| --- | ---: | ---: |
+| nx-tool-disposition | 7 | 235992933 |
+| nx-workspace | 7 | 232193045 |
+| kind-only-budget/nx-workspace | 7 | 263461564 |
+| schema-type-binding-nx-workspace | 7 | 258685111 |
+| nx-flow-browser | 7 | 228858944 |
+| styling-graph-retry | 7 | 237304565 |
+
+Total reclaimed: 1456496162 bytes.

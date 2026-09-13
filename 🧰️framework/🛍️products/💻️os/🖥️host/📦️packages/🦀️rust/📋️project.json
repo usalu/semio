@@ -14,7 +14,8 @@
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**/*.rs",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*.rs",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*.json",
-      "{projectRoot}/**/*"
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts"
     ]
   },
   "targets": {

@@ -154,8 +154,9 @@ export function directoryHomeBootstrapOracle(repoRoot: string): number {
   const runtime = readFileSync(join(contractRoot, "../../🔌️PluginRuntime/🟦️.tsx"), "utf8");
   assert(owner.includes("await owner.plugin.handleAction") && owner.includes("parseDirectoryProjectionReceiptV1(response.output)"));
   assert(owner.indexOf("await owner.plugin.handleAction") < owner.indexOf('kind: "directory-bootstrap-ack"'));
-  assert(owner.indexOf('directoryActionInvocation(owner, "setClient"') < owner.indexOf('kind: "directory-bootstrap-open"'));
-  assert(owner.includes("input.identity.userId") && owner.includes("input.identity.displayName") && owner.includes("invocationTerminal(response)"));
+  assert(owner.includes('sessionIdentity: { userId: input.identity.userId, displayName: input.identity.displayName }'));
+  assert(owner.includes('sessionIdentity: { userId: owner.identity.userId, displayName: owner.identity.displayName }'));
+  assert(!owner.includes('directoryActionInvocation(owner, "setClient"'));
   assert(owner.includes("ownsInstance") && owner.includes("if (owner.ownsInstance)") && owner.includes("await beforeAcknowledge?.(owner)"));
   assert(owner.includes('kind: "directory-bootstrap-reject"') && owner.includes('kind: "directory-bootstrap-close"'));
   assert(shell.includes('message.kind === "directory-event-page"') && shell.includes("directoryHomeOwnerRef"));

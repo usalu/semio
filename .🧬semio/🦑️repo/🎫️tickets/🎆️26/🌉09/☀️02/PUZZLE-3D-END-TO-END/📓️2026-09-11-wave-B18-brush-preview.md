@@ -17,14 +17,14 @@ disarmed Brush, but the guest tick still looked the utility map up under the win
 B9 `puzzle3d_addressed_window_id` already keys **render_body** / `handle` /
 `puzzle3d_retained_reduce` by instance. The live miss was a different call site.
 
-| # | Hop | Evidence | Verdict |
-| --- | --- | --- | --- |
-| 1 | `#brush` → `SET_ACTIVE_UTILITY` | host leftover `activeUtility=brush` (B17) | OK |
-| 2 | host map | `activeUtilityByWindowId["puzzle3d-main-perspective"]=brush` | OK |
-| 3 | leftover hover | leftover `hoveredId=seed-left-001:v*` overlays, utility stays `brush` | OK — B17 |
-| 4 | `suggestionsTick` / `registerBrushMesh` | `[DEBUG] puzzle3d.utility.publish … window=Some("puzzle3d-main") utility= map_hit=false` | **FOLD** |
-| 5 | `suggestions_tick` | `active_utility == brush` is false (`PUZZLE3D_DEFAULT_UTILITY` is `""`) → no target, cache never warms | fold |
-| 6 | `render` | `brushPreview.lane utility= preview=0` even when leftover hover names a vortex | fold |
+| #   | Hop                                     | Evidence                                                                                               | Verdict  |
+| --- | --------------------------------------- | ------------------------------------------------------------------------------------------------------ | -------- |
+| 1   | `#brush` → `SET_ACTIVE_UTILITY`         | host leftover `activeUtility=brush` (B17)                                                              | OK       |
+| 2   | host map                                | `activeUtilityByWindowId["puzzle3d-main-perspective"]=brush`                                           | OK       |
+| 3   | leftover hover                          | leftover `hoveredId=seed-left-001:v*` overlays, utility stays `brush`                                  | OK — B17 |
+| 4   | `suggestionsTick` / `registerBrushMesh` | `[DEBUG] puzzle3d.utility.publish … window=Some("puzzle3d-main") utility= map_hit=false`               | **FOLD** |
+| 5   | `suggestions_tick`                      | `active_utility == brush` is false (`PUZZLE3D_DEFAULT_UTILITY` is `""`) → no target, cache never warms | fold     |
+| 6   | `render`                                | `brushPreview.lane utility= preview=0` even when leftover hover names a vortex                         | fold     |
 
 `Puzzle3dPrecomputeCommandWork` (the path `suggestionsTick` actually takes) used
 `view.window_id.or(command.window_id())`. The tick ViewModel's `window_id` is the KIND
@@ -66,13 +66,13 @@ B17 `leftoverOverlayArmedBrushUtilityV1` / `leftoverOverlayCarryingUtilityV1` /
 `cargo test -p semio-s-artifact-puzzle-3d --features component-app-assembly --lib -- --test-threads=1`
 with `RUST_MIN_STACK=33554432`:
 
-| Law | Result |
-| --- | --- |
+| Law                                                                                    | Result                                                                                                                                                 |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `suggestions_tick_at_the_window_kind_still_publishes_the_instance_brush_preview` (new) | 1 passed — tick addressed at `puzzle3d-main` after arming `puzzle3d-main-perspective`; `map_hit=true utility=brush`; `brushPreview.lane … preview=281` |
-| `hover_committed_in_brush_publishes_preview` | 1 passed |
-| `each_window_instance_publishes_its_own_armed_utility_into_its_world_lane` | 1 passed — unarmed pane still `preview=0` |
-| `set_active_utility_dirties_the_world_body` | 1 passed |
-| `set_active_utility_emits_no_ops_and_no_history_entry` | 1 passed |
+| `hover_committed_in_brush_publishes_preview`                                           | 1 passed                                                                                                                                               |
+| `each_window_instance_publishes_its_own_armed_utility_into_its_world_lane`             | 1 passed — unarmed pane still `preview=0`                                                                                                              |
+| `set_active_utility_dirties_the_world_body`                                            | 1 passed                                                                                                                                               |
+| `set_active_utility_emits_no_ops_and_no_history_entry`                                 | 1 passed                                                                                                                                               |
 
 `SEMIO_TEST_LEVEL=long bun x vitest run --config 🧰️framework/…/⚛️react/vitest.config.ts --testNamePattern='carries the armed utility|leftover activeUtility|hover leftover select keeps an armed brush'`:
 

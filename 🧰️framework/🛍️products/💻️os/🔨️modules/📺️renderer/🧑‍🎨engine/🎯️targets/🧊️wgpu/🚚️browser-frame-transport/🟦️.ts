@@ -91,6 +91,66 @@ export type BrowserFrameLosslessEvent =
   | { readonly kind: "ime-update"; readonly text: string; readonly cursor: number }
   | { readonly kind: "ime-commit"; readonly text: string };
 
+/** @emoji 🖱️ One DOM input as the UI isolate observes it on `#semio-wgpu-canvas`, reduced to the fields
+ * the wire carries. Deliberately NOT `PointerEvent`/`WheelEvent`/`KeyboardEvent`: this shape is what the
+ * language-neutral oracle `🧫️fixtures/🎮️wgpu-browser-input-wire/🔣️.json` names, so the projection below
+ * can be exercised without a DOM and the Rust law can read the same rows. */
+export type BrowserFrameDomEvent =
+  | { readonly type: "pointermove" | "pointerdown" | "pointerup"; readonly pointerId: number; readonly pointerType: string; readonly offsetX: number; readonly offsetY: number; readonly pressure?: number; readonly tiltX?: number; readonly tiltY?: number; readonly button?: number }
+  | { readonly type: "wheel"; readonly offsetX: number; readonly offsetY: number; readonly deltaX: number; readonly deltaY: number }
+  | { readonly type: "keydown" | "keyup"; readonly key: string; readonly shift: boolean; readonly ctrl: boolean; readonly alt: boolean; readonly meta: boolean }
+  | { readonly type: "resize"; readonly clientWidth: number; readonly clientHeight: number };
+
+/** @emoji 📏️ The ONE place a CSS pixel becomes a physical pixel. `offsetX`/`offsetY` are CSS pixels
+ * relative to the canvas; the renderer's layout, hit registry and dock plan are all physical. Scroll
+ * deltas are already device-independent and are never scaled. */
+function physical(css: number, devicePixelRatio: number): number {
+  return css * devicePixelRatio;
+}
+
+/** @emoji 🖱️ Names a DOM `button` integer. The wire carries a name so neither side has to agree on
+ * the DOM's numbering, and an unknown button is the primary one rather than a dropped event. */
+function pointerButtonName(button: number | undefined): "primary" | "secondary" | "middle" {
+  return button === 2 ? "secondary" : button === 1 ? "middle" : "primary";
+}
+
+function pointerFields(event: Extract<BrowserFrameDomEvent, { type: "pointermove" | "pointerdown" | "pointerup" }>, devicePixelRatio: number): BrowserFramePointer {
+  return {
+    pointerId: event.pointerId,
+    pointerKind: event.pointerType === "touch" || event.pointerType === "pen" || event.pointerType === "eraser" ? event.pointerType : "mouse",
+    x: physical(event.offsetX, devicePixelRatio),
+    y: physical(event.offsetY, devicePixelRatio),
+    ...(event.pressure ? { pressure: event.pressure } : {}),
+    ...(event.tiltX ? { tiltX: event.tiltX } : {}),
+    ...(event.tiltY ? { tiltY: event.tiltY } : {}),
+  };
+}
+
+/** @emoji 🎮️ Projects one observed DOM input onto the single wire event the frame Worker decodes.
+ *
+ * This is the UI isolate's whole share of input semantics — the listeners in `🚀️browser-boot/🟦️.ts`
+ * add nothing but focus/capture and the lossless-versus-replaceable lane choice. Keeping the projection
+ * HERE, beside the wire types it produces and inside the module the transport's own vitest suite already
+ * imports, is what lets `🧫️fixtures/🎮️wgpu-browser-input-wire/🔣️.json` be answered without a browser and
+ * by the Rust law on the other side of the same fixture.
+ *
+ * A `resize` is expressed in physical pixels by the caller's own surface measurement, so it carries
+ * `dpr` and is not scaled again here. */
+export function browserFrameEventFromDom(event: BrowserFrameDomEvent, devicePixelRatio: number): BrowserFrameReplaceableEvent | BrowserFrameLosslessEvent {
+  if (event.type === "pointermove") return { kind: "pointer-move", ...pointerFields(event, devicePixelRatio) };
+  if (event.type === "pointerdown" || event.type === "pointerup") return { kind: event.type === "pointerdown" ? "pointer-down" : "pointer-up", ...pointerFields(event, devicePixelRatio), button: pointerButtonName(event.button) };
+  if (event.type === "wheel") return { kind: "wheel", x: physical(event.offsetX, devicePixelRatio), y: physical(event.offsetY, devicePixelRatio), deltaX: event.deltaX, deltaY: event.deltaY };
+  if (event.type === "resize") return { kind: "resize", width: Math.max(1, Math.round(physical(event.clientWidth, devicePixelRatio))), height: Math.max(1, Math.round(physical(event.clientHeight, devicePixelRatio))), dpr: devicePixelRatio };
+  return { kind: event.type === "keydown" ? "key-down" : "key-up", key: event.key, shift: event.shift, ctrl: event.ctrl, alt: event.alt, meta: event.meta };
+}
+
+/** @emoji 🫧 Whether a projected wire event belongs to the coalescing lane (`enqueueReplaceable`) rather
+ * than the credit-bearing lossless lane. A pointer MOVE, a wheel and a resize are each "the newest one
+ * wins"; a button transition and a key transition are not, because dropping one latches shell state. */
+export function browserFrameEventIsReplaceable(event: BrowserFrameReplaceableEvent | BrowserFrameLosslessEvent): event is BrowserFrameReplaceableEvent {
+  return event.kind === "pointer-move" || event.kind === "wheel" || event.kind === "resize";
+}
+
 export type BrowserFrameWorkerBoot = {
   readonly kind: "boot";
   readonly lifecycle: number;

@@ -15,7 +15,8 @@ Error.stackTraceLimit = 200;
 // gets redacted to `"undefined undefined undefined"` (also reproduced by the spike) — `actorId: "*"`
 // is a worker-wide sentinel, not a real actor, since no actor has activated yet at this point.
 if (typeof WebAssembly === "undefined" || typeof WebAssembly.Suspending !== "function" || typeof WebAssembly.promising !== "function") {
-  const message = "semio shard worker: this browser/engine lacks JavaScript Promise Integration (JSPI) — WebAssembly.Suspending/WebAssembly.promising are required to run semio's async-lifted plugin components and there is no fallback. Chrome/Edge/Chromium-based browsers ship JSPI on by default; Firefox needs the javascript.options.wasm_js_promise_integration flag in about:config; Node.js needs --experimental-wasm-jspi.";
+  const message =
+    "semio shard worker: this browser/engine lacks JavaScript Promise Integration (JSPI) — WebAssembly.Suspending/WebAssembly.promising are required to run semio's async-lifted plugin components and there is no fallback. Chrome/Edge/Chromium-based browsers ship JSPI on by default; Firefox needs the javascript.options.wasm_js_promise_integration flag in about:config; Node.js needs --experimental-wasm-jspi.";
   self.postMessage({ kind: "trap", actorId: "*", activationGeneration: null, message });
   throw new Error(message);
 }
@@ -77,15 +78,34 @@ function reply(requestId, value) {
 // we're trying to report a stack overflow.
 function replyError(requestId, error, frames) {
   const payload = error && typeof error === "object" && "payload" in error ? error.payload : undefined;
-  const detail = payload !== undefined ? ` payload=${(() => { try { return JSON.stringify(payload); } catch { return String(payload); } })()}` : "";
+  const detail =
+    payload !== undefined
+      ? ` payload=${(() => {
+          try {
+            return JSON.stringify(payload);
+          } catch {
+            return String(payload);
+          }
+        })()}`
+      : "";
   let stack;
-  try { stack = error && error.stack ? String(error.stack) : undefined; } catch { stack = undefined; }
+  try {
+    stack = error && error.stack ? String(error.stack) : undefined;
+  } catch {
+    stack = undefined;
+  }
   let type;
-  try { type = (error && error.constructor && error.constructor.name) || typeof error; } catch { type = typeof error; }
+  try {
+    type = (error && error.constructor && error.constructor.name) || typeof error;
+  } catch {
+    type = typeof error;
+  }
   let framesBytes;
   try {
     framesBytes = frames instanceof Uint8Array || frames instanceof ArrayBuffer ? frames.byteLength : frames !== undefined ? JSON.stringify(frames).length : undefined;
-  } catch { framesBytes = undefined; }
+  } catch {
+    framesBytes = undefined;
+  }
   // 🩺️ A guest plugin rejects with a LIFTED FAULT RECORD, not an `Error` — a plain object whose
   // `String()` is the useless `[object Object]` that used to be all the host, the console, and the
   // on-screen error surface ever saw for the single most common failure there is. Serialize the
@@ -93,8 +113,13 @@ function replyError(requestId, error, frames) {
   // back to `String`.
   let reason;
   if (error instanceof Error) reason = error.message;
-  else if (error && typeof error === "object") { try { reason = JSON.stringify(error); } catch { reason = String(error); } }
-  else reason = String(error);
+  else if (error && typeof error === "object") {
+    try {
+      reason = JSON.stringify(error);
+    } catch {
+      reason = String(error);
+    }
+  } else reason = String(error);
   self.postMessage({ kind: "result", requestId, ok: false, error: reason + detail, stack, type, framesBytes });
 }
 
@@ -204,9 +229,10 @@ self.addEventListener("message", async (event) => {
         reply(requestId, await actor.api.stepJob(msg.job, msg.budget));
         break;
       case "takeSegmentedDownloadChunk": {
-        if (!Number.isSafeInteger(msg.instanceId) || msg.instanceId < 0 || typeof msg.operationId !== "bigint" || msg.operationId <= 0n || msg.operationId > ((1n << 64n) - 1n)) throw new Error("segmented-download-authority-invalid");
+        if (!Number.isSafeInteger(msg.instanceId) || msg.instanceId < 0 || typeof msg.operationId !== "bigint" || msg.operationId <= 0n || msg.operationId > (1n << 64n) - 1n) throw new Error("segmented-download-authority-invalid");
         const chunk = await actor.api.takeSegmentedDownloadChunk(msg.instanceId, msg.operationId);
-        if (chunk !== undefined && chunk !== null && (Object.prototype.toString.call(chunk) !== "[object Uint8Array]" || chunk.byteLength === 0 || chunk.byteLength > MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES)) throw new Error("segmented-download-worker-limit");
+        if (chunk !== undefined && chunk !== null && (Object.prototype.toString.call(chunk) !== "[object Uint8Array]" || chunk.byteLength === 0 || chunk.byteLength > MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES))
+          throw new Error("segmented-download-worker-limit");
         reply(requestId, chunk ?? undefined);
         break;
       }
@@ -235,7 +261,10 @@ self.addEventListener("message", async (event) => {
         if (inFlightTurnActors.has(actorId)) throw new Error(`shard worker: actor ${actorId} already has a turn in flight`);
         inFlightTurnActors.add(actorId);
         try {
-          const events = spliceInstanceOpenAssets(actor, result.envelopes.map((envelope) => envelope.payload));
+          const events = spliceInstanceOpenAssets(
+            actor,
+            result.envelopes.map((envelope) => envelope.payload),
+          );
           reply(requestId, await actor.api.poll(events, undefined, result.budget));
         } finally {
           inFlightTurnActors.delete(actorId);

@@ -20,4 +20,3 @@ Hand-reviewed every strict path-statute finding under `✏️s/🔌️plugins/�
 - Gismap mutation runner: `🦠️mutate-gismap-1`.
 - Mutation payload schema: `🧬️.schema.json` where it has no same-level collision.
 - Oracle owner: `🔮️oracle`.
-

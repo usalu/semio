@@ -12,48 +12,48 @@ Authored paths contain repeated mutation-contract test prefixes, fixture/schema/
 
 Paths are relative to the scope root. Descendants retain their contents and follow the explicit parent move.
 
-| Old Path | New Path | Meaning |
-| --- | --- | --- |
-| `🎮️mutation/🧪️tests/🧬️mutation-leaf-contract` | `🎮️mutation/🧪️tests/🤝️mutation-leaf-contract` | Descriptor/provenance agreement. |
-| `🎮️mutation/🧪️tests/🧬️mutation-leaf-source-contract` | `🎮️mutation/🧪️tests/🧭️mutation-leaf-source-contract` | Source ownership/scope qualification. |
-| `📡️wire/🏠️local-interaction/🧪️fixtures` | `📡️wire/🏠️local-interaction/🧫️fixtures` | Specimen data distinct from tests. |
-| `📡️wire/🏠️local-interaction/🧫️fixtures/♻️retirement/🔣️.schema.json` | `📡️wire/🏠️local-interaction/🧫️fixtures/♻️retirement/🧬️.schema.json` | Retirement specimen structure. |
-| `📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🔣️.schema.json` | `📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🧬️.schema.json` | Local-interaction specimen structure. |
-| `📡️wire/🏠️local-interaction/🧫️fixtures/📃️query/🔣️.schema.json` | `📡️wire/🏠️local-interaction/🧫️fixtures/📃️query/🧬️.schema.json` | Query specimen structure. |
-| `📡️wire/🏠️local-interaction/🧫️fixtures/🔐️topology-authority/🔣️.schema.json` | `📡️wire/🏠️local-interaction/🧫️fixtures/🔐️topology-authority/🧬️.schema.json` | Authority specimen structure. |
-| `📡️wire/🏠️local-interaction/🌳️root/🧪️fixture` | `📡️wire/🏠️local-interaction/🌳️root/🧫️fixture` | Root specimen. |
-| `📡️wire/🏠️local-interaction/🌳️root/🧪️schema` | `📡️wire/🏠️local-interaction/🌳️root/📐️schema` | Root fixture constraints. |
-| `📡️wire/🏠️local-interaction/🌳️root/🩹️update/🧪️fixture` | `📡️wire/🏠️local-interaction/🌳️root/🩹️update/🧫️fixture` | Update specimen. |
-| `📡️wire/🏠️local-interaction/🌳️root/🩹️update/🧪️schema` | `📡️wire/🏠️local-interaction/🌳️root/🩹️update/📐️schema` | Update fixture constraints. |
-| `📡️wire/🏠️local-interaction/📡️transport/🧪️fixtures` | `📡️wire/🏠️local-interaction/📡️transport/🧫️fixtures` | Transport specimens. |
-| `📡️wire/🏠️local-interaction/📡️transport/🧪️schema` | `📡️wire/🏠️local-interaction/📡️transport/📐️schema` | Transport fixture constraints, distinct from wire schema. |
-| `🧫️fixtures/🧫️artifact-bootstrap` | `🧫️fixtures/🚀️artifact-bootstrap` | Artifact bootstrap/startup. |
-| `🧫️fixtures/🚀️artifact-bootstrap/🔣️.schema.json` | `🧫️fixtures/🚀️artifact-bootstrap/🧬️.schema.json` | Bootstrap specimen structure. |
-| `🧫️fixtures/🧫️wire` | `🧫️fixtures/📡️wire` | Network wire frames. |
+| Old Path                                                                    | New Path                                                                    | Meaning                                                   |
+| --------------------------------------------------------------------------- | --------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `🎮️mutation/🧪️tests/🧬️mutation-leaf-contract`                               | `🎮️mutation/🧪️tests/🤝️mutation-leaf-contract`                               | Descriptor/provenance agreement.                          |
+| `🎮️mutation/🧪️tests/🧬️mutation-leaf-source-contract`                        | `🎮️mutation/🧪️tests/🧭️mutation-leaf-source-contract`                        | Source ownership/scope qualification.                     |
+| `📡️wire/🏠️local-interaction/🧪️fixtures`                                     | `📡️wire/🏠️local-interaction/🧫️fixtures`                                     | Specimen data distinct from tests.                        |
+| `📡️wire/🏠️local-interaction/🧫️fixtures/♻️retirement/🔣️.schema.json`         | `📡️wire/🏠️local-interaction/🧫️fixtures/♻️retirement/🧬️.schema.json`         | Retirement specimen structure.                            |
+| `📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🔣️.schema.json`  | `📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🧬️.schema.json`  | Local-interaction specimen structure.                     |
+| `📡️wire/🏠️local-interaction/🧫️fixtures/📃️query/🔣️.schema.json`              | `📡️wire/🏠️local-interaction/🧫️fixtures/📃️query/🧬️.schema.json`              | Query specimen structure.                                 |
+| `📡️wire/🏠️local-interaction/🧫️fixtures/🔐️topology-authority/🔣️.schema.json` | `📡️wire/🏠️local-interaction/🧫️fixtures/🔐️topology-authority/🧬️.schema.json` | Authority specimen structure.                             |
+| `📡️wire/🏠️local-interaction/🌳️root/🧪️fixture`                               | `📡️wire/🏠️local-interaction/🌳️root/🧫️fixture`                               | Root specimen.                                            |
+| `📡️wire/🏠️local-interaction/🌳️root/🧪️schema`                                | `📡️wire/🏠️local-interaction/🌳️root/📐️schema`                                | Root fixture constraints.                                 |
+| `📡️wire/🏠️local-interaction/🌳️root/🩹️update/🧪️fixture`                      | `📡️wire/🏠️local-interaction/🌳️root/🩹️update/🧫️fixture`                      | Update specimen.                                          |
+| `📡️wire/🏠️local-interaction/🌳️root/🩹️update/🧪️schema`                       | `📡️wire/🏠️local-interaction/🌳️root/🩹️update/📐️schema`                       | Update fixture constraints.                               |
+| `📡️wire/🏠️local-interaction/📡️transport/🧪️fixtures`                         | `📡️wire/🏠️local-interaction/📡️transport/🧫️fixtures`                         | Transport specimens.                                      |
+| `📡️wire/🏠️local-interaction/📡️transport/🧪️schema`                           | `📡️wire/🏠️local-interaction/📡️transport/📐️schema`                           | Transport fixture constraints, distinct from wire schema. |
+| `🧫️fixtures/🧫️artifact-bootstrap`                                           | `🧫️fixtures/🚀️artifact-bootstrap`                                           | Artifact bootstrap/startup.                               |
+| `🧫️fixtures/🚀️artifact-bootstrap/🔣️.schema.json`                            | `🧫️fixtures/🚀️artifact-bootstrap/🧬️.schema.json`                            | Bootstrap specimen structure.                             |
+| `🧫️fixtures/🧫️wire`                                                         | `🧫️fixtures/📡️wire`                                                         | Network wire frames.                                      |
 
 The following paths are relative to the renamed `🧫️fixtures/📡️wire` parent. Every old prefix is `📦️`:
 
-| Old Name | New Name | Meaning |
-| --- | --- | --- |
-| `📦️client-bye` | `👋️client-bye` | Client farewell. |
-| `📦️client-commands` | `🕹️client-commands` | Client command input. |
-| `📦️client-credit-grant` | `🎟️client-credit-grant` | Client-issued flow-control allowance. |
-| `📦️client-frontier-advertise` | `🚩️client-frontier-advertise` | Advertised causal frontier. |
-| `📦️client-presence` | `🙋️client-presence` | One client's presence. |
-| `📦️client-preview-publish` | `📣️client-preview-publish` | Client publishes a preview. |
-| `📦️server-ack-accepted` | `✅️server-ack-accepted` | Accepted acknowledgement. |
-| `📦️server-ack-rejected` | `⛔️server-ack-rejected` | Rejected acknowledgement. |
-| `📦️server-ack-transformed` | `🔀️server-ack-transformed` | Transformed acknowledgement. |
-| `📦️server-commands` | `🎮️server-commands` | Server command delivery. |
-| `📦️server-credit-grant` | `🎫️server-credit-grant` | Server-issued flow-control allowance. |
-| `📦️server-error` | `🚨️server-error` | Protocol error. |
-| `📦️server-presence` | `👥️server-presence` | Peer collection from server. |
-| `📦️server-preview` | `👁️server-preview` | View of published preview. |
-| `📦️server-session` | `🪪️server-session` | Session identity. |
-| `📦️server-snapshot-chunk` | `🧩️server-snapshot-chunk` | One snapshot piece. |
-| `📦️server-snapshot-done` | `🏁️server-snapshot-done` | Snapshot completion. |
-| `📦️server-welcome-snapshot-inline` | `📸️server-welcome-snapshot-inline` | Welcome with inline snapshot. |
-| `📦️server-welcome-tail` | `🔗️server-welcome-tail` | Welcome continuing the causal tail. |
+| Old Name                           | New Name                           | Meaning                               |
+| ---------------------------------- | ---------------------------------- | ------------------------------------- |
+| `📦️client-bye`                     | `👋️client-bye`                     | Client farewell.                      |
+| `📦️client-commands`                | `🕹️client-commands`                | Client command input.                 |
+| `📦️client-credit-grant`            | `🎟️client-credit-grant`            | Client-issued flow-control allowance. |
+| `📦️client-frontier-advertise`      | `🚩️client-frontier-advertise`      | Advertised causal frontier.           |
+| `📦️client-presence`                | `🙋️client-presence`                | One client's presence.                |
+| `📦️client-preview-publish`         | `📣️client-preview-publish`         | Client publishes a preview.           |
+| `📦️server-ack-accepted`            | `✅️server-ack-accepted`            | Accepted acknowledgement.             |
+| `📦️server-ack-rejected`            | `⛔️server-ack-rejected`            | Rejected acknowledgement.             |
+| `📦️server-ack-transformed`         | `🔀️server-ack-transformed`         | Transformed acknowledgement.          |
+| `📦️server-commands`                | `🎮️server-commands`                | Server command delivery.              |
+| `📦️server-credit-grant`            | `🎫️server-credit-grant`            | Server-issued flow-control allowance. |
+| `📦️server-error`                   | `🚨️server-error`                   | Protocol error.                       |
+| `📦️server-presence`                | `👥️server-presence`                | Peer collection from server.          |
+| `📦️server-preview`                 | `👁️server-preview`                 | View of published preview.            |
+| `📦️server-session`                 | `🪪️server-session`                 | Session identity.                     |
+| `📦️server-snapshot-chunk`          | `🧩️server-snapshot-chunk`          | One snapshot piece.                   |
+| `📦️server-snapshot-done`           | `🏁️server-snapshot-done`           | Snapshot completion.                  |
+| `📦️server-welcome-snapshot-inline` | `📸️server-welcome-snapshot-inline` | Welcome with inline snapshot.         |
+| `📦️server-welcome-tail`            | `🔗️server-welcome-tail`            | Welcome continuing the causal tail.   |
 
 `🚫️legacy-client-hello-rejected` remains a specifically rejected obsolete wire tag, not legacy support.
 

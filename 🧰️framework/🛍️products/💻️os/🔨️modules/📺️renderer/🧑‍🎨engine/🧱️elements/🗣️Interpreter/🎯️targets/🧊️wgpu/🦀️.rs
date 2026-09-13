@@ -384,6 +384,29 @@ static POINTER_EDGE_STATE: WorkerCell<std::collections::HashMap<String, (bool, i
  * command list too, for `FocusChanged`/`OverlayClosed`/`DropCommitted`/clipboard commands a caller may
  * want to react to itself (e.g. an actual OS clipboard read for `ClipboardPasteRequested` is a `host`
  * concern, not this function's). */
+/** 🎯️ Pushes `window_id`'s retained pointer registry — one entry per interactive node of its last
+ * published paint, at the rect that paint drew it at — into the host's own `InputState`, and answers
+ * the control ids it minted so the caller can tell a document hit from a chrome hit.
+ *
+ * 🩸️ Without this the shell's registry held the chrome and nothing else: a pointer inside a
+ * published `mounted_layout` row rect resolved the WINDOW's own `HitKind::ScrollRegion`, so no row
+ * action dispatched, no wheel propagated to a scene and no hover ever resolved (ticket
+ * 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md` §6). The
+ * window's own `ScrollRegion` is registered by the chrome BEFORE the body paints, so every body
+ * child outranks it in `InputState::hit_at`'s reverse scan. */
+pub fn register_retained_hit_targets(window_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<String> {
+    UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        let registrations = engine.window_hit_targets(window_id);
+        let mut ids = Vec::with_capacity(registrations.len());
+        for registration in registrations {
+            ids.push(registration.control_id.clone());
+            input.register_hit(registration.to_hit_target());
+        }
+        ids
+    })
+}
+
 pub fn dispatch_ui_event(window_id: &str, event: ui_wgpu::wgpu::UiEvent, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ui_wgpu::wgpu::UiCommand> {
     #[cfg(all(not(target_arch = "wasm32"), not(test)))]
     pump_clipboard_io_one();

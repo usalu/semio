@@ -20,39 +20,39 @@ Every source-controlled hub directory and file is being inspected. Tool-owned `n
 
 Handpicked repairs:
 
-| Existing node | Handpicked node | Meaning |
-| --- | --- | --- |
-| `🔐️local-bootstrap` | `🚀️local-bootstrap` | Starts and provisions the local hub; distinct from authentication. |
-| `🗂️chunk-cas` | `🧱️chunk-cas` | Immutable content-addressed chunks are the storage building blocks. |
-| `🗂️trusted-catalog` | `🔏️trusted-catalog` | Authenticated, trusted package catalog. |
-| `🗂️📇️native-openable-provider` | `📇️native-openable-provider` | Provider of native-openable catalog records; removes stacked prefix. |
-| Directory `🧪️fixtures` beside `🧪️tests` | `🧫️fixtures` | Input samples are distinct from executable tests. |
-| `🔴️ConnectionsPage` | `🔗️ConnectionsPage` | Live client connections, not an arbitrary color. |
-| `🧬️admin-live-journey-v1` | `🚶️admin-live-journey-v1` | End-to-end administrator journey. |
-| `🧬️admin-intent-v1` | `🎯️admin-intent-v1` | Administrative intent contract. |
-| `🧬️public-space-detail-v1` | `🏛️public-space-detail-v1` | Public space details. |
-| `🧬️authority-adapter` | `🔌️authority-adapter` | Authority integration adapter. |
-| `🧬️canonical-authority` | `🏛️canonical-authority` | Canonical authority contract. |
-| `🧬️artifact-chunk-cas` | `🧱️artifact-chunk-cas` | Chunk-storage fixture contract. |
-| `🧬️pipe-v1` fixture | `🚇️pipe-v1` | Local bootstrap pipe protocol. |
-| `🧬️idle-admission-v1` | `⏳️idle-admission-v1` | Admission following idle time. |
-| `🧬️canonical-pair` | `🪢️canonical-pair` | Canonical pack/SPR pair. |
-| `🧬️lag-rebootstrap` | `🛟️lag-rebootstrap` | Recovery after replication lag. |
-| `🧬️capability-v1` | `🔑️capability-v1` | Authentication capabilities. |
-| Native provider fixture `🧬️v1` | `🪪️v1` | Validated provider identity contract. |
-| `🧬️two-package` | `👥️two-package` | Two distinct packages sharing a trusted catalog. |
-| `🧬️hub-boundaries` | `🚧️hub-boundaries` | Hub protocol and isolation boundaries. |
-| `🧬️gis-inference-job-v1` | `🗺️gis-inference-job-v1` | Geographic inference job. |
-| `🔣️share-token-vectors.json` | `🔑️share-token-vectors.json` | Share capability vectors. |
-| `🔣️artifact-checkpoint-projection.json` | `📸️artifact-checkpoint-projection.json` | Checkpoint projection vectors. |
-| `🧪️index.test.ts` | `🤝️index.test.ts` | Hub collaboration integration test. |
-| `🧪️admin.test.tsx` | `🛡️admin.test.tsx` | Administrative UI test. |
-| `📦️bin.rs` | `🚀️bin.rs` | Executable server entry point. |
-| `📦️index.tsx` | `🚪️index.tsx` | Browser application entry point. |
-| `🔣️entry-graph.json` | `🚪️entry-graph.json` | Entry dependency graph fixture. |
-| `🔣️entry-graph.schema.json` | `📐️entry-graph.schema.json` | Entry graph structural contract. |
-| `🔣️stylesheet-graph.json` | `🎨️stylesheet-graph.json` | Stylesheet dependency graph fixture. |
-| `🔣️stylesheet-graph.schema.json` | `🧵️stylesheet-graph.schema.json` | Stylesheet wiring contract. |
+| Existing node                           | Handpicked node                         | Meaning                                                              |
+| --------------------------------------- | --------------------------------------- | -------------------------------------------------------------------- |
+| `🔐️local-bootstrap`                     | `🚀️local-bootstrap`                     | Starts and provisions the local hub; distinct from authentication.   |
+| `🗂️chunk-cas`                           | `🧱️chunk-cas`                           | Immutable content-addressed chunks are the storage building blocks.  |
+| `🗂️trusted-catalog`                     | `🔏️trusted-catalog`                     | Authenticated, trusted package catalog.                              |
+| `🗂️📇️native-openable-provider`          | `📇️native-openable-provider`            | Provider of native-openable catalog records; removes stacked prefix. |
+| Directory `🧪️fixtures` beside `🧪️tests` | `🧫️fixtures`                            | Input samples are distinct from executable tests.                    |
+| `🔴️ConnectionsPage`                     | `🔗️ConnectionsPage`                     | Live client connections, not an arbitrary color.                     |
+| `🧬️admin-live-journey-v1`               | `🚶️admin-live-journey-v1`               | End-to-end administrator journey.                                    |
+| `🧬️admin-intent-v1`                     | `🎯️admin-intent-v1`                     | Administrative intent contract.                                      |
+| `🧬️public-space-detail-v1`              | `🏛️public-space-detail-v1`              | Public space details.                                                |
+| `🧬️authority-adapter`                   | `🔌️authority-adapter`                   | Authority integration adapter.                                       |
+| `🧬️canonical-authority`                 | `🏛️canonical-authority`                 | Canonical authority contract.                                        |
+| `🧬️artifact-chunk-cas`                  | `🧱️artifact-chunk-cas`                  | Chunk-storage fixture contract.                                      |
+| `🧬️pipe-v1` fixture                     | `🚇️pipe-v1`                             | Local bootstrap pipe protocol.                                       |
+| `🧬️idle-admission-v1`                   | `⏳️idle-admission-v1`                   | Admission following idle time.                                       |
+| `🧬️canonical-pair`                      | `🪢️canonical-pair`                      | Canonical pack/SPR pair.                                             |
+| `🧬️lag-rebootstrap`                     | `🛟️lag-rebootstrap`                     | Recovery after replication lag.                                      |
+| `🧬️capability-v1`                       | `🔑️capability-v1`                       | Authentication capabilities.                                         |
+| Native provider fixture `🧬️v1`          | `🪪️v1`                                  | Validated provider identity contract.                                |
+| `🧬️two-package`                         | `👥️two-package`                         | Two distinct packages sharing a trusted catalog.                     |
+| `🧬️hub-boundaries`                      | `🚧️hub-boundaries`                      | Hub protocol and isolation boundaries.                               |
+| `🧬️gis-inference-job-v1`                | `🗺️gis-inference-job-v1`                | Geographic inference job.                                            |
+| `🔣️share-token-vectors.json`            | `🔑️share-token-vectors.json`            | Share capability vectors.                                            |
+| `🔣️artifact-checkpoint-projection.json` | `📸️artifact-checkpoint-projection.json` | Checkpoint projection vectors.                                       |
+| `🧪️index.test.ts`                       | `🤝️index.test.ts`                       | Hub collaboration integration test.                                  |
+| `🧪️admin.test.tsx`                      | `🛡️admin.test.tsx`                      | Administrative UI test.                                              |
+| `📦️bin.rs`                              | `🚀️bin.rs`                              | Executable server entry point.                                       |
+| `📦️index.tsx`                           | `🚪️index.tsx`                           | Browser application entry point.                                     |
+| `🔣️entry-graph.json`                    | `🚪️entry-graph.json`                    | Entry dependency graph fixture.                                      |
+| `🔣️entry-graph.schema.json`             | `📐️entry-graph.schema.json`             | Entry graph structural contract.                                     |
+| `🔣️stylesheet-graph.json`               | `🎨️stylesheet-graph.json`               | Stylesheet dependency graph fixture.                                 |
+| `🔣️stylesheet-graph.schema.json`        | `🧵️stylesheet-graph.schema.json`        | Stylesheet wiring contract.                                          |
 
 ## Retained Names Reviewed
 

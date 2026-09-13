@@ -6,82 +6,82 @@ Each table path is relative to this plugin root. For nested moves, the parent co
 
 ## Exact Moves
 
-| Parent | Old | New | Meaning |
-| --- | --- | --- | --- |
-| . | 🧪️tool-factory-proof.json | 🔬️tool-factory-proof.json | Factory-witness proof vectors. |
-| . | 🧬️tool-factory-proof.schema.json | 📐️tool-factory-proof.schema.json | Proof-vector shape. |
-| . | 🧪️tool-latest-wins.json | 🥇️tool-latest-wins.json | Latest winning request. |
-| . | 🧪️tool-latest-wins.schema.json | 📏️tool-latest-wins.schema.json | Cancellation/publication budgets. |
-| . | 🧪️tool-latest-wins-integration.json | 🔗️tool-latest-wins-integration.json | Joined publication pipeline. |
-| . | 🧪️tool-latest-wins-integration.schema.json | 🧩️tool-latest-wins-integration.schema.json | Integrated pipeline structure. |
-| 🚪️lifetime | 🧪️aggregate-admission.json | 🛂️aggregate-admission.json | Explicit backing admission. |
-| 🚪️lifetime | 🧪️aggregate-admission.schema.json | 📐️aggregate-admission.schema.json | Admission-vector structure. |
-| 🚪️lifetime | 🧪️construction.json | 🏗️construction.json | Worker-shell construction sequence. |
-| 🚪️lifetime | 🧪️construction.schema.json | 🧬️construction.schema.json | Construction-state schema. |
-| 📦️packages/🟦️typescript/🧪️fixtures | 🔣️async-results.json | ⏳️async-results.json | Async component return shapes. |
-| 📦️packages/🟦️typescript/🧪️fixtures | 🔣️component-instantiation.json | 🏗️component-instantiation.json | Explicit instance construction. |
-| 📦️packages/🟦️typescript/🧪️fixtures | 🔣️component-instantiation.schema.json | 📐️component-instantiation.schema.json | Instance ownership structure. |
-| 📦️packages/🟦️typescript/🧪️fixtures | 🔣️host-activation.json | ⚡️host-activation.json | Actor activation generations. |
-| 📦️packages/🟦️typescript/🧪️fixtures | 🔣️host-activation.schema.json | 🛡️host-activation.schema.json | Activation isolation contract. |
-| . | 📇️describe | 🖨️describe | Build-time descriptor emitter, distinct from registry and in-component describe. |
-| . | 📦️codec | 🔣️codec | Serialized caller codec contract, distinct from packages. |
-| ⚛️reactor/📨️pending | 🧪️authority.json | 🛂️authority.json | Exact pending feedback authority. |
-| ⚛️reactor/📨️pending | 🧪️authority.schema.json | 🧬️authority.schema.json | Feedback authority structure. |
-| ⚛️reactor/🚪️lifetime | 🧪️fixture | 🧫️fixture | Lifetime specimen, distinct from tests. |
-| ⚛️reactor/🚪️lifetime | 🧪️schema | 🧬️schema | Lifetime specimen structure. |
-| ⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🧬️job-test-mutations | 🧬️diff | 🔺️diff | Job mutation deltas. |
-| ⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🧬️job-test-mutations | 🧬️schema | 📐️schema | Job snapshot shape, distinct from mutations. |
-| ⚛️reactor/🩹️patches/🧪️fixtures | 🔣️catalogue-surface.json | 🗂️catalogue-surface.json | Material catalogue surface. |
-| ⚛️reactor/🩹️patches/🧪️fixtures | 🔣️document-surface.json | 📃️document-surface.json | Document object surface. |
-| ⚛️reactor/🩹️patches/🧪️fixtures | 🔣️mounted-surfaces.json | 🪟️mounted-surfaces.json | Mounted windows/surfaces. |
-| ⚛️reactor/🩹️patches/🧪️fixtures | 🔣️settings-surface.json | 🎚️settings-surface.json | Adjustable settings. |
-| ⚛️reactor/🩹️patches/🧪️fixtures | 🔣️surface-close.json | 🚪️surface-close.json | Surface closing lifecycle. |
-| 📇️registry | 🧪️fixtures | 🧫️fixtures | Registry specimens, distinct from tests. |
-| 📇️registry | 🧪️catalog-complete.test.ts | ✅️catalog-complete.test.ts | Complete catalog verification. |
-| 📇️registry | 🧪️launch.test.ts | 🚀️launch.test.ts | Preview launch configuration. |
-| 🏪️store | 📜️store.ts | 📥️store.ts | Runtime extension installation, distinct from task router. |
-| 📇️registry/🤖️generated | 🔣️plugins.json | 🔌️plugins.json | Plugin catalog data. |
-| 📇️registry/🤖️generated | 🟦️plugins.ts | 🧩️plugins.ts | Extension/plugin runtime bindings. |
-| 📇️registry/🤖️generated | 🔣️playgrounds.json | 🎠️playgrounds.json | Playground catalog data. |
-| 📇️registry/🤖️generated | 🟦️playgrounds.ts | 🎮️playgrounds.ts | Playground launch/build targets. |
-| 📇️registry/🤖️generated | 🔣️framework.json | 🧰️framework.json | Framework package catalog. |
-| 📇️registry/🤖️generated | 🟦️framework.ts | 🏗️framework.ts | Framework build bindings. |
-| 📇️registry/🤖️generated | 🦀️hosts.rs | 🖥️hosts.rs | Native host dispatch. |
-| 📇️registry/🤖️generated | 🦀️artifacts.rs | 🗿️artifacts.rs | Native artifact dispatch. |
-| 🖥️host | ⏳️imports | 📥️imports | Guest imports implemented by host. |
-| 🖥️host | 🧪️oracle | 🔮️oracle | Independent oracle policy. |
-| 🖥️host | 🧪️schema-parity | 🪞️schema-parity | WIT parity comparison. |
-| 🖥️host/🧪️tests | mutate-os-config-merge-policy | 🛡️mutate-os-config-merge-policy | Merge-policy protection. |
-| 🖥️host/🧪️tests | mutate-os-config-opening | 🚪️mutate-os-config-opening | Opening policy. |
-| 🖥️host/🧫️fixtures | 🔣️relay-lifecycle.json | ♻️relay-lifecycle.json | Relay retirement/reuse. |
-| 🖥️host/🧫️fixtures | 🔣️stack-authority.json | 🧱️stack-authority.json | Owned execution stack authority. |
-| 🕹️interaction/📡️live | 🧪️dispatch | 📨️dispatch | Live interaction dispatch. |
-| 🕹️interaction/🧬️mutations/🔁️set-state | 🧪️fixture | 🧫️fixture | Set-state specimen, distinct from test source. |
-| 🧵️retained-command | 🧪️full-operation | 🔄️full-operation | Complete retained-operation lifecycle. |
-| 🧵️retained-command/🔄️full-operation | 🧪️schema | 🧬️schema | Full-operation specimen structure. |
-| 🧵️retained-command/🧪️fixtures | 🔣️artifact-command-checkpoint.json | 📸️artifact-command-checkpoint.json | Command checkpoint. |
-| 🧵️retained-command/🧬️schema | 🔣️artifact-command-checkpoint.schema.json | 📸️artifact-command-checkpoint.schema.json | Checkpoint specimen schema. |
-| 🧵️retained-command/🧪️fixtures | 🔣️mounted-dispatch-binding.json | 📌️mounted-dispatch-binding.json | Mounted dispatch binding. |
-| 🧵️retained-command/🧬️schema | 🔣️mounted-dispatch-binding.schema.json | 📌️mounted-dispatch-binding.schema.json | Dispatch binding schema. |
-| 🧵️retained-command/🧪️fixtures | 🔣️owner-factory-resolution.json | 🏭️owner-factory-resolution.json | Owner/factory resolution. |
-| 🧵️retained-command/🧬️schema | 🔣️owner-factory-resolution.schema.json | 🏭️owner-factory-resolution.schema.json | Factory resolution schema. |
-| 🧵️retained-command/🧪️fixtures | 🔣️raw-allocation-close.json | 🚪️raw-allocation-close.json | Raw allocation closing. |
-| 🧵️retained-command/🧬️schema | 🔣️raw-allocation-close.schema.json | 🚪️raw-allocation-close.schema.json | Allocation closing schema. |
-| 🧵️retained-command/🧪️fixtures | 🔣️scalar-config-cohort.json | 🎚️scalar-config-cohort.json | Scalar configuration cohort. |
-| 🧵️retained-command/🧬️schema | 🔣️scalar-config-cohort.schema.json | 🎚️scalar-config-cohort.schema.json | Scalar cohort schema. |
-| 🧪️tests | 🧬️children-fixture | 🧒️children-fixture | Empty child-mutation roster laws. |
-| 🧪️tests | 🧬️contributed-mutation-wire | 📡️contributed-mutation-wire | Contributed mutation wire/provenance. |
-| 🧪️tests | 🧬️publication-fixtures | 📢️publication-fixtures | Presence/transient publication. |
-| 🧪️tests | 🧬️test-app-mutations | 🖥️test-app-mutations | Test app document/config mutations. |
-| 🧪️tests/📡️contributed-mutation-wire | 🧬️diff | 🔺️diff | Contributed mutation deltas. |
-| 🧪️tests/🧬️mutation-fixtures/🔀️transaction/🧬️mutations | 📝️set-transaction-count-and-notify | 📣️set-transaction-count-and-notify | Notifying a foreign target. |
-| 🧪️tests/🧬️mutation-fixtures/🔀️transaction/🧬️mutations | 📝️set-transaction-count-without-preflight | ⏩️set-transaction-count-without-preflight | Bypassing foreign-step preflight. |
-| 🧪️tests/⏳️completion | 🧪️schema | 🧬️schema | Completion specimen structure. |
-| 🧪️tests/🛰️declaration-channels/1️⃣standard-1/🌐️any | 🧬️schema | 📐️schema | Standard-one any-subset shape. |
-| 🧪️tests/🛰️declaration-channels/1️⃣standard-1/🔒️strict | 🧬️schema | 📐️schema | Standard-one strict-subset shape. |
-| 🧪️tests/🛰️declaration-channels/2️⃣standard-2/🌐️any | 🧬️schema | 📐️schema | Standard-two any-subset shape. |
-| 🏗️builder/🧪️tests/🔗️dependency-contribution | 🧬️diff | 🔺️diff | Dependency-contribution deltas. |
-| 🏗️builder/🧪️tests/🔗️dependency-contribution | 🧬️schema | 📐️schema | Dependency snapshot shape. |
+| Parent                                                        | Old                                        | New                                        | Meaning                                                                          |
+| ------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------ | -------------------------------------------------------------------------------- |
+| .                                                             | 🧪️tool-factory-proof.json                  | 🔬️tool-factory-proof.json                  | Factory-witness proof vectors.                                                   |
+| .                                                             | 🧬️tool-factory-proof.schema.json           | 📐️tool-factory-proof.schema.json           | Proof-vector shape.                                                              |
+| .                                                             | 🧪️tool-latest-wins.json                    | 🥇️tool-latest-wins.json                    | Latest winning request.                                                          |
+| .                                                             | 🧪️tool-latest-wins.schema.json             | 📏️tool-latest-wins.schema.json             | Cancellation/publication budgets.                                                |
+| .                                                             | 🧪️tool-latest-wins-integration.json        | 🔗️tool-latest-wins-integration.json        | Joined publication pipeline.                                                     |
+| .                                                             | 🧪️tool-latest-wins-integration.schema.json | 🧩️tool-latest-wins-integration.schema.json | Integrated pipeline structure.                                                   |
+| 🚪️lifetime                                                    | 🧪️aggregate-admission.json                 | 🛂️aggregate-admission.json                 | Explicit backing admission.                                                      |
+| 🚪️lifetime                                                    | 🧪️aggregate-admission.schema.json          | 📐️aggregate-admission.schema.json          | Admission-vector structure.                                                      |
+| 🚪️lifetime                                                    | 🧪️construction.json                        | 🏗️construction.json                        | Worker-shell construction sequence.                                              |
+| 🚪️lifetime                                                    | 🧪️construction.schema.json                 | 🧬️construction.schema.json                 | Construction-state schema.                                                       |
+| 📦️packages/🟦️typescript/🧪️fixtures                            | 🔣️async-results.json                       | ⏳️async-results.json                       | Async component return shapes.                                                   |
+| 📦️packages/🟦️typescript/🧪️fixtures                            | 🔣️component-instantiation.json             | 🏗️component-instantiation.json             | Explicit instance construction.                                                  |
+| 📦️packages/🟦️typescript/🧪️fixtures                            | 🔣️component-instantiation.schema.json      | 📐️component-instantiation.schema.json      | Instance ownership structure.                                                    |
+| 📦️packages/🟦️typescript/🧪️fixtures                            | 🔣️host-activation.json                     | ⚡️host-activation.json                     | Actor activation generations.                                                    |
+| 📦️packages/🟦️typescript/🧪️fixtures                            | 🔣️host-activation.schema.json              | 🛡️host-activation.schema.json              | Activation isolation contract.                                                   |
+| .                                                             | 📇️describe                                 | 🖨️describe                                 | Build-time descriptor emitter, distinct from registry and in-component describe. |
+| .                                                             | 📦️codec                                    | 🔣️codec                                    | Serialized caller codec contract, distinct from packages.                        |
+| ⚛️reactor/📨️pending                                           | 🧪️authority.json                           | 🛂️authority.json                           | Exact pending feedback authority.                                                |
+| ⚛️reactor/📨️pending                                           | 🧪️authority.schema.json                    | 🧬️authority.schema.json                    | Feedback authority structure.                                                    |
+| ⚛️reactor/🚪️lifetime                                          | 🧪️fixture                                  | 🧫️fixture                                  | Lifetime specimen, distinct from tests.                                          |
+| ⚛️reactor/🚪️lifetime                                          | 🧪️schema                                   | 🧬️schema                                   | Lifetime specimen structure.                                                     |
+| ⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🧬️job-test-mutations | 🧬️diff                                     | 🔺️diff                                     | Job mutation deltas.                                                             |
+| ⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🧬️job-test-mutations | 🧬️schema                                   | 📐️schema                                   | Job snapshot shape, distinct from mutations.                                     |
+| ⚛️reactor/🩹️patches/🧪️fixtures                                | 🔣️catalogue-surface.json                   | 🗂️catalogue-surface.json                   | Material catalogue surface.                                                      |
+| ⚛️reactor/🩹️patches/🧪️fixtures                                | 🔣️document-surface.json                    | 📃️document-surface.json                    | Document object surface.                                                         |
+| ⚛️reactor/🩹️patches/🧪️fixtures                                | 🔣️mounted-surfaces.json                    | 🪟️mounted-surfaces.json                    | Mounted windows/surfaces.                                                        |
+| ⚛️reactor/🩹️patches/🧪️fixtures                                | 🔣️settings-surface.json                    | 🎚️settings-surface.json                    | Adjustable settings.                                                             |
+| ⚛️reactor/🩹️patches/🧪️fixtures                                | 🔣️surface-close.json                       | 🚪️surface-close.json                       | Surface closing lifecycle.                                                       |
+| 📇️registry                                                    | 🧪️fixtures                                 | 🧫️fixtures                                 | Registry specimens, distinct from tests.                                         |
+| 📇️registry                                                    | 🧪️catalog-complete.test.ts                 | ✅️catalog-complete.test.ts                 | Complete catalog verification.                                                   |
+| 📇️registry                                                    | 🧪️launch.test.ts                           | 🚀️launch.test.ts                           | Preview launch configuration.                                                    |
+| 🏪️store                                                       | 📜️store.ts                                 | 📥️store.ts                                 | Runtime extension installation, distinct from task router.                       |
+| 📇️registry/🤖️generated                                        | 🔣️plugins.json                             | 🔌️plugins.json                             | Plugin catalog data.                                                             |
+| 📇️registry/🤖️generated                                        | 🟦️plugins.ts                               | 🧩️plugins.ts                               | Extension/plugin runtime bindings.                                               |
+| 📇️registry/🤖️generated                                        | 🔣️playgrounds.json                         | 🎠️playgrounds.json                         | Playground catalog data.                                                         |
+| 📇️registry/🤖️generated                                        | 🟦️playgrounds.ts                           | 🎮️playgrounds.ts                           | Playground launch/build targets.                                                 |
+| 📇️registry/🤖️generated                                        | 🔣️framework.json                           | 🧰️framework.json                           | Framework package catalog.                                                       |
+| 📇️registry/🤖️generated                                        | 🟦️framework.ts                             | 🏗️framework.ts                             | Framework build bindings.                                                        |
+| 📇️registry/🤖️generated                                        | 🦀️hosts.rs                                 | 🖥️hosts.rs                                 | Native host dispatch.                                                            |
+| 📇️registry/🤖️generated                                        | 🦀️artifacts.rs                             | 🗿️artifacts.rs                             | Native artifact dispatch.                                                        |
+| 🖥️host                                                        | ⏳️imports                                  | 📥️imports                                  | Guest imports implemented by host.                                               |
+| 🖥️host                                                        | 🧪️oracle                                   | 🔮️oracle                                   | Independent oracle policy.                                                       |
+| 🖥️host                                                        | 🧪️schema-parity                            | 🪞️schema-parity                            | WIT parity comparison.                                                           |
+| 🖥️host/🧪️tests                                                | mutate-os-config-merge-policy              | 🛡️mutate-os-config-merge-policy            | Merge-policy protection.                                                         |
+| 🖥️host/🧪️tests                                                | mutate-os-config-opening                   | 🚪️mutate-os-config-opening                 | Opening policy.                                                                  |
+| 🖥️host/🧫️fixtures                                             | 🔣️relay-lifecycle.json                     | ♻️relay-lifecycle.json                     | Relay retirement/reuse.                                                          |
+| 🖥️host/🧫️fixtures                                             | 🔣️stack-authority.json                     | 🧱️stack-authority.json                     | Owned execution stack authority.                                                 |
+| 🕹️interaction/📡️live                                          | 🧪️dispatch                                 | 📨️dispatch                                 | Live interaction dispatch.                                                       |
+| 🕹️interaction/🧬️mutations/🔁️set-state                         | 🧪️fixture                                  | 🧫️fixture                                  | Set-state specimen, distinct from test source.                                   |
+| 🧵️retained-command                                            | 🧪️full-operation                           | 🔄️full-operation                           | Complete retained-operation lifecycle.                                           |
+| 🧵️retained-command/🔄️full-operation                           | 🧪️schema                                   | 🧬️schema                                   | Full-operation specimen structure.                                               |
+| 🧵️retained-command/🧪️fixtures                                 | 🔣️artifact-command-checkpoint.json         | 📸️artifact-command-checkpoint.json         | Command checkpoint.                                                              |
+| 🧵️retained-command/🧬️schema                                   | 🔣️artifact-command-checkpoint.schema.json  | 📸️artifact-command-checkpoint.schema.json  | Checkpoint specimen schema.                                                      |
+| 🧵️retained-command/🧪️fixtures                                 | 🔣️mounted-dispatch-binding.json            | 📌️mounted-dispatch-binding.json            | Mounted dispatch binding.                                                        |
+| 🧵️retained-command/🧬️schema                                   | 🔣️mounted-dispatch-binding.schema.json     | 📌️mounted-dispatch-binding.schema.json     | Dispatch binding schema.                                                         |
+| 🧵️retained-command/🧪️fixtures                                 | 🔣️owner-factory-resolution.json            | 🏭️owner-factory-resolution.json            | Owner/factory resolution.                                                        |
+| 🧵️retained-command/🧬️schema                                   | 🔣️owner-factory-resolution.schema.json     | 🏭️owner-factory-resolution.schema.json     | Factory resolution schema.                                                       |
+| 🧵️retained-command/🧪️fixtures                                 | 🔣️raw-allocation-close.json                | 🚪️raw-allocation-close.json                | Raw allocation closing.                                                          |
+| 🧵️retained-command/🧬️schema                                   | 🔣️raw-allocation-close.schema.json         | 🚪️raw-allocation-close.schema.json         | Allocation closing schema.                                                       |
+| 🧵️retained-command/🧪️fixtures                                 | 🔣️scalar-config-cohort.json                | 🎚️scalar-config-cohort.json                | Scalar configuration cohort.                                                     |
+| 🧵️retained-command/🧬️schema                                   | 🔣️scalar-config-cohort.schema.json         | 🎚️scalar-config-cohort.schema.json         | Scalar cohort schema.                                                            |
+| 🧪️tests                                                       | 🧬️children-fixture                         | 🧒️children-fixture                         | Empty child-mutation roster laws.                                                |
+| 🧪️tests                                                       | 🧬️contributed-mutation-wire                | 📡️contributed-mutation-wire                | Contributed mutation wire/provenance.                                            |
+| 🧪️tests                                                       | 🧬️publication-fixtures                     | 📢️publication-fixtures                     | Presence/transient publication.                                                  |
+| 🧪️tests                                                       | 🧬️test-app-mutations                       | 🖥️test-app-mutations                       | Test app document/config mutations.                                              |
+| 🧪️tests/📡️contributed-mutation-wire                           | 🧬️diff                                     | 🔺️diff                                     | Contributed mutation deltas.                                                     |
+| 🧪️tests/🧬️mutation-fixtures/🔀️transaction/🧬️mutations         | 📝️set-transaction-count-and-notify         | 📣️set-transaction-count-and-notify         | Notifying a foreign target.                                                      |
+| 🧪️tests/🧬️mutation-fixtures/🔀️transaction/🧬️mutations         | 📝️set-transaction-count-without-preflight  | ⏩️set-transaction-count-without-preflight  | Bypassing foreign-step preflight.                                                |
+| 🧪️tests/⏳️completion                                          | 🧪️schema                                   | 🧬️schema                                   | Completion specimen structure.                                                   |
+| 🧪️tests/🛰️declaration-channels/1️⃣standard-1/🌐️any             | 🧬️schema                                   | 📐️schema                                   | Standard-one any-subset shape.                                                   |
+| 🧪️tests/🛰️declaration-channels/1️⃣standard-1/🔒️strict          | 🧬️schema                                   | 📐️schema                                   | Standard-one strict-subset shape.                                                |
+| 🧪️tests/🛰️declaration-channels/2️⃣standard-2/🌐️any             | 🧬️schema                                   | 📐️schema                                   | Standard-two any-subset shape.                                                   |
+| 🏗️builder/🧪️tests/🔗️dependency-contribution                   | 🧬️diff                                     | 🔺️diff                                     | Dependency-contribution deltas.                                                  |
+| 🏗️builder/🧪️tests/🔗️dependency-contribution                   | 🧬️schema                                   | 📐️schema                                   | Dependency snapshot shape.                                                       |
 
 ## Reference Preservation
 

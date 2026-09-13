@@ -7,7 +7,7 @@ fn direct_owner_descriptor_surfaces_and_catalog_correspond() {
     let owner = mutation_root.join("🔢️change-catalog-generation");
     let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
     let descriptor: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid descriptor");
-    let catalog: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(mutation_root.join("../../🔣️oracle.json")).expect("language-neutral catalog")).expect("valid catalog");
+    let catalog: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(mutation_root.join("../../🔮️oracles/🔣️.json")).expect("language-neutral catalog")).expect("valid catalog");
     let mutation_catalog = &catalog["mutationCatalogs"][0];
     assert_eq!(<SHomeMutation as protocol::SemanticMutation<SHomeSnapshot>>::kinds()[0].kind, "change-catalog-generation");
     assert_eq!(mutation_catalog["kinds"], pack::json!(["change-catalog-generation"]));

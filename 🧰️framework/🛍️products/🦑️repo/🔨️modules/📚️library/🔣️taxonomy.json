@@ -3377,6 +3377,134 @@
         "members-of-modules"
       ]
     },
+    "flow-browser": {
+      "emoji": "🌐️",
+      "slugPattern": "^browser$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "flow-webassembly"
+      ]
+    },
+    "flow-browser-runtime": {
+      "emoji": "🏃️",
+      "slugPattern": "^runtime$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "flow-browser"
+      ]
+    },
+    "flow-host": {
+      "emoji": "🖥️",
+      "slugPattern": "^host$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "flow-webassembly"
+      ]
+    },
+    "flow-host-runtime": {
+      "emoji": "🏃️",
+      "slugPattern": "^runtime$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "flow-host"
+      ]
+    },
+    "flow-browser-declaration": {
+      "emoji": "📝️",
+      "slugPattern": "^declaration$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "flow-browser"
+      ]
+    },
+    "flow-browser-declaration-projection": {
+      "emoji": "📤️",
+      "slugPattern": "^projection$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "flow-browser-declaration"
+      ]
+    },
+    "flow-browser-declaration-generated": {
+      "emoji": "🤖️",
+      "slugPattern": "^generated$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "flow-browser-declaration"
+      ]
+    },
+    "flow-browser-publication": {
+      "emoji": "📦️",
+      "slugPattern": "^publication$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "flow-browser"
+      ]
+    },
+    "flow-browser-ownership": {
+      "emoji": "🏷️",
+      "slugPattern": "^ownership$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "flow-browser"
+      ]
+    },
+    "flow-browser-ownership-schema": {
+      "emoji": "🧬️",
+      "slugPattern": "^schema$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "flow-browser-ownership"
+      ]
+    },
+    "flow-browser-ownership-fixtures": {
+      "emoji": "🧫️",
+      "slugPattern": "^fixtures$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "flow-browser-ownership"
+      ]
+    },
+    "flow-browser-ownership-tests": {
+      "emoji": "🧪️",
+      "slugPattern": "^tests$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "flow-browser-ownership"
+      ]
+    },
+    "flow-wasm-abi": {
+      "emoji": "📡️",
+      "slugPattern": "^abi$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "schema"
+      ]
+    },
+    "flow-wasm-browser-types": {
+      "emoji": "📝️",
+      "slugPattern": "^browser-types$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "fixtures"
+      ]
+    },
+    "flow-core-browser-publication": {
+      "emoji": "🌐️",
+      "slugPattern": "^browser$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "flow-wasm-bindings"
+      ]
+    },
+    "flow-core-host-publication": {
+      "emoji": "🖥️",
+      "slugPattern": "^host$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "flow-wasm-bindings"
+      ]
+    },
     "flow-operator-catalogue": {
       "emoji": "🗂️",
       "slugPattern": "^catalogue$",
@@ -4531,6 +4659,214 @@
       "slugPattern": "^hub$",
       "allowEmojiOnly": false
     },
+    "hub-build": {
+      "emoji": "🏗️",
+      "slugPattern": "^build$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub"
+      ]
+    },
+    "hub-build-staging-environment": {
+      "emoji": "🛂️",
+      "slugPattern": "^staging-environment$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-build"
+      ]
+    },
+    "hub-tests": {
+      "emoji": "🧪️",
+      "slugPattern": "^tests$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub"
+      ]
+    },
+    "hub-tests-schema": {
+      "emoji": "🧬️",
+      "slugPattern": "^schema$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-tests"
+      ]
+    },
+    "hub-fixture-expectation": {
+      "emoji": "🛂️",
+      "slugPattern": "^expectation$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-tests-schema"
+      ]
+    },
+    "hub-local-bootstrap": {
+      "emoji": "🚀️",
+      "slugPattern": "^local-bootstrap$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub"
+      ]
+    },
+    "hub-local-bootstrap-framing": {
+      "emoji": "📡️",
+      "slugPattern": "^framing$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-local-bootstrap"
+      ]
+    },
+    "hub-local-bootstrap-authentication": {
+      "emoji": "🛂️",
+      "slugPattern": "^authentication$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-local-bootstrap"
+      ]
+    },
+    "hub-local-bootstrap-execution": {
+      "emoji": "🏃️",
+      "slugPattern": "^execution$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-local-bootstrap"
+      ]
+    },
+    "hub-local-bootstrap-credential-issuance": {
+      "emoji": "🔐️",
+      "slugPattern": "^credential-issuance$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-local-bootstrap"
+      ]
+    },
+    "hub-auth": {
+      "emoji": "🔐️",
+      "slugPattern": "^auth$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub"
+      ]
+    },
+    "hub-auth-credential-delivery": {
+      "emoji": "📤️",
+      "slugPattern": "^credential-delivery$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-auth"
+      ]
+    },
+    "hub-directory": {
+      "emoji": "📇️",
+      "slugPattern": "^directory$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub"
+      ]
+    },
+    "hub-directory-publication": {
+      "emoji": "📣️",
+      "slugPattern": "^publication$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-directory"
+      ]
+    },
+    "hub-directory-publication-tests": {
+      "emoji": "🧪️",
+      "slugPattern": "^tests$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-directory-publication"
+      ]
+    },
+    "hub-directory-ordered-append-broadcast": {
+      "emoji": "🧾️",
+      "slugPattern": "^ordered-append-broadcast$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-directory-publication-tests"
+      ]
+    },
+    "hub-foundation-source-test": {
+      "emoji": "🧱️",
+      "slugPattern": "^foundation-source$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-tests"
+      ]
+    },
+    "hub-foundation-source-execution": {
+      "emoji": "🏃️",
+      "slugPattern": "^execution$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-foundation-source-test"
+      ]
+    },
+    "hub-auth-tests": {
+      "emoji": "🧪️",
+      "slugPattern": "^tests$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-auth"
+      ]
+    },
+    "hub-auth-credential-source-order": {
+      "emoji": "🧭️",
+      "slugPattern": "^credential-source-order$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-auth-tests"
+      ]
+    },
+    "hub-inference": {
+      "emoji": "💡️",
+      "slugPattern": "^inference$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub"
+      ]
+    },
+    "hub-inference-schema": {
+      "emoji": "🧬️",
+      "slugPattern": "^schema$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-inference"
+      ]
+    },
+    "hub-schema": {
+      "emoji": "🧬️",
+      "slugPattern": "^schema$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub"
+      ]
+    },
+    "hub-foundation-source-schema": {
+      "emoji": "🧱️",
+      "slugPattern": "^foundation-source$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-schema"
+      ]
+    },
+    "hub-fixtures": {
+      "emoji": "🧫️",
+      "slugPattern": "^fixtures$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub"
+      ]
+    },
+    "hub-foundation-source-fixture": {
+      "emoji": "🧱️",
+      "slugPattern": "^foundation-source$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-fixtures"
+      ]
+    },
     "benchmarks": {
       "emoji": "🏃️",
       "slugPattern": "^benches$",
@@ -5190,6 +5526,134 @@
       "allowEmojiOnly": false,
       "parentKindIds": [
         "repo-cache-artifacts"
+      ]
+    },
+    "repo-cache-artifact-native-input": {
+      "emoji": "🎛️",
+      "slugPattern": "^native-input$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-cache-artifacts"
+      ]
+    },
+    "repo-cache-artifact-native-build": {
+      "emoji": "🏗️",
+      "slugPattern": "^native-build$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-cache-artifacts"
+      ]
+    },
+    "repo-cache-artifact-native-orchestration": {
+      "emoji": "📋️",
+      "slugPattern": "^native-orchestration$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-cache-artifacts"
+      ]
+    },
+    "repo-library-workspaces": {
+      "emoji": "🗂️",
+      "slugPattern": "^workspaces$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-server-library"
+      ]
+    },
+    "repo-library-workspace-manifest-projection": {
+      "emoji": "📄️",
+      "slugPattern": "^manifest-projection$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-library-workspaces"
+      ]
+    },
+    "repo-library-workspace-membership-comparison": {
+      "emoji": "⚖️",
+      "slugPattern": "^membership-comparison$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-library-workspaces"
+      ]
+    },
+    "repo-library-workspace-publication": {
+      "emoji": "📣️",
+      "slugPattern": "^publication$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-library-workspaces"
+      ]
+    },
+    "repo-library-workspace-execution": {
+      "emoji": "🏃️",
+      "slugPattern": "^execution$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-library-workspaces"
+      ]
+    },
+    "repo-library-transactions": {
+      "emoji": "🔄️",
+      "slugPattern": "^transactions$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-server-library"
+      ]
+    },
+    "repo-library-transaction-verification": {
+      "emoji": "🧪️",
+      "slugPattern": "^verification$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-library-transactions"
+      ]
+    },
+    "repo-library-transaction-run-allocation": {
+      "emoji": "📁️",
+      "slugPattern": "^run-allocation$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-library-transaction-verification"
+      ]
+    },
+    "repo-library-transaction-provenance": {
+      "emoji": "🧾️",
+      "slugPattern": "^provenance$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-library-transaction-verification"
+      ]
+    },
+    "repo-library-transaction-shard-execution": {
+      "emoji": "🏃️",
+      "slugPattern": "^shard-execution$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-library-transaction-verification"
+      ]
+    },
+    "repo-library-transaction-orchestration": {
+      "emoji": "📋️",
+      "slugPattern": "^orchestration$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-library-transaction-verification"
+      ]
+    },
+    "repo-library-test-execution": {
+      "emoji": "🧪️",
+      "slugPattern": "^execution$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-server-library"
+      ]
+    },
+    "repo-library-go-test-execution": {
+      "emoji": "🐹️",
+      "slugPattern": "^go$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-library-test-execution"
       ]
     },
     "repo-test-command-contract": {
@@ -7247,6 +7711,14 @@
       "allowEmojiOnly": false,
       "parentKindIds": [
         "members-of-modules"
+      ]
+    },
+    "repo-process-owned-execution": {
+      "emoji": "🎛️",
+      "slugPattern": "^owned-execution$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-process"
       ]
     },
     "repo-process-environment": {
@@ -14266,6 +14738,15 @@
       ],
       "source": "registry"
     },
+    "react-build-tooling-styling": {
+      "ownerKindIds": [
+        "build-tooling"
+      ],
+      "memberNames": [
+        "🎨️styling"
+      ],
+      "source": "registry"
+    },
     "members-of-ui-runtime": {
       "ownerKindIds": [
         "ui-runtime"
@@ -14748,6 +15229,503 @@
       ],
       "memberNames": [
         "🔮️oracle-source-ownership"
+      ],
+      "source": "registry"
+    },
+    "os-dev-playground-session": {
+      "ownerKindIds": [
+        "members-of-modules"
+      ],
+      "memberNames": [
+        "🎮️playground-session"
+      ],
+      "source": "registry"
+    },
+    "os-dev-playground-session-execution": {
+      "ownerKindIds": [
+        "os-dev-playground-session"
+      ],
+      "memberNames": [
+        "🏃️execution"
+      ],
+      "source": "registry"
+    },
+    "plugin-registry-refresh": {
+      "ownerKindIds": [
+        "registry"
+      ],
+      "memberNames": [
+        "🔄️refresh"
+      ],
+      "source": "registry"
+    },
+    "plugin-build": {
+      "ownerKindIds": [
+        "members-of-modules"
+      ],
+      "memberNames": [
+        "🏗️build"
+      ],
+      "source": "registry"
+    },
+    "plugin-build-plan": {
+      "ownerKindIds": [
+        "plugin-build"
+      ],
+      "memberNames": [
+        "📋️plan"
+      ],
+      "source": "registry"
+    },
+    "plugin-build-materialization": {
+      "ownerKindIds": [
+        "plugin-build"
+      ],
+      "memberNames": [
+        "📦️materialization"
+      ],
+      "source": "registry"
+    },
+    "plugin-build-descriptor": {
+      "ownerKindIds": [
+        "plugin-build"
+      ],
+      "memberNames": [
+        "🛂️descriptor"
+      ],
+      "source": "registry"
+    },
+    "plugin-build-installation": {
+      "ownerKindIds": [
+        "plugin-build"
+      ],
+      "memberNames": [
+        "📥️installation"
+      ],
+      "source": "registry"
+    },
+    "plugin-build-execution": {
+      "ownerKindIds": [
+        "plugin-build"
+      ],
+      "memberNames": [
+        "🏃️execution"
+      ],
+      "source": "registry"
+    },
+    "plugin-build-watch": {
+      "ownerKindIds": [
+        "plugin-build"
+      ],
+      "memberNames": [
+        "👁️watch"
+      ],
+      "source": "registry"
+    },
+    "plugin-size": {
+      "ownerKindIds": [
+        "members-of-modules"
+      ],
+      "memberNames": [
+        "📊️size"
+      ],
+      "source": "registry"
+    },
+    "os-dev-activation": {
+      "ownerKindIds": [
+        "members-of-modules"
+      ],
+      "memberNames": [
+        "♻️activation"
+      ],
+      "source": "registry"
+    },
+    "browser-host-staging": {
+      "ownerKindIds": [
+        "browser-host"
+      ],
+      "memberNames": [
+        "🏗️staging"
+      ],
+      "source": "registry"
+    },
+    "os-dev-engine-selection": {
+      "ownerKindIds": [
+        "engine"
+      ],
+      "memberNames": [
+        "🧭️selection"
+      ],
+      "source": "registry"
+    },
+    "os-dev-engine-publication": {
+      "ownerKindIds": [
+        "engine"
+      ],
+      "memberNames": [
+        "📤️publication"
+      ],
+      "source": "registry"
+    },
+    "os-dev-activation-lease": {
+      "ownerKindIds": [
+        "os-dev-activation"
+      ],
+      "memberNames": [
+        "🔐️lease"
+      ],
+      "source": "registry"
+    },
+    "os-dev-activation-readiness": {
+      "ownerKindIds": [
+        "os-dev-activation"
+      ],
+      "memberNames": [
+        "🩺️readiness"
+      ],
+      "source": "registry"
+    },
+    "os-dev-activation-installation": {
+      "ownerKindIds": [
+        "os-dev-activation"
+      ],
+      "memberNames": [
+        "📥️installation"
+      ],
+      "source": "registry"
+    },
+    "os-dev-activation-freshness": {
+      "ownerKindIds": [
+        "os-dev-activation"
+      ],
+      "memberNames": [
+        "🔍️freshness"
+      ],
+      "source": "registry"
+    },
+    "os-dev-activation-preparation": {
+      "ownerKindIds": [
+        "os-dev-activation"
+      ],
+      "memberNames": [
+        "🧰️preparation"
+      ],
+      "source": "registry"
+    },
+    "os-dev-activation-execution": {
+      "ownerKindIds": [
+        "os-dev-activation"
+      ],
+      "memberNames": [
+        "🏃️execution"
+      ],
+      "source": "registry"
+    },
+    "os-dev-activation-serve": {
+      "ownerKindIds": [
+        "os-dev-activation"
+      ],
+      "memberNames": [
+        "🌐️serve"
+      ],
+      "source": "registry"
+    },
+    "os-dev-capability-policy-tests": {
+      "ownerKindIds": [
+        "tests"
+      ],
+      "memberNames": [
+        "🧹️capability-policy"
+      ],
+      "source": "registry"
+    },
+    "os-dev-layering-policy-tests": {
+      "ownerKindIds": [
+        "tests"
+      ],
+      "memberNames": [
+        "🧹️layering-policy"
+      ],
+      "source": "registry"
+    },
+    "os-dev-export-path-policy-tests": {
+      "ownerKindIds": [
+        "tests"
+      ],
+      "memberNames": [
+        "🧹️export-path-policy"
+      ],
+      "source": "registry"
+    },
+    "os-dev-host-handle-policy-tests": {
+      "ownerKindIds": [
+        "tests"
+      ],
+      "memberNames": [
+        "🧹️host-handle-policy"
+      ],
+      "source": "registry"
+    },
+    "os-dev-test-execution": {
+      "ownerKindIds": [
+        "tests"
+      ],
+      "memberNames": [
+        "🏃️execution"
+      ],
+      "source": "registry"
+    },
+    "os-dev-studio-tests": {
+      "ownerKindIds": [
+        "tests"
+      ],
+      "memberNames": [
+        "🎬️studio"
+      ],
+      "source": "registry"
+    },
+    "os-dev-catalog-smoke-tests": {
+      "ownerKindIds": [
+        "tests"
+      ],
+      "memberNames": [
+        "🔬️catalog-smoke"
+      ],
+      "source": "registry"
+    },
+    "os-dev-collaboration-tests": {
+      "ownerKindIds": [
+        "tests"
+      ],
+      "memberNames": [
+        "🤝️collaboration"
+      ],
+      "source": "registry"
+    },
+    "os-dev-verification-tests": {
+      "ownerKindIds": [
+        "tests"
+      ],
+      "memberNames": [
+        "✅️verification"
+      ],
+      "source": "registry"
+    },
+    "os-dev-parity-tests": {
+      "ownerKindIds": [
+        "tests"
+      ],
+      "memberNames": [
+        "⚖️parity"
+      ],
+      "source": "registry"
+    },
+    "os-dev-parity-structure": {
+      "ownerKindIds": [
+        "os-dev-parity-tests"
+      ],
+      "memberNames": [
+        "🏗️structure"
+      ],
+      "source": "registry"
+    },
+    "os-dev-parity-pixels": {
+      "ownerKindIds": [
+        "os-dev-parity-tests"
+      ],
+      "memberNames": [
+        "🖼️pixels"
+      ],
+      "source": "registry"
+    },
+    "os-dev-parity-probe": {
+      "ownerKindIds": [
+        "os-dev-parity-tests"
+      ],
+      "memberNames": [
+        "🔬️probe"
+      ],
+      "source": "registry"
+    },
+    "os-dev-parity-server-pool": {
+      "ownerKindIds": [
+        "os-dev-parity-tests"
+      ],
+      "memberNames": [
+        "🌐️server-pool"
+      ],
+      "source": "registry"
+    },
+    "os-dev-parity-report": {
+      "ownerKindIds": [
+        "os-dev-parity-tests"
+      ],
+      "memberNames": [
+        "📊️report"
+      ],
+      "source": "registry"
+    },
+    "os-dev-parity-execution": {
+      "ownerKindIds": [
+        "os-dev-parity-tests"
+      ],
+      "memberNames": [
+        "🏃️execution"
+      ],
+      "source": "registry"
+    },
+    "os-dev-distribution-source": {
+      "ownerKindIds": [
+        "dev-distribution-authority"
+      ],
+      "memberNames": [
+        "📥️source"
+      ],
+      "source": "registry"
+    },
+    "os-dev-distribution-plan": {
+      "ownerKindIds": [
+        "dev-distribution-authority"
+      ],
+      "memberNames": [
+        "📋️plan"
+      ],
+      "source": "registry"
+    },
+    "os-dev-distribution-compiler": {
+      "ownerKindIds": [
+        "dev-distribution-authority"
+      ],
+      "memberNames": [
+        "🏗️compiler"
+      ],
+      "source": "registry"
+    },
+    "os-dev-distribution-publication": {
+      "ownerKindIds": [
+        "dev-distribution-authority"
+      ],
+      "memberNames": [
+        "📤️publication"
+      ],
+      "source": "registry"
+    },
+    "os-dev-distribution-freshness": {
+      "ownerKindIds": [
+        "dev-distribution-authority"
+      ],
+      "memberNames": [
+        "🔍️freshness"
+      ],
+      "source": "registry"
+    },
+    "os-dev-distribution-execution": {
+      "ownerKindIds": [
+        "dev-distribution-authority"
+      ],
+      "memberNames": [
+        "🏃️execution"
+      ],
+      "source": "registry"
+    },
+    "os-scale-fixture-projection": {
+      "ownerKindIds": [
+        "test-fixture-member"
+      ],
+      "memberNames": [
+        "📽️projection"
+      ],
+      "source": "registry"
+    },
+    "os-scale-fixture-publication": {
+      "ownerKindIds": [
+        "test-fixture-member"
+      ],
+      "memberNames": [
+        "📤️publication"
+      ],
+      "source": "registry"
+    },
+    "os-dev-benchmarks": {
+      "ownerKindIds": [
+        "members-of-modules"
+      ],
+      "memberNames": [
+        "📊️benchmarks"
+      ],
+      "source": "registry"
+    },
+    "os-dev-benchmark-plan": {
+      "ownerKindIds": [
+        "plugins"
+      ],
+      "memberNames": [
+        "📋️plan"
+      ],
+      "source": "registry"
+    },
+    "os-dev-benchmark-host": {
+      "ownerKindIds": [
+        "plugins"
+      ],
+      "memberNames": [
+        "🖥️host"
+      ],
+      "source": "registry"
+    },
+    "os-dev-benchmark-browser": {
+      "ownerKindIds": [
+        "plugins"
+      ],
+      "memberNames": [
+        "🌐️browser"
+      ],
+      "source": "registry"
+    },
+    "os-dev-benchmark-stub": {
+      "ownerKindIds": [
+        "plugins"
+      ],
+      "memberNames": [
+        "🧪️stub"
+      ],
+      "source": "registry"
+    },
+    "os-dev-benchmark-execution": {
+      "ownerKindIds": [
+        "plugins"
+      ],
+      "memberNames": [
+        "🏃️execution"
+      ],
+      "source": "registry"
+    },
+    "os-dev-schema-validation": {
+      "ownerKindIds": [
+        "schema"
+      ],
+      "memberNames": [
+        "🛂️validation"
+      ],
+      "source": "registry"
+    },
+    "os-dev-canonical-bootstrap-tests": {
+      "ownerKindIds": [
+        "tests"
+      ],
+      "memberNames": [
+        "📇️canonical-bootstrap-folder-mirror"
+      ],
+      "source": "registry"
+    },
+    "os-dev-composition-ownership": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "🧑‍💻os-dev-composition-ownership"
       ],
       "source": "registry"
     }
@@ -19833,17 +20811,6 @@
       "verification": "Surface compiler companion roster and byte preservation",
       "expires": null
     },
-    "flow-family-package-manifest": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/🕸️bindings/package.json",
-      "authority": "wasm-pack",
-      "reason": "Exact generated Node package manifest consumed and copied by the Flow compiler output publisher",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "path-pattern"
-      },
-      "verification": "Flow compiler output package manifest and copied bytes",
-      "expires": null
-    },
     "flow-family-module": {
       "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/🕸️bindings/flow_core.js",
       "authority": "wasm-bindgen",
@@ -22676,18 +23643,6 @@
       "verification": "cargo build",
       "expires": null
     },
-    "postcss-config": {
-      "pathPattern": "**/postcss.config.ts",
-      "authority": "PostCSS",
-      "reason": "PostCSS configuration discovery",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "package-root",
-        "ecosystemId": "🟦️typescript"
-      },
-      "verification": "postcss --config",
-      "expires": null
-    },
     "root-mcp-config": {
       "pathPattern": ".mcp.json",
       "authority": "Model Context Protocol tooling",
@@ -24466,7 +25421,6 @@
         "root-script",
         "next-environment-declaration",
         "next-typescript-config",
-        "postcss-config",
         "next-app-page",
         "next-app-layout",
         "next-app-route"
@@ -26531,13 +27485,6 @@
       "authority": "Cargo build script discovery",
       "verification": "cargo build"
     },
-    "postcss-config": {
-      "contractKind": "fixed",
-      "disposition": "tool-metadata",
-      "validator": "tool-config-postcss",
-      "authority": "PostCSS",
-      "verification": "postcss --config"
-    },
     "storybook-main": {
       "contractKind": "fixed",
       "disposition": "adapter-source",
@@ -26677,8 +27624,14 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🏃️execution/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🏗️compiler/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📇️layout.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📋️plan/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📐️schema.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📤️publication/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📥️source/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🔍️freshness/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🔐️inputs.schema.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🔗️inputs.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🟦️.ts",
@@ -26794,6 +27747,40 @@
       ],
       "reason": "ST-Developer headers prove external generation but no owned import target exists"
     },
+    "flow-browser-package": {
+      "ownership": "owned",
+      "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust",
+      "target": "semio-framework-os-flow-core:wasm",
+      "previewTarget": "semio-framework-os-flow-core:preview-generated",
+      "inputPatterns": [
+        "Cargo.lock",
+        "Cargo.toml",
+        "bun.lock",
+        "package.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/**/*.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📝️declaration/📤️projection/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/📡️abi/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/package.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📋️project.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts"
+      ],
+      "outputRoots": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/🕸️bindings",
+          "inclusion": "ignored"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings",
+          "inclusion": "tracked"
+        }
+      ],
+      "reason": "The Flow core command invokes wasm-pack, then delegates browser, host, declaration, manifest and snippet publication to the semantic browser publisher"
+    },
     "framework-manifest": {
       "ownership": "owned",
       "ownerPath": "🧰️framework/📦️packages/🦀️rust",
@@ -26906,6 +27893,7 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎠️playgrounds.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🏃️execution/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
       ],
@@ -27042,7 +28030,9 @@
       "checkTarget": "@semio-tech/framework-os-dev:scale-fixture-check",
       "inputPatterns": [
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+        "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📤️publication/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📽️projection/🟦️.ts"
       ],
       "outputRoots": [
         {
@@ -27189,26 +28179,6 @@
         }
       ],
       "reason": "The adapter manifest and shared renderer own exact CSS, TypeScript, C#, Rust, and corrected Python bytes with a freshness target"
-    },
-    "ticket-important-fem-handoff": {
-      "ownership": "owned",
-      "ownerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-      "target": "@semio-tech/repo-lib:generate-ticket-important-fem-handoff",
-      "previewTarget": "@semio-tech/repo-lib:preview-generated",
-      "checkTarget": "@semio-tech/repo-lib:check-ticket-important-fem-handoff",
-      "inputPatterns": [
-        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/FEM-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION/🔧️update-handoff-tests.mjs",
-        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/FEM-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION/🔧️write-handoff.mjs",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts"
-      ],
-      "outputRoots": [
-        {
-          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/FEM-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION/📋️registrar-handoff.json",
-          "inclusion": "tracked"
-        }
-      ],
-      "reason": "The repo normalization owner isolates the two existing FEM handoff authors, previews their exact JSON leaf and verifies the tracked output byte-for-byte"
     },
     "ui-axes": {
       "ownership": "owned",

@@ -6,21 +6,21 @@ The initial structural audit reported 441 files, 386 directories and 807 governe
 
 Six operation owners now express their subject/action more clearly: `➕️create-layer`, `📋️duplicate-layer`, `🔍️update-layer-trace-params`, `🌓️set-layer-blend-mode`, `🖊️replace-layer-stroke`, and `🎨️replace-layer-fill`. Existing transform, boolean, reordering, deletion, visibility, rename, lock and opacity identities remain meaningful and distinct among siblings.
 
-| Existing entry | Chosen entry | Inspected meaning |
-| --- | --- | --- |
-| 🟤️set-snapshot | 📸️set-snapshot | Resets the drawing snapshot |
-| 🌹️mutate-drawing-1-any-structure | 🧱️mutate-drawing-1-any-structure | Aggregate structure mutation suite |
-| 🛰️mutate-drawing-1-structure | 🧱️mutate-drawing-1-structure | Subset structure mutation suite |
-| 🔴️translates-and-scales-shape-a | 📐️translates-and-scales-shape-a | Changes position and two scale factors |
-| 🟢️sharpens-the-trace | 🔍️sharpens-the-trace | Raises threshold and reduces simplification |
-| 🎈️union-to-subtract | ➖️union-to-subtract | Changes boolean operation to subtraction |
-| 🍋️appends-shape-b-at-the-root | ➕️appends-shape-b-at-the-root | Creates a root-level circular shape |
-| 🍎️moves-shape-a-above-shape-b | ⬆️moves-shape-a-above-shape-b | Changes stacking order |
-| 🐙️hides-shape-a | 🙈️hides-shape-a | Sets visibility false |
-| 🐯️normal-to-multiply | ✖️normal-to-multiply | Selects multiply blending |
-| 🟤️adds-a-dashed-stroke | 🖊️adds-a-dashed-stroke | Attaches a dashed outline |
-| 🌾️solid-to-linear-gradient | 🌈️solid-to-linear-gradient | Replaces solid paint with a two-stop gradient |
-| 🐼️dims-shape-a-to-half | 🌫️dims-shape-a-to-half | Sets opacity to one half |
+| Existing entry                   | Chosen entry                     | Inspected meaning                             |
+| -------------------------------- | -------------------------------- | --------------------------------------------- |
+| 🟤️set-snapshot                   | 📸️set-snapshot                   | Resets the drawing snapshot                   |
+| 🌹️mutate-drawing-1-any-structure | 🧱️mutate-drawing-1-any-structure | Aggregate structure mutation suite            |
+| 🛰️mutate-drawing-1-structure     | 🧱️mutate-drawing-1-structure     | Subset structure mutation suite               |
+| 🔴️translates-and-scales-shape-a  | 📐️translates-and-scales-shape-a  | Changes position and two scale factors        |
+| 🟢️sharpens-the-trace             | 🔍️sharpens-the-trace             | Raises threshold and reduces simplification   |
+| 🎈️union-to-subtract              | ➖️union-to-subtract              | Changes boolean operation to subtraction      |
+| 🍋️appends-shape-b-at-the-root    | ➕️appends-shape-b-at-the-root    | Creates a root-level circular shape           |
+| 🍎️moves-shape-a-above-shape-b    | ⬆️moves-shape-a-above-shape-b    | Changes stacking order                        |
+| 🐙️hides-shape-a                  | 🙈️hides-shape-a                  | Sets visibility false                         |
+| 🐯️normal-to-multiply             | ✖️normal-to-multiply             | Selects multiply blending                     |
+| 🟤️adds-a-dashed-stroke           | 🖊️adds-a-dashed-stroke           | Attaches a dashed outline                     |
+| 🌾️solid-to-linear-gradient       | 🌈️solid-to-linear-gradient       | Replaces solid paint with a two-stop gradient |
+| 🐼️dims-shape-a-to-half           | 🌫️dims-shape-a-to-half           | Sets opacity to one half                      |
 
 The already meaningful rejection, removal, rename and lock cases are retained. The existing monkey fixture is specifically about hiding and is retained; it is not treated as a violation merely because it is an animal. Reserved/build-output directories are not renamed.
 

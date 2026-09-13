@@ -15,6 +15,11 @@
     "generation2d-preview": { "viewport": { "x": 0, "y": 0, "zoom": 1 } },
     "generation2d-generate-preview": { "viewport": { "x": 0, "y": 0, "zoom": 1 } }
   },
+  "renderers": {
+    "generation2d-main": { "bodyKey": "generation2d.play.main", "sceneSchema": "node-graph@1" },
+    "generation2d-preview": { "bodyKey": "generation2d.play.preview", "sceneSchema": "canvas-2d@1" },
+    "generation2d-generate-preview": { "bodyKey": "generation2d.play.generate-preview", "sceneSchema": "canvas-2d@1" }
+  },
   "mutations": [
     { "windowId": "main-left", "windowKindId": "generation2d-main", "mutation": { "kind": "snapshot", "config": { "viewport": { "x": 11, "y": 12, "zoom": 1.1 } } } },
     { "windowId": "main-right", "windowKindId": "generation2d-main", "mutation": { "kind": "snapshot", "config": { "viewport": { "x": 21, "y": 22, "zoom": 1.2 } } } },

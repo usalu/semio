@@ -7,31 +7,21 @@ import Ajv from "ajv";
 import {
   BundleScript,
   ScriptRouter,
-  SEMIO_ASSET_SERVER_PORT,
-  SEMIO_ASSET_BASE_URL_ENV,
-  daemonBudgetOpts,
   getWorkspaceRoot,
-  orchestratorBudgetOpts,
   resolveTestLevel,
   runCargoTestBudgeted,
   runExactCargoLaws,
-  runCmdStatus,
   runVitest,
-  loadFrameworkOsPlaygroundCatalog,
 } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { startAssetServer } from "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
-import { nativeRendererBinary } from "../../🏗️compiler/🦀️native/📜️script.ts";
-import { pluginModulesRoot } from "../../../../../../🧑‍💻dev/♻️activation/🟦️.ts";
-import type { PlaygroundAssetSpec } from "../../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 
 import { checkBrowserBoot, renderBrowserEntry } from "../../⚙️browser-build/🟦️.ts";
 import { checkFrameWorker, generateFrameWorker, renderFrameWorker } from "../../🎞️frame-worker/🏗️builder/🟦️.ts";
 
+import { runNativeBinary } from "../../⌨️native-entrypoint/📜️script.ts";
+
 const repoRoot = getWorkspaceRoot();
 const rustPackageRoot = resolve(import.meta.dir, "../🦀️rust");
 const crateName = "semio-framework-os-renderer-wgpu";
-const NATIVE_RUNNER_BENIGN_ENV_KEY = "SEMIO_DIRECT_CHILD_BENIGN";
-const NATIVE_RUNNER_BENIGN_ENV_VALUE = "preserved";
 
 function assertRendererOutputOwnership(): number {
   const project = JSON.parse(readFileSync(join(import.meta.dir, "📋️project.json"), "utf8"));
@@ -43,34 +33,7 @@ function assertRendererOutputOwnership(): number {
   return 2;
 }
 
-function nativeRunnerEnvironmentKeyIsProtected(key: string): boolean {
-  const normalized = key.toUpperCase();
-  return (
-    normalized === "S_USER" ||
-    normalized === "VITE_S_USER" ||
-    normalized === "S_HUB_URL" ||
-    normalized.includes("TOKEN") ||
-    normalized.includes("SESSION") ||
-    normalized.includes("CREDENTIAL") ||
-    normalized.includes("BEARER") ||
-    normalized.includes("CAPABILITY") ||
-    normalized.includes("AUTHORIZATION") ||
-    normalized.includes("COOKIE")
-  );
-}
-
-function nativeRunnerEnvironment(source: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
-  const environment: NodeJS.ProcessEnv = {};
-  for (const [key, value] of Object.entries(source)) if (!nativeRunnerEnvironmentKeyIsProtected(key)) environment[key] = value;
-  environment[NATIVE_RUNNER_BENIGN_ENV_KEY] = NATIVE_RUNNER_BENIGN_ENV_VALUE;
-  return environment;
-}
-
-function runNativeBinary(executable: string, args: readonly string[], environment: NodeJS.ProcessEnv): number {
-  return runCmdStatus(executable, [...args], { cwd: repoRoot, env: nativeRunnerEnvironment(environment), ...daemonBudgetOpts() });
-}
-
-function proveNativeRunnerEnvironment(): void {
+async function proveNativeRunnerEnvironment(): Promise<void> {
   const poisoned = {
     ...process.env,
     S_USER: "poison-user",
@@ -86,90 +49,13 @@ function proveNativeRunnerEnvironment(): void {
 const keys = Object.keys(process.env).map(key => key.toUpperCase());
 const protectedKey = key => key === "S_USER" || key === "VITE_S_USER" || key === "S_HUB_URL" || key.includes("TOKEN") || key.includes("SESSION") || key.includes("CREDENTIAL") || key.includes("BEARER") || key.includes("CAPABILITY") || key.includes("AUTHORIZATION") || key.includes("COOKIE");
 process.exit(keys.some(protectedKey) || process.env.SEMIO_DIRECT_CHILD_BENIGN !== "preserved" ? 1 : 0);`;
-  if (runNativeBinary(process.execPath, ["-e", consumer], poisoned) !== 0) throw new Error("ordinary WGPU native runner leaked protected parent environment");
+  await runNativeBinary(process.execPath, ["-e", consumer], poisoned, repoRoot);
   const entrypoint = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs"), "utf8");
   const guard = entrypoint.indexOf("if !protected_credential_environment_is_absent()");
   const claim = entrypoint.indexOf('claim_inherited_local_hub_credential("native")');
   const plugin = entrypoint.indexOf('arg_value("--plugin")');
   if (guard < 0 || claim < 0 || plugin < 0 || guard > claim || guard > plugin) throw new Error("native binary protected-environment guard no longer precedes credential claim and plugin activation");
   console.log("native-environment-check: poisoned ordinary runner sanitized and binary fail-closed guard precedes credential/plugin activation");
-}
-
-//#region 🌐️ NativeAssets
-function assetServerBaseUrl(): string {
-  return `http://127.0.0.1:${SEMIO_ASSET_SERVER_PORT}`;
-}
-
-/** @emoji 🗂️ The active playground variant's declared asset specs (tile-proxy, mesh-collection, static-dir). */
-function variantAssetSpecs(variant: string): readonly PlaygroundAssetSpec[] {
-  const row = loadFrameworkOsPlaygroundCatalog().find((entry) => entry.variant === variant);
-  return row?.assets ?? [];
-}
-
-/** @emoji 🌐️ Generic dev-time asset server bootstrap driven by the active playground's declared
- * asset specs — mesh-collection/static-dir are served here so Trunk proxies and native
- * `SEMIO_ASSET_BASE_URL` can resolve `/mesh/*` (and fixture routes) without Vite. */
-function ensureAssetServer(variant: string): void {
-  const specs = variantAssetSpecs(variant);
-  if (specs.length === 0) return;
-  startAssetServer(repoRoot, SEMIO_ASSET_SERVER_PORT, specs);
-  console.log(`asset server serving at ${assetServerBaseUrl()} (${specs.map((s) => `${s.kind}:${s.route}`).join(", ")})`);
-}
-
-/** 🎯️Resolves the `--app <appId>` args for `semio-wgpu-native` from the catalog row matching `filterPlugin`, or `[]` when the row has no `app`. */
-function resolveNativeAppArgs(catalog: ReturnType<typeof loadFrameworkOsPlaygroundCatalog>, filterPlugin: string): string[] {
-  const row = catalog.find((r) => r.variant === filterPlugin);
-  return row?.app ? ["--app", row.app] : [];
-}
-
-//#endregion 🌐️ NativeAssets
-
-/** ⚖️ Reads one option for the headless native scale benchmark. */
-function scaleModeArgValue(segments: readonly string[], flag: string): string | undefined {
-  const index = segments.indexOf(flag);
-  return index >= 0 ? segments[index + 1] : undefined;
-}
-
-function scaleModePassthroughArgs(segments: readonly string[]): string[] {
-  const args: string[] = [];
-  for (const flag of ["--scale", "--scale-wasm", "--shards", "--report"]) {
-    const value = scaleModeArgValue(segments, flag);
-    if (value) args.push(flag, value);
-  }
-  return args;
-}
-
-class NativeRunScript extends BundleScript {
-  async run([profile, ...segments]: string[]): Promise<void> {
-    if (!["dev", "release"].includes(profile) || segments.some((argument) => argument === "--release" || argument === "--dist")) throw new Error("Select native or native-release through Nx");
-    const executable = nativeRendererBinary(rustPackageRoot, profile);
-    if (segments.includes("--scale")) {
-      if (runNativeBinary(executable, scaleModePassthroughArgs(segments), process.env) !== 0) {
-        throw new Error("native wgpu scale-bench run failed");
-      }
-      return;
-    }
-    const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || "s";
-    // 🧊️ Delegates to the Nx-cached `activate-<variant>-wgpu-<profile>` target (`playgroundPreparationTargets`
-    // in `…🦑️repo/🔨️modules/📚️library/🟨️.mjs`) instead of a raw `plugin` build — a warm cache restores the
-    // per-variant/profile module directory below instantly rather than rebuilding the whole catalog serially.
-    if (runCmdStatus("bun", ["nx", "run", `@semio-tech/framework-os-dev:activate-${filterPlugin}-wgpu-${profile}`], { cwd: repoRoot, ...orchestratorBudgetOpts() }) !== 0) throw new Error(`Plugin activation failed: ${filterPlugin}`);
-    ensureAssetServer(filterPlugin);
-    const nativeEnv = nativeRunnerEnvironment(process.env);
-    nativeEnv.SEMIO_PLUGIN_MODULES = pluginModulesRoot(profile as "dev" | "release");
-    if (variantAssetSpecs(filterPlugin).length > 0) {
-      nativeEnv[SEMIO_ASSET_BASE_URL_ENV] = assetServerBaseUrl();
-    }
-    const catalog = loadFrameworkOsPlaygroundCatalog();
-    const appArgs = resolveNativeAppArgs(catalog, filterPlugin);
-    // 🧪️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END — `--smoke` passes straight
-    // through to `semio-wgpu-native` (boots headless, dumps the widget tree as JSON, exits) instead of
-    // opening a real window; an honest way to drive/observe this shell in an environment that cannot.
-    const smokeArgs = segments.includes("--smoke") ? ["--smoke"] : [];
-    if (runNativeBinary(executable, ["--plugin", filterPlugin, ...appArgs, ...smokeArgs], nativeEnv) !== 0) {
-      throw new Error("native wgpu renderer run failed");
-    }
-  }
 }
 
 class TestScript extends BundleScript {
@@ -464,12 +350,11 @@ class LintScript extends BundleScript {
 //#endregion 🔖️LintScript
 
 const router = new ScriptRouter(import.meta.dir)
-  .register("native", NativeRunScript)
   .register(
     "native-environment-check",
     class extends BundleScript {
-      run(): void {
-        proveNativeRunnerEnvironment();
+      async run(): Promise<void> {
+        await proveNativeRunnerEnvironment();
       }
     },
   )

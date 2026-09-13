@@ -459,9 +459,11 @@ function buildShardClientOptions(createWorker: () => ShardWorkerLike = () => new
   readonly residentLedger: OwnedResidentLedger;
   readonly shardCount: number;
   readonly createWorker: () => ShardWorkerLike;
+  readonly heartbeatTimeoutMs: number;
   readonly onActorTrap: (actorId: string, message: string) => void;
   readonly onShardLost: (shardIndex: number, actorIds: readonly string[]) => void;
 } {
+  console.error("[DEBUG] buildShardClientOptions heartbeatTimeoutMs=120000");
   return {
     residentLedger: rendererResidentLedger(),
     shardCount: poolConcurrency(),
@@ -470,6 +472,9 @@ function buildShardClientOptions(createWorker: () => ShardWorkerLike = () => new
     // wider native `MessageEvent`/`ErrorEvent` handler types down to the interface's minimal
     // `{data: unknown}`/`unknown` shape, which a `MessageEvent`/`ErrorEvent` handler always satisfies.
     createWorker,
+    // [DEBUG] temporary watchdog widening — measures whether the setContributions turn is a HANG or a
+    // long-but-finite install. REMOVE with the measurement (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    heartbeatTimeoutMs: 120_000,
     onActorTrap: (actorId, message) => console.error(`[DEBUG] PluginRuntime: actor ${actorId} trapped: ${message}`),
     onShardLost: handlePluginShardLost,
   };

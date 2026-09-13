@@ -10,7 +10,7 @@
 //! command's own selection fallback.
 
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use crate::editor::puzzle3d::{
     object_scale_json, puzzle3d_vortex_full_id, target_volume_scale_json, ui_label, ui_node_list, Puzzle3dAttraction, Puzzle3dFixture, Puzzle3dInteractionSnapshot, Puzzle3dObject, Puzzle3dReference, Puzzle3dScene, Puzzle3dTargetVolume,
     Puzzle3dVortex, PUZZLE3D_GRANULARITY_ATTRACTION, PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_REFERENCE, PUZZLE3D_GRANULARITY_TARGET_VOLUME, PUZZLE3D_GRANULARITY_VORTEX, PUZZLE3D_PLAY_CONTROLLER_ID,
@@ -73,7 +73,7 @@ fn id_list_value(ids: &[String]) -> UiAssemblyResult<UiValue> {
     Ok(UiValue::List(builder.finish()))
 }
 
-fn ids_page<'a>(ids: &'a [String], pages: &HashMap<String, u32>) -> &'a [String] {
+fn ids_page<'a>(ids: &'a [String], pages: &BTreeMap<String, u32>) -> &'a [String] {
     if ids.is_empty() {
         return ids;
     }
@@ -82,7 +82,7 @@ fn ids_page<'a>(ids: &'a [String], pages: &HashMap<String, u32>) -> &'a [String]
     &ids[(page * IDS_ROWS).min(ids.len())..]
 }
 
-fn push_ids(fields: &mut UiFixedList<BuiltNode>, ids: &[String], pages: &HashMap<String, u32>) -> UiAssemblyResult<()> {
+fn push_ids(fields: &mut UiFixedList<BuiltNode>, ids: &[String], pages: &BTreeMap<String, u32>) -> UiAssemblyResult<()> {
     let rest = ids_page(ids, pages);
     let page = if ids.is_empty() { 0 } else { (pages.get(IDS_SECTION).copied().unwrap_or(0) as usize).min((ids.len() - 1) / IDS_ROWS) };
     for (index, id) in rest.iter().take(IDS_ROWS).enumerate() {
@@ -115,7 +115,7 @@ fn flag_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, entity: 
 //#endregion 🔖️Rows
 
 //#region 🔖️Sections
-fn object_fields(object: &Puzzle3dObject, ids: &[String], pages: &HashMap<String, u32>, labels: &Puzzle3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn object_fields(object: &Puzzle3dObject, ids: &[String], pages: &BTreeMap<String, u32>, labels: &Puzzle3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut fields = UiFixedList::default();
     push_ids(&mut fields, ids, pages)?;
     read_only(&mut fields, "object.id", labels.id.as_str(), &object.id)?;
@@ -156,7 +156,7 @@ fn attraction_fields(attraction: &Puzzle3dAttraction, labels: &Puzzle3dLabels) -
     Ok(fields)
 }
 
-fn target_volume_fields(volume: &Puzzle3dTargetVolume, ids: &[String], pages: &HashMap<String, u32>, labels: &Puzzle3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn target_volume_fields(volume: &Puzzle3dTargetVolume, ids: &[String], pages: &BTreeMap<String, u32>, labels: &Puzzle3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut fields = UiFixedList::default();
     push_ids(&mut fields, ids, pages)?;
     read_only(&mut fields, "target-volume.id", labels.id.as_str(), &volume.id)?;
@@ -168,7 +168,7 @@ fn target_volume_fields(volume: &Puzzle3dTargetVolume, ids: &[String], pages: &H
     Ok(fields)
 }
 
-fn reference_fields(reference: &Puzzle3dReference, ids: &[String], pages: &HashMap<String, u32>, labels: &Puzzle3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn reference_fields(reference: &Puzzle3dReference, ids: &[String], pages: &BTreeMap<String, u32>, labels: &Puzzle3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut fields = UiFixedList::default();
     push_ids(&mut fields, ids, pages)?;
     read_only(&mut fields, "reference.id", labels.id.as_str(), &reference.id)?;
@@ -193,7 +193,7 @@ fn summary(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> UiAssemblyResu
 
 /// 🔍️ The selected entity's own field group, or `None` when the selection resolves to nothing in this
 /// document (a just-deleted id, or a granularity with no inspectable body such as `kind`).
-fn selected_section(fixture: &Puzzle3dFixture, interaction: &Puzzle3dInteractionSnapshot, pages: &HashMap<String, u32>, labels: &Puzzle3dLabels) -> Option<UiAssemblyResult<BuiltNode>> {
+fn selected_section(fixture: &Puzzle3dFixture, interaction: &Puzzle3dInteractionSnapshot, pages: &BTreeMap<String, u32>, labels: &Puzzle3dLabels) -> Option<UiAssemblyResult<BuiltNode>> {
     let section = |label: &str, id: &str, fields: UiAssemblyResult<UiFixedList<BuiltNode>>| -> UiAssemblyResult<BuiltNode> { PanelTreeBuilder::new(ROOT)?.section(format!("{ROOT}.{id}"), Some(ui_label(label)?), true, fields?)?.build() };
     match interaction.granularity.as_str() {
         PUZZLE3D_GRANULARITY_OBJECT => {

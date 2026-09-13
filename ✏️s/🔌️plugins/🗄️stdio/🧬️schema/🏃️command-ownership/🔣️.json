@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/stdio-command-ownership.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "owners", "routers", "artifactDefinitions", "inputs", "registration"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "owners": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/owner" }
+    },
+    "routers": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/router" }
+    },
+    "artifactDefinitions": {
+      "type": "array",
+      "minItems": 36,
+      "maxItems": 36,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/[^/]+/📜️artifact-definition\\.json$" }
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["build", "contract", "graph"],
+      "properties": {
+        "build": { "$ref": "#/$defs/paths" },
+        "contract": { "$ref": "#/$defs/paths" },
+        "graph": { "$ref": "#/$defs/paths" }
+      }
+    },
+    "registration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["projectPath", "packagePath", "launchSeedPath", "launchPath", "projectName"],
+      "properties": {
+        "projectPath": { "type": "string" },
+        "packagePath": { "type": "string" },
+        "launchSeedPath": { "type": "string" },
+        "launchPath": { "type": "string" },
+        "projectName": { "const": "@semio-tech/stdio-js" }
+      }
+    }
+  },
+  "$defs": {
+    "paths": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "path", "exports"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]+$" },
+        "path": { "type": "string", "pattern": "/🟦️\\.ts$" },
+        "exports": { "$ref": "#/$defs/paths" }
+      }
+    },
+    "router": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "path", "defaultCommand", "commands"],
+      "properties": {
+        "id": { "enum": ["root", "composition-package"] },
+        "path": { "type": "string", "pattern": "/📜️script\\.ts$" },
+        "defaultCommand": { "type": "string" },
+        "commands": { "$ref": "#/$defs/paths" }
+      }
+    }
+  }
+}

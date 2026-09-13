@@ -16,16 +16,16 @@ These are newly introduced report asset copies and report sources, not the disap
 
 ## Finding Breakdown
 
-| Branch | Findings |
-| --- | ---: |
-| Zwischenbericht actor tree | 752 |
-| Forschungsbericht actor tree | 752 |
-| Forschungsbericht project tree | 66 |
-| Forschungsbericht appendices | 9 |
-| Forschungsbericht bare demonstrator directory | 1 |
-| Forschungsbericht logo tree | 9 |
-| Kompaktbericht logo tree | 9 |
-| Total | 1,598 |
+| Branch                                        | Findings |
+| --------------------------------------------- | -------: |
+| Zwischenbericht actor tree                    |      752 |
+| Forschungsbericht actor tree                  |      752 |
+| Forschungsbericht project tree                |       66 |
+| Forschungsbericht appendices                  |        9 |
+| Forschungsbericht bare demonstrator directory |        1 |
+| Forschungsbericht logo tree                   |        9 |
+| Kompaktbericht logo tree                      |        9 |
+| Total                                         |    1,598 |
 
 The actor trees use the country roster AT, BE, CH, DE, DK, FI, FR, GB, NL, NO, SE. Their actor basenames are identifiers such as F01/I01/M01/N01/U01 with optional `-dark`, so an arbitrary emoji palette cannot express their meaning. A proper follow-up must use the actor ledger/entity names and explicitly distinguish each light/dark pair, then repair the corresponding `assetPath` references and rendering source. Existing canonical project/logo choices can be individually reused for the byte-identical copies without inventing new identities.
 

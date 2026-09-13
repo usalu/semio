@@ -42,9 +42,9 @@ Ran via `bun ./📜️script.ts test import_fixture_of_a_distinct_two_object_jso
 
 **PASS** (2.006s). Debug:
 
-| hop | apply |
-| --- | --- |
-| restore 2→1 | `ops=1 after_objects=1` |
+| hop          | apply                   |
+| ------------ | ----------------------- |
+| restore 2→1  | `ops=1 after_objects=1` |
 | distinct 1→2 | `ops=1 after_objects=2` |
 
 After-snapshot length 2 and contains the distinct object id. `history_patch.is_some()`.

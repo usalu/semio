@@ -28,24 +28,24 @@ Exact malformed dream URL inventory: 16 distinct names, 1,408 total source occur
 
 All rows below occur in the authored 5D capsule-dream DSL. Each intended identity is independently present among the 90 actual GLBs and in the new hand-authored representation catalog. This table is input evidence, not an executable replacement specification. The 1,408 semantic values remain unchanged while delivery is repaired; the parent owns the constrained source-correction decision and subsequent canonical descriptor/hash emission.
 
-| Corrupt public URL | Intended existing public URL | Occurrences |
-|---|---|---:|
-| `/mesh/🧊️cylindric-🧊️capital.glb` | `/mesh/🧊️cylindric-capital.glb` | 16 |
-| `/mesh/🧊️ellipsoid-🧊️capsule_backslash.glb` | `/mesh/🧊️ellipsoid-capsule_backslash.glb` | 124 |
-| `/mesh/🧊️ellipsoid-🧊️capsule_L.glb` | `/mesh/🧊️ellipsoid-capsule_L.glb` | 104 |
-| `/mesh/🧊️ellipsoid-🧊️capsule_J.glb` | `/mesh/🧊️ellipsoid-capsule_J.glb` | 132 |
-| `/mesh/🧊️ellipsoid-🧊️capsule_slash.glb` | `/mesh/🧊️ellipsoid-capsule_slash.glb` | 160 |
-| `/mesh/🧊️ellipsoid-🧊️capsule_s.glb` | `/mesh/🧊️ellipsoid-capsule_s.glb` | 52 |
-| `/mesh/🧊️ellipsoid-🧊️capsule_p.glb` | `/mesh/🧊️ellipsoid-capsule_p.glb` | 44 |
-| `/mesh/🧊️cylindric-🧊️tambour_first-storey.glb` | `/mesh/🧊️cylindric-tambour_first-storey.glb` | 16 |
-| `/mesh/🧊️cylindric-🧊️tambour.glb` | `/mesh/🧊️cylindric-tambour.glb` | 128 |
-| `/mesh/🧊️cylindric-🧊️tambour_last-storey.glb` | `/mesh/🧊️cylindric-tambour_last-storey.glb` | 16 |
-| `/mesh/🧊️trapezoid-🧊️capsule_backslash.glb` | `/mesh/🧊️trapezoid-capsule_backslash.glb` | 124 |
-| `/mesh/🧊️trapezoid-🧊️capsule_L.glb` | `/mesh/🧊️trapezoid-capsule_L.glb` | 104 |
-| `/mesh/🧊️trapezoid-🧊️capsule_J.glb` | `/mesh/🧊️trapezoid-capsule_J.glb` | 132 |
-| `/mesh/🧊️trapezoid-🧊️capsule_slash.glb` | `/mesh/🧊️trapezoid-capsule_slash.glb` | 160 |
-| `/mesh/🧊️trapezoid-🧊️capsule_s.glb` | `/mesh/🧊️trapezoid-capsule_s.glb` | 52 |
-| `/mesh/🧊️trapezoid-🧊️capsule_p.glb` | `/mesh/🧊️trapezoid-capsule_p.glb` | 44 |
+| Corrupt public URL                             | Intended existing public URL                 | Occurrences |
+| ---------------------------------------------- | -------------------------------------------- | ----------: |
+| `/mesh/🧊️cylindric-🧊️capital.glb`              | `/mesh/🧊️cylindric-capital.glb`              |          16 |
+| `/mesh/🧊️ellipsoid-🧊️capsule_backslash.glb`    | `/mesh/🧊️ellipsoid-capsule_backslash.glb`    |         124 |
+| `/mesh/🧊️ellipsoid-🧊️capsule_L.glb`            | `/mesh/🧊️ellipsoid-capsule_L.glb`            |         104 |
+| `/mesh/🧊️ellipsoid-🧊️capsule_J.glb`            | `/mesh/🧊️ellipsoid-capsule_J.glb`            |         132 |
+| `/mesh/🧊️ellipsoid-🧊️capsule_slash.glb`        | `/mesh/🧊️ellipsoid-capsule_slash.glb`        |         160 |
+| `/mesh/🧊️ellipsoid-🧊️capsule_s.glb`            | `/mesh/🧊️ellipsoid-capsule_s.glb`            |          52 |
+| `/mesh/🧊️ellipsoid-🧊️capsule_p.glb`            | `/mesh/🧊️ellipsoid-capsule_p.glb`            |          44 |
+| `/mesh/🧊️cylindric-🧊️tambour_first-storey.glb` | `/mesh/🧊️cylindric-tambour_first-storey.glb` |          16 |
+| `/mesh/🧊️cylindric-🧊️tambour.glb`              | `/mesh/🧊️cylindric-tambour.glb`              |         128 |
+| `/mesh/🧊️cylindric-🧊️tambour_last-storey.glb`  | `/mesh/🧊️cylindric-tambour_last-storey.glb`  |          16 |
+| `/mesh/🧊️trapezoid-🧊️capsule_backslash.glb`    | `/mesh/🧊️trapezoid-capsule_backslash.glb`    |         124 |
+| `/mesh/🧊️trapezoid-🧊️capsule_L.glb`            | `/mesh/🧊️trapezoid-capsule_L.glb`            |         104 |
+| `/mesh/🧊️trapezoid-🧊️capsule_J.glb`            | `/mesh/🧊️trapezoid-capsule_J.glb`            |         132 |
+| `/mesh/🧊️trapezoid-🧊️capsule_slash.glb`        | `/mesh/🧊️trapezoid-capsule_slash.glb`        |         160 |
+| `/mesh/🧊️trapezoid-🧊️capsule_s.glb`            | `/mesh/🧊️trapezoid-capsule_s.glb`            |          52 |
+| `/mesh/🧊️trapezoid-🧊️capsule_p.glb`            | `/mesh/🧊️trapezoid-capsule_p.glb`            |          44 |
 
 ## Handpicked Physical Authority
 

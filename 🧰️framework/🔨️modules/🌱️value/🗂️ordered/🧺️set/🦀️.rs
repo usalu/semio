@@ -27,7 +27,10 @@ impl OrderedSet {
     /// 🧊️ Explicit cold cleanup; never called by retained advance or Drop.
     pub fn retire_cold(self) {
         let mut retirement = self.retire();
-        while !matches!(retirement.advance(Grant { maximum_items: 1, maximum_bytes: 4096 }), RetirementStep::Complete) {}
+        loop {
+            let maximum_bytes = retirement.next_close_byte_demand().expect("finite ordered-set cold release demand").max(1);
+            if matches!(retirement.advance(Grant { maximum_items: 1, maximum_bytes }), RetirementStep::Complete) { break; }
+        }
     }
 }
 

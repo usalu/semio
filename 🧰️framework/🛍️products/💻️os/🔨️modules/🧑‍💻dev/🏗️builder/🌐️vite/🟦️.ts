@@ -26,7 +26,7 @@ const renderer = process.env.SEMIO_RENDERER ?? "react";
 const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT;
 const profile = command === "build" || process.env.SEMIO_BUILD_MODE === "ship" ? "release" : "dev";
 const rendererModulesDir = path.resolve(playDir, "../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist", `wasm-${profile}`);
-const runtimeRoot = developmentRuntimeRoot(configDir, plugin, profile);
+const runtimeRoot = developmentRuntimeRoot(configDir, plugin, profile, "react");
 const testBrowserHost = command === "serve" ? resolveTestBrowserHostRootsV1(process.env) : undefined;
 const receiptDirectory = testBrowserHost?.activationRoot ?? path.join(runtimeRoot, "activation");
 const activated = command === "serve" ? readActivationReceipt(receiptDirectory) : undefined;
@@ -46,10 +46,7 @@ const distributionRollupOutput = {
 };
 
 //#region 🔖️RegistryDrivenAssetsAndEngines
-/** @emoji 🔌️ Framework engine crates every react-renderer dev session needs regardless of the active
- * plugin (the node-graph/editor host engines back shared studio chrome, not any one app) — kept as a
- * literal baseline rather than per-plugin metadata, mirroring the equally-unconditional pre-registry
- * build in `os/dev/script.ts`'s `buildEngineWasm`. */
+/** 🔌️ Keeps lazy engine imports out of eager optimization; selected playground metadata owns compilation prerequisites. */
 const FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE = ["@semio-tech/framework-surface-node-graph-rs", "@semio-tech/framework-surface-board-2d-rs", "@semio-tech/framework-editor-rs", "@semio-tech/flow-core"];
 
 /** @emoji 📦️ Maps a registry `engines` crate path (e.g. `framework/module/surface/tiled-map/rs`) to its wasm-pack
@@ -64,7 +61,7 @@ function engineNpmPackage(cratePath: string): string {
   return name;
 }
 
-const registryEngineOptimizeDepsExclude = [...new Set((isHostPlaygroundFilter(plugin) ? PLAYGROUND_BUILD_TARGETS : PLAYGROUND_BUILD_TARGETS.filter((target) => target.variant === plugin)).flatMap((target) => target.engines))].map(engineNpmPackage);
+const registryEngineOptimizeDepsExclude = [...new Set(PLAYGROUND_BUILD_TARGETS.filter((target) => target.variant === plugin).flatMap((target) => target.engines))].map(engineNpmPackage);
 
 /** @emoji 🗄️ Isolates dependency-optimizer state for concurrent playground variants, renderers and
  * profiles under the ONE shared cache root, so disk is bounded by build history rather than by

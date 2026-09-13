@@ -361,8 +361,6 @@ export class SetupScript extends Script {
   private runFull(): void {
     console.log("[setup] locked dependency environments are ready through the Nx prerequisite graph");
   }
-
-
 }
 //#endregion 🔖️SetupScript
 
@@ -7314,8 +7312,46 @@ export class VerifyScript extends Script {
     }
     if (segments[0] === "home-host-panel-owner") {
       const oracle = join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧬️schema/📌️panel-state/🧪️tests/🔬️unit/🟦️.ts");
+      const directoryOracle = join(this.root, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/📇️directory-projection/🧪️tests/🔬️unit/🟦️.ts");
       const { testHostPanelStateSchema } = await import(oracle);
+      const { testHomeDirectoryProjectionSchema } = await import(directoryOracle);
+      const { testResolvedHostContext } = await import(join(this.root, "🧰️framework/🔨️modules/🛂️manifest/🪟️view-context/🧪️tests/🪟️resolved-host-context/🟦️.ts"));
       testHostPanelStateSchema();
+      testHomeDirectoryProjectionSchema(this.root);
+      testResolvedHostContext();
+      const homeRoot = join(this.root, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home");
+      const homeSources: string[] = [];
+      const collectHomeSources = (directory: string): void => {
+        for (const entry of readdirSync(directory, { withFileTypes: true })) {
+          const path = join(directory, entry.name);
+          if (entry.isDirectory()) collectHomeSources(path);
+          else if ([".rs", ".ts", ".json", ".graphql", ".proto", ".py", ".feature"].includes(extname(entry.name))) homeSources.push(path);
+        }
+      };
+      collectHomeSources(homeRoot);
+      const homePanelMirror = /active_panel_tab|activePanelTab|SetActivePanelTab|setActivePanelTab|active-panel-tab/;
+      const homePanelResidue = homeSources.filter((path) => homePanelMirror.test(readFileSync(path, "utf8"))).map((path) => relative(this.root, path));
+      if (homePanelResidue.length !== 0) throw new Error(`Home panel ownership still leaks into app sources: ${homePanelResidue.join(", ")}`);
+      const homeSessionIdentityMirror = /\bSetClient\b|\bsetClient\b|\bclient_id\b|\bclient_name\b|\bclientId\b|\bclientName\b/;
+      const homeSessionIdentityResidue = homeSources.filter((path) => homeSessionIdentityMirror.test(readFileSync(path, "utf8"))).map((path) => relative(this.root, path));
+      if (homeSessionIdentityResidue.length !== 0) throw new Error(`Home session identity still leaks into app sources: ${homeSessionIdentityResidue.join(", ")}`);
+      const spaceConfigRoot = join(this.root, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎚️config");
+      const spaceConfigSources: string[] = [];
+      collectHomeSources(spaceConfigRoot);
+      for (const path of homeSources) if (path.startsWith(spaceConfigRoot)) spaceConfigSources.push(path);
+      const spaceIdentityResidue = spaceConfigSources.filter((path) => homeSessionIdentityMirror.test(readFileSync(path, "utf8"))).map((path) => relative(this.root, path));
+      if (spaceIdentityResidue.length !== 0) throw new Error(`Studio session identity still leaks into app config: ${spaceIdentityResidue.join(", ")}`);
+      const spaceManifest = JSON.parse(readFileSync(join(this.root, "✏️s/🔌️plugins/🪐️space/🔣️.json"), "utf8")) as { manifest: { apps: { id: string; windowKinds: { actions: { id: string }[] }[] }[] } };
+      const panelActionCount = (appId: string): number => spaceManifest.manifest.apps.find((app) => app.id === appId)?.windowKinds.flatMap((window) => window.actions).filter((action) => action.id === "setActivePanelTab").length ?? 0;
+      if (panelActionCount("s.space.home@1/*#editor") !== 0 || panelActionCount("s.space.home@1/*#viewer") !== 0) throw new Error("generated Home apps still declare setActivePanelTab");
+      if (panelActionCount("s.space.studio@1/*#editor") !== 3) throw new Error("generated Studio panel actions changed during Home-only cleanup");
+      const setClientActionCount = spaceManifest.manifest.apps.flatMap((app) => app.windowKinds).flatMap((window) => window.actions).filter((action) => action.id === "setClient").length;
+      if (setClientActionCount !== 0) throw new Error("generated Space manifest still declares the retired setClient action");
+      const homeEditor = spaceManifest.manifest.apps.find((app) => app.id === "s.space.home@1/*#editor");
+      const generatedHomeActions = new Map(homeEditor?.windowKinds.flatMap((window) => window.actions).map((action) => [action.id, action]) ?? []);
+      for (const actionId of ["applyDirectoryEventPage", "createStudio", "bindSpaceFile", "importSpace", "deleteVirtualFileSystemNode", "renameSpace", "foldDirectoryEvents"]) {
+        if ((generatedHomeActions.get(actionId) as { semantics?: { execution?: { interactiveJob?: string } } } | undefined)?.semantics?.execution?.interactiveJob !== "batchOnlyPendingRewrite") throw new Error(`generated Home action ${actionId} overclaims retained execution`);
+      }
       runCmd(
         "bun",
         [
@@ -7333,9 +7369,17 @@ export class VerifyScript extends Script {
           "--esModuleInterop",
           "--skipLibCheck",
           oracle,
+          directoryOracle,
         ],
         { cwd: this.root },
       );
+      runCmd("bun", [join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts"), "directory-home-bootstrap-check"], { cwd: this.root });
+      if (segments[1] === "native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "view_context_capacity_tests", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-renderer-wgpu", "--lib", "host_panel_", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-space-home", "--features", "component-app-assembly", "--lib", "--", "--nocapture"], this.root);
+      }
       return;
     }
     if (segments[0] === "writer-window-state") {
@@ -7525,6 +7569,30 @@ export class VerifyScript extends Script {
         return;
       }
       if (segments[1] === "value") return;
+      if (segments[1] === "diagnostic") return;
+      if (segments[1] === "inflater") return;
+      if (segments[1] === "inflater-native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-deflate", "--lib", "retained_inflater_physical_", "--", "--nocapture", "--test-threads=1"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-pack", "--lib", "retained_pack_inflater_physical_", "--", "--nocapture", "--test-threads=1"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-pack", "--lib", "retained_pack_pipeline_diagnostic_deflate_", "--", "--nocapture", "--test-threads=1"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-pack", "--lib", "write_then_read_round_trip_with_compressed_segment_and_chunk", "--", "--nocapture", "--test-threads=1"], this.root);
+        for (const packageName of ["semio-s-artifact-procedural-generation2d", "semio-s-artifact-procedural-generation3d"]) {
+          await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", packageName, "--lib", "retained_mounted_laws", "--", "--nocapture", "--test-threads=1"], this.root);
+        }
+        return;
+      }
+      if (segments[1] === "diagnostic-native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        for (const filter of [
+          "retained_pack_pipeline_diagnostic_",
+          "retained_anchors_segments_catalog_and_deflate_are_wire_identical_and_resumable",
+          "retained_anchor_rejects_hostile_crc_and_requires_explicit_close",
+        ]) {
+          await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-pack", "--lib", filter, "--", "--nocapture"], this.root);
+        }
+        return;
+      }
       if (segments[1] === "value-native") {
         const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
         for (const [packageName, filters] of [
@@ -7546,6 +7614,20 @@ export class VerifyScript extends Script {
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation2d", "--lib", "retained_mounted_laws", "--", "--nocapture"], this.root);
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation2d", "--lib", "retained_pack_outer_", "--", "--nocapture"], this.root);
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation3d", "--lib", "retained_mounted_laws", "--", "--nocapture"], this.root);
+      }
+      return;
+    }
+    if (segments[0] === "framework-flow-physical-retirement") {
+      if (segments.length > 2 || (segments[1] !== undefined && segments[1] !== "native")) throw new Error("framework-flow-physical-retirement accepts only optional native");
+      const testPath = join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🧪️tests/🔬️flow-typed-retirement/🟦️.ts");
+      if (segments[1] === "native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-replication", "--lib", "ordered_physical_retirement_", "--", "--nocapture", "--test-threads=1"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel-neural-engine", "--lib", "neural_physical_retirement_", "--", "--nocapture", "--test-threads=1"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-artifact-flow-flow", "--lib", "flow_physical_retirement_", "--", "--nocapture", "--test-threads=1"], this.root);
+      } else {
+        flowTypedRetirementSelfTests();
+        runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.root });
       }
       return;
     }
@@ -7584,6 +7666,30 @@ export class VerifyScript extends Script {
       if (segments[1] === "native") {
         const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "window_config_pack_identity_", "--", "--nocapture", "--test-threads=1"], this.root);
+      }
+      return;
+    }
+    if (segments[0] === "fem-pcg-publication-owners") {
+      if (segments.length > 2 || (segments[1] !== undefined && segments[1] !== "native")) throw new Error("fem-pcg-publication-owners accepts only optional native");
+      const testPath = join(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/⛽️publication-grant/🟦️.ts");
+      const { testFemPcgPublicationGrantOracle } = await import(testPath);
+      testFemPcgPublicationGrantOracle();
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.root });
+      if (segments[1] === "native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--features", "component-app-assembly", "--lib", "--", "--nocapture", "--test-threads=1", "pcg_job_", "pcg_construction_", "solver_jobs_reject_stale_and_cancelled_"], this.root);
+      }
+      return;
+    }
+    if (segments[0] === "fem-assembly-physical-owners") {
+      if (segments.length > 2 || (segments[1] !== undefined && segments[1] !== "native")) throw new Error("fem-assembly-physical-owners accepts only optional native");
+      const testPath = join(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧪️tests/📦️physical-owners/🟦️.ts");
+      const { testFemAssemblyPhysicalOwners } = await import(testPath);
+      testFemAssemblyPhysicalOwners();
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.root });
+      if (segments[1] === "native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--features", "component-app-assembly", "--lib", "assembly_triplet_pages_", "--", "--nocapture", "--test-threads=1"], this.root);
       }
       return;
     }
@@ -7636,6 +7742,7 @@ export class VerifyScript extends Script {
       const dimension = segments[0].startsWith("fem2d") ? "2d" : "3d";
       const testRoot = join(this.root, "✏️s/🔌️plugins/🏗️fem/🧪️tests/🪟️window-config-contract");
       const mountedStiffnessOracle = join(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧱️elements3d/🧪️tests/🧱️mounted-stiffness/🟦️.ts");
+      const numericalOwnerOracle = join(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/📦️numerical-pages/🟦️.ts");
       if (dimension === "3d") {
         const { runVitest } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
         await runVitest(join(this.root, "✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript"), ["-t", "story window ownership|story document replacement"], "../../🧪️tests/🎚️config/🟦️.ts");
@@ -7647,8 +7754,10 @@ export class VerifyScript extends Script {
         contract.testFem3dWindowConfigContract();
         const { testFem3dMountedStiffnessOracle } = await import(mountedStiffnessOracle);
         testFem3dMountedStiffnessOracle();
+        const { testNumericalPageOwners } = await import(numericalOwnerOracle);
+        testNumericalPageOwners();
       }
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", `${testRoot}/🟦️.ts`, ...(dimension === "3d" ? [mountedStiffnessOracle, join(this.root, "✏️s/🔌️plugins/🏗️fem/📖️stories/🧭️coordination/🧪️tests/🪟️viewport/🟦️.ts")] : [])], { cwd: this.root });
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", `${testRoot}/🟦️.ts`, ...(dimension === "3d" ? [mountedStiffnessOracle, numericalOwnerOracle, join(this.root, "✏️s/🔌️plugins/🏗️fem/📖️stories/🧭️coordination/🧪️tests/🪟️viewport/🟦️.ts")] : [])], { cwd: this.root });
       if (segments[1] === "native") {
         const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
         if (dimension === "2d") {
@@ -7656,7 +7765,7 @@ export class VerifyScript extends Script {
         } else {
           const failures: unknown[] = [];
           for (const [packageName, filters] of [
-            ["semio-s-artifact-fem-2d", ["fem2d_window_config_", "mesh_edge_authority_", "mounted_3d_element_interfaces_", "assembly_triplet_pages_", "pcg_job_", "subspace_"]],
+            ["semio-s-artifact-fem-2d", ["fem2d_window_config_", "mesh_edge_authority_", "mounted_3d_element_interfaces_", "assembly_triplet_pages_", "pcg_job_", "subspace_", "numerical_page_", "ldlt_job_checkpoint_resume_", "p6h_ldlt_", "p6h_subspace_"]],
             ["semio-s-artifact-fem-3d", ["fem3d_window_config_", "live_visual::tests::"]],
           ] as const) {
             try {

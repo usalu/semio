@@ -4,17 +4,26 @@
 
 Dragging an object kind from the catalogue onto the 3D viewport places the object correctly on drop, but no mesh ghost follows the cursor during the drag.
 
-## Root cause
+## Root causes
 
-1. **`WorldCanvas` uses `frameloop="demand"`** — scene updates do not paint until something calls `invalidate()`. `BrushPreviewGhost` already mounts `DemandInvalidateOnToken` for this; `CatalogueDropGhost` did not, so preview state could update while the canvas stayed on the last frame (invisible ghost until the user orbits).
+1. **HTML5 drag never fires `pointermove`** — the React host only listened on `pointermove` for palette-style drags; native `draggable` catalogue rows need `dragover` (window capture) to update preview each frame.
 
-2. **Brush preview took precedence** — when a retained `brushPreviewJson` was still latched (vortex hover), `visibleBrushPreview` rendered instead of `CatalogueDropGhost`, so an active catalogue drag showed no catalogue mesh even though drop commit still worked.
+2. **`frameloop="demand"`** — catalogue ghosts must call `invalidate()` when preview state changes (`DemandInvalidateOnToken` / `CatalogueDropPreviewInvalidate`).
+
+3. **wgpu shell had no catalogue-drop ghost** — Puzzle 3D dev defaults to `SEMIO_RENDERER=wgpu`; native `World3dState` rendered brush previews but never tracked catalogue-drop preview or `addObjectKind` drop from the catalogue tree drag.
+
+4. **Pointer-palette `begin` did not publish `activeCatalogueDragPayload`** — fixed in `catalogueTreeDragController`.
 
 ## Fix
 
-- Align `CatalogueDropGhost` with `BrushPreviewGhost`: `brushPreviewGhostMeshUrl`, `DemandInvalidateOnToken`, `pickEnabled={false}` on the GLB.
-- While `catalogueDropPreview` is live, render the catalogue ghost before the brush ghost.
+- **React `World3dHost`**: window `dragover` (capture), drag-enter preview kick, `CatalogueDropPreviewInvalidate`, catalogue ghost priority over brush.
+- **wgpu**: `World3dState.catalogue_drop_preview`, ground-plane pick + grid snap, translucent draw pass, shell tree-drag sync + `addObjectKind` commit.
+- **`engine_canvas`**: `puzzle3d_catalogue_drag_payload_json` parser + unit test.
 
 ## Files
 
 - `🧰️framework/…/🌐️World3dHost/🟦️.tsx`
+- `🧰️framework/…/♾️infinite/🌍️world/🦀️.rs`
+- `🧰️framework/…/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`
+- `🧰️framework/…/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx`

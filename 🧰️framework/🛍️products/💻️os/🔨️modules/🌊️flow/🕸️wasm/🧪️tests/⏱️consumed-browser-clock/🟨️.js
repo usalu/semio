@@ -2,8 +2,8 @@
 
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { flowWasmContract } from "../../📦️packages/🟨️javascript/📜️script.ts";
-import { createFlowBrowserRuntime } from "../../📦️packages/🟨️javascript/🌐️flow-browser.js";
+import { flowWasmContract } from "../🧬️schema-oracle/🛂️admission/🟦️.ts";
+import { createFlowBrowserRuntime } from "../../🌐️browser/🏃️runtime/🟨️.js";
 
 //#region ⏱️ConsumedClock
 export async function testFlowBrowserClock() {

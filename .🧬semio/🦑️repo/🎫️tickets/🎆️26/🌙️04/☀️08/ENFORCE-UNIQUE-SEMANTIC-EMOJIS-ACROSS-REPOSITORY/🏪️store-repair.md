@@ -6,32 +6,32 @@ Scope: `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store`.
 
 Paths are relative to the scoped root. Paired fixture/schema rows represent the two explicit moves shown.
 
-| Parent | Old basename | New basename | Meaning |
-| --- | --- | --- | --- |
-| root | 🧪️fixtures | 🧫️fixtures | Specimens distinct from test sources. |
-| root | 🧪️group-cursor.json | 🎯️group-cursor.json | Group history cursor. |
-| root | 🧪️group-cursor.schema.json | 📐️group-cursor.schema.json | Cursor shape. |
-| root | 🧪️group-read.json | 📖️group-read.json | Group read visibility. |
-| root | 🧪️group-read.schema.json | 📏️group-read.schema.json | Group read constraints. |
-| root | 🧪️interaction-state-pack.json | 🎒️interaction-state-pack.json | Packed interaction state. |
-| root | 🧪️member-publication.json | 📢️member-publication.json | Retained member publication. |
-| root | 🧪️runtime-seed.json | 🌱️runtime-seed.json | Runtime seeding. |
-| 👥️presence | 🧪️peer-admission.json | 🛂️peer-admission.json | Peer admission. |
-| 👥️presence | 🧪️peer-commit.json | 📌️peer-commit.json | Peer commit. |
-| 👥️presence | 🧪️retirement.json | 🧹️retirement.json | Exact owner cleanup. |
-| 👥️presence/🧬️schema | 🔣️peer-admission.schema.json | 🛂️peer-admission.schema.json | Admission constraints. |
-| 👥️presence/🧬️schema | 🔣️peer-commit.schema.json | 📌️peer-commit.schema.json | Commit constraints. |
-| 👥️presence/🧬️schema | 🔣️retirement.schema.json | 🧹️retirement.schema.json | Cleanup constraints. |
-| 👥️presence/♻️retirement/🧪️fixtures | 🧬️schema | 📐️schema | Specimen shape distinct from mutation collection. |
-| 🧪️tests | 🧬️rejected-page-close | 🚫️rejected-page-close | Rejected-page closing. |
-| 🧵️canonical-edit/🧪️fixtures | 🔣️canonical-borrowed-map.json | 🗺️canonical-borrowed-map.json | Borrowed map traversal. |
-| 🧵️canonical-edit/🧪️fixtures | 🔣️canonical-edit-sealer.json | 🔏️canonical-edit-sealer.json | Edit sealing and digest. |
-| 🧵️canonical-edit/🧪️fixtures | 🔣️canonical-error-progress.json | 🚧️canonical-error-progress.json | Bounded progress through failures. |
-| 🧵️canonical-edit/🧪️fixtures | 🔣️canonical-reader.json | 📖️canonical-reader.json | Canonical reader. |
-| 🧵️canonical-edit/🧬️schema | 🔣️canonical-borrowed-map.schema.json | 🗺️canonical-borrowed-map.schema.json | Borrowed-map constraints. |
-| 🧵️canonical-edit/🧬️schema | 🔣️canonical-edit-sealer.schema.json | 🔏️canonical-edit-sealer.schema.json | Sealer constraints. |
-| 🧵️canonical-edit/🧬️schema | 🔣️canonical-error-progress.schema.json | 🚧️canonical-error-progress.schema.json | Failure-progress constraints. |
-| 🧵️canonical-edit/🧬️schema | 🔣️canonical-reader.schema.json | 📖️canonical-reader.schema.json | Reader constraints. |
+| Parent                             | Old basename                           | New basename                           | Meaning                                           |
+| ---------------------------------- | -------------------------------------- | -------------------------------------- | ------------------------------------------------- |
+| root                               | 🧪️fixtures                             | 🧫️fixtures                             | Specimens distinct from test sources.             |
+| root                               | 🧪️group-cursor.json                    | 🎯️group-cursor.json                    | Group history cursor.                             |
+| root                               | 🧪️group-cursor.schema.json             | 📐️group-cursor.schema.json             | Cursor shape.                                     |
+| root                               | 🧪️group-read.json                      | 📖️group-read.json                      | Group read visibility.                            |
+| root                               | 🧪️group-read.schema.json               | 📏️group-read.schema.json               | Group read constraints.                           |
+| root                               | 🧪️interaction-state-pack.json          | 🎒️interaction-state-pack.json          | Packed interaction state.                         |
+| root                               | 🧪️member-publication.json              | 📢️member-publication.json              | Retained member publication.                      |
+| root                               | 🧪️runtime-seed.json                    | 🌱️runtime-seed.json                    | Runtime seeding.                                  |
+| 👥️presence                         | 🧪️peer-admission.json                  | 🛂️peer-admission.json                  | Peer admission.                                   |
+| 👥️presence                         | 🧪️peer-commit.json                     | 📌️peer-commit.json                     | Peer commit.                                      |
+| 👥️presence                         | 🧪️retirement.json                      | 🧹️retirement.json                      | Exact owner cleanup.                              |
+| 👥️presence/🧬️schema                | 🔣️peer-admission.schema.json           | 🛂️peer-admission.schema.json           | Admission constraints.                            |
+| 👥️presence/🧬️schema                | 🔣️peer-commit.schema.json              | 📌️peer-commit.schema.json              | Commit constraints.                               |
+| 👥️presence/🧬️schema                | 🔣️retirement.schema.json               | 🧹️retirement.schema.json               | Cleanup constraints.                              |
+| 👥️presence/♻️retirement/🧪️fixtures | 🧬️schema                               | 📐️schema                               | Specimen shape distinct from mutation collection. |
+| 🧪️tests                            | 🧬️rejected-page-close                  | 🚫️rejected-page-close                  | Rejected-page closing.                            |
+| 🧵️canonical-edit/🧪️fixtures        | 🔣️canonical-borrowed-map.json          | 🗺️canonical-borrowed-map.json          | Borrowed map traversal.                           |
+| 🧵️canonical-edit/🧪️fixtures        | 🔣️canonical-edit-sealer.json           | 🔏️canonical-edit-sealer.json           | Edit sealing and digest.                          |
+| 🧵️canonical-edit/🧪️fixtures        | 🔣️canonical-error-progress.json        | 🚧️canonical-error-progress.json        | Bounded progress through failures.                |
+| 🧵️canonical-edit/🧪️fixtures        | 🔣️canonical-reader.json                | 📖️canonical-reader.json                | Canonical reader.                                 |
+| 🧵️canonical-edit/🧬️schema          | 🔣️canonical-borrowed-map.schema.json   | 🗺️canonical-borrowed-map.schema.json   | Borrowed-map constraints.                         |
+| 🧵️canonical-edit/🧬️schema          | 🔣️canonical-edit-sealer.schema.json    | 🔏️canonical-edit-sealer.schema.json    | Sealer constraints.                               |
+| 🧵️canonical-edit/🧬️schema          | 🔣️canonical-error-progress.schema.json | 🚧️canonical-error-progress.schema.json | Failure-progress constraints.                     |
+| 🧵️canonical-edit/🧬️schema          | 🔣️canonical-reader.schema.json         | 📖️canonical-reader.schema.json         | Reader constraints.                               |
 
 ## References And Registry
 

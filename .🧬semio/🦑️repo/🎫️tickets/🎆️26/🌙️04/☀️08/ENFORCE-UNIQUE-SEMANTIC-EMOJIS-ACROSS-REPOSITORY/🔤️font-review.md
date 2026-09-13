@@ -4,21 +4,21 @@ The active asset font tree has 219 files: Anta 12, Kelly Slab 9, Share Tech Mono
 
 The installed independent `opentype.js` parser read the actual regular-weight Noto TTF character maps. This is local evidence, not an inference from arbitrary subset numbers.
 
-| Existing subset | Mapped code points | Observed content | Handpicked group proposal |
-| --- | ---: | --- | --- |
-| 0 | 29 | Regional indicator letters | 🌍️regions |
-| 1 | 23 | Flags, rainbow, gender and tag sequences | 🚩️flags |
-| 2 | 266 | Arrows, controls, keycaps and symbols | 🔣️symbols |
-| 3 | 265 | Tools, clothing, clocks and other objects | 🧰️objects |
-| 4 | 119 | Sports, celebrations, games and arts | 🎯️activities |
-| 5 | 126 | Buildings, vehicles, travel and places | 🧳️travel |
-| 6 | 133 | Food, drinks and tableware | 🍽️food |
-| 7 | 225 | Weather, celestial bodies, plants and animals | 🌿️nature |
-| 8 | 131 | People, professions and human activity | 🧑️people |
-| 9 | 247 | Faces, hands, body parts and expressions | 😀️faces |
-| 10 | 34 | Joined directional people and supplementary composite forms | 🔗️joined-forms |
-| 11 | 10 | Harp, shovel, bare tree, fingerprint, root vegetable, splatter and tired face | 🪉️supplement |
-| emoji | 1,447 | Combined older glyph coverage | 🌐️complete |
+| Existing subset | Mapped code points | Observed content                                                              | Handpicked group proposal |
+| --------------- | -----------------: | ----------------------------------------------------------------------------- | ------------------------- |
+| 0               |                 29 | Regional indicator letters                                                    | 🌍️regions                 |
+| 1               |                 23 | Flags, rainbow, gender and tag sequences                                      | 🚩️flags                   |
+| 2               |                266 | Arrows, controls, keycaps and symbols                                         | 🔣️symbols                 |
+| 3               |                265 | Tools, clothing, clocks and other objects                                     | 🧰️objects                 |
+| 4               |                119 | Sports, celebrations, games and arts                                          | 🎯️activities              |
+| 5               |                126 | Buildings, vehicles, travel and places                                        | 🧳️travel                  |
+| 6               |                133 | Food, drinks and tableware                                                    | 🍽️food                    |
+| 7               |                225 | Weather, celestial bodies, plants and animals                                 | 🌿️nature                  |
+| 8               |                131 | People, professions and human activity                                        | 🧑️people                  |
+| 9               |                247 | Faces, hands, body parts and expressions                                      | 😀️faces                   |
+| 10              |                 34 | Joined directional people and supplementary composite forms                   | 🔗️joined-forms            |
+| 11              |                 10 | Harp, shovel, bare tree, fingerprint, root vegetable, splatter and tired face | 🪉️supplement              |
+| emoji           |              1,447 | Combined older glyph coverage                                                 | 🌐️complete                |
 
 Counts include control, variation and combining characters. No release-version claim is made. Proposed weight owners are `🪶️light` (300), `📖️regular` (400), `⚖️medium` (500), `🖋️semibold` (600), and `🏋️bold` (700). Within each exact subset/weight owner, the three encodings can have distinct descriptive names: `🔤️outline.ttf`, `🌐️web.woff`, and `🗜️compressed.woff2`. Family proposals: `🚀️anta`, `🧱️kelly-slab`, `⌨️share-tech-mono`; existing `😀️noto-emoji` remains fitting. These are proposals pending implementation and verification, not completed moves.
 

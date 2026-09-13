@@ -17,7 +17,7 @@ import { ownedFilePaths, ownedFilesystemEntries, ownedPathByteSort } from "../�
 type Fixture = Readonly<{ baselineCommit: string; options: TaxonomyInventoryOptions; planCacheKey?: string; repoRoot: string; root: string; scope: string; ticketDir: string; workspace: string }>;
 type Snapshot = Readonly<Record<string, string>>;
 
-const TICKET_REL = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION";
+const TICKET_REL = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE";
 const SCHEMA_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
 const TRANSACTION_LEDGER_BOUNDARIES_GOLDEN = resolve(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/📒️transaction-ledger-boundaries/🔣️.json");
 const TRANSACTION_PROTOCOL_GOLDEN = resolve(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🤝️transaction-protocol/🔣️.json");
@@ -65,7 +65,7 @@ function registerChild(childProcess: ChildProcess): ChildProcess {
 function assertFixtureRunRoot(repoRoot: string, runId: string, runRoot: string): string {
   const identity = /^[1-9][0-9]*-([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/u.exec(runId);
   if (!identity || !isAbsolute(repoRoot) || resolve(repoRoot) !== repoRoot || !isAbsolute(runRoot) || resolve(runRoot) !== runRoot) throw new Error("Invalid transaction fixture run identity");
-  const expected = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION", "📓️transaction-current-readiness-2026-08-28", "🧾️runs", "🔖️" + identity[1]);
+  const expected = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE", "🗑️generated/repo-lib-test-artifacts/transaction-v2/🧾️runs", "🔖️" + identity[1]);
   if (runRoot !== expected) throw new Error("Transaction fixture belongs to a different run");
   let path = parse(runRoot).root;
   for (const part of relative(path, runRoot).split(sep)) {
@@ -577,12 +577,13 @@ describe("transaction plan journal v2 aggregate", () => {
     const harness = JSON.parse(readFileSync(join(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🪢️transaction-harness-retention/🔣️.json"), "utf8"));
     const ts = await import("typescript");
     const launcher = ts.createSourceFile(harness.launcherPath, readFileSync(join(getWorkspaceRoot(), harness.launcherPath), "utf8"), ts.ScriptTarget.Latest, true);
+    const allocationSource = ts.createSourceFile(harness.allocationPath, readFileSync(join(getWorkspaceRoot(), harness.allocationPath), "utf8"), ts.ScriptTarget.Latest, true);
     const testSource = ts.createSourceFile(harness.testPath, readFileSync(join(getWorkspaceRoot(), harness.testPath), "utf8"), ts.ScriptTarget.Latest, true);
     const runValidator = testSource.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === harness.runRootValidator);
     expect(runValidator).toBeDefined();
     const filterWaves: string[][][] = [], staticTitles: string[] = [];
     const visitLauncher = (node: import("typescript").Node): void => {
-      if (ts.isVariableDeclaration(node) && node.name.getText(launcher) === "defaultFilterWaves" && node.initializer && ts.isArrayLiteralExpression(node.initializer)) filterWaves.push(node.initializer.elements.map((wave) => {
+      if (ts.isVariableDeclaration(node) && node.name.getText(launcher) === harness.filterWavesConstant && node.initializer && ts.isArrayLiteralExpression(node.initializer)) filterWaves.push(node.initializer.elements.map((wave) => {
         if (!ts.isArrayLiteralExpression(wave) || wave.elements.some((entry) => !ts.isStringLiteral(entry))) throw new Error("Transaction shard filters must be closed literal strings");
         return wave.elements.map((entry) => (entry as import("typescript").StringLiteral).text);
       }));
@@ -616,7 +617,9 @@ describe("transaction plan journal v2 aggregate", () => {
     }
     expect(filters.map((filter) => cases.filter((entry) => filter.test(entry.title)).length)).toEqual(harness.shards.map((entry: { tests: number }) => entry.tests));
     expect(filters.map((filter) => cases.filter((entry) => filter.test(entry.title)).flatMap((entry) => entry.boundaries).length)).toEqual(harness.shards.map((entry: { boundaries: number }) => entry.boundaries));
-    const allocation = launcher.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === harness.bundleRootFunction);
+    const allocationConstant = allocationSource.statements.find((node) => ts.isVariableStatement(node) && node.declarationList.declarations.some((declaration) => declaration.name.getText(allocationSource) === harness.runOwnerConstant));
+    const allocation = allocationSource.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === harness.bundleRootFunction);
+    expect(allocationConstant).toBeDefined();
     expect(allocation).toBeDefined();
     const retention = testSource.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === harness.retentionFunction);
     expect(retention).toBeDefined();
@@ -626,8 +629,8 @@ describe("transaction plan journal v2 aggregate", () => {
       ts.forEachChild(node, inspectPropagation);
     };
     inspectPropagation(launcher);
-    expect(propagation).toEqual(["runRoot"]);
-    const functionSource = [allocation!.getText(launcher).replace(/^export\s+/u, ""), runValidator!.getText(testSource), retention!.getText(testSource)].join("\n");
+    expect(propagation).toEqual(["options.runRoot"]);
+    const functionSource = [allocationConstant!.getText(allocationSource).replace(/^export\s+/u, ""), allocation!.getText(allocationSource).replace(/^export\s+/u, ""), runValidator!.getText(testSource), retention!.getText(testSource)].join("\n");
     const compiled = [new Bun.Transpiler({ loader: "ts" }).transformSync(functionSource), ts.transpileModule(functionSource, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText];
     const roots: string[] = [];
     const allocationRepo = mkdtempSync(join(fixtureRunRoot(), "🧪️allocation-"));

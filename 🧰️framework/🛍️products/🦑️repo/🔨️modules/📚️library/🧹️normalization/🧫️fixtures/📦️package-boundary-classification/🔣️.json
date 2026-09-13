@@ -1176,7 +1176,9 @@
       "content": "import type { Script } from \"./owner/🟦️.ts\";\nimport { execute, ScriptRouter, runWorkspaceScriptMain } from \"./owner/🟦️.ts\";\nclass Verify extends Script { async run(args: string[]): Promise<void> { await execute(args); } }\nconst router = new ScriptRouter(import.meta.dir).register(\"verify\", Verify);\nawait runWorkspaceScriptMain(router);\n",
       "expectedDispositionRole": "unresolved",
       "expectedFinding": "fixed-source-disposition-unresolved",
-      "expectedSemanticDiagnostics": [1361]
+      "expectedSemanticDiagnostics": [
+        1361
+      ]
     },
     {
       "id": "root-workspace-script-type-only-terminal",
@@ -1186,7 +1188,9 @@
       "content": "import type { runWorkspaceScriptMain } from \"./owner/🟦️.ts\";\nimport { ScriptRouter } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir);\nawait runWorkspaceScriptMain(router);\n",
       "expectedDispositionRole": "unresolved",
       "expectedFinding": "fixed-source-disposition-unresolved",
-      "expectedSemanticDiagnostics": [1361]
+      "expectedSemanticDiagnostics": [
+        1361
+      ]
     },
     {
       "id": "root-workspace-script-hidden-io",
@@ -1250,6 +1254,562 @@
       "content": "import { runArtifactTypeScriptPackageMain } from \"./owner/🟦️.ts\";\nawait fetch(\"https://example.invalid\");\nawait runArtifactTypeScriptPackageMain(import.meta.dir, \"fixture\");\n",
       "expectedDispositionRole": "unresolved",
       "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "bound-router-main-terminal",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await router.run(process.argv.slice(2));\n",
+      "expectedDispositionRole": "tool-metadata",
+      "expectedFinding": null,
+      "expectedSemanticDiagnostics": []
+    },
+    {
+      "id": "bound-router-alias-terminal",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { ScriptRouter as Router, MaterializeScript } from \"./owner/🟦️.ts\";\nconst router = new Router(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await router.run(process.argv.slice(2));\n",
+      "expectedDispositionRole": "tool-metadata",
+      "expectedFinding": null,
+      "expectedSemanticDiagnostics": []
+    },
+    {
+      "id": "bound-router-outside-main",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nawait router.run(process.argv.slice(2));\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "bound-router-computed-member",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await router[\"run\"](process.argv.slice(2));\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "bound-router-argument-io",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await router.run(await fetch(\"https://example.invalid\"));\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "bound-router-other-argument",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await router.run([\"build\"]);\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "bound-router-wrong-slice",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await router.run(process.argv.slice(1));\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "bound-router-type-only",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import type { ScriptRouter } from \"./owner/🟦️.ts\";\nimport { MaterializeScript } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await router.run(process.argv.slice(2));\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved",
+      "expectedSemanticDiagnostics": [
+        1361
+      ]
+    },
+    {
+      "id": "bound-router-local-shadow",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) { const router = { run: MaterializeScript }; await router.run(process.argv.slice(2)); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "bound-router-reassignment",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nrouter = new ScriptRouter(import.meta.dir);\nif (import.meta.main) await router.run(process.argv.slice(2));\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "bound-router-two-terminals",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await router.run(process.argv.slice(2));\nif (import.meta.main) await router.run(process.argv.slice(2));\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "bound-router-process-shadow",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nconst process = { argv: [\"bun\", \"source\", \"build\"] };\nif (import.meta.main) await router.run(process.argv.slice(2));\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "bound-router-else-branch",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await router.run(process.argv.slice(2)); else await router.run(process.argv.slice(2));\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "literal-environment-before-terminal",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { runArtifactRustPackageMain } from \"./owner/🟦️.ts\";\nprocess.env.RUST_MIN_STACK ??= \"134217728\";\nawait runArtifactRustPackageMain(import.meta.dir, \"fixture\");\n",
+      "expectedDispositionRole": "tool-metadata",
+      "expectedFinding": null,
+      "expectedSemanticDiagnostics": []
+    },
+    {
+      "id": "literal-environment-after-terminal",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { runArtifactRustPackageMain } from \"./owner/🟦️.ts\";\nawait runArtifactRustPackageMain(import.meta.dir, \"fixture\");\nprocess.env.RUST_MIN_STACK ??= \"134217728\";\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "literal-environment-two-defaults",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { runArtifactRustPackageMain } from \"./owner/🟦️.ts\";\nprocess.env.RUST_MIN_STACK ??= \"134217728\";\nprocess.env.OTHER_STACK ??= \"134217728\";\nawait runArtifactRustPackageMain(import.meta.dir, \"fixture\");\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "literal-environment-shadowed-process",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { runArtifactRustPackageMain } from \"./owner/🟦️.ts\";\nconst process = { env: {} };\nprocess.env.RUST_MIN_STACK ??= \"134217728\";\nawait runArtifactRustPackageMain(import.meta.dir, \"fixture\");\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "literal-environment-lowercase",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { runArtifactRustPackageMain } from \"./owner/🟦️.ts\";\nprocess.env.rust_min_stack ??= \"134217728\";\nawait runArtifactRustPackageMain(import.meta.dir, \"fixture\");\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "literal-environment-computed-key",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { runArtifactRustPackageMain } from \"./owner/🟦️.ts\";\nprocess.env[\"RUST_MIN_STACK\"] ??= \"134217728\";\nawait runArtifactRustPackageMain(import.meta.dir, \"fixture\");\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "literal-environment-assignment",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { runArtifactRustPackageMain } from \"./owner/🟦️.ts\";\nprocess.env.RUST_MIN_STACK = \"134217728\";\nawait runArtifactRustPackageMain(import.meta.dir, \"fixture\");\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "literal-environment-or-assignment",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { runArtifactRustPackageMain } from \"./owner/🟦️.ts\";\nprocess.env.RUST_MIN_STACK ||= \"134217728\";\nawait runArtifactRustPackageMain(import.meta.dir, \"fixture\");\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "literal-environment-arithmetic",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { runArtifactRustPackageMain } from \"./owner/🟦️.ts\";\nprocess.env.RUST_MIN_STACK ??= 128 * 1024 * 1024;\nawait runArtifactRustPackageMain(import.meta.dir, \"fixture\");\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "literal-environment-call",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { runArtifactRustPackageMain } from \"./owner/🟦️.ts\";\nprocess.env.RUST_MIN_STACK ??= String(128 * 1024 * 1024);\nawait runArtifactRustPackageMain(import.meta.dir, \"fixture\");\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "literal-environment-local-value",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { runArtifactRustPackageMain } from \"./owner/🟦️.ts\";\nconst size = \"134217728\";\nprocess.env.RUST_MIN_STACK ??= size;\nawait runArtifactRustPackageMain(import.meta.dir, \"fixture\");\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "literal-environment-argv-guard",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { runArtifactRustPackageMain } from \"./owner/🟦️.ts\";\nif (process.argv[2] === \"test\") { process.env.RUST_MIN_STACK ??= \"134217728\";\n}\nawait runArtifactRustPackageMain(import.meta.dir, \"fixture\");\n",
+      "expectedDispositionRole": "tool-metadata",
+      "expectedFinding": null,
+      "expectedSemanticDiagnostics": []
+    },
+    {
+      "id": "bound-router-new-target-is-not-import-meta",
+      "placement": "root",
+      "manifest": "not-applicable",
+      "path": "📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (new.target.main) await router.run(process.argv.slice(2));\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-bound-callback",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1 } = await import(\"./🧪️tests/🟦️.ts\"); await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "tool-metadata",
+      "expectedFinding": null,
+      "expectedSemanticDiagnostics": []
+    },
+    {
+      "id": "vitest-registration-aliased-callback",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1: register } = await import(\"./🧪️tests/🟦️.ts\"); await register(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "tool-metadata",
+      "expectedFinding": null,
+      "expectedSemanticDiagnostics": []
+    },
+    {
+      "id": "vitest-registration-literal-dependencies",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1 } = await import(\"./🧪️tests/🟦️.ts\"); await registerTests1(import.meta.vitest, { execute, rows: [1, true, null, { name: \"test\" }] }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "tool-metadata",
+      "expectedFinding": null,
+      "expectedSemanticDiagnostics": []
+    },
+    {
+      "id": "vitest-registration-wrong-guard-0",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.main) { const { registerTests1 } = await import(\"./🧪️tests/🟦️.ts\"); await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-wrong-guard-1",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta[\"vitest\"]) { const { registerTests1 } = await import(\"./🧪️tests/🟦️.ts\"); await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-wrong-guard-2",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (new.target.vitest) { const { registerTests1 } = await import(\"./🧪️tests/🟦️.ts\"); await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-else-branch",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1 } = await import(\"./🧪️tests/🟦️.ts\"); await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); } else { console.log(\"extra\"); }",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-second-block",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1 } = await import(\"./🧪️tests/🟦️.ts\"); await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\nif (import.meta.vitest) { const { registerTests1 } = await import(\"./🧪️tests/🟦️.ts\"); await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-extra-statement",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1 } = await import(\"./🧪️tests/🟦️.ts\"); console.log(\"extra\"); await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-second-registration",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1 } = await import(\"./🧪️tests/🟦️.ts\"); await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-static-callback",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nimport { registerTests1 } from \"./🧪️tests/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-type-only-callback",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nimport type { registerTests1 } from \"./🧪️tests/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved",
+      "expectedSemanticDiagnostics": [
+        1361
+      ]
+    },
+    {
+      "id": "vitest-registration-local-callback",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const registerTests1 = execute; await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-wrong-callback",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1 } = await import(\"./🧪️tests/🟦️.ts\"); await execute(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-shadowed-callback",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nimport { registerTests1 } from \"./🧪️tests/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1 } = await import(\"./🧪️tests/🟦️.ts\"); await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-unguarded-import",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nconst { registerTests1 } = await import(\"./🧪️tests/🟦️.ts\");\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-unawaited-import",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1 } = import(\"./🧪️tests/🟦️.ts\"); await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-unawaited-registration",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1 } = await import(\"./🧪️tests/🟦️.ts\"); registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-non-test-module",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1 } = await import(\"./owner/🟦️.ts\"); await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-computed-module",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1 } = await import(\"./🧪️tests/\" + \"🟦️.ts\"); await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-traversing-module",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1 } = await import(\"./🧪️tests/../owner/🟦️.ts\"); await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-then-module",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1 } = await import(\"./🧪️tests/🟦️.ts\").then(execute); await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-wrong-pattern-0",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const [registerTests1] = await import(\"./🧪️tests/🟦️.ts\"); await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-wrong-pattern-1",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { ...registerTests1 } = await import(\"./🧪️tests/🟦️.ts\"); await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-wrong-pattern-2",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { [\"registerTests1\"]: registerTests1 } = await import(\"./🧪️tests/🟦️.ts\"); await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-wrong-pattern-3",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1 = execute } = await import(\"./🧪️tests/🟦️.ts\"); await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-wrong-pattern-4",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1, registerTests2 } = await import(\"./🧪️tests/🟦️.ts\"); await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-wrong-first-argument",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1 } = await import(\"./🧪️tests/🟦️.ts\"); await registerTests1(import.meta.main, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-argument-call",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1 } = await import(\"./🧪️tests/🟦️.ts\"); await registerTests1(import.meta.vitest, { value: execute() }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-awaited-dependency",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1 } = await import(\"./🧪️tests/🟦️.ts\"); await registerTests1(import.meta.vitest, { value: (await execute) }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-local-dependency",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst dependency = \"local\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1 } = await import(\"./🧪️tests/🟦️.ts\"); await registerTests1(import.meta.vitest, { dependency }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-type-only-dependency",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, type execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1 } = await import(\"./🧪️tests/🟦️.ts\"); await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved",
+      "expectedSemanticDiagnostics": [
+        1361
+      ]
+    },
+    {
+      "id": "vitest-registration-computed-dependency",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1 } = await import(\"./🧪️tests/🟦️.ts\"); await registerTests1(import.meta.vitest, { [\"execute\"]: execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
+    },
+    {
+      "id": "vitest-registration-spread-dependency",
+      "placement": "domain",
+      "manifest": "not-applicable",
+      "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1 } = await import(\"./🧪️tests/🟦️.ts\"); await registerTests1(import.meta.vitest, { ...execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "expectedDispositionRole": "unresolved",
+      "expectedFinding": "fixed-source-disposition-unresolved"
     }
   ],
   "fixedScriptReadFailureCases": [
@@ -1260,7 +1820,10 @@
       "expectedFixedContractId": "root-script",
       "expectedFileKind": null,
       "expectedPackageRole": "not-package",
-      "expectedViolations": ["fixed-source-content-unreadable", "path-read-failed"]
+      "expectedViolations": [
+        "fixed-source-content-unreadable",
+        "path-read-failed"
+      ]
     }
   ],
   "manifestPresenceCases": [

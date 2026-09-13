@@ -61,7 +61,9 @@ test("typechecks an acyclic cache owner graph with no command back edge", { time
     noEmit: true,
     types: ["node"],
   });
-  expect(paths.flatMap((path: string) => [...program.getSyntacticDiagnostics(program.getSourceFile(path)), ...program.getSemanticDiagnostics(program.getSourceFile(path))]).map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"))).toEqual([]);
+  expect(
+    paths.flatMap((path: string) => [...program.getSyntacticDiagnostics(program.getSourceFile(path)), ...program.getSemanticDiagnostics(program.getSourceFile(path))]).map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")),
+  ).toEqual([]);
   const owners = new Set(paths),
     edges = new Map<string, string[]>(paths.map((path: string) => [path, []]));
   for (const owner of paths) {
@@ -174,10 +176,33 @@ test("projects cache areas through injected scanners and preserves cancellation"
   expect(() => scanCacheAreas("/repo", cancelled.signal, undefined, operations)).toThrow(/portable cancellation/);
 });
 
-test("captures bounded child output and terminates a timed-out child", { timeout: 10_000 }, async () => {
+test("captures bounded child output and terminates a timed-out process tree", { timeout: 10_000 }, async () => {
   const { captureArtifactContract } = await import("../../📦️artifacts/🏃️contract-capture/🟦️.ts");
   expect(await captureArtifactContract(process.execPath, ["-e", "process.stdout.write('bounded')"], repoRoot, 5_000)).toBe("bounded");
   await expect(captureArtifactContract(process.execPath, ["-e", "setTimeout(() => {}, 10_000)"], repoRoot, 50)).rejects.toThrow(/timeout 50ms/);
+  const parent = ["const {spawn}=require('node:child_process')", "const child=spawn(process.execPath,['-e','setTimeout(() => {}, 10000)'],{stdio:'ignore'})", "console.log('descendant='+child.pid)", "setTimeout(() => {}, 10000)"].join(";");
+  let descendant = 0;
+  try {
+    await captureArtifactContract(process.execPath, ["-e", parent], repoRoot, 2_000);
+  } catch (error) {
+    descendant = Number(String(error).match(/descendant=(\d+)/)?.[1]);
+  }
+  expect(descendant).toBeGreaterThan(0);
+  const alive = (): boolean => {
+    try {
+      process.kill(descendant, 0);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  for (let attempt = 0; attempt < 20 && alive(); attempt++) await new Promise((accept) => setTimeout(accept, 25));
+  try {
+    expect(alive()).toBe(false);
+  } finally {
+    if (alive()) process.kill(descendant, "SIGKILL");
+  }
+  expect(readFileSync(resolve(domainRoot, "📦️artifacts/🏃️contract-capture/🟦️.ts"), "utf8")).toContain('["taskkill", "/pid", String(child.pid), "/t", "/f"]');
 });
 
 test("keeps policy, bootstrap and prune executable coordinates source-relative", async () => {

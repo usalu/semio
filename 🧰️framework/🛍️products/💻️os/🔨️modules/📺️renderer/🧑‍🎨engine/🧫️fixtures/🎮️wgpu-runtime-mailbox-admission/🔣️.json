@@ -1,0 +1,143 @@
+{
+  "title": "wgpu runtime mailbox admission",
+  "why": "The renderer owns exactly one interaction state and one bounded completion mailbox. Every input the browser shell admits crosses that mailbox as a `DispatchEvents` completion that needs the state, and every viewport change as a keyed `Resize` that needs it too. This oracle pins the admission arithmetic that decides, for one queue and one checkout ledger, WHICH completion a frame may apply now: that a checked-out state defers the work needing it without losing it, that work needing no state is admitted past it (so the completion carrying the state home is never queued behind the input waiting for it), that order among the work needing the state is preserved, that a checkout outliving its credits becomes a typed diagnostic naming its site exactly once, and that the fixed capacity always keeps one reserve for the interaction return.",
+  "credits": 240,
+  "consumers": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎮️wgpu-runtime-mailbox-admission/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎮️wgpu-runtime-mailbox-admission/🟦️.ts"
+  ],
+  "operations": {
+    "enqueue": "Push one completion at the BACK, refusing overflow unless a ready completion with the same key can be coalesced away. `admitted` is the answer.",
+    "reserveInteraction": "Take the reserve slot a suspended worker turn needs to hand the interaction state back. `admitted` is the answer.",
+    "finish": "Return one reserved completion at the FRONT and release its reservation.",
+    "checkOut": "Lend the single interaction state to one bounded step. `admitted` is false while another step already holds it.",
+    "checkIn": "Return the interaction state and clear its ledger.",
+    "apply": "One apply opportunity. `admission` is the ledger's verdict for the queue HEAD, `appliedRevision` the completion the turn removed (null when none is applicable), `opportunities` the ledger's age of the live checkout."
+  },
+  "rows": [
+    {
+      "id": "a-checked-out-state-defers-the-head-without-losing-it",
+      "why": "The hop that stalled on 6118: DispatchEvents needs the interaction state, a dispatch already holds it, and the apply opportunity must refuse WITHOUT dropping or reordering the event. The very next opportunity after the state comes home applies it.",
+      "capacity": 8,
+      "steps": [
+        { "op": "enqueue", "key": null, "revision": 1, "requiresInteraction": true, "admitted": true },
+        { "op": "checkOut", "site": "dispatch-event", "admitted": true },
+        { "op": "apply", "admission": "deferred", "appliedRevision": null, "opportunities": 1 },
+        { "op": "apply", "admission": "deferred", "appliedRevision": null, "opportunities": 2 },
+        { "op": "checkIn" },
+        { "op": "apply", "admission": "admitted", "appliedRevision": 1, "opportunities": 0 }
+      ],
+      "expect": { "length": 0, "readyRevisions": [], "staleNotices": [] }
+    },
+    {
+      "id": "work-that-needs-no-state-is-admitted-past-work-that-does",
+      "why": "A completion that needs no interaction state must never wait behind one that does — that is how the resume carrying the state home would deadlock against the input waiting for it. Order among the state-needing completions is untouched.",
+      "capacity": 8,
+      "steps": [
+        { "op": "enqueue", "key": null, "revision": 1, "requiresInteraction": true, "admitted": true },
+        { "op": "enqueue", "key": null, "revision": 2, "requiresInteraction": false, "admitted": true },
+        { "op": "enqueue", "key": null, "revision": 3, "requiresInteraction": true, "admitted": true },
+        { "op": "checkOut", "site": "frame-deferred", "admitted": true },
+        { "op": "apply", "admission": "deferred", "appliedRevision": 2, "opportunities": 1 },
+        { "op": "apply", "admission": "deferred", "appliedRevision": null, "opportunities": 2 },
+        { "op": "checkIn" },
+        { "op": "apply", "admission": "admitted", "appliedRevision": 1, "opportunities": 0 },
+        { "op": "apply", "admission": "admitted", "appliedRevision": 3, "opportunities": 0 }
+      ],
+      "expect": { "length": 0, "readyRevisions": [], "staleNotices": [] }
+    },
+    {
+      "id": "a-returned-state-arrives-at-the-front-and-unblocks-the-input-behind-it",
+      "why": "The real shape of one dispatched event: the mailbox holds the input, the worker turn holds the state, and the completion that ends the turn is returned through its reservation — at the FRONT, so it is applied before the input it unblocks.",
+      "capacity": 8,
+      "steps": [
+        { "op": "enqueue", "key": null, "revision": 1, "requiresInteraction": true, "admitted": true },
+        { "op": "reserveInteraction", "admitted": true },
+        { "op": "checkOut", "site": "dispatch-event", "admitted": true },
+        { "op": "apply", "admission": "deferred", "appliedRevision": null, "opportunities": 1 },
+        { "op": "finish", "key": null, "revision": 9, "requiresInteraction": false },
+        { "op": "apply", "admission": "admitted", "appliedRevision": 9, "opportunities": 1 },
+        { "op": "checkIn" },
+        { "op": "apply", "admission": "admitted", "appliedRevision": 1, "opportunities": 0 }
+      ],
+      "expect": { "length": 0, "readyRevisions": [], "staleNotices": [] }
+    },
+    {
+      "id": "resize-and-dispatch-are-both-applied-once-the-state-is-home",
+      "why": "A viewport change travels the same mailbox as input, keyed so only the newest survives. Both must land within the opportunities that follow the state coming home — this is the law behind 'a resize re-plans the dock on the next frame'.",
+      "capacity": 8,
+      "steps": [
+        { "op": "checkOut", "site": "frame-deferred", "admitted": true },
+        { "op": "enqueue", "key": "window-metrics", "revision": 1, "requiresInteraction": true, "admitted": true },
+        { "op": "enqueue", "key": null, "revision": 2, "requiresInteraction": true, "admitted": true },
+        { "op": "apply", "admission": "deferred", "appliedRevision": null, "opportunities": 1 },
+        { "op": "checkIn" },
+        { "op": "apply", "admission": "admitted", "appliedRevision": 1, "opportunities": 0 },
+        { "op": "apply", "admission": "admitted", "appliedRevision": 2, "opportunities": 0 }
+      ],
+      "expect": { "length": 0, "readyRevisions": [], "staleNotices": [] }
+    },
+    {
+      "id": "a-second-checkout-is-refused-while-one-is-live",
+      "why": "There is exactly one interaction state. A second bounded step may not lend it to itself, and the refusal must not disturb the ledger's age of the live checkout.",
+      "capacity": 8,
+      "steps": [
+        { "op": "checkOut", "site": "dispatch-event", "admitted": true },
+        { "op": "enqueue", "key": null, "revision": 1, "requiresInteraction": true, "admitted": true },
+        { "op": "apply", "admission": "deferred", "appliedRevision": null, "opportunities": 1 },
+        { "op": "checkOut", "site": "frame-deferred", "admitted": false },
+        { "op": "apply", "admission": "deferred", "appliedRevision": null, "opportunities": 2 },
+        { "op": "checkIn" },
+        { "op": "checkOut", "site": "frame-deferred", "admitted": true },
+        { "op": "apply", "admission": "deferred", "appliedRevision": null, "opportunities": 1 }
+      ],
+      "expect": { "length": 1, "readyRevisions": [1], "staleNotices": [] }
+    },
+    {
+      "id": "a-checkout-that-outlives-its-credits-is-a-typed-diagnostic-once",
+      "why": "A checkout is scoped to ONE bounded step. One that survives its credits is a defect, and the mailbox must say so — naming the site that took it — exactly once per episode instead of freezing in silence. Checking the state back in clears the episode, so the next checkout starts from zero.",
+      "capacity": 8,
+      "steps": [
+        { "op": "enqueue", "key": null, "revision": 1, "requiresInteraction": true, "admitted": true },
+        { "op": "checkOut", "site": "dispatch-event", "admitted": true },
+        { "op": "apply", "repeat": 240, "admission": "deferred", "appliedRevision": null, "opportunities": 240 },
+        { "op": "apply", "admission": "stale", "appliedRevision": null, "opportunities": 241 },
+        { "op": "apply", "admission": "stale", "appliedRevision": null, "opportunities": 242 },
+        { "op": "checkIn" },
+        { "op": "apply", "admission": "admitted", "appliedRevision": 1, "opportunities": 0 },
+        { "op": "enqueue", "key": null, "revision": 2, "requiresInteraction": true, "admitted": true },
+        { "op": "checkOut", "site": "frame-deferred", "admitted": true },
+        { "op": "apply", "admission": "deferred", "appliedRevision": null, "opportunities": 1 }
+      ],
+      "expect": { "length": 1, "readyRevisions": [2], "staleNotices": [{ "site": "dispatch-event", "opportunities": 241 }] }
+    },
+    {
+      "id": "the-fixed-bound-always-keeps-one-interaction-reserve",
+      "why": "Ready and in-flight work share one bound. Keyless work is lossless and refuses overflow one slot early; only the interaction reserve may take the last slot, so an owned state can always come home.",
+      "capacity": 4,
+      "steps": [
+        { "op": "enqueue", "key": null, "revision": 1, "requiresInteraction": true, "admitted": true },
+        { "op": "enqueue", "key": null, "revision": 2, "requiresInteraction": true, "admitted": true },
+        { "op": "enqueue", "key": null, "revision": 3, "requiresInteraction": false, "admitted": true },
+        { "op": "enqueue", "key": null, "revision": 4, "requiresInteraction": false, "admitted": false },
+        { "op": "reserveInteraction", "admitted": true },
+        { "op": "reserveInteraction", "admitted": false },
+        { "op": "finish", "key": null, "revision": 9, "requiresInteraction": false }
+      ],
+      "expect": { "length": 4, "readyRevisions": [9, 1, 2, 3], "staleNotices": [] }
+    },
+    {
+      "id": "a-keyed-completion-coalesces-its-own-predecessor-at-the-bound",
+      "why": "A viewport change is replaceable: at the bound a newer `window-metrics` may drop the ready older one rather than be refused, so the mailbox never answers a stale size and never overflows on a resize drag.",
+      "capacity": 4,
+      "steps": [
+        { "op": "enqueue", "key": null, "revision": 1, "requiresInteraction": true, "admitted": true },
+        { "op": "enqueue", "key": "window-metrics", "revision": 2, "requiresInteraction": true, "admitted": true },
+        { "op": "enqueue", "key": null, "revision": 3, "requiresInteraction": true, "admitted": true },
+        { "op": "enqueue", "key": "window-metrics", "revision": 4, "requiresInteraction": true, "admitted": true },
+        { "op": "enqueue", "key": null, "revision": 5, "requiresInteraction": true, "admitted": false }
+      ],
+      "expect": { "length": 3, "readyRevisions": [1, 3, 4], "staleNotices": [] }
+    }
+  ]
+}

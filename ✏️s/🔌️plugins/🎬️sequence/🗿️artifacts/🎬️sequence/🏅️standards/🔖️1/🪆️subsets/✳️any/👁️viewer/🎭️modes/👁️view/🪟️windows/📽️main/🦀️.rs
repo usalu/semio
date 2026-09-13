@@ -8,7 +8,8 @@
 //! type) provides, since a viewer never needs to lay anything out interactively.
 
 use crate::{SequenceStep, SequenceWorkingScene};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphScene, Viewport2d, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphScene, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_os_kernel::Viewport2d;
 
 //#region 🔖️Constants
 pub const SEQUENCE_VIEW_WINDOW_MAIN: &str = "sequence-view-main";

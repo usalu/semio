@@ -57,6 +57,8 @@ if (args[0] === "verify-abstraction-ownership") {
   await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-ui-contract", "--lib", "fixed_list_", "--", "--nocapture"], root);
 } else if (args[0] === "framework-retained-pack-ownership") {
   runCmd("bun", [root + "/📜️script.ts", "verify", "framework-retained-pack-ownership", ...args.slice(1)], { cwd: root });
+} else if (args[0] === "framework-flow-physical-retirement") {
+  runCmd("bun", [root + "/📜️script.ts", "verify", "framework-flow-physical-retirement", ...args.slice(1)], { cwd: root });
 } else if (args[0] === "window-config-pack-identity") {
   runCmd("bun", [root + "/📜️script.ts", "verify", "window-config-pack-identity", ...args.slice(1)], { cwd: root });
 } else if (args[0] === "window-config-provisioning-lifecycle") {
@@ -73,7 +75,7 @@ if (args[0] === "verify-abstraction-ownership") {
   testFrameworkEmptyStateContract();
   runCmd("bun", [root + "/node_modules/typescript/bin/tsc", "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: root });
   if (args[1] === "native") await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "framework_empty_state_contract_", "--", "--nocapture"], root);
-} else if (args[0] === "fem-numerical-page-owners") {
+} else if (args[0] === "fem-pcg-publication-owners" || args[0] === "fem-assembly-physical-owners" || args[0] === "fem-numerical-page-owners") {
   runCmd("bun", [root + "/📜️script.ts", "verify", ...args], { cwd: root });
 } else if (args[0] === "fem-mesh-preparation-owners") {
   runCmd("bun", [root + "/📜️script.ts", "verify", ...args], { cwd: root });
@@ -82,37 +84,7 @@ if (args[0] === "verify-abstraction-ownership") {
 } else if (args[0] === "fem3d-numerical-child-native") {
   runCmd("bun", [root + "/📜️script.ts", "verify", ...args], { cwd: root });
 } else if (args[0] === "fem2d-window-config-contract" || args[0] === "fem3d-window-config-contract") {
-  const dimension = args[0].startsWith("fem2d") ? "2d" : "3d";
-  const testRoot = root + "/✏️s/🔌️plugins/🏗️fem/🧪️tests/🪟️window-config-contract";
-  const mountedStiffnessOracle = root + "/✏️s/🔨️modules/🏗️fem/⚙️engine/🧱️elements3d/🧪️tests/🧱️mounted-stiffness/🟦️.ts";
-  if (dimension === "3d") await runVitest(root + "/✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript", ["-t", "story window ownership|story document replacement"], "../../🧪️tests/🎚️config/🟦️.ts");
-  const contract = await import(`${testRoot}/🟦️.ts`);
-  if (dimension === "2d") contract.testFem2dWindowConfigContract();
-  else {
-    contract.testFem2dWindowConfigContract();
-    contract.testFem3dWindowConfigContract();
-    const { testFem3dMountedStiffnessOracle } = await import(mountedStiffnessOracle);
-    testFem3dMountedStiffnessOracle();
-  }
-  runCmd("bun", [root + "/node_modules/typescript/bin/tsc", "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", `${testRoot}/🟦️.ts`, ...(dimension === "3d" ? [mountedStiffnessOracle, root + "/✏️s/🔌️plugins/🏗️fem/📖️stories/🧭️coordination/🧪️tests/🪟️viewport/🟦️.ts"] : [])], { cwd: root });
-  if (args[1] === "native") {
-    if (dimension === "2d") {
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--features", "component-app-assembly", "--lib", "fem2d_window_config_", "--", "--nocapture"], root);
-    } else {
-      const failures: unknown[] = [];
-      for (const [packageName, filters] of [
-        ["semio-s-artifact-fem-2d", ["fem2d_window_config_", "mesh_edge_authority_", "mounted_3d_element_interfaces_", "assembly_triplet_pages_", "pcg_job_", "subspace_"]],
-        ["semio-s-artifact-fem-3d", ["fem3d_window_config_", "live_visual::tests::"]],
-      ] as const) {
-        try {
-          await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", packageName, "--features", "component-app-assembly", "--lib", "--", "--nocapture", "--test-threads=1", ...filters], root);
-        } catch (error) {
-          failures.push(error);
-        }
-      }
-      if (failures.length > 0) throw new AggregateError(failures, "FEM native package validations failed");
-    }
-  }
+  runCmd("bun", [root + "/📜️script.ts", "verify", ...args], { cwd: root });
 } else if (args[0] === "composition-policy") {
   const ownerRoot = root + "/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript";
   runCmd("bun", [ownerRoot + "/📜️script.ts", "test", "composition-policy"], { cwd: ownerRoot });

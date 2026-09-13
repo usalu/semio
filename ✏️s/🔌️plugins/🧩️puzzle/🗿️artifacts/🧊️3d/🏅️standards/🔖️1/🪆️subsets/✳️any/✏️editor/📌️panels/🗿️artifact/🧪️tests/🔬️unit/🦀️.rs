@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use crate::editor::puzzle3d::terminology::{puzzle3d_labels, Puzzle3dLabels};
 use crate::editor::puzzle3d::{default_fixture, empty_fixture, with_puzzle3d_app, PUZZLE3D_DOCUMENT_TREE_BUILDS};
 
@@ -351,7 +351,7 @@ fn pressing_the_outliner_continuation_reveals_the_next_page() {
     let section = "puzzle3d-play-document.objects";
     drain_retired_ui_owners();
     let fixture = scaled_fixture(objects, 0);
-    let first = super::render_from(&fixture, native, &HashMap::new()).expect("page 0");
+    let first = super::render_from(&fixture, native, &BTreeMap::new()).expect("page 0");
     let mut rows = Vec::new();
     walk(&first, &mut rows);
     let _more = rows.iter().find(|(key, _, bindings, _)| key.ends_with(".more") && key.contains("objects") && *bindings > 0).expect("page 0 must close the objects section with a setPanelPage +N");
@@ -359,7 +359,7 @@ fn pressing_the_outliner_continuation_reveals_the_next_page() {
     assert!(!rows.iter().any(|(key, _, _, _)| *key == format!("object-{rows_per}")), "page 0 must not already show the next-page head");
     drop(first);
     drain_retired_ui_owners();
-    let mut pages = HashMap::new();
+    let mut pages = BTreeMap::new();
     pages.insert(section.to_string(), 1);
     let second = super::render_from(&fixture, native, &pages).expect("page 1");
     rows.clear();

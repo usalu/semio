@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "wire", "admission", "physicalOwnership", "retainedCatalog", "retainedValue", "multiByteChunk", "outerCancellation", "anchors", "segments", "registries", "hostile", "valueTags"],
+  "required": ["schema", "wire", "admission", "physicalOwnership", "retainedCatalog", "retainedValue", "retainedPipelineDiagnostic", "retainedInflater", "retainedTypedPersistence", "multiByteChunk", "outerCancellation", "anchors", "segments", "registries", "hostile", "valueTags"],
   "properties": {
     "schema": {"const": "semio.retained-canonical-pack-laws.v1"},
     "wire": {"const": "SPK/1.0"},
@@ -270,6 +270,109 @@
             "symbols": {"const": 0},
             "scalars": {"const": 0},
             "allocatedBytes": {"const": 0},
+            "closed": {"const": true}
+          }
+        }
+      }
+    },
+    "retainedPipelineDiagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stages", "hotVariant", "storage", "heapBytes", "publicStepAllocates", "firstFaultSticky", "laterIngress", "close", "physicalScope"],
+      "properties": {
+        "stages": {"const": ["anchor", "segment", "retained-varint", "retained-deflate"]},
+        "hotVariant": {"const": "retained-malformed-static"},
+        "storage": {"const": "inline"},
+        "heapBytes": {"const": 0},
+        "publicStepAllocates": {"const": false},
+        "firstFaultSticky": {"const": true},
+        "laterIngress": {"const": "rejected"},
+        "close": {"const": "bounded-logical"},
+        "physicalScope": {"const": "existing-lower-owners-only"}
+      }
+    },
+    "retainedInflater": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["constructionAllocates", "historyBytes", "dynamicLengths", "huffmanSymbols", "blocks", "distances", "dynamicRepeatCodes", "allocationBeforeInput", "zeroOrSubexactMutates", "actualBackingAccounted", "reuseAcrossCompressedSegments", "identityAllocationBytes", "closeOrder", "firstFaultSticky", "consumers", "terminal"],
+      "properties": {
+        "constructionAllocates": {"const": false},
+        "historyBytes": {"const": 32768},
+        "dynamicLengths": {"const": 318},
+        "huffmanSymbols": {"const": 288},
+        "blocks": {"const": ["stored", "fixed", "dynamic", "window-wrap"]},
+        "distances": {"const": [1, 32768]},
+        "dynamicRepeatCodes": {"const": [16, 17, 18]},
+        "allocationBeforeInput": {"const": true},
+        "zeroOrSubexactMutates": {"const": false},
+        "actualBackingAccounted": {"const": true},
+        "reuseAcrossCompressedSegments": {"const": true},
+        "identityAllocationBytes": {"const": 0},
+        "closeOrder": {"const": ["pending-input", "history-logical", "decoder-logical", "history-physical"]},
+        "firstFaultSticky": {"const": true},
+        "consumers": {"const": ["generation2-snapshot", "generation3-snapshot"]},
+        "terminal": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pending", "historyLength", "historyCapacity", "allocatedBytes", "inflaterPresent", "closed"],
+          "properties": {
+            "pending": {"const": false},
+            "historyLength": {"const": 0},
+            "historyCapacity": {"const": 0},
+            "allocatedBytes": {"const": 0},
+            "inflaterPresent": {"const": false},
+            "closed": {"const": true}
+          }
+        }
+      }
+    },
+    "retainedTypedPersistence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "implementationOrder", "constructionAllocates", "allocationBeforeIngress", "limits", "collectionOwners", "snapshotConsumers", "mutationConsumers", "handoff", "sprHistory", "zeroOrSubexactMutates", "firstFaultSticky", "closeOrder", "terminal"],
+      "properties": {
+        "status": {"const": "next-slice-contract"},
+        "implementationOrder": {"const": ["typed-snapshot-candidate", "typed-mutation-builder", "spr-history"]},
+        "constructionAllocates": {"const": false},
+        "allocationBeforeIngress": {"const": true},
+        "limits": {"const": ["logical-items", "utf8-bytes", "payload-bytes", "actual-allocation-bytes"]},
+        "collectionOwners": {"const": ["container-stacks", "strings", "row-vectors", "presence-vectors", "ordered-maps", "nested-values"]},
+        "snapshotConsumers": {"const": ["generation2-snapshot", "generation3-snapshot"]},
+        "mutationConsumers": {"const": ["generation2-mutation", "generation3-mutation"]},
+        "handoff": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "plainValue", "retirementOwnerTransferred"],
+          "properties": {
+            "kind": {"const": "owner-and-ledger-atomic"},
+            "plainValue": {"const": false},
+            "retirementOwnerTransferred": {"const": true}
+          }
+        },
+        "sprHistory": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["recordAtomic", "batchDecode", "owners", "order"],
+          "properties": {
+            "recordAtomic": {"const": true},
+            "batchDecode": {"const": false},
+            "owners": {"const": ["history-byte-copy", "dictionary", "edit-id-index", "records", "payload-bytes"]},
+            "order": {"const": ["verify", "admit-record", "decode-record", "validate", "typed-replay", "retire-history"]}
+          }
+        },
+        "zeroOrSubexactMutates": {"const": false},
+        "firstFaultSticky": {"const": true},
+        "closeOrder": {"const": ["pending-input", "partial-scalar", "typed-logical", "history-logical", "physical-backing"]},
+        "terminal": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pending", "typedItems", "historyRecords", "allocatedBytes", "ownerTransferred", "closed"],
+          "properties": {
+            "pending": {"const": false},
+            "typedItems": {"const": 0},
+            "historyRecords": {"const": 0},
+            "allocatedBytes": {"const": 0},
+            "ownerTransferred": {"const": false},
             "closed": {"const": true}
           }
         }

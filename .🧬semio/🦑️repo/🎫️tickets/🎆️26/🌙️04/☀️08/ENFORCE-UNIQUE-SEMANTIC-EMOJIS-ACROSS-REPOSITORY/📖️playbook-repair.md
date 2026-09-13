@@ -21,4 +21,3 @@ Hand-reviewed every strict path-statute finding under `✏️s/🔌️plugins/�
 - Oracle owners: `🔮️oracle` at artifact and subset levels.
 - Direct mutation schemas: `🧬️.schema.json`.
 - Artifact fixtures: `👑️playbook-scene-owner-law.json`, `🎬️playbook-scene-owner.schema.json`, `👁️playbook-view-command-limits.json`, and `🎚️playbook-view-command-limits.schema.json`.
-

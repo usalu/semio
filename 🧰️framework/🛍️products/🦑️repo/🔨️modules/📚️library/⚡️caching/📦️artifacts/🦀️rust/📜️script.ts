@@ -1,7 +1,9 @@
 #!/usr/bin/env bun
 import { relative, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
-import { artifactRustCargoArguments, buildCargoArtifacts, runOwnedCommand, startNativeProgress, validateNativeCargoArguments } from "../../🦀️cargo/📜️script.ts";
+import { runOwnedCommand, startNativeProgress } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
+import { artifactRustCargoArguments, validateNativeCargoArguments } from "../🎛️native-input/🟦️.ts";
+import { buildCargoArtifacts } from "../🏗️native-build/🟦️.ts";
 
 /**
  * 🧪️ Runs an artifact crate through the repository's level filters, Nextest profile and assertion budget.

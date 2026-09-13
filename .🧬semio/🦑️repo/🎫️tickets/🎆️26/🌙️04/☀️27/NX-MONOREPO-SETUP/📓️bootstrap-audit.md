@@ -2,15 +2,14 @@
 
 The current root configuration still references removed Compose-era directories. These paths were checked on disk and are absent: `compose`, `compose/py`, `compose/engine`, `elements/client/lib/geometry/topologic`. The only declared Git submodule is the research repository.
 
-| Surface | Observed Configuration | Required Alignment |
-| --- | --- | --- |
-| Python | Root workspace lists compose/py and compose/engine; styling and Energy oracle have standalone locks | Keep active Python environments explicit and preserve the Energy oracle's separate Python 3.12 constraint |
-| .NET | Monorepo.sln lists removed Compose projects; the current test-host csproj points at nonexistent 🔷️host.cs | Use the current test-host project and its actual 🔷️.cs source |
-| CMake | Root adds nonexistent Topologic directory; presets and setup install vcpkg for it | Remove the obsolete product dependency and keep native configuration/provisioning separate |
-| Editor | Three Animate-video entries reference missing animate/video/rs; Coda and Trinity entries also need current target mapping | Remove unsupported entries or map supported commands to real Nx targets |
+| Surface | Observed Configuration                                                                                                    | Required Alignment                                                                                        |
+| ------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Python  | Root workspace lists compose/py and compose/engine; styling and Energy oracle have standalone locks                       | Keep active Python environments explicit and preserve the Energy oracle's separate Python 3.12 constraint |
+| .NET    | Monorepo.sln lists removed Compose projects; the current test-host csproj points at nonexistent 🔷️host.cs                 | Use the current test-host project and its actual 🔷️.cs source                                             |
+| CMake   | Root adds nonexistent Topologic directory; presets and setup install vcpkg for it                                         | Remove the obsolete product dependency and keep native configuration/provisioning separate                |
+| Editor  | Three Animate-video entries reference missing animate/video/rs; Coda and Trinity entries also need current target mapping | Remove unsupported entries or map supported commands to real Nx targets                                   |
 
 Baseline Python and .NET dependency tasks are being executed to capture their concrete errors before making changes. No bootstrap configuration changes have been made yet.
-
 
 ## Baseline Results and Correction Contract
 
@@ -21,7 +20,6 @@ Baseline Python and .NET dependency tasks are being executed to capture their co
 The root CMake graph has no surviving application subdirectory. It will retain native tool configuration without referencing deleted Topologic paths or downloading unused vcpkg state. Configure/build/test ordering belongs to Nx; the commands will remain uncached while they manage native configuration state.
 
 The .NET implementation follows Microsoft's documented [explicit restore/build boundary](https://github.com/dotnet/docs/blob/main/docs/core/tools/dotnet-build.md) and [locked restore behavior](https://devblogs.microsoft.com/dotnet/enable-repeatable-package-restores-using-a-lock-file/). The restore and build must use the same intermediate directory.
-
 
 ## Verified Implementation
 

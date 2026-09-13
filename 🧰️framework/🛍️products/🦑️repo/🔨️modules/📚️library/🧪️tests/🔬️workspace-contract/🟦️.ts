@@ -3999,13 +3999,7 @@ describe("discoverBurndown", () => {
 });
 
 describe("computeWorkspaces", () => {
-  /** 🧪️ Builds a synthetic repo tree covering every hazard `🗂️workspaces.ts` was written to handle:
-   * a plain Shape V1 package, a nested Shape V2-ish package, a skip-dir (`node_modules`) and a dot-dir
-   * that must never surface, a wasm `pkg/` shadowed by its outer wrapper's identical name, a wasm `pkg/`
-   * with a genuinely different name (included regardless of whether anything depends on it via
-   * `workspace:*` — a real `bun install` only requires a listed workspace dir to exist on disk, and
-   * 🌊️flow's real `flow-extension-bim` has no such dependent at all since it's loaded by path at runtime),
-   * and a stray `pkg/` with no sibling `Cargo.toml` (must be skipped and never descended into). */
+  /** 🧪️ Models independent packages, explicitly exported payloads, and excluded trees. */
   function buildFixture(): string {
     const root = mkdtempSync(join(tmpdir(), "workspaces-fixture-"));
     const write = (relPath: string, content: string) => {
@@ -4017,19 +4011,15 @@ describe("computeWorkspaces", () => {
     write("b/nested/package.json", JSON.stringify({ name: "@t/b-nested" }));
     write("node_modules/pkgx/package.json", JSON.stringify({ name: "@t/should-be-skipped" }));
     write(".hidden/package.json", JSON.stringify({ name: "@t/also-should-be-skipped" }));
-    // c: wasm pkg/ shares its outer wrapper's exact name -> shadowed, pkg/ excluded.
-    write("c/📦️packages/🦀️rust/package.json", JSON.stringify({ name: "@t/c-rs" }));
+    write("c/📦️packages/🦀️rust/package.json", JSON.stringify({ name: "@t/c-rs", exports: "./pkg/🟨️.js" }));
     write("c/📦️packages/🦀️rust/Cargo.toml", "[package]\nname = \"c\"\n");
     write("c/📦️packages/🦀️rust/pkg/package.json", JSON.stringify({ name: "@t/c-rs" }));
-    // d: wasm pkg/ has its OWN name and no outer wrapper at all -> included (flow-extension-bim's real shape).
+    write("c/📦️packages/🦀️rust/pkg/🟨️.js", "export {};\n");
     write("d/📦️packages/🦀️rust/Cargo.toml", "[package]\nname = \"d\"\n");
     write("d/📦️packages/🦀️rust/pkg/package.json", JSON.stringify({ name: "@t/d-wasm" }));
-    // f: wasm pkg/ differs from its outer wrapper's name too -> included the same way (flow-core's real shape).
     write("f/📦️packages/🦀️rust/package.json", JSON.stringify({ name: "@t/f-rs" }));
     write("f/📦️packages/🦀️rust/Cargo.toml", "[package]\nname = \"f\"\n");
     write("f/📦️packages/🦀️rust/pkg/package.json", JSON.stringify({ name: "@t/f-wasm" }));
-    // e: a pkg/ dir with no sibling Cargo.toml -- a broken/stray wasm-pack emission, must never surface
-    // and must never be descended into (its own nested junk must not surface either).
     write("e/strayroot/pkg/junk/package.json", JSON.stringify({ name: "@t/e-stray-nested" }));
     write("e/strayroot/pkg/package.json", JSON.stringify({ name: "@t/e-stray" }));
     return root;
@@ -4048,7 +4038,7 @@ describe("computeWorkspaces", () => {
     }
   });
 
-  test("a wasm pkg/ shadowed by its outer wrapper's identical name is excluded", () => {
+  test("an explicitly exported same-name package payload is excluded", () => {
     const root = buildFixture();
     try {
       const result = computeWorkspaces(root);
@@ -4059,23 +4049,24 @@ describe("computeWorkspaces", () => {
     }
   });
 
-  test("a differently-named wasm pkg/ is included whether or not it has an outer wrapper", () => {
+  test("a differently named nested package remains independent", () => {
     const root = buildFixture();
     try {
       const result = computeWorkspaces(root);
-      expect(result).toContain("d/📦️packages/🦀️rust/pkg"); // no outer wrapper at all
+      expect(result).toContain("d/📦️packages/🦀️rust/pkg");
       expect(result).toContain("f/📦️packages/🦀️rust");
-      expect(result).toContain("f/📦️packages/🦀️rust/pkg"); // differs from its outer wrapper's name
+      expect(result).toContain("f/📦️packages/🦀️rust/pkg");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
   });
 
-  test("a pkg/ dir with no sibling Cargo.toml is skipped and never descended into", () => {
+  test("a pkg directory has ordinary membership independently of Cargo", () => {
     const root = buildFixture();
     try {
       const result = computeWorkspaces(root);
-      expect(result.some((entry) => entry.startsWith("e/"))).toBe(false);
+      expect(result).toContain("e/strayroot/pkg");
+      expect(result).toContain("e/strayroot/pkg/junk");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -4119,17 +4110,14 @@ describe("computeWorkspaces", () => {
     }
   });
 
-  test("against the real repo: every entry is a real dir with its own package.json, no duplicates, and known Shape V1/V2 + math drift cases resolve as expected", () => {
+  test("against the real repo: packages are physical, unambiguous, and preserve their owned payload boundaries", () => {
     const root = getWorkspaceRoot();
     const result = computeWorkspaces(root);
     for (const entry of result) expect(existsSync(join(root, entry, "package.json"))).toBe(true);
     expect(new Set(result).size).toBe(result.length);
-    // Shape V1 (not yet migrated) framework core must still resolve — dropping it would break bun install repo-wide.
     expect(result).toContain("🧰️framework/📦️packages/🟦️typescript");
-    // Shape V2 (already migrated) flow plugin TS residual.
     expect(result).toContain("✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript");
     expect(result).toContain("🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust");
-    // editor's wasm pkg/ shares its outer wrapper's name -> must stay excluded (would collide otherwise).
     expect(result).not.toContain("🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/pkg");
   });
 });

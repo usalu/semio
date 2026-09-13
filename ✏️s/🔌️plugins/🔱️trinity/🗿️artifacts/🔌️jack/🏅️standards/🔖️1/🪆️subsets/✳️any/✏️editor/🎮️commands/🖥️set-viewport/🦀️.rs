@@ -3,7 +3,8 @@
 use crate::editor::jack::window_config::{addressed, JackGraphWindowConfigMutation, SetCamera};
 use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
 use crate::Camera;
-use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, ViewModel, Viewport2d};
+use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, ViewModel};
+use semio_framework_os_kernel::Viewport2d;
 
 pub(crate) fn set_viewport(viewport: &Viewport2d, view: Option<&ViewModel>) -> Result<Emit<TrinityGraphMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
     let view = view.ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("jack.window-required"), "Jack viewport requires a host window context"))?;

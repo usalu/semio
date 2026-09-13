@@ -10462,6 +10462,7 @@ interface EcmaRoutePattern {
   readonly names: readonly string[];
   readonly defaults: boolean;
   readonly destructured: boolean;
+  readonly objectBindings?: readonly { readonly imported: string; readonly local: string }[];
 }
 
 interface EcmaRouteExpression {
@@ -10471,6 +10472,7 @@ interface EcmaRouteExpression {
   readonly value?: string;
   readonly object?: EcmaRouteExpression;
   readonly property?: EcmaRouteExpression | string;
+  readonly optional?: boolean;
   readonly callee?: EcmaRouteExpression;
   readonly arguments?: readonly EcmaRouteExpression[];
   readonly elements?: readonly EcmaRouteExpression[];
@@ -10673,7 +10675,9 @@ class EcmaRouteParser {
       if (!name) return null;
       names.push(name);
     }
-    return { names, defaults: defaults || values.some((token) => token.text === "="), destructured: true };
+    const members = this.chunks(values.slice(1, -1));
+    const objectBindings = values[0]?.text === "{" && members.every((row) => row.length === 1 && row[0]?.kind === "identifier" || row.length === 3 && row[0]?.kind === "identifier" && row[1]?.text === ":" && row[2]?.kind === "identifier") ? members.map((row) => ({ imported: row[0]!.text, local: row.at(-1)!.text })) : undefined;
+    return { names, defaults: defaults || values.some((token) => token.text === "="), destructured: true, objectBindings };
   }
   private parameters(tokens: readonly EcmaRouteToken[]): readonly EcmaRoutePattern[] | null {
     const rows: EcmaRoutePattern[] = [];
@@ -10702,7 +10706,7 @@ class EcmaRouteParser {
   private primary(): EcmaRouteExpression | null {
     const token = this.peek();
     if (token.text === "await" || token.text === "!" || token.text === "+" || token.text === "-" || token.text === "delete" || token.text === "yield") {
-      this.take(); const object = this.primary(); return object ? { kind: "unary", operator: token.text, object } : null;
+      this.take(); const object = this.expression(9); return object ? { kind: "unary", operator: token.text, object } : null;
     }
     if (token.text === "new") {
       this.take(); const callee = this.primary();
@@ -10777,9 +10781,10 @@ class EcmaRouteParser {
     let left = this.primary();
     if (!left) return null;
     while (true) {
-      if (this.consume(".") || this.consume("?.")) {
+      if (this.peek().text === "." || this.peek().text === "?.") {
+        const optional = this.take().text === "?.";
         const property = this.take(); if (property.kind !== "identifier") return null;
-        left = { kind: "member", object: left, property: property.text }; continue;
+        left = { kind: "member", object: left, property: property.text, optional }; continue;
       }
       if (this.consume("[")) {
         const property = this.expression(); if (!property || !this.consume("]")) return null;
@@ -11112,7 +11117,7 @@ function ecmaRoutePrebind(rows: readonly EcmaRouteStatement[], scope: EcmaRouteS
 function ecmaRouteEnvironment(statement: EcmaRouteStatement, scope: EcmaRouteScope): boolean {
   if (statement.kind !== "expression" || statement.expression?.kind !== "assignment" || statement.expression.operator !== "??=") return false;
   const left = statement.expression.left!, right = statement.expression.right!;
-  if (right.kind !== "literal" || left.kind !== "member" || typeof left.property !== "string" || !/^[A-Z][A-Z0-9_]*$/u.test(left.property)) return false;
+  if (right.kind !== "literal" || !/^["'\d]/u.test(right.value ?? "") || left.kind !== "member" || typeof left.property !== "string" || !/^[A-Z][A-Z0-9_]*$/u.test(left.property)) return false;
   const env = ecmaRouteUnwrap(left.object!);
   return env.kind === "member" && env.property === "env" && ecmaRouteIntrinsic(scope, ecmaRouteIdentifier(env.object!) ?? "") === "process";
 }
@@ -11128,9 +11133,9 @@ function ecmaRouteEnvironmentGuard(expression: EcmaRouteExpression, scope: EcmaR
 
 function ecmaRouteImportMetaMember(expression: EcmaRouteExpression, member: string, scope: EcmaRouteScope): boolean {
   const value = ecmaRouteUnwrap(expression);
-  if (value.kind !== "member" || value.property !== member) return false;
+  if (value.kind !== "member" || value.property !== member || value.optional) return false;
   const meta = ecmaRouteUnwrap(value.object!);
-  return meta.kind === "member" && meta.property === "meta" && ecmaRouteIdentifier(meta.object!) === "import" && !scope.resolve("import");
+  return meta.kind === "member" && meta.property === "meta" && !meta.optional && ecmaRouteIdentifier(meta.object!) === "import" && !scope.resolve("import");
 }
 
 function ecmaRouteBlock(rows: readonly EcmaRouteStatement[], scope: EcmaRouteScope, validation: EcmaRouteValidation, guarded = false, closure = false, maximum = 64): boolean {
@@ -11201,10 +11206,19 @@ function ecmaRouteRouter(expression: EcmaRouteExpression, scope: EcmaRouteScope,
   return (value.arguments ?? []).every(inspect);
 }
 
-function ecmaRouteTerminal(statement: EcmaRouteStatement, scope: EcmaRouteScope, validation: EcmaRouteValidation): boolean {
+function ecmaRouteTerminal(statement: EcmaRouteStatement, scope: EcmaRouteScope, validation: EcmaRouteValidation, mainGuard = false): boolean {
   if (statement.kind !== "expression") return false;
   const expression = ecmaRouteUnwrap(statement.expression!);
   if (expression.kind !== "call") return false;
+  const callee = ecmaRouteUnwrap(expression.callee!);
+  if (mainGuard && callee.kind === "member" && callee.property === "run" && scope.resolve(ecmaRouteIdentifier(callee.object!) ?? "")?.kind === "router") {
+    const argument = expression.arguments?.length === 1 ? ecmaRouteUnwrap(expression.arguments[0]!) : undefined;
+    const slice = argument?.kind === "call" ? ecmaRouteUnwrap(argument.callee!) : undefined;
+    const argv = slice?.kind === "member" && slice.property === "slice" ? ecmaRouteUnwrap(slice.object!) : undefined;
+    if (argv?.kind !== "member" || argv.property !== "argv" || ecmaRouteIntrinsic(scope, ecmaRouteIdentifier(argv.object!) ?? "") !== "process" || argument?.arguments?.length !== 1 || argument.arguments[0]?.kind !== "literal" || argument.arguments[0].value !== "2") return false;
+    validation.terminals++;
+    return true;
+  }
   const name = ecmaRouteIdentifier(expression.callee!), binding = name ? scope.resolve(name) : undefined;
   if (binding?.kind !== "import-value" || !["runBundleScriptMain", "runWorkspaceScriptMain", "runPolicyOnlyMain", "runArtifactRustPackageMain", "runArtifactTypeScriptPackageMain"].includes(binding.imported ?? "")) return false;
   if (!expression.arguments!.every((argument) => ecmaRouteRouter(argument, scope, validation) || ["data", "finite"].includes(ecmaRouteValue(argument, scope)))) return false;
@@ -11212,11 +11226,50 @@ function ecmaRouteTerminal(statement: EcmaRouteStatement, scope: EcmaRouteScope,
   return true;
 }
 
+function ecmaRouteTestMetadata(expression: EcmaRouteExpression, member: string, scope: EcmaRouteScope): boolean {
+  const meta = expression.object;
+  return expression.kind === "member" && expression.property === member && !expression.optional && meta?.kind === "member" && meta.property === "meta" && !meta.optional && meta.object?.kind === "identifier" && meta.object.name === "import" && !scope.resolve("import");
+}
+
+function ecmaRouteTestDependency(expression: EcmaRouteExpression, scope: EcmaRouteScope): boolean {
+  if (expression.kind === "parenthesized" || expression.kind === "nonnull") return ecmaRouteTestDependency(expression.object!, scope);
+  if (expression.kind === "literal") return expression.value !== "undefined";
+  if (expression.kind === "identifier") {
+    const binding = scope.resolve(expression.name!);
+    return binding?.kind === "import-value" && binding.module !== "dynamic-test";
+  }
+  if (expression.kind === "member") return ["dir", "url"].some((member) => ecmaRouteTestMetadata(expression, member, scope));
+  if (expression.kind === "array") return expression.elements!.every((row) => ecmaRouteTestDependency(row, scope));
+  return expression.kind === "object" && expression.properties!.every((row) => !row.computed && ecmaRouteTestDependency(row.value, scope));
+}
+
+function ecmaRouteTestRegistration(statement: EcmaRouteStatement, scope: EcmaRouteScope): boolean {
+  if (statement.otherwise || statement.then?.kind !== "block" || statement.then.body?.length !== 2) return false;
+  const [declaration, invocation] = statement.then.body;
+  if (declaration?.kind !== "const" || declaration.declarations?.length !== 1 || invocation?.kind !== "expression") return false;
+  const binding = declaration.declarations[0]!, members = binding.pattern.objectBindings;
+  if (binding.pattern.defaults || members?.length !== 1 || scope.resolve(members[0]!.local) || binding.initializer.kind !== "unary" || binding.initializer.operator !== "await") return false;
+  const module = binding.initializer.object!;
+  if (module.kind !== "call" || module.callee?.kind !== "identifier" || module.callee.name !== "import" || scope.resolve("import") || module.arguments?.length !== 1) return false;
+  const literal = module.arguments[0]!;
+  if (literal.kind !== "literal" || !/^["']/u.test(literal.value ?? "")) return false;
+  const path = literal.value!.slice(1, -1), segments = path.split("/");
+  if (!/^\.{1,2}\//u.test(path) || /[\\%?#]/u.test(path)) return false;
+  while (segments[0] === "." || segments[0] === "..") segments.shift();
+  if (segments.some((segment) => !segment || segment === "." || segment === "..") || !segments.slice(0, -1).some((segment) => segment === "🧪️tests" || segment === "🧪️")) return false;
+  const expression = invocation.expression!;
+  if (expression.kind !== "unary" || expression.operator !== "await" || expression.object?.kind !== "call") return false;
+  const call = expression.object, nested = new EcmaRouteScope(scope), local = members[0]!.local;
+  if (!nested.define(local, { kind: "import-value", imported: members[0]!.imported, module: "dynamic-test" }) || call.callee?.kind !== "identifier" || call.callee.name !== local || call.arguments?.length !== 3 || !ecmaRouteTestMetadata(call.arguments[0]!, "vitest", nested)) return false;
+  return call.arguments.slice(1).every((argument) => ecmaRouteTestDependency(argument, nested));
+}
+
 /** 🚦️ Recognizes only value-bound, lexically scoped command routing. */
 function ecmaCommandRouterModule(content: string, grammar: PackageGlueGrammarSpec): boolean {
   const parser = new EcmaRouteParser(ecmaRouteTokens(content)), program = parser.program();
   if (!program) return false;
   const scope = new EcmaRouteScope(), validation: EcmaRouteValidation = { terminals: 0, classes: new Set(), wiredClasses: new Set() };
+  let environmentDefaults = 0, testRegistrations = 0;
   for (const row of program) if (row.kind === "import") for (const binding of row.imports ?? []) if (!scope.define(binding.local, { kind: binding.runtime ? "import-value" : "import-type", imported: binding.imported, module: binding.module })) return false;
   if (!ecmaRoutePrebind(program.filter((row) => row.kind !== "import"), scope)) return false;
   for (const row of program) {
@@ -11236,12 +11289,16 @@ function ecmaCommandRouterModule(content: string, grammar: PackageGlueGrammarSpe
       for (const declaration of row.declarations ?? []) {
         if (ecmaRouteRouter(declaration.initializer, scope, validation)) {
           if (declaration.pattern.destructured || declaration.pattern.defaults || declaration.pattern.names.length !== 1 || !scope.initialize(declaration.pattern.names[0]!, { kind: "router" })) return false;
-        } else if (!ecmaRouteDefine(declaration.pattern, declaration.initializer, scope)) return false;
+        } else if (ecmaRouteValue(declaration.initializer, scope) === "module" || !ecmaRouteDefine(declaration.pattern, declaration.initializer, scope)) return false;
       }
       continue;
     }
     if (row.kind === "if") {
       const condition = ecmaRouteUnwrap(row.expression!);
+      if (ecmaRouteTestMetadata(row.expression!, "vitest", scope)) {
+        if (testRegistrations++ !== 0 || !ecmaRouteTestRegistration(row, scope)) return false;
+        continue;
+      }
       if (condition.kind === "member" && ecmaRouteImportMetaMember(condition, "main", scope)) {
         const nested = new EcmaRouteScope(scope), rows = row.then!.kind === "block" ? row.then!.body! : [row.then!];
         if (!ecmaRoutePrebind(rows, nested)) return false;
@@ -11250,14 +11307,18 @@ function ecmaCommandRouterModule(content: string, grammar: PackageGlueGrammarSpe
             for (const declaration of statement.declarations ?? []) {
               if (!ecmaRouteRouter(declaration.initializer, nested, validation) || declaration.pattern.destructured || declaration.pattern.defaults || declaration.pattern.names.length !== 1 || !nested.initialize(declaration.pattern.names[0]!, { kind: "router" })) return false;
             }
-          } else if (!ecmaRouteTerminal(statement, nested, validation)) return false;
+          } else if (!ecmaRouteTerminal(statement, nested, validation, true)) return false;
         }
         if (row.otherwise) return false;
         continue;
       }
       if (!ecmaRouteEnvironmentGuard(row.expression!, scope) || row.otherwise) return false;
       const rows = row.then!.kind === "block" ? row.then!.body! : [row.then!];
-      if (rows.length !== 1 || !ecmaRouteEnvironment(rows[0]!, scope)) return false;
+      if (rows.length !== 1 || !ecmaRouteEnvironment(rows[0]!, scope) || environmentDefaults++ !== 0 || validation.terminals !== 0) return false;
+      continue;
+    }
+    if (ecmaRouteEnvironment(row, scope)) {
+      if (environmentDefaults++ !== 0 || validation.terminals !== 0) return false;
       continue;
     }
     if (!ecmaRouteTerminal(row, scope, validation)) return false;

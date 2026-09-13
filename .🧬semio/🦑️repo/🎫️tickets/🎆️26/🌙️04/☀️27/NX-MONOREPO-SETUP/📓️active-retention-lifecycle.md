@@ -1,0 +1,9 @@
+# Active Retention Lifecycle Inspection
+
+The current explicit pruner holds only an exclusive cache-prune resource. Cargo/Vite/agent units are selected by timestamps and nominal budgets, without corresponding active producer/reader leases. Cargo stale finalized incremental sessions are even marked eligible regardless of a concurrently working session. No destructive prune was run.
+
+Installed Nx 23.2.0 exposes preTasksExecution and postTasksExecution plugins, but their contexts describe the entire invocation rather than each task; pre-execution also runs in the daemon/plugin worker when a daemon is enabled. Holding a lease there for a complete dev invocation would keep already finished compiler state unavailable to reclamation for the whole dev session. A daemon-owned SQLite lease could also outlive the originating client unless ownership death is explicitly accounted for. An invocation-wide lock is therefore insufficient as the final retention architecture.
+
+Native compiler stores are excluded from Nx task artifacts, so their execution/read leases can be attached around the native commands independently of Nx output restoration. Final deliverable pruning needs protection spanning Nx retrieval/restoration/capture as well. Existing resource leases have process-death cleanup via SQLite transactions; most native Cargo compilation funnels through buildCargoArtifacts, but check/test still use synchronous runCmdStatus and Trunk starts Cargo internally. These paths and other explicit native callers must be covered before enabling Cargo deletion under matching leases.
+
+Vite and agent scratch directories need real owner identities and corresponding active readers; arbitrary directory names plus age are not ownership. The next retention change must qualify locked writer/reader, crash, cancellation, deletion and repeated-cycle cases against actual process and filesystem behavior.

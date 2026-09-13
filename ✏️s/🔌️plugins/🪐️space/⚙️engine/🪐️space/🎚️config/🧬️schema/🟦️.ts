@@ -25,10 +25,6 @@ export interface SpaceConfig {
   /** @state config */
   spaceId?: string;
   /** @state config */
-  clientId?: string;
-  /** @state config */
-  clientName?: string;
-  /** @state config */
 }
 
 export interface SpaceWindowCamera {
@@ -99,8 +95,6 @@ export function parseSpaceConfig(value: unknown, at = "$"): SpaceConfig {
     pendingImportFormat: row["pendingImportFormat"] === undefined ? undefined : spaceSpaceConfigGuardString(row["pendingImportFormat"], `${at}.pendingImportFormat`),
     activePanelTab: spaceSpaceConfigGuardString(row["activePanelTab"], `${at}.activePanelTab`),
     spaceId: row["spaceId"] === undefined ? undefined : spaceSpaceConfigGuardString(row["spaceId"], `${at}.spaceId`),
-    clientId: row["clientId"] === undefined ? undefined : spaceSpaceConfigGuardString(row["clientId"], `${at}.clientId`),
-    clientName: row["clientName"] === undefined ? undefined : spaceSpaceConfigGuardString(row["clientName"], `${at}.clientName`),
   };
 }
 

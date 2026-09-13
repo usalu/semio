@@ -20,9 +20,9 @@ Each state has its own Rust owner and JSON Schema, TypeScript, GraphQL, Protobuf
 
 `NodeGraphViewport` is classified as a `WindowConfig` publication. The raw handler emits nothing. The retained Generation2d reducer requires the trusted command context, resolves the captured exact `ViewModel`, reads the current `generation2d-main` snapshot, and emits one addressed `WindowConfigMutation`. It rejects missing view context, stale concrete IDs, and wrong window kinds.
 
-All three render paths resolve their corresponding exact owner from `ConfigView.window`. Two same-kind instances per kind therefore render six independent viewport values. The edit preview continues to read application-owned `show_mode`; only its camera moved.
+All three render paths resolve their corresponding exact owner from `ConfigView.window`. Two same-kind instances per kind therefore render six independent viewport values. The edit preview continues to read application-owned `show_mode`; only its camera moved. The generate-preview path now preserves its registered `Canvas2d` renderer when evaluated output has zero drawing layers, so its exact camera remains observable after evaluation. Its pre-evaluation hint remains unchanged.
 
-Canvas pointer-down, pointer-move, pointer-up, and wheel remain `HostOnly` empty-payload commands whose raw handlers and actual retained receipts have no mutation or event lanes. No camera interaction was invented for them.
+Canvas pointer-down, pointer-move, pointer-up, and wheel remain `HostOnly` empty-payload commands whose raw handlers emit nothing. Their actual retained receipts contain exactly the framework lifecycle lanes `[Ui, Terminal]` and no document, application config, window config, draft, transient, effect, or event lane. No camera interaction was invented for them.
 
 ## App Surface Removal
 
@@ -53,16 +53,19 @@ The root and ticket Nx projects expose `generation2d-window-camera-ownership-ora
 
 ## Verification
 
-- `bun nx run workspace:generation2d-window-camera-ownership-oracle`: PASS through the registered root Nx target. The durable 65-line, 3,063-byte run log records `[DEBUG] generation2d-window-camera-ownership owners=3 instances=6 canvasNoOps=4 appCamera=absent` and `NX Successfully ran target generation2d-window-camera-ownership-oracle for project workspace`.
-- `bun ./📜️script.ts verify generation2d-window-camera-ownership native`: pending a clean rerun after the coordinated shared Pack API edit ends. The latest attempt reached the feature-enabled Generation2d editor, exposed only incorrect `Viewport2d` namespaces in this slice, and those references are corrected to `semio_framework_os_kernel::Viewport2d`. The immediate rerun then stopped before Generation2d compilation in the concurrently edited shared Pack module, so it is not recorded as acceptance.
+- `NX_DAEMON=false SEMIO_BUILD_BUDGET_MS=600000 bun nx run workspace:generation2d-window-camera-ownership-oracle`: PASS through the registered root Nx target. The durable 26-line, 1,761-byte `🗑️generated/generation2d-window-camera-owner-oracle-final.log` records `[DEBUG] generation2d-window-camera-ownership owners=3 instances=6 canvasNoOps=4 appCamera=absent` and `NX Successfully ran target generation2d-window-camera-ownership-oracle for project workspace`.
+- `NX_DAEMON=false SEMIO_BUILD_BUDGET_MS=1800000 bun nx run workspace:generation2d-window-camera-ownership-native`: PASS through the registered root Nx target. The durable 632-line, 40,462-byte `🗑️generated/generation2d-window-camera-owner-native-final.log` records `3 passed; 0 failed`, the final six-owner summary, every reopened/rejection/primary close marker, and `NX Successfully ran target generation2d-window-camera-ownership-native for project workspace`. The runtime law used the fixed 2 MiB thread and exited normally.
+
+The native route also records the actual public rejection boundaries. Missing view context and wrong-kind context reach the retained reducer and surface its registered-operation rejection. A stale concrete id is rejected earlier by registry capture as `window-config.window-context`. Independent exact-address laws verify the three domain codes `generation2d-main-window-required`, `generation2d-main-window-stale`, and `generation2d-main-window-kind-required`.
 
 ## Source Ledger
 
-- Three exact owner implementations and their six schema facets live under the `🎚️config` directories of the main graph, edit preview, and generate preview window kinds.
-- Window module roots and the Generation2d editor root register and consume the owners.
-- The Generation2d retained reducer, `NodeGraphViewport` handler, publication contract, renderer paths, and editor preparation logic implement the routing cutover.
-- The Generation2d application config and its schema facets remove camera ownership.
-- The neutral fixture, neutral schema, TypeScript oracle, and Rust native law live in `✏️editor/🧪️tests/🪟️generation2d-window-camera-ownership`.
-- Root `📜️script.ts`, root `📋️project.json`, ticket `validation/📜️script.ts`, ticket `validation/project.json`, `.vscode/launch.json`, and `.vscode/🧩️launch.seed.jsonc` expose the repeatable routes.
+- Main owner: `✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🎚️config/🦀️.rs` and its `🧬️schema/{🔣️.json,🦀️.rs,🟦️.ts,🔗️.graphql,🛰️.proto,📜️.wit}` facets.
+- Edit-preview owner: `✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🎚️config/🦀️.rs` and the same six schema facets.
+- Generate-preview owner: `✏️editor/🎭️modes/🧬️generate/🪟️windows/👁️preview/🎚️config/🦀️.rs` and the same six schema facets.
+- Routing and rendering: `✏️editor/🦀️.rs`, `✏️editor/🎮️commands/🔭️node-graph-viewport/🦀️.rs`, and the `🦀️.rs` roots for the main, edit-preview, and generate-preview window directories.
+- Application-scope removal: `✏️editor/🎚️config/🦀️.rs` and its six schema facets, plus the Generation2d preparation and unit fixtures that enumerate the closed mutation surface.
+- Contract tests: `✏️editor/🧪️tests/🪟️generation2d-window-camera-ownership/{🧬️schema/🔣️.json,🧫️fixtures/🔣️.json,🟦️.ts,🦀️.rs}`.
+- Registered execution: root `📜️script.ts` and `📋️project.json`; ticket `validation/📜️script.ts` and `validation/project.json`; `.vscode/launch.json` and `.vscode/🧩️launch.seed.jsonc` at reserved orders `311.226` and `311.227`.
 
 No Generation3d production source or shared Store, Pack, or framework implementation was changed for this slice.

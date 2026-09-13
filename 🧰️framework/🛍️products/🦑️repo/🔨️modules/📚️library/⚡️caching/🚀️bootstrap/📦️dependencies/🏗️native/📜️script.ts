@@ -21,7 +21,7 @@ export async function prepareDependencies(kind: string, workspace: string, signa
   };
   const probe = async (command: string, args: string[]): Promise<string> => {
     try { return await run(command, args, true); }
-    catch (error) { signal.throwIfAborted(); return ""; }
+    catch { signal.throwIfAborted(); return ""; }
   };
   const tool = async (crate: string, command: string[], version: string): Promise<void> => {
     if ((await probe(command[0]!, [...command.slice(1), "--version"])).split(/\s+/).includes(version)) return;
@@ -68,4 +68,3 @@ export class NativeDependenciesScript extends Script {
 }
 
 if (import.meta.main) await new ScriptRouter(getWorkspaceRoot()).register("sync", NativeDependenciesScript).run(process.argv.slice(2));
-

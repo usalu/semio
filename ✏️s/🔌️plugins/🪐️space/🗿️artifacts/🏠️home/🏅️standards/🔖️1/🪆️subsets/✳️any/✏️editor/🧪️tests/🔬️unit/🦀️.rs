@@ -4,24 +4,46 @@ use super::*;
 //#region 🧪️RetainedCommandEnvelope
 #[test]
 fn retained_command_fixture_matches_exact_routes_and_serde_json_boundaries() {
-    use store::ArtifactStoreOneItemPreparationFactory as _;
     let fixture: pack::JsonValue = pack::parse_json(include_str!("../../🧫️fixtures/🧫️retained-command-limits/🔣️.json")).expect("language-neutral retained fixture");
     let migrated: Vec<&str> = fixture["routes"].as_array().expect("routes").iter().filter(|row| row["disposition"] == "Migrated").map(|row| row["id"].as_str().expect("route id")).collect();
     assert_eq!(migrated, HOME_RETAINED_TOOL_IDS);
     assert_eq!(HOME_RETAINED_PUBLICATION_CONTRACTS.len(), migrated.len());
-    assert_eq!(fixture["limits"]["configValueBytes"].as_u64(), Some(HOME_CONFIG_VALUE_BYTES as u64));
+    assert_eq!(fixture["controller"].as_str(), Some(S_HOME_CONTROLLER_ID));
+    assert_eq!(fixture["limits"]["scalarBytes"].as_u64(), Some(HOME_RETAINED_SCALAR_BYTES as u64));
     assert_eq!(fixture["limits"]["storeStepBytes"].as_u64(), Some(HOME_CONFIG_STEP_BYTES as u64));
-    let factory = HomeConfigPreparationFactory;
     for case in fixture["boundaryCases"].as_array().expect("boundary cases") {
         let value = "x".repeat(case["bytes"].as_u64().expect("byte count") as usize);
-        let mutation = HomeConfigMutation::SetActivePanelTab { tab_id: value };
-        let first_party = pack::json_from_dsl_value(&dsl::ToValue::to_value(&mutation));
+        let command = HomeCommand::OpenSpace(open_space::OpenSpace { space_id: value });
+        let first_party = pack::json_from_dsl_value(&dsl::ToValue::to_value(&command));
         let oracle: serde_json::Value = serde_json::from_str(&pack::json_to_string(&first_party)).expect("third-party JSON decode");
         let oracle_wire = serde_json::to_string(&oracle).expect("third-party JSON encode");
         assert_eq!(pack::parse_json(&oracle_wire).expect("first-party JSON decode"), first_party);
-        let decoded: HomeConfigMutation = dsl::from_dsl_value(pack::json_to_dsl_value(&first_party)).expect("mutation value decode");
-        assert_eq!(decoded, mutation);
-        assert_eq!(factory.preflight(&decoded, None, store::HistoryLane::Document).is_ok(), case["accepted"].as_bool().expect("admission oracle"));
+        let decoded: HomeCommand = dsl::from_dsl_value(pack::json_to_dsl_value(&first_party)).expect("command value decode");
+        assert_eq!(decoded, command);
+        assert_eq!(home_retained_extent(&decoded, &SHomeSnapshot::default(), &protocol::InteractionState::default()).is_some(), case["accepted"].as_bool().expect("admission oracle"));
+    }
+}
+
+#[test]
+fn every_migrated_home_route_has_an_exact_scalar_boundary() {
+    let scalar = |bytes: usize| "x".repeat(bytes);
+    let pairs = [
+        (HomeCommand::OpenSpace(open_space::OpenSpace { space_id: scalar(4096) }), HomeCommand::OpenSpace(open_space::OpenSpace { space_id: scalar(4097) })),
+        (HomeCommand::NavigateVirtualFileSystemNode(navigate_virtual_file_system_node::NavigateVirtualFileSystemNode { node_id: scalar(4096) }), HomeCommand::NavigateVirtualFileSystemNode(navigate_virtual_file_system_node::NavigateVirtualFileSystemNode { node_id: scalar(4097) })),
+        (HomeCommand::CreateSpace(create_space::CreateSpace { name: scalar(4094), kind: "k".into(), visibility: "v".into() }), HomeCommand::CreateSpace(create_space::CreateSpace { name: scalar(4095), kind: "k".into(), visibility: "v".into() })),
+        (HomeCommand::DeleteSpace(delete_space::DeleteSpace { space_id: scalar(4096), confirmed: true }), HomeCommand::DeleteSpace(delete_space::DeleteSpace { space_id: scalar(4097), confirmed: true })),
+        (HomeCommand::ShareSpace(share_space::ShareSpace { space_id: scalar(4094), email: "e".into(), role: "r".into() }), HomeCommand::ShareSpace(share_space::ShareSpace { space_id: scalar(4095), email: "e".into(), role: "r".into() })),
+        (HomeCommand::ManageSpace(manage_space::ManageSpace { space_id: scalar(4096) }), HomeCommand::ManageSpace(manage_space::ManageSpace { space_id: scalar(4097) })),
+        (HomeCommand::CopyInviteLink(copy_invite_link::CopyInviteLink { space_id: scalar(4095), role: "r".into(), ttl_secs: u64::MAX }), HomeCommand::CopyInviteLink(copy_invite_link::CopyInviteLink { space_id: scalar(4096), role: "r".into(), ttl_secs: u64::MAX })),
+    ];
+    let snapshot = SHomeSnapshot::default();
+    let interaction = protocol::InteractionState::default();
+    for (at_limit, overflow) in pairs {
+        assert_eq!(home_retained_extent(&at_limit, &snapshot, &interaction), Some(1), "{} must admit the exact scalar limit", at_limit.command_id());
+        assert_eq!(home_retained_extent(&overflow, &snapshot, &interaction), None, "{} must reject one byte beyond the scalar limit", overflow.command_id());
+    }
+    for zero in [HomeCommand::GoHome(go_home::GoHome {}), HomeCommand::PresenceHeartbeat(presence_heartbeat::PresenceHeartbeat {})] {
+        assert_eq!(home_retained_extent(&zero, &snapshot, &interaction), Some(1), "{} carries no scalar payload", zero.command_id());
     }
 }
 
@@ -29,10 +51,15 @@ fn retained_command_fixture_matches_exact_routes_and_serde_json_boundaries() {
 fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
     use std::io::Write as _;
     use store::ArtifactStoreOneItemPreparation as _;
-    let value = "x".repeat(HOME_CONFIG_VALUE_BYTES);
+    let config = HomeConfig::default();
     let mut preparation = HomeConfigPreparation {
         base: None,
-        mutation: Some(HomeConfigMutation::SetActivePanelTab { tab_id: value }),
+        mutation: Some(HomeConfigMutation::ReplaceDirectoryProjection {
+            directory_json: config.directory_json,
+            session_binding_sha256: "a".repeat(64),
+            authorization_generation: 1,
+            receipt_sha256: "b".repeat(64),
+        }),
         description: None,
         authority: None,
         candidate: None,
@@ -64,6 +91,14 @@ use std::sync::Arc;
 
 fn empty_history() -> semio_framework_plugin::HistoryView {
     semio_framework_plugin::HistoryView::empty()
+}
+
+fn home_view(user_id: &str, locale: semio_framework_plugin::Locale) -> semio_framework_plugin::ViewModel {
+    semio_framework_plugin::ViewModel {
+        locale,
+        session_identity: Some(semio_framework_plugin::ViewSessionIdentity { user_id: user_id.into(), display_name: "Ada".into() }),
+        ..Default::default()
+    }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -121,7 +156,8 @@ async fn home_labels_resolve_native_english_by_default() {
     let home_view = ArtifactView::new(&home_doc, &history);
     let config = config_with_one_folded_space().await;
     let cfg = ConfigView { snapshot: &config, window: None };
-    let home_node = HomeApp::render(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &home_view, &cfg, &semio_framework_plugin::ViewModel::default()).expect("English Home assembly");
+    let view_state = home_view("u1", semio_framework_plugin::Locale::En);
+    let home_node = HomeApp::render(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &home_view, &cfg, &view_state).expect("English Home assembly");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(home_node).expect("English Home tree projection");
     assert!(json.contains("Updated"), "English column header must resolve: {json}");
     assert!(json.contains("Fixture"), "the folded space's name must render: {json}");
@@ -134,9 +170,26 @@ async fn home_labels_resolve_native_german_locale() {
     let home_view = ArtifactView::new(&home_doc, &history);
     let config = config_with_one_folded_space().await;
     let cfg = ConfigView { snapshot: &config, window: None };
-    let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::Locale::De, ..Default::default() };
+    let view_state = home_view("u1", semio_framework_plugin::Locale::De);
     let home_node = HomeApp::render(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &home_view, &cfg, &view_state).expect("German Home assembly");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(home_node).expect("German Home tree projection");
     assert!(json.contains("Aktualisiert"), "German column header must resolve: {json}");
     assert!(json.contains("Fixture"), "the folded space's name must render: {json}");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn home_render_requires_current_host_identity_and_changes_roles_with_it() {
+    let history = empty_history();
+    let home_doc = SHomeSnapshot::default();
+    let home = ArtifactView::new(&home_doc, &history);
+    let config = config_with_one_folded_space().await;
+    let cfg = ConfigView { snapshot: &config, window: None };
+    let missing = HomeApp::render(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &home, &cfg, &semio_framework_plugin::ViewModel::default()).unwrap_err();
+    assert_eq!(missing.code, "s.home.session-identity-required");
+    let author = HomeApp::render(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &home, &cfg, &home_view("u1", semio_framework_plugin::Locale::En)).expect("author render");
+    let author_json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(author).expect("author projection");
+    let foreign = HomeApp::render(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &home, &cfg, &home_view("u2", semio_framework_plugin::Locale::En)).expect("foreign render");
+    let foreign_json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(foreign).expect("foreign projection");
+    assert!(author_json.contains("manageSpace"));
+    assert!(!foreign_json.contains("manageSpace"));
 }

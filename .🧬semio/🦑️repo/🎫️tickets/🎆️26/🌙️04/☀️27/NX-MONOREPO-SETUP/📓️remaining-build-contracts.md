@@ -468,3 +468,27 @@ The native dependency import issue is resolved: nine uncached setup leaves now u
 ## Canonical WGPU And Explicit Cleanup — 2026-09-13
 
 Actual WGPU wasm publication passed and retired the duplicate aliases; see 📓️trunk-output-boundary.md. The full contract run progressed past the repaired taxonomy and failed at an outdated Hub configuration reference; the focused corrected Hub contract passes. Cargo no longer launches detached cleanup after native tasks, with red/green native proof in 📓️cargo-cleanup-boundary.md. Active-use-safe retention, WGPU runtime extension isolation and other listed goal gaps remain open.
+
+The refreshed audit completed in 28.1 seconds: 704 projects, 7,295 commands, 7,904 artifact records and zero automated findings. This does not close the manual retention/activation/CI/platform gaps. The current full-suite retry includes the new Cargo cleanup regression and corrected Hub configuration contract.
+
+## Resident Bun Reload Fix — 2026-09-13
+
+The full-suite retry exposed a Bun module cache loop after graph implementation edits. The owned stalled process was stopped and a bounded actual-graph regression reproduced the issue. Native Bun and Node now agree after graph policy/implementation changes and helper rejection/recovery; taxonomy participates in the revision too. See 📓️graph-revision-runtime.md. This is a runtime reload fix, not a completed monorepo qualification.
+
+## Runtime Namespace And Test Owner Follow-Up (2026-09-13)
+
+WGPU live extension publication now uses renderer/profile/variant namespaces and content receipts, with explicit uncached Nx output ownership. Its server consumes the corresponding installation and the existing font producer directly. Eight native Nx namespaces, warm receipt stability, deleted-state reconstruction and native Vite font delivery pass; see 📓️wgpu-runtime-isolation.md. Actual puzzle3d activation and full suite validation are running. Native nested activation, audited build-script source inputs, active reclamation, installed CI lanes and platform qualification remain open.
+
+The previous 5m18s full run reached the stale OS Dev test extraction (fixed in this change). A subsequent 9.4s run reached a stale Cargo NativeScript owner assertion after another extraction; that test now discovers the definition through esbuild and its native Cargo regression passed in 6.9 seconds. Both failures were explicit assertions, not the prior resident graph reload loop.
+
+## Native Runtime Follow-Up (2026-09-13)
+
+The native consumer now has generated variant/profile preparation, run and smoke targets. Its nested Nx activation was removed, so browser compiler/boot/worker generation is absent from the native prerequisite graph. The runtime publisher selects raw component-model WASM and matching descriptors instead of handing the native loader JCO core files from the browser deployment directory. Native Nx restoration, profile invalidation, live asset responsiveness, child/grandchild cancellation and protected environment checks pass; 122 real playground closures match the graphlib oracle. See 📓️native-runtime-graph.md.
+
+The actual WGPU dev compiler passed again after the current pack/codec edits settled. Actual Puzzle 3D native publication passed using existing completed artifacts with cache/dependency execution bypassed expressly for that publication check. Full current-source native activation, release compiler qualification and painting remain open. The publisher currently duplicates component bytes per variant/profile; a compact manifest consuming existing producer outputs is still needed to remove that cost.
+
+Active cleanup remains unchanged and unsafe for concurrent producers/readers. Installed Nx invocation hooks alone cannot solve this without holding completed native stores for entire dev sessions or misattributing daemon-owned leases. See 📓️active-retention-lifecycle.md. No destructive pruning was performed. Installed CI lanes, native Windows/Linux/devcontainer qualification, root composite cleanup and custom build-script input narrowing remain open.
+
+Compact native publication and its Rust reader are implemented and qualified by repo:test (4m14s full pass), the actual native renderer build (3m06s), and actual Puzzle 3D publication (558 manifest/ownership bytes). Native shell smoke remains open: the headless generic executor does not pump mounted renderer I/O sessions, unlike the winit frame owner. The failed smoke invocation was cancelled and its owned processes exited. Active-safe retention, CI lanes, remaining nested orchestration, custom build-script input closure and platform/clean-machine qualification remain outstanding.
+
+The subsequent native repeat found a new owned Flow publication contract without previewTarget. See 📓️flow-publication-contract.md for its overlapping declaration writers and required producer separation. The earlier 4m14s full suite is a measured prior-source pass, not a claim that the later shared taxonomy is valid.

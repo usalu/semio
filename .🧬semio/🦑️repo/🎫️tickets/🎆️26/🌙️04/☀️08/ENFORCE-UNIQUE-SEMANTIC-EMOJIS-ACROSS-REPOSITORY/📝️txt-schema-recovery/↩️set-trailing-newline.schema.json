@@ -3,9 +3,7 @@
   "title": "SetTrailingNewlineMutation",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "value"
-  ],
+  "required": ["value"],
   "properties": {
     "value": {
       "type": "boolean"

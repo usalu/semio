@@ -5,7 +5,38 @@
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🌎️hub/**/*.rs",
-      "{projectRoot}/**/*"
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/{🟦️.ts,🏗️staging/🟦️.ts}",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts"
+    ],
+    "hubFoundationSources": [
+      "{workspaceRoot}/🌎️hub/🏗️build/🛂staging-environment/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🧪️tests/🧬️schema/🛂expectation/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/📡️framing/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/🛂authentication/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/🏃️execution/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🔐️auth/📤️credential-delivery/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/📇️directory/📣️publication/🧪️tests/🧾️ordered-append-broadcast/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🔐️auth/🧪️tests/🧭️credential-source-order/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🔐️auth/🧪️tests/🧭️credential-source-order/🔮️oracles/🦀️.rs",
+      "{workspaceRoot}/🌎️hub/🧪️tests/🧱️foundation-source/🏃️execution/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/💡️inference/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🧬️schema/🧱️foundation-source/🔣️.json",
+      "{workspaceRoot}/🌎️hub/🧫️fixtures/🧱️foundation-source/🔣️.json",
+      "{workspaceRoot}/🌎️hub/🧪️tests/🧱️foundation-source/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/🧫️fixtures/{🚇️pipe-v1,⏳️idle-admission-v1}/🔣️.json",
+      "{workspaceRoot}/🌎️hub/🔐️auth/{🧬️schema/🔣️.json,🧫️fixtures/🔑️capability-v1/🔣️.json}",
+      "{workspaceRoot}/🌎️hub/📇️directory/{🦀️.rs,🧫️fixtures/📣️ordered-append-broadcast-v1/🔣️.json}",
+      "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/{📜️script.ts,📋️project.json,Cargo.toml,🦀️.rs}",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/{🧭️routing/🟦️.ts,🎛️owned-execution/🟦️.ts}",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/{🦀️.rs,📜️script.ts}",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/{🏗️bootstrap/🦀️.rs,🏠️workspace/🦀️.rs,🏠️workspace/🔗️remote/🦀️.rs,📦️packages/🦀️rust/📜️script.ts}",
+      "{workspaceRoot}/.vscode/{🧩️launch.seed.jsonc,launch.json}"
     ]
   },
   "targets": {
@@ -496,6 +527,18 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts directory-ordered-publication-check"
+      },
+      "outputs": []
+    },
+    "foundation-source-check": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "hubFoundationSources"
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts foundation-source-check"
       },
       "outputs": []
     },

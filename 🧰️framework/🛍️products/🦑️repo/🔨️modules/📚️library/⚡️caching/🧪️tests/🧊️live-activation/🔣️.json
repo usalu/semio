@@ -2,6 +2,9 @@
   "project": "@semio-tech/framework-os-dev",
   "variant": "fixture",
   "profile": "dev",
+  "renderers": ["react", "wgpu"],
+  "profiles": ["dev", "release"],
+  "variants": ["fixture", "another"],
   "plugin": "sample",
   "payload": "prepared component bytes",
   "cycles": [

@@ -1,8 +1,6 @@
 #!/usr/bin/env bun
-import { createHash, createHmac, randomBytes, timingSafeEqual, webcrypto } from "node:crypto";
+import { createHash, randomBytes, timingSafeEqual, webcrypto } from "node:crypto";
 import { chmodSync, closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
-import { createServer } from "node:net";
-import { tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
 import type { Duplex } from "node:stream";
@@ -10,7 +8,7 @@ import Ajv from "ajv";
 import { requireMcpBinary } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
 import { canonicalJson } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
 import { cargoTargetDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { buildCargoArtifacts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts";
+import { buildCargoArtifacts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 import { repoCacheDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { blake3Hex } from "../../../🧰️framework/🔨️modules/🔏️hash/🟦️.ts";
 import {
@@ -65,6 +63,7 @@ import { SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES, SPACE_ARTIFACT_CREATION_MAX_
 import { foldAll as foldDirectoryIndexEvents } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️.ts";
 import { artifactFrontierIsGenesisForV1, artifactFrontierIsEditedForV1, descriptorDigestEncodingV1, validDocumentIndexEntryV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 import type { TestBrowserHostRootsV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/🟦️.ts";
+import { stageTestBrowserHostV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/🏗️staging/🟦️.ts";
 import { produceFreshComponentV1, testFreshComponentStagingV1, testFreshComponentProcessV1, testFreshComponentSourceEpochV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
 import { type FreshBuildControlV1, type FreshComponentReceiptV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts";
 import { verifyFreshCatalogPackageV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts";
@@ -90,34 +89,21 @@ import {
   readStableBuildFile,
 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { hubSchemaExport } from "../🟦️typescript/🟦️.ts";
-
-function exactCargoStageEnvironments() {
-  return {
-    env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" },
-    nativeEnv: { RUST_MIN_STACK: "268435456" },
-  };
-}
-
-//#region 🧬️Scope-owned schema resolution
-
-/** 🧾️ One fixture-declared negative expectation: the stage that rejects it and the reason code. */
-export type HubFixtureExpectationV1 = { readonly stage: "contract" | "domain" | "bounds"; readonly result: "accepted" | "rejected"; readonly code: string };
-
-/** ✅️ Enforces one fixture-declared expectation against the observed contract-stage outcome. */
-export function assertHubFixtureExpectation(name: string, expectation: HubFixtureExpectationV1, admitted: boolean): void {
-  if (expectation.result === "rejected" && expectation.stage === "contract" && admitted) throw new Error(`${name}: contract stage admitted ${expectation.code}`);
-  if (expectation.result === "accepted" && !admitted) throw new Error(`${name}: contract stage rejected ${expectation.code}`);
-}
-
-//#endregion 🧬️Scope-owned schema resolution
-
-const LOCAL_BOOTSTRAP_SCHEMA = "semio.hub.local-bootstrap/v1";
-const LOCAL_BOOTSTRAP_DOMAIN = "semio/hub/local-bootstrap/v1\0";
-const LOCAL_BOOTSTRAP_FRAME_MAX = 16 * 1024;
-const LOCAL_BOOTSTRAP_DEADLINE_MS = 15_000;
-const LOCAL_READINESS_DEADLINE_MS = 30_000;
-type LocalClientClass = "native" | "mcp" | "react-relay" | "admin-relay";
-type LocalProfile = { readonly profileId: string; readonly subject: string; readonly displayName: string; readonly allowedClientClasses: readonly LocalClientClass[] };
+import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
+import { orderedDirectoryPublicationOracle } from "../../📇️directory/📣️publication/🧪️tests/🧾️ordered-append-broadcast/🟦️.ts";
+import { DIRECT_CHILD_BENIGN_ENV_KEY, DIRECT_CHILD_BENIGN_ENV_VALUE, deliverCredentialEnvelopeToChild, deliverMcpCredentialEnvelope, deliverNativeCredentialEnvelope, directChildEnvironment, sealedDirectChildEnvironment } from "../../🔐️auth/📤️credential-delivery/🟦️.ts";
+import { proveMcpCredentialSourceOrder, proveNativeCredentialSourceOrder } from "../../🔐️auth/🧪️tests/🧭️credential-source-order/🟦️.ts";
+import { assertHubFixtureExpectation, type HubFixtureExpectationV1 } from "../../🧪️tests/🧬️schema/🛂expectation/🟦️.ts";
+import { HubFoundationSourceScript } from "../../🧪️tests/🧱️foundation-source/🏃️execution/🟦️.ts";
+import { HubSocketGrantCommandSourceScript } from "../../🧪️tests/🧱️socket-grant-command-source/🏃️execution/🟦️.ts";
+import { proveScopedDirectorySocketRevocationFixture } from "../../📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🧾️fixture-verification/🟦️.ts";
+import { SocketGrantCheckScript } from "../../📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🏃️execution/🟦️.ts";
+import { localRelayExecutionTargetAsset, localRelayInferencePath, localRelaySpaceArtifactCreationPath, localRelayUpstreamPath } from "../../🚀️local-relay/🧭️routing/🟦️.ts";
+import { issueLocalCredential } from "../../🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
+import { authenticatedFrame, LOCAL_BOOTSTRAP_SCHEMA, type LocalClientClass, type LocalProfile, verifyAuthenticatedFrame } from "../../🚀️local-bootstrap/🛂authentication/🟦️.ts";
+import { LOCAL_BOOTSTRAP_DEADLINE_MS, LOCAL_BOOTSTRAP_FRAME_MAX, LocalFrameReader, writeLocalFrame } from "../../🚀️local-bootstrap/📡️framing/🟦️.ts";
+import { finishLocalHub, freeLoopbackPort, hubBinaryPath, hubDevBinaryPath, LOCAL_READINESS_DEADLINE_MS, type LocalHubRun, startLocalHub, waitForChildExit, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
+import { GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES } from "../../💡️inference/🧬️schema/🟦️.ts";
 type AdminLiveJourneyFixture = {
   readonly schema: "semio.hub.admin-live-journey/v1";
   readonly profile: { readonly profileId: string; readonly subject: string; readonly displayName: string };
@@ -134,81 +120,6 @@ type LocalBrowserRelayOptions = {
   readonly binding?: { readonly port: number; readonly secret: Buffer };
 };
 type LocalAdminRelay = { readonly url: string; stop: () => Promise<void> };
-
-type OrderedAppendBroadcastFixture = {
-  readonly schema: "semio.hub.directory.ordered-append-broadcast/v1";
-  readonly maximumEventsPerDecision: 2;
-  readonly cases: readonly {
-    readonly id: string;
-    readonly persistedSequences: readonly number[];
-    readonly appendSucceeds: boolean;
-    readonly expectedBroadcastSequences: readonly number[];
-  }[];
-};
-
-/** 📣️ Validates the neutral append/broadcast law and the exact single-writer production seam. */
-export function orderedDirectoryPublicationOracle(repoRoot: string): number {
-  const base = join(repoRoot, "🌎️hub/📇️directory/🧫️fixtures/📣️ordered-append-broadcast-v1");
-  const fixture = JSON.parse(readFileSync(join(base, "🔣️.json"), "utf8")) as OrderedAppendBroadcastFixture;
-  const caseIds = ["concurrent-single-events", "paired-user-member-events", "append-failure", "empty-idempotent-decision"] as const;
-  if (fixture.schema !== "semio.hub.directory.ordered-append-broadcast/v1" || fixture.maximumEventsPerDecision !== 2) throw new Error("ordered directory publication fixture envelope drift");
-  if (fixture.cases.length !== caseIds.length || caseIds.some((id, index) => fixture.cases[index]?.id !== id)) throw new Error("ordered directory publication fixture case inventory drift");
-  if (new Set(fixture.cases.map((row) => row.id)).size !== fixture.cases.length) throw new Error("ordered directory publication fixture has duplicate cases");
-  for (const row of fixture.cases) {
-    const sequences = [...row.persistedSequences, ...row.expectedBroadcastSequences];
-    if (typeof row.appendSucceeds !== "boolean" || sequences.some((value) => !Number.isSafeInteger(value) || value < 1)) throw new Error(`ordered directory publication fixture row is not a bounded decision: ${row.id}`);
-  }
-  for (const row of fixture.cases) {
-    const expected = row.appendSucceeds ? row.persistedSequences : [];
-    if (JSON.stringify(expected) !== JSON.stringify(row.expectedBroadcastSequences)) throw new Error(`ordered directory publication oracle differs for ${row.id}`);
-    if (row.persistedSequences.length > fixture.maximumEventsPerDecision) throw new Error(`ordered directory publication fixture exceeds its decision bound for ${row.id}`);
-  }
-  const source = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🦀️.rs"), "utf8");
-  const body = (text: string, name: string): string => {
-    const signature = text.indexOf(`fn ${name}(`);
-    if (signature < 0) return "";
-    const start = text.indexOf("{", signature);
-    let depth = 0;
-    for (let index = start; index < text.length; index += 1) {
-      if (text[index] === "{") depth += 1;
-      else if (text[index] === "}" && --depth === 0) return text.slice(start + 1, index);
-    }
-    return "";
-  };
-  const exact = (text: string): boolean => {
-    const append = body(text, "append_and_publish_locked");
-    const publish = body(text, "publish_persisted_locked");
-    const common = ["execute", "execute_create_space_with_id", "execute_artifact_authority"].map((name) => body(text, name));
-    const checkpoint = body(text, "publish_reserved_artifact_checkpoint");
-    const invite = body(text, "redeem_invite");
-    const idempotent = body(text, "execute_idempotent");
-    const ordered = (method: string, steps: readonly string[]): boolean => {
-      let previous = -1;
-      return !method.includes("drop(clock)") && steps.every((step) => { const index = method.indexOf(step); if (index <= previous) return false; previous = index; return true; });
-    };
-    return (
-      append.indexOf("self.dir.append_events(events).await?") >= 0 &&
-      append.indexOf("self.dir.append_events(events).await?") < append.indexOf("self.publish_persisted_locked(clock, persisted)") &&
-      publish.includes("for event in &persisted") &&
-      publish.includes("self.tx.send(DirectoryStreamMessage::Event { event: Box::new(event.clone()) })") &&
-      common.every((method) => method.includes("self.append_and_publish_locked(&clock,") && !method.includes("drop(clock)")) &&
-      ordered(invite, ["self.write.lock().await", "self.dir.redeem_invite_atomic(", "InviteRedemptionCommit::NewlyCommitted", "self.publish_persisted_locked(&clock, persisted)"]) &&
-      ordered(idempotent, ["self.write.lock().await", "claim_or_read_directory_command_receipt(", "append_decided_events(", "complete_directory_command_receipt(", "self.publish_persisted_locked(&clock, persisted)"]) &&
-      checkpoint.includes("self.publish_persisted_locked(&clock, persisted)") &&
-      !checkpoint.includes("drop(clock)")
-    );
-  };
-  if (!exact(source)) throw new Error("directory append and broadcast do not share one writer-guard lifetime");
-  const hostiles = [
-    source.replace("self.append_and_publish_locked(&clock, &decision.events).await?", "drop(clock); self.dir.append_events(&decision.events).await?"),
-    source.replace("self.publish_persisted_locked(clock, persisted)", "drop(clock); persisted"),
-    source.replace("self.publish_persisted_locked(&clock, persisted)", "drop(clock); persisted"),
-    source.replace("let committed = self.dir.redeem_invite_atomic(", "drop(clock); let committed = self.dir.redeem_invite_atomic("),
-    source.replace("let persisted = match self.dir.append_decided_events(", "drop(clock); let persisted = match self.dir.append_decided_events("),
-  ];
-  for (const hostile of hostiles) if (exact(hostile)) throw new Error("directory ordered-publication oracle accepted an unlocked append or fanout");
-  return fixture.cases.length + hostiles.length;
-}
 
 const LOCAL_RELAY_MAX_BODY_BYTES = 1024 * 1024;
 const LOCAL_RELAY_MAX_STATIC_RESPONSE_BYTES = 4 * 1024 * 1024;
@@ -435,67 +346,6 @@ function startLocalAdminRelay(hubOrigin: string, envelope: Record<string, any>, 
       return stopPromise;
     },
   };
-}
-
-function localRelayExecutionTargetAsset(path: string): "manifest" | "component" | "descriptor" | "browser-actor" | undefined {
-  const matched = /^\/spaces\/([^/]+)\/documents\/([^/]+)\/execution-target\/(manifest|component|descriptor|browser-actor)$/u.exec(path);
-  if (!matched) return undefined;
-  try {
-    for (const encoded of [matched[1]!, matched[2]!]) {
-      const id = decodeURIComponent(encoded);
-      if (!id || id === "." || id === ".." || encodeURIComponent(id) !== encoded || /[\/\\\u0000-\u0020\u007f%?#]/u.test(id)) return undefined;
-    }
-    return matched[3] as "manifest" | "component" | "descriptor" | "browser-actor";
-  } catch {
-    return undefined;
-  }
-}
-
-function localRelaySpaceArtifactCreationPath(method: string, path: string): boolean {
-  const matched = /^\/spaces\/([^/]+)\/artifact-creations(?:\/([0-9a-f]{32})(\/cancel)?)?$/u.exec(path);
-  if (!matched) return false;
-  try {
-    const spaceId = decodeURIComponent(matched[1]!);
-    if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$/u.test(spaceId) || encodeURIComponent(spaceId) !== matched[1]) return false;
-  } catch {
-    return false;
-  }
-  const requestId = matched[2];
-  if (requestId === "0".repeat(32)) return false;
-  const cancel = matched[3] !== undefined;
-  return (method === "POST" && requestId === undefined && !cancel) || (method === "GET" && !cancel) || (method === "POST" && requestId !== undefined && cancel);
-}
-
-function localRelayInferencePath(method: string, path: string): boolean {
-  const matched = /^\/spaces\/([^/]+)\/documents\/([^/]+)\/inference\/gis-map\/(.+)$/u.exec(path);
-  if (!matched) return false;
-  try {
-    for (const encoded of [matched[1]!, matched[2]!]) {
-      const id = decodeURIComponent(encoded);
-      if (!/^[A-Za-z0-9._:-]{1,96}$/u.test(id) || id === "." || id === ".." || encodeURIComponent(id) !== encoded) return false;
-    }
-  } catch { return false; }
-  const suffix = matched[3]!;
-  if (method === "POST") return /^(?:jobs|jobs\/reconcile|jobs\/[0-9a-f]{32}\/(?:cancel|approval)|approval-undos)$/u.test(suffix);
-  const events = /^jobs\/[0-9a-f]{32}\/events\?after=(0|[1-9][0-9]*)$/u.exec(suffix);
-  return method === "GET" && events !== null && Number(events[1]) <= GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR;
-}
-
-function localRelayUpstreamPath(method: string, url: URL): string | undefined {
-  if (!url.pathname.startsWith("/_semio/hub/")) return undefined;
-  const upstream = url.pathname.slice("/_semio/hub".length);
-  const noQuery = url.search === "";
-  if (method === "GET" && upstream === "/auth/sessions/me" && noQuery) return upstream;
-  if (method === "GET" && (upstream === "/directory/spaces" || /^\/directory\/spaces\/[^/]+$/u.test(upstream)) && noQuery) return upstream;
-  if (method === "GET" && upstream === "/directory/events" && [...url.searchParams].length === 1 && /^\d+$/u.test(url.searchParams.get("since") ?? "")) return `${upstream}?since=${url.searchParams.get("since")}`;
-  if (method === "POST" && (upstream === "/directory/commands" || upstream === "/directory/socket-grants") && noQuery) return upstream;
-  if (method === "POST" && /^\/directory\/spaces\/[^/]+\/documents\/[^/]+\/socket-grants$/u.test(upstream) && noQuery) return upstream;
-  if (method === "POST" && /^\/spaces\/[^/]+\/documents\/[^/]+\/open-plan$/u.test(upstream) && noQuery) return upstream;
-  if (method === "POST" && /^\/spaces\/[^/]+\/documents\/[^/]+\/socket-grants$/u.test(upstream) && noQuery) return upstream;
-  if (method === "POST" && localRelayExecutionTargetAsset(upstream) && noQuery) return upstream;
-  if (noQuery && localRelaySpaceArtifactCreationPath(method, upstream)) return upstream;
-  if (localRelayInferencePath(method, upstream + url.search)) return upstream + url.search;
-  return undefined;
 }
 
 async function readLocalRelayBody(request: Request, maximumBytes = LOCAL_RELAY_MAX_BODY_BYTES, signal?: AbortSignal): Promise<Uint8Array | undefined> {
@@ -736,324 +586,6 @@ function startLocalBrowserRelay(hubOrigin: string, uiOrigin: string, envelope: R
   };
 }
 
-class LocalFrameReader {
-  private retained = Buffer.alloc(0);
-  private readonly waiters: Array<{ resolve: (value: Record<string, any>) => void; reject: (error: Error) => void; timer: ReturnType<typeof setTimeout> }> = [];
-
-  constructor(
-    private readonly pipe: Duplex,
-    private readonly frameMaximumBytes = LOCAL_BOOTSTRAP_FRAME_MAX,
-    private readonly label = "local bootstrap",
-  ) {
-    pipe.on("data", (chunk: Buffer) => {
-      if (this.retained.length + chunk.length > this.frameMaximumBytes * 2) return this.fail(new Error(`${this.label} retained input exceeded fixed bound`));
-      this.retained = Buffer.concat([this.retained, chunk]);
-      this.drain();
-    });
-    pipe.once("error", () => this.fail(new Error(`${this.label} endpoint failed`)));
-    pipe.once("end", () => this.fail(new Error(`${this.label} endpoint reached EOF`)));
-    pipe.once("close", () => this.fail(new Error(`${this.label} endpoint closed`)));
-  }
-
-  read(deadlineMs = LOCAL_BOOTSTRAP_DEADLINE_MS): Promise<Record<string, any>> {
-    if (!Number.isSafeInteger(deadlineMs) || deadlineMs <= 0) return Promise.reject(new Error("local bootstrap frame deadline invalid"));
-    if (this.waiters.length >= 8) return Promise.reject(new Error("local bootstrap outstanding read bound exceeded"));
-    return new Promise((resolveRead, rejectRead) => {
-      const waiter = {
-        resolve: resolveRead,
-        reject: rejectRead,
-        timer: setTimeout(() => {
-          const index = this.waiters.indexOf(waiter);
-          if (index >= 0) this.waiters.splice(index, 1);
-          rejectRead(new Error("local bootstrap frame deadline exceeded"));
-        }, deadlineMs),
-      };
-      this.waiters.push(waiter);
-      this.drain();
-    });
-  }
-
-  private drain(): void {
-    while (this.waiters.length > 0 && this.retained.length >= 4) {
-      const length = this.retained.readUInt32BE(0);
-      if (length === 0 || length + 4 > this.frameMaximumBytes) return this.fail(new Error(`${this.label} frame exceeded fixed bound`));
-      if (this.retained.length < length + 4) return;
-      const bytes = this.retained.subarray(4, length + 4);
-      this.retained = this.retained.subarray(length + 4);
-      const waiter = this.waiters.shift()!;
-      clearTimeout(waiter.timer);
-      try {
-        waiter.resolve(JSON.parse(bytes.toString("utf8")));
-      } catch {
-        waiter.reject(new Error(`${this.label} frame was not JSON`));
-      }
-    }
-  }
-
-  private fail(error: Error): void {
-    for (const waiter of this.waiters.splice(0)) {
-      clearTimeout(waiter.timer);
-      waiter.reject(error);
-    }
-    this.retained.fill(0);
-    this.retained = Buffer.alloc(0);
-  }
-}
-
-function hmacProof(channelKey: Buffer, unsigned: object): string {
-  const canonical = Buffer.from(JSON.stringify(unsigned));
-  if (canonical.length + 4 > LOCAL_BOOTSTRAP_FRAME_MAX) throw new Error("local bootstrap canonical frame exceeded fixed bound");
-  const length = Buffer.alloc(4);
-  length.writeUInt32BE(canonical.length);
-  const proof = createHmac("sha256", channelKey).update(LOCAL_BOOTSTRAP_DOMAIN).update(length).update(canonical).digest("hex");
-  canonical.fill(0);
-  return proof;
-}
-
-function authenticatedFrame(channelKey: Buffer, unsigned: Record<string, unknown>): Record<string, unknown> {
-  return { ...unsigned, proof: hmacProof(channelKey, unsigned) };
-}
-
-function writeLocalFrame(pipe: Duplex, value: object): Promise<void> {
-  const bytes = Buffer.from(JSON.stringify(value));
-  if (bytes.length === 0 || bytes.length + 4 > LOCAL_BOOTSTRAP_FRAME_MAX) throw new Error("local bootstrap frame exceeded fixed bound");
-  const frame = Buffer.allocUnsafe(bytes.length + 4);
-  frame.writeUInt32BE(bytes.length, 0);
-  bytes.copy(frame, 4);
-  bytes.fill(0);
-  return new Promise((resolveWrite, rejectWrite) => {
-    pipe.write(frame, (error?: Error | null) => {
-      frame.fill(0);
-      if (error) rejectWrite(new Error("local bootstrap write failed"));
-      else resolveWrite();
-    });
-  });
-}
-
-function verifyAuthenticatedFrame(channelKey: Buffer, frame: Record<string, unknown>): void {
-  const proof = frame.proof;
-  if (typeof proof !== "string" || !/^[0-9a-f]{64}$/.test(proof)) throw new Error("local bootstrap response proof invalid");
-  const unsigned = { ...frame };
-  delete unsigned.proof;
-  const expected = hmacProof(channelKey, unsigned);
-  const left = Buffer.from(expected, "hex");
-  const right = Buffer.from(proof, "hex");
-  let difference = 0;
-  for (let index = 0; index < left.length; index++) difference |= left[index]! ^ right[index]!;
-  left.fill(0);
-  right.fill(0);
-  if (difference !== 0) throw new Error("local bootstrap response proof invalid");
-}
-
-async function freeLoopbackPort(): Promise<number> {
-  const server = createServer();
-  await new Promise<void>((resolveListen, rejectListen) => server.once("error", rejectListen).listen(0, "127.0.0.1", resolveListen));
-  const address = server.address();
-  if (!address || typeof address === "string") throw new Error("local bootstrap launcher could not allocate a loopback port");
-  await new Promise<void>((resolveClose, rejectClose) => server.close((error) => (error ? rejectClose(error) : resolveClose())));
-  return address.port;
-}
-
-function hubBinaryPath(repoRoot: string): string {
-  return join(cargoTargetDirectory(repoRoot), "debug", process.platform === "win32" ? "os-hub.exe" : "os-hub");
-}
-
-/** 📦️ Reads the Nx-cached dev-profile deliverable (`os-hub:build-dev`, staged like `framework-renderer-wgpu:native-build`) that `DevScript` execs instead of building inline. */
-function hubDevBinaryPath(root: string): string {
-  const path = join(root, "dist", "build-dev", process.platform === "win32" ? "os-hub.exe" : "os-hub");
-  if (!existsSync(path)) throw new Error(`Missing Nx-staged os-hub dev binary: ${path}; run: bun nx run os-hub:build-dev`);
-  return path;
-}
-
-type LocalHubRun = {
-  readonly child: ChildProcess;
-  readonly pipe: Duplex;
-  readonly reader: LocalFrameReader;
-  readonly channelKey: Buffer;
-  readonly runId: string;
-  readonly port: number;
-  readonly runRoot: string;
-  readonly output: () => string;
-  readonly inferenceCheckpointPipe?: Duplex;
-  readonly inferenceCheckpointReader?: LocalFrameReader;
-  inferenceCheckpointEnteredJobId?: string;
-  inferenceCheckpointProgress?: Readonly<{ progressCursor: number; completed: number; total: number }>;
-  inferenceCheckpointReleased?: boolean;
-  finishPromise?: Promise<void>;
-};
-
-async function startLocalHub(
-  repoRoot: string,
-  root: string,
-  profiles: readonly LocalProfile[],
-  options: { readonly port?: number; readonly dataDir?: string; readonly capture?: boolean; readonly adminSubjects?: readonly string[]; readonly isolatedSecuritySmoke?: boolean; readonly binaryPath?: string; readonly inferenceCheckpointControl?: boolean } = {},
-): Promise<LocalHubRun> {
-  if (profiles.length === 0 || profiles.length > 8) throw new Error("local bootstrap profiles must contain 1..=8 entries");
-  const runId = randomBytes(16).toString("hex");
-  const channelKey = randomBytes(32);
-  const runRoot = mkdtempSync(join(tmpdir(), "semio-hub-run-"));
-  if (process.platform !== "win32") chmodSync(runRoot, 0o700);
-  const port = options.port ?? (await freeLoopbackPort());
-  const captured: Buffer[] = [];
-  let capturedBytes = 0;
-  const capture = (chunk: Buffer): void => {
-    const remaining = 1024 * 1024 - capturedBytes;
-    if (remaining <= 0) return;
-    const retained = Buffer.from(chunk.subarray(0, remaining));
-    captured.push(retained);
-    capturedBytes += retained.length;
-  };
-  const env: Record<string, string | undefined> = {
-    ...process.env,
-    OS_HUB_MODE: "development",
-    OS_HUB_BIND: "127.0.0.1",
-    OS_HUB_PORT: String(port),
-    OS_HUB_DATA: options.dataDir ?? join(runRoot, "data"),
-  };
-  if (options.inferenceCheckpointControl) env.OS_HUB_TEST_INFERENCE_CHECKPOINT_FD = "4";
-  else delete env.OS_HUB_TEST_INFERENCE_CHECKPOINT_FD;
-  delete env.OS_HUB_TRUSTED_CATALOG_BUNDLE;
-  delete env.OS_HUB_TRUSTED_CATALOG_PROFILE;
-  delete env.OS_HUB_ADMIN_TOKEN;
-  delete env.S_USER;
-  for (const name of Object.keys(env)) if (/^S_.*TOKEN$/.test(name)) delete env[name];
-  if (options.isolatedSecuritySmoke) {
-    env.OS_HUB_STORAGE_BACKEND = "fs";
-    env.OS_HUB_DIRECTORY_BACKEND = "sqlite";
-    delete env.OS_HUB_ADMIN_DIR;
-  }
-  if (options.adminSubjects?.length) env.OS_HUB_ADMIN_SUBJECTS = options.adminSubjects.join(",");
-  else delete env.OS_HUB_ADMIN_SUBJECTS;
-  const outputMode: "pipe" | "inherit" = options.capture ? "pipe" : "inherit";
-  const child = spawn(options.binaryPath ?? hubBinaryPath(repoRoot), [], { cwd: root, env, shell: false, stdio: ["ignore", outputMode, outputMode, "pipe", options.inferenceCheckpointControl ? "pipe" : "ignore"] });
-  if (options.capture) {
-    child.stdout?.on("data", capture);
-    child.stderr?.on("data", capture);
-  }
-  const pipe = child.stdio[3] as Duplex;
-  const inferenceCheckpointPipe = options.inferenceCheckpointControl ? (child.stdio[4] as Duplex) : undefined;
-  if (!pipe || (options.inferenceCheckpointControl && !inferenceCheckpointPipe)) {
-    channelKey.fill(0);
-    child.kill();
-    await waitForChildExit(child, 2_000).catch(() => undefined);
-    rmSync(runRoot, { recursive: true, force: true });
-    throw new Error("local bootstrap inherited endpoint was not created");
-  }
-  const reader = new LocalFrameReader(pipe);
-  const run: LocalHubRun = {
-    child,
-    pipe,
-    reader,
-    channelKey,
-    runId,
-    port,
-    runRoot,
-    output: () => Buffer.concat(captured).toString("utf8"),
-    inferenceCheckpointPipe,
-    inferenceCheckpointReader: inferenceCheckpointPipe ? new LocalFrameReader(inferenceCheckpointPipe, GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES + 4, "GIS inference checkpoint control") : undefined,
-    inferenceCheckpointReleased: inferenceCheckpointPipe ? false : undefined,
-  };
-  try {
-    const initialize = {
-      schema: LOCAL_BOOTSTRAP_SCHEMA,
-      kind: "initialize",
-      runId,
-      channelKey: channelKey.toString("hex"),
-      profiles,
-    };
-    await writeLocalFrame(pipe, initialize);
-    initialize.channelKey = "";
-    const now = Date.now();
-    const helloExchange = randomBytes(16).toString("hex");
-    const hello = authenticatedFrame(channelKey, {
-      schema: LOCAL_BOOTSTRAP_SCHEMA,
-      kind: "hello",
-      runId,
-      sequence: 1,
-      exchangeId: helloExchange,
-      issuedAt: now,
-      expiresAt: now + LOCAL_BOOTSTRAP_DEADLINE_MS,
-      launcherNonce: randomBytes(32).toString("hex"),
-    });
-    await writeLocalFrame(pipe, hello);
-    const accepted = await reader.read();
-    verifyAuthenticatedFrame(channelKey, accepted);
-    if (accepted.schema !== LOCAL_BOOTSTRAP_SCHEMA || accepted.kind !== "hello-accepted" || accepted.runId !== runId || accepted.exchangeId !== helloExchange || accepted.sequence !== 1) {
-      throw new Error("local bootstrap mutual hello binding mismatch");
-    }
-    return run;
-  } catch (error) {
-    let diagnostics = run.output().slice(-2_048).replaceAll(channelKey.toString("hex"), "<channel-key-redacted>");
-    for (const profile of profiles) diagnostics = diagnostics.replaceAll(profile.subject, "<profile-subject-redacted>");
-    const status = child.exitCode;
-    await finishLocalHub(run);
-    throw new Error(`local bootstrap handshake failed (child status ${status ?? "running"}): ${error instanceof Error ? error.message : "unknown"}\n${diagnostics}`);
-  }
-}
-
-async function issueLocalCredential(run: LocalHubRun, profileId: string, clientClass: LocalClientClass, sequence = 2, exchangeId = randomBytes(16).toString("hex")): Promise<Record<string, any>> {
-  const now = Date.now();
-  const issue = authenticatedFrame(run.channelKey, {
-    schema: LOCAL_BOOTSTRAP_SCHEMA,
-    kind: "issue",
-    runId: run.runId,
-    sequence,
-    exchangeId,
-    issuedAt: now,
-    expiresAt: now + LOCAL_BOOTSTRAP_DEADLINE_MS,
-    profileId,
-    deviceInstanceId: `${clientClass}-launcher`,
-    clientClass,
-  });
-  await writeLocalFrame(run.pipe, issue);
-  const envelope = await run.reader.read();
-  verifyAuthenticatedFrame(run.channelKey, envelope);
-  if (
-    envelope.schema !== "semio.hub.local-credential-envelope/v1" ||
-    envelope.runId !== run.runId ||
-    envelope.exchangeId !== exchangeId ||
-    envelope.profileId !== profileId ||
-    envelope.clientClass !== clientClass ||
-    envelope.sessionKind !== "development-local" ||
-    !Number.isSafeInteger(envelope.authorizationGeneration) ||
-    envelope.authorizationGeneration < 1
-  ) {
-    throw new Error("local credential envelope binding mismatch");
-  }
-  return envelope;
-}
-
-async function waitForReadiness(run: LocalHubRun, bootstrapSecuritySmoke = false): Promise<Record<string, any>> {
-  const deadline = Date.now() + LOCAL_READINESS_DEADLINE_MS;
-  while (Date.now() < deadline) {
-    if (run.child.exitCode !== null) throw new Error("hub exited before readiness");
-    try {
-      const response = await fetch(`http://127.0.0.1:${run.port}/readyz`, { signal: AbortSignal.timeout(1000) });
-      const body = (await response.json()) as Record<string, any>;
-      if (
-        body.schema !== "semio.hub.readiness/v1" ||
-        body.runId !== run.runId ||
-        body.mode !== "development" ||
-        body.bindScope !== "loopback" ||
-        body.authentication?.kind !== "local-bootstrap-pipe-v1" ||
-        body.authentication?.publicSessionIssuance !== false
-      ) {
-        throw new Error("hub readiness binding mismatch");
-      }
-      const componentsReady = body.directory?.ready === true && body.storage?.ready === true && body.adminAssets?.ready === true;
-      const fullyReady = response.status === 200 && body.status === "ready" && body.authentication.bootstrapReady === true && componentsReady && body.artifactAuthority?.ready === true;
-      const bootstrapReadyOnly = response.status === 503 && body.status === "not-ready" && body.authentication.bootstrapReady === true && componentsReady && body.artifactAuthority?.ready === false;
-      if (fullyReady || (bootstrapSecuritySmoke && bootstrapReadyOnly)) {
-        return body;
-      }
-    } catch (error) {
-      if (error instanceof Error && error.message === "hub readiness binding mismatch") throw error;
-    }
-    await Bun.sleep(50);
-  }
-  throw new Error("hub readiness deadline exceeded");
-}
-
 async function waitForUiReadiness(origin: string, child: ChildProcess): Promise<void> {
   const deadline = Date.now() + LOCAL_READINESS_DEADLINE_MS;
   while (Date.now() < deadline) {
@@ -1067,119 +599,11 @@ async function waitForUiReadiness(origin: string, child: ChildProcess): Promise<
   throw new Error("secure local UI readiness deadline exceeded");
 }
 
-async function waitForChildExit(child: ChildProcess, deadlineMs = LOCAL_BOOTSTRAP_DEADLINE_MS + 2_000): Promise<void> {
-  if (child.exitCode !== null) return;
-  await Promise.race([
-    new Promise<void>((resolveExit) => child.once("exit", () => resolveExit())),
-    Bun.sleep(deadlineMs).then(() => {
-      throw new Error("hub child exit deadline exceeded");
-    }),
-  ]);
-}
-
 function openExternalBrowser(url: string): void {
   const command = process.platform === "darwin" ? "open" : process.platform === "win32" ? "cmd.exe" : "xdg-open";
   const args = process.platform === "win32" ? ["/d", "/s", "/c", "start", "", url] : [url];
   const opener = spawn(command, args, { shell: false, detached: true, stdio: "ignore" });
   opener.unref();
-}
-
-async function finishLocalHub(run: LocalHubRun): Promise<void> {
-  if (run.finishPromise) return run.finishPromise;
-  run.finishPromise = (async () => {
-    run.pipe.end();
-    run.inferenceCheckpointPipe?.end();
-    run.channelKey.fill(0);
-    if (run.child.exitCode === null) {
-      try {
-        await waitForChildExit(run.child, 2_000);
-      } catch {
-        run.child.kill();
-        await waitForChildExit(run.child, 2_000).catch(() => undefined);
-      }
-    }
-    rmSync(run.runRoot, { recursive: true, force: true });
-  })();
-  return run.finishPromise;
-}
-
-const DIRECT_CHILD_BENIGN_ENV_KEY = "SEMIO_DIRECT_CHILD_BENIGN";
-const DIRECT_CHILD_BENIGN_ENV_VALUE = "preserved";
-
-function isProtectedDirectChildEnvironmentKey(key: string): boolean {
-  const normalized = key.toUpperCase();
-  return (
-    normalized === "S_USER" ||
-    normalized === "VITE_S_USER" ||
-    normalized === "S_HUB_URL" ||
-    normalized.includes("TOKEN") ||
-    normalized.includes("SESSION") ||
-    normalized.includes("CREDENTIAL") ||
-    normalized.includes("BEARER") ||
-    normalized.includes("CAPABILITY") ||
-    normalized.includes("AUTHORIZATION") ||
-    normalized.includes("COOKIE")
-  );
-}
-
-function sealedDirectChildEnvironment(source: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
-  const environment: NodeJS.ProcessEnv = {};
-  for (const [key, value] of Object.entries(source)) {
-    if (!isProtectedDirectChildEnvironmentKey(key)) environment[key] = value;
-  }
-  environment[DIRECT_CHILD_BENIGN_ENV_KEY] = DIRECT_CHILD_BENIGN_ENV_VALUE;
-  return environment;
-}
-
-function directChildEnvironment(source: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
-  const environment = sealedDirectChildEnvironment(source);
-  environment.S_LOCAL_CREDENTIAL_FD = "3";
-  return environment;
-}
-
-async function deliverCredentialEnvelopeToChild(
-  executable: string,
-  args: readonly string[],
-  envelope: Record<string, any>,
-  expectedClass: "native" | "mcp",
-  hubOrigin: string,
-  environmentSource: NodeJS.ProcessEnv = process.env,
-): Promise<ChildProcess> {
-  if (envelope.clientClass !== expectedClass) throw new Error("credential envelope client class mismatch");
-  if (!/^http:\/\/127\.0\.0\.1:\d+$/u.test(hubOrigin)) throw new Error("credential hub origin mismatch");
-  const child = spawn(executable, [...args], { shell: false, env: directChildEnvironment(environmentSource), stdio: expectedClass === "mcp" ? ["pipe", "pipe", "pipe", "pipe"] : ["ignore", "pipe", "pipe", "pipe"] });
-  const pipe = child.stdio[3] as Duplex;
-  if (!pipe) {
-    child.kill();
-    envelope.capability = "";
-    throw new Error("one-shot credential endpoint was not created");
-  }
-  try {
-    await writeLocalFrame(pipe, {
-      schema: "semio.local.consumer-credential/v1",
-      clientClass: expectedClass,
-      hubOrigin,
-      sessionId: envelope.sessionId,
-      authorizationGeneration: envelope.authorizationGeneration,
-      expiresAtMs: envelope.expiresAt,
-      capability: envelope.capability,
-    });
-    pipe.end();
-    return child;
-  } catch (error) {
-    child.kill();
-    throw error;
-  } finally {
-    envelope.capability = "";
-  }
-}
-
-export async function deliverNativeCredentialEnvelope(executable: string, args: readonly string[], envelope: Record<string, any>, hubOrigin: string): Promise<ChildProcess> {
-  return deliverCredentialEnvelopeToChild(executable, args, envelope, "native", hubOrigin);
-}
-
-export async function deliverMcpCredentialEnvelope(executable: string, args: readonly string[], envelope: Record<string, any>, hubOrigin: string): Promise<ChildProcess> {
-  return deliverCredentialEnvelopeToChild(executable, args, envelope, "mcp", hubOrigin);
 }
 
 function nativeWgpuExecutable(repoRoot: string): string {
@@ -1188,37 +612,6 @@ function nativeWgpuExecutable(repoRoot: string): string {
 
 function mcpExecutable(repoRoot: string): string {
   return requireMcpBinary(repoRoot);
-}
-
-function proveMcpCredentialSourceOrder(repoRoot: string): void {
-  const entrypoint = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏗️bootstrap/🦀️.rs"), "utf8");
-  const workspace = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs"), "utf8");
-  const remote = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🔗️remote/🦀️.rs"), "utf8");
-  const directory = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), "utf8");
-  const runnerPaths = ["🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/📜️script.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/📜️script.ts"].map((path) => join(repoRoot, path)).filter(existsSync);
-  if (runnerPaths.length !== 1) throw new Error("MCP runner path must resolve to exactly one physical source");
-  const runner = readFileSync(runnerPaths[0]!, "utf8");
-  const launch = readFileSync(join(repoRoot, ".vscode/🧩️launch.seed.jsonc"), "utf8");
-  const claim = entrypoint.indexOf('claim_inherited_local_hub_credential("mcp")');
-  if (claim < 0 || claim > entrypoint.indexOf("parse_args()") || !entrypoint.includes('return value == "3";')) throw new Error("MCP credential marker/claim no longer rejects non-fd3 values before argv parsing and workspace activation");
-  if (entrypoint.includes('"--token" => hub.') || remote.includes("set_token(") || remote.includes("DirectoryClient::new(transport, base_url)")) throw new Error("MCP hub binding regained a raw credential carrier");
-  const openHub = workspace.indexOf("pub fn open_hub(");
-  const injectCredential = workspace.indexOf("set_local_hub_credential(credential)", openHub);
-  const injectGrantSource = workspace.indexOf("set_hub_socket_grant_source(grant_source)", openHub);
-  const returnWorkspace = workspace.indexOf("Ok(workspace)", openHub);
-  if (openHub < 0 || injectCredential < openHub || injectGrantSource < injectCredential || returnWorkspace < injectGrantSource) throw new Error("MCP ArtifactHost credential/grant injection no longer precedes document access");
-  if (!workspace.includes(`PROBE_PACK_SCHEMA_HASH: &str = "${MCP_PROBE_PACK_SCHEMA_HASH}"`) || !workspace.includes("authenticated_probe_document_is_known") || !workspace.includes("Some(probe_record_spec())"))
-    throw new Error("MCP authenticated probe document schema binding drift");
-  if (
-    workspace.includes("probe_document_socket_surface") ||
-    workspace.includes("set_document_execution_target_lease(") ||
-    !workspace.includes("artifact_document_key(artifact_id)") ||
-    !workspace.includes("surface: Some(PROBE_SURFACE_ID.to_string())")
-  )
-    throw new Error("MCP probe document transport regained a forgeable local execution-target claim or lost its full-scope requested surface");
-  if (!directory.includes('"/directory/socket-grants"') || !directory.includes('"/directory/socket/v1"') || !directory.includes("directory_socket_hello_v1()")) throw new Error("MCP directory binding no longer uses the v1 receipt/tag7 protocol");
-  if (runner.includes('runCmd("cargo", ["run"') || !runner.includes("runCmd(requireMcpBinary")) throw new Error("MCP runner is not a direct binary supervisor");
-  if (!launch.includes("os-hub:dev-secure-mcp")) throw new Error("MCP secure direct-child launch is not registered in the source seed");
 }
 
 const MCP_PROBE_SCHEMA = "os.agent.probe/v1";
@@ -1889,20 +1282,6 @@ async function proveNonFd3CredentialMarkerRejection(executable: string, client: 
   });
   await waitForChildExit(child, 5_000);
   if (child.exitCode === 0 || output.includes(poison) || diagnostics.includes(poison)) throw new Error(`${client} entrypoint admitted or leaked a non-fd3 credential marker`);
-}
-
-function proveNativeCredentialSourceOrder(repoRoot: string): void {
-  const entrypoint = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs"), "utf8");
-  const credential = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), "utf8");
-  const runner = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts"), "utf8");
-  const launch = readFileSync(join(repoRoot, ".vscode/🧩️launch.seed.jsonc"), "utf8");
-  const claim = entrypoint.indexOf('claim_inherited_local_hub_credential("native")');
-  if (claim < 0 || claim > entrypoint.indexOf('arg_value("--plugin")') || claim > entrypoint.indexOf("run_native(") || !entrypoint.includes('return value == "3";'))
-    throw new Error("WGPU credential marker/claim no longer rejects non-fd3 values before plugin/renderer activation");
-  if (!credential.includes("FD_CLOEXEC") || !credential.includes("_close(3)") || !entrypoint.includes("--assert-no-local-credential-state") || !entrypoint.includes("protected_credential_environment_is_absent"))
-    throw new Error("WGPU inherited descriptor/environment seal law drift");
-  if (runner.includes('const cargoArgs = ["run"]') || !runner.includes("runCmdStatus(nativeBinaryPath(ship)")) throw new Error("WGPU native runner is not a direct binary supervisor");
-  if (!launch.includes("os-hub:dev-secure-native")) throw new Error("WGPU secure direct-child launch is not registered in the source seed");
 }
 
 async function proveNativeSocketGrantActor(repoRoot: string): Promise<void> {
@@ -3142,87 +2521,6 @@ class ArtifactCasCheckScript extends BundleScript {
     runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "--lib", "artifact_chunk_cas", ...segments], this.root, { ...process.env, RUST_MIN_STACK: "16777216" });
     runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub", "artifact_cas_maintenance", ...segments], this.root, { ...process.env, RUST_MIN_STACK: "16777216" });
     runCargo(["check", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub"], this.root);
-  }
-}
-
-async function proveScopedDirectorySocketRevocationFixture(repoRoot: string): Promise<void> {
-  const root = join(repoRoot, "🌎️hub", "📇️directory", "🧫️fixtures", "🔌️scoped-socket-revocation-v1");
-  const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const scopeContract = hubSchemaExport(repoRoot, "schema://hub.directory/DirectorySocketScopeV1");
-  const messageContract = hubSchemaExport(repoRoot, "schema://hub.directory/DirectorySocketMessageRoutingV1");
-  if (fixture.schema !== "semio.hub.directory-scoped-socket-revocation/v1") throw new Error("scoped directory socket fixture schema drift");
-  if (Object.keys(fixture).sort().join(",") !== "clientCloses,limits,schema,scope,vectors") throw new Error("scoped directory socket fixture envelope drift");
-  if (fixture.limits.identifierBytes !== 4096 || fixture.limits.grantRequestBytes !== 256 || fixture.limits.authorizationDeadlineMs !== 2000) throw new Error("scoped directory socket bound drift");
-  if (fixture.vectors.length < 12 || fixture.vectors.length > 32 || new Set(fixture.vectors.map((vector: any) => vector.name)).size !== fixture.vectors.length) throw new Error("scoped directory socket vector inventory drift");
-  if (fixture.clientCloses.length !== 3 || new Set(fixture.clientCloses.map((close: any) => close.code)).size !== 3) throw new Error("scoped directory socket client-close inventory drift");
-  if (!scopeContract(fixture.scope)) throw new Error("scoped directory socket fixture scope is not the owned socket scope contract");
-  for (const vector of fixture.vectors) {
-    if (!scopeContract(vector.grantScope) || !scopeContract(vector.urlScope)) throw new Error(`scoped directory socket vector scope is not the owned contract: ${vector.name}`);
-    if (!messageContract(vector.message)) throw new Error(`scoped directory socket vector message is not the owned routing contract: ${vector.name}`);
-    if (!["active", "unauthorized", "unavailable"].includes(vector.binding) || !["send", "removal", "neither"].includes(vector.gateWinner)) throw new Error(`scoped directory socket vector taxonomy drift: ${vector.name}`);
-    if (!["deliver", "skip-unrelated", "close-unauthorized", "close-unavailable", "deny-before-upgrade"].includes(vector.expected)) throw new Error(`scoped directory socket expectation taxonomy drift: ${vector.name}`);
-  }
-  const sameScope = (left: any, right: any): boolean => left.spaceId === right.spaceId && left.documentId === right.documentId;
-  const scopedClasses = new Set(["document-announced", "checkpoint", "retention", "rebootstrap", "presence", "connection"]);
-  const decide = (vector: any): { outcome: string; closeCode: number | null; cursorAdvance: boolean; textFrames: number } => {
-    if (!sameScope(vector.grantScope, vector.urlScope)) return { outcome: "deny-before-upgrade", closeCode: 4401, cursorAdvance: false, textFrames: 0 };
-    if (vector.gateWinner === "removal" || vector.binding === "unauthorized" || !vector.descriptor || !vector.live) return { outcome: "close-unauthorized", closeCode: 4401, cursorAdvance: false, textFrames: 0 };
-    if (vector.binding === "unavailable") return { outcome: "close-unavailable", closeCode: 1013, cursorAdvance: false, textFrames: 0 };
-    if (!scopedClasses.has(vector.message.class) || vector.message.scope === null || !sameScope(vector.grantScope, vector.message.scope)) return { outcome: "skip-unrelated", closeCode: null, cursorAdvance: false, textFrames: 0 };
-    return { outcome: "deliver", closeCode: null, cursorAdvance: ["document-announced", "checkpoint", "retention"].includes(vector.message.class), textFrames: 1 };
-  };
-  for (const vector of fixture.vectors) {
-    const actual = decide(vector);
-    const expected = { outcome: vector.expected, closeCode: vector.closeCode, cursorAdvance: vector.cursorAdvance, textFrames: vector.textFrames };
-    if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error(`scoped directory decision differs for ${vector.name}: ${JSON.stringify(actual)}`);
-  }
-  const hostile = [
-    { ...fixture.scope, spaceId: "x".repeat(129) },
-    { ...fixture.scope, documentId: "" },
-    { ...fixture.scope, extra: true },
-  ];
-  if (hostile.some((candidate) => scopeContract(candidate))) throw new Error("scoped directory socket scope contract admitted a hostile boundary mutation");
-  if (messageContract({ ...fixture.vectors[0].message, extra: true }) || messageContract({ ...fixture.vectors[0].message, class: "forged" })) throw new Error("scoped directory socket routing contract admitted a hostile message");
-  for (const close of fixture.clientCloses) {
-    const terminal = close.code === 4401;
-    if (terminal !== close.terminal || close.reconnect === terminal) throw new Error(`scoped directory client close mismatch for ${close.code}`);
-  }
-  const relayPath = "/directory/spaces/space%2Fa/documents/document%20b/socket-grants";
-  if (localRelayUpstreamPath("POST", new URL(`http://relay.invalid/_semio/hub${relayPath}`)) !== relayPath) throw new Error("scoped directory relay denied the exact bounded grant path");
-  if (localRelayUpstreamPath("POST", new URL(`http://relay.invalid/_semio/hub${relayPath}?extra=1`)) !== undefined) throw new Error("scoped directory relay admitted an arbitrary query");
-  if (localRelayUpstreamPath("GET", new URL(`http://relay.invalid/_semio/hub${relayPath}`)) !== undefined) throw new Error("scoped directory relay admitted the wrong method");
-  console.log(`scoped-directory-socket-oracle: hub.directory-exports=2 decisions=${fixture.vectors.length} hostiles=${hostile.length} client-closes=${fixture.clientCloses.length} relay=3`);
-}
-
-class SocketGrantCheckScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    await proveScopedDirectorySocketRevocationFixture(this.repoRoot);
-    if (segments[0] === "oracle") return;
-    const tests = [
-      "tests::scoped_directory_socket_ledger_indexes_and_invalidates_exact_membership",
-      "tests::scoped_directory_socket_message_matching_is_body_exact_and_removal_private",
-      "tests::scoped_directory_socket_admin_removal_uses_the_same_membership_fence",
-      "tests::scoped_directory_socket_route_rejects_scope_substitution_and_rest_removal_closes_without_event",
-      "tests::scoped_directory_socket_removal_and_delivery_have_one_total_membership_order",
-      "tests::directory_socket_forced_lag_is_scope_authorized_and_closes_1013",
-      "tests::document_socket_forced_lag_sends_verified_control_then_closes_1013",
-      "tests::socket_admin_user_gate_rejects_a_late_same_user_grant_after_batch_revoke",
-      "tests::socket_directory_revoke_after_admission_suppresses_replay_without_deadlock",
-      "tests::socket_directory_visibility_requires_membership_even_for_public_spaces",
-      "tests::socket_grant_directory_route_uses_credential_free_hello_and_revokes_live",
-      "tests::socket_grant_document_route_is_exact_replay_safe_actor_bound_and_revoke_live",
-      "tests::socket_grant_ledger_is_bounded_single_consume_restart_scoped_and_revoke_race_safe",
-      "tests::socket_grant_revoke_and_welcome_have_a_bounded_binding_linearization",
-      "tests::socket_grant_revoke_before_broadcast_authorization_suppresses_frame",
-      "tests::socket_grant_revoke_before_command_admission_has_no_storage_effect",
-      "tests::socket_grant_revoke_before_lag_authorization_reads_no_private_control",
-    ];
-    const env = { ...process.env, RUST_MIN_STACK: "268435456" };
-    for (const test of tests) runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub", test, "--", "--exact", "--test-threads=1"], this.root, env);
-    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "--lib", "typed_capabilities_match_neutral_sha256_vectors_and_fixed_boundaries", "--", "--test-threads=1"], this.root, env);
-    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "--lib", "socket_binding_reads_are_exact_id_generation_selector_scope_and_status", "--", "--test-threads=1"], this.root, env);
-    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "-p", "semio-framework-replication", "client_frame_socket_hello_v1_round_trips_without_credentials", "--", "--test-threads=1"], this.root, env);
-    runCargo(["check", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub"], this.root, env);
   }
 }
 
@@ -7051,7 +6349,6 @@ async function proveInferenceWalChainFixture(repoRoot: string): Promise<void> {
   if (fixture.schema !== "semio.hub.inference-wal-chain-fixture/v1") throw new Error("WAL chain fixture envelope drifted");
   if (fixture.cases.length !== 14 || new Set(fixture.cases.map((test: { name: string }) => test.name)).size !== 14 || fixture.hashingOwnership.length !== 3 || fixture.retainedBoundaries.length !== 2)
     throw new Error("WAL chain fixture inventory drifted");
-  const { blake3Hex } = await import(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"));
   const digest = (bytes: Buffer): Buffer => Buffer.from(blake3Hex(bytes), "hex");
   const crc = (bytes: Buffer): number => {
     let value = 0xffffffff;
@@ -9194,7 +8491,6 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
     !fixture.hostile.includes("stale-plan-generation")
   )
     throw new Error("trusted bootstrap bounds/cancellation/cross-generation rotation corpus drifted");
-  const { blake3Hex } = await import(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"));
   if (blake3Hex(Buffer.from("abc")) !== "6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85") throw new Error("trusted bootstrap first-party BLAKE3 known answer mismatch");
   const descriptor: Record<string, any> = {
     descriptorVersion: 1,
@@ -11495,7 +10791,6 @@ async function callGisMapProcessMcp(client: GisMapProcessMcpClientV1, method: st
 }
 
 const GIS_INFERENCE_CHECKPOINT_CONTROL_SCHEMA = "semio.hub.gis-inference-checkpoint-control/v1";
-const GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES = 256;
 
 type GisInferenceCheckpointControlFrameV1 = Readonly<{
   schema: typeof GIS_INFERENCE_CHECKPOINT_CONTROL_SCHEMA;
@@ -12060,10 +11355,8 @@ async function proveGisMapTwoAuthorShellProcess(repoRoot: string, hubRoot: strin
   assert.equal(target?.artifactKind, "s.gis.gismap");
   assert.equal(selected?.component?.path, "packages/gis/component.wasm");
   assert.equal(selected?.descriptor?.path, "packages/gis/descriptor.semio");
-  const devScript = await import(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"));
-  if (typeof devScript.stageTestBrowserHostV1 !== "function") throw new Error("ticket browser-host staging facade is absent");
   const generationRoot = dirname(prepared.current.bundlePath);
-  const browserHost = await devScript.stageTestBrowserHostV1({
+  const browserHost = await stageTestBrowserHostV1({
     artifactRoot: prepared.artifactRoot,
     selectedGis: {
       generationId: prepared.current.generationId,
@@ -17183,6 +16476,8 @@ class SpaceJourneyCheckScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir)
   .register("setup", SetupScript)
+  .register("foundation-source-check", HubFoundationSourceScript)
+  .register("socket-grant-command-source-check", HubSocketGrantCommandSourceScript)
   .register("test", TestScript)
   .register("artifact-cas-check", ArtifactCasCheckScript)
   .register("socket-grant-check", SocketGrantCheckScript)

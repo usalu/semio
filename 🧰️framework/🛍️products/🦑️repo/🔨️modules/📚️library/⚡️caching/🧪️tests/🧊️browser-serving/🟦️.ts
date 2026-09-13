@@ -29,14 +29,14 @@ export async function testWgpuBrowserServing(workspace: string, output: string):
   try {
     for (const profile of fixture.profiles) {
       const app = join(root, profile), publicRoot = join(app, "public"), config = join(app, "⚙️vite.config.ts");
-      const roots = Object.fromEntries(["boot", "worker", "compiler", "modules", "extensions"].map(name => [name, join(app, name)]));
+      const roots = Object.fromEntries(["boot", "worker", "compiler", "modules", "extensions", "fonts"].map(name => [name, join(app, name)]));
       const reloadFile = join(roots.modules, "reload.json");
       for (const route of fixture.routes) { put(join(roots[route.root], route.file), route.content); put(join(publicRoot, decodeURI(route.url)), route.content); }
       const wasm = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]);
       writeFileSync(join(roots.compiler, "semio-framework-os-renderer-wgpu_bg.wasm"), wasm);
       put(reloadFile, "0");
       copyFileSync(template, join(app, "🌐️.html"));
-      put(config, 'import { createWgpuBrowserConfig } from ' + JSON.stringify(implementation) + ';\nexport default () => createWgpuBrowserConfig(' + JSON.stringify({ workspace: root, root: app, profile, compilerRoot: roots.compiler, moduleRoot: roots.modules, extensionRoot: roots.extensions, bootRoot: roots.boot, workerRoot: roots.worker, reloadFile, assets: [] }) + ');\n');
+      put(config, 'import { createWgpuBrowserConfig } from ' + JSON.stringify(implementation) + ';\nexport default () => createWgpuBrowserConfig(' + JSON.stringify({ workspace: root, root: app, profile, compilerRoot: roots.compiler, moduleRoot: roots.modules, extensionRoot: roots.extensions, fontRoot: roots.fonts, bootRoot: roots.boot, workerRoot: roots.worker, reloadFile, assets: [] }) + ');\n');
       const controller = new AbortController();
       let ready!: (url: string) => void;
       const readiness = new Promise<string>(resolve => ready = resolve);

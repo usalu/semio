@@ -841,6 +841,34 @@ fn cap_plus_one_returns_the_exact_tree_owner() {
     assert_eq!(returned.root.children.get(0).unwrap().key.as_ptr(), pointer);
 }
 
+/// 🎟️ Holds process-wide resident credit until the aggregate has less than ONE reconcile floor price left,
+/// so a law can reach the refusal a reconcile reservation answers without mounting one surface per 8 MiB —
+/// which is no longer possible now that a reservation is priced by its own body (ticket
+/// 26/09/02/PUZZLE-3D-END-TO-END wave B58).
+fn fill_resident_aggregate() -> Vec<ui_contract::UiResidentPermit> {
+    let floor = semio_framework_ui_runtime::SURFACE_RECONCILE_FLOOR_BYTES;
+    let mut remaining = ui_contract::UI_RESIDENT_AGGREGATE_BYTES - ui_contract::UiResidentPermit::snapshot().expect("readable ledger").bytes;
+    let mut held = Vec::new();
+    while remaining >= floor {
+        let bytes = ui_contract::UI_RESIDENT_SURFACE_BYTES.min(remaining - floor + 1);
+        let mut permit = None;
+        assert_eq!(
+            ui_contract::UiResidentPermit::try_reserve(ui_contract::UiResidentLimits { items: 1, bytes }, &mut permit, ui_contract::UiResidentPermit::required_reservation_bytes()),
+            Ok(true),
+            "an aggregate filler of {bytes} bytes must be admitted with {remaining} free"
+        );
+        held.push(permit.expect("admitted aggregate filler"));
+        remaining -= bytes;
+    }
+    held
+}
+
+fn release_resident_aggregate(held: Vec<ui_contract::UiResidentPermit>) {
+    for mut permit in held {
+        assert!(permit.close_step(1).expect("exact filler return").complete);
+    }
+}
+
 #[test]
 fn mounted_reservation_precedes_tree_and_cap_plus_one_returns_exact_owner() {
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -848,6 +876,7 @@ fn mounted_reservation_precedes_tree_and_cap_plus_one_returns_exact_owner() {
     let law = &fixture["residentCapacity"];
     let aggregate = semio_framework_ui_runtime::SURFACE_RECONCILE_AGGREGATE_BYTES;
     let limits = semio_framework_ui_runtime::SurfaceReconcileLimits::default();
+    let floor = semio_framework_ui_runtime::SURFACE_RECONCILE_FLOOR_BYTES;
     assert_eq!(aggregate, fixture["aggregateCeilingBytes"].as_u64().unwrap() as usize);
     assert_eq!(limits.max_bytes, law["reservationBytes"].as_u64().unwrap() as usize);
     for row in law["cases"].as_array().unwrap() {
@@ -865,26 +894,26 @@ fn mounted_reservation_precedes_tree_and_cap_plus_one_returns_exact_owner() {
 
     let fixed_bytes = ui_contract::UiResidentPermit::fixed_backing_bytes().unwrap();
     let capacity = aggregate.checked_sub(fixed_bytes).unwrap() / limits.max_bytes;
-    assert!(capacity > 0 && capacity < SURFACE_RECONCILE_ADMISSION_SLOTS);
+    assert!(capacity > 0 && capacity < SURFACE_RECONCILE_ADMISSION_SLOTS, "the CEILING-sized capacity is a handful of surfaces: {capacity}");
+    assert!(floor * SURFACE_RECONCILE_ADMISSION_SLOTS < aggregate - fixed_bytes, "the floor price must admit every admission slot at once: {floor} against {}", aggregate - fixed_bytes);
     let first = ui_contract::UiResidentPermit::snapshot().unwrap();
-    assert_eq!(first, ui_contract::UiResidentSnapshot { bytes: fixed_bytes + limits.max_bytes, items: limits.max_items, used_slots: 1 });
-    for index in 0..capacity - 1 {
-        tracker.retain_unadmitted(format!("{index}:queued"), leaf("root", "queued")).expect("fixed unadmitted slot");
-        let admitted = index + 2;
-        assert_eq!(
-            ui_contract::UiResidentPermit::snapshot().unwrap(),
-            ui_contract::UiResidentSnapshot { bytes: fixed_bytes.checked_add(admitted.checked_mul(limits.max_bytes).unwrap()).unwrap(), items: admitted.checked_mul(limits.max_items).unwrap(), used_slots: admitted }
-        );
-    }
+    assert_eq!(
+        first,
+        ui_contract::UiResidentSnapshot { bytes: fixed_bytes + floor, items: semio_framework_ui_runtime::SURFACE_RECONCILE_FLOOR_ITEMS, used_slots: 1 },
+        "one mounted reservation is priced at the reconcile FLOOR, never at the per-surface ceiling {}",
+        limits.max_bytes
+    );
+    let held = fill_resident_aggregate();
     let full = ui_contract::UiResidentPermit::snapshot().unwrap();
-    assert!(full.bytes <= aggregate && full.bytes.checked_add(limits.max_bytes).unwrap() > aggregate);
+    assert!(full.bytes <= aggregate && full.bytes.checked_add(floor).unwrap() > aggregate, "the aggregate must have less than one floor price left: {full:?}");
     let overflow = tree_with_owned_child("overflow");
     let overflow_pointer = overflow.root.children.get(0).unwrap().key.as_ptr();
     let (_, returned) = tracker.retain_unadmitted("66:queued".into(), overflow).expect_err("cap + 1 returns the exact tree");
     assert_eq!(returned.root.children.get(0).unwrap().key.as_ptr() == overflow_pointer, law["refusalPreservesTree"].as_bool().unwrap());
     assert!(reserve(&tracker, ui_contract::SurfaceId::try_from("67:mounted").expect("bounded surface")).is_err(), "render cannot materialize before a fixed slot exists");
     assert_eq!(ui_contract::UiResidentPermit::snapshot().unwrap(), full);
-    let keys: Vec<_> = std::iter::once(4).chain((0..capacity - 1).map(|index| u32::try_from(index).unwrap())).map(|instance| NativeCloseKey::fixture(instance, 1)).collect();
+    release_resident_aggregate(held);
+    let keys = [NativeCloseKey::fixture(4, 1)];
     for key in &keys {
         tracker.reserve_close_instance(*key).unwrap();
         tracker.activate_close_instance(*key).unwrap();
@@ -901,7 +930,7 @@ fn mounted_reservation_precedes_tree_and_cap_plus_one_returns_exact_owner() {
     }
     assert_eq!(tracker.terminal_is_empty(), law["terminal"].as_bool().unwrap());
     assert_eq!(ui_contract::UiResidentPermit::snapshot().unwrap(), ui_contract::UiResidentSnapshot { bytes: fixed_bytes, items: 0, used_slots: 0 });
-    eprintln!("[DEBUG] mounted-resident-capacity fixed={fixed_bytes} per={} accepted={capacity} full={} cap-plus-one=false exact-refusal=true restored={fixed_bytes}", limits.max_bytes, full.bytes);
+    eprintln!("[DEBUG] mounted-resident-capacity fixed={fixed_bytes} floor={floor} ceiling={} ceiling-sized-accepted={capacity} full={} cap-plus-one=false exact-refusal=true restored={fixed_bytes}", limits.max_bytes, full.bytes);
 }
 
 #[test]
@@ -1304,36 +1333,33 @@ fn an_alias_window_surface_the_host_never_acknowledges_does_not_block_the_retire
 /// 🦾️ This is the reading wave B48 residual 1 asked for and wave B54 §6.4 could not take: its census
 /// carried the single opaque word `registry-reservation-unavailable`, so the refusal that left six surfaces
 /// deferred and the reactor answering `more-work` 1 008 turns in a row could have been any of three
-/// different defects. The arithmetic is the point: one reservation asks for
-/// `SurfaceReconcileLimits::default().max_bytes` (`UI_RESIDENT_SURFACE_BYTES`, 8 MiB) of a
-/// `UI_RESIDENT_AGGREGATE_BYTES` (32 MiB) budget, so only a HANDFUL of surfaces can reconcile at once while
-/// a puzzle3d instance mounts thirteen — and the handback registry has `UI_RESIDENT_SLOTS * 6` slots, which
-/// is an order of magnitude more headroom. Every surface beyond the credit ceiling is refused, deferred and
-/// re-dirtied for ever, which is why one surface too many (the retired `<instance>:window` alias) could
-/// starve a whole session. Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B56.
+/// different defects. The handback registry has `UI_RESIDENT_SLOTS * 6` slots, an order of magnitude more
+/// headroom than the aggregate byte budget, so the credit ledger is always the table that runs out first.
+///
+/// 🧾️ WAVE B58 refinement: credit is now priced by the body a surface actually reconciles, so an aggregate
+/// full of CEILING-sized bodies is what it takes to refuse one — the arithmetic that used to hold for every
+/// surface (`UI_RESIDENT_AGGREGATE_BYTES` / `UI_RESIDENT_SURFACE_BYTES` = a handful, against a session that
+/// mounts thirteen) now holds only for bodies that genuinely fill the per-surface maximum. This law holds
+/// that many ceiling-sized reservations OUTRIGHT and then requires the refusal to name the ledger it came
+/// from; `thirteen_mounted_surfaces_at_their_real_sizes_all_hold_a_reconcile_reservation_at_once` pins the
+/// other half — that ordinary bodies are never refused at all.
 #[test]
 fn the_refused_reconcile_reservation_names_the_resident_credit_ledger_not_the_handback_registry() {
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let baseline = semio_framework_ui_runtime::surface_reconcile_registry_census();
     let ceiling = (ui_contract::UI_RESIDENT_AGGREGATE_BYTES - baseline.resident_bytes) / ui_contract::UI_RESIDENT_SURFACE_BYTES;
-    assert!(ceiling > 0 && ceiling < ui_contract::UI_RESIDENT_SLOTS, "the credit ceiling must be a handful of surfaces, not the slot count: {ceiling}");
+    assert!(ceiling > 0 && ceiling < ui_contract::UI_RESIDENT_SLOTS, "the ceiling-sized credit ceiling must be a handful of surfaces, not the slot count: {ceiling}");
+    let held = fill_resident_aggregate();
     let tracker = PatchTracker::new();
-    let mut grants = Vec::new();
-    for index in 0..ceiling {
-        let surface = ui_contract::SurfaceId::try_from(format!("51:surface-{index}")).expect("bounded surface");
-        grants.push(reserve(&tracker, surface).unwrap_or_else(|surface| panic!("surface {} is within the credit ceiling {ceiling}: {}", surface.as_ref(), tracker.debug_state())));
-    }
-    let over = ui_contract::SurfaceId::try_from(format!("51:surface-{ceiling}")).expect("bounded surface");
-    assert!(reserve(&tracker, over).is_err(), "the reservation past the credit ceiling must be refused: {}", tracker.debug_state());
+    let over = ui_contract::SurfaceId::try_from("51:surface-over").expect("bounded surface");
+    assert!(reserve(&tracker, over).is_err(), "a reconcile reservation must be refused once the aggregate is full of ceiling-sized bodies: {}", tracker.debug_state());
     let state = tracker.debug_state();
     assert!(state.contains("reserve_refusal=unmounted:registry-resident-credit-exhausted"), "the refusal must name the resident credit ledger, not an opaque registry — and a surface refused before it ever mounted has no slot to name: {state}");
     assert!(state.contains(&format!("of {}B", ui_contract::UI_RESIDENT_AGGREGATE_BYTES)), "the census must price the refusal against the aggregate budget: {state}");
     let refused_census = semio_framework_ui_runtime::surface_reconcile_registry_census();
     assert!(refused_census.handback_free > 0, "the handback registry must still have headroom when credit runs out: {refused_census:?}");
-    eprintln!("[DEBUG] credit ceiling={ceiling} surfaces; refusal={state}");
-    for grant in grants {
-        grant.cancel();
-    }
+    eprintln!("[DEBUG] ceiling-sized credit ceiling={ceiling} surfaces; refusal={state}");
+    release_resident_aggregate(held);
 }
 
 /// 🎫️ WAVE B56 LAW: after two hundred leftover-producing publications the process-wide reconcile
@@ -1404,9 +1430,14 @@ fn a_node_record_wider_than_the_copy_grant_still_retires_its_document_to_termina
 /// document node ceiling admits — the shape of a real pane body rather than a one-node fixture.
 fn sized_body(key: &str, bytes: usize) -> TreeNode {
     let filler = "n".repeat(480);
+    let rows = bytes.div_ceil(480).min(120);
     let mut root = leaf(key, "body").root;
-    for row in 0..bytes.div_ceil(480).min(120) {
-        root.children.try_push(leaf(&format!("{key}-{row}"), &filler).root).expect("bounded fixture row");
+    for group in 0..rows.div_ceil(30) {
+        let mut branch = leaf(&format!("{key}-group-{group}"), "group").root;
+        for row in (group * 30)..((group + 1) * 30).min(rows) {
+            branch.children.try_push(leaf(&format!("{key}-{row}"), &filler).root).expect("bounded fixture row");
+        }
+        root.children.try_push(branch).expect("bounded fixture group");
     }
     root
 }
@@ -1449,10 +1480,40 @@ fn thirteen_mounted_surfaces_at_their_real_sizes_all_hold_a_reconcile_reservatio
         census.resident_bytes - baseline.resident_bytes < mounted.len() * ui_contract::UI_RESIDENT_SURFACE_BYTES,
         "thirteen reservations priced at the per-surface ceiling cannot fit the aggregate, so they must be priced by their bodies: {census:?} against {baseline:?}"
     );
-    for surface in &mounted {
-        let patch = acknowledge_one_publication(&tracker, surface).unwrap_or_else(|| panic!("surface {surface} publishes its body: {}", tracker.debug_state()));
-        close_test_patch(patch);
+    let mut peak = census.resident_bytes;
+    let mut published = 0usize;
+    for _ in 0..1_048_576 {
+        tracker.drive_one();
+        peak = peak.max(semio_framework_ui_runtime::surface_reconcile_registry_census().resident_bytes);
+        if let Some(owner) = tracker.take_ready_patch() {
+            let (patch, authority) = publish_test(owner);
+            close_published(authority);
+            close_test_patch(patch);
+            published += 1;
+            if published == mounted.len() {
+                break;
+            }
+        }
     }
-    eprintln!("[DEBUG] thirteen surfaces admitted: {census:?} against baseline {baseline:?}");
+    assert_eq!(published, mounted.len(), "every mounted surface must publish its body within one turn set: {}", tracker.debug_state());
+    assert!(
+        peak - baseline.resident_bytes < mounted.len() * ui_contract::UI_RESIDENT_SURFACE_BYTES,
+        "thirteen concurrent reconciles must never hold thirteen per-surface ceilings: peak {peak} against baseline {} — {}",
+        baseline.resident_bytes,
+        tracker.debug_state()
+    );
+    eprintln!(
+        "[DEBUG] {} surfaces admitted at floor={}B each; reserved={}B for {} slots (mean {}B); peak while reconciling and publishing all of them={}B (mean {}B per surface) of {}B aggregate against a {}B per-surface ceiling; baseline={}B",
+        mounted.len(),
+        semio_framework_ui_runtime::SURFACE_RECONCILE_FLOOR_BYTES,
+        census.resident_bytes - baseline.resident_bytes,
+        census.resident_slots - baseline.resident_slots,
+        (census.resident_bytes - baseline.resident_bytes) / mounted.len(),
+        peak - baseline.resident_bytes,
+        (peak - baseline.resident_bytes) / mounted.len(),
+        ui_contract::UI_RESIDENT_AGGREGATE_BYTES,
+        ui_contract::UI_RESIDENT_SURFACE_BYTES,
+        baseline.resident_bytes
+    );
     close_instance_to_empty(&tracker, 58);
 }

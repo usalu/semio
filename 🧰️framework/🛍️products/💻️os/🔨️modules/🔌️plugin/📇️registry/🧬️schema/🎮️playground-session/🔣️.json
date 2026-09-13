@@ -10,11 +10,12 @@
     "default": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["variant", "sourcePath", "producerScript"],
+      "required": ["variant", "sourcePath", "producerScript", "producerSource"],
       "properties": {
         "variant": { "$ref": "#/$defs/variant" },
         "sourcePath": { "$ref": "#/$defs/repositoryPath" },
-        "producerScript": { "$ref": "#/$defs/repositoryPath" }
+        "producerScript": { "$ref": "#/$defs/repositoryPath" },
+        "producerSource": { "$ref": "#/$defs/repositoryPath" }
       }
     },
     "isolation": {

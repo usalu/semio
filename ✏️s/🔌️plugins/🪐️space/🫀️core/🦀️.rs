@@ -213,11 +213,7 @@ pub async fn register_studio_port(space_id: &str, port: Arc<dyn OsBackbonePort>)
 /// @emoji 🆕️ Mints a fresh draft space manifest (empty, no collections) for the default create path — a
 /// `SpaceSnapshot` document registered as a draft (`kind_id = "s.space"`) at `draft_uri(id)` on the
 /// ephemeral port, never on the real catalog port, never tracked as a `space://` catalog entry.
-/// `owner_id`/`owner_name` carry the real signed-in identity (ticket
-/// 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS — `HomeConfig.client_id`/`client_name`,
-/// contract §C3); empty strings fall back to the pre-ticket `"local"` guest identity, which is the
-/// correct behavior when there is no signed-in session (no hub reachable) — the local-only path this
-/// ticket's brief requires stays working unchanged in that case.
+/// `owner_id`/`owner_name` carry the signed-in identity selected by the caller's current host view.
 pub async fn create_and_register_ephemeral_studio(name: &str, owner_id: &str, owner_name: &str) -> String {
     let owner = SpaceUser { id: if owner_id.is_empty() { "local".into() } else { owner_id.into() }, name: if owner_name.is_empty() { name.into() } else { owner_name.into() }, avatar: None, role: SpaceRole::Author };
     let mut projection = empty_space_snapshot(name.trim(), SpaceKind::Atelier, SpaceVisibility::Private);
@@ -447,6 +443,19 @@ pub async fn list_all_space_catalog_entries() -> Vec<semio_framework_os::OsSpace
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️HomeSpaceRows
+/// 🪪️ Returns the current host-owned session identity only when both exact fields satisfy the shared
+/// view-context identifier contract.
+pub fn home_session_identity(view: &semio_framework_plugin::ViewModel) -> Option<&semio_framework_plugin::ViewSessionIdentity> {
+    let identity = view.session_identity.as_ref()?;
+    view_session_identity_valid(identity).then_some(identity)
+}
+
+/// 🪪️ Applies the shared view-context bounds to an already selected host session identity.
+pub fn view_session_identity_valid(identity: &semio_framework_plugin::ViewSessionIdentity) -> bool {
+    let admitted = |value: &str| !value.is_empty() && value.chars().count() <= semio_framework::VIEW_CONTEXT_IDENTIFIER_CHARS && !value.chars().any(|character| character.is_control());
+    admitted(&identity.user_id) && admitted(&identity.display_name)
+}
+
 // 🏠️ One row of the Home overview table — ticket
 // 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS: replaces the pre-ticket virtual-file-
 // system scene with a real table of every space, fed by the event-sourced hub directory read model
@@ -490,11 +499,11 @@ pub struct HomeSpaceRow {
 /// 🛂️ The caller's role in one folded space, or `None` when they are not a current member.
 pub use store::os_directory::DirectorySpaceRole;
 
-fn caller_role(space: &store::os_directory::DirectorySpace, client_id: &str) -> Option<DirectorySpaceRole> {
-    if client_id.is_empty() {
+fn caller_role(space: &store::os_directory::DirectorySpace, user_id: &str) -> Option<DirectorySpaceRole> {
+    if user_id.is_empty() {
         return None;
     }
-    space.members.iter().find(|member| member.user_id == client_id).map(|member| member.role)
+    space.members.iter().find(|member| member.user_id == user_id).map(|member| member.role)
 }
 
 async fn directory_kind_str(kind: store::os_directory::DirectorySpaceKind) -> &'static str {
@@ -531,7 +540,7 @@ async fn local_visibility_str(visibility: &SpaceVisibility) -> &'static str {
 /// (`origin: "local"`) — a hub row wins on an id collision (a space promoted from local to hub keeps
 /// its hub-confirmed data, never a stale local shadow). Contract §C0 row-id grammar for the e2e is
 /// `space:<id>`; callers building the table's `data-row-id` prepend that prefix to `HomeSpaceRow.id`.
-pub async fn home_space_rows(directory: &store::os_directory::DirectoryReadModel, client_id: &str) -> Vec<HomeSpaceRow> {
+pub async fn home_space_rows(directory: &store::os_directory::DirectoryReadModel, user_id: &str) -> Vec<HomeSpaceRow> {
     let mut seen = HashSet::new();
     let mut rows = Vec::new();
     for (id, space) in &directory.spaces {
@@ -544,7 +553,7 @@ pub async fn home_space_rows(directory: &store::os_directory::DirectoryReadModel
             members: space.view.member_count.to_string(),
             updated: space.view.updated_at_ms.to_string(),
             origin: "hub",
-            role: caller_role(space, client_id),
+            role: caller_role(space, user_id),
         });
     }
     for entry in list_all_space_catalog_entries().await {

@@ -23,7 +23,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️pack
  * Their owning modules live under `🔌️plugin/`, not in this bundle, so the gate belongs here rather than in
  * a per-case `atTestLevel` inside runtime source. */
 const WIT_MAPPING_IN_SOURCE = ["../../../🔌️plugin/📤️return/🟦️.ts", "../../../🔌️plugin/📥️poll/🏘️composition/🟦️.ts"];
-const inSource = ["📜️script.ts", ...(testLevelAtLeast("long") ? WIT_MAPPING_IN_SOURCE : [])];
+const inSource = testLevelAtLeast("long") ? WIT_MAPPING_IN_SOURCE : [];
 
 export default defineConfig({
   root: testRoot,
@@ -46,8 +46,8 @@ export default defineConfig({
     environment: process.env.SEMIO_BUILD_INSPECTION_OUTPUT ? "node" : testLevelAtLeast("long") ? "jsdom" : "node",
     // 🩹️ In-source files belong only in `includeSource`; listing them in BOTH keys made Vitest
     // collect them twice. Dedicated regression files remain ordinary `include` entries.
-    include: ["../../🧪️tests/🧹️config/🟦️.ts", "../../🧪️tests/🔌️staging-root/🟦️.ts"],
+    include: ["../../🧪️tests/🧹️config/🟦️.ts", "../../🧪️tests/🔌️staging-root/🟦️.ts", "../../🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts"],
     includeSource: inSource,
-    coverage: { include: ["📜️script.ts", ...WIT_MAPPING_IN_SOURCE] },
+    coverage: { include: ["../../**/🟦️.ts", ...WIT_MAPPING_IN_SOURCE] },
   },
 });

@@ -241,7 +241,7 @@ fn fem3d_numerical_fixed_owner_maximum_plus_one_refuses_unchanged_and_closes_one
     assert!(ids.close_admission_one());
 
     let mut model = MountedAnalysisModel::new();
-    assert_eq!(model.admit_node_one(MAXIMUM_FIELDS + 1), Err(crate::analyses::MountedAnalysisCapacityExceeded { requested: MAXIMUM_FIELDS + 1, maximum: crate::analyses::MOUNTED_ANALYSIS_NODE_SLOTS }));
+    assert_eq!(model.admit_node_one(MAXIMUM_FIELDS + 1, MOUNTED_ANALYSIS_BACKING_BYTES), Err(crate::analyses::MountedAnalysisFault::Capacity { requested: MAXIMUM_FIELDS + 1, maximum: crate::analyses::MOUNTED_ANALYSIS_NODE_SLOTS }));
     assert_eq!(model.nodes_len(), 0);
     let node = Node { id: "returned-node".into(), pos: [0.0; 3] };
     let node_pointer = node.id.as_ptr();
@@ -269,7 +269,7 @@ fn fem3d_numerical_child_absent_lanes_retain_later_close_owners() {
         child.close_lane = lane;
         if row["model"].as_bool().unwrap() {
             let model = child.model.as_mut().unwrap();
-            assert!(!model.admit_node_one(1).unwrap());
+            while !model.admit_node_one(1, MOUNTED_ANALYSIS_BACKING_BYTES).unwrap().complete {}
             model.push_node(Node { id: "retained-model-node".into(), pos: [0.0; 3] }).unwrap();
         } else { child.model = None; }
         if row["nodeIds"].as_bool().unwrap() {

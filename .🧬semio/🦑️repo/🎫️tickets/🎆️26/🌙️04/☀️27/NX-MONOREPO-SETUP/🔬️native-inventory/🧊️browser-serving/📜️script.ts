@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
-import { createReadStream, readFileSync } from "node:fs";
+import { createReadStream, existsSync, readFileSync, readdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { testWgpuBrowserServing } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧊️browser-serving/🟦️.ts";
 import { serveVite } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
 const workspace = process.env.SEMIO_REPO_ROOT!;
 if (process.argv[2] === "actual") {
-  process.env.SEMIO_PLUGIN = "s"; process.env.SEMIO_BUILD_MODE = "dev";
+  const variant = process.argv[3] ?? "s";
+  process.env.SEMIO_PLUGIN = variant; process.env.SEMIO_BUILD_MODE = "dev";
   const engine = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu"), controller = new AbortController();
   let ready!: (url: string) => void;
   const readiness = new Promise<string>(resolve => ready = resolve);
@@ -14,13 +15,27 @@ if (process.argv[2] === "actual") {
   const url = await Promise.race([readiness, server.then(() => { throw new Error("Server stopped before readiness"); })]);
   const digest = async (stream: AsyncIterable<Uint8Array>) => { const hash = createHash("sha256"); let bytes = 0; for await (const chunk of stream) { hash.update(chunk); bytes += chunk.length; } return { sha256: hash.digest("hex"), bytes }; };
   try {
-    const html = await (await fetch(url)).text(); assert.ok(html.includes('content="s"') && html.includes("/@vite/client"));
+    const html = await (await fetch(url)).text(); assert.ok(html.includes(`content="${variant}"`) && html.includes("/@vite/client"));
     for (const [route, file] of [["/renderer-modules/wgpu/semio-framework-os-renderer-wgpu.js", "📦️packages/🦀️rust/dist/wasm-dev/semio-framework-os-renderer-wgpu.js"], ["/renderer-modules/wgpu/semio-framework-os-renderer-wgpu_bg.wasm", "📦️packages/🦀️rust/dist/wasm-dev/semio-framework-os-renderer-wgpu_bg.wasm"], ["/🚀️boot.js/🟨️.js", "🚀️browser-boot/🤖️generated/🟨️.js"], ["/🎞️frame-worker.js/🟨️.js", "🎞️frame-worker/🤖️generated/🟨️.js"]]) {
       const response = await fetch(new URL(route, url)); assert.equal(response.status, 200, route);
       const actual = await digest(response.body! as any), expected = await digest(createReadStream(join(engine, file)));
       assert.deepEqual(actual, expected); console.log("[DEBUG] Actual WGPU HTTP artifact", route, actual);
     }
     const boot = readFileSync(join(engine, "🚀️browser-boot/🤖️generated/🟨️.js"), "utf8"); assert.ok(boot.includes("../renderer-modules/wgpu/semio-framework-os-renderer-wgpu.js"));
+    const fonts = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts/🔤️guestslim-typst-fonts.bin");
+    const response = await fetch(new URL("/🔌️plugin-modules/🪞️vendor/🔤️guestslim-typst-fonts.bin", url));
+    assert.equal(response.status, 200);
+    assert.deepEqual(await digest(response.body! as any), await digest(createReadStream(fonts)));
+    const runtime = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/wgpu/dev", variant);
+    const receipt = JSON.parse(readFileSync(join(runtime, "activation/🔣️receipt.json"), "utf8"));
+    assert.equal(receipt.variant, variant); assert.equal(receipt.profile, "dev");
+    const extensions = existsSync(join(runtime, "extensions")) ? readdirSync(join(runtime, "extensions"), { withFileTypes: true }).filter(row => row.isDirectory()) : [];
+    for (const extension of extensions) {
+      const route = new URL(`/🧩️extension-modules/${extension.name}/🔣️.json`, url), response = await fetch(route);
+      assert.equal(response.status, 200, route.toString());
+      assert.equal(await response.text(), readFileSync(join(runtime, "extensions", extension.name, "🔣️.json"), "utf8"));
+    }
+    console.log(`[DEBUG] Actual ${variant} runtime serves ${extensions.length} isolated extension descriptors and completed font bytes`);
   } finally { controller.abort(); await server; }
   await assert.rejects(() => fetch(url)); console.log("[DEBUG] Actual renderer configuration serves published compiler/boot/worker bytes and releases its listener PASS");
 } else if (process.argv[2] === "routes") {

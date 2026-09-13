@@ -3,6 +3,16 @@
     "package": "fast-json-patch",
     "version": "3.1.1"
   },
+  "construction": {
+    "scalarBytes": 8,
+    "backingCeilingBytes": 4096,
+    "cases": [
+      { "order": 0, "requestedBytes": 0, "rejected": false },
+      { "order": 1, "requestedBytes": 8, "rejected": false },
+      { "order": 512, "requestedBytes": 4096, "rejected": false },
+      { "order": 513, "requestedBytes": 4104, "rejected": true }
+    ]
+  },
   "cases": [
     {
       "kind": "checkpoint",
@@ -33,10 +43,10 @@
       "fuel": 1,
       "deadline": 1,
       "expected": {
-        "pending": false,
+        "pending": true,
         "cursor": 0,
         "fuelRemaining": 0,
-        "outcome": "checkpoint",
+        "outcome": "yield",
         "terminalEmpty": true
       }
     },
@@ -69,10 +79,10 @@
       "fuel": 1,
       "deadline": 1,
       "expected": {
-        "pending": false,
+        "pending": true,
         "cursor": 0,
         "fuelRemaining": 0,
-        "outcome": "preview",
+        "outcome": "yield",
         "terminalEmpty": true
       }
     },
@@ -108,7 +118,7 @@
         "pending": true,
         "cursor": 0,
         "fuelRemaining": 0,
-        "outcome": "complete",
+        "outcome": "yield",
         "terminalEmpty": true
       }
     }

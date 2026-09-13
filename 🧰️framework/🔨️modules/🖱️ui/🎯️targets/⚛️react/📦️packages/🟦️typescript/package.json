@@ -17,7 +17,7 @@
     "./🧵️.css": "../../../../🧵️styles/🎨️.css",
     "./🌐️globals-ui.css": "../../../../🌐️globals/🎨️.css",
     "./🌓️theme.css": "../../../../🎨️styling/🌓️theme/🎨️.css",
-    "./postcss.config": "./postcss.config.ts"
+    "./postcss.config": "./🟦️.mts"
   },
   "targets": {
     "lint": {

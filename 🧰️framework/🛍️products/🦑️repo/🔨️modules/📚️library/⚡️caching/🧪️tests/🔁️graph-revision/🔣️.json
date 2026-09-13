@@ -1,0 +1,50 @@
+{
+  "library": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+  "files": [
+    "🟨️.mjs",
+    "⚡️caching/🔣️policy.json",
+    "🔣️taxonomy.json",
+    "🕸️dependencies/🧩️runtime/🟨️.mjs",
+    "🕸️dependencies/🟦️typescript/🟨️.mjs"
+  ],
+  "runtimes": [
+    "bun",
+    "node"
+  ],
+  "helpers": [
+    "🕸️dependencies/🧩️runtime/🟨️.mjs",
+    "🕸️dependencies/🟦️typescript/🟨️.mjs"
+  ],
+  "expected": [
+    {
+      "stage": "initial",
+      "cache": true,
+      "executor": "nx:run-commands"
+    },
+    {
+      "stage": "policy",
+      "cache": false,
+      "executor": "nx:run-commands"
+    },
+    {
+      "stage": "implementation",
+      "cache": false,
+      "executor": "nx:noop"
+    },
+    {
+      "stage": "helper-0",
+      "cache": false,
+      "executor": "nx:noop"
+    },
+    {
+      "stage": "helper-1",
+      "cache": false,
+      "executor": "nx:noop"
+    },
+    {
+      "stage": "taxonomy",
+      "cache": false,
+      "executor": "nx:noop"
+    }
+  ]
+}

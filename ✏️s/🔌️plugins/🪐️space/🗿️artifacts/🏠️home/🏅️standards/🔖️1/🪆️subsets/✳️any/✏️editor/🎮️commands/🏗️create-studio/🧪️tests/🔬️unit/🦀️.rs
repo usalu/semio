@@ -1,7 +1,7 @@
 
 use super::*;
 use semio_framework_os::list_os_space_catalog_entries;
-use semio_framework_plugin::{EditorApp, HistoryView, VcsArtifactApp, artifact_app_laws};
+use semio_framework_plugin::{AppActionRegistry, EditorApp, HistoryView, PluginApp, VcsArtifactApp, artifact_app_laws};
 
 #[semio_framework_async_macros::async_test]
 async fn home_command_op_text_round_trips_every_variant() {
@@ -15,13 +15,16 @@ async fn home_command_op_text_round_trips_every_variant() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn creates_studio_via_home_action() {
-    let port = crate::catalog_port().await;
-    let before = list_os_space_catalog_entries(&port).expect("list").len();
-    let mut home: VcsArtifactApp<EditorApp<crate::editor::home::HomeApp>> = VcsArtifactApp::new(EditorApp::<crate::editor::home::HomeApp>::default()).await;
-    home.dispatch_typed(crate::editor::home::HomeCommand::CreateStudio(CreateStudio { name: "Test Studio".into(), kind: "catalog".into(), folder_path: None }), &artifact_app_laws::meta("local")).await.expect("create");
-    let after = list_os_space_catalog_entries(&port).expect("list").len();
-    assert!(after >= before);
+async fn registered_home_rejects_create_studio_until_its_retained_owner_exists() {
+    let definition = crate::editor::home::create_home_app().await;
+    let registry = AppActionRegistry::from_definition(&definition);
+    let mut home: VcsArtifactApp<EditorApp<crate::editor::home::HomeApp>> = VcsArtifactApp::with_registry(EditorApp::<crate::editor::home::HomeApp>::default(), registry).await;
+    let fault = home
+        .dispatch_typed(crate::editor::home::HomeCommand::CreateStudio(CreateStudio { name: "Test Studio".into(), kind: "catalog".into(), folder_path: None }), &artifact_app_laws::meta("local"))
+        .await
+        .expect_err("batch-only createStudio must fail closed at interactive dispatch");
+    assert_eq!(fault.code.as_str(), "interactive-job.not-ui-safe");
+    artifact_app_laws::close_registered_fixture_app(&mut home);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -31,7 +34,9 @@ async fn temporary_studio_uses_ephemeral_registry_not_catalog() {
     let doc = ArtifactView::new(&projection, &history);
     let config = HomeConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
-    let emit = handle(&CreateStudio { name: "Temp Studio".into(), kind: "temporary".into(), folder_path: None }, &doc, &cfg).expect("handle");
+    assert_eq!(handle(&CreateStudio { name: "Missing Identity".into(), kind: "temporary".into(), folder_path: None }, &doc, &cfg).unwrap_err().code.as_str(), "s.home.session-identity-required");
+    let identity = semio_framework_plugin::ViewSessionIdentity { user_id: "u1".into(), display_name: "Ada".into() };
+    let emit = handle_with_identity(&CreateStudio { name: "Temp Studio".into(), kind: "temporary".into(), folder_path: None }, &doc, &cfg, &identity).expect("handle");
     assert!(emit.effects.iter().any(|effect| matches!(effect, Effect::Navigate { .. })));
     assert!(!emit.effects.iter().any(|effect| matches!(effect, Effect::DownloadMediaExport { .. })), "ephemeral create must not download");
     let persistent = list_os_space_catalog_entries(&crate::catalog_port().await).expect("list");

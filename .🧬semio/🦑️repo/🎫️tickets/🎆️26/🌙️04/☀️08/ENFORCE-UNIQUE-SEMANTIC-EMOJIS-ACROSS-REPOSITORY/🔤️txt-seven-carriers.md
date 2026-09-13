@@ -6,15 +6,15 @@ Read every applicable plugin `AGENTS.md`, all fourteen Rust codec bodies, all fo
 
 The table is an exact coordinate list. For every listed artifact owner there are precisely two moves: append `🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🦅️txt` or `🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🦅️txt`; replace only that final directory with `🔤️txt`. Its `🔖️utf-8/✳️any/🦀️.rs` and `🟦️.ts` descendants are retained byte-for-byte. This table is documentation, not executable rename logic.
 
-| Exact artifact owner | Import/export role actually inspected | Existing sibling formats |
-| --- | --- | --- |
-| `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer` | Plain document text to/from `WriterSnapshot`; existing raw-body tests | JSON, PDF, Markdown, TXT, DOCX |
-| `✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation` | Equation/TXT boundary; existing explicit unimplemented error | JSON, Markdown, TXT, CSV |
-| `✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs` | Version-control snapshot/TXT boundary; existing explicit unimplemented error | JSON, ZIP, TXT, XLSX, CSV |
-| `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence` | Sequence snapshot/TXT boundary; existing explicit unimplemented error | JSON, Markdown, TXT, CSV |
-| `✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires` | Wires snapshot/TXT boundary; existing explicit unimplemented error | JSON, SVG, Markdown, TXT, PNG, CSV |
-| `✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag` | DAG snapshot/TXT boundary; existing explicit unimplemented error | JSON, SVG, Markdown, TXT, PNG, CSV |
-| `✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation` | Curation snapshot/TXT boundary; existing explicit unimplemented error | JSON, OBJ, ZIP, TXT, PNG, STL |
+| Exact artifact owner                                  | Import/export role actually inspected                                        | Existing sibling formats           |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------- | ---------------------------------- |
+| `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer`         | Plain document text to/from `WriterSnapshot`; existing raw-body tests        | JSON, PDF, Markdown, TXT, DOCX     |
+| `✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation` | Equation/TXT boundary; existing explicit unimplemented error                 | JSON, Markdown, TXT, CSV           |
+| `✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs`               | Version-control snapshot/TXT boundary; existing explicit unimplemented error | JSON, ZIP, TXT, XLSX, CSV          |
+| `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence`     | Sequence snapshot/TXT boundary; existing explicit unimplemented error        | JSON, Markdown, TXT, CSV           |
+| `✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires`       | Wires snapshot/TXT boundary; existing explicit unimplemented error           | JSON, SVG, Markdown, TXT, PNG, CSV |
+| `✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag`               | DAG snapshot/TXT boundary; existing explicit unimplemented error             | JSON, SVG, Markdown, TXT, PNG, CSV |
+| `✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation`     | Curation snapshot/TXT boundary; existing explicit unimplemented error        | JSON, OBJ, ZIP, TXT, PNG, STL      |
 
 No codec implementation is added or repaired in this naming batch; in particular, the twelve unimplemented Rust directions and placeholder TypeScript leaves must not be presented as working codecs.
 

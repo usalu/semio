@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "fontTool": {
+    "root": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🔤️fonts/📦️packages/🦀️rust",
+    "project": "semio-framework-os-font-assets",
+    "crates": [
+      "semio-framework-os-font-assets",
+      "typst-assets"
+    ],
+    "commands": [
+      "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/📜️script.ts"
+    ],
+    "forbiddenInputs": [
+      "/🔌️plugin/",
+      "/🧪️tests/"
+    ]
+  },
+  "variants": [
+    {
+      "variant": "puzzle3d",
+      "engines": [],
+      "forbiddenProjects": [
+        "semio-framework-os-flow-core",
+        "@semio-tech/framework-editor-rs",
+        "@semio-tech/framework-surface-rs"
+      ]
+    },
+    {
+      "variant": "puzzle5d",
+      "engines": [],
+      "forbiddenProjects": [
+        "semio-framework-os-flow-core"
+      ]
+    },
+    {
+      "variant": "writer",
+      "engines": [],
+      "forbiddenProjects": [
+        "semio-framework-os-flow-core",
+        "@semio-tech/puzzle-plugin"
+      ]
+    },
+    {
+      "variant": "s",
+      "engines": [],
+      "forbiddenProjects": [
+        "semio-framework-os-flow-core"
+      ]
+    },
+    {
+      "variant": "flow",
+      "engines": [
+        "semio-framework-os-flow-core:wasm"
+      ],
+      "forbiddenProjects": [
+        "@semio-tech/puzzle-plugin"
+      ]
+    },
+    {
+      "variant": "puzzle2d",
+      "engines": [
+        "@semio-tech/puzzle-plugin:wasm"
+      ],
+      "forbiddenProjects": [
+        "semio-framework-os-flow-core"
+      ]
+    }
+  ],
+  "profiles": [
+    "dev",
+    "release"
+  ],
+  "renderers": [
+    "react",
+    "wgpu"
+  ],
+  "packageProjects": [
+    {
+      "root": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust",
+      "package": "@semio-tech/puzzle-wasm",
+      "project": "@semio-tech/puzzle-plugin"
+    },
+    {
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust",
+      "package": "@semio-tech/flow-core-build",
+      "project": "semio-framework-os-flow-core"
+    }
+  ]
+}

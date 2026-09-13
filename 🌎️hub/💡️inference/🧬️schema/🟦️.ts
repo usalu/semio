@@ -278,6 +278,7 @@ export function parseInferenceApprovalOutboxV1(value: unknown): InferenceApprova
 }
 
 /** ⏸️ One integration-fixtures checkpoint control frame on the fixed inherited descriptor. */
+export const GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES = 256;
 export type GisInferenceCheckpointControlFrameV1 = {
   readonly schema: "semio.hub.gis-inference-checkpoint-control/v1";
   readonly version: 1;

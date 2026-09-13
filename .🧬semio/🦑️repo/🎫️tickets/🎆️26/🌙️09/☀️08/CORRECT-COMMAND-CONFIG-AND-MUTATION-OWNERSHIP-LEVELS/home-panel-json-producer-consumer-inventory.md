@@ -108,4 +108,4 @@ The browser and native laws must each cover: valid tab selection with unchanged 
 
 ## Source status
 
-This inventory and the neutral schema/fixture/oracle are test-first work only. No native Shell, browser ShellHost, panel-helper production codec, Home config, or generated frame-worker source was changed in this preparation step.
+This inventory began as test-first preparation. The coordinated implementation is now complete in the native Shell, browser ShellHost and shared panel helper: both hosts use the strict JSON-text codec, qualify exact host/session panel actions before guest dispatch, preserve the bounded spawned roster/focus and persist the active session. Native r4 accepted the reducer and restore behavior before removal. The obsolete Home config/mutation/command/action mirror and all its facets, fixtures and generated Home manifest row are now removed. Final post-removal evidence is recorded in `home-host-panel-owner-implementation.md`.

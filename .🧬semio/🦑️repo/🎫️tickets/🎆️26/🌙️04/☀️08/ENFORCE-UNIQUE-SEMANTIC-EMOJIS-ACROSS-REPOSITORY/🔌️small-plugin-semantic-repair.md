@@ -6,112 +6,112 @@ This pass owns Lowpoly, Process, Raster, Sequence, GIS, Sourcing, Layout, Archit
 
 The 87 changes below replace inherited animal, color, tree, and unrelated-symbol prefixes with the actual operation or domain identity. Identical operation symbols occur only under different parents; each actual sibling set is checked independently. All old-to-new references in the owned TS, Rust, Python, JSON, Gherkin, and documentation surfaces were patched exactly.
 
-| Prior identity | Handpicked identity |
-|---|---|
-| 🌷️io-lowpoly-1 | 🔀️io-lowpoly-1 |
-| 🟩️io-lowpoly-png-1 | 📷️io-lowpoly-png-1 |
-| 🧭️mutate-lowpoly-1 | 💠️mutate-lowpoly-1 |
-| 🦋️yaws-obj-hull-about-the-y-axis | 🔄️yaws-obj-hull-about-the-y-axis |
-| 🟩️stacks-a-detail-layer-above-the-base-layer | 🪜️stacks-a-detail-layer-above-the-base-layer |
-| 🔵️fades-the-base-layer-to-half | 🌫️fades-the-base-layer-to-half |
-| 🟤️switches-the-base-layer-to-multiply | ✖️switches-the-base-layer-to-multiply |
-| 🦉️attaches-a-mesh-child-handle-to-obj-fin | 🕸️attaches-a-mesh-child-handle-to-obj-fin |
-| 🌷️mutate-process3d-1 | 🏭️mutate-process3d-1 |
-| 🐯️adds-a-drill-press-to-the-workshop | 🪛️adds-a-drill-press-to-the-workshop |
-| 🌳️accepts-a-machine-provenance-and-applies-it | 🏭️accepts-a-machine-provenance-and-applies-it |
-| 🐺️accepts-a-rip-cut-step-and-inserts-it | 🪚️accepts-a-rip-cut-step-and-inserts-it |
-| 🦉️trades-the-blade-cut-for-a-gated-pocket-cut | 🕳️trades-the-blade-cut-for-a-gated-pocket-cut |
-| 🟪️switches-the-tone-layer-from-levels-to-curves | 📈️switches-the-tone-layer-from-levels-to-curves |
-| 🔵️fades-the-highlight-layer-to-a-quarter | 🌫️fades-the-highlight-layer-to-a-quarter |
-| 🦋️mutate-sequence-1-any-step | 🪜️mutate-sequence-1-any-step |
-| 🌱️mutate-sequence-1-any-dependency | 🔗️mutate-sequence-1-any-dependency |
-| 🐬️adds-old-town-region-after-harbor-district | 🏘️adds-old-town-region-after-harbor-district |
-| 🐺️moves-park-region-between-2-districts | 🌳️moves-park-region-between-2-districts |
-| 🔵️adds-lighthouse-position-after-harbor | 💡️adds-lighthouse-position-after-harbor |
-| 🟩️rewrites-harbor-position-payload | ⚓️rewrites-harbor-position-payload |
-| 🔴️moves-harbor-position-to-end | ⚓️moves-harbor-position-to-end |
-| 🌹️raises-exaggeration-from-1-to-2-5 | ⛰️raises-exaggeration-from-1-to-2-5 |
-| 🟨️mutate-curation-1 | 🗂️mutate-curation-1 |
-| 🍐️appends-a-steel-plate-to-the-curation | 🧲️appends-a-steel-plate-to-the-curation |
-| 🟦️rewrites-story-1-body | 📝️rewrites-story-1-body |
-| 🟤️appends-story-3 | 📖️appends-story-3 |
-| 🔵️moves-the-rect-frame | 📍️moves-the-rect-frame |
-| 🟩️mutate-program-1 | 🏛️mutate-program-1 |
-| 🟨️mutate-writer-1 | ✒️mutate-writer-1 |
-| 🌲️re-declares-the-same-endpoints | 🟰️re-declares-the-same-endpoints |
-| 🟦️replaces-a-note-with-an-identical-note | 🟰️replaces-a-note-with-an-identical-note |
-| 🛟️retitles-obj-hull | 🏷️retitles-obj-hull |
-| 🌴️halves-obj-hull-uniformly | 📐️halves-obj-hull-uniformly |
+| Prior identity                                      | Handpicked identity                                 |
+| --------------------------------------------------- | --------------------------------------------------- |
+| 🌷️io-lowpoly-1                                      | 🔀️io-lowpoly-1                                      |
+| 🟩️io-lowpoly-png-1                                  | 📷️io-lowpoly-png-1                                  |
+| 🧭️mutate-lowpoly-1                                  | 💠️mutate-lowpoly-1                                  |
+| 🦋️yaws-obj-hull-about-the-y-axis                    | 🔄️yaws-obj-hull-about-the-y-axis                    |
+| 🟩️stacks-a-detail-layer-above-the-base-layer        | 🪜️stacks-a-detail-layer-above-the-base-layer        |
+| 🔵️fades-the-base-layer-to-half                      | 🌫️fades-the-base-layer-to-half                      |
+| 🟤️switches-the-base-layer-to-multiply               | ✖️switches-the-base-layer-to-multiply               |
+| 🦉️attaches-a-mesh-child-handle-to-obj-fin           | 🕸️attaches-a-mesh-child-handle-to-obj-fin           |
+| 🌷️mutate-process3d-1                                | 🏭️mutate-process3d-1                                |
+| 🐯️adds-a-drill-press-to-the-workshop                | 🪛️adds-a-drill-press-to-the-workshop                |
+| 🌳️accepts-a-machine-provenance-and-applies-it       | 🏭️accepts-a-machine-provenance-and-applies-it       |
+| 🐺️accepts-a-rip-cut-step-and-inserts-it             | 🪚️accepts-a-rip-cut-step-and-inserts-it             |
+| 🦉️trades-the-blade-cut-for-a-gated-pocket-cut       | 🕳️trades-the-blade-cut-for-a-gated-pocket-cut       |
+| 🟪️switches-the-tone-layer-from-levels-to-curves     | 📈️switches-the-tone-layer-from-levels-to-curves     |
+| 🔵️fades-the-highlight-layer-to-a-quarter            | 🌫️fades-the-highlight-layer-to-a-quarter            |
+| 🦋️mutate-sequence-1-any-step                        | 🪜️mutate-sequence-1-any-step                        |
+| 🌱️mutate-sequence-1-any-dependency                  | 🔗️mutate-sequence-1-any-dependency                  |
+| 🐬️adds-old-town-region-after-harbor-district        | 🏘️adds-old-town-region-after-harbor-district        |
+| 🐺️moves-park-region-between-2-districts             | 🌳️moves-park-region-between-2-districts             |
+| 🔵️adds-lighthouse-position-after-harbor             | 💡️adds-lighthouse-position-after-harbor             |
+| 🟩️rewrites-harbor-position-payload                  | ⚓️rewrites-harbor-position-payload                  |
+| 🔴️moves-harbor-position-to-end                      | ⚓️moves-harbor-position-to-end                      |
+| 🌹️raises-exaggeration-from-1-to-2-5                 | ⛰️raises-exaggeration-from-1-to-2-5                 |
+| 🟨️mutate-curation-1                                 | 🗂️mutate-curation-1                                 |
+| 🍐️appends-a-steel-plate-to-the-curation             | 🧲️appends-a-steel-plate-to-the-curation             |
+| 🟦️rewrites-story-1-body                             | 📝️rewrites-story-1-body                             |
+| 🟤️appends-story-3                                   | 📖️appends-story-3                                   |
+| 🔵️moves-the-rect-frame                              | 📍️moves-the-rect-frame                              |
+| 🟩️mutate-program-1                                  | 🏛️mutate-program-1                                  |
+| 🟨️mutate-writer-1                                   | ✒️mutate-writer-1                                   |
+| 🌲️re-declares-the-same-endpoints                    | 🟰️re-declares-the-same-endpoints                    |
+| 🟦️replaces-a-note-with-an-identical-note            | 🟰️replaces-a-note-with-an-identical-note            |
+| 🛟️retitles-obj-hull                                 | 🏷️retitles-obj-hull                                 |
+| 🌴️halves-obj-hull-uniformly                         | 📐️halves-obj-hull-uniformly                         |
 | 💎️paints-red-over-the-second-half-of-the-base-layer | 🖌️paints-red-over-the-second-half-of-the-base-layer |
-| 🏔️detaches-the-mesh-child-handle-from-obj-hull | ✂️detaches-the-mesh-child-handle-from-obj-hull |
-| 🧿️hides-the-base-layer | 🙈️hides-the-base-layer |
-| 🪄️inserts-obj-mast-between-hull-and-fin | ⛵️inserts-obj-mast-between-hull-and-fin |
-| 🛟️retitles-the-base-layer-to-undercoat | 🏷️retitles-the-base-layer-to-undercoat |
-| 🚪️drops-the-detail-layer-at-index-1 | ➖️drops-the-detail-layer-at-index-1 |
-| ⚫️moves-obj-fin-in-front-of-obj-hull | 🔀️moves-obj-fin-in-front-of-obj-hull |
-| 🌱️translates-obj-hull-along-x-and-z | 📍️translates-obj-hull-along-x-and-z |
-| 🌴️empties-the-workshop-of-the-saw | ➖️empties-the-workshop-of-the-saw |
-| ⚓️retitles-the-saw | 🏷️retitles-the-saw |
-| 🌾️accepts-a-disable-flag-and-applies-it | ⏸️accepts-a-disable-flag-and-applies-it |
-| 🟥️swaps-the-saw-icon | 🪚️swaps-the-saw-icon |
-| 🚪️accepts-a-target-index-and-reorders-them | 🔀️accepts-a-target-index-and-reorders-them |
-| 🎫️reissues-the-stock-brep-child-handle | 🧊️reissues-the-stock-brep-child-handle |
-| 🟠️pins-the-replay-cursor-to-two-steps | ⏯️pins-the-replay-cursor-to-two-steps |
-| 🧭️accepts-a-bore-measure-and-replaces-it | 🕳️accepts-a-bore-measure-and-replaces-it |
-| 🔮️lifts-the-caption-layer-out-of-the-frame-group | ⤴️lifts-the-caption-layer-out-of-the-frame-group |
-| 🧿️switches-the-glow-layer-to-screen | 💡️switches-the-glow-layer-to-screen |
-| 🟢️creates-an-ink-layer-inside-the-artwork-group | 🖋️creates-an-ink-layer-inside-the-artwork-group |
-| 🎞️slides-the-stamp-layer-off-the-origin | 📍️slides-the-stamp-layer-off-the-origin |
-| 🟠️hides-the-overlay-layer | 🙈️hides-the-overlay-layer |
-| 📖️no-ops-when-the-step-is-already-collapsed | 🟰️no-ops-when-the-step-is-already-collapsed |
-| 📖️no-ops-when-the-step-is-already-at-that-position | 🟰️no-ops-when-the-step-is-already-at-that-position |
-| 📖️no-ops-when-the-params-are-already-identical | 🟰️no-ops-when-the-params-are-already-identical |
-| 🧿️adds-tram-route-after-ferry | 🚋️adds-tram-route-after-ferry |
-| 🍀️rewrites-harbor-district-region-payload | 🏘️rewrites-harbor-district-region-payload |
-| 🍀️moves-bus-route-to-front | 🚌️moves-bus-route-to-front |
-| 🧿️rewrites-ferry-route-payload | ⛴️rewrites-ferry-route-payload |
-| 📃️moves-page-1-behind-page-2 | 🔀️moves-page-1-behind-page-2 |
-| 📃️lengthens-page-1 | ↕️lengthens-page-1 |
-| 🍀️repaints-the-rect-frame-fill | 🎨️repaints-the-rect-frame-fill |
-| 📃️renames-the-document | 🏷️renames-the-document |
-| 📃️appends-page-3 | ➕️appends-page-3 |
-| 🦅️adds-a-stroke-to-the-rect-frame | 🖊️adds-a-stroke-to-the-rect-frame |
-| ⛵️attaches-a-data-fields-payload | 🧾️attaches-a-data-fields-payload |
-| 📃️renames-page-1 | 🏷️renames-page-1 |
-| 📃️splits-page-1-into-three-columns | 🏛️splits-page-1-into-three-columns |
-| 🚪️inserts-a-rect-frame-at-index-1 | 🔲️inserts-a-rect-frame-at-index-1 |
-| 📃️widens-page-1 | ↔️widens-page-1 |
-| 📃️sets-asymmetric-margins-on-page-1 | 📐️sets-asymmetric-margins-on-page-1 |
-| 📃️renames-the-document-to-mission-brief | 🏷️renames-the-document-to-mission-brief |
-| 🛟️republishes-the-brief-under-a-new-uri | 🔗️republishes-the-brief-under-a-new-uri |
-| 🔀️warns-that-the-brief-body-is-unchanged | ⚠️warns-that-the-brief-body-is-unchanged |
-| 🤖️re-applies-the-current-layout-to-both-widgets | 🟰️re-applies-the-current-layout-to-both-widgets |
-| 🚪️keeps-the-leading-synapse-at-index-zero | 🟰️keeps-the-leading-synapse-at-index-zero |
-| 🟫️refuses-a-parallel-synapse-as-a-no-op | 🚫️refuses-a-parallel-synapse-as-a-no-op |
-| 🚪️clamps-an-out-of-range-index-onto-the-last-slot | 🗜️clamps-an-out-of-range-index-onto-the-last-slot |
-| 🟠️mutate-raster-1 | 🖨️mutate-raster-1 |
-| 🗺️mutate-gisterrain-1 | 🏔️mutate-gisterrain-1 |
-| 🦠️mutate-gismap-1 | 🗺️mutate-gismap-1 |
-| ⚓️mutate-sequence-1-dependency | 🔗️mutate-sequence-1-dependency |
-| 🎨️mutate-sequence-1-step | 🪜️mutate-sequence-1-step |
-| 🗺️infer-gismap-1 | 📐️infer-gismap-1 |
+| 🏔️detaches-the-mesh-child-handle-from-obj-hull      | ✂️detaches-the-mesh-child-handle-from-obj-hull      |
+| 🧿️hides-the-base-layer                              | 🙈️hides-the-base-layer                              |
+| 🪄️inserts-obj-mast-between-hull-and-fin             | ⛵️inserts-obj-mast-between-hull-and-fin             |
+| 🛟️retitles-the-base-layer-to-undercoat              | 🏷️retitles-the-base-layer-to-undercoat              |
+| 🚪️drops-the-detail-layer-at-index-1                 | ➖️drops-the-detail-layer-at-index-1                 |
+| ⚫️moves-obj-fin-in-front-of-obj-hull                | 🔀️moves-obj-fin-in-front-of-obj-hull                |
+| 🌱️translates-obj-hull-along-x-and-z                 | 📍️translates-obj-hull-along-x-and-z                 |
+| 🌴️empties-the-workshop-of-the-saw                   | ➖️empties-the-workshop-of-the-saw                   |
+| ⚓️retitles-the-saw                                  | 🏷️retitles-the-saw                                  |
+| 🌾️accepts-a-disable-flag-and-applies-it             | ⏸️accepts-a-disable-flag-and-applies-it             |
+| 🟥️swaps-the-saw-icon                                | 🪚️swaps-the-saw-icon                                |
+| 🚪️accepts-a-target-index-and-reorders-them          | 🔀️accepts-a-target-index-and-reorders-them          |
+| 🎫️reissues-the-stock-brep-child-handle              | 🧊️reissues-the-stock-brep-child-handle              |
+| 🟠️pins-the-replay-cursor-to-two-steps               | ⏯️pins-the-replay-cursor-to-two-steps               |
+| 🧭️accepts-a-bore-measure-and-replaces-it            | 🕳️accepts-a-bore-measure-and-replaces-it            |
+| 🔮️lifts-the-caption-layer-out-of-the-frame-group    | ⤴️lifts-the-caption-layer-out-of-the-frame-group    |
+| 🧿️switches-the-glow-layer-to-screen                 | 💡️switches-the-glow-layer-to-screen                 |
+| 🟢️creates-an-ink-layer-inside-the-artwork-group     | 🖋️creates-an-ink-layer-inside-the-artwork-group     |
+| 🎞️slides-the-stamp-layer-off-the-origin             | 📍️slides-the-stamp-layer-off-the-origin             |
+| 🟠️hides-the-overlay-layer                           | 🙈️hides-the-overlay-layer                           |
+| 📖️no-ops-when-the-step-is-already-collapsed         | 🟰️no-ops-when-the-step-is-already-collapsed         |
+| 📖️no-ops-when-the-step-is-already-at-that-position  | 🟰️no-ops-when-the-step-is-already-at-that-position  |
+| 📖️no-ops-when-the-params-are-already-identical      | 🟰️no-ops-when-the-params-are-already-identical      |
+| 🧿️adds-tram-route-after-ferry                       | 🚋️adds-tram-route-after-ferry                       |
+| 🍀️rewrites-harbor-district-region-payload           | 🏘️rewrites-harbor-district-region-payload           |
+| 🍀️moves-bus-route-to-front                          | 🚌️moves-bus-route-to-front                          |
+| 🧿️rewrites-ferry-route-payload                      | ⛴️rewrites-ferry-route-payload                      |
+| 📃️moves-page-1-behind-page-2                        | 🔀️moves-page-1-behind-page-2                        |
+| 📃️lengthens-page-1                                  | ↕️lengthens-page-1                                  |
+| 🍀️repaints-the-rect-frame-fill                      | 🎨️repaints-the-rect-frame-fill                      |
+| 📃️renames-the-document                              | 🏷️renames-the-document                              |
+| 📃️appends-page-3                                    | ➕️appends-page-3                                    |
+| 🦅️adds-a-stroke-to-the-rect-frame                   | 🖊️adds-a-stroke-to-the-rect-frame                   |
+| ⛵️attaches-a-data-fields-payload                    | 🧾️attaches-a-data-fields-payload                    |
+| 📃️renames-page-1                                    | 🏷️renames-page-1                                    |
+| 📃️splits-page-1-into-three-columns                  | 🏛️splits-page-1-into-three-columns                  |
+| 🚪️inserts-a-rect-frame-at-index-1                   | 🔲️inserts-a-rect-frame-at-index-1                   |
+| 📃️widens-page-1                                     | ↔️widens-page-1                                     |
+| 📃️sets-asymmetric-margins-on-page-1                 | 📐️sets-asymmetric-margins-on-page-1                 |
+| 📃️renames-the-document-to-mission-brief             | 🏷️renames-the-document-to-mission-brief             |
+| 🛟️republishes-the-brief-under-a-new-uri             | 🔗️republishes-the-brief-under-a-new-uri             |
+| 🔀️warns-that-the-brief-body-is-unchanged            | ⚠️warns-that-the-brief-body-is-unchanged            |
+| 🤖️re-applies-the-current-layout-to-both-widgets     | 🟰️re-applies-the-current-layout-to-both-widgets     |
+| 🚪️keeps-the-leading-synapse-at-index-zero           | 🟰️keeps-the-leading-synapse-at-index-zero           |
+| 🟫️refuses-a-parallel-synapse-as-a-no-op             | 🚫️refuses-a-parallel-synapse-as-a-no-op             |
+| 🚪️clamps-an-out-of-range-index-onto-the-last-slot   | 🗜️clamps-an-out-of-range-index-onto-the-last-slot   |
+| 🟠️mutate-raster-1                                   | 🖨️mutate-raster-1                                   |
+| 🗺️mutate-gisterrain-1                               | 🏔️mutate-gisterrain-1                               |
+| 🦠️mutate-gismap-1                                   | 🗺️mutate-gismap-1                                   |
+| ⚓️mutate-sequence-1-dependency                      | 🔗️mutate-sequence-1-dependency                      |
+| 🎨️mutate-sequence-1-step                            | 🪜️mutate-sequence-1-step                            |
+| 🗺️infer-gismap-1                                    | 📐️infer-gismap-1                                    |
 
 ## Verification
 
 All ten scoped read-only naming audits passed all eight categories before the final five suite-only improvements. Their observed entries are listed below; a final physical and reference pass follows after names settle.
 
-| Tree | Files | Directories | Governed | Findings |
-|---|---:|---:|---:|---:|
-| 🪵️sourcing | 307 | 219 | 510 | 0 |
-| 📏️layout | 450 | 386 | 829 | 0 |
-| ✒️writer | 285 | 202 | 479 | 0 |
-| 💠️lowpoly | 435 | 373 | 801 | 0 |
-| 🏭️process | 423 | 355 | 759 | 0 |
-| 🖨️raster | 374 | 315 | 683 | 0 |
-| 🎬️sequence | 391 | 281 | 655 | 0 |
-| 🌍️gis | 639 | 492 | 1123 | 0 |
-| 🏛️architect | 3174 | 3173 | 6340 | 0 |
-| 🌊️flow | 486 | 364 | 814 | 0 |
+| Tree        | Files | Directories | Governed | Findings |
+| ----------- | ----: | ----------: | -------: | -------: |
+| 🪵️sourcing  |   307 |         219 |      510 |        0 |
+| 📏️layout    |   450 |         386 |      829 |        0 |
+| ✒️writer    |   285 |         202 |      479 |        0 |
+| 💠️lowpoly   |   435 |         373 |      801 |        0 |
+| 🏭️process   |   423 |         355 |      759 |        0 |
+| 🖨️raster    |   374 |         315 |      683 |        0 |
+| 🎬️sequence  |   391 |         281 |      655 |        0 |
+| 🌍️gis       |   639 |         492 |     1123 |        0 |
+| 🏛️architect |  3174 |        3173 |     6340 |        0 |
+| 🌊️flow      |   486 |         364 |      814 |        0 |
 
 The mutation catalog walk resolves every scenario using its exact semanticKind manifest (including Architect's nested entity groups): 375 scenario coordinates resolve. Forty-eight stale catalog directoryName fields were aligned to the existing, reviewed physical names. No mutation ID or payload changed.
 

@@ -8,7 +8,7 @@
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import picomatch from "picomatch";
 import { URL as OracleURL } from "whatwg-url";
 import { describe, expect, it } from "vitest";
@@ -25,7 +25,7 @@ import {
   type StagedModuleVerdict,
 } from "../../♻️activation/🟦️.ts";
 
-const suiteDir = dirname(new URL(import.meta.url).pathname);
+const suiteDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteDir, "../../../../../../..");
 const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🔌️staging-root.json"), "utf8")) as {
   readonly root: {
@@ -52,7 +52,7 @@ const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️
 function oracleStagingRoot(profile: string): string {
   const base = pathToFileURL(`${repoRoot}/`).href;
   const relativeReference = `${fixture.root.packageRelativePath}/${profile}/${fixture.root.modulesDirectoryName}`.split("/").map(encodeURIComponent).join("/");
-  return decodeURIComponent(new OracleURL(relativeReference, base).pathname);
+  return fileURLToPath(new OracleURL(relativeReference, base).href);
 }
 
 describe("one plugin staging root", () => {
@@ -64,7 +64,7 @@ describe("one plugin staging root", () => {
     expect(pluginModulesRoot(profile)).toBe(oracleStagingRoot(profile));
   });
 
-  it("hands every declared consumer of every renderer the SAME path for a profile", () => {
+  it("projects every declared staging-input consumer to one root per profile", () => {
     const byProfile = new Map<string, Set<string>>();
     for (const consumer of fixture.root.consumers) {
       const roots = byProfile.get(consumer.profile) ?? new Set<string>();
@@ -83,7 +83,7 @@ describe("one plugin staging root", () => {
     const sandbox = mkdtempSync(join(tmpdir(), "semio-staging-workspace-"));
     try {
       expect(pluginModulesRootIn(sandbox, "release")).toBe(join(sandbox, fixture.root.packageRelativePath, "release", fixture.root.modulesDirectoryName));
-      expect(pluginModulesRootIn(sandbox, "release").startsWith(repoRoot)).toBe(false);
+      expect(pluginModulesRootIn(sandbox, "release")).not.toBe(pluginModulesRoot("release"));
     } finally {
       rmSync(sandbox, { recursive: true, force: true });
     }
@@ -102,11 +102,20 @@ describe("one plugin staging root", () => {
   });
 
   it("leaves no retired root or symbol in any declared source file", () => {
+    expect(new Set(fixture.root.sourceFiles).size).toBe(fixture.root.sourceFiles.length);
     for (const file of fixture.root.sourceFiles) {
       const source = readFileSync(join(repoRoot, file), "utf8");
       for (const retired of fixture.root.retiredRoots) expect(source, `${file} still names the retired root ${retired}`).not.toContain(`${retired}"`);
       for (const symbol of fixture.root.retiredSymbols) expect(source, `${file} still names the retired symbol ${symbol}`).not.toContain(symbol);
     }
+  });
+
+  it("tracks every declared source through the registered test inputs", () => {
+    const project = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json"), "utf8"));
+    const expected = [...fixture.root.sourceFiles, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🔌️staging-root.json", relative(repoRoot, fileURLToPath(import.meta.url)).replaceAll("\\", "/")].map((path) => `{workspaceRoot}/${path}`).sort();
+    expect([...project.namedInputs.stagingRootSources].sort()).toEqual(expected);
+    const targets = Object.values(project.targets) as { options?: { command?: string }; inputs?: readonly string[] }[];
+    for (const target of targets.filter((target) => target.options?.command?.startsWith("bun ./📜️script.ts test"))) expect(target.inputs).toContain("stagingRootSources");
   });
 });
 

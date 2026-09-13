@@ -10,48 +10,48 @@ All choices are explicit after inspecting purpose and siblings. Unique existing 
 
 Element paths below are relative to `🧑️‍🎨️engine/🧱️elements`.
 
-| Original | Handpicked | Meaning |
-| --- | --- | --- |
-| `AgentBridge` | `🔗️AgentBridge` | Agent gateway connection |
-| `AgentPresence` | `🚦️AgentPresence` | Connected, working, idle, and disconnected status |
-| `Canvas2dHost` | `📐️Canvas2dHost` | Two-dimensional geometry canvas |
-| `IconRenderHost` | `🖼️IconRenderHost` | Rendered icon shot preview |
-| `InkCanvasHost` | `🖋️InkCanvasHost` | Freeform ink and note strokes |
-| `NodeGraph` | `🕸️NodeGraph` | Connected node graph |
-| `Paint2dHost` | `🖌️Paint2dHost` | Raster brush painting |
-| `PluginRuntime` | `🔌️PluginRuntime` | Plugin actor-channel runtime |
-| `ShellHelpers` | `🛠️ShellHelpers` | Shared shell utility functions |
-| `ShellHost` | `🏛️ShellHost` | Shell orchestration and window host |
-| `ShellSync` | `🔄️ShellSync` | Document synchronization attachment |
-| `Table` | `📊️Table` | Tabular data rendering |
-| `TiledMapHost` | `🧭️TiledMapHost` | Navigable tiled map viewport |
-| `UtilityTree` | `🎛️UtilityTree` | Grouped utility ribbon controls |
-| `World3dHost` | `🌐️World3dHost` | Three-dimensional world viewport |
-| `🟦️Interpreter` | `🗣️Interpreter` | Semantic UI interpretation, not one implementation language |
-| `ShellHelpers/🧪️fixtures` | `🛠️ShellHelpers/🧫️fixtures` | Samples distinct from the sibling executable component test |
-| `ShellHelpers/🧪️fixtures/🔣️.schema.json` | `🛠️ShellHelpers/🧫️fixtures/🧬️.schema.json` | Shape distinct from sibling JSON sample |
-| `ShellHelpers/🧪️fixtures/📂️open-artifact` | `🛠️ShellHelpers/🧫️fixtures/🚪️open-artifact` | Artifact-opening relay rather than a generic folder |
-| `ShellHost/🧪️fixtures/🔣️.schema.json` | `🏛️ShellHost/🧪️fixtures/🧬️.schema.json` | Extension invocation shape |
-| `NodeGraph/🧪️fixtures/🔣️.schema.json` | `🕸️NodeGraph/🧪️fixtures/🧬️.schema.json` | Pick-target shape |
+| Original                                  | Handpicked                                  | Meaning                                                     |
+| ----------------------------------------- | ------------------------------------------- | ----------------------------------------------------------- |
+| `AgentBridge`                             | `🔗️AgentBridge`                             | Agent gateway connection                                    |
+| `AgentPresence`                           | `🚦️AgentPresence`                           | Connected, working, idle, and disconnected status           |
+| `Canvas2dHost`                            | `📐️Canvas2dHost`                            | Two-dimensional geometry canvas                             |
+| `IconRenderHost`                          | `🖼️IconRenderHost`                          | Rendered icon shot preview                                  |
+| `InkCanvasHost`                           | `🖋️InkCanvasHost`                           | Freeform ink and note strokes                               |
+| `NodeGraph`                               | `🕸️NodeGraph`                               | Connected node graph                                        |
+| `Paint2dHost`                             | `🖌️Paint2dHost`                             | Raster brush painting                                       |
+| `PluginRuntime`                           | `🔌️PluginRuntime`                           | Plugin actor-channel runtime                                |
+| `ShellHelpers`                            | `🛠️ShellHelpers`                            | Shared shell utility functions                              |
+| `ShellHost`                               | `🏛️ShellHost`                               | Shell orchestration and window host                         |
+| `ShellSync`                               | `🔄️ShellSync`                               | Document synchronization attachment                         |
+| `Table`                                   | `📊️Table`                                   | Tabular data rendering                                      |
+| `TiledMapHost`                            | `🧭️TiledMapHost`                            | Navigable tiled map viewport                                |
+| `UtilityTree`                             | `🎛️UtilityTree`                             | Grouped utility ribbon controls                             |
+| `World3dHost`                             | `🌐️World3dHost`                             | Three-dimensional world viewport                            |
+| `🟦️Interpreter`                           | `🗣️Interpreter`                             | Semantic UI interpretation, not one implementation language |
+| `ShellHelpers/🧪️fixtures`                 | `🛠️ShellHelpers/🧫️fixtures`                 | Samples distinct from the sibling executable component test |
+| `ShellHelpers/🧪️fixtures/🔣️.schema.json`  | `🛠️ShellHelpers/🧫️fixtures/🧬️.schema.json`  | Shape distinct from sibling JSON sample                     |
+| `ShellHelpers/🧪️fixtures/📂️open-artifact` | `🛠️ShellHelpers/🧫️fixtures/🚪️open-artifact` | Artifact-opening relay rather than a generic folder         |
+| `ShellHost/🧪️fixtures/🔣️.schema.json`     | `🏛️ShellHost/🧪️fixtures/🧬️.schema.json`     | Extension invocation shape                                  |
+| `NodeGraph/🧪️fixtures/🔣️.schema.json`     | `🕸️NodeGraph/🧪️fixtures/🧬️.schema.json`     | Pick-target shape                                           |
 
 Inside `🔌️PluginRuntime/🧪️fixtures`: `🔣️channel-close.json` → `🔒️channel-close.json` (closed channel), `🔣️channel-close.schema.json` → `🛡️channel-close.schema.json` (closure safety contract), `🔣️lifecycle-scheduler.json` → `⏱️lifecycle-scheduler.json` (scheduled lifetime traces), `🔣️lifecycle-scheduler.schema.json` → `📐️lifecycle-scheduler.schema.json` (trace shape), and `🔣️surface-refresh.json` → `🔄️surface-refresh.json` (refresh coalescing).
 
 WGPU paths below are relative to `🧑️‍🎨️engine/🎯️targets/🧊️wgpu`. `🧵️frame-job` is retained for its thread-coordinating purpose.
 
-| Original | Handpicked | Meaning |
-| --- | --- | --- |
-| `🧵️browser-boot` | `🚀️browser-boot` | Browser launch |
-| `🧵️frame-worker` | `🎞️frame-worker` | Dedicated frame production |
-| `🧵️browser-interactive-job-port` | `🔌️browser-interactive-job-port` | Interactive job protocol port |
-| `🧵️browser-worker` | `🌐️browser-worker` | Browser-owned worker runtime |
-| `🧵️interactive-job-registry` | `📇️interactive-job-registry` | Registered interactive jobs |
-| `🧵️browser-frame-transport` | `🚚️browser-frame-transport` | Frame message transport |
-| `🧊️renderer-boot` | `🎬️renderer-boot` | Starting the renderer |
-| `🧪️tests/🟦️browser-frame-transport.ts` | `🧪️tests/📨️browser-frame-transport.ts` | Message transport checks |
-| `🧪️tests/🟦️browser-interactive-job-port.ts` | `🧪️tests/🎮️browser-interactive-job-port.ts` | Interactive work protocol checks |
-| `🧪️tests/🟦️package-integration.ts` | `🧪️tests/🧩️package-integration.ts` | Package integration |
-| `📦️packages/🦀️rust/🟦️typescript/🟨️boot.js` | `📦️packages/🦀️rust/🟦️typescript/🚀️boot.js` | Generated browser launch bundle |
-| `📦️packages/🦀️rust/🟦️typescript/🟨️frame-worker.js` | `📦️packages/🦀️rust/🟦️typescript/🎞️frame-worker.js` | Generated frame-worker bundle |
+| Original                                           | Handpicked                                         | Meaning                          |
+| -------------------------------------------------- | -------------------------------------------------- | -------------------------------- |
+| `🧵️browser-boot`                                   | `🚀️browser-boot`                                   | Browser launch                   |
+| `🧵️frame-worker`                                   | `🎞️frame-worker`                                   | Dedicated frame production       |
+| `🧵️browser-interactive-job-port`                   | `🔌️browser-interactive-job-port`                   | Interactive job protocol port    |
+| `🧵️browser-worker`                                 | `🌐️browser-worker`                                 | Browser-owned worker runtime     |
+| `🧵️interactive-job-registry`                       | `📇️interactive-job-registry`                       | Registered interactive jobs      |
+| `🧵️browser-frame-transport`                        | `🚚️browser-frame-transport`                        | Frame message transport          |
+| `🧊️renderer-boot`                                  | `🎬️renderer-boot`                                  | Starting the renderer            |
+| `🧪️tests/🟦️browser-frame-transport.ts`             | `🧪️tests/📨️browser-frame-transport.ts`             | Message transport checks         |
+| `🧪️tests/🟦️browser-interactive-job-port.ts`        | `🧪️tests/🎮️browser-interactive-job-port.ts`        | Interactive work protocol checks |
+| `🧪️tests/🟦️package-integration.ts`                 | `🧪️tests/🧩️package-integration.ts`                 | Package integration              |
+| `📦️packages/🦀️rust/🟦️typescript/🟨️boot.js`         | `📦️packages/🦀️rust/🟦️typescript/🚀️boot.js`         | Generated browser launch bundle  |
+| `📦️packages/🦀️rust/🟦️typescript/🟨️frame-worker.js` | `📦️packages/🦀️rust/🟦️typescript/🎞️frame-worker.js` | Generated frame-worker bundle    |
 
 In the React package root `🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react`: `🧪️index.test.ts` → `🔬️index.test.ts` (integration checks), `🧪️quick.test.ts` → `⚡️quick.test.ts` (bounded quick checks), and `🧪️opening.test.ts` → `🚪️opening.test.ts` (artifact opening relay). The `🧪️tests` directory owns the test configuration and remains distinct.
 

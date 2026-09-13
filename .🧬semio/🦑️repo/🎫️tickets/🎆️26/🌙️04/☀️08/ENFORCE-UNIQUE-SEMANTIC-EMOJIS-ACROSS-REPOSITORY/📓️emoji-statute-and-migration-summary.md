@@ -8,13 +8,13 @@ The repository now defines and enforces one schema-first policy for emoji-bearin
 
 The migration renamed 6,256 path entries: 4,108 directories and 2,148 files. The final independent audit covers 74,091 files, 41,635 directories, and 77,399 governed entries with no statute breaches.
 
-| Finding | Initial | Final |
-| --- | ---: | ---: |
-| Missing leading emoji | 2,176 | 0 |
-| Generic emoji | 243 | 0 |
-| Presentation mismatch | 219 | 0 |
-| Prefix spacing | 0 | 0 |
-| Duplicate sibling identity | 3,644 | 0 |
+| Finding                    | Initial | Final |
+| -------------------------- | ------: | ----: |
+| Missing leading emoji      |   2,176 |     0 |
+| Generic emoji              |     243 |     0 |
+| Presentation mismatch      |     219 |     0 |
+| Prefix spacing             |       0 |     0 |
+| Duplicate sibling identity |   3,644 |     0 |
 
 The command family reported by the user is now sibling-unique:
 

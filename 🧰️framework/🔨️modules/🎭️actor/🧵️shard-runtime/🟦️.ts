@@ -109,6 +109,13 @@ export function createPooledActorRuntime(options: {
    * effect-request fails fast with "no host effect handler installed", same as omitting it directly. */
   readonly onHostEffect?: ShardClientOptions["onHostEffect"];
   readonly maxOutstandingEffectsPerActor?: ShardClientOptions["maxOutstandingEffectsPerActor"];
+  /** 🫀️ Passed straight through to {@link ShardClient} — see {@link SHARD_LIVENESS_POLICY}. A target
+   * whose shards run ON the host's own thread (the wgpu frame Worker's `MainThreadShardWorker`) blocks
+   * its own progress ticker for the whole of a compute-bound guest turn, so "silent" there measures the
+   * turn's cost rather than the worker's health and the ordinary 5 s ladder prices a healthy first
+   * render as death. `PluginRuntime` already sets this field directly; this is the same knob for the
+   * targets that construct their pool through this factory. */
+  readonly heartbeatTimeoutMs?: ShardClientOptions["heartbeatTimeoutMs"];
 }): PooledActorRuntime {
   const shardClient = new ShardClient(buildShardClientOptions(options));
   // 🚑️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-web-plugin-runtime): before that packet, neither

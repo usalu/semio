@@ -6,20 +6,20 @@ The shard client sends actor traffic through a bounded worker pool, so `📮️s
 
 Each of the following fixture-schema documents was read and confirmed to describe neutral test laws or vectors rather than runtime payload data. Its containing `🧪️schema` folder will use `📐️schema`, distinct from the fixture and executable-test siblings:
 
-| Owner | Confirmed fixture contract |
-| --- | --- |
-| `📃️page` | Byte-page vectors, lengths, padding, and ownership |
-| `📤️return` | Retained-return wire vectors, limits, and laws |
-| `📤️return/📨️response` | Response tags, vectors, invalid bytes, and authority |
-| `📤️return/📨️response/🎟️credit` | Receiver/worker credit and reservation laws |
-| `🚪️lifetime` | Lifecycle, receipt, completion, and failure vectors |
-| `🚪️lifetime/🩹️patch` | Patch receipt pairing and wire-feedback vectors |
-| `🪪️activation` | Activation lease revocation/disposal cases |
-| `🪪️activation/📨️inbound` | Actor inbound activation cases |
-| `🪪️activation/🚪️instance` | Instance phases, refusals, and cancellation |
-| `🪪️activation/🚪️instance/📥️output/🏘️admission` | Output admission, dispatch, and cancellation laws |
-| `🪪️activation/📤️return` | Captured return authority and boundaries |
-| `🪪️activation/📤️return/🏘️admission` | Captured-return admission and retained-fault laws |
+| Owner                                          | Confirmed fixture contract                           |
+| ---------------------------------------------- | ---------------------------------------------------- |
+| `📃️page`                                       | Byte-page vectors, lengths, padding, and ownership   |
+| `📤️return`                                     | Retained-return wire vectors, limits, and laws       |
+| `📤️return/📨️response`                          | Response tags, vectors, invalid bytes, and authority |
+| `📤️return/📨️response/🎟️credit`                 | Receiver/worker credit and reservation laws          |
+| `🚪️lifetime`                                   | Lifecycle, receipt, completion, and failure vectors  |
+| `🚪️lifetime/🩹️patch`                           | Patch receipt pairing and wire-feedback vectors      |
+| `🪪️activation`                                 | Activation lease revocation/disposal cases           |
+| `🪪️activation/📨️inbound`                       | Actor inbound activation cases                       |
+| `🪪️activation/🚪️instance`                      | Instance phases, refusals, and cancellation          |
+| `🪪️activation/🚪️instance/📥️output/🏘️admission` | Output admission, dispatch, and cancellation laws    |
+| `🪪️activation/📤️return`                        | Captured return authority and boundaries             |
+| `🪪️activation/📤️return/🏘️admission`            | Captured-return admission and retained-fault laws    |
 
 Only three fixture folders also collide with executable-test siblings: page, retained return, and lifetime patch. These will use `🧫️fixture`; other already distinct fixture names are retained.
 

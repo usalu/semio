@@ -7,9 +7,8 @@
 //! out a pure `empty_home_document()`/compute helper (every call site builds the literal
 //! `SHomeSnapshot { schema: "s.home".into(), catalog_generation: N }` directly), so this app has no
 //! document-side `⚙️engine` node under `🗿️artifacts/🏠️home`. What this file owns is `HomeConfig` — the
-//! Home launcher's real `ArtifactEditor::Config`: the active panel tab, folded hub directory read model
-//! (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C1/§C6) and the signed-in
-//! client identity.
+//! Home launcher's real `ArtifactEditor::Config`: the folded hub directory read model
+//! (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C1/§C6).
 
 use std::collections::BTreeMap;
 use semio_framework_plugin::Fault;
@@ -50,7 +49,7 @@ impl DirectoryProjectionReceiptV1 {
 /// hand, entirely inside this file. `SpaceView`/`MemberView`/`UserView` (the read model's own leaves)
 /// already derive `Serialize`/`Deserialize`; only the two WRAPPER structs need a hand-written wire shape.
 #[derive(value_derive::ToValue, value_derive::FromValue)]
-#[value(deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 struct DirectorySpaceWire {
     view: store::os_directory::SpaceView,
     members: Vec<store::os_directory::MemberView>,
@@ -59,7 +58,7 @@ struct DirectorySpaceWire {
 }
 
 #[derive(value_derive::ToValue, value_derive::FromValue)]
-#[value(deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 struct DirectoryReadModelWire {
     spaces: BTreeMap<String, DirectorySpaceWire>,
     cursor: u64,
@@ -120,8 +119,6 @@ pub(crate) fn directory_projection_state_is_valid(directory_json: &str, session_
 #[dsl(extension = "homecfg")]
 #[dsl(layout = "lines")]
 pub struct HomeConfig {
-    /// 👁️ Active launcher panel tab.
-    pub active_panel_tab: String,
     /// 📇️ JSON-serialized `DirectoryReadModel` (see `🔖️DirectoryJson` above) — folded here by
     /// `HomeConfigMutation::FoldDirectoryEvent` as `/directory/ws` events arrive; read via `directory()`.
     /// No optimistic mutation (contract §C6): the ONLY writer is the fold over hub-confirmed events.
@@ -132,11 +129,6 @@ pub struct HomeConfig {
     pub directory_authorization_generation: u64,
     /// 🧾️ Receipt of the last durably accepted directory page.
     pub directory_receipt_sha256: String,
-    /// 🪪️ The signed-in client's directory user id (`os.config.identity`'s `userId`); empty while
-    /// offline/no identity yet. Threads into `SpaceUser` ownership on space creation.
-    pub client_id: String,
-    /// 🪪️ The signed-in client's display name.
-    pub client_name: String,
 }
 
 impl HomeConfig {
@@ -238,13 +230,10 @@ impl store::ArtifactPack for HomeConfig {
 impl Default for HomeConfig {
     fn default() -> Self {
         Self {
-            active_panel_tab: String::new(),
             directory_json: directory_to_json(&store::os_directory::DirectoryReadModel::default()),
             directory_session_binding_sha256: String::new(),
             directory_authorization_generation: 0,
             directory_receipt_sha256: String::new(),
-            client_id: String::new(),
-            client_name: String::new(),
         }
     }
 }
@@ -262,8 +251,6 @@ pub enum HomeConfigMutation {
         #[dsl(block)]
         config: HomeConfig,
     },
-    #[dsl(key = "active-panel-tab")]
-    SetActivePanelTab { tab_id: String },
     /// 📇️ Folds one hub-confirmed `DirectoryEvent` (JSON-encoded, contract §C1) into `directory_json`
     /// — the SOLE writer of the directory read model (contract §C6: no optimistic mutation).
     #[dsl(key = "fold-directory-event")]
@@ -276,9 +263,6 @@ pub enum HomeConfigMutation {
         authorization_generation: u64,
         receipt_sha256: String,
     },
-    /// 🪪️ Sets the signed-in client identity (contract §C3 identity bootstrap).
-    #[dsl(key = "set-client")]
-    SetClient { client_id: String, client_name: String },
 }
 
 //#region 🔖️OpCodec
@@ -343,19 +327,15 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
     /// variant below has an authored leaf directory on disk yet.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-snapshot", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "⚙️", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-active-panel-tab", semantic_kind: "set-active-panel-tab", display_name: "Set Active Panel Tab", emoji: "⚙️", aggregate_variant: "SetActivePanelTab", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️fold-directory-event", semantic_kind: "fold-directory-event", display_name: "Fold Directory Event", emoji: "⚙️", aggregate_variant: "FoldDirectoryEvent", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️replace-directory-projection", semantic_kind: "replace-directory-projection", display_name: "Replace Directory Projection", emoji: "📄️", aggregate_variant: "ReplaceDirectoryProjection", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-client", semantic_kind: "set-client", display_name: "Set Client", emoji: "⚙️", aggregate_variant: "SetClient", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
             HomeConfigMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
-            HomeConfigMutation::SetActivePanelTab { .. } => &Self::DESCRIPTORS[1],
-            HomeConfigMutation::FoldDirectoryEvent { .. } => &Self::DESCRIPTORS[2],
-            HomeConfigMutation::ReplaceDirectoryProjection { .. } => &Self::DESCRIPTORS[3],
-            HomeConfigMutation::SetClient { .. } => &Self::DESCRIPTORS[4],
+            HomeConfigMutation::FoldDirectoryEvent { .. } => &Self::DESCRIPTORS[1],
+            HomeConfigMutation::ReplaceDirectoryProjection { .. } => &Self::DESCRIPTORS[2],
         }
     }
 
@@ -365,7 +345,6 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
         let mut next = base.clone();
         match self {
             HomeConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
-            HomeConfigMutation::SetActivePanelTab { tab_id } => next.active_panel_tab = tab_id.clone(),
             HomeConfigMutation::FoldDirectoryEvent { event_json } => {
                 if let (Ok(event), Ok(directory)) = (pack::from_json_str::<store::os_directory::DirectoryEvent>(event_json), next.directory()) {
                     next.directory_json = directory_to_json(&store::os_directory::fold(directory, &event));
@@ -378,10 +357,6 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
                     next.directory_authorization_generation = *authorization_generation;
                     next.directory_receipt_sha256 = receipt_sha256.clone();
                 }
-            }
-            HomeConfigMutation::SetClient { client_id, client_name } => {
-                next.client_id = client_id.clone();
-                next.client_name = client_name.clone();
             }
         }
         protocol::MutationOutcome::new(next)

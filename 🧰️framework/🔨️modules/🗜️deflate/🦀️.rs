@@ -197,7 +197,7 @@ impl BitWriter {
 /// lookup table needed.
 struct Huffman {
     counts: [u16; 16],
-    symbols: Vec<u16>,
+    symbols: [u16; 288],
 }
 
 impl Huffman {
@@ -214,7 +214,10 @@ impl Huffman {
         for len in 1..16 {
             offsets[len] = offsets[len - 1] + counts[len - 1];
         }
-        let mut symbols = vec![0u16; lengths.len()];
+        if lengths.len() > 288 {
+            return Err(DeflateError::BadHuffmanCode);
+        }
+        let mut symbols = [0u16; 288];
         for (symbol, &len) in lengths.iter().enumerate() {
             if len != 0 {
                 symbols[offsets[len as usize] as usize] = symbol as u16;
@@ -259,15 +262,170 @@ enum Phase {
     StoredCopy { remaining: u16 },
     DynamicCounts,
     DynamicClcLengths { read: usize, hclen: usize, hlit: usize, hdist: usize, clc_lengths: [u8; 19] },
-    DynamicCodeLengths { clc: Huffman, hlit: usize, hdist: usize, lengths: Vec<u8> },
-    DynamicRepeatPrev { clc: Huffman, hlit: usize, hdist: usize, lengths: Vec<u8>, prev: u8 },
-    DynamicRepeatZero { clc: Huffman, hlit: usize, hdist: usize, lengths: Vec<u8>, bits: u32, base: u32 },
+    DynamicCodeLengths { clc: Huffman, hlit: usize, hdist: usize, lengths: [u8; 318], len: usize },
+    DynamicRepeatPrev { clc: Huffman, hlit: usize, hdist: usize, lengths: [u8; 318], len: usize, prev: u8 },
+    DynamicRepeatZero { clc: Huffman, hlit: usize, hdist: usize, lengths: [u8; 318], len: usize, bits: u32, base: u32 },
     DecodeSymbol { lit_len: Huffman, dist: Huffman },
     LengthExtra { lit_len: Huffman, dist: Huffman, base_len: u16, extra: u8 },
     DecodeDistanceSymbol { lit_len: Huffman, dist: Huffman, length: u16 },
     DistanceExtra { lit_len: Huffman, dist: Huffman, length: u16, base_dist: u32, extra: u8 },
     CopyMatch { lit_len: Huffman, dist: Huffman, distance: u32, remaining: u16 },
     Done,
+}
+
+pub const RETAINED_INFLATE_WINDOW_BYTES: usize = 32 * 1024;
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct RetainedInflateAllocationStep {
+    pub progressed: bool,
+    pub allocated_bytes: usize,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RetainedInflateAllocationError {
+    pub allocated_bytes: usize,
+    pub reason: &'static str,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RetainedInflateCloseStep {
+    Pending { released_items: usize, released_bytes: usize },
+    Complete,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RetainedInflateProgress {
+    pub history_bytes: usize,
+    pub allocated_bytes: usize,
+    pub maximum_distance: usize,
+    pub observed_distance_one: bool,
+    pub dynamic_repeat_codes: u8,
+    pub allocation_ready: bool,
+    pub terminal: bool,
+}
+
+struct RetainedInflateHistory {
+    bytes: std::mem::ManuallyDrop<Vec<u8>>,
+    target: usize,
+    maximum_allocation_bytes: usize,
+    length: usize,
+    write: usize,
+    allocation_fault: Option<RetainedInflateAllocationError>,
+    physical_closed: bool,
+}
+
+impl RetainedInflateHistory {
+    fn new(target: usize, maximum_allocation_bytes: usize) -> Result<Self, DeflateError> {
+        if target > maximum_allocation_bytes || maximum_allocation_bytes > isize::MAX as usize {
+            return Err(DeflateError::OutputLimitExceeded);
+        }
+        Ok(Self {
+            bytes: std::mem::ManuallyDrop::new(Vec::new()),
+            target,
+            maximum_allocation_bytes,
+            length: 0,
+            write: 0,
+            allocation_fault: None,
+            physical_closed: false,
+        })
+    }
+
+    fn allocated_bytes(&self) -> usize {
+        self.bytes.capacity()
+    }
+
+    fn ready(&self) -> bool {
+        self.allocation_fault.is_none() && (self.target == 0 || self.allocated_bytes() >= self.target) && self.allocated_bytes() <= self.maximum_allocation_bytes && !self.physical_closed
+    }
+
+    fn next_allocation_bytes(&self) -> Option<usize> {
+        (!self.ready() && self.allocation_fault.is_none() && self.target != 0).then_some(self.target)
+    }
+
+    fn reserve(&mut self, maximum_bytes: usize) -> Result<RetainedInflateAllocationStep, RetainedInflateAllocationError> {
+        if let Some(fault) = self.allocation_fault {
+            return Err(fault);
+        }
+        let Some(exact) = self.next_allocation_bytes() else { return Ok(RetainedInflateAllocationStep::default()) };
+        if maximum_bytes < exact {
+            return Ok(RetainedInflateAllocationStep::default());
+        }
+        if self.bytes.try_reserve_exact(exact).is_err() {
+            let fault = RetainedInflateAllocationError { allocated_bytes: self.allocated_bytes(), reason: "retained inflate history allocation failed" };
+            self.allocation_fault = Some(fault);
+            return Err(fault);
+        }
+        let allocated_bytes = self.allocated_bytes();
+        if allocated_bytes < exact || allocated_bytes > maximum_bytes || allocated_bytes > self.maximum_allocation_bytes {
+            let fault = RetainedInflateAllocationError { allocated_bytes, reason: "retained inflate history allocation exceeded physical ceiling" };
+            self.allocation_fault = Some(fault);
+            return Err(fault);
+        }
+        Ok(RetainedInflateAllocationStep { progressed: true, allocated_bytes })
+    }
+
+    fn push(&mut self, byte: u8) -> Result<(), DeflateError> {
+        if !self.ready() || self.target == 0 {
+            return Err(DeflateError::OutputLimitExceeded);
+        }
+        if self.length < self.target {
+            self.bytes.push(byte);
+            self.length += 1;
+            self.write = self.length % self.target;
+        } else {
+            self.bytes[self.write] = byte;
+            self.write = (self.write + 1) % self.target;
+        }
+        Ok(())
+    }
+
+    fn read_back(&self, distance: usize) -> Result<u8, DeflateError> {
+        if distance == 0 || distance > self.length {
+            return Err(DeflateError::BadDistance);
+        }
+        let index = if self.length < self.target { self.length - distance } else { (self.write + self.target - distance) % self.target };
+        Ok(self.bytes[index])
+    }
+
+    fn reset(&mut self) {
+        self.bytes.clear();
+        self.length = 0;
+        self.write = 0;
+    }
+
+    fn release(&mut self, maximum_bytes: usize) -> RetainedInflateCloseStep {
+        let allocated_bytes = self.allocated_bytes();
+        if allocated_bytes > maximum_bytes {
+            return RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        let bytes = std::mem::replace(&mut self.bytes, std::mem::ManuallyDrop::new(Vec::new()));
+        drop(std::mem::ManuallyDrop::into_inner(bytes));
+        self.physical_closed = true;
+        if allocated_bytes == 0 {
+            RetainedInflateCloseStep::Complete
+        } else {
+            RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: allocated_bytes }
+        }
+    }
+}
+
+impl Drop for RetainedInflateHistory {
+    fn drop(&mut self) {
+        assert!(self.physical_closed && self.allocated_bytes() == 0, "retained inflate history reached Drop before exact physical release");
+    }
+}
+
+enum InflateHistory {
+    Cold(Vec<u8>),
+    Retained(RetainedInflateHistory),
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum RetainedInflateClosePhase {
+    Open,
+    DecoderLogical,
+    HistoryPhysical,
+    Closed,
 }
 
 /// 🌊️ Resumable raw-DEFLATE decoder that yields exactly one output byte (or `NeedInput`/`Done`)
@@ -277,9 +435,13 @@ enum Phase {
 /// callers that only need a one-shot `Vec<u8>` should use `inflate` instead.
 pub struct Inflater {
     reader: BitReader,
-    output: Vec<u8>,
+    history: InflateHistory,
     phase: Phase,
     final_block: bool,
+    maximum_distance: usize,
+    observed_distance_one: bool,
+    dynamic_repeat_codes: u8,
+    retained_close_phase: RetainedInflateClosePhase,
 }
 
 impl Default for Inflater {
@@ -290,12 +452,179 @@ impl Default for Inflater {
 
 impl Inflater {
     pub fn new() -> Self {
-        Self { reader: BitReader::new(), output: Vec::new(), phase: Phase::BlockHeader, final_block: false }
+        Self {
+            reader: BitReader::new(),
+            history: InflateHistory::Cold(Vec::new()),
+            phase: Phase::BlockHeader,
+            final_block: false,
+            maximum_distance: 0,
+            observed_distance_one: false,
+            dynamic_repeat_codes: 0,
+            retained_close_phase: RetainedInflateClosePhase::Open,
+        }
+    }
+
+    pub fn try_new_retained(maximum_history_bytes: usize, maximum_allocation_bytes: usize) -> Result<Self, DeflateError> {
+        let target = maximum_history_bytes.min(RETAINED_INFLATE_WINDOW_BYTES);
+        Ok(Self {
+            reader: BitReader::new(),
+            history: InflateHistory::Retained(RetainedInflateHistory::new(target, maximum_allocation_bytes)?),
+            phase: Phase::BlockHeader,
+            final_block: false,
+            maximum_distance: 0,
+            observed_distance_one: false,
+            dynamic_repeat_codes: 0,
+            retained_close_phase: RetainedInflateClosePhase::Open,
+        })
+    }
+
+    pub fn next_retained_allocation_bytes(&self) -> Option<usize> {
+        match &self.history {
+            InflateHistory::Cold(_) => None,
+            InflateHistory::Retained(history) => history.next_allocation_bytes(),
+        }
+    }
+
+    pub fn reserve_retained_history(&mut self, maximum_bytes: usize) -> Result<RetainedInflateAllocationStep, RetainedInflateAllocationError> {
+        match &mut self.history {
+            InflateHistory::Cold(_) => Ok(RetainedInflateAllocationStep::default()),
+            InflateHistory::Retained(history) => history.reserve(maximum_bytes),
+        }
+    }
+
+    pub fn retained_allocated_bytes(&self) -> usize {
+        match &self.history {
+            InflateHistory::Cold(_) => 0,
+            InflateHistory::Retained(history) => history.allocated_bytes(),
+        }
+    }
+
+    pub fn retained_history_ptr(&self) -> Option<usize> {
+        match &self.history {
+            InflateHistory::Cold(_) => None,
+            InflateHistory::Retained(history) if history.allocated_bytes() != 0 => Some(history.bytes.as_ptr() as usize),
+            InflateHistory::Retained(_) => None,
+        }
+    }
+
+    pub fn retained_progress(&self) -> Option<RetainedInflateProgress> {
+        match &self.history {
+            InflateHistory::Cold(_) => None,
+            InflateHistory::Retained(history) => Some(RetainedInflateProgress {
+                history_bytes: history.length,
+                allocated_bytes: history.allocated_bytes(),
+                maximum_distance: self.maximum_distance,
+                observed_distance_one: self.observed_distance_one,
+                dynamic_repeat_codes: self.dynamic_repeat_codes,
+                allocation_ready: history.ready(),
+                terminal: self.retained_terminal_is_empty(),
+            }),
+        }
+    }
+
+    pub fn reset_retained(&mut self) -> Result<(), DeflateError> {
+        let InflateHistory::Retained(history) = &mut self.history else { return Err(DeflateError::BadBlockType) };
+        if self.retained_close_phase != RetainedInflateClosePhase::Open || !history.ready() {
+            return Err(DeflateError::OutputLimitExceeded);
+        }
+        history.reset();
+        self.reader = BitReader::new();
+        self.phase = Phase::BlockHeader;
+        self.final_block = false;
+        Ok(())
+    }
+
+    pub fn next_retained_release_allocation_bytes(&self) -> Option<usize> {
+        if self.retained_close_phase != RetainedInflateClosePhase::HistoryPhysical {
+            return None;
+        }
+        match &self.history {
+            InflateHistory::Retained(history) if history.allocated_bytes() != 0 => Some(history.allocated_bytes()),
+            _ => None,
+        }
+    }
+
+    pub fn close_retained_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> RetainedInflateCloseStep {
+        if self.retained_close_phase == RetainedInflateClosePhase::Closed {
+            return RetainedInflateCloseStep::Complete;
+        }
+        if maximum_items == 0 && maximum_bytes == 0 {
+            return RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        match self.retained_close_phase {
+            RetainedInflateClosePhase::Open => {
+                if maximum_items == 0 {
+                    return RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                if let InflateHistory::Retained(history) = &mut self.history {
+                    history.reset();
+                }
+                self.retained_close_phase = RetainedInflateClosePhase::DecoderLogical;
+                RetainedInflateCloseStep::Pending { released_items: 1, released_bytes: 0 }
+            }
+            RetainedInflateClosePhase::DecoderLogical => {
+                if maximum_items == 0 {
+                    return RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                self.reader = BitReader::new();
+                self.phase = Phase::Done;
+                self.final_block = false;
+                self.retained_close_phase = RetainedInflateClosePhase::HistoryPhysical;
+                RetainedInflateCloseStep::Pending { released_items: 1, released_bytes: 0 }
+            }
+            RetainedInflateClosePhase::HistoryPhysical => {
+                let step = match &mut self.history {
+                    InflateHistory::Cold(_) => RetainedInflateCloseStep::Complete,
+                    InflateHistory::Retained(history) => history.release(maximum_bytes),
+                };
+                if matches!(step, RetainedInflateCloseStep::Complete) || matches!(step, RetainedInflateCloseStep::Pending { released_bytes, .. } if released_bytes != 0) {
+                    self.retained_close_phase = RetainedInflateClosePhase::Closed;
+                }
+                step
+            }
+            RetainedInflateClosePhase::Closed => RetainedInflateCloseStep::Complete,
+        }
+    }
+
+    pub fn retained_terminal_is_empty(&self) -> bool {
+        self.retained_close_phase == RetainedInflateClosePhase::Closed
+            && matches!(&self.history, InflateHistory::Retained(history) if history.length == 0 && history.allocated_bytes() == 0 && history.physical_closed)
+    }
+
+    fn history_ready(&self) -> bool {
+        match &self.history {
+            InflateHistory::Cold(_) => true,
+            InflateHistory::Retained(history) => history.ready() && self.retained_close_phase == RetainedInflateClosePhase::Open,
+        }
+    }
+
+    fn push_history(&mut self, byte: u8) -> Result<(), DeflateError> {
+        match &mut self.history {
+            InflateHistory::Cold(history) => {
+                history.push(byte);
+                Ok(())
+            }
+            InflateHistory::Retained(history) => history.push(byte),
+        }
+    }
+
+    fn read_history(&self, distance: usize) -> Result<u8, DeflateError> {
+        match &self.history {
+            InflateHistory::Cold(history) => distance
+                .checked_sub(1)
+                .and_then(|_| history.len().checked_sub(distance))
+                .and_then(|index| history.get(index).copied())
+                .ok_or(DeflateError::BadDistance),
+            InflateHistory::Retained(history) => history.read_back(distance),
+        }
     }
 
     /// ▶️ Advances the state machine by at most one admitted input byte, producing at most one
     /// output byte. `pending` is taken (set to `None`) exactly when this call consumed it.
     pub fn advance(&mut self, pending: &mut Option<u8>, input_complete: bool) -> Result<InflateOutcome, DeflateError> {
+        if !self.history_ready() {
+            return Ok(InflateOutcome::NeedInput);
+        }
         loop {
             let phase = std::mem::replace(&mut self.phase, Phase::Done);
             match phase {
@@ -346,7 +675,7 @@ impl Inflater {
                         return Ok(InflateOutcome::NeedInput);
                     }
                     let byte = self.reader.take(8) as u8;
-                    self.output.push(byte);
+                    self.push_history(byte)?;
                     self.phase = Phase::StoredCopy { remaining: remaining - 1 };
                     return Ok(InflateOutcome::Wrote(byte));
                 }
@@ -363,7 +692,7 @@ impl Inflater {
                 Phase::DynamicClcLengths { read, hclen, hlit, hdist, mut clc_lengths } => {
                     if read == hclen {
                         let clc = Huffman::build(&clc_lengths)?;
-                        self.phase = Phase::DynamicCodeLengths { clc, hlit, hdist, lengths: Vec::with_capacity(hlit + hdist) };
+                        self.phase = Phase::DynamicCodeLengths { clc, hlit, hdist, lengths: [0; 318], len: 0 };
                         continue;
                     }
                     if !self.reader.ensure(3, pending, input_complete)? {
@@ -373,51 +702,66 @@ impl Inflater {
                     clc_lengths[CLC_ORDER[read]] = self.reader.take(3) as u8;
                     self.phase = Phase::DynamicClcLengths { read: read + 1, hclen, hlit, hdist, clc_lengths };
                 }
-                Phase::DynamicCodeLengths { clc, hlit, hdist, mut lengths } => {
-                    if lengths.len() >= hlit + hdist {
+                Phase::DynamicCodeLengths { clc, hlit, hdist, mut lengths, len } => {
+                    if len == hlit + hdist {
                         let lit_len = Huffman::build(&lengths[..hlit])?;
                         let dist = Huffman::build(&lengths[hlit..hlit + hdist])?;
                         self.phase = Phase::DecodeSymbol { lit_len, dist };
                         continue;
                     }
+                    if len > hlit + hdist || hlit + hdist > lengths.len() {
+                        return Err(DeflateError::BadHuffmanCode);
+                    }
                     if !self.reader.ensure_huffman(pending, input_complete)? {
-                        self.phase = Phase::DynamicCodeLengths { clc, hlit, hdist, lengths };
+                        self.phase = Phase::DynamicCodeLengths { clc, hlit, hdist, lengths, len };
                         return Ok(InflateOutcome::NeedInput);
                     }
                     let symbol = clc.decode(&mut self.reader)?;
                     match symbol {
                         0..=15 => {
-                            lengths.push(symbol as u8);
-                            self.phase = Phase::DynamicCodeLengths { clc, hlit, hdist, lengths };
+                            lengths[len] = symbol as u8;
+                            self.phase = Phase::DynamicCodeLengths { clc, hlit, hdist, lengths, len: len + 1 };
                         }
                         16 => {
-                            let prev = *lengths.last().ok_or(DeflateError::BadHuffmanCode)?;
-                            self.phase = Phase::DynamicRepeatPrev { clc, hlit, hdist, lengths, prev };
+                            if len == 0 {
+                                return Err(DeflateError::BadHuffmanCode);
+                            }
+                            self.dynamic_repeat_codes |= 0b001;
+                            let prev = lengths[len - 1];
+                            self.phase = Phase::DynamicRepeatPrev { clc, hlit, hdist, lengths, len, prev };
                         }
-                        17 => self.phase = Phase::DynamicRepeatZero { clc, hlit, hdist, lengths, bits: 3, base: 3 },
-                        18 => self.phase = Phase::DynamicRepeatZero { clc, hlit, hdist, lengths, bits: 7, base: 11 },
+                        17 => {
+                            self.dynamic_repeat_codes |= 0b010;
+                            self.phase = Phase::DynamicRepeatZero { clc, hlit, hdist, lengths, len, bits: 3, base: 3 };
+                        }
+                        18 => {
+                            self.dynamic_repeat_codes |= 0b100;
+                            self.phase = Phase::DynamicRepeatZero { clc, hlit, hdist, lengths, len, bits: 7, base: 11 };
+                        }
                         _ => return Err(DeflateError::BadHuffmanCode),
                     }
                 }
-                Phase::DynamicRepeatPrev { clc, hlit, hdist, mut lengths, prev } => {
+                Phase::DynamicRepeatPrev { clc, hlit, hdist, mut lengths, len, prev } => {
                     if !self.reader.ensure(2, pending, input_complete)? {
-                        self.phase = Phase::DynamicRepeatPrev { clc, hlit, hdist, lengths, prev };
+                        self.phase = Phase::DynamicRepeatPrev { clc, hlit, hdist, lengths, len, prev };
                         return Ok(InflateOutcome::NeedInput);
                     }
-                    let repeat = self.reader.take(2) + 3;
-                    for _ in 0..repeat {
-                        lengths.push(prev);
+                    let repeat = self.reader.take(2) as usize + 3;
+                    let next = len.checked_add(repeat).filter(|next| *next <= hlit + hdist && *next <= lengths.len()).ok_or(DeflateError::BadHuffmanCode)?;
+                    for entry in &mut lengths[len..next] {
+                        *entry = prev;
                     }
-                    self.phase = Phase::DynamicCodeLengths { clc, hlit, hdist, lengths };
+                    self.phase = Phase::DynamicCodeLengths { clc, hlit, hdist, lengths, len: next };
                 }
-                Phase::DynamicRepeatZero { clc, hlit, hdist, mut lengths, bits, base } => {
+                Phase::DynamicRepeatZero { clc, hlit, hdist, mut lengths, len, bits, base } => {
                     if !self.reader.ensure(bits, pending, input_complete)? {
-                        self.phase = Phase::DynamicRepeatZero { clc, hlit, hdist, lengths, bits, base };
+                        self.phase = Phase::DynamicRepeatZero { clc, hlit, hdist, lengths, len, bits, base };
                         return Ok(InflateOutcome::NeedInput);
                     }
-                    let repeat = self.reader.take(bits) + base;
-                    lengths.extend(std::iter::repeat_n(0, repeat as usize));
-                    self.phase = Phase::DynamicCodeLengths { clc, hlit, hdist, lengths };
+                    let repeat = (self.reader.take(bits) + base) as usize;
+                    let next = len.checked_add(repeat).filter(|next| *next <= hlit + hdist && *next <= lengths.len()).ok_or(DeflateError::BadHuffmanCode)?;
+                    lengths[len..next].fill(0);
+                    self.phase = Phase::DynamicCodeLengths { clc, hlit, hdist, lengths, len: next };
                 }
                 Phase::DecodeSymbol { lit_len, dist } => {
                     if !self.reader.ensure_huffman(pending, input_complete)? {
@@ -427,7 +771,7 @@ impl Inflater {
                     let symbol = lit_len.decode(&mut self.reader)?;
                     if symbol < 256 {
                         let byte = symbol as u8;
-                        self.output.push(byte);
+                        self.push_history(byte)?;
                         self.phase = Phase::DecodeSymbol { lit_len, dist };
                         return Ok(InflateOutcome::Wrote(byte));
                     } else if symbol == 256 {
@@ -477,11 +821,10 @@ impl Inflater {
                         continue;
                     }
                     let back = distance as usize;
-                    if back == 0 || back > self.output.len() {
-                        return Err(DeflateError::BadDistance);
-                    }
-                    let byte = self.output[self.output.len() - back];
-                    self.output.push(byte);
+                    let byte = self.read_history(back)?;
+                    self.maximum_distance = self.maximum_distance.max(back);
+                    self.observed_distance_one |= back == 1;
+                    self.push_history(byte)?;
                     self.phase = Phase::CopyMatch { lit_len, dist, distance, remaining: remaining - 1 };
                     return Ok(InflateOutcome::Wrote(byte));
                 }

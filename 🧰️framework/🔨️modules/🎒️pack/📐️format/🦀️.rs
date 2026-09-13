@@ -1415,7 +1415,7 @@ struct RetainedVarintCursor {
 impl RetainedVarintCursor {
     fn admit(&mut self, byte: u8, offset: u64) -> Result<RetainedVarintStep, PackError> {
         if self.bytes >= 10 || (self.bytes == 9 && ((byte & 0x80) != 0 || byte & 0x7f > 1)) {
-            return Err(PackError::Malformed { what: "varint", offset: offset - self.bytes as u64, detail: "overlong retained varint".into() });
+            return Err(PackError::RetainedMalformed { what: "varint", offset: offset - self.bytes as u64, detail: "overlong retained varint" });
         }
         let payload = (byte & 0x7f) as u64;
         self.value |= payload << (self.bytes as u32 * 7);
@@ -1464,13 +1464,18 @@ pub struct RetainedPackSegmentCursor {
     trailer_seen: usize,
     #[cfg(feature = "deflate")]
     inflater: Option<crate::codec::DeflateRetainedCursor>,
+    maximum_inflater_allocation_bytes: usize,
+    fault: Option<PackError>,
     closed: bool,
 }
 
 impl RetainedPackSegmentCursor {
-    pub fn try_new(limits: PackLimits) -> Result<Self, PackError> {
+    pub fn try_new(limits: PackLimits, maximum_inflater_allocation_bytes: usize) -> Result<Self, PackError> {
         if limits.max_segment_len == 0 || limits.max_file_len < (HEADER_SIZE + FOOTER_SIZE) as u64 {
             return Err(PackError::LimitExceeded("retained pack limits"));
+        }
+        if maximum_inflater_allocation_bytes > isize::MAX as usize {
+            return Err(PackError::LimitExceeded("retained inflater physical ceiling exceeds address space"));
         }
         Ok(Self {
             limits,
@@ -1486,16 +1491,21 @@ impl RetainedPackSegmentCursor {
             trailer_seen: 0,
             #[cfg(feature = "deflate")]
             inflater: None,
+            maximum_inflater_allocation_bytes,
+            fault: None,
             closed: false,
         })
     }
 
     pub fn preflight(&self) -> Result<(), &'static str> {
-        if self.closed || self.pending.is_some() || matches!(self.phase, RetainedPackSegmentPhase::Complete | RetainedPackSegmentPhase::Closed) {
+        if self.closed || self.fault.is_some() || self.pending.is_some() || matches!(self.phase, RetainedPackSegmentPhase::Complete | RetainedPackSegmentPhase::Closed) {
             return Err("retained-pack.segment-admission");
         }
         #[cfg(feature = "deflate")]
-        if self.inflater.as_ref().is_some_and(|inflater| !inflater.can_admit()) {
+        if matches!(self.phase, RetainedPackSegmentPhase::Payload)
+            && self.segment.flags & 1 != 0
+            && self.inflater.as_ref().is_some_and(|inflater| !inflater.can_admit())
+        {
             return Err("retained-pack.inflate-backpressure");
         }
         Ok(())
@@ -1513,7 +1523,7 @@ impl RetainedPackSegmentCursor {
         match self.pending.take() {
             Some(RetainedPackSourceEvent::Byte { offset, value }) => {
                 if offset != self.total || offset >= self.limits.max_file_len {
-                    return Err(PackError::Malformed { what: "retained-segment", offset, detail: "non-contiguous or over-limit source".into() });
+                    return Err(PackError::RetainedMalformed { what: "retained-segment", offset, detail: "non-contiguous or over-limit source" });
                 }
                 self.total += 1;
                 Ok(Some((offset, value)))
@@ -1531,22 +1541,30 @@ impl RetainedPackSegmentCursor {
             return Err(PackError::LimitExceeded("segment length exceeds max_segment_len"));
         }
         if self.segment.kind == crate::KIND_END && (self.segment.stored_len != 0 || self.segment.raw_len != 0) {
-            return Err(PackError::Malformed { what: "end-segment", offset: self.segment.offset, detail: "END payload must be empty".into() });
+            return Err(PackError::RetainedMalformed { what: "end-segment", offset: self.segment.offset, detail: "END payload must be empty" });
         }
         let codec = (self.segment.flags >> 1) & 0x07;
         if self.segment.flags & 0xf0 != 0 {
-            return Err(PackError::Malformed { what: "segment", offset: self.segment.offset + 1, detail: "reserved segment flags are set".into() });
+            return Err(PackError::RetainedMalformed { what: "segment", offset: self.segment.offset + 1, detail: "reserved segment flags are set" });
         }
         if self.segment.flags & 1 == 0 {
             if codec != 0 || self.segment.raw_len != self.segment.stored_len {
-                return Err(PackError::Malformed { what: "segment", offset: self.segment.offset + 1, detail: "identity segment length or codec mismatch".into() });
+                return Err(PackError::RetainedMalformed { what: "segment", offset: self.segment.offset + 1, detail: "identity segment length or codec mismatch" });
             }
         } else if codec != 1 {
             return Err(PackError::UnsupportedCodec(codec));
         } else {
             #[cfg(feature = "deflate")]
             {
-                self.inflater = Some(crate::codec::DeflateRetainedCursor::try_new(self.segment.raw_len, self.limits.max_segment_len)?);
+                if let Some(inflater) = self.inflater.as_mut() {
+                    inflater.reset(self.segment.raw_len, self.limits.max_segment_len)?;
+                } else {
+                    self.inflater = Some(crate::codec::DeflateRetainedCursor::try_new(
+                        self.segment.raw_len,
+                        self.limits.max_segment_len,
+                        self.maximum_inflater_allocation_bytes,
+                    )?);
+                }
             }
             #[cfg(not(feature = "deflate"))]
             return Err(PackError::UnsupportedCodec(codec));
@@ -1555,6 +1573,20 @@ impl RetainedPackSegmentCursor {
     }
 
     pub fn grant(&mut self) -> Result<Option<RetainedPackSegmentEvent>, PackError> {
+        if let Some(fault) = &self.fault {
+            return Err(fault.clone());
+        }
+        let result = self.grant_inner();
+        match result {
+            Ok(step) => Ok(step),
+            Err(fault) => {
+                self.fault = Some(fault);
+                Err(self.fault.as_ref().expect("retained segment first fault").clone())
+            }
+        }
+    }
+
+    fn grant_inner(&mut self) -> Result<Option<RetainedPackSegmentEvent>, PackError> {
         match self.phase {
             RetainedPackSegmentPhase::Header(index) => {
                 let Some((_, _)) = self.take_byte()? else { return Ok(None) };
@@ -1645,10 +1677,8 @@ impl RetainedPackSegmentCursor {
                         }
                         crate::codec::DeflateRetainedStep::Complete => {
                             if self.raw_seen != self.segment.raw_len {
-                                return Err(PackError::Malformed { what: "segment", offset: self.segment.payload_offset, detail: "raw length mismatch".into() });
+                                return Err(PackError::RetainedMalformed { what: "segment", offset: self.segment.payload_offset, detail: "raw length mismatch" });
                             }
-                            inflater.close();
-                            self.inflater = None;
                             self.phase = RetainedPackSegmentPhase::Crc(0);
                             Ok(None)
                         }
@@ -1675,7 +1705,7 @@ impl RetainedPackSegmentCursor {
             RetainedPackSegmentPhase::Trailer => match self.pending.take() {
                 Some(RetainedPackSourceEvent::Byte { offset, .. }) => {
                     if offset != self.total || self.total >= self.limits.max_file_len || self.trailer_seen == FOOTER_SIZE {
-                        return Err(PackError::Malformed { what: "retained-footer", offset, detail: "non-contiguous trailer".into() });
+                        return Err(PackError::RetainedMalformed { what: "retained-footer", offset, detail: "non-contiguous trailer" });
                     }
                     self.total += 1;
                     self.trailer_seen += 1;
@@ -1691,19 +1721,99 @@ impl RetainedPackSegmentCursor {
                 None => Ok(None),
             },
             RetainedPackSegmentPhase::Complete => Ok(Some(RetainedPackSegmentEvent::PackComplete { bytes: self.total, segments: self.segments })),
-            RetainedPackSegmentPhase::Closed => Err(PackError::Malformed { what: "retained-segment", offset: self.total, detail: "cursor is closed".into() }),
+            RetainedPackSegmentPhase::Closed => Err(PackError::RetainedMalformed { what: "retained-segment", offset: self.total, detail: "cursor is closed" }),
         }
     }
 
-    pub fn close_step(&mut self) -> RetainedPackCloseStep {
+    pub fn next_allocation_bytes(&self) -> Option<usize> {
         #[cfg(feature = "deflate")]
-        if let Some(mut inflater) = self.inflater.take() {
-            inflater.close();
+        {
+            self.inflater.as_ref().and_then(crate::codec::DeflateRetainedCursor::next_allocation_bytes)
         }
-        self.pending = None;
+        #[cfg(not(feature = "deflate"))]
+        {
+            None
+        }
+    }
+
+    pub fn reserve_allocation(&mut self, maximum_bytes: usize) -> Result<RetainedPackSourceAllocationStep, RetainedPackSourceAllocationError> {
+        #[cfg(feature = "deflate")]
+        if let Some(inflater) = self.inflater.as_mut() {
+            return inflater
+                .reserve_allocation(maximum_bytes)
+                .map(|step| RetainedPackSourceAllocationStep { progressed: step.progressed, allocated_bytes: step.allocated_bytes })
+                .map_err(|error| RetainedPackSourceAllocationError { allocated_bytes: error.allocated_bytes, reason: error.reason });
+        }
+        Ok(RetainedPackSourceAllocationStep::default())
+    }
+
+    pub fn allocated_bytes(&self) -> usize {
+        #[cfg(feature = "deflate")]
+        {
+            self.inflater.as_ref().map_or(0, crate::codec::DeflateRetainedCursor::allocated_bytes)
+        }
+        #[cfg(not(feature = "deflate"))]
+        {
+            0
+        }
+    }
+
+    pub fn retained_inflater_ptr(&self) -> Option<usize> {
+        #[cfg(feature = "deflate")]
+        {
+            self.inflater.as_ref().and_then(crate::codec::DeflateRetainedCursor::retained_history_ptr)
+        }
+        #[cfg(not(feature = "deflate"))]
+        {
+            None
+        }
+    }
+
+    pub fn next_release_allocation_bytes(&self) -> Option<usize> {
+        if self.pending.is_some() {
+            return None;
+        }
+        #[cfg(feature = "deflate")]
+        {
+            self.inflater.as_ref().and_then(crate::codec::DeflateRetainedCursor::next_release_allocation_bytes)
+        }
+        #[cfg(not(feature = "deflate"))]
+        {
+            None
+        }
+    }
+
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> RetainedPackCloseStep {
+        if self.closed {
+            return RetainedPackCloseStep::Complete;
+        }
+        if maximum_items == 0 && maximum_bytes == 0 {
+            return RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.pending.is_some() {
+            if maximum_items == 0 {
+                return RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.pending = None;
+            return RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        #[cfg(feature = "deflate")]
+        if let Some(inflater) = self.inflater.as_mut() {
+            match inflater.close_step(maximum_items, maximum_bytes) {
+                crate::codec::RetainedInflateCloseStep::Pending { released_items, released_bytes } => {
+                    return RetainedPackCloseStep::Pending { released_items, released_bytes };
+                }
+                crate::codec::RetainedInflateCloseStep::Complete => {}
+            }
+            drop(self.inflater.take());
+            return RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if maximum_items == 0 {
+            return RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
         self.phase = RetainedPackSegmentPhase::Closed;
         self.closed = true;
-        RetainedPackCloseStep::Complete
+        RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 }
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -3024,6 +3134,7 @@ pub struct RetainedPackAnchorCursor {
     phase: RetainedPackAnchorPhase,
     value: Option<Superblock>,
     handed_back: bool,
+    fault: Option<PackError>,
 }
 
 impl RetainedPackAnchorCursor {
@@ -3041,15 +3152,30 @@ impl RetainedPackAnchorCursor {
             phase: RetainedPackAnchorPhase::Collect,
             value: None,
             handed_back: false,
+            fault: None,
         }
     }
 
     pub fn grant(&mut self, event: Option<RetainedPackSourceEvent>) -> Result<bool, PackError> {
+        if let Some(fault) = &self.fault {
+            return Err(fault.clone());
+        }
+        let result = self.grant_inner(event);
+        match result {
+            Ok(step) => Ok(step),
+            Err(fault) => {
+                self.fault = Some(fault);
+                Err(self.fault.as_ref().expect("retained anchor first fault").clone())
+            }
+        }
+    }
+
+    fn grant_inner(&mut self, event: Option<RetainedPackSourceEvent>) -> Result<bool, PackError> {
         match self.phase {
             RetainedPackAnchorPhase::Collect => match event {
                 Some(RetainedPackSourceEvent::Byte { offset, value }) => {
                     if offset != self.total {
-                        return Err(PackError::Malformed { what: "retained-anchor", offset, detail: "non-contiguous source event".into() });
+                        return Err(PackError::RetainedMalformed { what: "retained-anchor", offset, detail: "non-contiguous source event" });
                     }
                     if self.header_len < HEADER_SIZE {
                         self.header[self.header_len] = value;
@@ -3075,7 +3201,7 @@ impl RetainedPackAnchorCursor {
             },
             RetainedPackAnchorPhase::VerifyHeader(index) => {
                 if event.is_some() {
-                    return Err(PackError::Malformed { what: "retained-anchor", offset: self.total, detail: "source replay after completion".into() });
+                    return Err(PackError::RetainedMalformed { what: "retained-anchor", offset: self.total, detail: "source replay after completion" });
                 }
                 if index < 20 {
                     self.header_crc.update_page(&self.header[index..index + 1]);
@@ -3090,14 +3216,14 @@ impl RetainedPackAnchorCursor {
                     return Err(PackError::BadMagic);
                 }
                 if self.header[24..32] != [0; 8] {
-                    return Err(PackError::Malformed { what: "header", offset: 24, detail: "reserved header bytes are nonzero".into() });
+                    return Err(PackError::RetainedMalformed { what: "header", offset: 24, detail: "reserved header bytes are nonzero" });
                 }
                 self.phase = RetainedPackAnchorPhase::VerifyFooter(0);
                 Ok(false)
             }
             RetainedPackAnchorPhase::VerifyFooter(index) => {
                 if event.is_some() {
-                    return Err(PackError::Malformed { what: "retained-anchor", offset: self.total, detail: "source replay after completion".into() });
+                    return Err(PackError::RetainedMalformed { what: "retained-anchor", offset: self.total, detail: "source replay after completion" });
                 }
                 if index < 80 {
                     self.footer_crc.update_page(&self.ordered_footer[index..index + 1]);
@@ -3130,10 +3256,10 @@ impl RetainedPackAnchorCursor {
                 let manifest_len = u64::from_le_bytes(self.ordered_footer[24..32].try_into().expect("manifest length"));
                 let manifest_end = manifest_offset.checked_add(manifest_len).ok_or(PackError::LimitExceeded("manifest span overflow"))?;
                 if footer_major != version_major || footer_minor != version_minor || footer_flags != required_flags || file_len != self.total {
-                    return Err(PackError::Malformed { what: "footer", offset: self.total - FOOTER_SIZE as u64, detail: "anchor identity mismatch".into() });
+                    return Err(PackError::RetainedMalformed { what: "footer", offset: self.total - FOOTER_SIZE as u64, detail: "anchor identity mismatch" });
                 }
                 if manifest_offset < HEADER_SIZE as u64 || manifest_len == 0 || manifest_end > self.total - FOOTER_SIZE as u64 {
-                    return Err(PackError::Malformed { what: "footer", offset: self.total - FOOTER_SIZE as u64, detail: "manifest span is outside the segment area".into() });
+                    return Err(PackError::RetainedMalformed { what: "footer", offset: self.total - FOOTER_SIZE as u64, detail: "manifest span is outside the segment area" });
                 }
                 let mut content_hash = [0; 32];
                 content_hash.copy_from_slice(&self.ordered_footer[40..72]);
@@ -3154,7 +3280,7 @@ impl RetainedPackAnchorCursor {
                 Ok(true)
             }
             RetainedPackAnchorPhase::Ready => Ok(true),
-            RetainedPackAnchorPhase::Closed => Err(PackError::Malformed { what: "retained-anchor", offset: self.total, detail: "anchor is closed".into() }),
+            RetainedPackAnchorPhase::Closed => Err(PackError::RetainedMalformed { what: "retained-anchor", offset: self.total, detail: "anchor is closed" }),
         }
     }
 

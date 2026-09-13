@@ -1,0 +1,514 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://semio/library-workspace-publication-source/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "owners",
+    "contexts",
+    "routes",
+    "inputs",
+    "arguments",
+    "workspaceCase",
+    "retirement",
+    "payloadCases",
+    "publicationConflicts"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "owners": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "declarations",
+          "imports",
+          "contextChain"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "/🟦️\\.ts$"
+          },
+          "declarations": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "imports": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "/🟦️\\.ts$"
+            }
+          },
+          "contextChain": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^repo-library-workspace"
+            }
+          }
+        }
+      }
+    },
+    "contexts": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "directoryName",
+          "parentKindId",
+          "kindId"
+        ],
+        "properties": {
+          "directoryName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "parentKindId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kindId": {
+            "type": "string",
+            "pattern": "^repo-library-workspace"
+          }
+        }
+      }
+    },
+    "routes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "check",
+        "write"
+      ],
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/route"
+        },
+        "check": {
+          "$ref": "#/$defs/route"
+        },
+        "write": {
+          "$ref": "#/$defs/route"
+        }
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "membership",
+        "source"
+      ],
+      "properties": {
+        "membership": {
+          "type": "array",
+          "minItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "source": {
+          "type": "array",
+          "minItems": 10,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "arguments": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "segments",
+          "accepted"
+        ],
+        "properties": {
+          "segments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "mode": {
+            "enum": [
+              "check",
+              "write"
+            ]
+          }
+        }
+      }
+    },
+    "workspaceCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rootDocument",
+        "packages",
+        "ignoredPackages",
+        "expectedWorkspaces"
+      ],
+      "properties": {
+        "rootDocument": {
+          "type": "object"
+        },
+        "packages": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "$ref": "#/$defs/package"
+          }
+        },
+        "ignoredPackages": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "$ref": "#/$defs/package"
+          }
+        },
+        "expectedWorkspaces": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "retirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generatorId",
+        "commands",
+        "targets",
+        "launch",
+        "historicalEvidence",
+        "absentPaths"
+      ],
+      "properties": {
+        "generatorId": {
+          "const": "ticket-important-fem-handoff"
+        },
+        "commands": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "targets": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "launch": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "command",
+            "order"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "command": {
+              "type": "string"
+            },
+            "order": {
+              "const": 206.115
+            }
+          }
+        },
+        "historicalEvidence": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "bytes",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        },
+        "absentPaths": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "payloadCases": {
+      "type": "array",
+      "minItems": 15,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "manifests",
+          "files",
+          "links",
+          "expected",
+          "duplicate",
+          "resolutions",
+          "externalFiles"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "manifests": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "directory",
+                "document"
+              ],
+              "properties": {
+                "directory": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "document": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "files": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "target",
+                "external",
+                "kind"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "target": {
+                  "type": "string"
+                },
+                "external": {
+                  "type": "boolean"
+                },
+                "kind": {
+                  "enum": [
+                    "file",
+                    "directory"
+                  ]
+                }
+              }
+            }
+          },
+          "expected": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "duplicate": {
+            "type": "boolean"
+          },
+          "resolutions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "owner",
+                "entry",
+                "conditions",
+                "targets",
+                "payload"
+              ],
+              "properties": {
+                "owner": {
+                  "type": "string"
+                },
+                "entry": {
+                  "type": "string"
+                },
+                "conditions": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "targets": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "payload": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "externalFiles": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "publicationConflicts": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "change",
+          "expectedError"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "change": {
+            "enum": [
+              "source",
+              "file-kind"
+            ]
+          },
+          "expectedError": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target",
+        "command",
+        "launchName",
+        "launchCommand"
+      ],
+      "properties": {
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "command": {
+          "type": "string",
+          "minLength": 1
+        },
+        "launchName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "launchCommand": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directory",
+        "name"
+      ],
+      "properties": {
+        "directory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "oracle": {
+    "package": "fast-json-patch",
+    "version": "3.1.1"
+  },
+  "mountedModel": {
+    "maximumInlineBytes": 4096,
+    "maximumBackingBytes": 4096,
+    "initialAllocationBytes": 0,
+    "logicalLimits": { "node": 128, "element": 128, "support": 64 },
+    "targets": ["empty", "one", "maximum"],
+    "allocationFaultOwner": "retained",
+    "modelTransfer": "move"
+  },
+  "inlineOwners": [
+    "assembly",
+    "matrix"
+  ],
+  "cases": [
+    {
+      "name": "empty",
+      "backingCount": 0
+    },
+    {
+      "name": "three-empty-capacitated-owners",
+      "backingCount": 3
+    }
+  ],
+  "grants": [
+    {
+      "name": "zero",
+      "relativeBytes": "zero",
+      "releasedBackings": 0
+    },
+    {
+      "name": "subexact",
+      "relativeBytes": "one-less",
+      "releasedBackings": 0
+    },
+    {
+      "name": "exact",
+      "relativeBytes": "next-backing",
+      "releasedBackings": 1
+    }
+  ],
+  "release": {
+    "inlineOwnerBytes": 0,
+    "maximumOwnersPerStep": 1,
+    "allocationLedger": "actual-capacity"
+  }
+}

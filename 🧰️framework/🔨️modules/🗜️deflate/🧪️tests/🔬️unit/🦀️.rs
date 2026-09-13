@@ -132,6 +132,148 @@ fn round_trips_multi_block_input_spanning_the_window() {
     assert_eq!(streamed_inflate(&ours), sample);
 }
 
+fn retained_inflate(compressed: &[u8], maximum_output_bytes: usize) -> (Vec<u8>, RetainedInflateProgress, usize, usize) {
+    let mut inflater = Inflater::try_new_retained(maximum_output_bytes, RETAINED_INFLATE_WINDOW_BYTES).expect("retained inflater bounds");
+    let demand = inflater.next_retained_allocation_bytes().expect("retained history demand");
+    let step = inflater.reserve_retained_history(demand).expect("retained history allocation");
+    assert!(step.progressed && step.allocated_bytes >= demand);
+    let pointer = inflater.retained_history_ptr().expect("retained history pointer");
+    let mut output = Vec::new();
+    let mut input = 0usize;
+    let mut pending = None;
+    loop {
+        if pending.is_none() && input < compressed.len() {
+            pending = Some(compressed[input]);
+            input += 1;
+        }
+        match inflater.advance(&mut pending, input == compressed.len()).expect("retained decode") {
+            InflateOutcome::NeedInput if input == compressed.len() => panic!("retained decoder stalled at sealed input"),
+            InflateOutcome::NeedInput => {}
+            InflateOutcome::Wrote(byte) => output.push(byte),
+            InflateOutcome::Done => break,
+        }
+    }
+    let progress = inflater.retained_progress().expect("retained progress");
+    assert_eq!(close_retained(&mut inflater), step.allocated_bytes);
+    (output, progress, step.allocated_bytes, pointer)
+}
+
+fn close_retained(inflater: &mut Inflater) -> usize {
+    let mut released = 0usize;
+    loop {
+        let demand = inflater.next_retained_release_allocation_bytes().unwrap_or(0);
+        match inflater.close_retained_step(1, demand) {
+            RetainedInflateCloseStep::Pending { released_bytes, .. } => released += released_bytes,
+            RetainedInflateCloseStep::Complete => return released,
+        }
+    }
+}
+
+#[test]
+fn retained_inflater_physical_allocation_requires_exact_grant_and_releases_actual_backing() {
+    assert_eq!(
+        Inflater::try_new_retained(RETAINED_INFLATE_WINDOW_BYTES, RETAINED_INFLATE_WINDOW_BYTES - 1).err(),
+        Some(DeflateError::OutputLimitExceeded)
+    );
+    let mut inflater = Inflater::try_new_retained(64 * 1024, RETAINED_INFLATE_WINDOW_BYTES).expect("retained bounds");
+    assert_eq!(inflater.retained_allocated_bytes(), 0);
+    assert_eq!(inflater.next_retained_allocation_bytes(), Some(RETAINED_INFLATE_WINDOW_BYTES));
+    let mut pending = Some(0b11);
+    assert_eq!(inflater.advance(&mut pending, false).expect("allocation backpressure"), InflateOutcome::NeedInput);
+    assert_eq!(pending, Some(0b11));
+    let before = inflater.retained_progress().expect("pre-allocation progress");
+    assert_eq!(inflater.reserve_retained_history(0).expect("zero allocation grant"), RetainedInflateAllocationStep::default());
+    assert_eq!(inflater.reserve_retained_history(RETAINED_INFLATE_WINDOW_BYTES - 1).expect("subexact allocation grant"), RetainedInflateAllocationStep::default());
+    assert_eq!(inflater.retained_progress().expect("unchanged pre-allocation progress"), before);
+    let step = inflater.reserve_retained_history(RETAINED_INFLATE_WINDOW_BYTES).expect("exact allocation grant");
+    assert!(step.progressed && step.allocated_bytes >= RETAINED_INFLATE_WINDOW_BYTES);
+    assert_eq!(inflater.retained_allocated_bytes(), step.allocated_bytes);
+    let pointer = inflater.retained_history_ptr().expect("history pointer");
+    assert_eq!(inflater.close_retained_step(0, 0), RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    assert_eq!(inflater.retained_history_ptr(), Some(pointer));
+    assert_eq!(inflater.close_retained_step(1, 0), RetainedInflateCloseStep::Pending { released_items: 1, released_bytes: 0 });
+    assert_eq!(inflater.close_retained_step(1, 0), RetainedInflateCloseStep::Pending { released_items: 1, released_bytes: 0 });
+    assert_eq!(inflater.next_retained_release_allocation_bytes(), Some(step.allocated_bytes));
+    assert_eq!(inflater.close_retained_step(0, step.allocated_bytes - 1), RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    assert_eq!(inflater.retained_history_ptr(), Some(pointer));
+    assert_eq!(inflater.close_retained_step(0, step.allocated_bytes), RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: step.allocated_bytes });
+    assert_eq!(inflater.close_retained_step(0, 0), RetainedInflateCloseStep::Complete);
+    assert!(inflater.retained_terminal_is_empty());
+    eprintln!("[DEBUG] retained-inflater allocation={} pointer-stable=true exact-release={}", step.allocated_bytes, step.allocated_bytes);
+}
+
+#[test]
+fn retained_inflater_physical_decodes_stored_fixed_dynamic_and_window_wrap_with_oracle() {
+    let stored_raw = [0, 0, 0, 0xff, 0xff];
+    let mut stored = vec![0b001u8];
+    stored.extend_from_slice(&(stored_raw.len() as u16).to_le_bytes());
+    stored.extend_from_slice(&(!(stored_raw.len() as u16)).to_le_bytes());
+    stored.extend_from_slice(&stored_raw);
+    let fixed_raw = vec![b'x'; 10_000];
+    let fixed = deflate(&fixed_raw);
+    let dynamic_raw = "the quick brown fox jumps over the lazy dog. ".repeat(2000).into_bytes();
+    let dynamic = miniz_oxide::deflate::compress_to_vec(&dynamic_raw, 6);
+    let wrap_raw: Vec<u8> = (0..3u64).flat_map(|block| lcg_bytes(100 + block, 40_000)).collect();
+    let wrap = miniz_oxide::deflate::compress_to_vec(&wrap_raw, 6);
+    for (name, compressed, expected) in [("stored", stored, stored_raw.to_vec()), ("fixed", fixed, fixed_raw), ("dynamic", dynamic, dynamic_raw), ("window-wrap", wrap, wrap_raw)] {
+        let oracle = miniz_oxide::inflate::decompress_to_vec_with_limit(&compressed, expected.len().max(1)).expect("miniz retained oracle");
+        let (actual, progress, allocated, _) = retained_inflate(&compressed, expected.len().max(RETAINED_INFLATE_WINDOW_BYTES));
+        assert_eq!(actual, oracle, "retained {name} differs from miniz");
+        assert_eq!(actual, expected, "retained {name} output");
+        assert!(progress.history_bytes <= RETAINED_INFLATE_WINDOW_BYTES);
+        assert_eq!(allocated, progress.allocated_bytes);
+    }
+}
+
+#[test]
+fn retained_inflater_physical_observes_overlap_max_distance_repeats_and_reuses_backing() {
+    let overlap_raw = vec![b'z'; 20_000];
+    let overlap = miniz_oxide::deflate::compress_to_vec(&overlap_raw, 9);
+    let (_, overlap_progress, _, _) = retained_inflate(&overlap, RETAINED_INFLATE_WINDOW_BYTES);
+    assert!(overlap_progress.observed_distance_one);
+
+    let prefix = lcg_bytes(0x5eed, RETAINED_INFLATE_WINDOW_BYTES);
+    let max_distance_raw: Vec<u8> = prefix.iter().copied().chain(prefix.iter().copied()).collect();
+    let max_distance = deflate(&max_distance_raw);
+    assert_eq!(miniz_oxide::inflate::decompress_to_vec_with_limit(&max_distance, max_distance_raw.len()).expect("miniz maximum-distance oracle"), max_distance_raw);
+    let (_, distance_progress, _, _) = retained_inflate(&max_distance, max_distance_raw.len());
+    assert_eq!(distance_progress.maximum_distance, RETAINED_INFLATE_WINDOW_BYTES);
+
+    let dynamic_raw = "aaaaaaaaaabbbbbbbbbbcccccccccc0123456789".repeat(4096).into_bytes();
+    let dynamic = miniz_oxide::deflate::compress_to_vec(&dynamic_raw, 9);
+    let (_, repeat_progress, _, _) = retained_inflate(&dynamic, dynamic_raw.len());
+    assert_eq!(repeat_progress.dynamic_repeat_codes & 0b111, 0b111);
+
+    let mut inflater = Inflater::try_new_retained(64 * 1024, RETAINED_INFLATE_WINDOW_BYTES).expect("retained reuse bounds");
+    let exact = inflater.next_retained_allocation_bytes().expect("reuse allocation");
+    let allocated = inflater.reserve_retained_history(exact).expect("reuse reserve").allocated_bytes;
+    let pointer = inflater.retained_history_ptr().expect("reuse pointer");
+    for raw in [b"first compressed segment".repeat(800), b"second compressed segment".repeat(800)] {
+        let compressed = miniz_oxide::deflate::compress_to_vec(&raw, 6);
+        let mut output = Vec::new();
+        let mut input = 0usize;
+        let mut pending = None;
+        loop {
+            if pending.is_none() && input < compressed.len() {
+                pending = Some(compressed[input]);
+                input += 1;
+            }
+            match inflater.advance(&mut pending, input == compressed.len()).expect("reused retained decode") {
+                InflateOutcome::NeedInput => {}
+                InflateOutcome::Wrote(byte) => output.push(byte),
+                InflateOutcome::Done => break,
+            }
+        }
+        assert_eq!(output, raw);
+        inflater.reset_retained().expect("retain backing for next segment");
+        assert_eq!(inflater.retained_history_ptr(), Some(pointer));
+        assert_eq!(inflater.retained_allocated_bytes(), allocated);
+    }
+    assert_eq!(close_retained(&mut inflater), allocated);
+    assert!(inflater.retained_terminal_is_empty());
+    eprintln!("[DEBUG] retained-inflater distance-1=true distance-32768=true repeat-codes=16,17,18 reuse=true exact-release={allocated}/{allocated}");
+}
+
 //#region 🧪️Oracle
 /// 🧪️ `miniz_oxide` lives ONLY in `[dev-dependencies]` here — the differential oracle proving
 /// round-trip compatibility in both directions with what is already persisted.

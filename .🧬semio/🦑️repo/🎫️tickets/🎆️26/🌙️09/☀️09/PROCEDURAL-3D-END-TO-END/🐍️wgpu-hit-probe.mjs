@@ -112,6 +112,30 @@ await page.evaluate(() => {
   }, true);
 });
 
+/** 👆️ Hover witness: `dumpStructure`'s own `state.hovered`, sampled with the pointer parked on the
+ * row, then 300 px away, then back — the three samples §6 of
+ * `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md` measured as `[]`, `[]`, `[]`. */
+const hoveredIds = async (windowId) => {
+  const sample = await dump(windowId);
+  return (sample?.structure?.nodes ?? []).filter((node) => node?.state?.hovered === true).map((node) => node.path);
+};
+
+const hoverTarget = rowTargets.at(-1);
+const hoverWitness = { row: hoverTarget?.path ?? null, idle: [], onRow: [], away: [], back: [] };
+if (hoverTarget) {
+  hoverWitness.idle = await hoveredIds(hoverTarget.windowId);
+  await page.mouse.move(hoverTarget.page[0], hoverTarget.page[1]);
+  await page.waitForTimeout(2500);
+  hoverWitness.onRow = await hoveredIds(hoverTarget.windowId);
+  await page.mouse.move(hoverTarget.page[0], hoverTarget.page[1] + 300);
+  await page.waitForTimeout(2500);
+  hoverWitness.away = await hoveredIds(hoverTarget.windowId);
+  await page.mouse.move(hoverTarget.page[0], hoverTarget.page[1]);
+  await page.waitForTimeout(2500);
+  hoverWitness.back = await hoveredIds(hoverTarget.windowId);
+}
+lines.push(`${at()} PROBE hoverWitness ${JSON.stringify(hoverWitness)}`);
+
 const beforeRenderBegin = has("render begin").length;
 const beforeDispatch = has(rowNeedle).length;
 const target = rowTargets.at(-1);
@@ -157,6 +181,37 @@ for (const [id, kindNeedle] of [
 await dropOverlay();
 await page.screenshot({ path: join(outDir, "shot-elsewhere.png"), type: "png" }).catch(() => {});
 
+/** 🎥️ Wheel witness: the world3d camera the renderer traces per surface, before and after a wheel
+ * over the Preview. `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md` §6 measured it byte-identical
+ * across all 121 traces of a run that wheeled twice, because the wheel gate refused the ScrollRegion
+ * the window answered. */
+const cameraTrace = () => {
+  const line = has("world3d surface").at(-1) ?? "";
+  const match = /\{"fov".*?\}/.exec(line);
+  return match ? match[0] : null;
+};
+const previewWindow = process.env.SEMIO_PROBE_PREVIEW_WINDOW ?? "generation3d-generate-preview";
+const previewBody = dockPlan()[previewWindow];
+const wheelWitness = { window: previewWindow, body: previewBody ?? null, before: cameraTrace(), after: null, deltaLines: 0 };
+if (previewBody) {
+  const point = [previewBody.x + previewBody.w / 2, previewBody.y + previewBody.h / 2];
+  const beforeCount = has("world3d surface").length;
+  await page.mouse.move(point[0], point[1]);
+  await page.waitForTimeout(800);
+  for (let tick = 0; tick < 4; tick += 1) {
+    await page.mouse.wheel(0, 160);
+    await page.waitForTimeout(700);
+    await nudge(tick);
+  }
+  await page.waitForTimeout(3000);
+  wheelWitness.after = cameraTrace();
+  wheelWitness.deltaLines = has("world3d surface").length - beforeCount;
+  wheelWitness.changed = wheelWitness.before !== null && wheelWitness.after !== null && wheelWitness.before !== wheelWitness.after;
+  lines.push(`${at()} PROBE wheeled ${previewWindow} at ${point.join(",")}`);
+}
+lines.push(`${at()} PROBE wheelWitness ${JSON.stringify(wheelWitness)}`);
+await page.screenshot({ path: join(outDir, "shot-after-wheel.png"), type: "png" }).catch(() => {});
+
 const afterStructures = {};
 for (const id of windowIds) afterStructures[id] = await dump(id);
 
@@ -175,6 +230,9 @@ const verdict = {
   addGenerationLines: lines.filter((line) => line.toLowerCase().includes("addgeneration")).slice(-10),
   commandSettled: has("wgpu-shell command").slice(-8),
   previewStats: afterStructures[process.env.SEMIO_PROBE_PREVIEW_WINDOW ?? "generation3d-generate-preview"]?.stats ?? null,
+  hoverWitness,
+  wheelWitness,
+  pointerHitLines: has("os_host pointer hit").slice(-12),
   elsewhere,
   rowRectsAfter: Object.fromEntries(
     Object.entries(afterStructures).map(([id, sample]) => [id, (sample?.structure?.nodes ?? []).filter((node) => String(node.kind ?? "") === "stack").slice(0, 24).map((node) => ({ path: node.path, rect: node.rect }))]),

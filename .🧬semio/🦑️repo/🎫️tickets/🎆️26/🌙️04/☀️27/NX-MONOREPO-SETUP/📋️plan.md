@@ -41,17 +41,17 @@ The accessible branch overview shows an existing Nx configuration alongside Bun,
 
 Start with this inspection map, validating every path against the pinned commit:
 
-| Surface visible in the branch overview                                                          | Audit objective                                                                                       |
-| ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `nx.json`, `.nxignore`                                                                          | Resolve effective targets, caching, inputs, defaults, discovery, and exclusions                       |
-| `package.json`, `bun.lock`, `bunfig.toml`                                                       | Find package scripts, lifecycle hooks, workspace boundaries, and installation behavior                |
-| `Cargo.toml`, `Cargo.lock`, `.cargo/`, `rust-toolchain.toml`                                    | Find native workspace boundaries, profiles, output directories, and compiler settings                 |
-| `pyproject.toml`, `uv.lock`, `conftest.py`                                                      | Find Python environments, test collection, fixtures, native extensions, and packaging                 |
-| `go.work`, `go.work.sum`                                                                        | Find Go modules, local module dependencies, and workspace-wide commands                               |
-| `Monorepo.sln`                                                                                  | Find individual projects, build references, configurations, and platform requirements                 |
-| `CMakeLists.txt`, `CMakePresets.json`                                                           | Find configure/build/test relationships and shared native build directories                           |
-| `📋️project.json`, `📜️script.ts`, `🗿️artifact.ts`, `🔒️dependencies.json`, `🧅️layering.json` | Establish whether custom metadata defines projects, dependencies, artifacts, or a competing scheduler |
-| `.github/`, `.devcontainer/`, `.vscode/`, `.storybook/`, `.gitmodules`, agent configuration     | Find every external entry point and nested repository boundary                                        |
+| Surface visible in the branch overview                                                      | Audit objective                                                                                       |
+| ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `nx.json`, `.nxignore`                                                                      | Resolve effective targets, caching, inputs, defaults, discovery, and exclusions                       |
+| `package.json`, `bun.lock`, `bunfig.toml`                                                   | Find package scripts, lifecycle hooks, workspace boundaries, and installation behavior                |
+| `Cargo.toml`, `Cargo.lock`, `.cargo/`, `rust-toolchain.toml`                                | Find native workspace boundaries, profiles, output directories, and compiler settings                 |
+| `pyproject.toml`, `uv.lock`, `conftest.py`                                                  | Find Python environments, test collection, fixtures, native extensions, and packaging                 |
+| `go.work`, `go.work.sum`                                                                    | Find Go modules, local module dependencies, and workspace-wide commands                               |
+| `Monorepo.sln`                                                                              | Find individual projects, build references, configurations, and platform requirements                 |
+| `CMakeLists.txt`, `CMakePresets.json`                                                       | Find configure/build/test relationships and shared native build directories                           |
+| `📋️project.json`, `📜️script.ts`, `🗿️artifact.ts`, `🔒️dependencies.json`, `🧅️layering.json`  | Establish whether custom metadata defines projects, dependencies, artifacts, or a competing scheduler |
+| `.github/`, `.devcontainer/`, `.vscode/`, `.storybook/`, `.gitmodules`, agent configuration | Find every external entry point and nested repository boundary                                        |
 
 Do not assume `📋️project.json` is either broken or already integrated. Standard Nx project discovery and custom metadata discovery are different mechanisms; a plugin can bridge custom configuration into Nx. The audit must establish whether that bridge exists and what it produces. ([Nx][3])
 
@@ -194,9 +194,9 @@ Nx exposes project-graph extension mechanisms for adding language support and de
 
 The plugin must:
 
-* Discover every relevant project, including non-JavaScript projects.
-* Attach dependency provenance: import, native manifest, schema, generated binding, runtime fixture, or explicit declaration.
-* Validate duplicate identifiers, cycles, missing owners, and conflicting metadata.
+- Discover every relevant project, including non-JavaScript projects.
+- Attach dependency provenance: import, native manifest, schema, generated binding, runtime fixture, or explicit declaration.
+- Validate duplicate identifiers, cycles, missing owners, and conflicting metadata.
 
 Graph construction must be offline and cheap. It must not install dependencies, compile projects, recursively invoke Nx, or rescan every generated directory.
 
@@ -253,34 +253,34 @@ This is a **design sketch**, not a drop-in replacement for the unread `nx.json`:
 
 ```json
 {
-  "parallel": 3,
-  "cacheDirectory": ".cache/nx",
-  "maxCacheSize": "8GB",
-  "targetDefaults": {
-    "dev": {
-      "cache": false,
-      "continuous": true
-    },
-    "test-watch": {
-      "cache": false,
-      "continuous": true
-    },
-    "deps": {
-      "cache": false
-    },
-    "format-fix": {
-      "cache": false
-    },
-    "publish": {
-      "cache": false
-    },
-    "deploy": {
-      "cache": false
-    },
-    "clean": {
-      "cache": false
-    }
+ "parallel": 3,
+ "cacheDirectory": ".cache/nx",
+ "maxCacheSize": "8GB",
+ "targetDefaults": {
+  "dev": {
+   "cache": false,
+   "continuous": true
+  },
+  "test-watch": {
+   "cache": false,
+   "continuous": true
+  },
+  "deps": {
+   "cache": false
+  },
+  "format-fix": {
+   "cache": false
+  },
+  "publish": {
+   "cache": false
+  },
+  "deploy": {
+   "cache": false
+  },
+  "clean": {
+   "cache": false
   }
+ }
 }
 ```
 

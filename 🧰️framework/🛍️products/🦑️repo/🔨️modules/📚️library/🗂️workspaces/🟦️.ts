@@ -1,14 +1,11 @@
 //#region 🧲️Header
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
-// AGPL-3.0 — @semio-tech/repo-lib/js: generates root `package.json`'s bun `workspaces` array from a real
-// on-disk scan for every `package.json`-carrying directory (Shape V1 `⚡️implementations/<lang>` and
-// Shape V2 `📦️packages/<lang>` alike), replacing the ~68 hand-maintained literal globs that were
-// already out of sync (~40 math npm wrapper packages were resolving via nx only, invisible to bun).
-// @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/GENERATED-BUN-WORKSPACES-FROM-PACKAGE-CATALOG
+// AGPL-3.0 — @semio-tech/repo-lib/js
+// Physical package membership and explicit package payload ownership.
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, lstatSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 //#endregion 🔌️Adapters
 
@@ -42,16 +39,12 @@ export function getWorkspaceRoot(): string {
 
 //#region 🔣️Constants
 const MANIFEST_FILENAME = "package.json";
-const CARGO_MANIFEST_FILENAME = "Cargo.toml";
 
 /** 🧺️ Directory names never descended into — build/vendor/scratch trees, never real workspace source.
  * Includes the schema-owned opaque `compose` boundary (same isolation as `DISCOVERY_SKIP_DIRS`) so
  * workspace generation cannot reintroduce its intentionally deleted memberships. */
 const WORKSPACE_SCAN_SKIP_DIR_NAMES = new Set(["node_modules", "target", "dist", "build", "🤖️generated", "storybook-static", "temp", "coverage", "🔌️plugin-modules", ".🧬semio", "compose"]);
 
-/** 🧻️ wasm-pack's generated npm-wrapper dir name — gitignored, present only once built, handled
- * specially by `resolvePkgDir` and never generically recursed into (see its docstring for why). */
-const WASM_PKG_DIR_NAME = "pkg";
 //#endregion 🔣️Constants
 
 //#region 🔍️Scan
@@ -60,112 +53,174 @@ interface WorkspaceCandidate {
   readonly relDir: string;
   readonly absDir: string;
   readonly name?: string;
+  readonly exports?: unknown;
 }
 
-/** 🧻️ A `pkg/` dir queued for the special resolution pass in `computeWorkspaces` — see `resolvePkgDir`. */
-interface PkgDirCandidate {
-  readonly pkgAbsDir: string;
-  readonly parentAbsDir: string;
+export interface WorkspaceDiscoveryProgress {
+  readonly candidatesDiscovered: number;
+  readonly directoriesScanned: number;
+  readonly relativeDirectory: string;
 }
 
-function readManifestName(manifestPath: string): string | undefined {
+export interface WorkspaceDiscoveryEntry {
+  readonly kind: "directory" | "file" | "symlink" | "other";
+  readonly name: string;
+}
+
+export interface WorkspaceDiscoveryOperations {
+  readonly list: (path: string) => readonly WorkspaceDiscoveryEntry[];
+  readonly readText: (path: string) => string;
+  readonly state: (path: string) => "directory" | "file" | "missing" | "symlink" | "other";
+}
+
+export interface WorkspaceDiscoveryOptions {
+  readonly onProgress?: (progress: WorkspaceDiscoveryProgress) => void;
+  readonly operations?: WorkspaceDiscoveryOperations;
+  readonly signal?: Pick<AbortSignal, "aborted">;
+}
+
+function errorCode(error: unknown): string | undefined {
+  return typeof error === "object" && error !== null && "code" in error ? String((error as { code?: unknown }).code) : undefined;
+}
+
+function nativeState(path: string): "directory" | "file" | "missing" | "symlink" | "other" {
   try {
-    return (JSON.parse(readFileSync(manifestPath, "utf8")) as { name?: string }).name;
-  } catch {
-    return undefined;
+    const state = lstatSync(path);
+    if (state.isSymbolicLink()) return "symlink";
+    if (state.isDirectory()) return "directory";
+    if (state.isFile()) return "file";
+    return "other";
+  } catch (error) {
+    if (errorCode(error) === "ENOENT") return "missing";
+    throw new Error(`Workspace source is unreadable: ${path}`, { cause: error });
   }
 }
 
-/** 📁️ `readdirSync(dir, { withFileTypes: true })`, defaulting to `[]` for an unreadable/missing dir. */
-function readdirSafe(absDir: string) {
-  try {
-    return readdirSync(absDir, { withFileTypes: true });
-  } catch {
-    return [];
-  }
+const NATIVE_DISCOVERY_OPERATIONS: WorkspaceDiscoveryOperations = {
+  list: (path) => {
+    try {
+      return readdirSync(path, { withFileTypes: true }).map((entry) => ({
+        kind: entry.isSymbolicLink() ? "symlink" : entry.isDirectory() ? "directory" : entry.isFile() ? "file" : "other",
+        name: entry.name,
+      }));
+    } catch (error) {
+      if (errorCode(error) === "ENOENT") return [];
+      throw new Error(`Workspace directory is unreadable: ${path}`, { cause: error });
+    }
+  },
+  readText: (path) => {
+    try {
+      return readFileSync(path, "utf8");
+    } catch (error) {
+      throw new Error(`Workspace manifest is unreadable: ${path}`, { cause: error });
+    }
+  },
+  state: nativeState,
+};
+
+function checkCancellation(options: WorkspaceDiscoveryOptions): void {
+  if (options.signal?.aborted) throw new Error("Workspace discovery cancelled");
 }
 
-/**
- * 🗺️ ONE walk collecting every real package directory, at whatever depth it sits. Deliberately does
- * NOT reuse `discoverPackages()` — that function only sees Shape V2's `📦️packages/<lang>` contract, but
- * bun's `workspaces` array must resolve EVERY real npm package regardless of migration state (most of
- * the repo is still Shape V1 `⚡️implementations/<lang>` as of this writing), so a shape-agnostic
- * "does this dir have its own `package.json`" walk is root package.json's actual source of truth.
- * `pkg/` dirs are queued into `pkgCandidates` instead of resolved inline — see `resolvePkgDir`.
- */
-function walk(absDir: string, repoRoot: string, pkgCandidates: PkgDirCandidate[], results: WorkspaceCandidate[]): void {
-  for (const entry of readdirSafe(absDir)) {
-    if (!entry.isDirectory() || entry.name.startsWith(".") || WORKSPACE_SCAN_SKIP_DIR_NAMES.has(entry.name)) continue;
+function readManifest(manifestPath: string, operations: WorkspaceDiscoveryOperations): { name?: string; exports?: unknown } {
+  const state = operations.state(manifestPath);
+  if (state === "missing") return {};
+  if (state !== "file") throw new Error(`Workspace manifest must be a regular file: ${manifestPath} (${state})`);
+  const source = operations.readText(manifestPath);
+  let document: unknown;
+  try {
+    document = JSON.parse(source);
+  } catch (error) {
+    throw new Error(`Workspace manifest is malformed: ${manifestPath}`, { cause: error });
+  }
+  if (!document || typeof document !== "object" || Array.isArray(document)) throw new Error(`Workspace manifest must contain an object: ${manifestPath}`);
+  const manifest = document as { name?: unknown; exports?: unknown };
+  return { name: typeof manifest.name === "string" ? manifest.name : undefined, exports: manifest.exports };
+}
+
+/** 🗺️ Discovers physical package manifests without language or output-directory assumptions. */
+function walk(absDir: string, repoRoot: string, results: WorkspaceCandidate[], options: WorkspaceDiscoveryOptions, operations: WorkspaceDiscoveryOperations, progress: { directoriesScanned: number }): void {
+  checkCancellation(options);
+  const entries = operations.list(absDir);
+  progress.directoriesScanned += 1;
+  options.onProgress?.({ candidatesDiscovered: results.length, directoriesScanned: progress.directoriesScanned, relativeDirectory: relative(repoRoot, absDir).replaceAll("\\", "/") });
+  checkCancellation(options);
+  for (const entry of entries) {
+    checkCancellation(options);
+    if (entry.kind !== "directory" || entry.name.startsWith(".") || WORKSPACE_SCAN_SKIP_DIR_NAMES.has(entry.name)) continue;
     const absChild = join(absDir, entry.name);
-    if (entry.name === WASM_PKG_DIR_NAME) {
-      pkgCandidates.push({ pkgAbsDir: absChild, parentAbsDir: absDir });
-      continue; // 🧻️ never generically recursed — a broken wasm-pack run can nest arbitrary junk inside
-    }
     const manifestPath = join(absChild, MANIFEST_FILENAME);
-    if (existsSync(manifestPath)) {
-      results.push({ relDir: relative(repoRoot, absChild).replaceAll("\\", "/"), absDir: absChild, name: readManifestName(manifestPath) });
+    if (operations.state(manifestPath) !== "missing") {
+      results.push({ relDir: relative(repoRoot, absChild).replaceAll("\\", "/"), absDir: absChild, ...readManifest(manifestPath, operations) });
     }
-    walk(absChild, repoRoot, pkgCandidates, results);
+    walk(absChild, repoRoot, results, options, operations, progress);
   }
 }
 
-/**
- * 🧻️ Decides whether a `pkg/` dir (wasm-pack's generated npm wrapper, gitignored, present only once
- * built) should become its own workspace entry. Auditing the real repo found two hazards a naive
- * "any `package.json` counts" rule would hit:
- * 1. A misplaced/broken wasm-pack invocation can leave a `pkg/` dir with no sibling `Cargo.toml` (found
- *    once, under 🌊️flow's `🫀️core` — a stray `pkg/⚡️implementation/🦀️rust` re-emission alongside the
- *    real `📦️packages/🦀️rust/pkg`). Such a dir is never a real package — skipped outright, and
- *    never descended into (see `walk`), so nothing inside it is ever considered either.
- * 2. Most wasm crates' checked-in outer wrapper `package.json` already re-exports the built `pkg/*.js`
- *    under the SAME package name (e.g. both `🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/`
- *    and its `pkg/` declare `@semio-tech/framework-editor-rs`) — listing the nested copy too would be a
- *    duplicate-name workspace. It is only included when its name genuinely differs from the outer
- *    wrapper's (or the outer dir has no wrapper at all — e.g. 🌊️flow's dynamically-loaded
- *    `flow-extension-bim`, whose `pkg/` is its only manifest and has no `workspace:*` dependent at all,
- *    since it is loaded by path at runtime, not imported by name — deliberately NOT gated on real
- *    `workspace:*` usage for exactly that reason, confirmed by a real `bun install` requiring any listed
- *    workspace dir to exist on disk, never on being depended upon).
- */
-function resolvePkgDir(pkgAbsDir: string, parentAbsDir: string): string | undefined {
-  const manifestPath = join(pkgAbsDir, MANIFEST_FILENAME);
-  if (!existsSync(manifestPath)) return undefined; // e.g. a `--target web` wasm-pack build with no npm wrapper
-  if (!existsSync(join(parentAbsDir, CARGO_MANIFEST_FILENAME))) return undefined; // hazard 1
-  const pkgName = readManifestName(manifestPath);
-  if (!pkgName) return undefined;
-  const parentManifestPath = join(parentAbsDir, MANIFEST_FILENAME);
-  const parentName = existsSync(parentManifestPath) ? readManifestName(parentManifestPath) : undefined;
-  if (pkgName === parentName) return undefined; // hazard 2: shadowed by the outer wrapper's re-export
-  return manifestPath;
+/** 📦️ Enumerates explicit export targets across package subpaths and conditions. */
+function exportTargets(value: unknown, subpaths = true): string[] {
+  if (typeof value === "string") return [value];
+  if (Array.isArray(value)) return value.flatMap((entry) => exportTargets(entry, false));
+  if (!value || typeof value !== "object") return [];
+  const entries = Object.entries(value);
+  if (entries.some(([key]) => key.startsWith("."))) {
+    if (!subpaths || entries.some(([key]) => key !== "." && (!key.startsWith("./") || key.includes("*")))) return [];
+    return entries.flatMap(([, entry]) => exportTargets(entry, false));
+  }
+  if (entries.some(([key]) => !key || /^\d+$/u.test(key))) return [];
+  const targets: string[] = [];
+  for (const [condition, entry] of entries) {
+    targets.push(...exportTargets(entry, false));
+    if (condition === "default") break;
+  }
+  return targets;
 }
+
+/** 🔗️ Binds a payload to its nearest package owner through a concrete physical export. */
+function ownsPayload(owner: WorkspaceCandidate, payload: WorkspaceCandidate, operations: WorkspaceDiscoveryOperations): boolean {
+  if (!owner.name || owner.name !== payload.name) return false;
+  const prefix = relative(owner.absDir, payload.absDir).replaceAll("\\", "/") + "/";
+  return exportTargets(owner.exports).some((target) => {
+    if (!target.startsWith("./") || /[\\:*?%#\u0000]/u.test(target)) return false;
+    const segments = target.slice(2).split("/");
+    if (segments.some((segment) => !segment || segment === "." || segment === ".." || segment === "node_modules")) return false;
+    if (!segments.join("/").startsWith(prefix)) return false;
+    let path = owner.absDir;
+    return segments.every((segment, index) => {
+      path = join(path, segment);
+      return operations.state(path) === (index === segments.length - 1 ? "file" : "directory");
+    });
+  });
+}
+
 //#endregion 🔍️Scan
 
 //#region 🏗️Generate
-/**
- * 🏗️ Computes root `package.json`'s `workspaces` array by walking the real repo tree for every
- * directory carrying its own `package.json` — see `walk`. Nothing is hand-listed, so nothing can drift
- * again: as areas migrate from Shape V1 to Shape V2 (or gain/lose packages), the next `--write` simply
- * reflects it. Throws if two discovered packages declare the identical `name` (`bun install` would not
- * be able to tell them apart) — a real collision is a genuine problem worth failing loudly on rather
- * than silently emitting a broken array (see `resolvePkgDir` for the one near-miss this already avoids).
- */
-export function computeWorkspaces(repoRoot: string): string[] {
-  const pkgCandidates: PkgDirCandidate[] = [];
-  const results: WorkspaceCandidate[] = [];
-  walk(repoRoot, repoRoot, pkgCandidates, results);
-
-  for (const { pkgAbsDir, parentAbsDir } of pkgCandidates) {
-    const manifestPath = resolvePkgDir(pkgAbsDir, parentAbsDir);
-    if (!manifestPath) continue;
-    results.push({ relDir: relative(repoRoot, pkgAbsDir).replaceAll("\\", "/"), absDir: pkgAbsDir, name: readManifestName(manifestPath) });
-  }
+/** 🏗️ Emits each independent package once and rejects unbound duplicate identities. */
+export function computeWorkspaces(repoRoot: string, options: WorkspaceDiscoveryOptions = {}): string[] {
+  const operations = options.operations ?? NATIVE_DISCOVERY_OPERATIONS;
+  const rootState = operations.state(repoRoot);
+  if (rootState !== "directory") throw new Error(`Workspace root must be a physical directory: ${repoRoot} (${rootState})`);
+  const candidates: WorkspaceCandidate[] = [];
+  walk(repoRoot, repoRoot, candidates, options, operations, { directoriesScanned: 0 });
+  const byDirectory = new Map(candidates.map((candidate) => [candidate.absDir, candidate]));
+  const results = candidates.filter((candidate) => {
+    checkCancellation(options);
+    let parent = dirname(candidate.absDir);
+    while (parent !== repoRoot && parent !== dirname(parent)) {
+      const owner = byDirectory.get(parent);
+      if (owner) return !ownsPayload(owner, candidate, operations);
+      parent = dirname(parent);
+    }
+    return true;
+  });
 
   const dirByName = new Map<string, string>();
   for (const { relDir, name } of results) {
     if (!name) continue;
     const existing = dirByName.get(name);
     if (existing && existing !== relDir) {
-      throw new Error(`🗂️workspaces.ts: duplicate package name "${name}" at both "${existing}" and "${relDir}" — bun install would not resolve this unambiguously.`);
+      throw new Error(`Workspace discovery: duplicate package name "${name}" at both "${existing}" and "${relDir}" — bun install would not resolve this unambiguously.`);
     }
     dirByName.set(name, relDir);
   }
@@ -175,8 +230,8 @@ export function computeWorkspaces(repoRoot: string): string[] {
 
 /** 🔎️ Diagnostic split for `--check`: entries `computeWorkspaces` wants that root `package.json` is
  * missing, and entries root `package.json` still lists that no longer resolve to a real package. */
-export function diffWorkspaces(repoRoot: string, current: readonly string[]): { readonly expected: readonly string[]; readonly missing: readonly string[]; readonly stale: readonly string[] } {
-  const expected = computeWorkspaces(repoRoot);
+export function diffWorkspaces(repoRoot: string, current: readonly string[], options: WorkspaceDiscoveryOptions = {}): { readonly expected: readonly string[]; readonly missing: readonly string[]; readonly stale: readonly string[] } {
+  const expected = computeWorkspaces(repoRoot, options);
   const expectedSet = new Set(expected);
   const currentSet = new Set(current);
   return {

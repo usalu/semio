@@ -34,10 +34,19 @@ fn created_studio_emit(catalog_generation: u64, space_id: &str) -> Emit<SHomeMut
     Emit { artifact_mutations: vec![change_catalog_generation(catalog_generation + 1)], effects: vec![Effect::Navigate { uri: format!("/spaces/{space_id}") }], ..Default::default() }
 }
 
-pub fn handle(payload: &CreateStudio, doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+pub fn handle(_payload: &CreateStudio, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+    Err(Fault::from("s.home.session-identity-required"))
+}
+
+pub fn handle_with_identity(
+    payload: &CreateStudio,
+    doc: &ArtifactView<'_, SHomeSnapshot>,
+    _cfg: &ConfigView<'_, HomeConfig>,
+    identity: &semio_framework_plugin::ViewSessionIdentity,
+) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     let generation = doc.snapshot.catalog_generation;
-    let owner_id = cfg.snapshot.client_id.as_str();
-    let owner_name = cfg.snapshot.client_name.as_str();
+    let owner_id = identity.user_id.as_str();
+    let owner_name = identity.display_name.as_str();
     match payload.kind.as_str() {
         "folder" => {
             #[cfg(not(target_arch = "wasm32"))]

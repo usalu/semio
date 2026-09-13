@@ -177,7 +177,8 @@ pub fn render(cfg: &HomeConfig, view_state: &semio_framework_plugin::ViewModel) 
     let directory = cfg.directory().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("s.home.directory-projection-malformed", "Home directory projection is invalid"))?;
     // 🌉️ `crate::home_space_rows` is a plugin-root async fn (outside this lease); `render` must
     // stay sync (called synchronously by `HomeApp::render`) — bridged via `resolve_ready`.
-    let rows = semio_framework_plugin::resolve_ready(crate::home_space_rows(&directory, &cfg.client_id));
+    let identity = crate::home_session_identity(view_state).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("s.home.session-identity-required", "current host session identity is required"))?;
+    let rows = semio_framework_plugin::resolve_ready(crate::home_space_rows(&directory, &identity.user_id));
     render_rows_wrapped(&rows, table, actions)
 }
 //#endregion 🔖️Render

@@ -342,6 +342,7 @@
   },
   "platformEnvironment": {
     "project": "@semio-tech/framework-os-dev",
+    "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚙️engine/📤️publication/🟦️.ts",
     "keys": [
       "SDKROOT",
       "DEVELOPER_DIR"
@@ -494,9 +495,10 @@
   },
   "fontAssets": {
     "project": "semio-framework-os-infinite",
-    "tool": "font-tool",
+    "toolProject": "semio-framework-os-font-assets",
+    "tool": "build",
     "producer": "fonts",
-    "toolOutput": "{projectRoot}/dist/font-tool",
+    "toolOutput": "{projectRoot}/dist/build",
     "output": "{projectRoot}/dist/fonts"
   },
   "engineOutputs": [
@@ -522,12 +524,6 @@
     "profiles": [
       "dev",
       "release"
-    ],
-    "engines": [
-      "@semio-tech/framework-surface-rs:wasm",
-      "@semio-tech/framework-editor-rs:wasm",
-      "semio-framework-os-flow-core:wasm",
-      "@semio-tech/puzzle-plugin:wasm"
     ],
     "fonts": "semio-framework-os-infinite:fonts"
   },

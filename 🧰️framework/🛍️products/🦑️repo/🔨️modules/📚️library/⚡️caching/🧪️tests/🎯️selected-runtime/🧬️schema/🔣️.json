@@ -1,0 +1,134 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "variants",
+    "profiles",
+    "renderers",
+    "fontTool",
+    "packageProjects"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "fontTool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "project",
+        "crates",
+        "commands",
+        "forbiddenInputs"
+      ],
+      "properties": {
+        "root": {
+          "type": "string"
+        },
+        "project": {
+          "type": "string"
+        },
+        "crates": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "commands": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "forbiddenInputs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "profiles": {
+      "const": [
+        "dev",
+        "release"
+      ]
+    },
+    "renderers": {
+      "const": [
+        "react",
+        "wgpu"
+      ]
+    },
+    "variants": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "variant",
+          "engines",
+          "forbiddenProjects"
+        ],
+        "properties": {
+          "variant": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "engines": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "forbiddenProjects": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "packageProjects": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "root",
+          "package",
+          "project"
+        ],
+        "properties": {
+          "root": {
+            "type": "string",
+            "minLength": 1
+          },
+          "package": {
+            "type": "string",
+            "minLength": 1
+          },
+          "project": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

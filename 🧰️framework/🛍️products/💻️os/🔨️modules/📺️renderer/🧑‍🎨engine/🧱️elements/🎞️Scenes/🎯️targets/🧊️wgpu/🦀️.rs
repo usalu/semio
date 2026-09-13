@@ -1341,7 +1341,7 @@ fn render_world3d_surface_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: 
         return ui_wgpu::wgpu::ScenePaintStep::Fault;
     };
     infinite_world::world::render_world_3d(scene, bounds, ctx, state, hosts.world_resources);
-    engine_canvas::register_engine_surface(scene, bounds, engine_canvas::EngineSurfaceKindDetail::World3d, created);
+    engine_canvas::register_engine_surface(scene, bounds, engine_canvas::EngineSurfaceKindDetail::World3d { status_json: scene.world_3d.as_ref().and_then(|world| world.status_json.clone()) }, created);
     world3d_surface_debug_log(scene, bounds, ctx, state);
     cursor.finish()
 }

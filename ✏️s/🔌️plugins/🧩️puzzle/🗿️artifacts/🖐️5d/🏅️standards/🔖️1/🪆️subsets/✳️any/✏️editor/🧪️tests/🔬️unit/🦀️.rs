@@ -10,11 +10,11 @@ pub(crate) mod context {
     pub type Puzzle5dApp = VcsArtifactApp<EditorApp<Puzzle5dPlayApp>>;
     
     pub fn meta(actor: &str) -> ActionMeta {
-        context::meta(actor)
+        semio_framework_plugin::artifact_app_laws::meta(actor)
     }
     
     pub fn app() -> Puzzle5dApp {
-        let mut app = semio_framework::io::resolve_ready(context::new_app::<EditorApp<Puzzle5dPlayApp>>());
+        let mut app = semio_framework::io::resolve_ready(semio_framework_plugin::artifact_app_laws::new_app::<EditorApp<Puzzle5dPlayApp>>());
         semio_framework::io::resolve_ready(app.bind_instance_id(1));
         app
     }
@@ -29,7 +29,7 @@ pub(crate) mod context {
     /// 🧰️ A registry-backed app so kind discipline (View actions must emit no operations) and the
     /// utility contract are enforced exactly as in production.
     pub fn app_with_registry() -> Puzzle5dApp {
-        let mut app = semio_framework::io::resolve_ready(context::new_app_with_registry::<EditorApp<Puzzle5dPlayApp>>(puzzle5d_app_manifest_for_tests));
+        let mut app = semio_framework::io::resolve_ready(semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<Puzzle5dPlayApp>>(puzzle5d_app_manifest_for_tests));
         semio_framework::io::resolve_ready(app.bind_instance_id(1));
         app
     }
@@ -151,7 +151,7 @@ pub(crate) mod context {
             }
             stack.extend(node.children.iter());
         }
-        let projected = context::project_and_retire_fixture_tree(tree).expect("retire rendered node");
+        let projected = artifact_app_laws::project_and_retire_fixture_tree(tree).expect("retire rendered node");
         scene_json.unwrap_or(projected)
     }
     

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv, { type AnySchema } from "ajv/dist/2020.js";
 import { applyPatch, type Operation } from "fast-json-patch";
+import { buildSpacePanelState, isSpacePanelState, panelJsonFromState, parsePanelState } from "../../../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
 
 type SpawnedAppEntry = {
   id: string;
@@ -70,6 +71,7 @@ export function testHostPanelStateSchema(): void {
   for (const state of [fixture.base, fixture.expected]) {
     assert(validate(state), JSON.stringify(validate.errors));
     assert(independentState(state));
+    assert(isSpacePanelState(state));
   }
   const patched = applyPatch(structuredClone(fixture.base), fixture.selectionPatch, true, false).newDocument as HostPanelState;
   const projected = { ...structuredClone(fixture.base), activePanelTab: fixture.expected.activePanelTab };
@@ -77,6 +79,14 @@ export function testHostPanelStateSchema(): void {
   assert.deepEqual(patched, fixture.expected);
   assert.deepEqual(patched.spawnedApps, fixture.base.spawnedApps);
   assert.equal(patched.activeSpawnedId, fixture.base.activeSpawnedId);
+  const built = buildSpacePanelState(fixture.base.spawnedApps, fixture.base.activePanelTab, fixture.base.activeSpawnedId);
+  const panelJson = panelJsonFromState(built);
+  assert.equal(panelJson, JSON.stringify(fixture.base));
+  assert.deepEqual(parsePanelState({ panelJson } as never), fixture.base);
+  assert.equal(parsePanelState({} as never), null);
+  assert.throws(() => parsePanelState({ panelJson: "" } as never));
+  assert.throws(() => parsePanelState({ panelJson: Buffer.from(panelJson).toString("base64") } as never));
+  assert.throws(() => parsePanelState({ panelJson: JSON.stringify({ ...fixture.base, programs: [] }) } as never));
 
   assert(fixture.configuredPanelLeaves.valid.every(identifier));
   assert(fixture.configuredPanelLeaves.invalid.every((id) => !identifier(id)));
@@ -99,5 +109,5 @@ export function testHostPanelStateSchema(): void {
 
 if (import.meta.main) {
   testHostPanelStateSchema();
-  console.log("host-panel-state ajv=valid independent=valid json-patch=valid strict-capacity=valid spawned-preservation=valid");
+  console.log("host-panel-state ajv=valid independent=valid json-patch=valid json-text-codec=valid no-pack-fallback=valid strict-capacity=valid spawned-preservation=valid");
 }

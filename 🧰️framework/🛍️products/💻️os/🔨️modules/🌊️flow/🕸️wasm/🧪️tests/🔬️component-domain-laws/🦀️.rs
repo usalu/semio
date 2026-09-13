@@ -356,10 +356,10 @@ fn production_reachability_fixture_and_hostile_source_census_reject_the_old_rout
     let bridge_protocol = include_str!("../../📡️protocol/🦀️.rs");
     let protocol_production = bridge_protocol.split_once("//#region 🧪️Laws").expect("Flow protocol production/test boundary").0;
     let schema = protocol::FLOW_ABI_SCHEMA;
-    let host = include_str!("../../📦️packages/🟨️javascript/🖥️flow-host.js");
-    let browser = include_str!("../../📦️packages/🟨️javascript/🌐️flow-browser.js");
-    let packaged_host = include_str!("../../../🫀️core/🕸️bindings/🖥️flow-host.js");
-    let packaged_browser = include_str!("../../../🫀️core/🕸️bindings/🌐️flow-browser.js");
+    let host = include_str!("../../🖥️host/🏃️runtime/🟨️.js");
+    let browser = include_str!("../../🌐️browser/🏃️runtime/🟨️.js");
+    let packaged_host = include_str!("../../../🫀️core/🕸️bindings/🖥️host/🟨️.js");
+    let packaged_browser = include_str!("../../../🫀️core/🕸️bindings/🌐️browser/🟨️.js");
     let package_manifest = include_str!("../../../🫀️core/🕸️bindings/package.json");
     let package_build = include_str!("../../../🫀️core/📦️packages/🦀️rust/📜️script.ts");
     let production_loader = include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🪪️WasmSessionLoader/🟦️.tsx");
@@ -408,7 +408,7 @@ fn production_reachability_fixture_and_hostile_source_census_reject_the_old_rout
     assert_eq!(browser, packaged_browser);
     assert!(package_manifest.contains("\"./🌐️flow-browser.js\""));
     assert!(package_build.contains("manifest.exports"));
-    assert!(package_build.contains("copyFileSync(join(BROWSER_BRIDGE_DIR, name)"));
+    assert!(package_build.contains("publishFlowBrowserPackage(join(FAMILY_RS_DIR"));
     assert!(production_loader.contains("import(\"@semio-tech/flow-core/🌐️flow-browser.js\")"));
     let rows: Vec<&str> = FLOW_VCS_PRODUCTION_LEDGER.lines().skip(1).collect();
     assert_eq!(rows.len(), 6);

@@ -1,0 +1,33 @@
+{
+  "name": "@semio-tech/framework-actor-rs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./pkg/framework_actor.js",
+  "module": "./pkg/framework_actor.js",
+  "types": "./pkg/framework_actor.d.ts",
+  "files": [
+    "pkg/framework_actor.js",
+    "pkg/framework_actor.d.ts",
+    "pkg/framework_actor_bg.wasm",
+    "pkg/framework_actor_bg.wasm.d.ts"
+  ],
+  "exports": {
+    ".": {
+      "types": "./pkg/framework_actor.d.ts",
+      "import": "./pkg/framework_actor.js"
+    },
+    "./framework_actor.js": {
+      "types": "./pkg/framework_actor.d.ts",
+      "import": "./pkg/framework_actor.js"
+    },
+    "./framework_actor_bg.wasm": {
+      "types": "./pkg/framework_actor_bg.wasm.d.ts",
+      "default": "./pkg/framework_actor_bg.wasm"
+    }
+  },
+  "bundleKind": "library",
+  "nx": {
+    "includedScripts": []
+  }
+}

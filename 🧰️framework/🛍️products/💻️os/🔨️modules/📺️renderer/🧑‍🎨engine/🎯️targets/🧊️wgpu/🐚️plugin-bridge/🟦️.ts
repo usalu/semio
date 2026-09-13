@@ -195,6 +195,12 @@ function getShardClient(): ShardClient {
   pooledRuntime ??= createPooledActorRuntime({
     createWorker: (shardIndex: number) => new MainThreadShardWorker(shardIndex),
     residentLedger: rendererResidentLedger(),
+    // [DEBUG] temporary watchdog widening — measures whether the edit-mode `procedural.play.main`
+    // render turn is a HANG or a long-but-finite build. On THIS target the shard is a
+    // `MainThreadShardWorker`, so a compute-bound guest turn blocks the very progress ticker the
+    // 5 s ladder reads and the whole isolate logs nothing for the turn's duration (measured: 19 202 ms
+    // of complete console silence, ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    heartbeatTimeoutMs: 180_000,
     onActorTrap: (actorId, message) => console.error(`[DEBUG] wgpu plugin-bridge: actor ${actorId} trapped: ${message}`),
     onShardLost: (shardIndex, actorIds) => {
       console.error(`[DEBUG] wgpu plugin-bridge: shard ${shardIndex} lost, restoring actors: ${actorIds.join(", ")}`);

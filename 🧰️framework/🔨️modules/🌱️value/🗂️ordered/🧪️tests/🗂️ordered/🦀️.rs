@@ -269,6 +269,40 @@ fn long_key_comparison_transfers_workers_and_retirement_counts_exact_key_bytes()
 
 //#region 📤️SharedOwnership
 #[test]
+fn ordered_physical_retirement_uses_inline_frontier_and_releases_exact_key_capacity() {
+    let mut key = String::with_capacity(8193);
+    key.push_str("retained-key");
+    let key_capacity = key.capacity();
+    let mut map = OrderedMap::new();
+    map.insert(key, ());
+    let mut retirement = map.retire();
+    assert_eq!(retirement.allocated_bytes(), 0);
+    let mut released = 0usize;
+    let mut saw_key = false;
+    for _ in 0..MAX_AVL_HEIGHT + 16 {
+        let demand = retirement.next_close_byte_demand().unwrap();
+        if demand == key_capacity {
+            saw_key = true;
+            assert_eq!(retirement.allocated_bytes(), key_capacity);
+            assert!(matches!(retirement.advance(Grant { maximum_items: 0, maximum_bytes: key_capacity }), RetirementStep::Blocked));
+            assert!(matches!(retirement.advance(Grant { maximum_items: 1, maximum_bytes: 0 }), RetirementStep::Blocked));
+            assert!(matches!(retirement.advance(Grant { maximum_items: 1, maximum_bytes: key_capacity - 1 }), RetirementStep::Blocked));
+            assert_eq!(retirement.allocated_bytes(), key_capacity);
+        }
+        match retirement.advance(Grant { maximum_items: 1, maximum_bytes: demand.max(1) }) {
+            RetirementStep::Progress { released_bytes, .. } => released += released_bytes,
+            RetirementStep::OwnedValue(()) => {}
+            RetirementStep::Complete => break,
+            RetirementStep::Blocked => panic!("exact ordered retirement demand blocked"),
+        }
+    }
+    assert!(saw_key);
+    assert_eq!(released, key_capacity);
+    assert_eq!(retirement.allocated_bytes(), 0);
+    assert!(retirement.terminal_is_empty());
+}
+
+#[test]
 fn shared_release_is_empty_or_transfers_the_exact_final_frontier() {
     assert!(OrderedMap::<Payload>::new().release_shared().is_ok());
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/👥️shared-owner/🔣️.json")).unwrap();

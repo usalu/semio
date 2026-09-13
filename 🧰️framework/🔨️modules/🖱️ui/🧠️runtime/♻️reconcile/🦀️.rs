@@ -374,7 +374,7 @@ impl SurfaceReconciler {
                 let fixed = size_of::<Self>() + size_of_val(self.ordinals.entries.entries.as_ref()) + size_of_val(self.key_index.entries.entries.as_ref()) + ui_contract::UiDocumentAssembly::required_open_bytes();
                 let allocated = self.assembly.allocated_bytes()?;
                 let bytes = usage.bytes.checked_add(fixed).and_then(|bytes| bytes.checked_add(allocated)).unwrap_or(usize::MAX);
-                self.assembly.shrink_resident(ui_contract::UiResidentLimits { items: usage.items.max(self.ordinals.len()).max(1), bytes }, 1, SURFACE_RECONCILE_PAGE_BYTES)?
+                self.assembly.reprice_resident(ui_contract::UiResidentLimits { items: usage.items.max(self.ordinals.len()).max(1), bytes }, 1, SURFACE_RECONCILE_PAGE_BYTES)?
             }
             1 if has_output => self.assembly.split_resident_output(output, 1, SURFACE_RECONCILE_PAGE_BYTES)?,
             1 => { self.seal_phase = 2; return Ok(false); }
@@ -618,6 +618,7 @@ pub enum SurfaceReconcileFault {
     DuplicateSiblingKey,
     IdentifierBytes { actual: usize, max: usize },
     Credits { usage: SurfaceReconcileUsage, limits: SurfaceReconcileLimits },
+    ResidentCredit { required: usize, aggregate: usize },
     PageBytes { actual: usize, max: usize },
     ValueDepth { actual: usize, max: usize },
     StaleGeneration { expected: u64, actual: u64 },
@@ -1475,6 +1476,9 @@ impl SurfaceReconcileCursor {
                         return SurfaceReconcileStep::Fault(SurfaceReconcileFault::CounterOverflow);
                     };
                     let projected = SurfaceReconcileUsage { nodes: projected_nodes, items: projected_items, bytes: projected_bytes };
+                    if let Err(fault) = self.admit_credit(projected) {
+                        return self.fail(fault);
+                    }
                     let Some((parent, node)) = self.held_node.take() else {
                         self.fault = Some(SurfaceReconcileFault::CounterOverflow);
                         return SurfaceReconcileStep::Fault(SurfaceReconcileFault::CounterOverflow);
@@ -1840,7 +1844,59 @@ impl SurfaceReconcileCursor {
                 return SurfaceReconcileStep::Fault(fault);
             }
         }
+        if let Err(fault) = self.admit_credit(self.usage) {
+            return self.fail(fault);
+        }
         step
+    }
+
+    /// 🎟️ Grows this reconcile's resident credit to cover what it has ACTUALLY used, in page quanta, before
+    /// the next step allocates into it — the reservation is priced by the tree being reconciled instead of by
+    /// the per-surface ceiling.
+    ///
+    /// 🐛️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B58: `SurfaceReconcileReservation::try_new` took
+    /// [`SURFACE_RECONCILE_SURFACE_BYTES`] (8 MiB) of a 32 MiB aggregate for EVERY surface, so three
+    /// reconciles ran process-wide while one puzzle3d session mounts thirteen and every fourth surface was
+    /// refused `registry-resident-credit-exhausted`, deferred and re-dirtied for ever (wave B54 §8.2, wave
+    /// B56 §1.1). The credit now starts at [`SURFACE_RECONCILE_FLOOR_BYTES`] — one assembly root plus four
+    /// work pages, more than any single step can charge — and climbs with `usage`, so the per-surface
+    /// ceiling is reached only by a body that genuinely fills it. An aggregate that cannot take the increase
+    /// is a NAMED terminal fault, never a silent defer: a busy ledger is retried on the next step (the floor
+    /// headroom covers it), a full one faults.
+    fn admit_credit(&mut self, required: SurfaceReconcileUsage) -> Result<(), SurfaceReconcileFault> {
+        if !required.fits(self.limits) {
+            return Err(SurfaceReconcileFault::Credits { usage: required, limits: self.limits });
+        }
+        let needed = ui_contract::UiResidentLimits {
+            items: required.items.saturating_add(SURFACE_RECONCILE_FLOOR_ITEMS).min(self.limits.max_items),
+            bytes: required.bytes.saturating_add(SURFACE_RECONCILE_FLOOR_BYTES).min(self.limits.max_bytes),
+        };
+        let refusal = || SurfaceReconcileFault::ResidentCredit { required: needed.bytes, aggregate: ui_contract::UiResidentPermit::snapshot().unwrap_or_default().bytes };
+        if let Some(credit) = self.assembly_credit.as_mut() {
+            let held = credit.limits();
+            if needed.items <= held.items && needed.bytes <= held.bytes {
+                return Ok(());
+            }
+            return match credit.try_reprice(ui_contract::UiResidentLimits { items: needed.items.max(held.items), bytes: needed.bytes.max(held.bytes) }) {
+                Ok(_) | Err(ui_contract::UiResidentFault::Contended) => Ok(()),
+                Err(_) => Err(refusal()),
+            };
+        }
+        if !self.assembly_open {
+            return Ok(());
+        }
+        let held = match self.assembly.resident_limits() {
+            Ok(limits) => limits,
+            Err(_) => return Ok(()),
+        };
+        if needed.items <= held.items && needed.bytes <= held.bytes {
+            return Ok(());
+        }
+        match self.assembly.reprice_resident(ui_contract::UiResidentLimits { items: needed.items.max(held.items), bytes: needed.bytes.max(held.bytes) }, 1, SURFACE_RECONCILE_PAGE_BYTES) {
+            Ok(_) => Ok(()),
+            Err(error) if error.kind == ui_contract::UiDocumentAssemblyErrorKind::Contended => Ok(()),
+            Err(_) => Err(refusal()),
+        }
     }
 
     fn clear_fault(&mut self) {
@@ -2212,6 +2268,19 @@ pub const SURFACE_RECONCILE_SURFACE_BYTES: usize = ui_contract::UI_RESIDENT_SURF
 pub const SURFACE_RECONCILE_AGGREGATE_BYTES: usize = ui_contract::UI_RESIDENT_AGGREGATE_BYTES;
 pub const SURFACE_RECONCILE_AGGREGATE_ITEMS: usize = ui_contract::UI_RESIDENT_AGGREGATE_ITEMS;
 
+/// 🎟️ What one reconcile reservation costs BEFORE its tree has been measured: the fixed assembly root plus
+/// four work pages, which covers the largest charge any single reconcile step can make (`PageBytes` faults
+/// anything wider than one page) with room for the fixed census structures the seal prices in.
+///
+/// 🐛️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B58: the reservation used to ask for the per-surface
+/// CEILING [`SURFACE_RECONCILE_SURFACE_BYTES`] (8 MiB) of a 32 MiB aggregate, so exactly THREE surfaces
+/// could reconcile process-wide while one puzzle3d session mounts THIRTEEN. The ceiling is a maximum a
+/// surface may reach, never a price.
+pub const SURFACE_RECONCILE_FLOOR_BYTES: usize = ui_contract::UiDocumentAssembly::required_open_bytes() + 4 * SURFACE_RECONCILE_PAGE_BYTES;
+pub const SURFACE_RECONCILE_FLOOR_ITEMS: usize = 256;
+const _: () = assert!(SURFACE_RECONCILE_FLOOR_BYTES <= SURFACE_RECONCILE_SURFACE_BYTES);
+const _: () = assert!(SURFACE_RECONCILE_FLOOR_ITEMS <= ui_contract::UI_RESIDENT_SURFACE_ITEMS);
+
 fn reserve_surface_reconcile(limits: SurfaceReconcileLimits) -> Option<ui_contract::UiResidentPermit> {
     if limits.max_nodes > SurfaceReconcileLimits::default().max_nodes
         || limits.max_items > SurfaceReconcileLimits::default().max_items
@@ -2220,7 +2289,8 @@ fn reserve_surface_reconcile(limits: SurfaceReconcileLimits) -> Option<ui_contra
     { return None; }
     if !register_surface_reconcile_backing(SURFACE_RECONCILE_PAGE_BYTES).ok()? { return None; }
     let mut permit = None;
-    ui_contract::UiResidentPermit::try_reserve(ui_contract::UiResidentLimits { items: limits.max_items, bytes: limits.max_bytes }, &mut permit, SURFACE_RECONCILE_PAGE_BYTES).ok()?;
+    let floor = ui_contract::UiResidentLimits { items: SURFACE_RECONCILE_FLOOR_ITEMS.min(limits.max_items), bytes: SURFACE_RECONCILE_FLOOR_BYTES.min(limits.max_bytes) };
+    ui_contract::UiResidentPermit::try_reserve(floor, &mut permit, SURFACE_RECONCILE_PAGE_BYTES).ok()?;
     permit
 }
 

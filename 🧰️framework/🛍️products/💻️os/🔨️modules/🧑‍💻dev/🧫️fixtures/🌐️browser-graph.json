@@ -1,0 +1,64 @@
+{
+  "reason": "Vite serves this entry's whole static import closure to the browser and hands every bare specifier it finds to the esbuild dependency optimizer. Build tooling that reaches a browser-served module therefore lands in that optimizer, where `@tailwindcss/postcss` and `@tailwindcss/vite` bottom out in `@tailwindcss/oxide`'s native `.node` binding: esbuild fails the whole optimize pass with `No loader is configured for \".node\" files` and every module of the playground answers `504 (Outdated Optimize Dep)`. The closure is bounded here so the boundary is a test rather than a boot.",
+  "entry": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🟦️.ts",
+  "configPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",
+  "resolveExtensions": [".mjs", ".js", ".mts", ".ts", ".jsx", ".tsx", ".json"],
+  "conditionNames": ["browser", "import", "module", "default"],
+  "extensionAlias": {
+    ".js": [".ts", ".tsx", ".js"],
+    ".mjs": [".mts", ".mjs"],
+    ".jsx": [".tsx", ".jsx"]
+  },
+  "alias": [
+    { "find": "@semio-tech/ui-react/test", "replacement": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🖌️render/🟦️.ts" },
+    { "find": "@semio-tech/ui-react/runtime", "replacement": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎠️runtime/🟦️.ts" },
+    { "find": "@semio-tech/ui-react", "replacement": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx" },
+    { "find": "@semio-tech/assets", "replacement": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🟦️.ts" },
+    { "find": "@semio-tech/ui-styling", "replacement": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript" },
+    { "find": "@semio-tech/infinite-canvas-react-renderer", "replacement": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/🟦️.tsx" },
+    { "find": "@semio-tech/infinite-world-r3f", "replacement": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️.tsx" },
+    { "find": "@semio-tech/framework-renderer-react", "replacement": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx" },
+    { "find": "@semio-tech/framework-renderer-wgpu", "replacement": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📚️library/🟦️.ts" },
+    { "find": "@semio-tech/framework-os", "replacement": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts" },
+    { "find": "@semio-tech/framework", "replacement": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts" }
+  ],
+  "denyPackages": [
+    "@tailwindcss/oxide",
+    "@tailwindcss/node",
+    "@tailwindcss/vite",
+    "@tailwindcss/postcss",
+    "@tailwindcss/typography",
+    "tailwindcss",
+    "postcss",
+    "postcss-load-config",
+    "playwright",
+    "playwright-core",
+    "vite",
+    "esbuild",
+    "enhanced-resolve"
+  ],
+  "denyModules": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.mts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🎨️styling/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/💨️tailwind/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"
+  ],
+  "requireModules": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌓️theme/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx",
+    "♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx"
+  ],
+  "ambiguousDirectories": [
+    {
+      "directory": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+      "kindBasename": "🟦️",
+      "extensionlessResolvesTo": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.mts",
+      "browserEntry": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx"
+    }
+  ],
+  "maxModules": 1600
+}

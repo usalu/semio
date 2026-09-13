@@ -1,0 +1,386 @@
+{
+  "schemaVersion": 1,
+  "owners": [
+    {
+      "id": "browser-runtime",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js",
+      "exports": [
+        "FlowSession",
+        "createFlowBrowserRuntime"
+      ]
+    },
+    {
+      "id": "host-runtime",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js",
+      "exports": [
+        "FLOW_DRAW_LIST_VERSION",
+        "FLOW_MAX_ENCODED_MESSAGE_BYTES",
+        "FLOW_MAX_IN_FLIGHT",
+        "FLOW_MAX_PAGE_BYTES",
+        "FLOW_MAX_REQUEST_BYTES",
+        "FLOW_MAX_TRANSFER_BYTES",
+        "FlowFeatureGroups",
+        "FlowOperation",
+        "FlowOperationFields",
+        "FlowPresentation",
+        "attachFlowSurface",
+        "createFlowFeatures",
+        "createFlowHost",
+        "decodeFlowMessage",
+        "decodeFlowVcsPage",
+        "isFlowSessionOpenRejected",
+        "renderFlowCanvas",
+        "renderFlowSurface",
+        "replayFlowDrawList"
+      ]
+    },
+    {
+      "id": "declaration-projection",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📝️declaration/📤️projection/🟦️.ts",
+      "exports": [
+        "FLOW_WASM_ABI_URL",
+        "flowBrowserDeclaration",
+        "writeFlowBrowserDeclaration"
+      ]
+    },
+    {
+      "id": "browser-publication",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts",
+      "exports": [
+        "bundleFlowBrowserModule",
+        "previewFlowBrowserPackage",
+        "publishFlowBrowserDeclarations",
+        "publishFlowBrowserPackage"
+      ]
+    }
+  ],
+  "testContract": {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🧬️schema-oracle/🛂️admission/🟦️.ts",
+    "exports": [
+      "flowWasmContract"
+    ]
+  },
+  "dataOwners": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/📡️abi/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧫️fixtures/📝️browser-types/🔣️.json"
+  ],
+  "projections": [
+    {
+      "sourceOwner": "declaration-projection",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📝️declaration/🤖️generated/🟦️.d.ts",
+      "kind": "authored-declaration"
+    },
+    {
+      "sourceOwner": "browser-publication",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/🌐️browser/🟨️.js",
+      "kind": "published-browser"
+    },
+    {
+      "sourceOwner": "browser-publication",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/🖥️host/🟨️.js",
+      "kind": "published-host"
+    }
+  ],
+  "predecessors": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/🕸️bindings/package.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📦️packages/🟨️javascript/🌐️flow-browser.js",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📦️packages/🟨️javascript/🖥️flow-host.js",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📦️packages/🟨️javascript/📝️flow-browser.d.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/🌐️flow-browser.js",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/🖥️flow-host.js",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/📝️flow-browser.d.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/📡️abi.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧫️fixtures/📝️browser-types.json"
+  ],
+  "contexts": [
+    {
+      "ownerId": "browser-runtime",
+      "segments": [
+        {
+          "name": "🕸️wasm",
+          "kindId": "flow-webassembly"
+        },
+        {
+          "name": "🌐️browser",
+          "kindId": "flow-browser"
+        },
+        {
+          "name": "🏃️runtime",
+          "kindId": "flow-browser-runtime"
+        }
+      ],
+      "parentKindId": "members-of-modules"
+    },
+    {
+      "ownerId": "host-runtime",
+      "segments": [
+        {
+          "name": "🕸️wasm",
+          "kindId": "flow-webassembly"
+        },
+        {
+          "name": "🖥️host",
+          "kindId": "flow-host"
+        },
+        {
+          "name": "🏃️runtime",
+          "kindId": "flow-host-runtime"
+        }
+      ],
+      "parentKindId": "members-of-modules"
+    },
+    {
+      "ownerId": "declaration-projection",
+      "segments": [
+        {
+          "name": "🕸️wasm",
+          "kindId": "flow-webassembly"
+        },
+        {
+          "name": "🌐️browser",
+          "kindId": "flow-browser"
+        },
+        {
+          "name": "📝️declaration",
+          "kindId": "flow-browser-declaration"
+        },
+        {
+          "name": "📤️projection",
+          "kindId": "flow-browser-declaration-projection"
+        }
+      ],
+      "parentKindId": "members-of-modules"
+    },
+    {
+      "ownerId": "browser-publication",
+      "segments": [
+        {
+          "name": "🕸️wasm",
+          "kindId": "flow-webassembly"
+        },
+        {
+          "name": "🌐️browser",
+          "kindId": "flow-browser"
+        },
+        {
+          "name": "📦️publication",
+          "kindId": "flow-browser-publication"
+        }
+      ],
+      "parentKindId": "members-of-modules"
+    }
+  ],
+  "package": {
+    "manifestPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/package.json",
+    "name": "@semio-tech/flow-core",
+    "files": [
+      "flow_core_bg.wasm",
+      "flow_core.js",
+      "flow_core.d.ts",
+      "flow_core_bg.wasm.d.ts",
+      "🌐️browser/🟨️.js",
+      "🖥️host/🟨️.js",
+      "🌐️browser/🟦️.d.ts"
+    ],
+    "exports": {
+      ".": {
+        "types": "./flow_core.d.ts",
+        "import": "./flow_core.js"
+      },
+      "./🌐️flow-browser.js": {
+        "types": "./🌐️browser/🟦️.d.ts",
+        "import": "./🌐️browser/🟨️.js"
+      },
+      "./🖥️flow-host.js": "./🖥️host/🟨️.js"
+    }
+  },
+  "consumers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js",
+      "tokens": [
+        "../../🖥️host/🏃️runtime/🟨️.js",
+        "../../../🫀️core/🕸️bindings/flow_core.js"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧪️tests/🌐️browser-declaration/🟦️.ts",
+      "tokens": [
+        "🕸️wasm/🌐️browser/📝️declaration/📤️projection/🟦️.ts",
+        "🕸️wasm/🌐️browser/🏃️runtime/🟨️.js",
+        "🕸️wasm/🧫️fixtures/📝️browser-types/🔣️.json",
+        "../../🕸️wasm/🧪️tests/🧬️schema-oracle/🛂️admission/🟦️.ts"
+      ],
+      "forbiddenTokens": [
+        "flowBrowserDeclaration(): string",
+        "writeFlowBrowserDeclaration(): string",
+        "📦️packages/🟨️javascript/📜️script.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/⏱️consumed-browser-clock/🟨️.js",
+      "tokens": [
+        "../🧬️schema-oracle/🛂️admission/🟦️.ts",
+        "../../🌐️browser/🏃️runtime/🟨️.js"
+      ],
+      "forbiddenTokens": [
+        "📦️packages/🟨️javascript/📜️script.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🖥️host/🟨️.js",
+      "tokens": [
+        "../../🖥️host/🏃️runtime/🟨️.js",
+        "../../🌐️browser/🏃️runtime/🟨️.js",
+        "../🧬️schema-oracle/🛂️admission/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🎬️draw-list/🟨️.js",
+      "tokens": [
+        "../../🖥️host/🏃️runtime/🟨️.js"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🔓️open-ownership/🟦️.ts",
+      "tokens": [
+        "../../🌐️browser/🏃️runtime/🟨️.js"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🧬️schema-oracle/🟨️.js",
+      "tokens": [
+        "../../🖥️host/🏃️runtime/🟨️.js",
+        "../../🧬️schema/📡️abi/🔣️.json",
+        "./🛂️admission/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🎭️mock-flow-bridge/🟦️.ts",
+      "tokens": [
+        "../../🧬️schema/📡️abi/🔣️.json"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📡️protocol/🦀️.rs",
+      "tokens": [
+        "../🧬️schema/📡️abi/🔣️.json"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🔬️component-domain-laws/🦀️.rs",
+      "tokens": [
+        "../../🖥️host/🏃️runtime/🟨️.js",
+        "../../🌐️browser/🏃️runtime/🟨️.js",
+        "../../../🫀️core/🕸️bindings/🖥️host/🟨️.js",
+        "../../../🫀️core/🕸️bindings/🌐️browser/🟨️.js"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
+      "tokens": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts",
+      "tokens": [
+        "🌊️flow/🕸️wasm/🧬️schema/📡️abi/🔣️.json"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🧫️fixtures/🎬️draw-list/🔣️.json",
+      "tokens": [
+        "🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📇️layout.json",
+      "tokens": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/🌐️browser/🟨️.js",
+        "🌊️flow/🌐️browser-[hash].js"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts",
+      "tokens": [
+        "🌐️browser/📦️publication/🟦️.ts",
+        "publishFlowBrowserPackage",
+        "testFlowBrowserOwnership"
+      ],
+      "forbiddenTokens": [
+        "async function bundleBrowserModule",
+        "async function publishBrowserDeclarations",
+        "📦️packages/🟨️javascript"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/package.json",
+      "tokens": [
+        "./🌐️browser/🟨️.js",
+        "./🌐️browser/🟦️.d.ts",
+        "./🖥️host/🟨️.js"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+      "tokens": [
+        "🕸️wasm/🧪️tests/🧬️schema-oracle/🛂️admission/🟦️.ts"
+      ]
+    }
+  ],
+  "target": {
+    "projectPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📋️project.json",
+    "name": "test-browser-ownership",
+    "previewName": "preview-generated",
+    "inputs": [
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/bun.lock",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏷️ownership/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏷️ownership/🧫️fixtures/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏷️ownership/🧪️tests/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📝️declaration/📤️projection/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🧬️schema-oracle/🛂️admission/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/📡️abi/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧫️fixtures/📝️browser-types/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📝️declaration/🤖️generated/🟦️.d.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/🌐️browser/🟨️.js",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/🖥️host/🟨️.js",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/🌐️browser/🟦️.d.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📋️project.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/package.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/package.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧪️tests/🌐️browser-declaration/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/⏱️consumed-browser-clock/🟨️.js",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🖥️host/🟨️.js",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🎬️draw-list/🟨️.js",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🔓️open-ownership/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🧬️schema-oracle/🟨️.js",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🎭️mock-flow-bridge/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📡️protocol/🦀️.rs",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🔬️component-domain-laws/🦀️.rs",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🧫️fixtures/🎬️draw-list/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📇️layout.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
+      "{workspaceRoot}/.vscode/launch.json"
+    ]
+  },
+  "registration": {
+    "packagePath": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/package.json",
+    "packageScript": "test:browser-ownership",
+    "previewPackageScript": "preview:browser-package",
+    "launchSeedPath": ".vscode/🧩️launch.seed.jsonc",
+    "launchPath": ".vscode/launch.json",
+    "launchCommand": "bun nx run semio-framework-os-flow-core:test-browser-ownership",
+    "previewLaunchCommand": "bun nx run semio-framework-os-flow-core:preview-generated"
+  }
+}

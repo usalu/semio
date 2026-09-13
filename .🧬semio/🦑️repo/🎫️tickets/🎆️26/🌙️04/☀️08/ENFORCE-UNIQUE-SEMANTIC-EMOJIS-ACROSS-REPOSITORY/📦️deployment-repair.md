@@ -6,34 +6,34 @@ Scope: the four still-outstanding developer output trees, with registry producer
 
 The schema-first authority is `OS/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🗺️catalog.json`. Its 59 explicit ID/name pairs were individually chosen after reviewing the source catalog and domain owners. Most plugin roots retain their already-handpicked source-owner emoji. Extension outputs share the flat deployment namespace with all plugins, so some need a different, still domain-specific identity.
 
-| Extension Identity | Selected Emoji | Meaning in the Flat Deployment Namespace |
-| --- | --- | --- |
-| cad-extension-aec-building | 🏢️ | Building model. |
-| cad-extension-aec-building-energy | 🔥️ | Building heat/energy. |
-| cad-extension-aec-building-structure | 🏟️ | Built structural enclosure. |
-| cad-extension-spatial-shape | 🔷️ | Geometric shape. |
-| flow-extension-bim | 🏘️ | Building-information model. |
-| flow-extension-brep | 🧊️ | Boundary-representation solid. |
-| flow-extension-dictionary | 📚️ | Key/value lexicon. |
-| flow-extension-draw | 🎨️ | Drawing operators. |
-| flow-extension-list | 📃️ | Ordered list. |
-| flow-extension-logic | 🔀️ | Logical branching. |
-| flow-extension-math | 🧮️ | Numeric operators. |
-| flow-extension-primitive | 🔤️ | Primitive typed values. |
-| flow-extension-text | 📝️ | Text values. |
-| imperative-extension-control | 🎮️ | Execution control. |
-| imperative-extension-effect | 📣️ | Observable effects. |
-| imperative-extension-logic | ⚖️ | Boolean comparison/decision. |
-| imperative-extension-math | ➕️ | Arithmetic evaluation. |
-| imperative-extension-text | 🔡️ | String operations. |
-| playbook-module-procedural | ⚙️ | Procedural execution. |
-| process-extension-concrete | 🏙️ | Concrete construction process. |
-| process-extension-metal | 🔩️ | Metal fabrication. |
-| process-extension-robotic | 🤖️ | Robotic fabrication. |
-| process-extension-wood | 🪓️ | Wood processing. |
-| sourcing-module-beams | 🪜️ | Load-carrying linear members. |
-| sourcing-module-slabs | 🧇️ | Waffle/slab construction. |
-| sourcing-module-windows | 🪟️ | Window products. |
+| Extension Identity                   | Selected Emoji | Meaning in the Flat Deployment Namespace |
+| ------------------------------------ | -------------- | ---------------------------------------- |
+| cad-extension-aec-building           | 🏢️             | Building model.                          |
+| cad-extension-aec-building-energy    | 🔥️             | Building heat/energy.                    |
+| cad-extension-aec-building-structure | 🏟️             | Built structural enclosure.              |
+| cad-extension-spatial-shape          | 🔷️             | Geometric shape.                         |
+| flow-extension-bim                   | 🏘️             | Building-information model.              |
+| flow-extension-brep                  | 🧊️             | Boundary-representation solid.           |
+| flow-extension-dictionary            | 📚️             | Key/value lexicon.                       |
+| flow-extension-draw                  | 🎨️             | Drawing operators.                       |
+| flow-extension-list                  | 📃️             | Ordered list.                            |
+| flow-extension-logic                 | 🔀️             | Logical branching.                       |
+| flow-extension-math                  | 🧮️             | Numeric operators.                       |
+| flow-extension-primitive             | 🔤️             | Primitive typed values.                  |
+| flow-extension-text                  | 📝️             | Text values.                             |
+| imperative-extension-control         | 🎮️             | Execution control.                       |
+| imperative-extension-effect          | 📣️             | Observable effects.                      |
+| imperative-extension-logic           | ⚖️             | Boolean comparison/decision.             |
+| imperative-extension-math            | ➕️             | Arithmetic evaluation.                   |
+| imperative-extension-text            | 🔡️             | String operations.                       |
+| playbook-module-procedural           | ⚙️             | Procedural execution.                    |
+| process-extension-concrete           | 🏙️             | Concrete construction process.           |
+| process-extension-metal              | 🔩️             | Metal fabrication.                       |
+| process-extension-robotic            | 🤖️             | Robotic fabrication.                     |
+| process-extension-wood               | 🪓️             | Wood processing.                         |
+| sourcing-module-beams                | 🪜️             | Load-carrying linear members.            |
+| sourcing-module-slabs                | 🧇️             | Waffle/slab construction.                |
+| sourcing-module-windows              | 🪟️             | Window products.                         |
 
 All names are explicit data: no palette, hash, slug heuristic, fallback, or name-generation loop is used. The parser rejects missing/extra fields, undeclared IDs, malformed or generic emoji, stacked/interior emoji, duplicate public IDs, and repeated sibling emoji. Its focused Nx test passed against Ajv and the independent emoji-regex oracle. The existing developer hot-swap tests now assert mapping from exact physical names back to public IDs, including an explicit negative for raw IDs and undeclared decorated folders; 6 focused tests passed.
 
@@ -77,14 +77,14 @@ These runtime-private names were handpicked: vendor mirrors use `🪞️vendor`,
 
 While this lane was finishing import edits, another active task's existing `DEMONSTRATOR-END-TO-END-ALL-APPS/🔨️build-components.sh` producer created the canonical vendor and shard destinations. The existing old trees and newly created trees matched fully; neither was overwritten or deleted. After root coordination, exact no-overwrite moves preserved the old copies:
 
-| Old Path Relative to Developer Root | Current Location / Action |
-| --- | --- |
-| `🔌️plugin-modules/_vendor` | Moved intact to ticket `📦️vendor-recovery`; the already-created canonical `🔌️plugin-modules/🪞️vendor` has the same 11 file payloads. |
-| `🔌️plugin-modules/_shard` | Moved intact to ticket `🧵️shard-recovery`; the already-created canonical `🔌️plugin-modules/🧵️shard` has the same worker bytes. |
-| `🔌️plugin-modules/.hot-swap` | `🔌️plugin-modules/♻️hot-swap.json`, no-overwrite move. |
-| `🧩️extension-modules/.extension-watch` | `🧩️extension-modules/👀️extension-watch.json`, no-overwrite move. |
-| Future `.size-report.json` output | Writer now explicitly names `📊️size-report.json`; no existing file was removed. |
-| Future `.engine-size-report.json` output | Writer now explicitly names `📈️engine-size-report.json`; no existing file was removed. |
+| Old Path Relative to Developer Root      | Current Location / Action                                                                                                            |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `🔌️plugin-modules/_vendor`               | Moved intact to ticket `📦️vendor-recovery`; the already-created canonical `🔌️plugin-modules/🪞️vendor` has the same 11 file payloads. |
+| `🔌️plugin-modules/_shard`                | Moved intact to ticket `🧵️shard-recovery`; the already-created canonical `🔌️plugin-modules/🧵️shard` has the same worker bytes.       |
+| `🔌️plugin-modules/.hot-swap`             | `🔌️plugin-modules/♻️hot-swap.json`, no-overwrite move.                                                                               |
+| `🧩️extension-modules/.extension-watch`   | `🧩️extension-modules/👀️extension-watch.json`, no-overwrite move.                                                                     |
+| Future `.size-report.json` output        | Writer now explicitly names `📊️size-report.json`; no existing file was removed.                                                      |
+| Future `.engine-size-report.json` output | Writer now explicitly names `📈️engine-size-report.json`; no existing file was removed.                                               |
 
 The 14-file snapshot across vendor, shard and both markers totals 8,819,607 bytes; every current canonical payload matched its original full size and SHA-256. The font is 8,757,072 bytes, SHA-256 `05c4bbb7d07a3ee0c77274d546a3a4c5942366ccbc82eedad18b4885aa21fc5a`. The shard worker is 13,578 bytes, SHA-256 `0a7b304e6b787056a1fdbdf55398be3b2a6d9a622cee93d49cfd091a13b980c5`. All ten vendor JS modules match the installed `@bytecodealliance/preview2-shim/dist/browser` bytes; their exact literal basenames, and only those ten paths, have fixed filename contracts and package-glue source dispositions. Four scoped semantic directory memberships resolve correctly under the actual ancestor chain; full taxonomy validation returns no problems.
 

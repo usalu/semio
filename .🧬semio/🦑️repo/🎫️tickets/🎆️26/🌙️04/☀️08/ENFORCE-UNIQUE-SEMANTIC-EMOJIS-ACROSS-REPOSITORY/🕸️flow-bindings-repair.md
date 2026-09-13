@@ -2,10 +2,10 @@
 
 The existing wasm-pack producer explicitly chose `pkg` and copied its four compiler companions into a second `pkg` beside the core package. Those two configurable directory names were manually renamed to `🕸️bindings`, denoting WebAssembly bindings:
 
-| Exact Old Path Relative to OS Flow | Exact New Path |
-| --- | --- |
-| 📦️packages/🦀️rust/pkg | 📦️packages/🦀️rust/🕸️bindings |
-| 🫀️core/pkg | 🫀️core/🕸️bindings |
+| Exact Old Path Relative to OS Flow | Exact New Path               |
+| ---------------------------------- | ---------------------------- |
+| 📦️packages/🦀️rust/pkg              | 📦️packages/🦀️rust/🕸️bindings |
+| 🫀️core/pkg                         | 🫀️core/🕸️bindings            |
 
 Both directory moves used explicit no-overwrite filesystem operations. Every contained payload was retained. Each `flow_core_bg.wasm` is 36,532,683 bytes with SHA256 `0dfb368b85c325ca32378bfcfec22d47f33d334de699e15e29edc2fc25de7133`, unchanged from before the moves. No WASM compilation or regeneration ran.
 

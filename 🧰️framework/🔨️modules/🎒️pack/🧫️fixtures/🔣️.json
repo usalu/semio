@@ -92,6 +92,56 @@
     "consumers": ["generation2-snapshot", "generation3-snapshot", "generation2-mutation", "generation3-mutation"],
     "terminal": {"pending": false, "stackFrames": 0, "symbols": 0, "scalars": 0, "allocatedBytes": 0, "closed": true}
   },
+  "retainedPipelineDiagnostic": {
+    "stages": ["anchor", "segment", "retained-varint", "retained-deflate"],
+    "hotVariant": "retained-malformed-static",
+    "storage": "inline",
+    "heapBytes": 0,
+    "publicStepAllocates": false,
+    "firstFaultSticky": true,
+    "laterIngress": "rejected",
+    "close": "bounded-logical",
+    "physicalScope": "existing-lower-owners-only"
+  },
+  "retainedInflater": {
+    "constructionAllocates": false,
+    "historyBytes": 32768,
+    "dynamicLengths": 318,
+    "huffmanSymbols": 288,
+    "blocks": ["stored", "fixed", "dynamic", "window-wrap"],
+    "distances": [1, 32768],
+    "dynamicRepeatCodes": [16, 17, 18],
+    "allocationBeforeInput": true,
+    "zeroOrSubexactMutates": false,
+    "actualBackingAccounted": true,
+    "reuseAcrossCompressedSegments": true,
+    "identityAllocationBytes": 0,
+    "closeOrder": ["pending-input", "history-logical", "decoder-logical", "history-physical"],
+    "firstFaultSticky": true,
+    "consumers": ["generation2-snapshot", "generation3-snapshot"],
+    "terminal": {"pending": false, "historyLength": 0, "historyCapacity": 0, "allocatedBytes": 0, "inflaterPresent": false, "closed": true}
+  },
+  "retainedTypedPersistence": {
+    "status": "next-slice-contract",
+    "implementationOrder": ["typed-snapshot-candidate", "typed-mutation-builder", "spr-history"],
+    "constructionAllocates": false,
+    "allocationBeforeIngress": true,
+    "limits": ["logical-items", "utf8-bytes", "payload-bytes", "actual-allocation-bytes"],
+    "collectionOwners": ["container-stacks", "strings", "row-vectors", "presence-vectors", "ordered-maps", "nested-values"],
+    "snapshotConsumers": ["generation2-snapshot", "generation3-snapshot"],
+    "mutationConsumers": ["generation2-mutation", "generation3-mutation"],
+    "handoff": {"kind": "owner-and-ledger-atomic", "plainValue": false, "retirementOwnerTransferred": true},
+    "sprHistory": {
+      "recordAtomic": true,
+      "batchDecode": false,
+      "owners": ["history-byte-copy", "dictionary", "edit-id-index", "records", "payload-bytes"],
+      "order": ["verify", "admit-record", "decode-record", "validate", "typed-replay", "retire-history"]
+    },
+    "zeroOrSubexactMutates": false,
+    "firstFaultSticky": true,
+    "closeOrder": ["pending-input", "partial-scalar", "typed-logical", "history-logical", "physical-backing"],
+    "terminal": {"pending": false, "typedItems": 0, "historyRecords": 0, "allocatedBytes": 0, "ownerTransferred": false, "closed": true}
+  },
   "multiByteChunk": {
     "bytes": [17, 34, 51, 68, 85],
     "rawByteEvents": 5,

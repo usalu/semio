@@ -24687,6 +24687,7 @@ function getShardClient() {
   pooledRuntime ??= createPooledActorRuntime({
     createWorker: (shardIndex) => new MainThreadShardWorker(shardIndex),
     residentLedger: rendererResidentLedger(),
+    heartbeatTimeoutMs: 180000,
     onActorTrap: (actorId, message) => console.error(`[DEBUG] wgpu plugin-bridge: actor ${actorId} trapped: ${message}`),
     onShardLost: (shardIndex, actorIds) => {
       console.error(`[DEBUG] wgpu plugin-bridge: shard ${shardIndex} lost, restoring actors: ${actorIds.join(", ")}`);

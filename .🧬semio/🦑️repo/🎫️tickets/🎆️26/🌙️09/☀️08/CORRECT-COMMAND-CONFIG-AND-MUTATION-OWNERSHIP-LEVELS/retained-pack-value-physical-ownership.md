@@ -73,7 +73,7 @@ Durable evidence is in `🗑️generated/retained-pack-value-native-5.log`. The 
 
 The compact-diagnostic follow-up adds `PackError::RetainedMalformed { what: &'static str, offset: u64, detail: &'static str }`. Every governed value and record-body malformed path now stores and returns that allocation-free payload; the successful path no longer constructs eager owned errors. Repeated malformed UTF-8 and symbol faults preserve the same first fault and allocation ledger. The new record-body law observes and exactly releases 9,456 admitted bytes after rejection.
 
-The registered `retained-pack-value-native-6.log` run has passed the neutral oracle, PagedList 1/1, symbol table 2/2, catalog 3/3, cold codec 1 1/1, retained value 3/3, retained record body 4/4 and Generation2d mutation 1/1. Exec session `26866` remains live behind shared Cargo work with Generation2d mounted 2/2 plus Generation3d mutation 1/1 and mounted 2/2 still pending and no emitted failure. Root owns monitoring after the frozen diagnostic handoff.
+The registered `retained-pack-value-native-6.log` run passed the neutral oracle, PagedList 1/1, symbol table 2/2, catalog 3/3, cold codec 1 1/1, retained value 3/3, retained record body 4/4 and Generation2d mutation 1/1. It then ended without a resumable exec session or Nx footer. Generation2d mounted 2/2 plus Generation3d mutation 1/1 and mounted 2/2 produced no result, so native run 6 is recorded as interrupted rather than complete.
 
 ## Source Ledger
 
@@ -94,10 +94,10 @@ The registered `retained-pack-value-native-6.log` run has passed the neutral ora
 
 ## Remaining Ownership Work
 
-The retained inflater and segment protocol in Slice Two remains unimplemented. Cold `PackFile`, the one-shot codecs and codec 1 remain enabled.
+The retained inflater and segment protocol is now implemented and accepted as the following bounded slice. Cold `PackFile`, the one-shot codecs and codec 1 remain enabled. See `retained-pack-inflater-physical-implementation.md`.
 
 Value and record-body cursor diagnostics are now accounted: their sticky faults contain only static retained fields or another allocation-free `PackError` variant, and their four mounted callers translate them to static codes without formatting. This closes the diagnostic gap for these two cursor owners together with the accepted stack and symbol/span backing.
 
-It does not close the complete retained Pack pipeline. `RetainedPackAnchorCursor::grant`, `RetainedPackSegmentCursor::grant` and `DeflateRetainedCursor::grant` still construct ordinary `PackError::Malformed { detail: String }` on hot fault paths. Segment close also drops inflater backing synchronously. No inspected retained hot method directly constructs `Schema(String)` or `Io(String)`; those remain cold variants. Exact boundary details are in `retained-pack-compact-diagnostic-plan.md`.
+The pipeline diagnostic follow-up also converted anchor, segment, retained-varint and retained-DEFLATE malformed grants to the sticky static variant. No inspected retained hot method now constructs ordinary `Malformed(String)`, `Schema(String)` or `Io(String)`; those remain cold variants. This still does not close physical inflater ownership: segment close drops inflater backing synchronously and reports no actual bytes. Exact boundary details are in `retained-pack-pipeline-diagnostic-implementation.md`.
 
-Typed mutation builders and snapshot collections still contain ordinary `String` and `Vec` owners. Archive ingress, recursive members and the common persisted-document factory remain separate required work. This report makes no full-retained or recursive-persistence claim.
+Typed mutation builders and snapshot collections still contain ordinary `String` and `Vec` owners. Retained SPR/history, archive ingress, recursive members and the common persisted-document factory remain separate required work. Their next bounded design begins in `retained-typed-snapshot-mutation-and-spr-history-design.md`. This report makes no full-retained or recursive-persistence claim.

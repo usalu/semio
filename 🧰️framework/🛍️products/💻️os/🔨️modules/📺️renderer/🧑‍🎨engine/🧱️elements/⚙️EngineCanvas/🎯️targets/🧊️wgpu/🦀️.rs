@@ -1766,14 +1766,18 @@ fn create_target_texture(device: &wgpu::Device, width: u32, height: u32) -> wgpu
 //#region 🧩️EngineSurfaceAttach
 /// 🧩️ The per-kind payload one attached surface projects into the shell's own bespoke pointer state
 /// map — `NodeGraphSurface`/`TiledMapSurface`/`Board2dSurface` each carry a different tail beyond
-/// bounds+controller, and `World3d` carries none because its host (`World3dState`) IS the shell's
-/// entry and keeps its own bounds.
+/// bounds+controller, and `World3d` carries the scene's own compute-status document because the
+/// CANCEL CONTRACT lives there: `World3dScene.statusJson`'s `cancellable`/`cancelAction` pair is what
+/// the shell offers an affordance for, and `World3dState` (the shell's entry) keeps geometry, never
+/// status (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+///
+/// @see `🔨️modules/🖱️ui/🎬️scene/🟦️.ts` — `World3dComputeStatusV1`/`world3dComputeStatusV1`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum EngineSurfaceKindDetail {
     NodeGraph,
     TiledMap { selection_method: String },
     Board2d { fixture_json: String },
-    World3d,
+    World3d { status_json: Option<String> },
 }
 
 /// 🧩️ One live engine surface this frame's chrome walk attached, projected for the shell's own
@@ -2487,6 +2491,24 @@ pub fn node_graph_sync_caret_blink(visible: bool) {
     });
 }
 
+/// 🖼️ Frames the whole graph of one node-graph surface and answers the camera it installed, or
+/// `None` when the surface has no live engine or no graph to frame. The wgpu twin of React's
+/// `fitGraphToView` (`🧱️elements/🕸️NodeGraph/🟦️.tsx`); the caller persists the answer through
+/// `nodeGraphViewport` exactly the way a pan or a zoom gesture is persisted, so the next open
+/// honours it.
+///
+/// @see `♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs` — `DagHost::fit_camera_to_content`
+pub fn node_graph_fit_camera(surface_id: &str) -> Option<[f64; 3]> {
+    ENGINE_SURFACES.with(|cell| {
+        let mut surfaces = cell.borrow_mut();
+        let engine = surfaces.get_mut(surface_id)?.node_graph.as_mut()?;
+        match engine {
+            NodeGraphEngine::Flow(host) => host.dag.fit_camera_to_content().then(|| [host.fixture.camera.x, host.fixture.camera.y, host.fixture.camera.zoom]),
+            NodeGraphEngine::Dag(host) => host.dag.fit_camera_to_content().then(|| [host.dag.fixture.camera.x, host.dag.fixture.camera.y, host.dag.fixture.camera.zoom]),
+        }
+    })
+}
+
 /// 🛍️ Installs the app-static operator/palette catalogue on one node-graph surface's engine host.
 /// Idempotent and cheap: an unchanged payload costs one string compare, which is what makes it safe
 /// to call from the shell's per-refresh `publish_app_catalogue` sweep. Returns whether a live host
@@ -2536,6 +2558,19 @@ pub fn node_graph_clear_wheel_zoom_active() {
 
 const FLOW_WIDGET_DRAG_MIME: &str = "application/x-flow-widget";
 const CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
+
+/// 🧩️ Parses a Puzzle 3D catalogue drag payload (`objectKind`, optional `meshUrl`) — mirrors React `parsePuzzle3dCatalogueDragPayload`.
+pub fn puzzle3d_catalogue_drag_payload_json(raw: &str) -> Option<(String, Option<String>)> {
+    let payload: Value = serde_json::from_str(raw).ok()?;
+    let object_kind = payload.get("objectKind").and_then(|value| value.as_str()).filter(|kind| !kind.is_empty())?;
+    let mesh_url = payload.get("meshUrl").and_then(|value| value.as_str()).filter(|url| !url.is_empty()).map(str::to_string);
+    Some((object_kind.to_string(), mesh_url))
+}
+
+/// 🧩️ Reads the Puzzle 3D catalogue drag payload from a tree drag's mime map.
+pub fn puzzle3d_catalogue_drag_payload(drag_data: &HashMap<String, String>) -> Option<(String, Option<String>)> {
+    drag_data.get(CATALOGUE_DRAG_MIME).and_then(|raw| puzzle3d_catalogue_drag_payload_json(raw))
+}
 
 /// 👻️ Ghost descriptor JSON for a catalogue app drag (mirrors React `catalogueGhostDescriptorJson`).
 pub fn catalogue_ghost_descriptor_json(raw: &str) -> Option<String> {

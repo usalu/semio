@@ -6,6 +6,7 @@ import { isGeneratedPath } from "../../../../../🦑️repo/🔨️modules/📚�
 import { devToolingEnv, parseExtensionCargoManifest, readStableBuildFile, resolveWorkspaceBin, runExactCargoLawProcess } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { semanticOwnedInputFileSnapshot } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 import { createFreshComponentTests } from "../🧪️tests/🆕️fresh-component/🟦️.ts";
+import { blake3Hex } from "../../../../../../🔨️modules/🔏️hash/🟦️.ts";
 import { verifyFreshCatalogPackageV1 } from "../../📇️registry/✅️catalog-verification/🟦️.ts";
 import { DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME, FRESH_COMPONENT_MAX_BYTES, FRESH_DESCRIPTOR_MAX_BYTES, FRESH_IO_CHUNK_BYTES, CRATE_NAME, buildPluginComponent, cargoTargetRoot, extractPluginCore, freshWasmArtifactSize, pluginWasmArtifactPath } from "../🏗️component-build/🟦️.ts";
 import { emitOwnerDescriptorPairV1, type DescriptorEmissionControlV1 } from "../🛂️descriptor-emission/🟦️.ts";
@@ -128,7 +129,6 @@ export async function captureFreshComponentInputs(
       wasmSha256: componentSha256,
       coreWasmSha256: coreSha256,
     });
-    const { blake3Hex } = await import(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"));
     check();
     const result = {
       componentBytes,

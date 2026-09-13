@@ -9,7 +9,8 @@ use crate::schema::{FLOW_DEFAULT_GRID_FACTOR, FLOW_DEFAULT_PROXIMITY_DISTANCE};
 use crate::FlowSnapshot;
 use flow::{flow_backed_node_graph_extras, flow_host_with_session, FlowEvalSession, FLOW_LOD_MODE_AUTOMATIC};
 use semio_framework_artifact_infinite_dag::DagFixture;
-use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, NodeGraphScene, Viewport2d, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, NodeGraphScene, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_os_kernel::Viewport2d;
 use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
 use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 

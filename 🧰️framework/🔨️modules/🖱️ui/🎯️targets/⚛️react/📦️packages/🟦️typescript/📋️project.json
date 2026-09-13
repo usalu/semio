@@ -7,8 +7,10 @@
       "{projectRoot}/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧹️lint/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧱️elements/**/*"
-    , "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts"]
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧱️elements/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🎨️styling/🟦️.ts"
+    ]
   },
   "targets": {
     "dev": {

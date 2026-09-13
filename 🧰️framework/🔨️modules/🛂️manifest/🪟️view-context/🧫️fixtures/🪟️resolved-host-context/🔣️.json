@@ -3,6 +3,10 @@
     "locale": "de",
     "terminology": "reuse",
     "activeModeId": "edit",
+    "sessionIdentity": {
+      "userId": "user-a",
+      "displayName": "Ada"
+    },
     "focusedWindowId": "right",
     "windowInstances": [
       {
@@ -41,6 +45,25 @@
       "name": "unknown-field",
       "set": {
         "pluginLocale": "en"
+      }
+    },
+    {
+      "name": "empty-session-user-id",
+      "set": {
+        "sessionIdentity": {
+          "userId": "",
+          "displayName": "Ada"
+        }
+      }
+    },
+    {
+      "name": "unknown-session-identity-field",
+      "set": {
+        "sessionIdentity": {
+          "userId": "user-a",
+          "displayName": "Ada",
+          "token": "secret"
+        }
       }
     },
     {
@@ -96,6 +119,7 @@
     }
   ],
   "panelCapacityChars": 65536,
+  "identityCapacityChars": 256,
   "guestDecode": [
     {
       "name": "missing-locale",

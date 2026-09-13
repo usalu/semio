@@ -12,7 +12,6 @@ The consumer passes both rlib and rmeta with `--extern`, matching [Rust’s docu
 
 Artifact hashes:
 
-
 - `.nx-artifact.json`: `0db003ab5dd6eee88dcfef4a85067a4fa7d6c911a4d93d2bbb666af13e624d99`
 - `libsemio_framework_hash.rmeta`: `3ed6bec660a16cb669b4d55742f05ccd7baaf01f826faee4714465d86c7495a8`
 - `libsemio_framework_hash.rlib`: `5f681f9b4673b254737aa9a2b629d50fea0775f8d393453b8ffe24f868ade218`

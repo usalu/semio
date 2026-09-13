@@ -843,7 +843,6 @@ Generated WGPU package 🟦️typescript/🚀️boot.js and .vscode/launch.json 
 - Native inventory fixture: native task-graph cacheability checks for inferred publishing executors; removed the overbroad executor-bypass classification.
 - Ticket native-inventory Vite-storage and Rust-input probes: retained input scripts.
 
-
 ## 2026-09-12 Inferred Native Test Caching
 
 Shared subject/oracle resolution, native source and generator dependencies, affected edges, executable import closure, resident plugin refresh, schema-backed native regression, and existing browser import repairs. Twin target contracts are under validation.
@@ -861,7 +860,6 @@ Shared subject/oracle resolution, native source and generator dependencies, affe
 - `🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📋️project.json`
 
 Ticket inputs: updated `🔬️native-inventory/🦀️test-inputs/📜️script.ts`; added `🔬️native-inventory/🦀️input-contract/📜️script.ts`. Reports: `📓️inferred-test-inputs.md`, `📓️remaining-build-contracts.md`, `📓️nx-inventory.md`, this file.
-
 
 ## WGPU Physical Producer Partition — 2026-09-12
 
@@ -889,7 +887,6 @@ Projected session follow-up: registry `🔎️discovery/🟦️.ts` now resolves
 
 - Follow-up bootstrap correction: inferred-test plugin command inputs are deferred until a canonical case exists; the dependency-bootstrap neutral fixture includes `🧪️test/🕸️dependencies/🟨️.mjs`; CORE validates physical producer bindings only for contracts with discovered participants. Added ticket probe `🔬️native-inventory/🛠️tooling/📜️script.ts` and empty-project regression alongside invalid producer rejection.
 
-
 ### Styling .NET Output Contract — 2026-09-13
 
 - `🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🟦️.ts` — removed .NET commands from the Python command module.
@@ -900,7 +897,6 @@ Projected session follow-up: registry `🔎️discovery/🟦️.ts` now resolves
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🟦️.ts` — test registration and resolved .NET Compile source check.
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/nx-contract/🔣️.json` — corrected support-library Compile source.
 - Ticket `🔬️native-inventory/🎨️styling/📜️script.ts`, `📓️styling-outputs.md`, `📓️compiler-output-gaps.md`, `📓️remaining-build-contracts.md`, `📓️changed-files.md`.
-
 
 ### OS Dev Production Completion — 2026-09-13
 
@@ -953,3 +949,50 @@ Created caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script
 ## Cargo Cleanup Boundary And Hub Contract (2026-09-13)
 
 Removed detached pruning from caching/🦀️cargo/📜️script.ts. Added caching/🧪️tests/🦀️cleanup-boundary fixture/schema/native test and its ticket probe/report; registered it in cache-contracts. Corrected the concurrency docstring in the relocated caching/🧹️pruning/📋️orchestration/🟦️.ts. Updated the Hub fixture/schema/test to its current builder configuration and added a focused ticket probe.
+
+Added the ticket-only native Cargo incremental-publication probe and 📓️native-incremental-publication.md; recorded actual WGPU HTTP consumption and the subsequent concurrent-source compilation failure.
+
+## Graph Reload Runtime (2026-09-13)
+
+Updated library/🟨️.mjs module admission and revision hashing; added caching/🧪️tests/🔁️graph-revision fixture/schema/test and registered it in the full suite. Added ticket graph-revision and module-revision probes and 📓️graph-revision-runtime.md. The stalled owned full-suite process was stopped after the reload loop was reproduced; all its tracked processes exited.
+
+## WGPU Runtime Namespaces (2026-09-13)
+
+Updated OS Dev activation root, execution, installation, freshness and React serve/Vite consumers; updated Demonstrator's React activation consumer. Retired the WGPU global-publication helper from OS Dev engine publication. Updated WGPU server configuration/mounts, module-route fixture, library graph output paths, full cache contracts, browser-serving fixture/schema/test and live-activation fixture/schema/test. Added the focused ticket live-activation probe and runtime-isolation report. Updated Cargo cleanup tests to resolve NativeScript from the real esbuild import closure after its concurrent extraction. No generated editor command changed because the existing activation and server targets remain the entry points.
+
+Updated nx-contract fixture/schema and Apple tooling source assertion; added the ticket platform-environment probe. Updated the ticket actual browser probe to select a variant and compare its namespace descriptors/font bytes. Corrected the WGPU winit debug formatter for InputGeneration after native compilation rejected Display formatting.
+
+## Native Runtime Graph (2026-09-13)
+
+- Updated library/🟨️.mjs to infer profile/variant native publication, run and smoke targets with explicit component/descriptor/session and native binary prerequisites.
+- Updated caching/🚀️bootstrap/📜️script.ts to resolve native selections before the outer Nx graph.
+- Added WGPU/⌨️native-entrypoint/📜️script.ts for asynchronous native/scale execution, owned asset listeners and protected child environment.
+- Added WGPU/⌨️native-entrypoint/📦️modules/{📜️script.ts,🟦️.ts,🧬️schema/🔣️.json} for finite native component/descriptor publication.
+- Updated WGPU TypeScript project/router and native Rust entrypoint diagnostic; removed its nested Nx runtime pipeline.
+- Added caching/🧪️tests/🧊️native-runtime/{🟦️.ts,🔣️.json,🧬️schema/🔣️.json} and registered it in cache-contracts; added native graphlib/editor checks.
+- Updated plugin browser distribution inventory fileDigest to accept an abort signal for native publication hashing.
+- Updated registry/🚀️launch/🟦️.ts and .vscode/🧩️launch.seed.jsonc, then regenerated .vscode/launch.json through Nx.
+- Added ticket/🔬️native-inventory/🧊️native-runtime/📜️script.ts and 📓️native-runtime-graph.md.
+
+Compact native runtime additions: native-entrypoint/📦️modules/🦀️.rs (native manifest/page reader), its TypeScript publisher and JSON schema, WGPU Rust library module registration, ProgramBridge native descriptor/reference consumption, and caching/🧪️tests/🧊️native-runtime fixtures/schema/test. cache-contracts now awaits node discovery through graph reloads.
+
+## Selected Runtime Dependencies (2026-09-13)
+
+- Updated library/🟨️.mjs playground preparation to select only authored app engines and keep WGPU compilation renderer-specific.
+- Removed the unconditional OS Dev engine publication builder and unused composition engine collector; removed their collaboration prebuild call and obsolete engine-publication fixture/test. Updated the engine lease description and Vite's selected optimization metadata.
+- Added caching/🧪️tests/🎯️selected-runtime/{🟦️.ts,🔣️.json,🧬️schema/🔣️.json}; registered selected prerequisites and Cargo font closure checks in cache-contracts.
+- Added Infinite/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/{Cargo.toml,📋️project.json,📜️script.ts} as the independent font exporter. Updated root Cargo membership/lockfile and removed the old Infinite exporter binary/render feature/dependency.
+- Updated Infinite's fonts task/router to consume the separate cached tool and narrow its source inputs. Updated the Rust font source documentation.
+- Updated nx-contract fixture/schema for separate font project ownership and removed baseline engine expectations. Cache-contracts now compares equivalent WASM output declarations by their resolved physical paths.
+- Updated .vscode/🧩️launch.seed.jsonc for all three font exporter commands; regenerated .vscode/launch.json through Nx.
+- Added ticket/🔬️native-inventory/🎯️selected-runtime/📜️script.ts, ticket/🔬️native-inventory/⚙️config-graph/📜️script.ts and 📓️selected-runtime-dependencies.md. Private runner entries, logs and comparison outputs remain ticket-owned while work is open.
+
+Font follow-up: both command routers now use narrow shared routing/process imports; selected-runtime fixtures/schema/test compare their source exclusions with esbuild. Native-runtime cancellation assertions now wait up to five seconds for asynchronous OS process-table removal of the exact recorded child/grandchild PIDs.
+
+## Selected Runtime Identity and Config Boundaries
+
+- Updated Puzzle Rust `package.json` with its authored Nx project identity while preserving its new npm import name.
+- Updated Flow core build `package.json` with its authored Nx identity and disabled duplicate npm-script inference.
+- Extended selected-runtime JSON vectors and schema plus native Nx identity oracle; updated the ticket probe and full contract registration.
+- Added `📚️library/🎮️playground/🧭️selection/🟦️.ts` for authored manifest selection.
+- Updated the playground helper, repo library export/type imports, and cache-contract selection import to keep discovery out of configuration consumers.

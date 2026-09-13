@@ -30,11 +30,11 @@ The four concrete callers do not format or copy the retained diagnostic. Generat
 | `RetainedPackCatalogCursor`, `RetainedPackSymbolTable` query/reserve/grant methods | `RetainedPackCatalogFault { code: &'static str, offset: u64 }` | Inline for this boundary |
 | `RetainedValueCursor::{try_new,next_allocation_bytes,seal,grant}` | `PackError::RetainedMalformed` or another allocation-free `PackError` variant | Closed by this slice |
 | `RetainedRecordBodyCursor::{try_new,next_allocation_bytes,seal,symbol_chars,symbol_char,grant}` | `PackError::RetainedMalformed` or another allocation-free `PackError` variant | Closed by this slice |
-| `RetainedPackAnchorCursor::grant` | ordinary `PackError::Malformed { detail: String }` on malformed/replay/closed paths | Open |
-| `RetainedPackSegmentCursor::grant` | ordinary `PackError::Malformed { detail: String }`, including retained-varint faults and delegated inflater faults | Open |
-| `DeflateRetainedCursor::grant` | ordinary `PackError::Malformed { detail: String }` | Open with inflater ownership |
+| `RetainedPackAnchorCursor::grant` | sticky `PackError::RetainedMalformed` or another allocation-free variant | Closed by the pipeline diagnostic follow-up |
+| `RetainedPackSegmentCursor::grant` | sticky `PackError::RetainedMalformed` or another allocation-free variant, including retained-varint and delegated inflater faults | Closed by the pipeline diagnostic follow-up |
+| `DeflateRetainedCursor::grant` | sticky `PackError::RetainedMalformed` or another allocation-free variant | Diagnostic closed; physical inflater ownership open |
 
-No inspected retained hot method constructs `PackError::Schema(String)` or `PackError::Io(String)` directly. Those owned variants remain available to cold Pack APIs. Anchor and segment callers currently map their errors to static mounted codes, but the discarded intermediate `Malformed` still allocates during the governed step. The complete source-to-value pipeline therefore is not allocation-free yet.
+No inspected retained hot method constructs ordinary `PackError::Malformed { detail: String }`, `PackError::Schema(String)` or `PackError::Io(String)` after the pipeline diagnostic follow-up. Those owned variants remain available to cold Pack APIs. This closes the inspected hot diagnostic payload, while the segment/inflater physical state remains unaccounted.
 
 ## Schema-First Laws
 
@@ -59,6 +59,8 @@ Native laws will:
 
 The schema and fixture now require the `retained-malformed-static` hot variant, inline storage, zero heap bytes, a non-allocating public retained step and sticky first-fault identity. The Ajv/TypeScript/platform oracle passed in `🗑️generated/retained-pack-value-native-6.log`. Native value 3/3 and record-body 4/4 also passed there; the malformed record-body law preserved the pending input and actual ledger across repeated observation, then released exactly 9,456 admitted bytes.
 
-The registered run remains live as exec session `26866` while shared Cargo work serializes. Completed filters are PagedList 1/1, symbol table 2/2, catalog 3/3, cold codec 1 1/1, retained value 3/3, retained record body 4/4 and Generation2d mutation 1/1. Generation2d mounted 2/2 plus Generation3d mutation 1/1 and mounted 2/2 remain pending in that same durable run; the process has emitted no failure. Root owns monitoring after this frozen handoff.
+Registered native run 6 ended without a resumable exec session or Nx footer after shared Cargo serialization. Its durable completed evidence is PagedList 1/1, symbol table 2/2, catalog 3/3, cold codec 1 1/1, retained value 3/3, retained record body 4/4 and Generation2d mutation 1/1. Generation2d mounted 2/2 plus Generation3d mutation 1/1 and mounted 2/2 did not produce results. The run is recorded as interrupted, not passing or live.
 
-Acceptance closes diagnostic ownership only for the retained value and record-body cursors and their four mounted caller mappings, subject to the pending caller compile filters above. Retained anchor/segment delegated errors, DEFLATE state/history, typed builders and collections, Store factories, archive ingress and recursive members remain explicit work. Inflater production edits start only after the separate audit and authorization.
+The follow-up registered target passed three anchor/segment-varint/retained-DEFLATE diagnostic laws, the real codec-1 retained pipeline law and the hostile anchor CRC close law. It proves a 9,480-byte admitted source owner releases exactly after anchor rejection. Detailed red/green evidence is in `retained-pack-pipeline-diagnostic-implementation.md`.
+
+The implemented result closes the inspected retained Pack hot diagnostic payloads. The four mounted caller mappings are source-reviewed and were green in native run 5 before the diagnostic-only changes, but interrupted native run 6 did not revalidate three pending caller filters. DEFLATE state/history, segment physical propagation, typed builders and collections, Store factories, archive ingress and recursive members remain explicit work.

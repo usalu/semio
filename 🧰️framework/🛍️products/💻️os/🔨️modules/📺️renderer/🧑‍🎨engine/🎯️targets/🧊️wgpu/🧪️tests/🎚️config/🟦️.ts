@@ -15,7 +15,7 @@ export default defineConfig({
     root: testRoot,
     name: "@semio-tech/framework-renderer-wgpu",
     environment: "node",
-    include: ["🧪️tests/📨️browser-frame-transport/🟦️.ts", "🧪️tests/🎮️browser-interactive-job-port/🟦️.ts", "🧪️tests/⏱️wgpu-ui-turn-budget/🟦️.ts", "🧪️tests/⏱️wgpu-worker-step-budget/🟦️.ts", "🧪️tests/🧩️package-integration/🟦️.ts", "🧪️tests/🔬️wgpu-extension-dispatch/🟦️.ts", "🧪️tests/🧩️wgpu-module-routes/🟦️.ts", "🧪️tests/🔢️wgpu-u64-seam/🟦️.ts", "🧪️tests/🖌️wgpu-document-owner-move/🟦️.ts", "🧪️tests/🌳️wgpu-document-reconcile/🟦️.ts", "🧪️tests/🌳️tree-row-rects/🟦️.ts", "🧪️tests/🖼️wgpu-raster-witness/🟦️.ts", "🧪️tests/🗞️wgpu-typed-operation-reply/🟦️.ts"],
+    include: ["🧪️tests/📨️browser-frame-transport/🟦️.ts", "🧪️tests/🎮️browser-interactive-job-port/🟦️.ts", "🧪️tests/⏱️wgpu-ui-turn-budget/🟦️.ts", "🧪️tests/⏱️wgpu-worker-step-budget/🟦️.ts", "🧪️tests/🧩️package-integration/🟦️.ts", "🧪️tests/🔬️wgpu-extension-dispatch/🟦️.ts", "🧪️tests/🧩️wgpu-module-routes/🟦️.ts", "🧪️tests/🔢️wgpu-u64-seam/🟦️.ts", "🧪️tests/🖌️wgpu-document-owner-move/🟦️.ts", "🧪️tests/🌳️wgpu-document-reconcile/🟦️.ts", "🧪️tests/🌳️tree-row-rects/🟦️.ts", "🧪️tests/🎯️retained-hit-targets/🟦️.ts", "🧪️tests/🖼️wgpu-raster-witness/🟦️.ts", "🧪️tests/🗞️wgpu-typed-operation-reply/🟦️.ts", "🧪️tests/🎮️wgpu-browser-input-wire/🟦️.ts", "🧪️tests/🎮️wgpu-runtime-mailbox-admission/🟦️.ts"],
     coverage: { include: ["🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts"] },
     passWithNoTests: false,
   },

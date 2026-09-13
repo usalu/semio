@@ -11,6 +11,9 @@ export function testResolvedHostContext(): void {
   const actual = parseResolvedPluginViewState(fixture.valid);
   assert.deepEqual(actual, fixture.valid);
   assert.notEqual(actual, fixture.valid);
+  assert.equal(schema.$defs.SessionIdentity.properties.userId.$ref, "#/$defs/Identifier");
+  assert.equal(schema.$defs.SessionIdentity.properties.displayName.$ref, "#/$defs/Identifier");
+  assert.equal(schema.$defs.Identifier.maxLength, fixture.identityCapacityChars);
   for (const row of fixture.invalid) {
     const value: Record<string, unknown> = structuredClone(fixture.valid);
     if ("remove" in row) for (const key of row.remove) delete value[key];

@@ -150,7 +150,13 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
       "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
-      "{workspaceRoot}/.vscode/launch.json"
+      "{workspaceRoot}/.vscode/launch.json",
+      "{projectRoot}/📦️artifacts/🎛️native-input/🟦️.ts",
+      "{projectRoot}/📦️artifacts/🏗️native-build/🟦️.ts",
+      "{projectRoot}/📦️artifacts/📋️native-orchestration/🟦️.ts",
+      "{projectRoot}/🧫️fixtures/command-boundaries/🧫️cases.json",
+      "{projectRoot}/🧫️fixtures/command-boundaries/🛂️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts"
     ]
   }
 }

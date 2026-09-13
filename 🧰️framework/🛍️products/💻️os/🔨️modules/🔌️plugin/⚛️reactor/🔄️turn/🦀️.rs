@@ -1176,13 +1176,32 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
             // 26/09/02/PUZZLE-3D-END-TO-END wave B46 §8.1: `interactionSelect` settles, no verdict is
             // recorded, and `data-guest-selection-json` stays `selectedIds:[]` for 150 s), so it is a
             // typed fault naming the surface rather than a `let _ =`.
-            Err(surface) => PATCHES.with(|patches| patches.defer(surface)).map_err(|surface| {
-                semio_framework::Fault::new(
-                    semio_framework::FaultOrigin::Os,
-                    semio_framework::FaultCode::new("ui.dirty-surface-deferred-capacity"),
-                    format!("deferred render ring is full, so dirty surface {} would never re-render", surface.as_ref()),
-                )
-            })?,
+            Err(surface) => {
+                // 🎟️ A refusal by one of the PROCESS-WIDE reconcile tables is not the ordinary "previous
+                // reconcile still in flight" race the defer ring exists for: it says this surface cannot be
+                // admitted at all until some other surface hands credit back, and while the reservation was
+                // priced at the per-surface CEILING that was structural — three surfaces of a thirteen-surface
+                // session, refused/deferred/re-dirtied for ever with `effects=0` (ticket
+                // 26/09/02/PUZZLE-3D-END-TO-END wave B56 §1.1, wave B58). Priced by its own body it should
+                // never happen, so it is reported by NAME, once per refusal, instead of deferring in silence.
+                if let Some(reason) = PATCHES.with(|patches| patches.take_unreported_reserve_refusal()).filter(|reason| reason.starts_with("registry-")) {
+                    effects.push(shell_fault_effect(
+                        instance,
+                        &semio_framework::Fault::new(
+                            semio_framework::FaultOrigin::Os,
+                            semio_framework::FaultCode::new("ui.surface-reconcile-unadmitted"),
+                            format!("dirty surface {surface_key} was refused its reconcile reservation by {reason}, so its render is deferred until another surface returns credit"),
+                        ),
+                    ));
+                }
+                PATCHES.with(|patches| patches.defer(surface)).map_err(|surface| {
+                    semio_framework::Fault::new(
+                        semio_framework::FaultOrigin::Os,
+                        semio_framework::FaultCode::new("ui.dirty-surface-deferred-capacity"),
+                        format!("deferred render ring is full, so dirty surface {} would never re-render", surface.as_ref()),
+                    )
+                })?;
+            }
         }
     }
     let reconcile_work = PATCHES

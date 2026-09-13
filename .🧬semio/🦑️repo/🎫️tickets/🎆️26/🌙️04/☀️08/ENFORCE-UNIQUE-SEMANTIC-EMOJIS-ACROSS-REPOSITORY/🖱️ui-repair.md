@@ -6,14 +6,14 @@ The first 12 manual moves are applied (six root identities and six module identi
 
 The UI root was inspected, including stylesheet contents, the package exports, the oracle contribution, and the rendering package manifests. The handpicked root choices are:
 
-| Current identity | Chosen identity | Meaning |
-| --- | --- | --- |
-| `🎨️.css` | `🧵️.css` | Composes the shared stylesheet imports |
-| `🎨️globals-ui.css` | `🌐️globals-ui.css` | Global UI interaction styles |
-| `🎨️theme.css` | `🌓️theme.css` | Theme/palette stylesheet entry |
-| `🔣️components.json` | `components.json` | Reserved shadcn configuration basename |
-| `🧪️oracle` | `🔮️oracle` | Independent comparison authority, distinct from the story type file |
-| `🖼️render` | `🖌️render` | Rendering operations and backends, distinct from image assets |
+| Current identity    | Chosen identity    | Meaning                                                             |
+| ------------------- | ------------------ | ------------------------------------------------------------------- |
+| `🎨️.css`            | `🧵️.css`           | Composes the shared stylesheet imports                              |
+| `🎨️globals-ui.css`  | `🌐️globals-ui.css` | Global UI interaction styles                                        |
+| `🎨️theme.css`       | `🌓️theme.css`      | Theme/palette stylesheet entry                                      |
+| `🔣️components.json` | `components.json`  | Reserved shadcn configuration basename                              |
+| `🧪️oracle`          | `🔮️oracle`         | Independent comparison authority, distinct from the story type file |
+| `🖼️render`          | `🖌️render`         | Rendering operations and backends, distinct from image assets       |
 
 The `components.json` exception follows the actual schema in the file and the [official shadcn configuration contract](https://ui.shadcn.com/docs/components-json). It is registered only at this exact owner path. The existing `🔣️ui-axes.json` becomes unique once this fixed-name correction is applied and is left intact. The existing story type file is likewise left intact once the oracle receives its own handpicked identity.
 

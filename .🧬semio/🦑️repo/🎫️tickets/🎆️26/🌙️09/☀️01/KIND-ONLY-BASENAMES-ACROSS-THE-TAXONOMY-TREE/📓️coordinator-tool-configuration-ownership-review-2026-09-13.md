@@ -1,0 +1,15 @@
+# Tool Configuration Ownership Review
+
+Accepted for the bounded non-Vitest configuration slice. The repository-wide taxonomy goal remains active, and PostCSS remains separate work.
+
+The coordinator read the full executor report and independent audit, including the final two documentation/source-token consumers and explicit shared Vite-selector repair. The final map contains 11 anonymous semantic owners, 22 consumers and eight external project-input bindings. Five obsolete fixed filename/disposition contracts and two Tailwind package reexports are retired. No compatibility source remains at those thirteen predecessors.
+
+The exact 64-product identity union is retained in `📓️sol-tool-configuration-ownership-2026-09-13.md`. A coordinator filesystem integrity check found 64 unique entries: all 51 current files present and exactly the thirteen declared predecessors absent. The report itself is the 65th executor-attributed filesystem identity. Shared-file attribution is limited to that report's configuration, selector, documentation, input and registration changes; no unrelated current diff is attributed.
+
+Final direct evidence is 7 tests/134 assertions/zero failures in 22.17 seconds. The actual isolated registered `@semio-tech/repo-lib:test-tool-configuration-ownership` route passes the same 7/134 in 29.11 seconds (Nx 29.8 seconds), with cache skipped. The safe installed-tool controls include five Vite configurations through the actual native-loader argument six, protected Playwright enumeration of seven tests, Tailwind/theme import identity, root and React ESLint readers, dependency-cruiser configuration and a separately bounded selected-source run, and the VS Code test CLI's real configuration loader. They do not establish product builds, dev servers, browser/E2E execution, Electron extension-host execution, generated CSS, or repository-wide lint/graph success.
+
+The final source closure matters beyond existence: `runViteBunxDev` requires its explicit semantic configuration selector, and all three callers supply it. In particular, OS dev no longer falls back to its removed package-local Vite filename. The later VS Code README and ShellHost source-token references are also included in the portable fixture and exact target inputs. Terra independently reviewed these two additions in `📓️terra-tool-configuration-ownership-audit-2026-09-13.md`.
+
+The broader package-policy test exposed a separate missed HTML normalization reader. Root reproduced and owns that repair in `📓️coordinator-html-normalization-reader-repair-2026-09-13.md`; its direct and registered evidence is reported separately. Do not describe the previously failing package-policy route as green merely because this ownership gate passes.
+
+PostCSS remains a current configured source, with its loader distinction documented in `📓️coordinator-postcss-loader-current-intake-2026-09-13.md`. OS dev composition is now the executor's next task. The executor removed only its own completed generated scratch; authored schema, fixture, test and report remain.

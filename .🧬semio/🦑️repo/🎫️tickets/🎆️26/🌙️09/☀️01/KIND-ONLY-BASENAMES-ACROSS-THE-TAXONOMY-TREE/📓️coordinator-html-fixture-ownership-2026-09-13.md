@@ -2,6 +2,8 @@
 
 Status: complete for the bounded sixteen Stdio HTML source leaves; the repository-wide taxonomy goal remains active.
 
+Follow-up reader repair: `📓️coordinator-html-normalization-reader-repair-2026-09-13.md` records a subsequently discovered single-extension restriction in the separate normalization parser. Earlier acceptance below covered discovery and native fixture readers, which did not exercise that parser. The repair adds actual sixteen-leaf normalization coverage and explicit reader inputs; follow its report for current registered validation status.
+
 The eight HTML v5/any mutation source pairs now use anonymous `🌐️.html` leaves under `📸️snapshot/⬅️before` and `📸️snapshot/➡️after`. Five fixture parents now use the existing canonical VS16 spelling. The real oracle manifest selects all final paths; the original 1497 bytes, protocol byte counts and SHA-256 values, and installed parse5 canonical output are preserved for every source.
 
 `stdio-html-source-pair-v1` explicitly declares the six realized nodes, no alternatives, and 42-byte descendant reserve. Exact membership admits only the eight named fixture parents below fixtures. The separate test-data member `html-source-pair-control` does not admit Stdio production members. This shape does not apply the JSON mutation-runtime bundle or exempt HTML sources.

@@ -71,19 +71,19 @@ This is substantial. It is not a toy API surface. However, its implementation de
 
 My source-based readiness assessment:
 
-| Area | Readiness | Assessment |
-|---|---:|---|
-| Topological and geometric data model | **70%** | Good foundation; explicit coedges, optional p-curves, analytic/NURBS supports, arenas, labels. |
-| Artifact schema, persistence, and primitive mutations | **60%** | Coherent snapshot/mutation protocol, but incomplete subshape identity and feature-history integration. |
-| Basic primitives and elementary evaluation | **55%** | Boxes and several analytic supports exist; topology and sampling quality vary. |
-| Procedural graph/API integration | **50%** | Broad Flow node surface and happy-path tests; inherits algorithmic limitations. |
-| Tessellation for preview | **40%** | Serious implementation exists, but robustness around trims, projection, seams, and fallback triangulation is insufficient. |
-| General free-form geometry | **25%** | NURBS storage/evaluation exists, but inverse evaluation, derivatives, intersections, and trimming are immature. |
-| Exact booleans and production modeling features | **15%** | General operations are mesh/centroid/hull approximations; exact B-Rep reconstruction is absent. |
-| STEP interoperability | **25%** | Useful AP214-shaped subset; important orientation, p-curve, unit, assembly, attribute, and healing gaps. |
-| Interactive CAD viewer/editor | **5–10%** | Placeholder boxes and no-op edit commands, not actual B-Rep rendering/editing. |
-| Industrial tolerance, healing, and robustness | **10–15%** | Validation exists, but there is no production-grade tolerance propagation, sewing/healing, singularity handling, or adversarial robustness. |
-| **Overall OpenCascade/BRepJS replacement readiness** | **20–30%** | Strong foundation and integration experiment; not a production substitute. |
+| Area                                                  |  Readiness | Assessment                                                                                                                                  |
+| ----------------------------------------------------- | ---------: | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Topological and geometric data model                  |    **70%** | Good foundation; explicit coedges, optional p-curves, analytic/NURBS supports, arenas, labels.                                              |
+| Artifact schema, persistence, and primitive mutations |    **60%** | Coherent snapshot/mutation protocol, but incomplete subshape identity and feature-history integration.                                      |
+| Basic primitives and elementary evaluation            |    **55%** | Boxes and several analytic supports exist; topology and sampling quality vary.                                                              |
+| Procedural graph/API integration                      |    **50%** | Broad Flow node surface and happy-path tests; inherits algorithmic limitations.                                                             |
+| Tessellation for preview                              |    **40%** | Serious implementation exists, but robustness around trims, projection, seams, and fallback triangulation is insufficient.                  |
+| General free-form geometry                            |    **25%** | NURBS storage/evaluation exists, but inverse evaluation, derivatives, intersections, and trimming are immature.                             |
+| Exact booleans and production modeling features       |    **15%** | General operations are mesh/centroid/hull approximations; exact B-Rep reconstruction is absent.                                             |
+| STEP interoperability                                 |    **25%** | Useful AP214-shaped subset; important orientation, p-curve, unit, assembly, attribute, and healing gaps.                                    |
+| Interactive CAD viewer/editor                         |  **5–10%** | Placeholder boxes and no-op edit commands, not actual B-Rep rendering/editing.                                                              |
+| Industrial tolerance, healing, and robustness         | **10–15%** | Validation exists, but there is no production-grade tolerance propagation, sewing/healing, singularity handling, or adversarial robustness. |
+| **Overall OpenCascade/BRepJS replacement readiness**  | **20–30%** | Strong foundation and integration experiment; not a production substitute.                                                                  |
 
 These percentages are qualitative and intentionally conservative.
 
@@ -822,16 +822,16 @@ However, it inherits all kernel approximations:
 
 ### Procedural-use classification
 
-| Use | Current suitability |
-|---|---|
-| Visual shape exploration | Moderate for simple models |
-| Low-poly / mesh-oriented procedural output | Moderate |
-| Exact parametric solids | Low |
-| Re-editable feature tree | Very low |
-| Manufacturing geometry | Very low |
-| Automated CAD generation with STEP delivery | Low |
-| Geometry oracle development | Moderate to high |
-| Differential testing against OpenCascade | High strategic value |
+| Use                                         | Current suitability        |
+| ------------------------------------------- | -------------------------- |
+| Visual shape exploration                    | Moderate for simple models |
+| Low-poly / mesh-oriented procedural output  | Moderate                   |
+| Exact parametric solids                     | Low                        |
+| Re-editable feature tree                    | Very low                   |
+| Manufacturing geometry                      | Very low                   |
+| Automated CAD generation with STEP delivery | Low                        |
+| Geometry oracle development                 | Moderate to high           |
+| Differential testing against OpenCascade    | High strategic value       |
 
 The Flow integration should remain, but node results must advertise quality and failure mode.
 
@@ -1475,44 +1475,44 @@ The safest migration is to keep OpenCascade/BRepJS as a quarantined differential
 
 ## Appendix A — Capability matrix
 
-| Capability | Exists | Current implementation class | Production replacement blocker |
-|---|---|---|---|
-| Vertex/edge/coedge/loop/face/shell/solid topology | Yes | Native generational arenas | Lossless artifact mapping and complete invariant enforcement |
-| Analytic curves | Yes | Basic evaluators | Robust inverse/derivatives/intersections |
-| NURBS curves | Yes | Storage/evaluation; weak interpolation/fit | Full knot/rational math, periodicity, solvers |
-| Analytic surfaces | Yes | Plane/cylinder/cone/sphere/torus | Trim/seam/singularity and exact operations |
-| NURBS surfaces | Yes | Storage/evaluation; finite-difference derivatives | Exact derivatives, inverse UV, trimming |
-| P-curves | Partial | Optional in coedge model | Producers and algorithms do not consistently generate/use them |
-| Tolerances | Partial | Stored and validated | Hardcoded tolerances and no propagation budget |
-| Persistent labels | Partial | Topology structures | Not aligned with public handles or operation history |
-| Primitive box | Yes | Strong special case | General consistency tests |
-| Sphere/cylinder/cone | Partial | Analytic support with sampled topology | Seam/pole/pcurve/boolean robustness |
-| Torus | Partial | Sampled triangle soup | Exact toroidal topology |
-| Transform | API yes | Tessellate-transform-rebuild | Must preserve analytic B-Rep |
-| Extrude | Partial | Sampled/triangle-soup route | Exact side/cap surfaces and history |
-| Revolve | Partial | Fixed sampling | Exact revolution surfaces and poles |
-| Loft | Partial | Compatible sampled profiles | Continuity, guides, topology correspondence |
-| Sweep/pipe | Partial | Sampled ad hoc frames | Exact frames/laws/guides |
-| Helix | Partial | Fixed sampling | Exact/controlled helical curves/surfaces |
-| Boolean | Partial | AABB fast path + centroid mesh boolean | Exact intersection/split/classify/stitch |
-| Fillet | Partial | Sample/hull MVP | Rolling-ball, corner resolution, variable radius |
-| Chamfer | Partial | Approximate; second distance ignored | Complete definitions and exact trimming |
-| Offset/shell/thicken | Partial | Planar or convex hull | General offset surfaces/self-intersection |
-| Draft | Partial | Box AABB shear | General neutral-plane draft |
-| Section/split | Partial | Mesh/hardcoded tolerance | Exact section curves and topology |
-| Tessellation | Partial | UV triangulation and refinement | Robust trims/seams/holes/error bounds |
-| Point classification | Partial | Ray logic; BVH unused | One robust authoritative classifier |
-| Mass properties | Partial | Quadrature/special cases | Certified accuracy and trimmed supports |
-| Distance | Partial | Sampling/support-surface methods | Exact constrained extrema |
-| Validation | Partial | Referential/topological checks | Healing, self-intersection, manifold guarantees |
-| STEP import/export | Partial | AP214-shaped subset | Units, pcurves, orientation, assemblies, AP242 |
-| STL/OBJ/GLB | Yes/partial | Mesh-oriented codecs | Determinism and metadata |
-| Artifact mutations | Yes | 13 primitive verbs | Loop/coedge identity and feature history |
-| Artifact viewer | Scaffold | Placeholder boxes | Real tessellation/render IDs/picking |
-| Artifact editor | Scaffold | No-op command | Real mutation/compiler/undo |
-| Flow procedural nodes | Yes | Broad API | Exactness and reliability |
-| Native deployment | Partial | Rust code exists | Build/test/release validation |
-| Browser/WASM replacement | Not demonstrated | Legacy precise path remains OCCT WASM | First-party ABI, performance, app wiring |
+| Capability                                        | Exists           | Current implementation class                      | Production replacement blocker                                 |
+| ------------------------------------------------- | ---------------- | ------------------------------------------------- | -------------------------------------------------------------- |
+| Vertex/edge/coedge/loop/face/shell/solid topology | Yes              | Native generational arenas                        | Lossless artifact mapping and complete invariant enforcement   |
+| Analytic curves                                   | Yes              | Basic evaluators                                  | Robust inverse/derivatives/intersections                       |
+| NURBS curves                                      | Yes              | Storage/evaluation; weak interpolation/fit        | Full knot/rational math, periodicity, solvers                  |
+| Analytic surfaces                                 | Yes              | Plane/cylinder/cone/sphere/torus                  | Trim/seam/singularity and exact operations                     |
+| NURBS surfaces                                    | Yes              | Storage/evaluation; finite-difference derivatives | Exact derivatives, inverse UV, trimming                        |
+| P-curves                                          | Partial          | Optional in coedge model                          | Producers and algorithms do not consistently generate/use them |
+| Tolerances                                        | Partial          | Stored and validated                              | Hardcoded tolerances and no propagation budget                 |
+| Persistent labels                                 | Partial          | Topology structures                               | Not aligned with public handles or operation history           |
+| Primitive box                                     | Yes              | Strong special case                               | General consistency tests                                      |
+| Sphere/cylinder/cone                              | Partial          | Analytic support with sampled topology            | Seam/pole/pcurve/boolean robustness                            |
+| Torus                                             | Partial          | Sampled triangle soup                             | Exact toroidal topology                                        |
+| Transform                                         | API yes          | Tessellate-transform-rebuild                      | Must preserve analytic B-Rep                                   |
+| Extrude                                           | Partial          | Sampled/triangle-soup route                       | Exact side/cap surfaces and history                            |
+| Revolve                                           | Partial          | Fixed sampling                                    | Exact revolution surfaces and poles                            |
+| Loft                                              | Partial          | Compatible sampled profiles                       | Continuity, guides, topology correspondence                    |
+| Sweep/pipe                                        | Partial          | Sampled ad hoc frames                             | Exact frames/laws/guides                                       |
+| Helix                                             | Partial          | Fixed sampling                                    | Exact/controlled helical curves/surfaces                       |
+| Boolean                                           | Partial          | AABB fast path + centroid mesh boolean            | Exact intersection/split/classify/stitch                       |
+| Fillet                                            | Partial          | Sample/hull MVP                                   | Rolling-ball, corner resolution, variable radius               |
+| Chamfer                                           | Partial          | Approximate; second distance ignored              | Complete definitions and exact trimming                        |
+| Offset/shell/thicken                              | Partial          | Planar or convex hull                             | General offset surfaces/self-intersection                      |
+| Draft                                             | Partial          | Box AABB shear                                    | General neutral-plane draft                                    |
+| Section/split                                     | Partial          | Mesh/hardcoded tolerance                          | Exact section curves and topology                              |
+| Tessellation                                      | Partial          | UV triangulation and refinement                   | Robust trims/seams/holes/error bounds                          |
+| Point classification                              | Partial          | Ray logic; BVH unused                             | One robust authoritative classifier                            |
+| Mass properties                                   | Partial          | Quadrature/special cases                          | Certified accuracy and trimmed supports                        |
+| Distance                                          | Partial          | Sampling/support-surface methods                  | Exact constrained extrema                                      |
+| Validation                                        | Partial          | Referential/topological checks                    | Healing, self-intersection, manifold guarantees                |
+| STEP import/export                                | Partial          | AP214-shaped subset                               | Units, pcurves, orientation, assemblies, AP242                 |
+| STL/OBJ/GLB                                       | Yes/partial      | Mesh-oriented codecs                              | Determinism and metadata                                       |
+| Artifact mutations                                | Yes              | 13 primitive verbs                                | Loop/coedge identity and feature history                       |
+| Artifact viewer                                   | Scaffold         | Placeholder boxes                                 | Real tessellation/render IDs/picking                           |
+| Artifact editor                                   | Scaffold         | No-op command                                     | Real mutation/compiler/undo                                    |
+| Flow procedural nodes                             | Yes              | Broad API                                         | Exactness and reliability                                      |
+| Native deployment                                 | Partial          | Rust code exists                                  | Build/test/release validation                                  |
+| Browser/WASM replacement                          | Not demonstrated | Legacy precise path remains OCCT WASM             | First-party ABI, performance, app wiring                       |
 
 ---
 

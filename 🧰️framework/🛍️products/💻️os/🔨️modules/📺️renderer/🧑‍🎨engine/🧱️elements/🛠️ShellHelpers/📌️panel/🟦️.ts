@@ -14,8 +14,20 @@
  * the payload that put 248 635 characters against a 65 536-character bound
  * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
 
-import type { SpacePanelState, SpawnedAppEntry } from "../../🐚️Shell/🟦️.tsx";
-import type { PluginViewState as ViewModel } from "@semio-tech/framework";
+export type SpawnedAppEntry = {
+  readonly id: string;
+  readonly pluginId: string;
+  readonly instanceId: number;
+  readonly appId: string;
+  readonly label: string;
+  readonly breadcrumb: readonly string[];
+};
+
+export type SpacePanelState = {
+  readonly activePanelTab: string;
+  readonly spawnedApps: readonly SpawnedAppEntry[];
+  readonly activeSpawnedId?: string;
+};
 
 const PANEL_JSON_CAPACITY = 65_536;
 const PANEL_IDENTIFIER_CAPACITY = 256;
@@ -62,8 +74,8 @@ export function panelJsonFromState(state: SpacePanelState): string {
 }
 
 /** 📦️ Decodes the strict JSON panel a view state carries; only an absent payload is no panel. */
-export function parsePanelState(viewState: ViewModel): SpacePanelState | null {
-  if (!viewState.panelJson) return null;
+export function parsePanelState(viewState: { readonly panelJson?: string }): SpacePanelState | null {
+  if (viewState.panelJson === undefined) return null;
   if (Array.from(viewState.panelJson).length > PANEL_JSON_CAPACITY) throw new Error("host panel JSON exceeds its carriage capacity");
   const state: unknown = JSON.parse(viewState.panelJson);
   if (!isSpacePanelState(state)) throw new Error("host panel JSON violates its strict carriage contract");
@@ -83,6 +95,6 @@ export function studioPanelFocusingSpawned(panel: SpacePanelState, spawned: Spaw
 }
 
 /** @emoji 🐚️ Commits a studio panel into a view state's `panelJson` for a single host-effect session write. */
-export function viewStateWithSpacePanel(viewState: ViewModel, panel: SpacePanelState): ViewModel {
+export function viewStateWithSpacePanel<T extends { readonly panelJson?: string }>(viewState: T, panel: SpacePanelState): T {
   return { ...viewState, panelJson: panelJsonFromState(panel) };
 }

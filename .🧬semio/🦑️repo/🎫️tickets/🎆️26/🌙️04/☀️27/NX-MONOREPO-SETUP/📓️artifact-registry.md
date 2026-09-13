@@ -26,16 +26,16 @@ The consistent-source rerun exited 1 after 12.3 seconds because a concurrent tax
 
 `repo:disk-report` exited 0 after 10m29s. It enumerated 285,112 unique files, recognized 44,609 further hard links and excluded 282 symbolic links. The declared workspace scopes retained 231.05 GiB of allocated space; all visited reads completed without a reported error and the inventory had zero ownership conflicts. The run began before the final additional rejection vectors; those separately pass on the completed implementation.
 
-| Owner | Category | Allocated GiB |
-| --- | --- | ---: |
-| cargo | compiler-state | 170.06 |
-| cargo-browser | compiler-state | 38.98 |
-| agents | service-state | 6.40 |
-| repo-cache | unclassified | 5.19 |
-| bun | dependency-store | 4.10 |
-| workspace:build-storybook | deliverable | 2.75 |
-| test-oracles | dependency-store | 1.29 |
-| uv | dependency-store | 0.69 |
+| Owner                     | Category         | Allocated GiB |
+| ------------------------- | ---------------- | ------------: |
+| cargo                     | compiler-state   |        170.06 |
+| cargo-browser             | compiler-state   |         38.98 |
+| agents                    | service-state    |          6.40 |
+| repo-cache                | unclassified     |          5.19 |
+| bun                       | dependency-store |          4.10 |
+| workspace:build-storybook | deliverable      |          2.75 |
+| test-oracles              | dependency-store |          1.29 |
+| uv                        | dependency-store |          0.69 |
 
 Compiler state totals 209.10 GiB against the provisional 20 GiB group budget. Nx task results occupy 0.08 GiB. These observations identify retained compiler state as the dominant measured category; they do not establish when or why all of it accumulated. No compiler state was deleted. The approximately 5.19 GiB unclassified cache remainder still needs narrower ownership and retention. The report covers registered workspace scopes and does not claim a complete machine/container/user-cache baseline.
 

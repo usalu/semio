@@ -6,9 +6,31 @@
   "additionalProperties": false,
   "required": [
     "oracle",
+    "construction",
     "cases"
   ],
   "properties": {
+    "construction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scalarBytes", "backingCeilingBytes", "cases"],
+      "properties": {
+        "scalarBytes": { "const": 8 },
+        "backingCeilingBytes": { "const": 4096 },
+        "cases": {
+          "type": "array", "minItems": 4, "maxItems": 4,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["order", "requestedBytes", "rejected"],
+            "properties": {
+              "order": { "type": "integer", "minimum": 0 },
+              "requestedBytes": { "type": "integer", "minimum": 0 },
+              "rejected": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
     "oracle": {
       "type": "object",
       "additionalProperties": false,
@@ -69,9 +91,7 @@
               "terminalEmpty"
             ],
             "properties": {
-              "pending": {
-                "type": "boolean"
-              },
+              "pending": { "const": true },
               "cursor": {
                 "const": 0
               },
@@ -81,14 +101,7 @@
                   1
                 ]
               },
-              "outcome": {
-                "enum": [
-                  "yield",
-                  "preview",
-                  "checkpoint",
-                  "complete"
-                ]
-              },
+              "outcome": { "const": "yield" },
               "terminalEmpty": {
                 "const": true
               }

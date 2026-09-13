@@ -1,7 +1,6 @@
 import { readFile } from "node:fs/promises";
-import { readFileSync } from "node:fs";
-import Ajv from "ajv";
-import { FlowOperation, FlowOperationFields } from "../../📦️packages/🟨️javascript/🖥️flow-host.js";
+import { FlowOperation, FlowOperationFields } from "../../🖥️host/🏃️runtime/🟨️.js";
+import { flowWasmContract } from "./🛂️admission/🟦️.ts";
 
 //#region 🔮️OwnedOraclePort
 
@@ -11,10 +10,7 @@ class FlowSchemaOracle {
 
 class AjvFlowSchemaOracle extends FlowSchemaOracle {
   summarize(abi) {
-    const document = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
-    const ajv = new Ajv({ strict: true, allErrors: true });
-    ajv.addSchema(document);
-    const validate = ajv.getSchema(`${document.$id}#/$defs/FlowEditorBrowserAbiV1`);
+    const validate = flowWasmContract("FlowEditorBrowserAbiV1");
     if (!validate(abi)) throw new Error(`Flow schema oracle rejected: ${JSON.stringify(validate.errors)}`);
     return summary(abi);
   }
@@ -33,7 +29,7 @@ function summary(abi) {
 //#endregion 🔮️OwnedOraclePort
 
 const expected = JSON.parse(await readFile(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
-const abi = JSON.parse(await readFile(new URL("../../🧬️schema/📡️abi.json", import.meta.url), "utf8"));
+const abi = JSON.parse(await readFile(new URL("../../🧬️schema/📡️abi/🔣️.json", import.meta.url), "utf8"));
 const owned = summary(abi);
 const thirdParty = new AjvFlowSchemaOracle().summarize(abi);
 if (JSON.stringify(owned) !== JSON.stringify(expected)) throw new Error("Flow owned schema summary drift");

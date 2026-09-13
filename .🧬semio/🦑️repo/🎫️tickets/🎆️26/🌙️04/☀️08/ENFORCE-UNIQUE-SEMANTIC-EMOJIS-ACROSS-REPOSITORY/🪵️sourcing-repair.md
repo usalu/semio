@@ -23,4 +23,3 @@ Hand-reviewed every strict path-statute finding under `✏️s/🔌️plugins/�
 - Oracle owner: `🔮️oracle` at subset level.
 - Direct mutation schemas: `🧬️.schema.json`.
 - Presentation normalization: `🗃️entries`.
-

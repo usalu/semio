@@ -49,4 +49,16 @@ async fn window_view_context_uses_the_addressed_instance() {
         assert_eq!(projected.active_tool_id.as_deref(), case["activeToolId"].as_str());
         assert_eq!(projected.active_utility_id.as_deref(), case["activeUtilityId"].as_str());
     }
+    // 📌️ A panel keeps the focused pane only while the roster still carries it. A shell publishes the
+    // new mode's roster before it refocuses, and a focused pane the roster does not list made the
+    // guest's window-config capture fault BEFORE it ever matched the panel's body key — so every app
+    // panel published nothing (`wgpu-ui.surface-not-published:framework.panel.*` on the wgpu shell in
+    // generate mode, ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    for row in fixture["panelFocus"].as_array().unwrap() {
+        let focused = row["focusedWindowId"].as_str().unwrap();
+        let raised = ViewModel { focused_window_id: Some(focused.to_string()), ..view.clone() };
+        let panel = raised.for_panel();
+        assert_eq!(panel.focused_window_id.as_deref(), row["keptFocusedWindowId"].as_str(), "panel focus row {}", row["id"]);
+        assert_eq!(panel.window_instances, view.window_instances, "panel focus row {} must not touch the roster", row["id"]);
+    }
 }

@@ -2,13 +2,13 @@
 
 Five choices were made after reading the module implementations. This is an explicit manual rename list, not an automatic naming rule.
 
-| Previous | Handpicked | Inspected responsibility |
-| --- | --- | --- |
-| `📐️intrinsic-size` | `📏️intrinsic-size` | Reads intrinsic image dimensions without decoding pixels; distinct from geometry. |
-| `🔢️hash` | `🔏️hash` | SHA-256, BLAKE3, and Merkle content-integrity algorithms; distinct from numbers. |
-| `🔺️mesh-engine` | `🏗️mesh-engine` | Constructs mesh primitives and implements mesh interchange codecs; distinct from mesh topology. |
-| `🖼️pixels` | `🔲️pixels` | Pixel buffers and raster codecs; distinct from asset ownership. |
-| `🧮️action-argument-resolution` | `🧩️action-argument-resolution` | Assembles staged, seeded, and default action arguments; distinct from mathematics. |
+| Previous                       | Handpicked                     | Inspected responsibility                                                                        |
+| ------------------------------ | ------------------------------ | ----------------------------------------------------------------------------------------------- |
+| `📐️intrinsic-size`             | `📏️intrinsic-size`             | Reads intrinsic image dimensions without decoding pixels; distinct from geometry.               |
+| `🔢️hash`                       | `🔏️hash`                       | SHA-256, BLAKE3, and Merkle content-integrity algorithms; distinct from numbers.                |
+| `🔺️mesh-engine`                | `🏗️mesh-engine`                | Constructs mesh primitives and implements mesh interchange codecs; distinct from mesh topology. |
+| `🖼️pixels`                     | `🔲️pixels`                     | Pixel buffers and raster codecs; distinct from asset ownership.                                 |
+| `🧮️action-argument-resolution` | `🧩️action-argument-resolution` | Assembles staged, seeded, and default action arguments; distinct from mathematics.              |
 
 Status: five root moves and exact incoming Cargo/TypeScript/doc references complete. Other hash modules, including UI retained-state hashing, are outside these five moves. Concurrent Cargo checks were notified before the path changes. No code behavior, semantic IDs, Git state, or historical purity evidence was restored or overwritten.
 

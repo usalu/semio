@@ -1,0 +1,24 @@
+{
+  "variant": "fixture",
+  "profiles": ["dev", "release"],
+  "pluginId": "sample",
+  "componentHex": "0061736d0d000100",
+  "asset": "native asset service remains responsive",
+  "manifestLimitBytes": 1048576,
+  "paths": [
+    {"value": "../compiled/🧩️plugin/component.wasm", "valid": true},
+    {"value": "component.wasm", "valid": true},
+    {"value": "/absolute/component.wasm", "valid": false},
+    {"value": "C:/component.wasm", "valid": false},
+    {"value": "other:component.wasm", "valid": false},
+    {"value": "compiled//component.wasm", "valid": false},
+    {"value": "./component.wasm", "valid": false},
+    {"value": "compiled/./component.wasm", "valid": false},
+    {"value": "compiled/", "valid": false}
+  ],
+  "cycles": [
+    {"name": "cold", "remove": false, "publications": 1},
+    {"name": "warm", "remove": false, "publications": 1},
+    {"name": "restored", "remove": true, "publications": 1}
+  ]
+}

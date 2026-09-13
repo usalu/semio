@@ -118,8 +118,7 @@ pub mod gpu;
 #[path = "🎟️prepared/🦀️.rs"]
 pub mod prepared;
 
-/// 🧩️ 100% target-neutral (hit-testing/pointer/keyboard input state — zero `wgpu::` reference
-/// anywhere in the file, confirmed by grep). Mounted unconditionally.
+/// 🧩️ Target-neutral pointer and keyboard input, with retained engine registrations gated by `wgpu-engine`.
 #[path = "📥️input/🦀️.rs"]
 pub mod input;
 
@@ -302,6 +301,8 @@ pub use host::{clipboard_read_text, clipboard_write_text, dispatch_window_event,
 #[cfg(all(feature = "wgpu-engine", not(target_arch = "wasm32"), not(target_os = "wasi")))]
 pub use host::{dispatch_window_event, modifiers_from_winit, pointer_coords, ClipboardIoJob, WindowInputState};
 pub use input::{DragAxis, DragState, HitKind, HitTarget, InputState, KeyAction, PointerCallbacks, PointerModifiers, TreeDragState, TreeDropPosition};
+#[cfg(feature = "wgpu-engine")]
+pub use input::RetainedHitRegistration;
 #[cfg(feature = "wgpu-engine")]
 pub use paint::{paint_retained_glyph_step, RetainedGlyphCursor, RetainedGlyphStep, RETAINED_NODE_TEXT_MAX_BYTES};
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]

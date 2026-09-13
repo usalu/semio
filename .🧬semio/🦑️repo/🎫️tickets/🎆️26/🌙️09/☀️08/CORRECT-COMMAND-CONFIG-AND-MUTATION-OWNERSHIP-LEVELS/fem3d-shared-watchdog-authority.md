@@ -1,5 +1,19 @@
 # FEM3D Shared Watchdog Authority
 
+## Current Combined Acceptance — 2026-09-13
+
+Canonical combined native green2 completed the FEM2D engine package with **35/35**, 940 filtered, 118.34s Rust, normal 2 MiB stack. Its mounted 3D element law now freshly passes NumPy stiffness parity and exact Bar3/Frame3/Tet4 string-owner retirement (3/3/5). The shared numerical close/control corrections pass in the same binary.
+
+The upper FEM3D window/session package passed **20/20**, 829 filtered, 1.52s Rust. The complete registered Nx run exited zero in 12m55s with zero cache hits. The full numerical child reports terminal/ready/static/modal/closed all true, close_lane22 and both job close bits set. It uses245452 of27689000 finite test opportunities; PCG converges in11 iterations with residual5.243634533307156e-9, and Subspace in8 with residual3.3764473060475575e-7. The shared watchdog records5 isolated overruns, longest run1, without sustained quarantine. Its8ms ceiling,4-consecutive quarantine rule, one-fuel opportunities and2MiB stack are unchanged.
+
+This accepts the concrete string-cleanup repair through the full child and all existing selected window/session laws. Actual model-root admission and assembly physical byte accounting remain separate open gaps. The new assembly physical-owner schema/oracle passes7.9s; two pre-fix native regressions are now running in `fem-assembly-physical-native-red-1.log`. Their production fix is not applied.
+
+Log: `🗑️generated/fem3d-canonical-physical-green-2.log`.
+
+## Earlier Evidence and Development Record
+
+2026-09-13 current queue: broader `fem3d-window-contract-close-green-1.log` passed its two story laws, neutral contracts and strict TypeScript, including the independent mounted string-count expectations 3/3/5. Native Cargo remained in a verified shared prebuild lock wait for 30 minutes without executing tests. Root deliberately stopped only its owned facade/Cargo processes and queued fresh FEM validation behind Pack caller work. This is a pre-test cancellation, not runtime acceptance or failure of the string repair. The last actual full-child runtime remains close-red2: 13/14, with absent-lane cleanup fixed and AssemblyCsrBuild lane3 stalled.
+
 ## Current Verified State — Native3
 
 Current string-release source correction is applied after repeated actual full-child close failures: a common borrowed-string owner helper serves Bar3,Frame3,Tet4 and the existing Bar2,BeamEb2,Tri3Cst implementations. Unsupported 3D defaults are replaced with exact next-allocation observation, one backing retirement and terminal emptiness. Close-red3 did not execute tests because root taxonomy initialization rejects currently missing fixed contract ids/dispositions. This is not element test failure evidence. The already registered broader FEM3D window-contract native route remains usable without that root initializer; it now runs after correcting its stale Vitest config path to the verified canonical config. Its story/neutral/strictTS stage passes and it is compiling the selected lower element/assembly/PCG/subspace and upper window/session laws. Canonical taxonomy acceptance remains open independently.

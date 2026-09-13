@@ -90,6 +90,9 @@ mod frame_job;
 #[path = "../📐️surface-lane/🦀️.rs"]
 mod surface_lane;
 
+#[path = "../🎮️input-wire/🦀️.rs"]
+mod input_wire;
+
 #[cfg(target_arch = "wasm32")]
 #[path = "../🌐️browser-worker/🦀️.rs"]
 mod browser_worker;
@@ -8973,6 +8976,22 @@ where
     spawn_local(future);
 }
 
+/// 🩺️ Temporary transition-only tracing so a per-frame predicate can be observed without 60 lines a
+/// second. Remove with the `[DEBUG]` lines it serves.
+fn log_debug_once_per_transition(site: &'static str, state: bool, message: &str) {
+    use std::sync::Mutex;
+    static LAST: Mutex<Option<Vec<(&'static str, bool)>>> = Mutex::new(None);
+    let mut guard = LAST.lock().expect("debug transition ledger");
+    let entries = guard.get_or_insert_with(Vec::new);
+    match entries.iter_mut().find(|(key, _)| *key == site) {
+        Some(entry) if entry.1 == state => return,
+        Some(entry) => entry.1 = state,
+        None => entries.push((site, state)),
+    }
+    drop(guard);
+    log_debug(message);
+}
+
 #[cfg(target_arch = "wasm32")]
 fn log_debug(message: &str) {
     web_sys::console::log_1(&JsValue::from_str(message));
@@ -9457,20 +9476,25 @@ enum RuntimeApply {
 
 impl RuntimeApply {
     fn start_dispatch(cursor: &mut Option<RuntimeDispatchCursor>, runtime: &mut AppRuntime, handle: &AppHandle) -> bool {
+        log_debug("[DEBUG] start_dispatch enter");
         let Some(cursor_value) = cursor.as_mut() else { return true };
         if cursor_value.terminal_is_empty() {
             cursor.take();
             return true;
         }
         let Some(mailbox) = handle.upgrade().map(RuntimeMailbox) else {
+            log_debug("[DEBUG] start_dispatch refused: mailbox handle expired");
             return false;
         };
-        let Some(mut interaction) = runtime.interaction.take() else {
+        let Some(mut interaction) = runtime.check_out_interaction("dispatch-event") else {
+            log_debug_once_per_transition("start-dispatch-checkout", true, "[DEBUG] start_dispatch refused: interaction state is checked out");
             return false;
         };
+        log_debug_once_per_transition("start-dispatch-checkout", false, "[DEBUG] start_dispatch: interaction state checked out for one event");
         if !mailbox.reserve_interaction_future() {
+            log_debug("[DEBUG] start_dispatch refused: interaction future credits exhausted");
             interaction.frame_fault = Some("runtime dispatch completion credits exhausted".to_string());
-            runtime.interaction = Some(interaction);
+            runtime.return_interaction(interaction);
             return false;
         }
         let mut cursor_value = cursor.take().expect("dispatch cursor admitted above");
@@ -9514,7 +9538,7 @@ impl RuntimeApply {
                 return false;
             };
             returned_cursor.return_shell_maintenance();
-            runtime.interaction = Some(interaction);
+            runtime.return_interaction(interaction);
             *cursor = Some(returned_cursor);
             return false;
         }
@@ -9531,18 +9555,18 @@ impl RuntimeApply {
             return true;
         }
         let Some(mailbox) = handle.upgrade().map(RuntimeMailbox) else { return false };
-        let Some(mut interaction) = runtime.interaction.take() else { return false };
+        let Some(mut interaction) = runtime.check_out_interaction("frame-deferred") else { return false };
         if !mailbox.reserve_interaction_future() {
             interaction.frame_fault = Some("frame deferred completion credits exhausted".to_string());
-            runtime.interaction = Some(interaction);
+            runtime.return_interaction(interaction);
             return false;
         }
         let Some(mut cursor_value) = cursor.take() else {
-            runtime.interaction = Some(interaction);
+            runtime.return_interaction(interaction);
             return false;
         };
         let Some(work) = cursor_value.take_next() else {
-            runtime.interaction = Some(interaction);
+            runtime.return_interaction(interaction);
             return true;
         };
         if matches!(work, FrameDeferredWork::ShellMaintenance) {
@@ -9588,23 +9612,30 @@ impl RuntimeApply {
     }
 
     fn apply_step(&mut self, runtime: &mut AppRuntime, handle: &AppHandle) -> bool {
+        if let Self::DispatchEvents(cursor) = self {
+            log_debug(&format!("[DEBUG] apply_step DispatchEvents present={} terminal-empty={:?}", cursor.is_some(), cursor.as_ref().map(RuntimeDispatchCursor::terminal_is_empty)));
+        }
         match self {
             Self::Resize { width, height, dpr } => runtime.resize(*width, *height, *dpr),
             Self::DispatchEvents(cursor) => return Self::start_dispatch(cursor, runtime, handle),
             Self::ResumeDispatch { interaction, cursor } => {
                 if let Some(returned) = interaction.take() {
-                    runtime.interaction = Some(returned);
+                    runtime.return_interaction(returned);
                 }
                 return Self::start_dispatch(cursor, runtime, handle);
             }
             Self::ResumeFrameDeferred { interaction, cursor } => {
                 if let Some(returned) = interaction.take() {
-                    runtime.interaction = Some(returned);
+                    runtime.return_interaction(returned);
                 }
                 return Self::start_frame_deferred(cursor, runtime, handle);
             }
             #[cfg(not(target_arch = "wasm32"))]
-            Self::RestoreInteraction(interaction) => runtime.interaction = interaction.take(),
+            Self::RestoreInteraction(interaction) => {
+                if let Some(returned) = interaction.take() {
+                    runtime.return_interaction(returned);
+                }
+            }
             #[cfg(not(target_arch = "wasm32"))]
             Self::PluginReload(result) => match result.take() {
                 Some(Ok(entries)) => {
@@ -10346,6 +10377,13 @@ impl RuntimeMailbox {
         self.0.completions.lock().expect("runtime completion mailbox lock").len() < RUNTIME_COMPLETION_CAPACITY - 1
     }
 
+    /// 📮️ Whether the mailbox still owes the runtime an apply — the per-frame predicate that turns a
+    /// queued `DispatchEvents`/`Resize` into the next `request_frame` on an event-driven shell.
+    #[cfg(target_arch = "wasm32")]
+    fn has_pending_applies(&self) -> bool {
+        !self.0.completions.lock().expect("runtime completion mailbox lock").ready.is_empty()
+    }
+
     #[cfg(target_arch = "wasm32")]
     fn has_pending_text_work(&self) -> bool {
         self.try_lock().ok().and_then(|runtime| runtime.interaction.as_ref().map(AppInteractionState::has_pending_text_work)).unwrap_or(false)
@@ -10574,16 +10612,62 @@ impl RuntimeMailbox {
         });
     }
 
+    /// 📮️ Applies at most ONE completion, and never lets a live interaction checkout stall the queue.
+    ///
+    /// 🩸️ This used to read only the HEAD and refuse the whole turn without popping while that head
+    /// wanted the checked-out interaction state. Two things then went wrong at once on the browser:
+    /// every completion behind it stalled — including work that needed no interaction at all — and,
+    /// because the only caller was ONE phase of a frame build (`🧵️frame-job` `ApplyPending`), a build
+    /// that parked on `!interaction_available()` held its session forever and no LATER build ever ran
+    /// that phase again. Input reached `WindowDelegate::handle_event` and was enqueued, and
+    /// `dispatch_normalized_event` was never reached (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+    /// `📓️wgpu-server-input-present-2026-09-13.md` §5.2). The pump is now driven from EVERY frame-build
+    /// advance, the queue admits work that needs no state past work that does, and a checkout that
+    /// outlives its credits publishes a typed fault naming its site instead of freezing in silence.
+    /// 📮️ The HOST TICK's own bounded share of the mailbox.
+    ///
+    /// ⚖️ The frame build pumps the mailbox from every advance, but a build cannot always run — while
+    /// the interaction state is checked out there is nothing to build, and the completion that brings
+    /// it home lives in this queue. Pumping here as well is what makes "`DispatchEvents` and `Resize`
+    /// are applied within the next frame" true unconditionally, independently of any build's lifetime.
+    pub(crate) fn pump_pending_applies(&self, credits: u32) -> u32 {
+        let mut applied = 0;
+        while applied < credits && self.apply_pending_step() {
+            applied += 1;
+        }
+        applied
+    }
+
     fn apply_pending_step(&self) -> bool {
         let Ok(mut runtime) = self.try_lock() else {
+            log_debug_once_per_transition("apply-lock", true, "[DEBUG] apply_pending_step blocked: runtime mutex is held");
             return false;
         };
-        let mut queue = self.0.completions.lock().expect("runtime completion mailbox lock");
-        if queue.ready.front().is_some_and(|completion| completion.requires_interaction && !runtime.interaction_available()) {
-            return false;
-        }
-        let Some(mut completion) = queue.ready.pop_front() else { return false };
+        log_debug_once_per_transition("apply-lock", false, "[DEBUG] apply_pending_step: runtime mutex acquired again");
+        let available = runtime.interaction_available();
+        let queue = self.0.completions.lock().expect("runtime completion mailbox lock");
+        let head_requires_interaction = queue.head_requires_interaction();
+        let index = queue.first_applicable(available);
         drop(queue);
+        let admission = runtime.checkout.admit(head_requires_interaction, available);
+        let blocked = matches!(admission, runtime_mailbox_core::InteractionCheckoutStep::Deferred | runtime_mailbox_core::InteractionCheckoutStep::Stale);
+        log_debug_once_per_transition(
+            "apply-interaction",
+            blocked,
+            &if blocked {
+                format!("[DEBUG] apply_pending_step blocked: head needs the interaction state, checked out at {:?} for {} opportunities", runtime.checkout.site(), runtime.checkout.opportunities())
+            } else {
+                "[DEBUG] apply_pending_step: interaction state is available again".to_string()
+            },
+        );
+        if let Some((site, opportunities)) = runtime.checkout.take_stale_notice() {
+            let mut slot = self.0.frame_fault.lock().expect("runtime frame fault lock");
+            if slot.is_none() {
+                *slot = Some(format!("runtime interaction checkout at {site} outlived its bounded step after {opportunities} apply opportunities"));
+            }
+        }
+        let Some(index) = index else { return false };
+        let Some(mut completion) = self.0.completions.lock().expect("runtime completion mailbox lock").take_at(index) else { return false };
         if let Some(key) = completion.key {
             let mut applied = self.0.applied_revisions.lock().expect("runtime completion revisions lock");
             if applied.get(key).is_some_and(|revision| *revision >= completion.revision) {
@@ -10595,7 +10679,7 @@ impl RuntimeMailbox {
         if completion.apply.apply_step(&mut runtime, &handle) {
             return true;
         }
-        self.0.completions.lock().expect("runtime completion mailbox lock").ready.push_front(completion);
+        self.0.completions.lock().expect("runtime completion mailbox lock").restore_at(index, completion);
         false
     }
 }
@@ -10620,6 +10704,7 @@ struct AppRuntime {
     atlas: FontAtlas,
     icons: IconAtlas,
     interaction: Option<AppInteractionState>,
+    checkout: runtime_mailbox_core::InteractionCheckoutLedger,
     draw: DrawList,
     overlay: DrawList,
     pending_frame_deferred: Option<FrameDeferredCursor>,
@@ -10681,19 +10766,38 @@ impl AppRuntime {
         self.interaction.is_some()
     }
 
+    /// 🎟️ The ONE way the interaction state leaves the runtime, so every checkout is named and aged.
+    ///
+    /// ⚖️ `site` is the bounded step the state is lent to; it must come home through
+    /// [`Self::return_interaction`] on every path, faults and supersession included.
+    fn check_out_interaction(&mut self, site: &'static str) -> Option<AppInteractionState> {
+        let interaction = self.interaction.take()?;
+        if !self.checkout.check_out(site) {
+            self.interaction = Some(interaction);
+            return None;
+        }
+        Some(interaction)
+    }
+
+    /// 🎟️ The ONE way the interaction state comes home.
+    fn return_interaction(&mut self, interaction: AppInteractionState) {
+        self.checkout.check_in();
+        self.interaction = Some(interaction);
+    }
+
     #[cfg(not(target_arch = "wasm32"))]
     fn submit_interaction<F, Fut>(&mut self, handle: &AppHandle, key: Option<&'static str>, work: F) -> bool
     where
         F: FnOnce(AppInteractionState) -> Fut,
         Fut: Future<Output = AppInteractionState> + Send + 'static,
     {
-        let Some(interaction) = self.interaction.take() else { return false };
+        let Some(interaction) = self.check_out_interaction("submit-interaction") else { return false };
         let Some(mailbox) = handle.upgrade().map(RuntimeMailbox) else {
-            self.interaction = Some(interaction);
+            self.return_interaction(interaction);
             return false;
         };
         if !mailbox.reserve_interaction_future() {
-            self.interaction = Some(interaction);
+            self.return_interaction(interaction);
             return false;
         }
         mailbox.spawn_interaction_reserved(key, work(interaction));
@@ -11243,8 +11347,20 @@ impl FrameTransaction {
             return AppFrameTransactionStep::Pending;
         }
         let Ok(mut app) = runtime.try_lock() else { return AppFrameTransactionStep::Pending };
+        // 🎟️ No interaction state, no frame — and NO PARKING.
+        //
+        // 🩸️ Parking here (`Pending`) kept the build alive across the whole checkout, and a live build
+        // both freezes the frame generation and keeps asking for frames, so the worker isolate spun its
+        // whole interactive share on a transaction that could not move — starving the very suspended
+        // turn whose completion returns the state. Measured on 6118 as a third dispatched pointer move
+        // that never came home, after which the isolate answered nothing for thirty seconds
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
+        // Ending the build instead retires the session in this same turn: the mailbox is pumped from
+        // every advance, the returning completion is applied at the next opportunity, and the build that
+        // needs the state is admitted fresh against it.
         if !app.interaction_available() {
-            return AppFrameTransactionStep::Pending;
+            self.phase = AppFrameTransactionPhase::Terminal;
+            return AppFrameTransactionStep::Superseded;
         }
         match self.phase {
             AppFrameTransactionPhase::SceneCamera => match self.scene_camera_cursor.step() {
@@ -12407,6 +12523,20 @@ impl AppPresenter {
         self.pending.is_some() || self.retirement.is_some() || self.retained_fault.is_some() || self.gate.has_pending_acknowledgement()
     }
 
+    /// 🩺️ Which of the four owners is holding the presentation gate shut — the gate that decides
+    /// whether `admit_next_frame` runs a frame build at all, and therefore whether the runtime mailbox
+    /// is pumped this tick.
+    pub(crate) fn presentation_gate_shape(&self) -> String {
+        format!(
+            "pending={} phase={:?} retirement={} retained-fault={} gate-ack={}",
+            self.pending.is_some(),
+            self.pending.as_ref().map(|cursor| cursor.phase),
+            self.retirement.is_some(),
+            self.retained_fault.is_some(),
+            self.gate.has_pending_acknowledgement()
+        )
+    }
+
     pub(crate) fn close_cursor_wake_step(&mut self) -> bool {
         let Some(pending) = self.pending.as_mut() else { return true };
         if pending.frame.cursor_wake.take().is_some() {
@@ -12520,6 +12650,23 @@ impl AppPresenter {
         Some(cursor)
     }
 
+    /// 🎬️ Advances the pending presentation by exactly one phase.
+    ///
+    /// **Freshness is decided ONCE, at admission.** `AppPresentPhase::BeginGpu` reads
+    /// `presentation_authority.current()` and hands it to `begin_prepared`/`begin_prepared_offscreen`,
+    /// whose `PreparedRenderGate::validate` refuses a packet whose `scene_revision`/`preview_generation`
+    /// does not match that live pair; the same pair is then frozen into the cursor's
+    /// `RasterTextureWitness`. Every later phase therefore compares against THAT witness and never
+    /// against `presentation_authority.current()` again: the authority is a moving target — `OsHost`
+    /// re-publishes `observe_presentation_input_generation(frame_generation)` on every
+    /// `build_and_publish_snapshot`, and `🌐️browser-worker`'s `enqueueBatch` additionally rebases
+    /// `frame_generation` onto the UI isolate's input generation — so a presentation that legitimately
+    /// spans more than one host tick (the browser's own interactive-ceiling loop guarantees it will)
+    /// would observe a different authority at acknowledgement than the one that admitted it and fault a
+    /// frame that is ALREADY submitted to the GPU. That is what took the wgpu browser surface down on
+    /// the first pointer event (`worker-present-failed: prepared frame authority was stale before
+    /// acknowledgement`, ticket 26/09/09/PROCEDURAL-3D-END-TO-END): a superseded frame must be
+    /// acknowledged and replaced by the next one, never turned into a surface fault.
     pub(crate) fn present_step(&mut self) -> Result<AppPresentStep, String> {
         #[cfg(not(target_arch = "wasm32"))]
         {
@@ -12748,12 +12895,6 @@ impl AppPresenter {
                     cursor.phase = AppPresentPhase::Aborted;
                     return Err("prepared frame presenter witness was stale before acknowledgement".to_string());
                 };
-                let expected = self.presentation_authority.current();
-                if packet.scene_revision() != expected.scene_revision || packet.preview_generation() != expected.input_generation {
-                    cursor.frame.packet = self.gate.abort_pending();
-                    cursor.phase = AppPresentPhase::Aborted;
-                    return Err("prepared frame authority was stale before acknowledgement".to_string());
-                }
                 let raster_witness = cursor.raster_witness.ok_or_else(|| "raster operation witness was missing before acknowledgement".to_string())?;
                 if !self.raster_operation_authority.matches(raster_witness) || raster_witness.scene_revision != packet.scene_revision() || raster_witness.preview_generation != packet.preview_generation() {
                     cursor.frame.packet = self.gate.abort_pending();
@@ -13647,6 +13788,7 @@ impl AppInteractionState {
         self.pointer_button = button;
         self.modifiers = modifiers.clone();
         self.shell.handle_pointer_move(x, y, down, &mut self.input, &self.theme);
+        log_debug(&format!("[DEBUG] os_host pointer hit x={x} y={y} targets={} hit={:?}", self.input.hit_targets.len(), self.input.hit_at(x, y).map(|target| (target.kind, target.control_id.clone()))));
         if let Err(err) = self.shell.flush_deferred_actions().await {
             log_debug(&format!("deferred actions: {err}"));
         }
@@ -13810,6 +13952,7 @@ async fn boot_runtime(
             #[cfg(not(target_arch = "wasm32"))]
             last_sync_pump_ms: 0.0,
         }),
+        checkout: runtime_mailbox_core::InteractionCheckoutLedger::default(),
         draw: DrawList::default(),
         overlay: DrawList::default(),
         pending_frame_deferred: None,

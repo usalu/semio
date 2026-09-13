@@ -19,7 +19,8 @@ export class ArtifactPackageContractScript extends BundleScript {
     for (const rejected of fixture.rejected) assert.equal(validate(rejected.value), false, `Negative fixture accepted: ${rejected.id}`);
     const contract = artifactPackageInventory(this.repoRoot);
     assert.ok(validate(contract), JSON.stringify(validate.errors));
-    const cargoNames = new Set<string>(), nxNames = new Set<string>();
+    const cargoNames = new Set<string>(),
+      nxNames = new Set<string>();
     for (const entry of contract.packages) {
       assert.ok(!cargoNames.has(entry.rust.cargoName), `Duplicate Cargo package ${entry.rust.cargoName}`);
       assert.ok(!nxNames.has(entry.rust.nxName), `Duplicate Nx project ${entry.rust.nxName}`);
@@ -28,7 +29,9 @@ export class ArtifactPackageContractScript extends BundleScript {
       const packageRoot = join(this.repoRoot, dirname(entry.rust.manifest));
       const implementations = sourceFiles(packageRoot).filter((path) => /(?:^|\/)(?!📜️script\.ts$).+\.(?:rs|ts|tsx)$/.test(path) && !path.startsWith("dist/"));
       assert.deepEqual(implementations, [], `Rust package declarations contain implementation: ${implementations.join(", ")}`);
-      const artifactMarker = "/🗿️artifacts/", marker = entry.root.indexOf(artifactMarker), parentSource = marker < 0 ? "" : `${entry.root.slice(0, marker)}/📦️packages/🦀️rust/🦀️.rs`;
+      const artifactMarker = "/🗿️artifacts/",
+        marker = entry.root.indexOf(artifactMarker),
+        parentSource = marker < 0 ? "" : `${entry.root.slice(0, marker)}/📦️packages/🦀️rust/🦀️.rs`;
       if (parentSource && existsSync(join(this.repoRoot, parentSource))) {
         const parent = readFileSync(join(this.repoRoot, parentSource), "utf8");
         assert.equal(/#\[path\s*=\s*"\.\.\/\.\.\/🗿️artifacts\//.test(parent), false, `${parentSource} recompiles taxonomy artifact implementation`);
@@ -67,7 +70,10 @@ export class ArtifactPackageContractScript extends BundleScript {
               const [name, selected] = value.replace("?/", "/").split("/", 2);
               if (!forwarded.has(name)) forwarded.set(name, new Set());
               forwarded.get(name)!.add(selected);
-            } else if (!enabled.has(value)) { enabled.add(value); queue.push(value); }
+            } else if (!enabled.has(value)) {
+              enabled.add(value);
+              queue.push(value);
+            }
           }
         }
         const state = `${id}\0${[...enabled].sort().join(",")}\0${defaults}`;
@@ -83,17 +89,29 @@ export class ArtifactPackageContractScript extends BundleScript {
           if (!active.length) continue;
           const features = new Set<string>(forwarded.get(edge.name) ?? []);
           for (const declaration of active) for (const feature of declaration.features ?? []) features.add(feature);
-          visit(edge.pkg, [...features], active.some((row: any) => row.uses_default_features), [...route, dependency?.name], visited);
+          visit(
+            edge.pkg,
+            [...features],
+            active.some((row: any) => row.uses_default_features),
+            [...route, dependency?.name],
+            visited,
+          );
         }
       };
       visit(cargo.id, [], true, [], new Set());
     }
     const legacy = sourceFiles(this.repoRoot).filter((path) => {
       if (!path.endsWith(".rs")) return false;
-      try { return /semio_s_plugin_(?![a-z0-9_]*_test_oracle::)[a-z0-9_]+::artifacts::/.test(readFileSync(join(this.repoRoot, path), "utf8")); }
-      catch (error) { if ((error as { code?: string }).code === "ENOENT") return false; throw error; }
+      try {
+        return /semio_s_plugin_(?![a-z0-9_]*_test_oracle::)[a-z0-9_]+::artifacts::/.test(readFileSync(join(this.repoRoot, path), "utf8"));
+      } catch (error) {
+        if ((error as { code?: string }).code === "ENOENT") return false;
+        throw error;
+      }
     });
     assert.deepEqual(legacy, [], `Rust consumers retain composition artifact namespaces: ${legacy.join(", ")}`);
-    console.log(`[artifact-package-contract] AJV=${fixture.accepted.length + 1}/${fixture.rejected.length} packages=${contract.packages.length} rust=${cargoNames.size} typescript=${contract.packages.filter((entry) => entry.typescript).length} dag=clean`);
+    console.log(
+      `[artifact-package-contract] AJV=${fixture.accepted.length + 1}/${fixture.rejected.length} packages=${contract.packages.length} rust=${cargoNames.size} typescript=${contract.packages.filter((entry) => entry.typescript).length} dag=clean`,
+    );
   }
 }

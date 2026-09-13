@@ -92,7 +92,7 @@ Key functions:
 | Definition  | `{kindEmoji}{file}#{section}§{name}` | `🛠️compose/js/compose.ts#Kit§validateKit` |
 | Ticket      | `🎫️{YYYY}/{MM}/{DD}/{slug}`          | `🎫️2026/02/14/MY-TICKET`                  |
 | Goal        | `🎯️{id}`                             | `🎯️R26-02/RUNNING-SKETCHPAD`              |
-| Draft       | `✍️{id}`                              | `✍️MY-DRAFT`                               |
+| Draft       | `✍️{id}`                             | `✍️MY-DRAFT`                              |
 | Todo        | `📝️{id}`                             | `📝️FIX-BUG`                               |
 | Policy      | `🛡️/{id}`                            | `🛡️/code`                                 |
 | Statute     | `🚫️{path}`                           | `🚫️Code#Header#Missing Region`            |

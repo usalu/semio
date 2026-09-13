@@ -11,9 +11,8 @@
 
 use crate::SHomeSnapshot;
 use crate::editor::home::commands::apply_directory_event_page;
-use crate::editor::home::commands::set_active_panel_tab;
 use crate::editor::home::commands::{bind_space_file, create_studio, import_space, open_space};
-use crate::editor::home::commands::{copy_invite_link, create_space, delete_space, fold_directory_events, manage_space, presence_heartbeat, rename_space, set_client, share_space};
+use crate::editor::home::commands::{copy_invite_link, create_space, delete_space, fold_directory_events, manage_space, presence_heartbeat, rename_space, share_space};
 use crate::editor::home::commands::{delete_virtual_file_system_node, go_home, navigate_virtual_file_system_node};
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use crate::editor::home::presence::{HomePresence, HomePresenceMutation};
@@ -28,6 +27,10 @@ use store::EngineHandles;
 pub const S_HOME_CONTROLLER_ID: &str = "s.space.home@1/*#editor";
 //#endregion 🔖️Constants
 
+fn require_session_identity(view_state: Option<&semio_framework_plugin::ViewModel>) -> Result<&semio_framework_plugin::ViewSessionIdentity, Fault> {
+    view_state.and_then(crate::home_session_identity).ok_or_else(|| Fault::from("s.home.session-identity-required"))
+}
+
 //#region 🔖️HomeCommand
 app_commands! {
     /// 🎯️ `HomeApp::Command` — the SOLE dispatch surface for the Home launcher's own behavior, one
@@ -41,7 +44,6 @@ app_commands! {
         "navigateVirtualFileSystemNode" as "navigate-vfs-node" => navigate_virtual_file_system_node::NavigateVirtualFileSystemNode,
         "deleteVirtualFileSystemNode" as "delete-vfs-node" => delete_virtual_file_system_node::DeleteVirtualFileSystemNode,
         "goHome" as "go-home" => go_home::GoHome,
-        "setActivePanelTab" as "active-panel-tab" => set_active_panel_tab::SetActivePanelTab,
         // 🐙️ Ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS: Home = a real table of
         // every space, fed by the event-sourced hub directory read model (contract §C1/§C6).
         "createSpace" as "create-space" => create_space::CreateSpace,
@@ -52,41 +54,30 @@ app_commands! {
         "copyInviteLink" as "copy-invite-link" => copy_invite_link::CopyInviteLink,
         "foldDirectoryEvents" as "fold-directory-events" => fold_directory_events::FoldDirectoryEvents,
         "presenceHeartbeat" as "presence-heartbeat" => presence_heartbeat::PresenceHeartbeat,
-        "setClient" as "set-client" => set_client::SetClient,
     }
 }
 //#endregion 🔖️HomeCommand
 
 //#region 🧵️RetainedCommands
 const HOME_RETAINED_TOOL_IDS: &[&str] = &[
-    "applyDirectoryEventPage", "openSpace", "navigateVirtualFileSystemNode", "goHome", "setActivePanelTab", "createSpace", "deleteSpace", "shareSpace", "manageSpace", "copyInviteLink", "presenceHeartbeat", "setClient",
-    "createStudio", "bindSpaceFile", "importSpace", "deleteVirtualFileSystemNode", "renameSpace", "foldDirectoryEvents",
+    "openSpace", "navigateVirtualFileSystemNode", "goHome", "createSpace", "deleteSpace", "shareSpace", "manageSpace", "copyInviteLink", "presenceHeartbeat",
 ];
 const HOME_RETAINED_PAYLOAD_SCHEMA: &str = "space.home.tool-command.v1";
 const HOME_RETAINED_RAW_BYTES: usize = 128 * 1024;
+const HOME_RETAINED_SCALAR_BYTES: usize = semio_framework::PUBLIC_INVOCATION_STRING_BYTES;
 const HOME_RETAINED_WORK_ITEMS: usize = 1;
-const HOME_CONFIG_VALUE_BYTES: usize = 512;
 const HOME_CONFIG_BASE_BYTES: usize = 4 * 1024 * 1024;
 const HOME_CONFIG_STEP_BYTES: usize = 16 * 1024 * 1024;
 const HOME_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
-    ArtifactToolPublicationContract { tool_id: "applyDirectoryEventPage", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "openSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "navigateVirtualFileSystemNode", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "goHome", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-    ArtifactToolPublicationContract { tool_id: "setActivePanelTab", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "createSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "deleteSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "shareSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "manageSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "copyInviteLink", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "presenceHeartbeat", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-    ArtifactToolPublicationContract { tool_id: "setClient", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "createStudio", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "bindSpaceFile", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-    ArtifactToolPublicationContract { tool_id: "importSpace", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "deleteVirtualFileSystemNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "renameSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-    ArtifactToolPublicationContract { tool_id: "foldDirectoryEvents", lanes: &[ArtifactToolPublicationLane::Config] },
 ];
 
 fn home_retained_contract() -> ToolExecutionContract {
@@ -95,26 +86,23 @@ fn home_retained_contract() -> ToolExecutionContract {
 
 fn home_retained_extent(command: &HomeCommand, _snapshot: &SHomeSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     let admitted = match command {
-        HomeCommand::ApplyDirectoryEventPage(payload) => payload.page_json.len(),
         HomeCommand::OpenSpace(payload) => payload.space_id.len(),
         HomeCommand::NavigateVirtualFileSystemNode(payload) => payload.node_id.len(),
         HomeCommand::GoHome(_) | HomeCommand::PresenceHeartbeat(_) => 0,
-        HomeCommand::SetActivePanelTab(payload) => payload.tab_id.len(),
         HomeCommand::CreateSpace(payload) => payload.name.len().saturating_add(payload.kind.len()).saturating_add(payload.visibility.len()),
         HomeCommand::DeleteSpace(payload) => payload.space_id.len(),
         HomeCommand::ShareSpace(payload) => payload.space_id.len().saturating_add(payload.email.len()).saturating_add(payload.role.len()),
         HomeCommand::ManageSpace(payload) => payload.space_id.len(),
         HomeCommand::CopyInviteLink(payload) => payload.space_id.len().saturating_add(payload.role.len()),
-        HomeCommand::SetClient(payload) => payload.client_id.len().saturating_add(payload.client_name.len()),
-        HomeCommand::CreateStudio(payload) => payload.name.len().saturating_add(payload.kind.len()).saturating_add(payload.folder_path.as_ref().map_or(0, String::len)),
-        HomeCommand::BindSpaceFile(payload) => payload.space_id.len().saturating_add(payload.file_path.len()),
-        HomeCommand::ImportSpace(payload) => payload.dsl.as_ref().map_or(0, String::len),
-        HomeCommand::DeleteVirtualFileSystemNode(payload) => payload.node_id.len(),
-        HomeCommand::RenameSpace(payload) => payload.space_id.len().saturating_add(payload.name.len()),
-        HomeCommand::FoldDirectoryEvents(payload) => payload.events_json.len(),
+        HomeCommand::ApplyDirectoryEventPage(_)
+        | HomeCommand::CreateStudio(_)
+        | HomeCommand::BindSpaceFile(_)
+        | HomeCommand::ImportSpace(_)
+        | HomeCommand::DeleteVirtualFileSystemNode(_)
+        | HomeCommand::RenameSpace(_)
+        | HomeCommand::FoldDirectoryEvents(_) => return None,
     };
-    let limit = if matches!(command, HomeCommand::SetActivePanelTab(_) | HomeCommand::SetClient(_)) { HOME_CONFIG_VALUE_BYTES } else { HOME_RETAINED_RAW_BYTES };
-    (admitted <= limit).then_some(HOME_RETAINED_WORK_ITEMS)
+    (admitted <= HOME_RETAINED_SCALAR_BYTES).then_some(HOME_RETAINED_WORK_ITEMS)
 }
 
 #[expect(clippy::too_many_arguments, reason = "ArtifactCommandReducer requires the eight operation, document, configuration, history, and interaction inputs.")]
@@ -125,9 +113,10 @@ fn home_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<HomeApp>>>,
+    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<HomeApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation, HomeConfigMutation, NoDraftMutation>, Fault> {
+    require_session_identity(context.and_then(|context| context.view_state.as_ref()))?;
     if home_retained_extent(command, snapshot, _interaction).is_none() {
         return Err(Fault::from("space-home-retained-route-mismatch"));
     }
@@ -196,14 +185,11 @@ struct HomeConfigPreparation {
 
 fn home_config_retained_bytes(config: &HomeConfig) -> usize {
     config
-        .active_panel_tab
+        .directory_json
         .len()
-        .saturating_add(config.directory_json.len())
         .saturating_add(config.directory_session_binding_sha256.len())
         .saturating_add(config.directory_receipt_sha256.len())
         .saturating_add(size_of_val(&config.directory_authorization_generation))
-        .saturating_add(config.client_id.len())
-        .saturating_add(config.client_name.len())
 }
 
 fn home_config_edit(forward: HomeConfigMutation, inverse: HomeConfigMutation, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<HomeConfigMutation> {
@@ -243,8 +229,6 @@ fn home_config_edit_bytes(edit: &protocol::Edit<HomeConfigMutation>) -> Result<u
 impl store::ArtifactStoreOneItemPreparationFactory<HomeConfig, HomeConfigMutation> for HomeConfigPreparationFactory {
     fn preflight(&self, mutation: &HomeConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         let (mutation_bytes, maximum_bytes) = match mutation {
-            HomeConfigMutation::SetActivePanelTab { tab_id } => (tab_id.len(), HOME_CONFIG_VALUE_BYTES),
-            HomeConfigMutation::SetClient { client_id, client_name } => (client_id.len().saturating_add(client_name.len()), HOME_CONFIG_VALUE_BYTES),
             HomeConfigMutation::ReplaceDirectoryProjection { directory_json, session_binding_sha256, authorization_generation, receipt_sha256 }
                 if *authorization_generation > 0
                     && directory_json.len() <= HOME_CONFIG_BASE_BYTES
@@ -263,8 +247,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<HomeConfig, HomeConfigMutatio
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<HomeConfig, HomeConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<HomeConfig, HomeConfigMutation>> {
         let (mutation_bytes, maximum_bytes) = match &request.mutation {
-            HomeConfigMutation::SetActivePanelTab { tab_id } => (tab_id.len(), HOME_CONFIG_VALUE_BYTES),
-            HomeConfigMutation::SetClient { client_id, client_name } => (client_id.len().saturating_add(client_name.len()), HOME_CONFIG_VALUE_BYTES),
             HomeConfigMutation::ReplaceDirectoryProjection { directory_json, session_binding_sha256, authorization_generation, receipt_sha256 }
                 if *authorization_generation > 0
                     && directory_json.len() <= HOME_CONFIG_BASE_BYTES
@@ -296,11 +278,6 @@ impl store::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation> for 
             let mutation = self.mutation.take().ok_or_else(|| "Space Home config preparation lost its mutation owner".to_string())?;
             let mut post = base.clone();
             let inverse = match &mutation {
-                HomeConfigMutation::SetActivePanelTab { tab_id } => HomeConfigMutation::SetActivePanelTab { tab_id: std::mem::replace(&mut post.active_panel_tab, tab_id.clone()) },
-                HomeConfigMutation::SetClient { client_id, client_name } => HomeConfigMutation::SetClient {
-                    client_id: std::mem::replace(&mut post.client_id, client_id.clone()),
-                    client_name: std::mem::replace(&mut post.client_name, client_name.clone()),
-                },
                 HomeConfigMutation::ReplaceDirectoryProjection { directory_json, session_binding_sha256, authorization_generation, receipt_sha256 } => HomeConfigMutation::ReplaceDirectoryProjection {
                     directory_json: std::mem::replace(&mut post.directory_json, directory_json.clone()),
                     session_binding_sha256: std::mem::replace(&mut post.directory_session_binding_sha256, session_binding_sha256.clone()),
@@ -401,8 +378,15 @@ impl ArtifactEditor for HomeApp {
         factory: "HomeRetainedCommandJobFactory",
         factory_type: HomeRetainedCommandJobFactory,
         contract: home_retained_contract(),
-        tools: ["applyDirectoryEventPage", "openSpace", "navigateVirtualFileSystemNode", "goHome", "setActivePanelTab", "createSpace", "deleteSpace", "shareSpace", "manageSpace", "copyInviteLink", "presenceHeartbeat", "setClient",
-            "createStudio", "bindSpaceFile", "importSpace", "deleteVirtualFileSystemNode", "renameSpace", "foldDirectoryEvents"]
+        tools: ["openSpace", "navigateVirtualFileSystemNode", "goHome", "createSpace", "deleteSpace", "shareSpace", "manageSpace", "copyInviteLink", "presenceHeartbeat"]
+    }
+
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -434,7 +418,7 @@ impl ArtifactEditor for HomeApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
             HomeCommand::command_id,
             HOME_RETAINED_RAW_BYTES,
             HOME_RETAINED_WORK_ITEMS,
@@ -483,7 +467,6 @@ impl ArtifactEditor for HomeApp {
                 node_id: str_field("nodeId").or_else(|| str_field("node_id")).or_else(|| str_field("spaceId").map(|id| format!("studio:{id}"))).or_else(|| str_field("space_id").map(|id| format!("studio:{id}"))).unwrap_or_default(),
             })),
             "goHome" => Ok(HomeCommand::GoHome(go_home::GoHome {})),
-            "setActivePanelTab" => Ok(HomeCommand::SetActivePanelTab(set_active_panel_tab::SetActivePanelTab { tab_id: str_field("tabId").or_else(|| str_field("tab_id")).unwrap_or_default() })),
             "createSpace" => Ok(HomeCommand::CreateSpace(create_space::CreateSpace {
                 name: str_field("name").unwrap_or_default(),
                 kind: str_field("kind").or_else(|| str_field("spaceKind")).unwrap_or_default(),
@@ -507,10 +490,6 @@ impl ArtifactEditor for HomeApp {
                 Ok(HomeCommand::FoldDirectoryEvents(fold_directory_events::FoldDirectoryEvents { events_json: args.and_then(|value| value.get("eventsJson")).and_then(DslValue::as_str).map_or_else(|| "[]".into(), str::to_string) }))
             }
             "presenceHeartbeat" => Ok(HomeCommand::PresenceHeartbeat(presence_heartbeat::PresenceHeartbeat {})),
-            "setClient" => Ok(HomeCommand::SetClient(set_client::SetClient {
-                client_id: str_field("clientId").or_else(|| str_field("client_id")).unwrap_or_default(),
-                client_name: str_field("clientName").or_else(|| str_field("client_name")).unwrap_or_default(),
-            })),
             other => Err(Fault::new(FaultOrigin::App, "s.home.unhandled-action", format!("home: unhandled action id {other}"))),
         }
     }
@@ -526,14 +505,19 @@ impl ArtifactEditor for HomeApp {
         command: &HomeCommand,
         doc: &ArtifactView<'_, SHomeSnapshot>,
         cfg: &ConfigView<'_, HomeConfig>,
-        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &InteractionView<'_>, view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation, HomeConfigMutation, Self::DraftMutation>, Fault> {
-        command.dispatch(doc, cfg)
+        let identity = require_session_identity(view_state)?;
+        match command {
+            HomeCommand::CreateStudio(payload) => create_studio::handle_with_identity(payload, doc, cfg, identity),
+            _ => command.dispatch(doc, cfg),
+        }
     }
 
     fn render(body_key: &str, _doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
+        crate::home_session_identity(view_state).ok_or_else(|| PluginAssemblyError::new("s.home.session-identity-required", "current host session identity is required"))?;
         let root = match body_key {
             crate::editor::home::modes::explore::windows::main::S_HOME_BODY => crate::editor::home::modes::explore::windows::main::render(cfg.snapshot, view_state)?,
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
@@ -564,7 +548,6 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
         .action_with(semio_framework_plugin::ActionDefinition::new("navigateVirtualFileSystemNode", LocalizedLabel::native("Navigate File System Node", "Dateisystemknoten navigieren"), semio_framework_plugin::ActionKind::Shell, "folder"))
         .mutation("deleteVirtualFileSystemNode", LocalizedLabel::native("Delete File System Node", "Dateisystemknoten löschen"))
         .action_with(semio_framework_plugin::ActionDefinition::new("goHome", LocalizedLabel::native("Go Home", "Zur Startseite"), semio_framework_plugin::ActionKind::Shell, "home"))
-        .action_with(semio_framework_plugin::ActionDefinition::new("setActivePanelTab", LocalizedLabel::native("Set Active Panel Tab", "Aktiven Panel-Tab festlegen"), semio_framework_plugin::ActionKind::View, "panel-left"))
         // 🐙️ Ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS: the overview table's
         // row-scoped actions. Every one of these is a pure `Effect` relay (contract §C6) — never a
         // document mutation — so each is `.shell_action`, matching `openSpace`/`goHome` above, not
@@ -622,25 +605,22 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
         .view_action("applyDirectoryEventPage", LocalizedLabel::native("Apply Directory Event Page", "Verzeichnis-Ereignisseite anwenden"))
         .view_action("foldDirectoryEvents", LocalizedLabel::native("Fold Directory Events", "Verzeichnisereignisse einspielen"))
         .view_action("presenceHeartbeat", LocalizedLabel::native("Presence Heartbeat", "Präsenz-Heartbeat"))
-        .view_action("setClient", LocalizedLabel::native("Set Client", "Client setzen"))
-        .action_interactive_job("createStudio", InteractiveJobClassification::Migrated)
-        .action_interactive_job("bindSpaceFile", InteractiveJobClassification::Migrated)
-        .action_interactive_job("importSpace", InteractiveJobClassification::Migrated)
+        .action_interactive_job("createStudio", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("bindSpaceFile", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("importSpace", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("openSpace", InteractiveJobClassification::Migrated)
         .action_interactive_job("navigateVirtualFileSystemNode", InteractiveJobClassification::Migrated)
-        .action_interactive_job("deleteVirtualFileSystemNode", InteractiveJobClassification::Migrated)
+        .action_interactive_job("deleteVirtualFileSystemNode", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("goHome", InteractiveJobClassification::Migrated)
-        .action_interactive_job("setActivePanelTab", InteractiveJobClassification::Migrated)
         .action_interactive_job("createSpace", InteractiveJobClassification::Migrated)
         .action_interactive_job("deleteSpace", InteractiveJobClassification::Migrated)
-        .action_interactive_job("renameSpace", InteractiveJobClassification::Migrated)
+        .action_interactive_job("renameSpace", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("shareSpace", InteractiveJobClassification::Migrated)
         .action_interactive_job("manageSpace", InteractiveJobClassification::Migrated)
         .action_interactive_job("copyInviteLink", InteractiveJobClassification::Migrated)
-        .action_interactive_job("applyDirectoryEventPage", InteractiveJobClassification::Migrated)
-        .action_interactive_job("foldDirectoryEvents", InteractiveJobClassification::Migrated)
+        .action_interactive_job("applyDirectoryEventPage", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("foldDirectoryEvents", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("presenceHeartbeat", InteractiveJobClassification::Migrated)
-        .action_interactive_job("setClient", InteractiveJobClassification::Migrated)
         .window_kind_action_refs(crate::editor::home::modes::explore::windows::main::S_HOME_WINDOW, vec![
             "createStudio".into(),
             "bindSpaceFile".into(),
@@ -649,7 +629,6 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
             "navigateVirtualFileSystemNode".into(),
             "deleteVirtualFileSystemNode".into(),
             "goHome".into(),
-            "setActivePanelTab".into(),
             "createSpace".into(),
             "deleteSpace".into(),
             "renameSpace".into(),

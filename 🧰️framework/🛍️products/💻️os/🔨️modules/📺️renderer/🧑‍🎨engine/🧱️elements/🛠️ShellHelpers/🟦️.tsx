@@ -119,6 +119,7 @@ import {
 import { type UiPreferencesConfigMutation, setAppearance, setDriver, setLayout, setLocale, setTerminology, setTheme } from "../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
 import type { DomainSelection, InteractionState } from "../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
 import { hostContinuations, type ContinuationCancel, type ContinuationScheduler } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
+import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES } from "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🟦️.ts";
 import {
   decodeWorldProjectionTemplateId,
 } from "@semio-tech/infinite-world-r3f";
@@ -768,9 +769,55 @@ export function makeEffectDispatchOne(
   };
 }
 
-/** 📤️ D3 fan-out: one {@link EffectDispatchOne} call per opened file — single-file behavior (`multiple`
- * absent/false, exactly one call, plain `{payload, name}`) is byte-for-byte what this loop always did
- * before `multiple` existed, since it's just a one-entry `opened` array through the same path. */
+//#region 📥️ChunkedImport
+/** 📏️ UTF-8 bytes ONE import chunk may carry — the INBOUND mirror of
+ * `📤️SegmentedDownload`'s chunk contract, and the host half of `PUZZLE3D_IMPORT_CHUNK_BYTES`
+ * (`✏️s/🔌️plugins/🧩️puzzle/…/🎮️commands/📥️import-fixture/🦀️.rs`), held equal to it by the engine
+ * contract's own law.
+ *
+ * 🧊️ Derived from the guest's per-request contiguous ceiling, never a literal: an import's `payload`
+ * crosses as ONE string, and every guest hop that carries it asks for one contiguous block — the channel's
+ * `read_bounded_bytes` reserves the whole `AppCommand::Command` field exactly
+ * (`📡️spr/🧵️channel/🦀️.rs`), and the retained tool job allocates its wire owner at the declared extent.
+ * A 145 924-byte document sent as ONE command therefore asked the fixed guest heap for a 146 KB block,
+ * 2.2× the ceiling. Half the ceiling leaves the other half for the JSON-escaped op envelope the chunk
+ * rides in (measured 1.10× on the Nakagin export). */
+export const IMPORT_CHUNK_BYTES = GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES / 2;
+
+/** 📥️ One opened file's text as the chunk sequence the import lane carries: `chunk`/`chunkCount` name the
+ * position, and a file that fits one chunk yields exactly one entry whose envelope a plugin may ignore.
+ *
+ * 🔤️ Sliced by UTF-8 EXTENT, not by code units: the guest measures `text.len()` in bytes, so a slice
+ * counted in UTF-16 units would overrun the cap by up to 3× on non-ASCII labels (`·`, `ō`) — and the
+ * Nakagin fixture has them. No slice ever splits a code point. */
+export function importPayloadChunks(payload: string): readonly { readonly payload: string; readonly chunk: number; readonly chunkCount: number }[] {
+  const pages: string[] = [];
+  let page = "";
+  let pageBytes = 0;
+  for (const character of payload) {
+    const code = character.codePointAt(0) ?? 0;
+    const characterBytes = code < 0x80 ? 1 : code < 0x800 ? 2 : code < 0x10000 ? 3 : 4;
+    if (pageBytes + characterBytes > IMPORT_CHUNK_BYTES) {
+      pages.push(page);
+      page = "";
+      pageBytes = 0;
+    }
+    page += character;
+    pageBytes += characterBytes;
+  }
+  if (page.length > 0 || pages.length === 0) pages.push(page);
+  return pages.map((text, chunk) => ({ payload: text, chunk, chunkCount: pages.length }));
+}
+//#endregion 📥️ChunkedImport
+
+/** 📤️ D3 fan-out: one {@link EffectDispatchOne} call per opened file, and — since wave B59 — one call per
+ * {@link importPayloadChunks} CHUNK of each file, so no single import command asks the guest for a
+ * contiguous block above its own per-request ceiling. A file that fits one chunk dispatches exactly one
+ * call whose args are the pre-B59 `{payload, name}` plus the chunk envelope naming itself as `0` of `1`.
+ *
+ * 🧯 The chunks of one file are dispatched in ORDER and awaited one at a time: the guest's staging area
+ * refuses a gap rather than resuming into bytes nobody can account for, so a concurrent fan-out would
+ * cost the whole file. */
 export async function dispatchOpenedFiles(
   opened: readonly { readonly contents: string; readonly name: string }[],
   importAction: string,
@@ -780,7 +827,10 @@ export async function dispatchOpenedFiles(
   const total = opened.length;
   for (let index = 0; index < opened.length; index += 1) {
     const file = opened[index]!;
-    await dispatchOne(importAction, multiple ? { payload: file.contents, name: file.name, index, total } : { payload: file.contents, name: file.name });
+    for (const page of importPayloadChunks(file.contents)) {
+      const envelope = { payload: page.payload, name: file.name, chunk: page.chunk, chunkCount: page.chunkCount };
+      await dispatchOne(importAction, multiple ? { ...envelope, index, total } : envelope);
+    }
   }
 }
 

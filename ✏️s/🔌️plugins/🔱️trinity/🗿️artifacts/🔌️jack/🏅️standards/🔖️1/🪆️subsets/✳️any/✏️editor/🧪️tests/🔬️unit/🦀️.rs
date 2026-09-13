@@ -24,7 +24,7 @@ async fn trinity_jack_command_text_and_binary_round_trip() {
         TrinityJackCommand::LoadExampleQuery { query: "MATCH (a:Piece) RETURN a.name".into(), results_window_id: "results".into() },
         TrinityJackCommand::FormatDocument,
         TrinityJackCommand::SetActiveExample { example_id: "branch-chain".into() },
-        TrinityJackCommand::SetViewport { surface_id: Some("trinity.jack.play".into()), viewport: semio_framework_plugin::Viewport2d { x: 1.0, y: 2.0, zoom: 1.0 } },
+        TrinityJackCommand::SetViewport { surface_id: Some("trinity.jack.play".into()), viewport: semio_framework_os_kernel::Viewport2d { x: 1.0, y: 2.0, zoom: 1.0 } },
         TrinityJackCommand::TextSelect { start: 3, end: 9 },
         TrinityJackCommand::SetLodMode { value: "compact".into() },
     ];

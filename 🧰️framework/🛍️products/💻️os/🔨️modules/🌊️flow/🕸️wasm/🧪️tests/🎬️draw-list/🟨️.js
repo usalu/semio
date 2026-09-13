@@ -9,7 +9,7 @@
 
 import { readFile } from "node:fs/promises";
 import { deepStrictEqual } from "node:assert";
-import { FLOW_DRAW_LIST_VERSION, FlowPresentation, renderFlowCanvas, replayFlowDrawList } from "../../📦️packages/🟨️javascript/🖥️flow-host.js";
+import { FLOW_DRAW_LIST_VERSION, FlowPresentation, renderFlowCanvas, replayFlowDrawList } from "../../🖥️host/🏃️runtime/🟨️.js";
 
 const equal = (actual, expected, law) => {
   if (actual !== expected) throw new Error(`${law}: ${actual} !== ${expected}`);

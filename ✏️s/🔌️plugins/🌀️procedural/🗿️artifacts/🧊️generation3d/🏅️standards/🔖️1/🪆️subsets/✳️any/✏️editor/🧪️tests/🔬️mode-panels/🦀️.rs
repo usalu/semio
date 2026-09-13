@@ -10,7 +10,8 @@
 //! returns earlier) published fine (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 
 use super::*;
-use crate::editor::generation3d::unit_tests::context::{self, app_with_registry};
+use crate::editor::generation3d::unit_tests::context::app_with_registry;
+use crate::editor::generation3d::unit_tests::serial_execution;
 use semio_framework_plugin::{PluginApp, ViewModel, ViewWindowInstance};
 
 //#region 📌️Fixture
@@ -74,12 +75,13 @@ fn panel_view(case: &ModePanelCase) -> ViewModel {
 /// reason for a panel to publish nothing.
 #[semio_framework_async_macros::async_test]
 async fn every_panel_publishes_its_body_in_generate_mode_as_well_as_edit() {
-    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let _serial = serial_execution::lock();
     let fixture = mode_panel_fixture();
     let mut app = app_with_registry().await;
     for case in &fixture.cases {
         let view = panel_view(case);
         assert_eq!(view.window_id, None, "case {} is a panel projection, not a window one", case.id);
+        assert_eq!(view.focused_window_id.is_some(), case.focused_window_in_roster, "case {} kept the wrong focused pane: {:?}", case.id, view.focused_window_id);
         for panel in &fixture.panels {
             let rendered = app.render(&panel.body_key, None, &view).await;
             let tree = match rendered {
@@ -102,7 +104,7 @@ async fn every_panel_publishes_its_body_in_generate_mode_as_well_as_edit() {
 /// duplication this app must not grow.
 #[semio_framework_async_macros::async_test]
 async fn a_panel_publishes_the_same_body_in_every_mode() {
-    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let _serial = serial_execution::lock();
     let fixture = mode_panel_fixture();
     let mut app = app_with_registry().await;
     for panel in &fixture.panels {
@@ -131,13 +133,13 @@ fn the_app_declares_one_shared_panel_per_framework_tab_and_no_mode_declares_its_
         assert_eq!(declared.len(), 1, "{} must be declared exactly once on the app", panel.tab);
         assert_eq!(declared[0].body_key.as_deref(), Some(panel.body_key.as_str()), "{} must carry its fixture body key", panel.tab);
     }
-    for mode in [modes::edit::definition(), modes::generate::definition()] {
+    for mode in [edit::definition(), generate::definition()] {
         let json = serde_json::to_string(&mode).expect("mode definition json");
         for panel in &fixture.panels {
             assert!(!json.contains(&panel.body_key), "mode {} must not carry the {} body — panels are app-scoped", mode.id, panel.tab);
         }
     }
-    let generate_layout = serde_json::to_string(&modes::generate::layout()).expect("generate layout json");
+    let generate_layout = serde_json::to_string(&generate::layout()).expect("generate layout json");
     for panel in &fixture.panels {
         assert!(!generate_layout.contains(&panel.body_key), "the generate layout must not carry the {} body", panel.tab);
     }

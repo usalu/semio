@@ -19,4 +19,3 @@ Hand-reviewed every strict path-statute finding under `✏️s/🔌️plugins/�
 - Lowpoly snapshot fixtures: `💠️lowpoly-snapshot.json`.
 - Oracle owner: `🔮️oracle`.
 - Direct mutation and interactive-job schemas: `🧬️.schema.json`, distinct from sibling `🔣️.json` data.
-

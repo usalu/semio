@@ -4,7 +4,8 @@ use crate::editor::dag::terminology::DagPlayLabels;
 use crate::schema::document_to_workflow;
 use crate::DagSnapshot;
 use semio_framework_artifact_infinite_dag::DagCamera;
-use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, NodeGraphScene, Viewport2d, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, NodeGraphScene, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_os_kernel::Viewport2d;
 
 //#region 🔖️Constants
 pub const DAG_PLAY_WINDOW_MAIN: &str = "dag-main";

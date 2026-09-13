@@ -318,10 +318,11 @@ When `showLabel && id`:
 ### Data-slots
 
 None directly — uses composite sub-components:
-| Slot (from sub-components) | Source component |
-|---|---|
-| `popover`, `popover-trigger`, `popover-content` | Popover |
-| `command`, `command-input`, `command-list`, `command-empty`, `command-group`, `command-item` | Command |
+
+| Slot (from sub-components)                                                                   | Source component |
+| -------------------------------------------------------------------------------------------- | ---------------- |
+| `popover`, `popover-trigger`, `popover-content`                                              | Popover          |
+| `command`, `command-input`, `command-list`, `command-empty`, `command-group`, `command-item` | Command          |
 
 The trigger button gets `role="combobox"` and `aria-expanded={open}`.
 
@@ -574,14 +575,15 @@ Also uses `data-panel="leftSidePanel"` or `data-panel="rightSidePanel"` on the o
 ## showLabel wrapping pattern
 
 Components that support `showLabel`:
-| Component | Always uses Label? | showLabel conditional? | Extra Label className |
-|-----------|-------------------|----------------------|----------------------|
-| **Input** | No | `showLabel && id` | — |
-| **Textarea** | No | `showLabel && id` | `items-start` |
-| **Slider** | No | `showLabel` (no id check) | `{className}` passthrough |
-| **Stepper** | **Yes, always** | N/A | — |
-| **Combobox** | No | `showLabel && id` | `h-medium` |
-| **Select** | No | `showLabel && id` | — |
+
+| Component    | Always uses Label? | showLabel conditional?    | Extra Label className     |
+| ------------ | ------------------ | ------------------------- | ------------------------- |
+| **Input**    | No                 | `showLabel && id`         | —                         |
+| **Textarea** | No                 | `showLabel && id`         | `items-start`             |
+| **Slider**   | No                 | `showLabel` (no id check) | `{className}` passthrough |
+| **Stepper**  | **Yes, always**    | N/A                       | —                         |
+| **Combobox** | No                 | `showLabel && id`         | `h-medium`                |
+| **Select**   | No                 | `showLabel && id`         | —                         |
 
 When wrapped in Label, the component becomes a child of the 96px|1fr grid, placed in the `property-control` (1fr) column.
 

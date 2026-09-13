@@ -9,7 +9,6 @@ Standalone metadata mappings:
 
 Do not apply source mappings to `destinationPath`.
 
-
 - 🏛️aec.building.structure.classic/🎬️actions/🔣️constructOneWayReinforcedConcreteSlabFrom2PointsAndHeight.json → 🏺️aec.building.structure.classic/🎬️actions/📍️constructOneWayReinforcedConcreteSlabFrom2PointsAndHeight.json
 - 🏛️aec.building.structure.classic/🎬️actions/🔣️constructOneWayReinforcedConcreteSlabFromCurveAndHeight.json → 🏺️aec.building.structure.classic/🎬️actions/〰️constructOneWayReinforcedConcreteSlabFromCurveAndHeight.json
 - 🏛️aec.building.structure.classic/🎬️actions/🔣️constructOneWayReinforcedConcreteSlabFromSurface.json → 🏺️aec.building.structure.classic/🎬️actions/🗺️constructOneWayReinforcedConcreteSlabFromSurface.json

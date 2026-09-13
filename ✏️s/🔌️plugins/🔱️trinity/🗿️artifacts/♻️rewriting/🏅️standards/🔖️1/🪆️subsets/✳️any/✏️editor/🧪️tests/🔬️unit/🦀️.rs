@@ -25,7 +25,7 @@ async fn trinity_rewriting_command_text_and_binary_round_trip() {
         TrinityRewritingCommand::AddRuleClause { kind: "where".into() },
         TrinityRewritingCommand::ResetRule,
         TrinityRewritingCommand::PatchNodes { node_ids: vec!["a".into()], field: "name".into(), value: "Renamed".into() },
-        TrinityRewritingCommand::SetViewport { surface_id: Some("trinity.rewriting.before".into()), viewport: semio_framework_plugin::Viewport2d { x: 1.0, y: 2.0, zoom: 1.0 } },
+        TrinityRewritingCommand::SetViewport { surface_id: Some("trinity.rewriting.before".into()), viewport: semio_framework_os_kernel::Viewport2d { x: 1.0, y: 2.0, zoom: 1.0 } },
         TrinityRewritingCommand::Reorganize,
         TrinityRewritingCommand::SetLodMode { value: "compact".into() },
     ];

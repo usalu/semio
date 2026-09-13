@@ -13,7 +13,8 @@
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/**/*.rs",
       "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*",
-      "{projectRoot}/**/*"
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts"
     ]
   },
   "targets": {

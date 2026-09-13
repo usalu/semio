@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "wrappers": [
+    {
+      "id": "actor",
+      "ownerPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/package.json",
+      "payloadManifestPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/pkg/package.json",
+      "packageName": "@semio-tech/framework-actor-rs",
+      "projectName": "@semio-tech/framework-actor-rs",
+      "projectPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📋️project.json",
+      "producerTarget": "wasm",
+      "producerCommand": "bun ./📜️script.ts wasm",
+      "producerOutput": "{projectRoot}/pkg",
+      "module": "framework_actor.js",
+      "types": "framework_actor.d.ts",
+      "wasm": "framework_actor_bg.wasm",
+      "wasmTypes": "framework_actor_bg.wasm.d.ts",
+      "manifest": {
+        "name": "@semio-tech/framework-actor-rs",
+        "version": "0.1.0",
+        "private": true,
+        "type": "module",
+        "main": "./pkg/framework_actor.js",
+        "module": "./pkg/framework_actor.js",
+        "types": "./pkg/framework_actor.d.ts",
+        "files": ["pkg/framework_actor.js", "pkg/framework_actor.d.ts", "pkg/framework_actor_bg.wasm", "pkg/framework_actor_bg.wasm.d.ts"],
+        "exports": {
+          ".": { "types": "./pkg/framework_actor.d.ts", "import": "./pkg/framework_actor.js" },
+          "./framework_actor.js": { "types": "./pkg/framework_actor.d.ts", "import": "./pkg/framework_actor.js" },
+          "./framework_actor_bg.wasm": { "types": "./pkg/framework_actor_bg.wasm.d.ts", "default": "./pkg/framework_actor_bg.wasm" }
+        },
+        "bundleKind": "library",
+        "nx": { "includedScripts": [] }
+      }
+    },
+    {
+      "id": "puzzle",
+      "ownerPath": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/package.json",
+      "payloadManifestPath": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/pkg/package.json",
+      "packageName": "@semio-tech/puzzle-wasm",
+      "projectName": "@semio-tech/puzzle-plugin",
+      "projectPath": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/📋️project.json",
+      "producerTarget": "wasm",
+      "producerCommand": "bun ./📜️script.ts wasm",
+      "producerOutput": "{projectRoot}/pkg",
+      "module": "semio_puzzle.js",
+      "types": "semio_puzzle.d.ts",
+      "wasm": "semio_puzzle_bg.wasm",
+      "wasmTypes": "semio_puzzle_bg.wasm.d.ts",
+      "manifest": {
+        "name": "@semio-tech/puzzle-wasm",
+        "version": "0.1.0",
+        "private": true,
+        "type": "module",
+        "main": "./pkg/semio_puzzle.js",
+        "module": "./pkg/semio_puzzle.js",
+        "types": "./pkg/semio_puzzle.d.ts",
+        "files": ["pkg/semio_puzzle.js", "pkg/semio_puzzle.d.ts", "pkg/semio_puzzle_bg.wasm", "pkg/semio_puzzle_bg.wasm.d.ts"],
+        "exports": {
+          ".": { "types": "./pkg/semio_puzzle.d.ts", "import": "./pkg/semio_puzzle.js" },
+          "./semio_puzzle.js": { "types": "./pkg/semio_puzzle.d.ts", "import": "./pkg/semio_puzzle.js" },
+          "./semio_puzzle_bg.wasm": { "types": "./pkg/semio_puzzle_bg.wasm.d.ts", "default": "./pkg/semio_puzzle_bg.wasm" }
+        },
+        "bundleKind": "library",
+        "nx": { "includedScripts": [] }
+      }
+    }
+  ],
+  "registration": {
+    "projectPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+    "packagePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
+    "target": "test-wasm-package-wrappers",
+    "packageScript": "test-wasm-package-wrappers",
+    "launchSeedPath": ".vscode/🧩️launch.seed.jsonc",
+    "launchPath": ".vscode/launch.json",
+    "launchName": "🧱️test📦️wasm-package-wrappers",
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-wasm-package-wrappers"
+  },
+  "inputs": [
+    "sharedGlobals",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/package.json",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/pkg/package.json",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/pkg/framework_actor.js",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/pkg/framework_actor.d.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/pkg/framework_actor_bg.wasm",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/pkg/framework_actor_bg.wasm.d.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📋️project.json",
+    "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/package.json",
+    "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/pkg/package.json",
+    "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/pkg/semio_puzzle.js",
+    "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/pkg/semio_puzzle.d.ts",
+    "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/pkg/semio_puzzle_bg.wasm",
+    "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/pkg/semio_puzzle_bg.wasm.d.ts",
+    "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/📋️project.json",
+    "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️wasm-package-wrappers/🔣️.json",
+    "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧱️wasm-package-wrappers/🔣️.json",
+    "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️wasm-package-wrappers/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+    "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+    "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
+    "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
+    "{workspaceRoot}/.vscode/launch.json"
+  ]
+}

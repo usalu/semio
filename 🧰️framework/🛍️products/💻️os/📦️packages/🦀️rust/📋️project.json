@@ -422,5 +422,11 @@
         "cwd": "{projectRoot}"
       }
     }
+  },
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts"
+    ]
   }
 }

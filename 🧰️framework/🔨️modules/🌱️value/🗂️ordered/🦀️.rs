@@ -137,9 +137,9 @@ impl<V> OrderedMap<V> {
         let Some(root) = self.root.take() else { return Ok(()); };
         let Some(node) = Arc::into_inner(root) else { return Ok(()); };
         let mut retirement = Retirement::default();
-        if let Some(left) = node.left { retirement.owners.push_front(Owner::Node(left)); }
-        if let Some(right) = node.right { retirement.owners.push_front(Owner::Node(right)); }
-        retirement.owners.push_front(Owner::Entry(node.entry));
+        if let Some(left) = node.left { retirement.push(Owner::Node(left)); }
+        if let Some(right) = node.right { retirement.push(Owner::Node(right)); }
+        retirement.push(Owner::Entry(node.entry));
         Err(retirement)
     }
 }
@@ -278,13 +278,13 @@ impl<V> UpdateState<V> {
     pub fn close_step(&mut self, grant: Grant) -> RetirementStep<V> {
         if !self.closing || grant.maximum_items == 0 || grant.maximum_bytes == 0 { return RetirementStep::Blocked; }
         if !self.retirement.is_empty() { return self.retirement.advance(grant); }
-        if let Some(parent) = self.path.pop_front() { self.retirement.owners.push_front(Owner::Node(parent.node)); }
-        else if let Some(node) = self.successor_path.pop_front() { self.retirement.owners.push_front(Owner::Node(node)); }
-        else if let Some(node) = self.current.take().or_else(|| self.removed_node.take()).or_else(|| self.replacement.take()).or_else(|| self.base.root.take()) { self.retirement.owners.push_front(Owner::Node(node)); }
-        else if let Some(mut map) = self.result.take() { if let Some(node) = map.root.take() { self.retirement.owners.push_front(Owner::Node(node)); } }
-        else if let Some(entry) = self.successor_entry.take() { self.retirement.owners.push_front(Owner::Entry(entry)); }
-        else if let Some(key) = self.key.take() { self.retirement.owners.push_front(Owner::Key(key)); }
-        else if let Some(value) = self.value.take().or_else(|| self.removed.take()) { self.retirement.owners.push_front(Owner::Value(value)); }
+        if let Some(parent) = self.path.pop_front() { self.retirement.push(Owner::Node(parent.node)); }
+        else if let Some(node) = self.successor_path.pop_front() { self.retirement.push(Owner::Node(node)); }
+        else if let Some(node) = self.current.take().or_else(|| self.removed_node.take()).or_else(|| self.replacement.take()).or_else(|| self.base.root.take()) { self.retirement.push(Owner::Node(node)); }
+        else if let Some(mut map) = self.result.take() { if let Some(node) = map.root.take() { self.retirement.push(Owner::Node(node)); } }
+        else if let Some(entry) = self.successor_entry.take() { self.retirement.push(Owner::Entry(entry)); }
+        else if let Some(key) = self.key.take() { self.retirement.push(Owner::Key(key)); }
+        else if let Some(value) = self.value.take().or_else(|| self.removed.take()) { self.retirement.push(Owner::Value(value)); }
         else { return RetirementStep::Complete; }
         RetirementStep::Progress { released_items: 1, released_bytes: 0 }
     }
@@ -345,8 +345,8 @@ impl<V> LookupState<V> {
     fn close_step(&mut self, grant: Grant) -> RetirementStep<V> {
         if !self.closing || grant.maximum_items == 0 || grant.maximum_bytes == 0 { return RetirementStep::Blocked; }
         if !self.retirement.is_empty() { return self.retirement.advance(grant); }
-        if let Some(node) = self.current.take().or_else(|| self.base.root.take()) { self.retirement.owners.push_front(Owner::Node(node)); }
-        else if let Some(key) = self.key.take() { self.retirement.owners.push_front(Owner::Key(key)); }
+        if let Some(node) = self.current.take().or_else(|| self.base.root.take()) { self.retirement.push(Owner::Node(node)); }
+        else if let Some(key) = self.key.take() { self.retirement.push(Owner::Key(key)); }
         else { return RetirementStep::Complete; }
         RetirementStep::Progress { released_items: 1, released_bytes: 0 }
     }
@@ -384,26 +384,69 @@ enum Owner<V> { Node(Arc<Node<V>>), Entry(Arc<Entry<V>>), Key(Arc<String>), Valu
 /// 📤️ OwnedValue transfers final payload ownership to the caller's domain retirement cursor.
 pub enum RetirementStep<V> { Blocked, Progress { released_items: usize, released_bytes: usize }, OwnedValue(V), Complete }
 #[must_use = "retirement owners must be drained before drop"]
-pub struct Retirement<V> { owners: ManuallyDrop<LinkedList<Owner<V>>> }
-impl<V> Default for Retirement<V> { fn default() -> Self { Self { owners: ManuallyDrop::new(LinkedList::new()) } } }
-impl<V> Drop for Retirement<V> { fn drop(&mut self) { if !std::thread::panicking() { assert!(self.owners.is_empty(), "ordered-map retirement must be empty before drop"); } } }
+pub struct Retirement<V> {
+    owners: ManuallyDrop<[Option<Owner<V>>; MAX_AVL_HEIGHT + 3]>,
+    length: usize,
+}
+impl<V> Default for Retirement<V> {
+    fn default() -> Self { Self { owners: ManuallyDrop::new(std::array::from_fn(|_| None)), length: 0 } }
+}
+impl<V> Drop for Retirement<V> {
+    fn drop(&mut self) {
+        if self.length != 0 {
+            if !std::thread::panicking() { panic!("ordered-map retirement must be empty before drop"); }
+            return;
+        }
+        unsafe { ManuallyDrop::drop(&mut self.owners); }
+    }
+}
 impl<V> Retirement<V> {
-    fn new(root: Root<V>) -> Self { let mut owner = Self::default(); if let Some(root) = root { owner.owners.push_front(Owner::Node(root)); } owner }
-    pub fn is_empty(&self) -> bool { self.owners.is_empty() }
+    fn new(root: Root<V>) -> Self { let mut owner = Self::default(); if let Some(root) = root { owner.push(Owner::Node(root)); } owner }
+    fn push(&mut self, owner: Owner<V>) {
+        assert!(self.length < self.owners.len(), "ordered-map inline retirement frontier exceeded its AVL-height proof");
+        self.owners[self.length] = Some(owner);
+        self.length += 1;
+    }
+    fn pop(&mut self) -> Option<Owner<V>> {
+        self.length = self.length.checked_sub(1)?;
+        self.owners[self.length].take()
+    }
+    pub fn is_empty(&self) -> bool { self.length == 0 }
+    pub fn terminal_is_empty(&self) -> bool { self.length == 0 }
+    pub fn allocated_bytes(&self) -> usize {
+        self.owners[..self.length].iter().fold(0usize, |total, owner| match owner {
+            Some(Owner::Bytes(bytes)) => total.saturating_add(bytes.capacity()),
+            _ => total,
+        })
+    }
+    pub fn next_close_byte_demand(&self) -> Result<usize, &'static str> {
+        Ok(match self.length.checked_sub(1).and_then(|index| self.owners[index].as_ref()) {
+            Some(Owner::Bytes(bytes)) => bytes.capacity().max(1),
+            Some(_) => 1,
+            None => 0,
+        })
+    }
     pub fn advance(&mut self, grant: Grant) -> RetirementStep<V> {
         if grant.maximum_items == 0 || grant.maximum_bytes == 0 { return RetirementStep::Blocked; }
-        let Some(owner) = self.owners.pop_front() else { return RetirementStep::Complete; };
+        let Some(owner) = self.pop() else { return RetirementStep::Complete; };
         let mut bytes = 0;
         match owner {
             Owner::Node(node) => if let Some(node) = Arc::into_inner(node) {
-                if let Some(left) = node.left { self.owners.push_front(Owner::Node(left)); }
-                if let Some(right) = node.right { self.owners.push_front(Owner::Node(right)); }
-                self.owners.push_front(Owner::Entry(node.entry));
+                if let Some(left) = node.left { self.push(Owner::Node(left)); }
+                if let Some(right) = node.right { self.push(Owner::Node(right)); }
+                self.push(Owner::Entry(node.entry));
             },
-            Owner::Entry(entry) => if let Some(entry) = Arc::into_inner(entry) { self.owners.push_front(Owner::Key(entry.key)); self.owners.push_front(Owner::Value(entry.value)); },
-            Owner::Key(key) => if let Some(key) = Arc::into_inner(key) { self.owners.push_front(Owner::Bytes(key.into_bytes())); },
+            Owner::Entry(entry) => if let Some(entry) = Arc::into_inner(entry) { self.push(Owner::Key(entry.key)); self.push(Owner::Value(entry.value)); },
+            Owner::Key(key) => if let Some(key) = Arc::into_inner(key) { self.push(Owner::Bytes(key.into_bytes())); },
             Owner::Value(value) => if let Some(value) = Arc::into_inner(value) { return RetirementStep::OwnedValue(value); },
-            Owner::Bytes(mut value) => { bytes = grant.maximum_bytes.min(value.len()); value.truncate(value.len() - bytes); if !value.is_empty() { self.owners.push_front(Owner::Bytes(value)); } }
+            Owner::Bytes(value) => {
+                bytes = value.capacity();
+                if bytes > grant.maximum_bytes {
+                    self.push(Owner::Bytes(value));
+                    return RetirementStep::Blocked;
+                }
+                drop(value);
+            }
         }
         RetirementStep::Progress { released_items: 1, released_bytes: bytes }
     }
@@ -411,7 +454,10 @@ impl<V> Retirement<V> {
 
 /// 🧊️ Cold-only convenience cleanup; never called by retained advance or close_step.
 fn retire_cold<V>(mut retirement: Retirement<V>) {
-    loop { match retirement.advance(Grant { maximum_items: 1, maximum_bytes: 4096 }) { RetirementStep::OwnedValue(value) => drop(value), RetirementStep::Complete => break, _ => {} } }
+    loop {
+        let maximum_bytes = retirement.next_close_byte_demand().expect("finite ordered cold release demand").max(1);
+        match retirement.advance(Grant { maximum_items: 1, maximum_bytes }) { RetirementStep::OwnedValue(value) => drop(value), RetirementStep::Complete => break, _ => {} }
+    }
 }
 
 /// 🧊️ Cold-only convenience cleanup; explicit synchronous APIs cannot earn interactive credit.

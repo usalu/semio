@@ -1088,7 +1088,10 @@ impl Generation2dMountedPackSession {
         let maximum_source_allocation_bytes = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES.checked_mul(4).ok_or("generation2d-mounted.source-allocation-credits")?;
         *self.source = Some(mounted::RetainedPackSourceCursor::try_new(pages, canonical, maximum_source_allocation_bytes)?);
         *self.anchor = Some(mounted::RetainedPackAnchorCursor::new());
-        *self.segment = Some(mounted::RetainedPackSegmentCursor::try_new(limits()).map_err(|_| "generation2d-mounted.segment-preflight")?);
+        *self.segment = Some(
+            mounted::RetainedPackSegmentCursor::try_new(limits(), store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES)
+                .map_err(|_| "generation2d-mounted.segment-preflight")?,
+        );
         *self.catalog = Some(
             mounted::RetainedPackCatalogCursor::try_new(
                 limits(),
@@ -1265,9 +1268,12 @@ impl Generation2dMountedPackSession {
             let Some(source) = self.source.as_ref() else { return Ok(None) };
             if source.has_reserved_page() { None } else { Some(source.next_allocation_bytes()?) }
         } else if self.phase == Generation2dMountedPackPhase::Drive {
-            match self.value.as_mut().ok_or("generation2d-mounted.value-owner")?.next_allocation_bytes().map_err(|_| "generation2d-mounted.value-allocation")? {
+            match self.segment.as_ref().ok_or("generation2d-mounted.segment-owner")?.next_allocation_bytes() {
                 Some(requested) => Some(requested),
-                None => self.catalog.as_mut().ok_or("generation2d-mounted.catalog-owner")?.next_allocation_bytes().map_err(|fault| fault.code)?,
+                None => match self.value.as_mut().ok_or("generation2d-mounted.value-owner")?.next_allocation_bytes().map_err(|_| "generation2d-mounted.value-allocation")? {
+                    Some(requested) => Some(requested),
+                    None => self.catalog.as_mut().ok_or("generation2d-mounted.catalog-owner")?.next_allocation_bytes().map_err(|fault| fault.code)?,
+                },
             }
         } else {
             None
@@ -1292,6 +1298,13 @@ impl Generation2dMountedPackSession {
                 .reserve_page(maximum_bytes.min(remaining));
         }
         if self.phase == Generation2dMountedPackPhase::Drive {
+            let segment = self
+                .segment
+                .as_mut()
+                .ok_or(mounted::RetainedPackSourceAllocationError { allocated_bytes: 0, reason: "generation2d-mounted.segment-owner" })?;
+            if segment.next_allocation_bytes().is_some() {
+                return segment.reserve_allocation(maximum_bytes.min(remaining));
+            }
             let value = self
                 .value
                 .as_mut()
@@ -1319,6 +1332,7 @@ impl Generation2dMountedPackSession {
 
     pub fn retained_allocated_bytes(&self) -> usize {
         self.source.as_ref().map_or(0, mounted::RetainedPackSourceCursor::allocated_bytes)
+            + self.segment.as_ref().map_or(0, mounted::RetainedPackSegmentCursor::allocated_bytes)
             + self.catalog.as_ref().map_or(0, mounted::RetainedPackCatalogCursor::allocated_bytes)
             + self.value.as_ref().map_or(0, mounted::RetainedValueCursor::allocated_bytes)
     }
@@ -1385,7 +1399,12 @@ impl Generation2dMountedPackSession {
             return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(segment) = self.segment.as_mut() {
-            segment.close_step();
+            match segment.close_step(1, maximum_bytes) {
+                mounted::RetainedPackCloseStep::Pending { released_items, released_bytes } => {
+                    return Ok(Generation2dMountedPackCloseStep::Pending { released_items, released_bytes });
+                }
+                mounted::RetainedPackCloseStep::Complete => {}
+            }
             drop(self.segment.take());
             return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -1421,6 +1440,9 @@ impl Generation2dMountedPackSession {
         }
         if let Some(catalog) = self.catalog.as_ref() {
             return catalog.next_release_allocation_bytes().ok().flatten();
+        }
+        if let Some(segment) = self.segment.as_ref() {
+            return segment.next_release_allocation_bytes();
         }
         self.source.as_ref()?.next_release_allocation_bytes().ok()
     }

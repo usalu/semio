@@ -419,12 +419,13 @@
       "continuous": true,
       "outputs": [],
       "dependsOn": [
-        "native-build"
+        "native-build",
+        "@semio-tech/framework-os-dev:prepare-s-native-dev"
       ],
       "options": {
-        "command": "bun ./📜️script.ts native dev",
+        "command": "bun ../../⌨️native-entrypoint/📜️script.ts run s dev",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
-        "forwardAllArgs": true
+        "forwardAllArgs": false
       }
     },
     "native-environment-check": {
@@ -474,12 +475,13 @@
       "continuous": true,
       "outputs": [],
       "dependsOn": [
-        "native-build-release"
+        "native-build-release",
+        "@semio-tech/framework-os-dev:prepare-s-native-release"
       ],
       "options": {
-        "command": "bun ./📜️script.ts native release",
+        "command": "bun ../../⌨️native-entrypoint/📜️script.ts run s release",
         "cwd": "{projectRoot}",
-        "forwardAllArgs": true
+        "forwardAllArgs": false
       }
     },
     "lint": {
@@ -508,6 +510,34 @@
       "options": {
         "command": "bun ../../🏗️compiler/🌐️wasm/📜️script.ts build release",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "forwardAllArgs": true
+      }
+    },
+    "native-scale": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "native-build",
+        "@semio-tech/framework-os-scale-fixture:build-wasm"
+      ],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ../../⌨️native-entrypoint/📜️script.ts scale dev",
+        "forwardAllArgs": true
+      }
+    },
+    "native-scale-release": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "native-build-release",
+        "@semio-tech/framework-os-scale-fixture:build-wasm"
+      ],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ../../⌨️native-entrypoint/📜️script.ts scale release",
         "forwardAllArgs": true
       }
     }

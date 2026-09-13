@@ -90,6 +90,7 @@ pub struct AnalysisModel {
 pub const MOUNTED_ANALYSIS_NODE_SLOTS: usize = 128;
 pub const MOUNTED_ANALYSIS_ELEMENT_SLOTS: usize = 128;
 pub const MOUNTED_ANALYSIS_SUPPORT_SLOTS: usize = 64;
+pub const MOUNTED_ANALYSIS_BACKING_BYTES: usize = MOUNTED_OWNER_PAGE_BYTES;
 
 pub struct MountedAnalysisSupport {
     node_id: String,
@@ -129,193 +130,205 @@ impl MountedAnalysisSupport {
     }
 }
 
-/// 📦️ A mounted analysis admission request exceeds its fixed slot capacity.
+/// 🚧️ A mounted model retains allocation failures separately from logical admission limits.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct MountedAnalysisCapacityExceeded {
-    pub requested: usize,
-    pub maximum: usize,
+pub enum MountedAnalysisFault {
+    Capacity { requested: usize, maximum: usize },
+    Allocation { allocated_bytes: usize, reason: &'static str },
+    Closing,
 }
 
-/// 🧱 Fixed mounted analysis owner with one admitted slot, copied value, or close action per turn.
+/// 🎟️ One model admission opportunity reports only its actual newly retained backing.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct MountedAnalysisAdmission {
+    pub complete: bool,
+    pub allocated_bytes: usize,
+}
+
+struct MountedModelItems<T, const N: usize> {
+    values: PagedList<T, N>,
+    admitted: usize,
+}
+
+impl<T, const N: usize> Default for MountedModelItems<T, N> {
+    fn default() -> Self {
+        Self { values: PagedList::default(), admitted: 0 }
+    }
+}
+
+impl<T, const N: usize> MountedModelItems<T, N> {
+    fn next_allocation_bytes(&self, target: usize) -> Result<Option<usize>, MountedAnalysisFault> {
+        if target > N { return Err(MountedAnalysisFault::Capacity { requested: target, maximum: N }); }
+        self.values.next_capacity_allocation_bytes(target).map_err(|reason| MountedAnalysisFault::Allocation { allocated_bytes: 0, reason })
+    }
+
+    fn admit_one(&mut self, target: usize, maximum_bytes: usize) -> Result<MountedAnalysisAdmission, MountedAnalysisFault> {
+        if self.next_allocation_bytes(target)?.is_some() {
+            let progress = self.values.reserve_capacity_one(target, maximum_bytes.min(MOUNTED_OWNER_PAGE_BYTES)).map_err(|error| MountedAnalysisFault::Allocation { allocated_bytes: error.allocated_bytes, reason: error.reason })?;
+            return Ok(MountedAnalysisAdmission { complete: false, allocated_bytes: progress.allocated_bytes });
+        }
+        if self.admitted < target {
+            self.admitted += 1;
+            return Ok(MountedAnalysisAdmission::default());
+        }
+        Ok(MountedAnalysisAdmission { complete: true, allocated_bytes: 0 })
+    }
+
+    fn push(&mut self, value: T) -> Result<(), T> {
+        if self.values.len() >= self.admitted { return Err(value); }
+        self.values.push_reserved(value)
+    }
+}
+
+trait MountedAnalysisItem {
+    fn close_item_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize);
+}
+
+impl MountedAnalysisItem for Node {
+    fn close_item_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        let bytes = self.id.capacity();
+        if bytes == 0 { return (true, 0, 0); }
+        if bytes > maximum_bytes { return (false, 0, 0); }
+        self.id = String::new();
+        (false, 1, bytes)
+    }
+}
+
+impl MountedAnalysisItem for Elements {
+    fn close_item_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        if let Some(bytes) = self.mounted_next_string_bytes() {
+            if bytes > maximum_bytes { return (false, 0, 0); }
+            return (false, 1, self.close_mounted_string_step().expect("admitted mounted element string"));
+        }
+        (self.mounted_strings_terminal_is_empty(), 0, 0)
+    }
+}
+
+impl MountedAnalysisItem for MountedAnalysisSupport {
+    fn close_item_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        self.close_step(maximum_bytes)
+    }
+}
+
+impl<T: MountedAnalysisItem, const N: usize> MountedModelItems<T, N> {
+    fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        if let Some(value) = self.values.len().checked_sub(1).and_then(|index| self.values.get_mut(index)) {
+            let progress = value.close_item_step(maximum_bytes);
+            if !progress.0 { return progress; }
+            self.values.pop();
+            return (false, 1, 0);
+        }
+        if self.admitted != 0 {
+            self.admitted -= 1;
+            return (false, 1, 0);
+        }
+        match close_paged_owner_step(&mut self.values, maximum_bytes) {
+            Ok(Some((items, bytes))) => (false, items, bytes),
+            Ok(None) => (true, 0, 0),
+            Err(()) => (false, 0, 0),
+        }
+    }
+}
+
+/// 🧱 Mounted model metadata moves directly while each payload page retains its own byte grant.
 pub struct MountedAnalysisModel {
-    nodes: [Option<Node>; MOUNTED_ANALYSIS_NODE_SLOTS],
-    elements: [Option<Elements>; MOUNTED_ANALYSIS_ELEMENT_SLOTS],
-    supports: [Option<MountedAnalysisSupport>; MOUNTED_ANALYSIS_SUPPORT_SLOTS],
-    admitted_nodes: usize,
-    admitted_elements: usize,
-    admitted_supports: usize,
-    node_len: usize,
-    element_len: usize,
-    support_len: usize,
+    nodes: MountedModelItems<Node, MOUNTED_ANALYSIS_NODE_SLOTS>,
+    elements: MountedModelItems<Elements, MOUNTED_ANALYSIS_ELEMENT_SLOTS>,
+    supports: MountedModelItems<MountedAnalysisSupport, MOUNTED_ANALYSIS_SUPPORT_SLOTS>,
+    fault: Option<MountedAnalysisFault>,
+    closing: bool,
     close_lane: u8,
 }
 
 impl MountedAnalysisModel {
     pub fn new() -> Self {
-        Self {
-            nodes: std::array::from_fn(|_| None),
-            elements: std::array::from_fn(|_| None),
-            supports: std::array::from_fn(|_| None),
-            admitted_nodes: 0,
-            admitted_elements: 0,
-            admitted_supports: 0,
-            node_len: 0,
-            element_len: 0,
-            support_len: 0,
-            close_lane: 0,
-        }
+        Self { nodes: MountedModelItems::default(), elements: MountedModelItems::default(), supports: MountedModelItems::default(), fault: None, closing: false, close_lane: 0 }
     }
 
-    fn admit_one(admitted: &mut usize, target: usize, maximum: usize) -> Result<bool, MountedAnalysisCapacityExceeded> {
-        if target > maximum {
-            return Err(MountedAnalysisCapacityExceeded { requested: target, maximum });
-        }
-        if *admitted < target {
-            *admitted += 1;
-            return Ok(false);
-        }
-        Ok(true)
+    fn admission_ready(&self) -> Result<(), MountedAnalysisFault> {
+        if let Some(fault) = self.fault { return Err(fault); }
+        if self.closing { return Err(MountedAnalysisFault::Closing); }
+        Ok(())
     }
 
-    pub fn admit_node_one(&mut self, target: usize) -> Result<bool, MountedAnalysisCapacityExceeded> {
-        Self::admit_one(&mut self.admitted_nodes, target, MOUNTED_ANALYSIS_NODE_SLOTS)
+    fn retain_admission(&mut self, result: Result<MountedAnalysisAdmission, MountedAnalysisFault>) -> Result<MountedAnalysisAdmission, MountedAnalysisFault> {
+        if let Err(fault) = result { self.fault = Some(fault); }
+        result
     }
 
-    pub fn admit_element_one(&mut self, target: usize) -> Result<bool, MountedAnalysisCapacityExceeded> {
-        Self::admit_one(&mut self.admitted_elements, target, MOUNTED_ANALYSIS_ELEMENT_SLOTS)
+    pub fn next_node_allocation_bytes(&self, target: usize) -> Result<Option<usize>, MountedAnalysisFault> {
+        self.admission_ready()?;
+        self.nodes.next_allocation_bytes(target)
     }
 
-    pub fn admit_support_one(&mut self, target: usize) -> Result<bool, MountedAnalysisCapacityExceeded> {
-        Self::admit_one(&mut self.admitted_supports, target, MOUNTED_ANALYSIS_SUPPORT_SLOTS)
+    pub fn next_element_allocation_bytes(&self, target: usize) -> Result<Option<usize>, MountedAnalysisFault> {
+        self.admission_ready()?;
+        self.elements.next_allocation_bytes(target)
+    }
+
+    pub fn next_support_allocation_bytes(&self, target: usize) -> Result<Option<usize>, MountedAnalysisFault> {
+        self.admission_ready()?;
+        self.supports.next_allocation_bytes(target)
+    }
+
+    pub fn admit_node_one(&mut self, target: usize, maximum_bytes: usize) -> Result<MountedAnalysisAdmission, MountedAnalysisFault> {
+        self.admission_ready()?;
+        let result = self.nodes.admit_one(target, maximum_bytes);
+        self.retain_admission(result)
+    }
+
+    pub fn admit_element_one(&mut self, target: usize, maximum_bytes: usize) -> Result<MountedAnalysisAdmission, MountedAnalysisFault> {
+        self.admission_ready()?;
+        let result = self.elements.admit_one(target, maximum_bytes);
+        self.retain_admission(result)
+    }
+
+    pub fn admit_support_one(&mut self, target: usize, maximum_bytes: usize) -> Result<MountedAnalysisAdmission, MountedAnalysisFault> {
+        self.admission_ready()?;
+        let result = self.supports.admit_one(target, maximum_bytes);
+        self.retain_admission(result)
     }
 
     pub fn push_node(&mut self, node: Node) -> Result<(), Node> {
-        if self.node_len == self.admitted_nodes {
-            return Err(node);
-        }
-        self.nodes[self.node_len] = Some(node);
-        self.node_len += 1;
-        Ok(())
+        if self.admission_ready().is_err() { return Err(node); }
+        self.nodes.push(node)
     }
 
     pub fn push_element(&mut self, element: Elements) -> Result<(), Elements> {
-        if self.element_len == self.admitted_elements {
-            return Err(element);
-        }
-        self.elements[self.element_len] = Some(element);
-        self.element_len += 1;
-        Ok(())
+        if self.admission_ready().is_err() { return Err(element); }
+        self.elements.push(element)
     }
 
     pub fn push_support(&mut self, support: MountedAnalysisSupport) -> Result<(), MountedAnalysisSupport> {
-        if self.support_len == self.admitted_supports {
-            return Err(support);
-        }
-        self.supports[self.support_len] = Some(support);
-        self.support_len += 1;
-        Ok(())
+        if self.admission_ready().is_err() { return Err(support); }
+        self.supports.push(support)
     }
 
-    pub fn nodes_len(&self) -> usize {
-        self.node_len
+    pub fn nodes_len(&self) -> usize { self.nodes.values.len() }
+    pub fn elements_len(&self) -> usize { self.elements.values.len() }
+    pub fn node(&self, index: usize) -> Option<&Node> { self.nodes.values.get(index) }
+    pub fn element(&self, index: usize) -> Option<&Elements> { self.elements.values.get(index) }
+    fn support(&self, index: usize) -> Option<&MountedAnalysisSupport> { self.supports.values.get(index) }
+
+    pub fn physical_backing_bytes(&self) -> [usize; 3] {
+        [self.nodes.values.allocated_bytes(), self.elements.values.allocated_bytes(), self.supports.values.allocated_bytes()]
     }
 
-    pub fn elements_len(&self) -> usize {
-        self.element_len
-    }
-
-    pub fn node(&self, index: usize) -> Option<&Node> {
-        (index < self.node_len).then(|| self.nodes[index].as_ref()).flatten()
-    }
-
-    pub fn element(&self, index: usize) -> Option<&Elements> {
-        (index < self.element_len).then(|| self.elements[index].as_ref()).flatten()
-    }
-
-    fn support(&self, index: usize) -> Option<&MountedAnalysisSupport> {
-        (index < self.support_len).then(|| self.supports[index].as_ref()).flatten()
+    pub fn terminal_is_empty(&self) -> bool {
+        self.nodes.values.terminal_is_empty() && self.elements.values.terminal_is_empty() && self.supports.values.terminal_is_empty() && self.nodes.admitted == 0 && self.elements.admitted == 0 && self.supports.admitted == 0
     }
 
     pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        self.closing = true;
         loop {
-            match self.close_lane {
-                0 => {
-                    let Some(node) = self.node_len.checked_sub(1).and_then(|index| self.nodes[index].as_mut()) else {
-                        self.close_lane += 1;
-                        continue;
-                    };
-                    if node.id.capacity() != 0 {
-                        let bytes = node.id.capacity();
-                        if bytes > maximum_bytes {
-                            return (false, 0, 0);
-                        }
-                        node.id = String::new();
-                        return (false, 1, bytes);
-                    }
-                    self.node_len -= 1;
-                    self.nodes[self.node_len] = None;
-                    return (false, 1, 0);
-                }
-                1 => {
-                    if self.admitted_nodes != 0 {
-                        self.admitted_nodes -= 1;
-                        return (false, 1, 0);
-                    }
-                    self.close_lane += 1;
-                }
-                2 => {
-                    let Some(element) = self.element_len.checked_sub(1).and_then(|index| self.elements[index].as_mut()) else {
-                        self.close_lane += 1;
-                        continue;
-                    };
-                    if let Some(bytes) = element.mounted_next_string_bytes() {
-                        if bytes > maximum_bytes {
-                            return (false, 0, 0);
-                        }
-                        return (false, 1, element.close_mounted_string_step().unwrap_or(0));
-                    }
-                    self.element_len -= 1;
-                    self.elements[self.element_len] = None;
-                    return (false, 1, 0);
-                }
-                3 => {
-                    if self.admitted_elements != 0 {
-                        self.admitted_elements -= 1;
-                        return (false, 1, 0);
-                    }
-                    self.close_lane += 1;
-                }
-                4 => {
-                    let Some(support) = self.support_len.checked_sub(1).and_then(|index| self.supports[index].as_mut()) else {
-                        self.close_lane += 1;
-                        continue;
-                    };
-                    if support.node_id.capacity() != 0 {
-                        let bytes = support.node_id.capacity();
-                        if bytes > maximum_bytes {
-                            return (false, 0, 0);
-                        }
-                        support.node_id = String::new();
-                        return (false, 1, bytes);
-                    }
-                    if support.fixed_len != 0 {
-                        support.fixed_len -= 1;
-                        support.fixed[support.fixed_len] = None;
-                        return (false, 1, 0);
-                    }
-                    self.support_len -= 1;
-                    self.supports[self.support_len] = None;
-                    return (false, 1, 0);
-                }
-                5 => {
-                    if self.admitted_supports != 0 {
-                        self.admitted_supports -= 1;
-                        return (false, 1, 0);
-                    }
-                    self.close_lane += 1;
-                }
-                _ => return (true, 0, 0),
-            }
+            let progress = match self.close_lane {
+                0 => self.nodes.close_step(maximum_bytes),
+                1 => self.elements.close_step(maximum_bytes),
+                2 => self.supports.close_step(maximum_bytes),
+                _ => return (self.terminal_is_empty(), 0, 0),
+            };
+            if !progress.0 { return progress; }
+            self.close_lane += 1;
         }
     }
 }
@@ -1041,7 +1054,7 @@ enum AssemblyConstructionStage {
 /// comparison, DOF insertion, scalar initialization or fixed-capacity allocation opportunity.
 enum AssemblyConstructionModel {
     Dynamic(Arc<AnalysisModel>),
-    Mounted(Arc<MountedAnalysisModel>),
+    Mounted(MountedAnalysisModel),
 }
 
 impl AssemblyConstructionModel {
@@ -1062,7 +1075,7 @@ impl AssemblyConstructionModel {
     fn supports_len(&self) -> usize {
         match self {
             Self::Dynamic(model) => model.supports.len(),
-            Self::Mounted(model) => model.support_len,
+            Self::Mounted(model) => model.supports.values.len(),
         }
     }
 
@@ -1184,7 +1197,7 @@ impl AssemblyJobConstruction {
     }
 
     /// 🧱 Retains an already-admitted fixed mounted model without contiguous materialization.
-    pub fn new_mounted(model: Arc<MountedAnalysisModel>, operation: Operation, partition_count: usize) -> Self {
+    pub fn new_mounted(model: MountedAnalysisModel, operation: Operation, partition_count: usize) -> Self {
         Self::from_model(AssemblyConstructionModel::Mounted(model), operation, partition_count)
     }
 
@@ -1610,7 +1623,7 @@ impl AssemblyJobConstruction {
         if let Some(model) = self.model.as_mut() {
             let (terminal, items, bytes) = match model {
                 AssemblyConstructionModel::Dynamic(model) => close_analysis_model_step(model, &mut self.model_close, maximum_bytes),
-                AssemblyConstructionModel::Mounted(model) => Arc::get_mut(model).map_or((false, 0, 0), |model| model.close_step(maximum_bytes)),
+                AssemblyConstructionModel::Mounted(model) => model.close_step(maximum_bytes),
             };
             if !terminal {
                 return (false, items, bytes);
@@ -1645,7 +1658,7 @@ struct UnfactoredSystem {
 enum AnalysisModelOwner<'model> {
     Borrowed(&'model AnalysisModel),
     Owned(Arc<AnalysisModel>),
-    Mounted(Arc<MountedAnalysisModel>),
+    Mounted(MountedAnalysisModel),
 }
 
 impl AnalysisModelOwner<'_> {
@@ -1946,7 +1959,7 @@ impl<'model> AssemblyJob<'model> {
                         return (false, items, bytes);
                     }
                     AnalysisModelOwner::Mounted(model) => {
-                        let (terminal, items, bytes) = Arc::get_mut(model).map_or((false, 0, 0), |model| model.close_step(maximum_bytes));
+                        let (terminal, items, bytes) = model.close_step(maximum_bytes);
                         if terminal {
                             self.close_lane += 1;
                             continue;
@@ -2494,7 +2507,7 @@ impl AssemblyCsrBuild {
                 return (false, items, bytes);
             }
             self.assembly = None;
-            return (false, 1, size_of::<AssemblyJob<'static>>());
+            return (false, 1, 0);
         }
         match close_paged_owner_step(&mut self.entries, maximum_bytes) {
             Ok(Some((items, bytes))) => return (false, items, bytes),
@@ -2519,7 +2532,7 @@ impl AssemblyCsrBuild {
                 return (false, items, bytes);
             }
             self.matrix = None;
-            return (false, 1, size_of::<Csr>());
+            return (false, 1, 0);
         }
         (true, 0, 0)
     }

@@ -13,7 +13,7 @@ The installed `node_modules/nx/src/utils/consume-messages-from-socket.js` calls 
 The language-neutral reproduction input is one JSON frame followed by byte `04`:
 
 ```json
-{"root":"modules/📺️renderer"}
+{ "root": "modules/📺️renderer" }
 ```
 
 Split the UTF-8 byte stream two bytes into `📺` (`f0 9f | 93 ba`). Feeding those two legal transport chunks into the actual installed Nx consumer yields `modules/���️renderer`, exactly the observed phantom spelling. Decoding the complete frame with independent WHATWG `TextDecoder` preserves `modules/📺️renderer`. This test does not create either directory or alter dependency code.

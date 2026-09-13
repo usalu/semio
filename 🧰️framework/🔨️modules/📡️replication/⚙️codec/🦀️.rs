@@ -425,6 +425,14 @@ pub enum DeflateRetainedStep {
     Complete,
 }
 
+/// 🧵️ The retirement step [`DeflateRetainedCursor::close_step`] answers with, re-exported because it
+/// is part of this module's own public surface: a caller that drives the cursor to terminal must be
+/// able to name the answer without taking a second, direct dependency on `semio-framework-deflate`
+/// (CLAUDE.md — an exported API must not require an interface the client cannot reach through us).
+/// `🎒️pack/📐️format/🦀️.rs` is exactly that caller, and reaches it as `crate::codec::…`.
+#[cfg(feature = "deflate")]
+pub use semio_framework_deflate::RetainedInflateCloseStep;
+
 /// 🧵️ Incremental raw-DEFLATE decoder with exact producer handback and one output byte per grant.
 #[cfg(feature = "deflate")]
 pub struct DeflateRetainedCursor {
@@ -432,20 +440,69 @@ pub struct DeflateRetainedCursor {
     pending: Option<u8>,
     expected: u64,
     produced: u64,
+    fault: Option<PackError>,
     complete: bool,
+    closed: bool,
 }
 
 #[cfg(feature = "deflate")]
 impl DeflateRetainedCursor {
-    pub fn try_new(expected: u64, limit: u64) -> Result<Self, PackError> {
+    pub fn try_new(expected: u64, limit: u64, maximum_allocation_bytes: usize) -> Result<Self, PackError> {
         if expected > limit {
             return Err(PackError::LimitExceeded("retained deflate raw length exceeds limit"));
         }
-        Ok(Self { inflater: Some(semio_framework_deflate::Inflater::new()), pending: None, expected, produced: 0, complete: false })
+        let maximum_history_bytes = usize::try_from(limit).map_err(|_| PackError::LimitExceeded("retained deflate history exceeds address space"))?;
+        let inflater = semio_framework_deflate::Inflater::try_new_retained(maximum_history_bytes, maximum_allocation_bytes)
+            .map_err(|_| PackError::LimitExceeded("retained deflate physical ceiling"))?;
+        Ok(Self { inflater: Some(inflater), pending: None, expected, produced: 0, fault: None, complete: false, closed: false })
+    }
+
+    pub fn reset(&mut self, expected: u64, limit: u64) -> Result<(), PackError> {
+        if !self.complete || self.closed || self.pending.is_some() || self.fault.is_some() || expected > limit {
+            return Err(PackError::RetainedMalformed { what: "deflate", offset: self.produced, detail: "retained decoder cannot reset" });
+        }
+        self.inflater
+            .as_mut()
+            .ok_or(PackError::RetainedMalformed { what: "deflate", offset: self.produced, detail: "decoder is closed" })?
+            .reset_retained()
+            .map_err(|_| PackError::RetainedMalformed { what: "deflate", offset: self.produced, detail: "retained decoder reset failed" })?;
+        self.expected = expected;
+        self.produced = 0;
+        self.complete = false;
+        Ok(())
+    }
+
+    pub fn next_allocation_bytes(&self) -> Option<usize> {
+        self.inflater.as_ref().and_then(semio_framework_deflate::Inflater::next_retained_allocation_bytes)
+    }
+
+    pub fn reserve_allocation(
+        &mut self,
+        maximum_bytes: usize,
+    ) -> Result<semio_framework_deflate::RetainedInflateAllocationStep, semio_framework_deflate::RetainedInflateAllocationError> {
+        let result = self
+            .inflater
+            .as_mut()
+            .expect("retained deflate allocation owner")
+            .reserve_retained_history(maximum_bytes);
+        if let Err(error) = result {
+            if self.fault.is_none() {
+                self.fault = Some(PackError::RetainedMalformed { what: "deflate", offset: self.produced, detail: error.reason });
+            }
+        }
+        result
+    }
+
+    pub fn allocated_bytes(&self) -> usize {
+        self.inflater.as_ref().map_or(0, semio_framework_deflate::Inflater::retained_allocated_bytes)
+    }
+
+    pub fn retained_history_ptr(&self) -> Option<usize> {
+        self.inflater.as_ref().and_then(semio_framework_deflate::Inflater::retained_history_ptr)
     }
 
     pub fn admit_byte(&mut self, byte: u8) -> Result<(), u8> {
-        if self.complete || self.pending.is_some() {
+        if !self.can_admit() {
             return Err(byte);
         }
         self.pending = Some(byte);
@@ -453,42 +510,87 @@ impl DeflateRetainedCursor {
     }
 
     pub fn grant(&mut self, input_complete: bool) -> Result<DeflateRetainedStep, PackError> {
+        if let Some(fault) = &self.fault {
+            return Err(fault.clone());
+        }
+        let result = self.grant_inner(input_complete);
+        match result {
+            Ok(step) => Ok(step),
+            Err(fault) => {
+                self.fault = Some(fault);
+                Err(self.fault.as_ref().expect("retained deflate first fault").clone())
+            }
+        }
+    }
+
+    fn grant_inner(&mut self, input_complete: bool) -> Result<DeflateRetainedStep, PackError> {
         if self.complete {
             return Ok(DeflateRetainedStep::Complete);
         }
-        let inflater = self.inflater.as_mut().ok_or(PackError::Malformed { what: "deflate", offset: self.produced, detail: "decoder is closed".into() })?;
+        if self.next_allocation_bytes().is_some() {
+            return Ok(DeflateRetainedStep::NeedInput);
+        }
+        let inflater = self.inflater.as_mut().ok_or(PackError::RetainedMalformed { what: "deflate", offset: self.produced, detail: "decoder is closed" })?;
         match inflater.advance(&mut self.pending, input_complete) {
             Ok(semio_framework_deflate::InflateOutcome::Wrote(byte)) => {
                 self.produced = self.produced.checked_add(1).ok_or(PackError::LimitExceeded("retained deflate output overflow"))?;
                 if self.produced > self.expected {
-                    return Err(PackError::Malformed { what: "deflate", offset: self.produced, detail: "decompressed length exceeds declared raw length".into() });
+                    return Err(PackError::RetainedMalformed { what: "deflate", offset: self.produced, detail: "decompressed length exceeds declared raw length" });
                 }
                 Ok(DeflateRetainedStep::Byte(byte))
             }
             Ok(semio_framework_deflate::InflateOutcome::Done) => {
                 if self.pending.is_some() || self.produced != self.expected {
-                    return Err(PackError::Malformed { what: "deflate", offset: self.produced, detail: "decompressed length mismatch or trailing input".into() });
+                    return Err(PackError::RetainedMalformed { what: "deflate", offset: self.produced, detail: "decompressed length mismatch or trailing input" });
                 }
                 self.complete = true;
                 Ok(DeflateRetainedStep::Complete)
             }
             Ok(semio_framework_deflate::InflateOutcome::NeedInput) => Ok(DeflateRetainedStep::NeedInput),
-            Err(_) => Err(PackError::Malformed { what: "deflate", offset: self.produced, detail: "incremental decompression failed".into() }),
+            Err(_) => Err(PackError::RetainedMalformed { what: "deflate", offset: self.produced, detail: "incremental decompression failed" }),
         }
     }
 
     pub fn can_admit(&self) -> bool {
-        !self.complete && self.pending.is_none()
+        !self.complete && !self.closed && self.fault.is_none() && self.pending.is_none() && self.next_allocation_bytes().is_none()
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.complete && self.pending.is_none() && self.inflater.is_none()
+        self.closed && self.pending.is_none() && self.inflater.is_none()
     }
 
-    pub fn close(&mut self) {
-        self.pending = None;
-        self.complete = true;
-        self.inflater = None;
+    pub fn next_release_allocation_bytes(&self) -> Option<usize> {
+        if self.pending.is_some() {
+            return None;
+        }
+        self.inflater.as_ref().and_then(semio_framework_deflate::Inflater::next_retained_release_allocation_bytes)
+    }
+
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_deflate::RetainedInflateCloseStep {
+        if self.closed {
+            return semio_framework_deflate::RetainedInflateCloseStep::Complete;
+        }
+        if maximum_items == 0 && maximum_bytes == 0 {
+            return semio_framework_deflate::RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.pending.is_some() {
+            if maximum_items == 0 {
+                return semio_framework_deflate::RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.pending = None;
+            return semio_framework_deflate::RetainedInflateCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        let step = self
+            .inflater
+            .as_mut()
+            .expect("retained deflate close owner")
+            .close_retained_step(maximum_items, maximum_bytes);
+        if step == semio_framework_deflate::RetainedInflateCloseStep::Complete {
+            drop(self.inflater.take());
+            self.complete = true;
+            self.closed = true;
+        }
+        step
     }
 }
 

@@ -73,14 +73,6 @@
     "spaceId": {
       "type": "string",
       "x-semio-state": "config"
-    },
-    "clientId": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "clientName": {
-      "type": "string",
-      "x-semio-state": "config"
     }
   },
   "$defs": {

@@ -68,6 +68,7 @@
       "required": [
         "schema",
         "grants",
+        "physicalRetirement",
         "fixture",
         "expected"
       ],
@@ -84,6 +85,115 @@
           },
           "minItems": 3,
           "maxItems": 3
+        },
+        "physicalRetirement": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "directOwners",
+            "nestedOwners",
+            "oversizedMinimumBytes",
+            "subexactMaximumBytes",
+            "multiRootIngress",
+            "laws"
+          ],
+          "properties": {
+            "directOwners": {
+              "const": [
+                "bytes",
+                "strings",
+                "widgets",
+                "specs",
+                "neurons",
+                "synapses",
+                "previews",
+                "layout"
+              ]
+            },
+            "nestedOwners": {
+              "const": [
+                "orderedSet",
+                "orderedLayoutMap",
+                "orderedNodeMap",
+                "dynamicDictionary",
+                "dynamicValue",
+                "frontierMetadata",
+                "frontierPayload"
+              ]
+            },
+            "oversizedMinimumBytes": {
+              "type": "integer",
+              "minimum": 4097
+            },
+            "subexactMaximumBytes": {
+              "const": 4096
+            },
+            "multiRootIngress": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "firstCapacityBytes",
+                "secondCapacityBytes",
+                "ownerCount",
+                "laws"
+              ],
+              "properties": {
+                "firstCapacityBytes": {
+                  "type": "integer",
+                  "minimum": 4097
+                },
+                "secondCapacityBytes": {
+                  "type": "integer",
+                  "minimum": 4097
+                },
+                "ownerCount": {
+                  "const": 2
+                },
+                "laws": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "missingAdmissionReturnsOwner",
+                    "subexactAdmissionUnchanged",
+                    "preflightBeforeMovement",
+                    "retryTransfersOnce",
+                    "explicitCloseReleasesAll"
+                  ],
+                  "properties": {
+                    "missingAdmissionReturnsOwner": { "const": true },
+                    "subexactAdmissionUnchanged": { "const": true },
+                    "preflightBeforeMovement": { "const": true },
+                    "retryTransfersOnce": { "const": true },
+                    "explicitCloseReleasesAll": { "const": true }
+                  }
+                }
+              }
+            },
+            "laws": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "checkedCapacityBytes",
+                "childrenBeforeBacking",
+                "zeroGrantUnchanged",
+                "subexactGrantUnchanged",
+                "exactCapacityReleasedOnce",
+                "frontierReleasedLast",
+                "terminalLedgerZero",
+                "coldUsesDemand"
+              ],
+              "properties": {
+                "checkedCapacityBytes": { "const": true },
+                "childrenBeforeBacking": { "const": true },
+                "zeroGrantUnchanged": { "const": true },
+                "subexactGrantUnchanged": { "const": true },
+                "exactCapacityReleasedOnce": { "const": true },
+                "frontierReleasedLast": { "const": true },
+                "terminalLedgerZero": { "const": true },
+                "coldUsesDemand": { "const": true }
+              }
+            }
+          }
         },
         "fixture": {
           "type": "object",

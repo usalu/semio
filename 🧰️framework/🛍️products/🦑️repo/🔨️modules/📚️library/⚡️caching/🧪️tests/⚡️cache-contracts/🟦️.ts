@@ -26,6 +26,7 @@ import { testCommandImportClosure } from "../🔗️command-imports/🟦️.ts";
 import { testTrunkLockfile } from "../🔒️trunk-lockfile/🟦️.ts";
 import { testNativeDependencies } from "../📦️native-dependencies/🟦️.ts";
 import { testCargoCleanupBoundary } from "../🦀️cleanup-boundary/🟦️.ts";
+import { testGraphRevision } from "../🔁️graph-revision/🟦️.ts";
 import { testContainerPersistentState } from "../../📦️artifacts/🐳️containers/🧪️tests/🔒️persistent-state/🟦️.ts";
 import { testExtensionAttach } from "../../📦️artifacts/🐳️containers/🧪️tests/🧩️extension-attach/🟦️.ts";
 import { testBinaryenToolchain } from "../../🚀️bootstrap/🛠️tools/🕸️wasm/🧪️tests/🛠️binaryen-toolchain/🟦️.ts";
@@ -33,6 +34,7 @@ import { testWasmToolFingerprint } from "../../🚀️bootstrap/🛠️tools/�
 
 /** 🧪️ Verifies native source and command ownership against compiler and bundler input oracles. */
 export async function testCommandInputs(workspace: string, output: string): Promise<void> {
+  await testGraphRevision(workspace, output);
   await testWasmOptimizer(workspace, output);
   await testBinaryenToolchain(workspace, output);
   await testWasmToolFingerprint(workspace, output);
@@ -97,6 +99,8 @@ export async function testCommandInputs(workspace: string, output: string): Prom
   await testStylingPythonOutputs(workspace, output);
   const { testWgpuLiveActivation } = await import("../🧊️live-activation/🟦️.ts");
   await testWgpuLiveActivation(workspace, output);
+  const { testNativeRuntime } = await import("../🧊️native-runtime/🟦️.ts");
+  await testNativeRuntime(workspace, output);
   const { testPlaygroundInputView } = await import("../🎮️playground-input-view/🟦️.ts");
   await testPlaygroundInputView(workspace);
   const { testInferredNativeInputs } = await import("../../../../🧪️test/🕸️dependencies/🧪️tests/🦀️inputs/🟦️.ts");
@@ -270,11 +274,18 @@ export async function testRuntimeComponents(workspace: string): Promise<void> {
     return { ...metadata.semio, project, pluginId: metadata.component.package.slice(6), dependsOn: [...(metadata.semio.extends ? [metadata.semio.extends] : []), ...(metadata.semio["depends-on"] ?? [])] };
   });
   const targets = cacheInternals.playgroundPreparationTargets(paths, workspace, dev), projects = new Map(components.map((row: any) => [row.pluginId, row.project]));
+  const { testSelectedRuntimeDependencies } = await import("../🎯️selected-runtime/🟦️.ts");
+  testSelectedRuntimeDependencies(targets);
   let checked = 0;
   for (const component of components) for (const row of component.playground ?? []) for (const profile of ["dev", "release"]) {
     const expected = oracle(components, [component.pluginId]).map((id: string) => `${projects.get(id)}:materialize-${profile}`).sort();
     const actual = targets[`prepare-${row.variant}-react-${profile}`].dependsOn.filter((id: string) => id.endsWith(`:materialize-${profile}`)).sort();
     assert.deepEqual(actual, expected, `${row.variant} ${profile}: Cargo metadata and graphlib`);
+    const native = targets[`prepare-${row.variant}-native-${profile}`];
+    assert.equal(native.dependsOn[0], `@semio-tech/plugin-registry:session-${row.variant}`);
+    assert.deepEqual(native.dependsOn.slice(1).sort(), expected);
+    assert.ok(!native.dependsOn.some((id: string) => /renderer.*:(wasm|generate-)|:fonts$/.test(id)));
+
     if (profile === "release") {
       const name = `build-${row.variant}-react-release`, build = targets[name];
       assert.equal(build?.cache, true, `${name}: production needs a cacheable owner`);
@@ -383,13 +394,15 @@ export async function testNativePreparation(workspace: string, output: string): 
       assert.equal(lstatSync(target).mtimeMs === before, !row.rewritten, `${row.name}: mtime identity`);
     }
   } finally { rmSync(writeRoot, { recursive: true, force: true }); }
-  const native = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts")).href);
-  assert.equal(typeof native.validateNativeCargoArguments, "function");
-  for (const row of cases.arguments) if (row.valid) assert.doesNotThrow(() => native.validateNativeCargoArguments(row.operation, row.args)); else assert.throws(() => native.validateNativeCargoArguments(row.operation, row.args), /input contract/);
-  assert.equal(typeof native.artifactRustCargoArguments, "function");
-  for (const row of cases.artifactArguments) if (row.valid) assert.deepEqual(native.artifactRustCargoArguments(row.operation, row.args).cargoArgs, row.cargoArgs, row.operation); else assert.throws(() => native.artifactRustCargoArguments(row.operation, row.args), /input contract/);
-  assert.equal(typeof native.startNativeProgress, "function");
-  const progress: string[] = [], stopProgress = native.startNativeProgress(cases.artifactProgress.label, cases.artifactProgress.intervalMs, (line: string) => progress.push(line));
+  const nativeInput = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🎛️native-input/🟦️.ts")).href);
+  const ownedExecution = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts")).href);
+  const nativeBuild = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts")).href);
+  assert.equal(typeof nativeInput.validateNativeCargoArguments, "function");
+  for (const row of cases.arguments) if (row.valid) assert.doesNotThrow(() => nativeInput.validateNativeCargoArguments(row.operation, row.args)); else assert.throws(() => nativeInput.validateNativeCargoArguments(row.operation, row.args), /input contract/);
+  assert.equal(typeof nativeInput.artifactRustCargoArguments, "function");
+  for (const row of cases.artifactArguments) if (row.valid) assert.deepEqual(nativeInput.artifactRustCargoArguments(row.operation, row.args).cargoArgs, row.cargoArgs, row.operation); else assert.throws(() => nativeInput.artifactRustCargoArguments(row.operation, row.args), /input contract/);
+  assert.equal(typeof ownedExecution.startNativeProgress, "function");
+  const progress: string[] = [], stopProgress = ownedExecution.startNativeProgress(cases.artifactProgress.label, cases.artifactProgress.intervalMs, (line: string) => progress.push(line));
   await Bun.sleep(cases.artifactProgress.intervalMs * 4);
   stopProgress();
   assert.equal(progress.some((line) => new RegExp(cases.artifactProgress.pattern).test(line)), true, "artifact build progress must remain visible while Cargo waits");
@@ -467,12 +480,12 @@ writeFileSync(dependency, process.env.SEMIO_CAPTURE_REPLACEMENT_BYTES!);
     process.env.SEMIO_CAPTURE_PRIMARY_BYTES = cases.artifactCapture.primary;
     process.env.SEMIO_CAPTURE_REPLACEMENT_BYTES = cases.artifactCapture.replacement;
     process.env.SEMIO_CAPTURE_DELAY_MS = String(cases.artifactCapture.delayMs);
-    await native.buildCargoArtifacts("package/Cargo.toml", [], captureRoot);
+    await nativeBuild.buildCargoArtifacts("package/Cargo.toml", [], captureRoot);
     assert.equal(readFileSync(join(packageRoot, "dist/build/deps/libfixture_dependency.rlib"), "utf8"), cases.artifactCapture.dependency, "Cargo dependency must be captured before a successor can replace its shared output");
     assert.equal(readFileSync(join(packageRoot, "dist/build/libfixture_primary.rlib"), "utf8"), cases.artifactCapture.primary, "Cargo primary output must be captured from the same compiler event epoch");
     process.env.SEMIO_CAPTURE_MISSING = "1";
     const failureStarted = Date.now();
-    await assert.rejects(native.buildCargoArtifacts("package/Cargo.toml", [], captureRoot), /ENOENT/);
+    await assert.rejects(nativeBuild.buildCargoArtifacts("package/Cargo.toml", [], captureRoot), /ENOENT/);
     assert.ok(Date.now() - failureStarted < 5000, "A capture failure must cancel and await Cargo without leaving the build alive");
     assert.equal(readFileSync(join(packageRoot, "dist/build/deps/libfixture_dependency.rlib"), "utf8"), cases.artifactCapture.dependency, "A capture failure must preserve the previous dependency output");
     assert.equal(readFileSync(join(packageRoot, "dist/build/libfixture_primary.rlib"), "utf8"), cases.artifactCapture.primary, "A capture failure must preserve the previous primary output");
@@ -688,7 +701,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       assert.equal(disabled.cache, row.authored ? false : row.cache, row.authored ? `${row.target}: an unclassified name honors its owner's authored cache: false` : `${row.target} must not keep authored cache when policy is authoritative`);
       assert.equal(isCacheableTask({ cache: enabled.cache, continuous: enabled.continuous === true, target: { project: "probe", target: row.target }, overrides: {} }), row.cache, `${row.target}: nx isCacheableTask`);
     }
-    const selectionApi = await import("../../../🎮️playground/🟦️.ts");
+    const selectionApi = await import("../../../🎮️playground/🧭️selection/🟦️.ts");
     assert.equal(typeof selectionApi.loadFrameworkOsPlaygroundSelections, "function", "Development selection must read authored metadata before generation");
     const selectionFixture = mkdtempSync(join(ticketOutput(root, []), "playground-selection-"));
     try {
@@ -760,11 +773,15 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     }
     assert.ok(componentPackages > 0, "Component metadata must discover plugin producers");
     const fontProject = contracts.find((project) => project.name === vectors.fontAssets.project)!;
-    for (const [name, output] of [[vectors.fontAssets.tool, vectors.fontAssets.toolOutput], [vectors.fontAssets.producer, vectors.fontAssets.output]]) {
-      assert.equal(fontProject.targets[name]?.cache, true, `${name} must be separately cacheable`);
-      assert.deepEqual(fontProject.targets[name].outputs, [output]);
+    const fontToolProject = contracts.find((project) => project.name === vectors.fontAssets.toolProject)!;
+    for (const [project, name, output] of [[fontToolProject, vectors.fontAssets.tool, vectors.fontAssets.toolOutput], [fontProject, vectors.fontAssets.producer, vectors.fontAssets.output]] as const) {
+      assert.equal(project.targets[name]?.cache, true, `${name} must be separately cacheable`);
+      assert.deepEqual(project.targets[name].outputs, [output]);
     }
-    assert.deepEqual(fontProject.targets[vectors.fontAssets.producer].dependsOn, [vectors.fontAssets.tool]);
+    assert.deepEqual(fontProject.targets[vectors.fontAssets.producer].dependsOn, [`${vectors.fontAssets.toolProject}:${vectors.fontAssets.tool}`]);
+    const { testSelectedFontDependencies, testSelectedPackageIdentities } = await import("../🎯️selected-runtime/🟦️.ts");
+    testSelectedPackageIdentities(root);
+    await testSelectedFontDependencies(root);
     assert.ok(fontProject.targets[vectors.fontAssets.producer].inputs.some((input: any) => input.dependentTasksOutputFiles === "**/*"));
     const activationRoot = join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation");
     const activation = await import(join(activationRoot, "🟦️.ts"));
@@ -810,6 +827,8 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     for (const playground of playgrounds) {
       for (const engine of playground.engines) assert.ok(contracts.some((project) => resolve(root, project.root) === resolve(root, engine) && project.targets.wasm), `Engine ${engine} must name an authored producer`);
       for (const profile of vectors.playgroundPreparation.profiles) {
+        for (const command of ["prepare", "run", "smoke"]) assert.ok(configurations.some((row: any) => row.command === `bun nx run @semio-tech/framework-os-dev:${command}-${playground.variant}-native-${profile}`), "Missing native variant editor command");
+
         const targetName = `prepare-${playground.variant}-react-${profile}`, preparation = preparationProject.targets[targetName];
         assert.ok(preparation, `${targetName} needs declared prerequisites`);
         assert.equal(preparation.cache, true, `${targetName} only validates already Nx-materialized bytes and writes nothing`);
@@ -819,18 +838,18 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
         assert.ok(wgpuPreparation, `${wgpuTargetName} needs declared prerequisites`);
         assert.ok(wgpuPreparation.dependsOn.includes(`@semio-tech/framework-renderer-wgpu:${profile === "release" ? "wasm-release" : "wasm"}`));
         assert.equal(wgpuPreparation.cache, true, `${wgpuTargetName} validates completed prerequisites without publishing live state`);
-        assert.deepEqual(wgpuPreparation.outputs, [], `${wgpuTargetName} must mirror no module: the trunk bundle and the native runner both read pluginModulesRoot(profile)`);
+        assert.deepEqual(wgpuPreparation.outputs, [], `${wgpuTargetName} validates browser prerequisites without copying native modules`);
         assert.ok(wgpuPreparation.inputs.some((input: any) => input.dependentTasksOutputFiles === "**/*" && input.transitive), `${wgpuTargetName} must hash its whole transitive dependency closure`);
         const activationName = `activate-${playground.variant}-react-${profile}`, activationTarget = preparationProject.targets[activationName];
         assert.ok(activationTarget, `${activationName} must follow completed preparation`);
         assert.equal(activationTarget.cache, true, `${activationName} publishes into a variant/profile-scoped runtime root and is safe to replay`);
-        assert.deepEqual(activationTarget.outputs, [`{projectRoot}/dist/runtime/${profile}/${playground.variant}`]);
+        assert.deepEqual(activationTarget.outputs, [`{projectRoot}/dist/runtime/react/${profile}/${playground.variant}`]);
         assert.deepEqual(activationTarget.dependsOn, [targetName]);
         assert.equal(configurations.filter((configuration: any) => configuration.command === `bun nx run ${preparationProject.name}:${activationName}`).length, 1);
         const wgpuActivationName = `activate-${playground.variant}-wgpu-${profile}`, wgpuActivationTarget = preparationProject.targets[wgpuActivationName];
         assert.ok(wgpuActivationTarget, `${wgpuActivationName} must follow completed preparation`);
         assert.equal(wgpuActivationTarget.cache, false, `${wgpuActivationName} publishes live extensions and reload notifications on every activation`);
-        assert.deepEqual(wgpuActivationTarget.outputs, []);
+        assert.deepEqual(wgpuActivationTarget.outputs, [`{projectRoot}/dist/runtime/wgpu/${profile}/${playground.variant}`]);
         assert.deepEqual(wgpuActivationTarget.dependsOn, [wgpuTargetName]);
         for (const command of ["serve", "dev"]) {
           const serverName = `${command}-${playground.variant}-react-${profile}`, server = preparationProject.targets[serverName];
@@ -843,7 +862,8 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
           assert.equal(configurations.filter((configuration: any) => configuration.command === `bun nx run ${preparationProject.name}:${serverName}`).length, 1);
         }
         const components = buildPlaygroundSession(playground.variant).plugins.map((row: any) => `${componentLaunchers.find((entry) => entry.pluginId === row.pluginId)!.project}:materialize-${profile}`);
-        assert.deepEqual([...preparation.dependsOn].sort(), [...new Set([`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-${profile}`, vectors.playgroundPreparation.fonts, ...vectors.playgroundPreparation.engines, ...components])].sort());
+        const engines = playground.engines.map((engine: string) => contracts.find((project) => resolve(root, project.root) === resolve(root, engine))!.name + ":wasm");
+        assert.deepEqual([...preparation.dependsOn].sort(), [...new Set([`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-${profile}`, vectors.playgroundPreparation.fonts, ...engines, ...components])].sort());
         assert.equal(configurations.filter((configuration: any) => configuration.command === `bun nx run ${preparationProject.name}:${targetName}`).length, 1);
       }
       const target = `session-${playground.variant}`;
@@ -938,6 +958,8 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     assert.ok(styling.targets.generate.dependsOn.includes(bootstrap.stylingGenerator));
     assert.deepEqual(styling.targets.generate.outputs, []);
     const nativeGraph = createRequire(testSource.url)("@nx/devkit").readCachedProjectGraph();
+    const { testSelectedRuntimeDependencies } = await import("../🎯️selected-runtime/🟦️.ts");
+    testSelectedRuntimeDependencies(preparationProject.targets, nativeGraph);
     const { createTaskGraph } = createRequire(testSource.url)("nx/src/tasks-runner/create-task-graph");
     for (const [name, target] of Object.entries(styling.targets) as [string, any][]) if (target.options.command.includes(" test")) {
       const tasks = createTaskGraph(nativeGraph, {}, [styling.name], [name], undefined, {}, false);
@@ -947,7 +969,8 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     const ts = createRequire(testSource.url)("typescript");
     for (const row of vectors.engineOutputs) {
       const project = contracts.find((project) => project.name === row.project)!;
-      assert.deepEqual(project.targets.wasm.outputs, row.outputs);
+      const physicalOutputs = (outputs: string[]): string[] => outputs.map(output => cacheInternals.resolveOutputPath(output, project.root, root)).sort();
+      assert.deepEqual(physicalOutputs(project.targets.wasm.outputs), physicalOutputs(row.outputs));
       const engineSource = ts.createSourceFile("engine.ts", readFileSync(join(root, project.root, "📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
       const outputs: string[] = [];
       const inspect = (node: any): void => {
@@ -994,9 +1017,10 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       assert.equal(hostProject.targets[target].dependsOn.includes("@semio-tech/framework-os-scale-fixture:build-wasm"), renderer === "native");
       assert.equal(hostProject.targets[target].dependsOn.includes("@semio-tech/framework-renderer-wgpu:native-build"), renderer === "native");
     }
-    assert.deepEqual(resolveInvocation(["run", "@semio-tech/framework-renderer-wgpu:native", "--", "s", "--release"]).args, ["run", "@semio-tech/framework-renderer-wgpu:native-release", "--", "s"]);
-    const hostSource = ts.createSourceFile("host.ts", readFileSync(join(root, hostProject.root, "📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+    assert.deepEqual(resolveInvocation(["run", "@semio-tech/framework-renderer-wgpu:native", "--", "s", "--release"]).args, ["run", "@semio-tech/framework-os-dev:run-s-native-release"]);
+    const hostSource = ts.createSourceFile("host.ts", readFileSync(join(root, vectors.platformEnvironment.source), "utf8"), ts.ScriptTarget.Latest, true);
     const apple = hostSource.statements.find((node: any) => ts.isFunctionDeclaration(node) && node.name?.text === "ensureAppleDeveloperDir");
+    assert.ok(apple, `Missing Apple tooling selector in ${vectors.platformEnvironment.source}`);
     const selectApple = ts.transpileModule(apple.getText(hostSource), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
     for (const platform of vectors.platformEnvironment.platforms) {
       const host = { platform, env: {} as Record<string, string> };
@@ -1010,7 +1034,10 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     assert.equal(wasmBindgenVersion(lock), lockOracle.package.find((pkg: any) => pkg.name === "wasm-bindgen").version);
     for (const row of vectors.wasm) {
       const project = contracts.find((project) => project.name === row.project);
-      assert.ok(project?.targets.wasm.outputs?.includes(row.output), `${row.project}:wasm must own ${row.output}`);
+      assert.ok(project, row.project);
+      const expectedOutput = cacheInternals.resolveOutputPath(row.output, project.root, root);
+      assert.ok(expectedOutput, row.output);
+      assert.ok(project.targets.wasm.outputs?.some((output: string) => cacheInternals.resolveOutputPath(output, project.root, root) === expectedOutput), `${row.project}:wasm must own ${row.output}`);
       assert.notEqual(project?.targets.wasm.cache, false, `${row.project}:wasm must be cacheable`);
       assert.ok(project?.namedInputs?.default.some((input: any) => input.env === "RUSTFLAGS"), `${row.project} must preserve toolchain inputs`);
       if (row.output.startsWith("{projectRoot}/") && !row.output.includes("../")) assert.ok(project?.namedInputs?.default.includes(`!${row.output}/**/*`), `${row.project} must exclude its output in the project fileset`);
@@ -1101,10 +1128,10 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     const { manifest: _manifest, ...expectedGo } = vectors.go;
     assert.deepEqual(cacheInternals.goDependencies(goManifest), expectedGo);
     assert.deepEqual(cacheInternals.goDependencies(goManifest), { module: go.Module.Path, requires: go.Require.map((row: any) => row.Path), replacements: go.Replace.map((row: any) => ({ module: row.Old.Path, path: row.New.Path })) });
-    assert.throws(() => plugin.createNodesV2[1]([`${graph.leaf.directory}/📋️project.json`, "other/📋️project.json"], {}, { workspaceRoot: fixture }), new RegExp(`duplicate.*${graph.leaf.name}`, "i"));
-    const projects = plugin.createNodesV2[1]([`${graph.leaf.directory}/📋️project.json`], {}, { workspaceRoot: fixture });
+    await assert.rejects(async () => await plugin.createNodesV2[1]([`${graph.leaf.directory}/📋️project.json`, "other/📋️project.json"], {}, { workspaceRoot: fixture }), new RegExp(`duplicate.*${graph.leaf.name}`, "i"));
+    const projects = await plugin.createNodesV2[1]([`${graph.leaf.directory}/📋️project.json`], {}, { workspaceRoot: fixture });
     assert.equal(projects[0][1].projects[graph.leaf.name].targets[graph.leaf.derivedTarget].cache, true);
-    const rooted = plugin.createNodesV2[1](["📋️project.json"], {}, { workspaceRoot: fixture });
+    const rooted = await plugin.createNodesV2[1](["📋️project.json"], {}, { workspaceRoot: fixture });
     const resolvedRoot = rooted[0][1].projects[graph.workspaceRoot.name].targets;
     for (const name of graph.workspaceRoot.targets) {
       const expected = vectors.policies.find((row) => row.target === name);

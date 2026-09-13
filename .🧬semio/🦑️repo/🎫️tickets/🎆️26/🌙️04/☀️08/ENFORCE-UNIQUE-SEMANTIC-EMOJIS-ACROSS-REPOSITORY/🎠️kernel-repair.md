@@ -8,44 +8,44 @@ Every source-controlled file and directory in this tree was inspected by role. U
 
 Paths below are relative to the scoped kernel root. Each choice is explicit, not selected by a renaming algorithm. An arrow changes only the named basename unless a full relative destination is shown.
 
-| Parent | Original | Handpicked | Reason |
-| --- | --- | --- | --- |
-| root | `🧪️oracle` | `🔮️oracle` | Independent reference implementation |
-| root | `🧪️fixtures` | `🧫️fixtures` | Controlled sample inputs, distinct from executable tests |
-| `🧪️tests` | `🖱️satisfy-version-requirements` | `✅️satisfy-version-requirements` | Requirement satisfaction, not pointer input |
-| `🧫️fixtures/📇️descriptor-load` | `🔣️.schema.json` | `🧬️.schema.json` | Schema distinct from the sibling JSON fixture |
-| `🧫️fixtures/🚪️turn-patch-owner` | `🔣️.schema.json` | `🧬️.schema.json` | Schema distinct from the sibling JSON fixture |
-| `📥️poll/🏘️composition` | `🧬️contract` | `📜️contract` | Written composition ownership contract |
-| `📥️poll/🏘️composition` | `🧬️🧬️schema` | `🧬️schema` | Domain composition shape |
-| `📥️poll/🏘️composition` | `🧪️🧬️🌾️🌾️schema` | `📐️fixture-schema` | Shape of neutral test cases, distinct from domain shape |
-| `📥️poll/🏘️composition` | `🧪️fixture` | `🧫️fixture` | Neutral composition examples |
-| `📤️return/🏠️source` | `🧪️fixture` | `🧫️fixture` | Source ownership examples |
-| `📤️return/🏠️source` | `🧪️schema` | `🧬️schema` | Source fixture shape |
-| `📤️return/🏠️source/📚️entries` | `🧪️fixture` | `🧫️fixture` | FIFO entry examples |
-| `📤️return/🏠️source/📚️entries` | `🧪️schema` | `🧬️schema` | Entry fixture shape, distinct from executable tests |
-| `📤️return/📦️content` | `🧬️wire` | `🔌️wire` | Wire-format connection contract |
-| `📤️return/📦️content` | `🧪️fixture` | `🧫️fixture` | Content byte vectors |
-| `📤️return/📦️content` | `🧪️🧬️🌾️🌾️schema` | `📐️fixture-schema` | Fixture shape, distinct from content declaration schema |
-| `📤️return/📦️content` | `🧪️framing` | `🖼️framing` | Frame boundary tests |
-| `📤️return/📦️content` | `🧪️dialects` | `🗣️dialects` | Field encoding dialect tests |
-| `📤️return/📦️content/💌️message` | `🧪️fixture` | `🧫️fixture` | Message byte vectors |
-| `📤️return/📦️content/💌️message` | `🧪️schema` | `🧬️schema` | Message fixture shape, distinct from executable tests |
-| `📤️return/📦️content/📥️input` | `🧪️fixture` | `🧫️fixture` | Input byte vectors |
-| `📤️return/📦️content/📥️input` | `🧪️schema` | `🧬️schema` | Input fixture shape |
-| `📤️return/📦️content/📥️input/🪪️authority` | `🧪️fixture` | `🧫️fixture` | Authority lifetime examples |
-| `📤️return/📦️content/📥️input/🪪️authority` | `🧪️schema` | `🧬️schema` | Authority fixture shape |
-| `📤️return/📦️content/📥️input/🏗️builder` | `🧬️contract` | `📜️contract` | Builder binding contract |
-| `📤️return/📦️content/📥️input/🏗️builder` | `🧬️🧬️schema` | `🧬️schema` | Builder binding contract shape |
-| `📤️return/📦️content/📥️input/🏗️builder` | `🧪️🧬️🌾️🌾️schema` | `📐️fixture-schema` | Builder trace fixture shape |
-| `📤️return/📦️content/📥️input/🏗️builder` | `🧪️fixture` | `🧫️fixture` | Builder binding traces |
-| `📤️return/📦️content/📥️input/🧾️release` | `🧬️contract` | `📜️contract` | Release evidence contract |
-| `📤️return/📦️content/📥️input/🧾️release` | `🧬️🧬️schema` | `🧬️schema` | Release contract shape |
-| `📤️return/📦️content/📥️input/🧾️release` | `🧪️🧬️🌾️🌾️schema` | `📐️fixture-schema` | Release trace fixture shape |
-| `📤️return/📦️content/📥️input/🧾️release` | `🧪️fixture` | `🧫️fixture` | Release readiness and identity traces |
-| `📤️return/📦️content/📥️input/📦️payload` | `🧬️contract` | `📜️contract` | Resident payload association contract |
-| `📤️return/📦️content/📥️input/📦️payload` | `🧬️🧬️schema` | `🧬️schema` | Payload contract shape |
-| `📤️return/📦️content/📥️input/📦️payload` | `🧪️🧬️🌾️🌾️schema` | `📐️fixture-schema` | Payload lifetime fixture shape |
-| `📤️return/📦️content/📥️input/📦️payload` | `🧪️fixture` | `🧫️fixture` | Payload detachment and lifetime examples |
+| Parent                                   | Original                         | Handpicked                       | Reason                                                   |
+| ---------------------------------------- | -------------------------------- | -------------------------------- | -------------------------------------------------------- |
+| root                                     | `🧪️oracle`                       | `🔮️oracle`                       | Independent reference implementation                     |
+| root                                     | `🧪️fixtures`                     | `🧫️fixtures`                     | Controlled sample inputs, distinct from executable tests |
+| `🧪️tests`                                | `🖱️satisfy-version-requirements` | `✅️satisfy-version-requirements` | Requirement satisfaction, not pointer input              |
+| `🧫️fixtures/📇️descriptor-load`           | `🔣️.schema.json`                 | `🧬️.schema.json`                 | Schema distinct from the sibling JSON fixture            |
+| `🧫️fixtures/🚪️turn-patch-owner`          | `🔣️.schema.json`                 | `🧬️.schema.json`                 | Schema distinct from the sibling JSON fixture            |
+| `📥️poll/🏘️composition`                   | `🧬️contract`                     | `📜️contract`                     | Written composition ownership contract                   |
+| `📥️poll/🏘️composition`                   | `🧬️🧬️schema`                     | `🧬️schema`                       | Domain composition shape                                 |
+| `📥️poll/🏘️composition`                   | `🧪️🧬️🌾️🌾️schema`                 | `📐️fixture-schema`               | Shape of neutral test cases, distinct from domain shape  |
+| `📥️poll/🏘️composition`                   | `🧪️fixture`                      | `🧫️fixture`                      | Neutral composition examples                             |
+| `📤️return/🏠️source`                      | `🧪️fixture`                      | `🧫️fixture`                      | Source ownership examples                                |
+| `📤️return/🏠️source`                      | `🧪️schema`                       | `🧬️schema`                       | Source fixture shape                                     |
+| `📤️return/🏠️source/📚️entries`            | `🧪️fixture`                      | `🧫️fixture`                      | FIFO entry examples                                      |
+| `📤️return/🏠️source/📚️entries`            | `🧪️schema`                       | `🧬️schema`                       | Entry fixture shape, distinct from executable tests      |
+| `📤️return/📦️content`                     | `🧬️wire`                         | `🔌️wire`                         | Wire-format connection contract                          |
+| `📤️return/📦️content`                     | `🧪️fixture`                      | `🧫️fixture`                      | Content byte vectors                                     |
+| `📤️return/📦️content`                     | `🧪️🧬️🌾️🌾️schema`                 | `📐️fixture-schema`               | Fixture shape, distinct from content declaration schema  |
+| `📤️return/📦️content`                     | `🧪️framing`                      | `🖼️framing`                      | Frame boundary tests                                     |
+| `📤️return/📦️content`                     | `🧪️dialects`                     | `🗣️dialects`                     | Field encoding dialect tests                             |
+| `📤️return/📦️content/💌️message`           | `🧪️fixture`                      | `🧫️fixture`                      | Message byte vectors                                     |
+| `📤️return/📦️content/💌️message`           | `🧪️schema`                       | `🧬️schema`                       | Message fixture shape, distinct from executable tests    |
+| `📤️return/📦️content/📥️input`             | `🧪️fixture`                      | `🧫️fixture`                      | Input byte vectors                                       |
+| `📤️return/📦️content/📥️input`             | `🧪️schema`                       | `🧬️schema`                       | Input fixture shape                                      |
+| `📤️return/📦️content/📥️input/🪪️authority` | `🧪️fixture`                      | `🧫️fixture`                      | Authority lifetime examples                              |
+| `📤️return/📦️content/📥️input/🪪️authority` | `🧪️schema`                       | `🧬️schema`                       | Authority fixture shape                                  |
+| `📤️return/📦️content/📥️input/🏗️builder`   | `🧬️contract`                     | `📜️contract`                     | Builder binding contract                                 |
+| `📤️return/📦️content/📥️input/🏗️builder`   | `🧬️🧬️schema`                     | `🧬️schema`                       | Builder binding contract shape                           |
+| `📤️return/📦️content/📥️input/🏗️builder`   | `🧪️🧬️🌾️🌾️schema`                 | `📐️fixture-schema`               | Builder trace fixture shape                              |
+| `📤️return/📦️content/📥️input/🏗️builder`   | `🧪️fixture`                      | `🧫️fixture`                      | Builder binding traces                                   |
+| `📤️return/📦️content/📥️input/🧾️release`   | `🧬️contract`                     | `📜️contract`                     | Release evidence contract                                |
+| `📤️return/📦️content/📥️input/🧾️release`   | `🧬️🧬️schema`                     | `🧬️schema`                       | Release contract shape                                   |
+| `📤️return/📦️content/📥️input/🧾️release`   | `🧪️🧬️🌾️🌾️schema`                 | `📐️fixture-schema`               | Release trace fixture shape                              |
+| `📤️return/📦️content/📥️input/🧾️release`   | `🧪️fixture`                      | `🧫️fixture`                      | Release readiness and identity traces                    |
+| `📤️return/📦️content/📥️input/📦️payload`   | `🧬️contract`                     | `📜️contract`                     | Resident payload association contract                    |
+| `📤️return/📦️content/📥️input/📦️payload`   | `🧬️🧬️schema`                     | `🧬️schema`                       | Payload contract shape                                   |
+| `📤️return/📦️content/📥️input/📦️payload`   | `🧪️🧬️🌾️🌾️schema`                 | `📐️fixture-schema`               | Payload lifetime fixture shape                           |
+| `📤️return/📦️content/📥️input/📦️payload`   | `🧪️fixture`                      | `🧫️fixture`                      | Payload detachment and lifetime examples                 |
 
 ## Verification
 

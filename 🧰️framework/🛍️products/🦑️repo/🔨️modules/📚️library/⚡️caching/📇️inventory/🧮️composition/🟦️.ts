@@ -46,9 +46,24 @@ export function composeInventory(root: string, files: readonly string[], graph: 
     for (const [name, target] of Object.entries(project.targets)) {
       const path = sources[project.name]![name]!;
       const identity = `${project.name}:${name}`;
-      commands.push({ project: project.name, target: name, file: path, executor: target.executor, configurations: target.configurations, cwd: target.options?.cwd ?? root, command: target.options?.command, cache: target.cache === true, continuous: target.continuous === true, inputs: target.inputs, outputs: target.outputs ?? [], dependsOn: target.dependsOn ?? [] });
-      if (typeof target.options?.command === "string" && (!/^bun(?: --watch)? (?:"[^"\n]*📜️script\.ts"|[^\s]*📜️script\.ts) [^\n]+$/.test(target.options.command) || /(?:&&|\|\|)/.test(target.options.command))) report("ORCH-01", path, identity, target.options.command, "Invoke one script and declare prerequisite ordering in dependsOn");
-      if ((target.cache || /^(build(?:-|$)|wasm$|native-build$|package$|extension-package$)/.test(name)) && !Object.hasOwn(target, "outputs")) report("CACHE-06", path, identity, "Target still needs an explicit output contract", "Declare complete owned deliverables, or outputs: [] for a verified read-only task");
+      commands.push({
+        project: project.name,
+        target: name,
+        file: path,
+        executor: target.executor,
+        configurations: target.configurations,
+        cwd: target.options?.cwd ?? root,
+        command: target.options?.command,
+        cache: target.cache === true,
+        continuous: target.continuous === true,
+        inputs: target.inputs,
+        outputs: target.outputs ?? [],
+        dependsOn: target.dependsOn ?? [],
+      });
+      if (typeof target.options?.command === "string" && (!/^bun(?: --watch)? (?:"[^"\n]*📜️script\.ts"|[^\s]*📜️script\.ts) [^\n]+$/.test(target.options.command) || /(?:&&|\|\|)/.test(target.options.command)))
+        report("ORCH-01", path, identity, target.options.command, "Invoke one script and declare prerequisite ordering in dependsOn");
+      if ((target.cache || /^(build(?:-|$)|wasm$|native-build$|package$|extension-package$)/.test(name)) && !Object.hasOwn(target, "outputs"))
+        report("CACHE-06", path, identity, "Target still needs an explicit output contract", "Declare complete owned deliverables, or outputs: [] for a verified read-only task");
       for (const output of target.outputs ?? []) {
         const ownedPath = output.replaceAll("{workspaceRoot}", root).replaceAll("{projectRoot}", join(root, project.root));
         artifacts.push({ owner: identity, path: slash(relative(root, resolve(root, ownedPath))), category: "deliverable", cacheability: Boolean(target.cache), retention: "replace-on-next-success", producer: identity });
@@ -63,7 +78,8 @@ export function composeInventory(root: string, files: readonly string[], graph: 
     } catch {
       continue;
     }
-    if (Object.keys(json.scripts ?? {}).length && projects.some((project) => project.root === dirname(file) || (project.root === "." && file === "package.json")) && JSON.stringify(json.nx?.includedScripts) !== "[]") report("ORCH-05", file, "nx.includedScripts", "Nx re-infers forwarding scripts and replaces their implementation targets", "Set nx.includedScripts to [] for forwarding package scripts");
+    if (Object.keys(json.scripts ?? {}).length && projects.some((project) => project.root === dirname(file) || (project.root === "." && file === "package.json")) && JSON.stringify(json.nx?.includedScripts) !== "[]")
+      report("ORCH-05", file, "nx.includedScripts", "Nx re-infers forwarding scripts and replaces their implementation targets", "Set nx.includedScripts to [] for forwarding package scripts");
     for (const [name, command] of Object.entries(json.scripts ?? {})) {
       commands.push({ file, script: name, command, cwd: dirname(file) });
       const bootstrap = operations.bootstrapExecutable ?? CACHE_BOOTSTRAP_EXECUTABLE;

@@ -18,7 +18,7 @@ import { PLAYGROUND_SESSION_ARTIFACT_KEY, renderPlaygroundSessionTypeScript, sta
 
 type Fixture = {
   readonly schemaVersion: 1;
-  readonly default: { readonly variant: string; readonly sourcePath: string; readonly producerScript: string };
+  readonly default: { readonly variant: string; readonly sourcePath: string; readonly producerScript: string; readonly producerSource: string };
   readonly isolation: {
     readonly canonicalOutputRoot: string;
     readonly stagedOutputRoot: string;
@@ -86,9 +86,9 @@ describe("playground session output ownership", () => {
     expect(existsSync(absolute(fixture.isolation.resolverSource))).toBe(true);
     expect(fixture.staging.artifactKey).toBe(PLAYGROUND_SESSION_ARTIFACT_KEY);
     expect(new Set(fixture.staging.variants.map((row) => row.variant)).size).toBe(2);
-    const devSource = readFileSync(absolute(fixture.default.producerScript), "utf8");
+    const devSource = readFileSync(absolute(fixture.default.producerSource), "utf8");
     const ensureStart = devSource.indexOf("export async function ensurePluginRegistry");
-    const ensureEnd = devSource.indexOf("\nfunction resolvePluginBuildTargets", ensureStart);
+    const ensureEnd = devSource.indexOf("\nexport { assertPluginCatalogComplete, buildPluginCatalog }", ensureStart);
     expect(ensureStart).toBeGreaterThanOrEqual(0);
     expect(ensureEnd).toBeGreaterThan(ensureStart);
     expect(devSource.slice(ensureStart, ensureEnd)).not.toContain("writePlaygroundSession");

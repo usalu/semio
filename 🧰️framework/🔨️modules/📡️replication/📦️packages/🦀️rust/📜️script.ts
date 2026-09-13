@@ -4,7 +4,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo, runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
-import { buildCargoArtifacts } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts";
+import { buildCargoArtifacts } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import { blake3Hex } from "../../../🔏️hash/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -93,7 +94,6 @@ export class RetainedVerificationScript extends BundleScript {
     const { default: crc } = await import("crc-32/crc32c.js");
     const { inflateRawSync } = await import("node:zlib");
     const leb = await import("@webassemblyjs/leb128");
-    const { blake3Hex } = await import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");
     const owner = join(this.root, "../../📐️format/🔎️verification");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
     const schema = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
@@ -202,7 +202,6 @@ class RetainedRecordObservationScript extends BundleScript {
     const { default: Ajv } = await import("ajv/dist/2020.js");
     const { default: crc } = await import("crc-32/crc32c.js");
     const leb = await import("@webassemblyjs/leb128");
-    const { blake3Hex } = await import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");
     const owner = join(this.root, "../../📐️format/🔎️verification/🧾️record");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: true }); const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));

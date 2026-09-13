@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { createFlowBrowserRuntime } from "../../📦️packages/🟨️javascript/🌐️flow-browser.js";
+import { createFlowBrowserRuntime } from "../../🌐️browser/🏃️runtime/🟨️.js";
 import { MockFlowBridge } from "../🎭️mock-flow-bridge/🟦️.ts";
 
 interface FlowOpenFailureFixture {

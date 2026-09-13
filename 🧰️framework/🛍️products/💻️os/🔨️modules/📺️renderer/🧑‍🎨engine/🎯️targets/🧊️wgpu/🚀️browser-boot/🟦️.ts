@@ -1,7 +1,7 @@
 //#region 🧲️PlatformBoot
 /** @emoji 🧵️ Browser UI isolate host for the dedicated frame Worker. */
 
-import { BrowserFrameTransport, type BrowserFrameFallbackState, type BrowserFrameIntrospectionProbe, type BrowserFramePointer, type BrowserFrameWorkerFaultCode } from "../🚚️browser-frame-transport/🟦️.ts";
+import { BrowserFrameTransport, browserFrameEventFromDom, browserFrameEventIsReplaceable, type BrowserFrameDomEvent, type BrowserFrameFallbackState, type BrowserFrameIntrospectionProbe, type BrowserFrameWorkerFaultCode } from "../🚚️browser-frame-transport/🟦️.ts";
 import { setInteractiveJobPort } from "../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔌️Ports/📡️interactive-jobs/🟦️.ts";
 import { TURN_DIAGNOSTICS_KEY, setTurnDiagnostics } from "../⏱️turn-budget/🟦️.ts";
 import { describeBrowserBootPhase } from "../🫀️boot-liveness/🟦️.ts";
@@ -152,46 +152,42 @@ function renderFault(root: HTMLElement, code: string, detail: string, state?: Br
 function wireInput(canvas: HTMLCanvasElement, transport: BrowserFrameTransport): () => void {
   const abort = new AbortController();
   const options = { signal: abort.signal };
-  const pointer = (event: PointerEvent): BrowserFramePointer => ({
-    pointerId: event.pointerId,
-    pointerKind: event.pointerType === "touch" || event.pointerType === "pen" ? event.pointerType : "mouse",
-    x: event.offsetX * window.devicePixelRatio,
-    y: event.offsetY * window.devicePixelRatio,
-    pressure: event.pressure || undefined,
-    tiltX: event.tiltX || undefined,
-    tiltY: event.tiltY || undefined,
-  });
   const observed = (site: string, startedAt: number) => void transport.observeUiTurn(site, performance.now() - startedAt);
-  canvas.addEventListener("pointermove", (event) => {
-    const startedAt = performance.now();
-    transport.enqueueReplaceable({ kind: "pointer-move", ...pointer(event) });
-    observed("pointer-move", startedAt);
-  }, options);
+  /** 🎮️ Hands ONE observed DOM input to the transport through the shared projection, on the lane that
+   * projection names. Every input listener below is therefore focus/capture plus this call. */
+  const admit = (dom: BrowserFrameDomEvent, startedAt: number): void => {
+    const event = browserFrameEventFromDom(dom, window.devicePixelRatio || 1);
+    if (browserFrameEventIsReplaceable(event)) transport.enqueueReplaceable(event);
+    else transport.enqueueLossless(event);
+    observed(dom.type, startedAt);
+  };
+  const pointer = (event: PointerEvent, type: "pointermove" | "pointerdown" | "pointerup"): BrowserFrameDomEvent => ({
+    type,
+    pointerId: event.pointerId,
+    pointerType: event.pointerType,
+    offsetX: event.offsetX,
+    offsetY: event.offsetY,
+    pressure: event.pressure,
+    tiltX: event.tiltX,
+    tiltY: event.tiltY,
+    button: event.button,
+  });
+  canvas.addEventListener("pointermove", (event) => admit(pointer(event, "pointermove"), performance.now()), options);
   canvas.addEventListener("pointerdown", (event) => {
     const startedAt = performance.now();
     canvas.focus({ preventScroll: true });
     canvas.setPointerCapture(event.pointerId);
-    transport.enqueueLossless({ kind: "pointer-down", ...pointer(event), button: event.button === 2 ? "secondary" : event.button === 1 ? "middle" : "primary" });
-    observed("pointer-down", startedAt);
+    admit(pointer(event, "pointerdown"), startedAt);
   }, options);
-  canvas.addEventListener("pointerup", (event) => {
-    const startedAt = performance.now();
-    transport.enqueueLossless({ kind: "pointer-up", ...pointer(event), button: event.button === 2 ? "secondary" : event.button === 1 ? "middle" : "primary" });
-    observed("pointer-up", startedAt);
-  }, options);
+  canvas.addEventListener("pointerup", (event) => admit(pointer(event, "pointerup"), performance.now()), options);
   canvas.addEventListener("wheel", (event) => {
     const startedAt = performance.now();
     event.preventDefault();
-    transport.enqueueReplaceable({ kind: "wheel", x: event.offsetX * window.devicePixelRatio, y: event.offsetY * window.devicePixelRatio, deltaX: event.deltaX, deltaY: event.deltaY });
-    observed("wheel", startedAt);
+    admit({ type: "wheel", offsetX: event.offsetX, offsetY: event.offsetY, deltaX: event.deltaX, deltaY: event.deltaY }, startedAt);
   }, { ...options, passive: false });
-  const key = (event: KeyboardEvent, kind: "key-down" | "key-up") => {
-    const startedAt = performance.now();
-    transport.enqueueLossless({ kind, key: event.key, shift: event.shiftKey, ctrl: event.ctrlKey, alt: event.altKey, meta: event.metaKey });
-    observed(kind, startedAt);
-  };
-  canvas.addEventListener("keydown", (event) => void key(event, "key-down"), options);
-  canvas.addEventListener("keyup", (event) => void key(event, "key-up"), options);
+  const key = (event: KeyboardEvent, type: "keydown" | "keyup") => admit({ type, key: event.key, shift: event.shiftKey, ctrl: event.ctrlKey, alt: event.altKey, meta: event.metaKey }, performance.now());
+  canvas.addEventListener("keydown", (event) => void key(event, "keydown"), options);
+  canvas.addEventListener("keyup", (event) => void key(event, "keyup"), options);
   canvas.addEventListener("compositionstart", () => {
     const startedAt = performance.now();
     transport.enqueueLossless({ kind: "ime-start" });
@@ -272,7 +268,7 @@ async function mount(root: HTMLElement): Promise<void> {
       status.remove();
       detachIntrospection = attachIntrospectionBindings(transport);
       cleanupInput = wireInput(canvas, transport);
-      transport.enqueueReplaceable({ kind: "resize", width, height, dpr });
+      transport.enqueueReplaceable(browserFrameEventFromDom({ type: "resize", clientWidth: canvas.clientWidth, clientHeight: canvas.clientHeight }, dpr) as Extract<ReturnType<typeof browserFrameEventFromDom>, { kind: "resize" }>);
       canvas.focus({ preventScroll: true });
     },
     onDirectives: ({ cursor, fullscreen }) => {
@@ -290,7 +286,7 @@ async function mount(root: HTMLElement): Promise<void> {
   const resize = new ResizeObserver(() => {
     const startedAt = performance.now();
     const nextDpr = window.devicePixelRatio || 1;
-    transport.enqueueReplaceable({ kind: "resize", width: Math.max(1, Math.round(canvas.clientWidth * nextDpr)), height: Math.max(1, Math.round(canvas.clientHeight * nextDpr)), dpr: nextDpr });
+    transport.enqueueReplaceable(browserFrameEventFromDom({ type: "resize", clientWidth: canvas.clientWidth, clientHeight: canvas.clientHeight }, nextDpr) as Extract<ReturnType<typeof browserFrameEventFromDom>, { kind: "resize" }>);
     transport.observeUiTurn("resize-observer", performance.now() - startedAt);
   });
   resize.observe(canvas);

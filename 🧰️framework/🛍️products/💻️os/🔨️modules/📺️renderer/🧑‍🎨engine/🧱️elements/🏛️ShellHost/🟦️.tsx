@@ -1171,7 +1171,7 @@ export interface FrameworkOsShellProps {
 
 //#region 🔖️Identity
 /** 🪪️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C3 — reads one
- * `VITE_S_*` compile-time define (`💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts`'s
+ * `VITE_S_*` compile-time define (`💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts`'s
  * `define` block). Guarded for non-Vite embeds (SSR/tests/other bundlers) where `import.meta.env` is
  * absent — mirrors `🐚️Shell/🟦️.tsx`'s `readViteAppRoleEnv` idiom (that file is out of this
  * lane's lease, so re-implemented locally rather than imported). Returns `undefined` for an unset/
@@ -1949,6 +1949,10 @@ function FrameworkOsShellInner({
   const lastDispatchedExampleIdRef = useRef("");
   const localHistoryOrderRef = useRef(0);
   const { loadedPlugins, pluginStatusById, pluginSupervisorById, session, error, sessionFault, instanceFault } = shellState.pluginRuntime;
+  // 🌐️ Read with the other render-time `shellState` slice above the memo block below: `spacePrograms`'s dependency
+  // array reads `uiLocale`/`uiTerminology` during this render, and a `const` declared after it is still in its
+  // temporal dead zone there — the shell then throws `Cannot access 'uiLocale' before initialization` on first paint.
+  const { uiAppearance, uiLayout, uiDriverId, uiCustomDrivers, uiDriverDraft, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft, uiKeybindingOverrides } = shellState.uiPrefs;
   const boardSessionFactory = useMemo(() => resolveAppSurfaceSessionFactory(surfaceSessionFactories ?? [], session ? { pluginId: session.pluginId, appId: session.app.id, instanceId: session.instanceId } : null), [surfaceSessionFactories, session?.pluginId, session?.app.id, session?.instanceId]);
   const applyHistoryPatch = useCallback((patch: HistoryPatch | undefined, replace = false) => {
     if (!patch) return;
@@ -2139,7 +2143,6 @@ function FrameworkOsShellInner({
   const liveDialogRef = useRef(overlayDialog);
   liveDialogRef.current = overlayDialog;
   const { activeTutorialId, playing: tutorialPlaying, rate: tutorialRate, muted: tutorialMuted, captionsOn: tutorialCaptionsOn, recording: tutorialRecording, deviated: tutorialDeviated } = shellState.tutorial;
-  const { uiAppearance, uiLayout, uiDriverId, uiCustomDrivers, uiDriverDraft, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft, uiKeybindingOverrides } = shellState.uiPrefs;
   useEffect(
     () =>
       subscribeUiPreferences(scope.storage, (preferences) => {
@@ -3500,7 +3503,7 @@ function FrameworkOsShellInner({
       dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
       dispatch({ type: "SET_ERROR", value: null });
     },
-    [hostConfig, appId, appRole, pluginFilter],
+    [hostConfig, hostApp, appId, appRole, pluginFilter],
   );
 
   /** 🚑️ ONE watchdog kill must not be a fatal boot. Losing the shard that was running the primary
@@ -4299,6 +4302,7 @@ function FrameworkOsShellInner({
           ...targetSession.viewState,
           locale: uiLocale,
           terminology: uiTerminology,
+          sessionIdentity: identityRef.current ? { userId: identityRef.current.userId, displayName: identityRef.current.displayName } : undefined,
           windowInstances: sessionWindowInstances(targetSession.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
           activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
           activeUtilityId: undefined,
@@ -5187,7 +5191,7 @@ function FrameworkOsShellInner({
         setSurfaceSwitchBusy(false);
       }
     },
-    [loadedPlugins, refreshUi, retireSessionInstance, session, appLabelsOverlay, hostMode, landingAppId, uiTerminology, uiLocale],
+    [loadedPlugins, refreshUi, retireSessionInstance, session, appLabelsOverlay, hostMode, hostApp, landingAppId, uiTerminology, uiLocale],
   );
 
   const syncSpawnedPluginDocument = useCallback(async (plugin: PluginWasmHandle, app: AppDefinition, pluginInstanceId: number, documentJson: string, viewState: ViewModel) => {
@@ -5233,7 +5237,7 @@ function FrameworkOsShellInner({
         breadcrumb: program.breadcrumb,
       });
     },
-    [loadedPlugins, session, syncSpawnedPluginDocument],
+    [loadedPlugins, session, syncSpawnedPluginDocument, hostApp],
   );
 
   /**
@@ -5857,7 +5861,7 @@ function FrameworkOsShellInner({
         applyShellUriDepthRef.current -= 1;
       }
     },
-    [applyHostEffects, loadedPlugins, refreshUi, hostConfig, landingAppId, hostAppId, switchToPluginApp, updateSpacePanel],
+    [applyHostEffects, loadedPlugins, refreshUi, hostConfig, hostApp, landingAppId, hostAppId, switchToPluginApp, updateSpacePanel],
   );
 
   useEffect(() => {
@@ -6136,7 +6140,7 @@ function FrameworkOsShellInner({
         }),
       );
     },
-    [loadedPlugins, session, updateSpacePanel],
+    [loadedPlugins, session, updateSpacePanel, hostApp],
   );
 
   const onAction = useCallback(
@@ -6407,7 +6411,7 @@ function FrameworkOsShellInner({
         const leaf = flattenPanelTabLeaves(targetApp.panelTabs).find((tab) => panelTabKindId(tab.kind) === tabId);
         const path = panelDefinitionPath(targetApp.panelTabs, tabId);
         if (!leaf || !path) return;
-        const currentPanel = parsePanelState(session.viewState) ?? buildSpacePanelState([], hostCatalogueTabId);
+        const currentPanel = parsePanelState(session.viewState) ?? buildSpacePanelState([], requiredHostPanelLeafId(hostApp));
         updateSpacePanel(buildSpacePanelState(currentPanel.spawnedApps, tabId, currentPanel.activeSpawnedId));
         if (mobile) {
           dispatch({ type: "SET_MOBILE_PANEL_PATH", value: path });

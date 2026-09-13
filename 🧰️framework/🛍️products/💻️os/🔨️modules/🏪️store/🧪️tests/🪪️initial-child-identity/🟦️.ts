@@ -4,7 +4,7 @@ const testSourceUrl = new URL("../../🧩️composition/🌱️initial/🪪️id
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
-import { blake3Hex } from "../../../🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts";
+import { blake3Hex } from "../../../../../../🔨️modules/🔏️hash/🟦️.ts";
 
 type Coordinate = { values: string[]; ordinal: number };
 

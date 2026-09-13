@@ -209,17 +209,29 @@ impl UiResidentPermit {
         Ok(true)
     }
 
-    pub fn try_shrink(&mut self, limits: UiResidentLimits) -> Result<bool, UiResidentFault> {
+    /// ⚖️ One live reservation moves to new limits in place — up or down — so a holder priced from what it
+    /// has actually used can climb toward the per-surface ceiling instead of reserving that ceiling up front,
+    /// and can hand unused credit back when its census completes.
+    ///
+    /// 🐛️ A reconcile reservation asked for [`UI_RESIDENT_SURFACE_BYTES`] — the per-surface MAXIMUM — of a
+    /// [`UI_RESIDENT_AGGREGATE_BYTES`] budget four times its size, so exactly THREE surfaces could hold one
+    /// process-wide while a single app session mounts thirteen; every further surface was refused, deferred
+    /// and re-dirtied for ever (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B56 §6, wave B58). An increase the
+    /// aggregate cannot take is refused [`UiResidentFault::Capacity`] — the same named refusal a first
+    /// reservation answers — so an over-budget aggregate can never become a silent defer loop. The exact
+    /// ownership of the whole reservation is required in either direction, so a reservation whose output
+    /// obligation has already been split off can no longer be repriced.
+    pub fn try_reprice(&mut self, limits: UiResidentLimits) -> Result<bool, UiResidentFault> {
         let key = self.key.ok_or(UiResidentFault::Owner)?;
-        if limits.items > self.limits.items || limits.bytes > self.limits.bytes {
+        if limits.items > UI_RESIDENT_SURFACE_ITEMS || limits.bytes > UI_RESIDENT_SURFACE_BYTES {
             return Err(UiResidentFault::InvalidLimits);
         }
         let mut ledger = ledger()?;
         if self.owner != 1 || ledger.exact(key, self.limits, self.owner)?.owners != 1 {
             return Err(UiResidentFault::Owner);
         }
-        let items = ledger.snapshot.items.checked_sub(self.limits.items).and_then(|total| total.checked_add(limits.items)).ok_or(UiResidentFault::CounterOverflow)?;
-        let bytes = ledger.snapshot.bytes.checked_sub(self.limits.bytes).and_then(|total| total.checked_add(limits.bytes)).ok_or(UiResidentFault::CounterOverflow)?;
+        let items = ledger.snapshot.items.checked_sub(self.limits.items).and_then(|total| total.checked_add(limits.items)).filter(|total| *total <= UI_RESIDENT_AGGREGATE_ITEMS).ok_or(UiResidentFault::Capacity)?;
+        let bytes = ledger.snapshot.bytes.checked_sub(self.limits.bytes).and_then(|total| total.checked_add(limits.bytes)).filter(|total| *total <= UI_RESIDENT_AGGREGATE_BYTES).ok_or(UiResidentFault::Capacity)?;
         ledger.snapshot.items = items;
         ledger.snapshot.bytes = bytes;
         ledger.slots[key.slot].limits = limits;

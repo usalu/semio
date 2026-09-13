@@ -13,4 +13,3 @@ Verification:
 - The STEP generator module imports successfully.
 - Taxonomy validation returned `[]` after sorting the frozen output roots as `1️⃣cc1` through `6️⃣cc6`, then `🧱️base`.
 - Focused Nx Rust verification was attempted twice. The first run stopped at a deliberately in-flight LAS old path; after LAS reconciliation, the second reached an unrelated concurrently-moving Semio `✳️base/.../🕸apply-mesh` path. Neither failure identified a STEP source or fixture error.
-

@@ -34,9 +34,9 @@ Feature: Apply the one typed s.space.home mutation against an independent Python
   3 to 7, not from 0 to 1, so an implementation that INCREMENTED rather than SET lands on 4 and the
   forward scenario fails; and the leaf's only guard is an equal-counter `mutation.no-op` warning, so
   the vector's declared message-free `applied` outcome is itself an assertion that 3 and 7 were
-  compared rather than assumed. The committed diff pins that exactly one of `SHomeDiff`'s four
-  optional fields is written: an artifact-lane counter pin that reached into `activePanelTab` or
-  `locale` would be a config-lane leak and shows up as a diff divergence.
+  compared rather than assumed. The committed diff pins that exactly one of `SHomeDiff`'s three
+  optional fields is written: an artifact-lane counter pin that reached into `locale` would be a
+  config-lane leak and shows up as a diff divergence.
 
   The identity round trip reads the artifact's own committed demo example, a 40-byte document that is
   the smallest complete `.dsl.semio` envelope in this plugin — a preamble line plus one body line

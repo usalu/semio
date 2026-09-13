@@ -13,7 +13,7 @@
 //! roughly the eleventh object.
 
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use crate::editor::puzzle3d::{
     puzzle3d_vortex_full_id, ui_label, Puzzle3dAttraction, Puzzle3dFixture, Puzzle3dObject, Puzzle3dReference, Puzzle3dTargetVolume, Puzzle3dVortex, PUZZLE3D_GRANULARITY_ATTRACTION, PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_REFERENCE,
     PUZZLE3D_GRANULARITY_TARGET_VOLUME, PUZZLE3D_GRANULARITY_VORTEX, PUZZLE3D_INTERACTION_DOMAIN, PUZZLE3D_PLAY_CONTROLLER_ID,
@@ -275,7 +275,7 @@ pub fn continuation_row_from(section_id: &str, omitted: usize, next_page: Option
     }
 }
 
-fn section_page(pages: &HashMap<String, u32>, section_id: &str, len: usize) -> usize {
+fn section_page(pages: &BTreeMap<String, u32>, section_id: &str, len: usize) -> usize {
     if len == 0 {
         return 0;
     }
@@ -285,11 +285,11 @@ fn section_page(pages: &HashMap<String, u32>, section_id: &str, len: usize) -> u
 
 /// 🗂️ See `semio_framework_plugin::paged_panel_section` — bound to this panel's own [`SECTION_ROWS`] quota.
 pub fn paged_section<T>(section_id: &str, entries: &[T], budget: &mut RowBudget, row: impl FnMut(&T, &mut RowBudget) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
-    paged_section_from(section_id, entries, &HashMap::new(), budget, row)
+    paged_section_from(section_id, entries, &BTreeMap::new(), budget, row)
 }
 
 /// 📄 One section page starting at the cursor in `pages`, with an Activate continuation that advances it.
-pub fn paged_section_from<T>(section_id: &str, entries: &[T], pages: &HashMap<String, u32>, budget: &mut RowBudget, mut row: impl FnMut(&T, &mut RowBudget) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+pub fn paged_section_from<T>(section_id: &str, entries: &[T], pages: &BTreeMap<String, u32>, budget: &mut RowBudget, mut row: impl FnMut(&T, &mut RowBudget) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let page = section_page(pages, section_id, entries.len());
     let offset = page.saturating_mul(SECTION_ROWS).min(entries.len());
     let slice = &entries[offset..];
@@ -330,11 +330,11 @@ pub fn paged_section_from<T>(section_id: &str, entries: &[T], pages: &HashMap<St
 /// 🌳️ The four document sections as one bounded page, memoized by the app against the fixture's geometry
 /// fingerprint and the resolved label set.
 pub fn render(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> UiAssemblyResult<BuiltNode> {
-    render_from(fixture, labels, &HashMap::new())
+    render_from(fixture, labels, &BTreeMap::new())
 }
 
 /// 📄 Same tree as [`render`], starting each section at its `setPanelPage` cursor.
-pub fn render_from(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels, pages: &HashMap<String, u32>) -> UiAssemblyResult<BuiltNode> {
+pub fn render_from(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels, pages: &BTreeMap<String, u32>) -> UiAssemblyResult<BuiltNode> {
     let budget = &mut RowBudget::new(page_rows_for(fixture));
     let objects = budget.nested(SECTIONS - 1, |share| paged_section_from(&format!("{ROOT}.objects"), &fixture.objects, pages, share, |object, share| object_row(object, labels, share)))?;
     let references = budget.nested(SECTIONS - 2, |share| paged_section_from(&format!("{ROOT}.references"), &fixture.references, pages, share, |reference, _| reference_row(reference, labels)))?;

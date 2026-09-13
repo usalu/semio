@@ -5,7 +5,7 @@
 //! checkpoints remain in the retained operation that owns their frozen input.
 
 use semio_framework_plugin::{WorldProjectionConfig, WorldSunConfig};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 //#region 🔖️Defaults
 fn one_f64() -> f64 {
@@ -72,18 +72,22 @@ fn default_active_example_id() -> String {
 /// 🎥️ Session-only per-window viewport camera — never a document field (see `setCamera`'s
 /// `ActionKind::View`): orbiting one window instance must never move a sibling's camera and must
 /// never create a VCS edit.
-#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dCamera {
     #[value(default)]
+    #[dsl(coord)]
     pub position: [f64; 3],
     #[value(default)]
+    #[dsl(coord)]
     pub target: [f64; 3],
     #[value(default = "one_f64")]
     pub zoom: f64,
     #[value(default)]
+    #[dsl(coord)]
     pub up: Option<[f64; 3]>,
     #[value(default)]
+    #[dsl(block)]
     pub projection: WorldProjectionConfig,
 }
 
@@ -100,7 +104,7 @@ pub fn puzzle3d_camera_distance(camera: &Puzzle3dCamera) -> f64 {
 //#endregion 🔖️Camera
 
 //#region 🔖️Selection
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dSelectableKinds {
     #[value(default = "default_true")]
@@ -207,7 +211,7 @@ pub struct Puzzle3dRuntime {
     #[value(default = "default_window_ids")]
     pub window_ids: Vec<String>,
     #[value(default)]
-    pub panel_pages: HashMap<String, u32>,
+    pub panel_pages: BTreeMap<String, u32>,
     /// 🏷️ Projected from [`Puzzle3dConfig::active_example_id`] — see its doc.
     #[value(default = "default_active_example_id")]
     pub active_example_id: String,
@@ -244,7 +248,7 @@ impl Default for Puzzle3dRuntime {
             camera: Puzzle3dCamera::default(),
             active_tool_id: None,
             window_ids: default_window_ids(),
-            panel_pages: HashMap::new(),
+            panel_pages: BTreeMap::new(),
             active_example_id: default_active_example_id(),
         }
     }

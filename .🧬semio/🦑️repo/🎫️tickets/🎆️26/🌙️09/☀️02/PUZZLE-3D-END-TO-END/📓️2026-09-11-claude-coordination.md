@@ -839,3 +839,35 @@ A3 also re-verified `worldRelocate` on Nakagin as NOT a live defect (extent ≈1
   repo-root `📜️script.ts` currently broken. → wave B58: size the reconcile reservation to the tree actually reconciled
   (`try_shrink` runs AFTER reservation today) so thirteen surfaces fit — the last convergent blocker for mutations.
 | B58 | 05:15 (09-14) | reconcile reservation 8 MiB × 3 of 32 MiB starves every fourth surface: size reservations to the tree, all mounted surfaces reconcile | `📓️2026-09-14-wave-B58-reconcile-reservation-ceiling.md` |
+- 06:40 (09-14) B57 landed (`📓️2026-09-14-wave-B57-export-recipe-show-restore.md`): export-only/names/import-same/
+  import-distinct-records-history/example-switch/outliner-show-restores all PASS live (probe: B53's budgets + the
+  Actions-pane fold press must be REPEATED on Nakagin — pointer then keyboard, 45 s row polls; switch judged by the
+  guest census; outliner dump scoped to its id space). Guest un-hide was never broken (`instance_record_fingerprint`
+  hashes `hidden`); two laws added. Remaining product red: `import-distinct` — a 141 574 B string arg crosses the
+  wire, no refusal, guest census stays 180 → the guest's contiguous-request ceiling on the import arg (B56/B58 lane,
+  next wave). Cleared a peer's in-flight World3dHost TDZ (`sharedGumballTransformPreview` used above its declaration).
+| B59 | 06:45 (09-14) | 141 KB `importFixture` silently no-ops (contiguous guest string over the 64 KiB ceiling): streaming/paged inbound import with named refusals | `📓️2026-09-14-wave-B59-large-import-wire.md` |
+- 08:20 (09-14) B58 landed (`📓️2026-09-14-wave-B58-reconcile-reservation-ceiling.md`): `SurfaceReconcileReservation::try_new`
+  priced EVERY reservation at the 8 MiB per-surface maximum (truing-up ran only at `seal_step`, after the reconcile) →
+  `try_reprice` (bidirectional, aggregate-checked), a 132 978 B floor (assembly root + 4 work pages), credit climbing
+  with usage, exhausted aggregate = named terminal fault, refusals raise `ui.surface-reconcile-unadmitted`. Thirteen
+  real surfaces now admit at 1.73 MB (5.2 % of the aggregate; ceiling-priced would have been 3.25× the budget), peak
+  23.8 MB while all publish. 54/54 laws; guest-only → #62. Residual: a sealed surface costs ~1.83 MB regardless of
+  body size (128-slot record table + a double-count of node bytes at `♻️reconcile/🦀️.rs:1462`) → ~17 concurrent
+  surfaces per session; halving it is a follow-up.
+- 08:25 (09-14) build #62 (compile only, pid 69399; B54 + B56 + B57 + B58 guest) started; recycle + deploy + final battery after B59.
+- 09:35 (09-14) B59 landed (`📓️2026-09-14-wave-B59-large-import-wire.md`): the wire carried the 145 KB payload through all
+  11 hops; the drop was the guest's retained command job — `PuzzleCommandPhase::WireBytes` advanced the raw scan
+  cursor ONE BYTE per job step and re-hashed the whole prefix on every step (O(bytes²): 28 672 of 160 314 bytes
+  scanned in 60 s, `Decode` never reached, no edit/notice). Fix: page-granular stride + incrementally folded hash
+  (160 314 steps → 40; shared by 2d/5d), plus a chunked inbound import lane (host `importPayloadChunks` by UTF-8
+  extent, guest fixed-slot staging parsing array elements one at a time; widest contiguous request 2 212 B vs a
+  125 958 B root member; `import_too_large/incomplete/invalid` notices EN+DE). `--lib import` 15/15 in 1.7 s.
+  Guest → #63 (the #62 compile predates it); the host chunker is live, so on #61/#62 a large import now shows the
+  `import_too_large` notice instead of silence.
+- 10:10 (09-14) serve boot broken by a peer's taxonomy edit (04:58 CEST: `generatorContracts.flow-browser-package` without `previewTarget`, required for owned contracts) → added `semio-framework-os-flow-core:preview-generated` per the sibling convention; serve restarted (watcher fix now in). The #62 battery ran against the dead serve and is void.
+- 10:30 (09-14) serve restored (peer relocated the activation receipt → re-ran prepare/activate). #62 (B54/B56/B57/B58) is served; battery #62 started (`🗑️generated/battery-2026-09-14-62b-6013.txt`); build #63 (B59) retried after an interrupted nx run (pid 83220).
+- 11:05 (09-14) build #63 (B59 guest) fails in a PEER's live store refactor (`🏪️store/🎚️config/📥️retained/🦀️.rs:466` E0277 `P: ArtifactPack`, `semio-framework-os-kernel`); retry loop armed (kernel check every 5 min, up to 12 tries) → materialize #63 → final battery.
+- 11:45 (09-14) #63 retry: the kernel compiles again but `semio-framework-plugin` now has a peer's unclosed delimiter mid-edit; retry loop re-armed (plugin check every 5 min, up to 12 tries) → materialize #63 → final battery.
+- 12:20 (09-14) two #62 batteries died at boot on a 504 for the optimized `@tailwindcss_postcss.js` dep (stale optimizer bundle after the restarts) → cleared this serve's own vite dep cache and restarted.
+- 12:40 (09-14) #63 retry 3 failed: a peer is rewriting `🔌️plugin/🪟️window/🎚️config` live (E0308/E0616 mid-edit; `Puzzle3dWindowConfig: DslField` bound) — the puzzle crate itself does not compile right now; retry loop re-armed on the puzzle-crate check (every 5 min, up to 2 h) → build → deploy → final battery. #62 stays the measured state meanwhile.

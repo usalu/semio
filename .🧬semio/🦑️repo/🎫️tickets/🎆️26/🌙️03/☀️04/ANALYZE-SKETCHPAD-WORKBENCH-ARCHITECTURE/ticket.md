@@ -19,15 +19,16 @@ Comprehensive analysis of sketchpad workbench architecture. Documented panel sys
 **PanelPosition enum**: `LEFT`, `RIGHT`, `MIDDLE`, `BOTTOM`
 
 **Panel → Position mapping** (`panelKindConfigs`):
+
 | PanelKind | Position | Group | Transparent | Hotkey |
-|-----------|----------|-------|-------------|--------|
-| WORKBENCH | LEFT | left | no | — |
-| TOOLS | LEFT | left | no | ctrl+j |
-| TOOLBAR | BOTTOM | — | no | — |
-| STATS | MIDDLE | hud | yes | ctrl+k |
-| DETAILS | RIGHT | right | no | ctrl+l |
-| PARAMS | RIGHT | right | no | ctrl+l |
-| CONSOLE | BOTTOM | — | no | ctrl+k |
+| --------- | -------- | ----- | ----------- | ------ |
+| WORKBENCH | LEFT     | left  | no          | —      |
+| TOOLS     | LEFT     | left  | no          | ctrl+j |
+| TOOLBAR   | BOTTOM   | —     | no          | —      |
+| STATS     | MIDDLE   | hud   | yes         | ctrl+k |
+| DETAILS   | RIGHT    | right | no          | ctrl+l |
+| PARAMS    | RIGHT    | right | no          | ctrl+l |
+| CONSOLE   | BOTTOM   | —     | no          | ctrl+k |
 
 **Side Panel Tabs**: left and right side panels use a tabbed UI. `SidePanelTab` has id, icon, order, content. Panels with PanelPosition LEFT register as left side tabs; PanelPosition RIGHT register as right side tabs.
 

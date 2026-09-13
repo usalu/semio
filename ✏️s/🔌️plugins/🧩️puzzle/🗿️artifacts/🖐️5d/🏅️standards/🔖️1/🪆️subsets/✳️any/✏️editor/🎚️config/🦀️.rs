@@ -31,7 +31,7 @@ fn default_true() -> bool {
 //#endregion 🔖️Defaults
 
 //#region 🔖️Cameras
-#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dCamera2d {
     #[value(default)]
@@ -42,12 +42,14 @@ pub struct Puzzle5dCamera2d {
     pub zoom: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dCamera3d {
     #[value(default)]
+    #[dsl(coord)]
     pub position: [f64; 3],
     #[value(default)]
+    #[dsl(coord)]
     pub target: [f64; 3],
     #[value(default = "one_f64")]
     pub zoom: f64,

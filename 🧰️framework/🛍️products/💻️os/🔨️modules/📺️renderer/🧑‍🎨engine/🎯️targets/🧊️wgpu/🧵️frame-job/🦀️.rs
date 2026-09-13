@@ -240,12 +240,51 @@ impl ActiveFrameBuild {
         self.cancel.cancel_now();
     }
 
+    /// 📮️ One runtime-mailbox opportunity, priced by the same interactive ceiling every frame phase is.
+    ///
+    /// ⚖️ Returns whether a completion was applied, and quarantines on its own overrun exactly as the
+    /// phase that used to own this call did.
+    fn pump_runtime_mailbox_step(&mut self) -> bool {
+        let watchdog = semio_framework_trace::Watchdog::start("os_renderer.frame.apply_pending", self.operation, self.generation, InteractiveStage::InteractiveStep);
+        if !watchdog.is_admitted() {
+            self.quarantine_overrun("os_renderer.frame.apply_pending has no monotonic clock");
+            return true;
+        }
+        let applied = self.runtime.apply_pending_step();
+        if self.overruns.admit(&watchdog.finish()).is_terminal() {
+            self.quarantine_overrun("os_renderer.frame.apply_pending overran the interactive ceiling");
+            return true;
+        }
+        applied
+    }
+
     fn advance(&mut self) -> ActiveFrameStep {
         if self.cancel.is_cancelled_now() {
             if self.retire_cancelled_phase() {
                 self.phase = ActiveFramePhase::Terminal;
                 return ActiveFrameStep::Complete(None);
             }
+            return ActiveFrameStep::Pending;
+        }
+        // 📮️ The mailbox is pumped at EVERY advance, not only in `ApplyPending`.
+        //
+        // 🩸️ It used to be one phase, visited once per build: the build drained the queue, then walked
+        // on. A transaction that parked on `!interaction_available()` therefore held the one live
+        // session forever — no new build could be admitted (`FrameBuildHandle::poll_runtime_and_resubmit`
+        // admits only when `session.is_none()`), so the `ResumeDispatch` carrying the interaction state
+        // home was never applied, and `DispatchEvents` behind it never reached
+        // `winit_app::dispatch_normalized_event` at all (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+        // `📓️wgpu-server-input-present-2026-09-13.md` §5.2). Draining from every advance is what makes
+        // "applied within the next frame" true for `DispatchEvents` and `Resize` alike.
+        if self.pump_runtime_mailbox_step() {
+            return ActiveFrameStep::Pending;
+        }
+        if matches!(self.phase, ActiveFramePhase::ApplyPending(_)) {
+            let directives = match &mut self.phase {
+                ActiveFramePhase::ApplyPending(directives) => std::mem::take(directives),
+                _ => return ActiveFrameStep::Pending,
+            };
+            self.phase = ActiveFramePhase::Build(crate::FrameTransaction::new(directives, self.operation, self.generation));
             return ActiveFrameStep::Pending;
         }
         match &mut self.phase {
@@ -287,23 +326,7 @@ impl ActiveFrameBuild {
                     ActiveFrameStep::Pending
                 }
             }
-            ActiveFramePhase::ApplyPending(directives) => {
-                let watchdog = semio_framework_trace::Watchdog::start("os_renderer.frame.apply_pending", self.operation, self.generation, InteractiveStage::InteractiveStep);
-                if !watchdog.is_admitted() {
-                    self.quarantine_overrun("os_renderer.frame.apply_pending has no monotonic clock");
-                    return ActiveFrameStep::Pending;
-                }
-                let applied = self.runtime.apply_pending_step();
-                if self.overruns.admit(&watchdog.finish()).is_terminal() {
-                    self.quarantine_overrun("os_renderer.frame.apply_pending overran the interactive ceiling");
-                    return ActiveFrameStep::Pending;
-                }
-                if applied {
-                    return ActiveFrameStep::Pending;
-                }
-                self.phase = ActiveFramePhase::Build(crate::FrameTransaction::new(std::mem::take(directives), self.operation, self.generation));
-                ActiveFrameStep::Pending
-            }
+            ActiveFramePhase::ApplyPending(_) => ActiveFrameStep::Pending,
             ActiveFramePhase::Build(transaction) => {
                 let watchdog = semio_framework_trace::Watchdog::start("os_renderer.frame.transaction", self.operation, self.generation, InteractiveStage::InteractiveStep);
                 if !watchdog.is_admitted() {
@@ -571,17 +594,27 @@ impl FrameBuildHandle {
             return None;
         }
         if let Some(session) = self.session.as_ref() {
+            // 🌀️ A superseded build is RETIRED HERE, in this caller's own share — never parked.
+            //
+            // 🩸️ This used to cancel the session and `return None`, which drove the close ladder by one
+            // step per CALL. On the browser the caller is an event-driven tick, so a shell that is
+            // settled between inputs ticks about once a second: one superseded build then held
+            // `self.session` for tens of seconds, no replacement build could be admitted
+            // (`self.session.is_none()` is the admission gate), and therefore NOTHING pumped the runtime
+            // mailbox — measured on 6118 as `frame build cancelled: session generation Generation(3) !=
+            // requested Generation(4)` followed by 74 seconds with no further `frame build admitted`,
+            // no `render begin`, and 75 undelivered `DispatchEvents`
+            // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
+            // Falling through to the drive loop spends the SAME interactive share retiring it that a
+            // live build would have spent stepping, so the next opportunity admits a fresh one.
             if session.generation() != generation {
+                crate::log_debug_once_per_transition("frame-session-generation", true, &format!("[DEBUG] frame build superseded: session generation {:?} != requested {generation:?}", session.generation()));
                 self.cancel.cancel_now();
                 if !matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
                     let _ = session.begin_close();
-                } else {
-                    let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                    if session.terminal_is_empty() {
-                        self.session = None;
-                    }
                 }
-                return None;
+            } else {
+                crate::log_debug_once_per_transition("frame-session-generation", false, "[DEBUG] frame build session generation matches the requested one again");
             }
             // 🌐️ The browser drives the step ON THE CALLER, never through a pool: this function
             // only runs inside the dedicated `semio-frame-worker` isolate (the `web_sys::window()`
@@ -627,7 +660,13 @@ impl FrameBuildHandle {
                     }
                     semio_framework_job::WorkerJobPoll::Closing => {
                         let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                        retire_session = session.terminal_is_empty();
+                        if session.terminal_is_empty() {
+                            retire_session = true;
+                            break;
+                        }
+                    }
+                    semio_framework_job::WorkerJobPoll::TerminalEmpty => {
+                        retire_session = true;
                         break;
                     }
                     _ => break,
@@ -652,10 +691,17 @@ impl FrameBuildHandle {
         // that still asked for frames (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
         // `📓️wgpu-blank-paint-2026-09-12.md`). One-build-at-a-time is enforced by `self.session`, which
         // is the authority that gate was standing in for.
+        crate::log_debug(&format!("[DEBUG] frame build admitted generation={generation:?}"));
         self.cancel = root_cancel_token();
         self.admit_active(ActiveFrameBuild::new(runtime, inputs, operation, generation, self.cancel.clone()));
         self.last_submitted_generation = Some(generation);
         None
+    }
+
+    /// 🧵️ Whether a frame build is admitted right now — the one owner that must keep its own frames
+    /// coming and must not have its inputs renumbered underneath it.
+    pub(crate) fn has_live_session(&self) -> bool {
+        self.session.is_some() || self.rejected.is_some()
     }
 
     pub(crate) fn close_step(&mut self) -> bool {

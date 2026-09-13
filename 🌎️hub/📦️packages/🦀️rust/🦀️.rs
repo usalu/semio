@@ -24,3 +24,11 @@ pub mod local_bootstrap;
 
 #[path = "../../💡️inference/🦀️.rs"]
 pub mod inference;
+
+#[cfg(test)]
+#[path = "../../🔐️auth/🧪️tests/🧭️credential-source-order/🔮️oracles/🦀️.rs"]
+mod credential_source_order_oracle;
+
+#[cfg(test)]
+#[path = "../../📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🔮️oracles/🦀️.rs"]
+mod socket_grant_oracle;

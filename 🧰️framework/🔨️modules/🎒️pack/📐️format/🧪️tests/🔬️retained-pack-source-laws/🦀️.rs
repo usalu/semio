@@ -67,6 +67,17 @@ fn close_symbol_table(table: &mut RetainedPackSymbolTable) -> usize {
     released
 }
 
+fn close_segment(cursor: &mut RetainedPackSegmentCursor) -> usize {
+    let mut released = 0;
+    loop {
+        let grant = cursor.next_release_allocation_bytes().unwrap_or(0);
+        match cursor.close_step(1, grant) {
+            RetainedPackCloseStep::Pending { released_bytes, .. } => released += released_bytes,
+            RetainedPackCloseStep::Complete => return released,
+        }
+    }
+}
+
 async fn canonical_pack(codec: CodecId) -> (Vec<u8>, Vec<u8>) {
     let options = WriteOptions { required_flags: 0, optional_flags: OPTIONAL_CANONICAL, codec };
     let mut writer = PackWriter::begin(Vec::<u8>::new(), &options).await.expect("writer");
@@ -179,6 +190,10 @@ fn catalog_limits(maximum_symbols: u32, maximum_items: u64) -> PackLimits {
 fn forward_source(event: RetainedPackSourceEvent, segment: &mut RetainedPackSegmentCursor, catalog: &mut RetainedPackCatalogCursor, document: &mut Vec<u8>) {
     segment.admit(event).expect("segment admission");
     loop {
+        if let Some(exact) = segment.next_allocation_bytes() {
+            let step = segment.reserve_allocation(exact).expect("segment retained inflater allocation");
+            assert!(step.progressed && step.allocated_bytes >= exact);
+        }
         if let Some(event) = segment.grant().expect("segment grant") {
             forward_catalog(event, catalog, document);
         }
@@ -526,7 +541,7 @@ async fn retained_pack_catalog_multibyte_scalar_crosses_physical_source_page_and
     assert_eq!(independent.symbol(0).expect("independent schema symbol"), expected);
     let mut source = source(&bytes);
     let mut anchor = RetainedPackAnchorCursor::new();
-    let mut segment = RetainedPackSegmentCursor::try_new(limits.clone()).expect("segment cursor");
+    let mut segment = RetainedPackSegmentCursor::try_new(limits.clone(), 64 * 1024).expect("segment cursor");
     let mut catalog = RetainedPackCatalogCursor::try_new(limits, 1, expected.len(), expected.chars().count(), 0, 256 * 1024).expect("catalog cursor");
     let mut document = Vec::new();
     loop {
@@ -544,7 +559,7 @@ async fn retained_pack_catalog_multibyte_scalar_crosses_physical_source_page_and
     assert_eq!(actual, expected);
     let allocated = catalog.allocated_bytes();
     anchor.close_step();
-    segment.close_step();
+    close_segment(&mut segment);
     assert_eq!(close_catalog(&mut catalog), allocated);
     close(&mut source);
     eprintln!("[DEBUG] retained-pack-catalog page-crossing-offset={position} scalar={} independent-pack-file=true allocated-bytes={allocated}", u32::from('€'));
@@ -556,7 +571,7 @@ async fn retained_anchors_segments_catalog_and_deflate_are_wire_identical_and_re
     let mut source = source(&bytes);
     let limits = PackLimits { max_file_len: bytes.len() as u64, max_segment_len: 4096, max_symbols: 2, max_depth: 8, max_items: 4, max_total_alloc: 4096 };
     let mut anchor = RetainedPackAnchorCursor::new();
-    let mut segment = RetainedPackSegmentCursor::try_new(limits.clone()).expect("segment");
+    let mut segment = RetainedPackSegmentCursor::try_new(limits.clone(), 64 * 1024).expect("segment");
     let mut catalog_cursor = RetainedPackCatalogCursor::try_new(limits, 2, 16, 16, 0, 64 * 1024).expect("catalog");
     let mut document = Vec::new();
     loop {
@@ -576,7 +591,7 @@ async fn retained_anchors_segments_catalog_and_deflate_are_wire_identical_and_re
     let second: String = (0..catalog_cursor.symbol_chars(1).expect("second scalar count")).map(|index| catalog_cursor.symbol_char(1, index).expect("second scalar").expect("second scalar value")).collect();
     assert_eq!((schema.as_str(), second.as_str()), ("p2d2", "ä"));
     anchor.close_step();
-    segment.close_step();
+    close_segment(&mut segment);
     assert!(close_catalog(&mut catalog_cursor) > 0);
     close(&mut source);
 }
@@ -593,7 +608,7 @@ async fn multi_byte_chunk_is_observed_once_at_begin_and_matches_pack_file() {
     assert_eq!(independent.read_chunk(ChunkId(0), VerificationLevel::Full).await.expect("independent chunk"), chunk);
     let mut source = source(&bytes);
     let mut anchor = RetainedPackAnchorCursor::new();
-    let mut segment = RetainedPackSegmentCursor::try_new(limits.clone()).expect("segment");
+    let mut segment = RetainedPackSegmentCursor::try_new(limits.clone(), 64 * 1024).expect("segment");
     let mut catalog_cursor = RetainedPackCatalogCursor::try_new(limits, 0, 0, 0, 1, 64 * 1024).expect("catalog");
     let mut document = Vec::new();
     loop {
@@ -610,7 +625,7 @@ async fn multi_byte_chunk_is_observed_once_at_begin_and_matches_pack_file() {
     assert_eq!(catalog_cursor.chunk(0).expect("retained chunk entry").raw_len, chunk.len() as u64);
     let _ = catalog;
     anchor.close_step();
-    segment.close_step();
+    close_segment(&mut segment);
     assert!(close_catalog(&mut catalog_cursor) > 0);
     close(&mut source);
     eprintln!("[DEBUG] retained-pack-catalog multi-byte-chunk-bytes={} begin-observations=1 independent-reader-match=true", chunk.len());
@@ -636,4 +651,213 @@ async fn retained_anchor_rejects_hostile_crc_and_requires_explicit_close() {
     assert!(matches!(failure, Some(PackError::ChecksumMismatch { segment: "header", .. })));
     anchor.close_step();
     close(&mut source);
+}
+
+#[test]
+fn retained_pack_pipeline_diagnostic_anchor_is_inline_sticky_and_closes_the_source() {
+    let mut source = source(&[0x2a]);
+    let allocated = source.allocated_bytes();
+    let event = source.grant().expect("source grant").expect("source byte");
+    let hostile = match event {
+        RetainedPackSourceEvent::Byte { offset, value } => RetainedPackSourceEvent::Byte { offset: offset + 1, value },
+        RetainedPackSourceEvent::Complete { .. } => panic!("one-byte source emits its byte first"),
+    };
+    let mut anchor = RetainedPackAnchorCursor::new();
+    let first = anchor.grant(Some(hostile)).expect_err("non-contiguous anchor input");
+    assert_eq!(first, PackError::RetainedMalformed { what: "retained-anchor", offset: 1, detail: "non-contiguous source event" });
+    assert_eq!(anchor.grant(Some(event)).expect_err("first anchor fault remains sticky"), first);
+    assert_eq!(anchor.close_step(), RetainedPackCloseStep::Complete);
+    assert!(anchor.terminal_is_empty());
+    assert_eq!(close(&mut source), allocated);
+    eprintln!("[DEBUG] retained-pack-pipeline anchor-fault=inline-static sticky=true source-allocation-release={allocated}/{allocated}");
+}
+
+fn segment_byte(cursor: &mut RetainedPackSegmentCursor, offset: u64, value: u8) -> Result<Option<RetainedPackSegmentEvent>, PackError> {
+    cursor.admit(RetainedPackSourceEvent::Byte { offset, value }).expect("segment byte admission");
+    cursor.grant()
+}
+
+fn segment_prefix(cursor: &mut RetainedPackSegmentCursor, flags: u8) -> u64 {
+    for offset in 0..HEADER_SIZE as u64 {
+        assert_eq!(segment_byte(cursor, offset, 0).expect("header byte"), None);
+    }
+    assert_eq!(segment_byte(cursor, HEADER_SIZE as u64, crate::KIND_DOCUMENT).expect("kind byte"), None);
+    assert_eq!(segment_byte(cursor, HEADER_SIZE as u64 + 1, flags).expect("flags byte"), None);
+    HEADER_SIZE as u64 + 2
+}
+
+#[test]
+fn retained_pack_pipeline_diagnostic_segment_and_varint_are_inline_sticky_and_reject_later_ingress() {
+    let limits = PackLimits { max_file_len: 512, max_segment_len: 256, max_symbols: 0, max_depth: 8, max_items: 1, max_total_alloc: 512 };
+    let mut varint = RetainedPackSegmentCursor::try_new(limits.clone(), 64 * 1024).expect("varint segment");
+    let start = segment_prefix(&mut varint, 0);
+    for offset in start..start + 9 {
+        assert_eq!(segment_byte(&mut varint, offset, 0x80).expect("continued varint"), None);
+    }
+    let first = segment_byte(&mut varint, start + 9, 0x80).expect_err("overlong retained varint");
+    assert_eq!(first, PackError::RetainedMalformed { what: "varint", offset: start, detail: "overlong retained varint" });
+    assert_eq!(varint.grant().expect_err("first varint fault remains sticky"), first);
+    let later = RetainedPackSourceEvent::Byte { offset: start + 10, value: 0 };
+    assert_eq!(varint.admit(later).expect_err("faulted segment rejects later ingress"), later);
+    close_segment(&mut varint);
+    assert!(varint.terminal_is_empty());
+
+    let mut segment = RetainedPackSegmentCursor::try_new(limits, 64 * 1024).expect("reserved-flag segment");
+    let stored_len = segment_prefix(&mut segment, 0xf0);
+    assert_eq!(segment_byte(&mut segment, stored_len, 0).expect("stored length"), None);
+    let first = segment.grant().expect_err("reserved segment flags");
+    assert_eq!(first, PackError::RetainedMalformed { what: "segment", offset: HEADER_SIZE as u64 + 1, detail: "reserved segment flags are set" });
+    assert_eq!(segment.grant().expect_err("first segment fault remains sticky"), first);
+    let later = RetainedPackSourceEvent::Byte { offset: stored_len + 1, value: 0 };
+    assert_eq!(segment.admit(later).expect_err("faulted segment rejects later ingress"), later);
+    close_segment(&mut segment);
+    assert!(segment.terminal_is_empty());
+    eprintln!("[DEBUG] retained-pack-pipeline segment-faults=varint,reserved-flags inline-static=true sticky=true later-ingress=rejected");
+}
+
+#[cfg(feature = "deflate")]
+#[test]
+fn retained_pack_pipeline_diagnostic_deflate_is_inline_sticky_and_closes_after_real_decode() {
+    let raw = b"retained diagnostic backing";
+    let stored = crate::codec::deflate_compress(raw).expect("cold independent compressor");
+    let mut cursor = crate::codec::DeflateRetainedCursor::try_new(raw.len() as u64 + 1, raw.len() as u64 + 1, 64 * 1024).expect("retained inflater");
+    let exact = cursor.next_allocation_bytes().expect("retained inflater allocation");
+    let allocated = cursor.reserve_allocation(exact).expect("retained inflater reserve").allocated_bytes;
+    let mut produced = Vec::new();
+    let mut first = None;
+    for byte in stored {
+        cursor.admit_byte(byte).expect("retained compressed input");
+        loop {
+            match cursor.grant(false) {
+                Ok(crate::codec::DeflateRetainedStep::Byte(byte)) => produced.push(byte),
+                Ok(crate::codec::DeflateRetainedStep::NeedInput) => break,
+                Ok(crate::codec::DeflateRetainedStep::Complete) => panic!("declared output is deliberately one byte too long"),
+                Err(fault) => {
+                    first = Some(fault);
+                    break;
+                }
+            }
+        }
+        if first.is_some() {
+            break;
+        }
+    }
+    for _ in 0..raw.len() + 16 {
+        if first.is_some() {
+            break;
+        }
+        match cursor.grant(true) {
+            Ok(crate::codec::DeflateRetainedStep::Byte(byte)) => produced.push(byte),
+            Ok(crate::codec::DeflateRetainedStep::NeedInput) => {}
+            Ok(crate::codec::DeflateRetainedStep::Complete) => panic!("declared output is deliberately one byte too long"),
+            Err(fault) => first = Some(fault),
+        }
+    }
+    assert_eq!(produced, raw);
+    let first = first.expect("declared raw length mismatch");
+    assert_eq!(first, PackError::RetainedMalformed { what: "deflate", offset: raw.len() as u64, detail: "decompressed length mismatch or trailing input" });
+    assert_eq!(cursor.grant(true).expect_err("first inflater fault remains sticky"), first);
+    assert_eq!(cursor.admit_byte(0).expect_err("faulted inflater rejects later ingress"), 0);
+    let mut released = 0;
+    loop {
+        let grant = cursor.next_release_allocation_bytes().unwrap_or(0);
+        match cursor.close_step(1, grant) {
+            crate::codec::RetainedInflateCloseStep::Pending { released_bytes, .. } => released += released_bytes,
+            crate::codec::RetainedInflateCloseStep::Complete => break,
+        }
+    }
+    assert!(cursor.terminal_is_empty());
+    assert_eq!(released, allocated);
+    eprintln!("[DEBUG] retained-pack-pipeline deflate-fault=inline-static sticky=true decoded-bytes={} physical-backing-release={released}/{allocated}", produced.len());
+}
+
+#[cfg(feature = "deflate")]
+async fn drive_segment_physical(bytes: &[u8], expect_allocation: bool) -> (usize, usize, usize, Option<usize>) {
+    let limits = PackLimits { max_file_len: bytes.len() as u64, max_segment_len: 64 * 1024, max_symbols: 128, max_depth: 16, max_items: 64 * 1024, max_total_alloc: 1024 * 1024 };
+    let mut source = source(bytes);
+    let source_allocated = source.allocated_bytes();
+    let mut segment = RetainedPackSegmentCursor::try_new(limits, 64 * 1024).expect("physical segment cursor");
+    let mut allocated = 0usize;
+    let mut compressed_begins = 0usize;
+    let mut pointer = None;
+    let mut pack_complete = false;
+    while !pack_complete {
+        let source_event = source.grant().expect("physical source grant").expect("sealed source event");
+        segment.admit(source_event).expect("physical segment admission");
+        for _ in 0..bytes.len().saturating_mul(4).max(64) {
+            if let Some(exact) = segment.next_allocation_bytes() {
+                let before = segment.allocated_bytes();
+                assert_eq!(segment.reserve_allocation(0).expect("zero inflater grant"), RetainedPackSourceAllocationStep::default());
+                assert_eq!(segment.reserve_allocation(exact - 1).expect("subexact inflater grant"), RetainedPackSourceAllocationStep::default());
+                assert_eq!(segment.allocated_bytes(), before);
+                let step = segment.reserve_allocation(exact).expect("exact inflater allocation");
+                allocated += step.allocated_bytes;
+                pointer = Some(segment.retained_inflater_ptr().expect("retained inflater pointer"));
+            }
+            if let Some(event) = segment.grant().expect("physical segment grant") {
+                match event {
+                    RetainedPackSegmentEvent::Begin(header) if header.flags & 1 != 0 => {
+                        compressed_begins += 1;
+                        if let Some(expected) = pointer {
+                            assert_eq!(segment.retained_inflater_ptr(), Some(expected));
+                        }
+                    }
+                    RetainedPackSegmentEvent::PackComplete { .. } => pack_complete = true,
+                    _ => {}
+                }
+            }
+            if pack_complete || segment.preflight().is_ok() {
+                break;
+            }
+        }
+    }
+    assert_eq!(allocated != 0, expect_allocation);
+    let retained = segment.allocated_bytes();
+    let stable_pointer = segment.retained_inflater_ptr();
+    assert_eq!(retained, allocated);
+    let before_zero = (segment.allocated_bytes(), segment.retained_inflater_ptr());
+    assert_eq!(segment.close_step(0, 0), RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    assert_eq!((segment.allocated_bytes(), segment.retained_inflater_ptr()), before_zero);
+    let released = close_segment(&mut segment);
+    assert!(segment.terminal_is_empty());
+    assert_eq!(released, allocated);
+    assert_eq!(close(&mut source), source_allocated);
+    (compressed_begins, allocated, released, stable_pointer)
+}
+
+#[cfg(feature = "deflate")]
+#[semio_framework_async_macros::async_test]
+async fn retained_pack_inflater_physical_identity_has_zero_demand_and_compressed_segments_reuse_exact_backing() {
+    let (identity, _) = canonical_pack(CodecId(0)).await;
+    let (identity_begins, identity_allocated, identity_released, identity_pointer) = drive_segment_physical(&identity, false).await;
+    assert_eq!((identity_begins, identity_allocated, identity_released, identity_pointer), (0, 0, 0, None));
+
+    let (compressed, _) = canonical_pack(CodecId(1)).await;
+    let (compressed_begins, allocated, released, pointer) = drive_segment_physical(&compressed, true).await;
+    assert!(compressed_begins >= 2, "canonical compressed pack must exercise backing reuse across segments");
+    assert!(pointer.is_some());
+    assert_eq!(released, allocated);
+    eprintln!("[DEBUG] retained-pack-inflater identity-allocation=0 compressed-segments={compressed_begins} backing-reuse=true exact-release={released}/{allocated}");
+}
+
+#[cfg(feature = "deflate")]
+#[test]
+fn retained_pack_inflater_physical_cancellation_retires_pending_input_before_exact_backing() {
+    let mut cursor = crate::codec::DeflateRetainedCursor::try_new(1024, 64 * 1024, 64 * 1024).expect("cancellable retained inflater");
+    let exact = cursor.next_allocation_bytes().expect("cancellation history demand");
+    let allocated = cursor.reserve_allocation(exact).expect("cancellation history reserve").allocated_bytes;
+    let pointer = cursor.retained_history_ptr().expect("cancellation pointer");
+    cursor.admit_byte(0b11).expect("pending compressed byte");
+    assert_eq!(cursor.close_step(0, 0), crate::codec::RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    assert_eq!(cursor.retained_history_ptr(), Some(pointer));
+    assert_eq!(cursor.close_step(1, 0), crate::codec::RetainedInflateCloseStep::Pending { released_items: 1, released_bytes: 0 });
+    while cursor.next_release_allocation_bytes().is_none() {
+        assert_eq!(cursor.close_step(1, 0), crate::codec::RetainedInflateCloseStep::Pending { released_items: 1, released_bytes: 0 });
+    }
+    assert_eq!(cursor.close_step(0, allocated - 1), crate::codec::RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    assert_eq!(cursor.retained_history_ptr(), Some(pointer));
+    assert_eq!(cursor.close_step(0, allocated), crate::codec::RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: allocated });
+    assert_eq!(cursor.close_step(1, 0), crate::codec::RetainedInflateCloseStep::Complete);
+    assert!(cursor.terminal_is_empty());
+    eprintln!("[DEBUG] retained-pack-inflater cancel-order=pending,history-logical,decoder-logical,history-physical exact-release={allocated}/{allocated}");
 }

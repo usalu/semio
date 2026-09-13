@@ -121,9 +121,9 @@ export function homeDirectoryEventPageOwnerOracle(repoRoot: string): number {
   const configSchema = JSON.parse(readFileSync(join(base, "🎚️config/🧬️schema/🔣️.json"), "utf8"));
   const validateConfig = new Ajv({ strict: false, allErrors: true }).compile(configSchema);
   const configVector = {
-    activePanelTab: "", directoryJson: JSON.stringify({ spaces: {}, cursor: 5, users: {} }),
+    directoryJson: JSON.stringify({ spaces: {}, cursor: 5, users: {} }),
     directorySessionBindingSha256: "a".repeat(64), directoryAuthorizationGeneration: 7,
-    directoryReceiptSha256: fixture.expectedReceiptSha256, clientId: "u-1", clientName: "Ada",
+    directoryReceiptSha256: fixture.expectedReceiptSha256,
   };
   assert(validateConfig(configVector), JSON.stringify(validateConfig.errors));
   for (const field of ["directoryJson", "directorySessionBindingSha256", "directoryAuthorizationGeneration", "directoryReceiptSha256"]) {
@@ -134,7 +134,9 @@ export function homeDirectoryEventPageOwnerOracle(repoRoot: string): number {
   const retainedFixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🧫️retained-command-limits/🔣️.json"), "utf8"));
   const validateRetained = compileRetainedCommandLimits(repoRoot, join(base, ".."), "HomeRetainedCommandLimits");
   assert(validateRetained(retainedFixture), JSON.stringify(validateRetained.errors));
-  assert.equal(retainedFixture.routes.find((route: any) => route.id === "applyDirectoryEventPage")?.lanes?.[0], "Config");
+  const directoryRoute = retainedFixture.routes.find((route: any) => route.id === "applyDirectoryEventPage");
+  assert.equal(directoryRoute?.disposition, "BatchOnlyPendingRewrite");
+  assert.deepEqual(directoryRoute?.lanes, []);
   const commandPath = join(base, "🎮️commands/📬️apply-directory-event-page/🦀️.rs");
   const command = existsSync(commandPath) ? readFileSync(commandPath, "utf8") : "";
   const receiptRoot = join(base, "🎮️commands/📬️apply-directory-event-page/🧬️receipt");
@@ -165,7 +167,7 @@ export function homeDirectoryEventPageOwnerOracle(repoRoot: string): number {
     && configSource.includes("pub struct DirectoryProjectionReceiptV1")
     && configSource.includes("pub fn directory_projection_receipt")
     && editorSource.includes('"applyDirectoryEventPage"')
-    && editorSource.includes("ArtifactToolPublicationLane::Config")
+    && editorSource.includes('.action_interactive_job("applyDirectoryEventPage", InteractiveJobClassification::BatchOnlyPendingRewrite)')
     && !editorSource.includes('str_field("pageJson").or_else(|| str_field("page_json"))')
     && crateSource.includes("pub mod apply_directory_event_page;");
   assert(exact(command, config, editor, crate), "Home directory event-page retained owner is incomplete");

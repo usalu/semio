@@ -14,15 +14,6 @@ use std::collections::{BTreeMap, VecDeque};
 const SPARSE_INDEX_SPACE: usize = usize::MAX;
 const SPARSE_PAGE_BYTES: usize = 4096;
 
-fn encode_value<T: dsl::ToValue>(value: &T) -> Vec<u8> {
-    store::pack_rt::encode_wire_value(&value.to_value())
-}
-
-fn decode_value<T: dsl::FromValue>(bytes: &[u8]) -> Result<T, String> {
-    let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| error.to_string())?;
-    T::from_value(value).map_err(|error| error.to_string())
-}
-
 fn close_vec_owner_step<T>(owner: &mut Vec<T>, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {
     if owner.pop().is_some() {
         return Ok(Some((1, 0)));
@@ -1962,28 +1953,6 @@ pub enum PcgStage {
     Complete,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[value(tag = "kind")]
-pub enum PcgQuality {
-    Initializing,
-    Coarse,
-    Final,
-}
-
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-pub struct PcgPreview {
-    pub stage: PcgStage,
-    pub quality: PcgQuality,
-    pub iteration: usize,
-    pub residual_norm: f64,
-    pub displacement: Vec<f64>,
-    pub residual: Vec<f64>,
-    pub reactions: Vec<f64>,
-    pub approximate_contours: Vec<f64>,
-    pub converged: bool,
-}
-
-#[derive(Clone, ToValue, FromValue)]
 struct PcgCheckpoint {
     a: Csr,
     b: VecD,
@@ -2016,10 +1985,107 @@ struct PcgCheckpoint {
     checkpoint_due: bool,
 }
 
+const PCG_SCALAR_BACKING_BYTES: usize = SPARSE_PAGE_BYTES;
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum PcgPublicationKind {
+    Checkpoint,
+    Preview,
+    Complete,
+}
+
+struct PcgPublication {
+    kind: PcgPublicationKind,
+    cursor: NumericalPageCursor,
+    writer: RetainedJobPayloadWriter,
+    complete: bool,
+}
+
+impl PcgPublication {
+    fn new(kind: PcgPublicationKind) -> Self {
+        let stream = match kind {
+            PcgPublicationKind::Checkpoint => JobPayloadStream::CheckpointState,
+            PcgPublicationKind::Preview => JobPayloadStream::Preview,
+            PcgPublicationKind::Complete => JobPayloadStream::CommitOutput,
+        };
+        Self { kind, cursor: NumericalPageCursor::new(), writer: RetainedJobPayloadWriter::new(stream), complete: false }
+    }
+
+    fn advance(&mut self, operation: Operation, state: &PcgCheckpoint) -> Result<bool, JobPayloadAdmissionFault> {
+        let (magic, kind, fields) = match self.kind {
+            PcgPublicationKind::Checkpoint => (b"FEMPCP1\0", 13, 11),
+            _ => (b"FEMPCG1\0", 3, 5),
+        };
+        if advance_numerical_page_header(&mut self.writer, magic, kind, self.cursor)? { return Ok(false); }
+        let complete = if self.kind == PcgPublicationKind::Checkpoint {
+            match self.cursor.field {
+                0 => advance_u64_values(&mut self.writer, &state.checkpoint_control(operation), &mut self.cursor)?,
+                1 => advance_paged_u32_owner(&mut self.writer, &state.a.indptr, &mut self.cursor)?,
+                2 => advance_paged_u32_owner(&mut self.writer, &state.a.indices, &mut self.cursor)?,
+                3 => advance_paged_f64_owner(&mut self.writer, &state.a.vals, &mut self.cursor)?,
+                4 => advance_f64_owner(&mut self.writer, &state.b.0, &mut self.cursor)?,
+                5 => advance_f64_owner(&mut self.writer, &state.x.0, &mut self.cursor)?,
+                6 => advance_f64_owner(&mut self.writer, &state.diag.0, &mut self.cursor)?,
+                7 => advance_f64_owner(&mut self.writer, &state.r.0, &mut self.cursor)?,
+                8 => advance_f64_owner(&mut self.writer, &state.z.0, &mut self.cursor)?,
+                9 => advance_f64_owner(&mut self.writer, &state.p.0, &mut self.cursor)?,
+                10 => advance_f64_owner(&mut self.writer, &state.ap.0, &mut self.cursor)?,
+                _ => true,
+            }
+        } else if self.cursor.field == 0 {
+            advance_u64_values(&mut self.writer, &state.output_control(operation), &mut self.cursor)?
+        } else {
+            let values = if self.cursor.field == 2 || self.cursor.field == 3 { &state.r.0 } else { &state.x.0 };
+            if !advance_owner_length(&mut self.writer, values.len(), &mut self.cursor)? { return Ok(false); }
+            if let Some(value) = values.get(self.cursor.item) {
+                let value = match self.cursor.field { 3 => -*value, 4 => value.abs(), _ => *value };
+                if write_numerical_entry(&mut self.writer, &value.to_bits().to_le_bytes())? { self.cursor.item += 1; }
+                false
+            } else {
+                true
+            }
+        };
+        if complete {
+            self.writer.commit_staged_page()?;
+            self.cursor.field += 1;
+            self.cursor.owner = 0;
+            self.cursor.item = 0;
+        }
+        Ok(self.cursor.field == fields)
+    }
+}
+
+impl PcgCheckpoint {
+    fn checkpoint_control(&self, operation: Operation) -> [u64; 26] {
+        [
+            operation.operation.0, operation.base_revision.0, operation.generation.0, operation.seed,
+            self.a.n as u64, self.tol_rel.to_bits(), self.max_iter as u64, self.batch_units as u64,
+            self.stage as u64, self.b_norm.to_bits(), self.residual_norm.to_bits(), self.residual_sq.to_bits(),
+            self.rz_old.to_bits(), self.rz_new.to_bits(), self.dot_accum.to_bits(), self.alpha.to_bits(),
+            self.beta.to_bits(), self.iteration as u64, self.cursor as u64, self.row_cursor as u64,
+            self.entry_cursor as u64, self.row_sum.to_bits(), self.converged as u64, self.coarse_published as u64,
+            self.preview_due as u64, 0,
+        ]
+    }
+
+    fn output_control(&self, operation: Operation) -> [u64; 10] {
+        [
+            operation.operation.0, operation.base_revision.0, operation.generation.0, operation.seed,
+            self.a.n as u64, self.stage as u64,
+            if self.converged { 2 } else if self.coarse_published { 1 } else { 0 },
+            self.iteration as u64, self.residual_norm.to_bits(), self.converged as u64,
+        ]
+    }
+}
+
 pub struct PcgJob {
     operation: Operation,
     state: PcgCheckpoint,
     close_lane: u8,
+    publication: Option<PcgPublication>,
+    publication_fault: Option<NumericalCheckpointFault>,
+    terminal_published: bool,
+    closing: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -2032,6 +2098,52 @@ pub struct PcgVisualScalar {
 }
 
 impl PcgJob {
+    fn from_state(operation: Operation, state: PcgCheckpoint) -> Self {
+        Self { operation, state, close_lane: 0, publication: None, publication_fault: None, terminal_published: false, closing: false }
+    }
+
+    fn step_publication(&mut self, context: &mut StepContext<'_>, kind: PcgPublicationKind) -> Result<StepOutcome, NumericalCheckpointFault> {
+        if context.should_yield() { return Ok(StepOutcome::Yield); }
+        context.consume_fuel(1);
+        if self.publication.is_none() {
+            self.publication = Some(PcgPublication::new(kind));
+            return Ok(StepOutcome::Yield);
+        }
+        let publication = self.publication.as_mut().ok_or(NumericalCheckpointFault::Field)?;
+        if !publication.complete {
+            if publication.writer.staged_page_len().is_none() {
+                publication.writer.begin_staged_page(context).map_err(|_| NumericalCheckpointFault::Admission)?;
+                return Ok(StepOutcome::Yield);
+            }
+            publication.complete = publication.advance(self.operation, &self.state).map_err(|_| NumericalCheckpointFault::Admission)?;
+            return Ok(StepOutcome::Yield);
+        }
+        let publication = self.publication.take().ok_or(NumericalCheckpointFault::Field)?;
+        let payload = match publication.writer.finish() {
+            Ok(payload) => payload,
+            Err(writer) => {
+                self.publication = Some(PcgPublication { kind: publication.kind, cursor: publication.cursor, writer, complete: publication.complete });
+                return Err(NumericalCheckpointFault::Admission);
+            }
+        };
+        Ok(match publication.kind {
+            PcgPublicationKind::Checkpoint => {
+                self.state.checkpoint_due = false;
+                StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: payload, applied_progress: self.state.iteration as u64 })
+            }
+            PcgPublicationKind::Preview => {
+                self.state.preview_due = false;
+                StepOutcome::PreviewReady(payload)
+            }
+            PcgPublicationKind::Complete => {
+                self.terminal_published = true;
+                self.state.preview_due = false;
+                self.state.checkpoint_due = false;
+                StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: payload })
+            }
+        })
+    }
+
     pub fn new(operation: Operation, a: Csr, b: VecD, x: VecD, tol_rel: f64, max_iter: usize, batch_units: usize) -> Self {
         assert_eq!(a.n, b.len(), "pcg rhs dimension mismatch");
         assert_eq!(a.n, x.len(), "pcg initial guess dimension mismatch");
@@ -2072,35 +2184,10 @@ impl PcgJob {
                 checkpoint_due: false,
             },
             close_lane: 0,
-        }
-    }
-
-    pub fn from_checkpoint(operation: Operation, bytes: &[u8]) -> Result<Self, String> {
-        Ok(Self { operation, state: decode_value(bytes)?, close_lane: 0 })
-    }
-
-    pub fn checkpoint_bytes(&self) -> Vec<u8> {
-        encode_value(&self.state)
-    }
-
-    pub fn preview(&self) -> PcgPreview {
-        let reactions = self.state.r.0.iter().map(|value| -*value).collect();
-        PcgPreview {
-            stage: self.state.stage,
-            quality: if self.state.converged {
-                PcgQuality::Final
-            } else if self.state.coarse_published {
-                PcgQuality::Coarse
-            } else {
-                PcgQuality::Initializing
-            },
-            iteration: self.state.iteration,
-            residual_norm: self.state.residual_norm,
-            displacement: self.state.x.0.clone(),
-            residual: self.state.r.0.clone(),
-            reactions,
-            approximate_contours: self.state.x.0.iter().map(|value| value.abs()).collect(),
-            converged: self.state.converged,
+            publication: None,
+            publication_fault: None,
+            terminal_published: false,
+            closing: false,
         }
     }
 
@@ -2127,6 +2214,13 @@ impl PcgJob {
 
     /// 🧹️ Retires one matrix/vector scalar owner per governed close opportunity.
     pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        self.closing = true;
+        if let Some(publication) = self.publication.as_mut() {
+            return match publication.writer.close_step(1, maximum_bytes) {
+                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => (false, released_items, released_bytes),
+                semio_framework_job::JobPayloadCloseStep::Complete => { self.publication = None; (false, 1, 0) }
+            };
+        }
         loop {
             if self.close_lane == 0 {
                 let (terminal, items, bytes) = self.state.a.close_step(maximum_bytes);
@@ -2522,8 +2616,9 @@ impl ModalInputConstruction {
 
     pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
         if let Some((stiffness, mass)) = self.complete.as_mut() {
-            if !stiffness.vals.is_empty() || !stiffness.rowind.is_empty() || !stiffness.colptr.is_empty() {
-                return stiffness.close_step(maximum_bytes);
+            let (terminal, items, bytes) = stiffness.close_step(maximum_bytes);
+            if !terminal {
+                return (false, items, bytes);
             }
             let (terminal, items, bytes) = mass.close_step(maximum_bytes);
             if !terminal {
@@ -2579,6 +2674,7 @@ enum PcgConstructionStage {
     ReserveB,
     InitializeB,
     RetireMountedB,
+    NormalizeB,
     ReserveX,
     InitializeX,
     ReserveDiagonal,
@@ -2603,6 +2699,7 @@ pub struct PcgJobConstruction {
     cursor: usize,
     b: VecD,
     mounted_b: Option<MountedScalarSlots>,
+    rhs_norm: f64,
     x: VecD,
     diag: VecD,
     r: VecD,
@@ -2610,6 +2707,8 @@ pub struct PcgJobConstruction {
     p: VecD,
     ap: VecD,
     complete: Option<PcgJob>,
+    fault: Option<&'static [u8]>,
+    closing: bool,
 }
 
 impl PcgJobConstruction {
@@ -2621,6 +2720,7 @@ impl PcgJobConstruction {
             cursor: 0,
             b: VecD::from_vec(Vec::new()),
             mounted_b: None,
+            rhs_norm: 0.0,
             x: VecD::from_vec(Vec::new()),
             diag: VecD::from_vec(Vec::new()),
             r: VecD::from_vec(Vec::new()),
@@ -2628,21 +2728,24 @@ impl PcgJobConstruction {
             p: VecD::from_vec(Vec::new()),
             ap: VecD::from_vec(Vec::new()),
             complete: None,
+            fault: None,
+            closing: false,
         }
     }
 
-    /// 🌬️ Retains a generation-local assembled RHS instead of fabricating the compatibility unit vector.
+    /// 🌬️ Retains the generation's assembled RHS and derives its convergence norm one scalar per opportunity.
     pub fn new_with_rhs(operation: Operation, matrix: Csr, rhs: VecD) -> Result<Self, (Csr, VecD)> {
-        if matrix.n != rhs.len() || rhs.0.capacity().saturating_mul(size_of::<f64>()) > NUMERICAL_OWNER_PAGE_BYTES {
+        if matrix.n != rhs.len() || rhs.0.capacity().saturating_mul(size_of::<f64>()) > PCG_SCALAR_BACKING_BYTES {
             return Err((matrix, rhs));
         }
         Ok(Self {
             operation,
             matrix: Some(matrix),
-            stage: PcgConstructionStage::ReserveX,
+            stage: PcgConstructionStage::NormalizeB,
             cursor: 0,
             b: rhs,
             mounted_b: None,
+            rhs_norm: 0.0,
             x: VecD::from_vec(Vec::new()),
             diag: VecD::from_vec(Vec::new()),
             r: VecD::from_vec(Vec::new()),
@@ -2650,6 +2753,8 @@ impl PcgJobConstruction {
             p: VecD::from_vec(Vec::new()),
             ap: VecD::from_vec(Vec::new()),
             complete: None,
+            fault: None,
+            closing: false,
         })
     }
 
@@ -2663,11 +2768,22 @@ impl PcgJobConstruction {
     }
 
     pub fn step_one(&mut self) -> Result<bool, &'static [u8]> {
+        if let Some(fault) = self.fault { return Err(fault); }
+        if self.closing { return Err(b"pcg-construction-closing"); }
+        let result = self.advance_one();
+        if let Err(fault) = result { self.fault = Some(fault); }
+        result
+    }
+
+    fn advance_one(&mut self) -> Result<bool, &'static [u8]> {
         let n = self.matrix.as_ref().ok_or(b"pcg-construction-matrix-missing" as &'static [u8])?.n;
+        if n.checked_mul(size_of::<f64>()).is_none_or(|bytes| bytes > PCG_SCALAR_BACKING_BYTES) {
+            return Err(b"pcg-construction-owner-page-capacity");
+        }
         macro_rules! reserve {
             ($owner:expr, $next:expr, $fault:expr) => {{
                 $owner.0.try_reserve_exact(n).map_err(|_| $fault as &'static [u8])?;
-                if $owner.0.capacity().checked_mul(std::mem::size_of::<f64>()).is_none_or(|bytes| bytes > 4_096) {
+                if $owner.0.capacity().checked_mul(std::mem::size_of::<f64>()).is_none_or(|bytes| bytes > PCG_SCALAR_BACKING_BYTES) {
                     return Err(b"pcg-construction-owner-page-capacity");
                 }
                 self.cursor = 0;
@@ -2692,12 +2808,25 @@ impl PcgJobConstruction {
                     self.b.0.push(value);
                     self.cursor += 1;
                 } else {
-                    self.stage = if self.mounted_b.is_some() { PcgConstructionStage::RetireMountedB } else { PcgConstructionStage::ReserveX };
+                    self.cursor = 0;
+                    self.stage = if self.mounted_b.is_some() { PcgConstructionStage::RetireMountedB } else { PcgConstructionStage::NormalizeB };
                 }
             }
             PcgConstructionStage::RetireMountedB => {
                 if self.mounted_b.as_mut().is_some_and(MountedScalarSlots::close_step) {
                     self.mounted_b = None;
+                    self.stage = PcgConstructionStage::NormalizeB;
+                }
+            }
+            PcgConstructionStage::NormalizeB => {
+                if self.cursor < n {
+                    let value = *self.b.0.get(self.cursor).ok_or(b"pcg-construction-rhs-missing" as &'static [u8])?;
+                    if !value.is_finite() { return Err(b"pcg-construction-rhs-scalar"); }
+                    let norm = self.rhs_norm.hypot(value);
+                    if !norm.is_finite() { return Err(b"pcg-construction-rhs-norm"); }
+                    self.rhs_norm = norm;
+                    self.cursor += 1;
+                } else {
                     self.stage = PcgConstructionStage::ReserveX;
                 }
             }
@@ -2730,7 +2859,7 @@ impl PcgJobConstruction {
                             z: std::mem::replace(&mut self.z, VecD::from_vec(Vec::new())),
                             p: std::mem::replace(&mut self.p, VecD::from_vec(Vec::new())),
                             ap: std::mem::replace(&mut self.ap, VecD::from_vec(Vec::new())),
-                            b_norm: (n as f64).sqrt().max(1e-300),
+                            b_norm: self.rhs_norm.max(1e-300),
                             residual_norm: 0.0,
                             residual_sq: 0.0,
                             rz_old: 0.0,
@@ -2749,6 +2878,10 @@ impl PcgJobConstruction {
                             checkpoint_due: false,
                         },
                         close_lane: 0,
+                        publication: None,
+                        publication_fault: None,
+                        terminal_published: false,
+                        closing: false,
                     });
                 }
                 return Ok(true);
@@ -2762,6 +2895,7 @@ impl PcgJobConstruction {
     }
 
     pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        self.closing = true;
         if let Some(complete) = self.complete.as_mut() {
             let (terminal, items, bytes) = complete.close_step(maximum_bytes);
             if !terminal {
@@ -2796,6 +2930,192 @@ impl PcgJobConstruction {
     }
 }
 
+/// 🧬 Restores one exact retained PCG generation with bounded page and scalar ownership.
+pub struct PcgRestoreCursor {
+    operation: Operation,
+    payload: Option<RetainedJobPayload>,
+    total_pages: usize,
+    page_slot: usize,
+    close_due: bool,
+    expected_field: u16,
+    page_entry: usize,
+    owner_cursor: NumericalOwnerRestoreCursor,
+    control: [u64; 26],
+    job: Option<PcgJob>,
+    fault: Option<NumericalCheckpointFault>,
+    closing: bool,
+}
+
+impl PcgRestoreCursor {
+    pub fn new(operation: Operation, payload: RetainedJobPayload) -> Self {
+        let total_pages = payload.page_count();
+        Self { operation, payload: Some(payload), total_pages, page_slot: 0, close_due: false, expected_field: 0, page_entry: 0, owner_cursor: NumericalOwnerRestoreCursor::default(), control: [0; 26], job: None, fault: None, closing: false }
+    }
+
+    fn decode_control(&mut self) -> Result<(), NumericalCheckpointFault> {
+        let c = self.control;
+        if !(NumericalCheckpointIdentity { operation: c[0], revision: c[1], generation: c[2], seed: c[3] }).matches(self.operation) {
+            return Err(NumericalCheckpointFault::Stale);
+        }
+        let integer = |index| usize::try_from(c[index]).map_err(|_| NumericalCheckpointFault::Envelope);
+        let boolean = |index| match c[index] { 0 => Ok(false), 1 => Ok(true), _ => Err(NumericalCheckpointFault::Field) };
+        let n = integer(4)?;
+        if n.checked_mul(size_of::<f64>()).is_none_or(|bytes| bytes > PCG_SCALAR_BACKING_BYTES) || integer(7)? == 0 || integer(18)? > n || integer(19)? > n {
+            return Err(NumericalCheckpointFault::Envelope);
+        }
+        let stage = match c[8] {
+            0 => PcgStage::InitializeDiagonal,
+            1 => PcgStage::InitialSpmv,
+            2 => PcgStage::InitialResidual,
+            3 => PcgStage::InitialPrecondition,
+            4 => PcgStage::IterationSpmv,
+            5 => PcgStage::IterationUpdate,
+            6 => PcgStage::IterationPrecondition,
+            7 => PcgStage::IterationDirection,
+            8 => PcgStage::Complete,
+            _ => return Err(NumericalCheckpointFault::Field),
+        };
+        let state = PcgCheckpoint {
+            a: Csr::from_paged_parts(n, PagedList::default(), PagedList::default(), PagedList::default()),
+            b: VecD::from_vec(Vec::new()), x: VecD::from_vec(Vec::new()), diag: VecD::from_vec(Vec::new()),
+            r: VecD::from_vec(Vec::new()), z: VecD::from_vec(Vec::new()), p: VecD::from_vec(Vec::new()), ap: VecD::from_vec(Vec::new()),
+            tol_rel: f64::from_bits(c[5]), max_iter: integer(6)?, batch_units: integer(7)?, stage,
+            b_norm: f64::from_bits(c[9]), residual_norm: f64::from_bits(c[10]), residual_sq: f64::from_bits(c[11]),
+            rz_old: f64::from_bits(c[12]), rz_new: f64::from_bits(c[13]), dot_accum: f64::from_bits(c[14]),
+            alpha: f64::from_bits(c[15]), beta: f64::from_bits(c[16]), iteration: integer(17)?, cursor: integer(18)?,
+            row_cursor: integer(19)?, entry_cursor: integer(20)?, row_sum: f64::from_bits(c[21]),
+            converged: boolean(22)?, coarse_published: boolean(23)?, preview_due: boolean(24)?, checkpoint_due: boolean(25)?,
+        };
+        if !state.tol_rel.is_finite() || state.tol_rel <= 0.0 || !state.b_norm.is_finite() || state.b_norm <= 0.0 || state.iteration > state.max_iter
+            || [state.residual_norm, state.residual_sq, state.rz_old, state.rz_new, state.dot_accum, state.alpha, state.beta, state.row_sum].iter().any(|value| !value.is_finite())
+            || state.residual_norm < 0.0 || state.residual_sq < 0.0 {
+            return Err(NumericalCheckpointFault::Envelope);
+        }
+        self.job = Some(PcgJob::from_state(self.operation, state));
+        Ok(())
+    }
+
+    fn decode_page_entry(&mut self, bytes: &[u8]) -> Result<bool, NumericalCheckpointFault> {
+        let page = parse_numerical_page(bytes, b"FEMPCP1\0")?;
+        if bytes[14..16] != [0, 0] || page.kind != 13 || page.field != self.expected_field || (self.owner_cursor.shape.is_none() && (page.owner != 0 || page.item != 0)) {
+            return Err(NumericalCheckpointFault::Field);
+        }
+        if page.field == 0 {
+            if declared_owner_length(&page, 26)? != 26 || page.bytes.len() != 216 { return Err(NumericalCheckpointFault::Truncated); }
+            if self.page_entry == 0 { self.page_entry = 1; return Ok(false); }
+            let item = self.page_entry - 1;
+            if item < 26 {
+                self.control[item] = read_checkpoint_u64(page.bytes, 8 + item * 8)?;
+                self.page_entry += 1;
+                return Ok(false);
+            }
+            self.decode_control()?;
+            self.expected_field = 1;
+            return Ok(true);
+        }
+        let state = &mut self.job.as_mut().ok_or(NumericalCheckpointFault::Field)?.state;
+        let n = state.a.n;
+        let expected = match page.field {
+            1 => n + 1,
+            2 | 3 => state.a.indptr(n).ok_or(NumericalCheckpointFault::Field)? as usize,
+            4..=10 => n,
+            _ => return Err(NumericalCheckpointFault::Field),
+        };
+        if self.owner_cursor.shape.is_none() && declared_owner_length(&page, expected)? != expected { return Err(NumericalCheckpointFault::Envelope); }
+        let before = match page.field { 1 => state.a.indptr.len(), 2 => state.a.indices.len(), _ => 0 };
+        let complete = match page.field {
+            1 => restore_paged_u32_entry(&mut state.a.indptr, &page, expected, &mut self.page_entry, &mut self.owner_cursor)?,
+            2 => restore_paged_u32_entry(&mut state.a.indices, &page, expected, &mut self.page_entry, &mut self.owner_cursor)?,
+            3 => restore_paged_f64_entry(&mut state.a.vals, &page, expected, &mut self.page_entry, &mut self.owner_cursor)?,
+            field => {
+                let owner = match field {
+                    4 => &mut state.b.0, 5 => &mut state.x.0, 6 => &mut state.diag.0, 7 => &mut state.r.0,
+                    8 => &mut state.z.0, 9 => &mut state.p.0, 10 => &mut state.ap.0, _ => unreachable!(),
+                };
+                let complete = restore_f64_entry(owner, &page, expected, &mut self.page_entry, &mut self.owner_cursor)?;
+                if owner.capacity().checked_mul(size_of::<f64>()).is_none_or(|bytes| bytes > PCG_SCALAR_BACKING_BYTES) { return Err(NumericalCheckpointFault::Admission); }
+                if owner.last().is_some_and(|value| !value.is_finite()) { return Err(NumericalCheckpointFault::Envelope); }
+                complete
+            }
+        };
+        if page.field == 3 && state.a.vals.len() != 0 && state.a.value(state.a.vals.len() - 1).is_some_and(|value| !value.is_finite()) {
+            return Err(NumericalCheckpointFault::Envelope);
+        }
+        if page.field == 1 && state.a.indptr.len() > before {
+            let value = state.a.indptr(before).ok_or(NumericalCheckpointFault::Field)? as usize;
+            if value > n * n || (before == 0 && value != 0) || (before > 0 && value < state.a.indptr(before - 1).ok_or(NumericalCheckpointFault::Field)? as usize) {
+                return Err(NumericalCheckpointFault::Envelope);
+            }
+        }
+        if page.field == 2 && state.a.indices.len() > before && state.a.index(before).is_none_or(|value| value as usize >= n) {
+            return Err(NumericalCheckpointFault::Envelope);
+        }
+        if complete && self.owner_cursor.shape.is_none() { self.expected_field = if page.field == 10 { u16::MAX } else { page.field + 1 }; }
+        Ok(complete)
+    }
+
+    pub fn step(&mut self, context: &mut StepContext<'_>) -> Result<Option<PcgJob>, NumericalCheckpointFault> {
+        if let Some(fault) = self.fault { return Err(fault); }
+        let result = self.advance(context);
+        if let Err(fault) = result { self.fault = Some(fault); }
+        result
+    }
+
+    fn advance(&mut self, context: &mut StepContext<'_>) -> Result<Option<PcgJob>, NumericalCheckpointFault> {
+        if self.closing || context.is_cancelled() { return Err(NumericalCheckpointFault::Cancelled); }
+        if context.operation() != self.operation.operation || context.generation() != self.operation.generation { return Err(NumericalCheckpointFault::Stale); }
+        if context.should_yield() { return Ok(None); }
+        context.consume_fuel(1);
+        if self.close_due {
+            let payload = self.payload.as_mut().ok_or(NumericalCheckpointFault::Truncated)?;
+            let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            self.page_slot += 1;
+            self.close_due = false;
+            self.page_entry = 0;
+            if self.page_slot == self.total_pages {
+                if self.expected_field != u16::MAX || !payload.terminal_is_empty() { return Err(NumericalCheckpointFault::Truncated); }
+                let job = self.job.as_ref().ok_or(NumericalCheckpointFault::Truncated)?;
+                let state = &job.state;
+                if state.entry_cursor > state.a.vals.len() || state.a.indices.len() != state.a.vals.len() { return Err(NumericalCheckpointFault::Envelope); }
+                self.payload = None;
+                return Ok(self.job.take());
+            }
+            return Ok(None);
+        }
+        let payload = self.payload.take().ok_or(NumericalCheckpointFault::Truncated)?;
+        let decoded = payload.page(self.page_slot).ok_or(NumericalCheckpointFault::Truncated).and_then(|source| self.decode_page_entry(source));
+        self.payload = Some(payload);
+        if decoded? { self.close_due = true; }
+        Ok(None)
+    }
+
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        use semio_framework_job::InteractiveJobCloseStep;
+        if maximum_items == 0 { return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }; }
+        self.closing = true;
+        if let Some(payload) = self.payload.as_mut() {
+            if !payload.terminal_is_empty() {
+                return match payload.close_step(1, maximum_bytes) {
+                    semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                    semio_framework_job::JobPayloadCloseStep::Complete => InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 },
+                };
+            }
+            self.payload = None;
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if let Some(job) = self.job.as_mut() {
+            let (complete, released_items, released_bytes) = job.close_step(maximum_bytes);
+            if !complete { return InteractiveJobCloseStep::Pending { released_items, released_bytes }; }
+            self.job = None;
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        InteractiveJobCloseStep::Complete
+    }
+
+    pub fn terminal_is_empty(&self) -> bool { self.payload.is_none() && self.job.is_none() }
+}
+
+
 impl InteractiveJob for PcgJob {
     fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
         if context.is_cancelled() {
@@ -2804,44 +3124,31 @@ impl InteractiveJob for PcgJob {
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
             return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
         }
-        context.set_stage(if self.state.stage == PcgStage::Complete {
-            "fem.pcg.complete-encode"
-        } else if self.state.preview_due {
-            "fem.pcg.preview-encode"
-        } else if self.state.checkpoint_due {
-            "fem.pcg.checkpoint-encode"
-        } else {
-            "fem.pcg"
+        if self.closing || self.publication_fault.is_some() {
+            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+        }
+        if self.terminal_published { return StepOutcome::Yield; }
+        let publication_kind = self.publication.as_ref().map(|publication| publication.kind).or_else(|| {
+            if self.state.stage == PcgStage::Complete { Some(PcgPublicationKind::Complete) }
+            else if self.state.preview_due { Some(PcgPublicationKind::Preview) }
+            else if self.state.checkpoint_due { Some(PcgPublicationKind::Checkpoint) }
+            else { None }
         });
-        if context.should_yield() {
-            return StepOutcome::Yield;
-        }
-        if self.state.stage == PcgStage::Complete || self.state.preview_due || self.state.checkpoint_due {
-            context.consume_fuel(1);
-        }
-        if self.state.stage == PcgStage::Complete {
-            let bytes = encode_value(&self.preview());
-            return match context.payload_from_bytes(JobPayloadStream::CommitOutput, &bytes) {
-                Ok(output) => StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output }),
-                Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+        if let Some(kind) = publication_kind {
+            context.set_stage(match kind {
+                PcgPublicationKind::Checkpoint => "fem.pcg.checkpoint-page",
+                PcgPublicationKind::Preview => "fem.pcg.preview-page",
+                PcgPublicationKind::Complete => "fem.pcg.complete-page",
+            });
+            return match self.step_publication(context, kind) {
+                Ok(outcome) => outcome,
+                Err(fault) => {
+                    self.publication_fault = Some(fault);
+                    StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) })
+                }
             };
         }
-        if self.state.preview_due {
-            self.state.preview_due = false;
-            let bytes = encode_value(&self.preview());
-            return match context.payload_from_bytes(JobPayloadStream::Preview, &bytes) {
-                Ok(preview) => StepOutcome::PreviewReady(preview),
-                Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
-            };
-        }
-        if self.state.checkpoint_due {
-            self.state.checkpoint_due = false;
-            let bytes = self.checkpoint_bytes();
-            return match context.payload_from_bytes(JobPayloadStream::CheckpointState, &bytes) {
-                Ok(state) => StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state, applied_progress: self.state.iteration as u64 }),
-                Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
-            };
-        }
+        context.set_stage("fem.pcg");
         let mut units = 0;
         while units < self.state.batch_units && !context.should_yield() && self.state.stage != PcgStage::Complete && !self.state.preview_due && !self.state.checkpoint_due {
             match self.state.stage {
@@ -2862,7 +3169,10 @@ impl InteractiveJob for PcgJob {
         StepOutcome::Yield
     }
 
-    fn begin_close(&mut self) {}
+    fn begin_close(&mut self) {
+        self.closing = true;
+        if let Some(publication) = self.publication.as_mut() { publication.writer.begin_close(); }
+    }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
         if maximum_items == 0 {
@@ -2877,7 +3187,7 @@ impl InteractiveJob for PcgJob {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.close_lane == 8
+        self.close_lane == 8 && self.publication.is_none()
     }
 }
 
@@ -3108,6 +3418,23 @@ struct SubspaceWork {
 }
 
 impl SubspaceWork {
+    fn checkpoint_control(&self) -> [u64; 12] {
+        [
+            self.stage as u64,
+            self.reserve as u64,
+            self.first as u64,
+            self.second as u64,
+            self.third as u64,
+            self.phase as u64,
+            self.sweep as u64,
+            self.scalar.to_bits(),
+            self.coefficient.to_bits(),
+            self.cosine.to_bits(),
+            self.sine.to_bits(),
+            self.tangent.to_bits(),
+        ]
+    }
+
     fn empty() -> Self {
         Self {
             stage: SubspaceStage::ReserveIteration,
@@ -3178,6 +3505,38 @@ pub struct SubspaceIterationJob {
     terminal_page_cursor: usize,
     checkpoint_writer: Option<RetainedJobPayloadWriter>,
     checkpoint_cursor: NumericalPageCursor,
+}
+
+fn close_subspace_checkpoint_step(state: &mut SubspaceCheckpoint, maximum_bytes: usize) -> (bool, usize, usize) {
+    match close_nested_vec_owner_step(&mut state.k_factor.l_cols, maximum_bytes) {
+        Ok(Some((items, bytes))) => return (false, items, bytes),
+        Err(()) => return (false, 0, 0),
+        Ok(None) => {}
+    }
+    for owner in [&mut state.k_factor.d, &mut state.x.data, &mut state.prev_theta, &mut state.final_theta, &mut state.residuals] {
+        match close_vec_owner_step(owner, maximum_bytes) {
+            Ok(Some((items, bytes))) => return (false, items, bytes),
+            Err(()) => return (false, 0, 0),
+            Ok(None) => {}
+        }
+    }
+    let (matrix_terminal, matrix_items, matrix_bytes) = state.b.close_step(maximum_bytes);
+    if !matrix_terminal {
+        return (false, matrix_items, matrix_bytes);
+    }
+    let (terminal, items, bytes) = state.work.close_step(maximum_bytes);
+    if !terminal {
+        return (false, items, bytes);
+    }
+    if let Some(retiring) = state.retiring_work.as_mut() {
+        let (terminal, items, bytes) = retiring.close_step(maximum_bytes);
+        if !terminal {
+            return (false, items, bytes);
+        }
+        state.retiring_work = None;
+        return (false, 1, 0);
+    }
+    (true, 0, 0)
 }
 
 impl SubspaceIterationJob {
@@ -3262,21 +3621,7 @@ impl SubspaceIterationJob {
     fn advance_work_checkpoint_entry(work: &SubspaceWork, cursor: &mut NumericalPageCursor, writer: &mut RetainedJobPayloadWriter, base: u16) -> Result<bool, JobPayloadAdmissionFault> {
         Ok(match cursor.field - base {
             0 => {
-                let values = [
-                    work.stage as u64,
-                    work.reserve as u64,
-                    work.first as u64,
-                    work.second as u64,
-                    work.third as u64,
-                    work.phase as u64,
-                    work.sweep as u64,
-                    work.scalar.to_bits(),
-                    work.coefficient.to_bits(),
-                    work.cosine.to_bits(),
-                    work.sine.to_bits(),
-                    work.tangent.to_bits(),
-                    work.close_lane as u64,
-                ];
+                let values = work.checkpoint_control();
                 advance_u64_values(writer, &values, cursor)?
             }
             1 => advance_matrix_owner(writer, &work.rhs, cursor)?,
@@ -3341,21 +3686,7 @@ impl SubspaceIterationJob {
                     cursor.owner = 1;
                     false
                 } else if let Some(work) = state.retiring_work.as_ref() {
-                    let values = [
-                        work.stage as u64,
-                        work.reserve as u64,
-                        work.first as u64,
-                        work.second as u64,
-                        work.third as u64,
-                        work.phase as u64,
-                        work.sweep as u64,
-                        work.scalar.to_bits(),
-                        work.coefficient.to_bits(),
-                        work.cosine.to_bits(),
-                        work.sine.to_bits(),
-                        work.tangent.to_bits(),
-                        work.close_lane as u64,
-                    ];
+                    let values = work.checkpoint_control();
                     if cursor.owner == 1 {
                         writer.write_staged(&(values.len() as u64).to_le_bytes())?;
                         cursor.owner = 2;
@@ -4235,35 +4566,7 @@ impl SubspaceIterationJob {
     }
 
     fn close_retained_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
-        match close_nested_vec_owner_step(&mut self.state.k_factor.l_cols, maximum_bytes) {
-            Ok(Some((items, bytes))) => return (false, items, bytes),
-            Err(()) => return (false, 0, 0),
-            Ok(None) => {}
-        }
-        for owner in [&mut self.state.k_factor.d, &mut self.state.x.data, &mut self.state.prev_theta, &mut self.state.final_theta, &mut self.state.residuals] {
-            match close_vec_owner_step(owner, maximum_bytes) {
-                Ok(Some((items, bytes))) => return (false, items, bytes),
-                Err(()) => return (false, 0, 0),
-                Ok(None) => {}
-            }
-        }
-        let (matrix_terminal, matrix_items, matrix_bytes) = self.state.b.close_step(maximum_bytes);
-        if !matrix_terminal {
-            return (false, matrix_items, matrix_bytes);
-        }
-        let (terminal, items, bytes) = self.state.work.close_step(maximum_bytes);
-        if !terminal {
-            return (false, items, bytes);
-        }
-        if let Some(retiring) = self.state.retiring_work.as_mut() {
-            let (terminal, items, bytes) = retiring.close_step(maximum_bytes);
-            if !terminal {
-                return (false, items, bytes);
-            }
-            self.state.retiring_work = None;
-            return (false, 1, 0);
-        }
-        (true, 0, 0)
+        close_subspace_checkpoint_step(&mut self.state, maximum_bytes)
     }
 
     fn close_terminal_is_empty(&self) -> bool {
@@ -4320,15 +4623,15 @@ fn apply_work_control(work: &mut SubspaceWork, values: &[u64; 24]) -> Result<(),
     work.cosine = f64::from_bits(values[9]);
     work.sine = f64::from_bits(values[10]);
     work.tangent = f64::from_bits(values[11]);
-    work.close_lane = values[12] as u8;
+    work.close_lane = 0;
     Ok(())
 }
 
 fn restore_work_entry(work: &mut SubspaceWork, page: &NumericalPageView<'_>, base: u16, n: usize, m: usize, entry: &mut usize, control: &mut [u64; 24], cursor: &mut NumericalOwnerRestoreCursor) -> Result<bool, NumericalCheckpointFault> {
     match page.field - base {
         0 => {
-            let count = declared_owner_length(page, 13)?;
-            if count != 13 || page.bytes.len() != 8 + count * 8 {
+            let count = read_checkpoint_usize(page.bytes, 0)?;
+            if count != 12 || page.bytes.len() != 8 + count * 8 {
                 return Err(NumericalCheckpointFault::Truncated);
             }
             if *entry == 0 {
@@ -4481,8 +4784,8 @@ impl SubspaceRestoreCursor {
                 match present {
                     0 if page.bytes.len() == 8 => true,
                     1 => {
-                        let count = read_checkpoint_u64(page.bytes, 8)? as usize;
-                        if count != 13 || page.bytes.len() != 16 + count * 8 {
+                        let count = read_checkpoint_usize(page.bytes, 8)?;
+                        if count != 12 || page.bytes.len() != 16 + count * 8 {
                             return Err(NumericalCheckpointFault::Truncated);
                         }
                         if self.page_entry == 1 {
@@ -4595,27 +4898,8 @@ impl SubspaceRestoreCursor {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
         let Some(state) = self.state.as_mut() else { return semio_framework_job::InteractiveJobCloseStep::Complete };
-        if let Some(work) = state.retiring_work.as_mut() {
-            let (complete, released_items, released_bytes) = work.close_step(maximum_bytes);
-            if complete {
-                state.retiring_work = None;
-            }
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
-        }
-        let (work_complete, released_items, released_bytes) = state.work.close_step(maximum_bytes);
-        if !work_complete {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
-        }
-        if let Ok(Some((released_items, released_bytes))) = close_nested_vec_owner_step(&mut state.k_factor.l_cols, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
-        }
-        for owner in [&mut state.k_factor.d, &mut state.x.data, &mut state.prev_theta, &mut state.final_theta, &mut state.residuals] {
-            if let Ok(Some((released_items, released_bytes))) = close_vec_owner_step(owner, maximum_bytes) {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
-            }
-        }
-        let (matrix_terminal, released_items, released_bytes) = state.b.close_step(maximum_bytes);
-        if !matrix_terminal {
+        let (terminal, released_items, released_bytes) = close_subspace_checkpoint_step(state, maximum_bytes);
+        if !terminal {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
         }
         self.state = None;

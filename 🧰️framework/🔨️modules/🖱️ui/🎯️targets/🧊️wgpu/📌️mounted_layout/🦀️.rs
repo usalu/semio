@@ -61,7 +61,7 @@ enum LayoutNodeKind {
 
 /// 🌳️ The `UiTreeNode` spec that owns the row `id` mounts as — the nearest `UiNode::Tree`
 /// ancestor, the same walk `events::find_tree_item_spec` does to re-derive a row's authored item.
-fn owning_tree_spec(tree: &UiTree, id: NodeId) -> Option<&UiTreeNode> {
+pub(crate) fn owning_tree_spec(tree: &UiTree, id: NodeId) -> Option<&UiTreeNode> {
     let mut ancestor = tree.node(id)?.parent;
     let mut hops = 0usize;
     while let Some(candidate) = ancestor {
@@ -78,7 +78,7 @@ fn owning_tree_spec(tree: &UiTree, id: NodeId) -> Option<&UiTreeNode> {
     None
 }
 
-fn find_tree_item<'a>(items: &'a [UiTreeItemNode], id: &str, depth: usize) -> Option<&'a UiTreeItemNode> {
+pub(crate) fn find_tree_item<'a>(items: &'a [UiTreeItemNode], id: &str, depth: usize) -> Option<&'a UiTreeItemNode> {
     if depth >= TREE_ROW_MAX_DEPTH {
         return None;
     }

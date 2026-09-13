@@ -32,9 +32,15 @@ impl Default for Puzzle5dWindowConfig {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+/// 🎚️ ONE exact Puzzle 5D board pane's persisted-local options — `WindowConfigOwner::State`
+/// requires `dsl::DslField`, emitted by `#[derive(dsl::DslArtifact)]` together with the `__dsl_*`
+/// helpers the record-backed `ArtifactDsl`/`ArtifactPack` below call; `id`/`extension` are stated
+/// explicitly so the derived constants reproduce the envelope identity this kind already carried.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase")]
+#[dsl(id = "s.puzzle.puzzle5d.boardwindowconfig", extension = "puzzle5dboardwindowcfg", layout = "lines")]
 pub struct Puzzle5dBoardWindowConfig {
+    #[dsl(block)]
     pub camera2d: Puzzle5dCamera2d,
     pub fill_count: u32,
     pub lod_mode: String,
@@ -50,10 +56,15 @@ impl Default for Puzzle5dBoardWindowConfig {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+/// 🎚️ ONE exact Puzzle 5D world pane's persisted-local options — same `dsl::DslArtifact` completion
+/// as [`Puzzle5dBoardWindowConfig`], with its own envelope identity.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase")]
+#[dsl(id = "s.puzzle.puzzle5d.worldwindowconfig", extension = "puzzle5dworldwindowcfg", layout = "lines")]
 pub struct Puzzle5dWorldWindowConfig {
+    #[dsl(block)]
     pub camera3d: Puzzle5dCamera3d,
+    #[dsl(block)]
     pub sun: WorldSunConfig,
 }
 
@@ -116,9 +127,50 @@ macro_rules! json_store {
     };
 }
 
-json_store!(Puzzle5dBoardWindowConfig, "puzzle5dboardwindowcfg", "s.puzzle.puzzle5d.boardwindowconfig");
+/// 📜️ Record-backed text form for one Puzzle 5D window config — the derived `__dsl_spec` grammar
+/// inside that kind's semio text envelope.
+///
+/// 🎒️ The pack half's `record_spec` is what the retained window-config loader reads to decode a
+/// mounted pack field-by-field; `None` there would fail every retained load of the kind with
+/// `WindowConfigPackLoadDiagnostic::TypedState`.
+macro_rules! record_store {
+    ($state:ty, $envelope_label:literal) => {
+        impl store::ArtifactDsl for $state {
+            const EXTENSION: &'static str = Self::__DSL_EXTENSION;
+            fn envelope_id() -> &'static str { Self::__DSL_ENVELOPE_ID }
+            fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+                let body = store::semio_format::split_text_preamble(text).map_or(text, |(_, body)| body);
+                let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+                Self::__dsl_from_record(&record)
+            }
+            fn print_dsl(&self) -> String {
+                let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+                let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect($envelope_label);
+                store::semio_format::wrap_text(&envelope, &body)
+            }
+        }
+        impl store::ArtifactPack for $state {
+            fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+                let body = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+                let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
+                Ok(store::semio_format::wrap_binary(&envelope, &body))
+            }
+            fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+                let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
+                if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+                    return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+                }
+                let (record, _) = store::pack_rt::decode_document(&body, &Self::__dsl_spec(), options)?;
+                Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+            }
+            fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
+        }
+    };
+}
+
+record_store!(Puzzle5dBoardWindowConfig, "valid Puzzle 5D board-window envelope");
 store::impl_whole_record_config!(Puzzle5dBoardWindowConfig);
-json_store!(Puzzle5dWorldWindowConfig, "puzzle5dworldwindowcfg", "s.puzzle.puzzle5d.worldwindowconfig");
+record_store!(Puzzle5dWorldWindowConfig, "valid Puzzle 5D world-window envelope");
 store::impl_whole_record_config!(Puzzle5dWorldWindowConfig);
 json_store!(Puzzle5dWindowTransient, "puzzle5dwindowtransient", "s.puzzle.puzzle5d.windowtransient");
 

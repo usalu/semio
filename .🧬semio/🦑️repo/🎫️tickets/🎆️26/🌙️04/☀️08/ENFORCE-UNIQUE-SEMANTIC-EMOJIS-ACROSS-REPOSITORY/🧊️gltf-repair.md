@@ -18,17 +18,17 @@ The separate `🧊️gltf-codec` mesh-engine fixture kind is not a format-root c
 
 The glTF standard currently has nine direct subset siblings and all nine repeat the generic `✳️` identity. Their meanings are explicit in the contribution manifests, so the reviewed physical names are:
 
-| Current | Planned | Meaning |
-| --- | --- | --- |
-| `✳️any` | `♾️any` | Whole-document, all-domain substrate |
-| `✳️animation` | `🎞️animation` | Animation clips and channels |
-| `✳️asset` | `🪪️asset` | Asset metadata |
-| `✳️buffer` | `💾️buffer` | Binary buffer storage and views |
-| `✳️camera` | `🎥️camera` | Camera declarations |
-| `✳️material` | `💎️material` | Material, texture, image and sampler state |
-| `✳️mesh` | `🕸️mesh` | Mesh, primitive, accessor and morph data |
-| `✳️scene` | `🎬️scene` | Scene and node graph |
-| `✳️skin` | `🦴️skin` | Skeleton and skin bindings |
+| Current       | Planned       | Meaning                                    |
+| ------------- | ------------- | ------------------------------------------ |
+| `✳️any`       | `♾️any`       | Whole-document, all-domain substrate       |
+| `✳️animation` | `🎞️animation` | Animation clips and channels               |
+| `✳️asset`     | `🪪️asset`     | Asset metadata                             |
+| `✳️buffer`    | `💾️buffer`    | Binary buffer storage and views            |
+| `✳️camera`    | `🎥️camera`    | Camera declarations                        |
+| `✳️material`  | `💎️material`  | Material, texture, image and sampler state |
+| `✳️mesh`      | `🕸️mesh`      | Mesh, primitive, accessor and morph data   |
+| `✳️scene`     | `🎬️scene`     | Scene and node graph                       |
+| `✳️skin`      | `🦴️skin`      | Skeleton and skin bindings                 |
 
 Each planned identity is unique in this exact sibling group and each destination is absent. The subset slugs and public semantic IDs remain unchanged. The eight slice manifests carry explicit `subsetDirectoryName` fields and the catalogs physically source mutations from the whole-document subset, so these are not standalone directory moves: exact manifest coordinates, the source-owner map, package mounts, fixture commands and all path consumers must change together. No subset move has been made while Architect native qualification is compiling.
 
@@ -46,16 +46,16 @@ The source tree contains exactly 120 direct schemas, 120 contracts and 120 test 
 
 The final 33 scene cases were inspected individually: scene and node creation/deletion/movement/reordering; names, extra data, extension data, transforms and morph weights; reparenting; default scene, scene-root, child, camera, mesh and skin bindings. Ninety-nine handwritten moves and eight semantic fixture directories are complete, bringing the fixture repair to all 120 cases, 240 before/after files and 360 literal moves. No production operation or glTF root was moved.
 
-| Fixture domain | Handpicked case names |
-| --- | --- |
-| `🎬️scene` | `🌱️create`, `🗑️delete`, `🚚️move`, `🔀️reorder`, `🏷️rename`, `📝️change-extras`, `🧩️change-extensions`. |
-| `🌳️node` | The same seven operations, plus `📐️transform`, `⚖️change-weights`, and `🌿️reparent`. |
-| `🏠️default-scene` | `🔗️bind`, `✂️unbind`. |
-| `🌲️scene-root` | `🔗️bind`, `✂️unbind`, `🚚️move`, `🔀️reorder`. |
-| `🌿️node-child` | `🔗️bind`, `✂️unbind`, `🚚️move`, `🔀️reorder`. |
-| `📷️node-camera` | `🔗️bind`, `✂️unbind`. |
-| `🏗️node-mesh` | `🔗️bind`, `✂️unbind`. |
-| `🩻️node-skin` | `🔗️bind`, `✂️unbind`. |
+| Fixture domain    | Handpicked case names                                                                                |
+| ----------------- | ---------------------------------------------------------------------------------------------------- |
+| `🎬️scene`         | `🌱️create`, `🗑️delete`, `🚚️move`, `🔀️reorder`, `🏷️rename`, `📝️change-extras`, `🧩️change-extensions`. |
+| `🌳️node`          | The same seven operations, plus `📐️transform`, `⚖️change-weights`, and `🌿️reparent`.                 |
+| `🏠️default-scene` | `🔗️bind`, `✂️unbind`.                                                                                |
+| `🌲️scene-root`    | `🔗️bind`, `✂️unbind`, `🚚️move`, `🔀️reorder`.                                                         |
+| `🌿️node-child`    | `🔗️bind`, `✂️unbind`, `🚚️move`, `🔀️reorder`.                                                         |
+| `📷️node-camera`   | `🔗️bind`, `✂️unbind`.                                                                                |
+| `🏗️node-mesh`     | `🔗️bind`, `✂️unbind`.                                                                                |
+| `🩻️node-skin`     | `🔗️bind`, `✂️unbind`.                                                                                |
 
 All 66 file byte hashes and lengths are unchanged, all 66 independent parser comparisons agree, and all 66 exact manifest roles/paths/hashes/lengths resolve. The entire 107-node scene fixture subtree has zero naming findings. Maximum path length changes from 183 to 191 UTF-8 bytes, with no new or worsened overlength path. Full semantic fixture IDs and generator provenance remain unchanged. Canonical verifier session 4099 passed all 120 glTF fixtures with zero file problems; no native behavior pass is inferred from fixture integrity.
 
@@ -65,16 +65,16 @@ Thirty-five mesh cases were inspected individually through their parsed before/a
 
 One hundred five handwritten moves and eight semantic fixture directories are complete, bringing glTF moves to 261. Each case's original full fixture ID remains in the manifest; only its explicit file paths changed. Every before file is `⬅️before.gltf`, every after file `➡️after.gltf`.
 
-| Fixture domain | Cases and handpicked names |
-| --- | --- |
-| `📐️accessor` | Create/delete/move/reorder accessors → `🌱️create`, `🗑️delete`, `🚚️move`, `🔀️reorder`. |
-| `🕸️mesh` | The same quartet; name → `🏷️rename`; extra data → `📝️change-extras`; extension data → `🧩️change-extensions`; morph weights → `⚖️change-weights`. The full existing ID `reorder-meshs-applied` is preserved. |
-| `🔺️primitive` | The same quartet; extra data → `📝️change-extras`; extension data → `🧩️change-extensions`; topology mode → `📐️change-topology`. |
-| `🧬️morph-target` | Create/delete/move/reorder morph targets → the four operation names above. |
-| `🔤️primitive-attribute` | Bind/unbind/move/reorder primitive attributes → `🔗️bind`, `✂️unbind`, `🚚️move`, `🔀️reorder`. |
-| `🔢️primitive-indices` | Bind/unbind primitive indices → `🔗️bind`, `✂️unbind`. |
-| `🧱️primitive-material` | Bind/unbind primitive material → `🔗️bind`, `✂️unbind`. |
-| `🎚️morph-attribute` | Bind/unbind/move/reorder morph-target attributes → `🔗️bind`, `✂️unbind`, `🚚️move`, `🔀️reorder`. |
+| Fixture domain          | Cases and handpicked names                                                                                                                                                                                  |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `📐️accessor`            | Create/delete/move/reorder accessors → `🌱️create`, `🗑️delete`, `🚚️move`, `🔀️reorder`.                                                                                                                       |
+| `🕸️mesh`                | The same quartet; name → `🏷️rename`; extra data → `📝️change-extras`; extension data → `🧩️change-extensions`; morph weights → `⚖️change-weights`. The full existing ID `reorder-meshs-applied` is preserved. |
+| `🔺️primitive`           | The same quartet; extra data → `📝️change-extras`; extension data → `🧩️change-extensions`; topology mode → `📐️change-topology`.                                                                              |
+| `🧬️morph-target`        | Create/delete/move/reorder morph targets → the four operation names above.                                                                                                                                  |
+| `🔤️primitive-attribute` | Bind/unbind/move/reorder primitive attributes → `🔗️bind`, `✂️unbind`, `🚚️move`, `🔀️reorder`.                                                                                                                |
+| `🔢️primitive-indices`   | Bind/unbind primitive indices → `🔗️bind`, `✂️unbind`.                                                                                                                                                       |
+| `🧱️primitive-material`  | Bind/unbind primitive material → `🔗️bind`, `✂️unbind`.                                                                                                                                                      |
+| `🎚️morph-attribute`     | Bind/unbind/move/reorder morph-target attributes → `🔗️bind`, `✂️unbind`, `🚚️move`, `🔀️reorder`.                                                                                                             |
 
 All 70 byte hashes and lengths match the captured baseline; all 70 independent `jsonc-parser` results agree with native JSON parsing, and all 70 exact manifest roles/paths/hashes/lengths resolve. The complete 113-node mesh fixture subtree has zero naming findings. Maximum fixture path length changes from 186 to 194 UTF-8 bytes, with no new or worsened overlength path. No Rust, TypeScript, Gherkin or Markdown consumer referenced the old mesh fixture paths. Two out-of-order exact patch attempts were rejected without changing the manifest; the successful patch follows its actual physical order, including the accessor records appended at the end.
 
@@ -102,128 +102,128 @@ Five old TXT references in glTF were documentation only: the IO TypeScript mirro
 
 Every physical domain and operation below was selected individually. Full existing wire IDs remain explicit, including the existing `reorder-meshs` spelling. The read-only comparison covers 120 operations and 2,708 descendants, reducing maximum path length from 319 to 315 bytes, with zero new or worsened overlength paths. This map does not authorize an automatic renamer.
 
-| Physical owner | Full semantic identity |
-| --- | --- |
-| `🎥️camera/🌱️create` | `create-camera` |
-| `🎥️camera/🗑️delete` | `delete-camera` |
-| `🎥️camera/🚚️move` | `move-camera` |
-| `🎥️camera/🔀️reorder` | `reorder-cameras` |
-| `🎞️animation/🌱️create` | `create-animation` |
-| `🎞️animation/🗑️delete` | `delete-animation` |
-| `🎞️animation/🚚️move` | `move-animation` |
-| `🎞️animation/🔀️reorder` | `reorder-animations` |
-| `🦴️skin/🌱️create` | `create-skin` |
-| `🦴️skin/🗑️delete` | `delete-skin` |
-| `🦴️skin/🚚️move` | `move-skin` |
-| `🦴️skin/🔀️reorder` | `reorder-skins` |
-| `🎬️scene/🌱️create` | `create-scene` |
-| `🎬️scene/🗑️delete` | `delete-scene` |
-| `🎬️scene/🚚️move` | `move-scene` |
-| `🎬️scene/🔀️reorder` | `reorder-scenes` |
-| `🎬️scene/🏷️rename` | `change-scene-name` |
-| `🎬️scene/📝️change-extras` | `change-scene-extra-data` |
-| `🎬️scene/🧩️change-extensions` | `change-scene-extension-data` |
-| `🌳️node/🌱️create` | `create-node` |
-| `🌳️node/🗑️delete` | `delete-node` |
-| `🌳️node/🚚️move` | `move-node` |
-| `🌳️node/🔀️reorder` | `reorder-nodes` |
-| `🌳️node/🏷️rename` | `change-node-name` |
-| `🌳️node/📝️change-extras` | `change-node-extra-data` |
-| `🌳️node/🧩️change-extensions` | `change-node-extension-data` |
-| `🌳️node/⚖️change-weights` | `change-node-morph-weights` |
-| `🌳️node/📐️transform` | `change-node-transform` |
-| `🌳️node/🌿️reparent` | `move-node-parent` |
-| `🕸️mesh/🌱️create` | `create-mesh` |
-| `🕸️mesh/🗑️delete` | `delete-mesh` |
-| `🕸️mesh/🚚️move` | `move-mesh` |
-| `🕸️mesh/🔀️reorder` | `reorder-meshs` |
-| `🕸️mesh/🏷️rename` | `change-mesh-name` |
-| `🕸️mesh/📝️change-extras` | `change-mesh-extra-data` |
-| `🕸️mesh/🧩️change-extensions` | `change-mesh-extension-data` |
-| `🕸️mesh/⚖️change-weights` | `change-mesh-morph-weights` |
-| `🔺️primitive/🌱️create` | `create-primitive` |
-| `🔺️primitive/🗑️delete` | `delete-primitive` |
-| `🔺️primitive/🚚️move` | `move-primitive` |
-| `🔺️primitive/🔀️reorder` | `reorder-primitives` |
-| `🔺️primitive/📐️change-topology` | `change-primitive-topology-mode` |
-| `🔺️primitive/📝️change-extras` | `change-primitive-extra-data` |
-| `🔺️primitive/🧩️change-extensions` | `change-primitive-extension-data` |
-| `🧬️morph-target/🌱️create` | `create-morph-target` |
-| `🧬️morph-target/🗑️delete` | `delete-morph-target` |
-| `🧬️morph-target/🚚️move` | `move-morph-target` |
-| `🧬️morph-target/🔀️reorder` | `reorder-morph-targets` |
-| `💎️material/🌱️create` | `create-material` |
-| `💎️material/🗑️delete` | `delete-material` |
-| `💎️material/🚚️move` | `move-material` |
-| `💎️material/🔀️reorder` | `reorder-materials` |
-| `💎️material/🪞️change-sides` | `change-material-double-sided` |
-| `💎️material/🌫️change-alpha` | `change-material-alpha-mode` |
-| `🎨️texture/🌱️create` | `create-texture` |
-| `🎨️texture/🗑️delete` | `delete-texture` |
-| `🎨️texture/🚚️move` | `move-texture` |
-| `🎨️texture/🔀️reorder` | `reorder-textures` |
-| `🖼️image/🌱️create` | `create-image` |
-| `🖼️image/🗑️delete` | `delete-image` |
-| `🖼️image/🚚️move` | `move-image` |
-| `🖼️image/🔀️reorder` | `reorder-images` |
-| `🎛️sampler/🌱️create` | `create-sampler` |
-| `🎛️sampler/🗑️delete` | `delete-sampler` |
-| `🎛️sampler/🚚️move` | `move-sampler` |
-| `🎛️sampler/🔀️reorder` | `reorder-samplers` |
-| `📐️accessor/🌱️create` | `create-accessor` |
-| `📐️accessor/🗑️delete` | `delete-accessor` |
-| `📐️accessor/🚚️move` | `move-accessor` |
-| `📐️accessor/🔀️reorder` | `reorder-accessors` |
-| `💿️buffer/🌱️create` | `create-buffer` |
-| `💿️buffer/🗑️delete` | `delete-buffer` |
-| `💿️buffer/🚚️move` | `move-buffer` |
-| `💿️buffer/🔀️reorder` | `reorder-buffers` |
-| `🪟️buffer-view/🌱️create` | `create-buffer-view` |
-| `🪟️buffer-view/🗑️delete` | `delete-buffer-view` |
-| `🪟️buffer-view/🚚️move` | `move-buffer-view` |
-| `🪟️buffer-view/🔀️reorder` | `reorder-buffer-views` |
-| `🪪️asset/🔖️version` | `change-asset-version` |
-| `🪪️asset/📝️change-description` | `change-asset-descriptive-metadata` |
-| `🪪️asset/🧩️change-extensions` | `change-asset-extension-data` |
-| `🪪️asset/🧾️change-extras` | `change-asset-extra-data` |
-| `📃️document/📝️change-extras` | `change-document-extra-data` |
-| `📃️document/🧩️change-extensions` | `change-document-extension-data` |
-| `📣️used-extension/➕️add` | `add-used-extension` |
-| `📣️used-extension/➖️remove` | `remove-used-extension` |
-| `📣️used-extension/🚚️move` | `move-used-extension` |
-| `📣️used-extension/🔀️reorder` | `reorder-used-extensions` |
-| `✅️required-extension/➕️add` | `add-required-extension` |
-| `✅️required-extension/➖️remove` | `remove-required-extension` |
-| `✅️required-extension/🚚️move` | `move-required-extension` |
-| `✅️required-extension/🔀️reorder` | `reorder-required-extensions` |
-| `🏠️default-scene/🔗️bind` | `bind-default-scene` |
-| `🏠️default-scene/✂️unbind` | `unbind-default-scene` |
-| `🌲️scene-root/🔗️bind` | `bind-scene-root-node` |
-| `🌲️scene-root/✂️unbind` | `unbind-scene-root-node` |
-| `🌲️scene-root/🚚️move` | `move-scene-root-node` |
-| `🌲️scene-root/🔀️reorder` | `reorder-scene-root-nodes` |
-| `📷️node-camera/🔗️bind` | `bind-node-camera` |
-| `📷️node-camera/✂️unbind` | `unbind-node-camera` |
-| `🌿️node-child/🔗️bind` | `bind-node-child` |
-| `🌿️node-child/✂️unbind` | `unbind-node-child` |
-| `🌿️node-child/🚚️move` | `move-node-child` |
-| `🌿️node-child/🔀️reorder` | `reorder-node-children` |
-| `🏗️node-mesh/🔗️bind` | `bind-node-mesh` |
-| `🏗️node-mesh/✂️unbind` | `unbind-node-mesh` |
-| `🩻️node-skin/🔗️bind` | `bind-node-skin` |
-| `🩻️node-skin/✂️unbind` | `unbind-node-skin` |
-| `🔤️primitive-attribute/🔗️bind` | `bind-primitive-attribute` |
-| `🔤️primitive-attribute/✂️unbind` | `unbind-primitive-attribute` |
-| `🔤️primitive-attribute/🚚️move` | `move-primitive-attribute` |
-| `🔤️primitive-attribute/🔀️reorder` | `reorder-primitive-attributes` |
-| `🔢️primitive-indices/🔗️bind` | `bind-primitive-indices` |
-| `🔢️primitive-indices/✂️unbind` | `unbind-primitive-indices` |
-| `🧱️primitive-material/🔗️bind` | `bind-primitive-material` |
-| `🧱️primitive-material/✂️unbind` | `unbind-primitive-material` |
-| `🎚️morph-attribute/🔗️bind` | `bind-morph-target-attribute` |
-| `🎚️morph-attribute/✂️unbind` | `unbind-morph-target-attribute` |
-| `🎚️morph-attribute/🚚️move` | `move-morph-target-attribute` |
-| `🎚️morph-attribute/🔀️reorder` | `reorder-morph-target-attributes` |
+| Physical owner                    | Full semantic identity              |
+| --------------------------------- | ----------------------------------- |
+| `🎥️camera/🌱️create`               | `create-camera`                     |
+| `🎥️camera/🗑️delete`               | `delete-camera`                     |
+| `🎥️camera/🚚️move`                 | `move-camera`                       |
+| `🎥️camera/🔀️reorder`              | `reorder-cameras`                   |
+| `🎞️animation/🌱️create`            | `create-animation`                  |
+| `🎞️animation/🗑️delete`            | `delete-animation`                  |
+| `🎞️animation/🚚️move`              | `move-animation`                    |
+| `🎞️animation/🔀️reorder`           | `reorder-animations`                |
+| `🦴️skin/🌱️create`                 | `create-skin`                       |
+| `🦴️skin/🗑️delete`                 | `delete-skin`                       |
+| `🦴️skin/🚚️move`                   | `move-skin`                         |
+| `🦴️skin/🔀️reorder`                | `reorder-skins`                     |
+| `🎬️scene/🌱️create`                | `create-scene`                      |
+| `🎬️scene/🗑️delete`                | `delete-scene`                      |
+| `🎬️scene/🚚️move`                  | `move-scene`                        |
+| `🎬️scene/🔀️reorder`               | `reorder-scenes`                    |
+| `🎬️scene/🏷️rename`                | `change-scene-name`                 |
+| `🎬️scene/📝️change-extras`         | `change-scene-extra-data`           |
+| `🎬️scene/🧩️change-extensions`     | `change-scene-extension-data`       |
+| `🌳️node/🌱️create`                 | `create-node`                       |
+| `🌳️node/🗑️delete`                 | `delete-node`                       |
+| `🌳️node/🚚️move`                   | `move-node`                         |
+| `🌳️node/🔀️reorder`                | `reorder-nodes`                     |
+| `🌳️node/🏷️rename`                 | `change-node-name`                  |
+| `🌳️node/📝️change-extras`          | `change-node-extra-data`            |
+| `🌳️node/🧩️change-extensions`      | `change-node-extension-data`        |
+| `🌳️node/⚖️change-weights`         | `change-node-morph-weights`         |
+| `🌳️node/📐️transform`              | `change-node-transform`             |
+| `🌳️node/🌿️reparent`               | `move-node-parent`                  |
+| `🕸️mesh/🌱️create`                 | `create-mesh`                       |
+| `🕸️mesh/🗑️delete`                 | `delete-mesh`                       |
+| `🕸️mesh/🚚️move`                   | `move-mesh`                         |
+| `🕸️mesh/🔀️reorder`                | `reorder-meshs`                     |
+| `🕸️mesh/🏷️rename`                 | `change-mesh-name`                  |
+| `🕸️mesh/📝️change-extras`          | `change-mesh-extra-data`            |
+| `🕸️mesh/🧩️change-extensions`      | `change-mesh-extension-data`        |
+| `🕸️mesh/⚖️change-weights`         | `change-mesh-morph-weights`         |
+| `🔺️primitive/🌱️create`            | `create-primitive`                  |
+| `🔺️primitive/🗑️delete`            | `delete-primitive`                  |
+| `🔺️primitive/🚚️move`              | `move-primitive`                    |
+| `🔺️primitive/🔀️reorder`           | `reorder-primitives`                |
+| `🔺️primitive/📐️change-topology`   | `change-primitive-topology-mode`    |
+| `🔺️primitive/📝️change-extras`     | `change-primitive-extra-data`       |
+| `🔺️primitive/🧩️change-extensions` | `change-primitive-extension-data`   |
+| `🧬️morph-target/🌱️create`         | `create-morph-target`               |
+| `🧬️morph-target/🗑️delete`         | `delete-morph-target`               |
+| `🧬️morph-target/🚚️move`           | `move-morph-target`                 |
+| `🧬️morph-target/🔀️reorder`        | `reorder-morph-targets`             |
+| `💎️material/🌱️create`             | `create-material`                   |
+| `💎️material/🗑️delete`             | `delete-material`                   |
+| `💎️material/🚚️move`               | `move-material`                     |
+| `💎️material/🔀️reorder`            | `reorder-materials`                 |
+| `💎️material/🪞️change-sides`       | `change-material-double-sided`      |
+| `💎️material/🌫️change-alpha`       | `change-material-alpha-mode`        |
+| `🎨️texture/🌱️create`              | `create-texture`                    |
+| `🎨️texture/🗑️delete`              | `delete-texture`                    |
+| `🎨️texture/🚚️move`                | `move-texture`                      |
+| `🎨️texture/🔀️reorder`             | `reorder-textures`                  |
+| `🖼️image/🌱️create`                | `create-image`                      |
+| `🖼️image/🗑️delete`                | `delete-image`                      |
+| `🖼️image/🚚️move`                  | `move-image`                        |
+| `🖼️image/🔀️reorder`               | `reorder-images`                    |
+| `🎛️sampler/🌱️create`              | `create-sampler`                    |
+| `🎛️sampler/🗑️delete`              | `delete-sampler`                    |
+| `🎛️sampler/🚚️move`                | `move-sampler`                      |
+| `🎛️sampler/🔀️reorder`             | `reorder-samplers`                  |
+| `📐️accessor/🌱️create`             | `create-accessor`                   |
+| `📐️accessor/🗑️delete`             | `delete-accessor`                   |
+| `📐️accessor/🚚️move`               | `move-accessor`                     |
+| `📐️accessor/🔀️reorder`            | `reorder-accessors`                 |
+| `💿️buffer/🌱️create`               | `create-buffer`                     |
+| `💿️buffer/🗑️delete`               | `delete-buffer`                     |
+| `💿️buffer/🚚️move`                 | `move-buffer`                       |
+| `💿️buffer/🔀️reorder`              | `reorder-buffers`                   |
+| `🪟️buffer-view/🌱️create`          | `create-buffer-view`                |
+| `🪟️buffer-view/🗑️delete`          | `delete-buffer-view`                |
+| `🪟️buffer-view/🚚️move`            | `move-buffer-view`                  |
+| `🪟️buffer-view/🔀️reorder`         | `reorder-buffer-views`              |
+| `🪪️asset/🔖️version`               | `change-asset-version`              |
+| `🪪️asset/📝️change-description`    | `change-asset-descriptive-metadata` |
+| `🪪️asset/🧩️change-extensions`     | `change-asset-extension-data`       |
+| `🪪️asset/🧾️change-extras`         | `change-asset-extra-data`           |
+| `📃️document/📝️change-extras`      | `change-document-extra-data`        |
+| `📃️document/🧩️change-extensions`  | `change-document-extension-data`    |
+| `📣️used-extension/➕️add`          | `add-used-extension`                |
+| `📣️used-extension/➖️remove`       | `remove-used-extension`             |
+| `📣️used-extension/🚚️move`         | `move-used-extension`               |
+| `📣️used-extension/🔀️reorder`      | `reorder-used-extensions`           |
+| `✅️required-extension/➕️add`      | `add-required-extension`            |
+| `✅️required-extension/➖️remove`   | `remove-required-extension`         |
+| `✅️required-extension/🚚️move`     | `move-required-extension`           |
+| `✅️required-extension/🔀️reorder`  | `reorder-required-extensions`       |
+| `🏠️default-scene/🔗️bind`          | `bind-default-scene`                |
+| `🏠️default-scene/✂️unbind`        | `unbind-default-scene`              |
+| `🌲️scene-root/🔗️bind`             | `bind-scene-root-node`              |
+| `🌲️scene-root/✂️unbind`           | `unbind-scene-root-node`            |
+| `🌲️scene-root/🚚️move`             | `move-scene-root-node`              |
+| `🌲️scene-root/🔀️reorder`          | `reorder-scene-root-nodes`          |
+| `📷️node-camera/🔗️bind`            | `bind-node-camera`                  |
+| `📷️node-camera/✂️unbind`          | `unbind-node-camera`                |
+| `🌿️node-child/🔗️bind`             | `bind-node-child`                   |
+| `🌿️node-child/✂️unbind`           | `unbind-node-child`                 |
+| `🌿️node-child/🚚️move`             | `move-node-child`                   |
+| `🌿️node-child/🔀️reorder`          | `reorder-node-children`             |
+| `🏗️node-mesh/🔗️bind`              | `bind-node-mesh`                    |
+| `🏗️node-mesh/✂️unbind`            | `unbind-node-mesh`                  |
+| `🩻️node-skin/🔗️bind`              | `bind-node-skin`                    |
+| `🩻️node-skin/✂️unbind`            | `unbind-node-skin`                  |
+| `🔤️primitive-attribute/🔗️bind`    | `bind-primitive-attribute`          |
+| `🔤️primitive-attribute/✂️unbind`  | `unbind-primitive-attribute`        |
+| `🔤️primitive-attribute/🚚️move`    | `move-primitive-attribute`          |
+| `🔤️primitive-attribute/🔀️reorder` | `reorder-primitive-attributes`      |
+| `🔢️primitive-indices/🔗️bind`      | `bind-primitive-indices`            |
+| `🔢️primitive-indices/✂️unbind`    | `unbind-primitive-indices`          |
+| `🧱️primitive-material/🔗️bind`     | `bind-primitive-material`           |
+| `🧱️primitive-material/✂️unbind`   | `unbind-primitive-material`         |
+| `🎚️morph-attribute/🔗️bind`        | `bind-morph-target-attribute`       |
+| `🎚️morph-attribute/✂️unbind`      | `unbind-morph-target-attribute`     |
+| `🎚️morph-attribute/🚚️move`        | `move-morph-target-attribute`       |
+| `🎚️morph-attribute/🔀️reorder`     | `reorder-morph-target-attributes`   |
 
 Scope: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf` only, plus exact incoming references coordinated with other owners. The glTF root itself is not renamed; the parent owns its eventual format-root sibling decision. Stdio and root AGENTS were read. No Git mutation, bulk rename script, automatic emoji palette, migration, or generated-name transformation is permitted.
 

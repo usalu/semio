@@ -1,9 +1,17 @@
 {
   "name": "@semio-tech/flow-core-build",
+  "nx": {
+    "name": "semio-framework-os-flow-core",
+    "includedScripts": []
+  },
   "private": true,
   "type": "module",
   "exports": {
     ".": "../../🕸️bindings/flow_core.js",
     "./pkg/flow_core.js": "../../🕸️bindings/flow_core.js"
+  },
+  "scripts": {
+    "preview:browser-package": "bun nx run semio-framework-os-flow-core:preview-generated",
+    "test:browser-ownership": "bun nx run semio-framework-os-flow-core:test-browser-ownership"
   }
 }

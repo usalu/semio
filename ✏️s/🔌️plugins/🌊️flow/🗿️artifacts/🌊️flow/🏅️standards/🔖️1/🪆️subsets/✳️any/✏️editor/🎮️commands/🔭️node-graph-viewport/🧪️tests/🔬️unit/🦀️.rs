@@ -22,6 +22,6 @@ async fn set_preview_off_toggles_ids_on_and_off_the_scene() {
 async fn node_graph_viewport_moves_the_camera() {
     let mut app = flow_app().await;
     let before = render(&mut app, FLOW_PLAY_BODY_MAIN).await;
-    dispatch(&mut app, FlowCommand::NodeGraphViewport(NodeGraphViewport { viewport: semio_framework::Viewport2d { x: 30.0, y: -12.0, zoom: 2.0 } })).await;
+    dispatch(&mut app, FlowCommand::NodeGraphViewport(NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 30.0, y: -12.0, zoom: 2.0 } })).await;
     assert_ne!(before, render(&mut app, FLOW_PLAY_BODY_MAIN).await);
 }

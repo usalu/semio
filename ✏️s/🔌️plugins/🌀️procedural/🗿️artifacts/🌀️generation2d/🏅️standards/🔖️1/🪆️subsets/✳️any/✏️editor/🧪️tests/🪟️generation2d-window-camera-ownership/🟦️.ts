@@ -15,6 +15,7 @@ type Fixture = {
   appConfig: Record<string, unknown>;
   windowInstances: { id: string; windowKindId: string }[];
   baseConfigs: Record<Kind, Config>;
+  renderers: Record<Kind, { bodyKey: string; sceneSchema: "node-graph@1" | "canvas-2d@1" }>;
   mutations: { windowId: string; windowKindId: Kind; mutation: Mutation }[];
   expected: Record<string, Config>;
   rejections: { windowId: string | null; claimedWindowKindId: Kind; code: string }[];
@@ -59,6 +60,14 @@ export function testGeneration2dWindowCameraOwnershipOracle(): void {
     assert(!validate({ ...fixture.baseConfigs[kind], camera: { x: 0, y: 0, zoom: 1 } }));
   }
   assert.equal(schemaIds.size, 3, "each window kind has a distinct schema identity");
+  assert.deepEqual(
+    Object.fromEntries(Object.entries(fixture.renderers).map(([kind, renderer]) => [kind, renderer.sceneSchema])),
+    {
+      "generation2d-main": "node-graph@1",
+      "generation2d-preview": "canvas-2d@1",
+      "generation2d-generate-preview": "canvas-2d@1",
+    },
+  );
   assert(!Object.hasOwn(fixture.appConfig, "camera"), "the app config has no camera owner");
 
   const documentBytes = JSON.stringify(fixture.document);

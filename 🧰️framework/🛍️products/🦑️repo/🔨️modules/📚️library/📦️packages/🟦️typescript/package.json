@@ -18,6 +18,11 @@
     "test-root-artifact-schema-law-source": "nx run @semio-tech/repo-lib:test-root-artifact-schema-law-source",
     "test-root-surface-abstraction-law-source": "nx run @semio-tech/repo-lib:test-root-surface-abstraction-law-source",
     "test-root-inference-law-source": "nx run @semio-tech/repo-lib:test-root-inference-law-source",
+    "test-cargo-transaction-command-source": "nx run @semio-tech/repo-lib:test-cargo-transaction-command-source",
+    "test-workspace-publication-source": "nx run @semio-tech/repo-lib:test-workspace-publication-source",
+    "test-wasm-package-wrappers": "nx run @semio-tech/repo-lib:test-wasm-package-wrappers",
+    "workspaces-check": "nx run @semio-tech/repo-lib:workspaces-check",
+    "workspaces-write": "nx run @semio-tech/repo-lib:workspaces-write",
     "test-manifestless-source-closure": "nx run @semio-tech/repo-lib:test-manifestless-source-closure",
     "test-plugin-publication-source-ownership": "nx run @semio-tech/repo-lib:test-plugin-publication-source-ownership",
     "test-app-verification-source-ownership": "nx run @semio-tech/repo-lib:test-app-verification-source-ownership",
@@ -50,7 +55,8 @@
     "test-taxonomy-leading-grapheme": "nx run @semio-tech/repo-lib:test-taxonomy-leading-grapheme",
     "test-reference-coordinate-progress": "nx run @semio-tech/repo-lib:test-reference-coordinate-progress",
     "test-draw-destination-observation": "nx run @semio-tech/repo-lib:test-draw-destination-observation",
-    "test-markdown-inline-references": "nx run @semio-tech/repo-lib:test-markdown-inline-references"
+    "test-markdown-inline-references": "nx run @semio-tech/repo-lib:test-markdown-inline-references",
+    "test-os-dev-composition-ownership": "nx run @semio-tech/repo-lib:test-os-dev-composition-ownership"
   },
   "nx": {
     "includedScripts": []

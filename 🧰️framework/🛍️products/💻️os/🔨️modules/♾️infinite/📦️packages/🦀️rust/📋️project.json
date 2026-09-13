@@ -46,30 +46,17 @@
         "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\" native cargo test --manifest \"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml\""
       }
     },
-    "font-tool": {
-      "cache": true,
-      "parallelism": false,
-      "inputs": [
-        "production",
-        "^production"
-      ],
-      "outputs": [
-        "{projectRoot}/dist/font-tool"
-      ],
-      "options": {
-        "command": "bun ./📜️script.ts font-tool"
-      }
-    },
     "fonts": {
       "cache": true,
       "inputs": [
-        "production",
+        "{projectRoot}/📜️script.ts",
+        "{projectRoot}/../../🖼️canvas/🔤️fonts/🟦️.ts",
         {
           "dependentTasksOutputFiles": "**/*"
         }
       ],
       "dependsOn": [
-        "font-tool"
+        "semio-framework-os-font-assets:build"
       ],
       "outputs": [
         "{projectRoot}/dist/fonts"

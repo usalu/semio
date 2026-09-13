@@ -28,7 +28,9 @@ import {
 } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
 import { DOWNLOAD_MEDIA_EXPORT_REVOKE_MS, EMPTY_APP_LABELS_OVERLAY, SET_ACTIVE_EXAMPLE_ACTION_ID, buildActiveExampleAction, navbarExampleIdFromHistoryUpserts, rememberedExampleIdFromDispatchV1, interactionViewFromLeftoverOutput, leftoverInteractionStateV1, leftoverWorldGumballPoseV1, historyPatchShouldApplyV1, historyRefreshNeededV1, undeclaredActionDiagnostic, downloadMediaExport, mediaExportEncodingText, makeEffectDispatchOne, renderStagedArgControl, resolveDialogDefinition, world3dMarqueeOverlayShape, windowMeasuresChrome, windowMeasureDomId, qualifyWindowMeasureIds } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import { FRAMEWORK_HISTORY_BODY_KEY, resolveUiDirtyScope, type UiDirtyScope } from "@semio-tech/framework";
-import { hostArmedViewContext, parseResolvedPluginViewState, windowViewContext } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import { hostArmedViewContext, panelViewContext, parseResolvedPluginViewState, windowViewContext } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import { world3dComputeStatusV1 } from "../../../../../../../🔨️modules/🖱️ui/🎬️scene/🟦️.ts";
+import surfaceControlsFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/🛑️surface-controls/🔣️.json";
 import { createContinuationScheduler, createVirtualContinuationHost } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
 import { SHARD_RUNTIME_DIAGNOSTICS_KEY, SHARD_WORKER_DIAGNOSTICS_PARAM, SHARD_WORKER_URL, shardWorkerUrl } from "../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
 /** 🗣️ The resolver every `makeEffectDispatchOne` owner passes — the shell's `resolvedTargetViewState`, reduced to what a test session needs: both host preferences always stamped. */
@@ -1679,7 +1681,7 @@ import flowParameterSchema from "../../../../🌊️flow/🗿️artifacts/🌊�
 import * as flowSessionLoader from "../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
 import { createFlowBrowserRuntime } from "@semio-tech/flow-core/🌐️flow-browser.js";
 import { MockFlowBridge } from "../../../../🌊️flow/🕸️wasm/🧪️tests/🎭️mock-flow-bridge/🟦️.ts";
-import flowAbi from "../../../../🌊️flow/🕸️wasm/🧬️schema/📡️abi.json" with { type: "json" };
+import flowAbi from "../../../../🌊️flow/🕸️wasm/🧬️schema/📡️abi/🔣️.json" with { type: "json" };
 import flowBrowserRuntimeFixture from "../../../../🌊️flow/🕸️wasm/🧫️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json";
 import flowWasmSchema from "../../../../🌊️flow/🕸️wasm/🧬️schema/🔣️.json" with { type: "json" };
 import { cleanup, fireEvent, render, waitFor } from "@semio-tech/ui-react/test";
@@ -1980,6 +1982,8 @@ import {
   dagOverlayLabelFill,
   dagOverlayLabelFillHex,
   dispatchOpenedFiles,
+  IMPORT_CHUNK_BYTES,
+  importPayloadChunks,
   scheduleDispatchAction,
   sampleMediaFrameTimestampsMs,
   runTier2VideoFrames,
@@ -3307,6 +3311,45 @@ describe("batched ui refresh request/response (puzzle 2d perf round 3)", () => {
     expect(request?.engagements).toBeDefined();
     expect(request?.measures).toBeDefined();
     expect(request?.labels).toBeDefined();
+  });
+
+  // 📌️ The panel half of the same protocol: `buildUiRefreshRequest` names the panel bodies, and
+  // `PluginRuntime` mounts each of them under `panelViewContext(request.viewState)`. A panel is not
+  // rendered FOR a window, so that projection strips `windowId`/`activeWindowKindId`/`activeUtilityId`
+  // and keeps `focusedWindowId` — but only while the roster still carries that pane. A shell publishes
+  // the new mode's roster before it refocuses, and the guest's window-config capture faults on a
+  // focused pane the roster does not list BEFORE it ever matches the panel's body key: on the wgpu
+  // shell, booting straight into generate mode with the edit-mode `procedural-main` still focused left
+  // Artifact/Catalogue/Inspection publishing nothing at all
+  // (`wgpu-ui.surface-not-published:framework.panel.*`, ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+  // Twin of `ViewModel::for_panel`'s own Rust law.
+  const generateRoster = [
+    { id: "generation3d-generations", windowKindId: "generation3d-generations" },
+    { id: "generation3d-generate-form", windowKindId: "generation3d-generate-form" },
+    { id: "generation3d-generate-preview", windowKindId: "generation3d-generate-preview" },
+  ];
+
+  it("panelViewContext unbinds a panel from every window-scoped field", () => {
+    const projected = panelViewContext({ activeModeId: "generate", windowId: "generation3d-generations", activeWindowKindId: "generation3d-generations", activeUtilityId: "move", focusedWindowId: "generation3d-generations", windowInstances: generateRoster });
+    expect(projected.windowId).toBeUndefined();
+    expect(projected.activeWindowKindId).toBeUndefined();
+    expect(projected.activeUtilityId).toBeUndefined();
+    expect(projected.activeModeId).toBe("generate");
+  });
+
+  it("panelViewContext keeps a focused pane the roster carries, so per-window panel controls still address it", () => {
+    const projected = panelViewContext({ activeModeId: "generate", focusedWindowId: "generation3d-generate-form", windowInstances: generateRoster });
+    expect(projected.focusedWindowId).toBe("generation3d-generate-form");
+  });
+
+  it("panelViewContext drops a focused pane the active mode's roster does not carry, so a mode-switch race cannot unpublish every app panel", () => {
+    const projected = panelViewContext({ activeModeId: "generate", focusedWindowId: "procedural-main", windowInstances: generateRoster });
+    expect(projected.focusedWindowId).toBeUndefined();
+    expect(projected.windowInstances).toEqual(generateRoster);
+  });
+
+  it("panelViewContext drops a focused pane when the host carries no roster at all", () => {
+    expect(panelViewContext({ focusedWindowId: "procedural-main" }).focusedWindowId).toBeUndefined();
   });
 
   it("buildUiRefreshRequest for none returns null", () => {
@@ -9510,10 +9553,36 @@ describe("host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, 
     }
   });
 
-  it("dispatchOpenedFiles (D3): single-file (multiple=false) makes exactly one call with {payload, name} and no index/total", async () => {
+  it("dispatchOpenedFiles (D3): single-file (multiple=false) makes exactly one call with {payload, name} plus the one-chunk envelope and no index/total", async () => {
     const dispatchOne = vi.fn().mockResolvedValue(undefined);
     await dispatchOpenedFiles([{ contents: "abc", name: "a.png" }], "importFramePayload", false, dispatchOne);
-    expect(dispatchOne).toHaveBeenCalledExactlyOnceWith("importFramePayload", { payload: "abc", name: "a.png" });
+    expect(dispatchOne).toHaveBeenCalledExactlyOnceWith("importFramePayload", { payload: "abc", name: "a.png", chunk: 0, chunkCount: 1 });
+  });
+
+  it("dispatchOpenedFiles (B59): a file above one chunk is dispatched in order as chunks that each stay inside the guest contiguous ceiling", async () => {
+    const calls: { readonly payload: string; readonly chunk: number; readonly chunkCount: number; readonly name: string }[] = [];
+    const dispatchOne = vi.fn().mockImplementation(async (_action: string, args: unknown) => {
+      calls.push(args as (typeof calls)[number]);
+    });
+    // 📏️ The product's own payload class: the Nakagin Capsule Tower export is 145 714 B (wave B53/B57).
+    const contents = `{"schema":"puzzle.3d.fixture","objects":[${"x".repeat(145_000)}]}`;
+    await dispatchOpenedFiles([{ contents, name: "nakagin-capsule-tower.json" }], "importFixture", false, dispatchOne);
+    expect(calls.length).toBe(Math.ceil(contents.length / IMPORT_CHUNK_BYTES));
+    expect(calls.map((call) => call.chunk)).toEqual(calls.map((_, index) => index));
+    expect(new Set(calls.map((call) => call.chunkCount))).toEqual(new Set([calls.length]));
+    expect(new Set(calls.map((call) => call.name))).toEqual(new Set(["nakagin-capsule-tower.json"]));
+    for (const call of calls) expect(new TextEncoder().encode(call.payload).length).toBeLessThanOrEqual(IMPORT_CHUNK_BYTES);
+    expect(calls.map((call) => call.payload).join("")).toBe(contents);
+  });
+
+  it("importPayloadChunks (B59): slices by UTF-8 extent so a non-ASCII label can never overrun the chunk cap, and never splits a code point", () => {
+    const label = "Distinct Capsule J · cs_sl1 ōō";
+    const contents = label.repeat(4_000);
+    const chunks = importPayloadChunks(contents);
+    expect(chunks.length).toBeGreaterThan(1);
+    for (const chunk of chunks) expect(new TextEncoder().encode(chunk.payload).length).toBeLessThanOrEqual(IMPORT_CHUNK_BYTES);
+    expect(chunks.map((chunk) => chunk.payload).join("")).toBe(contents);
+    expect(importPayloadChunks("")).toEqual([{ payload: "", chunk: 0, chunkCount: 1 }]);
   });
 
   it("dispatchOpenedFiles (D3): multiple=true dispatches once per file, in order, each extended with {index, total}", async () => {
@@ -9529,9 +9598,9 @@ describe("host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, 
     await dispatchOpenedFiles(opened, "importFramePayload", true, dispatchOne);
     expect(dispatchOne).toHaveBeenCalledTimes(3);
     expect(calls).toEqual([
-      ["importFramePayload", { payload: "a", name: "a.png", index: 0, total: 3 }],
-      ["importFramePayload", { payload: "b", name: "b.png", index: 1, total: 3 }],
-      ["importFramePayload", { payload: "c", name: "c.png", index: 2, total: 3 }],
+      ["importFramePayload", { payload: "a", name: "a.png", chunk: 0, chunkCount: 1, index: 0, total: 3 }],
+      ["importFramePayload", { payload: "b", name: "b.png", chunk: 0, chunkCount: 1, index: 1, total: 3 }],
+      ["importFramePayload", { payload: "c", name: "c.png", chunk: 0, chunkCount: 1, index: 2, total: 3 }],
     ]);
   });
 
@@ -11344,3 +11413,66 @@ describe("node-graph opening camera (renderer twin)", () => {
   });
 });
 //#endregion 📷️CameraAndLabelFitTwins
+
+//#region 🛑️SurfaceControlCancelTwin
+/** 🛑️ The TypeScript half of the surface-control laws: the SAME
+ * `🐚️Shell/🧫️fixtures/🛑️surface-controls/🔣️.json` rows the Rust
+ * `🔬️wgpu-shell-chrome-parity` laws answer through `world3d_cancel_affordance`, answered here by the
+ * shipped `world3dComputeStatusV1` parser — two independent implementations, one fixture, so neither
+ * renderer can drift into offering a cancel the producer never authorised.
+ * Ticket 26/09/09/PROCEDURAL-3D-END-TO-END. */
+describe("🛑️ world3d cancel contract", () => {
+  const ajv = new Ajv({ allErrors: true, strict: false });
+  const validate = ajv.compile({
+    type: "object",
+    required: ["note", "cancelContract", "surfaceControls", "controlHeightPx", "surfaceControlMinimum"],
+    properties: {
+      note: { type: "string" },
+      cancelContract: {
+        type: "array",
+        minItems: 1,
+        items: {
+          type: "object",
+          required: ["id", "statusJson", "expected"],
+          properties: {
+            id: { type: "string" },
+            statusJson: { type: ["string", "null"] },
+            expected: { type: "object", required: ["cancellable", "cancelAction"], properties: { cancellable: { type: "boolean" }, cancelAction: { type: "string" } } },
+          },
+        },
+      },
+      surfaceControls: { type: "array", minItems: 1 },
+      controlHeightPx: { type: "number", exclusiveMinimum: 0 },
+      surfaceControlMinimum: { type: "object", required: ["widthControlHeights", "heightControlHeights"], properties: { widthControlHeights: { type: "number" }, heightControlHeights: { type: "number" } } },
+    },
+  });
+
+  it("validates the shared fixture against its own declared schema", () => {
+    expect(validate(surfaceControlsFixture)).toBe(true);
+  });
+
+  it("offers a cancel affordance for exactly the rows the shared fixture declares", () => {
+    const rows = surfaceControlsFixture.cancelContract;
+    for (const row of rows) {
+      const status = world3dComputeStatusV1(row.statusJson);
+      expect(status.cancellable, row.id).toBe(row.expected.cancellable);
+      expect(status.cancelAction, row.id).toBe(row.expected.cancelAction);
+    }
+    console.log("[DEBUG] world3d cancel contract reproduced all %s shared fixture rows", rows.length);
+  });
+
+  it("derives the control ids the wgpu shell paints from the same rows", () => {
+    for (const row of surfaceControlsFixture.surfaceControls) {
+      const { controlHeightPx, surfaceControlMinimum } = surfaceControlsFixture;
+      const fits = (bounds: readonly number[]) => bounds[2] >= surfaceControlMinimum.widthControlHeights * controlHeightPx && bounds[3] >= surfaceControlMinimum.heightControlHeights * controlHeightPx;
+      const ids = [
+        ...row.graphs.filter((graph: { bounds: number[] }) => fits(graph.bounds)).map((graph: { surfaceId: string }) => `shell.nodeGraph.fit::${graph.surfaceId}`),
+        ...row.worlds
+          .filter((world: { bounds: number[]; statusJson: string | null }) => fits(world.bounds) && world3dComputeStatusV1(world.statusJson).cancellable)
+          .map((world: { surfaceId: string }) => `shell.world3d.cancel::${world.surfaceId}`),
+      ];
+      expect(ids, row.id).toEqual(row.expected);
+    }
+  });
+});
+//#endregion 🛑️SurfaceControlCancelTwin

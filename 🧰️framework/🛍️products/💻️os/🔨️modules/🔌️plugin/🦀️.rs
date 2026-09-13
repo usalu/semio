@@ -1,5 +1,12 @@
 //! 🔌️ Declarative app plugin SDK — build fully declarative Rust apps bundled into hot-swappable WASM plugins.
 
+/// 🗣️ `#[derive(dsl::DslRecord)]` expands to `::dsl::…` paths, so the crate root must bind that name
+/// — the same `extern crate semio_framework_os_kernel as dsl;` every technology crate declares.
+/// Without it the plugin-owned `world-3d` records (`WorldSunConfig`, `WorldProjectionConfig`) could
+/// not implement `DslField`, and every artifact embedding one in a `WindowConfigOwner::State` would
+/// have to carry a hand-mirrored copy instead.
+extern crate semio_framework_os_kernel as dsl;
+
 //#region 🧮️HeapWitness
 /// 🧮️ Weighs what ONE reactor turn RETAINS, in this crate's own test binary only. The wasm harness
 /// (`🖥️host/🧪️tests/🔬️poll-turn-memory`) measured 4 437 B of guest linear memory per `poll` turn
@@ -297,7 +304,8 @@ pub mod app {
 
     pub use super::transient_publication::{bounded_transient_preparation_factory, bounded_transient_root_retirement_factory, bounded_transient_store_disposer, transient_store_disposer};
     pub use super::window_config::{
-        bounded_window_config_preparation_factory, bounded_window_config_store_disposer, bounded_window_config_store_owners, WindowConfigMutation, WindowConfigOwner, WindowConfigOwnerRegistry, WindowConfigPack, WindowConfigSnapshot,
+        bounded_window_config_preparation_factory, bounded_window_config_store_disposer, bounded_window_config_store_owners, WindowConfigMutation, WindowConfigOwner, WindowConfigOwnerRegistry, WindowConfigPack, WindowConfigPackLoad,
+        WindowConfigPackLoadDiagnostic, WindowConfigPackLoadGrant, WindowConfigPackLoadPhase, WindowConfigPackLoadProgress, WindowConfigPackLoadStep, WindowConfigSnapshot,
     };
     pub use super::window_transient::{WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientOwnerRegistry, WindowTransientSnapshot};
     use dsl::{to_dsl_value, DslValue};
@@ -9427,6 +9435,24 @@ pub mod app {
         }
         fn print_dsl(&self) -> String {
             String::new()
+        }
+    }
+
+    impl store::mounted_pack_rt::DslField for NoConfig {
+        fn shape() -> store::mounted_pack_rt::Shape {
+            fn spec() -> store::mounted_pack_rt::RecordSpec {
+                store::mounted_pack_rt::RecordSpec::new(None, store::mounted_pack_rt::RecordLayout::Lines, Vec::new())
+            }
+            store::mounted_pack_rt::Shape::Record(spec)
+        }
+        fn to_value(&self) -> store::mounted_pack_rt::FieldValue {
+            store::mounted_pack_rt::FieldValue::Record(store::mounted_pack_rt::RecordValue::default())
+        }
+        fn from_value(value: &store::mounted_pack_rt::FieldValue) -> Result<Self, String> {
+            match value {
+                store::mounted_pack_rt::FieldValue::Record(record) if record.fields.is_empty() => Ok(Self::default()),
+                _ => Err("no config state requires an empty record".into()),
+            }
         }
     }
 
@@ -36387,7 +36413,7 @@ pub mod world3d_host {
 
     //#region 🌞️ WorldSunConfig
     /** 🌞️ Plugin-owned directional-light state for a `world-3d` scene; off by default so meshes render flat until a dev opts in via the window-options Sun toggle. */
-    #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
+    #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, dsl::DslRecord)]
     #[serde(rename_all = "camelCase", default)]
     #[value(rename_all = "camelCase", default)]
     pub struct WorldSunConfig {
@@ -36506,7 +36532,7 @@ pub mod world3d_host {
      * (Parallel: Orthographic/Axonometric/Oblique, Perspective: 1/2/3-Point/Curvilinear). Flat so
      * switching `kind` and back restores whatever a dev last dialed in on the other kinds. See
      * https://en.wikipedia.org/wiki/Axonometric_projection and https://en.wikipedia.org/wiki/Oblique_projection. */
-    #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
+    #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, dsl::DslRecord)]
     #[serde(rename_all = "camelCase", default)]
     #[value(rename_all = "camelCase", default)]
     pub struct WorldProjectionConfig {
@@ -37354,6 +37380,12 @@ pub use app::{
     WindowConfigOwner,
     WindowConfigOwnerRegistry,
     WindowConfigPack,
+    WindowConfigPackLoad,
+    WindowConfigPackLoadDiagnostic,
+    WindowConfigPackLoadGrant,
+    WindowConfigPackLoadPhase,
+    WindowConfigPackLoadProgress,
+    WindowConfigPackLoadStep,
     WindowConfigSnapshot,
     WindowKindSpec,
     WindowKit,

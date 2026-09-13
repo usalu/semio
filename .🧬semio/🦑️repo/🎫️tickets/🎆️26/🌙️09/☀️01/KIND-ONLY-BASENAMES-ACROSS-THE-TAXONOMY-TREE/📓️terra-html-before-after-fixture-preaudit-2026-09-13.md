@@ -63,3 +63,27 @@ The renderer repair uses `canonicalPrimaryFilenameForKind`; the coordinator's fo
 I independently parsed both current project manifests. Each has an identical `htmlSourcePairs` named input containing exactly 17 existing source inputs: the Stdio oracle manifest plus every one of the 16 canonical HTML leaves. The test-domain package manifest binds it to its four package test targets (`test`, `test-quick`, `test-long`, and `test-exhaustive`); the test-domain project manifest binds it to `test-fixture-verify`. This is the exact producer/consumer closure for the manifest reader and fixture verifier, with no Stdio/root project attribution.
 
 The coordinator's installed Nx `createNodesV2` probe reported five target projections and the same 17 inputs in 2.36 seconds, retaining the original commands and working directories. The portable control covers both consumers. The final direct control is 11/210 in 2.89 seconds. These results extend the preceding acceptance without claiming another registered execution run.
+
+## Normalization reader repair delta
+
+The HTML pair exposed a separate generic reader defect: normalization rendered a descendant file through the one-extension-only canonical filename helper, while the schema declares both .html and .htm. The current reader uses canonicalPrimaryFilenameForKind, so it follows the schema-ordered authoring leaf without changing the one-extension helper.
+
+I re-read the actual control. It scopes inventory to the fixture root, filters only the eight declared owner prefixes, and requires the exact sixteen file paths. It then requires each leaf to retain file kind html, identity normalizedPath, and no violations. This prevents the earlier overbroad sibling population while retaining the full declared set inside every owner.
+
+The portable Nx closure now distinguishes fixture bytes from reader code: both consumers keep the exact 17 htmlSourcePairs inputs; the four package test targets additionally include normalization, discovery, and taxonomy, while the fixture-verification target needs no reader-code input. The control verifies each declared source input against every target that reads it.
+
+Coordinator evidence for the repaired current sources is direct 12/271 in 26.79 seconds and package-body-policy 121/530 in 68.16 seconds. The registered reader route is still pending at this audit point, so this delta is not a second registered acceptance claim.
+
+## Reader Nx progression
+
+The first current package-policy Nx run reached 120 of 121 tests and 530 assertions in 133.54 seconds (2 minutes 15 seconds Nx). All three HTML cases passed. Its sole nonzero result was an unrelated native Go bootstrap case exceeding the former implicit five-second per-case budget at 5.84 seconds; its assertions were not relaxed. The coordinator assigned native-oracle cases an explicit 30-second bound, retained five seconds for TypeScript cases, and set the total route budget to 240 seconds from the observed direct duration. The scoped HTML registered route is still running, so this remains progress evidence rather than a final registered result.
+
+## Registered normalization-reader acceptance
+
+The exact registered long route is now green: @semio-tech/repo-test:test-long with -t HTML completed with four passing tests, 256 assertions, and 325 filtered tests in 86.74 seconds; Nx took 1 minute 28 seconds with cache skipped. The installed Nx graph independently confirms four package test targets, three reader inputs, the 17-pair input set, and cacheability.
+
+The short route's 30-second outer cap was reached in an unrelated test-platform module-scope contribution scan before any HTML assertion. It is not HTML reader evidence and did not result in a route, assertion, or budget change. The preceding fixture verifier and this long-route result together accept the bounded HTML source-pair and normalization-reader closure, with the parser/browser/native limits already stated.
+
+## Final package-policy result
+
+The coordinator's final current `package-body-policy` Nx route is green: 121 tests and 530 assertions in 127.51 seconds of test work and 2 minutes 8 seconds through Nx, cache skipped. It postdates the explicit 30-second native-oracle bound and 240-second route bound; the three HTML controls pass within that route. This is whole-policy corroboration, separate from the focused fixture verifier and HTML long route above. No browser execution or mutation simulation is implied.

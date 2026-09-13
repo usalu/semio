@@ -9,7 +9,6 @@ async fn home_config_dsl_text_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn home_config_op_text_round_trips_every_variant() {
     store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::Snapshot { config: HomeConfig::default() });
-    store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::SetActivePanelTab { tab_id: "tab-1".into() });
     store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::FoldDirectoryEvent { event_json: "{}".into() });
     store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::ReplaceDirectoryProjection {
         directory_json: directory_to_json(&store::os_directory::DirectoryReadModel::default()),
@@ -17,7 +16,6 @@ async fn home_config_op_text_round_trips_every_variant() {
         authorization_generation: 1,
         receipt_sha256: "b".repeat(64),
     });
-    store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::SetClient { client_id: "u1".into(), client_name: "Ada".into() });
 }
 
 #[semio_framework_async_macros::async_test]
@@ -69,19 +67,16 @@ async fn directory_projection_round_trip_preserves_documents_and_rejects_corrupt
 }
 
 #[semio_framework_async_macros::async_test]
-async fn set_client_updates_identity_fields() {
-    let config = HomeConfig::default();
-    let next = HomeConfigMutation::SetClient { client_id: "u1".into(), client_name: "Ada".into() }.diff(&config).diff().clone();
-    assert_eq!(next.client_id, "u1");
-    assert_eq!(next.client_name, "Ada");
-}
-
-#[semio_framework_async_macros::async_test]
 async fn home_config_operation_round_trips_via_apply_and_backwards() {
     let config = HomeConfig::default();
-    let operation = HomeConfigMutation::SetActivePanelTab { tab_id: "documents".into() };
+    let operation = HomeConfigMutation::ReplaceDirectoryProjection {
+        directory_json: directory_to_json(&store::os_directory::DirectoryReadModel::default()),
+        session_binding_sha256: "a".repeat(64),
+        authorization_generation: 1,
+        receipt_sha256: "b".repeat(64),
+    };
     let next = operation.diff(&config).diff().clone();
-    assert_eq!(next.active_panel_tab, "documents");
+    assert_eq!(next.directory_authorization_generation, 1);
     let backwards = operation.inverse(&config);
     let restored = backwards[0].diff(&next).diff().clone();
     assert_eq!(restored, config);

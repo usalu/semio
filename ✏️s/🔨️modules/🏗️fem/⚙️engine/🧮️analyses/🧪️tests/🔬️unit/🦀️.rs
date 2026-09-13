@@ -55,6 +55,243 @@ fn assembly_triplet_pages_control_transitions_preserve_state_until_granted() {
     }
 }
 
+
+fn assembly_physical_fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../📦️physical-owners/🧫️fixtures/🔣️.json")).expect("assembly physical fixture")
+}
+
+/// 🧱 The mounted model moves as small metadata while payload pages require explicit admission.
+#[test]
+fn assembly_triplet_pages_mounted_model_has_no_inline_payload_arrays() {
+    let fixture = assembly_physical_fixture();
+    let bytes = size_of::<MountedAnalysisModel>();
+    eprintln!("[DEBUG] mounted analysis inline owner bytes={bytes}, maximum={}", fixture["mountedModel"]["maximumInlineBytes"]);
+    assert!(bytes <= fixture["mountedModel"]["maximumInlineBytes"].as_u64().unwrap() as usize);
+}
+
+
+type MountedAdmissionQuery = fn(&MountedAnalysisModel, usize) -> Result<Option<usize>, MountedAnalysisFault>;
+type MountedAdmissionStep = fn(&mut MountedAnalysisModel, usize, usize) -> Result<MountedAnalysisAdmission, MountedAnalysisFault>;
+
+fn mounted_fixture_owners() -> [(&'static str, MountedAdmissionQuery, MountedAdmissionStep); 3] {
+    [
+        ("node", MountedAnalysisModel::next_node_allocation_bytes, MountedAnalysisModel::admit_node_one),
+        ("element", MountedAnalysisModel::next_element_allocation_bytes, MountedAnalysisModel::admit_element_one),
+        ("support", MountedAnalysisModel::next_support_allocation_bytes, MountedAnalysisModel::admit_support_one),
+    ]
+}
+
+fn mounted_fixture_coordinates(model: &MountedAnalysisModel, kind: &str) -> (usize, usize, usize) {
+    match kind {
+        "node" => (model.nodes.admitted, model.nodes.values.len(), model.nodes.values.capacity()),
+        "element" => (model.elements.admitted, model.elements.values.len(), model.elements.values.capacity()),
+        "support" => (model.supports.admitted, model.supports.values.len(), model.supports.values.capacity()),
+        _ => unreachable!(),
+    }
+}
+
+fn close_mounted_fixture(model: &mut MountedAnalysisModel) -> (usize, bool) {
+    let mut released = 0;
+    for _ in 0..4_096 {
+        let before = model.physical_backing_bytes().into_iter().sum::<usize>();
+        let step = model.close_step(MOUNTED_ANALYSIS_BACKING_BYTES);
+        let after = model.physical_backing_bytes().into_iter().sum::<usize>();
+        released += step.2;
+        assert!(step.1 <= 1 && step.2 <= MOUNTED_ANALYSIS_BACKING_BYTES);
+        assert_eq!(before, after + step.2);
+        if step.0 { return (released, model.terminal_is_empty()); }
+    }
+    (released, false)
+}
+
+/// 🎟️ Every model backing is separately queried, admitted and physically retired under exact grants.
+#[test]
+fn assembly_triplet_pages_mounted_model_admits_one_backing_and_preserves_refused_grants() {
+    let fixture = assembly_physical_fixture();
+    for (kind, query, admit) in mounted_fixture_owners() {
+        for target_name in fixture["mountedModel"]["targets"].as_array().unwrap() {
+            let maximum = fixture["mountedModel"]["logicalLimits"][kind].as_u64().unwrap() as usize;
+            let target = match target_name.as_str().unwrap() { "empty" => 0, "one" => 1, "maximum" => maximum, _ => unreachable!() };
+            let mut model = MountedAnalysisModel::new();
+            assert_eq!(model.physical_backing_bytes(), [0; 3]);
+            let mut allocated = 0;
+            let mut allocations = 0;
+            let mut complete = false;
+            for _ in 0..4_096 {
+                let before = model.physical_backing_bytes();
+                let coordinates = mounted_fixture_coordinates(&model, kind);
+                let demand = query(&model, target).expect("exact model allocation demand");
+                if let Some(bytes) = demand {
+                    for refused in [0, bytes.saturating_sub(1)] {
+                        assert_eq!(admit(&mut model, target, refused), Ok(MountedAnalysisAdmission::default()));
+                        assert_eq!(model.physical_backing_bytes(), before);
+                        assert_eq!(mounted_fixture_coordinates(&model, kind), coordinates);
+                    }
+                }
+                let step = admit(&mut model, target, demand.unwrap_or(0)).expect("model admission");
+                let after = model.physical_backing_bytes();
+                assert_eq!(after.into_iter().sum::<usize>(), before.into_iter().sum::<usize>() + step.allocated_bytes);
+                assert!(step.allocated_bytes <= MOUNTED_ANALYSIS_BACKING_BYTES);
+                if step.allocated_bytes != 0 {
+                    assert_eq!(mounted_fixture_coordinates(&model, kind).0, coordinates.0);
+                    allocations += 1;
+                }
+                allocated += step.allocated_bytes;
+                if step.complete { complete = true; break; }
+            }
+            assert!(complete);
+            assert_eq!(mounted_fixture_coordinates(&model, kind).0, target);
+            assert_eq!(mounted_fixture_coordinates(&model, kind).1, 0);
+            for _ in 0..target {
+                match kind {
+                    "node" => model.push_node(Node { id: String::new(), pos: [0.0; 3] }).unwrap(),
+                    "element" => model.push_element(BeamEb2 { id: String::new(), start: String::new(), end: String::new(), e: 1.0, area: 1.0, iy: 1.0, density: 1.0 }.into()).unwrap_or_else(|_| panic!("admitted element")),
+                    "support" => model.push_support(MountedAnalysisSupport::new(String::new())).unwrap_or_else(|_| panic!("admitted support")),
+                    _ => unreachable!(),
+                }
+            }
+            let before_close = model.physical_backing_bytes();
+            for _ in 0..1_024 {
+                let step = model.close_step(0);
+                assert_eq!(step.2, 0);
+                if step.0 || step.1 == 0 { break; }
+            }
+            assert_eq!(model.physical_backing_bytes(), before_close);
+            let (released, terminal) = close_mounted_fixture(&mut model);
+            eprintln!("[DEBUG] mounted model {kind}/{target_name}: allocations={allocations}, allocated={allocated}, released={released}, terminal={terminal}");
+            assert_eq!(allocated, released);
+            assert!(terminal);
+            if target == maximum && kind != "support" { assert!(allocated > MOUNTED_ANALYSIS_BACKING_BYTES); }
+        }
+    }
+}
+
+/// 🛑 A partially admitted model retains its first fault and every real backing for cancellation.
+#[test]
+fn assembly_triplet_pages_mounted_model_partial_admission_and_fault_retain_every_backing() {
+    let fixture = assembly_physical_fixture();
+    for (kind, _, admit) in mounted_fixture_owners() {
+        let maximum = fixture["mountedModel"]["logicalLimits"][kind].as_u64().unwrap() as usize;
+        for cutoff in 1..=5 {
+            let mut model = MountedAnalysisModel::new();
+            let mut allocated = 0;
+            for _ in 0..cutoff {
+                allocated += admit(&mut model, maximum, MOUNTED_ANALYSIS_BACKING_BYTES).expect("partial model admission").allocated_bytes;
+            }
+            let before = model.physical_backing_bytes();
+            let coordinates = mounted_fixture_coordinates(&model, kind);
+            let expected = Err(MountedAnalysisFault::Capacity { requested: maximum + 1, maximum });
+            assert_eq!(admit(&mut model, maximum + 1, MOUNTED_ANALYSIS_BACKING_BYTES), expected);
+            assert_eq!(admit(&mut model, maximum, MOUNTED_ANALYSIS_BACKING_BYTES), expected);
+            assert_eq!(model.physical_backing_bytes(), before);
+            assert_eq!(mounted_fixture_coordinates(&model, kind), coordinates);
+            let (released, terminal) = close_mounted_fixture(&mut model);
+            eprintln!("[DEBUG] mounted model partial {kind}/{cutoff}: allocated={allocated}, released={released}, terminal={terminal}");
+            assert_eq!(allocated, released);
+            assert!(terminal);
+        }
+    }
+}
+
+fn assembly_physical_empty_build(matrix: Option<Csr>) -> AssemblyCsrBuild {
+    AssemblyCsrBuild {
+        assembly: None,
+        entries: PagedList::default(),
+        stage: AssemblyCsrBuildStage::Complete,
+        sort_outer: 0,
+        sort_inner: 0,
+        count_cursor: 0,
+        unique_count: 0,
+        count_key: None,
+        merge_cursor: 0,
+        row_cursor: 0,
+        row_counts: PagedList::default(),
+        indptr: PagedList::default(),
+        indices: PagedList::default(),
+        values: PagedList::default(),
+        last_key: None,
+        matrix,
+        n: 0,
+    }
+}
+
+/// 🪶 Clearing an inline assembly record has no physical backing release of its own.
+#[test]
+fn assembly_triplet_pages_inline_job_close_reports_no_struct_bytes() {
+    static EMPTY_MODEL: AnalysisModel = AnalysisModel { nodes: Vec::new(), elements: Vec::new(), supports: Vec::new() };
+    let fixture = assembly_physical_fixture();
+    let model = Arc::new(cantilever_analysis_model(210e9, 0.02, 8e-6, 3.0, 7_850.0).0);
+    let mut construction = AssemblyJobConstruction::new_owned(model, assembly_operation(956), 1);
+    let mut constructed = false;
+    for _ in 0..4_096 {
+        if construction.step_one().expect("inline assembly setup") { constructed = true; break; }
+    }
+    assert!(constructed);
+    let mut job = construction.take_complete().expect("inline assembly fixture job");
+    let mut job_closed = false;
+    for _ in 0..20_000 {
+        if job.close_step(MOUNTED_OWNER_PAGE_BYTES).0 { job_closed = true; break; }
+    }
+    assert!(job_closed);
+    job.model = AnalysisModelOwner::Borrowed(&EMPTY_MODEL);
+    job.state.stage = AssemblyJobStage::Complete;
+    let mut build = AssemblyCsrBuild::new(job).unwrap_or_else(|_| panic!("closed inline fixture"));
+    let first = build.close_step(0);
+    let terminal = build.close_step(0);
+    eprintln!("[DEBUG] assembly inline job first={first:?}, terminal={terminal:?}");
+    assert_eq!(first, (false, fixture["release"]["maximumOwnersPerStep"].as_u64().unwrap() as usize, fixture["release"]["inlineOwnerBytes"].as_u64().unwrap() as usize));
+    assert_eq!(terminal, (true, 0, 0));
+}
+
+/// 🧮 Empty capacitated matrix pages remain live until their exact physical grant arrives.
+#[test]
+fn assembly_triplet_pages_inline_matrix_close_reports_only_actual_backing() {
+    let fixture = assembly_physical_fixture();
+    for case in fixture["cases"].as_array().unwrap() {
+        for grant in fixture["grants"].as_array().unwrap() {
+            let count = case["backingCount"].as_u64().unwrap();
+            let (mut indptr, mut indices, mut values) = (PagedList::default(), PagedList::default(), PagedList::default());
+            if count != 0 {
+                while indptr.capacity() < 1 { indptr.reserve_capacity_one(1, MOUNTED_OWNER_PAGE_BYTES).expect("row backing"); }
+                while indices.capacity() < 1 { indices.reserve_capacity_one(1, MOUNTED_OWNER_PAGE_BYTES).expect("index backing"); }
+                while values.capacity() < 1 { values.reserve_capacity_one(1, MOUNTED_OWNER_PAGE_BYTES).expect("value backing"); }
+            }
+            let next_bytes = if count == 0 { 0 } else { values.next_release_allocation_bytes().expect("next matrix backing") };
+            let matrix = Csr::from_paged_parts(0, indptr, indices, values);
+            let before = matrix.physical_backing_bytes();
+            let allocated: usize = before.into_iter().sum();
+            let bytes = match grant["relativeBytes"].as_str().unwrap() {
+                "zero" => 0,
+                "one-less" => next_bytes.saturating_sub(1),
+                "next-backing" => next_bytes,
+                _ => unreachable!(),
+            };
+            let mut build = assembly_physical_empty_build(Some(matrix));
+            let first = build.close_step(bytes);
+            let after = build.matrix.as_ref().map_or([0; 3], Csr::physical_backing_bytes);
+            let mut released = first.2;
+            let mut exact = allocated == after.into_iter().sum::<usize>() + first.2;
+            let mut terminal = first.0;
+            for _ in 0..100 {
+                let before_step = build.matrix.as_ref().map_or(0, |owner| owner.physical_backing_bytes().into_iter().sum::<usize>());
+                let step = build.close_step(MOUNTED_OWNER_PAGE_BYTES);
+                let after_step = build.matrix.as_ref().map_or(0, |owner| owner.physical_backing_bytes().into_iter().sum::<usize>());
+                exact &= step.1 <= 1 && step.2 <= MOUNTED_OWNER_PAGE_BYTES && before_step == after_step + step.2;
+                released += step.2;
+                if step.0 { terminal = true; break; }
+            }
+            eprintln!("[DEBUG] assembly matrix {} / {} grant={bytes}, before={before:?}, first={first:?}, after={after:?}, allocated={allocated}, released={released}, exact={exact}, terminal={terminal}", case["name"], grant["name"]);
+            assert!(terminal);
+            assert!(exact, "inline retirement cannot invent backing bytes");
+            assert_eq!(released, allocated);
+            if count != 0 && grant["releasedBackings"].as_u64().unwrap() == 0 {
+                assert_eq!(after, before);
+                assert_eq!(first, (false, 0, 0));
+            }
+        }
+    }
+}
+
 fn merge_fixture_triplet(value: &serde_json::Value) -> AssemblyTriplet {
     AssemblyTriplet {
         sequence: value["sequence"].as_u64().expect("triplet sequence"),
@@ -140,18 +377,18 @@ fn mounted_assembly_construction_is_retained_and_preserves_the_exact_model_owner
 fn assembly_triplet_pages_cross_one_physical_page_without_extra_logical_partitions() {
     let nodes = vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [2.0, 0.0, 0.0] }];
     let mut model = MountedAnalysisModel::new();
-    while !model.admit_node_one(nodes.len()).unwrap() {}
+    while !model.admit_node_one(nodes.len(), MOUNTED_ANALYSIS_BACKING_BYTES).unwrap().complete {}
     for node in nodes { model.push_node(node).unwrap(); }
-    while !model.admit_element_one(50).unwrap() {}
+    while !model.admit_element_one(50, MOUNTED_ANALYSIS_BACKING_BYTES).unwrap().complete {}
     for index in 0..50 {
         let element = BeamEb2 { id: format!("e{index}"), start: "a".into(), end: "b".into(), e: 210e9, area: 0.02, iy: 8e-6, density: 7_850.0 }.into();
         model.push_element(element).unwrap_or_else(|_| panic!("admitted mounted element"));
     }
-    while !model.admit_support_one(1).unwrap() {}
+    while !model.admit_support_one(1, MOUNTED_ANALYSIS_BACKING_BYTES).unwrap().complete {}
     let mut support = MountedAnalysisSupport::new("a".into());
     for dof in [Dof::Tx, Dof::Ty, Dof::Rz] { support.push_fixed(dof).unwrap(); }
     model.push_support(support).unwrap_or_else(|_| panic!("admitted mounted support"));
-    let mut construction = AssemblyJobConstruction::new_mounted(Arc::new(model), assembly_operation(87), 1);
+    let mut construction = AssemblyJobConstruction::new_mounted(model, assembly_operation(87), 1);
     let mut previous_paged_bytes = 0;
     let mut opportunities = 0;
     loop {

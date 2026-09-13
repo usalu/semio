@@ -1,7 +1,78 @@
+import * as Vitest from "vitest";
+import * as Fs from "node:fs";
+import * as Crypto from "node:crypto";
+import * as Events from "node:events";
+import * as Os from "node:os";
+import * as Path from "node:path";
+import * as Url from "node:url";
+import * as Owner01 from "../../🎮️playground-session/🏃️execution/🟦️.ts";
+import * as Owner02 from "../../../🔌️plugin/📇️registry/🔄️refresh/🟦️.ts";
+import * as Owner03 from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
+import * as Owner04 from "../../../🔌️plugin/🏗️build/📦️materialization/🟦️.ts";
+import * as Owner05 from "../../../🔌️plugin/🏗️build/🛂️descriptor/🟦️.ts";
+import * as Owner06 from "../../../🔌️plugin/🏗️build/📥️installation/🟦️.ts";
+import * as Owner07 from "../../../🔌️plugin/🏗️build/🏃️execution/🟦️.ts";
+import * as Owner08 from "../../../🔌️plugin/🏗️build/👁️watch/🟦️.ts";
+import * as Owner09 from "../../../🔌️plugin/📊️size/🟦️.ts";
+import * as Owner10 from "../../♻️activation/🌐️browser-host/🏗️staging/🟦️.ts";
+import * as Owner11 from "../../⚙️engine/🧭️selection/🟦️.ts";
+import * as Owner12 from "../../⚙️engine/📤️publication/🟦️.ts";
+import * as Owner13 from "../../♻️activation/🔐️lease/🟦️.ts";
+import * as Owner14 from "../../♻️activation/🩺️readiness/🟦️.ts";
+import * as Owner15 from "../../♻️activation/📥️installation/🟦️.ts";
+import * as Owner16 from "../../♻️activation/🔍️freshness/🟦️.ts";
+import * as Owner17 from "../../♻️activation/🧰️preparation/🟦️.ts";
+import * as Owner18 from "../../♻️activation/🏃️execution/🟦️.ts";
+import * as Owner19 from "../../♻️activation/🌐️serve/🟦️.ts";
+import * as Owner20 from "../🧹️capability-policy/🟦️.ts";
+import * as Owner21 from "../🧹️layering-policy/🟦️.ts";
+import * as Owner22 from "../🧹️export-path-policy/🟦️.ts";
+import * as Owner23 from "../🧹️host-handle-policy/🟦️.ts";
+import * as Owner24 from "../🏃️execution/🟦️.ts";
+import * as Owner25 from "../🎬️studio/🟦️.ts";
+import * as Owner26 from "../🔬️catalog-smoke/🟦️.ts";
+import * as Owner27 from "../🤝️collaboration/🟦️.ts";
+import * as Owner28 from "../✅️verification/🟦️.ts";
+import * as Owner29 from "../⚖️parity/🏗️structure/🟦️.ts";
+import * as Owner30 from "../⚖️parity/🖼️pixels/🟦️.ts";
+import * as Owner31 from "../⚖️parity/🔬️probe/🟦️.ts";
+import * as Owner32 from "../⚖️parity/🌐️server-pool/🟦️.ts";
+import * as Owner33 from "../⚖️parity/📊️report/🟦️.ts";
+import * as Owner34 from "../⚖️parity/🏃️execution/🟦️.ts";
+import * as Owner35 from "../../🚚️distribution/📥️source/🟦️.ts";
+import * as Owner36 from "../../🚚️distribution/📋️plan/🟦️.ts";
+import * as Owner37 from "../../🚚️distribution/🏗️compiler/🟦️.ts";
+import * as Owner38 from "../../🚚️distribution/📤️publication/🟦️.ts";
+import * as Owner39 from "../../🚚️distribution/🔍️freshness/🟦️.ts";
+import * as Owner40 from "../../🚚️distribution/🏃️execution/🟦️.ts";
+import * as Owner41 from "../../../../🧫️fixtures/⚖️scale/📽️projection/🟦️.ts";
+import * as Owner42 from "../../../../🧫️fixtures/⚖️scale/📤️publication/🟦️.ts";
+import * as Owner43 from "../../📊️benchmarks/🔌️plugins/📋️plan/🟦️.ts";
+import * as Owner44 from "../../📊️benchmarks/🔌️plugins/🖥️host/🟦️.ts";
+import * as Owner45 from "../../📊️benchmarks/🔌️plugins/🌐️browser/🟦️.ts";
+import * as Owner46 from "../../📊️benchmarks/🔌️plugins/🧪️stub/🟦️.ts";
+import * as Owner47 from "../../📊️benchmarks/🔌️plugins/🏃️execution/🟦️.ts";
+import * as Owner48 from "../../🧬️schema/🛂️validation/🟦️.ts";
+import * as Owner49 from "../📇️canonical-bootstrap-folder-mirror/🟦️.ts";
+import * as External01 from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import * as External02 from "../../../🔌️plugin/🌐️browser-bundle/🛂️descriptor/🟦️.ts";
+import * as External03 from "../../../🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
+import * as External04 from "../../♻️activation/🟦️.ts";
+import * as External05 from "../../♻️activation/🌐️browser-host/🟦️.ts";
+import * as External06 from "../../🔌️vite-plugins/🟦️.ts";
+import * as External07 from "../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
+import * as External08 from "../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
+import * as External09 from "../../../🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts";
+import * as External10 from "../../../🔌️plugin/📇️registry/🟦️.ts";
+import * as External11 from "../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts";
+import * as External12 from "../../../🔌️plugin/🏪️store/📥️installation/🟦️.ts";
+import * as External13 from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import * as External14 from "../../🚚️distribution/🟦️.ts";
+
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
-  const { ACTIVATION_RECEIPT_FILE, ACTOR_COMPONENT_EXPORTS, DISTRIBUTION_LAYOUT, EXTENSION_WATCH_MARKER, EventEmitter, MODULE_EXTENSION_ROUTE, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, PLAYWRIGHT_MODULE_SPECIFIER, PLUGIN_HOST_SHIM_FILE, PLUGIN_SOURCE_WATCH_PATH, TEST_BROWSER_ACTIVATION_ROOT_ENV, TEST_BROWSER_HOST_RECEIPT_ENV, TEST_BROWSER_MODULE_ROOT_ENV, assertActorComponentExports, assertExtensionOutputsFresh, assertNoStalePublicPluginOutputs, assertPluginCatalogComplete, assertPluginOutputChildren, atTestLevel, awaitChildExit, awaitHttpOk, awaitTcpReady, backboneDbHandleFor, basename, buildEngineWasm, buildPluginCatalog, cargoProfileDir, catalogSmokeExitCode, catalogSmokeMarkdown, checkDistributionBundle, checkScaleFixtureArtifacts, closeTestBrowserHostStagingV1, compareOwnedParityPixels, cpSync, createConcurrencyLimiter, createHash, createReadStream, cropOwnedParityRgba, decodePackValue, decodeParityScreenshot, descriptorRouteDecision, dirname, distributionFileWitness, distributionPathOrder, distributionStaticSourcePaths, encodePackValue, encodeParityDiff, ensureParityPlaywrightBrowsersPath, exactSpaceCreateArtifactArgs, existsSync, fileURLToPath, finalizePluginDescriptor, hostShimSource, isAbsolute, join, linkedSessionEngines, mkdirSync, mkdtempSync, moduleIdForDirectoryName, moduleRoutePath, packValueToExactJson, parseDistributionManifest, parseDistributionStaticInputs, parseTestBrowserGisMaterializationReceiptV1, parseTestBrowserHostStagingReceiptV1, pathToFileURL, pluginCargoArgs, pluginComponentBridgeSource, pluginOutRoot, pluginWasmProfile, prepareTestBrowserHostRootsV1, publishDistributionBundle, readActivationReceipt, readFileSync, readdirSync, relative, renderScaleFixtureArtifacts, repoRoot, resolve, resolveTestBrowserHostRootsV1, rewriteJcoAsyncResultLifting, rewriteJcoComponentAssetUrls, rewritePreview2ShimImportSource, rmSync, scaleFixtureGeneratedDir, scanBuiltPluginModules, shardWorkerSource, stagePluginDescriptor, statSync, stateProbeCandidates, stateProbeChangedPaths, stateProbeSnapshot, summarizeCatalogSmoke, tmpdir, unlinkSync, watch, writeFileSync, writeTestBrowserGisMaterializationReceiptV1 } = dependencies;
+  const { ACTIVATION_RECEIPT_FILE, ACTOR_COMPONENT_EXPORTS, DISTRIBUTION_LAYOUT, EXTENSION_WATCH_MARKER, EventEmitter, MODULE_EXTENSION_ROUTE, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, PLAYWRIGHT_MODULE_SPECIFIER, PLUGIN_HOST_SHIM_FILE, PLUGIN_SOURCE_WATCH_PATH, TEST_BROWSER_ACTIVATION_ROOT_ENV, TEST_BROWSER_HOST_RECEIPT_ENV, TEST_BROWSER_MODULE_ROOT_ENV, assertActorComponentExports, assertExtensionOutputsFresh, assertNoStalePublicPluginOutputs, assertPluginCatalogComplete, assertPluginOutputChildren, atTestLevel, awaitChildExit, awaitHttpOk, awaitTcpReady, backboneDbHandleFor, basename, buildPluginCatalog, cargoProfileDir, catalogSmokeExitCode, catalogSmokeMarkdown, checkDistributionBundle, checkScaleFixtureArtifacts, closeTestBrowserHostStagingV1, compareOwnedParityPixels, cpSync, createConcurrencyLimiter, createHash, createReadStream, cropOwnedParityRgba, decodePackValue, decodeParityScreenshot, descriptorRouteDecision, dirname, distributionFileWitness, distributionPathOrder, distributionStaticSourcePaths, encodePackValue, encodeParityDiff, ensureParityPlaywrightBrowsersPath, exactSpaceCreateArtifactArgs, existsSync, fileURLToPath, finalizePluginDescriptor, hostShimSource, isAbsolute, join, linkedSessionEngines, mkdirSync, mkdtempSync, moduleIdForDirectoryName, moduleRoutePath, packValueToExactJson, parseDistributionManifest, parseDistributionStaticInputs, parseTestBrowserGisMaterializationReceiptV1, parseTestBrowserHostStagingReceiptV1, pathToFileURL, pluginCargoArgs, pluginComponentBridgeSource, pluginOutRoot, pluginWasmProfile, prepareTestBrowserHostRootsV1, publishDistributionBundle, readActivationReceipt, readFileSync, readdirSync, relative, renderScaleFixtureArtifacts, repoRoot, resolve, resolveTestBrowserHostRootsV1, rewriteJcoAsyncResultLifting, rewriteJcoComponentAssetUrls, rewritePreview2ShimImportSource, rmSync, scaleFixtureGeneratedDir, scanBuiltPluginModules, shardWorkerSource, stagePluginDescriptor, statSync, stateProbeCandidates, stateProbeChangedPaths, stateProbeSnapshot, summarizeCatalogSmoke, tmpdir, unlinkSync, watch, writeFileSync, writeTestBrowserGisMaterializationReceiptV1 } = dependencies;
   type OwnedParityImage = any;
   type PackValue = any;
   type ParityDump = any;
@@ -26,6 +97,18 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
    * 30 s `quick` wall-clock budget. They stay in the suite and run from `test long` upwards; `test quick`
    * keeps every pure-helper case. */
   const itLong = atTestLevel(it, "long");
+  const ownedRelativeFiles = (root: string): string[] => {
+    const files: string[] = [];
+    const visit = (directory: string): void => {
+      for (const entry of readdirSync(directory, { withFileTypes: true })) {
+        const path = join(directory, entry.name);
+        if (entry.isDirectory()) visit(path);
+        else if (entry.isFile()) files.push(relative(root, path).replaceAll("\\", "/"));
+      }
+    };
+    visit(root);
+    return files.sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
+  };
 
   describe("ticket-owned browser host staging", () => {
     it("matches the neutral schema and closes only the exact Space, GIS and support module set", async () => {
@@ -49,7 +132,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
       expect(exactSpaceCreateArtifactArgs({ dialogs: [{ id: "createArtifact", args: [{ id: "name" }, { id: "kindChoice" }] }] })).toBe(true);
       expect(exactSpaceCreateArtifactArgs({ dialogs: [{ id: "createArtifact", args: [{ id: "name" }, { id: "kindId" }] }] })).toBe(false);
-      const scriptSource = readFileSync(fileURLToPath(source.url), "utf8");
+      const scriptSource = readFileSync(fileURLToPath(new URL("../../♻️activation/🌐️browser-host/🏗️staging/🟦️.ts", import.meta.url)), "utf8");
       // 🔒️ `buildPluginCargo` now always builds into the ONE shared, fine-grain-locked `cargoTargetDirectory`
       // (no private per-caller target dirs) — this asserts the ticket-owned COPY step that still makes the
       // fresh Space artifact eligible for `ownedTestBrowserHostInput`'s bounded-regular-file check survives.
@@ -123,7 +206,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
         const receiptBytes = readFileSync(closed.receiptPath);
         const moduleSetSha256 = (): string => {
-          const paths = [...new Bun.Glob("**/*").scanSync({ cwd: closed.moduleRoot, onlyFiles: true, dot: true })].sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
+          const paths = ownedRelativeFiles(closed.moduleRoot);
           const hash = createHash("sha256");
           for (const path of paths) {
             const bytes = readFileSync(join(closed.moduleRoot, path));
@@ -224,22 +307,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
   //#endregion 🌉️LinkedSessionEnginesTests
 
-  //#region 🧱️EnginePublicationTests
-  describe("buildEngineWasm", () => {
-    const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../../🧫️fixtures/📢️engine-publication.json"), "utf8"));
-    it("revalidates every required engine on each build even when outputs already exist", async () => {
-      for (let run = 0; run < fixture.repetitions; run++) {
-        const calls: string[] = [];
-        await buildEngineWasm(fixture.variant, "react", join(repoRoot, fixture.composition), (script) => { calls.push(script); return 0; }, () => false);
-        expect(calls).toEqual(fixture.engines.map((engine: string) => join(repoRoot, engine, "📜️script.ts")));
-      }
-    });
-    it("fails publication when the required Flow engine fails", async () => {
-      const flow = join(repoRoot, fixture.engines[2], "📜️script.ts");
-      await expect(buildEngineWasm(fixture.variant, "react", join(repoRoot, fixture.composition), (script) => script === flow ? 1 : 0, () => false)).rejects.toThrow("flow-core wasm build failed");
-    });
-  });
-  //#endregion 🧱️EnginePublicationTests
+
 
   //#region 🔖️PixelCompare-tests
   describe("compareOwnedParityPixels", () => {
@@ -1124,7 +1192,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
       mkdirSync(recovery);
       writeFileSync(join(destination, "📌️retained.bin"), fixture.text);
       const plan = { manifest: fixture.manifest, files: new Map(fixture.manifest.outputs.map((row: { path: string }) => [row.path, Buffer.from(fixture.text)])) };
-      const before = () => Object.fromEntries([...new Bun.Glob("**/*").scanSync({ cwd: destination, onlyFiles: true, dot: true })].sort().map(path => [path, createHash("sha256").update(readFileSync(join(destination, path))).digest("hex")]));
+      const before = () => Object.fromEntries(ownedRelativeFiles(destination).map(path => [path, createHash("sha256").update(readFileSync(join(destination, path))).digest("hex")]));
       await publishDistributionBundle(plan, layout, destination, recovery);
       expect(await checkDistributionBundle(plan, layout, destination)).toEqual([]);
       const retained = before();
@@ -1149,7 +1217,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
       expect(readFileSync(join(destination, "📌️retained.bin"), "utf8")).toBe(fixture.text);
       expect(await checkDistributionBundle(next, layout, destination)).toEqual([]);
       const { default: glob } = await import("fast-glob");
-      expect((await glob("**/*", { cwd: destination, onlyFiles: true, dot: true })).sort()).toEqual([...new Bun.Glob("**/*").scanSync({ cwd: destination, onlyFiles: true, dot: true })].sort());
+      expect((await glob("**/*", { cwd: destination, onlyFiles: true, dot: true })).sort()).toEqual(ownedRelativeFiles(destination));
     });
 
     itLong("validates exact distribution owner manifests against a neutral digest oracle", async () => {
@@ -1915,3 +1983,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
   //#endregion 🔖️CatalogSmoke-tests
 
 }
+
+const testPackageDirectory = Path.resolve(Path.dirname(Url.fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
+const testDependencies = Object.assign({}, Fs, Crypto, Events, Os, Path, Url, Owner01, Owner02, Owner03, Owner04, Owner05, Owner06, Owner07, Owner08, Owner09, Owner10, Owner11, Owner12, Owner13, Owner14, Owner15, Owner16, Owner17, Owner18, Owner19, Owner20, Owner21, Owner22, Owner23, Owner24, Owner25, Owner26, Owner27, Owner28, Owner29, Owner30, Owner31, Owner32, Owner33, Owner34, Owner35, Owner36, Owner37, Owner38, Owner39, Owner40, Owner41, Owner42, Owner43, Owner44, Owner45, Owner46, Owner47, Owner48, Owner49, External01, External02, External03, External04, External05, External06, External07, External08, External09, External10, External11, External12, External13, External14, { repoRoot: External01.getWorkspaceRoot() });
+await registerTests1(Vitest as unknown as NonNullable<ImportMeta["vitest"]>, testDependencies, { directory: testPackageDirectory, url: Url.pathToFileURL(Path.resolve(testPackageDirectory, "📜️script.ts")).href });

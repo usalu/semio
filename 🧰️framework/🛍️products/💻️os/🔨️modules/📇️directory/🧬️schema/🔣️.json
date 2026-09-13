@@ -2485,6 +2485,94 @@
         "maximum": 255
       }
     },
+    "DirectoryIndexedDocumentViewV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "descriptor",
+        "descriptorDigestV1",
+        "entry",
+        "createdAtMs",
+        "createdBy"
+      ],
+      "properties": {
+        "descriptor": {
+          "$ref": "#/$defs/DocumentDescriptor"
+        },
+        "descriptorDigestV1": {
+          "$ref": "#/$defs/ArtifactHash"
+        },
+        "entry": {
+          "$ref": "#/$defs/DocumentIndexEntryV1"
+        },
+        "createdAtMs": {
+          "type": "integer"
+        },
+        "createdBy": {
+          "type": "string"
+        }
+      }
+    },
+    "DirectorySpace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "view",
+        "members",
+        "documents",
+        "indexedDocuments"
+      ],
+      "properties": {
+        "view": {
+          "$ref": "#/$defs/SpaceView"
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MemberView"
+          }
+        },
+        "documents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocumentDescriptor"
+          }
+        },
+        "indexedDocuments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DirectoryIndexedDocumentViewV1"
+          }
+        }
+      }
+    },
+    "DirectoryReadModel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "spaces",
+        "cursor",
+        "users"
+      ],
+      "properties": {
+        "spaces": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/DirectorySpace"
+          }
+        },
+        "cursor": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "users": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/UserView"
+          }
+        }
+      }
+    },
     "NonzeroArtifactHash": {
       "allOf": [
         {
