@@ -66,10 +66,13 @@ import {
   type PluginContextMenuRequest,
   type UiComponentSceneNode,
   type UiMenuRef,
-  type World3dScene,
-  type World3dSceneLaneRef,
+  type SceneLane,
+  type SceneLaneRef,
+  CANVAS2D_SCENE_LANES,
   WORLD3D_SCENE_LANES,
   WORLD3D_SCENE_LANE_KEY_PREFIX,
+  canvas2dSceneFromLanes,
+  sceneFromLanes,
   world3dSceneFromLanes,
   world3dSceneLaneForBodyKey,
 } from "@semio-tech/framework";
@@ -110,6 +113,7 @@ import {
   type UiValue,
 } from "@semio-tech/framework";
 import { decodeScenePackField, decodeScenePackValue } from "@semio-tech/framework-os";
+import { uiAccessibilityValueV1, uiProgressFractionV1 } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/♿️accessibility/🟦️.ts";
 import { shellLabel } from "../🛠️ShellHelpers/🟦️.tsx";
 import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 import { ShellFaultBoundary } from "../🐚️Shell/🟦️.tsx";
@@ -570,17 +574,18 @@ function surfaceSceneLaneText(state: UiDocumentState, root: UiNodeRecord): strin
   return payload;
 }
 
-/** 🚚️ Collects one world-3d surface's arrived lane texts, keyed by reserved carrier key, ready for
- * `world3dSceneFromLanes`. A lane the spine does not declare is ignored; a lane that is declared but
- * not yet fully arrived falls back to its last complete text, or is omitted when there is none. */
-function world3dSurfaceLaneTexts(record: UiNodeRecord, state: UiDocumentState, declared: readonly World3dSceneLaneRef[]): ReadonlyMap<string, string> {
+/** 🚚️ Collects one paged surface's arrived lane texts, keyed by reserved carrier key, ready for
+ * `sceneFromLanes` over the same `lanes` table. A lane the spine does not declare is ignored; a lane
+ * that is declared but not yet fully arrived falls back to its last complete text, or is omitted when
+ * there is none. */
+function surfaceLaneTexts<S extends object>(record: UiNodeRecord, state: UiDocumentState, declared: readonly SceneLaneRef[], lanes: readonly SceneLane<S>[]): ReadonlyMap<string, string> {
   const texts = new Map<string, string>();
   if (declared.length === 0) return texts;
   const refByLane = new Map(declared.map((ref) => [ref.lane, ref]));
   for (const childId of record.children ?? []) {
     const child = state.nodes.get(childId);
     if (!child) continue;
-    const lane = world3dSceneLaneForBodyKey(String(child.key));
+    const lane = lanes.find((entry) => entry.bodyKey === String(child.key));
     const ref = lane && refByLane.get(lane.lane);
     if (!lane || !ref) continue;
     const cacheKey = `${record.id}:${lane.lane}`;
@@ -1314,7 +1319,7 @@ function nodeDomId(store: UiDocumentStore, record: UiNodeRecord): string {
  * number therefore turns any upstream shape change into a React key change — and a key change is an
  * unmount of the entire subtree, however unchanged it is. Measured on `window:procedural-main`: one
  * eval-status refresh grew the outline tree by four port rows (`profile@wire`,
- * `extrusion-axis@vector`, `extrusion-axis@errors`, `extrude@solid`), which moved the node-graph
+ * `extrusion-axis@vectorOut`, `extrusion-axis@errors`, `extrude@solid`), which moved the node-graph
  * surface from id 30 to 34 and its container from 29 to 33, and React tore down and rebuilt the flow
  * host — a second wasm flow session, a second canvas, a second wasm-side surface, ~5.7 s of attach and
  * a graph that stayed blank for 39 s — for a surface node whose own content had not changed
@@ -1439,11 +1444,11 @@ function ImageView({ record }: { readonly record: UiNodeRecord }) {
   return <img id={`node-${record.id}`} src={component.src} alt={component.alt ?? ""} className="max-h-64 max-w-full rounded-md object-contain" data-ui-node-id={record.id} data-ui-node-key={record.key} />;
 }
 
-/** 🚚️ A surface whose scene declares out-of-doc payload lanes (`world-3d`). Its `doc.bytes` carry only
+/** 🚚️ A surface whose scene declares out-of-doc payload lanes (`world-3d`, `canvas-2d`). Its `doc.bytes` carry only
  * the spine; the lanes are retained text-leaf subtrees hanging off this very node, so this view — and
  * only this view — subscribes to the whole document's revision: a lane leaf changing does NOT change
  * this node's own record, and a tree larger than one reconcile page arrives across several patches. */
-function world3dCarrierEpoch(store: UiDocumentStore, record: UiNodeRecord): string {
+function surfaceCarrierEpoch(store: UiDocumentStore, record: UiNodeRecord): string {
   const state = store.getState();
   const stack = [...(record.children ?? [])];
   const parts: string[] = [];
@@ -1457,7 +1462,7 @@ function world3dCarrierEpoch(store: UiDocumentStore, record: UiNodeRecord): stri
   return parts.join("|");
 }
 
-function useWorld3dCarrierEpoch(store: UiDocumentStore, record: UiNodeRecord): string {
+function useSurfaceCarrierEpoch(store: UiDocumentStore, record: UiNodeRecord): string {
   const childKey = (record.children ?? []).join(",");
   return useSyncExternalStore(
     (onChange) => {
@@ -1475,24 +1480,24 @@ function useWorld3dCarrierEpoch(store: UiDocumentStore, record: UiNodeRecord): s
         for (const unsub of unsubs) unsub();
       };
     },
-    () => world3dCarrierEpoch(store, record),
-    () => world3dCarrierEpoch(store, record),
+    () => surfaceCarrierEpoch(store, record),
+    () => surfaceCarrierEpoch(store, record),
   );
 }
 
 function PagedSurfaceView({ record, component, context }: { readonly record: UiNodeRecord; readonly component: Extract<Component, { type: "surface" }>; readonly context: UiInterpreterContext }) {
   const store = context.store;
   const revision = useUiDocumentRevision(store);
-  const carrierEpoch = useWorld3dCarrierEpoch(store, record);
+  const carrierEpoch = useSurfaceCarrierEpoch(store, record);
+  const lanes = (component.kind === "canvas-2d" ? CANVAS2D_SCENE_LANES : WORLD3D_SCENE_LANES) as readonly SceneLane<Record<string, unknown>>[];
   const assemble = useCallback(
     (spine: Record<string, unknown>): Record<string, unknown> => {
       void revision;
       void carrierEpoch;
-      const declared = Array.isArray(spine.lanes) ? (spine.lanes as readonly World3dSceneLaneRef[]) : [];
-      const texts = world3dSurfaceLaneTexts(record, store.getState(), declared);
-      return world3dSceneFromLanes(spine as unknown as World3dScene, texts) as unknown as Record<string, unknown>;
+      const declared = Array.isArray(spine.lanes) ? (spine.lanes as readonly SceneLaneRef[]) : [];
+      return sceneFromLanes(spine, surfaceLaneTexts(record, store.getState(), declared, lanes), lanes);
     },
-    [record, store, revision, carrierEpoch],
+    [record, store, revision, carrierEpoch, lanes],
   );
   return <>{renderComponentSceneHost(record, component, context.onAction, store.getState().surface, context.requestContextMenu, assemble)}</>;
 }
@@ -1549,11 +1554,39 @@ function SurfaceAccessibilityShell({ record, context, children }: { readonly rec
 
 function SurfaceView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "surface" }>;
-  const body = component.kind === "world-3d" ? <PagedSurfaceView record={record} component={component} context={context} /> : <>{renderComponentSceneHost(record, component, context.onAction, context.store.getState().surface, context.requestContextMenu)}</>;
+  const body = component.kind === "world-3d" || component.kind === "canvas-2d" ? <PagedSurfaceView record={record} component={component} context={context} /> : <>{renderComponentSceneHost(record, component, context.onAction, context.store.getState().surface, context.requestContextMenu)}</>;
   return (
     <SurfaceAccessibilityShell record={record} context={context}>
       {body}
     </SurfaceAccessibilityShell>
+  );
+}
+
+/** 📶️ `Component::Progress` → a real `role="progressbar"`. Determinate bars carry
+ * `aria-valuemin`/`max`/`now`/`valuetext` and a fill sized by the shared fraction law; indeterminate bars
+ * carry only `aria-busy` and a centred sweep that pulses only when the user has not asked for reduced
+ * motion (`motion-safe:`). */
+function ProgressView({ record }: { readonly record: UiNodeRecord }) {
+  const component = record.component as Extract<Component, { type: "progress" }>;
+  const value = uiAccessibilityValueV1(component);
+  const fraction = uiProgressFractionV1(component.completed, component.total);
+  const { props: aria, describedBy } = accessibilityAriaProps(record.accessibility, `node-${record.id}`);
+  return (
+    <div
+      role="progressbar"
+      data-ui-node-id={record.id}
+      data-ui-node-key={record.key}
+      aria-valuemin={value.valueMin ?? undefined}
+      aria-valuemax={value.valueMax ?? undefined}
+      aria-valuenow={value.valueNow ?? undefined}
+      aria-valuetext={value.valueText ?? undefined}
+      aria-busy={value.busy ? true : undefined}
+      {...aria}
+      className="bg-muted h-tiny w-full min-w-0 overflow-hidden rounded-full"
+    >
+      {describedBy}
+      <div data-slot="progress-fill" className={fraction === null ? "bg-accent mx-auto h-full w-1/3 motion-safe:animate-pulse" : "bg-accent h-full"} style={fraction === null ? undefined : { width: `${fraction * 100}%` }} />
+    </div>
   );
 }
 
@@ -1582,7 +1615,7 @@ function UnknownComponentView({ record }: { readonly record: UiNodeRecord }) {
 //#endregion ComponentRenderers
 
 function interpretUiNodeBusyShell(record: UiNodeRecord): ReactNode | null {
-  if (record.activity !== "loading" && record.activity !== "waiting") return null;
+  if (record.component.type === "progress" || (record.activity !== "loading" && record.activity !== "waiting")) return null;
   return (
     <div data-ui-node-id={record.id} data-ui-node-key={record.key} data-ui-status={record.activity} className={cn("p-single w-full min-w-0", record.activity === "waiting" ? waitingBorderElementClass : loadingBorderElementClass)} role="status" aria-busy="true">
       {elementSkeleton(record.component.type as ElementSkeletonKind)}
@@ -1620,6 +1653,8 @@ function renderComponent(store: UiDocumentStore, record: UiNodeRecord, context: 
       return <RingView record={record} context={context} />;
     case "iconSelect":
       return <IconSelectView record={record} context={context} />;
+    case "progress":
+      return <ProgressView record={record} />;
     case "tree":
       return <TreeView store={store} record={record} context={context} />;
     case "treeSection":
@@ -1679,10 +1714,26 @@ if (import.meta.vitest) {
   await registerTests1(import.meta.vitest, { DEFAULT_UI_DOCUMENT_LIMITS, Profiler, UiDocumentStore, UiNodeView, accessibilityAriaProps }, { directory: import.meta.dir, url: import.meta.url });
   const { registerTests1: registerContainerNodeIdTests } = await import("./🧪️tests/🪪️container-node-ids/🟦️.tsx");
   await registerContainerNodeIdTests(import.meta.vitest, { UiDocumentStore, UiNodeView, uiChildReactKeys, uiSiblingReactKeys }, { url: import.meta.url });
+  const { registerTests1: registerProgressTests } = await import("./🧪️tests/📶️progress/🟦️.tsx");
+  await registerProgressTests(import.meta.vitest, { UiDocumentStore, UiNodeView }, { url: import.meta.url });
   const { registerTests1: registerSurfaceSceneLaneTests } = await import("./🧪️tests/🚚️surface-scene-lanes/🟦️.tsx");
   await registerSurfaceSceneLaneTests(
     import.meta.vitest,
-    { UiDocumentStore, UiNodeView, surfaceSceneLaneText, surfaceSceneLaneCache, utf8ByteLength, world3dSurfaceLaneTexts, world3dSceneFromLanes, WORLD3D_SCENE_LANES, WORLD3D_SCENE_LANE_KEY_PREFIX, world3dSceneLaneForBodyKey },
+    {
+      UiDocumentStore,
+      UiNodeView,
+      surfaceSceneLaneText,
+      surfaceSceneLaneCache,
+      utf8ByteLength,
+      world3dSurfaceLaneTexts: (record: UiNodeRecord, state: UiDocumentState, declared: readonly SceneLaneRef[]) => surfaceLaneTexts(record, state, declared, WORLD3D_SCENE_LANES),
+      canvas2dSurfaceLaneTexts: (record: UiNodeRecord, state: UiDocumentState, declared: readonly SceneLaneRef[]) => surfaceLaneTexts(record, state, declared, CANVAS2D_SCENE_LANES),
+      world3dSceneFromLanes,
+      canvas2dSceneFromLanes,
+      WORLD3D_SCENE_LANES,
+      CANVAS2D_SCENE_LANES,
+      WORLD3D_SCENE_LANE_KEY_PREFIX,
+      world3dSceneLaneForBodyKey,
+    },
     { url: import.meta.url },
   );
 }

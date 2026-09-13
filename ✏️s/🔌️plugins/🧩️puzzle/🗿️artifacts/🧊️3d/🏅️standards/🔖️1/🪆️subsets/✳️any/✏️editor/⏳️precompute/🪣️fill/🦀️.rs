@@ -1,25 +1,27 @@
-//! 🪣️ Puzzle 3d play app — the precompute fill planner's own state: the running `FillBuilder` (base
-//! scene, the growing plan sequence and its appended objects/attractions, the placed collision
-//! entries the next step tests against, the per-session RNG stream) plus its progress readout. The
-//! stepping itself lives in the sibling `⏳️precompute/🦀️.rs`, which owns the two precompute
-//! lanes. Rehomed from the former `⚙️engine/🪣️fill` (ticket
-//! 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): this is interactive fill-tool session state,
-//! so it lives with the app, not the artifact.
+//! 🪣️ Puzzle 3d play app — the fill planner (`FillBuilder`: base scene, the growing plan sequence and its
+//! appended objects/attractions, the placed collision entries the next step tests against, the per-run RNG
+//! stream) and the fill tool run's two jobs, [`FillRunJob`] and [`FillRevalidateJob`], which the framework
+//! tool run ledger owns and steps (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS `📋️tool-run-contract.md`
+//! §2.7, §3.7).
 
 use crate::editor::puzzle3d::precompute::brush::{
     brush_fill_candidate_at, brush_object_id, brush_preview_from_candidate, brush_stack_mate_pair, fill_candidate_diversity_score, fill_rng, resolve_object_kind_mesh_url, vortex_world_from_object, AttractionVortexContext, BrushCatalogView,
     BrushFillVortexTarget, BrushFixtureView, TargetVortexWorld,
 };
 use crate::editor::puzzle3d::precompute::geometry::{
-    pose_isometry, world_bounds, world_volumes_contain_aabb, CollisionAabb, CollisionBody, CollisionIndexMutation, CollisionIndexOwner, CollisionIndexOwnerCensusCursor, CollisionIndexOwnerCensusStep, CollisionIndexRejectedOwner,
+    pose_isometry, world_bounds, world_volumes_contain_aabb, CollisionAabb, CollisionBody, CollisionIndexMutation, CollisionStepContext, CollisionIndexOwner, CollisionIndexOwnerCensusCursor, CollisionIndexOwnerCensusStep, CollisionIndexRejectedOwner,
     CollisionIndexRemoval, CollisionMutationStep, CollisionOverlapState, CollisionQueryCursor, CollisionQueryStep, CollisionSpatialIndex, CollisionStepResult, FixedOwnerMap, FixedOwnerMapInsert, FixedOwnerSet, FixedOwnerSetInsert, FixedOwnerVec,
     Pose3d, DOCUMENT_ATTRACTION_SLOTS, DOCUMENT_CANDIDATE_SLOTS, DOCUMENT_KIND_SLOTS, DOCUMENT_OBJECT_SLOTS, DOCUMENT_OWNER_PAGE_BYTES, DOCUMENT_VOLUME_SLOTS, DOCUMENT_VORTEX_SLOTS,
 };
 use crate::standards::v1::subsets::any::schema::{
-    puzzle3d_vortex_full_id, AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushPlacePayload, BrushPreviewState, CableKindCatalog, FillBuildPreview, FillBuildProgress, FillCandidateVerdict, FillTriedCandidate, Fixture, FixtureObject,
-    KindCompatEntry, ObjectKind, SceneConfig, VortexKindCatalog, VortexProps, WorldVolumeProps, FILL_TRIED_RING,
+    puzzle3d_vortex_full_id, AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushPlacePayload, BrushPreviewState, CableKindCatalog, Fixture, FixtureObject, FillRunCheckpoint, FillRunCounter, FillRunReason, FillRunStage, KindCompatEntry,
+    ObjectKind, SceneConfig, VortexKindCatalog, VortexProps, WorldVolumeProps,
 };
-use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, Operation, StepContext, StepOutcome};
+use semio_framework_job::{CommitCandidate, Generation, InteractiveJob, JobFault, JobPayloadStream, Operation, OperationId, RetainedJobPayload, StepContext, StepOutcome};
+use semio_framework_tool_run::{
+    ToolRunCounter, ToolRunIdentity, ToolRunProgress, ToolRunState, ToolRunStep, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTick, ToolRunTickWriter, ToolRunTraceOp, ToolRunTracePage, ToolRunTraceSubject, ToolRunVerdict, TOOL_RUN_PROVISIONAL_OPS_MAX,
+    TOOL_RUN_REASON_CONFLICT, TOOL_RUN_REASON_PROVISIONAL_CAP,
+};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -32,899 +34,50 @@ pub(crate) const FILL_STALL_NO_FREE_PLACEMENT: &str = "no-free-placement";
 /// 📄️ A fixed document page refused an owner: a visible stall, never a fault.
 pub(crate) const FILL_STALL_DOCUMENT_CAPACITY: &str = "document-capacity";
 
-//#region 🔭️RetainedPreviewJson
-pub(crate) const FILL_PREVIEW_JSON_MAX_BYTES: usize = 16 * 1024;
-pub(crate) const FILL_PREVIEW_JSON_MAX_COLOR_BYTES: usize = 128;
-pub(crate) const FILL_PREVIEW_JSON_MAX_STATUS_LABEL_BYTES: usize = 256;
-pub(crate) const FILL_PREVIEW_JSON_MAX_SOURCE_VORTEX_INDEX: u64 = 9_007_199_254_740_991;
-pub(crate) const FILL_PREVIEW_JSON_MAX_DIAGNOSTIC_INTEGER: u64 = 9_007_199_254_740_991;
-
-fn preview_json_wire_u64(value: u64, minimum: u64) -> Result<u64, ()> {
-    (value >= minimum && value <= FILL_PREVIEW_JSON_MAX_DIAGNOSTIC_INTEGER).then_some(value).ok_or(())
+/// 🧭️ What one planner transition needs from its caller: the collision budget seam plus identity,
+/// stage and fault payloads. The job context forwards everything; the fill run job
+/// hands the planner a transition context whose fuel is the run's own candidate budget instead.
+pub(crate) trait FillStepContext: CollisionStepContext {
+    fn operation(&self) -> OperationId;
+    fn generation(&self) -> Generation;
+    fn set_stage(&mut self, label: &'static str);
+    fn fault_payload(&mut self, bytes: &[u8]) -> RetainedJobPayload;
 }
 
-fn preview_json_wire_usize(value: usize) -> Result<u64, ()> {
-    preview_json_wire_u64(u64::try_from(value).map_err(|_| ())?, 0)
-}
+impl FillStepContext for StepContext<'_> {
+    fn operation(&self) -> OperationId {
+        StepContext::operation(self)
+    }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-struct FillPreviewJsonIdentity {
-    operation: u64,
-    base_revision: u64,
-    registry_generation: u64,
-    generation: u64,
-    sequence: u64,
-}
+    fn generation(&self) -> Generation {
+        StepContext::generation(self)
+    }
 
-impl FillPreviewJsonIdentity {
-    fn read(preview: &FillBuildPreview) -> Option<Self> {
-        (preview_json_wire_u64(preview.operation, 1).is_ok()
-            && preview_json_wire_u64(preview.base_revision, 1).is_ok()
-            && preview_json_wire_u64(preview.registry_generation, 1).is_ok()
-            && preview_json_wire_u64(preview.generation, 1).is_ok()
-            && preview_json_wire_u64(preview.sequence, 0).is_ok())
-        .then_some(Self { operation: preview.operation, base_revision: preview.base_revision, registry_generation: preview.registry_generation, generation: preview.generation, sequence: preview.sequence })
+    fn set_stage(&mut self, label: &'static str) {
+        StepContext::set_stage(self, label);
+    }
+
+    fn fault_payload(&mut self, bytes: &[u8]) -> RetainedJobPayload {
+        self.payload_from_bytes(JobPayloadStream::Fault, bytes).unwrap_or_else(|_| RetainedJobPayload::empty(JobPayloadStream::Fault))
     }
 }
 
-#[derive(Clone, Copy)]
-struct FillPreviewJsonSourceAuthority {
-    root: u64,
-    candidate_ghost: u64,
+/// 🛰️ One observation the planner reports to a fill run job, in the order it happened.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) enum FillRunEvent {
+    Constructed { mesh_url: String, origin: [f64; 3], orientation: [f64; 4], scale: f32 },
+    Refused(FillRunReason),
+    Accepted,
+    Abandoned,
+    Stalled(FillRunReason),
+    Discarded,
 }
 
-impl FillPreviewJsonSourceAuthority {
-    fn field(value: usize) -> Result<u64, ()> {
-        let value = preview_json_wire_usize(value)?;
-        (value <= FILL_PREVIEW_JSON_MAX_SOURCE_VORTEX_INDEX).then_some(value).ok_or(())
-    }
-
-    fn read(preview: &FillBuildPreview) -> Result<Option<Self>, ()> {
-        let Some(ghost) = preview.candidate_ghost.as_ref() else {
-            return Ok(None);
-        };
-        Ok(Some(Self { root: Self::field(ghost.source_vortex_index)?, candidate_ghost: Self::field(ghost.source_vortex_index)? }))
-    }
-
-    /// 🔁️ One tried ring entry's wire-safe source index — the ring carries ghosts the root never
-    /// republishes, so each slot answers for its own index instead of borrowing the live ghost's.
-    fn tried(preview: &FillBuildPreview, index: usize) -> Result<u64, ()> {
-        Self::field(preview.tried.get(index).and_then(Option::as_ref).ok_or(())?.ghost.source_vortex_index)
-    }
+/// 📏️ Uniform trace scale of an object scale value: a number, the first component of a vector, else 1.
+fn fill_run_scale(scale: &Option<dsl::DslValue>) -> f32 {
+    scale.as_ref().and_then(|value| value.as_f64().or_else(|| value.as_array().and_then(|values| values.first()).and_then(dsl::DslValue::as_f64))).map_or(1.0, |value| value as f32)
 }
 
-struct FillPreviewJsonDiagnosticAuthority;
-
-impl FillPreviewJsonDiagnosticAuthority {
-    fn read(preview: &FillBuildPreview) -> Result<Self, ()> {
-        preview_json_wire_u64(preview.operation, 1)?;
-        preview_json_wire_u64(preview.base_revision, 1)?;
-        preview_json_wire_u64(preview.registry_generation, 1)?;
-        preview_json_wire_u64(preview.sequence, 0)?;
-        preview_json_wire_u64(preview.generation, 1)?;
-        preview_json_wire_usize(preview.collision_count)?;
-        preview_json_wire_usize(preview.sample_cursor)?;
-        preview_json_wire_usize(preview.inside_both)?;
-        preview_json_wire_usize(preview.target_cursor)?;
-        preview_json_wire_usize(preview.candidate_cursor)?;
-        preview_json_wire_usize(preview.accepted_count)?;
-        preview_json_wire_usize(preview.requested_count)?;
-        preview_json_wire_u64(preview.search_count, 0)?;
-        preview_json_wire_u64(preview.rejected_count, 0)?;
-        preview_json_wire_u64(preview.tested_count, 0)?;
-        for index in 0..preview.tried.len() {
-            if preview.tried[index].is_some() {
-                preview_json_wire_u64(preview.tried[index].as_ref().ok_or(())?.sequence, 0)?;
-                FillPreviewJsonSourceAuthority::tried(preview, index)?;
-            }
-        }
-        Ok(Self)
-    }
-}
-
-struct FillPreviewJsonAdmission;
-
-impl FillPreviewJsonAdmission {
-    fn read(preview: &FillBuildPreview, color: &str, status_label: &str) -> Result<Self, ()> {
-        FillPreviewJsonSourceAuthority::read(preview)?;
-        FillPreviewJsonDiagnosticAuthority::read(preview)?;
-        if color.len() > FILL_PREVIEW_JSON_MAX_COLOR_BYTES || status_label.is_empty() || status_label.len() > FILL_PREVIEW_JSON_MAX_STATUS_LABEL_BYTES {
-            return Err(());
-        }
-        let unfinished = |ghost: &BrushPreviewState| ghost.origin.into_iter().chain(ghost.orientation).any(|value| !value.is_finite());
-        if preview.candidate_ghost.as_ref().is_some_and(unfinished) || preview.last_sample.is_some_and(|sample| sample.into_iter().any(|value| !value.is_finite())) {
-            return Err(());
-        }
-        if preview.tried.iter().flatten().any(|entry| unfinished(&entry.ghost)) {
-            return Err(());
-        }
-        fill_preview_json_wire_bytes(preview, color, status_label)?;
-        Ok(Self)
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum FillPreviewJsonPhase {
-    Idle,
-    RetireSuperseded,
-    Census,
-    Reserve,
-    Encode,
-    Validate,
-    Ready,
-    Rejected,
-    Closing,
-    Terminal,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum FillPreviewJsonStep {
-    Pending { progress: u64, checkpoint: [u64; 6] },
-    Ready,
-    Rejected,
-    Cancelled,
-    Terminal,
-}
-
-#[derive(Clone, Copy)]
-enum FillPreviewString {
-    RootTarget,
-    RootKind,
-    RootMesh,
-    Color,
-    Stage,
-    StatusLabel,
-    Target,
-    Candidate,
-    GhostTarget,
-    GhostKind,
-    GhostMesh,
-    CurrentPair,
-    CandidatePage(usize),
-    Rejection,
-    Stall,
-    TriedReason(usize),
-    TriedGhostTarget(usize),
-    TriedGhostKind(usize),
-    TriedGhostMesh(usize),
-}
-
-#[derive(Default)]
-struct FillPreviewJsonPass {
-    field: u8,
-    subfield: u8,
-    item: usize,
-    string_phase: u8,
-    string_byte: usize,
-}
-
-struct FillPreviewJsonUnit {
-    bytes: [u8; 128],
-    len: usize,
-}
-
-impl FillPreviewJsonUnit {
-    fn empty() -> Self {
-        Self { bytes: [0; 128], len: 0 }
-    }
-
-    fn extend(&mut self, source: &[u8]) -> Result<(), ()> {
-        self.bytes.get_mut(self.len..self.len.checked_add(source.len()).ok_or(())?).ok_or(())?.copy_from_slice(source);
-        self.len += source.len();
-        Ok(())
-    }
-
-    fn bytes(source: &[u8]) -> Result<Self, ()> {
-        let mut unit = Self::empty();
-        unit.extend(source)?;
-        Ok(unit)
-    }
-
-    fn formatted(arguments: std::fmt::Arguments<'_>) -> Result<Self, ()> {
-        let mut unit = Self::empty();
-        std::fmt::write(&mut unit, arguments).map_err(|_| ())?;
-        Ok(unit)
-    }
-
-    fn escaped(byte: u8) -> Self {
-        let mut unit = Self { bytes: [0; 128], len: 1 };
-        match byte {
-            b'"' => {
-                unit.bytes[..2].copy_from_slice(b"\\\"");
-                unit.len = 2;
-            }
-            b'\\' => {
-                unit.bytes[..2].copy_from_slice(b"\\\\");
-                unit.len = 2;
-            }
-            0x08 => {
-                unit.bytes[..2].copy_from_slice(b"\\b");
-                unit.len = 2;
-            }
-            0x0c => {
-                unit.bytes[..2].copy_from_slice(b"\\f");
-                unit.len = 2;
-            }
-            b'\n' => {
-                unit.bytes[..2].copy_from_slice(b"\\n");
-                unit.len = 2;
-            }
-            b'\r' => {
-                unit.bytes[..2].copy_from_slice(b"\\r");
-                unit.len = 2;
-            }
-            b'\t' => {
-                unit.bytes[..2].copy_from_slice(b"\\t");
-                unit.len = 2;
-            }
-            value @ 0x00..=0x1f => {
-                const HEX: &[u8; 16] = b"0123456789abcdef";
-                unit.bytes[..6].copy_from_slice(&[b'\\', b'u', b'0', b'0', HEX[(value >> 4) as usize], HEX[(value & 0x0f) as usize]]);
-                unit.len = 6;
-            }
-            _ => unit.bytes[0] = byte,
-        }
-        unit
-    }
-}
-
-impl std::fmt::Write for FillPreviewJsonUnit {
-    fn write_str(&mut self, source: &str) -> std::fmt::Result {
-        self.extend(source.as_bytes()).map_err(|_| std::fmt::Error)
-    }
-}
-
-struct FillPreviewQuotedField {
-    prefix: &'static [u8],
-    source: FillPreviewString,
-    optional: bool,
-    advance: bool,
-}
-
-fn preview_json_float(unit: &mut FillPreviewJsonUnit, value: f64) -> Result<(), ()> {
-    if !value.is_finite() {
-        return Err(());
-    }
-    let start = unit.len;
-    std::fmt::write(unit, format_args!("{value}")).map_err(|_| ())?;
-    if !unit.bytes[start..unit.len].iter().any(|byte| matches!(*byte, b'.' | b'e' | b'E')) {
-        unit.extend(b".0")?;
-    }
-    Ok(())
-}
-
-fn preview_json_vec3(prefix: &str, value: [f64; 3]) -> Result<FillPreviewJsonUnit, ()> {
-    let mut unit = FillPreviewJsonUnit::empty();
-    unit.extend(prefix.as_bytes())?;
-    unit.extend(b"[")?;
-    preview_json_float(&mut unit, value[0])?;
-    unit.extend(b",")?;
-    preview_json_float(&mut unit, value[1])?;
-    unit.extend(b",")?;
-    preview_json_float(&mut unit, value[2])?;
-    unit.extend(b"]")?;
-    Ok(unit)
-}
-
-fn preview_json_quat(prefix: &str, value: [f64; 4]) -> Result<FillPreviewJsonUnit, ()> {
-    let mut unit = FillPreviewJsonUnit::empty();
-    unit.extend(prefix.as_bytes())?;
-    unit.extend(b"[")?;
-    preview_json_float(&mut unit, value[0])?;
-    unit.extend(b",")?;
-    preview_json_float(&mut unit, value[1])?;
-    unit.extend(b",")?;
-    preview_json_float(&mut unit, value[2])?;
-    unit.extend(b",")?;
-    preview_json_float(&mut unit, value[3])?;
-    unit.extend(b"]")?;
-    Ok(unit)
-}
-
-/// 🔁️ The occupied tried-ring slot at `index`, or nothing when the ring has not wrapped that far.
-fn tried_entry(preview: &FillBuildPreview, index: usize) -> Option<&FillTriedCandidate> {
-    preview.tried.get(index).and_then(Option::as_ref)
-}
-
-impl FillPreviewJsonPass {
-    fn advance_field(&mut self) {
-        self.field = self.field.saturating_add(1);
-        self.subfield = 0;
-        self.item = 0;
-        self.string_phase = 0;
-        self.string_byte = 0;
-    }
-
-    fn string<'a>(&self, preview: &'a FillBuildPreview, color: &'a str, status_label: &'a str, source: FillPreviewString) -> Option<&'a str> {
-        let ghost = preview.candidate_ghost.as_ref();
-        match source {
-            FillPreviewString::RootTarget | FillPreviewString::GhostTarget => ghost.map(|value| value.target_vortex_full_id.as_str()),
-            FillPreviewString::RootKind | FillPreviewString::GhostKind => ghost.map(|value| value.object_kind_id.as_str()),
-            FillPreviewString::RootMesh | FillPreviewString::GhostMesh => ghost.map(|value| value.mesh_url.as_str()),
-            FillPreviewString::Color => Some(color),
-            FillPreviewString::Stage => Some(preview.stage.as_str()),
-            FillPreviewString::StatusLabel => Some(status_label),
-            FillPreviewString::Target => preview.target_vortex_full_id.as_deref(),
-            FillPreviewString::Candidate => preview.candidate_object_kind_id.as_deref(),
-            FillPreviewString::CurrentPair => preview.current_pair_object_id.as_deref(),
-            FillPreviewString::CandidatePage(index) => preview.candidate_page.get(index).and_then(Option::as_deref),
-            FillPreviewString::Rejection => preview.rejection_reason.as_deref(),
-            FillPreviewString::Stall => preview.stall_reason.as_deref(),
-            FillPreviewString::TriedReason(index) => tried_entry(preview, index).and_then(|entry| entry.reason.as_deref()),
-            FillPreviewString::TriedGhostTarget(index) => tried_entry(preview, index).map(|entry| entry.ghost.target_vortex_full_id.as_str()),
-            FillPreviewString::TriedGhostKind(index) => tried_entry(preview, index).map(|entry| entry.ghost.object_kind_id.as_str()),
-            FillPreviewString::TriedGhostMesh(index) => tried_entry(preview, index).map(|entry| entry.ghost.mesh_url.as_str()),
-        }
-    }
-
-    fn quoted(&mut self, preview: &FillBuildPreview, color: &str, status_label: &str, field: FillPreviewQuotedField) -> Result<FillPreviewJsonUnit, ()> {
-        let FillPreviewQuotedField { prefix, source, optional, advance } = field;
-        let value = self.string(preview, color, status_label, source);
-        match self.string_phase {
-            0 => {
-                self.string_phase = 1;
-                FillPreviewJsonUnit::bytes(prefix)
-            }
-            1 if optional && value.is_none() => {
-                if advance {
-                    self.advance_field();
-                } else {
-                    self.string_phase = 0;
-                }
-                FillPreviewJsonUnit::bytes(b"null")
-            }
-            1 => {
-                self.string_phase = 2;
-                FillPreviewJsonUnit::bytes(b"\"")
-            }
-            2 => {
-                let bytes = value.ok_or(())?.as_bytes();
-                if let Some(byte) = bytes.get(self.string_byte).copied() {
-                    self.string_byte += 1;
-                    Ok(FillPreviewJsonUnit::escaped(byte))
-                } else {
-                    if advance {
-                        self.advance_field();
-                    } else {
-                        self.string_phase = 0;
-                        self.string_byte = 0;
-                    }
-                    FillPreviewJsonUnit::bytes(b"\"")
-                }
-            }
-            _ => Err(()),
-        }
-    }
-
-    fn candidate_ghost(&mut self, preview: &FillBuildPreview, color: &str, status_label: &str) -> Result<FillPreviewJsonUnit, ()> {
-        let Some(ghost) = preview.candidate_ghost.as_ref() else {
-            self.advance_field();
-            return FillPreviewJsonUnit::bytes(b",\"candidateGhost\":null");
-        };
-        let active_subfield = self.subfield;
-        let unit = match active_subfield {
-            0 => {
-                self.subfield = 1;
-                FillPreviewJsonUnit::bytes(b",\"candidateGhost\":{")
-            }
-            1 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b"\"targetVortexFullId\":", source: FillPreviewString::GhostTarget, optional: false, advance: false }),
-            2 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"objectKindId\":", source: FillPreviewString::GhostKind, optional: false, advance: false }),
-            3 => {
-                self.subfield = 4;
-                let source_vortex_index = FillPreviewJsonSourceAuthority::read(preview)?.ok_or(())?.candidate_ghost;
-                FillPreviewJsonUnit::formatted(format_args!(",\"sourceVortexIndex\":{source_vortex_index}"))
-            }
-            4 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"meshUrl\":", source: FillPreviewString::GhostMesh, optional: false, advance: false }),
-            5 => {
-                self.subfield = 6;
-                preview_json_vec3(",\"origin\":", ghost.origin)
-            }
-            6 => {
-                self.subfield = 7;
-                preview_json_quat(",\"orientation\":", ghost.orientation)
-            }
-            _ => {
-                self.advance_field();
-                FillPreviewJsonUnit::bytes(b"}")
-            }
-        }?;
-        if self.string_phase == 0 && matches!(active_subfield, 1 | 2 | 4) {
-            self.subfield += 1;
-        }
-        Ok(unit)
-    }
-
-    fn candidate_page(&mut self, preview: &FillBuildPreview, color: &str, status_label: &str) -> Result<FillPreviewJsonUnit, ()> {
-        if self.subfield == 0 {
-            self.subfield = 1;
-            return FillPreviewJsonUnit::bytes(b",\"candidatePage\":[");
-        }
-        if self.item == preview.candidate_page.len() {
-            self.advance_field();
-            return FillPreviewJsonUnit::bytes(b"]");
-        }
-        let prefix = if self.item == 0 { b"".as_slice() } else { b",".as_slice() };
-        let item = self.item;
-        let unit = self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix, source: FillPreviewString::CandidatePage(item), optional: true, advance: false })?;
-        if self.string_phase == 0 {
-            self.item += 1;
-        }
-        Ok(unit)
-    }
-
-    /// 🔁️ One fixed-width ring of tried candidates, one grant at a time: `item` walks the slots,
-    /// `subfield` walks one slot's own fields, and an empty slot publishes `null` in place.
-    fn tried(&mut self, preview: &FillBuildPreview, color: &str, status_label: &str) -> Result<FillPreviewJsonUnit, ()> {
-        if self.subfield == 0 {
-            self.subfield = 1;
-            return FillPreviewJsonUnit::bytes(b",\"tried\":[");
-        }
-        if self.item >= preview.tried.len() {
-            self.advance_field();
-            return FillPreviewJsonUnit::bytes(b"]");
-        }
-        let index = self.item;
-        let separator: &'static [u8] = if index == 0 { b"" } else { b"," };
-        let Some(entry) = tried_entry(preview, index) else {
-            self.item += 1;
-            let mut unit = FillPreviewJsonUnit::bytes(separator)?;
-            unit.extend(b"null")?;
-            return Ok(unit);
-        };
-        let active_subfield = self.subfield;
-        let unit = match active_subfield {
-            1 => {
-                self.subfield = 2;
-                let sequence = preview_json_wire_u64(entry.sequence, 0)?;
-                let mut unit = FillPreviewJsonUnit::bytes(separator)?;
-                std::fmt::write(&mut unit, format_args!("{{\"sequence\":{sequence}")).map_err(|_| ())?;
-                Ok(unit)
-            }
-            2 => {
-                self.subfield = 3;
-                FillPreviewJsonUnit::formatted(format_args!(",\"verdict\":\"{}\"", entry.verdict.wire()))
-            }
-            3 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"reason\":", source: FillPreviewString::TriedReason(index), optional: true, advance: false }),
-            4 => {
-                self.subfield = 5;
-                FillPreviewJsonUnit::bytes(b",\"ghost\":{")
-            }
-            5 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b"\"targetVortexFullId\":", source: FillPreviewString::TriedGhostTarget(index), optional: false, advance: false }),
-            6 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"objectKindId\":", source: FillPreviewString::TriedGhostKind(index), optional: false, advance: false }),
-            7 => {
-                self.subfield = 8;
-                let source_vortex_index = FillPreviewJsonSourceAuthority::tried(preview, index)?;
-                FillPreviewJsonUnit::formatted(format_args!(",\"sourceVortexIndex\":{source_vortex_index}"))
-            }
-            8 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"meshUrl\":", source: FillPreviewString::TriedGhostMesh(index), optional: false, advance: false }),
-            9 => {
-                self.subfield = 10;
-                preview_json_vec3(",\"origin\":", entry.ghost.origin)
-            }
-            10 => {
-                self.subfield = 11;
-                preview_json_quat(",\"orientation\":", entry.ghost.orientation)
-            }
-            _ => {
-                self.subfield = 1;
-                self.item += 1;
-                FillPreviewJsonUnit::bytes(b"}}")
-            }
-        }?;
-        if self.string_phase == 0 && matches!(active_subfield, 3 | 5 | 6 | 8) {
-            self.subfield += 1;
-        }
-        Ok(unit)
-    }
-
-    fn next_unit(&mut self, preview: &FillBuildPreview, color: &str, status_label: &str) -> Result<Option<FillPreviewJsonUnit>, ()> {
-        let ghost = preview.candidate_ghost.as_ref();
-        let unit = match self.field {
-            0 => {
-                self.field = if ghost.is_some() { 1 } else { 10 };
-                FillPreviewJsonUnit::bytes(b"{")?
-            }
-            1 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b"\"targetVortexFullId\":", source: FillPreviewString::RootTarget, optional: false, advance: true })?,
-            2 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"objectKindId\":", source: FillPreviewString::RootKind, optional: false, advance: true })?,
-            3 => {
-                self.advance_field();
-                let source_vortex_index = FillPreviewJsonSourceAuthority::read(preview)?.ok_or(())?.root;
-                FillPreviewJsonUnit::formatted(format_args!(",\"sourceVortexIndex\":{source_vortex_index}"))?
-            }
-            4 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"meshUrl\":", source: FillPreviewString::RootMesh, optional: false, advance: true })?,
-            5 => {
-                self.advance_field();
-                preview_json_vec3(",\"origin\":", ghost.ok_or(())?.origin)?
-            }
-            6 => {
-                self.advance_field();
-                preview_json_quat(",\"orientation\":", ghost.ok_or(())?.orientation)?
-            }
-            7 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"color\":", source: FillPreviewString::Color, optional: false, advance: true })?,
-            8 => {
-                self.advance_field();
-                FillPreviewJsonUnit::bytes(b",\"opacity\":0.35")?
-            }
-            9 => {
-                self.advance_field();
-                FillPreviewJsonUnit::formatted(format_args!(",\"verdict\":\"{}\"", preview.verdict.wire()))?
-            }
-            10 => {
-                self.advance_field();
-                FillPreviewJsonUnit::bytes(if ghost.is_some() { b",\"fillBuildPreview\":{" } else { b"\"fillBuildPreview\":{" })?
-            }
-            11 => {
-                self.advance_field();
-                FillPreviewJsonUnit::formatted(format_args!("\"operation\":{}", preview.operation))?
-            }
-            12 => {
-                self.advance_field();
-                FillPreviewJsonUnit::formatted(format_args!(",\"baseRevision\":{}", preview.base_revision))?
-            }
-            13 => {
-                self.advance_field();
-                FillPreviewJsonUnit::formatted(format_args!(",\"registryGeneration\":{}", preview.registry_generation))?
-            }
-            14 => {
-                self.advance_field();
-                FillPreviewJsonUnit::formatted(format_args!(",\"sequence\":{}", preview.sequence))?
-            }
-            15 => {
-                self.advance_field();
-                FillPreviewJsonUnit::formatted(format_args!(",\"generation\":{}", preview.generation))?
-            }
-            16 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"stage\":", source: FillPreviewString::Stage, optional: false, advance: true })?,
-            17 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"statusLabel\":", source: FillPreviewString::StatusLabel, optional: false, advance: true })?,
-            18 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"targetVortexFullId\":", source: FillPreviewString::Target, optional: true, advance: true })?,
-            19 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"candidateObjectKindId\":", source: FillPreviewString::Candidate, optional: true, advance: true })?,
-            20 => self.candidate_ghost(preview, color, status_label)?,
-            21 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"currentPairObjectId\":", source: FillPreviewString::CurrentPair, optional: true, advance: true })?,
-            22 => {
-                self.advance_field();
-                FillPreviewJsonUnit::formatted(format_args!(",\"collisionCount\":{}", preview.collision_count))?
-            }
-            23 => {
-                self.advance_field();
-                FillPreviewJsonUnit::formatted(format_args!(",\"sampleCursor\":{}", preview.sample_cursor))?
-            }
-            24 => {
-                self.advance_field();
-                FillPreviewJsonUnit::formatted(format_args!(",\"insideBoth\":{}", preview.inside_both))?
-            }
-            25 => {
-                self.advance_field();
-                match preview.last_sample {
-                    Some(value) => preview_json_vec3(",\"lastSample\":", value.map(f64::from))?,
-                    None => FillPreviewJsonUnit::bytes(b",\"lastSample\":null")?,
-                }
-            }
-            26 => self.candidate_page(preview, color, status_label)?,
-            27 => {
-                self.advance_field();
-                FillPreviewJsonUnit::bytes(if preview.truncated { b",\"truncated\":true" } else { b",\"truncated\":false" })?
-            }
-            28 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"rejectionReason\":", source: FillPreviewString::Rejection, optional: true, advance: true })?,
-            29 => {
-                self.advance_field();
-                FillPreviewJsonUnit::formatted(format_args!(",\"targetCursor\":{}", preview.target_cursor))?
-            }
-            30 => {
-                self.advance_field();
-                FillPreviewJsonUnit::formatted(format_args!(",\"candidateCursor\":{}", preview.candidate_cursor))?
-            }
-            31 => {
-                self.advance_field();
-                FillPreviewJsonUnit::formatted(format_args!(",\"acceptedCount\":{}", preview.accepted_count))?
-            }
-            32 => {
-                self.advance_field();
-                FillPreviewJsonUnit::formatted(format_args!(",\"requestedCount\":{}", preview.requested_count))?
-            }
-            33 => {
-                self.advance_field();
-                FillPreviewJsonUnit::formatted(format_args!(",\"searchCount\":{}", preview.search_count))?
-            }
-            34 => {
-                self.advance_field();
-                FillPreviewJsonUnit::formatted(format_args!(",\"rejectedCount\":{}", preview.rejected_count))?
-            }
-            35 => {
-                self.advance_field();
-                FillPreviewJsonUnit::formatted(format_args!(",\"verdict\":\"{}\"", preview.verdict.wire()))?
-            }
-            36 => {
-                self.advance_field();
-                FillPreviewJsonUnit::formatted(format_args!(",\"testedCount\":{}", preview_json_wire_u64(preview.tested_count, 0)?))?
-            }
-            37 => self.quoted(preview, color, status_label, FillPreviewQuotedField { prefix: b",\"stallReason\":", source: FillPreviewString::Stall, optional: true, advance: true })?,
-            38 => self.tried(preview, color, status_label)?,
-            39 => {
-                self.advance_field();
-                FillPreviewJsonUnit::bytes(b"}}")?
-            }
-            _ => return Ok(None),
-        };
-        Ok(Some(unit))
-    }
-}
-
-fn fill_preview_json_wire_bytes(preview: &FillBuildPreview, color: &str, status_label: &str) -> Result<usize, ()> {
-    let mut pass = FillPreviewJsonPass::default();
-    let mut exact_bytes = 0usize;
-    while let Some(unit) = pass.next_unit(preview, color, status_label)? {
-        exact_bytes = exact_bytes.checked_add(unit.len).filter(|bytes| *bytes <= FILL_PREVIEW_JSON_MAX_BYTES).ok_or(())?;
-    }
-    Ok(exact_bytes)
-}
-
-pub(crate) struct FillPreviewJsonCursor {
-    phase: FillPreviewJsonPhase,
-    identity: Option<FillPreviewJsonIdentity>,
-    color: String,
-    status_label: String,
-    census: FillPreviewJsonPass,
-    encode: FillPreviewJsonPass,
-    exact_bytes: usize,
-    output: Option<Vec<u8>>,
-    ready: Option<String>,
-    ready_identity: Option<FillPreviewJsonIdentity>,
-    retiring_bytes: Option<Vec<u8>>,
-    retiring_ready: Option<String>,
-    retiring_color: Option<String>,
-    retiring_status_label: Option<String>,
-    progress: u64,
-}
-
-impl Default for FillPreviewJsonCursor {
-    fn default() -> Self {
-        Self {
-            phase: FillPreviewJsonPhase::Idle,
-            identity: None,
-            color: String::new(),
-            status_label: String::new(),
-            census: FillPreviewJsonPass::default(),
-            encode: FillPreviewJsonPass::default(),
-            exact_bytes: 0,
-            output: None,
-            ready: None,
-            ready_identity: None,
-            retiring_bytes: None,
-            retiring_ready: None,
-            retiring_color: None,
-            retiring_status_label: None,
-            progress: 0,
-        }
-    }
-}
-
-impl FillPreviewJsonCursor {
-    fn checkpoint(&self) -> [u64; 6] {
-        let identity = self.identity.unwrap_or(FillPreviewJsonIdentity { operation: 0, base_revision: 0, registry_generation: 0, generation: 0, sequence: 0 });
-        [identity.operation, identity.base_revision, identity.registry_generation, identity.generation, identity.sequence, self.progress]
-    }
-
-    fn pending(&self) -> FillPreviewJsonStep {
-        FillPreviewJsonStep::Pending { progress: self.progress, checkpoint: self.checkpoint() }
-    }
-
-    fn begin(&mut self, identity: FillPreviewJsonIdentity, color: &str, status_label: &str) -> FillPreviewJsonStep {
-        if color.len() > FILL_PREVIEW_JSON_MAX_COLOR_BYTES || status_label.is_empty() || status_label.len() > FILL_PREVIEW_JSON_MAX_STATUS_LABEL_BYTES {
-            self.phase = FillPreviewJsonPhase::Rejected;
-            return FillPreviewJsonStep::Rejected;
-        }
-        self.identity = Some(identity);
-        self.census = FillPreviewJsonPass::default();
-        self.encode = FillPreviewJsonPass::default();
-        self.exact_bytes = 0;
-        self.progress = 0;
-        if let Some(output) = self.output.take() {
-            self.retiring_bytes = Some(output);
-        }
-        if self.color != color {
-            let retiring = std::mem::take(&mut self.color);
-            self.retiring_color = (retiring.capacity() != 0).then_some(retiring);
-            if self.color.try_reserve_exact(color.len()).is_err() {
-                self.phase = FillPreviewJsonPhase::Rejected;
-                return FillPreviewJsonStep::Rejected;
-            }
-            self.color.push_str(color);
-        }
-        if self.status_label != status_label {
-            let retiring = std::mem::take(&mut self.status_label);
-            self.retiring_status_label = (retiring.capacity() != 0).then_some(retiring);
-            if self.status_label.try_reserve_exact(status_label.len()).is_err() {
-                self.phase = FillPreviewJsonPhase::Rejected;
-                return FillPreviewJsonStep::Rejected;
-            }
-            self.status_label.push_str(status_label);
-        }
-        self.phase = if self.retiring_bytes.is_some() || self.retiring_color.as_ref().is_some_and(|value| value.capacity() != 0) || self.retiring_status_label.as_ref().is_some_and(|value| value.capacity() != 0) {
-            FillPreviewJsonPhase::RetireSuperseded
-        } else {
-            FillPreviewJsonPhase::Census
-        };
-        self.pending()
-    }
-
-    pub(crate) fn step(&mut self, preview: &FillBuildPreview, color: &str, status_label: &str, fuel: &mut u32, cancelled: bool, deadline_reached: bool) -> FillPreviewJsonStep {
-        if matches!(self.phase, FillPreviewJsonPhase::Closing | FillPreviewJsonPhase::Terminal) {
-            return if self.phase == FillPreviewJsonPhase::Terminal { FillPreviewJsonStep::Terminal } else { self.pending() };
-        }
-        if FillPreviewJsonAdmission::read(preview, color, status_label).is_err() {
-            return FillPreviewJsonStep::Rejected;
-        }
-        if cancelled {
-            if let Some(output) = self.output.take() {
-                self.retiring_bytes = Some(output);
-            }
-            self.phase = FillPreviewJsonPhase::RetireSuperseded;
-            return FillPreviewJsonStep::Cancelled;
-        }
-        if deadline_reached {
-            return self.pending();
-        }
-        let Some(next_fuel) = fuel.checked_sub(1) else {
-            return self.pending();
-        };
-        *fuel = next_fuel;
-        let Some(identity) = FillPreviewJsonIdentity::read(preview) else {
-            self.phase = FillPreviewJsonPhase::Rejected;
-            return FillPreviewJsonStep::Rejected;
-        };
-        if self.identity != Some(identity) || self.color != color || self.status_label != status_label {
-            let result = self.begin(identity, color, status_label);
-            self.progress = self.progress.saturating_add(1);
-            return result;
-        }
-        let result = match self.phase {
-            FillPreviewJsonPhase::Idle => self.begin(identity, color, status_label),
-            FillPreviewJsonPhase::RetireSuperseded => {
-                if self.retiring_bytes.take().is_none() && self.retiring_color.take().is_none() {
-                    self.retiring_status_label.take();
-                }
-                if self.retiring_bytes.is_none() && self.retiring_color.is_none() && self.retiring_status_label.is_none() {
-                    self.phase = FillPreviewJsonPhase::Census;
-                }
-                self.pending()
-            }
-            FillPreviewJsonPhase::Census => match self.census.next_unit(preview, &self.color, &self.status_label) {
-                Ok(Some(unit)) => match self.exact_bytes.checked_add(unit.len) {
-                    Some(bytes) if bytes <= FILL_PREVIEW_JSON_MAX_BYTES => {
-                        self.exact_bytes = bytes;
-                        self.pending()
-                    }
-                    _ => {
-                        self.phase = FillPreviewJsonPhase::Rejected;
-                        FillPreviewJsonStep::Rejected
-                    }
-                },
-                Ok(None) => {
-                    self.phase = FillPreviewJsonPhase::Reserve;
-                    self.pending()
-                }
-                Err(()) => {
-                    self.phase = FillPreviewJsonPhase::Rejected;
-                    FillPreviewJsonStep::Rejected
-                }
-            },
-            FillPreviewJsonPhase::Reserve => {
-                let mut output = Vec::new();
-                if output.try_reserve_exact(self.exact_bytes).is_err() {
-                    self.phase = FillPreviewJsonPhase::Rejected;
-                    FillPreviewJsonStep::Rejected
-                } else {
-                    self.output = Some(output);
-                    self.phase = FillPreviewJsonPhase::Encode;
-                    self.pending()
-                }
-            }
-            FillPreviewJsonPhase::Encode => match self.encode.next_unit(preview, &self.color, &self.status_label) {
-                Ok(Some(unit)) => {
-                    let Some(output) = self.output.as_mut() else {
-                        self.phase = FillPreviewJsonPhase::Rejected;
-                        return FillPreviewJsonStep::Rejected;
-                    };
-                    if output.len().saturating_add(unit.len) > self.exact_bytes {
-                        self.phase = FillPreviewJsonPhase::Rejected;
-                        return FillPreviewJsonStep::Rejected;
-                    }
-                    output.extend_from_slice(&unit.bytes[..unit.len]);
-                    self.pending()
-                }
-                Ok(None) if self.output.as_ref().is_some_and(|output| output.len() == self.exact_bytes) => {
-                    self.phase = FillPreviewJsonPhase::Validate;
-                    self.pending()
-                }
-                _ => {
-                    self.phase = FillPreviewJsonPhase::Rejected;
-                    FillPreviewJsonStep::Rejected
-                }
-            },
-            FillPreviewJsonPhase::Validate => {
-                if self.identity != FillPreviewJsonIdentity::read(preview) {
-                    return self.begin(identity, color, status_label);
-                }
-                let Some(output) = self.output.take() else {
-                    self.phase = FillPreviewJsonPhase::Rejected;
-                    return FillPreviewJsonStep::Rejected;
-                };
-                let Ok(text) = String::from_utf8(output) else {
-                    self.phase = FillPreviewJsonPhase::Rejected;
-                    return FillPreviewJsonStep::Rejected;
-                };
-                if let Some(ready) = self.ready.replace(text) {
-                    self.retiring_ready = Some(ready);
-                }
-                self.ready_identity = self.identity;
-                self.phase = FillPreviewJsonPhase::Ready;
-                FillPreviewJsonStep::Ready
-            }
-            FillPreviewJsonPhase::Ready => {
-                self.retiring_ready.take();
-                FillPreviewJsonStep::Ready
-            }
-            FillPreviewJsonPhase::Rejected => FillPreviewJsonStep::Rejected,
-            FillPreviewJsonPhase::Closing | FillPreviewJsonPhase::Terminal => unreachable!(),
-        };
-        self.progress = self.progress.saturating_add(1);
-        result
-    }
-
-    pub(crate) fn ready(&self) -> Option<&str> {
-        self.ready.as_deref()
-    }
-
-    #[cfg(test)]
-    pub(crate) fn ready_identity(&self) -> Option<[u64; 5]> {
-        self.ready_identity.map(|identity| [identity.operation, identity.base_revision, identity.registry_generation, identity.generation, identity.sequence])
-    }
-
-    pub(crate) fn close_step(&mut self) -> bool {
-        self.phase = FillPreviewJsonPhase::Closing;
-        if self.output.take().is_some() {
-            return false;
-        }
-        if self.retiring_bytes.take().is_some() {
-            return false;
-        }
-        if self.ready.take().is_some() {
-            return false;
-        }
-        if self.retiring_ready.take().is_some() {
-            return false;
-        }
-        if self.retiring_color.take().is_some() {
-            return false;
-        }
-        if self.retiring_status_label.take().is_some() {
-            return false;
-        }
-        if !self.color.is_empty() {
-            drop(std::mem::take(&mut self.color));
-            return false;
-        }
-        if !self.status_label.is_empty() {
-            drop(std::mem::take(&mut self.status_label));
-            return false;
-        }
-        self.identity = None;
-        self.ready_identity = None;
-        self.phase = FillPreviewJsonPhase::Terminal;
-        true
-    }
-
-    fn terminal_owners_empty(&self) -> bool {
-        self.output.is_none()
-            && self.ready.is_none()
-            && self.retiring_bytes.is_none()
-            && self.retiring_ready.is_none()
-            && self.retiring_color.is_none()
-            && self.retiring_status_label.is_none()
-            && self.color.capacity() == 0
-            && self.status_label.capacity() == 0
-    }
-}
-//#endregion 🔭️RetainedPreviewJson
 
 /// 🧱️ One already-placed object's collision footprint, kept alongside the plan so each new fill step
 /// only has to test the candidate against bodies it can actually hit.
@@ -1148,6 +301,7 @@ impl PreparationCapacityBranch {
 struct PreparationCapacityRefusal {
     branch: PreparationCapacityBranch,
     omitted_index: usize,
+    published: bool,
 }
 
 impl PreparationCapacityRefusal {
@@ -1179,7 +333,7 @@ fn preparation_capacity_refusal(roots: &FillPreparationRoots) -> Option<Preparat
     ]
     .into_iter()
     .find_map(|(branch, len, capacity)| (len > capacity).then_some((branch, capacity)))?;
-    Some(PreparationCapacityRefusal { branch, omitted_index: capacity })
+    Some(PreparationCapacityRefusal { branch, omitted_index: capacity, published: false })
 }
 
 pub(crate) struct FillBuilder {
@@ -1209,23 +363,11 @@ pub(crate) struct FillBuilder {
     /// 🪜️ Where a running tail discard stops: the applied prefix for a weight replan, the newly
     /// requested count for a lowered ask.
     tail_floor: usize,
-    /// 🔁️ Next tried-ring slot a constructed preview claims; the ring wraps, newest over oldest.
-    tried_cursor: usize,
-    /// 👻️ The slot the live ghost owns, so a verdict rewrites its own entry and no other.
-    tried_current: Option<usize>,
-    /// 🕰️ The slot written this turn — [`FillBuilder::publish_preview`] stamps it with the sequence
-    /// the verdict actually reaches the host under.
-    tried_dirty: Option<usize>,
-    pub(crate) tested_count: u64,
-    pub(crate) collisions: u64,
     /// 🔎️ Whether this target round ever built a pose, which tells a bare document apart from one
     /// whose every candidate was refused.
     round_constructed: bool,
-    capacity_stall_published: bool,
     pub(crate) operation: Operation,
     pub(crate) stage: FillJobStage,
-    pub(crate) preview: FillBuildPreview,
-    preview_json: FillPreviewJsonCursor,
     catalogs: FixedCatalogOwner,
     weights: RetainedBrushKindWeights,
     kind_compatibility: FixedOwnerVec<KindCompatEntry, DOCUMENT_KIND_SLOTS>,
@@ -1285,11 +427,13 @@ pub(crate) struct FillBuilder {
     close_field: u8,
     close_current: Option<FillRetiredOwner>,
     closing: bool,
+    /// 🛰️ Observations for a fill run job; `None` for the retained session lane, which never reads them.
+    run_events: Option<Vec<FillRunEvent>>,
+    /// 👻️ A constructed candidate still owes the run its verdict.
+    run_candidate_live: bool,
 }
 
 pub(crate) const FILL_BUILDER_OWNER_PAGE_BYTES: usize = 16 * 1024;
-const FILL_BUILDER_NESTED_ITEMS: usize = 32;
-const FILL_BUILDER_STD_COLLECTIONS: usize = 10;
 
 struct RetainedBrushKindWeights {
     object_weights: FixedOwnerMap<String, f64, DOCUMENT_KIND_SLOTS>,
@@ -1317,1097 +461,6 @@ fn retained_fill_vortex_target_weight(target: &BrushFillVortexTarget, weights: &
 fn retained_candidate_suggestion_weight(candidate: &BrushCompatibleCandidate, weights: &RetainedBrushKindWeights, catalogs: &impl BrushCatalogView) -> f64 {
     let vortex_kind = catalogs.objects().iter().find(|kind| kind.id == candidate.object_kind_id).and_then(|kind| kind.vortices.get(candidate.source_vortex_index)).and_then(|template| template.vortex_kind.as_deref()).unwrap_or("");
     weights.object_value(&candidate.object_kind_id) * weights.vortex_value(vortex_kind)
-}
-
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub(crate) struct FillBuilderOwnerCredit {
-    pub(crate) items: usize,
-    pub(crate) bytes: usize,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum FillBuilderOwnerCensusStep {
-    Pending,
-    Complete(FillBuilderOwnerCredit),
-    Rejected,
-}
-
-#[derive(Default)]
-pub(crate) struct FillBuilderOwnerCensusCursor {
-    field: u8,
-    section: u8,
-    phase: u8,
-    index: usize,
-    inner: usize,
-    leaf: usize,
-    dsl: Option<FillDslOwnerCensusCursor>,
-    spatial: CollisionIndexOwnerCensusCursor,
-    credit: FillBuilderOwnerCredit,
-}
-
-#[derive(Clone, Copy)]
-enum FillOwnerCensusUnit {
-    Credit(FillBuilderOwnerCredit),
-    Advance,
-    Rejected,
-}
-
-#[derive(Clone, Copy)]
-enum FillDslOwnerRoot {
-    FixtureObject { fixture: u8, index: usize },
-    FixtureVolume { fixture: u8, index: usize },
-    SequencePayload(usize),
-    AppendedObject(usize),
-    CatalogObject(usize),
-    CurrentPreview,
-    PendingPayload,
-    PendingObject,
-    PreviewGhost,
-    TriedGhost(usize),
-}
-
-struct FillDslOwnerCensusCursor {
-    root: FillDslOwnerRoot,
-    depth: usize,
-    path: [usize; 16],
-    phase: [u8; 17],
-    child: [usize; 17],
-}
-
-impl FillDslOwnerCensusCursor {
-    fn new(root: FillDslOwnerRoot) -> Self {
-        Self { root, depth: 0, path: [0; 16], phase: [0; 17], child: [0; 17] }
-    }
-
-    fn root<'a>(&self, fill: &'a FillBuilder) -> Option<&'a dsl::DslValue> {
-        match self.root {
-            FillDslOwnerRoot::FixtureObject { fixture, index } => {
-                let value = if fixture == 0 { fill.base.objects.get(index) } else { fill.appended_objects.get(index) }?;
-                value.scale.as_ref()
-            }
-            FillDslOwnerRoot::FixtureVolume { fixture, index } => {
-                let value = (fixture == 0).then(|| fill.base.target_volumes.get(index)).flatten()?;
-                value.scale.as_ref()
-            }
-            FillDslOwnerRoot::SequencePayload(index) => fill.sequence.get(index)?.scale.as_ref(),
-            FillDslOwnerRoot::AppendedObject(index) => fill.appended_objects.get(index)?.scale.as_ref(),
-            FillDslOwnerRoot::CatalogObject(index) => fill.catalogs.objects.get(index)?.scale.as_ref(),
-            FillDslOwnerRoot::CurrentPreview => fill.current_preview.as_ref()?.scale.as_ref(),
-            FillDslOwnerRoot::PendingPayload => fill.pending_payload.as_ref()?.scale.as_ref(),
-            FillDslOwnerRoot::PendingObject => fill.pending_object.as_ref()?.scale.as_ref(),
-            FillDslOwnerRoot::PreviewGhost => fill.preview.candidate_ghost.as_ref()?.scale.as_ref(),
-            FillDslOwnerRoot::TriedGhost(index) => tried_entry(&fill.preview, index)?.ghost.scale.as_ref(),
-        }
-    }
-
-    fn value<'a>(&self, fill: &'a FillBuilder) -> Option<&'a dsl::DslValue> {
-        let mut value = self.root(fill)?;
-        for depth in 0..self.depth {
-            value = match value {
-                dsl::DslValue::Array(values) => values.get(self.path[depth])?,
-                dsl::DslValue::Object(values) => &values.get(self.path[depth])?.1,
-                _ => return None,
-            };
-        }
-        Some(value)
-    }
-
-    fn step(&mut self, fill: &FillBuilder) -> Result<Option<FillBuilderOwnerCredit>, ()> {
-        let Some(value) = self.value(fill) else { return Err(()) };
-        if self.phase[self.depth] == 0 {
-            self.phase[self.depth] = 1;
-            let bytes = match value {
-                dsl::DslValue::String(value) => value.capacity(),
-                dsl::DslValue::Array(values) => values.capacity().checked_mul(size_of::<dsl::DslValue>()).ok_or(())?,
-                dsl::DslValue::Object(values) => values.capacity().checked_mul(size_of::<(String, dsl::DslValue)>()).ok_or(())?,
-                _ => 0,
-            };
-            if bytes > FILL_BUILDER_OWNER_PAGE_BYTES {
-                return Err(());
-            }
-            return Ok(Some(FillBuilderOwnerCredit { items: usize::from(bytes != 0), bytes }));
-        }
-        match value {
-            dsl::DslValue::Array(values) if self.child[self.depth] < values.len() => {
-                if self.depth == 16 {
-                    return Err(());
-                }
-                self.path[self.depth] = self.child[self.depth];
-                self.depth += 1;
-                return Ok(None);
-            }
-            dsl::DslValue::Object(values) if self.child[self.depth] < values.len() => {
-                if self.phase[self.depth] == 1 {
-                    self.phase[self.depth] = 2;
-                    let bytes = values[self.child[self.depth]].0.capacity();
-                    if bytes > FILL_BUILDER_OWNER_PAGE_BYTES {
-                        return Err(());
-                    }
-                    return Ok(Some(FillBuilderOwnerCredit { items: usize::from(bytes != 0), bytes }));
-                }
-                if self.depth == 16 {
-                    return Err(());
-                }
-                self.path[self.depth] = self.child[self.depth];
-                self.depth += 1;
-                return Ok(None);
-            }
-            _ => {}
-        }
-        if self.depth == 0 {
-            return Ok(None);
-        }
-        self.phase[self.depth] = 0;
-        self.child[self.depth] = 0;
-        self.depth -= 1;
-        self.child[self.depth] += 1;
-        if matches!(self.value(fill), Some(dsl::DslValue::Object(_))) {
-            self.phase[self.depth] = 1;
-        }
-        Ok(None)
-    }
-
-    fn complete(&self, fill: &FillBuilder) -> bool {
-        let Some(value) = self.value(fill) else { return true };
-        self.depth == 0
-            && self.phase[0] != 0
-            && match value {
-                dsl::DslValue::Array(values) => self.child[0] >= values.len(),
-                dsl::DslValue::Object(values) => self.child[0] >= values.len(),
-                _ => true,
-            }
-    }
-}
-
-fn fill_owner_strings<const N: usize>(values: [Option<&String>; N]) -> Option<FillBuilderOwnerCredit> {
-    let mut credit = FillBuilderOwnerCredit::default();
-    for value in values.into_iter().flatten() {
-        if value.capacity() > FILL_BUILDER_OWNER_PAGE_BYTES {
-            return None;
-        }
-        credit.items = credit.items.checked_add(usize::from(value.capacity() != 0))?;
-        credit.bytes = credit.bytes.checked_add(value.capacity())?;
-        if credit.bytes > FILL_BUILDER_OWNER_PAGE_BYTES {
-            return None;
-        }
-    }
-    Some(credit)
-}
-
-fn fill_owner_vec<T>(capacity: usize) -> Option<FillBuilderOwnerCredit> {
-    let bytes = capacity.checked_mul(size_of::<T>())?;
-    (capacity <= FILL_BUILDER_NESTED_ITEMS && bytes <= FILL_BUILDER_OWNER_PAGE_BYTES).then_some(FillBuilderOwnerCredit { items: usize::from(bytes != 0), bytes })
-}
-
-fn fill_owner_collection(occupied: usize) -> Option<FillBuilderOwnerCredit> {
-    (occupied <= FILL_BUILDER_NESTED_ITEMS).then_some(FillBuilderOwnerCredit::default())
-}
-
-fn fill_fixed_vec_backing_credit<T, const N: usize>(values: &FixedOwnerVec<T, N>) -> Option<FillBuilderOwnerCredit> {
-    let credit = values.backing_credit()?;
-    (credit.1 <= DOCUMENT_OWNER_PAGE_BYTES).then_some(FillBuilderOwnerCredit { items: credit.0, bytes: credit.1 })
-}
-
-fn fill_collection_backing_credit(fill: &FillBuilder, index: usize) -> Option<FillBuilderOwnerCredit> {
-    let credit = match index {
-        0 => fill.placed_lookup.backing_credit(),
-        1 => fill.candidate_cache.backing_credit(),
-        2 => fill.seed_object_ids.backing_credit(),
-        3 => fill.weights.object_weights.backing_credit(),
-        4 => fill.weights.vortex_weights.backing_credit(),
-        5 => fill.meshes.backing_credit(),
-        6 => fill.blocked_vortex_ids.backing_credit(),
-        7 => fill.candidate_seen.backing_credit(),
-        8 => fill.candidate_cross.backing_credit(),
-        9 => fill.candidate_same.backing_credit(),
-        _ => return None,
-    }?;
-    (credit.1 <= DOCUMENT_OWNER_PAGE_BYTES).then_some(FillBuilderOwnerCredit { items: credit.0, bytes: credit.1 })
-}
-
-impl FillBuilderOwnerCensusCursor {
-    fn finish_field(&mut self) -> FillOwnerCensusUnit {
-        self.field += 1;
-        self.section = 0;
-        self.phase = 0;
-        self.index = 0;
-        self.inner = 0;
-        self.leaf = 0;
-        FillOwnerCensusUnit::Advance
-    }
-
-    pub(crate) fn step(&mut self, fill: &FillBuilder, max_items: usize, max_bytes: usize) -> FillBuilderOwnerCensusStep {
-        if fill.collection_over_capacity || fill.fixed_rejection.is_some() {
-            return FillBuilderOwnerCensusStep::Rejected;
-        }
-        if self.field > 13 {
-            return FillBuilderOwnerCensusStep::Complete(self.credit);
-        }
-        if let Some(dsl) = self.dsl.as_mut() {
-            if dsl.complete(fill) {
-                self.dsl = None;
-                return FillBuilderOwnerCensusStep::Pending;
-            }
-            let unit = match dsl.step(fill) {
-                Ok(Some(credit)) => FillOwnerCensusUnit::Credit(credit),
-                Ok(None) => FillOwnerCensusUnit::Advance,
-                Err(()) => FillOwnerCensusUnit::Rejected,
-            };
-            return self.apply_unit(unit, max_items, max_bytes);
-        }
-        let unit = self.next_unit(fill);
-        self.apply_unit(unit, max_items, max_bytes)
-    }
-
-    fn apply_unit(&mut self, unit: FillOwnerCensusUnit, max_items: usize, max_bytes: usize) -> FillBuilderOwnerCensusStep {
-        let FillOwnerCensusUnit::Credit(credit) = unit else {
-            return if matches!(unit, FillOwnerCensusUnit::Rejected) { FillBuilderOwnerCensusStep::Rejected } else { FillBuilderOwnerCensusStep::Pending };
-        };
-        let Some(items) = self.credit.items.checked_add(credit.items) else { return FillBuilderOwnerCensusStep::Rejected };
-        let Some(bytes) = self.credit.bytes.checked_add(credit.bytes) else { return FillBuilderOwnerCensusStep::Rejected };
-        if items > max_items || bytes > max_bytes {
-            return FillBuilderOwnerCensusStep::Rejected;
-        }
-        self.credit = FillBuilderOwnerCredit { items, bytes };
-        FillBuilderOwnerCensusStep::Pending
-    }
-
-    fn next_unit(&mut self, fill: &FillBuilder) -> FillOwnerCensusUnit {
-        match self.field {
-            0 => {
-                if self.section == 0 {
-                    self.section = 1;
-                    return FillOwnerCensusUnit::Credit(FillBuilderOwnerCredit { items: 1, bytes: size_of::<FillBuilder>() });
-                }
-                if self.index < FILL_BUILDER_STD_COLLECTIONS {
-                    let Some(credit) = fill_collection_backing_credit(fill, self.index) else { return FillOwnerCensusUnit::Rejected };
-                    self.index += 1;
-                    return FillOwnerCensusUnit::Credit(credit);
-                }
-                self.finish_field()
-            }
-            1 | 2 => self.fixture_unit(fill, self.field - 1),
-            3 => self.sequence_unit(fill),
-            4 => self.lookup_unit(fill),
-            5 => self.catalog_unit(fill),
-            6 => self.weight_mesh_unit(fill),
-            7 => self.target_unit(fill),
-            8 => self.target_weight_unit(fill),
-            9 => self.candidate_unit(fill),
-            10 => self.candidate_order_unit(fill),
-            11 => self.pending_unit(fill),
-            12 => self.preview_unit(fill),
-            13 => self.final_unit(fill),
-            _ => FillOwnerCensusUnit::Advance,
-        }
-    }
-
-    fn credit(value: Option<FillBuilderOwnerCredit>) -> FillOwnerCensusUnit {
-        value.map_or(FillOwnerCensusUnit::Rejected, FillOwnerCensusUnit::Credit)
-    }
-
-    fn start_dsl(&mut self, root: FillDslOwnerRoot) -> FillOwnerCensusUnit {
-        self.dsl = Some(FillDslOwnerCensusCursor::new(root));
-        self.phase += 1;
-        FillOwnerCensusUnit::Advance
-    }
-
-    fn fixture_object_unit(&mut self, value: &FixtureObject, root: FillDslOwnerRoot) -> Option<FillOwnerCensusUnit> {
-        let unit = match self.phase {
-            0 => {
-                self.phase = 1;
-                Self::credit(fill_owner_strings([Some(&value.id), value.object_kind.as_ref(), value.mesh_url.as_ref()]))
-            }
-            1 if value.scale.is_some() => self.start_dsl(root),
-            1 => {
-                self.phase = 2;
-                FillOwnerCensusUnit::Advance
-            }
-            2 => {
-                self.phase = 3;
-                Self::credit(fill_owner_vec::<VortexProps>(value.vortices.capacity()))
-            }
-            _ => match value.vortices.get(self.inner) {
-                Some(vortex) => {
-                    self.inner += 1;
-                    Self::credit(fill_owner_strings([Some(&vortex.id), vortex.vortex_kind.as_ref()]))
-                }
-                None => {
-                    self.phase = 0;
-                    self.inner = 0;
-                    return None;
-                }
-            },
-        };
-        Some(unit)
-    }
-
-    fn world_volume_unit(&mut self, value: &WorldVolumeProps, root: FillDslOwnerRoot) -> Option<FillOwnerCensusUnit> {
-        match self.phase {
-            0 => {
-                self.phase = 1;
-                Some(Self::credit(fill_owner_strings([Some(&value.id)])))
-            }
-            1 if value.scale.is_some() => Some(self.start_dsl(root)),
-            _ => {
-                self.phase = 0;
-                None
-            }
-        }
-    }
-
-    fn payload_unit(&mut self, value: &BrushPlacePayload, root: FillDslOwnerRoot) -> Option<FillOwnerCensusUnit> {
-        match self.phase {
-            0 => {
-                self.phase = 1;
-                Some(Self::credit(fill_owner_strings([Some(&value.target_vortex_full_id), Some(&value.object_kind_id)])))
-            }
-            1 if value.scale.is_some() => Some(self.start_dsl(root)),
-            _ => {
-                self.phase = 0;
-                None
-            }
-        }
-    }
-
-    fn fixture_unit(&mut self, fill: &FillBuilder, fixture_id: u8) -> FillOwnerCensusUnit {
-        if fixture_id != 0 {
-            return self.finish_field();
-        }
-        let fixture = &fill.base;
-        match self.section {
-            0 => {
-                self.section = 1;
-                Self::credit(fill_fixed_vec_backing_credit(&fixture.objects))
-            }
-            1 => match fixture.objects.get(self.index) {
-                Some(value) => match self.fixture_object_unit(value, FillDslOwnerRoot::FixtureObject { fixture: fixture_id, index: self.index }) {
-                    Some(unit) => unit,
-                    None => {
-                        self.index += 1;
-                        FillOwnerCensusUnit::Advance
-                    }
-                },
-                None => {
-                    self.section = 2;
-                    self.index = 0;
-                    FillOwnerCensusUnit::Advance
-                }
-            },
-            2 => {
-                self.section = 3;
-                Self::credit(fill_fixed_vec_backing_credit(&fixture.attractions))
-            }
-            3 => match fixture.attractions.get(self.index) {
-                Some(value) => {
-                    self.index += 1;
-                    Self::credit(fill_owner_strings([Some(&value.id), Some(&value.attracting), Some(&value.attracted)]))
-                }
-                None => {
-                    self.section = 4;
-                    self.index = 0;
-                    FillOwnerCensusUnit::Advance
-                }
-            },
-            4 => {
-                self.section = 5;
-                Self::credit(fill_fixed_vec_backing_credit(&fixture.target_volumes))
-            }
-            5 => match fixture.target_volumes.get(self.index) {
-                Some(value) => match self.world_volume_unit(value, FillDslOwnerRoot::FixtureVolume { fixture: fixture_id, index: self.index }) {
-                    Some(unit) => unit,
-                    None => {
-                        self.index += 1;
-                        FillOwnerCensusUnit::Advance
-                    }
-                },
-                None => self.finish_field(),
-            },
-            _ => self.finish_field(),
-        }
-    }
-
-    fn sequence_unit(&mut self, fill: &FillBuilder) -> FillOwnerCensusUnit {
-        match self.section {
-            0 => {
-                self.section = 1;
-                Self::credit(fill_owner_vec::<BrushPlacePayload>(fill.sequence.capacity()))
-            }
-            1 => match fill.sequence.get(self.index) {
-                Some(value) => match self.payload_unit(value, FillDslOwnerRoot::SequencePayload(self.index)) {
-                    Some(unit) => unit,
-                    None => {
-                        self.index += 1;
-                        FillOwnerCensusUnit::Advance
-                    }
-                },
-                None => {
-                    self.section = 2;
-                    self.index = 0;
-                    FillOwnerCensusUnit::Advance
-                }
-            },
-            2 => {
-                self.section = 3;
-                Self::credit(fill_owner_vec::<FixtureObject>(fill.appended_objects.capacity()))
-            }
-            3 => match fill.appended_objects.get(self.index) {
-                Some(value) => match self.fixture_object_unit(value, FillDslOwnerRoot::AppendedObject(self.index)) {
-                    Some(unit) => unit,
-                    None => {
-                        self.index += 1;
-                        FillOwnerCensusUnit::Advance
-                    }
-                },
-                None => {
-                    self.section = 4;
-                    self.index = 0;
-                    FillOwnerCensusUnit::Advance
-                }
-            },
-            4 => {
-                self.section = 5;
-                Self::credit(fill_owner_vec::<AttractionProps>(fill.appended_attractions.capacity()))
-            }
-            5 => match fill.appended_attractions.get(self.index) {
-                Some(value) => {
-                    self.index += 1;
-                    Self::credit(fill_owner_strings([Some(&value.id), Some(&value.attracting), Some(&value.attracted)]))
-                }
-                None => {
-                    self.section = 6;
-                    self.index = 0;
-                    FillOwnerCensusUnit::Advance
-                }
-            },
-            6 => {
-                self.section = 7;
-                Self::credit(fill_owner_vec::<PlacedCollisionEntry>(fill.placed.capacity()))
-            }
-            7 => match fill.placed.get(self.index) {
-                Some(value) => {
-                    self.index += 1;
-                    Self::credit(fill_owner_strings([Some(&value.object_id), Some(&value.mesh_url)]))
-                }
-                None => self.finish_field(),
-            },
-            _ => self.finish_field(),
-        }
-    }
-
-    fn lookup_unit(&mut self, fill: &FillBuilder) -> FillOwnerCensusUnit {
-        match self.section {
-            0 => {
-                self.section = 1;
-                Self::credit(fill_owner_collection(fill.placed_lookup.len()))
-            }
-            1 => match fill.placed_lookup.keys().nth(self.index) {
-                Some(key) => {
-                    self.index += 1;
-                    let Some(mut credit) = fill_owner_strings([Some(key)]) else { return FillOwnerCensusUnit::Rejected };
-                    credit.items += 1;
-                    Self::credit(Some(credit))
-                }
-                None => {
-                    self.section = 2;
-                    self.index = 0;
-                    FillOwnerCensusUnit::Advance
-                }
-            },
-            2 => {
-                self.section = 3;
-                Self::credit(fill_owner_collection(fill.candidate_cache.len()))
-            }
-            3 => match fill.candidate_cache.iter().nth(self.index) {
-                Some((key, values)) if self.phase == 0 => {
-                    self.phase = 1;
-                    let Some(mut credit) = fill_owner_strings([Some(key)]) else { return FillOwnerCensusUnit::Rejected };
-                    let Some(backing) = fill_owner_vec::<BrushCompatibleCandidate>(values.capacity()) else { return FillOwnerCensusUnit::Rejected };
-                    credit.items = credit.items.saturating_add(backing.items).saturating_add(1);
-                    credit.bytes = credit.bytes.saturating_add(backing.bytes);
-                    FillOwnerCensusUnit::Credit(credit)
-                }
-                Some((_, values)) => match values.get(self.inner) {
-                    Some(value) => {
-                        self.inner += 1;
-                        Self::credit(fill_owner_strings([Some(&value.object_kind_id)]))
-                    }
-                    None => {
-                        self.index += 1;
-                        self.inner = 0;
-                        self.phase = 0;
-                        FillOwnerCensusUnit::Advance
-                    }
-                },
-                None => {
-                    self.section = 4;
-                    self.index = 0;
-                    self.phase = 0;
-                    FillOwnerCensusUnit::Advance
-                }
-            },
-            4 => {
-                self.section = 5;
-                Self::credit(fill_owner_collection(fill.seed_object_ids.len()))
-            }
-            5 => match fill.seed_object_ids.iter().nth(self.index) {
-                Some(value) => {
-                    self.index += 1;
-                    let Some(mut credit) = fill_owner_strings([Some(value)]) else { return FillOwnerCensusUnit::Rejected };
-                    credit.items += 1;
-                    Self::credit(Some(credit))
-                }
-                None => self.finish_field(),
-            },
-            _ => self.finish_field(),
-        }
-    }
-
-    fn catalog_unit(&mut self, fill: &FillBuilder) -> FillOwnerCensusUnit {
-        match self.section {
-            0 => {
-                self.section = 1;
-                Self::credit(fill_fixed_vec_backing_credit(&fill.catalogs.objects))
-            }
-            1 => match fill.catalogs.objects.get(self.index) {
-                Some(value) => match self.phase {
-                    0 => {
-                        self.phase = 1;
-                        Self::credit(fill_owner_strings([Some(&value.id)]))
-                    }
-                    1 if value.scale.is_some() => self.start_dsl(FillDslOwnerRoot::CatalogObject(self.index)),
-                    1 => {
-                        self.phase = 2;
-                        FillOwnerCensusUnit::Advance
-                    }
-                    2 => {
-                        self.phase = 3;
-                        Self::credit(fill_owner_vec::<crate::standards::v1::subsets::any::schema::ObjectKindRepresentation>(value.representations.capacity()))
-                    }
-                    3 => match value.representations.get(self.inner) {
-                        Some(representation) if self.leaf == 0 => {
-                            self.leaf = 1;
-                            Self::credit(fill_owner_strings([Some(&representation.id), Some(&representation.name), Some(&representation.url), Some(&representation.mime), representation.lod.as_ref(), Some(&representation.description)]))
-                        }
-                        Some(representation) if self.leaf == 1 => {
-                            self.leaf = 2;
-                            Self::credit(fill_owner_vec::<String>(representation.tags.capacity()))
-                        }
-                        Some(representation) => match representation.tags.get(self.leaf - 2) {
-                            Some(tag) => {
-                                self.leaf += 1;
-                                Self::credit(fill_owner_strings([Some(tag)]))
-                            }
-                            None => {
-                                self.inner += 1;
-                                self.leaf = 0;
-                                FillOwnerCensusUnit::Advance
-                            }
-                        },
-                        None => {
-                            self.phase = 4;
-                            self.inner = 0;
-                            self.leaf = 0;
-                            FillOwnerCensusUnit::Advance
-                        }
-                    },
-                    4 => {
-                        self.phase = 5;
-                        Self::credit(fill_owner_vec::<crate::standards::v1::subsets::any::schema::ObjectKindVortexTemplate>(value.vortices.capacity()))
-                    }
-                    _ => match value.vortices.get(self.inner) {
-                        Some(vortex) => {
-                            self.inner += 1;
-                            Self::credit(fill_owner_strings([Some(&vortex.id), Some(&vortex.name), Some(&vortex.label), Some(&vortex.description), Some(&vortex.icon), vortex.vortex_kind.as_ref()]))
-                        }
-                        None => {
-                            self.index += 1;
-                            self.inner = 0;
-                            self.phase = 0;
-                            FillOwnerCensusUnit::Advance
-                        }
-                    },
-                },
-                None => {
-                    self.section = 2;
-                    self.index = 0;
-                    self.phase = 0;
-                    FillOwnerCensusUnit::Advance
-                }
-            },
-            2 => {
-                self.section = 3;
-                Self::credit(fill_fixed_vec_backing_credit(&fill.catalogs.vortices))
-            }
-            3 => match fill.catalogs.vortices.get(self.index) {
-                Some(value) if self.phase == 0 => {
-                    self.phase = 1;
-                    Self::credit(fill_owner_strings([Some(&value.id), value.code.as_ref(), value.label.as_ref(), Some(&value.description), Some(&value.icon), Some(&value.color), value.default_cable_kind.as_ref()]))
-                }
-                Some(value) if self.phase == 1 => {
-                    self.phase = 2;
-                    Self::credit(fill_owner_vec::<String>(value.compatible_with.capacity()))
-                }
-                Some(value) => match value.compatible_with.get(self.inner) {
-                    Some(entry) => {
-                        self.inner += 1;
-                        Self::credit(fill_owner_strings([Some(entry)]))
-                    }
-                    None => {
-                        self.index += 1;
-                        self.inner = 0;
-                        self.phase = 0;
-                        FillOwnerCensusUnit::Advance
-                    }
-                },
-                None => {
-                    self.section = 4;
-                    self.index = 0;
-                    self.phase = 0;
-                    FillOwnerCensusUnit::Advance
-                }
-            },
-            4 => {
-                self.section = 5;
-                Self::credit(fill_fixed_vec_backing_credit(&fill.catalogs.cables))
-            }
-            5 => match fill.catalogs.cables.get(self.index) {
-                Some(value) => {
-                    self.index += 1;
-                    Self::credit(fill_owner_strings([Some(&value.id), value.default_attraction_kind.as_ref()]))
-                }
-                None => {
-                    self.section = 6;
-                    self.index = 0;
-                    FillOwnerCensusUnit::Advance
-                }
-            },
-            6 => {
-                self.section = 7;
-                Self::credit(fill_fixed_vec_backing_credit(&fill.kind_compatibility))
-            }
-            7 => match fill.kind_compatibility.get(self.index) {
-                Some(value) => {
-                    self.index += 1;
-                    Self::credit(fill_owner_strings([Some(&value.source), Some(&value.target), value.specificity.as_ref()]))
-                }
-                None => self.finish_field(),
-            },
-            _ => self.finish_field(),
-        }
-    }
-
-    fn weight_mesh_unit(&mut self, fill: &FillBuilder) -> FillOwnerCensusUnit {
-        match self.section {
-            0 => {
-                self.section = 1;
-                Self::credit(fill_owner_collection(fill.weights.object_weights.len()))
-            }
-            1 => match fill.weights.object_weights.keys().nth(self.index) {
-                Some(key) => {
-                    self.index += 1;
-                    let Some(mut credit) = fill_owner_strings([Some(key)]) else { return FillOwnerCensusUnit::Rejected };
-                    credit.items += 1;
-                    FillOwnerCensusUnit::Credit(credit)
-                }
-                None => {
-                    self.section = 2;
-                    self.index = 0;
-                    FillOwnerCensusUnit::Advance
-                }
-            },
-            2 => {
-                self.section = 3;
-                Self::credit(fill_owner_collection(fill.weights.vortex_weights.len()))
-            }
-            3 => match fill.weights.vortex_weights.keys().nth(self.index) {
-                Some(key) => {
-                    self.index += 1;
-                    let Some(mut credit) = fill_owner_strings([Some(key)]) else { return FillOwnerCensusUnit::Rejected };
-                    credit.items += 1;
-                    FillOwnerCensusUnit::Credit(credit)
-                }
-                None => {
-                    self.section = 4;
-                    self.index = 0;
-                    FillOwnerCensusUnit::Advance
-                }
-            },
-            4 => {
-                self.section = 6;
-                FillOwnerCensusUnit::Advance
-            }
-            6 => {
-                self.section = 7;
-                Self::credit(fill_owner_collection(fill.meshes.len()))
-            }
-            7 => match fill.meshes.iter().nth(self.index) {
-                Some((key, body)) if self.phase == 0 => {
-                    self.phase = 1;
-                    let Some(mut credit) = fill_owner_strings([Some(key)]) else { return FillOwnerCensusUnit::Rejected };
-                    let Some((items, bytes)) = body.retained_parts_backing_credit() else { return FillOwnerCensusUnit::Rejected };
-                    credit.items = credit.items.saturating_add(items).saturating_add(1);
-                    credit.bytes = credit.bytes.saturating_add(bytes);
-                    FillOwnerCensusUnit::Credit(credit)
-                }
-                Some((_, body)) => match body.retained_part_credit(self.inner) {
-                    Some((items, bytes)) => {
-                        self.inner += 1;
-                        FillOwnerCensusUnit::Credit(FillBuilderOwnerCredit { items, bytes })
-                    }
-                    None if self.inner < body.parts.len() => FillOwnerCensusUnit::Rejected,
-                    None => {
-                        self.index += 1;
-                        self.inner = 0;
-                        self.phase = 0;
-                        FillOwnerCensusUnit::Advance
-                    }
-                },
-                None => self.finish_field(),
-            },
-            _ => self.finish_field(),
-        }
-    }
-
-    fn target_credit(value: &BrushFillVortexTarget) -> Option<FillBuilderOwnerCredit> {
-        fill_owner_strings([Some(&value.full_id), Some(&value.object_id), value.object_kind.as_ref(), value.vortex_kind.as_ref()])
-    }
-
-    fn target_unit(&mut self, fill: &FillBuilder) -> FillOwnerCensusUnit {
-        match self.section {
-            0 => {
-                self.section = 1;
-                Self::credit(fill_owner_vec::<BrushFillVortexTarget>(fill.targets.capacity()))
-            }
-            1 => match fill.targets.get(self.index) {
-                Some(value) => {
-                    self.index += 1;
-                    Self::credit(Self::target_credit(value))
-                }
-                None => {
-                    self.section = 2;
-                    self.index = 0;
-                    FillOwnerCensusUnit::Advance
-                }
-            },
-            2 => {
-                self.section = 3;
-                Self::credit(fill_owner_collection(fill.blocked_vortex_ids.len()))
-            }
-            3 => match fill.blocked_vortex_ids.iter().nth(self.index) {
-                Some(value) => {
-                    self.index += 1;
-                    let Some(mut credit) = fill_owner_strings([Some(value)]) else { return FillOwnerCensusUnit::Rejected };
-                    credit.items += 1;
-                    FillOwnerCensusUnit::Credit(credit)
-                }
-                None => {
-                    self.section = 4;
-                    self.index = 0;
-                    FillOwnerCensusUnit::Advance
-                }
-            },
-            4 => {
-                self.section = 5;
-                Self::credit(fill_owner_vec::<BrushFillVortexTarget>(fill.seed_targets.capacity()))
-            }
-            5 => match fill.seed_targets.get(self.index) {
-                Some(value) => {
-                    self.index += 1;
-                    Self::credit(Self::target_credit(value))
-                }
-                None => {
-                    self.section = 6;
-                    self.index = 0;
-                    FillOwnerCensusUnit::Advance
-                }
-            },
-            6 => {
-                self.section = 7;
-                Self::credit(fill_owner_vec::<BrushFillVortexTarget>(fill.frontier_targets.capacity()))
-            }
-            7 => match fill.frontier_targets.get(self.index) {
-                Some(value) => {
-                    self.index += 1;
-                    Self::credit(Self::target_credit(value))
-                }
-                None => self.finish_field(),
-            },
-            _ => self.finish_field(),
-        }
-    }
-
-    fn target_weight_unit(&mut self, fill: &FillBuilder) -> FillOwnerCensusUnit {
-        let credit = match self.section {
-            0 => fill_owner_vec::<f64>(fill.seed_target_weights.capacity()),
-            1 => fill_owner_vec::<f64>(fill.frontier_target_weights.capacity()),
-            2 => fill_owner_vec::<f64>(fill.seed_target_tree.capacity()),
-            3 => fill_owner_vec::<f64>(fill.frontier_target_tree.capacity()),
-            _ => return self.finish_field(),
-        };
-        self.section += 1;
-        Self::credit(credit)
-    }
-
-    fn candidate_unit(&mut self, fill: &FillBuilder) -> FillOwnerCensusUnit {
-        match self.section {
-            0 => {
-                self.section = 1;
-                Self::credit(fill_owner_vec::<BrushCompatibleCandidate>(fill.candidates.capacity()))
-            }
-            1 => match fill.candidates.get(self.index) {
-                Some(value) => {
-                    self.index += 1;
-                    Self::credit(fill_owner_strings([Some(&value.object_kind_id)]))
-                }
-                None => {
-                    self.section = 2;
-                    self.index = 0;
-                    FillOwnerCensusUnit::Advance
-                }
-            },
-            2 => {
-                self.section = 3;
-                Self::credit(fill_owner_collection(fill.candidate_seen.len()))
-            }
-            3 => match fill.candidate_seen.iter().nth(self.index) {
-                Some(value) => {
-                    self.index += 1;
-                    let Some(mut credit) = fill_owner_strings([Some(value)]) else { return FillOwnerCensusUnit::Rejected };
-                    credit.items += 1;
-                    FillOwnerCensusUnit::Credit(credit)
-                }
-                None => {
-                    self.section = 4;
-                    self.index = 0;
-                    FillOwnerCensusUnit::Advance
-                }
-            },
-            4 => {
-                self.section = 5;
-                Self::credit(fill_owner_vec::<BrushCompatibleCandidate>(fill.candidate_raw.capacity()))
-            }
-            5 => match fill.candidate_raw.get(self.index) {
-                Some(value) => {
-                    self.index += 1;
-                    Self::credit(fill_owner_strings([Some(&value.object_kind_id)]))
-                }
-                None => {
-                    self.section = 6;
-                    self.index = 0;
-                    FillOwnerCensusUnit::Advance
-                }
-            },
-            6 => {
-                self.section = 7;
-                Self::credit(fill_owner_collection(fill.candidate_cross.len()))
-            }
-            7 => match fill.candidate_cross.iter().nth(self.index) {
-                Some((key, value)) => {
-                    self.index += 1;
-                    let Some(mut credit) = fill_owner_strings([Some(key), Some(&value.object_kind_id)]) else { return FillOwnerCensusUnit::Rejected };
-                    credit.items += 1;
-                    FillOwnerCensusUnit::Credit(credit)
-                }
-                None => self.finish_field(),
-            },
-            _ => self.finish_field(),
-        }
-    }
-
-    fn candidate_order_unit(&mut self, fill: &FillBuilder) -> FillOwnerCensusUnit {
-        match self.section {
-            0 => {
-                self.section = 1;
-                Self::credit(fill_owner_collection(fill.candidate_same.len()))
-            }
-            1 => match fill.candidate_same.iter().nth(self.index) {
-                Some((key, value)) => {
-                    self.index += 1;
-                    let Some(mut credit) = fill_owner_strings([Some(key), Some(&value.object_kind_id)]) else { return FillOwnerCensusUnit::Rejected };
-                    credit.items += 1;
-                    FillOwnerCensusUnit::Credit(credit)
-                }
-                None => {
-                    self.section = 2;
-                    self.index = 0;
-                    FillOwnerCensusUnit::Advance
-                }
-            },
-            2 => {
-                self.section = 3;
-                Self::credit(fill_owner_vec::<BrushCompatibleCandidate>(fill.candidate_same_sorted.capacity()))
-            }
-            3 => match fill.candidate_same_sorted.get(self.index) {
-                Some(value) => {
-                    self.index += 1;
-                    Self::credit(fill_owner_strings([Some(&value.object_kind_id)]))
-                }
-                None => {
-                    self.section = 4;
-                    self.index = 0;
-                    FillOwnerCensusUnit::Advance
-                }
-            },
-            4 => {
-                self.section = 5;
-                Self::credit(fill_owner_vec::<f64>(fill.candidate_same_weights.capacity()))
-            }
-            5 => {
-                self.section = 6;
-                Self::credit(fill_owner_vec::<f64>(fill.candidate_same_tree.capacity()))
-            }
-            _ => self.finish_field(),
-        }
-    }
-
-    fn preview_state_unit(&mut self, value: &BrushPreviewState, root: FillDslOwnerRoot) -> Option<FillOwnerCensusUnit> {
-        match self.phase {
-            0 => {
-                self.phase = 1;
-                Some(Self::credit(fill_owner_strings([Some(&value.target_vortex_full_id), Some(&value.object_kind_id), Some(&value.mesh_url)])))
-            }
-            1 if value.scale.is_some() => Some(self.start_dsl(root)),
-            _ => {
-                self.phase = 0;
-                None
-            }
-        }
-    }
-
-    fn pending_unit(&mut self, fill: &FillBuilder) -> FillOwnerCensusUnit {
-        match self.section {
-            0 => {
-                self.section = 1;
-                fill.current_target.as_ref().map_or(FillOwnerCensusUnit::Advance, |value| Self::credit(Self::target_credit(value)))
-            }
-            1 => match fill.current_preview.as_ref() {
-                Some(value) => match self.preview_state_unit(value, FillDslOwnerRoot::CurrentPreview) {
-                    Some(unit) => unit,
-                    None => {
-                        self.section = 2;
-                        FillOwnerCensusUnit::Advance
-                    }
-                },
-                None => {
-                    self.section = 2;
-                    FillOwnerCensusUnit::Advance
-                }
-            },
-            2 => match fill.pending_payload.as_ref() {
-                Some(value) => match self.payload_unit(value, FillDslOwnerRoot::PendingPayload) {
-                    Some(unit) => unit,
-                    None => {
-                        self.section = 3;
-                        FillOwnerCensusUnit::Advance
-                    }
-                },
-                None => {
-                    self.section = 3;
-                    FillOwnerCensusUnit::Advance
-                }
-            },
-            3 => match fill.pending_object.as_ref() {
-                Some(value) => match self.fixture_object_unit(value, FillDslOwnerRoot::PendingObject) {
-                    Some(unit) => unit,
-                    None => {
-                        self.section = 4;
-                        FillOwnerCensusUnit::Advance
-                    }
-                },
-                None => {
-                    self.section = 4;
-                    FillOwnerCensusUnit::Advance
-                }
-            },
-            4 => {
-                self.section = 5;
-                fill.pending_attraction.as_ref().map_or(FillOwnerCensusUnit::Advance, |value| Self::credit(fill_owner_strings([Some(&value.id), Some(&value.attracting), Some(&value.attracted)])))
-            }
-            _ => self.finish_field(),
-        }
-    }
-
-    fn preview_unit(&mut self, fill: &FillBuilder) -> FillOwnerCensusUnit {
-        let preview = &fill.preview;
-        match self.section {
-            0 => {
-                self.section = 1;
-                Self::credit(fill_owner_strings([
-                    Some(&preview.stage),
-                    preview.target_vortex_full_id.as_ref(),
-                    preview.candidate_object_kind_id.as_ref(),
-                    preview.current_pair_object_id.as_ref(),
-                    preview.rejection_reason.as_ref(),
-                    preview.stall_reason.as_ref(),
-                ]))
-            }
-            1 => match preview.candidate_ghost.as_ref() {
-                Some(value) => match self.preview_state_unit(value, FillDslOwnerRoot::PreviewGhost) {
-                    Some(unit) => unit,
-                    None => {
-                        self.section = 2;
-                        FillOwnerCensusUnit::Advance
-                    }
-                },
-                None => {
-                    self.section = 2;
-                    FillOwnerCensusUnit::Advance
-                }
-            },
-            2 => match preview.candidate_page.get(self.index).and_then(Option::as_ref) {
-                Some(value) => {
-                    self.index += 1;
-                    Self::credit(fill_owner_strings([Some(value)]))
-                }
-                None => {
-                    self.section = 3;
-                    self.index = 0;
-                    FillOwnerCensusUnit::Advance
-                }
-            },
-            3 => {
-                if self.index >= preview.tried.len() {
-                    return self.finish_field();
-                }
-                let Some(entry) = tried_entry(preview, self.index) else {
-                    self.index += 1;
-                    return FillOwnerCensusUnit::Advance;
-                };
-                if self.inner != 0 {
-                    self.inner = 0;
-                    self.index += 1;
-                    return Self::credit(fill_owner_strings([entry.reason.as_ref()]));
-                }
-                match self.preview_state_unit(&entry.ghost, FillDslOwnerRoot::TriedGhost(self.index)) {
-                    Some(unit) => unit,
-                    None => {
-                        self.inner = 1;
-                        FillOwnerCensusUnit::Advance
-                    }
-                }
-            }
-            _ => self.finish_field(),
-        }
-    }
-
-    fn final_unit(&mut self, fill: &FillBuilder) -> FillOwnerCensusUnit {
-        if self.section == 0 {
-            self.section = 1;
-            return Self::credit(fill_owner_strings([fill.last_rejection.as_ref()]));
-        }
-        match fill.spatial_index.census_one_owner(&mut self.spatial) {
-            CollisionIndexOwnerCensusStep::Pending { items, bytes } => FillOwnerCensusUnit::Credit(FillBuilderOwnerCredit { items, bytes }),
-            CollisionIndexOwnerCensusStep::Complete => self.finish_field(),
-            CollisionIndexOwnerCensusStep::Rejected => FillOwnerCensusUnit::Rejected,
-        }
-    }
-}
-
-pub(crate) struct FillBuilderRetirementCursor {
-    fill: Option<FillBuilder>,
-    field: u8,
-    current: Option<FillRetiredOwner>,
 }
 
 enum FillRetiredOwner {
@@ -2542,37 +595,6 @@ fn retire_target(value: &mut BrushFillVortexTarget) -> bool {
 
 fn retire_preview_state(value: &mut BrushPreviewState) -> bool {
     retire_string(&mut value.target_vortex_full_id) && retire_string(&mut value.object_kind_id) && retire_string(&mut value.mesh_url) && retire_option_dsl(&mut value.scale)
-}
-
-fn retire_fill_preview(value: &mut FillBuildPreview) -> bool {
-    if !retire_string(&mut value.stage) || !retire_option_string(&mut value.target_vortex_full_id) || !retire_option_string(&mut value.candidate_object_kind_id) || value.candidate_ghost.as_mut().is_some_and(|preview| !retire_preview_state(preview)) {
-        return false;
-    }
-    if value.candidate_ghost.is_some() {
-        value.candidate_ghost.take();
-        return false;
-    }
-    for candidate in &mut value.candidate_page {
-        if let Some(string) = candidate.as_mut() {
-            if !retire_string(string) {
-                return false;
-            }
-            candidate.take();
-            return false;
-        }
-    }
-    for tried in &mut value.tried {
-        let Some(entry) = tried.as_mut() else { continue };
-        if !retire_preview_state(&mut entry.ghost) || !retire_option_string(&mut entry.reason) {
-            return false;
-        }
-        tried.take();
-        return false;
-    }
-    if !retire_option_string(&mut value.current_pair_object_id) || !retire_option_string(&mut value.rejection_reason) || !retire_option_string(&mut value.stall_reason) {
-        return false;
-    }
-    true
 }
 
 fn retire_object_kind(value: &mut ObjectKind) -> bool {
@@ -2916,145 +938,6 @@ fn fixture_terminal_owners_empty(value: &FixedFixtureOwner) -> bool {
     value.objects.terminal_owners_empty() && value.attractions.terminal_owners_empty() && value.target_volumes.terminal_owners_empty()
 }
 
-fn preview_terminal_owners_empty(value: &FillBuildPreview) -> bool {
-    value.stage.capacity() == 0
-        && value.target_vortex_full_id.is_none()
-        && value.candidate_object_kind_id.is_none()
-        && value.candidate_ghost.is_none()
-        && value.current_pair_object_id.is_none()
-        && value.rejection_reason.is_none()
-        && value.candidate_page.iter().all(Option::is_none)
-}
-
-impl FillBuilderRetirementCursor {
-    pub(crate) fn new(fill: FillBuilder) -> Self {
-        Self { fill: Some(fill), field: 0, current: None }
-    }
-
-    /// 🔎️ What the builder this cursor is draining still owes, by name — `None` once it owes nothing.
-    pub(crate) fn owner_debt(&self) -> Option<&'static str> {
-        self.fill.as_ref().and_then(FillBuilder::terminal_owner_debt)
-    }
-
-    pub(crate) fn retire_one(&mut self) -> bool {
-        if let Some(current) = self.current.as_mut() {
-            if retire_retained_owner(current) {
-                self.current = None;
-            }
-            return false;
-        }
-        let Some(fill) = self.fill.as_mut() else {
-            return true;
-        };
-        let retired = match self.field {
-            0 => take_fixture_owner(&mut fill.base, &mut self.current),
-            1 => false,
-            2 => take_sequence_owner(fill, &mut self.current),
-            3 => take_lookup_owner(fill, &mut self.current),
-            4 => take_catalog_owner(fill, &mut self.current),
-            5 => take_weight_mesh_owner(fill, &mut self.current),
-            6 => take_target_owner(fill, &mut self.current),
-            7 => take_target_weight_owner(fill),
-            8 => take_candidate_owner(fill, &mut self.current),
-            9 => take_candidate_order_owner(fill, &mut self.current),
-            10 => match fill.broad_phase_query.as_mut() {
-                Some(query) => {
-                    if query.retire_one_owner() {
-                        fill.broad_phase_query.take();
-                    }
-                    true
-                }
-                None => false,
-            },
-            11 => fill.pending_payload.take().is_some_and(|value| {
-                self.current = Some(FillRetiredOwner::Payload(value));
-                true
-            }),
-            12 => fill.pending_object.take().is_some_and(|value| {
-                self.current = Some(FillRetiredOwner::FixtureObject(value));
-                true
-            }),
-            13 => fill.pending_attraction.take().is_some_and(|value| {
-                self.current = Some(FillRetiredOwner::Attraction(value));
-                true
-            }),
-            14 => fill.current_target.take().is_some_and(|value| {
-                self.current = Some(FillRetiredOwner::Target(value));
-                true
-            }),
-            15 => fill.current_preview.take().is_some_and(|value| {
-                self.current = Some(FillRetiredOwner::PreviewState(value));
-                true
-            }),
-            16 => fill.last_rejection.take().is_some_and(|value| {
-                self.current = Some(FillRetiredOwner::String(value));
-                true
-            }),
-            17 => fill.collision.take().is_some(),
-            18 => !fill.preview_json.close_step(),
-            19 => !retire_fill_preview(&mut fill.preview),
-            20 => match fill.fixed_rejection.as_mut() {
-                Some(rejected) => {
-                    if retire_retained_owner(rejected) {
-                        fill.fixed_rejection.take();
-                    }
-                    true
-                }
-                None => false,
-            },
-            21 => retire_fixed_collection_backing(fill),
-            22 => !fill.spatial_index.retire_one_owner(),
-            23 if fill.collection_over_capacity => {
-                fill.collection_over_capacity = false;
-                true
-            }
-            23 => false,
-            24 => match fill.preparation_spatial.as_mut() {
-                Some(mutation) => {
-                    if mutation.retire_one_owner() {
-                        fill.preparation_spatial.take();
-                    }
-                    true
-                }
-                None => false,
-            },
-            25 => match fill.pending_spatial.as_mut() {
-                Some(mutation) => {
-                    if mutation.retire_one_owner() {
-                        fill.pending_spatial.take();
-                    }
-                    true
-                }
-                None => false,
-            },
-            26 => match fill.tail_removal.as_mut() {
-                Some(removal) => {
-                    if removal.retire_one_owner() {
-                        fill.tail_removal.take();
-                    }
-                    true
-                }
-                None => false,
-            },
-            27 if fill.preparation_roots.take().is_some() => true,
-            27 => false,
-            28 if fill.preparation_capacity_refusal.take().is_some() => true,
-            28 => false,
-            _ => {
-                if !fill.terminal_owners_empty() {
-                    return false;
-                }
-                let shell = self.fill.take().expect("terminal-empty builder shell");
-                drop(shell);
-                return self.fill.is_none() && self.current.is_none();
-            }
-        };
-        if !retired {
-            self.field += 1;
-        }
-        false
-    }
-}
 
 impl FillBuilder {
     #[cfg(test)]
@@ -3112,8 +995,8 @@ impl FillBuilder {
 
     /// 🔎️ The FIRST retained-owner clause this builder still fails, BY NAME. A close ladder that wedges
     /// has to be able to say which owner nothing drains, instead of only that the builder is "not empty":
-    /// `FillBuilderRetirementCursor::retire_one`'s terminal arm returns `false` forever in that case, so
-    /// the whole teardown spins without progress (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B42).
+    /// the close walk's terminal arm returns `false` forever in that case, so the whole teardown spins
+    /// without progress (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B42).
     pub(crate) fn terminal_owner_debt(&self) -> Option<&'static str> {
         [
             ("fixture_terminal_owners_empty base", fixture_terminal_owners_empty(&self.base)),
@@ -3189,8 +1072,7 @@ impl FillBuilder {
             ("candidate_seen.terminal_owners_empty", self.candidate_seen.terminal_owners_empty()),
             ("candidate_cross.terminal_owners_empty", self.candidate_cross.terminal_owners_empty()),
             ("candidate_same.terminal_owners_empty", self.candidate_same.terminal_owners_empty()),
-            ("preview_json.terminal_owners_empty", self.preview_json.terminal_owners_empty()),
-            ("preview_terminal_owners_empty preview", preview_terminal_owners_empty(&self.preview)),
+            ("run_events.is_none", self.run_events.is_none()),
         ]
         .into_iter()
         .find_map(|(owner, empty)| (!empty).then_some(owner))
@@ -3205,7 +1087,6 @@ impl FillBuilder {
     pub(crate) fn begin_preparation(roots: FillPreparationRoots, operation: Operation, requested_count: usize) -> Self {
         let seed = roots.scene.seed;
         let preparation_capacity_refusal = preparation_capacity_refusal(&roots);
-        let rejection_reason = preparation_capacity_refusal.map(PreparationCapacityRefusal::diagnostic);
         Self {
             base: FixedFixtureOwner::new(),
             preparation_roots: Some(roots),
@@ -3226,45 +1107,9 @@ impl FillBuilder {
             stalled: false,
             max_count: requested_count,
             tail_floor: 0,
-            tried_cursor: 0,
-            tried_current: None,
-            tried_dirty: None,
-            tested_count: 0,
-            collisions: 0,
             round_constructed: false,
-            capacity_stall_published: false,
             operation,
             stage: FillJobStage::PrepareFixture,
-            preview: FillBuildPreview {
-                operation: operation.operation.0,
-                base_revision: operation.base_revision.0,
-                registry_generation: operation.generation.0,
-                sequence: 0,
-                generation: operation.generation.0,
-                stage: "prepare-fixture".into(),
-                target_vortex_full_id: None,
-                candidate_object_kind_id: None,
-                candidate_ghost: None,
-                current_pair_object_id: None,
-                collision_count: 0,
-                sample_cursor: 0,
-                inside_both: 0,
-                last_sample: None,
-                candidate_page: std::array::from_fn(|_| None),
-                truncated: false,
-                rejection_reason,
-                target_cursor: 0,
-                candidate_cursor: 0,
-                accepted_count: 0,
-                requested_count,
-                search_count: 0,
-                rejected_count: 0,
-                verdict: FillCandidateVerdict::Testing,
-                tried: std::array::from_fn(|_| None),
-                tested_count: 0,
-                stall_reason: None,
-            },
-            preview_json: FillPreviewJsonCursor::default(),
             catalogs: FixedCatalogOwner::new(),
             weights: RetainedBrushKindWeights::new(),
             kind_compatibility: FixedOwnerVec::new(),
@@ -3324,6 +1169,8 @@ impl FillBuilder {
             close_field: 0,
             close_current: None,
             closing: false,
+            run_events: None,
+            run_candidate_live: false,
         }
     }
 
@@ -3335,32 +1182,6 @@ impl FillBuilder {
             Some(roots) => roots.scene.fixture.clone(),
             None => self.base.snapshot(),
         }
-    }
-
-    pub(crate) fn progress(&self) -> FillBuildProgress {
-        FillBuildProgress {
-            count: self.sequence.len(),
-            applied_count: self.applied_count,
-            max_count: self.max_count,
-            done: self.stalled || self.sequence.len() >= self.max_count,
-            appended_objects: Vec::new(),
-            appended_attractions: Vec::new(),
-            sequence: Vec::new(),
-            preview: Some(self.preview.clone()),
-        }
-    }
-
-    pub(crate) fn preview_json_step(&mut self, color: &str, status_label: &str, fuel: &mut u32, cancelled: bool, deadline_reached: bool) -> FillPreviewJsonStep {
-        self.preview_json.step(&self.preview, color, status_label, fuel, cancelled, deadline_reached)
-    }
-
-    pub(crate) fn preview_json_ready(&self) -> Option<&str> {
-        self.preview_json.ready()
-    }
-
-    #[cfg(test)]
-    pub(crate) fn preview_json_ready_identity(&self) -> Option<[u64; 5]> {
-        self.preview_json.ready_identity()
     }
 
     fn retire_one_close_owner(&mut self) -> bool {
@@ -3416,9 +1237,7 @@ impl FillBuilder {
                 true
             }),
             17 => self.collision.take().is_some(),
-            18 => !self.preview_json.close_step(),
-            19 => !retire_fill_preview(&mut self.preview),
-            20 => match self.fixed_rejection.as_mut() {
+            18 => match self.fixed_rejection.as_mut() {
                 Some(rejected) => {
                     if retire_retained_owner(rejected) {
                         self.fixed_rejection.take();
@@ -3427,14 +1246,14 @@ impl FillBuilder {
                 }
                 None => false,
             },
-            21 => retire_fixed_collection_backing(self),
-            22 => !self.spatial_index.retire_one_owner(),
-            23 if self.collection_over_capacity => {
+            19 => retire_fixed_collection_backing(self),
+            20 => !self.spatial_index.retire_one_owner(),
+            21 if self.collection_over_capacity => {
                 self.collection_over_capacity = false;
                 true
             }
-            23 => false,
-            24 => match self.preparation_spatial.as_mut() {
+            21 => false,
+            22 => match self.preparation_spatial.as_mut() {
                 Some(mutation) => {
                     if mutation.retire_one_owner() {
                         self.preparation_spatial.take();
@@ -3443,7 +1262,7 @@ impl FillBuilder {
                 }
                 None => false,
             },
-            25 => match self.pending_spatial.as_mut() {
+            23 => match self.pending_spatial.as_mut() {
                 Some(mutation) => {
                     if mutation.retire_one_owner() {
                         self.pending_spatial.take();
@@ -3452,7 +1271,7 @@ impl FillBuilder {
                 }
                 None => false,
             },
-            26 => match self.tail_removal.as_mut() {
+            24 => match self.tail_removal.as_mut() {
                 Some(removal) => {
                     if removal.retire_one_owner() {
                         self.tail_removal.take();
@@ -3461,10 +1280,12 @@ impl FillBuilder {
                 }
                 None => false,
             },
-            27 if self.preparation_roots.take().is_some() => true,
+            25 if self.preparation_roots.take().is_some() => true,
+            25 => false,
+            26 if self.preparation_capacity_refusal.take().is_some() => true,
+            26 => false,
+            27 if self.run_events.take().is_some() => true,
             27 => false,
-            28 if self.preparation_capacity_refusal.take().is_some() => true,
-            28 => false,
             _ => return self.terminal_owners_empty() && self.close_current.is_none(),
         };
         self.close_current = current;
@@ -3503,12 +1324,11 @@ impl FillBuilder {
         for (id, weight) in vortex_weights {
             let _ = self.weights.vortex_weights.try_insert(id.clone(), *weight);
         }
+        self.abandon_run_candidate();
         self.applied_count = self.applied_count.min(self.sequence.len());
         self.tail_floor = self.applied_count;
         self.stalled = false;
         self.last_rejection = None;
-        self.preview.rejection_reason = None;
-        self.preview.stall_reason = None;
         self.stage = FillJobStage::DiscardTail;
     }
 
@@ -3528,11 +1348,9 @@ impl FillBuilder {
         }
         let raising = requested > self.max_count;
         self.max_count = requested;
-        self.preview.requested_count = requested;
         if raising {
             if self.stage == FillJobStage::Complete && self.sequence.len() < self.max_count {
                 self.stalled = false;
-                self.preview.stall_reason = None;
                 self.stage = FillJobStage::PrepareTargets;
             }
             return;
@@ -3540,10 +1358,10 @@ impl FillBuilder {
         if self.sequence.len() <= self.max_count {
             return;
         }
+        self.abandon_run_candidate();
         self.applied_count = self.applied_count.min(self.sequence.len());
         self.tail_floor = self.max_count.max(self.applied_count);
         self.stalled = false;
-        self.preview.stall_reason = None;
         self.stage = FillJobStage::DiscardTail;
     }
 
@@ -3570,9 +1388,8 @@ impl FillBuilder {
             self.target_prepare_phase = TargetPreparePhase::Reset;
             self.reset_candidate_preparation();
             self.reset_candidate();
-            self.reset_collision(true);
+            self.reset_collision();
             self.reset_acceptance();
-            self.preview.accepted_count = self.sequence.len();
             self.stage = if self.sequence.len() >= self.max_count { FillJobStage::Complete } else { FillJobStage::PrepareTargets };
             return;
         }
@@ -3582,6 +1399,7 @@ impl FillBuilder {
         };
         self.sequence.pop();
         self.appended_attractions.pop();
+        self.run_event(FillRunEvent::Discarded);
         if let Some((id, index)) = self.placed_lookup.remove_entry(object.id.as_str()) {
             if index + 1 == self.placed.len() {
                 self.placed.pop();
@@ -3595,7 +1413,6 @@ impl FillBuilder {
     pub(crate) fn prepare_one(&mut self) {
         if self.collection_over_capacity {
             self.last_rejection = Some("preparation-capacity".into());
-            self.preview.rejection_reason = self.last_rejection.clone();
             self.stall(FILL_STALL_DOCUMENT_CAPACITY);
             return;
         }
@@ -3938,8 +1755,6 @@ impl FillBuilder {
             self.stall(self.exhausted_targets_stall());
             return;
         };
-        self.preview.target_vortex_full_id = Some(target.full_id.clone());
-        self.preview.target_cursor = self.target_cursor;
         self.current_target = Some(target);
         self.reset_candidate_preparation();
         self.stage = FillJobStage::PrepareCandidates;
@@ -4064,8 +1879,6 @@ impl FillBuilder {
             self.reject_target("candidates-exhausted");
             return;
         };
-        self.preview.candidate_cursor = self.candidate_cursor;
-        self.preview.candidate_object_kind_id = Some(candidate.object_kind_id.clone());
         self.stage = FillJobStage::ConstructPreview;
     }
 
@@ -4093,6 +1906,11 @@ impl FillBuilder {
             self.reject_candidate("preview-unavailable");
             return;
         };
+        self.round_constructed = true;
+        if self.run_events.is_some() {
+            self.run_candidate_live = true;
+            self.run_event(FillRunEvent::Constructed { mesh_url: preview.mesh_url.clone(), origin: preview.origin, orientation: preview.orientation, scale: fill_run_scale(&preview.scale) });
+        }
         let Some(body) = self.meshes.get(&preview.mesh_url) else {
             self.reject_candidate("mesh-unavailable");
             return;
@@ -4105,14 +1923,6 @@ impl FillBuilder {
         }
         self.current_preview = Some(preview);
         self.last_rejection = None;
-        self.round_constructed = true;
-        self.preview.rejection_reason = None;
-        self.preview.candidate_ghost = self.current_preview.clone();
-        self.push_tried(self.current_preview.clone().expect("constructed preview"));
-        self.preview.current_pair_object_id = None;
-        self.preview.collision_count = 0;
-        self.preview.candidate_page = std::array::from_fn(|_| None);
-        self.preview.truncated = false;
         self.stage = FillJobStage::QueryBroadPhase;
     }
 
@@ -4149,16 +1959,11 @@ impl FillBuilder {
         }
         self.broad_phase_cursor = 0;
         self.collision = None;
-        self.preview.candidate_page = std::array::from_fn(|index| query.candidate(index).cloned());
-        self.preview.truncated = query.truncated() || query.len() > self.preview.candidate_page.len();
-        self.preview.collision_count = 0;
         self.stage = FillJobStage::TestCollision;
     }
 
-    fn test_collision(&mut self, context: &mut StepContext<'_>) -> Option<StepOutcome> {
+    fn test_collision<C: FillStepContext>(&mut self, context: &mut C) -> Option<StepOutcome> {
         let Some(pair_id) = self.broad_phase_query.as_ref().and_then(|query| query.candidate(self.broad_phase_cursor)).cloned() else {
-            self.preview.current_pair_object_id = None;
-            self.record_verdict(FillCandidateVerdict::Free, None);
             self.stage = FillJobStage::AcceptCandidate;
             return None;
         };
@@ -4166,7 +1971,6 @@ impl FillBuilder {
             self.broad_phase_cursor += 1;
             return None;
         }
-        self.preview.current_pair_object_id = Some(pair_id.clone());
         let Some(preview) = &self.current_preview else {
             self.reject_candidate("missing-preview");
             return None;
@@ -4186,22 +1990,15 @@ impl FillBuilder {
         let preview_world = pose_isometry(preview.origin, preview.orientation, &preview.scale);
         let collision = self.collision.get_or_insert_with(|| CollisionOverlapState::new(512, 8, self.overlap_budget));
         let result = collision.step(context, preview_body, &preview_world, other, &entry.world);
-        self.preview.sample_cursor = collision.sample_cursor;
-        self.preview.inside_both = collision.inside_both;
-        self.preview.last_sample = collision.last_sample;
         match result {
             CollisionStepResult::Pending => {}
             CollisionStepResult::Cancelled => return Some(StepOutcome::Cancelled),
             CollisionStepResult::Complete { overlap, .. } if overlap > self.overlap_budget => {
-                self.preview.collision_count += 1;
                 self.reject_candidate("solid-overlap");
             }
             CollisionStepResult::Complete { .. } => {
                 self.broad_phase_cursor += 1;
                 self.collision = None;
-                self.preview.sample_cursor = 0;
-                self.preview.inside_both = 0;
-                self.preview.last_sample = None;
             }
         }
         None
@@ -4260,7 +2057,6 @@ impl FillBuilder {
                     orientation: Some(payload.orientation),
                     scale: payload.scale.clone().or(kind.scale.clone()),
                     vortices: Vec::new(),
-                    reveal_index: None,
                 });
                 self.pending_payload = Some(payload);
                 self.accept_attraction_cursor = 0;
@@ -4363,7 +2159,7 @@ impl FillBuilder {
                     self.reject_candidate("placement-state-missing");
                     return StepOutcome::Yield;
                 };
-                let Some(mut placed_object) = self.pending_object.take() else {
+                let Some(placed_object) = self.pending_object.take() else {
                     self.reject_candidate("placement-state-missing");
                     return StepOutcome::Yield;
                 };
@@ -4372,109 +2168,61 @@ impl FillBuilder {
                     return StepOutcome::Yield;
                 };
                 self.sequence.push(payload);
-                placed_object.reveal_index = Some(self.appended_objects.len());
                 self.appended_objects.push(placed_object);
                 self.appended_attractions.push(attraction);
-                self.preview.accepted_count = self.sequence.len();
-                self.record_verdict(FillCandidateVerdict::Accepted, None);
+                if std::mem::take(&mut self.run_candidate_live) {
+                    self.run_event(FillRunEvent::Accepted);
+                }
                 self.reset_candidate();
                 self.stage = if self.sequence.len() >= self.max_count { FillJobStage::Complete } else { FillJobStage::PrepareTargets };
                 if self.stage == FillJobStage::Complete {
                     return self.complete();
                 }
-                StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CheckpointState), applied_progress: self.applied_count as u64 })
+                StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: RetainedJobPayload::empty(JobPayloadStream::CheckpointState), applied_progress: self.applied_count as u64 })
             }
-        }
-    }
-
-    /// 👻️ Publishes a constructed pose as the live ghost and claims it a ring slot under
-    /// [`FillCandidateVerdict::Testing`] — every later verdict rewrites that same slot, so a
-    /// candidate occupies exactly one entry from the moment it exists.
-    fn push_tried(&mut self, ghost: BrushPreviewState) {
-        let slot = self.tried_cursor % FILL_TRIED_RING;
-        self.tried_cursor = slot + 1;
-        self.tried_current = Some(slot);
-        self.tried_dirty = Some(slot);
-        self.tested_count = self.tested_count.saturating_add(1);
-        self.preview.tested_count = self.tested_count;
-        self.preview.verdict = FillCandidateVerdict::Testing;
-        self.preview.tried[slot] = Some(FillTriedCandidate { sequence: self.preview.sequence, verdict: FillCandidateVerdict::Testing, reason: None, ghost });
-    }
-
-    /// ⚖️ The one place a verdict is written: the live preview always, and the candidate's own ring
-    /// slot whenever a pose was actually built for it.
-    fn record_verdict(&mut self, verdict: FillCandidateVerdict, reason: Option<&str>) {
-        self.preview.verdict = verdict;
-        if verdict == FillCandidateVerdict::Collision {
-            self.collisions = self.collisions.saturating_add(1);
-        }
-        let Some(slot) = self.tried_current else { return };
-        let Some(entry) = self.preview.tried.get_mut(slot).and_then(Option::as_mut) else { return };
-        entry.verdict = verdict;
-        entry.reason = reason.map(str::to_string);
-        self.tried_dirty = Some(slot);
-    }
-
-    /// 🚩️ A solid overlap is its own visible verdict; every other refusal is a plain rejection.
-    fn verdict_for(reason: &str) -> FillCandidateVerdict {
-        if reason == "solid-overlap" {
-            FillCandidateVerdict::Collision
-        } else {
-            FillCandidateVerdict::Rejected
         }
     }
 
     /// 🛑️ Stops the planner below its requested count with a reason the HUD can name, instead of
     /// leaving the user with a silently finished plan.
     fn stall(&mut self, reason: &'static str) {
+        let reason_code = FillRunReason::of_id(reason).unwrap_or(FillRunReason::Rejected);
+        if std::mem::take(&mut self.run_candidate_live) {
+            self.run_event(FillRunEvent::Refused(reason_code));
+        }
+        self.run_event(FillRunEvent::Stalled(reason_code));
         self.stalled = true;
-        self.preview.stall_reason = Some(reason.to_string());
         self.stage = FillJobStage::Complete;
     }
 
     fn reject_candidate(&mut self, reason: &str) {
+        self.refuse_run_candidate(reason);
         self.last_rejection = Some(reason.to_string());
-        self.preview.rejection_reason = self.last_rejection.clone();
         self.rejected_count += 1;
-        self.preview.rejected_count = self.rejected_count;
-        self.record_verdict(Self::verdict_for(reason), Some(reason));
         self.candidate_cursor += 1;
         self.reset_acceptance();
-        self.reset_collision(false);
+        self.reset_collision();
         self.stage = FillJobStage::SelectCandidate;
     }
 
     fn reject_target(&mut self, reason: &str) {
+        self.refuse_run_candidate(reason);
         self.last_rejection = Some(reason.to_string());
-        self.preview.rejection_reason = self.last_rejection.clone();
         self.rejected_count += 1;
-        self.preview.rejected_count = self.rejected_count;
-        self.record_verdict(Self::verdict_for(reason), Some(reason));
         self.target_cursor += 1;
         self.current_target = None;
         self.reset_candidate_preparation();
         self.reset_acceptance();
-        self.reset_collision(false);
+        self.reset_collision();
         self.stage = FillJobStage::SelectTarget;
     }
 
-    fn reset_collision(&mut self, clear_preview: bool) {
+    fn reset_collision(&mut self) {
         self.current_preview = None;
         self.broad_phase_query = None;
         self.broad_phase_cursor = 0;
         self.broad_phase_bounds = None;
         self.collision = None;
-        if clear_preview {
-            self.tried_current = None;
-            self.preview.candidate_ghost = None;
-            self.preview.current_pair_object_id = None;
-            self.preview.collision_count = 0;
-            self.preview.sample_cursor = 0;
-            self.preview.inside_both = 0;
-            self.preview.last_sample = None;
-            self.preview.candidate_page = std::array::from_fn(|_| None);
-            self.preview.truncated = false;
-        }
     }
 
     fn reset_candidate(&mut self) {
@@ -4499,8 +2247,7 @@ impl FillBuilder {
         self.reset_candidate_preparation();
         self.reset_acceptance();
         self.last_rejection = None;
-        self.preview.rejection_reason = None;
-        self.reset_collision(true);
+        self.reset_collision();
     }
 
     fn reset_candidate_preparation(&mut self) {
@@ -4527,53 +2274,63 @@ impl FillBuilder {
         self.pending_spatial = None;
     }
 
-    fn publish_preview(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
-        self.preview.sequence = match context.next_preview_sequence() {
-            Ok(sequence) => sequence,
-            Err(_) => return StepOutcome::Fault(JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }),
-        };
-        self.preview.operation = self.operation.operation.0;
-        self.preview.base_revision = self.operation.base_revision.0;
-        self.preview.generation = self.operation.generation.0;
-        self.preview.stage = self.stage_label().to_string();
-        self.preview.target_cursor = self.target_cursor;
-        self.preview.candidate_cursor = self.candidate_cursor;
-        self.preview.search_count = self.transition_count;
-        self.preview.rejected_count = self.rejected_count;
-        self.preview.tested_count = self.tested_count;
-        self.preview.requested_count = self.max_count;
-        if let Some(entry) = self.tried_dirty.take().and_then(|slot| self.preview.tried.get_mut(slot)).and_then(Option::as_mut) {
-            entry.sequence = self.preview.sequence;
+    /// 🛰️ Records one observation when a fill run job is listening.
+    fn run_event(&mut self, event: FillRunEvent) {
+        if let Some(events) = self.run_events.as_mut() {
+            events.push(event);
         }
-        StepOutcome::PreviewReady(semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Preview))
     }
 
-    /// 📄️ Which fixed document page refused an owner, if any — the preparation preflight names its
-    /// branch and limit, a page that filled mid-plan names itself.
-    fn capacity_diagnostic(&self) -> Option<String> {
-        self.preparation_capacity_refusal
-            .map(PreparationCapacityRefusal::diagnostic)
-            .or_else(|| (self.collection_over_capacity || self.fixed_rejection.is_some()).then(|| "fill-fixed-collection-capacity".to_string()))
+    fn refuse_run_candidate(&mut self, reason: &str) {
+        if std::mem::take(&mut self.run_candidate_live) {
+            self.run_event(FillRunEvent::Refused(FillRunReason::of_refusal(reason)));
+        }
     }
 
-    /// 🚧️ A full document page stops the plan where the user can see it: one published diagnostic
-    /// carrying the `document-capacity` stall, then a plain completion. Faults stay reserved for
-    /// invariant breaks — running out of document room is a limit, not a bug.
-    fn stall_on_capacity(&mut self, context: &mut StepContext<'_>, diagnostic: String) -> StepOutcome {
-        self.stall(FILL_STALL_DOCUMENT_CAPACITY);
-        if self.capacity_stall_published {
-            return self.complete();
+    /// 🫥️ A retarget or replan drops the candidate under test before it reached a verdict.
+    fn abandon_run_candidate(&mut self) {
+        if std::mem::take(&mut self.run_candidate_live) {
+            self.run_event(FillRunEvent::Abandoned);
         }
-        self.capacity_stall_published = true;
-        self.preview.candidate_ghost = None;
-        self.preview.rejection_reason = Some(diagnostic);
-        self.publish_preview(context)
+    }
+
+    /// 🛰️ Starts recording observations for a fill run job.
+    pub(crate) fn observe_run(&mut self) {
+        self.run_events.get_or_insert_with(|| Vec::with_capacity(4));
+    }
+
+    /// 📤️ Moves the recorded observations into `into` (cleared first), keeping both buffers' capacity.
+    pub(crate) fn swap_run_events(&mut self, into: &mut Vec<FillRunEvent>) {
+        into.clear();
+        if let Some(events) = self.run_events.as_mut() {
+            std::mem::swap(events, into);
+        }
+    }
+
+    /// 🚧️ A document too large for the planner's fixed pages ends the run where the user can see it: the
+    /// preparation preflight's refusal publishes one `danger` step through the run's tick writer and then
+    /// faults the run (nothing was changed), while a page that fills mid-plan is a visible
+    /// `document-capacity` stall that completes what was placed. Without a writer the refusal faults at once.
+    pub(crate) fn capacity_outcome<C: FillStepContext>(&mut self, context: &mut C, writer: Option<&mut ToolRunTickWriter>) -> Option<StepOutcome> {
+        if let Some(refusal) = self.preparation_capacity_refusal.as_mut() {
+            if let Some(writer) = writer.filter(|_| !refusal.published) {
+                refusal.published = true;
+                let _ = writer.step(ToolRunStepKind::Danger, FillRunStage::Prepare.index(), FillRunReason::DocumentCapacity.code(), None, &[ToolRunStepArg::Unsigned(refusal.omitted_index as u64)]);
+                return Some(StepOutcome::Yield);
+            }
+            return Some(StepOutcome::Fault(JobFault { detail: context.fault_payload(refusal.diagnostic().as_bytes()) }));
+        }
+        if self.collection_over_capacity || self.fixed_rejection.is_some() {
+            self.stall(FILL_STALL_DOCUMENT_CAPACITY);
+            return Some(self.complete());
+        }
+        None
     }
 
     fn complete(&self) -> StepOutcome {
         StepOutcome::Complete(CommitCandidate {
-            state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-            output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+            state: RetainedJobPayload::empty(JobPayloadStream::CommitState),
+            output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput),
         })
     }
 
@@ -4600,17 +2357,17 @@ impl FillBuilder {
     }
 }
 
-impl InteractiveJob for FillBuilder {
-    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+impl FillBuilder {
+    /// 🪜️ One bounded planner transition under any [`FillStepContext`].
+    pub(crate) fn advance<C: FillStepContext>(&mut self, context: &mut C) -> StepOutcome {
         if context.is_cancelled() {
             return StepOutcome::Cancelled;
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            let detail = context.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, b"stale-fill-operation").unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
-            return StepOutcome::Fault(JobFault { detail });
+            return StepOutcome::Fault(JobFault { detail: context.fault_payload(b"stale-fill-operation") });
         }
-        if let Some(diagnostic) = self.capacity_diagnostic() {
-            return self.stall_on_capacity(context, diagnostic);
+        if let Some(outcome) = self.capacity_outcome(context, None) {
+            return outcome;
         }
         if context.should_yield() {
             return StepOutcome::Yield;
@@ -4679,7 +2436,13 @@ impl InteractiveJob for FillBuilder {
         {
             return StepOutcome::Yield;
         }
-        outcome.unwrap_or_else(|| self.publish_preview(context))
+        outcome.unwrap_or(StepOutcome::Yield)
+    }
+}
+
+impl InteractiveJob for FillBuilder {
+    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+        self.advance(context)
     }
 
     fn begin_close(&mut self) {
@@ -4703,6 +2466,823 @@ impl InteractiveJob for FillBuilder {
     }
 }
 //#endregion 🧵️InteractiveFillJob
+
+//#region ⏯️FillRunJob
+/// 🚰️ Estimated pending tick bytes past which a fill run job flushes: one tick must fit one
+/// `JOB_PAYLOAD_PAGE_BYTES` job payload page with a placement's ops to spare.
+pub(crate) const FILL_RUN_TICK_FLUSH_BYTES: usize = 8 * 1024;
+/// 🧬️ Provisional ops one accepted placement appends: `create_object` then `connect_vortices`.
+pub(crate) const FILL_RUN_OPS_PER_PLACEMENT: u32 = 2;
+
+/// 🆔️ Stable provisional entity of a placed object: the first eight little-endian bytes of its id digest.
+pub(crate) fn fill_run_entity(object_id: &str) -> u64 {
+    let digest = semio_framework_hash::hash(object_id.as_bytes());
+    u64::from_le_bytes(digest.as_bytes()[..8].try_into().expect("eight digest bytes"))
+}
+
+/// 🧬️ The two `OpBinary` document ops one placement contributes, in append order.
+pub(crate) fn fill_run_ops(object: &FixtureObject, attraction: &AttractionProps) -> Option<[Vec<u8>; 2]> {
+    use crate::standards::v1::subsets::any::schema::mutations::{binary::encode_op, connect_vortices, create_object};
+    let document = <crate::Puzzle3dObject as dsl::FromValue>::from_value(dsl::ToValue::to_value(object)).ok()?;
+    let create = encode_op(&create_object(document, None)).ok()?;
+    let connect = encode_op(&connect_vortices(attraction.id.clone(), attraction.attracting.clone(), attraction.attracted.clone(), attraction.gap, attraction.shift, attraction.rise, attraction.rotation, attraction.turn, attraction.tilt, attraction.x, attraction.y)).ok()?;
+    Some([create, connect])
+}
+
+/// 🔑️ Trace keys a revalidation gives placements it rebuilds from provisional ops alone: the run's own
+/// candidate keys are not recoverable from ops, so revalidation records live above every candidate key.
+pub(crate) const FILL_REVALIDATE_KEY_BASE: u64 = 1 << 63;
+
+/// 🧱️ The placements a provisional op list holds, in op order (`create_object` then `connect_vortices`
+/// per placement), keyed from [`FILL_REVALIDATE_KEY_BASE`] with subjects indexing `mesh_lane`; `None`
+/// when the list is not a whole sequence of fill placements.
+pub(crate) fn fill_run_placements(provisional: &[crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation], mesh_lane: &[String]) -> Option<Vec<FillRunPlacement>> {
+    use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
+    provisional
+        .chunks(FILL_RUN_OPS_PER_PLACEMENT as usize)
+        .enumerate()
+        .map(|(index, pair)| {
+            let [Puzzle3dMutation::CreateObject(create), Puzzle3dMutation::ConnectVortices(connect)] = pair else { return None };
+            let object = <FixtureObject as dsl::FromValue>::from_value(dsl::ToValue::to_value(&create.object)).ok()?;
+            let mesh = object.mesh_url.as_ref().and_then(|url| mesh_lane.iter().position(|entry| entry == url)).unwrap_or(0) as u32;
+            let subject = ToolRunTraceSubject::Instance3d { mesh, position: object.origin.map(|value| value as f32), rotation: object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]).map(|value| value as f32), scale: fill_run_scale(&object.scale) };
+            let attraction = AttractionProps { id: connect.id.clone(), attracting: connect.attracting.clone(), attracted: connect.attracted.clone(), gap: connect.gap, shift: connect.shift, rise: connect.rise, rotation: connect.rotation, turn: connect.turn, tilt: connect.tilt, x: connect.x, y: connect.y };
+            Some(FillRunPlacement { key: FILL_REVALIDATE_KEY_BASE | index as u64, subject, entity: fill_run_entity(&object.id), object, attraction })
+        })
+        .collect()
+}
+
+/// 🧱️ One provisional placement of a fill run: its trace key, entity, object and attraction.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct FillRunPlacement {
+    pub(crate) key: u64,
+    pub(crate) subject: ToolRunTraceSubject,
+    pub(crate) entity: u64,
+    pub(crate) object: FixtureObject,
+    pub(crate) attraction: AttractionProps,
+}
+
+impl FillRunStage {
+    /// 🧭️ The run stage a planner stage belongs to.
+    fn of(stage: FillJobStage) -> Option<Self> {
+        match stage {
+            FillJobStage::DiscardTail => Some(Self::Retract),
+            FillJobStage::PrepareFixture | FillJobStage::PrepareCatalogs | FillJobStage::PrepareMeshes | FillJobStage::PrepareEntries | FillJobStage::PrepareSpatial | FillJobStage::PrepareLookup | FillJobStage::PrepareConfiguration => Some(Self::Prepare),
+            FillJobStage::PrepareTargets | FillJobStage::SelectTarget | FillJobStage::PrepareCandidates | FillJobStage::SelectCandidate => Some(Self::Search),
+            FillJobStage::ConstructPreview | FillJobStage::QueryBroadPhase | FillJobStage::TestCollision => Some(Self::Test),
+            FillJobStage::AcceptCandidate => Some(Self::Lock),
+            FillJobStage::Complete => None,
+        }
+    }
+}
+
+/// ⏳️ Planner transitions inside one run job step: the step's deadline and cancellation, but neither
+/// its fuel — a run job's fuel counts candidates, never transitions or collision samples — nor its job
+/// operation: the planner answers to its own `operation`, while the framework tool run ledger guards the
+/// job by run identity and generation.
+struct FillRunTransitionContext<'a, 'b> {
+    outer: &'a mut StepContext<'b>,
+    operation: Operation,
+}
+
+impl CollisionStepContext for FillRunTransitionContext<'_, '_> {
+    fn is_cancelled(&self) -> bool {
+        self.outer.is_cancelled()
+    }
+
+    fn should_yield(&self) -> bool {
+        self.outer.deadline_exceeded()
+    }
+
+    fn consume_fuel(&mut self, _units: u64) {}
+}
+
+impl FillStepContext for FillRunTransitionContext<'_, '_> {
+    fn operation(&self) -> OperationId {
+        self.operation.operation
+    }
+
+    fn generation(&self) -> Generation {
+        self.operation.generation
+    }
+
+    fn set_stage(&mut self, label: &'static str) {
+        self.outer.set_stage(label);
+    }
+
+    fn fault_payload(&mut self, bytes: &[u8]) -> RetainedJobPayload {
+        FillStepContext::fault_payload(self.outer, bytes)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum FillRunOwed {
+    Checkpoint,
+    Complete,
+}
+
+/// 🧾️ Test-only record of one verdict the run reached, with what the oracle needs to recompute it.
+#[cfg(test)]
+#[derive(Clone, Debug)]
+pub(crate) struct FillRunVerdictRecord {
+    pub(crate) key: u64,
+    pub(crate) reason: FillRunReason,
+    pub(crate) mesh_url: String,
+    pub(crate) origin: [f64; 3],
+    pub(crate) orientation: [f64; 4],
+    pub(crate) host: Option<String>,
+    pub(crate) placements_before: usize,
+}
+
+/// ⏯️ The puzzle 3d fill tool run job (`ToolRunDefinition.runJob`): drives [`FillBuilder`] and reports
+/// every constructed candidate as a `testing` trace record that turns `danger` (collision), `warning`
+/// (rule refusal) or `success` (placed); every placement appends its `create_object` +
+/// `connect_vortices` ops and entity. One unit of fuel is one candidate verdict. Ticks travel only in
+/// `PreviewReady` pages; `CheckpointReady` (after each placement) and `Complete` are returned by the
+/// call after the tick that led to them. [`FillRunJob::resume`] with a new requested count continues the
+/// same deterministic sequence (raise) or retracts the tail (lower); a job rebuilt after the framework
+/// closed its predecessor reaches that checkpoint first by a silent replay ([`FillRunJob::replaying`]).
+pub(crate) struct FillRunJob {
+    builder: FillBuilder,
+    writer: ToolRunTickWriter,
+    inputs: [u8; 32],
+    replay: Option<FillRunReplay>,
+    mesh_lane: Vec<String>,
+    mesh_index: HashMap<String, u32>,
+    events: Vec<FillRunEvent>,
+    live: Option<(u64, ToolRunTraceSubject)>,
+    next_key: u64,
+    placement_keys: Vec<(u64, ToolRunTraceSubject)>,
+    tested: u64,
+    collisions: u64,
+    rejected: u64,
+    stage: FillRunStage,
+    stall: Option<FillRunReason>,
+    settled: bool,
+    capped: bool,
+    owed: Option<FillRunOwed>,
+    progress_sequence: u64,
+    #[cfg(test)]
+    pub(crate) verdicts: Vec<FillRunVerdictRecord>,
+    #[cfg(test)]
+    live_record: Option<FillRunVerdictRecord>,
+}
+
+/// ⏪️ A rebuilt run job's silent way back to its predecessor's checkpoint: every planner transition runs,
+/// no tick leaves the job, and on arrival the writer continues from the ledger's provisional length.
+#[derive(Clone, Copy, Debug)]
+struct FillRunReplay {
+    target: FillRunCheckpoint,
+    requested: usize,
+    provisional: u32,
+}
+
+/// 🚫️ A checkpoint that does not belong to this resident run.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum FillRunResumeError {
+    Malformed,
+    Foreign,
+}
+
+impl FillRunJob {
+    /// 🎬️ Wraps a freshly begun planner; `mesh_lane` is the plugin mesh lane trace subjects index into
+    /// (a url missing from it is appended and reported through [`FillRunJob::mesh_lane`]).
+    pub(crate) fn new(builder: FillBuilder, identity: ToolRunIdentity, mesh_lane: Vec<String>, inputs: [u8; 32]) -> Self {
+        Self::with_writer(builder, ToolRunTickWriter::new(identity), mesh_lane, inputs)
+    }
+
+    /// 🔁️ A fresh run that replaces a predecessor whose sequence it cannot reproduce (other inputs or no
+    /// checkpoint): its first tick clears the trace and retracts all `provisional` ops the ledger holds.
+    pub(crate) fn restarting(builder: FillBuilder, identity: ToolRunIdentity, mesh_lane: Vec<String>, inputs: [u8; 32], provisional: u32) -> Self {
+        let mut job = Self::with_writer(builder, ToolRunTickWriter::with_provisional_base(identity, provisional), mesh_lane, inputs);
+        job.writer.clear_trace();
+        job.writer.retract_to(0);
+        job
+    }
+
+    /// ⏪️ A run rebuilt from `checkpoint` (same `inputs`): `builder` must be begun with the checkpoint's own
+    /// requested count; it replays silently to the checkpoint, retracts any `provisional` op the ledger holds
+    /// past it, and then resumes toward `requested`. A replay that overshoots the checkpoint restarts.
+    pub(crate) fn replaying(builder: FillBuilder, identity: ToolRunIdentity, mesh_lane: Vec<String>, checkpoint: FillRunCheckpoint, requested: usize, provisional: u32) -> Self {
+        let mut job = Self::with_writer(builder, ToolRunTickWriter::new(identity), mesh_lane, checkpoint.inputs);
+        job.replay = Some(FillRunReplay { target: checkpoint, requested, provisional });
+        job
+    }
+
+    fn with_writer(mut builder: FillBuilder, writer: ToolRunTickWriter, mesh_lane: Vec<String>, inputs: [u8; 32]) -> Self {
+        builder.observe_run();
+        let mesh_index = mesh_lane.iter().enumerate().map(|(index, url)| (url.clone(), index as u32)).collect();
+        Self {
+            builder,
+            writer,
+            inputs,
+            replay: None,
+            mesh_lane,
+            mesh_index,
+            events: Vec::with_capacity(4),
+            live: None,
+            next_key: 0,
+            placement_keys: Vec::new(),
+            tested: 0,
+            collisions: 0,
+            rejected: 0,
+            stage: FillRunStage::Prepare,
+            stall: None,
+            settled: false,
+            capped: false,
+            owed: None,
+            progress_sequence: 0,
+            #[cfg(test)]
+            verdicts: Vec::new(),
+            #[cfg(test)]
+            live_record: None,
+        }
+    }
+
+    pub(crate) fn builder(&self) -> &FillBuilder {
+        &self.builder
+    }
+
+    pub(crate) fn operation(&self) -> Operation {
+        self.builder.operation
+    }
+
+    pub(crate) fn identity(&self) -> ToolRunIdentity {
+        self.writer.identity()
+    }
+
+    /// 🪢️ Stamps later ticks with a new run generation.
+    pub(crate) fn rebind(&mut self, identity: ToolRunIdentity) {
+        self.writer.rebind(identity);
+    }
+
+    pub(crate) fn mesh_lane(&self) -> &[String] {
+        &self.mesh_lane
+    }
+
+    /// 📟️ `[tested, locked, collisions, rejected]`, in [`FillRunCounter::ALL`] order.
+    pub(crate) fn counters(&self) -> [u64; 4] {
+        [self.tested, self.placement_keys.len() as u64, self.collisions, self.rejected]
+    }
+
+    pub(crate) fn stage(&self) -> FillRunStage {
+        self.stage
+    }
+
+    /// 📸️ Where this run stands right now.
+    pub(crate) fn checkpoint(&self) -> FillRunCheckpoint {
+        FillRunCheckpoint { requested: self.builder.requested_count() as u64, placements: self.placement_keys.len() as u64, provisional_ops: self.writer.provisional_len(), tested: self.tested, next_key: self.next_key, inputs: self.inputs }
+    }
+
+    /// 🧱️ The provisional placements in op order, for finalize revalidation.
+    pub(crate) fn provisional_placements(&self) -> Vec<FillRunPlacement> {
+        self.placement_keys
+            .iter()
+            .zip(self.builder.appended_objects.iter().zip(&self.builder.appended_attractions))
+            .map(|((key, subject), (object, attraction))| FillRunPlacement { key: *key, subject: *subject, entity: fill_run_entity(&object.id), object: object.clone(), attraction: attraction.clone() })
+            .collect()
+    }
+
+    /// ⏩️ Resumes this resident run from one of its own checkpoints with a new requested count.
+    pub(crate) fn resume(&mut self, checkpoint: &[u8], requested: usize) -> Result<(), FillRunResumeError> {
+        let checkpoint = FillRunCheckpoint::decode(checkpoint).ok_or(FillRunResumeError::Malformed)?;
+        let current = self.checkpoint();
+        if checkpoint.inputs != self.inputs || checkpoint.next_key > current.next_key || checkpoint.tested > current.tested || checkpoint.placements > self.builder.sequence.len() as u64 {
+            return Err(FillRunResumeError::Foreign);
+        }
+        self.builder.set_requested_count(requested);
+        if self.builder.stage != FillJobStage::Complete {
+            self.settled = false;
+            self.stall = None;
+            if self.owed == Some(FillRunOwed::Complete) {
+                self.owed = None;
+            }
+        }
+        Ok(())
+    }
+
+    fn mesh(&mut self, url: &str) -> u32 {
+        if let Some(index) = self.mesh_index.get(url) {
+            return *index;
+        }
+        let index = self.mesh_lane.len() as u32;
+        self.mesh_lane.push(url.to_string());
+        self.mesh_index.insert(url.to_string(), index);
+        index
+    }
+
+    fn progress_snapshot(&mut self) -> ToolRunProgress {
+        self.progress_sequence += 1;
+        let counters = self.counters();
+        ToolRunProgress {
+            identity: self.writer.identity(),
+            sequence: self.progress_sequence,
+            state: if self.builder.stage == FillJobStage::Complete { ToolRunState::Complete } else { ToolRunState::Running },
+            stage: self.stage.index(),
+            completed: self.placement_keys.len() as u64,
+            total: Some(self.builder.requested_count() as u64),
+            counters: FillRunCounter::ALL.iter().zip(counters).map(|(counter, value)| ToolRunCounter { counter: counter.index(), value }).collect(),
+            units_per_second: 0.0,
+            conflicts: 0,
+            steps: ToolRunStepRing::default(),
+        }
+    }
+
+    fn verdict(&mut self, context: &mut StepContext<'_>, reason: FillRunReason, verdict: ToolRunVerdict, code: u16) -> Option<(u64, ToolRunTraceSubject)> {
+        let (key, subject) = self.live.take()?;
+        self.writer.upsert(key, verdict, code, subject);
+        if self.replay.is_none() {
+            context.consume_fuel(1);
+        }
+        #[cfg(test)]
+        if let Some(mut record) = self.live_record.take() {
+            record.reason = reason;
+            self.verdicts.push(record);
+        }
+        let _ = reason;
+        Some((key, subject))
+    }
+
+    fn observe(&mut self, context: &mut StepContext<'_>) -> Result<bool, &'static [u8]> {
+        self.builder.swap_run_events(&mut self.events);
+        let events = std::mem::take(&mut self.events);
+        let mut accepted = false;
+        for event in &events {
+            match event {
+                FillRunEvent::Constructed { mesh_url, origin, orientation, scale } => {
+                    let key = self.next_key;
+                    self.next_key += 1;
+                    self.tested += 1;
+                    let subject = ToolRunTraceSubject::Instance3d { mesh: self.mesh(mesh_url), position: origin.map(|value| value as f32), rotation: orientation.map(|value| value as f32), scale: *scale };
+                    self.writer.upsert(key, ToolRunVerdict::Testing, FillRunReason::Fits.code(), subject);
+                    self.live = Some((key, subject));
+                    #[cfg(test)]
+                    {
+                        self.live_record = Some(FillRunVerdictRecord { key, reason: FillRunReason::Fits, mesh_url: mesh_url.clone(), origin: *origin, orientation: *orientation, host: self.builder.current_target.as_ref().map(|target| target.object_id.clone()), placements_before: self.builder.sequence.len() });
+                    }
+                }
+                FillRunEvent::Refused(reason) => {
+                    if self.verdict(context, *reason, reason.verdict(), reason.code()).is_some() {
+                        if *reason == FillRunReason::SolidOverlap {
+                            self.collisions += 1;
+                        } else {
+                            self.rejected += 1;
+                        }
+                    }
+                }
+                FillRunEvent::Accepted => {
+                    let (Some(object), Some(attraction)) = (self.builder.appended_objects.last(), self.builder.appended_attractions.last()) else {
+                        return Err(b"fill-run-placement-missing");
+                    };
+                    let Some(ops) = fill_run_ops(object, attraction) else {
+                        return Err(b"fill-run-op-encode");
+                    };
+                    let entity = fill_run_entity(&object.id);
+                    if self.writer.provisional_len() + FILL_RUN_OPS_PER_PLACEMENT > TOOL_RUN_PROVISIONAL_OPS_MAX {
+                        let _ = self.verdict(context, FillRunReason::Rejected, ToolRunVerdict::Warning, TOOL_RUN_REASON_PROVISIONAL_CAP);
+                        self.rejected += 1;
+                        self.capped = true;
+                        let _ = self.writer.step(ToolRunStepKind::Warning, self.stage.index(), TOOL_RUN_REASON_PROVISIONAL_CAP, None, &[ToolRunStepArg::Unsigned(u64::from(TOOL_RUN_PROVISIONAL_OPS_MAX))]);
+                        self.builder.set_requested_count(self.builder.sequence.len().saturating_sub(1));
+                        continue;
+                    }
+                    let Some(placement) = self.verdict(context, FillRunReason::Fits, ToolRunVerdict::Success, FillRunReason::Fits.code()) else {
+                        return Err(b"fill-run-placement-untested");
+                    };
+                    let [create, connect] = ops;
+                    if self.writer.append_op(create).and_then(|()| self.writer.append_op(connect)).is_err() {
+                        return Err(b"fill-run-provisional-ops");
+                    }
+                    self.writer.append_entity(entity);
+                    self.placement_keys.push(placement);
+                    accepted = true;
+                }
+                FillRunEvent::Abandoned => {
+                    if let Some((key, _)) = self.live.take() {
+                        self.writer.retire(key);
+                    }
+                    #[cfg(test)]
+                    {
+                        self.live_record = None;
+                    }
+                }
+                FillRunEvent::Stalled(reason) => self.stall = Some(*reason),
+                FillRunEvent::Discarded => {
+                    while self.placement_keys.len() > self.builder.sequence.len() {
+                        if let Some((key, _)) = self.placement_keys.pop() {
+                            self.writer.retire(key);
+                        }
+                    }
+                    self.writer.retract_to(self.placement_keys.len() as u32 * FILL_RUN_OPS_PER_PLACEMENT);
+                    let _ = self.writer.step(ToolRunStepKind::Info, FillRunStage::Retract.index(), FillRunReason::Retracted.code(), None, &[]);
+                }
+            }
+        }
+        self.events = events;
+        if let Some(stage) = FillRunStage::of(self.builder.stage) {
+            self.stage = stage;
+        }
+        Ok(accepted)
+    }
+
+    fn settle(&mut self) {
+        if std::mem::replace(&mut self.settled, true) {
+            return;
+        }
+        let placed = [ToolRunStepArg::Unsigned(self.placement_keys.len() as u64)];
+        let _ = match (self.stall, self.capped) {
+            (Some(reason), _) => self.writer.step(ToolRunStepKind::Warning, self.stage.index(), reason.code(), None, &placed),
+            (None, false) => self.writer.step(ToolRunStepKind::Success, self.stage.index(), FillRunReason::RequestedReached.code(), None, &placed),
+            (None, true) => Ok(()),
+        };
+    }
+
+    fn flush(&mut self, context: &mut StepContext<'_>) -> Option<StepOutcome> {
+        if self.writer.is_empty() {
+            return None;
+        }
+        let progress = self.progress_snapshot();
+        self.writer.progress(progress);
+        let bytes = self.writer.finish()?.encode().ok();
+        let page = bytes.as_deref().map(|bytes| context.payload_from_bytes(JobPayloadStream::Preview, bytes));
+        Some(match page {
+            Some(Ok(payload)) => StepOutcome::PreviewReady(payload),
+            Some(Err(rejected)) => {
+                drop(rejected.into_source());
+                StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) })
+            }
+            None => StepOutcome::Fault(JobFault { detail: FillStepContext::fault_payload(context, b"fill-run-tick-encode") }),
+        })
+    }
+
+    fn flush_then(&mut self, context: &mut StepContext<'_>, owed: FillRunOwed) -> StepOutcome {
+        match self.flush(context) {
+            Some(preview @ StepOutcome::PreviewReady(_)) => {
+                self.owed = Some(owed);
+                preview
+            }
+            Some(fault) => fault,
+            None => self.settle_owed(context, owed),
+        }
+    }
+
+    fn settle_owed(&mut self, context: &mut StepContext<'_>, owed: FillRunOwed) -> StepOutcome {
+        match owed {
+            FillRunOwed::Complete => self.builder.complete(),
+            FillRunOwed::Checkpoint => match context.payload_from_bytes(JobPayloadStream::CheckpointState, &self.checkpoint().encode()) {
+                Ok(state) => StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state, applied_progress: self.placement_keys.len() as u64 }),
+                Err(rejected) => {
+                    drop(rejected.into_source());
+                    StepOutcome::Yield
+                }
+            },
+        }
+    }
+}
+
+impl FillRunJob {
+    /// ⏪️ Where a replay stands after one observed transition: arrived at its checkpoint (the writer now
+    /// continues from the ledger's provisional length and the run resumes toward the requested count),
+    /// overshot it (a restart over the ledger's provisional ops), or still on its way (pending bytes are
+    /// dropped, never flushed).
+    fn settle_replay(&mut self) {
+        let Some(replay) = self.replay else { return };
+        let target = replay.target;
+        let placements = self.placement_keys.len() as u64;
+        if placements == target.placements && self.tested == target.tested && self.next_key == target.next_key && self.writer.provisional_len() == target.provisional_ops {
+            self.replay = None;
+            self.writer = ToolRunTickWriter::with_provisional_base(self.writer.identity(), replay.provisional);
+            if replay.provisional > target.provisional_ops {
+                self.writer.retract_to(target.provisional_ops);
+            }
+            self.builder.set_requested_count(replay.requested);
+            self.settled = false;
+            self.stall = None;
+            return;
+        }
+        if placements > target.placements || self.tested > target.tested || self.next_key > target.next_key || self.builder.stage == FillJobStage::Complete {
+            self.replay = None;
+            self.writer = ToolRunTickWriter::with_provisional_base(self.writer.identity(), replay.provisional);
+            self.writer.clear_trace();
+            self.writer.retract_to(0);
+            return;
+        }
+        if self.writer.pending_bytes() >= FILL_RUN_TICK_FLUSH_BYTES {
+            let _ = self.writer.finish();
+        }
+    }
+}
+
+impl InteractiveJob for FillRunJob {
+    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+        if context.is_cancelled() {
+            return StepOutcome::Cancelled;
+        }
+        if let Some(owed) = self.owed.take() {
+            return self.settle_owed(context, owed);
+        }
+        loop {
+            if let Some(outcome) = self.builder.capacity_outcome(context, Some(&mut self.writer)) {
+                return match outcome {
+                    StepOutcome::Yield => self.flush(context).unwrap_or(StepOutcome::Yield),
+                    outcome => outcome,
+                };
+            }
+            if self.replay.is_none() && self.builder.stage == FillJobStage::Complete {
+                self.settle();
+                return self.flush_then(context, FillRunOwed::Complete);
+            }
+            if context.deadline_exceeded() || (self.replay.is_none() && (context.fuel_exhausted() || self.writer.pending_bytes() >= FILL_RUN_TICK_FLUSH_BYTES)) {
+                return if self.replay.is_some() { StepOutcome::Yield } else { self.flush(context).unwrap_or(StepOutcome::Yield) };
+            }
+            let operation = self.builder.operation;
+            let outcome = self.builder.advance(&mut FillRunTransitionContext { outer: context, operation });
+            let accepted = match self.observe(context) {
+                Ok(accepted) => accepted,
+                Err(detail) => {
+                    drop(outcome);
+                    return StepOutcome::Fault(JobFault { detail: FillStepContext::fault_payload(context, detail) });
+                }
+            };
+            match outcome {
+                StepOutcome::Cancelled => return StepOutcome::Cancelled,
+                fault @ StepOutcome::Fault(_) => return fault,
+                _ => {}
+            }
+            if self.replay.is_some() {
+                self.settle_replay();
+                continue;
+            }
+            if accepted {
+                return self.flush_then(context, FillRunOwed::Checkpoint);
+            }
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.builder.begin_close();
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        self.builder.close_step(maximum_items, maximum_bytes)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.builder.terminal_is_empty()
+    }
+}
+
+/// 🔍️ Where a finalize revalidation stands.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum FillRevalidatePhase {
+    PrepareHead,
+    Placement,
+    Finish,
+    Done,
+}
+
+/// 🔍️ The fill tool run revalidation job (`ToolRunDefinition.revalidateJob`): re-tests every provisional
+/// placement against the head document — its host vortex must still exist, its id must be free and its
+/// body must not overlap a head object beyond the head's overlap budget. Each placement is one unit of
+/// fuel and ends as a `success` (`fits`) or `danger` (`TOOL_RUN_REASON_CONFLICT`) trace record. The last
+/// tick retracts to the first conflict and re-appends every later survivor's ops and entity, with one
+/// `danger` conflict step carrying the conflict count; `Complete` follows on the next call.
+pub(crate) struct FillRevalidateJob {
+    operation: Operation,
+    identity: ToolRunIdentity,
+    scene: Arc<SceneConfig>,
+    meshes: Arc<HashMap<String, CollisionBody>>,
+    placements: Vec<FillRunPlacement>,
+    head: Vec<PlacedCollisionEntry>,
+    head_ids: std::collections::HashSet<String>,
+    vortex_owners: HashMap<String, String>,
+    head_cursor: usize,
+    pair_cursor: usize,
+    collision: Option<CollisionOverlapState>,
+    conflicts: Vec<bool>,
+    cursor: usize,
+    phase: FillRevalidatePhase,
+    ops: Vec<ToolRunTraceOp>,
+    steps: Vec<ToolRunStep>,
+    sequence: u64,
+    page: u32,
+    closed: bool,
+}
+
+impl FillRevalidateJob {
+    pub(crate) fn new(operation: Operation, identity: ToolRunIdentity, head: FillPreparationRoots, placements: Vec<FillRunPlacement>, first_sequence: u64) -> Self {
+        Self {
+            operation,
+            identity,
+            scene: head.scene,
+            meshes: head.meshes,
+            conflicts: Vec::with_capacity(placements.len()),
+            placements,
+            head: Vec::new(),
+            head_ids: std::collections::HashSet::new(),
+            vortex_owners: HashMap::new(),
+            head_cursor: 0,
+            pair_cursor: 0,
+            collision: None,
+            cursor: 0,
+            phase: FillRevalidatePhase::PrepareHead,
+            ops: Vec::new(),
+            steps: Vec::new(),
+            sequence: first_sequence,
+            page: 0,
+            closed: false,
+        }
+    }
+
+    /// ⚖️ `true` per placement that conflicts with the head, in op order.
+    pub(crate) fn conflicts(&self) -> &[bool] {
+        &self.conflicts
+    }
+
+    fn prepare_head_one(&mut self) {
+        let Some(object) = self.scene.fixture.objects.get(self.head_cursor) else {
+            self.phase = FillRevalidatePhase::Placement;
+            return;
+        };
+        self.head_cursor += 1;
+        self.head_ids.insert(object.id.clone());
+        for vortex in &object.vortices {
+            self.vortex_owners.insert(puzzle3d_vortex_full_id(&object.id, &vortex.id), object.id.clone());
+        }
+        let mesh_url = match self.scene.kind_catalogs.as_ref() {
+            Some(catalogs) => resolve_object_kind_mesh_url(object.object_kind.as_deref().unwrap_or(""), catalogs, &self.scene.fixture),
+            None => object.mesh_url.clone(),
+        };
+        if let Some(mesh_url) = mesh_url.filter(|url| self.meshes.contains_key(url)) {
+            self.head.push(PlacedCollisionEntry { object_id: object.id.clone(), mesh_url, world: pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale) });
+        }
+    }
+
+    fn host_of(&self, index: usize) -> Option<String> {
+        let attracting = &self.placements[index].attraction.attracting;
+        self.vortex_owners.get(attracting).cloned().or_else(|| {
+            self.placements[..index].iter().zip(&self.conflicts).filter(|(_, conflict)| !**conflict).find(|(placement, _)| placement.object.vortices.iter().any(|vortex| puzzle3d_vortex_full_id(&placement.object.id, &vortex.id) == *attracting)).map(|(placement, _)| placement.object.id.clone())
+        })
+    }
+
+    /// ⚖️ One bounded unit of the current placement's test: `Some(conflict)` once it is decided.
+    fn test_placement_unit(&mut self, context: &mut StepContext<'_>) -> Option<bool> {
+        let index = self.cursor;
+        let placement = &self.placements[index];
+        if self.pair_cursor == 0 && self.collision.is_none() {
+            if self.head_ids.contains(&placement.object.id) {
+                return Some(true);
+            }
+            if self.host_of(index).is_none() {
+                return Some(true);
+            }
+        }
+        let placement = &self.placements[index];
+        let host = self.vortex_owners.get(&placement.attraction.attracting);
+        let Some(body) = placement.object.mesh_url.as_ref().and_then(|url| self.meshes.get(url)) else {
+            return Some(false);
+        };
+        let world = pose_isometry(placement.object.origin, placement.object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &placement.object.scale);
+        let Some(entry) = self.head.get(self.pair_cursor) else {
+            return Some(false);
+        };
+        if host == Some(&entry.object_id) {
+            self.pair_cursor += 1;
+            return None;
+        }
+        let Some(other) = self.meshes.get(&entry.mesh_url) else {
+            self.pair_cursor += 1;
+            return None;
+        };
+        if self.collision.is_none() {
+            if !CollisionAabb::from_body(other, &entry.world).intersects(&CollisionAabb::from_body(body, &world)) {
+                self.pair_cursor += 1;
+                return None;
+            }
+        }
+        let budget = self.scene.overlap_budget;
+        let collision = self.collision.get_or_insert_with(|| CollisionOverlapState::new(512, 8, budget));
+        match collision.step(&mut FillRunTransitionContext { outer: context, operation: self.operation }, body, &world, other, &entry.world) {
+            CollisionStepResult::Pending | CollisionStepResult::Cancelled => None,
+            CollisionStepResult::Complete { overlap, .. } => {
+                self.collision = None;
+                self.pair_cursor += 1;
+                (overlap > budget).then_some(true)
+            }
+        }
+    }
+
+    fn flush(&mut self, context: &mut StepContext<'_>, final_ops: Option<(u32, Vec<Vec<u8>>, Vec<u64>)>) -> StepOutcome {
+        let (retract_to, append_ops, append_entities) = match final_ops {
+            Some((retract_to, ops, entities)) => (Some(retract_to), ops, entities),
+            None => (None, Vec::new(), Vec::new()),
+        };
+        let trace = if self.ops.is_empty() { Vec::new() } else { vec![ToolRunTracePage { identity: self.identity, page: self.page, ops: std::mem::take(&mut self.ops) }] };
+        self.page += u32::from(!trace.is_empty());
+        let conflicts = self.conflicts.iter().filter(|conflict| **conflict).count() as u64;
+        let progress = ToolRunProgress {
+            identity: self.identity,
+            sequence: self.sequence,
+            state: ToolRunState::Finalizing,
+            stage: FillRunStage::Lock.index(),
+            completed: self.conflicts.len() as u64,
+            total: Some(self.placements.len() as u64),
+            counters: vec![ToolRunCounter { counter: FillRunCounter::Collisions.index(), value: conflicts }],
+            units_per_second: 0.0,
+            conflicts: conflicts as u32,
+            steps: ToolRunStepRing::default(),
+        };
+        let tick = ToolRunTick { identity: self.identity, sequence: self.sequence, progress: Some(progress), steps: std::mem::take(&mut self.steps), trace, append_ops, append_entities, retract_to };
+        self.sequence += 1;
+        match tick.encode().ok().map(|bytes| context.payload_from_bytes(JobPayloadStream::Preview, &bytes)) {
+            Some(Ok(payload)) => StepOutcome::PreviewReady(payload),
+            Some(Err(rejected)) => {
+                drop(rejected.into_source());
+                StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) })
+            }
+            None => StepOutcome::Fault(JobFault { detail: FillStepContext::fault_payload(context, b"fill-revalidate-tick-encode") }),
+        }
+    }
+
+    fn finish(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+        self.phase = FillRevalidatePhase::Done;
+        let Some(first) = self.conflicts.iter().position(|conflict| *conflict) else {
+            return self.flush(context, None);
+        };
+        let mut ops = Vec::new();
+        let mut entities = Vec::new();
+        for (placement, _) in self.placements.iter().zip(&self.conflicts).skip(first).filter(|(_, conflict)| !**conflict) {
+            let Some([create, connect]) = fill_run_ops(&placement.object, &placement.attraction) else {
+                return StepOutcome::Fault(JobFault { detail: FillStepContext::fault_payload(context, b"fill-revalidate-op-encode") });
+            };
+            ops.extend([create, connect]);
+            entities.push(placement.entity);
+        }
+        let conflicts = self.conflicts.iter().filter(|conflict| **conflict).count() as u64;
+        self.steps.push(ToolRunStep { sequence: 0, kind: ToolRunStepKind::Danger, stage: FillRunStage::Lock.index(), reason: TOOL_RUN_REASON_CONFLICT, subject: None, repeat: 1, args: vec![ToolRunStepArg::Unsigned(conflicts)] });
+        self.flush(context, Some((first as u32 * FILL_RUN_OPS_PER_PLACEMENT, ops, entities)))
+    }
+}
+
+impl InteractiveJob for FillRevalidateJob {
+    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+        if context.is_cancelled() {
+            return StepOutcome::Cancelled;
+        }
+        loop {
+            match self.phase {
+                FillRevalidatePhase::Done => {
+                    return StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) });
+                }
+                FillRevalidatePhase::Finish => return self.finish(context),
+                _ if context.fuel_exhausted() || context.deadline_exceeded() => {
+                    return if self.ops.is_empty() { StepOutcome::Yield } else { self.flush(context, None) };
+                }
+                FillRevalidatePhase::PrepareHead => self.prepare_head_one(),
+                FillRevalidatePhase::Placement => {
+                    let Some(placement) = self.placements.get(self.cursor) else {
+                        self.phase = FillRevalidatePhase::Finish;
+                        continue;
+                    };
+                    let (key, subject) = (placement.key, placement.subject);
+                    if self.pair_cursor == 0 && self.collision.is_none() {
+                        self.ops.push(ToolRunTraceOp::Upsert { key, verdict: ToolRunVerdict::Testing, reason: FillRunReason::Fits.code(), subject });
+                    }
+                    if let Some(conflict) = self.test_placement_unit(context) {
+                        let (verdict, reason) = if conflict { (ToolRunVerdict::Danger, TOOL_RUN_REASON_CONFLICT) } else { (ToolRunVerdict::Success, FillRunReason::Fits.code()) };
+                        self.ops.push(ToolRunTraceOp::Upsert { key, verdict, reason, subject });
+                        self.conflicts.push(conflict);
+                        self.cursor += 1;
+                        self.pair_cursor = 0;
+                        self.collision = None;
+                        context.consume_fuel(1);
+                    }
+                }
+            }
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.closed = true;
+    }
+
+    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        self.closed = true;
+        self.placements = Vec::new();
+        self.head = Vec::new();
+        self.head_ids = std::collections::HashSet::new();
+        self.vortex_owners = HashMap::new();
+        self.collision = None;
+        self.ops = Vec::new();
+        self.steps = Vec::new();
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closed && self.placements.is_empty() && self.head.is_empty() && self.ops.is_empty()
+    }
+}
+//#endregion ⏯️FillRunJob
 
 //#region 🧪️Tests
 #[cfg(test)]

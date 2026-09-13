@@ -100,6 +100,24 @@ export type ArtifactPresencePeer = {
   readonly views: readonly ArtifactPresenceWindowView[];
   /** 🖱️ Live `data-ui-path` hover/focus/press state (bit 9, APP scope). */
   readonly ui?: ArtifactPresenceUi;
+  /** ⏯️ Summary of this peer's tool run (bit 10, ARTIFACT scope), never provisional geometry. */
+  readonly toolRun?: ArtifactPresenceToolRun;
+};
+
+/** ⏳️ Twin of Rust `PresenceToolRunState`: the `ToolRunState` wire spelling (tool run contract §2.2) in binary tag order.
+ * Duplicated because the tool run module layers above replication. */
+export const PRESENCE_TOOL_RUN_STATES = Object.freeze(["starting", "running", "paused", "complete", "finalizing", "finalized", "aborting", "aborted", "faulted"] as const);
+
+/** 🔤️ One `ToolRunState` wire name. */
+export type ArtifactPresenceToolRunState = (typeof PRESENCE_TOOL_RUN_STATES)[number];
+
+/** 📶️ Twin of Rust `PresenceToolRun`: `total` absent means indeterminate and `completed <= total` otherwise. */
+export type ArtifactPresenceToolRun = {
+  readonly toolId: string;
+  readonly state: ArtifactPresenceToolRunState;
+  readonly stage: number;
+  readonly completed: number;
+  readonly total?: number;
 };
 
 /** 🪟️ Twin of Rust `PresenceWindowView`. */
@@ -371,7 +389,7 @@ export function readVecBytes(bytes: Uint8Array, pos: [number]): number[][] {
 
 /** 🎯️ `actor str | flags varint_u64 | connected_at_ms varint | fields present per bitmask, strictly
  * in bit order (label str? | presence_pack bytes? | user_id str? | role str? | drag_ghost_json str? |
- * interaction? | color u8? | surface str? | views? | ui?)` — the TS twin of Rust
+ * interaction? | color u8? | surface str? | views? | ui? | tool_run?)` — the TS twin of Rust
  * `encode_presence_peer` (`📡️wire/🦀️.rs`). This is what `ClientFrame::Presence.peer`/
  * `ServerFrame::Presence.peers[]` actually carry — real binary, not JSON bytes. `flags` is a varint
  * (not a single byte) now that bit 9 exceeds a byte's range. */
@@ -398,6 +416,7 @@ export function encodePresencePeer(peer: ArtifactPresencePeer): number[] {
   if (presencePresent(peer.surface)) flags |= 1 << 7;
   if (peer.views.length > 0) flags |= 1 << 8;
   if (presencePresent(peer.ui)) flags |= 1 << 9;
+  if (presencePresent(peer.toolRun)) flags |= 1 << 10;
   writeVarintU64(out, flags);
   writeVarintU64(out, peer.connectedAtMs ?? 0);
   if (presencePresent(peer.label)) writeStr(out, peer.label);
@@ -410,7 +429,19 @@ export function encodePresencePeer(peer: ArtifactPresencePeer): number[] {
   if (presencePresent(peer.surface)) writeStr(out, peer.surface);
   if (peer.views.length > 0) writeVecPresenceWindowView(out, peer.views);
   if (presencePresent(peer.ui)) writePresenceUi(out, peer.ui);
+  if (presencePresent(peer.toolRun)) writePresenceToolRun(out, peer.toolRun);
   return out;
+}
+
+function writePresenceToolRun(out: number[], toolRun: ArtifactPresenceToolRun): void {
+  const tag = PRESENCE_TOOL_RUN_STATES.indexOf(toolRun.state);
+  if (tag < 0) throw new Error(`presence tool run state: unknown ${toolRun.state}`);
+  writeStr(out, toolRun.toolId);
+  out.push(tag);
+  writeVarintU64(out, toolRun.stage);
+  writeVarintU64(out, toolRun.completed);
+  out.push(presencePresent(toolRun.total) ? 1 : 0);
+  if (presencePresent(toolRun.total)) writeVarintU64(out, toolRun.total);
 }
 
 /** 🛡️ Fixed hostile-input ceilings shared byte-for-byte with Rust. */
@@ -422,6 +453,7 @@ export const PRESENCE_PEER_WIRE_LIMITS_V1 = Object.freeze({
   maximumInteractionDomains: 16,
   maximumDomainIds: 64,
   maximumConnectedAtMs: Number.MAX_SAFE_INTEGER,
+  maximumToolRunUnits: Number.MAX_SAFE_INTEGER,
 });
 
 class PresencePeerReader {
@@ -551,6 +583,25 @@ class PresencePeerReader {
     return this.boolean(what) ? this.text(what) : undefined;
   }
 
+  toolRunUnits(what: string): number {
+    const value = this.varint(what);
+    if (value > PRESENCE_PEER_WIRE_LIMITS_V1.maximumToolRunUnits) this.fail(what, "limit exceeded");
+    return value;
+  }
+
+  toolRun(): ArtifactPresenceToolRun {
+    const toolId = this.text("presence tool run id");
+    const tag = this.byte("presence tool run state");
+    const state = PRESENCE_TOOL_RUN_STATES[tag];
+    if (state === undefined) this.fail("presence tool run state", `unknown tag ${tag}`);
+    const stage = this.varint("presence tool run stage");
+    if (stage > 0xffff) this.fail("presence tool run stage", "limit exceeded");
+    const completed = this.toolRunUnits("presence tool run completed");
+    const total = this.boolean("presence tool run total") ? this.toolRunUnits("presence tool run total") : undefined;
+    if (total !== undefined && completed > total) this.fail("presence tool run completed", "completed exceeds total");
+    return { toolId, state, stage, completed, total };
+  }
+
   ui(): ArtifactPresenceUi {
     return { hoveredPath: this.optionalText("presence ui hovered path"), focusedPath: this.optionalText("presence ui focused path"), pressedPath: this.optionalText("presence ui pressed path") };
   }
@@ -563,7 +614,7 @@ export function decodePresencePeer(bytes: Uint8Array, pos: [number]): ArtifactPr
   const reader = new PresencePeerReader(bytes, pos[0]);
   const actor = reader.text("presence peer actor");
   const flags = reader.varint("presence peer flags");
-  if (flags > 0x3ff) reader.fail("presence peer flags", `unknown flag bits set: ${flags.toString(16)}`);
+  if (flags > 0x7ff) reader.fail("presence peer flags", `unknown flag bits set: ${flags.toString(16)}`);
   const connectedAtMs = reader.varint("presence peer connected at");
   if (connectedAtMs > PRESENCE_PEER_WIRE_LIMITS_V1.maximumConnectedAtMs) reader.fail("presence peer connected at", "limit exceeded");
   const label = flags & (1 << 0) ? reader.text("presence peer label") : undefined;
@@ -576,9 +627,27 @@ export function decodePresencePeer(bytes: Uint8Array, pos: [number]): ArtifactPr
   const surface = flags & (1 << 7) ? reader.text("presence peer surface") : undefined;
   const views = flags & (1 << 8) ? reader.views() : [];
   const ui = flags & (1 << 9) ? reader.ui() : undefined;
+  const toolRun = flags & (1 << 10) ? reader.toolRun() : undefined;
   if (reader.position !== bytes.length) reader.fail("presence peer", "trailing bytes");
   pos[0] = reader.position;
-  return { actor, connectedAtMs, label, presencePack, userId, role, dragGhostJson, interaction, color, surface, views, ui };
+  return { actor, connectedAtMs, label, presencePack, userId, role, dragGhostJson, interaction, color, surface, views, ui, toolRun };
+}
+
+/** ⏯️ Twin of Rust `encode_presence_tool_run`: the standalone tool run summary body a guest's
+ * `AppFrame::Ephemeral.tool_run` carries, byte-identical to a peer's flag-bit-10 section. */
+export function encodePresenceToolRun(toolRun: ArtifactPresenceToolRun): number[] {
+  const out: number[] = [];
+  writePresenceToolRun(out, toolRun);
+  return out;
+}
+
+/** 🎞️ Twin of Rust `decode_presence_tool_run`: the peer decoder's limits over a standalone body, no trailing bytes. */
+export function decodePresenceToolRun(bytes: Uint8Array): ArtifactPresenceToolRun {
+  if (bytes.length > PRESENCE_PEER_WIRE_LIMITS_V1.maximumEntryBytes) throw new Error("presence tool run bytes: limit exceeded");
+  const reader = new PresencePeerReader(bytes, 0);
+  const toolRun = reader.toolRun();
+  if (reader.position !== bytes.length) reader.fail("presence tool run", "trailing bytes");
+  return toolRun;
 }
 
 /** 🎞️ One raw byte — the TS twin of `protocol_core::read_u8`-shaped inline reads. */

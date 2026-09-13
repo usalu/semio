@@ -633,6 +633,7 @@ impl BrowserRendererBootstrap {
             draw: DrawList::default(),
             overlay: DrawList::default(),
             pending_frame_deferred: None,
+            frame_actions: crate::FrameActionOwners::default(),
         });
         let token = OffscreenPresentToken::mint_for_dedicated_worker().map_err(|error| js_error("worker-capability", error))?;
         let presenter = AppPresenter {

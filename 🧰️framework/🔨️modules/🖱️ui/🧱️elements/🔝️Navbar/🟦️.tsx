@@ -10,7 +10,7 @@ import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { shellFloorPaints, shellFloorFillClass } from "../../🔨️modules/🏠️shell-floor-presentation/🟦️.ts";
 import { useSurface, SurfaceScope, getLevelZClass } from "../🌈️Surface/🟦️.tsx";
-import { NavbarTrailingFullscreenSlot } from "../../🎯️targets/⚛️react/🟦️";
+import { NavbarTrailingChromeSlot } from "../../🎯️targets/⚛️react/🟦️";
 // #endregion 🔌️Adapters
 
 // #region 🩺️Navbar
@@ -36,6 +36,8 @@ export interface NavbarProps {
   className?: string;
   showFullscreenToggle?: boolean;
   onFullscreenToggle?: () => void;
+  /** @emoji 💬 Chrome parked immediately left of the fullscreen control (e.g. chat panel toggle). */
+  trailingBeforeFullscreen?: React.ReactNode;
 }
 
 /**
@@ -48,7 +50,7 @@ export interface NavbarProps {
  * `z-index: var(--z-base) !important` here; this class said `z-navbar` and was simply never the truth —
  * a contradiction that cost ticket 26/09/02 three waves of "the navbar covers the catalogue".
  **/
-function Navbar({ items, className, showFullscreenToggle = true, onFullscreenToggle }: NavbarProps) {
+function Navbar({ items, className, showFullscreenToggle = true, onFullscreenToggle, trailingBeforeFullscreen }: NavbarProps) {
   const parent = useSurface();
   const paints = shellFloorPaints(parent);
   const bgClass = shellFloorFillClass(parent);
@@ -62,7 +64,9 @@ function Navbar({ items, className, showFullscreenToggle = true, onFullscreenTog
             {item.content}
           </div>
         ))}
-        {showFullscreenToggle ? <NavbarTrailingFullscreenSlot onToggle={onFullscreenToggle} /> : null}
+        {showFullscreenToggle || trailingBeforeFullscreen ? (
+          <NavbarTrailingChromeSlot beforeFullscreen={trailingBeforeFullscreen} showFullscreenToggle={showFullscreenToggle} onFullscreenToggle={onFullscreenToggle} />
+        ) : null}
       </div>
       {centeredItems.map((item, index) => (
         <div key={item.key ?? index} className="pointer-events-none absolute inset-0 flex items-center justify-center">

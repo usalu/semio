@@ -68,15 +68,18 @@ fn retained_resident_permit_preserves_existing_capacity_and_paired_final_return(
         close(owner);
     }
     assert_eq!(UiResidentPermit::snapshot().unwrap(), empty_snapshot());
+    assert_eq!(UI_RESIDENT_DOCUMENT_BYTES, data["documentBytes"].as_u64().unwrap() as usize);
+    assert_eq!(UI_RESIDENT_AGGREGATE_BYTES, data["aggregateBytes"].as_u64().unwrap() as usize);
+    assert_eq!(UI_RESIDENT_SLOTS * UI_RESIDENT_DOCUMENT_BYTES, UI_RESIDENT_AGGREGATE_BYTES, "the aggregate must fund every slot the ledger admits at one full document each");
     let mut remaining = UI_RESIDENT_AGGREGATE_BYTES - empty_snapshot().bytes;
-    let mut full = (0..4)
-        .map(|_| {
-            let bytes = remaining.min(UI_RESIDENT_SURFACE_BYTES);
-            remaining -= bytes;
-            reserve(1, bytes)
-        })
-        .collect::<Vec<_>>();
+    let mut full = std::iter::from_fn(|| (remaining > 0).then(|| {
+        let bytes = remaining.min(UI_RESIDENT_SURFACE_BYTES);
+        remaining -= bytes;
+        reserve(1, bytes)
+    }))
+    .collect::<Vec<_>>();
     assert_eq!(remaining, 0);
+    assert!(full.len() <= UI_RESIDENT_SLOTS, "filling the aggregate at the per-surface ceiling must not need more slots than the ledger has: {}", full.len());
     assert_eq!(UiResidentPermit::snapshot().unwrap().bytes, UI_RESIDENT_AGGREGATE_BYTES);
     let mut rejected = None;
     assert_eq!(UiResidentPermit::try_reserve(UiResidentLimits { items: 1, bytes: 1 }, &mut rejected, 32768), Err(UiResidentFault::Capacity));
@@ -99,7 +102,7 @@ fn retained_resident_permit_preserves_existing_capacity_and_paired_final_return(
     }
     close(&mut reused);
     assert_eq!(UiResidentPermit::snapshot().unwrap(), empty_snapshot());
-    eprintln!("[DEBUG] resident-permit small=9 slots=64 aggregate=33554432 paired-return=0,65536 explicit-close-drop-does-not-return-again=true");
+    eprintln!("[DEBUG] resident-permit small=9 slots={UI_RESIDENT_SLOTS} document={UI_RESIDENT_DOCUMENT_BYTES} aggregate={UI_RESIDENT_AGGREGATE_BYTES} paired-return=0,65536 explicit-close-drop-does-not-return-again=true");
 }
 
 #[test]

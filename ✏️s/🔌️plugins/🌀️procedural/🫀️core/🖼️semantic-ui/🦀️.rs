@@ -79,6 +79,24 @@ pub(crate) fn accessible_scene_surface<T: semio_framework_ui::wgpu::SceneDoc>(
     Ok(node)
 }
 
+/// ⏎️ Gives a scene surface the `Trigger::Activate` binding its `role="application"` promises.
+///
+/// A canvas that announces itself as an application is telling assistive technology "I handle my own
+/// Enter/Space" — and the React interpreter's `SurfaceAccessibilityShell` only installs its
+/// `onKeyDown` when the record actually carries an activate binding, so without this the promise is
+/// unkept and Enter does nothing. `shortcut` is what reaches the reader as `aria-keyshortcuts`, which
+/// is the only way a user who cannot see the canvas learns the chord exists.
+///
+/// @see ../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🟦️.tsx
+pub(crate) fn activatable_scene_surface(mut node: BuiltNode, controller_id: &'static str, action: &str, shortcut: &str) -> UiAssemblyResult<BuiltNode> {
+    let (action_id, _) = ActionFactory::new(controller_id).action(action, None)?;
+    node.bindings
+        .try_push(semio_framework_ui_contract::ActionBinding { trigger: Trigger::Activate, action: action_id, args: None, capability: None })
+        .map_err(|_| ui_assembly_error("ui.surface.activate-binding"))?;
+    node.accessibility.shortcut = semio_framework_ui_contract::UiText::try_from_str(shortcut);
+    Ok(node)
+}
+
 /// 🖊️ The SELECTED generation's inline name editor: a text `input` seeded with the current name
 /// whose `Trigger::Commit` (Enter / blur — `InputProps::commit == "blur"`) dispatches
 /// `renameGeneration{id}`, the typed text arriving as the framework's scalar `value` argument

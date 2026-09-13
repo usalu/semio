@@ -1,0 +1,86 @@
+{
+  "format": "semio.ui.styling.appearance-boot",
+  "version": 1,
+  "note": "🌓️ What the pre-paint appearance bootstrap must resolve, stated once and answered twice. The head's inline `<script>` runs BEFORE any module is fetched, so the appearance it resolves is the one the very first painted frame uses — resolve it wrong and a dark session flashes light on every reload. `storageKey`/`preferenceKey` name the ONE durable document the OS shell writes (`OS_SHELL_CONFIG_STORAGE_KEY`, `UI_PREFERENCES_CONFIG_SCHEMA`); `events` is the append-only UI-preference log exactly as `commitUiPreferencesConfigMutation` persists it, so a case is a replay, never a state blob. `deadKeys` names storage keys the bootstrap must NOT read: they were written by a shell generation that no longer exists, and reading one is how the regression this fixture closes happened in the first place. The TypeScript half EXECUTES the shipped script string in a DOM-less sandbox; the Rust half replays the same events through the OS config projection and answers only the appearance. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.",
+  "storageKey": "semio.os.config",
+  "preferenceKey": "os.config.ui-preferences",
+  "deadKeys": ["ui.chrome.appearance", "ui.chrome.theme.snapshot"],
+  "cases": [
+    {
+      "name": "a first visit follows the system, dark",
+      "storage": null,
+      "prefersDark": true,
+      "appearance": null,
+      "resolved": "dark",
+      "bodyBackground": "#001117"
+    },
+    {
+      "name": "a first visit follows the system, light",
+      "storage": null,
+      "prefersDark": false,
+      "appearance": null,
+      "resolved": "light",
+      "bodyBackground": "#f7f3e3"
+    },
+    {
+      "name": "a dark session on a light system boots dark — the regression this fixture closes",
+      "storage": { "version": 1, "preferences": { "os.config.ui-preferences": { "version": 1, "events": [{ "mutation": "setAppearance", "appearance": "dark" }] } } },
+      "prefersDark": false,
+      "appearance": "dark",
+      "resolved": "dark",
+      "bodyBackground": "#001117"
+    },
+    {
+      "name": "a light session on a dark system boots light",
+      "storage": { "version": 1, "preferences": { "os.config.ui-preferences": { "version": 1, "events": [{ "mutation": "setAppearance", "appearance": "light" }] } } },
+      "prefersDark": true,
+      "appearance": "light",
+      "resolved": "light",
+      "bodyBackground": "#f7f3e3"
+    },
+    {
+      "name": "the LAST setAppearance wins — the log is replayed, not merged",
+      "storage": {
+        "version": 1,
+        "preferences": { "os.config.ui-preferences": { "version": 1, "events": [{ "mutation": "setAppearance", "appearance": "dark" }, { "mutation": "setLocale", "locale": "de" }, { "mutation": "setAppearance", "appearance": "light" }] } }
+      },
+      "prefersDark": true,
+      "appearance": "light",
+      "resolved": "light",
+      "bodyBackground": "#f7f3e3"
+    },
+    {
+      "name": "an explicit return to system follows the system again",
+      "storage": { "version": 1, "preferences": { "os.config.ui-preferences": { "version": 1, "events": [{ "mutation": "setAppearance", "appearance": "dark" }, { "mutation": "setAppearance", "appearance": "system" }] } } },
+      "prefersDark": false,
+      "appearance": "system",
+      "resolved": "light",
+      "bodyBackground": "#f7f3e3"
+    },
+    {
+      "name": "a log carrying no appearance at all follows the system",
+      "storage": { "version": 1, "preferences": { "os.config.ui-preferences": { "version": 1, "events": [{ "mutation": "setLocale", "locale": "de" }] } } },
+      "prefersDark": true,
+      "appearance": null,
+      "resolved": "dark",
+      "bodyBackground": "#001117"
+    },
+    {
+      "name": "a corrupt document never throws in the head and falls back to the system",
+      "storageRaw": "{not json",
+      "prefersDark": true,
+      "resolved": "dark",
+      "bodyBackground": "#001117",
+      "skipProjection": true
+    }
+  ],
+  "deadKeyCases": [
+    {
+      "name": "the retired key is ignored — a session written by the old shell no longer steers the boot",
+      "deadKey": "ui.chrome.appearance",
+      "deadValue": "dark",
+      "prefersDark": false,
+      "resolved": "light"
+    }
+  ]
+}

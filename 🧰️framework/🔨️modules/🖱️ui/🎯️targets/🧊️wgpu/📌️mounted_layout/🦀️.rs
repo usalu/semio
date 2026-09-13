@@ -56,6 +56,9 @@ enum LayoutNodeKind {
     /// painter draws none of them, so an unreached row must measure zero rather than overlap the
     /// row that visually follows it.
     TreeRow { row: f32, height: f32, expanded: bool },
+    /// 🎛️ A value-carrying control: one control row tall on its own, so a container that sizes its
+    /// children by intrinsic height (a `Section`) never collapses it to zero.
+    Control { height: f32 },
     Leaf,
 }
 
@@ -420,6 +423,7 @@ impl MountedLayoutJob {
             }),
             UiNode::Field(_) => LayoutNodeKind::Field { top: self.theme.font_size_small + gap_for_token(&self.theme, Some("standard")) },
             UiNode::Section(_) => LayoutNodeKind::Section { gap: self.theme.gap_standard },
+            UiNode::Input(_) | UiNode::Select(_) | UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) | UiNode::Button(_) | UiNode::Ring(_) | UiNode::IconSelect(_) => LayoutNodeKind::Control { height: self.theme.control_height },
             _ => LayoutNodeKind::Leaf,
         };
         let index = self.nodes.len();
@@ -587,6 +591,7 @@ impl MountedLayoutJob {
             LayoutNodeKind::Field { top } => IntrinsicSize { width: aggregate.max_width, height: aggregate.height_sum + top },
             LayoutNodeKind::Section { gap } => IntrinsicSize { width: aggregate.max_width, height: aggregate.height_sum + SECTION_HEADER_HEIGHT + gap * aggregate.count.saturating_sub(1) as f32 },
             LayoutNodeKind::Tree { height } | LayoutNodeKind::TreeSection { height, .. } | LayoutNodeKind::TreeRow { height, .. } => IntrinsicSize { width: aggregate.max_width, height },
+            LayoutNodeKind::Control { height } => IntrinsicSize { width: aggregate.max_width, height: height.max(aggregate.height_sum) },
             LayoutNodeKind::Leaf => IntrinsicSize { width: aggregate.max_width, height: aggregate.height_sum },
         };
         if matches!(input.kind, LayoutNodeKind::Text) {

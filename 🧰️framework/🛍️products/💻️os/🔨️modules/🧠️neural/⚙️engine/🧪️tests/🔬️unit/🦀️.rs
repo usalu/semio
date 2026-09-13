@@ -766,6 +766,10 @@ fn schema_component_info_declares_tri_modal_ports() {
     assert_eq!(info.outputs.len(), 5);
     assert_eq!(info.inputs[0].cardinality, Cardinality::ZeroOrOne);
     assert_eq!(info.outputs.last().expect("errors").name, "errors");
+    let input_ids: Vec<&str> = info.inputs.iter().map(|channel| channel.name.as_str()).collect();
+    let output_ids: Vec<&str> = info.outputs.iter().map(|channel| channel.name.as_str()).collect();
+    assert_eq!(output_ids, vec!["pointOut", "xOut", "yOut", "zOut", "errors"], "a schema component names what it PRODUCES apart from what it is GIVEN");
+    assert!(!input_ids.iter().any(|id| output_ids.contains(id)), "one operator's input ids and output ids are disjoint: {input_ids:?} vs {output_ids:?}");
     assert_eq!(info.group, vec!["Schemas".to_string()]);
 }
 
@@ -776,12 +780,12 @@ fn schema_component_construct_deconstruct_and_modify() {
     registry.finalize();
     let construct = Dictionary::new().insert("x", Value::Dictionary(number_dictionary(1.0))).insert("y", Value::Dictionary(number_dictionary(2.0))).insert("z", Value::Dictionary(number_dictionary(3.0)));
     let built = registry.dispatch("math.point", &construct).unwrap();
-    let point = built.get("point").and_then(|value| value.as_dictionary()).expect("point");
+    let point = built.get("pointOut").and_then(|value| value.as_dictionary()).expect("pointOut");
     assert_eq!(point.get("z").and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(3.0));
     let deconstructed = registry.dispatch("math.point", &ColdOwner::new(Dictionary::new().insert("point", Value::Dictionary(point.clone())))).unwrap();
-    assert_eq!(deconstructed.get("x").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(1.0));
+    assert_eq!(deconstructed.get("xOut").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(1.0));
     let modified = registry.dispatch("math.point", &ColdOwner::new(Dictionary::new().insert("point", Value::Dictionary(point.clone())).insert("x", Value::Dictionary(number_dictionary(9.0))))).unwrap();
-    assert_eq!(modified.get("point").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("x")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(9.0));
+    assert_eq!(modified.get("pointOut").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("x")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(9.0));
     modified.retire_cold();
     deconstructed.retire_cold();
     built.retire_cold();
@@ -795,8 +799,8 @@ fn schema_component_error_emits_null_outputs_and_errors() {
     registry.register_schema(point_schema());
     registry.finalize();
     let output = registry.dispatch("math.point", &Dictionary::new()).unwrap();
-    assert!(output.get("point").expect("point").is_null());
-    assert!(output.get("x").expect("x").is_null());
+    assert!(output.get("pointOut").expect("pointOut").is_null());
+    assert!(output.get("xOut").expect("xOut").is_null());
     let errors = output.get("errors").and_then(|value| value.as_dictionary()).expect("errors");
     assert_eq!(errors.schema(), Some("list"));
     assert!(errors.get("0").is_some());

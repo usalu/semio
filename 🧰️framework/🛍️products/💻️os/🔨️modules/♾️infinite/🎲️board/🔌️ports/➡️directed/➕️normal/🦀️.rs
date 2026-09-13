@@ -908,6 +908,7 @@ pub mod board_host {
         rejection: Option<BoardFillText>,
         search_count: u64,
         preview_sequence: u64,
+        candidate_event: Option<BoardFillCandidateEvent>,
     }
 
     /// 📡️ Latest bounded fill search projection, separate from authoritative placements.
@@ -924,6 +925,28 @@ pub mod board_host {
         pub tested_collision_id: Option<BoardFillText>,
         pub rejection: Option<BoardFillText>,
         pub search_count: u64,
+    }
+
+    /// ⚖️ What one fill search transition decided about one candidate placement.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum BoardFillCandidateVerdict {
+        Testing,
+        HostCollision,
+        VirtualCollision,
+        PortIncompatible,
+        RuleIncompatible,
+        Fits,
+    }
+
+    /// 🔎️ One candidate verdict with the candidate's kind index (capture order), slot center and axis-aligned
+    /// collision footprint `[min_x, min_y, max_x, max_y]`, taken once per transition by
+    /// [`BoardFillJob::take_candidate_event`].
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct BoardFillCandidateEvent {
+        pub verdict: BoardFillCandidateVerdict,
+        pub kind_index: usize,
+        pub position: [f64; 2],
+        pub bounds: [f64; 4],
     }
 
     #[derive(Clone, Copy, Debug)]
@@ -6235,6 +6258,7 @@ pub mod board_host {
                     rejection: None,
                     search_count: 0,
                     preview_sequence: 0,
+                    candidate_event: None,
                 }),
                 checkpoint: None,
                 preview: None,
@@ -6278,6 +6302,22 @@ pub mod board_host {
 
         pub fn take_fault(&mut self) -> Option<&'static str> {
             self.fault.take()
+        }
+
+        pub fn take_candidate_event(&mut self) -> Option<BoardFillCandidateEvent> {
+            self.state.as_mut()?.candidate_event.take()
+        }
+
+        fn kind_event(kind: &BoardFillKindSnapshot, kind_index: usize, verdict: BoardFillCandidateVerdict, [x, y]: [f64; 2]) -> BoardFillCandidateEvent {
+            let bounds = match kind.shape {
+                BoardFillShape::Rectangle => [x - kind.width / 2.0, y - kind.height / 2.0, x + kind.width / 2.0, y + kind.height / 2.0],
+                BoardFillShape::Circle => [x - kind.radius, y - kind.radius, x + kind.radius, y + kind.radius],
+            };
+            BoardFillCandidateEvent { verdict, kind_index, position: [x, y], bounds }
+        }
+
+        fn preview_event(preview: &BoardFillCandidatePreview, verdict: BoardFillCandidateVerdict) -> BoardFillCandidateEvent {
+            BoardFillCandidateEvent { verdict, kind_index: preview.kind_index, position: [preview.x, preview.y], bounds: preview.bounds }
         }
 
         pub fn stage(&self) -> BoardFillStage {
@@ -6500,6 +6540,7 @@ pub mod board_host {
             if let Some(template) = kind.handles.get(state.template_cursor) {
                 let target = *state.sources.get(target_index).ok_or("missing-target-source")?;
                 if !BoardHost::handle_port_shapes_compatible(target.handle_kind.as_str(), template.handle_kind.as_str()) || !BoardHost::single_letter_port_families_compatible(target.handle_kind.as_str(), template.handle_kind.as_str()) {
+                    state.candidate_event = Some(Self::kind_event(kind, state.kind_cursor, BoardFillCandidateVerdict::PortIncompatible, target.slot));
                     state.template_cursor += 1;
                     return Ok(());
                 }
@@ -6539,6 +6580,8 @@ pub mod board_host {
                     state.compatibility_candidate = Some(candidate);
                     return Err("candidate-capacity");
                 }
+            } else {
+                state.candidate_event = Some(Self::kind_event(kind, candidate.kind_index, BoardFillCandidateVerdict::RuleIncompatible, source.slot));
             }
             state.compatibility_candidate = None;
             state.template_cursor += 1;
@@ -6580,12 +6623,10 @@ pub mod board_host {
             let target = *state.sources.get(target_index).ok_or("missing-target-source")?;
             let candidate = *state.candidates.get(candidate_index).ok_or("missing-candidate")?;
             let kind = state.snapshot.kinds.get(candidate.kind_index).ok_or("missing-candidate-kind")?;
-            let [x, y] = target.slot;
-            let bounds = match kind.shape {
-                BoardFillShape::Rectangle => [x - kind.width / 2.0, y - kind.height / 2.0, x + kind.width / 2.0, y + kind.height / 2.0],
-                BoardFillShape::Circle => [x - kind.radius, y - kind.radius, x + kind.radius, y + kind.radius],
-            };
-            state.current_preview = Some(BoardFillCandidatePreview { source_id: target.id, kind_index: candidate.kind_index, target_handle_index: candidate.target_handle_index, x, y, bounds });
+            let event = Self::kind_event(kind, candidate.kind_index, BoardFillCandidateVerdict::Testing, target.slot);
+            let [x, y] = event.position;
+            state.current_preview = Some(BoardFillCandidatePreview { source_id: target.id, kind_index: candidate.kind_index, target_handle_index: candidate.target_handle_index, x, y, bounds: event.bounds });
+            state.candidate_event = Some(event);
             state.host_collision_cursor = 0;
             state.virtual_collision_cursor = 0;
             state.search_count = state.search_count.checked_add(1).ok_or("search-sequence-exhausted")?;
@@ -6601,6 +6642,7 @@ pub mod board_host {
             if let Some(node) = state.snapshot.nodes.get(state.host_collision_cursor) {
                 state.host_collision_cursor += 1;
                 if Self::boxes_overlap(preview.bounds, node.bounds) {
+                    state.candidate_event = Some(Self::preview_event(&preview, BoardFillCandidateVerdict::HostCollision));
                     Self::reject_candidate(state, "host-collision")?;
                 }
             } else {
@@ -6617,9 +6659,11 @@ pub mod board_host {
             if let Some(node) = state.virtual_nodes.get(state.virtual_collision_cursor) {
                 state.virtual_collision_cursor += 1;
                 if Self::boxes_overlap(preview.bounds, node.bounds) {
+                    state.candidate_event = Some(Self::preview_event(&preview, BoardFillCandidateVerdict::VirtualCollision));
                     Self::reject_candidate(state, "virtual-collision")?;
                 }
             } else {
+                state.candidate_event = Some(Self::preview_event(&preview, BoardFillCandidateVerdict::Fits));
                 state.stage = BoardFillStage::AcceptCandidate;
             }
             Ok(())
@@ -7091,6 +7135,7 @@ pub mod board_host {
                 || state.source_capture.take().is_some()
                 || state.compatibility_candidate.take().is_some()
                 || state.current_preview.take().is_some()
+                || state.candidate_event.take().is_some()
                 || state.rejection.take().is_some()
             {
                 return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };

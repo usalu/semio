@@ -1116,6 +1116,88 @@ pub fn widget_from_descriptor(descriptor: &WidgetDescriptor, id: String, kind_in
 }
 // #endregion 🔖️Document
 
+//#region 🔖️KeyboardTraversal
+/// ⌨️ One keyboard step across a flow graph — the whole vocabulary of node-by-node traversal.
+///
+/// `Next`/`Previous` walk the READING order [`FlowFixture::keyboard_order`] defines and wrap, so a
+/// user can reach every node of a disconnected graph with one key. `Upstream`/`Downstream` follow a
+/// WIRE and deliberately do not wrap: a source node has nothing upstream of it, and pretending
+/// otherwise would teleport the selection across the canvas.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FlowGraphStep {
+    Next,
+    Previous,
+    Upstream,
+    Downstream,
+}
+
+/// ⌨️ The reading order keyboard traversal walks: ascending `layout.x`, then ascending `layout.y`,
+/// then the document's own widget order for the pairs neither coordinate separates.
+///
+/// A node the layout map never names sits at the origin, exactly as [`FlowFixture::to_artifact`]
+/// places it — the two must agree or the keyboard would visit a node where the canvas does not paint
+/// it. Left-to-right first because a flow graph reads left to right: inputs, operators, outputs.
+pub fn keyboard_order(fixture: &FlowFixture) -> Vec<&str> {
+    let mut rows: Vec<(usize, f64, f64, &str)> = fixture
+        .widgets
+        .iter()
+        .enumerate()
+        .map(|(index, widget)| {
+            let id = widget_id_for(widget);
+            let layout = fixture.layout.get(id);
+            (index, layout.map_or(0.0, |layout| layout.x), layout.map_or(0.0, |layout| layout.y), id)
+        })
+        .collect();
+    rows.sort_by(|left, right| left.1.total_cmp(&right.1).then(left.2.total_cmp(&right.2)).then(left.0.cmp(&right.0)));
+    rows.into_iter().map(|row| row.3).collect()
+}
+
+/// ⌨️ Which node one keyboard step lands on, or `None` when the step has nowhere to go.
+///
+/// `anchor` is the node the step starts from — the caller's current selection, already reduced to a
+/// node id (a port selection is the owning node's, which is what the editor's `activateSelection`
+/// makes reachable). With no anchor at all, a forward step enters the graph at its first node and a
+/// backward step at its last, so the very first keypress always selects something.
+///
+/// A wire step whose candidate set holds more than one node takes the first in [`keyboard_order`],
+/// never the document's synapse order: the user sees a canvas, and the canvas is laid out.
+pub fn keyboard_step<'a>(fixture: &'a FlowFixture, anchor: Option<&str>, step: FlowGraphStep) -> Option<&'a str> {
+    let order = keyboard_order(fixture);
+    if order.is_empty() {
+        return None;
+    }
+    let Some(anchor) = anchor else {
+        return match step {
+            FlowGraphStep::Next | FlowGraphStep::Downstream => order.first().copied(),
+            FlowGraphStep::Previous | FlowGraphStep::Upstream => order.last().copied(),
+        };
+    };
+    let at = order.iter().position(|id| *id == anchor)?;
+    match step {
+        FlowGraphStep::Next => order.get((at + 1) % order.len()).copied(),
+        FlowGraphStep::Previous => order.get((at + order.len() - 1) % order.len()).copied(),
+        FlowGraphStep::Upstream => first_in_order(&order, fixture.synapses.iter().filter(|synapse| synapse.to == anchor).map(|synapse| synapse.from.as_str())),
+        FlowGraphStep::Downstream => first_in_order(&order, fixture.synapses.iter().filter(|synapse| synapse.from == anchor).map(|synapse| synapse.to.as_str())),
+    }
+}
+
+fn first_in_order<'a>(order: &[&'a str], candidates: impl Iterator<Item = &'a str>) -> Option<&'a str> {
+    candidates.filter_map(|id| order.iter().position(|known| *known == id).map(|at| (at, id))).min_by_key(|(at, _)| *at).map(|(_, id)| id)
+}
+
+impl FlowFixture {
+    /// ⌨️ See [`keyboard_order`].
+    pub fn keyboard_order(&self) -> Vec<&str> {
+        keyboard_order(self)
+    }
+
+    /// ⌨️ See [`keyboard_step`].
+    pub fn keyboard_step(&self, anchor: Option<&str>, step: FlowGraphStep) -> Option<&str> {
+        keyboard_step(self, anchor, step)
+    }
+}
+//#endregion 🔖️KeyboardTraversal
+
 //#region 🧪️AuthoredSliderLabels
 #[cfg(test)]
 #[path = "🧪️tests/🔬️slider-label/🦀️.rs"]

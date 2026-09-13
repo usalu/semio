@@ -1345,6 +1345,9 @@ fn render_world3d_surface_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: 
     let Some(state) = hosts.world3d_states.get_or_insert_with(surface_id.clone(), || infinite_world::world::World3dState::new(surface_id, controller_id)) else {
         return ui_wgpu::wgpu::ScenePaintStep::Fault;
     };
+    if state.tool_run_trace_window_id.as_deref() != Some(hosts.window_id) {
+        state.tool_run_trace_window_id = Some(hosts.window_id.to_string());
+    }
     infinite_world::world::render_world_3d(scene, bounds, ctx, state, hosts.world_resources);
     engine_canvas::register_engine_surface(scene, hosts.window_id, bounds, engine_canvas::EngineSurfaceKindDetail::World3d { status_json: scene.world_3d.as_ref().and_then(|world| world.status_json.clone()) }, created);
     world3d_surface_debug_log(scene, bounds, ctx, state);

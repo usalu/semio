@@ -114,6 +114,6 @@ pub fn render(document: &DrawingSnapshot, config: &config::DrawingCanvasWindowCo
     scene_surface(
         DRAWING_PLAY_SURFACE_ID,
         semio_framework_ui_contract::SurfaceKind::Canvas2d,
-        &Canvas2dScene { camera_x: config.viewport.x, camera_y: config.viewport.y, zoom: config.viewport.zoom, layers_json: dsl::json::to_json_string(&records), snapshot: None },
+        &Canvas2dScene { camera_x: config.viewport.x, camera_y: config.viewport.y, zoom: config.viewport.zoom, layers_json: dsl::json::to_json_string(&records), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
     )
 }

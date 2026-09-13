@@ -25,7 +25,7 @@ import {
   cssAnimationScopeViolations,
   CSS_ANIMATION_SCOPE_LAWS,
 } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { meshCollectionVitePlugin, resolveSemioAssetRoot, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, semioAssetsVitePlugin, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, staticDirVitePlugin, tileProxyVitePlugin, type PlaygroundAssetSpec } from "../../🏗️builder/🌐️vite/🟦️.ts";
+import { meshCollectionVitePlugin, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, resolveSemioAssetRoot, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, semioAssetsVitePlugin, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, staticDirVitePlugin, tileProxyVitePlugin, type PlaygroundAssetSpec } from "../../🏗️builder/🌐️vite/🟦️.ts";
 import { fontCatalogSources, parseFontCatalog, parseGoogleFontWoff2Map, resolveFontFaceUrl, resolveFontSource } from "../../🔤️fonts/🟦️.ts";
 import type { OwnedBuildMiddleware } from "../../../🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 import { MESH_DELIVERY_CATALOG, parseMeshDeliveryCatalog, meshAssetTransportUrl, resolveMeshAsset } from "../../../../🖼️assets/🥽️mesh/🟦️.ts";
@@ -292,6 +292,11 @@ describe("styling resolve", () => {
     expect(uiCss).toMatch(/::-moz-selection\s*\{\s*background-color:\s*var\(--accent\);\s*color:\s*var\(--border-emphasized-color\);/);
   });
 
+  it("unlayered emphasis tokens re-declare on .dark so scoped shell roots do not inherit html-computed emphasis", () => {
+    expect(uiCss).toMatch(/:root,\s*\.dark\s*\{[^}]*--border-emphasized-color:\s*var\(--foreground\)/);
+    expect(uiCss).toMatch(/:root,\s*\.dark\s*\{[^}]*--color-emphasized:\s*var\(--foreground\)/);
+  });
+
   it("keeps panel-tab toggle dividers normal even when the active fill recolors other borders", () => {
     expect(uiCss).toMatch(/\[data-slot="panel-tabs"\] > \[data-slot="panel-tab-button"\]\s*\{\s*border-inline-end-color:\s*var\(--border-normal-color\) !important;/);
   });
@@ -396,6 +401,42 @@ describe("styling resolve", () => {
       expect(lightFg).toBe(STYLING_TOKENS.dark);
       expect(darkFg).toBe(STYLING_TOKENS.light);
       expect(darkFg).not.toBe(lightFg);
+    } finally {
+      globalThis.document = previousDocument;
+      clearColorResolveCache();
+    }
+  });
+
+  it("resolveColorHex border-emphasized flips with html.dark appearance", () => {
+    clearColorResolveCache();
+    const previousDocument = globalThis.document;
+    const classSet = new Set<string>();
+    globalThis.document = {
+      documentElement: {
+        classList: {
+          contains: (name: string) => classSet.has(name),
+          add: (...names: string[]) => {
+            for (const name of names) classSet.add(name);
+          },
+          remove: (...names: string[]) => {
+            for (const name of names) classSet.delete(name);
+          },
+        },
+      },
+      createElement: () => {
+        throw new Error("css probe unavailable in this test");
+      },
+    } as unknown as Document;
+    try {
+      document.documentElement.classList.remove("dark");
+      clearColorResolveCache();
+      const lightEmphasis = resolveColorHex("var(--border-emphasized-color)", "gray");
+      document.documentElement.classList.add("dark");
+      clearColorResolveCache();
+      const darkEmphasis = resolveColorHex("var(--border-emphasized-color)", "gray");
+      expect(lightEmphasis).toBe(STYLING_TOKENS.dark);
+      expect(darkEmphasis).toBe(STYLING_TOKENS.light);
+      expect(darkEmphasis).not.toBe(lightEmphasis);
     } finally {
       globalThis.document = previousDocument;
       clearColorResolveCache();
@@ -803,3 +844,79 @@ describe("🔁️ border effect animation scope", () => {
     console.info(`[DEBUG] 🔁️animation-scope: ${scope.animatedCustomProperties.length} animated properties, ${scope.clocks.length} clocks, ${scope.paints.length} paints, 0 root clocks`);
   });
 });
+
+//#region 🌓️AppearanceBoot
+/**
+ * 🌓️ The pre-paint appearance bootstrap, answered by EXECUTING the shipped inline script.
+ *
+ * A head script is not importable code: it is a string that the browser parses before any module
+ * exists, so the only way to test what it actually does is to run that exact string. `node:vm` gives
+ * it the smallest DOM it touches — `document.documentElement`, `document.body`, `localStorage` and
+ * `matchMedia` — and the resolved class/dataset/background are read straight back off that DOM.
+ * `🧫️fixtures/🌓️appearance-boot.json` is the statement; `🎚️config/🧬️schema/🧪️tests/🔬️unit/🦀️.rs`
+ * answers the same `events` logs through the OS config projection.
+ */
+const appearanceBootFixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🌓️appearance-boot.json"), "utf8")) as {
+  readonly storageKey: string;
+  readonly preferenceKey: string;
+  readonly deadKeys: readonly string[];
+  readonly cases: readonly { name: string; storage?: unknown; storageRaw?: string; prefersDark: boolean; resolved: "light" | "dark"; bodyBackground: string }[];
+  readonly deadKeyCases: readonly { name: string; deadKey: string; deadValue: string; prefersDark: boolean; resolved: "light" | "dark" }[];
+};
+
+/** 🌓️ Runs one boot script against a throwaway DOM and reports what the first painted frame would use. */
+async function runBootAppearanceScript(script: string, store: Record<string, string>, prefersDark: boolean): Promise<{ dark: boolean; appearance: string; bodyBackground: string }> {
+  const vm = await import("node:vm");
+  const documentElement = { classList: { values: new Set<string>(), toggle(name: string, on: boolean) { if (on) this.values.add(name); else this.values.delete(name); } }, dataset: {} as Record<string, string>, style: {} as Record<string, string> };
+  const body = { style: {} as Record<string, string> };
+  const context = vm.createContext({
+    document: { documentElement, body },
+    window: { matchMedia: (query: string) => ({ matches: query.includes("dark") ? prefersDark : false }) },
+    localStorage: { getItem: (key: string) => (key in store ? store[key]! : null) },
+    JSON,
+    Array,
+  });
+  vm.runInContext(script, context);
+  return { dark: documentElement.classList.values.has("dark"), appearance: documentElement.dataset.uiAppearance ?? "", bodyBackground: body.style.backgroundColor ?? "" };
+}
+
+describe("pre-paint appearance bootstrap", () => {
+  it("reads the document the OS shell actually writes, and none of the retired keys", () => {
+    expect(PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT).toContain(appearanceBootFixture.storageKey);
+    expect(PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT).toContain(appearanceBootFixture.preferenceKey);
+    expect(PLAYGROUND_PLAY_BOOT_THEME_SCRIPT).toContain(appearanceBootFixture.storageKey);
+    for (const dead of appearanceBootFixture.deadKeys) {
+      expect(PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT).not.toContain(dead);
+      expect(PLAYGROUND_PLAY_BOOT_THEME_SCRIPT).not.toContain(dead);
+    }
+  });
+
+  for (const testCase of appearanceBootFixture.cases) {
+    it(testCase.name, async () => {
+      const store: Record<string, string> = {};
+      if (testCase.storageRaw !== undefined) store[appearanceBootFixture.storageKey] = testCase.storageRaw;
+      else if (testCase.storage !== null && testCase.storage !== undefined) {
+        const snapshot = testCase.storage as { version: number; preferences: Record<string, unknown> };
+        store[appearanceBootFixture.storageKey] = JSON.stringify({ ...snapshot, preferences: Object.fromEntries(Object.entries(snapshot.preferences).map(([key, value]) => [key, JSON.stringify(value)])) });
+      }
+      const result = await runBootAppearanceScript(PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, store, testCase.prefersDark);
+      expect(result.appearance).toBe(testCase.resolved);
+      expect(result.dark).toBe(testCase.resolved === "dark");
+      expect(result.bodyBackground).toBe(testCase.bodyBackground);
+    });
+  }
+
+  for (const testCase of appearanceBootFixture.deadKeyCases) {
+    it(testCase.name, async () => {
+      const result = await runBootAppearanceScript(PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, { [testCase.deadKey]: testCase.deadValue }, testCase.prefersDark);
+      expect(result.appearance).toBe(testCase.resolved);
+    });
+  }
+
+  it("the hand-authored dev distribution head carries the byte-identical scripts", () => {
+    const html = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📤️distribution/🌐️.html"), "utf8");
+    expect(html).toContain(`<script>${PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT}</script>`);
+    expect(html).toContain(`<script>${PLAYGROUND_PLAY_BOOT_THEME_SCRIPT}</script>`);
+  });
+});
+//#endregion 🌓️AppearanceBoot

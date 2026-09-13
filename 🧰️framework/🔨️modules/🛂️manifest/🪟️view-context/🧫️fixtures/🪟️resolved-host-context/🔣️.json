@@ -20,6 +20,13 @@
     ],
     "activeUtilityByWindowId": {
       "right": "measure"
+    },
+    "toolRunTraceCursorByWindowId": {
+      "right": {
+        "run": 3,
+        "generation": 1,
+        "page": 12
+      }
     }
   },
   "invalid": [
@@ -100,6 +107,55 @@
       "set": {
         "activeUtilityByWindowId": {
           "right": 32
+        }
+      }
+    },
+    {
+      "name": "invalid-trace-cursor-page",
+      "set": {
+        "toolRunTraceCursorByWindowId": {
+          "right": {
+            "run": 3,
+            "generation": 1,
+            "page": -1
+          }
+        }
+      }
+    },
+    {
+      "name": "unknown-trace-cursor-field",
+      "set": {
+        "toolRunTraceCursorByWindowId": {
+          "right": {
+            "run": 3,
+            "generation": 1,
+            "page": 12,
+            "records": 4
+          }
+        }
+      }
+    },
+    {
+      "name": "inexact-trace-cursor-run",
+      "set": {
+        "toolRunTraceCursorByWindowId": {
+          "right": {
+            "run": 9007199254740992,
+            "generation": 1,
+            "page": 12
+          }
+        }
+      }
+    },
+    {
+      "name": "invalid-trace-cursor-window",
+      "set": {
+        "toolRunTraceCursorByWindowId": {
+          "": {
+            "run": 3,
+            "generation": 1,
+            "page": 12
+          }
         }
       }
     },

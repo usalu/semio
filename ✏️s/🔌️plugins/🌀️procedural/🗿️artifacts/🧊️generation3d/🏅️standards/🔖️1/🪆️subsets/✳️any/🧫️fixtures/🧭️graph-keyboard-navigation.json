@@ -1,0 +1,100 @@
+{
+  "format": "semio.generation3d.graph-keyboard-navigation",
+  "version": 1,
+  "note": "🧭️ Node-by-node keyboard traversal of the flow node graph, stated once and answered twice. `graph` is a language-neutral restatement of the bundled `hexagonal-mushroom-column` example — the Rust law asserts it is EQUAL to that example's own widgets/layout/synapses, so the fixture can never drift from the document a user actually opens. `keyboardOrder` is the reading order the traversal walks: ascending layout x, then ascending layout y, then the document's own widget order. `walks` are arrow sequences: each step names one `FlowGraphStep` and the selection ids it must leave behind; a step with nowhere to go leaves the selection UNCHANGED and is written as the repeated row (a source node has nothing upstream of it). `anchors` states how a non-node selection is reduced to the node a step starts from — a port handle (`{node}@{port}`, what `activateSelection` selects) steps from its owning node, so arrowing after opening a node closes it again. The Rust half answers this through `FlowFixture::keyboard_step` and the app's own reducer; the TypeScript twin re-implements the traversal from this file alone and must reach the same ids. Driven by `✏️editor/🎮️commands/🧭️navigate-graph/🧪️tests/🔬️unit/🦀️.rs` and `🧪️tests/🔬️unit/🟦️.ts`; this file, not either of them, is the statement.",
+  "exampleId": "hexagonal-mushroom-column",
+  "domainId": "graph",
+  "nodeGranularity": "node",
+  "handleGranularity": "handle",
+  "verbs": {
+    "next": "selectNextNode",
+    "previous": "selectPreviousNode",
+    "upstream": "selectUpstreamNode",
+    "downstream": "selectDownstreamNode",
+    "activate": "activateSelection"
+  },
+  "graph": {
+    "nodes": [
+      { "id": "height", "x": -197.1913555449187, "y": -102.70789997839545 },
+      { "id": "radius", "x": -156.03796288966, "y": -177.3373596163105 },
+      { "id": "sides", "x": -156.43467044109153, "y": -155.28679730672846 },
+      { "id": "profile", "x": -64.49671116929301, "y": -163.40310309861746 },
+      { "id": "extrusion-axis", "x": -65.26327021036892, "y": -116.45687403531778 },
+      { "id": "extrude", "x": 34.842068675720895, "y": -154.18083645790136 },
+      { "id": "column-preview", "x": 237.4197774877085, "y": -103.14518978933415 }
+    ],
+    "wires": [
+      { "id": "e1", "from": "height", "to": "extrusion-axis" },
+      { "id": "e2", "from": "radius", "to": "profile" },
+      { "id": "e3", "from": "sides", "to": "profile" },
+      { "id": "e4", "from": "profile", "to": "extrude" },
+      { "id": "e5", "from": "extrusion-axis", "to": "extrude" },
+      { "id": "e6", "from": "extrude", "to": "column-preview" }
+    ]
+  },
+  "keyboardOrder": ["height", "sides", "radius", "extrusion-axis", "profile", "extrude", "column-preview"],
+  "anchors": [
+    { "selection": [], "anchor": null, "why": "Nothing selected: a forward step enters at the first node, a backward step at the last." },
+    { "selection": ["extrude"], "anchor": "extrude", "why": "One node selected is the anchor." },
+    { "selection": ["extrude@wire"], "anchor": "extrude", "why": "A port handle steps from the node that owns it." },
+    { "selection": ["profile", "extrude"], "anchor": "profile", "why": "A multi-selection steps from its FIRST member in reading order, never from whichever id the set happened to hold first." },
+    { "selection": ["ghost"], "anchor": null, "why": "An id the document no longer holds is no anchor at all; the step re-enters the graph rather than refusing." }
+  ],
+  "walks": [
+    {
+      "name": "arrow-down walks the whole reading order and wraps",
+      "start": [],
+      "steps": [
+        { "step": "next", "expected": ["height"] },
+        { "step": "next", "expected": ["sides"] },
+        { "step": "next", "expected": ["radius"] },
+        { "step": "next", "expected": ["extrusion-axis"] },
+        { "step": "next", "expected": ["profile"] },
+        { "step": "next", "expected": ["extrude"] },
+        { "step": "next", "expected": ["column-preview"] },
+        { "step": "next", "expected": ["height"] }
+      ]
+    },
+    {
+      "name": "arrow-up enters at the last node and walks back",
+      "start": [],
+      "steps": [
+        { "step": "previous", "expected": ["column-preview"] },
+        { "step": "previous", "expected": ["extrude"] },
+        { "step": "previous", "expected": ["profile"] }
+      ]
+    },
+    {
+      "name": "arrow-right follows the wires to the preview and then holds",
+      "start": ["height"],
+      "steps": [
+        { "step": "downstream", "expected": ["extrusion-axis"] },
+        { "step": "downstream", "expected": ["extrude"] },
+        { "step": "downstream", "expected": ["column-preview"] },
+        { "step": "downstream", "expected": ["column-preview"] }
+      ]
+    },
+    {
+      "name": "arrow-left follows the wires back to a source and then holds",
+      "start": ["extrude"],
+      "steps": [
+        { "step": "upstream", "expected": ["extrusion-axis"] },
+        { "step": "upstream", "expected": ["height"] },
+        { "step": "upstream", "expected": ["height"] }
+      ]
+    },
+    {
+      "name": "a fork upstream takes the first candidate in reading order, not in wire order",
+      "start": ["profile"],
+      "steps": [{ "step": "upstream", "expected": ["sides"] }]
+    },
+    {
+      "name": "walking from an opened node's port closes it back onto a node",
+      "start": ["extrude@wire"],
+      "steps": [
+        { "step": "next", "expected": ["column-preview"] },
+        { "step": "previous", "expected": ["extrude"] }
+      ]
+    }
+  ]
+}

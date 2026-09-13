@@ -1,0 +1,144 @@
+{
+  "title": "frame action ledger",
+  "why": "Every action a wgpu frame's authorities mint — a scene camera follow-up, and every retained control's commit (Input, Toggle, Slider, NumberStepper, Ring, IconSelect) once `take_action_step` has taken it OUT of the bounded input authority — is a USER commit that exists nowhere else. A frame candidate is discardable by construction: `AppFrameTransactionStep::Superseded` drops the whole transaction without retiring it, and the cancel ladder that does retire it used to POP each action as a retirement unit. This oracle pins WHO owns that action between minting and dispatch: that a superseded or retired frame changes the ledger by nothing, that FIFO order survives any number of discarded candidates, that a completing frame installs the whole ledger exactly once, that an install refused because a deferred owner is still live costs nothing, and that the shipped candidate-owned model loses precisely the commits this ledger keeps.",
+  "consumers": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧾️frame-action-ledger/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧾️frame-action-ledger/🟦️.ts"
+  ],
+  "owners": {
+    "runtime": "The rule: the ledger is `AppRuntime::frame_actions`, which outlives every frame candidate. The frame only BORROWS it, at install.",
+    "candidate": "The shipped model this oracle exists to refuse: the queue was a field of `FrameTransaction`, handed down through `FrameBuildCursor`, `AppFrameAfterChrome` and `FrameFinishCursor`, and reached the runtime only at `FrameFinishPhase::Complete`."
+  },
+  "operations": {
+    "mint": "One of the frame's authorities mints an action. `action` is its name.",
+    "supersede": "This frame candidate is DROPPED, not closed — the superseded-inputs path, which runs no close ladder at all.",
+    "retire": "This frame candidate is CLOSED by the cancel ladder, one owner per step.",
+    "complete": "The frame completes. `installs` is whether the deferred owner was minted from the ledger this frame; an install is refused while a previous owner is still live.",
+    "dispatch": "One deferred-owner work step. `action` is the action it hands the shell, or null when that owner has nothing left."
+  },
+  "rows": [
+    {
+      "id": "a-commit-minted-in-a-superseded-frame-still-dispatches",
+      "why": "The hop measured on 6118: the inline rename editor's `renameGeneration` commit reached the frame's input phase and the build was superseded 1 ms later. Under the rule the commit is untouched by that and the next frame that completes installs it.",
+      "owner": "runtime",
+      "steps": [
+        { "op": "mint", "action": "renameGeneration" },
+        { "op": "supersede" },
+        { "op": "complete", "installs": true },
+        { "op": "dispatch", "action": "renameGeneration" },
+        { "op": "dispatch", "action": null }
+      ],
+      "expect": { "dispatched": ["renameGeneration"], "lost": [], "ledgerDepth": 0 }
+    },
+    {
+      "id": "the-shipped-candidate-owned-queue-loses-that-same-commit",
+      "why": "The identical gesture against the model this oracle refuses. The commit is already out of the input authority, so a dropped candidate is the end of it: no dispatch, no fault, no retirement — exactly the silence the console showed.",
+      "owner": "candidate",
+      "steps": [
+        { "op": "mint", "action": "renameGeneration" },
+        { "op": "supersede" },
+        { "op": "complete", "installs": false },
+        { "op": "dispatch", "action": null }
+      ],
+      "expect": { "dispatched": [], "lost": ["renameGeneration"], "ledgerDepth": 0 }
+    },
+    {
+      "id": "a-commit-minted-in-a-cancelled-frame-still-dispatches",
+      "why": "The other half of the same defect. A cancelled build DOES run its close ladder, and that ladder popped each action as a retirement unit — a commit discarded politely is discarded all the same.",
+      "owner": "runtime",
+      "steps": [
+        { "op": "mint", "action": "updateGenerationValues" },
+        { "op": "retire" },
+        { "op": "complete", "installs": true },
+        { "op": "dispatch", "action": "updateGenerationValues" },
+        { "op": "dispatch", "action": null }
+      ],
+      "expect": { "dispatched": ["updateGenerationValues"], "lost": [], "ledgerDepth": 0 }
+    },
+    {
+      "id": "the-shipped-candidate-owned-queue-retires-that-same-commit",
+      "why": "The cancel ladder against the refused model, for symmetry with the superseded row.",
+      "owner": "candidate",
+      "steps": [
+        { "op": "mint", "action": "updateGenerationValues" },
+        { "op": "retire" },
+        { "op": "complete", "installs": false },
+        { "op": "dispatch", "action": null }
+      ],
+      "expect": { "dispatched": [], "lost": ["updateGenerationValues"], "ledgerDepth": 0 }
+    },
+    {
+      "id": "fifo-order-survives-any-number-of-discarded-candidates",
+      "why": "A slider drag mints one commit per intermediate value and a shell under input supersedes most of its builds, so the ledger routinely spans several candidates. The user's last value must be the last one dispatched.",
+      "owner": "runtime",
+      "steps": [
+        { "op": "mint", "action": "setValue-1" },
+        { "op": "supersede" },
+        { "op": "mint", "action": "setValue-2" },
+        { "op": "retire" },
+        { "op": "mint", "action": "setValue-3" },
+        { "op": "supersede" },
+        { "op": "complete", "installs": true },
+        { "op": "dispatch", "action": "setValue-1" },
+        { "op": "dispatch", "action": "setValue-2" },
+        { "op": "dispatch", "action": "setValue-3" },
+        { "op": "dispatch", "action": null }
+      ],
+      "expect": { "dispatched": ["setValue-1", "setValue-2", "setValue-3"], "lost": [], "ledgerDepth": 0 }
+    },
+    {
+      "id": "an-install-refused-by-a-live-owner-costs-nothing",
+      "why": "A completing frame refuses to install while the previous frame's deferred owner is still draining. Under the rule that refusal is free: the ledger simply stays put and the next completion takes it. Under the refused model the same refusal faulted the frame and the candidate went on to discard what it was holding.",
+      "owner": "runtime",
+      "steps": [
+        { "op": "mint", "action": "first" },
+        { "op": "complete", "installs": true },
+        { "op": "mint", "action": "second" },
+        { "op": "complete", "installs": false },
+        { "op": "supersede" },
+        { "op": "dispatch", "action": "first" },
+        { "op": "dispatch", "action": null },
+        { "op": "complete", "installs": true },
+        { "op": "dispatch", "action": "second" },
+        { "op": "dispatch", "action": null }
+      ],
+      "expect": { "dispatched": ["first", "second"], "lost": [], "ledgerDepth": 0 }
+    },
+    {
+      "id": "an-uninterrupted-frame-installs-what-it-minted",
+      "why": "The happy path both models always agreed on, kept so the rule cannot be satisfied by never installing at all.",
+      "owner": "runtime",
+      "steps": [
+        { "op": "mint", "action": "addGeneration" },
+        { "op": "complete", "installs": true },
+        { "op": "dispatch", "action": "addGeneration" },
+        { "op": "dispatch", "action": null }
+      ],
+      "expect": { "dispatched": ["addGeneration"], "lost": [], "ledgerDepth": 0 }
+    },
+    {
+      "id": "the-shipped-model-agreed-on-the-uninterrupted-frame",
+      "why": "Why the defect survived so long: with no supersession between the mint and the completion the two models are indistinguishable, and every existing law drove exactly that frame.",
+      "owner": "candidate",
+      "steps": [
+        { "op": "mint", "action": "addGeneration" },
+        { "op": "complete", "installs": true },
+        { "op": "dispatch", "action": "addGeneration" },
+        { "op": "dispatch", "action": null }
+      ],
+      "expect": { "dispatched": ["addGeneration"], "lost": [], "ledgerDepth": 0 }
+    },
+    {
+      "id": "a-ledger-the-frame-never-filled-installs-nothing",
+      "why": "An idle frame must not mint a deferred owner for an empty ledger, or every frame would pay an owner it has no work for.",
+      "owner": "runtime",
+      "steps": [
+        { "op": "complete", "installs": false },
+        { "op": "supersede" },
+        { "op": "complete", "installs": false },
+        { "op": "dispatch", "action": null }
+      ],
+      "expect": { "dispatched": [], "lost": [], "ledgerDepth": 0 }
+    }
+  ]
+}

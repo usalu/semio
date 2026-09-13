@@ -3,7 +3,6 @@ export interface Puzzle2dWindowConfig {
   cameraY: number;
   cameraZoom: number;
   lodMode: string;
-  fillCount: number;
   gridSnapEnabled: boolean;
   gridFactor: number;
   suggestionOffset: number;

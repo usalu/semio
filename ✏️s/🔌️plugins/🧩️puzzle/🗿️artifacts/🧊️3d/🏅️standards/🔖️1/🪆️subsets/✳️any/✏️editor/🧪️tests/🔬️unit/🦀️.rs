@@ -5196,12 +5196,13 @@ fn set_active_utility_dirties_the_world_body() {
 #[semio_framework_async_macros::async_test]
 async fn engagement_exposes_no_utility_switch_options() {
     // 🧰️ select/brush/fill switching lives only on the framework utility bar; the engagement HUD
-    // must not duplicate it as options. The Add Object dialog opener is a create verb, not a utility.
+    // must not duplicate it as options. Object placement is catalogue drag-and-drop plus the shell
+    // menu row `openAddObjectDialog`, not a per-viewport quick-action chip.
     let scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
     let engagement = main::engagement(&scene, &Puzzle3dLabels::NATIVE_EN);
-    let options = engagement.options.as_ref().expect("add-object opener lives on the engagement HUD");
-    assert!(options.iter().all(|option| !matches!(option.id.as_str(), "select" | "brush" | "fill" | "volumeBrush" | "worldRelocate")), "the puzzle3d engagement must not re-expose utility switching as options");
-    assert!(options.iter().any(|option| option.id == "shell-menu.action.openAddObjectDialog" && option.action.as_ref().is_some_and(|action| action.action == "openAddObjectDialog")), "engagement must expose the Add Object dialog opener");
+    let options = engagement.options.as_deref().unwrap_or(&[]);
+    assert!(options.is_empty(), "the puzzle3d engagement must not publish window quick-action options");
+    assert!(options.iter().all(|option| !matches!(option.id.as_str(), "select" | "brush" | "fill" | "volumeBrush" | "worldRelocate" | "shell-menu.action.openAddObjectDialog")), "the puzzle3d engagement must not re-expose utilities or add-object chrome as options");
 }
 
 #[semio_framework_async_macros::async_test]

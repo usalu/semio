@@ -64,8 +64,14 @@ export function surfaceOwnershipSelfTests(): number {
   const documentSchema = JSON.parse(readFileSync(new URL("../../📃️document/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validateDocument = new Ajv({ strict: true, allErrors: true }).compile(documentSchema);
   assert(validateDocument(document), JSON.stringify(validateDocument.errors));
-  assert.equal(document.aggregateCeilingBytes / document.surfaceCeilingBytes, 4);
-  assert(document.surfaces > document.aggregateCeilingBytes / document.surfaceCeilingBytes);
+  // ⚖️ The aggregate funds every resident SLOT at one full DOCUMENT each, so the byte ledger and the
+  // slot ledger refuse together. Read as a multiple of the per-surface CEILING it funded four holders
+  // against sixty-four slots, and a twenty-six-surface React session was refused at 99.8 % with
+  // thirty-eight slots free (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+  assert.equal(document.aggregateCeilingBytes / document.documentBytes, document.residentSlots);
+  assert(document.documentBytes < document.surfaceCeilingBytes);
+  assert(document.surfaces <= document.residentSlots);
+  assert(document.surfaces > Math.floor(document.aggregateCeilingBytes / document.surfaceCeilingBytes));
   const canonical = Buffer.from("canonical-root", "utf8");
   const alias = canonical.subarray();
   assert.equal(alias.buffer, canonical.buffer);

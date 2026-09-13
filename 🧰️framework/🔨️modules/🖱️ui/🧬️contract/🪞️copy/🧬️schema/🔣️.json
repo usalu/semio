@@ -57,7 +57,7 @@
           "const": 32768
         },
         "componentCount": {
-          "const": 18
+          "const": 19
         },
         "listItems": {
           "const": 32

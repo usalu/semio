@@ -66,7 +66,11 @@ struct BudgetExpectation {
 #[serde(rename_all = "camelCase")]
 struct DeliveryExpectation {
     lod_mode: String,
-    min_meshes: usize,
+    /// 🕸️ The EXACT number of meshes this example's preview publishes. A floor is not enough: a
+    /// preview that loses one of three meshes still reports every node `ok`, and the surface simply
+    /// paints less — which is how a renamed operator port that stopped feeding `extrude` its axis
+    /// reached a browser with a green suite behind it (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    meshes: usize,
     min_triangles: usize,
     min_edge_segments: usize,
     max_round_trips: usize,
@@ -847,8 +851,8 @@ fn assert_delivery(dsl: &str, fixture_json: &str) {
     // 👁️ A wire preview has NO triangles and must still paint: its polyline rides the same `pack`
     // body in `edgePositions`, and `mesh_has_preview_geometry` admits it on that alone.
     assert!(run.triangles > 0 || run.edge_segments > 0, "{}: the delivered mesh is empty", fixture.example);
-    assert!(run.payload_meshes >= delivery.min_meshes, "{}: the preview published {} meshes, expected at least {}", fixture.example, run.payload_meshes, delivery.min_meshes);
-    assert_eq!(run.payload_instances, run.payload_meshes.max(delivery.min_meshes), "{}: every published mesh owes exactly one preview instance", fixture.example);
+    assert_eq!(run.payload_meshes, delivery.meshes, "{}: the preview published {} meshes, the example delivers exactly {}", fixture.example, run.payload_meshes, delivery.meshes);
+    assert_eq!(run.payload_instances, delivery.meshes, "{}: every published mesh owes exactly one preview instance", fixture.example);
     assert!(run.payload_triangles >= delivery.min_triangles, "{}: the published payload carries {} triangles, expected at least {}", fixture.example, run.payload_triangles, delivery.min_triangles);
     assert!(run.payload_edge_segments >= delivery.min_edge_segments, "{}: the published payload carries {} edge segments, expected at least {}", fixture.example, run.payload_edge_segments, delivery.min_edge_segments);
     assert!(run.chunks <= delivery.max_chunks, "{}: the mesh body crossed in {} chunks, budget {}", fixture.example, run.chunks, delivery.max_chunks);

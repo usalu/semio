@@ -72,6 +72,9 @@ struct EngineSurface {
     document_generation: u64,
     scene_revision: u64,
     last_note_click: Option<(String, f64)>,
+    published_graph_interaction: PublishedGraphInteraction,
+    published_graph_hit: u64,
+    published_graph_geometry: u64,
 }
 
 pub(crate) const ENGINE_SURFACE_CAPACITY: usize = 256;
@@ -379,6 +382,9 @@ impl EngineSurfaceRetirement {
             document_generation: _,
             scene_revision: _,
             last_note_click,
+            published_graph_interaction: _,
+            published_graph_hit: _,
+            published_graph_geometry: _,
         } = surface;
         Self {
             node_graph_source,
@@ -1616,6 +1622,10 @@ mod engine_surface_attach_tests;
 #[path = "../../🧪️tests/🕸️wgpu-node-graph/🦀️.rs"]
 mod node_graph_attach_tests;
 
+#[cfg(test)]
+#[path = "../../🧪️tests/🫳️node-graph-gestures/🦀️.rs"]
+mod node_graph_gesture_tests;
+
 
 
 
@@ -1665,6 +1675,9 @@ fn empty_engine_surface(pw: u32, ph: u32) -> EngineSurface {
         document_generation: 0,
         scene_revision: 0,
         last_note_click: None,
+        published_graph_interaction: PublishedGraphInteraction::default(),
+        published_graph_hit: 0,
+        published_graph_geometry: 0,
     }
 }
 
@@ -1999,7 +2012,7 @@ fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyn
         if let Some(viewport) = graph.viewport.as_ref() {
             match engine {
                 NodeGraphEngine::Flow(host) if first => {
-                    host.dag.adopt_camera_or_fit(viewport.x, viewport.y, viewport.zoom);
+                    host.adopt_camera_or_fit(viewport.x, viewport.y, viewport.zoom);
                 }
                 NodeGraphEngine::Flow(host) => host.set_camera(viewport.x, viewport.y, viewport.zoom),
                 NodeGraphEngine::Dag(host) if first => {
@@ -2014,7 +2027,7 @@ fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyn
         // 🔀️ An example switch can move the whole graph out from under a live camera; only then is
         // the camera the viewer set re-fitted (`CONTENT_REFIT_MAX_COVERAGE`).
         let refitted = match engine {
-            NodeGraphEngine::Flow(host) => host.dag.refit_camera_if_content_left_view(),
+            NodeGraphEngine::Flow(host) => host.refit_camera_if_content_left_view(),
             NodeGraphEngine::Dag(host) => host.dag.refit_camera_if_content_left_view(),
         };
         changed |= refitted;
@@ -2104,6 +2117,7 @@ pub fn sync_node_graph_scene(scene: &UiComponentSceneNode, window_id: &str, boun
     let Some(created) = created else {
         return false;
     };
+    log_graph_geometry_census(&scene.surface_id);
     register_engine_surface(scene, window_id, bounds, EngineSurfaceKindDetail::NodeGraph, created);
     true
 }
@@ -2513,7 +2527,7 @@ pub fn node_graph_fit_camera(surface_id: &str) -> Option<[f64; 3]> {
         let mut surfaces = cell.borrow_mut();
         let engine = surfaces.get_mut(surface_id)?.node_graph.as_mut()?;
         match engine {
-            NodeGraphEngine::Flow(host) => host.dag.fit_camera_to_content().then(|| [host.fixture.camera.x, host.fixture.camera.y, host.fixture.camera.zoom]),
+            NodeGraphEngine::Flow(host) => host.fit_camera_to_content().then(|| host.camera()),
             NodeGraphEngine::Dag(host) => host.dag.fit_camera_to_content().then(|| [host.dag.fixture.camera.x, host.dag.fixture.camera.y, host.dag.fixture.camera.zoom]),
         }
     })
@@ -2707,7 +2721,6 @@ pub fn node_graph_catalogue_drop_action(x: f32, y: f32, drag_data: &HashMap<Stri
 mod catalogue_workflow_drop_tests;
 
 pub fn node_graph_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, _ctrl: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
-    let mut reservation = input.reserve_actions(3, 3 * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
     let planned = ENGINE_SURFACES.with(|cell| {
@@ -2725,7 +2738,13 @@ pub fn node_graph_wheel_into(surface_id: &str, controller_id: &str, inner: Rect,
     let Some((plan, snapshot)) = planned else {
         return Ok(false);
     };
-    write_graph_interaction_actions(&mut reservation, surface_id, controller_id, snapshot)?;
+    let dispatch = graph_interaction_dispatch(published_graph_interaction(surface_id), snapshot)?;
+    let items = dispatch.item_count();
+    if items == 0 {
+        return Ok(false);
+    }
+    let mut reservation = input.reserve_actions(items, items * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
+    write_graph_interaction_actions(&mut reservation, surface_id, controller_id, &dispatch)?;
     reservation.publish_with_checked(|| {
         ENGINE_SURFACES.with(|cell| {
             let mut map = cell.borrow_mut();
@@ -2755,6 +2774,7 @@ pub fn node_graph_wheel_into(surface_id: &str, controller_id: &str, inner: Rect,
             committed
         })
     })?;
+    record_graph_interaction(surface_id, dispatch.digest);
     Ok(true)
 }
 
@@ -2778,14 +2798,11 @@ pub fn node_graph_pointer_down_into(
     if node_graph_gesture_is_screen_path(surface_id, Some((sx, sy))) {
         return node_graph_screen_pointer_into(surface_id, controller_id, intent, input);
     }
-    let mut reservation = input.reserve_actions(3, 3 * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
     let planned = plan_node_graph_pointer(surface_id, intent)?;
     let Some((plan, snapshot)) = planned else {
         return Ok(false);
     };
-    write_graph_interaction_actions(&mut reservation, surface_id, controller_id, snapshot)?;
-    reservation.publish_with_checked(|| commit_node_graph_pointer(surface_id, plan))?;
-    Ok(true)
+    node_graph_bounded_publish(surface_id, controller_id, plan, snapshot, input)
 }
 
 pub fn node_graph_pointer_move_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl: bool, alt: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
@@ -2795,14 +2812,56 @@ pub fn node_graph_pointer_move_into(surface_id: &str, controller_id: &str, inner
     if node_graph_gesture_is_screen_path(surface_id, Some((sx, sy))) {
         return node_graph_screen_pointer_into(surface_id, controller_id, intent, input);
     }
-    let mut reservation = input.reserve_actions(3, 3 * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
     let planned = plan_node_graph_pointer(surface_id, intent)?;
     let Some((plan, snapshot)) = planned else {
         return Ok(false);
     };
-    write_graph_interaction_actions(&mut reservation, surface_id, controller_id, snapshot)?;
+    node_graph_bounded_publish(surface_id, controller_id, plan, snapshot, input)
+}
+
+
+/// 🫃️ The bounded path's one dispatch point: the interaction actions this gesture CHANGED, plus
+/// the node moves it commits when it ends a drag, reserved exactly and published atomically with the
+/// host mutation. A gesture that changed nothing reserves nothing — see `📌️GraphInteractionChange`.
+fn node_graph_bounded_publish(
+    surface_id: &str,
+    controller_id: &str,
+    plan: NodeGraphPointerPlan,
+    snapshot: GraphInteractionSnapshot,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let edits = plan_node_graph_edits(surface_id, &plan);
+    let dispatch = graph_interaction_dispatch(published_graph_interaction(surface_id), snapshot)?;
+    let items = dispatch.item_count() + usize::from(!edits.is_empty());
+    if items == 0 {
+        return Ok(commit_node_graph_pointer(surface_id, plan));
+    }
+    let mut reservation = input.reserve_actions(items, items * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
+    write_graph_interaction_actions(&mut reservation, surface_id, controller_id, &dispatch)?;
+    write_graph_edit_action(&mut reservation, controller_id, &edits)?;
+    if !edits.is_empty() {
+        engine_canvas_debug_log(&format!("[DEBUG] wgpu node-graph bounded gesture surface={surface_id} edits={edits:?}"));
+    }
     reservation.publish_with_checked(|| commit_node_graph_pointer(surface_id, plan))?;
+    record_graph_interaction(surface_id, dispatch.digest);
     Ok(true)
+}
+
+/// 🫃️ The guest-vocabulary edits a bounded plan commits — today the node moves a finished drag
+/// performed. Read off the PLAN, never off the committed host, because the bounded protocol has to
+/// know every byte it will publish before the mutation is allowed to happen.
+fn plan_node_graph_edits(surface_id: &str, plan: &NodeGraphPointerPlan) -> Vec<flow::dag::DagGraphEdit> {
+    ENGINE_SURFACES.with(|cell| {
+        let map = cell.borrow();
+        let Some(engine) = map.get(surface_id).and_then(|entry| entry.node_graph.as_ref()) else {
+            return Vec::new();
+        };
+        match (engine, plan) {
+            (NodeGraphEngine::Flow(host), NodeGraphPointerPlan::Flow(plan)) => host.dag.plan_graph_edits(plan),
+            (NodeGraphEngine::Dag(host), NodeGraphPointerPlan::Dag(plan)) => host.dag.plan_graph_edits(plan),
+            _ => Vec::new(),
+        }
+    })
 }
 
 pub fn node_graph_pointer_up_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl: bool, alt: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
@@ -2812,14 +2871,11 @@ pub fn node_graph_pointer_up_into(surface_id: &str, controller_id: &str, inner: 
     if node_graph_gesture_is_screen_path(surface_id, Some((sx, sy))) {
         return node_graph_screen_pointer_into(surface_id, controller_id, intent, input);
     }
-    let mut reservation = input.reserve_actions(3, 3 * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
     let planned = plan_node_graph_pointer(surface_id, intent)?;
     let Some((plan, snapshot)) = planned else {
         return Ok(false);
     };
-    write_graph_interaction_actions(&mut reservation, surface_id, controller_id, snapshot)?;
-    reservation.publish_with_checked(|| commit_node_graph_pointer(surface_id, plan))?;
-    Ok(true)
+    node_graph_bounded_publish(surface_id, controller_id, plan, snapshot, input)
 }
 
 
@@ -2938,13 +2994,34 @@ fn engine_canvas_debug_log(line: &str) {
 /// `📓️wgpu-node-graph-surface-retention-2026-09-13.md`).
 fn node_graph_gesture_is_screen_path(surface_id: &str, at: Option<(f64, f64)>) -> bool {
     ENGINE_SURFACES.with(|cell| {
-        let map = cell.borrow();
-        let Some(engine) = map.get(surface_id).and_then(|entry| entry.node_graph.as_ref()) else { return false };
-        let dag = match engine {
-            NodeGraphEngine::Flow(host) => &host.dag,
-            NodeGraphEngine::Dag(host) => &host.dag,
+        let mut map = cell.borrow_mut();
+        let Some(entry) = map.get_mut(surface_id) else { return false };
+        let Some(engine) = entry.node_graph.as_ref() else { return false };
+        let (dag, bounded_gesture) = match engine {
+            NodeGraphEngine::Flow(host) => (&host.dag, host.bounded_pointer_gesture_active()),
+            NodeGraphEngine::Dag(host) => (&host.dag, host.bounded_pointer_gesture_active()),
         };
-        dag.screen_pointer_gesture_active() || at.is_some_and(|(sx, sy)| dag.screen_pointer_gesture_begins_at(sx, sy))
+        if dag.screen_pointer_gesture_active() {
+            return true;
+        }
+        // 🫳️ A gesture belongs to the path that STARTED it. A bounded drag whose pointer crossed a port
+        // or an inline widget was handed to the screen path mid-flight, and that path's
+        // `resync_interaction_projection` rebuilt the projection as IDLE — so the drag's own release saw
+        // no gesture to close: no `move` edit was ever journalled and the undo baseline it had armed
+        // stayed armed. Measured on 6118: a 90x60 px drag of `radius` published its selection and then
+        // nothing at all (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        if bounded_gesture {
+            return false;
+        }
+        let Some((sx, sy)) = at else { return false };
+        let hit = dag.screen_hit(sx, sy);
+        let trace = dag.screen_hit_json(sx, sy);
+        let digest = graph_payload_digest(&[trace.as_str()]);
+        if entry.published_graph_hit != digest {
+            entry.published_graph_hit = digest;
+            engine_canvas_debug_log(&format!("[DEBUG] wgpu node-graph hit surface={surface_id} sx={sx:.1} sy={sy:.1} trace={trace}"));
+        }
+        hit.is_screen_path()
     })
 }
 
@@ -3002,19 +3079,21 @@ fn apply_node_graph_screen_pointer(surface_id: &str, intent: flow::dag::DagPoint
     })
 }
 
-/// 🔗️ Writes the `nodeGraphEdit` one gesture's wire edits ask for, in the guest's own operation
-/// vocabulary — the very shape React's own `onConnect` dispatches
-/// (`{operations: [{operation: "connect", sourceNodeId, sourcePortId, targetNodeId, targetPortId}]}`).
+/// 🔗️ Writes the `nodeGraphEdit` one gesture's graph edits ask for, in the guest's own operation
+/// vocabulary — the very shape React's own `onConnect`/`onNodeDragStop` dispatch
+/// (`{operations: [{operation: "connect", sourceNodeId, sourcePortId, targetNodeId, targetPortId}]}`,
+/// `{operations: [{operation: "move", nodeId, x, y}]}`).
 fn write_graph_edit_action(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, controller_id: &str, edits: &[flow::dag::DagGraphEdit]) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     if edits.is_empty() {
         return Ok(());
     }
     let edit_action = "nodeGraphEdit";
-    let mut parts: Vec<&str> = vec![controller_id, edit_action, "operations", "operation", "connect", "disconnect", "sourceNodeId", "sourcePortId", "targetNodeId", "targetPortId", "synapseId"];
+    let mut parts: Vec<&str> = vec![controller_id, edit_action, "operations", "operation", "connect", "disconnect", "move", "sourceNodeId", "sourcePortId", "targetNodeId", "targetPortId", "synapseId", "nodeId", "x", "y"];
     for edit in edits {
         match edit {
             flow::dag::DagGraphEdit::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => parts.extend([source_node_id.as_str(), source_port_id.as_str(), target_node_id.as_str(), target_port_id.as_str()]),
             flow::dag::DagGraphEdit::Disconnect { synapse_id } => parts.push(synapse_id.as_str()),
+            flow::dag::DagGraphEdit::Move { node_id, .. } => parts.push(node_id.as_str()),
         }
     }
     let edit_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&parts)?;
@@ -3035,6 +3114,12 @@ fn write_graph_edit_action(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservat
                     builder.string(Some("operation"), "disconnect")?;
                     builder.string(Some("synapseId"), synapse_id)?;
                 }
+                flow::dag::DagGraphEdit::Move { node_id, x, y } => {
+                    builder.string(Some("operation"), "move")?;
+                    builder.string(Some("nodeId"), node_id)?;
+                    builder.number(Some("x"), *x)?;
+                    builder.number(Some("y"), *y)?;
+                }
             }
             builder.end_container()?;
         }
@@ -3043,19 +3128,45 @@ fn write_graph_edit_action(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservat
     })
 }
 
-/// 🖱️ One gesture on the screen pointer path, dispatched whole: interaction state plus any wire
-/// edit. Four action credits — the same three the bounded path publishes, plus the edit.
+/// 🖱️ One gesture on the screen pointer path, dispatched whole: the interaction state this
+/// gesture CHANGED plus any wire edit it performed.
+///
+/// 🩸️ A gesture that can still MUTATE the graph — a press, a release, or a move while a wire draw,
+/// minimap drag or widget drag is in flight — reserves its four credits BEFORE the host is allowed to
+/// change, because a bounded dispatch must never mutate what it cannot then publish. A plain hover
+/// over a port or the minimap can produce no edit at all, so it pays only for the actions it actually
+/// changes and, when it changes none, takes no reservation whatsoever — see
+/// `📌️GraphInteractionChange` for the sweep that died without that rule.
 fn node_graph_screen_pointer_into(surface_id: &str, controller_id: &str, intent: flow::dag::DagPointerIntent, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
-    let mut reservation = input.reserve_actions(4, 4 * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
+    let may_mutate = !matches!(intent.phase, flow::dag::DagPointerPhase::Move) || node_graph_gesture_is_screen_path(surface_id, None);
+    if may_mutate {
+        let mut reservation = input.reserve_actions(4, 4 * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
+        let Some(outcome) = apply_node_graph_screen_pointer(surface_id, intent)? else {
+            return Ok(false);
+        };
+        let dispatch = graph_interaction_dispatch(published_graph_interaction(surface_id), outcome.snapshot)?;
+        if !outcome.edits.is_empty() {
+            engine_canvas_debug_log(&format!("[DEBUG] wgpu node-graph screen gesture surface={surface_id} edits={:?}", outcome.edits));
+        }
+        write_graph_interaction_actions(&mut reservation, surface_id, controller_id, &dispatch)?;
+        write_graph_edit_action(&mut reservation, controller_id, &outcome.edits)?;
+        reservation.publish_partial()?;
+        record_graph_interaction(surface_id, dispatch.digest);
+        return Ok(true);
+    }
     let Some(outcome) = apply_node_graph_screen_pointer(surface_id, intent)? else {
         return Ok(false);
     };
-    if !outcome.edits.is_empty() {
-        engine_canvas_debug_log(&format!("[DEBUG] wgpu node-graph screen gesture surface={surface_id} edits={:?}", outcome.edits));
+    let dispatch = graph_interaction_dispatch(published_graph_interaction(surface_id), outcome.snapshot)?;
+    let items = dispatch.item_count() + usize::from(!outcome.edits.is_empty());
+    if items == 0 {
+        return Ok(true);
     }
-    write_graph_interaction_actions(&mut reservation, surface_id, controller_id, outcome.snapshot)?;
+    let mut reservation = input.reserve_actions(items, items * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
+    write_graph_interaction_actions(&mut reservation, surface_id, controller_id, &dispatch)?;
     write_graph_edit_action(&mut reservation, controller_id, &outcome.edits)?;
-    reservation.publish_partial()?;
+    reservation.publish()?;
+    record_graph_interaction(surface_id, dispatch.digest);
     Ok(true)
 }
 //#endregion 🔗️NodeGraphScreenPointer
@@ -3147,45 +3258,159 @@ fn graph_interaction_snapshot(entry: &EngineSurface, camera: Option<[f64; 3]>) -
     graph_projection_snapshot(node_ids, hovered_id, None, camera.unwrap_or(current_camera))
 }
 
-fn write_graph_interaction_actions(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, surface_id: &str, controller_id: &str, snapshot: GraphInteractionSnapshot) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
-    let select_action = "interactionSelect";
+//#region 📌️GraphInteractionChange
+// 📮️ WHAT A POINTER MOVE IS ALLOWED TO COST.
+//
+// Every pointer move over a node graph published `interactionSelect` + `interactionHover` +
+// `nodeGraphViewport` whether or not any of the three had changed. The bounded action queue holds
+// `ACTION_QUEUE_ITEM_CAPACITY` = 256 items and is drained one step per host turn, so a hover sweep
+// denser than the frame loop filled it: `BoundedActionFault::ItemCredits` at admission, after which
+// the session published NOTHING for the rest of its life — measured on 6118 as one
+// `graph move fault … fault=ItemCredits` followed by 0 of 440 sweep points and 0 of 6 presses ever
+// reaching the host (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-node-graph-gestures-2026-09-13.md`).
+//
+// A plain move is not a mutation and must not be priced like one. The surface remembers the
+// fingerprint of each action it last dispatched, a gesture publishes only the ones whose payload
+// actually changed, and it reserves exactly that many credits — zero of them when nothing changed,
+// in which case no reservation is taken at all and the plan is simply committed. React reaches the
+// same end structurally: `emitIntent` answers `undefined` for an unchanged intent, and
+// `NodeGraphHost`'s hover effect is keyed on the hovered id rather than on the pointer.
+
+/// 📌️ The fingerprints of the three interaction actions a node-graph surface last dispatched.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+struct PublishedGraphInteraction {
+    select: u64,
+    hover: u64,
+    viewport: u64,
+}
+
+/// 🔢️ FNV-1a over a payload's own bytes — the change witness is the dispatched payload itself,
+/// never a hand-maintained shadow of the fields that feed it.
+fn graph_payload_digest(parts: &[&str]) -> u64 {
+    let mut digest = 0xcbf2_9ce4_8422_2325_u64;
+    for part in parts {
+        for byte in part.as_bytes().iter().chain(std::iter::once(&0xff)) {
+            digest ^= u64::from(*byte);
+            digest = digest.wrapping_mul(0x0000_0100_0000_01b3);
+        }
+    }
+    digest
+}
+
+/// 📮️ One gesture's interaction payloads, with the three flags that say which of them this surface
+/// has not already told the guest.
+struct GraphInteractionDispatch {
+    select_targets: String,
+    hover_targets: String,
+    viewport: semio_framework_os_kernel::Viewport2d,
+    digest: PublishedGraphInteraction,
+    publish_select: bool,
+    publish_hover: bool,
+    publish_viewport: bool,
+}
+
+impl GraphInteractionDispatch {
+    fn item_count(&self) -> usize {
+        usize::from(self.publish_select) + usize::from(self.publish_hover) + usize::from(self.publish_viewport)
+    }
+}
+
+fn graph_interaction_dispatch(published: PublishedGraphInteraction, snapshot: GraphInteractionSnapshot) -> Result<GraphInteractionDispatch, ui_wgpu::wgpu::BoundedActionFault> {
     let select_targets = serde_json::to_string(&snapshot.node_ids.iter().map(|id| json!({ "granularity": "node", "id": id })).collect::<Vec<_>>()).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)?;
-    let select_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, select_action, "domainId", "graph", "targets", select_targets.as_str(), "merge", "replace", "method", "pick"])?;
-    batch.action(controller_id, select_action, select_bytes, |builder| {
-        builder.begin_object(None)?;
-        builder.string(Some("domainId"), "graph")?;
-        builder.string(Some("targets"), &select_targets)?;
-        builder.string(Some("merge"), "replace")?;
-        builder.string(Some("method"), "pick")?;
-        builder.end_container()
-    })?;
-    let hover_action = "interactionHover";
     let hover_target = match (snapshot.hovered_handle.as_ref(), snapshot.hovered_id.as_ref()) {
         (Some(handle), _) => Some(json!({ "granularity": "handle", "id": handle })),
         (None, Some(node)) => Some(json!({ "granularity": "node", "id": node })),
         (None, None) => None,
     };
     let hover_targets = serde_json::to_string(&hover_target.into_iter().collect::<Vec<_>>()).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)?;
-    let hover_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, hover_action, "domainId", "graph", "channel", "pointer", "targets", hover_targets.as_str()])?;
-    batch.action(controller_id, hover_action, hover_bytes, |builder| {
-        builder.begin_object(None)?;
-        builder.string(Some("domainId"), "graph")?;
-        builder.string(Some("channel"), "pointer")?;
-        builder.string(Some("targets"), &hover_targets)?;
-        builder.end_container()
-    })?;
-    let viewport_action = "nodeGraphViewport";
-    let viewport_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, viewport_action, "surfaceId", surface_id, "viewport", "x", "y", "zoom"])?;
-    batch.action(controller_id, viewport_action, viewport_bytes, |builder| {
-        builder.begin_object(None)?;
-        builder.string(Some("surfaceId"), surface_id)?;
-        builder.begin_object(Some("viewport"))?;
-        builder.number(Some("x"), snapshot.viewport.x)?;
-        builder.number(Some("y"), snapshot.viewport.y)?;
-        builder.number(Some("zoom"), snapshot.viewport.zoom)?;
-        builder.end_container()?;
-        builder.end_container()
-    })?;
+    let viewport_text = format!("{}|{}|{}", snapshot.viewport.x, snapshot.viewport.y, snapshot.viewport.zoom);
+    let digest = PublishedGraphInteraction { select: graph_payload_digest(&[select_targets.as_str()]), hover: graph_payload_digest(&[hover_targets.as_str()]), viewport: graph_payload_digest(&[viewport_text.as_str()]) };
+    Ok(GraphInteractionDispatch {
+        select_targets,
+        hover_targets,
+        viewport: snapshot.viewport,
+        digest,
+        publish_select: digest.select != published.select,
+        publish_hover: digest.hover != published.hover,
+        publish_viewport: digest.viewport != published.viewport,
+    })
+}
+
+/// 🗺️ One line naming where every node and port of a graph surface IS, emitted once per CHANGE of
+/// that geometry rather than once per frame — the census a browser probe needs so that finding the
+/// graph costs nothing, instead of costing the host's whole pointer budget in a hover sweep.
+fn log_graph_geometry_census(surface_id: &str) {
+    ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let Some(entry) = map.get_mut(surface_id) else { return };
+        let Some(engine) = entry.node_graph.as_ref() else { return };
+        let census = match engine {
+            NodeGraphEngine::Flow(host) => host.dag.screen_geometry_census_json(),
+            NodeGraphEngine::Dag(host) => host.dag.screen_geometry_census_json(),
+        };
+        let digest = graph_payload_digest(&[census.as_str()]);
+        if entry.published_graph_geometry == digest {
+            return;
+        }
+        entry.published_graph_geometry = digest;
+        engine_canvas_debug_log(&format!("[DEBUG] wgpu node-graph geometry surface={surface_id} entities={census}"));
+    });
+}
+
+fn published_graph_interaction(surface_id: &str) -> PublishedGraphInteraction {
+    ENGINE_SURFACES.with(|cell| cell.borrow().get(surface_id).map(|entry| entry.published_graph_interaction).unwrap_or_default())
+}
+
+fn record_graph_interaction(surface_id: &str, digest: PublishedGraphInteraction) {
+    ENGINE_SURFACES.with(|cell| {
+        if let Some(entry) = cell.borrow_mut().get_mut(surface_id) {
+            entry.published_graph_interaction = digest;
+        }
+    });
+}
+//#endregion 📌️GraphInteractionChange
+
+fn write_graph_interaction_actions(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, surface_id: &str, controller_id: &str, dispatch: &GraphInteractionDispatch) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    if dispatch.publish_select {
+        let select_action = "interactionSelect";
+        let select_targets = dispatch.select_targets.as_str();
+        let select_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, select_action, "domainId", "graph", "targets", select_targets, "merge", "replace", "method", "pick"])?;
+        batch.action(controller_id, select_action, select_bytes, |builder| {
+            builder.begin_object(None)?;
+            builder.string(Some("domainId"), "graph")?;
+            builder.string(Some("targets"), select_targets)?;
+            builder.string(Some("merge"), "replace")?;
+            builder.string(Some("method"), "pick")?;
+            builder.end_container()
+        })?;
+    }
+    if dispatch.publish_hover {
+        let hover_action = "interactionHover";
+        let hover_targets = dispatch.hover_targets.as_str();
+        let hover_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, hover_action, "domainId", "graph", "channel", "pointer", "targets", hover_targets])?;
+        batch.action(controller_id, hover_action, hover_bytes, |builder| {
+            builder.begin_object(None)?;
+            builder.string(Some("domainId"), "graph")?;
+            builder.string(Some("channel"), "pointer")?;
+            builder.string(Some("targets"), hover_targets)?;
+            builder.end_container()
+        })?;
+    }
+    if dispatch.publish_viewport {
+        let viewport_action = "nodeGraphViewport";
+        let viewport = dispatch.viewport;
+        let viewport_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, viewport_action, "surfaceId", surface_id, "viewport", "x", "y", "zoom"])?;
+        batch.action(controller_id, viewport_action, viewport_bytes, |builder| {
+            builder.begin_object(None)?;
+            builder.string(Some("surfaceId"), surface_id)?;
+            builder.begin_object(Some("viewport"))?;
+            builder.number(Some("x"), viewport.x)?;
+            builder.number(Some("y"), viewport.y)?;
+            builder.number(Some("zoom"), viewport.zoom)?;
+            builder.end_container()?;
+            builder.end_container()
+        })?;
+    }
     Ok(())
 }
 

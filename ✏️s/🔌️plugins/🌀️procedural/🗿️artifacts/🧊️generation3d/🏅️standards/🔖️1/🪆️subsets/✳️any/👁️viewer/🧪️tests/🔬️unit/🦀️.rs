@@ -246,8 +246,12 @@ fn the_viewer_offers_export_in_both_languages_and_never_offers_import() {
     let action = window.actions.iter().find(|action| action.id == "exportDocument").expect("the viewer declares exportDocument");
     assert!(action.in_palette, "a reader has to be able to find it");
     assert_eq!(action.kind, ActionKind::View, "ShellHost's read-only gate swallows a Mutation-kind action on a viewer session");
-    assert_eq!(action.label.resolve(Terminology::Native, Locale::En), "Export Document…");
-    assert_eq!(action.label.resolve(Terminology::Native, Locale::De), "Dokument exportieren…");
+    // 🪪️ NO trailing ellipsis in the declared label: the shell appends one itself for every action
+    // that carries staged args (`🛠️ShellHelpers/🟦️.tsx`, `label: `${action.label}…``), so a declared
+    // one painted "Export Document……" / "Dokument exportieren……" in the Actions pane (ticket
+    // 26/09/09/PROCEDURAL-3D-END-TO-END, `🐍️react-gap-probe.mjs` step `actions-pane-de`).
+    assert_eq!(action.label.resolve(Terminology::Native, Locale::En), "Export Document");
+    assert_eq!(action.label.resolve(Terminology::Native, Locale::De), "Dokument exportieren");
     let arg = action.args.iter().find(|arg| arg.id == "format").expect("exportDocument carries a format arg");
     let ArgSchema::String { options, .. } = &arg.schema else { panic!("the format arg is a string select") };
     assert_eq!(options.iter().map(|option| option.value.as_str()).collect::<Vec<_>>(), document_io::EXPORT_FORMATS.iter().map(|row| row.id).collect::<Vec<_>>(), "the viewer's picker and the io roster are one list");

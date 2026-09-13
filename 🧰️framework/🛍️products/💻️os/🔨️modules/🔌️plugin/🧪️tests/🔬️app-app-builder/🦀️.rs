@@ -336,6 +336,38 @@ mod app_builder_tests {
     }
 
     #[semio_framework_async_macros::async_test]
+    async fn declaring_a_tool_run_injects_the_reserved_actions_and_their_chords_without_stealing_escape() {
+        use semio_framework::{JobKindId, ToolDefinition, ToolRef, ToolRunDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunStageDefinition, ToolRunTraceKind, TOOL_RUN_ACTION_IDS};
+        let run = ToolRunDefinition {
+            mutating: true,
+            rebase: ToolRunRebasePolicy::Revalidate,
+            reconfigure: ToolRunReconfigurePolicy::Resume,
+            unit: LocalizedLabel::native("candidates", "Kandidaten"),
+            stages: vec![ToolRunStageDefinition { id: "test".into(), label: LocalizedLabel::native("Testing", "Prüfen") }],
+            counters: vec![],
+            reasons: vec![],
+            trace: ToolRunTraceKind::Instance3d,
+            run_job: JobKindId::new("fill.run"),
+            revalidate_job: None,
+        };
+        let plain = minimal_app("tool-without-run-app").await.tool(ToolDefinition::new("fill", LocalizedLabel::data("Fill"), IconName::PaintBucket).await).await.mode_tools("edit", vec![ToolRef::new("fill").await]).await.build_definition();
+        assert!(!plain.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| TOOL_RUN_ACTION_IDS.contains(&action.id.as_str())));
+        let interactive = minimal_app("tool-run-app").await.tool(ToolDefinition { run: Some(run), ..ToolDefinition::new("fill", LocalizedLabel::data("Fill"), IconName::PaintBucket).await }).await.mode_tools("edit", vec![ToolRef::new("fill").await]).await.build_definition();
+        let window_actions: Vec<&str> = interactive.window_kinds.first().actions.iter().map(|action| action.id.as_str()).collect();
+        for id in TOOL_RUN_ACTION_IDS {
+            assert!(window_actions.contains(&id), "{id} injected");
+        }
+        let bound = |keys: &str| interactive.keybindings.iter().find(|binding| binding.keys == keys).map(|binding| binding.action.action.clone());
+        assert_eq!(bound("mod+enter").as_deref(), Some("toolRunStart"));
+        assert_eq!(bound("mod+alt+enter").as_deref(), Some("toolRunPause"));
+        assert_eq!(bound("mod+alt+arrowright").as_deref(), Some("toolRunStep"));
+        assert_eq!(bound("mod+.").as_deref(), Some("toolRunAbort"));
+        assert_eq!(bound("mod+shift+enter").as_deref(), Some("toolRunFinalize"));
+        assert!(interactive.keybindings.iter().all(|binding| binding.action.action != "toolRunDismiss" && binding.action.action != "toolRunResume"));
+        assert_ne!(bound("escape").as_deref(), Some("toolRunDismiss"), "escape dismisses only with the run panel focused");
+    }
+
+    #[semio_framework_async_macros::async_test]
     async fn action_args_attaches_declared_arguments() {
         let definition = minimal_app("args-app").await.mutation("resize", LocalizedLabel::data("Resize")).await.action_args("resize", vec![ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).required()]).await.build_definition();
         let resize = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "resize").expect("declared");

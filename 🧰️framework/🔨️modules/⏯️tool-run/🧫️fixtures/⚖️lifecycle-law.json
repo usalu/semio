@@ -1,0 +1,2187 @@
+{
+  "schema": "semio.framework.tool-run.lifecycle-law.v1",
+  "states": [
+    "starting",
+    "running",
+    "paused",
+    "complete",
+    "finalizing",
+    "finalized",
+    "aborting",
+    "aborted",
+    "faulted"
+  ],
+  "eventKeys": [
+    "start",
+    "jobAdmitted",
+    "pause",
+    "resume",
+    "step",
+    "jobComplete",
+    "jobFault",
+    "settingsChanged",
+    "baseChanged",
+    "finalize",
+    "publicationComplete",
+    "revalidationConflicts",
+    "storeRejected",
+    "abort",
+    "abortWhilePublishing",
+    "abortComplete",
+    "dismiss",
+    "closed"
+  ],
+  "matrix": [
+    {
+      "from": "none",
+      "event": "start",
+      "to": "starting",
+      "effect": "spawnJob",
+      "generation": "reset",
+      "commits": false
+    },
+    {
+      "from": "none",
+      "event": "jobAdmitted",
+      "rejection": "toolRun.stale"
+    },
+    {
+      "from": "none",
+      "event": "pause",
+      "rejection": "toolRun.stale"
+    },
+    {
+      "from": "none",
+      "event": "resume",
+      "rejection": "toolRun.stale"
+    },
+    {
+      "from": "none",
+      "event": "step",
+      "rejection": "toolRun.stale"
+    },
+    {
+      "from": "none",
+      "event": "jobComplete",
+      "rejection": "toolRun.stale"
+    },
+    {
+      "from": "none",
+      "event": "jobFault",
+      "rejection": "toolRun.stale"
+    },
+    {
+      "from": "none",
+      "event": "settingsChanged",
+      "rejection": "toolRun.stale"
+    },
+    {
+      "from": "none",
+      "event": "baseChanged",
+      "rejection": "toolRun.stale"
+    },
+    {
+      "from": "none",
+      "event": "finalize",
+      "rejection": "toolRun.stale"
+    },
+    {
+      "from": "none",
+      "event": "publicationComplete",
+      "rejection": "toolRun.stale"
+    },
+    {
+      "from": "none",
+      "event": "revalidationConflicts",
+      "rejection": "toolRun.stale"
+    },
+    {
+      "from": "none",
+      "event": "storeRejected",
+      "rejection": "toolRun.stale"
+    },
+    {
+      "from": "none",
+      "event": "abort",
+      "rejection": "toolRun.stale"
+    },
+    {
+      "from": "none",
+      "event": "abortWhilePublishing",
+      "rejection": "toolRun.stale"
+    },
+    {
+      "from": "none",
+      "event": "abortComplete",
+      "rejection": "toolRun.stale"
+    },
+    {
+      "from": "none",
+      "event": "dismiss",
+      "rejection": "toolRun.stale"
+    },
+    {
+      "from": "none",
+      "event": "closed",
+      "to": "none",
+      "effect": "retireAll",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "starting",
+      "event": "start",
+      "rejection": "toolRun.busy"
+    },
+    {
+      "from": "starting",
+      "event": "jobAdmitted",
+      "to": "running",
+      "effect": "schedule",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "starting",
+      "event": "pause",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "starting",
+      "event": "resume",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "starting",
+      "event": "step",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "starting",
+      "event": "jobComplete",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "starting",
+      "event": "jobFault",
+      "to": "faulted",
+      "effect": "discardProvisional",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "starting",
+      "event": "settingsChanged",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "starting",
+      "event": "baseChanged",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "starting",
+      "event": "finalize",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "starting",
+      "event": "publicationComplete",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "starting",
+      "event": "revalidationConflicts",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "starting",
+      "event": "storeRejected",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "starting",
+      "event": "abort",
+      "to": "aborting",
+      "effect": "closeJob",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "starting",
+      "event": "abortWhilePublishing",
+      "to": "aborting",
+      "effect": "closeJob",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "starting",
+      "event": "abortComplete",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "starting",
+      "event": "dismiss",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "starting",
+      "event": "closed",
+      "to": "none",
+      "effect": "retireAll",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "running",
+      "event": "start",
+      "rejection": "toolRun.busy"
+    },
+    {
+      "from": "running",
+      "event": "jobAdmitted",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "running",
+      "event": "pause",
+      "to": "paused",
+      "effect": "stopScheduling",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "running",
+      "event": "resume",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "running",
+      "event": "step",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "running",
+      "event": "jobComplete",
+      "to": "complete",
+      "effect": "holdResult",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "running",
+      "event": "jobFault",
+      "to": "faulted",
+      "effect": "discardProvisional",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "running",
+      "event": "settingsChanged",
+      "to": "running",
+      "effect": "reconfigure",
+      "generation": "increment",
+      "commits": false
+    },
+    {
+      "from": "running",
+      "event": "baseChanged",
+      "to": "running",
+      "effect": "refold",
+      "generation": "increment",
+      "commits": false
+    },
+    {
+      "from": "running",
+      "event": "finalize",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "running",
+      "event": "publicationComplete",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "running",
+      "event": "revalidationConflicts",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "running",
+      "event": "storeRejected",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "running",
+      "event": "abort",
+      "to": "aborting",
+      "effect": "closeJob",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "running",
+      "event": "abortWhilePublishing",
+      "to": "aborting",
+      "effect": "closeJob",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "running",
+      "event": "abortComplete",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "running",
+      "event": "dismiss",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "running",
+      "event": "closed",
+      "to": "none",
+      "effect": "retireAll",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "paused",
+      "event": "start",
+      "rejection": "toolRun.busy"
+    },
+    {
+      "from": "paused",
+      "event": "jobAdmitted",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "paused",
+      "event": "pause",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "paused",
+      "event": "resume",
+      "to": "running",
+      "effect": "schedule",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "paused",
+      "event": "step",
+      "to": "paused",
+      "effect": "driveOneUnit",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "paused",
+      "event": "jobComplete",
+      "to": "complete",
+      "effect": "holdResult",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "paused",
+      "event": "jobFault",
+      "to": "faulted",
+      "effect": "discardProvisional",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "paused",
+      "event": "settingsChanged",
+      "to": "paused",
+      "effect": "reconfigure",
+      "generation": "increment",
+      "commits": false
+    },
+    {
+      "from": "paused",
+      "event": "baseChanged",
+      "to": "paused",
+      "effect": "refold",
+      "generation": "increment",
+      "commits": false
+    },
+    {
+      "from": "paused",
+      "event": "finalize",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "paused",
+      "event": "publicationComplete",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "paused",
+      "event": "revalidationConflicts",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "paused",
+      "event": "storeRejected",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "paused",
+      "event": "abort",
+      "to": "aborting",
+      "effect": "closeJob",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "paused",
+      "event": "abortWhilePublishing",
+      "to": "aborting",
+      "effect": "closeJob",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "paused",
+      "event": "abortComplete",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "paused",
+      "event": "dismiss",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "paused",
+      "event": "closed",
+      "to": "none",
+      "effect": "retireAll",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "complete",
+      "event": "start",
+      "rejection": "toolRun.busy"
+    },
+    {
+      "from": "complete",
+      "event": "jobAdmitted",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "complete",
+      "event": "pause",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "complete",
+      "event": "resume",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "complete",
+      "event": "step",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "complete",
+      "event": "jobComplete",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "complete",
+      "event": "jobFault",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "complete",
+      "event": "settingsChanged",
+      "to": "running",
+      "effect": "reconfigure",
+      "generation": "increment",
+      "commits": false
+    },
+    {
+      "from": "complete",
+      "event": "baseChanged",
+      "to": "complete",
+      "effect": "refold",
+      "generation": "increment",
+      "commits": false
+    },
+    {
+      "from": "complete",
+      "event": "finalize",
+      "to": "finalizing",
+      "effect": "beginFinalize",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "complete",
+      "event": "publicationComplete",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "complete",
+      "event": "revalidationConflicts",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "complete",
+      "event": "storeRejected",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "complete",
+      "event": "abort",
+      "to": "aborting",
+      "effect": "closeJob",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "complete",
+      "event": "abortWhilePublishing",
+      "to": "aborting",
+      "effect": "closeJob",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "complete",
+      "event": "abortComplete",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "complete",
+      "event": "dismiss",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "complete",
+      "event": "closed",
+      "to": "none",
+      "effect": "retireAll",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "finalizing",
+      "event": "start",
+      "rejection": "toolRun.busy"
+    },
+    {
+      "from": "finalizing",
+      "event": "jobAdmitted",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalizing",
+      "event": "pause",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalizing",
+      "event": "resume",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalizing",
+      "event": "step",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalizing",
+      "event": "jobComplete",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalizing",
+      "event": "jobFault",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalizing",
+      "event": "settingsChanged",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalizing",
+      "event": "baseChanged",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalizing",
+      "event": "finalize",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalizing",
+      "event": "publicationComplete",
+      "to": "finalized",
+      "effect": "releaseProvisional",
+      "generation": "keep",
+      "commits": true
+    },
+    {
+      "from": "finalizing",
+      "event": "revalidationConflicts",
+      "to": "complete",
+      "effect": "retractConflicts",
+      "generation": "increment",
+      "commits": false
+    },
+    {
+      "from": "finalizing",
+      "event": "storeRejected",
+      "to": "complete",
+      "effect": "keepProvisional",
+      "generation": "increment",
+      "commits": false
+    },
+    {
+      "from": "finalizing",
+      "event": "abort",
+      "to": "aborting",
+      "effect": "cancelBatch",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "finalizing",
+      "event": "abortWhilePublishing",
+      "rejection": "toolRun.stale"
+    },
+    {
+      "from": "finalizing",
+      "event": "abortComplete",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalizing",
+      "event": "dismiss",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalizing",
+      "event": "closed",
+      "to": "none",
+      "effect": "retireAll",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "finalized",
+      "event": "start",
+      "to": "starting",
+      "effect": "spawnJob",
+      "generation": "reset",
+      "commits": false
+    },
+    {
+      "from": "finalized",
+      "event": "jobAdmitted",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalized",
+      "event": "pause",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalized",
+      "event": "resume",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalized",
+      "event": "step",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalized",
+      "event": "jobComplete",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalized",
+      "event": "jobFault",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalized",
+      "event": "settingsChanged",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalized",
+      "event": "baseChanged",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalized",
+      "event": "finalize",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalized",
+      "event": "publicationComplete",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalized",
+      "event": "revalidationConflicts",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalized",
+      "event": "storeRejected",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalized",
+      "event": "abort",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalized",
+      "event": "abortWhilePublishing",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalized",
+      "event": "abortComplete",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "finalized",
+      "event": "dismiss",
+      "to": "none",
+      "effect": "clearTrace",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "finalized",
+      "event": "closed",
+      "to": "none",
+      "effect": "retireAll",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "aborting",
+      "event": "start",
+      "rejection": "toolRun.busy"
+    },
+    {
+      "from": "aborting",
+      "event": "jobAdmitted",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborting",
+      "event": "pause",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborting",
+      "event": "resume",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborting",
+      "event": "step",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborting",
+      "event": "jobComplete",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborting",
+      "event": "jobFault",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborting",
+      "event": "settingsChanged",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborting",
+      "event": "baseChanged",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborting",
+      "event": "finalize",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborting",
+      "event": "publicationComplete",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborting",
+      "event": "revalidationConflicts",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborting",
+      "event": "storeRejected",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborting",
+      "event": "abort",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborting",
+      "event": "abortWhilePublishing",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborting",
+      "event": "abortComplete",
+      "to": "aborted",
+      "effect": "retireProvisional",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "aborting",
+      "event": "dismiss",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborting",
+      "event": "closed",
+      "to": "none",
+      "effect": "retireAll",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "aborted",
+      "event": "start",
+      "to": "starting",
+      "effect": "spawnJob",
+      "generation": "reset",
+      "commits": false
+    },
+    {
+      "from": "aborted",
+      "event": "jobAdmitted",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborted",
+      "event": "pause",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborted",
+      "event": "resume",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborted",
+      "event": "step",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborted",
+      "event": "jobComplete",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborted",
+      "event": "jobFault",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborted",
+      "event": "settingsChanged",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborted",
+      "event": "baseChanged",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborted",
+      "event": "finalize",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborted",
+      "event": "publicationComplete",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborted",
+      "event": "revalidationConflicts",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborted",
+      "event": "storeRejected",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborted",
+      "event": "abort",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborted",
+      "event": "abortWhilePublishing",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborted",
+      "event": "abortComplete",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "aborted",
+      "event": "dismiss",
+      "to": "none",
+      "effect": "clearTrace",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "aborted",
+      "event": "closed",
+      "to": "none",
+      "effect": "retireAll",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "faulted",
+      "event": "start",
+      "to": "starting",
+      "effect": "spawnJob",
+      "generation": "reset",
+      "commits": false
+    },
+    {
+      "from": "faulted",
+      "event": "jobAdmitted",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "faulted",
+      "event": "pause",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "faulted",
+      "event": "resume",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "faulted",
+      "event": "step",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "faulted",
+      "event": "jobComplete",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "faulted",
+      "event": "jobFault",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "faulted",
+      "event": "settingsChanged",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "faulted",
+      "event": "baseChanged",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "faulted",
+      "event": "finalize",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "faulted",
+      "event": "publicationComplete",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "faulted",
+      "event": "revalidationConflicts",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "faulted",
+      "event": "storeRejected",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "faulted",
+      "event": "abort",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "faulted",
+      "event": "abortWhilePublishing",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "faulted",
+      "event": "abortComplete",
+      "rejection": "toolRun.illegal"
+    },
+    {
+      "from": "faulted",
+      "event": "dismiss",
+      "to": "none",
+      "effect": "clearTrace",
+      "generation": "keep",
+      "commits": false
+    },
+    {
+      "from": "faulted",
+      "event": "closed",
+      "to": "none",
+      "effect": "retireAll",
+      "generation": "keep",
+      "commits": false
+    }
+  ],
+  "cases": [
+    {
+      "name": "stale generation pause is a silent no-op",
+      "slot": {
+        "run": 7,
+        "generation": 2,
+        "state": "running"
+      },
+      "event": {
+        "type": "pause",
+        "run": 7,
+        "generation": 1
+      },
+      "expect": {
+        "rejection": "toolRun.stale"
+      }
+    },
+    {
+      "name": "stale run pause is a silent no-op",
+      "slot": {
+        "run": 7,
+        "generation": 2,
+        "state": "running"
+      },
+      "event": {
+        "type": "pause",
+        "run": 6,
+        "generation": 2
+      },
+      "expect": {
+        "rejection": "toolRun.stale"
+      }
+    },
+    {
+      "name": "settings change for another run is stale",
+      "slot": {
+        "run": 7,
+        "generation": 2,
+        "state": "running"
+      },
+      "event": {
+        "type": "settingsChanged",
+        "run": 8
+      },
+      "expect": {
+        "rejection": "toolRun.stale"
+      }
+    },
+    {
+      "name": "dismiss of another run is stale",
+      "slot": {
+        "run": 7,
+        "generation": 2,
+        "state": "aborted"
+      },
+      "event": {
+        "type": "dismiss",
+        "run": 6
+      },
+      "expect": {
+        "rejection": "toolRun.stale"
+      }
+    },
+    {
+      "name": "old generation job completion is stale",
+      "slot": {
+        "run": 7,
+        "generation": 2,
+        "state": "running"
+      },
+      "event": {
+        "type": "jobComplete",
+        "run": 7,
+        "generation": 1
+      },
+      "expect": {
+        "rejection": "toolRun.stale"
+      }
+    },
+    {
+      "name": "second start while running is busy",
+      "slot": {
+        "run": 7,
+        "generation": 2,
+        "state": "running"
+      },
+      "event": {
+        "type": "start",
+        "run": 8
+      },
+      "expect": {
+        "rejection": "toolRun.busy"
+      }
+    },
+    {
+      "name": "abort at or after publishing is stale",
+      "slot": {
+        "run": 7,
+        "generation": 2,
+        "state": "finalizing"
+      },
+      "event": {
+        "type": "abort",
+        "run": 7,
+        "generation": 2,
+        "publishing": true
+      },
+      "expect": {
+        "rejection": "toolRun.stale"
+      }
+    },
+    {
+      "name": "abort before publishing cancels the batch",
+      "slot": {
+        "run": 7,
+        "generation": 2,
+        "state": "finalizing"
+      },
+      "event": {
+        "type": "abort",
+        "run": 7,
+        "generation": 2,
+        "publishing": false
+      },
+      "expect": {
+        "transition": {
+          "slot": {
+            "run": 7,
+            "generation": 2,
+            "state": "aborting"
+          },
+          "effect": "cancelBatch"
+        }
+      }
+    },
+    {
+      "name": "publishing flag outside finalizing aborts normally",
+      "slot": {
+        "run": 7,
+        "generation": 2,
+        "state": "running"
+      },
+      "event": {
+        "type": "abort",
+        "run": 7,
+        "generation": 2,
+        "publishing": true
+      },
+      "expect": {
+        "transition": {
+          "slot": {
+            "run": 7,
+            "generation": 2,
+            "state": "aborting"
+          },
+          "effect": "closeJob"
+        }
+      }
+    },
+    {
+      "name": "run ids are never reused",
+      "slot": {
+        "run": 7,
+        "generation": 2,
+        "state": "aborted"
+      },
+      "event": {
+        "type": "start",
+        "run": 7
+      },
+      "expect": {
+        "rejection": "toolRun.illegal"
+      }
+    },
+    {
+      "name": "start from terminal discards the slot",
+      "slot": {
+        "run": 7,
+        "generation": 2,
+        "state": "finalized"
+      },
+      "event": {
+        "type": "start",
+        "run": 9
+      },
+      "expect": {
+        "transition": {
+          "slot": {
+            "run": 9,
+            "generation": 0,
+            "state": "starting"
+          },
+          "effect": "spawnJob"
+        }
+      }
+    },
+    {
+      "name": "start from none",
+      "slot": null,
+      "event": {
+        "type": "start",
+        "run": 1
+      },
+      "expect": {
+        "transition": {
+          "slot": {
+            "run": 1,
+            "generation": 0,
+            "state": "starting"
+          },
+          "effect": "spawnJob"
+        }
+      }
+    },
+    {
+      "name": "base change on complete refolds with generation plus one",
+      "slot": {
+        "run": 7,
+        "generation": 2,
+        "state": "complete"
+      },
+      "event": {
+        "type": "baseChanged",
+        "run": 7
+      },
+      "expect": {
+        "transition": {
+          "slot": {
+            "run": 7,
+            "generation": 3,
+            "state": "complete"
+          },
+          "effect": "refold"
+        }
+      }
+    },
+    {
+      "name": "settings change on complete resumes running",
+      "slot": {
+        "run": 7,
+        "generation": 2,
+        "state": "complete"
+      },
+      "event": {
+        "type": "settingsChanged",
+        "run": 7
+      },
+      "expect": {
+        "transition": {
+          "slot": {
+            "run": 7,
+            "generation": 3,
+            "state": "running"
+          },
+          "effect": "reconfigure"
+        }
+      }
+    },
+    {
+      "name": "finalize is illegal while running",
+      "slot": {
+        "run": 7,
+        "generation": 2,
+        "state": "running"
+      },
+      "event": {
+        "type": "finalize",
+        "run": 7,
+        "generation": 2
+      },
+      "expect": {
+        "rejection": "toolRun.illegal"
+      }
+    },
+    {
+      "name": "revalidation conflicts return to complete",
+      "slot": {
+        "run": 7,
+        "generation": 2,
+        "state": "finalizing"
+      },
+      "event": {
+        "type": "revalidationConflicts",
+        "run": 7,
+        "generation": 2
+      },
+      "expect": {
+        "transition": {
+          "slot": {
+            "run": 7,
+            "generation": 3,
+            "state": "complete"
+          },
+          "effect": "retractConflicts"
+        }
+      }
+    },
+    {
+      "name": "closed with no run",
+      "slot": null,
+      "event": {
+        "type": "closed"
+      },
+      "expect": {
+        "transition": {
+          "slot": null,
+          "effect": "retireAll"
+        }
+      }
+    },
+    {
+      "name": "pause with no run is stale",
+      "slot": null,
+      "event": {
+        "type": "pause",
+        "run": 1,
+        "generation": 0
+      },
+      "expect": {
+        "rejection": "toolRun.stale"
+      }
+    },
+    {
+      "name": "step drives one unit",
+      "slot": {
+        "run": 7,
+        "generation": 2,
+        "state": "paused"
+      },
+      "event": {
+        "type": "step",
+        "run": 7,
+        "generation": 2
+      },
+      "expect": {
+        "transition": {
+          "slot": {
+            "run": 7,
+            "generation": 2,
+            "state": "paused"
+          },
+          "effect": "driveOneUnit"
+        }
+      }
+    },
+    {
+      "name": "dismiss clears a terminal slot",
+      "slot": {
+        "run": 7,
+        "generation": 2,
+        "state": "faulted"
+      },
+      "event": {
+        "type": "dismiss",
+        "run": 7
+      },
+      "expect": {
+        "transition": {
+          "slot": null,
+          "effect": "clearTrace"
+        }
+      }
+    },
+    {
+      "name": "dismiss is illegal while running",
+      "slot": {
+        "run": 7,
+        "generation": 2,
+        "state": "running"
+      },
+      "event": {
+        "type": "dismiss",
+        "run": 7
+      },
+      "expect": {
+        "rejection": "toolRun.illegal"
+      }
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "run pause step resume complete finalize dismiss",
+      "events": [
+        {
+          "type": "start",
+          "run": 1
+        },
+        {
+          "type": "jobAdmitted",
+          "run": 1,
+          "generation": 0
+        },
+        {
+          "type": "pause",
+          "run": 1,
+          "generation": 0
+        },
+        {
+          "type": "step",
+          "run": 1,
+          "generation": 0
+        },
+        {
+          "type": "resume",
+          "run": 1,
+          "generation": 0
+        },
+        {
+          "type": "jobComplete",
+          "run": 1,
+          "generation": 0
+        },
+        {
+          "type": "finalize",
+          "run": 1,
+          "generation": 0
+        },
+        {
+          "type": "publicationComplete",
+          "run": 1,
+          "generation": 0
+        },
+        {
+          "type": "dismiss",
+          "run": 1
+        }
+      ],
+      "states": [
+        "starting",
+        "running",
+        "paused",
+        "paused",
+        "running",
+        "complete",
+        "finalizing",
+        "finalized",
+        "none"
+      ],
+      "commits": 1
+    },
+    {
+      "name": "abort after complete leaves zero trace",
+      "events": [
+        {
+          "type": "start",
+          "run": 1
+        },
+        {
+          "type": "jobAdmitted",
+          "run": 1,
+          "generation": 0
+        },
+        {
+          "type": "jobComplete",
+          "run": 1,
+          "generation": 0
+        },
+        {
+          "type": "abort",
+          "run": 1,
+          "generation": 0,
+          "publishing": false
+        },
+        {
+          "type": "abortComplete",
+          "run": 1,
+          "generation": 0
+        }
+      ],
+      "states": [
+        "starting",
+        "running",
+        "complete",
+        "aborting",
+        "aborted"
+      ],
+      "commits": 0
+    },
+    {
+      "name": "fault while running discards provisional",
+      "events": [
+        {
+          "type": "start",
+          "run": 1
+        },
+        {
+          "type": "jobAdmitted",
+          "run": 1,
+          "generation": 0
+        },
+        {
+          "type": "jobFault",
+          "run": 1,
+          "generation": 0
+        }
+      ],
+      "states": [
+        "starting",
+        "running",
+        "faulted"
+      ],
+      "commits": 0
+    },
+    {
+      "name": "conflict return then finalize again",
+      "events": [
+        {
+          "type": "start",
+          "run": 1
+        },
+        {
+          "type": "jobAdmitted",
+          "run": 1,
+          "generation": 0
+        },
+        {
+          "type": "jobComplete",
+          "run": 1,
+          "generation": 0
+        },
+        {
+          "type": "finalize",
+          "run": 1,
+          "generation": 0
+        },
+        {
+          "type": "revalidationConflicts",
+          "run": 1,
+          "generation": 0
+        },
+        {
+          "type": "finalize",
+          "run": 1,
+          "generation": 0
+        },
+        {
+          "type": "finalize",
+          "run": 1,
+          "generation": 1
+        },
+        {
+          "type": "publicationComplete",
+          "run": 1,
+          "generation": 1
+        }
+      ],
+      "states": [
+        "starting",
+        "running",
+        "complete",
+        "finalizing",
+        "complete",
+        "toolRun.stale",
+        "finalizing",
+        "finalized"
+      ],
+      "commits": 1
+    },
+    {
+      "name": "rebase and reconfigure keep the run id",
+      "events": [
+        {
+          "type": "start",
+          "run": 1
+        },
+        {
+          "type": "jobAdmitted",
+          "run": 1,
+          "generation": 0
+        },
+        {
+          "type": "baseChanged",
+          "run": 1
+        },
+        {
+          "type": "pause",
+          "run": 1,
+          "generation": 0
+        },
+        {
+          "type": "pause",
+          "run": 1,
+          "generation": 1
+        },
+        {
+          "type": "settingsChanged",
+          "run": 1
+        },
+        {
+          "type": "abort",
+          "run": 1,
+          "generation": 2,
+          "publishing": false
+        },
+        {
+          "type": "abortComplete",
+          "run": 1,
+          "generation": 2
+        },
+        {
+          "type": "start",
+          "run": 2
+        }
+      ],
+      "states": [
+        "starting",
+        "running",
+        "running",
+        "toolRun.stale",
+        "paused",
+        "paused",
+        "aborting",
+        "aborted",
+        "starting"
+      ],
+      "commits": 0
+    },
+    {
+      "name": "second start is busy and closing retires everything",
+      "events": [
+        {
+          "type": "start",
+          "run": 1
+        },
+        {
+          "type": "start",
+          "run": 2
+        },
+        {
+          "type": "closed"
+        }
+      ],
+      "states": [
+        "starting",
+        "toolRun.busy",
+        "none"
+      ],
+      "commits": 0
+    }
+  ],
+  "invariants": [
+    {
+      "id": "finalizeOnlyInComplete",
+      "statement": "finalize is accepted only in complete"
+    },
+    {
+      "id": "storeGenerationOnlyOnFinalized",
+      "statement": "the store generation changes only on finalizing → finalized (the only committing row)"
+    },
+    {
+      "id": "abortAndFaultLeaveZeroTrace",
+      "statement": "a run that reaches aborted or faulted committed nothing since its start"
+    },
+    {
+      "id": "pauseAndStepNeverCommit",
+      "statement": "pause, resume and step create no durable trace"
+    },
+    {
+      "id": "singleNonTerminalRun",
+      "statement": "a second start while a run is non-terminal fails with toolRun.busy"
+    }
+  ],
+  "actions": [
+    {
+      "id": "toolRunStart",
+      "args": [
+        {
+          "name": "toolId",
+          "required": true
+        },
+        {
+          "name": "windowId",
+          "required": false
+        }
+      ],
+      "legalIn": [
+        "none",
+        "finalized",
+        "aborted",
+        "faulted"
+      ],
+      "chord": "mod+enter",
+      "label": "actionStart"
+    },
+    {
+      "id": "toolRunPause",
+      "args": [
+        {
+          "name": "runId",
+          "required": true
+        },
+        {
+          "name": "generation",
+          "required": true
+        }
+      ],
+      "legalIn": [
+        "running"
+      ],
+      "chord": "mod+alt+enter",
+      "label": "actionPause"
+    },
+    {
+      "id": "toolRunResume",
+      "args": [
+        {
+          "name": "runId",
+          "required": true
+        },
+        {
+          "name": "generation",
+          "required": true
+        }
+      ],
+      "legalIn": [
+        "paused"
+      ],
+      "chord": "mod+alt+enter",
+      "label": "actionResume"
+    },
+    {
+      "id": "toolRunStep",
+      "args": [
+        {
+          "name": "runId",
+          "required": true
+        },
+        {
+          "name": "generation",
+          "required": true
+        }
+      ],
+      "legalIn": [
+        "paused"
+      ],
+      "chord": "mod+alt+arrowright",
+      "label": "actionStep"
+    },
+    {
+      "id": "toolRunAbort",
+      "args": [
+        {
+          "name": "runId",
+          "required": true
+        },
+        {
+          "name": "generation",
+          "required": true
+        }
+      ],
+      "legalIn": [
+        "starting",
+        "running",
+        "paused",
+        "complete",
+        "finalizing"
+      ],
+      "chord": "mod+.",
+      "label": "actionAbort"
+    },
+    {
+      "id": "toolRunFinalize",
+      "args": [
+        {
+          "name": "runId",
+          "required": true
+        },
+        {
+          "name": "generation",
+          "required": true
+        }
+      ],
+      "legalIn": [
+        "complete"
+      ],
+      "chord": "mod+shift+enter",
+      "label": "actionFinalize"
+    },
+    {
+      "id": "toolRunDismiss",
+      "args": [
+        {
+          "name": "runId",
+          "required": true
+        }
+      ],
+      "legalIn": [
+        "finalized",
+        "aborted",
+        "faulted"
+      ],
+      "chord": "escape",
+      "label": "actionDismiss"
+    }
+  ],
+  "labels": [
+    {
+      "key": "stateStarting",
+      "en": "Starting",
+      "de": "Wird gestartet"
+    },
+    {
+      "key": "stateRunning",
+      "en": "Running",
+      "de": "Läuft"
+    },
+    {
+      "key": "statePaused",
+      "en": "Paused",
+      "de": "Pausiert"
+    },
+    {
+      "key": "stateComplete",
+      "en": "Complete, ready to finalize",
+      "de": "Fertig, bereit zum Abschließen"
+    },
+    {
+      "key": "stateFinalizing",
+      "en": "Finalizing",
+      "de": "Wird abgeschlossen"
+    },
+    {
+      "key": "stateFinalized",
+      "en": "Finalized",
+      "de": "Abgeschlossen"
+    },
+    {
+      "key": "stateAborting",
+      "en": "Aborting",
+      "de": "Wird abgebrochen"
+    },
+    {
+      "key": "stateAborted",
+      "en": "Aborted, nothing was changed",
+      "de": "Abgebrochen, nichts wurde geändert"
+    },
+    {
+      "key": "stateFaulted",
+      "en": "Failed, nothing was changed",
+      "de": "Fehlgeschlagen, nichts wurde geändert"
+    },
+    {
+      "key": "actionStart",
+      "en": "Start",
+      "de": "Starten"
+    },
+    {
+      "key": "actionPause",
+      "en": "Pause",
+      "de": "Pausieren"
+    },
+    {
+      "key": "actionResume",
+      "en": "Resume",
+      "de": "Fortsetzen"
+    },
+    {
+      "key": "actionStep",
+      "en": "Step",
+      "de": "Einzelschritt"
+    },
+    {
+      "key": "actionAbort",
+      "en": "Abort",
+      "de": "Abbrechen"
+    },
+    {
+      "key": "actionFinalize",
+      "en": "Finalize",
+      "de": "Abschließen"
+    },
+    {
+      "key": "actionDismiss",
+      "en": "Dismiss",
+      "de": "Schließen"
+    },
+    {
+      "key": "finalizeDisabled",
+      "en": "Available once the run is complete",
+      "de": "Verfügbar, sobald der Lauf fertig ist"
+    },
+    {
+      "key": "rebasingStep",
+      "en": "Document changed, re-applying provisional result",
+      "de": "Dokument geändert, vorläufiges Ergebnis wird neu angewendet"
+    },
+    {
+      "key": "conflictStep",
+      "en": "{0} provisional changes conflict with the current document",
+      "de": "{0} vorläufige Änderungen stehen im Konflikt mit dem aktuellen Dokument"
+    },
+    {
+      "key": "traceTruncatedStep",
+      "en": "Oldest {0} rejected attempts are no longer shown",
+      "de": "Die ältesten {0} verworfenen Versuche werden nicht mehr angezeigt"
+    },
+    {
+      "key": "provisionalCapStep",
+      "en": "Provisional change limit of {0} reached, run completed",
+      "de": "Grenze von {0} vorläufigen Änderungen erreicht, Lauf abgeschlossen"
+    },
+    {
+      "key": "progressValueText",
+      "en": "{stage} ({i}/{n}): {completed} of {total} {unit} ({pct} %)",
+      "de": "{stage} ({i}/{n}): {completed} von {total} {unit} ({pct} %)"
+    }
+  ],
+  "reservedReasons": [
+    {
+      "code": 65280,
+      "label": "rebasingStep"
+    },
+    {
+      "code": 65281,
+      "label": "conflictStep"
+    },
+    {
+      "code": 65282,
+      "label": "traceTruncatedStep"
+    },
+    {
+      "code": 65283,
+      "label": "provisionalCapStep"
+    }
+  ],
+  "templates": [
+    {
+      "template": "{0} provisional changes conflict with the current document",
+      "values": {
+        "0": "3"
+      },
+      "expected": "3 provisional changes conflict with the current document"
+    },
+    {
+      "template": "{stage} ({i}/{n}): {completed} of {total} {unit} ({pct} %)",
+      "values": {
+        "stage": "Testing candidates",
+        "i": "2",
+        "n": "3",
+        "completed": "42",
+        "total": "100",
+        "unit": "candidates",
+        "pct": "42"
+      },
+      "expected": "Testing candidates (2/3): 42 of 100 candidates (42 %)"
+    },
+    {
+      "template": "{x} and {0}",
+      "values": {
+        "0": "a"
+      },
+      "expected": "{x} and a"
+    },
+    {
+      "template": "a {0",
+      "values": {
+        "0": "b"
+      },
+      "expected": "a {0"
+    },
+    {
+      "template": "{0}{0}",
+      "values": {
+        "0": "{0}"
+      },
+      "expected": "{0}{0}"
+    }
+  ],
+  "limits": {
+    "stepRingCapacity": 64,
+    "stepArgsMax": 4,
+    "countersMax": 8,
+    "provisionalOpsMax": 65536,
+    "traceResidentRecords": 1048576,
+    "tracePageOpsMax": 4096,
+    "tracePageBytesMax": 262144,
+    "tickBytesMax": 262144,
+    "traceLogCompactFloor": 4096,
+    "statusAnnounceIntervalMs": 2000,
+    "reservedReasonFloor": 65280
+  },
+  "definition": {
+    "mutating": true,
+    "rebase": "revalidate",
+    "reconfigure": "resume",
+    "unit": {
+      "native": {
+        "en": "candidates",
+        "de": "Kandidaten"
+      },
+      "reuse": {
+        "en": "candidates",
+        "de": "Kandidaten"
+      }
+    },
+    "stages": [
+      {
+        "id": "plan",
+        "label": {
+          "native": {
+            "en": "Planning",
+            "de": "Planung"
+          },
+          "reuse": {
+            "en": "Planning",
+            "de": "Planung"
+          }
+        }
+      },
+      {
+        "id": "test",
+        "label": {
+          "native": {
+            "en": "Testing candidates",
+            "de": "Kandidaten werden geprüft"
+          },
+          "reuse": {
+            "en": "Testing candidates",
+            "de": "Kandidaten werden geprüft"
+          }
+        }
+      },
+      {
+        "id": "lock",
+        "label": {
+          "native": {
+            "en": "Locking placements",
+            "de": "Platzierungen werden fixiert"
+          },
+          "reuse": {
+            "en": "Locking placements",
+            "de": "Platzierungen werden fixiert"
+          }
+        }
+      }
+    ],
+    "counters": [
+      {
+        "id": "tested",
+        "label": {
+          "native": {
+            "en": "Tested",
+            "de": "Geprüft"
+          },
+          "reuse": {
+            "en": "Tested",
+            "de": "Geprüft"
+          }
+        }
+      },
+      {
+        "id": "locked",
+        "label": {
+          "native": {
+            "en": "Locked",
+            "de": "Fixiert"
+          },
+          "reuse": {
+            "en": "Locked",
+            "de": "Fixiert"
+          }
+        }
+      },
+      {
+        "id": "collisions",
+        "label": {
+          "native": {
+            "en": "Collisions",
+            "de": "Kollisionen"
+          },
+          "reuse": {
+            "en": "Collisions",
+            "de": "Kollisionen"
+          }
+        }
+      }
+    ],
+    "reasons": [
+      {
+        "code": 1,
+        "id": "fits",
+        "verdict": "success",
+        "template": {
+          "native": {
+            "en": "Fits",
+            "de": "Passt"
+          },
+          "reuse": {
+            "en": "Fits",
+            "de": "Passt"
+          }
+        }
+      },
+      {
+        "code": 2,
+        "id": "collision",
+        "verdict": "danger",
+        "template": {
+          "native": {
+            "en": "Collides with {0} pieces",
+            "de": "Kollidiert mit {0} Teilen"
+          },
+          "reuse": {
+            "en": "Collides with {0} pieces",
+            "de": "Kollidiert mit {0} Teilen"
+          }
+        }
+      }
+    ],
+    "trace": "instance3d",
+    "runJob": "fillRun",
+    "revalidateJob": "fillRevalidate"
+  }
+}

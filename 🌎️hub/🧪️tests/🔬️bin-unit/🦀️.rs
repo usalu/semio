@@ -5078,6 +5078,7 @@ fn presence_normalization_socket_overwrites_identity_and_rejects_without_refresh
         assert_eq!(normalized.interaction, input.interaction);
         assert_eq!(normalized.views, input.views);
         assert_eq!(normalized.ui, input.ui);
+        assert_eq!(normalized.tool_run, input.tool_run);
         assert_eq!(protocol::encode_presence_peer(&normalized).await, peers[0]);
         let key = document_scope_key_v1(&scope);
         assert_eq!(state.presence_snapshot(&key).actors[0].surface, normalized.surface.as_deref().expect("plan surface"));

@@ -25218,7 +25218,6 @@ function stashLeftoverHostEffects(instanceId, effects) {
 }
 var pendingSpawnedJobs = new Map;
 var WGPU_SPAWNED_JOB_ROUNDS = 16;
-var spawnJobPayloadsRecorded = 0;
 function admitSpawnedJob(instanceId, effect) {
   if (effect.tag !== "spawn-job")
     return false;
@@ -25418,6 +25417,7 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
   };
   const drainSpawnedJobs = async (instanceId, actorId) => {
     const frames = [];
+    let last;
     const client = getShardClient();
     const port = {
       startJob: (job, kind, input) => client.startJob(actorId, job, kind, input),
@@ -25426,13 +25426,9 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
     for (let round = 0;round < WGPU_SPAWNED_JOB_ROUNDS; round += 1) {
       const jobs = takeSpawnedJobs(instanceId);
       if (jobs.length === 0)
-        return frames;
+        return { frames, last };
       for (const job of jobs) {
         const started = performance.now();
-        if (spawnJobPayloadsRecorded < 3) {
-          spawnJobPayloadsRecorded += 1;
-          console.log(`[DEBUG] wgpu-bridge spawn-job payload job=${job.job} kind=${job.kind} placement=${job.placement} bytes=${job.input.byteLength} base64=${btoa(String.fromCharCode(...job.input))}`);
-        }
         let completion;
         try {
           completion = await driveSpawnedJob({ job: job.job, kind: job.kind, input: job.input, port });
@@ -25465,15 +25461,13 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
         }
         stashLeftoverHostEffects(instanceId, hostEffects);
         drive.report(`job=${job.job}`);
-        const status = wireTurnStatusTag(settled.at(-1)?.status);
-        console.log(`[DEBUG] wgpu-bridge spawn-job settled instance=${instanceId} job=${job.job} turns=${settled.length} status=${status || "-"} frames=${frames.length}`);
-        if (status === "more-work")
-          drainTypedOperations(instanceId);
+        last = settled.at(-1) ?? last;
+        console.log(`[DEBUG] wgpu-bridge spawn-job settled instance=${instanceId} job=${job.job} turns=${settled.length} status=${wireTurnStatusTag(last?.status) || "-"} frames=${frames.length}`);
       }
     }
     console.warn(`[DEBUG] wgpu-bridge spawn-job drain for instance ${instanceId} exhausted its ${WGPU_SPAWNED_JOB_ROUNDS}-round authority`);
     forgetSpawnedJobs(instanceId);
-    return frames;
+    return { frames, last };
   };
   const runQueuedTurnSerialized = async (instanceId, actorId, events) => {
     try {
@@ -25530,14 +25524,15 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
           outFrames.push(frame);
       }
       stashLeftoverHostEffects(instanceId, drive.hostEffects(results));
-      outFrames.push(...await drainSpawnedJobs(instanceId, actorId));
+      const jobDrain = await drainSpawnedJobs(instanceId, actorId);
+      outFrames.push(...jobDrain.frames);
       const leftover = pendingTurnEffects.get(instanceId) ?? [];
       const leftoverFriendly = leftover.map((effect) => wireEffectToFriendly(effect, decodePackWire)).filter((effect) => effect !== null);
       if (leftoverFriendly.length)
         console.log(`[DEBUG] wgpu-bridge effects leftover ${leftoverFriendly.length} tags=${effectTags(leftoverFriendly).join(",")}`);
       drive.report("command");
       turnOutcomes.push({ instanceId, frames: outFrames });
-      if (wireTurnStatusTag(results.at(-1)?.status) === "more-work")
+      if (wireTurnStatusTag((jobDrain.last ?? results.at(-1))?.status) === "more-work")
         drainTypedOperations(instanceId);
     } catch (error) {
       turnOutcomes.push({ instanceId, error });
@@ -25572,10 +25567,12 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
         if (leftover.length > WGPU_TYPED_OPERATION_EFFECT_CAPACITY)
           throw new Error(`[DEBUG] wgpu-bridge typed-operation host effects for instance ${instanceId} exceeded their ${WGPU_TYPED_OPERATION_EFFECT_CAPACITY}-entry authority`);
         pendingTurnEffects.set(instanceId, leftover);
-        frames.push(...await drainSpawnedJobs(instanceId, actorId));
+        const jobDrain = await drainSpawnedJobs(instanceId, actorId);
+        frames.push(...jobDrain.frames);
         if (frames.length > 0)
           turnOutcomes.push({ instanceId, frames });
-        return { status: accepted.at(-1)?.status, nextWake: accepted.at(-1)?.nextWake ?? null };
+        const latest = jobDrain.last ?? accepted.at(-1);
+        return { status: latest?.status, nextWake: latest?.nextWake ?? null };
       }), yieldWgpuUi);
       drive.report(`drain polls=${outcome.polls} stopped=${outcome.stopped}`);
       if (outcome.stopped === "budget")
@@ -25659,7 +25656,10 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
           else
             leftoverWire.push(effect);
         }
-        frames.push(...await drainSpawnedJobs(instanceId, actorId));
+        const jobDrain = await drainSpawnedJobs(instanceId, actorId);
+        frames.push(...jobDrain.frames);
+        if (jobDrain.last)
+          accepted.push(jobDrain.last);
         return accepted;
       });
       drive.report(`completion req=${req}`);

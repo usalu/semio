@@ -353,7 +353,10 @@ impl ActiveFrameBuild {
                     }
                     crate::AppFrameTransactionStep::Pending => ActiveFrameStep::Pending,
                     // 🌀️ Superseded inputs end THIS build with no frame and no fault; the caller's next
-                    // opportunity admits a fresh one against the current witness.
+                    // opportunity admits a fresh one against the current witness. The transaction is
+                    // DROPPED here rather than closed, which is only sound because a transaction owns
+                    // nothing a user minted: every action its authorities take belongs to
+                    // `AppRuntime::frame_actions` (`🧊️renderer/🦀️.rs`), which outlives every candidate.
                     crate::AppFrameTransactionStep::Superseded => {
                         self.phase = ActiveFramePhase::Terminal;
                         ActiveFrameStep::Complete(None)

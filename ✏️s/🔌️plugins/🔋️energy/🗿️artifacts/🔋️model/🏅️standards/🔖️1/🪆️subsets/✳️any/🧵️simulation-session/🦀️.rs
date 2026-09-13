@@ -1,237 +1,205 @@
-//! ⚡️ Artifact-neutral mounted Energy product session: admitted capture, worker job and immutable view.
+//! ⚡️ Energy simulation tool run (`📋️tool-run-contract.md` §2.4, §3.7): the `ToolRunDefinition` vocabulary
+//! (stages of the tier/timestep pipeline, counters, reasons) and the run job that captures the base model
+//! in bounded grants, drives the numerical `EnergyJob` inline and publishes progress ticks. One unit of
+//! fuel is one computed timestep (warmup or run), so a single step of a paused run advances exactly one.
+//! The run is read-only: it holds no provisional document ops, so finalize publishes nothing.
+//! Source of record: `✏️editor/🧵️simulation-session/🔣️.json`.
 
-use crate::{
-    EnergyAdmissionRejected, EnergyCheckpointRejected, EnergyJob, EnergyJobPreview, EnergyJobStage, EnergyModelCloseCursor, EnergyNumericalBounds, EnergyQualityTier, EnergyRestoreJob, EnergyWireLease, EnergyWirePacket, Model, SimulationConfig,
+use crate::{EnergyAdmissionRejected, EnergyJob, EnergyJobCursor, EnergyJobStage, EnergyModelCloseCursor, EnergyModelSnapshot, EnergyNumericalBounds, EnergyQualityTier, Model, SimulationConfig};
+use semio_framework_job::{Generation, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, OperationId, RetainedJobPayload, StepBudget, StepContext, StepOutcome};
+use semio_framework_plugin::LocalizedLabel;
+use semio_framework_tool_run::{
+    JobKindId, ToolRunCounter, ToolRunCounterDefinition, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunStageDefinition, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing,
+    ToolRunTickWriter, ToolRunTraceKind, ToolRunVerdict,
 };
-use crate::{EnergyModelReadLease, EnergyModelSnapshot};
-use semio_framework_job::{CancelToken, Generation, InteractiveJob, Operation, OperationId, RevisionId, StepBudget, StepContext, StepOutcome};
-use semio_framework_plugin::kernel::{Effect, JobPlacement};
-use semio_framework_plugin::reactor::jobs::{BoundedJob, BoundedJobFactory, JobBudget, JobStep};
-use semio_framework_plugin::{AppRenderOperationContext, ArtifactView, PluginCloseStep};
-// 🌱️ Additive `ToValue`/`FromValue` — see the artifact root `🦀️.rs`'s own docstring note
-// on this crate's interim (not-yet-serde-free) state.
-use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::sync::Arc;
 
 //#region 🔖️Contract
-pub const ENERGY_SIMULATION_JOB_KIND: &str = "semio.energy.mounted-simulation.v1";
-pub const ENERGY_SIMULATION_EVENT_SCHEMA: &str = "semio.energy.simulation-event.v1";
-const ACTIVE_SLOTS: usize = 16;
-const SHELL_SLOTS: usize = 32;
-const EVENT_SLOTS: usize = 64;
+pub const ENERGY_SIMULATION_RUN_JOB_KIND: &str = "energy.simulation.run";
+pub const ENERGY_SIMULATION_RUN_SCHEMA: &str = "energy.simulation.run.v1";
 const MAXIMUM_CAPTURE_ITEMS: usize = 4_194_304;
 const MAXIMUM_CAPTURE_BYTES: usize = 512 * 1_024 * 1_024;
-const INPUT_BYTES: usize = 95;
-const JOB_TAG: u64 = 0xe7c3_0000_0000_0000;
-const JOB_COUNTER_MAXIMUM: u64 = 0x0000_ffff_ffff_ffff;
 
-/// ⚙️ Per-run session parameters that are NOT model data. The run period and the schedule tables
-/// are persisted `Model` fields (ticket 26/09/06/ENERGY-PLUGIN-END-TO-END) and are read out of the
-/// admitted model by [`EnergySimulationConfigProjection::build`], never carried here.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValueDerive, FromValueDerive)]
-pub struct EnergySimulationConfigProjection {
-    pub checkpoint_token: u64,
-    pub zone_timestep_minutes: u32,
-    pub system_timestep_minutes: u32,
-    pub warmup_days: u32,
+/// 🧭️ Stages of the run as the panel names them: the plugin capture, then the numerical pipeline grouped by tier.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum EnergySimulationRunStage {
+    Capture,
+    Prepare,
+    Warmup,
+    Run,
+    Finalize,
+    Encode,
 }
 
-impl Default for EnergySimulationConfigProjection {
-    fn default() -> Self {
-        Self::DEFAULT
-    }
-}
+impl EnergySimulationRunStage {
+    pub const ALL: [Self; 6] = [Self::Capture, Self::Prepare, Self::Warmup, Self::Run, Self::Finalize, Self::Encode];
 
-impl EnergySimulationConfigProjection {
-    /// 🎛️ Const twin of [`SimulationConfig::default`]'s three session fields — the fixed arena needs
-    /// a `const` initializer, which `Default::default()` cannot be while it reads a non-const
-    /// `SimulationConfig`. `settings_match_engine_defaults` keeps the two literally in lockstep.
-    pub const DEFAULT: Self = Self { checkpoint_token: 0, zone_timestep_minutes: 60, system_timestep_minutes: 60, warmup_days: 7 };
-
-    /// 🎛️ Accepts an edited projection only inside the engine's own admissible ranges.
-    pub fn is_valid(self) -> bool {
-        self.validate()
+    pub fn index(self) -> u16 {
+        self as u16
     }
 
-    fn validate(self) -> bool {
-        (1..=60).contains(&self.zone_timestep_minutes) && (1..=60).contains(&self.system_timestep_minutes) && self.warmup_days <= 365
-    }
-
-    /// ⚙️ Folds the session parameters together with the admitted model's own persisted run period
-    /// and schedule tables into one engine input.
-    fn build(self, model: &Model) -> SimulationConfig {
-        SimulationConfig {
-            zone_timestep_minutes: self.zone_timestep_minutes,
-            system_timestep_minutes: self.system_timestep_minutes,
-            warmup_days: self.warmup_days,
-            run_period_start_month: model.run_period.start_month,
-            run_period_start_day: model.run_period.start_day,
-            run_period_end_month: model.run_period.end_month,
-            run_period_end_day: model.run_period.end_day,
-            schedules: model.schedules.clone(),
-            ..SimulationConfig::default()
+    pub fn id(self) -> &'static str {
+        match self {
+            Self::Capture => "capture",
+            Self::Prepare => "prepare",
+            Self::Warmup => "warmup",
+            Self::Run => "run",
+            Self::Finalize => "finalize",
+            Self::Encode => "encode",
         }
     }
 
-    fn digest(self) -> u64 {
-        let mut digest = 0xcbf2_9ce4_8422_2325u64;
-        for byte in [self.zone_timestep_minutes.to_le_bytes().as_slice(), self.system_timestep_minutes.to_le_bytes().as_slice(), self.warmup_days.to_le_bytes().as_slice()].into_iter().flatten() {
-            digest = (digest ^ u64::from(*byte)).wrapping_mul(0x100_0000_01b3);
+    pub fn label(self) -> LocalizedLabel {
+        match self {
+            Self::Capture => LocalizedLabel::native("Capturing the model", "Modell wird erfasst"),
+            Self::Prepare => LocalizedLabel::native("Preparing weather, geometry and zones", "Wetter, Geometrie und Zonen werden vorbereitet"),
+            Self::Warmup => LocalizedLabel::native("Warming up", "Einschwingen"),
+            Self::Run => LocalizedLabel::native("Solving timesteps", "Zeitschritte werden gelöst"),
+            Self::Finalize => LocalizedLabel::native("Sizing and summarizing", "Auslegung und Zusammenfassung"),
+            Self::Encode => LocalizedLabel::native("Encoding the final result", "Endergebnis wird kodiert"),
         }
-        digest
     }
-}
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValueDerive, FromValueDerive)]
-pub struct EnergySimulationRequestIdentity {
-    pub request: u64,
-    pub operation: u64,
-    pub generation: u64,
-    pub config_digest: u64,
-}
-
-impl EnergySimulationRequestIdentity {
-    fn valid(self) -> bool {
-        self.request != 0 && self.operation != 0 && self.generation != 0 && self.config_digest != 0
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum EnergySimulationEventKind {
-    Start {
-        request: u64,
-        config: EnergySimulationConfigProjection,
-    },
-    /// 🎛️ Ephemeral local-only run settings for the addressed app instance — timesteps and warmup
-    /// are not model data (`Model` owns the run period and schedules), so they are event-sourced
-    /// into this session's fixed arena rather than into the document.
-    Configure {
-        config: EnergySimulationConfigProjection,
-    },
-    Cancel(EnergySimulationRequestIdentity),
-    Retry(EnergySimulationRequestIdentity),
-    Discard(EnergySimulationRequestIdentity),
-    Adopt(EnergySimulationRequestIdentity),
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum EnergySimulationStatus {
-    Idle,
-    Admitting,
-    Queued,
-    Running,
-    Cancelled,
-    Faulted,
-    FinalReady,
-    Adopted,
-    Closing,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct EnergyTierProjection {
-    pub app_instance_id: u32,
-    pub document_revision: RevisionId,
-    pub document_generation: Generation,
-    pub canonical_base_revision: [u8; 32],
-    pub operation: OperationId,
-    pub generation: Generation,
-    pub config_digest: u64,
-    pub sequence: u64,
-    pub tier: EnergyQualityTier,
-    pub stage: EnergyJobStage,
-    pub warmup_hour: u32,
-    pub timestep: u32,
-    pub total_timesteps: u32,
-    pub facility_electricity_kwh: f64,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct EnergySimulationProjection {
-    pub status: EnergySimulationStatus,
-    pub request: u64,
-    pub operation: OperationId,
-    pub generation: Generation,
-    pub config_digest: u64,
-    pub latest_sequence: u64,
-    pub latest_tier: Option<EnergyQualityTier>,
-    pub tiers: [Option<EnergyTierProjection>; 4],
-    pub checkpoint_ready: bool,
-    pub checkpoint_token: u64,
-    pub final_ready: bool,
-    pub fault_ready: bool,
-    pub adopted: bool,
-}
-
-impl EnergySimulationProjection {
-    fn new(identity: MountedIdentity) -> Self {
-        Self {
-            status: EnergySimulationStatus::Admitting,
-            request: identity.request,
-            operation: identity.operation,
-            generation: identity.generation,
-            config_digest: identity.config_digest,
-            latest_sequence: 0,
-            latest_tier: None,
-            tiers: [None; 4],
-            checkpoint_ready: false,
-            checkpoint_token: 0,
-            final_ready: false,
-            fault_ready: false,
-            adopted: false,
+    /// 🧭️ The run stage a numerical pipeline stage belongs to.
+    pub fn of(stage: EnergyJobStage) -> Self {
+        match stage {
+            EnergyJobStage::Validate | EnergyJobStage::ResolveWeather | EnergyJobStage::Precompute | EnergyJobStage::InitializeZones | EnergyJobStage::InitializeSurfaces | EnergyJobStage::InitializeWarmupHistory => Self::Prepare,
+            EnergyJobStage::WarmupTimestep | EnergyJobStage::WarmupConvergence => Self::Warmup,
+            EnergyJobStage::StartRun | EnergyJobStage::RunZoneTimestep | EnergyJobStage::AggregateZone | EnergyJobStage::AggregateFacility | EnergyJobStage::PublishTimestep => Self::Run,
+            EnergyJobStage::Finalize | EnergyJobStage::Size | EnergyJobStage::FinalizeSummaries | EnergyJobStage::FinalizeMetrics | EnergyJobStage::FinalizeEconomics | EnergyJobStage::BuildResults | EnergyJobStage::PublishFinal => Self::Finalize,
+            EnergyJobStage::EncodeOutput | EnergyJobStage::Complete => Self::Encode,
         }
     }
 }
 
+/// 🔢️ Counters every progress snapshot carries, in this order.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-struct MountedIdentity {
-    app_instance_id: u32,
-    request: u64,
-    document_revision: RevisionId,
-    document_generation: Generation,
-    canonical_base_revision: [u8; 32],
-    operation: OperationId,
-    generation: Generation,
-    config_digest: u64,
-    operation_seed: u64,
-    job: u64,
+pub enum EnergySimulationRunCounter {
+    WarmupTimesteps,
+    RunTimesteps,
+    TiersPublished,
+    FacilityElectricityWh,
 }
 
-impl MountedIdentity {
-    fn operation(self) -> Operation {
-        Operation::new(self.operation, self.document_revision, self.generation, self.operation_seed)
+impl EnergySimulationRunCounter {
+    pub const ALL: [Self; 4] = [Self::WarmupTimesteps, Self::RunTimesteps, Self::TiersPublished, Self::FacilityElectricityWh];
+
+    pub fn index(self) -> u16 {
+        self as u16
     }
 
-    fn matches_render(self, render: AppRenderOperationContext) -> bool {
-        self.app_instance_id == render.app_instance_id
-            && self.document_revision == render.base_revision
-            && self.document_generation == render.generation
-            && self.canonical_base_revision == render.canonical_base_revision
-            && self.generation.0 != 0
-            && self.operation.0 != 0
+    pub fn id(self) -> &'static str {
+        match self {
+            Self::WarmupTimesteps => "warmupTimesteps",
+            Self::RunTimesteps => "runTimesteps",
+            Self::TiersPublished => "tiersPublished",
+            Self::FacilityElectricityWh => "facilityElectricityWh",
+        }
     }
 
-    fn matches_request(self, request: EnergySimulationRequestIdentity) -> bool {
-        request.request == self.request && request.operation == self.operation.0 && request.generation == self.generation.0 && request.config_digest == self.config_digest
-    }
-}
-
-fn quality_tier_index(tier: EnergyQualityTier) -> usize {
-    match tier {
-        EnergyQualityTier::SteadyStateEstimate => 0,
-        EnergyQualityTier::DesignDay => 1,
-        EnergyQualityTier::CoarseTimestep => 2,
-        EnergyQualityTier::Final => 3,
+    pub fn label(self) -> LocalizedLabel {
+        match self {
+            Self::WarmupTimesteps => LocalizedLabel::native("Warmup timesteps", "Einschwing-Zeitschritte"),
+            Self::RunTimesteps => LocalizedLabel::native("Run timesteps", "Lauf-Zeitschritte"),
+            Self::TiersPublished => LocalizedLabel::native("Quality tiers published", "Veröffentlichte Qualitätsstufen"),
+            Self::FacilityElectricityWh => LocalizedLabel::native("Facility electricity (Wh)", "Anlagenelektrizität (Wh)"),
+        }
     }
 }
 
-fn retain_worker_outcome(slot: &mut Option<StepOutcome>, outcome: StepOutcome) -> JobStep {
-    let terminal = matches!(outcome, StepOutcome::Complete(_));
-    *slot = Some(outcome);
-    if terminal {
-        JobStep::Done(Vec::new())
-    } else {
-        JobStep::Running(None)
+/// 🗒️ Step reasons. The four tier reasons carry `[kWh, run timesteps, total run timesteps]`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum EnergySimulationRunReason {
+    SteadyStateEstimate,
+    DesignDay,
+    CoarseTimestep,
+    Final,
+    WarmupConverged,
+    CaptureRejected,
+    AdmissionRejected,
+    SimulationFaulted,
+}
+
+impl EnergySimulationRunReason {
+    pub const ALL: [Self; 8] = [Self::SteadyStateEstimate, Self::DesignDay, Self::CoarseTimestep, Self::Final, Self::WarmupConverged, Self::CaptureRejected, Self::AdmissionRejected, Self::SimulationFaulted];
+
+    pub fn code(self) -> u16 {
+        self as u16
+    }
+
+    pub fn from_code(code: u16) -> Option<Self> {
+        Self::ALL.get(usize::from(code)).copied()
+    }
+
+    pub fn id(self) -> &'static str {
+        match self {
+            Self::SteadyStateEstimate => "steadyStateEstimate",
+            Self::DesignDay => "designDay",
+            Self::CoarseTimestep => "coarseTimestep",
+            Self::Final => "final",
+            Self::WarmupConverged => "warmupConverged",
+            Self::CaptureRejected => "captureRejected",
+            Self::AdmissionRejected => "admissionRejected",
+            Self::SimulationFaulted => "simulationFaulted",
+        }
+    }
+
+    pub fn verdict(self) -> ToolRunVerdict {
+        match self {
+            Self::SteadyStateEstimate | Self::DesignDay | Self::CoarseTimestep | Self::Final | Self::WarmupConverged => ToolRunVerdict::Success,
+            Self::CaptureRejected | Self::AdmissionRejected | Self::SimulationFaulted => ToolRunVerdict::Danger,
+        }
+    }
+
+    pub fn template(self) -> LocalizedLabel {
+        match self {
+            Self::SteadyStateEstimate => LocalizedLabel::native("Steady-state estimate (provisional): {0} kWh facility electricity", "Stationäre Schätzung (vorläufig): {0} kWh Anlagenelektrizität"),
+            Self::DesignDay => LocalizedLabel::native("Design day (provisional): {0} kWh after {1} of {2} timesteps", "Auslegungstag (vorläufig): {0} kWh nach {1} von {2} Zeitschritten"),
+            Self::CoarseTimestep => LocalizedLabel::native("Coarse timestep (provisional): {0} kWh after {1} of {2} timesteps", "Grober Zeitschritt (vorläufig): {0} kWh nach {1} von {2} Zeitschritten"),
+            Self::Final => LocalizedLabel::native("Final: {0} kWh after {1} of {2} timesteps", "Endgültig: {0} kWh nach {1} von {2} Zeitschritten"),
+            Self::WarmupConverged => LocalizedLabel::native("Warmup converged after {0} timesteps", "Einschwingen nach {0} Zeitschritten konvergiert"),
+            Self::CaptureRejected => LocalizedLabel::native("The model exceeds the capture capacity", "Das Modell überschreitet die Erfassungskapazität"),
+            Self::AdmissionRejected => LocalizedLabel::native("The model exceeds the simulation capacity", "Das Modell überschreitet die Simulationskapazität"),
+            Self::SimulationFaulted => LocalizedLabel::native("The simulation failed after {0} timesteps", "Die Simulation ist nach {0} Zeitschritten fehlgeschlagen"),
+        }
+    }
+
+    /// 🏅️ The reason a published quality tier reports under.
+    pub fn of_tier(tier: EnergyQualityTier) -> Self {
+        match tier {
+            EnergyQualityTier::SteadyStateEstimate => Self::SteadyStateEstimate,
+            EnergyQualityTier::DesignDay => Self::DesignDay,
+            EnergyQualityTier::CoarseTimestep => Self::CoarseTimestep,
+            EnergyQualityTier::Final => Self::Final,
+        }
+    }
+}
+
+/// ⏯️ The simulation run declaration: read-only, restarted on any base or settings change, no trace subjects.
+pub fn energy_simulation_run_definition() -> ToolRunDefinition {
+    ToolRunDefinition {
+        mutating: false,
+        rebase: ToolRunRebasePolicy::Restart,
+        reconfigure: ToolRunReconfigurePolicy::Restart,
+        unit: LocalizedLabel::native("timesteps", "Zeitschritte"),
+        stages: EnergySimulationRunStage::ALL.iter().map(|stage| ToolRunStageDefinition { id: stage.id().into(), label: stage.label() }).collect(),
+        counters: EnergySimulationRunCounter::ALL.iter().map(|counter| ToolRunCounterDefinition { id: counter.id().into(), label: counter.label() }).collect(),
+        reasons: EnergySimulationRunReason::ALL.iter().map(|reason| ToolRunReasonDefinition { code: reason.code(), id: reason.id().into(), verdict: reason.verdict(), template: reason.template() }).collect(),
+        trace: ToolRunTraceKind::None,
+        run_job: JobKindId::new(ENERGY_SIMULATION_RUN_JOB_KIND),
+        revalidate_job: None,
+    }
+}
+
+/// ⚙️ Folds the captured model's persisted run period and schedule tables into the settings template.
+pub fn simulation_config_for(template: &SimulationConfig, model: &Model) -> SimulationConfig {
+    SimulationConfig {
+        run_period_start_month: model.run_period.start_month,
+        run_period_start_day: model.run_period.start_day,
+        run_period_end_month: model.run_period.end_month,
+        run_period_end_day: model.run_period.end_day,
+        schedules: model.schedules.clone(),
+        ..template.clone()
     }
 }
 //#endregion 🔖️Contract
@@ -879,1500 +847,371 @@ impl ModelCapture {
         self.model
     }
 }
-
-fn take_captured_model_for_admission(
-    capture: &mut Option<ModelCapture>,
-    mounted: MountedIdentity,
-    expected: MountedIdentity,
-    render: AppRenderOperationContext,
-    live_request: u64,
-    retained_config_digest: u64,
-    snapshot_fresh: bool,
-    cancelled: bool,
-) -> Result<Model, &'static str> {
-    if mounted != expected || !mounted.matches_render(render) || mounted.request != live_request || mounted.config_digest != retained_config_digest || !snapshot_fresh || cancelled {
-        return Err("energy.session.admission-stale-or-cancelled");
-    }
-    Ok(capture.take().ok_or("energy.session.capture-missing")?.finish())
-}
 //#endregion 🧮️RetainedInput
 
-//#region 🧰️FixedArena
-#[derive(Clone, Copy)]
-struct SessionEvent {
-    sequence: u64,
-    render: AppRenderOperationContext,
-    kind: EnergySimulationEventKind,
+//#region 🧵️RunJob
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum EnergyRunPhase {
+    Census,
+    Capture,
+    Simulate,
+    Settled,
 }
 
-struct MountedState {
-    identity: MountedIdentity,
-    snapshot: EnergyModelReadLease,
+/// 🎟️ What one bounded grant of the run produced.
+enum EnergyRunGrant {
+    Continue,
+    Timestep,
+    Settled(StepOutcome),
+}
+
+/// 🧭️ The run's projection of the numerical cursor: timestep units, tier publications and the live meter.
+#[derive(Clone, Copy, Debug)]
+struct EnergyRunCursor {
+    stage: EnergyJobStage,
+    tier: EnergyQualityTier,
+    timestep: u32,
+    total_timesteps: u32,
+    warmup_hours: u32,
+    warmup_timesteps: u64,
+    run_timesteps: u64,
+    tiers_published: u64,
+    facility_electricity_kwh: f64,
+}
+
+impl EnergyRunCursor {
+    fn new() -> Self {
+        Self { stage: EnergyJobStage::Validate, tier: EnergyQualityTier::SteadyStateEstimate, timestep: 0, total_timesteps: 0, warmup_hours: 0, warmup_timesteps: 0, run_timesteps: 0, tiers_published: 0, facility_electricity_kwh: 0.0 }
+    }
+
+    fn completed(&self) -> u64 {
+        self.warmup_timesteps + self.run_timesteps
+    }
+
+    fn is_warmup(stage: EnergyJobStage) -> bool {
+        matches!(stage, EnergyJobStage::WarmupTimestep | EnergyJobStage::WarmupConvergence)
+    }
+
+    fn publish_tier(&mut self, writer: &mut ToolRunTickWriter) {
+        let kwh = (self.facility_electricity_kwh * 1_000.0).round() / 1_000.0;
+        let args = [ToolRunStepArg::Float(kwh), ToolRunStepArg::Unsigned(self.run_timesteps), ToolRunStepArg::Unsigned(u64::from(self.total_timesteps))];
+        let _ = writer.step(ToolRunStepKind::Success, EnergySimulationRunStage::of(self.stage).index(), EnergySimulationRunReason::of_tier(self.tier).code(), None, &args);
+        self.tiers_published += 1;
+    }
+
+    /// 🔭️ Folds one numerical cursor; `true` when exactly one warmup or run timestep was computed.
+    fn observe(&mut self, cursor: EnergyJobCursor, writer: &mut ToolRunTickWriter) -> bool {
+        let warmup = self.stage == EnergyJobStage::WarmupTimestep && cursor.stage == EnergyJobStage::WarmupConvergence;
+        let run = cursor.timestep > self.timestep;
+        self.warmup_timesteps += u64::from(warmup);
+        self.run_timesteps += u64::from(cursor.timestep.saturating_sub(self.timestep));
+        if Self::is_warmup(self.stage) && !Self::is_warmup(cursor.stage) && self.warmup_timesteps < u64::from(cursor.warmup_hours) {
+            let _ = writer.step(ToolRunStepKind::Info, EnergySimulationRunStage::Warmup.index(), EnergySimulationRunReason::WarmupConverged.code(), None, &[ToolRunStepArg::Unsigned(self.warmup_timesteps)]);
+        }
+        self.timestep = cursor.timestep;
+        self.total_timesteps = cursor.total_timesteps;
+        self.warmup_hours = cursor.warmup_hours;
+        self.facility_electricity_kwh = cursor.facility_electricity_kwh;
+        if cursor.tier != self.tier {
+            self.publish_tier(writer);
+            self.tier = cursor.tier;
+        }
+        self.stage = cursor.stage;
+        warmup || run
+    }
+
+    fn progress(&self, identity: ToolRunIdentity, state: ToolRunState, stage: EnergySimulationRunStage) -> ToolRunProgress {
+        let values = [self.warmup_timesteps, self.run_timesteps, self.tiers_published, (self.facility_electricity_kwh * 1_000.0).round().max(0.0) as u64];
+        ToolRunProgress {
+            identity,
+            sequence: 0,
+            state,
+            stage: stage.index(),
+            completed: self.completed(),
+            total: (stage.index() >= EnergySimulationRunStage::Run.index()).then(|| self.warmup_timesteps + u64::from(self.total_timesteps)),
+            counters: EnergySimulationRunCounter::ALL.iter().zip(values).map(|(counter, value)| ToolRunCounter { counter: counter.index(), value }).collect(),
+            units_per_second: 0.0,
+            conflicts: 0,
+            steps: ToolRunStepRing::new(),
+        }
+    }
+}
+
+fn close_payload(payload: &mut RetainedJobPayload) {
+    while !payload.terminal_is_empty() {
+        let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+    }
+}
+
+fn fault_outcome() -> StepOutcome {
+    StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) })
+}
+
+/// ⏯️ The simulation `runJob`: captures the run's base model in bounded grants, admits the numerical
+/// `EnergyJob` and steps it inline under the caller's deadline. It consumes one unit of fuel per computed
+/// timestep and flushes one tick whenever at least one timestep was computed or the run settled; the
+/// settled outcome (`Complete` with the numerical commit candidate, `Fault`, `Cancelled`) follows on the next call.
+pub struct EnergySimulationRunJob {
+    identity: ToolRunIdentity,
+    writer: ToolRunTickWriter,
+    snapshot: Option<Arc<EnergyModelSnapshot>>,
+    template: SimulationConfig,
+    phase: EnergyRunPhase,
+    census: CaptureCensus,
     capture: Option<ModelCapture>,
     capture_close: Option<EnergyModelCloseCursor>,
-    config: EnergySimulationConfigProjection,
-    job: Option<EnergyJob>,
-    restore: Option<EnergyRestoreJob>,
+    numerical: Option<EnergyJob>,
     rejected: Option<EnergyAdmissionRejected>,
-    restore_rejected: Option<EnergyCheckpointRejected>,
-    cancel: CancelToken,
-    preview_sequence: u64,
-    outcome: Option<StepOutcome>,
-    preview_packet: Option<EnergyWirePacket>,
-    checkpoint: Option<EnergyWireLease>,
-    checkpoint_packet: Option<(u64, EnergyWirePacket)>,
-    retiring_checkpoint_packet: Option<EnergyWirePacket>,
-    commit: Option<EnergyWireLease>,
-    fault: Option<EnergyWireLease>,
-    projection: EnergySimulationProjection,
-    adopt_requested: bool,
-    admission_blocked: bool,
-    spawned: bool,
-    worker_attached: bool,
-    worker_returned: bool,
+    operation: OperationId,
+    generation: Generation,
+    numerical_sequence: u64,
+    cursor: EnergyRunCursor,
+    settled: Option<StepOutcome>,
     closing: bool,
-    close_lane: u8,
 }
 
-#[expect(clippy::large_enum_variant, reason = "Stale admission returns the exact checkpoint owner for retry or bounded retirement without allocating.")]
-enum MountedAdmissionError {
-    Stale { checkpoint: Option<EnergyWirePacket> },
-    Rejected(&'static str),
-}
-
-impl MountedState {
-    fn new(identity: MountedIdentity, snapshot: store::SnapshotRead<EnergyModelSnapshot>, config: EnergySimulationConfigProjection) -> Self {
-        let mut projection = EnergySimulationProjection::new(identity);
-        projection.checkpoint_token = config.checkpoint_token;
+impl EnergySimulationRunJob {
+    pub fn new(identity: ToolRunIdentity, snapshot: Arc<EnergyModelSnapshot>, template: SimulationConfig) -> Self {
         Self {
             identity,
-            snapshot: EnergyModelReadLease::new(snapshot, identity.document_generation.0, identity.canonical_base_revision),
-            capture: Some(ModelCapture::new()),
+            writer: ToolRunTickWriter::new(identity),
+            snapshot: Some(snapshot),
+            template,
+            phase: EnergyRunPhase::Census,
+            census: CaptureCensus::new(),
+            capture: None,
             capture_close: None,
-            config,
-            job: None,
-            restore: None,
+            numerical: None,
             rejected: None,
-            restore_rejected: None,
-            cancel: semio_framework_job::root_cancel_token(),
-            preview_sequence: 0,
-            outcome: None,
-            preview_packet: None,
-            checkpoint: None,
-            checkpoint_packet: None,
-            retiring_checkpoint_packet: None,
-            commit: None,
-            fault: None,
-            projection,
-            adopt_requested: false,
-            admission_blocked: false,
-            spawned: false,
-            worker_attached: false,
-            worker_returned: false,
+            operation: semio_framework_job::allocate_operation_id(),
+            generation: Generation(u64::from(identity.generation)),
+            numerical_sequence: 0,
+            cursor: EnergyRunCursor::new(),
+            settled: None,
             closing: false,
-            close_lane: 0,
         }
     }
 
-    fn snapshot_is_fresh(&self) -> bool {
-        self.snapshot.model().is_some()
+    fn stage(&self) -> EnergySimulationRunStage {
+        if self.numerical.is_some() {
+            EnergySimulationRunStage::of(self.cursor.stage)
+        } else {
+            EnergySimulationRunStage::Capture
+        }
     }
 
-    fn capture_one(&mut self) -> Result<bool, &'static str> {
-        if !self.snapshot_is_fresh() || self.cancel.is_cancelled_now() {
-            return Err("energy.session.capture-stale-or-cancelled");
-        }
-        let source = self.snapshot.model().ok_or("energy.session.snapshot-missing")?;
-        let capture = self.capture.as_mut().ok_or("energy.session.capture-missing")?;
-        capture.step_one(source)
+    fn refuse(&mut self, reason: EnergySimulationRunReason, args: &[ToolRunStepArg]) -> EnergyRunGrant {
+        let _ = self.writer.step(ToolRunStepKind::Danger, self.stage().index(), reason.code(), None, args);
+        self.phase = EnergyRunPhase::Settled;
+        EnergyRunGrant::Settled(fault_outcome())
     }
 
-    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
-    fn admit_job(&mut self, render: AppRenderOperationContext, live_request: u64, expected: MountedIdentity, checkpoint: Option<EnergyWirePacket>) -> Result<(), MountedAdmissionError> {
-        if self.config.checkpoint_token != 0 && checkpoint.is_none() {
-            self.admission_blocked = true;
-            self.projection.status = EnergySimulationStatus::Faulted;
-            return Err(MountedAdmissionError::Rejected("energy.session.checkpoint-token-not-found"));
+    fn census_one(&mut self) -> EnergyRunGrant {
+        let Some(snapshot) = self.snapshot.as_ref() else { return self.refuse(EnergySimulationRunReason::CaptureRejected, &[]) };
+        match self.census.step_one(&snapshot.model) {
+            Ok(false) => EnergyRunGrant::Continue,
+            Ok(true) => {
+                self.capture = Some(ModelCapture::new());
+                self.phase = EnergyRunPhase::Capture;
+                EnergyRunGrant::Continue
+            }
+            Err(_) => self.refuse(EnergySimulationRunReason::CaptureRejected, &[]),
         }
-        let snapshot_fresh = self.snapshot_is_fresh();
-        let cancelled = self.cancel.is_cancelled_now();
-        let model = match take_captured_model_for_admission(&mut self.capture, self.identity, expected, render, live_request, self.config.digest(), snapshot_fresh, cancelled) {
-            Ok(model) => model,
-            Err(_) => return Err(MountedAdmissionError::Stale { checkpoint }),
-        };
-        let config = self.config.build(&model);
-        if self.config.checkpoint_token != 0 {
-            let packet = checkpoint.expect("checkpoint presence was retained before owner move");
-            return match EnergyRestoreJob::admit(self.identity.operation(), model, config, packet, EnergyNumericalBounds::default()) {
-                Ok(restore) => {
-                    self.restore = Some(restore);
-                    self.projection.status = EnergySimulationStatus::Queued;
-                    Ok(())
-                }
-                Err(rejected) => {
-                    self.restore_rejected = Some(rejected);
-                    self.projection.status = EnergySimulationStatus::Faulted;
-                    Err(MountedAdmissionError::Rejected("energy.session.restore-admission-rejected"))
-                }
-            };
+    }
+
+    fn capture_one(&mut self) -> EnergyRunGrant {
+        let (Some(snapshot), Some(capture)) = (self.snapshot.as_ref(), self.capture.as_mut()) else { return self.refuse(EnergySimulationRunReason::CaptureRejected, &[]) };
+        match capture.step_one(&snapshot.model) {
+            Ok(false) => EnergyRunGrant::Continue,
+            Ok(true) => self.admit(),
+            Err(_) => self.refuse(EnergySimulationRunReason::CaptureRejected, &[]),
         }
-        match EnergyJob::admit(self.identity.operation(), model, config, EnergyNumericalBounds::default()) {
+    }
+
+    fn admit(&mut self) -> EnergyRunGrant {
+        let Some(capture) = self.capture.take() else { return self.refuse(EnergySimulationRunReason::CaptureRejected, &[]) };
+        let model = capture.finish();
+        let config = simulation_config_for(&self.template, &model);
+        let base = self.identity.base_revision[..8].try_into().map_or(0, u64::from_be_bytes);
+        let operation = semio_framework_job::Operation::new(self.operation, semio_framework_job::RevisionId(base), self.generation, self.identity.id.run ^ base);
+        self.snapshot = None;
+        match EnergyJob::admit(operation, model, config, EnergyNumericalBounds::default()) {
             Ok(job) => {
-                self.job = Some(job);
-                self.projection.status = EnergySimulationStatus::Queued;
-                Ok(())
+                self.numerical = Some(job);
+                self.phase = EnergyRunPhase::Simulate;
+                EnergyRunGrant::Continue
             }
             Err(rejected) => {
                 self.rejected = Some(rejected);
-                self.projection.status = EnergySimulationStatus::Faulted;
-                Err(MountedAdmissionError::Rejected("energy.session.numerical-admission-rejected"))
+                self.refuse(EnergySimulationRunReason::AdmissionRejected, &[])
             }
         }
     }
 
-    fn retry_rejected(&mut self) -> bool {
-        if let Some(rejected) = self.rejected.take() {
-            return match rejected.retry(EnergyNumericalBounds::default()) {
-                Ok(job) => {
-                    self.job = Some(job);
-                    self.admission_blocked = false;
-                    self.spawned = false;
-                    self.projection.status = EnergySimulationStatus::Queued;
-                    true
+    /// 🦶️ Steps the numerical job until one timestep is computed, the run settles or the caller must yield.
+    fn simulate(&mut self, cx: &StepContext<'_>) -> EnergyRunGrant {
+        let Self { numerical, numerical_sequence, operation, generation, cursor, writer, phase, .. } = self;
+        let Some(job) = numerical.as_mut() else { return EnergyRunGrant::Settled(fault_outcome()) };
+        let mut inner = StepContext::new(*operation, *generation, StepBudget::new(u64::MAX, cx.deadline_us()), cx.cancel_token(), semio_framework_job::default_now_us, numerical_sequence);
+        loop {
+            if cx.should_yield() {
+                return EnergyRunGrant::Continue;
+            }
+            let settled = match job.step(&mut inner) {
+                StepOutcome::Yield => None,
+                StepOutcome::PreviewReady(mut payload) => {
+                    close_payload(&mut payload);
+                    None
                 }
-                Err(rejected) => {
-                    self.rejected = Some(rejected);
-                    false
+                StepOutcome::CheckpointReady(mut checkpoint) => {
+                    close_payload(&mut checkpoint.state);
+                    (!acknowledge_checkpoint(job, *generation)).then(fault_outcome)
                 }
+                StepOutcome::Complete(candidate) => {
+                    cursor.observe(job.cursor(), writer);
+                    cursor.publish_tier(writer);
+                    Some(StepOutcome::Complete(candidate))
+                }
+                StepOutcome::Fault(mut fault) => {
+                    close_payload(&mut fault.detail);
+                    let _ = writer.step(ToolRunStepKind::Danger, EnergySimulationRunStage::of(cursor.stage).index(), EnergySimulationRunReason::SimulationFaulted.code(), None, &[ToolRunStepArg::Unsigned(cursor.completed())]);
+                    Some(fault_outcome())
+                }
+                StepOutcome::Cancelled => Some(StepOutcome::Cancelled),
             };
+            if let Some(outcome) = settled {
+                *phase = EnergyRunPhase::Settled;
+                return EnergyRunGrant::Settled(outcome);
+            }
+            if cursor.observe(job.cursor(), writer) {
+                return EnergyRunGrant::Timestep;
+            }
         }
-        if let Some(rejected) = self.restore_rejected.take() {
-            return match rejected.retry(EnergyNumericalBounds::default()) {
-                Ok(restore) => {
-                    self.restore = Some(restore);
-                    self.admission_blocked = false;
-                    self.spawned = false;
-                    self.projection.status = EnergySimulationStatus::Queued;
-                    true
-                }
-                Err(rejected) => {
-                    self.restore_rejected = Some(rejected);
-                    false
-                }
+    }
+}
+
+/// 📮️ Retires the numerical job's retained restore checkpoint: a run restarts rather than restores.
+fn acknowledge_checkpoint(job: &mut EnergyJob, generation: Generation) -> bool {
+    let mut lease = match job.take_checkpoint_packet(generation) {
+        Ok(Some(lease)) => lease,
+        Ok(None) => return true,
+        Err(_) => return false,
+    };
+    while !lease.packet().terminal_is_empty() {
+        let _ = lease.packet_mut().ack_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+    }
+    job.ack_checkpoint_packet(lease).is_ok()
+}
+
+impl InteractiveJob for EnergySimulationRunJob {
+    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+        if self.closing || cx.is_cancelled() {
+            return StepOutcome::Cancelled;
+        }
+        if let Some(outcome) = self.settled.take() {
+            return outcome;
+        }
+        let mut computed = false;
+        let settled = loop {
+            if cx.should_yield() || self.phase == EnergyRunPhase::Settled {
+                break None;
+            }
+            let grant = match self.phase {
+                EnergyRunPhase::Census => self.census_one(),
+                EnergyRunPhase::Capture => self.capture_one(),
+                EnergyRunPhase::Simulate => self.simulate(cx),
+                EnergyRunPhase::Settled => EnergyRunGrant::Continue,
             };
-        }
-        false
-    }
-
-    fn packet_is_fresh(&self, identity: crate::EnergyWireIdentity) -> bool {
-        self.snapshot_is_fresh() && identity.operation == self.identity.operation.0 && identity.base_revision == self.identity.document_revision.0 && identity.generation == self.identity.generation.0 && identity.seed == self.identity.operation().seed
-    }
-
-    fn install_preview(&mut self, preview: &EnergyJobPreview) -> bool {
-        let tier_index = quality_tier_index(preview.tier);
-        let prior_tier = self.projection.latest_tier.map_or(0, quality_tier_index);
-        if preview.sequence <= self.projection.latest_sequence || tier_index < prior_tier {
-            return false;
-        }
-        let projection = EnergyTierProjection {
-            app_instance_id: self.identity.app_instance_id,
-            document_revision: self.identity.document_revision,
-            document_generation: self.identity.document_generation,
-            canonical_base_revision: self.identity.canonical_base_revision,
-            operation: self.identity.operation,
-            generation: self.identity.generation,
-            config_digest: self.identity.config_digest,
-            sequence: preview.sequence,
-            tier: preview.tier,
-            stage: preview.stage,
-            warmup_hour: preview.warmup_hour,
-            timestep: preview.timestep,
-            total_timesteps: preview.total_timesteps,
-            facility_electricity_kwh: preview.facility_electricity_kwh,
+            match grant {
+                EnergyRunGrant::Continue => {}
+                EnergyRunGrant::Timestep => {
+                    computed = true;
+                    cx.consume_fuel(1);
+                }
+                EnergyRunGrant::Settled(outcome) => break Some(outcome),
+            }
         };
-        self.projection.tiers[tier_index] = Some(projection);
-        self.projection.latest_sequence = preview.sequence;
-        self.projection.latest_tier = Some(preview.tier);
-        self.projection.status = EnergySimulationStatus::Running;
-        true
-    }
-
-    fn collect_channels_one(&mut self) -> Result<(), &'static str> {
-        if self.preview_packet.is_none() {
-            let packet = self.job.as_mut().ok_or("energy.session.job-missing")?.take_preview_packet(self.identity.generation).map_err(|_| "energy.session.preview-identity")?;
-            if let Some(packet) = packet {
-                let fresh = self.packet_is_fresh(packet.identity());
-                if fresh {
-                    if let Some(preview) = packet.preview() {
-                        let _ = self.install_preview(preview);
-                    }
+        if !computed && settled.is_none() {
+            return StepOutcome::Yield;
+        }
+        let state = if matches!(settled, Some(StepOutcome::Complete(_))) { ToolRunState::Complete } else { ToolRunState::Running };
+        self.writer.progress(self.cursor.progress(self.identity, state, self.stage()));
+        let payload = self.writer.finish().and_then(|tick| tick.encode().ok()).and_then(|bytes| cx.payload_from_bytes(JobPayloadStream::Preview, &bytes).map_err(|rejected| drop(rejected.into_source())).ok());
+        match payload {
+            Some(payload) => {
+                self.settled = settled;
+                StepOutcome::PreviewReady(payload)
+            }
+            None => {
+                if let Some(mut outcome) = settled {
+                    while !matches!(outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) {}
                 }
-                self.preview_packet = Some(packet);
-                return Ok(());
+                fault_outcome()
             }
         }
-        if self.checkpoint.is_none() {
-            self.checkpoint = self.job.as_mut().ok_or("energy.session.job-missing")?.take_checkpoint_packet(self.identity.generation).map_err(|_| "energy.session.checkpoint-identity")?;
-            if let Some(lease) = self.checkpoint.as_ref() {
-                if !self.packet_is_fresh(lease.identity()) {
-                    return Err("energy.session.checkpoint-stale");
-                }
-                self.projection.checkpoint_ready = true;
-                return Ok(());
-            }
-        }
-        if self.commit.is_none() {
-            self.commit = self.job.as_mut().ok_or("energy.session.job-missing")?.take_commit_packet(self.identity.generation).map_err(|_| "energy.session.commit-identity")?;
-            if let Some(lease) = self.commit.as_ref() {
-                if !self.packet_is_fresh(lease.identity()) {
-                    return Err("energy.session.commit-stale");
-                }
-                self.projection.final_ready = true;
-                self.projection.status = EnergySimulationStatus::FinalReady;
-                return Ok(());
-            }
-        }
-        if self.fault.is_none() {
-            self.fault = self.job.as_mut().ok_or("energy.session.job-missing")?.take_fault_packet(self.identity.generation).map_err(|_| "energy.session.fault-identity")?;
-            if let Some(lease) = self.fault.as_ref() {
-                if !self.packet_is_fresh(lease.identity()) {
-                    return Err("energy.session.fault-stale");
-                }
-                self.projection.fault_ready = true;
-                self.projection.status = EnergySimulationStatus::Faulted;
-            }
-        }
-        Ok(())
-    }
-
-    fn close_outcome_one(&mut self, maximum_bytes: usize) -> bool {
-        let Some(outcome) = self.outcome.as_mut() else { return true };
-        if matches!(outcome.close_step(1, maximum_bytes), semio_framework_job::JobPayloadCloseStep::Complete) {
-            self.outcome = None;
-        }
-        false
-    }
-
-    fn worker_step(&mut self, budget: JobBudget) -> JobStep {
-        if self.closing || self.cancel.is_cancelled_now() {
-            self.projection.status = EnergySimulationStatus::Cancelled;
-            return JobStep::Done(Vec::new());
-        }
-        if budget.fuel == 0 || budget.deadline_ms == 0 || self.outcome.is_some() {
-            return JobStep::Running(None);
-        }
-        let Some(now) = semio_framework_job::default_now_us() else { return JobStep::Running(None) };
-        let Some(deadline) = now.checked_add(u64::from(budget.deadline_ms).min(7) * 1_000) else { return JobStep::Running(None) };
-        {
-            let mut context = StepContext::new(self.identity.operation, self.identity.generation, StepBudget::new(budget.fuel.min(1), deadline), self.cancel.clone(), semio_framework_job::default_now_us, &mut self.preview_sequence);
-            if context.should_yield() {
-                return JobStep::Running(None);
-            }
-            if let Some(restore) = self.restore.as_mut() {
-                match restore.step(&mut context) {
-                    Ok(false) => return JobStep::Running(None),
-                    Ok(true) => {
-                        let restore = self.restore.take().expect("ready Energy restore remains mounted");
-                        match restore.finish(&context) {
-                            Ok(job) => {
-                                self.job = Some(job);
-                                self.projection.status = EnergySimulationStatus::Running;
-                                return JobStep::Running(None);
-                            }
-                            Err(restore) => {
-                                self.restore = Some(restore);
-                                self.projection.status = EnergySimulationStatus::Faulted;
-                                return JobStep::Failed(b"energy.session.restore-finish".to_vec());
-                            }
-                        }
-                    }
-                    Err(_) => {
-                        self.projection.status = EnergySimulationStatus::Faulted;
-                        return JobStep::Failed(b"energy.session.restore-replay".to_vec());
-                    }
-                }
-            }
-        }
-        if let Err(detail) = self.collect_channels_one() {
-            self.projection.status = EnergySimulationStatus::Faulted;
-            return JobStep::Failed(detail.as_bytes().to_vec());
-        }
-        if self.commit.is_some() || self.fault.is_some() {
-            return JobStep::Running(None);
-        }
-        let Some(job) = self.job.as_mut() else { return JobStep::Failed(b"energy.session.job-missing".to_vec()) };
-        let mut context = StepContext::new(self.identity.operation, self.identity.generation, StepBudget::new(budget.fuel.min(1), deadline), self.cancel.clone(), semio_framework_job::default_now_us, &mut self.preview_sequence);
-        let outcome = job.step(&mut context);
-        match outcome {
-            StepOutcome::Yield => JobStep::Running(None),
-            StepOutcome::Cancelled => {
-                self.projection.status = EnergySimulationStatus::Cancelled;
-                JobStep::Done(Vec::new())
-            }
-            other => retain_worker_outcome(&mut self.outcome, other),
-        }
-    }
-
-    fn maintenance_one(&mut self, maximum_bytes: usize) -> PluginCloseStep {
-        if !self.close_outcome_one(maximum_bytes) {
-            return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        if let Some(packet) = self.preview_packet.as_mut() {
-            let step = packet.ack_step(1, maximum_bytes);
-            if matches!(step, semio_framework_job::JobPayloadCloseStep::Complete) {
-                self.preview_packet = None;
-            }
-            return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        if let Some(packet) = self.retiring_checkpoint_packet.as_mut() {
-            let _ = packet.ack_step(1, maximum_bytes);
-            if packet.terminal_is_empty() {
-                self.retiring_checkpoint_packet = None;
-            }
-            return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        if let Some(lease) = self.checkpoint.take() {
-            if !self.packet_is_fresh(lease.identity()) {
-                self.checkpoint = Some(lease);
-                return PluginCloseStep::Blocked { reason: "stale Energy checkpoint retained for retirement" };
-            }
-            if self.checkpoint_packet.is_some() && self.retiring_checkpoint_packet.is_some() {
-                self.checkpoint = Some(lease);
-                return PluginCloseStep::Blocked { reason: "Energy checkpoint replacement retirement saturated" };
-            }
-            let Some(job) = self.job.as_mut() else {
-                self.checkpoint = Some(lease);
-                return PluginCloseStep::Blocked { reason: "checkpoint job owner missing" };
-            };
-            let identity = lease.identity();
-            let packet = match job.ack_checkpoint_for_restore(lease) {
-                Ok(packet) => packet,
-                Err(lease) => {
-                    self.checkpoint = Some(lease);
-                    return PluginCloseStep::Blocked { reason: "checkpoint transfer ACK rejected" };
-                }
-            };
-            self.retiring_checkpoint_packet = self.checkpoint_packet.take().map(|(_, packet)| packet);
-            let token = identity.sequence.max(1);
-            self.checkpoint_packet = Some((token, packet));
-            self.projection.checkpoint_token = token;
-            self.projection.checkpoint_ready = true;
-            return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        if self.adopt_requested {
-            if let Some(mut lease) = self.commit.take() {
-                if !self.packet_is_fresh(lease.identity()) {
-                    self.commit = Some(lease);
-                    return PluginCloseStep::Blocked { reason: "stale Energy commit retained for retirement" };
-                }
-                if !lease.packet().terminal_is_empty() {
-                    let _ = lease.packet_mut().ack_step(1, maximum_bytes);
-                    self.commit = Some(lease);
-                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
-                }
-                let Some(job) = self.job.as_mut() else {
-                    self.commit = Some(lease);
-                    return PluginCloseStep::Blocked { reason: "commit job owner missing" };
-                };
-                if let Err(lease) = job.ack_commit_packet(lease) {
-                    self.commit = Some(lease);
-                    return PluginCloseStep::Blocked { reason: "commit ACK rejected" };
-                }
-                self.projection.final_ready = false;
-                self.projection.adopted = true;
-                self.projection.status = EnergySimulationStatus::Adopted;
-                self.adopt_requested = false;
-                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
-            }
-        }
-        PluginCloseStep::Complete
     }
 
     fn begin_close(&mut self) {
         self.closing = true;
-        self.projection.status = EnergySimulationStatus::Closing;
-        self.cancel.cancel_now();
-        if let Some(job) = self.job.as_mut() {
-            job.begin_close();
+        if let Some(job) = self.numerical.as_mut() {
+            InteractiveJob::begin_close(job);
         }
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
-        if maximum_items == 0 {
-            return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-        }
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
         self.begin_close();
-        match self.close_lane {
-            0 => {
-                if !self.close_outcome_one(maximum_bytes) {
-                    PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                } else {
-                    self.close_lane += 1;
-                    PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-            }
-            1 => {
-                if let Some(packet) = self.preview_packet.as_mut() {
-                    let _ = packet.ack_step(1, maximum_bytes);
-                    if packet.terminal_is_empty() {
-                        self.preview_packet = None;
-                    }
-                    PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                } else {
-                    self.close_lane += 1;
-                    PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-            }
-            2 => {
-                if let Some((_, packet)) = self.checkpoint_packet.as_mut() {
-                    let _ = packet.ack_step(1, maximum_bytes);
-                    if packet.terminal_is_empty() {
-                        self.checkpoint_packet = None;
-                    }
-                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
-                }
-                self.close_lane += 1;
-                PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
-            }
-            3 => {
-                if let Some(packet) = self.retiring_checkpoint_packet.as_mut() {
-                    let _ = packet.ack_step(1, maximum_bytes);
-                    if packet.terminal_is_empty() {
-                        self.retiring_checkpoint_packet = None;
-                    }
-                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
-                }
-                self.close_lane += 1;
-                PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
-            }
-            4..=6 => {
-                let lease = match self.close_lane {
-                    4 => &mut self.checkpoint,
-                    5 => &mut self.commit,
-                    _ => &mut self.fault,
-                };
-                if let Some(owner) = lease.as_mut() {
-                    if !owner.packet().terminal_is_empty() {
-                        let _ = owner.packet_mut().ack_step(1, maximum_bytes);
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
-                    }
-                }
-                if let Some(owner) = lease.take() {
-                    let Some(job) = self.job.as_mut() else {
-                        *lease = Some(owner);
-                        return PluginCloseStep::Blocked { reason: "Energy lease job owner missing" };
-                    };
-                    let result = match self.close_lane {
-                        4 => job.ack_checkpoint_packet(owner),
-                        5 => job.ack_commit_packet(owner),
-                        _ => job.ack_fault_packet(owner),
-                    };
-                    if let Err(owner) = result {
-                        *lease = Some(owner);
-                        return PluginCloseStep::Blocked { reason: "Energy lease close ACK rejected" };
-                    }
-                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
-                }
-                self.close_lane += 1;
-                PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
-            }
-            7 => {
-                if let Some(job) = self.job.as_mut() {
-                    match job.close_step(1, maximum_bytes) {
-                        semio_framework_job::InteractiveJobCloseStep::Complete => {
-                            self.job = None;
-                            PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                        }
-                        semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
-                        semio_framework_job::InteractiveJobCloseStep::Blocked => PluginCloseStep::Blocked { reason: "Energy numerical owner close blocked" },
-                    }
-                } else {
-                    self.close_lane += 1;
-                    PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-            }
-            8 => {
-                if let Some(restore) = self.restore.as_mut() {
-                    match restore.close_step(1, maximum_bytes) {
-                        semio_framework_job::InteractiveJobCloseStep::Complete => {
-                            if !restore.terminal_is_empty() {
-                                return PluginCloseStep::Blocked { reason: "Energy restore false terminal" };
-                            }
-                            self.restore = None;
-                            return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
-                        }
-                        semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => return PluginCloseStep::Pending { released_items, released_bytes },
-                        semio_framework_job::InteractiveJobCloseStep::Blocked => return PluginCloseStep::Blocked { reason: "Energy restore close blocked" },
-                    }
-                }
-                self.close_lane += 1;
-                PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
-            }
-            9 => {
-                if let Some(rejected) = self.rejected.as_mut() {
-                    match rejected.close_step(1, maximum_bytes) {
-                        semio_framework_job::InteractiveJobCloseStep::Complete => {
-                            if !rejected.terminal_is_empty() {
-                                return PluginCloseStep::Blocked { reason: "Energy rejected owner false terminal" };
-                            }
-                            self.rejected = None;
-                            return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
-                        }
-                        semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => return PluginCloseStep::Pending { released_items, released_bytes },
-                        semio_framework_job::InteractiveJobCloseStep::Blocked => return PluginCloseStep::Blocked { reason: "Energy rejected owner close blocked" },
-                    }
-                }
-                self.close_lane += 1;
-                PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
-            }
-            10 => {
-                if let Some(rejected) = self.restore_rejected.as_mut() {
-                    match rejected.close_step(1, maximum_bytes) {
-                        semio_framework_job::InteractiveJobCloseStep::Complete => {
-                            if !rejected.terminal_is_empty() {
-                                return PluginCloseStep::Blocked { reason: "Energy restore rejection false terminal" };
-                            }
-                            self.restore_rejected = None;
-                            return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
-                        }
-                        semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => return PluginCloseStep::Pending { released_items, released_bytes },
-                        semio_framework_job::InteractiveJobCloseStep::Blocked => return PluginCloseStep::Blocked { reason: "Energy restore rejection close blocked" },
-                    }
-                }
-                self.close_lane += 1;
-                PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
-            }
-            11 => {
-                if let Some(capture) = self.capture.take() {
-                    self.capture_close = Some(EnergyModelCloseCursor::new(capture.finish()));
-                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
-                }
-                self.close_lane += 1;
-                PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
-            }
-            12 => {
-                if let Some(cursor) = self.capture_close.as_mut() {
-                    match cursor.close_step(maximum_bytes) {
-                        semio_framework_job::InteractiveJobCloseStep::Complete => {
-                            self.capture_close = None;
-                            return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
-                        }
-                        semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => return PluginCloseStep::Pending { released_items, released_bytes },
-                        semio_framework_job::InteractiveJobCloseStep::Blocked => return PluginCloseStep::Blocked { reason: "Energy partial capture close blocked" },
-                    }
-                }
-                self.close_lane += 1;
-                PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
-            }
-            13 => {
-                if !self.snapshot.close_step() {
-                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
-                }
-                self.close_lane += 1;
-                PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
-            }
-            14 => {
-                self.projection.tiers = [None; 4];
-                self.close_lane += 1;
-                PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
-            }
-            _ if self.worker_attached && !self.worker_returned => PluginCloseStep::Blocked { reason: "Energy process owner has not published its fixed recovery witness" },
-            _ => PluginCloseStep::Complete,
+        if maximum_items == 0 {
+            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
         }
+        if let Some(outcome) = self.settled.as_mut() {
+            if matches!(outcome.close_step(1, maximum_bytes), semio_framework_job::JobPayloadCloseStep::Complete) {
+                self.settled = None;
+            }
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if let Some(job) = self.numerical.as_mut() {
+            return match InteractiveJob::close_step(job, maximum_items, maximum_bytes) {
+                InteractiveJobCloseStep::Complete => {
+                    self.numerical = None;
+                    InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                }
+                pending => pending,
+            };
+        }
+        if let Some(rejected) = self.rejected.as_mut() {
+            return match rejected.close_step(maximum_items, maximum_bytes) {
+                InteractiveJobCloseStep::Complete if rejected.terminal_is_empty() => {
+                    self.rejected = None;
+                    InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                }
+                InteractiveJobCloseStep::Complete => InteractiveJobCloseStep::Blocked,
+                pending => pending,
+            };
+        }
+        if let Some(capture) = self.capture.take() {
+            self.capture_close = Some(EnergyModelCloseCursor::new(capture.finish()));
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if let Some(close) = self.capture_close.as_mut() {
+            return match close.close_step(maximum_bytes) {
+                InteractiveJobCloseStep::Complete => {
+                    self.capture_close = None;
+                    InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                }
+                pending => pending,
+            };
+        }
+        if self.snapshot.take().is_some() {
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        InteractiveJobCloseStep::Complete
     }
 
     fn terminal_is_empty(&self) -> bool {
-        !self.worker_attached
-            && self.job.is_none()
-            && self.restore.is_none()
-            && self.rejected.is_none()
-            && self.restore_rejected.is_none()
-            && self.capture.is_none()
-            && self.capture_close.as_ref().is_none_or(EnergyModelCloseCursor::terminal_is_empty)
-            && self.snapshot.terminal_is_empty()
-            && self.outcome.is_none()
-            && self.preview_packet.is_none()
-            && self.checkpoint.is_none()
-            && self.checkpoint_packet.is_none()
-            && self.retiring_checkpoint_packet.is_none()
-            && self.commit.is_none()
-            && self.fault.is_none()
-            && self.projection.tiers.iter().all(Option::is_none)
+        self.closing && self.settled.is_none() && self.numerical.is_none() && self.rejected.is_none() && self.capture.is_none() && self.capture_close.is_none() && self.snapshot.is_none()
     }
 }
-
-#[derive(Clone, Copy)]
-struct CurrentSession {
-    app_instance_id: u32,
-    shell: u16,
-    identity: MountedIdentity,
-}
-
-#[derive(Clone, Copy)]
-struct AdoptedProjectionAuthority {
-    render: AppRenderOperationContext,
-    identity: MountedIdentity,
-    projection: EnergySimulationProjection,
-}
-
-impl AdoptedProjectionAuthority {
-    fn new(identity: MountedIdentity, projection: EnergySimulationProjection) -> Option<Self> {
-        let render = AppRenderOperationContext { app_instance_id: identity.app_instance_id, base_revision: identity.document_revision, generation: identity.document_generation, canonical_base_revision: identity.canonical_base_revision };
-        let authority = Self { render, identity, projection };
-        authority.matches_render(render).then_some(authority)
-    }
-
-    fn matches_render(&self, render: AppRenderOperationContext) -> bool {
-        self.render == render
-            && self.identity.matches_render(render)
-            && self.projection.adopted
-            && self.projection.request == self.identity.request
-            && self.projection.operation == self.identity.operation
-            && self.projection.generation == self.identity.generation
-            && self.projection.config_digest == self.identity.config_digest
-            && self.projection.tiers.iter().flatten().all(|tier| {
-                tier.app_instance_id == self.identity.app_instance_id
-                    && tier.document_revision == self.identity.document_revision
-                    && tier.document_generation == self.identity.document_generation
-                    && tier.canonical_base_revision == self.identity.canonical_base_revision
-                    && tier.operation == self.identity.operation
-                    && tier.generation == self.identity.generation
-                    && tier.config_digest == self.identity.config_digest
-            })
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-struct RecoveryRecord {
-    shell: u16,
-    identity: MountedIdentity,
-}
-
-#[derive(Clone, Copy)]
-struct PendingPreflight {
-    render: AppRenderOperationContext,
-    request: u64,
-    config: EnergySimulationConfigProjection,
-    census: CaptureCensus,
-}
-
-struct Registry {
-    shells: [Rc<RefCell<Option<MountedState>>>; SHELL_SLOTS],
-    apps: [Option<u32>; ACTIVE_SLOTS],
-    last_request: [u64; ACTIVE_SLOTS],
-    settings: [EnergySimulationConfigProjection; ACTIVE_SLOTS],
-    current: [Option<CurrentSession>; ACTIVE_SLOTS],
-    adopted: [Option<AdoptedProjectionAuthority>; ACTIVE_SLOTS],
-    pending: [Option<u16>; ACTIVE_SLOTS],
-    preflight: [Option<PendingPreflight>; ACTIVE_SLOTS],
-    retiring: [Option<u16>; SHELL_SLOTS],
-    retirement_reserved: [bool; SHELL_SLOTS],
-    shell_retirement: [Option<u8>; SHELL_SLOTS],
-    recovery_reserved: [bool; SHELL_SLOTS],
-    events: [Option<SessionEvent>; EVENT_SLOTS],
-    event_head: usize,
-    event_len: usize,
-    free: [u16; SHELL_SLOTS],
-    free_head: usize,
-    free_len: usize,
-    next_event: u64,
-    next_generation: u64,
-    next_job: u64,
-}
-
-impl Registry {
-    fn new() -> Self {
-        Self {
-            shells: std::array::from_fn(|_| Rc::new(RefCell::new(None))),
-            apps: [None; ACTIVE_SLOTS],
-            last_request: [0; ACTIVE_SLOTS],
-            settings: [EnergySimulationConfigProjection::DEFAULT; ACTIVE_SLOTS],
-            current: [None; ACTIVE_SLOTS],
-            adopted: [None; ACTIVE_SLOTS],
-            pending: [None; ACTIVE_SLOTS],
-            preflight: [None; ACTIVE_SLOTS],
-            retiring: [None; SHELL_SLOTS],
-            retirement_reserved: [false; SHELL_SLOTS],
-            shell_retirement: [None; SHELL_SLOTS],
-            recovery_reserved: [false; SHELL_SLOTS],
-            events: [None; EVENT_SLOTS],
-            event_head: 0,
-            event_len: 0,
-            free: std::array::from_fn(|index| index as u16),
-            free_head: 0,
-            free_len: SHELL_SLOTS,
-            next_event: 0,
-            next_generation: 0,
-            next_job: 0,
-        }
-    }
-
-    fn push_event(&mut self, render: AppRenderOperationContext, kind: EnergySimulationEventKind) -> Result<(), &'static str> {
-        if self.event_len == EVENT_SLOTS || render.app_instance_id == 0 {
-            return Err("energy.session.event-log-saturated");
-        }
-        let slot = self.apps.iter().position(|app| *app == Some(render.app_instance_id)).or_else(|| self.apps.iter().position(Option::is_none)).ok_or("energy.session.active-slots-saturated")?;
-        self.next_event = self.next_event.checked_add(1).ok_or("energy.session.event-sequence-exhausted")?;
-        self.apps[slot] = Some(render.app_instance_id);
-        let write = (self.event_head + self.event_len) % EVENT_SLOTS;
-        self.events[write] = Some(SessionEvent { sequence: self.next_event, render, kind });
-        self.event_len += 1;
-        Ok(())
-    }
-
-    fn pop_event(&mut self) -> Option<SessionEvent> {
-        let event = self.events[self.event_head].take()?;
-        self.event_head = (self.event_head + 1) % EVENT_SLOTS;
-        self.event_len -= 1;
-        Some(event)
-    }
-
-    fn allocate(&mut self) -> Option<u16> {
-        if self.free_len == 0 {
-            return None;
-        }
-        let shell = self.free[self.free_head];
-        self.free_head = (self.free_head + 1) % SHELL_SLOTS;
-        self.free_len -= 1;
-        Some(shell)
-    }
-
-    fn release(&mut self, shell: u16) {
-        let write = (self.free_head + self.free_len) % SHELL_SLOTS;
-        self.free[write] = shell;
-        self.free_len += 1;
-    }
-
-    fn reserve_retirement(&mut self) -> Option<u8> {
-        let index = (0..SHELL_SLOTS).find(|index| self.retiring[*index].is_none() && !self.retirement_reserved[*index])?;
-        self.retirement_reserved[index] = true;
-        Some(index as u8)
-    }
-
-    fn install_retirement(&mut self, reservation: u8, shell: u16) -> bool {
-        let index = reservation as usize;
-        if index >= SHELL_SLOTS || !self.retirement_reserved[index] || self.retiring[index].is_some() {
-            return false;
-        }
-        self.retirement_reserved[index] = false;
-        self.retiring[index] = Some(shell);
-        true
-    }
-
-    fn release_retirement(&mut self, reservation: u8) {
-        let index = reservation as usize;
-        if index < SHELL_SLOTS {
-            self.retirement_reserved[index] = false;
-        }
-    }
-
-    fn cancel_preflight(&mut self, slot: usize) -> bool {
-        self.preflight[slot].take().is_some()
-    }
-
-    fn reserve_shell_retirement(&mut self, shell: u16) -> bool {
-        let Some(reservation) = self.reserve_retirement() else { return false };
-        self.shell_retirement[shell as usize] = Some(reservation);
-        true
-    }
-
-    fn reserve_shell_recovery(&mut self, shell: u16) -> bool {
-        let slot = &mut self.recovery_reserved[shell as usize];
-        if *slot {
-            return false;
-        }
-        *slot = true;
-        true
-    }
-
-    fn release_shell_recovery(&mut self, shell: u16) {
-        self.recovery_reserved[shell as usize] = false;
-    }
-
-    fn release_shell_retirement(&mut self, shell: u16) {
-        if let Some(reservation) = self.shell_retirement[shell as usize].take() {
-            self.release_retirement(reservation);
-        }
-    }
-
-    fn retire_shell(&mut self, shell: u16) -> bool {
-        let Some(reservation) = self.shell_retirement[shell as usize].take() else { return false };
-        self.install_retirement(reservation, shell)
-    }
-
-    fn slot_for(&self, app_instance_id: u32) -> Option<usize> {
-        self.apps.iter().position(|app| *app == Some(app_instance_id))
-    }
-
-    fn adopted_projection(&self, render: AppRenderOperationContext) -> Option<&EnergySimulationProjection> {
-        let slot = self.slot_for(render.app_instance_id)?;
-        let authority = self.adopted[slot].as_ref()?;
-        (self.last_request[slot] == authority.identity.request && authority.matches_render(render)).then_some(&authority.projection)
-    }
-
-    fn app_terminal_is_empty(&self, slot: usize, app_instance_id: u32) -> bool {
-        self.current[slot].is_none()
-            && self.pending[slot].is_none()
-            && self.preflight[slot].is_none()
-            && !self.retiring.iter().any(|entry| entry.is_some_and(|shell| self.shells[shell as usize].try_borrow().is_ok_and(|owner| owner.as_ref().is_some_and(|state| state.identity.app_instance_id == app_instance_id))))
-            && self.events.iter().flatten().all(|event| event.render.app_instance_id != app_instance_id)
-    }
-
-    fn checkpoint_identity(&self, slot: usize, render: AppRenderOperationContext, config: EnergySimulationConfigProjection) -> Result<Option<crate::EnergyWireIdentity>, &'static str> {
-        if config.checkpoint_token == 0 {
-            return Ok(None);
-        }
-        let current = self.current[slot].filter(|current| current.app_instance_id == render.app_instance_id).ok_or("Energy checkpoint token is unavailable")?;
-        let owner = self.shells[current.shell as usize].try_borrow().map_err(|_| "Energy checkpoint owner is busy")?;
-        let state = owner.as_ref().filter(|state| state.identity.matches_render(render) && state.identity.config_digest == config.digest()).ok_or("Energy checkpoint provenance is stale")?;
-        let (_, packet) = state.checkpoint_packet.as_ref().filter(|(token, _)| *token == config.checkpoint_token).ok_or("Energy checkpoint token is unavailable")?;
-        let identity = packet.identity();
-        if identity.operation != state.identity.operation.0 || identity.base_revision != render.base_revision.0 || identity.generation != state.identity.generation.0 || identity.seed != state.identity.operation_seed {
-            return Err("Energy checkpoint provenance is stale");
-        }
-        Ok(Some(identity))
-    }
-}
-
-thread_local! {
-    static REGISTRY: RefCell<Registry> = RefCell::new(Registry::new());
-    static RECOVERY: RefCell<[Option<RecoveryRecord>; SHELL_SLOTS]> = const { RefCell::new([None; SHELL_SLOTS]) };
-}
-//#endregion 🧰️FixedArena
-
-//#region 💼️ProcessBridge
-struct EnergyMountedBoundedJob {
-    shell_index: u16,
-    shell: Rc<RefCell<Option<MountedState>>>,
-    identity: MountedIdentity,
-}
-
-impl BoundedJob for EnergyMountedBoundedJob {
-    fn step(&mut self, budget: JobBudget) -> JobStep {
-        let Ok(mut owner) = self.shell.try_borrow_mut() else { return JobStep::Running(None) };
-        let Some(state) = owner.as_mut() else { return JobStep::Failed(b"energy.session.owner-missing".to_vec()) };
-        if state.identity != self.identity {
-            return JobStep::Failed(b"energy.session.aba".to_vec());
-        }
-        state.worker_step(budget)
-    }
-
-    fn cancel(&mut self) {
-        if let Ok(owner) = self.shell.try_borrow() {
-            if let Some(state) = owner.as_ref() {
-                state.cancel.cancel_now();
-            }
-        }
-    }
-
-    fn checkpoint(&self) -> Option<Vec<u8>> {
-        None
-    }
-
-    fn terminal_drop_is_shallow(&self) -> bool {
-        true
-    }
-}
-
-impl Drop for EnergyMountedBoundedJob {
-    fn drop(&mut self) {
-        RECOVERY.with(|recovery| {
-            let mut recovery = recovery.borrow_mut();
-            let slot = &mut recovery[self.shell_index as usize];
-            assert!(slot.is_none() || slot.is_some_and(|record| record.identity == self.identity), "fixed Energy recovery slot cannot replace a different generation owner");
-            *slot = Some(RecoveryRecord { shell: self.shell_index, identity: self.identity });
-        });
-    }
-}
-
-fn encode_input(shell: u16, identity: MountedIdentity) -> Vec<u8> {
-    let mut input = Vec::with_capacity(INPUT_BYTES);
-    input.push(1);
-    input.extend_from_slice(&shell.to_le_bytes());
-    input.extend_from_slice(&identity.app_instance_id.to_le_bytes());
-    input.extend_from_slice(&identity.request.to_le_bytes());
-    input.extend_from_slice(&identity.document_revision.0.to_le_bytes());
-    input.extend_from_slice(&identity.document_generation.0.to_le_bytes());
-    input.extend_from_slice(&identity.generation.0.to_le_bytes());
-    input.extend_from_slice(&identity.canonical_base_revision);
-    input.extend_from_slice(&identity.config_digest.to_le_bytes());
-    input.extend_from_slice(&identity.operation_seed.to_le_bytes());
-    input.extend_from_slice(&identity.operation.0.to_le_bytes());
-    input
-}
-
-fn decode_input(job: u64, input: &[u8]) -> Option<(u16, MountedIdentity)> {
-    if input.len() != INPUT_BYTES || input[0] != 1 || job & !JOB_COUNTER_MAXIMUM != JOB_TAG {
-        return None;
-    }
-    let shell = u16::from_le_bytes(input[1..3].try_into().ok()?);
-    let app_instance_id = u32::from_le_bytes(input[3..7].try_into().ok()?);
-    let request = u64::from_le_bytes(input[7..15].try_into().ok()?);
-    let document_revision = RevisionId(u64::from_le_bytes(input[15..23].try_into().ok()?));
-    let document_generation = Generation(u64::from_le_bytes(input[23..31].try_into().ok()?));
-    let generation = Generation(u64::from_le_bytes(input[31..39].try_into().ok()?));
-    let canonical_base_revision = input[39..71].try_into().ok()?;
-    let config_digest = u64::from_le_bytes(input[71..79].try_into().ok()?);
-    let operation_seed = u64::from_le_bytes(input[79..87].try_into().ok()?);
-    let operation = OperationId(u64::from_le_bytes(input[87..95].try_into().ok()?));
-    if generation.0 == 0 {
-        return None;
-    }
-    Some((shell, MountedIdentity { app_instance_id, request, document_revision, document_generation, canonical_base_revision, operation, generation, config_digest, operation_seed, job }))
-}
-
-fn factory(job: u64, input: &[u8]) -> Result<Box<dyn BoundedJob>, Vec<u8>> {
-    let (shell, identity) = decode_input(job, input).ok_or_else(|| b"energy.session.factory-input".to_vec())?;
-    REGISTRY.with(|registry| {
-        let registry = registry.borrow();
-        let owner = registry.shells.get(shell as usize).ok_or_else(|| b"energy.session.factory-shell".to_vec())?.clone();
-        if !registry.recovery_reserved[shell as usize] {
-            return Err(b"energy.session.factory-recovery-unreserved".to_vec());
-        }
-        let Ok(mut state_owner) = owner.try_borrow_mut() else { return Err(b"energy.session.factory-busy".to_vec()) };
-        let Some(state) = state_owner.as_mut().filter(|state| state.identity == identity && (state.job.is_some() || state.restore.is_some()) && !state.worker_attached) else {
-            return Err(b"energy.session.factory-stale".to_vec());
-        };
-        state.worker_attached = true;
-        drop(state_owner);
-        Ok(Box::new(EnergyMountedBoundedJob { shell_index: shell, shell: owner, identity }) as Box<dyn BoundedJob>)
-    })
-}
-
-pub fn initialize() {
-    REGISTRY.with(|registry| {
-        let _ = registry.borrow().free_len;
-    });
-    semio_framework_plugin::reactor::jobs::register_bounded_job_kind(ENERGY_SIMULATION_JOB_KIND, factory as BoundedJobFactory);
-}
-//#endregion 💼️ProcessBridge
-
-//#region 🎛️ProductSession
-pub fn record_event(render: AppRenderOperationContext, kind: EnergySimulationEventKind) -> Result<(), &'static str> {
-    if matches!(kind, EnergySimulationEventKind::Start { request: 0, .. })
-        || matches!(kind, EnergySimulationEventKind::Start { config, .. } if !config.validate())
-        || matches!(kind, EnergySimulationEventKind::Configure { config } if !config.validate())
-    {
-        return Err("energy.session.config-invalid");
-    }
-    if match kind {
-        EnergySimulationEventKind::Cancel(identity) | EnergySimulationEventKind::Retry(identity) | EnergySimulationEventKind::Discard(identity) | EnergySimulationEventKind::Adopt(identity) => !identity.valid(),
-        EnergySimulationEventKind::Start { .. } | EnergySimulationEventKind::Configure { .. } => false,
-    } {
-        return Err("energy.session.request-identity-invalid");
-    }
-    REGISTRY.with(|registry| registry.borrow_mut().push_event(render, kind))
-}
-
-fn apply_event_one(registry: &mut Registry) {
-    let Some(event) = registry.pop_event() else { return };
-    let _ = event.sequence;
-    let Some(slot) = registry.slot_for(event.render.app_instance_id) else { return };
-    match event.kind {
-        EnergySimulationEventKind::Configure { config } => {
-            registry.settings[slot] = config;
-        }
-        EnergySimulationEventKind::Start { request, config } => {
-            if request == 0 || request <= registry.last_request[slot] {
-                return;
-            }
-            registry.last_request[slot] = request;
-            if let Some(shell) = registry.pending[slot] {
-                if !registry.retire_shell(shell) {
-                    return;
-                }
-                registry.pending[slot] = None;
-            }
-            registry.preflight[slot] = Some(PendingPreflight { render: event.render, request, config, census: CaptureCensus::new() });
-        }
-        EnergySimulationEventKind::Retry(request) => {
-            let Some(current) = registry.current[slot].filter(|current| current.app_instance_id == event.render.app_instance_id && current.identity.matches_render(event.render) && current.identity.matches_request(request)) else { return };
-            if let Ok(mut owner) = registry.shells[current.shell as usize].try_borrow_mut() {
-                if owner.as_mut().is_some_and(MountedState::retry_rejected) {
-                    return;
-                }
-            }
-            if let Some(shell) = registry.pending[slot] {
-                if !registry.retire_shell(shell) {
-                    return;
-                }
-                registry.pending[slot] = None;
-            }
-            let Ok(owner) = registry.shells[current.shell as usize].try_borrow() else { return };
-            let Some(config) = owner.as_ref().map(|state| state.config) else { return };
-            drop(owner);
-            registry.preflight[slot] = Some(PendingPreflight { render: event.render, request: request.request, config, census: CaptureCensus::new() });
-        }
-        EnergySimulationEventKind::Cancel(request) => {
-            if registry.preflight[slot].is_some_and(|preflight| preflight.render == event.render && preflight.request == request.request) {
-                registry.cancel_preflight(slot);
-            }
-            if let Some(shell) = registry.pending[slot] {
-                if let Ok(owner) = registry.shells[shell as usize].try_borrow() {
-                    if let Some(state) = owner.as_ref().filter(|state| state.identity.matches_render(event.render) && state.identity.matches_request(request)) {
-                        state.cancel.cancel_now();
-                    }
-                }
-            }
-            if let Some(current) = registry.current[slot].filter(|current| current.app_instance_id == event.render.app_instance_id && current.identity.matches_render(event.render) && current.identity.matches_request(request)) {
-                if let Ok(owner) = registry.shells[current.shell as usize].try_borrow() {
-                    if let Some(state) = owner.as_ref() {
-                        state.cancel.cancel_now();
-                    }
-                }
-            }
-        }
-        EnergySimulationEventKind::Discard(request) => {
-            if registry.preflight[slot].is_some_and(|preflight| preflight.render == event.render && preflight.request == request.request) {
-                registry.cancel_preflight(slot);
-            }
-            if let Some(shell) = registry.pending[slot] {
-                let exact = registry.shells[shell as usize].try_borrow().is_ok_and(|owner| owner.as_ref().is_some_and(|state| state.identity.matches_render(event.render) && state.identity.matches_request(request)));
-                if exact && registry.retire_shell(shell) {
-                    registry.pending[slot] = None;
-                }
-            }
-            if let Some(current) = registry.current[slot].filter(|current| current.app_instance_id == event.render.app_instance_id && current.identity.matches_render(event.render) && current.identity.matches_request(request)) {
-                if let Ok(owner) = registry.shells[current.shell as usize].try_borrow() {
-                    if let Some(state) = owner.as_ref() {
-                        state.cancel.cancel_now();
-                    }
-                }
-                if registry.retire_shell(current.shell) {
-                    registry.current[slot] = None;
-                }
-            }
-        }
-        EnergySimulationEventKind::Adopt(request) => {
-            if let Some(current) = registry.current[slot].filter(|current| current.app_instance_id == event.render.app_instance_id) {
-                if current.identity.matches_render(event.render) && current.identity.matches_request(request) {
-                    if let Ok(mut owner) = registry.shells[current.shell as usize].try_borrow_mut() {
-                        if let Some(state) = owner.as_mut() {
-                            state.adopt_requested = true;
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-pub fn prepare_snapshot_read(render: AppRenderOperationContext, snapshot: &EnergyModelSnapshot) -> bool {
-    REGISTRY.with(|registry| {
-        let mut registry = registry.borrow_mut();
-        apply_event_one(&mut registry);
-        let Some(slot) = registry.slot_for(render.app_instance_id) else { return false };
-        let Some(mut preflight) = registry.preflight[slot] else { return false };
-        if preflight.render != render {
-            registry.cancel_preflight(slot);
-            return false;
-        }
-        let step = preflight.census.step_one(&snapshot.model);
-        match step {
-            Ok(true) => {
-                registry.preflight[slot] = Some(preflight);
-                true
-            }
-            Ok(false) => {
-                registry.preflight[slot] = Some(preflight);
-                false
-            }
-            Err(_) => {
-                registry.cancel_preflight(slot);
-                false
-            }
-        }
-    })
-}
-
-pub fn reconcile(doc: &ArtifactView<'_, EnergyModelSnapshot>) -> Vec<Effect> {
-    let Some(render) = doc.render_operation() else { return Vec::new() };
-    REGISTRY.with(|registry| {
-        let mut registry = registry.borrow_mut();
-        apply_event_one(&mut registry);
-        let Some(slot) = registry.slot_for(render.app_instance_id) else { return Vec::new() };
-        if let Some(preflight) = registry.preflight[slot] {
-            if preflight.render != render || preflight.census.lane <= 39 {
-                return Vec::new();
-            }
-            let checkpoint_identity = match registry.checkpoint_identity(slot, render, preflight.config) {
-                Ok(identity) => identity,
-                Err(message) => return vec![Effect::Notify { message: message.into() }],
-            };
-            let Some(shell) = registry.allocate() else { return vec![Effect::Notify { message: "Energy simulation slots are full".into() }] };
-            if !registry.reserve_shell_retirement(shell) {
-                registry.release(shell);
-                return vec![Effect::Notify { message: "Energy retirement capacity is full".into() }];
-            }
-            if !registry.reserve_shell_recovery(shell) {
-                registry.release_shell_retirement(shell);
-                registry.release(shell);
-                return vec![Effect::Notify { message: "Energy recovery capacity is full".into() }];
-            }
-            let Some(generation_value) = registry.next_generation.checked_add(1) else {
-                registry.release_shell_retirement(shell);
-                registry.release_shell_recovery(shell);
-                registry.release(shell);
-                return Vec::new();
-            };
-            let Some(counter) = registry.next_job.checked_add(1).filter(|counter| *counter <= JOB_COUNTER_MAXIMUM) else {
-                registry.release_shell_retirement(shell);
-                registry.release_shell_recovery(shell);
-                registry.release(shell);
-                return Vec::new();
-            };
-            registry.next_generation = generation_value;
-            registry.next_job = counter;
-            let job = JOB_TAG | counter;
-            let operation = checkpoint_identity.map_or(OperationId(job), |identity| OperationId(identity.operation));
-            let generation = checkpoint_identity.map_or(Generation(generation_value), |identity| Generation(identity.generation));
-            let operation_seed = checkpoint_identity.map_or(OperationId(job).0.rotate_left(19) ^ preflight.config.digest(), |identity| identity.seed);
-            let identity = MountedIdentity {
-                app_instance_id: render.app_instance_id,
-                request: preflight.request,
-                document_revision: render.base_revision,
-                document_generation: render.generation,
-                canonical_base_revision: render.canonical_base_revision,
-                operation,
-                generation,
-                config_digest: preflight.config.digest(),
-                operation_seed,
-                job,
-            };
-            let snapshot = match doc.take_snapshot_read() {
-                Ok(snapshot) => snapshot,
-                Err(_) => {
-                    registry.release_shell_retirement(shell);
-                    registry.release_shell_recovery(shell);
-                    registry.release(shell);
-                    return Vec::new();
-                }
-            };
-            *registry.shells[shell as usize].borrow_mut() = Some(MountedState::new(identity, snapshot, preflight.config));
-            registry.pending[slot] = Some(shell);
-            registry.preflight[slot] = None;
-            return Vec::new();
-        }
-        if let Some(current) = registry.current[slot].filter(|current| current.app_instance_id == render.app_instance_id && current.identity.matches_render(render)) {
-            if let Ok(mut owner) = registry.shells[current.shell as usize].try_borrow_mut() {
-                if let Some(state) = owner.as_mut().filter(|state| !state.spawned && !state.closing && (state.job.is_some() || state.restore.is_some())) {
-                    state.spawned = true;
-                    return vec![Effect::SpawnJob { job: state.identity.job, kind: ENERGY_SIMULATION_JOB_KIND.into(), input: encode_input(current.shell, state.identity), placement: JobPlacement::Isolated }];
-                }
-            }
-        }
-        let pending_shell = registry.pending[slot].filter(|shell| {
-            registry.shells[*shell as usize]
-                .try_borrow()
-                .is_ok_and(|state| state.as_ref().is_some_and(|state| state.identity.app_instance_id == render.app_instance_id && state.job.is_none() && state.capture.is_some() && !state.admission_blocked && !state.closing))
-        });
-        if let Some(shell) = pending_shell {
-            let (identity, checkpoint_token) = {
-                let mut owner = match registry.shells[shell as usize].try_borrow_mut() {
-                    Ok(owner) => owner,
-                    Err(_) => return Vec::new(),
-                };
-                let state = owner.as_mut().expect("matched pending Energy shell");
-                if !state.identity.matches_render(render) {
-                    state.begin_close();
-                    drop(owner);
-                    if registry.retire_shell(shell) {
-                        registry.pending[slot] = None;
-                    }
-                    return Vec::new();
-                }
-                match state.capture_one() {
-                    Ok(false) => return Vec::new(),
-                    Ok(true) => (state.identity, state.config.checkpoint_token),
-                    Err(_) => {
-                        state.begin_close();
-                        drop(owner);
-                        if registry.retire_shell(shell) {
-                            registry.pending[slot] = None;
-                        }
-                        return vec![Effect::Notify { message: "Energy simulation snapshot became stale".into() }];
-                    }
-                }
-            };
-            let checkpoint = if checkpoint_token == 0 {
-                None
-            } else {
-                let Some(previous) = registry.current[slot].filter(|previous| previous.app_instance_id == render.app_instance_id && previous.shell != shell) else {
-                    return vec![Effect::Notify { message: "Energy checkpoint owner is unavailable".into() }];
-                };
-                let mut previous_owner = match registry.shells[previous.shell as usize].try_borrow_mut() {
-                    Ok(owner) => owner,
-                    Err(_) => return Vec::new(),
-                };
-                let Some(previous_state) = previous_owner.as_mut().filter(|state| {
-                    state.identity.matches_render(render)
-                        && state.identity.operation == identity.operation
-                        && state.identity.generation == identity.generation
-                        && state.identity.operation_seed == identity.operation_seed
-                        && state.identity.config_digest == identity.config_digest
-                }) else {
-                    return vec![Effect::Notify { message: "Energy checkpoint owner is stale".into() }];
-                };
-                let Some((token, packet)) = previous_state.checkpoint_packet.take() else {
-                    return vec![Effect::Notify { message: "Energy checkpoint owner is unavailable".into() }];
-                };
-                if token != checkpoint_token || !previous_state.packet_is_fresh(packet.identity()) {
-                    previous_state.checkpoint_packet = Some((token, packet));
-                    return vec![Effect::Notify { message: "Energy checkpoint owner is stale".into() }];
-                }
-                Some(packet)
-            };
-            let mut owner = match registry.shells[shell as usize].try_borrow_mut() {
-                Ok(owner) => owner,
-                Err(_) => return Vec::new(),
-            };
-            let state = owner.as_mut().expect("captured Energy shell remains mounted");
-            match state.admit_job(render, registry.last_request[slot], identity, checkpoint) {
-                Ok(()) => {}
-                Err(MountedAdmissionError::Stale { checkpoint }) => {
-                    if let Some(packet) = checkpoint {
-                        state.checkpoint_packet = Some((checkpoint_token, packet));
-                    }
-                    state.begin_close();
-                    drop(owner);
-                    if registry.retire_shell(shell) {
-                        registry.pending[slot] = None;
-                    }
-                    return vec![Effect::Notify { message: "Energy simulation admission authority became stale".into() }];
-                }
-                Err(MountedAdmissionError::Rejected(message)) => {
-                    let rejected_identity = state.identity;
-                    drop(owner);
-                    if let Some(previous) = registry.current[slot] {
-                        if !registry.retire_shell(previous.shell) {
-                            return vec![Effect::Notify { message: "Energy retirement arena is saturated".into() }];
-                        }
-                    }
-                    registry.current[slot] = Some(CurrentSession { app_instance_id: render.app_instance_id, shell, identity: rejected_identity });
-                    registry.pending[slot] = None;
-                    return vec![Effect::Notify { message: message.into() }];
-                }
-            }
-            drop(owner);
-            let previous = registry.current[slot];
-            if let Some(previous) = previous {
-                if !registry.retire_shell(previous.shell) {
-                    return Vec::new();
-                }
-                if let Ok(owner) = registry.shells[previous.shell as usize].try_borrow() {
-                    if let Some(state) = owner.as_ref() {
-                        state.cancel.cancel_now();
-                    }
-                }
-            }
-            registry.current[slot] = Some(CurrentSession { app_instance_id: render.app_instance_id, shell, identity });
-            registry.pending[slot] = None;
-            if let Ok(mut owner) = registry.shells[shell as usize].try_borrow_mut() {
-                if let Some(state) = owner.as_mut() {
-                    state.spawned = true;
-                }
-            }
-            let mut effects = Vec::with_capacity(2);
-            if let Some(previous) = previous {
-                effects.push(Effect::CancelJob { job: previous.identity.job });
-            }
-            effects.push(Effect::SpawnJob { job: identity.job, kind: ENERGY_SIMULATION_JOB_KIND.into(), input: encode_input(shell, identity), placement: JobPlacement::Isolated });
-            return effects;
-        }
-        Vec::new()
-    })
-}
-
-pub fn with_projection<R>(render: Option<AppRenderOperationContext>, read: impl FnOnce(Option<&EnergySimulationProjection>) -> R) -> R {
-    let Some(render) = render else { return read(None) };
-    let shell = REGISTRY.with(|registry| {
-        let registry = registry.borrow();
-        let current = registry.current[registry.slot_for(render.app_instance_id)?]?;
-        if current.app_instance_id != render.app_instance_id || !current.identity.matches_render(render) {
-            return None;
-        }
-        Some(registry.shells[current.shell as usize].clone())
-    });
-    let Some(shell) = shell else { return read(None) };
-    let Ok(owner) = shell.try_borrow() else { return read(None) };
-    read(owner.as_ref().map(|state| &state.projection))
-}
-
-pub fn with_adopted_projection<R>(render: Option<AppRenderOperationContext>, read: impl FnOnce(Option<&EnergySimulationProjection>) -> R) -> R {
-    let Some(render) = render else { return read(None) };
-    REGISTRY.with(|registry| {
-        let registry = registry.borrow();
-        read(registry.adopted_projection(render))
-    })
-}
-
-/// 🎛️ The addressed app instance's live run settings — the projection a `Configure` event last
-/// admitted, or [`EnergySimulationConfigProjection::DEFAULT`] for an instance that never configured
-/// one. Read by the simulation window (to render the editable settings) and by `start-energy-simulation`
-/// (to build the run), so the UI never has to carry them back through the action payload.
-pub fn session_settings(render: Option<AppRenderOperationContext>) -> EnergySimulationConfigProjection {
-    let Some(render) = render else { return EnergySimulationConfigProjection::DEFAULT };
-    REGISTRY.with(|registry| {
-        let registry = registry.borrow();
-        registry.slot_for(render.app_instance_id).map_or(EnergySimulationConfigProjection::DEFAULT, |slot| registry.settings[slot])
-    })
-}
-
-/// 🪪️ Rebuilds the renderer-observed identity from a dispatched command's own operation authority.
-/// `ArtifactView::render_operation()` is `None` on the dispatch path (the framework only binds it on
-/// the render path), so a command that records a session event must derive the same identity the
-/// render pass would have produced: `base_revision` is the first eight big-endian bytes of the
-/// canonical revision and `generation` is the store generation the operation was admitted against
-/// (`VcsArtifactApp`'s own `AppRenderOperationContext` construction).
-pub fn render_identity_of(operation: &semio_framework_plugin::app::AppOperationContext) -> Option<AppRenderOperationContext> {
-    let lane = operation.canonical_base_revision.get(..8).and_then(|bytes| <[u8; 8]>::try_from(bytes).ok())?;
-    Some(AppRenderOperationContext { app_instance_id: operation.app_instance_id, base_revision: RevisionId(u64::from_be_bytes(lane)), generation: Generation(operation.generation), canonical_base_revision: operation.canonical_base_revision })
-}
-
-fn retire_one(app_instance_id: u32, maximum_bytes: usize) -> PluginCloseStep {
-    REGISTRY.with(|registry| {
-        let mut registry = registry.borrow_mut();
-        let Some(index) = registry.retiring.iter().position(|entry| entry.is_some_and(|shell| registry.shells[shell as usize].try_borrow().is_ok_and(|owner| owner.as_ref().is_some_and(|state| state.identity.app_instance_id == app_instance_id))))
-        else {
-            return PluginCloseStep::Complete;
-        };
-        let shell = registry.retiring[index].expect("matched Energy retirement");
-        let step = {
-            let mut owner = match registry.shells[shell as usize].try_borrow_mut() {
-                Ok(owner) => owner,
-                Err(_) => return PluginCloseStep::Blocked { reason: "Energy worker owns retirement shell" },
-            };
-            owner.as_mut().map_or(PluginCloseStep::Complete, |state| state.close_step(1, maximum_bytes))
-        };
-        if step == PluginCloseStep::Complete {
-            if !registry.shells[shell as usize].try_borrow().is_ok_and(|owner| owner.as_ref().is_none_or(MountedState::terminal_is_empty)) {
-                return PluginCloseStep::Blocked { reason: "Energy false terminal shell" };
-            }
-            *registry.shells[shell as usize].borrow_mut() = None;
-            registry.retiring[index] = None;
-            registry.release_shell_recovery(shell);
-            registry.release(shell);
-            return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        step
-    })
-}
-
-pub fn maintenance_step(app_instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
-    if maximum_items == 0 {
-        return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-    }
-    let recovered = RECOVERY.with(|recovery| {
-        let mut recovery = recovery.borrow_mut();
-        let index = recovery.iter().position(|record| record.is_some_and(|record| record.identity.app_instance_id == app_instance_id))?;
-        recovery[index].take()
-    });
-    if let Some(recovered) = recovered {
-        return REGISTRY.with(|registry| {
-            let mut registry = registry.borrow_mut();
-            let shell = recovered.shell;
-            let mut matched = false;
-            if let Ok(mut owner) = registry.shells[shell as usize].try_borrow_mut() {
-                if let Some(state) = owner.as_mut().filter(|state| state.identity == recovered.identity) {
-                    matched = true;
-                    state.worker_attached = false;
-                    state.worker_returned = true;
-                    state.begin_close();
-                }
-            }
-            if !matched && !registry.retiring.contains(&Some(shell)) {
-                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
-            }
-            if let Some(slot) = registry.slot_for(app_instance_id) {
-                if registry.current[slot].is_some_and(|current| current.shell == shell && current.identity == recovered.identity) {
-                    registry.current[slot] = None;
-                }
-                if registry.pending[slot] == Some(shell) {
-                    registry.pending[slot] = None;
-                }
-            }
-            if registry.retiring.contains(&Some(shell)) || registry.retire_shell(shell) {
-                PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
-            } else {
-                PluginCloseStep::Blocked { reason: "Energy fixed recovery retirement reservation is unavailable" }
-            }
-        });
-    }
-    let retired = retire_one(app_instance_id, maximum_bytes);
-    if retired != PluginCloseStep::Complete {
-        return retired;
-    }
-    REGISTRY.with(|registry| {
-        let mut registry = registry.borrow_mut();
-        let Some(slot) = registry.slot_for(app_instance_id) else { return PluginCloseStep::Complete };
-        let Some(current) = registry.current[slot].filter(|current| current.app_instance_id == app_instance_id) else { return PluginCloseStep::Complete };
-        let mut owner = match registry.shells[current.shell as usize].try_borrow_mut() {
-            Ok(owner) => owner,
-            Err(_) => return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
-        };
-        let Some(state) = owner.as_mut() else { return PluginCloseStep::Complete };
-        let step = state.maintenance_one(maximum_bytes);
-        let adopted = state.projection.adopted.then(|| AdoptedProjectionAuthority::new(state.identity, state.projection)).flatten();
-        drop(owner);
-        if let Some(adopted) = adopted {
-            registry.adopted[slot] = Some(adopted);
-        }
-        step
-    })
-}
-
-pub fn close_step(app_instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
-    if maximum_items == 0 {
-        return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-    }
-    let scheduled = REGISTRY.with(|registry| {
-        let mut registry = registry.borrow_mut();
-        let Some(slot) = registry.slot_for(app_instance_id) else { return false };
-        if registry.preflight[slot].take().is_some() {
-            return true;
-        }
-        if let Some(shell) = registry.pending[slot] {
-            if registry.retire_shell(shell) {
-                registry.pending[slot] = None;
-                return true;
-            }
-            return false;
-        }
-        if let Some(current) = registry.current[slot].filter(|current| current.app_instance_id == app_instance_id) {
-            if registry.retire_shell(current.shell) {
-                registry.current[slot] = None;
-                return true;
-            }
-        }
-        false
-    });
-    if scheduled {
-        return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
-    }
-    let step = retire_one(app_instance_id, maximum_bytes);
-    if step == PluginCloseStep::Complete {
-        REGISTRY.with(|registry| {
-            let mut registry = registry.borrow_mut();
-            if let Some(slot) = registry.slot_for(app_instance_id).filter(|slot| registry.app_terminal_is_empty(*slot, app_instance_id)) {
-                registry.apps[slot] = None;
-                registry.last_request[slot] = 0;
-                registry.settings[slot] = EnergySimulationConfigProjection::DEFAULT;
-                registry.adopted[slot] = None;
-            }
-        });
-    }
-    step
-}
-
-pub fn terminal_is_empty(app_instance_id: u32) -> bool {
-    let registry_empty = REGISTRY.with(|registry| {
-        let registry = registry.borrow();
-        let Some(slot) = registry.slot_for(app_instance_id) else { return true };
-        registry.app_terminal_is_empty(slot, app_instance_id)
-    });
-    registry_empty && RECOVERY.with(|recovery| recovery.borrow().iter().flatten().all(|record| record.identity.app_instance_id != app_instance_id))
-}
-//#endregion 🎛️ProductSession
+//#endregion 🧵️RunJob
 
 //#region 🧪️Laws
 #[cfg(test)]

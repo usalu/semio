@@ -138,13 +138,21 @@ impl Drop for UnlinkedFlowExtensions {
         // and the installer answers de-duplicate on the contribution map alone — re-pushing the
         // closure the law already pushed would rebuild nothing and silently leave the packs
         // unlinked for every later test in this binary.
-        semio_framework_os_flow::sync_host_flow_extension_contributions("[]".to_string()).expect("the law leaves the process-wide registry as it found it");
-        let contributions = staged_flow_extension_contributions_json(&[]);
-        semio_framework_os_flow::sync_host_flow_extension_contributions(contributions).expect("the law leaves the process-wide registry as it found it");
-        assert!(
-            std::thread::panicking() || semio_framework_os_flow::flow_extension_invocation_address(BREP_EXTENSION_FLOW_ID).is_ok(),
-            "the restored registry must address the geometry kernel again"
-        );
+        let restored = semio_framework_os_flow::sync_host_flow_extension_contributions("[]".to_string())
+            .and_then(|()| semio_framework_os_flow::sync_host_flow_extension_contributions(staged_flow_extension_contributions_json(&[])))
+            .and_then(|()| semio_framework_os_flow::flow_extension_invocation_address(BREP_EXTENSION_FLOW_ID).map(|_| ()).map_err(|_| "the restored registry must address the geometry kernel again"));
+        if let Err(reason) = restored {
+            eprintln!("UnlinkedFlowExtensions: the process-wide registry was not restored: {reason}");
+        }
+        // 💣️ A `Drop` that panics while its thread is ALREADY unwinding is a non-unwinding panic:
+        // the process aborts on the spot and every remaining law in the binary is never run. That is
+        // what took the featured `--lib` suite down at test 395 of 438 — a close-ladder law failed,
+        // and this restore then answered `flow.registry-retirement-full` inside its unwind, so 43
+        // laws were lost to a diagnostic about a law that had already reported itself
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). A failing restore is still a failure — it is
+        // raised here, loudly, on every path where raising it is not fatal, and printed on the one
+        // where it is.
+        assert!(std::thread::panicking() || restored.is_ok(), "the law leaves the process-wide registry as it found it: {restored:?}");
     }
 }
 

@@ -9041,8 +9041,16 @@ function NavbarFullscreenToggle({ onToggle }: { readonly onToggle?: () => void }
   );
 }
 
-/** @emoji 🖥️ Navbar trailing slot for fullscreen — parks width so labels do not collapse when panels open. */
-export function NavbarTrailingFullscreenSlot({ onToggle }: { readonly onToggle?: () => void } = {}) {
+/** @emoji 🖥️ Navbar trailing chrome (chat toggle, fullscreen, …) — parks width so center labels do not collapse when panels open. */
+export function NavbarTrailingChromeSlot({
+  beforeFullscreen,
+  showFullscreenToggle = true,
+  onFullscreenToggle,
+}: {
+  readonly beforeFullscreen?: React.ReactNode;
+  readonly showFullscreenToggle?: boolean;
+  readonly onFullscreenToggle?: () => void;
+} = {}) {
   const shellScope = useShellScopeOptional();
   // 🐚️ Resolved at render time (not read from `shellScope.rootRef` inside the effect): the ref object's
   // identity never changes, so a dep array holding the ref itself would never re-fire this effect once
@@ -9071,10 +9079,16 @@ export function NavbarTrailingFullscreenSlot({ onToggle }: { readonly onToggle?:
   }, [root]);
 
   return (
-    <div ref={shellRef} key="fullscreenToggle" data-slot="navbar-fullscreen-toggle" className="ms-auto flex h-medium shrink-0 min-w-fit items-center" style={parkedMinWidth > 0 ? { minWidth: parkedMinWidth } : undefined}>
-      <NavbarFullscreenToggle onToggle={onToggle} />
+    <div ref={shellRef} key="navbarTrailingChrome" data-slot="navbar-trailing-chrome" className="ms-auto flex h-medium shrink-0 min-w-fit items-center gap-single" style={parkedMinWidth > 0 ? { minWidth: parkedMinWidth } : undefined}>
+      {beforeFullscreen}
+      {showFullscreenToggle ? <NavbarFullscreenToggle onToggle={onFullscreenToggle} /> : null}
     </div>
   );
+}
+
+/** @emoji 🖥️ @deprecated Use {@link NavbarTrailingChromeSlot}; kept for story/tests that only need fullscreen. */
+export function NavbarTrailingFullscreenSlot({ onToggle }: { readonly onToggle?: () => void } = {}) {
+  return <NavbarTrailingChromeSlot showFullscreenToggle onFullscreenToggle={onToggle} />;
 }
 
 // #endregion 🖥️Fullscreen

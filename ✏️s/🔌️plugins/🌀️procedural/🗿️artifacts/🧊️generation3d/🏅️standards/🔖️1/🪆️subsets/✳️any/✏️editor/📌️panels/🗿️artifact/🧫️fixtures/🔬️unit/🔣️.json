@@ -1,0 +1,27 @@
+{
+  "law": "The Document panel carries one row per widget of the open flow graph, keyed by that widget's raw id, and every row is bound to both framework interaction verbs against the graph domain with its own id as the pick target — a row without those bindings is inert on the React renderer, because a tree's interactionDomain carries topology and presence stamping only, never a dispatch.",
+  "interactionDomain": "graph",
+  "granularity": "node",
+  "fixture": {
+    "schema": "flow.fixture",
+    "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+    "widgets": [
+      { "kind": "inputSlider", "id": "height", "label": "Height", "value": 3.0, "min": 0.0, "max": 10.0, "step": 0.5 },
+      { "kind": "inputNote", "id": "caption", "text": "Tower" },
+      { "kind": "outputPreview", "id": "result" }
+    ],
+    "synapses": [{ "id": "wire-height", "from": "height", "to": "result", "fromPort": "out", "toPort": "in" }],
+    "layout": {
+      "height": { "x": 0.0, "y": 0.0 },
+      "caption": { "x": 0.0, "y": 120.0 },
+      "result": { "x": 260.0, "y": 60.0 }
+    }
+  },
+  "expected": {
+    "rows": [
+      { "id": "height", "triggers": ["activate", "hoverPreview"] },
+      { "id": "caption", "triggers": ["activate", "hoverPreview"] },
+      { "id": "result", "triggers": ["activate", "hoverPreview"] }
+    ]
+  }
+}

@@ -72,7 +72,7 @@ pub fn render(board: &DslValue, wires: &DslValue, window: &config::WiresCanvasWi
     let mut layers: Vec<Value> = fixture_nodes(board).iter().map(dsl_to_json).collect();
     layers.extend(fixture_edges(board).iter().map(dsl_to_json));
     layers.extend(relationship_edge_layers(wires, board));
-    semio_framework_plugin::scene_surface(WIRES_PLAY_SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { camera_x, camera_y, zoom, layers_json: dsl::os_pack::json::to_string(&Value::Array(layers)), snapshot: None })
+    semio_framework_plugin::scene_surface(WIRES_PLAY_SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { camera_x, camera_y, zoom, layers_json: dsl::os_pack::json::to_string(&Value::Array(layers)), snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 //#endregion 🔖️Render
 

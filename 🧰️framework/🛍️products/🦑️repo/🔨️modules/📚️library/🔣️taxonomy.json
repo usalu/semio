@@ -9089,6 +9089,7 @@
         "🔁️cycle-candidate",
         "🔁️cycle-show-mode",
         "🔁️cycle-lod-mode",
+        "🧭️navigate-graph",
         "🔂️engagement-repeat-last",
         "🔄️redraw-handles",
         "🔎️zoom-to-selection",
@@ -11050,7 +11051,8 @@
         "🧾️diff",
         "🪝️webhook",
         "🦑️repo-source-ownership",
-        "🚨️breaches"
+        "🚨️breaches",
+        "⏯️tool-run-trace"
       ],
       "source": "registry"
     },
@@ -11461,6 +11463,7 @@
         "🧮️math",
         "🧮️vector-operations",
         "🧵️job",
+        "⏯️tool-run",
         "🧾️measurement-contracts",
         "🪐️space",
         "🪪️identity",

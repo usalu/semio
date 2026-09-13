@@ -10,6 +10,8 @@
         "version",
         "surfaces",
         "surfaceCeilingBytes",
+        "documentBytes",
+        "residentSlots",
         "aggregateCeilingBytes",
         "workBytes",
         "physicalBytes",
@@ -33,7 +35,7 @@
           "const": 8388608
         },
         "aggregateCeilingBytes": {
-          "const": 33554432
+          "const": 52559872
         },
         "workBytes": {
           "const": 4096
@@ -76,6 +78,12 @@
             64,
             4096
           ]
+        },
+        "documentBytes": {
+          "const": 821248
+        },
+        "residentSlots": {
+          "const": 64
         }
       }
     }

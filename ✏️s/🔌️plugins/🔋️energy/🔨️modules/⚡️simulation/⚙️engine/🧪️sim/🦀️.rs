@@ -409,6 +409,19 @@ pub struct EnergyJobPreview {
     pub facility_electricity_kwh: f64,
 }
 
+/// 🧭️ Live numerical cursor of [`EnergyJob`]: what a host projects into run progress without decoding a
+/// retained preview packet. `timestep` counts completed run timesteps, `warmup_hour` the warmup cursor.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct EnergyJobCursor {
+    pub stage: EnergyJobStage,
+    pub tier: EnergyQualityTier,
+    pub warmup_hour: u32,
+    pub warmup_hours: u32,
+    pub timestep: u32,
+    pub total_timesteps: u32,
+    pub facility_electricity_kwh: f64,
+}
+
 // #region 🔖️NumericalAdmission
 /// 📏️ Schema-first simultaneous working-set census for an Energy numerical job.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
@@ -2011,6 +2024,18 @@ impl EnergyJob {
 impl EnergyJobAuthority {
     pub fn stage(&self) -> EnergyJobStage {
         self.stage
+    }
+
+    pub fn cursor(&self) -> EnergyJobCursor {
+        EnergyJobCursor {
+            stage: self.stage,
+            tier: self.tier,
+            warmup_hour: self.warmup_hour,
+            warmup_hours: self.config.warmup_days.saturating_mul(24),
+            timestep: self.hour_index,
+            total_timesteps: self.total_timesteps,
+            facility_electricity_kwh: self.facility_electricity_j / 3_600_000.0,
+        }
     }
 
     pub fn preview(&self) -> Option<&EnergyJobPreview> {

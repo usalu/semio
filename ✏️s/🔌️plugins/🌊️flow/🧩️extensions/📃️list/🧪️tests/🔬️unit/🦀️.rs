@@ -71,7 +71,7 @@ async fn append_adds_next_index() {
     register(&mut reg);
     let input = Dictionary::new().insert("list", Value::Dictionary(sample_list())).insert("value", Value::Dictionary(number_dictionary(4.0)));
     let out = reg.dispatch("list.append", &input).unwrap();
-    let list = out.get("list").and_then(|v| v.as_dictionary()).expect("list channel");
+    let list = out.get("listOut").and_then(|v| v.as_dictionary()).expect("listOut channel");
     assert_eq!(list.get("3").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(4.0));
 }
 

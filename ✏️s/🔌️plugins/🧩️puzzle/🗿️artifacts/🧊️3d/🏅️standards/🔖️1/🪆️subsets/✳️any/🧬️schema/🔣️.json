@@ -482,350 +482,272 @@
         }
       }
     },
-    "Puzzle3dFillPreviewJson": {
+    "Puzzle3dFillRun": {
+      "title": "Puzzle3dFillRun",
+      "description": "The fill tool run vocabulary of `s.puzzle3d`'s ⏳️precompute/🪣️fill run job: stage and counter indices, reason codes with their tool-run verdict, and the fixed checkpoint layout. Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W1-A.",
       "type": "object",
-      "x-semio-maxEncodedUtf8Bytes": 16384,
       "additionalProperties": false,
       "properties": {
-        "targetVortexFullId": {
-          "type": "string"
+        "stages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dFillRunStage"
+          }
         },
-        "objectKindId": {
-          "type": "string"
+        "counters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dFillRunCounter"
+          }
         },
-        "sourceVortexIndex": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
+        "reasons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dFillRunReason"
+          }
         },
-        "meshUrl": {
-          "type": "string"
-        },
-        "origin": {
-          "$ref": "#/$defs/Puzzle3dFillPreviewVector3"
-        },
-        "orientation": {
-          "$ref": "#/$defs/Puzzle3dFillPreviewQuaternion"
-        },
-        "color": {
-          "type": "string",
-          "maxLength": 128,
-          "x-semio-maxUtf8Bytes": 128
-        },
-        "opacity": {
-          "const": 0.35
-        },
-        "verdict": {
-          "$ref": "#/$defs/Puzzle3dFillPreviewVerdict"
-        },
-        "fillBuildPreview": {
-          "$ref": "#/$defs/Puzzle3dFillPreviewDiagnostic"
+        "checkpoint": {
+          "$ref": "#/$defs/Puzzle3dFillRunCheckpoint"
         }
       },
       "required": [
-        "fillBuildPreview"
+        "stages",
+        "counters",
+        "reasons",
+        "checkpoint"
       ],
-      "title": "Puzzle3dFillPreviewJson",
-      "description": "The retained fill-preview JSON page of `s.puzzle3d`'s ⏳️precompute/🪣️fill builder: one encoded page never exceeds `x-semio-maxEncodedUtf8Bytes`, and every diagnostic integer, colour and status label carries the builder's own byte and index ceilings.",
+      "x-semio-toolRun": {
+        "stages": [
+          "prepare",
+          "search",
+          "test",
+          "lock",
+          "retract"
+        ],
+        "counters": [
+          "tested",
+          "locked",
+          "collisions",
+          "rejected"
+        ],
+        "reasons": [
+          {
+            "code": 0,
+            "id": "fits",
+            "verdict": "success"
+          },
+          {
+            "code": 1,
+            "id": "solid-overlap",
+            "verdict": "danger"
+          },
+          {
+            "code": 2,
+            "id": "outside-target-volume",
+            "verdict": "warning"
+          },
+          {
+            "code": 3,
+            "id": "mesh-unavailable",
+            "verdict": "warning"
+          },
+          {
+            "code": 4,
+            "id": "missing-preview",
+            "verdict": "warning"
+          },
+          {
+            "code": 5,
+            "id": "missing-target",
+            "verdict": "warning"
+          },
+          {
+            "code": 6,
+            "id": "broad-phase-entry-missing",
+            "verdict": "warning"
+          },
+          {
+            "code": 7,
+            "id": "placed-mesh-unavailable",
+            "verdict": "warning"
+          },
+          {
+            "code": 8,
+            "id": "stale-spatial-query",
+            "verdict": "warning"
+          },
+          {
+            "code": 9,
+            "id": "placement-kind-missing",
+            "verdict": "warning"
+          },
+          {
+            "code": 10,
+            "id": "placement-vortex-missing",
+            "verdict": "warning"
+          },
+          {
+            "code": 11,
+            "id": "placement-mesh-missing",
+            "verdict": "warning"
+          },
+          {
+            "code": 12,
+            "id": "placement-rejected",
+            "verdict": "warning"
+          },
+          {
+            "code": 13,
+            "id": "placement-state-missing",
+            "verdict": "warning"
+          },
+          {
+            "code": 14,
+            "id": "placement-spatial-state-missing",
+            "verdict": "warning"
+          },
+          {
+            "code": 15,
+            "id": "stale-spatial-mutation",
+            "verdict": "warning"
+          },
+          {
+            "code": 16,
+            "id": "rejected",
+            "verdict": "warning"
+          },
+          {
+            "code": 17,
+            "id": "no-open-vortex",
+            "verdict": "warning"
+          },
+          {
+            "code": 18,
+            "id": "no-compatible-kind",
+            "verdict": "warning"
+          },
+          {
+            "code": 19,
+            "id": "no-free-placement",
+            "verdict": "warning"
+          },
+          {
+            "code": 20,
+            "id": "document-capacity",
+            "verdict": "warning"
+          },
+          {
+            "code": 21,
+            "id": "requested-reached",
+            "verdict": "success"
+          },
+          {
+            "code": 22,
+            "id": "retracted",
+            "verdict": "testing"
+          }
+        ],
+        "checkpoint": {
+          "bytes": 68,
+          "layout": [
+            "requested:u64le",
+            "placements:u64le",
+            "provisionalOps:u32le",
+            "tested:u64le",
+            "nextKey:u64le",
+            "inputs:bytes32"
+          ]
+        }
+      },
       "x-semio-formats": [
         "🔣️jsonschema"
       ]
     },
-    "Puzzle3dFillPreviewVerdict": {
+    "Puzzle3dFillRunStage": {
       "type": "string",
       "enum": [
-        "testing",
-        "free",
-        "collision",
-        "rejected",
-        "accepted"
-      ],
-      "x-semio-formats": [
-        "🔣️jsonschema"
+        "prepare",
+        "search",
+        "test",
+        "lock",
+        "retract"
       ]
     },
-    "Puzzle3dFillPreviewTried": {
+    "Puzzle3dFillRunCounter": {
+      "type": "string",
+      "enum": [
+        "tested",
+        "locked",
+        "collisions",
+        "rejected"
+      ]
+    },
+    "Puzzle3dFillRunReason": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "sequence": {
+        "code": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 9007199254740991
+          "maximum": 65279
+        },
+        "id": {
+          "type": "string"
         },
         "verdict": {
-          "$ref": "#/$defs/Puzzle3dFillPreviewVerdict"
-        },
-        "reason": {
-          "$ref": "#/$defs/Puzzle3dFillPreviewNullableString"
-        },
-        "ghost": {
-          "$ref": "#/$defs/Puzzle3dFillPreviewGhost"
-        }
-      },
-      "required": [
-        "sequence",
-        "verdict",
-        "reason",
-        "ghost"
-      ],
-      "x-semio-formats": [
-        "🔣️jsonschema"
-      ]
-    },
-    "Puzzle3dFillPreviewNullableString": {
-      "type": [
-        "string",
-        "null"
-      ],
-      "x-semio-formats": [
-        "🔣️jsonschema"
-      ]
-    },
-    "Puzzle3dFillPreviewVector3": {
-      "type": "array",
-      "items": {
-        "type": "number"
-      },
-      "minItems": 3,
-      "maxItems": 3,
-      "x-semio-formats": [
-        "🔣️jsonschema"
-      ]
-    },
-    "Puzzle3dFillPreviewQuaternion": {
-      "type": "array",
-      "items": {
-        "type": "number"
-      },
-      "minItems": 4,
-      "maxItems": 4,
-      "x-semio-formats": [
-        "🔣️jsonschema"
-      ]
-    },
-    "Puzzle3dFillPreviewGhost": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "targetVortexFullId": {
-          "type": "string"
-        },
-        "objectKindId": {
-          "type": "string"
-        },
-        "sourceVortexIndex": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
-        },
-        "meshUrl": {
-          "type": "string"
-        },
-        "origin": {
-          "$ref": "#/$defs/Puzzle3dFillPreviewVector3"
-        },
-        "orientation": {
-          "$ref": "#/$defs/Puzzle3dFillPreviewQuaternion"
-        }
-      },
-      "required": [
-        "targetVortexFullId",
-        "objectKindId",
-        "sourceVortexIndex",
-        "meshUrl",
-        "origin",
-        "orientation"
-      ],
-      "x-semio-formats": [
-        "🔣️jsonschema"
-      ]
-    },
-    "Puzzle3dFillPreviewDiagnostic": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "operation": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
-        },
-        "baseRevision": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
-        },
-        "registryGeneration": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
-        },
-        "sequence": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
-        },
-        "generation": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
-        },
-        "stage": {
-          "type": "string"
-        },
-        "statusLabel": {
           "type": "string",
-          "minLength": 1,
-          "maxLength": 256,
-          "x-semio-maxUtf8Bytes": 256
-        },
-        "targetVortexFullId": {
-          "$ref": "#/$defs/Puzzle3dFillPreviewNullableString"
-        },
-        "candidateObjectKindId": {
-          "$ref": "#/$defs/Puzzle3dFillPreviewNullableString"
-        },
-        "candidateGhost": {
-          "oneOf": [
-            {
-              "$ref": "#/$defs/Puzzle3dFillPreviewGhost"
-            },
-            {
-              "type": "null"
-            }
+          "enum": [
+            "testing",
+            "success",
+            "warning",
+            "danger"
           ]
-        },
-        "currentPairObjectId": {
-          "$ref": "#/$defs/Puzzle3dFillPreviewNullableString"
-        },
-        "collisionCount": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
-        },
-        "sampleCursor": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
-        },
-        "insideBoth": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
-        },
-        "lastSample": {
-          "oneOf": [
-            {
-              "$ref": "#/$defs/Puzzle3dFillPreviewVector3"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "candidatePage": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Puzzle3dFillPreviewNullableString"
-          },
-          "minItems": 8,
-          "maxItems": 8
-        },
-        "truncated": {
-          "type": "boolean"
-        },
-        "rejectionReason": {
-          "$ref": "#/$defs/Puzzle3dFillPreviewNullableString"
-        },
-        "targetCursor": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
-        },
-        "candidateCursor": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
-        },
-        "acceptedCount": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
-        },
-        "requestedCount": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
-        },
-        "searchCount": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
-        },
-        "rejectedCount": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
-        },
-        "verdict": {
-          "$ref": "#/$defs/Puzzle3dFillPreviewVerdict"
-        },
-        "testedCount": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
-        },
-        "stallReason": {
-          "$ref": "#/$defs/Puzzle3dFillPreviewNullableString"
-        },
-        "tried": {
-          "type": "array",
-          "items": {
-            "oneOf": [
-              {
-                "$ref": "#/$defs/Puzzle3dFillPreviewTried"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "minItems": 12,
-          "maxItems": 12
         }
       },
       "required": [
-        "operation",
-        "baseRevision",
-        "registryGeneration",
-        "sequence",
-        "generation",
-        "stage",
-        "statusLabel",
-        "targetVortexFullId",
-        "candidateObjectKindId",
-        "candidateGhost",
-        "currentPairObjectId",
-        "collisionCount",
-        "sampleCursor",
-        "insideBoth",
-        "lastSample",
-        "candidatePage",
-        "truncated",
-        "rejectionReason",
-        "targetCursor",
-        "candidateCursor",
-        "acceptedCount",
-        "requestedCount",
-        "searchCount",
-        "rejectedCount",
-        "verdict",
-        "testedCount",
-        "stallReason",
-        "tried"
-      ],
-      "x-semio-formats": [
-        "🔣️jsonschema"
+        "code",
+        "id",
+        "verdict"
+      ]
+    },
+    "Puzzle3dFillRunCheckpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "requested": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "placements": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "provisionalOps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "tested": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nextKey": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "inputs": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "Digest of the run inputs the deterministic sequence depends on, except the requested count."
+        }
+      },
+      "required": [
+        "requested",
+        "placements",
+        "provisionalOps",
+        "tested",
+        "nextKey",
+        "inputs"
       ]
     }
   }

@@ -1563,6 +1563,7 @@ fn scene_with_selection_and_domain(selection_json: &str, domain: Option<(&str, &
             terrain_json: None,
             points_json: None,
             status_json: None,
+            tool_run_trace: None,
             domain_id: domain.map(|(id, _)| id.to_string()),
             domain_granularity_id: domain.map(|(_, granularity)| granularity.to_string()),
             lanes: Vec::new(),
@@ -2856,6 +2857,44 @@ fn scene_bridge_renders_the_generation3d_preview_payload_into_a_snapshot() {
     }
 }
 
+/// 🟩️ A `provisional: true` instance record — the producer's stamp from `ArtifactView::tool_run()` (tool run
+/// contract §4.1 layer 1) — fills `provisional_instance_ids`, so the draw pass paints it with the provisional
+/// token; records without the flag stay ordinary instances.
+#[test]
+fn scene_bridge_collects_the_provisional_instance_flag_the_producer_stamps() {
+    let mut fixture = scene_bridge_fixture();
+    let bridged: Vec<String> = fixture["expect"]["instanceIds"].as_array().expect("instance ids").iter().map(|id| id.as_str().expect("instance id").to_string()).collect();
+    let provisional = bridged.first().expect("a bridged instance").clone();
+    for instance in fixture["instancesJson"].as_array_mut().expect("instances") {
+        if instance["id"].as_str() == Some(provisional.as_str()) {
+            instance["provisional"] = serde_json::Value::Bool(true);
+        }
+    }
+    let scene = scene_from_bridge_fixture(&fixture);
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    drive_scene_bridge(&mut state, &scene, Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 });
+    assert_eq!(state.provisional_instance_ids, HashSet::from([provisional]), "exactly the stamped record is provisional");
+}
+
+/// 🧭️ Only a world surface bound to a window AND holding an applied trace lane owes that window a cursor echo.
+#[test]
+fn world_surfaces_echo_their_trace_cursor_under_their_window_instance() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/⏯️tool-run/🧫️fixtures/📼️trace-pages.json")).expect("trace pages fixture");
+    let bytes: Vec<u8> = fixture["deltas"][0]["hex"].as_str().expect("delta hex").as_bytes().chunks(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).expect("hex"), 16).expect("hex")).collect();
+    let delta = semio_framework_tool_run::ToolRunTraceDelta::decode(&bytes).expect("fixture delta decodes");
+    let lane = base64_codec::base64_url_encode(&bytes);
+    let mut bound = World3dState::new("surface-bound".into(), "controller".into());
+    bound.tool_run_trace_window_id = Some("world-left".into());
+    bound.tool_run_trace.apply_lane(Some(&lane)).expect("lane applies");
+    let mut unbound = World3dState::new("surface-unbound".into(), "controller".into());
+    unbound.tool_run_trace.apply_lane(Some(&lane)).expect("lane applies");
+    let mut idle = World3dState::new("surface-idle".into(), "controller".into());
+    idle.tool_run_trace_window_id = Some("world-right".into());
+    let echoed = world3d_tool_run_trace_cursors([&bound, &unbound, &idle]);
+    let expected = semio_framework_tool_run::ToolRunTraceCursor { run: delta.identity.id.run, generation: delta.identity.generation, page: delta.next };
+    assert_eq!(echoed, std::collections::HashMap::from([("world-left".to_string(), expected)]));
+}
+
 #[test]
 fn scene_bridge_honours_selection_hover_camera_and_sun() {
     let fixture = scene_bridge_fixture();
@@ -2974,7 +3013,7 @@ fn gumball_draws_ensure_the_plane_mesh_they_reference() {
     state.meshes.insert(GUMBALL_PLANE_MESH.into(), publish_oracle_mesh(triangle_mesh_oracle())).expect("plane lease admitted");
     state.mesh_versions.insert(GUMBALL_PLANE_MESH.into(), 7).expect("plane version admitted");
     state.meshes.insert("mesh-1".into(), publish_oracle_mesh(triangle_mesh_oracle())).expect("body lease admitted");
-    state.draws.push(SceneDraw3d { mesh_key: "mesh-1".into(), mesh_version: 0, instances: vec![Instance3d { id: "obj-1".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: true, hovered: false }] });
+    state.draws.push(SceneDraw3d { mesh_key: "mesh-1".into(), mesh_version: 0, instances: vec![Instance3d { id: "obj-1".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: true, hovered: false }] }).expect("body draw admitted");
     state.selected_ids = vec!["obj-1".into()];
     append_gumball_geometry(&mut lines, &mut translucent, &mut gpu, &state, &Camera3d::default(), &state.meshes, &state.mesh_versions);
 

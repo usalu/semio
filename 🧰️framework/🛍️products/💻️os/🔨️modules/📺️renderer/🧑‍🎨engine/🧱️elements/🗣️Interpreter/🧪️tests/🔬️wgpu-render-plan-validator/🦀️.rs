@@ -44,6 +44,7 @@ fn validate_component_scene_rejects_oversized_mesh_count() {
             terrain_json: None,
             points_json: None,
             status_json: None,
+            tool_run_trace: None,
             domain_id: None,
             domain_granularity_id: None,
             lanes: Vec::new(),
@@ -51,6 +52,22 @@ fn validate_component_scene_rejects_oversized_mesh_count() {
     );
     let error = validate_ui_node(&node, &limits).expect_err("oversized mesh count should be rejected");
     assert!(error.contains("mesh count 3 exceeds max 2"));
+}
+
+#[test]
+fn validate_component_scene_bounds_the_tool_run_trace_lane_on_both_scene_kinds() {
+    assert_eq!(RenderPlanLimits::default().max_tool_run_trace_bytes, infinite_world::world::tool_run_trace::TOOL_RUN_TRACE_LANE_BYTES_MAX);
+    let limits = RenderPlanLimits { max_tool_run_trace_bytes: 8, ..RenderPlanLimits::default() };
+    let mut world = World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into());
+    world.tool_run_trace = Some("AAQBDQQB".into());
+    assert!(validate_ui_node(&build_world_3d_scene("world", "controller", world.clone()), &limits).is_ok());
+    world.tool_run_trace = Some("AAQBDQQBA".into());
+    let error = validate_ui_node(&build_world_3d_scene("world", "controller", world), &limits).expect_err("oversized trace lane should be rejected");
+    assert!(error.contains("world3d.toolRunTrace has 9 bytes (max 8)"), "{error}");
+    let canvas = ui_wgpu::wgpu::Canvas2dScene { tool_run_trace: Some("A".repeat(9)), ..ui_wgpu::wgpu::Canvas2dScene::base(0.0, 0.0, 1.0, "[]".into()) };
+    let node = ui_wgpu::wgpu::build_canvas_2d_scene("canvas", "controller", canvas);
+    let error = validate_ui_node(&node, &limits).expect_err("oversized canvas trace lane should be rejected");
+    assert!(error.contains("canvas2d.toolRunTrace has 9 bytes (max 8)"), "{error}");
 }
 
 #[test]

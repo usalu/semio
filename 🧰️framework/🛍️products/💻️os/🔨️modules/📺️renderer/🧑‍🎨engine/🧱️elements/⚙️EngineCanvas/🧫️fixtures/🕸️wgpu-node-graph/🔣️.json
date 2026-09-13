@@ -23,7 +23,7 @@
       { "id": "e2", "from": "radius", "to": "profile", "fromPort": "number", "toPort": "radius" },
       { "id": "e3", "from": "sides", "to": "profile", "fromPort": "number", "toPort": "sides" },
       { "id": "e4", "from": "profile", "to": "extrude", "fromPort": "wire", "toPort": "wire" },
-      { "id": "e5", "from": "extrusion-axis", "to": "extrude", "fromPort": "vector", "toPort": "vector" },
+      { "id": "e5", "from": "extrusion-axis", "to": "extrude", "fromPort": "vectorOut", "toPort": "vector" },
       { "id": "e6", "from": "extrude", "to": "column-preview", "fromPort": "solid", "toPort": "" }
     ],
     "layout": {

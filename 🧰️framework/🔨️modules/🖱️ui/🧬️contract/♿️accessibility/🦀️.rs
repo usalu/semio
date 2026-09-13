@@ -80,6 +80,7 @@ pub fn accessibility_role(component: &crate::Component, activatable: bool) -> &'
         crate::Component::Slider(_) | crate::Component::Ring(_) => "slider",
         crate::Component::NumberStepper(_) => "spinbutton",
         crate::Component::IconSelect(_) => "radiogroup",
+        crate::Component::Progress(_) => "progressbar",
         crate::Component::Tree(_) => "tree",
         crate::Component::TreeSection(_) => "group",
         crate::Component::TreeItem(_) => "treeitem",
@@ -169,12 +170,47 @@ pub struct AccessibilityProjectionNode {
     pub focused: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rect: Option<[f32; 4]>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub value_min: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub value_max: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub value_now: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub value_text: Option<String>,
+    #[serde(default, skip_serializing_if = "is_default")]
+    pub busy: bool,
+}
+
+/// 📶️ The range semantics a component announces: `aria-valuemin`/`max`/`now`/`valuetext` for a
+/// determinate [`crate::Component::Progress`], and `aria-busy` with no value at all while it is
+/// indeterminate — announcing a made-up value for unknown work would be a lie to the reader.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct AccessibilityValue {
+    pub min: Option<f64>,
+    pub max: Option<f64>,
+    pub now: Option<f64>,
+    pub text: Option<String>,
+    pub busy: bool,
+}
+
+/// 📶️ Projects [`AccessibilityValue`] out of a component; every non-range component answers the empty
+/// default.
+pub fn accessibility_value(component: &crate::Component) -> AccessibilityValue {
+    match component {
+        crate::Component::Progress(props) => match props.total {
+            Some(total) => AccessibilityValue { min: Some(0.0), max: Some(total), now: Some(props.completed), text: Some(props.value_text.0.as_str().to_string()), busy: false },
+            None => AccessibilityValue { busy: true, ..AccessibilityValue::default() },
+        },
+        _ => AccessibilityValue::default(),
+    }
 }
 
 /// ♿️ Projects ONE published node record. Pure over the record — every renderer's own walk supplies
 /// `depth`, and afterwards stamps whatever live state only it knows (`focused`, `rect`).
 pub fn accessibility_projection_node(record: &crate::UiNodeRecord, depth: usize) -> AccessibilityProjectionNode {
     let activatable = record.bindings.iter().any(|binding| binding.trigger == crate::Trigger::Activate);
+    let value = accessibility_value(&record.component);
     AccessibilityProjectionNode {
         node_id: record.id.0,
         key: record.key.as_str().to_string(),
@@ -190,6 +226,11 @@ pub fn accessibility_projection_node(record: &crate::UiNodeRecord, depth: usize)
         actionable: activatable || !record.bindings.is_empty(),
         focused: false,
         rect: None,
+        value_min: value.min,
+        value_max: value.max,
+        value_now: value.now,
+        value_text: value.text,
+        busy: value.busy,
     }
 }
 //#endregion 🔖️AccessibilityProjection

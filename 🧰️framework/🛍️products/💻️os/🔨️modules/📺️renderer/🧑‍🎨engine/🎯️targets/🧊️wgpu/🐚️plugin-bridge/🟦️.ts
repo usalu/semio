@@ -704,10 +704,10 @@ const pendingSpawnedJobs = new Map<number, Map<string, Extract<Effect, { readonl
  * instead of wedging the actor's serialization chain. */
 const WGPU_SPAWNED_JOB_ROUNDS = 16;
 
-/** 🐞️ `[DEBUG]` — how many real reserved-job payloads this page has printed verbatim, so the shared
- * fixture's recorded rows are transcribed from the wire rather than invented. Temporary, ticket
- * 26/09/09/PROCEDURAL-3D-END-TO-END. */
-let spawnJobPayloadsRecorded = 0;
+/** 🧵️ What one spawned-job drain hands back: the shell frames its completions published, and the LAST
+ * turn it actually drove. The status of that turn — not the caller's own last turn, which ended before
+ * the job started — is what decides whether the guest still needs polling. */
+type WgpuSpawnedJobDrain = { readonly frames: readonly Uint8Array[]; readonly last: WireTurnResult | undefined };
 
 /** 🧵️ Takes one `spawn-job` out of the effect stream, deduplicated by job id — the SAME effect is
  * observed twice per gesture (once as the command turn's host effect, once as the leftover drain's),
@@ -1039,8 +1039,9 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
    * A drive that refuses still answers — with the refusal bytes as a `fault` — because the guest has a
    * parked future on this job id and a host that says nothing leaves the interaction hanging forever,
    * which is the shape the dropped effect already had. */
-  const drainSpawnedJobs = async (instanceId: number, actorId: string): Promise<Uint8Array[]> => {
+  const drainSpawnedJobs = async (instanceId: number, actorId: string): Promise<WgpuSpawnedJobDrain> => {
     const frames: Uint8Array[] = [];
+    let last: WireTurnResult | undefined;
     const client = getShardClient();
     const port: SpawnedJobPort = {
       startJob: (job, kind, input) => client.startJob(actorId, job, kind, input),
@@ -1048,13 +1049,9 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     };
     for (let round = 0; round < WGPU_SPAWNED_JOB_ROUNDS; round += 1) {
       const jobs = takeSpawnedJobs(instanceId);
-      if (jobs.length === 0) return frames;
+      if (jobs.length === 0) return { frames, last };
       for (const job of jobs) {
         const started = performance.now();
-        if (spawnJobPayloadsRecorded < 3) {
-          spawnJobPayloadsRecorded += 1;
-          console.log(`[DEBUG] wgpu-bridge spawn-job payload job=${job.job} kind=${job.kind} placement=${job.placement} bytes=${job.input.byteLength} base64=${btoa(String.fromCharCode(...job.input))}`);
-        }
         let completion: SpawnedJobCompletion;
         try {
           completion = await driveSpawnedJob({ job: job.job, kind: job.kind, input: job.input, port });
@@ -1085,19 +1082,18 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         }
         stashLeftoverHostEffects(instanceId, hostEffects);
         drive.report(`job=${job.job}`);
+        last = settled.at(-1) ?? last;
         // 🔁️ A reserved tool job's completion turn is a turn like any other: if the guest still has
         // work left, SOMETHING has to keep polling it. Nothing else will — the command's own
         // `more-work` check reads the command turns, which ended before this job ever started — so an
         // operation the completion re-armed would sit forever and the shell's deferred action would
         // never resolve, wedging the interaction state it holds checked out.
-        const status = wireTurnStatusTag(settled.at(-1)?.status);
-        console.log(`[DEBUG] wgpu-bridge spawn-job settled instance=${instanceId} job=${job.job} turns=${settled.length} status=${status || "-"} frames=${frames.length}`);
-        if (status === "more-work") void drainTypedOperations(instanceId);
+        console.log(`[DEBUG] wgpu-bridge spawn-job settled instance=${instanceId} job=${job.job} turns=${settled.length} status=${wireTurnStatusTag(last?.status) || "-"} frames=${frames.length}`);
       }
     }
     console.warn(`[DEBUG] wgpu-bridge spawn-job drain for instance ${instanceId} exhausted its ${WGPU_SPAWNED_JOB_ROUNDS}-round authority`);
     forgetSpawnedJobs(instanceId);
-    return frames;
+    return { frames, last };
   };
 
   const runQueuedTurnSerialized = async (instanceId: number, actorId: string, events: readonly Uint8Array[]): Promise<void> => {
@@ -1153,13 +1149,17 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       // 🧵️ Before the command's own reply is published: a reserved tool job's completion IS the rest
       // of this action (`interactionSelect` answers with nothing but the job), so its frames belong on
       // the same outcome the shell is already waiting on, after the admitted reply and in order.
-      outFrames.push(...await drainSpawnedJobs(instanceId, actorId));
+      const jobDrain = await drainSpawnedJobs(instanceId, actorId);
+      outFrames.push(...jobDrain.frames);
       const leftover = pendingTurnEffects.get(instanceId) ?? [];
       const leftoverFriendly = leftover.map((effect) => wireEffectToFriendly(effect, decodePackWire)).filter((effect): effect is Effect => effect !== null);
       if (leftoverFriendly.length) console.log(`[DEBUG] wgpu-bridge effects leftover ${leftoverFriendly.length} tags=${effectTags(leftoverFriendly).join(",")}`);
       drive.report("command");
       turnOutcomes.push({ instanceId, frames: outFrames });
-      if (wireTurnStatusTag(results.at(-1)?.status) === "more-work") void drainTypedOperations(instanceId);
+      // 🔁️ The status that decides whether to keep polling is the LAST turn this call drove — a
+      // reserved tool job's completion turn, when one ran. Reading the command's own last turn would
+      // stop the drain on work the job itself re-armed, and nothing else would ever poll the guest.
+      if (wireTurnStatusTag((jobDrain.last ?? results.at(-1))?.status) === "more-work") void drainTypedOperations(instanceId);
     } catch (error) {
       turnOutcomes.push({ instanceId, error });
     }
@@ -1201,9 +1201,12 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
           pendingTurnEffects.set(instanceId, leftover);
           // 🧵️ A poll can uncover a reserved tool job just as a command can — an `interactionHover`
           // the guest armed between two host calls arrives here and nowhere else.
-          frames.push(...await drainSpawnedJobs(instanceId, actorId));
+          const jobDrain = await drainSpawnedJobs(instanceId, actorId);
+          frames.push(...jobDrain.frames);
           if (frames.length > 0) turnOutcomes.push({ instanceId, frames });
-          return { status: accepted.at(-1)?.status, nextWake: accepted.at(-1)?.nextWake ?? null };
+          // 🔁️ Same rule as the command path: this poll's verdict is the last turn it actually drove.
+          const latest = jobDrain.last ?? accepted.at(-1);
+          return { status: latest?.status, nextWake: latest?.nextWake ?? null };
         }),
         yieldWgpuUi,
       );
@@ -1286,7 +1289,9 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         }
         // 🧵️ An extension answer resumes a guest operation that may itself admit a reserved tool job;
         // the pump belongs inside this serialized body, never in a second one behind it.
-        frames.push(...await drainSpawnedJobs(instanceId, actorId));
+        const jobDrain = await drainSpawnedJobs(instanceId, actorId);
+        frames.push(...jobDrain.frames);
+        if (jobDrain.last) accepted.push(jobDrain.last);
         return accepted;
       });
       drive.report(`completion req=${req}`);

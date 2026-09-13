@@ -66,6 +66,15 @@ import type {
   DomainSelection as GeneratedDomainSelection,
   ToolDefinition as GeneratedToolDefinition,
   ToolRef as GeneratedToolRef,
+  JobKindId as GeneratedJobKindId,
+  ToolRunCounterDefinition as GeneratedToolRunCounterDefinition,
+  ToolRunDefinition as GeneratedToolRunDefinition,
+  ToolRunReasonDefinition as GeneratedToolRunReasonDefinition,
+  ToolRunRebasePolicy as GeneratedToolRunRebasePolicy,
+  ToolRunReconfigurePolicy as GeneratedToolRunReconfigurePolicy,
+  ToolRunStageDefinition as GeneratedToolRunStageDefinition,
+  ToolRunTraceKind as GeneratedToolRunTraceKind,
+  ToolRunVerdict as GeneratedToolRunVerdict,
   CommandDefinition as GeneratedCommandDefinition,
   CommandOwnerAddress as GeneratedCommandOwnerAddress,
   CommandAddress as GeneratedCommandAddress,
@@ -74,8 +83,6 @@ import type {
   Platform as GeneratedPlatform,
   PlatformKeybinding as GeneratedPlatformKeybinding,
   WindowMeasure as GeneratedWindowMeasure,
-  MeasureProgressStep as GeneratedMeasureProgressStep,
-  MeasureProgressStepKind as GeneratedMeasureProgressStepKind,
   WindowEngagementOption as GeneratedWindowEngagementOption,
   WindowEngagementInput as GeneratedWindowEngagementInput,
   WindowEngagementStatus as GeneratedWindowEngagementStatus,
@@ -177,6 +184,7 @@ import type {
   NumberStepperProps as GeneratedNumberStepperProps,
   RingProps as GeneratedRingProps,
   IconSelectProps as GeneratedIconSelectProps,
+  ProgressProps as GeneratedProgressProps,
   TreeProps as GeneratedTreeProps,
   TreeSectionProps as GeneratedTreeSectionProps,
   TreeItemProps as GeneratedTreeItemProps,
@@ -258,6 +266,7 @@ export type SliderProps = GeneratedSliderProps;
 export type NumberStepperProps = GeneratedNumberStepperProps;
 export type RingProps = GeneratedRingProps;
 export type IconSelectProps = GeneratedIconSelectProps;
+export type ProgressProps = GeneratedProgressProps;
 export type TreeProps = GeneratedTreeProps;
 export type TreeSectionProps = GeneratedTreeSectionProps;
 export type TreeItemProps = GeneratedTreeItemProps;
@@ -590,6 +599,42 @@ export type DomainSelection = GeneratedDomainSelection;
 export type ToolDefinition = GeneratedToolDefinition;
 export type ToolRef = GeneratedToolRef;
 
+/** ⏯️ Generated from Rust `ToolRunDefinition` (`⏯️tool-run/🦀️.rs`, schema `⏯️tool-run/🧬️schema/🔣️.json`) — the static
+ * run declaration a `ToolDefinition`/`UtilityDefinition` carries as `run`. */
+export type ToolRunDefinition = GeneratedToolRunDefinition;
+export type ToolRunStageDefinition = GeneratedToolRunStageDefinition;
+export type ToolRunCounterDefinition = GeneratedToolRunCounterDefinition;
+export type ToolRunReasonDefinition = GeneratedToolRunReasonDefinition;
+export type ToolRunRebasePolicy = GeneratedToolRunRebasePolicy;
+export type ToolRunReconfigurePolicy = GeneratedToolRunReconfigurePolicy;
+export type ToolRunTraceKind = GeneratedToolRunTraceKind;
+export type ToolRunVerdict = GeneratedToolRunVerdict;
+export type JobKindId = GeneratedJobKindId;
+export {
+  TOOL_RUN_ABORT_ACTION_ID,
+  TOOL_RUN_ABORT_CHORD,
+  TOOL_RUN_ACTION_IDS,
+  TOOL_RUN_ACTIONS,
+  TOOL_RUN_DISMISS_ACTION_ID,
+  TOOL_RUN_DISMISS_CHORD,
+  TOOL_RUN_FINALIZE_ACTION_ID,
+  TOOL_RUN_FINALIZE_CHORD,
+  TOOL_RUN_PAUSE_ACTION_ID,
+  TOOL_RUN_PAUSE_RESUME_CHORD,
+  TOOL_RUN_RESUME_ACTION_ID,
+  TOOL_RUN_START_ACTION_ID,
+  TOOL_RUN_START_CHORD,
+  TOOL_RUN_STEP_ACTION_ID,
+  TOOL_RUN_STEP_CHORD,
+  type ToolRunActionId,
+} from "../⏯️tool-run/🟦️.ts";
+
+/** ⏯️ Mirrors Rust `app_declares_tool_run`: the seven reserved tool run actions are injected exactly when a
+ * tool or utility declares `run`. */
+export function appDeclaresToolRun(app: { readonly tools: readonly { readonly run?: ToolRunDefinition }[]; readonly utilities: readonly { readonly run?: ToolRunDefinition }[] }): boolean {
+  return app.tools.some((tool) => tool.run !== undefined) || app.utilities.some((utility) => utility.run !== undefined);
+}
+
 /** 🎛️ Generated command ownership, invocation, and platform-aware keybinding contracts. */
 export type CommandDefinition = GeneratedCommandDefinition;
 export type CommandOwnerAddress = GeneratedCommandOwnerAddress;
@@ -818,7 +863,14 @@ export type PluginViewState = {
   readonly focusedWindowId?: string;
   /** 🪟️ The live set of open window instances (base + spawned/split), so `windowMeasures`/`windowEngagements` can return one entry per instance. */
   readonly windowInstances?: readonly { readonly id: string; readonly windowKindId: string }[];
+  /** ⏯️ The tool run trace cursor each window instance's renderer echoes, keyed by window instance id: the
+   * next trace page it expects of `run` at `generation`. The guest answers the pages after it inside the
+   * scene's `toolRunTrace` lane (`📋️tool-run-contract.md` §3.2). */
+  readonly toolRunTraceCursorByWindowId?: Readonly<Record<string, ViewToolRunTraceCursor>>;
 };
+
+/** 🧭️ View-context form of the tool run `ToolRunTraceCursor` — `run` bounded to exact JavaScript integers. */
+export type ViewToolRunTraceCursor = { readonly run: number; readonly generation: number; readonly page: number };
 
 export type ResolvedPluginViewState = PluginViewState & { readonly locale: "en" | "de"; readonly terminology: "native" | "reuse" };
 
@@ -905,7 +957,7 @@ export function parseResolvedPluginViewState(value: unknown): ResolvedPluginView
   const row = object(value);
   const short = ["activeModeId", "activeWindowKindId", "activeUtilityId", "activeToolId", "windowId", "focusedWindowId"];
   const long = VIEW_CONTEXT_LONG_STRING_FIELDS;
-  const allowed = new Set([...short, ...long, "locale", "terminology", "sessionIdentity", "activeUtilityByWindowId", "windowInstances"]);
+  const allowed = new Set([...short, ...long, "locale", "terminology", "sessionIdentity", "activeUtilityByWindowId", "windowInstances", "toolRunTraceCursorByWindowId"]);
   if (Object.keys(row).some((key) => !allowed.has(key)) || !["en", "de"].includes(row.locale as string) || !["native", "reuse"].includes(row.terminology as string)) throw new Error("view context: explicit supported preferences required");
   for (const key of short) if (row[key] !== undefined) identifier(row[key]);
   for (const key of long) if (row[key] !== undefined && (typeof row[key] !== "string" || Array.from(row[key]).length > VIEW_CONTEXT_LONG_STRING_CHARS)) throw new Error(`view context: invalid panel data at ${key}`);
@@ -930,6 +982,16 @@ export function parseResolvedPluginViewState(value: unknown): ResolvedPluginView
       identifier(window.windowKindId);
       if (ids.has(id)) throw new Error("view context: repeated window instance");
       ids.add(id);
+    }
+  }
+  if (row.toolRunTraceCursorByWindowId !== undefined) {
+    const entries = Object.entries(object(row.toolRunTraceCursorByWindowId));
+    if (entries.length > 64) throw new Error("view context: trace cursor capacity exceeded");
+    const bounded = (input: unknown, maximum: number): boolean => Number.isInteger(input) && (input as number) >= 0 && (input as number) <= maximum;
+    for (const [key, item] of entries) {
+      identifier(key);
+      const cursor = object(item);
+      if (Object.keys(cursor).sort().join(",") !== "generation,page,run" || !bounded(cursor.run, Number.MAX_SAFE_INTEGER) || !bounded(cursor.generation, 0xffff_ffff) || !bounded(cursor.page, 0xffff_ffff)) throw new Error("view context: invalid tool run trace cursor");
     }
   }
   return structuredClone(row) as ResolvedPluginViewState;
@@ -1187,8 +1249,6 @@ if (import.meta.vitest) {
 //#region AppManifestProtocol
 /** 🧬️ Generated from Rust `WindowMeasure`/`WindowEngagement*` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
 export type WindowMeasure = GeneratedWindowMeasure;
-export type MeasureProgressStep = GeneratedMeasureProgressStep;
-export type MeasureProgressStepKind = GeneratedMeasureProgressStepKind;
 export type WindowEngagementOption = GeneratedWindowEngagementOption;
 export type WindowEngagementInput = GeneratedWindowEngagementInput;
 export type WindowEngagementStatus = GeneratedWindowEngagementStatus;

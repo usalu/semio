@@ -1,0 +1,58 @@
+{
+  "case": "progress",
+  "kind": "component",
+  "description": "A group holding one determinate Progress (12 of 100) and one indeterminate Progress (no total).",
+  "outcome": "accept",
+  "limits": null,
+  "tree": {
+    "root": 0,
+    "nodeCount": 3,
+    "shape": [
+      {
+        "id": 0,
+        "key": "#0",
+        "type": "container",
+        "children": [1, 2]
+      },
+      {
+        "id": 1,
+        "key": "#0",
+        "type": "progress",
+        "children": []
+      },
+      {
+        "id": 2,
+        "key": "#1",
+        "type": "progress",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": "Fill",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 1,
+      "label": "Fill progress",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 2,
+      "label": "Preparation progress",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": []
+}

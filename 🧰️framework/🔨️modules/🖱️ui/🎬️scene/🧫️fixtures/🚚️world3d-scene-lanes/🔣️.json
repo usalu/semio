@@ -133,6 +133,12 @@
       "field": "statusJson",
       "bodyKey": "framework.scene.world3d.status",
       "optional": true
+    },
+    {
+      "lane": "toolRunTrace",
+      "field": "toolRunTrace",
+      "bodyKey": "framework.scene.world3d.toolRunTrace",
+      "optional": true
     }
   ],
   "roundTrip": {

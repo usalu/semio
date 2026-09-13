@@ -9,6 +9,13 @@
         "command": "bun ./📜️script.ts test-action-choices"
       }
     },
+    "test-tool-run-actions": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-tool-run-actions"
+      }
+    },
     "test-core-modules": {
       "executor": "nx:run-commands",
       "options": {

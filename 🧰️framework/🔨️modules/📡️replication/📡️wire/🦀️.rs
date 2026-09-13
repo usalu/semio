@@ -1373,6 +1373,110 @@ pub struct PresencePeer {
     pub views: Vec<PresenceWindowView>,
     /// @emoji 🖱️ Live `data-ui-path` hover/focus/press state (APP scope).
     pub ui: Option<PresenceUi>,
+    /// @emoji ⏯️ Summary of this peer's non-terminal or just-settled tool run (ARTIFACT scope), never provisional geometry.
+    pub tool_run: Option<PresenceToolRun>,
+}
+
+/// @emoji ⏳️ Lifecycle state of a peer's tool run, spelled like `ToolRunState` in the tool run contract §2.2.
+///
+/// Duplicated rather than imported: `semio-framework-tool-run` layers above this replication kernel.
+/// The binary tag is the declaration order and the JSON value is the camelCase wire name.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PresenceToolRunState {
+    Starting,
+    Running,
+    Paused,
+    Complete,
+    Finalizing,
+    Finalized,
+    Aborting,
+    Aborted,
+    Faulted,
+}
+
+impl PresenceToolRunState {
+    pub const ALL: [PresenceToolRunState; 9] = [Self::Starting, Self::Running, Self::Paused, Self::Complete, Self::Finalizing, Self::Finalized, Self::Aborting, Self::Aborted, Self::Faulted];
+
+    /// @emoji 🔤️ The camelCase wire spelling shared with `ToolRunState`.
+    pub fn wire_name(self) -> &'static str {
+        match self {
+            Self::Starting => "starting",
+            Self::Running => "running",
+            Self::Paused => "paused",
+            Self::Complete => "complete",
+            Self::Finalizing => "finalizing",
+            Self::Finalized => "finalized",
+            Self::Aborting => "aborting",
+            Self::Aborted => "aborted",
+            Self::Faulted => "faulted",
+        }
+    }
+
+    /// @emoji 🔡️ Inverse of [`Self::wire_name`].
+    pub fn from_wire_name(name: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|state| state.wire_name() == name)
+    }
+}
+
+/// @emoji 📶️ Ephemeral shared progress summary of a peer's tool run ("Alice · Fill · 42 %").
+///
+/// `stage` indexes the tool's declared stages, `total` absent means indeterminate, and the percentage
+/// is derived by the renderer. `completed <= total` whenever `total` is present.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PresenceToolRun {
+    pub tool_id: String,
+    pub state: PresenceToolRunState,
+    pub stage: u16,
+    pub completed: u64,
+    pub total: Option<u64>,
+}
+
+impl crate::value::ToValue for PresenceToolRun {
+    fn to_value(&self) -> crate::value::DslValue {
+        let mut entries = vec![
+            ("toolId".to_string(), crate::value::ToValue::to_value(&self.tool_id)),
+            ("state".to_string(), crate::value::DslValue::String(self.state.wire_name().to_string())),
+            ("stage".to_string(), crate::value::ToValue::to_value(&self.stage)),
+            ("completed".to_string(), crate::value::ToValue::to_value(&self.completed)),
+        ];
+        if let Some(total) = &self.total {
+            entries.push(("total".to_string(), crate::value::ToValue::to_value(total)));
+        }
+        crate::value::DslValue::object(entries)
+    }
+}
+
+impl crate::value::FromValue for PresenceToolRun {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for PresenceToolRun, found {value:?}")));
+        };
+        let mut tool_id = None;
+        let mut state = None;
+        let mut stage = None;
+        let mut completed = None;
+        let mut total = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "toolId" => tool_id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("toolId"))?),
+                "state" => {
+                    let name = <String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("state"))?;
+                    state = Some(PresenceToolRunState::from_wire_name(&name).ok_or_else(|| crate::value::ValueError::new(format!("unknown tool run state {name}")).under("state"))?);
+                }
+                "stage" => stage = Some(<u16 as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("stage"))?),
+                "completed" => completed = Some(<u64 as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("completed"))?),
+                "total" => total = <Option<u64> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("total"))?,
+                _ => {}
+            }
+        }
+        Ok(PresenceToolRun {
+            tool_id: tool_id.ok_or_else(|| crate::value::ValueError::new("PresenceToolRun missing toolId"))?,
+            state: state.ok_or_else(|| crate::value::ValueError::new("PresenceToolRun missing state"))?,
+            stage: stage.ok_or_else(|| crate::value::ValueError::new("PresenceToolRun missing stage"))?,
+            completed: completed.ok_or_else(|| crate::value::ValueError::new("PresenceToolRun missing completed"))?,
+            total,
+        })
+    }
 }
 
 /// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above. `presence_pack` mirrors
@@ -1413,6 +1517,9 @@ impl crate::value::ToValue for PresencePeer {
         if let Some(ui) = &self.ui {
             entries.push(("ui".to_string(), crate::value::ToValue::to_value(ui)));
         }
+        if let Some(tool_run) = &self.tool_run {
+            entries.push(("toolRun".to_string(), crate::value::ToValue::to_value(tool_run)));
+        }
         crate::value::DslValue::object(entries)
     }
 }
@@ -1433,6 +1540,7 @@ impl crate::value::FromValue for PresencePeer {
         let mut surface = None;
         let mut views = Vec::new();
         let mut ui = None;
+        let mut tool_run = None;
         for (key, entry) in fields {
             match key.as_str() {
                 "actor" => actor = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("actor"))?),
@@ -1452,6 +1560,7 @@ impl crate::value::FromValue for PresencePeer {
                 "surface" => surface = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("surface"))?,
                 "views" => views = <Vec<PresenceWindowView> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("views"))?,
                 "ui" => ui = <Option<PresenceUi> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("ui"))?,
+                "toolRun" => tool_run = <Option<PresenceToolRun> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("toolRun"))?,
                 _ => {}
             }
         }
@@ -1468,6 +1577,7 @@ impl crate::value::FromValue for PresencePeer {
             surface,
             views,
             ui,
+            tool_run,
         })
     }
 }
@@ -1482,7 +1592,8 @@ impl crate::value::FromValue for PresencePeer {
 /// (self-delimiting varint-counted fields — see the `🔖️PresenceInteraction` region below); bit 8
 /// (`views`) is set iff non-empty; bit 9 (`ui`) carries three `opt_str` fields unconditionally once
 /// present. `flags` widened from a single `u8` to a varint (ticket 26/08/17/SHARED-PRESENCE-SESSION-
-/// COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.1) now that bit 9 exceeds a byte's range.
+/// COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.1) now that bit 9 exceeds a byte's range. Bit 10 carries
+/// `tool_run` as `tool_id str | state u8 | stage varint | completed varint | total bool+varint?`.
 pub async fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
     let mut out = Vec::new();
     crate::write_str(&mut out, &peer.actor);
@@ -1517,6 +1628,9 @@ pub async fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
     if peer.ui.is_some() {
         flags |= 1 << 9;
     }
+    if peer.tool_run.is_some() {
+        flags |= 1 << 10;
+    }
     crate::wire::write_varint_u64(&mut out, flags);
     crate::wire::write_varint_u64(&mut out, peer.connected_at_ms as u64);
     if let Some(label) = &peer.label {
@@ -1549,7 +1663,24 @@ pub async fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
     if let Some(ui) = &peer.ui {
         encode_presence_ui(ui, &mut out).await;
     }
+    if let Some(tool_run) = &peer.tool_run {
+        encode_presence_tool_run(tool_run, &mut out);
+    }
     out
+}
+
+/// @emoji ⏯️ Appends one `PresenceToolRun` body — the exact bytes a `PresencePeer` carries under flag bit 10.
+/// `pub` so a guest's `AppFrame::Ephemeral` can publish its run summary in the same encoding the heartbeat
+/// assembly re-embeds (contract `📋️tool-run-contract.md` §3.4).
+pub fn encode_presence_tool_run(tool_run: &PresenceToolRun, out: &mut Vec<u8>) {
+    crate::write_str(out, &tool_run.tool_id);
+    out.push(tool_run.state as u8);
+    crate::wire::write_varint_u64(out, u64::from(tool_run.stage));
+    crate::wire::write_varint_u64(out, tool_run.completed);
+    crate::write_bool(out, tool_run.total.is_some());
+    if let Some(total) = tool_run.total {
+        crate::wire::write_varint_u64(out, total);
+    }
 }
 
 /// @emoji 🛡️ Fixed hostile-input ceilings shared with the TypeScript presence decoder.
@@ -1562,6 +1693,7 @@ pub struct PresencePeerWireLimitsV1 {
     pub maximum_interaction_domains: usize,
     pub maximum_domain_ids: usize,
     pub maximum_connected_at_ms: u64,
+    pub maximum_tool_run_units: u64,
 }
 
 pub const PRESENCE_PEER_WIRE_LIMITS_V1: PresencePeerWireLimitsV1 = PresencePeerWireLimitsV1 {
@@ -1572,6 +1704,7 @@ pub const PRESENCE_PEER_WIRE_LIMITS_V1: PresencePeerWireLimitsV1 = PresencePeerW
     maximum_interaction_domains: 16,
     maximum_domain_ids: 64,
     maximum_connected_at_ms: 9_007_199_254_740_991,
+    maximum_tool_run_units: 9_007_199_254_740_991,
 };
 
 struct PresencePeerReader<'a> {
@@ -1706,9 +1839,37 @@ impl<'a> PresencePeerReader<'a> {
         if self.boolean(what)? { Ok(Some(self.text(what)?)) } else { Ok(None) }
     }
 
+    fn tool_run_units(&mut self, what: &'static str) -> Result<u64, crate::ProtocolError> {
+        let value = self.varint(what)?;
+        if value > self.limits.maximum_tool_run_units { return Err(crate::ProtocolError::LimitExceeded(what)); }
+        Ok(value)
+    }
+
+    fn tool_run(&mut self) -> Result<PresenceToolRun, crate::ProtocolError> {
+        let tool_id = self.text("presence tool run id")?;
+        let tag = self.byte("presence tool run state")?;
+        let state = *PresenceToolRunState::ALL.get(usize::from(tag)).ok_or_else(|| self.malformed("presence tool run state", format!("unknown tag {tag:#x}")))?;
+        let stage = u16::try_from(self.varint("presence tool run stage")?).map_err(|_| crate::ProtocolError::LimitExceeded("presence tool run stage"))?;
+        let completed = self.tool_run_units("presence tool run completed")?;
+        let total = if self.boolean("presence tool run total")? { Some(self.tool_run_units("presence tool run total")?) } else { None };
+        if total.is_some_and(|total| completed > total) { return Err(self.malformed("presence tool run completed", "completed exceeds total")); }
+        Ok(PresenceToolRun { tool_id, state, stage, completed, total })
+    }
+
     fn ui(&mut self) -> Result<PresenceUi, crate::ProtocolError> {
         Ok(PresenceUi { hovered_path: self.optional_text("presence ui hovered path")?, focused_path: self.optional_text("presence ui focused path")?, pressed_path: self.optional_text("presence ui pressed path")? })
     }
+}
+
+/// @emoji 🎞️ Exact inverse of [`encode_presence_tool_run`] over a standalone body: the peer decoder's limits
+/// (state tag, `u16` stage, exact-integer units, `completed ≤ total`) and no trailing bytes.
+pub fn decode_presence_tool_run(bytes: &[u8]) -> Result<PresenceToolRun, crate::ProtocolError> {
+    let limits = PRESENCE_PEER_WIRE_LIMITS_V1;
+    if bytes.len() > limits.maximum_entry_bytes { return Err(crate::ProtocolError::LimitExceeded("presence tool run bytes")); }
+    let mut reader = PresencePeerReader { bytes, position: 0, limits };
+    let tool_run = reader.tool_run()?;
+    if reader.position != bytes.len() { return Err(reader.malformed("presence tool run", "trailing bytes")); }
+    Ok(tool_run)
 }
 
 /// @emoji 🎯️ Exact, allocation-bounded inverse of [`encode_presence_peer`]. Unknown flags,
@@ -1720,7 +1881,7 @@ pub async fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::P
     let mut reader = PresencePeerReader { bytes, position: 0, limits };
     let actor = reader.text("presence peer actor")?;
     let flags = reader.varint("presence peer flags")?;
-    if flags >> 10 != 0 { return Err(reader.malformed("presence peer flags", format!("unknown flag bits set: {flags:#x}"))); }
+    if flags >> 11 != 0 { return Err(reader.malformed("presence peer flags", format!("unknown flag bits set: {flags:#x}"))); }
     let connected_at = reader.varint("presence peer connected at")?;
     if connected_at > limits.maximum_connected_at_ms { return Err(crate::ProtocolError::LimitExceeded("presence peer connected at")); }
     let connected_at_ms = connected_at as i64;
@@ -1734,8 +1895,9 @@ pub async fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::P
     let surface = if flags & (1 << 7) != 0 { Some(reader.text("presence peer surface")?) } else { None };
     let views = if flags & (1 << 8) != 0 { reader.views()? } else { Vec::new() };
     let ui = if flags & (1 << 9) != 0 { Some(reader.ui()?) } else { None };
+    let tool_run = if flags & (1 << 10) != 0 { Some(reader.tool_run()?) } else { None };
     if reader.position != bytes.len() { return Err(reader.malformed("presence peer", "trailing bytes")); }
-    Ok(PresencePeer { actor, connected_at_ms, label, presence_pack, user_id, role, drag_ghost_json, interaction, color, surface, views, ui })
+    Ok(PresencePeer { actor, connected_at_ms, label, presence_pack, user_id, role, drag_ghost_json, interaction, color, surface, views, ui, tool_run })
 }
 
 #[cfg(test)]

@@ -25,7 +25,7 @@
           "const": 64
         },
         "aggregateBytes": {
-          "const": 33554432
+          "const": 52559872
         },
         "staticCountsAgainstAggregate": {
           "const": true

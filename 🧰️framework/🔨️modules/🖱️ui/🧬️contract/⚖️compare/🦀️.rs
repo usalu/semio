@@ -201,6 +201,7 @@ variants!(Component {
     NumberStepper: NumberStepperProps,
     Ring: RingProps,
     IconSelect: IconSelectProps,
+    Progress: ProgressProps,
     Tree: TreeProps,
     TreeSection: TreeSectionProps,
     TreeItem: TreeItemProps,

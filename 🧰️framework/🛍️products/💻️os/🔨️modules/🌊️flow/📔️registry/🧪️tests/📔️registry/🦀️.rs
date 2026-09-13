@@ -10,7 +10,7 @@ fn third_party_json<T: crate::os_dsl::ToValue>(value: &T) -> serde_json::Value {
 #[test]
 fn contributed_registry_replacement_preserves_readers_and_drains_old_versions() {
     let _serialized = lock_flow_extension_registry_for_test();
-    drain_flow_extension_registry_retirements();
+    let queued_before = drain_flow_extension_registry_retirements();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let plugin = fixture["pluginId"].as_str().unwrap();
     let manifest = serde_json::to_string(&fixture["manifest"]).unwrap();
@@ -38,7 +38,7 @@ fn contributed_registry_replacement_preserves_readers_and_drains_old_versions() 
     for _ in 0..100_000 {
         if retire_flow_extension_registries_step(1, 1).unwrap() == neural::ValueRetirementStep::Complete { break; }
     }
-    assert!(flow_extension_state().lock().unwrap().retired.is_empty());
+    assert!(flow_extension_state().lock().unwrap().retired.len() <= queued_before, "this law retires every version IT queued — the depth another live law pins is not its to empty");
 }
 
 /// ⚖️ LAW: a maintenance step never brings the process-wide registry into existence.
@@ -71,7 +71,7 @@ impl neural::Operator for FaultingOperator {
 #[test]
 fn registry_maintenance_retains_cursor_outside_a_faulted_worker() {
     let _serialized = lock_flow_extension_registry_for_test();
-    drain_flow_extension_registry_retirements();
+    let queued_before = drain_flow_extension_registry_retirements();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let mut registry = neural::Registry::new();
     registry.register_operator(neural::OperatorInfo::default(), vec![OperatorImpl { schemas: vec![], operator: Box::new(FaultingOperator { text: fixture["pluginId"].as_str().unwrap().into() }) }], &[]);
@@ -90,13 +90,13 @@ fn registry_maintenance_retains_cursor_outside_a_faulted_worker() {
     for _ in 0..1000 {
         if retire_flow_extension_registries_step(1, 1).unwrap() == neural::ValueRetirementStep::Complete { break; }
     }
-    assert!(flow_extension_state().lock().unwrap().retired.is_empty());
+    assert!(flow_extension_state().lock().unwrap().retired.len() <= queued_before, "this law retires every version IT queued — the depth another live law pins is not its to empty");
 }
 
 #[test]
 fn registry_replacement_admission_preserves_roots_on_capacity_and_generation_exhaustion() {
     let _serialized = lock_flow_extension_registry_for_test();
-    drain_flow_extension_registry_retirements();
+    let queued_before = drain_flow_extension_registry_retirements();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let plugin = fixture["pluginId"].as_str().unwrap();
     let manifest = fixture["manifest"].to_string();
@@ -105,7 +105,19 @@ fn registry_replacement_admission_preserves_roots_on_capacity_and_generation_exh
     let expected = third_party_json(reader.schema("owned").unwrap());
     let capacity = fixture["retiredCapacity"].as_u64().unwrap() as usize;
     assert_eq!(RETIRED_REGISTRY_CAPACITY, capacity);
-    for _ in 1..capacity { install_flow_extension_manifest(plugin, &manifest).unwrap(); }
+    // 🎟️ Filled by pressure, not by an exact count: an admission that finds the queue full first
+    // retires the free versions ahead of the pinned one (`reclaim_free_retired_registries`), so the
+    // number of installs exhaustion takes is the queue's depth BEHIND `reader`, not `capacity`.
+    // What the law states is unchanged — that exhaustion is reached, refuses, and preserves every
+    // root (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    let mut refused = None;
+    for _ in 1..=capacity * 4 {
+        if let Err(reason) = install_flow_extension_manifest(plugin, &manifest) {
+            refused = Some(reason);
+            break;
+        }
+    }
+    assert_eq!(refused, Some("flow.registry-retirement-full"), "a version a live reader pins can never be retired past, so the queue behind it must still exhaust");
     let generation = flow_extension_state().lock().unwrap().generation;
     assert_eq!(install_flow_extension_manifest(plugin, &manifest), Err("flow.registry-retirement-full"));
     assert_eq!(uninstall_flow_extension("owned"), Err("flow.registry-retirement-full"));
@@ -122,14 +134,47 @@ fn registry_replacement_admission_preserves_roots_on_capacity_and_generation_exh
     assert_eq!(sync_host_flow_extension_contributions("[]".to_string()), Err("flow.registry-generation-exhausted"));
     assert_eq!(flow_extension_state().lock().unwrap().generation, maximum);
     assert_eq!(third_party_json(flow_extension_registry().schema("owned").unwrap()), expected);
-    assert!(flow_extension_state().lock().unwrap().retired.is_empty());
+    assert!(flow_extension_state().lock().unwrap().retired.len() <= queued_before, "this law retires every version IT queued — the depth another live law pins is not its to empty");
     flow_extension_state().lock().unwrap().generation = generation;
     sync_host_flow_extension_contributions("[]".to_string()).unwrap();
     assert!(flow_extension_registry().schema("owned").is_none());
     for _ in 0..100_000 {
         if retire_flow_extension_registries_step(1, 64).unwrap() == neural::ValueRetirementStep::Complete { break; }
     }
-    assert!(flow_extension_state().lock().unwrap().retired.is_empty());
+    assert!(flow_extension_state().lock().unwrap().retired.len() <= queued_before, "this law retires every version IT queued — the depth another live law pins is not its to empty");
+}
+/// ⚖️ LAW: a process that keeps replacing the registry and never pumps the retirement queue keeps
+/// working. Nothing outside test code calls [`retire_flow_extension_registries_step`], so an
+/// admission that finds the queue full retires the free versions at its FRONT and only then refuses
+/// — otherwise the 17th replacement of a process's life is the last one it ever admits
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+///
+/// 🔒️ The second half is the promise the first half must not cost: while a reader PINS the front
+/// version, no amount of admission pressure may retire past it, and the refusal still arrives with
+/// every root intact.
+#[test]
+fn a_full_retirement_queue_reclaims_its_free_versions_before_refusing_but_never_past_a_live_reader() {
+    let _serialized = lock_flow_extension_registry_for_test();
+    drain_flow_extension_registry_retirements();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let plugin = fixture["pluginId"].as_str().unwrap();
+    let manifest = fixture["manifest"].to_string();
+    for _ in 0..RETIRED_REGISTRY_CAPACITY * 4 {
+        install_flow_extension_manifest(plugin, &manifest).expect("an unpumped queue must not end the process's ability to install");
+    }
+    assert!(flow_extension_state().lock().unwrap().retired.len() <= RETIRED_REGISTRY_CAPACITY, "an unread queue never grows past its declared capacity");
+    let reader = flow_extension_registry();
+    let pinned = third_party_json(reader.schema("owned").unwrap());
+    for _ in 0..RETIRED_REGISTRY_CAPACITY {
+        if install_flow_extension_manifest(plugin, &manifest).is_err() {
+            break;
+        }
+    }
+    assert_eq!(install_flow_extension_manifest(plugin, &manifest), Err("flow.registry-retirement-full"), "a version a reader still holds is never retired past");
+    assert_eq!(third_party_json(reader.schema("owned").unwrap()), pinned, "the refused admission leaves the pinned root exactly as it was");
+    drop(reader);
+    install_flow_extension_manifest(plugin, &manifest).expect("the released reader's version is reclaimable again");
+    uninstall_flow_extension("owned").expect("the law leaves the contribution table as it found it");
 }
 //#endregion 🧪️RetainedReplacement
 
@@ -145,7 +190,7 @@ fn registry_replacement_admission_preserves_roots_on_capacity_and_generation_exh
 #[test]
 fn contributed_operators_are_addressed_by_their_contributing_plugin_id() {
     let _serialized = lock_flow_extension_registry_for_test();
-    drain_flow_extension_registry_retirements();
+    let queued_before = drain_flow_extension_registry_retirements();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let plugin_id = fixture["pluginId"].as_str().unwrap();
     let flow_extension_id = fixture["manifest"]["id"].as_str().unwrap();
@@ -256,7 +301,7 @@ fn a_contributed_manifest_is_admitted_or_faulted_per_fixture_row() {
 #[test]
 fn a_malformed_contributed_manifest_faults_the_whole_contributions_sync() {
     let _serialized = lock_flow_extension_registry_for_test();
-    drain_flow_extension_registry_retirements();
+    let queued_before = drain_flow_extension_registry_retirements();
     let fixture: serde_json::Value = serde_json::from_str(MANIFEST_ADMISSION_FIXTURE).unwrap();
     let plugin = fixture["pluginId"].as_str().unwrap();
     let row = fixture["rows"].as_array().unwrap().iter().find(|row| row["id"] == "metadata-only").expect("the fixture owns the metadata-readable row");

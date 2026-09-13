@@ -42,7 +42,7 @@ fn every_component_implies_the_role_the_shared_fixture_declares() {
         assert_eq!(accessibility_is_focusable(&component, activatable), row["focusable"].as_bool().expect("fixture focusable"), "{id}: focusability");
         seen.insert(row["component"]["type"].as_str().expect("fixture component type tag"));
     }
-    assert_eq!(seen.len(), 18, "the fixture covers every one of the contract's 18 components");
+    assert_eq!(seen.len(), 19, "the fixture covers every one of the contract's 19 components");
     eprintln!("[DEBUG] ui contract accessibility: {} role rows over all {} components", rows.len(), seen.len());
 }
 
@@ -69,6 +69,7 @@ fn every_published_record_projects_the_way_the_shared_fixture_declares() {
         assert_eq!(node.focusable, row["focusable"].as_bool().expect("fixture focusable"), "{} focusable", node.key);
         assert_eq!(node.actionable, row["actionable"].as_bool().expect("fixture actionable"), "{} actionable", node.key);
         assert!(!node.focused, "the pure projection stamps no live focus — only a renderer's own walk does");
+        assert_value_matches(&node, row);
         if !node.hidden && (node.focusable || node.actionable) && node.label.is_some() {
             announced.push(node.node_id);
         }
@@ -90,6 +91,37 @@ fn a_hidden_node_is_marked_not_dropped() {
     assert!(node.hidden);
     assert_eq!(node.role, "img", "a hidden node still carries the role it would have had");
     eprintln!("[DEBUG] ui contract accessibility: the decorative node projects as hidden, not absent");
+}
+
+/// 📶️ Asserts the range semantics a fixture row pins, reading absent keys as null/false.
+pub(crate) fn assert_value_matches(node: &AccessibilityProjectionNode, row: &serde_json::Value) {
+    assert_eq!(node.value_min, row["valueMin"].as_f64(), "{} valueMin", node.key);
+    assert_eq!(node.value_max, row["valueMax"].as_f64(), "{} valueMax", node.key);
+    assert_eq!(node.value_now, row["valueNow"].as_f64(), "{} valueNow", node.key);
+    assert_eq!(node.value_text.as_deref(), row["valueText"].as_str(), "{} valueText", node.key);
+    assert_eq!(node.busy, row["busy"].as_bool().unwrap_or(false), "{} busy", node.key);
+}
+
+/// 📶️ Every case of the shared progress law announces exactly the value attributes it declares:
+/// min/max/now/valuetext while determinate, only `busy` while indeterminate.
+#[test]
+fn every_progress_case_announces_the_value_the_shared_fixture_declares() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📶️progress.json")).expect("📶️ the progress fixture parses");
+    let cases = fixture["cases"].as_array().expect("progress cases");
+    for case in cases {
+        let id = case["id"].as_str().expect("case id");
+        let component: crate::Component = serde_json::from_value(case["component"].clone()).unwrap_or_else(|error| panic!("{id}: {error}"));
+        let expected = &case["accessibility"];
+        assert_eq!(accessibility_role(&component, false), expected["role"].as_str().expect("role"), "{id}: role");
+        assert_eq!(accessibility_is_focusable(&component, false), expected["focusable"].as_bool().expect("focusable"), "{id}: focusable");
+        let value = accessibility_value(&component);
+        assert_eq!(value.min, expected["valueMin"].as_f64(), "{id}: valueMin");
+        assert_eq!(value.max, expected["valueMax"].as_f64(), "{id}: valueMax");
+        assert_eq!(value.now, expected["valueNow"].as_f64(), "{id}: valueNow");
+        assert_eq!(value.text.as_deref(), expected["valueText"].as_str(), "{id}: valueText");
+        assert_eq!(value.busy, expected["busy"].as_bool().expect("busy"), "{id}: busy");
+    }
+    assert_eq!(accessibility_value(&crate::Component::Separator(crate::SeparatorProps {})), AccessibilityValue::default(), "a non-range component announces no value");
 }
 
 //#endregion ♿️ProjectionLaws

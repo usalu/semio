@@ -1,20 +1,51 @@
 {
   "why": "Who owns a `send-message` effect once a turn hands it back. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END: every `interactionSelect` completion left two of them in the browser console as `[DEBUG] wireEffectToFriendly: unmapped effect \"send-message\" dropped — unverified wasm-boundary conversion`, which read like lost work. It was not: `route_app_frame` (`⚛️reactor/🔄️turn/🦀️.rs`) wraps EVERY non-`UiPatch` `AppFrame` reply in `Effect::SendMessage{Shell{instance}}`, the reserved-tool-job completion turn parks them in `pendingTurnEffects`, and `invocationFromFrames` already applies them through `leftoverShellInvocationFrames` (the history patch the console logs one line later) before handing the SAME list to the friendly mapping. A shell or backbone send-message is transport with an owner; anything else has no host route at all and must stay loud.",
   "instanceId": 7,
-  "routedTargets": ["shell", "backbone"],
+  "routedTargets": [
+    "shell",
+    "backbone"
+  ],
   "cases": [
     {
       "id": "shell-reply-frame-for-this-instance",
       "why": "The `interactionSelect` shape: an AppFrame reply addressed at the calling instance. `shellFrameBytes` hands back its payload and the friendly mapping must stay silent.",
-      "effect": { "tag": "send-message", "val": { "target": { "tag": "shell", "val": "7" }, "payload": [1, 2, 3] } },
+      "effect": {
+        "tag": "send-message",
+        "val": {
+          "target": {
+            "tag": "shell",
+            "val": "7"
+          },
+          "payload": [
+            1,
+            2,
+            3
+          ]
+        }
+      },
       "friendly": null,
       "warns": false,
-      "shellFramePayload": [1, 2, 3]
+      "shellFramePayload": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": "shell-reply-frame-for-another-instance",
       "why": "`shellFrameBytes` declines a frame addressed elsewhere, but it is still transport owned by that other instance's own drain — never a friendly effect this instance should act on, and never a warning.",
-      "effect": { "tag": "send-message", "val": { "target": { "tag": "shell", "val": "9" }, "payload": [4] } },
+      "effect": {
+        "tag": "send-message",
+        "val": {
+          "target": {
+            "tag": "shell",
+            "val": "9"
+          },
+          "payload": [
+            4
+          ]
+        }
+      },
       "friendly": null,
       "warns": false,
       "shellFramePayload": null
@@ -22,7 +53,19 @@
     {
       "id": "backbone-document-port",
       "why": "`routeHostEffects` already pushed this out the bound document port before the friendly mapping ran.",
-      "effect": { "tag": "send-message", "val": { "target": { "tag": "backbone", "val": "actor://space-1" }, "payload": [5, 6] } },
+      "effect": {
+        "tag": "send-message",
+        "val": {
+          "target": {
+            "tag": "backbone",
+            "val": "actor://space-1"
+          },
+          "payload": [
+            5,
+            6
+          ]
+        }
+      },
       "friendly": null,
       "warns": false,
       "shellFramePayload": null
@@ -30,7 +73,18 @@
     {
       "id": "topic-endpoint-has-no-host-route",
       "why": "The real hole the old blanket drop was hiding: no consumer anywhere routes a topic-addressed message, so this one MUST stay loud.",
-      "effect": { "tag": "send-message", "val": { "target": { "tag": "topic", "val": "t" }, "payload": [7] } },
+      "effect": {
+        "tag": "send-message",
+        "val": {
+          "target": {
+            "tag": "topic",
+            "val": "t"
+          },
+          "payload": [
+            7
+          ]
+        }
+      },
       "friendly": null,
       "warns": true,
       "shellFramePayload": null
@@ -38,7 +92,14 @@
     {
       "id": "send-message-with-no-endpoint",
       "why": "A target-less send-message is malformed, not transport.",
-      "effect": { "tag": "send-message", "val": { "payload": [8] } },
+      "effect": {
+        "tag": "send-message",
+        "val": {
+          "payload": [
+            8
+          ]
+        }
+      },
       "friendly": null,
       "warns": true,
       "shellFramePayload": null
@@ -46,7 +107,10 @@
     {
       "id": "genuinely-unknown-effect-kind",
       "why": "The default arm keeps its meaning: an effect kind with no case at all is still an honest, loud drop.",
-      "effect": { "tag": "teleport", "val": {} },
+      "effect": {
+        "tag": "teleport",
+        "val": {}
+      },
       "friendly": null,
       "warns": true,
       "shellFramePayload": null
@@ -54,34 +118,224 @@
     {
       "id": "download-media-export-tagged-option-encoding",
       "why": "The wgpu door had NO case for this effect at all, so a binary export vanished into the loud default drop; and where a door did map it, the WIT `option<string>` arrives as `{tag:\"some\"}` and a flat read lost it. Both halves are pinned here. The bytes this `data` must become are `🎠️kernel/🧫️fixtures/⬇️media-export-encoding/🔣️.json`'s law.",
-      "effect": { "tag": "download-media-export", "val": { "filename": "generation3d.dwg", "mimeType": "image/vnd.dwg", "data": "QUMxMDE4", "encoding": { "tag": "some", "val": "base64" } } },
-      "friendly": { "downloadMediaExport": { "filename": "generation3d.dwg", "mimeType": "image/vnd.dwg", "data": "QUMxMDE4", "encoding": "base64" } },
+      "effect": {
+        "tag": "download-media-export",
+        "val": {
+          "filename": "generation3d.dwg",
+          "mimeType": "image/vnd.dwg",
+          "data": "QUMxMDE4",
+          "encoding": {
+            "tag": "some",
+            "val": "base64"
+          }
+        }
+      },
+      "friendly": {
+        "downloadMediaExport": {
+          "filename": "generation3d.dwg",
+          "mimeType": "image/vnd.dwg",
+          "data": "QUMxMDE4",
+          "encoding": "base64"
+        }
+      },
       "warns": false,
       "shellFramePayload": null
     },
     {
       "id": "download-media-export-bare-option-encoding",
       "why": "jco's direct binding hands the same field over bare — the other real shape of one `option<string>`.",
-      "effect": { "tag": "download-media-export", "val": { "filename": "generation3d.dwg", "mimeType": "image/vnd.dwg", "data": "QUMxMDE4", "encoding": "base64" } },
-      "friendly": { "downloadMediaExport": { "filename": "generation3d.dwg", "mimeType": "image/vnd.dwg", "data": "QUMxMDE4", "encoding": "base64" } },
+      "effect": {
+        "tag": "download-media-export",
+        "val": {
+          "filename": "generation3d.dwg",
+          "mimeType": "image/vnd.dwg",
+          "data": "QUMxMDE4",
+          "encoding": "base64"
+        }
+      },
+      "friendly": {
+        "downloadMediaExport": {
+          "filename": "generation3d.dwg",
+          "mimeType": "image/vnd.dwg",
+          "data": "QUMxMDE4",
+          "encoding": "base64"
+        }
+      },
       "warns": false,
       "shellFramePayload": null
     },
     {
       "id": "download-media-export-textual-none-encoding",
       "why": "A textual export declares no encoding; a `none` variant and an absent field mean the same thing and must not become the string \"none\".",
-      "effect": { "tag": "download-media-export", "val": { "filename": "generation3d.txt", "mimeType": "text/plain", "data": "semio v1", "encoding": { "tag": "none" } } },
-      "friendly": { "downloadMediaExport": { "filename": "generation3d.txt", "mimeType": "text/plain", "data": "semio v1" } },
+      "effect": {
+        "tag": "download-media-export",
+        "val": {
+          "filename": "generation3d.txt",
+          "mimeType": "text/plain",
+          "data": "semio v1",
+          "encoding": {
+            "tag": "none"
+          }
+        }
+      },
+      "friendly": {
+        "downloadMediaExport": {
+          "filename": "generation3d.txt",
+          "mimeType": "text/plain",
+          "data": "semio v1"
+        }
+      },
+      "warns": false,
+      "shellFramePayload": null
+    },
+    {
+      "id": "spawn-job-recorded-interaction-hover",
+      "why": "The exact `interactionHover` reserved tool job recorded on 6118 (job 909, 174 B). Before this row the wgpu bridge had NO `spawn-job` case: this effect hit the default arm as `unmapped effect \"spawn-job\" dropped`, twice per gesture, and the hover was published perfectly and applied never.",
+      "effect": {
+        "tag": "spawn-job",
+        "val": {
+          "job": "909",
+          "kind": "framework.reserved.tool",
+          "input": {
+            "base64": "RlJSRVNWMDECAAAAAAAAAFsiaW50ZXJhY3Rpb25Ib3ZlciIseyJjaGFubmVsIjoicG9pbnRlciIsImRvbWFpbklkIjoiZ3JhcGgiLCJ0YXJnZXRzIjoiW3tcImdyYW51bGFyaXR5XCI6XCJoYW5kbGVcIixcImlkXCI6XCJleHRydWRlQHNvbGlkXCJ9XSIsIndpbmRvd0lkIjoicHJvY2VkdXJhbC1tYWluIn1d"
+          },
+          "placement": "isolated"
+        }
+      },
+      "friendly": {
+        "spawnJob": {
+          "job": "909",
+          "kind": "framework.reserved.tool",
+          "input": {
+            "base64": "RlJSRVNWMDECAAAAAAAAAFsiaW50ZXJhY3Rpb25Ib3ZlciIseyJjaGFubmVsIjoicG9pbnRlciIsImRvbWFpbklkIjoiZ3JhcGgiLCJ0YXJnZXRzIjoiW3tcImdyYW51bGFyaXR5XCI6XCJoYW5kbGVcIixcImlkXCI6XCJleHRydWRlQHNvbGlkXCJ9XSIsIndpbmRvd0lkIjoicHJvY2VkdXJhbC1tYWluIn1d"
+          },
+          "placement": "isolated"
+        }
+      },
+      "warns": false,
+      "shellFramePayload": null,
+      "recordedInput": "FRRESV01 magic + u64 work-items(2) + the JSON call: [\"interactionHover\",{\"channel\":\"pointer\",\"domainId\":\"graph\",\"targets\":\"[{\\\"granularity\\\":\\\"handle\\\",\\\"id\\\":\\\"extrude@solid\\\"}]\",\"windowId\":\"procedural-main\"}]"
+    },
+    {
+      "id": "spawn-job-recorded-interaction-select",
+      "why": "The exact `interactionSelect` reserved tool job recorded on 6118 (job 916/917/918 across runs, 189 B). `job` crosses as a jco `bigint` and MUST stay one: it IS the guest's parked request id, and `start-job`/`step-job` reject a `number`.",
+      "effect": {
+        "tag": "spawn-job",
+        "val": {
+          "job": "916",
+          "kind": "framework.reserved.tool",
+          "input": {
+            "base64": "RlJSRVNWMDECAAAAAAAAAFsiaW50ZXJhY3Rpb25TZWxlY3QiLHsiZG9tYWluSWQiOiJncmFwaCIsIm1lcmdlIjoicmVwbGFjZSIsIm1ldGhvZCI6InBpY2siLCJ0YXJnZXRzIjoiW3tcImdyYW51bGFyaXR5XCI6XCJvYmplY3RcIixcImlkXCI6XCJleHRydWRlQHNvbGlkXCJ9XSIsIndpbmRvd0lkIjoicHJvY2VkdXJhbC1tYWluIn1d"
+          },
+          "placement": "isolated"
+        }
+      },
+      "friendly": {
+        "spawnJob": {
+          "job": "916",
+          "kind": "framework.reserved.tool",
+          "input": {
+            "base64": "RlJSRVNWMDECAAAAAAAAAFsiaW50ZXJhY3Rpb25TZWxlY3QiLHsiZG9tYWluSWQiOiJncmFwaCIsIm1lcmdlIjoicmVwbGFjZSIsIm1ldGhvZCI6InBpY2siLCJ0YXJnZXRzIjoiW3tcImdyYW51bGFyaXR5XCI6XCJvYmplY3RcIixcImlkXCI6XCJleHRydWRlQHNvbGlkXCJ9XSIsIndpbmRvd0lkIjoicHJvY2VkdXJhbC1tYWluIn1d"
+          },
+          "placement": "isolated"
+        }
+      },
+      "warns": false,
+      "shellFramePayload": null,
+      "recordedInput": "FRRESV01 magic + u64 work-items(2) + the JSON call: [\"interactionSelect\",{\"domainId\":\"graph\",\"merge\":\"replace\",\"method\":\"pick\",\"targets\":\"[{\\\"granularity\\\":\\\"object\\\",\\\"id\\\":\\\"extrude@solid\\\"}]\",\"windowId\":\"procedural-main\"}]"
+    },
+    {
+      "id": "cancel-job-keeps-its-u64-identity",
+      "why": "`cancel-job` is the other half of the same door and was dropped by the same missing case.",
+      "effect": {
+        "tag": "cancel-job",
+        "val": {
+          "job": "916"
+        }
+      },
+      "friendly": {
+        "cancelJob": {
+          "job": "916"
+        }
+      },
+      "warns": false,
+      "shellFramePayload": null
+    },
+    {
+      "id": "spawn-job-unknown-placement-refuses",
+      "why": "An unrecognised `job-placement` is refused, never defaulted: guessing `inline` would run a pooled job inside the spawning instance's own turn budget.",
+      "effect": {
+        "tag": "spawn-job",
+        "val": {
+          "job": "916",
+          "kind": "framework.reserved.tool",
+          "input": {
+            "base64": ""
+          },
+          "placement": "pooled"
+        }
+      },
+      "throws": true,
+      "warns": false,
+      "shellFramePayload": null
+    },
+    {
+      "id": "spawn-job-zero-job-identity-refuses",
+      "why": "The guest's `RequestRegistry` never issues 0 — the same bound `respond`/`invoke-extension` put on `req`.",
+      "effect": {
+        "tag": "spawn-job",
+        "val": {
+          "job": "0",
+          "kind": "framework.reserved.tool",
+          "input": {
+            "base64": ""
+          },
+          "placement": "isolated"
+        }
+      },
+      "throws": true,
+      "warns": false,
+      "shellFramePayload": null
+    },
+    {
+      "id": "spawn-job-empty-kind-refuses",
+      "why": "A job with no kind names no registered factory; admitting it would start a job nothing can step.",
+      "effect": {
+        "tag": "spawn-job",
+        "val": {
+          "job": "916",
+          "kind": "",
+          "input": {
+            "base64": ""
+          },
+          "placement": "isolated"
+        }
+      },
+      "throws": true,
       "warns": false,
       "shellFramePayload": null
     },
     {
       "id": "mapped-effect-still-maps",
       "why": "Control row — the new case must not shadow a real friendly projection.",
-      "effect": { "tag": "notify", "val": { "message": "refused" } },
-      "friendly": { "notify": { "message": "refused" } },
+      "effect": {
+        "tag": "notify",
+        "val": {
+          "message": "refused"
+        }
+      },
+      "friendly": {
+        "notify": {
+          "message": "refused"
+        }
+      },
       "warns": false,
       "shellFramePayload": null
     }
-  ]
+  ],
+  "u64Fields": [
+    "job"
+  ],
+  "u64FieldsWhy": "A WIT `u64` reaches the decoder as a jco `bigint`, which JSON cannot carry. The fixture states these fields as decimal TEXT and every reader rehydrates them to `BigInt` before driving the decoder — narrowing one to a `number` would silently mis-resolve a long-lived actor's parked futures.",
+  "bytesFieldsWhy": "A `pack`/`list<u8>` field is stated as `{\"base64\": \"…\"}` so a recorded payload stays byte-exact and readable; readers decode it to a `Uint8Array` before driving the decoder."
 }

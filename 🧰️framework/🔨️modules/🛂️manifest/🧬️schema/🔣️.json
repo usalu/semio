@@ -529,6 +529,236 @@
           }
         }
       }
+    },
+    "ToolRunDefinition": {
+      "$ref": "https://semio.tech/schema/framework/tool-run/schema.json#/$defs/ToolRunDefinition"
+    },
+    "ToolDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "iconId"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "$ref": "https://semio.tech/schema/framework/tool-run/schema.json#/$defs/LocalizedLabel"
+        },
+        "iconId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "keys": {
+          "type": "string",
+          "minLength": 1
+        },
+        "run": {
+          "$ref": "#/$defs/ToolRunDefinition"
+        }
+      }
+    },
+    "UtilityDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "iconId"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "$ref": "https://semio.tech/schema/framework/tool-run/schema.json#/$defs/LocalizedLabel"
+        },
+        "iconId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "group": {
+          "type": "string"
+        },
+        "keys": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cursor": {
+          "type": "string"
+        },
+        "category": {
+          "enum": [
+            "selection",
+            "utilities",
+            "history",
+            "sync"
+          ]
+        },
+        "allowsActionsWhileActive": {
+          "type": "boolean"
+        },
+        "run": {
+          "$ref": "#/$defs/ToolRunDefinition"
+        }
+      }
+    },
+    "ToolRunActionsFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "actions",
+        "reservedChords",
+        "cases"
+      ],
+      "properties": {
+        "kind": {
+          "const": "history"
+        },
+        "actions": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "iconId",
+              "label",
+              "args"
+            ],
+            "oneOf": [
+              {
+                "required": [
+                  "keys"
+                ],
+                "properties": {
+                  "keys": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "required": [
+                  "panelChord"
+                ],
+                "properties": {
+                  "panelChord": {
+                    "type": "string"
+                  }
+                }
+              }
+            ],
+            "properties": {
+              "id": {
+                "$ref": "https://semio.tech/schema/framework/tool-run/schema.json#/$defs/ToolRunActionId"
+              },
+              "iconId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "keys": {
+                "type": "string",
+                "pattern": "^[a-z0-9.+]+$"
+              },
+              "panelChord": {
+                "type": "string",
+                "pattern": "^[a-z0-9.+]+$"
+              },
+              "label": {
+                "$ref": "https://semio.tech/schema/framework/tool-run/schema.json#/$defs/LocaleText"
+              },
+              "args": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 2,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "schema",
+                    "required",
+                    "label"
+                  ],
+                  "properties": {
+                    "id": {
+                      "enum": [
+                        "toolId",
+                        "windowId",
+                        "runId",
+                        "generation"
+                      ]
+                    },
+                    "schema": {
+                      "enum": [
+                        "text",
+                        "integer"
+                      ]
+                    },
+                    "required": {
+                      "type": "boolean"
+                    },
+                    "label": {
+                      "$ref": "https://semio.tech/schema/framework/tool-run/schema.json#/$defs/LocaleText"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "reservedChords": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "tools",
+              "utilities",
+              "injected"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "tools": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/ToolDefinition"
+                }
+              },
+              "utilities": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/UtilityDefinition"
+                }
+              },
+              "injected": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

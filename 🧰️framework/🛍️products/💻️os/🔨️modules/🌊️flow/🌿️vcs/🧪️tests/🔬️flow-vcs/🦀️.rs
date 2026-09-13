@@ -1734,6 +1734,8 @@ fn set_layout_round_trip() {
     let operation = FlowMutation::ChangeLayout(ChangeLayout { entries: vec![FlowLayoutEntry { id: "slider".into(), layout: Some(WidgetLayout { x: 12.0, y: 34.0 }) }] });
     let next = round_trip(&fixture, &operation);
     assert_eq!(next.layout.get("slider"), Some(&WidgetLayout { x: 12.0, y: 34.0 }));
+    next.retire_cold();
+    fixture.retire_cold();
 }
 
 #[test]
@@ -1753,11 +1755,19 @@ fn flow_fixture_ops_diffs_widgets_synapses_layout() {
     assert!(materialized.widgets.iter().any(|widget| Identified::id(widget) == "c"));
     assert!(materialized.widgets.iter().all(|widget| Identified::id(widget) != "a"));
     assert_eq!(materialized.layout.get("c"), Some(&WidgetLayout { x: 1.0, y: 2.0 }));
+    materialized.retire_cold();
+    after.retire_cold();
+    before.retire_cold();
 }
 
 #[semio_framework_async_macros::async_test]
 async fn coalesced_layout_drag_produces_one_edit() {
     let mut store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_snapshot(), None)).await.expect("valid flow store fixture");
+    // 🔐️ `ArtifactStore::new` installs no owner catalog, and every mutating command is refused
+    // without one — the refusal drops the replayed projection on its error path, so the law reports
+    // `ordered-map root must be explicitly retired before drop` from inside `amend_command` instead
+    // of the validation that caused it (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    store.install_document_store_owners_exact(<FlowFixture as crate::os_store::MemberStoreOwner<FlowMutation>>::member_store_owners());
     for y in [10.0, 20.0, 30.0] {
         store
             .dispatch(ArtifactCommand::AmendLast {
@@ -1771,6 +1781,7 @@ async fn coalesced_layout_drag_produces_one_edit() {
     let snapshot = store.snapshot().expect("projection");
     assert_eq!(snapshot.layout.get("slider"), Some(&WidgetLayout { x: 0.0, y: 30.0 }));
     snapshot.retire_cold();
+    semio_framework_artifact_flow_flow::retire_flow_store_cold(store);
 }
 
 /// 📜️ Exercises every `Widget` variant (including `Cluster`'s nested `Tree`/`flow` payload,

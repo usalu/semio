@@ -15,6 +15,7 @@ function finite(component: Component | RetainedUiComponent): boolean {
     case "slider": return Number.isFinite(component.value) && Number.isFinite(component.min) && Number.isFinite(component.max) && Number.isFinite(component.step);
     case "numberStepper": return Number.isFinite(component.value) && Number.isFinite(component.step);
     case "ring": return Number.isFinite(component.t);
+    case "progress": return Number.isFinite(component.completed) && (component.total == null || Number.isFinite(component.total));
     case "input": return (component.min == null || Number.isFinite(component.min)) && (component.max == null || Number.isFinite(component.max)) && (component.step == null || Number.isFinite(component.step));
     default: return true;
   }

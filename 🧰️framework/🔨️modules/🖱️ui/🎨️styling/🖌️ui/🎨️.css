@@ -22,14 +22,19 @@
    here, outside any `@layer`, sidesteps the pruning: unlayered CSS is always the highest-priority layer
    in the cascade, so this wins regardless of textual order and regardless of whether Tailwind also keeps
    or drops the `@layer base` copy. Values must stay in lockstep with the originals in the `:root` block
-   under `@layer base` further down this file. */
-:root {
+   under `@layer base` further down this file. `.dark` is listed beside `:root` because surface chrome
+   leases paint `.dark` on a shell's `.semio-scope` root and clear it from `documentElement`; a custom
+   property computed on bare `html` would inherit light-mode `--foreground` into that subtree and freeze
+   emphasis/hover colors dark (navbar edge, tree hover, `text-emphasized`). */
+:root,
+.dark {
   --border-normal-color: var(--color-gray);
   --border-emphasized-color: var(--foreground);
   --border-color: var(--border-normal-color);
   --hover-interactive-fill: var(--border-normal-color);
   --scrollbar-thumb: var(--border-color);
   --scrollbar-thumb-hover: var(--muted-foreground);
+  --color-emphasized: var(--foreground);
 }
 
 #navbar,
@@ -867,7 +872,7 @@
   --color-popover-foreground: var(--border-element-color);
   --color-border: var(--border-normal-color);
   --color-element: var(--border-element-color);
-  --color-emphasized: var(--border-emphasized-color);
+  --color-emphasized: var(--foreground);
   --color-hover-interactive-fill: var(--hover-interactive-fill);
 }
 

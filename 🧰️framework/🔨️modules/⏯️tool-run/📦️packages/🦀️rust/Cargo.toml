@@ -1,0 +1,28 @@
+[package]
+name = "semio-framework-tool-run"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Domain-neutral, pure tool run contract: run identity, the lifecycle reducer, progress and step ring, columnar trace pages with their resident store, tick codec and writer, ToolRunDefinition, framework-reserved actions, chords and EN/DE labels. Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W0-A."
+
+[package.metadata.semio]
+role = "framework"
+id = "tool-run"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_tool_run"
+path = "🦀️.rs"
+
+[dependencies]
+# 🎒️ `encode_record_body`/`decode_record_body_exact` and the `ToValue`/`FromValue` derives; the derive
+# output is rooted at `::semio_framework_os_kernel::`, so the dependency keeps its real name.
+semio-framework-os-kernel = { workspace = true }
+# 🗣️ `LocalizedLabel`/`Locale` live in the declarative-only `wgpu` feature (no `wgpu` crate).
+ui = { path = "../../../🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
+serde = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

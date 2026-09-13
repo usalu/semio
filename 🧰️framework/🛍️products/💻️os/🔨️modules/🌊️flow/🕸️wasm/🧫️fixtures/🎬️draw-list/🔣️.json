@@ -129,7 +129,7 @@
         "id": "e5",
         "from": "extrusion-axis",
         "to": "extrude",
-        "fromPort": "vector",
+        "fromPort": "vectorOut",
         "toPort": "vector"
       },
       {

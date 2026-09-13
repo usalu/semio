@@ -529,6 +529,12 @@ impl GraphHost {
         self.refresh_interaction_projection();
     }
 
+    /// 🫳️ Whether this host is mid-way through a BOUNDED gesture — a node drag, a marquee or a pan
+    /// started by `commit_pointer` and not yet released. A gesture belongs to the path that started it.
+    pub fn bounded_pointer_gesture_active(&self) -> bool {
+        self.interaction_projection.is_some_and(|projection| projection.gesture_active())
+    }
+
     pub fn plan_pointer(&self, intent: dag::DagPointerIntent) -> Result<dag::DagPointerPlan, dag::DagInteractionPlanFault> {
         let projection = self.interaction_projection.ok_or(dag::DagInteractionPlanFault::NodeCredits)?;
         if projection.revision() != self.interaction_revision {

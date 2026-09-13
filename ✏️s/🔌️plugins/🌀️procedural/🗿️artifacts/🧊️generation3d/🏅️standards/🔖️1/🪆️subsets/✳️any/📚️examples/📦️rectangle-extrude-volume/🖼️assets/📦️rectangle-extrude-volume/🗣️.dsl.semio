@@ -11,7 +11,7 @@ synapses [id:TEXT wire:WIRE] {
   e2 height@number->rect@height
   e3 rect@wire->extrude@wire
   e4 distance@number->vector@z
-  e5 vector@vector->extrude@vector
+  e5 vector@vectorOut->extrude@vector
   e6 extrude@solid->volume@geometry
 }
 generations [id:TEXT name:TEXT values:VAL] {

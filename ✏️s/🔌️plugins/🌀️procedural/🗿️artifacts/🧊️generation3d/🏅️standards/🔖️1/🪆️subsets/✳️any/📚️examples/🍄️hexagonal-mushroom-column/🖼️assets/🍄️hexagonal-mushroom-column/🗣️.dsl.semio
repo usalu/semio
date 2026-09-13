@@ -11,7 +11,7 @@ synapses [id:TEXT wire:WIRE] {
   e2 radius@number->profile@radius
   e3 sides@number->profile@sides
   e4 profile@wire->extrude@wire
-  e5 extrusion-axis@vector->extrude@vector
+  e5 extrusion-axis@vectorOut->extrude@vector
   e6 extrude@solid->column-preview
 }
 generations [id:TEXT name:TEXT values:VAL] {

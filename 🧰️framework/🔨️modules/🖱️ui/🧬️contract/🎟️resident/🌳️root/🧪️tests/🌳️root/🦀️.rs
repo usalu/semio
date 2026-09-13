@@ -170,7 +170,7 @@ fn retained_document_root_permit_reader_pressure_refuses_then_retries_exact_slot
         close(root, 64);
     }
     assert_eq!(UiResidentPermit::snapshot().unwrap(), before);
-    eprintln!("[DEBUG] document-root-pressure aggregate=33554432 captured-reader-keeps-credit=true exact-slot-epoch-retry=true");
+    eprintln!("[DEBUG] document-root-pressure aggregate={UI_RESIDENT_AGGREGATE_BYTES} captured-reader-keeps-credit=true exact-slot-epoch-retry=true");
 }
 #[test]
 fn retained_document_root_permit_seal_transfers_output_without_detaching_root_credit() {

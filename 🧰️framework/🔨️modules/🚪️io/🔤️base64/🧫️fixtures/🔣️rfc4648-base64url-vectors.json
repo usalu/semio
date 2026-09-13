@@ -1,0 +1,70 @@
+{
+  "schema": "semio.rfc4648-base64url-vectors.v1",
+  "source": "https://www.rfc-editor.org/rfc/rfc4648#section-5",
+  "alphabet": "url",
+  "padding": false,
+  "cases": [
+    {
+      "input_hex": "",
+      "encoded": ""
+    },
+    {
+      "input_hex": "66",
+      "encoded": "Zg"
+    },
+    {
+      "input_hex": "666f",
+      "encoded": "Zm8"
+    },
+    {
+      "input_hex": "666f6f",
+      "encoded": "Zm9v"
+    },
+    {
+      "input_hex": "666f6f62",
+      "encoded": "Zm9vYg"
+    },
+    {
+      "input_hex": "666f6f6261",
+      "encoded": "Zm9vYmE"
+    },
+    {
+      "input_hex": "666f6f626172",
+      "encoded": "Zm9vYmFy"
+    },
+    {
+      "input_hex": "fbff",
+      "encoded": "-_8"
+    },
+    {
+      "input_hex": "fbefbe",
+      "encoded": "----"
+    },
+    {
+      "input_hex": "ffffff",
+      "encoded": "____"
+    }
+  ],
+  "rejected": [
+    {
+      "encoded": "Zg==",
+      "why": "padding"
+    },
+    {
+      "encoded": "Z",
+      "why": "dangling sextet"
+    },
+    {
+      "encoded": "Zm+v",
+      "why": "standard alphabet"
+    },
+    {
+      "encoded": "Zh",
+      "why": "non-canonical trailing bits"
+    },
+    {
+      "encoded": "Zm9 ",
+      "why": "whitespace"
+    }
+  ]
+}

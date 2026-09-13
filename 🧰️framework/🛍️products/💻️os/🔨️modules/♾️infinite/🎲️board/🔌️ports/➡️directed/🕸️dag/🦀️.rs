@@ -1293,11 +1293,14 @@ fn dag_lod_resolve_zoom(zoom: f64) -> f64 {
     (zoom - DAG_LOD_ZOOM_SHIFT).max(0.05)
 }
 
-/// 🩺️ TEMPORARY (ticket 26/09/09 wire drag): names the live interaction for a `[DEBUG]` line.
+/// 🩺️ Names the live pointer interaction for the port-press diagnostic line — a wire drawn inside a
+/// Worker leaves no other trace, and `draw-edge(reconnect)` vs `draw-edge(new)` is the difference
+/// between a gesture that can cut a wire and one that cannot.
 fn dag_interaction_label(interaction: &InteractionMode) -> &'static str {
     match interaction {
         InteractionMode::Idle => "idle",
-        InteractionMode::DrawEdge { .. } => "draw-edge",
+        InteractionMode::DrawEdge { reconnecting: Some(_), .. } => "draw-edge(reconnect)",
+        InteractionMode::DrawEdge { .. } => "draw-edge(new)",
         InteractionMode::DragNode { .. } => "drag-node",
         InteractionMode::DragNodes { .. } => "drag-nodes",
         InteractionMode::SelectionPending { .. } => "selection-pending",
@@ -1532,6 +1535,49 @@ impl DagChannelRef {
         self.direction == "out"
     }
 }
+/// 🩺️ What a screen point resolves to, once and for all: the draggable fixture node under it, the
+/// port channel when the pick landed on a connector, and the four hits that hand the gesture to
+/// `pointer_*_screen` instead of to the bounded plan path.
+#[derive(Clone, Debug, PartialEq)]
+pub struct DagScreenHit {
+    pub node_id: Option<String>,
+    pub channel: Option<DagChannelRef>,
+    pub minimap: bool,
+    /// 🧭️ Inside the minimap panel AND on its viewport rectangle — the press that GRABS the camera
+    /// rather than the one that navigates to where it landed.
+    pub minimap_viewport: bool,
+    pub port_insert: bool,
+    pub handle: bool,
+    pub widget: bool,
+}
+
+impl DagScreenHit {
+    /// 🖱️ Whether this point belongs to the screen pointer path — the minimap widget, a wire handle,
+    /// a port insertion target or an inline widget.
+    pub fn is_screen_path(&self) -> bool {
+        self.minimap || self.port_insert || self.handle || self.widget
+    }
+
+    /// 🫳️ Whether a press here would select and start dragging a node through the bounded plan path.
+    /// A node's body is draggable everywhere EXCEPT over its own inline widgets and connector dots.
+    pub fn is_draggable_body(&self) -> bool {
+        self.node_id.is_some() && !self.is_screen_path()
+    }
+}
+
+/// 🩺️ The wire shape of [`DagScreenHit`].
+#[derive(Clone, Debug, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+struct DagScreenHitJson {
+    node: Option<String>,
+    draggable: bool,
+    handle: Option<String>,
+    direction: Option<String>,
+    widget: bool,
+    minimap: bool,
+    minimap_viewport: bool,
+    port_insert: bool,
+}
 // #endregion 🔖️ChannelRef
 
 // #region 🔖️NoteEdit
@@ -1616,6 +1662,10 @@ pub struct DagPointerPlan {
     next: DagInteractionProjection,
     moves: [Option<DagNodeMove>; DAG_INTERACTION_NODE_CAPACITY],
     move_len: u16,
+    /// 🫃️ Whether this plan's pointer actually left the drag's own origin. A press-and-release that
+    /// never moved derives a ZERO-delta drag whose `moves` are the positions the nodes already hold,
+    /// and journalling those would spend a guest mutation on a plain click.
+    dragged: bool,
 }
 
 pub const DAG_CURSOR_MAX_OUTPUT_BYTES: usize = 65_536;
@@ -1893,6 +1943,14 @@ impl DagInteractionProjection {
     pub fn hover(&self) -> Option<usize> {
         self.hover.map(usize::from)
     }
+
+    /// 🫳️ Whether a BOUNDED gesture — a node drag, a marquee, a pan — is in flight in this projection.
+    /// A gesture belongs to the path that STARTED it: without this, a drag whose pointer crossed a port
+    /// or an inline widget was handed to the screen path mid-flight, which resynced the projection and
+    /// erased the drag (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub fn gesture_active(&self) -> bool {
+        !matches!(self.gesture, DagProjectionGesture::Idle)
+    }
 }
 
 impl DagPointerPlan {
@@ -1970,21 +2028,24 @@ pub struct DagHost {
     pending_graph_edits: Vec<DagGraphEdit>,
 }
 
-/// 🔗️ One wire edit a completed pointer gesture performed on this host's own graph, in the guest's
-/// own vocabulary (`FlowNodeGraphEditOp`'s `connect`, and the synapse id a `disconnect` names) rather
+/// 🔗️ One graph edit a completed pointer gesture performed on this host's own graph, in the guest's
+/// own sub-operation vocabulary (`connect`, `disconnect` by synapse id, `move` by node id) rather
 /// than in engine handle/edge ids. The renderer drains these after a gesture and dispatches them as
-/// a `nodeGraphEdit`, which is how a wire the user drew survives the guest's next fixture push —
-/// React reaches the same end by re-publishing the WHOLE fixture (`commitFixture`), a payload no
-/// bounded-action budget on the wgpu target can carry.
-#[derive(Clone, Debug, PartialEq, Eq)]
+/// a `nodeGraphEdit`, which is how a wire the user drew — or a node they dragged — survives the
+/// guest's next fixture push. React reaches the same end by re-publishing the WHOLE fixture
+/// (`commitFixture`), a payload no bounded-action budget on the wgpu target can carry; its SSR
+/// `Diagram` fallback dispatches this exact narrow shape instead (`onNodeDragStop`/`onConnect`).
+#[derive(Clone, Debug, PartialEq)]
 pub enum DagGraphEdit {
     Connect { source_node_id: String, source_port_id: String, target_node_id: String, target_port_id: String },
     Disconnect { synapse_id: String },
+    Move { node_id: String, x: f64, y: f64 },
 }
 
-/// 📏️ How many wire edits one drain may carry. A single pointer gesture completes at most one wire,
-/// so this is slack for a gesture that also removes the edge it replaced, never a growth path.
-pub const DAG_GRAPH_EDIT_CAPACITY: usize = 8;
+/// 📏️ How many graph edits one drain may carry. A single pointer gesture completes at most one wire
+/// (plus the edge it replaced), but ONE drag moves every selected node, so the bound is the widest
+/// multi-select drag a single `nodeGraphEdit` reports rather than a per-wire number.
+pub const DAG_GRAPH_EDIT_CAPACITY: usize = 64;
 
 /// 🧮️ One retained retirement turn; `credited_bytes` never exceeds the current grant,
 /// while `released_bytes` is the physical backing freed after enough credits were retained.
@@ -2754,6 +2815,9 @@ impl DagHostRetirement {
             let values = match edit {
                 DagGraphEdit::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => vec![source_node_id, source_port_id, target_node_id, target_port_id],
                 DagGraphEdit::Disconnect { synapse_id } => vec![synapse_id],
+                // 🧷️ Fixed forward for the wire-drag lane, which added this row while this retirement
+                // ladder still named only two: a `Move` owns exactly its node id.
+                DagGraphEdit::Move { node_id, .. } => vec![node_id],
             };
             let remaining_backing_bytes = dag_vec_backing_bytes(&values);
             return self.credit_owner(DagRetirementOwner::Strings { values, remaining_backing_bytes }, maximum_items, maximum_bytes);
@@ -3178,11 +3242,12 @@ impl DagHost {
         next.revision = projection.revision + 1;
         let mut moves = [None; DAG_INTERACTION_NODE_CAPACITY];
         let mut move_len = 0u16;
+        let mut dragged = false;
         match intent.phase {
             DagPointerPhase::Down => self.derive_projection_down(&mut next, intent)?,
-            DagPointerPhase::Move => self.derive_projection_move(&mut next, &mut moves, &mut move_len, intent)?,
+            DagPointerPhase::Move => self.derive_projection_move(&mut next, &mut moves, &mut move_len, &mut dragged, intent)?,
             DagPointerPhase::Up => {
-                self.derive_projection_move(&mut next, &mut moves, &mut move_len, intent)?;
+                self.derive_projection_move(&mut next, &mut moves, &mut move_len, &mut dragged, intent)?;
                 next.gesture = DagProjectionGesture::Idle;
             }
             DagPointerPhase::Leave => {
@@ -3190,7 +3255,7 @@ impl DagHost {
                 next.hover = None;
             }
         }
-        Ok(DagPointerPlan { expected_revision: projection.revision, previous_active: !matches!(projection.gesture, DagProjectionGesture::Idle), next, moves, move_len })
+        Ok(DagPointerPlan { expected_revision: projection.revision, previous_active: !matches!(projection.gesture, DagProjectionGesture::Idle), next, moves, move_len, dragged })
     }
 
     fn bounded_node_hit_index(&self, sx: f64, sy: f64) -> Result<Option<usize>, DagInteractionPlanFault> {
@@ -3244,7 +3309,7 @@ impl DagHost {
         Ok(())
     }
 
-    fn derive_projection_move(&self, next: &mut DagInteractionProjection, moves: &mut [Option<DagNodeMove>; DAG_INTERACTION_NODE_CAPACITY], move_len: &mut u16, intent: DagPointerIntent) -> Result<(), DagInteractionPlanFault> {
+    fn derive_projection_move(&self, next: &mut DagInteractionProjection, moves: &mut [Option<DagNodeMove>; DAG_INTERACTION_NODE_CAPACITY], move_len: &mut u16, dragged: &mut bool, intent: DagPointerIntent) -> Result<(), DagInteractionPlanFault> {
         match next.gesture {
             DagProjectionGesture::Pan { start_x, start_y, camera } => {
                 let zoom = camera[2].max(1e-9);
@@ -3254,6 +3319,7 @@ impl DagHost {
                 let zoom = next.camera[2].max(1e-9);
                 let dx = (intent.x - start_x) / zoom;
                 let dy = (intent.y - start_y) / zoom;
+                *dragged = dx != 0.0 || dy != 0.0;
                 for index in 0..usize::from(len) {
                     let Some(start) = starts[index] else {
                         continue;
@@ -3329,6 +3395,35 @@ impl DagHost {
     pub fn pointer_plan_move(&self, plan: &DagPointerPlan, index: usize) -> Option<(&str, f64, f64)> {
         let delta = plan.moves.get(index).and_then(|delta| *delta)?;
         self.fixture.nodes.get(usize::from(delta.index)).map(|node| (node.id.as_str(), delta.x, delta.y))
+    }
+
+    /// 🫳️ The node moves a plan COMMITS when it ends a drag, in the guest's own edit vocabulary.
+    ///
+    /// 🩸️ A bounded drag writes the new positions into `fixture.layout` and into the engine — and
+    /// told the guest NOTHING, so every node the user dragged snapped back on the next fixture push.
+    /// Only the TERMINAL application is journalled (a drag publishes one `move` per node, not one per
+    /// pointer sample), and a gesture that ended where it started is not an edit at all — a plain
+    /// click on a node body derives a zero-delta drag, which must not spend a guest mutation.
+    ///
+    /// @see `🕸️NodeGraph/🟦️.tsx` — the SSR `Diagram` fallback's `onNodeDragStop`
+    pub fn plan_graph_edits(&self, plan: &DagPointerPlan) -> Vec<DagGraphEdit> {
+        if !plan.previous_active || !plan.dragged || !matches!(plan.next.gesture, DagProjectionGesture::Idle) {
+            return Vec::new();
+        }
+        let mut edits = Vec::new();
+        for index in 0..usize::from(plan.move_len) {
+            let Some(delta) = plan.moves[index] else {
+                continue;
+            };
+            let Some(node) = self.fixture.nodes.get(usize::from(delta.index)) else {
+                continue;
+            };
+            edits.push(DagGraphEdit::Move { node_id: node.id.clone(), x: delta.x, y: delta.y });
+            if edits.len() == DAG_GRAPH_EDIT_CAPACITY {
+                break;
+            }
+        }
+        edits
     }
 
     /// 🔗️ Selected fixture edge ids (synapse ids) from the engine selection snapshot.
@@ -3452,6 +3547,69 @@ impl DagHost {
             Some(channel) => os_pack::json::to_json_string(&channel),
             None => "null".into(),
         }
+    }
+
+    /// 🗺️ Every node and port this graph paints, each with the SCREEN geometry
+    /// [`Self::entity_screen_json`] publishes for it — one census of where everything IS, for a
+    /// renderer diagnostic and for a browser probe that would otherwise have to FIND the graph by
+    /// sweeping the pointer across it. A sweep is not a cheap way to ask: measured on the wgpu serve,
+    /// a 224-point hover sweep spends the host's whole attention budget and leaves nothing for the
+    /// gesture it was sweeping to find (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    ///
+    /// Rects are SURFACE-local, in the same coordinates `pointer_*_screen` takes.
+    pub fn screen_geometry_census_json(&self) -> String {
+        let mut rows: Vec<String> = Vec::new();
+        for node in &self.fixture.nodes {
+            let body = match self.entity_screen_rect("node", &node.id) {
+                Some(rect) => self.first_screen_point_in(rect, |hit| hit.is_draggable_body() && hit.node_id.as_deref() == Some(node.id.as_str())),
+                None => None,
+            };
+            let body_json = body.map_or_else(|| "null".to_string(), |(x, y)| format!("[{x:.1},{y:.1}]"));
+            rows.push(format!("{{\"kind\":\"node\",\"id\":{},\"body\":{body_json},\"geometry\":{}}}", os_pack::json::to_json_string(&node.id), self.entity_screen_json("node", &node.id)));
+            for (port, direction) in node.inputs().iter().map(|port| (port, "in")).chain(node.outputs().iter().map(|port| (port, "out"))) {
+                let channel = format!("{}@{}", node.id, port.id);
+                rows.push(format!("{{\"kind\":\"handle\",\"direction\":\"{direction}\",\"id\":{},\"geometry\":{}}}", os_pack::json::to_json_string(&channel), self.entity_screen_json("handle", &channel)));
+            }
+        }
+        let panel = [0.0, 0.0, self.width as f64, self.height as f64];
+        let navigate = self.first_screen_point_in(panel, |hit| hit.minimap && !hit.minimap_viewport);
+        rows.push(format!("{{\"kind\":\"minimap\",\"navigate\":{}}}", navigate.map_or_else(|| "null".to_string(), |(x, y)| format!("[{x:.1},{y:.1}]"))));
+        format!("[{}]", rows.join(","))
+    }
+
+    /// 🗺️ The screen rect [`Self::entity_screen_json`] reports for one entity, or `None` when it is
+    /// off screen — the typed read the census needs before it can scan inside it.
+    fn entity_screen_rect(&self, domain: &str, id: &str) -> Option<[f64; 4]> {
+        let value = os_pack::json::parse(&self.entity_screen_json(domain, id)).ok()?;
+        if value.get("visible").and_then(os_pack::json::Value::as_bool) != Some(true) {
+            return None;
+        }
+        let rect = value.get("rect")?.as_array()?;
+        if rect.len() < 4 {
+            return None;
+        }
+        let read = |index: usize| rect.get(index).and_then(os_pack::json::Value::as_f64);
+        Some([read(0)?, read(1)?, read(2)?, read(3)?])
+    }
+
+    /// 🔎️ The first point of a screen rect whose classification satisfies `wanted`, scanned on a fixed
+    /// grid inset from the rim. Which part of a node is draggable body and which is inline widget is
+    /// the ENGINE's answer, and this is how it is asked without a pointer ever moving.
+    fn first_screen_point_in(&self, rect: [f64; 4], wanted: impl Fn(&DagScreenHit) -> bool) -> Option<(f64, f64)> {
+        const STEPS: usize = 12;
+        for row in 0..STEPS {
+            for column in 0..STEPS {
+                let x = rect[0] + rect[2] * (0.06 + 0.88 * column as f64 / (STEPS - 1) as f64);
+                let y = rect[1] + rect[3] * (0.06 + 0.88 * row as f64 / (STEPS - 1) as f64);
+                if x < 0.0 || y < 0.0 || x > self.width as f64 || y > self.height as f64 {
+                    continue;
+                }
+                if wanted(&self.screen_hit(x, y)) {
+                    return Some((x, y));
+                }
+            }
+        }
+        None
     }
 
     /// @emoji 🎯️ All pick targets under a screen point as JSON (`domain`, `id`, `generality`).
@@ -4718,16 +4876,64 @@ impl DagHost {
     /// is just as undescribable to the bounded plan path, and routing only presses left a plain move
     /// across a port faulting the whole dispatch (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     pub fn screen_pointer_gesture_begins_at(&self, sx: f64, sy: f64) -> bool {
-        if self.minimap_widget_pointer_hit(sx, sy).is_some() {
-            return true;
-        }
+        self.screen_hit(sx, sy).is_screen_path()
+    }
+
+    /// 🩺️ The ONE classification of a screen point both the path discriminator and a renderer
+    /// diagnostic read, so a gesture can never be explained by a different hit test than the one that
+    /// routed it. `node_id` is the draggable fixture node under the point; the four booleans are the
+    /// hits `bounded_node_hit_index` answers `Unsupported` for.
+    pub fn screen_hit(&self, sx: f64, sy: f64) -> DagScreenHit {
+        let minimap = self.minimap_widget_pointer_hit(sx, sy);
         let world = self.screen_to_world_point(sx, sy);
-        self.port_insert_hit(world.x, world.y, self.fixture.camera.zoom).is_some() || self.world_hits_handle(world.x, world.y) || self.widget_hit_at(world.x, world.y).is_some()
+        let handle = self.port_pointer_handle_hit(world.x, world.y);
+        DagScreenHit {
+            node_id: self.fixture_draggable_node_hit(world.x, world.y).and_then(|node_id| self.widget_id_for_node_id(node_id)),
+            channel: handle.and_then(|hid| self.decode_channel_ref(hid)),
+            minimap: minimap.is_some(),
+            minimap_viewport: minimap.is_some_and(|(_, on_viewport)| on_viewport),
+            port_insert: self.port_insert_hit(world.x, world.y, self.fixture.camera.zoom).is_some(),
+            handle: handle.is_some(),
+            widget: self.widget_hit_at(world.x, world.y).is_some(),
+        }
+    }
+
+    /// 🩺️ [`Self::screen_hit`] as JSON, for a renderer that has to report why a press went where it
+    /// went across a wasm boundary that carries no Rust types.
+    pub fn screen_hit_json(&self, sx: f64, sy: f64) -> String {
+        let hit = self.screen_hit(sx, sy);
+        os_pack::json::to_json_string(&DagScreenHitJson {
+            node: hit.node_id.clone(),
+            draggable: hit.is_draggable_body(),
+            handle: hit.channel.as_ref().map(|channel| format!("{}@{}", channel.widget_id, channel.port)),
+            direction: hit.channel.as_ref().map(|channel| channel.direction.clone()),
+            widget: hit.widget,
+            minimap: hit.minimap,
+            minimap_viewport: hit.minimap_viewport,
+            port_insert: hit.port_insert,
+        })
     }
 
     fn handle_id_for_port(&self, node_id: &str, port_id: &str) -> Option<HandleId> {
         let key = format!("{node_id}@{port_id}");
         self.handle_key_map.iter().find(|(_, k)| k.as_str() == key).map(|(&hid, _)| hid)
+    }
+
+    /// 🔌️ The handle on ONE side of a port. `handle_key_map` keys every handle as `"{nodeId}@{portId}"`,
+    /// and a node may carry an input AND an output under the same port id (`extrusion-axis` carries
+    /// `vector`, `x`, `y`, `z` on both sides): a name-only lookup then answers whichever handle came
+    /// first in the map, so a press on an OUTPUT could resolve to the input handle 40 world units away
+    /// on the other side of the node, snap there, and start a wire from the wrong end. The engine
+    /// already records the side as [`HandleRole`]; this reads it rather than keeping a second map.
+    fn handle_id_for_port_side(&self, node_id: &str, port_id: &str, input: bool) -> Option<HandleId> {
+        let key = format!("{node_id}@{port_id}");
+        let wanted = if input { HandleRole::Target } else { HandleRole::Source };
+        self.handle_key_map
+            .iter()
+            .filter(|(_, candidate)| candidate.as_str() == key)
+            .map(|(&hid, _)| hid)
+            .find(|hid| self.engine.handles.get(hid).is_some_and(|handle| handle.role == wanted))
+            .or_else(|| self.handle_id_for_port(node_id, port_id))
     }
 
     fn port_row_handle_hit(&self, world_x: f64, world_y: f64, inputs: bool, outputs: bool) -> Option<HandleId> {
@@ -4740,7 +4946,7 @@ impl DagHost {
                     if !point_in_rect(world_x, world_y, x0, y0, x1, y1) {
                         continue;
                     }
-                    if let Some(hid) = self.handle_id_for_port(&node.id, &port.id) {
+                    if let Some(hid) = self.handle_id_for_port_side(&node.id, &port.id, true) {
                         return Some(hid);
                     }
                 }
@@ -4753,7 +4959,7 @@ impl DagHost {
                     if !point_in_rect(world_x, world_y, x0, y0, x1, y1) {
                         continue;
                     }
-                    if let Some(hid) = self.handle_id_for_port(&node.id, &port.id) {
+                    if let Some(hid) = self.handle_id_for_port_side(&node.id, &port.id, false) {
                         return Some(hid);
                     }
                 }
@@ -4768,7 +4974,7 @@ impl DagHost {
             for (port_idx, port) in node.inputs().iter().enumerate() {
                 let Some((x0, y0, x1, y1)) = input_port_connector_bounds(node, port_idx) else { continue };
                 if point_in_rect(world_x, world_y, x0, y0, x1, y1) {
-                    if let Some(hid) = self.handle_id_for_port(&node.id, &port.id) {
+                    if let Some(hid) = self.handle_id_for_port_side(&node.id, &port.id, true) {
                         return Some(hid);
                     }
                 }
@@ -4776,7 +4982,7 @@ impl DagHost {
             for (port_idx, port) in node.outputs().iter().enumerate() {
                 let Some((x0, y0, x1, y1)) = output_port_connector_bounds(node, port_idx) else { continue };
                 if point_in_rect(world_x, world_y, x0, y0, x1, y1) {
-                    if let Some(hid) = self.handle_id_for_port(&node.id, &port.id) {
+                    if let Some(hid) = self.handle_id_for_port_side(&node.id, &port.id, false) {
                         return Some(hid);
                     }
                 }
@@ -5264,7 +5470,7 @@ impl DagHost {
         let (hit_x, hit_y) = self.connection_hit_world(world.x, world.y);
         if self.world_hits_handle(hit_x, hit_y) {
             self.engine.pointer_down_screen(sx, sy, hit_x, hit_y, button, shift, ctrl_or_meta, alt);
-            dag_debug_log(&format!("[DEBUG] dag port press sx={sx:.1} sy={sy:.1} handle={:?} interaction={}", self.port_pointer_handle_hit(hit_x, hit_y).and_then(|hid| self.handle_key_map.get(&hid).cloned()), dag_interaction_label(&self.engine.interaction)));
+            dag_debug_log(&format!("[DEBUG] dag port press port={:?} interaction={}", self.engine.hover.and_then(|hid| self.handle_key_map.get(&hid).cloned()), dag_interaction_label(&self.engine.interaction)));
             self.process_engine_events();
             self.sync_camera_from_engine();
             return;
@@ -5352,7 +5558,6 @@ impl DagHost {
     }
 
     pub fn pointer_up_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
-        dag_debug_log(&format!("[DEBUG] dag pointer up sx={sx:.1} sy={sy:.1} interaction={}", dag_interaction_label(&self.engine.interaction)));
         self.pan_anchor = None;
         self.minimap_widget_drag = None;
         self.sync_connection_hit_picking_for_lod();
@@ -5740,7 +5945,7 @@ impl DagHost {
             let Some(bounds) = input_port_row_hit_bounds(node, port_idx) else {
                 continue;
             };
-            let Some(hid) = self.handle_id_for_port(&node.id, &port.id) else {
+            let Some(hid) = self.handle_id_for_port_side(&node.id, &port.id, true) else {
                 continue;
             };
             let (selected, highlighted, hovered) = self.handle_interaction_chrome(hid);
@@ -5750,7 +5955,7 @@ impl DagHost {
             let Some(bounds) = output_port_row_hit_bounds(node, port_idx) else {
                 continue;
             };
-            let Some(hid) = self.handle_id_for_port(&node.id, &port.id) else {
+            let Some(hid) = self.handle_id_for_port_side(&node.id, &port.id, false) else {
                 continue;
             };
             let (selected, highlighted, hovered) = self.handle_interaction_chrome(hid);

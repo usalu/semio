@@ -1,0 +1,600 @@
+{
+  "schema": "semio.framework.tool-run.ticks.v1",
+  "ticks": [
+    {
+      "name": "full tick",
+      "tick": {
+        "identity": {
+          "id": {
+            "appInstanceId": 3,
+            "run": 42
+          },
+          "generation": 1,
+          "baseRevision": "0008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8"
+        },
+        "sequence": 12,
+        "progress": {
+          "identity": {
+            "id": {
+              "appInstanceId": 3,
+              "run": 42
+            },
+            "generation": 1,
+            "baseRevision": "0008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8"
+          },
+          "sequence": 12,
+          "state": "running",
+          "stage": 1,
+          "completed": 42,
+          "total": 100,
+          "counters": [
+            {
+              "counter": 0,
+              "value": 42
+            },
+            {
+              "counter": 2,
+              "value": 5
+            }
+          ],
+          "unitsPerSecond": 37.5,
+          "conflicts": 0,
+          "steps": [
+            {
+              "sequence": 3,
+              "kind": "warning",
+              "stage": 1,
+              "reason": 65282,
+              "repeat": 2,
+              "args": [
+                {
+                  "unsigned": 5
+                }
+              ]
+            }
+          ]
+        },
+        "steps": [
+          {
+            "sequence": 4,
+            "kind": "info",
+            "stage": 1,
+            "reason": 7,
+            "subject": 9,
+            "repeat": 1,
+            "args": [
+              {
+                "float": 0.5
+              },
+              {
+                "unsigned": 3
+              }
+            ]
+          }
+        ],
+        "trace": [
+          {
+            "identity": {
+              "id": {
+                "appInstanceId": 3,
+                "run": 42
+              },
+              "generation": 1,
+              "baseRevision": "0008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8"
+            },
+            "page": 7,
+            "ops": [
+              {
+                "op": "upsert",
+                "key": 1,
+                "verdict": "testing",
+                "reason": 0,
+                "subject": {
+                  "kind": "instance3d",
+                  "mesh": 2,
+                  "position": [
+                    0.5,
+                    -1.25,
+                    2
+                  ],
+                  "rotation": [
+                    0,
+                    0,
+                    0,
+                    1
+                  ],
+                  "scale": 1
+                }
+              },
+              {
+                "op": "upsert",
+                "key": 2,
+                "verdict": "danger",
+                "reason": 3,
+                "subject": {
+                  "kind": "placement2d",
+                  "shape": 4,
+                  "position": [
+                    10.5,
+                    -3
+                  ],
+                  "rotation": 0.25
+                }
+              },
+              {
+                "op": "upsert",
+                "key": 9007199254740991,
+                "verdict": "success",
+                "reason": 65535,
+                "subject": {
+                  "kind": "entity",
+                  "entity": 77
+                }
+              },
+              {
+                "op": "retire",
+                "key": 5
+              },
+              {
+                "op": "clear"
+              }
+            ]
+          }
+        ],
+        "appendOps": [
+          "0a0b0c",
+          "ff"
+        ],
+        "appendEntities": [
+          1001,
+          1002
+        ],
+        "retractTo": 40
+      },
+      "hex": "0008010d0401040302042a0304010408200008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f802040c030d0a010d0401040302042a0304010408200008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f802040c03040104040105042a06046407081400002a000000000000000200050000000000000008050000000000c042400904000a0c010d06010403020402030401040482fe03060402070809000500000000000000040c010d0701040402040003040104040705040906040107081201000000000000e03f000300000000000000050c0108bc01000b010d0401040302042a0304010408200008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8020407030805000000010204082001000000000000000200000000000000ffffffffffff1f00050000000000000005080300030106080600000300ffff07080300010208080402000000090804040000000a08084d000000000000000b082c0000003f0000a0bf000000400000000000000000000000000000803f0000803f00002841000040c00000803e060c0208030a0b0c0801ff070810e903000000000000ea03000000000000080428"
+    },
+    {
+      "name": "minimal tick",
+      "tick": {
+        "identity": {
+          "id": {
+            "appInstanceId": 3,
+            "run": 42
+          },
+          "generation": 1,
+          "baseRevision": "0008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8"
+        },
+        "sequence": 0,
+        "steps": [],
+        "trace": [],
+        "appendOps": [],
+        "appendEntities": []
+      },
+      "hex": "0002010d0401040302042a0304010408200008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8020400"
+    },
+    {
+      "name": "indeterminate progress with retract to zero",
+      "tick": {
+        "identity": {
+          "id": {
+            "appInstanceId": 0,
+            "run": 1
+          },
+          "generation": 0,
+          "baseRevision": "0008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8"
+        },
+        "sequence": 1,
+        "progress": {
+          "identity": {
+            "id": {
+              "appInstanceId": 0,
+              "run": 1
+            },
+            "generation": 0,
+            "baseRevision": "0008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8"
+          },
+          "sequence": 1,
+          "state": "paused",
+          "stage": 0,
+          "completed": 7,
+          "counters": [],
+          "unitsPerSecond": 0,
+          "conflicts": 2,
+          "steps": []
+        },
+        "steps": [],
+        "trace": [],
+        "appendOps": [],
+        "appendEntities": [],
+        "retractTo": 0
+      },
+      "hex": "0004010d040104000204010304000408200008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8020401030d07010d040104000204010304000408200008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f802040103040204040005040708050000000000000000090402080400"
+    }
+  ],
+  "stepRing": [
+    {
+      "name": "coalesces identical consecutive steps",
+      "push": [
+        {
+          "sequence": 1,
+          "kind": "warning",
+          "stage": 0,
+          "reason": 5,
+          "repeat": 1,
+          "args": []
+        },
+        {
+          "sequence": 2,
+          "kind": "warning",
+          "stage": 0,
+          "reason": 5,
+          "repeat": 1,
+          "args": []
+        },
+        {
+          "sequence": 3,
+          "kind": "info",
+          "stage": 0,
+          "reason": 6,
+          "repeat": 1,
+          "args": []
+        },
+        {
+          "sequence": 4,
+          "kind": "warning",
+          "stage": 0,
+          "reason": 5,
+          "repeat": 1,
+          "args": []
+        }
+      ],
+      "expect": {
+        "length": 3,
+        "first": {
+          "sequence": 2,
+          "kind": "warning",
+          "stage": 0,
+          "reason": 5,
+          "repeat": 2,
+          "args": []
+        },
+        "last": {
+          "sequence": 4,
+          "kind": "warning",
+          "stage": 0,
+          "reason": 5,
+          "repeat": 1,
+          "args": []
+        }
+      }
+    },
+    {
+      "name": "overwrites the oldest beyond 64 entries",
+      "push": [
+        {
+          "repeatSequence": {
+            "from": 100,
+            "count": 70,
+            "kind": "info"
+          }
+        }
+      ],
+      "expect": {
+        "length": 64,
+        "first": {
+          "sequence": 106,
+          "kind": "info",
+          "stage": 0,
+          "reason": 106,
+          "repeat": 1,
+          "args": []
+        },
+        "last": {
+          "sequence": 169,
+          "kind": "info",
+          "stage": 0,
+          "reason": 169,
+          "repeat": 1,
+          "args": []
+        }
+      }
+    },
+    {
+      "name": "subject and arguments distinguish steps",
+      "push": [
+        {
+          "sequence": 1,
+          "kind": "warning",
+          "stage": 0,
+          "reason": 1,
+          "repeat": 1,
+          "args": [],
+          "subject": 1
+        },
+        {
+          "sequence": 2,
+          "kind": "warning",
+          "stage": 0,
+          "reason": 1,
+          "repeat": 1,
+          "args": [],
+          "subject": 2
+        },
+        {
+          "sequence": 3,
+          "kind": "warning",
+          "stage": 0,
+          "reason": 1,
+          "repeat": 1,
+          "args": [
+            {
+              "float": 1
+            }
+          ],
+          "subject": 2
+        },
+        {
+          "sequence": 4,
+          "kind": "warning",
+          "stage": 0,
+          "reason": 1,
+          "repeat": 3,
+          "args": [
+            {
+              "float": 1
+            }
+          ],
+          "subject": 2
+        }
+      ],
+      "expect": {
+        "length": 3,
+        "first": {
+          "sequence": 1,
+          "kind": "warning",
+          "stage": 0,
+          "reason": 1,
+          "repeat": 1,
+          "args": [],
+          "subject": 1
+        },
+        "last": {
+          "sequence": 4,
+          "kind": "warning",
+          "stage": 0,
+          "reason": 1,
+          "repeat": 4,
+          "args": [
+            {
+              "float": 1
+            }
+          ],
+          "subject": 2
+        }
+      }
+    },
+    {
+      "name": "empty ring",
+      "push": [],
+      "expect": {
+        "length": 0,
+        "first": null,
+        "last": null
+      }
+    }
+  ],
+  "writer": [
+    {
+      "name": "splits trace pages at 4096 ops",
+      "upserts": 4097,
+      "appendOps": 0,
+      "retractTo": null,
+      "expect": {
+        "pageOps": [
+          4096,
+          1
+        ],
+        "appendOps": 0,
+        "retractTo": null,
+        "rejectedOps": 0
+      }
+    },
+    {
+      "name": "provisional cap refuses the 65537th op",
+      "upserts": 0,
+      "appendOps": 65537,
+      "retractTo": null,
+      "expect": {
+        "pageOps": [],
+        "appendOps": 65536,
+        "retractTo": null,
+        "rejectedOps": 1
+      }
+    },
+    {
+      "name": "retract below the committed base emits retractTo",
+      "upserts": 1,
+      "appendOps": 10,
+      "retractTo": 4,
+      "expect": {
+        "pageOps": [
+          1
+        ],
+        "appendOps": 10,
+        "retractTo": 4,
+        "rejectedOps": 0
+      }
+    },
+    {
+      "name": "retract at the committed base emits nothing",
+      "upserts": 0,
+      "appendOps": 3,
+      "retractTo": 3,
+      "expect": {
+        "pageOps": [],
+        "appendOps": 3,
+        "retractTo": null,
+        "rejectedOps": 0
+      }
+    }
+  ],
+  "writerResume": [
+    {
+      "name": "a resumed writer retracts inside its pending appends without retractTo",
+      "provisionalBase": 5,
+      "script": [
+        {
+          "append": 1
+        },
+        {
+          "entity": 11
+        },
+        {
+          "append": 1
+        },
+        {
+          "entity": 12
+        },
+        {
+          "append": 1
+        },
+        {
+          "entity": 13
+        },
+        {
+          "retractTo": 6
+        },
+        {
+          "finish": true
+        }
+      ],
+      "expect": {
+        "ticks": [
+          {
+            "appendOps": 1,
+            "appendEntities": [
+              11
+            ],
+            "retractTo": null
+          }
+        ],
+        "provisionalLen": 6,
+        "rejectedOps": 0
+      }
+    },
+    {
+      "name": "a resumed writer retracting below its base emits retractTo and drops later entities",
+      "provisionalBase": 8,
+      "script": [
+        {
+          "entity": 21
+        },
+        {
+          "append": 2
+        },
+        {
+          "entity": 22
+        },
+        {
+          "retractTo": 3
+        },
+        {
+          "append": 2
+        },
+        {
+          "entity": 23
+        },
+        {
+          "finish": true
+        }
+      ],
+      "expect": {
+        "ticks": [
+          {
+            "appendOps": 2,
+            "appendEntities": [
+              23
+            ],
+            "retractTo": 3
+          }
+        ],
+        "provisionalLen": 5,
+        "rejectedOps": 0
+      }
+    },
+    {
+      "name": "an entity tagged at the retract length survives it",
+      "provisionalBase": 0,
+      "script": [
+        {
+          "append": 2
+        },
+        {
+          "entity": 31
+        },
+        {
+          "append": 2
+        },
+        {
+          "entity": 32
+        },
+        {
+          "finish": true
+        },
+        {
+          "retractTo": 2
+        },
+        {
+          "finish": true
+        }
+      ],
+      "expect": {
+        "ticks": [
+          {
+            "appendOps": 4,
+            "appendEntities": [
+              31,
+              32
+            ],
+            "retractTo": null
+          },
+          {
+            "appendOps": 0,
+            "appendEntities": [],
+            "retractTo": 2
+          }
+        ],
+        "provisionalLen": 2,
+        "rejectedOps": 0
+      }
+    },
+    {
+      "name": "a writer resumed at the provisional cap refuses appends",
+      "provisionalBase": 65536,
+      "script": [
+        {
+          "append": 1
+        },
+        {
+          "entity": 41
+        },
+        {
+          "finish": true
+        }
+      ],
+      "expect": {
+        "ticks": [
+          {
+            "appendOps": 0,
+            "appendEntities": [
+              41
+            ],
+            "retractTo": null
+          }
+        ],
+        "provisionalLen": 65536,
+        "rejectedOps": 1
+      }
+    }
+  ]
+}

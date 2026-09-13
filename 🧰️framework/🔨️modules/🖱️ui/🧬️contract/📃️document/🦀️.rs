@@ -811,7 +811,150 @@ mod document_assembly;
 pub use document_assembly::{UiDocumentAssembly, UiDocumentAssemblyError, UiDocumentAssemblyErrorKind, UiDocumentAssemblyIdentity, UiDocumentAssemblyProgress, UiDocumentRead, UiDocumentRootIdentity};
 //#endregion 🪪️DocumentLease
 
+//#region 📜️PagedText
+/// 🧯️ Why a retained document could not be reassembled as one paged-text carrier.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum UiPagedTextError {
+    Lease(UiDocumentLeaseError),
+    MissingNode(UiNodeId),
+    Cyclic,
+}
+
+impl UiDocumentLease {
+    /// 📜️ The payload of a document published as a paged-text carrier: the depth-first concatenation
+    /// of every `Component::Text` leaf's packed payload under the root. This is the retained wire
+    /// home of every reserved `UiRefreshSection` surface (`framework.section.measures`,
+    /// `framework.section.catalogue`, …) that `semio_framework_plugin::app::paged_text_carrier`
+    /// publishes; the walk follows the record graph, so any page order reassembles byte-identically.
+    ///
+    /// See `🧬️contract/🧫️fixtures/📜️paged-text.json`.
+    pub fn read_paged_text(&self) -> Result<String, UiPagedTextError> {
+        let root = self.header().map_err(UiPagedTextError::Lease)?.root;
+        let read = (0..UI_DOCUMENT_PUBLISH_OPPORTUNITIES)
+            .map(|_| self.try_read())
+            .find(|read| !matches!(read, Err(UiDocumentLeaseError::Contended)))
+            .unwrap_or(Err(UiDocumentLeaseError::Contended))
+            .map_err(UiPagedTextError::Lease)?;
+        let ordinals: std::collections::HashMap<UiNodeId, usize> = (0..read.len()).filter_map(|ordinal| read.node_at(ordinal).map(|record| (record.id, ordinal))).collect();
+        let mut payload = String::new();
+        let mut stack = vec![root];
+        let mut visited = 0usize;
+        while let Some(id) = stack.pop() {
+            let record = ordinals.get(&id).and_then(|ordinal| read.node_at(*ordinal)).ok_or(UiPagedTextError::MissingNode(id))?;
+            visited += 1;
+            if visited > ordinals.len() {
+                return Err(UiPagedTextError::Cyclic);
+            }
+            if let crate::Component::Text(text) = &record.component {
+                payload.push_str(&text.packed_payload());
+            }
+            stack.extend(record.children.iter().rev().copied());
+        }
+        Ok(payload)
+    }
+}
+//#endregion 📜️PagedText
+
+//#region 🧾️RightSizedPublication
+/// 🎟️ Per-step byte grant of [`UiDocumentLease::try_publish`] — a step grant, never a total; the value
+/// the assembly's own resident-root tests step with.
+pub const UI_DOCUMENT_PUBLISH_STEP_BYTES: usize = 32 * 1024;
+const UI_DOCUMENT_PUBLISH_OPPORTUNITIES: usize = UI_DOCUMENT_PATCH_OPS + UI_DOCUMENT_NODES * UI_DOCUMENT_NODES + UI_DOCUMENT_LEASE_SLOTS;
+
+/// 🧯️ Why a host-held record list could not be published as a retained document.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum UiDocumentPublishError {
+    Empty,
+    Permit { fault: UiResidentFault, items: usize, bytes: usize },
+    Assembly(UiDocumentAssemblyError),
+    Budget,
+}
+
+impl UiDocumentLease {
+    /// 🧾️ Publishes `nodes` as one generation-qualified document through the stepped assembly protocol
+    /// with a RIGHT-SIZED resident reservation. The cold [`UiDocumentBuilder`] reserves the fixed
+    /// per-surface ceiling, and the process aggregate holds only four of those beside every live surface,
+    /// so a host that owns its records (the browser bridge's published snapshot, the wgpu shell's
+    /// Measures overlay) must price the root by what it actually holds. A refused publication returns
+    /// its reservation before it answers.
+    pub fn try_publish(surface: SurfaceId, identity: UiDocumentAssemblyIdentity, nodes: Vec<UiNodeRecord>) -> Result<Self, UiDocumentPublishError> {
+        if nodes.is_empty() {
+            return Err(UiDocumentPublishError::Empty);
+        }
+        let items = nodes.len().saturating_add(2).min(UI_RESIDENT_SURFACE_ITEMS);
+        let bytes = nodes.len().saturating_add(2).saturating_mul(size_of::<UiNodeRecord>()).saturating_add(UiDocumentAssembly::required_open_bytes()).min(UI_RESIDENT_SURFACE_BYTES);
+        let mut permit = None;
+        for _ in 0..UI_DOCUMENT_PUBLISH_OPPORTUNITIES {
+            match UiResidentPermit::try_reserve(UiResidentLimits { items, bytes }, &mut permit, UI_DOCUMENT_PUBLISH_STEP_BYTES) {
+                Err(UiResidentFault::Contended) => continue,
+                Err(fault) => return Err(UiDocumentPublishError::Permit { fault, items, bytes }),
+                Ok(_) => break,
+            }
+        }
+        if permit.is_none() {
+            return Err(UiDocumentPublishError::Permit { fault: UiResidentFault::Capacity, items, bytes });
+        }
+        let mut assembly = UiDocumentAssembly::default();
+        let published = Self::publish_into(&mut assembly, &mut permit, surface, identity, nodes);
+        if published.is_err() {
+            for _ in 0..UI_DOCUMENT_PUBLISH_OPPORTUNITIES {
+                if !matches!(assembly.close_step(1, UI_DOCUMENT_PUBLISH_STEP_BYTES), Ok(step) if !step.complete) {
+                    break;
+                }
+            }
+        }
+        if let Some(permit) = permit.as_mut() {
+            let _ = permit.close_step(1);
+        }
+        published
+    }
+
+    fn publish_into(assembly: &mut UiDocumentAssembly, permit: &mut Option<UiResidentPermit>, surface: SurfaceId, identity: UiDocumentAssemblyIdentity, nodes: Vec<UiNodeRecord>) -> Result<Self, UiDocumentPublishError> {
+        let mut surface = Some(surface);
+        for _ in 0..UI_DOCUMENT_PUBLISH_OPPORTUNITIES {
+            uncontended(assembly.open_with_permit(permit, &mut surface, identity, 1, UI_DOCUMENT_PUBLISH_STEP_BYTES))?;
+            if surface.is_none() && permit.is_none() {
+                break;
+            }
+        }
+        if surface.is_some() || permit.is_some() {
+            return Err(UiDocumentPublishError::Budget);
+        }
+        for record in nodes {
+            let mut source = Some(record);
+            for _ in 0..UI_DOCUMENT_PUBLISH_OPPORTUNITIES {
+                uncontended(assembly.place_one(&mut source, 1, UI_DOCUMENT_PUBLISH_STEP_BYTES))?;
+                if source.is_none() {
+                    break;
+                }
+            }
+            if source.is_some() {
+                return Err(UiDocumentPublishError::Budget);
+            }
+        }
+        let mut lease = None;
+        for _ in 0..UI_DOCUMENT_PUBLISH_OPPORTUNITIES {
+            if uncontended(assembly.finish_into(&mut lease, identity.revision, 1, UI_DOCUMENT_PUBLISH_STEP_BYTES))?.is_some_and(|progress| progress.complete) {
+                break;
+            }
+        }
+        lease.ok_or(UiDocumentPublishError::Budget)
+    }
+}
+/// 🔁️ A contended arena lock spends the opportunity without progress; every other refusal is final.
+fn uncontended(step: Result<UiDocumentAssemblyProgress, UiDocumentAssemblyError>) -> Result<Option<UiDocumentAssemblyProgress>, UiDocumentPublishError> {
+    match step {
+        Ok(progress) => Ok(Some(progress)),
+        Err(UiDocumentAssemblyError { kind: UiDocumentAssemblyErrorKind::Contended, .. }) => Ok(None),
+        Err(error) => Err(UiDocumentPublishError::Assembly(error)),
+    }
+}
+//#endregion 🧾️RightSizedPublication
+
 //#region 🧪️Tests
+#[cfg(test)]
+#[path = "../📃️document/🧪️tests/📜️paged-text/🦀️.rs"]
+mod paged_text_tests;
 #[cfg(test)]
 #[path = "../📃️document/🎟️assembly/🧪️tests/🎟️assembly/🦀️.rs"]
 mod document_assembly_tests;

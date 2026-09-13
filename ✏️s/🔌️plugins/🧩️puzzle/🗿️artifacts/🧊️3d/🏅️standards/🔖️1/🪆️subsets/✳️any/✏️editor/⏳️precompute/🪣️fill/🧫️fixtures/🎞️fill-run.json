@@ -1,0 +1,131 @@
+{
+  "$comment": "🎞️ Language-neutral fill tool run law of s.puzzle3d's ⏳️precompute/🪣️fill run job (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W1-A). A case seeds a shipped example document (scaled box fallback for every mesh identity, as the app registers before real GLBs arrive) and a requested count; `expected` is the verdict prefix as `verdict:reasonId`, the run counters, provisional op and entity counts, checkpoints and the stall reason id.",
+  "laws": {
+    "opsPerPlacement": 2,
+    "parryOracle": {
+      "document": "concrete-forest",
+      "seed": 7,
+      "requested": 60
+    },
+    "delivery": {
+      "document": "concrete-forest",
+      "seed": 7,
+      "requested": 1000000,
+      "candidates": 5000,
+      "deltaBudgetBytes": 65536
+    },
+    "interactive": {
+      "document": "nakagin",
+      "seed": 1,
+      "requested": 100,
+      "turns": 771,
+      "budgetUs": 2000,
+      "coldRuns": 5
+    }
+  },
+  "cases": [
+    {
+      "document": "nakagin",
+      "seed": 1,
+      "requested": 12,
+      "expected": {
+        "verdictPrefix": [
+          "danger:solid-overlap",
+          "danger:solid-overlap",
+          "danger:solid-overlap",
+          "danger:solid-overlap",
+          "danger:solid-overlap",
+          "danger:solid-overlap",
+          "danger:solid-overlap",
+          "danger:solid-overlap",
+          "danger:solid-overlap",
+          "danger:solid-overlap",
+          "danger:solid-overlap",
+          "danger:solid-overlap",
+          "danger:solid-overlap",
+          "danger:solid-overlap",
+          "danger:solid-overlap",
+          "danger:solid-overlap"
+        ],
+        "tested": 3344,
+        "locked": 1,
+        "collisions": 3343,
+        "rejected": 0,
+        "appendOps": 2,
+        "appendEntities": 1,
+        "checkpoints": 1,
+        "stall": "no-free-placement"
+      }
+    },
+    {
+      "document": "concrete-forest",
+      "seed": 7,
+      "requested": 8,
+      "expected": {
+        "verdictPrefix": [
+          "success:fits",
+          "success:fits",
+          "success:fits",
+          "success:fits",
+          "danger:solid-overlap",
+          "danger:solid-overlap",
+          "danger:solid-overlap",
+          "success:fits",
+          "success:fits",
+          "success:fits",
+          "danger:solid-overlap",
+          "success:fits"
+        ],
+        "tested": 12,
+        "locked": 8,
+        "collisions": 4,
+        "rejected": 0,
+        "appendOps": 16,
+        "appendEntities": 8,
+        "checkpoints": 8,
+        "stall": null
+      }
+    },
+    {
+      "document": "concrete-forest",
+      "seed": 3,
+      "requested": 40,
+      "expected": {
+        "verdictPrefix": [
+          "success:fits",
+          "success:fits",
+          "success:fits",
+          "success:fits",
+          "success:fits",
+          "success:fits",
+          "success:fits",
+          "success:fits",
+          "success:fits",
+          "success:fits",
+          "success:fits",
+          "danger:solid-overlap",
+          "success:fits",
+          "success:fits",
+          "danger:solid-overlap",
+          "danger:solid-overlap",
+          "danger:solid-overlap",
+          "success:fits",
+          "success:fits",
+          "success:fits",
+          "success:fits",
+          "success:fits",
+          "success:fits",
+          "success:fits"
+        ],
+        "tested": 93,
+        "locked": 40,
+        "collisions": 53,
+        "rejected": 0,
+        "appendOps": 80,
+        "appendEntities": 40,
+        "checkpoints": 40,
+        "stall": null
+      }
+    }
+  ]
+}

@@ -1408,6 +1408,18 @@ pub struct World3dState {
     asset_generation: u64,
     asset_io: WorldAssetIoAuthority,
     dynamic_retirement: Option<World3dDynamicRetirement>,
+    /// ⏯️ The resident tool run trace fed by `World3dScene.tool_run_trace` — see [`tool_run_trace`].
+    pub tool_run_trace: tool_run_trace::ToolRunTraceLayer,
+    /// 👁️ The trace legend toggles this window's config exposes.
+    pub tool_run_trace_visibility: tool_run_trace::ToolRunTraceVisibility,
+    tool_run_trace_meshes_digest: Option<u64>,
+    tool_run_trace_mesh_keys: Vec<String>,
+    /// 🟩️ Instance ids a running tool placed provisionally; painted with the `provisional` style token.
+    /// Filled from the `provisional: true` flag the scene producer stamps on `instances_json` records.
+    pub provisional_instance_ids: HashSet<String>,
+    /// 🪟️ The window instance whose view state echoes this layer's trace cursor as
+    /// `toolRunTraceCursorByWindowId[window]`; set by the host that paints the surface into that window.
+    pub tool_run_trace_window_id: Option<String>,
 }
 
 impl World3dState {
@@ -1636,6 +1648,12 @@ impl World3dState {
             asset_generation: 0,
             asset_io: WorldAssetIoAuthority::default(),
             dynamic_retirement: None,
+            tool_run_trace: tool_run_trace::ToolRunTraceLayer::default(),
+            tool_run_trace_visibility: tool_run_trace::ToolRunTraceVisibility::default(),
+            tool_run_trace_meshes_digest: None,
+            tool_run_trace_mesh_keys: Vec::new(),
+            provisional_instance_ids: HashSet::new(),
+            tool_run_trace_window_id: None,
         }
     }
 
@@ -9532,6 +9550,9 @@ struct World3dSceneInstanceEntry {
     scale: Option<[f64; 3]>,
     #[serde(default)]
     color: Option<String>,
+    /// 🟩️ The instance stands for an entity a running tool placed provisionally (`ArtifactView::tool_run()`).
+    #[serde(default)]
+    provisional: bool,
 }
 
 /// 🎥️ `World3dScene.camera_json` — the window's own camera measure, authored host-side.
@@ -9854,6 +9875,7 @@ fn publish_world3d_scene_bridge_snapshot(state: &mut World3dState, cursor: &Worl
     for instance in cursor.instances.iter().filter(|instance| instance.interaction_id.as_deref().is_some_and(|target| target != instance.id)) {
         state.instance_interaction_ids.insert(instance.id.clone(), instance.interaction_id.clone().expect("instance interaction id filtered above"));
     }
+    state.provisional_instance_ids = cursor.instances.iter().filter(|instance| instance.provisional).map(|instance| instance.id.clone()).collect();
     let mut draws: Vec<(&World3dSceneMeshEntry, Vec<&World3dSceneInstanceEntry>)> = Vec::new();
     for mesh in &cursor.meshes {
         if !state.meshes.contains_key(&mesh.id) {
@@ -10019,6 +10041,7 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
     state.bound_domain_id = world.domain_id.clone();
     state.bound_domain_granularity_id = world.domain_granularity_id.clone();
     state.environment = world.environment_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default();
+    sync_world3d_tool_run_trace(state, world);
     sync_world3d_scene_selection(state, &world.selection_json);
     let lease = match world.snapshot {
         Some(lease) => lease,
@@ -10042,6 +10065,57 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
     }
     state.snapshot_apply = Some(World3dSnapshotApplyCursor::new(lease));
     state.snapshot_fault = None;
+}
+
+/// ⏯️ Feeds `World3dScene.tool_run_trace` into the resident trace layer and re-derives the mesh index →
+/// mesh key table the trace subjects address (`meshes_json` order) only when that lane changed.
+fn sync_world3d_tool_run_trace(state: &mut World3dState, world: &ui_wgpu::wgpu::World3dScene) {
+    let _ = state.tool_run_trace.apply_lane(world.tool_run_trace.as_deref());
+    if state.tool_run_trace.is_empty() {
+        return;
+    }
+    let digest = world3d_scene_digest(&[&world.meshes_json]);
+    if state.tool_run_trace_meshes_digest == Some(digest) {
+        return;
+    }
+    #[derive(Deserialize)]
+    struct MeshKey {
+        id: String,
+    }
+    state.tool_run_trace_mesh_keys = serde_json::from_str::<Vec<MeshKey>>(&world.meshes_json).map(|meshes| meshes.into_iter().map(|mesh| mesh.id).collect()).unwrap_or_default();
+    state.tool_run_trace_meshes_digest = Some(digest);
+}
+
+/// 🧭️ The cursor this surface echoes as `toolRunTraceCursorByWindowId[window]` in its window instance view state.
+pub fn world3d_tool_run_trace_cursor(state: &World3dState) -> Option<semio_framework_tool_run::ToolRunTraceCursor> {
+    state.tool_run_trace.cursor()
+}
+
+/// 🧭️ Every `(window instance, cursor)` echo the given world surfaces owe their view state — surfaces without
+/// a bound window or without an applied trace lane echo nothing.
+pub fn world3d_tool_run_trace_cursors<'a>(states: impl IntoIterator<Item = &'a World3dState>) -> std::collections::HashMap<String, semio_framework_tool_run::ToolRunTraceCursor> {
+    states.into_iter().filter_map(|state| Some((state.tool_run_trace_window_id.clone()?, state.tool_run_trace.cursor()?))).collect()
+}
+
+/// 🎨️ Appends the trace layer's instanced `(mesh, verdict)` draws; a mesh index with no published mesh
+/// falls back to the placeholder box, exactly like the brush ghost.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+fn append_tool_run_trace_draws(state: &mut World3dState, gpu: &mut World3dBuildContext, theme: &ui_wgpu::wgpu::Theme, translucent_draws: &mut Vec<SceneDraw3d>) {
+    if state.tool_run_trace.is_empty() {
+        return;
+    }
+    let palette = tool_run_trace::ToolRunTracePalette::from_theme(theme);
+    for draw in state.tool_run_trace.draws(&palette, state.tool_run_trace_visibility) {
+        let mesh_key = state.tool_run_trace_mesh_keys.get(draw.mesh as usize).filter(|key| state.meshes.contains_key(key.as_str())).cloned().unwrap_or_else(|| brush_preview_mesh_id(None));
+        if !state.meshes.contains_key(&mesh_key) {
+            begin_world_placeholder_mesh(state, &mesh_key, WorldPlaceholderKind::Box);
+        }
+        let mesh_version = *state.mesh_versions.get(&mesh_key).unwrap_or(&0);
+        if let Some(mesh) = state.meshes.get(&mesh_key) {
+            gpu.ensure_mesh(&mesh_key, mesh_version, *mesh);
+        }
+        translucent_draws.push(SceneDraw3d { mesh_key, mesh_version, instances: draw.instances });
+    }
 }
 
 fn apply_runtime_draw_flags(state: &mut World3dState) {
@@ -10111,6 +10185,7 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
     let view_proj = camera.view_proj(aspect);
     let planes = frustum_planes(view_proj);
     let mut culled_draws = Vec::new();
+    let mut provisional_draws = Vec::new();
     let mut culled_count = 0u32;
     let mut needed_mesh_keys = HashSet::new();
     let missing_mesh_urls: HashSet<String> = state.draws.iter().filter(|draw| !state.meshes.contains_key(&draw.mesh_key)).filter_map(|draw| state.mesh_source_urls.get(&draw.mesh_key).cloned()).collect();
@@ -10144,9 +10219,16 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
                 visible.then_some(instance)
             })
             .collect();
-        if !instances.is_empty() {
+        let (provisional, instances): (Vec<Instance3d>, Vec<Instance3d>) = instances.into_iter().partition(|instance| state.provisional_instance_ids.contains(&instance.id));
+        if !instances.is_empty() || !provisional.is_empty() {
             needed_mesh_keys.insert(draw.mesh_key.clone());
             gpu.ensure_mesh(&draw.mesh_key, mesh_version, mesh);
+        }
+        if !provisional.is_empty() {
+            let color = tool_run_trace::tool_run_provisional_color(theme);
+            provisional_draws.push(SceneDraw3d { mesh_key: draw.mesh_key.clone(), mesh_version, instances: provisional.into_iter().map(|instance| Instance3d { color, selected: false, hovered: false, ..instance }).collect() });
+        }
+        if !instances.is_empty() {
             culled_draws.push(SceneDraw3d { mesh_key: draw.mesh_key.clone(), mesh_version, instances });
         }
     }
@@ -10180,6 +10262,8 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
     }
     let mut translucent_draws = Vec::new();
     append_component_face_translucent_overlays(state, gpu, &mut translucent_draws);
+    translucent_draws.append(&mut provisional_draws);
+    append_tool_run_trace_draws(state, gpu, theme, &mut translucent_draws);
     if let Some(preview) = state.catalogue_drop_preview.clone() {
         let mesh_id = brush_preview_mesh_id(preview.mesh_url.as_deref());
         if !state.meshes.contains_key(&mesh_id) {
@@ -10304,6 +10388,9 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
     }
     ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(state.surface_id.clone()), kind: HitKind::World3d, drag_axis: None, drag_data: None });
 }
+
+#[path = "⏯️tool-run-trace/🦀️.rs"]
+pub mod tool_run_trace;
 
 //#region 🧭️WorldOrbitViewGizmo
 /** 🧭️ The pure placement/tip-geometry/paint logic relocated to `ui_wgpu::wgpu::widgets::gizmo` (see

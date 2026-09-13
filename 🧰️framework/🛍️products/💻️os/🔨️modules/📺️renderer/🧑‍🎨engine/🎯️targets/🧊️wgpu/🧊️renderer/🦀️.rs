@@ -9045,6 +9045,12 @@ pub(crate) fn app_now_ms() -> f64 {
 mod async_boundary_tests;
 //#endregion 🔖️AsyncBoundaryTests
 
+//#region 🔖️FrameActionLedgerTests
+#[cfg(test)]
+#[path = "../../../🧪️tests/🧾️frame-action-ledger/🦀️.rs"]
+mod frame_action_ledger_tests;
+//#endregion 🔖️FrameActionLedgerTests
+
 //#region 📮️RuntimeMailbox
 
 struct RuntimeDispatchCursor {
@@ -9475,6 +9481,20 @@ enum RuntimeApply {
 }
 
 impl RuntimeApply {
+    /// 🎟️ Whether applying this completion HANDS THE INTERACTION STATE BACK. The checkout ledger ages
+    /// a live checkout against exactly this: while one of these is queued (or a reservation for one is
+    /// in flight) the state has an owner, and however long that owner takes it is not a leak. An arm
+    /// that carries no state carries no ownership either — the native abandoned-maintenance resume is
+    /// `ResumeFrameDeferred { interaction: None, .. }` for that reason.
+    fn restores_interaction(&self) -> bool {
+        match self {
+            Self::ResumeDispatch { interaction, .. } | Self::ResumeFrameDeferred { interaction, .. } => interaction.is_some(),
+            #[cfg(not(target_arch = "wasm32"))]
+            Self::RestoreInteraction(interaction) => interaction.is_some(),
+            _ => false,
+        }
+    }
+
     fn start_dispatch(cursor: &mut Option<RuntimeDispatchCursor>, runtime: &mut AppRuntime, handle: &AppHandle) -> bool {
         log_debug("[DEBUG] start_dispatch enter");
         let Some(cursor_value) = cursor.as_mut() else { return true };
@@ -9772,6 +9792,14 @@ type RuntimeHostWaker = std::rc::Rc<dyn Fn()>;
 type RuntimeCompletion = runtime_mailbox_core::Completion<RuntimeApply>;
 type RuntimeCompletionQueue = runtime_mailbox_core::BoundedCompletionQueue<RuntimeApply, RUNTIME_COMPLETION_CAPACITY>;
 
+/// 📮️ A completion returned through a reservation the submitting turn already took: the revision was
+/// minted when the work was submitted, it never needs the interaction state to apply, and whether it
+/// CARRIES that state home is read off the apply itself — the one owner of that rule
+/// ([`RuntimeApply::restores_interaction`]), so no call site can disagree with the checkout ledger.
+fn returned_completion(revision: u64, apply: RuntimeApply) -> RuntimeCompletion {
+    RuntimeCompletion { key: None, revision, requires_interaction: false, restores_interaction: apply.restores_interaction(), apply }
+}
+
 #[cfg(all(test, not(target_arch = "wasm32")))]
 #[path = "../../../../../../../../🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🔗️commit/📥️enqueue/🧪️tests/📥️enqueue/🦀️.rs"]
 mod runtime_publication_tests;
@@ -9831,7 +9859,7 @@ impl RuntimeMailboxInner {
     }
 
     fn completion(&self, key: Option<&'static str>, requires_interaction: bool, apply: RuntimeApply) -> RuntimeCompletion {
-        RuntimeCompletion { key, revision: self.next_revision.fetch_add(1, Ordering::Relaxed), requires_interaction, apply }
+        RuntimeCompletion { key, revision: self.next_revision.fetch_add(1, Ordering::Relaxed), requires_interaction, restores_interaction: apply.restores_interaction(), apply }
     }
 
     fn enqueue(&self, key: Option<&'static str>, requires_interaction: bool, apply: RuntimeApply) -> bool {
@@ -9880,7 +9908,7 @@ impl FrameMaintenanceExecutionEnvelope {
 impl Drop for FrameMaintenanceExecutionEnvelope {
     fn drop(&mut self) {
         if self.armed && self.registry.abandon(self.generation) {
-            self.mailbox.0.finish(RuntimeCompletion { key: None, revision: self.revision, requires_interaction: false, apply: RuntimeApply::ResumeFrameDeferred { interaction: None, cursor: None } });
+            self.mailbox.0.finish(returned_completion(self.revision, RuntimeApply::ResumeFrameDeferred { interaction: None, cursor: None }));
         }
     }
 }
@@ -9911,7 +9939,7 @@ impl FrameMaintenanceExecutionGuard {
             return false;
         }
         self.completed = true;
-        self.mailbox.0.finish(RuntimeCompletion { key: None, revision: self.revision, requires_interaction: false, apply: RuntimeApply::ResumeFrameDeferred { interaction: Some(interaction), cursor: Some(cursor) } });
+        self.mailbox.0.finish(returned_completion(self.revision, RuntimeApply::ResumeFrameDeferred { interaction: Some(interaction), cursor: Some(cursor) }));
         true
     }
 }
@@ -9926,7 +9954,7 @@ impl Drop for FrameMaintenanceExecutionGuard {
             self.owner_cell.restore_taken(owner);
         }
         if self.registry.abandon(self.generation) {
-            self.mailbox.0.finish(RuntimeCompletion { key: None, revision: self.revision, requires_interaction: false, apply: RuntimeApply::ResumeFrameDeferred { interaction: None, cursor: None } });
+            self.mailbox.0.finish(returned_completion(self.revision, RuntimeApply::ResumeFrameDeferred { interaction: None, cursor: None }));
         }
     }
 }
@@ -10424,6 +10452,7 @@ impl RuntimeMailbox {
     }
 
     pub(crate) fn record_frame_fault(&self, fault: &'static str) {
+        log_debug(&format!("[DEBUG] frame fault recorded: {fault}"));
         let mut slot = self.0.frame_fault.lock().expect("runtime frame fault lock");
         if slot.is_none() {
             *slot = Some(fault.to_string());
@@ -10477,7 +10506,7 @@ impl RuntimeMailbox {
         let revision = mailbox.0.next_revision.fetch_add(1, Ordering::Relaxed);
         spawn_app_task(async move {
             let interaction = future.await;
-            mailbox.0.finish(RuntimeCompletion { key: None, revision, requires_interaction: false, apply: RuntimeApply::RestoreInteraction(Some(interaction)) });
+            mailbox.0.finish(returned_completion(revision, RuntimeApply::RestoreInteraction(Some(interaction))));
         });
     }
 
@@ -10492,7 +10521,7 @@ impl RuntimeMailbox {
         let revision = mailbox.0.next_revision.fetch_add(1, Ordering::Relaxed);
         spawn_app_task(async move {
             let (interaction, cursor) = future.await;
-            mailbox.0.finish(RuntimeCompletion { key: None, revision, requires_interaction: false, apply: RuntimeApply::ResumeDispatch { interaction: Some(interaction), cursor: Some(cursor) } });
+            mailbox.0.finish(returned_completion(revision, RuntimeApply::ResumeDispatch { interaction: Some(interaction), cursor: Some(cursor) }));
         });
     }
 
@@ -10505,7 +10534,7 @@ impl RuntimeMailbox {
         let revision = mailbox.0.next_revision.fetch_add(1, Ordering::Relaxed);
         spawn_app_task(async move {
             let (interaction, cursor) = future.await;
-            mailbox.0.finish(RuntimeCompletion { key: None, revision, requires_interaction: false, apply: RuntimeApply::ResumeFrameDeferred { interaction: Some(interaction), cursor: Some(cursor) } });
+            mailbox.0.finish(returned_completion(revision, RuntimeApply::ResumeFrameDeferred { interaction: Some(interaction), cursor: Some(cursor) }));
         });
     }
 
@@ -10596,7 +10625,7 @@ impl RuntimeMailbox {
         let revision = mailbox.0.next_revision.fetch_add(1, Ordering::Relaxed);
         spawn_app_task(async move {
             let (interaction, cursor) = future.await;
-            mailbox.0.finish(RuntimeCompletion { key: None, revision, requires_interaction: false, apply: RuntimeApply::ResumeFrameDeferred { interaction: Some(interaction), cursor: Some(cursor) } });
+            mailbox.0.finish(returned_completion(revision, RuntimeApply::ResumeFrameDeferred { interaction: Some(interaction), cursor: Some(cursor) }));
         });
     }
 
@@ -10609,7 +10638,7 @@ impl RuntimeMailbox {
         let revision = mailbox.0.next_revision.fetch_add(1, Ordering::Relaxed);
         spawn_app_task(async move {
             let (interaction, cursor) = future.await;
-            mailbox.0.finish(RuntimeCompletion { key: None, revision, requires_interaction: false, apply: RuntimeApply::ResumeDispatch { interaction: Some(interaction), cursor: Some(cursor) } });
+            mailbox.0.finish(returned_completion(revision, RuntimeApply::ResumeDispatch { interaction: Some(interaction), cursor: Some(cursor) }));
         });
     }
 
@@ -10624,7 +10653,8 @@ impl RuntimeMailbox {
     /// `dispatch_normalized_event` was never reached (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
     /// `📓️wgpu-server-input-present-2026-09-13.md` §5.2). The pump is now driven from EVERY frame-build
     /// advance, the queue admits work that needs no state past work that does, and a checkout that
-    /// outlives its credits publishes a typed fault naming its site instead of freezing in silence.
+    /// with no owner left to return it publishes a typed fault naming its site instead of freezing in
+    /// silence — while a checkout that merely takes a long time defers, however long it takes.
     /// 📮️ The HOST TICK's own bounded share of the mailbox.
     ///
     /// ⚖️ The frame build pumps the mailbox from every advance, but a build cannot always run — while
@@ -10648,10 +10678,16 @@ impl RuntimeMailbox {
         let available = runtime.interaction_available();
         let queue = self.0.completions.lock().expect("runtime completion mailbox lock");
         let head_requires_interaction = queue.head_requires_interaction();
+        let owner_outstanding = queue.interaction_owner_outstanding();
         let index = queue.first_applicable(available);
         drop(queue);
-        let admission = runtime.checkout.admit(head_requires_interaction, available);
-        let blocked = matches!(admission, runtime_mailbox_core::InteractionCheckoutStep::Deferred | runtime_mailbox_core::InteractionCheckoutStep::Stale);
+        // 🎟️ On native the owner may also be a frame-maintenance refusal this runtime is still holding:
+        // the reservation is already cancelled and the state lives inside the refusal's owner cell, so
+        // the mailbox alone cannot see it.
+        #[cfg(not(target_arch = "wasm32"))]
+        let owner_outstanding = owner_outstanding || runtime.pending_frame_maintenance_refusal.is_some();
+        let admission = runtime.checkout.admit(head_requires_interaction, available, owner_outstanding);
+        let blocked = matches!(admission, runtime_mailbox_core::InteractionCheckoutStep::Deferred | runtime_mailbox_core::InteractionCheckoutStep::Abandoned);
         log_debug_once_per_transition(
             "apply-interaction",
             blocked,
@@ -10661,10 +10697,13 @@ impl RuntimeMailbox {
                 "[DEBUG] apply_pending_step: interaction state is available again".to_string()
             },
         );
-        if let Some((site, opportunities)) = runtime.checkout.take_stale_notice() {
+        if let Some((site, opportunities)) = runtime.checkout.take_abandoned_notice() {
+            // 🩺️ Once per abandoned episode, and the episode is what QUARANTINES the surface — the overlay
+            // is the only place this used to appear, and a probe reads the console, not the canvas.
+            log_debug(&format!("[DEBUG] frame fault recorded: runtime interaction checkout at {site} has no owner left to return it after {opportunities} apply opportunities"));
             let mut slot = self.0.frame_fault.lock().expect("runtime frame fault lock");
             if slot.is_none() {
-                *slot = Some(format!("runtime interaction checkout at {site} outlived its bounded step after {opportunities} apply opportunities"));
+                *slot = Some(format!("runtime interaction checkout at {site} has no owner left to return it after {opportunities} apply opportunities"));
             }
         }
         let Some(index) = index else { return false };
@@ -10709,6 +10748,20 @@ struct AppRuntime {
     draw: DrawList,
     overlay: DrawList,
     pending_frame_deferred: Option<FrameDeferredCursor>,
+    /// 🧾️ Every action a frame's authorities MINT, owned by the runtime and never by the frame
+    /// candidate that minted it.
+    ///
+    /// 🩸️ It used to be a field of [`FrameTransaction`], handed down through [`FrameBuildCursor`],
+    /// [`AppFrameAfterChrome`] and [`FrameFinishCursor`] and only reaching this runtime at
+    /// [`FrameFinishPhase::Complete`]. A frame candidate is DISCARDABLE by construction — 655
+    /// supersessions in one 140 s session on 6118 — and `AppFrameTransactionStep::Superseded` drops
+    /// the whole transaction without retiring it, so an action `take_action_step` had already taken
+    /// OUT of the bounded input authority was destroyed with it: measured as a retained rename whose
+    /// `renameGeneration` commit reached `AppFrameTransactionPhase::InputEvents` and was superseded
+    /// 1 ms later, never installed, never dispatched, never even retired
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-deferred-action-commit-2026-09-13.md`).
+    /// A user's commit is SESSION state, not frame state; the frame only borrows it at install.
+    frame_actions: FrameActionOwners,
     #[cfg(not(target_arch = "wasm32"))]
     pending_frame_maintenance_refusal: Option<FrameMaintenanceRefusal>,
     #[cfg(not(target_arch = "wasm32"))]
@@ -10869,7 +10922,6 @@ struct AppFrameAfterChrome {
     upload_rejected: Option<ui_wgpu::wgpu::PreparedRenderUpload>,
     draw_rejected: Option<ui_wgpu::wgpu::PreparedRenderInputRejected>,
     engine_packets: Option<FrameEnginePackets>,
-    deferred_actions: FrameActionOwners,
     fullscreen: Option<bool>,
     cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
     #[cfg(not(target_arch = "wasm32"))]
@@ -10880,7 +10932,6 @@ struct AppFrameAfterChrome {
 struct FrameBuildCursor {
     phase: FrameBuildPhase,
     presentation_witness: RuntimePresentationWitness,
-    deferred_actions: Option<FrameActionOwners>,
     fullscreen: Option<bool>,
     previous_draw: Option<DrawList>,
     previous_overlay: Option<DrawList>,
@@ -10940,11 +10991,10 @@ enum FrameBuildPhase {
 }
 
 impl FrameBuildCursor {
-    fn new(presentation_witness: RuntimePresentationWitness, deferred_actions: FrameActionOwners) -> Self {
+    fn new(presentation_witness: RuntimePresentationWitness) -> Self {
         Self {
             phase: FrameBuildPhase::Deferred,
             presentation_witness,
-            deferred_actions: Some(deferred_actions),
             fullscreen: None,
             previous_draw: None,
             previous_overlay: None,
@@ -11084,7 +11134,7 @@ impl FrameBuildCursor {
             return false;
         }
         self.cursor_wake.take();
-        self.deferred_actions.as_mut().is_none_or(|actions| actions.pop_front().is_none())
+        true
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -11101,7 +11151,6 @@ impl FrameBuildCursor {
             && self.icon_pages.is_none()
             && self.retirement.is_none()
             && self.cursor_wake.is_none()
-            && self.deferred_actions.as_ref().is_none_or(FrameActionOwners::is_empty)
     }
 }
 
@@ -11111,7 +11160,6 @@ struct FrameFinishCursor {
     pump_sync: bool,
     flush_tutorial: bool,
     shell_maintenance: bool,
-    deferred_actions: Option<FrameActionOwners>,
     glyph_started: bool,
     glyph_pages: Option<ui_wgpu::wgpu::PreparedAtlasPages>,
 }
@@ -11129,7 +11177,7 @@ enum FrameFinishPhase {
 
 impl Default for FrameFinishCursor {
     fn default() -> Self {
-        Self { phase: FrameFinishPhase::Inputs, cursor: SemioCursor::Default, pump_sync: false, flush_tutorial: false, shell_maintenance: false, deferred_actions: None, glyph_started: false, glyph_pages: None }
+        Self { phase: FrameFinishPhase::Inputs, cursor: SemioCursor::Default, pump_sync: false, flush_tutorial: false, shell_maintenance: false, glyph_started: false, glyph_pages: None }
     }
 }
 
@@ -11142,11 +11190,11 @@ impl FrameFinishCursor {
             self.glyph_pages = None;
             return false;
         }
-        self.deferred_actions.as_mut().is_none_or(|actions| actions.pop_front().is_none())
+        true
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.glyph_pages.is_none() && self.deferred_actions.as_ref().is_none_or(FrameActionOwners::is_empty)
+        self.glyph_pages.is_none()
     }
 }
 
@@ -11184,9 +11232,6 @@ impl AppFrameAfterChrome {
                 return false;
             }
             self.upload_rejected = None;
-            return false;
-        }
-        if self.deferred_actions.pop_front().is_some() {
             return false;
         }
         if self.retirement.is_none() {
@@ -11233,7 +11278,6 @@ pub(crate) struct FrameTransaction {
     board_authority_cursor: usize,
     world3d_authority_cursor: usize,
     scene_camera_cursor: scenes::SceneCameraDispatchCursor,
-    deferred_actions: FrameActionOwners,
     build_cursor: Option<FrameBuildCursor>,
     finish_cursor: Option<FrameFinishCursor>,
     after_chrome: Option<AppFrameAfterChrome>,
@@ -11302,7 +11346,6 @@ impl FrameTransaction {
             board_authority_cursor: 0,
             world3d_authority_cursor: 0,
             scene_camera_cursor: scenes::SceneCameraDispatchCursor::begin(app_now_ms()),
-            deferred_actions: FrameActionOwners::default(),
             build_cursor: None,
             finish_cursor: None,
             after_chrome: None,
@@ -11367,7 +11410,7 @@ impl FrameTransaction {
             AppFrameTransactionPhase::SceneCamera => match self.scene_camera_cursor.step() {
                 scenes::SceneCameraDispatchStep::Pending => AppFrameTransactionStep::Pending,
                 scenes::SceneCameraDispatchStep::Action(action) => {
-                    if let Err(_action) = self.deferred_actions.try_push(action) {
+                    if let Err(_action) = app.frame_actions.try_push(action) {
                         runtime.record_frame_fault("frame deferred action credits exceeded");
                         self.phase = AppFrameTransactionPhase::Terminal;
                         return AppFrameTransactionStep::Fault;
@@ -11392,7 +11435,7 @@ impl FrameTransaction {
                         self.phase = AppFrameTransactionPhase::Terminal;
                         return AppFrameTransactionStep::Fault;
                     };
-                    self.build_cursor = Some(FrameBuildCursor::new(presentation_witness, std::mem::take(&mut self.deferred_actions)));
+                    self.build_cursor = Some(FrameBuildCursor::new(presentation_witness));
                     return AppFrameTransactionStep::Pending;
                 }
                 let Some(cursor) = self.build_cursor.as_mut() else { return AppFrameTransactionStep::Pending };
@@ -11422,18 +11465,18 @@ impl FrameTransaction {
                     }
                 };
                 if let Some(action) = action {
-                    let Some(partial) = self.after_chrome.as_mut() else {
+                    if self.after_chrome.is_none() {
                         runtime.record_frame_fault("frame input phase lost the retained chrome owner");
                         self.phase = AppFrameTransactionPhase::Terminal;
                         return AppFrameTransactionStep::Fault;
-                    };
+                    }
                     let Ok(action) = action.into_descriptor() else {
                         runtime.record_frame_fault("bounded frame input action failed materialization");
                         self.phase = AppFrameTransactionPhase::Terminal;
                         return AppFrameTransactionStep::Fault;
                     };
                     log_debug(&format!("[DEBUG] frame input action controller={} action={} args={}", action.controller_id, action.action, action.args.as_ref().map_or_else(|| "none".into(), |args| dsl::os_pack::json::to_json_string(args))));
-                    if let Err(_action) = partial.deferred_actions.try_push(action) {
+                    if let Err(_action) = app.frame_actions.try_push(action) {
                         runtime.record_frame_fault("frame input action credits exceeded");
                         self.phase = AppFrameTransactionPhase::Terminal;
                         return AppFrameTransactionStep::Fault;
@@ -11974,9 +12017,6 @@ impl FrameTransaction {
             self.scene_camera_cursor.close_step();
             return false;
         }
-        if self.deferred_actions.pop_front().is_some() {
-            return false;
-        }
         let Some(directives) = self.directives.as_mut() else { return true };
         if !directives.close_step() {
             return false;
@@ -12007,7 +12047,6 @@ impl FrameTransaction {
             && self.raster_uploads.is_none()
             && self.raster_rejected.is_none()
             && self.scene_camera_cursor.terminal_is_empty()
-            && self.deferred_actions.is_empty()
     }
 }
 
@@ -13142,7 +13181,7 @@ impl AppRuntime {
             let revision = mailbox.0.next_revision.fetch_add(1, Ordering::Relaxed);
             spawn_app_task(async move {
                 let result = load_wasm_plugins(&plugin_filter, &modules_root).await.map(|entries| filter_plugins(entries, &plugin_filter));
-                mailbox.0.finish(RuntimeCompletion { key: None, revision, requires_interaction: true, apply: RuntimeApply::PluginReload(Some(result)) });
+                mailbox.0.finish(RuntimeCompletion { key: None, revision, requires_interaction: true, restores_interaction: false, apply: RuntimeApply::PluginReload(Some(result)) });
             });
         }
         if !accepted {
@@ -13422,14 +13461,12 @@ impl AppRuntime {
                     return FrameBuildBoundaryStep::Fault("frame build resource cursor was not terminal-empty");
                 }
                 let Some(resource_input) = cursor.resource_input.take() else { return FrameBuildBoundaryStep::Fault("frame build lost resource input") };
-                let Some(deferred_actions) = cursor.deferred_actions.take() else { return FrameBuildBoundaryStep::Fault("frame build lost deferred action owners") };
                 let engine_packets = std::mem::take(&mut cursor.engine_packets);
                 return FrameBuildBoundaryStep::Complete(AppFrameAfterChrome {
                     resource_input: Some(resource_input),
                     upload_rejected: None,
                     draw_rejected: None,
                     engine_packets: Some(engine_packets),
-                    deferred_actions,
                     fullscreen: cursor.fullscreen.take(),
                     cursor_wake: cursor.cursor_wake.take(),
                     #[cfg(not(target_arch = "wasm32"))]
@@ -13449,7 +13486,6 @@ impl AppRuntime {
                 cursor.phase = FrameFinishPhase::Deferred;
             }
             FrameFinishPhase::Deferred => {
-                cursor.deferred_actions = Some(std::mem::take(&mut partial.deferred_actions));
                 cursor.flush_tutorial = !self.shell.tutorial_pending_document_ops.is_empty();
                 cursor.shell_maintenance = self.shell.chrome_maintenance_pending();
                 #[cfg(not(target_arch = "wasm32"))]
@@ -13529,22 +13565,30 @@ impl AppRuntime {
                 cursor.phase = FrameFinishPhase::Complete;
             }
             FrameFinishPhase::Complete => {
-                let Some(deferred_actions) = cursor.deferred_actions.take() else { return FrameFinishBoundaryStep::Fault("frame completion lost deferred action owners") };
-                let has_deferred = cursor.pump_sync || !deferred_actions.is_empty() || cursor.flush_tutorial || cursor.shell_maintenance;
+                let has_deferred = cursor.pump_sync || !self.frame_actions.is_empty() || cursor.flush_tutorial || cursor.shell_maintenance;
+                // 🧾️ A refusal here COSTS NOTHING any more: the ledger is the runtime's, so it simply
+                // stays put and the next frame that completes installs it.
                 if has_deferred && self.pending_frame_deferred.is_some() {
-                    cursor.deferred_actions = Some(deferred_actions);
                     return FrameFinishBoundaryStep::Fault("frame completion found an unclosed deferred owner");
                 }
                 let Some(input) = partial.resource_input.take() else {
-                    cursor.deferred_actions = Some(deferred_actions);
                     return FrameFinishBoundaryStep::Fault("frame completion lost resource input");
                 };
                 let Some(engine_packets) = partial.engine_packets.take() else {
                     partial.resource_input = Some(input);
-                    cursor.deferred_actions = Some(deferred_actions);
                     return FrameFinishBoundaryStep::Fault("frame completion lost engine packets");
                 };
                 if has_deferred {
+                    let deferred_actions = std::mem::take(&mut self.frame_actions);
+                    // 🩺️ Only a frame that actually carries a dispatchable action says so — the
+                    // tutorial/maintenance installs run several times a second and are not news.
+                    // Its ABSENCE after a `frame input action` line was the defect
+                    // `📓️wgpu-deferred-action-commit-2026-09-13.md` closes; a `frame input action`
+                    // now always has one of these behind it, however many builds were superseded in
+                    // between.
+                    if !deferred_actions.is_empty() {
+                        log_debug("[DEBUG] frame deferred install carries an action");
+                    }
                     self.pending_frame_deferred = Some(FrameDeferredCursor::new(deferred_actions, cursor.pump_sync, cursor.flush_tutorial, cursor.shell_maintenance, input.preview_generation, cancel));
                 }
                 return FrameFinishBoundaryStep::Complete(AppFrameBuild {
@@ -14014,6 +14058,7 @@ async fn boot_runtime(
         draw: DrawList::default(),
         overlay: DrawList::default(),
         pending_frame_deferred: None,
+        frame_actions: FrameActionOwners::default(),
         #[cfg(not(target_arch = "wasm32"))]
         pending_frame_maintenance_refusal: None,
         #[cfg(not(target_arch = "wasm32"))]

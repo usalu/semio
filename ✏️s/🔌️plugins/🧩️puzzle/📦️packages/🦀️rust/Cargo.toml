@@ -83,6 +83,9 @@ semio-s-artifact-puzzle-5d = { workspace = true, features = ["component-app-asse
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["component-guest"] }
+# ⏯️ `dyn_enum_close!` copies `PluginApp::tool_run_trace_delta`'s signature verbatim into the generated
+# impl HERE, so the domain-neutral tool-run types have to resolve in this crate too.
+semio-framework-tool-run = { workspace = true }
 
 [dev-dependencies]
 semio-framework-plugin = { workspace = true, features = ["component-guest", "artifact-app-testing"] }

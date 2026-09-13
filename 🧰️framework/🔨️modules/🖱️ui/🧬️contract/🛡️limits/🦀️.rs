@@ -149,6 +149,7 @@ fn component_text_bytes(component: &crate::Component) -> usize {
         TreeSection(props) => label_bytes(&props.label),
         TreeItem(props) => props.label.0.len() + props.description.as_deref().map_or(0, str::len),
         Image(props) => label_bytes(&props.alt),
+        Progress(props) => props.value_text.0.len(),
         Extension(props) => props.extension.len(),
         Separator(_) | Slider(_) | NumberStepper(_) | Ring(_) | IconSelect(_) | Tree(_) | Surface(_) => 0,
     }
@@ -165,6 +166,7 @@ fn component_is_finite(component: &crate::Component) -> bool {
         crate::Component::Slider(props) => [props.value, props.min, props.max, props.step].into_iter().all(f64::is_finite),
         crate::Component::NumberStepper(props) => [props.value, props.step].into_iter().all(f64::is_finite),
         crate::Component::Ring(props) => props.t.is_finite(),
+        crate::Component::Progress(props) => props.completed.is_finite() && props.total.is_none_or(f64::is_finite),
         crate::Component::Input(props) => [props.min, props.max, props.step].into_iter().flatten().all(|value| value.is_finite()),
         _ => true,
     }

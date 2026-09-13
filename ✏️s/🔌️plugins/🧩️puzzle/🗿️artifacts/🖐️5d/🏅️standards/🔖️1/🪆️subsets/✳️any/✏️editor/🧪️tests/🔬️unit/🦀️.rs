@@ -199,15 +199,6 @@ pub(crate) mod context {
             _ => None,
         })
     }
-
-    /// ⏳️ Finds one `WindowMeasure::Progress` leaf anywhere in a measure tree.
-    pub fn find_measure_progress<'a>(measures: &'a [WindowMeasure], progress_id: &str) -> Option<&'a WindowMeasure> {
-        measures.iter().find_map(|measure| match measure {
-            WindowMeasure::Progress { id, .. } if id == progress_id => Some(measure),
-            WindowMeasure::Group { children, .. } => find_measure_progress(children, progress_id),
-            _ => None,
-        })
-    }
 }
 
 
@@ -901,14 +892,13 @@ async fn set_fill_count_carries_a_large_count_and_retargets_the_planner() {
     assert_eq!(session.fill_requested_count(), 5_000, "the planner is retargeted, not merely projected onto");
 }
 
-/// ⏳️ The 5d fill progress row is the wrapped 3d session's own summary — same locked count, same
+/// ⏳️ The 5d fill cancel toggle reads the wrapped 3d session's own summary — same locked count, same
 /// requested count, same stage — and it disappears exactly when that session reports itself done.
 #[semio_framework_async_macros::async_test]
-async fn fill_progress_row_reflects_the_wrapped_session_summary() {
+async fn fill_cancel_toggle_reflects_the_wrapped_session_summary() {
     let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::default()).expect("admitted host axis");
     let idle = Puzzle5dPrecomputeSession::new();
-    assert!(idle.fill_progress().done, "a session with no scene has nothing to report");
-    assert!(crate::editor::puzzle5d::modes::edit::options::fill::fill_progress_measure(&idle, labels).is_none(), "a done session must not publish a progress row");
+    assert_eq!(crate::editor::puzzle5d::modes::edit::options::fill::fill_cancel_measure(&idle, labels).is_none(), idle.fill_progress().done, "the toggle exists exactly while the planner has work");
 
     let scene = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime { fill_count: 40, ..Default::default() }, active_utility: "fill".into() };
     let mut live = Puzzle5dPrecomputeSession::new();
@@ -916,18 +906,18 @@ async fn fill_progress_row_reflects_the_wrapped_session_summary() {
     live.set_fill_requested_count(40);
     live.precompute_step(8);
     let progress = live.fill_progress();
-    match crate::editor::puzzle5d::modes::edit::options::fill::fill_progress_measure(&live, labels) {
-        Some(WindowMeasure::Progress { id, completed, total, stage, cancel, loading, .. }) => {
-            assert!(!progress.done, "a published row implies the planner still has work");
-            assert_eq!(id, "puzzle5d-play-fill-progress");
-            assert_eq!(completed, progress.applied_count as f64);
-            assert_eq!(total, Some(progress.requested_count as f64));
-            assert_eq!(stage, Some(crate::editor::puzzle5d::terminology::puzzle5d_fill_stage_label(labels, progress.stage.as_str(), progress.stall_reason.as_deref())));
-            assert_eq!(cancel.map(|cancel| cancel.action), Some("cancelFillBuild".to_string()));
-            assert_eq!(loading, Some(true));
+    match crate::editor::puzzle5d::modes::edit::options::fill::fill_cancel_measure(&live, labels) {
+        Some(WindowMeasure::Toggle { id, label, text, pressed, on_change, .. }) => {
+            assert!(!progress.done, "a published toggle implies the planner still has work");
+            assert_eq!(id, "puzzle5d-play-fill-cancel");
+            assert_eq!(label.as_deref(), Some("Cancel fill"));
+            let stage = crate::editor::puzzle5d::terminology::puzzle5d_fill_stage_label(labels, progress.stage.as_str(), progress.stall_reason.as_deref());
+            assert_eq!(text, Some(format!("{stage} · {} / {} locked", progress.applied_count, progress.requested_count)));
+            assert!(!pressed);
+            assert_eq!(on_change.action, "cancelFillBuild");
         }
-        Some(other) => panic!("fill progress row must be a Progress measure, found {other:?}"),
-        None => assert!(progress.done, "a withheld row implies the planner is done"),
+        Some(other) => panic!("fill cancel must be a Toggle measure, found {other:?}"),
+        None => assert!(progress.done, "a withheld toggle implies the planner is done"),
     }
 }
 

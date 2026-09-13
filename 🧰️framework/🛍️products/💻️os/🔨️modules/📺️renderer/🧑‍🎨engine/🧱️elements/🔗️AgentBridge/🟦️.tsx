@@ -41,6 +41,9 @@ export const agentUiLabel = registerUiTranslationBundles({
             idle: { label: { normal: "Agent idle", beginner: "Agent idle" } },
             statusLabel: { label: { normal: "Agent status", beginner: "Agent status" } },
           },
+          chat: {
+            panelTitle: { label: { normal: "Chat", beginner: "Chat" } },
+          },
           approvals: {
             trigger: { label: { normal: "Open agent approvals", beginner: "Open agent approvals" } },
             title: { label: { normal: "Agent Approvals", beginner: "Agent Approvals" } },
@@ -74,6 +77,9 @@ export const agentUiLabel = registerUiTranslationBundles({
             working: { label: { normal: "Agent aktiv: {{label}}", beginner: "Agent aktiv: {{label}}" } },
             idle: { label: { normal: "Agent inaktiv", beginner: "Agent inaktiv" } },
             statusLabel: { label: { normal: "Agent-Status", beginner: "Agent-Status" } },
+          },
+          chat: {
+            panelTitle: { label: { normal: "Chat", beginner: "Chat" } },
           },
           approvals: {
             trigger: { label: { normal: "Agent-Freigaben öffnen", beginner: "Agent-Freigaben öffnen" } },

@@ -1052,6 +1052,14 @@ impl SurfaceSemanticCensusCursor {
                     SurfaceSemanticCensusStep::Complete
                 }
             }
+            Progress(props) => {
+                self.container += 1;
+                if self.container == 1 {
+                    progress(self.inline_text(&props.value_text.0))
+                } else {
+                    SurfaceSemanticCensusStep::Complete
+                }
+            }
             IconSelect(props) => {
                 let usage = match self.container {
                     0 => self.inline_text(&props.value),

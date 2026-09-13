@@ -1,0 +1,52 @@
+{
+  "why": "The World3d window mount law of a tool run trace: a scene whose `toolRunTrace` lane carries the delta pages below mounts exactly one instanced batch per resident (mesh, verdict) with the listed instance count, drawn through `meshesJson[mesh]`; `entity` subjects are counted in the `data-tool-run-*` counters but never drawn; instances marked `provisional` paint the dashed provisional outline. Pages are delivered cumulatively after the renderer's echoed cursor.",
+  "identity": { "id": { "appInstanceId": 1, "run": 9 }, "generation": 0, "baseRevision": "0008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8" },
+  "capacity": 64,
+  "compactFloor": 100,
+  "meshes": [
+    { "id": "quad", "data": { "positions": [0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0], "normals": [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1], "indices": [0, 1, 2, 0, 2, 3] } },
+    { "id": "tri", "data": { "positions": [0, 0, 0, 1, 0, 0, 0, 1, 0], "normals": [0, 0, 1, 0, 0, 1, 0, 0, 1], "indices": [0, 1, 2] } }
+  ],
+  "instances": [
+    { "id": "committed", "meshId": "quad", "position": [0, -4, 0] },
+    { "id": "provisional-a", "meshId": "tri", "position": [0, -8, 0], "provisional": true }
+  ],
+  "provisionalOutlines": 1,
+  "steps": [
+    {
+      "ops": [
+        { "op": "upsert", "key": 1, "verdict": "testing", "reason": 0, "subject": { "kind": "instance3d", "mesh": 0, "position": [1, 0, 0], "rotation": [0, 0, 0, 1], "scale": 1 } },
+        { "op": "upsert", "key": 2, "verdict": "success", "reason": 0, "subject": { "kind": "instance3d", "mesh": 0, "position": [2, 0, 0], "rotation": [0, 0, 0, 1], "scale": 1 } },
+        { "op": "upsert", "key": 3, "verdict": "success", "reason": 0, "subject": { "kind": "instance3d", "mesh": 0, "position": [3, 0, 0], "rotation": [0, 0.7071067811865476, 0, 0.7071067811865476], "scale": 0.5 } },
+        { "op": "upsert", "key": 4, "verdict": "warning", "reason": 1, "subject": { "kind": "instance3d", "mesh": 1, "position": [4, 0, 0], "rotation": [0, 0, 0, 1], "scale": 1 } },
+        { "op": "upsert", "key": 5, "verdict": "danger", "reason": 2, "subject": { "kind": "instance3d", "mesh": 1, "position": [5, 0, 0], "rotation": [0, 0, 0, 1], "scale": 1 } },
+        { "op": "upsert", "key": 6, "verdict": "danger", "reason": 2, "subject": { "kind": "instance3d", "mesh": 1, "position": [6, 0, 0], "rotation": [0, 0, 0, 1], "scale": 2 } },
+        { "op": "upsert", "key": 7, "verdict": "danger", "reason": 2, "subject": { "kind": "instance3d", "mesh": 0, "position": [7, 0, 0], "rotation": [0, 0, 0, 1], "scale": 1 } },
+        { "op": "upsert", "key": 8, "verdict": "success", "reason": 0, "subject": { "kind": "entity", "entity": 42 } }
+      ],
+      "batches": [
+        { "mesh": 0, "verdict": "testing", "count": 1 },
+        { "mesh": 0, "verdict": "success", "count": 2 },
+        { "mesh": 0, "verdict": "danger", "count": 1 },
+        { "mesh": 1, "verdict": "warning", "count": 1 },
+        { "mesh": 1, "verdict": "danger", "count": 2 }
+      ],
+      "counters": { "records": 8, "testing": 1, "success": 3, "warning": 1, "danger": 3 }
+    },
+    {
+      "ops": [
+        { "op": "upsert", "key": 1, "verdict": "success", "reason": 0, "subject": { "kind": "instance3d", "mesh": 0, "position": [1, 0, 0], "rotation": [0, 0, 0, 1], "scale": 1 } },
+        { "op": "retire", "key": 5 },
+        { "op": "upsert", "key": 9, "verdict": "testing", "reason": 0, "subject": { "kind": "instance3d", "mesh": 1, "position": [9, 0, 0], "rotation": [0, 0, 0, 1], "scale": 1 } }
+      ],
+      "batches": [
+        { "mesh": 0, "verdict": "success", "count": 3 },
+        { "mesh": 0, "verdict": "danger", "count": 1 },
+        { "mesh": 1, "verdict": "testing", "count": 1 },
+        { "mesh": 1, "verdict": "warning", "count": 1 },
+        { "mesh": 1, "verdict": "danger", "count": 1 }
+      ],
+      "counters": { "records": 8, "testing": 1, "success": 4, "warning": 1, "danger": 2 }
+    }
+  ]
+}

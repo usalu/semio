@@ -82,6 +82,8 @@ function componentTextBytes(component: Component): number {
       return utf8ByteLength(component.label) + (component.description?.length ? utf8ByteLength(component.description) : 0);
     case "image":
       return labelBytes(component.alt);
+    case "progress":
+      return utf8ByteLength(component.valueText);
     case "extension":
       return utf8ByteLength(component.extension);
     case "separator":
@@ -149,6 +151,8 @@ function componentIsFinite(component: Component): boolean {
       return [component.value, component.step].every(Number.isFinite);
     case "ring":
       return Number.isFinite(component.t);
+    case "progress":
+      return isFiniteOrUndefined(component.completed) && isFiniteOrUndefined(component.total);
     case "input":
       return isFiniteOrUndefined(component.min) && isFiniteOrUndefined(component.max) && isFiniteOrUndefined(component.step);
     default:

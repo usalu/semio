@@ -2,7 +2,9 @@
 //! terminology×locale combination is compile-checked by `semio_framework_plugin::app_labels!`
 //! (see ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND).
 
+use crate::standards::v1::subsets::any::schema::{FillRunCounter, FillRunReason, FillRunStage};
 use semio_framework_plugin::{AppLabels, LabelText, Locale, LocalizedLabel, Terminology};
+use semio_framework_tool_run::{ToolRunCounterDefinition, ToolRunReasonDefinition, ToolRunStageDefinition, ToolRunVerdict};
 
 //#region 🔖️Labels
 semio_framework_plugin::app_labels! {
@@ -22,25 +24,6 @@ semio_framework_plugin::app_labels! {
         window_main: native_en "Puzzle 3D", native_de "Puzzle 3D", reuse_en "Aggregator", reuse_de "Aggregator";
         example_concrete_forest: native_en "Concrete Forest", native_de "Betonwald", reuse_en "Abbau Aufbau", reuse_de "Abbau Aufbau";
         fill: native_en "Fill", native_de "Füllen", reuse_en "Fill", reuse_de "Füllen";
-        fill_progress: native_en "Fill progress", native_de "Füllfortschritt", reuse_en "Fill progress", reuse_de "Füllfortschritt";
-        fill_cancel: native_en "Cancel fill", native_de "Füllen abbrechen", reuse_en "Cancel fill", reuse_de "Füllen abbrechen";
-        fill_planned: native_en "planned", native_de "geplant", reuse_en "planned", reuse_de "geplant";
-        fill_stage_preparing: native_en "Preparing", native_de "Vorbereiten", reuse_en "Preparing", reuse_de "Vorbereiten";
-        fill_stage_selecting_target: native_en "Selecting vortex", native_de "Vortex wählen", reuse_en "Selecting connection point", reuse_de "Verbindungspunkt wählen";
-        fill_stage_selecting_candidate: native_en "Selecting object", native_de "Objekt wählen", reuse_en "Selecting building component", reuse_de "Baukomponente wählen";
-        fill_stage_testing_collision: native_en "Testing collision", native_de "Kollision prüfen", reuse_en "Testing collision", reuse_de "Kollision prüfen";
-        fill_stage_locking: native_en "Locking", native_de "Festsetzen", reuse_en "Locking", reuse_de "Festsetzen";
-        fill_stage_done: native_en "Done", native_de "Fertig", reuse_en "Done", reuse_de "Fertig";
-        fill_stage_stalled: native_en "Stalled", native_de "Angehalten", reuse_en "Stalled", reuse_de "Angehalten";
-        fill_stall_no_open_vortex: native_en "no open vortex", native_de "kein offener Vortex", reuse_en "no open connection point", reuse_de "kein offener Verbindungspunkt";
-        fill_stall_document_capacity: native_en "document capacity reached", native_de "Dokumentkapazität erreicht", reuse_en "document capacity reached", reuse_de "Dokumentkapazität erreicht";
-        fill_stall_no_compatible_kind: native_en "no compatible kind", native_de "keine passende Art", reuse_en "no compatible building component", reuse_de "keine passende Baukomponente";
-        fill_tested: native_en "tested", native_de "getestet", reuse_en "tested", reuse_de "getestet";
-        fill_locked: native_en "locked", native_de "festgesetzt", reuse_en "locked", reuse_de "festgesetzt";
-        fill_rejected: native_en "rejected", native_de "abgelehnt", reuse_en "rejected", reuse_de "abgelehnt";
-        fill_collision: native_en "collision", native_de "Kollision", reuse_en "collision", reuse_de "Kollision";
-        fill_requested: native_en "requested", native_de "angefordert", reuse_en "requested", reuse_de "angefordert";
-        fill_failed: native_en "Fill planning stopped — the background job failed", native_de "Füllplanung gestoppt — der Hintergrundauftrag ist fehlgeschlagen", reuse_en "Fill planning stopped — the background job failed", reuse_de "Füllplanung gestoppt — der Hintergrundauftrag ist fehlgeschlagen";
         count: native_en "Count", native_de "Anzahl", reuse_en "Count", reuse_de "Anzahl";
         brush: native_en "Brush", native_de "Pinsel", reuse_en "Brush", reuse_de "Pinsel";
         move_flag: native_en "Move", native_de "Verschieben", reuse_en "Move", reuse_de "Verschieben";
@@ -175,41 +158,65 @@ pub fn puzzle3d_localized_phrase(field: impl Fn(&Puzzle3dLabels) -> LabelText, e
 }
 //#endregion 🔖️Locale
 
-//#region 🔖️FillStage
-/// 🧭️ The user-facing caption for ONE fill-planner stage. The planner's own `stage` vocabulary
-/// (`FillProgressSummary::stage`, machine strings such as `prepare-spatial`/`test-collision`) is a wire
-/// identity, never UI text — this folds it onto the phases a person can act on and answers in both
-/// authored locales, so the viewport HUD and the progress measure read the same words. A stalled run
-/// reports the stall instead of the phase it froze in, because that is the only state that asks the
-/// user for a decision (see [`puzzle3d_fill_stall_reason_label`]).
-pub fn puzzle3d_fill_stage_label(labels: &Puzzle3dLabels, stage: &str, stall_reason: Option<&str>) -> String {
-    if let Some(reason) = stall_reason {
-        return format!("{} — {}", labels.fill_stage_stalled.as_str(), puzzle3d_fill_stall_reason_label(labels, reason));
-    }
-    match stage {
-        "select-target" => labels.fill_stage_selecting_target,
-        "prepare-candidates" | "select-candidate" => labels.fill_stage_selecting_candidate,
-        "construct-preview" | "query-broad-phase" | "test-collision" => labels.fill_stage_testing_collision,
-        "accept-candidate" => labels.fill_stage_locking,
-        "complete" => labels.fill_stage_done,
-        _ => labels.fill_stage_preparing,
-    }
-    .as_str()
-    .to_string()
+//#region 🔖️FillRun
+/// 🧮️ What one fill run counts its progress in: placed objects of the requested count.
+pub fn puzzle3d_fill_run_unit() -> LocalizedLabel {
+    LocalizedLabel::native("objects", "Objekte")
 }
 
-/// 🛑️ The user-facing reason a fill run stopped short of the requested count. An unknown reason is
-/// surfaced verbatim rather than swallowed: a visible machine token beats a silently wrong sentence,
-/// and it names exactly the string the planner has to grow a label for.
-pub fn puzzle3d_fill_stall_reason_label(labels: &Puzzle3dLabels, reason: &str) -> String {
-    match reason {
-        "no-open-vortex" => labels.fill_stall_no_open_vortex.as_str().to_string(),
-        "document-capacity" => labels.fill_stall_document_capacity.as_str().to_string(),
-        "no-compatible-kind" => labels.fill_stall_no_compatible_kind.as_str().to_string(),
-        other => other.to_string(),
-    }
+/// 🧭️ The fill run's stages, in `FillRunStage::ALL` order (`$defs.Puzzle3dFillRun`).
+pub fn puzzle3d_fill_run_stages() -> Vec<ToolRunStageDefinition> {
+    vec![
+        ToolRunStageDefinition { id: FillRunStage::Prepare.id().into(), label: LocalizedLabel::native("Preparing", "Vorbereiten") },
+        ToolRunStageDefinition { id: FillRunStage::Search.id().into(), label: LocalizedLabel::native("Choosing vortex and object", "Vortex und Objekt wählen") },
+        ToolRunStageDefinition { id: FillRunStage::Test.id().into(), label: LocalizedLabel::native("Testing collision", "Kollision prüfen") },
+        ToolRunStageDefinition { id: FillRunStage::Lock.id().into(), label: LocalizedLabel::native("Placing", "Platzieren") },
+        ToolRunStageDefinition { id: FillRunStage::Retract.id().into(), label: LocalizedLabel::native("Retracting", "Zurücknehmen") },
+    ]
 }
-//#endregion 🔖️FillStage
+
+/// 🔢️ The fill run's counters, in `FillRunCounter::ALL` order.
+pub fn puzzle3d_fill_run_counters() -> Vec<ToolRunCounterDefinition> {
+    vec![
+        ToolRunCounterDefinition { id: FillRunCounter::Tested.id().into(), label: LocalizedLabel::native("Tested", "Getestet") },
+        ToolRunCounterDefinition { id: FillRunCounter::Locked.id().into(), label: LocalizedLabel::native("Placed", "Platziert") },
+        ToolRunCounterDefinition { id: FillRunCounter::Collisions.id().into(), label: LocalizedLabel::native("Collisions", "Kollisionen") },
+        ToolRunCounterDefinition { id: FillRunCounter::Rejected.id().into(), label: LocalizedLabel::native("Rejected", "Abgelehnt") },
+    ]
+}
+
+/// 🏷️ Every fill run reason with its verdict and localized template, in `FillRunReason::ALL` order. Trace
+/// records render the template as is; steps substitute `{0}` with their first argument (the placement
+/// count, or the refused capacity).
+pub fn puzzle3d_fill_run_reasons() -> Vec<ToolRunReasonDefinition> {
+    let reason = |reason: FillRunReason, verdict: ToolRunVerdict, en: &str, de: &str| ToolRunReasonDefinition { code: reason.code(), id: reason.id().into(), verdict, template: LocalizedLabel::native(en, de) };
+    vec![
+        ToolRunReasonDefinition { code: FillRunReason::Fits.code(), id: FillRunReason::Fits.id().into(), verdict: ToolRunVerdict::Success, template: LocalizedLabel::native("Fits", "Passt") },
+        ToolRunReasonDefinition { code: FillRunReason::SolidOverlap.code(), id: FillRunReason::SolidOverlap.id().into(), verdict: ToolRunVerdict::Danger, template: LocalizedLabel::native("Collides with a placed object", "Kollidiert mit einem platzierten Objekt") },
+        ToolRunReasonDefinition { code: FillRunReason::OutsideTargetVolume.code(), id: FillRunReason::OutsideTargetVolume.id().into(), verdict: ToolRunVerdict::Warning, template: LocalizedLabel::native("Outside the target volume", "Außerhalb des Zielvolumens") },
+        reason(FillRunReason::MeshUnavailable, ToolRunVerdict::Warning, "Mesh geometry unavailable", "Mesh-Geometrie nicht verfügbar"),
+        reason(FillRunReason::MissingPreview, ToolRunVerdict::Warning, "Candidate pose missing", "Kandidatenpose fehlt"),
+        reason(FillRunReason::MissingTarget, ToolRunVerdict::Warning, "Target vortex missing", "Zielvortex fehlt"),
+        reason(FillRunReason::BroadPhaseEntryMissing, ToolRunVerdict::Warning, "Broad-phase entry missing", "Grobphasen-Eintrag fehlt"),
+        reason(FillRunReason::PlacedMeshUnavailable, ToolRunVerdict::Warning, "Mesh of a placed object unavailable", "Mesh eines platzierten Objekts nicht verfügbar"),
+        reason(FillRunReason::StaleSpatialQuery, ToolRunVerdict::Warning, "Spatial query outdated", "Räumliche Abfrage veraltet"),
+        reason(FillRunReason::PlacementKindMissing, ToolRunVerdict::Warning, "Object kind missing", "Objektart fehlt"),
+        reason(FillRunReason::PlacementVortexMissing, ToolRunVerdict::Warning, "Vortex missing", "Vortex fehlt"),
+        reason(FillRunReason::PlacementMeshMissing, ToolRunVerdict::Warning, "Placement mesh missing", "Platzierungs-Mesh fehlt"),
+        reason(FillRunReason::PlacementRejected, ToolRunVerdict::Warning, "Placement rejected", "Platzierung abgelehnt"),
+        reason(FillRunReason::PlacementStateMissing, ToolRunVerdict::Warning, "Placement state missing", "Platzierungszustand fehlt"),
+        reason(FillRunReason::PlacementSpatialStateMissing, ToolRunVerdict::Warning, "Spatial placement state missing", "Räumlicher Platzierungszustand fehlt"),
+        reason(FillRunReason::StaleSpatialMutation, ToolRunVerdict::Warning, "Spatial update outdated", "Räumliche Aktualisierung veraltet"),
+        reason(FillRunReason::Rejected, ToolRunVerdict::Warning, "Rejected", "Abgelehnt"),
+        reason(FillRunReason::NoOpenVortex, ToolRunVerdict::Warning, "Stopped after {0}: no open vortex", "Nach {0} angehalten: kein offener Vortex"),
+        reason(FillRunReason::NoCompatibleKind, ToolRunVerdict::Warning, "Stopped after {0}: no compatible kind", "Nach {0} angehalten: keine passende Art"),
+        reason(FillRunReason::NoFreePlacement, ToolRunVerdict::Warning, "Stopped after {0}: no free placement", "Nach {0} angehalten: kein freier Platz"),
+        reason(FillRunReason::DocumentCapacity, ToolRunVerdict::Warning, "Document capacity reached at {0}", "Dokumentkapazität bei {0} erreicht"),
+        reason(FillRunReason::RequestedReached, ToolRunVerdict::Success, "Placed all {0} requested objects", "Alle {0} angeforderten Objekte platziert"),
+        reason(FillRunReason::Retracted, ToolRunVerdict::Testing, "Retracted placements above the new count", "Platzierungen über der neuen Anzahl zurückgenommen"),
+    ]
+}
+//#endregion 🔖️FillRun
 
 //#region 🧪️Tests
 #[cfg(test)]

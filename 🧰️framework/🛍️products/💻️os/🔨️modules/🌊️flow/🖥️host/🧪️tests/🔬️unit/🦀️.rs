@@ -105,6 +105,82 @@ fn fixture_kind_infos_json() -> String {
 
 /// 🌿️ All 9 first-party flow extensions install into the shared registry and each contributes
 /// at least one evaluable neuron kind — procedural3d's flow graph can reach every extension.
+//#region 🔌️PortSides
+/// 🔌️ The catalogue-wide port-side law: one operator's INPUT ids and OUTPUT ids are disjoint,
+/// because `"{nodeId}@{portId}"` is the only public name a wire endpoint has. Driven over the LIVE
+/// first-party catalogue — every operator every shipped extension registers — so a new operator
+/// cannot reintroduce the ambiguity that made a press on `extrusion-axis`'s output `z` begin a wire
+/// from its INPUT `z`. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
+///
+/// @see `🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧫️fixtures/🔌️port-sides/🔣️.json`
+const PORT_SIDES_FIXTURE_JSON: &str = include_str!("../../../../🧠️neural/⚙️engine/🧫️fixtures/🔌️port-sides/🔣️.json");
+
+fn port_sides_fixture() -> serde_json::Value {
+    serde_json::from_str(PORT_SIDES_FIXTURE_JSON).expect("port sides fixture")
+}
+
+fn catalogue_channel_ids(operator: &serde_json::Value, side: &str) -> Vec<String> {
+    operator[side].as_array().map(|channels| channels.iter().filter_map(|channel| channel["name"].as_str().map(str::to_string)).collect()).unwrap_or_default()
+}
+
+#[test]
+fn no_operator_in_the_catalogue_declares_one_port_id_on_both_sides() {
+    let fixture = port_sides_fixture();
+    let wildcard = fixture["wildcardMarker"].as_str().expect("wildcardMarker");
+    let catalogue: serde_json::Value = serde_json::from_str(&fixture_kind_infos_json()).expect("neuron kind infos json");
+    let operators = catalogue.as_array().expect("neuron kind infos array");
+    assert!(operators.len() >= 100, "the first-party catalogue must be live, not a stub: {} operators", operators.len());
+    let mut checked = 0usize;
+    let mut offenders: Vec<String> = Vec::new();
+    for operator in operators {
+        let id = operator["id"].as_str().unwrap_or_default();
+        let inputs = catalogue_channel_ids(operator, "inputs");
+        let outputs = catalogue_channel_ids(operator, "outputs");
+        let both: Vec<String> = inputs.iter().filter(|input| input.as_str() != wildcard && outputs.contains(input)).cloned().collect();
+        if !both.is_empty() {
+            offenders.push(format!("{id}: {both:?}"));
+        }
+        checked += 1;
+    }
+    assert!(offenders.is_empty(), "these operators name one port id on both sides, so \"{{nodeId}}@{{portId}}\" is ambiguous for them: {offenders:#?}");
+    println!("[DEBUG] port-side law checked {checked} first-party operators");
+}
+
+#[test]
+fn every_named_port_side_row_is_the_catalogue_the_extensions_register() {
+    let fixture = port_sides_fixture();
+    let suffix = fixture["suffix"].as_str().expect("suffix");
+    let rows = fixture["rows"].as_array().expect("rows");
+    assert!(rows.len() >= 12, "the port-side law needs the collided families AND the controls");
+    let catalogue: serde_json::Value = serde_json::from_str(&fixture_kind_infos_json()).expect("neuron kind infos json");
+    let operators = catalogue.as_array().expect("neuron kind infos array");
+    for row in rows {
+        let id = row["operator"].as_str().expect("row operator");
+        let live = operators.iter().find(|operator| operator["id"].as_str() == Some(id)).unwrap_or_else(|| panic!("{id} is not in the live catalogue"));
+        let expected_inputs: Vec<String> = row["inputs"].as_array().expect("inputs").iter().filter_map(|name| name.as_str().map(str::to_string)).collect();
+        let expected_outputs: Vec<String> = row["outputs"].as_array().expect("outputs").iter().filter_map(|name| name.as_str().map(str::to_string)).collect();
+        assert_eq!(catalogue_channel_ids(live, "inputs"), expected_inputs, "{id} inputs");
+        assert_eq!(catalogue_channel_ids(live, "outputs"), expected_outputs, "{id} outputs");
+        for output in &expected_outputs {
+            if let Some(plain) = output.strip_suffix(suffix) {
+                assert!(expected_inputs.iter().any(|input| input == plain), "{id}: `{output}` carries the suffix, so `{plain}` must be one of its own inputs — the suffix is not decoration");
+            }
+        }
+    }
+}
+
+#[test]
+fn a_renamed_output_keeps_the_display_name_it_always_had() {
+    let catalogue: serde_json::Value = serde_json::from_str(&fixture_kind_infos_json()).expect("neuron kind infos json");
+    let operators = catalogue.as_array().expect("neuron kind infos array");
+    let vector = operators.iter().find(|operator| operator["id"].as_str() == Some("math.vector")).expect("math.vector");
+    let output = vector["outputs"].as_array().expect("outputs").iter().find(|channel| channel["name"].as_str() == Some("vectorOut")).expect("vectorOut");
+    assert_eq!(output["fullName"].as_str(), Some("Vector"), "the rename is an identity, not a label");
+    assert_eq!(output["abbreviation"].as_str(), Some("vec"));
+    assert_eq!(output["code"].as_str(), Some("VE"));
+}
+//#endregion 🔌️PortSides
+
 #[test]
 fn fixture_kind_infos_json_covers_every_first_party_extension() {
     // 🧊️ Untyped JSON on purpose: deserializing into `NeuronKindInfo` (= `neural::OperatorInfo`)
@@ -319,6 +395,7 @@ fn flow_eval_session_retains_baseline_across_ephemeral_hosts() {
     let pending = replay.pending_eval_widget_ids();
     assert!(pending.contains(&"add".to_string()));
     assert!(!pending.contains(&"slider".to_string()));
+    session.retire_cold();
     replay.retire_cold();
     host.retire_cold();
 }
@@ -329,7 +406,11 @@ fn flow_eval_session_seeds_its_retained_neural_cache() {
     let expected = Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(42.0)));
     let output_json = crate::os_pack::json::to_json_string(&expected);
     session.seed_node_cache(17, &output_json).unwrap();
-    assert_eq!(session.neural_cache().get(17), Some(expected));
+    let seeded = session.neural_cache().get(17);
+    assert_eq!(seeded, Some(expected.clone()));
+    seeded.retire_cold();
+    expected.retire_cold();
+    session.retire_cold();
 }
 
 /// 🧵️ Builds a two-computable-node chain (`add` -> `pass`, replacing `add`'s direct link to
@@ -392,6 +473,7 @@ fn flow_eval_session_sync_and_tick_state_machine() {
     assert!(session.pending(), "the in-flight chain is still the one that will pick up 30");
     while session.tick(&mut host) {}
     assert_eq!(host.preview_text(), "30", "converges on the latest value, not the superseded intermediate one");
+    session.retire_cold();
     host.retire_cold();
 }
 
@@ -671,6 +753,7 @@ fn collect_live_geometry_handles_includes_input_channels() {
     let channels = EvalChannels { outputs, inputs };
     let handles = collect_live_geometry_handles_from_channels(&channels);
     assert_eq!(handles, vec![String::from("solid-box")]);
+    channels.retire_cold();
 }
 
 #[test]
@@ -700,6 +783,7 @@ fn collect_live_geometry_handles_traverses_nested_dictionaries() {
     outputs.insert("nested".into(), Dictionary::new().insert("child", NeuralValue::Dictionary(Dictionary::with_schema("face").insert("handle", NeuralValue::Atom(Atom::String("face-2".into()))))));
     let handles = collect_live_geometry_handles(&outputs);
     assert_eq!(handles, vec![String::from("face-2"), String::from("solid-1")]);
+    outputs.retire_cold();
 }
 
 #[test]
@@ -711,6 +795,7 @@ fn collect_live_drawing_handles_traverses_list_values() {
     );
     let channels = EvalChannels { outputs, inputs: BTreeMap::new() };
     assert_eq!(collect_live_drawing_handles_from_channels(&channels), vec![String::from("drawing-2")]);
+    channels.retire_cold();
 }
 
 #[test]
@@ -730,6 +815,7 @@ fn preview_text_formats_geometry_as_tree_summary() {
     let content = dag_preview_content_from_dict(&dict);
     assert!(matches!(content, DagPreviewContent::Tree { .. }));
     assert_eq!(preview_content_summary(&content), "{1 keys}");
+    dict.retire_cold();
 }
 
 #[test]
@@ -739,6 +825,7 @@ fn preview_scalar_content_from_number_dict() {
         dag_preview_content_from_dict(&dict),
         DagPreviewContent::Scalar { text } if text == "3"
     ));
+    dict.retire_cold();
 }
 
 #[test]
@@ -751,6 +838,7 @@ fn image_input_seed_and_preview_content() {
     assert!(matches!(node.kind, DagNodeKind::Image { .. }));
     let seeds = host.build_seeds();
     assert_eq!(seeds.get("image").and_then(|d| d.get("image")).and_then(|v| v.as_dictionary()).and_then(|d| d.get("dataUrl")).and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some(png));
+    seeds.retire_cold();
     host.retire_cold();
 }
 
@@ -875,6 +963,7 @@ fn fixture_json_round_trip() {
     let json = host.fixture_json().unwrap();
     let parsed = FlowHost::parse_fixture_json(&json).unwrap();
     assert_eq!(parsed.schema, "flow.fixture");
+    parsed.retire_cold();
     host.retire_cold();
 }
 
@@ -891,6 +980,10 @@ fn flow_document_tree_is_shakable() {
     seeds.insert("slider".into(), channel_output("number", Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(3.0)))));
     let channels = evaluator.evaluate_channels_with(&document.tree, &seeds, &host.kind_infos, &dispatch).unwrap();
     assert_eq!(channels.outputs.get("add").and_then(|d| d.get("sum")).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
+    channels.retire_cold();
+    seeds.retire_cold();
+    registry.retire_cold();
+    document.retire_cold();
     host.retire_cold();
 }
 
@@ -936,6 +1029,99 @@ fn flow_host_enables_minimap_widget_on_dag() {
     assert!(raw.get("minimapWidget").is_some());
     host.retire_cold();
 }
+
+//#region 📷️CameraAuthority
+/// 📷️ The SURFACE half of the node-graph camera-fit law. The geometry half
+/// (`♾️infinite/🖼️canvas/🧪️tests/📷️camera-fit/🦀️.rs` and the renderer's TypeScript twin) pins WHICH
+/// camera a fit computes; these rows pin that the surface actually publishes it. A flow surface
+/// carries two camera copies — `FlowHost::fixture.camera`, the authority every projection and every
+/// `nodeGraphViewport` publication reads, and `DagHost::fixture.camera`, the derived copy the paint
+/// reads — and the wgpu `Fit graph` control published the first while the fit had only landed on the
+/// second. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
+///
+/// @see `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🧫️fixtures/📷️camera-fit/🔣️.json` — `surfaceRows`
+const CAMERA_FIT_FIXTURE_JSON: &str = include_str!("../../../../♾️infinite/🖼️canvas/🧫️fixtures/📷️camera-fit/🔣️.json");
+
+/// 🕸️ The hexagonal mushroom column's own graph, laid out the way the shipped example lays it out —
+/// the graph whose nodes sit at negative surface x, which is what made the stale publication visible.
+fn camera_law_column_host() -> FlowHost {
+    let mut host = host_with_test_bridge();
+    let mut layout = crate::OrderedMap::new();
+    for (id, x, y) in [("height", -197.19, -102.70), ("radius", -156.03, -177.33), ("sides", -156.43, -155.28), ("profile", -64.49, -163.40), ("extrusion-axis", -65.26, -116.45), ("extrude", 34.84, -154.18)] {
+        layout.insert(id.to_string(), WidgetLayout { x, y });
+    }
+    host.replace_fixture(FlowFixture {
+        schema: "flow.fixture".into(),
+        camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
+        widgets: vec![
+            Widget::InputSlider { id: "height".into(), label: "Column Height".into(), value: 6.0, min: 0.0, max: 10.0, step: 0.5 },
+            Widget::Neuron { id: "extrusion-axis".into(), neuron_kind: "math.vector".into(), params: Dictionary::new(), input_ports: vec![], output_ports: vec![], preview: false },
+            Widget::Neuron { id: "extrude".into(), neuron_kind: "math.add".into(), params: Dictionary::new(), input_ports: vec![], output_ports: vec![], preview: true },
+        ],
+        synapses: vec![],
+        layout,
+    });
+    host
+}
+
+fn camera_fit_surface_rows() -> Vec<serde_json::Value> {
+    let document: serde_json::Value = serde_json::from_str(CAMERA_FIT_FIXTURE_JSON).expect("camera fit fixture");
+    document["surfaceRows"].as_array().expect("surfaceRows").clone()
+}
+
+#[test]
+fn a_fitted_flow_surface_publishes_the_camera_it_computed() {
+    let rows = camera_fit_surface_rows();
+    assert!(rows.len() >= 4, "the surface half of the camera-fit law needs more than a happy path");
+    for row in &rows {
+        let name = row["name"].as_str().expect("row name");
+        let width = row["viewport"]["width"].as_u64().expect("width") as u32;
+        let height = row["viewport"]["height"].as_u64().expect("height") as u32;
+        let mut host = camera_law_column_host();
+        host.set_viewport(width, height, 1.0);
+        host.set_camera(row["camera"]["x"].as_f64().expect("x"), row["camera"]["y"].as_f64().expect("y"), row["camera"]["zoom"].as_f64().expect("zoom"));
+        let before = host.camera();
+
+        let fitted = host.fit_camera_to_content();
+        assert_eq!(fitted, row["expect"]["fits"].as_bool().expect("fits"), "{name}: the fit must report whether it framed anything");
+        let published = host.camera();
+        assert_ne!(published, before, "{name}: a fit that reports success must move the published camera off the pre-fit one");
+
+        let painted = [host.dag.fixture.camera.x, host.dag.fixture.camera.y, host.dag.fixture.camera.zoom];
+        if row["expect"]["publishedEqualsPainted"].as_bool().unwrap_or(false) {
+            assert_eq!(published, painted, "{name}: the published camera and the painted camera are one camera");
+        }
+        if row["expect"]["publishedEqualsFitRule"].as_bool().unwrap_or(false) {
+            let content = host.dag.content_world_bounds().expect("the column graph has content");
+            let rule = canvas::camera::fit_camera(&content, &Viewport { width, height, dpr: 1.0 }, canvas::camera::CONTENT_FIT_PADDING_PX);
+            assert_eq!(published, [rule.x, rule.y, rule.zoom], "{name}: the published camera is the shared fit rule's answer, not a neighbouring copy");
+        }
+        if let Some(expected) = row["expect"]["coverageAfterFit"].as_f64() {
+            assert!((host.dag.camera_content_coverage() - expected).abs() <= 1e-9, "{name}: a fitted camera frames the whole graph");
+        }
+        if row["expect"]["idempotent"].as_bool().unwrap_or(false) {
+            host.fit_camera_to_content();
+            assert_eq!(host.camera(), published, "{name}: fitting twice must not drift the camera");
+        }
+        host.retire_cold();
+    }
+}
+
+#[test]
+fn a_flow_surface_projects_screen_points_with_the_camera_it_published() {
+    let mut host = camera_law_column_host();
+    host.set_viewport(483, 814, 1.0);
+    host.set_camera(94.75581571737445, -97.50833134679668, 1.7844325616011099);
+    assert!(host.fit_camera_to_content());
+    let published = host.camera();
+    let content = host.dag.content_world_bounds().expect("the column graph has content");
+    let rule = canvas::camera::fit_camera(&content, &Viewport { width: 483, height: 814, dpr: 1.0 }, canvas::camera::CONTENT_FIT_PADDING_PX);
+    let centre = host.world_from_screen(483.0 / 2.0, 814.0 / 2.0);
+    assert!((centre.0 - rule.x).abs() <= 1e-6 && (centre.1 - rule.y).abs() <= 1e-6, "the viewport centre must project through the FITTED camera, not through the one the document shipped with");
+    assert_eq!(published, [rule.x, rule.y, rule.zoom]);
+    host.retire_cold();
+}
+//#endregion 📷️CameraAuthority
 
 #[test]
 fn replace_fixture_preserves_kind_infos_and_named_input_ports() {
@@ -1132,17 +1318,30 @@ async fn undo_redo_add_widget() {
 
     let envelope: FlowEnvelope = create_document_envelope(FLOW_DOCUMENT_SCHEMA, "test", fixture_before, None);
     let mut store = FlowStore::new(envelope).await.expect("valid flow store fixture");
+    // 🔐️ `ArtifactStore::new` installs NO owner catalog, and `reserve_edit_history_slot` refuses every
+    // `Apply` without one — `edit history insertion requires its exact mutation retirement factory`.
+    // The refusal then drops the replayed projection on the error path, so the FIRST thing this law
+    // saw was `ordered-map root must be explicitly retired before drop` from inside `apply_command`,
+    // never the validation that caused it. The flow host installs the same catalog on its own history
+    // store (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    store.install_document_store_owners_exact(FlowFixture::member_store_owners());
     store.dispatch(ArtifactCommand::Apply { mutations: operations, description: None }).await.expect("apply add-widget operations");
-    assert_eq!(store.snapshot().expect("projection").widgets.len(), count_before + 1);
+    let applied = store.snapshot().expect("projection");
+    assert_eq!(applied.widgets.len(), count_before + 1);
+    applied.retire_cold();
 
     store.dispatch(ArtifactCommand::Undo).await.expect("undo");
     let after_undo = store.snapshot().expect("projection");
     assert_eq!(after_undo.widgets.len(), count_before);
     assert!(!after_undo.widgets.iter().any(|w| widget_id_for(w) == id));
+    after_undo.retire_cold();
 
     store.dispatch(ArtifactCommand::Redo).await.expect("redo");
     let after_redo = store.snapshot().expect("projection");
     assert!(after_redo.widgets.iter().any(|w| widget_id_for(w) == id));
+    after_redo.retire_cold();
+    semio_framework_artifact_flow_flow::retire_flow_store_cold(store);
+    host.retire_cold();
 }
 
 #[test]
@@ -1196,7 +1395,8 @@ fn test_dictionary_merge_bridge(kind: &str, input: &Dictionary) -> Result<Dictio
     let mut merged = Dictionary::with_schema("dictionary");
     for index in indices {
         let slot = items.get(&index.to_string()).and_then(|value| value.as_dictionary()).ok_or_else(|| EvalError::MissingInput(index.to_string()))?;
-        merged = merged.merge(slot);
+        let next = merged.merge(slot);
+        std::mem::replace(&mut merged, next).retire_cold();
     }
     Ok(channel_output("dictionary", merged))
 }
@@ -1233,7 +1433,7 @@ fn variadic_merge_evaluates_port_routed_inputs() {
         ..Default::default()
     }]));
     host.previous_snapshot = None;
-    host.outputs.clear();
+    std::mem::take(&mut host.outputs).retire_cold();
     host.evaluate_internal();
     let preview = host
         .fixture
@@ -1656,11 +1856,11 @@ fn node_drag_proximity_skips_wired_cut_inputs_in_flow() {
     use canvas::Point;
     let mut host = FlowHost::default();
     host.set_viewport(1280, 800, 1.0);
-    host.fixture.widgets = vec![
+    host.fixture.replace_widgets(vec![
         Widget::Neuron { id: "sphere".into(), neuron_kind: "brep.prim3d.sphere".into(), params: Dictionary::new(), input_ports: vec![], output_ports: vec![], preview: false },
         Widget::Neuron { id: "torus".into(), neuron_kind: "brep.prim3d.torus".into(), params: Dictionary::new(), input_ports: vec![], output_ports: vec![], preview: false },
         Widget::Neuron { id: "cut".into(), neuron_kind: "brep.bool.cut".into(), params: Dictionary::new(), input_ports: vec!["a".into(), "b".into()], output_ports: vec![], preview: true },
-    ];
+    ]);
     host.fixture.synapses = vec![
         SynapseSpec { id: "e1".into(), from: "sphere".into(), to: "cut".into(), from_port: "solid".into(), to_port: "a".into() },
         SynapseSpec { id: "e2".into(), from: "torus".into(), to: "cut".into(), from_port: "solid".into(), to_port: "b".into() },
@@ -1669,7 +1869,7 @@ fn node_drag_proximity_skips_wired_cut_inputs_in_flow() {
     host.fixture.layout.insert("torus".into(), WidgetLayout { x: 0.0, y: 60.0 });
     host.fixture.layout.insert("cut".into(), WidgetLayout { x: 240.0, y: 0.0 });
     let solid_out = vec![InputSpec::named("S", "Sld", "solid", "Solid")];
-    host.set_neuron_kind_infos_json(&crate::os_pack::json::to_json_string(&vec![
+    host.set_neuron_kind_infos_json(&kind_infos_json(vec![
         NeuronKindInfo {
             id: "brep.prim3d.sphere".into(),
             extension: "brep".into(),
@@ -1726,11 +1926,11 @@ fn node_drag_proximity_skips_wired_cut_inputs_in_flow() {
 #[test]
 fn dag_bridge_keeps_same_named_brep_input_and_output_distinct() {
     let mut host = FlowHost::default();
-    host.fixture.widgets = vec![
+    host.fixture.replace_widgets(vec![
         Widget::Neuron { id: "extrude".into(), neuron_kind: "brep.solid.extrude".into(), params: Dictionary::new(), input_ports: vec!["wire".into(), "vector".into()], output_ports: vec![], preview: true },
         Widget::Neuron { id: "brep".into(), neuron_kind: "brep.brep".into(), params: Dictionary::new(), input_ports: vec!["brep".into(), "vertex".into(), "edge".into(), "face".into()], output_ports: vec![], preview: true },
         Widget::Neuron { id: "get".into(), neuron_kind: "list.get".into(), params: Dictionary::new(), input_ports: vec!["list".into(), "index".into(), "wrap".into()], output_ports: vec!["0".into()], preview: true },
-    ];
+    ]);
     host.fixture.synapses = vec![
         SynapseSpec { id: "e112".into(), from: "extrude".into(), to: "brep".into(), from_port: "solid".into(), to_port: "brep".into() },
         SynapseSpec { id: "e113".into(), from: "brep".into(), to: "get".into(), from_port: "brep".into(), to_port: "list".into() },
@@ -1738,7 +1938,7 @@ fn dag_bridge_keeps_same_named_brep_input_and_output_distinct() {
     host.fixture.layout.insert("extrude".into(), WidgetLayout { x: 0.0, y: 0.0 });
     host.fixture.layout.insert("brep".into(), WidgetLayout { x: 200.0, y: 0.0 });
     host.fixture.layout.insert("get".into(), WidgetLayout { x: 400.0, y: 0.0 });
-    host.set_neuron_kind_infos_json(&crate::os_pack::json::to_json_string(&vec![
+    host.set_neuron_kind_infos_json(&kind_infos_json(vec![
         NeuronKindInfo {
             id: "brep.solid.extrude".into(),
             extension: "brep".into(),
@@ -1951,6 +2151,7 @@ fn cluster_ports_from_contract() {
     assert_eq!(outputs.len(), 1);
     assert_eq!(inputs[0].id, "a");
     assert_eq!(outputs[0].id, "sum");
+    widget.retire_cold();
 }
 
 #[test]
@@ -1990,6 +2191,7 @@ fn collapse_uses_variable_name_as_cluster_input_port() {
     assert!(inputs.iter().any(|port| port.name == "width"));
     host.explode_cluster(&cluster_id).unwrap();
     assert!(host.fixture.widgets.iter().any(|widget| matches!(widget, Widget::Variable { name, .. } if name == "width")));
+    cluster.retire_cold();
     host.retire_cold();
 }
 
@@ -2058,7 +2260,7 @@ fn rectangle_extrude_fixture_port_labels_follow_draw_lod() {
     { "id": "e2", "from": "height", "to": "rect", "fromPort": "number", "toPort": "height" },
     { "id": "e3", "from": "rect", "to": "extrude", "fromPort": "wire", "toPort": "wire" },
     { "id": "e4", "from": "distance", "to": "vector", "fromPort": "number", "toPort": "z" },
-    { "id": "e5", "from": "vector", "to": "extrude", "fromPort": "vector", "toPort": "vector" },
+    { "id": "e5", "from": "vector", "to": "extrude", "fromPort": "vectorOut", "toPort": "vector" },
     { "id": "e6", "from": "extrude", "to": "volume", "fromPort": "solid", "toPort": "geometry" }
   ],
   "layout": {
@@ -2093,6 +2295,8 @@ fn rectangle_extrude_fixture_port_labels_follow_draw_lod() {
     let micro = port_texts("micro");
     assert!(micro.iter().any(|text| text.ends_with("RectangleWire")), "micro ports: {micro:?}");
     assert!(micro.iter().any(|text| text.ends_with("ExtrudedSolid")), "micro ports: {micro:?}");
+    drop(port_texts);
+    host.retire_cold();
 }
 
 #[test]
@@ -2146,7 +2350,7 @@ fn rectangle_extrude_fixture_evaluates_solid_output() {
     { "id": "e2", "from": "height", "to": "rect", "fromPort": "number", "toPort": "height" },
     { "id": "e3", "from": "rect", "to": "extrude", "fromPort": "wire", "toPort": "wire" },
     { "id": "e4", "from": "distance", "to": "vector", "fromPort": "number", "toPort": "z" },
-    { "id": "e5", "from": "vector", "to": "extrude", "fromPort": "vector", "toPort": "vector" },
+    { "id": "e5", "from": "vector", "to": "extrude", "fromPort": "vectorOut", "toPort": "vector" },
     { "id": "e6", "from": "extrude", "to": "volume", "fromPort": "solid", "toPort": "geometry" }
   ],
   "layout": {
@@ -2192,7 +2396,7 @@ fn hexagonal_mushroom_fixture_reports_extruded_solid_output() {
     { "id": "e2", "from": "radius", "to": "profile", "fromPort": "number", "toPort": "radius" },
     { "id": "e3", "from": "sides", "to": "profile", "fromPort": "number", "toPort": "sides" },
     { "id": "e4", "from": "profile", "to": "extrude", "fromPort": "wire", "toPort": "wire" },
-    { "id": "e5", "from": "extrusion-axis", "to": "extrude", "fromPort": "vector", "toPort": "vector" },
+    { "id": "e5", "from": "extrusion-axis", "to": "extrude", "fromPort": "vectorOut", "toPort": "vector" },
     { "id": "e6", "from": "extrude", "to": "column-preview", "fromPort": "solid", "toPort": "" }
   ],
   "layout": {

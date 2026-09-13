@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/energy/model/config/schema.json",
+  "title": "EnergyModelConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["zoneTimestepMinutes", "systemTimestepMinutes", "warmupDays"],
+  "properties": {
+    "zoneTimestepMinutes": { "type": "integer", "minimum": 1, "maximum": 60, "default": 60, "x-semio-state": "config" },
+    "systemTimestepMinutes": { "type": "integer", "minimum": 1, "maximum": 60, "default": 60, "x-semio-state": "config" },
+    "warmupDays": { "type": "integer", "minimum": 0, "maximum": 365, "default": 7, "x-semio-state": "config" }
+  },
+  "$defs": {
+    "EnergyModelConfigMutation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mutation", "payload"],
+          "properties": {
+            "mutation": { "const": "changeSimulationSettings" },
+            "payload": { "$ref": "#/$defs/ChangeSimulationSettings" }
+          }
+        }
+      ]
+    },
+    "ChangeSimulationSettings": {
+      "type": "object",
+      "additionalProperties": false,
+      "x-semio-kind": "change-simulation-settings",
+      "required": ["zoneTimestepMinutes", "systemTimestepMinutes", "warmupDays"],
+      "properties": {
+        "zoneTimestepMinutes": { "type": "integer", "minimum": 1, "maximum": 60 },
+        "systemTimestepMinutes": { "type": "integer", "minimum": 1, "maximum": 60 },
+        "warmupDays": { "type": "integer", "minimum": 0, "maximum": 365 }
+      }
+    }
+  }
+}

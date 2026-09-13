@@ -5,10 +5,9 @@ message Puzzle2dWindowConfig {
   double camera_y = 2;
   double camera_zoom = 3;
   string lod_mode = 4;
-  uint32 fill_count = 5;
-  bool grid_snap_enabled = 6;
-  double grid_factor = 7;
-  double suggestion_offset = 8;
+  bool grid_snap_enabled = 5;
+  double grid_factor = 6;
+  double suggestion_offset = 7;
 }
 message Puzzle2dWindowTransient {
   string engagement_input = 1;

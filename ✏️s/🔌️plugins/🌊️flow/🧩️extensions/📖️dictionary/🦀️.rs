@@ -19,7 +19,7 @@ pub struct Unpack;
 
 impl Operator for Unpack {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(channel_output("dictionary", read_dict(input, "dictionary")?.clone()))
+        Ok(channel_output("dictionaryOut", read_dict(input, "dictionary")?.clone()))
     }
 }
 // #endregion 🔖️Unpack
@@ -49,7 +49,7 @@ impl Operator for Set {
         let dict = read_dict(input, "dictionary")?;
         let key = read_channel_text(input, "key")?;
         let value = input.get("value").cloned().ok_or_else(|| EvalError::MissingInput("value".into()))?;
-        Ok(channel_output("dictionary", dict.clone().insert(key, value)))
+        Ok(channel_output("dictionaryOut", dict.clone().insert(key, value)))
     }
 }
 // #endregion 🔖️Set
@@ -62,7 +62,7 @@ impl Operator for Remove {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let dict = read_dict(input, "dictionary")?;
         let key = read_channel_text(input, "key")?;
-        Ok(channel_output("dictionary", remove_key(dict, &key)))
+        Ok(channel_output("dictionaryOut", remove_key(dict, &key)))
     }
 }
 // #endregion 🔖️Remove
@@ -183,7 +183,7 @@ pub fn register(registry: &mut Registry) {
     register_simple(registry, info("dictionary.pack", "Pack", "Wraps input as a dictionary", vec![ChannelSpec::wildcard()], ChannelSpec::named("D", "Dic", "dictionary", "PackedDictionary")), Pack, vec![], &["dictionary"]);
     register_simple(
         registry,
-        info("dictionary.unpack", "Unpack", "Forwards a dictionary", vec![dict_channel("dictionary", "dictionary.unpack")], ChannelSpec::named("D", "Dic", "dictionary", "UnpackedDictionary")),
+        info("dictionary.unpack", "Unpack", "Forwards a dictionary", vec![dict_channel("dictionary", "dictionary.unpack")], ChannelSpec::named("D", "Dic", "dictionaryOut", "UnpackedDictionary")),
         Unpack,
         vec!["dictionary"],
         &["dictionary"],
@@ -202,7 +202,7 @@ pub fn register(registry: &mut Registry) {
             "Set",
             "Inserts or replaces a key",
             vec![dict_channel("dictionary", "dictionary.set"), text_channel("key", "dictionary.set"), ChannelSpec::any("value")],
-            ChannelSpec::named("D", "Dic", "dictionary", "UpdatedDictionary"),
+            ChannelSpec::named("D", "Dic", "dictionaryOut", "UpdatedDictionary"),
         ),
         Set,
         vec![],
@@ -210,7 +210,7 @@ pub fn register(registry: &mut Registry) {
     );
     register_simple(
         registry,
-        info("dictionary.remove", "Remove", "Removes a key", vec![dict_channel("dictionary", "dictionary.remove"), text_channel("key", "dictionary.remove")], ChannelSpec::named("D", "Dic", "dictionary", "ReducedDictionary")),
+        info("dictionary.remove", "Remove", "Removes a key", vec![dict_channel("dictionary", "dictionary.remove"), text_channel("key", "dictionary.remove")], ChannelSpec::named("D", "Dic", "dictionaryOut", "ReducedDictionary")),
         Remove,
         vec!["dictionary", "text"],
         &["dictionary"],

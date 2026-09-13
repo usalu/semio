@@ -3,4 +3,5 @@ package semio.app.puzzle.puzzle2d;
 message Puzzle2dConfig {
   map<string, double> node_kind_weights = 1;
   map<string, double> handle_kind_weights = 2;
+  uint32 fill_count = 3;
 }

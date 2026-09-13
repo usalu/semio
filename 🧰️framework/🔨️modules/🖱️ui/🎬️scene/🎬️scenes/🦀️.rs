@@ -175,10 +175,62 @@ pub struct Canvas2dScene {
     pub layers_json: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub snapshot: Option<crate::Canvas2dSnapshotLease>,
+    /// ⏯️ The base64url `ToolRunTraceDelta` paged to this window — the 2d twin of
+    /// [`World3dScene::tool_run_trace`], carried outside the doc as [`Canvas2dSceneLane::ToolRunTrace`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tool_run_trace: Option<String>,
+    /// 🚚️ The spine's lane manifest — see [`World3dScene::lanes`].
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub lanes: Vec<SceneLaneRef>,
 }
+
+impl Canvas2dScene {
+    /** @emoji 🖼️ Builds a canvas-2d scene with every optional extension unset. */
+    pub fn base(camera_x: f64, camera_y: f64, zoom: f64, layers_json: String) -> Self {
+        Self { camera_x, camera_y, zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() }
+    }
+}
+
+scene_pack_wire!(Canvas2dScenePack, Canvas2dScene {
+    camera_x: f64,
+    camera_y: f64,
+    zoom: f64,
+    layers_json: String,
+    snapshot: Option<crate::Canvas2dSnapshotLease>,
+    tool_run_trace: Option<String>,
+    #[serde(default)]
+    lanes: Vec<SceneLaneRef>,
+});
 
 impl SceneDoc for Canvas2dScene {
     const SCHEMA: &'static str = "canvas-2d@1";
+
+    fn encode_pack(&self) -> Result<Vec<u8>, crate::pack::PackError> {
+        crate::pack::to_bytes(&Canvas2dScenePack::from(self))
+    }
+
+    fn decode_pack(bytes: &[u8]) -> Result<Self, crate::pack::PackError> {
+        crate::pack::from_bytes::<Canvas2dScenePack>(bytes).map(Into::into)
+    }
+
+    fn split_lanes(&self) -> (Self, Vec<SceneLanePayload>) {
+        let mut spine = self.clone();
+        let mut lanes = Vec::new();
+        let mut refs = Vec::new();
+        for lane in Canvas2dSceneLane::ALL {
+            let Some(payload) = lane.take(&mut spine) else { continue };
+            refs.push(SceneLaneRef { lane: lane.name().to_string(), bytes: payload.len() as u32, hash: scene_lane_hash(&payload) });
+            lanes.push(SceneLanePayload { key: lane.body_key(), payload });
+        }
+        spine.lanes = refs;
+        (spine, lanes)
+    }
+
+    fn merge_lane(&mut self, key: &str, payload: String) -> bool {
+        let Some(lane) = Canvas2dSceneLane::from_body_key(key) else { return false };
+        lane.put(self, payload);
+        true
+    }
 }
 
 impl ToValue for Canvas2dScene {
@@ -189,6 +241,8 @@ impl ToValue for Canvas2dScene {
         value_push(&mut entries, "zoom", &self.zoom);
         value_push(&mut entries, "layersJson", &self.layers_json);
         value_push_option(&mut entries, "snapshot", &self.snapshot);
+        value_push_option(&mut entries, "toolRunTrace", &self.tool_run_trace);
+        value_push_if_nonempty(&mut entries, "lanes", &self.lanes);
         DslValue::Object(entries)
     }
 }
@@ -202,7 +256,89 @@ impl FromValue for Canvas2dScene {
             zoom: value_decode(&entries, "zoom")?,
             layers_json: value_decode(&entries, "layersJson")?,
             snapshot: value_decode_option(&entries, "snapshot")?,
+            tool_run_trace: value_decode_option(&entries, "toolRunTrace")?,
+            lanes: value_decode_default(&entries, "lanes", Vec::new)?,
         })
+    }
+}
+
+/// 🚚️ The canvas-2d payload fields that ride OUTSIDE the fixed-capacity surface doc — the 2d twin of
+/// [`World3dSceneLane`], pinned against `🧫️fixtures/🚚️canvas2d-scene-lanes/🔣️.json` on both sides.
+/// `layers_json` stays in the spine: it is a bounded per-frame descriptor, while a trace delta scales
+/// with the run.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Canvas2dSceneLane {
+    ToolRunTrace,
+}
+
+/// 🚚️ Reserved carrier-key namespace of the canvas-2d lanes.
+pub const CANVAS2D_SCENE_LANE_KEY_PREFIX: &str = "framework.scene.canvas2d.";
+
+/// 🚚️ Wire name of each [`Canvas2dSceneLane`], in `Canvas2dSceneLane::ALL` order.
+pub const CANVAS2D_SCENE_LANE_NAMES: [&str; 1] = ["toolRunTrace"];
+
+/// 🚚️ [`Canvas2dScene`] field each lane carries, spelled as its serialized (camelCase) name.
+pub const CANVAS2D_SCENE_LANE_FIELDS: [&str; 1] = ["toolRunTrace"];
+
+/// 🚚️ Reserved carrier key of each lane.
+pub const CANVAS2D_SCENE_LANE_BODY_KEYS: [&str; 1] = ["framework.scene.canvas2d.toolRunTrace"];
+
+/// 🚚️ Whether each lane's [`Canvas2dScene`] field is an `Option<String>`.
+pub const CANVAS2D_SCENE_LANE_OPTIONAL: [bool; 1] = [true];
+
+impl Canvas2dSceneLane {
+    pub const ALL: [Self; 1] = [Self::ToolRunTrace];
+
+    /// 🏷️ See [`CANVAS2D_SCENE_LANE_NAMES`].
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn name(self) -> &'static str {
+        CANVAS2D_SCENE_LANE_NAMES[self as usize]
+    }
+
+    /// 🏷️ See [`CANVAS2D_SCENE_LANE_FIELDS`].
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn field(self) -> &'static str {
+        CANVAS2D_SCENE_LANE_FIELDS[self as usize]
+    }
+
+    /// 🪧️ See [`CANVAS2D_SCENE_LANE_BODY_KEYS`].
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn body_key(self) -> &'static str {
+        CANVAS2D_SCENE_LANE_BODY_KEYS[self as usize]
+    }
+
+    /// 🏷️ See [`CANVAS2D_SCENE_LANE_OPTIONAL`].
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn optional(self) -> bool {
+        CANVAS2D_SCENE_LANE_OPTIONAL[self as usize]
+    }
+
+    /// 🔎️ Resolves a carrier root key back to its lane.
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn from_body_key(body_key: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|lane| lane.body_key() == body_key)
+    }
+
+    /// 🔎️ Resolves a lane wire name back to its lane.
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn from_name(name: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|lane| lane.name() == name)
+    }
+
+    /// 📤️ Removes this lane's payload from `scene`; `None` when the optional lane is unset.
+    // 🚫️async: E6 sync payload construction — see this module's own header.
+    pub fn take(self, scene: &mut Canvas2dScene) -> Option<String> {
+        match self {
+            Self::ToolRunTrace => scene.tool_run_trace.take(),
+        }
+    }
+
+    /// 📥️ Writes this lane's payload back into `scene` — the inverse of [`Canvas2dSceneLane::take`].
+    // 🚫️async: E6 sync payload construction — see this module's own header.
+    pub fn put(self, scene: &mut Canvas2dScene, payload: String) {
+        match self {
+            Self::ToolRunTrace => scene.tool_run_trace = Some(payload),
+        }
     }
 }
 //#endregion 🔖️Canvas2dScene
@@ -257,6 +393,11 @@ pub struct World3dScene {
     pub points_json: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub status_json: Option<String>,
+    /// ⏯️ The base64url `ToolRunTraceDelta` (`🧰️framework/🔨️modules/⏯️tool-run/🦀️.rs`) the tool run
+    /// ledger pages to this window after the renderer's echoed `toolRunTraceCursor`. Opaque to this
+    /// crate by layering: only renderers decode it, and an idle run publishes no lane at all.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tool_run_trace: Option<String>,
     /// 🪟️ The framework [`InteractionRef`]/`InteractionDefinition` id this world window is bound to,
     /// serialized as `domainId`. `None` leaves the window on the OS's own shared `world` board
     /// domain and plain plugin-private actions (`setHover`/`worldPick`/`worldSelect`). When set, a
@@ -279,25 +420,26 @@ pub struct World3dScene {
     /// node's own `Component` differ — exactly when a lane's content changed, so an unchanged lane
     /// costs nothing on a partial refresh.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub lanes: Vec<World3dSceneLaneRef>,
+    pub lanes: Vec<SceneLaneRef>,
 }
 
-/// 🚚️ One entry of [`World3dScene::lanes`] — see that field's doc.
+/// 🚚️ One entry of a scene spine's lane manifest ([`World3dScene::lanes`], [`Canvas2dScene::lanes`]) — see
+/// [`World3dScene::lanes`]' doc.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct World3dSceneLaneRef {
+pub struct SceneLaneRef {
     pub lane: String,
     pub bytes: u32,
     pub hash: String,
 }
 
-impl ToValue for World3dSceneLaneRef {
+impl ToValue for SceneLaneRef {
     fn to_value(&self) -> DslValue {
         DslValue::object([("lane".to_string(), self.lane.to_value()), ("bytes".to_string(), self.bytes.to_value()), ("hash".to_string(), self.hash.to_value())])
     }
 }
 
-impl FromValue for World3dSceneLaneRef {
+impl FromValue for SceneLaneRef {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = value.into_object()?;
         Ok(Self { lane: value_decode(&entries, "lane")?, bytes: value_decode(&entries, "bytes")?, hash: value_decode(&entries, "hash")? })
@@ -326,13 +468,14 @@ scene_pack_wire!(World3dScenePack, World3dScene {
     terrain_json: Option<String>,
     points_json: Option<String>,
     status_json: Option<String>,
+    tool_run_trace: Option<String>,
     domain_id: Option<String>,
     domain_granularity_id: Option<String>,
     // 🚚️ An assembled scene carries no manifest, and neither does a scene built by a producer that
     // never publishes through a surface — so a missing key decodes to "no lanes", exactly as serde
     // already treats every `Option` field above.
     #[serde(default)]
-    lanes: Vec<World3dSceneLaneRef>,
+    lanes: Vec<SceneLaneRef>,
 });
 
 impl SceneDoc for World3dScene {
@@ -352,7 +495,7 @@ impl SceneDoc for World3dScene {
         let mut refs = Vec::new();
         for lane in World3dSceneLane::ALL {
             let Some(payload) = lane.take(&mut spine) else { continue };
-            refs.push(World3dSceneLaneRef { lane: lane.name().to_string(), bytes: payload.len() as u32, hash: world3d_scene_lane_hash(&payload) });
+            refs.push(SceneLaneRef { lane: lane.name().to_string(), bytes: payload.len() as u32, hash: scene_lane_hash(&payload) });
             lanes.push(SceneLanePayload { key: lane.body_key(), payload });
         }
         spine.lanes = refs;
@@ -401,6 +544,7 @@ impl World3dScene {
             terrain_json: None,
             points_json: None,
             status_json: None,
+            tool_run_trace: None,
             domain_id: None,
             domain_granularity_id: None,
             lanes: Vec::new(),
@@ -432,6 +576,7 @@ impl ToValue for World3dScene {
         value_push_option(&mut entries, "terrainJson", &self.terrain_json);
         value_push_option(&mut entries, "pointsJson", &self.points_json);
         value_push_option(&mut entries, "statusJson", &self.status_json);
+        value_push_option(&mut entries, "toolRunTrace", &self.tool_run_trace);
         value_push_option(&mut entries, "domainId", &self.domain_id);
         value_push_option(&mut entries, "domainGranularityId", &self.domain_granularity_id);
         value_push_if_nonempty(&mut entries, "lanes", &self.lanes);
@@ -464,6 +609,7 @@ impl FromValue for World3dScene {
             terrain_json: value_decode_option(&entries, "terrainJson")?,
             points_json: value_decode_option(&entries, "pointsJson")?,
             status_json: value_decode_option(&entries, "statusJson")?,
+            tool_run_trace: value_decode_option(&entries, "toolRunTrace")?,
             domain_id: value_decode_option(&entries, "domainId")?,
             domain_granularity_id: value_decode_option(&entries, "domainGranularityId")?,
             lanes: value_decode_default(&entries, "lanes", Vec::new)?,
@@ -473,7 +619,7 @@ impl FromValue for World3dScene {
 //#endregion 🔖️World3dScene
 
 //#region 🔖️World3dSceneLanes
-/// 🚚️ The nineteen world-3d payload fields that ride OUTSIDE the fixed-capacity surface doc, each as
+/// 🚚️ The twenty world-3d payload fields that ride OUTSIDE the fixed-capacity surface doc, each as
 /// its own retained, individually paged text carrier rooted at [`World3dSceneLane::body_key`].
 ///
 /// Everything NOT in this list stays in the spine: `camera_json` (a ~120-byte per-frame descriptor
@@ -508,6 +654,7 @@ pub enum World3dSceneLane {
     Terrain,
     Points,
     Status,
+    ToolRunTrace,
 }
 
 /// 🚚️ Reserved carrier-key namespace. Dotted and `framework.`-prefixed so a lane root can never
@@ -515,7 +662,7 @@ pub enum World3dSceneLane {
 pub const WORLD3D_SCENE_LANE_KEY_PREFIX: &str = "framework.scene.world3d.";
 
 /// 🚚️ Wire name of each [`World3dSceneLane`], in `World3dSceneLane::ALL` order.
-pub const WORLD3D_SCENE_LANE_NAMES: [&str; 19] = [
+pub const WORLD3D_SCENE_LANE_NAMES: [&str; 20] = [
     "meshes",
     "instances",
     "instancesDelta",
@@ -535,10 +682,11 @@ pub const WORLD3D_SCENE_LANE_NAMES: [&str; 19] = [
     "terrain",
     "points",
     "status",
+    "toolRunTrace",
 ];
 
 /// 🚚️ [`World3dScene`] field each lane carries, spelled as its serialized (camelCase) name.
-pub const WORLD3D_SCENE_LANE_FIELDS: [&str; 19] = [
+pub const WORLD3D_SCENE_LANE_FIELDS: [&str; 20] = [
     "meshesJson",
     "instancesJson",
     "instancesDeltaJson",
@@ -558,11 +706,12 @@ pub const WORLD3D_SCENE_LANE_FIELDS: [&str; 19] = [
     "terrainJson",
     "pointsJson",
     "statusJson",
+    "toolRunTrace",
 ];
 
 /// 🚚️ Reserved carrier key of each lane — `WORLD3D_SCENE_LANE_KEY_PREFIX` + its name, spelled out
 /// so the constant is greppable and pinnable rather than assembled at runtime.
-pub const WORLD3D_SCENE_LANE_BODY_KEYS: [&str; 19] = [
+pub const WORLD3D_SCENE_LANE_BODY_KEYS: [&str; 20] = [
     "framework.scene.world3d.meshes",
     "framework.scene.world3d.instances",
     "framework.scene.world3d.instancesDelta",
@@ -582,15 +731,16 @@ pub const WORLD3D_SCENE_LANE_BODY_KEYS: [&str; 19] = [
     "framework.scene.world3d.terrain",
     "framework.scene.world3d.points",
     "framework.scene.world3d.status",
+    "framework.scene.world3d.toolRunTrace",
 ];
 
 /// 🚚️ Whether each lane's [`World3dScene`] field is an `Option<String>` (`true`) rather than a plain
 /// required `String` (`false`). A required lane always publishes — its empty payload is still a lane
 /// — while an absent optional lane publishes no carrier at all.
-pub const WORLD3D_SCENE_LANE_OPTIONAL: [bool; 19] = [false, false, true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true];
+pub const WORLD3D_SCENE_LANE_OPTIONAL: [bool; 20] = [false, false, true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true];
 
 impl World3dSceneLane {
-    pub const ALL: [Self; 19] = [
+    pub const ALL: [Self; 20] = [
         Self::Meshes,
         Self::Instances,
         Self::InstancesDelta,
@@ -610,6 +760,7 @@ impl World3dSceneLane {
         Self::Terrain,
         Self::Points,
         Self::Status,
+        Self::ToolRunTrace,
     ];
 
     /// 🏷️ See [`WORLD3D_SCENE_LANE_NAMES`].
@@ -672,6 +823,7 @@ impl World3dSceneLane {
             Self::Terrain => scene.terrain_json.take(),
             Self::Points => scene.points_json.take(),
             Self::Status => scene.status_json.take(),
+            Self::ToolRunTrace => scene.tool_run_trace.take(),
         }
     }
 
@@ -698,6 +850,7 @@ impl World3dSceneLane {
             Self::Terrain => scene.terrain_json = Some(payload),
             Self::Points => scene.points_json = Some(payload),
             Self::Status => scene.status_json = Some(payload),
+            Self::ToolRunTrace => scene.tool_run_trace = Some(payload),
         }
     }
 }
@@ -707,7 +860,7 @@ impl World3dSceneLane {
 /// pulled from a hashing crate because this crate depends on nothing beyond `ui_contract`/`serde`,
 /// and because the digest is part of a wire payload two languages have to agree on.
 // 🚫️async: E6 sync payload construction — see this module's own header.
-pub fn world3d_scene_lane_hash(payload: &str) -> String {
+pub fn scene_lane_hash(payload: &str) -> String {
     let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
     for byte in payload.as_bytes() {
         hash ^= u64::from(*byte);

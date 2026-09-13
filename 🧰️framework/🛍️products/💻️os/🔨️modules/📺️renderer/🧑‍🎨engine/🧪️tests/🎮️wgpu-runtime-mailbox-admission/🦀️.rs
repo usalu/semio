@@ -9,8 +9,14 @@
 //! wire, reached `WindowDelegate::handle_event`, was enqueued as `DispatchEvents` — and never reached
 //! `Ui::dispatch_event`, because one interaction checkout that was never returned held the queue head
 //! and the pump that would have drained it ran once per frame BUILD, not once per frame.
+//!
+//! 🩸️ Extended for `📓️wgpu-frame-loop-after-selection-2026-09-13.md`: the ledger then aged a LIVE
+//! checkout by counting blocked apply opportunities, which the frame loop and arriving input produce
+//! at ~120 a second on 6118, so every applied selection — whose settle legitimately spends seconds
+//! re-rendering the panels through the guest — tripped a 240-credit ceiling, published a frame fault,
+//! and had the surface quarantined a few gestures in. The verdict is now whether an OWNER exists.
 
-use super::{BoundedCompletionQueue, Completion, InteractionCheckoutLedger, InteractionCheckoutStep, INTERACTION_CHECKOUT_CREDITS};
+use super::{BoundedCompletionQueue, Completion, InteractionCheckoutLedger, InteractionCheckoutStep};
 use serde_json::Value;
 
 const FIXTURE: &str = include_str!("../../🧫️fixtures/🎮️wgpu-runtime-mailbox-admission/🔣️.json");
@@ -61,6 +67,7 @@ impl<const CAPACITY: usize> Replay<CAPACITY> {
                         key: interned(step, "key"),
                         revision,
                         requires_interaction: step["requiresInteraction"].as_bool().expect("enqueue names its interaction need"),
+                        restores_interaction: step["restoresInteraction"].as_bool().expect("enqueue names whether it carries the state home"),
                         apply: revision,
                     };
                     let admitted = self.queue.enqueue(completion);
@@ -76,6 +83,7 @@ impl<const CAPACITY: usize> Replay<CAPACITY> {
                         key: interned(step, "key"),
                         revision,
                         requires_interaction: step["requiresInteraction"].as_bool().expect("finish names its interaction need"),
+                        restores_interaction: step["restoresInteraction"].as_bool().expect("finish names whether it carries the state home"),
                         apply: revision,
                     });
                 }
@@ -93,10 +101,11 @@ impl<const CAPACITY: usize> Replay<CAPACITY> {
                 }
                 "apply" => {
                     let head_requires = self.queue.head_requires_interaction();
-                    let admission = self.ledger.admit(head_requires, self.available);
+                    let owner_outstanding = self.queue.interaction_owner_outstanding();
+                    let admission = self.ledger.admit(head_requires, self.available, owner_outstanding);
                     let index_applied = self.queue.first_applicable(self.available);
                     let applied = index_applied.and_then(|at| self.queue.take_at(at)).map(|completion| completion.revision);
-                    if let Some((site, opportunities)) = self.ledger.take_stale_notice() {
+                    if let Some((site, opportunities)) = self.ledger.take_abandoned_notice() {
                         self.notices.push((site.to_string(), opportunities));
                     }
                     if !last {
@@ -105,7 +114,7 @@ impl<const CAPACITY: usize> Replay<CAPACITY> {
                     let expected = match step["admission"].as_str().expect("apply names its admission") {
                         "admitted" => InteractionCheckoutStep::Admitted,
                         "deferred" => InteractionCheckoutStep::Deferred,
-                        "stale" => InteractionCheckoutStep::Stale,
+                        "abandoned" => InteractionCheckoutStep::Abandoned,
                         other => panic!("{row} step {index}: unknown admission {other}"),
                     };
                     assert_eq!(admission, expected, "{row} step {index}: admission verdict");
@@ -122,13 +131,13 @@ impl<const CAPACITY: usize> Replay<CAPACITY> {
         let ready: Vec<u64> = self.queue.ready.iter().map(|completion| completion.revision).collect();
         let expected: Vec<u64> = expect["readyRevisions"].as_array().expect("row names its ready revisions").iter().map(|value| value.as_u64().expect("revision")).collect();
         assert_eq!(ready, expected, "{row}: ready order");
-        let notices: Vec<(String, u32)> = expect["staleNotices"]
+        let notices: Vec<(String, u32)> = expect["abandonedNotices"]
             .as_array()
-            .expect("row names its stale notices")
+            .expect("row names its abandoned-checkout notices")
             .iter()
             .map(|notice| (notice["site"].as_str().expect("notice site").to_string(), notice["opportunities"].as_u64().expect("notice age") as u32))
             .collect();
-        assert_eq!(self.notices, notices, "{row}: stale checkout diagnostics");
+        assert_eq!(self.notices, notices, "{row}: abandoned checkout diagnostics");
     }
 }
 
@@ -165,8 +174,29 @@ fn every_fixture_row_replays_on_the_live_mailbox() {
     }
 }
 
+/// ⏳️ The lane's own law, stated against the ledger directly: no number of blocked opportunities can
+/// turn a checkout with a live owner into a fault. A credit ceiling would fail this at 241.
 #[test]
-fn the_fixture_pins_the_credits_the_ledger_actually_spends() {
-    let fixture = fixture();
-    assert_eq!(fixture["credits"].as_u64().expect("fixture names the credits"), u64::from(INTERACTION_CHECKOUT_CREDITS), "the oracle and the ledger must agree on the bounded-step credits");
+fn a_live_owner_never_ages_into_a_fault() {
+    let mut ledger = InteractionCheckoutLedger::default();
+    assert!(ledger.check_out("frame-deferred"));
+    for _ in 0..100_000 {
+        assert_eq!(ledger.admit(true, false, true), InteractionCheckoutStep::Deferred, "a checkout with an owner outstanding defers, however long it takes");
+    }
+    assert_eq!(ledger.take_abandoned_notice(), None, "a live owner publishes no diagnostic");
+    assert_eq!(ledger.opportunities(), 100_000, "the age is still reported, it is just not the verdict");
+}
+
+/// 🕳️ The other half: with no owner the very first blocked opportunity is the defect.
+#[test]
+fn a_missing_owner_is_a_defect_on_the_first_blocked_opportunity() {
+    let mut ledger = InteractionCheckoutLedger::default();
+    assert!(ledger.check_out("dispatch-event"));
+    assert_eq!(ledger.admit(true, false, false), InteractionCheckoutStep::Abandoned);
+    assert_eq!(ledger.take_abandoned_notice(), Some(("dispatch-event", 1)));
+    assert_eq!(ledger.admit(true, false, false), InteractionCheckoutStep::Abandoned);
+    assert_eq!(ledger.take_abandoned_notice(), None, "one notice per episode");
+    ledger.check_in();
+    assert!(ledger.check_out("frame-deferred"));
+    assert_eq!(ledger.admit(true, false, true), InteractionCheckoutStep::Deferred, "check-in clears the episode");
 }

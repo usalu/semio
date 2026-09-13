@@ -5,6 +5,7 @@
 //! `🎭️modes/*/🪟️windows/*`, panel trees in `📌️panels/*`, labels in `🦀️terminology.rs`, view state in
 //! `🦀️config.rs`, shared compute in the artifact's `⚙️engine`.
 
+use crate::editor::generation3d::commands::navigate_graph::{activate_selection, select_downstream_node, select_next_node, select_previous_node, select_upstream_node};
 use crate::editor::generation3d::commands::{
     add_generation, add_widget, cancel_preview_eval, cycle_lod_mode, cycle_show_mode, delete_selection, export_document, flow_eval_resolve, flow_eval_tick, flow_tessellate_cancel_resolve, flow_tessellate_resolve, import_document, import_document_request, node_graph_edit, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget, rename_generation, reorganize, rotate_selection,
     scale_selection, select_generation, set_active_example, set_camera, set_contributions, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun, translate_selection,
@@ -95,7 +96,12 @@ semio_framework_plugin::app_commands! {
         "importDocument" as "import-document" => import_document::ImportDocument,
         "exportDocument" as "export-document" => export_document::ExportDocument,
         "cycleShowMode" as "cycle-show-mode" => cycle_show_mode::CycleShowMode,
-        "cycleLodMode" as "cycle-lod-mode" => cycle_lod_mode::CycleLodMode}
+        "cycleLodMode" as "cycle-lod-mode" => cycle_lod_mode::CycleLodMode,
+        "selectNextNode" as "select-next-node" => select_next_node::SelectNextNode,
+        "selectPreviousNode" as "select-previous-node" => select_previous_node::SelectPreviousNode,
+        "selectUpstreamNode" as "select-upstream-node" => select_upstream_node::SelectUpstreamNode,
+        "selectDownstreamNode" as "select-downstream-node" => select_downstream_node::SelectDownstreamNode,
+        "activateSelection" as "activate-selection" => activate_selection::ActivateSelection}
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
@@ -196,10 +202,14 @@ fn with_scratch_session<R>(body: impl FnOnce(&mut FlowEvalSession) -> R) -> R {
 #[derive(Default)]
 pub struct Generation3dPlayApp;
 
-/// 🎥️ Parses the flow-graph camera out of `command_from_action`'s JSON args — either a nested
-/// `{camera: {...}}` object or flat `x`/`y`/`zoom` keys.
+/// 🎥️ Parses the flow-graph camera out of `command_from_action`'s JSON args' nested `{viewport: {x, y, zoom}}`
+/// object (`nodeGraphViewportActionArgs`, `🧱️elements/🕸️NodeGraph/🟦️.tsx`). An ABSENT `viewport` decodes to
+/// the identity camera, because `ActionDefinition::new("nodeGraphViewport", …)` declares no args and every
+/// declared action must bridge from its own id under the shell's staged args alone — the same contract
+/// `parse_preview_camera_json` keeps for `setCamera`. A PRESENT but malformed one still faults: a camera the
+/// graph cannot express must never be silently replaced by one it can.
 fn parse_flow_viewport(args: &dsl::DslValue) -> Result<semio_framework_os_kernel::Viewport2d, Fault> {
-    let value = args.get("viewport").cloned().ok_or_else(|| Fault::from("nodeGraphViewport requires viewport"))?;
+    let Some(value) = args.get("viewport").cloned() else { return Ok(semio_framework_os_kernel::Viewport2d::default()) };
     dsl::from_dsl_value(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))
 }
 
@@ -294,6 +304,13 @@ const GENERATION3D_RETAINED_TOOL_IDS: &[&str] = &[
     "selectGeneration",
     "cycleShowMode",
     "cycleLodMode",
+    // 🧭️ The node graph's keyboard traversal (`🎮️commands/🧭️navigate-graph`). Retained like every
+    // other gesture, but publishing ONLY the framework's selection lane.
+    "selectNextNode",
+    "selectPreviousNode",
+    "selectUpstreamNode",
+    "selectDownstreamNode",
+    "activateSelection",
 ];
 /// ⏱️ The preview chain's own tool ids — a HOST route, never a user gesture: nobody clicks a tick,
 /// and the mesh body an extension answer carries is nothing like a gesture's wire payload. Split
@@ -647,6 +664,14 @@ fn generation3d_retained_reduce(
         Generation3dCommand::TranslateSelection(payload) => Ok(translate_selection::apply_selected(payload, &doc, &selected())),
         Generation3dCommand::RotateSelection(payload) => Ok(rotate_selection::apply_selected(payload, &doc, &selected())),
         Generation3dCommand::ScaleSelection(payload) => Ok(scale_selection::apply_selected(payload, &doc, &selected())),
+        // 🧭️ Keyboard traversal reads the SAME `graph` selection the pointer writes and hands the next
+        // one back through `Emit.interaction_writes`, so an arrow key and a click are the same gesture
+        // to everything downstream (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        Generation3dCommand::SelectNextNode(_payload) => Ok(select_next_node::apply_selected(&doc, &selected())),
+        Generation3dCommand::SelectPreviousNode(_payload) => Ok(select_previous_node::apply_selected(&doc, &selected())),
+        Generation3dCommand::SelectUpstreamNode(_payload) => Ok(select_upstream_node::apply_selected(&doc, &selected())),
+        Generation3dCommand::SelectDownstreamNode(_payload) => Ok(select_downstream_node::apply_selected(&doc, &selected())),
+        Generation3dCommand::ActivateSelection(_payload) => Ok(activate_selection::apply_ports(&doc, &generation3d_port_ids_by_node(&doc.snapshot.fixture), &selected())),
         _ => command.dispatch(&doc, &cfg, session),
     }
 }
@@ -773,6 +798,14 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation3dBounded
         ArtifactToolPublicationContract { tool_id: "selectGeneration", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Transient] },
         ArtifactToolPublicationContract { tool_id: "cycleShowMode", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "cycleLodMode", lanes: &[ArtifactToolPublicationLane::Config] },
+        // 🧭️ Keyboard traversal publishes the framework's selection lane and NOTHING else: a step is
+        // not an edit, so it authors no document op and takes no config row — which is also why it
+        // never enters undo (`HistoryLane::Interaction`).
+        ArtifactToolPublicationContract { tool_id: "selectNextNode", lanes: &[ArtifactToolPublicationLane::Interaction] },
+        ArtifactToolPublicationContract { tool_id: "selectPreviousNode", lanes: &[ArtifactToolPublicationLane::Interaction] },
+        ArtifactToolPublicationContract { tool_id: "selectUpstreamNode", lanes: &[ArtifactToolPublicationLane::Interaction] },
+        ArtifactToolPublicationContract { tool_id: "selectDownstreamNode", lanes: &[ArtifactToolPublicationLane::Interaction] },
+        ArtifactToolPublicationContract { tool_id: "activateSelection", lanes: &[ArtifactToolPublicationLane::Interaction] },
     ];
 }
 
@@ -1069,6 +1102,11 @@ impl Generation3dBoundedCommandJobFactoryProofs {
             "selectGeneration",
             "cycleShowMode",
             "cycleLodMode",
+            "selectNextNode",
+            "selectPreviousNode",
+            "selectUpstreamNode",
+            "selectDownstreamNode",
+            "activateSelection",
         ]
     }
 }
@@ -1882,6 +1920,11 @@ impl ArtifactEditor for Generation3dPlayApp {
             "setShowMode" => Ok(Generation3dCommand::SetShowMode(set_show_mode::SetShowMode { value: str_arg(&["value", "showMode", "show_mode"]).unwrap_or_default() })),
             "cycleShowMode" => Ok(Generation3dCommand::CycleShowMode(cycle_show_mode::CycleShowMode {})),
             "cycleLodMode" => Ok(Generation3dCommand::CycleLodMode(cycle_lod_mode::CycleLodMode {})),
+            "selectNextNode" => Ok(Generation3dCommand::SelectNextNode(select_next_node::SelectNextNode {})),
+            "selectPreviousNode" => Ok(Generation3dCommand::SelectPreviousNode(select_previous_node::SelectPreviousNode {})),
+            "selectUpstreamNode" => Ok(Generation3dCommand::SelectUpstreamNode(select_upstream_node::SelectUpstreamNode {})),
+            "selectDownstreamNode" => Ok(Generation3dCommand::SelectDownstreamNode(select_downstream_node::SelectDownstreamNode {})),
+            "activateSelection" => Ok(Generation3dCommand::ActivateSelection(activate_selection::ActivateSelection {})),
             "toggleSun" => Ok(Generation3dCommand::ToggleSun(toggle_sun::ToggleSun {})),
             "setSunAzimuth" => Ok(Generation3dCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: f64_arg(&["value"]).unwrap_or(0.0) })),
             "setSunElevation" => Ok(Generation3dCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: f64_arg(&["value"]).unwrap_or(0.0) })),
@@ -1960,6 +2003,11 @@ impl ArtifactEditor for Generation3dPlayApp {
             Generation3dCommand::TranslateSelection(payload) => translate_selection::apply(payload, doc, cfg, interaction, session),
             Generation3dCommand::RotateSelection(payload) => rotate_selection::apply(payload, doc, cfg, interaction, session),
             Generation3dCommand::ScaleSelection(payload) => scale_selection::apply(payload, doc, cfg, interaction, session),
+            Generation3dCommand::SelectNextNode(_payload) => Ok(select_next_node::apply_selected(doc, &interaction.selection("graph").ids)),
+            Generation3dCommand::SelectPreviousNode(_payload) => Ok(select_previous_node::apply_selected(doc, &interaction.selection("graph").ids)),
+            Generation3dCommand::SelectUpstreamNode(_payload) => Ok(select_upstream_node::apply_selected(doc, &interaction.selection("graph").ids)),
+            Generation3dCommand::SelectDownstreamNode(_payload) => Ok(select_downstream_node::apply_selected(doc, &interaction.selection("graph").ids)),
+            Generation3dCommand::ActivateSelection(_payload) => Ok(activate_selection::apply_ports(doc, &generation3d_port_ids_by_node(&doc.snapshot.fixture), &interaction.selection("graph").ids)),
             _ => command.dispatch(doc, cfg, session),
         })
     }
@@ -2204,7 +2252,7 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             // neither authors a document row by itself: one asks the shell for a file, the other
             // hands it a download (`🎮️commands/📂️import-document-request`, `📤️export-document`).
             .shell_action("importDocumentRequest", LocalizedLabel::native("Import Document…", "Dokument importieren…"))
-            .shell_action("exportDocument", LocalizedLabel::native("Export Document…", "Dokument exportieren…"))
+            .shell_action("exportDocument", LocalizedLabel::native("Export Document", "Dokument exportieren"))
             // 📥️ Not palette-worthy: the shell re-dispatches it once per CHUNK of the picked file,
             // with args no human types (`dispatchOpenedFiles`, `🛠️ShellHelpers/🟦️.tsx`).
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importDocument", LocalizedLabel::native("Import Document File", "Dokumentdatei importieren"), ActionKind::Mutation) })
@@ -2223,6 +2271,17 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             // ladder the pickers build their rows from.
             .action_with(ActionDefinition::new("cycleShowMode", LocalizedLabel::native("Cycle Show Mode", "Anzeigemodus wechseln"), ActionKind::View, "eye"))
             .action_with(ActionDefinition::new("cycleLodMode", LocalizedLabel::native("Cycle Lod Mode", "LOD-Modus wechseln"), ActionKind::View, "layers"))
+            // 🧭️ Node-by-node keyboard traversal of the graph canvas — the five verbs
+            // `📓️react-i18n-a11y-customization-2026-09-13.md` §4.1 named as missing. All five are
+            // ARG-FREE by construction (a chord carries a key and an action id and nothing else) and
+            // read their next target off the document's own wires and layout
+            // (`🎮️commands/🧭️navigate-graph`). `ActionKind::View`, never `Mutation`: a traversal moves
+            // the framework's selection lane and authors no document op.
+            .action_with(ActionDefinition::new("selectNextNode", LocalizedLabel::native("Select Next Node", "Nächsten Knoten auswählen"), ActionKind::View, "arrow-down"))
+            .action_with(ActionDefinition::new("selectPreviousNode", LocalizedLabel::native("Select Previous Node", "Vorherigen Knoten auswählen"), ActionKind::View, "arrow-up"))
+            .action_with(ActionDefinition::new("selectUpstreamNode", LocalizedLabel::native("Select Upstream Node", "Vorgelagerten Knoten auswählen"), ActionKind::View, "arrow-left"))
+            .action_with(ActionDefinition::new("selectDownstreamNode", LocalizedLabel::native("Select Downstream Node", "Nachgelagerten Knoten auswählen"), ActionKind::View, "arrow-right"))
+            .action_with(ActionDefinition::new("activateSelection", LocalizedLabel::native("Open Node Ports", "Knotenanschlüsse öffnen"), ActionKind::View, "circle"))
             .action_with(ActionDefinition::new("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"), ActionKind::View, "sun"))
             .action_with(ActionDefinition::new("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"), ActionKind::View, "sun"))
             .action_with(ActionDefinition::new("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"), ActionKind::View, "sun"))
@@ -2256,6 +2315,11 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setShowMode", InteractiveJobClassification::Migrated)
             .action_interactive_job("cycleShowMode", InteractiveJobClassification::Migrated)
             .action_interactive_job("cycleLodMode", InteractiveJobClassification::Migrated)
+            .action_interactive_job("selectNextNode", InteractiveJobClassification::Migrated)
+            .action_interactive_job("selectPreviousNode", InteractiveJobClassification::Migrated)
+            .action_interactive_job("selectUpstreamNode", InteractiveJobClassification::Migrated)
+            .action_interactive_job("selectDownstreamNode", InteractiveJobClassification::Migrated)
+            .action_interactive_job("activateSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("toggleSun", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSunAzimuth", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSunElevation", InteractiveJobClassification::Migrated)
@@ -2321,7 +2385,25 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             // `setActiveExample`, the catalogue palette's `addWidget`, the inspector's `patchFlowWidgets`, the
             // context menu's `reorganize`/`removeWidget`/`deleteSelection`, and the
             // framework's own history/clipboard/tutorial ids.
-            .window_kind_action_refs(flow_window::GENERATION_3D_PLAY_WINDOW_MAIN, vec!["nodeGraphEdit".into(), "nodeGraphViewport".into(), "setLodMode".into()])
+            // 🧭️ The five keyboard-traversal verbs are OWNED by the flow window, and that ownership is
+            // their whole scope: `ShellHost`'s keybinding loop resolves a chord against the FOCUSED
+            // window kind's own actions, so the bare arrow chords below are live exactly while the node
+            // graph has focus and are inert in every other window — which is what lets them be bare
+            // arrows at all. `activateSelection` is owned here for the same reason and because the flow
+            // canvas's own `Trigger::Activate` binding dispatches it (`declaredAction` gate).
+            .window_kind_action_refs(
+                flow_window::GENERATION_3D_PLAY_WINDOW_MAIN,
+                vec![
+                    "nodeGraphEdit".into(),
+                    "nodeGraphViewport".into(),
+                    "setLodMode".into(),
+                    "selectNextNode".into(),
+                    "selectPreviousNode".into(),
+                    "selectUpstreamNode".into(),
+                    "selectDownstreamNode".into(),
+                    "activateSelection".into(),
+                ],
+            )
             .window_kind_action_refs(edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW, vec![
                 // 🛑️ The preview window OWNS its cancel. `World3dHost` reads `cancelAction` off the
                 // status this window publishes and dispatches it back scoped to this window kind, so
@@ -2415,6 +2497,22 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("mod+shift+g", "addGeneration")
             .keybinding("mod+alt+d", "cycleShowMode")
             .keybinding("mod+alt+k", "cycleLodMode")
+            // 🧭️ Node-by-node traversal of the graph canvas. BARE arrows, with no modifier, because
+            // `role="application"` — which `accessibility_role` already implies for every
+            // `Component::Surface` and which the React shell now paints on the canvas — is the ARIA
+            // contract for "this widget handles its own arrow keys"; a modifier would break the promise
+            // the canvas makes to a screen reader. They are safe as bare chords for two measured
+            // reasons: all five verbs are owned by the flow window above, and `ShellHost`'s keybinding
+            // loop resolves a chord against the FOCUSED window kind's actions only, so they are inert
+            // anywhere else; and that loop returns early on `event.defaultPrevented` and on any
+            // editable target, so a tree row or a text field that handles its own arrows keeps them.
+            // ⌨️ The key token is the DOM `event.key` lowercased (`arrowdown`), never a shorthand:
+            // `keyboardEventMatchesChord` compares the last `+` segment against `event.key` verbatim,
+            // which is the same rule that made `mod+period` a silently dead chord.
+            .keybinding("arrowdown", "selectNextNode")
+            .keybinding("arrowup", "selectPreviousNode")
+            .keybinding("arrowleft", "selectUpstreamNode")
+            .keybinding("arrowright", "selectDownstreamNode")
             .config(Generation3dPlayApp::config_spec())
             .io(semio_framework::io::resolve_ready(generation3d_io()))
             .build_definition()

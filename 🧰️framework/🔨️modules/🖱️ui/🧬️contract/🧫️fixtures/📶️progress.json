@@ -1,0 +1,40 @@
+{
+  "note": "📶️ The language-neutral law of `Component::Progress`: its exact wire spelling, the fraction a renderer fills, and the accessibility value it announces. Determinate (`total` present) announces aria-valuemin 0, aria-valuemax total, aria-valuenow completed and aria-valuetext; indeterminate (`total` absent) announces aria-busy and no value attributes at all. Answered in Rust by serde_json (third-party oracle) against the first-party ToValue/FromValue codec and `accessibility_value`, by the wgpu target's accessibility projection and paint geometry, in TypeScript by `uiAccessibilityProjectionNodeV1`, and in React by the Interpreter's rendered progressbar. Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS.",
+  "cases": [
+    {
+      "id": "determinate-testing-candidates",
+      "component": { "type": "progress", "completed": 12, "total": 100, "valueText": "Testing candidates (2/3): 12 of 100 pieces (12 %)" },
+      "wire": "{\"type\":\"progress\",\"completed\":12.0,\"total\":100.0,\"valueText\":\"Testing candidates (2/3): 12 of 100 pieces (12 %)\"}",
+      "fraction": 0.12,
+      "accessibility": { "role": "progressbar", "focusable": false, "valueMin": 0, "valueMax": 100, "valueNow": 12, "valueText": "Testing candidates (2/3): 12 of 100 pieces (12 %)", "busy": false }
+    },
+    {
+      "id": "determinate-german-complete",
+      "component": { "type": "progress", "completed": 250, "total": 250, "valueText": "Kandidaten testen (3/3): 250 von 250 Teilen (100 %)" },
+      "wire": "{\"type\":\"progress\",\"completed\":250.0,\"total\":250.0,\"valueText\":\"Kandidaten testen (3/3): 250 von 250 Teilen (100 %)\"}",
+      "fraction": 1,
+      "accessibility": { "role": "progressbar", "focusable": false, "valueMin": 0, "valueMax": 250, "valueNow": 250, "valueText": "Kandidaten testen (3/3): 250 von 250 Teilen (100 %)", "busy": false }
+    },
+    {
+      "id": "determinate-overshoot-clamps-the-fill-not-the-value",
+      "component": { "type": "progress", "completed": 140, "total": 100, "valueText": "Locking (3/3): 140 of 100 pieces" },
+      "wire": "{\"type\":\"progress\",\"completed\":140.0,\"total\":100.0,\"valueText\":\"Locking (3/3): 140 of 100 pieces\"}",
+      "fraction": 1,
+      "accessibility": { "role": "progressbar", "focusable": false, "valueMin": 0, "valueMax": 100, "valueNow": 140, "valueText": "Locking (3/3): 140 of 100 pieces", "busy": false }
+    },
+    {
+      "id": "determinate-zero-total-fills-nothing",
+      "component": { "type": "progress", "completed": 0, "total": 0, "valueText": "Nothing to fill" },
+      "wire": "{\"type\":\"progress\",\"completed\":0.0,\"total\":0.0,\"valueText\":\"Nothing to fill\"}",
+      "fraction": 0,
+      "accessibility": { "role": "progressbar", "focusable": false, "valueMin": 0, "valueMax": 0, "valueNow": 0, "valueText": "Nothing to fill", "busy": false }
+    },
+    {
+      "id": "indeterminate-omits-total-and-every-value",
+      "component": { "type": "progress", "completed": 3, "valueText": "Preparing (1/3)" },
+      "wire": "{\"type\":\"progress\",\"completed\":3.0,\"valueText\":\"Preparing (1/3)\"}",
+      "fraction": null,
+      "accessibility": { "role": "progressbar", "focusable": false, "valueMin": null, "valueMax": null, "valueNow": null, "valueText": null, "busy": true }
+    }
+  ]
+}

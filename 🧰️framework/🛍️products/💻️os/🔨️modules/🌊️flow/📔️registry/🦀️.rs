@@ -76,17 +76,24 @@ pub(crate) fn lock_flow_extension_registry_for_test() -> std::sync::MutexGuard<'
     FLOW_EXTENSION_REGISTRY_TEST_LOCK.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
 }
 
-/// 🧹️ Drains whatever retired registry versions an earlier law left behind, so a law that MEASURES
-/// the retirement queue measures its own work. Bounded, and gives up the moment the queue is empty
-/// or a faulted worker owns the cursor — neither is this helper's business to report.
+/// 🧹️ Drains whatever retired registry versions an earlier law left behind and answers the depth it
+/// could NOT free — the baseline a law that MEASURES the retirement queue must judge itself against.
+///
+/// 🐛️ A version another live law still reads can never be freed from here, and the queue is one
+/// process-global singleton, so `retired.is_empty()` at the end of a law is an assertion about the
+/// whole binary's history rather than about that law: the four laws that made it passed alone and
+/// failed in suite order (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Bounded, and gives up the
+/// moment the queue is empty or a faulted worker owns the cursor — neither is this helper's business
+/// to report.
 #[cfg(test)]
-pub(crate) fn drain_flow_extension_registry_retirements() {
+pub(crate) fn drain_flow_extension_registry_retirements() -> usize {
     for _ in 0..1_000_000 {
         match retire_flow_extension_registries_step(1, 4096) {
             Ok(neural::ValueRetirementStep::Pending { .. }) => {}
             _ => break,
         }
     }
+    FLOW_EXTENSION_STATE.get().map_or(0, |state| state.lock().map_or(0, |state| state.retired.len()))
 }
 
 pub(crate) fn flow_extension_state() -> &'static Mutex<FlowExtensionRegistryState> {
@@ -226,9 +233,51 @@ fn build_flow_extension_registry(contributed: &BTreeMap<String, ContributedFlowE
 
 pub(crate) struct FlowRegistryReplacement<'a> { state: &'a mut FlowExtensionRegistryState, generation: u64 }
 
+/// 🧹️ How many `close_step`s ONE admission pays to make room in a full retirement queue. A registry
+/// version is a few hundred operators plus their schemas and defaults, so a free version retires in
+/// far fewer than this; the ceiling exists so a faulted cursor can never turn an admission into a
+/// spin.
+const RETIREMENT_RECLAIM_STEPS: usize = 65_536;
+
+/// 🧹️ Retires the retired versions at the FRONT of the queue that nobody reads any more, and stops
+/// at the first one that is still read.
+///
+/// 🐛️ [`retire_flow_extension_registries_step`] — the pump that gives these slots back — has no
+/// caller outside test code anywhere in this repository, so nothing in a served process drains this
+/// queue: the 17th replacement of a process's life is refused with `flow.registry-retirement-full`
+/// and every later `setContributions`, extension install and uninstall fails with it, forever. In
+/// the generation3d `--lib` binary that is
+/// `a_late_contributions_install_re_arms_the_viewer_evaluation_the_empty_registry_faulted` failing
+/// at law 398 of 449 on sixteen earlier laws' debt while passing alone
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+///
+/// 🔒️ It is deliberately FRONT-ONLY and never rotates: a blocked front means a live reader still
+/// holds that version, and the promise
+/// `registry_replacement_admission_preserves_roots_on_capacity_and_generation_exhaustion` states —
+/// a caller that pins a version and then fills the queue is still refused, with every root intact —
+/// is exactly the promise rotating past it would break. Pumping is therefore back-pressure paid at
+/// the door, never a force-close.
+fn reclaim_free_retired_registries(state: &mut FlowExtensionRegistryState) {
+    for _ in 0..RETIREMENT_RECLAIM_STEPS {
+        let Some(retirement) = state.retired.front_mut() else { return };
+        let Ok(Ok(step)) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| retirement.close_step(1, RETIREMENT_RECLAIM_PAGE_BYTES))) else { return };
+        match step {
+            neural::ValueRetirementStep::Complete if retirement.terminal_is_empty() => drop(state.retired.pop_front()),
+            neural::ValueRetirementStep::Pending { .. } => {}
+            _ => return,
+        }
+    }
+}
+
+/// 🎟️ The byte grant one reclaim step pays, matching the pump's own fixture grant.
+const RETIREMENT_RECLAIM_PAGE_BYTES: usize = 4_096;
+
 /// 🎟️ Admits a replacement before constructing any new registry or changing contribution metadata.
 pub(crate) fn begin_flow_registry_replacement(state: &mut FlowExtensionRegistryState) -> Result<FlowRegistryReplacement<'_>, &'static str> {
     let generation = state.generation.checked_add(1).ok_or("flow.registry-generation-exhausted")?;
+    if state.retired.len() >= RETIRED_REGISTRY_CAPACITY {
+        reclaim_free_retired_registries(state);
+    }
     if state.retired.len() >= RETIRED_REGISTRY_CAPACITY { return Err("flow.registry-retirement-full"); }
     Ok(FlowRegistryReplacement { state, generation })
 }

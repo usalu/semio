@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🦀️ `@semio-tech/framework` task router: `bun ./📜️script.ts test|generate|check|lint`. */
-import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runCargoLint, runCargoTestBudgeted, runCmdStatus, runVitest, resolveTestLevel } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runCargoLint, runCargoTestBudgeted, runCmdStatus, runTestBudgeted, runVitest, resolveTestLevel } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative } from "node:path";
@@ -25,6 +25,14 @@ class TestScript extends BundleScript {
     const { rest } = resolveTestLevel(segments);
     await runCargoTestBudgeted(["semio-framework"], this.repoRoot, rest);
     await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
+  }
+}
+
+/** ⏯️ Runs the shared tool run declaration fixture through ajv plus the TypeScript mirror, then the manifest injection and chord-law tests. */
+class ToolRunActionsTestScript extends BundleScript {
+  async run(): Promise<void> {
+    await runTestBudgeted(process.execPath, ["test", join(this.root, "../../🔨️modules/🛂️manifest/🧪️tests/🔬️tool-run-actions/🟦️.ts")], { cwd: this.repoRoot });
+    await runCargoTestBudgeted(["semio-framework"], this.repoRoot, ["--lib", "manifest::tool_run_actions_tests"]);
   }
 }
 
@@ -117,6 +125,6 @@ class CheckScript extends BundleScript {
 }
 //#endregion 🔖️Typegen
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-action-choices", ActionChoicesTestScript).register("test-core-modules", CoreModulesTestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-action-choices", ActionChoicesTestScript).register("test-tool-run-actions", ToolRunActionsTestScript).register("test-core-modules", CoreModulesTestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

@@ -2972,7 +2972,7 @@ mod plugin_builder_contract_tests {
         assert_eq!(app.transient_store.generation().await, 1, "transient lane never received the command's emission");
         assert_eq!(
             app.ephemeral_snapshot().await,
-            EphemeralSnapshot { presence: PublicationPresence { revision: 1 }.encode_pack(), presence_generation: 1, transient_generation: 1, interaction: Vec::new() },
+            EphemeralSnapshot { presence: PublicationPresence { revision: 1 }.encode_pack(), presence_generation: 1, transient_generation: 1, interaction: Vec::new(), tool_run: None },
             "object-safe channel snapshot must carry the typed presence pack, both generations, and (declaring no interaction domain) empty interaction bytes"
         );
 
@@ -3061,6 +3061,7 @@ mod plugin_builder_contract_tests {
             surface: None,
             views: Vec::new(),
             ui: None,
+            tool_run: None,
         }
     }
 
@@ -5143,7 +5144,7 @@ mod plugin_builder_contract_tests {
         for reference in &spine.lanes {
             let lane = semio_framework_ui_scene::World3dSceneLane::from_name(&reference.lane).unwrap();
             assert_eq!(reference.bytes as usize, expected.iter().find(|entry| entry.key == lane.body_key()).unwrap().payload.len());
-            assert_eq!(reference.hash, semio_framework_ui_scene::world3d_scene_lane_hash(&expected.iter().find(|entry| entry.key == lane.body_key()).unwrap().payload));
+            assert_eq!(reference.hash, semio_framework_ui_scene::scene_lane_hash(&expected.iter().find(|entry| entry.key == lane.body_key()).unwrap().payload));
         }
 
         let mut reassembled: semio_framework_ui_scene::World3dScene = artifact_app_laws::decode_fixture_scene_with_lanes(&serde_json::to_string(&projection).unwrap()).unwrap();

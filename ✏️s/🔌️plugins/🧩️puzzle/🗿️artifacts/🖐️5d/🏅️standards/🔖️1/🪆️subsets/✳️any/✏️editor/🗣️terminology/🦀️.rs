@@ -18,6 +18,7 @@ semio_framework_plugin::app_labels! {
         brush: native_en "Brush", native_de "Pinsel", reuse_en "Brush", reuse_de "Pinsel";
         fill: native_en "Fill", native_de "Füllen", reuse_en "Fill", reuse_de "Füllen";
         fill_progress: native_en "Fill progress", native_de "Füllfortschritt", reuse_en "Fill progress", reuse_de "Füllfortschritt";
+        fill_cancel: native_en "Cancel fill", native_de "Füllen abbrechen", reuse_en "Cancel fill", reuse_de "Füllen abbrechen";
         fill_stage_preparing: native_en "Preparing", native_de "Vorbereiten", reuse_en "Preparing", reuse_de "Vorbereiten";
         fill_stage_selecting_target: native_en "Selecting grip", native_de "Griff wählen", reuse_en "Selecting connection point", reuse_de "Verbindungspunkt wählen";
         fill_stage_selecting_candidate: native_en "Selecting part", native_de "Teil wählen", reuse_en "Selecting building component", reuse_de "Baukomponente wählen";

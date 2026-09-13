@@ -29,6 +29,12 @@ artifact-app-testing = []
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
 semio-framework-job = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+# ⏯️ Tool run contract (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W0-D): the runtime ledger/driver
+# folds `ToolRunTick`s and publishes one `Edit` at finalize; the pure contract crate never depends back on this one.
+semio-framework-tool-run = { workspace = true }
+# 🔤️ First-party RFC 4648 §5 base64url codec: the tool run trace delta rides the scene `toolRunTrace` lane as
+# unpadded base64url text (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W0-H).
+base64_codec = { path = "../../../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
 # ⏱️ `runtime_live_cleanup_pump`/`runtime_callback_clock_elapsed` judge each maintenance step against
 # the interactive-step contract, which this crate calls directly as `semio_framework_trace::…`. The
 # call site landed without the manifest edge, so every build of this crate failed on an unlinked crate.

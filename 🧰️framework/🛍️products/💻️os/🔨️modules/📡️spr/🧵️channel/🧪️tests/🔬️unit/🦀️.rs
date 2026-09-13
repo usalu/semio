@@ -358,8 +358,8 @@ async fn app_frame_draft_round_trips() {
     assert_frame_round_trips(&AppFrame::Draft { in_reply_to: 15, pack: vec![1], spr: vec![2], ops: "d".to_string() }).await;
     assert_frame_round_trips(&AppFrame::Children { in_reply_to: 16, entries: sample_child_entries().await }).await;
     assert_frame_round_trips(&AppFrame::Children { in_reply_to: 17, entries: Vec::new() }).await;
-    assert_frame_round_trips(&AppFrame::Ephemeral { presence: vec![1, 2], presence_generation: 3, transient_generation: 4, interaction: vec![9, 9] }).await;
-    assert_frame_round_trips(&AppFrame::Ephemeral { presence: vec![1, 2], presence_generation: 3, transient_generation: 4, interaction: Vec::new() }).await;
+    assert_frame_round_trips(&AppFrame::Ephemeral { presence: vec![1, 2], presence_generation: 3, transient_generation: 4, interaction: vec![9, 9], tool_run: Vec::new() }).await;
+    assert_frame_round_trips(&AppFrame::Ephemeral { presence: vec![1, 2], presence_generation: 3, transient_generation: 4, interaction: Vec::new(), tool_run: vec![5, 6, 7] }).await;
 }
 
 //#region 🔖️Children
@@ -764,7 +764,7 @@ async fn channel_frame_fixture_corpus() -> Vec<(&'static str, AppFrame)> {
         ("Emit", AppFrame::Emit { in_reply_to: 1, document_ops: vec![1], config_ops: vec![], draft_ops: vec![], output: vec![2], diagnostics: vec![] }),
         ("Draft", AppFrame::Draft { in_reply_to: 1, pack: vec![1], spr: vec![2], ops: "d".to_string() }),
         ("Children", AppFrame::Children { in_reply_to: 1, entries: vec![ChildPackEntry { slot: "s".to_string(), child_id: "c".to_string(), dialect: "d".to_string(), envelope_pack: vec![1] }] }),
-        ("Ephemeral", AppFrame::Ephemeral { presence: vec![1, 2], presence_generation: 3, transient_generation: 4, interaction: vec![7] }),
+        ("Ephemeral", AppFrame::Ephemeral { presence: vec![1, 2], presence_generation: 3, transient_generation: 4, interaction: vec![7], tool_run: vec![8] }),
         ("HistorySnapshot", AppFrame::HistorySnapshot { in_reply_to: 1, history_patch: vec![1] }),
         ("TransactionProposal", AppFrame::TransactionProposal { in_reply_to: 1, proposal_id: "p".to_string(), local_ops: vec![vec![1]], description: "d".to_string(), coalesce_key: "k".to_string(), foreign: Vec::new() }),
         ("TransactionPrepared", AppFrame::TransactionPrepared { txn_id: "t".to_string(), foreign: vec![vec![1]], rejection: Vec::new() }),
@@ -839,7 +839,7 @@ async fn channel_frame_fixture_hex(label: &str) -> &'static str {
         "Emit" => "0a0101010000010200",
         "Draft" => "0b01010101020164",
         "Children" => "0c01010173016301640101",
-        "Ephemeral" => "0d02010203040107",
+        "Ephemeral" => "0d020102030401070108",
         "HistorySnapshot" => "0e010101",
         "TransactionProposal" => "0f0101700101010164016b00",
         "TransactionPrepared" => "10017401010100",

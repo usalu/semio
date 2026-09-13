@@ -851,3 +851,45 @@ fn retained_text_cancel_close_preserves_exact_terminal_witness() {
     assert!(cursor.close_step());
 }
 //#endregion 🧵️RetainedPaintLaws
+
+//#region 📶️ProgressPaint
+fn progress(completed: f64, total: Option<f64>) -> UiProgressNode {
+    UiProgressNode { id: "progress".into(), completed, total, value_text: Label::data("progress"), presence: UiPresence::default(), menu: None }
+}
+
+/// 📶️ Every case of the shared progress law fills exactly the fraction it declares, on a centred track
+/// one `padding_standard` tall — the same fraction React's bar is sized by.
+#[test]
+fn a_progress_bar_fills_the_fraction_the_shared_fixture_declares() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/🧫️fixtures/📶️progress.json")).expect("📶️ the progress fixture parses");
+    let theme = Theme::default();
+    let bounds = Rect::new(10.0, 20.0, 300.0, 40.0);
+    for case in fixture["cases"].as_array().expect("progress cases") {
+        let component = &case["component"];
+        let node = progress(component["completed"].as_f64().expect("completed"), component["total"].as_f64());
+        let (track, fill) = progress_bar_rects(&node, bounds, &theme);
+        assert_eq!(track, [10.0, 20.0 + (40.0 - theme.padding_standard) * 0.5, 300.0, theme.padding_standard], "{}: the track spans the bounds, vertically centred", case["id"]);
+        match case["fraction"].as_f64() {
+            Some(fraction) => assert_eq!(fill, [track[0], track[1], 300.0 * fraction as f32, track[3]], "{}: determinate fill", case["id"]),
+            None => assert_eq!(fill, [10.0 + 100.0, track[1], 100.0, track[3]], "{}: a still, centred indeterminate sweep", case["id"]),
+        }
+    }
+}
+
+/// 🎨️ A progress bar paints with theme tokens only: the `separator` track, then the `progress` fill —
+/// and an empty determinate bar paints no zero-width fill instance at all.
+#[test]
+fn a_progress_bar_paints_its_track_and_fill_from_theme_tokens() {
+    let theme = Theme::default();
+    let bounds = Rect::new(0.0, 0.0, 200.0, 24.0);
+    let colors = |node: &UiProgressNode| {
+        let mut draw = DrawList::default();
+        paint_progress(node, bounds, &theme, &mut draw);
+        draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|instance| instance.color).collect::<Vec<_>>()
+    };
+    let token = |color: Rgba| [color.r, color.g, color.b, color.a];
+    assert_eq!(colors(&progress(12.0, Some(100.0))), vec![token(theme.separator), token(theme.progress)]);
+    assert_eq!(colors(&progress(3.0, None)), vec![token(theme.separator), token(theme.progress)]);
+    assert_eq!(colors(&progress(0.0, Some(100.0))), vec![token(theme.separator)]);
+}
+//#endregion 📶️ProgressPaint

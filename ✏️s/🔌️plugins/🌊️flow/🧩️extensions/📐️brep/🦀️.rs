@@ -318,7 +318,7 @@ impl Operator for CoonsPatch {
     }
 }
 
-geo_operation!(OffsetFace, "face", |k, i| k.offset_face(&read_geometry(i, "face")?, read_channel_number(i, "distance")?));
+geo_operation!(OffsetFace, "faceOut", |k, i| k.offset_face(&read_geometry(i, "face")?, read_channel_number(i, "distance")?));
 geo_operation!(ThickenFace, "solid", |k, i| k.thicken_face(&read_geometry(i, "face")?, read_channel_number(i, "thickness")?));
 // #endregion 🔖️Surfaces
 
@@ -518,12 +518,12 @@ impl Operator for CompoundCut {
 // #endregion 🔖️Booleans
 
 // #region 🔖️Transforms
-geo_operation!(Translate, "geometry", |k, i| k.translate(&read_geometry(i, "geometry")?, read_xyz(i, "offset")?));
-geo_operation!(Rotate, "geometry", |k, i| k.rotate(&read_geometry(i, "geometry")?, read_xyz(i, "axis")?, read_channel_number(i, "angle")?));
-geo_operation!(RotateAbout, "geometry", |k, i| k.rotate_about(&read_geometry(i, "geometry")?, read_xyz(i, "origin")?, read_xyz(i, "axis")?, read_channel_number(i, "angle")?));
-geo_operation!(Scale, "geometry", |k, i| k.scale(&read_geometry(i, "geometry")?, read_channel_number(i, "factor")?, read_xyz(i, "center")?));
-geo_operation!(Mirror, "geometry", |k, i| k.mirror(&read_geometry(i, "geometry")?, read_xyz(i, "origin")?, read_xyz(i, "normal")?));
-geo_operation!(CopyShape, "geometry", |k, i| k.copy_shape(&read_geometry(i, "geometry")?));
+geo_operation!(Translate, "geometryOut", |k, i| k.translate(&read_geometry(i, "geometry")?, read_xyz(i, "offset")?));
+geo_operation!(Rotate, "geometryOut", |k, i| k.rotate(&read_geometry(i, "geometry")?, read_xyz(i, "axis")?, read_channel_number(i, "angle")?));
+geo_operation!(RotateAbout, "geometryOut", |k, i| k.rotate_about(&read_geometry(i, "geometry")?, read_xyz(i, "origin")?, read_xyz(i, "axis")?, read_channel_number(i, "angle")?));
+geo_operation!(Scale, "geometryOut", |k, i| k.scale(&read_geometry(i, "geometry")?, read_channel_number(i, "factor")?, read_xyz(i, "center")?));
+geo_operation!(Mirror, "geometryOut", |k, i| k.mirror(&read_geometry(i, "geometry")?, read_xyz(i, "origin")?, read_xyz(i, "normal")?));
+geo_operation!(CopyShape, "geometryOut", |k, i| k.copy_shape(&read_geometry(i, "geometry")?));
 geo_operation!(LinearPattern, "compound", |k, i| k.linear_pattern(&read_geometry(i, "geometry")?, read_xyz(i, "direction")?, read_channel_number(i, "spacing")?, read_channel_number(i, "count")? as usize,));
 geo_operation!(CircularPattern, "compound", |k, i| k.circular_pattern(&read_geometry(i, "geometry")?, read_xyz(i, "axis")?, read_channel_number(i, "count")? as usize,));
 geo_operation!(GridPattern, "compound", |k, i| k.grid_pattern(
@@ -706,7 +706,7 @@ impl Operator for CurveClosestParameter {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel_read(|kernel| {
             let (parameter, point, distance) = kernel.curve_closest_parameter(&read_geometry(input, "curve")?, read_xyz(input, "point")?).map_err(|error| map_kernel_error(&error))?;
-            Ok(Dictionary::new().insert("parameter", Value::Dictionary(number_dictionary(parameter))).insert("point", Value::Dictionary(point_dictionary(point))).insert("distance", Value::Dictionary(number_dictionary(distance))))
+            Ok(Dictionary::new().insert("parameter", Value::Dictionary(number_dictionary(parameter))).insert("pointOut", Value::Dictionary(point_dictionary(point))).insert("distance", Value::Dictionary(number_dictionary(distance))))
         })
     }
 }
@@ -720,7 +720,7 @@ impl Operator for SurfaceClosestUv {
             Ok(Dictionary::new()
                 .insert("u", Value::Dictionary(number_dictionary(u)))
                 .insert("v", Value::Dictionary(number_dictionary(v)))
-                .insert("point", Value::Dictionary(point_dictionary(point)))
+                .insert("pointOut", Value::Dictionary(point_dictionary(point)))
                 .insert("distance", Value::Dictionary(number_dictionary(distance))))
         })
     }
@@ -800,7 +800,7 @@ impl Operator for ClosestPoint {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel_read(|kernel| {
             let result = kernel.closest_point(&read_geometry(input, "geometry")?, read_xyz(input, "point")?).map_err(|error| map_kernel_error(&error))?;
-            Ok(channel_output("point", point_dictionary(result.point)))
+            Ok(channel_output("pointOut", point_dictionary(result.point)))
         })
     }
 }
@@ -835,7 +835,7 @@ impl Operator for SewFaces {
 }
 
 geo_operation!(HealSolid, "solid", |k, i| k.heal_solid(&read_geometry(i, "geometry")?, read_channel_number(i, "tolerance")?));
-geo_operation!(ConvertToNurbs, "geometry", |k, i| k.convert_to_nurbs(&read_geometry(i, "geometry")?));
+geo_operation!(ConvertToNurbs, "geometryOut", |k, i| k.convert_to_nurbs(&read_geometry(i, "geometry")?));
 // #endregion 🔖️Utilities
 
 // #region 🔖️IO
@@ -953,7 +953,7 @@ pub async fn register(registry: &mut Registry) {
             summary: q("deconstruct", "Deconstructs B-Rep geometry into vertices, edges, and faces"),
             inputs: vec![geometry_channel("brep", "brep.brep")],
             outputs: vec![
-                ChannelSpec::named("B", "Brep", "brep", "BrepGeometry").with_operators(vec!["brep.brep".into()]),
+                ChannelSpec::named("B", "Brep", neural_engine::produced_channel_id("brep"), "BrepGeometry").with_operators(vec!["brep.brep".into()]),
                 topology_output("V", "Vtx", "vertex", "vertex"),
                 topology_output("E", "Edg", "edge", "edge"),
                 topology_output("F", "Fce", "face", "face"),
@@ -1196,7 +1196,7 @@ pub async fn register(registry: &mut Registry) {
         "emoji:↔",
         &q("offset_face", "Offset face"),
         vec![geometry_channel("face", "brep.surf.offset"), number_channel("distance", "brep.surf.offset", 0.1)],
-        out_face("OffsetFace"),
+        out_face_result("OffsetFace"),
         &["Surfaces"],
         Box::new(OffsetFace),
     );
@@ -1340,7 +1340,7 @@ pub async fn register(registry: &mut Registry) {
         "emoji:🔁️",
         &q("translate", "Translate geometry"),
         vec![geometry_channel("geometry", "brep.xform.translate"), ChannelSpec::requires("offset", &["math.move"])],
-        out_geometry("TranslatedGeometry"),
+        out_geometry_result("TranslatedGeometry"),
         &["Transforms"],
         Box::new(Translate),
     );
@@ -1352,7 +1352,7 @@ pub async fn register(registry: &mut Registry) {
         "emoji:🔁️",
         &q("rotate", "Rotate geometry"),
         vec![geometry_channel("geometry", "brep.xform.rotate"), number_channel("angle", "brep.xform.rotate", std::f64::consts::FRAC_PI_4), ChannelSpec::requires("axis", &["brep.xform.rotate"])],
-        out_geometry("RotatedGeometry"),
+        out_geometry_result("RotatedGeometry"),
         &["Transforms"],
         Box::new(Rotate),
     );
@@ -1369,7 +1369,7 @@ pub async fn register(registry: &mut Registry) {
             ChannelSpec::requires("axis", &["brep.xform.rotateAbout"]),
             number_channel("angle", "brep.xform.rotateAbout", std::f64::consts::FRAC_PI_4),
         ],
-        out_geometry("RotatedGeometry"),
+        out_geometry_result("RotatedGeometry"),
         &["Transforms"],
         Box::new(RotateAbout),
     );
@@ -1381,7 +1381,7 @@ pub async fn register(registry: &mut Registry) {
         "emoji:🔁️",
         &q("scale", "Scale geometry"),
         vec![geometry_channel("geometry", "brep.xform.scale"), number_channel("factor", "brep.xform.scale", 2.0), ChannelSpec::requires("center", &["brep.xform.scale"])],
-        out_geometry("ScaledGeometry"),
+        out_geometry_result("ScaledGeometry"),
         &["Transforms"],
         Box::new(Scale),
     );
@@ -1393,11 +1393,11 @@ pub async fn register(registry: &mut Registry) {
         "emoji:🔁️",
         &q("mirror", "Mirror geometry"),
         vec![geometry_channel("geometry", "brep.xform.mirror"), ChannelSpec::requires("origin", &["brep.xform.mirror"]), ChannelSpec::requires("normal", &["brep.xform.mirror"])],
-        out_geometry("MirroredGeometry"),
+        out_geometry_result("MirroredGeometry"),
         &["Transforms"],
         Box::new(Mirror),
     );
-    reg_geo(registry, "brep.xform.copy", "Copy", "Copy", "emoji:📋️", &q("copy_shape", "Copy geometry"), vec![geometry_channel("geometry", "brep.xform.copy")], out_geometry("CopiedGeometry"), &["Transforms"], Box::new(CopyShape));
+    reg_geo(registry, "brep.xform.copy", "Copy", "Copy", "emoji:📋️", &q("copy_shape", "Copy geometry"), vec![geometry_channel("geometry", "brep.xform.copy")], out_geometry_result("CopiedGeometry"), &["Transforms"], Box::new(CopyShape));
     reg_geo(
         registry,
         "brep.xform.linearPattern",
@@ -1730,7 +1730,7 @@ pub async fn register(registry: &mut Registry) {
             "emoji:🎯️",
             &q("curve_closest_parameter", "Certified closest parameter, point, and achieved distance on a curve"),
             vec![geometry_channel("curve", "brep.eval.curveClosestParameter"), point_channel("point", "brep.eval.curveClosestParameter")],
-            vec![ChannelSpec::named("T", "Prm", "parameter", "ClosestParameter"), out_point("ClosestPoint"), ChannelSpec::named("D", "Dst", "distance", "AchievedDistance")],
+            vec![ChannelSpec::named("T", "Prm", "parameter", "ClosestParameter"), out_point_result("ClosestPoint"), ChannelSpec::named("D", "Dst", "distance", "AchievedDistance")],
             &["Evaluate"],
         ),
         Box::new(CurveClosestParameter),
@@ -1745,7 +1745,7 @@ pub async fn register(registry: &mut Registry) {
             "emoji:🎯️",
             &q("surface_closest_uv", "Certified closest (u, v), point, and achieved distance on a surface"),
             vec![geometry_channel("surface", "brep.eval.surfaceClosestUv"), point_channel("point", "brep.eval.surfaceClosestUv")],
-            vec![ChannelSpec::named("U", "U", "u", "ClosestU"), ChannelSpec::named("V", "V", "v", "ClosestV"), out_point("ClosestPoint"), ChannelSpec::named("D", "Dst", "distance", "AchievedDistance")],
+            vec![ChannelSpec::named("U", "U", "u", "ClosestU"), ChannelSpec::named("V", "V", "v", "ClosestV"), out_point_result("ClosestPoint"), ChannelSpec::named("D", "Dst", "distance", "AchievedDistance")],
             &["Evaluate"],
         ),
         Box::new(SurfaceClosestUv),
@@ -1801,7 +1801,7 @@ pub async fn register(registry: &mut Registry) {
             "emoji:📐️",
             &q("closest_point", "Closest point on geometry"),
             vec![geometry_channel("geometry", "brep.measure.closestPoint"), point_channel("point", "brep.measure.closestPoint")],
-            vec![out_point("ClosestPoint")],
+            vec![out_point_result("ClosestPoint")],
             &["Measure"],
         ),
         Box::new(ClosestPoint),
@@ -1874,7 +1874,7 @@ pub async fn register(registry: &mut Registry) {
         "emoji:〰",
         &q("convert_to_nurbs", "Convert to NURBS"),
         vec![geometry_channel("geometry", "brep.util.convertToNurbs")],
-        out_geometry("NurbsGeometry"),
+        out_geometry_result("NurbsGeometry"),
         &["Utilities"],
         Box::new(ConvertToNurbs),
     );

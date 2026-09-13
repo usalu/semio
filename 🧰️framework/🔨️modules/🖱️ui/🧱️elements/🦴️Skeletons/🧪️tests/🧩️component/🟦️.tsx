@@ -16,7 +16,7 @@ describe("CanvasSkeleton", () => {
       </LevelProvider>,
     );
     expect(container.querySelectorAll('[data-slot="canvas-skeleton-stack"]')).toHaveLength(2);
-    expect(container.querySelectorAll('[data-window-silhouette-border]')).toHaveLength(2);
+    expect(container.querySelectorAll('[data-window-silhouette-border][data-kind="loading"]')).toHaveLength(2);
     expect(container.querySelectorAll('[data-window-silhouette-chip]')).toHaveLength(2);
     expect(container.querySelector('[data-slot="canvas-skeleton-stack"][data-active="true"]')).toBeTruthy();
     expect(container.querySelector(".flex-row.gap-single")?.children).toHaveLength(2);

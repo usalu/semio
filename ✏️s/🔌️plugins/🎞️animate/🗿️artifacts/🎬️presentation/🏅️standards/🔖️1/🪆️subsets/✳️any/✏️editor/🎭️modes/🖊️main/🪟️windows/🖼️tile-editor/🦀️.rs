@@ -77,7 +77,7 @@ fn deck_to_canvas_layers(deck: &PresentationSnapshot) -> String {
 
 //#region 🔖️Render
 pub fn render(deck: &PresentationSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let scene = Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: deck_to_canvas_layers(deck), snapshot: None };
+    let scene = Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: deck_to_canvas_layers(deck), snapshot: None, tool_run_trace: None, lanes: Vec::new() };
     semio_framework_plugin::scene_surface(PRESENTATION_PLAY_SURFACE_MAIN, semio_framework_ui_contract::SurfaceKind::Canvas2d, &scene)
 }
 //#endregion 🔖️Render

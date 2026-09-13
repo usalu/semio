@@ -134,6 +134,7 @@ mod tests {
             crate::Component::NumberStepper(_) => "numberStepper",
             crate::Component::Ring(_) => "ring",
             crate::Component::IconSelect(_) => "iconSelect",
+            crate::Component::Progress(_) => "progress",
             crate::Component::Tree(_) => "tree",
             crate::Component::TreeSection(_) => "treeSection",
             crate::Component::TreeItem(_) => "treeItem",
@@ -260,7 +261,7 @@ mod tests {
                 count += 1;
             }
         }
-        assert_eq!(count, 62);
+        assert_eq!(count, 63);
     }
     //#endregion 🔍️Pairing
 
@@ -282,7 +283,7 @@ mod tests {
             }
         }
         let expected: BTreeSet<&str> =
-            ["container", "text", "button", "separator", "input", "select", "toggle", "keyValueList", "slider", "numberStepper", "ring", "iconSelect", "tree", "treeSection", "treeItem", "image", "surface", "extension"].into_iter().collect();
+            ["container", "text", "button", "separator", "input", "select", "toggle", "keyValueList", "slider", "numberStepper", "ring", "iconSelect", "progress", "tree", "treeSection", "treeItem", "image", "surface", "extension"].into_iter().collect();
         let missing: Vec<&&str> = expected.iter().filter(|tag| !seen.contains(**tag)).collect();
         assert!(missing.is_empty(), "Component variants with no fixture anywhere in the corpus: {missing:?}");
     }

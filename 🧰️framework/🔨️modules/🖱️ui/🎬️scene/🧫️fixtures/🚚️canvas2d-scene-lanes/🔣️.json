@@ -1,0 +1,47 @@
+{
+  "$comment": "🚚️ The one language-neutral declaration of the canvas-2d scene lane carrier — the 2d twin of 🚚️world3d-scene-lanes. Rust pins Canvas2dSceneLane / CANVAS2D_SCENE_LANE_* (🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🦀️.rs) against it; TypeScript pins CANVAS2D_SCENE_LANES / canvas2dSceneFromLanes (🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts) against it. The roundTrip toolRunTrace payload is the base64url of ⏯️tool-run/🧫️fixtures/📼️trace-pages.json deltas[0].",
+  "schema": "canvas-2d@1",
+  "laneKeyPrefix": "framework.scene.canvas2d.",
+  "spineFields": [
+    "cameraX",
+    "cameraY",
+    "zoom",
+    "layersJson",
+    "snapshot",
+    "lanes"
+  ],
+  "lanes": [
+    {
+      "lane": "toolRunTrace",
+      "field": "toolRunTrace",
+      "bodyKey": "framework.scene.canvas2d.toolRunTrace",
+      "optional": true
+    }
+  ],
+  "roundTrip": {
+    "assembled": {
+      "cameraX": 1.5,
+      "cameraY": -2.0,
+      "zoom": 2.0,
+      "layersJson": "[]",
+      "toolRunTrace": "AAQBDQQBBAMCBCoDBAEECCAACBAYICgwOEBIUFhgaHB4gIiQmKCosLjAyNDY4Ojw-AICAwQCBAwCCEwABAENBAEEAwIEKgMEAQQIIAAIEBggKDA4QEhQWGBocHiAiJCYoKiwuMDI0Njg6PD4AgQAAwgCAQEECBABAAAAAAAAAAIAAAAAAAAACFsACAENBAEEAwIEKgMEAQQIIAAIEBggKDA4QEhQWGBocHiAiJCYoKiwuMDI0Njg6PD4AgQBAwgBAAQICAMAAAAAAAAABQgBAgYIAgkABwgBAgoICOsDAAAAAAAA"
+    },
+    "laneTexts": {
+      "framework.scene.canvas2d.toolRunTrace": "AAQBDQQBBAMCBCoDBAEECCAACBAYICgwOEBIUFhgaHB4gIiQmKCosLjAyNDY4Ojw-AICAwQCBAwCCEwABAENBAEEAwIEKgMEAQQIIAAIEBggKDA4QEhQWGBocHiAiJCYoKiwuMDI0Njg6PD4AgQAAwgCAQEECBABAAAAAAAAAAIAAAAAAAAACFsACAENBAEEAwIEKgMEAQQIIAAIEBggKDA4QEhQWGBocHiAiJCYoKiwuMDI0Njg6PD4AgQBAwgBAAQICAMAAAAAAAAABQgBAgYIAgkABwgBAgoICOsDAAAAAAAA"
+    },
+    "spine": {
+      "cameraX": 1.5,
+      "cameraY": -2.0,
+      "zoom": 2.0,
+      "layersJson": "[]",
+      "lanes": [
+        {
+          "lane": "toolRunTrace",
+          "bytes": 304,
+          "hash": "83e0ab7ead42f955"
+        }
+      ]
+    },
+    "traceDeltaFixture": "deltas[0]"
+  }
+}

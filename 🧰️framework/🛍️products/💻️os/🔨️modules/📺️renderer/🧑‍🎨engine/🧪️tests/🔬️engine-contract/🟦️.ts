@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { flushSync } from "react-dom";
 import type { BackboneWorkerResponse } from "@semio-tech/framework-os";
 import { applyPatch } from "fast-json-patch";
-import { Layout, UIDialog, childElementId, createTutorialClock, isElementId, uiI18n } from "@semio-tech/ui-react";
+import { Layout, UIDialog, childElementId, createTutorialClock, isElementId, singleTreeLeaf, uiI18n } from "@semio-tech/ui-react";
 import { createWorldProjectionTemplates, worldProjectionSwitchTreeItems } from "@semio-tech/infinite-world-r3f";
 import { resolvePluginCanvasStatus, type PluginSupervisorState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import bootCanvasFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/🔣️.json";
@@ -1729,7 +1729,7 @@ import {
 import { ENTWERFEN_MIT_BESTAND_BRAND_IDS, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🪧️brand.ts";
 import { Footer, navbarFillItem, progressPanelTabSelection, resolvePanelBranchBodyLeaf, resolveTranslationLabel, SelectionMarquee, uiDataLabel, formatKeybindingShortcut, buildKeysByActionId, type PanelTabNode, type TreeDataSection } from "@semio-tech/ui-react";
 import { renderUiControl } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
-import { WorldOrbitProjectionSwitchPane, world3dProjectionPaneElementId, parseWorldBrushPreview, resolveClickInstanceIdFromProjected, world3dInstancePickUsesInteractionDomain, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick, world3dFrameCameraFromBounds, world3dFrameCameraFromInstances, world3dSuggestionsGestureArmed, world3dRetainLocalVortexHover, leftoverHoveredVortexFullIdV1, leftoverOverlayCarryingSelectionV1, leftoverSelectIdsMustNameHoverPickV1, leftoverOverlayCarryingUtilityV1, leftoverOverlayArmedBrushUtilityV1, leftoverOverlayArmedUtilityV1, leftoverTreeItemSelectedV1, leftoverWorldOverlayAppliesV1, retainWorldBrushPreviewJsonV1, mergeWorldInteractionWithLeftoverV1, mergeWorldSelectionWithLeftoverV1, gumballPreviewWorldPoint, world3dSuggestionsGestureConsumesContextMenu, world3dSuggestionsRightDownRoutesOnWindowCapture, worldVortexHitProxy, worldInstanceMeshRaycast, applyWorldInstanceMeshRaycast } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { WorldOrbitProjectionSwitchPane, world3dProjectionPaneElementId, parseWorldBrushPreview, resolveClickInstanceIdFromProjected, world3dInstancePickUsesInteractionDomain, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick, world3dFrameCameraFromBounds, world3dFrameCameraFromInstances, world3dSuggestionsGestureArmed, world3dRetainLocalVortexHover, leftoverHoveredVortexFullIdV1, leftoverOverlayCarryingSelectionV1, leftoverSelectIdsMustNameHoverPickV1, leftoverOverlayCarryingUtilityV1, leftoverOverlayArmedBrushUtilityV1, leftoverTreeItemSelectedV1, leftoverWorldOverlayAppliesV1, retainWorldBrushPreviewJsonV1, mergeWorldInteractionWithLeftoverV1, mergeWorldSelectionWithLeftoverV1, gumballPreviewWorldPoint, world3dSuggestionsGestureConsumesContextMenu, world3dSuggestionsRightDownRoutesOnWindowCapture, worldVortexHitProxy, worldInstanceMeshRaycast, applyWorldInstanceMeshRaycast } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 import { leftoverInspectionPanelHash, leftoverInspectionRefreshScope, uiRefreshSectionUnchanged } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem, LUH_LOGO_URL, LUH_URL, UDK_LOGO_URL, UDK_URL, ZUKUNFT_BAU_PROJECT_URL } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
@@ -1826,10 +1826,10 @@ import {
   worldCameraSetCameraDispatchArgs,
   snapWorldPointToGrid,
   world3dViewportCameraSeedKey,
+  world3dFitProjectionContent,
+  world3dProjectionContentFrameMounted,
   world3dCameraDomJson,
   worldInstancePickBlocked,
-  worldFillBuildShouldTick,
-  worldFillBuildHostTickAllowed,
   parseWorldTerrainStyle,
   clearWorldCatalogueDropPreview,
   getWorldCatalogueDropPreview,
@@ -1917,8 +1917,10 @@ import {
   resolveUtilities,
   panelTabDefinitionToNode,
   panelAnchorForGroup,
+  integrateAppSettingsPanelTabsIntoFrameworkBranch,
   SHELL_OWNED_PANEL_TAB_IDS,
   shellLabel,
+  shellTabIcon,
   shellRendersPanelTabItself,
   syncShellLabelLocale,
   uiIntentToActionDescriptor,
@@ -2317,8 +2319,8 @@ describe("in-flight skipping interval", () => {
   });
 
   it("gates on exactly what run returns — a discarded dispatch promise gates nothing", async () => {
-    // 🏁️ The measured 2026-09-09 20:55 defect: `World3dHost`'s fill tick body was
-    // `() => { if (busy) return; dispatch("fillBuildTick"); }`, whose block form DISCARDS the dispatch
+    // 🏁️ The measured 2026-09-09 20:55 defect: `World3dHost`'s background tick body was
+    // `() => { if (busy) return; dispatch(tick); }`, whose block form DISCARDS the dispatch
     // promise, so the in-flight flag cleared on the same microtask and 120 ms ticks queued into the
     // serialized guest until the per-actor turn queue overflowed. This pins the difference so the shape
     // cannot silently regress: same slow work, only the return value differs.
@@ -5570,331 +5572,6 @@ describe("framework renderer hosts", () => {
     expect(markup).toContain("data-world-projection-kind-switch");
   });
 
-  it("admits only the fixed localized fill diagnostic schema", () => {
-    const diagnostic = {
-      operation: 41,
-      baseRevision: 7,
-      registryGeneration: 11,
-      sequence: 5,
-      generation: 3,
-      stage: "test-collision",
-      statusLabel: "Fill progress",
-      targetVortexFullId: "host:v0",
-      candidateObjectKindId: "candidate",
-      verdict: "collision",
-      candidateGhost: null,
-      tried: [],
-      testedCount: 13,
-      requestedCount: 100,
-      stallReason: null,
-      currentPairObjectId: "obstacle-1",
-      collisionCount: 1,
-      sampleCursor: 4,
-      insideBoth: 2,
-      lastSample: [0.25, -0.5, 1],
-      candidatePage: ["a", "b", null, null, null, null, null, null],
-      truncated: false,
-      rejectionReason: "solid-overlap",
-      targetCursor: 6,
-      candidateCursor: 7,
-      acceptedCount: 8,
-      searchCount: 23,
-      rejectedCount: 4,
-    };
-    const page = (statusLabel: string, override: Record<string, unknown> = {}, root: Record<string, unknown> = {}) => JSON.stringify({ ...root, fillBuildPreview: { ...diagnostic, statusLabel, ...override } });
-    const oneKeyNullGhostRoot = page("Fill progress");
-    expect(Object.keys(JSON.parse(oneKeyNullGhostRoot))).toHaveLength(1);
-    expect(parseWorldBrushPreview(oneKeyNullGhostRoot)?.fillBuildPreview?.statusLabel).toBe("Fill progress");
-    expect(parseWorldBrushPreview(page("Füllfortschritt"))?.fillBuildPreview?.statusLabel).toBe("Füllfortschritt");
-    expect(parseWorldBrushPreview(page("Fill progress", {}, { extra: true }))).toBeNull();
-    expect(parseWorldBrushPreview(page("Fill progress", { extra: true }))).toBeNull();
-    const missing = { fillBuildPreview: { ...diagnostic } } as { fillBuildPreview: Record<string, unknown> };
-    delete missing.fillBuildPreview.statusLabel;
-    expect(parseWorldBrushPreview(JSON.stringify(missing))).toBeNull();
-    expect(parseWorldBrushPreview(page(""))).toBeNull();
-    expect(parseWorldBrushPreview(page("x".repeat(256)))).not.toBeNull();
-    expect(parseWorldBrushPreview(page("x".repeat(257)))).toBeNull();
-    expect(parseWorldBrushPreview(page("ü".repeat(128)))).not.toBeNull();
-    expect(parseWorldBrushPreview(page("ü".repeat(129)))).toBeNull();
-    for (const field of [
-      "operation",
-      "baseRevision",
-      "registryGeneration",
-      "sequence",
-      "generation",
-      "collisionCount",
-      "sampleCursor",
-      "insideBoth",
-      "targetCursor",
-      "candidateCursor",
-      "acceptedCount",
-      "testedCount",
-      "requestedCount",
-      "searchCount",
-      "rejectedCount",
-    ]) {
-      expect(parseWorldBrushPreview(page("Fill progress", { [field]: Number.MAX_SAFE_INTEGER }))).not.toBeNull();
-      expect(parseWorldBrushPreview(page("Fill progress", { [field]: Number.MAX_SAFE_INTEGER + 1 }))).toBeNull();
-    }
-    // 📏️ The ghost envelope carries a ring of tried candidates beside the live one, so the cap is 16 KiB —
-    // still a hard refusal one byte past it, never a budget the producer may plan around.
-    const emptyStagePage = page("Fill progress", { stage: "" });
-    const exactWirePage = page("Fill progress", { stage: "x".repeat(16384 - emptyStagePage.length) });
-    const plusOneWirePage = page("Fill progress", { stage: "x".repeat(16384 - emptyStagePage.length + 1) });
-    expect(exactWirePage).toHaveLength(16384);
-    expect(plusOneWirePage).toHaveLength(16385);
-    expect(parseWorldBrushPreview(exactWirePage)).not.toBeNull();
-    expect(parseWorldBrushPreview(plusOneWirePage)).toBeNull();
-    const oversizedOrdinaryBrushPage = JSON.stringify({ meshUrl: "x".repeat(16385) });
-    expect(oversizedOrdinaryBrushPage.length).toBeGreaterThan(16384);
-    expect(parseWorldBrushPreview(oversizedOrdinaryBrushPage)?.meshUrl).toHaveLength(16385);
-    expect(parseWorldBrushPreview(JSON.stringify({ fillBuildPreview: { ...diagnostic, statusLabel: 7 } }))).toBeNull();
-    expect(parseWorldBrushPreview("{")).toBeNull();
-    expect(parseWorldBrushPreview(page("Fill progress", { candidatePage: diagnostic.candidatePage.slice(0, 7) }))).toBeNull();
-    expect(parseWorldBrushPreview(page("Fill progress", { candidatePage: [...diagnostic.candidatePage, null] }))).toBeNull();
-    const missingGhost = { fillBuildPreview: { ...diagnostic } } as { fillBuildPreview: Record<string, unknown> };
-    delete missingGhost.fillBuildPreview.candidateGhost;
-    expect(parseWorldBrushPreview(JSON.stringify(missingGhost))).toBeNull();
-
-    const ghost = {
-      targetVortexFullId: "host:v0",
-      objectKindId: "candidate",
-      sourceVortexIndex: 2,
-      meshUrl: "/candidate.glb",
-      origin: [1, 2, 3],
-      orientation: [0, 0, 0, 1],
-    };
-    const ghostRoot = { ...ghost, color: "#38bdf8", opacity: 0.35, verdict: "collision" };
-    const fullGhostRoot = page("Fill progress", { candidateGhost: ghost }, ghostRoot);
-    expect(Object.keys(JSON.parse(fullGhostRoot))).toHaveLength(10);
-    expect(parseWorldBrushPreview(fullGhostRoot)?.verdict).toBe("collision");
-    expect(parseWorldBrushPreview(page("Fill progress", {}, { verdict: "nonsense" }))).toBeNull();
-    expect(parseWorldBrushPreview(page("Fill progress", {}, { color: "x".repeat(128) }))).not.toBeNull();
-    for (const malformedRoot of [
-      { targetVortexFullId: 7 },
-      { objectKindId: 7 },
-      { sourceVortexIndex: "2" },
-      { sourceVortexIndex: -1 },
-      { sourceVortexIndex: Number.MAX_SAFE_INTEGER + 1 },
-      { meshUrl: 7 },
-      { origin: "bad" },
-      { origin: [1, 2] },
-      { origin: [1, Number.NaN, 3] },
-      { orientation: "bad" },
-      { orientation: [0, 0, 1] },
-      { orientation: [0, 0, Number.POSITIVE_INFINITY, 1] },
-      { color: 7 },
-      { color: "x".repeat(129) },
-      { color: "ü".repeat(65) },
-      { opacity: true },
-      { opacity: 0.34 },
-    ]) {
-      expect(parseWorldBrushPreview(page("Fill progress", {}, malformedRoot))).toBeNull();
-    }
-    for (const mismatchedRoot of [
-      { ...ghostRoot, targetVortexFullId: "other:v0" },
-      { ...ghostRoot, objectKindId: "other" },
-      { ...ghostRoot, sourceVortexIndex: 3 },
-      { ...ghostRoot, meshUrl: "/other.glb" },
-      { ...ghostRoot, origin: [1, 2, 4] },
-      { ...ghostRoot, orientation: [0, 0, 1, 0] },
-    ]) {
-      expect(parseWorldBrushPreview(page("Fill progress", { candidateGhost: ghost }, mismatchedRoot))).toBeNull();
-    }
-    for (const malformedGhost of [
-      [],
-      {},
-      { ...ghost, meshUrl: undefined },
-      { ...ghost, meshUrl: 7 },
-      { ...ghost, sourceVortexIndex: -1 },
-      { ...ghost, sourceVortexIndex: Number.MAX_SAFE_INTEGER + 1 },
-      { ...ghost, origin: [1, 2] },
-      { ...ghost, orientation: [0, 0, 1] },
-      { ...ghost, origin: [1, Number.NaN, 3] },
-      { ...ghost, orientation: [0, 0, Number.POSITIVE_INFINITY, 1] },
-      { ...ghost, extra: true },
-    ]) {
-      expect(parseWorldBrushPreview(page("Fill progress", { candidateGhost: malformedGhost }, ghostRoot))).toBeNull();
-    }
-  });
-
-  it("parses the tried-candidate ring and the per-candidate verdicts, and refuses an unbounded one", () => {
-    const ghost = (index: number) => ({ targetVortexFullId: `host:v${index}`, objectKindId: "candidate", sourceVortexIndex: index, meshUrl: "/candidate.glb", origin: [index, 2, 3], orientation: [0, 0, 0, 1] });
-    const tried = (count: number) => Array.from({ length: count }, (_unused, index) => ({ sequence: index, verdict: index % 2 === 0 ? "collision" : "accepted", reason: index % 2 === 0 ? "solid-overlap" : null, ghost: ghost(index) }));
-    const diagnostic = (override: Record<string, unknown> = {}) => ({
-      operation: 41,
-      baseRevision: 7,
-      registryGeneration: 11,
-      sequence: 5,
-      generation: 3,
-      stage: "test-collision",
-      statusLabel: "Testing collision",
-      targetVortexFullId: "host:v0",
-      candidateObjectKindId: "candidate",
-      verdict: "testing",
-      candidateGhost: null,
-      tried: tried(12),
-      testedCount: 13,
-      requestedCount: 100,
-      stallReason: null,
-      currentPairObjectId: null,
-      collisionCount: 6,
-      sampleCursor: 0,
-      insideBoth: 0,
-      lastSample: null,
-      candidatePage: [null, null, null, null, null, null, null, null],
-      truncated: false,
-      rejectionReason: null,
-      targetCursor: 0,
-      candidateCursor: 0,
-      acceptedCount: 6,
-      searchCount: 23,
-      rejectedCount: 6,
-      ...override,
-    });
-    const page = (override: Record<string, unknown> = {}) => JSON.stringify({ fillBuildPreview: diagnostic(override) });
-
-    const parsed = parseWorldBrushPreview(page())?.fillBuildPreview;
-    expect(parsed?.tried).toHaveLength(12);
-    expect(parsed?.tried[0]?.verdict).toBe("collision");
-    expect(parsed?.tried[0]?.reason).toBe("solid-overlap");
-    expect(parsed?.tried[1]?.ghost.sourceVortexIndex).toBe(1);
-    expect(parsed?.testedCount).toBe(13);
-    expect(parsed?.requestedCount).toBe(100);
-    expect(parsed?.stallReason).toBeNull();
-
-    // 🕯️ Twelve is the producer's ring; a thirteenth entry is an unbounded payload, not a richer one.
-    expect(parseWorldBrushPreview(page({ tried: tried(13) }))).toBeNull();
-    expect(parseWorldBrushPreview(page({ tried: [] }))?.fillBuildPreview?.tried).toEqual([]);
-    expect(parseWorldBrushPreview(page({ tried: "12" }))).toBeNull();
-    expect(parseWorldBrushPreview(page({ tried: [{ sequence: 0, verdict: "collision", ghost: ghost(0), extra: true }] }))).toBeNull();
-    expect(parseWorldBrushPreview(page({ tried: [{ sequence: 0, verdict: "exploded", ghost: ghost(0) }] }))).toBeNull();
-    expect(parseWorldBrushPreview(page({ tried: [{ sequence: -1, verdict: "collision", ghost: ghost(0) }] }))).toBeNull();
-    expect(parseWorldBrushPreview(page({ tried: [{ sequence: 0, verdict: "collision", ghost: { ...ghost(0), origin: [1, 2] } }] }))).toBeNull();
-    expect(parseWorldBrushPreview(page({ tried: [{ sequence: 0, verdict: "collision", reason: 7, ghost: ghost(0) }] }))).toBeNull();
-    expect(parseWorldBrushPreview(page({ tried: [null] }))).toBeNull();
-    expect(parseWorldBrushPreview(page({ verdict: "elsewhere" }))).toBeNull();
-    expect(parseWorldBrushPreview(page({ stallReason: "document-capacity" }))?.fillBuildPreview?.stallReason).toBe("document-capacity");
-    expect(parseWorldBrushPreview(page({ stallReason: 7 }))).toBeNull();
-    // ⚖️ A verdict rides the tried ghost too, so the viewport can paint each remembered pose on its own.
-    expect(parseWorldBrushPreview(page({ tried: [{ sequence: 0, verdict: "collision", ghost: { ...ghost(0), verdict: "collision" } }] }))?.fillBuildPreview?.tried[0]?.ghost.verdict).toBe("collision");
-  });
-
-  it("reads tested · locked / requested, the verdict and the stall reason off the fill overlay probe attributes", () => {
-    const markup = renderToStaticMarkup(
-      createElement(World3dHost, {
-        node: {
-          type: "componentScene",
-          surfaceId: "puzzle.3d.play.viewport",
-          controllerId: "puzzle3d-play",
-          componentKind: "world-3d",
-          world3d: {
-            cameraJson: '{"position":[4,4,4],"target":[0,0,0],"zoom":1}',
-            meshesJson: "[]",
-            instancesJson: "[]",
-            selectionJson: "{}",
-            brushPreviewJson: JSON.stringify({
-              fillBuildPreview: {
-                operation: 1,
-                baseRevision: 1,
-                registryGeneration: 1,
-                sequence: 2,
-                generation: 1,
-                stage: "select-target",
-                statusLabel: "Angehalten — kein offener Vortex",
-                targetVortexFullId: null,
-                candidateObjectKindId: null,
-                verdict: "rejected",
-                candidateGhost: null,
-                tried: [{ sequence: 1, verdict: "collision", reason: "solid-overlap", ghost: { targetVortexFullId: "host:v1", objectKindId: "candidate", sourceVortexIndex: 1, meshUrl: "/candidate.glb", origin: [1, 2, 3], orientation: [0, 0, 0, 1] } }],
-                testedCount: 37,
-                requestedCount: 250,
-                stallReason: "no-open-vortex",
-                currentPairObjectId: null,
-                collisionCount: 9,
-                sampleCursor: 0,
-                insideBoth: 0,
-                lastSample: null,
-                candidatePage: [null, null, null, null, null, null, null, null],
-                truncated: false,
-                rejectionReason: null,
-                targetCursor: 0,
-                candidateCursor: 0,
-                acceptedCount: 12,
-                searchCount: 0,
-                rejectedCount: 25,
-              },
-            }),
-          },
-        },
-        onAction: noopAction,
-      }),
-    );
-    expect(markup).toContain('data-fill-tested="37"');
-    expect(markup).toContain('data-fill-locked="12"');
-    expect(markup).toContain('data-fill-requested="250"');
-    expect(markup).toContain('data-fill-verdict="rejected"');
-    expect(markup).toContain('data-fill-tried-count="1"');
-    expect(markup).toContain('data-fill-stall-reason="no-open-vortex"');
-    expect(markup).toContain("<span>Angehalten — kein offener Vortex</span>");
-    expect(markup).toContain("37 · 12 / 250");
-  });
-
-  it.each(["Fill progress", "Füllfortschritt"])("renders the %s fill label with visible and ARIA parity", (statusLabel) => {
-    const brushPreviewJson = JSON.stringify({
-      fillBuildPreview: {
-        operation: 1,
-        baseRevision: 1,
-        registryGeneration: 1,
-        sequence: 0,
-        generation: 1,
-        stage: "census",
-        statusLabel,
-        targetVortexFullId: null,
-        candidateObjectKindId: null,
-        verdict: "testing",
-        candidateGhost: null,
-        tried: [],
-        testedCount: 0,
-        requestedCount: 1,
-        stallReason: null,
-        currentPairObjectId: null,
-        collisionCount: 0,
-        sampleCursor: 0,
-        insideBoth: 0,
-        lastSample: null,
-        candidatePage: [null, null, null, null, null, null, null, null],
-        truncated: false,
-        rejectionReason: null,
-        targetCursor: 0,
-        candidateCursor: 0,
-        acceptedCount: 0,
-        searchCount: 0,
-        rejectedCount: 0,
-      },
-    });
-    const markup = renderToStaticMarkup(
-      createElement(World3dHost, {
-        node: {
-          type: "componentScene",
-          surfaceId: "puzzle.3d.play.viewport",
-          controllerId: "puzzle3d-play",
-          componentKind: "world-3d",
-          world3d: {
-            cameraJson: '{"position":[4,4,4],"target":[0,0,0],"zoom":1}',
-            meshesJson: "[]",
-            instancesJson: "[]",
-            selectionJson: "{}",
-            brushPreviewJson,
-          },
-        },
-        onAction: noopAction,
-      }),
-    );
-    expect(markup).toContain(`aria-label="${statusLabel}; census; 0 · 0 / 1; testing;`);
-    expect(markup).toContain(`<span>${statusLabel}</span>`);
-  });
-
   it("mirrors the world-3d camera pose into a stable rounded dom json attribute", () => {
     const pose = { position: [1.000004, 2, 3], target: [0, 0, 0], zoom: 1, up: [0, 0, 1], projection: "perspective", fov: 50 } as const;
     const first = world3dCameraDomJson(pose);
@@ -5925,6 +5602,17 @@ describe("framework renderer hosts", () => {
     expect(merged.fov).toBe(45);
     expect(merged.explicitProjection).toBe(true);
     expect(merged.up).toEqual([0, 1, 0]);
+  });
+
+  it("world3dFitProjectionContent pauses fill-driven projection reframes while the user is navigating", () => {
+    expect(world3dFitProjectionContent(false, false, true)).toBe(true);
+    expect(world3dFitProjectionContent(true, false, true)).toBe(false);
+    expect(world3dFitProjectionContent(false, true, true)).toBe(false);
+    expect(world3dFitProjectionContent(false, false, false)).toBe(false);
+    expect(world3dProjectionContentFrameMounted(true, false, false)).toBe(true);
+    expect(world3dProjectionContentFrameMounted(true, false, true)).toBe(false);
+    expect(world3dProjectionContentFrameMounted(false, true, true)).toBe(false);
+    expect(world3dProjectionContentFrameMounted(false, true, false)).toBe(true);
   });
 
   it("buildWorldCameraDispatchArgs carries position/target/zoom/up but never a projection field", () => {
@@ -6024,28 +5712,12 @@ describe("framework renderer hosts", () => {
     });
   });
 
-  it("blocks instance picking for fill, brush, and volume brush engagements but not move", () => {
+  it("blocks instance picking for brush and volume brush engagements but not move", () => {
     expect(worldInstancePickBlocked("brush")).toBe(true);
-    expect(worldInstancePickBlocked("fill")).toBe(true);
     expect(worldInstancePickBlocked("volumeBrush")).toBe(true);
+    expect(worldInstancePickBlocked("surfaceBrush")).toBe(true);
     expect(worldInstancePickBlocked("move")).toBe(false);
     expect(worldInstancePickBlocked(undefined)).toBe(false);
-  });
-
-  it("an unstarted fill plan (done true, count 0) still schedules fillBuildTick while fill is armed", () => {
-    expect(worldFillBuildShouldTick("select", { done: true, count: 0 }), "fails-before: !done starved the first tick").toBe(false);
-    expect(worldFillBuildShouldTick("fill", { done: true, count: 0 })).toBe(true);
-    expect(worldFillBuildShouldTick("fill", undefined)).toBe(true);
-    expect(worldFillBuildShouldTick("fill", { done: false, count: 0 })).toBe(true);
-    expect(worldFillBuildShouldTick("fill", { done: true, count: 12 })).toBe(false);
-    expect(worldFillBuildShouldTick("select", { done: true, count: 0 }, "fill")).toBe(true);
-  });
-
-  it("skips fillBuildTick while an Isolated job is driving unless a UI poll is due", () => {
-    expect(worldFillBuildHostTickAllowed(true, true, false), "fails-before: driving ticks starved the job pump").toBe(false);
-    expect(worldFillBuildHostTickAllowed(true, false, false)).toBe(true);
-    expect(worldFillBuildHostTickAllowed(true, true, true)).toBe(true);
-    expect(worldFillBuildHostTickAllowed(false, false, true)).toBe(false);
   });
 
   it("keeps the vortex hit proxy visible so Three's raycaster does not skip it", () => {
@@ -8342,11 +8014,10 @@ describe("registry-derived utilities and activation (P5)", () => {
       'return dispatchSettled("interactionHover", world3dHoverActionArgs(interactionDomainId, interactionGranularity, target));',
       'return dispatchSettled("interactionHover", args);',
       'return dispatchSettled("suggestionsTick");',
-      'return dispatchSettled("fillBuildTick");',
     ]) {
       expect(source.includes(site), `[DEBUG] a gated lane must read: ${site}`).toBe(true);
     }
-    for (const swallowed of ['void dispatch("suggestionsTick")', 'void dispatch("fillBuildTick")', 'return dispatch("suggestionsTick")', 'return dispatch("fillBuildTick")', 'dispatch("interactionHover"']) {
+    for (const swallowed of ['void dispatch("suggestionsTick")', 'return dispatch("suggestionsTick")', 'dispatch("interactionHover"']) {
       expect(source.includes(swallowed), `[DEBUG] ${swallowed} hands the in-flight gate a discarded promise — use dispatchSettled`).toBe(false);
     }
     // 🕰️ A per-gesture tick may only be REQUESTED on the single-flight lane, never dispatched straight into
@@ -9021,18 +8692,14 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     console.warn("[DEBUG] leftover publication authority", JSON.stringify({ publications: publications.length }));
   });
 
-  it("leftover fill tool overlays guest select so fillBuildTick still arms", () => {
-    const leftover = { ids: [] as const, hoveredId: null, gumballActive: false, gumballAnchorId: null, activeUtility: "select", activeToolId: "fill" };
-    expect(leftoverOverlayArmedUtilityV1(leftover)).toBe("fill");
+  it("carries an armed mode tool id across hover leftovers without overriding the published utility", () => {
+    const leftover = { ids: [] as const, hoveredId: null, gumballActive: false, gumballAnchorId: null, activeUtility: "select", activeToolId: "tool-a" };
     expect(leftoverWorldOverlayAppliesV1(leftover)).toBe(true);
-    expect(mergeWorldInteractionWithLeftoverV1({ activeUtility: "select" }, leftover).activeUtility).toBe("fill");
-    expect(worldFillBuildShouldTick("select", { done: true, count: 0 }, leftover.activeToolId)).toBe(true);
+    expect(mergeWorldInteractionWithLeftoverV1({ activeUtility: "brush" }, leftover).activeUtility).toBe("select");
     const hoverOnly = { ids: [] as const, hoveredId: "seed-left-001:v0", hoveredDomain: "vortex" as const, gumballActive: false, gumballAnchorId: null };
     const carried = leftoverOverlayCarryingUtilityV1(hoverOnly, leftover);
-    expect(carried.activeToolId).toBe("fill");
-    expect(leftoverOverlayArmedUtilityV1(carried)).toBe("fill");
-    expect(worldFillBuildShouldTick(mergeWorldInteractionWithLeftoverV1({ activeUtility: "select" }, carried).activeUtility, { done: true, count: 0 }, carried.activeToolId)).toBe(true);
-    console.warn("[DEBUG] leftover fill tool hop", JSON.stringify({ armed: leftoverOverlayArmedUtilityV1(leftover), carriedTool: carried.activeToolId }));
+    expect(carried.activeToolId).toBe("tool-a");
+    expect(mergeWorldInteractionWithLeftoverV1({}, carried).activeUtility).toBe("select");
   });
 
   it("first leftover pick keeps selection across hover leftover and busts the Inspection hash skip", () => {
@@ -9868,6 +9535,30 @@ describe("createFrameworkSettingsPanelTab", () => {
     expect(settings.id).toBe("framework.settings");
     expect(settings.children.map((child) => child.id)).toEqual(["framework.settings.general", "framework.settings.theme", "framework.settings.keybindings"]);
     expect(settings.children.map((child) => child.name)).toEqual(["General", "Theme", "Hotkeys"]);
+  });
+});
+
+describe("integrateAppSettingsPanelTabsIntoFrameworkBranch", () => {
+  it("nests app Settings-group tabs inside framework.settings so the bottom-right anchor carries one Settings toggle", () => {
+    const framework = createFrameworkSettingsPanelTab(() => null);
+    const appTab = singleTreeLeaf({
+      id: "puzzle3d.panel.settings",
+      icon: shellTabIcon("settings"),
+      name: "Einstellungen",
+      order: 0,
+      tree: { resolveTree: () => ({ sections: [{ id: "puzzle3d-play-settings", items: [] }] }) },
+    });
+    const integrated = integrateAppSettingsPanelTabsIntoFrameworkBranch(framework, [appTab]);
+    expect(integrated.kind).toBe("branch");
+    if (integrated.kind !== "branch") throw new Error("integrated settings must be a branch");
+    expect(integrated.id).toBe("framework.settings");
+    expect(integrated.children[0]?.id).toBe("puzzle3d.panel.settings");
+    expect(integrated.children.map((child) => child.id)).toEqual([
+      "puzzle3d.panel.settings",
+      "framework.settings.general",
+      "framework.settings.theme",
+      "framework.settings.keybindings",
+    ]);
   });
 });
 
@@ -11370,6 +11061,7 @@ describe("example switch — the completion's scope is what re-takes the flow wi
 
 //#region 📷️CameraAndLabelFitTwins
 import cameraFitFixture from "../../../../♾️infinite/🖼️canvas/🧫️fixtures/📷️camera-fit/🔣️.json" with { type: "json" };
+import portSidesFixture from "../../../../🧠️neural/⚙️engine/🧫️fixtures/🔌️port-sides/🔣️.json" with { type: "json" };
 import labelFitFixture from "../../../../♾️infinite/🖼️canvas/🧫️fixtures/🏷️label-fit/🔣️.json" with { type: "json" };
 
 /** 📏️ The fixture's own synthetic advance — the ONE measure both implementations are driven with, so
@@ -11493,6 +11185,21 @@ describe("node-graph opening camera (renderer twin)", () => {
     expect(dagContentCoverage(dagContentBounds(nodes)!, fitted, 483, 814)).toBeCloseTo(1, 9);
   });
 
+  it("publishes the camera it computed for every surface row", () => {
+    const rows = portSidesSurfaceRows();
+    expect(rows.length).toBeGreaterThanOrEqual(4);
+    for (const row of rows) {
+      const nodes = [{ id: "graph", x: (row.content.minX + row.content.maxX) / 2, y: (row.content.minY + row.content.maxY) / 2, width: row.content.maxX - row.content.minX, height: row.content.maxY - row.content.minY, inputs: [], outputs: [] }];
+      const content = dagContentBounds(nodes)!;
+      const published = dagFitCamera(content, row.viewport.width, row.viewport.height);
+      expect([row.name, published.x, published.y, published.zoom]).not.toEqual([row.name, row.camera.x, row.camera.y, row.camera.zoom]);
+      expect([row.name, dagContentCoverage(content, published, row.viewport.width, row.viewport.height)]).toEqual([row.name, row.expect.coverageAfterFit]);
+      const again = dagFitCamera(content, row.viewport.width, row.viewport.height);
+      expect([row.name, again.x, again.y, again.zoom]).toEqual([row.name, published.x, published.y, published.zoom]);
+    }
+    console.log("[DEBUG] node-graph fit publication reproduced all %s surface rows", rows.length);
+  });
+
   it("re-frames only on a layout change, never on hover, selection or evaluation churn", () => {
     const nodes = [{ id: "a", x: 0, y: 0, width: 40, height: 20, inputs: [], outputs: [] }];
     const same = [{ id: "a", x: 0, y: 0, width: 40, height: 20, inputs: [{ id: "a@in", label: "in" }], outputs: [] }];
@@ -11501,6 +11208,68 @@ describe("node-graph opening camera (renderer twin)", () => {
     expect(nodeGraphContentSignature(nodes)).not.toBe(nodeGraphContentSignature(moved));
   });
 });
+
+/** 🖼️ The `surfaceRows` half of the shared camera-fit fixture — the rows that say a fit must PUBLISH
+ * what it computed. The Rust half drives a real `FlowHost`
+ * (`🌊️flow/🖥️host/🧪️tests/🔬️unit/🦀️.rs`, `a_fitted_flow_surface_publishes_the_camera_it_computed`);
+ * this half drives the renderer's own fit rule over the same rows. */
+function portSidesSurfaceRows(): { name: string; viewport: { width: number; height: number }; camera: { x: number; y: number; zoom: number }; content: { minX: number; minY: number; maxX: number; maxY: number }; expect: { coverageAfterFit: number } }[] {
+  return (cameraFitFixture as unknown as { surfaceRows: { name: string; viewport: { width: number; height: number }; camera: { x: number; y: number; zoom: number }; content: { minX: number; minY: number; maxX: number; maxY: number }; expect: { coverageAfterFit: number } }[] }).surfaceRows;
+}
+
+//#region 🔌️PortSideTwin
+/** 🔌️ The renderer half of the catalogue port-side law. A wire endpoint has exactly ONE public name
+ * here — `${nodeId}@${portId}`, the string `🕸️NodeGraph/🟦️.tsx` builds for every hit target — so an
+ * operator that declares one port id on both sides gives two handles one key and a press on the
+ * output resolves to the input. The Rust half
+ * (`🌊️flow/🖥️host/🧪️tests/🔬️unit/🦀️.rs`, `no_operator_in_the_catalogue_declares_one_port_id_on_both_sides`)
+ * drives the LIVE first-party catalogue; this half drives the same fixture rows through the
+ * renderer's own handle spelling. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END. */
+describe("🔌️ operator port sides", () => {
+  const fixture = portSidesFixture as unknown as {
+    suffix: string;
+    wildcardMarker: string;
+    correctedInputs: { operator: string; was: string; now: string }[];
+    rows: { operator: string; inputs: string[]; outputs: string[] }[];
+  };
+
+  it("gives every port of an operator its own {nodeId}@{portId} handle", () => {
+    expect(fixture.rows.length).toBeGreaterThanOrEqual(12);
+    for (const row of fixture.rows) {
+      const ports = [...row.inputs, ...row.outputs].filter((port) => port !== fixture.wildcardMarker);
+      const handles = ports.map((port) => `${row.operator}@${port}`);
+      expect([row.operator, new Set(handles).size]).toEqual([row.operator, handles.length]);
+    }
+    console.log("[DEBUG] port-side twin checked %s operators", fixture.rows.length);
+  });
+
+  it("spells a produced channel with the suffix only when its own operator is given the same noun", () => {
+    for (const row of fixture.rows) {
+      for (const output of row.outputs) {
+        if (!output.endsWith(fixture.suffix)) continue;
+        const plain = output.slice(0, -fixture.suffix.length);
+        expect([row.operator, output, row.inputs.includes(plain)]).toEqual([row.operator, output, true]);
+      }
+      for (const input of row.inputs) {
+        if (input === fixture.wildcardMarker) continue;
+        expect([row.operator, input, row.outputs.includes(input)]).toEqual([row.operator, input, false]);
+      }
+    }
+  });
+
+  it("keeps the wildcard marker and the corrected inputs the fixture names", () => {
+    expect(fixture.wildcardMarker).toBe("*");
+    const variable = fixture.rows.find((row) => row.operator === "core.variable")!;
+    expect(variable.inputs).toEqual([fixture.wildcardMarker]);
+    expect(variable.outputs).toEqual([fixture.wildcardMarker]);
+    const move = fixture.rows.find((row) => row.operator === "math.move")!;
+    for (const corrected of fixture.correctedInputs.filter((entry) => entry.operator === "math.move")) {
+      expect(move.inputs).toContain(corrected.now);
+      expect(move.inputs).not.toContain(corrected.was);
+    }
+  });
+});
+//#endregion 🔌️PortSideTwin
 //#endregion 📷️CameraAndLabelFitTwins
 
 //#region 📚️BootExampleTwin

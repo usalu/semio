@@ -5,13 +5,12 @@
     "Puzzle2dWindowConfig": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["cameraX", "cameraY", "cameraZoom", "lodMode", "fillCount", "gridSnapEnabled", "gridFactor", "suggestionOffset"],
+      "required": ["cameraX", "cameraY", "cameraZoom", "lodMode", "gridSnapEnabled", "gridFactor", "suggestionOffset"],
       "properties": {
         "cameraX": {"type": "number", "x-semio-state": "window-config"},
         "cameraY": {"type": "number", "x-semio-state": "window-config"},
         "cameraZoom": {"type": "number", "x-semio-state": "window-config"},
         "lodMode": {"type": "string", "x-semio-state": "window-config"},
-        "fillCount": {"type": "integer", "minimum": 0, "default": 100, "x-semio-state": "window-config"},
         "gridSnapEnabled": {"type": "boolean", "x-semio-state": "window-config"},
         "gridFactor": {"type": "number", "x-semio-state": "window-config"},
         "suggestionOffset": {"type": "number", "x-semio-state": "window-config"}

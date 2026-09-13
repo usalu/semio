@@ -745,3 +745,28 @@ impl MemberStoreOwner<FlowMutation> for FlowFixture {
 pub fn empty_flow_snapshot() -> FlowFixture {
     FlowFixture::default()
 }
+
+/// 🧹️ How many disposer turns one cold flow-store teardown pays before it declares the ladder stuck.
+const FLOW_STORE_COLD_CLOSE_STEPS: usize = 1_000_000;
+
+/// 🎟️ The byte grant one cold flow-store disposal turn pays.
+const FLOW_STORE_COLD_CLOSE_PAGE_BYTES: usize = 4_096;
+
+/// 🧊️ Explicit cold-only disposal of a detached flow store — the store-level twin of
+/// [`FlowFixture::retire_cold`].
+///
+/// 🐛️ `ArtifactStore`'s `Drop` asserts a terminal-empty shallow shell, and only the owner-supplied
+/// disposer installed by [`FlowFixture::member_store_owners`] empties it, so a store built for the
+/// length of an expression and then dropped aborts with
+/// `artifact store reached Drop without its exact terminal-empty shallow-shell witness`. Retained
+/// callers drive `close_owned_store_step` under their own grant; this drains the same ladder in one
+/// uninterrupted cold pass (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub fn retire_flow_store_cold(mut store: FlowStore) {
+    for _ in 0..FLOW_STORE_COLD_CLOSE_STEPS {
+        if store.close_owned_store_step(1, FLOW_STORE_COLD_CLOSE_PAGE_BYTES).expect("cold flow store disposal") == crate::os_store::SnapshotRetirementStep::Complete {
+            assert!(store.close_owned_store_terminal_is_empty(), "a flow store disposer that reports Complete owes its exact terminal-empty witness");
+            return;
+        }
+    }
+    panic!("cold flow store disposal did not reach terminal within its fixture bound");
+}

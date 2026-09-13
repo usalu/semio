@@ -129,6 +129,42 @@
       }
     },
     {
+      "name": "tool-run-summary-passes-through",
+      "admission": {
+        "actor": "server-actor",
+        "connectedAtMs": 1000,
+        "userId": "user-a",
+        "label": "Ada",
+        "role": "spectator",
+        "color": 3,
+        "surface": "verified-map"
+      },
+      "rawPeerHex": "01788008000466696c6c01012a0164",
+      "expected": {
+        "accepted": true,
+        "normalizedPeerHex": "0c7365727665722d6163746f72cd09e8070341646106757365722d6109737065637461746f72030c76657269666965642d6d61700466696c6c01012a0164",
+        "durableWrites": 0
+      }
+    },
+    {
+      "name": "tool-run-completed-over-total",
+      "admission": {
+        "actor": "server-actor",
+        "connectedAtMs": 1000,
+        "userId": "user-a",
+        "label": "Ada",
+        "role": "spectator",
+        "color": 3,
+        "surface": "verified-map"
+      },
+      "rawPeerHex": "01788008000466696c6c0100650164",
+      "expected": {
+        "accepted": false,
+        "normalizedPeerHex": null,
+        "durableWrites": 0
+      }
+    },
+    {
       "name": "trailing-byte",
       "admission": {
         "actor": "server-actor",
@@ -193,7 +229,7 @@
         "color": 3,
         "surface": "verified-map"
       },
-      "rawPeerHex": "0178800800",
+      "rawPeerHex": "0178801000",
       "expected": {
         "accepted": false,
         "normalizedPeerHex": null,

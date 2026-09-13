@@ -270,6 +270,15 @@ pub fn out_face(full_name: &str) -> ChannelSpec {
     ChannelSpec::named("F", "Fce", "face", full_name)
 }
 
+/// 📤️ The `face` an operator MAKES, for the operators that are also GIVEN a `face` — one operator's
+/// input ids and output ids are disjoint, because `"{nodeId}@{portId}"` is the only public name a
+/// wire endpoint has.
+///
+/// @see `🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🦀️.rs` — `produced_channel_id`
+pub fn out_face_result(full_name: &str) -> ChannelSpec {
+    ChannelSpec::named("F", "Fce", neural_engine::produced_channel_id("face"), full_name)
+}
+
 pub fn out_surface(full_name: &str) -> ChannelSpec {
     ChannelSpec::named("S", "Srf", "surface", full_name)
 }
@@ -278,12 +287,22 @@ pub fn out_geometry(full_name: &str) -> ChannelSpec {
     ChannelSpec::named("G", "Geo", "geometry", full_name)
 }
 
+/// 📤️ The `geometry` an operator MAKES — see [`out_face_result`].
+pub fn out_geometry_result(full_name: &str) -> ChannelSpec {
+    ChannelSpec::named("G", "Geo", neural_engine::produced_channel_id("geometry"), full_name)
+}
+
 pub fn out_compound(full_name: &str) -> ChannelSpec {
     ChannelSpec::named("C", "Cmp", "compound", full_name)
 }
 
 pub fn out_point(full_name: &str) -> ChannelSpec {
     ChannelSpec::named("P", "Pnt", "point", full_name)
+}
+
+/// 📤️ The `point` an operator FINDS, for the operators that are also GIVEN a `point` — see [`out_face_result`].
+pub fn out_point_result(full_name: &str) -> ChannelSpec {
+    ChannelSpec::named("P", "Pnt", neural_engine::produced_channel_id("point"), full_name)
 }
 
 pub fn out_normal(full_name: &str) -> ChannelSpec {
@@ -428,7 +447,7 @@ impl Operator for BrepDeconstruct {
             let shape = read_geometry(input, "brep")?;
             let topology = kernel.deconstruct(&shape).map_err(|error| map_kernel_error(&error))?;
             Ok(Dictionary::new()
-                .insert("brep", Value::Dictionary(geometry_dict(kernel, &shape)?))
+                .insert(neural_engine::produced_channel_id("brep"), Value::Dictionary(geometry_dict(kernel, &shape)?))
                 .insert("vertex", Value::Dictionary(topology_list("vertex", topology.vertices)))
                 .insert("edge", Value::Dictionary(topology_list("edge", topology.edges)))
                 .insert("face", Value::Dictionary(topology_list("face", topology.faces)))

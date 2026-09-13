@@ -53,7 +53,7 @@ pub fn render(document: &DrawingSnapshot) -> UiAssemblyResult<BuiltNode> {
     for node in &scene_nodes {
         records.push(dsl::ToValue::to_value(node));
     }
-    scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: dsl::json::to_json_string(&records), snapshot: None })
+    scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: dsl::json::to_json_string(&records), snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 
 /// 👁️ Read-only twin of the editor's `edit::artboard_scene_records` frame-only half (no dimension

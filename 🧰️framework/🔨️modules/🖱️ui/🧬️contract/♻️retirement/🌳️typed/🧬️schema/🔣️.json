@@ -39,6 +39,7 @@
             "numberStepper",
             "ring",
             "iconSelect",
+            "progress",
             "tree",
             "treeSection",
             "treeItem",
@@ -149,8 +150,8 @@
         },
         "cases": {
           "type": "array",
-          "minItems": 18,
-          "maxItems": 18,
+          "minItems": 19,
+          "maxItems": 19,
           "items": {
             "type": "object",
             "additionalProperties": false,
@@ -274,6 +275,14 @@
                       "value": "v",
                       "uniform": false,
                       "classifierKind": "k"
+                    }
+                  },
+                  {
+                    "const": {
+                      "type": "progress",
+                      "completed": 1,
+                      "total": 2,
+                      "valueText": "V"
                     }
                   },
                   {

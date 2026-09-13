@@ -1,14 +1,14 @@
 {
   "title": "wgpu runtime mailbox admission",
-  "why": "The renderer owns exactly one interaction state and one bounded completion mailbox. Every input the browser shell admits crosses that mailbox as a `DispatchEvents` completion that needs the state, and every viewport change as a keyed `Resize` that needs it too. This oracle pins the admission arithmetic that decides, for one queue and one checkout ledger, WHICH completion a frame may apply now: that a checked-out state defers the work needing it without losing it, that work needing no state is admitted past it (so the completion carrying the state home is never queued behind the input waiting for it), that order among the work needing the state is preserved, that a checkout outliving its credits becomes a typed diagnostic naming its site exactly once, and that the fixed capacity always keeps one reserve for the interaction return.",
-  "credits": 240,
+  "why": "The renderer owns exactly one interaction state and one bounded completion mailbox. Every input the browser shell admits crosses that mailbox as a `DispatchEvents` completion that needs the state, and every viewport change as a keyed `Resize` that needs it too. This oracle pins the admission arithmetic that decides, for one queue and one checkout ledger, WHICH completion a frame may apply now: that a checked-out state defers the work needing it without losing it, that work needing no state is admitted past it (so the completion carrying the state home is never queued behind the input waiting for it), that order among the work needing the state is preserved, that a checkout is a defect exactly when NO owner is left to return it — never merely because it is slow — and that the fixed capacity always keeps one reserve for the interaction return.",
+  "liveness": "A checked-out interaction state is LIVE while an owner that can return it is outstanding: a reservation still in flight, or a ready completion that RESTORES the state. With such an owner the checkout is deferred for as long as it takes — a single post-selection shell settle re-renders every surface through the guest and legitimately spans seconds. With no such owner the state can never come home, and that is a defect at the very first blocked opportunity, with no timer to tune.",
   "consumers": [
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎮️wgpu-runtime-mailbox-admission/🦀️.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎮️wgpu-runtime-mailbox-admission/🟦️.ts"
   ],
   "operations": {
-    "enqueue": "Push one completion at the BACK, refusing overflow unless a ready completion with the same key can be coalesced away. `admitted` is the answer.",
-    "reserveInteraction": "Take the reserve slot a suspended worker turn needs to hand the interaction state back. `admitted` is the answer.",
+    "enqueue": "Push one completion at the BACK, refusing overflow unless a ready completion with the same key can be coalesced away. `admitted` is the answer. `restoresInteraction` marks a completion that carries the interaction state home.",
+    "reserveInteraction": "Take the reserve slot a suspended worker turn needs to hand the interaction state back. `admitted` is the answer, and a live reservation is an outstanding owner.",
     "finish": "Return one reserved completion at the FRONT and release its reservation.",
     "checkOut": "Lend the single interaction state to one bounded step. `admitted` is false while another step already holds it.",
     "checkIn": "Return the interaction state and clear its ledger.",
@@ -20,47 +20,53 @@
       "why": "The hop that stalled on 6118: DispatchEvents needs the interaction state, a dispatch already holds it, and the apply opportunity must refuse WITHOUT dropping or reordering the event. The very next opportunity after the state comes home applies it.",
       "capacity": 8,
       "steps": [
-        { "op": "enqueue", "key": null, "revision": 1, "requiresInteraction": true, "admitted": true },
+        { "op": "enqueue", "key": null, "revision": 1, "requiresInteraction": true, "restoresInteraction": false, "admitted": true },
         { "op": "checkOut", "site": "dispatch-event", "admitted": true },
+        { "op": "reserveInteraction", "admitted": true },
         { "op": "apply", "admission": "deferred", "appliedRevision": null, "opportunities": 1 },
         { "op": "apply", "admission": "deferred", "appliedRevision": null, "opportunities": 2 },
+        { "op": "finish", "key": null, "revision": 9, "requiresInteraction": false, "restoresInteraction": true },
+        { "op": "apply", "admission": "admitted", "appliedRevision": 9, "opportunities": 2 },
         { "op": "checkIn" },
         { "op": "apply", "admission": "admitted", "appliedRevision": 1, "opportunities": 0 }
       ],
-      "expect": { "length": 0, "readyRevisions": [], "staleNotices": [] }
+      "expect": { "length": 0, "readyRevisions": [], "abandonedNotices": [] }
     },
     {
       "id": "work-that-needs-no-state-is-admitted-past-work-that-does",
       "why": "A completion that needs no interaction state must never wait behind one that does — that is how the resume carrying the state home would deadlock against the input waiting for it. Order among the state-needing completions is untouched.",
       "capacity": 8,
       "steps": [
-        { "op": "enqueue", "key": null, "revision": 1, "requiresInteraction": true, "admitted": true },
-        { "op": "enqueue", "key": null, "revision": 2, "requiresInteraction": false, "admitted": true },
-        { "op": "enqueue", "key": null, "revision": 3, "requiresInteraction": true, "admitted": true },
+        { "op": "enqueue", "key": null, "revision": 1, "requiresInteraction": true, "restoresInteraction": false, "admitted": true },
+        { "op": "enqueue", "key": null, "revision": 2, "requiresInteraction": false, "restoresInteraction": false, "admitted": true },
+        { "op": "enqueue", "key": null, "revision": 3, "requiresInteraction": true, "restoresInteraction": false, "admitted": true },
         { "op": "checkOut", "site": "frame-deferred", "admitted": true },
+        { "op": "reserveInteraction", "admitted": true },
         { "op": "apply", "admission": "deferred", "appliedRevision": 2, "opportunities": 1 },
         { "op": "apply", "admission": "deferred", "appliedRevision": null, "opportunities": 2 },
+        { "op": "finish", "key": null, "revision": 9, "requiresInteraction": false, "restoresInteraction": true },
+        { "op": "apply", "admission": "admitted", "appliedRevision": 9, "opportunities": 2 },
         { "op": "checkIn" },
         { "op": "apply", "admission": "admitted", "appliedRevision": 1, "opportunities": 0 },
         { "op": "apply", "admission": "admitted", "appliedRevision": 3, "opportunities": 0 }
       ],
-      "expect": { "length": 0, "readyRevisions": [], "staleNotices": [] }
+      "expect": { "length": 0, "readyRevisions": [], "abandonedNotices": [] }
     },
     {
       "id": "a-returned-state-arrives-at-the-front-and-unblocks-the-input-behind-it",
       "why": "The real shape of one dispatched event: the mailbox holds the input, the worker turn holds the state, and the completion that ends the turn is returned through its reservation — at the FRONT, so it is applied before the input it unblocks.",
       "capacity": 8,
       "steps": [
-        { "op": "enqueue", "key": null, "revision": 1, "requiresInteraction": true, "admitted": true },
-        { "op": "reserveInteraction", "admitted": true },
+        { "op": "enqueue", "key": null, "revision": 1, "requiresInteraction": true, "restoresInteraction": false, "admitted": true },
         { "op": "checkOut", "site": "dispatch-event", "admitted": true },
+        { "op": "reserveInteraction", "admitted": true },
         { "op": "apply", "admission": "deferred", "appliedRevision": null, "opportunities": 1 },
-        { "op": "finish", "key": null, "revision": 9, "requiresInteraction": false },
+        { "op": "finish", "key": null, "revision": 9, "requiresInteraction": false, "restoresInteraction": true },
         { "op": "apply", "admission": "admitted", "appliedRevision": 9, "opportunities": 1 },
         { "op": "checkIn" },
         { "op": "apply", "admission": "admitted", "appliedRevision": 1, "opportunities": 0 }
       ],
-      "expect": { "length": 0, "readyRevisions": [], "staleNotices": [] }
+      "expect": { "length": 0, "readyRevisions": [], "abandonedNotices": [] }
     },
     {
       "id": "resize-and-dispatch-are-both-applied-once-the-state-is-home",
@@ -68,14 +74,17 @@
       "capacity": 8,
       "steps": [
         { "op": "checkOut", "site": "frame-deferred", "admitted": true },
-        { "op": "enqueue", "key": "window-metrics", "revision": 1, "requiresInteraction": true, "admitted": true },
-        { "op": "enqueue", "key": null, "revision": 2, "requiresInteraction": true, "admitted": true },
+        { "op": "reserveInteraction", "admitted": true },
+        { "op": "enqueue", "key": "window-metrics", "revision": 1, "requiresInteraction": true, "restoresInteraction": false, "admitted": true },
+        { "op": "enqueue", "key": null, "revision": 2, "requiresInteraction": true, "restoresInteraction": false, "admitted": true },
         { "op": "apply", "admission": "deferred", "appliedRevision": null, "opportunities": 1 },
+        { "op": "finish", "key": null, "revision": 9, "requiresInteraction": false, "restoresInteraction": true },
+        { "op": "apply", "admission": "admitted", "appliedRevision": 9, "opportunities": 1 },
         { "op": "checkIn" },
         { "op": "apply", "admission": "admitted", "appliedRevision": 1, "opportunities": 0 },
         { "op": "apply", "admission": "admitted", "appliedRevision": 2, "opportunities": 0 }
       ],
-      "expect": { "length": 0, "readyRevisions": [], "staleNotices": [] }
+      "expect": { "length": 0, "readyRevisions": [], "abandonedNotices": [] }
     },
     {
       "id": "a-second-checkout-is-refused-while-one-is-live",
@@ -83,61 +92,92 @@
       "capacity": 8,
       "steps": [
         { "op": "checkOut", "site": "dispatch-event", "admitted": true },
-        { "op": "enqueue", "key": null, "revision": 1, "requiresInteraction": true, "admitted": true },
+        { "op": "reserveInteraction", "admitted": true },
+        { "op": "enqueue", "key": null, "revision": 1, "requiresInteraction": true, "restoresInteraction": false, "admitted": true },
         { "op": "apply", "admission": "deferred", "appliedRevision": null, "opportunities": 1 },
         { "op": "checkOut", "site": "frame-deferred", "admitted": false },
         { "op": "apply", "admission": "deferred", "appliedRevision": null, "opportunities": 2 },
+        { "op": "finish", "key": null, "revision": 9, "requiresInteraction": false, "restoresInteraction": true },
+        { "op": "apply", "admission": "admitted", "appliedRevision": 9, "opportunities": 2 },
         { "op": "checkIn" },
         { "op": "checkOut", "site": "frame-deferred", "admitted": true },
+        { "op": "reserveInteraction", "admitted": true },
         { "op": "apply", "admission": "deferred", "appliedRevision": null, "opportunities": 1 }
       ],
-      "expect": { "length": 1, "readyRevisions": [1], "staleNotices": [] }
+      "expect": { "length": 2, "readyRevisions": [1], "abandonedNotices": [] }
     },
     {
-      "id": "a-checkout-that-outlives-its-credits-is-a-typed-diagnostic-once",
-      "why": "A checkout is scoped to ONE bounded step. One that survives its credits is a defect, and the mailbox must say so — naming the site that took it — exactly once per episode instead of freezing in silence. Checking the state back in clears the episode, so the next checkout starts from zero.",
+      "id": "a-live-owner-keeps-a-long-checkout-out-of-the-fault-lane",
+      "why": "Measured on 6118 (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-frame-loop-after-selection-2026-09-13.md`): one applied selection re-renders every panel through the guest, `framework.panel.inspection` alone takes 2 138 ms inside ONE `frame-deferred` checkout, and the frame loop meanwhile spends ~120 blocked apply opportunities a second. An age counted in apply opportunities measures the VICTIMS' arrival rate, never the holder's health, so a ledger that faults on a fixed count of them kills the surface for doing exactly what a selection asks. A live owner defers, for as long as the owner lives.",
       "capacity": 8,
       "steps": [
-        { "op": "enqueue", "key": null, "revision": 1, "requiresInteraction": true, "admitted": true },
-        { "op": "checkOut", "site": "dispatch-event", "admitted": true },
-        { "op": "apply", "repeat": 240, "admission": "deferred", "appliedRevision": null, "opportunities": 240 },
-        { "op": "apply", "admission": "stale", "appliedRevision": null, "opportunities": 241 },
-        { "op": "apply", "admission": "stale", "appliedRevision": null, "opportunities": 242 },
-        { "op": "checkIn" },
-        { "op": "apply", "admission": "admitted", "appliedRevision": 1, "opportunities": 0 },
-        { "op": "enqueue", "key": null, "revision": 2, "requiresInteraction": true, "admitted": true },
+        { "op": "enqueue", "key": null, "revision": 1, "requiresInteraction": true, "restoresInteraction": false, "admitted": true },
         { "op": "checkOut", "site": "frame-deferred", "admitted": true },
-        { "op": "apply", "admission": "deferred", "appliedRevision": null, "opportunities": 1 }
+        { "op": "reserveInteraction", "admitted": true },
+        { "op": "apply", "repeat": 2000, "admission": "deferred", "appliedRevision": null, "opportunities": 2000 },
+        { "op": "finish", "key": null, "revision": 9, "requiresInteraction": false, "restoresInteraction": true },
+        { "op": "apply", "admission": "admitted", "appliedRevision": 9, "opportunities": 2000 },
+        { "op": "checkIn" },
+        { "op": "apply", "admission": "admitted", "appliedRevision": 1, "opportunities": 0 }
       ],
-      "expect": { "length": 1, "readyRevisions": [2], "staleNotices": [{ "site": "dispatch-event", "opportunities": 241 }] }
+      "expect": { "length": 0, "readyRevisions": [], "abandonedNotices": [] }
+    },
+    {
+      "id": "a-checkout-with-no-owner-to-return-it-is-abandoned-at-once",
+      "why": "The defect the ledger exists to name, stated exactly: the state is checked out, no reservation is in flight and no ready completion restores it, so NOTHING can bring it home. That is a defect on the first blocked opportunity — no credits to spend, no timer to tune — and it is reported once per episode, naming the site that took it.",
+      "capacity": 8,
+      "steps": [
+        { "op": "enqueue", "key": null, "revision": 1, "requiresInteraction": true, "restoresInteraction": false, "admitted": true },
+        { "op": "checkOut", "site": "dispatch-event", "admitted": true },
+        { "op": "apply", "admission": "abandoned", "appliedRevision": null, "opportunities": 1 },
+        { "op": "apply", "admission": "abandoned", "appliedRevision": null, "opportunities": 2 },
+        { "op": "checkIn" },
+        { "op": "apply", "admission": "admitted", "appliedRevision": 1, "opportunities": 0 }
+      ],
+      "expect": { "length": 0, "readyRevisions": [], "abandonedNotices": [{ "site": "dispatch-event", "opportunities": 1 }] }
+    },
+    {
+      "id": "a-ready-completion-that-restores-the-state-is-an-outstanding-owner",
+      "why": "The owner is not always a reservation: once a suspended turn finishes, the state rides a READY completion. Until that completion is applied it is the owner, and taking it away is what leaves the checkout with nobody to return it.",
+      "capacity": 8,
+      "steps": [
+        { "op": "enqueue", "key": null, "revision": 1, "requiresInteraction": true, "restoresInteraction": false, "admitted": true },
+        { "op": "enqueue", "key": null, "revision": 2, "requiresInteraction": false, "restoresInteraction": true, "admitted": true },
+        { "op": "checkOut", "site": "frame-deferred", "admitted": true },
+        { "op": "apply", "admission": "deferred", "appliedRevision": 2, "opportunities": 1 },
+        { "op": "apply", "admission": "abandoned", "appliedRevision": null, "opportunities": 2 },
+        { "op": "checkIn" },
+        { "op": "apply", "admission": "admitted", "appliedRevision": 1, "opportunities": 0 }
+      ],
+      "expect": { "length": 0, "readyRevisions": [], "abandonedNotices": [{ "site": "frame-deferred", "opportunities": 2 }] }
     },
     {
       "id": "the-fixed-bound-always-keeps-one-interaction-reserve",
       "why": "Ready and in-flight work share one bound. Keyless work is lossless and refuses overflow one slot early; only the interaction reserve may take the last slot, so an owned state can always come home.",
       "capacity": 4,
       "steps": [
-        { "op": "enqueue", "key": null, "revision": 1, "requiresInteraction": true, "admitted": true },
-        { "op": "enqueue", "key": null, "revision": 2, "requiresInteraction": true, "admitted": true },
-        { "op": "enqueue", "key": null, "revision": 3, "requiresInteraction": false, "admitted": true },
-        { "op": "enqueue", "key": null, "revision": 4, "requiresInteraction": false, "admitted": false },
+        { "op": "enqueue", "key": null, "revision": 1, "requiresInteraction": true, "restoresInteraction": false, "admitted": true },
+        { "op": "enqueue", "key": null, "revision": 2, "requiresInteraction": true, "restoresInteraction": false, "admitted": true },
+        { "op": "enqueue", "key": null, "revision": 3, "requiresInteraction": false, "restoresInteraction": false, "admitted": true },
+        { "op": "enqueue", "key": null, "revision": 4, "requiresInteraction": false, "restoresInteraction": false, "admitted": false },
         { "op": "reserveInteraction", "admitted": true },
         { "op": "reserveInteraction", "admitted": false },
-        { "op": "finish", "key": null, "revision": 9, "requiresInteraction": false }
+        { "op": "finish", "key": null, "revision": 9, "requiresInteraction": false, "restoresInteraction": true }
       ],
-      "expect": { "length": 4, "readyRevisions": [9, 1, 2, 3], "staleNotices": [] }
+      "expect": { "length": 4, "readyRevisions": [9, 1, 2, 3], "abandonedNotices": [] }
     },
     {
       "id": "a-keyed-completion-coalesces-its-own-predecessor-at-the-bound",
       "why": "A viewport change is replaceable: at the bound a newer `window-metrics` may drop the ready older one rather than be refused, so the mailbox never answers a stale size and never overflows on a resize drag.",
       "capacity": 4,
       "steps": [
-        { "op": "enqueue", "key": null, "revision": 1, "requiresInteraction": true, "admitted": true },
-        { "op": "enqueue", "key": "window-metrics", "revision": 2, "requiresInteraction": true, "admitted": true },
-        { "op": "enqueue", "key": null, "revision": 3, "requiresInteraction": true, "admitted": true },
-        { "op": "enqueue", "key": "window-metrics", "revision": 4, "requiresInteraction": true, "admitted": true },
-        { "op": "enqueue", "key": null, "revision": 5, "requiresInteraction": true, "admitted": false }
+        { "op": "enqueue", "key": null, "revision": 1, "requiresInteraction": true, "restoresInteraction": false, "admitted": true },
+        { "op": "enqueue", "key": "window-metrics", "revision": 2, "requiresInteraction": true, "restoresInteraction": false, "admitted": true },
+        { "op": "enqueue", "key": null, "revision": 3, "requiresInteraction": true, "restoresInteraction": false, "admitted": true },
+        { "op": "enqueue", "key": "window-metrics", "revision": 4, "requiresInteraction": true, "restoresInteraction": false, "admitted": true },
+        { "op": "enqueue", "key": null, "revision": 5, "requiresInteraction": true, "restoresInteraction": false, "admitted": false }
       ],
-      "expect": { "length": 3, "readyRevisions": [1, 3, 4], "staleNotices": [] }
+      "expect": { "length": 3, "readyRevisions": [1, 3, 4], "abandonedNotices": [] }
     }
   ]
 }

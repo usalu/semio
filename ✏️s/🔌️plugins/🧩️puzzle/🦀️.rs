@@ -55,7 +55,6 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// was not traced this pass) — deleting on inference alone risks silently breaking real export/import
 /// UI functionality, which this ticket's "get everything working" rule forbids doing speculatively.
 pub fn plugin() -> Result<Plugin<PuzzleApps>, PluginAssemblyError> {
-    semio_s_artifact_puzzle_3d::editor::puzzle3d::precompute::initialize();
     Plugin::<PuzzleApps>::builder("puzzle")
         .label("Puzzle")
         .version("0.1.0")

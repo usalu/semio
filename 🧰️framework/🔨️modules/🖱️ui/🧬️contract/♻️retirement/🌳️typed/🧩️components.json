@@ -13,6 +13,7 @@
     {"component": {"type": "numberStepper", "value": 1, "step": 1, "uniform": false}, "bytes": 0},
     {"component": {"type": "ring", "orbId": "x", "t": 0}, "bytes": 1},
     {"component": {"type": "iconSelect", "value": "v", "uniform": false, "classifierKind": "k"}, "bytes": 2},
+    {"component": {"type": "progress", "completed": 1, "total": 2, "valueText": "V"}, "bytes": 1},
     {"component": {"type": "tree", "interactionDomain": "d"}, "bytes": 1},
     {"component": {"type": "treeSection", "label": "L"}, "bytes": 1},
     {"component": {"type": "treeItem", "label": "L", "description": "D", "icon": "I", "dragData": {"x": "🌊"}, "rowActions": [{"icon": "R", "label": "B", "action": {"trigger": "activate", "action": {"scope": "s", "name": "n", "version": 1}, "args": {"x": ["🌊"]}, "capability": "c"}}]}, "bytes": 18},

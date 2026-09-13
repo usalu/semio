@@ -20,7 +20,7 @@ use crate::editor::puzzle3d::{
 };
 use semio_framework_plugin::{
     world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_fit_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, World3dScene, world3d_selection_json, SurfaceKind, WindowEngagement,
-    WindowEngagementInput, WindowEngagementOption, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions,
+    WindowEngagementInput, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions,
 };
 use crate::standards::v1::subsets::any::schema::{BrushPreviewState, FillCandidateVerdict};
 use semio_framework_ui_contract::BuiltNode;
@@ -752,7 +752,7 @@ pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecom
         // so far (it grows tick by tick), and `progress` says how much of the compatible list has
         // been tested, how much was refused on overlap, what is under test right now and with which
         // verdict. Machine identities only — the localized sentence for the same state is the brush
-        // utility's `WindowMeasure::Progress` stage caption.
+        // utility's `brush_search_stage` caption.
         let progress = session.brush_search_progress(&menu.vortex_full_id);
         json!({
             "open": true,
@@ -993,25 +993,17 @@ pub fn render(
 /// 🤝️ The engagement HUD for this window: the select/brush/fill switcher lives in the framework
 /// utility bar (declared via `.utility` + `.window_kind_utilities`); the fill-count slider, voxel
 /// steppers and brush placement picker are tagged [`WindowMeasure::Group`]s surfaced in the dedicated
-/// "Utility Options" rail. The remaining chrome is the Add Object dialog opener, a command input, and a status line.
+/// "Utility Options" rail. The remaining chrome is the command input and a status line — object
+/// placement lives on the catalogue panel (drag-and-drop) and the shell menu (`openAddObjectDialog`).
 pub fn engagement(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> WindowEngagement {
     let object_count = envelope.fixture.objects.len();
     let attraction_count = envelope.fixture.attractions.len();
     let active_utility = envelope.active_utility.as_str();
     let objects_label = labels.objects.as_str();
     let attractions_label = labels.attractions.as_str();
-    let object_word = labels.object.as_str();
-    let add_object_label = if object_word.eq_ignore_ascii_case("objekt") { format!("{object_word} hinzufügen…") } else { format!("Add {object_word}…") };
     WindowEngagement {
         session_active: Some(engagement_session_active(active_utility)),
-        options: Some(vec![WindowEngagementOption {
-            id: "shell-menu.action.openAddObjectDialog".into(),
-            label: Some(add_object_label),
-            icon_id: Some("plus".into()),
-            pressed: None,
-            disabled: None,
-            action: Some(puzzle3d_action("openAddObjectDialog", None)),
-        }]),
+        options: None,
         input: Some(WindowEngagementInput {
             id: Some("puzzle3d-engagement".into()),
             value: Some(envelope.runtime.engagement_input.clone()),

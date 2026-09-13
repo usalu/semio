@@ -51,7 +51,7 @@
       }
     },
     {
-      "id": "eval-extrusion-axis@vector#0",
+      "id": "eval-extrusion-axis@vectorOut#0",
       "data": {
         "positions": [
           0.0,
@@ -495,8 +495,8 @@
       "hovered": false
     },
     {
-      "id": "extrusion-axis@vector#0",
-      "meshId": "eval-extrusion-axis@vector#0",
+      "id": "extrusion-axis@vectorOut#0",
+      "meshId": "eval-extrusion-axis@vectorOut#0",
       "position": [
         0.0,
         0.0,
@@ -513,8 +513,8 @@
         1.0,
         1.0
       ],
-      "label": "extrusion-axis@vector",
-      "interactionId": "extrusion-axis@vector",
+      "label": "extrusion-axis@vectorOut",
+      "interactionId": "extrusion-axis@vectorOut",
       "selected": false,
       "hovered": false
     },
@@ -567,7 +567,7 @@
     "ids": [
       "extrude@solid#0"
     ],
-    "hoveredId": "extrusion-axis@vector#0"
+    "hoveredId": "extrusion-axis@vectorOut#0"
   },
   "environmentJson": {
     "sun": {
@@ -589,12 +589,12 @@
     ],
     "wireOnlyMeshesDropped": [
       "eval-profile@wire#0",
-      "eval-extrusion-axis@vector#0"
+      "eval-extrusion-axis@vectorOut#0"
     ],
     "selectedIds": [
       "extrude@solid#0"
     ],
-    "hoveredId": "extrusion-axis@vector#0",
+    "hoveredId": "extrusion-axis@vectorOut#0",
     "cameraPosition": [
       4.0,
       -4.0,

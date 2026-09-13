@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "componentCount": 18,
+  "componentCount": 19,
   "grants": [1, 64, 4096],
   "closeGrant": 64,
   "text": "é",

@@ -71,6 +71,7 @@ fn edit_rows(edits: &[DagGraphEdit]) -> Vec<Value> {
                 serde_json::json!({ "operation": "connect", "sourceNodeId": source_node_id, "sourcePortId": source_port_id, "targetNodeId": target_node_id, "targetPortId": target_port_id })
             }
             DagGraphEdit::Disconnect { synapse_id } => serde_json::json!({ "operation": "disconnect", "synapseId": synapse_id }),
+            DagGraphEdit::Move { node_id, x, y } => serde_json::json!({ "operation": "move", "nodeId": node_id, "x": x, "y": y }),
         })
         .collect()
 }
@@ -93,6 +94,16 @@ fn published_port_centre(host: &DagHost, endpoint: &str) -> (f64, f64) {
 /// 🗑️ A screen point with no node, no port row and no minimap panel under it at any of the oracle's
 /// zoom bands — where a detached wire is dropped.
 const EMPTY_CANVAS_SCREEN: (f64, f64) = (8.0, 8.0);
+
+/// 📐️ World point to viewport pixels through the host's own camera — the projection every published
+/// rect is reported in.
+fn world_point_to_screen(host: &DagHost, point: canvas::Point) -> (f64, f64) {
+    use canvas::camera::{world_to_screen, Camera, Viewport};
+    let camera = Camera { x: host.fixture.camera.x, y: host.fixture.camera.y, zoom: host.fixture.camera.zoom };
+    let viewport = Viewport { width: host.width, height: host.height, dpr: host.dpr };
+    let screen = world_to_screen(&camera, &viewport, point);
+    (screen.x, screen.y)
+}
 
 #[test]
 fn a_port_to_port_drag_creates_a_wire_and_journals_it_for_the_guest() {
@@ -269,6 +280,25 @@ fn the_port_geometry_the_host_publishes_is_the_geometry_that_grabs_a_wire() {
                     host.pointer_up_screen(to_x, to_y, false, false, false);
                     assert_case_edits(&host.take_graph_edits(), case, &name);
                     assert_case_edges(&host, case, &name);
+                }
+                "grabSides" => {
+                    let endpoint = gesture["at"].as_str().expect("grab endpoint");
+                    let (node_id, port_id) = endpoint.split_once('@').expect("endpoint grammar");
+                    let node = host.fixture.nodes.iter().find(|node| node.id == node_id).expect("fixture node").clone();
+                    let input_index = node.inputs().iter().position(|port| port.id == port_id).expect("input port");
+                    let output_index = node.outputs().iter().position(|port| port.id == port_id).expect("output port");
+                    for (side, bounds) in [(true, input_port_connector_bounds(&node, input_index)), (false, output_port_connector_bounds(&node, output_index))] {
+                        let (x0, y0, x1, y1) = bounds.expect("connector bounds");
+                        let (sx, sy) = world_point_to_screen(&host, canvas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5));
+                        host.pointer_down_screen(sx, sy, 0, false, false, false, false);
+                        let InteractionMode::DrawEdge { anchor_handle, .. } = host.engine.interaction else {
+                            panic!("{name}: pressing the {} connector of {endpoint} must draw a wire", if side { "input" } else { "output" });
+                        };
+                        let role = host.engine.handles.get(&anchor_handle).expect("anchor handle").role;
+                        assert_eq!(role == HandleRole::Target, side, "{name}: the {} connector of {endpoint} must grab the handle on ITS side, got {role:?}", if side { "input" } else { "output" });
+                        host.pointer_up_screen(sx, sy, false, false, false);
+                        let _ = host.take_graph_edits();
+                    }
                 }
                 "detach" => {
                     let (x, y) = published_port_centre(&host, gesture["at"].as_str().expect("detach endpoint"));

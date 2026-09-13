@@ -12,7 +12,7 @@ synapses [id:TEXT wire:WIRE] {
   e3 rect@wire->face@wire
   e4 face@face->extrude@face
   e5 distance@number->vector@z
-  e6 vector@vector->extrude@vector
+  e6 vector@vectorOut->extrude@vector
 }
 generations [id:TEXT name:TEXT values:VAL] {
 }

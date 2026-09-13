@@ -41,22 +41,22 @@
             "cases": [
               {
                 "fixedBytes": 0,
-                "capacity": 4
+                "capacity": 6
               },
               {
-                "fixedBytes": 1,
-                "capacity": 3
+                "fixedBytes": 2228224,
+                "capacity": 6
+              },
+              {
+                "fixedBytes": 2228225,
+                "capacity": 5
               },
               {
                 "fixedBytes": 8388608,
-                "capacity": 3
+                "capacity": 5
               },
               {
-                "fixedBytes": 8388609,
-                "capacity": 2
-              },
-              {
-                "fixedBytes": 33554432,
+                "fixedBytes": 52559872,
                 "capacity": 0
               }
             ],
@@ -154,7 +154,7 @@
           "const": false
         },
         "aggregateCeilingBytes": {
-          "const": 33554432
+          "const": 52559872
         },
         "returnedEntryReusableBeforeDrain": {
           "const": false

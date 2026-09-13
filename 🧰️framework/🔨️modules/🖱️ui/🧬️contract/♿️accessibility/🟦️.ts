@@ -31,7 +31,15 @@ export type UiAccessibilityProjectionNodeV1 = {
   readonly focusable: boolean;
   readonly actionable: boolean;
   readonly focused: boolean;
+  readonly valueMin: number | null;
+  readonly valueMax: number | null;
+  readonly valueNow: number | null;
+  readonly valueText: string | null;
+  readonly busy: boolean;
 };
+
+/** 📶️ The range semantics a component announces — the TS mirror of the Rust `AccessibilityValue`. */
+export type UiAccessibilityValueV1 = Pick<UiAccessibilityProjectionNodeV1, "valueMin" | "valueMax" | "valueNow" | "valueText" | "busy">;
 
 /** 🗂️ The authored container role's own ARIA name — `plain`/`group`/`field` are all plain grouping
  * (a field is a label plus its control, which is a group, not a landmark), `section` is a region. */
@@ -82,6 +90,8 @@ export function uiAccessibilityRoleV1(component: Component, activatable: boolean
       return "spinbutton";
     case "iconSelect":
       return "radiogroup";
+    case "progress":
+      return "progressbar";
     case "tree":
       return "tree";
     case "treeSection":
@@ -125,6 +135,21 @@ export function uiAccessibilityIsFocusableV1(component: Component, activatable: 
   }
 }
 
+/** 📶️ `aria-valuemin`/`max`/`now`/`valuetext` for a determinate progress bar, only `aria-busy` while it
+ * is indeterminate (a total that is absent, never merely zero), and nothing for every other component. */
+export function uiAccessibilityValueV1(component: Component): UiAccessibilityValueV1 {
+  if (component.type !== "progress") return { valueMin: null, valueMax: null, valueNow: null, valueText: null, busy: false };
+  if (component.total == null) return { valueMin: null, valueMax: null, valueNow: null, valueText: null, busy: true };
+  return { valueMin: 0, valueMax: component.total, valueNow: component.completed, valueText: component.valueText, busy: false };
+}
+
+/** 📐️ The filled share in `0..1` of a progress bar, `null` while indeterminate — the twin of the Rust
+ * `progress_fraction`: a zero total fills nothing, an overshoot clamps the fill but never the value. */
+export function uiProgressFractionV1(completed: number, total: number | null | undefined): number | null {
+  if (total == null) return null;
+  return total > 0 ? Math.min(1, Math.max(0, completed / total)) : 0;
+}
+
 /** ♿️ Projects ONE published node record. Pure over the record: a renderer's own walk supplies
  * `depth` and afterwards stamps whatever live state only it knows (`focused`, and its laid-out
  * rect). A hidden node is KEPT, carrying `hidden` — dropping it would disagree with the DOM
@@ -147,6 +172,7 @@ export function uiAccessibilityProjectionNodeV1(record: UiNodeRecord, depth: num
     focusable: uiAccessibilityIsFocusableV1(record.component, activatable),
     actionable: activatable || bindings.length > 0,
     focused: false,
+    ...uiAccessibilityValueV1(record.component),
   };
 }
 

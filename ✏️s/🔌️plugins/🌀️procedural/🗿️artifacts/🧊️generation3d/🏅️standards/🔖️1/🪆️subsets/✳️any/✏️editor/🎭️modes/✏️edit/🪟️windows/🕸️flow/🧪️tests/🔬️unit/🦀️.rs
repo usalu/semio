@@ -164,3 +164,26 @@ async fn main_body_carries_the_documents_graph_as_semantic_rows() {
     }
 }
 //#endregion 🔖️GraphOutline
+
+/// ⏎️ LAW: the node-graph canvas carries the `activate` binding its `role="application"` promises,
+/// and the chord it advertises, exactly as `🧫️fixtures/⌨️keyboard-reachability.json` states.
+///
+/// `SurfaceAccessibilityShell` (`🗣️Interpreter/🟦️.tsx`) installs its Enter/Space handler ONLY when the
+/// record actually carries an activate binding, so a canvas without one announces itself as an
+/// application that handles its own keys and then handles none. `aria-keyshortcuts` comes off
+/// `AccessibilitySpec.shortcut`, which is the only way a user who cannot see the canvas learns the
+/// chord exists.
+#[semio_framework_async_macros::async_test]
+async fn the_node_graph_canvas_declares_the_activate_binding_the_keyboard_fixture_states() {
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let fixture: serde_json::Value = serde_json::from_str(crate::editor::generation3d::unit_tests::KEYBOARD_REACHABILITY_FIXTURE_JSON).expect("keyboard fixture");
+    let row = fixture["surfaceBindings"].as_array().expect("surfaceBindings").iter().find(|row| row["surface"].as_str() == Some(GENERATION_3D_PLAY_SURFACE_MAIN)).expect("the node-graph canvas has a surface-binding row");
+    let mut app = app_with_registry().await;
+    let json = render_body(&mut app, GENERATION_3D_PLAY_BODY_MAIN).await;
+    let action = row["action"].as_str().expect("action");
+    assert!(json.contains(action), "the rendered canvas must bind {action}");
+    assert!(json.contains(crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID), "the binding must be addressed at this app");
+    assert!(json.contains(row["trigger"].as_str().expect("trigger")), "the binding must carry the fixture's trigger");
+    assert!(json.contains(row["shortcut"].as_str().expect("shortcut")), "the canvas must advertise its chord as aria-keyshortcuts");
+    eprintln!("[DEBUG] node-graph canvas binds {action} on {} with shortcut {}", row["trigger"].as_str().unwrap_or_default(), row["shortcut"].as_str().unwrap_or_default());
+}

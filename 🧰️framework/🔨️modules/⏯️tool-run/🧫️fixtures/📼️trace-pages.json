@@ -1,0 +1,901 @@
+{
+  "schema": "semio.framework.tool-run.trace-pages.v1",
+  "pages": [
+    {
+      "name": "mixed subjects, retire and clear",
+      "page": {
+        "identity": {
+          "id": {
+            "appInstanceId": 3,
+            "run": 42
+          },
+          "generation": 1,
+          "baseRevision": "0008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8"
+        },
+        "page": 7,
+        "ops": [
+          {
+            "op": "upsert",
+            "key": 1,
+            "verdict": "testing",
+            "reason": 0,
+            "subject": {
+              "kind": "instance3d",
+              "mesh": 2,
+              "position": [
+                0.5,
+                -1.25,
+                2
+              ],
+              "rotation": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": 1
+            }
+          },
+          {
+            "op": "upsert",
+            "key": 2,
+            "verdict": "danger",
+            "reason": 3,
+            "subject": {
+              "kind": "placement2d",
+              "shape": 4,
+              "position": [
+                10.5,
+                -3
+              ],
+              "rotation": 0.25
+            }
+          },
+          {
+            "op": "upsert",
+            "key": 9007199254740991,
+            "verdict": "success",
+            "reason": 65535,
+            "subject": {
+              "kind": "entity",
+              "entity": 77
+            }
+          },
+          {
+            "op": "retire",
+            "key": 5
+          },
+          {
+            "op": "clear"
+          }
+        ]
+      },
+      "hex": "000b010d0401040302042a0304010408200008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8020407030805000000010204082001000000000000000200000000000000ffffffffffff1f00050000000000000005080300030106080600000300ffff07080300010208080402000000090804040000000a08084d000000000000000b082c0000003f0000a0bf000000400000000000000000000000000000803f0000803f00002841000040c00000803e"
+    },
+    {
+      "name": "empty page",
+      "page": {
+        "identity": {
+          "id": {
+            "appInstanceId": 3,
+            "run": 42
+          },
+          "generation": 1,
+          "baseRevision": "0008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8"
+        },
+        "page": 0,
+        "ops": []
+      },
+      "hex": "0002010d0401040302042a0304010408200008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8020400"
+    },
+    {
+      "name": "retire only",
+      "page": {
+        "identity": {
+          "id": {
+            "appInstanceId": 3,
+            "run": 42
+          },
+          "generation": 1,
+          "baseRevision": "0008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8"
+        },
+        "page": 0,
+        "ops": [
+          {
+            "op": "retire",
+            "key": 1
+          },
+          {
+            "op": "retire",
+            "key": 2
+          }
+        ]
+      },
+      "hex": "0004010d0401040302042a0304010408200008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8020400030802010104081001000000000000000200000000000000"
+    }
+  ],
+  "deltas": [
+    {
+      "name": "resend with two pages",
+      "delta": {
+        "identity": {
+          "id": {
+            "appInstanceId": 3,
+            "run": 42
+          },
+          "generation": 1,
+          "baseRevision": "0008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8"
+        },
+        "clear": true,
+        "next": 2,
+        "pages": [
+          {
+            "identity": {
+              "id": {
+                "appInstanceId": 3,
+                "run": 42
+              },
+              "generation": 1,
+              "baseRevision": "0008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8"
+            },
+            "page": 0,
+            "ops": [
+              {
+                "op": "retire",
+                "key": 1
+              },
+              {
+                "op": "retire",
+                "key": 2
+              }
+            ]
+          },
+          {
+            "identity": {
+              "id": {
+                "appInstanceId": 3,
+                "run": 42
+              },
+              "generation": 1,
+              "baseRevision": "0008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8"
+            },
+            "page": 1,
+            "ops": [
+              {
+                "op": "upsert",
+                "key": 3,
+                "verdict": "warning",
+                "reason": 9,
+                "subject": {
+                  "kind": "entity",
+                  "entity": 1003
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "hex": "0004010d0401040302042a0304010408200008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f80202030402040c02084c0004010d0401040302042a0304010408200008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8020400030802010104081001000000000000000200000000000000085b0008010d0401040302042a0304010408200008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8020401030801000408080300000000000000050801020608020900070801020a0808eb03000000000000"
+    },
+    {
+      "name": "idle",
+      "delta": {
+        "identity": {
+          "id": {
+            "appInstanceId": 3,
+            "run": 42
+          },
+          "generation": 1,
+          "baseRevision": "0008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8"
+        },
+        "clear": false,
+        "next": 5,
+        "pages": []
+      },
+      "hex": "0003010d0401040302042a0304010408200008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f80201030405"
+    }
+  ],
+  "malformed": [
+    {
+      "name": "truncated page",
+      "target": "page",
+      "hex": "000b010d0401040302042a0304010408200008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8020407030805000000010204082001000000000000000200000000000000ffffffffffff1f00050000000000000005080300030106080600000300ffff07080300010208080402000000090804040000000a08084d000000000000000b082c0000003f0000a0bf000000400000000000000000000000000000803f0000803f00002841000040c0000080"
+    },
+    {
+      "name": "trailing byte after the page record",
+      "target": "page",
+      "hex": "000b010d0401040302042a0304010408200008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8020407030805000000010204082001000000000000000200000000000000ffffffffffff1f00050000000000000005080300030106080600000300ffff07080300010208080402000000090804040000000a08084d000000000000000b082c0000003f0000a0bf000000400000000000000000000000000000803f0000803f00002841000040c00000803e00"
+    },
+    {
+      "name": "verdict ordinal out of range",
+      "target": "page",
+      "hex": "0008010d0401040302042a0304010408200008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8020400030801000408080100000000000000050801040608020000070801020a08080100000000000000"
+    },
+    {
+      "name": "key column one byte short",
+      "target": "page",
+      "hex": "0008010d0401040302042a0304010408200008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f80204000308010004080700000000000000050801000608020000070801020a08080100000000000000"
+    },
+    {
+      "name": "unknown page field",
+      "target": "page",
+      "hex": "0003010d0401040302042a0304010408200008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f80204000c0400"
+    },
+    {
+      "name": "delta without clear",
+      "target": "delta",
+      "hex": "0002010d0401040302042a0304010408200008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8030400"
+    },
+    {
+      "name": "step with zero repeat",
+      "target": "tick",
+      "hex": "0003010d0401040302042a0304010408200008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8020400040c010d05010400020400030400040400060400"
+    },
+    {
+      "name": "base revision of 31 bytes",
+      "target": "tick",
+      "hex": "0002010d0401040302042a03040104081f08101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8020400"
+    },
+    {
+      "name": "sequence carried as bytes",
+      "target": "tick",
+      "hex": "0002010d0401040302042a0304010408200008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f802080100"
+    }
+  ],
+  "residency": [
+    {
+      "name": "evicts the oldest rejected record first",
+      "capacity": 3,
+      "compactFloor": 100,
+      "identity": {
+        "id": {
+          "appInstanceId": 1,
+          "run": 5
+        },
+        "generation": 0,
+        "baseRevision": "0008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8"
+      },
+      "pages": [
+        [
+          {
+            "op": "upsert",
+            "key": 1,
+            "verdict": "danger",
+            "reason": 0,
+            "subject": {
+              "kind": "entity",
+              "entity": 1001
+            }
+          },
+          {
+            "op": "upsert",
+            "key": 2,
+            "verdict": "success",
+            "reason": 1,
+            "subject": {
+              "kind": "instance3d",
+              "mesh": 0,
+              "position": [
+                1,
+                2,
+                3
+              ],
+              "rotation": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": 0.5
+            }
+          },
+          {
+            "op": "upsert",
+            "key": 3,
+            "verdict": "warning",
+            "reason": 2,
+            "subject": {
+              "kind": "placement2d",
+              "shape": 1,
+              "position": [
+                4,
+                5
+              ],
+              "rotation": 0.5
+            }
+          }
+        ],
+        [
+          {
+            "op": "upsert",
+            "key": 4,
+            "verdict": "testing",
+            "reason": 0,
+            "subject": {
+              "kind": "entity",
+              "entity": 1004
+            }
+          }
+        ],
+        [
+          {
+            "op": "upsert",
+            "key": 5,
+            "verdict": "danger",
+            "reason": 0,
+            "subject": {
+              "kind": "entity",
+              "entity": 1005
+            }
+          }
+        ],
+        [
+          {
+            "op": "upsert",
+            "key": 6,
+            "verdict": "success",
+            "reason": 0,
+            "subject": {
+              "kind": "entity",
+              "entity": 1006
+            }
+          }
+        ],
+        [
+          {
+            "op": "upsert",
+            "key": 7,
+            "verdict": "danger",
+            "reason": 0,
+            "subject": {
+              "kind": "entity",
+              "entity": 1007
+            }
+          }
+        ],
+        [
+          {
+            "op": "upsert",
+            "key": 8,
+            "verdict": "testing",
+            "reason": 0,
+            "subject": {
+              "kind": "entity",
+              "entity": 1008
+            }
+          }
+        ],
+        [
+          {
+            "op": "upsert",
+            "key": 4,
+            "verdict": "success",
+            "reason": 0,
+            "subject": {
+              "kind": "entity",
+              "entity": 1004
+            }
+          },
+          {
+            "op": "retire",
+            "key": 2
+          },
+          {
+            "op": "retire",
+            "key": 99
+          }
+        ]
+      ],
+      "applied": [
+        {
+          "logged": 1,
+          "evicted": 0,
+          "overflowed": 0,
+          "compacted": false
+        },
+        {
+          "logged": 1,
+          "evicted": 1,
+          "overflowed": 0,
+          "compacted": false
+        },
+        {
+          "logged": 1,
+          "evicted": 1,
+          "overflowed": 0,
+          "compacted": false
+        },
+        {
+          "logged": 1,
+          "evicted": 1,
+          "overflowed": 0,
+          "compacted": false
+        },
+        {
+          "logged": 0,
+          "evicted": 1,
+          "overflowed": 0,
+          "compacted": false
+        },
+        {
+          "logged": 0,
+          "evicted": 0,
+          "overflowed": 1,
+          "compacted": false
+        },
+        {
+          "logged": 1,
+          "evicted": 0,
+          "overflowed": 0,
+          "compacted": false
+        }
+      ],
+      "resident": [
+        {
+          "key": 4,
+          "verdict": "success",
+          "reason": 0
+        },
+        {
+          "key": 6,
+          "verdict": "success",
+          "reason": 0
+        }
+      ],
+      "logPages": [
+        [
+          {
+            "op": "upsert",
+            "key": 1,
+            "verdict": "danger",
+            "reason": 0,
+            "subject": {
+              "kind": "entity",
+              "entity": 1001
+            }
+          },
+          {
+            "op": "upsert",
+            "key": 2,
+            "verdict": "success",
+            "reason": 1,
+            "subject": {
+              "kind": "instance3d",
+              "mesh": 0,
+              "position": [
+                1,
+                2,
+                3
+              ],
+              "rotation": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": 0.5
+            }
+          },
+          {
+            "op": "upsert",
+            "key": 3,
+            "verdict": "warning",
+            "reason": 2,
+            "subject": {
+              "kind": "placement2d",
+              "shape": 1,
+              "position": [
+                4,
+                5
+              ],
+              "rotation": 0.5
+            }
+          }
+        ],
+        [
+          {
+            "op": "retire",
+            "key": 1
+          },
+          {
+            "op": "upsert",
+            "key": 4,
+            "verdict": "testing",
+            "reason": 0,
+            "subject": {
+              "kind": "entity",
+              "entity": 1004
+            }
+          }
+        ],
+        [
+          {
+            "op": "retire",
+            "key": 3
+          },
+          {
+            "op": "upsert",
+            "key": 5,
+            "verdict": "danger",
+            "reason": 0,
+            "subject": {
+              "kind": "entity",
+              "entity": 1005
+            }
+          }
+        ],
+        [
+          {
+            "op": "retire",
+            "key": 5
+          },
+          {
+            "op": "upsert",
+            "key": 6,
+            "verdict": "success",
+            "reason": 0,
+            "subject": {
+              "kind": "entity",
+              "entity": 1006
+            }
+          }
+        ],
+        [
+          {
+            "op": "upsert",
+            "key": 4,
+            "verdict": "success",
+            "reason": 0,
+            "subject": {
+              "kind": "entity",
+              "entity": 1004
+            }
+          },
+          {
+            "op": "retire",
+            "key": 2
+          }
+        ]
+      ],
+      "logBase": 0
+    },
+    {
+      "name": "compaction replaces the log with a clear snapshot",
+      "capacity": 10,
+      "compactFloor": 2,
+      "identity": {
+        "id": {
+          "appInstanceId": 1,
+          "run": 5
+        },
+        "generation": 0,
+        "baseRevision": "0008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8"
+      },
+      "pages": [
+        [
+          {
+            "op": "upsert",
+            "key": 1,
+            "verdict": "success",
+            "reason": 4,
+            "subject": {
+              "kind": "entity",
+              "entity": 1001
+            }
+          },
+          {
+            "op": "upsert",
+            "key": 2,
+            "verdict": "danger",
+            "reason": 5,
+            "subject": {
+              "kind": "entity",
+              "entity": 1002
+            }
+          }
+        ],
+        [
+          {
+            "op": "upsert",
+            "key": 1,
+            "verdict": "danger",
+            "reason": 6,
+            "subject": {
+              "kind": "entity",
+              "entity": 1001
+            }
+          },
+          {
+            "op": "retire",
+            "key": 2
+          }
+        ],
+        [
+          {
+            "op": "upsert",
+            "key": 3,
+            "verdict": "testing",
+            "reason": 7,
+            "subject": {
+              "kind": "entity",
+              "entity": 1003
+            }
+          }
+        ]
+      ],
+      "applied": [
+        {
+          "logged": 1,
+          "evicted": 0,
+          "overflowed": 0,
+          "compacted": false
+        },
+        {
+          "logged": 1,
+          "evicted": 0,
+          "overflowed": 0,
+          "compacted": false
+        },
+        {
+          "logged": 1,
+          "evicted": 0,
+          "overflowed": 0,
+          "compacted": true
+        }
+      ],
+      "resident": [
+        {
+          "key": 1,
+          "verdict": "danger",
+          "reason": 6
+        },
+        {
+          "key": 3,
+          "verdict": "testing",
+          "reason": 7
+        }
+      ],
+      "logPages": [
+        [
+          {
+            "op": "clear"
+          },
+          {
+            "op": "upsert",
+            "key": 1,
+            "verdict": "danger",
+            "reason": 6,
+            "subject": {
+              "kind": "entity",
+              "entity": 1001
+            }
+          },
+          {
+            "op": "upsert",
+            "key": 3,
+            "verdict": "testing",
+            "reason": 7,
+            "subject": {
+              "kind": "entity",
+              "entity": 1003
+            }
+          }
+        ]
+      ],
+      "logBase": 3
+    }
+  ],
+  "delivery": [
+    {
+      "name": "no cursor resends everything with a clear",
+      "residency": "evicts the oldest rejected record first",
+      "generation": 0,
+      "cursor": null,
+      "byteBudget": 1000000,
+      "expect": {
+        "clear": true,
+        "next": 5,
+        "pages": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      }
+    },
+    {
+      "name": "cursor inside the log continues without clear",
+      "residency": "evicts the oldest rejected record first",
+      "generation": 0,
+      "cursor": {
+        "run": 5,
+        "generation": 0,
+        "page": 2
+      },
+      "byteBudget": 1000000,
+      "expect": {
+        "clear": false,
+        "next": 5,
+        "pages": [
+          2,
+          3,
+          4
+        ]
+      }
+    },
+    {
+      "name": "caught-up cursor costs nothing",
+      "residency": "evicts the oldest rejected record first",
+      "generation": 0,
+      "cursor": {
+        "run": 5,
+        "generation": 0,
+        "page": 5
+      },
+      "byteBudget": 1000000,
+      "expect": {
+        "clear": false,
+        "next": 5,
+        "pages": []
+      }
+    },
+    {
+      "name": "generation mismatch resends from the base",
+      "residency": "evicts the oldest rejected record first",
+      "generation": 1,
+      "cursor": {
+        "run": 5,
+        "generation": 0,
+        "page": 5
+      },
+      "byteBudget": 1000000,
+      "expect": {
+        "clear": true,
+        "next": 5,
+        "pages": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      }
+    },
+    {
+      "name": "run mismatch resends from the base",
+      "residency": "evicts the oldest rejected record first",
+      "generation": 0,
+      "cursor": {
+        "run": 4,
+        "generation": 0,
+        "page": 5
+      },
+      "byteBudget": 1000000,
+      "expect": {
+        "clear": true,
+        "next": 5,
+        "pages": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      }
+    },
+    {
+      "name": "future cursor resends from the base",
+      "residency": "evicts the oldest rejected record first",
+      "generation": 0,
+      "cursor": {
+        "run": 5,
+        "generation": 0,
+        "page": 9
+      },
+      "byteBudget": 1000000,
+      "expect": {
+        "clear": true,
+        "next": 5,
+        "pages": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      }
+    },
+    {
+      "name": "zero budget still delivers one page",
+      "residency": "evicts the oldest rejected record first",
+      "generation": 0,
+      "cursor": {
+        "run": 5,
+        "generation": 0,
+        "page": 1
+      },
+      "byteBudget": 0,
+      "expect": {
+        "clear": false,
+        "next": 2,
+        "pages": [
+          1
+        ]
+      }
+    },
+    {
+      "name": "budget fitting two pages exactly",
+      "residency": "evicts the oldest rejected record first",
+      "generation": 0,
+      "cursor": {
+        "run": 5,
+        "generation": 0,
+        "page": 1
+      },
+      "byteBudget": 188,
+      "expect": {
+        "clear": false,
+        "next": 3,
+        "pages": [
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "name": "budget one byte short of two pages",
+      "residency": "evicts the oldest rejected record first",
+      "generation": 0,
+      "cursor": {
+        "run": 5,
+        "generation": 0,
+        "page": 1
+      },
+      "byteBudget": 187,
+      "expect": {
+        "clear": false,
+        "next": 2,
+        "pages": [
+          1
+        ]
+      }
+    },
+    {
+      "name": "cursor before a compacted base resends the snapshot",
+      "residency": "compaction replaces the log with a clear snapshot",
+      "generation": 0,
+      "cursor": {
+        "run": 5,
+        "generation": 0,
+        "page": 2
+      },
+      "byteBudget": 1000000,
+      "expect": {
+        "clear": true,
+        "next": 4,
+        "pages": [
+          3
+        ]
+      }
+    },
+    {
+      "name": "caught-up cursor receives the snapshot page with its clear op",
+      "residency": "compaction replaces the log with a clear snapshot",
+      "generation": 0,
+      "cursor": {
+        "run": 5,
+        "generation": 0,
+        "page": 3
+      },
+      "byteBudget": 1000000,
+      "expect": {
+        "clear": false,
+        "next": 4,
+        "pages": [
+          3
+        ]
+      }
+    }
+  ]
+}

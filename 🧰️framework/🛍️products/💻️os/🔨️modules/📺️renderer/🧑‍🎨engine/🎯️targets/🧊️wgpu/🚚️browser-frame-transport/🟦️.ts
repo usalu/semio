@@ -35,6 +35,7 @@ export type BrowserFrameWorkerFaultCode =
   | "worker-step-overrun"
   | "worker-present-failed"
   | "worker-input-failed"
+  | "worker-frame-failed"
   | "worker-message-failed"
   | "ui-hook-failed"
   | "interactive-job-violation"
@@ -713,7 +714,10 @@ export class BrowserFrameTransport {
     this.inFlight = false;
     if (message.workerStepVerdict === "sustained-overrun") this.workerStepOverruns++;
     if (message.quarantined) {
-      const code = message.faultCode === "present-failed" ? "worker-present-failed" : message.faultCode === "text-input-failed" ? "worker-input-failed" : "worker-step-overrun";
+      // 🏷️ Every renderer fault code keeps its OWN name. `frame-credits` used to land on
+      // `worker-step-overrun`, so a frame the runtime refused to build was reported as a slow step and
+      // read as a budget problem for days (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+      const code = message.faultCode === "present-failed" ? "worker-present-failed" : message.faultCode === "text-input-failed" ? "worker-input-failed" : message.faultCode === "frame-credits" ? "worker-frame-failed" : "worker-step-overrun";
       this.quarantine(code, message.faultDetail ?? `worker frame step executed ${message.workerExecutingMs.toFixed(3)} ms`);
       return;
     }

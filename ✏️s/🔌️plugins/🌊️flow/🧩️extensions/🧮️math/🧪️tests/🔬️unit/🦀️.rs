@@ -18,7 +18,7 @@ async fn construct_vector_uses_xyz_channels() {
     register(&mut reg);
     let input = Dictionary::new().insert("x", Value::Dictionary(number_dictionary(1.0))).insert("y", Value::Dictionary(number_dictionary(2.0))).insert("z", Value::Dictionary(number_dictionary(3.0)));
     let out = reg.dispatch("math.vector", &input).unwrap();
-    let vector = out.get("vector").and_then(|v| v.as_dictionary()).expect("vector channel");
+    let vector = out.get("vectorOut").and_then(|v| v.as_dictionary()).expect("vectorOut channel");
     assert_eq!(vector.schema(), Some("vector"));
     assert_eq!(vector.get("z").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
 }
@@ -27,16 +27,16 @@ async fn construct_vector_uses_xyz_channels() {
 async fn schema_component_round_trips_vector() {
     let reg = module_registry();
     let built = reg.dispatch("math.vector", &Dictionary::new().insert("x", Value::Dictionary(number_dictionary(1.0))).insert("y", Value::Dictionary(number_dictionary(2.0))).insert("z", Value::Dictionary(number_dictionary(3.0)))).unwrap();
-    let vector = built.get("vector").and_then(|value| value.as_dictionary()).expect("vector");
+    let vector = built.get("vectorOut").and_then(|value| value.as_dictionary()).expect("vectorOut");
     let deconstructed = reg.dispatch("math.vector", &Dictionary::new().insert("vector", Value::Dictionary(vector.clone()))).unwrap();
-    assert_eq!(deconstructed.get("y").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(2.0));
+    assert_eq!(deconstructed.get("yOut").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(2.0));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn move_translates_point() {
     let mut reg = Registry::new();
     register(&mut reg);
-    let input = Dictionary::new().insert("subject", Value::Dictionary(xyz_dictionary("point", Vec3::new(1.0, 2.0, 3.0)))).insert("vector", Value::Dictionary(xyz_dictionary("vector", Vec3::new(4.0, 5.0, 6.0))));
+    let input = Dictionary::new().insert("subject", Value::Dictionary(xyz_dictionary("point", Vec3::new(1.0, 2.0, 3.0)))).insert("offset", Value::Dictionary(xyz_dictionary("vector", Vec3::new(4.0, 5.0, 6.0))));
     let out = reg.dispatch("math.move", &input).unwrap();
     let point = out.get("point").and_then(|v| v.as_dictionary()).expect("point channel");
     assert_eq!(point.schema(), Some("point"));

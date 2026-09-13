@@ -1,5 +1,5 @@
 {
-  "note": "♿️ The language-neutral accessibility projection every renderer publishes from a UiNodeRecord. `roles` pins the role a Component IMPLIES — AccessibilitySpec deliberately carries no `role` field, so this table is the ONE place that implication is written down, and React reaches the same roles implicitly through the HTML element each component view renders. `document` is one real flat snapshot plus the pre-order projection it must produce, so a renderer that walks a tree (the wgpu target, which has no DOM to carry aria-* attributes) is measured on order, depth and reach as well as per-node fields. Answered in Rust by `accessibility_role`/`accessibility_is_focusable`/`accessibility_projection_node`, in TypeScript by `uiAccessibilityRoleV1`/`uiAccessibilityIsFocusableV1`/`uiAccessibilityProjectionNodeV1`, and walked by the wgpu target's own `accessibility_projection`. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.",
+  "note": "♿️ The language-neutral accessibility projection every renderer publishes from a UiNodeRecord. `roles` pins the role a Component IMPLIES — AccessibilitySpec deliberately carries no `role` field, so this table is the ONE place that implication is written down, and React reaches the same roles implicitly through the HTML element each component view renders. Every expected projection row may additionally pin `valueMin`/`valueMax`/`valueNow`/`valueText`/`busy` (absent means null/false): a determinate progress bar announces its value, an indeterminate one announces only `busy`. `document` is one real flat snapshot plus the pre-order projection it must produce, so a renderer that walks a tree (the wgpu target, which has no DOM to carry aria-* attributes) is measured on order, depth and reach as well as per-node fields. Answered in Rust by `accessibility_role`/`accessibility_is_focusable`/`accessibility_projection_node`, in TypeScript by `uiAccessibilityRoleV1`/`uiAccessibilityIsFocusableV1`/`uiAccessibilityProjectionNodeV1`, and walked by the wgpu target's own `accessibility_projection`. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.",
   "roles": [
     { "id": "a-plain-container-is-a-group", "component": { "type": "container" }, "activatable": false, "role": "group", "focusable": false },
     { "id": "a-container-you-can-press-is-a-button", "component": { "type": "container" }, "activatable": true, "role": "button", "focusable": true },
@@ -18,6 +18,8 @@
     { "id": "a-slider-is-a-slider", "component": { "type": "slider", "value": 0.4, "min": 0, "max": 1, "step": 0.1 }, "activatable": false, "role": "slider", "focusable": true },
     { "id": "a-number-stepper-is-a-spinbutton", "component": { "type": "numberStepper", "value": 2, "step": 1, "uniform": false }, "activatable": false, "role": "spinbutton", "focusable": true },
     { "id": "a-ring-is-a-slider-too", "component": { "type": "ring", "orbId": "orb-1", "t": 0.6 }, "activatable": false, "role": "slider", "focusable": true },
+    { "id": "a-determinate-progress-is-a-progressbar", "component": { "type": "progress", "completed": 12, "total": 100, "valueText": "12 of 100 pieces" }, "activatable": false, "role": "progressbar", "focusable": false },
+    { "id": "an-indeterminate-progress-is-still-a-progressbar", "component": { "type": "progress", "completed": 3, "valueText": "Preparing" }, "activatable": false, "role": "progressbar", "focusable": false },
     { "id": "an-icon-select-is-a-radiogroup", "component": { "type": "iconSelect", "value": "circle", "uniform": true, "classifierKind": "shape" }, "activatable": false, "role": "radiogroup", "focusable": true },
     { "id": "a-tree-is-a-tree", "component": { "type": "tree", "interactionDomain": "selection" }, "activatable": false, "role": "tree", "focusable": false },
     { "id": "a-tree-section-is-a-group", "component": { "type": "treeSection", "label": "Section" }, "activatable": false, "role": "group", "focusable": false },
@@ -26,7 +28,7 @@
     { "id": "a-surface-is-an-application-you-can-tab-into", "component": { "type": "surface", "surfaceId": "surf-1", "controllerId": "ctrl", "kind": "world-3d", "docSchema": "world3d@1", "doc": { "bytes": [1, 2, 3] } }, "activatable": false, "role": "application", "focusable": true },
     { "id": "an-extension-slot-is-a-region", "component": { "type": "extension", "extension": "plugin.app.slot", "props": { "id": "widget" } }, "activatable": false, "role": "region", "focusable": false }
   ],
-  "documentNote": "🌳️ A generation editor's Form window in miniature: a section holding a labelled numeric field, a decorative (aria-hidden) ornament, a live status line, and a pressable card. `expected` is the FULL pre-order projection — a renderer that reorders, loses depth, or drops the hidden node disagrees with the DOM renderer about what exists.",
+  "documentNote": "🌳️ A generation editor's Form window in miniature: a section holding a labelled numeric field, a decorative (aria-hidden) ornament, a live status line, a pressable card, a canvas, and a determinate plus an indeterminate progress bar (value attributes versus `busy`). `expected` is the FULL pre-order projection — a renderer that reorders, loses depth, or drops the hidden node disagrees with the DOM renderer about what exists.",
   "document": {
     "surface": "conformance.a11y.projection",
     "revision": 0,
@@ -41,7 +43,7 @@
         "style": {},
         "activity": "idle",
         "accessibility": { "label": "Generation parameters" },
-        "children": [1, 3, 4, 5, 6]
+        "children": [1, 3, 4, 5, 6, 7, 8]
       },
       {
         "id": 1,
@@ -100,6 +102,24 @@
         "style": {},
         "activity": "idle",
         "accessibility": { "label": "Preview", "description": "3D preview canvas. Arrow keys orbit, Enter selects.", "live": "polite" }
+      },
+      {
+        "id": 7,
+        "key": "#evaluation",
+        "component": { "type": "progress", "completed": 12, "total": 100, "valueText": "Meshing faces (2/3): 12 of 100 faces (12 %)" },
+        "layout": { "kind": "leaf", "width": "fill", "height": "hug" },
+        "style": {},
+        "activity": "idle",
+        "accessibility": { "label": "Evaluation progress" }
+      },
+      {
+        "id": 8,
+        "key": "#preparation",
+        "component": { "type": "progress", "completed": 0, "valueText": "Preparing (1/3)" },
+        "layout": { "kind": "leaf", "width": "fill", "height": "hug" },
+        "style": {},
+        "activity": "idle",
+        "accessibility": { "label": "Preparation progress" }
       }
     ]
   },
@@ -110,7 +130,9 @@
     { "nodeId": 3, "key": "#ornament", "depth": 1, "role": "img", "label": null, "description": null, "live": "off", "shortcut": null, "hidden": true, "disabled": false, "focusable": false, "actionable": false },
     { "nodeId": 4, "key": "#status", "depth": 1, "role": "paragraph", "label": "Evaluation status", "description": null, "live": "polite", "shortcut": null, "hidden": false, "disabled": false, "focusable": false, "actionable": false },
     { "nodeId": 5, "key": "#card", "depth": 1, "role": "button", "label": "Open generation", "description": null, "live": "off", "shortcut": null, "hidden": false, "disabled": true, "focusable": true, "actionable": true },
-    { "nodeId": 6, "key": "#canvas", "depth": 1, "role": "application", "label": "Preview", "description": "3D preview canvas. Arrow keys orbit, Enter selects.", "live": "polite", "shortcut": null, "hidden": false, "disabled": false, "focusable": true, "actionable": false }
+    { "nodeId": 6, "key": "#canvas", "depth": 1, "role": "application", "label": "Preview", "description": "3D preview canvas. Arrow keys orbit, Enter selects.", "live": "polite", "shortcut": null, "hidden": false, "disabled": false, "focusable": true, "actionable": false },
+    { "nodeId": 7, "key": "#evaluation", "depth": 1, "role": "progressbar", "label": "Evaluation progress", "description": null, "live": "off", "shortcut": null, "hidden": false, "disabled": false, "focusable": false, "actionable": false, "valueMin": 0, "valueMax": 100, "valueNow": 12, "valueText": "Meshing faces (2/3): 12 of 100 faces (12 %)", "busy": false },
+    { "nodeId": 8, "key": "#preparation", "depth": 1, "role": "progressbar", "label": "Preparation progress", "description": null, "live": "off", "shortcut": null, "hidden": false, "disabled": false, "focusable": false, "actionable": false, "valueMin": null, "valueMax": null, "valueNow": null, "valueText": null, "busy": true }
   ],
   "announcedNote": "🏷️ The subset a reader can reach BY NAME: not hidden, focusable or actionable, and carrying a label of its own. The mirror still exposes the whole projection — a live region is announced without ever being reachable — so this is the reach law, not the exposure law.",
   "announced": [2, 5, 6]

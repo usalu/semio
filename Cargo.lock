@@ -5049,6 +5049,7 @@ dependencies = [
  "semio-framework-mesh-engine",
  "semio-framework-os-kernel",
  "semio-framework-schema",
+ "semio-framework-tool-run",
  "semio-framework-ui",
  "semio-framework-ui-contract",
  "semio-framework-value-derive",
@@ -5512,6 +5513,7 @@ dependencies = [
  "semio-framework-math",
  "semio-framework-os-kernel",
  "semio-framework-pixels",
+ "semio-framework-tool-run",
  "semio-framework-ui",
  "semio-framework-ui-styling",
  "semio-framework-value-derive",
@@ -5739,9 +5741,11 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
  "semio-framework-hash",
+ "semio-framework-io-base64",
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-schema",
+ "semio-framework-tool-run",
  "semio-framework-trace",
  "semio-framework-ui",
  "semio-framework-ui-contract",
@@ -5887,6 +5891,16 @@ dependencies = [
  "serde_json",
  "wasm-bindgen",
  "web-sys",
+]
+
+[[package]]
+name = "semio-framework-tool-run"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel",
+ "semio-framework-ui",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -7175,6 +7189,7 @@ name = "semio-s-artifact-puzzle-3d"
 version = "0.1.0"
 dependencies = [
  "js-sys",
+ "parry3d",
  "semio-framework",
  "semio-framework-3d",
  "semio-framework-async",
@@ -7187,6 +7202,7 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-tool-run",
  "semio-framework-trace",
  "semio-framework-ui-contract",
  "semio-framework-ui-scene",
@@ -8546,6 +8562,7 @@ dependencies = [
  "semio-framework-os-kernel-dsl-derive",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-tool-run",
  "semio-framework-ui",
  "semio-framework-ui-contract",
  "semio-framework-value-derive",
@@ -8997,6 +9014,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-tool-run",
  "semio-framework-trace",
  "semio-s-artifact-procedural-assembly",
  "semio-s-artifact-procedural-generation2d",
@@ -9085,6 +9103,7 @@ dependencies = [
  "semio-framework-dispatch-macros",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-tool-run",
  "semio-s-artifact-puzzle-2d",
  "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-5d",

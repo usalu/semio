@@ -1,0 +1,236 @@
+{
+  "provenance": {
+    "what": "The port-side law of the operator catalogue: one operator's INPUT ids and OUTPUT ids are disjoint.",
+    "law": "A wire endpoint has exactly one public name, \"{nodeId}@{portId}\". A graph synapse, a journalled edit and a pointer press all address a port by that string, so an operator that declares the same portId on both sides names TWO handles with ONE key — and a press on the output rect resolves to whichever handle the lookup reached first. `math.vector` declared `vector`, `x`, `y` and `z` on both sides; a press on its output `z` began a wire from its INPUT `z`, 40 world units across the node, and journalled the wrong endpoint.",
+    "rule": "Inputs keep the plain noun. An output that would repeat one of its own operator's input ids is spelled with the `suffix` — `produced_channel_id` in the neural engine, which every auto-registered schema component and every hand-written colliding operator uses. Display names (code, abbreviation, fullName) are untouched: this is an identity, not a label. Where an INPUT was simply misnamed the input is corrected instead, and the fixture names each such correction.",
+    "implementations": [
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🦀️.rs — produced_channel_id, schema_component_info, SchemaComponent",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧪️tests/🔬️unit/🦀️.rs — the live first-party catalogue law",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts — the renderer twin over `{nodeId}@{portId}`"
+    ],
+    "ticket": "26/09/09/PROCEDURAL-3D-END-TO-END"
+  },
+  "suffix": "Out",
+  "wildcardMarker": "*",
+  "wildcardWhy": "`core.variable` declares the marker `*` on both sides. It is not a port id: the flow bridge and the flow host replace it with the variable's own name before a handle exists (`if port.name == \"*\"`), so no node ever carries a `*` handle. The marker is the ONE exemption and the law names it.",
+  "correctedInputs": [
+    {
+      "operator": "math.move",
+      "was": "vector",
+      "now": "offset",
+      "why": "The displacement a move applies is an offset, the name `brep.xform.translate` already gives it; the operator's product is the moved `point`/`vector`."
+    }
+  ],
+  "rows": [
+    {
+      "operator": "math.vector",
+      "why": "The hexagonal mushroom column's extrusion-axis node — the defect's own operator.",
+      "inputs": [
+        "vector",
+        "x",
+        "y",
+        "z"
+      ],
+      "outputs": [
+        "vectorOut",
+        "xOut",
+        "yOut",
+        "zOut",
+        "errors"
+      ]
+    },
+    {
+      "operator": "math.point",
+      "why": "The other math schema component, same shape.",
+      "inputs": [
+        "point",
+        "x",
+        "y",
+        "z"
+      ],
+      "outputs": [
+        "pointOut",
+        "xOut",
+        "yOut",
+        "zOut",
+        "errors"
+      ]
+    },
+    {
+      "operator": "math.passThrough",
+      "why": "A hand-written relay: input and output are both the number.",
+      "inputs": [
+        "number"
+      ],
+      "outputs": [
+        "numberOut"
+      ]
+    },
+    {
+      "operator": "math.move",
+      "why": "The corrected input: no suffix was needed once the displacement was named for what it is.",
+      "inputs": [
+        "subject",
+        "offset"
+      ],
+      "outputs": [
+        "point",
+        "vector"
+      ]
+    },
+    {
+      "operator": "brep.geometry",
+      "why": "A schema component over a schema whose fields are themselves nouns of the graph.",
+      "inputs": [
+        "geometry",
+        "handle",
+        "kind"
+      ],
+      "outputs": [
+        "geometryOut",
+        "handleOut",
+        "kindOut",
+        "errors"
+      ]
+    },
+    {
+      "operator": "brep.brep",
+      "why": "Hand-registered rather than auto-derived, and the only one whose PRODUCT and whose topology lists differ: the brep it echoes is suffixed, the vertex/edge/face lists it makes are not, because it is not given those.",
+      "inputs": [
+        "brep"
+      ],
+      "outputs": [
+        "brepOut",
+        "vertex",
+        "edge",
+        "face",
+        "errors"
+      ]
+    },
+    {
+      "operator": "brep.xform.translate",
+      "why": "A transform is GIVEN a geometry and MAKES one.",
+      "inputs": [
+        "geometry",
+        "offset"
+      ],
+      "outputs": [
+        "geometryOut"
+      ]
+    },
+    {
+      "operator": "brep.surf.offset",
+      "why": "A surface operator that is given a face and makes a face.",
+      "inputs": [
+        "face",
+        "distance"
+      ],
+      "outputs": [
+        "faceOut"
+      ]
+    },
+    {
+      "operator": "brep.measure.closestPoint",
+      "why": "Given a point, finds a point.",
+      "inputs": [
+        "geometry",
+        "point"
+      ],
+      "outputs": [
+        "pointOut"
+      ]
+    },
+    {
+      "operator": "logic.not",
+      "why": "Given a boolean, makes a boolean.",
+      "inputs": [
+        "boolean"
+      ],
+      "outputs": [
+        "booleanOut"
+      ]
+    },
+    {
+      "operator": "list.append",
+      "why": "Given a list, makes a list.",
+      "inputs": [
+        "list",
+        "value"
+      ],
+      "outputs": [
+        "listOut"
+      ]
+    },
+    {
+      "operator": "dictionary.set",
+      "why": "Given a dictionary, makes a dictionary.",
+      "inputs": [
+        "dictionary",
+        "key",
+        "value"
+      ],
+      "outputs": [
+        "dictionaryOut"
+      ]
+    },
+    {
+      "operator": "text.upper",
+      "why": "Given text, makes text.",
+      "inputs": [
+        "text"
+      ],
+      "outputs": [
+        "textOut"
+      ]
+    },
+    {
+      "operator": "bim.wall",
+      "why": "A bim schema component: every field is a port on both sides.",
+      "inputs": [
+        "wall",
+        "length",
+        "height",
+        "thickness"
+      ],
+      "outputs": [
+        "wallOut",
+        "lengthOut",
+        "heightOut",
+        "thicknessOut",
+        "errors"
+      ]
+    },
+    {
+      "operator": "core.variable",
+      "why": "The wildcard marker, the law's one exemption.",
+      "inputs": [
+        "*"
+      ],
+      "outputs": [
+        "*"
+      ]
+    },
+    {
+      "operator": "math.add",
+      "why": "A control: an operator that never collided keeps its plain output noun.",
+      "inputs": [
+        "a",
+        "b"
+      ],
+      "outputs": [
+        "sum"
+      ]
+    },
+    {
+      "operator": "brep.solid.extrude",
+      "why": "A control from the hexagonal column's own chain — the wire `extrusion-axis@vectorOut -> extrude@vector` has one name per end.",
+      "inputs": [
+        "wire",
+        "vector"
+      ],
+      "outputs": [
+        "solid"
+      ]
+    }
+  ]
+}

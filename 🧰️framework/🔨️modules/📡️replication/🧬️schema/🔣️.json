@@ -57,7 +57,8 @@
         "maximumViews",
         "maximumInteractionDomains",
         "maximumDomainIds",
-        "maximumConnectedAtMs"
+        "maximumConnectedAtMs",
+        "maximumToolRunUnits"
       ],
       "properties": {
         "maximumEntryBytes": {
@@ -79,6 +80,9 @@
           "const": 64
         },
         "maximumConnectedAtMs": {
+          "const": 9007199254740991
+        },
+        "maximumToolRunUnits": {
           "const": 9007199254740991
         }
       }
@@ -201,6 +205,52 @@
         },
         "ui": {
           "$ref": "#/definitions/ui"
+        },
+        "toolRun": {
+          "$ref": "#/definitions/toolRun"
+        }
+      }
+    },
+    "toolRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "toolId",
+        "state",
+        "stage",
+        "completed"
+      ],
+      "properties": {
+        "toolId": {
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "starting",
+            "running",
+            "paused",
+            "complete",
+            "finalizing",
+            "finalized",
+            "aborting",
+            "aborted",
+            "faulted"
+          ]
+        },
+        "stage": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "completed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
         }
       }
     },

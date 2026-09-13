@@ -145,6 +145,7 @@ async fn artifact_mailbox_nested_identifier_bytes_and_backbone_one_pop_preserve_
         surface: None,
         views: Vec::new(),
         ui: None,
+        tool_run: None,
     };
     let nested_bytes = artifact_actor_message_bytes(&ArtifactActorMsg::PresenceHeartbeat { peer: Box::new(nested) }).expect("nested message fits");
     let bare_bytes = artifact_actor_message_bytes(&ArtifactActorMsg::PresenceHeartbeat { peer: Box::new(bare) }).expect("bare message fits");
@@ -798,6 +799,7 @@ async fn actor_stamps_session_color_and_surface_on_outbound_heartbeat() {
         surface: Some("shell-should-never-set-this".into()),
         views: Vec::new(),
         ui: None,
+        tool_run: None,
     };
     stamp_session(&mut peer, Some(7), Some("s.space.home@1/*#editor")).await;
     assert_eq!(peer.color, Some(7));
@@ -968,6 +970,7 @@ async fn sample_presence_peer_with_interaction() -> PresencePeer {
             crate::os_spr::PresenceWindowView { window_id: "w2".to_string(), space: "canvas".to_string(), kind: crate::os_spr::PresenceViewKind::Canvas { x: 12.5, y: -4.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None },
         ],
         ui: Some(crate::os_spr::PresenceUi { hovered_path: Some("row[2]#t1".to_string()), focused_path: None, pressed_path: None }),
+        tool_run: None,
     }
 }
 //#endregion 🧪️WireBridge
@@ -998,6 +1001,28 @@ async fn presence_heartbeat_producer_publishes_immediately_then_coalesces_to_lat
     assert!(producer.pending().is_none());
 }
 
+#[semio_framework_async_macros::async_test]
+async fn presence_tool_run_summary_is_byte_credited_and_last_writer_wins() {
+    let run = |state, completed, total| crate::os_spr::PresenceToolRun { tool_id: "fill".into(), state, stage: 1, completed, total };
+    let bare = sample_presence_peer_with_interaction().await;
+    let mut indeterminate = bare.clone();
+    indeterminate.tool_run = Some(run(crate::os_spr::PresenceToolRunState::Starting, 0, None));
+    let mut determinate = bare.clone();
+    determinate.tool_run = Some(run(crate::os_spr::PresenceToolRunState::Running, 42, Some(100)));
+    let bytes = |peer: &PresencePeer| artifact_actor_message_bytes(&ArtifactActorMsg::PresenceHeartbeat { peer: Box::new(peer.clone()) }).expect("presence fits the mailbox");
+    assert!(bytes(&bare) < bytes(&indeterminate) && bytes(&indeterminate) < bytes(&determinate), "tool run id, counters and total contribute byte credit");
+    assert_eq!(crate::os_spr::decode_presence_peer(&presence_to_bytes(&determinate).await).await.expect("tool run presence decodes"), determinate);
+
+    let mut producer = PresenceHeartbeatProducer::new(100);
+    assert_eq!(producer.offer(1_000, indeterminate.clone()), Some(indeterminate));
+    assert_eq!(producer.offer(1_050, determinate.clone()), None);
+    let mut finalized = determinate.clone();
+    finalized.tool_run = Some(run(crate::os_spr::PresenceToolRunState::Finalized, 100, Some(100)));
+    assert_eq!(producer.offer(1_080, finalized.clone()), None);
+    assert_eq!(producer.pending(), Some(&finalized), "the newest tool run summary replaces pending progress");
+    assert_eq!(producer.offer(1_100, finalized.clone()), Some(finalized));
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 #[semio_framework_async_macros::async_test]
 async fn artifact_host_presence_heartbeat_owns_cadence_per_document() {
@@ -1018,6 +1043,39 @@ async fn artifact_host_presence_heartbeat_owns_cadence_per_document() {
     assert!(host.presence_heartbeat("doc", 600, latest.clone()));
     assert!(matches!(cmd_rx.try_recv(), Some(ArtifactActorMsg::PresenceHeartbeat { peer }) if *peer == latest));
     assert!(!host.presence_heartbeat("missing", 700, sample_presence_peer_with_interaction().await));
+}
+
+/// ⏯️ The presence assembly carries the guest's tool run summary (`AppFrame::Ephemeral.tool_run`) into the local
+/// peer: an observed summary wins over the renderer's, its absence clears a stale one, and `completed` never
+/// exceeds `total`, so every published peer decodes.
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn artifact_host_presence_heartbeat_stamps_the_observed_tool_run_summary() {
+    let host = ArtifactHost::new(test_pool());
+    let (cmd_tx, cmd_rx) = artifact_mailbox_pair();
+    let (events, _) = broadcast::channel(1);
+    let runner = native_actor::retained_turn_fixtures::fixture_runner_handle(host.pool.clone(), 1, cmd_rx.close_handle());
+    let key = ArtifactDocumentKey::local("doc");
+    host.inner.lock().unwrap().documents.insert(key.clone(), OpenDocument { generation: 1, cancel: semio_framework_async::CancelToken::root_now(), cmd_tx, events, presence: PresenceHeartbeatProducer::new(100), runner });
+    let run = |state, completed, total| crate::os_spr::PresenceToolRun { tool_id: "fill".into(), state, stage: 0, completed, total };
+
+    let mut renderer_peer = sample_presence_peer_with_interaction().await;
+    renderer_peer.tool_run = Some(run(crate::os_spr::PresenceToolRunState::Running, 9, Some(4)));
+    assert!(host.presence_heartbeat_key(&key, 1_000, renderer_peer.clone()));
+    let Some(ArtifactActorMsg::PresenceHeartbeat { peer }) = cmd_rx.try_recv() else { panic!("first heartbeat publishes") };
+    assert_eq!(peer.tool_run.as_ref().map(|tool_run| (tool_run.completed, tool_run.total)), Some((4, Some(4))), "an unobserved renderer summary is still clamped");
+
+    assert!(host.observe_presence_tool_run_key(&key, Some(run(crate::os_spr::PresenceToolRunState::Complete, 120, Some(100)))));
+    assert!(host.presence_heartbeat_key(&key, 1_100, sample_presence_peer_with_interaction().await));
+    let Some(ArtifactActorMsg::PresenceHeartbeat { peer }) = cmd_rx.try_recv() else { panic!("second heartbeat publishes") };
+    assert_eq!(peer.tool_run, Some(run(crate::os_spr::PresenceToolRunState::Complete, 100, Some(100))), "the observed summary is stamped, completed clamped to total");
+    assert_eq!(crate::os_spr::decode_presence_peer(&presence_to_bytes(&peer).await).await.expect("the stamped peer decodes"), *peer);
+
+    assert!(host.observe_presence_tool_run_key(&key, None));
+    assert!(host.presence_heartbeat_key(&key, 1_200, renderer_peer));
+    let Some(ArtifactActorMsg::PresenceHeartbeat { peer }) = cmd_rx.try_recv() else { panic!("third heartbeat publishes") };
+    assert!(peer.tool_run.is_none(), "a dismissed run clears the renderer's stale summary");
+    assert!(!host.observe_presence_tool_run_key(&ArtifactDocumentKey::local("missing"), None));
 }
 //#endregion 🧪️PresenceInteraction
 

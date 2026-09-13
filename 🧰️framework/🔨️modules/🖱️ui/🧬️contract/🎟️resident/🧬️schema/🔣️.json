@@ -10,6 +10,7 @@
         "version",
         "slots",
         "surfaceBytes",
+        "documentBytes",
         "aggregateBytes",
         "surfaceItems",
         "aggregateItems",
@@ -35,8 +36,11 @@
         "surfaceBytes": {
           "const": 8388608
         },
+        "documentBytes": {
+          "const": 821248
+        },
         "aggregateBytes": {
-          "const": 33554432
+          "const": 52559872
         },
         "surfaceItems": {
           "const": 4097

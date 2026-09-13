@@ -82,6 +82,7 @@ import {
   type UiLabel,
 } from "@semio-tech/ui-react";
 import { isIconName } from "@semio-tech/assets";
+import { ToolRunProvisionalOutline, ToolRunTraceLayer, TOOL_RUN_PROVISIONAL_PAINT, toolRunTraceDataAttributes, useToolRunProvisional, useToolRunTraceCursorEcho, useToolRunTraceStore, type ToolRunTraceRecordStore } from "./⏯️tool-run-trace/🟦️.tsx";
 import { windowElementId, world3dComputeStatusV1, type ComponentSceneHostProps, type ContextMenuItemSpec, type MergeMode, type PluginContextMenuSurfaceTarget } from "@semio-tech/framework";
 import {
   cadVec3ToThree,
@@ -119,7 +120,7 @@ import { CAMERA_SYNC_DEBOUNCE_MS } from "../📐️Canvas2dHost/🟦️.tsx";
 import { openSurfaceContextMenu, useShellContextMenuFallback, wireLabel, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
 import { WorldTerrainLayer } from "../🗺️WorldTerrainLayer/🟦️.tsx";
 import { base64ToBytes } from "../🖌️Paint2dHost/🟦️.tsx";
-import { contextMenuGroupLabel, createCoalescingActionDispatcher, declareSurfaceCancelAction, createInFlightSkippingInterval, isolatedJobDriveIsActive, takeIsolatedJobUiPoll, world3dMarqueeOverlayShape, type Puzzle3dBrushMeshPage, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, drainPuzzle3dBrushMeshQueue, PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES, puzzle3dBrushMeshRegistry, NOTE_WORLD_NAVIGATION_ACTION_ID, shellLabel, leftoverWorldGumballPoseV1 } from "../🛠️ShellHelpers/🟦️.tsx";
+import { contextMenuGroupLabel, createCoalescingActionDispatcher, declareSurfaceCancelAction, createInFlightSkippingInterval, world3dMarqueeOverlayShape, type Puzzle3dBrushMeshPage, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, drainPuzzle3dBrushMeshQueue, PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES, puzzle3dBrushMeshRegistry, NOTE_WORLD_NAVIGATION_ACTION_ID, shellLabel, leftoverWorldGumballPoseV1 } from "../🛠️ShellHelpers/🟦️.tsx";
 import { SetWindowIconContext, SetWindowTitleContext, useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -174,6 +175,9 @@ export type WorldInstanceRecord = {
   readonly highlighted?: boolean;
   /** 🎨️ Non-interactive/locked state — resolves to the muted "disabled" mesh style at reduced opacity. */
   readonly disabled?: boolean;
+  /** 🟩️ Placed by a running tool and not yet finalized — resolves to the "provisional" mesh style and is
+   * never pickable. Also derived from `ToolRunProvisionalIdsContext`. */
+  readonly provisional?: boolean;
   readonly smoothShading?: boolean;
   readonly objectKind?: string;
   /** 🎯️ The framework interaction target this instance stands for, when it differs from `id`.
@@ -244,22 +248,6 @@ type WorldSuggestionMenuRecord = {
   readonly candidates: readonly WorldSuggestionCandidateRecord[];
 };
 
-/** 🪣️ The live fill run as counters: `count` planned, `appliedCount` locked into the document,
- * `requestedCount` what the user asked for, and the tested/rejected/collisions triple that makes the
- * search visible. `stage`/`stallReason` are the planner's machine identities — the localized sentence
- * for the same state rides `WorldFillDiagnosticRecord.statusLabel`. */
-type WorldFillBuildRecord = {
-  readonly count: number;
-  readonly appliedCount: number;
-  readonly requestedCount: number;
-  readonly tested: number;
-  readonly rejected: number;
-  readonly collisions: number;
-  readonly done: boolean;
-  readonly stage: string;
-  readonly stallReason: string | null;
-};
-
 type WorldInteractionRecord = {
   readonly activeUtility?: string;
   readonly brushCandidateIndex?: number;
@@ -268,7 +256,6 @@ type WorldInteractionRecord = {
   readonly voxelDims?: readonly [number, number, number];
   readonly gridFactor?: number;
   readonly suggestionMenu?: WorldSuggestionMenuRecord | null;
-  readonly fillBuild?: WorldFillBuildRecord;
   /** 🔢️ The guest's monotone brush-mesh install counter. Climbs inside one guest instantiation and
    * starts at zero in a fresh one, so a value below the last one this page read proves the guest was
    * restarted and holds nothing this page uploaded — see {@link Puzzle3dBrushMeshRegistry}. */
@@ -327,13 +314,9 @@ type WorldReferenceRecord = World3dMarkerInteractionFields & {
   readonly opacity?: number;
 };
 
-/** ⚖️ What the planner decided about ONE candidate pose. `testing` is still being examined, `free`
- * passed broad phase, `collision` overlaps beyond the budget, `rejected` failed for another reason,
- * `accepted` became a real document object. Absent means `testing` — a brush ghost is pre-filtered
- * collision-free and never carries a verdict. */
-type WorldBrushVerdict = "testing" | "free" | "collision" | "rejected" | "accepted";
-
-const WORLD_BRUSH_VERDICTS: ReadonlySet<string> = new Set<WorldBrushVerdict>(["testing", "free", "collision", "rejected", "accepted"]);
+/** ⚖️ What the brush search decided about the ghost it shows: `testing` is still being examined, `free`
+ * passed, `collision` overlaps. Absent means `testing`. */
+type WorldBrushVerdict = "testing" | "free" | "collision";
 
 type WorldBrushPreviewRecord = {
   readonly targetVortexFullId?: string;
@@ -346,106 +329,7 @@ type WorldBrushPreviewRecord = {
   readonly color?: string;
   readonly opacity?: number;
   readonly verdict?: WorldBrushVerdict;
-  readonly fillBuildPreview?: WorldFillDiagnosticRecord;
 };
-
-/** 🕯️ One already-tried candidate, kept so the viewport can show the search itself rather than only its
- * winner. `sequence` is the planner's monotone try counter — the newest entry has the highest one, which
- * is what {@link FillTriedGhosts} fades by. */
-type WorldFillTriedRecord = {
-  readonly sequence: number;
-  readonly verdict: WorldBrushVerdict;
-  readonly reason?: string | null;
-  readonly ghost: WorldBrushPreviewRecord;
-};
-
-type WorldFillDiagnosticRecord = {
-  readonly operation: number;
-  readonly baseRevision: number;
-  readonly registryGeneration: number;
-  readonly sequence: number;
-  readonly generation: number;
-  readonly stage: string;
-  readonly statusLabel: string;
-  readonly targetVortexFullId: string | null;
-  readonly candidateObjectKindId: string | null;
-  /** ⚖️ Verdict of {@link WorldFillDiagnosticRecord.candidateGhost}. */
-  readonly verdict: WorldBrushVerdict;
-  readonly candidateGhost: WorldBrushPreviewRecord | null;
-  /** 🕯️ The last candidates the planner tried, oldest first, bounded by the producer's ring. */
-  readonly tried: readonly WorldFillTriedRecord[];
-  /** 🔬️ Candidate poses constructed so far — accepted plus rejected plus the one under test. */
-  readonly testedCount: number;
-  /** 🎯️ The count the user asked for. Never a ceiling the planner imposed. */
-  readonly requestedCount: number;
-  /** 🛑️ Why the run stopped short of {@link requestedCount}; `null` while it is still making progress. */
-  readonly stallReason: string | null;
-  readonly currentPairObjectId: string | null;
-  readonly collisionCount: number;
-  readonly sampleCursor: number;
-  readonly insideBoth: number;
-  readonly lastSample: readonly [number, number, number] | null;
-  readonly candidatePage: readonly (string | null)[];
-  readonly truncated: boolean;
-  readonly rejectionReason: string | null;
-  readonly targetCursor: number;
-  readonly candidateCursor: number;
-  readonly acceptedCount: number;
-  readonly searchCount: number;
-  readonly rejectedCount: number;
-};
-
-const WORLD_FILL_STATUS_LABEL_MAX_BYTES = 256;
-const WORLD_FILL_COLOR_MAX_BYTES = 128;
-/** 📏️ The ghost envelope now carries a whole ring of tried candidates beside the live one, so the cap
- * that used to fit one pose has to fit thirteen. 16 KiB is half the fixed 32 KiB scene surface — still a
- * hard refusal of an unbounded payload, never a budget the producer may plan around. */
-const WORLD_FILL_PREVIEW_JSON_MAX_BYTES = 16 * 1024;
-/** 🕯️ The most tried candidates one diagnostic may carry (the producer's `FILL_TRIED_RING`). */
-const WORLD_FILL_TRIED_MAX = 12;
-const WORLD_FILL_ROOT_KEYS: ReadonlySet<string> = new Set(["targetVortexFullId", "objectKindId", "sourceVortexIndex", "meshUrl", "origin", "orientation", "color", "opacity", "verdict", "fillBuildPreview"]);
-const WORLD_FILL_DIAGNOSTIC_KEYS: ReadonlySet<string> = new Set([
-  "operation",
-  "baseRevision",
-  "registryGeneration",
-  "sequence",
-  "generation",
-  "stage",
-  "statusLabel",
-  "targetVortexFullId",
-  "candidateObjectKindId",
-  "verdict",
-  "candidateGhost",
-  "tried",
-  "testedCount",
-  "requestedCount",
-  "stallReason",
-  "currentPairObjectId",
-  "collisionCount",
-  "sampleCursor",
-  "insideBoth",
-  "lastSample",
-  "candidatePage",
-  "truncated",
-  "rejectionReason",
-  "targetCursor",
-  "candidateCursor",
-  "acceptedCount",
-  "searchCount",
-  "rejectedCount",
-]);
-const WORLD_FILL_GHOST_KEYS: ReadonlySet<string> = new Set(["targetVortexFullId", "objectKindId", "sourceVortexIndex", "meshUrl", "origin", "orientation", "verdict"]);
-const WORLD_FILL_TRIED_KEYS: ReadonlySet<string> = new Set(["sequence", "verdict", "reason", "ghost"]);
-
-function censusAllowedOwnKeys(value: object, allowed: ReadonlySet<string>): number {
-  let count = 0;
-  for (const key in value) {
-    if (!Object.prototype.hasOwnProperty.call(value, key)) continue;
-    if (!allowed.has(key)) return -1;
-    count += 1;
-  }
-  return count;
-}
 
 /** ☁️ One point-cloud rendering layer (`World3dScene.pointsJson` entries) — the cheap path for
  * 10^5-10^6 points, distinct from per-point meshes. `positionsB64` is base64 of little-endian f32 xyz
@@ -490,7 +374,7 @@ type WorldEngagementPreviewItem = WorldEngagementPreviewPoint | WorldEngagementP
 
 //#region WorldMeshPaint
 /** 🎨️ Mesh style kinds, in {@link resolveMeshStyle} priority order (highest first). */
-type MeshStyleKind = "disabled" | "danger" | "celebrated" | "selected" | "highlighted" | "hovered" | "neutral";
+type MeshStyleKind = "disabled" | "danger" | "provisional" | "celebrated" | "selected" | "highlighted" | "hovered" | "neutral";
 
 type MeshStyleColors = {
   readonly meshColor: string;
@@ -508,9 +392,11 @@ const MESH_STYLE_PAINT: Readonly<Record<MeshStyleKind, { readonly fill: string; 
   selected: { fill: tokenVar("primary"), line: tokenVar("primary"), emissiveIntensity: 0.35, opacity: 1 },
   highlighted: { fill: tokenVar("secondary"), line: tokenVar("secondary"), emissiveIntensity: 0.2, opacity: 1 },
   // 🎉️ Transient drop/completion paint — solid fallback for lines; shaded meshes use {@link CelebratingConicMaterial}.
-  // 🛑️ Refusal paint — a pose the algorithm just proved impossible (a fill candidate that collides).
+  // 🛑️ Refusal paint — a pose the algorithm just proved impossible (a brush ghost that collides).
   // It outranks every other kind because "this cannot be" is the one thing a viewer must not misread.
   danger: { fill: tokenVar("danger"), line: tokenVar("danger"), emissiveIntensity: 0.35, opacity: 0.72 },
+  // 🟩️ The `provisional` style token: a running tool's not-yet-finalized placement (dashed outline via `ToolRunProvisionalOutline`).
+  provisional: { fill: TOOL_RUN_PROVISIONAL_PAINT.fill, line: TOOL_RUN_PROVISIONAL_PAINT.line, emissiveIntensity: 0.2, opacity: TOOL_RUN_PROVISIONAL_PAINT.opacity },
   celebrated: { fill: tokenVar("primary"), line: tokenVar("primary"), emissiveIntensity: 0.55, opacity: 1 },
   disabled: { fill: "color-mix(in oklab, var(--color-muted-foreground) 55%, var(--panel))", line: themeColorVar("muted-foreground"), emissiveIntensity: 0, opacity: 0.45 },
 };
@@ -550,10 +436,11 @@ export function worldMeshMaterialRevision(kind: MeshStyleKind): MeshStyleKind {
   return kind;
 }
 
-/** 🎨️ Resolves the effective style kind for an instance/component, priority: disabled → danger → celebrated → selected → highlighted → hovered → neutral. */
+/** 🎨️ Resolves the effective style kind for an instance/component, priority: disabled → danger → provisional → celebrated → selected → highlighted → hovered → neutral. */
 export function resolveMeshStyle(state: {
   readonly disabled?: boolean;
   readonly danger?: boolean;
+  readonly provisional?: boolean;
   readonly celebrating?: boolean;
   readonly selected?: boolean;
   readonly highlighted?: boolean;
@@ -561,6 +448,7 @@ export function resolveMeshStyle(state: {
 }): MeshStyleKind {
   if (state.disabled) return "disabled";
   if (state.danger) return "danger";
+  if (state.provisional) return "provisional";
   if (state.celebrating) return "celebrated";
   if (state.selected) return "selected";
   if (state.highlighted) return "highlighted";
@@ -570,12 +458,13 @@ export function resolveMeshStyle(state: {
 
 /** 🎨️ Resolves live group-selection preview paint: the new selection is active, while only objects exiting the old selection are highlighted. */
 export function resolveMeshSelectionPreviewStyle(
-  instance: Pick<WorldInstanceRecord, "disabled" | "selected" | "highlighted" | "hovered"> & { readonly celebrating?: boolean },
+  instance: Pick<WorldInstanceRecord, "disabled" | "provisional" | "selected" | "highlighted" | "hovered"> & { readonly celebrating?: boolean },
   previewSelected?: boolean,
 ): MeshStyleKind {
   const selectionExited = previewSelected === false && instance.selected === true;
   return resolveMeshStyle({
     disabled: instance.disabled,
+    provisional: instance.provisional,
     celebrating: instance.celebrating,
     selected: previewSelected ?? instance.selected,
     highlighted: selectionExited || instance.highlighted,
@@ -849,6 +738,16 @@ export function mergeWorldViewportCamera(base: WorldParsedCameraState, next: Wor
 /** 📷️ Orbit seed: follow `scene.cameraJson` until a programmatic viewport apply bumps `detachEpoch`; orbit-only detach keeps the seed stable. */
 export function world3dViewportCameraSeedKey(sceneCameraJson: string, detachEpoch: number): string {
   return detachEpoch === 0 ? sceneCameraJson : `viewport:${detachEpoch}`;
+}
+
+/** 📷️ Whether a seeded projection pane may keep auto-fitting {@link worldSceneContentBounds} while a running tool grows the scene. */
+export function world3dFitProjectionContent(viewportOwned: boolean, cameraNavigating: boolean, hasProjectionSeed: boolean): boolean {
+  return !viewportOwned && !cameraNavigating && hasProjectionSeed;
+}
+
+/** 📷️ Whether {@link WorldProjectionContentFrame} should stay mounted — suppressed for the whole orbit/pan/zoom gesture, not only after `end`. */
+export function world3dProjectionContentFrameMounted(fitProjectionContent: boolean, projectionFramePending: boolean, cameraNavigating: boolean): boolean {
+  return (fitProjectionContent || projectionFramePending) && !cameraNavigating;
 }
 
 /** 📷️ Builds the `setCamera` dispatch payload from a viewport camera pose — deliberately omits `projection`
@@ -1137,7 +1036,7 @@ function seedPendingWorldProjectionCamera(
 }
 
 /** @emoji 📷️ Viewport-aware reframe for a projection seed so orthographic panes fit content — re-runs whenever
- * {@link worldSceneContentBoundsKey} changes (fill planning grows the scene) until the host stops enabling it
+ * {@link worldSceneContentBoundsKey} changes (a running tool grows the scene) until the host stops enabling it
  * (user-owned orbit/pan/zoom). */
 function WorldProjectionContentFrame(props: {
   readonly enabled: boolean;
@@ -1442,11 +1341,6 @@ export function leftoverOverlayCarryingUtilityV1(next: LeftoverWorldSelectionOve
   return preview === withTool.brushPreviewJson ? withTool : { ...withTool, brushPreviewJson: preview };
 }
 
-/** 🛠️ Fill is a mode-level tool, not a window utility — leftover `select` must not mask an armed fill tab. */
-export function leftoverOverlayArmedUtilityV1(leftover: LeftoverWorldSelectionOverlayV1 | null | undefined): string | null | undefined {
-  return leftover?.activeToolId === "fill" ? "fill" : leftover?.activeUtility;
-}
-
 /** 🕹️ Hover leftover publishes empty `ids` — a first pick must keep leftover.ids, never fall back to hoveredId. */
 export function leftoverOverlayCarryingSelectionV1(next: LeftoverWorldSelectionOverlayV1, prior: LeftoverWorldSelectionOverlayV1 | null): LeftoverWorldSelectionOverlayV1 {
   const carried = leftoverOverlayCarryingUtilityV1(next, prior);
@@ -1520,7 +1414,7 @@ export function mergeWorldSelectionWithLeftoverV1(base: WorldSelectionRecord, le
 
 export function mergeWorldInteractionWithLeftoverV1(base: WorldInteractionRecord, leftover: LeftoverWorldSelectionOverlayV1 | null): WorldInteractionRecord {
   const hoveredVortexFullId = leftoverHoveredVortexFullIdV1(leftover);
-  const activeUtility = leftoverOverlayArmedUtilityV1(leftover);
+  const activeUtility = leftover?.activeUtility;
   if (!hoveredVortexFullId && !activeUtility) return base;
   return {
     ...base,
@@ -1537,7 +1431,7 @@ function mergeWorldSelectionWithLeftover(base: WorldSelectionRecord, windowId: s
  * `mergeWorldSelectionWithLeftoverV1` has laid the host's leftover overlay over the guest's own
  * `selectionJson` lane. Until this attribute existed the pane published its geometry, its camera and
  * its interaction record but never its selection: `WorldInteractionRecord` carries neither
- * `selectedIds` nor a hover target (it is the utility/brush/fill record), `data-instances-json` is the
+ * `selectedIds` nor a hover target (it is the utility/brush record), `data-instances-json` is the
  * guest's geometry cache which deliberately never bakes selection into an instance
  * (`world_instances_geometry_json`), and `data-status-json` is the off-thread COMPUTE status
  * (`{computing,label}`) — so every outside reader of "what is selected in this pane" was reading
@@ -1689,116 +1583,7 @@ export function parseWorldBrushPreview(brushPreviewJson: string | undefined): Wo
   if (!brushPreviewJson) return null;
   try {
     const parsed = JSON.parse(brushPreviewJson) as WorldBrushPreviewRecord;
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return null;
-    const hasFillDiagnostic = Object.prototype.hasOwnProperty.call(parsed, "fillBuildPreview");
-    const diagnostic = parsed.fillBuildPreview;
-    if (!hasFillDiagnostic) return parsed;
-    if (typeof diagnostic !== "object" || diagnostic === null || Array.isArray(diagnostic)) return null;
-    if (censusAllowedOwnKeys(parsed, WORLD_FILL_ROOT_KEYS) < 0 || censusAllowedOwnKeys(diagnostic, WORLD_FILL_DIAGNOSTIC_KEYS) !== WORLD_FILL_DIAGNOSTIC_KEYS.size) return null;
-    const nullableString = (value: unknown) => value === null || typeof value === "string";
-    const nonnegativeInteger = (value: unknown) => Number.isSafeInteger(value) && (value as number) >= 0;
-    const finiteTuple = (value: unknown, length: number) => Array.isArray(value) && value.length === length && value.every((item) => typeof item === "number" && Number.isFinite(item));
-    const equalTuple = (left: unknown, right: unknown) => Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every((item, index) => item === right[index]);
-    const boundedUtf8 = (value: string, maximumBytes: number) => {
-      let bytes = 0;
-      for (const scalar of value) {
-        const point = scalar.codePointAt(0) ?? 0;
-        bytes += point <= 0x7f ? 1 : point <= 0x7ff ? 2 : point <= 0xffff ? 3 : 4;
-        if (bytes > maximumBytes) return false;
-      }
-      return true;
-    };
-    if (!boundedUtf8(brushPreviewJson, WORLD_FILL_PREVIEW_JSON_MAX_BYTES)) return null;
-    if (
-      (Object.prototype.hasOwnProperty.call(parsed, "targetVortexFullId") && typeof parsed.targetVortexFullId !== "string") ||
-      (Object.prototype.hasOwnProperty.call(parsed, "objectKindId") && typeof parsed.objectKindId !== "string") ||
-      (Object.prototype.hasOwnProperty.call(parsed, "sourceVortexIndex") && !nonnegativeInteger(parsed.sourceVortexIndex)) ||
-      (Object.prototype.hasOwnProperty.call(parsed, "meshUrl") && typeof parsed.meshUrl !== "string") ||
-      (Object.prototype.hasOwnProperty.call(parsed, "origin") && !finiteTuple(parsed.origin, 3)) ||
-      (Object.prototype.hasOwnProperty.call(parsed, "orientation") && !finiteTuple(parsed.orientation, 4)) ||
-      (Object.prototype.hasOwnProperty.call(parsed, "color") && (typeof parsed.color !== "string" || !boundedUtf8(parsed.color, WORLD_FILL_COLOR_MAX_BYTES))) ||
-      (Object.prototype.hasOwnProperty.call(parsed, "verdict") && !WORLD_BRUSH_VERDICTS.has(parsed.verdict as string)) ||
-      (Object.prototype.hasOwnProperty.call(parsed, "opacity") && parsed.opacity !== 0.35)
-    ) {
-      return null;
-    }
-    const ghostPose = (ghost: unknown): ghost is WorldBrushPreviewRecord =>
-      typeof ghost === "object" &&
-      ghost !== null &&
-      !Array.isArray(ghost) &&
-      censusAllowedOwnKeys(ghost, WORLD_FILL_GHOST_KEYS) >= 0 &&
-      typeof (ghost as WorldBrushPreviewRecord).targetVortexFullId === "string" &&
-      typeof (ghost as WorldBrushPreviewRecord).objectKindId === "string" &&
-      nonnegativeInteger((ghost as WorldBrushPreviewRecord).sourceVortexIndex) &&
-      typeof (ghost as WorldBrushPreviewRecord).meshUrl === "string" &&
-      finiteTuple((ghost as WorldBrushPreviewRecord).origin, 3) &&
-      finiteTuple((ghost as WorldBrushPreviewRecord).orientation, 4) &&
-      (!Object.prototype.hasOwnProperty.call(ghost, "verdict") || WORLD_BRUSH_VERDICTS.has((ghost as WorldBrushPreviewRecord).verdict as string));
-    const candidateGhost = diagnostic?.candidateGhost;
-    const candidateGhostRecord = candidateGhost === null || ghostPose(candidateGhost);
-    const triedRecords =
-      Array.isArray(diagnostic.tried) &&
-      diagnostic.tried.length <= WORLD_FILL_TRIED_MAX &&
-      diagnostic.tried.every(
-        (entry) =>
-          typeof entry === "object" &&
-          entry !== null &&
-          !Array.isArray(entry) &&
-          censusAllowedOwnKeys(entry, WORLD_FILL_TRIED_KEYS) >= 0 &&
-          nonnegativeInteger(entry.sequence) &&
-          WORLD_BRUSH_VERDICTS.has(entry.verdict as string) &&
-          (!Object.prototype.hasOwnProperty.call(entry, "reason") || nullableString(entry.reason)) &&
-          ghostPose(entry.ghost),
-      );
-    if (
-      !triedRecords ||
-      !WORLD_BRUSH_VERDICTS.has(diagnostic.verdict as string) ||
-      !nonnegativeInteger(diagnostic.testedCount) ||
-      !nonnegativeInteger(diagnostic.requestedCount) ||
-      !nullableString(diagnostic.stallReason) ||
-      !Number.isSafeInteger(diagnostic.operation) ||
-      diagnostic.operation <= 0 ||
-      !Number.isSafeInteger(diagnostic.baseRevision) ||
-      diagnostic.baseRevision <= 0 ||
-      !Number.isSafeInteger(diagnostic.registryGeneration) ||
-      diagnostic.registryGeneration <= 0 ||
-      !Number.isSafeInteger(diagnostic.generation) ||
-      diagnostic.generation <= 0 ||
-      !Number.isSafeInteger(diagnostic.sequence) ||
-      diagnostic.sequence < 0 ||
-      typeof diagnostic.stage !== "string" ||
-      typeof diagnostic.statusLabel !== "string" ||
-      diagnostic.statusLabel.length === 0 ||
-      !boundedUtf8(diagnostic.statusLabel, WORLD_FILL_STATUS_LABEL_MAX_BYTES) ||
-      !nullableString(diagnostic.targetVortexFullId) ||
-      !nullableString(diagnostic.candidateObjectKindId) ||
-      !nullableString(diagnostic.currentPairObjectId) ||
-      !nullableString(diagnostic.rejectionReason) ||
-      !nonnegativeInteger(diagnostic.collisionCount) ||
-      !nonnegativeInteger(diagnostic.sampleCursor) ||
-      !nonnegativeInteger(diagnostic.insideBoth) ||
-      !nonnegativeInteger(diagnostic.targetCursor) ||
-      !nonnegativeInteger(diagnostic.candidateCursor) ||
-      !nonnegativeInteger(diagnostic.acceptedCount) ||
-      !nonnegativeInteger(diagnostic.searchCount) ||
-      !nonnegativeInteger(diagnostic.rejectedCount) ||
-      typeof diagnostic.truncated !== "boolean" ||
-      !Array.isArray(diagnostic.candidatePage) ||
-      diagnostic.candidatePage.length !== 8 ||
-      !diagnostic.candidatePage.every(nullableString) ||
-      (diagnostic.lastSample !== null && (!Array.isArray(diagnostic.lastSample) || diagnostic.lastSample.length !== 3 || !diagnostic.lastSample.every(Number.isFinite))) ||
-      !candidateGhostRecord ||
-      (diagnostic.candidateGhost !== null &&
-        (diagnostic.candidateGhost.targetVortexFullId !== parsed.targetVortexFullId ||
-          diagnostic.candidateGhost.objectKindId !== parsed.objectKindId ||
-          diagnostic.candidateGhost.sourceVortexIndex !== parsed.sourceVortexIndex ||
-          diagnostic.candidateGhost.meshUrl !== parsed.meshUrl ||
-          !equalTuple(diagnostic.candidateGhost.origin, parsed.origin) ||
-          !equalTuple(diagnostic.candidateGhost.orientation, parsed.orientation)))
-    ) {
-      return null;
-    }
-    return parsed;
+    return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed) ? parsed : null;
   } catch {
     return null;
   }
@@ -1833,9 +1618,9 @@ export function world3dContextMenuSurfaceV1(
   return { hits: target ? [{ domain: target.kind, id: target.id }] : [], selection: groups };
 }
 
-/** @emoji 🚫️ Instance-mesh picking must be disabled for fill/brush engagements — otherwise a click meant for a vortex marker or a fill/voxel gesture falls through and selects/gumballs the underlying object instead. */
+/** @emoji 🚫️ Instance-mesh picking must be disabled for brush engagements — otherwise a click meant for a vortex marker or a voxel gesture falls through and selects/gumballs the underlying object instead. */
 export function worldInstancePickBlocked(activeUtility: string | undefined): boolean {
-  return activeUtility === "fill" || activeUtility === "brush" || activeUtility === "volumeBrush" || activeUtility === "surfaceBrush";
+  return activeUtility === "brush" || activeUtility === "volumeBrush" || activeUtility === "surfaceBrush";
 }
 
 /** @emoji 🚫️ `undefined` keeps the default mesh raycast; a no-op replaces it so a blocked instance cannot steal sibling vortex hits. */
@@ -1862,22 +1647,6 @@ const WORLD_VORTEX_DEFAULT_RADIUS = 0.36;
 export function worldVortexHitProxy(radius?: number): { readonly visible: true; readonly radius: number } {
   const published = radius ?? WORLD_VORTEX_DEFAULT_RADIUS;
   return { visible: true, radius: Math.max(published, WORLD_VORTEX_DEFAULT_RADIUS) };
-}
-
-/** 📜️ Guest fill progress before the first `fillBuildTick` is `{ done: true, count: 0 }` — requiring
- * `!done` starved the interval forever. Tick while Fill is the published interaction (or the host
- * tool) until a completed plan exists (`done` and `count > 0`). */
-export function worldFillBuildShouldTick(activeUtility: string | undefined, fillBuild: { readonly done?: boolean; readonly count?: number } | undefined, activeToolId?: string | null): boolean {
-  if (activeUtility !== "fill" && activeToolId !== "fill") return false;
-  if (fillBuild == null) return true;
-  return !fillBuild.done || (fillBuild.count ?? 0) === 0;
-}
-
-/** ⏱️ While an Isolated fill job holds the actor lock, only a queued UI poll may dispatch fillBuildTick. */
-export function worldFillBuildHostTickAllowed(shouldTick: boolean, driving: boolean, pollDue: boolean): boolean {
-  if (!shouldTick) return false;
-  if (!driving) return true;
-  return pollDue;
 }
 
 /** @emoji 🖱️ In brush mode or vertex selection mode, pointer-down on a vortex selects immediately; otherwise a click selects and a drag starts connect. */
@@ -2334,6 +2103,63 @@ function BrushMeshRegistrar({ url, revision, onRegister }: { readonly url: strin
   return null;
 }
 
+/** 🥽️ One loaded GLB as the single welded geometry a tool run trace instance draws through, already in the
+ * {@link GLB_MESH_FRAME_ROTATION_X} frame the instance group applies. */
+function ToolRunTraceGlbGeometry({ url, onGeometry }: { readonly url: string; readonly onGeometry: (url: string, geometry: BufferGeometry | null) => void }) {
+  const gltf = useLoader(GLTFLoader, meshAssetTransportUrl(url));
+  useEffect(() => {
+    const mesh = extractGlbCollisionMesh(gltf);
+    if (mesh.positions.length === 0 || mesh.indices.length === 0) return;
+    const geometry = new BufferGeometry();
+    geometry.setAttribute("position", new BufferAttribute(new Float32Array(mesh.positions), 3));
+    geometry.setIndex(mesh.indices);
+    geometry.computeVertexNormals();
+    onGeometry(url, geometry);
+    return () => {
+      onGeometry(url, null);
+      geometry.dispose();
+    };
+  }, [gltf, onGeometry, url]);
+  return null;
+}
+
+/** ⏯️ Mounts the scene's `toolRunTrace` lane for this window: one instanced mesh per `(mesh, verdict)` batch,
+ * each drawn through `meshesJson[mesh]` — inline mesh data directly, a GLB once it has loaded, a unit box
+ * until then. Only meshes a resident `instance3d` record names are loaded.
+ * @see ./⏯️tool-run-trace/🟦️.tsx */
+function WorldToolRunTrace({ lane, meshes, trace }: { readonly lane: string | null | undefined; readonly meshes: readonly WorldMeshRecord[]; readonly trace: { readonly store: ToolRunTraceRecordStore; readonly version: number } }) {
+  const inline = useMemo(() => meshes.map((mesh) => (mesh.data ? geometryFromMesh(mesh.data) : null)), [meshes]);
+  useEffect(() => () => inline.forEach((geometry) => geometry?.dispose()), [inline]);
+  const [loaded, setLoaded] = useState<ReadonlyMap<string, BufferGeometry>>(() => new Map());
+  const onGeometry = useCallback((url: string, geometry: BufferGeometry | null) => {
+    setLoaded((previous) => {
+      const next = new Map(previous);
+      if (geometry) next.set(url, geometry);
+      else next.delete(url);
+      return next;
+    });
+  }, []);
+  const urls = useMemo(() => {
+    const named = new Set<string>();
+    for (const batch of trace.store.batches()) {
+      const mesh = batch.family === "instance3d" && batch.count > 0 ? meshes[batch.index] : undefined;
+      if (mesh?.url && !mesh.data) named.add(mesh.url);
+    }
+    return [...named];
+  }, [meshes, trace.store, trace.version]);
+  const geometryForMesh = useCallback((index: number) => inline[index] ?? loaded.get(meshes[index]?.url ?? "") ?? null, [inline, loaded, meshes]);
+  return (
+    <>
+      {urls.map((url) => (
+        <Suspense key={url} fallback={null}>
+          <ToolRunTraceGlbGeometry url={url} onGeometry={onGeometry} />
+        </Suspense>
+      ))}
+      <ToolRunTraceLayer lane={lane} store={trace} geometryForMesh={geometryForMesh} />
+    </>
+  );
+}
+
 /** 🎛️ True when `mode` is an explicit transform-gumball utility (`move`/`rotate`/`scale`/`transform`) — never treat a missing/unknown mode as move. */
 export function isWorldTransformGumballMode(mode: string | undefined): boolean {
   return mode === "move" || mode === "rotate" || mode === "scale" || mode === "transform";
@@ -2714,8 +2540,9 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
   const isActiveObject = instance.id === activeObjectId;
   const colors = semanticColorsFromPalette(palette);
   const celebratingIds = useCelebratingWorldInstanceIds();
+  const provisional = useToolRunProvisional(instance) || instance.provisional === true;
   const styleKind = resolveMeshSelectionPreviewStyle(
-    { ...instance, selected: chrome.selected, hovered: chrome.hovered, highlighted: chrome.highlighted, celebrating: celebratingIds.has(instance.id) },
+    { ...instance, provisional, selected: chrome.selected, hovered: chrome.hovered, highlighted: chrome.highlighted, celebrating: celebratingIds.has(instance.id) },
     chrome.previewSelected ?? previewInstanceSelected,
   );
   const style = palette[styleKind];
@@ -2723,7 +2550,7 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
   const glbColor = glbUsesEnvironmentColor ? environmentMaterial!.color! : style.meshColor;
   const glbEmissive = glbUsesEnvironmentColor && environmentMaterial?.emissive ? environmentMaterial.emissive : style.meshColor;
   const glbEmissiveIntensity = glbUsesEnvironmentColor && environmentMaterial?.emissive ? (environmentMaterial.emissiveIntensity ?? 1) : style.emissiveIntensity;
-  const instancePickEnabled = pickEnabled && !instance.disabled;
+  const instancePickEnabled = pickEnabled && !instance.disabled && !provisional;
   const lockedClickClears = instance.disabled === true;
   const hoveredFaceId = hoveredComponent?.mode === "face" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
   const hoveredVertexId = hoveredComponent?.mode === "vertex" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
@@ -2821,11 +2648,12 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
             }}
           ></PaintTexturedMesh>
           ) : null}
-          {hasShadedMesh && borderGeometry && (showEdges ?? true) && !edgeGeometry ? (
+          {hasShadedMesh && borderGeometry && (showEdges ?? true) && !edgeGeometry && !provisional ? (
             <lineSegments geometry={borderGeometry} scale={1.001} raycast={() => null} renderOrder={2}>
               <lineBasicMaterial color={style.lineColor} depthTest={false} />
             </lineSegments>
           ) : null}
+          {provisional && borderGeometry ? <ToolRunProvisionalOutline geometry={borderGeometry} /> : null}
           {(targets.edge || isCurveOnly || (showEdges ?? true) || (selectionMode === "mesh" && selectedComponentIds.size > 0)) && edgeGeometry ? (
             <lineSegments
               geometry={edgeGeometry}
@@ -3051,7 +2879,7 @@ function WorldInstancesLayer({
   readonly mergedComponentIds?: readonly number[] | null;
   /** Live drag-preview merged whole-instance id set (null when no marquee drag is in progress). */
   readonly mergedInstanceIds?: readonly string[] | null;
-  /** Disables instance picking; passed for fill and brush engagements so a click meant for a vortex marker can't fall through and select/gumball the underlying object instead. */
+  /** Disables instance picking; passed for brush engagements so a click meant for a vortex marker can't fall through and select/gumball the underlying object instead. */
   readonly blockPick?: boolean;
   readonly environment?: WorldEnvironmentRecord | null;
 }) {
@@ -3722,12 +3550,10 @@ function BrushPreviewGhost({
   preview,
   meshes,
   palette,
-  opacityScale = 1,
 }: {
   readonly preview: WorldBrushPreviewRecord;
   readonly meshes: readonly WorldMeshRecord[];
   readonly palette: MeshStylePalette;
-  readonly opacityScale?: number;
 }) {
   if (!preview.origin) return null;
   const { style, meshColor, revision } = brushGhostPaint(preview, palette);
@@ -3742,90 +3568,15 @@ function BrushPreviewGhost({
       <DemandInvalidateOnToken token={invalidateToken} />
       {url ? (
         <Suspense fallback={null}>
-          <GlbInstanceMesh url={url} color={meshColor} emissive={meshColor} emissiveIntensity={style.emissiveIntensity + 0.25} opacity={0.72 * opacityScale} borderColor={palette.neutral.lineColor} revision={revision} pickEnabled={false} />
+          <GlbInstanceMesh url={url} color={meshColor} emissive={meshColor} emissiveIntensity={style.emissiveIntensity + 0.25} opacity={0.72} borderColor={palette.neutral.lineColor} revision={revision} pickEnabled={false} />
         </Suspense>
       ) : (
         <mesh raycast={() => null}>
           <boxGeometry args={[1, 1, 1]} />
-          <meshBasicMaterial color={meshColor} transparent opacity={0.42 * opacityScale} depthWrite={false} />
+          <meshBasicMaterial color={meshColor} transparent opacity={0.42} depthWrite={false} />
         </mesh>
       )}
     </group>
-  );
-}
-
-/** 🕯️ How faint the OLDEST kept try is drawn, relative to the newest. */
-const WORLD_FILL_TRIED_FAINTEST = 0.25;
-
-/** 🕯️ The ring of already-tried candidates, so the viewport shows the SEARCH and not only its winner:
- * every collision stays visible in danger red, every accepted pose in the highlighted paint, and both
- * fade with age by their distance from the newest `sequence`. A rejected-for-another-reason try is
- * muted rather than red — it was not impossible, only not chosen. Rendered as ordinary ghosts inside
- * the fill dirty scope: the diagnostic that carries them already re-renders per tick, so this layer
- * adds no React work of its own. */
-function FillTriedGhosts({ tried, meshes, palette }: { readonly tried: readonly WorldFillTriedRecord[]; readonly meshes: readonly WorldMeshRecord[]; readonly palette: MeshStylePalette }) {
-  if (tried.length === 0) return null;
-  const newest = tried.reduce((highest, entry) => Math.max(highest, entry.sequence), 0);
-  const span = Math.max(1, newest - tried.reduce((lowest, entry) => Math.min(lowest, entry.sequence), newest));
-  return (
-    <>
-      {tried.map((entry) => {
-        const age = (newest - entry.sequence) / span;
-        const freshness = 1 - age * (1 - WORLD_FILL_TRIED_FAINTEST);
-        const muted = entry.verdict !== "collision" && entry.verdict !== "accepted" && entry.verdict !== "free";
-        // ⚖️ The ENTRY's verdict is the authority, not the pose's own optional one: the ring records what the
-        // planner decided about that try, and a ghost the producer left unmarked must still paint that verdict.
-        return <BrushPreviewGhost key={`${entry.sequence}:${entry.ghost.targetVortexFullId ?? ""}`} preview={{ ...entry.ghost, verdict: entry.verdict }} meshes={meshes} palette={palette} opacityScale={(muted ? 0.4 : 0.6) * freshness} />;
-      })}
-    </>
-  );
-}
-
-/** @emoji 🪣️ Bounded fill progress/rejection readout; it is deliberately independent from the optional
- * placement ghost. It reads `tested · locked / requested` — the three numbers that answer "is it working,
- * how hard is it working, and how far has it got" — beside the producer's own localized phase sentence
- * (`statusLabel`, never invented here) and, when the run froze, the reason it froze. The `data-fill-*`
- * attributes are the browser probe's only contract with this overlay. */
-function FillDiagnosticOverlay({ diagnostic }: { readonly diagnostic: WorldFillDiagnosticRecord }) {
-  const target = diagnostic.targetVortexFullId ?? "—";
-  const candidate = diagnostic.candidateObjectKindId ?? "—";
-  const rejection = diagnostic.rejectionReason ?? "—";
-  const page = diagnostic.candidatePage.filter((value): value is string => typeof value === "string").join(", ");
-  const sample = diagnostic.lastSample?.join(",") ?? "—";
-  const counts = `${diagnostic.testedCount} · ${diagnostic.acceptedCount} / ${diagnostic.requestedCount}`;
-  const label = [diagnostic.statusLabel, diagnostic.stage, counts, diagnostic.verdict, diagnostic.stallReason ?? "—", target, candidate, String(diagnostic.collisionCount), rejection, page || "—", sample].join("; ");
-  return (
-    <div
-      className={cn("pointer-events-none absolute bottom-3 left-3 max-w-[28rem] rounded px-2 py-1 text-xs shadow-sm", glassClass)}
-      data-fill-operation={diagnostic.operation}
-      data-fill-base-revision={diagnostic.baseRevision}
-      data-fill-registry-generation={diagnostic.registryGeneration}
-      data-fill-generation={diagnostic.generation}
-      data-fill-sequence={diagnostic.sequence}
-      data-fill-stage={diagnostic.stage}
-      data-fill-tested={diagnostic.testedCount}
-      data-fill-locked={diagnostic.acceptedCount}
-      data-fill-requested={diagnostic.requestedCount}
-      data-fill-verdict={diagnostic.verdict}
-      data-fill-tried-count={diagnostic.tried.length}
-      data-fill-stall-reason={diagnostic.stallReason ?? undefined}
-      data-fill-target-cursor={diagnostic.targetCursor}
-      data-fill-candidate-cursor={diagnostic.candidateCursor}
-      data-fill-search-count={diagnostic.searchCount}
-      data-fill-rejected-count={diagnostic.rejectedCount}
-      data-fill-sample-cursor={diagnostic.sampleCursor}
-      data-fill-inside-both={diagnostic.insideBoth}
-      data-fill-current-pair={diagnostic.currentPairObjectId ?? undefined}
-      data-fill-has-ghost={diagnostic.candidateGhost != null}
-      data-fill-truncated={diagnostic.truncated}
-      role="status"
-      aria-label={label}
-    >
-      <span>{diagnostic.statusLabel}</span>
-      <span className="ml-2">{counts}</span>
-      {diagnostic.stallReason ? <span className="ml-2">{diagnostic.stallReason}</span> : <span className="ml-2">{diagnostic.rejectionReason ?? String(diagnostic.collisionCount)}</span>}
-      {diagnostic.truncated ? <span className="ml-2">…</span> : null}
-    </div>
   );
 }
 
@@ -5290,8 +5041,9 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   });
   const [projectionFramePending, setProjectionFramePending] = useState(() => pendingProjectionSpecRef.current !== null);
   const [viewportOwned, setViewportOwned] = useState(false);
+  const [cameraNavigating, setCameraNavigating] = useState(false);
   const [detachEpoch, setDetachEpoch] = useState(0);
-  /** 📷️ First content-frame remounts orbit controls; later fill-driven bound expansions only soft-update the camera. */
+  /** 📷️ First content-frame remounts orbit controls; later tool-driven bound expansions only soft-update the camera. */
   const projectionContentFrameSeededRef = useRef(false);
   const previousSceneCameraJsonRef = useRef(sceneCameraJson);
   /** 🧭️ The last camera pose this component itself dispatched via debounced `setCamera` — lets the reattach
@@ -5305,6 +5057,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     if (!shouldReattachWorldViewportCamera(previousSceneCameraJson, sceneCameraJson, lastDispatchedWorldCameraRef.current)) return;
     setViewportCamera(null);
     setViewportOwned(false);
+    setCameraNavigating(false);
     setDetachEpoch(0);
     setProjectionFramePending(Boolean(pendingProjectionSpecRef.current));
     projectionContentFrameSeededRef.current = false;
@@ -5365,24 +5118,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     return decided.json;
   }, [leftoverSelectionEpoch, scene?.brushPreviewJson, scene?.interactionJson, windowInstanceId]);
   const brushPreview = useMemo(() => parseWorldBrushPreview(brushPreviewJson || undefined), [brushPreviewJson]);
-  const latestFillIdentityRef = useRef<readonly [number, number, number, number, number] | null>(null);
-  const suppliedFillDiagnostic = brushPreview?.fillBuildPreview ?? null;
-  let fillDiagnostic: WorldFillDiagnosticRecord | null = null;
-  if (suppliedFillDiagnostic) {
-    const identity = [suppliedFillDiagnostic.operation, suppliedFillDiagnostic.baseRevision, suppliedFillDiagnostic.registryGeneration, suppliedFillDiagnostic.generation, suppliedFillDiagnostic.sequence] as const;
-    const latest = latestFillIdentityRef.current;
-    const fresh =
-      !latest ||
-      identity[0] > latest[0] ||
-      (identity[0] === latest[0] && identity[1] > latest[1]) ||
-      (identity[0] === latest[0] && identity[1] === latest[1] && identity[2] > latest[2]) ||
-      (identity[0] === latest[0] && identity[1] === latest[1] && identity[2] === latest[2] && identity[3] > latest[3]) ||
-      (identity[0] === latest[0] && identity[1] === latest[1] && identity[2] === latest[2] && identity[3] === latest[3] && identity[4] >= latest[4]);
-    if (fresh) {
-      latestFillIdentityRef.current = identity;
-      fillDiagnostic = suppliedFillDiagnostic;
-    }
-  }
   const environment = useMemo(() => parseEnvironment(scene?.environmentJson), [scene?.environmentJson]);
   const frame = useMemo(() => parseFrame(scene?.frameJson), [scene?.frameJson]);
   const fit = useMemo(() => parseFit(scene?.fitJson), [scene?.fitJson]);
@@ -5390,6 +5125,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   // last-known-good (stale) cache while a plugin worker's `flowEvalTick` chain is still resolving.
   const computeStatus = useMemo(() => world3dComputeStatusV1(scene?.statusJson), [scene?.statusJson]);
   const computing = computeStatus.computing;
+  const toolRunTrace = useToolRunTraceStore(scene?.toolRunTrace, useToolRunTraceCursorEcho(windowInstanceId));
   // 🛑️ While this surface offers a cancel affordance it DECLARES the action id to the shell, so the
   // shell's one action funnel can retire the requesting instance's in-flight extension requests
   // before forwarding the gesture — without the shell ever learning a domain verb from code
@@ -5397,12 +5133,10 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const cancelActionId = computeStatus.cancellable ? computeStatus.cancelAction : "";
   useEffect(() => declareSurfaceCancelAction(cancelActionId), [cancelActionId]);
   const activeUtility = interaction.activeUtility ?? "select";
-  const fillMode = activeUtility === "fill";
-  const visibleBrushPreview = fillMode ? (fillDiagnostic?.candidateGhost ? brushPreview : null) : brushPreview;
   const brushMode = activeUtility === "brush";
   const volumeBrushMode = activeUtility === "volumeBrush";
   const relocateMode = activeUtility === "worldRelocate";
-  const volumeLayersInteractive = !brushMode && !fillMode && !volumeBrushMode;
+  const volumeLayersInteractive = !brushMode && !volumeBrushMode;
   const hostRef = useRef<HTMLDivElement | null>(null);
   const instancesGroupRef = useRef<Group | null>(null);
   const lodRef = useRef(DEFAULT_MANUAL_LOD);
@@ -5989,13 +5723,13 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     };
   }, [handleSuggestionClose, suggestionMenuOpen, suggestionMenuOwnsThisWindow]);
 
-  // 🐢️ Background suggestion/fill planning ticks must not pile into the serialized plugin WASM queue —
-  // a blind `setInterval` every 120ms while each tick+refresh still runs turns ~15s of idle fill into an
-  // unbounded backlog that starves every other utility action (the fill utility appears to "die").
+  // 🐢️ Background suggestion ticks must not pile into the serialized plugin WASM queue — a blind
+  // `setInterval` every 120ms while each tick+refresh still runs turns ~15s of idle search into an
+  // unbounded backlog that starves every other utility action.
   //
   // 🏁️ `createInFlightSkippingInterval` gates on the promise `run` RETURNS, so the tick must return the
   // dispatch — a `run` that swallowed it cleared the in-flight flag on the same microtask and the gate
-  // did nothing (measured 2026-09-09 20:55: 252 `fillBuildTick`s enqueued in 35 s, 38 rejected with
+  // did nothing (measured 2026-09-09 20:55: 252 background ticks enqueued in 35 s, 38 rejected with
   // `serializePerActor: queue is full (>256 pending turns)`). `onAction` settles on the dispatched
   // action's own `OperationCompleted` frame (`ComponentSceneHostProps.onAction`), so exactly one tick is
   // ever outstanding and the cadence degrades to the guest's real turn time instead of overflowing.
@@ -6007,17 +5741,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       return dispatchSettled("suggestionsTick");
     }, 120);
   }, [brushMode, dispatchSettled, interaction.suggestionMenu?.open, interaction.suggestionMenu?.pending]);
-
-  const leftoverArmedToolId = leftoverWorldSelectionOverlayV1()?.activeToolId;
-  const fillBuildShouldTick = worldFillBuildShouldTick(activeUtility, interaction.fillBuild, leftoverArmedToolId);
-  useEffect(() => {
-    if (!fillBuildShouldTick) return;
-    return createInFlightSkippingInterval(() => {
-      if (interactivePluginActionInFlight()) return undefined;
-      if (!worldFillBuildHostTickAllowed(true, isolatedJobDriveIsActive(), takeIsolatedJobUiPoll())) return undefined;
-      return dispatchSettled("fillBuildTick");
-    }, 120);
-  }, [activeUtility, dispatchSettled, fillBuildShouldTick, interaction.fillBuild, leftoverArmedToolId]);
 
   const selectionArgs = useCallback(() => world3dGumballSelectionArgsV1(selection), [selection]);
 
@@ -6271,6 +5994,11 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     [adoptViewportCamera, dispatchWorldCameraDebounced],
   );
 
+  const handleCameraNavigate = useCallback((active: boolean) => {
+    setCameraNavigating((prev) => (prev === active ? prev : active));
+    if (active) setViewportOwned(true);
+  }, []);
+
   // 🧭️ Programmatic auto-fit-to-content camera change (`WorldAutoFit.onFitted`, runs after a document/scene
   // loads or content changes) — deliberately split from `handleCameraChange` so this path never dispatches;
   // only a genuine user gesture should sync a camera to the plugin.
@@ -6335,9 +6063,11 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
 
   const worldProjectionSpec: WorldProjectionSpec = cameraState.projectionSpec ?? (cameraState.projection === "orthographic" ? worldProjectionDefaults("orthographic") : worldProjectionDefaults("threePoint"));
   /** 📷️ Keep fitting the live content bounds into seeded projection panes (esp. orthographic Top) until the
-   * user takes ownership — otherwise fill-planned objects that expand the scene fall outside the one-shot
+   * user takes ownership — otherwise tool-placed objects that expand the scene fall outside the one-shot
    * initial frustum and only remain visible in the wider perspective pane. */
-  const fitProjectionContent = !viewportOwned && Boolean(pendingProjectionSpecRef.current ?? cameraState.projectionSpec);
+  const hasProjectionSeed = Boolean(pendingProjectionSpecRef.current ?? cameraState.projectionSpec);
+  const fitProjectionContent = world3dFitProjectionContent(viewportOwned, cameraNavigating, hasProjectionSeed);
+  const projectionContentFrameMounted = world3dProjectionContentFrameMounted(fitProjectionContent, projectionFramePending, cameraNavigating);
   const worldOrbitConstraints = useMemo(() => worldProjectionOrbitConstraints(cameraState.projectionSpec), [cameraState.projectionSpec]);
 
   const marqueePreview = useMemo<{ readonly mergedComponentIds: readonly number[] | null; readonly mergedInstanceIds: readonly string[] | null }>(() => {
@@ -6918,6 +6648,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       data-suggestion-menu-json={interaction.suggestionMenu ? JSON.stringify(interaction.suggestionMenu) : ""}
       data-interaction-json={JSON.stringify(interaction)}
       data-status-json={scene.statusJson ?? undefined}
+      {...toolRunTraceDataAttributes(toolRunTrace.store)}
       onContextMenu={(event) => {
         const alt = world3dSuggestionsAltHeld(event.altKey, altHeldRef.current);
         const brushArmed = Boolean(brushMode && hoveredVortexFullIdRef.current);
@@ -6993,18 +6724,24 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
               </button>
               <WorldComputeStatusPane status={computeStatus} glassClass={glassClass} locale={shellScope?.i18n.language} onCancel={() => dispatch(computeStatus.cancelAction)} />
             </div>
-            {fillDiagnostic ? <FillDiagnosticOverlay diagnostic={fillDiagnostic} /> : null}
           </>
         }
       >
         <WorldOrbitViewSnapGateProvider>
           <WorldProjectionRig spec={worldProjectionSpec} state={cameraState} seedKey={cameraSeedKey} pendingSpec={pendingProjectionSpec} />
-          {fitProjectionContent || projectionFramePending ? (
-            <WorldProjectionContentFrame enabled spec={pendingProjectionSpecRef.current ?? worldProjectionSpec} bounds={contentBounds} fov={cameraState.fov} onFramed={handleProjectionContentFrame} />
+          {projectionContentFrameMounted ? (
+            <WorldProjectionContentFrame
+              enabled={fitProjectionContent || projectionFramePending}
+              spec={pendingProjectionSpecRef.current ?? worldProjectionSpec}
+              bounds={contentBounds}
+              fov={cameraState.fov}
+              onFramed={handleProjectionContentFrame}
+            />
           ) : null}
           <WorldOrbitGated
             controlsGate={marqueeDown || gumballDragActive || connectDragSource !== null || faceDragSession !== null}
             onCamera={handleCameraChange}
+            onCameraNavigate={handleCameraNavigate}
             zoom={cameraState.zoom}
             projection={cameraState.explicitProjection ? cameraState.projection : undefined}
             constraints={worldOrbitConstraints}
@@ -7106,8 +6843,8 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
             />
             {connectDragSource && connectDragHoverPosition ? <WorldConnectRubberBand from={connectDragSource.position} to={connectDragHoverPosition} /> : null}
             <WorldAttractionLines attractions={previewAttractions} />
-            {catalogueDropPreview ? <CatalogueDropGhost preview={catalogueDropPreview} meshes={meshes} palette={meshStylePalette} /> : visibleBrushPreview ? <BrushPreviewGhost preview={visibleBrushPreview} meshes={meshes} palette={meshStylePalette} /> : null}
-            {fillMode && fillDiagnostic ? <FillTriedGhosts tried={fillDiagnostic.tried} meshes={meshes} palette={meshStylePalette} /> : null}
+            {catalogueDropPreview ? <CatalogueDropGhost preview={catalogueDropPreview} meshes={meshes} palette={meshStylePalette} /> : brushPreview ? <BrushPreviewGhost preview={brushPreview} meshes={meshes} palette={meshStylePalette} /> : null}
+            <WorldToolRunTrace lane={scene.toolRunTrace} meshes={meshes} trace={toolRunTrace} />
             {engagementPreview.length > 0 ? <EngagementPreviewLayer items={engagementPreview} color={colors.hover} /> : null}
             <WorldVolumeLayer
               volumes={targetVolumes

@@ -1,7 +1,7 @@
 //! 🧵️ Shared typed Flow ownership frontiers for resumable copying and retirement.
 
 use crate::os_store::{ErasedSnapshotRetirement, SnapshotRetirementStep};
-use crate::{neural, FlowFixture, FlowGui, FlowLayoutEntry, FlowNodeGui, FlowPreviewGui, NodeChrome, OrderedMap, OrderedSet, SynapseSpec, Widget, WidgetLayout};
+use crate::{neural, FlowArtifact, FlowFixture, FlowGui, FlowLayoutEntry, FlowNodeGui, FlowPreviewGui, NodeChrome, OrderedMap, OrderedSet, SynapseSpec, Widget, WidgetLayout};
 use protocol::value::list::{PagedList, PagedListAllocationError, PagedListProgress};
 use protocol::value::ordered::{Grant, Retirement, RetirementStep};
 use std::mem::{size_of, ManuallyDrop};
@@ -549,12 +549,43 @@ impl FlowFixture {
     pub fn retire_cold(self) {
         FlowRetirement::from_owner(FlowOwner::Fixture(self)).retire_cold();
     }
+
+    /// 🧊️ Installs a whole widget roster AND retires the one it displaces. A bare
+    /// `fixture.widgets = vec![…]` drops every displaced `Widget` — each of which owns a
+    /// `Dictionary`/`OrderedSet`/`Tree` that refuses a bare drop — so the assignment panics with
+    /// `final Dictionary ownership must be explicitly retired or owned by a cold boundary` at the
+    /// END of the caller, naming nothing that points back at the assignment. This is the paid form,
+    /// the twin of the `std::mem::replace(&mut self.fixture, fixture).retire_cold()` the flow host's
+    /// own `apply_fixture` already pays (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub fn replace_widgets(&mut self, widgets: Vec<Widget>) {
+        FlowRetirement::from_owner(FlowOwner::Widgets(std::mem::replace(&mut self.widgets, widgets))).retire_cold();
+    }
 }
 
 impl Widget {
     /// 🧊️ Explicit cold-only disposal of a detached widget.
     pub fn retire_cold(self) {
         FlowRetirement::from_owner(FlowOwner::Widget(self)).retire_cold();
+    }
+}
+
+impl FlowGui {
+    /// 🧊️ Explicit cold-only disposal of a detached gui projection — its `nodes` are an
+    /// `OrderedMap<FlowNodeGui>` that refuses a bare drop.
+    pub fn retire_cold(self) {
+        FlowRetirement::from_owner(FlowOwner::Gui(self)).retire_cold();
+    }
+}
+
+impl FlowArtifact {
+    /// 🧊️ Explicit cold-only disposal of a detached artifact projection. `FlowHost::document()`
+    /// hands back an OWNED projection built by `FlowFixture::to_artifact`, and both of its halves
+    /// refuse a bare drop — the `Tree`'s neurons own `Dictionary` params, the `FlowUi`'s `nodes` are
+    /// an `OrderedMap` — so a caller that only reads it still has to close it
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub fn retire_cold(self) {
+        FlowRetirement::from_owner(FlowOwner::Tree(self.tree)).retire_cold();
+        self.ui.retire_cold();
     }
 }
 

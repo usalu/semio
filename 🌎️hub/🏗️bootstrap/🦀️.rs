@@ -1741,6 +1741,7 @@ impl HubState {
                 interaction: input.interaction,
                 views: input.views,
                 ui: input.ui,
+                tool_run: input.tool_run,
             })
         });
         let Some(normalized) = normalized else { return PresenceLeaseTransition::NoChange };

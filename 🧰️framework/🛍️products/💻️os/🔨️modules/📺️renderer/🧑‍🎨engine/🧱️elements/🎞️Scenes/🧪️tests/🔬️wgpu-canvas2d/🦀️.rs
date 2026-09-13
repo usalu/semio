@@ -9,7 +9,7 @@ fn canvas_scene(surface_id: &str, layers_json: String) -> UiComponentSceneNode {
         pane_id: None,
         binding_id: None,
         presence: UiPresence::default(),
-        canvas_2d: Some(ui_wgpu::wgpu::Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json, snapshot: None }),
+        canvas_2d: Some(ui_wgpu::wgpu::Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() }),
         world_3d: None,
         node_graph: None,
         text_editor: None,

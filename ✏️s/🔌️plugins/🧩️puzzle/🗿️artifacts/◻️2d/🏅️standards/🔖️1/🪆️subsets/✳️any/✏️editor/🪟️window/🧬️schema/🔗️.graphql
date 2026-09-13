@@ -3,7 +3,6 @@ type Puzzle2dWindowConfig {
   cameraY: Float!
   cameraZoom: Float!
   lodMode: String!
-  fillCount: Int!
   gridSnapEnabled: Boolean!
   gridFactor: Float!
   suggestionOffset: Float!

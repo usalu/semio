@@ -1,0 +1,14 @@
+{
+  "name": "@semio-tech/framework-tool-run-rs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "bun nx run @semio-tech/framework-tool-run-rs:test",
+    "check": "bun nx run @semio-tech/framework-tool-run-rs:check"
+  },
+  "bundleKind": "library",
+  "nx": {
+    "includedScripts": []
+  }
+}

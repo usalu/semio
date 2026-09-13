@@ -1188,6 +1188,59 @@ pub fn interaction_action_definitions(app: &AppDefinition) -> Vec<ActionDefiniti
 }
 //#endregion 🔖️Interaction
 
+//#region 🔖️ToolRun
+pub use semio_framework_tool_run::{
+    JobKindId, ToolRunAction, ToolRunCounterDefinition, ToolRunDefinition, ToolRunDefinitionError, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunStageDefinition, ToolRunTraceKind, ToolRunVerdict, TOOL_RUN_ABORT_ACTION_ID,
+    TOOL_RUN_ACTION_IDS, TOOL_RUN_DISMISS_ACTION_ID, TOOL_RUN_DISMISS_CHORD, TOOL_RUN_FINALIZE_ACTION_ID, TOOL_RUN_PAUSE_ACTION_ID, TOOL_RUN_RESUME_ACTION_ID, TOOL_RUN_START_ACTION_ID, TOOL_RUN_STEP_ACTION_ID,
+};
+
+/// ⏯️ Whether any tool or utility of `app` declares a `ToolRunDefinition`.
+pub fn app_declares_tool_run(app: &AppDefinition) -> bool {
+    app.tools.iter().any(|tool| tool.run.is_some()) || app.utilities.iter().any(|utility| utility.run.is_some())
+}
+
+/// 🕹️ The seven framework-reserved tool run actions (§2.5 of the tool run contract), auto-injected into any
+/// `AppDefinition` whose tools or utilities declare `run` — mirrors `interaction_action_definitions`. Ids,
+/// chords, argument names and EN/DE labels come from `semio_framework_tool_run::ToolRunAction`. They are
+/// `History` actions like `undo`: host-routed, never queued behind the run, never in the palette or the
+/// Actions panel. `toolRunDismiss` carries no app-wide `keys` because `escape` dismisses only with the run
+/// panel focused ([`TOOL_RUN_DISMISS_CHORD`]); pause and resume share one toggle chord.
+pub fn tool_run_action_definitions(app: &AppDefinition) -> Vec<ActionDefinition> {
+    if !app_declares_tool_run(app) {
+        return Vec::new();
+    }
+    ToolRunAction::ALL
+        .into_iter()
+        .map(|action| {
+            let icon = match action {
+                ToolRunAction::Start | ToolRunAction::Resume => "play",
+                ToolRunAction::Pause => "pause",
+                ToolRunAction::Step => "skip-forward",
+                ToolRunAction::Abort => "square",
+                ToolRunAction::Finalize => "check",
+                ToolRunAction::Dismiss => "x",
+            };
+            let keys = (action != ToolRunAction::Dismiss).then(|| action.chord().to_string());
+            ActionDefinition { keys, in_palette: false, ..ActionDefinition::resumable_framework(action.id(), action.label().localized(), ActionKind::History, icon) }.with_args(action.args().iter().map(|arg| tool_run_action_arg(arg.name, arg.required)))
+        })
+        .collect()
+}
+
+fn tool_run_action_arg(name: &'static str, required: bool) -> ActionArgDef {
+    let (label, schema) = match name {
+        semio_framework_tool_run::TOOL_RUN_ARG_TOOL_ID => (LocalizedLabel::native("Tool", "Werkzeug"), ActionArgDef::plain_string(None)),
+        semio_framework_tool_run::TOOL_RUN_ARG_WINDOW_ID => (LocalizedLabel::native("Window", "Fenster"), ActionArgDef::plain_string(None)),
+        semio_framework_tool_run::TOOL_RUN_ARG_RUN_ID => (LocalizedLabel::native("Run", "Lauf"), ArgSchema::Number { min: Some(0.0), max: None, step: Some(1.0), integer: true, unit: None }),
+        _ => (LocalizedLabel::native("Generation", "Generation"), ArgSchema::Number { min: Some(0.0), max: None, step: Some(1.0), integer: true, unit: None }),
+    };
+    ActionArgDef { presentation: Some(ArgPresentation::Hidden), required, ..ActionArgDef::with_schema(name, label, schema) }
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️tool-run-actions/🦀️.rs"]
+mod tool_run_actions_tests;
+//#endregion 🔖️ToolRun
+
 /// @emoji 🧰️ The framework-owned action id apps dispatch to activate a utility — auto-injected as a View
 /// action into any `AppDefinition` that declares utilities (mirrors `history_action_definitions`).
 pub const SET_ACTIVE_UTILITY_ACTION_ID: &str = "setActiveUtility";
@@ -1317,12 +1370,17 @@ pub struct UtilityDefinition {
     #[serde(default)]
     #[value(default)]
     pub allows_actions_while_active: bool,
+    /// ⏯️ Declares that activating this utility runs a visible, abortable algorithm (tool run contract §2.4);
+    /// injects [`tool_run_action_definitions`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub run: Option<ToolRunDefinition>,
 }
 
 impl UtilityDefinition {
-    /// @emoji 🧰️ A utility with sensible defaults (no group/keys/cursor/category, gates actions while active).
+    /// @emoji 🧰️ A utility with sensible defaults (no group/keys/cursor/category/run, gates actions while active).
     pub fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
-        Self { id: id.into(), label: label.into(), icon_id: icon_id.into(), group: None, keys: None, cursor: None, category: None, allows_actions_while_active: false }
+        Self { id: id.into(), label: label.into(), icon_id: icon_id.into(), group: None, keys: None, cursor: None, category: None, allows_actions_while_active: false, run: None }
     }
 }
 
@@ -1503,12 +1561,17 @@ pub struct ToolDefinition {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub keys: Option<String>,
+    /// ⏯️ Declares that this tool runs a visible, abortable, finalizable algorithm (tool run contract §2.4);
+    /// injects [`tool_run_action_definitions`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub run: Option<ToolRunDefinition>,
 }
 
 impl ToolDefinition {
-    /// @emoji 🛠️ A tool with sensible defaults (no keybinding).
+    /// @emoji 🛠️ A tool with sensible defaults (no keybinding, no run).
     pub async fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
-        Self { id: id.into(), label: label.into(), icon_id: icon_id.into(), keys: None }
+        Self { id: id.into(), label: label.into(), icon_id: icon_id.into(), keys: None, run: None }
     }
 }
 
@@ -4419,6 +4482,12 @@ pub struct ViewModel {
     #[serde(default)]
     #[value(default)]
     pub window_instances: Vec<ViewWindowInstance>,
+    /// ⏯️ The tool run trace cursor each window instance's renderer echoes, keyed by window instance id —
+    /// host-owned like [`Self::active_utility_by_window_id`]. The guest answers the trace pages after it
+    /// inside that window's scene `toolRunTrace` lane (`📋️tool-run-contract.md` §3.2).
+    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    #[value(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    pub tool_run_trace_cursor_by_window_id: std::collections::HashMap<String, semio_framework_tool_run::ToolRunTraceCursor>,
 }
 
 /// 🪟️ One live window instance, as seen by a plugin: `id` is the instance id (equal to `window_kind_id`
@@ -4497,6 +4566,12 @@ pub const VIEW_CONTEXT_LONG_STRING_CHARS: usize = 65_536;
 pub const VIEW_CONTEXT_UTILITY_ENTRIES: usize = 64;
 /// 📏️ `windowInstances` capacity (schema `maxItems`).
 pub const VIEW_CONTEXT_WINDOW_INSTANCES: usize = 64;
+/// 📏️ `toolRunTraceCursorByWindowId` capacity (schema `maxProperties`).
+pub const VIEW_CONTEXT_TRACE_CURSOR_ENTRIES: usize = 64;
+/// 🔢️ Numeric fields of one `ToolRunTraceCursor`: `run`, `generation`, `page`.
+pub const VIEW_CONTEXT_TRACE_CURSOR_FIELDS: usize = 3;
+/// 📐️ Widest decimal a cursor field reaches in text form: `run` up to 2^53-1.
+const VIEW_CONTEXT_TRACE_CURSOR_DIGITS: usize = 16;
 /// 🔢️ `Identifier`-typed scalar fields: `activeModeId`, `activeWindowKindId`, `activeUtilityId`,
 /// `activeToolId`, `windowId`, `focusedWindowId`.
 pub const VIEW_CONTEXT_IDENTIFIER_FIELDS: usize = 6;
@@ -4513,8 +4588,16 @@ const VIEW_CONTEXT_BYTES_PER_CHAR: usize = 4;
 const VIEW_CONTEXT_FRAMING_BYTES_PER_VALUE: usize = 64;
 /// 🔢️ Encoded values a maximal view context carries: every scalar field, the two enums, both
 /// collections and each of their entries' fields.
-const VIEW_CONTEXT_ENCODED_VALUES: usize =
-    VIEW_CONTEXT_IDENTIFIER_FIELDS + VIEW_CONTEXT_SESSION_IDENTITY_FIELDS + VIEW_CONTEXT_LONG_STRING_FIELDS + 2 + 1 + VIEW_CONTEXT_UTILITY_ENTRIES * 2 + 1 + VIEW_CONTEXT_WINDOW_INSTANCES * 2;
+const VIEW_CONTEXT_ENCODED_VALUES: usize = VIEW_CONTEXT_IDENTIFIER_FIELDS
+    + VIEW_CONTEXT_SESSION_IDENTITY_FIELDS
+    + VIEW_CONTEXT_LONG_STRING_FIELDS
+    + 2
+    + 1
+    + VIEW_CONTEXT_UTILITY_ENTRIES * 2
+    + 1
+    + VIEW_CONTEXT_WINDOW_INSTANCES * 2
+    + 1
+    + VIEW_CONTEXT_TRACE_CURSOR_ENTRIES * (1 + VIEW_CONTEXT_TRACE_CURSOR_FIELDS);
 
 /// 📏️ Largest wire-encoded surface view context the contract can produce — the admission bound
 /// `plugin_mount_surface` holds `Event::SurfaceVisible`'s `view_state` to.
@@ -4529,7 +4612,8 @@ pub const MAX_SURFACE_VIEW_CONTEXT_BYTES: usize = (VIEW_CONTEXT_IDENTIFIER_FIELD
     + VIEW_CONTEXT_SESSION_IDENTITY_FIELDS * VIEW_CONTEXT_IDENTIFIER_CHARS
     + VIEW_CONTEXT_LONG_STRING_FIELDS * VIEW_CONTEXT_LONG_STRING_CHARS
     + VIEW_CONTEXT_UTILITY_ENTRIES * 2 * VIEW_CONTEXT_IDENTIFIER_CHARS
-    + VIEW_CONTEXT_WINDOW_INSTANCES * 2 * VIEW_CONTEXT_IDENTIFIER_CHARS)
+    + VIEW_CONTEXT_WINDOW_INSTANCES * 2 * VIEW_CONTEXT_IDENTIFIER_CHARS
+    + VIEW_CONTEXT_TRACE_CURSOR_ENTRIES * (VIEW_CONTEXT_IDENTIFIER_CHARS + VIEW_CONTEXT_TRACE_CURSOR_FIELDS * VIEW_CONTEXT_TRACE_CURSOR_DIGITS))
     * VIEW_CONTEXT_BYTES_PER_CHAR
     + VIEW_CONTEXT_ENCODED_VALUES * VIEW_CONTEXT_FRAMING_BYTES_PER_VALUE;
 

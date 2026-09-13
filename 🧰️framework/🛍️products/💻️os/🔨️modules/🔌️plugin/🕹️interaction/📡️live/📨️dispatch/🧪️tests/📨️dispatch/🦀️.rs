@@ -468,8 +468,8 @@ async fn local_interaction_registered_query_channel_continuation_ack_and_close()
         if let Some(frame) = pending.pop_front() {
                 match frame {
                     protocol::AppFrame::Done { in_reply_to } => { received_receipt += 1; assert_eq!(in_reply_to, received_receipt); },
-                    protocol::AppFrame::Ephemeral { presence, presence_generation, transient_generation, interaction } => {
-                        assert!(presence.is_empty()); assert!(interaction.is_empty());
+                    protocol::AppFrame::Ephemeral { presence, presence_generation, transient_generation, interaction, tool_run } => {
+                        assert!(presence.is_empty()); assert!(interaction.is_empty()); assert!(tool_run.is_empty());
                         assert_eq!(presence_generation, 0); assert_eq!(transient_generation, 0);
                         ephemeral += 1;
                     },

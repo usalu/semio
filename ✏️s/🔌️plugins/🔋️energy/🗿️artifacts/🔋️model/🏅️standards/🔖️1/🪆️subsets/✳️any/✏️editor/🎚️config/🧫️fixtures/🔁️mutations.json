@@ -1,0 +1,16 @@
+[
+  {
+    "kind": "change-simulation-settings",
+    "mutation": { "mutation": "changeSimulationSettings", "payload": { "zoneTimestepMinutes": 15, "systemTimestepMinutes": 5, "warmupDays": 1 } },
+    "base": { "zoneTimestepMinutes": 60, "systemTimestepMinutes": 60, "warmupDays": 7 },
+    "after": { "zoneTimestepMinutes": 15, "systemTimestepMinutes": 5, "warmupDays": 1 },
+    "valid": true
+  },
+  {
+    "kind": "change-simulation-settings",
+    "mutation": { "mutation": "changeSimulationSettings", "payload": { "zoneTimestepMinutes": 0, "systemTimestepMinutes": 60, "warmupDays": 366 } },
+    "base": { "zoneTimestepMinutes": 15, "systemTimestepMinutes": 5, "warmupDays": 1 },
+    "after": { "zoneTimestepMinutes": 0, "systemTimestepMinutes": 60, "warmupDays": 366 },
+    "valid": false
+  }
+]

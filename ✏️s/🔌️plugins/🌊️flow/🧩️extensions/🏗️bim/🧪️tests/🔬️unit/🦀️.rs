@@ -131,9 +131,9 @@ async fn schema_component_round_trips_wall() {
     register(&mut reg);
     let built =
         reg.dispatch("bim.wall", &Dictionary::new().insert("length", Value::Dictionary(number_dictionary(5.0))).insert("height", Value::Dictionary(number_dictionary(3.0))).insert("thickness", Value::Dictionary(number_dictionary(0.2)))).unwrap();
-    let wall = channel_payload(&built, "wall");
+    let wall = channel_payload(&built, "wallOut");
     let deconstructed = reg.dispatch("bim.wall", &Dictionary::new().insert("wall", Value::Dictionary(wall))).unwrap();
-    assert_eq!(deconstructed.get("length").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(5.0));
+    assert_eq!(deconstructed.get("lengthOut").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(5.0));
 }
 
 #[semio_framework_async_macros::async_test]

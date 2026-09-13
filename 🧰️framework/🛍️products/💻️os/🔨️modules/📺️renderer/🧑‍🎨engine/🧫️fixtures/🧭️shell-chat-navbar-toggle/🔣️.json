@@ -1,0 +1,7 @@
+{
+  "controlId": "ui.panelToggle.chat",
+  "dockAnchor": "right-middle",
+  "frameworkChatPanelId": "framework.chat",
+  "navbarSlot": "trailingBeforeFullscreen",
+  "mutuallyExclusiveAnchors": ["top-right", "bottom-right", "right-middle"]
+}

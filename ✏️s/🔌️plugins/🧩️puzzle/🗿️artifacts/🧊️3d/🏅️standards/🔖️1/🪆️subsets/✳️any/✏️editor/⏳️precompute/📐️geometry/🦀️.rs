@@ -1095,7 +1095,7 @@ impl CollisionAabb {
         Self { min: [min.x(), min.y(), min.z()], max: [max.x(), max.y(), max.z()] }
     }
 
-    fn intersects(&self, other: &Self) -> bool {
+    pub(crate) fn intersects(&self, other: &Self) -> bool {
         self.max[0] >= other.min[0] && other.max[0] >= self.min[0] && self.max[1] >= other.min[1] && other.max[1] >= self.min[1] && self.max[2] >= other.min[2] && other.max[2] >= self.min[2]
     }
 }

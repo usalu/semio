@@ -117,6 +117,7 @@ mod ui_node_wire_format_tests {
                         terrain_json: None,
                         points_json: None,
                         status_json: None,
+                        tool_run_trace: None,
                         domain_id: None,
                         domain_granularity_id: None,
                         lanes: Vec::new(),
@@ -243,6 +244,7 @@ mod ui_node_wire_format_tests {
         assert_presence_serializes(UiNode::Slider(UiSliderNode { menu: None, id: "i".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1, unit: None, on_change: act("a"), presence: UiPresence::default() }), "Slider");
         assert_presence_serializes(UiNode::NumberStepper(UiNumberStepperNode { menu: None, id: "i".into(), value: 0.0, step: 1.0, uniform: true, on_absolute: act("a"), on_delta: act("a"), presence: UiPresence::default() }), "NumberStepper");
         assert_presence_serializes(UiNode::Ring(UiRingNode { menu: None, id: "i".into(), orb_id: "o".into(), t: 0.0, on_change: act("a"), presence: UiPresence::default() }), "Ring");
+        assert_presence_serializes(UiNode::Progress(UiProgressNode { menu: None, id: "i".into(), completed: 1.0, total: None, value_text: Label::data("x"), presence: UiPresence::default() }), "Progress");
         assert_presence_serializes(UiNode::IconSelect(UiIconSelectNode { menu: None, id: "i".into(), value: "v".into(), uniform: true, classifier_kind: "icon".into(), on_change: act("a"), presence: UiPresence::default() }), "IconSelect");
         assert_presence_serializes(
             UiNode::Field(UiFieldNode {
@@ -338,7 +340,7 @@ mod ui_node_wire_format_tests {
     #[semio_framework_async_macros::async_test]
     async fn scene_records_serialize_to_golden_json() {
         let scenes = (
-            Canvas2dScene { camera_x: 1.0, camera_y: 2.0, zoom: 1.5, layers_json: "[]".into(), snapshot: None },
+            Canvas2dScene { camera_x: 1.0, camera_y: 2.0, zoom: 1.5, layers_json: "[]".into(), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
             TableScene::base("[]", "[]"),
             Paint2dScene {
                 document_sync_json: "{}".into(),
@@ -439,6 +441,26 @@ mod ui_node_wire_format_tests {
         assert_menu_serializes(UiNode::Separator(UiSeparatorNode { menu: None, presence: UiPresence::default() }), "Separator");
         assert_menu_serializes(UiNode::Image(UiImageNode { menu: None, id: "i".into(), src: "s".into(), alt: None, presence: UiPresence::default() }), "Image");
         assert_menu_serializes(UiNode::Tree(UiTreeNode { menu: None, sections: vec![], presence: UiPresence::default(), drop_action: None, interaction_domain: None }), "Tree");
+        assert_menu_serializes(UiNode::Progress(UiProgressNode { menu: None, id: "i".into(), completed: 1.0, total: Some(2.0), value_text: Label::data("x"), presence: UiPresence::default() }), "Progress");
+    }
+
+    const GOLDEN_PROGRESS_JSON: &str = "[{\"type\":\"progress\",\"id\":\"fill\",\"completed\":12.0,\"total\":100.0,\"valueText\":\"12 of 100\"},{\"type\":\"progress\",\"id\":\"prepare\",\"completed\":3.0,\"valueText\":\"Preparing\"}]";
+
+    /// 📶️ The retained progress node keeps the contract's spelling: an absent total stays absent on the
+    /// wire (indeterminate) instead of collapsing to zero, through serde and the first-party value codec.
+    #[semio_framework_async_macros::async_test]
+    async fn ui_progress_node_wire_format_round_trips() {
+        let nodes = vec![
+            UiNode::Progress(UiProgressNode { menu: None, id: "fill".into(), completed: 12.0, total: Some(100.0), value_text: Label::data("12 of 100"), presence: UiPresence::default() }),
+            UiNode::Progress(UiProgressNode { menu: None, id: "prepare".into(), completed: 3.0, total: None, value_text: Label::data("Preparing"), presence: UiPresence::default() }),
+        ];
+        assert_eq!(serde_json::to_string(&nodes).unwrap(), GOLDEN_PROGRESS_JSON);
+        let decoded: Vec<UiNode> = serde_json::from_str(GOLDEN_PROGRESS_JSON).unwrap();
+        assert_eq!(decoded, nodes);
+        for node in nodes {
+            assert_eq!(UiNode::from_value(node.to_value()).expect("valid DslValue decodes"), node);
+        }
+        assert!(matches!(decoded.last(), Some(UiNode::Progress(UiProgressNode { total: None, .. }))), "an absent total must stay indeterminate");
     }
 
     //#region 🗂️OrganizeContextMenuTests

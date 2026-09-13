@@ -367,7 +367,7 @@ async fn utility_definition_and_utility_ref_construction() {
     assert_eq!(UtilityRef::from("brush").as_str(), "brush");
 }
 
-async fn app_with(actions: Vec<ActionDefinition>, window_actions: Vec<ActionRef>) -> AppDefinition {
+pub(super) async fn app_with(actions: Vec<ActionDefinition>, window_actions: Vec<ActionRef>) -> AppDefinition {
     let owned_actions = if window_actions.is_empty() { actions } else { window_actions.iter().filter_map(|action_ref| actions.iter().find(|action| action.id == action_ref.as_str()).cloned()).collect() };
     AppDefinition {
         id: "a".into(),
@@ -1474,7 +1474,7 @@ fn action_semantics_defaults_match_language_neutral_fixture() {
 #[test]
 fn exports_typescript_bindings() {
     crate::schema_metadata::validate().unwrap();
-    assert_eq!(crate::schema_metadata::TYPES.len(), 186);
+    assert_eq!(crate::schema_metadata::TYPES.len(), 194);
     let rendered = crate::schema_metadata::render_typescript();
     if let Some(path) = std::env::var_os("SEMIO_TYPEGEN_OUT") {
         std::fs::write(path, &rendered).unwrap();

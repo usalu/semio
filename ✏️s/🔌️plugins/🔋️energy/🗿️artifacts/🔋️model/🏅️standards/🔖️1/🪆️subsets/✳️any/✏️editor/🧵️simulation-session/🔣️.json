@@ -1,36 +1,41 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "semio.energy.simulation-event.v1",
-  "title": "Energy Simulation Event",
-  "oneOf": [
-    {
-      "type": "object",
-      "required": ["kind", "request", "checkpointToken", "zoneTimestepMinutes", "systemTimestepMinutes", "warmupDays", "runPeriodStartMonth", "runPeriodStartDay", "runPeriodEndMonth", "runPeriodEndDay"],
-      "properties": {
-        "kind": { "const": "start" },
-        "request": { "type": "integer", "minimum": 1 },
-        "zoneTimestepMinutes": { "type": "integer", "minimum": 1, "maximum": 60 },
-        "systemTimestepMinutes": { "type": "integer", "minimum": 1, "maximum": 60 },
-        "warmupDays": { "type": "integer", "minimum": 0, "maximum": 365 },
-        "runPeriodStartMonth": { "type": "integer", "minimum": 1, "maximum": 12 },
-        "runPeriodStartDay": { "type": "integer", "minimum": 1, "maximum": 31 },
-        "runPeriodEndMonth": { "type": "integer", "minimum": 1, "maximum": 12 },
-        "runPeriodEndDay": { "type": "integer", "minimum": 1, "maximum": 31 },
-        "checkpointToken": { "type": "integer", "minimum": 0 }
-      },
-      "additionalProperties": false
-    },
-    {
-      "type": "object",
-      "required": ["kind", "request", "operation", "generation", "configDigest"],
-      "properties": {
-        "kind": { "enum": ["cancel", "retry", "discard", "adopt"] },
-        "request": { "type": "integer", "minimum": 1 },
-        "operation": { "type": "integer", "minimum": 1 },
-        "generation": { "type": "integer", "minimum": 1 },
-        "configDigest": { "type": "integer", "minimum": 1 }
-      },
-      "additionalProperties": false
-    }
-  ]
+  "$id": "energy.simulation.run.v1",
+  "title": "Energy Simulation Run",
+  "description": "Source of record for the energy simulation ToolRunDefinition (📋️tool-run-contract.md §2.4). The run is read-only: finalize publishes no document edit. One unit of fuel is one computed warmup or run timestep.",
+  "$ref": "https://semio.tech/schema/framework/tool-run/schema.json#/$defs/ToolRunDefinition",
+  "x-semio-toolRun": {
+    "toolId": "energySimulation",
+    "label": { "en": "Energy simulation", "de": "Energiesimulation" },
+    "mutating": false,
+    "rebase": "restart",
+    "reconfigure": "restart",
+    "unit": { "en": "timesteps", "de": "Zeitschritte" },
+    "trace": "none",
+    "runJob": "energy.simulation.run",
+    "stages": [
+      { "id": "capture", "en": "Capturing the model", "de": "Modell wird erfasst" },
+      { "id": "prepare", "en": "Preparing weather, geometry and zones", "de": "Wetter, Geometrie und Zonen werden vorbereitet" },
+      { "id": "warmup", "en": "Warming up", "de": "Einschwingen" },
+      { "id": "run", "en": "Solving timesteps", "de": "Zeitschritte werden gelöst" },
+      { "id": "finalize", "en": "Sizing and summarizing", "de": "Auslegung und Zusammenfassung" },
+      { "id": "encode", "en": "Encoding the final result", "de": "Endergebnis wird kodiert" }
+    ],
+    "counters": [
+      { "id": "warmupTimesteps", "en": "Warmup timesteps", "de": "Einschwing-Zeitschritte" },
+      { "id": "runTimesteps", "en": "Run timesteps", "de": "Lauf-Zeitschritte" },
+      { "id": "tiersPublished", "en": "Quality tiers published", "de": "Veröffentlichte Qualitätsstufen" },
+      { "id": "facilityElectricityWh", "en": "Facility electricity (Wh)", "de": "Anlagenelektrizität (Wh)" }
+    ],
+    "reasons": [
+      { "code": 0, "id": "steadyStateEstimate", "verdict": "success", "args": ["kWh"], "en": "Steady-state estimate (provisional): {0} kWh facility electricity", "de": "Stationäre Schätzung (vorläufig): {0} kWh Anlagenelektrizität" },
+      { "code": 1, "id": "designDay", "verdict": "success", "args": ["kWh", "runTimesteps", "totalRunTimesteps"], "en": "Design day (provisional): {0} kWh after {1} of {2} timesteps", "de": "Auslegungstag (vorläufig): {0} kWh nach {1} von {2} Zeitschritten" },
+      { "code": 2, "id": "coarseTimestep", "verdict": "success", "args": ["kWh", "runTimesteps", "totalRunTimesteps"], "en": "Coarse timestep (provisional): {0} kWh after {1} of {2} timesteps", "de": "Grober Zeitschritt (vorläufig): {0} kWh nach {1} von {2} Zeitschritten" },
+      { "code": 3, "id": "final", "verdict": "success", "args": ["kWh", "runTimesteps", "totalRunTimesteps"], "en": "Final: {0} kWh after {1} of {2} timesteps", "de": "Endgültig: {0} kWh nach {1} von {2} Zeitschritten" },
+      { "code": 4, "id": "warmupConverged", "verdict": "success", "args": ["warmupTimesteps"], "en": "Warmup converged after {0} timesteps", "de": "Einschwingen nach {0} Zeitschritten konvergiert" },
+      { "code": 5, "id": "captureRejected", "verdict": "danger", "args": [], "en": "The model exceeds the capture capacity", "de": "Das Modell überschreitet die Erfassungskapazität" },
+      { "code": 6, "id": "admissionRejected", "verdict": "danger", "args": [], "en": "The model exceeds the simulation capacity", "de": "Das Modell überschreitet die Simulationskapazität" },
+      { "code": 7, "id": "simulationFaulted", "verdict": "danger", "args": ["completedTimesteps"], "en": "The simulation failed after {0} timesteps", "de": "Die Simulation ist nach {0} Zeitschritten fehlgeschlagen" }
+    ]
+  }
 }

@@ -20,7 +20,7 @@ use crate::wgpu::arena::NodeId;
 use crate::wgpu::chrome::chrome_item_bg;
 use crate::wgpu::chrome::{item_bg, item_text, push_chrome_border, push_control_border, push_icon, ICON_TINY};
 use crate::wgpu::component::ui::{
-    UiControlNode, UiNode, UiPresence, UiStackNode, UiState, UiStatus, UiTreeItemNode, UiTreeNode, UI_INSPECTOR_MIXED_PLACEHOLDER,
+    UiControlNode, UiNode, UiPresence, UiProgressNode, UiStackNode, UiState, UiStatus, UiTreeItemNode, UiTreeNode, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 #[cfg(test)]
 use crate::wgpu::component::ui::{UiButtonNode, UiComponentSceneNode, UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueNode, UiNumberStepperNode, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSliderNode, UiTextNode, UiToggleNode};
@@ -954,6 +954,19 @@ pub(crate) fn paint_node_step(
                 retained_presence_step(draw, bounds, theme, presence)
             }
         }
+        UiNode::Progress(progress) => {
+            if cursor.phase == 0 {
+                let result = retained_fixed_output(draw, |draw| paint_progress(progress, bounds, theme, draw));
+                cursor.advance(1);
+                if result.is_err() {
+                    RetainedNodePaintStep::Fault
+                } else {
+                    RetainedNodePaintStep::Pending
+                }
+            } else {
+                retained_presence_step(draw, bounds, theme, presence)
+            }
+        }
         UiNode::IconSelect(select) => match cursor.phase {
             0 => {
                 let result = retained_fixed_output(draw, |draw| push_control_border(draw, bounds, theme, theme.border_normal, theme.input_bg));
@@ -1740,6 +1753,7 @@ pub(crate) fn paint_node_self(tree: &UiTree, id: NodeId, origin_x: f32, origin_y
         UiNode::NumberStepper(stepper) => paint_number_stepper(stepper, bounds, flags, theme, atlas, draw),
         UiNode::Ring(ring) => paint_ring(ring, bounds, theme, draw),
         UiNode::IconSelect(_) => {}
+        UiNode::Progress(progress) => paint_progress(progress, bounds, theme, draw),
         UiNode::Field(field) => {
             paint_field(field, bounds, theme, atlas, draw);
         }
@@ -1767,6 +1781,40 @@ pub(crate) fn paint_node_self(tree: &UiTree, id: NodeId, origin_x: f32, origin_y
     }
     presence_overlay(draw, bounds, theme, presence);
 }
+
+//#region 📶️Progress
+/// 📶️ The share of the track an indeterminate sweep covers. The sweep is painted centred and still:
+/// this target's CPU paint pass carries no motion clock and no reduced-motion signal, so a motionless
+/// busy band is the one indeterminate rendering that honours `prefers-reduced-motion: reduce` by
+/// construction — the bar never animates on a host that asked it not to.
+pub(crate) const PROGRESS_INDETERMINATE_SHARE: f32 = 1.0 / 3.0;
+
+/// 📶️ Track and fill rects of one retained progress bar inside `bounds`: a track `padding_standard`
+/// tall, centred vertically, filled from the left to `ui_contract::progress_fraction` while determinate,
+/// or carrying the centred [`PROGRESS_INDETERMINATE_SHARE`] sweep while `total` is `None`.
+pub(crate) fn progress_bar_rects(node: &UiProgressNode, bounds: Rect, theme: &Theme) -> ([f32; 4], [f32; 4]) {
+    let height = theme.padding_standard.min(bounds.h).max(0.0);
+    let track = [bounds.x, bounds.y + (bounds.h - height) * 0.5, bounds.w.max(0.0), height];
+    let fill = match ui_contract::progress_fraction(node.completed, node.total) {
+        Some(fraction) => [track[0], track[1], track[2] * fraction as f32, height],
+        None => {
+            let width = track[2] * PROGRESS_INDETERMINATE_SHARE;
+            [track[0] + (track[2] - width) * 0.5, track[1], width, height]
+        }
+    };
+    (track, fill)
+}
+
+/// 📶️ Paints a progress bar from theme tokens only: `separator` track, `progress` fill.
+fn paint_progress(node: &UiProgressNode, bounds: Rect, theme: &Theme, draw: &mut DrawList) {
+    let (track, fill) = progress_bar_rects(node, bounds, theme);
+    let radius = track[3] * 0.5;
+    draw.push_rounded(track, theme.separator, radius);
+    if fill[2] > 0.0 {
+        draw.push_rounded(fill, theme.progress, radius);
+    }
+}
+//#endregion 📶️Progress
 
 /// 🌀️ Shared "this node is loading" affordance for every `UiNode` kind that carries a
 /// `loading: Option<bool>` flag (`Button`, `Stack`, `Section`, `Tree`, `TreeItem`). Delegates to

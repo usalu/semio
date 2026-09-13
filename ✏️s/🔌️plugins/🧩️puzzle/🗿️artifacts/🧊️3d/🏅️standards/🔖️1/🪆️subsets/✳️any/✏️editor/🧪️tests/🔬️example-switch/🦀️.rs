@@ -149,7 +149,7 @@ async fn the_nakagin_switch_assembles_every_object_onto_a_mesh_the_same_publicat
     assert!(meshes.iter().all(|mesh| mesh.get("kind").and_then(serde_json::Value::as_str).is_some() || mesh.get("url").and_then(serde_json::Value::as_str).is_some()), "every declared mesh resolves by kind or by url: {meshes:?}");
 
     let instances_lane = census.lane(semio_framework_plugin::World3dSceneLane::Instances.body_key()).expect("the instances lane always publishes");
-    assert_eq!(instances_lane.declared_hash, semio_framework_plugin::world3d_scene_lane_hash(&census.assembled.instances_json), "the spine manifest must describe the very text the host reassembles");
+    assert_eq!(instances_lane.declared_hash, semio_framework_plugin::scene_lane_hash(&census.assembled.instances_json), "the spine manifest must describe the very text the host reassembles");
     assert_eq!(instances_lane.bytes, census.assembled.instances_json.len(), "the carrier text and the assembled lane are the same bytes");
     eprintln!("[DEBUG] Nakagin switch assembled {} instances over {} declared meshes ({} unresolved) from a {}-byte instances lane in {} leaves", instances.len(), declared_meshes.len(), dangling.len(), instances_lane.bytes, instances_lane.leaves);
 }

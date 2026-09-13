@@ -52,6 +52,9 @@ const engineTestSuites = [
   engineSuite("🎟️resident-refresh-budget"),
   elementSuite("🛠️ShellHelpers", "🧩️component"),
   elementSuite("🧭️TiledMapHost", "🧩️component"),
+  elementSuite("🌐️World3dHost", "🧩️component", "tsx"),
+  elementSuite("🌐️World3dHost/⏯️tool-run-trace", "🧩️component"),
+  elementSuite("📐️Canvas2dHost/⏯️tool-run-trace", "🧩️component"),
   elementSuite("📃️UiDocumentStore/📥️intake", "📏️step-ceiling"),
 ] as const;
 const playwrightEngineTestSuites = [engineSuite("📚️storybook-hosts-no-wasm"), engineSuite("📚️storybook-hosts-wasm")] as const;

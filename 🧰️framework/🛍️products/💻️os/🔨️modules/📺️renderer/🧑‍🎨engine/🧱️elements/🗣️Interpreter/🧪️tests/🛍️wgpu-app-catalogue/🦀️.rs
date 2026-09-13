@@ -1,7 +1,7 @@
 //! 🛍️ The wgpu half of the app-static catalogue surface. The shell fetches
 //! `framework.section.catalogue` as an ordinary retained document (`SurfaceVisible` →
 //! `AdvanceRetained`, the same protocol every window body rides) and reassembles it with
-//! `read_paged_text_document`. That reader's whole contract is: **the payload is the depth-first
+//! `UiDocumentLease::read_paged_text`. That reader's whole contract is: **the payload is the depth-first
 //! concatenation of every `Component::Text` leaf under the document's root**, which is what
 //! `semio_framework_plugin::app::paged_text_carrier` splits it into — a balanced
 //! `UI_BUILT_CHILDREN_MAX`-ary tree of `UI_TEXT_MAX_BYTES` leaves, because a real catalogue is
@@ -129,7 +129,7 @@ fn app_catalogue_section_document_round_trips_through_the_wgpu_reader() {
     for (operators, pages) in [(1usize, 1usize), (8, 1), (64, 4)] {
         let payload = catalogue_payload(operators);
         let document = catalogue_document(&payload, pages);
-        let read = read_paged_text_document(&document).expect("catalogue reassembles");
+        let read = document.read_paged_text().expect("catalogue reassembles");
         retire_catalogue_document(document);
         assert_eq!(read, payload, "a {operators}-operator catalogue ({} bytes over {pages} carrier pages) must survive byte-for-byte", payload.len());
     }
@@ -142,7 +142,7 @@ fn app_catalogue_reader_walks_a_payload_larger_than_one_text_leaf() {
     assert!(payload.len() > ui_contract::UI_TEXT_MAX_BYTES, "the paging case needs a payload past one {}-byte text leaf, got {}", ui_contract::UI_TEXT_MAX_BYTES, payload.len());
     let document = catalogue_document(&payload, 4);
     let header = document.header().expect("catalogue header");
-    let read = read_paged_text_document(&document).expect("catalogue reassembles");
+    let read = document.read_paged_text().expect("catalogue reassembles");
     retire_catalogue_document(document);
     assert!(header.node_count > text_leaves(&payload).len(), "a paged carrier is a tree — leaves plus their intermediate pages plus the root");
     assert_eq!(read, payload, "every leaf across every intermediate page must be concatenated in depth-first order");
@@ -152,7 +152,7 @@ fn app_catalogue_reader_walks_a_payload_larger_than_one_text_leaf() {
 fn app_catalogue_reader_returns_the_empty_payload_for_an_app_without_a_catalogue() {
     let _guard = exclusive();
     let document = catalogue_document("{}", 1);
-    let read = read_paged_text_document(&document).expect("catalogue reassembles");
+    let read = document.read_paged_text().expect("catalogue reassembles");
     retire_catalogue_document(document);
     assert_eq!(read, "{}", "the default `ArtifactApp::app_catalogue_json` is an empty object, and must arrive as one");
 }

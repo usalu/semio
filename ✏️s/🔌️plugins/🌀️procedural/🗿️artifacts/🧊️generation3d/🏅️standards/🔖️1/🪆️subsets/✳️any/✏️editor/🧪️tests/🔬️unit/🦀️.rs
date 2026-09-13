@@ -1,4 +1,4 @@
-const KEYBOARD_REACHABILITY_FIXTURE_JSON: &str = include_str!("../../../🧫️fixtures/⌨️keyboard-reachability.json");
+pub(crate) const KEYBOARD_REACHABILITY_FIXTURE_JSON: &str = include_str!("../../../🧫️fixtures/⌨️keyboard-reachability.json");
 
 pub(crate) mod context {
     use super::super::*;
@@ -565,6 +565,16 @@ fn admit_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<Ed
     Generation3dProductionLease { handle, released: false }
 }
 
+/// 🚿️ Drives ONE production envelope load to its terminal poll.
+///
+/// 🔎️ It does NOT terminate today, and the turn budget is not why: measured at 300 000 turns with
+/// `std::thread::yield_now`, and again with `advance_typed_operation_publication().await` plus a
+/// cooperative yield per turn, `poll_artifact_envelope_decode` reads `Pending` on every single turn —
+/// so the job exists (a missing one reads `Fault`) and stays in
+/// `ActiveArtifactEnvelopeDecodeState::Active`, and no maintenance turn ever reports `Blocked`, so
+/// nothing on the ladder names an authority it is waiting for. The stall is inside the decode's own
+/// `WorkerJobSession`, not in this driver (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️remaining-suite-reds-2026-09-13.md` §3.3).
 fn drive_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation3dPlayApp>>, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..300_000 {
         crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0)
@@ -576,7 +586,7 @@ fn drive_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<Ed
         }
         std::thread::yield_now();
     }
-    panic!("P3 production envelope load did not reach terminal");
+    panic!("P3 production envelope load did not reach terminal, last decode poll {:?}", app.poll_artifact_envelope_decode(handle));
 }
 
 /// 🔐️ LAW: non-empty P3D3 canonical ingress reaches the real VCS maintenance replacement,
@@ -681,12 +691,12 @@ fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
     use semio_framework_plugin::ArtifactOwnedToolJobFactory;
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
-    assert_eq!(GENERATION3D_RETAINED_TOOL_IDS.len(), 25);
+    assert_eq!(GENERATION3D_RETAINED_TOOL_IDS.len(), 30);
     assert_eq!(GENERATION3D_FLOW_EVAL_TOOL_IDS.len(), 5);
     assert_eq!(GENERATION3D_CONTRIBUTIONS_TOOL_IDS.len(), 1);
     assert_eq!(GENERATION3D_DOCUMENT_IO_TOOL_IDS.len(), 3);
-    assert_eq!(<Generation3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 34, "all four factories' proofs, aggregated");
-    assert_eq!(Generation3dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 25);
+    assert_eq!(<Generation3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 39, "all four factories' proofs, aggregated");
+    assert_eq!(Generation3dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 30);
     assert_eq!(Generation3dFlowEvalJobFactory::PUBLICATION_CONTRACTS.len(), 5);
     assert_eq!(Generation3dContributionsJobFactory::PUBLICATION_CONTRACTS.len(), 1);
     assert_eq!(Generation3dDocumentIoJobFactory::PUBLICATION_CONTRACTS.len(), 3);
@@ -733,33 +743,23 @@ fn contributions_route_declares_a_reachable_wire_ceiling() {
     assert_eq!(generation3d_contributions_contract().max_raw_wire_bytes, GENERATION3D_CONTRIBUTIONS_RAW_BYTES);
 }
 
+/// 🎯️ Counts the artifact / config / app-transient publications ONE preview command produces, through
+/// the framework's own settle ladder.
+///
+/// 🐛️ This used to be a hand-rolled copy of that ladder which never drained
+/// `take_typed_operation_completion` — the terminal witness lands in its own outbox and
+/// `has_pending_typed_operations` counts it, so an operation whose last page had already been ACKed
+/// spun here until the 30 s deadline and reported `Generation3d preview operation did not finish`
+/// about an operation that had in fact finished. `settle_registered_typed_operation` grew that drain
+/// and its docstring names this exact trap; a second copy of a bounded protocol is how a fix lands in
+/// one of them only (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 async fn drive_preview_operation(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation3dPlayApp>>) -> Result<(u64, u64, u64), String> {
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
-    let mut artifact = 0;
-    let mut config = 0;
-    let mut transient = 0;
-    while app.has_pending_typed_operations() {
-        if std::time::Instant::now() >= deadline {
-            return Err("Generation3d preview operation did not finish".into());
-        }
-        app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?;
-        app.advance_typed_operation_publication().await.map_err(|error| format!("{error:?}"))?;
-        while let Some(page) = app.take_typed_operation_result_page(1) {
-            use semio_framework_plugin::app::TypedOperationResultLane;
-            if page.lane == TypedOperationResultLane::Fault {
-                return Err(format!("preview operation fault: {:?}", page.bytes()));
-            }
-            artifact += u64::from(page.lane == TypedOperationResultLane::Artifact);
-            config += u64::from(page.lane == TypedOperationResultLane::Config);
-            transient += u64::from(page.lane == TypedOperationResultLane::Transient);
-            app.acknowledge_typed_operation_result(page.token).map_err(|error| format!("{error:?}"))?;
-        }
-        app.take_typed_operation_effect();
-        app.take_typed_operation_event();
-        app.take_typed_operation_ui_scope();
-        std::thread::yield_now();
-    }
-    Ok((artifact, config, transient))
+    use semio_framework_plugin::app::TypedOperationResultLane;
+    let receipt = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, semio_framework_plugin::artifact_app_laws::meta("preview-owner").instance_id)
+        .await
+        .map_err(|error| format!("{error:?}"))?;
+    let count = |lane: TypedOperationResultLane| receipt.lanes.iter().filter(|published| **published == lane).count() as u64;
+    Ok((count(TypedOperationResultLane::Artifact), count(TypedOperationResultLane::Config), count(TypedOperationResultLane::Transient)))
 }
 
 #[semio_framework_async_macros::async_test]
@@ -769,8 +769,9 @@ async fn generation_preview_is_one_app_transient_shared_by_two_generation_window
         let before_document = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(app.snapshot().map_err(|error| format!("{error:?}"))?);
         let before_generation = app.ephemeral_snapshot().await.transient_generation;
         app.dispatch_typed(Generation3dCommand::AddGeneration(add_generation::AddGeneration {}), &semio_framework_plugin::artifact_app_laws::meta("preview-owner")).await.map_err(|error| format!("{error:?}"))?;
-        if drive_preview_operation(&mut app).await? != (1, 1, 1) {
-            return Err("preview command did not publish artifact, selection config, and app transient exactly once".into());
+        let published = drive_preview_operation(&mut app).await?;
+        if published != (1, 1, 1) {
+            return Err(format!("preview command did not publish artifact, selection config, and app transient exactly once: artifact={} config={} transient={}", published.0, published.1, published.2));
         }
         if app.ephemeral_snapshot().await.transient_generation != before_generation + 1 {
             return Err("preview app transient generation did not advance exactly once".into());
@@ -853,6 +854,11 @@ fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         "export-document",
         "cycle-show-mode",
         "cycle-lod-mode",
+        "select-next-node",
+        "select-previous-node",
+        "select-upstream-node",
+        "select-downstream-node",
+        "activate-selection",
     ];
     let commands = every_command();
     assert_eq!(commands.len(), expected_keywords.len(), "every_command() and expected_keywords must stay in the same declaration order");
@@ -906,6 +912,11 @@ pub(super) fn every_command() -> Vec<Generation3dCommand> {
         Generation3dCommand::ExportDocument(export_document::ExportDocument { format: "stl".into() }),
         Generation3dCommand::CycleShowMode(cycle_show_mode::CycleShowMode {}),
         Generation3dCommand::CycleLodMode(cycle_lod_mode::CycleLodMode {}),
+        Generation3dCommand::SelectNextNode(select_next_node::SelectNextNode {}),
+        Generation3dCommand::SelectPreviousNode(select_previous_node::SelectPreviousNode {}),
+        Generation3dCommand::SelectUpstreamNode(select_upstream_node::SelectUpstreamNode {}),
+        Generation3dCommand::SelectDownstreamNode(select_downstream_node::SelectDownstreamNode {}),
+        Generation3dCommand::ActivateSelection(activate_selection::ActivateSelection {}),
     ]
 }
 
@@ -1167,6 +1178,26 @@ fn an_oversized_chunk_is_refused_and_an_abandoned_run_is_swept() {
 async fn declared_actions_bridge_to_commands() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Generation3dPlayApp>>(context::generation3d_app_manifest_for_tests).await;
+}
+
+/// 🎥️ LAW: `nodeGraphViewport` declares NO args, so the shell can stage nothing for it — an absent
+/// `viewport` therefore decodes to the identity camera rather than refusing the bridge, while a
+/// PRESENT but malformed one still faults. Both halves of `parse_flow_viewport` are stated here
+/// because the generic bridge law only ever exercises the absent half
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[test]
+fn node_graph_viewport_decodes_an_absent_viewport_as_identity_and_refuses_a_malformed_one() {
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let decode = |args: dsl::DslValue| <Generation3dPlayApp as ArtifactEditor>::command_from_action("nodeGraphViewport", Some(&args));
+    let identity = semio_framework_os_kernel::Viewport2d::default();
+    assert_eq!(decode(dsl::DslValue::Object(Vec::new())).expect("an argless invocation bridges"), Generation3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: identity }));
+    let authored = semio_framework_os_kernel::Viewport2d { x: 12.0, y: -8.0, zoom: 2.0 };
+    assert_eq!(
+        decode(dsl::DslValue::object([("viewport".into(), protocol::ToValue::to_value(&authored))])).expect("an authored viewport bridges"),
+        Generation3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: authored })
+    );
+    let refused = decode(dsl::DslValue::object([("viewport".into(), dsl::DslValue::object([("x".into(), dsl::DslValue::float(1.0)), ("y".into(), dsl::DslValue::float(2.0)), ("zoom".into(), dsl::DslValue::float(0.0))]))]));
+    assert!(refused.is_err(), "a zoom the graph cannot express must fault instead of being replaced by the identity camera");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -2723,3 +2754,35 @@ async fn an_evaluate_fault_outranks_the_addressing_miss_and_a_contribution_insta
     assert_ne!(cleared["phase"].as_str(), Some("faulted"), "{cleared}");
 }
 //#endregion 💥️ExtensionEvaluateFaultLaw
+
+//#region 🔤️StagedArgLabelLaw
+/// ⏎️ LAW: an action that carries STAGED ARGS must not declare its own trailing ellipsis, on either
+/// surface and in either language. The shell paints such a row as `` `${action.label}…` ``
+/// (`🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🟦️.tsx`),
+/// so a declared one reaches the user doubled.
+///
+/// 🐛️ `exportDocument` declared `"Export Document…"`/`"Dokument exportieren…"` and the editor's
+/// Actions pane painted `Export Document……` / `Dokument exportieren……` (ticket
+/// 26/09/09/PROCEDURAL-3D-END-TO-END, `🐍️react-gap-probe.mjs` step `actions-pane-de`, run
+/// `🗑️generated/react-verify/gaps/`). An argless action keeps its own ellipsis — that is how
+/// `importDocumentRequest` still announces the picker it opens.
+#[test]
+fn staged_argument_actions_declare_no_trailing_ellipsis() {
+    use semio_framework_plugin::{Locale, Terminology};
+    let surfaces = [("editor", create_generation3d_app()), ("viewer", crate::viewer::generation3d::create_generation3d_viewer())];
+    let mut checked = 0usize;
+    for (surface, definition) in surfaces {
+        for action in definition.window_kinds.iter().flat_map(|window| window.actions.iter()) {
+            if action.args.is_empty() {
+                continue;
+            }
+            checked += 1;
+            for locale in [Locale::En, Locale::De] {
+                let label = action.label.resolve(Terminology::Native, locale);
+                assert!(!label.ends_with('…') && !label.ends_with("..."), "{surface}/{} declares a trailing ellipsis the shell appends again: {label:?}", action.id);
+            }
+        }
+    }
+    assert!(checked > 0, "no staged-argument action was reached — the law would pass vacuously");
+}
+//#endregion 🔤️StagedArgLabelLaw

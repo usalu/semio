@@ -176,6 +176,8 @@ pub use manifest::kernel::{
     PhysicalSize,
     PluginInstanceId,
     PresencePeer,
+    PresenceToolRun,
+    PresenceToolRunState,
     PresenceUi,
     PresenceViewKind,
     PresenceWindowView,

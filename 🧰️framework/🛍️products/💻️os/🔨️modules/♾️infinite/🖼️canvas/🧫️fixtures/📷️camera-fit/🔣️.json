@@ -13,7 +13,8 @@
       "refitMaxCoverage": 0.05,
       "zoomMin": 0.05,
       "zoomMax": 32.0
-    }
+    },
+    "publication": "A surface that FITS must publish the camera it computed. A flow surface carries two camera copies — the FlowHost fixture camera (the authority: what screen-to-world projects with, what every dag rebuild re-seeds the dag copy from, and what the renderer publishes as nodeGraphViewport) and the DagHost fixture camera (the derived copy the paint reads). `surfaceRows` pins that a fit lands on BOTH, so a Fit graph can never publish the pre-fit camera while painting the fitted one."
   },
   "rows": [
     {
@@ -287,6 +288,109 @@
         "fitted": false,
         "coverage": 1.0,
         "refits": false
+      }
+    }
+  ],
+  "surfaceRows": [
+    {
+      "name": "fit-after-the-boot-camera-publishes-the-camera-it-computed",
+      "why": "The wgpu Fit graph control published the scene's own boot camera (x=94.75 y=-97.5 zoom=1.78) while the fit it had just computed stayed on the derived paint copy.",
+      "viewport": {
+        "width": 483,
+        "height": 814
+      },
+      "camera": {
+        "x": 94.75581571737445,
+        "y": -97.50833134679668,
+        "zoom": 1.7844325616011099
+      },
+      "content": {
+        "minX": -220.0,
+        "minY": -200.0,
+        "maxX": 280.0,
+        "maxY": -80.0
+      },
+      "expect": {
+        "fits": true,
+        "coverageAfterFit": 1.0,
+        "publishedEqualsFitRule": true,
+        "publishedEqualsPainted": true
+      }
+    },
+    {
+      "name": "fit-after-a-zoom-out-publishes-the-camera-it-computed",
+      "why": "A viewer who zoomed far out must get the whole graph back, not the camera the document shipped with.",
+      "viewport": {
+        "width": 483,
+        "height": 814
+      },
+      "camera": {
+        "x": 0.0,
+        "y": 0.0,
+        "zoom": 0.1
+      },
+      "content": {
+        "minX": -220.0,
+        "minY": -200.0,
+        "maxX": 280.0,
+        "maxY": -80.0
+      },
+      "expect": {
+        "fits": true,
+        "coverageAfterFit": 1.0,
+        "publishedEqualsFitRule": true,
+        "publishedEqualsPainted": true
+      }
+    },
+    {
+      "name": "fit-after-a-pan-off-the-graph-publishes-the-camera-it-computed",
+      "why": "The pan that makes the defect visible: every node is off screen, so the published camera and the painted camera must both be the fit.",
+      "viewport": {
+        "width": 900,
+        "height": 600
+      },
+      "camera": {
+        "x": 4000.0,
+        "y": 4000.0,
+        "zoom": 1.0
+      },
+      "content": {
+        "minX": -220.0,
+        "minY": -200.0,
+        "maxX": 280.0,
+        "maxY": -80.0
+      },
+      "expect": {
+        "fits": true,
+        "coverageAfterFit": 1.0,
+        "publishedEqualsFitRule": true,
+        "publishedEqualsPainted": true
+      }
+    },
+    {
+      "name": "a-second-fit-changes-nothing",
+      "why": "A fit is idempotent: pressing Fit graph twice must not drift the camera, which it would if the two copies disagreed.",
+      "viewport": {
+        "width": 483,
+        "height": 814
+      },
+      "camera": {
+        "x": 94.75581571737445,
+        "y": -97.50833134679668,
+        "zoom": 1.7844325616011099
+      },
+      "content": {
+        "minX": -220.0,
+        "minY": -200.0,
+        "maxX": 280.0,
+        "maxY": -80.0
+      },
+      "expect": {
+        "fits": true,
+        "coverageAfterFit": 1.0,
+        "publishedEqualsFitRule": true,
+        "publishedEqualsPainted": true,
+        "idempotent": true
       }
     }
   ]

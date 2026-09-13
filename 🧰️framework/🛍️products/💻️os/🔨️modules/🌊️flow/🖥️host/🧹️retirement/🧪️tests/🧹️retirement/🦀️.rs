@@ -258,4 +258,40 @@ fn a_gesture_that_changed_nothing_retires_its_history_baseline() {
     assert!(!host.widget_drag_active(), "a bare press and release leaves no gesture in flight");
     host.retire_cold();
 }
+
+/// 🧭️ LAW: arming an undo baseline while one is ALREADY armed must retire the one it replaces.
+///
+/// The bounded pointer path arms a baseline on the press that STARTS a gesture — it calls
+/// `begin_gesture` when the plan goes from idle to active — and closes it on the release. But the
+/// projection a plan is derived from is rebuilt as IDLE by `refresh_interaction_projection`, which
+/// every screen-path gesture triggers through `resync_interaction_projection`. So a bounded gesture
+/// interleaved with a screen-path one is seen as never having started: its release closes nothing,
+/// its baseline stays armed, and the NEXT press's `begin_gesture` simply assigned over it — dropping a
+/// `FlowFixture`, and with it an unretired `OrderedMap<WidgetLayout>` root. The pool worker aborted
+/// with `ordered-map root must be explicitly retired before drop`, measured on 6118 as the FOURTH
+/// middle-button pan of one session (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️wgpu-node-graph-gestures-2026-09-13.md` §4). A bare drop aborts rather than unwinds, so — like
+/// its neighbour above — it is the RUN that proves it.
+#[test]
+fn arming_a_second_history_baseline_retires_the_first() {
+    let json = r#"{
+  "schema": "flow.fixture",
+  "camera": { "x": 0, "y": 0, "zoom": 1 },
+  "widgets": [{ "id": "rect", "kind": "neuron", "neuronKind": "rectangle" }],
+  "synapses": [],
+  "layout": { "rect": { "x": 40, "y": 40 } }
+}
+"#;
+    let fixture = FlowHost::parse_fixture_json(json).expect("fixture json");
+    let mut host = FlowHost::from_fixture(fixture);
+    host.set_viewport(1280, 800, 1.0);
+    host.rebuild_dag();
+    let pan = |x: f64, y: f64| dag::DagPointerIntent { phase: dag::DagPointerPhase::Down, x, y, button: 1, shift: false, ctrl_or_meta: false, alt: false, pan: true };
+    for turn in 0..8 {
+        let plan = host.plan_pointer(pan(20.0 + turn as f64, 20.0)).expect("the pan press plans");
+        assert!(host.commit_pointer(plan), "turn {turn}: the pan press commits");
+        host.resync_interaction_projection();
+    }
+    host.retire_cold();
+}
 //#endregion 🖐️GestureHistoryRetirement

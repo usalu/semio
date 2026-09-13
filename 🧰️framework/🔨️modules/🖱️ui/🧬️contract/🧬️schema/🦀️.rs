@@ -260,7 +260,7 @@ icon: string, label: Label, };"####,
  * `crate::SurfaceProps` (a single pack-encoded payload keyed by a `doc_schema` id), so the variants
  * are all comparably small.
  */
-export type Component = { "type": "container" } & ContainerProps | { "type": "text" } & TextProps | { "type": "button" } & ButtonProps | { "type": "separator" } & SeparatorProps | { "type": "input" } & InputProps | { "type": "select" } & SelectProps | { "type": "toggle" } & ToggleProps | { "type": "keyValueList" } & KeyValueListProps | { "type": "slider" } & SliderProps | { "type": "numberStepper" } & NumberStepperProps | { "type": "ring" } & RingProps | { "type": "iconSelect" } & IconSelectProps | { "type": "tree" } & TreeProps | { "type": "treeSection" } & TreeSectionProps | { "type": "treeItem" } & TreeItemProps | { "type": "image" } & ImageProps | { "type": "surface" } & SurfaceProps | { "type": "extension" } & ExtensionProps;"####,
+export type Component = { "type": "container" } & ContainerProps | { "type": "text" } & TextProps | { "type": "button" } & ButtonProps | { "type": "separator" } & SeparatorProps | { "type": "input" } & InputProps | { "type": "select" } & SelectProps | { "type": "toggle" } & ToggleProps | { "type": "keyValueList" } & KeyValueListProps | { "type": "slider" } & SliderProps | { "type": "numberStepper" } & NumberStepperProps | { "type": "ring" } & RingProps | { "type": "iconSelect" } & IconSelectProps | { "type": "progress" } & ProgressProps | { "type": "tree" } & TreeProps | { "type": "treeSection" } & TreeSectionProps | { "type": "treeItem" } & TreeItemProps | { "type": "image" } & ImageProps | { "type": "surface" } & SurfaceProps | { "type": "extension" } & ExtensionProps;"####,
     },
     SchemaMetadata {
         name: "ContainerProps",
@@ -550,6 +550,17 @@ export type PresenceUpdate = { surface: SurfaceId,
  * right element across a reconciliation that reassigns ids but keeps keys stable.
  */
 nodeKey: string, own: OwnPresence, peers: Array<PeerMark>, ttlMs: number, };"####,
+    },
+    SchemaMetadata {
+        name: "ProgressProps",
+        version: 1,
+        typescript: r####"/**
+ * 📶️ Props for `Component::Progress` — a read-only progress bar. `total` absent means indeterminate: a
+ * renderer shows a busy sweep and announces no value; present means determinate on `0..=total`, and the
+ * percentage is derived by the renderer, never sent. `value_text` is the already-localized spoken form
+ * (`aria-valuetext`); plugins never send a percentage string of their own.
+ */
+export type ProgressProps = { completed: number, total: number | null, valueText: Label, };"####,
     },
     SchemaMetadata {
         name: "QuotaKind",

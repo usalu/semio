@@ -233,7 +233,7 @@ fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &Viewport
     //#endregion 🔖️StressContour
 
     let layers_json = dsl::json::to_string(&Value::Array(layers));
-    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None })
+    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 
 /// 📊️ Modal mode-shape overlay: undeformed structure faintly plus the selected mode's deformed-shape
@@ -253,7 +253,7 @@ fn render_modal(doc: &Fem2dSnapshot, mode_index: usize, camera: &Viewport2d) -> 
         "text": { "content": format!("Mode {}: {freq_hz:.3} Hz", mode_index + 1), "size": 12.0 },
     }));
     let layers_json = dsl::json::to_string(&Value::Array(layers));
-    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None })
+    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 
 /// 📊️ Buckling mode-shape overlay: undeformed structure faintly plus the selected mode's deformed-shape
@@ -277,7 +277,7 @@ fn render_buckling(doc: &Fem2dSnapshot, source_id: Option<&str>, mode_index: usi
         "text": { "content": format!("Buckling mode {}: factor {factor:.3}", mode_index + 1), "size": 12.0 },
     }));
     let layers_json = dsl::json::to_string(&Value::Array(layers));
-    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None })
+    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 //#endregion 🔖️Render
 

@@ -15124,7 +15124,7 @@ async function provePresenceLeaseFixture(repoRoot: string): Promise<number> {
 /** 🪪️ Pins canonical admitted presence bytes independently with AJV and third-party LEB128. */
 async function provePresenceNormalizationFixture(repoRoot: string): Promise<number> {
   const root = join(repoRoot, "🌎️hub/🧫️fixtures/🪪️presence-normalization-v1");
-  const fixture = JSON.parse(readFileSync(join(root, "🧪️fixture/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const presenceAdmission = hubSchemaExport(repoRoot, "schema://hub.directory/PresenceAdmissionV1");
   if (fixture.schema !== "semio.hub.presence-normalization/v1" || fixture.maximumEntryBytes !== 4096) throw new Error("presence normalization fixture schema/bound drift");
   if (Object.keys(fixture).sort().join(",") !== "maximumEntryBytes,schema,vectors") throw new Error("presence normalization fixture envelope drift");
@@ -15152,7 +15152,7 @@ async function provePresenceNormalizationFixture(repoRoot: string): Promise<numb
     return Array.from(bytes);
   };
   const independentEncode = (peer: ArtifactPresencePeer): Buffer => {
-    const fields = [peer.label, peer.presencePack, peer.userId, peer.role, peer.dragGhostJson, peer.interaction, peer.color, peer.surface, peer.views.length ? peer.views : undefined, peer.ui];
+    const fields = [peer.label, peer.presencePack, peer.userId, peer.role, peer.dragGhostJson, peer.interaction, peer.color, peer.surface, peer.views.length ? peer.views : undefined, peer.ui, peer.toolRun];
     const flags = fields.reduce<number>((mask, value, index) => (value === undefined ? mask : mask | (1 << index)), 0);
     const out = [...text(peer.actor), ...integer(flags), ...integer(peer.connectedAtMs)];
     for (const [index, value] of fields.entries()) {
@@ -15188,6 +15188,11 @@ async function provePresenceNormalizationFixture(repoRoot: string): Promise<numb
           out.push(path === undefined ? 0 : 1);
           if (path !== undefined) out.push(...text(path));
         }
+      } else if (index === 10) {
+        const toolRun = peer.toolRun!;
+        const states = ["starting", "running", "paused", "complete", "finalizing", "finalized", "aborting", "aborted", "faulted"];
+        out.push(...text(toolRun.toolId), states.indexOf(toolRun.state), ...integer(toolRun.stage), ...integer(toolRun.completed), toolRun.total === undefined ? 0 : 1);
+        if (toolRun.total !== undefined) out.push(...integer(toolRun.total));
       }
     }
     return Buffer.from(out);
@@ -15212,6 +15217,7 @@ async function provePresenceNormalizationFixture(repoRoot: string): Promise<numb
         interaction: input.interaction,
         views: input.views,
         ui: input.ui,
+        toolRun: input.toolRun,
       };
       normalized = independentEncode(output);
       if (!normalized.equals(Buffer.from(encodePresencePeer(output)))) throw new Error("output canonical oracle mismatch");
@@ -15234,7 +15240,7 @@ async function provePresenceNormalizationFixture(repoRoot: string): Promise<numb
     !ingress.includes("self.refresh_presence(")
   )
     throw new Error("Hub lacks canonical admitted presence reconstruction");
-  for (const field of ["connected_at_ms: slot.connected_at_ms", "label: slot.label.clone()", "user_id: slot.user_id.clone()", "role: slot.role.clone()", "color: Some(slot.color)", "surface: slot.document_surface.clone()"])
+  for (const field of ["tool_run: input.tool_run", "connected_at_ms: slot.connected_at_ms", "label: slot.label.clone()", "user_id: slot.user_id.clone()", "role: slot.role.clone()", "color: Some(slot.color)", "surface: slot.document_surface.clone()"])
     if (!ingress.includes(field)) throw new Error(`Hub presence authority missing: ${field}`);
   if (!hub.includes("state.refresh_document_presence(") || !hub.includes("socket_grant.document_plan.as_ref().map(|plan| plan.surface.surface_id.clone())")) throw new Error("presence ingress must use the admitted plan surface");
   return fixture.vectors.length;

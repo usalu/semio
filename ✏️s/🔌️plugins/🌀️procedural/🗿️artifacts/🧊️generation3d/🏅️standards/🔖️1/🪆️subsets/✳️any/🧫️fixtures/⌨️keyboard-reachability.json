@@ -11,10 +11,23 @@
     { "chord": "mod+alt+d", "action": "cycleShowMode", "framework": false, "why": "Preview — step the shading ladder without reaching for the picker." },
     { "chord": "mod+alt+k", "action": "cycleLodMode", "framework": false, "why": "Graph/preview — step the level-of-detail ladder." },
     { "chord": "mod+shift+g", "action": "addGeneration", "framework": false, "windowScoped": true, "why": "Generate — add a generation, the mode's primary create verb. Window-scoped: addGeneration is owned by the Generations window kind, so the chord is live while that window has focus." },
+    { "chord": "arrowdown", "action": "selectNextNode", "framework": false, "windowScoped": true, "why": "Graph — the next node in reading order. A BARE arrow because `role=\"application\"`, which the node-graph canvas now carries, is the ARIA contract for `this widget handles its own arrow keys`; window-scoped to the Flow window, which is what keeps a bare arrow out of every other window. The token is the DOM `event.key` lowercased (`arrowdown`), because the chord matcher compares it verbatim." },
+    { "chord": "arrowup", "action": "selectPreviousNode", "framework": false, "windowScoped": true, "why": "Graph — the previous node in reading order." },
+    { "chord": "arrowleft", "action": "selectUpstreamNode", "framework": false, "windowScoped": true, "why": "Graph — follows a wire INTO the anchor node." },
+    { "chord": "arrowright", "action": "selectDownstreamNode", "framework": false, "windowScoped": true, "why": "Graph — follows a wire OUT of the anchor node." },
     { "chord": "mod+o", "action": "importDocumentRequest", "framework": false, "why": "IO — the chord every application in the world uses to open a file." },
     { "chord": "mod+shift+e", "action": "exportDocument", "framework": false, "why": "IO — export; carries a required format, so this chord opens the staged form on purpose.", "staged": true }
   ],
   "shellChrome": [
     { "control": "fitGraph", "chord": "f", "why": "Painted by the shell over any node-graph surface, not declared by this app — the app must NOT re-bind it." }
+  ],
+  "surfaceBindings": [
+    {
+      "surface": "procedural.play",
+      "trigger": "activate",
+      "action": "activateSelection",
+      "shortcut": "Enter",
+      "why": "⏎️ Enter/Space on the FOCUSED node-graph canvas opens the selected node's ports. Deliberately a surface binding and not a row of `bindings` above: `SurfaceAccessibilityShell` fires an `activate` trigger only for the canvas that actually has focus and calls `preventDefault`, whereas an `enter` chord in the app keybinding table would also fire on every focused button in the shell. `shortcut` is what reaches a screen reader as `aria-keyshortcuts`."
+    }
   ]
 }

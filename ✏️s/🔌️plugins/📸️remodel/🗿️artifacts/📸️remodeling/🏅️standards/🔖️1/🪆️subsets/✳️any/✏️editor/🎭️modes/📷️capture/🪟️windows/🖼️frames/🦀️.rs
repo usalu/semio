@@ -93,7 +93,7 @@ fn frames_layers_json(scene: &RemodelingSnapshot, cursor: &RemodelingFrameCursor
 }
 
 pub fn render(scene: &RemodelingSnapshot, config: &RemodelingFramesWindowConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let scene_2d = Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: frames_layers_json(scene, &config.frame_cursor), snapshot: None };
+    let scene_2d = Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: frames_layers_json(scene, &config.frame_cursor), snapshot: None, tool_run_trace: None, lanes: Vec::new() };
     semio_framework_plugin::scene_surface(REMODELING_PLAY_SURFACE_FRAMES, ContractSurfaceKind::Canvas2d, &scene_2d)
 }
 //#endregion 🔖️Scene

@@ -600,7 +600,22 @@ max wave reiterations (optional) - amount of reiterations after a wave was passe
 
 ---
 
-All tools that 
+All tools must be declarative extended finite state machines.
+The state machine holds global variables.
+The transitions are guarded by 
+The config holds global variables and 
+
+---
+
+puzzle 3d fill: The fill should be wrapped inside a transaction an 
+
+---
+
+All tools must be interactive and the user must see how the algorithms think by seeing the process (this way the user can identify wrong settings faster and build up an intuition about how the algorithms work, etc). Every tool can show progress (different steps, percentage, status, etc).
+A tool that is mutating the artifact is wrapped inside a transaction.
+A tool can be started, aborted and finalized (only when it is complete)
+
+e.g. puzzle 3d fill all the tested meshes should be shown and colored. When a mesh is tested then it is shown in 3d and when it collides then the mesh color shows the collision, when a mesh is fitting then it should show the success color.
 
 ---
 

@@ -1455,3 +1455,639 @@ fn retained_preview_json_tried_ring_and_unbounded_request_match_the_language_neu
         assert_preview_ready_matches_oracle(owned, &color, &english);
     }
 }
+
+//#region ⏯️FillRunJob
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
+use semio_framework_tool_run::{ToolRunId, ToolRunTraceCursor, ToolRunTraceStore, TOOL_RUN_TRACE_PAGE_BYTES_MAX};
+
+const FILL_RUN_FIXTURE: &str = include_str!("../../🧫️fixtures/🎞️fill-run.json");
+const FILL_RUN_BOX_SCALE: f32 = 4.0;
+
+fn fill_run_identity() -> ToolRunIdentity {
+    ToolRunIdentity::new(ToolRunId { app_instance_id: 7, run: 1 }, [3; 32])
+}
+
+fn never() -> Option<u64> {
+    Some(0)
+}
+
+/// 🏙️ A shipped example document through the app's own scene bridge, every mesh identity backed by the
+/// app's scaled box fallback; answers the roots, the sorted mesh lane and each mesh's raw positions.
+fn example_fill_roots(document: &str, seed: u32) -> (FillPreparationRoots, Vec<String>, Vec<f32>) {
+    let text = match document {
+        "nakagin" => crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT,
+        "concrete-forest" => crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT,
+        other => panic!("unknown example document {other}"),
+    };
+    let snapshot = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(text).expect("example parses");
+    let envelope = crate::editor::puzzle3d::scene_from_snapshot(&snapshot, Default::default(), "fill");
+    let mut scene: SceneConfig = dsl::FromValue::from_value(crate::editor::puzzle3d::scene_config_value(&envelope)).expect("scene config decodes");
+    scene.seed = seed;
+    let fallback = semio_framework_plugin::mesh_from_kind(crate::editor::puzzle3d::PUZZLE3D_FALLBACK_MESH_KIND);
+    let positions: Vec<f32> = fallback.positions.iter().map(|value| value * FILL_RUN_BOX_SCALE).collect();
+    let body = collision_body_from_buffers(&positions, &fallback.indices).expect("fallback body");
+    let mut lane = crate::editor::puzzle3d::collect_mesh_urls(&envelope.fixture);
+    lane.push(crate::editor::puzzle3d::PUZZLE3D_FALLBACK_MESH_KIND.to_string());
+    lane.sort();
+    lane.dedup();
+    let meshes = lane.iter().map(|url| (url.clone(), body.clone())).collect();
+    (FillPreparationRoots::new(Arc::new(scene), Arc::new(meshes)), lane, positions)
+}
+
+fn fill_run_job(roots: FillPreparationRoots, lane: Vec<String>, seed: u64, requested: usize) -> FillRunJob {
+    FillRunJob::new(FillBuilder::begin_preparation(roots, Operation::new(OperationId(71), RevisionId(1), Generation(1), seed), requested), fill_run_identity(), lane)
+}
+
+fn close_payload(mut payload: RetainedJobPayload) {
+    while !payload.terminal_is_empty() {
+        payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+    }
+}
+
+/// 🚦️ What one run job turn handed its driver, with every retained page returned to its ledger.
+#[derive(Debug)]
+enum FillRunTurn {
+    Tick(ToolRunTick),
+    Checkpoint(Vec<u8>),
+    Complete,
+    Yield,
+}
+
+fn settle_fill_run_outcome(outcome: StepOutcome) -> FillRunTurn {
+    match outcome {
+        StepOutcome::PreviewReady(payload) => {
+            let page = payload.single_page().expect("a tick is one payload page").to_vec();
+            close_payload(payload);
+            assert!(page.len() <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES && page.len() <= TOOL_RUN_TRACE_PAGE_BYTES_MAX);
+            FillRunTurn::Tick(ToolRunTick::decode(&page).expect("tick decodes"))
+        }
+        StepOutcome::CheckpointReady(checkpoint) => {
+            let bytes = checkpoint.state.single_page().expect("checkpoint page").to_vec();
+            close_payload(checkpoint.state);
+            FillRunTurn::Checkpoint(bytes)
+        }
+        StepOutcome::Complete(candidate) => {
+            close_payload(candidate.state);
+            close_payload(candidate.output);
+            FillRunTurn::Complete
+        }
+        StepOutcome::Yield => FillRunTurn::Yield,
+        other => {
+            let described = format!("{other:?}");
+            assert!(faulted(other), "unexpected run job outcome {described}");
+            panic!("the fill run job faulted: {described}");
+        }
+    }
+}
+
+fn fill_run_turn(job: &mut FillRunJob, fuel: u64, sequence: &mut u64) -> FillRunTurn {
+    let operation = job.operation();
+    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX), root_cancel_token(), never, sequence);
+    settle_fill_run_outcome(job.step(&mut context))
+}
+
+/// 🪞️ The ledger side of a run as the contract folds it: provisional ops and entities, the resident
+/// trace, and every verdict in the order the ticks carried it.
+struct FillRunMirror {
+    ops: Vec<Vec<u8>>,
+    entities: Vec<u64>,
+    trace: ToolRunTraceStore,
+    verdicts: Vec<(u64, ToolRunVerdict, u16)>,
+    steps: Vec<ToolRunStep>,
+    retractions: Vec<u32>,
+    checkpoints: Vec<Vec<u8>>,
+    last_sequence: Option<u64>,
+    progress: Option<ToolRunProgress>,
+    ticks: usize,
+}
+
+impl FillRunMirror {
+    fn new() -> Self {
+        Self { ops: Vec::new(), entities: Vec::new(), trace: ToolRunTraceStore::new(fill_run_identity()), verdicts: Vec::new(), steps: Vec::new(), retractions: Vec::new(), checkpoints: Vec::new(), last_sequence: None, progress: None, ticks: 0 }
+    }
+
+    fn apply(&mut self, tick: ToolRunTick) {
+        assert!(self.last_sequence.is_none_or(|last| tick.sequence > last), "tick sequences are monotone");
+        self.last_sequence = Some(tick.sequence);
+        self.ticks += 1;
+        if let Some(retract_to) = tick.retract_to {
+            self.retractions.push(retract_to);
+            self.ops.truncate(retract_to as usize);
+            self.entities.truncate((retract_to / FILL_RUN_OPS_PER_PLACEMENT) as usize);
+        }
+        self.ops.extend(tick.append_ops);
+        self.entities.extend(tick.append_entities);
+        assert_eq!(self.ops.len(), self.entities.len() * FILL_RUN_OPS_PER_PLACEMENT as usize, "every placement carries exactly its two ops and one entity");
+        for page in &tick.trace {
+            for op in &page.ops {
+                if let ToolRunTraceOp::Upsert { key, verdict, reason, .. } = op {
+                    if *verdict != ToolRunVerdict::Testing {
+                        self.verdicts.push((*key, *verdict, *reason));
+                    }
+                }
+            }
+            self.trace.apply_page(page).expect("pages of the one run and generation");
+        }
+        self.steps.extend(tick.steps);
+        if tick.progress.is_some() {
+            self.progress = tick.progress;
+        }
+    }
+
+    fn drive(&mut self, job: &mut FillRunJob, fuel: u64, turns: usize) -> usize {
+        let mut sequence = 0;
+        for turn in 0..turns {
+            match fill_run_turn(job, fuel, &mut sequence) {
+                FillRunTurn::Tick(tick) => self.apply(tick),
+                FillRunTurn::Checkpoint(bytes) => self.checkpoints.push(bytes),
+                FillRunTurn::Complete => return turn + 1,
+                FillRunTurn::Yield => {}
+            }
+        }
+        panic!("the fill run job did not complete in {turns} turns at stage {:?}", job.builder().stage);
+    }
+
+    fn verdict_words(&self) -> Vec<String> {
+        self.verdicts.iter().map(|(_, verdict, reason)| format!("{}:{}", verdict.as_str(), FillRunReason::from_code(*reason).map_or("framework", FillRunReason::id))).collect()
+    }
+}
+
+fn fill_run_summary(job: &FillRunJob, mirror: &FillRunMirror, prefix: usize) -> serde_json::Value {
+    let [tested, locked, collisions, rejected] = job.counters();
+    let stall = mirror.steps.iter().rev().find(|step| step.kind == ToolRunStepKind::Warning).and_then(|step| FillRunReason::from_code(step.reason)).map(FillRunReason::id);
+    serde_json::json!({
+        "verdictPrefix": mirror.verdict_words().into_iter().take(prefix).collect::<Vec<_>>(),
+        "tested": tested,
+        "locked": locked,
+        "collisions": collisions,
+        "rejected": rejected,
+        "appendOps": mirror.ops.len(),
+        "appendEntities": mirror.entities.len(),
+        "checkpoints": mirror.checkpoints.len(),
+        "stall": stall,
+    })
+}
+
+/// ⚖️ LAW (language-neutral fixture `🎞️fill-run.json`): a seeded shipped document and a requested count
+/// produce exactly the declared verdict prefix, counters, op and entity counts — and the laws that hold
+/// for every run: two ops and one entity per placement, one `success` per placement, one `danger` per
+/// collision, one `warning` per rule refusal, ops alternating `create_object` / `connect_vortices` whose
+/// entity is the created object's own id digest.
+#[test]
+fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
+    let fixture: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run fixture");
+    assert_eq!(fixture["laws"]["opsPerPlacement"].as_u64(), Some(u64::from(FILL_RUN_OPS_PER_PLACEMENT)));
+    let schema: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧬️schema/🔣️.json")).expect("schema");
+    let vocabulary = &schema["$defs"]["Puzzle3dFillRun"]["x-semio-toolRun"];
+    assert_eq!(vocabulary["stages"].as_array().map(|stages| stages.iter().filter_map(serde_json::Value::as_str).collect::<Vec<_>>()), Some(FillRunStage::ALL.iter().map(|stage| stage.id()).collect()));
+    assert_eq!(vocabulary["counters"].as_array().map(|counters| counters.iter().filter_map(serde_json::Value::as_str).collect::<Vec<_>>()), Some(FillRunCounter::ALL.iter().map(|counter| counter.id()).collect()));
+    let reasons: Vec<(u64, String, String)> = vocabulary["reasons"].as_array().expect("reasons").iter().map(|reason| (reason["code"].as_u64().expect("code"), reason["id"].as_str().expect("id").into(), reason["verdict"].as_str().expect("verdict").into())).collect();
+    assert_eq!(reasons, FillRunReason::ALL.iter().map(|reason| (u64::from(reason.code()), reason.id().to_string(), reason.verdict().as_str().to_string())).collect::<Vec<_>>());
+    assert_eq!(vocabulary["checkpoint"]["bytes"].as_u64(), Some(FillRunCheckpoint::BYTES as u64));
+    let mut disagreements = Vec::new();
+    for case in fixture["cases"].as_array().expect("cases") {
+        let document = case["document"].as_str().expect("document");
+        let seed = case["seed"].as_u64().expect("seed");
+        let requested = case["requested"].as_u64().expect("requested") as usize;
+        let (roots, lane, _) = example_fill_roots(document, seed as u32);
+        let mut job = fill_run_job(roots, lane, seed, requested);
+        let mut mirror = FillRunMirror::new();
+        mirror.drive(&mut job, u64::MAX, 1_000_000);
+        let expected = &case["expected"];
+        let prefix = expected["verdictPrefix"].as_array().map_or(0, Vec::len);
+        let actual = fill_run_summary(&job, &mirror, prefix);
+        if &actual != expected {
+            disagreements.push(format!("{document} seed {seed} requested {requested}: actual {actual}"));
+        }
+        let [tested, locked, collisions, rejected] = job.counters();
+        let count = |wanted: ToolRunVerdict| mirror.verdicts.iter().filter(|(_, verdict, _)| *verdict == wanted).count() as u64;
+        assert_eq!((count(ToolRunVerdict::Success), count(ToolRunVerdict::Danger), count(ToolRunVerdict::Warning)), (locked, collisions, rejected));
+        assert_eq!(mirror.verdicts.len() as u64, tested, "every constructed candidate reached exactly one verdict");
+        assert_eq!(mirror.trace.len() as u64, tested, "every tested candidate stays resident");
+        for (index, pair) in mirror.ops.chunks(2).enumerate() {
+            let Ok(Puzzle3dMutation::CreateObject(create)) = crate::standards::v1::subsets::any::schema::mutations::binary::decode_op(&pair[0]) else { panic!("op {} is create_object", 2 * index) };
+            let Ok(Puzzle3dMutation::ConnectVortices(connect)) = crate::standards::v1::subsets::any::schema::mutations::binary::decode_op(&pair[1]) else { panic!("op {} is connect_vortices", 2 * index + 1) };
+            assert_eq!(mirror.entities[index], fill_run_entity(&create.object.id));
+            assert_eq!(connect.attracted.split(':').next(), Some(create.object.id.as_str()), "the attraction docks the created object");
+            assert_eq!(create.object.id, job.builder().appended_objects[index].id);
+        }
+        let progress = mirror.progress.as_ref().expect("progress");
+        assert_eq!((progress.state, progress.completed, progress.total), (ToolRunState::Complete, locked, Some(requested as u64)));
+        assert_eq!(progress.counters.iter().map(|counter| counter.value).collect::<Vec<_>>(), vec![tested, locked, collisions, rejected]);
+    }
+    assert!(disagreements.is_empty(), "the fill run fixture disagrees:\n{}", disagreements.join("\n"));
+}
+
+fn parry_hull(pose: &Pose3d, positions: &[f32]) -> parry3d::shape::ConvexPolyhedron {
+    let points: Vec<parry3d::math::Point<f32>> = positions
+        .chunks(3)
+        .map(|vertex| {
+            let world = pose.transform_point(&crate::editor::puzzle3d::precompute::geometry::Point3d::new(vertex[0], vertex[1], vertex[2]));
+            parry3d::math::Point::new(world.x(), world.y(), world.z())
+        })
+        .collect();
+    parry3d::shape::ConvexPolyhedron::from_convex_hull(&points).expect("box hull")
+}
+
+/// 📦️ Overlap volume of two world-space hulls by `parry3d` point containment on a regular grid over
+/// their bounding-box intersection, plus that intersection's volume.
+fn parry_overlap(a: &parry3d::shape::ConvexPolyhedron, b: &parry3d::shape::ConvexPolyhedron, cells: usize) -> (f64, f64) {
+    use parry3d::query::PointQuery;
+    use parry3d::shape::Shape;
+    let (left, right) = (a.compute_local_aabb(), b.compute_local_aabb());
+    let min = left.mins.sup(&right.mins);
+    let max = left.maxs.inf(&right.maxs);
+    let size = max - min;
+    if size.iter().any(|extent| *extent <= 0.0) {
+        return (0.0, 0.0);
+    }
+    let box_volume = f64::from(size.x) * f64::from(size.y) * f64::from(size.z);
+    let mut inside = 0usize;
+    for x in 0..cells {
+        for y in 0..cells {
+            for z in 0..cells {
+                let at = |index: usize, axis: usize| min[axis] + size[axis] * ((index as f32 + 0.5) / cells as f32);
+                let point = parry3d::math::Point::new(at(x, 0), at(y, 1), at(z, 2));
+                inside += usize::from(a.contains_local_point(&point) && b.contains_local_point(&point));
+            }
+        }
+    }
+    (box_volume * inside as f64 / (cells * cells * cells) as f64, box_volume)
+}
+
+/// ⚖️ ORACLE (`parry3d`): every candidate the run marked `danger` (solid overlap) or `success` (fits) is
+/// recomputed against every body placed before it — the document's own bodies plus the run's earlier
+/// placements, the docking host excluded — as exact convex hulls whose pairwise overlap volume
+/// `parry3d` measures by point containment. The planner collides when one pair overlaps beyond the
+/// scene's overlap budget, estimated from `COLLISION_SAMPLES` samples of the pair's bounding-box
+/// intersection; a verdict is decisive when the true overlap is at least twice (collision) or at most
+/// half (fit) the budget and the sample estimate cannot plausibly land across it, or when parry
+/// separates the hulls outright. Every decisive verdict must agree.
+#[test]
+fn fill_run_job_collision_verdicts_agree_with_the_parry3d_oracle() {
+    const COLLISION_SAMPLES: f64 = 512.0;
+    const DECISIVE_HITS: f64 = 16.0;
+    const GRID_CELLS: usize = 16;
+    let fixture: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run fixture");
+    let oracle = &fixture["laws"]["parryOracle"];
+    let seed = oracle["seed"].as_u64().expect("seed");
+    let (roots, lane, positions) = example_fill_roots(oracle["document"].as_str().expect("document"), seed as u32);
+    let budget = roots.scene.overlap_budget;
+    let mut job = fill_run_job(roots, lane, seed, oracle["requested"].as_u64().expect("requested") as usize);
+    let mut mirror = FillRunMirror::new();
+    mirror.drive(&mut job, u64::MAX, 1_000_000);
+    let placed = &job.builder().placed;
+    let base = placed.len() - job.builder().sequence.len();
+    let identity = parry3d::math::Isometry::identity();
+    let hulls: Vec<parry3d::shape::ConvexPolyhedron> = placed.iter().map(|entry| parry_hull(&entry.world, &positions)).collect();
+    let (mut decisive, mut ambiguous, mut collisions, mut fits) = (0usize, 0usize, 0usize, 0usize);
+    let mut disagreements = Vec::new();
+    for record in job.verdicts.iter().filter(|record| matches!(record.reason, FillRunReason::SolidOverlap | FillRunReason::Fits)) {
+        let candidate = parry_hull(&pose_isometry(record.origin, record.orientation, &None), &positions);
+        let (mut collides, mut uncertain) = (false, false);
+        for (_, other) in placed[..base + record.placements_before].iter().zip(&hulls).filter(|(entry, _)| Some(&entry.object_id) != record.host.as_ref()) {
+            if !parry3d::bounding_volume::BoundingVolume::intersects(&parry3d::shape::Shape::compute_local_aabb(&candidate), &parry3d::shape::Shape::compute_local_aabb(other)) || parry3d::query::distance(&identity, &candidate, &identity, other).expect("convex distance") > 0.0 {
+                continue;
+            }
+            let (volume, box_volume) = parry_overlap(&candidate, other, GRID_CELLS);
+            let expected_hits = COLLISION_SAMPLES * volume / box_volume.max(f64::MIN_POSITIVE);
+            let threshold_hits = COLLISION_SAMPLES * budget / box_volume.max(f64::MIN_POSITIVE);
+            if volume >= 2.0 * budget && expected_hits >= DECISIVE_HITS {
+                collides = true;
+            } else if !(volume <= 0.5 * budget && threshold_hits >= DECISIVE_HITS) {
+                uncertain = true;
+            }
+        }
+        let ours = record.reason == FillRunReason::SolidOverlap;
+        collisions += usize::from(ours);
+        fits += usize::from(!ours);
+        if !collides && uncertain {
+            ambiguous += 1;
+            continue;
+        }
+        decisive += 1;
+        if ours != collides {
+            disagreements.push(format!("candidate {} ours={:?} parry collides={collides}", record.key, record.reason));
+        }
+    }
+    assert!(disagreements.is_empty(), "{} of {decisive} decisive verdicts disagree with parry3d:\n{}", disagreements.len(), disagreements.join("\n"));
+    assert!(collisions > 0 && fits > 0, "the oracle run must decide both collisions ({collisions}) and fits ({fits})");
+    assert!(ambiguous * 10 <= decisive, "at most one in ten verdicts may fall inside the sampling band: {ambiguous} of {decisive}");
+}
+
+/// ⚖️ LAW: a run of at least 5 000 tested candidates delivers every trace record — the ledger's resident
+/// store and a renderer that only ever reads byte-budgeted deltas through its echoed cursor hold exactly
+/// the key set the job reported, with the verdict the job reported last.
+#[test]
+fn fill_run_job_delivers_every_trace_record_of_a_5000_candidate_run() {
+    let fixture: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run fixture");
+    let law = &fixture["laws"]["delivery"];
+    let minimum = law["candidates"].as_u64().expect("candidates");
+    let seed = law["seed"].as_u64().expect("seed");
+    let (roots, lane, _) = example_fill_roots(law["document"].as_str().expect("document"), seed as u32);
+    let mut job = fill_run_job(roots, lane, seed, law["requested"].as_u64().expect("requested") as usize);
+    let mut ledger = FillRunMirror::new();
+    let mut renderer = ToolRunTraceStore::new(fill_run_identity());
+    let mut cursor: Option<ToolRunTraceCursor> = None;
+    let mut expected: HashMap<u64, ToolRunVerdict> = HashMap::new();
+    let mut sequence = 0;
+    let budget = law["deltaBudgetBytes"].as_u64().expect("delta budget") as usize;
+    for _ in 0..10_000_000 {
+        match fill_run_turn(&mut job, 64, &mut sequence) {
+            FillRunTurn::Tick(tick) => {
+                for op in tick.trace.iter().flat_map(|page| &page.ops) {
+                    match op {
+                        ToolRunTraceOp::Upsert { key, verdict, .. } => {
+                            expected.insert(*key, *verdict);
+                        }
+                        ToolRunTraceOp::Retire { key } => {
+                            expected.remove(key);
+                        }
+                        ToolRunTraceOp::Clear => expected.clear(),
+                    }
+                }
+                ledger.apply(tick);
+                let delta = ledger.trace.delta_after(cursor, budget);
+                if delta.clear {
+                    renderer = ToolRunTraceStore::new(fill_run_identity());
+                }
+                for page in &delta.pages {
+                    renderer.apply_ops(&page.ops);
+                }
+                cursor = Some(ToolRunTraceCursor { run: delta.identity.id.run, generation: delta.identity.generation, page: delta.next });
+            }
+            FillRunTurn::Checkpoint(_) | FillRunTurn::Yield => {}
+            FillRunTurn::Complete => break,
+        }
+        if job.counters()[0] >= minimum {
+            break;
+        }
+    }
+    loop {
+        let delta = ledger.trace.delta_after(cursor, budget);
+        if delta.clear {
+            renderer = ToolRunTraceStore::new(fill_run_identity());
+        }
+        let caught_up = delta.pages.is_empty();
+        for page in &delta.pages {
+            renderer.apply_ops(&page.ops);
+        }
+        cursor = Some(ToolRunTraceCursor { run: delta.identity.id.run, generation: delta.identity.generation, page: delta.next });
+        if caught_up {
+            break;
+        }
+    }
+    assert!(job.counters()[0] >= minimum, "the delivery law needs at least {minimum} tested candidates, the run reached {:?}", job.counters());
+    let keys = |store: &ToolRunTraceStore| store.records().map(|(key, record)| (key, record.verdict)).collect::<HashMap<_, _>>();
+    assert_eq!(expected.len() as u64, job.counters()[0]);
+    assert_eq!(keys(&ledger.trace), expected, "the ledger holds every reported record");
+    assert_eq!(keys(&renderer), expected, "a cursor-driven renderer holds every reported record");
+}
+
+/// ⏱️ Turn clock of the interactive law: records where the wall slice expired in the first cold run
+/// and replays exactly those expiries in the later runs, so every run takes the same bounded turns.
+#[derive(Default)]
+struct FillRunTurnClock {
+    reads: u64,
+    deadline: u64,
+    first_expired: Option<u64>,
+    replay_expiry: Option<u64>,
+}
+
+thread_local! {
+    static FILL_RUN_TURN_CLOCK: std::cell::RefCell<FillRunTurnClock> = std::cell::RefCell::new(FillRunTurnClock::default());
+}
+
+fn fill_run_recording_clock() -> Option<u64> {
+    let now = semio_framework_job::default_now_us();
+    FILL_RUN_TURN_CLOCK.with(|clock| {
+        let mut clock = clock.borrow_mut();
+        clock.reads += 1;
+        if clock.first_expired.is_none() && now.is_none_or(|now| now >= clock.deadline) {
+            clock.first_expired = Some(clock.reads);
+        }
+    });
+    now
+}
+
+fn fill_run_replaying_clock() -> Option<u64> {
+    FILL_RUN_TURN_CLOCK.with(|clock| {
+        let mut clock = clock.borrow_mut();
+        clock.reads += 1;
+        Some(if clock.replay_expiry.is_some_and(|expiry| clock.reads >= expiry) { u64::MAX } else { 0 })
+    })
+}
+
+/// ⏱️ LAW (red→green row 1, part a): on the shipped Nakagin document every `drive_step` of the fill run
+/// job under the interactive lane's wall slice stays below the artifact's 2 ms budget over at least 771
+/// turns. Like the artifact's other interactive laws it takes each turn's best of several cold runs;
+/// the first run slices by the real clock and the others replay its slice boundaries exactly.
+#[test]
+fn fill_run_job_step_stays_below_the_interactive_ceiling_for_nakagin() {
+    let fixture: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run fixture");
+    let law = &fixture["laws"]["interactive"];
+    let minimum_turns = law["turns"].as_u64().expect("turns") as usize;
+    let budget = Duration::from_micros(law["budgetUs"].as_u64().expect("budget"));
+    let runs = law["coldRuns"].as_u64().expect("cold runs") as usize;
+    let seed = law["seed"].as_u64().expect("seed");
+    let mut expiries: Vec<Option<u64>> = Vec::new();
+    let mut best: Vec<Duration> = Vec::new();
+    let mut counters = [0; 4];
+    for run in 0..runs {
+        let (roots, lane, _) = example_fill_roots(law["document"].as_str().expect("document"), seed as u32);
+        let mut job = fill_run_job(roots, lane, seed, law["requested"].as_u64().expect("requested") as usize);
+        let operation = job.operation();
+        let mut sequence = 0;
+        let mut verdict = None;
+        for turn in 0.. {
+            let recording = run == 0;
+            assert!(recording || turn < expiries.len(), "cold run {run} took more turns than the recorded run");
+            let (step_budget, clock): (StepBudget, fn() -> Option<u64>) = if recording {
+                let start = semio_framework_job::default_now_us().expect("clock");
+                FILL_RUN_TURN_CLOCK.with(|clock| *clock.borrow_mut() = FillRunTurnClock { deadline: start + semio_framework_job::INTERACTIVE_LANE_WALL_US, ..FillRunTurnClock::default() });
+                (StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, start + semio_framework_job::INTERACTIVE_LANE_WALL_US), fill_run_recording_clock)
+            } else {
+                FILL_RUN_TURN_CLOCK.with(|clock| *clock.borrow_mut() = FillRunTurnClock { replay_expiry: expiries[turn], ..FillRunTurnClock::default() });
+                (StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, 1), fill_run_replaying_clock)
+            };
+            let started = Instant::now();
+            let outcome = semio_framework_job::drive_step(&mut job, "puzzle3d-fill-run", operation.operation, operation.generation, semio_framework_job::InteractiveStage::InteractiveStep, step_budget, root_cancel_token(), clock, &mut sequence, &mut verdict);
+            let elapsed = started.elapsed();
+            if recording {
+                expiries.push(FILL_RUN_TURN_CLOCK.with(|clock| clock.borrow().first_expired));
+                best.push(elapsed);
+            } else {
+                best[turn] = best[turn].min(elapsed);
+            }
+            if matches!(settle_fill_run_outcome(outcome), FillRunTurn::Complete) {
+                assert!(recording || turn + 1 == expiries.len(), "cold run {run} completed after {} turns, the recorded run after {}", turn + 1, expiries.len());
+                break;
+            }
+        }
+        counters = job.counters();
+    }
+    let (turn, worst) = best.iter().enumerate().max_by_key(|(_, elapsed)| **elapsed).map_or((0, Duration::ZERO), |(turn, elapsed)| (turn + 1, *elapsed));
+    assert!(best.len() >= minimum_turns, "the law measures at least {minimum_turns} turns, the run took {}", best.len());
+    assert!(counters[1] > 0 && counters[0] > counters[1], "the measured run tested and placed objects: {counters:?}");
+    assert!(worst < budget, "fill run job worst drive_step {worst:?} at turn {turn} of {} exceeds {budget:?}", best.len());
+}
+
+/// ⚖️ LAW: with one unit of fuel a run job step reaches exactly one candidate verdict — the tick carries
+/// that candidate's `testing` and final upsert under one key — except the final tick of a completed run.
+#[test]
+fn fill_run_job_step_with_one_unit_of_fuel_reaches_exactly_one_candidate_verdict() {
+    let mut job = FillRunJob::new(FillBuilder::begin_preparation(nakagin_scale_roots(), Operation::new(OperationId(73), RevisionId(1), Generation(1), 43), 24), fill_run_identity(), vec![NAKAGIN_MESH_URL.to_string()]);
+    let mut sequence = 0;
+    let (mut ticks, mut verdicts) = (0usize, 0u64);
+    for _ in 0..1_000_000 {
+        match fill_run_turn(&mut job, 1, &mut sequence) {
+            FillRunTurn::Tick(tick) => {
+                ticks += 1;
+                let ops: Vec<&ToolRunTraceOp> = tick.trace.iter().flat_map(|page| &page.ops).collect();
+                let finals: Vec<u64> = ops.iter().filter_map(|op| match op {
+                    ToolRunTraceOp::Upsert { key, verdict, .. } if *verdict != ToolRunVerdict::Testing => Some(*key),
+                    _ => None,
+                }).collect();
+                let testing: Vec<u64> = ops.iter().filter_map(|op| match op {
+                    ToolRunTraceOp::Upsert { key, verdict: ToolRunVerdict::Testing, .. } => Some(*key),
+                    _ => None,
+                }).collect();
+                let complete = tick.progress.as_ref().is_some_and(|progress| progress.state == ToolRunState::Complete);
+                if complete && finals.is_empty() {
+                    continue;
+                }
+                assert_eq!(finals.len(), 1, "one fuel unit is one candidate verdict, tick {} carried {finals:?}", tick.sequence);
+                assert!(testing.is_empty() || testing == finals, "the verdict closes the candidate this step tested: {testing:?} vs {finals:?}");
+                verdicts += 1;
+            }
+            FillRunTurn::Checkpoint(_) | FillRunTurn::Yield => {}
+            FillRunTurn::Complete => break,
+        }
+    }
+    assert_eq!(verdicts, job.counters()[0], "every tested candidate took exactly one fuel-one step");
+    assert!(ticks as u64 >= verdicts && job.counters()[1] == 24);
+}
+
+fn nakagin_scale_run(requested: usize) -> (FillRunJob, FillRunMirror) {
+    let mut job = FillRunJob::new(FillBuilder::begin_preparation(nakagin_scale_roots(), Operation::new(OperationId(79), RevisionId(1), Generation(1), 43), requested), fill_run_identity(), vec![NAKAGIN_MESH_URL.to_string()]);
+    let mut mirror = FillRunMirror::new();
+    mirror.drive(&mut job, u64::MAX, 1_000_000);
+    (job, mirror)
+}
+
+/// ⚖️ LAW: a completed run resumed from its own checkpoint with a raised count continues the same
+/// deterministic sequence — ops, entities and verdicts equal one run to the raised count — and resumed
+/// with a lowered count retracts the provisional tail to exactly the lowered count; a foreign or
+/// malformed checkpoint is refused.
+#[test]
+fn fill_run_job_resume_raise_continues_the_sequence_and_lower_retracts_the_tail() {
+    const SHORT: usize = 30;
+    const LONG: usize = 45;
+    const LOWERED: usize = 12;
+    let (mut raised, mut raised_mirror) = nakagin_scale_run(SHORT);
+    assert_eq!(raised_mirror.checkpoints.len(), SHORT, "one checkpoint per placement");
+    let checkpoint = raised_mirror.checkpoints.last().cloned().expect("checkpoint");
+    assert_eq!(FillRunCheckpoint::decode(&checkpoint), Some(raised.checkpoint()), "the last checkpoint is where the completed run stands");
+    let short_ops = raised_mirror.ops.clone();
+    raised.resume(&checkpoint, LONG).expect("resume raise");
+    raised_mirror.drive(&mut raised, u64::MAX, 1_000_000);
+    let (long, long_mirror) = nakagin_scale_run(LONG);
+    assert_eq!(raised_mirror.ops, long_mirror.ops, "the raised run appends the same ops as one long run");
+    assert_eq!(raised_mirror.entities, long_mirror.entities);
+    assert_eq!(raised_mirror.verdicts, long_mirror.verdicts, "and reaches the same verdicts in the same order");
+    assert_eq!(&long_mirror.ops[..short_ops.len()], short_ops.as_slice());
+    assert_eq!(raised.counters(), long.counters());
+
+    let (mut lowered, mut lowered_mirror) = nakagin_scale_run(SHORT);
+    let checkpoint = lowered_mirror.checkpoints.last().cloned().expect("checkpoint");
+    let before = lowered_mirror.ops.clone();
+    lowered.resume(&checkpoint, LOWERED).expect("resume lower");
+    lowered_mirror.drive(&mut lowered, u64::MAX, 1_000_000);
+    assert_eq!(lowered_mirror.retractions.iter().min().copied(), Some(LOWERED as u32 * FILL_RUN_OPS_PER_PLACEMENT), "the lowered run retracts to exactly the lowered count");
+    assert_eq!(lowered_mirror.ops.as_slice(), &before[..LOWERED * 2]);
+    assert_eq!((lowered_mirror.entities.len(), lowered.counters()[1], lowered.builder().sequence.len()), (LOWERED, LOWERED as u64, LOWERED));
+    let success = lowered_mirror.trace.records().filter(|(_, record)| record.verdict == ToolRunVerdict::Success).count();
+    assert_eq!(success, LOWERED, "every retracted placement's success record was retired");
+
+    let mut foreign = FillRunCheckpoint::decode(&checkpoint).expect("checkpoint");
+    foreign.next_key += 1_000;
+    assert_eq!(lowered.resume(&foreign.encode(), SHORT), Err(FillRunResumeError::Foreign));
+    assert_eq!(lowered.resume(&checkpoint[..8], SHORT), Err(FillRunResumeError::Malformed));
+}
+
+fn drive_revalidation(job: &mut FillRevalidateJob, operation: Operation) -> Vec<ToolRunTick> {
+    let mut ticks = Vec::new();
+    let mut sequence = 0;
+    for _ in 0..1_000_000 {
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), root_cancel_token(), never, &mut sequence);
+        match settle_fill_run_outcome(job.step(&mut context)) {
+            FillRunTurn::Tick(tick) => ticks.push(tick),
+            FillRunTurn::Complete => return ticks,
+            FillRunTurn::Checkpoint(_) | FillRunTurn::Yield => {}
+        }
+    }
+    panic!("revalidation did not complete");
+}
+
+/// ⚖️ LAW: revalidating provisional placements against an unchanged head keeps every one; against a head
+/// that gained a body where one placement stands, that placement turns `danger` with the framework
+/// conflict reason, the final tick retracts to it and re-appends every later survivor's exact ops and
+/// entity, and one `danger` conflict step counts the conflicts.
+#[test]
+fn fill_revalidate_job_retracts_conflicting_placements_and_reappends_survivors() {
+    const PLACED: usize = 8;
+    const INTRUDED: usize = 3;
+    let (job, mirror) = nakagin_scale_run(PLACED);
+    let placements = job.provisional_placements();
+    assert_eq!(placements.len(), PLACED);
+    let operation = Operation::new(OperationId(83), RevisionId(2), Generation(1), 43);
+    let head = nakagin_scale_roots();
+    let mut clean = FillRevalidateJob::new(operation, fill_run_identity(), FillPreparationRoots::new(head.scene.clone(), head.meshes.clone()), placements.clone(), 1_000);
+    let ticks = drive_revalidation(&mut clean, operation);
+    assert!(clean.conflicts().iter().all(|conflict| !conflict) && clean.conflicts().len() == PLACED);
+    assert!(ticks.iter().all(|tick| tick.retract_to.is_none() && tick.append_ops.is_empty()));
+
+    let mut scene = (*head.scene).clone();
+    let mut intruder = placements[INTRUDED].object.clone();
+    intruder.id = "intruder".into();
+    intruder.vortices.clear();
+    scene.fixture.objects.push(intruder);
+    let mut intruded = FillRevalidateJob::new(operation, fill_run_identity(), FillPreparationRoots::new(Arc::new(scene), head.meshes.clone()), placements.clone(), 1_000);
+    let ticks = drive_revalidation(&mut intruded, operation);
+    let conflicts = intruded.conflicts().to_vec();
+    assert!(conflicts[INTRUDED], "the intruded placement conflicts: {conflicts:?}");
+    let first = conflicts.iter().position(|conflict| *conflict).expect("a conflict");
+    let last = ticks.last().expect("final tick");
+    assert_eq!(last.retract_to, Some(first as u32 * FILL_RUN_OPS_PER_PLACEMENT));
+    let survivors: Vec<usize> = (first..PLACED).filter(|index| !conflicts[*index]).collect();
+    assert_eq!(last.append_ops, survivors.iter().flat_map(|index| mirror.ops[index * 2..index * 2 + 2].to_vec()).collect::<Vec<_>>(), "survivors re-append their exact ops");
+    assert_eq!(last.append_entities, survivors.iter().map(|index| mirror.entities[*index]).collect::<Vec<_>>());
+    let conflict_count = conflicts.iter().filter(|conflict| **conflict).count() as u64;
+    assert!(last.steps.iter().any(|step| step.kind == ToolRunStepKind::Danger && step.reason == TOOL_RUN_REASON_CONFLICT && step.args == vec![ToolRunStepArg::Unsigned(conflict_count)]));
+    let danger: Vec<u64> = ticks.iter().flat_map(|tick| tick.trace.iter().flat_map(|page| page.ops.clone())).filter_map(|op| match op {
+        ToolRunTraceOp::Upsert { key, verdict: ToolRunVerdict::Danger, reason: TOOL_RUN_REASON_CONFLICT, .. } => Some(key),
+        _ => None,
+    }).collect();
+    assert_eq!(danger, conflicts.iter().zip(&placements).filter(|(conflict, _)| **conflict).map(|(_, placement)| placement.key).collect::<Vec<_>>());
+}
+//#endregion ⏯️FillRunJob
+
+/// ⚖️ LAW: a rule refusal is a `warning` record, never a collision — a document whose target volume
+/// lies away from every open vortex refuses each constructed candidate as `outside-target-volume`,
+/// appends nothing and ends with the `no-free-placement` warning step.
+#[test]
+fn fill_run_job_reports_rule_refusals_as_warnings_and_the_stall_as_a_warning_step() {
+    let roots = nakagin_scale_roots();
+    let mut scene = (*roots.scene).clone();
+    scene.fixture.target_volumes.push(WorldVolumeProps { id: "elsewhere".into(), origin: [1.0e6, 1.0e6, 1.0e6], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None });
+    let mut job = FillRunJob::new(FillBuilder::begin_preparation(FillPreparationRoots::new(Arc::new(scene), roots.meshes.clone()), Operation::new(OperationId(89), RevisionId(1), Generation(1), 43), 10), fill_run_identity(), vec![NAKAGIN_MESH_URL.to_string()]);
+    let mut mirror = FillRunMirror::new();
+    mirror.drive(&mut job, u64::MAX, 1_000_000);
+    let [tested, locked, collisions, rejected] = job.counters();
+    assert!(tested > 0 && tested == rejected && locked == 0 && collisions == 0, "{:?}", job.counters());
+    assert!(mirror.verdicts.iter().all(|(_, verdict, reason)| *verdict == ToolRunVerdict::Warning && *reason == FillRunReason::OutsideTargetVolume.code()));
+    assert!(mirror.ops.is_empty() && mirror.entities.is_empty());
+    let last = mirror.steps.last().expect("stall step");
+    assert_eq!((last.kind, last.reason, last.args.clone()), (ToolRunStepKind::Warning, FillRunReason::NoFreePlacement.code(), vec![ToolRunStepArg::Unsigned(0)]));
+    assert_eq!(mirror.progress.as_ref().map(|progress| progress.state), Some(ToolRunState::Complete));
+}

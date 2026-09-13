@@ -89,13 +89,13 @@
           "const": false
         },
         "pressureRoots": {
-          "const": 4
+          "const": 7
         },
         "pressureReservationBytes": {
           "const": 8388608
         },
         "pressureAggregateBytes": {
-          "const": 33554432
+          "const": 52559872
         },
         "slotReuseRequiresTypedTerminal": {
           "const": true

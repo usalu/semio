@@ -254,9 +254,17 @@ impl Atom {
     }
 }
 
-/// 🔁️ `DslValue::Number`'s `Int`/`UInt` variants round-trip straight to `Atom::Integer`; only a
-/// `Float` still needs the whole-valued check, recovering `Integer` for a fractionless value and
-/// `Decimal` otherwise — the same convention `pack::json::Number` uses.
+/// 🔁️ `DslValue::Number` carries its own exact variant, so each one maps to exactly one `Atom`:
+/// `Int`/`UInt` to `Atom::Integer` and `Float` to `Atom::Decimal`.
+///
+/// 🐛️ `Float` used to take a whole-valued shortcut back to `Integer`, which made the round trip
+/// LOSSY at the one hop that is supposed to preserve the carrier: `Atom::Decimal(42.0)` prints as
+/// `42.0` (`pack::json`'s `write_float`), parses back as `Number::Float(42.0)` — the JSON layer
+/// distinguishes `42` from `42.0` by the text precisely so it does not have to guess — and then
+/// became `Atom::Integer(42)` here. Every `flowEvalResolve` seeds a node cache from exactly this
+/// JSON (`seed_flow_eval_node_cache`), so a decimal output came back from an extension hop as an
+/// integer and compared unequal to the value the kernel had produced
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 impl ToValue for Atom {
     fn to_value(&self) -> DslValue {
         match self {
@@ -276,7 +284,6 @@ impl FromValue for Atom {
             DslValue::Bool(b) => Ok(Atom::Boolean(b)),
             DslValue::Number(Number::Int(value)) => Ok(Atom::Integer(value)),
             DslValue::Number(Number::UInt(value)) => Ok(Atom::Integer(value as i64)),
-            DslValue::Number(Number::Float(value)) if value.fract() == 0.0 => Ok(Atom::Integer(value as i64)),
             DslValue::Number(Number::Float(value)) => Ok(Atom::Decimal(value)),
             DslValue::String(s) => Ok(Atom::String(s)),
             DslValue::Array(_) | DslValue::Object(_) => Err(ValueError::new("expected an atom, found an array or object")),
@@ -609,6 +616,18 @@ fn field_channel_operators(value: &ValueType) -> Vec<String> {
     }
 }
 
+/// 🏷️ The id an OUTPUT channel takes when it carries the same noun as one of its operator's own
+/// INPUTS. An operator's input ids and output ids are disjoint, because `"{nodeId}@{portId}"` is the
+/// one public name a wire endpoint has: a graph, a journalled edit and a pointer press all address a
+/// port by that string, so a port id that names a channel on both sides names two handles and the
+/// press resolves to whichever the lookup happened to reach first. The display names (`code`,
+/// `abbreviation`, `fullName`) are untouched — this is an identity, not a label.
+///
+/// @see `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧫️fixtures/🔌️port-sides/🔣️.json` — the catalogue-wide law
+pub fn produced_channel_id(input_id: &str) -> String {
+    format!("{input_id}Out")
+}
+
 /// 🧩️ Builds construct/deconstruct/modify operator metadata for a schema.
 pub fn schema_component_info(schema: &Schema) -> OperatorInfo {
     let operator_id = schema_component_operator_id(schema);
@@ -617,10 +636,11 @@ pub fn schema_component_info(schema: &Schema) -> OperatorInfo {
         let operators = field_channel_operators(&field.value);
         inputs.push(ChannelSpec::requires(&field.key, &operators).with_cardinality(schema_field_input_cardinality(&field.value)));
     }
-    let mut outputs = vec![ChannelSpec::provides(&schema.id, vec![schema.id.clone()])];
+    let (instance_code, instance_abbreviation, instance_full_name) = derive_channel_names(&schema.id);
+    let mut outputs = vec![ChannelSpec::named(instance_code, instance_abbreviation, produced_channel_id(&schema.id), instance_full_name).with_operators(vec![schema.id.clone()])];
     for field in &schema.fields {
         let (code, abbreviation, full_name) = derive_channel_names(&field.key);
-        outputs.push(ChannelSpec::named(code, abbreviation, &field.key, full_name).with_operators(field_channel_operators(&field.value)).with_cardinality(schema_field_output_cardinality(&field.value)));
+        outputs.push(ChannelSpec::named(code, abbreviation, produced_channel_id(&field.key), full_name).with_operators(field_channel_operators(&field.value)).with_cardinality(schema_field_output_cardinality(&field.value)));
     }
     outputs.push(ChannelSpec::list_output("errors", vec![]));
     OperatorInfo {
@@ -764,22 +784,22 @@ impl SchemaComponent {
     }
 
     fn success_output(&self, instance: &Dictionary) -> Result<Dictionary, NeuralEngineError> {
-        let mut output = ColdDictionaryBuilder::from_dictionary(Dictionary::new().insert(self.schema.id.clone(), Value::Dictionary(instance.clone())));
+        let mut output = ColdDictionaryBuilder::from_dictionary(Dictionary::new().insert(produced_channel_id(&self.schema.id), Value::Dictionary(instance.clone())));
         for field in &self.schema.fields {
             // 🛡️ `instance` only reaches here after `Schema::validate` confirmed every
             // declared field.key is present, so this lookup can never miss.
             let value = instance.get(&field.key).expect("validated field");
             let channel = field_to_channel(value, &field.value)?;
-            output.insert(field.key.clone(), channel);
+            output.insert(produced_channel_id(&field.key), channel);
         }
         output.insert("errors".into(), Value::Dictionary(schema_errors_list(&[])));
         Ok(output.finish())
     }
 
     fn error_output(&self, messages: &[String]) -> Dictionary {
-        let mut output = Dictionary::new().insert(self.schema.id.clone(), Value::null()).insert("errors", Value::Dictionary(schema_errors_list(messages)));
+        let mut output = Dictionary::new().insert(produced_channel_id(&self.schema.id), Value::null()).insert("errors", Value::Dictionary(schema_errors_list(messages)));
         for field in &self.schema.fields {
-            output = output.insert(field.key.clone(), Value::null());
+            output = output.insert(produced_channel_id(&field.key), Value::null());
         }
         output
     }

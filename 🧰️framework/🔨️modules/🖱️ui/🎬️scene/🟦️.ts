@@ -13,6 +13,10 @@ export type Canvas2dScene = {
   readonly cameraY: number;
   readonly zoom: number;
   readonly layersJson: string;
+  /** ⏯️ The base64url `ToolRunTraceDelta` paged to this window — see {@link World3dScene.toolRunTrace}. */
+  readonly toolRunTrace?: string | null;
+  /** 🚚️ The spine's lane manifest — see {@link CANVAS2D_SCENE_LANES}. */
+  readonly lanes?: readonly SceneLaneRef[];
 };
 
 /** 🖱️ A render-time address for an on-demand context menu — bytes only, never items. At right-click
@@ -298,6 +302,9 @@ export type World3dScene = {
    * meshes this scene renders — see {@link World3dComputeStatusV1} for the full declared shape and
    * {@link world3dComputeStatusV1} for the one parser every surface reads it through. */
   readonly statusJson?: string;
+  /** ⏯️ The base64url `ToolRunTraceDelta` (`🧰️framework/🔨️modules/⏯️tool-run/🟦️.ts`) the tool run ledger
+   * pages to this window after the renderer's echoed `toolRunTraceCursor`. Absent while no run traces. */
+  readonly toolRunTrace?: string | null;
   /** 🪟️ The framework interaction domain id this world window is bound to (see the Rust
    * `World3dScene::domain_id` doc comment). `undefined` leaves the window on plain plugin-private
    * actions (`setHover`/`worldPick`/`worldSelect`); when set, the renderer routes instance pick/hover
@@ -309,7 +316,7 @@ export type World3dScene = {
   /** 🚚️ On a scene SPINE (what arrives inside `SurfaceProps.doc`) this names every payload lane that
    * rides OUTSIDE it, with the byte length and content hash of each — see {@link WORLD3D_SCENE_LANES}
    * and the Rust `World3dScene::lanes` doc. Absent on an assembled scene built by hand. */
-  readonly lanes?: readonly World3dSceneLaneRef[];
+  readonly lanes?: readonly SceneLaneRef[];
 };
 
 //#region ⏳️World3dComputeStatus
@@ -410,29 +417,33 @@ export function world3dComputeStatusV1(statusJson: string | undefined | null): W
 //#endregion ⏳️World3dComputeStatus
 
 //#region 🚚️World3dSceneLanes
-/** 🚚️ One entry of {@link World3dScene.lanes}. `bytes` is what tells a fully arrived lane from one
- * still spread across reconcile pages; `hash` (FNV-1a/64, lowercase hex, computed by the producer)
- * is what makes the spine itself differ exactly when a lane's content differs. */
-export type World3dSceneLaneRef = {
+/** 🚚️ One entry of a scene spine's lane manifest ({@link World3dScene.lanes}, {@link Canvas2dScene.lanes}).
+ * `bytes` is what tells a fully arrived lane from one still spread across reconcile pages; `hash`
+ * (FNV-1a/64, lowercase hex, computed by the producer) is what makes the spine itself differ exactly
+ * when a lane's content differs. */
+export type SceneLaneRef = {
   readonly lane: string;
   readonly bytes: number;
   readonly hash: string;
 };
 
-/** 🚚️ One world-3d payload lane: which {@link World3dScene} field it carries and which reserved node
- * key its retained text carrier is rooted at. */
-export type World3dSceneLane = {
+/** 🚚️ One scene payload lane: which scene field it carries and which reserved node key its retained
+ * text carrier is rooted at. */
+export type SceneLane<S> = {
   readonly lane: string;
-  readonly field: keyof World3dScene;
+  readonly field: keyof S;
   readonly bodyKey: string;
   readonly optional: boolean;
 };
+
+/** 🚚️ One world-3d payload lane. */
+export type World3dSceneLane = SceneLane<World3dScene>;
 
 /** 🚚️ Reserved carrier-key namespace — dotted and `framework.`-prefixed so a lane root can never
  * collide with an app-authored node id. */
 export const WORLD3D_SCENE_LANE_KEY_PREFIX = "framework.scene.world3d.";
 
-/** 🚚️ The eighteen world-3d payload fields that ride OUTSIDE the fixed-capacity surface doc, each as
+/** 🚚️ The twenty world-3d payload fields that ride OUTSIDE the fixed-capacity surface doc, each as
  * its own retained, individually paged text carrier. `SurfaceDoc.bytes` is a hard 32 KiB
  * `UiFixedBytes` ceiling that cannot page, so a world whose payload scales with its document (a
  * measured 57 281-byte Nakagin Capsule Tower) can only publish with the payload split out; keeping the
@@ -461,6 +472,7 @@ export const WORLD3D_SCENE_LANES: readonly World3dSceneLane[] = [
   { lane: "terrain", field: "terrainJson", bodyKey: "framework.scene.world3d.terrain", optional: true },
   { lane: "points", field: "pointsJson", bodyKey: "framework.scene.world3d.points", optional: true },
   { lane: "status", field: "statusJson", bodyKey: "framework.scene.world3d.status", optional: true },
+  { lane: "toolRunTrace", field: "toolRunTrace", bodyKey: "framework.scene.world3d.toolRunTrace", optional: true },
 ];
 
 /** 🚚️ Resolves a retained node key back to the lane it carries, `undefined` for every other key. */
@@ -468,27 +480,54 @@ export function world3dSceneLaneForBodyKey(bodyKey: string): World3dSceneLane | 
   return WORLD3D_SCENE_LANES.find((lane) => lane.bodyKey === bodyKey);
 }
 
-/** 🚚️ Reassembles a decoded scene spine and its lane carrier texts back into the `World3dScene` every
- * render host already knows how to read — the exact inverse of the Rust `SceneDoc::split_lanes`.
+/** 🚚️ Reassembles a decoded scene spine and its lane carrier texts back into the scene every render
+ * host already knows how to read — the exact inverse of the Rust `SceneDoc::split_lanes`.
  *
- * `laneTexts` is keyed by reserved carrier key ({@link World3dSceneLane.bodyKey}). A lane the spine
- * declares but `laneTexts` does not carry is left at its spine value (an empty string for a required
- * lane, absent for an optional one) rather than guessed: a caller that wants last-known-good content
- * across a partially arrived refresh supplies it in `laneTexts` itself, which is exactly what the
+ * `laneTexts` is keyed by reserved carrier key ({@link SceneLane.bodyKey}). A lane the spine declares
+ * but `laneTexts` does not carry is left at its spine value (an empty string for a required lane,
+ * absent for an optional one) rather than guessed: a caller that wants last-known-good content across
+ * a partially arrived refresh supplies it in `laneTexts` itself, which is exactly what the
  * Interpreter's per-lane cache does. Never throws. */
-export function world3dSceneFromLanes(spine: World3dScene, laneTexts: ReadonlyMap<string, string>): World3dScene {
+export function sceneFromLanes<S extends object>(spine: S, laneTexts: ReadonlyMap<string, string>, lanes: readonly SceneLane<S>[]): S {
   if (laneTexts.size === 0) return spine;
-  const assembled: Record<string, unknown> = { ...spine };
-  for (const lane of WORLD3D_SCENE_LANES) {
+  const assembled: Record<string, unknown> = { ...(spine as Record<string, unknown>) };
+  for (const lane of lanes) {
     const text = laneTexts.get(lane.bodyKey);
     if (text === undefined) continue;
-    const prior = assembled[lane.field];
+    const prior = assembled[lane.field as string];
     if (lane.optional && text.length === 0 && typeof prior === "string" && prior.length > 0) continue;
-    assembled[lane.field] = text;
+    assembled[lane.field as string] = text;
   }
-  return assembled as World3dScene;
+  return assembled as S;
+}
+
+/** 🚚️ {@link sceneFromLanes} over {@link WORLD3D_SCENE_LANES}. */
+export function world3dSceneFromLanes(spine: World3dScene, laneTexts: ReadonlyMap<string, string>): World3dScene {
+  return sceneFromLanes(spine, laneTexts, WORLD3D_SCENE_LANES);
 }
 //#endregion 🚚️World3dSceneLanes
+
+//#region 🚚️Canvas2dSceneLanes
+/** 🚚️ Reserved carrier-key namespace of the canvas-2d lanes. */
+export const CANVAS2D_SCENE_LANE_KEY_PREFIX = "framework.scene.canvas2d.";
+
+/** 🚚️ The canvas-2d payload fields that ride OUTSIDE the fixed-capacity surface doc — mirrors the Rust
+ * `Canvas2dSceneLane` / `CANVAS2D_SCENE_LANE_*`; both pinned against
+ * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️canvas2d-scene-lanes/🔣️.json`. */
+export const CANVAS2D_SCENE_LANES: readonly SceneLane<Canvas2dScene>[] = [
+  { lane: "toolRunTrace", field: "toolRunTrace", bodyKey: "framework.scene.canvas2d.toolRunTrace", optional: true },
+];
+
+/** 🚚️ Resolves a retained node key back to the canvas-2d lane it carries. */
+export function canvas2dSceneLaneForBodyKey(bodyKey: string): SceneLane<Canvas2dScene> | undefined {
+  return CANVAS2D_SCENE_LANES.find((lane) => lane.bodyKey === bodyKey);
+}
+
+/** 🚚️ {@link sceneFromLanes} over {@link CANVAS2D_SCENE_LANES}. */
+export function canvas2dSceneFromLanes(spine: Canvas2dScene, laneTexts: ReadonlyMap<string, string>): Canvas2dScene {
+  return sceneFromLanes(spine, laneTexts, CANVAS2D_SCENE_LANES);
+}
+//#endregion 🚚️Canvas2dSceneLanes
 
 /** 🔌️ One port on a node-graph node: identity + display label (direction is implied by whether the
  * record lives in the owning node's `inputs` or `outputs` array). `code`/`abbreviation`/`fullName`/

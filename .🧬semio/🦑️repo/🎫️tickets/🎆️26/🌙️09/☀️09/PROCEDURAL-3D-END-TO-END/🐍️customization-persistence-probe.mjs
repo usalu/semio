@@ -44,6 +44,9 @@ async function snapshot(p, tag) {
     appearanceAttrs: Object.fromEntries([...document.documentElement.attributes].map((a) => [a.name, a.value.slice(0, 120)])),
     osConfig: (() => { try { return JSON.parse(localStorage.getItem("semio.os.config") ?? "{}"); } catch { return "<unparsable>"; } })(),
     bg: getComputedStyle(document.body).backgroundColor,
+    // 🎨️ The appearance a user picked is painted by the SCOPE element, never by `body` — reading the
+    // body's background reported "unchanged" for a flip that had in fact applied.
+    scopeAppearance: document.querySelector(".semio-scope")?.getAttribute("data-ui-appearance") ?? null,
     lang: document.documentElement.lang,
     text: document.body.innerText.replace(/\s+/g, " ").slice(0, 900),
     localStorageKeys: (() => { try { return Object.keys(localStorage); } catch { return ["<blocked>"]; } })(),
@@ -76,10 +79,10 @@ console.log("[DEBUG] reloaded bg", reloaded.bg, "text head", reloaded.text.slice
 console.log("[DEBUG] reloaded lsKeys", JSON.stringify(reloaded.localStorageKeys));
 
 const localeKept = /Dokument|Katalog|Bearbeiten|Workflow/.test(reloaded.text);
-const appearanceKept = reloaded.bg === after.bg && after.bg !== before.bg;
+const appearanceKept = after.scopeAppearance === "dark" && reloaded.scopeAppearance === after.scopeAppearance;
 console.log("=== VERDICT ===");
 console.log("localeSurvivedReload", localeKept);
-console.log("appearanceSurvivedReload", appearanceKept, `(baseline=${before.bg} customized=${after.bg} reloaded=${reloaded.bg})`);
-writeFileSync(join(outDir, "verdict.json"), JSON.stringify({ localeKept, appearanceKept, before: before.bg, after: after.bg, reloaded: reloaded.bg, lsKeysAfter: after.localStorageKeys, lsKeysReloaded: reloaded.localStorageKeys, lsDumpAfter: after.localStorageDump }, null, 2));
+console.log("appearanceSurvivedReload", appearanceKept, `(baseline=${before.scopeAppearance} customized=${after.scopeAppearance} reloaded=${reloaded.scopeAppearance})`);
+writeFileSync(join(outDir, "verdict.json"), JSON.stringify({ localeKept, appearanceKept, okLang, okAppearance, appearanceBefore: before.scopeAppearance, appearanceAfter: after.scopeAppearance, appearanceReloaded: reloaded.scopeAppearance, before: before.bg, after: after.bg, reloaded: reloaded.bg, lsKeysAfter: after.localStorageKeys, lsKeysReloaded: reloaded.localStorageKeys, lsDumpAfter: after.localStorageDump }, null, 2));
 console.log("DONE");
 await browser.close();

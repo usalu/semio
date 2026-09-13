@@ -72,7 +72,7 @@ impl Operator for Set {
         let list = read_list(input, "list")?;
         let index = read_number(input, "index")? as usize;
         let value = input.get("value").cloned().ok_or_else(|| EvalError::MissingInput("value".into()))?;
-        Ok(channel_output("list", list.clone().insert(index.to_string(), value)))
+        Ok(channel_output("listOut", list.clone().insert(index.to_string(), value)))
     }
 }
 // #endregion 🔖️Set
@@ -86,7 +86,7 @@ impl Operator for Append {
         let list = read_list(input, "list")?;
         let value = input.get("value").cloned().ok_or_else(|| EvalError::MissingInput("value".into()))?;
         let next = list_indices(list).len();
-        Ok(channel_output("list", list.clone().insert(next.to_string(), value)))
+        Ok(channel_output("listOut", list.clone().insert(next.to_string(), value)))
     }
 }
 // #endregion 🔖️Append
@@ -111,7 +111,7 @@ impl Operator for Remove {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let list = read_list(input, "list")?;
         let index = read_number(input, "index")? as usize;
-        Ok(channel_output("list", remove_list_index(list, index)))
+        Ok(channel_output("listOut", remove_list_index(list, index)))
     }
 }
 // #endregion 🔖️Remove
@@ -233,14 +233,14 @@ pub fn register(registry: &mut Registry) {
     );
     register_simple(
         registry,
-        info("list.set", "Set", "Replaces a value at an index", vec![list_channel("list", "list.set"), number_channel("index", "list.set"), ChannelSpec::any("value")], list_output_channel("L", "Lst", "list", "UpdatedList")),
+        info("list.set", "Set", "Replaces a value at an index", vec![list_channel("list", "list.set"), number_channel("index", "list.set"), ChannelSpec::any("value")], list_output_channel("L", "Lst", "listOut", "UpdatedList")),
         Set,
         vec![],
         &["list"],
     );
     register_simple(
         registry,
-        info("list.append", "Append", "Appends a value at the next index", vec![list_channel("list", "list.append"), ChannelSpec::any("value")], list_output_channel("L", "Lst", "list", "AppendedList")),
+        info("list.append", "Append", "Appends a value at the next index", vec![list_channel("list", "list.append"), ChannelSpec::any("value")], list_output_channel("L", "Lst", "listOut", "AppendedList")),
         Append,
         vec![],
         &["list"],
@@ -248,7 +248,7 @@ pub fn register(registry: &mut Registry) {
     register_simple(registry, info("list.size", "Size", "Reports the number of indexed elements", vec![list_channel("list", "list.size")], ChannelSpec::named("C", "Cnt", "count", "ListCount")), Size, vec!["list"], &["number"]);
     register_simple(
         registry,
-        info("list.remove", "Remove", "Removes an index and reindexes", vec![list_channel("list", "list.remove"), number_channel("index", "list.remove")], list_output_channel("L", "Lst", "list", "ReducedList")),
+        info("list.remove", "Remove", "Removes an index and reindexes", vec![list_channel("list", "list.remove"), number_channel("index", "list.remove")], list_output_channel("L", "Lst", "listOut", "ReducedList")),
         Remove,
         vec!["list", "number"],
         &["list"],

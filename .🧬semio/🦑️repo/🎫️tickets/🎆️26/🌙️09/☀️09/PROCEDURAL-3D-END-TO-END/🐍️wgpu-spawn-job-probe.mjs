@@ -63,6 +63,7 @@ const dockPlan = () => {
 };
 
 const results = { url, steps: {} };
+const skip = (name) => only !== "" && name !== only && name.startsWith("s");
 const record = async (name, value) => {
   const alive = await liveness();
   const entry = { ...value, alive };
@@ -140,8 +141,15 @@ const corner = [body.x + 12, body.y + body.h - 12];
 await record("preview", { previewId, body, centre, corner, guestLanes: guestLanes(), guestSelected: guestSelected() });
 await page.screenshot({ path: join(outDir, "shot-booted.png"), type: "png" }).catch(() => {});
 
+/** ⏳️ A gesture that APPLIES costs the shell a full re-render of every panel (2+ s each after a
+ * selection), so a settle budget sized for the old drop-the-job behaviour reads as a wedge. */
+const settleScale = Number(process.env.SEMIO_PROBE_SETTLE_SCALE ?? 1);
+/** 🎯️ Run ONE gesture instead of the whole ladder. The shell wedges a few applied selections in
+ * (see the lane report §6), so a gesture late in the ladder needs its own fresh boot to be measured
+ * at all — `SEMIO_PROBE_ONLY=s5_marquee`. */
+const only = process.env.SEMIO_PROBE_ONLY ?? "";
 const settleTicks = async (count) => {
-  for (let tick = 0; tick < count; tick += 1) {
+  for (let tick = 0; tick < Math.round(count * settleScale); tick += 1) {
     await pause(1000);
     await nudge(tick);
   }
@@ -149,81 +157,105 @@ const settleTicks = async (count) => {
 
 // ── 1 — hover the mesh → interactionHover ─────────────────────────────────────────────────────
 {
-  const before = snapshot();
-  await page.mouse.move(centre[0], centre[1]);
-  await settleTicks(6);
-  await record("s1_hover", delta(before));
+  if (skip("s1_hover")) {
+    lines.push(`${at()} PROBE s1_hover skipped`);
+  } else {
+    const before = snapshot();
+    await page.mouse.move(centre[0], centre[1]);
+    await settleTicks(6);
+    await record("s1_hover", delta(before));
+  }
 }
 
 // ── 2 — click the mesh → interactionSelect replace ────────────────────────────────────────────
 {
-  const before = snapshot();
-  await page.mouse.move(centre[0], centre[1]);
-  await pause(400);
-  await page.mouse.down();
-  await pause(120);
-  await page.mouse.up();
-  await settleTicks(7);
-  await record("s2_click", delta(before));
+  if (skip("s2_click")) {
+    lines.push(`${at()} PROBE s2_click skipped`);
+  } else {
+    const before = snapshot();
+    await page.mouse.move(centre[0], centre[1]);
+    await pause(400);
+    await page.mouse.down();
+    await pause(120);
+    await page.mouse.up();
+    await settleTicks(7);
+    await record("s2_click", delta(before));
+  }
 }
 await page.screenshot({ path: join(outDir, "shot-selected.png"), type: "png" }).catch(() => {});
 
 // ── 3 — shift-click → additive ────────────────────────────────────────────────────────────────
 {
-  const before = snapshot();
-  await page.keyboard.down("Shift");
-  await page.mouse.move(centre[0] + 18, centre[1] + 18);
-  await pause(300);
-  await page.mouse.down();
-  await pause(120);
-  await page.mouse.up();
-  await page.keyboard.up("Shift");
-  await settleTicks(6);
-  await record("s3_shift_click", delta(before));
+  if (skip("s3_shift_click")) {
+    lines.push(`${at()} PROBE s3_shift_click skipped`);
+  } else {
+    const before = snapshot();
+    await page.keyboard.down("Shift");
+    await page.mouse.move(centre[0] + 18, centre[1] + 18);
+    await pause(300);
+    await page.mouse.down();
+    await pause(120);
+    await page.mouse.up();
+    await page.keyboard.up("Shift");
+    await settleTicks(6);
+    await record("s3_shift_click", delta(before));
+  }
 }
 
 // ── 4 — empty click clears ────────────────────────────────────────────────────────────────────
 {
-  const before = snapshot();
-  await page.mouse.move(corner[0], corner[1]);
-  await pause(300);
-  await page.mouse.down();
-  await pause(120);
-  await page.mouse.up();
-  await settleTicks(6);
-  await record("s4_empty_click", delta(before));
+  if (skip("s4_empty_click")) {
+    lines.push(`${at()} PROBE s4_empty_click skipped`);
+  } else {
+    const before = snapshot();
+    await page.mouse.move(corner[0], corner[1]);
+    await pause(300);
+    await page.mouse.down();
+    await pause(120);
+    await page.mouse.up();
+    await settleTicks(6);
+    await record("s4_empty_click", delta(before));
+  }
 }
 
 // ── 5 — marquee (crossing band, right → left) ─────────────────────────────────────────────────
 {
-  const before = snapshot();
-  const from = [body.x + body.w - 8, body.y + 8];
-  const to = [body.x + 8, body.y + body.h - 8];
-  await page.mouse.move(from[0], from[1]);
-  await page.mouse.down();
-  for (let step = 1; step <= 8; step += 1) {
-    await page.mouse.move(from[0] + ((to[0] - from[0]) * step) / 8, from[1] + ((to[1] - from[1]) * step) / 8);
-    await pause(120);
+  if (skip("s5_marquee")) {
+    lines.push(`${at()} PROBE s5_marquee skipped`);
+  } else {
+    const before = snapshot();
+    const from = [body.x + body.w - 8, body.y + 8];
+    const to = [body.x + 8, body.y + body.h - 8];
+    await page.mouse.move(from[0], from[1]);
+    await page.mouse.down();
+    for (let step = 1; step <= 8; step += 1) {
+      await page.mouse.move(from[0] + ((to[0] - from[0]) * step) / 8, from[1] + ((to[1] - from[1]) * step) / 8);
+      await pause(120);
+    }
+    await page.mouse.up();
+    await settleTicks(7);
+    await record("s5_marquee", delta(before));
   }
-  await page.mouse.up();
-  await settleTicks(7);
-  await record("s5_marquee", delta(before));
 }
 
 // ── 6 — orbit still reaches setCamera (the typed-operation lane must not regress) ──────────────
 {
-  const before = snapshot();
-  await page.keyboard.down("Alt");
-  await page.mouse.move(centre[0] - 80, centre[1]);
-  await page.mouse.down({ button: "right" });
-  for (let step = 1; step <= 8; step += 1) {
-    await page.mouse.move(centre[0] - 80 + step * 20, centre[1] + step * 6);
-    await pause(140);
+  if (skip("s6_orbit")) {
+    lines.push(`${at()} PROBE s6_orbit skipped`);
+  } else {
+    const before = snapshot();
+    await page.keyboard.down("Alt");
+    await page.mouse.move(centre[0] - 80, centre[1]);
+    await page.mouse.down({ button: "right" });
+    for (let step = 1; step <= 8; step += 1) {
+      await page.mouse.move(centre[0] - 80 + step * 20, centre[1] + step * 6);
+      await pause(140);
+    }
+    await page.mouse.up({ button: "right" });
+    await page.keyboard.up("Alt");
+    await settleTicks(5);
+    await record("s6_orbit", delta(before));
   }
-  await page.mouse.up({ button: "right" });
-  await page.keyboard.up("Alt");
-  await settleTicks(5);
-  await record("s6_orbit", delta(before));
 }
 
 await page.screenshot({ path: join(outDir, "shot-final.png"), type: "png" }).catch(() => {});

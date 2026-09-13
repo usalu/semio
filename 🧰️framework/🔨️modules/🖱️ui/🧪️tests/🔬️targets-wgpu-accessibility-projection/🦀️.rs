@@ -79,6 +79,11 @@ fn a_mounted_document_publishes_the_accessibility_tree_the_shared_fixture_declar
         assert_eq!(node.hidden, row["hidden"].as_bool().expect("fixture hidden"), "{}: hidden", node.key);
         assert_eq!(node.focusable, row["focusable"].as_bool().expect("fixture focusable"), "{}: focusable", node.key);
         assert_eq!(node.actionable, row["actionable"].as_bool().expect("fixture actionable"), "{}: actionable", node.key);
+        assert_eq!(node.value_min, row["valueMin"].as_f64(), "{}: valueMin", node.key);
+        assert_eq!(node.value_max, row["valueMax"].as_f64(), "{}: valueMax", node.key);
+        assert_eq!(node.value_now, row["valueNow"].as_f64(), "{}: valueNow", node.key);
+        assert_eq!(node.value_text.as_deref(), row["valueText"].as_str(), "{}: valueText", node.key);
+        assert_eq!(node.busy, row["busy"].as_bool().unwrap_or(false), "{}: busy", node.key);
     }
     eprintln!("[DEBUG] wgpu accessibility projection: {} nodes published in pre-order from a mounted document", projection.len());
 }
@@ -128,4 +133,22 @@ fn the_projection_carries_the_live_focus_and_laid_out_rect_from_the_arena() {
     let focused: Vec<u64> = projection.iter().filter(|node| node.focused).map(|node| node.node_id).collect();
     assert_eq!(focused, vec![width_id.0], "exactly the arena node holding FOCUSED is announced as focused");
     eprintln!("[DEBUG] wgpu accessibility projection: focus stamped from the arena onto node {:?}", focused);
+}
+
+/// 📶️ A mounted progress bar publishes `progressbar` with its value attributes while determinate and
+/// only `busy` while indeterminate — and mounts as the retained `UiNode::Progress` the paint pass fills.
+#[test]
+fn a_mounted_progress_bar_announces_its_value_or_busy_and_mounts_as_a_retained_progress_node() {
+    let law = law();
+    let tree = mounted_tree(&law);
+    let projection = accessibility_projection(&tree);
+    let determinate = projection.iter().find(|node| node.key == "#evaluation").expect("the determinate bar is projected");
+    assert_eq!((determinate.role.as_str(), determinate.value_min, determinate.value_max, determinate.value_now, determinate.busy), ("progressbar", Some(0.0), Some(100.0), Some(12.0), false));
+    let indeterminate = projection.iter().find(|node| node.key == "#preparation").expect("the indeterminate bar is projected");
+    assert_eq!((indeterminate.value_min, indeterminate.value_max, indeterminate.value_now, indeterminate.value_text.as_deref(), indeterminate.busy), (None, None, None, None, true));
+    for (id, total) in [(UiNodeId(7), Some(100.0)), (UiNodeId(8), None)] {
+        let mounted = tree.document_node(id).expect("the progress record mounted");
+        let crate::wgpu::component::ui::UiNode::Progress(node) = &tree.node(mounted).expect("the mounted node is live").spec.0 else { panic!("node {id:?} mounts as UiNode::Progress") };
+        assert_eq!(node.total, total, "node {id:?}: the total survives reconcile verbatim");
+    }
 }

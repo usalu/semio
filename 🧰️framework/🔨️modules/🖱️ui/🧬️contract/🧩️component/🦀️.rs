@@ -379,6 +379,37 @@ pub struct IconSelectProps {
     pub classifier_kind: crate::UiText,
 }
 
+/// 📶️ Props for `Component::Progress` — a read-only progress bar. `total` absent means indeterminate: a
+/// renderer shows a busy sweep and announces no value; present means determinate on `0..=total`, and the
+/// percentage is derived by the renderer, never sent. `value_text` is the already-localized spoken form
+/// (`aria-valuetext`); plugins never send a percentage string of their own. See
+/// `📋️tool-run-contract.md` §2.3 and §2.6 of ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
+pub struct ProgressProps {
+    pub completed: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub total: Option<f64>,
+    pub value_text: Label,
+}
+
+impl ProgressProps {
+    /// 📏️ Whether a total is known — the one switch between value attributes and `aria-busy`.
+    pub fn is_determinate(&self) -> bool {
+        self.total.is_some()
+    }
+
+}
+
+/// 📐️ The filled share in `0.0..=1.0` of a bar at `completed` of `total`; `None` while indeterminate. A
+/// zero total fills nothing rather than dividing by zero, and an overshoot clamps the fill, never the
+/// announced value. Every renderer fills through this one law.
+pub fn progress_fraction(completed: f64, total: Option<f64>) -> Option<f64> {
+    total.map(|total| if total > 0.0 { (completed / total).clamp(0.0, 1.0) } else { 0.0 })
+}
+
 /// 🌲️ Props for `Component::Tree` — the tree's own binding, nothing else. Sections and items are no
 /// longer inline (`sections: Vec<UiTreeSectionNode>`); they are ordinary child nodes
 /// (`Component::TreeSection` / `Component::TreeItem`) reached through the record's `children`.
@@ -505,6 +536,7 @@ pub enum Component {
     NumberStepper(NumberStepperProps),
     Ring(RingProps),
     IconSelect(IconSelectProps),
+    Progress(ProgressProps),
     Tree(TreeProps),
     TreeSection(TreeSectionProps),
     TreeItem(TreeItemProps),
@@ -528,6 +560,7 @@ impl Component {
             Self::NumberStepper(value) => Self::NumberStepper(value.clone()),
             Self::Ring(value) => Self::Ring(value.clone()),
             Self::IconSelect(value) => Self::IconSelect(value.clone()),
+            Self::Progress(value) => Self::Progress(value.clone()),
             Self::Tree(value) => Self::Tree(value.clone()),
             Self::TreeSection(value) => Self::TreeSection(value.clone()),
             Self::TreeItem(value) => Self::TreeItem(value.credited_clone()?),

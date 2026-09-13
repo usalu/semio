@@ -103,7 +103,7 @@ fn a_ui_map_still_refuses_one_entry_past_capacity() {
     println!("[DEBUG] catalogue-carrier-map ui-map capacity-refusal entries={} {error}", UI_VALUE_MAX_ITEMS + 1);
 }
 
-/// 📜️ …and the whole leaf reassembles byte-for-byte, which is what `read_paged_text_document` and the
+/// 📜️ …and the whole leaf reassembles byte-for-byte, which is what `UiDocumentLease::read_paged_text` and the
 /// React renderer's `packedTextLeaf` both depend on.
 #[test]
 fn a_javascript_ordered_carrier_leaf_recovers_its_payload() {

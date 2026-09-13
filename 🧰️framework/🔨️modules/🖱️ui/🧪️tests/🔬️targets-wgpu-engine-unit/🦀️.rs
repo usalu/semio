@@ -539,13 +539,13 @@ fn to_widget_node(node: &UiNode) -> WidgetNode<ActionDescriptor> {
             selection_change: None,
         },
         // KNOWN GAP: `WidgetNode<E>` (the immediate-mode `widgets` region's tree type) has no
-        // Image/ComponentScene/ExternalSlot variant at all — the renderer's own
+        // Image/ComponentScene/ExternalSlot/Progress variant at all — the renderer's own
         // `ui_node_to_widget` collapses all three to an empty placeholder `Text` node, which
         // isn't a like-for-like rendering of the same node. There is no immediate-mode output to
         // compare the retained `paint::paint_image`/`paint_component_scene`/`paint_external_slot`
         // against; see the golden tests below for these three, which verify the retained side
         // alone produces sane output and skip the two-pipeline equivalence assertion.
-        UiNode::Image(_) | UiNode::ComponentScene(_) | UiNode::ExternalSlot(_) => WidgetNode::Text { value: String::new(), emphasize: false },
+        UiNode::Image(_) | UiNode::ComponentScene(_) | UiNode::ExternalSlot(_) | UiNode::Progress(_) => WidgetNode::Text { value: String::new(), emphasize: false },
     }
 }
 

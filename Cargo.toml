@@ -193,6 +193,7 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust",
@@ -315,6 +316,7 @@ semio-framework-async = { path = "🧰️framework/🔨️modules/⏳️async/�
 semio-framework-async-macros = { path = "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-job = { path = "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-tool-run = { path = "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust" }
 semio-framework-dispatch-macros = { path = "🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-mesh-engine = { path = "🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust" }

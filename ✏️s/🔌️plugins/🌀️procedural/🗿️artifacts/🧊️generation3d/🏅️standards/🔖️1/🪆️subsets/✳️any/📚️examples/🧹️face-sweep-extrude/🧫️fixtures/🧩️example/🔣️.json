@@ -38,7 +38,7 @@
   },
   "delivery": {
     "lodMode": "",
-    "minMeshes": 1,
+    "meshes": 1,
     "minTriangles": 12,
     "minEdgeSegments": 12,
     "maxRoundTrips": 1,

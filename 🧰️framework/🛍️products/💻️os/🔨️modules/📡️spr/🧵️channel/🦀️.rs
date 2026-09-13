@@ -2281,11 +2281,14 @@ pub enum AppFrame {
     /// `interaction` (trailing field, CHANNEL_VERSION 12 wire addition, contract-freeze §C7.6) is the
     /// output of `encode_presence_interaction` over the app's own declared broadcast domains — empty
     /// bytes when the app declares no interaction domains or nothing is selected/hovered right now.
+    /// `tool_run` (trailing field) is `encode_presence_tool_run` of the instance's tool run summary — empty
+    /// bytes without a run (`📋️tool-run-contract.md` §3.4).
     Ephemeral {
         presence: Vec<u8>,
         presence_generation: u64,
         transient_generation: u64,
         interaction: Vec<u8>,
+        tool_run: Vec<u8>,
     },
     /// 🧾️ Full history patch for initial host projection and gap recovery.
     HistorySnapshot {
@@ -3203,12 +3206,13 @@ pub async fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
             write_vec_child_pack(&mut out, entries).await;
         }
-        AppFrame::Ephemeral { presence, presence_generation, transient_generation, interaction } => {
+        AppFrame::Ephemeral { presence, presence_generation, transient_generation, interaction, tool_run } => {
             out.push(13);
             crate::os_spr::write_bytes(&mut out, presence);
             crate::os_spr::write_varint_u64(&mut out, *presence_generation);
             crate::os_spr::write_varint_u64(&mut out, *transient_generation);
             crate::os_spr::write_bytes(&mut out, interaction);
+            crate::os_spr::write_bytes(&mut out, tool_run);
         }
         AppFrame::HistorySnapshot { in_reply_to, history_patch } => {
             out.push(14);
@@ -3329,6 +3333,7 @@ pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::P
             presence_generation: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
             transient_generation: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
             interaction: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            tool_run: crate::os_spr::read_bytes(bytes, &mut pos)?,
         },
         14 => AppFrame::HistorySnapshot { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, history_patch: crate::os_spr::read_bytes(bytes, &mut pos)? },
         15 => AppFrame::TransactionProposal {

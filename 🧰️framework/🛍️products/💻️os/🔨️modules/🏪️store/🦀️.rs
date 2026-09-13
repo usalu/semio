@@ -14483,6 +14483,7 @@ pub struct ArtifactStoreBatchPublication<P, Mutation> {
     fault: Option<String>,
     phase: ArtifactStoreOneItemPublicationPhase,
     coalesce_key: Option<String>,
+    outbound: bool,
 }
 
 impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
@@ -14550,7 +14551,7 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
     }
 
     pub fn acknowledge(&mut self) -> bool {
-        if self.phase != ArtifactStoreOneItemPublicationPhase::AwaitingAck {
+        if self.phase != ArtifactStoreOneItemPublicationPhase::AwaitingAck || self.outbound {
             return false;
         }
         self.phase = ArtifactStoreOneItemPublicationPhase::Closing;
@@ -16465,17 +16466,71 @@ where
         P: Sync,
         Mutation: Send,
     {
+        self.begin_typed_apply_batch(operation, expected_generation, expected_revision, actor, mutations, description, lane, factory, false)
+    }
+
+    /// 📤️ Admits ONE gesture exactly like [`Self::begin_apply_batch`], but on a store with an attached
+    /// backbone: the one edit it publishes stays unannounced until [`Self::flush_published_apply_batch`]
+    /// sends it as ONE `BackboneMessage::Mutations` batch, and the publication refuses its ACK before.
+    /// See `📋️tool-run-contract.md` §2.7.4 (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS).
+    #[allow(clippy::too_many_arguments)]
+    pub fn begin_outbound_apply_batch(
+        &self,
+        operation: semio_framework_job::OperationId,
+        expected_generation: u64,
+        expected_revision: [u8; 32],
+        actor: String,
+        mutations: Vec<Mutation>,
+        description: Option<String>,
+        factory: Option<&Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>>,
+    ) -> Result<ArtifactStoreBatchPublication<P, Mutation>, ArtifactStoreBatchAdmissionRejected<Mutation>>
+    where
+        P: Sync,
+        Mutation: Send,
+    {
+        self.begin_typed_apply_batch(operation, expected_generation, expected_revision, actor, mutations, description, HistoryLane::Document, factory, true)
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn begin_typed_apply_batch(
+        &self,
+        operation: semio_framework_job::OperationId,
+        expected_generation: u64,
+        expected_revision: [u8; 32],
+        actor: String,
+        mutations: Vec<Mutation>,
+        description: Option<String>,
+        lane: HistoryLane,
+        factory: Option<&Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>>,
+        outbound: bool,
+    ) -> Result<ArtifactStoreBatchPublication<P, Mutation>, ArtifactStoreBatchAdmissionRejected<Mutation>>
+    where
+        P: Sync,
+        Mutation: Send,
+    {
         let Some(factory) = factory else {
             return Err(ArtifactStoreBatchAdmissionRejected { reason: "batched publication requires an explicit app-owned ArtifactStoreOneItemPreparationFactory".into(), mutations, description });
         };
         let mut inputs = mutations;
         inputs.reverse();
         let source = ArtifactStoreBatchSourceOf { authority: Some(Arc::clone(factory)), inputs, description, marker: PhantomData };
-        self.begin_apply_batch_owned(operation, expected_generation, expected_revision, actor, lane, None, source).map_err(|rejected| {
+        self.begin_apply_batch_owned(operation, expected_generation, expected_revision, actor, lane, None, source, outbound).map_err(|rejected| {
             let (reason, mut mutations, description) = rejected.into_owners();
             mutations.reverse();
             ArtifactStoreBatchAdmissionRejected { reason, mutations, description }
         })
+    }
+
+    /// 📤️ Announces the ONE edit an outbound batched publication just made visible as ONE
+    /// `BackboneMessage::Mutations` batch. `false` when the publication is not an outbound one awaiting
+    /// its announcement; the ACK becomes admissible only after this returns `true`.
+    pub async fn flush_published_apply_batch(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mutation>) -> Result<bool, VcsError> {
+        if publication.phase != ArtifactStoreOneItemPublicationPhase::AwaitingAck || !publication.outbound {
+            return Ok(false);
+        }
+        publication.outbound = false;
+        self.flush_apply_outbound().await?;
+        Ok(true)
     }
 
     /// 🧩 Uses the exact typed factory installed by the member's owner catalog.
@@ -16495,6 +16550,7 @@ where
         self.begin_apply_batch(operation, expected_generation, expected_revision, actor, mutations, description, HistoryLane::Document, self.one_item_preparation_factory.as_ref())
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn begin_apply_batch_owned<A>(
         &self,
         operation: semio_framework_job::OperationId,
@@ -16504,6 +16560,7 @@ where
         lane: HistoryLane,
         group_id: Option<String>,
         source: ArtifactStoreBatchSourceOf<P, Mutation, A>,
+        outbound: bool,
     ) -> Result<ArtifactStoreBatchPublication<P, Mutation>, ArtifactStoreBatchAdmissionRejected<A::Input>>
     where
         P: Sync + Send,
@@ -16524,7 +16581,7 @@ where
         if lane != HistoryLane::Document {
             return Err(reject("batched publication has no retained side-lane map preparation authority".into(), source));
         }
-        if self.backbone.is_some() {
+        if self.backbone.is_some() && !outbound {
             return Err(reject("batched publication has no retained outbound backbone encoder/sender authority".into(), source));
         }
         let footprint = match source.footprint(lane) {
@@ -16584,6 +16641,7 @@ where
             fault: None,
             phase: ArtifactStoreOneItemPublicationPhase::Preparing,
             coalesce_key: None,
+            outbound,
         })
     }
 
@@ -16725,7 +16783,7 @@ where
                     || meta.timestamp != authority.next_clock
                     || stage.edit.inverse.len().saturating_add(stage.edit.forwards.len()) > publication.footprint.work_items
                     || stage.post.is_none()
-                    || self.backbone.is_some()
+                    || (self.backbone.is_some() && !publication.outbound)
                 {
                     return Err(VcsError::ValidationFailed("batched prepared candidate failed its exact fixed commit contract".into()));
                 }
@@ -16897,6 +16955,10 @@ where
             return Err(VcsError::ValidationFailed("batched fold exceeded its admitted fixed inverse capacity".into()));
         }
         stage.edit.inverse.extend(inverse);
+        let position = stage.edit.forwards.len();
+        for meta in edit.mutation_meta.iter_mut() {
+            meta.mutation_id = Some(crate::os_spr::MutationId(format!("{}#{position}", stage.edit.id)));
+        }
         stage.edit.forwards.extend(std::mem::take(&mut edit.forwards));
         stage.edit.mutation_meta.extend(std::mem::take(&mut edit.mutation_meta));
         stage.folded = stage.folded.saturating_add(1);
@@ -19300,7 +19362,7 @@ where
             return Err(ArtifactStoreBatchAdmissionRejected { reason: "member wire exceeds its fixed schema or byte admission".into(), mutations: vec![request.wire], description: request.description });
         }
         let source = ArtifactStoreBatchSourceOf { authority: Some(Arc::clone(factory)), inputs: vec![request.wire], description: request.description, marker: PhantomData };
-        let publication = self.begin_apply_batch_owned(request.operation, request.expected_generation, request.expected_revision, request.actor, HistoryLane::Document, request.group_id, source)?;
+        let publication = self.begin_apply_batch_owned(request.operation, request.expected_generation, request.expected_revision, request.actor, HistoryLane::Document, request.group_id, source, false)?;
         Ok(Box::new(MemberStoreOneItemPublication { member: Some(Arc::clone(&self.snapshot_read_leases)), publication, group_history: None, group_displaced: None }))
     }
 

@@ -827,6 +827,325 @@
       "x-semio-formats": [
         "🔣️jsonschema"
       ]
+    },
+    "Puzzle2dFillRunStage": {
+      "type": "string",
+      "enum": [
+        "capture",
+        "search",
+        "test",
+        "place",
+        "retract"
+      ],
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    },
+    "Puzzle2dFillRunCounter": {
+      "type": "string",
+      "enum": [
+        "tested",
+        "accepted",
+        "collisions",
+        "rejected"
+      ],
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    },
+    "Puzzle2dFillRunReason": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "id",
+        "verdict",
+        "en",
+        "de"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65279
+        },
+        "id": {
+          "type": "string"
+        },
+        "verdict": {
+          "type": "string",
+          "enum": [
+            "testing",
+            "success",
+            "warning",
+            "danger"
+          ]
+        },
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    },
+    "Puzzle2dFillRunCheckpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requested",
+        "tested",
+        "collisions",
+        "rejected",
+        "nextKey",
+        "placements"
+      ],
+      "properties": {
+        "requested": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tested": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "collisions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rejected": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nextKey": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "placements": {
+          "type": "array",
+          "maxItems": 1361,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "key",
+              "shape"
+            ],
+            "properties": {
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "shape": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              }
+            }
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    },
+    "Puzzle2dFillRun": {
+      "title": "Puzzle2dFillRun",
+      "description": "The fill tool run vocabulary of `s.puzzle2d`'s ✏️editor/⏳️precompute/🪣️fill run job: stage and counter indices, reason codes with their tool-run verdict and EN/DE templates, the policies and the fixed little-endian checkpoint layout. Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W2-A.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stages",
+        "counters",
+        "reasons",
+        "checkpoint"
+      ],
+      "properties": {
+        "stages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle2dFillRunStage"
+          }
+        },
+        "counters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle2dFillRunCounter"
+          }
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle2dFillRunReason"
+          }
+        },
+        "checkpoint": {
+          "$ref": "#/$defs/Puzzle2dFillRunCheckpoint"
+        }
+      },
+      "x-semio-toolRun": {
+        "mutating": true,
+        "rebase": "revalidate",
+        "reconfigure": "resume",
+        "trace": "placement2d",
+        "runJob": "puzzle2d.fill.run",
+        "revalidateJob": "puzzle2d.fill.revalidate",
+        "unit": {
+          "en": "placements",
+          "de": "Platzierungen"
+        },
+        "stages": [
+          {
+            "id": "capture",
+            "en": "Capturing the board",
+            "de": "Brett wird erfasst"
+          },
+          {
+            "id": "search",
+            "en": "Searching an open handle",
+            "de": "Offener Anschluss wird gesucht"
+          },
+          {
+            "id": "test",
+            "en": "Testing candidates",
+            "de": "Kandidaten werden geprüft"
+          },
+          {
+            "id": "place",
+            "en": "Placing",
+            "de": "Wird platziert"
+          },
+          {
+            "id": "retract",
+            "en": "Retracting",
+            "de": "Wird zurückgenommen"
+          }
+        ],
+        "counters": [
+          {
+            "id": "tested",
+            "en": "Tested",
+            "de": "Geprüft"
+          },
+          {
+            "id": "accepted",
+            "en": "Accepted",
+            "de": "Angenommen"
+          },
+          {
+            "id": "collisions",
+            "en": "Collisions",
+            "de": "Kollisionen"
+          },
+          {
+            "id": "rejected",
+            "en": "Rejected",
+            "de": "Abgelehnt"
+          }
+        ],
+        "reasons": [
+          {
+            "code": 0,
+            "id": "fits",
+            "verdict": "success",
+            "en": "Fits",
+            "de": "Passt"
+          },
+          {
+            "code": 1,
+            "id": "host-collision",
+            "verdict": "danger",
+            "en": "Collides with a board node",
+            "de": "Kollidiert mit einem Brettknoten"
+          },
+          {
+            "code": 2,
+            "id": "virtual-collision",
+            "verdict": "danger",
+            "en": "Collides with a provisional placement",
+            "de": "Kollidiert mit einer vorläufigen Platzierung"
+          },
+          {
+            "code": 3,
+            "id": "port-incompatible",
+            "verdict": "warning",
+            "en": "Port shape does not fit the open handle",
+            "de": "Anschlussform passt nicht zum offenen Anschluss"
+          },
+          {
+            "code": 4,
+            "id": "kind-incompatible",
+            "verdict": "warning",
+            "en": "No compatibility rule allows this kind",
+            "de": "Keine Kompatibilitätsregel erlaubt diese Art"
+          },
+          {
+            "code": 5,
+            "id": "no-open-handle",
+            "verdict": "warning",
+            "en": "No open handle left, {0} placed",
+            "de": "Kein offener Anschluss mehr, {0} platziert"
+          },
+          {
+            "code": 6,
+            "id": "no-compatible-kind",
+            "verdict": "warning",
+            "en": "No kind fits any open handle, {0} placed",
+            "de": "Keine Art passt zu einem offenen Anschluss, {0} platziert"
+          },
+          {
+            "code": 7,
+            "id": "no-free-placement",
+            "verdict": "warning",
+            "en": "No free placement left, {0} placed",
+            "de": "Kein freier Platz mehr, {0} platziert"
+          },
+          {
+            "code": 8,
+            "id": "document-capacity",
+            "verdict": "warning",
+            "en": "Fill capacity reached, {0} placed",
+            "de": "Füllkapazität erreicht, {0} platziert"
+          },
+          {
+            "code": 9,
+            "id": "requested-reached",
+            "verdict": "success",
+            "en": "{0} placements reached",
+            "de": "{0} Platzierungen erreicht"
+          },
+          {
+            "code": 10,
+            "id": "retracted",
+            "verdict": "testing",
+            "en": "Provisional tail retracted to {0} placements",
+            "de": "Vorläufiges Ende auf {0} Platzierungen zurückgenommen"
+          }
+        ],
+        "checkpoint": {
+          "layout": "littleEndian",
+          "header": [
+            "requested:u64",
+            "tested:u64",
+            "collisions:u64",
+            "rejected:u64",
+            "nextKey:u64",
+            "placements:u32"
+          ],
+          "placement": [
+            "key:u64",
+            "shape:u32"
+          ]
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     }
   }
 }

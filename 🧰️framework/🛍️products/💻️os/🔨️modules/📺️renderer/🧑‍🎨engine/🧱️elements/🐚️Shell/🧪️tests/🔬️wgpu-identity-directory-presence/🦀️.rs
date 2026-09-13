@@ -181,6 +181,7 @@ fn presence_rows_require_each_normalized_surface_and_preserve_hub_color() {
         surface: surface.map(str::to_owned),
         views: Vec::new(),
         ui: None,
+        tool_run: None,
     };
     let editor_surface = "s.space.space@1/*#editor";
     let viewer_surface = "s.space.space@1/*#viewer";

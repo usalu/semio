@@ -68,7 +68,7 @@ pub fn render(document: &Generation2dSnapshot) -> semio_framework_plugin::UiAsse
     crate::scene_surface(
         SURFACE_ID,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
-        &Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: dsl::json::to_json_string(&dsl::DslValue::Array(layers)), snapshot: None },
+        &Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: dsl::json::to_json_string(&dsl::DslValue::Array(layers)), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
     )
 }
 //#endregion 🔖️Render

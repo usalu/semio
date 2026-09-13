@@ -1,0 +1,147 @@
+{
+  "schema": "framework.plugin.tool-run.v1",
+  "contract": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️13/INTERACTIVE-TOOLS-VISIBLE-PROCESS/📋️tool-run-contract.md §2.2, §2.7, §2.8, §3.2, §3.3, §3.4, §4.1",
+  "toolId": "toyFill",
+  "freezeToolId": "toyFreeze",
+  "actor": "local",
+  "defaultTarget": 5,
+  "opsPerUnit": 2,
+  "labelPrefix": "unit-",
+  "reasons": {
+    "fits": 1,
+    "conflict": 2
+  },
+  "overlay": {
+    "units": 5,
+    "overlayCount": 5,
+    "committedCount": 0,
+    "provisionalOps": 10,
+    "entities": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "traceRecords": 5,
+    "mainBodyText": "count=5",
+    "committedBodyText": "count=0"
+  },
+  "panel": {
+    "bodyKey": "framework.body.toolRun",
+    "rootId": "framework.toolRun",
+    "status": {
+      "id": "framework.toolRun.status",
+      "live": "polite"
+    },
+    "progress": {
+      "id": "framework.toolRun.progress",
+      "type": "progress",
+      "completed": 5,
+      "total": 5
+    },
+    "finalize": {
+      "id": "framework.toolRun.toolRunFinalize",
+      "shortcut": "mod+shift+enter"
+    },
+    "abort": {
+      "id": "framework.toolRun.toolRunAbort",
+      "shortcut": "mod+."
+    },
+    "runningFinalizeDescription": "Available once the run is complete"
+  },
+  "abort": {
+    "target": 1000,
+    "unitsBeforeAbort": 1,
+    "state": "aborted"
+  },
+  "finalize": {
+    "units": 5,
+    "editsAdded": 1,
+    "commandRowsAdded": 1,
+    "storeGenerationAdded": 1,
+    "mutationsMessages": 1,
+    "snapshotMessages": 0,
+    "groupId": "toolRun:1",
+    "countAfterFinalize": 5,
+    "labelAfterFinalize": "unit-5",
+    "countAfterUndo": 0,
+    "labelAfterUndo": ""
+  },
+  "conflict": {
+    "remoteCount": 100,
+    "retracted": 10,
+    "generationAfterRebase": 1,
+    "generationAfterConflict": 2,
+    "state": "complete"
+  },
+  "stale": {
+    "wrongGeneration": 7,
+    "wrongRun": 99,
+    "code": "toolRun.stale"
+  },
+  "illegal": {
+    "code": "toolRun.illegal"
+  },
+  "busy": {
+    "code": "toolRun.busy"
+  },
+  "pauseStep": {
+    "target": 1000,
+    "opsPerStep": 2,
+    "steps": 3
+  },
+  "reconfigure": {
+    "initialTarget": 5,
+    "raisedTarget": 8,
+    "loweredTarget": 3,
+    "resumedFrom": 5,
+    "generationAfterRaise": 1,
+    "generationAfterLower": 2
+  },
+  "bench": {
+    "ticks": 771,
+    "labelBytes": 96,
+    "budgetUs": 2000,
+    "allowedPreemptedTicks": 3
+  },
+  "traceLane": {
+    "units": 200,
+    "unitsPerTick": 64,
+    "windowId": "world",
+    "bodyKey": "world",
+    "surfaceId": "world.scene",
+    "laneName": "toolRunTrace",
+    "laneKey": "framework.scene.world3d.toolRunTrace",
+    "otherWindowId": "main",
+    "resumePage": 1,
+    "stallRefreshes": 4,
+    "pageByteBudget": 1
+  },
+  "dirtyScope": {
+    "windowBodies": [
+      "world"
+    ],
+    "panelBodies": [
+      "framework.body.toolRun"
+    ],
+    "excludedWindowBody": "main"
+  },
+  "presence": {
+    "running": "running",
+    "complete": "complete",
+    "aborted": "aborted",
+    "raisedTotal": 8,
+    "loweredTotal": 3
+  },
+  "provisional": {
+    "units": 5,
+    "flaggedInstances": [
+      "unit-1",
+      "unit-2",
+      "unit-3",
+      "unit-4",
+      "unit-5"
+    ]
+  }
+}

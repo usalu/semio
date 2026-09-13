@@ -1,7 +1,7 @@
 //! 🖌️ Main-window utility — Brush: hover a vortex and WATCH the engine test the candidates that could
 //! dock there, cycle the collision-free ones, click to place one. Its Utility Options are the overlap
-//! budget, the shared object/vortex distribution tree, the candidate search's own progress row, and
-//! the placement picker — which appears with the first free candidate, not with the last.
+//! budget, the shared object/vortex distribution tree, and the placement picker — which appears with
+//! the first free candidate, not with the last.
 
 use crate::editor::puzzle3d::precompute::Puzzle3dPrecomputeSession;
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
@@ -58,30 +58,16 @@ pub fn options(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession,
     }
 }
 
-/// 🔎️ The candidate search, said out loud: a [`WindowMeasure::Progress`] row carrying how far the
-/// search got, and — the moment the FIRST collision-free candidate is known, not when the whole list
-/// finishes — the placement picker, whose label repeats the count so the user can tell a short list
-/// from an unfinished one. The row has no cancel action on purpose: leaving the vortex (or closing
-/// the popup) is the cancel, and the lane stops warming a target nothing asks for.
-/// Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS wave G.
+/// 🔎️ The candidate search, said out loud: the moment the FIRST collision-free candidate is known, not
+/// when the whole list finishes, the placement picker appears, and its label repeats the counted phrase
+/// so the user can tell a short list from an unfinished one. Leaving the vortex (or closing the popup)
+/// is the cancel. The search's own progress row returns through the framework ToolRun panel
+/// (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS §3.6, wave 2).
 pub fn brush_search_measures(target: &str, envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
     let progress = precompute.brush_search_progress(target);
     let candidates = precompute.brush_candidates(target).free;
-    let mut measures = Vec::new();
-    if progress.total_candidates > 0 || !progress.done {
-        measures.push(WindowMeasure::Progress {
-            id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush-search"),
-            label: Some(labels.brush_search.into()),
-            stage: Some(brush_search_stage(&progress, labels)),
-            completed: progress.tested as f64,
-            total: (progress.total_candidates > 0).then(|| progress.total_candidates as f64),
-            steps: Vec::new(),
-            cancel: None,
-            loading: Some(!progress.done),
-        });
-    }
     if candidates.is_empty() {
-        return measures;
+        return Vec::new();
     }
     let items: Vec<MeasureSelectItem> = candidates
         .iter()
@@ -92,14 +78,13 @@ pub fn brush_search_measures(target: &str, envelope: &Puzzle3dScene, precompute:
         })
         .collect();
     let selected_index = envelope.runtime.brush_candidate_index.min(items.len().saturating_sub(1));
-    measures.push(WindowMeasure::Select {
+    vec![WindowMeasure::Select {
         id: "puzzle3d-brush-placement".into(),
         label: Some(format!("{} — {}", labels.placement.as_str(), brush_search_summary(&progress, labels))),
         value: format!("puzzle3d.brush.candidate.{selected_index}"),
         items,
         on_change: puzzle3d_action("engagementControlSelect", None),
-    });
-    measures
+    }]
 }
 
 /// 🔤️ `3 free · 7 / 12 tested` — the one counted phrase the picker label and the popup both read, so
@@ -108,7 +93,7 @@ pub fn brush_search_summary(progress: &BrushSearchProgress, labels: &Puzzle3dLab
     format!("{} {} · {} / {} {}", progress.free, labels.brush_search_free.as_str(), progress.tested, progress.total_candidates, labels.brush_search_tested.as_str())
 }
 
-/// 🧭️ Stage caption of the progress row: the counted phrase while candidates are still owed, with
+/// 🧭️ Stage caption of the candidate search: the counted phrase while candidates are still owed, with
 /// the blocked tally once anything has been refused, and the completion caption once nothing is.
 pub fn brush_search_stage(progress: &BrushSearchProgress, labels: &Puzzle3dLabels) -> String {
     let counted = brush_search_summary(progress, labels);

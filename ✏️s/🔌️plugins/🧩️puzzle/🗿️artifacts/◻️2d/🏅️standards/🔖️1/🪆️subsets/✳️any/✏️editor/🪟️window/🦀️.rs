@@ -16,7 +16,6 @@ pub struct Puzzle2dWindowConfig {
     pub camera_y: f64,
     pub camera_zoom: f64,
     pub lod_mode: String,
-    pub fill_count: u32,
     pub grid_snap_enabled: bool,
     pub grid_factor: f64,
     pub suggestion_offset: f64,
@@ -29,7 +28,6 @@ impl Default for Puzzle2dWindowConfig {
             camera_y: 0.0,
             camera_zoom: 1.0,
             lod_mode: crate::editor::puzzle2d::PUZZLE2D_LOD_MODE_AUTOMATIC.into(),
-            fill_count: crate::editor::puzzle2d::modes::edit::tools::fill::PUZZLE2D_DEFAULT_FILL_COUNT,
             grid_snap_enabled: false,
             grid_factor: 1.0,
             suggestion_offset: crate::editor::puzzle2d::config::PUZZLE2D_DEFAULT_SUGGESTION_OFFSET,
@@ -437,7 +435,7 @@ pub fn runtime(config: &crate::editor::puzzle2d::config::Puzzle2dConfig, window:
         brush_candidate_index: transient.brush_candidate_index,
         brush_candidates: transient.brush_candidates.clone(),
         brush_candidate_source_handle_id: transient.brush_candidate_source_handle_id.clone(),
-        fill_count: window.fill_count,
+        fill_count: config.fill_count,
         grid_snap_enabled: window.grid_snap_enabled,
         grid_factor: window.grid_factor,
         suggestion_offset: window.suggestion_offset,
@@ -449,13 +447,12 @@ pub fn runtime(config: &crate::editor::puzzle2d::config::Puzzle2dConfig, window:
 
 pub fn split(runtime: &crate::editor::puzzle2d::config::Puzzle2dPlayRuntime, window_kind: &str) -> (crate::editor::puzzle2d::config::Puzzle2dConfig, Puzzle2dWindowConfig, Puzzle2dWindowTransient) {
     (
-        crate::editor::puzzle2d::config::Puzzle2dConfig { node_kind_weights: runtime.node_kind_weights.clone(), handle_kind_weights: runtime.handle_kind_weights.clone() },
+        crate::editor::puzzle2d::config::Puzzle2dConfig { node_kind_weights: runtime.node_kind_weights.clone(), handle_kind_weights: runtime.handle_kind_weights.clone(), fill_count: runtime.fill_count },
         Puzzle2dWindowConfig {
             camera_x: runtime.camera_x,
             camera_y: runtime.camera_y,
             camera_zoom: runtime.camera_zoom,
             lod_mode: runtime.lod_mode_by_pane.get(window_kind).cloned().unwrap_or_else(|| crate::editor::puzzle2d::PUZZLE2D_LOD_MODE_AUTOMATIC.into()),
-            fill_count: runtime.fill_count,
             grid_snap_enabled: runtime.grid_snap_enabled,
             grid_factor: runtime.grid_factor,
             suggestion_offset: runtime.suggestion_offset,

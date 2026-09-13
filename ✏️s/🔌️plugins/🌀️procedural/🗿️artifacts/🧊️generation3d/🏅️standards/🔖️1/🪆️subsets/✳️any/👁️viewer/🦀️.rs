@@ -1545,7 +1545,7 @@ pub fn create_generation3d_viewer() -> semio_framework_plugin::AppDefinition {
         // chrome dispatches it as its `cancelAction` — and this is the SAME fix the sibling editor
         // already carries for the same mistake (`✏️editor/🦀️.rs`, `view_action("cancelPreviewEval", …)`).
         .view_action("cancelPreviewEval", LocalizedLabel::native("Cancel Preview Computation", "Vorschauberechnung abbrechen"))
-        .action_with(ActionDefinition::new("exportDocument", LocalizedLabel::native("Export Document…", "Dokument exportieren…"), ActionKind::View, "download"))
+        .action_with(ActionDefinition::new("exportDocument", LocalizedLabel::native("Export Document", "Dokument exportieren"), ActionKind::View, "download"))
         .action_interactive_job("exportDocument", InteractiveJobClassification::Migrated)
         .action_args("exportDocument", vec![semio_framework_plugin::ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), crate::standards::v1::subsets::any::io::document_io::export_format_options()).required().default_value(&"stl")])
         .keybinding("mod+shift+e", "exportDocument")

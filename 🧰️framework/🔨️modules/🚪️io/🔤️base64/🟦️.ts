@@ -1,5 +1,5 @@
 /** 🔤️ TypeScript twin of this module's Rust codec (`🦀️.rs`): strict RFC 4648 §4 standard-alphabet,
- * padded base64, implemented here rather than borrowed from `atob`/`Buffer` so both halves of the
+ * padded base64 (plus §5 unpadded base64url below), implemented here rather than borrowed from `atob`/`Buffer` so both halves of the
  * repo refuse exactly the same malformed input. `atob` silently accepts unpadded groups and
  * non-canonical trailing bits that `base64_standard_decode` rejects, and a boundary whose two
  * implementations disagree on what a valid export is has no law at all.
@@ -97,4 +97,60 @@ export function base64StandardDecode(encoded: string): Uint8Array {
     decoded.push(((third << 6) | fourth) & 0xff);
   }
   return Uint8Array.from(decoded);
+}
+
+const BASE64_URL_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+
+/** 🔗️ Encodes bytes with the unpadded RFC 4648 §5 URL-safe alphabet — the twin of Rust `base64_url_encode`,
+ * pinned by `🧫️fixtures/🔣️rfc4648-base64url-vectors.json`.
+ * @see https://www.rfc-editor.org/rfc/rfc4648#section-5 */
+export function base64UrlEncode(bytes: Uint8Array): string {
+  let encoded = "";
+  for (let offset = 0; offset < bytes.length; offset += 3) {
+    const remaining = bytes.length - offset;
+    const first = bytes[offset] as number;
+    const second = remaining >= 2 ? (bytes[offset + 1] as number) : 0;
+    const third = remaining >= 3 ? (bytes[offset + 2] as number) : 0;
+    encoded += BASE64_URL_ALPHABET[first >> 2];
+    encoded += BASE64_URL_ALPHABET[((first & 0x03) << 4) | (second >> 4)];
+    if (remaining >= 2) encoded += BASE64_URL_ALPHABET[((second & 0x0f) << 2) | (third >> 6)];
+    if (remaining >= 3) encoded += BASE64_URL_ALPHABET[third & 0x3f];
+  }
+  return encoded;
+}
+
+function urlSextet(byte: number, index: number): number {
+  if (byte >= 0x41 && byte <= 0x5a) return byte - 0x41;
+  if (byte >= 0x61 && byte <= 0x7a) return byte - 0x61 + 26;
+  if (byte >= 0x30 && byte <= 0x39) return byte - 0x30 + 52;
+  if (byte === 0x2d) return 62;
+  if (byte === 0x5f) return 63;
+  throw new Base64DecodeError({ kind: "invalidByte", index, byte });
+}
+
+/** 🔗️ Decodes unpadded RFC 4648 §5 base64url, rejecting padding, the standard-only `+`/`/`, a dangling
+ * sextet and non-canonical unused bits — the twin of Rust `base64_url_decode`. */
+export function base64UrlDecode(encoded: string): Uint8Array {
+  if (encoded.length % 4 === 1) throw new Base64DecodeError({ kind: "invalidLength" });
+  const decoded = new Uint8Array(Math.floor((encoded.length * 3) / 4));
+  let written = 0;
+  for (let offset = 0; offset < encoded.length; offset += 4) {
+    const width = Math.min(4, encoded.length - offset);
+    const a = urlSextet(encoded.charCodeAt(offset), offset);
+    const b = urlSextet(encoded.charCodeAt(offset + 1), offset + 1);
+    decoded[written++] = ((a << 2) | (b >> 4)) & 0xff;
+    if (width === 2) {
+      if ((b & 0x0f) !== 0) throw new Base64DecodeError({ kind: "nonCanonicalTrailingBits" });
+      continue;
+    }
+    const c = urlSextet(encoded.charCodeAt(offset + 2), offset + 2);
+    decoded[written++] = ((b << 4) | (c >> 2)) & 0xff;
+    if (width === 3) {
+      if ((c & 0x03) !== 0) throw new Base64DecodeError({ kind: "nonCanonicalTrailingBits" });
+      continue;
+    }
+    const d = urlSextet(encoded.charCodeAt(offset + 3), offset + 3);
+    decoded[written++] = ((c << 6) | d) & 0xff;
+  }
+  return decoded;
 }

@@ -16,6 +16,7 @@
     "disconnectNamesTheSynapse": "A removal is named `synapseId`, the id the guest's own `disconnect` sub-operation reads (✏️s/🔌️plugins/🌀️procedural/…/🎮️commands/✏️node-graph-edit/🦀️.rs). A renderer that spells it `edgeId` — the engine's private numbering's name — dispatches a well-formed command the guest silently drops.",
     "unknownEdgeIsSilent": "A removed edge the guest never learned about (one this very gesture created) carries no synapse id and is not journalled — there is nothing for the guest to remove.",
     "publishedPortGeometryIsGrabbable": "The host publishes exactly ONE screen geometry per port — `entity_screen_json('handle', '<nodeId>@<portId>')`, the port's CONNECTOR rect (the outer share of its row) — and that is the geometry a press grabs. A press anywhere inside the published rect, its CENTRE included, begins a wire, at every zoom band the graph draws nodes at. A hit zone that differs from the published rect is a second authority: the host tells a caller (an assistive tool, a demonstration, a user aiming at what is painted) that the port is at a place a press on it does nothing. The rest of the row is deliberately NOT published and stays node body — a computation node has no header row, so it would otherwise have nothing left to be dragged by.",
+    "portSideIsPartOfAPortsIdentity": "A node may carry an INPUT and an OUTPUT under the same port id (`extrusion-axis` carries `vector`, `x`, `y`, `z` on both sides). `'{nodeId}@{portId}'` alone therefore does not name one handle, and a lookup that ignores the side answers whichever came first — so a press on one side can snap to the handle on the OTHER side of the node and draw a wire from the wrong end. Each side's rect resolves to its own side's handle.",
     "detachCutsTheWire": "Dragging a connected input port onto empty canvas and releasing REMOVES that wire — the reconnect gesture's other outcome — and journals it as {operation: 'disconnect', synapseId}. A drag from an unconnected port released over empty canvas leaves the graph exactly as it was.",
     "drainedOnce": "The journal is drained by the renderer after each gesture; a second drain of the same gesture yields nothing, so one wire is never dispatched twice.",
     "minimapClickNavigates": "A press inside the minimap panel but outside its viewport rectangle re-centres the camera on the world point under the pointer. A press inside the viewport rectangle instead begins a drag of that rectangle, leaving the camera where it was until the pointer moves. Both rectangles are reported as CORNERS (x0, y0, x1, y1), and which part of the panel lies outside the viewport rectangle depends on the camera — so a law looks for the relation, never for a fixed corner.",
@@ -27,7 +28,8 @@
     "nodes": [
       { "id": "src", "label": "Src", "inputs": [], "outputs": ["out"], "x": 0.0, "y": 0.0 },
       { "id": "tgt", "label": "Tgt", "inputs": ["in"], "outputs": ["out"], "x": 420.0, "y": 0.0 },
-      { "id": "alt", "label": "Alt", "inputs": [], "outputs": ["out"], "x": 0.0, "y": 260.0 }
+      { "id": "alt", "label": "Alt", "inputs": [], "outputs": ["out"], "x": 0.0, "y": 260.0 },
+      { "id": "dual", "label": "Dual", "inputs": ["v"], "outputs": ["v"], "x": 0.0, "y": -260.0 }
     ],
     "viewport": { "width": 1280, "height": 800, "dpr": 1.0 }
   },
@@ -107,6 +109,12 @@
         "gesture": { "kind": "detach", "at": "tgt@in" },
         "expectedEditOperations": ["disconnect"],
         "expectedEdges": []
+      },
+      {
+        "name": "each-side-of-a-shared-port-id-grabs-its-own-handle",
+        "rule": "portSideIsPartOfAPortsIdentity",
+        "gesture": { "kind": "grabSides", "at": "dual@v" },
+        "expectedDrawEdge": true
       },
       {
         "name": "dragging-an-unwired-port-onto-empty-canvas-changes-nothing",

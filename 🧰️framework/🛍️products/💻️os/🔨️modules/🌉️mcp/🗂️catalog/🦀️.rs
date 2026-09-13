@@ -346,6 +346,7 @@ fn framework_capabilities(apps: &[&manifest::AppDefinition], locale: Locale, ter
         let mut actions = manifest::history_action_definitions();
         actions.extend(manifest::clipboard_action_definitions());
         actions.extend(manifest::interaction_action_definitions(app));
+        actions.extend(manifest::tool_run_action_definitions(app));
         actions.push(manifest::set_history_command_filter_action_definition());
         actions.push(manifest::note_shell_command_action_definition());
         if !app.utilities.is_empty() {

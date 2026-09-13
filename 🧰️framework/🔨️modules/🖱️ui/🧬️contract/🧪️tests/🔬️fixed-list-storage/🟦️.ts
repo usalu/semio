@@ -101,8 +101,13 @@ export function fixedListStorageSelfTests(): number {
   const validateResident = new Ajv({ strict: true, allErrors: true }).compile(residentSchema);
   assert(validateResident(resident), JSON.stringify(validateResident.errors));
   const residentBytes = Buffer.alloc(8);
-  residentBytes.writeBigUInt64LE(BigInt(resident.surfaceBytes) * 4n);
+  // ⚖️ The aggregate funds every SLOT the ledger admits at one full DOCUMENT each — never a multiple of
+  // the per-surface CEILING, which is a maximum one pathological surface may reach and not a price. Read
+  // from `4 * surfaceBytes`, the byte ledger refused a twenty-six-surface session at sixty-four free
+  // slots (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, lane `react-example-switch-regression`).
+  residentBytes.writeBigUInt64LE(BigInt(resident.slots) * BigInt(resident.documentBytes));
   assert.equal(Number(residentBytes.readBigUInt64LE()), resident.aggregateBytes);
+  assert(resident.documentBytes < resident.surfaceBytes, "one full document must stay under the per-surface ceiling");
   let mask = resident.rootOwner | resident.outputOwner;
   assert.deepEqual(resident.returnOrder.map((owner: number) => { mask &= ~owner; return mask === 0 ? resident.smallBytes : 0; }), resident.returnedBytes);
   assert(resident.smallReservations * resident.smallBytes < resident.aggregateBytes);
@@ -127,7 +132,10 @@ export function fixedListStorageSelfTests(): number {
   const rootId = Buffer.alloc(8); rootId.writeBigUInt64LE(BigInt(residentRoot.rootId));
   assert.equal(rootId.toString("hex"), residentRoot.wireHex);
   for (const field of ["separateLedger", "reusesBeforeFinalReader", "dropWaits"]) assert.equal(validateResidentRoot({ ...residentRoot, [field]: true }), false);
-  assert.equal(residentRoot.pressureRoots * residentRoot.pressureReservationBytes, residentRoot.pressureAggregateBytes);
+  // 🎟️ The aggregate is no longer a whole multiple of the per-surface ceiling, so filling it takes a
+  // last PARTIAL reservation: `pressureRoots` is the count that first covers it, never a clean divisor.
+  assert((residentRoot.pressureRoots - 1) * residentRoot.pressureReservationBytes < residentRoot.pressureAggregateBytes);
+  assert(residentRoot.pressureRoots * residentRoot.pressureReservationBytes >= residentRoot.pressureAggregateBytes);
   assert.equal(validateResidentRoot({ ...residentRoot, slotReuseRequiresTypedTerminal: false }), false);
   for (const order of residentRoot.outputOrders) {
     let pending = 3;

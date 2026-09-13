@@ -73,7 +73,7 @@ pub fn window_measures(lod_mode: &str, on_change: impl Fn(&str, Option<serde_jso
 /// (`parse_interaction_targets` in `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`) — a renderer
 /// serialises its whole pick/hover batch into the single `targets` text arg, and a semantic row is just
 /// a batch of one.
-fn graph_targets_json(granularity: &str, id: &str) -> String {
+pub(crate) fn graph_targets_json(granularity: &str, id: &str) -> String {
     let mut target = dsl::json::Object::new();
     target.insert("granularity", dsl::json::Value::String(granularity.to_string()));
     target.insert("id", dsl::json::Value::String(id.to_string()));
@@ -297,6 +297,12 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, sess
         labels.graph_canvas_hint.as_str(),
         semio_framework_ui_contract::Liveness::Off,
     )?;
+    // ⏎️ Enter/Space on the focused canvas opens the selected node's ports — the `activate` half of
+    // the keyboard traversal the arrow chords drive (`🎮️commands/🧭️navigate-graph`). It is a SURFACE
+    // binding and deliberately not an app chord: `SurfaceAccessibilityShell` fires it only for the
+    // focused canvas and `preventDefault`s it, whereas an `enter` chord in the app keybinding table
+    // would fire on every focused button in the shell.
+    let surface = crate::activatable_scene_surface(surface, crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID, "activateSelection", "Enter")?;
     let canvas = semio_framework_ui_contract::column()
         .grow(true)
         .try_id("procedural-play-main.canvas")

@@ -88,7 +88,9 @@ export type ExampleBudgetExpectation = {
  */
 export type ExampleDeliveryExpectation = {
   lodMode: string;
-  minMeshes: number;
+  /** 🕸️ The EXACT number of meshes this example's preview publishes — a floor lets a preview lose
+   * a mesh while every node still reports `ok`, which paints less and passes. */
+  meshes: number;
   minTriangles: number;
   minEdgeSegments: number;
   maxRoundTrips: number;
@@ -228,7 +230,8 @@ export const EXAMPLE_BUDGET_FIDELITY_CEILING_MICROS = 8_000_000;
 export function assertDeliveryContract(fixture: ExampleGeometryFixture): void {
   const delivery = fixture.delivery;
   expect(typeof delivery.lodMode).toBe("string");
-  expect(delivery.minMeshes).toBeGreaterThanOrEqual(1);
+  expect(delivery.meshes).toBeGreaterThanOrEqual(1);
+  expect(Number.isInteger(delivery.meshes)).toBe(true);
   expect(delivery.minTriangles + delivery.minEdgeSegments).toBeGreaterThan(0);
   expect(delivery.maxRoundTrips).toBeGreaterThanOrEqual(1);
   expect(delivery.maxRoundTrips).toBeLessThanOrEqual(EXAMPLE_DELIVERY_ROUND_TRIP_CEILING);

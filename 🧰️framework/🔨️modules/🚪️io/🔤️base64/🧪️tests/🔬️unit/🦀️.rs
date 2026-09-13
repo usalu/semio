@@ -62,3 +62,33 @@ fn matches_third_party_base64_oracle() {
         assert_eq!(ours_decoded, bytes, "our decode of oracle encoding at length {length}");
     }
 }
+
+/// 🔗️ RFC 4648 §10 vectors re-spelled for §5 base64url without padding, plus URL-alphabet rows.
+#[test]
+fn matches_rfc4648_base64url_vectors() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️rfc4648-base64url-vectors.json")).expect("fixture JSON");
+    for case in fixture["cases"].as_array().expect("cases array") {
+        let bytes = case["input_hex"].as_str().map(|hex| (0..hex.len()).step_by(2).map(|index| u8::from_str_radix(&hex[index..index + 2], 16).expect("hex")).collect::<Vec<u8>>()).expect("input_hex");
+        let expected = case["encoded"].as_str().expect("encoded");
+        assert_eq!(base64_url_encode(&bytes), expected, "encode({bytes:?})");
+        assert_eq!(base64_url_decode(expected).expect("decode fixture"), bytes, "decode({expected:?})");
+    }
+    for case in fixture["rejected"].as_array().expect("rejected array") {
+        assert!(base64_url_decode(case["encoded"].as_str().expect("encoded")).is_err(), "{} must be rejected", case["encoded"]);
+    }
+}
+
+/// 🔬️ Differential oracle for base64url: the third-party `URL_SAFE_NO_PAD` engine both ways.
+#[test]
+fn matches_third_party_base64url_oracle() {
+    use base64::Engine as _;
+    let oracle = base64::engine::general_purpose::URL_SAFE_NO_PAD;
+    let mut lcg = Lcg(0xD1B5_4A32_D192_ED03);
+    for length in 0..=128usize {
+        let bytes: Vec<u8> = (0..length).map(|_| lcg.next_byte()).collect();
+        let ours = base64_url_encode(&bytes);
+        assert_eq!(ours, oracle.encode(&bytes), "encode mismatch at length {length}");
+        assert_eq!(base64_url_decode(oracle.encode(&bytes)).expect("our decode of oracle encoding"), bytes);
+        assert_eq!(oracle.decode(&ours).expect("oracle decode of our encoding"), bytes);
+    }
+}

@@ -42,6 +42,7 @@ fn runtime_single_enqueue_reader_cannot_observe_completion_without_its_scene_inv
         key: Some("window-metrics"),
         revision: source_revision,
         requires_interaction: true,
+        restores_interaction: false,
         apply: RuntimeApply::Resize { width: size.0, height: size.1, dpr: size.2 },
     };
     let (publication, observation, resumed, accepted, reader_joined) = std::thread::scope(|scope| {

@@ -5,7 +5,9 @@
  * (`🧫️fixtures/🎮️wgpu-runtime-mailbox-admission/🔣️.json`) without looking at the Rust: a fixed bound
  * shared by ready and in-flight work with one reserve for the interaction return, keyed coalescing,
  * a first-applicable rule that lets work needing no interaction state past work that does, and a
- * checkout ledger that ages one bounded step and turns an overrun into a named diagnostic exactly once.
+ * checkout ledger whose verdict is whether an OWNER is still outstanding — a reservation in flight,
+ * or a ready completion that restores the state — rather than how many blocked opportunities the
+ * checkout has spanned.
  *
  * ⚖️ An independent derivation is the point: if the two implementations agree with the fixture they
  * agree with each other, and a browser frame cannot start swallowing input while the Rust unit tests
@@ -20,10 +22,10 @@ import { describe, expect, it } from "vitest";
 const here = dirname(fileURLToPath(import.meta.url));
 const fixturePath = resolve(here, "../../🧫️fixtures/🎮️wgpu-runtime-mailbox-admission/🔣️.json");
 
-type Completion = { key: string | null; revision: number; requiresInteraction: boolean };
+type Completion = { key: string | null; revision: number; requiresInteraction: boolean; restoresInteraction: boolean };
 type Step = Record<string, unknown>;
-type Row = { id: string; why: string; capacity: number; steps: Step[]; expect: { length: number; readyRevisions: number[]; staleNotices: { site: string; opportunities: number }[] } };
-type Fixture = { credits: number; rows: Row[] };
+type Row = { id: string; why: string; capacity: number; steps: Step[]; expect: { length: number; readyRevisions: number[]; abandonedNotices: { site: string; opportunities: number }[] } };
+type Fixture = { rows: Row[] };
 
 const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as Fixture;
 
@@ -72,6 +74,11 @@ class BoundedCompletionQueue {
     return this.ready.length > 0 && this.ready[0].requiresInteraction;
   }
 
+  /** 🎟️ Anything that can still bring a checked-out interaction state home. */
+  interactionOwnerOutstanding(): boolean {
+    return this.inFlight > 0 || this.ready.some(completion => completion.restoresInteraction);
+  }
+
   firstApplicable(interactionAvailable: boolean): number | null {
     if (interactionAvailable) return this.ready.length > 0 ? 0 : null;
     const index = this.ready.findIndex(completion => !completion.requiresInteraction);
@@ -83,22 +90,20 @@ class BoundedCompletionQueue {
   }
 }
 
-type Admission = "admitted" | "deferred" | "stale";
+type Admission = "admitted" | "deferred" | "abandoned";
 
 /** 🎟️ The interaction checkout ledger, re-derived. */
 class InteractionCheckoutLedger {
   private site: string | null = null;
   private ageInOpportunities = 0;
-  private stale = false;
+  private abandoned = false;
   private notified = false;
-
-  constructor(private readonly credits: number) {}
 
   checkOut(site: string): boolean {
     if (this.site !== null) return false;
     this.site = site;
     this.ageInOpportunities = 0;
-    this.stale = false;
+    this.abandoned = false;
     this.notified = false;
     return true;
   }
@@ -106,20 +111,20 @@ class InteractionCheckoutLedger {
   checkIn(): void {
     this.site = null;
     this.ageInOpportunities = 0;
-    this.stale = false;
+    this.abandoned = false;
     this.notified = false;
   }
 
-  admit(headRequiresInteraction: boolean, interactionAvailable: boolean): Admission {
+  admit(headRequiresInteraction: boolean, interactionAvailable: boolean, ownerOutstanding: boolean): Admission {
     if (interactionAvailable || !headRequiresInteraction) return "admitted";
     this.ageInOpportunities += 1;
-    if (this.ageInOpportunities <= this.credits) return "deferred";
-    this.stale = true;
-    return "stale";
+    if (ownerOutstanding) return "deferred";
+    this.abandoned = true;
+    return "abandoned";
   }
 
-  takeStaleNotice(): { site: string; opportunities: number } | null {
-    if (!this.stale || this.notified) return null;
+  takeAbandonedNotice(): { site: string; opportunities: number } | null {
+    if (!this.abandoned || this.notified) return null;
     this.notified = true;
     return { site: this.site ?? "unknown", opportunities: this.ageInOpportunities };
   }
@@ -129,9 +134,9 @@ class InteractionCheckoutLedger {
   }
 }
 
-function replay(row: Row, credits: number) {
+function replay(row: Row) {
   const queue = new BoundedCompletionQueue(row.capacity);
-  const ledger = new InteractionCheckoutLedger(credits);
+  const ledger = new InteractionCheckoutLedger();
   const notices: { site: string; opportunities: number }[] = [];
   let available = true;
 
@@ -142,7 +147,7 @@ function replay(row: Row, credits: number) {
       const where = `${row.id} step ${index}`;
       switch (step.op) {
         case "enqueue": {
-          const admitted = queue.enqueue({ key: (step.key as string | null) ?? null, revision: step.revision as number, requiresInteraction: step.requiresInteraction as boolean });
+          const admitted = queue.enqueue({ key: (step.key as string | null) ?? null, revision: step.revision as number, requiresInteraction: step.requiresInteraction as boolean, restoresInteraction: step.restoresInteraction as boolean });
           expect(admitted, `${where}: enqueue admission`).toBe(step.admitted);
           break;
         }
@@ -151,7 +156,7 @@ function replay(row: Row, credits: number) {
           break;
         }
         case "finish": {
-          queue.finish({ key: (step.key as string | null) ?? null, revision: step.revision as number, requiresInteraction: step.requiresInteraction as boolean });
+          queue.finish({ key: (step.key as string | null) ?? null, revision: step.revision as number, requiresInteraction: step.requiresInteraction as boolean, restoresInteraction: step.restoresInteraction as boolean });
           break;
         }
         case "checkOut": {
@@ -166,10 +171,10 @@ function replay(row: Row, credits: number) {
           break;
         }
         case "apply": {
-          const admission = ledger.admit(queue.headRequiresInteraction(), available);
+          const admission = ledger.admit(queue.headRequiresInteraction(), available, queue.interactionOwnerOutstanding());
           const at = queue.firstApplicable(available);
           const applied = at === null ? null : (queue.takeAt(at)?.revision ?? null);
-          const notice = ledger.takeStaleNotice();
+          const notice = ledger.takeAbandonedNotice();
           if (notice) notices.push(notice);
           if (!last) break;
           expect(admission, `${where}: admission verdict`).toBe(step.admission);
@@ -185,32 +190,31 @@ function replay(row: Row, credits: number) {
 
   expect(queue.length, `${row.id}: final mailbox length`).toBe(row.expect.length);
   expect(queue.ready.map(completion => completion.revision), `${row.id}: ready order`).toEqual(row.expect.readyRevisions);
-  expect(notices, `${row.id}: stale checkout diagnostics`).toEqual(row.expect.staleNotices);
+  expect(notices, `${row.id}: abandoned checkout diagnostics`).toEqual(row.expect.abandonedNotices);
 }
 
 describe("wgpu runtime mailbox admission", () => {
   it("declares rows", () => {
     expect(fixture.rows.length).toBeGreaterThan(0);
-    expect(fixture.credits).toBeGreaterThan(0);
   });
 
   for (const row of fixture.rows) {
-    it(`${row.id} — ${row.why}`, () => replay(row, fixture.credits));
+    it(`${row.id} — ${row.why}`, () => replay(row));
   }
 
   it("never lets a completion that needs no interaction state wait behind one that does", () => {
     const queue = new BoundedCompletionQueue(8);
-    queue.enqueue({ key: null, revision: 1, requiresInteraction: true });
-    queue.enqueue({ key: null, revision: 2, requiresInteraction: true });
-    queue.enqueue({ key: null, revision: 3, requiresInteraction: false });
+    queue.enqueue({ key: null, revision: 1, requiresInteraction: true, restoresInteraction: false });
+    queue.enqueue({ key: null, revision: 2, requiresInteraction: true, restoresInteraction: false });
+    queue.enqueue({ key: null, revision: 3, requiresInteraction: false, restoresInteraction: false });
     expect(queue.firstApplicable(false)).toBe(2);
     expect(queue.firstApplicable(true)).toBe(0);
   });
 
   it("preserves the order of the completions that do need the interaction state", () => {
     const queue = new BoundedCompletionQueue(8);
-    queue.enqueue({ key: null, revision: 1, requiresInteraction: true });
-    queue.enqueue({ key: null, revision: 2, requiresInteraction: true });
+    queue.enqueue({ key: null, revision: 1, requiresInteraction: true, restoresInteraction: false });
+    queue.enqueue({ key: null, revision: 2, requiresInteraction: true, restoresInteraction: false });
     const applied: number[] = [];
     for (;;) {
       const at = queue.firstApplicable(true);
@@ -221,28 +225,47 @@ describe("wgpu runtime mailbox admission", () => {
   });
 
   it("ages a checkout only on the opportunities its own head actually blocked", () => {
-    const ledger = new InteractionCheckoutLedger(fixture.credits);
+    const ledger = new InteractionCheckoutLedger();
     expect(ledger.checkOut("dispatch-event")).toBe(true);
-    expect(ledger.admit(false, false)).toBe("admitted");
+    expect(ledger.admit(false, false, true)).toBe("admitted");
     expect(ledger.opportunities).toBe(0);
-    expect(ledger.admit(true, true)).toBe("admitted");
+    expect(ledger.admit(true, true, true)).toBe("admitted");
     expect(ledger.opportunities).toBe(0);
-    expect(ledger.admit(true, false)).toBe("deferred");
+    expect(ledger.admit(true, false, true)).toBe("deferred");
     expect(ledger.opportunities).toBe(1);
   });
 
-  it("reports a stale checkout once and clears the episode on check-in", () => {
-    const ledger = new InteractionCheckoutLedger(2);
+  it("never ages a checkout with a live owner into a fault", () => {
+    const ledger = new InteractionCheckoutLedger();
     ledger.checkOut("frame-deferred");
-    expect(ledger.admit(true, false)).toBe("deferred");
-    expect(ledger.admit(true, false)).toBe("deferred");
-    expect(ledger.admit(true, false)).toBe("stale");
-    expect(ledger.takeStaleNotice()).toEqual({ site: "frame-deferred", opportunities: 3 });
-    expect(ledger.admit(true, false)).toBe("stale");
-    expect(ledger.takeStaleNotice()).toBeNull();
+    for (let opportunity = 0; opportunity < 100_000; opportunity += 1) expect(ledger.admit(true, false, true)).toBe("deferred");
+    expect(ledger.takeAbandonedNotice()).toBeNull();
+    expect(ledger.opportunities).toBe(100_000);
+  });
+
+  it("reports an abandoned checkout once and clears the episode on check-in", () => {
+    const ledger = new InteractionCheckoutLedger();
+    ledger.checkOut("frame-deferred");
+    expect(ledger.admit(true, false, false)).toBe("abandoned");
+    expect(ledger.takeAbandonedNotice()).toEqual({ site: "frame-deferred", opportunities: 1 });
+    expect(ledger.admit(true, false, false)).toBe("abandoned");
+    expect(ledger.takeAbandonedNotice()).toBeNull();
     ledger.checkIn();
     ledger.checkOut("dispatch-event");
-    expect(ledger.admit(true, false)).toBe("deferred");
-    expect(ledger.takeStaleNotice()).toBeNull();
+    expect(ledger.admit(true, false, true)).toBe("deferred");
+    expect(ledger.takeAbandonedNotice()).toBeNull();
+  });
+
+  it("counts a ready completion that restores the state as an outstanding owner", () => {
+    const queue = new BoundedCompletionQueue(8);
+    expect(queue.interactionOwnerOutstanding()).toBe(false);
+    queue.enqueue({ key: null, revision: 1, requiresInteraction: true, restoresInteraction: false });
+    expect(queue.interactionOwnerOutstanding()).toBe(false);
+    queue.enqueue({ key: null, revision: 2, requiresInteraction: false, restoresInteraction: true });
+    expect(queue.interactionOwnerOutstanding()).toBe(true);
+    queue.takeAt(1);
+    expect(queue.interactionOwnerOutstanding()).toBe(false);
+    expect(queue.reserveInteraction()).toBe(true);
+    expect(queue.interactionOwnerOutstanding()).toBe(true);
   });
 });

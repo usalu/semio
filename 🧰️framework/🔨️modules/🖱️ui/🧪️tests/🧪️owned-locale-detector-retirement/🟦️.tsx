@@ -4001,21 +4001,26 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(cap.style.paddingInlineStart).toBe("");
     });
 
-    it("navbar fullscreen toggle parks its width so inline labels do not collapse", async () => {
+    it("navbar trailing chrome parks its width so inline labels do not collapse", async () => {
       const { render } = await import("@testing-library/react");
       const rectSpy = vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
-        if (this.getAttribute("data-slot") === "navbar-fullscreen-toggle") {
+        if (this.getAttribute("data-slot") === "navbar-trailing-chrome") {
           return { width: 112, height: 24, top: 0, left: 0, right: 112, bottom: 24, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
         }
         return { width: 0, height: 0, top: 0, left: 0, right: 0, bottom: 0, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
       });
       const { container } = render(
         <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
-          <Navbar items={[]} showFullscreenToggle />
+          <Navbar
+            items={[]}
+            trailingBeforeFullscreen={<Toggle id="ui.panelToggle.chat" pressed={false} onPressedChange={() => undefined} icon="message-square" />}
+            showFullscreenToggle
+          />
         </UiDriverProvider>,
       );
-      const slot = container.querySelector('[data-slot="navbar-fullscreen-toggle"]') as HTMLElement;
+      const slot = container.querySelector('[data-slot="navbar-trailing-chrome"]') as HTMLElement;
       expect(slot.style.minWidth).toBe("112px");
+      expect(container.querySelector("#ui\\.panelToggle\\.chat")).toBeTruthy();
       expect(shellNavbarTrailingEndWidthByRoot.get(document.documentElement)).toBe(112);
       rectSpy.mockRestore();
     });

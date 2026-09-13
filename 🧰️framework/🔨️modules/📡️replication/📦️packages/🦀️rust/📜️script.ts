@@ -276,8 +276,9 @@ class PresencePeerCodecScript extends BundleScript {
     }
     const extra = structuredClone(fixture); extra.cases[0].authority = true; assert(!validate(extra));
     const source = readFileSync(join(this.root, "../../📡️wire/🦀️.rs"), "utf8");
+    const tests = readFileSync(join(this.root, "../../📡️wire/🧪️tests/🔬️presence-codec/🦀️.rs"), "utf8");
     const laws = ["presence_peer_decoder_matches_neutral_bounded_exact_corpus", "presence_peer_decoder_rejects_hostile_counts_before_allocation"];
-    for (const law of laws) assert(source.includes(`fn ${law}(`), `missing native presence codec law ${law}`);
+    for (const law of laws) assert(tests.includes(`fn ${law}(`), `missing native presence codec law ${law}`);
     assert(source.includes("PRESENCE_PEER_WIRE_LIMITS_V1") && source.includes("reader.position != bytes.len()"), "Rust bounded exact decoder is absent");
     console.log(`presence peer codec oracle: ${fixture.cases.length} neutral Rust/TypeScript vectors, ${fixture.cases.filter((row: { accepted: boolean }) => !row.accepted).length} hostile inputs rejected exactly`);
     if (segments.includes("--oracle-only")) return;

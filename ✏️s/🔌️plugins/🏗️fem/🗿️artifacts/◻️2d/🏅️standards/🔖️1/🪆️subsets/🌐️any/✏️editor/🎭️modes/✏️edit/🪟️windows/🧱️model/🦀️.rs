@@ -1148,12 +1148,12 @@ pub fn render(doc: &Fem2dSnapshot, camera: &Viewport2d) -> semio_framework_plugi
         }));
     }
     let layers_json = dsl::json::to_string(&dsl::json::Value::Array(layers));
-    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None })
+    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 
 /// 👁️ Renders the model plus an optional replaceable worker-job progress snapshot.
 pub fn render_with_progress(_doc: &Fem2dSnapshot, camera: &Viewport2d, progress: Option<&Fem2dMountedVisualLease>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: String::new(), snapshot: progress.map(Fem2dMountedVisualLease::snapshot) })
+    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: String::new(), snapshot: progress.map(Fem2dMountedVisualLease::snapshot), tool_run_trace: None, lanes: Vec::new() })
 }
 //#endregion 🔖️Render
 

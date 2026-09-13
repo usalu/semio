@@ -52,45 +52,42 @@ fn fill_count_defaults_to_one_hundred() {
     assert!(matches!(children.first(), Some(WindowMeasure::Number { value, .. }) if *value == 100.0));
 }
 
-/// ⏳️ An idle session publishes no progress row; a live one publishes stage, accepted-of-requested,
-/// its counters and a cancel action carrying the run's own generation.
+fn toggle<'a>(children: &'a [WindowMeasure], toggle_id: &str) -> Option<&'a WindowMeasure> {
+    children.iter().find(|measure| matches!(measure, WindowMeasure::Toggle { id, .. } if id == toggle_id))
+}
+
+/// 🛑️ An idle session publishes no cancel toggle; a live one publishes a cancel carrying the run's own
+/// generation, with the localized stage as its text.
 #[test]
-fn live_fill_publishes_a_progress_row_with_cancel() {
+fn live_fill_publishes_a_cancel_toggle_with_its_generation() {
     let labels = puzzle2d_labels(&semio_framework_plugin::ViewModel::default());
-    assert!(!fill_children(Puzzle2dPlayRuntime::default(), labels).iter().any(|measure| matches!(measure, WindowMeasure::Progress { .. })), "an idle session must not claim progress");
+    assert!(toggle(&fill_children(Puzzle2dPlayRuntime::default(), labels), "puzzle2d-fill-cancel").is_none(), "an idle session must not offer to cancel nothing");
 
     let running = Puzzle2dPlayRuntime { fill_count: 9, fill_job_accepted_count: 4, fill_job_search_count: 17, fill_job_generation: 12, fill_job_lifecycle: Puzzle2dFillLifecycle::Running, ..Puzzle2dPlayRuntime::default() };
     let children = fill_children(running, labels);
-    let Some(WindowMeasure::Progress { id, stage, completed, total, steps, cancel, loading, .. }) = children.iter().find(|measure| matches!(measure, WindowMeasure::Progress { .. })) else { panic!("fill progress row") };
-    assert_eq!(id, "puzzle2d-fill-progress");
-    assert_eq!(stage.as_deref(), Some("Searching"));
-    assert_eq!(*completed, 4.0);
-    assert_eq!(*total, Some(9.0));
-    assert_eq!(*loading, Some(true));
-    assert_eq!(steps.len(), 2);
-    assert_eq!(steps[0].kind, MeasureProgressStepKind::Success);
-    assert_eq!(steps[0].text, "accepted · 4");
-    assert_eq!(steps[1].text, "tested · 17");
-    let cancel = cancel.as_ref().expect("a live run must be cancellable");
-    assert_eq!(cancel, &puzzle2d_action("brushFillSessionCancel", Some(serde_json::json!({ "generation": 12 }))));
+    let Some(WindowMeasure::Toggle { label, text, pressed, on_change, .. }) = toggle(&children, "puzzle2d-fill-cancel") else { panic!("fill cancel toggle") };
+    assert_eq!(label.as_deref(), Some("Cancel fill"));
+    assert_eq!(text.as_deref(), Some("Searching"));
+    assert!(!pressed);
+    assert_eq!(on_change, &puzzle2d_action("brushFillSessionCancel", Some(serde_json::json!({ "generation": 12 }))));
+    assert!(toggle(&children, "puzzle2d-fill-retry").is_none(), "a live run offers no retry");
 }
 
 /// 🗣️ Stage captions, the fault reason and the retry affordance stay accessible in German, and a
-/// faulted run publishes its machine code as a danger step rather than swallowing it.
+/// faulted run carries its machine code in the retry text rather than swallowing it.
 #[test]
-fn fill_progress_localizes_stage_fault_and_retry() {
+fn fill_toggles_localize_stage_fault_and_retry() {
     let german_view = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::Locale::De, ..Default::default() };
     let labels = puzzle2d_labels(&german_view);
     let running = Puzzle2dPlayRuntime { fill_count: 9, fill_job_accepted_count: 4, fill_job_lifecycle: Puzzle2dFillLifecycle::Applying, ..Puzzle2dPlayRuntime::default() };
     let children = fill_children(running, labels);
-    assert!(children.iter().any(|measure| matches!(measure, WindowMeasure::Progress { label: Some(label), stage: Some(stage), .. } if label == "Füllfortschritt" && stage == "Anwenden")));
+    assert!(matches!(toggle(&children, "puzzle2d-fill-cancel"), Some(WindowMeasure::Toggle { label: Some(label), text: Some(text), .. }) if label == "Füllen abbrechen" && text == "Anwenden"));
 
     let faulted = Puzzle2dPlayRuntime { fill_job_lifecycle: Puzzle2dFillLifecycle::Faulted, fill_job_fault_code: Puzzle2dFillText::try_from_str("puzzle2d-fill-hostile"), ..Puzzle2dPlayRuntime::default() };
     let children = fill_children(faulted, labels);
-    let Some(WindowMeasure::Progress { stage: Some(stage), steps, cancel, .. }) = children.iter().find(|measure| matches!(measure, WindowMeasure::Progress { .. })) else { panic!("fill progress row") };
-    assert!(stage.starts_with("Füllen fehlgeschlagen"), "{stage}");
-    assert!(stage.contains("puzzle2d-fill-hostile"), "{stage}");
-    assert!(cancel.is_none(), "a stopped run must not offer to cancel nothing");
-    assert!(steps.iter().any(|step| step.kind == MeasureProgressStepKind::Danger && step.text == "puzzle2d-fill-hostile"));
-    assert!(children.iter().any(|measure| matches!(measure, WindowMeasure::Toggle { id, label: Some(label), .. } if id == "puzzle2d-fill-retry" && label == "Füllen erneut versuchen")));
+    assert!(toggle(&children, "puzzle2d-fill-cancel").is_none(), "a stopped run must not offer to cancel nothing");
+    let Some(WindowMeasure::Toggle { label: Some(label), text: Some(text), .. }) = toggle(&children, "puzzle2d-fill-retry") else { panic!("fill retry toggle") };
+    assert_eq!(label, "Füllen erneut versuchen");
+    assert!(text.starts_with("Füllen fehlgeschlagen"), "{text}");
+    assert!(text.contains("puzzle2d-fill-hostile"), "{text}");
 }

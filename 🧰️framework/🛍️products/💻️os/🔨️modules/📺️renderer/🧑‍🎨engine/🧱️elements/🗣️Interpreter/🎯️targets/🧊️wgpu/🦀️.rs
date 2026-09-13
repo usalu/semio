@@ -66,15 +66,31 @@ pub struct RenderPlanLimits {
     pub max_json_payload_bytes: usize,
     pub max_texture_dimension: u32,
     pub max_mesh_count: usize,
+    /// ⏯️ Longest base64url tool run trace delta a world-3d or canvas-2d lane may carry.
+    pub max_tool_run_trace_bytes: usize,
 }
 
 impl Default for RenderPlanLimits {
     fn default() -> Self {
-        Self { max_tree_depth: 64, max_node_count: 4096, max_json_payload_bytes: 4 * 1024 * 1024, max_texture_dimension: 8192, max_mesh_count: 2048 }
+        RENDER_PLAN_LIMITS
     }
 }
 
-pub const RENDER_PLAN_LIMITS: RenderPlanLimits = RenderPlanLimits { max_tree_depth: 64, max_node_count: 4096, max_json_payload_bytes: 4 * 1024 * 1024, max_texture_dimension: 8192, max_mesh_count: 2048 };
+pub const RENDER_PLAN_LIMITS: RenderPlanLimits = RenderPlanLimits {
+    max_tree_depth: 64,
+    max_node_count: 4096,
+    max_json_payload_bytes: 4 * 1024 * 1024,
+    max_texture_dimension: 8192,
+    max_mesh_count: 2048,
+    max_tool_run_trace_bytes: infinite_world::world::tool_run_trace::TOOL_RUN_TRACE_LANE_BYTES_MAX,
+};
+
+fn check_tool_run_trace(label: &str, lane: &Option<String>, limits: &RenderPlanLimits) -> Result<(), String> {
+    match lane {
+        Some(lane) if lane.len() > limits.max_tool_run_trace_bytes => Err(format!("render plan limit exceeded: {label} has {} bytes (max {})", lane.len(), limits.max_tool_run_trace_bytes)),
+        _ => Ok(()),
+    }
+}
 
 fn check_json_payload(label: &str, payload: &str, limits: &RenderPlanLimits) -> Result<(), String> {
     if payload.len() > limits.max_json_payload_bytes {
@@ -94,6 +110,7 @@ pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPla
     let scene_label = format!("component scene '{}'", scene.surface_id);
     if let Some(canvas) = &scene.canvas_2d {
         check_json_payload(&format!("{scene_label} canvas2d.layers"), &canvas.layers_json, limits)?;
+        check_tool_run_trace(&format!("{scene_label} canvas2d.toolRunTrace"), &canvas.tool_run_trace, limits)?;
     }
     if let Some(world) = &scene.world_3d {
         check_json_payload(&format!("{scene_label} world3d.camera"), &world.camera_json, limits)?;
@@ -122,6 +139,7 @@ pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPla
         // validator still guards the native shell against an oversized/malformed payload same as every
         // other optional world3d field above.
         check_optional_json_payload(&format!("{scene_label} world3d.points"), &world.points_json, limits)?;
+        check_tool_run_trace(&format!("{scene_label} world3d.toolRunTrace"), &world.tool_run_trace, limits)?;
     }
     if let Some(graph) = &scene.node_graph {
         check_json_payload(&format!("{scene_label} nodeGraph.nodes"), &serde_json::to_string(&graph.nodes).unwrap_or_default(), limits)?;
@@ -1353,44 +1371,6 @@ pub(crate) fn render_ui_document_step(cursor: &mut UiDocumentFrameCursor, docume
     });
     cursor.terminal_is_complete()
 }
-
-
-/// 🛍️ Reassembles a retained document published as a `paged_text_carrier` back into its payload —
-/// the depth-first concatenation of every `Component::Text` leaf, which is exactly what
-/// `semio_framework_plugin::app::paged_text_carrier` split it from. The reserved
-/// `UiRefreshSection` surfaces (`framework.section.catalogue` and its three siblings) are the only
-/// documents shaped this way; a window/panel body goes through the widget engine above instead.
-///
-/// The walk is driven by the record graph rather than by page order, so a producer that pages its
-/// nodes in any other order still reassembles byte-identically.
-pub fn read_paged_text_document(document: &UiDocumentLease) -> Result<String, String> {
-    let header = document.header().map_err(|_| "section document lease is stale".to_string())?;
-    let mut records = std::collections::HashMap::with_capacity(header.node_count);
-    for index in 0..header.node_count {
-        let Ok(Some(page)) = document.read_node_page(index) else {
-            return Err(format!("section document page {index} of {} is unreadable", header.node_count));
-        };
-        let record = page.into_record();
-        records.insert(record.id, record);
-    }
-    let mut payload = String::new();
-    let mut stack = vec![header.root];
-    let mut visited = 0usize;
-    while let Some(id) = stack.pop() {
-        let Some(record) = records.get(&id) else { continue };
-        visited += 1;
-        if visited > header.node_count {
-            return Err("section document record graph is cyclic".to_string());
-        }
-        if let ui_contract::Component::Text(text) = &record.component {
-            payload.push_str(&text.packed_payload());
-        }
-        for child in record.children.iter().rev() {
-            stack.push(*child);
-        }
-    }
-    Ok(payload)
-}
 //#endregion 📄️RetainedDocumentConsumer
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
@@ -1826,6 +1806,7 @@ fn ui_node_kind_tag(node: &UiNode) -> &'static str {
         UiNode::NumberStepper(_) => "numberStepper",
         UiNode::Ring(_) => "ring",
         UiNode::IconSelect(_) => "iconSelect",
+        UiNode::Progress(_) => "progress",
         UiNode::Field(_) => "field",
         UiNode::Section(_) => "section",
         UiNode::Group(_) => "group",
@@ -1855,6 +1836,7 @@ fn ui_node_declared_id(node: &UiNode) -> Option<&str> {
         UiNode::Field(n) => Some(n.id.as_str()),
         UiNode::Section(n) => Some(n.id.as_str()),
         UiNode::Group(n) => Some(n.id.as_str()),
+        UiNode::Progress(n) => Some(n.id.as_str()),
         UiNode::Image(n) => Some(n.id.as_str()),
         UiNode::ComponentScene(n) => Some(n.surface_id.as_str()),
         UiNode::ExternalSlot(n) => Some(n.body_key.as_str()),
@@ -1947,6 +1929,7 @@ fn dump_visual_fields(node: &UiNode, theme: &Theme, hovered: bool) -> (Option<St
         }
         UiNode::Ring(_) => (None, None, None, None),
         UiNode::IconSelect(select) => (Some(select.value.clone()), Some(rgba_array(theme.text)), None, Some(theme.font_size_body)),
+        UiNode::Progress(progress) => (Some(progress.value_text.as_str().to_string()), Some(rgba_array(theme.progress)), Some(rgba_array(theme.separator)), None),
         UiNode::Field(field) => (Some(field.label.as_str().to_string()), Some(rgba_array(theme.text_muted)), None, Some(theme.font_size_small)),
         UiNode::Section(section) => match &section.label {
             Some(label) => (Some(label.as_str().to_string()), Some(rgba_array(theme.text)), None, Some(theme.font_size_body)),

@@ -29,7 +29,7 @@ use crate::wgpu::component::layout::ActionDescriptor;
 use crate::wgpu::component::ui::ui_control_to_node;
 use crate::wgpu::component::ui::{
     SurfaceKind, UiButtonNode, UiComponentSceneNode, UiControlNode, UiDropOverlaySpec, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiMenuRef, UiNode,
-    UiNumberStepperNode, UiPresence, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiStatus, UiTextNode, UiToggleNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode,
+    UiNumberStepperNode, UiPresence, UiProgressNode, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiStatus, UiTextNode, UiToggleNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode,
     UiTreeSectionNode,
 };
 use crate::wgpu::tree::{Node, NodeFlags, NodeKey, UiDocumentPageRejection, UiDocumentTree, UiDocumentTreeFault, UiTree, WidgetSpec};
@@ -349,24 +349,24 @@ fn lane_payload(document: &UiDocumentTree, root: &UiNodeRecord) -> String {
     payload
 }
 
-/// 🚚️ Reattaches a world-3d surface's out-of-doc payload lanes to the spine its `doc.bytes` decoded
-/// to. A lane the document declares but whose carrier has not fully arrived is left at its spine
-/// value rather than guessed — a truncated `meshes` payload would parse to an EMPTY scene, which is
-/// strictly worse than the previous frame's.
-fn merge_world3d_lanes(document: &UiDocumentTree, record: &UiNodeRecord, scene: &mut ui_scene::World3dScene) {
-    if scene.lanes.is_empty() {
+/// 🚚️ Reattaches a surface's out-of-doc payload lanes to the spine its `doc.bytes` decoded to.
+/// `lane_name` resolves a carrier key to its declared lane name (`World3dSceneLane`,
+/// `Canvas2dSceneLane`). A lane the document declares but whose carrier has not fully arrived is left
+/// at its spine value rather than guessed — a truncated `meshes` payload would parse to an EMPTY
+/// scene, which is strictly worse than the previous frame's.
+fn merge_scene_lanes<T: ui_scene::SceneDoc>(document: &UiDocumentTree, record: &UiNodeRecord, scene: &mut T, declared: &[ui_scene::SceneLaneRef], lane_name: impl Fn(&str) -> Option<&'static str>) {
+    if declared.is_empty() {
         return;
     }
-    let declared: Vec<ui_scene::World3dSceneLaneRef> = scene.lanes.clone();
     for child_id in record.children.iter() {
         let Some(child) = document.record(*child_id) else { continue };
-        let Some(lane) = ui_scene::World3dSceneLane::from_body_key(child.key.as_str()) else { continue };
-        let Some(reference) = declared.iter().find(|entry| entry.lane == lane.name()) else { continue };
+        let Some(name) = lane_name(child.key.as_str()) else { continue };
+        let Some(reference) = declared.iter().find(|entry| entry.lane == name) else { continue };
         let payload = lane_payload(document, child);
         if payload.len() as u32 != reference.bytes {
             continue;
         }
-        let _ = ui_scene::SceneDoc::merge_lane(scene, child.key.as_str(), payload);
+        let _ = scene.merge_lane(child.key.as_str(), payload);
     }
 }
 
@@ -411,12 +411,21 @@ fn surface_scene_node(document: &UiDocumentTree, record: &UiNodeRecord, props: &
     match props.kind {
         ui_contract::SurfaceKind::World3d => {
             if let Ok(mut scene) = ui_scene::decode::<ui_scene::World3dScene>(props) {
-                merge_world3d_lanes(document, record, &mut scene);
+                let declared = std::mem::take(&mut scene.lanes);
+                merge_scene_lanes(document, record, &mut scene, &declared, |key| ui_scene::World3dSceneLane::from_body_key(key).map(ui_scene::World3dSceneLane::name));
+                scene.lanes = declared;
                 node.world_3d = Some(scene);
             }
         }
         ui_contract::SurfaceKind::NodeGraph => node.node_graph = ui_scene::decode::<ui_scene::NodeGraphScene>(props).ok(),
-        ui_contract::SurfaceKind::Canvas2d => node.canvas_2d = ui_scene::decode::<ui_scene::Canvas2dScene>(props).ok(),
+        ui_contract::SurfaceKind::Canvas2d => {
+            if let Ok(mut scene) = ui_scene::decode::<ui_scene::Canvas2dScene>(props) {
+                let declared = std::mem::take(&mut scene.lanes);
+                merge_scene_lanes(document, record, &mut scene, &declared, |key| ui_scene::Canvas2dSceneLane::from_body_key(key).map(ui_scene::Canvas2dSceneLane::name));
+                scene.lanes = declared;
+                node.canvas_2d = Some(scene);
+            }
+        }
         ui_contract::SurfaceKind::TextEditor => node.text_editor = ui_scene::decode::<ui_scene::TextEditorScene>(props).ok(),
         ui_contract::SurfaceKind::Table => node.table = ui_scene::decode::<ui_scene::TableScene>(props).ok(),
         ui_contract::SurfaceKind::Paint2d => node.paint_2d = ui_scene::decode::<ui_scene::Paint2dScene>(props).ok(),
@@ -683,6 +692,12 @@ fn icon_select_node(record: &UiNodeRecord, controller: &str) -> UiNode {
     })
 }
 
+/// 📶️ `Component::Progress` → the retained bar; the record key is its identity, exactly like every
+/// other leaf control.
+fn progress_node(record: &UiNodeRecord, props: &ui_contract::ProgressProps, presence: UiPresence, menu: Option<UiMenuRef>) -> UiNode {
+    UiNode::Progress(UiProgressNode { id: record.key.as_str().to_string(), completed: props.completed, total: props.total, value_text: contract_label(&props.value_text), presence, menu })
+}
+
 /// 🧩️ Projects ONE published record onto the retained `UiNode` this target paints — the missing half
 /// of the retained-document pipeline (`📓️wgpu-blank-paint-2026-09-12.md` §5).
 ///
@@ -751,6 +766,7 @@ pub fn ui_node_from_record(document: &UiDocumentTree, record: &UiNodeRecord, sur
         ui_contract::Component::NumberStepper(_) => number_stepper_node(record, controller),
         ui_contract::Component::Ring(_) => ring_node(record, controller),
         ui_contract::Component::IconSelect(_) => icon_select_node(record, controller),
+        ui_contract::Component::Progress(props) => progress_node(record, props, presence, menu),
         ui_contract::Component::Image(props) => UiNode::Image(UiImageNode { id: record.key.as_str().to_string(), src: props.src.as_str().to_string(), alt: optional_contract_label(props.alt.as_ref()), presence, menu }),
         ui_contract::Component::Tree(props) => {
             let sections = record
@@ -937,6 +953,7 @@ fn variant_discriminant(node: &UiNode) -> u32 {
         UiNode::NumberStepper(_) => 10,
         UiNode::Ring(_) => 11,
         UiNode::IconSelect(_) => 12,
+        UiNode::Progress(_) => 20,
         UiNode::Field(_) => 13,
         UiNode::Section(_) => 14,
         UiNode::Tree(_) => 15,
@@ -959,6 +976,7 @@ fn explicit_id(node: &UiNode) -> Option<&str> {
         UiNode::NumberStepper(n) => Some(n.id.as_str()),
         UiNode::Ring(n) => Some(n.id.as_str()),
         UiNode::IconSelect(n) => Some(n.id.as_str()),
+        UiNode::Progress(n) => Some(n.id.as_str()),
         UiNode::Field(n) => Some(n.id.as_str()),
         UiNode::Section(n) => Some(n.id.as_str()),
         UiNode::Group(n) => Some(n.id.as_str()),

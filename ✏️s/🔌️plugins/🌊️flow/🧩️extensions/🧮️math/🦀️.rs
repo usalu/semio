@@ -46,9 +46,9 @@ pub struct Move;
 impl Operator for Move {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let subject = read_dict(input, "subject")?;
-        let vector = read_dict(input, "vector")?;
+        let offset = read_dict(input, "offset")?;
         let schema = subject.schema().unwrap_or("vector");
-        let result = xyz_dictionary(schema, read_xyz(subject)? + read_xyz(vector)?);
+        let result = xyz_dictionary(schema, read_xyz(subject)? + read_xyz(offset)?);
         if schema == "point" {
             Ok(Dictionary::new().insert("point", Value::Dictionary(result)).insert("vector", Value::null()))
         } else {
@@ -237,7 +237,7 @@ pub struct PassThrough;
 
 impl Operator for PassThrough {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(channel_output("number", number_dictionary(read_channel_number(input, "number")?)))
+        Ok(channel_output("numberOut", number_dictionary(read_channel_number(input, "number")?)))
     }
 }
 
@@ -429,7 +429,7 @@ fn tangent_out() -> ChannelSpec {
 }
 
 fn number_out() -> ChannelSpec {
-    ChannelSpec::named("N", "Num", "number", "Number")
+    ChannelSpec::named("N", "Num", "numberOut", "Number")
 }
 
 fn minimum_out() -> ChannelSpec {
@@ -568,7 +568,7 @@ pub fn register(registry: &mut Registry) {
     );
     register_simple(registry, operator_info("math.sum", "Sum", "Sum", "Sums numbers in a list dictionary", vec![ChannelSpec::list("list", &["math.sum"])], sum_output), Sum, vec!["list"], &["number"]);
     registry.register_operator(
-        operator_info("math.move", "Move", "Move", "Moves a point or vector by a vector", vec![ChannelSpec::requires("subject", &["math.move"]), ChannelSpec::requires("vector", &["math.move"])], move_out()),
+        operator_info("math.move", "Move", "Move", "Moves a point or vector by a vector", vec![ChannelSpec::requires("subject", &["math.move"]), ChannelSpec::requires("offset", &["math.move"])], move_out()),
         vec![OperatorImpl { schemas: vec!["point".into(), "vector".into()], operator: Box::new(Move) }, OperatorImpl { schemas: vec!["vector".into(), "vector".into()], operator: Box::new(Move) }],
         &["point", "vector"],
     );

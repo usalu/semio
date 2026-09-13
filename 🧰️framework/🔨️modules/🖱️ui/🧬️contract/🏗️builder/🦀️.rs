@@ -1316,6 +1316,46 @@ impl From<SliderBuilder> for BuiltNode {
 }
 //#endregion 🎚️Slider
 
+//#region 📶️Progress
+/// 📶️ A read-only progress bar — `Component::Progress`. Build with [`progress`].
+pub struct ProgressBuilder {
+    base: NodeBase,
+    completed: f64,
+    total: Option<f64>,
+    value_text: crate::Label,
+}
+
+/// 📶️ An indeterminate bar at `completed` units announcing `value_text`; call [`ProgressBuilder::total`]
+/// once the amount of work is known.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn progress(completed: f64, value_text: crate::Label) -> ProgressBuilder {
+    ProgressBuilder { base: NodeBase::leaf(), completed, total: None, value_text }
+}
+
+impl ProgressBuilder {
+    /// 🏁️ Makes the bar determinate on `0..=total`.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn total(mut self, total: f64) -> Self {
+        self.total = Some(total);
+        self
+    }
+}
+
+impl HasBase for ProgressBuilder {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn base_mut(&mut self) -> &mut NodeBase {
+        &mut self.base
+    }
+}
+
+impl From<ProgressBuilder> for BuiltNode {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn from(builder: ProgressBuilder) -> Self {
+        assemble(builder.base, crate::Component::Progress(crate::ProgressProps { completed: builder.completed, total: builder.total, value_text: builder.value_text }))
+    }
+}
+//#endregion 📶️Progress
+
 //#region 🌲️Tree
 /// 🌲️ A selection-bound tree's own binding node — `Component::Tree`. Sections and items are its
 /// [`HasChildren::child`]ren, not inline fields. Build with [`tree`].

@@ -208,7 +208,7 @@ import {
   type WorldInstanceRecord,
 } from "../🌐️World3dHost/🟦️.tsx";
 import { groupUtilityNodesByCategory, UTILITY_CATEGORIES, UtilityTree } from "../🎛️UtilityTree/🟦️.tsx";
-import { WindowMeasureNumber, WindowMeasureProgress, WindowMeasureSelect, WindowMeasureToggle } from "./🎚️measure-controls/🟦️.tsx";
+import { WindowMeasureNumber, WindowMeasureSelect, WindowMeasureToggle } from "./🎚️measure-controls/🟦️.tsx";
 import { loadPluginModule, pluginLoadProgressAt, SHARD_LIVENESS_POLICY, type PluginWasmHandle } from "../🔌️PluginRuntime/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -1376,6 +1376,18 @@ export function panelAnchorForGroup(group: string): Anchor {
   if (group === "display") return "bottom-left";
   if (group === "settings") return "bottom-right";
   return "top-right";
+}
+
+const FRAMEWORK_SETTINGS_BRANCH_ID = "framework.settings";
+
+/** @emoji ⚙️ Nests every app-declared Settings-group panel tab under the framework Settings branch so the
+ * bottom-right anchor exposes one Settings toggle instead of a duplicate beside it. */
+export function integrateAppSettingsPanelTabsIntoFrameworkBranch(frameworkSettingsTab: PanelTabNode, appSettingsTabs: readonly PanelTabNode[]): PanelTabNode {
+  if (appSettingsTabs.length === 0) return frameworkSettingsTab;
+  if (frameworkSettingsTab.kind !== "branch" || frameworkSettingsTab.id !== FRAMEWORK_SETTINGS_BRANCH_ID) return frameworkSettingsTab;
+  const appChildren = appSettingsTabs.map((tab, index) => ({ ...tab, order: tab.order ?? index }));
+  const frameworkChildren = frameworkSettingsTab.children.map((tab, index) => ({ ...tab, order: (tab.order ?? index) + appSettingsTabs.length }));
+  return { ...frameworkSettingsTab, children: [...appChildren, ...frameworkChildren] };
 }
 
 /**
@@ -3294,10 +3306,6 @@ function windowMeasureNumberControl(measure: Extract<WindowMeasure, { kind: "num
   return <WindowMeasureNumber measure={measure} onAction={onAction} />;
 }
 
-function windowMeasureProgressControl(measure: Extract<WindowMeasure, { kind: "progress" }>, onAction: (action: ActionDescriptor) => unknown): ReactNode {
-  return <WindowMeasureProgress measure={measure} onAction={onAction} />;
-}
-
 function windowMeasureToggleIcon(measure: Extract<WindowMeasure, { kind: "toggle" }>): ReactNode {
   return <Icon icon={measure.iconId as IconName} size={12} />;
 }
@@ -3343,14 +3351,6 @@ function windowMeasuresToTreeItems(measures: readonly WindowMeasure[], onAction:
         waiting: measure.waiting,
       };
     }
-    if (measure.kind === "progress") {
-      return {
-        id: measure.id,
-        label: measure.label ?? "",
-        control: windowMeasureProgressControl(measure, onAction),
-        loading: measure.loading,
-      };
-    }
     return {
       id: measure.id,
       label: measure.label ?? measure.text ?? "",
@@ -3388,13 +3388,6 @@ function renderWindowMeasure(measure: WindowMeasure, onAction: (action: ActionDe
     return (
       <WindowMeasureTreeLeaf key={measure.id} label={measure.label === undefined ? undefined : uiDataLabel(measure.label)}>
         {windowMeasureNumberControl(measure, onAction)}
-      </WindowMeasureTreeLeaf>
-    );
-  }
-  if (measure.kind === "progress") {
-    return (
-      <WindowMeasureTreeLeaf key={measure.id} label={measure.label === undefined ? undefined : uiDataLabel(measure.label)}>
-        {windowMeasureProgressControl(measure, onAction)}
       </WindowMeasureTreeLeaf>
     );
   }

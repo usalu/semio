@@ -155,9 +155,15 @@ fn retained_refresh_double_buffered_order_needs_a_second_full_set() {
     assert_eq!(UiResidentPermit::snapshot().unwrap(), before);
 }
 
-/// 🎟️ Why a retained caller right-sizes: the aggregate admits only THREE ceiling-sized surfaces.
+/// 🎟️ Why a retained caller right-sizes: the aggregate admits only a HANDFUL of ceiling-sized surfaces
+/// out of the sixty-four slots the ledger offers, because the per-surface ceiling is a maximum one
+/// pathological surface may reach and never the price a real body pays.
+///
+/// 🧾️ ticket 26/09/09/PROCEDURAL-3D-END-TO-END: the aggregate is no longer `4 * UI_RESIDENT_SURFACE_BYTES`
+/// but `UI_RESIDENT_SLOTS * UI_RESIDENT_DOCUMENT_BYTES`, so the handful is six rather than three — and the
+/// gap between six and sixty-four is exactly the reason right-sizing is not optional.
 #[test]
-fn retained_refresh_aggregate_admits_only_three_ceiling_sized_surfaces() {
+fn retained_refresh_aggregate_admits_only_a_handful_of_ceiling_sized_surfaces() {
     let data = fixture();
     let before = UiResidentPermit::snapshot().unwrap();
     let mut admitted = Vec::new();
@@ -176,6 +182,8 @@ fn retained_refresh_aggregate_admits_only_three_ceiling_sized_surfaces() {
     }
     eprintln!("[DEBUG] resident-refresh-ceiling admitted={count} refusal={refusal:?} surface-bytes={UI_RESIDENT_SURFACE_BYTES} aggregate={UI_RESIDENT_AGGREGATE_BYTES} fixed-backing={}", UiResidentPermit::contract_backing_bytes());
     assert_eq!(count, data["ceilingSizedRoots"].as_u64().unwrap() as usize);
+    assert!(count < UI_RESIDENT_SLOTS, "the ceiling is a maximum, never a price: {count} ceiling-sized roots against {UI_RESIDENT_SLOTS} slots");
+    assert_eq!(UI_RESIDENT_SLOTS * UI_RESIDENT_DOCUMENT_BYTES, UI_RESIDENT_AGGREGATE_BYTES, "the aggregate funds every slot at one full document each");
     assert_eq!(refusal, Some(UiResidentFault::Capacity));
     assert_eq!(UiResidentPermit::snapshot().unwrap(), before);
 }

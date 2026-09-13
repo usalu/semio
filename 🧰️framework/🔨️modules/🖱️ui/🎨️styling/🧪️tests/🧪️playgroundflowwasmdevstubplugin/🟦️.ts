@@ -161,13 +161,19 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("exposes inline appearance and reveal scripts", () => {
       expect(PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT).toContain("prefers-color-scheme");
-      expect(PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT).toContain("ui.chrome.appearance");
+      // 🌓️ The ONE document the OS shell writes — never `ui.chrome.appearance`, which nothing has
+      // written since the shell moved to the event-sourced config lane (the fixture-driven law in
+      // `🧪️tests/🧩️suite/🟦️.ts` is what states this; this line keeps the retired key out).
+      expect(PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT).toContain("semio.os.config");
+      expect(PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT).not.toContain("ui.chrome.appearance");
       expect(PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT).toContain("semio-play-styles");
       expect(PLAYGROUND_PLAY_BOOT_INLINE_STYLE).toContain("data-semio-styled");
     });
 
-    it("exposes an inline theme bootstrap script reading the persisted theme snapshot", () => {
-      expect(PLAYGROUND_PLAY_BOOT_THEME_SCRIPT).toContain("ui.chrome.theme.snapshot");
+    it("exposes an inline theme bootstrap script replaying the persisted ui-preference log", () => {
+      expect(PLAYGROUND_PLAY_BOOT_THEME_SCRIPT).toContain("os.config.ui-preferences");
+      expect(PLAYGROUND_PLAY_BOOT_THEME_SCRIPT).toContain("setCustomTheme");
+      expect(PLAYGROUND_PLAY_BOOT_THEME_SCRIPT).not.toContain("ui.chrome.theme.snapshot");
       expect(PLAYGROUND_PLAY_BOOT_THEME_SCRIPT).toContain("--color-");
       expect(PLAYGROUND_PLAY_BOOT_THEME_SCRIPT).toContain("dataset.uiTheme");
     });

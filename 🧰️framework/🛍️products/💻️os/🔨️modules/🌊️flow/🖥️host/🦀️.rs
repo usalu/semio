@@ -302,7 +302,9 @@ impl FlowHost {
                 resolve_ready(store.reset(envelope, Vec::new(), Vec::new())).expect("failed to reset flow history store");
                 store.install_document_store_owners_exact(FlowFixture::member_store_owners());
             }
-            self.pending_history_baseline = None;
+            if let Some(stale) = self.pending_history_baseline.take() {
+                stale.retire_cold();
+            }
             self.pending_change = false;
             self.gesture_active = false;
         }
@@ -550,6 +552,53 @@ impl FlowHost {
         self.refresh_interaction_projection();
     }
 
+    /// 📷️ The ONE camera of a flow surface. `self.fixture.camera` is the authority — it is what
+    /// `screen_to_world_point` projects with, what `build_dag_fixture_v1` re-seeds the dag copy from
+    /// on every rebuild, and what the renderer publishes as `nodeGraphViewport`. The dag's own
+    /// `fixture.camera` is a derived paint copy; reading it instead is how a fit got published stale.
+    pub fn camera(&self) -> [f64; 3] {
+        [self.fixture.camera.x, self.fixture.camera.y, self.fixture.camera.zoom]
+    }
+
+    /// 📷️ Adopts a camera the DAG computed for itself (a fit, a refit, an opening decision) into the
+    /// authority, so the published, projected and painted cameras cannot drift apart.
+    fn adopt_dag_camera(&mut self) {
+        self.fixture.camera = CameraJson { x: self.dag.fixture.camera.x, y: self.dag.fixture.camera.y, zoom: self.dag.fixture.camera.zoom };
+        self.interaction_revision = self.interaction_revision.wrapping_add(1);
+        self.refresh_interaction_projection();
+    }
+
+    /// 🖼️ Frames the whole graph and keeps the authority on the fitted camera.
+    ///
+    /// @see `♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs` — `DagHost::fit_camera_to_content`
+    pub fn fit_camera_to_content(&mut self) -> bool {
+        let fitted = self.dag.fit_camera_to_content();
+        if fitted {
+            self.adopt_dag_camera();
+        }
+        fitted
+    }
+
+    /// 🖼️ The opening-camera decision, with the authority kept on whichever camera won.
+    ///
+    /// @see `♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs` — `DagHost::adopt_camera_or_fit`
+    pub fn adopt_camera_or_fit(&mut self, x: f64, y: f64, zoom: f64) -> bool {
+        let fitted = self.dag.adopt_camera_or_fit(x, y, zoom);
+        self.adopt_dag_camera();
+        fitted
+    }
+
+    /// 🖼️ Re-fits a graph that changed under a live camera, with the authority kept on the result.
+    ///
+    /// @see `♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs` — `DagHost::refit_camera_if_content_left_view`
+    pub fn refit_camera_if_content_left_view(&mut self) -> bool {
+        let refitted = self.dag.refit_camera_if_content_left_view();
+        if refitted {
+            self.adopt_dag_camera();
+        }
+        refitted
+    }
+
     fn refresh_interaction_projection(&mut self) {
         self.interaction_projection = self.dag.bounded_interaction_projection(self.interaction_revision).ok();
     }
@@ -592,6 +641,12 @@ impl FlowHost {
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
         self.refresh_interaction_projection();
         true
+    }
+
+    /// 🫳️ Whether this host is mid-way through a BOUNDED gesture — a node drag, a marquee or a pan
+    /// started by `commit_pointer` and not yet released. A gesture belongs to the path that started it.
+    pub fn bounded_pointer_gesture_active(&self) -> bool {
+        self.interaction_projection.is_some_and(|projection| projection.gesture_active())
     }
 
     pub fn plan_pointer(&self, intent: dag::DagPointerIntent) -> Result<dag::DagPointerPlan, dag::DagInteractionPlanFault> {
@@ -1098,6 +1153,21 @@ impl FlowHost {
                 dag::DagGraphEdit::Disconnect { synapse_id } => {
                     crate::os_pack::json::object([("operation".to_string(), crate::os_pack::json::Value::String("disconnect".to_string())), ("synapseId".to_string(), crate::os_pack::json::Value::String(synapse_id))])
                 }
+                dag::DagGraphEdit::Move { node_id, x, y } => crate::os_pack::json::object([
+                    ("operation".to_string(), crate::os_pack::json::Value::String("move".to_string())),
+                    ("nodeId".to_string(), crate::os_pack::json::Value::String(node_id)),
+                    ("x".to_string(), crate::os_pack::json::Value::Number(x.into())),
+                    ("y".to_string(), crate::os_pack::json::Value::Number(y.into())),
+                ]),
+                // 🧷️ Fixed forward for the wire-drag lane: `move` is the third row of `DagGraphEdit`
+                // and the guest's `nodeGraphEdit` already decodes exactly these three keys
+                // (`🎮️commands/✏️node-graph-edit/🦀️.rs`'s `"move"` arm).
+                dag::DagGraphEdit::Move { node_id, x, y } => crate::os_pack::json::object([
+                    ("operation".to_string(), crate::os_pack::json::Value::String("move".to_string())),
+                    ("nodeId".to_string(), crate::os_pack::json::Value::String(node_id)),
+                    ("x".to_string(), crate::os_pack::json::Value::from(x)),
+                    ("y".to_string(), crate::os_pack::json::Value::from(y)),
+                ]),
             })
             .collect();
         crate::os_pack::json::to_string(&crate::os_pack::json::object([("operations".to_string(), crate::os_pack::json::array(operations))]))
@@ -2192,16 +2262,32 @@ impl FlowHost {
     pub fn begin_change(&mut self) {
         if !self.gesture_active {
             self.flush_pending_change();
-            self.pending_history_baseline = Some(self.fixture.clone());
+            self.arm_history_baseline();
             self.pending_change = true;
         }
+    }
+
+    /// 🧾️ Arms a fresh undo baseline, RETIRING the one it replaces.
+    ///
+    /// 🩸️ A baseline is a `FlowFixture`, which owns the fail-closed `OrderedMap<WidgetLayout>` root,
+    /// and overwriting the field simply DROPPED the old one: `panicked at 🗂️ordered/🦀️.rs:81:
+    /// ordered-map root must be explicitly retired before drop`, aborting the whole pool worker.
+    /// Reached on 6118 by the FOURTH middle-button pan of one session — a gesture whose release never
+    /// committed leaves its baseline armed, and the next gesture's `begin_gesture` overwrote it
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-node-graph-gestures-2026-09-13.md` §4).
+    /// The same hazard sat on `begin_change` and on the history reset inside `apply_fixture`.
+    fn arm_history_baseline(&mut self) {
+        if let Some(stale) = self.pending_history_baseline.take() {
+            stale.retire_cold();
+        }
+        self.pending_history_baseline = Some(self.fixture.clone());
     }
 
     /// 🖐️ Starts a coalescing gesture (drag, inline note edit): flushes anything already armed first,
     /// then suppresses further `begin_change` checkpoints until `commit_gesture_history`.
     fn begin_gesture(&mut self) {
         self.flush_pending_change();
-        self.pending_history_baseline = Some(self.fixture.clone());
+        self.arm_history_baseline();
         self.gesture_active = true;
     }
 
@@ -2863,6 +2949,9 @@ impl Drop for FlowEvalSession {
     }
 }
 
+/// 🧹️ How many close turns one cold evaluation-session teardown pays before it declares the ladder stuck.
+const FLOW_EVAL_SESSION_COLD_CLOSE_STEPS: usize = 1_000_000;
+
 impl FlowEvalSession {
     pub fn new() -> Self {
         Self {
@@ -3492,6 +3581,23 @@ impl FlowEvalSession {
             }
         }
         sync_flow_geometry_retention();
+    }
+
+    /// 🧊️ Explicit cold-only disposal of a detached evaluation session — the twin of
+    /// [`FlowHost::retire_cold`]. A `FlowEvalSession` refuses a bare drop
+    /// (`FlowEvalSession must finish explicit close before drop`), so a caller that only needed one
+    /// for the length of a law closes it here instead of hand-rolling the same
+    /// `begin_close` + bounded `close_step` loop at every site
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub fn retire_cold(mut self) {
+        self.begin_close();
+        for _ in 0..FLOW_EVAL_SESSION_COLD_CLOSE_STEPS {
+            if self.terminal_is_empty() {
+                return;
+            }
+            let _ = self.close_step(usize::MAX, usize::MAX);
+        }
+        assert!(self.terminal_is_empty(), "cold flow evaluation session disposal did not reach terminal-empty within its bound");
     }
 
     /// 📄 Releases at most one retained owner under the caller's close-page grant.

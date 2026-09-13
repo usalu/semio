@@ -19,7 +19,7 @@ pub struct Not;
 
 impl Operator for Not {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(channel_output("boolean", boolean_dictionary(!read_channel_bool(input, "boolean")?)))
+        Ok(channel_output("booleanOut", boolean_dictionary(!read_channel_bool(input, "boolean")?)))
     }
 }
 // #endregion 🔖️Not
@@ -64,7 +64,7 @@ pub fn register(registry: &mut Registry) {
         &["boolean"],
     );
     registry.register_operator(
-        info("logic.not", "Not", "Inverts a boolean", vec![boolean_channel("boolean", "logic.not")], ChannelSpec::named("B", "Boo", "boolean", "Negated")),
+        info("logic.not", "Not", "Inverts a boolean", vec![boolean_channel("boolean", "logic.not")], ChannelSpec::named("B", "Boo", "booleanOut", "Negated")),
         vec![OperatorImpl { schemas: vec!["boolean".into()], operator: Box::new(Not) }],
         &["boolean"],
     );

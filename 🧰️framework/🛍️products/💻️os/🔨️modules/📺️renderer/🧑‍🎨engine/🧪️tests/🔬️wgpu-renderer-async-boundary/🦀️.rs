@@ -476,7 +476,7 @@ fn retained_asset_structure_scanners_reject_pixel_and_varint_capacity_plus_one()
 
 #[test]
 fn runtime_mailbox_reserves_completion_capacity_and_coalesces_only_matching_keys() {
-    let completion = |key: Option<&'static str>, revision: u64| RuntimeCompletion { key, revision, requires_interaction: false, apply: RuntimeApply::Resize { width: 1.0, height: 1.0, dpr: 1.0 } };
+    let completion = |key: Option<&'static str>, revision: u64| RuntimeCompletion { key, revision, requires_interaction: false, restores_interaction: false, apply: RuntimeApply::Resize { width: 1.0, height: 1.0, dpr: 1.0 } };
     let mut queue = RuntimeCompletionQueue::new();
     for revision in 0..RUNTIME_COMPLETION_CAPACITY - 1 {
         assert!(queue.enqueue(completion(None, revision as u64)));

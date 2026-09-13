@@ -1,0 +1,148 @@
+{
+  "_comment": "📜️ Paged-text carrier laws: a retained document published by `paged_text_carrier` reassembles to its payload as the depth-first concatenation of packed Text leaves, independent of record insertion order; a dangling child refuses. `expectedJson` is checked with serde_json as the third-party oracle.",
+  "cases": [
+    {
+      "name": "single-leaf",
+      "root": 1,
+      "records": [
+        {
+          "id": 1,
+          "key": "framework.section.catalogue",
+          "children": [
+            5
+          ]
+        },
+        {
+          "id": 5,
+          "key": "c5",
+          "text": {
+            "value": "{\"operators\":{}}"
+          },
+          "children": []
+        }
+      ],
+      "expectedPayload": "{\"operators\":{}}"
+    },
+    {
+      "name": "measures-two-pages-packed-attributes-reverse-insertion",
+      "root": 1,
+      "records": [
+        {
+          "id": 1,
+          "key": "framework.section.measures",
+          "children": [
+            2,
+            3
+          ]
+        },
+        {
+          "id": 3,
+          "key": "p0-1",
+          "children": [
+            12
+          ]
+        },
+        {
+          "id": 2,
+          "key": "p0-0",
+          "children": [
+            10,
+            11
+          ]
+        },
+        {
+          "id": 12,
+          "key": "c12",
+          "text": {
+            "value": "\"action\":\"setFillCount\"}}]}"
+          },
+          "children": []
+        },
+        {
+          "id": 11,
+          "key": "c11",
+          "text": {
+            "value": "0,\"onChange\":{\"controllerId\":\"puzzle3d\","
+          },
+          "children": []
+        },
+        {
+          "id": 10,
+          "key": "c10",
+          "text": {
+            "value": "{\"puzzle3d-main\":[{\"kind\":\"number\",\"id\":",
+            "dataAttributes": {
+              "01": "\"puzzle3d-fill-count\",\"label\":\"Anzahl ·",
+              "02": " Count\",\"value\":12.0,\"min\":0.0,\"step\":1."
+            }
+          },
+          "children": []
+        }
+      ],
+      "expectedPayload": "{\"puzzle3d-main\":[{\"kind\":\"number\",\"id\":\"puzzle3d-fill-count\",\"label\":\"Anzahl · Count\",\"value\":12.0,\"min\":0.0,\"step\":1.0,\"onChange\":{\"controllerId\":\"puzzle3d\",\"action\":\"setFillCount\"}}]}",
+      "expectedJson": {
+        "puzzle3d-main": [
+          {
+            "kind": "number",
+            "id": "puzzle3d-fill-count",
+            "label": "Anzahl · Count",
+            "value": 12.0,
+            "min": 0.0,
+            "step": 1.0,
+            "onChange": {
+              "controllerId": "puzzle3d",
+              "action": "setFillCount"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "empty-carrier",
+      "root": 1,
+      "records": [
+        {
+          "id": 1,
+          "key": "framework.section.engagements",
+          "children": [
+            2
+          ]
+        },
+        {
+          "id": 2,
+          "key": "c2",
+          "text": {
+            "value": ""
+          },
+          "children": []
+        }
+      ],
+      "expectedPayload": ""
+    },
+    {
+      "name": "dangling-child-refuses",
+      "root": 1,
+      "records": [
+        {
+          "id": 1,
+          "key": "framework.section.tools",
+          "children": [
+            2,
+            9
+          ]
+        },
+        {
+          "id": 2,
+          "key": "c2",
+          "text": {
+            "value": "{}"
+          },
+          "children": []
+        }
+      ],
+      "expectedError": {
+        "missingNode": 9
+      }
+    }
+  ]
+}

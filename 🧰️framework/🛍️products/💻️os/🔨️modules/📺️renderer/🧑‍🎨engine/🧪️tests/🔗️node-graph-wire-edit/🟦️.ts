@@ -140,9 +140,12 @@ describe("node graph wire edit", () => {
     // `wgpu-shell graph move fault surface=procedural-main fault=Structure`, after which the frame
     // loop published nothing further.
     const canvas = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs"), "utf8");
-    const asks = [...canvas.matchAll(/node_graph_gesture_is_screen_path\(surface_id, ([^)]*\))\)/gu)].map((match) => match[1]);
-    expect(asks).toHaveLength(3);
-    for (const argument of asks) expect(argument).toBe("Some((sx, sy)");
+    const asks = [...canvas.matchAll(/node_graph_gesture_is_screen_path\(surface_id, ([^)]*\)?)\)/gu)].map((match) => match[1]);
+    // 🖐️ Three PHASE questions — down, move, up — each asked about the point the pointer is at, plus
+    // the one the screen-path dispatcher asks with no point at all: "is a gesture already in flight?",
+    // which is what tells a plain hover (which can edit nothing) from a move inside a live wire draw.
+    expect(asks.filter((argument) => argument === "Some((sx, sy)")).toHaveLength(3);
+    expect(asks.filter((argument) => argument === "None")).toHaveLength(1);
     expect(law.rules.everyPhaseOverAnUnsupportedHit).toContain("EVERY phase");
   });
 });

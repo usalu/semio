@@ -92,7 +92,7 @@ fn viewer_canvas_layers(doc: &LayoutSnapshot) -> String {
 /// 👁️ Fixed default camera every render — a viewer has no persisted per-session camera (`Config =
 /// NoConfig`), matching cad's viewer's documented "default camera/sun" simplification.
 pub fn render(doc: &LayoutSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d, &Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: viewer_canvas_layers(doc), snapshot: None })
+    semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d, &Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: viewer_canvas_layers(doc), snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 //#endregion 🔖️Render
 

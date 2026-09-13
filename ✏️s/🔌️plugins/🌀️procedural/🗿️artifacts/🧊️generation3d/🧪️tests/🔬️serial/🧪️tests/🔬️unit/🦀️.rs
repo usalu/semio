@@ -58,6 +58,31 @@ fn a_nested_acquisition_is_refused_instead_of_hanging() {
     assert!(!held_by_this_thread());
 }
 
+/// ⚖️ LAW: a guard that mutates process-global state restores it when the law it guards FAILS, and
+/// does so without taking the binary down.
+///
+/// 💣️ A `Drop` that panics while its thread is already unwinding is a non-unwinding panic: the
+/// process aborts and every remaining law is never run. The featured `--lib` suite died that way at
+/// test 395 of 438 — a close-ladder law failed, and `UnlinkedFlowExtensions`'s registry restore then
+/// raised `flow.registry-retirement-full` inside that unwind, costing 43 laws to a diagnostic about
+/// a law that had already reported itself (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[test]
+fn a_failing_law_does_not_abort_the_binary_through_the_registry_guard() {
+    let _serial = lock();
+    let previous_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(|_| {}));
+    let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::take();
+        panic!("a law under test fails while the linked operator packs are retired");
+    }));
+    std::panic::set_hook(previous_hook);
+    assert!(outcome.is_err(), "the law under test must actually have panicked");
+    assert!(
+        semio_framework_os_flow::flow_extension_invocation_address(crate::flow_operators::BREP_EXTENSION_FLOW_ID).is_ok(),
+        "the guard must have put the linked packs back even though the law it guarded panicked"
+    );
+}
+
 /// ⚖️ LAW: the lock really is ONE lock — the editor's door, the viewer's door and the publication
 /// door all open it, so a thread holding any one of them is refused by the other two. Three mutexes
 /// over one shared state is not serialisation, and this is the law that keeps them from drifting

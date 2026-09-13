@@ -19,7 +19,7 @@ pub struct Upper;
 
 impl Operator for Upper {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(channel_output("text", text_dictionary(read_channel_text(input, "text")?.to_uppercase())))
+        Ok(channel_output("textOut", text_dictionary(read_channel_text(input, "text")?.to_uppercase())))
     }
 }
 // #endregion 🔖️Upper
@@ -51,7 +51,7 @@ pub fn register(registry: &mut Registry) {
         &["text"],
     );
     registry.register_operator(
-        info("text.upper", "Upper", "Uppercases text", vec![text_channel("text", "text.upper")], ChannelSpec::named("T", "Txt", "text", "UppercasedText")),
+        info("text.upper", "Upper", "Uppercases text", vec![text_channel("text", "text.upper")], ChannelSpec::named("T", "Txt", "textOut", "UppercasedText")),
         vec![OperatorImpl { schemas: vec!["text".into()], operator: Box::new(Upper) }],
         &["text"],
     );

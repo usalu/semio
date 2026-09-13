@@ -96,7 +96,6 @@ mod layout_wire_format_tests {
     }
 
     const GOLDEN_MEASURE_NUMBER_JSON: &str = "[{\"kind\":\"number\",\"id\":\"count\",\"label\":\"Count\",\"value\":100.0,\"min\":0.0,\"max\":1000.0,\"step\":1.0,\"ready\":42.0,\"loading\":true,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"setFillCount\"}},{\"kind\":\"number\",\"id\":\"count\",\"label\":null,\"value\":250.0,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"setFillCount\"}}]";
-    const GOLDEN_MEASURE_PROGRESS_JSON: &str = "[{\"kind\":\"progress\",\"id\":\"fill\",\"label\":\"Fill\",\"stage\":\"testing\",\"completed\":12.0,\"total\":100.0,\"steps\":[{\"kind\":\"info\",\"text\":\"trying 13\"},{\"kind\":\"danger\",\"text\":\"collision\"},{\"kind\":\"success\",\"text\":\"locked 12\"},{\"kind\":\"warning\",\"text\":\"document-capacity\"}],\"cancel\":{\"controllerId\":\"ctrl\",\"action\":\"cancelFill\"},\"loading\":true},{\"kind\":\"progress\",\"id\":\"fill\",\"label\":null,\"completed\":3.0,\"steps\":[]}]";
 
     #[semio_framework_async_macros::async_test]
     async fn window_measure_number_wire_format_round_trips_through_serde() {
@@ -133,46 +132,6 @@ mod layout_wire_format_tests {
         assert_eq!(serde_json::to_string(&decoded).unwrap(), GOLDEN_MEASURE_NUMBER_JSON);
         let no_ceiling = decoded.last().expect("two measures");
         assert!(matches!(no_ceiling, WindowMeasure::Number { max: None, min: None, .. }), "an absent ceiling must decode as None, never as a default number");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn window_measure_progress_wire_format_round_trips_through_serde() {
-        let determinate = WindowMeasure::Progress {
-            id: "fill".into(),
-            label: Some("Fill".into()),
-            stage: Some("testing".into()),
-            completed: 12.0,
-            total: Some(100.0),
-            steps: vec![
-                MeasureProgressStep { kind: MeasureProgressStepKind::Info, text: "trying 13".into() },
-                MeasureProgressStep { kind: MeasureProgressStepKind::Danger, text: "collision".into() },
-                MeasureProgressStep { kind: MeasureProgressStepKind::Success, text: "locked 12".into() },
-                MeasureProgressStep { kind: MeasureProgressStepKind::Warning, text: "document-capacity".into() },
-            ],
-            cancel: Some(ActionDescriptor { controller_id: "ctrl".into(), action: "cancelFill".into(), args: None }),
-            loading: Some(true),
-        };
-        let indeterminate = WindowMeasure::Progress { id: "fill".into(), label: None, stage: None, completed: 3.0, total: None, steps: vec![], cancel: None, loading: None };
-        let json = serde_json::to_string(&vec![determinate.clone(), indeterminate.clone()]).unwrap();
-        assert_eq!(json, GOLDEN_MEASURE_PROGRESS_JSON);
-        let decoded: Vec<WindowMeasure> = serde_json::from_str(GOLDEN_MEASURE_PROGRESS_JSON).unwrap();
-        assert_eq!(decoded, vec![determinate, indeterminate]);
-        assert_eq!(serde_json::to_string(&decoded).unwrap(), GOLDEN_MEASURE_PROGRESS_JSON);
-        assert!(matches!(decoded.last(), Some(WindowMeasure::Progress { total: None, .. })), "an absent total must stay indeterminate, never collapse to zero");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn measure_progress_step_kind_wire_tags_match_the_semantic_tokens() {
-        for (kind, tag) in [
-            (MeasureProgressStepKind::Info, "\"info\""),
-            (MeasureProgressStepKind::Success, "\"success\""),
-            (MeasureProgressStepKind::Warning, "\"warning\""),
-            (MeasureProgressStepKind::Danger, "\"danger\""),
-        ] {
-            assert_eq!(serde_json::to_string(&kind).unwrap(), tag);
-            assert_eq!(serde_json::from_str::<MeasureProgressStepKind>(tag).unwrap(), kind);
-            assert_eq!(format!("\"{}\"", kind.as_str()), tag);
-        }
     }
 
     fn utility_scoped_group(id: &str, utility: Option<&str>, children: Vec<WindowMeasure>) -> WindowMeasure {

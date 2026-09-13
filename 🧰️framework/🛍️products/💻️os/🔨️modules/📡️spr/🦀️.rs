@@ -44,7 +44,7 @@ pub use crate::os_spr::command::{
 };
 pub use crate::os_spr::conflict::{Conflict, ConflictId, ConflictKind, ConflictResolution, ConflictStatus, DispatchReport, EditMessages, MergeReport};
 pub use crate::os_spr::wire::{
-    decode_client_frame, decode_presence_peer, decode_server_frame, encode_client_frame, encode_presence_peer, encode_server_frame, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, PresencePeer, PresenceUi, PresenceViewKind, PresenceWindowView,
+    decode_client_frame, decode_presence_peer, decode_server_frame, encode_client_frame, encode_presence_peer, encode_server_frame, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, PresencePeer, PresenceToolRun, PresenceToolRunState, PresenceUi, PresenceViewKind, PresenceWindowView,
     ServerFrame,
 };
 pub use crate::os_spr::wire::{

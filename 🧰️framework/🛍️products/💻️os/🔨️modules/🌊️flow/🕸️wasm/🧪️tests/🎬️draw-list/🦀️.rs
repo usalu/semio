@@ -250,7 +250,7 @@ fn the_generation_3d_document_camera_does_not_frame_its_own_graph_and_loses_to_t
         "the document camera already frames {stored_coverage} of the graph — this law no longer measures the defect it was written for"
     );
 
-    let fitted = host.dag.adopt_camera_or_fit(stored.x, stored.y, stored.zoom);
+    let fitted = host.adopt_camera_or_fit(stored.x, stored.y, stored.zoom);
     assert!(fitted, "the opening camera kept a stored camera that shows {stored_coverage} of the graph");
     assert!((host.dag.camera_content_coverage() - 1.0).abs() < 1e-6, "after the fit the whole graph must be on screen");
 
@@ -278,13 +278,13 @@ fn the_generation_3d_document_camera_does_not_frame_its_own_graph_and_loses_to_t
 fn a_graph_that_left_the_view_refits_and_one_that_did_not_is_left_alone() {
     let mut host = generation_3d_flow_host();
     host.set_viewport(483, 814, 1.0);
-    host.dag.fit_camera_to_content();
-    assert!(!host.dag.refit_camera_if_content_left_view(), "a framed graph must never be re-fitted under the viewer");
+    host.fit_camera_to_content();
+    assert!(!host.refit_camera_if_content_left_view(), "a framed graph must never be re-fitted under the viewer");
 
     let content = host.dag.content_world_bounds().expect("content");
     host.set_camera(content.max_x + 100_000.0, content.max_y + 100_000.0, 1.0);
     assert!(host.dag.camera_content_coverage() <= canvas::camera::CONTENT_REFIT_MAX_COVERAGE);
-    assert!(host.dag.refit_camera_if_content_left_view(), "a graph nothing of which is on screen must be re-fitted");
+    assert!(host.refit_camera_if_content_left_view(), "a graph nothing of which is on screen must be re-fitted");
     assert!((host.dag.camera_content_coverage() - 1.0).abs() < 1e-6);
     retire(host);
 }
@@ -357,7 +357,7 @@ fn every_captioned_zoom_band_names_the_node_instead_of_abbreviating_it() {
 fn a_title_above_the_node_body_is_budgeted_wider_than_the_body() {
     let mut host = generation_3d_flow_host();
     host.set_viewport(483, 814, 1.0);
-    host.dag.fit_camera_to_content();
+    host.fit_camera_to_content();
     let state: Value = serde_json::from_str(&host.label_overlay_paint_state_json().expect("label overlay state")).expect("label json");
     let camera_zoom = state["camera"]["zoom"].as_f64().expect("camera zoom");
     let rows = state["labels"].as_array().expect("rows");

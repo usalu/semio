@@ -205,6 +205,20 @@ fn populated_flow_surface_closes_history_and_cache_before_slot_reuse() {
     assert_ne!(token.generation, next.generation);
 }
 
+/// 🔒️ `ENGINE_SURFACES` is ONE process-wide registry and `take_engine_surface_registrations` drains it
+/// globally, so two laws attaching engine surfaces at the same time steal each other's registrations
+/// and each other's close tokens. Every law that attaches one holds this first
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[cfg(test)]
+pub(crate) static ENGINE_SURFACE_LAW_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+/// 🔒️ The guard itself, poison-tolerant: a law that panicked already reported its own failure and
+/// must not turn every later law into a second, misleading one.
+#[cfg(test)]
+pub(crate) fn engine_surface_law_guard() -> std::sync::MutexGuard<'static, ()> {
+    ENGINE_SURFACE_LAW_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
 #[cfg(test)]
 fn scene_action(scene: &UiComponentSceneNode, action: &str, args: Value) -> ActionDescriptor {
     ActionDescriptor { controller_id: scene.controller_id.clone(), action: action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) }

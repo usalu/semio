@@ -992,6 +992,7 @@ fn shell_command_for_control_maps_dock_and_panel_control_ids() {
     assert_eq!(ShellState::shell_command_for_control("shell.layout.compact", false), Some(("shell.applyNamedLayout", "Apply Layout".to_string())));
     assert_eq!(ShellState::shell_command_for_control("ui.panelToggle.details", false), Some(("shell.panelToggle", shell_chrome_string("panelToggle.details", false).to_string())));
     assert_eq!(ShellState::shell_command_for_control("ui.panelToggle.settings", true), Some(("shell.panelToggle", shell_chrome_string("panelToggle.settings", true).to_string())));
+    assert_eq!(ShellState::shell_command_for_control("ui.panelToggle.chat", false), Some(("shell.panelToggle", shell_chrome_string("panelToggle.chat", false).to_string())));
     assert_eq!(ShellState::shell_command_for_control("ui.panelToggle.display", false), None, "left-panel toggles are out of scope");
     assert_eq!(ShellState::shell_command_for_control("ui.nav.back", false), None);
 }

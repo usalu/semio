@@ -2537,7 +2537,7 @@ export type AppFrameValue =
   | { readonly Emit: { readonly in_reply_to: number; readonly document_ops: readonly number[]; readonly config_ops: readonly number[]; readonly draft_ops: readonly number[]; readonly output: readonly number[]; readonly diagnostics: readonly number[] } }
   | { readonly Draft: { readonly in_reply_to: number; readonly pack: readonly number[]; readonly spr: readonly number[]; readonly ops: string } }
   | { readonly Children: { readonly in_reply_to: number; readonly entries: readonly ChildPackEntry[] } }
-  | { readonly Ephemeral: { readonly presence: readonly number[]; readonly presence_generation: number; readonly transient_generation: number; readonly interaction: readonly number[] } }
+  | { readonly Ephemeral: { readonly presence: readonly number[]; readonly presence_generation: number; readonly transient_generation: number; readonly interaction: readonly number[]; readonly tool_run: readonly number[] } }
   | { readonly HistorySnapshot: { readonly in_reply_to: number; readonly history_patch: readonly number[] } }
   | {
       readonly transactionProposal: {
@@ -3147,6 +3147,7 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
     writeVarintU64(out, frame.Ephemeral.presence_generation);
     writeVarintU64(out, frame.Ephemeral.transient_generation);
     writeBytes(out, frame.Ephemeral.interaction);
+    writeBytes(out, frame.Ephemeral.tool_run);
   } else if ("HistorySnapshot" in frame) {
     out.push(APP_FRAME_TAGS.HistorySnapshot);
     writeVarintU64(out, frame.HistorySnapshot.in_reply_to);
@@ -3297,7 +3298,7 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
       return { Children: { in_reply_to: readVarintU64(bytes, pos), entries: readVecChildPackEntry(bytes, pos) } };
     case APP_FRAME_TAGS.Ephemeral:
       return {
-        Ephemeral: { presence: readBytes(bytes, pos), presence_generation: readVarintU64(bytes, pos), transient_generation: readVarintU64(bytes, pos), interaction: readBytes(bytes, pos) },
+        Ephemeral: { presence: readBytes(bytes, pos), presence_generation: readVarintU64(bytes, pos), transient_generation: readVarintU64(bytes, pos), interaction: readBytes(bytes, pos), tool_run: readBytes(bytes, pos) },
       };
     case APP_FRAME_TAGS.HistorySnapshot:
       return { HistorySnapshot: { in_reply_to: readVarintU64(bytes, pos), history_patch: readBytes(bytes, pos) } };

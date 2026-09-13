@@ -3,12 +3,16 @@ use super::*;
 
 #[test]
 fn canvas2d_scene_round_trips_with_and_without_snapshot() {
-    let bare = Canvas2dScene { camera_x: 1.5, camera_y: -2.0, zoom: 1.0, layers_json: "[]".into(), snapshot: None };
+    let bare = Canvas2dScene::base(1.5, -2.0, 1.0, "[]".into());
     assert_eq!(Canvas2dScene::from_value(bare.to_value()), Ok(bare.clone()));
     assert!(matches!(bare.to_value(), DslValue::Object(entries) if !entries.iter().any(|(k, _)| k == "snapshot")));
 
     let leased = Canvas2dScene { snapshot: Some(crate::Canvas2dSnapshotLease { slot: 1, epoch: 2, revision: 3, generation: 4, page_count: 1, byte_count: 16 }), ..bare };
-    assert_eq!(Canvas2dScene::from_value(leased.to_value()), Ok(leased));
+    assert_eq!(Canvas2dScene::from_value(leased.to_value()), Ok(leased.clone()));
+
+    let traced = Canvas2dScene { tool_run_trace: Some("AAQB".into()), lanes: vec![SceneLaneRef { lane: "toolRunTrace".into(), bytes: 4, hash: scene_lane_hash("AAQB") }], ..leased };
+    assert_eq!(Canvas2dScene::from_value(traced.to_value()), Ok(traced.clone()));
+    assert_eq!(Canvas2dScene::decode_pack(&traced.encode_pack().expect("canvas-2d packs")).expect("canvas-2d unpacks"), traced);
 }
 
 #[test]

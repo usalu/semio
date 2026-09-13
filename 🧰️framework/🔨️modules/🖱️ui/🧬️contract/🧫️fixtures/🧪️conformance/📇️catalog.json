@@ -60,6 +60,7 @@
         "input": "⌨️input",
         "key-value-list": "📋️key-value-list",
         "number-stepper": "🔢️number-stepper",
+        "progress": "📶️progress",
         "ring": "💍️ring",
         "select": "🔽️select",
         "separator": "➖️separator",

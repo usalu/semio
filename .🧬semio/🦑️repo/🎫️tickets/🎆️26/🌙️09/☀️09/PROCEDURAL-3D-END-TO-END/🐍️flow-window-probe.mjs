@@ -116,13 +116,21 @@ if (mode === "wire") {
     return { status: document.querySelector("[data-status-json]")?.getAttribute("data-status-json")?.slice(0, 240) ?? null, meshes: host?.getAttribute("data-meshes-json")?.length ?? 0 };
   });
 
-  const drag = async (from, to) => {
+  /** 🖱️ One pointer gesture, then WAIT for the guest to republish: the fixture this probe reads is the
+   * guest's own scene, which lands a few frames after the dispatch settles — reading it too early
+   * reports the graph as it was and hides a change that did happen. */
+  const drag = async (from, to, expectWires) => {
     await page.mouse.move(from.x, from.y);
     await page.mouse.down();
     await page.mouse.move((from.x + to.x) / 2, (from.y + to.y) / 2, { steps: 8 });
     await page.mouse.move(to.x, to.y, { steps: 8 });
     await page.mouse.up();
-    await page.waitForTimeout(3000);
+    for (let attempt = 0; attempt < 30; attempt++) {
+      await page.waitForTimeout(500);
+      const live = wires(await fixture());
+      if (expectWires === undefined || live.length === expectWires) return live;
+    }
+    return wires(await fixture());
   };
 
   const before = await fixture();
@@ -141,6 +149,32 @@ if (mode === "wire") {
     console.log("[DEBUG] published port geometry", JSON.stringify({ fromPort, toPort, source, sink }));
     const steps = [];
 
+    /** 🔍️ Wheels the graph camera until its zoom crosses `target`, then reports the zoom reached. The
+     * LOD band a zoom lands in used to decide whether ports were hit-testable at all, so a wire proof
+     * that only ever ran at the boot zoom proved one band out of six. */
+    const liveZoom = () => {
+      for (let index = lines.length - 1; index >= 0; index--) {
+        const match = /dag draw lod=(\w+) zoom=([0-9.]+)/u.exec(lines[index]);
+        if (match) return { lod: match[1], zoom: Number(match[2]) };
+      }
+      return null;
+    };
+    /** 🔍️ Wheels out one notch at a time until the host reports one of `bands` — the LOD tier is what
+     * port hit-picking used to be gated on, so the proof has to name the tier it ran in, not a zoom
+     * number. `minimap` is deliberately excluded: that tier is a silhouette and withholds ports. */
+    const zoomToBand = async (bands) => {
+      const anchor = centreOf(sink);
+      for (let step = 0; step < 40; step++) {
+        const live = liveZoom();
+        if (live && bands.includes(live.lod)) return live;
+        if (live && live.lod === "minimap") return live;
+        await page.mouse.move(anchor.x, anchor.y);
+        await page.mouse.wheel(0, 40);
+        await page.waitForTimeout(350);
+      }
+      return liveZoom();
+    };
+
     if (!source || !sink) {
       console.log("[DEBUG] wire: the host published no rect for one of the ports");
     } else {
@@ -151,16 +185,18 @@ if (mode === "wire") {
       // test is the one a user performs.)
       const host = await page.evaluate((id) => { const el = document.querySelector(`[data-surface-id="${id}"]`) ?? document.querySelector(".semio-node-graph-host"); const r = el?.getBoundingClientRect(); return r ? { x: r.x, y: r.y, width: r.width, height: r.height } : null; }, surface);
       const empty = host ? { x: host.x + host.width * 0.5, y: host.y + host.height - 60 } : { x: sink.point.x, y: sink.point.y + 200 };
-      await drag(centreOf(sink), empty);
+      const cutWires = await drag(centreOf(sink), empty, wires(before).length - 1);
       const cut = await fixture();
-      steps.push({ phase: "cut", at: centreOf(sink), wires: wires(cut) });
-      console.log("[DEBUG] wires after cut", JSON.stringify(wires(cut)));
+      await page.waitForTimeout(5000);
+      const previewCut = await previewState();
+      steps.push({ phase: "cut", at: centreOf(sink), wires: cutWires });
+      console.log("[DEBUG] wires after cut", JSON.stringify(cutWires), "preview", JSON.stringify(previewCut));
       await page.screenshot({ path: join(outDir, "5-wire-cut.png") });
 
       // 2️⃣ CONNECT: redraw it from the output's published centre to the input's.
       const sourceAgain = await publishedPort(fromPort);
       const sinkAgain = await publishedPort(toPort);
-      await drag(centreOf(sourceAgain ?? source), centreOf(sinkAgain ?? sink));
+      await drag(centreOf(sourceAgain ?? source), centreOf(sinkAgain ?? sink), wires(before).length);
       const redrawn = await fixture();
       steps.push({ phase: "connect", from: centreOf(sourceAgain ?? source), to: centreOf(sinkAgain ?? sink), wires: wires(redrawn) });
       console.log("[DEBUG] wires after redraw", JSON.stringify(wires(redrawn)));
@@ -176,12 +212,35 @@ if (mode === "wire") {
         cutRemovedTheWire: wires(cut).length === wires(before).length - 1,
         redrawRestoredTheWire: wires(redrawn).sort().join("|") === wires(before).sort().join("|"),
         dispatched,
-        preview: { before: previewBefore, after: previewAfter },
+        preview: { before: previewBefore, afterCut: previewCut, afterRedraw: previewAfter },
         published: { source, sink },
         steps,
       };
+      // 3️⃣ The same gesture in a LOWER zoom band — where port hit-picking used to be switched off.
+      const zoomReached = await zoomToBand(["compact", "overview"]);
+      const zoomedSink = await publishedPort(toPort);
+      const zoomedSource = await publishedPort(fromPort);
+      let zoomedCut = null;
+      let zoomedRedraw = null;
+      if (zoomedSink && zoomedSource) {
+        zoomedCut = await drag(centreOf(zoomedSink), { x: host ? host.x + host.width * 0.5 : centreOf(zoomedSink).x, y: host ? host.y + host.height - 60 : centreOf(zoomedSink).y + 200 }, wires(before).length - 1);
+        const sinkAfter = await publishedPort(toPort);
+        const sourceAfter = await publishedPort(fromPort);
+        zoomedRedraw = await drag(centreOf(sourceAfter ?? zoomedSource), centreOf(sinkAfter ?? zoomedSink), wires(before).length);
+      }
+      // 📶️ The wheel crosses LOD bands faster than it can be stopped in one (the host pins the tier for
+      // the duration of a wheel gesture), so this phase reports the band it actually reached. The
+      // `minimap` tier withholds ports BY DESIGN — a whole-graph silhouette whose nodes are a few
+      // pixels wide — so a no-op there is the rule holding, not the gesture failing. Zoom coverage of
+      // the port-bearing bands (0.5 / 1 / 2) is carried deterministically by the Rust law over the
+      // real `DagHost` (`🕸️dag/🧪️tests/🔗️wire-edit/🦀️.rs`).
+      const withholdsPorts = zoomReached?.lod === "minimap";
+      result.lowZoom = { zoomReached, bandWithholdsPortsByDesign: withholdsPorts, publishedSink: zoomedSink, cut: zoomedCut, redraw: zoomedRedraw, cutRemovedTheWire: zoomedCut ? zoomedCut.length === wires(before).length - 1 : null };
+      result.dispatched = lines.filter((line) => line.includes("node graph wire edit dispatch"));
+      console.log("[DEBUG] low zoom wire result", JSON.stringify(result.lowZoom));
+      await page.screenshot({ path: join(outDir, "7-wire-low-zoom.png") });
       writeFileSync(join(outDir, "wire-result.json"), JSON.stringify(result, null, 2));
-      console.log("[DEBUG] wire result", JSON.stringify({ cut: result.cutRemovedTheWire, redraw: result.redrawRestoredTheWire, dispatched: dispatched.length, preview: result.preview }));
+      console.log("[DEBUG] wire result", JSON.stringify({ cut: result.cutRemovedTheWire, redraw: result.redrawRestoredTheWire, dispatched, preview: result.preview }));
     }
   }
 }

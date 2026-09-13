@@ -53,7 +53,7 @@ mod value_round_trip_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn window_measure_number_and_progress_round_trip() {
+    async fn window_measure_number_round_trips() {
         let measures = [
             WindowMeasure::Number {
                 id: "count".into(),
@@ -68,28 +68,9 @@ mod value_round_trip_tests {
                 disabled: Some(false),
                 on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "setFillCount".into(), args: None },
             },
-            WindowMeasure::Progress {
-                id: "fill".into(),
-                label: None,
-                stage: Some("locking".into()),
-                completed: 12.0,
-                total: Some(100.0),
-                steps: vec![MeasureProgressStep { kind: MeasureProgressStepKind::Warning, text: "no-open-vortex".into() }],
-                cancel: Some(ActionDescriptor { controller_id: "ctrl".into(), action: "cancelFill".into(), args: None }),
-                loading: None,
-            },
         ];
         for measure in measures {
             assert_eq!(WindowMeasure::from_value(measure.to_value()).expect("valid DslValue decodes"), measure);
-        }
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn measure_progress_step_round_trips() {
-        for kind in [MeasureProgressStepKind::Info, MeasureProgressStepKind::Success, MeasureProgressStepKind::Warning, MeasureProgressStepKind::Danger] {
-            let step = MeasureProgressStep { kind, text: format!("{} step", kind.as_str()) };
-            assert_eq!(MeasureProgressStep::from_value(step.to_value()).expect("valid DslValue decodes"), step);
-            assert_eq!(MeasureProgressStepKind::from_value(kind.to_value()).expect("valid DslValue decodes"), kind);
         }
     }
 

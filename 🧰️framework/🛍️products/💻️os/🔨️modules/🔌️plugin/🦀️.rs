@@ -5646,7 +5646,7 @@ pub mod app {
                 command_grammar: self.command_grammar,
                 io: self.io,
             };
-            for action in semio_framework::interaction_action_definitions(&definition) {
+            for action in semio_framework::interaction_action_definitions(&definition).into_iter().chain(semio_framework::tool_run_action_definitions(&definition)) {
                 if declared_action_ids.insert(action.id.clone()) {
                     if let Some(keys) = &action.keys {
                         if bound_keys.insert(keys.clone()) {
@@ -6485,6 +6485,14 @@ pub mod app {
     #[path = "🧪️tests/♻️publication-retirement-authority/🦀️.rs"]
     mod publication_retirement_authority;
 
+    #[path = "⏯️tool-run/🦀️.rs"]
+    pub mod tool_run;
+    pub use tool_run::{is_tool_run_action_id, ToolRunActionOutcome, ToolRunDriver, ToolRunJob, ToolRunJobPurpose, ToolRunJobRequest, ToolRunLedger, ToolRunTickReceipt, ToolRunView, FRAMEWORK_TOOL_RUN_BODY_KEY};
+
+    #[cfg(test)]
+    #[path = "🧪️tests/🔬️tool-run/🦀️.rs"]
+    mod tool_run_tests;
+
     //#region 🔖️ArtifactAppLaws
     #[cfg(any(test, feature = "artifact-app-testing"))]
     pub mod artifact_app_laws {
@@ -6528,7 +6536,14 @@ pub mod app {
             // X" assertion read against a tree that had no actions at all
             // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
             let bindings = serde_json::to_value(&node.bindings).map_err(|_| "bindings-json")?;
-            Ok(serde_json::json!({ "key": node.key.as_str(), "component": component, "bindings": bindings, "children": children }))
+            // ♿️ …and so is the accessibility spec, for exactly the same reason: a `Component::Surface`
+            // paints into a canvas with no accessible children, so the record's own name, description,
+            // liveness and `aria-keyshortcuts` are ALL an assistive technology ever learns about it. A
+            // projection that omitted them made every "this canvas is named / announces / advertises its
+            // chord" assertion read against a tree that carried no accessibility at all
+            // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+            let accessibility = serde_json::to_value(&node.accessibility).map_err(|_| "accessibility-json")?;
+            Ok(serde_json::json!({ "key": node.key.as_str(), "component": component, "bindings": bindings, "accessibility": accessibility, "children": children }))
         }
 
         /// 🖼️ Observes fixture keys/components/children and retires that exact tree before any outcome; not a wire codec.
@@ -6728,11 +6743,21 @@ pub mod app {
                 }
                 if let super::PluginCloseStep::Pending { released_items, released_bytes } = app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)? {
                     if released_items > 1 || released_bytes > store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
-                        return Err(super::Fault::from("registered fixture typed operation exceeded its exact maintenance grant"));
+                        return Err(super::Fault::from(format!(
+                            "registered fixture typed operation exceeded its exact maintenance grant: stage {} released {released_items} items / {released_bytes} bytes against a grant of 1 item / {} bytes",
+                            crate::app::LAST_MAINTENANCE_STAGE.load(std::sync::atomic::Ordering::Relaxed),
+                            store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES
+                        )));
                     }
                 }
                 app.advance_typed_operation_publication().await?;
-                if let Some(page) = app.take_typed_operation_result_page(receiver) {
+                // 📄️ EVERY presented page, not one per turn: `has_pending_typed_operations` counts the
+                // effect/event/ui/completion outboxes and the mounted operations, but NOT a presented
+                // page waiting for its ACK — so a turn that leaves a second page queued can be the turn
+                // the loop exits on, and that page is never seen. A command that publishes an artifact,
+                // a config and an app transient reported two of the three
+                // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+                while let Some(page) = app.take_typed_operation_result_page(receiver) {
                     let lane = page.lane;
                     let fault = (lane == TypedOperationResultLane::Fault).then(|| super::Fault::from(format!("registered fixture typed operation fault: {}", String::from_utf8_lossy(page.bytes()))));
                     if !app.acknowledge_typed_operation_result(page.token)? {
@@ -7635,6 +7660,7 @@ pub mod app {
         operation: Option<AppOperationContext>,
         render_operation: Option<AppRenderOperationContext>,
         snapshot_read: std::sync::Mutex<Option<store::SnapshotRead<P>>>,
+        tool_run: Option<ToolRunView>,
     }
 
     /// 🪪️ Durable authority captured once at public command admission and copied into every
@@ -7677,19 +7703,19 @@ pub mod app {
         /// shape every leaf app and test uses. Prefer this over a struct literal: lane views grow
         /// over time, and a constructor absorbs that growth without touching every call site.
         pub fn new(snapshot: &'a P, history: &'a HistoryView) -> Self {
-            Self { snapshot, history, children: ChildContentView::EMPTY, operation: None, render_operation: None, snapshot_read: std::sync::Mutex::new(None) }
+            Self { snapshot, history, children: ChildContentView::EMPTY, operation: None, render_operation: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None }
         }
 
         /// 🪪️ Synchronous retained-worker view bound to one exact admitted operation.
         pub fn with_operation(snapshot: &'a P, history: &'a HistoryView, operation: AppOperationContext) -> Self {
-            Self { snapshot, history, children: ChildContentView::EMPTY, operation: Some(operation), render_operation: None, snapshot_read: std::sync::Mutex::new(None) }
+            Self { snapshot, history, children: ChildContentView::EMPTY, operation: Some(operation), render_operation: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None }
         }
 
         /// 🧩️ App-side composing view for retained command work, which observes its children through
         /// [`ArtifactOwnedToolJobContext::children`] rather than through a host render pass and so
         /// carries no render identity. Synchronous on purpose: it only moves owned fields.
         pub fn with_children(snapshot: &'a P, history: &'a HistoryView, children: ChildContentView) -> Self {
-            Self { snapshot, history, children, operation: None, render_operation: None, snapshot_read: std::sync::Mutex::new(None) }
+            Self { snapshot, history, children, operation: None, render_operation: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None }
         }
 
         /// 🏗️ A view over a composing document, wired to its live child stores AND to the identity the
@@ -7699,7 +7725,19 @@ pub mod app {
         /// here, so [`ArtifactView::render_operation`] is total on the host and an app that leases a
         /// per-instance session off it (puzzle 3d's `puzzle3d_view_session_key`) never runs cold.
         async fn with_render_context(snapshot: &'a P, history: &'a HistoryView, children: ChildContentView, render_operation: AppRenderOperationContext, snapshot_read: Option<store::SnapshotRead<P>>) -> Self {
-            Self { snapshot, history, children, operation: None, render_operation: Some(render_operation), snapshot_read: std::sync::Mutex::new(snapshot_read) }
+            Self { snapshot, history, children, operation: None, render_operation: Some(render_operation), snapshot_read: std::sync::Mutex::new(snapshot_read), tool_run: None }
+        }
+
+        /// ⏯️ Binds the tool run this document instance shows; `snapshot` is then committed ⊕ provisional.
+        fn with_tool_run(mut self, tool_run: Option<ToolRunView>) -> Self {
+            self.tool_run = tool_run;
+            self
+        }
+
+        /// ⏯️ The run whose provisional entities render with the `provisional` style token and stay
+        /// out of interaction topology (contract §4.1 layer 1).
+        pub fn tool_run(&self) -> Option<&ToolRunView> {
+            self.tool_run.as_ref()
         }
 
         /// 🪪️ Returns the actual public job authority for command handlers.
@@ -11101,6 +11139,10 @@ pub mod app {
         fn register_tool_job_factories(_registry: &mut ArtifactToolFactoryRegistry<'_, Self>) -> Result<(), Fault> {
             Ok(())
         }
+        /// ⏯️ Builds one run or revalidate job of a tool run (contract §3.7); `None` faults the run.
+        fn build_tool_run_job(_request: ToolRunJobRequest<'_, Self>) -> Result<Option<ToolRunJob>, Fault> {
+            Ok(None)
+        }
         fn register_window_transient_owners(_registry: &mut WindowTransientOwnerRegistry) -> Result<(), Fault> {
             Ok(())
         }
@@ -11738,6 +11780,9 @@ pub mod app {
         pub presence_generation: u64,
         pub transient_generation: u64,
         pub interaction: Vec<u8>,
+        /// ⏯️ This instance's tool run summary (`PluginApp::tool_run_presence`, contract §3.4) — the local
+        /// `PresencePeer.tool_run` the host's heartbeat assembly stamps; `None` without a run.
+        pub tool_run: Option<protocol::PresenceToolRun>,
     }
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -11779,6 +11824,15 @@ pub mod app {
         async fn tool_public_contracts(&self) -> Vec<ArtifactToolPublicContract>;
         /// 📬️ Advances at most one typed-operation store or host publication unit.
         async fn advance_typed_operation_publication(&mut self) -> Result<(), Fault>;
+        /// 👥️ This instance's tool run summary for the local `PresencePeer.tool_run` (contract §3.4).
+        fn tool_run_presence(&self) -> Option<protocol::PresenceToolRun> {
+            None
+        }
+        /// 📼️ Base64url `ToolRunTraceDelta` after the renderer-echoed cursor, for the scene lane
+        /// `toolRunTrace` (contract §3.2, §4.1 layer 2); `None` when idle.
+        fn tool_run_trace_delta(&self, _cursor: Option<semio_framework_tool_run::ToolRunTraceCursor>) -> Option<String> {
+            None
+        }
         /// 🔁️ Keeps admitted work live through worker preparation, publication, ACK, and retirement.
         fn has_pending_typed_operations(&self) -> bool;
         /// ▶️ Whether this app still owes the host a typed-operation round trip — the sole source the
@@ -12138,6 +12192,9 @@ pub mod app {
         /// `VcsArtifactApp::new` therefore has no interaction domains to intercept, matching the fact
         /// that `AppBuilder::interaction(...)` calls never reach a registry built that way either.
         interactions: HashMap<String, InteractionDefinition>,
+        /// ⏯️ Every tool and utility that declares a `ToolRunDefinition`, with its label, keyed by id —
+        /// the manifest is the run's source of record (tool run contract §2.4).
+        tool_runs: HashMap<String, (LocalizedLabel, semio_framework::ToolRunDefinition)>,
     }
 
     fn validate_ui_dispatch_classification(owner: &str, id: &str, classification: semio_framework::InteractiveJobClassification) -> Result<(), Fault> {
@@ -12178,7 +12235,13 @@ pub mod app {
             let window_actions: HashMap<String, HashMap<String, ActionDefinition>> = definition.window_kinds.iter().map(|window| (window.id.clone(), window.actions.iter().map(|action| (action.id.clone(), action.clone())).collect())).collect();
             let mut actions: HashMap<String, ActionDefinition> = semio_framework::interaction_action_definitions(definition).into_iter().map(|action| (action.id.clone(), action)).collect();
             actions.extend(window_actions.values().flat_map(|window| window.iter().map(|(id, action)| (id.clone(), action.clone()))));
-            Self { actions, window_actions, app_commands, mode_commands, controller_id: definition.controller_id.clone(), interactions: definition.interactions.iter().map(|interaction| (interaction.id.clone(), interaction.clone())).collect() }
+            let tool_runs = definition
+                .tools
+                .iter()
+                .filter_map(|tool| tool.run.clone().map(|run| (tool.id.clone(), (tool.label.clone(), run))))
+                .chain(definition.utilities.iter().filter_map(|utility| utility.run.clone().map(|run| (utility.id.clone(), (utility.label.clone(), run)))))
+                .collect();
+            Self { actions, window_actions, app_commands, mode_commands, controller_id: definition.controller_id.clone(), interactions: definition.interactions.iter().map(|interaction| (interaction.id.clone(), interaction.clone())).collect(), tool_runs }
         }
 
         /// 🧹 Releases one catalog row or one empty nested catalog owner.
@@ -12242,6 +12305,15 @@ pub mod app {
                 drop(self.app_commands.remove(&key));
                 return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
             }
+            if let Some(key) = self.tool_runs.keys().next() {
+                let bytes = key.len();
+                if bytes > maximum_bytes {
+                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                let key = key.clone();
+                drop(self.tool_runs.remove(&key));
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+            }
             if let Some(key) = self.interactions.keys().next() {
                 let bytes = key.len();
                 if bytes > maximum_bytes {
@@ -12264,7 +12336,12 @@ pub mod app {
 
         /// 🧺 Proves that every catalog row and nested catalog owner was retired.
         pub(crate) fn terminal_is_empty(&self) -> bool {
-            self.actions.is_empty() && self.window_actions.is_empty() && self.app_commands.is_empty() && self.mode_commands.is_empty() && self.controller_id.is_empty() && self.interactions.is_empty()
+            self.actions.is_empty() && self.window_actions.is_empty() && self.app_commands.is_empty() && self.mode_commands.is_empty() && self.controller_id.is_empty() && self.interactions.is_empty() && self.tool_runs.is_empty()
+        }
+
+        /// ⏯️ The declared label and `ToolRunDefinition` of one tool or utility.
+        pub(crate) fn tool_run(&self, id: &str) -> Option<&(LocalizedLabel, semio_framework::ToolRunDefinition)> {
+            self.tool_runs.get(id)
         }
 
         fn get(&self, id: &str) -> Option<&ActionDefinition> {
@@ -19976,6 +20053,9 @@ pub mod app {
         /// revision — this lane has no op log, no undo group, no command-log row, mirroring
         /// `presence_store`/`transient_store`'s own ephemeral treatment above.
         pub(crate) pending_presence: Vec<PresenceUpdate>,
+        /// ⏯️ The ephemeral local-only tool run ledger (contract §3.3): provisional document ops folded
+        /// into an overlay the renderer reads, never touching `store` until the one-edit finalize.
+        pub(crate) tool_runs: ToolRunLedger<A>,
     }
 
     /// 🆔️ Deterministic session-local `ArtifactHandle` for a CHILD's real (string) artifact id.
@@ -20011,6 +20091,7 @@ pub mod app {
         HISTORY_ACTION_IDS.contains(&action)
             || CLIPBOARD_ACTION_IDS.contains(&action)
             || INTERACTION_ACTION_IDS.contains(&action)
+            || is_tool_run_action_id(action)
             || matches!(action, REVERT_TO_COMMAND_ACTION_ID | SET_HISTORY_COMMAND_FILTER_ACTION_ID | NOTE_SHELL_COMMAND_ACTION_ID | RECORD_TUTORIAL_ACTION_ID)
     }
 
@@ -20751,6 +20832,7 @@ pub mod app {
                 pending_transaction: None,
                 pending_transaction_proposal: None,
                 pending_presence: Vec::new(),
+                tool_runs: ToolRunLedger::default(),
             }
         }
 
@@ -22788,6 +22870,10 @@ pub mod app {
             // queuing it — config/draft-only and op-less dispatches are unaffected. Read-only
             // commands (RefreshUi/ReadDocument/ContextMenu/ephemeral lanes) never reach
             // `dispatch_emit` at all, so they are unaffected by construction.
+            if !artifact_mutations.is_empty() && self.tool_runs.freezes_local_emits() {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.busy"), format!("verb {verb:?} would emit artifact mutations while a freezing tool run is non-terminal on this instance")));
+            }
+
             if !artifact_mutations.is_empty() && self.pending_transaction.is_some() {
                 let pending_txn_id = self.pending_transaction.as_ref().map(|pending| pending.txn_id.clone()).unwrap_or_default();
                 return Err(Self::transaction_fault(FaultOrigin::Plugin, "transaction.instance-busy", format!("verb {verb:?} would emit artifact mutations while transaction {pending_txn_id:?} is pending on this instance")));
@@ -22866,6 +22952,7 @@ pub mod app {
                 for mutation in window_config_mutations {
                     self.window_config_store.dispatch(&authority, &meta.actor, mutation, description.clone(), coalesce_key.clone()).await?;
                 }
+                self.tool_runs.note_window_config_published();
             }
             #[cfg(test)]
             debug_assert!(tasks.is_empty());
@@ -24571,6 +24658,9 @@ pub mod app {
             if A::ROLE == AppRole::Viewer && VIEWER_REJECTED_ACTION_IDS.contains(&action) {
                 return Err(viewer_read_only_fault(action));
             }
+            if is_tool_run_action_id(action) {
+                return self.dispatch_tool_run_action(action, args, meta).await;
+            }
             if is_framework_reserved_action_id(action) {
                 return self.dispatch_framework_reserved_action(action, args, meta).await;
             }
@@ -25222,6 +25312,7 @@ pub mod app {
                             TypedOperationResultLane::WindowConfig => {
                                 let authority = mounted.window_config_authority.as_mut().ok_or_else(|| plugin_sdk_fault("window config receipt lost its captured window authority"))?;
                                 self.window_config_store.refresh(authority)?;
+                                self.tool_runs.note_window_config_published();
                             }
                             TypedOperationResultLane::WindowTransient => {
                                 let authority = mounted.window_transient_authority.as_mut().ok_or_else(|| plugin_sdk_fault("window transient receipt lost its captured window authority"))?;
@@ -26694,6 +26785,10 @@ pub mod app {
                 }
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
+            if !self.tool_runs.terminal_is_empty() {
+                let step = self.tool_runs.close_step(&mut self.store, maximum_items, maximum_bytes)?;
+                return Ok(if step == PluginCloseStep::Complete { PluginCloseStep::Pending { released_items: 1, released_bytes: 0 } } else { step });
+            }
             // 🧾️ A stage that reports `Complete` HANDED OFF: one retained authority really did cross the
             // close boundary, so the ladder owes `released_items: 1`, not `Pending { 0, 0 }` — the same
             // convention `ArtifactStoreEnvelopeRetirement::close_step` was corrected to on 2026-09-10.
@@ -27200,6 +27295,7 @@ pub mod app {
 
         fn close_terminal_is_empty(&self) -> bool {
             self.close_started
+                && self.tool_runs.terminal_is_empty()
                 && self.close_owned_stage >= 8
                 && self.close_document_disposer.is_none()
                 && self.close_config_disposer.is_none()
@@ -27393,6 +27489,9 @@ pub mod app {
         }
 
         async fn advance_typed_operation_publication(&mut self) -> Result<(), Fault> {
+            if self.tool_run_has_pending_work() {
+                self.drive_tool_run_turn().await?;
+            }
             self.drive_artifact_envelope_decode_worker()?;
             if self.local_interaction_query.as_ref().is_some_and(|query| query.has_pending_work()) {
                 self.local_interaction_query_turn = !self.local_interaction_query_turn;
@@ -27404,8 +27503,17 @@ pub mod app {
             self.advance_typed_operation_publication_one().await
         }
 
+        fn tool_run_presence(&self) -> Option<protocol::PresenceToolRun> {
+            self.tool_runs.presence()
+        }
+
+        fn tool_run_trace_delta(&self, cursor: Option<semio_framework_tool_run::ToolRunTraceCursor>) -> Option<String> {
+            self.tool_runs.trace_delta(cursor, tool_run::TOOL_RUN_TRACE_DELTA_BYTES)
+        }
+
         fn has_pending_typed_operations(&self) -> bool {
-            !self.tool_operations.is_empty()
+            self.tool_run_has_pending_work()
+                || !self.tool_operations.is_empty()
                 || !self.latest_wins_commands.is_empty()
                 || self.typed_effect_outbox.len() != 0
                 || self.typed_event_outbox.len() != 0
@@ -27419,7 +27527,8 @@ pub mod app {
         }
 
         fn has_runnable_typed_operations(&self) -> bool {
-            !self.tool_operations.is_empty()
+            self.tool_run_has_pending_work()
+                || !self.tool_operations.is_empty()
                 || self.has_runnable_artifact_envelope_decode()
                 || !self.latest_wins_commands.is_empty()
                 || self.typed_effect_outbox.len() != 0
@@ -27858,7 +27967,13 @@ pub mod app {
                 protocol::encode_presence_interaction(&interaction, &mut bytes).await;
                 bytes
             };
-            EphemeralSnapshot { presence: self.presence_store.local().encode_pack(), presence_generation: self.presence_store.generation().await, transient_generation: self.transient_store.generation().await, interaction: interaction_bytes }
+            EphemeralSnapshot {
+                presence: self.presence_store.local().encode_pack(),
+                presence_generation: self.presence_store.generation().await,
+                transient_generation: self.transient_store.generation().await,
+                interaction: interaction_bytes,
+                tool_run: self.tool_runs.presence(),
+            }
         }
 
         fn reserve_presence_ingress(&mut self, seq: u64) -> Result<PresenceRosterAdmission, Fault> {
@@ -28181,6 +28296,11 @@ pub mod app {
                 let root = ui_history_panel(history, &self.registry.controller_id, view_state.locale == Locale::De, A::ROLE == AppRole::Viewer, self.history_page).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
                 return Ok(built_to_component_tree(root));
             }
+            if body_key == FRAMEWORK_TOOL_RUN_BODY_KEY {
+                let tool_label = self.tool_runs.tool_id().and_then(|tool_id| self.registry.tool_run(tool_id)).map(|(label, _)| label.resolve(Terminology::Native, view_state.locale).to_string());
+                let root = self.tool_runs.panel(&self.registry.controller_id, view_state.locale, tool_label).map_err(|error| plugin_sdk_fault(error.to_string()))?;
+                return Ok(built_to_component_tree(root));
+            }
             // 🕹️ Task 5: materialized once, before either branch, then used to stamp EVERY
             // `interaction_domain`-bound `UiTree` this render produces — see `stamp_and_cache_interaction_ui`.
             let interaction_state = self.interaction_state().await;
@@ -28205,17 +28325,18 @@ pub mod app {
                 return Ok(node);
             }
             let render_operation = self.live_render_operation();
-            let node = {
-                let VcsArtifactApp { app: _, cache, child_content_root, .. } = self;
+            let mut node = {
+                let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, .. } = self;
                 let Some((_, snapshot, config, history)) = cache.as_ref() else {
                     return Err(plugin_sdk_fault("render cache unavailable after refresh"));
                 };
-                let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None).await;
+                let doc = ArtifactView::with_render_context(tool_runs.overlay_or(snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None).await.with_tool_run(tool_runs.view());
                 let cfg = ConfigView { snapshot: config.as_ref(), window: window_config.as_ref().map(|authority| &authority.snapshot) };
                 let transient = self.transient_store.current_root();
                 let transient = TransientView { snapshot: transient.as_ref(), window: window_transient.as_ref().map(|authority| &authority.snapshot) };
                 A::render_with_request_context(&self.instance_operation_owner, body_key, &doc, &cfg, view_state, &transient, &interaction).await.map_err(|error| plugin_sdk_fault(error.to_string()))?
             };
+            self.inject_tool_run_trace_lane(&mut node, body_key, view_state)?;
             self.stamp_and_cache_interaction_ui(&node, &interaction_state, body_key).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
             Ok(node)
         }
@@ -28225,9 +28346,9 @@ pub mod app {
                 return HashMap::new();
             }
             let render_operation = self.live_render_operation();
-            let VcsArtifactApp { window_config_store, window_transient_store, cache, child_content_root, transient_store, .. } = self;
+            let VcsArtifactApp { window_config_store, window_transient_store, cache, child_content_root, transient_store, tool_runs, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None).await;
+            let doc = ArtifactView::with_render_context(tool_runs.overlay_or(snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None).await.with_tool_run(tool_runs.view());
             let mut engagements = HashMap::new();
             for window in view_state.window_instances.iter().take(UI_RESIDENT_SLOTS) {
                 let Some(window_view_state) = view_state.for_window_instance(&window.id) else { continue };
@@ -28259,9 +28380,9 @@ pub mod app {
             let interaction_peers = std::sync::Arc::clone(&self.peer_presence);
             let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref() };
             let render_operation = self.live_render_operation();
-            let VcsArtifactApp { window_config_store, cache, child_content_root, .. } = self;
+            let VcsArtifactApp { window_config_store, cache, child_content_root, tool_runs, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None).await;
+            let doc = ArtifactView::with_render_context(tool_runs.overlay_or(snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None).await.with_tool_run(tool_runs.view());
             let mut measures = HashMap::new();
             for window in view_state.window_instances.iter().take(UI_RESIDENT_SLOTS) {
                 let Some(window_view_state) = view_state.for_window_instance(&window.id) else { continue };
@@ -28287,9 +28408,9 @@ pub mod app {
                 Err(_) => return HashMap::new(),
             };
             let render_operation = self.live_render_operation();
-            let VcsArtifactApp { app: _, cache, child_content_root, .. } = self;
+            let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None).await;
+            let doc = ArtifactView::with_render_context(tool_runs.overlay_or(snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None).await.with_tool_run(tool_runs.view());
             let cfg = ConfigView { snapshot: config.as_ref(), window: window_config.as_ref().map(|authority| &authority.snapshot) };
             A::tool_measures(&doc, &cfg, view_state).await
         }
@@ -29368,6 +29489,10 @@ pub mod app {
         fn register_tool_job_factories(_registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
             Ok(())
         }
+        /// ⏯️ Author-owned run/revalidate job builder whose runtime owner is `EditorApp<Self>`.
+        fn build_tool_run_job(_request: ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<ToolRunJob>, Fault> {
+            Ok(None)
+        }
         fn register_window_transient_owners(_registry: &mut WindowTransientOwnerRegistry) -> Result<(), Fault> {
             Ok(())
         }
@@ -30118,6 +30243,9 @@ pub mod app {
         }
         fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, Self>) -> Result<(), Fault> {
             E::register_tool_job_factories(registry)
+        }
+        fn build_tool_run_job(request: ToolRunJobRequest<'_, Self>) -> Result<Option<ToolRunJob>, Fault> {
+            E::build_tool_run_job(request)
         }
         fn register_window_transient_owners(registry: &mut WindowTransientOwnerRegistry) -> Result<(), Fault> {
             E::register_window_transient_owners(registry)
@@ -35727,8 +35855,13 @@ pub mod plugin_runtime {
             let instance = find_instance(list, instance_id)?;
             Ok(resolve_ready(instance.app.ephemeral_snapshot()))
         });
-        if let Ok(EphemeralSnapshot { presence, presence_generation, transient_generation, interaction }) = ephemeral.await {
-            frames.push(protocol::AppFrame::Ephemeral { presence, presence_generation, transient_generation, interaction });
+        if let Ok(EphemeralSnapshot { presence, presence_generation, transient_generation, interaction, tool_run }) = ephemeral.await {
+            let tool_run = tool_run.map_or_else(Vec::new, |tool_run| {
+                let mut bytes = Vec::new();
+                protocol::encode_presence_tool_run(&tool_run, &mut bytes);
+                bytes
+            });
+            frames.push(protocol::AppFrame::Ephemeral { presence, presence_generation, transient_generation, interaction, tool_run });
         }
 
         if let Some(outcome) = with_instances_mut(runtime, |list| {
@@ -36440,7 +36573,7 @@ pub mod world3d_host {
     // `ActionDescriptor`/`MeasureSelectItem`/`WindowMeasure` were not part of that move and stay here.
     use semio_framework_ui_scene::world3d_default_selection_json;
     pub use semio_framework_ui_scene::{
-        world3d_scene_lane_hash, SceneLanePayload, World3dScene, World3dSceneLane, World3dSceneLaneRef, WORLD3D_SCENE_LANE_BODY_KEYS, WORLD3D_SCENE_LANE_FIELDS, WORLD3D_SCENE_LANE_KEY_PREFIX, WORLD3D_SCENE_LANE_NAMES,
+        scene_lane_hash, SceneLanePayload, World3dScene, World3dSceneLane, SceneLaneRef, WORLD3D_SCENE_LANE_BODY_KEYS, WORLD3D_SCENE_LANE_FIELDS, WORLD3D_SCENE_LANE_KEY_PREFIX, WORLD3D_SCENE_LANE_NAMES,
         WORLD3D_SCENE_LANE_OPTIONAL,
     };
     use ui_wgpu::wgpu::{world3d_camera_json, ActionDescriptor, MeasureSelectItem, WindowMeasure};
@@ -37210,6 +37343,7 @@ pub mod plugin_app_close_prelude {
 
 #[cfg(any(test, feature = "artifact-app-testing"))]
 pub use app::artifact_app_laws;
+pub use app::tool_run::{is_tool_run_action_id, ToolRunActionOutcome, ToolRunDriver, ToolRunJob, ToolRunJobPurpose, ToolRunJobRequest, ToolRunLedger, ToolRunTickReceipt, ToolRunView, FRAMEWORK_TOOL_RUN_BODY_KEY};
 pub use app::ActionFactory;
 pub use app::{
     artifact_inference_service,
@@ -37452,7 +37586,7 @@ pub use semio_framework_ui_contract::{ActionBinding, ActionId, Buildable, Compon
 pub use world3d_host::{
     apply_world3d_projection_action, apply_world3d_sun_action, default_world3d_selection, merge_world_selection_ids, mesh_kind_from_json, world3d_camera_projection_json, world3d_default_camera, world3d_environment_json, world3d_mesh_id_from_url,
     world3d_meshes_json_from_kinds, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose, world3d_projection_spec_json,
-    world3d_scene, world3d_scene_lane_hash, world3d_selection_json, world3d_sun_measures, SceneLanePayload, SelectionSet, World3dScene, World3dSceneLane, World3dSceneLaneRef, WorldProjectionConfig, WorldSunConfig,
+    world3d_scene, scene_lane_hash, world3d_selection_json, world3d_sun_measures, SceneLanePayload, SelectionSet, World3dScene, World3dSceneLane, SceneLaneRef, WorldProjectionConfig, WorldSunConfig,
     WORLD3D_SCENE_LANE_BODY_KEYS, WORLD3D_SCENE_LANE_FIELDS, WORLD3D_SCENE_LANE_KEY_PREFIX, WORLD3D_SCENE_LANE_NAMES, WORLD3D_SCENE_LANE_OPTIONAL,
 };
 // 🧩️ Declarative component model (UiNode, layouts, utilities) — moved into ui_wgpu; re-exported here so

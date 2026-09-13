@@ -33,6 +33,8 @@
       "required": [
         "version",
         "aggregateBytes",
+        "documentBytes",
+        "residentSlots",
         "surfaceBytes",
         "surfaceItems",
         "documentNodes",
@@ -53,7 +55,9 @@
       ],
       "properties": {
         "version": { "const": 1 },
-        "aggregateBytes": { "const": 33554432 },
+        "aggregateBytes": { "const": 52559872 },
+        "documentBytes": { "const": 821248 },
+        "residentSlots": { "const": 64 },
         "surfaceBytes": { "const": 8388608 },
         "surfaceItems": { "const": 4097 },
         "documentNodes": { "const": 128 },
@@ -70,7 +74,7 @@
         "doubleBufferedPeakBytes": { "type": "integer", "minimum": 2 },
         "ceilingSizedRoots": { "type": "integer", "minimum": 1 },
         "measured": { "$ref": "#/$defs/ResidentRefreshMeasurement" },
-        "laws": { "type": "array", "minItems": 4, "items": { "type": "string", "minLength": 1 } }
+        "laws": { "type": "array", "minItems": 5, "items": { "type": "string", "minLength": 1 } }
       }
     }
   },

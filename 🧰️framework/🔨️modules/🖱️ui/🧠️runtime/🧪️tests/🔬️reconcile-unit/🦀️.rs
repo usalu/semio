@@ -811,3 +811,45 @@ fn round_trip_property_every_emitted_patch_applies_cleanly_and_reproduces_the_sn
     }
 }
 //#endregion 🔖️RoundTripProperty
+
+//#region 🔖️ResidentAdmissionArithmetic
+
+/// ⚖️ Every slot the resident SLOT ledger offers must also fit inside its BYTE aggregate, so a surface
+/// is refused only when the declared admission limit [`SURFACE_RECONCILE_ADMISSION_SLOTS`] is actually
+/// reached — never because the FLOOR PRICE of one reservation outgrew the budget while sixty-three
+/// slots stood empty.
+///
+/// 🐛️ ticket 26/09/09/PROCEDURAL-3D-END-TO-END lane `react-example-switch-regression`: the React
+/// generation3d editor ran with the aggregate at `33548883` of `33554432` bytes — 99.98 % — from boot,
+/// because every mounted surface was charged a floor that already contained a whole static document
+/// arena slot. The fifth example switch asked the flow window to grow to `2517394` bytes, the ledger
+/// had `5549` left, and `SurfaceReconcileFault::ResidentCredit` retired `window:procedural-main` for
+/// good: fourteen further switches published the same stale graph
+/// (`🗑️generated/example-switch/results.json`). A full aggregate is deliberately a terminal fault
+/// rather than a retry — wave B56's defer loop is worse — so the aggregate must simply never be full
+/// while slots remain.
+#[test]
+fn resident_aggregate_admits_every_reconcile_slot() {
+    let fixed = ui_contract::UiResidentPermit::fixed_backing_bytes().expect("resident ledger");
+    let floor = SURFACE_RECONCILE_FLOOR_BYTES;
+    let open = ui_contract::UiDocumentAssembly::required_open_bytes();
+    let flat = size_of::<FlatPresentedNode>();
+    let document = ui_contract::UI_RESIDENT_DOCUMENT_BYTES;
+    let admitted = SURFACE_RECONCILE_AGGREGATE_BYTES / document.max(1);
+    eprintln!(
+        "[DEBUG] resident-admission aggregate={SURFACE_RECONCILE_AGGREGATE_BYTES}B fixed={fixed}B contract={}B floor={floor}B open={open}B page={}B flat={flat}B nodes={} ceiling={SURFACE_RECONCILE_SURFACE_BYTES}B document={document}B admitted={admitted} slots={SURFACE_RECONCILE_ADMISSION_SLOTS}",
+        ui_contract::UiResidentPermit::contract_backing_bytes(),
+        SURFACE_RECONCILE_PAGE_BYTES,
+        SurfaceReconcileLimits::default().max_nodes,
+    );
+    assert!(
+        admitted >= SURFACE_RECONCILE_ADMISSION_SLOTS,
+        "the byte aggregate must fund every slot the slot ledger admits at one full document each: {admitted} of {SURFACE_RECONCILE_ADMISSION_SLOTS} slots fit at {document}B, against {SURFACE_RECONCILE_AGGREGATE_BYTES}B aggregate",
+    );
+    assert!(
+        SURFACE_RECONCILE_AGGREGATE_BYTES.saturating_sub(fixed) > SURFACE_RECONCILE_ADMISSION_SLOTS.saturating_mul(floor),
+        "the fixed backing must never eat the floor of every slot: {fixed}B backing and {floor}B floors against {SURFACE_RECONCILE_AGGREGATE_BYTES}B",
+    );
+}
+
+//#endregion 🔖️ResidentAdmissionArithmetic

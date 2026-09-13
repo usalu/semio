@@ -127,6 +127,7 @@ function* componentStrings(component: Component | import("./📦️wire/🧾️t
     case "treeSection": yield component.label ?? ""; break;
     case "treeItem": yield component.label; yield component.description ?? ""; break;
     case "image": yield component.alt ?? ""; break;
+    case "progress": yield component.valueText; break;
     case "extension": yield component.extension; break;
   }
 }

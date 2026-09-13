@@ -30,6 +30,8 @@ semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
+# ⏯️ Tool run contract: the fill run job reports `ToolRunTick` pages through `ToolRunTickWriter`.
+semio-framework-tool-run = { workspace = true }
 # 🧮️ The guest memory budget the fixed owners size their sub-pages against, and the shared heap
 # witness this artifact's growth laws weigh the tick loop with.
 semio-framework-trace = { workspace = true }
@@ -60,3 +62,5 @@ semio-framework-os-kernel = { workspace = true, features = ["protocol-laws"] }
 semio-framework-async-macros = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+# ⚖️ Third-party collision oracle for the fill run job verdicts. Test-only, never a runtime dependency.
+parry3d = "0.17"

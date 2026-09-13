@@ -14,7 +14,7 @@
 //!   `PortBackbone` (an in-memory queue relayed to the host). This actor is a host-side concern only.
 
 use crate::os_dsl::{DslValue, FromValue as FromValueTrait, ToValue as ToValueTrait, ValueError};
-use crate::os_spr::PresencePeer;
+use crate::os_spr::{PresencePeer, PresenceToolRun};
 use crate::os_spr::{
     decode_document_backbone_envelopes_exact, decode_envelopes, decode_server_frame, encode_client_frame, encode_envelopes, AckStage, ApplyOutcome, ArtifactBootstrap, ArtifactBootstrapAssembler, ArtifactBootstrapControl, ArtifactBootstrapLimits,
     ArtifactBootstrapPair, ArtifactBootstrapProgress, Bootstrap, ClientFrame, Lane, MutationEnvelope, MutationMessage, OpBinary, RuntimeFrontierSummary, ServerFrame,
@@ -496,6 +496,14 @@ fn artifact_actor_message_bytes(message: &ArtifactActorMsg) -> Option<usize> {
                 optional_text(&mut bytes, ui.hovered_path.as_ref())?;
                 optional_text(&mut bytes, ui.focused_path.as_ref())?;
                 optional_text(&mut bytes, ui.pressed_path.as_ref())?;
+            }
+            add(&mut bytes, 1)?;
+            if let Some(tool_run) = &peer.tool_run {
+                text(&mut bytes, &tool_run.tool_id)?;
+                add(&mut bytes, 1 + 2 + 8 + 1)?;
+                if tool_run.total.is_some() {
+                    add(&mut bytes, 8)?;
+                }
             }
         }
         ArtifactActorMsg::PublishPreview { key, seq: _, payload } => {
@@ -1070,6 +1078,12 @@ where
 /// publishes only the newest complete peer snapshot at ten hertz.
 pub const PRESENCE_HEARTBEAT_INTERVAL_MS: u64 = 100;
 
+/// @emoji 🧮️ The summary a peer may publish: `completed` never above `total`, so the wire decoder never refuses it.
+pub fn presence_tool_run_clamped(tool_run: PresenceToolRun) -> PresenceToolRun {
+    let completed = tool_run.total.map_or(tool_run.completed, |total| tool_run.completed.min(total));
+    PresenceToolRun { completed, ..tool_run }
+}
+
 /// @emoji 💓️ Per-document last-writer-wins presence producer. The producer owns cadence rather than
 /// every renderer/app inventing a timer: offers inside the minimum interval replace `pending`, the
 /// first offer publishes immediately, and a later offer publishes the newest complete snapshot.
@@ -1078,6 +1092,7 @@ pub struct PresenceHeartbeatProducer {
     interval_ms: u64,
     last_sent_at_ms: Option<u64>,
     pending: Option<PresencePeer>,
+    observed_tool_run: Option<Option<PresenceToolRun>>,
 }
 
 impl Default for PresenceHeartbeatProducer {
@@ -1090,12 +1105,28 @@ impl PresenceHeartbeatProducer {
     // 🚫️async: E1 pure struct-literal builder consumed by `impl Default` (sync-only external
     // trait) — see R9. No I/O, no suspension point.
     pub fn new(interval_ms: u64) -> Self {
-        Self { interval_ms: interval_ms.max(1), last_sent_at_ms: None, pending: None }
+        Self { interval_ms: interval_ms.max(1), last_sent_at_ms: None, pending: None, observed_tool_run: None }
+    }
+
+    /// @emoji ⏯️ Records the document instance's latest tool run summary (a guest's `AppFrame::Ephemeral.tool_run`,
+    /// `📋️tool-run-contract.md` §3.4). Once observed, the guest's summary is authoritative: every later offer
+    /// carries it (or its absence) instead of whatever the offering renderer assembled.
+    pub fn observe_tool_run(&mut self, tool_run: Option<PresenceToolRun>) {
+        let tool_run = tool_run.map(presence_tool_run_clamped);
+        if let Some(pending) = self.pending.as_mut() {
+            pending.tool_run = tool_run.clone();
+        }
+        self.observed_tool_run = Some(tool_run);
     }
 
     /// @emoji 📡️ Offers the newest whole peer snapshot and returns it only when this document's
     /// cadence permits a publish. A backward-moving clock conservatively waits for the next interval.
-    pub fn offer(&mut self, now_ms: u64, peer: PresencePeer) -> Option<PresencePeer> {
+    /// The tool run summary is the observed one when there is one, and `completed ≤ total` either way.
+    pub fn offer(&mut self, now_ms: u64, mut peer: PresencePeer) -> Option<PresencePeer> {
+        peer.tool_run = match &self.observed_tool_run {
+            Some(observed) => observed.clone(),
+            None => peer.tool_run.map(presence_tool_run_clamped),
+        };
         self.pending = Some(peer);
         let due = self.last_sent_at_ms.is_none_or(|last| now_ms.saturating_sub(last) >= self.interval_ms);
         if !due {
@@ -1309,6 +1340,15 @@ impl ArtifactHost {
     /// the document's producer and cannot flood the preview lane.
     pub fn presence_heartbeat(&self, document_id: &str, now_ms: u64, peer: PresencePeer) -> bool {
         self.presence_heartbeat_key(&ArtifactDocumentKey::local(document_id), now_ms, peer)
+    }
+
+    /// @emoji ⏯️ Records an open document's latest tool run summary for its presence heartbeats — the host
+    /// calls this with each `AppFrame::Ephemeral.tool_run` it decodes. `false` when the document is not open.
+    pub fn observe_presence_tool_run_key(&self, document_key: &ArtifactDocumentKey, tool_run: Option<PresenceToolRun>) -> bool {
+        let mut state = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let Some(document) = state.documents.get_mut(document_key) else { return false };
+        document.presence.observe_tool_run(tool_run);
+        true
     }
 
     pub fn presence_heartbeat_key(&self, document_key: &ArtifactDocumentKey, now_ms: u64, peer: PresencePeer) -> bool {

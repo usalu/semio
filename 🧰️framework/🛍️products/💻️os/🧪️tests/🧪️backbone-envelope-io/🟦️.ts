@@ -513,8 +513,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       { Emit: { in_reply_to: 11, document_ops: [1], config_ops: [2], draft_ops: [3], output: [4], diagnostics: [5] } },
       { Draft: { in_reply_to: 12, pack: [1], spr: [2], ops: "d" } },
       { Children: { in_reply_to: 13, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } },
-      { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [7] } },
-      { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [] } },
+      { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [7], tool_run: [8] } },
+      { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [], tool_run: [] } },
       { HistorySnapshot: { in_reply_to: 14, history_patch: [1] } },
       { transactionProposal: { in_reply_to: 15, proposal_id: "prop-1", local_ops: [[1]], description: "move", coalesce_key: "k-1", foreign: [[2, 3]] } },
       { transactionPrepared: { txn_id: "txn-1", foreign: [[1]], rejection: [] } },
@@ -593,7 +593,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(encodeAppFrame({ Done: { in_reply_to: 0 } })[0]).toBe(0);
       expect(encodeAppFrame({ Invocation: { in_reply_to: 0, output: [], diagnostics: [], ui_scope: [], history_patch: [], messages: [], mutations: [], inverse_group: [] } })[0]).toBe(1);
       expect(encodeAppFrame({ Error: { in_reply_to: null, fault: [], report: [] } })[0]).toBe(9);
-      expect(encodeAppFrame({ Ephemeral: { presence: [], presence_generation: 0, transient_generation: 0, interaction: [] } })[0]).toBe(13);
+      expect(encodeAppFrame({ Ephemeral: { presence: [], presence_generation: 0, transient_generation: 0, interaction: [], tool_run: [] } })[0]).toBe(13);
       expect(encodeAppFrame({ HistorySnapshot: { in_reply_to: 0, history_patch: [] } })[0]).toBe(14);
       expect(encodeAppFrame({ transactionProposal: { in_reply_to: 0, proposal_id: "", local_ops: [], description: "", coalesce_key: "", foreign: [] } })[0]).toBe(15);
       expect(encodeAppFrame({ transactionPrepared: { txn_id: "", foreign: [], rejection: [] } })[0]).toBe(16);
@@ -707,7 +707,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         ["Emit", { Emit: { in_reply_to: 1, document_ops: [1], config_ops: [], draft_ops: [], output: [2], diagnostics: [] } }],
         ["Draft", { Draft: { in_reply_to: 1, pack: [1], spr: [2], ops: "d" } }],
         ["Children", { Children: { in_reply_to: 1, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } }],
-        ["Ephemeral", { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [] } }],
+        ["Ephemeral", { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [], tool_run: [] } }],
         ["HistorySnapshot", { HistorySnapshot: { in_reply_to: 1, history_patch: [1] } }],
         ["UiPatch", { UiPatch: { in_reply_to: 1, surface: "1:body", kind: "window", revision: 3, base_revision: 2, ops: [9] } }],
         ["UiSnapshotEnd", { UiSnapshotEnd: { revision: 6 } }],
@@ -727,7 +727,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         Emit: "0a0101010000010200",
         Draft: "0b01010101020164",
         Children: "0c01010173016301640101",
-        Ephemeral: "0d020102030400",
+        Ephemeral: "0d02010203040000",
         HistorySnapshot: "0e010101",
         UiPatch: "15010106313a626f64790677696e646f7703020109",
         UiSnapshotEnd: "1606",
@@ -979,7 +979,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
           }
           else if (event === "startedWithNotice" || event === "pageWithNotice") {
             const reply: LocalInteractionQueryReply = event === "startedWithNotice" ? { kind: "started", token } : { kind: "page", page: { ...token, terminal: true, bytes: [0xe2, 0x9c, 0x93] } };
-            broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ LocalInteractionQuery: { reply } }), encodeAppFrame({ Ephemeral: { presence: [], presence_generation: 0, transient_generation: 0, interaction: [] } }), encodeAppFrame({ UiPatch: { in_reply_to: null, surface: "fixture", kind: "graph", revision: 1, base_revision: 0, ops: [] } })] });
+            broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ LocalInteractionQuery: { reply } }), encodeAppFrame({ Ephemeral: { presence: [], presence_generation: 0, transient_generation: 0, interaction: [], tool_run: [] } }), encodeAppFrame({ UiPatch: { in_reply_to: null, surface: "fixture", kind: "graph", revision: 1, base_revision: 0, ops: [] } })] });
             await flush(); expect(ordinaryComplete).toBe(false);
           }
           else if (event === "page") push({ kind: "page", page: { ...token, terminal: true, bytes: [0xe2, 0x9c, 0x93] } });

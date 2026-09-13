@@ -29,7 +29,7 @@ async fn set_inserts_key() {
     register(&mut reg);
     let input = Dictionary::new().insert("dictionary", Value::Dictionary(Dictionary::with_schema("dictionary"))).insert("key", Value::Dictionary(text_dictionary("text".into()))).insert("value", Value::Dictionary(text_dictionary("new".into())));
     let out = reg.dispatch("dictionary.set", &input).unwrap();
-    let dictionary = out.get("dictionary").and_then(|v| v.as_dictionary()).expect("dictionary channel");
+    let dictionary = out.get("dictionaryOut").and_then(|v| v.as_dictionary()).expect("dictionaryOut channel");
     assert!(dictionary.get("text").is_some());
 }
 

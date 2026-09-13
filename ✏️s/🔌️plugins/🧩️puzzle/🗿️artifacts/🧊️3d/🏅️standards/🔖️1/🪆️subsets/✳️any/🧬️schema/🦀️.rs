@@ -470,12 +470,6 @@ pub struct FixtureObject {
     #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub vortices: Vec<VortexProps>,
-    /// 🪣️ Live-viewport-only tag (never persisted to the document): this object's 0-based position in
-    /// the fill plan's sequence, so the viewport can reveal/hide planned pieces by drag position without
-    /// a WASM round trip. Set only on `compose_fill_display`'s output, stripped from committed fixtures.
-    #[cfg_attr(test, serde(rename = "revealIndex", default, skip_serializing_if = "Option::is_none"))]
-    #[value(rename = "revealIndex", default, skip_serializing_if = "Option::is_none")]
-    pub reveal_index: Option<usize>,
 }
 
 #[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
@@ -595,13 +589,6 @@ pub struct BrushPreviewState {
     pub scale: Option<dsl::DslValue>,
 }
 
-/// 🚦️ Which background precompute lane a tick should advance — fill and brush never share one FIFO queue.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum PrecomputeLane {
-    Brush = 0,
-    Fill = 1,
-}
-
 #[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -678,11 +665,6 @@ impl BrushSearchProgress {
 }
 //#endregion 🔖️BrushSearchProgress
 
-/// 🔟️ How many tried candidates the fill preview keeps alive at once — a ring, newest replacing
-/// oldest, so the viewport can paint the recent search instead of only the one live ghost. Fixed
-/// like the sibling `candidate_page`, so the whole preview stays one bounded owner.
-pub const FILL_TRIED_RING: usize = 12;
-
 /// ⚖️ What the planner currently knows about one candidate placement: it is being tested, it came
 /// through broad and narrow phase clean, it overlapped a placed body beyond the budget, it was
 /// refused for another reason, or it became a real placement.
@@ -700,8 +682,8 @@ pub enum FillCandidateVerdict {
 }
 
 impl FillCandidateVerdict {
-    /// 🔤️ The one wire spelling of a verdict — the retained preview-JSON cursor and every consumer
-    /// read this, so the camelCase `value` rename and the hand-written encoder never drift apart.
+    /// 🔤️ The one wire spelling of a verdict, so the camelCase `value` rename and the brush ghost encoder
+    /// never drift apart.
     pub fn wire(self) -> &'static str {
         match self {
             Self::Testing => "testing",
@@ -713,116 +695,206 @@ impl FillCandidateVerdict {
     }
 }
 
-/// 👻️ One entry of the tried ring: the ghost the planner built, the verdict it reached, the reason
-/// behind a refusal, and the preview sequence the verdict was published under.
-#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct FillTriedCandidate {
-    pub sequence: u64,
-    pub verdict: FillCandidateVerdict,
-    pub reason: Option<String>,
-    pub ghost: BrushPreviewState,
+/// 🧭️ Stage of a fill tool run, the index into `ToolRunDefinition.stages` (`$defs.Puzzle3dFillRun`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum FillRunStage {
+    Prepare,
+    Search,
+    Test,
+    Lock,
+    Retract,
 }
 
-#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub struct FillBuildPreview {
-    #[value(default)]
-    #[cfg_attr(test, serde(default))]
-    pub operation: u64,
-    #[value(default)]
-    #[cfg_attr(test, serde(default))]
-    pub base_revision: u64,
-    #[value(default)]
-    #[cfg_attr(test, serde(default))]
-    pub registry_generation: u64,
-    pub sequence: u64,
-    pub generation: u64,
-    pub stage: String,
-    pub target_vortex_full_id: Option<String>,
-    pub candidate_object_kind_id: Option<String>,
-    #[value(default)]
-    #[cfg_attr(test, serde(default))]
-    pub candidate_ghost: Option<BrushPreviewState>,
-    pub current_pair_object_id: Option<String>,
-    #[value(default)]
-    #[cfg_attr(test, serde(default))]
-    pub collision_count: usize,
-    pub sample_cursor: usize,
-    pub inside_both: usize,
-    pub last_sample: Option<[f32; 3]>,
-    #[value(default)]
-    #[cfg_attr(test, serde(default))]
-    pub candidate_page: [Option<String>; 8],
-    #[value(default)]
-    #[cfg_attr(test, serde(default))]
-    pub truncated: bool,
-    pub rejection_reason: Option<String>,
-    pub target_cursor: usize,
-    pub candidate_cursor: usize,
-    pub accepted_count: usize,
-    /// 🎯️ What the user asked for, never a hidden planner ceiling.
-    #[value(default)]
-    #[cfg_attr(test, serde(default))]
-    pub requested_count: usize,
-    #[value(default)]
-    #[cfg_attr(test, serde(default))]
-    pub search_count: u64,
-    #[value(default)]
-    #[cfg_attr(test, serde(default))]
-    pub rejected_count: u64,
-    /// ⚖️ Verdict of `candidate_ghost`.
-    #[value(default)]
-    #[cfg_attr(test, serde(default))]
-    pub verdict: FillCandidateVerdict,
-    /// 🔁️ Newest-replaces-oldest ring of tried candidates; slot order, ordered by `sequence`.
-    #[value(default)]
-    #[cfg_attr(test, serde(default))]
-    pub tried: [Option<FillTriedCandidate>; FILL_TRIED_RING],
-    /// 🔢️ Constructed previews so far — accepted plus rejected plus the one under test.
-    #[value(default)]
-    #[cfg_attr(test, serde(default))]
-    pub tested_count: u64,
-    /// 🛑️ Why a planner that stopped below `requested_count` cannot continue.
-    #[value(default)]
-    #[cfg_attr(test, serde(default))]
-    pub stall_reason: Option<String>,
+impl FillRunStage {
+    pub const ALL: [Self; 5] = [Self::Prepare, Self::Search, Self::Test, Self::Lock, Self::Retract];
+
+    pub fn index(self) -> u16 {
+        self as u16
+    }
+
+    pub fn id(self) -> &'static str {
+        match self {
+            Self::Prepare => "prepare",
+            Self::Search => "search",
+            Self::Test => "test",
+            Self::Lock => "lock",
+            Self::Retract => "retract",
+        }
+    }
 }
 
-#[derive(Debug, Clone, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct FillBuildProgress {
-    pub(crate) count: usize,
-    pub(crate) applied_count: usize,
-    pub(crate) max_count: usize,
-    pub(crate) done: bool,
-    #[value(default)]
-    pub(crate) appended_objects: Vec<FixtureObject>,
-    #[value(default)]
-    pub(crate) appended_attractions: Vec<AttractionProps>,
-    #[value(default)]
-    pub(crate) sequence: Vec<BrushPlacePayload>,
-    #[value(default)]
-    pub(crate) preview: Option<FillBuildPreview>,
+/// 🔢️ Counter of a fill tool run, the index into `ToolRunDefinition.counters`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum FillRunCounter {
+    Tested,
+    Locked,
+    Collisions,
+    Rejected,
 }
 
-#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct FillProgressSummary {
-    pub count: usize,
-    pub applied_count: usize,
-    /// 🎯️ The live requested count — what the user asked for, not a planner ceiling.
-    pub max_count: usize,
-    pub done: bool,
+impl FillRunCounter {
+    pub const ALL: [Self; 4] = [Self::Tested, Self::Locked, Self::Collisions, Self::Rejected];
+
+    pub fn index(self) -> u16 {
+        self as u16
+    }
+
+    pub fn id(self) -> &'static str {
+        match self {
+            Self::Tested => "tested",
+            Self::Locked => "locked",
+            Self::Collisions => "collisions",
+            Self::Rejected => "rejected",
+        }
+    }
+}
+
+/// 🏷️ Reason code of a fill run trace record or step; `id` spells the planner's own refusal string.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum FillRunReason {
+    Fits,
+    SolidOverlap,
+    OutsideTargetVolume,
+    MeshUnavailable,
+    MissingPreview,
+    MissingTarget,
+    BroadPhaseEntryMissing,
+    PlacedMeshUnavailable,
+    StaleSpatialQuery,
+    PlacementKindMissing,
+    PlacementVortexMissing,
+    PlacementMeshMissing,
+    PlacementRejected,
+    PlacementStateMissing,
+    PlacementSpatialStateMissing,
+    StaleSpatialMutation,
+    Rejected,
+    NoOpenVortex,
+    NoCompatibleKind,
+    NoFreePlacement,
+    DocumentCapacity,
+    RequestedReached,
+    Retracted,
+}
+
+impl FillRunReason {
+    pub const ALL: [Self; 23] = [
+        Self::Fits,
+        Self::SolidOverlap,
+        Self::OutsideTargetVolume,
+        Self::MeshUnavailable,
+        Self::MissingPreview,
+        Self::MissingTarget,
+        Self::BroadPhaseEntryMissing,
+        Self::PlacedMeshUnavailable,
+        Self::StaleSpatialQuery,
+        Self::PlacementKindMissing,
+        Self::PlacementVortexMissing,
+        Self::PlacementMeshMissing,
+        Self::PlacementRejected,
+        Self::PlacementStateMissing,
+        Self::PlacementSpatialStateMissing,
+        Self::StaleSpatialMutation,
+        Self::Rejected,
+        Self::NoOpenVortex,
+        Self::NoCompatibleKind,
+        Self::NoFreePlacement,
+        Self::DocumentCapacity,
+        Self::RequestedReached,
+        Self::Retracted,
+    ];
+
+    pub fn code(self) -> u16 {
+        self as u16
+    }
+
+    pub fn from_code(code: u16) -> Option<Self> {
+        Self::ALL.get(usize::from(code)).copied()
+    }
+
+    pub fn id(self) -> &'static str {
+        match self {
+            Self::Fits => "fits",
+            Self::SolidOverlap => "solid-overlap",
+            Self::OutsideTargetVolume => "outside-target-volume",
+            Self::MeshUnavailable => "mesh-unavailable",
+            Self::MissingPreview => "missing-preview",
+            Self::MissingTarget => "missing-target",
+            Self::BroadPhaseEntryMissing => "broad-phase-entry-missing",
+            Self::PlacedMeshUnavailable => "placed-mesh-unavailable",
+            Self::StaleSpatialQuery => "stale-spatial-query",
+            Self::PlacementKindMissing => "placement-kind-missing",
+            Self::PlacementVortexMissing => "placement-vortex-missing",
+            Self::PlacementMeshMissing => "placement-mesh-missing",
+            Self::PlacementRejected => "placement-rejected",
+            Self::PlacementStateMissing => "placement-state-missing",
+            Self::PlacementSpatialStateMissing => "placement-spatial-state-missing",
+            Self::StaleSpatialMutation => "stale-spatial-mutation",
+            Self::Rejected => "rejected",
+            Self::NoOpenVortex => "no-open-vortex",
+            Self::NoCompatibleKind => "no-compatible-kind",
+            Self::NoFreePlacement => "no-free-placement",
+            Self::DocumentCapacity => "document-capacity",
+            Self::RequestedReached => "requested-reached",
+            Self::Retracted => "retracted",
+        }
+    }
+
+    pub fn of_id(id: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|candidate| candidate.id() == id)
+    }
+
+    /// 🔎️ The reason a planner refusal string names; an undeclared refusal is a plain `rejected`.
+    pub fn of_refusal(reason: &str) -> Self {
+        Self::ALL[..Self::Rejected as usize].iter().copied().find(|candidate| candidate.id() == reason).unwrap_or(Self::Rejected)
+    }
+
+    /// 🚥️ `fits` succeeds, `solid-overlap` is a collision, every other candidate refusal is a rule warning,
+    /// the stalls warn, reaching the request succeeds and a retraction informs.
+    pub fn verdict(self) -> semio_framework_tool_run::ToolRunVerdict {
+        match self {
+            Self::Fits | Self::RequestedReached => semio_framework_tool_run::ToolRunVerdict::Success,
+            Self::SolidOverlap => semio_framework_tool_run::ToolRunVerdict::Danger,
+            Self::Retracted => semio_framework_tool_run::ToolRunVerdict::Testing,
+            _ => semio_framework_tool_run::ToolRunVerdict::Warning,
+        }
+    }
+}
+
+/// 📸️ Resume point a fill run job reports through `StepOutcome::CheckpointReady`: fixed 68-byte
+/// little-endian layout `requested u64 | placements u64 | provisionalOps u32 | tested u64 | nextKey u64 |
+/// inputs [u8; 32]`. `inputs` digests everything the planner's deterministic sequence depends on except
+/// the requested count (base revision, overlap budget, weights, collision meshes), so a rebuilt run job
+/// replays to the checkpoint only when its prefix is provably the same sequence.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct FillRunCheckpoint {
+    pub requested: u64,
+    pub placements: u64,
+    pub provisional_ops: u32,
     pub tested: u64,
-    pub rejected: u64,
-    pub collisions: u64,
-    pub stage: String,
-    pub stall_reason: Option<String>,
+    pub next_key: u64,
+    pub inputs: [u8; 32],
+}
+
+impl FillRunCheckpoint {
+    pub const BYTES: usize = 68;
+
+    pub fn encode(self) -> [u8; Self::BYTES] {
+        let mut bytes = [0; Self::BYTES];
+        bytes[..8].copy_from_slice(&self.requested.to_le_bytes());
+        bytes[8..16].copy_from_slice(&self.placements.to_le_bytes());
+        bytes[16..20].copy_from_slice(&self.provisional_ops.to_le_bytes());
+        bytes[20..28].copy_from_slice(&self.tested.to_le_bytes());
+        bytes[28..36].copy_from_slice(&self.next_key.to_le_bytes());
+        bytes[36..].copy_from_slice(&self.inputs);
+        bytes
+    }
+
+    pub fn decode(bytes: &[u8]) -> Option<Self> {
+        let bytes: &[u8; Self::BYTES] = bytes.try_into().ok()?;
+        let u64_at = |at: usize| u64::from_le_bytes(bytes[at..at + 8].try_into().expect("eight bytes"));
+        Some(Self { requested: u64_at(0), placements: u64_at(8), provisional_ops: u32::from_le_bytes(bytes[16..20].try_into().expect("four bytes")), tested: u64_at(20), next_key: u64_at(28), inputs: bytes[36..].try_into().expect("thirty-two bytes") })
+    }
 }
 
 /// 🪪️ `objectId:vortexId`, unless the vortex id already carries its owner's prefix.
@@ -854,10 +926,6 @@ pub enum Puzzle3dEngineCommand {
     SetScene { scene: SceneConfig },
     #[dsl(key = "apply-brush-placement")]
     ApplyBrushPlacement { payload: BrushPlacePayload },
-    #[dsl(key = "apply-fill-count")]
-    ApplyFillCount { count: u32 },
-    #[dsl(key = "compose-fill-display")]
-    ComposeFillDisplay { count: u32 },
     #[dsl(key = "update-kind-weights")]
     UpdateKindWeights { object_weights: std::collections::BTreeMap<String, f64>, vortex_weights: std::collections::BTreeMap<String, f64> },
     #[dsl(key = "brush-preview")]

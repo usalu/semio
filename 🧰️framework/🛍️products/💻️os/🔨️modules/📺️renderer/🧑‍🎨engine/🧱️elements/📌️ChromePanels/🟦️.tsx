@@ -9,7 +9,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useMemo, useState, useSyncExternalStore, type ReactElement, type ReactNode } from "react";
 import {
   App,
   Button,
@@ -79,6 +79,8 @@ export const FRAMEWORK_SETTINGS_DEFAULT_APPS_TAB_ID = "framework.settings.defaul
  * CLASS-CONFLICTS` §C9) — open first-class conflicts with Accept/Discard, mirrors
  * `FRAMEWORK_SETTINGS_DEFAULT_APPS_TAB_ID`'s "omitted entirely when no host is wired" idiom. */
 export const FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID = "framework.settings.conflicts";
+/** 💬 MCP agent chat — navbar-only toggle (`ui.panelToggle.chat`), hosted on the `right-middle` dock anchor. */
+export const FRAMEWORK_CHAT_PANEL_ID = "framework.chat";
 
 function groupNamedLayoutsToTreeItems(layouts: readonly NamedLayout[], onApply: (layoutId: string) => void, onDeleteUser?: (layoutId: string) => void): TreeDataItem[] {
   const root: TreeDataItem[] = [];
@@ -1369,6 +1371,23 @@ function buildMarketplaceTree(host: MarketplaceHostApi): TreePanelConfig {
       })),
   ];
   return { sections };
+}
+
+export function createFrameworkChatPanelTab(renderPanel: () => ReactElement): PanelTabNode {
+  return singleTreeLeaf({
+    id: FRAMEWORK_CHAT_PANEL_ID,
+    icon: shellTabIcon("message-square"),
+    name: shellLabel("ui.panelToggle.chat"),
+    order: 0,
+    tree: {
+      resolveTree: () => ({
+        sections: [],
+        emptyState: renderPanel(),
+        className: "min-h-0 min-w-0 w-full flex-1",
+        sortableSections: false,
+      }),
+    },
+  });
 }
 
 export function createFrameworkMarketplacePanelTab(getHost: () => MarketplaceHostApi | null): PanelTabNode {

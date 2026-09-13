@@ -76,6 +76,16 @@
           }
         }
       }
+    },
+    "toolRunTraceCursorByWindowId": {
+      "type": "object",
+      "maxProperties": 64,
+      "propertyNames": {
+        "$ref": "#/$defs/Identifier"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/ToolRunTraceCursor"
+      }
     }
   },
   "$defs": {
@@ -92,6 +102,33 @@
         },
         "displayName": {
           "$ref": "#/$defs/Identifier"
+        }
+      }
+    },
+    "ToolRunTraceCursor": {
+      "description": "The tool run trace cursor a window instance's renderer echoes: the next page it expects of run `run` at `generation` (tool-run schema ToolRunTraceCursor, run bounded to exact JavaScript integers).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run",
+        "generation",
+        "page"
+      ],
+      "properties": {
+        "run": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },

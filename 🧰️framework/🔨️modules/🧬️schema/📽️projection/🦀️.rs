@@ -865,24 +865,15 @@ logos: Array<IntroductionLogo>,
  */
 demonstrations?: Array<IntroductionDemonstration>, };"####,
         },
+        SchemaMetadata {
+            name: "JobKindId",
+            version: 1,
+            typescript: r####"/**
+ * 🧵️ Id of a job kind registered in the artifact tool factory registry.
+ */
+export type JobKindId = string;"####,
+        },
         SchemaMetadata { name: "Keybinding", version: 1, typescript: r####"export type Keybinding = { keys: string, action: ActionDescriptor, };"#### },
-        SchemaMetadata {
-            name: "MeasureProgressStep",
-            version: 1,
-            typescript: r####"/**
- * 🪜️ One line of the "what the algorithm just did" log carried by `WindowMeasure::Progress`.
- */
-export type MeasureProgressStep = { kind: MeasureProgressStepKind, text: string, };"####,
-        },
-        SchemaMetadata {
-            name: "MeasureProgressStepKind",
-            version: 1,
-            typescript: r####"/**
- * 🚦️ Severity tint of one `MeasureProgressStep`, mirroring `semio_framework_job::DiagnosticKind`
- * so a job's progress vocabulary projects onto the semantic `info`/`success`/`warning`/`danger` tokens.
- */
-export type MeasureProgressStepKind = "info" | "success" | "warning" | "danger";"####,
-        },
         SchemaMetadata { name: "MeasureSelectItem", version: 1, typescript: r####"export type MeasureSelectItem = { id: string, value: string, label: string, };"#### },
         SchemaMetadata {
             name: "MediaClass",
@@ -1190,7 +1181,12 @@ export type ToolDefinition = { id: string,
 /**
  * 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
  */
-label: unknown, iconId: IconName, keys?: string, };"####,
+label: unknown, iconId: IconName, keys?: string,
+/**
+ * ⏯️ Declares that this tool runs a visible, abortable, finalizable algorithm (tool run contract §2.4);
+ * injects [`tool_run_action_definitions`].
+ */
+run?: ToolRunDefinition, };"####,
         },
         SchemaMetadata {
             name: "ToolRef",
@@ -1200,6 +1196,70 @@ label: unknown, iconId: IconName, keys?: string, };"####,
  * `UtilityRef`, scoping tools to modes with a typed, resolvable id.
  */
 export type ToolRef = string;"####,
+        },
+        SchemaMetadata {
+            name: "ToolRunCounterDefinition",
+            version: 1,
+            typescript: r####"/**
+ * 🔟️ One progress counter.
+ */
+export type ToolRunCounterDefinition = { id: string, label: unknown, };"####,
+        },
+        SchemaMetadata {
+            name: "ToolRunDefinition",
+            version: 1,
+            typescript: r####"/**
+ * 📜️ Static run declaration attached to tool and utility definitions (§2.4).
+ */
+export type ToolRunDefinition = { mutating: boolean, rebase: ToolRunRebasePolicy, reconfigure: ToolRunReconfigurePolicy, unit: unknown, stages: Array<ToolRunStageDefinition>, counters: Array<ToolRunCounterDefinition>, reasons: Array<ToolRunReasonDefinition>, trace: ToolRunTraceKind, runJob: JobKindId, revalidateJob?: JobKindId, };"####,
+        },
+        SchemaMetadata {
+            name: "ToolRunReasonDefinition",
+            version: 1,
+            typescript: r####"/**
+ * 🗯️ One reason code with its verdict and EN/DE template (`{0}`..`{3}` take step arguments).
+ */
+export type ToolRunReasonDefinition = { code: number, id: string, verdict: ToolRunVerdict, template: unknown, };"####,
+        },
+        SchemaMetadata {
+            name: "ToolRunRebasePolicy",
+            version: 1,
+            typescript: r####"/**
+ * 🔄️ How a mutating run reacts to head changes (§2.7.5).
+ */
+export type ToolRunRebasePolicy = "revalidate" | "restart" | "freeze";"####,
+        },
+        SchemaMetadata {
+            name: "ToolRunReconfigurePolicy",
+            version: 1,
+            typescript: r####"/**
+ * 🎚️ How a run reacts to settings changes (§3.3).
+ */
+export type ToolRunReconfigurePolicy = "resume" | "restart";"####,
+        },
+        SchemaMetadata {
+            name: "ToolRunStageDefinition",
+            version: 1,
+            typescript: r####"/**
+ * 🪜️ One algorithm stage.
+ */
+export type ToolRunStageDefinition = { id: string, label: unknown, };"####,
+        },
+        SchemaMetadata {
+            name: "ToolRunTraceKind",
+            version: 1,
+            typescript: r####"/**
+ * 🫥️ Trace subject kind a run emits.
+ */
+export type ToolRunTraceKind = "instance3d" | "placement2d" | "entity" | "none";"####,
+        },
+        SchemaMetadata {
+            name: "ToolRunVerdict",
+            version: 1,
+            typescript: r####"/**
+ * 🚥️ Verdict of one traced attempt; colours are framework semantic tokens.
+ */
+export type ToolRunVerdict = "testing" | "success" | "warning" | "danger";"####,
         },
         SchemaMetadata {
             name: "TutorialArtifactEvent",
@@ -1577,6 +1637,16 @@ color: number | null,
  */
 peers: Array<UiPeerMark>, };"####,
         },
+        SchemaMetadata {
+            name: "UiProgressNode",
+            version: 1,
+            typescript: r####"/**
+ * 📶️ The retained twin of `ui_contract::Component::Progress`: a read-only bar, determinate on
+ * `0..=total` or an indeterminate sweep while `total` is `None`. `value_text` is the localized spoken
+ * form the accessibility projection announces; paint never invents a percentage string.
+ */
+export type UiProgressNode = { id: string, completed: number, total?: number, valueText: Label, presence?: UiPresence, menu?: UiMenuRef, };"####,
+        },
         SchemaMetadata { name: "UiRingNode", version: 1, typescript: r####"export type UiRingNode = { id: string, orbId: string, t: number, onChange: ActionDescriptor, presence?: UiPresence, menu?: UiMenuRef, };"#### },
         SchemaMetadata { name: "UiSelectItem", version: 1, typescript: r####"export type UiSelectItem = { value: string, label: Label, };"#### },
         SchemaMetadata {
@@ -1675,7 +1745,12 @@ cursor?: string, category?: UtilityCategory,
  * (matching today's whitelist-based gating where an active utility suppresses the action panel);
  * set `true` for passive view utilities (e.g. cad `cad.play.view.*`) that should not gate actions.
  */
-allowsActionsWhileActive: boolean, };"####,
+allowsActionsWhileActive: boolean,
+/**
+ * ⏯️ Declares that activating this utility runs a visible, abortable algorithm (tool run contract §2.4);
+ * injects [`tool_run_action_definitions`].
+ */
+run?: ToolRunDefinition, };"####,
         },
         SchemaMetadata {
             name: "UtilityRef",
@@ -1858,23 +1933,7 @@ waiting?: boolean,
 /**
  * 🚫️ When true, the entry is inert.
  */
-disabled?: boolean, onChange: ActionDescriptor, } | { "kind": "progress", id: string, label?: string,
-/**
- * 🧭️ Localized caption of the phase the work is in, mirroring `ProgressEvent::StageChanged`.
- */
-stage?: string, completed: number,
-/**
- * ♾️ Total units of work; `None` means indeterminate — renderers show a busy bar, never a percentage.
- */
-total?: number, steps: Array<MeasureProgressStep>,
-/**
- * 🛑️ Dispatched when the user cancels; absent means the work cannot be cancelled.
- */
-cancel?: ActionDescriptor,
-/**
- * 🌀️ When true, the measure tree leaf shows a loading ring while work continues.
- */
-loading?: boolean, } | { "kind": "toggle", id: string, iconId: IconName, label?: string, pressed: boolean, text?: string, onChange: ActionDescriptor, } | { "kind": "group", id: string, label: string, defaultOpen?: boolean,
+disabled?: boolean, onChange: ActionDescriptor, } | { "kind": "toggle", id: string, iconId: IconName, label?: string, pressed: boolean, text?: string, onChange: ActionDescriptor, } | { "kind": "group", id: string, label: string, defaultOpen?: boolean,
 /**
  * 🎯️ When `Some(utility_id)`, this group is *utility-scoped chrome*: the shell surfaces it only while
  * `ViewModel.active_utility_id == utility_id`, and renders it in the dedicated "Utility Options" rail

@@ -10,8 +10,9 @@
 use crate::dock::{push_window_silhouette_border, DockDropZone, DockStackTab};
 #[cfg(all(test, not(target_arch = "wasm32")))]
 use semio_framework_os_kernel::os_directory::{client::DirectoryTransport, directory_command_sha256, DirectoryCommandOutcomeV1};
+use ui_wgpu::wgpu::push_chrome_group_border;
 #[cfg(test)]
-use ui_wgpu::wgpu::{push_chrome_group_border, Label, UiButtonNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode};
+use ui_wgpu::wgpu::{Label, UiButtonNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode};
 
 use crate::dock::{compute_dock_drop_zone, parse_path, DockDragKind, DockDragPayload, DockDragState, DockRenderContext, DockState, WindowSilhouette};
 use crate::interpreter::{begin_ui_document_opportunity, framework_widget_context, render_ui_document_step, UiDocumentFrameCursor};
@@ -36,7 +37,6 @@ use store_sync::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactDocumentKe
 #[cfg(not(target_arch = "wasm32"))]
 use store_sync::PresencePeer;
 use ui_contract::{SurfaceId, UiDocumentLease, UiText, UI_DOCUMENT_LEASE_ALIASES, UI_DOCUMENT_LEASE_SLOTS};
-#[cfg(test)]
 use ui_contract::UiFixedList;
 // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C3/§C6 (lane 2-D) —
 // lane 1-D's Rust directory client + native identity mint/restore helper, consumed as-is (never
@@ -105,6 +105,7 @@ const FRAMEWORK_SETTINGS_THEME_TAB_ID: &str = "framework.settings.theme";
 /// The local builder remains a test oracle; production panel content now requires retained semantic
 /// document publication.
 const FRAMEWORK_SETTINGS_COMMANDS_TAB_ID: &str = "framework.settings.commands";
+const FRAMEWORK_CHAT_PANEL_ID: &str = "framework.chat";
 const CHROME_ICON_TINY: f32 = 14.0;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -119,6 +120,7 @@ pub enum RightPanelKind {
     #[default]
     Details,
     Settings,
+    Chat,
 }
 
 #[derive(Clone, Debug)]
@@ -2633,7 +2635,11 @@ pub struct ShellState {
     pub checkin_dialog_draft: Option<String>,
     //#endregion 🔖️CheckIn
     pub window_engagements: HashMap<String, WindowEngagement>,
-    pub window_measures: HashMap<String, Vec<WindowMeasure>>,
+    /// 📏️ Each live window instance's projected Measures overlay document — see `//#region 📏️WindowMeasures`.
+    pub window_measures_documents: HashMap<String, UiDocumentLease>,
+    /// 🪪️ `(revision, generation)` last minted per Measures overlay surface — the ledger
+    /// `ui_document_ingress_generation` reads, kept across retirements so a reopened overlay moves forward.
+    pub window_measures_minted: HashMap<String, (u64, u64)>,
     pub utility_collection_expanded: HashMap<String, bool>,
     pub contributor_instances: HashMap<String, u32>,
     /// 🖱️ Last-rendered full window content bounds per window id — used to apply the active utility's
@@ -2836,6 +2842,302 @@ fn save_panel_layout_to_store(layout: &PanelLayoutPersisted) {
 }
 
 //#endregion 🧭️PanelAnchorModel
+
+//#region 📏️WindowMeasures
+/// 📏️ The retained engine surface one window instance's Measures overlay paints into — the window
+/// instance, then the reserved section body key, the same `{windowId}/{id}` rule React's
+/// `windowMeasureDomId` qualifies measure ids with. Window instance ids are plain identifiers, so the
+/// suffix can never collide with an app-authored surface.
+pub(crate) fn window_measures_surface_id(window_id: &str) -> String {
+    format!("{window_id}/{}", semio_framework::UiRefreshSection::Measures.body_key())
+}
+
+/// 🪟️ The window instance a Measures overlay surface belongs to, `None` for every other surface.
+pub(crate) fn window_measures_owner(surface_id: &str) -> Option<&str> {
+    surface_id.strip_suffix(semio_framework::UiRefreshSection::Measures.body_key()).and_then(|owner| owner.strip_suffix('/')).filter(|owner| !owner.is_empty())
+}
+
+/// 📏️ Projects one window instance's GENERAL measures (see `partition_window_measures`; a group
+/// tagged with a utility id belongs to the Utility Options rail) into the `ui_contract` records the
+/// Measures overlay paints, pre-order so every parent precedes its children. `None` when the window has
+/// no general measure. Mirrors React's `renderWindowMeasure`:
+///
+/// - `Number` → an `Input` of kind `number` committing on Enter/blur (`value`), so it is typed and
+///   committed by keyboard exactly like React's stepper entry.
+/// - `Slider`/`Select` → their own components bound on `Change` (`value`).
+/// - `Toggle` → a `Toggle` bound on `Change` whose authored args already carry React's `pressed`.
+/// - `Group` → a `Section` whose optional header slider precedes its children.
+/// - `loading`/`waiting` → the record's `Activity`; a label → a `Field` around the control.
+///
+/// See `🧑‍🎨engine/🧫️fixtures/📏️window-measures/🔣️.json`.
+pub(crate) fn window_measures_overlay_records(window_id: &str, measures: &[WindowMeasure], active_utility_id: Option<&str>) -> Result<Option<Vec<ui_contract::UiNodeRecord>>, String> {
+    let partition = ui_wgpu::wgpu::partition_window_measures(measures, active_utility_id).map_err(|measure| format!("window '{window_id}' authored more than {} measures, refused at {measure:?}", ui_wgpu::wgpu::component::layout::WINDOW_MEASURE_PARTITION_CAPACITY))?;
+    if partition.general.is_empty() {
+        return Ok(None);
+    }
+    let mut projection = WindowMeasuresProjection { window_id, records: Vec::new() };
+    let root = projection.reserve();
+    let mut children = ui_contract::UiNodeChildren::default();
+    for measure in partition.general.iter() {
+        if let Some(child) = projection.measure(measure)? {
+            children.try_push(child).map_err(|_| format!("window '{window_id}' measures exceed one overlay document"))?;
+        }
+    }
+    projection.place(root, semio_framework::UiRefreshSection::Measures.body_key().to_string(), ui_contract::Component::Container(measure_container(ui_contract::ContainerRole::Plain, None, None)), MeasureRecord { children, ..MeasureRecord::default() })?;
+    projection.records.into_iter().collect::<Option<Vec<_>>>().map(Some).ok_or_else(|| format!("window '{window_id}' measures projection left a reserved record unplaced"))
+}
+
+/// 🧩️ Everything a measure record carries beside its key and component.
+#[derive(Default)]
+struct MeasureRecord {
+    children: ui_contract::UiNodeChildren,
+    bindings: ui_contract::UiNodeBindings,
+    activity: ui_contract::Activity,
+    disabled: bool,
+    label: Option<ui_contract::Label>,
+}
+
+/// 🌳️ One overlay document under construction: ids are reserved pre-order and filled once a node's
+/// children exist, so the published record order is parent-first.
+struct WindowMeasuresProjection<'a> {
+    window_id: &'a str,
+    records: Vec<Option<ui_contract::UiNodeRecord>>,
+}
+
+impl WindowMeasuresProjection<'_> {
+    fn reserve(&mut self) -> ui_contract::UiNodeId {
+        self.records.push(None);
+        ui_contract::UiNodeId(self.records.len() as u64)
+    }
+
+    fn place(&mut self, id: ui_contract::UiNodeId, key: String, component: ui_contract::Component, record: MeasureRecord) -> Result<ui_contract::UiNodeId, String> {
+        if self.records.len() > ui_contract::UI_DOCUMENT_NODES {
+            return Err(format!("window '{}' measures exceed {} overlay nodes", self.window_id, ui_contract::UI_DOCUMENT_NODES));
+        }
+        let key = UiText::try_from_string(key).map_err(|key| format!("measure key '{key}' exceeds the retained contract"))?;
+        let MeasureRecord { children, bindings, activity, disabled, label } = record;
+        self.records[(id.0 - 1) as usize] = Some(ui_contract::UiNodeRecord {
+            id,
+            key,
+            component,
+            layout: ui_contract::LayoutSpec::Stack(ui_contract::StackLayout { axis: ui_contract::Axis::Vertical, gap: ui_contract::SpaceToken::Sm, ..Default::default() }),
+            style: Default::default(),
+            activity,
+            disabled,
+            transition: None,
+            accessibility: ui_contract::AccessibilitySpec { label, ..Default::default() },
+            bindings,
+            menu: None,
+            children,
+        });
+        Ok(id)
+    }
+
+    fn control(&mut self, id: &str, label: Option<&str>, component: ui_contract::Component, record: MeasureRecord) -> Result<ui_contract::UiNodeId, String> {
+        let key = format!("{}/{id}", self.window_id);
+        let Some(label) = label else {
+            let control = self.reserve();
+            return self.place(control, key, component, record);
+        };
+        let field = self.reserve();
+        let control = self.reserve();
+        self.place(control, key.clone(), component, record)?;
+        let mut children = ui_contract::UiNodeChildren::default();
+        children.try_push(control).map_err(|_| "measure field admits its control".to_string())?;
+        self.place(field, format!("{key}.field"), ui_contract::Component::Container(measure_container(ui_contract::ContainerRole::Field, Some(label), None)), MeasureRecord { children, label: Some(measure_label(label)), ..MeasureRecord::default() })
+    }
+
+    fn measure(&mut self, measure: &WindowMeasure) -> Result<Option<ui_contract::UiNodeId>, String> {
+        match measure {
+            WindowMeasure::Number { id, label, value, min, max, step, loading, waiting, disabled, on_change, .. } => {
+                let input = ui_contract::InputProps { kind: ui_contract::InputKind::Number, value: UiText::clipped(&value.to_string()), placeholder: None, commit: Some(UiText::clipped("blur")), min: *min, max: *max, step: *step, accept: None };
+                let record = MeasureRecord { bindings: measure_bindings(ui_contract::Trigger::Commit, on_change, None)?, activity: measure_activity(*loading, *waiting), disabled: disabled.unwrap_or(false), label: label.as_deref().map(measure_label), ..MeasureRecord::default() };
+                self.control(id, label.as_deref(), ui_contract::Component::Input(input), record).map(Some)
+            }
+            WindowMeasure::Slider { id, label, value, min, max, step, loading, waiting, disabled, on_change, .. } => {
+                let record = MeasureRecord { bindings: measure_bindings(ui_contract::Trigger::Change, on_change, None)?, activity: measure_activity(*loading, *waiting), disabled: disabled.unwrap_or(false), label: label.as_deref().map(measure_label), ..MeasureRecord::default() };
+                self.control(id, label.as_deref(), measure_slider(*value, *min, *max, *step), record).map(Some)
+            }
+            WindowMeasure::Select { id, label, value, items, on_change } => {
+                let mut options = UiFixedList::default();
+                for item in items {
+                    options.try_push(ui_contract::SelectItem { value: UiText::clipped(&item.value), label: measure_label(&item.label) }).map_err(|_| format!("measure '{id}' has more options than one select admits"))?;
+                }
+                let record = MeasureRecord { bindings: measure_bindings(ui_contract::Trigger::Change, on_change, None)?, label: label.as_deref().map(measure_label), ..MeasureRecord::default() };
+                self.control(id, label.as_deref(), ui_contract::Component::Select(ui_contract::SelectProps { value: UiText::clipped(value), items: options, placeholder: None }), record).map(Some)
+            }
+            WindowMeasure::Toggle { id, icon_id, label, pressed, text, on_change } => {
+                let toggle = ui_contract::ToggleProps { on: *pressed, icon: UiText::clipped(icon_id.as_str()), text: text.as_deref().map(measure_label) };
+                let record = MeasureRecord { bindings: measure_bindings(ui_contract::Trigger::Change, on_change, Some(("pressed", DslValue::Bool(!pressed))))?, label: label.as_deref().or(text.as_deref()).map(measure_label), ..MeasureRecord::default() };
+                self.control(id, label.as_deref(), ui_contract::Component::Toggle(toggle), record).map(Some)
+            }
+            WindowMeasure::Group { id, label, default_open, value, min, max, step, loading, waiting, on_change, children, .. } => {
+                let key = format!("{}/{id}", self.window_id);
+                let section = self.reserve();
+                let mut ids = ui_contract::UiNodeChildren::default();
+                if let (Some(value), Some(on_change)) = (value, on_change) {
+                    let header = self.reserve();
+                    let record = MeasureRecord { bindings: measure_bindings(ui_contract::Trigger::Change, on_change, None)?, activity: measure_activity(*loading, *waiting), label: Some(measure_label(label)), ..MeasureRecord::default() };
+                    ids.try_push(self.place(header, format!("{key}.header-slider"), measure_slider(*value, min.unwrap_or(0.0), max.unwrap_or(1.0), *step), record)?).map_err(|_| format!("measure group '{id}' exceeds one overlay document"))?;
+                }
+                for child in children {
+                    if let Some(child) = self.measure(child)? {
+                        ids.try_push(child).map_err(|_| format!("measure group '{id}' exceeds one overlay document"))?;
+                    }
+                }
+                let record = MeasureRecord { children: ids, activity: measure_activity(*loading, *waiting), label: Some(measure_label(label)), ..MeasureRecord::default() };
+                self.place(section, key, ui_contract::Component::Container(measure_container(ui_contract::ContainerRole::Section, Some(label), *default_open)), record).map(Some)
+            }
+        }
+    }
+}
+
+fn measure_label(value: &str) -> ui_contract::Label {
+    ui_contract::Label(UiText::clipped(value))
+}
+
+fn measure_container(role: ui_contract::ContainerRole, label: Option<&str>, default_open: Option<bool>) -> ui_contract::ContainerProps {
+    ui_contract::ContainerProps { role, label: label.map(measure_label), description: None, required: None, error: None, default_open, drop_overlay: None }
+}
+
+fn measure_slider(value: f64, min: f64, max: f64, step: Option<f64>) -> ui_contract::Component {
+    ui_contract::Component::Slider(ui_contract::SliderProps { value, min, max, step: step.unwrap_or(0.0), unit: None })
+}
+
+fn measure_activity(loading: Option<bool>, waiting: Option<bool>) -> ui_contract::Activity {
+    match (loading, waiting) {
+        (Some(true), _) => ui_contract::Activity::Loading,
+        (_, Some(true)) => ui_contract::Activity::Waiting,
+        _ => ui_contract::Activity::Idle,
+    }
+}
+
+/// 🔗️ A measure's `on_change` as the record's one binding: the authored args, plus `extra` merged over
+/// them. The gesture's own scalar is merged over these again by the retained router.
+fn measure_bindings(trigger: ui_contract::Trigger, action: &ActionDescriptor, extra: Option<(&str, DslValue)>) -> Result<ui_contract::UiNodeBindings, String> {
+    let mut entries = match action.args.as_ref() {
+        Some(DslValue::Object(entries)) => entries.clone(),
+        _ => Vec::new(),
+    };
+    if let Some((key, value)) = extra {
+        entries.retain(|(existing, _)| existing != key);
+        entries.push((key.to_string(), value));
+    }
+    let args = if entries.is_empty() { None } else { Some(serde_json::from_value::<ui_contract::UiValue>(dsl_value_as_json(&DslValue::Object(entries))).map_err(|error| format!("measure action '{}' args exceed the retained contract: {error}", action.action))?) };
+    let action_id = ui_contract::ActionId::try_v1(&action.controller_id, &action.action).ok_or_else(|| format!("measure action '{}' exceeds the retained contract", action.action))?;
+    let mut bindings = ui_contract::UiNodeBindings::default();
+    bindings.try_push(ui_contract::ActionBinding { trigger, action: action_id, args, capability: None }).map_err(|_| "measure binding admits one action".to_string())?;
+    Ok(bindings)
+}
+
+impl ShellState {
+    /// 📏️ Reads the instance's reserved measures surface once per refresh and republishes every live
+    /// window instance's Measures overlay document. A window whose measures fail to project keeps no
+    /// overlay and reports a surface fault instead of blanking the refresh.
+    async fn refresh_window_measures(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel, windows: &[String], faults: &mut Vec<(String, String, String)>) -> Result<(), String> {
+        let body_key = semio_framework::UiRefreshSection::Measures.body_key();
+        let measures = match program.window_measures_section(instance_id, view_state).await {
+            Ok(document) => {
+                let measures = crate::program_bridge::window_measures_from_section(&document);
+                self.retire_one_surface_document(Some(document))?;
+                measures
+            }
+            Err(error) => Err(error),
+        };
+        let measures = measures.unwrap_or_else(|error| {
+            faults.push((body_key.to_string(), body_key.to_string(), error));
+            HashMap::new()
+        });
+        let stale: Vec<String> = self.window_measures_documents.keys().filter(|window_id| !windows.contains(window_id)).cloned().collect();
+        for window_id in stale.into_iter().chain(windows.iter().cloned()) {
+            let previous = self.window_measures_documents.remove(&window_id);
+            self.retire_one_surface_document(previous)?;
+            if !windows.contains(&window_id) {
+                continue;
+            }
+            let surface = window_measures_surface_id(&window_id);
+            match self.publish_window_measures(&window_id, &surface, measures.get(&window_id).map_or(&[], Vec::as_slice)) {
+                Ok(Some(document)) => {
+                    self.window_measures_documents.insert(window_id, document);
+                }
+                Ok(None) => {}
+                Err(error) => faults.push((surface, body_key.to_string(), error)),
+            }
+        }
+        Ok(())
+    }
+
+    /// 🧾️ One window's overlay document, minted through the engine's own ingress-generation rule
+    /// keyed on the projected content, so an unchanged overlay pays no ingress.
+    fn publish_window_measures(&mut self, window_id: &str, surface: &str, measures: &[WindowMeasure]) -> Result<Option<UiDocumentLease>, String> {
+        let Some(records) = window_measures_overlay_records(window_id, measures, self.active_utility_for_window(window_id))? else { return Ok(None) };
+        let revision = {
+            use std::hash::{Hash, Hasher};
+            let mut hasher = std::collections::hash_map::DefaultHasher::new();
+            serde_json::to_string(&records).map_err(|error| error.to_string())?.hash(&mut hasher);
+            hasher.finish()
+        };
+        let generation = ui_wgpu::wgpu::engine::ui_document_ingress_generation(self.window_measures_minted.get(surface).copied(), revision);
+        self.window_measures_minted.insert(surface.to_string(), (revision, generation));
+        let identity = ui_contract::UiDocumentAssemblyIdentity { generation, revision: ui_contract::UiRevision(revision), root: Some(ui_contract::UiNodeId(1)), layout_epoch: 0 };
+        let surface_id = SurfaceId::try_from(surface).map_err(|_| format!("measures surface '{surface}' exceeds the retained contract"))?;
+        UiDocumentLease::try_publish(surface_id, identity, records).map(Some).map_err(|error| crate::program_bridge::retained_publication_refusal(surface, error))
+    }
+
+    /// 🖌️ One paint opportunity of a window's Measures overlay, over the window body it belongs to:
+    /// the overlay backdrop once, then its retained document through the same stepped paint every body
+    /// uses, then its hit registry above the body's. `true` once the overlay is off the walk's critical
+    /// path — painted, absent, folded, or faulted after its opportunity ceiling.
+    #[allow(clippy::too_many_arguments, reason = "the chrome walk's own paint context, forwarded unchanged")]
+    fn paint_window_measures_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, overlay: &mut Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, window_id: &str, window_rect: Rect, world_resources: &mut infinite_world::world::World3dBuildContext) -> bool {
+        if self.measures_folded.get(window_id).copied().unwrap_or(false) {
+            return true;
+        }
+        let Some(document) = self.window_measures_documents.remove(window_id) else { return true };
+        let surface = window_measures_surface_id(window_id);
+        let rect = self.window_measures_rect(window_id, window_rect, theme);
+        if !cursor.flag {
+            draw.push_solid([rect.x, rect.y, rect.w, rect.h], theme.panel);
+            cursor.flag = true;
+        }
+        let controller = self.document_controller_id();
+        let complete = {
+            let scroll_offsets = &mut self.scroll_offsets;
+            let collapsed_sections = &mut self.collapsed_sections;
+            let open_selects = &mut self.open_selects;
+            let widget_maps = &mut self.widget_maps;
+            let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut self.world3d_states, world_resources, window_id: surface.as_str() };
+            let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps));
+            ctx.pick_clip = Some(rect);
+            render_ui_document_step(&mut cursor.document, &document, rect, &mut ctx, surface.as_str(), controller.as_str(), &mut hosts)
+        };
+        self.window_measures_documents.insert(window_id.to_string(), document);
+        if complete {
+            self.clear_document_paint_fault(&surface);
+        } else {
+            cursor.scalar = cursor.scalar.saturating_add(1);
+            if !cursor.document.terminal_is_fault() && cursor.scalar < SHELL_WINDOW_PAINT_OPPORTUNITIES {
+                return false;
+            }
+            self.record_document_paint_fault(&surface);
+        }
+        push_chrome_group_border(draw, rect, theme);
+        self.register_retained_body_hits(&surface, rect, input);
+        true
+    }
+
+    /// 📐️ The Measures overlay's rect inside a window body: right-aligned like React's measures pane,
+    /// at the window's own resized width (or the theme default), inset by the panel inset.
+    fn window_measures_rect(&self, window_id: &str, body: Rect, theme: &Theme) -> Rect {
+        let width = self.measures_width.get(window_id).copied().unwrap_or(theme.window_measures_default_width).min((body.w - theme.panel_inset * 2.0).max(0.0));
+        Rect::new(body.x + body.w - width - theme.panel_inset, body.y + theme.panel_inset, width, (body.h - theme.panel_inset * 2.0).max(0.0))
+    }
+}
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../🧪️tests/📏️wgpu-window-measures/🦀️.rs"]
+mod window_measures_tests;
+//#endregion 📏️WindowMeasures
 
 //#region 🛍️AppCatalogueAttempt
 /// 🛍️ The "fetch the app-static catalogue once per app instance" rule, owned in ONE place because it
@@ -3140,7 +3442,8 @@ impl ShellState {
             #[cfg(not(target_arch = "wasm32"))]
             checkin_dialog_draft: None,
             window_engagements: HashMap::new(),
-            window_measures: HashMap::new(),
+            window_measures_documents: HashMap::new(),
+            window_measures_minted: HashMap::new(),
             utility_collection_expanded: HashMap::new(),
             contributor_instances: HashMap::new(),
             window_content_rects: HashMap::new(),
@@ -3437,6 +3740,7 @@ impl ShellState {
                 window_instances: Vec::new(),
                 active_tool_id: None,
                 active_utility_by_window_id: HashMap::new(),
+                tool_run_trace_cursor_by_window_id: HashMap::new(),
             };
             self.active_window_id = Some(s_app.window_kinds.first().id.clone());
             let session = ActiveSession { plugin_id: host_plugin_id, instance_id, app: s_app, view_state };
@@ -3478,6 +3782,7 @@ impl ShellState {
                     window_instances: Vec::new(),
                     active_tool_id: None,
                     active_utility_by_window_id: HashMap::new(),
+                    tool_run_trace_cursor_by_window_id: HashMap::new(),
                 },
             });
         }
@@ -3806,6 +4111,7 @@ impl ShellState {
         view_state.terminology = self.active_terminology();
         view_state.window_instances = Self::session_window_instances(session, &self.dock);
         view_state.active_utility_by_window_id = self.active_utility_by_window.clone();
+        view_state.tool_run_trace_cursor_by_window_id = infinite_world::world::world3d_tool_run_trace_cursors(self.world3d_states.values());
         view_state.focused_window_id = self.active_window_id.clone();
         view_state.session_identity = self.session_identity_view();
         view_state
@@ -3863,6 +4169,7 @@ impl ShellState {
         self.sync_dock();
         let view_state = self.live_view_state(&session);
         let live_windows = self.dock.window_instances();
+        let measure_windows: Vec<String> = live_windows.iter().map(|(window_id, _)| window_id.clone()).collect();
         let mut refresh_effects = Vec::new();
         let mut faults: Vec<(String, String, String)> = Vec::new();
         {
@@ -3916,7 +4223,7 @@ impl ShellState {
         self.active_utilities.extend(framework_sync_utilities(self.sync_backbone_uri.as_deref()));
         self.refresh_app_catalogue(&program, session.instance_id, &panel_view).await;
         self.window_engagements = program.window_engagements(session.instance_id, &view_state).await.unwrap_or_default();
-        self.window_measures = program.window_measures(session.instance_id, &view_state).await.unwrap_or_default();
+        self.refresh_window_measures(&program, session.instance_id, &view_state, &measure_windows, &mut faults).await?;
         if self.space_mode {
             if let Some(panel) = Self::panel_state_from_view(&session.view_state)? {
                 if let Some(spawned) = panel.active_spawned_id.as_ref().and_then(|id| panel.spawned_apps.iter().find(|app| &app.id == id)) {
@@ -3937,6 +4244,7 @@ impl ShellState {
                                 window_instances: vec![semio_framework::ViewWindowInstance { id: spawned.id.clone(), window_kind_id: app.window_kinds.first().id.clone() }],
                                 active_tool_id: None,
                                 active_utility_by_window_id: HashMap::new(),
+                                tool_run_trace_cursor_by_window_id: HashMap::new(),
                             };
                             if let Some(document) = self.spawned_ui.take() {
                                 if let Err(document) = self.retain_document_for_close(document) {
@@ -4005,7 +4313,7 @@ impl ShellState {
                 return;
             }
         };
-        let payload = crate::interpreter::read_paged_text_document(&document);
+        let payload = document.read_paged_text();
         if let Err(document) = self.retain_document_for_close(document) {
             drop(document);
         }
@@ -4015,7 +4323,7 @@ impl ShellState {
                 self.app_catalogue_json = payload;
                 self.publish_app_catalogue();
             }
-            Err(error) => Self::debug_log(&format!("[DEBUG] wgpu shell app catalogue reassembly failed: {error}")),
+            Err(error) => Self::debug_log(&format!("[DEBUG] wgpu shell app catalogue reassembly failed: {error:?}")),
         }
     }
 
@@ -4456,6 +4764,7 @@ impl ShellState {
                 match self.active_right_kind {
                     RightPanelKind::Details => "details",
                     RightPanelKind::Settings => "settings",
+                    RightPanelKind::Chat => "chat",
                 }
                 .to_string(),
             ),
@@ -4477,6 +4786,7 @@ impl ShellState {
         if let Some(kind) = &layout.active_right_kind {
             self.active_right_kind = match kind.as_str() {
                 "settings" => RightPanelKind::Settings,
+                "chat" => RightPanelKind::Chat,
                 _ => RightPanelKind::Details,
             };
         }
@@ -5132,7 +5442,10 @@ impl ShellState {
         }
     }
 
-    pub async fn dispatch_action(&mut self, action: ActionDescriptor) -> Result<(), String> {
+    pub async fn dispatch_action(&mut self, mut action: ActionDescriptor) -> Result<(), String> {
+        if let Some(owner) = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(DslValue::as_str).and_then(window_measures_owner).map(str::to_string) {
+            scope_action_to_window(&mut action, &owner);
+        }
         // 🎬️ Tutorial playback remains shell-local. Recording is armed only after the plugin's shared
         // retained `recordTutorial` route accepts and commits below.
         if action.action == semio_framework::START_TUTORIAL_ACTION_ID {
@@ -6246,6 +6559,7 @@ impl ShellState {
             window_instances: Vec::new(),
             active_tool_id: None,
             active_utility_by_window_id: HashMap::new(),
+            tool_run_trace_cursor_by_window_id: HashMap::new(),
         };
         let next_view_state = view_state.unwrap_or(default_view_state);
         self.active_window_id = Some(app.window_kinds.first().id.clone());
@@ -6306,6 +6620,7 @@ impl ShellState {
             window_instances: Vec::new(),
             active_tool_id: None,
             active_utility_by_window_id: HashMap::new(),
+            tool_run_trace_cursor_by_window_id: HashMap::new(),
         };
         self.layout_override = None;
         self.active_window_id = Some(landing_window_id);
@@ -6408,6 +6723,7 @@ impl ShellState {
             window_instances: Vec::new(),
             active_tool_id: None,
             active_utility_by_window_id: HashMap::new(),
+            tool_run_trace_cursor_by_window_id: HashMap::new(),
         };
         self.active_window_id = Some(app.window_kinds.first().id.clone());
         self.session = Some(ActiveSession { plugin_id: plugin_id.to_string(), instance_id, app, view_state });
@@ -6981,7 +7297,10 @@ impl ShellState {
         // any window but the first (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
         // `📓️wgpu-generation-publication-2026-09-13.md`).
         if down {
-            self.active_window_id = Some(window_id.to_string());
+            let owner = window_measures_owner(window_id).unwrap_or(window_id).to_string();
+            let sibling = if owner == window_id { window_measures_surface_id(&owner) } else { owner.clone() };
+            self.chrome_build.content_focus.insert(sibling, false);
+            self.active_window_id = Some(owner);
         }
         if matches!(kind, HitKind::Input | HitKind::Select | HitKind::Toggle | HitKind::Slider | HitKind::NumberStepper | HitKind::Ring | HitKind::IconSelect) {
             let event = if down {
@@ -7293,6 +7612,17 @@ impl ShellState {
                     self.right_panel_open = true;
                 }
                 self.note_panel_toggle_command(id, "settings").await?;
+                return Ok(true);
+            }
+            "ui.panelToggle.chat" => {
+                if self.right_panel_open && self.active_right_kind == RightPanelKind::Chat {
+                    self.right_panel_open = false;
+                } else {
+                    self.active_right_kind = RightPanelKind::Chat;
+                    self.active_right_tab = Some(FRAMEWORK_CHAT_PANEL_ID.to_string());
+                    self.right_panel_open = true;
+                }
+                self.note_panel_toggle_command(id, "chat").await?;
                 return Ok(true);
             }
             "ui.fullscreen.toggle" => {
@@ -8471,9 +8801,11 @@ impl ShellState {
         if idle {
             if let Some(window_id) = self.active_window_id.clone() {
                 Self::debug_log(&format!("[DEBUG] wgpu-shell key routing window={window_id} contentFocus={} action={action:?}", self.chrome_build.content_has_focus(&window_id)));
-                if self.chrome_build.content_has_focus(&window_id) {
+                let measures = window_measures_surface_id(&window_id);
+                let surface = if self.chrome_build.content_has_focus(&measures) { measures } else { window_id };
+                if self.chrome_build.content_has_focus(&surface) {
                     if let Some(event) = ui_event_from_key_action(&action, modifiers) {
-                        let commands = crate::interpreter::dispatch_ui_event(&window_id, event, input);
+                        let commands = crate::interpreter::dispatch_ui_event(&surface, event, input);
                         self.chrome_build.note_content_focus_commands(&commands);
                         return Ok(());
                     }
@@ -9215,6 +9547,7 @@ fn panel_toggle_icon_id(kind: &str, session: Option<&ActiveSession>) -> &'static
         "workbench" => session.and_then(|s| s.app.panel_tabs.iter().find(|tab| group_side(tab.group) == "left")).map(|tab| panel_tab_icon_id(tab)).unwrap_or("folder"),
         "details" => session.and_then(|s| s.app.panel_tabs.iter().find(|tab| group_side(tab.group) == "right")).map(|tab| panel_tab_icon_id(tab)).unwrap_or("info"),
         "settings" => "settings-2",
+        "chat" => "message-square",
         _ => "circle-dot",
     }
 }
@@ -10220,6 +10553,9 @@ impl ShellState {
         if control_id == "ui.panelToggle.settings" {
             return Some(("shell.panelToggle", shell_chrome_string("panelToggle.settings", is_de).to_string()));
         }
+        if control_id == "ui.panelToggle.chat" {
+            return Some(("shell.panelToggle", shell_chrome_string("panelToggle.chat", is_de).to_string()));
+        }
         None
     }
 
@@ -10279,6 +10615,7 @@ impl ShellState {
             && match panel {
                 "details" => self.active_right_kind == RightPanelKind::Details,
                 "settings" => self.active_right_kind == RightPanelKind::Settings,
+                "chat" => self.active_right_kind == RightPanelKind::Chat,
                 _ => false,
             };
         self.note_control_command(control_id, Some(serde_json::json!({ "panel": panel, "visible": visible }))).await
@@ -11029,6 +11366,7 @@ fn tutorial_capture_ui_snapshot(state: &ShellState) -> semio_framework::Tutorial
             let group = match state.active_right_kind {
                 RightPanelKind::Details => "details",
                 RightPanelKind::Settings => "settings",
+                RightPanelKind::Chat => "chat",
             };
             active_panel_tab_by_group.insert(group.into(), tab.clone());
         }
@@ -12055,7 +12393,7 @@ impl ShellState {
         let connected_at_ms = channel.connected_at_ms;
         let label = self.session.as_ref().map(|session| session.app.id.clone()).filter(|value| value.len() <= SHELL_CHROME_IO_FIELD_BYTES);
         let user_id = self.identity.as_ref().map(|identity| identity.user_id.clone()).filter(|value| value.len() <= SHELL_CHROME_IO_FIELD_BYTES);
-        let peer = PresencePeer { actor, label, presence_pack: None, connected_at_ms, user_id, role: None, drag_ghost_json: None, interaction: None, color: None, surface: None, views: Vec::new(), ui: None };
+        let peer = PresencePeer { actor, label, presence_pack: None, connected_at_ms, user_id, role: None, drag_ghost_json: None, interaction: None, color: None, surface: None, views: Vec::new(), ui: None, tool_run: None };
         self.document_host.presence_heartbeat_key(&channel.document_key, chrome_now_ms() as u64, peer);
     }
 
@@ -12277,6 +12615,21 @@ impl ShellState {
                 // of the body outranks it in `InputState::hit_at`'s reverse scan.
                 self.register_retained_body_hits(&window_id, window_rect, input);
                 cursor.document = UiDocumentFrameCursor::default();
+                cursor.scalar = 0;
+                cursor.flag = false;
+                cursor.phase = 8;
+            }
+            8 => {
+                let Some((window_id, window_rect)) = self.dock_window_plan.get(cursor.item).cloned() else {
+                    cursor.phase = 5;
+                    return false;
+                };
+                if !self.paint_window_measures_step(cursor, draw, overlay, atlas, icons, input, theme, &window_id, window_rect, world_resources) {
+                    return false;
+                }
+                cursor.document = UiDocumentFrameCursor::default();
+                cursor.scalar = 0;
+                cursor.flag = false;
                 cursor.item += 1;
                 cursor.phase = 3;
             }
@@ -12505,7 +12858,15 @@ impl ShellState {
                 let is_de = self.locale_id == "de";
                 let display = self.has_display_tabs();
                 let item = match (display, cursor.item) {
-                    (true, 0) => Some(ChromeGroupItem {
+                    (true, 0) | (false, 0) => Some(ChromeGroupItem {
+                        control_id: "ui.panelToggle.chat",
+                        icon_id: Some(panel_toggle_icon_id("chat", self.session.as_ref())),
+                        label: Some(shell_chrome_string("panelToggle.chat", is_de)),
+                        active: self.right_panel_open && self.active_right_kind == RightPanelKind::Chat,
+                        disabled: false,
+                        kind: HitKind::Toggle,
+                    }),
+                    (true, 1) => Some(ChromeGroupItem {
                         control_id: "ui.panelToggle.display",
                         icon_id: Some(panel_toggle_icon_id("display", self.session.as_ref())),
                         label: Some(shell_chrome_string("panelToggle.display", is_de)),
@@ -12513,7 +12874,7 @@ impl ShellState {
                         disabled: false,
                         kind: HitKind::Toggle,
                     }),
-                    (true, 1) | (false, 0) => Some(ChromeGroupItem {
+                    (true, 2) | (false, 1) => Some(ChromeGroupItem {
                         control_id: "ui.panelToggle.workbench",
                         icon_id: Some(panel_toggle_icon_id("workbench", self.session.as_ref())),
                         label: Some(shell_chrome_string("panelToggle.workbench", is_de)),
@@ -12521,7 +12882,7 @@ impl ShellState {
                         disabled: false,
                         kind: HitKind::Toggle,
                     }),
-                    (true, 2) | (false, 1) => Some(ChromeGroupItem {
+                    (true, 3) | (false, 2) => Some(ChromeGroupItem {
                         control_id: "ui.panelToggle.details",
                         icon_id: Some(panel_toggle_icon_id("details", self.session.as_ref())),
                         label: Some(shell_chrome_string("panelToggle.details", is_de)),
@@ -12529,7 +12890,7 @@ impl ShellState {
                         disabled: false,
                         kind: HitKind::Toggle,
                     }),
-                    (true, 3) | (false, 2) => Some(ChromeGroupItem {
+                    (true, 4) | (false, 3) => Some(ChromeGroupItem {
                         control_id: "ui.panelToggle.settings",
                         icon_id: Some(panel_toggle_icon_id("settings", self.session.as_ref())),
                         label: Some(shell_chrome_string("panelToggle.settings", is_de)),
@@ -14494,6 +14855,8 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("panelToggle.details", true) => "Details",
         ("panelToggle.settings", false) => "Settings",
         ("panelToggle.settings", true) => "Einstellungen",
+        ("panelToggle.chat", false) => "Chat",
+        ("panelToggle.chat", true) => "Chat",
         ("common.home", false) => "Home",
         ("common.home", true) => "Startseite",
         ("common.windowOptions", false) => "Window Options",

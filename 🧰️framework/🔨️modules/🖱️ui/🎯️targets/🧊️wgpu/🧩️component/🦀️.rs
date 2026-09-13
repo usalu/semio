@@ -1037,27 +1037,6 @@ pub mod layout {
         pub label: String,
     }
 
-    /// 🚦️ Severity tint of one [`MeasureProgressStep`], mirroring `semio_framework_job::DiagnosticKind`
-    /// so a job's progress vocabulary projects onto the semantic `info`/`success`/`warning`/`danger` tokens.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
-    #[serde(rename_all = "camelCase")]
-    #[value(rename_all = "camelCase")]
-    pub enum MeasureProgressStepKind {
-        Info,
-        Success,
-        Warning,
-        Danger,
-    }
-
-    /// 🪜️ One line of the "what the algorithm just did" log carried by [`WindowMeasure::Progress`].
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-    #[serde(rename_all = "camelCase")]
-    #[value(rename_all = "camelCase")]
-    pub struct MeasureProgressStep {
-        pub kind: MeasureProgressStepKind,
-        pub text: String,
-    }
-
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
     #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
@@ -1131,31 +1110,6 @@ pub mod layout {
             disabled: Option<bool>,
             on_change: ActionDescriptor,
         },
-        /// ⏳️ Read-only view of running work: a stage caption, a determinate-or-indeterminate bar and the
-        /// last few [`MeasureProgressStep`] lines, with an optional cancel action. Mirrors
-        /// `semio_framework_job::ProgressEvent` so a job's own progress vocabulary reaches the UI unchanged.
-        Progress {
-            id: String,
-            label: Option<String>,
-            /// 🧭️ Localized caption of the phase the work is in, mirroring `ProgressEvent::StageChanged`.
-            #[serde(default, skip_serializing_if = "Option::is_none")]
-            #[value(default, skip_serializing_if = "Option::is_none")]
-            stage: Option<String>,
-            completed: f64,
-            /// ♾️ Total units of work; `None` means indeterminate — renderers show a busy bar, never a percentage.
-            #[serde(default, skip_serializing_if = "Option::is_none")]
-            #[value(default, skip_serializing_if = "Option::is_none")]
-            total: Option<f64>,
-            steps: Vec<MeasureProgressStep>,
-            /// 🛑️ Dispatched when the user cancels; absent means the work cannot be cancelled.
-            #[serde(default, skip_serializing_if = "Option::is_none")]
-            #[value(default, skip_serializing_if = "Option::is_none")]
-            cancel: Option<ActionDescriptor>,
-            /// 🌀️ When true, the measure tree leaf shows a loading ring while work continues.
-            #[serde(default, skip_serializing_if = "Option::is_none")]
-            #[value(default, skip_serializing_if = "Option::is_none")]
-            loading: Option<bool>,
-        },
         Toggle {
             id: String,
             icon_id: IconName,
@@ -1204,25 +1158,6 @@ pub mod layout {
         },
     }
     //#endregion 🔖️WindowMeasure
-
-    /// 🛑️ Framework-owned copy of [`WindowMeasure::Progress`]'s cancel affordance. Callers resolve it
-    /// against their own `(Terminology, Locale)` — there is no default locale, so no renderer may bake
-    /// one of the two strings in. See [`crate::wgpu::LocalizedLabel::native`].
-    pub fn measure_progress_cancel_label() -> crate::wgpu::LocalizedLabel {
-        crate::wgpu::LocalizedLabel::native("Cancel", "Abbrechen")
-    }
-
-    impl MeasureProgressStepKind {
-        /// 🔤️ Wire tag of this kind — the same string serde writes, for renderers that key styling off it.
-        pub fn as_str(self) -> &'static str {
-            match self {
-                Self::Info => "info",
-                Self::Success => "success",
-                Self::Warning => "warning",
-                Self::Danger => "danger",
-            }
-        }
-    }
 
     impl WindowMeasure {
         /// 🌳️ Builds a measure group with default slider/header fields unset.
@@ -2262,6 +2197,27 @@ pub mod ui {
         pub menu: Option<UiMenuRef>,
     }
 
+    /// 📶️ The retained twin of `ui_contract::Component::Progress`: a read-only bar, determinate on
+    /// `0..=total` or an indeterminate sweep while `total` is `None`. `value_text` is the localized spoken
+    /// form the accessibility projection announces; paint never invents a percentage string.
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+    #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
+    pub struct UiProgressNode {
+        pub id: String,
+        pub completed: f64,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub total: Option<f64>,
+        pub value_text: Label,
+        #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+        #[value(default, skip_serializing_if = "UiPresence::is_default")]
+        pub presence: UiPresence,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub menu: Option<UiMenuRef>,
+    }
+
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(tag = "type", rename_all = "camelCase")]
     #[value(tag = "type", rename_all = "camelCase")]
@@ -3258,6 +3214,7 @@ pub mod ui {
         NumberStepper(UiNumberStepperNode),
         Ring(UiRingNode),
         IconSelect(UiIconSelectNode),
+        Progress(UiProgressNode),
         Field(UiFieldNode),
         Section(UiSectionNode),
         Group(UiGroupNode),
@@ -3284,6 +3241,7 @@ pub mod ui {
                 UiNode::NumberStepper(n) => &n.presence,
                 UiNode::Ring(n) => &n.presence,
                 UiNode::IconSelect(n) => &n.presence,
+                UiNode::Progress(n) => &n.presence,
                 UiNode::Field(n) => &n.presence,
                 UiNode::Section(n) => &n.presence,
                 UiNode::Group(n) => &n.presence,
@@ -3307,6 +3265,7 @@ pub mod ui {
                 UiNode::NumberStepper(n) => &mut n.presence,
                 UiNode::Ring(n) => &mut n.presence,
                 UiNode::IconSelect(n) => &mut n.presence,
+                UiNode::Progress(n) => &mut n.presence,
                 UiNode::Field(n) => &mut n.presence,
                 UiNode::Section(n) => &mut n.presence,
                 UiNode::Group(n) => &mut n.presence,
@@ -3333,6 +3292,7 @@ pub mod ui {
                 UiNode::NumberStepper(n) => n.menu.as_ref(),
                 UiNode::Ring(n) => n.menu.as_ref(),
                 UiNode::IconSelect(n) => n.menu.as_ref(),
+                UiNode::Progress(n) => n.menu.as_ref(),
                 UiNode::Field(n) => n.menu.as_ref(),
                 UiNode::Section(n) => n.menu.as_ref(),
                 UiNode::Group(n) => n.menu.as_ref(),
@@ -3356,6 +3316,7 @@ pub mod ui {
                 UiNode::NumberStepper(n) => &mut n.menu,
                 UiNode::Ring(n) => &mut n.menu,
                 UiNode::IconSelect(n) => &mut n.menu,
+                UiNode::Progress(n) => &mut n.menu,
                 UiNode::Field(n) => &mut n.menu,
                 UiNode::Section(n) => &mut n.menu,
                 UiNode::Group(n) => &mut n.menu,

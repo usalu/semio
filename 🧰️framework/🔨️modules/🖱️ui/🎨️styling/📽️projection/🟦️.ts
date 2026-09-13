@@ -394,7 +394,7 @@ function emitRust(tokens: Tokens, resolvedAppearances: ReturnType<typeof resolve
   }
   lines.push("pub mod metrics {");
   for (const [section, values] of Object.entries(resolveMetrics(tokens.metrics))) {
-    lines.push(`    pub mod ${section} {`);
+    lines.push(`    pub mod ${toSnakeCase(section)} {`);
     for (const [k, v] of Object.entries(values)) {
       const name = toScreamingSnake(k);
       if (Array.isArray(v)) {

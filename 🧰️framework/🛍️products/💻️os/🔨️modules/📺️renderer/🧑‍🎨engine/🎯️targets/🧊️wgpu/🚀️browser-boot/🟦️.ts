@@ -119,6 +119,11 @@ type AccessibilityProjectionNode = {
   readonly focusable?: boolean;
   readonly actionable?: boolean;
   readonly focused?: boolean;
+  readonly valueMin?: number;
+  readonly valueMax?: number;
+  readonly valueNow?: number;
+  readonly valueText?: string;
+  readonly busy?: boolean;
 };
 
 /**
@@ -163,6 +168,11 @@ function accessibilityMirror(root: HTMLElement, transport: BrowserFrameTransport
       if (node.shortcut !== undefined) element.setAttribute("aria-keyshortcuts", node.shortcut);
       if (node.hidden === true) element.setAttribute("aria-hidden", "true");
       if (node.disabled === true) element.setAttribute("aria-disabled", "true");
+      if (node.valueMin !== undefined) element.setAttribute("aria-valuemin", String(node.valueMin));
+      if (node.valueMax !== undefined) element.setAttribute("aria-valuemax", String(node.valueMax));
+      if (node.valueNow !== undefined) element.setAttribute("aria-valuenow", String(node.valueNow));
+      if (node.valueText !== undefined) element.setAttribute("aria-valuetext", node.valueText);
+      if (node.busy === true) element.setAttribute("aria-busy", "true");
       if (node.focused === true) element.dataset.focused = "true";
       if (node.focusable === true) element.dataset.focusable = "true";
       if (node.actionable === true) element.dataset.actionable = "true";
@@ -266,6 +276,11 @@ function fallbackLines(state: BrowserFrameFallbackState | undefined, tongue: "en
 }
 
 function renderFault(root: HTMLElement, code: string, detail: string, state?: BrowserFrameFallbackState): void {
+  // 🔊️ A dead surface must also be READABLE. The banner is the only place a fault appeared, and a
+  // console is what a probe, a CI run and a headless browser can read — so a quarantined renderer used
+  // to look exactly like a frame loop that simply stopped, with no error of any kind
+  // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-frame-loop-after-selection-2026-09-13.md`).
+  console.error(`wgpu renderer fault: ${code}: ${detail}`);
   const banner = document.createElement("div");
   banner.setAttribute("role", "alert");
   banner.style.cssText = "position:fixed;inset:0;padding:24px;background:#2a0a0acc;color:#ffb4b4;font:14px monospace;white-space:pre-wrap;overflow:auto;z-index:9999;";

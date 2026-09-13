@@ -1,6 +1,7 @@
 type Puzzle2dConfig {
   nodeKindWeights: [FloatEntry!]! @state(class: CONFIG)
   handleKindWeights: [FloatEntry!]! @state(class: CONFIG)
+  fillCount: Int! @state(class: CONFIG)
 }
 
 type FloatEntry {

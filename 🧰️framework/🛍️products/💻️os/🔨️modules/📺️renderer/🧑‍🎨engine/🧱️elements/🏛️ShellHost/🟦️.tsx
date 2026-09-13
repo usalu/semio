@@ -416,6 +416,7 @@ import {
   subscribeLeftoverWorldSelectionV1,
   WindowInstanceIdContext,
 } from "../🌐️World3dHost/🟦️.tsx";
+import { toolRunTraceCursorViewState } from "../🌐️World3dHost/⏯️tool-run-trace/🟦️.tsx";
 import {
   DEFAULT_PANEL_WIDTH_PX,
   EMPTY_APP_CATALOGUE,
@@ -540,6 +541,7 @@ import {
   sessionWindowInstances,
   setAsDefaultText,
   shellLabel,
+  integrateAppSettingsPanelTabsIntoFrameworkBranch,
   shellRendersPanelTabItself,
   shellTabIcon,
   spawnedWindowChromeForKind,
@@ -579,9 +581,11 @@ import { createContributionsPublisher, type ContributionsOperatorScope, type Con
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
 import { ENTWERFEN_MIT_BESTAND_BRAND_IDS } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🪧️brand.ts";
 import {
+  createFrameworkChatPanelTab,
   createFrameworkDisplayPanelTabs,
   createFrameworkMarketplacePanelTab,
   createFrameworkSettingsPanelTab,
+  FRAMEWORK_CHAT_PANEL_ID,
   DEFAULT_APP_NONE_VALUE,
   type ConflictsHostApi,
   type DefaultAppRow,
@@ -623,7 +627,7 @@ import {
 
 import { SyncAttachCard } from "../🔄️ShellSync/🟦️.tsx";
 import { useAgentBridge } from "../🔗️AgentBridge/🟦️.tsx";
-import { AgentPresence } from "../🚦️AgentPresence/🟦️.tsx";
+import { AgentChatPanel } from "../💬️AgentChatPanel/🟦️.tsx";
 import { AgentApprovals } from "../🤖️AgentApprovals/🟦️.tsx";
 import { UIFind, UIFindProvider, UISearch, type UISearchItem } from "../🔎️ShellSearch/🟦️.tsx";
 import { UTILITY_CATEGORY_ICON_ID } from "../🎛️UtilityTree/🟦️.tsx";
@@ -4747,6 +4751,7 @@ function FrameworkOsShellInner({
         terminology: uiTerminology,
         windowInstances: windowInstances.map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
         activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
+        toolRunTraceCursorByWindowId: toolRunTraceCursorViewState(windowInstances.map((instance) => instance.id)),
         activeUtilityId: undefined,
         // 🎯️ The pane the user is LOOKING at, carried into every section of this refresh. Window
         // sections are re-projected per instance by the guest and ignore it; an app-level panel body
@@ -8329,6 +8334,10 @@ function FrameworkOsShellInner({
   );
   marketplaceHostRef.current = marketplaceHost;
   const frameworkMarketplaceTab = useMemo(() => createFrameworkMarketplacePanelTab(() => marketplaceHostRef.current), [marketplaceHost]);
+  const frameworkChatTab = useMemo(
+    () => createFrameworkChatPanelTab(() => <AgentChatPanel status={agentBridge.status} presence={agentBridge.presence} />),
+    [agentBridge.presence, agentBridge.status],
+  );
 
   // 🐚️ Gated to this shell via `useShellKeydown` below — was an unconditional `window` keydown listener,
   // so every mounted shell fired its bound action (and could `preventDefault()` out from under another
@@ -8502,6 +8511,10 @@ function FrameworkOsShellInner({
   );
   const displayBottomLeftTabs = useMemo(() => appTabsForBottomAnchor("bottom-left"), [appTabsForBottomAnchor]);
   const settingsBottomRightTabs = useMemo(() => appTabsForBottomAnchor("bottom-right"), [appTabsForBottomAnchor]);
+  const settingsBottomRightDockTab = useMemo(
+    () => integrateAppSettingsPanelTabsIntoFrameworkBranch(frameworkSettingsTab, settingsBottomRightTabs),
+    [frameworkSettingsTab, settingsBottomRightTabs],
+  );
 
   //#region 🔖️CheckIn — ticket §C5 "when the user edits an artifact, the mutations are saved and
   // checked into vcs": status pill (`#s-sync-status`), auto check-in (idle ≥ 20s or ≥ 200 uncommitted
@@ -9167,10 +9180,9 @@ function FrameworkOsShellInner({
     bottomLeft.push(...displayBottomLeftTabs);
     if (frameworkSyncTab) bottomLeft.push(frameworkSyncTab);
     const topRight: PanelTabNode[] = [...detailsRightTabs];
-    // 🧭️ The open document's own settings lead the anchor; the shell-wide Settings branch and the
-    // Marketplace are chrome that applies to every app, so they sit behind it — the same "document first,
-    // shell last" ordering the bottom-left anchor uses for its sync leaf.
-    const bottomRight: PanelTabNode[] = [...settingsBottomRightTabs, frameworkSettingsTab, frameworkMarketplaceTab];
+    // 🧭️ App Settings-group tabs nest inside the framework Settings branch (document-first child order)
+    // so the anchor carries one Settings toggle; Marketplace stays a sibling leaf beside that branch.
+    const bottomRight: PanelTabNode[] = [settingsBottomRightDockTab, frameworkMarketplaceTab];
     if (frameworkUtilitiesHistoryTab) bottomRight.push(frameworkUtilitiesHistoryTab);
     // 🛠️ Tool categories stay nested under one expandable Tool branch, exactly like Command categories,
     // placed left of Command (order 0 vs 1) — like commands not being window-level, tools are not
@@ -9181,8 +9193,19 @@ function FrameworkOsShellInner({
       ...(toolTabs.length > 0 ? [{ kind: "branch" as const, id: FRAMEWORK_CATEGORY_TOOL_ID, icon: categoryTabIcon(toolTabs, "hammer"), name: shellLabel("ui.panelToggle.tool"), order: 0, children: toolTabs }] : []),
       ...(commandCategoryTabs.length > 0 ? [{ kind: "branch" as const, id: FRAMEWORK_CATEGORY_COMMAND_ID, icon: categoryTabIcon(commandCategoryTabs, "wrench"), name: shellLabel("ui.panelToggle.command"), order: 1, children: commandCategoryTabs }] : []),
     ];
-    return { anchors: { "top-left": topLeft, "top-middle": [], "top-right": topRight, "right-middle": [], "bottom-right": bottomRight, "bottom-middle": bottomMiddle, "bottom-left": bottomLeft, "left-middle": [] } };
-  }, [commandCategoryTabs, detailsRightTabs, displayBottomLeftTabs, frameworkDisplayTabs, frameworkMarketplaceTab, frameworkSettingsTab, frameworkSyncTab, frameworkUtilitiesHistoryTab, settingsBottomRightTabs, toolTabs, uiLocale, workbenchLeftTabs]);
+    return {
+      anchors: {
+        "top-left": topLeft,
+        "top-middle": [],
+        "top-right": topRight,
+        "right-middle": [frameworkChatTab],
+        "bottom-right": bottomRight,
+        "bottom-middle": bottomMiddle,
+        "bottom-left": bottomLeft,
+        "left-middle": [],
+      },
+    };
+  }, [commandCategoryTabs, detailsRightTabs, displayBottomLeftTabs, frameworkChatTab, frameworkDisplayTabs, frameworkMarketplaceTab, frameworkSyncTab, frameworkUtilitiesHistoryTab, settingsBottomRightDockTab, toolTabs, uiLocale, workbenchLeftTabs]);
 
   useEffect(() => {
     dispatch({ type: "SET_DOCK_OVERRIDE", value: dockLayoutStore.getSnapshot() });
@@ -9761,11 +9784,17 @@ function FrameworkOsShellInner({
   // selection state, shared by the chrome-hosted `PanelChromeTabBar` (below, for anchors in
   // {@link PANEL_TAB_BAR_HOSTS}) and the floating `Panel` itself (`buildPanelProps`) — the two hosts of the
   // SAME anchor always read/write the exact same controlled state.
+  const closePeerRightDockAnchors = useCallback((except: Anchor) => {
+    for (const peer of ["top-right", "bottom-right", "right-middle"] as const) {
+      if (peer !== except) dispatch({ type: "SET_PANEL_VISIBLE", anchor: peer, value: false });
+    }
+  }, []);
   const buildPanelSelectionProps = useCallback(
     (anchor: Anchor): PanelTabSelectionOptions => ({
       tabs: dock.anchors[anchor],
       visible: panels[anchor].visible,
       onVisibleChange: (value: boolean) => {
+        if (value && (anchor === "top-right" || anchor === "bottom-right" || anchor === "right-middle")) closePeerRightDockAnchors(anchor);
         dispatch({ type: "SET_PANEL_VISIBLE", anchor, value });
         noteShellCommand("shell.panelToggle", shellLabel("ui.shellCommand.panelToggle"), { anchor, visible: value });
       },
@@ -9801,9 +9830,27 @@ function FrameworkOsShellInner({
       onPathMemoryChange: (value: Readonly<Record<string, string>>) => dispatch({ type: "SET_PANEL_PATH_MEMORY", value }),
       drillOnOpen: anchor === "bottom-middle" ? (path, memory) => toolCategoryOpenPath(path, memory, toolTabs.map((tab) => tab.id)) : undefined,
     }),
-    [activeToolId, dock, onAction, panelActivePaths, panelPathMemory, panels, session, hostMode, hostAppId, noteShellCommand, toolTabs],
+    [activeToolId, closePeerRightDockAnchors, dock, onAction, panelActivePaths, panelPathMemory, panels, session, hostMode, hostAppId, noteShellCommand, toolTabs],
   );
   //#endregion 🎛️PanelTabBarHosting
+
+  const chatNavbarToggle = useMemo(() => {
+    if (mobile) return null;
+    const chatPanelOpen = panels["right-middle"].visible;
+    return (
+      <Toggle
+        id="ui.panelToggle.chat"
+        pressed={chatPanelOpen}
+        onPressedChange={(pressed) => {
+          if (pressed) closePeerRightDockAnchors("right-middle");
+          dispatch({ type: "SET_PANEL_VISIBLE", anchor: "right-middle", value: pressed });
+          if (pressed) dispatch({ type: "SET_PANEL_PATH", anchor: "right-middle", value: [FRAMEWORK_CHAT_PANEL_ID] });
+          noteShellCommand("shell.panelToggle", shellLabel("ui.shellCommand.panelToggle"), { panel: "chat", visible: pressed });
+        }}
+        icon="message-square"
+      />
+    );
+  }, [closePeerRightDockAnchors, mobile, noteShellCommand, panels]);
 
   const navbarItems = useMemo((): NavbarItem[] => {
     if (!session) return [];
@@ -10687,7 +10734,14 @@ function FrameworkOsShellInner({
             <Layout
               mobile={mobile}
               mobilePanel={mobilePanel}
-              navbar={<Navbar items={navbarItems} showFullscreenToggle={!mobile} onFullscreenToggle={() => onCommand({ owner: "os", commandId: "os.toggleFullscreen" })} />}
+              navbar={
+                <Navbar
+                  items={navbarItems}
+                  trailingBeforeFullscreen={chatNavbarToggle}
+                  showFullscreenToggle={!mobile}
+                  onFullscreenToggle={() => onCommand({ owner: "os", commandId: "os.toggleFullscreen" })}
+                />
+              }
               subnavbar={
                 activeTutorial ? (
                   <TutorialBar
@@ -10727,7 +10781,6 @@ function FrameworkOsShellInner({
         <UISearch items={searchItems} open={searchOpen} onOpenChange={(value) => dispatch({ type: "SET_SEARCH_OPEN", value })} />
         <UIFind open={findOpen} onOpenChange={(value) => dispatch({ type: "SET_FIND_OPEN", value })} />
         <TextSelectionContextMenuHost />
-        <AgentPresence status={agentBridge.status} presence={agentBridge.presence} />
         <AgentApprovals approvals={agentBridge.pendingApprovals} onDecision={agentBridge.resolveApproval} />
         <ContextMenuController
           title={shellContextMenuTitleLabel}

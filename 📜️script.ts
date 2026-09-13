@@ -25,9 +25,10 @@ import { toolJobFemLiveVisualPublicationSelfTests } from "./✏️s/🔌️plugi
 import { toolJobArtifactRetainedCommandSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-artifact-retained-command/🟦️.ts";
 import { interactivityAllAppDiscoverySelfTests } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧪️tests/🔬️interactivity-all-app-discovery/🟦️.ts";
 import { interactivityRuntimeSourceSelfTests } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧪️tests/🔬️interactivity-runtime-source/🟦️.ts";
-import { interactivityPuzzleFillEnvelopeSelfTests } from "./✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🔬️interactivity-puzzle-fill-envelope/🟦️.ts";
 import { interactivityPuzzleFillP4eSelfTests } from "./✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🔬️interactivity-puzzle-fill-p4e/🟦️.ts";
-import { interactivityPuzzleFillPreviewJsonSelfTests } from "./✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🔬️interactivity-puzzle-fill-preview-json/🟦️.ts";
+import { interactivityPuzzleFillRunJobSelfTests } from "./✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🔬️interactivity-puzzle-fill-run-job/🟦️.ts";
+import { interactivityPuzzleFillTraceSelfTests } from "./✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🔬️interactivity-puzzle-fill-trace/🟦️.ts";
+import { interactivityToolRunPolicySelfTests } from "./🧰️framework/🔨️modules/⏯️tool-run/🧪️tests/🔬️interactivity-tool-run-policy/🟦️.ts";
 import { interactivityLiveReconcileSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️interactivity-live-reconcile/🟦️.ts";
 import { interactivityMountedLayoutTextSelfTests } from "./🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️interactivity-mounted-layout-text/🟦️.ts";
 import { interactivityMountedFrameTransactionSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️interactivity-mounted-frame-transaction/🟦️.ts";
@@ -9055,19 +9056,6 @@ const INTERACTIVITY_AUDIT_DB_CLI_FILE = "🧰️framework/🛍️products/💻�
 const INTERACTIVITY_AUDIT_DB_TESTKIT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🧪️test/🦀️kit.rs";
 const INTERACTIVITY_AUDIT_HUB_BIN_FILE = "🌎️hub/🏗️bootstrap/🦀️.rs";
 const INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE = "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs";
-const INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🦀️.rs";
-const INTERACTIVITY_AUDIT_PUZZLE_FILL_STATE_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🦀️.rs";
-const INTERACTIVITY_AUDIT_PUZZLE_FILL_GEOMETRY_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/📐️geometry/🦀️.rs";
-const INTERACTIVITY_AUDIT_PUZZLE_FILL_ACTION_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪣️fill-build-tick/🦀️.rs";
-const INTERACTIVITY_AUDIT_PUZZLE_FILL_SCHEMA_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs";
-const INTERACTIVITY_AUDIT_PUZZLE_FILL_TRANSPORT_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️.rs";
-const INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx";
-const INTERACTIVITY_AUDIT_PUZZLE5D_FILL_PRECOMPUTE_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧠️precompute/🦀️.rs";
-const INTERACTIVITY_AUDIT_PUZZLE5D_FILL_WINDOW_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/🦀️.rs";
-const INTERACTIVITY_AUDIT_PUZZLE3D_TERMINOLOGY_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs";
-const INTERACTIVITY_AUDIT_PUZZLE5D_TERMINOLOGY_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs";
-const INTERACTIVITY_AUDIT_PUZZLE_FILL_PREVIEW_FIXTURE_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🧫️fixtures/🔣️.json";
-const INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_TEST_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts";
 const INTERACTIVITY_AUDIT_UI_RECONCILE_FILE = "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/♻️reconcile/🦀️.rs";
 const INTERACTIVITY_AUDIT_UI_VALUE_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎬️action/🦀️.rs";
 const INTERACTIVITY_AUDIT_UI_LAYOUT_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📐️layout/🦀️.rs";
@@ -9122,7 +9110,7 @@ const INTERACTIVITY_AUDIT_PRODUCTION_ROOTS = ["✏️s", "🧰️framework", "�
  */
 const INTERACTIVITY_AUDIT_SEVERITY: "warn" | "deny" = "deny";
 
-type InteractivityAuditCategory = "blocking-bridge" | "sync-fs" | "sync-net" | "sync-clipboard" | "sync-process" | "sync-db" | "thread-pool";
+type InteractivityAuditCategory = "blocking-bridge" | "sync-fs" | "sync-net" | "sync-clipboard" | "sync-process" | "sync-db" | "thread-pool" | "tool-run";
 
 type InteractivityAuditPatternDef = { category: InteractivityAuditCategory; re: RegExp; label: string; scope: "ui" | "runtime-repo-wide" };
 
@@ -9416,25 +9404,22 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   const rendererGlue = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE);
   const rendererHost = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_RENDERER_HOST_FILE);
   for (const failure of interactivityPreparedRasterProducerFailures(preparedRaster, preparedRasterDraw, preparedRasterGpu, canvasRaster, interpreterRaster, rendererGlue, rendererHost)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE, line: 0, text: failure });
-  interactivityPuzzleFillEnvelopeSelfTests(repoRoot);
-  const puzzleFillEnvelope = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE);
-  const puzzleFillState = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_STATE_FILE);
-  const puzzleFillGeometry = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_GEOMETRY_FILE);
-  const puzzleFillAction = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_ACTION_FILE);
-  for (const failure of interactivityPuzzleFillEnvelopeFailures(puzzleFillEnvelope, puzzleFillState, puzzleFillGeometry, puzzleFillAction)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE, line: 0, text: failure });
-  const puzzleFillSchema = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_SCHEMA_FILE);
-  const puzzleFillTransport = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_TRANSPORT_FILE);
-  const puzzleFillRenderer = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_FILE);
-  interactivityPuzzleFillP4eSelfTests(repoRoot);
-  for (const failure of interactivityPuzzleFillP4eFailures(puzzleFillEnvelope, puzzleFillState, puzzleFillGeometry, puzzleFillSchema, puzzleFillTransport, puzzleFillRenderer)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE, line: 0, text: failure });
-  const puzzle5dFillPrecompute = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE5D_FILL_PRECOMPUTE_FILE);
-  const puzzle5dFillWindow = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE5D_FILL_WINDOW_FILE);
-  const puzzle3dTerminology = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE3D_TERMINOLOGY_FILE);
-  const puzzle5dTerminology = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE5D_TERMINOLOGY_FILE);
-  const puzzleFillPreviewFixture = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_PREVIEW_FIXTURE_FILE);
-  const puzzleFillRendererTest = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_TEST_FILE);
-  interactivityPuzzleFillPreviewJsonSelfTests(repoRoot);
-  for (const failure of interactivityPuzzleFillPreviewJsonFailures(puzzleFillEnvelope, puzzleFillState, puzzleFillTransport, puzzle5dFillPrecompute, puzzle5dFillWindow, puzzleFillRenderer, puzzle3dTerminology, puzzle5dTerminology, puzzleFillPreviewFixture, puzzleFillRendererTest)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE, line: 0, text: failure });
+  const puzzleFill = interactivityPuzzleFillSources(repoRoot);
+  interactivityPuzzleFillP4eSelfTests();
+  for (const failure of interactivityPuzzleFillP4eFailures(puzzleFill.precompute, puzzleFill.fill, puzzleFill.geometry)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_PUZZLE_FILL_FILES.fill, line: 0, text: failure });
+  interactivityPuzzleFillRunJobSelfTests();
+  for (const failure of interactivityPuzzleFillRunJobFailures(puzzleFill)) findings.push({ category: "tool-run", file: INTERACTIVITY_AUDIT_PUZZLE_FILL_FILES.fill, line: 0, text: failure });
+  interactivityPuzzleFillTraceSelfTests();
+  for (const failure of interactivityPuzzleFillTraceFailures(puzzleFill)) findings.push({ category: "tool-run", file: INTERACTIVITY_AUDIT_PUZZLE_FILL_FILES.renderer, line: 0, text: failure });
+  interactivityToolRunPolicySelfTests();
+  const toolRunSources = interactivityToolRunPolicySources(repoRoot, INTERACTIVITY_TOOL_RUN_REQUIREMENTS);
+  for (const finding of [
+    ...interactivityToolRunAmendFailures(toolRunSources, INTERACTIVITY_TOOL_RUN_REQUIREMENTS),
+    ...interactivityToolRunLocalLifecycleFailures(toolRunSources, INTERACTIVITY_TOOL_RUN_REQUIREMENTS),
+    ...interactivityToolRunLegacyTraceFailures(toolRunSources),
+    ...interactivityToolRunDeclarationFailures(toolRunSources, INTERACTIVITY_TOOL_RUN_REQUIREMENTS),
+    ...interactivityToolRunReservedActionFailures(toolRunSources),
+  ]) findings.push({ category: "tool-run", ...finding });
   interactivityLiveReconcileSelfTests(repoRoot);
   const uiReconcile = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_UI_RECONCILE_FILE);
   const uiValue = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_UI_VALUE_FILE);
@@ -9492,102 +9477,129 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   return { findings, byCategory, blockingBridgeUnlisted, staleAllowlistEntries, expectedNeverToMatchEntries, preDeclaredOutOfScope };
 }
 
-function interactivityPuzzleFillEnvelopeFailures(precomputeSource: string, fillSource: string, geometrySource: string, actionSource: string): string[] {
-  const precompute = interactivityProductionSource(precomputeSource);
-  const fill = interactivityProductionSource(fillSource);
-  const geometry = interactivityProductionSource(geometrySource);
-  const action = interactivityProductionSource(actionSource);
-  const sessionStart = precompute.indexOf("    //#region 💼️FillJobBridge");
-  const sessionEnd = precompute.indexOf("    //#endregion 💼️FillJobBridge", sessionStart);
-  const sessionBridge = precompute.slice(sessionStart, sessionEnd);
-  const readStart = precompute.indexOf("    fn read_fill<R>");
-  const readEnd = precompute.indexOf("    pub fn set_scene", readStart);
-  const readBridge = precompute.slice(readStart, readEnd);
-  const restoreStart = precompute.indexOf("    pub fn restore_persisted_fill");
-  const restoreEnd = precompute.indexOf("    //#region 💼️FillJobBridge", restoreStart);
-  const restoreBridge = precompute.slice(restoreStart, restoreEnd);
-  const pumpStart = precompute.indexOf("    fn pump_fill_terminal_step");
-  const pumpEnd = precompute.indexOf("    pub fn take_terminal_fill_job", pumpStart);
-  const terminalPump = precompute.slice(pumpStart, pumpEnd);
-  const takeClosedStart = precompute.indexOf("    fn take_closed(&mut self)");
-  const takeClosedEnd = precompute.indexOf("enum FillEnvelopeDrive", takeClosedStart);
-  const takeClosedBridge = precompute.slice(takeClosedStart, takeClosedEnd);
-  const driveStart = precompute.indexOf("fn drive_fill_envelope(");
-  const driveEnd = precompute.indexOf("#[derive(Clone, Copy, Debug, PartialEq, Eq)]\npub enum FillEnvelopeCloseStep", driveStart);
-  const drive = precompute.slice(driveStart, driveEnd);
-  const ingressBindAt = precompute.indexOf("admitted_cursor.bind(&admitted_request)");
-  const ingressGuardAt = precompute.indexOf("let terminal_guard = FillEnvelopeWorkerFaultGuard::new(&input)");
-  const ingressDriveAt = precompute.indexOf("match drive_fill_envelope(&request)");
-  const censusStart = fill.indexOf("pub(crate) struct FillBuilderOwnerCensusCursor");
-  const censusEnd = fill.indexOf("pub(crate) struct FillBuilderRetirementCursor", censusStart);
-  const census = fill.slice(censusStart, censusEnd);
-  const fixedOwnerStart = geometry.indexOf("pub(crate) struct FixedOwnerMap");
-  const fixedOwnerEnd = geometry.indexOf("//#region 🔒️GeometryAdapter", fixedOwnerStart);
-  const fixedOwners = geometry.slice(fixedOwnerStart, fixedOwnerEnd);
-  const fillFixedFields = [
-    "placed_lookup: FixedOwnerMap<String, usize, DOCUMENT_OBJECT_SLOTS>",
-    "candidate_cache: FixedOwnerMap<String, Vec<BrushCompatibleCandidate>>",
-    "seed_object_ids: FixedOwnerSet<String, DOCUMENT_OBJECT_SLOTS>",
-    "object_weights: FixedOwnerMap<String, f64, DOCUMENT_KIND_SLOTS>",
-    "vortex_weights: FixedOwnerMap<String, f64, DOCUMENT_KIND_SLOTS>",
-    "meshes: FixedOwnerMap<String, CollisionBody, DOCUMENT_KIND_SLOTS>",
-    "blocked_vortex_ids: FixedOwnerSet<String, DOCUMENT_VORTEX_SLOTS>",
-    "candidate_seen: FixedOwnerSet<String, DOCUMENT_CANDIDATE_SLOTS>",
-    "candidate_cross: FixedOwnerMap<String, BrushCompatibleCandidate, DOCUMENT_CANDIDATE_SLOTS>",
-    "candidate_same: FixedOwnerMap<String, BrushCompatibleCandidate, DOCUMENT_CANDIDATE_SLOTS>",
-  ];
-  const fillFixedCredits = ["fill.placed_lookup.backing_credit()", "fill.candidate_cache.backing_credit()", "fill.seed_object_ids.backing_credit()", "fill.weights.object_weights.backing_credit()", "fill.weights.vortex_weights.backing_credit()", "fill.meshes.backing_credit()", "fill.blocked_vortex_ids.backing_credit()", "fill.candidate_seen.backing_credit()", "fill.candidate_cross.backing_credit()", "fill.candidate_same.backing_credit()"];
+//#region 🪣️PuzzleFillToolRun
+/** 🪣️ Puzzle fill sources the run-job, trace and P4e predicates read, keyed by role (`📋️tool-run-contract.md` §5 wave 1). */
+export const INTERACTIVITY_AUDIT_PUZZLE_FILL_FILES = {
+  precompute: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🦀️.rs",
+  fill: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🦀️.rs",
+  geometry: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/📐️geometry/🦀️.rs",
+  editor: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+  tool: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🪣️fill/🦀️.rs",
+  terminology: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs",
+  setFillCount: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️set-fill-count/🦀️.rs",
+  fillBuildTick: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪣️fill-build-tick/🦀️.rs",
+  editorTests: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+  runFixture: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🧫️fixtures/🎞️fill-run.json",
+  previewFixture: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🧫️fixtures/🔣️.json",
+  schema: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+  transport: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️.rs",
+  renderer: "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx",
+  puzzle5dPrecompute: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧠️precompute/🦀️.rs",
+  puzzle5dWindow: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/🦀️.rs",
+} as const;
+
+/** 🪣️ Raw text per [[INTERACTIVITY_AUDIT_PUZZLE_FILL_FILES]] role; a missing file is the empty string. */
+export type InteractivityPuzzleFillSources = Readonly<Record<keyof typeof INTERACTIVITY_AUDIT_PUZZLE_FILL_FILES, string>>;
+
+/** 🪣️ Reads every puzzle fill role, Rust files with their declared canonical test evidence appended. */
+export function interactivityPuzzleFillSources(repoRoot: string): InteractivityPuzzleFillSources {
+  return Object.fromEntries(Object.entries(INTERACTIVITY_AUDIT_PUZZLE_FILL_FILES).map(([key, path]) => [key, policyReadRustPolicySource(repoRoot, path)])) as InteractivityPuzzleFillSources;
+}
+
+/** ✂️ Production code per role: test evidence, `#[cfg(test)]` items and comments removed, string literals kept. */
+function interactivityPuzzleFillCode(sources: InteractivityPuzzleFillSources): InteractivityPuzzleFillSources {
+  return Object.fromEntries(Object.entries(sources).map(([key, text]) => {
+    const path = INTERACTIVITY_AUDIT_PUZZLE_FILL_FILES[key as keyof InteractivityPuzzleFillSources];
+    return [key, path.endsWith(".json") ? text : interactivityToolRunCode({ path, text: text.split(POLICY_RUST_TEST_EVIDENCE_BOUNDARY, 1)[0]! }).join("\n")];
+  })) as InteractivityPuzzleFillSources;
+}
+
+/**
+ * 🪣️ Puzzle 3d fill is a framework tool run: the fill tool declares a mutating `instance3d` `ToolRunDefinition`, its
+ * `FillBuilder` run job spends one fuel unit per candidate and streams every verdict as a trace upsert, accepted
+ * placements stay provisional `appendOps`, and the plugin owns no lifecycle (no tick command, lock-is-commit, plugin
+ * spawn/cancel or history coalescing). See `📋️tool-run-contract.md` §2.4, §2.7, §3.6, §3.7 and §5 W1-A/W1-B/W1-F.
+ */
+export function interactivityPuzzleFillRunJobFailures(sources: InteractivityPuzzleFillSources): string[] {
+  const code = interactivityPuzzleFillCode(sources);
   const failures: string[] = [];
-  for (const cap of [
-    "FILL_ENVELOPE_PAGE_BYTES: usize = 16 * 1024",
-    "FILL_ENVELOPE_MAX_PAGES: usize = 256",
-    "FILL_ENVELOPE_MAX_ITEMS: usize = 65_536",
-    "FILL_ENVELOPE_MAX_OPERATIONS: usize = 4",
-    "FILL_ENVELOPE_PROCESS_BYTES: usize = FILL_ENVELOPE_MAX_BYTES * FILL_ENVELOPE_MAX_OPERATIONS",
-  ]) if (!precompute.includes(cap)) failures.push(`Puzzle fill envelope fixed admission changed or disappeared: ${cap}`);
-  if (!precompute.includes("slots: [Option<FillEnvelopeAuthority>; FILL_ENVELOPE_MAX_OPERATIONS]") || !precompute.includes("generations: [u64; FILL_ENVELOPE_MAX_OPERATIONS]") || !precompute.includes("requested_items.checked_add(FILL_ENVELOPE_AUTHORITY_ITEMS)") || !precompute.includes("requested_bytes.checked_add(FILL_ENVELOPE_AUTHORITY_BYTES)") || !precompute.includes("self.aggregate_bytes.checked_add(bytes)") || !precompute.includes("self.slots[slot] = Some(FillEnvelopeAuthority")) failures.push("Puzzle fill envelope is not admitted into fixed generation slots before handoff");
-  if (!sessionBridge.includes("let fill = self.engine.fill.take()?") || !sessionBridge.includes("registry.begin_measurement(job, operation, fill, worker") || !sessionBridge.includes("Err(owners) =>") || !sessionBridge.includes("self.engine.fill_worker = Some(owners.worker)") || !sessionBridge.includes("self.engine.fill = Some(owners.fill)") || !sessionBridge.includes("registry.finish_measurement(&admission.request, credit.items, credit.bytes)")) failures.push("Puzzle fill UI admission does not move the exact source and mounted worker owners into a registered measurement authority before census and exact credit");
-  if (censusStart < 0 || censusEnd < 0 || fixedOwnerStart < 0 || fixedOwnerEnd < 0 || !fill.includes("FILL_BUILDER_NESTED_ITEMS: usize = 32") || !geometry.includes("FIXED_OWNER_SLOTS: usize = 32") || !geometry.includes("FIXED_OWNER_PAGE_BYTES: usize = 16 * 1024") || !geometry.includes("DOCUMENT_OWNER_PAGE_BYTES: usize = 64 * FIXED_OWNER_PAGE_BYTES") || !geometry.includes("DOCUMENT_OBJECT_SLOTS: usize = 2048") || !geometry.includes("DOCUMENT_VORTEX_SLOTS: usize = 2 * DOCUMENT_OBJECT_SLOTS") || !geometry.includes("DOCUMENT_ATTRACTION_SLOTS: usize = DOCUMENT_OBJECT_SLOTS") || !geometry.includes("DOCUMENT_KIND_SLOTS: usize = 256") || !geometry.includes("DOCUMENT_CANDIDATE_SLOTS: usize = 4 * DOCUMENT_KIND_SLOTS") || !geometry.includes("DOCUMENT_CELL_SLOTS: usize = 4 * DOCUMENT_OBJECT_SLOTS") || !fixedOwners.includes("page: Option<Box<[Option<(K, V)>; N]>>") || !/(?:std::mem::)?size_of::<\[Option<\(K, V\)>; N\]>\(\)/.test(fixedOwners) || !fixedOwners.includes("if self.len == N") || !fixedOwners.includes("return Err((key, value));") || !fixedOwners.includes("Occupied { input_key: K, input_value: V }") || !fixedOwners.includes("return Ok(FixedOwnerMapInsert::Occupied { input_key: key, input_value: value });") || (fixedOwners.match(/pub\(crate\) fn remove_entry/g) ?? []).length !== 2 || geometry.includes("#[derive(Clone, Debug)]\npub(crate) struct FixedOwnerMap") || geometry.includes("CollectionBackings") || !fillFixedFields.every((field) => fill.includes(field)) || !fillFixedCredits.every((credit) => census.includes(credit)) || !geometry.includes("entries: FixedOwnerMap<String, CollisionAabb, DOCUMENT_OBJECT_SLOTS>") || !geometry.includes("cells: FixedOwnerMap<(i32, i32, i32), FixedOwnerSet<String>, DOCUMENT_CELL_SLOTS>") || !geometry.includes("oversized: FixedOwnerSet<String, DOCUMENT_KIND_SLOTS>") || !geometry.includes("candidates: FixedOwnerSet<String, DOCUMENT_OBJECT_SLOTS>") || !geometry.includes("0 => self.entries.backing_credit()") || !geometry.includes("2 => self.cells.backing_credit()") || !geometry.includes("4 => self.oversized.backing_credit()") || !census.includes("path: [usize; 16]") || !census.includes("phase: [u8; 17]") || !census.includes("child: [usize; 17]") || !census.includes("self.credit.items.checked_add") || !census.includes("self.credit.bytes.checked_add") || !census.includes("(occupied <= FILL_BUILDER_NESTED_ITEMS).then_some(FillBuilderOwnerCredit::default())") || !census.includes("match fill.candidate_seen.iter().nth(self.index)") || census.includes("fn measure_") || census.includes(".iter().all(") || !geometry.includes("pub(crate) fn census_one_owner") || !sessionBridge.includes("admission.census.step(&fill, FILL_ENVELOPE_MAX_ITEMS, FILL_ENVELOPE_MAX_BYTES)")) failures.push("Puzzle fill admission does not advance one fixed nested allocation/entry backed by the exact credited slot pages before reservation");
-  if (sessionBridge.includes("serde_json::") || sessionBridge.includes("checkpoint_bytes()") || precompute.includes("FillWorkerState") || precompute.includes("restore_fill_worker_state")) failures.push("Puzzle fill UI/worker route contains whole-state serialization or compatibility restoration");
-  if (!precompute.includes("struct FillEnvelopeTokenCursor") || !precompute.includes("match self.field") || !precompute.includes("self.field += 1") || ingressGuardAt < 0 || !precompute.includes("Self { context_job, terminal_guard, token: FillEnvelopeTokenCursor::new(input) }") || !precompute.includes("let context_job = context.id().await") || !precompute.includes("let mut admitted_cursor = FillEnvelopeJobEntryCursor::new(context_job, input)") || !precompute.includes("request.job != self.context_job") || !precompute.includes("self.terminal_guard.request.as_ref() != Some(request)") || !precompute.includes("authority.request == *request") || !precompute.includes('return Err("fill worker envelope owner is stale");') || precompute.includes("request_fill_envelope_terminal_by_job") || ingressBindAt < ingressGuardAt || ingressDriveAt < ingressBindAt || !precompute.includes("context.tick().await;\n            match admitted_cursor.step()")) failures.push("Puzzle fill token ingress does not resolve the exact raw owner and bind context job to the decoded live request before transition");
-  if ((drive.match(/\.pump_one\(/g) ?? []).length !== 1 || !drive.includes("take_checked_out_outcome()") || !drive.includes("worker_outcome") || drive.includes("drive_step") || drive.includes("StepBudget") || !drive.includes("is_cancelled_now()") || !drive.includes("base_revision.0 != request.base_revision") || !drive.includes("FillEnvelopeDrive::Blocked") || drive.includes("while ") || drive.includes("for ")) failures.push("Puzzle fill worker grant does not advance exactly one fresh cancellable mounted opportunity");
-  if (!precompute.includes("pub fn take_terminal_fill_job") || !precompute.includes("pub fn resume(mut self)") || !precompute.includes("pub fn close_step(&mut self)") || !precompute.includes("impl Drop for FillEnvelopeTerminalHandle") || !precompute.includes("self.checked_out.store(false, Ordering::Release)") || !precompute.includes("authority.token_page.take()")) failures.push("Puzzle fill rejected/terminal owners lack public take-resume-close and Drop handback");
-  if (!sessionBridge.includes("if self.pump_fill_terminal_step()") || !sessionBridge.includes("fn pump_fill_terminal_step(&mut self)") || !sessionBridge.includes("self.take_terminal_fill_job()") || !sessionBridge.includes("FillEnvelopeTerminalHandle::close_step") || !precompute.includes("registry.take_closed()")) failures.push("Puzzle fill production callers do not mount terminal take/close and orphan recovery");
-  if (!precompute.includes("struct FillEnvelopeTerminalIntent") || !precompute.includes("intent.reason.fetch_max(reason.code(), Ordering::AcqRel)") || !precompute.includes("request_fill_envelope_terminal(request, reason)") || !precompute.includes("if !matches!(authority.phase, FillEnvelopePhase::Closing)") || !precompute.includes("apply_fill_envelope_terminal_intent(authority)") || !precompute.includes("terminalize_fill_envelope(request, FillEnvelopeTerminalReason::Closed)")) failures.push("Puzzle fill terminal intent can be lost under registry contention or ignore already-terminal session Drop");
-  if (readStart < 0 || !readBridge.includes("let authority = registry.slots.get") || !readBridge.includes("let fill = authority.fill.as_ref()?.try_lock().ok()?") || readBridge.includes("authority.fill.clone()") || restoreStart < 0 || !restoreBridge.includes("self.engine.fill = None") || restoreBridge.includes("authority.fill.clone()") || sessionBridge.includes("self.engine.fill = registry") || sessionBridge.includes("authority.fill.clone()") || !precompute.includes("fn supersede_admitted_fill(&mut self)") || !precompute.includes("request_fill_envelope_terminal(request, FillEnvelopeTerminalReason::Closed)") || (precompute.match(/if self\.fill\.is_none\(\) \{\n\s+self\.rebuild_queue\(\);/g) ?? []).length < 2 || terminalPump.includes("self.engine.fill.take()")) failures.push("Puzzle fill admitted builder is not registry-exclusive across immutable reads, restore, replan, mesh refresh, and retained close");
-  if (!restoreBridge.includes("let Some(request) = decode_fill_envelope_request(checkpoint)") || !restoreBridge.includes("*current != request && live(current)") || !restoreBridge.includes("terminal.request != request && live(&terminal.request)") || !restoreBridge.includes("authority.request == request") || !restoreBridge.includes("!authority.checked_out.load(Ordering::Acquire)") || restoreBridge.indexOf("*current != request && live(current)") > restoreBridge.indexOf("self.engine.fill = None")) failures.push("Puzzle fill restore can overwrite a different live mounted/closing exact producer");
-  if (!precompute.includes("fn allocate_fill_identity(&mut self, advance_revision: bool)") || !precompute.includes("self.fill_revision.checked_add(1)?") || !precompute.includes("self.fill_generation.checked_add(1)?") || !precompute.includes("if revision == 0 || generation == 0") || precompute.includes("self.fill_revision.wrapping_add(1)") || precompute.includes("self.fill_generation.wrapping_add(1)") || !precompute.includes("self.request.generation == 0") || !precompute.includes("self.request.base_revision == 0") || !precompute.includes("registry.aggregate_bytes.checked_sub(authority.reserved_bytes)") || precompute.includes("registry.aggregate_bytes.saturating_sub(authority.reserved_bytes)")) failures.push("Puzzle fill semantic generation/revision or exact aggregate credit can wrap/reset instead of refusing exhaustion");
-  if (takeClosedStart < 0 || !takeClosedBridge.includes("FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Closed) | FillEnvelopePhase::Closing") || !sessionBridge.includes("FillEnvelopePhase::Terminal(_) | FillEnvelopePhase::Closing") || !precompute.includes("request_fill_envelope_terminal(&self.request, FillEnvelopeTerminalReason::Closed);\n        self.checked_out.store(false, Ordering::Release)")) failures.push("Puzzle fill interrupted Closing handle is not durably re-armed for the exact generation");
-  if (!fill.includes("struct FillBuilderRetirementCursor") || !fill.includes("enum FillRetiredOwner") || !fill.includes("fn release_vec_backing<T>") || !fill.includes("self.current = Some(FillRetiredOwner::PreviewState(value));") || !fill.includes("FillRetiredOwner::PreviewState(value) => retire_preview_state(value)") || !fill.includes("18 => !self.preview_json.close_step()") || !fill.includes("21 => retire_fixed_collection_backing(self)") || !fill.includes("fill.placed_lookup.retire_backing()") || !fill.includes("|| fill.candidate_same.retire_backing()") || !fill.includes("self.placed_lookup.terminal_owners_empty()") || !fill.includes("self.candidate_same.terminal_owners_empty()") || !fill.includes("self.preview_json.terminal_owners_empty()") || !fill.includes("if !fill.terminal_owners_empty()") || !geometry.includes("retiring_key: Option<String>") || !geometry.includes("retiring_bucket: Option<FixedOwnerSet<String>>") || !geometry.includes("self.retiring_bucket = Some(bucket);") || !geometry.includes("self.retiring_key = Some(key);") || !geometry.includes("if self.entries.retire_backing()") || !geometry.includes("if self.cells.retire_backing()") || !geometry.includes("if self.oversized.retire_backing()") || !geometry.includes("self.entries.terminal_owners_empty() && self.cells.terminal_owners_empty() && self.oversized.terminal_owners_empty()") || !geometry.includes("pub(crate) fn terminal_owners_empty(&self)") || !precompute.includes("authority.fill_retirement = Some(FillBuilderRetirementCursor::new(fill))") || !precompute.includes("FillBuilderRetirementCursor::retire_one")) failures.push("Puzzle fill terminal close can recursively or bulk-drop nested builders, actual fixed pages, seed vectors, or spatial buckets");
-  if (!precomputeSource.includes("fill_worker_token_reopens_the_exact_retained_owner_and_drives_one_turn") || !precomputeSource.includes("fill_worker_fixed_cap_rejects_plus_one_and_reused_slot_rejects_aba") || !precomputeSource.includes("fill_worker_item_and_byte_plus_one_reject_before_owner_transfer") || !precomputeSource.includes("fill_worker_actual_owner_census_rejects_cap_plus_one_with_exact_handback") || !precomputeSource.includes("fill_worker_session_drop_during_measurement_mounts_the_same_terminal_once") || !precomputeSource.includes("fill_worker_completed_before_session_drop_is_reclassified_and_mounted_once") || !precomputeSource.includes("fill_worker_admitted_fixed_pages_survive_replan_and_mesh_supersession_until_retained_close") || !precomputeSource.includes("fill_worker_session_drop_during_partial_close_rearms_the_same_cursor_once") || !precomputeSource.includes("fill_worker_terminal_resume_contention_returns_then_rearms_the_exact_owner") || !precomputeSource.includes("fill_worker_cross_generation_restore_rejects_measuring_and_every_live_terminal_phase") || !precomputeSource.includes("fill_worker_cross_generation_restore_preserves_dropped_closing_handle_and_zero_credit") || !precomputeSource.includes("fill_worker_malformed_token_faults_exact_raw_owner_not_wrong_context_owner") || !precomputeSource.includes("fill_worker_wrong_context_identity_faults_decoded_producer_before_drive") || !precomputeSource.includes("fill_worker_stale_envelope_identity_is_rejected_without_faulting_replacement") || !precomputeSource.includes("fill_operation_identity_checked_nonzero_exhaustion_permanently_refuses_aba") || !precomputeSource.includes("fill_worker_zero_semantic_counters_and_exhausted_stale_tokens_never_alias") || !fillSource.includes("retained_owner_census_advances_one_fixed_unit_and_rejects_collection_cap_plus_one") || !fillSource.includes("retained_owner_census_credits_each_actual_fixed_slot_page_not_a_layout_heuristic") || !fillSource.includes("all_fill_fixed_collections_store_max_entries_in_the_credited_page_and_return_plus_one") || !fillSource.includes("occupied_fixed_slot_returns_the_distinct_input_owners_without_replacing_stored_owners") || !geometrySource.includes("spatial_index_close_retains_bucket_values_and_retires_one_credited_owner_per_grant") || !geometrySource.includes("spatial_fixed_collections_use_the_credited_pages_and_return_identical_plus_one_owners") || !precomputeSource.includes("fill_worker_mounted_terminal_pump_closes_completed_slot_and_rearms_capacity") || !precomputeSource.includes("fill_worker_early_fault_guard_terminalizes_and_deep_retirement_is_incremental") || !precomputeSource.includes("fill_worker_token_decode_advances_exactly_one_field_per_grant") || !precomputeSource.includes("fill_job_checkpoint_is_a_fixed_generation_token_not_a_whole_state_buffer")) failures.push("Puzzle fill semantic identity/cap/ABA/accounting/terminal/retirement fixtures are missing");
-  if ((action.match(/\.enqueue_fill_job\(\)/g) ?? []).length !== 2) failures.push("Puzzle fill retained envelope reachability is not exactly the two audited UI callers");
-  if (!fill.includes("StepOutcome::PreviewReady(semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Preview))") || !fill.includes("state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState)") || !fill.includes("output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput)")) failures.push("Puzzle FillBuilder still materializes a whole preview/result envelope inside one worker grant");
+  const missing = (source: string, needles: readonly string[]) => needles.filter((needle) => !source.includes(needle));
+  const definition = [code.tool, code.editor, code.terminology, code.precompute, code.fill].join("\n");
+  const toolLiteral = interactivityToolRunEnclosing(code.tool, code.tool.search(/\bToolDefinition::new\(\s*TOOL_ID\b/), /\bToolDefinition\s*\{/g) ?? "";
+  if (!/\brun\s*:\s*Some\s*\(/.test(toolLiteral)) failures.push("Puzzle fill ToolDefinition(TOOL_ID) declares no run: Some(ToolRunDefinition)");
+  const policy = missing(definition, ["mutating: true", "ToolRunRebasePolicy::Revalidate", "ToolRunReconfigurePolicy::Resume", "ToolRunTraceKind::Instance3d", "run_job: JobKindId::new(", "revalidate_job: Some(JobKindId::new("]);
+  if (policy.length > 0) failures.push(`Puzzle fill run definition is not a mutating instance3d run with revalidate rebase, resume reconfigure, run and revalidate jobs (missing ${policy.join(", ")})`);
+  const vocabulary = missing(definition, ["ToolRunStageDefinition {", "ToolRunCounterDefinition {", "ToolRunReasonDefinition {", "verdict: ToolRunVerdict::Danger", "verdict: ToolRunVerdict::Warning", "verdict: ToolRunVerdict::Success", "LocalizedLabel::native("]);
+  if (vocabulary.length > 0) failures.push(`Puzzle fill run definition lacks localized stages, counters or verdict-typed reasons (missing ${vocabulary.join(", ")})`);
+  const stepping = missing(code.fill, ["ToolRunTickWriter", "consume_fuel(1)", "StepOutcome::PreviewReady(", "StepOutcome::CheckpointReady(", "StepOutcome::Complete("]);
+  if (!/\bimpl\s+(?:[\w:]+::)?InteractiveJob\s+for\s+Fill\w*/.test(code.fill) || stepping.length > 0) failures.push(`Puzzle fill run job is not an InteractiveJob spending one fuel unit per candidate and publishing ticks, checkpoints and completion (missing ${stepping.join(", ") || "impl InteractiveJob for Fill…"})`);
+  const verdicts = missing(code.fill, [".upsert(", "ToolRunVerdict::Testing", "ToolRunVerdict::Danger", "ToolRunVerdict::Warning", "ToolRunVerdict::Success", "ToolRunTraceSubject::Instance3d"]);
+  if (verdicts.length > 0) failures.push(`Puzzle fill run job does not stream every tested candidate as a testing, danger, warning or success trace upsert (missing ${verdicts.join(", ")})`);
+  const provisional = missing(code.fill, [".append_op(", ".append_entity(", ".retract_to("]);
+  if (provisional.length > 0) failures.push(`Puzzle fill accepted placements are not provisional appendOps and entities with retraction on a lowered count (missing ${provisional.join(", ")})`);
+  if (!code.fill.includes("ToolRunStepKind::Warning")) failures.push("Puzzle fill stall is not reported as a warning step");
+  const retirement = missing(code.fill, ["fn begin_close", "fn close_step", "fn terminal_is_empty"]);
+  if (retirement.length > 0) failures.push(`Puzzle fill run job lacks incremental begin_close/close_step retirement (missing ${retirement.join(", ")})`);
+  for (const token of ["enqueue_fill_job", "cancel_fill_job", "fill_job_identity", "poll_fill_job", "take_fill_locked_chunk", "take_locked_into_fixture", "take_locked_mutations", "FILL_LOCK_PLACEMENTS_PER_TICK", "kind: FILL_JOB_KIND", '"fillBuildTick"', '"cancelFillBuild"', '"fill-count"']) {
+    if ([code.precompute, code.editor, code.tool, code.setFillCount].some((source) => source.includes(token))) failures.push(`Puzzle fill plugin still owns the run lifecycle (tick, lock-is-commit, plugin spawn or cancel, history coalescing): ${token}`);
+  }
+  if (sources.fillBuildTick.length > 0) failures.push("Puzzle fill fill-build-tick command still exists");
+  const evidence = [sources.editorTests, sources.fill, sources.precompute].join("\n");
+  for (const fixture of ["fill_run_job_step_and_overlay_append_stay_below_the_interactive_ceiling_for_nakagin", "fill_run_finalize_publishes_one_edit_with_every_provisional_placement"]) {
+    if (!evidence.includes(`fn ${fixture}`)) failures.push(`Puzzle fill red→green successor fixture missing: ${fixture}`);
+  }
+  for (const fixture of ["fill_build_tick_every_step_stays_below_the_interactive_ceiling_for_nakagin", "fill_build_tick_locks_planned_placements_into_the_document_in_bounded_chunks"]) {
+    if (evidence.includes(`fn ${fixture}`)) failures.push(`Puzzle fill lock-is-commit fixture survives: ${fixture}`);
+  }
+  try {
+    const fixture = JSON.parse(sources.runFixture) as { laws?: { opsPerPlacement?: unknown; parryOracle?: unknown; delivery?: { candidates?: unknown }; interactive?: { document?: unknown; turns?: unknown; budgetUs?: unknown } }; cases?: { expected?: { verdictPrefix?: unknown } }[] };
+    const laws = fixture.laws;
+    if (!laws || !(Number(laws.opsPerPlacement) >= 1) || typeof laws.parryOracle !== "object" || laws.parryOracle === null || !(Number(laws.delivery?.candidates) >= 5000) || laws.interactive?.document !== "nakagin" || !(Number(laws.interactive?.turns) >= 771) || laws.interactive?.budgetUs !== 2000) failures.push("Puzzle fill run fixture does not pin the parry3d oracle, the 5 000-candidate delivery law and the unchanged 2 ms Nakagin budget");
+    if (!Array.isArray(fixture.cases) || fixture.cases.length === 0 || !fixture.cases.every((entry) => Array.isArray(entry.expected?.verdictPrefix) && (entry.expected.verdictPrefix as unknown[]).every((verdict) => typeof verdict === "string" && /^(?:testing|success|warning|danger):[\w.-]+$/.test(verdict)))) failures.push("Puzzle fill run fixture cases do not carry verdict:reason prefixes");
+  } catch {
+    failures.push("Puzzle fill run fixture is missing or malformed");
+  }
   return failures;
 }
 
+/**
+ * 🪣️ Puzzle fill shows its process through tool-run trace pages only: no diagnostic page, candidate ghost or reveal
+ * cutoff survives in the 3d/5d producers or World3dHost, the legacy preview JSON fixture is gone, and World3dHost mounts
+ * the framework `ToolRunTraceLayer` (`📋️tool-run-contract.md` §3.2, §3.6, §4.1, §5 W1-C).
+ */
+export function interactivityPuzzleFillTraceFailures(sources: InteractivityPuzzleFillSources): string[] {
+  const code = interactivityPuzzleFillCode(sources);
+  const failures: string[] = [];
+  const producers = { fill: code.fill, precompute: code.precompute, schema: code.schema, transport: code.transport, puzzle5dPrecompute: code.puzzle5dPrecompute, puzzle5dWindow: code.puzzle5dWindow };
+  for (const [role, source] of Object.entries(producers)) {
+    for (const token of ["candidate_page", "candidate_ghost", "FillDiagnostic", "world_fill_preview_json"]) if (source.includes(token)) failures.push(`Puzzle fill ${role} still publishes the retired diagnostic page: ${token}`);
+  }
+  for (const token of ["WorldFillDiagnosticRecord", "FillDiagnosticOverlay", "latestFillIdentityRef", "data-fill-", "WORLD_FILL_"]) if (code.renderer.includes(token)) failures.push(`World3dHost still parses or paints the retired fill diagnostic: ${token}`);
+  for (const [role, source] of Object.entries({ ...producers, renderer: code.renderer })) {
+    const reveal = source.match(/\b(?:reveal_index|revealIndex|revealCutoffs?|reveal_cutoffs?)\b/);
+    if (reveal) failures.push(`Puzzle fill ${role} still carries a reveal cutoff: ${reveal[0]}`);
+  }
+  if (!code.renderer.includes("<ToolRunTraceLayer")) failures.push("World3dHost does not mount ToolRunTraceLayer for tool-run trace pages");
+  if (sources.previewFixture.length > 0) failures.push("Puzzle fill preview JSON fixture still exists");
+  return failures;
+}
 
-
-function interactivityPuzzleFillP4eFailures(precomputeSource: string, fillSource: string, geometrySource: string, schemaSource: string, transportSource: string, rendererSource: string): string[] {
-  const precompute = interactivityProductionSource(precomputeSource);
-  const fill = interactivityProductionSource(fillSource);
-  const geometry = interactivityProductionSource(geometrySource);
-  const schema = interactivityProductionSource(schemaSource);
-  const transport = interactivityProductionSource(transportSource);
+/** 🧮️ P4e FillBuilder-intrinsic laws that survive the tool-run conversion: cooperative preparation, fixed owners with exact cap/+1 handback, resumable spatial index, no whole-state checkpoint or clone, danger step before a capacity fault. */
+export function interactivityPuzzleFillP4eFailures(precomputeSource: string, fillSource: string, geometrySource: string): string[] {
+  const [precompute, fill, geometry] = [precomputeSource, fillSource, geometrySource].map((text) => interactivityToolRunCode({ path: "🦀️.rs", text: text.split(POLICY_RUST_TEST_EVIDENCE_BOUNDARY, 1)[0]! }).join("\n")) as [string, string, string];
   const failures: string[] = [];
   const preparationStages = ["PrepareFixture", "PrepareCatalogs", "PrepareMeshes", "PrepareEntries", "PrepareSpatial", "PrepareLookup", "PrepareConfiguration"];
   if (
     precompute.includes("FillBuilder::new(") ||
+    fill.includes("FillBuilder::new(") ||
     precompute.includes(".configure(") ||
     precompute.includes(".refresh_meshes(") ||
     precompute.includes(".rebuild_collision_index(") ||
-    !precompute.includes("FillBuilder::begin_preparation(FillPreparationRoots::new(scene, self.meshes.clone()), operation)") ||
-    !precompute.includes("scene: Option<Arc<SceneConfig>>") ||
-    !precompute.includes("meshes: Arc<HashMap<String, CollisionBody>>") ||
-    (precompute.match(/start_fill_preparation\(false\)/g) ?? []).length < 2 ||
+    ![precompute, fill].some((source) => source.includes("FillBuilder::begin_preparation(")) ||
     !fill.includes("pub(crate) struct FillPreparationRoots") ||
     !preparationStages.every((stage) => fill.includes(`FillJobStage::${stage}`)) ||
     !fill.includes("self.prepare_one();")
-  ) failures.push("P4e mounted fill construction/reconfiguration is not one generation-owned cooperative preparation path");
+  ) failures.push("P4e fill construction/reconfiguration is not one generation-owned cooperative preparation path");
   const preparationBranches = ["FixtureObjects", "FixtureAttractions", "FixtureTargetVolumes", "Meshes", "CatalogObjects", "CatalogVortices", "CatalogCables", "KindCompatibility", "ObjectWeights", "VortexWeights"];
   const preparationLengths = [
     "roots.scene.fixture.objects.len()",
@@ -9631,13 +9643,7 @@ function interactivityPuzzleFillP4eFailures(precomputeSource: string, fillSource
     !preparationBranches.every((branch) => fill.includes(`PreparationCapacityBranch::${branch}`)) ||
     !preparationLengths.every((length) => fill.includes(length)) ||
     !fixedPreparationOwners.every((owner) => fill.includes(owner)) ||
-    fill.includes("self.base.objects.push(") ||
-    fill.includes("self.base.attractions.push(") ||
-    fill.includes("self.base.target_volumes.push(") ||
-    fill.includes("self.catalogs.objects.push(") ||
-    fill.includes("self.catalogs.vortices.push(") ||
-    fill.includes("self.catalogs.cables.push(") ||
-    fill.includes("self.kind_compatibility.push(") ||
+    ["self.base.objects.push(", "self.base.attractions.push(", "self.base.target_volumes.push(", "self.catalogs.objects.push(", "self.catalogs.vortices.push(", "self.catalogs.cables.push(", "self.kind_compatibility.push("].some((push) => fill.includes(push)) ||
     !fillSource.includes("preparation_refusal_owner_for_test") ||
     !hostilePreparationBranches.every((branch) => fillSource.includes(branch)) ||
     !fillSource.includes("roots(branch, cap)") ||
@@ -9648,20 +9654,8 @@ function interactivityPuzzleFillP4eFailures(precomputeSource: string, fillSource
     !fill.includes('format!("preparation-capacity:{}:{}", self.branch.label(), self.omitted_index)')
   ) failures.push("P4e preparation preflight/storage omits a fixture, mesh, catalog, or compatibility fixed owner or lacks exact cap/+1 handback evidence");
   const refusalStart = fill.indexOf("if let Some(refusal) = self.preparation_capacity_refusal.as_mut()");
-  const refusalEnd = fill.indexOf("if self.collection_over_capacity", refusalStart);
-  const refusal = fill.slice(refusalStart, refusalEnd);
-  if (
-    refusalStart < 0 ||
-    !refusal.includes("if !refusal.diagnostic_published") ||
-    !refusal.includes("self.preview.candidate_ghost = None") ||
-    !refusal.includes("return self.publish_preview(context)") ||
-    refusal.indexOf("return self.publish_preview(context)") > refusal.indexOf("return StepOutcome::Fault") ||
-    !fillSource.includes("fn capacity_refusal_publishes_generation_qualified_no_ghost_diagnostic_before_fault") ||
-    transport.includes("candidate_ghost.as_ref()?") ||
-    !precompute.includes('if fill.preview.stage == "complete"') ||
-    !transport.includes("session.fill_preview_json_page") ||
-    !rendererSource.includes("let fillDiagnostic: WorldFillDiagnosticRecord | null = null")
-  ) failures.push("P4e capacity refusal does not publish an active generation-qualified no-ghost diagnostic before terminal fault/removal");
+  const refusal = fill.slice(refusalStart, fill.indexOf("if self.collection_over_capacity", refusalStart));
+  if (refusalStart < 0 || !refusal.includes("ToolRunStepKind::Danger") || !refusal.includes("StepOutcome::Fault") || refusal.indexOf("ToolRunStepKind::Danger") > refusal.indexOf("StepOutcome::Fault") || refusal.includes("candidate_ghost")) failures.push("P4e capacity refusal does not publish a danger step before the terminal fault");
   if (
     !geometry.includes("cells: FixedOwnerMap<(i32, i32, i32), FixedOwnerSet<String>, DOCUMENT_CELL_SLOTS>") ||
     !geometry.includes("struct CollisionCellSpan") ||
@@ -9676,232 +9670,386 @@ function interactivityPuzzleFillP4eFailures(precomputeSource: string, fillSource
     geometry.includes("pub(crate) fn remove(") ||
     geometry.includes("pub(crate) fn query(") ||
     geometry.includes("entry_intersects") ||
-    fill.includes(".upsert(") ||
+    fill.includes("spatial_index.upsert(") ||
     fill.includes("self.placed.iter()") ||
     !fill.includes("self.spatial_index.step_query(query, owner)") ||
     !fill.includes("self.spatial_index.step_replacement(mutation, owner)") ||
     !geometry.includes("CollisionOverlapStage::SamplingPointA") ||
     !geometry.includes("CollisionOverlapStage::SamplingPointB")
   ) failures.push("P4e spatial owner is not fixed, resumable, generation-bound, and used by the production broad phase");
-  if (
-    fillSource.includes("FillJobCheckpoint") ||
-    fillSource.includes("checkpoint_bytes") ||
-    fillSource.includes("restore_checkpoint") ||
-    fillSource.includes("normalized_checkpoint") ||
-    fillSource.includes("cloned_btree") ||
-    fillSource.includes("try_from_btree") ||
-    fillSource.includes("clear_for_rebuild_residual") ||
-    geometrySource.includes("cloned_btree") ||
-    geometrySource.includes("try_from_btree") ||
-    geometrySource.includes("clear_for_rebuild_residual")
-  ) failures.push("P4e retained a dormant whole-state checkpoint, clone, conversion, or rebuild-clear escape");
-  const progressStart = fill.indexOf("pub(crate) fn progress(&self)");
-  const progressEnd = fill.indexOf("fn collision_owner", progressStart);
-  const progress = fill.slice(progressStart, progressEnd);
-  const publishStart = fill.indexOf("fn publish_preview");
-  const publishEnd = fill.indexOf("fn complete", publishStart);
-  const publish = fill.slice(publishStart, publishEnd);
-  if (
-    progress.includes("self.appended_objects.clone()") ||
-    progress.includes("self.appended_attractions.clone()") ||
-    progress.includes("self.sequence.clone()") ||
-    publish.includes("self.sequence.clone()") ||
-    fillSource.includes("accepted_prefix") ||
-    !schema.includes("pub candidate_page: [Option<String>; 8]") ||
-    !schema.includes("pub registry_generation: u64") ||
-    !schema.includes("pub truncated: bool") ||
-    !schema.includes("pub collision_count: usize") ||
-    !fill.includes("self.preview.candidate_page = std::array::from_fn") ||
-    !fill.includes("self.preview.truncated = query.truncated()")
-  ) failures.push("P4e preview publication is not the canonical bounded diagnostic page");
-  if (
-    transport.includes("candidate_ghost.as_ref()?") ||
-    transport.includes("let build = session.fill_progress().preview?;") ||
-    transport.includes("serde_json::to_value(build)") ||
-    !transport.includes("session.fill_preview_json_page(&color, labels.fill_progress.as_str())") ||
-    !fill.includes("pub(crate) struct FillPreviewJsonCursor") ||
-    !fill.includes("pub(crate) const FILL_PREVIEW_JSON_MAX_BYTES: usize = 4 * 1024") ||
-    !fill.includes("FILL_PREVIEW_JSON_MAX_STATUS_LABEL_BYTES: usize = 256") ||
-    !fill.includes("FillPreviewJsonPhase::Census") ||
-    !fill.includes("FillPreviewJsonPhase::Reserve") ||
-    !fill.includes("FillPreviewJsonPhase::Encode") ||
-    !fill.includes("FillPreviewJsonPhase::Validate") ||
-    !fill.includes("try_reserve_exact") ||
-    fill.includes("serde_json::to_vec(&self.preview)") ||
-    !rendererSource.includes("type WorldFillDiagnosticRecord") ||
-    !rendererSource.includes("readonly statusLabel: string") ||
-    !rendererSource.includes("function FillDiagnosticOverlay") ||
-    !rendererSource.includes("fillDiagnostic ? <FillDiagnosticOverlay diagnostic={fillDiagnostic} /> : null") ||
-    !rendererSource.includes("latestFillIdentityRef") ||
-    !rendererSource.includes("identity[4] >= latest[4]") ||
-    !rendererSource.includes("data-fill-registry-generation={diagnostic.registryGeneration}") ||
-    !rendererSource.includes("fillDiagnostic?.candidateGhost ? brushPreview : null") ||
-    !rendererSource.includes("data-fill-truncated={diagnostic.truncated}") ||
-    !rendererSource.includes("diagnostic.candidatePage") ||
-    !rendererSource.includes("diagnostic.rejectionReason") ||
-    !rendererSource.includes("diagnostic.collisionCount") ||
-    !rendererSource.includes("diagnostic.statusLabel.length === 0") ||
-    !rendererSource.includes("<span>{diagnostic.statusLabel}</span>") ||
-    !rendererSource.includes("aria-label={label}")
-  ) failures.push("P4e renderer transport still gates diagnostics on ghosts, ignores canonical fields, or accepts stale identity");
+  if (["FillJobCheckpoint", "checkpoint_bytes", "restore_checkpoint", "normalized_checkpoint", "cloned_btree", "try_from_btree", "clear_for_rebuild_residual"].some((token) => fillSource.includes(token)) || ["cloned_btree", "try_from_btree", "clear_for_rebuild_residual"].some((token) => geometrySource.includes(token))) failures.push("P4e retained a dormant whole-state checkpoint, clone, conversion, or rebuild-clear escape");
+  if (["self.sequence.clone()", "self.appended_objects.clone()", "self.appended_attractions.clone()"].some((clone) => fill.includes(clone)) || fillSource.includes("accepted_prefix")) failures.push("P4e progress or tick publication clones the accepted sequence or appended owners");
   for (const fixture of ["constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently", "stale_generation_stops_preparation_before_installing_any_entry"]) {
     if (!fillSource.includes(`fn ${fixture}`)) failures.push(`P4e preparation fixture missing ${fixture}`);
   }
-  for (const fixture of [
-    "spatial_resumable_query_narrows_sparse_cells_without_visiting_distant_population",
-    "spatial_capacity_plus_one_refusal_preserves_exact_old_state",
-    "spatial_stale_owner_cannot_finish_partial_replacement",
-    "spatial_multi_cell_oversized_replacement_and_removal_make_bounded_progress",
-  ]) {
+  for (const fixture of ["spatial_resumable_query_narrows_sparse_cells_without_visiting_distant_population", "spatial_capacity_plus_one_refusal_preserves_exact_old_state", "spatial_stale_owner_cannot_finish_partial_replacement", "spatial_multi_cell_oversized_replacement_and_removal_make_bounded_progress"]) {
     if (!geometrySource.includes(`fn ${fixture}`)) failures.push(`P4e spatial fixture missing ${fixture}`);
   }
   return failures;
 }
+//#endregion 🪣️PuzzleFillToolRun
 
+//#region ⏯️ToolRunPolicy
+/**
+ * ⏯️ One tool the phase-4 inventory (`26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS/📓️audit-p4-tool-inventory.md`) classifies
+ * `algorithmic-mutating`. `toolId` is the Tool/UtilityDefinition id expected under `root` (artifact subset or engine
+ * dir); `scope` lists the tool's own files or dirs (relative to `root` unless repo-rooted) scanned for `Emit::amend`;
+ * `actions` are the action ids its handlers publish under (history coalescing scan across `root`); `verbs` are
+ * per-plugin run verbs and lifecycle states that must vanish from `root` once `run` is declared, `measures` the
+ * plugin-local progress/cancel measures that must vanish from `scope`; `lane` is the converting contract lane.
+ */
+export type InteractivityToolRunRequirement = {
+  readonly toolId: string;
+  readonly root: string;
+  readonly scope: readonly string[];
+  readonly actions: readonly string[];
+  readonly verbs: readonly string[];
+  readonly measures: readonly string[];
+  readonly lane: string;
+  readonly inventory: string;
+};
 
+/** ⏯️ A repo-relative source handed to the tool-run policy predicates. */
+export type InteractivityToolRunSource = { readonly path: string; readonly text: string };
 
-/** 🔭️Requires Puzzle3d and Puzzle5d's visible fill diagnostic to be a retained fixed-shape page with explicit locale admission. */
-export function interactivityPuzzleFillPreviewJsonFailures(
-  precomputeSource: string,
-  fillSource: string,
-  puzzle3dWindowSource: string,
-  puzzle5dPrecomputeSource: string,
-  puzzle5dWindowSource: string,
-  rendererSource: string,
-  puzzle3dTerminologySource: string,
-  puzzle5dTerminologySource: string,
-  fixtureSource: string,
-  rendererTestSource: string,
-): string[] {
-  const precompute = interactivityProductionSource(precomputeSource);
-  const fill = interactivityProductionSource(fillSource);
-  const puzzle3dWindow = interactivityProductionSource(puzzle3dWindowSource);
-  const puzzle5dPrecompute = interactivityProductionSource(puzzle5dPrecomputeSource);
-  const puzzle5dWindow = interactivityProductionSource(puzzle5dWindowSource);
-  const renderer = interactivityProductionSource(rendererSource);
-  const puzzle3dTerminology = interactivityProductionSource(puzzle3dTerminologySource);
-  const puzzle5dTerminology = interactivityProductionSource(puzzle5dTerminologySource);
-  const parserStart = renderer.indexOf("export function parseWorldBrushPreview");
-  const parserEnd = renderer.indexOf("type WorldContextMenuTarget", parserStart);
-  const parser = renderer.slice(parserStart, parserEnd);
-  const failures: string[] = [];
-  if (
-    !fill.includes("pub(crate) const FILL_PREVIEW_JSON_MAX_BYTES: usize = 4 * 1024") ||
-    !fill.includes("pub(crate) const FILL_PREVIEW_JSON_MAX_COLOR_BYTES: usize = 128") ||
-    !fill.includes("pub(crate) const FILL_PREVIEW_JSON_MAX_STATUS_LABEL_BYTES: usize = 256") ||
-    !fill.includes("pub(crate) struct FillPreviewJsonCursor") ||
-    !["Census", "Reserve", "Encode", "Validate", "Ready", "Rejected", "Closing", "Terminal"].every((phase) => fill.includes(`FillPreviewJsonPhase::${phase}`)) ||
-    !fill.includes("fuel.checked_sub(1)") ||
-    !fill.includes("self.exact_bytes.checked_add(unit.len)") ||
-    !fill.includes("output.try_reserve_exact(self.exact_bytes)") ||
-    !fill.includes("output.extend_from_slice(&unit.bytes[..unit.len])") ||
-    !fill.includes("if self.identity != FillPreviewJsonIdentity::read(preview)") ||
-    !fill.includes("FillPreviewJsonStep::Pending { progress: self.progress, checkpoint: self.checkpoint() }") ||
-    !fill.includes("pub(crate) fn close_step(&mut self) -> bool") ||
-    !fill.includes("self.phase = FillPreviewJsonPhase::Terminal") ||
-    fill.includes("serde_json::to_vec(&self.preview)")
-  ) failures.push("Puzzle retained fill preview is not fixed-cap, one-fuel, generation-fenced, checkpointed, and incrementally closeable");
-  if (
-    !precompute.includes("pub fn fill_preview_json_page(&self, color: &str, status_label: &str) -> Option<String>") ||
-    !precompute.includes("let mut previous_us = default_now_us()?") ||
-    !precompute.includes("let deadline = previous_us.checked_add(2_000)?") ||
-    !precompute.includes("let mut fuel = 1") ||
-    !precompute.includes("let now_us = default_now_us()?") ||
-    !precompute.includes("if now_us < previous_us") ||
-    !precompute.includes("previous_us = now_us") ||
-    !precompute.includes("now_us >= deadline") ||
-    !precompute.includes("self.engine.fill_cancel.is_cancelled_now()") ||
-    !precompute.includes("fill.preview_json_ready().map(ToOwned::to_owned)") ||
-    precompute.includes("let build = session.fill_progress().preview?")
-  ) failures.push("Puzzle3d fill preview caller does not mount bounded fuel/deadline/cancel advancement and retain the last valid page");
-  if (
-    !puzzle3dWindow.includes("session.fill_preview_json_page(&color, labels.fill_progress.as_str())") ||
-    !puzzle3dWindow.includes("world_fill_preview_json(precompute, envelope, labels).or_else(|| world_brush_preview_json") ||
-    puzzle3dWindow.includes("serde_json::to_value(build)") ||
-    !puzzle5dPrecompute.includes("self.inner.fill_preview_json_page(color, status_label)") ||
-    !puzzle5dWindow.includes("world_fill_preview_json(precompute, envelope, labels).or_else(|| world_brush_preview_json") ||
-    !puzzle5dWindow.includes("labels.fill_progress.as_str()")
-  ) failures.push("Puzzle3d or Puzzle5d visible 3d consumer bypasses the shared retained fill page");
-  if (
-    parserStart < 0 || parserEnd < 0 ||
-    !renderer.includes('const WORLD_FILL_ROOT_KEYS: ReadonlySet<string> = new Set(["targetVortexFullId", "objectKindId", "sourceVortexIndex", "meshUrl", "origin", "orientation", "color", "opacity", "fillBuildPreview"])') ||
-    !renderer.includes("const WORLD_FILL_DIAGNOSTIC_KEYS: ReadonlySet<string> = new Set([") ||
-    !renderer.includes('const WORLD_FILL_GHOST_KEYS: ReadonlySet<string> = new Set(["targetVortexFullId", "objectKindId", "sourceVortexIndex", "meshUrl", "origin", "orientation"])') ||
-    !renderer.includes("const WORLD_FILL_COLOR_MAX_BYTES = 128") ||
-    !parser.includes("censusAllowedOwnKeys(parsed, WORLD_FILL_ROOT_KEYS) < 0") ||
-    !parser.includes("censusAllowedOwnKeys(diagnostic, WORLD_FILL_DIAGNOSTIC_KEYS) !== WORLD_FILL_DIAGNOSTIC_KEYS.size") ||
-    !parser.includes("censusAllowedOwnKeys(candidateGhost, WORLD_FILL_GHOST_KEYS) === WORLD_FILL_GHOST_KEYS.size") ||
-    !parser.includes('Object.prototype.hasOwnProperty.call(parsed, "sourceVortexIndex") && !nonnegativeInteger(parsed.sourceVortexIndex)') ||
-    !parser.includes('Object.prototype.hasOwnProperty.call(parsed, "origin") && !finiteTuple(parsed.origin, 3)') ||
-    !parser.includes('Object.prototype.hasOwnProperty.call(parsed, "orientation") && !finiteTuple(parsed.orientation, 4)') ||
-    !parser.includes('Object.prototype.hasOwnProperty.call(parsed, "color") && (typeof parsed.color !== "string" || !boundedUtf8(parsed.color, WORLD_FILL_COLOR_MAX_BYTES))') ||
-    !parser.includes('Object.prototype.hasOwnProperty.call(parsed, "opacity") && parsed.opacity !== 0.35') ||
-    !parser.includes("diagnostic.candidateGhost.targetVortexFullId !== parsed.targetVortexFullId") ||
-    !parser.includes("diagnostic.candidateGhost.objectKindId !== parsed.objectKindId") ||
-    !parser.includes("diagnostic.candidateGhost.sourceVortexIndex !== parsed.sourceVortexIndex") ||
-    !parser.includes("diagnostic.candidateGhost.meshUrl !== parsed.meshUrl") ||
-    !parser.includes("!equalTuple(diagnostic.candidateGhost.origin, parsed.origin)") ||
-    !parser.includes("!equalTuple(diagnostic.candidateGhost.orientation, parsed.orientation)") ||
-    !parser.includes("diagnostic.statusLabel.length === 0") ||
-    !parser.includes("diagnostic.candidatePage.length !== 8") ||
-    !parser.includes("!Array.isArray(candidateGhost)") ||
-    !parser.includes("candidateGhost.sourceVortexIndex") ||
-    !parser.includes("candidateGhost.origin") ||
-    !parser.includes("candidateGhost.orientation") ||
-    !parser.includes("Number.isFinite") ||
-    !renderer.includes("readonly statusLabel: string") ||
-    !renderer.includes("aria-label={label}") ||
-    !renderer.includes("<span>{diagnostic.statusLabel}</span>") ||
-    renderer.includes('statusLabel ?? "Fill progress"')
-  ) failures.push("World3d fill parser or overlay does not fail closed on the exact diagnostic shape with visible/ARIA label parity");
-  if (
-    !puzzle3dTerminology.includes('fill_progress: native_en "Fill progress", native_de "Füllfortschritt", reuse_en "Fill progress", reuse_de "Füllfortschritt"') ||
-    !puzzle5dTerminology.includes('fill_progress: native_en "Fill progress", native_de "Füllfortschritt", reuse_en "Fill progress", reuse_de "Füllfortschritt"') ||
-    puzzle3dTerminology.includes("{ Locale::De } else { Locale::En }") ||
-    puzzle3dTerminology.includes(".unwrap_or(Terminology::Native)") ||
-    puzzle5dTerminology.includes("{ Locale::De } else { Locale::En }") ||
-    puzzle5dTerminology.includes("{ Terminology::Reuse } else { Terminology::Native }") ||
-    !puzzle3dTerminology.includes("None") ||
-    !puzzle5dTerminology.includes("None")
-  ) failures.push("Puzzle3d or Puzzle5d silently defaults an unsupported locale or terminology instead of failing closed");
-  try {
-    const fixture = JSON.parse(fixtureSource) as {
-      schema?: string;
-      limits?: { maximumBytes?: number; maximumColorBytes?: number; maximumStatusLabelBytes?: number; candidateItems?: number };
-      locales?: Record<string, { statusLabel?: string; expected?: string }>;
-    };
-    if (
-      fixture.schema !== "semio.puzzle3d.fill-preview-json.v1" ||
-      fixture.limits?.maximumBytes !== 4096 ||
-      fixture.limits?.maximumColorBytes !== 128 ||
-      fixture.limits?.maximumStatusLabelBytes !== 256 ||
-      fixture.limits?.candidateItems !== 8 ||
-      Object.keys(fixture.locales ?? {}).sort().join(",") !== "de,en" ||
-      fixture.locales?.en?.statusLabel !== "Fill progress" ||
-      fixture.locales?.de?.statusLabel !== "Füllfortschritt" ||
-      ![fixture.locales?.en?.expected, fixture.locales?.de?.expected].every((value) => typeof value === "string" && (JSON.parse(value).fillBuildPreview?.candidatePage?.length === 8))
-    ) failures.push("Puzzle fill language-neutral fixture does not own exact caps, EN/DE labels, and fixed eight-item expected pages");
-  } catch {
-    failures.push("Puzzle fill language-neutral fixture is malformed");
-  }
-  if (
-    !fillSource.includes("retained_preview_json_matches_language_neutral_fixture_and_test_only_serde_oracle") ||
-    !fillSource.includes("retained_preview_json_exact_cap_and_plus_one_fail_closed_before_reserve") ||
-    !fillSource.includes("retained_preview_json_zero_fuel_deadline_and_stale_generation_make_no_publication") ||
-    !fillSource.includes("retained_preview_json_cancellation_at_each_transfer_preserves_last_valid_page") ||
-    !fillSource.includes("retained_preview_json_reuses_exact_ready_page_during_locale_invalidated_encode_and_closes_idempotently") ||
-    !rendererTestSource.includes("parseWorldBrushPreview") ||
-    !rendererTestSource.includes('page("Füllfortschritt")') ||
-    !rendererTestSource.includes('page("Fill progress", {}, { extra: true })') ||
-    !rendererTestSource.includes('page("Fill progress", { extra: true })') ||
-    !rendererTestSource.includes("oneKeyNullGhostRoot") ||
-    !rendererTestSource.includes("fullNineKeyGhostRoot") ||
-    !rendererTestSource.includes("for (const malformedRoot of [") ||
-    !rendererTestSource.includes("for (const mismatchedRoot of [") ||
-    !rendererTestSource.includes('{ color: "ü".repeat(65) }')
-  ) failures.push("Puzzle fill source laws do not cover oracle parity, caps, stale/deadline/cancel/close, and localized renderer parsing");
-  return failures;
+/** ⏯️ A tool-run policy violation anchored to a file and a 1-based line (0 when a whole file or table row is at fault). */
+export type InteractivityToolRunFinding = { readonly file: string; readonly line: number; readonly text: string };
+
+type InteractivityToolRunDeclaration = { readonly id: string; readonly kind: "Tool" | "Utility"; readonly file: string; readonly line: number; readonly run: boolean };
+
+type InteractivityToolRunTool = { readonly label: string; readonly root: string; readonly scope: readonly string[]; readonly flat: boolean; readonly actions: readonly string[]; readonly verbs: readonly string[]; readonly measures: readonly string[]; readonly declared: boolean };
+
+type InteractivityToolRunIndex = { readonly code: ReadonlyMap<string, readonly string[]>; readonly declarations: readonly InteractivityToolRunDeclaration[] };
+
+const INTERACTIVITY_TOOL_RUN_ANY = "🏅️standards/🔖️1/🪆️subsets/✳️any";
+
+/**
+ * ⏯️ Every `algorithmic-mutating` tool of the phase-4 inventory with its plugin path; each must declare a
+ * `ToolRunDefinition` (`📋️tool-run-contract.md` §2.4). Read-only runs (layout/shooting exports, architect
+ * report/validation/search, generation3d preview eval, puzzle 3d brush suggestions), the param-only draw trace and
+ * the inner `WfcJob` capability (covered by the assembly row) are deliberately absent. A converting lane edits its row.
+ */
+export const INTERACTIVITY_TOOL_RUN_REQUIREMENTS: readonly InteractivityToolRunRequirement[] = [
+  { toolId: "fill", root: `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎭️modes/✏️edit/🛠️tools/🪣️fill", "✏️editor/🎮️commands/🪣️fill-build-tick", "✏️editor/🎮️commands/🧮️set-fill-count", "✏️editor/⏳️precompute/🪣️fill"], actions: ["setFillCount", "fillBuildTick"], verbs: ["fillBuildTick", "fill_build_tick", "cancelFillBuild", "cancel_fill_build", "take_locked_into_fixture", "FILL_LOCK_PLACEMENTS_PER_TICK", "enqueue_fill_job", "fill_job_identity"], measures: ["cancel_measure", "progress_measure"], lane: "W1-B", inventory: "§1.1" },
+  { toolId: "importFixture", root: `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/📥️import-fixture"], actions: ["importFixture"], verbs: [], measures: [], lane: "unassigned", inventory: "§1.1" },
+  { toolId: "fill", root: `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎭️modes/✏️edit/🛠️tools/🪣️fill", "✏️editor/🎮️commands/🏁️fill-session-begin", "✏️editor/🎮️commands/👣️fill-session-step", "✏️editor/🎮️commands/🧹️fill-session-clear", "✏️editor/🎮️commands/🧮️set-fill-count"], actions: ["setFillCount", "brushFillSessionBegin", "brushFillSessionStep"], verbs: ["brushFillSessionBegin", "brushFillSessionStep", "brushFillSessionCancel", "brushFillSessionDiscard", "brushFillSessionAdopt", "fill_session_begin", "fill_session_step", "fill_session_clear", "Puzzle2dFillLifecycle"], measures: ["cancel_measure", "progress_measure"], lane: "W2-A", inventory: "§1.2" },
+  { toolId: "fill", root: `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎭️modes/✏️edit/☑️options/🪣️fill", "✏️editor/🎭️modes/✏️edit/🪟️windows/◻️2d/🪛️utilities/🪣️fill", "✏️editor/🎮️commands/🧮️set-fill-count", "✏️editor/🎮️commands/🛑️cancel-fill-build", "✏️editor/🧠️precompute"], actions: ["setFillCount"], verbs: ["cancelFillBuild", "cancel_fill_build"], measures: ["fill_cancel_measure", "fill_progress_measure"], lane: "W2-B", inventory: "§1.3" },
+  { toolId: "importDocument", root: `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/📥️import-document"], actions: ["importDocument"], verbs: [], measures: [], lane: "unassigned", inventory: "§2.1" },
+  { toolId: "reorganize", root: `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🗺️reorganize"], actions: ["reorganize"], verbs: [], measures: [], lane: "unassigned", inventory: "§2.1" },
+  { toolId: "reorganize", root: `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🗺️reorganize"], actions: ["reorganize"], verbs: [], measures: [], lane: "unassigned", inventory: "§2.2" },
+  { toolId: "s.assembly.solve", root: `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["🧬️schema/💡️inferences"], actions: [], verbs: [], measures: [], lane: "W3 (3) assembly", inventory: "§2.3" },
+  { toolId: "energySimulation", root: `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["🧵️simulation-session", "✏️editor/🎭️modes/✏️edit/🪟️windows/⚡️simulation"], actions: [], verbs: ["start-energy-simulation", "cancel-energy-simulation", "retry-energy-simulation", "discard-energy-simulation", "adopt-energy-simulation", "EnergySimulationStatus"], measures: [], lane: "W3 (1) energy", inventory: "§3.1" },
+  { toolId: "reconstruction", root: `✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🏗️run-reconstruction", "✏️editor/🎮️commands/⏩️advance-reconstruction", "✏️editor/🎮️commands/🛑️cancel-reconstruction", "✏️editor/🎮️commands/🔁️retry-stage"], actions: ["runReconstruction", "advanceReconstruction"], verbs: ["advanceReconstruction", "cancelReconstruction", "retryStage"], measures: [], lane: "W3 (4) remodel", inventory: "§3.3" },
+  { toolId: "decimate", root: `✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🔷️mesh-edit", "🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🦀️.rs"], actions: ["decimate"], verbs: [], measures: [], lane: "W3 (15) lowpoly", inventory: "§3.4" },
+  { toolId: "formatDocument", root: `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🧹️format-document"], actions: ["formatDocument"], verbs: [], measures: [], lane: "unassigned", inventory: "§4.1" },
+  { toolId: "reorganize", root: `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🗺️reorganize"], actions: ["reorganize"], verbs: [], measures: [], lane: "W3-F layout-run", inventory: "§4.3" },
+  { toolId: "reorganize", root: `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🔄️layout"], actions: ["reorganize"], verbs: [], measures: [], lane: "W3-F layout-run", inventory: "§4.7" },
+  { toolId: "runAnalysis", root: `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🔬️analysis"], actions: ["runAnalysis"], verbs: [], measures: [], lane: "W3 (12) architect", inventory: "§4.8" },
+  { toolId: "importProgram", root: `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/📤️exchange"], actions: ["importProgram"], verbs: [], measures: [], lane: "W3 (12) architect", inventory: "§4.8" },
+  { toolId: "forceLayout", root: `✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/⚛️force-layout"], actions: ["forceLayout"], verbs: [], measures: [], lane: "W3-F layout-run", inventory: "§5.1" },
+  { toolId: "reorganize", root: `✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🗂️reorganize"], actions: ["reorganize"], verbs: [], measures: [], lane: "W3-F layout-run", inventory: "§5.1" },
+  { toolId: "importCadFile", root: `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/📥️io"], actions: ["importCadFile"], verbs: [], measures: [], lane: "unassigned", inventory: "§5.4" },
+  { toolId: "run", root: `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🏃️run"], actions: ["run"], verbs: [], measures: [], lane: "W3 (10) imperative", inventory: "§5.7" },
+  { toolId: "reorganize", root: `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: [], actions: ["reorganize"], verbs: [], measures: [], lane: "W3-F layout-run", inventory: "§5.8" },
+  { toolId: "reorganize", root: `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🧭️reorganize"], actions: ["reorganize"], verbs: [], measures: [], lane: "W3-F layout-run", inventory: "§5.8" },
+  { toolId: "reorganize", root: `✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🗂️reorganize"], actions: ["reorganize"], verbs: [], measures: [], lane: "W3-F layout-run", inventory: "§5.9" },
+  { toolId: "combineBoolean", root: `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🔀️combine-boolean"], actions: ["combineBoolean"], verbs: [], measures: [], lane: "unassigned", inventory: "§6.1" },
+  { toolId: "inkApplyEvents", root: `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🖊️ink-apply-events"], actions: ["inkApplyEvents"], verbs: [], measures: [], lane: "W3 (14) note", inventory: "§6.2" },
+  { toolId: "exportStudioPack", root: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space", scope: ["🎮️commands/📦️export-studio-pack"], actions: ["exportStudioPack"], verbs: [], measures: [], lane: "W3 (13) space", inventory: "§6.4" },
+  { toolId: "exportMedia", root: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space", scope: ["🎮️commands/📤️export-media"], actions: ["exportMedia"], verbs: [], measures: [], lane: "W3 (13) space", inventory: "§6.4" },
+  { toolId: "reorganizeWorkflow", root: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space", scope: ["🎮️commands/🗂️reorganize-workflow"], actions: ["reorganizeWorkflow"], verbs: [], measures: [], lane: "W3 (13) space", inventory: "§6.4" },
+];
+
+const INTERACTIVITY_TOOL_RUN_TRIGGER = /Emit::amend|coalesce_key|run\s*:\s*Some\s*\(|\.run\s*=\s*Some\s*\(|toolRun[A-Z]|TOOL_RUN_\w+_ACTION_ID|TRIED_|FillTried|WorldFillTried|push_tried|fillBuildPreview|FillBuildPreview|fill_build_preview|FILL_PREVIEW_JSON|FillPreviewJson|fill_preview_json/;
+
+const INTERACTIVITY_TOOL_RUN_LEGACY_TRACE = /\b(?:\w*_TRIED_RING|\w*_TRIED_MAX|FillTried\w*|WorldFillTried\w*|push_tried|fillBuildPreview|FillBuildPreview|fill_build_preview|\w*FILL_PREVIEW_JSON\w*|FillPreviewJson\w*|fill_preview_json\w*)\b/;
+
+const INTERACTIVITY_TOOL_RUN_LOCAL_LIFECYCLE: readonly RegExp[] = [
+  /\bfn\s+\w*(?:progress|cancel)_measure\b/,
+  /["'`](?:cancel|abort|stop|retry|discard|adopt|pause|resume|finalize)[A-Z]\w*["'`]/,
+  /["'`][a-z]\w*(?:Tick|Cancel|Abort|Adopt|Discard|Retry|Finalize)["'`]/,
+  /["'`](?:start|cancel|abort|stop|retry|discard|adopt|pause|resume|finalize)-[a-z0-9-]+["'`]/,
+];
+
+const INTERACTIVITY_TOOL_RUN_RESERVED: readonly RegExp[] = [
+  /["'`]toolRun[A-Z]\w*["'`]/,
+  /\bActionDefinition::new(?:_catalog)?\s*\(\s*(?:[\w:]+::)?TOOL_RUN_\w+_ACTION_ID\b/,
+  /\b(?:[\w:]+::)?TOOL_RUN_\w+_ACTION_ID\s*(?:\|\s*(?:[\w:]+::)?TOOL_RUN_\w+_ACTION_ID\s*)*=>/,
+];
+
+const INTERACTIVITY_TOOL_RUN_INDEXES = new WeakMap<readonly InteractivityToolRunSource[], InteractivityToolRunIndex>();
+
+/** 📍️ True when `path` is `prefix` or lies below it. */
+function interactivityToolRunWithin(path: string, prefix: string): boolean {
+  return path === prefix || path.startsWith(`${prefix}/`);
 }
+
+/** 📍️ A requirement scope entry as a repo-relative path. */
+function interactivityToolRunScopePath(root: string, entry: string): string {
+  return entry.startsWith("✏️s/") || entry.startsWith("🧰️framework/") ? entry : `${root}/${entry}`;
+}
+
+/** ✂️ Line-aligned code of one source: comments blanked, string literals kept, Rust `#[cfg(test)]` items emptied. */
+function interactivityToolRunCode(source: InteractivityToolRunSource): string[] {
+  const lines = source.text.split(/\r?\n/);
+  const tests = source.path.endsWith(".rs") ? [...policyTestModSpans(lines), ...interactivityCfgTestItemSpans(lines)] : [];
+  let depth = 0;
+  return lines.map((raw, index) => {
+    const masked = policyMaskLiterals(raw);
+    let code = "";
+    for (let at = 0; at < raw.length; ) {
+      const pair = masked.slice(at, at + 2);
+      if (depth > 0) {
+        depth += pair === "/*" ? 1 : pair === "*/" ? -1 : 0;
+        at += pair === "/*" || pair === "*/" ? 2 : 1;
+      } else if (pair === "//") {
+        break;
+      } else if (pair === "/*") {
+        depth = 1;
+        at += 2;
+      } else {
+        code += raw[at];
+        at += 1;
+      }
+    }
+    return policyLineInTestMod(tests, index + 1) ? "" : code;
+  });
+}
+
+/** 🧱️ The innermost `opener … }` span of `text` (literal-safe) that encloses offset `at`. */
+function interactivityToolRunEnclosing(text: string, at: number, opener: RegExp): string | undefined {
+  if (at < 0) return undefined;
+  const masked = policyMaskLiterals(text);
+  let enclosing: string | undefined;
+  for (const match of masked.matchAll(opener)) {
+    const open = match.index + match[0].length - 1;
+    if (open > at) break;
+    let depth = 0;
+    let close = masked.length;
+    for (let index = open; index < masked.length; index += 1) {
+      depth += masked[index] === "{" ? 1 : masked[index] === "}" ? -1 : 0;
+      if (depth === 0) {
+        close = index;
+        break;
+      }
+    }
+    if (close >= at) enclosing = text.slice(match.index, close + 1);
+  }
+  return enclosing;
+}
+
+/** 🧱️ The `{ … }` block opening at offset `open` of `text`, literal-safe. */
+function interactivityToolRunBlock(text: string, open: number): string {
+  const masked = policyMaskLiterals(text.slice(open));
+  let depth = 0;
+  for (let index = 0; index < masked.length; index += 1) {
+    depth += masked[index] === "{" ? 1 : masked[index] === "}" ? -1 : 0;
+    if (depth === 0) return text.slice(open, open + index + 1);
+  }
+  return text.slice(open);
+}
+
+/** 🗂️ Code lines per source plus every Tool/UtilityDefinition declaration under `✏️s/`, its resolved id and whether it declares `run`. */
+function interactivityToolRunIndex(sources: readonly InteractivityToolRunSource[]): InteractivityToolRunIndex {
+  const cached = INTERACTIVITY_TOOL_RUN_INDEXES.get(sources);
+  if (cached) return cached;
+  const code = new Map(sources.map((source) => [source.path, interactivityToolRunCode(source)] as const));
+  const constants = new Map<string, Map<string, Set<string>>>();
+  const plugin = (path: string) => path.split("/").slice(0, 3).join("/");
+  for (const [path, lines] of code) {
+    if (!path.endsWith(".rs")) continue;
+    for (const match of lines.join("\n").matchAll(/\bconst\s+([A-Z][A-Z0-9_]*)\s*:\s*&(?:'static\s+)?str\s*=\s*"([^"]*)"/g)) {
+      for (const key of [path, plugin(path)]) {
+        const byName = constants.get(key) ?? new Map<string, Set<string>>();
+        byName.set(match[1]!, (byName.get(match[1]!) ?? new Set<string>()).add(match[2]!));
+        constants.set(key, byName);
+      }
+    }
+  }
+  const resolve = (path: string, expression: string): string | undefined => {
+    const literal = expression.match(/^"([^"]*)"$/);
+    if (literal) return literal[1];
+    const name = expression.match(/^(?:[\w]+::)*([A-Z][A-Z0-9_]*)$/)?.[1];
+    if (!name) return undefined;
+    for (const key of [path, plugin(path)]) {
+      const values = constants.get(key)?.get(name);
+      if (values?.size === 1) return [...values][0];
+    }
+    return undefined;
+  };
+  const declarations: InteractivityToolRunDeclaration[] = [];
+  for (const [path, lines] of code) {
+    if (!path.startsWith("✏️s/") || !path.endsWith(".rs")) continue;
+    const joined = lines.join("\n");
+    for (const match of joined.matchAll(/\b(Tool|Utility)Definition::new\(\s*([^,()]+?)\s*,/g)) {
+      const id = resolve(path, match[2]!.trim());
+      if (id === undefined) continue;
+      const kind = match[1] as "Tool" | "Utility";
+      const literal = interactivityToolRunEnclosing(joined, match.index, new RegExp(`\\b${kind}Definition\\s*\\{`, "g"));
+      const body = interactivityToolRunEnclosing(joined, match.index, /\bfn\s+\w+[^{;]*\{/g);
+      const run = (literal !== undefined && /\brun\s*:\s*Some\s*\(/.test(literal)) || (body !== undefined && /\.run\s*=\s*Some\s*\(/.test(body));
+      declarations.push({ id, kind, file: path, line: joined.slice(0, match.index).split("\n").length, run });
+    }
+  }
+  const index = { code, declarations };
+  INTERACTIVITY_TOOL_RUN_INDEXES.set(sources, index);
+  return index;
+}
+
+/** 🧰️ Tools the amend and lifecycle predicates govern: every requirement row, plus every run-declaring tool no row names (scoped to its declaring directory). */
+function interactivityToolRunTools(sources: readonly InteractivityToolRunSource[], requirements: readonly InteractivityToolRunRequirement[]): InteractivityToolRunTool[] {
+  const { declarations } = interactivityToolRunIndex(sources);
+  const rows = requirements.map((row) => ({
+    label: `${row.toolId} (${row.root}, lane ${row.lane}, inventory ${row.inventory})`,
+    root: row.root,
+    scope: row.scope.map((entry) => interactivityToolRunScopePath(row.root, entry)),
+    flat: false,
+    actions: row.actions,
+    verbs: row.verbs,
+    measures: row.measures,
+    declared: declarations.some((declaration) => declaration.run && declaration.id === row.toolId && interactivityToolRunWithin(declaration.file, row.root)),
+  }));
+  const discovered = declarations
+    .filter((declaration) => declaration.run && !requirements.some((row) => row.toolId === declaration.id && interactivityToolRunWithin(declaration.file, row.root)))
+    .map((declaration) => {
+      const directory = declaration.file.slice(0, declaration.file.lastIndexOf("/"));
+      return { label: `${declaration.id} (${declaration.file}:${declaration.line})`, root: directory, scope: [directory], flat: true, actions: [], verbs: [], measures: [], declared: true };
+    });
+  return [...rows, ...discovered];
+}
+
+/** 📍️ True when `path` belongs to the tool's own files. */
+function interactivityToolRunInScope(tool: InteractivityToolRunTool, path: string): boolean {
+  return tool.scope.some((entry) => (tool.flat ? path.slice(0, path.lastIndexOf("/")) === entry : interactivityToolRunWithin(path, entry)));
+}
+
+/** 🔎️ A word-bounded token matcher that treats `-` as part of a token. */
+function interactivityToolRunToken(token: string): RegExp {
+  return new RegExp(`(?<![\\w-])${token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\w-])`);
+}
+
+/** 📚️ Every repo runtime Rust/TS source a tool-run predicate can hit: under a requirement root or scope, or carrying one of their trigger tokens. */
+export function interactivityToolRunPolicySources(repoRoot: string, requirements: readonly InteractivityToolRunRequirement[]): InteractivityToolRunSource[] {
+  const anchors = requirements.flatMap((row) => [row.root, ...row.scope.map((entry) => interactivityToolRunScopePath(row.root, entry))]);
+  return policyWalkRelFiles(repoRoot, ["✏️s", "🧰️framework"], (_path, name) => /\.(?:rs|tsx?)$/.test(name))
+    .filter(interactivityIsRuntimeSource)
+    .flatMap((path) => {
+      const text = policyReadFileSafe(repoRoot, path);
+      return anchors.some((anchor) => interactivityToolRunWithin(path, anchor)) || INTERACTIVITY_TOOL_RUN_TRIGGER.test(text) ? [{ path, text }] : [];
+    });
+}
+
+/** ⏯️ (1) No `Emit::amend` and no history-coalesced artifact emission inside a tool that declares `run` or is classified `algorithmic-mutating` (`📋️tool-run-contract.md` §1, §1.1). */
+export function interactivityToolRunAmendFailures(sources: readonly InteractivityToolRunSource[], requirements: readonly InteractivityToolRunRequirement[]): InteractivityToolRunFinding[] {
+  const { code } = interactivityToolRunIndex(sources);
+  const findings: InteractivityToolRunFinding[] = [];
+  const nonEmptyArtifactMutations = /\bartifact_mutations\s*:(?!\s*(?:Vec::new\(\)|vec!\[\s*\]|Default::default\(\)))/;
+  for (const tool of interactivityToolRunTools(sources, requirements)) {
+    const text = (detail: string) => `[⏯️ amend] ${tool.label}: ${detail}; provisional work belongs to the ToolRun ledger and finalize publishes one Edit (contract §1, §2.7)`;
+    for (const [path, lines] of code) {
+      const joined = lines.join("\n");
+      const lineAt = (offset: number) => joined.slice(0, offset).split("\n").length;
+      if (interactivityToolRunInScope(tool, path)) {
+        lines.forEach((line, index) => {
+          if (/\b(?:Action)?Emit::amend\s*\(/.test(line)) findings.push({ file: path, line: index + 1, text: text("Emit::amend inside the tool") });
+        });
+        for (const match of joined.matchAll(/\bcoalesce_key\s*:\s*Some\s*\(/g)) {
+          const literal = interactivityToolRunEnclosing(joined, match.index, /\b(?:Action)?Emit\s*\{/g);
+          if (literal && nonEmptyArtifactMutations.test(literal)) findings.push({ file: path, line: lineAt(match.index), text: text("history-coalesced artifact emission inside the tool") });
+        }
+      }
+      if (tool.actions.length === 0 || !interactivityToolRunWithin(path, tool.root)) continue;
+      const quoted = tool.actions.map((action) => `"${action}"`);
+      for (const match of joined.matchAll(/\bcoalesce_key\s*=\s*match\b[^{]*\{/g)) {
+        const arms = interactivityToolRunBlock(joined, match.index + match[0].length - 1);
+        arms.split("\n").forEach((arm, offset) => {
+          if (/=>/.test(arm) && !/=>\s*None\b/.test(arm) && quoted.some((action) => arm.split("=>")[0]!.includes(action))) findings.push({ file: path, line: lineAt(match.index) + offset, text: text(`coalesce_key arm for ${arm.split("=>")[0]!.trim()}`) });
+        });
+      }
+      for (const action of quoted) {
+        for (const match of joined.matchAll(new RegExp(`==\\s*${action.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}|${action.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*==`, "g"))) {
+          const open = joined.indexOf("{", match.index);
+          const guarded = open >= 0 && !joined.slice(match.index, open).includes("\n") ? interactivityToolRunBlock(joined, open) : undefined;
+          if (guarded && /\bcoalesce_key\s*:\s*Some\s*\(/.test(guarded) && nonEmptyArtifactMutations.test(guarded)) findings.push({ file: path, line: lineAt(match.index), text: text(`history-coalesced artifact emission guarded by ${action}`) });
+        }
+      }
+    }
+  }
+  return findings;
+}
+
+/** ⏯️ (2) Once a tool declares `run`, no per-plugin run verb, lifecycle state or plugin-local progress/cancel measure survives (`📋️tool-run-contract.md` §2.5, §3.6). */
+export function interactivityToolRunLocalLifecycleFailures(sources: readonly InteractivityToolRunSource[], requirements: readonly InteractivityToolRunRequirement[]): InteractivityToolRunFinding[] {
+  const { code } = interactivityToolRunIndex(sources);
+  const findings: InteractivityToolRunFinding[] = [];
+  for (const tool of interactivityToolRunTools(sources, requirements).filter((candidate) => candidate.declared)) {
+    const verbs = tool.verbs.map((verb) => [verb, interactivityToolRunToken(verb)] as const);
+    const measures = tool.measures.map((measure) => [measure, interactivityToolRunToken(measure)] as const);
+    for (const [path, lines] of code) {
+      const rooted = interactivityToolRunWithin(path, tool.root);
+      const scoped = interactivityToolRunInScope(tool, path);
+      if (!rooted && !scoped) continue;
+      lines.forEach((line, index) => {
+        const hits = [...(rooted ? verbs : []), ...(scoped ? measures : [])].filter(([, pattern]) => pattern.test(line)).map(([token]) => token);
+        if (scoped) hits.push(...INTERACTIVITY_TOOL_RUN_LOCAL_LIFECYCLE.flatMap((pattern) => line.match(pattern)?.[0] ?? []));
+        for (const hit of new Set(hits)) findings.push({ file: path, line: index + 1, text: `[⏯️ local-lifecycle] ${tool.label}: ${hit} survives next to a declared ToolRunDefinition; use the framework toolRun* actions, ToolRunState and the ToolRun panel (contract §2.5, §3.6)` });
+      });
+    }
+  }
+  return findings;
+}
+
+/** ⏯️ (3) No tried-candidate ring, `fillBuildPreview` tail or fill preview JSON cap survives anywhere; tested candidates travel only as trace pages (`📋️tool-run-contract.md` §3.2, §3.6). */
+export function interactivityToolRunLegacyTraceFailures(sources: readonly InteractivityToolRunSource[]): InteractivityToolRunFinding[] {
+  const { code } = interactivityToolRunIndex(sources);
+  const findings: InteractivityToolRunFinding[] = [];
+  for (const [path, lines] of code) {
+    lines.forEach((line, index) => {
+      const hit = line.match(INTERACTIVITY_TOOL_RUN_LEGACY_TRACE)?.[0];
+      if (hit) findings.push({ file: path, line: index + 1, text: `[⏯️ legacy-trace] ${hit} survives; tested candidates travel only as ToolRunTracePage deltas rendered by the ToolRunTraceLayer (contract §3.2, §3.6)` });
+    });
+  }
+  return findings;
+}
+
+/** ⏯️ (4) Every `algorithmic-mutating` tool of [[INTERACTIVITY_TOOL_RUN_REQUIREMENTS]] declares `run: Some(ToolRunDefinition)` on its Tool/UtilityDefinition, and every table row still points at real sources (`📋️tool-run-contract.md` §2.4, §3.7). */
+export function interactivityToolRunDeclarationFailures(sources: readonly InteractivityToolRunSource[], requirements: readonly InteractivityToolRunRequirement[]): InteractivityToolRunFinding[] {
+  const { code, declarations } = interactivityToolRunIndex(sources);
+  const paths = [...code.keys()];
+  const findings: InteractivityToolRunFinding[] = [];
+  const seen = new Set<string>();
+  for (const row of requirements) {
+    const label = `[⏯️ declaration] ${row.toolId} (${row.root}, lane ${row.lane}, inventory ${row.inventory})`;
+    const key = `${row.root}#${row.toolId}`;
+    if (seen.has(key)) findings.push({ file: row.root, line: 0, text: `${label}: duplicate requirement row` });
+    seen.add(key);
+    if (!paths.some((path) => interactivityToolRunWithin(path, row.root))) {
+      findings.push({ file: row.root, line: 0, text: `${label}: requirement root has no sources (stale row)` });
+      continue;
+    }
+    if (row.scope.length > 0 && !row.scope.some((entry) => paths.some((path) => interactivityToolRunWithin(path, interactivityToolRunScopePath(row.root, entry))))) findings.push({ file: row.root, line: 0, text: `${label}: no scope entry exists any more (stale row)` });
+    const matching = declarations.filter((declaration) => declaration.id === row.toolId && interactivityToolRunWithin(declaration.file, row.root));
+    if (matching.some((declaration) => declaration.run)) continue;
+    const found = matching[0];
+    findings.push(found ? { file: found.file, line: found.line, text: `${label}: ${found.kind}Definition "${row.toolId}" declares no run: Some(ToolRunDefinition) (contract §2.4)` } : { file: row.root, line: 0, text: `${label}: no Tool/UtilityDefinition "${row.toolId}" exists; the algorithm is not a tool run yet (contract §2.4, §3.7)` });
+  }
+  return findings;
+}
+
+/** ⏯️ (5) `toolRun*` action ids are framework-reserved: plugins never declare, literal-copy or route them (`📋️tool-run-contract.md` §2.5). */
+export function interactivityToolRunReservedActionFailures(sources: readonly InteractivityToolRunSource[]): InteractivityToolRunFinding[] {
+  const { code } = interactivityToolRunIndex(sources);
+  const findings: InteractivityToolRunFinding[] = [];
+  for (const [path, lines] of code) {
+    if (!path.startsWith("✏️s/")) continue;
+    lines.forEach((line, index) => {
+      const hit = INTERACTIVITY_TOOL_RUN_RESERVED.map((pattern) => line.match(pattern)?.[0]).find((match) => match !== undefined);
+      if (hit) findings.push({ file: path, line: index + 1, text: `[⏯️ reserved-action] ${hit.trim()}: toolRun* actions are framework-reserved and injected from ToolRunDefinition; reference the framework constants only to dispatch (contract §2.5)` });
+    });
+  }
+  return findings;
+}
+//#endregion ⏯️ToolRunPolicy
 
 
 
@@ -25401,21 +25549,6 @@ export {
   interactivityAllAppPlaygroundLaunchNames,
   interactivityIsRuntimeSource,
   policyReadFileSafe,
-  INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE,
-  INTERACTIVITY_AUDIT_PUZZLE_FILL_STATE_FILE,
-  INTERACTIVITY_AUDIT_PUZZLE_FILL_GEOMETRY_FILE,
-  INTERACTIVITY_AUDIT_PUZZLE_FILL_ACTION_FILE,
-  interactivityPuzzleFillEnvelopeFailures,
-  INTERACTIVITY_AUDIT_PUZZLE_FILL_SCHEMA_FILE,
-  INTERACTIVITY_AUDIT_PUZZLE_FILL_TRANSPORT_FILE,
-  INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_FILE,
-  interactivityPuzzleFillP4eFailures,
-  INTERACTIVITY_AUDIT_PUZZLE5D_FILL_PRECOMPUTE_FILE,
-  INTERACTIVITY_AUDIT_PUZZLE5D_FILL_WINDOW_FILE,
-  INTERACTIVITY_AUDIT_PUZZLE3D_TERMINOLOGY_FILE,
-  INTERACTIVITY_AUDIT_PUZZLE5D_TERMINOLOGY_FILE,
-  INTERACTIVITY_AUDIT_PUZZLE_FILL_PREVIEW_FIXTURE_FILE,
-  INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_TEST_FILE,
   INTERACTIVITY_AUDIT_UI_RECONCILE_FILE,
   INTERACTIVITY_AUDIT_UI_VALUE_FILE,
   INTERACTIVITY_AUDIT_KERNEL_FILE,

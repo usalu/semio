@@ -15,12 +15,12 @@ use ui_wgpu::wgpu::{DrawList, FontAtlas, IconAtlas, InputState, NodeGraphScene, 
 
 const NODE_GRAPH_SCENE_FIXTURE: &str = include_str!("../../🧫️fixtures/🕸️wgpu-node-graph/🔣️.json");
 
-fn hexagonal_mushroom_column_fixture_json() -> String {
+pub(super) fn hexagonal_mushroom_column_fixture_json() -> String {
     let value: Value = serde_json::from_str(NODE_GRAPH_SCENE_FIXTURE).expect("committed generation3d flow fixture parses");
     serde_json::to_string(value.get("fixture").expect("fixture payload")).expect("fixture re-encodes")
 }
 
-fn flow_window_scene(surface_id: &str) -> UiComponentSceneNode {
+pub(super) fn flow_window_scene(surface_id: &str) -> UiComponentSceneNode {
     UiComponentSceneNode {
         surface_id: surface_id.into(),
         controller_id: "generation3d".into(),
@@ -56,7 +56,7 @@ fn flow_window_scene(surface_id: &str) -> UiComponentSceneNode {
 /// 🧹️ Drains one attached surface through the registry's OWN retirement ladder. `FlowFixture`'s
 /// ordered maps refuse to drop unretired, so a plain `remove` panics inside the registry mutex and
 /// poisons it for every later lane — the ladder is the only correct teardown.
-fn drop_engine_surface(surface_id: &str) {
+pub(super) fn drop_engine_surface(surface_id: &str) {
     let _ = take_engine_surface_registrations();
     STAGED_ENGINE_SCENES.with(|cell| cell.borrow_mut().remove_surface(surface_id));
     let Some(token) = ENGINE_SURFACES.with(|cell| cell.borrow_mut().token(surface_id)) else {
@@ -99,7 +99,7 @@ fn paint_scene_into_draw_list(scene: &UiComponentSceneNode, bounds: Rect) -> Dra
 
 /// 🔤️ One action's string fields, key-sorted — the emitted value contract is order-preserving, and a
 /// key-order assertion would pin the writer's statement order rather than the payload React sends.
-fn action_fields(action: &ActionDescriptor) -> Vec<(String, String)> {
+pub(super) fn action_fields(action: &ActionDescriptor) -> Vec<(String, String)> {
     let mut fields: Vec<(String, String)> = action
         .args
         .as_ref()
@@ -112,7 +112,7 @@ fn action_fields(action: &ActionDescriptor) -> Vec<(String, String)> {
     fields
 }
 
-fn entity_screen_rect(surface_id: &str, domain: &str, id: &str) -> [f64; 4] {
+pub(super) fn entity_screen_rect(surface_id: &str, domain: &str, id: &str) -> [f64; 4] {
     let geometry = ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         let Some(NodeGraphEngine::Flow(host)) = map.get(surface_id)?.node_graph.as_ref() else { return None };
@@ -124,7 +124,7 @@ fn entity_screen_rect(surface_id: &str, domain: &str, id: &str) -> [f64; 4] {
     [rect[0], rect[1], rect[2], rect[3]]
 }
 
-fn node_center_screen(surface_id: &str, node_id: &str, inner: Rect) -> (f32, f32) {
+pub(super) fn node_center_screen(surface_id: &str, node_id: &str, inner: Rect) -> (f32, f32) {
     let rect = entity_screen_rect(surface_id, "node", node_id);
     (inner.x + (rect[0] + rect[2] * 0.5) as f32, inner.y + (rect[1] + rect[3] * 0.5) as f32)
 }
@@ -132,7 +132,7 @@ fn node_center_screen(surface_id: &str, node_id: &str, inner: Rect) -> (f32, f32
 /// 🔌️ The screen point of one input channel's handle dot: the engine hit-tests a handle against the
 /// dot on the node's own boundary (`hit_test_pick_targets`, radius + 6), not against the port row —
 /// so the pick point is the node rect's left edge at the row's vertical centre.
-fn input_handle_screen(surface_id: &str, node_id: &str, channel_id: &str, inner: Rect) -> (f32, f32) {
+pub(super) fn input_handle_screen(surface_id: &str, node_id: &str, channel_id: &str, inner: Rect) -> (f32, f32) {
     let node = entity_screen_rect(surface_id, "node", node_id);
     let row = entity_screen_rect(surface_id, "handle", channel_id);
     (inner.x + node[0] as f32, inner.y + (row[1] + row[3] * 0.5) as f32)
@@ -140,6 +140,7 @@ fn input_handle_screen(surface_id: &str, node_id: &str, channel_id: &str, inner:
 
 #[test]
 fn node_graph_window_attaches_the_flow_engine_and_paints_a_non_empty_draw_list() {
+    let _serialized = engine_surface_law_guard();
     let surface_id = "node-graph-attach-draw";
     drop_engine_surface(surface_id);
     let scene = flow_window_scene(surface_id);
@@ -185,6 +186,7 @@ fn node_graph_window_attaches_the_flow_engine_and_paints_a_non_empty_draw_list()
 
 #[test]
 fn pointer_down_on_a_node_emits_the_graph_domain_selection_react_dispatches() {
+    let _serialized = engine_surface_law_guard();
     let surface_id = "node-graph-attach-pick";
     drop_engine_surface(surface_id);
     let scene = flow_window_scene(surface_id);
@@ -234,6 +236,7 @@ fn pointer_down_on_a_node_emits_the_graph_domain_selection_react_dispatches() {
 
 #[test]
 fn wheel_zoom_emits_the_node_graph_viewport_action_with_the_moved_camera() {
+    let _serialized = engine_surface_law_guard();
     let surface_id = "node-graph-attach-viewport";
     drop_engine_surface(surface_id);
     let scene = flow_window_scene(surface_id);
@@ -261,8 +264,43 @@ fn wheel_zoom_emits_the_node_graph_viewport_action_with_the_moved_camera() {
     drop_engine_surface(surface_id);
 }
 
+/// 🖼️ `Fit graph` publishes the camera it COMPUTED, not the one the scene shipped with. The control
+/// (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`, `shell.nodeGraph.fit::`) persists whatever
+/// `node_graph_fit_camera` answers through `nodeGraphViewport`, so answering the pre-fit camera
+/// re-publishes it forever — which is exactly what a Flow surface did while the fit landed on the
+/// dag's derived paint copy. The shared rows live in
+/// `♾️infinite/🖼️canvas/🧫️fixtures/📷️camera-fit/🔣️.json` (`surfaceRows`); the host half of the law is
+/// `🌊️flow/🖥️host/🧪️tests/🔬️unit/🦀️.rs`, `a_fitted_flow_surface_publishes_the_camera_it_computed`.
+/// Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
+#[test]
+fn fit_graph_answers_the_fitted_camera_not_the_scene_camera() {
+    let _serialized = engine_surface_law_guard();
+    let surface_id = "node-graph-attach-fit";
+    drop_engine_surface(surface_id);
+    let scene = flow_window_scene(surface_id);
+    let bounds = Rect { x: 0.0, y: 0.0, w: 483.0, h: 814.0 };
+    assert!(sync_node_graph_scene(&scene, "law-window", bounds, Theme::default().panel), "attach");
+
+    let scene_camera = [94.755_815_717_374_45, -97.508_331_346_796_68, 1.784_432_561_601_109_9];
+    let fitted = crate::engine_canvas::node_graph_fit_camera(surface_id).expect("a live graph can be framed");
+    assert_ne!(fitted, scene_camera, "the fit must answer a camera it computed, not the scene's own");
+
+    let (published, painted, coverage) = ENGINE_SURFACES
+        .with(|cell| {
+            let map = cell.borrow();
+            let Some(NodeGraphEngine::Flow(host)) = map.get(surface_id)?.node_graph.as_ref() else { return None };
+            Some((host.camera(), [host.dag.fixture.camera.x, host.dag.fixture.camera.y, host.dag.fixture.camera.zoom], host.dag.camera_content_coverage()))
+        })
+        .expect("live flow host");
+    assert_eq!(fitted, published, "the answer the control persists is the surface's own published camera");
+    assert_eq!(published, painted, "the published camera and the painted camera are one camera");
+    assert!((coverage - 1.0).abs() <= 1e-6, "a fitted camera frames the whole graph, got {coverage}");
+    drop_engine_surface(surface_id);
+}
+
 #[test]
 fn projection_snapshot_rejects_invalid_node_graph_viewports() {
+    let _serialized = engine_surface_law_guard();
     for camera in [[0.0, 0.0, 0.0], [f64::NAN, 0.0, 1.0], [0.0, f64::INFINITY, 1.0]] {
         assert!(matches!(
             graph_projection_snapshot(Vec::new(), None, None, camera),

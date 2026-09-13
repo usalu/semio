@@ -135,6 +135,7 @@ const CanvasSkeletonWindow: React.FC<{ active?: boolean }> = ({ active = false }
     <WindowChrome
       level="window"
       active={active}
+      borderKind="loading"
       stackSlot="canvas-skeleton-stack"
       silhouetteSlot="canvas-skeleton-silhouette-border"
       stackClassName="relative z-window h-full min-h-0 w-full min-w-0 overflow-hidden"
@@ -147,7 +148,11 @@ const CanvasSkeletonWindow: React.FC<{ active?: boolean }> = ({ active = false }
           <SkeletonBlock className="h-3 w-14 max-w-full" />
         </span>
       }
-      body={<WindowBodySkeleton />}
+      body={
+        <div className="flex h-full min-h-0 w-full flex-col p-double" aria-hidden>
+          <SkeletonBlock className="min-h-0 flex-1 w-full" />
+        </div>
+      }
     />
   </SurfaceScope>
 );

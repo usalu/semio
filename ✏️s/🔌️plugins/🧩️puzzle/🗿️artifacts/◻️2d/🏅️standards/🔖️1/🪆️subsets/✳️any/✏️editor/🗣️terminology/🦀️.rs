@@ -2,7 +2,6 @@
 //! terminology×locale combination is compile-checked by `semio_framework_plugin::app_labels!`
 //! (see ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND).
 
-use crate::editor::puzzle2d::config::Puzzle2dFillLifecycle;
 use semio_framework_plugin::{AppLabels, LabelText, Locale, LocalizedLabel};
 
 //#region 🔖️Labels
@@ -45,19 +44,27 @@ semio_framework_plugin::app_labels! {
         fill: native_en "Fill", native_de "Füllen", reuse_en "Fill", reuse_de "Füllen";
         count: native_en "Count", native_de "Anzahl", reuse_en "Count", reuse_de "Anzahl";
         placement: native_en "Placement", native_de "Platzierung", reuse_en "Placement", reuse_de "Platzierung";
-        fill_progress: native_en "Fill progress", native_de "Füllfortschritt", reuse_en "Fill progress", reuse_de "Füllfortschritt";
-        fill_cancel: native_en "Cancel fill", native_de "Füllen abbrechen", reuse_en "Cancel fill", reuse_de "Füllen abbrechen";
-        fill_retry: native_en "Retry fill", native_de "Füllen erneut versuchen", reuse_en "Retry fill", reuse_de "Füllen erneut versuchen";
-        fill_fault: native_en "Fill failed", native_de "Füllen fehlgeschlagen", reuse_en "Fill failed", reuse_de "Füllen fehlgeschlagen";
-        fill_cancelled: native_en "Fill cancelled", native_de "Füllen abgebrochen", reuse_en "Fill cancelled", reuse_de "Füllen abgebrochen";
-        fill_stage_capturing: native_en "Capturing", native_de "Erfassen", reuse_en "Capturing", reuse_de "Erfassen";
-        fill_stage_queued: native_en "Queued", native_de "In Warteschlange", reuse_en "Queued", reuse_de "In Warteschlange";
-        fill_stage_searching: native_en "Searching", native_de "Suchen", reuse_en "Searching", reuse_de "Suchen";
-        fill_stage_applying: native_en "Applying", native_de "Anwenden", reuse_en "Applying", reuse_de "Anwenden";
-        fill_stage_closing: native_en "Closing", native_de "Abschließen", reuse_en "Closing", reuse_de "Abschließen";
-        fill_stage_done: native_en "Done", native_de "Fertig", reuse_en "Done", reuse_de "Fertig";
-        fill_tested: native_en "tested", native_de "getestet", reuse_en "tested", reuse_de "getestet";
-        fill_accepted: native_en "accepted", native_de "angenommen", reuse_en "accepted", reuse_de "angenommen";
+        fill_unit: native_en "placements", native_de "Platzierungen", reuse_en "placements", reuse_de "Platzierungen";
+        fill_stage_capture: native_en "Capturing the board", native_de "Brett wird erfasst", reuse_en "Capturing the assembly", reuse_de "Baugruppe wird erfasst";
+        fill_stage_search: native_en "Searching an open handle", native_de "Offener Anschluss wird gesucht", reuse_en "Searching an open connection point", reuse_de "Offener Verbindungspunkt wird gesucht";
+        fill_stage_test: native_en "Testing candidates", native_de "Kandidaten werden geprüft", reuse_en "Testing candidates", reuse_de "Kandidaten werden geprüft";
+        fill_stage_place: native_en "Placing", native_de "Wird platziert", reuse_en "Placing", reuse_de "Wird platziert";
+        fill_stage_retract: native_en "Retracting", native_de "Wird zurückgenommen", reuse_en "Retracting", reuse_de "Wird zurückgenommen";
+        fill_counter_tested: native_en "Tested", native_de "Geprüft", reuse_en "Tested", reuse_de "Geprüft";
+        fill_counter_accepted: native_en "Accepted", native_de "Angenommen", reuse_en "Accepted", reuse_de "Angenommen";
+        fill_counter_collisions: native_en "Collisions", native_de "Kollisionen", reuse_en "Collisions", reuse_de "Kollisionen";
+        fill_counter_rejected: native_en "Rejected", native_de "Abgelehnt", reuse_en "Rejected", reuse_de "Abgelehnt";
+        fill_reason_fits: native_en "Fits", native_de "Passt", reuse_en "Fits", reuse_de "Passt";
+        fill_reason_host_collision: native_en "Collides with a board node", native_de "Kollidiert mit einem Brettknoten", reuse_en "Collides with a building component", reuse_de "Kollidiert mit einer Baukomponente";
+        fill_reason_virtual_collision: native_en "Collides with a provisional placement", native_de "Kollidiert mit einer vorläufigen Platzierung", reuse_en "Collides with a provisional placement", reuse_de "Kollidiert mit einer vorläufigen Platzierung";
+        fill_reason_port_incompatible: native_en "Port shape does not fit the open handle", native_de "Anschlussform passt nicht zum offenen Anschluss", reuse_en "Port shape does not fit the open connection point", reuse_de "Anschlussform passt nicht zum offenen Verbindungspunkt";
+        fill_reason_kind_incompatible: native_en "No compatibility rule allows this kind", native_de "Keine Kompatibilitätsregel erlaubt diese Art", reuse_en "No compatibility rule allows this component", reuse_de "Keine Kompatibilitätsregel erlaubt diese Komponente";
+        fill_reason_no_open_handle: native_en "No open handle left, {0} placed", native_de "Kein offener Anschluss mehr, {0} platziert", reuse_en "No open connection point left, {0} placed", reuse_de "Kein offener Verbindungspunkt mehr, {0} platziert";
+        fill_reason_no_compatible_kind: native_en "No kind fits any open handle, {0} placed", native_de "Keine Art passt zu einem offenen Anschluss, {0} platziert", reuse_en "No component fits any open connection point, {0} placed", reuse_de "Keine Komponente passt zu einem offenen Verbindungspunkt, {0} platziert";
+        fill_reason_no_free_placement: native_en "No free placement left, {0} placed", native_de "Kein freier Platz mehr, {0} platziert", reuse_en "No free placement left, {0} placed", reuse_de "Kein freier Platz mehr, {0} platziert";
+        fill_reason_document_capacity: native_en "Fill capacity reached, {0} placed", native_de "Füllkapazität erreicht, {0} platziert", reuse_en "Fill capacity reached, {0} placed", reuse_de "Füllkapazität erreicht, {0} platziert";
+        fill_reason_requested_reached: native_en "{0} placements reached", native_de "{0} Platzierungen erreicht", reuse_en "{0} placements reached", reuse_de "{0} Platzierungen erreicht";
+        fill_reason_retracted: native_en "Provisional tail retracted to {0} placements", native_de "Vorläufiges Ende auf {0} Platzierungen zurückgenommen", reuse_en "Provisional tail retracted to {0} placements", reuse_de "Vorläufiges Ende auf {0} Platzierungen zurückgenommen";
         // example picker
         example_concrete_forest: native_en "Concrete Forest", native_de "Betonwald", reuse_en "Abbau Aufbau", reuse_de "Abbau Aufbau";
     }
@@ -90,27 +97,6 @@ pub fn puzzle2d_localized_phrase(field: impl Fn(&Puzzle2dLabels) -> LabelText, e
     })
 }
 //#endregion 🔖️Locale
-
-//#region 🔖️FillStage
-/// 🧭️ The phase caption of a fill run, in the reader's own language. A fault keeps the machine code
-/// visible beside the sentence: a code nobody translated yet is still a code the dev can act on,
-/// whereas a swallowed one leaves the operator with a stopped run and no reason.
-pub fn puzzle2d_fill_stage_label(labels: &Puzzle2dLabels, lifecycle: Puzzle2dFillLifecycle, fault_code: Option<&str>) -> String {
-    match lifecycle {
-        Puzzle2dFillLifecycle::Faulted => match fault_code {
-            Some(code) => format!("{} — {}", labels.fill_fault.as_str(), code),
-            None => labels.fill_fault.as_str().to_string(),
-        },
-        Puzzle2dFillLifecycle::Cancelled => labels.fill_cancelled.as_str().to_string(),
-        Puzzle2dFillLifecycle::Completed => labels.fill_stage_done.as_str().to_string(),
-        Puzzle2dFillLifecycle::Capturing => labels.fill_stage_capturing.as_str().to_string(),
-        Puzzle2dFillLifecycle::Queued | Puzzle2dFillLifecycle::CheckpointReady => labels.fill_stage_queued.as_str().to_string(),
-        Puzzle2dFillLifecycle::Applying => labels.fill_stage_applying.as_str().to_string(),
-        Puzzle2dFillLifecycle::AwaitingAdoption | Puzzle2dFillLifecycle::Closing => labels.fill_stage_closing.as_str().to_string(),
-        Puzzle2dFillLifecycle::Running | Puzzle2dFillLifecycle::Idle | Puzzle2dFillLifecycle::Discarded => labels.fill_stage_searching.as_str().to_string(),
-    }
-}
-//#endregion 🔖️FillStage
 
 //#region 🧪️Tests
 #[cfg(test)]

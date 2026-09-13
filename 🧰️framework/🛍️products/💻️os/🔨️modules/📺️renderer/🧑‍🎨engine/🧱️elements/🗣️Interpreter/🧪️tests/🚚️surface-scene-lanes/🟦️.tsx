@@ -4,11 +4,12 @@ type TestSource = { readonly url: string };
  * declaration the Rust producer is pinned against
  * (`🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json`). */
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
-  const { UiDocumentStore, surfaceSceneLaneCache, utf8ByteLength, world3dSurfaceLaneTexts, world3dSceneFromLanes, WORLD3D_SCENE_LANES, WORLD3D_SCENE_LANE_KEY_PREFIX, world3dSceneLaneForBodyKey } = dependencies;
+  const { UiDocumentStore, surfaceSceneLaneCache, utf8ByteLength, world3dSurfaceLaneTexts, canvas2dSurfaceLaneTexts, world3dSceneFromLanes, canvas2dSceneFromLanes, WORLD3D_SCENE_LANES, CANVAS2D_SCENE_LANES, WORLD3D_SCENE_LANE_KEY_PREFIX, world3dSceneLaneForBodyKey } = dependencies;
   const { describe, expect, it } = vitest;
   void source;
 
   const { default: contract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json");
+  const { default: canvas2dContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️canvas2d-scene-lanes/🔣️.json");
 
   type AnyRecord = Record<string, any>;
 
@@ -66,7 +67,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   }
 
   /** 🗺️ One world-3d surface node with a carrier per lane, loaded into a real `UiDocumentStore`. */
-  function surfaceWithLanes(laneTexts: Readonly<Record<string, string>>): { readonly store: any; readonly record: AnyRecord } {
+  function surfaceWithLanes(laneTexts: Readonly<Record<string, string>>, kind = "world-3d", docSchema: string = contract.schema): { readonly store: any; readonly record: AnyRecord } {
     const nextId = { value: 1 };
     const records: AnyRecord[] = [];
     const children: number[] = [];
@@ -75,7 +76,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       records.push(...built.records);
       children.push(built.rootId);
     }
-    const surface = node(0, "viewport", { type: "surface", kind: "world-3d", docSchema: contract.schema, doc: { bytes: [] }, bindings: [] }, children);
+    const surface = node(0, "viewport", { type: "surface", kind, docSchema, doc: { bytes: [] }, bindings: [] }, children);
     const store = new UiDocumentStore("s");
     store.loadSnapshot({ surface: "s", revision: 0, root: 0, nodes: [surface, ...records], layoutEpoch: 0n });
     return { store, record: surface };
@@ -320,6 +321,19 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         new Map([[declared.bodyKey, ""]]),
       );
       expect(assembled.brushPreviewJson).toBe(preview);
+    });
+  });
+
+  describe("canvas-2d paged scene carrier", () => {
+    it("mirrors the language-neutral canvas-2d lane declaration and walks the tool run trace lane back", () => {
+      expect(CANVAS2D_SCENE_LANES).toEqual(canvas2dContract.lanes);
+      const { spine, laneTexts, assembled } = canvas2dContract.roundTrip;
+      surfaceSceneLaneCache.clear();
+      const { store, record } = surfaceWithLanes(laneTexts, "canvas-2d", canvas2dContract.schema);
+      const collected = canvas2dSurfaceLaneTexts(record, store.getState(), spine.lanes);
+      expect(Object.fromEntries(collected)).toEqual(laneTexts);
+      expect(world3dSurfaceLaneTexts(record, store.getState(), spine.lanes).size).toBe(0);
+      expect(canvas2dSceneFromLanes(spine, collected)).toEqual({ ...assembled, lanes: spine.lanes });
     });
   });
 }

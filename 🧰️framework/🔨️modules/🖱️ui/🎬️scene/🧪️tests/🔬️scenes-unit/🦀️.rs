@@ -136,15 +136,15 @@ fn world3d_scene_spine_changes_only_for_the_lanes_that_changed() {
 }
 
 #[test]
-fn world3d_scene_lane_hash_is_fnv1a64_hex_and_pins_the_declared_digests() {
+fn scene_lane_hash_is_fnv1a64_hex_and_pins_the_declared_digests() {
     let contract = world3d_lane_contract();
     assert_eq!(contract["carrier"]["hash"].as_str(), Some("fnv1a64-hex"));
-    assert_eq!(world3d_scene_lane_hash(""), "cbf29ce484222325");
+    assert_eq!(scene_lane_hash(""), "cbf29ce484222325");
     for entry in contract["roundTrip"]["spine"]["lanes"].as_array().expect("spine lanes") {
         let name = entry["lane"].as_str().expect("lane name");
         let lane = World3dSceneLane::from_name(name).expect("declared lane");
         let payload = contract["roundTrip"]["laneTexts"][lane.body_key()].as_str().expect("lane text");
-        assert_eq!(world3d_scene_lane_hash(payload), entry["hash"].as_str().expect("hash"), "lane {name} hash");
+        assert_eq!(scene_lane_hash(payload), entry["hash"].as_str().expect("hash"), "lane {name} hash");
         assert_eq!(payload.len() as u64, entry["bytes"].as_u64().expect("bytes"), "lane {name} bytes");
     }
 }
@@ -215,7 +215,7 @@ fn a_nakagin_scale_world3d_scene_pages_per_lane_and_reassembles_losslessly() {
 
 #[test]
 fn a_scene_without_lanes_still_publishes_its_whole_doc() {
-    let scene = Canvas2dScene { snapshot: None, camera_x: 1.0, camera_y: 2.0, zoom: 3.0, layers_json: "[]".into() };
+    let scene = Canvas2dScene::base(1.0, 2.0, 3.0, "[]".into());
     let (spine, lanes) = scene.split_lanes();
     assert!(lanes.is_empty());
     assert_eq!(spine, scene);
@@ -231,4 +231,80 @@ fn world3d_empty_brush_preview_still_publishes_a_lane() {
     assert!(spine.lanes.iter().any(|lane| lane.lane == "brushPreview" && lane.bytes == 0));
 }
 
+#[test]
+fn world3d_tool_run_trace_rides_its_own_optional_lane_and_merges_back() {
+    let mut assembled = World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into());
+    assembled.tool_run_trace = Some("AAQBDQQB".into());
+    let (spine, lanes) = assembled.split_lanes();
+    assert_eq!(spine.tool_run_trace, None);
+    let trace = lanes.iter().find(|lane| lane.key == "framework.scene.world3d.toolRunTrace").expect("trace lane splits out");
+    assert_eq!(trace.payload, "AAQBDQQB");
+    assert!(spine.lanes.iter().any(|lane| lane.lane == "toolRunTrace" && lane.bytes == 8 && lane.hash == scene_lane_hash("AAQBDQQB")));
+    let mut merged = spine.clone();
+    for lane in &lanes {
+        assert!(merged.merge_lane(lane.key, lane.payload.clone()));
+    }
+    merged.lanes = Vec::new();
+    assert_eq!(merged, assembled);
+    let idle = World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into());
+    assert!(idle.split_lanes().1.iter().all(|lane| lane.key != World3dSceneLane::ToolRunTrace.body_key()), "an idle run publishes no trace carrier");
+}
 //#endregion 🚚️World3dSceneLanes
+
+//#region 🚚️Canvas2dSceneLanes
+/// 🚚️ The canvas-2d twin of [`WORLD3D_SCENE_LANE_CONTRACT`].
+const CANVAS2D_SCENE_LANE_CONTRACT: &str = include_str!("../../🧫️fixtures/🚚️canvas2d-scene-lanes/🔣️.json");
+
+fn canvas2d_lane_contract() -> Value {
+    serde_json::from_str(CANVAS2D_SCENE_LANE_CONTRACT).expect("canvas-2d lane contract parses")
+}
+
+#[test]
+fn canvas2d_scene_lanes_mirror_the_language_neutral_declaration() {
+    let contract = canvas2d_lane_contract();
+    assert_eq!(contract["schema"].as_str(), Some(Canvas2dScene::SCHEMA));
+    assert_eq!(contract["laneKeyPrefix"].as_str(), Some(CANVAS2D_SCENE_LANE_KEY_PREFIX));
+    let declared = contract["lanes"].as_array().expect("lanes array");
+    assert_eq!(declared.len(), Canvas2dSceneLane::ALL.len());
+    for (lane, entry) in Canvas2dSceneLane::ALL.into_iter().zip(declared) {
+        assert_eq!(entry["lane"].as_str(), Some(lane.name()));
+        assert_eq!(entry["field"].as_str(), Some(lane.field()));
+        assert_eq!(entry["bodyKey"].as_str(), Some(lane.body_key()));
+        assert_eq!(entry["optional"].as_bool(), Some(lane.optional()));
+        assert_eq!(lane.body_key(), format!("{CANVAS2D_SCENE_LANE_KEY_PREFIX}{}", lane.name()));
+        assert_eq!(Canvas2dSceneLane::from_body_key(lane.body_key()), Some(lane));
+        assert_eq!(Canvas2dSceneLane::from_name(lane.name()), Some(lane));
+    }
+    assert_eq!(Canvas2dSceneLane::from_body_key(World3dSceneLane::ToolRunTrace.body_key()), None);
+    let spine_fields: Vec<&str> = contract["spineFields"].as_array().expect("spineFields").iter().map(|field| field.as_str().expect("spine field")).collect();
+    let mut probe = Canvas2dScene::base(0.0, 0.0, 1.0, "[]".into());
+    probe.snapshot = Some(crate::Canvas2dSnapshotLease::default());
+    probe.tool_run_trace = Some(String::new());
+    probe.lanes = vec![SceneLaneRef::default()];
+    for key in serde_json::to_value(&probe).expect("serialize probe").as_object().expect("object").keys() {
+        assert!(spine_fields.contains(&key.as_str()) || CANVAS2D_SCENE_LANE_FIELDS.contains(&key.as_str()), "scene field {key} is declared neither spine nor lane");
+    }
+}
+
+#[test]
+fn canvas2d_scene_splits_into_the_declared_lanes_and_merges_back() {
+    let contract = canvas2d_lane_contract();
+    let round_trip = &contract["roundTrip"];
+    let assembled: Canvas2dScene = serde_json::from_value(round_trip["assembled"].clone()).expect("assembled scene");
+    let (spine, lanes) = assembled.split_lanes();
+    let expected_texts = round_trip["laneTexts"].as_object().expect("laneTexts object");
+    assert_eq!(lanes.len(), expected_texts.len());
+    for lane in &lanes {
+        assert_eq!(Some(lane.payload.as_str()), expected_texts.get(lane.key).and_then(Value::as_str), "lane {} payload", lane.key);
+    }
+    assert_eq!(serde_json::to_value(&spine).expect("serialize spine"), round_trip["spine"]);
+    assert_eq!(Canvas2dScene::decode_pack(&spine.encode_pack().expect("spine packs")).expect("spine unpacks"), spine);
+    let mut merged = spine.clone();
+    for lane in &lanes {
+        assert!(merged.merge_lane(lane.key, lane.payload.clone()));
+    }
+    assert!(!merged.merge_lane(World3dSceneLane::ToolRunTrace.body_key(), String::new()));
+    merged.lanes = Vec::new();
+    assert_eq!(merged, assembled);
+}
+//#endregion 🚚️Canvas2dSceneLanes

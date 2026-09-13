@@ -504,7 +504,6 @@ function headlessTokenFromVarRef(ref: string): string | undefined {
 const SEMANTIC_HEADLESS_FALLBACK: Partial<Record<string, StylingTokenKey>> = {
   "border-element-color": "gray",
   "border-normal-color": "gray",
-  "border-emphasized-color": "dark",
   "hover-interactive-fill": "gray",
   foreground: "dark",
   "color-foreground": "dark",
@@ -519,7 +518,7 @@ function headlessSemanticFromVarRef(ref: string): string | undefined {
     return undefined;
   }
   const semantic = m[1]!.slice(2);
-  if (semantic === "foreground" || semantic === "color-foreground") {
+  if (semantic === "foreground" || semantic === "color-foreground" || semantic === "border-emphasized-color" || semantic === "color-emphasized") {
     return tokenHex(currentStylingAppearanceName() === "dark" ? "light" : "dark");
   }
   const key = SEMANTIC_HEADLESS_FALLBACK[semantic];

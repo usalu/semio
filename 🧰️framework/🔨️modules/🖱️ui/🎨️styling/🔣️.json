@@ -323,6 +323,17 @@
       "lineWidthSelected": 3.0,
       "lineWidthDefault": 2.0
     },
+    "toolRun": {
+      "testingOpacity": 0.6,
+      "fadeFloorOpacity": 0.25,
+      "fadeRecords": 256.0,
+      "testingOutlineWidth": 2.0,
+      "testingPulseMs": 900.0,
+      "provisionalOpacity": 0.5,
+      "provisionalOutlineWidth": 2.0,
+      "provisionalDash": [6.0, 4.0],
+      "provisionalDashPeriodMs": 1200.0
+    },
     "chrome": {
       "uiSpacingCompactPx": 3.2,
       "navbarHeightUiSpacing": 9.0,

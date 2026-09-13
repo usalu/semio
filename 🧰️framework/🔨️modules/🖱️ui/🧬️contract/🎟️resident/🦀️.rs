@@ -9,7 +9,26 @@ use std::sync::{
 //#region 🎟️Ledger
 pub const UI_RESIDENT_SLOTS: usize = 64;
 pub const UI_RESIDENT_SURFACE_BYTES: usize = 8 * 1024 * 1024;
-pub const UI_RESIDENT_AGGREGATE_BYTES: usize = 4 * UI_RESIDENT_SURFACE_BYTES;
+
+/// 📐️ What ONE surface costs when its body FILLS the document contract: every record the contract
+/// admits, at the size the contract gives a record. This is a PRICE — what a real holder occupies —
+/// where [`UI_RESIDENT_SURFACE_BYTES`] is a MAXIMUM a pathological single surface may reach.
+pub const UI_RESIDENT_DOCUMENT_BYTES: usize = super::UI_DOCUMENT_NODES * size_of::<super::UiNodeRecord>();
+
+/// 🎟️ The process-wide budget, funding every slot the SLOT ledger admits at one full document each, so
+/// the two ledgers refuse together instead of the byte ledger refusing first with slots still empty.
+///
+/// 🐛️ ticket 26/09/09/PROCEDURAL-3D-END-TO-END lane `react-example-switch-regression`: this was
+/// `4 * UI_RESIDENT_SURFACE_BYTES` — four times the per-surface CEILING, the imagined concurrency of a
+/// four-surface session — while [`UI_RESIDENT_SLOTS`] admits sixty-four holders at once and the React
+/// generation3d editor peaks at TWENTY-SIX, `33 483 491` of `33 554 432` bytes
+/// (`🗑️generated/example-switch-census/console.txt`). The fifth example switch asked the flow window to
+/// grow to `2 517 394` bytes, `5 549` were left, and the refusal is a TERMINAL
+/// `SurfaceReconcileFault::ResidentCredit`: `window:procedural-main` never published a graph again and
+/// fourteen further switches rendered the same stale example. Wave B58 already established that the
+/// per-surface ceiling is "a maximum a surface may reach, never a price" — deriving the AGGREGATE from
+/// that ceiling repeated the same category error one level up.
+pub const UI_RESIDENT_AGGREGATE_BYTES: usize = UI_RESIDENT_SLOTS * UI_RESIDENT_DOCUMENT_BYTES;
 pub const UI_RESIDENT_SURFACE_ITEMS: usize = 4097;
 pub const UI_RESIDENT_AGGREGATE_ITEMS: usize = 131076;
 

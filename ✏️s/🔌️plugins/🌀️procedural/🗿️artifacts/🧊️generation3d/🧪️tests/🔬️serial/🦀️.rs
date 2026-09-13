@@ -72,6 +72,22 @@ pub(crate) fn lock() -> TestSerialGuard {
     TestSerialGuard { _inner: inner }
 }
 
+// 🚫️ This guard deliberately does NOT drain the flow registry's retired-version queue.
+//
+// It is tempting: `begin_flow_registry_replacement` refuses with `flow.registry-retirement-full`
+// once `RETIRED_REGISTRY_CAPACITY` (16) versions are queued, nothing in a test binary pumps that
+// queue the way a served host does, and
+// `a_late_contributions_install_re_arms_the_viewer_evaluation_the_empty_registry_faulted` passes
+// alone and fails deep in the suite on exactly that accumulated debt.
+//
+// It is also wrong, and this was MEASURED rather than reasoned: draining with
+// `retire_flow_extension_registries_step` from here, on the same binary and the same tree, back to
+// back, gave `443 passed; 7 failed` WITHOUT the drain and `375 passed; 75 failed` WITH it — a
+// cascade of `flow neuron kind info cache: PoisonError` and `job-session.terminal-fault` starting at
+// the 21st law, because a retired version is still referenced by live sessions and by the catalogue
+// cache. The queue's depth belongs to whoever owns the registry retirement frontier, not to a test
+// guard (ticket 26/09/09/PROCEDURAL-3D-END-TO-END; A/B logs `🗑️generated/lib-suite/ab-*.txt`).
+
 /// 🪪️ Whether the calling thread holds the lock right now — the laws' own witness that a guard
 /// really was released.
 pub(crate) fn held_by_this_thread() -> bool {

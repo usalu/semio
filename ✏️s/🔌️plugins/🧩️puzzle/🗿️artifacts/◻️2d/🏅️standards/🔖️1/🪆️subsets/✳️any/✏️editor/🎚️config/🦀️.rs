@@ -1,7 +1,8 @@
 //! 🎛️ Puzzle 2D shared app preferences and the internal runtime assembled with one exact window.
 //!
-//! 🪟️ `Puzzle2dConfig` contains only shared generator weights. Camera, LOD, grid, fill controls,
-//! engagement input, and brush candidates belong to `🪟️window`; document cameras only seed a new
+//! 🪟️ `Puzzle2dConfig` contains the shared generator weights and the fill tool's requested count (the
+//! `ToolRunJobRequest` a fill run is built from carries it). Camera, LOD, grid, engagement input and
+//! brush candidates belong to `🪟️window`; document cameras only seed a new
 //! exact window and never receive live view updates.
 
 use std::collections::BTreeMap;
@@ -39,122 +40,6 @@ fn default_fill_count() -> u32 {
 
 //#endregion 🔖️Defaults
 
-//#region 🧵️FillLifecycle
-/// 🧵️ Event-sourced public lifecycle for the transient mounted fill owner.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub enum Puzzle2dFillLifecycle {
-    #[default]
-    Idle,
-    Capturing,
-    Queued,
-    Running,
-    CheckpointReady,
-    Applying,
-    AwaitingAdoption,
-    Closing,
-    Completed,
-    Cancelled,
-    Faulted,
-    Discarded,
-}
-
-pub const PUZZLE2D_FILL_TEXT_CAPACITY: usize = 64;
-
-/// 🏷️ Fixed backing for bounded fill progress and fault identifiers.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct Puzzle2dFillText {
-    bytes: [u8; PUZZLE2D_FILL_TEXT_CAPACITY],
-    len: u8,
-}
-
-impl Puzzle2dFillText {
-    pub fn try_from_str(value: &str) -> Option<Self> {
-        if value.len() > PUZZLE2D_FILL_TEXT_CAPACITY {
-            return None;
-        }
-        let mut text = Self::default();
-        text.bytes[..value.len()].copy_from_slice(value.as_bytes());
-        text.len = u8::try_from(value.len()).ok()?;
-        Some(text)
-    }
-
-    pub fn as_str(&self) -> &str {
-        unsafe { std::str::from_utf8_unchecked(&self.bytes[..usize::from(self.len)]) }
-    }
-
-    pub fn clear(&mut self) {
-        self.bytes = [0; PUZZLE2D_FILL_TEXT_CAPACITY];
-        self.len = 0;
-    }
-}
-
-impl Default for Puzzle2dFillText {
-    fn default() -> Self {
-        Self { bytes: [0; PUZZLE2D_FILL_TEXT_CAPACITY], len: 0 }
-    }
-}
-
-impl std::ops::Deref for Puzzle2dFillText {
-    type Target = str;
-
-    fn deref(&self) -> &Self::Target {
-        self.as_str()
-    }
-}
-
-/// 🔁️ Hand-written: encodes as a bare `DslValue::String`, matching the pre-migration serde
-/// `Serialize`/`Deserialize` pair's wire shape (a plain JSON string).
-impl dsl::ToValue for Puzzle2dFillText {
-    fn to_value(&self) -> dsl::DslValue {
-        dsl::DslValue::String(self.as_str().to_string())
-    }
-}
-impl dsl::FromValue for Puzzle2dFillText {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-        match value {
-            dsl::DslValue::String(text) => Puzzle2dFillText::try_from_str(&text).ok_or_else(|| dsl::ValueError::new("fill identifier capacity exceeded")),
-            other => Err(dsl::ValueError::new(format!("expected a string, found {other:?}"))),
-        }
-    }
-}
-
-/// 🧵️ Fixed scalar projection carried by fill-only event mutations.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle2dFillRuntime {
-    pub fill_count: u32,
-    pub fill_job_operation: u64,
-    pub fill_job_generation: u64,
-    pub fill_job_seed: u64,
-    pub fill_job_base_revision: u64,
-    pub fill_job_checkpoint_sequence: u64,
-    pub fill_job_accepted_count: u64,
-    pub fill_job_search_count: u64,
-    pub fill_job_stage: Puzzle2dFillText,
-    pub fill_job_lifecycle: Puzzle2dFillLifecycle,
-    pub fill_job_fault_code: Option<Puzzle2dFillText>,
-}
-
-impl Puzzle2dFillRuntime {
-    pub fn for_count(fill_count: u32) -> Self {
-        Self {
-            fill_count,
-            fill_job_operation: 0,
-            fill_job_generation: 0,
-            fill_job_seed: 1,
-            fill_job_base_revision: 0,
-            fill_job_checkpoint_sequence: 0,
-            fill_job_accepted_count: 0,
-            fill_job_search_count: 0,
-            fill_job_stage: Puzzle2dFillText::default(),
-            fill_job_lifecycle: Puzzle2dFillLifecycle::Idle,
-            fill_job_fault_code: None,
-        }
-    }
-}
-//#endregion 🧵️FillLifecycle
-
 //#region 🔖️Config
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
@@ -177,26 +62,6 @@ pub struct Puzzle2dPlayRuntime {
     pub brush_candidate_source_handle_id: String,
     #[value(default = "default_fill_count")]
     pub fill_count: u32,
-    #[value(default)]
-    pub fill_job_operation: u64,
-    #[value(default)]
-    pub fill_job_generation: u64,
-    #[value(default)]
-    pub fill_job_seed: u64,
-    #[value(default)]
-    pub fill_job_base_revision: u64,
-    #[value(default)]
-    pub fill_job_checkpoint_sequence: u64,
-    #[value(default)]
-    pub fill_job_accepted_count: u64,
-    #[value(default)]
-    pub fill_job_search_count: u64,
-    #[value(default)]
-    pub fill_job_stage: Puzzle2dFillText,
-    #[value(default)]
-    pub fill_job_lifecycle: Puzzle2dFillLifecycle,
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub fill_job_fault_code: Option<Puzzle2dFillText>,
     #[value(default)]
     pub grid_snap_enabled: bool,
     #[value(default = "default_grid_factor")]
@@ -221,16 +86,6 @@ impl Default for Puzzle2dPlayRuntime {
             brush_candidates: Vec::new(),
             brush_candidate_source_handle_id: String::new(),
             fill_count: default_fill_count(),
-            fill_job_operation: 0,
-            fill_job_generation: 0,
-            fill_job_seed: 1,
-            fill_job_base_revision: 0,
-            fill_job_checkpoint_sequence: 0,
-            fill_job_accepted_count: 0,
-            fill_job_search_count: 0,
-            fill_job_stage: Puzzle2dFillText::default(),
-            fill_job_lifecycle: Puzzle2dFillLifecycle::Idle,
-            fill_job_fault_code: None,
             grid_snap_enabled: false,
             grid_factor: default_grid_factor(),
             suggestion_offset: default_suggestion_offset(),
@@ -240,13 +95,21 @@ impl Default for Puzzle2dPlayRuntime {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle2dConfig {
     #[value(default)]
     pub node_kind_weights: BTreeMap<String, f64>,
     #[value(default)]
     pub handle_kind_weights: BTreeMap<String, f64>,
+    #[value(default = "default_fill_count")]
+    pub fill_count: u32,
+}
+
+impl Default for Puzzle2dConfig {
+    fn default() -> Self {
+        Self { node_kind_weights: BTreeMap::new(), handle_kind_weights: BTreeMap::new(), fill_count: default_fill_count() }
+    }
 }
 
 impl store::ArtifactDsl for Puzzle2dConfig {

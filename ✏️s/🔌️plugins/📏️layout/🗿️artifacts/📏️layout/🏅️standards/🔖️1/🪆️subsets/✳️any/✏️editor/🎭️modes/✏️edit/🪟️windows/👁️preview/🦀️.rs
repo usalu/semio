@@ -42,7 +42,7 @@ pub fn render(engine: &mut crate::editor::layout::engine::scene::LayoutEngine, d
     semio_framework_plugin::scene_surface(
         LAYOUT_PLAY_SURFACE_PREVIEW,
         semio_framework_ui_contract::SurfaceKind::Canvas2d,
-        &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: canvas_layers(engine, doc, config, transient, false), snapshot: None },
+        &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: canvas_layers(engine, doc, config, transient, false), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
     )
 }
 //#endregion 🔖️Render

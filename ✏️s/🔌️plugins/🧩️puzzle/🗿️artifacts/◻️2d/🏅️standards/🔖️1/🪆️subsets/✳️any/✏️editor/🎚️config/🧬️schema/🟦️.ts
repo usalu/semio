@@ -1,9 +1,11 @@
-/** 🧬️ Shared Puzzle 2D generator preferences. */
+/** 🧬️ Shared Puzzle 2D generator preferences and the fill tool's requested count. */
 export interface Puzzle2dConfig {
   /** @state config */
   nodeKindWeights: Record<string, number>;
   /** @state config */
   handleKindWeights: Record<string, number>;
+  /** @state config */
+  fillCount: number;
 }
 
 export class Puzzle2dConfigGuardRefusal extends Error {
@@ -23,10 +25,16 @@ const weights = (value: unknown, at: string): Record<string, number> => {
   }));
 };
 
+const count = (value: unknown, at: string): number => {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > 4294967295) throw new Puzzle2dConfigGuardRefusal(at, "value is not a u32 count");
+  return value;
+};
+
 export function parsePuzzle2dConfig(value: unknown, at = "$"): Puzzle2dConfig {
   const row = record(value, at);
   return {
     nodeKindWeights: weights(row.nodeKindWeights, `${at}.nodeKindWeights`),
     handleKindWeights: weights(row.handleKindWeights, `${at}.handleKindWeights`),
+    fillCount: count(row.fillCount, `${at}.fillCount`),
   };
 }

@@ -4,7 +4,7 @@
   "title": "Puzzle2dConfig",
   "type": "object",
   "additionalProperties": false,
-  "required": ["nodeKindWeights", "handleKindWeights"],
+  "required": ["nodeKindWeights", "handleKindWeights", "fillCount"],
   "properties": {
     "nodeKindWeights": {
       "type": "object",
@@ -14,6 +14,13 @@
     "handleKindWeights": {
       "type": "object",
       "additionalProperties": { "type": "number" },
+      "x-semio-state": "config"
+    },
+    "fillCount": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "default": 100,
       "x-semio-state": "config"
     }
   }

@@ -1,0 +1,1966 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/tool-run/schema.json",
+  "title": "ToolRunSchema",
+  "description": "Source of record for the ⏯️tool-run framework module: run identity, lifecycle states, events and the pure reducer transition, progress and step ring, trace pages, trace delta, ticks, the static ToolRunDefinition and the lifecycle, trace page and tick fixtures. Wire names are camelCase; u64 values are JSON integers; byte strings are lowercase hex.",
+  "$defs": {
+    "U16": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535
+    },
+    "U32": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "U64": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "Hex": {
+      "type": "string",
+      "pattern": "^([0-9a-f]{2})*$"
+    },
+    "Hash32": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "LocaleText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "LocalizedLabel": {
+      "title": "LocalizedLabel",
+      "description": "Locale × terminology matrix, the wire shape of the framework LocalizedLabel.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "native",
+        "reuse"
+      ],
+      "properties": {
+        "native": {
+          "$ref": "#/$defs/LocaleText"
+        },
+        "reuse": {
+          "$ref": "#/$defs/LocaleText"
+        }
+      }
+    },
+    "ToolRunId": {
+      "title": "ToolRunId",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "appInstanceId",
+        "run"
+      ],
+      "properties": {
+        "appInstanceId": {
+          "$ref": "#/$defs/U32"
+        },
+        "run": {
+          "$ref": "#/$defs/U64"
+        }
+      }
+    },
+    "ToolRunIdentity": {
+      "title": "ToolRunIdentity",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "generation",
+        "baseRevision"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/ToolRunId"
+        },
+        "generation": {
+          "$ref": "#/$defs/U32"
+        },
+        "baseRevision": {
+          "$ref": "#/$defs/Hash32"
+        }
+      }
+    },
+    "ToolRunState": {
+      "title": "ToolRunState",
+      "enum": [
+        "starting",
+        "running",
+        "paused",
+        "complete",
+        "finalizing",
+        "finalized",
+        "aborting",
+        "aborted",
+        "faulted"
+      ]
+    },
+    "ToolRunSlotState": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ToolRunState"
+        },
+        {
+          "const": "none"
+        }
+      ]
+    },
+    "ToolRunSlot": {
+      "title": "ToolRunSlot",
+      "description": "The reducer's view of the single per-instance ledger slot. Absence (null) means no run.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run",
+        "generation",
+        "state"
+      ],
+      "properties": {
+        "run": {
+          "$ref": "#/$defs/U64"
+        },
+        "generation": {
+          "$ref": "#/$defs/U32"
+        },
+        "state": {
+          "$ref": "#/$defs/ToolRunState"
+        }
+      }
+    },
+    "ToolRunEvent": {
+      "title": "ToolRunEvent",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "run"
+          ],
+          "properties": {
+            "type": {
+              "const": "start"
+            },
+            "run": {
+              "$ref": "#/$defs/U64"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "run",
+            "generation"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "jobAdmitted",
+                "pause",
+                "resume",
+                "step",
+                "jobComplete",
+                "jobFault",
+                "finalize",
+                "publicationComplete",
+                "revalidationConflicts",
+                "storeRejected",
+                "abortComplete"
+              ]
+            },
+            "run": {
+              "$ref": "#/$defs/U64"
+            },
+            "generation": {
+              "$ref": "#/$defs/U32"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "run",
+            "generation",
+            "publishing"
+          ],
+          "properties": {
+            "type": {
+              "const": "abort"
+            },
+            "run": {
+              "$ref": "#/$defs/U64"
+            },
+            "generation": {
+              "$ref": "#/$defs/U32"
+            },
+            "publishing": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "run"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "settingsChanged",
+                "baseChanged",
+                "dismiss"
+              ]
+            },
+            "run": {
+              "$ref": "#/$defs/U64"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "const": "closed"
+            }
+          }
+        }
+      ]
+    },
+    "ToolRunEventKey": {
+      "title": "ToolRunEventKey",
+      "description": "Matrix column of an event: the event type, except that abort with publishing=true is keyed abortWhilePublishing.",
+      "enum": [
+        "start",
+        "jobAdmitted",
+        "pause",
+        "resume",
+        "step",
+        "jobComplete",
+        "jobFault",
+        "settingsChanged",
+        "baseChanged",
+        "finalize",
+        "publicationComplete",
+        "revalidationConflicts",
+        "storeRejected",
+        "abort",
+        "abortWhilePublishing",
+        "abortComplete",
+        "dismiss",
+        "closed"
+      ]
+    },
+    "ToolRunEffect": {
+      "title": "ToolRunEffect",
+      "enum": [
+        "spawnJob",
+        "schedule",
+        "stopScheduling",
+        "driveOneUnit",
+        "holdResult",
+        "reconfigure",
+        "refold",
+        "beginFinalize",
+        "releaseProvisional",
+        "retractConflicts",
+        "keepProvisional",
+        "closeJob",
+        "cancelBatch",
+        "retireProvisional",
+        "discardProvisional",
+        "clearTrace",
+        "retireAll"
+      ]
+    },
+    "ToolRunRejection": {
+      "title": "ToolRunRejection",
+      "enum": [
+        "toolRun.stale",
+        "toolRun.busy",
+        "toolRun.illegal"
+      ]
+    },
+    "ToolRunTransition": {
+      "title": "ToolRunTransition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slot",
+        "effect"
+      ],
+      "properties": {
+        "slot": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ToolRunSlot"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effect": {
+          "$ref": "#/$defs/ToolRunEffect"
+        }
+      }
+    },
+    "ToolRunVerdict": {
+      "title": "ToolRunVerdict",
+      "enum": [
+        "testing",
+        "success",
+        "warning",
+        "danger"
+      ]
+    },
+    "ToolRunStepKind": {
+      "title": "ToolRunStepKind",
+      "enum": [
+        "info",
+        "success",
+        "warning",
+        "danger"
+      ]
+    },
+    "ToolRunStepArg": {
+      "title": "ToolRunStepArg",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "unsigned"
+          ],
+          "properties": {
+            "unsigned": {
+              "$ref": "#/$defs/U64"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "float"
+          ],
+          "properties": {
+            "float": {
+              "type": "number"
+            }
+          }
+        }
+      ]
+    },
+    "ToolRunStep": {
+      "title": "ToolRunStep",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "kind",
+        "stage",
+        "reason",
+        "repeat",
+        "args"
+      ],
+      "properties": {
+        "sequence": {
+          "$ref": "#/$defs/U64"
+        },
+        "kind": {
+          "$ref": "#/$defs/ToolRunStepKind"
+        },
+        "stage": {
+          "$ref": "#/$defs/U16"
+        },
+        "reason": {
+          "$ref": "#/$defs/U16"
+        },
+        "subject": {
+          "$ref": "#/$defs/U64"
+        },
+        "repeat": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "args": {
+          "type": "array",
+          "maxItems": 4,
+          "items": {
+            "$ref": "#/$defs/ToolRunStepArg"
+          }
+        }
+      }
+    },
+    "ToolRunStepRing": {
+      "title": "ToolRunStepRing",
+      "description": "Newest ≤ 64 steps, oldest first, overwrite-oldest, identical consecutive steps coalesced into repeat.",
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "$ref": "#/$defs/ToolRunStep"
+      }
+    },
+    "ToolRunCounter": {
+      "title": "ToolRunCounter",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "counter",
+        "value"
+      ],
+      "properties": {
+        "counter": {
+          "$ref": "#/$defs/U16"
+        },
+        "value": {
+          "$ref": "#/$defs/U64"
+        }
+      }
+    },
+    "ToolRunProgress": {
+      "title": "ToolRunProgress",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "sequence",
+        "state",
+        "stage",
+        "completed",
+        "counters",
+        "unitsPerSecond",
+        "conflicts",
+        "steps"
+      ],
+      "properties": {
+        "identity": {
+          "$ref": "#/$defs/ToolRunIdentity"
+        },
+        "sequence": {
+          "$ref": "#/$defs/U64"
+        },
+        "state": {
+          "$ref": "#/$defs/ToolRunState"
+        },
+        "stage": {
+          "$ref": "#/$defs/U16"
+        },
+        "completed": {
+          "$ref": "#/$defs/U64"
+        },
+        "total": {
+          "$ref": "#/$defs/U64"
+        },
+        "counters": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/$defs/ToolRunCounter"
+          }
+        },
+        "unitsPerSecond": {
+          "type": "number"
+        },
+        "conflicts": {
+          "$ref": "#/$defs/U32"
+        },
+        "steps": {
+          "$ref": "#/$defs/ToolRunStepRing"
+        }
+      }
+    },
+    "F32Tuple2": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      }
+    },
+    "F32Tuple3": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number"
+      }
+    },
+    "F32Tuple4": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "number"
+      }
+    },
+    "ToolRunTraceSubject": {
+      "title": "ToolRunTraceSubject",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "mesh",
+            "position",
+            "rotation",
+            "scale"
+          ],
+          "properties": {
+            "kind": {
+              "const": "instance3d"
+            },
+            "mesh": {
+              "$ref": "#/$defs/U32"
+            },
+            "position": {
+              "$ref": "#/$defs/F32Tuple3"
+            },
+            "rotation": {
+              "$ref": "#/$defs/F32Tuple4"
+            },
+            "scale": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "shape",
+            "position",
+            "rotation"
+          ],
+          "properties": {
+            "kind": {
+              "const": "placement2d"
+            },
+            "shape": {
+              "$ref": "#/$defs/U32"
+            },
+            "position": {
+              "$ref": "#/$defs/F32Tuple2"
+            },
+            "rotation": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "entity"
+          ],
+          "properties": {
+            "kind": {
+              "const": "entity"
+            },
+            "entity": {
+              "$ref": "#/$defs/U64"
+            }
+          }
+        }
+      ]
+    },
+    "ToolRunTraceOp": {
+      "title": "ToolRunTraceOp",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "op",
+            "key",
+            "verdict",
+            "reason",
+            "subject"
+          ],
+          "properties": {
+            "op": {
+              "const": "upsert"
+            },
+            "key": {
+              "$ref": "#/$defs/U64"
+            },
+            "verdict": {
+              "$ref": "#/$defs/ToolRunVerdict"
+            },
+            "reason": {
+              "$ref": "#/$defs/U16"
+            },
+            "subject": {
+              "$ref": "#/$defs/ToolRunTraceSubject"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "op",
+            "key"
+          ],
+          "properties": {
+            "op": {
+              "const": "retire"
+            },
+            "key": {
+              "$ref": "#/$defs/U64"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "op"
+          ],
+          "properties": {
+            "op": {
+              "const": "clear"
+            }
+          }
+        }
+      ]
+    },
+    "ToolRunTracePage": {
+      "title": "ToolRunTracePage",
+      "description": "Columnar pack record body: identity, page, opKinds u8, keys u64le, verdicts u8, reasons u16le, subjectKinds u8, meshes u32le, shapes u32le, entities u64le, floats f32le. Empty columns are omitted.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "page",
+        "ops"
+      ],
+      "properties": {
+        "identity": {
+          "$ref": "#/$defs/ToolRunIdentity"
+        },
+        "page": {
+          "$ref": "#/$defs/U32"
+        },
+        "ops": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "$ref": "#/$defs/ToolRunTraceOp"
+          }
+        }
+      }
+    },
+    "ToolRunTraceDelta": {
+      "title": "ToolRunTraceDelta",
+      "description": "One refresh worth of trace pages for a window: clear=true means drop every record before applying pages; next is the cursor page to echo back.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "clear",
+        "next",
+        "pages"
+      ],
+      "properties": {
+        "identity": {
+          "$ref": "#/$defs/ToolRunIdentity"
+        },
+        "clear": {
+          "type": "boolean"
+        },
+        "next": {
+          "$ref": "#/$defs/U32"
+        },
+        "pages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ToolRunTracePage"
+          }
+        }
+      }
+    },
+    "ToolRunTraceCursor": {
+      "title": "ToolRunTraceCursor",
+      "description": "Echoed by a renderer in its window instance view state; page is the next page it expects.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run",
+        "generation",
+        "page"
+      ],
+      "properties": {
+        "run": {
+          "$ref": "#/$defs/U64"
+        },
+        "generation": {
+          "$ref": "#/$defs/U32"
+        },
+        "page": {
+          "$ref": "#/$defs/U32"
+        }
+      }
+    },
+    "ToolRunTick": {
+      "title": "ToolRunTick",
+      "description": "Pack record body carried by a RetainedJobPayload page: retractTo applies before appendOps.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "sequence",
+        "steps",
+        "trace",
+        "appendOps",
+        "appendEntities"
+      ],
+      "properties": {
+        "identity": {
+          "$ref": "#/$defs/ToolRunIdentity"
+        },
+        "sequence": {
+          "$ref": "#/$defs/U64"
+        },
+        "progress": {
+          "$ref": "#/$defs/ToolRunProgress"
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ToolRunStep"
+          }
+        },
+        "trace": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ToolRunTracePage"
+          }
+        },
+        "appendOps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Hex"
+          }
+        },
+        "appendEntities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/U64"
+          }
+        },
+        "retractTo": {
+          "$ref": "#/$defs/U32"
+        }
+      }
+    },
+    "ToolRunRebasePolicy": {
+      "title": "ToolRunRebasePolicy",
+      "enum": [
+        "revalidate",
+        "restart",
+        "freeze"
+      ]
+    },
+    "ToolRunReconfigurePolicy": {
+      "title": "ToolRunReconfigurePolicy",
+      "enum": [
+        "resume",
+        "restart"
+      ]
+    },
+    "ToolRunTraceKind": {
+      "title": "ToolRunTraceKind",
+      "enum": [
+        "instance3d",
+        "placement2d",
+        "entity",
+        "none"
+      ]
+    },
+    "JobKindId": {
+      "title": "JobKindId",
+      "type": "string",
+      "minLength": 1
+    },
+    "ToolRunStageDefinition": {
+      "title": "ToolRunStageDefinition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "$ref": "#/$defs/LocalizedLabel"
+        }
+      }
+    },
+    "ToolRunCounterDefinition": {
+      "title": "ToolRunCounterDefinition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "$ref": "#/$defs/LocalizedLabel"
+        }
+      }
+    },
+    "ToolRunReasonDefinition": {
+      "title": "ToolRunReasonDefinition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "id",
+        "verdict",
+        "template"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65279
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "verdict": {
+          "$ref": "#/$defs/ToolRunVerdict"
+        },
+        "template": {
+          "$ref": "#/$defs/LocalizedLabel"
+        }
+      }
+    },
+    "ToolRunDefinition": {
+      "title": "ToolRunDefinition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutating",
+        "rebase",
+        "reconfigure",
+        "unit",
+        "stages",
+        "counters",
+        "reasons",
+        "trace",
+        "runJob"
+      ],
+      "properties": {
+        "mutating": {
+          "type": "boolean"
+        },
+        "rebase": {
+          "$ref": "#/$defs/ToolRunRebasePolicy"
+        },
+        "reconfigure": {
+          "$ref": "#/$defs/ToolRunReconfigurePolicy"
+        },
+        "unit": {
+          "$ref": "#/$defs/LocalizedLabel"
+        },
+        "stages": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 65536,
+          "items": {
+            "$ref": "#/$defs/ToolRunStageDefinition"
+          }
+        },
+        "counters": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/$defs/ToolRunCounterDefinition"
+          }
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ToolRunReasonDefinition"
+          }
+        },
+        "trace": {
+          "$ref": "#/$defs/ToolRunTraceKind"
+        },
+        "runJob": {
+          "$ref": "#/$defs/JobKindId"
+        },
+        "revalidateJob": {
+          "$ref": "#/$defs/JobKindId"
+        }
+      }
+    },
+    "ToolRunActionId": {
+      "title": "ToolRunActionId",
+      "enum": [
+        "toolRunStart",
+        "toolRunPause",
+        "toolRunResume",
+        "toolRunStep",
+        "toolRunAbort",
+        "toolRunFinalize",
+        "toolRunDismiss"
+      ]
+    },
+    "ToolRunLabelKey": {
+      "title": "ToolRunLabelKey",
+      "enum": [
+        "stateStarting",
+        "stateRunning",
+        "statePaused",
+        "stateComplete",
+        "stateFinalizing",
+        "stateFinalized",
+        "stateAborting",
+        "stateAborted",
+        "stateFaulted",
+        "actionStart",
+        "actionPause",
+        "actionResume",
+        "actionStep",
+        "actionAbort",
+        "actionFinalize",
+        "actionDismiss",
+        "finalizeDisabled",
+        "rebasingStep",
+        "conflictStep",
+        "traceTruncatedStep",
+        "provisionalCapStep",
+        "progressValueText"
+      ]
+    },
+    "LifecycleLawFixture": {
+      "title": "LifecycleLawFixture",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "states",
+        "eventKeys",
+        "matrix",
+        "cases",
+        "scenarios",
+        "invariants",
+        "actions",
+        "labels",
+        "reservedReasons",
+        "templates",
+        "limits",
+        "definition"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.framework.tool-run.lifecycle-law.v1"
+        },
+        "states": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "items": {
+            "$ref": "#/$defs/ToolRunState"
+          }
+        },
+        "eventKeys": {
+          "type": "array",
+          "minItems": 18,
+          "maxItems": 18,
+          "items": {
+            "$ref": "#/$defs/ToolRunEventKey"
+          }
+        },
+        "matrix": {
+          "description": "Every (slot state, event key) pair: 10 × 18 rows. A legal row names to/effect/generation/commits; an illegal row names its rejection.",
+          "type": "array",
+          "minItems": 180,
+          "maxItems": 180,
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "from",
+                  "event",
+                  "to",
+                  "effect",
+                  "generation",
+                  "commits"
+                ],
+                "properties": {
+                  "from": {
+                    "$ref": "#/$defs/ToolRunSlotState"
+                  },
+                  "event": {
+                    "$ref": "#/$defs/ToolRunEventKey"
+                  },
+                  "to": {
+                    "$ref": "#/$defs/ToolRunSlotState"
+                  },
+                  "effect": {
+                    "$ref": "#/$defs/ToolRunEffect"
+                  },
+                  "generation": {
+                    "enum": [
+                      "keep",
+                      "increment",
+                      "reset"
+                    ]
+                  },
+                  "commits": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "from",
+                  "event",
+                  "rejection"
+                ],
+                "properties": {
+                  "from": {
+                    "$ref": "#/$defs/ToolRunSlotState"
+                  },
+                  "event": {
+                    "$ref": "#/$defs/ToolRunEventKey"
+                  },
+                  "rejection": {
+                    "$ref": "#/$defs/ToolRunRejection"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "slot",
+              "event",
+              "expect"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "slot": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ToolRunSlot"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "event": {
+                "$ref": "#/$defs/ToolRunEvent"
+              },
+              "expect": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "transition"
+                    ],
+                    "properties": {
+                      "transition": {
+                        "$ref": "#/$defs/ToolRunTransition"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "rejection"
+                    ],
+                    "properties": {
+                      "rejection": {
+                        "$ref": "#/$defs/ToolRunRejection"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "scenarios": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "events",
+              "states",
+              "commits"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "events": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/ToolRunEvent"
+                }
+              },
+              "states": {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/ToolRunSlotState"
+                    },
+                    {
+                      "$ref": "#/$defs/ToolRunRejection"
+                    }
+                  ]
+                }
+              },
+              "commits": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "invariants": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "statement"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "statement": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "actions": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "args",
+              "legalIn",
+              "chord",
+              "label"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/ToolRunActionId"
+              },
+              "args": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "name",
+                    "required"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "required": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              },
+              "legalIn": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/ToolRunSlotState"
+                }
+              },
+              "chord": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "labels": {
+          "type": "array",
+          "minItems": 22,
+          "maxItems": 22,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "key",
+              "en",
+              "de"
+            ],
+            "properties": {
+              "key": {
+                "$ref": "#/$defs/ToolRunLabelKey"
+              },
+              "en": {
+                "type": "string"
+              },
+              "de": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "reservedReasons": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "code",
+              "label"
+            ],
+            "properties": {
+              "code": {
+                "type": "integer",
+                "minimum": 65280,
+                "maximum": 65535
+              },
+              "label": {
+                "$ref": "#/$defs/ToolRunLabelKey"
+              }
+            }
+          }
+        },
+        "templates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "template",
+              "values",
+              "expected"
+            ],
+            "properties": {
+              "template": {
+                "type": "string"
+              },
+              "values": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "expected": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "stepRingCapacity",
+            "stepArgsMax",
+            "countersMax",
+            "provisionalOpsMax",
+            "traceResidentRecords",
+            "tracePageOpsMax",
+            "tracePageBytesMax",
+            "tickBytesMax",
+            "traceLogCompactFloor",
+            "statusAnnounceIntervalMs",
+            "reservedReasonFloor"
+          ],
+          "properties": {
+            "stepRingCapacity": {
+              "const": 64
+            },
+            "stepArgsMax": {
+              "const": 4
+            },
+            "countersMax": {
+              "const": 8
+            },
+            "provisionalOpsMax": {
+              "const": 65536
+            },
+            "traceResidentRecords": {
+              "const": 1048576
+            },
+            "tracePageOpsMax": {
+              "const": 4096
+            },
+            "tracePageBytesMax": {
+              "const": 262144
+            },
+            "tickBytesMax": {
+              "const": 262144
+            },
+            "traceLogCompactFloor": {
+              "const": 4096
+            },
+            "statusAnnounceIntervalMs": {
+              "const": 2000
+            },
+            "reservedReasonFloor": {
+              "const": 65280
+            }
+          }
+        },
+        "definition": {
+          "$ref": "#/$defs/ToolRunDefinition"
+        }
+      }
+    },
+    "TracePageFixture": {
+      "title": "TracePageFixture",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "pages",
+        "deltas",
+        "malformed",
+        "residency",
+        "delivery"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.framework.tool-run.trace-pages.v1"
+        },
+        "pages": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "page",
+              "hex"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "page": {
+                "$ref": "#/$defs/ToolRunTracePage"
+              },
+              "hex": {
+                "$ref": "#/$defs/Hex"
+              }
+            }
+          }
+        },
+        "deltas": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "delta",
+              "hex"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "delta": {
+                "$ref": "#/$defs/ToolRunTraceDelta"
+              },
+              "hex": {
+                "$ref": "#/$defs/Hex"
+              }
+            }
+          }
+        },
+        "malformed": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "target",
+              "hex"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "target": {
+                "enum": [
+                  "page",
+                  "delta",
+                  "tick"
+                ]
+              },
+              "hex": {
+                "$ref": "#/$defs/Hex"
+              }
+            }
+          }
+        },
+        "residency": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "capacity",
+              "compactFloor",
+              "identity",
+              "pages",
+              "applied",
+              "resident",
+              "logPages",
+              "logBase"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "capacity": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "compactFloor": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "identity": {
+                "$ref": "#/$defs/ToolRunIdentity"
+              },
+              "pages": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/ToolRunTraceOp"
+                  }
+                }
+              },
+              "applied": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "logged",
+                    "evicted",
+                    "overflowed",
+                    "compacted"
+                  ],
+                  "properties": {
+                    "logged": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "evicted": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "overflowed": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "compacted": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              },
+              "resident": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "key",
+                    "verdict",
+                    "reason"
+                  ],
+                  "properties": {
+                    "key": {
+                      "$ref": "#/$defs/U64"
+                    },
+                    "verdict": {
+                      "$ref": "#/$defs/ToolRunVerdict"
+                    },
+                    "reason": {
+                      "$ref": "#/$defs/U16"
+                    }
+                  }
+                }
+              },
+              "logPages": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/ToolRunTraceOp"
+                  }
+                }
+              },
+              "logBase": {
+                "$ref": "#/$defs/U32"
+              }
+            }
+          }
+        },
+        "delivery": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "residency",
+              "generation",
+              "cursor",
+              "byteBudget",
+              "expect"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "residency": {
+                "type": "string"
+              },
+              "generation": {
+                "$ref": "#/$defs/U32"
+              },
+              "cursor": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ToolRunTraceCursor"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "byteBudget": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "expect": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "clear",
+                  "next",
+                  "pages"
+                ],
+                "properties": {
+                  "clear": {
+                    "type": "boolean"
+                  },
+                  "next": {
+                    "$ref": "#/$defs/U32"
+                  },
+                  "pages": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/U32"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "TickFixture": {
+      "title": "TickFixture",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "ticks",
+        "stepRing",
+        "writer",
+        "writerResume"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.framework.tool-run.ticks.v1"
+        },
+        "ticks": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "tick",
+              "hex"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "tick": {
+                "$ref": "#/$defs/ToolRunTick"
+              },
+              "hex": {
+                "$ref": "#/$defs/Hex"
+              }
+            }
+          }
+        },
+        "stepRing": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "push",
+              "expect"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "push": {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/ToolRunStep"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "repeatSequence"
+                      ],
+                      "properties": {
+                        "repeatSequence": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "from",
+                            "count",
+                            "kind"
+                          ],
+                          "properties": {
+                            "from": {
+                              "$ref": "#/$defs/U64"
+                            },
+                            "count": {
+                              "type": "integer",
+                              "minimum": 1
+                            },
+                            "kind": {
+                              "$ref": "#/$defs/ToolRunStepKind"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "expect": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "length",
+                  "first",
+                  "last"
+                ],
+                "properties": {
+                  "length": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 64
+                  },
+                  "first": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/ToolRunStep"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "last": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/ToolRunStep"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "writer": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "upserts",
+              "appendOps",
+              "retractTo",
+              "expect"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "upserts": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "appendOps": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "retractTo": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/U32"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "expect": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "pageOps",
+                  "appendOps",
+                  "retractTo",
+                  "rejectedOps"
+                ],
+                "properties": {
+                  "pageOps": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "appendOps": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "retractTo": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/U32"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "rejectedOps": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "writerResume": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "provisionalBase",
+              "script",
+              "expect"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "provisionalBase": {
+                "$ref": "#/$defs/U32"
+              },
+              "script": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "minProperties": 1,
+                  "maxProperties": 1,
+                  "additionalProperties": false,
+                  "properties": {
+                    "append": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "entity": {
+                      "$ref": "#/$defs/U64"
+                    },
+                    "retractTo": {
+                      "$ref": "#/$defs/U32"
+                    },
+                    "finish": {
+                      "const": true
+                    }
+                  }
+                }
+              },
+              "expect": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ticks",
+                  "provisionalLen",
+                  "rejectedOps"
+                ],
+                "properties": {
+                  "ticks": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "appendOps",
+                        "appendEntities",
+                        "retractTo"
+                      ],
+                      "properties": {
+                        "appendOps": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "appendEntities": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/$defs/U64"
+                          }
+                        },
+                        "retractTo": {
+                          "anyOf": [
+                            {
+                              "$ref": "#/$defs/U32"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  "provisionalLen": {
+                    "$ref": "#/$defs/U32"
+                  },
+                  "rejectedOps": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

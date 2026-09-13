@@ -4,14 +4,15 @@
 //! replaceable keyed work may coalesce only a ready completion with the same key. One reserved slot
 //! guarantees that an owned interaction state can always return from a suspended worker turn.
 //!
-//! ⚖️ The single interaction state is CHECKED OUT for one bounded step and returned by the completion
-//! the step finishes with. Two rules keep that from becoming a permanent stall, both pinned by
+//! ⚖️ The single interaction state is CHECKED OUT for one step and returned by the completion that
+//! step finishes with. Two rules keep that from becoming a permanent stall, both pinned by
 //! `🧫️fixtures/🎮️wgpu-runtime-mailbox-admission/🔣️.json`:
 //!
 //! * a completion that does not need the checked-out state is admitted PAST one that does, so the
 //!   very completion carrying the state home is never queued behind the input waiting for it;
-//! * a checkout that outlives [`INTERACTION_CHECKOUT_CREDITS`] apply opportunities is a typed
-//!   diagnostic — the ledger names the site that took it — instead of an invisible freeze.
+//! * a checkout with no OWNER left to return it — no reservation in flight and no ready completion
+//!   that restores the state — is a typed diagnostic naming the site that took it, published on the
+//!   first blocked opportunity instead of becoming an invisible freeze.
 
 use std::collections::VecDeque;
 
@@ -19,6 +20,10 @@ pub(crate) struct Completion<T> {
     pub(crate) key: Option<&'static str>,
     pub(crate) revision: u64,
     pub(crate) requires_interaction: bool,
+    /// 🎟️ Whether this completion CARRIES the single interaction state home. While one of these is
+    /// ready — or a reservation for one is in flight — a live checkout has an owner and is not a leak,
+    /// however long it takes.
+    pub(crate) restores_interaction: bool,
     pub(crate) apply: T,
 }
 
@@ -91,6 +96,13 @@ impl<T, const CAPACITY: usize> BoundedCompletionQueue<T, CAPACITY> {
         self.ready.front().is_some_and(|completion| completion.requires_interaction)
     }
 
+    /// 🎟️ Whether anything can still bring a checked-out interaction state home: a reservation that
+    /// has not finished yet, or a ready completion that restores it. This is the exact predicate the
+    /// checkout ledger ages against — a slow owner is an owner, and an absent one is a leak now.
+    pub(crate) fn interaction_owner_outstanding(&self) -> bool {
+        self.in_flight > 0 || self.ready.iter().any(|completion| completion.restores_interaction)
+    }
+
     /// 🎯️ The first completion this turn may apply.
     ///
     /// 🩸️ The gate used to read the HEAD alone and refuse the whole turn without popping, so one
@@ -115,26 +127,31 @@ impl<T, const CAPACITY: usize> BoundedCompletionQueue<T, CAPACITY> {
     }
 }
 
-/// 🎟️ Apply opportunities one interaction checkout may span before it is reported as a defect.
-///
-/// ⚖️ One opportunity is one `apply_pending_step` that found the head blocked, i.e. at most one per
-/// frame-build advance. A legitimate checkout (one dispatched event, one deferred action) returns in
-/// a handful; this bound is two orders of magnitude above that so it can only name a real leak.
-pub(crate) const INTERACTION_CHECKOUT_CREDITS: u32 = 240;
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum InteractionCheckoutStep {
     Admitted,
     Deferred,
-    Stale,
+    Abandoned,
 }
 
-/// 🎟️ Who owns the single interaction state right now, and for how long.
+/// 🎟️ Who owns the single interaction state right now, and for how many blocked opportunities.
+///
+/// 🩸️ The age used to BE the verdict: a checkout that outlived a fixed 240 apply opportunities was
+/// declared stale, and `apply_pending_step` published that into the renderer's frame-fault slot,
+/// which `BrowserRendererWorker::tick` reports as `quarantined` and `BrowserFrameTransport` answers
+/// by closing the surface. But an apply opportunity is produced by the FRAME LOOP and by arriving
+/// input — the victims of the checkout, never the holder — so the count measures a rate, not health.
+/// Measured on 6118: ~120 blocked opportunities a second, so 240 credits was ≈2 s of wall clock,
+/// while ONE post-selection settle re-renders every panel through the guest and spends 2 138 ms in
+/// `framework.panel.inspection` alone. Every applied selection therefore killed the surface, and the
+/// page died silently a few gestures in (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️wgpu-frame-loop-after-selection-2026-09-13.md`). The age is now a diagnostic only; the verdict
+/// is whether an owner exists.
 #[derive(Default)]
 pub(crate) struct InteractionCheckoutLedger {
     site: Option<&'static str>,
     opportunities: u32,
-    stale: bool,
+    abandoned: bool,
     notified: bool,
 }
 
@@ -145,33 +162,33 @@ impl InteractionCheckoutLedger {
         }
         self.site = Some(site);
         self.opportunities = 0;
-        self.stale = false;
+        self.abandoned = false;
         self.notified = false;
         true
     }
 
     pub(crate) fn check_in(&mut self) -> Option<&'static str> {
         self.opportunities = 0;
-        self.stale = false;
+        self.abandoned = false;
         self.notified = false;
         self.site.take()
     }
 
-    pub(crate) fn admit(&mut self, head_requires_interaction: bool, interaction_available: bool) -> InteractionCheckoutStep {
+    pub(crate) fn admit(&mut self, head_requires_interaction: bool, interaction_available: bool, owner_outstanding: bool) -> InteractionCheckoutStep {
         if interaction_available || !head_requires_interaction {
             return InteractionCheckoutStep::Admitted;
         }
         self.opportunities = self.opportunities.saturating_add(1);
-        if self.opportunities <= INTERACTION_CHECKOUT_CREDITS {
+        if owner_outstanding {
             return InteractionCheckoutStep::Deferred;
         }
-        self.stale = true;
-        InteractionCheckoutStep::Stale
+        self.abandoned = true;
+        InteractionCheckoutStep::Abandoned
     }
 
-    /// 🩺️ Fires once per stale episode so the diagnostic is published, never repeated per frame.
-    pub(crate) fn take_stale_notice(&mut self) -> Option<(&'static str, u32)> {
-        if !self.stale || self.notified {
+    /// 🩺️ Fires once per abandoned episode so the diagnostic is published, never repeated per frame.
+    pub(crate) fn take_abandoned_notice(&mut self) -> Option<(&'static str, u32)> {
+        if !self.abandoned || self.notified {
             return None;
         }
         self.notified = true;

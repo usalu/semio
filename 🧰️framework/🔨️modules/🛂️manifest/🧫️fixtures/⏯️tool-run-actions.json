@@ -1,0 +1,133 @@
+{
+  "kind": "history",
+  "actions": [
+    {
+      "id": "toolRunStart",
+      "iconId": "play",
+      "keys": "mod+enter",
+      "label": { "en": "Start", "de": "Starten" },
+      "args": [
+        { "id": "toolId", "schema": "text", "required": true, "label": { "en": "Tool", "de": "Werkzeug" } },
+        { "id": "windowId", "schema": "text", "required": false, "label": { "en": "Window", "de": "Fenster" } }
+      ]
+    },
+    {
+      "id": "toolRunPause",
+      "iconId": "pause",
+      "keys": "mod+alt+enter",
+      "label": { "en": "Pause", "de": "Pausieren" },
+      "args": [
+        { "id": "runId", "schema": "integer", "required": true, "label": { "en": "Run", "de": "Lauf" } },
+        { "id": "generation", "schema": "integer", "required": true, "label": { "en": "Generation", "de": "Generation" } }
+      ]
+    },
+    {
+      "id": "toolRunResume",
+      "iconId": "play",
+      "keys": "mod+alt+enter",
+      "label": { "en": "Resume", "de": "Fortsetzen" },
+      "args": [
+        { "id": "runId", "schema": "integer", "required": true, "label": { "en": "Run", "de": "Lauf" } },
+        { "id": "generation", "schema": "integer", "required": true, "label": { "en": "Generation", "de": "Generation" } }
+      ]
+    },
+    {
+      "id": "toolRunStep",
+      "iconId": "skip-forward",
+      "keys": "mod+alt+arrowright",
+      "label": { "en": "Step", "de": "Einzelschritt" },
+      "args": [
+        { "id": "runId", "schema": "integer", "required": true, "label": { "en": "Run", "de": "Lauf" } },
+        { "id": "generation", "schema": "integer", "required": true, "label": { "en": "Generation", "de": "Generation" } }
+      ]
+    },
+    {
+      "id": "toolRunAbort",
+      "iconId": "square",
+      "keys": "mod+.",
+      "label": { "en": "Abort", "de": "Abbrechen" },
+      "args": [
+        { "id": "runId", "schema": "integer", "required": true, "label": { "en": "Run", "de": "Lauf" } },
+        { "id": "generation", "schema": "integer", "required": true, "label": { "en": "Generation", "de": "Generation" } }
+      ]
+    },
+    {
+      "id": "toolRunFinalize",
+      "iconId": "check",
+      "keys": "mod+shift+enter",
+      "label": { "en": "Finalize", "de": "Abschließen" },
+      "args": [
+        { "id": "runId", "schema": "integer", "required": true, "label": { "en": "Run", "de": "Lauf" } },
+        { "id": "generation", "schema": "integer", "required": true, "label": { "en": "Generation", "de": "Generation" } }
+      ]
+    },
+    {
+      "id": "toolRunDismiss",
+      "iconId": "x",
+      "panelChord": "escape",
+      "label": { "en": "Dismiss", "de": "Schließen" },
+      "args": [{ "id": "runId", "schema": "integer", "required": true, "label": { "en": "Run", "de": "Lauf" } }]
+    }
+  ],
+  "reservedChords": ["mod+z", "mod+shift+z", "mod+c", "mod+x", "mod+v", "mod+a", "escape"],
+  "cases": [
+    { "name": "no tools and no utilities", "tools": [], "utilities": [], "injected": false },
+    {
+      "name": "tool without run",
+      "tools": [{ "id": "fill", "label": { "native": { "en": "Fill", "de": "Füllen" }, "reuse": { "en": "Fill", "de": "Füllen" } }, "iconId": "paint-bucket" }],
+      "utilities": [{ "id": "brush", "label": { "native": { "en": "Brush", "de": "Pinsel" }, "reuse": { "en": "Brush", "de": "Pinsel" } }, "iconId": "paintbrush" }],
+      "injected": false
+    },
+    {
+      "name": "tool with run",
+      "tools": [
+        { "id": "select", "label": { "native": { "en": "Select", "de": "Auswählen" }, "reuse": { "en": "Select", "de": "Auswählen" } }, "iconId": "mouse-pointer" },
+        {
+          "id": "fill",
+          "label": { "native": { "en": "Fill", "de": "Füllen" }, "reuse": { "en": "Fill", "de": "Füllen" } },
+          "iconId": "paint-bucket",
+          "keys": "f",
+          "run": {
+            "mutating": true,
+            "rebase": "revalidate",
+            "reconfigure": "resume",
+            "unit": { "native": { "en": "candidates", "de": "Kandidaten" }, "reuse": { "en": "candidates", "de": "Kandidaten" } },
+            "stages": [{ "id": "test", "label": { "native": { "en": "Testing candidates", "de": "Kandidaten werden geprüft" }, "reuse": { "en": "Testing candidates", "de": "Kandidaten werden geprüft" } } }],
+            "counters": [{ "id": "locked", "label": { "native": { "en": "Locked", "de": "Fixiert" }, "reuse": { "en": "Locked", "de": "Fixiert" } } }],
+            "reasons": [
+              { "code": 1, "id": "collision", "verdict": "danger", "template": { "native": { "en": "Collides with {0}", "de": "Kollidiert mit {0}" }, "reuse": { "en": "Collides with {0}", "de": "Kollidiert mit {0}" } } }
+            ],
+            "trace": "instance3d",
+            "runJob": "puzzle3d.fill.run",
+            "revalidateJob": "puzzle3d.fill.revalidate"
+          }
+        }
+      ],
+      "utilities": [],
+      "injected": true
+    },
+    {
+      "name": "utility with run",
+      "tools": [],
+      "utilities": [
+        {
+          "id": "brush",
+          "label": { "native": { "en": "Brush", "de": "Pinsel" }, "reuse": { "en": "Brush", "de": "Pinsel" } },
+          "iconId": "paintbrush",
+          "run": {
+            "mutating": false,
+            "rebase": "restart",
+            "reconfigure": "restart",
+            "unit": { "native": { "en": "suggestions", "de": "Vorschläge" }, "reuse": { "en": "suggestions", "de": "Vorschläge" } },
+            "stages": [{ "id": "search", "label": { "native": { "en": "Searching", "de": "Suche" }, "reuse": { "en": "Searching", "de": "Suche" } } }],
+            "counters": [],
+            "reasons": [],
+            "trace": "none",
+            "runJob": "puzzle3d.brush.suggest"
+          }
+        }
+      ],
+      "injected": true
+    }
+  ]
+}
