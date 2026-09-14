@@ -3,12 +3,6 @@ import { preparedTectonic } from "./🔧️toolchain/📜️script.ts";
 import { preparedPrintBundle } from "./📚️bundle/📜️script.ts";
 import { stagePrintSources, printCompilerName } from "../📥️source-staging/🟦️.ts";
 import { createRequire } from "node:module";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { spawn } from "node:child_process";
-import { basename, dirname, join, relative } from "node:path";
-import { buildBudgetMs } from "../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { getWorkspaceRoot } from "../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { stageArtifacts } from "../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 import { printFontSearchPaths } from "../🔤print-font-catalog/🟦️.ts";
 import { resolvePrintPanelGlassStyle, type PrintTheme } from "../🎨print-design-token-paints/🟦️.ts";
 
@@ -63,27 +57,6 @@ export async function buildRegisteredPrintTemplate(id: string, signal?: AbortSig
 
 export type PrintArtifact = { readonly id: string; readonly sourceRoot: string; readonly texPath: string; readonly sources: readonly string[]; readonly output: string; readonly owner: string; readonly dark: boolean };
 
-/** 📄️ Publishes a caller-owned document from staged inputs using the pinned shared compiler. */
-export async function publishPrintArtifact(document: PrintArtifact, signal?: AbortSignal): Promise<void> {
-  if (!/^[a-z]+(?:-[a-z0-9]+)*$/.test(document.id)) throw new Error(`Invalid Print artifact id: ${document.id}`);
-  const tectonic = preparedTectonic(workspaceRoot);
-  const temporaryRoot = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated/print") : join(workspaceRoot, ".🧬semio/🦑️repo/⚡️cache/print");
-  mkdirSync(temporaryRoot, { recursive: true });
-  const temporary = mkdtempSync(join(temporaryRoot, `${document.id}-`));
-  try {
-    signal?.throwIfAborted();
-    const library = join(temporary, "library"), staged = stagePrintSources(document.sourceRoot, document.sources, join(temporary, "source")), output = join(temporary, "compiled"), texPath = staged.get(document.texPath);
-    stagePrintSources(productRoot, printLibrarySources(), library);
-    if (!texPath) throw new Error(`Print document is absent from its source set: ${document.texPath}`);
-    if (document.dark) await compileLightAndDark(tectonic, texPath, output, library, signal);
-    else await compilePrintDocumentWithPanels(tectonic, texPath, output, dirname(texPath), library, signal);
-    const names = printTemplatePdfNames(document.texPath);
-    const files = new Map((document.dark ? Object.values(names) : [names.light]).map(name => [name, join(output, printCompilerName(name))]));
-    for (const file of files.values()) if (readFileSync(file).subarray(0, 5).toString() !== "%PDF-") throw new Error(`Invalid compiled PDF: ${file}`);
-    signal?.throwIfAborted();
-    await stageArtifacts(document.output, document.owner, files, { signal });
-    console.log(`[print] Published ${document.id}: ${files.size} PDFs`);
-  } finally { rmSync(temporary, { recursive: true, force: true }); }
 }
 
 /** 🪟️ Renders registered panel-glass PNGs from a first-pass template PDF. */
@@ -172,7 +145,6 @@ function parseHex(hex: string): [number, number, number] {
   return [(integer >> 16) & 0xff, (integer >> 8) & 0xff, integer & 0xff];
 }
 
-async function compileLightAndDark(tectonic: string, lightTexPath: string, outDirectory: string, libraryRoot: string, signal?: AbortSignal): Promise<void> {
   const lightDirectory = dirname(lightTexPath);
   await compilePrintDocumentWithPanels(tectonic, lightTexPath, outDirectory, lightDirectory, libraryRoot, signal);
   const darkPath = writeDerivedDarkTex(lightTexPath);
@@ -191,20 +163,12 @@ async function compilePrintDocumentWithPanels(tectonic: string, texPath: string,
   }
 }
 
-async function compilePrintDocument(tectonic: string, texPath: string, outDirectory: string, workDirectory: string, libraryRoot: string, signal?: AbortSignal): Promise<void> {
   const jobname = basename(texPath, ".tex");
   mkdirSync(outDirectory, { recursive: true });
   clearStaleTableOfContentsFiles(workDirectory, outDirectory, jobname);
   clearStaleTableOfContentsFiles(dirname(texPath), outDirectory, jobname);
-  const libraryPackages = join(libraryRoot, printCompilerName("🖋️latex")), searchPaths = [libraryPackages, libraryRoot, workDirectory, outDirectory, ...printFontSearchPaths()];
-  signal?.throwIfAborted();
-  await new Promise<void>((accept, reject) => {
-    const child = spawn(tectonic, ["--bundle", preparedPrintBundle(workspaceRoot), "--keep-logs", "--keep-intermediates", "-Z", "deterministic-mode", ...searchPaths.flatMap((path) => ["-Z", `search-path=${path}`]), "--outdir", outDirectory, relative(workDirectory, texPath).replaceAll("\\", "/")], { cwd: workDirectory, env: tectonicEnvironment(workDirectory, outDirectory, libraryRoot), signal, stdio: "inherit", timeout: buildBudgetMs() });
-    let failure: Error | undefined;
-    child.once("error", error => { failure = error; });
-    child.once("close", code => failure ? reject(failure) : code === 0 ? accept() : reject(new Error(`Tectonic compilation failed: ${code}`)));
-  });
   const pdf = join(outDirectory, `${jobname}.pdf`);
+  if (!shape.requirePdf) return;
   if (!existsSync(pdf)) throw new Error(`missing PDF output: ${pdf}`);
   console.log(`[DEBUG] print built ${relative(workspaceRoot, pdf)}`);
 }

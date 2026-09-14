@@ -52,7 +52,22 @@ class WorkflowScript extends BundleScript {
   }
 }
 
+
+/**
+ * 🔌️ Forwards `semio mcp …`: builds the binary, then serves the repo MCP server on stdio with the
+ * profile taken from the first argument.
+ */
+class McpScript extends BundleScript {
+  run(segments: string[]): void {
+    runCmd("cargo", ["build", "-p", "semio-framework-repo-cli"], { cwd: this.repoRoot, env: devToolingEnv() });
+    const binName = process.platform === "win32" ? "semio.exe" : "semio";
+    const bin = join(this.repoRoot, "target", "debug", binName);
+    const status = runCmdStatus(bin, ["mcp", ...segments], { cwd: this.repoRoot, env: devToolingEnv() });
+    process.exit(status);
+  }
+}
+
 if (import.meta.main) {
-  const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript).register("run", RunScript).register("daemon", DaemonScript).register("workflow", WorkflowScript);
+  const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript).register("run", RunScript).register("daemon", DaemonScript).register("workflow", WorkflowScript).register("mcp", McpScript);
   await runBundleScriptMain(router, import.meta.url);
 }

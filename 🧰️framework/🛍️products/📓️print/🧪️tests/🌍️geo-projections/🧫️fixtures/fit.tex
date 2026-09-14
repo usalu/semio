@@ -1,0 +1,25 @@
+\documentclass{article}
+\usepackage{semio-viz-geo}
+\begin{document}
+\SemioVizProbeBegin{geo-projections}{fit-extent}
+\SemioVizProbePage
+\SemioVizProbePrecision{9}
+\ExplSyntaxOn
+\clist_map_inline:nn
+  { equirectangular, mercator, conic-equal-area }
+  {
+    \SemioVizProjection { probe } [ kind = #1 ]
+    \SemioVizGeoFitSize { probe } { demo-geo-regions } { 100 } { 60 }
+    \SemioVizProbeEval { geo/fit-size }
+      { \l_semio_viz_geo_k_fp , \l_semio_viz_geo_tx_fp , \l_semio_viz_geo_ty_fp }
+    \SemioVizProjection { probe } [ kind = #1 ]
+    \SemioVizGeoFit { probe } { demo-geo-regions } { 10 } { 5 } { 110 } { 65 }
+    \SemioVizProbeEval { geo/fit-extent }
+      { \l_semio_viz_geo_k_fp , \l_semio_viz_geo_tx_fp , \l_semio_viz_geo_ty_fp }
+    \SemioVizProjection { probe } [ kind = #1 ]
+    \SemioVizGeoFitWidth { probe } { demo-geo-regions } { 100 }
+    \SemioVizProbeEval { geo/fit-width }
+      { \l_semio_viz_geo_k_fp , \l_semio_viz_geo_tx_fp , \l_semio_viz_geo_ty_fp }
+  }
+\ExplSyntaxOff
+\end{document}

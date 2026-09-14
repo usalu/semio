@@ -1,0 +1,87 @@
+{
+  "$schema": "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ Oracle wiring for 📊️metrics. The numstat parser is checked against the real `git` CLI, which is a genuine third-party producer of the very stream under test: the TypeScript oracle rebuilds the recorded repository in a temporary directory, asks git for the log again, and compares. The unified per-file LOC counter has no third party at all — it is this repository's own definition — so the TypeScript library's `countUnifiedLocForFile` is registered honestly as a `cross-semio-implementation` supplement, and the aggregation, bucketing and benchmark shapes rest on recorded no-oracle decisions with specification vectors plus two independently written implementations.",
+  "oracles": [
+    {
+      "id": "git-numstat-cli",
+      "kind": "third-party-cli",
+      "ecosystem": "javascript",
+      "package": "git",
+      "engine": {
+        "family": "git",
+        "implementation": "git command line interface",
+        "version": "2.x"
+      },
+      "capabilities": [
+        "repo.metrics.numstat-parsing"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "GPL-2.0-only",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://git-scm.com",
+      "rationale": "📜️ `git log --numstat` is the format under test, and git itself is its only normative producer. The oracle adapter therefore does not re-implement the parser: it rebuilds the recorded repository from the committed recipe with fully pinned authors and dates, runs the real `git` binary over it, and asserts that the committed transcript is byte-identical to what git answers today. Every path form the parser has to survive — octal-escaped Unicode under `core.quotepath`, `old => new` renames, `-\t-` binary rows, a merge commit with no numstat block, `.`-prefixed and `.🧬semio` paths — is produced by git, not hand-written, so a parser that agrees with the transcript agrees with git. The oracle additionally re-derives the per-commit deltas with a parser written from the specification inside the adapter, independently of the Rust and Go subjects."
+    },
+    {
+      "id": "semio-library-uloc",
+      "kind": "cross-semio-implementation",
+      "ecosystem": "javascript",
+      "package": "@semio-tech/repo-library",
+      "engine": {
+        "family": "none",
+        "implementation": "semio repo library countUnifiedLocForFile",
+        "version": "0"
+      },
+      "capabilities": [
+        "repo.metrics.loc-aggregation"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "LGPL-3.0-or-later",
+      "testOnly": true,
+      "productionReachable": true,
+      "networkDuringExecution": false,
+      "rationale": "🫥️ HONESTLY RECLASSIFIED. `countUnifiedLocForFile` in `🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts` is a third, older implementation of the same unified-LOC rule that the repository dashboard already ships, written before the Rust and Go ones and never derived from them — so it is real evidence that the three agree. It is NOT independent of this repository, and \"one line of code\" is this repository's own definition rather than a published standard, so no qualifying oracle exists to be had: this entry is a required supplement rather than a qualifying reference, and the aggregate row shapes above it additionally rest on the specification vectors committed as `shared://📤️loc-report.json` and on two independently written subjects. Keeping the reference here is what pins the two definitions together: the day the library's counter drifts from the domain crates, this case fails.",
+      "productionDebt": {
+        "reachableFrom": [
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts"
+        ],
+        "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+        "plan": "🚚️ The counter moves into 📊️metrics with the rest of the LOC domain; the library then calls the domain implementation instead of owning a second copy, and this entry is deleted together with the duplicate."
+      }
+    }
+  ],
+  "noOracleDecisions": [
+    {
+      "id": "repo-metrics-time-bucketing",
+      "capabilities": [
+        "repo.metrics.time-bucketing"
+      ],
+      "rationale": "🕰️ UTC civil-date arithmetic and ISO-8601 week numbering are standardised, but no third-party library may be linked into a domain crate under this repository's no-runtime-dependency rule, so both implementations hand-roll the days-from-civil algorithm. The vectors in `shared://📤️time-buckets.json` were produced by a third arithmetic — the JavaScript `Date` object, in the recording script — and the round-trip law civil→days→civil is asserted directly, which together pin the algorithm without a linked reference.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws",
+        "independent-implementations"
+      ],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-metrics-benchmark",
+      "capabilities": [
+        "repo.metrics.benchmark-summary"
+      ],
+      "rationale": "⏱️ The benchmark stdout dialect (`name,time` lines, with warning and path lines filtered out) and the CSV report shape are this repository's own convention between its five compose benchmarks. There is nothing external that reads or writes it, so the evidence is the committed specification vectors plus two independently written implementations agreeing on the same table, the same column order and the same fastest-ecosystem choice.",
+      "substitutes": [
+        "specification-vectors",
+        "independent-implementations"
+      ],
+      "coversMutations": false
+    }
+  ],
+  "oracleHostPackages": []
+}

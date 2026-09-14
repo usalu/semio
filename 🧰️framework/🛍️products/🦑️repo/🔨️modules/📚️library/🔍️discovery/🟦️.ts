@@ -5972,6 +5972,34 @@ export function semanticExactOwnedDocumentCorrectionAuthority(catalog: SemanticE
 }
 //#endregion 🖋️Exact Authored Owner Documents
 
+const gitIndexFileModeCache = ephemeralMap<string, ReadonlyMap<string, number>>("framework.products.repo.modules.lib.discovery.component.ts.gitIndexFileModeCache");
+
+/** 🗝️ Stage-zero blob permission bits recorded in Git's index, keyed by the path Git reports relative to `repoRoot`; empty outside a work tree. */
+function gitIndexFileModes(repoRoot: string): ReadonlyMap<string, number> {
+  const cached = gitIndexFileModeCache.get(repoRoot);
+  if (cached) return cached;
+  const modes = new Map<string, number>();
+  try {
+    const stdout = execFileSync("git", ["ls-files", "--stage", "-z"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 256 * 1024 * 1024 });
+    for (const row of stdout.split("\0")) {
+      if (!row) continue;
+      const tab = row.indexOf("\t");
+      if (tab < 0) continue;
+      const [mode, , stage] = row.slice(0, tab).split(" ");
+      if (stage !== "0" || (mode !== "100644" && mode !== "100755")) continue;
+      modes.set(row.slice(tab + 1).normalize("NFC"), mode === "100755" ? 0o755 : 0o644);
+    }
+  } catch { /* outside a Git work tree the platform default below is the only authority */ }
+  gitIndexFileModeCache.set(repoRoot, modes);
+  return modes;
+}
+
+/** 🔐️ Platform-correct POSIX permission bits of a regular file: the filesystem's own bits where they exist, Git's index mode (else the `0o644` Git assumes for a new file) on Windows, whose NTFS carries none. */
+export function posixRegularFileMode(repoRoot: string, path: string, mode: number): number {
+  if (process.platform !== "win32") return mode & 0o7777;
+  return gitIndexFileModes(repoRoot).get(path.normalize("NFC")) ?? 0o644;
+}
+
 function exactOwnerRegularFile(repoRoot: string, path: string): "file" | "absent" | "invalid" {
   if (!exactOwnerPath(path)) return "invalid";
   const segments = path.split("/");
@@ -6023,7 +6051,7 @@ export function semanticOwnedInputFileSnapshot(repoRoot: string, path: string, c
       const ancestor = lstatSync(witness.path);
       if (!ancestor.isDirectory() || ancestor.isSymbolicLink() || ancestor.dev !== witness.dev || ancestor.ino !== witness.ino) throw new Error("Exact owner input ancestry changed: " + path);
     }
-    const result: SemanticOwnedInputFileSnapshot = { path, nodeKind: "file", contentHash: createHash("sha256").update(bytes).digest("hex"), mode: node.mode & 0o7777, size: bytes.byteLength, ancestorNodeKinds: parts.slice(1).map(() => "directory"), bytes };
+    const result: SemanticOwnedInputFileSnapshot = { path, nodeKind: "file", contentHash: createHash("sha256").update(bytes).digest("hex"), mode: posixRegularFileMode(repoRoot, path, node.mode), size: bytes.byteLength, ancestorNodeKinds: parts.slice(1).map(() => "directory"), bytes };
     complete = true;
     return result;
   } finally { if (!complete) retained?.fill(0); closeSync(descriptor); }
@@ -6113,7 +6141,7 @@ function exactOwnerGeneratorPrestate(repoRoot: string, outputPath: string, gener
   const entry = catalog?.cases.find((entry) => entry.generatorOwnerId === generatorId && entry.destinationPath === outputPath);
   if (!entry || exactOwnerRegularFile(repoRoot, entry.sourcePath) !== "file") return false;
   const stat = lstatSync(join(repoRoot, entry.sourcePath)), bytes = readFileSync(join(repoRoot, entry.sourcePath));
-  return (stat.mode & 0o7777) === Number.parseInt(entry.preimage.mode, 8) && bytes.byteLength === entry.preimage.size && createHash("sha256").update(bytes).digest("hex") === entry.preimage.sha256;
+  return posixRegularFileMode(repoRoot, entry.sourcePath, stat.mode) === Number.parseInt(entry.preimage.mode, 8) && bytes.byteLength === entry.preimage.size && createHash("sha256").update(bytes).digest("hex") === entry.preimage.sha256;
 }
 
 export function validateGeneratorContractsAgainstWorkspace(repoRoot: string, taxonomy: Taxonomy = readTaxonomyUnchecked()): string[] {

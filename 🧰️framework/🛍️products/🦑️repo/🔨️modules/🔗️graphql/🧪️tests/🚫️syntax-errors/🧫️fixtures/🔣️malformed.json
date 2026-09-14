@@ -1,0 +1,28 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json",
+  "inputs": [
+    { "id": "empty-document", "source": "", "note": "No selection set at all." },
+    { "id": "unclosed-brace", "source": "{" },
+    { "id": "closing-brace-only", "source": "}" },
+    { "id": "operation-without-selection-set", "source": "query" },
+    { "id": "bare-string-document", "source": "\"just a string\"" },
+    { "id": "number-as-field-name", "source": "{ 1 }" },
+    { "id": "punctuation-as-field-name", "source": "{ ]" },
+    { "id": "alias-without-target", "source": "{ a: }" },
+    { "id": "number-as-argument-name", "source": "{ a(1: 2) }" },
+    { "id": "argument-without-name", "source": "{ a(: 1) }" },
+    { "id": "argument-without-value", "source": "{ a(b) }" },
+    { "id": "argument-value-missing", "source": "{ a(b: ) }" },
+    { "id": "unclosed-argument-list", "source": "{ a(b: 1" },
+    { "id": "arguments-missing-closing-paren", "source": "{ a(b: 1 c: 2 }" },
+    { "id": "dollar-without-variable-name", "source": "{ a(b: $) }" },
+    { "id": "unterminated-string-literal", "source": "{ a(b: \"unterminated) }" },
+    { "id": "invalid-string-escape", "source": "{ a(b: \"\\q\") }" },
+    { "id": "number-as-object-field-name", "source": "{ a(b: {1: 2}) }" },
+    { "id": "object-field-without-colon", "source": "{ a(b: {c 1}) }" },
+    { "id": "unclosed-list-literal", "source": "{ a(b: [1) }" },
+    { "id": "stray-character-in-selection-set", "source": "{ a. }" },
+    { "id": "unclosed-nested-selection-set", "source": "{ a { b }" },
+    { "id": "trailing-garbage-after-document", "source": "{ a } extra" }
+  ]
+}

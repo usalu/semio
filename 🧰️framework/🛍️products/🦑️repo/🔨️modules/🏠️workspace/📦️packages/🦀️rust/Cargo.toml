@@ -1,0 +1,19 @@
+[package]
+name = "semio-framework-repo-workspace"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "repo workspace: monorepo root discovery, .🧬semio layout, 📋️config.toml, owned glob and ignore matching"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }

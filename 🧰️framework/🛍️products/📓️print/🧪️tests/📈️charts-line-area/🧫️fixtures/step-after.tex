@@ -1,0 +1,9 @@
+\documentclass{article}
+\usepackage{semio-viz-charts-line}
+\begin{document}
+\SemioVizProbeOn
+\SemioVizProbeBegin{charts-line-area}{step-after}
+\begin{VizProbeCanvas}[80][40]
+\SemioVizRunFamily{line}[data=demo-multiseries,x=t,y=val,group=series,curve=step-after,axes=false]
+\end{VizProbeCanvas}
+\end{document}

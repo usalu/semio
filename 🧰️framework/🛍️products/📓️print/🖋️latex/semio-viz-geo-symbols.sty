@@ -1,0 +1,545 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-geo-symbols}[2026/09/05 v0.3.0 semio viz namespace geo-symbols families: proportional symbols, dot density, hexbins, tessellations]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-tokens}
+\RequirePackage{semio-viz-geo}
+\RequirePackage{semio-viz-spatial}
+\RequirePackage{semio-viz-family}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 🔑 semio / viz / family / geo-symbol — inherits semio / viz / geo / base, plus
+% 🔑 symbols   (name)   geometry supplying the symbol anchors; default demo-geo-cities.
+% 🔑 shape     (choice) circle | square | triangle; default circle.
+% 🔑 sizing    (choice) area | radius | graduated; default area (perceptually correct, radius ∝ sqrt value).
+% 🔑 maxSize   (mm)     radius or half-side of the largest value; default 4.
+% 🔑 classes   (int)    number of graduated classes when sizing=graduated; default 4.
+% 🔑 basemap   (bool)   draw the geometry underneath the symbols; default true.
+\tl_new:N \l_semio_viz_geosym_symbols_tl
+\tl_new:N \l_semio_viz_geosym_shape_tl
+\tl_new:N \l_semio_viz_geosym_sizing_tl
+\fp_new:N \l_semio_viz_geosym_maxsize_fp
+\int_new:N \l_semio_viz_geosym_classes_int
+\bool_new:N \l_semio_viz_geosym_basemap_bool
+
+\keys_define:nn { semio / viz / family / geo-symbol }
+  {
+    symbols .tl_set:N = \l_semio_viz_geosym_symbols_tl ,
+    shape .tl_set:N = \l_semio_viz_geosym_shape_tl ,
+    sizing .tl_set:N = \l_semio_viz_geosym_sizing_tl ,
+    maxSize .fp_set:N = \l_semio_viz_geosym_maxsize_fp ,
+    classes .int_set:N = \l_semio_viz_geosym_classes_int ,
+    basemap .bool_set:N = \l_semio_viz_geosym_basemap_bool ,
+    unknown .code:n = { } ,
+  }
+
+% 🔑 semio / viz / family / geo-dotdensity — inherits semio / viz / geo / base, plus
+% 🔑 unit      (number) how many value units one dot represents; default 6.
+% 🔑 dotSize   (mm)     dot radius; default 0.5.
+% 🔑 spread    (mm)     radius of the deterministic scatter around the part centroid; default 6.
+\fp_new:N \l_semio_viz_geosym_unit_fp
+\fp_new:N \l_semio_viz_geosym_dotsize_fp
+\fp_new:N \l_semio_viz_geosym_spread_fp
+
+\keys_define:nn { semio / viz / family / geo-dotdensity }
+  {
+    unit .fp_set:N = \l_semio_viz_geosym_unit_fp ,
+    dotSize .fp_set:N = \l_semio_viz_geosym_dotsize_fp ,
+    spread .fp_set:N = \l_semio_viz_geosym_spread_fp ,
+    unknown .code:n = { } ,
+  }
+
+% 🔑 semio / viz / family / geo-hexbin — inherits semio / viz / geo / base, plus
+% 🔑 points    (name)   point set in plane millimetres; default demo-points-dense.
+% 🔑 radius    (mm)     hexagon radius; default 5.
+% 🔑 render    (choice) hex | density | heat; hex draws hexagons, density and heat draw KDE isolines; default hex.
+% 🔑 bandwidth (mm)     kernel bandwidth for render=density|heat; default 7.
+% 🔑 levels    (int)    number of isolines for render=density|heat; default 4.
+\tl_new:N \l_semio_viz_geosym_points_tl
+\fp_new:N \l_semio_viz_geosym_radius_fp
+\tl_new:N \l_semio_viz_geosym_render_tl
+\fp_new:N \l_semio_viz_geosym_bandwidth_fp
+\int_new:N \l_semio_viz_geosym_levels_int
+
+\keys_define:nn { semio / viz / family / geo-hexbin }
+  {
+    points .tl_set:N = \l_semio_viz_geosym_points_tl ,
+    radius .fp_set:N = \l_semio_viz_geosym_radius_fp ,
+    render .tl_set:N = \l_semio_viz_geosym_render_tl ,
+    bandwidth .fp_set:N = \l_semio_viz_geosym_bandwidth_fp ,
+    levels .int_set:N = \l_semio_viz_geosym_levels_int ,
+    unknown .code:n = { } ,
+  }
+
+% 🔑 semio / viz / family / spatial-tessellation — inherits semio / viz / geo / base, plus
+% 🔑 points   (name)   point set in plane millimetres; default demo-points.
+% 🔑 kind     (choice) voronoi | delaunay | hull | mesh | triangulation; default voronoi.
+% 🔑 sites    (bool)   draw the input points; default true.
+% 🔑 extent   (x0,y0,x1,y1) clip rectangle for kind=voronoi; default 0,0,72,48.
+\clist_new:N \l_semio_viz_geosym_extent_clist
+\tl_new:N \l_semio_viz_geosym_kind_tl
+\bool_new:N \l_semio_viz_geosym_sites_bool
+
+\keys_define:nn { semio / viz / family / spatial-tessellation }
+  {
+    points .tl_set:N = \l_semio_viz_geosym_points_tl ,
+    kind .tl_set:N = \l_semio_viz_geosym_kind_tl ,
+    sites .bool_set:N = \l_semio_viz_geosym_sites_bool ,
+    extent .clist_set:N = \l_semio_viz_geosym_extent_clist ,
+    unknown .code:n = { } ,
+  }
+%endregion 🔖️Keys
+
+%region 🔖️Families
+% ♻️ Puts every symbol, dot-density, hexbin and tessellation key back to its documented default.
+\cs_new_protected:Npn \semio_viz_geosym_reset:
+  {
+    \semio_viz_geo_base_reset:
+    \tl_set:Nn \l_semio_viz_geosym_symbols_tl { demo-geo-cities }
+    \tl_set:Nn \l_semio_viz_geosym_shape_tl { circle }
+    \tl_set:Nn \l_semio_viz_geosym_sizing_tl { area }
+    \fp_set:Nn \l_semio_viz_geosym_maxsize_fp { 4 }
+    \int_set:Nn \l_semio_viz_geosym_classes_int { 4 }
+    \bool_set_true:N \l_semio_viz_geosym_basemap_bool
+    \fp_set:Nn \l_semio_viz_geosym_unit_fp { 6 }
+    \fp_set:Nn \l_semio_viz_geosym_dotsize_fp { 0.5 }
+    \fp_set:Nn \l_semio_viz_geosym_spread_fp { 6 }
+    \tl_set:Nn \l_semio_viz_geosym_points_tl { demo-points-dense }
+    \fp_set:Nn \l_semio_viz_geosym_radius_fp { 5 }
+    \tl_set:Nn \l_semio_viz_geosym_render_tl { hex }
+    \fp_set:Nn \l_semio_viz_geosym_bandwidth_fp { 7 }
+    \int_set:Nn \l_semio_viz_geosym_levels_int { 4 }
+    \tl_set:Nn \l_semio_viz_geosym_kind_tl { voronoi }
+    \bool_set_true:N \l_semio_viz_geosym_sites_bool
+    \clist_set:Nn \l_semio_viz_geosym_extent_clist { 0, 0, 72, 48 }
+  }
+
+% 🗺️ The faint reference outline symbols and dots are read against, drawn under `basemap`.
+\cs_new_protected:Npn \semio_viz_geosym_basemap:
+  {
+    \bool_if:NT \l_semio_viz_geosym_basemap_bool
+      {
+        \semio_viz_geo_draw_geometry:nnn { semio-family }
+          { \l_semio_viz_geo_f_geometry_tl }
+          {
+            draw=semio-chrome-border-normal, line~width=\semio@stroke@hairline,
+            fill=semio-chrome-panel, fill~opacity=0.4
+          }
+      }
+  }
+
+% ⚪ Proportional and graduated symbol family: one symbol per anchor, scaled by the anchor's value.
+\SemioVizFamily { geo-symbol }
+  {
+    \semio_viz_geosym_reset:
+    \keys_set:nn { semio / viz / geo / base } {#1}
+    \keys_set:nn { semio / viz / family / geo-symbol } {#1}
+    \exp_args:NV \semio_viz_geo_base_frame:n \l_semio_viz_geo_f_geometry_tl
+    \semio_viz_geosym_basemap:
+    \exp_args:NV \semio_viz_geo_value_extent:n \l_semio_viz_geosym_symbols_tl
+    \semio_viz_geo_map_anchors:nnn { semio-family }
+      { \l_semio_viz_geosym_symbols_tl } { \semio_viz_geosym_draw:nnnn }
+  }
+
+% 📏 Symbol size: area scaling uses sqrt (equal-area perception), radius scales linearly, graduated quantises to classes.
+\cs_new:Npn \semio_viz_geosym_size:n #1
+  {
+    \fp_eval:n
+      {
+        0.8 + \l_semio_viz_geosym_maxsize_fp *
+        \str_case:VnF \l_semio_viz_geosym_sizing_tl
+          {
+            { radius } { \semio_viz_geo_norm:n {#1} }
+            { graduated }
+              {
+                round ( \semio_viz_geo_norm:n {#1}
+                        * ( \l_semio_viz_geosym_classes_int - 1 ) )
+                / ( \l_semio_viz_geosym_classes_int - 1 )
+              }
+          }
+          { sqrt ( \semio_viz_geo_norm:n {#1} ) }
+      }
+  }
+
+% ⚪ One symbol at the anchor (#1,#2) named #3 carrying the value #4, and its own probe record.
+\cs_new_protected:Npn \semio_viz_geosym_draw:nnnn #1#2#3#4
+  {
+    \semio_viz_probe_geometry:nx { geo/symbol }
+      {
+        \fp_to_decimal:n {#1} , \fp_to_decimal:n {#2} ,
+        \fp_to_decimal:n { \semio_viz_geosym_size:n {#4} } , \fp_to_decimal:n {#4}
+      }
+    \str_case:VnF \l_semio_viz_geosym_shape_tl
+      {
+        { square }
+          {
+            \use:x
+              {
+                \exp_not:N \filldraw
+                  [ draw= \exp_not:V \l_semio_viz_geo_f_stroke_tl ,
+                    fill=\semio_viz_theme_color:n { 0 }, fill~opacity=0.6 ]
+                  ( \fp_eval:n { #1 - \semio_viz_geosym_size:n {#4} } ,
+                    \fp_eval:n { #2 - \semio_viz_geosym_size:n {#4} } )
+                  rectangle
+                  ( \fp_eval:n { #1 + \semio_viz_geosym_size:n {#4} } ,
+                    \fp_eval:n { #2 + \semio_viz_geosym_size:n {#4} } ) ;
+              }
+          }
+        { triangle }
+          {
+            \use:x
+              {
+                \exp_not:N \filldraw
+                  [ draw= \exp_not:V \l_semio_viz_geo_f_stroke_tl ,
+                    fill=\semio_viz_theme_color:n { 1 }, fill~opacity=0.6 ]
+                  ( \fp_eval:n { #1 } ,
+                    \fp_eval:n { #2 + \semio_viz_geosym_size:n {#4} } ) --
+                  ( \fp_eval:n { #1 - \semio_viz_geosym_size:n {#4} } ,
+                    \fp_eval:n { #2 - \semio_viz_geosym_size:n {#4} } ) --
+                  ( \fp_eval:n { #1 + \semio_viz_geosym_size:n {#4} } ,
+                    \fp_eval:n { #2 - \semio_viz_geosym_size:n {#4} } ) -- cycle ;
+              }
+          }
+      }
+      {
+        \use:x
+          {
+            \exp_not:N \filldraw
+              [ draw= \exp_not:V \l_semio_viz_geo_f_stroke_tl ,
+                fill=\semio_viz_theme_color:n { 0 }, fill~opacity=0.55 ]
+              (#1,#2) circle
+                [ radius= \fp_eval:n { \semio_viz_geosym_size:n {#4} } ] ;
+          }
+      }
+  }
+
+% ⚫ Dot-density family: value/unit dots per part, scattered deterministically about the part centroid.
+\SemioVizFamily { geo-dotdensity }
+  {
+    \semio_viz_geosym_reset:
+    \keys_set:nn { semio / viz / geo / base } {#1}
+    \keys_set:nn { semio / viz / family / geo-dotdensity } {#1}
+    \exp_args:NV \semio_viz_geo_base_frame:n \l_semio_viz_geo_f_geometry_tl
+    \semio_viz_geosym_basemap:
+    \semio_viz_geo_map_anchors:nnn { semio-family }
+      { \l_semio_viz_geo_f_geometry_tl } { \semio_viz_geosym_dots:nnnn }
+  }
+
+% 🌌 `value / unit` dots scattered about the anchor (#1,#2), each one its own probe record.
+\cs_new_protected:Npn \semio_viz_geosym_dots:nnnn #1#2#3#4
+  {
+    \int_step_inline:nn
+      { \fp_eval:n { max ( 1 , round ( #4 / \l_semio_viz_geosym_unit_fp ) ) } }
+      {
+        \tl_set:Nx \l_semio_viz_geosym_dot_tl
+          {
+            \fp_to_decimal:n
+              {
+                #1 + \l_semio_viz_geosym_spread_fp
+                * ( 2 * \semio_viz_spatial_rand:n { ##1 * 7 + #4 } - 1 )
+              } ,
+            \fp_to_decimal:n
+              {
+                #2 + \l_semio_viz_geosym_spread_fp
+                * ( 2 * \semio_viz_spatial_rand:n { ##1 * 13 + #4 + 97 } - 1 )
+              }
+          }
+        \semio_viz_probe_geometry:nx { geo/dot }
+          {
+            \l_semio_viz_geosym_dot_tl ,
+            \fp_to_decimal:N \l_semio_viz_geosym_dotsize_fp
+          }
+        \use:x
+          {
+            \exp_not:N \fill [ semio-chrome-foreground, fill~opacity=0.8 ]
+              ( \l_semio_viz_geosym_dot_tl )
+              circle [ radius= \fp_to_decimal:N \l_semio_viz_geosym_dotsize_fp ] ;
+          }
+      }
+  }
+\tl_new:N \l_semio_viz_geosym_dot_tl
+
+% 🍯 Hexbin family: exact d3-hexbin binning of a plane point set, or its kernel-density isolines.
+\SemioVizFamily { geo-hexbin }
+  {
+    \semio_viz_geosym_reset:
+    \keys_set:nn { semio / viz / geo / base } {#1}
+    \keys_set:nn { semio / viz / family / geo-hexbin } {#1}
+    \str_if_eq:VnTF \l_semio_viz_geosym_render_tl { hex }
+      { \semio_viz_geosym_hexes: }
+      { \semio_viz_geosym_density: }
+  }
+
+% 🍯 The hexbin case: bin the point set, take the busiest bin as the ramp's upper bound, draw.
+\cs_new_protected:Npn \semio_viz_geosym_hexes:
+  {
+    \use:x
+      {
+        \exp_not:N \semio_viz_spatial_hexbin:nn
+          { \exp_not:V \l_semio_viz_geosym_points_tl }
+          { \fp_use:N \l_semio_viz_geosym_radius_fp }
+      }
+    \int_zero:N \l_tmpa_int
+    \seq_map_inline:Nn \g_semio_viz_spatial_bins_seq
+      { \semio_viz_geosym_maxbin:nnn ##1 }
+    \fp_set:Nn \l_semio_viz_geo_vmin_fp { 0 }
+    \fp_set:Nn \l_semio_viz_geo_vmax_fp { \l_tmpa_int }
+    \seq_map_inline:Nn \g_semio_viz_spatial_bins_seq
+      { \semio_viz_geosym_hex:nnn ##1 }
+  }
+
+% 📈 Raises the running maximum to the population of bin #1.
+\cs_new_protected:Npn \semio_viz_geosym_maxbin:nnn #1#2#3
+  {
+    \int_compare:nNnT { \semio_viz_spatial_bin_count:n {#1} } > \l_tmpa_int
+      { \int_set:Nn \l_tmpa_int { \semio_viz_spatial_bin_count:n {#1} } }
+  }
+
+% ⬡ One hexagon of the bin lattice at (#2,#3), filled from the ramp by its own population.
+\cs_new_protected:Npn \semio_viz_geosym_hex:nnn #1#2#3
+  {
+    \fp_set:Nn \l_tmpa_fp {#2}
+    \fp_set:Nn \l_tmpb_fp {#3}
+    \use:x
+      {
+        \exp_not:N \filldraw
+          [
+            draw= \exp_not:V \l_semio_viz_geo_f_stroke_tl ,
+            line~width= \exp_not:V \l_semio_viz_geo_f_linewidth_tl ,
+            fill= \semio_viz_geo_ramp:n
+                    {
+                      \semio_viz_geo_norm:n
+                        { \semio_viz_spatial_bin_count:n {#1} }
+                    }
+          ]
+          \clist_map_function:nN { 30, 90, 150, 210, 270, 330 }
+            \semio_viz_geosym_hexvertex:n
+          cycle ;
+      }
+  }
+
+% 📐 One hexagon vertex at angle #1 about the current bin's centre, ready to be joined by `--`.
+\cs_new:Npn \semio_viz_geosym_hexvertex:n #1
+  {
+    (
+      \fp_eval:n
+        { \l_tmpa_fp + \l_semio_viz_geosym_radius_fp * 0.92 * cosd (#1) } ,
+      \fp_eval:n
+        { \l_tmpb_fp + \l_semio_viz_geosym_radius_fp * 0.92 * sind (#1) }
+    ) --
+  }
+
+% 🌡️ The isoline case: a kernel density estimate over the same point set, drawn as contour rings.
+\cs_new_protected:Npn \semio_viz_geosym_density:
+  {
+    \use:x
+      {
+        \exp_not:N \semio_viz_spatial_density:nnnnnnn
+          { \exp_not:V \l_semio_viz_geosym_points_tl }
+          { 16 } { 11 } { 0 } { 0 } { 5 }
+          { \fp_use:N \l_semio_viz_geosym_bandwidth_fp }
+      }
+    \tl_set:Nx \l_tmpa_tl { \l_semio_viz_geosym_points_tl -density }
+    \exp_args:NV \semio_viz_geosym_levels:n \l_tmpa_tl
+  }
+
+% 🌫️ Thresholds are read from the density grid itself, so the isolines follow the data rather than a hardcoded level.
+\cs_new_protected:Npn \semio_viz_geosym_levels:n #1
+  {
+    \semio_viz_grid_require:n {#1}
+    \fp_set:Nn \l_semio_viz_geo_vmin_fp { inf }
+    \fp_set:Nn \l_semio_viz_geo_vmax_fp { -inf }
+    \seq_map_inline:cn
+      { g_semio_viz_grid_ \l_semio_viz_store_name_tl _seq }
+      {
+        \fp_set:Nn \l_semio_viz_geo_vmin_fp
+          { min ( \l_semio_viz_geo_vmin_fp , ##1 ) }
+        \fp_set:Nn \l_semio_viz_geo_vmax_fp
+          { max ( \l_semio_viz_geo_vmax_fp , ##1 ) }
+      }
+    \int_step_inline:nn { \l_semio_viz_geosym_levels_int }
+      {
+        \fp_set:Nn \l_tmpa_fp
+          { ##1 / ( \l_semio_viz_geosym_levels_int + 1 ) }
+        \use:x
+          {
+            \exp_not:N \semio_viz_spatial_contour:nn {#1}
+              {
+                \fp_eval:n
+                  {
+                    \l_semio_viz_geo_vmin_fp + \l_tmpa_fp
+                    * ( \l_semio_viz_geo_vmax_fp - \l_semio_viz_geo_vmin_fp )
+                  }
+              }
+          }
+        \semio_viz_geosym_rings:
+      }
+  }
+
+% ⭕ Draws every density ring the last contour pass left behind, skipping degenerate ones.
+\cs_new_protected:Npn \semio_viz_geosym_rings:
+  {
+    \seq_map_inline:Nn \g_semio_viz_spatial_rings_seq
+      {
+        \seq_set_split:Nnn \l_tmpb_seq { ; } {##1}
+        \int_compare:nNnT { \seq_count:N \l_tmpb_seq } > { 2 }
+          { \semio_viz_geosym_ring_draw: }
+      }
+  }
+
+% 〰️ One density ring, its grid coordinates scaled into the drawing rectangle.
+\cs_new_protected:Npn \semio_viz_geosym_ring_draw:
+  {
+    \seq_clear:N \l_tmpa_seq
+    \seq_map_inline:Nn \l_tmpb_seq
+      {
+        \seq_put_right:Nx \l_tmpa_seq
+          {
+            (
+              \fp_eval:n { \clist_item:nn {##1} { 1 } * 5 } ,
+              \fp_eval:n { \clist_item:nn {##1} { 2 } * 5 }
+            )
+          }
+      }
+    \use:x
+      {
+        \exp_not:N \path
+          [
+            draw= \semio_viz_geo_ramp:n { \fp_use:N \l_tmpa_fp } ,
+            line~width=\semio@stroke@default,
+            \str_if_eq:VnT \l_semio_viz_geosym_render_tl { heat }
+              {
+                fill= \semio_viz_geo_ramp:n { \fp_use:N \l_tmpa_fp } ,
+                fill~opacity=0.3 ,
+              }
+          ]
+          \seq_use:Nn \l_tmpa_seq { -- } -- cycle ;
+      }
+  }
+
+% 🔷 Tessellation family: Delaunay triangles, Voronoi cells or the convex hull of a plane point set.
+\SemioVizFamily { spatial-tessellation }
+  {
+    \semio_viz_geosym_reset:
+    \tl_set:Nn \l_semio_viz_geosym_points_tl { demo-points }
+    \keys_set:nn { semio / viz / geo / base } {#1}
+    \keys_set:nn { semio / viz / family / spatial-tessellation } {#1}
+    \str_case:VnF \l_semio_viz_geosym_kind_tl
+      {
+        { voronoi } { \semio_viz_geosym_voronoi: }
+        { hull } { \semio_viz_geosym_hull: }
+      }
+      { \semio_viz_geosym_delaunay: }
+    \bool_if:NT \l_semio_viz_geosym_sites_bool { \semio_viz_geosym_sites: }
+  }
+
+% 🧩 The Voronoi tessellation of the point set, clipped to `extent`, one cell per site.
+\cs_new_protected:Npn \semio_viz_geosym_voronoi:
+  {
+    \use:x
+      {
+        \exp_not:N \semio_viz_spatial_voronoi:nnnnn
+          { \exp_not:V \l_semio_viz_geosym_points_tl }
+          { \clist_item:Nn \l_semio_viz_geosym_extent_clist { 1 } }
+          { \clist_item:Nn \l_semio_viz_geosym_extent_clist { 2 } }
+          { \clist_item:Nn \l_semio_viz_geosym_extent_clist { 3 } }
+          { \clist_item:Nn \l_semio_viz_geosym_extent_clist { 4 } }
+      }
+    \fp_set:Nn \l_semio_viz_geo_vmin_fp { 1 }
+    \fp_set:Nn \l_semio_viz_geo_vmax_fp
+      { \l_semio_viz_spatial_n_int }
+    \seq_map_inline:Nn \g_semio_viz_spatial_cells_seq
+      { \semio_viz_geosym_cell:nn ##1 }
+  }
+
+% 🔷 One Voronoi cell: site #1's polygon #2, filled from the ramp by the site's own index.
+\cs_new_protected:Npn \semio_viz_geosym_cell:nn #1#2
+  {
+    \seq_set_split:Nnn \l_tmpb_seq { ; } {#2}
+    \int_compare:nNnT { \seq_count:N \l_tmpb_seq } > { 2 }
+      {
+        \seq_clear:N \l_tmpa_seq
+        \seq_map_inline:Nn \l_tmpb_seq
+          { \seq_put_right:Nn \l_tmpa_seq { ( ##1 ) } }
+        \use:x
+          {
+            \exp_not:N \filldraw
+              [
+                draw= \exp_not:V \l_semio_viz_geo_f_stroke_tl ,
+                line~width= \exp_not:V \l_semio_viz_geo_f_linewidth_tl ,
+                fill= \semio_viz_geo_ramp:n { \semio_viz_geo_norm:n {#1} } ,
+                fill~opacity= \fp_use:N \l_semio_viz_geo_f_opacity_fp
+              ]
+              \seq_use:Nn \l_tmpa_seq { -- } -- cycle ;
+          }
+      }
+  }
+
+% 🔺 The Delaunay triangulation of the point set, the dual of the Voronoi cells above.
+\cs_new_protected:Npn \semio_viz_geosym_delaunay:
+  {
+    \exp_args:NV \semio_viz_spatial_delaunay:n \l_semio_viz_geosym_points_tl
+    \seq_map_inline:Nn \g_semio_viz_spatial_tri_seq
+      { \semio_viz_geosym_tri:nnn ##1 }
+  }
+
+% 🔺 One Delaunay triangle on the sites #1, #2, #3; `mesh` fills it, the other kinds outline it.
+\cs_new_protected:Npn \semio_viz_geosym_tri:nnn #1#2#3
+  {
+    \use:x
+      {
+        \exp_not:N \path
+          [
+            draw= \exp_not:V \l_semio_viz_geo_f_stroke_tl ,
+            line~width= \exp_not:V \l_semio_viz_geo_f_linewidth_tl ,
+            \str_if_eq:VnT \l_semio_viz_geosym_kind_tl { mesh }
+              { fill=semio-chrome-panel, fill~opacity=0.35 , }
+          ]
+          ( \fp_eval:n { \semio_viz_spatial_x:n {#1} } , \fp_eval:n { \semio_viz_spatial_y:n {#1} } ) --
+          ( \fp_eval:n { \semio_viz_spatial_x:n {#2} } , \fp_eval:n { \semio_viz_spatial_y:n {#2} } ) --
+          ( \fp_eval:n { \semio_viz_spatial_x:n {#3} } , \fp_eval:n { \semio_viz_spatial_y:n {#3} } ) --
+          cycle ;
+      }
+  }
+
+% 🪢 The convex hull of the point set as one closed outline.
+\cs_new_protected:Npn \semio_viz_geosym_hull:
+  {
+    \exp_args:NV \semio_viz_spatial_hull:n \l_semio_viz_geosym_points_tl
+    \seq_clear:N \l_tmpa_seq
+    \seq_map_inline:Nn \g_semio_viz_spatial_hull_seq
+      {
+        \seq_put_right:Nx \l_tmpa_seq
+          {
+            ( \fp_eval:n { \semio_viz_spatial_x:n {##1} } , \fp_eval:n { \semio_viz_spatial_y:n {##1} } )
+          }
+      }
+    \use:x
+      {
+        \exp_not:N \filldraw
+          [
+            draw= \exp_not:V \l_semio_viz_geo_f_stroke_tl ,
+            line~width=\semio@stroke@default,
+            fill=\semio_viz_theme_color:n { 0 }, fill~opacity=0.2
+          ]
+          \seq_use:Nn \l_tmpa_seq { -- } -- cycle ;
+      }
+  }
+
+% 📍 The generating points themselves, drawn on top of whichever tessellation was asked for.
+\cs_new_protected:Npn \semio_viz_geosym_sites:
+  {
+    \exp_args:NV \semio_viz_spatial_load:n \l_semio_viz_geosym_points_tl
+    \int_step_inline:nn { \l_semio_viz_spatial_n_int }
+      {
+        \fill [ semio-chrome-foreground ]
+          ( \fp_eval:n { \semio_viz_spatial_x:n {##1} } , \fp_eval:n { \semio_viz_spatial_y:n {##1} } )
+          circle [ radius=0.6 ] ;
+      }
+  }
+%endregion 🔖️Families
+
+\ExplSyntaxOff

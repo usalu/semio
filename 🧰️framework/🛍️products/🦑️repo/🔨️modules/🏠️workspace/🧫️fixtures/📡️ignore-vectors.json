@@ -1,0 +1,144 @@
+{
+  "$comment": "🧫️ Immutable ignore vectors. Each case carries the whole rule set and one path. Only rule sets whose meaning the `ignore` npm package and the owned matcher agree on live in `vectors`; `divergentVectors` records the three deliberate differences from git — a leading slash is not a root anchor, a negation can re-include a file underneath an excluded directory, and a rule that already contains a separator (including the `**` a trailing slash expands to) is NOT lifted to every depth. They are exercised by the sibling case `🐙️gitignore-divergence`.",
+  "schema": "semio.repo.workspace.ignore-vectors/1",
+  "vectors": [
+    {
+      "name": "directory-rule-ignores-contents",
+      "rules": [
+        "node_modules/"
+      ],
+      "path": "node_modules/left-pad/index.js",
+      "expected": true
+    },
+    {
+      "name": "unrelated-path-is-kept",
+      "rules": [
+        "node_modules/"
+      ],
+      "path": "src/main.go",
+      "expected": false
+    },
+    {
+      "name": "extension-rule-matches-at-any-depth",
+      "rules": [
+        "*.log"
+      ],
+      "path": "deep/nested/a.log",
+      "expected": true
+    },
+    {
+      "name": "extension-rule-matches-at-the-root",
+      "rules": [
+        "*.log"
+      ],
+      "path": "a.log",
+      "expected": true
+    },
+    {
+      "name": "later-negation-re-includes-a-sibling",
+      "rules": [
+        "*.log",
+        "!important.log"
+      ],
+      "path": "important.log",
+      "expected": false
+    },
+    {
+      "name": "later-negation-leaves-others-ignored",
+      "rules": [
+        "*.log",
+        "!important.log"
+      ],
+      "path": "other.log",
+      "expected": true
+    },
+    {
+      "name": "comments-and-blanks-are-skipped",
+      "rules": [
+        "# a comment",
+        "",
+        "*.tmp"
+      ],
+      "path": "x.tmp",
+      "expected": true
+    },
+    {
+      "name": "comment-is-not-a-pattern",
+      "rules": [
+        "# *.go"
+      ],
+      "path": "a.go",
+      "expected": false
+    },
+    {
+      "name": "path-rule-matches-that-path",
+      "rules": [
+        "build/out.o"
+      ],
+      "path": "build/out.o",
+      "expected": true
+    },
+    {
+      "name": "path-rule-does-not-match-a-sibling",
+      "rules": [
+        "build/out.o"
+      ],
+      "path": "build/other.o",
+      "expected": false
+    },
+    {
+      "name": "star-does-not-cross-a-separator",
+      "rules": [
+        "build/*.o"
+      ],
+      "path": "build/nested/out.o",
+      "expected": false
+    },
+    {
+      "name": "globstar-crosses-separators",
+      "rules": [
+        "build/**/*.o"
+      ],
+      "path": "build/nested/out.o",
+      "expected": true
+    },
+    {
+      "name": "emoji-directory-rule",
+      "rules": [
+        "🗑️generated/"
+      ],
+      "path": "🗑️generated/report.txt",
+      "expected": true
+    }
+  ],
+  "divergentVectors": [
+    {
+      "name": "leading-slash-is-not-an-anchor-here",
+      "rules": [
+        "/target"
+      ],
+      "path": "nested/target",
+      "owned": true,
+      "git": false
+    },
+    {
+      "name": "a-file-under-an-excluded-directory-can-be-re-included",
+      "rules": [
+        "build/",
+        "!build/keep.txt"
+      ],
+      "path": "build/keep.txt",
+      "owned": false,
+      "git": true
+    },
+    {
+      "name": "a-directory-rule-is-root-anchored",
+      "rules": [
+        "node_modules/"
+      ],
+      "path": "a/node_modules/left-pad/index.js",
+      "owned": false,
+      "git": true
+    }
+  ]
+}

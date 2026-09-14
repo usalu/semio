@@ -14,7 +14,7 @@
   //     {
   //       "hooks": [
   //         {
-  //           "command": "repo/client/client hook Notification claude-code",
+  //           "command": "target/release/semio hook Notification claude-code",
   //           "type": "command"
   //         }
   //       ],
@@ -25,7 +25,7 @@
   //     {
   //       "hooks": [
   //         {
-  //           "command": "repo/client/client hook PermissionRequest claude-code",
+  //           "command": "target/release/semio hook PermissionRequest claude-code",
   //           "type": "command"
   //         }
   //       ],
@@ -36,7 +36,7 @@
   //     {
   //       "hooks": [
   //         {
-  //           "command": "repo/client/client hook TaskCompleted claude-code",
+  //           "command": "target/release/semio hook TaskCompleted claude-code",
   //           "type": "command"
   //         }
   //       ],
@@ -47,7 +47,7 @@
   //     {
   //       "hooks": [
   //         {
-  //           "command": "repo/client/client hook TeammateIdle claude-code",
+  //           "command": "target/release/semio hook TeammateIdle claude-code",
   //           "type": "command"
   //         }
   //       ],

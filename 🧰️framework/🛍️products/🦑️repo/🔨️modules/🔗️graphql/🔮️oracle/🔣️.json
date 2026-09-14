@@ -1,0 +1,93 @@
+{
+  "$schema": "../../🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🔗️ Contribution of the repo GraphQL grammar owner. The only third-party reference this domain needs is a conforming GraphQL parser; it is a devDependency of the repository root, imported exclusively from 🧪️tests/**/🟦️.ts, and never reachable from any implementation.",
+  "oracles": [
+    {
+      "id": "graphql-js",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "graphql",
+      "version": "16.14.0",
+      "source": {
+        "repository": "https://github.com/graphql/graphql-js",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "graphql-js",
+        "implementation": "graphql-js reference parser",
+        "version": "16"
+      },
+      "capabilities": [
+        "graphql-document-parsing",
+        "graphql-syntax-errors",
+        "graphql-variable-coercion",
+        "graphql-query-execution",
+        "graphql-schema-definition-language"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1",
+        "diagnostic-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://graphql.org/graphql-js/",
+      "rationale": "📖️ The repository answers `repo://` queries with a hand-rolled grammar. Judging that grammar against a second reading of our own source would prove only that we read ourselves twice; graphql-js is the reference implementation of the specification the grammar is a subset of, so it decides independently what a document means and whether a malformed input really is malformed. `valueFromASTUntyped` additionally decides the variable substitution of an untyped literal, which is precisely what the executor hands a resolver. Its projection into 🧬️schema/🔣️.json is a declared, lossy rename — variable definitions and directives are dropped because the subject grammar drops them — and nothing in the oracle adapter reimplements a parser. The one thing graphql-js cannot judge is the BOUNDARY of the subset: it accepts fragments we refuse and refuses `{ }` we accept, which is why that case carries the recorded `graphql-owned-subset-boundary` decision instead of this oracle. The same package also decides the two halves the executor adds: `buildSchema` reads the committed SDL and says whether it is a real GraphQL schema at all, and `execute` says what running a selection set against a set of source objects means — which selection is resolved, how an alias renames a key, how `__typename` is answered, how a list, a nullable and a non-null are shaped, how an enum member is serialised and how an argument is coerced. The oracle's source objects are a declared mapping of the same frozen records; nothing in the oracle adapter walks a selection set."
+    }
+  ],
+  "noOracleDecisions": [
+    {
+      "id": "graphql-owned-subset-boundary",
+      "capabilities": [
+        "graphql-subset-boundary"
+      ],
+      "rationale": "🚧️ The accepted language is a deliberate subset of GraphQL that is also, in a few places, wider than GraphQL: fragments, inline fragments, block strings, subscriptions and multi-operation documents are refused, while an empty selection set, an unnamed directive and an untyped variable definition are accepted. No conforming parser can judge either edge — measuring against one would only restate that this is not a GraphQL parser. The boundary is nonetheless load-bearing for the executor, so it is held by pairwise equivalence between the independently written Go and Rust implementations, verbatim diagnostic included, and by each implementation's own unit tests, which pin the exact message and byte offset that the harness profiles drop.",
+      "substitutes": [
+        "independent-implementations"
+      ]
+    },
+    {
+      "id": "graphql-owned-recording-context",
+      "capabilities": [
+        "graphql-mutation-execution"
+      ],
+      "rationale": "✍️ A mutation of this schema is a write against the repository's own aggregates — a ticket folder, a goal file, a todo, a draft. What it must produce is a changed record set and an event trail, and no GraphQL library has an opinion about either: `graphql-js` can say that `ticketClose(input: …)` selects one field of one Ticket, which the `query-execution` case already measures with it, but it cannot say what closing a ticket means. The write semantics are therefore held by specification vectors: a frozen record set, a frozen mutation script, and the exact resulting records and events, asserted field by field. The projection is the state AFTER the run, so a mutation that silently did nothing fails the same way a mutation that did the wrong thing does.",
+      "substitutes": [
+        "specification-vectors"
+      ]
+    },
+    {
+      "id": "graphql-owned-executor-diagnostics",
+      "capabilities": [
+        "graphql-execution-errors"
+      ],
+      "rationale": "❌️ The executor's failure text is its own: `unknown field \"x\" on Query`, the `field: cause` chain a nested selection wraps its cause in, `invalid node id format: …`, and the `graphql errors: […]` envelope the CLI prints. A conforming executor rejects the same documents but says so in its own words, so comparing the two would measure a rendering choice rather than a behaviour. The refusals are held by specification vectors instead: every input is paired with the verbatim message and the boundary it proves, and the accepting half of each pair is exercised by the `query-execution` corpus against the real oracle.",
+      "substitutes": [
+        "specification-vectors"
+      ]
+    }
+  ],
+  "oracleHostPackages": [
+    {
+      "implementation": "typescript",
+      "package": "graphql",
+      "version": "16.14.0"
+    }
+  ],
+  "probes": [],
+  "comparisonProfiles": [],
+  "comparisonPipelines": [],
+  "toleranceProfiles": [],
+  "mutationCatalogs": [],
+  "mutationManifests": [],
+  "fixtureManifests": []
+}

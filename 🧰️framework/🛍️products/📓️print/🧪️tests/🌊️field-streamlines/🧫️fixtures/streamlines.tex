@@ -1,0 +1,37 @@
+\documentclass{article}
+\usepackage{semio-viz-geo-routes}
+\begin{document}
+\SemioVizProbeBegin{field-streamlines}{rk-integration}
+\SemioVizProbePage
+\SemioVizProbePrecision{9}
+\ExplSyntaxOn
+% 🌀 One record per field: the RK4 trajectory from a fixed seed, sampled before every step.
+\cs_new_protected:Npn \semio_probe_stream:nnnn #1#2#3#4
+  {
+    \tl_set:Nn \l_semio_viz_georte_field_tl {#1}
+    \fp_set:Nn \l_semio_viz_georte_dt_fp {#4}
+    \fp_set:Nn \l_semio_viz_georte_sx_fp {#2}
+    \fp_set:Nn \l_semio_viz_georte_sy_fp {#3}
+    \clist_clear:N \l_tmpa_clist
+    \int_step_inline:nn { 16 }
+      {
+        \clist_put_right:Nx \l_tmpa_clist
+          {
+            \fp_use:N \l_semio_viz_georte_sx_fp ,
+            \fp_use:N \l_semio_viz_georte_sy_fp
+          }
+        \semio_viz_georte_rk_step:
+      }
+    \use:x
+      {
+        \exp_not:N \SemioVizProbeEval { field/streamline }
+          { \exp_not:V \l_tmpa_clist }
+      }
+  }
+\semio_probe_stream:nnnn { shear } { -1.5 } { 0.75 } { 0.25 }
+\semio_probe_stream:nnnn { vortex } { 1.25 } { -0.5 } { 0.2 }
+\semio_probe_stream:nnnn { source } { 0.4 } { 0.3 } { 0.1 }
+\semio_probe_stream:nnnn { saddle } { 0.6 } { 1.1 } { 0.15 }
+\semio_probe_stream:nnnn { dipole } { 1.6 } { 0.9 } { 0.05 }
+\ExplSyntaxOff
+\end{document}

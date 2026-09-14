@@ -1,0 +1,26 @@
+{
+  "schema": "semio.repo.codebase.ignore-vectors/1",
+  "comment": "🙈️ Every path whose three independent exclusion verdicts — structural repo exclusion, gitignore match and generated-folder detection — are compared, against the repository materialised from 📡️repo-tree.json.",
+  "vectors": [
+    { "name": "plain-source-file", "path": "compose/🖥️app/🧩️widget.ts" },
+    { "name": "gitignored-folder-member", "path": "compose/🖥️app/ignored/💀️dead.ts" },
+    { "name": "gitignored-extension", "path": "compose/🖥️app/scratch.tmp" },
+    { "name": "generated-folder-member", "path": "compose/📚️core/generated/🤖️gen.ts" },
+    { "name": "vendored-root", "path": "node_modules/vendored/index.ts" },
+    { "name": "vendored-nested", "path": "compose/📚️core/node_modules/dep/index.ts" },
+    { "name": "meta-root", "path": ".🧬semio/🦑️repo/📁️files.json" },
+    { "name": "git-internals", "path": ".git/config" },
+    { "name": "distribution-output", "path": "compose/📚️core/dist/bundle.js" },
+    { "name": "build-output", "path": "compose/📚️core/build/out.js" },
+    { "name": "cargo-target", "path": "compose/📚️core/target/debug/lib.rs" },
+    { "name": "python-cache", "path": "compose/📚️core/__pycache__/mod.pyc" },
+    { "name": "next-output", "path": "compose/🖥️app/.next/page.js" },
+    { "name": "coverage-output", "path": "compose/🖥️app/coverage/lcov.info" },
+    { "name": "designer-file", "path": "compose/🖥️app/Form.Designer.cs" },
+    { "name": "codegen-folder", "path": "compose/🖥️app/codegen/schema.ts" },
+    { "name": "repo-assets", "path": "assets/repo/logo.png" },
+    { "name": "license-document", "path": "LICENSE.md" },
+    { "name": "nested-license-document", "path": "compose/📚️core/LICENSE.md" },
+    { "name": "leading-dot-relative-path", "path": "./compose/🖥️app/🧩️widget.ts" }
+  ]
+}

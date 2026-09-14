@@ -1,0 +1,48 @@
+\documentclass{article}
+\usepackage{semio-viz-hierarchy}
+
+\ExplSyntaxOn
+% 📤 One record per node field, in the hierarchy's own preorder (d3 eachBefore).
+\cs_new_protected:Npn \VizProbeField #1#2#3 {
+  \tl_clear:N \l_tmpa_tl
+  \semio_viz_hierarchy_map_pre:nn {#2} {
+    \tl_put_right:Nx \l_tmpa_tl
+      { \tl_if_empty:NF \l_tmpa_tl { , } \semio_viz_hierarchy_get:nnn {#2} {#3} {##1} }
+  }
+  \semio_viz_probe_values:nV {#1} \l_tmpa_tl
+}
+\cs_new_protected:Npn \VizProbeRects #1#2 {
+  \VizProbeField{#1/x0}{#2}{x0}
+  \VizProbeField{#1/y0}{#2}{y0}
+  \VizProbeField{#1/x1}{#2}{x1}
+  \VizProbeField{#1/y1}{#2}{y1}
+}
+\ExplSyntaxOff
+
+\begin{document}
+
+\SemioVizProbeBegin{hierarchy-partition}{icicle}
+\SemioVizHierarchyBuild{deep}[data=demo-hierarchy-deep]
+\VizProbeField{id}{deep}{id}
+\SemioVizLayout{partition}{deep}{p1}[size={100,60}]
+\VizProbeRects{plain}{p1}
+\SemioVizLayout{partition}{deep}{p2}[size={100,60}, padding=1.5]
+\VizProbeRects{padded}{p2}
+\SemioVizLayout{partition}{deep}{p3}[size={100,60}, round=true]
+\VizProbeRects{rounded}{p3}
+
+\SemioVizProbeBegin{hierarchy-partition}{sunburst}
+\SemioVizLayout{partition}{deep}{p4}[size={6.283185307179586,24}]
+\VizProbeField{id}{p4}{id}
+\VizProbeField{sunburst/startAngle}{p4}{x0}
+\VizProbeField{sunburst/endAngle}{p4}{x1}
+\VizProbeField{sunburst/innerRadius}{p4}{y0}
+\VizProbeField{sunburst/outerRadius}{p4}{y1}
+
+\SemioVizProbeBegin{hierarchy-partition}{unbalanced}
+\SemioVizHierarchyBuild{unb}[data=demo-hierarchy-unbalanced]
+\VizProbeField{id}{unb}{id}
+\SemioVizLayout{partition}{unb}{p5}[size={80,50}]
+\VizProbeRects{plain}{p5}
+
+\end{document}

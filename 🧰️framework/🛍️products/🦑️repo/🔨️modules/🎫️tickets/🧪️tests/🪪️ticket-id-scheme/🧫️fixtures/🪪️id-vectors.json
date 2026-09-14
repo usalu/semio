@@ -1,0 +1,42 @@
+{
+  "repoMetaDir": "/repo/.🧬semio/🦑️repo",
+  "ids": [
+    "26/09/06/SOME-TICKET",
+    "🎆️26/🌙️09/☀️06/SOME-TICKET",
+    "25/11/24/LOG-SYSTEM",
+    "26/09/06/PARENT/CHILD",
+    "🎆️26/🌙️09/☀️06/PARENT/CHILD/GRANDCHILD",
+    "26/1/2/EDGE",
+    "  26/09/06/PADDED  ",
+    "/26/09/06/SLASHED/",
+    "26/12/31/NEW-YEARS-EVE"
+  ],
+  "invalidIds": ["", "26/09/06", "26/09/06/", "YY/09/06/X", "26/🌙️09/06/X", "🎆️/09/06/X", "abc"],
+  "titles": [
+    "Tree Text Short IDs",
+    "Print Visualization Library",
+    "Windows Checkout Illegal Filenames",
+    "Confine DWG Codecs to Artifact I/O",
+    "S End To End",
+    "XMLHttpRequest",
+    "aBcDeF",
+    "Grüße",
+    "  spaced   out  ",
+    "26 numbers 09",
+    "---",
+    "🎫️ emoji title"
+  ],
+  "emojiTitles": [
+    ["🎫️", "Some Ticket"],
+    ["📊️", "Print Visualization Library"],
+    ["🪟", "Windows Checkout Illegal Filenames"],
+    ["", "Missing Emoji"],
+    ["  ", "Blank Emoji"],
+    ["🎫️🎫️", "Two Emojis"],
+    ["🎫️x", "Emoji With Tail"],
+    ["x", "Not An Emoji"],
+    ["🎫️", ""],
+    ["🎫️", "   "],
+    ["🎫️", "---"]
+  ]
+}

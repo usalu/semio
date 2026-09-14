@@ -1,0 +1,283 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio-tech.com/schema/repo/mcp/v1",
+  "title": "semio repo MCP",
+  "description": "🔌️ The wire contract of the repo Model Context Protocol server: JSON-RPC envelope, MCP lifecycle, the tool argument schemas, the per-profile surface and the hash-chained event log. Both the Go and the Rust implementation are bound by this document.",
+  "$comment": "🪟️ Extension rule — every `params` object of every method is OPEN: an implementation MUST ignore members it does not know, because clients legitimately send `clientInfo.title`, additional capability objects and `_meta` keys. Exactly two surfaces are CLOSED and MUST reject unknown members: the JSON-RPC envelope itself (`$defs/Request`) and a `tools/call` `arguments` object (`$defs/*Arguments`), where an unrecognised member is a caller mistake that must fail loudly instead of being silently dropped.",
+  "type": "object",
+  "properties": {
+    "protocolVersion": { "$ref": "#/$defs/ProtocolVersion" },
+    "profiles": { "type": "array", "items": { "$ref": "#/$defs/Profile" } }
+  },
+  "$defs": {
+    "ProtocolVersion": {
+      "description": "🗓️ Negotiated protocol version. The first entry is preferred; any other listed version is echoed back unchanged, anything else negotiates down to the preferred one.",
+      "type": "string",
+      "enum": ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05", "2024-10-07"]
+    },
+    "Profile": {
+      "description": "🪪️ Per-IDE surface selected by the `SEMIO_REPO_MCP_CLIENT` environment variable.",
+      "type": "object",
+      "unevaluatedProperties": false,
+      "required": ["slug", "kind", "serverName"],
+      "properties": {
+        "slug": { "type": "string", "enum": ["client", "generic", "cursor", "kiro", "copilot", "claude", "codex"] },
+        "kind": { "type": "string", "enum": ["generic", "cursor", "kiro", "copilot", "claude", "codex"] },
+        "serverName": { "type": "string", "enum": ["repo", "repo-cursor", "repo-kiro", "repo-copilot", "repo-claude", "repo-codex"] }
+      }
+    },
+    "ErrorCode": {
+      "description": "🚨️ Every error code the server may emit. -32700…-32603 are JSON-RPC 2.0; -32001…-32005 and -32800 are the transport's own reserved codes; -32010 is a domain tool failure.",
+      "type": "integer",
+      "oneOf": [
+        { "const": -32700, "title": "parse error" },
+        { "const": -32600, "title": "invalid request" },
+        { "const": -32601, "title": "method not found" },
+        { "const": -32602, "title": "invalid params" },
+        { "const": -32603, "title": "internal error" },
+        { "const": -32001, "title": "payload too large" },
+        { "const": -32002, "title": "not initialized" },
+        { "const": -32003, "title": "duplicate request" },
+        { "const": -32004, "title": "stale session" },
+        { "const": -32005, "title": "server busy" },
+        { "const": -32800, "title": "request cancelled" },
+        { "const": -32010, "title": "tool error" }
+      ]
+    },
+    "Id": {
+      "description": "🔑️ A JSON-RPC request id. Null is never a valid request id.",
+      "type": ["string", "integer"]
+    },
+    "Request": {
+      "description": "📨️ The JSON-RPC envelope. CLOSED: an unknown top-level member is `-32600 invalid request`, and a second JSON value on the same line is `-32600 trailing data`.",
+      "type": "object",
+      "unevaluatedProperties": false,
+      "required": ["jsonrpc", "method"],
+      "properties": {
+        "jsonrpc": { "const": "2.0" },
+        "id": { "$ref": "#/$defs/Id" },
+        "method": { "type": "string", "minLength": 1 },
+        "params": { "type": "object" }
+      }
+    },
+    "Response": {
+      "description": "📩️ The JSON-RPC response envelope. `id` is echoed verbatim, or null when the request could not be parsed.",
+      "type": "object",
+      "unevaluatedProperties": false,
+      "required": ["jsonrpc", "id"],
+      "properties": {
+        "jsonrpc": { "const": "2.0" },
+        "id": { "type": ["string", "integer", "null"] },
+        "result": {},
+        "error": {
+          "type": "object",
+          "required": ["code", "message"],
+          "properties": { "code": { "$ref": "#/$defs/ErrorCode" }, "message": { "type": "string" }, "data": {} }
+        }
+      }
+    },
+    "InitializeParams": {
+      "description": "🤝️ OPEN. Unknown members anywhere inside are ignored: `clientInfo.title`, `capabilities.tasks`, `capabilities.elicitation` and every future capability object must not fail the handshake.",
+      "type": "object",
+      "required": ["protocolVersion", "clientInfo"],
+      "properties": {
+        "protocolVersion": { "type": "string", "minLength": 1 },
+        "capabilities": { "type": "object" },
+        "clientInfo": {
+          "type": "object",
+          "required": ["name", "version"],
+          "properties": { "name": { "type": "string", "minLength": 1 }, "version": { "type": "string", "minLength": 1 } }
+        }
+      }
+    },
+    "InitializeResult": {
+      "type": "object",
+      "required": ["protocolVersion", "capabilities", "serverInfo"],
+      "properties": {
+        "protocolVersion": { "$ref": "#/$defs/ProtocolVersion" },
+        "capabilities": {
+          "type": "object",
+          "properties": { "prompts": { "type": "object" }, "resources": { "type": "object" }, "tools": { "type": "object" } }
+        },
+        "serverInfo": { "type": "object", "required": ["name", "version"], "properties": { "name": { "type": "string" }, "version": { "type": "string" } } },
+        "instructions": { "type": "string" }
+      }
+    },
+    "Method": {
+      "description": "🚦️ Every routed method. `initialize` is answered only in the connected phase; every other request needs the `notifications/initialized` notification first, otherwise `-32002`.",
+      "type": "string",
+      "enum": [
+        "initialize",
+        "ping",
+        "tools/list",
+        "tools/call",
+        "resources/list",
+        "resources/read",
+        "resources/templates/list",
+        "prompts/list",
+        "prompts/get",
+        "notifications/initialized",
+        "notifications/cancelled",
+        "notifications/progress"
+      ]
+    },
+    "Tool": {
+      "type": "object",
+      "required": ["name", "inputSchema"],
+      "properties": {
+        "name": { "type": "string", "enum": ["ticket_open", "ticket_close", "ticket_reopen", "section_move", "file_integrate", "section_extract", "goal_open", "goal_close", "goal_reopen"] },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "inputSchema": { "type": "object" }
+      }
+    },
+    "TicketOpenArguments": {
+      "description": "🎫️ CLOSED. `plan_id` exists only in the cursor, copilot, claude and codex profiles; `spec_id` only in the kiro profile.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["emoji", "title", "prompt", "goal"],
+      "properties": {
+        "emoji": { "type": "string" },
+        "title": { "type": "string" },
+        "prompt": { "type": "string" },
+        "goal": { "type": "string" },
+        "client": { "type": "string" },
+        "llm": { "type": "string" },
+        "effort": { "type": "string" },
+        "draft": { "type": "string" },
+        "parent": { "type": "string" },
+        "issue": { "type": "string" },
+        "no_issue": { "type": "boolean" },
+        "no_management": { "type": "boolean" },
+        "plan_id": { "type": "string" },
+        "spec_id": { "type": "string" }
+      }
+    },
+    "TicketCloseArguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary"],
+      "properties": {
+        "path": { "type": "string" },
+        "summary": { "type": "string" },
+        "files": { "type": "array", "items": { "type": "string" } },
+        "title": { "type": "string" },
+        "no_management": { "type": "boolean" }
+      }
+    },
+    "TicketReopenArguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": { "type": "string" },
+        "prompt": { "type": "string" },
+        "llm": { "type": "string" },
+        "effort": { "type": "string" },
+        "client": { "type": "string" },
+        "draft": { "type": "string" },
+        "title": { "type": "string" },
+        "goal": { "type": "string" },
+        "parent": { "type": "string" },
+        "no_management": { "type": "boolean" },
+        "plan_id": { "type": "string" },
+        "spec_id": { "type": "string" }
+      }
+    },
+    "SectionMoveArguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "old_name", "new_name"],
+      "properties": { "file": { "type": "string" }, "old_name": { "type": "string" }, "new_name": { "type": "string" } }
+    },
+    "FileIntegrateArguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "target_section", "target_file"],
+      "properties": { "source": { "type": "string" }, "target_section": { "type": "string" }, "target_file": { "type": "string" }, "target_parent_section": { "type": "string" } }
+    },
+    "SectionExtractArguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_file", "source_section", "target_file"],
+      "properties": { "source_file": { "type": "string" }, "source_section": { "type": "string" }, "target_file": { "type": "string" } }
+    },
+    "GoalOpenArguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "prompt"],
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "prompt": { "type": "string" },
+        "due_date": { "type": "string" },
+        "llm": { "type": "string" },
+        "client": { "type": "string" },
+        "parent": { "type": "string" },
+        "milestone": { "type": "string" },
+        "no_management": { "type": "boolean" }
+      }
+    },
+    "GoalCloseArguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "summary"],
+      "properties": { "id": { "type": "string" }, "summary": { "type": "string" }, "no_management": { "type": "boolean" } }
+    },
+    "GoalReopenArguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "prompt", "llm", "client"],
+      "properties": {
+        "id": { "type": "string" },
+        "prompt": { "type": "string" },
+        "llm": { "type": "string" },
+        "client": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "due_date": { "type": "string" },
+        "no_management": { "type": "boolean" }
+      }
+    },
+    "ResourceUri": {
+      "description": "📚️ The eight readable resources. Every one is `text/plain`.",
+      "type": "string",
+      "enum": ["repo://", "repo://bundles", "repo://folders", "repo://files", "repo://tickets", "repo://goals", "repo://policies", "repo://contributors"]
+    },
+    "PromptName": {
+      "description": "💬️ The four prompts. Each takes exactly one required `prompt` argument.",
+      "type": "string",
+      "enum": ["enhance", "refactor", "test", "comply"]
+    },
+    "Event": {
+      "description": "🔗️ One record of the hash-chained JSONL event log. `hash` is the lowercase hex SHA-256 of this same object serialised with `hash` set to the empty string, member order exactly as declared here, omitting `requestId` when empty.",
+      "type": "object",
+      "unevaluatedProperties": false,
+      "required": ["schema", "sequence", "kind", "peer", "generation", "payload", "hash"],
+      "properties": {
+        "schema": { "const": "semio.mcp.event/1" },
+        "sequence": { "type": "integer", "minimum": 1, "description": "1-based, contiguous, no gaps." },
+        "kind": { "type": "string", "enum": ["session.opened", "session.closed", "request.received", "response.sent", "notification.received", "notification.sent"] },
+        "peer": { "type": "string" },
+        "generation": { "type": "integer", "minimum": 0 },
+        "requestId": { "type": "string" },
+        "payload": {},
+        "previous": { "type": "string", "description": "The `hash` of the preceding event; absent on the first event." },
+        "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "Limits": {
+      "description": "📏️ Bounded resources. A zero value means the default; a negative value is a configuration error.",
+      "type": "object",
+      "properties": {
+        "maxPayloadBytes": { "type": "integer", "default": 1048576 },
+        "maxNesting": { "type": "integer", "default": 64 },
+        "maxPageItems": { "type": "integer", "default": 64 },
+        "maxRegistryItems": { "type": "integer", "default": 4096 },
+        "maxRecentIds": { "type": "integer", "default": 4096 },
+        "maxEventBytes": { "type": "integer", "default": 67108864 },
+        "maxEvents": { "type": "integer", "default": 100000 },
+        "maxHandlers": { "type": "integer", "default": 8 }
+      }
+    }
+  }
+}

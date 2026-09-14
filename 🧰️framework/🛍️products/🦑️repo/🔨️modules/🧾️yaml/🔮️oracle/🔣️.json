@@ -1,0 +1,31 @@
+{
+  "$comment": "🔮️ Test-only third-party reference of the repo YAML codec. `yaml` is a devDependency of 📦️packages/🟦️typescript and is imported only from 🧪️tests/**; no runtime code may depend on it.",
+  "schemaVersion": 2,
+  "oracles": [
+    {
+      "id": "yaml-js",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "yaml",
+      "version": "2.8.1",
+      "engine": { "family": "none", "implementation": "eemeli-yaml", "version": "2.8.1" },
+      "capabilities": ["repo-yaml-decode"],
+      "comparisonProfiles": ["ordered-json-v1"],
+      "license": "ISC",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "rationale": "A complete YAML 1.2 implementation written by someone else decides what each vector means, so the hand-rolled scanner in this module cannot agree with itself."
+    }
+  ],
+  "noOracleDecisions": [
+    {
+      "id": "repo-yaml-owned-encoder",
+      "capabilities": ["repo-yaml-round-trip"],
+      "rationale": "The encoder is deliberately NOT a general YAML emitter: it produces one deterministic, key-sorted subset chosen for diffability, and it renders an empty container as an empty block. No third-party emitter reproduces that subset, so the round trip is held instead by two independently written subjects plus the metamorphic law decode(encode(decode(x))) == decode(x) over the shared vector set.",
+      "substitutes": ["metamorphic-laws", "independent-implementations"],
+      "coversMutations": false
+    }
+  ],
+  "oracleHostPackages": [{ "implementation": "typescript", "package": "yaml", "version": "2.8.1" }]
+}

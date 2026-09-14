@@ -115,43 +115,44 @@ Die Angaben der Karte wurden aus öffentlich zugänglichen Quellen und den im Be
 \end{VizSection}
 
 \begin{VizSection}[title={A \ SKALIERUNG \ \textperiodcentered\ \ sechs Dimensionen (E3)}]
-\SemioVizLayout{grid}[data=sk-dimension, label=label, columns=6, boxheight=7.5]
+\SemioVizCellGrid{sk-dimension}[label=label, columns=6, boxHeight=7.5]
 \end{VizSection}
 
 \begin{VizSection}[title={G \ EVIDENZPFADE \ \textperiodcentered\ \ durchgezogen belegt, gestrichelt analytisch (E3)}]
-\SemioVizLayout{process}[data=sk-evidenz, chip=chip, stages={s1,s2,s3,s4}, boxheight=4.7]
+\SemioVizStageChain{sk-evidenz}[chip=chip, stages={s1,s2,s3,s4}, boxHeight=4.7]
 \end{VizSection}
 
 \begin{VizSection}[title={B \ D2R-PROZESSE \ \textperiodcentered\ \ buildingSMART, neun Prozesse, nicht-linear}]
 \node[anchor=north west, align=left, text width=25mm, font=\SemioSans\fontsize{6.6pt}{7.6pt}\selectfont] at (0,-7.5) {Prozess-Rückgrat};
-\SemioVizLayout{grid}[data=sk-prozess, label=label, key=key, scale=d2r, boxheight=14.5]
+\SemioVizCellGrid{sk-prozess}[label=label, key=key, scale=d2r, boxHeight=14.5]
 \end{VizSection}
 
 \begin{VizSection}[title={C \ DIGITALE FUNKTIONEN \ \textperiodcentered\ \ neun Gruppen als Spannen (E3)}, aside={H-05 \SemioSlash{} H-09 \SemioSlash{} H-10}]
-\SemioVizLayout{gantt}[data=sk-funktion, label=label, from=von, to=bis, xscale=d2r, boxheight=2.4, labelwidth=25]
+\SemioVizSpanRows{sk-funktion}[label=label, from=von, to=bis, scale=d2r, boxHeight=2.4, labelWidth=25]
 \end{VizSection}
 
 \begin{VizSection}[title={D \ OPERATIVE DIENSTE \ \textperiodcentered\ \ physische Ausführung}, aside={H-11 \SemioSlash{} H-07 \SemioSlash{} H-04}]
-\SemioVizLayout{gantt}[data=sk-dienst, label=label, from=von, to=bis, xscale=d2r, boxheight=2.4, labelwidth=25]
+\SemioVizSpanRows{sk-dienst}[label=label, from=von, to=bis, scale=d2r, boxHeight=2.4, labelWidth=25]
 \end{VizSection}
 
 \begin{VizSection}[title={E \ RAHMENBEDINGUNGEN \ \textperiodcentered\ \ Umfeld, keine Plattformfunktionen}, aside={H-01 \SemioSlash{} H-13 \SemioSlash{} H-03 \SemioSlash{} H-12}]
-\SemioVizLayout{grid}[data=sk-rahmen, label=label, columns=5, boxheight=6.6]
+\SemioVizCellGrid{sk-rahmen}[label=label, columns=5, boxHeight=6.6]
 \end{VizSection}
 
 \begin{VizSection}[title={H1 \ UNTERSTÜTZUNG (EU26)}]
 \begin{VizColumn}[width=72, note={19 Antworten, 10 Länder; n\,=\,18 abgeleitet}]
-\SemioVizLayout{bar}[data=sk-h1, label=label, value=value, orient=horizontal, domain={0,100}, unit={\,\%}, labelwidth=38, boxheight=2.6, frame=false]
+\SemioVizChart{horizontal-bar-chart}[data=sk-h1, x=label, y=value, yMin=0, yMax=100, labels=value, grid=none, padLeft=38]
 \end{VizColumn}
 \begin{VizColumn}[width=70, title={H2 \ HEMMNIS-KOPPLUNG}, note={C-Index (Jaccard), sign. Paare, Rakhshan 2020}]
-\SemioVizLayout{heat}[data=sk-h2, row=zeile, col=spalte, value=value, header=true, boxheight=4.3, anchor=sk-h2-end]
+\SemioVizRunFamily{heatmap}[data=sk-h2, rowcol=zeile, colcol=spalte, valuecol=value, sparse=true, annotate=true, labels=true]
+\coordinate (sk-h2-end) at (0, -26);
 \SemioVizNoteBelow{sk-h2-end}{66}{Zusammenhang, keine Kausalität (eigene Einordnung).}
 \end{VizColumn}
 \end{VizSection}
 
 \begin{VizSection}[title={H3 \ MARKTSNAPSHOT 2022 \ \textperiodcentered\ \ n\,=\,746 Digital Reuse Market Solutions, Europa}]
 \begin{VizColumn}[width=72]
-\SemioVizLayout{bar}[data=sk-h3, label=label, value=value, orient=horizontal, labelwidth=38, boxheight=2.55, frame=false]
+\SemioVizChart{horizontal-bar-chart}[data=sk-h3, x=label, y=value, labels=value, grid=none, padLeft=38]
 \end{VizColumn}
 \begin{VizColumn}[width=68, note={Online-Zahlung: 13,4\,\% aller erfassten Lösungen. \enskip „Marktplatz“ ist nur eine von neun Kategorien (5,9\,\%); die Momentaufnahme 2022 ist kein aktueller Marktanteil.}]
 \end{VizColumn}

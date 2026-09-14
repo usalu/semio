@@ -288,7 +288,7 @@ export function parsePluginCargo(manifestPath: string, repoRoot: string, view?: 
   const packageId = parseComponentPackageId(text, manifestPath);
   const pluginId = packageId.slice("semio:".length);
   moduleDirectoryName(pluginId);
-  const cratePath = relative(repoRoot, dirname(manifestPath));
+  const cratePath = relative(repoRoot, dirname(manifestPath)).replaceAll("\\", "/");
   const wasmOut = `${packageName.replace(/-/g, "_")}.wasm`;
   const semioBlock = tomlBlocksAfterHeader(text.split("\n"), (line) => line === "[package.metadata.semio]")[0];
   const semioText = semioBlock?.join("\n") ?? "";

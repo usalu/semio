@@ -1,0 +1,291 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-matrix-heatmap}[2026/09/05 v0.3.0 semio viz namespace matrix-heatmap families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-transform}
+\RequirePackage{semio-viz-charts-distribution}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 🔑 Heatmap keys, `semio / viz / family / heatmap`.
+% rowcol    (column, default `row`)    row identity column
+% colcol    (column, default `col`)    column identity column
+% valuecol  (column, default `value`)  numeric column
+% cell      (choice `rect|dot|bubble|binary`, default rect) shape drawn in every cell
+% scheme    (choice `sequential|diverging`, default sequential) colour ramp of the value scale
+% annotate  (bool, default false)      print the value inside every cell
+% dendrogram (choice `none|row|column|both`, default none) reserve and draw the marginal cluster trees
+% marginals (bool, default false)      draw the marginal row and column histograms
+% labels    (bool, default true)       print the row and column names
+% padding   (fp, default 0.08)         relative gap between cells
+% sparse    (bool, default true)       leave a cell without a value empty; false outlines it, so a
+%                                      gap in the data reads as a gap and not as an absent cell
+\tl_new:N \l_semio_viz_hm_row_tl
+\tl_new:N \l_semio_viz_hm_col_tl
+\tl_new:N \l_semio_viz_hm_value_tl
+\tl_new:N \l_semio_viz_hm_cell_tl
+\tl_new:N \l_semio_viz_hm_scheme_tl
+\bool_new:N \l_semio_viz_hm_annotate_bool
+\tl_new:N \l_semio_viz_hm_dendrogram_tl
+\bool_new:N \l_semio_viz_hm_marginals_bool
+\bool_new:N \l_semio_viz_hm_labels_bool
+\fp_new:N \l_semio_viz_hm_padding_fp
+\bool_new:N \l_semio_viz_hm_sparse_bool
+
+\keys_define:nn { semio / viz / family / heatmap } {
+  rowcol     .tl_set:N = \l_semio_viz_hm_row_tl,
+  colcol     .tl_set:N = \l_semio_viz_hm_col_tl,
+  valuecol   .tl_set:N = \l_semio_viz_hm_value_tl,
+  cell       .tl_set:N = \l_semio_viz_hm_cell_tl,
+  scheme     .tl_set:N = \l_semio_viz_hm_scheme_tl,
+  annotate   .bool_set:N = \l_semio_viz_hm_annotate_bool,
+  dendrogram .tl_set:N = \l_semio_viz_hm_dendrogram_tl,
+  marginals  .bool_set:N = \l_semio_viz_hm_marginals_bool,
+  labels     .bool_set:N = \l_semio_viz_hm_labels_bool,
+  padding    .fp_set:N = \l_semio_viz_hm_padding_fp,
+  sparse     .bool_set:N = \l_semio_viz_hm_sparse_bool,
+  unknown    .code:n = { },
+}
+%endregion 🔖️Keys
+
+%region 🔖️Families
+\fp_new:N \l_semio_viz_hm_x_fp
+\fp_new:N \l_semio_viz_hm_y_fp
+\fp_new:N \l_semio_viz_hm_w_fp
+\fp_new:N \l_semio_viz_hm_h_fp
+
+% 🔥 Heatmap: the matrix family behind every clustered, annotated, calendar, confusion,
+% distance, similarity, covariance, co-occurrence, transition, binary, dot and sparse matrix.
+\SemioVizFamily { heatmap } {
+  \semio_viz_cb_reset:
+  \tl_set:Nn \l_semio_viz_cb_data_tl { demo-matrix }
+  \tl_set:Nn \l_semio_viz_hm_row_tl { row }
+  \tl_set:Nn \l_semio_viz_hm_col_tl { col }
+  \tl_set:Nn \l_semio_viz_hm_value_tl { value }
+  \tl_set:Nn \l_semio_viz_hm_cell_tl { rect }
+  \tl_set:Nn \l_semio_viz_hm_scheme_tl { sequential }
+  \bool_set_false:N \l_semio_viz_hm_annotate_bool
+  \tl_set:Nn \l_semio_viz_hm_dendrogram_tl { none }
+  \bool_set_false:N \l_semio_viz_hm_marginals_bool
+  \bool_set_true:N \l_semio_viz_hm_labels_bool
+  \fp_set:Nn \l_semio_viz_hm_padding_fp { 0.08 }
+  \bool_set_true:N \l_semio_viz_hm_sparse_bool
+  \keys_set:nn { semio / viz / family / common } {#1}
+  \keys_set:nn { semio / viz / family / heatmap } {#1}
+  \semio_viz_cb_frame:
+  \semio_viz_hm_render:
+}
+
+% 🔥 Runs the heatmap family once its keys are set.
+\cs_new_protected:Npn \semio_viz_hm_render: {
+  \semio_viz_tr_matrix_load:nnnn { \l_semio_viz_cb_data_tl } { \l_semio_viz_hm_row_tl }
+    { \l_semio_viz_hm_col_tl } { \l_semio_viz_hm_value_tl }
+  \fp_set_eq:NN \l_semio_viz_hm_x_fp \l_semio_viz_cb_xa_fp
+  \fp_set_eq:NN \l_semio_viz_hm_y_fp \l_semio_viz_cb_ya_fp
+  \fp_set:Nn \l_semio_viz_hm_w_fp { \l_semio_viz_cb_xb_fp - \l_semio_viz_cb_xa_fp }
+  \fp_set:Nn \l_semio_viz_hm_h_fp { \l_semio_viz_cb_yb_fp - \l_semio_viz_cb_ya_fp }
+  \str_if_eq:VnF \l_semio_viz_hm_dendrogram_tl { none } { \semio_viz_hm_dendrogram: }
+  \bool_if:NT \l_semio_viz_hm_marginals_bool { \semio_viz_hm_marginals: }
+  \fp_set:Nn \l_semio_viz_cb_w_fp
+    { \l_semio_viz_hm_w_fp / \seq_count:N \g_semio_viz_tr_matrix_cols_seq }
+  \fp_set:Nn \l_semio_viz_cb_h_fp
+    { \l_semio_viz_hm_h_fp / \seq_count:N \g_semio_viz_tr_matrix_rows_seq }
+  \int_step_inline:nn { \seq_count:N \g_semio_viz_tr_matrix_rows_seq } {
+    \int_step_inline:nn { \seq_count:N \g_semio_viz_tr_matrix_cols_seq }
+      { \semio_viz_hm_cell:nn {##1} {####1} }
+  }
+  \bool_if:NT \l_semio_viz_hm_labels_bool { \semio_viz_hm_labels: }
+}
+
+% 🔥 One matrix cell at row #1, column #2.
+\cs_new_protected:Npn \semio_viz_hm_cell:nn #1#2 {
+  \fp_set:Nn \l_semio_viz_cb_c_fp { \semio_viz_tr_matrix_at:nn {#1} {#2} }
+  \fp_compare:nNnT { \l_semio_viz_cb_c_fp } ? { \l_semio_viz_cb_c_fp }
+    { \bool_if:NF \l_semio_viz_hm_sparse_bool { \semio_viz_hm_empty:nn {#1} {#2} } }
+  \fp_compare:nNnF { \l_semio_viz_cb_c_fp } ? { \l_semio_viz_cb_c_fp } {
+    \fp_set:Nn \l_semio_viz_cb_t_fp
+      { \l_semio_viz_hm_x_fp + ( (#2) - 1 ) * \l_semio_viz_cb_w_fp }
+    \fp_set:Nn \l_semio_viz_cb_u_fp
+      { \l_semio_viz_hm_y_fp + ( (#1) - 1 ) * \l_semio_viz_cb_h_fp }
+    \fp_set:Nn \l_semio_viz_cb_a_fp
+      {
+        ( \l_semio_viz_cb_c_fp - \g_semio_viz_tr_matrix_min_fp )
+        / max ( 1e-9 , \g_semio_viz_tr_matrix_max_fp - \g_semio_viz_tr_matrix_min_fp )
+      }
+    \semio_viz_probe_geometry:nx { cell }
+      { #1, #2, \fp_eval:n { \l_semio_viz_cb_c_fp }, \fp_eval:n { \l_semio_viz_cb_a_fp } }
+    \str_case:VnF \l_semio_viz_hm_cell_tl
+      {
+        { dot } { \semio_viz_hm_dot:nn { 0.9 } { 1 } }
+        { bubble } { \semio_viz_hm_dot:nn { \l_semio_viz_cb_a_fp } { 1 } }
+        { binary } { \semio_viz_hm_binary: }
+      }
+      { \semio_viz_hm_rect: }
+    \bool_if:NT \l_semio_viz_hm_annotate_bool {
+      \semio_viz_g_text:nnnn
+        { \l_semio_viz_cb_t_fp + \l_semio_viz_cb_w_fp / 2 }
+        { \l_semio_viz_cb_u_fp + \l_semio_viz_cb_h_fp / 2 } { center }
+        { \fp_to_decimal:n { round ( \l_semio_viz_cb_c_fp , 1 ) } }
+    }
+  }
+}
+
+% ▭ Filled cell rectangle shaded by the normalised value.
+% 🕳️ The cell (#1,#2) that carries no value, outlined and unfilled under `sparse = false`.
+\cs_new_protected:Npn \semio_viz_hm_empty:nn #1#2 {
+  \semio_viz_g_rect:nnnnn
+    {
+      \l_semio_viz_hm_x_fp + ( (#2) - 1 ) * \l_semio_viz_cb_w_fp
+      + \l_semio_viz_cb_w_fp * \l_semio_viz_hm_padding_fp / 2
+    }
+    {
+      \l_semio_viz_hm_y_fp + ( (#1) - 1 ) * \l_semio_viz_cb_h_fp
+      + \l_semio_viz_cb_h_fp * \l_semio_viz_hm_padding_fp / 2
+    }
+    { \l_semio_viz_cb_w_fp * ( 1 - \l_semio_viz_hm_padding_fp ) }
+    { \l_semio_viz_cb_h_fp * ( 1 - \l_semio_viz_hm_padding_fp ) }
+    { fill = none , draw = semio-chrome-border-normal ,
+      line~width = \semio@stroke@hairline , draw~opacity = 0.4 }
+}
+
+% 🟥 The filled cell of the current heatmap band, inset by half the padding on every side.
+\cs_new_protected:Npn \semio_viz_hm_rect: {
+  \semio_viz_g_rect:nnnnn
+    { \l_semio_viz_cb_t_fp + \l_semio_viz_cb_w_fp * \l_semio_viz_hm_padding_fp / 2 }
+    { \l_semio_viz_cb_u_fp + \l_semio_viz_cb_h_fp * \l_semio_viz_hm_padding_fp / 2 }
+    { \l_semio_viz_cb_w_fp * ( 1 - \l_semio_viz_hm_padding_fp ) }
+    { \l_semio_viz_cb_h_fp * ( 1 - \l_semio_viz_hm_padding_fp ) }
+    {
+      fill = \semio_viz_hm_colour: ,
+      fill~opacity = \fp_eval:n { 0.12 + 0.85 * abs ( \l_semio_viz_cb_a_fp * 2 - 1 ) } ,
+      draw = none
+    }
+}
+
+% ⚫ Dot or bubble cell of relative area #1 in palette slot #2.
+\cs_new_protected:Npn \semio_viz_hm_dot:nn #1#2 {
+  \semio_viz_g_circle:nnnn
+    { \l_semio_viz_cb_t_fp + \l_semio_viz_cb_w_fp / 2 }
+    { \l_semio_viz_cb_u_fp + \l_semio_viz_cb_h_fp / 2 }
+    {
+      min ( \l_semio_viz_cb_w_fp , \l_semio_viz_cb_h_fp ) / 2
+      * ( 1 - \l_semio_viz_hm_padding_fp ) * sqrt ( max ( 0.02 , #1 ) )
+    }
+    { fill = \semio_viz_hm_colour: , draw = none , fill~opacity = 0.9 }
+}
+
+% ◼️ Binary or presence/absence cell: filled above the midpoint, hollow below.
+\cs_new_protected:Npn \semio_viz_hm_binary: {
+  \semio_viz_g_rect:nnnnn
+    { \l_semio_viz_cb_t_fp + \l_semio_viz_cb_w_fp * \l_semio_viz_hm_padding_fp / 2 }
+    { \l_semio_viz_cb_u_fp + \l_semio_viz_cb_h_fp * \l_semio_viz_hm_padding_fp / 2 }
+    { \l_semio_viz_cb_w_fp * ( 1 - \l_semio_viz_hm_padding_fp ) }
+    { \l_semio_viz_cb_h_fp * ( 1 - \l_semio_viz_hm_padding_fp ) }
+    {
+      fill = \fp_compare:nTF { \l_semio_viz_cb_a_fp >= 0.5 }
+               { \semio_viz_hm_colour: } { semio-chrome-canvas } ,
+      draw = semio-chrome-border-normal , line~width = \semio@stroke@hairline
+    }
+}
+
+% 🎨 Colour of the current cell under the active scheme.
+\cs_new:Npn \semio_viz_hm_colour: {
+  \str_if_eq:VnTF \l_semio_viz_hm_scheme_tl { diverging }
+    {
+      \fp_compare:nTF { \l_semio_viz_cb_a_fp >= 0.5 }
+        { \semio_viz_palette:n { 1 } } { \semio_viz_palette:n { 2 } }
+    }
+    { \semio_viz_palette:n { 1 } }
+}
+
+% 🌿 Marginal dendrogram slots: a two-level cluster join drawn beside the matrix.
+\cs_new_protected:Npn \semio_viz_hm_dendrogram: {
+  \bool_lazy_or:nnT
+    { \str_if_eq_p:Vn \l_semio_viz_hm_dendrogram_tl { column } }
+    { \str_if_eq_p:Vn \l_semio_viz_hm_dendrogram_tl { both } }
+    {
+      \fp_set:Nn \l_semio_viz_hm_h_fp { \l_semio_viz_hm_h_fp * 0.78 }
+      \semio_viz_hm_tree:nnnn { \l_semio_viz_hm_x_fp }
+        { \l_semio_viz_hm_y_fp + \l_semio_viz_hm_h_fp } { \l_semio_viz_hm_w_fp }
+        { \seq_count:N \g_semio_viz_tr_matrix_cols_seq }
+    }
+  \bool_lazy_or:nnT
+    { \str_if_eq_p:Vn \l_semio_viz_hm_dendrogram_tl { row } }
+    { \str_if_eq_p:Vn \l_semio_viz_hm_dendrogram_tl { both } }
+    {
+      \fp_set:Nn \l_semio_viz_hm_w_fp { \l_semio_viz_hm_w_fp * 0.82 }
+      \semio_viz_hm_tree:nnnn { \l_semio_viz_hm_x_fp + \l_semio_viz_hm_w_fp }
+        { \l_semio_viz_hm_y_fp } { \l_semio_viz_hm_w_fp * 0.2 }
+        { \seq_count:N \g_semio_viz_tr_matrix_rows_seq }
+    }
+}
+
+% 🌿 A balanced binary join of #4 leaves spanning width #3 from (#1,#2).
+\cs_new_protected:Npn \semio_viz_hm_tree:nnnn #1#2#3#4 {
+  \int_step_inline:nn { (#4) } {
+    \semio_viz_g_line:nnnnn
+      { (#1) + ( ##1 - 0.5 ) * (#3) / (#4) } { (#2) }
+      { (#1) + ( ##1 - 0.5 ) * (#3) / (#4) } { (#2) + 2 }
+      { draw = semio-chrome-border-normal , line~width = \semio@stroke@hairline }
+  }
+  \semio_viz_g_line:nnnnn { (#1) + 0.5 * (#3) / (#4) } { (#2) + 2 }
+    { (#1) + ( (#4) - 0.5 ) * (#3) / (#4) } { (#2) + 2 }
+    { draw = semio-chrome-border-normal , line~width = \semio@stroke@hairline }
+}
+
+% 📊 Marginal row and column sum histograms beside the matrix.
+\cs_new_protected:Npn \semio_viz_hm_marginals: {
+  \fp_set:Nn \l_semio_viz_hm_w_fp { \l_semio_viz_hm_w_fp * 0.82 }
+  \fp_set:Nn \l_semio_viz_hm_h_fp { \l_semio_viz_hm_h_fp * 0.82 }
+  \int_step_inline:nn { \seq_count:N \g_semio_viz_tr_matrix_rows_seq } {
+    \fp_zero:N \l_semio_viz_cb_a_fp
+    \int_step_inline:nn { \seq_count:N \g_semio_viz_tr_matrix_cols_seq } {
+      \fp_compare:nNnF { \semio_viz_tr_matrix_at:nn {##1} {####1} } ? { \semio_viz_tr_matrix_at:nn {##1} {####1} }
+        { \fp_add:Nn \l_semio_viz_cb_a_fp { \semio_viz_tr_matrix_at:nn {##1} {####1} } }
+    }
+    \semio_viz_g_rect:nnnnn { \l_semio_viz_hm_x_fp + \l_semio_viz_hm_w_fp + 0.6 }
+      {
+        \l_semio_viz_hm_y_fp
+        + ( ##1 - 1 ) * \l_semio_viz_hm_h_fp / \seq_count:N \g_semio_viz_tr_matrix_rows_seq
+      }
+      {
+        \fp_eval:n
+          {
+            ( \l_semio_viz_cb_xb_fp - \l_semio_viz_hm_x_fp - \l_semio_viz_hm_w_fp - 1.2 )
+            * \l_semio_viz_cb_a_fp
+            / max ( 1e-9 , \g_semio_viz_tr_matrix_max_fp * \seq_count:N \g_semio_viz_tr_matrix_cols_seq )
+          }
+      }
+      {
+        \fp_eval:n
+          { \l_semio_viz_hm_h_fp / \seq_count:N \g_semio_viz_tr_matrix_rows_seq * 0.8 }
+      }
+      { fill = \semio_viz_palette:n { 3 } , fill~opacity = 0.7 , draw = none }
+  }
+}
+
+% 🏷️ Row and column names along the two axes.
+\cs_new_protected:Npn \semio_viz_hm_labels: {
+  \int_zero:N \l_semio_viz_cb_j_int
+  \seq_map_inline:Nn \g_semio_viz_tr_matrix_rows_seq {
+    \int_incr:N \l_semio_viz_cb_j_int
+    \semio_viz_g_text:nnnn { \l_semio_viz_hm_x_fp - 0.6 }
+      {
+        \l_semio_viz_hm_y_fp
+        + ( \l_semio_viz_cb_j_int - 0.5 ) * \l_semio_viz_cb_h_fp
+      }
+      { east } {##1}
+  }
+  \int_zero:N \l_semio_viz_cb_j_int
+  \seq_map_inline:Nn \g_semio_viz_tr_matrix_cols_seq {
+    \int_incr:N \l_semio_viz_cb_j_int
+    \semio_viz_g_text:nnnn
+      { \l_semio_viz_hm_x_fp + ( \l_semio_viz_cb_j_int - 0.5 ) * \l_semio_viz_cb_w_fp }
+      { \l_semio_viz_hm_y_fp - 0.6 } { north } {##1}
+  }
+}
+%endregion 🔖️Families
+
+\ExplSyntaxOff

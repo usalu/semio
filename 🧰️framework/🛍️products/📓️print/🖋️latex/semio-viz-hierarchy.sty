@@ -1,0 +1,1856 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-hierarchy}[2026/09/05 v0.3.0 semio viz hierarchy: construction, aggregates, traversal, tree and cluster layouts, rendering]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-hierarchy-tiling}
+\RequirePackage{semio-viz-hierarchy-packing}
+\RequirePackage{semio-viz-data}
+\RequirePackage{semio-viz-layout}
+\RequirePackage{semio-viz-probe}
+\RequirePackage{semio-viz-theme}
+\RequirePackage{semio-viz-guide}
+\RequirePackage{semio-tokens}
+\RequirePackage{tikz}
+
+\ExplSyntaxOn
+
+%region 🔖️Diagnostics
+\msg_new:nnn { semio-viz } { unknown-hierarchy }
+  { Unknown~viz~hierarchy~'#1'.~Build~it~with~\SemioVizHierarchy~before~use. }
+\msg_new:nnn { semio-viz } { hierarchy-no-root }
+  { Viz~hierarchy~'#1'~has~no~root~row~(no~row~with~an~empty~parent~cell). }
+\msg_new:nnn { semio-viz } { hierarchy-many-roots }
+  { Viz~hierarchy~'#1'~has~more~than~one~root~row~('#2'~and~'#3'). }
+\msg_new:nnn { semio-viz } { hierarchy-missing-parent }
+  { Viz~hierarchy~'#1':~node~'#2'~names~the~unknown~parent~'#3'. }
+\msg_new:nnn { semio-viz } { hierarchy-duplicate-id }
+  { Viz~hierarchy~'#1':~the~identifier~'#2'~occurs~twice. }
+\msg_new:nnn { semio-viz } { unknown-hierarchy-layout }
+  { Unknown~hierarchy~layout~'#1'~(tree,~cluster,~treemap,~partition,~pack). }
+\msg_new:nnn { semio-viz } { unknown-hierarchy-tile }
+  { Unknown~treemap~tiling~'#1'~(squarify,~resquarify,~slice,~dice,~slice-dice,~binary,~strip,~voronoi). }
+\msg_new:nnn { semio-viz } { unknown-hierarchy-sort }
+  { Unknown~hierarchy~sort~'#1'~(none,~value-ascending,~value-descending,~height-ascending,~height-descending,~name-ascending,~name-descending). }
+%endregion 🔖️Diagnostics
+
+%region 🔖️Storage
+% 🗄️ Node fields live in one control sequence per (hierarchy, field, index); a
+% csname lookup is the cheapest random-access array TeX offers, which is what
+% keeps the fp loops of the pack front chain inside seconds for ~200 nodes.
+\cs_new_protected:Npn \semio_viz_hierarchy_set:nnnn #1#2#3#4 {
+  \cs_gset_nopar:cpx { g_semio_viz_hierarchy_ #1 _ #2 _ \int_eval:n {#3} } {#4}
+}
+
+% 🔍 Expands to the stored field, or to 0 when the field was never written. The name is assembled
+% once and handed straight to the reader: `\cs_if_exist_use:cF` builds the same string twice, and
+% this is the innermost operation of every fp loop in the pack front chain.
+\cs_new:Npn \semio_viz_hierarchy_get:nnn #1#2#3 {
+  \exp_after:wN \semio_viz_hierarchy_read:N
+    \cs:w g_semio_viz_hierarchy_ #1 _ #2 _ \int_eval:n {#3} \cs_end:
+}
+
+% 🈳 Reads a field control sequence: an undefined name arrives as \scan_stop: and reads as 0.
+\cs_new:Npn \semio_viz_hierarchy_read:N #1 {
+  \if_meaning:w #1 \scan_stop: 0 \else: \exp_after:wN #1 \fi:
+}
+
+% ♻️ Declares a sequence variable if needed and empties it.
+\cs_new_protected:Npn \semio_viz_hierarchy_seq_reset:n #1 {
+  \seq_if_exist:cF {#1} { \seq_new:c {#1} }
+  \seq_gclear:c {#1}
+}
+
+% 👶 Child sequence of node #2 in hierarchy #1.
+\cs_new:Npn \semio_viz_hierarchy_kids:nn #1#2 { g_semio_viz_hierarchy_ #1 _kids_ \int_eval:n {#2} _seq }
+% 🔢 Number of children of node #2.
+\cs_new:Npn \semio_viz_hierarchy_nk:nn #1#2 { \seq_count:c { g_semio_viz_hierarchy_ #1 _kids_ \int_eval:n {#2} _seq } }
+% 👉 The #3-th child (1-based) of node #2, or 0.
+\cs_new:Npn \semio_viz_hierarchy_kid:nnn #1#2#3 {
+  \seq_item:cn { g_semio_viz_hierarchy_ #1 _kids_ \int_eval:n {#2} _seq } {#3}
+}
+
+\int_new:N \l_semio_viz_hierarchy_n_int
+\int_new:N \l_semio_viz_hierarchy_i_int
+\int_new:N \l_semio_viz_hierarchy_j_int
+\int_new:N \l_semio_viz_hierarchy_k_int
+\tl_new:N \l_semio_viz_hierarchy_cell_tl
+\tl_new:N \l_semio_viz_hierarchy_name_tl
+\seq_new:N \g_semio_viz_hierarchy_names_seq
+
+% ❓ True when a hierarchy of that name was built.
+\prg_new_protected_conditional:Npnn \semio_viz_hierarchy_if_exist:n #1 { T, F, TF } {
+  \seq_if_in:NnTF \g_semio_viz_hierarchy_names_seq {#1} { \prg_return_true: } { \prg_return_false: }
+}
+
+% 🛡️ Resolves a hierarchy name: a table declared with \SemioVizHierarchy is built
+% under its own name on first use, anything else must already be a hierarchy.
+\cs_new_protected:Npn \semio_viz_hierarchy_require:n #1 {
+  \semio_viz_hierarchy_if_exist:nF {#1} {
+    \seq_if_in:NnTF \g_semio_viz_table_names_seq {#1}
+      { \semio_viz_hierarchy_build:nn {#1} { data = #1 } }
+      { \msg_error:nnn { semio-viz } { unknown-hierarchy } {#1} }
+  }
+}
+%endregion 🔖️Storage
+
+%region 🔖️Constructor
+% 🌳 \SemioVizHierarchy: the stratify/path constructor of the hierarchy namespace,
+% reading its rows through semio-viz-data's empty-cell-preserving table kernel.
+\prg_generate_conditional_variant:Nnn \regex_match:nn { nV } { T, F, TF }
+\cs_generate_variant:Nn \seq_set_split:Nnn { NVV }
+
+\int_new:N \l_semio_viz_hierarchy_idcol_int
+\int_new:N \l_semio_viz_hierarchy_parentcol_int
+\int_new:N \l_semio_viz_hierarchy_valuecol_int
+\int_new:N \g_semio_viz_hierarchy_generation_int
+
+% 🗂️ Identifier lookup as one control sequence per (build, identifier): l3prop
+% splits its whole list on every read, which turns a two-hundred node table into
+% a quadratic token walk, while a csname lookup is flat.
+\cs_new_protected:Npn \semio_viz_hierarchy_index_put:nn #1#2 {
+  \cs_gset_nopar:cpx { g_semio_viz_hierarchy_index_ \int_use:N \g_semio_viz_hierarchy_generation_int
+    _ \tl_to_str:n {#1} } { \int_eval:n {#2} }
+}
+% 🔎 Node index of the identifier #1 in the build being read, or 0 when the table never declared it.
+\cs_new:Npn \semio_viz_hierarchy_index:n #1 {
+  \exp_after:wN \semio_viz_hierarchy_read:N
+    \cs:w g_semio_viz_hierarchy_index_
+      \int_use:N \g_semio_viz_hierarchy_generation_int _ \tl_to_str:n {#1} \cs_end:
+}
+\cs_generate_variant:Nn \semio_viz_hierarchy_index_put:nn { Vn }
+\cs_generate_variant:Nn \semio_viz_hierarchy_index:n { V }
+
+% 🔢 Coerces a cell to a number the way d3 does (`+value || 0`): anything that is
+% not a finite decimal literal becomes zero instead of raising.
+\cs_new_protected:Npn \semio_viz_hierarchy_number:NN #1#2 {
+  \regex_match:nVTF { \A [\ ]* [-+]? ( [0-9]+ (\.[0-9]*)? | \.[0-9]+ ) ([eE][-+]?[0-9]+)? [\ ]* \Z } #1
+    { \fp_set:Nn #2 {#1} }
+    { \fp_zero:N #2 }
+}
+
+\tl_new:N \l_semio_viz_hierarchy_table_tl
+\tl_new:N \l_semio_viz_hierarchy_idcol_tl
+\tl_new:N \l_semio_viz_hierarchy_parentcol_tl
+\tl_new:N \l_semio_viz_hierarchy_valuecol_tl
+\tl_new:N \l_semio_viz_hierarchy_pathcol_tl
+\tl_new:N \l_semio_viz_hierarchy_delimiter_tl
+\tl_new:N \l_semio_viz_hierarchy_sort_tl
+\tl_new:N \l_semio_viz_hierarchy_aggregate_tl
+\tl_new:N \l_semio_viz_hierarchy_id_tl
+\tl_new:N \l_semio_viz_hierarchy_parent_tl
+\tl_new:N \l_semio_viz_hierarchy_prefix_tl
+\seq_new:N \l_semio_viz_hierarchy_stack_seq
+\seq_new:N \l_semio_viz_hierarchy_next_seq
+\seq_new:N \l_semio_viz_hierarchy_path_seq
+\fp_new:N \l_semio_viz_hierarchy_own_fp
+\int_new:N \l_semio_viz_hierarchy_root_int
+\int_new:N \l_semio_viz_hierarchy_node_int
+
+%region 🔖️Keys
+% 📋 `semio / viz / hierarchy` -- construction keys of \SemioVizHierarchy.
+%   data       (table name, required)                              default empty
+%   id         (column holding the node identifier)   default: the table's id role
+%   parent     (column holding the parent identifier) default: the table's parent role
+%   value      (column with the own value, `none` disables) default: the value role
+%   path       (column holding a delimited path, replaces id+parent) default empty
+%   delimiter  (single token separating path segments)              default `/`
+%   aggregate  (`sum`, `count` or `none`)                           default `sum`
+%   sort       (see \semio_viz_hierarchy_sort:nn)                   default `none`
+\keys_define:nn { semio / viz / hierarchy } {
+  data      .tl_set:N = \l_semio_viz_hierarchy_table_tl,
+  id        .tl_set:N = \l_semio_viz_hierarchy_idcol_tl,
+  parent    .tl_set:N = \l_semio_viz_hierarchy_parentcol_tl,
+  value     .tl_set:N = \l_semio_viz_hierarchy_valuecol_tl,
+  path      .tl_set:N = \l_semio_viz_hierarchy_pathcol_tl,
+  delimiter .tl_set:N = \l_semio_viz_hierarchy_delimiter_tl,
+  aggregate .tl_set:N = \l_semio_viz_hierarchy_aggregate_tl,
+  sort      .tl_set:N = \l_semio_viz_hierarchy_sort_tl,
+}
+
+% ♻️ Puts every construction key back to its documented default before an option list is read.
+\cs_new_protected:Npn \semio_viz_hierarchy_keys_reset: {
+  \tl_clear:N \l_semio_viz_hierarchy_table_tl
+  \tl_clear:N \l_semio_viz_hierarchy_idcol_tl
+  \tl_clear:N \l_semio_viz_hierarchy_parentcol_tl
+  \tl_clear:N \l_semio_viz_hierarchy_valuecol_tl
+  \tl_clear:N \l_semio_viz_hierarchy_pathcol_tl
+  \tl_set:Nn \l_semio_viz_hierarchy_delimiter_tl { / }
+  \tl_set:Nn \l_semio_viz_hierarchy_aggregate_tl { sum }
+  \tl_set:Nn \l_semio_viz_hierarchy_sort_tl { none }
+}
+%endregion 🔖️Keys
+
+% 🆕 Allocates one node, records its identifier and returns its index in #3.
+\cs_new_protected:Npn \semio_viz_hierarchy_node_new:nnN #1#2#3 {
+  \int_incr:N \l_semio_viz_hierarchy_n_int
+  \int_set_eq:NN #3 \l_semio_viz_hierarchy_n_int
+  \semio_viz_hierarchy_index_put:nn {#2} { \int_use:N #3 }
+  \semio_viz_hierarchy_set:nnnn {#1} { id } { #3 } { \exp_not:n {#2} }
+  \semio_viz_hierarchy_set:nnnn {#1} { own } { #3 } { 0 }
+  \semio_viz_hierarchy_set:nnnn {#1} { pi } { #3 } { 0 }
+  \semio_viz_hierarchy_set:nnnn {#1} { si } { #3 } { 0 }
+  \semio_viz_hierarchy_seq_reset:n { \semio_viz_hierarchy_kids:nn {#1} {#3} }
+}
+
+% 🔗 Appends node #3 to the child list of node #2 and records its sibling index.
+\cs_new_protected:Npn \semio_viz_hierarchy_link:nnn #1#2#3 {
+  \seq_gput_right:cx { \semio_viz_hierarchy_kids:nn {#1} {#2} } { \int_eval:n {#3} }
+  \semio_viz_hierarchy_set:nnnn {#1} { pi } {#3} { \int_eval:n {#2} }
+  \semio_viz_hierarchy_set:nnnn {#1} { si } {#3} { \int_eval:n { \semio_viz_hierarchy_nk:nn {#1} {#2} - 1 } }
+}
+
+% 🧱 Reads the id/parent/value columns of a table into a fresh node set.
+\cs_new_protected:Npn \semio_viz_hierarchy_build_table:n #1 {
+  \semio_viz_table_col_index_opt:nnN { \l_semio_viz_hierarchy_table_tl }
+    { \l_semio_viz_hierarchy_idcol_tl } \l_semio_viz_hierarchy_idcol_int
+  \semio_viz_table_col_index_opt:nnN { \l_semio_viz_hierarchy_table_tl }
+    { \l_semio_viz_hierarchy_parentcol_tl } \l_semio_viz_hierarchy_parentcol_int
+  \semio_viz_table_col_index_opt:nnN { \l_semio_viz_hierarchy_table_tl }
+    { \l_semio_viz_hierarchy_valuecol_tl } \l_semio_viz_hierarchy_valuecol_int
+  \semio_viz_table_nrows:nN { \l_semio_viz_hierarchy_table_tl } \l_semio_viz_hierarchy_i_int
+  \int_step_inline:nn { \l_semio_viz_hierarchy_i_int } {
+    \semio_viz_table_row_load:nn { \l_semio_viz_hierarchy_table_tl } {##1}
+    \semio_viz_table_row_cell:nN { \l_semio_viz_hierarchy_idcol_int }
+      \l_semio_viz_hierarchy_id_tl
+    \int_compare:nNnTF { \semio_viz_hierarchy_index:V \l_semio_viz_hierarchy_id_tl } > { 0 }
+      { \msg_error:nnxx { semio-viz } { hierarchy-duplicate-id } {#1} { \l_semio_viz_hierarchy_id_tl } }
+      {
+        \exp_args:NnV \semio_viz_hierarchy_node_new:nnN {#1} \l_semio_viz_hierarchy_id_tl
+          \l_semio_viz_hierarchy_node_int
+        \int_compare:nNnT { \l_semio_viz_hierarchy_valuecol_int } > { 0 } {
+          \semio_viz_table_row_cell:nN { \l_semio_viz_hierarchy_valuecol_int }
+            \l_semio_viz_hierarchy_cell_tl
+          \semio_viz_hierarchy_number:NN \l_semio_viz_hierarchy_cell_tl \l_semio_viz_hierarchy_own_fp
+          \semio_viz_hierarchy_set:nnnn {#1} { own } { \l_semio_viz_hierarchy_node_int }
+            { \fp_use:N \l_semio_viz_hierarchy_own_fp }
+        }
+      }
+  }
+  \int_zero:N \l_semio_viz_hierarchy_root_int
+  \int_step_inline:nn { \l_semio_viz_hierarchy_n_int } {
+    \semio_viz_table_row_load:nn { \l_semio_viz_hierarchy_table_tl } {##1}
+    \semio_viz_table_row_cell:nN { \l_semio_viz_hierarchy_parentcol_int }
+      \l_semio_viz_hierarchy_parent_tl
+    \tl_if_blank:VTF \l_semio_viz_hierarchy_parent_tl
+      {
+        \int_compare:nNnTF \l_semio_viz_hierarchy_root_int > { 0 }
+          { \msg_error:nnxxx { semio-viz } { hierarchy-many-roots } {#1}
+              { \semio_viz_hierarchy_get:nnn {#1} { id } { \l_semio_viz_hierarchy_root_int } }
+              { \semio_viz_hierarchy_get:nnn {#1} { id } {##1} } }
+          { \int_set:Nn \l_semio_viz_hierarchy_root_int {##1} }
+      }
+      {
+        \int_compare:nNnTF { \semio_viz_hierarchy_index:V \l_semio_viz_hierarchy_parent_tl } > { 0 }
+          { \semio_viz_hierarchy_link:nnn {#1}
+              { \semio_viz_hierarchy_index:V \l_semio_viz_hierarchy_parent_tl } {##1} }
+          { \msg_error:nnxxx { semio-viz } { hierarchy-missing-parent } {#1}
+              { \semio_viz_hierarchy_get:nnn {#1} { id } {##1} } { \l_semio_viz_hierarchy_parent_tl } }
+      }
+  }
+}
+
+% 🧭 Reads a delimited `path` column: every prefix becomes a node, the shared
+% first segment becomes the root, and only full paths carry a value.
+\cs_new_protected:Npn \semio_viz_hierarchy_build_path:n #1 {
+  \semio_viz_table_col_index_opt:nnN { \l_semio_viz_hierarchy_table_tl }
+    { \l_semio_viz_hierarchy_pathcol_tl } \l_semio_viz_hierarchy_idcol_int
+  \semio_viz_table_col_index_opt:nnN { \l_semio_viz_hierarchy_table_tl }
+    { \l_semio_viz_hierarchy_valuecol_tl } \l_semio_viz_hierarchy_valuecol_int
+  \semio_viz_table_nrows:nN { \l_semio_viz_hierarchy_table_tl } \l_semio_viz_hierarchy_i_int
+  \int_zero:N \l_semio_viz_hierarchy_root_int
+  \int_step_inline:nn { \l_semio_viz_hierarchy_i_int } {
+    \semio_viz_table_row_load:nn { \l_semio_viz_hierarchy_table_tl } {##1}
+    \semio_viz_table_row_cell:nN { \l_semio_viz_hierarchy_idcol_int }
+      \l_semio_viz_hierarchy_cell_tl
+    \seq_set_split:NVV \l_semio_viz_hierarchy_path_seq \l_semio_viz_hierarchy_delimiter_tl
+      \l_semio_viz_hierarchy_cell_tl
+    \seq_remove_all:Nn \l_semio_viz_hierarchy_path_seq { }
+    \tl_clear:N \l_semio_viz_hierarchy_prefix_tl
+    \int_zero:N \l_semio_viz_hierarchy_j_int
+    \seq_map_inline:Nn \l_semio_viz_hierarchy_path_seq {
+      \tl_if_empty:NTF \l_semio_viz_hierarchy_prefix_tl
+        { \tl_set:Nn \l_semio_viz_hierarchy_prefix_tl {####1} }
+        { \tl_put_right:Nx \l_semio_viz_hierarchy_prefix_tl
+            { \l_semio_viz_hierarchy_delimiter_tl ####1 } }
+      \int_compare:nNnTF { \semio_viz_hierarchy_index:V \l_semio_viz_hierarchy_prefix_tl } > { 0 }
+        { \int_set:Nn \l_semio_viz_hierarchy_node_int
+            { \semio_viz_hierarchy_index:V \l_semio_viz_hierarchy_prefix_tl } }
+        {
+          \exp_args:NnV \semio_viz_hierarchy_node_new:nnN {#1} \l_semio_viz_hierarchy_prefix_tl
+            \l_semio_viz_hierarchy_node_int
+          \int_compare:nNnTF \l_semio_viz_hierarchy_j_int = { 0 }
+            { \int_set_eq:NN \l_semio_viz_hierarchy_root_int \l_semio_viz_hierarchy_node_int }
+            { \semio_viz_hierarchy_link:nnn {#1} { \l_semio_viz_hierarchy_j_int }
+                { \l_semio_viz_hierarchy_node_int } }
+        }
+      \int_set_eq:NN \l_semio_viz_hierarchy_j_int \l_semio_viz_hierarchy_node_int
+    }
+    \int_compare:nNnT { \l_semio_viz_hierarchy_valuecol_int } > { 0 } {
+      \semio_viz_table_row_cell:nN { \l_semio_viz_hierarchy_valuecol_int }
+        \l_semio_viz_hierarchy_cell_tl
+      \semio_viz_hierarchy_number:NN \l_semio_viz_hierarchy_cell_tl \l_semio_viz_hierarchy_own_fp
+      \semio_viz_hierarchy_set:nnnn {#1} { own } { \l_semio_viz_hierarchy_j_int }
+        { \fp_use:N \l_semio_viz_hierarchy_own_fp }
+    }
+  }
+}
+%endregion 🔖️Constructor
+
+%region 🔖️Structure
+% 🧮 Fills the preorder (d3 eachBefore) and postorder (d3 eachAfter) sequences and
+% the depth/height fields; both traversals use d3's own explicit stacks so the
+% visiting order is identical, which every layout below depends on.
+\cs_new_protected:Npn \semio_viz_hierarchy_order:n #1 {
+  \semio_viz_hierarchy_seq_reset:n { g_semio_viz_hierarchy_ #1 _pre_seq }
+  \semio_viz_hierarchy_seq_reset:n { g_semio_viz_hierarchy_ #1 _post_seq }
+  \seq_clear:N \l_semio_viz_hierarchy_stack_seq
+  \seq_put_right:Nx \l_semio_viz_hierarchy_stack_seq
+    { \semio_viz_hierarchy_get:nnn {#1} { root } { 0 } }
+  \bool_while_do:nn { ! \seq_if_empty_p:N \l_semio_viz_hierarchy_stack_seq } {
+    \seq_pop_right:NN \l_semio_viz_hierarchy_stack_seq \l_semio_viz_hierarchy_cell_tl
+    \seq_gput_right:cV { g_semio_viz_hierarchy_ #1 _pre_seq } \l_semio_viz_hierarchy_cell_tl
+    \int_set:Nn \l_semio_viz_hierarchy_i_int { \l_semio_viz_hierarchy_cell_tl }
+    \int_compare:nNnTF { \semio_viz_hierarchy_get:nnn {#1} { pi } { \l_semio_viz_hierarchy_i_int } } = { 0 }
+      { \semio_viz_hierarchy_set:nnnn {#1} { dep } { \l_semio_viz_hierarchy_i_int } { 0 } }
+      { \semio_viz_hierarchy_set:nnnn {#1} { dep } { \l_semio_viz_hierarchy_i_int }
+          { \int_eval:n { \semio_viz_hierarchy_get:nnn {#1} { dep }
+              { \semio_viz_hierarchy_get:nnn {#1} { pi } { \l_semio_viz_hierarchy_i_int } } + 1 } } }
+    \int_step_inline:nnnn { \semio_viz_hierarchy_nk:nn {#1} { \l_semio_viz_hierarchy_i_int } } { -1 } { 1 } {
+      \seq_put_right:Nx \l_semio_viz_hierarchy_stack_seq
+        { \semio_viz_hierarchy_kid:nnn {#1} { \l_semio_viz_hierarchy_i_int } {##1} }
+    }
+  }
+  \seq_clear:N \l_semio_viz_hierarchy_stack_seq
+  \seq_clear:N \l_semio_viz_hierarchy_next_seq
+  \seq_put_right:Nx \l_semio_viz_hierarchy_stack_seq
+    { \semio_viz_hierarchy_get:nnn {#1} { root } { 0 } }
+  \bool_while_do:nn { ! \seq_if_empty_p:N \l_semio_viz_hierarchy_stack_seq } {
+    \seq_pop_right:NN \l_semio_viz_hierarchy_stack_seq \l_semio_viz_hierarchy_cell_tl
+    \seq_put_right:NV \l_semio_viz_hierarchy_next_seq \l_semio_viz_hierarchy_cell_tl
+    \int_set:Nn \l_semio_viz_hierarchy_i_int { \l_semio_viz_hierarchy_cell_tl }
+    \int_step_inline:nn { \semio_viz_hierarchy_nk:nn {#1} { \l_semio_viz_hierarchy_i_int } } {
+      \seq_put_right:Nx \l_semio_viz_hierarchy_stack_seq
+        { \semio_viz_hierarchy_kid:nnn {#1} { \l_semio_viz_hierarchy_i_int } {##1} }
+    }
+  }
+  \bool_while_do:nn { ! \seq_if_empty_p:N \l_semio_viz_hierarchy_next_seq } {
+    \seq_pop_right:NN \l_semio_viz_hierarchy_next_seq \l_semio_viz_hierarchy_cell_tl
+    \seq_gput_right:cV { g_semio_viz_hierarchy_ #1 _post_seq } \l_semio_viz_hierarchy_cell_tl
+  }
+  \seq_map_inline:cn { g_semio_viz_hierarchy_ #1 _post_seq } {
+    \int_zero:N \l_semio_viz_hierarchy_k_int
+    \int_step_inline:nn { \semio_viz_hierarchy_nk:nn {#1} {##1} } {
+      \int_set:Nn \l_semio_viz_hierarchy_k_int { \int_max:nn { \l_semio_viz_hierarchy_k_int }
+        { \semio_viz_hierarchy_get:nnn {#1} { hgt } { \semio_viz_hierarchy_kid:nnn {#1} {##1} {####1} } + 1 } }
+    }
+    \semio_viz_hierarchy_set:nnnn {#1} { hgt } {##1} { \int_use:N \l_semio_viz_hierarchy_k_int }
+  }
+}
+
+% 🔁 Maps over the preorder of a hierarchy; the body sees the node index as #1.
+\cs_new_protected:Npn \semio_viz_hierarchy_map_pre:nn #1#2 {
+  \seq_map_inline:cn { g_semio_viz_hierarchy_ #1 _pre_seq } {#2}
+}
+% 🔁 Maps over the postorder of a hierarchy; the body sees the node index as #1.
+\cs_new_protected:Npn \semio_viz_hierarchy_map_post:nn #1#2 {
+  \seq_map_inline:cn { g_semio_viz_hierarchy_ #1 _post_seq } {#2}
+}
+
+% ➕ d3 `node.sum(value)`, `node.count()` or the raw own values.
+\cs_new_protected:Npn \semio_viz_hierarchy_aggregate:nn #1#2 {
+  \str_case:nnF {#2} {
+    { sum } {
+      \semio_viz_hierarchy_map_post:nn {#1} {
+        \fp_set:Nn \l_semio_viz_hierarchy_own_fp { \semio_viz_hierarchy_get:nnn {#1} { own } {##1} }
+        \int_step_inline:nn { \semio_viz_hierarchy_nk:nn {#1} {##1} } {
+          \fp_add:Nn \l_semio_viz_hierarchy_own_fp
+            { \semio_viz_hierarchy_get:nnn {#1} { val } { \semio_viz_hierarchy_kid:nnn {#1} {##1} {####1} } }
+        }
+        \semio_viz_hierarchy_set:nnnn {#1} { val } {##1} { \fp_use:N \l_semio_viz_hierarchy_own_fp }
+      }
+    }
+    { count } {
+      \semio_viz_hierarchy_map_post:nn {#1} {
+        \int_compare:nNnTF { \semio_viz_hierarchy_nk:nn {#1} {##1} } = { 0 }
+          { \semio_viz_hierarchy_set:nnnn {#1} { val } {##1} { 1 } }
+          {
+            \fp_zero:N \l_semio_viz_hierarchy_own_fp
+            \int_step_inline:nn { \semio_viz_hierarchy_nk:nn {#1} {##1} } {
+              \fp_add:Nn \l_semio_viz_hierarchy_own_fp
+                { \semio_viz_hierarchy_get:nnn {#1} { val } { \semio_viz_hierarchy_kid:nnn {#1} {##1} {####1} } }
+            }
+            \semio_viz_hierarchy_set:nnnn {#1} { val } {##1} { \fp_use:N \l_semio_viz_hierarchy_own_fp }
+          }
+      }
+    }
+    { none } {
+      \semio_viz_hierarchy_map_pre:nn {#1} {
+        \semio_viz_hierarchy_set:nnnn {#1} { val } {##1} { \semio_viz_hierarchy_get:nnn {#1} { own } {##1} }
+      }
+    }
+  }
+  { \msg_error:nnn { semio-viz } { unknown-hierarchy-sort } {#2} }
+}
+
+% 🔤 d3 `node.sort(comparator)`: a stable merge sort of every child list, in
+% preorder, followed by a rebuild of the sibling indices and traversal orders.
+\cs_new_protected:Npn \semio_viz_hierarchy_sort:nn #1#2 {
+  \str_if_eq:nnF {#2} { none } {
+    \semio_viz_hierarchy_map_pre:nn {#1} {
+      \int_compare:nNnT { \semio_viz_hierarchy_nk:nn {#1} {##1} } > { 1 } {
+        \semio_viz_hierarchy_sort_children:nnn {#1} {##1} {#2}
+      }
+    }
+    \semio_viz_hierarchy_map_pre:nn {#1} {
+      \int_step_inline:nn { \semio_viz_hierarchy_nk:nn {#1} {##1} } {
+        \semio_viz_hierarchy_set:nnnn {#1} { si }
+          { \semio_viz_hierarchy_kid:nnn {#1} {##1} {####1} } { \int_eval:n { ####1 - 1 } }
+      }
+    }
+    \semio_viz_hierarchy_order:n {#1}
+  }
+}
+
+% ⚖️ Applies one comparator to the child list of node #2.
+\cs_new_protected:Npn \semio_viz_hierarchy_sort_children:nnn #1#2#3 {
+  \str_case:nnF {#3} {
+    { value-ascending } { \seq_gsort:cn { \semio_viz_hierarchy_kids:nn {#1} {#2} } {
+      \fp_compare:nNnTF { \semio_viz_hierarchy_get:nnn {#1} { val } {##1} } >
+        { \semio_viz_hierarchy_get:nnn {#1} { val } {##2} }
+        { \sort_return_swapped: } { \sort_return_same: } } }
+    { value-descending } { \seq_gsort:cn { \semio_viz_hierarchy_kids:nn {#1} {#2} } {
+      \fp_compare:nNnTF { \semio_viz_hierarchy_get:nnn {#1} { val } {##1} } <
+        { \semio_viz_hierarchy_get:nnn {#1} { val } {##2} }
+        { \sort_return_swapped: } { \sort_return_same: } } }
+    { height-ascending } { \seq_gsort:cn { \semio_viz_hierarchy_kids:nn {#1} {#2} } {
+      \int_compare:nNnTF { \semio_viz_hierarchy_get:nnn {#1} { hgt } {##1} } >
+        { \semio_viz_hierarchy_get:nnn {#1} { hgt } {##2} }
+        { \sort_return_swapped: } { \sort_return_same: } } }
+    { height-descending } { \seq_gsort:cn { \semio_viz_hierarchy_kids:nn {#1} {#2} } {
+      \int_compare:nNnTF { \semio_viz_hierarchy_get:nnn {#1} { hgt } {##1} } <
+        { \semio_viz_hierarchy_get:nnn {#1} { hgt } {##2} }
+        { \sort_return_swapped: } { \sort_return_same: } } }
+    { name-ascending } { \seq_gsort:cn { \semio_viz_hierarchy_kids:nn {#1} {#2} } {
+      \str_compare:eNeTF { \semio_viz_hierarchy_get:nnn {#1} { id } {##1} } >
+        { \semio_viz_hierarchy_get:nnn {#1} { id } {##2} }
+        { \sort_return_swapped: } { \sort_return_same: } } }
+    { name-descending } { \seq_gsort:cn { \semio_viz_hierarchy_kids:nn {#1} {#2} } {
+      \str_compare:eNeTF { \semio_viz_hierarchy_get:nnn {#1} { id } {##1} } <
+        { \semio_viz_hierarchy_get:nnn {#1} { id } {##2} }
+        { \sort_return_swapped: } { \sort_return_same: } } }
+  }
+  { \msg_error:nnn { semio-viz } { unknown-hierarchy-sort } {#3} }
+}
+%endregion 🔖️Structure
+
+%region 🔖️Traversal
+% 📤 d3 `node.ancestors()`: the node itself, then every parent up to the root.
+\cs_new_protected:Npn \semio_viz_hierarchy_ancestors:nnN #1#2#3 {
+  \seq_clear:N #3
+  \int_set:Nn \l_semio_viz_hierarchy_i_int {#2}
+  \bool_while_do:nn { \int_compare_p:nNn { \l_semio_viz_hierarchy_i_int } > { 0 } } {
+    \seq_put_right:Nx #3 { \int_use:N \l_semio_viz_hierarchy_i_int }
+    \int_set:Nn \l_semio_viz_hierarchy_i_int
+      { \semio_viz_hierarchy_get:nnn {#1} { pi } { \l_semio_viz_hierarchy_i_int } }
+  }
+}
+
+% 📥 d3 `node.descendants()`: the preorder of the subtree rooted at #2.
+\cs_new_protected:Npn \semio_viz_hierarchy_descendants:nnN #1#2#3 {
+  \seq_clear:N #3
+  \seq_clear:N \l_semio_viz_hierarchy_stack_seq
+  \seq_put_right:Nx \l_semio_viz_hierarchy_stack_seq { \int_eval:n {#2} }
+  \bool_while_do:nn { ! \seq_if_empty_p:N \l_semio_viz_hierarchy_stack_seq } {
+    \seq_pop_right:NN \l_semio_viz_hierarchy_stack_seq \l_semio_viz_hierarchy_cell_tl
+    \seq_put_right:NV #3 \l_semio_viz_hierarchy_cell_tl
+    \int_set:Nn \l_semio_viz_hierarchy_j_int { \l_semio_viz_hierarchy_cell_tl }
+    \int_step_inline:nnnn { \semio_viz_hierarchy_nk:nn {#1} { \l_semio_viz_hierarchy_j_int } } { -1 } { 1 } {
+      \seq_put_right:Nx \l_semio_viz_hierarchy_stack_seq
+        { \semio_viz_hierarchy_kid:nnn {#1} { \l_semio_viz_hierarchy_j_int } {##1} }
+    }
+  }
+}
+
+% 🍃 d3 `node.leaves()`: every childless descendant, in preorder.
+\cs_new_protected:Npn \semio_viz_hierarchy_leaves:nN #1#2 {
+  \seq_clear:N #2
+  \semio_viz_hierarchy_map_pre:nn {#1} {
+    \int_compare:nNnT { \semio_viz_hierarchy_nk:nn {#1} {##1} } = { 0 }
+      { \seq_put_right:Nn #2 {##1} }
+  }
+}
+
+\int_new:N \l_semio_viz_hierarchy_source_int
+\int_new:N \l_semio_viz_hierarchy_target_int
+
+\seq_new:N \l_semio_viz_hierarchy_queue_seq
+
+% 🔗 d3 `node.links()`: one parent/child pair per non-root node, in the
+% breadth-first order of d3's own node iterator; the body sees the child index as
+% #1 with source/target bound as integers.
+\cs_new_protected:Npn \semio_viz_hierarchy_map_links:nn #1#2 {
+  \seq_clear:N \l_semio_viz_hierarchy_queue_seq
+  \seq_put_right:Nx \l_semio_viz_hierarchy_queue_seq
+    { \semio_viz_hierarchy_get:nnn {#1} { root } { 0 } }
+  \bool_while_do:nn { ! \seq_if_empty_p:N \l_semio_viz_hierarchy_queue_seq } {
+    \seq_pop_left:NN \l_semio_viz_hierarchy_queue_seq \l_semio_viz_hierarchy_cell_tl
+    \int_set:Nn \l_semio_viz_hierarchy_source_int { \l_semio_viz_hierarchy_cell_tl }
+    \int_step_inline:nn
+      { \semio_viz_hierarchy_nk:nn {#1} { \l_semio_viz_hierarchy_source_int } } {
+      \seq_put_right:Nx \l_semio_viz_hierarchy_queue_seq
+        { \semio_viz_hierarchy_kid:nnn {#1} { \l_semio_viz_hierarchy_source_int } {##1} }
+    }
+    \int_compare:nNnT { \semio_viz_hierarchy_get:nnn {#1} { pi }
+      { \l_semio_viz_hierarchy_source_int } } > { 0 } {
+      \int_set:Nn \l_semio_viz_hierarchy_target_int { \l_semio_viz_hierarchy_source_int }
+      \int_set:Nn \l_semio_viz_hierarchy_source_int
+        { \semio_viz_hierarchy_get:nnn {#1} { pi } { \l_semio_viz_hierarchy_target_int } }
+      #2
+      \int_set:Nn \l_semio_viz_hierarchy_source_int { \l_semio_viz_hierarchy_target_int }
+    }
+  }
+}
+
+\tl_new:N \l_semio_viz_hierarchy_node_id_tl
+\tl_new:N \l_semio_viz_hierarchy_node_parent_tl
+\int_new:N \l_semio_viz_hierarchy_node_depth_int
+\int_new:N \l_semio_viz_hierarchy_node_height_int
+\int_new:N \l_semio_viz_hierarchy_node_children_int
+\int_new:N \l_semio_viz_hierarchy_node_index_int
+\fp_new:N \l_semio_viz_hierarchy_node_value_fp
+\fp_new:N \l_semio_viz_hierarchy_node_x_fp
+\fp_new:N \l_semio_viz_hierarchy_node_y_fp
+\fp_new:N \l_semio_viz_hierarchy_node_r_fp
+\fp_new:N \l_semio_viz_hierarchy_node_xa_fp
+\fp_new:N \l_semio_viz_hierarchy_node_xb_fp
+\fp_new:N \l_semio_viz_hierarchy_node_ya_fp
+\fp_new:N \l_semio_viz_hierarchy_node_yb_fp
+\bool_new:N \l_semio_viz_hierarchy_node_leaf_bool
+\bool_new:N \l_semio_viz_hierarchy_node_root_bool
+
+% 🧾 Binds every node field a renderer needs before running the body.
+\cs_new_protected:Npn \semio_viz_hierarchy_node_bind:nn #1#2 {
+  \int_set:Nn \l_semio_viz_hierarchy_node_index_int {#2}
+  \tl_set:Nx \l_semio_viz_hierarchy_node_id_tl { \semio_viz_hierarchy_get:nnn {#1} { id } {#2} }
+  \tl_set:Nx \l_semio_viz_hierarchy_node_parent_tl
+    { \semio_viz_hierarchy_get:nnn {#1} { id } { \semio_viz_hierarchy_get:nnn {#1} { pi } {#2} } }
+  \int_set:Nn \l_semio_viz_hierarchy_node_depth_int { \semio_viz_hierarchy_get:nnn {#1} { dep } {#2} }
+  \int_set:Nn \l_semio_viz_hierarchy_node_height_int { \semio_viz_hierarchy_get:nnn {#1} { hgt } {#2} }
+  \int_set:Nn \l_semio_viz_hierarchy_node_children_int { \semio_viz_hierarchy_nk:nn {#1} {#2} }
+  \fp_set:Nn \l_semio_viz_hierarchy_node_value_fp { \semio_viz_hierarchy_get:nnn {#1} { val } {#2} }
+  \fp_set:Nn \l_semio_viz_hierarchy_node_x_fp { \semio_viz_hierarchy_get:nnn {#1} { x } {#2} }
+  \fp_set:Nn \l_semio_viz_hierarchy_node_y_fp { \semio_viz_hierarchy_get:nnn {#1} { y } {#2} }
+  \fp_set:Nn \l_semio_viz_hierarchy_node_r_fp { \semio_viz_hierarchy_get:nnn {#1} { r } {#2} }
+  \fp_set:Nn \l_semio_viz_hierarchy_node_xa_fp { \semio_viz_hierarchy_get:nnn {#1} { x0 } {#2} }
+  \fp_set:Nn \l_semio_viz_hierarchy_node_xb_fp { \semio_viz_hierarchy_get:nnn {#1} { x1 } {#2} }
+  \fp_set:Nn \l_semio_viz_hierarchy_node_ya_fp { \semio_viz_hierarchy_get:nnn {#1} { y0 } {#2} }
+  \fp_set:Nn \l_semio_viz_hierarchy_node_yb_fp { \semio_viz_hierarchy_get:nnn {#1} { y1 } {#2} }
+  \bool_set:Nn \l_semio_viz_hierarchy_node_leaf_bool
+    { \int_compare_p:nNn { \l_semio_viz_hierarchy_node_children_int } = { 0 } }
+  \bool_set:Nn \l_semio_viz_hierarchy_node_root_bool
+    { \int_compare_p:nNn { \semio_viz_hierarchy_get:nnn {#1} { pi } {#2} } = { 0 } }
+}
+
+% 🎞️ The renderer iterator: preorder over every node with x, y, r, x0/x1/y0/y1,
+% depth, height, value, id and parent bound; the body sees the index as #1.
+\cs_new_protected:Npn \semio_viz_hierarchy_map_nodes:nn #1#2 {
+  \semio_viz_hierarchy_map_pre:nn {#1} {
+    \semio_viz_hierarchy_node_bind:nn {#1} {##1}
+    #2
+  }
+}
+
+% 📄 Duplicates the topology and aggregates of #1 into #2 so a layout can write
+% its geometry into a second name without touching the source hierarchy.
+\cs_new_protected:Npn \semio_viz_hierarchy_copy:nn #1#2 {
+  \str_if_eq:nnF {#1} {#2} {
+    \seq_if_in:NnF \g_semio_viz_hierarchy_names_seq {#2}
+      { \seq_gput_right:Nn \g_semio_viz_hierarchy_names_seq {#2} }
+    \semio_viz_hierarchy_set:nnnn {#2} { n } { 0 } { \semio_viz_hierarchy_get:nnn {#1} { n } { 0 } }
+    \semio_viz_hierarchy_set:nnnn {#2} { root } { 0 } { \semio_viz_hierarchy_get:nnn {#1} { root } { 0 } }
+    \int_step_inline:nn { \semio_viz_hierarchy_get:nnn {#1} { n } { 0 } } {
+      \clist_map_inline:nn { id, pi, si, dep, hgt, own, val } {
+        \semio_viz_hierarchy_set:nnnn {#2} {####1} {##1} { \semio_viz_hierarchy_get:nnn {#1} {####1} {##1} }
+      }
+      \semio_viz_hierarchy_seq_reset:n { \semio_viz_hierarchy_kids:nn {#2} {##1} }
+      \seq_gset_eq:cc { \semio_viz_hierarchy_kids:nn {#2} {##1} } { \semio_viz_hierarchy_kids:nn {#1} {##1} }
+    }
+    \semio_viz_hierarchy_seq_reset:n { \semio_viz_hierarchy_kids:nn {#2} { 0 } }
+    \seq_gset_eq:cc { \semio_viz_hierarchy_kids:nn {#2} { 0 } } { \semio_viz_hierarchy_kids:nn {#1} { 0 } }
+    \semio_viz_hierarchy_seq_reset:n { g_semio_viz_hierarchy_ #2 _pre_seq }
+    \semio_viz_hierarchy_seq_reset:n { g_semio_viz_hierarchy_ #2 _post_seq }
+    \seq_gset_eq:cc { g_semio_viz_hierarchy_ #2 _pre_seq } { g_semio_viz_hierarchy_ #1 _pre_seq }
+    \seq_gset_eq:cc { g_semio_viz_hierarchy_ #2 _post_seq } { g_semio_viz_hierarchy_ #1 _post_seq }
+  }
+}
+%endregion 🔖️Traversal
+
+%region 🔖️LayoutKeys
+% 📋 `semio / viz / hierarchy / layout` -- options of \SemioVizLayout.
+%   size             (`{w,h}` extent the layout is normalised into)   default `{1,1}`
+%   nodeSize         (`{w,h}` fixed per-node spacing, disables size)  default unset
+%   separationSame   (tree/cluster gap between siblings)              default 1
+%   separationOther  (tree/cluster gap between cousins)               default 2
+%   separationDepth  (divide the gap by the node depth, radial trees) default false
+%   tile             (squarify, resquarify, slice, dice, slice-dice,
+%                     binary, strip, voronoi)                         default squarify
+%   ratio            (target aspect ratio of squarify/strip)          default golden
+%   padding          (treemap inner+outer, partition and pack padding) default 0
+%   paddingInner     (treemap gap between siblings)                   default 0
+%   paddingOuter     (treemap gap inside a parent, all four sides)    default 0
+%   paddingTop, paddingRight, paddingBottom, paddingLeft              default 0
+%   round            (snap rectangle corners to whole millimetres)    default false
+%   radius           (pack leaf radius: `auto` = sqrt(value), `value`,
+%                     or a plain number for equal circles)            default auto
+%   relaxation       (voronoi tiling iterations)                      default 24
+\fp_new:N \l_semio_viz_hierarchy_dx_fp
+\fp_new:N \l_semio_viz_hierarchy_dy_fp
+\bool_new:N \l_semio_viz_hierarchy_nodesize_bool
+\bool_new:N \l_semio_viz_hierarchy_size_given_bool
+\fp_new:N \l_semio_viz_hierarchy_sep_same_fp
+\fp_new:N \l_semio_viz_hierarchy_sep_other_fp
+\bool_new:N \l_semio_viz_hierarchy_sep_depth_bool
+\tl_new:N \l_semio_viz_hierarchy_tile_tl
+\fp_new:N \l_semio_viz_hierarchy_ratio_fp
+\fp_new:N \l_semio_viz_hierarchy_padding_fp
+\fp_new:N \l_semio_viz_hierarchy_pad_inner_fp
+\fp_new:N \l_semio_viz_hierarchy_pad_top_fp
+\fp_new:N \l_semio_viz_hierarchy_pad_right_fp
+\fp_new:N \l_semio_viz_hierarchy_pad_bottom_fp
+\fp_new:N \l_semio_viz_hierarchy_pad_left_fp
+\bool_new:N \l_semio_viz_hierarchy_round_bool
+\tl_new:N \l_semio_viz_hierarchy_radius_tl
+\int_new:N \l_semio_viz_hierarchy_relax_int
+\clist_new:N \l_semio_viz_hierarchy_pair_clist
+\bool_new:N \l_semio_viz_hierarchy_radial_bool
+\fp_new:N \l_semio_viz_hierarchy_radial_offset_fp
+
+% 📏 Splits a `{w,h}` pair into the two extent variables.
+\cs_new_protected:Npn \semio_viz_hierarchy_pair:nNN #1#2#3 {
+  \clist_set:Nn \l_semio_viz_hierarchy_pair_clist {#1}
+  \fp_set:Nn #2 { \clist_item:Nn \l_semio_viz_hierarchy_pair_clist { 1 } }
+  \fp_set:Nn #3 { \clist_item:Nn \l_semio_viz_hierarchy_pair_clist { 2 } }
+}
+
+% 🔑 The layout options every taxonomy 78 hierarchy layout shares, `semio / viz / hierarchy /
+% layout`: the box it fills or the node size it repeats, the separation and padding it keeps, the
+% tiling and packing rules, and whether it is laid out radially.
+\keys_define:nn { semio / viz / hierarchy / layout } {
+  size .code:n = {
+    \semio_viz_hierarchy_pair:nNN {#1} \l_semio_viz_hierarchy_dx_fp \l_semio_viz_hierarchy_dy_fp
+    \bool_set_true:N \l_semio_viz_hierarchy_size_given_bool
+    \bool_set_false:N \l_semio_viz_hierarchy_nodesize_bool
+  },
+  nodeSize .code:n = {
+    \semio_viz_hierarchy_pair:nNN {#1} \l_semio_viz_hierarchy_dx_fp \l_semio_viz_hierarchy_dy_fp
+    \bool_set_true:N \l_semio_viz_hierarchy_size_given_bool
+    \bool_set_true:N \l_semio_viz_hierarchy_nodesize_bool
+  },
+  separationSame  .fp_set:N = \l_semio_viz_hierarchy_sep_same_fp,
+  separationOther .fp_set:N = \l_semio_viz_hierarchy_sep_other_fp,
+  separationDepth .bool_set:N = \l_semio_viz_hierarchy_sep_depth_bool,
+  tile  .tl_set:N = \l_semio_viz_hierarchy_tile_tl,
+  ratio .fp_set:N = \l_semio_viz_hierarchy_ratio_fp,
+  padding .code:n = {
+    \fp_set:Nn \l_semio_viz_hierarchy_padding_fp {#1}
+    \fp_set:Nn \l_semio_viz_hierarchy_pad_inner_fp {#1}
+    \fp_set:Nn \l_semio_viz_hierarchy_pad_top_fp {#1}
+    \fp_set:Nn \l_semio_viz_hierarchy_pad_right_fp {#1}
+    \fp_set:Nn \l_semio_viz_hierarchy_pad_bottom_fp {#1}
+    \fp_set:Nn \l_semio_viz_hierarchy_pad_left_fp {#1}
+  },
+  paddingInner .fp_set:N = \l_semio_viz_hierarchy_pad_inner_fp,
+  paddingOuter .code:n = {
+    \fp_set:Nn \l_semio_viz_hierarchy_pad_top_fp {#1}
+    \fp_set:Nn \l_semio_viz_hierarchy_pad_right_fp {#1}
+    \fp_set:Nn \l_semio_viz_hierarchy_pad_bottom_fp {#1}
+    \fp_set:Nn \l_semio_viz_hierarchy_pad_left_fp {#1}
+  },
+  paddingTop    .fp_set:N = \l_semio_viz_hierarchy_pad_top_fp,
+  paddingRight  .fp_set:N = \l_semio_viz_hierarchy_pad_right_fp,
+  paddingBottom .fp_set:N = \l_semio_viz_hierarchy_pad_bottom_fp,
+  paddingLeft   .fp_set:N = \l_semio_viz_hierarchy_pad_left_fp,
+  round      .bool_set:N = \l_semio_viz_hierarchy_round_bool,
+  radius     .tl_set:N = \l_semio_viz_hierarchy_radius_tl,
+  relaxation .int_set:N = \l_semio_viz_hierarchy_relax_int,
+  radial       .bool_set:N = \l_semio_viz_hierarchy_radial_bool,
+  radialOffset .fp_set:N = \l_semio_viz_hierarchy_radial_offset_fp,
+}
+
+% ♻️ Puts every shared layout key back to its documented default before an option list is read.
+\cs_new_protected:Npn \semio_viz_hierarchy_layout_keys_reset: {
+  \fp_set:Nn \l_semio_viz_hierarchy_dx_fp { 1 }
+  \fp_set:Nn \l_semio_viz_hierarchy_dy_fp { 1 }
+  \bool_set_false:N \l_semio_viz_hierarchy_nodesize_bool
+  \bool_set_false:N \l_semio_viz_hierarchy_size_given_bool
+  \bool_set_false:N \l_semio_viz_hierarchy_radial_bool
+  \fp_zero:N \l_semio_viz_hierarchy_radial_offset_fp
+  \fp_set:Nn \l_semio_viz_hierarchy_sep_same_fp { 1 }
+  \fp_set:Nn \l_semio_viz_hierarchy_sep_other_fp { 2 }
+  \bool_set_false:N \l_semio_viz_hierarchy_sep_depth_bool
+  \tl_set:Nn \l_semio_viz_hierarchy_tile_tl { squarify }
+  \fp_set:Nn \l_semio_viz_hierarchy_ratio_fp { (1 + sqrt(5)) / 2 }
+  \fp_zero:N \l_semio_viz_hierarchy_padding_fp
+  \fp_zero:N \l_semio_viz_hierarchy_pad_inner_fp
+  \fp_zero:N \l_semio_viz_hierarchy_pad_top_fp
+  \fp_zero:N \l_semio_viz_hierarchy_pad_right_fp
+  \fp_zero:N \l_semio_viz_hierarchy_pad_bottom_fp
+  \fp_zero:N \l_semio_viz_hierarchy_pad_left_fp
+  \bool_set_false:N \l_semio_viz_hierarchy_round_bool
+  \tl_set:Nn \l_semio_viz_hierarchy_radius_tl { auto }
+  \int_set:Nn \l_semio_viz_hierarchy_relax_int { 24 }
+}
+%endregion 🔖️LayoutKeys
+
+%region 🔖️LayoutTree
+% 📐 d3 `defaultSeparation` (1 between siblings, 2 otherwise), optionally divided
+% by the depth the way d3's commented-out `radialSeparation` does.
+\cs_new:Npn \semio_viz_hierarchy_sep:nnn #1#2#3 {
+  ( \int_compare:nNnTF { \semio_viz_hierarchy_get:nnn {#1} { pi } {#2} } =
+      { \semio_viz_hierarchy_get:nnn {#1} { pi } {#3} }
+      { \l_semio_viz_hierarchy_sep_same_fp } { \l_semio_viz_hierarchy_sep_other_fp } )
+  \bool_if:NT \l_semio_viz_hierarchy_sep_depth_bool
+    { / max ( 1 , \semio_viz_hierarchy_get:nnn {#1} { dep } {#2} ) }
+}
+
+% ⬅️ d3 `nextLeft`: leftmost child, else the thread.
+\cs_new:Npn \semio_viz_hierarchy_next_left:nn #1#2 {
+  \int_compare:nNnTF { \semio_viz_hierarchy_nk:nn {#1} {#2} } > { 0 }
+    { \semio_viz_hierarchy_kid:nnn {#1} {#2} { 1 } }
+    { \semio_viz_hierarchy_get:nnn {#1} { tt } {#2} }
+}
+% ➡️ d3 `nextRight`: rightmost child, else the thread.
+\cs_new:Npn \semio_viz_hierarchy_next_right:nn #1#2 {
+  \int_compare:nNnTF { \semio_viz_hierarchy_nk:nn {#1} {#2} } > { 0 }
+    { \semio_viz_hierarchy_kid:nnn {#1} {#2} { \semio_viz_hierarchy_nk:nn {#1} {#2} } }
+    { \semio_viz_hierarchy_get:nnn {#1} { tt } {#2} }
+}
+
+\int_new:N \l_semio_viz_hierarchy_tw_p_int
+\int_new:N \l_semio_viz_hierarchy_tw_w_int
+\int_new:N \l_semio_viz_hierarchy_tw_anc_int
+\int_new:N \l_semio_viz_hierarchy_tw_vip_int
+\int_new:N \l_semio_viz_hierarchy_tw_vop_int
+\int_new:N \l_semio_viz_hierarchy_tw_vim_int
+\int_new:N \l_semio_viz_hierarchy_tw_vom_int
+\int_new:N \l_semio_viz_hierarchy_tw_wm_int
+\int_new:N \l_semio_viz_hierarchy_tw_left_int
+\int_new:N \l_semio_viz_hierarchy_tw_right_int
+\int_new:N \l_semio_viz_hierarchy_tw_bottom_int
+\fp_new:N \l_semio_viz_hierarchy_tw_mid_fp
+\fp_new:N \l_semio_viz_hierarchy_tw_shift_fp
+\fp_new:N \l_semio_viz_hierarchy_tw_change_fp
+\fp_new:N \l_semio_viz_hierarchy_tw_sip_fp
+\fp_new:N \l_semio_viz_hierarchy_tw_sop_fp
+\fp_new:N \l_semio_viz_hierarchy_tw_sim_fp
+\fp_new:N \l_semio_viz_hierarchy_tw_som_fp
+\fp_new:N \l_semio_viz_hierarchy_tw_s_fp
+\fp_new:N \l_semio_viz_hierarchy_tw_tx_fp
+\fp_new:N \l_semio_viz_hierarchy_tw_kx_fp
+\fp_new:N \l_semio_viz_hierarchy_tw_ky_fp
+\bool_new:N \l_semio_viz_hierarchy_tw_loop_bool
+
+% ↔️ d3 `executeShifts`: distributes the accumulated shifts over the children.
+\cs_new_protected:Npn \semio_viz_hierarchy_tree_shifts:nn #1#2 {
+  \fp_zero:N \l_semio_viz_hierarchy_tw_shift_fp
+  \fp_zero:N \l_semio_viz_hierarchy_tw_change_fp
+  \int_step_inline:nnnn { \semio_viz_hierarchy_nk:nn {#1} {#2} } { -1 } { 1 } {
+    \int_set:Nn \l_semio_viz_hierarchy_k_int { \semio_viz_hierarchy_kid:nnn {#1} {#2} {##1} }
+    \semio_viz_hierarchy_set:nnnn {#1} { tz } { \l_semio_viz_hierarchy_k_int }
+      { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { tz } { \l_semio_viz_hierarchy_k_int }
+        + \l_semio_viz_hierarchy_tw_shift_fp } }
+    \semio_viz_hierarchy_set:nnnn {#1} { tm } { \l_semio_viz_hierarchy_k_int }
+      { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { tm } { \l_semio_viz_hierarchy_k_int }
+        + \l_semio_viz_hierarchy_tw_shift_fp } }
+    \fp_add:Nn \l_semio_viz_hierarchy_tw_change_fp
+      { \semio_viz_hierarchy_get:nnn {#1} { tc } { \l_semio_viz_hierarchy_k_int } }
+    \fp_add:Nn \l_semio_viz_hierarchy_tw_shift_fp
+      { \semio_viz_hierarchy_get:nnn {#1} { ts } { \l_semio_viz_hierarchy_k_int }
+        + \l_semio_viz_hierarchy_tw_change_fp }
+  }
+}
+
+% 🚚 d3 `moveSubtree`: shifts the subtree at #3 and prepares the smaller shifts.
+\cs_new_protected:Npn \semio_viz_hierarchy_tree_move:nnnn #1#2#3#4 {
+  \fp_set:Nn \l_semio_viz_hierarchy_tw_change_fp
+    { (#4) / ( \semio_viz_hierarchy_get:nnn {#1} { si } {#3}
+             - \semio_viz_hierarchy_get:nnn {#1} { si } {#2} ) }
+  \semio_viz_hierarchy_set:nnnn {#1} { tc } {#3}
+    { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { tc } {#3} - \l_semio_viz_hierarchy_tw_change_fp } }
+  \semio_viz_hierarchy_set:nnnn {#1} { ts } {#3}
+    { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { ts } {#3} + (#4) } }
+  \semio_viz_hierarchy_set:nnnn {#1} { tc } {#2}
+    { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { tc } {#2} + \l_semio_viz_hierarchy_tw_change_fp } }
+  \semio_viz_hierarchy_set:nnnn {#1} { tz } {#3}
+    { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { tz } {#3} + (#4) } }
+  \semio_viz_hierarchy_set:nnnn {#1} { tm } {#3}
+    { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { tm } {#3} + (#4) } }
+}
+
+% 🧵 d3 `apportion`: walks the inside contours of the left and right subtrees,
+% threading them and moving whole subtrees apart on conflict.
+\cs_new_protected:Npn \semio_viz_hierarchy_tree_apportion:nnn #1#2#3 {
+  \int_compare:nNnT {#3} > { 0 } {
+    \int_set:Nn \l_semio_viz_hierarchy_tw_vip_int {#2}
+    \int_set:Nn \l_semio_viz_hierarchy_tw_vop_int {#2}
+    \int_set:Nn \l_semio_viz_hierarchy_tw_vim_int {#3}
+    \int_set:Nn \l_semio_viz_hierarchy_tw_vom_int
+      { \semio_viz_hierarchy_kid:nnn {#1} { \semio_viz_hierarchy_get:nnn {#1} { pi } {#2} } { 1 } }
+    \fp_set:Nn \l_semio_viz_hierarchy_tw_sip_fp
+      { \semio_viz_hierarchy_get:nnn {#1} { tm } { \l_semio_viz_hierarchy_tw_vip_int } }
+    \fp_set:Nn \l_semio_viz_hierarchy_tw_sop_fp
+      { \semio_viz_hierarchy_get:nnn {#1} { tm } { \l_semio_viz_hierarchy_tw_vop_int } }
+    \fp_set:Nn \l_semio_viz_hierarchy_tw_sim_fp
+      { \semio_viz_hierarchy_get:nnn {#1} { tm } { \l_semio_viz_hierarchy_tw_vim_int } }
+    \fp_set:Nn \l_semio_viz_hierarchy_tw_som_fp
+      { \semio_viz_hierarchy_get:nnn {#1} { tm } { \l_semio_viz_hierarchy_tw_vom_int } }
+    \bool_set_true:N \l_semio_viz_hierarchy_tw_loop_bool
+    \bool_while_do:Nn \l_semio_viz_hierarchy_tw_loop_bool {
+      \int_set:Nn \l_semio_viz_hierarchy_tw_vim_int
+        { \semio_viz_hierarchy_next_right:nn {#1} { \l_semio_viz_hierarchy_tw_vim_int } }
+      \int_set:Nn \l_semio_viz_hierarchy_tw_vip_int
+        { \semio_viz_hierarchy_next_left:nn {#1} { \l_semio_viz_hierarchy_tw_vip_int } }
+      \bool_set:Nn \l_semio_viz_hierarchy_tw_loop_bool
+        { \int_compare_p:nNn { \l_semio_viz_hierarchy_tw_vim_int } > { 0 }
+          && \int_compare_p:nNn { \l_semio_viz_hierarchy_tw_vip_int } > { 0 } }
+      \bool_if:NT \l_semio_viz_hierarchy_tw_loop_bool {
+        \int_set:Nn \l_semio_viz_hierarchy_tw_vom_int
+          { \semio_viz_hierarchy_next_left:nn {#1} { \l_semio_viz_hierarchy_tw_vom_int } }
+        \int_set:Nn \l_semio_viz_hierarchy_tw_vop_int
+          { \semio_viz_hierarchy_next_right:nn {#1} { \l_semio_viz_hierarchy_tw_vop_int } }
+        \semio_viz_hierarchy_set:nnnn {#1} { ta } { \l_semio_viz_hierarchy_tw_vop_int } { \int_eval:n {#2} }
+        \fp_set:Nn \l_semio_viz_hierarchy_tw_shift_fp {
+          \semio_viz_hierarchy_get:nnn {#1} { tz } { \l_semio_viz_hierarchy_tw_vim_int }
+          + \l_semio_viz_hierarchy_tw_sim_fp
+          - \semio_viz_hierarchy_get:nnn {#1} { tz } { \l_semio_viz_hierarchy_tw_vip_int }
+          - \l_semio_viz_hierarchy_tw_sip_fp
+          + \semio_viz_hierarchy_sep:nnn {#1} { \l_semio_viz_hierarchy_tw_vim_int }
+              { \l_semio_viz_hierarchy_tw_vip_int }
+        }
+        \fp_compare:nNnT { \l_semio_viz_hierarchy_tw_shift_fp } > { 0 } {
+          \int_set:Nn \l_semio_viz_hierarchy_tw_wm_int
+            { \int_compare:nNnTF
+                { \semio_viz_hierarchy_get:nnn {#1} { pi }
+                  { \semio_viz_hierarchy_get:nnn {#1} { ta } { \l_semio_viz_hierarchy_tw_vim_int } } }
+                = { \semio_viz_hierarchy_get:nnn {#1} { pi } {#2} }
+                { \semio_viz_hierarchy_get:nnn {#1} { ta } { \l_semio_viz_hierarchy_tw_vim_int } }
+                { \l_semio_viz_hierarchy_tw_anc_int } }
+          \semio_viz_hierarchy_tree_move:nnnn {#1} { \l_semio_viz_hierarchy_tw_wm_int } {#2}
+            { \l_semio_viz_hierarchy_tw_shift_fp }
+          \fp_add:Nn \l_semio_viz_hierarchy_tw_sip_fp { \l_semio_viz_hierarchy_tw_shift_fp }
+          \fp_add:Nn \l_semio_viz_hierarchy_tw_sop_fp { \l_semio_viz_hierarchy_tw_shift_fp }
+        }
+        \fp_add:Nn \l_semio_viz_hierarchy_tw_sim_fp
+          { \semio_viz_hierarchy_get:nnn {#1} { tm } { \l_semio_viz_hierarchy_tw_vim_int } }
+        \fp_add:Nn \l_semio_viz_hierarchy_tw_sip_fp
+          { \semio_viz_hierarchy_get:nnn {#1} { tm } { \l_semio_viz_hierarchy_tw_vip_int } }
+        \fp_add:Nn \l_semio_viz_hierarchy_tw_som_fp
+          { \semio_viz_hierarchy_get:nnn {#1} { tm } { \l_semio_viz_hierarchy_tw_vom_int } }
+        \fp_add:Nn \l_semio_viz_hierarchy_tw_sop_fp
+          { \semio_viz_hierarchy_get:nnn {#1} { tm } { \l_semio_viz_hierarchy_tw_vop_int } }
+      }
+    }
+    \bool_lazy_and:nnT
+      { \int_compare_p:nNn { \l_semio_viz_hierarchy_tw_vim_int } > { 0 } }
+      { \int_compare_p:nNn
+          { \semio_viz_hierarchy_next_right:nn {#1} { \l_semio_viz_hierarchy_tw_vop_int } } = { 0 } }
+      {
+        \semio_viz_hierarchy_set:nnnn {#1} { tt } { \l_semio_viz_hierarchy_tw_vop_int }
+          { \int_use:N \l_semio_viz_hierarchy_tw_vim_int }
+        \semio_viz_hierarchy_set:nnnn {#1} { tm } { \l_semio_viz_hierarchy_tw_vop_int }
+          { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { tm } { \l_semio_viz_hierarchy_tw_vop_int }
+            + \l_semio_viz_hierarchy_tw_sim_fp - \l_semio_viz_hierarchy_tw_sop_fp } }
+      }
+    \bool_lazy_and:nnT
+      { \int_compare_p:nNn { \l_semio_viz_hierarchy_tw_vip_int } > { 0 } }
+      { \int_compare_p:nNn
+          { \semio_viz_hierarchy_next_left:nn {#1} { \l_semio_viz_hierarchy_tw_vom_int } } = { 0 } }
+      {
+        \semio_viz_hierarchy_set:nnnn {#1} { tt } { \l_semio_viz_hierarchy_tw_vom_int }
+          { \int_use:N \l_semio_viz_hierarchy_tw_vip_int }
+        \semio_viz_hierarchy_set:nnnn {#1} { tm } { \l_semio_viz_hierarchy_tw_vom_int }
+          { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { tm } { \l_semio_viz_hierarchy_tw_vom_int }
+            + \l_semio_viz_hierarchy_tw_sip_fp - \l_semio_viz_hierarchy_tw_som_fp } }
+        \int_set:Nn \l_semio_viz_hierarchy_tw_anc_int {#2}
+      }
+  }
+}
+
+% 🌿 d3 `firstWalk`: preliminary abscissa of one node, in postorder.
+\cs_new_protected:Npn \semio_viz_hierarchy_tree_firstwalk:nn #1#2 {
+  \int_set:Nn \l_semio_viz_hierarchy_tw_p_int { \semio_viz_hierarchy_get:nnn {#1} { pi } {#2} }
+  \int_zero:N \l_semio_viz_hierarchy_tw_w_int
+  \int_compare:nNnT { \semio_viz_hierarchy_get:nnn {#1} { si } {#2} } > { 0 } {
+    \int_set:Nn \l_semio_viz_hierarchy_tw_w_int
+      { \semio_viz_hierarchy_kid:nnn {#1} { \l_semio_viz_hierarchy_tw_p_int }
+        { \semio_viz_hierarchy_get:nnn {#1} { si } {#2} } }
+  }
+  \int_compare:nNnTF { \semio_viz_hierarchy_nk:nn {#1} {#2} } > { 0 } {
+    \semio_viz_hierarchy_tree_shifts:nn {#1} {#2}
+    \fp_set:Nn \l_semio_viz_hierarchy_tw_mid_fp {
+      ( \semio_viz_hierarchy_get:nnn {#1} { tz } { \semio_viz_hierarchy_kid:nnn {#1} {#2} { 1 } }
+      + \semio_viz_hierarchy_get:nnn {#1} { tz }
+          { \semio_viz_hierarchy_kid:nnn {#1} {#2} { \semio_viz_hierarchy_nk:nn {#1} {#2} } } ) / 2
+    }
+    \int_compare:nNnTF { \l_semio_viz_hierarchy_tw_w_int } > { 0 } {
+      \semio_viz_hierarchy_set:nnnn {#1} { tz } {#2}
+        { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { tz } { \l_semio_viz_hierarchy_tw_w_int }
+          + \semio_viz_hierarchy_sep:nnn {#1} {#2} { \l_semio_viz_hierarchy_tw_w_int } } }
+      \semio_viz_hierarchy_set:nnnn {#1} { tm } {#2}
+        { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { tz } {#2} - \l_semio_viz_hierarchy_tw_mid_fp } }
+    } {
+      \semio_viz_hierarchy_set:nnnn {#1} { tz } {#2} { \fp_use:N \l_semio_viz_hierarchy_tw_mid_fp }
+    }
+  } {
+    \int_compare:nNnT { \l_semio_viz_hierarchy_tw_w_int } > { 0 } {
+      \semio_viz_hierarchy_set:nnnn {#1} { tz } {#2}
+        { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { tz } { \l_semio_viz_hierarchy_tw_w_int }
+          + \semio_viz_hierarchy_sep:nnn {#1} {#2} { \l_semio_viz_hierarchy_tw_w_int } } }
+    }
+  }
+  \int_set:Nn \l_semio_viz_hierarchy_tw_anc_int
+    { \semio_viz_hierarchy_get:nnn {#1} { tA } { \l_semio_viz_hierarchy_tw_p_int } }
+  \int_compare:nNnT { \l_semio_viz_hierarchy_tw_anc_int } = { 0 } {
+    \int_set:Nn \l_semio_viz_hierarchy_tw_anc_int
+      { \semio_viz_hierarchy_kid:nnn {#1} { \l_semio_viz_hierarchy_tw_p_int } { 1 } }
+  }
+  \semio_viz_hierarchy_tree_apportion:nnn {#1} {#2} { \l_semio_viz_hierarchy_tw_w_int }
+  \semio_viz_hierarchy_set:nnnn {#1} { tA } { \l_semio_viz_hierarchy_tw_p_int }
+    { \int_use:N \l_semio_viz_hierarchy_tw_anc_int }
+}
+
+% 🌳 d3-hierarchy `tree()`: Reingold-Tilford with the Buchheim/Walker/Leipert
+% linear-time improvements. Complexity O(n) walks plus O(n) contour steps.
+\cs_new_protected:Npn \semio_viz_hierarchy_layout_tree:n #1 {
+  \int_step_inline:nnn { 0 } { \semio_viz_hierarchy_get:nnn {#1} { n } { 0 } } {
+    \clist_map_inline:nn { tz, tm, tc, ts, tt, tA }
+      { \semio_viz_hierarchy_set:nnnn {#1} {####1} {##1} { 0 } }
+    \semio_viz_hierarchy_set:nnnn {#1} { ta } {##1} {##1}
+  }
+  \semio_viz_hierarchy_map_post:nn {#1} { \semio_viz_hierarchy_tree_firstwalk:nn {#1} {##1} }
+  \semio_viz_hierarchy_set:nnnn {#1} { tm } { 0 }
+    { \fp_eval:n { - \semio_viz_hierarchy_get:nnn {#1} { tz }
+      { \semio_viz_hierarchy_get:nnn {#1} { root } { 0 } } } }
+  \semio_viz_hierarchy_map_pre:nn {#1} {
+    \semio_viz_hierarchy_set:nnnn {#1} { x } {##1}
+      { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { tz } {##1}
+        + \semio_viz_hierarchy_get:nnn {#1} { tm } { \semio_viz_hierarchy_get:nnn {#1} { pi } {##1} } } }
+    \semio_viz_hierarchy_set:nnnn {#1} { tm } {##1}
+      { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { tm } {##1}
+        + \semio_viz_hierarchy_get:nnn {#1} { tm } { \semio_viz_hierarchy_get:nnn {#1} { pi } {##1} } } }
+  }
+  \bool_if:NTF \l_semio_viz_hierarchy_nodesize_bool {
+    \semio_viz_hierarchy_map_pre:nn {#1} {
+      \semio_viz_hierarchy_set:nnnn {#1} { x } {##1}
+        { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { x } {##1} * \l_semio_viz_hierarchy_dx_fp } }
+      \semio_viz_hierarchy_set:nnnn {#1} { y } {##1}
+        { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { dep } {##1} * \l_semio_viz_hierarchy_dy_fp } }
+    }
+  } {
+    \int_set:Nn \l_semio_viz_hierarchy_tw_left_int { \semio_viz_hierarchy_get:nnn {#1} { root } { 0 } }
+    \int_set_eq:NN \l_semio_viz_hierarchy_tw_right_int \l_semio_viz_hierarchy_tw_left_int
+    \int_set_eq:NN \l_semio_viz_hierarchy_tw_bottom_int \l_semio_viz_hierarchy_tw_left_int
+    \semio_viz_hierarchy_map_pre:nn {#1} {
+      \fp_compare:nNnT { \semio_viz_hierarchy_get:nnn {#1} { x } {##1} } <
+        { \semio_viz_hierarchy_get:nnn {#1} { x } { \l_semio_viz_hierarchy_tw_left_int } }
+        { \int_set:Nn \l_semio_viz_hierarchy_tw_left_int {##1} }
+      \fp_compare:nNnT { \semio_viz_hierarchy_get:nnn {#1} { x } {##1} } >
+        { \semio_viz_hierarchy_get:nnn {#1} { x } { \l_semio_viz_hierarchy_tw_right_int } }
+        { \int_set:Nn \l_semio_viz_hierarchy_tw_right_int {##1} }
+      \int_compare:nNnT { \semio_viz_hierarchy_get:nnn {#1} { dep } {##1} } >
+        { \semio_viz_hierarchy_get:nnn {#1} { dep } { \l_semio_viz_hierarchy_tw_bottom_int } }
+        { \int_set:Nn \l_semio_viz_hierarchy_tw_bottom_int {##1} }
+    }
+    \int_compare:nNnTF { \l_semio_viz_hierarchy_tw_left_int } = { \l_semio_viz_hierarchy_tw_right_int }
+      { \fp_set:Nn \l_semio_viz_hierarchy_tw_s_fp { 1 } }
+      { \fp_set:Nn \l_semio_viz_hierarchy_tw_s_fp
+          { \semio_viz_hierarchy_sep:nnn {#1} { \l_semio_viz_hierarchy_tw_left_int }
+            { \l_semio_viz_hierarchy_tw_right_int } / 2 } }
+    \fp_set:Nn \l_semio_viz_hierarchy_tw_tx_fp { \l_semio_viz_hierarchy_tw_s_fp
+      - \semio_viz_hierarchy_get:nnn {#1} { x } { \l_semio_viz_hierarchy_tw_left_int } }
+    \fp_set:Nn \l_semio_viz_hierarchy_tw_kx_fp { \l_semio_viz_hierarchy_dx_fp /
+      ( \semio_viz_hierarchy_get:nnn {#1} { x } { \l_semio_viz_hierarchy_tw_right_int }
+        + \l_semio_viz_hierarchy_tw_s_fp + \l_semio_viz_hierarchy_tw_tx_fp ) }
+    \fp_set:Nn \l_semio_viz_hierarchy_tw_ky_fp { \l_semio_viz_hierarchy_dy_fp /
+      max ( 1 , \semio_viz_hierarchy_get:nnn {#1} { dep } { \l_semio_viz_hierarchy_tw_bottom_int } ) }
+    \semio_viz_hierarchy_map_pre:nn {#1} {
+      \semio_viz_hierarchy_set:nnnn {#1} { x } {##1}
+        { \fp_eval:n { ( \semio_viz_hierarchy_get:nnn {#1} { x } {##1}
+          + \l_semio_viz_hierarchy_tw_tx_fp ) * \l_semio_viz_hierarchy_tw_kx_fp } }
+      \semio_viz_hierarchy_set:nnnn {#1} { y } {##1}
+        { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { dep } {##1} * \l_semio_viz_hierarchy_tw_ky_fp } }
+    }
+  }
+}
+%endregion 🔖️LayoutTree
+
+%region 🔖️LayoutCluster
+\int_new:N \l_semio_viz_hierarchy_cl_prev_int
+\fp_new:N \l_semio_viz_hierarchy_cl_x_fp
+\fp_new:N \l_semio_viz_hierarchy_cl_xa_fp
+\fp_new:N \l_semio_viz_hierarchy_cl_xb_fp
+\fp_new:N \l_semio_viz_hierarchy_cl_acc_fp
+\int_new:N \l_semio_viz_hierarchy_cl_left_int
+\int_new:N \l_semio_viz_hierarchy_cl_right_int
+
+% 🍂 d3-hierarchy `cluster()`: every leaf on the deepest row, every parent on the
+% mean abscissa of its children. Complexity O(n).
+\cs_new_protected:Npn \semio_viz_hierarchy_layout_cluster:n #1 {
+  \int_zero:N \l_semio_viz_hierarchy_cl_prev_int
+  \fp_zero:N \l_semio_viz_hierarchy_cl_x_fp
+  \semio_viz_hierarchy_map_post:nn {#1} {
+    \int_compare:nNnTF { \semio_viz_hierarchy_nk:nn {#1} {##1} } > { 0 } {
+      \fp_zero:N \l_semio_viz_hierarchy_cl_acc_fp
+      \fp_zero:N \l_semio_viz_hierarchy_own_fp
+      \int_step_inline:nn { \semio_viz_hierarchy_nk:nn {#1} {##1} } {
+        \fp_add:Nn \l_semio_viz_hierarchy_cl_acc_fp
+          { \semio_viz_hierarchy_get:nnn {#1} { x } { \semio_viz_hierarchy_kid:nnn {#1} {##1} {####1} } }
+        \fp_set:Nn \l_semio_viz_hierarchy_own_fp { max ( \l_semio_viz_hierarchy_own_fp ,
+          \semio_viz_hierarchy_get:nnn {#1} { y } { \semio_viz_hierarchy_kid:nnn {#1} {##1} {####1} } ) }
+      }
+      \semio_viz_hierarchy_set:nnnn {#1} { x } {##1}
+        { \fp_eval:n { \l_semio_viz_hierarchy_cl_acc_fp / \semio_viz_hierarchy_nk:nn {#1} {##1} } }
+      \semio_viz_hierarchy_set:nnnn {#1} { y } {##1}
+        { \fp_eval:n { 1 + \l_semio_viz_hierarchy_own_fp } }
+    } {
+      \int_compare:nNnT { \l_semio_viz_hierarchy_cl_prev_int } > { 0 } {
+        \fp_add:Nn \l_semio_viz_hierarchy_cl_x_fp
+          { \semio_viz_hierarchy_sep:nnn {#1} {##1} { \l_semio_viz_hierarchy_cl_prev_int } }
+      }
+      \semio_viz_hierarchy_set:nnnn {#1} { x } {##1} { \fp_use:N \l_semio_viz_hierarchy_cl_x_fp }
+      \semio_viz_hierarchy_set:nnnn {#1} { y } {##1} { 0 }
+      \int_set:Nn \l_semio_viz_hierarchy_cl_prev_int {##1}
+    }
+  }
+  \int_set:Nn \l_semio_viz_hierarchy_cl_left_int { \semio_viz_hierarchy_get:nnn {#1} { root } { 0 } }
+  \bool_while_do:nn
+    { \int_compare_p:nNn { \semio_viz_hierarchy_nk:nn {#1} { \l_semio_viz_hierarchy_cl_left_int } } > { 0 } }
+    { \int_set:Nn \l_semio_viz_hierarchy_cl_left_int
+        { \semio_viz_hierarchy_kid:nnn {#1} { \l_semio_viz_hierarchy_cl_left_int } { 1 } } }
+  \int_set:Nn \l_semio_viz_hierarchy_cl_right_int { \semio_viz_hierarchy_get:nnn {#1} { root } { 0 } }
+  \bool_while_do:nn
+    { \int_compare_p:nNn { \semio_viz_hierarchy_nk:nn {#1} { \l_semio_viz_hierarchy_cl_right_int } } > { 0 } }
+    { \int_set:Nn \l_semio_viz_hierarchy_cl_right_int
+        { \semio_viz_hierarchy_kid:nnn {#1} { \l_semio_viz_hierarchy_cl_right_int }
+          { \semio_viz_hierarchy_nk:nn {#1} { \l_semio_viz_hierarchy_cl_right_int } } } }
+  \fp_set:Nn \l_semio_viz_hierarchy_cl_xa_fp
+    { \semio_viz_hierarchy_get:nnn {#1} { x } { \l_semio_viz_hierarchy_cl_left_int }
+      - \semio_viz_hierarchy_sep:nnn {#1} { \l_semio_viz_hierarchy_cl_left_int }
+        { \l_semio_viz_hierarchy_cl_right_int } / 2 }
+  \fp_set:Nn \l_semio_viz_hierarchy_cl_xb_fp
+    { \semio_viz_hierarchy_get:nnn {#1} { x } { \l_semio_viz_hierarchy_cl_right_int }
+      + \semio_viz_hierarchy_sep:nnn {#1} { \l_semio_viz_hierarchy_cl_right_int }
+        { \l_semio_viz_hierarchy_cl_left_int } / 2 }
+  \bool_if:NTF \l_semio_viz_hierarchy_nodesize_bool {
+    \semio_viz_hierarchy_map_post:nn {#1} {
+      \semio_viz_hierarchy_set:nnnn {#1} { x } {##1}
+        { \fp_eval:n { ( \semio_viz_hierarchy_get:nnn {#1} { x } {##1}
+          - \semio_viz_hierarchy_get:nnn {#1} { x } { \semio_viz_hierarchy_get:nnn {#1} { root } { 0 } } )
+          * \l_semio_viz_hierarchy_dx_fp } }
+      \semio_viz_hierarchy_set:nnnn {#1} { y } {##1}
+        { \fp_eval:n { ( \semio_viz_hierarchy_get:nnn {#1} { y }
+            { \semio_viz_hierarchy_get:nnn {#1} { root } { 0 } }
+          - \semio_viz_hierarchy_get:nnn {#1} { y } {##1} ) * \l_semio_viz_hierarchy_dy_fp } }
+    }
+  } {
+    \semio_viz_hierarchy_map_post:nn {#1} {
+      \semio_viz_hierarchy_set:nnnn {#1} { x } {##1}
+        { \fp_eval:n { ( \semio_viz_hierarchy_get:nnn {#1} { x } {##1} - \l_semio_viz_hierarchy_cl_xa_fp )
+          / ( \l_semio_viz_hierarchy_cl_xb_fp - \l_semio_viz_hierarchy_cl_xa_fp )
+          * \l_semio_viz_hierarchy_dx_fp } }
+      \semio_viz_hierarchy_set:nnnn {#1} { y } {##1}
+        { \fp_eval:n { ( 1 - \fp_compare:nNnTF
+            { \semio_viz_hierarchy_get:nnn {#1} { y } { \semio_viz_hierarchy_get:nnn {#1} { root } { 0 } } }
+            = { 0 } { 1 } { \semio_viz_hierarchy_get:nnn {#1} { y } {##1} /
+              \semio_viz_hierarchy_get:nnn {#1} { y } { \semio_viz_hierarchy_get:nnn {#1} { root } { 0 } } } )
+          * \l_semio_viz_hierarchy_dy_fp } }
+    }
+  }
+}
+%endregion 🔖️LayoutCluster
+
+%region 🔖️Radial
+
+% 🧭 Maps a tree/cluster/partition result from (angle, radius) to millimetres,
+% with d3's convention that the angle zero points up.
+\cs_new_protected:Npn \semio_viz_hierarchy_radial:n #1 {
+  \semio_viz_hierarchy_map_pre:nn {#1} {
+    \fp_set:Nn \l_semio_viz_hierarchy_own_fp
+      { \semio_viz_hierarchy_get:nnn {#1} { x } {##1} + \l_semio_viz_hierarchy_radial_offset_fp }
+    \semio_viz_hierarchy_set:nnnn {#1} { angle } {##1} { \fp_use:N \l_semio_viz_hierarchy_own_fp }
+    \semio_viz_hierarchy_set:nnnn {#1} { radius } {##1} { \semio_viz_hierarchy_get:nnn {#1} { y } {##1} }
+    \semio_viz_hierarchy_set:nnnn {#1} { x } {##1}
+      { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { y } {##1}
+        * cos ( \l_semio_viz_hierarchy_own_fp - pi / 2 ) } }
+    \semio_viz_hierarchy_set:nnnn {#1} { y } {##1}
+      { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { radius } {##1}
+        * sin ( \l_semio_viz_hierarchy_own_fp - pi / 2 ) } }
+  }
+}
+%endregion 🔖️Radial
+
+%region 🔖️Dispatch
+% 🚦 Runs one hierarchy layout from #1 into #3, reading the source topology from
+% #2. `tree`, `cluster`, `treemap`, `partition` and `pack` are the taxonomy 78
+% hierarchy transforms; the shared option list is documented above.
+\cs_new_protected:Npn \semio_viz_hierarchy_layout:nnnn #1#2#3#4 {
+  \semio_viz_hierarchy_layout_keys_reset:
+  \keys_set:nn { semio / viz / hierarchy / layout } {#4}
+  \semio_viz_hierarchy_layout_now:nnn {#1} {#2} {#3}
+}
+
+% 🚦 The same transform on keys that were already set, which is how a family
+% shares one flat option list between construction, layout and rendering.
+\cs_new_protected:Npn \semio_viz_hierarchy_layout_now:nnn #1#2#3 {
+  \semio_viz_hierarchy_require:n {#2}
+  \semio_viz_hierarchy_copy:nn {#2} {#3}
+  \int_step_inline:nn { \semio_viz_hierarchy_get:nnn {#3} { n } { 0 } }
+    { \semio_viz_hierarchy_set:nnnn {#3} { poly } {##1} { } }
+  \str_case:nnF {#1} {
+    { tree }      { \semio_viz_hierarchy_layout_tree:n {#3} }
+    { cluster }   { \semio_viz_hierarchy_layout_cluster:n {#3} }
+    { treemap }   { \semio_viz_hierarchy_layout_treemap:n {#3} }
+    { partition } { \semio_viz_hierarchy_layout_partition:n {#3} }
+    { pack }      { \semio_viz_hierarchy_layout_pack:n {#3} }
+  }
+  { \msg_error:nnn { semio-viz } { unknown-hierarchy-layout } {#1} }
+  \bool_if:NT \l_semio_viz_hierarchy_radial_bool { \semio_viz_hierarchy_radial:n {#3} }
+  \semio_viz_hierarchy_probe:nn {#1} {#3}
+}
+
+% 🧭 Emits one geometry record per node so the probe harness can compare the
+% layout numerically without rasterising anything.
+\cs_new_protected:Npn \semio_viz_hierarchy_probe:nn #1#2 {
+  \semio_viz_hierarchy_map_nodes:nn {#2} {
+    \semio_viz_probe_geometry:nx { hierarchy/#1 } {
+      \int_use:N \l_semio_viz_hierarchy_node_index_int ,
+      \l_semio_viz_hierarchy_node_id_tl ,
+      \int_use:N \l_semio_viz_hierarchy_node_depth_int ,
+      \fp_use:N \l_semio_viz_hierarchy_node_value_fp ,
+      \fp_use:N \l_semio_viz_hierarchy_node_x_fp ,
+      \fp_use:N \l_semio_viz_hierarchy_node_y_fp ,
+      \fp_use:N \l_semio_viz_hierarchy_node_r_fp ,
+      \fp_use:N \l_semio_viz_hierarchy_node_xa_fp ,
+      \fp_use:N \l_semio_viz_hierarchy_node_ya_fp ,
+      \fp_use:N \l_semio_viz_hierarchy_node_xb_fp ,
+      \fp_use:N \l_semio_viz_hierarchy_node_yb_fp
+    }
+  }
+}
+%endregion 🔖️Dispatch
+
+%region 🔖️PublicApi
+% 🎭 Leaves #1 alone when the key was given, otherwise takes the table's role #2,
+% otherwise the literal fallback #3.
+\cs_new_protected:Npn \semio_viz_hierarchy_column:Nnn #1#2#3 {
+  \tl_if_empty:NT #1 {
+    \tl_set:Nx #1
+      { \exp_args:NV \semio_viz_table_role:nn \l_semio_viz_hierarchy_table_tl {#2} }
+    \tl_if_empty:NT #1 { \tl_set:Nn #1 {#3} }
+  }
+}
+
+% 🎭 The same for a column that is allowed to be absent: a fallback naming a
+% column the table does not have means the hierarchy simply has no such column.
+\cs_new_protected:Npn \semio_viz_hierarchy_column_optional:Nnn #1#2#3 {
+  \semio_viz_hierarchy_column:Nnn #1 {#2} {#3}
+  \tl_if_empty:NF #1 {
+    \clist_if_in:cVF { g_semio_viz_table_ \l_semio_viz_hierarchy_table_tl _cols_clist } #1
+      { \tl_clear:N #1 }
+  }
+}
+
+% 🌳 Builds the node set of hierarchy #1 from the table named by the `data` key;
+% the id/parent/value columns default to the roles \SemioVizHierarchy declared on
+% that table in semio-viz-data.
+\cs_new_protected:Npn \semio_viz_hierarchy_build:nn #1#2 {
+  \semio_viz_hierarchy_keys_reset:
+  \keys_set:nn { semio / viz / hierarchy } {#2}
+  \semio_viz_hierarchy_build_now:n {#1}
+}
+
+% 🌳 The same stratification on keys that were already set.
+\cs_new_protected:Npn \semio_viz_hierarchy_build_now:n #1 {
+  \semio_viz_hierarchy_column:Nnn \l_semio_viz_hierarchy_idcol_tl { id } { id }
+  \semio_viz_hierarchy_column:Nnn \l_semio_viz_hierarchy_parentcol_tl { parent } { parent }
+  \semio_viz_hierarchy_column_optional:Nnn \l_semio_viz_hierarchy_valuecol_tl { value } { value }
+  \str_if_eq:VnT \l_semio_viz_hierarchy_valuecol_tl { none }
+    { \tl_clear:N \l_semio_viz_hierarchy_valuecol_tl }
+  \int_gincr:N \g_semio_viz_hierarchy_generation_int
+  \int_zero:N \l_semio_viz_hierarchy_n_int
+  \seq_if_in:NnF \g_semio_viz_hierarchy_names_seq {#1}
+    { \seq_gput_right:Nn \g_semio_viz_hierarchy_names_seq {#1} }
+  \tl_if_empty:NTF \l_semio_viz_hierarchy_pathcol_tl
+    { \semio_viz_hierarchy_build_table:n {#1} }
+    { \semio_viz_hierarchy_build_path:n {#1} }
+  \semio_viz_hierarchy_set:nnnn {#1} { n } { 0 } { \int_use:N \l_semio_viz_hierarchy_n_int }
+  \semio_viz_hierarchy_set:nnnn {#1} { root } { 0 }
+    { \int_use:N \l_semio_viz_hierarchy_root_int }
+  \semio_viz_hierarchy_seq_reset:n { \semio_viz_hierarchy_kids:nn {#1} { 0 } }
+  \seq_gput_right:cx { \semio_viz_hierarchy_kids:nn {#1} { 0 } }
+    { \int_use:N \l_semio_viz_hierarchy_root_int }
+  \semio_viz_hierarchy_set:nnnn {#1} { pi } { \l_semio_viz_hierarchy_root_int } { 0 }
+  \semio_viz_hierarchy_set:nnnn {#1} { si } { \l_semio_viz_hierarchy_root_int } { 0 }
+  \int_compare:nNnT { \l_semio_viz_hierarchy_root_int } = { 0 }
+    { \msg_error:nnn { semio-viz } { hierarchy-no-root } {#1} }
+  \semio_viz_hierarchy_order:n {#1}
+  \exp_args:NnV \semio_viz_hierarchy_aggregate:nn {#1} \l_semio_viz_hierarchy_aggregate_tl
+  \exp_args:NnV \semio_viz_hierarchy_sort:nn {#1} \l_semio_viz_hierarchy_sort_tl
+}
+
+% 🌳 \SemioVizHierarchyBuild{name}[data=,id=,parent=,value=,path=,delimiter=,
+% aggregate=,sort=]: stratifies a data table into a named hierarchy. Passing a
+% table name straight to \SemioVizLayout builds it with the defaults.
+\NewDocumentCommand \SemioVizHierarchyBuild { m O{} }
+  { \semio_viz_hierarchy_build:nn {#1} {#2} }
+
+% 📐 The five taxonomy 78 hierarchy layouts, registered with the layout kernel so
+% \SemioVizLayout{tree}{in}{out}[opts] reaches them; `out` may repeat `in` to lay
+% a hierarchy out in place.
+\semio_viz_layout_define:nn { tree }
+  { \semio_viz_hierarchy_layout:nnnn { tree } {#1} {#2} {#3} }
+% 🌴 `cluster`: the same tidy tree with every leaf on the last rank.
+\semio_viz_layout_define:nn { cluster }
+  { \semio_viz_hierarchy_layout:nnnn { cluster } {#1} {#2} {#3} }
+% 🧱 `treemap`: nested rectangles whose areas are the node values, under the chosen tiling.
+\semio_viz_layout_define:nn { treemap }
+  { \semio_viz_hierarchy_layout:nnnn { treemap } {#1} {#2} {#3} }
+% 🍰 `partition`: rank-aligned slices, the icicle and sunburst geometry.
+\semio_viz_layout_define:nn { partition }
+  { \semio_viz_hierarchy_layout:nnnn { partition } {#1} {#2} {#3} }
+% 🫧 `pack`: enclosing circles whose areas are the node values.
+\semio_viz_layout_define:nn { pack }
+  { \semio_viz_hierarchy_layout:nnnn { pack } {#1} {#2} {#3} }
+
+% 🔁 \SemioVizHierarchyMapNodes{name}{code}: renderer iterator, #1 is the index.
+\NewDocumentCommand \SemioVizHierarchyMapNodes { m +m }
+  { \semio_viz_hierarchy_map_nodes:nn {#1} {#2} }
+% 🔗 \SemioVizHierarchyMapLinks{name}{code}: parent/child iterator.
+\NewDocumentCommand \SemioVizHierarchyMapLinks { m +m }
+  { \semio_viz_hierarchy_map_links:nn {#1} {#2} }
+% 📤 \SemioVizHierarchyField{name}{field}{index}: expandable field accessor.
+\NewExpandableDocumentCommand \SemioVizHierarchyField { m m m }
+  { \semio_viz_hierarchy_get:nnn {#1} {#2} {#3} }
+%endregion 🔖️PublicApi
+
+%region 🔖️DemoData
+% 🧪 Hierarchy demo tables announced to the fleet, on top of GRAMMAR-CORE's shared
+% `demo-hierarchy`: `demo-hierarchy-deep` (four levels, thirteen nodes, for treemap
+% and pack), `demo-hierarchy-unbalanced` (a deliberately lopsided tree that makes
+% the Buchheim contour threading visible), `demo-hierarchy-path` (a delimited path
+% column) and `demo-hierarchy-branch` (branch lengths for phylograms).
+\cs_new_protected:Npn \semio_viz_hierarchy_demo_data: {
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-hierarchy-deep } {
+    \semio_viz_table_new:nn { demo-hierarchy-deep } { id, parent, value, label }
+    \clist_map_inline:nn {
+      { root, {}, 0, Wurzel }, { a, root, 0, Alpha }, { b, root, 0, Beta }, { c, root, 0, Gamma },
+      { a1, a, 6, {A~I} }, { a2, a, 3, {A~II} }, { a3, a, 2, {A~III} },
+      { b1, b, 8, {B~I} }, { b2, b, 4, {B~II} },
+      { c1, c, 5, {C~I} }, { c2, c, 1, {C~II} }, { c3, c, 7, {C~III} }, { c4, c, 2, {C~IV} }
+    } { \semio_viz_table_row:nn { demo-hierarchy-deep } {##1} }
+    \semio_viz_data_hierarchy:nn { demo-hierarchy-deep }
+      { id=id, parent=parent, value=value, label=label }
+  }
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-hierarchy-unbalanced } {
+    \semio_viz_table_new:nn { demo-hierarchy-unbalanced } { id, parent, value, label }
+    \clist_map_inline:nn {
+      { r, {}, 0, R }, { s, r, 0, S }, { t, r, 9, T },
+      { sa, s, 0, {S~1} }, { sb, s, 4, {S~2} },
+      { saa, sa, 0, {S~1.1} }, { sab, sa, 3, {S~1.2} },
+      { saaa, saa, 2, {S~1.1.1} }, { saab, saa, 5, {S~1.1.2} }, { saac, saa, 1, {S~1.1.3} }
+    } { \semio_viz_table_row:nn { demo-hierarchy-unbalanced } {##1} }
+    \semio_viz_data_hierarchy:nn { demo-hierarchy-unbalanced }
+      { id=id, parent=parent, value=value, label=label }
+  }
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-hierarchy-path } {
+    \semio_viz_table_new:nn { demo-hierarchy-path } { path, value }
+    \clist_map_inline:nn {
+      { {system/core/data}, 5 }, { {system/core/render}, 8 }, { {system/ui/input}, 3 },
+      { {system/ui/theme}, 4 }, { {system/io/read}, 6 }, { {system/io/write}, 2 }
+    } { \semio_viz_table_row:nn { demo-hierarchy-path } {##1} }
+  }
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-hierarchy-branch } {
+    \semio_viz_table_new:nn { demo-hierarchy-branch } { id, parent, value, length, label }
+    \clist_map_inline:nn {
+      { life, {}, 0, 0, Life }, { euk, life, 0, 3, Eukaryota }, { bac, life, 4, 5, Bacteria },
+      { plant, euk, 6, 4, Plantae }, { anim, euk, 0, 2, Animalia },
+      { vert, anim, 5, 3, Vertebrata }, { inv, anim, 3, 6, Invertebrata }
+    } { \semio_viz_table_row:nn { demo-hierarchy-branch } {##1} }
+    \semio_viz_data_hierarchy:nn { demo-hierarchy-branch }
+      { id=id, parent=parent, value=value, label=label }
+  }
+}
+\semio_viz_hierarchy_demo_data:
+%endregion 🔖️DemoData
+
+%region 🔖️RenderKeys
+% 📋 `semio / viz / hierarchy / render` -- the shared renderer of every hierarchy
+% family. Each family documents which subset it exposes.
+%   width, height     (canvas in millimetres)     default: the VizFigure frame
+%   inset             (margin kept free)          default 4
+%   orientation       (top-down, bottom-up, left-right, right-left, radial) default top-down
+%   link              (straight, curved, orthogonal, radial, none) default straight
+%   node              (circle, square, box, dot, none)  default circle
+%   nodeRadius        (mm)                        default 1.4
+%   nodeWidth         (mm, box nodes)             default 16
+%   nodeHeight        (mm, box nodes)             default 6
+%   labels            (bool)                      default true
+%   labelColumn       (column with the caption)   default: the table's label role
+%   fill              (depth, value, index, leaf, none) default depth
+%   opacity           (0..1 fill opacity)         default 1
+%   stroke            (colour name)               default semio-chrome-foreground
+%   strokeWidth       (pt)                        default \semio@stroke@hairline
+%   innerRadius       (mm, sunburst hole)         default 6
+%   leafLabels        (bool, labels on leaves only) default false
+\fp_new:N \l_semio_viz_hierarchy_rd_width_fp
+\fp_new:N \l_semio_viz_hierarchy_rd_height_fp
+\fp_new:N \l_semio_viz_hierarchy_rd_inset_fp
+\fp_new:N \l_semio_viz_hierarchy_rd_radius_fp
+\fp_new:N \l_semio_viz_hierarchy_rd_boxw_fp
+\fp_new:N \l_semio_viz_hierarchy_rd_boxh_fp
+\fp_new:N \l_semio_viz_hierarchy_rd_inner_fp
+\fp_new:N \l_semio_viz_hierarchy_rd_opacity_fp
+\tl_new:N \l_semio_viz_hierarchy_rd_orient_tl
+\tl_new:N \l_semio_viz_hierarchy_rd_link_tl
+\tl_new:N \l_semio_viz_hierarchy_rd_node_tl
+\tl_new:N \l_semio_viz_hierarchy_rd_fill_tl
+\tl_new:N \l_semio_viz_hierarchy_rd_stroke_tl
+\tl_new:N \l_semio_viz_hierarchy_rd_strokewidth_tl
+\tl_new:N \l_semio_viz_hierarchy_rd_labelcol_tl
+\tl_new:N \l_semio_viz_hierarchy_rd_color_tl
+\bool_new:N \l_semio_viz_hierarchy_rd_labels_bool
+\bool_new:N \l_semio_viz_hierarchy_rd_leaflabels_bool
+\fp_new:N \l_semio_viz_hierarchy_rd_px_fp
+\fp_new:N \l_semio_viz_hierarchy_rd_py_fp
+\fp_new:N \l_semio_viz_hierarchy_rd_qx_fp
+\fp_new:N \l_semio_viz_hierarchy_rd_qy_fp
+
+\keys_define:nn { semio / viz / hierarchy / render } {
+  width       .fp_set:N = \l_semio_viz_hierarchy_rd_width_fp,
+  height      .fp_set:N = \l_semio_viz_hierarchy_rd_height_fp,
+  inset       .fp_set:N = \l_semio_viz_hierarchy_rd_inset_fp,
+  orientation .tl_set:N = \l_semio_viz_hierarchy_rd_orient_tl,
+  link        .tl_set:N = \l_semio_viz_hierarchy_rd_link_tl,
+  node        .tl_set:N = \l_semio_viz_hierarchy_rd_node_tl,
+  nodeRadius  .fp_set:N = \l_semio_viz_hierarchy_rd_radius_fp,
+  nodeWidth   .fp_set:N = \l_semio_viz_hierarchy_rd_boxw_fp,
+  nodeHeight  .fp_set:N = \l_semio_viz_hierarchy_rd_boxh_fp,
+  labels      .bool_set:N = \l_semio_viz_hierarchy_rd_labels_bool,
+  leafLabels  .bool_set:N = \l_semio_viz_hierarchy_rd_leaflabels_bool,
+  labelColumn .tl_set:N = \l_semio_viz_hierarchy_rd_labelcol_tl,
+  fill        .tl_set:N = \l_semio_viz_hierarchy_rd_fill_tl,
+  opacity     .fp_set:N = \l_semio_viz_hierarchy_rd_opacity_fp,
+  stroke      .tl_set:N = \l_semio_viz_hierarchy_rd_stroke_tl,
+  strokeWidth .tl_set:N = \l_semio_viz_hierarchy_rd_strokewidth_tl,
+  innerRadius .fp_set:N = \l_semio_viz_hierarchy_rd_inner_fp,
+}
+
+% ♻️ Puts every renderer key back to its documented default; the frame's own width and height win
+% over the fallbacks whenever the renderer runs inside a figure.
+\cs_new_protected:Npn \semio_viz_hierarchy_render_keys_reset: {
+  \fp_set:Nn \l_semio_viz_hierarchy_rd_width_fp
+    { \fp_compare:nNnTF { \l_semio_viz_width_fp } > { 0 } { \l_semio_viz_width_fp } { 80 } }
+  \fp_set:Nn \l_semio_viz_hierarchy_rd_height_fp
+    { \fp_compare:nNnTF { \l_semio_viz_height_fp } > { 0 } { \l_semio_viz_height_fp } { 45 } }
+  \fp_set:Nn \l_semio_viz_hierarchy_rd_inset_fp { 4 }
+  \tl_set:Nn \l_semio_viz_hierarchy_rd_orient_tl { top-down }
+  \tl_set:Nn \l_semio_viz_hierarchy_rd_link_tl { straight }
+  \tl_set:Nn \l_semio_viz_hierarchy_rd_node_tl { circle }
+  \fp_set:Nn \l_semio_viz_hierarchy_rd_radius_fp { 1.4 }
+  \fp_set:Nn \l_semio_viz_hierarchy_rd_boxw_fp { 16 }
+  \fp_set:Nn \l_semio_viz_hierarchy_rd_boxh_fp { 6 }
+  \bool_set_true:N \l_semio_viz_hierarchy_rd_labels_bool
+  \bool_set_false:N \l_semio_viz_hierarchy_rd_leaflabels_bool
+  \tl_clear:N \l_semio_viz_hierarchy_rd_labelcol_tl
+  \tl_set:Nn \l_semio_viz_hierarchy_rd_fill_tl { depth }
+  \fp_set:Nn \l_semio_viz_hierarchy_rd_opacity_fp { 1 }
+  \tl_set:Nn \l_semio_viz_hierarchy_rd_stroke_tl { semio-chrome-foreground }
+  \tl_set:Nn \l_semio_viz_hierarchy_rd_strokewidth_tl { \semio@stroke@hairline }
+  \fp_set:Nn \l_semio_viz_hierarchy_rd_inner_fp { 6 }
+}
+%endregion 🔖️RenderKeys
+
+%region 🔖️Render
+% 📏 Canvas the layout is asked to fill, once the inset is taken off both sides.
+\cs_new:Npn \semio_viz_hierarchy_canvas_x: {
+  \fp_eval:n { max ( 1 , \l_semio_viz_hierarchy_rd_width_fp
+    - 2 * \l_semio_viz_hierarchy_rd_inset_fp ) }
+}
+% 📏 The same in the other direction.
+\cs_new:Npn \semio_viz_hierarchy_canvas_y: {
+  \fp_eval:n { max ( 1 , \l_semio_viz_hierarchy_rd_height_fp
+    - 2 * \l_semio_viz_hierarchy_rd_inset_fp ) }
+}
+
+% 🧭 Places one layout point on the TikZ canvas: the layout always works in a
+% top-down (x across, y down) box, and the orientation key rotates or mirrors it.
+\cs_new_protected:Npn \semio_viz_hierarchy_place:nnNN #1#2#3#4 {
+  \str_case:VnF \l_semio_viz_hierarchy_rd_orient_tl {
+    { top-down }   { \fp_set:Nn #3 { \l_semio_viz_hierarchy_rd_inset_fp + (#1) }
+                     \fp_set:Nn #4 { - \l_semio_viz_hierarchy_rd_inset_fp - (#2) } }
+    { bottom-up }  { \fp_set:Nn #3 { \l_semio_viz_hierarchy_rd_inset_fp + (#1) }
+                     \fp_set:Nn #4 { - \l_semio_viz_hierarchy_rd_height_fp
+                       + \l_semio_viz_hierarchy_rd_inset_fp + (#2) } }
+    { left-right } { \fp_set:Nn #3 { \l_semio_viz_hierarchy_rd_inset_fp + (#2) }
+                     \fp_set:Nn #4 { - \l_semio_viz_hierarchy_rd_inset_fp - (#1) } }
+    { right-left } { \fp_set:Nn #3 { \l_semio_viz_hierarchy_rd_width_fp
+                       - \l_semio_viz_hierarchy_rd_inset_fp - (#2) }
+                     \fp_set:Nn #4 { - \l_semio_viz_hierarchy_rd_inset_fp - (#1) } }
+    { radial }     { \fp_set:Nn #3 { \l_semio_viz_hierarchy_rd_width_fp / 2 + (#1) }
+                     \fp_set:Nn #4 { - \l_semio_viz_hierarchy_rd_height_fp / 2 + (#2) } }
+  }
+  { \fp_set:Nn #3 { \l_semio_viz_hierarchy_rd_inset_fp + (#1) }
+    \fp_set:Nn #4 { - \l_semio_viz_hierarchy_rd_inset_fp - (#2) } }
+}
+
+% 🎨 Fill colour of one node, following the `fill` key.
+\cs_new_protected:Npn \semio_viz_hierarchy_node_color:n #1 {
+  \str_case:VnF \l_semio_viz_hierarchy_rd_fill_tl {
+    { depth } { \semio_viz_theme_color:nN
+      { \semio_viz_hierarchy_get:nnn {#1} { dep } { \l_semio_viz_hierarchy_node_index_int } + 1 }
+      \l_semio_viz_hierarchy_rd_color_tl }
+    { index } { \semio_viz_theme_color:nN { \l_semio_viz_hierarchy_node_index_int }
+      \l_semio_viz_hierarchy_rd_color_tl }
+    { branch } { \semio_viz_theme_color:nN
+      { \semio_viz_hierarchy_branch:nn {#1} { \l_semio_viz_hierarchy_node_index_int } }
+      \l_semio_viz_hierarchy_rd_color_tl }
+    { value } { \semio_viz_theme_color:nN
+      { \fp_to_int:n { 1 + round ( \l_semio_viz_hierarchy_node_value_fp ) } }
+      \l_semio_viz_hierarchy_rd_color_tl }
+    { none } { \tl_set:Nn \l_semio_viz_hierarchy_rd_color_tl { semio-chrome-canvas } }
+  }
+  { \tl_set_eq:NN \l_semio_viz_hierarchy_rd_color_tl \l_semio_viz_hierarchy_rd_fill_tl }
+}
+
+% 🌿 Index of the depth-one ancestor of a node, so a whole branch shares a hue.
+\cs_new:Npn \semio_viz_hierarchy_branch:nn #1#2 {
+  \int_compare:nNnTF { \semio_viz_hierarchy_get:nnn {#1} { dep } {#2} } < { 2 }
+    { \semio_viz_hierarchy_get:nnn {#1} { si } {#2} + 1 }
+    { \semio_viz_hierarchy_branch:nn {#1} { \semio_viz_hierarchy_get:nnn {#1} { pi } {#2} } }
+}
+
+% 🔗 Draws one parent/child link in the style of the `link` key.
+\cs_new_protected:Npn \semio_viz_hierarchy_link_draw:nnnnnn #1#2#3#4#5#6 {
+  \str_case:VnF \l_semio_viz_hierarchy_rd_link_tl {
+    { none } { }
+    { straight } { \draw [ semio~viz~hierarchy~link ] (#3,#4) -- (#5,#6) ; }
+    { curved } {
+      \str_case:VnF \l_semio_viz_hierarchy_rd_orient_tl {
+        { left-right } { \draw [ semio~viz~hierarchy~link ] (#3,#4)
+          .. controls ( \fp_eval:n { ((#3)+(#5))/2 } , #4 )
+          and ( \fp_eval:n { ((#3)+(#5))/2 } , #6 ) .. (#5,#6) ; }
+        { right-left } { \draw [ semio~viz~hierarchy~link ] (#3,#4)
+          .. controls ( \fp_eval:n { ((#3)+(#5))/2 } , #4 )
+          and ( \fp_eval:n { ((#3)+(#5))/2 } , #6 ) .. (#5,#6) ; }
+      }
+      { \draw [ semio~viz~hierarchy~link ] (#3,#4)
+        .. controls ( #3 , \fp_eval:n { ((#4)+(#6))/2 } )
+        and ( #5 , \fp_eval:n { ((#4)+(#6))/2 } ) .. (#5,#6) ; }
+    }
+    { orthogonal } {
+      \str_case:VnF \l_semio_viz_hierarchy_rd_orient_tl {
+        { left-right } { \draw [ semio~viz~hierarchy~link ] (#3,#4)
+          -- ( \fp_eval:n { ((#3)+(#5))/2 } , #4 )
+          -- ( \fp_eval:n { ((#3)+(#5))/2 } , #6 ) -- (#5,#6) ; }
+        { right-left } { \draw [ semio~viz~hierarchy~link ] (#3,#4)
+          -- ( \fp_eval:n { ((#3)+(#5))/2 } , #4 )
+          -- ( \fp_eval:n { ((#3)+(#5))/2 } , #6 ) -- (#5,#6) ; }
+      }
+      { \draw [ semio~viz~hierarchy~link ] (#3,#4)
+        -- ( #3 , \fp_eval:n { ((#4)+(#6))/2 } )
+        -- ( #5 , \fp_eval:n { ((#4)+(#6))/2 } ) -- (#5,#6) ; }
+    }
+    { radial } {
+      \draw [ semio~viz~hierarchy~link ] (#3,#4)
+        .. controls ( \fp_eval:n { ((#3)+(#5))/2 } , \fp_eval:n { ((#4)+(#6))/2 } )
+        and ( \fp_eval:n { ((#3)+(#5))/2 } , \fp_eval:n { ((#4)+(#6))/2 } ) .. (#5,#6) ;
+    }
+  }
+  { \draw [ semio~viz~hierarchy~link ] (#3,#4) -- (#5,#6) ; }
+  \semio_viz_probe_geometry:nx { link/#2 } { #3 , #4 , #5 , #6 }
+}
+
+\tikzset{
+  semio~viz~hierarchy~link/.style = {
+    draw = semio-chrome-text-normal, line~width = \semio@stroke@hairline, line~cap = round,
+  },
+}
+
+% 🏷️ Caption of one node: the label column when the table has one, else the id.
+\cs_new_protected:Npn \semio_viz_hierarchy_label:nnN #1#2#3 {
+  \tl_if_empty:NTF \l_semio_viz_hierarchy_rd_labelcol_tl
+    { \tl_set_eq:NN #3 \l_semio_viz_hierarchy_node_id_tl }
+    {
+      \semio_viz_table_cell:nnnN {#1} {#2}
+        { \l_semio_viz_hierarchy_rd_labelcol_tl } #3
+      \tl_if_blank:VT #3 { \tl_set_eq:NN #3 \l_semio_viz_hierarchy_node_id_tl }
+    }
+}
+%endregion 🔖️Render
+
+%region 🔖️RenderNodes
+\tl_new:N \l_semio_viz_hierarchy_rd_text_tl
+\fp_new:N \l_semio_viz_hierarchy_rd_ax_fp
+\fp_new:N \l_semio_viz_hierarchy_rd_ay_fp
+\fp_new:N \l_semio_viz_hierarchy_rd_bx_fp
+\fp_new:N \l_semio_viz_hierarchy_rd_by_fp
+
+% 🔗 Draws every parent/child link of a laid-out hierarchy.
+\cs_new_protected:Npn \semio_viz_hierarchy_draw_links:n #1 {
+  \str_if_eq:VnF \l_semio_viz_hierarchy_rd_link_tl { none } {
+    \semio_viz_hierarchy_map_links:nn {#1} {
+      \semio_viz_hierarchy_place:nnNN
+        { \semio_viz_hierarchy_get:nnn {#1} { x } { \l_semio_viz_hierarchy_source_int } }
+        { \semio_viz_hierarchy_get:nnn {#1} { y } { \l_semio_viz_hierarchy_source_int } }
+        \l_semio_viz_hierarchy_rd_ax_fp \l_semio_viz_hierarchy_rd_ay_fp
+      \semio_viz_hierarchy_place:nnNN
+        { \semio_viz_hierarchy_get:nnn {#1} { x } { \l_semio_viz_hierarchy_target_int } }
+        { \semio_viz_hierarchy_get:nnn {#1} { y } { \l_semio_viz_hierarchy_target_int } }
+        \l_semio_viz_hierarchy_rd_bx_fp \l_semio_viz_hierarchy_rd_by_fp
+      \use:x {
+        \exp_not:N \semio_viz_hierarchy_link_draw:nnnnnn {#1}
+          { \l_semio_viz_hierarchy_rd_link_tl }
+          { \fp_use:N \l_semio_viz_hierarchy_rd_ax_fp }
+          { \fp_use:N \l_semio_viz_hierarchy_rd_ay_fp }
+          { \fp_use:N \l_semio_viz_hierarchy_rd_bx_fp }
+          { \fp_use:N \l_semio_viz_hierarchy_rd_by_fp }
+      }
+    }
+  }
+}
+
+% ⚫ Draws the node marks and their captions of a laid-out hierarchy; #2 is the
+% source table the label column is read from.
+\cs_new_protected:Npn \semio_viz_hierarchy_draw_nodes:nn #1#2 {
+  \semio_viz_hierarchy_map_nodes:nn {#1} {
+    \semio_viz_hierarchy_node_color:n {#1}
+    \semio_viz_hierarchy_place:nnNN { \l_semio_viz_hierarchy_node_x_fp }
+      { \l_semio_viz_hierarchy_node_y_fp }
+      \l_semio_viz_hierarchy_rd_px_fp \l_semio_viz_hierarchy_rd_py_fp
+    \semio_viz_hierarchy_label:nnN {#2} {##1} \l_semio_viz_hierarchy_rd_text_tl
+    \str_case:VnF \l_semio_viz_hierarchy_rd_node_tl {
+      { none } { }
+      { circle } {
+        \use:x { \exp_not:N \fill [ \l_semio_viz_hierarchy_rd_color_tl ,
+          draw = \l_semio_viz_hierarchy_rd_stroke_tl ,
+          line~width = \l_semio_viz_hierarchy_rd_strokewidth_tl ,
+          fill~opacity = \fp_use:N \l_semio_viz_hierarchy_rd_opacity_fp ]
+          ( \fp_use:N \l_semio_viz_hierarchy_rd_px_fp ,
+            \fp_use:N \l_semio_viz_hierarchy_rd_py_fp )
+          circle [ radius = \fp_use:N \l_semio_viz_hierarchy_rd_radius_fp ] ; }
+      }
+      { dot } {
+        \use:x { \exp_not:N \fill [ \l_semio_viz_hierarchy_rd_color_tl ]
+          ( \fp_use:N \l_semio_viz_hierarchy_rd_px_fp ,
+            \fp_use:N \l_semio_viz_hierarchy_rd_py_fp )
+          circle [ radius = \fp_eval:n { \l_semio_viz_hierarchy_rd_radius_fp / 2 } ] ; }
+      }
+      { square } {
+        \use:x { \exp_not:N \fill [ \l_semio_viz_hierarchy_rd_color_tl ,
+          draw = \l_semio_viz_hierarchy_rd_stroke_tl ,
+          line~width = \l_semio_viz_hierarchy_rd_strokewidth_tl ]
+          ( \fp_eval:n { \l_semio_viz_hierarchy_rd_px_fp - \l_semio_viz_hierarchy_rd_radius_fp } ,
+            \fp_eval:n { \l_semio_viz_hierarchy_rd_py_fp - \l_semio_viz_hierarchy_rd_radius_fp } )
+          rectangle
+          ( \fp_eval:n { \l_semio_viz_hierarchy_rd_px_fp + \l_semio_viz_hierarchy_rd_radius_fp } ,
+            \fp_eval:n { \l_semio_viz_hierarchy_rd_py_fp + \l_semio_viz_hierarchy_rd_radius_fp } ) ; }
+      }
+      { box } { \semio_viz_hierarchy_draw_box: }
+    }
+    { \semio_viz_hierarchy_draw_box: }
+    \semio_viz_probe_geometry:xx { node/ \l_semio_viz_hierarchy_rd_node_tl }
+      { \l_semio_viz_hierarchy_node_id_tl ,
+        \fp_use:N \l_semio_viz_hierarchy_rd_px_fp ,
+        \fp_use:N \l_semio_viz_hierarchy_rd_py_fp ,
+        \str_if_eq:VnTF \l_semio_viz_hierarchy_rd_node_tl { box }
+          { \fp_use:N \l_semio_viz_hierarchy_rd_boxw_fp ,
+            \fp_use:N \l_semio_viz_hierarchy_rd_boxh_fp }
+          { \fp_use:N \l_semio_viz_hierarchy_rd_radius_fp ,
+            \fp_use:N \l_semio_viz_hierarchy_rd_radius_fp } }
+    \bool_lazy_and:nnT { \l_semio_viz_hierarchy_rd_labels_bool }
+      { ! \str_if_eq_p:Vn \l_semio_viz_hierarchy_rd_node_tl { box } } {
+      \bool_lazy_or:nnT { ! \l_semio_viz_hierarchy_rd_leaflabels_bool }
+        { \l_semio_viz_hierarchy_node_leaf_bool }
+        { \semio_viz_hierarchy_draw_caption: }
+    }
+  }
+}
+
+% 🔤 Caption beside a node mark, kept clear of the mark itself.
+\cs_new_protected:Npn \semio_viz_hierarchy_draw_caption: {
+  \use:x { \exp_not:N \node [ font = \exp_not:N \scriptsize ,
+    text = semio-chrome-foreground , inner~sep = 0pt ,
+    \str_case:VnF \l_semio_viz_hierarchy_rd_orient_tl {
+      { left-right } { anchor = west , xshift = 1.2mm }
+      { right-left } { anchor = east , xshift = -1.2mm }
+      { bottom-up }  { anchor = south , yshift = 1.2mm }
+    } { anchor = north , yshift = -1.2mm } ]
+    at ( \fp_use:N \l_semio_viz_hierarchy_rd_px_fp ,
+         \fp_use:N \l_semio_viz_hierarchy_rd_py_fp )
+    { \exp_not:V \l_semio_viz_hierarchy_rd_text_tl } ; }
+}
+
+% 🗃️ A labelled box node, the organisation-chart and family-tree mark.
+\cs_new_protected:Npn \semio_viz_hierarchy_draw_box: {
+  \use:x { \exp_not:N \node [ draw = \l_semio_viz_hierarchy_rd_stroke_tl ,
+    fill = \l_semio_viz_hierarchy_rd_color_tl ,
+    fill~opacity = \fp_use:N \l_semio_viz_hierarchy_rd_opacity_fp ,
+    line~width = \l_semio_viz_hierarchy_rd_strokewidth_tl ,
+    rounded~corners = 0.6mm , inner~sep = 0.6mm ,
+    minimum~width = \fp_use:N \l_semio_viz_hierarchy_rd_boxw_fp mm ,
+    minimum~height = \fp_use:N \l_semio_viz_hierarchy_rd_boxh_fp mm ,
+    font = \exp_not:N \scriptsize , text = semio-chrome-foreground , align = center ]
+    at ( \fp_use:N \l_semio_viz_hierarchy_rd_px_fp ,
+         \fp_use:N \l_semio_viz_hierarchy_rd_py_fp )
+    { \exp_not:V \l_semio_viz_hierarchy_rd_text_tl } ; }
+}
+
+% 🟦 Draws the rectangle of every node of a treemap or partition layout, and the
+% polygon instead when the voronoi tiling left one on the node.
+\cs_new_protected:Npn \semio_viz_hierarchy_draw_rects:nnn #1#2#3 {
+  \semio_viz_hierarchy_map_nodes:nn {#1} {
+    \int_compare:nNnT { \l_semio_viz_hierarchy_node_depth_int } > { #3 - 1 } {
+      \semio_viz_hierarchy_node_color:n {#1}
+      \semio_viz_hierarchy_label:nnN {#2} {##1} \l_semio_viz_hierarchy_rd_text_tl
+      \clist_set:Nx \l_semio_viz_hierarchy_rd_poly_clist
+        { \semio_viz_hierarchy_get:nnn {#1} { poly } {##1} }
+      \clist_if_empty:NTF \l_semio_viz_hierarchy_rd_poly_clist
+        { \semio_viz_hierarchy_draw_rect:nn {#1} {##1} }
+        { \semio_viz_hierarchy_draw_poly:nn {#1} {##1} }
+    }
+  }
+}
+
+% ▭ Node #2 of hierarchy #1 as a rectangle: its two layout corners placed under the orientation.
+\cs_new_protected:Npn \semio_viz_hierarchy_draw_rect:nn #1#2 {
+  \semio_viz_hierarchy_place:nnNN { \l_semio_viz_hierarchy_node_xa_fp }
+    { \l_semio_viz_hierarchy_node_ya_fp }
+    \l_semio_viz_hierarchy_rd_ax_fp \l_semio_viz_hierarchy_rd_ay_fp
+  \semio_viz_hierarchy_place:nnNN { \l_semio_viz_hierarchy_node_xb_fp }
+    { \l_semio_viz_hierarchy_node_yb_fp }
+    \l_semio_viz_hierarchy_rd_bx_fp \l_semio_viz_hierarchy_rd_by_fp
+  \use:x { \exp_not:N \fill [ \l_semio_viz_hierarchy_rd_color_tl ,
+    draw = \l_semio_viz_hierarchy_rd_stroke_tl ,
+    line~width = \l_semio_viz_hierarchy_rd_strokewidth_tl ,
+    fill~opacity = \fp_use:N \l_semio_viz_hierarchy_rd_opacity_fp ]
+    ( \fp_use:N \l_semio_viz_hierarchy_rd_ax_fp ,
+      \fp_use:N \l_semio_viz_hierarchy_rd_ay_fp ) rectangle
+    ( \fp_use:N \l_semio_viz_hierarchy_rd_bx_fp ,
+      \fp_use:N \l_semio_viz_hierarchy_rd_by_fp ) ; }
+  \semio_viz_probe_geometry:nx { rect }
+    { \l_semio_viz_hierarchy_node_id_tl ,
+      \fp_use:N \l_semio_viz_hierarchy_node_xa_fp ,
+      \fp_use:N \l_semio_viz_hierarchy_node_ya_fp ,
+      \fp_use:N \l_semio_viz_hierarchy_node_xb_fp ,
+      \fp_use:N \l_semio_viz_hierarchy_node_yb_fp }
+  \bool_if:NT \l_semio_viz_hierarchy_rd_labels_bool {
+    \fp_compare:nNnT
+      { ( \l_semio_viz_hierarchy_node_xb_fp - \l_semio_viz_hierarchy_node_xa_fp )
+      * ( \l_semio_viz_hierarchy_node_yb_fp - \l_semio_viz_hierarchy_node_ya_fp ) } > { 24 } {
+      \use:x { \exp_not:N \node [ font = \exp_not:N \scriptsize , inner~sep = 0pt ,
+        text = semio-chrome-foreground , anchor = north~west ]
+        at ( \fp_eval:n { min ( \l_semio_viz_hierarchy_rd_ax_fp ,
+               \l_semio_viz_hierarchy_rd_bx_fp ) + 0.8 } ,
+             \fp_eval:n { max ( \l_semio_viz_hierarchy_rd_ay_fp ,
+               \l_semio_viz_hierarchy_rd_by_fp ) - 0.8 } )
+        { \exp_not:V \l_semio_viz_hierarchy_rd_text_tl } ; }
+    }
+  }
+}
+
+\clist_new:N \l_semio_viz_hierarchy_rd_poly_clist
+\int_new:N \l_semio_viz_hierarchy_rd_m_int
+
+\tl_new:N \l_semio_viz_hierarchy_rd_path_tl
+
+% ⬟ Node #2 of hierarchy #1 as a polygon, for the tilings whose cells are not rectangles.
+\cs_new_protected:Npn \semio_viz_hierarchy_draw_poly:nn #1#2 {
+  \int_set:Nn \l_semio_viz_hierarchy_rd_m_int
+    { \clist_count:N \l_semio_viz_hierarchy_rd_poly_clist / 2 }
+  \int_compare:nNnT { \l_semio_viz_hierarchy_rd_m_int } > { 2 } {
+    \tl_clear:N \l_semio_viz_hierarchy_rd_path_tl
+    \int_step_inline:nn { \l_semio_viz_hierarchy_rd_m_int } {
+      \semio_viz_hierarchy_place:nnNN
+        { \clist_item:Nn \l_semio_viz_hierarchy_rd_poly_clist { \int_eval:n { 2 * ##1 - 1 } } }
+        { \clist_item:Nn \l_semio_viz_hierarchy_rd_poly_clist { \int_eval:n { 2 * ##1 } } }
+        \l_semio_viz_hierarchy_rd_ax_fp \l_semio_viz_hierarchy_rd_ay_fp
+      \tl_put_right:Nx \l_semio_viz_hierarchy_rd_path_tl
+        { ( \fp_use:N \l_semio_viz_hierarchy_rd_ax_fp ,
+            \fp_use:N \l_semio_viz_hierarchy_rd_ay_fp ) -- }
+    }
+    \use:x { \exp_not:N \fill [ \l_semio_viz_hierarchy_rd_color_tl ,
+      draw = \l_semio_viz_hierarchy_rd_stroke_tl ,
+      line~width = \l_semio_viz_hierarchy_rd_strokewidth_tl ,
+      fill~opacity = \fp_use:N \l_semio_viz_hierarchy_rd_opacity_fp ]
+      \exp_not:V \l_semio_viz_hierarchy_rd_path_tl cycle ; }
+    \semio_viz_probe_geometry:nx { polygon }
+      { \l_semio_viz_hierarchy_node_id_tl , \l_semio_viz_hierarchy_rd_poly_clist }
+  }
+}
+
+% 🌈 Draws one annular sector per node of a radial partition (the sunburst mark).
+\cs_new_protected:Npn \semio_viz_hierarchy_draw_arcs:nnn #1#2#3 {
+  \semio_viz_hierarchy_map_nodes:nn {#1} {
+    \int_compare:nNnT { \l_semio_viz_hierarchy_node_depth_int } > { #3 - 1 } {
+      \semio_viz_hierarchy_node_color:n {#1}
+      \fp_set:Nn \l_semio_viz_hierarchy_rd_ax_fp
+        { \l_semio_viz_hierarchy_node_xa_fp * 180 / pi }
+      \fp_set:Nn \l_semio_viz_hierarchy_rd_bx_fp
+        { \l_semio_viz_hierarchy_node_xb_fp * 180 / pi }
+      \fp_set:Nn \l_semio_viz_hierarchy_rd_ay_fp
+        { \l_semio_viz_hierarchy_rd_inner_fp + \l_semio_viz_hierarchy_node_ya_fp }
+      \fp_set:Nn \l_semio_viz_hierarchy_rd_by_fp
+        { \l_semio_viz_hierarchy_rd_inner_fp + \l_semio_viz_hierarchy_node_yb_fp }
+      \fp_compare:nNnT { \l_semio_viz_hierarchy_rd_bx_fp - \l_semio_viz_hierarchy_rd_ax_fp }
+        > { 0.05 } {
+        \use:x { \exp_not:N \fill [ \l_semio_viz_hierarchy_rd_color_tl ,
+          draw = \l_semio_viz_hierarchy_rd_stroke_tl ,
+          line~width = \l_semio_viz_hierarchy_rd_strokewidth_tl ,
+          fill~opacity = \fp_use:N \l_semio_viz_hierarchy_rd_opacity_fp ,
+          shift = { ( \fp_eval:n { \l_semio_viz_hierarchy_rd_width_fp / 2 } ,
+                      \fp_eval:n { - \l_semio_viz_hierarchy_rd_height_fp / 2 } ) } ]
+          ( \fp_eval:n { 90 - \l_semio_viz_hierarchy_rd_ax_fp } \c_colon_str
+            \fp_use:N \l_semio_viz_hierarchy_rd_ay_fp )
+          arc [ start~angle = \fp_eval:n { 90 - \l_semio_viz_hierarchy_rd_ax_fp } ,
+                end~angle = \fp_eval:n { 90 - \l_semio_viz_hierarchy_rd_bx_fp } ,
+                radius = \fp_use:N \l_semio_viz_hierarchy_rd_ay_fp ]
+          -- ( \fp_eval:n { 90 - \l_semio_viz_hierarchy_rd_bx_fp } \c_colon_str
+               \fp_use:N \l_semio_viz_hierarchy_rd_by_fp )
+          arc [ start~angle = \fp_eval:n { 90 - \l_semio_viz_hierarchy_rd_bx_fp } ,
+                end~angle = \fp_eval:n { 90 - \l_semio_viz_hierarchy_rd_ax_fp } ,
+                radius = \fp_use:N \l_semio_viz_hierarchy_rd_by_fp ]
+          -- cycle ; }
+        \semio_viz_probe_geometry:nx { arc }
+          { \l_semio_viz_hierarchy_node_id_tl ,
+            \fp_use:N \l_semio_viz_hierarchy_node_xa_fp ,
+            \fp_use:N \l_semio_viz_hierarchy_node_xb_fp ,
+            \fp_use:N \l_semio_viz_hierarchy_rd_ay_fp ,
+            \fp_use:N \l_semio_viz_hierarchy_rd_by_fp }
+      }
+    }
+  }
+}
+
+% ⭕ Draws the circle of every node of a pack layout.
+\cs_new_protected:Npn \semio_viz_hierarchy_draw_circles:nnn #1#2#3 {
+  \semio_viz_hierarchy_map_nodes:nn {#1} {
+    \int_compare:nNnT { \l_semio_viz_hierarchy_node_depth_int } > { #3 - 1 } {
+      \semio_viz_hierarchy_node_color:n {#1}
+      \semio_viz_hierarchy_label:nnN {#2} {##1} \l_semio_viz_hierarchy_rd_text_tl
+      \fp_set:Nn \l_semio_viz_hierarchy_rd_px_fp
+        { \l_semio_viz_hierarchy_rd_inset_fp + \l_semio_viz_hierarchy_node_x_fp }
+      \fp_set:Nn \l_semio_viz_hierarchy_rd_py_fp
+        { - \l_semio_viz_hierarchy_rd_inset_fp - \l_semio_viz_hierarchy_node_y_fp }
+      \use:x { \exp_not:N \fill [ \l_semio_viz_hierarchy_rd_color_tl ,
+        draw = \l_semio_viz_hierarchy_rd_stroke_tl ,
+        line~width = \l_semio_viz_hierarchy_rd_strokewidth_tl ,
+        fill~opacity = \fp_eval:n { \l_semio_viz_hierarchy_rd_opacity_fp
+          * \bool_if:NTF \l_semio_viz_hierarchy_node_leaf_bool { 1 } { 0.35 } } ]
+        ( \fp_use:N \l_semio_viz_hierarchy_rd_px_fp ,
+          \fp_use:N \l_semio_viz_hierarchy_rd_py_fp )
+        circle [ radius = \fp_use:N \l_semio_viz_hierarchy_node_r_fp ] ; }
+      \semio_viz_probe_geometry:nx { circle }
+        { \l_semio_viz_hierarchy_node_id_tl ,
+          \fp_use:N \l_semio_viz_hierarchy_node_x_fp ,
+          \fp_use:N \l_semio_viz_hierarchy_node_y_fp ,
+          \fp_use:N \l_semio_viz_hierarchy_node_r_fp }
+      \bool_lazy_and:nnT { \l_semio_viz_hierarchy_rd_labels_bool }
+        { \l_semio_viz_hierarchy_node_leaf_bool } {
+        \fp_compare:nNnT { \l_semio_viz_hierarchy_node_r_fp } > { 3 } {
+          \use:x { \exp_not:N \node [ font = \exp_not:N \scriptsize , inner~sep = 0pt ,
+            text = semio-chrome-foreground ]
+            at ( \fp_use:N \l_semio_viz_hierarchy_rd_px_fp ,
+                 \fp_use:N \l_semio_viz_hierarchy_rd_py_fp )
+            { \exp_not:V \l_semio_viz_hierarchy_rd_text_tl } ; }
+        }
+      }
+    }
+  }
+}
+%endregion 🔖️RenderNodes
+
+%region 🔖️FamilySupport
+% 🧰 One flat option list per family: the keys a family declares itself win, then
+% the construction keys of `semio / viz / hierarchy`, then the layout keys, and
+% whatever is left must be a renderer key. Every family documents its own subset.
+\tl_new:N \l_semio_viz_hierarchy_fam_rest_tl
+\tl_new:N \l_semio_viz_hierarchy_fam_more_tl
+\cs_generate_variant:Nn \keys_set_known:nnN { nVN }
+\cs_generate_variant:Nn \keys_set:nn { nV }
+
+\cs_new_protected:Npn \semio_viz_hierarchy_family_setup:nnn #1#2#3 {
+  \semio_viz_hierarchy_keys_reset:
+  \semio_viz_hierarchy_layout_keys_reset:
+  \semio_viz_hierarchy_render_keys_reset:
+  \tl_set:Nn \l_semio_viz_hierarchy_table_tl { demo-hierarchy }
+  \semio_viz_hierarchy_family_apply:nn {#1} {#2}
+  \semio_viz_hierarchy_family_apply:nn {#1} {#3}
+  \semio_viz_hierarchy_column_optional:Nnn \l_semio_viz_hierarchy_rd_labelcol_tl { label } { label }
+}
+
+% 🔀 Routes one option list through the four key sets a family understands.
+\cs_new_protected:Npn \semio_viz_hierarchy_family_apply:nn #1#2 {
+  \keys_set_known:nnN { semio / viz / family / #1 } {#2} \l_semio_viz_hierarchy_fam_rest_tl
+  \keys_set_known:nVN { semio / viz / hierarchy } \l_semio_viz_hierarchy_fam_rest_tl
+    \l_semio_viz_hierarchy_fam_more_tl
+  \keys_set_known:nVN { semio / viz / hierarchy / layout } \l_semio_viz_hierarchy_fam_more_tl
+    \l_semio_viz_hierarchy_fam_rest_tl
+  \keys_set:nV { semio / viz / hierarchy / render } \l_semio_viz_hierarchy_fam_rest_tl
+}
+
+% 📐 Fills the layout extent with the drawable canvas unless the caller asked for
+% an explicit `size` or `nodeSize`.
+\cs_new_protected:Npn \semio_viz_hierarchy_family_extent: {
+  \bool_if:NF \l_semio_viz_hierarchy_size_given_bool {
+    \str_if_eq:VnTF \l_semio_viz_hierarchy_rd_orient_tl { radial }
+      {
+        \fp_set:Nn \l_semio_viz_hierarchy_dx_fp { 2 * pi }
+        \fp_set:Nn \l_semio_viz_hierarchy_dy_fp
+          { max ( 1 , min ( \l_semio_viz_hierarchy_rd_width_fp ,
+            \l_semio_viz_hierarchy_rd_height_fp ) / 2 - \l_semio_viz_hierarchy_rd_inset_fp ) }
+        \bool_set_true:N \l_semio_viz_hierarchy_radial_bool
+      }
+      {
+        \str_case:VnTF \l_semio_viz_hierarchy_rd_orient_tl {
+          { left-right } { \fp_set:Nn \l_semio_viz_hierarchy_dx_fp { \semio_viz_hierarchy_canvas_y: }
+                           \fp_set:Nn \l_semio_viz_hierarchy_dy_fp { \semio_viz_hierarchy_canvas_x: } }
+          { right-left } { \fp_set:Nn \l_semio_viz_hierarchy_dx_fp { \semio_viz_hierarchy_canvas_y: }
+                           \fp_set:Nn \l_semio_viz_hierarchy_dy_fp { \semio_viz_hierarchy_canvas_x: } }
+        } { }
+        { \fp_set:Nn \l_semio_viz_hierarchy_dx_fp { \semio_viz_hierarchy_canvas_x: }
+          \fp_set:Nn \l_semio_viz_hierarchy_dy_fp { \semio_viz_hierarchy_canvas_y: } }
+      }
+  }
+}
+
+\cs_generate_variant:Nn \semio_viz_hierarchy_build_now:n { V }
+\cs_generate_variant:Nn \semio_viz_hierarchy_layout_now:nnn { nVV }
+\cs_generate_variant:Nn \semio_viz_hierarchy_draw_links:n { V }
+\cs_generate_variant:Nn \semio_viz_hierarchy_draw_nodes:nn { VV }
+\cs_generate_variant:Nn \semio_viz_hierarchy_draw_rects:nnn { VVn }
+\cs_generate_variant:Nn \semio_viz_hierarchy_draw_arcs:nnn { VVn }
+\cs_generate_variant:Nn \semio_viz_hierarchy_draw_circles:nnn { VVn }
+
+% 🏷️ The scratch hierarchy names a family lays out into; one pair is enough
+% because a family renders before the next one starts.
+\tl_const:Nn \c_semio_viz_hierarchy_family_tl { semio-viz-family }
+
+% 🧱 Build, extend and lay out in one step, leaving the result in the scratch
+% hierarchy and the source table name in \l_semio_viz_hierarchy_table_tl.
+\cs_new_protected:Npn \semio_viz_hierarchy_family_layout:n #1 {
+  \semio_viz_hierarchy_build_now:V \c_semio_viz_hierarchy_family_tl
+  \semio_viz_hierarchy_family_extent:
+  \semio_viz_hierarchy_layout_now:nVV {#1} \c_semio_viz_hierarchy_family_tl
+    \c_semio_viz_hierarchy_family_tl
+}
+
+% 🖌️ Links plus node marks of the scratch hierarchy.
+\cs_new_protected:Npn \semio_viz_hierarchy_family_draw_tree: {
+  \semio_viz_hierarchy_draw_links:V \c_semio_viz_hierarchy_family_tl
+  \semio_viz_hierarchy_draw_nodes:VV \c_semio_viz_hierarchy_family_tl
+    \l_semio_viz_hierarchy_table_tl
+}
+%endregion 🔖️FamilySupport
+
+\ExplSyntaxOff

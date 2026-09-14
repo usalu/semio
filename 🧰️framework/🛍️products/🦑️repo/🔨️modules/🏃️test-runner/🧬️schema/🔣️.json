@@ -1,0 +1,280 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/repo/test-runner.json",
+  "title": "🏃️ Repo test runner",
+  "description": "🏃️ The wire shapes of the repo test-runner domain: the filesystem snapshot planning is a pure function of, the invocation plan it produces, the recorded runner transcripts execution replays, and the one outcome model every runner dialect folds into. Every implementation (🦀️rust, 🐹️go) and every 🧪️tests fixture of this module is described here.",
+  "type": "object",
+  "$defs": {
+    "EntryKind": {
+      "description": "🌲️ Whether a snapshot entry is a file or a directory.",
+      "enum": ["file", "directory"]
+    },
+    "SnapshotEntry": {
+      "description": "📄️ One path a planning rule may probe. `contents` is present only where a rule reads the bytes (package.json, a Go test file, a Rust or C# source scanned for test attributes).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "kind"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1, "description": "🛤️ Forward-slashed path, absolute or relative to the snapshot root." },
+        "kind": { "$ref": "#/$defs/EntryKind" },
+        "contents": { "type": "string", "description": "📝️ Text contents." }
+      }
+    },
+    "SnapshotBundle": {
+      "description": "📦️ The two fields planning needs from 📐️model's `Bundle`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "root"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "description": "🏷️ `technology/bundle`." },
+        "root": { "type": "string", "minLength": 1, "description": "🛤️ Repository-relative bundle root." }
+      }
+    },
+    "FilesystemSnapshot": {
+      "description": "🌍️ Everything planning is allowed to know about the world. Planning is a pure function of this value, so a plan is a golden a fixture can pin.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "root": { "type": "string", "description": "🏠️ Repository root every relative path is joined onto." },
+        "entries": { "type": "array", "items": { "$ref": "#/$defs/SnapshotEntry" }, "description": "🌲️ Every probeable path." },
+        "bundles": { "type": "array", "items": { "$ref": "#/$defs/SnapshotBundle" }, "description": "📦️ The bundle table." },
+        "uvAvailable": { "type": "boolean", "description": "🐍️ Whether `uv` is on PATH." }
+      }
+    },
+    "ScopeKind": {
+      "description": "🔭️ How wide a run reaches, narrowing left to right.",
+      "enum": ["all", "technology", "bundle", "file", "section", "definition"]
+    },
+    "TestScope": {
+      "description": "🧪️ A resolved scope.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "$ref": "#/$defs/ScopeKind" },
+        "bundle_root": { "type": "string", "description": "📦️ Bundle root, or the technology name for a technology scope." },
+        "file_path": { "type": "string", "description": "🥼️ File path." },
+        "section": { "type": "string", "description": "🔖️ Section name." },
+        "test_name": { "type": "string", "description": "🧪️ Flat test name." },
+        "language": { "type": "string", "description": "🗣️ Language." }
+      }
+    },
+    "Runner": {
+      "description": "🏭️ The program an invocation runs.",
+      "enum": ["go", "cargo", "cargo-nextest", "dotnet", "npx", "npm", "uv", "pytest", "rspec"]
+    },
+    "RunnerInvocation": {
+      "description": "🎬️ One process the plan will run, fully determined before anything executes.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runner", "argv", "cwd"],
+      "properties": {
+        "runner": { "$ref": "#/$defs/Runner" },
+        "argv": { "type": "array", "items": { "type": "string" }, "minItems": 1, "description": "📜️ Full argv, program name first." },
+        "cwd": { "type": "string", "description": "📁️ Absolute working directory." },
+        "env": { "type": "object", "additionalProperties": { "type": "string" }, "description": "🌱️ Environment overlay, key-sorted." },
+        "filter": { "type": "string", "description": "🎯️ The test filter this invocation carries." }
+      }
+    },
+    "InvocationPlan": {
+      "description": "🗺️ An ordered plan plus the refusals Go reports as errors, in Go's wording.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "invocations": { "type": "array", "items": { "$ref": "#/$defs/RunnerInvocation" } },
+        "problems": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "ProcessOutput": {
+      "description": "📤️ What a process answered.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": { "type": "integer", "description": "🔢️ Exit status." },
+        "stdout": { "type": "string" },
+        "stderr": { "type": "string" }
+      }
+    },
+    "RecordedTranscript": {
+      "description": "🎞️ One recorded `(argv, cwd) → output` pair. `cwd` empty matches any working directory, which is what lets a transcript fixture stay host-independent.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["argv", "output"],
+      "properties": {
+        "argv": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "cwd": { "type": "string" },
+        "output": { "$ref": "#/$defs/ProcessOutput" }
+      }
+    },
+    "TestStatus": {
+      "description": "🚦️ How one test ended.",
+      "enum": ["passed", "failed", "skipped"]
+    },
+    "RunStatus": {
+      "description": "🚦️ How one invocation ended.",
+      "enum": ["passed", "failed", "cancelled", "not-run"]
+    },
+    "TestCaseOutcome": {
+      "description": "🧪️ One test, normalised across every runner dialect.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "status"],
+      "properties": {
+        "name": { "type": "string" },
+        "suite": { "type": "string", "description": "📦️ Package, file or suite the runner attributed it to." },
+        "status": { "$ref": "#/$defs/TestStatus" },
+        "duration_ms": { "type": "number" },
+        "message": { "type": "string" }
+      }
+    },
+    "TestTotals": {
+      "description": "🔢️ Counts, always recomputed from the cases so a transcript's own summary line can never drift from the parsed tests.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["passed", "failed", "skipped", "total"],
+      "properties": {
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "skipped": { "type": "integer", "minimum": 0 },
+        "total": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "TestOutcome": {
+      "description": "📊️ One invocation's result in the one model every runner folds into.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runner", "status", "totals"],
+      "properties": {
+        "runner": { "$ref": "#/$defs/Runner" },
+        "status": { "$ref": "#/$defs/RunStatus" },
+        "tests": { "type": "array", "items": { "$ref": "#/$defs/TestCaseOutcome" } },
+        "totals": { "$ref": "#/$defs/TestTotals" },
+        "exit_status": { "type": "integer" }
+      }
+    },
+    "ProgressEvent": {
+      "description": "📣️ What the caller is told while a plan runs.",
+      "type": "object",
+      "required": ["event"],
+      "properties": {
+        "event": { "enum": ["plan-started", "invocation-started", "invocation-finished", "cancelled", "plan-finished"] },
+        "total": { "type": "integer", "minimum": 0 },
+        "index": { "type": "integer", "minimum": 0 },
+        "argv": { "type": "array", "items": { "type": "string" } },
+        "status": { "$ref": "#/$defs/RunStatus" },
+        "failed": { "type": "integer", "minimum": 0 },
+        "completed": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "ExecutionReport": {
+      "description": "📊️ What a whole plan produced. A cancelled run keeps the outcomes it already had — cancellation truncates, it never discards.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "outcomes": { "type": "array", "items": { "$ref": "#/$defs/TestOutcome" } },
+        "cancelled": { "type": "boolean" },
+        "completed": { "type": "integer", "minimum": 0 },
+        "total": { "type": "integer", "minimum": 0 },
+        "problems": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "DetectionVectors": {
+      "description": "🧭️ Fixture for the runner-detection case: one snapshot plus the bundle roots to probe.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["snapshot", "vectors"],
+      "properties": {
+        "snapshot": { "$ref": "#/$defs/FilesystemSnapshot" },
+        "vectors": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "bundleRoot", "expectedLanguage"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "bundleRoot": { "type": "string" },
+              "testFilter": { "type": "string" },
+              "expectedLanguage": { "type": "string", "description": "🗣️ The language `detectBundleLanguage` must answer; the empty string means no manifest was recognised." },
+              "expectedArgv": { "type": "array", "items": { "type": "string" }, "description": "📜️ For a JavaScript bundle, the argv `detectJSTestRunner` must answer." }
+            }
+          }
+        }
+      }
+    },
+    "PlanningVectors": {
+      "description": "🗺️ Fixture for the invocation-planning case: one snapshot plus the scopes to plan, each with the expected plan.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["snapshot", "vectors"],
+      "properties": {
+        "snapshot": { "$ref": "#/$defs/FilesystemSnapshot" },
+        "vectors": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "scope"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "scope": { "$ref": "#/$defs/TestScope" },
+              "expected": { "$ref": "#/$defs/InvocationPlan" }
+            }
+          }
+        }
+      }
+    },
+    "SelectorVectors": {
+      "description": "🧬️ Fixture for the scope-identifier case: raw selectors and the identifier normalisation every implementation must agree on.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["selectors"],
+      "properties": {
+        "selectors": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+      }
+    },
+    "TranscriptVectors": {
+      "description": "📊️ Fixture for the result-parsing case: one recorded runner report per vector.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vectors"],
+      "properties": {
+        "vectors": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "runner", "output"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "runner": { "$ref": "#/$defs/Runner" },
+              "output": { "$ref": "#/$defs/ProcessOutput" }
+            }
+          }
+        }
+      }
+    },
+    "CancellationVectors": {
+      "description": "🛑️ Fixture for the cancellation case: a plan, the transcripts that answer it, and the invocation index after which cancellation is requested.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["plan", "transcripts"],
+      "properties": {
+        "plan": { "$ref": "#/$defs/InvocationPlan" },
+        "transcripts": { "type": "array", "items": { "$ref": "#/$defs/RecordedTranscript" } },
+        "cancelAfter": { "type": "integer", "minimum": 0, "description": "🛑️ Cancel once this many invocations have completed." }
+      }
+    }
+  },
+  "oneOf": [
+    { "$ref": "#/$defs/DetectionVectors" },
+    { "$ref": "#/$defs/PlanningVectors" },
+    { "$ref": "#/$defs/SelectorVectors" },
+    { "$ref": "#/$defs/TranscriptVectors" },
+    { "$ref": "#/$defs/CancellationVectors" }
+  ]
+}

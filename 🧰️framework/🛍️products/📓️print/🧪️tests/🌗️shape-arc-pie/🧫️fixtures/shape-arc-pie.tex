@@ -1,0 +1,49 @@
+\documentclass{article}
+\usepackage{semio-viz-probe}
+\usepackage{semio-viz-shape}
+\ExplSyntaxOn
+% 🥧 Generates one arc and records the SVG path and the centroid it produced.
+\cs_new_protected:Npn \semio_probe_arc:nn #1#2 {
+  \SemioVizArc[ draw=false, #2 ]
+  \exp_args:NnV \SemioVizProbeValues { arc/#1 } \g_semio_viz_shape_result_tl
+}
+% 🎯 Records only the centroid, which d3 computes without touching the path.
+\cs_new_protected:Npn \semio_probe_centroid:nn #1#2 {
+  \SemioVizArc[ draw=false, #2 ]
+  \exp_args:NnV \SemioVizProbeValues { centroid/#1 } \g_semio_viz_shape_centroid_tl
+}
+% 🥧 Records the start and then the end angle of every datum, in the data's own order.
+\cs_new_protected:Npn \semio_probe_pie:nn #1#2 {
+  \SemioVizPie[ #2 ]
+  \exp_args:Nnx \SemioVizProbeValues { pie/#1 }
+    { \seq_use:Nn \g_semio_viz_pie_start_seq { , } , \seq_use:Nn \g_semio_viz_pie_end_seq { , } }
+}
+\ExplSyntaxOff
+\usepackage{semio-viz-mark}
+\begin{document}
+\ExplSyntaxOn
+\SemioVizProbeBegin{shape-arc-pie}{arc-geometry}
+\semio_probe_arc:nn { plain }       { innerRadius=0,  outerRadius=100, startAngle=0,   endAngle=1.2 }
+\semio_probe_arc:nn { annular }     { innerRadius=40, outerRadius=100, startAngle=0.3, endAngle=2.5 }
+\semio_probe_arc:nn { pad }         { innerRadius=40, outerRadius=100, startAngle=0.3, endAngle=2.5, padAngle=0.05 }
+\semio_probe_arc:nn { pad-radius }  { innerRadius=40, outerRadius=100, startAngle=0.3, endAngle=2.5, padAngle=0.05, padRadius=120 }
+\semio_probe_arc:nn { corner }      { innerRadius=40, outerRadius=100, startAngle=0.3, endAngle=2.5, cornerRadius=12 }
+\semio_probe_arc:nn { pad-corner }  { innerRadius=40, outerRadius=100, startAngle=0.3, endAngle=2.5, padAngle=0.05, cornerRadius=12 }
+\semio_probe_arc:nn { corner-solid } { innerRadius=0, outerRadius=100, startAngle=0.3, endAngle=2.5, cornerRadius=12 }
+\semio_probe_arc:nn { full }        { innerRadius=40, outerRadius=100, startAngle=0, endAngle=6.283185307179586 }
+\semio_probe_arc:nn { full-disc }   { innerRadius=0,  outerRadius=100, startAngle=0, endAngle=6.283185307179586 }
+\semio_probe_arc:nn { counter }     { innerRadius=40, outerRadius=100, startAngle=2.5, endAngle=0.3 }
+\semio_probe_arc:nn { collapsed }   { innerRadius=40, outerRadius=100, startAngle=0, endAngle=0.2, padAngle=0.5 }
+\SemioVizProbeBegin{shape-arc-pie}{arc-centroid}
+\semio_probe_centroid:nn { annular } { innerRadius=40, outerRadius=100, startAngle=0.3, endAngle=2.5 }
+\semio_probe_centroid:nn { wedge }   { innerRadius=0,  outerRadius=60,  startAngle=1,   endAngle=1.9 }
+\semio_probe_centroid:nn { counter } { innerRadius=10, outerRadius=30,  startAngle=2.5, endAngle=0.3 }
+\SemioVizProbeBegin{shape-arc-pie}{pie-angles}
+\semio_probe_pie:nn { descending } { value={1,2,3,4}, startAngle=0, endAngle=6.283185307179586 }
+\semio_probe_pie:nn { padded }     { value={1,2,3,4}, startAngle=0, endAngle=6.283185307179586, padAngle=0.05 }
+\semio_probe_pie:nn { unsorted }   { value={5,1,4,2}, startAngle=0.5, endAngle=4, sort=none }
+\semio_probe_pie:nn { ascending }  { value={5,1,4,2}, startAngle=0, endAngle=6.283185307179586, sort=ascending }
+\semio_probe_pie:nn { all-zero }   { value={0,0,0},   startAngle=0, endAngle=6.283185307179586 }
+\SemioVizProbeEnd
+\ExplSyntaxOff
+\end{document}

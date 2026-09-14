@@ -1,0 +1,9 @@
+\documentclass{article}
+\usepackage{semio-viz-charts-area}
+\begin{document}
+\SemioVizProbeOn
+\SemioVizProbeBegin{charts-line-area}{area-stack}
+\begin{VizProbeCanvas}[80][40]
+\SemioVizRunFamily{area}[data=demo-multiseries,x=t,y=val,group=series,stack=stack,axes=false]
+\end{VizProbeCanvas}
+\end{document}

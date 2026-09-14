@@ -1,0 +1,17 @@
+% 🧪 Probe fixture of case guide-axis-ticks, scenario log-ticks.
+% Base-10 log ticks over the feature's two domains, in table order, read the way an axis reads
+% them: through the named scale, which already knows the decade rule.
+\documentclass{article}
+\usepackage{semio-viz-guide}
+\ExplSyntaxOn
+\NewDocumentCommand \ProbeLogTicks { m m m m } {
+  \SemioVizScale{probelog#1}{log}{#2,#3}{0,100}
+  \semio_viz_guide_scale_ticks:nnN { probelog#1 } {#4} \l_semio_viz_guide_ticks_seq
+  \semio_viz_probe_values:nx { ticks/#1 } { \seq_use:Nn \l_semio_viz_guide_ticks_seq { , } }
+}
+\ExplSyntaxOff
+\begin{document}
+\SemioVizProbeBegin{guide-axis-ticks}{log-ticks}
+\ProbeLogTicks{0}{1}{100}{10}
+\ProbeLogTicks{1}{1}{1000000}{10}
+\end{document}

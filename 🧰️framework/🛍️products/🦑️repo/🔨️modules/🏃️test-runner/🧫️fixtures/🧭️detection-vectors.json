@@ -1,0 +1,242 @@
+{
+  "snapshot": {
+    "root": "/repo",
+    "entries": [
+      {
+        "path": "/repo/bundles",
+        "kind": "directory"
+      },
+      {
+        "path": "/repo/bundles/go-core",
+        "kind": "directory"
+      },
+      {
+        "path": "/repo/bundles/go-core/go.mod",
+        "kind": "file",
+        "contents": "module example.com/go-core\n\ngo 1.25\n"
+      },
+      {
+        "path": "/repo/bundles/go-core/pkg",
+        "kind": "directory"
+      },
+      {
+        "path": "/repo/bundles/go-core/pkg/thing_test.go",
+        "kind": "file",
+        "contents": "package pkg\n\nimport \"testing\"\n\n// #region Alpha\nfunc TestAlphaOne(t *testing.T) {}\n\nfunc TestAlphaTwo(t *testing.T) {}\n// #endregion Alpha\n\n// #region 🚀Gamma\nfunc TestGammaOne(t *testing.T) {}\n\nfunc BenchmarkGammaOne(b *testing.B) {}\n// #endregion Gamma\n"
+      },
+      {
+        "path": "/repo/bundles/rust-core",
+        "kind": "directory"
+      },
+      {
+        "path": "/repo/bundles/rust-core/Cargo.toml",
+        "kind": "file",
+        "contents": "[package]\nname = \"rust-core\"\n"
+      },
+      {
+        "path": "/repo/bundles/web",
+        "kind": "directory"
+      },
+      {
+        "path": "/repo/bundles/web/package.json",
+        "kind": "file",
+        "contents": "{\"devDependencies\":{\"vitest\":\"3.0.0\"}}\n"
+      },
+      {
+        "path": "/repo/bundles/web/src",
+        "kind": "directory"
+      },
+      {
+        "path": "/repo/bundles/web/src/app.test.ts",
+        "kind": "file",
+        "contents": "export {};\n"
+      },
+      {
+        "path": "/repo/bundles/legacy-web",
+        "kind": "directory"
+      },
+      {
+        "path": "/repo/bundles/legacy-web/package.json",
+        "kind": "file",
+        "contents": "{\"devDependencies\":{\"jest\":\"29.0.0\"}}\n"
+      },
+      {
+        "path": "/repo/bundles/scripts",
+        "kind": "directory"
+      },
+      {
+        "path": "/repo/bundles/scripts/package.json",
+        "kind": "file",
+        "contents": "{\"scripts\":{\"test\":\"node --test\"}}\n"
+      },
+      {
+        "path": "/repo/bundles/py",
+        "kind": "directory"
+      },
+      {
+        "path": "/repo/bundles/py/pyproject.toml",
+        "kind": "file",
+        "contents": "[project]\nname = \"py\"\n"
+      },
+      {
+        "path": "/repo/bundles/dotnet",
+        "kind": "directory"
+      },
+      {
+        "path": "/repo/bundles/dotnet/App.csproj",
+        "kind": "file",
+        "contents": "<Project />\n"
+      },
+      {
+        "path": "/repo/bundles/docs",
+        "kind": "directory"
+      },
+      {
+        "path": "/repo/bundles/docs/README.md",
+        "kind": "file",
+        "contents": "# docs\n"
+      },
+      {
+        "path": "/repo/bundles/docs-site",
+        "kind": "directory"
+      },
+      {
+        "path": "/repo/bundles/docs-site/package.json",
+        "kind": "file",
+        "contents": "{\"devDependencies\":{\"vitest\":\"3.0.0\"}}\n"
+      }
+    ],
+    "bundles": [
+      {
+        "name": "semio/go-core",
+        "root": "bundles/go-core"
+      },
+      {
+        "name": "semio/rust-core",
+        "root": "bundles/rust-core"
+      },
+      {
+        "name": "semio/web",
+        "root": "bundles/web"
+      },
+      {
+        "name": "semio/legacy-web",
+        "root": "bundles/legacy-web"
+      },
+      {
+        "name": "semio/scripts",
+        "root": "bundles/scripts"
+      },
+      {
+        "name": "semio/py",
+        "root": "bundles/py"
+      },
+      {
+        "name": "semio/dotnet",
+        "root": "bundles/dotnet"
+      },
+      {
+        "name": "docs/handbook",
+        "root": "bundles/docs"
+      },
+      {
+        "name": "docs/site",
+        "root": "bundles/docs-site"
+      }
+    ],
+    "uvAvailable": true
+  },
+  "vectors": [
+    {
+      "id": "go-module",
+      "bundleRoot": "bundles/go-core",
+      "expectedLanguage": "go"
+    },
+    {
+      "id": "cargo-manifest",
+      "bundleRoot": "bundles/rust-core",
+      "expectedLanguage": "rust"
+    },
+    {
+      "id": "csproj-glob",
+      "bundleRoot": "bundles/dotnet",
+      "expectedLanguage": "csharp"
+    },
+    {
+      "id": "vitest-manifest",
+      "bundleRoot": "bundles/web",
+      "expectedLanguage": "typescript",
+      "expectedArgv": [
+        "vitest",
+        "run"
+      ]
+    },
+    {
+      "id": "vitest-manifest-with-filter",
+      "bundleRoot": "bundles/web",
+      "testFilter": "renders",
+      "expectedLanguage": "typescript",
+      "expectedArgv": [
+        "vitest",
+        "run",
+        "-t",
+        "renders"
+      ]
+    },
+    {
+      "id": "jest-manifest",
+      "bundleRoot": "bundles/legacy-web",
+      "expectedLanguage": "typescript",
+      "expectedArgv": [
+        "jest"
+      ]
+    },
+    {
+      "id": "jest-manifest-with-filter",
+      "bundleRoot": "bundles/legacy-web",
+      "testFilter": "renders",
+      "expectedLanguage": "typescript",
+      "expectedArgv": [
+        "jest",
+        "-t",
+        "renders"
+      ]
+    },
+    {
+      "id": "plain-test-script",
+      "bundleRoot": "bundles/scripts",
+      "expectedLanguage": "typescript",
+      "expectedArgv": [
+        "test"
+      ]
+    },
+    {
+      "id": "plain-test-script-ignores-the-filter",
+      "bundleRoot": "bundles/scripts",
+      "testFilter": "renders",
+      "expectedLanguage": "typescript",
+      "expectedArgv": [
+        "test"
+      ]
+    },
+    {
+      "id": "pyproject-manifest",
+      "bundleRoot": "bundles/py",
+      "expectedLanguage": "python"
+    },
+    {
+      "id": "no-manifest",
+      "bundleRoot": "bundles/docs",
+      "expectedLanguage": ""
+    },
+    {
+      "id": "missing-manifest-falls-back-to-vitest",
+      "bundleRoot": "bundles/does-not-exist",
+      "expectedLanguage": "",
+      "expectedArgv": [
+        "vitest",
+        "run"
+      ]
+    }
+  ]
+}

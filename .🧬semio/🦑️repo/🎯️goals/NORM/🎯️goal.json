@@ -7,5 +7,8 @@
     "due": "2026-12-31"
   },
   "client": "cursor-chat",
-  "llm": "composer-2.5"
+  "llm": "composer-2.5",
+  "github": {
+    "milestone": "https://github.com/usalu/semio/milestone/78"
+  }
 }

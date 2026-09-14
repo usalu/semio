@@ -1,0 +1,683 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-diagram-uml}[2026/09/05 v0.2.0 semio viz UML and data-model diagram families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-diagram-flowchart}
+
+\ExplSyntaxOn
+
+%region 🔖️Relations
+% 🏹 UML relation tips: writes the TikZ arrow spec and the line dash of relation kind #1 into #2 and #3.
+\cs_new_protected:Npn \semio_viz_uml_relation:nNN #1#2#3 {
+  \tl_set:Nn #3 { , }
+  \str_case:nnF {#1} {
+    { association } { \tl_clear:N #2 }
+    { directed } { \tl_set:Nn #2 { -{Latex[length=1.6mm,width=1.2mm]} } }
+    { inheritance } { \tl_set:Nn #2 { -{Triangle[open,length=2mm,width=2mm]} } }
+    { generalization } { \tl_set:Nn #2 { -{Triangle[open,length=2mm,width=2mm]} } }
+    { realization } { \tl_set:Nn #2 { -{Triangle[open,length=2mm,width=2mm]} } \tl_set:Nn #3 { , dash~pattern=on~1.4pt~off~1.2pt } }
+    { dependency } { \tl_set:Nn #2 { -{Straight~Barb[length=1.2mm,width=1.4mm]} } \tl_set:Nn #3 { , dash~pattern=on~1.4pt~off~1.2pt } }
+    { composition } { \tl_set:Nn #2 { {Diamond[length=2mm,width=1.4mm]}-{Latex[length=1.4mm,width=1.1mm]} } }
+    { aggregation } { \tl_set:Nn #2 { {Diamond[open,length=2mm,width=1.4mm]}-{Latex[length=1.4mm,width=1.1mm]} } }
+    { one-to-many } { \tl_set:Nn #2 { {Bar[width=1.6mm]}-{Straight~Barb[length=1.4mm,width=1.8mm]} } }
+    { many-to-many } { \tl_set:Nn #2 { {Straight~Barb[length=1.4mm,width=1.8mm]}-{Straight~Barb[length=1.4mm,width=1.8mm]} } }
+    { one-to-one } { \tl_set:Nn #2 { {Bar[width=1.6mm]}-{Bar[width=1.6mm]} } }
+    { flow } { \tl_set:Nn #2 { -{Latex[length=1.6mm,width=1.2mm]} } }
+  } { \tl_set:Nn #2 { -{Latex[length=1.6mm,width=1.2mm]} } }
+}
+%endregion 🔖️Relations
+
+%region 🔖️Keys-uml-class
+% 🗝️ `uml-class` renders compartment boxes on the kernel grid plus typed relations.
+%   data        tl     classifier table (default demo-uml-class), columns id/label/row/col/stereotype
+%   members     tl     member table (default demo-uml-class-members), columns owner/section/text
+%   edges       tl     relation table (default demo-uml-class-edges), columns from/to/kind/label
+%   id/label/row/col/stereotype  tl  classifier column names
+%   owner/section/text tl  member column names
+%   sections    clist  compartment keys in drawing order (default attribute,operation)
+%   title-style choice plain|underline|stereotype (default plain)
+%   shape       tl     classifier outline shape (default process)
+%   routing     choice orthogonal|straight|curved (default straight)
+%   width/height fp    frame size in millimetres
+%endregion 🔖️Keys-uml-class
+\tl_new:N \l_semio_viz_uml_members_tl
+\tl_new:N \l_semio_viz_uml_owner_tl
+\tl_new:N \l_semio_viz_uml_section_tl
+\tl_new:N \l_semio_viz_uml_text_tl
+\tl_new:N \l_semio_viz_uml_stereo_tl
+\tl_new:N \l_semio_viz_uml_titlestyle_tl
+\tl_new:N \l_semio_viz_uml_tip_tl
+\tl_new:N \l_semio_viz_uml_dash_tl
+\clist_new:N \l_semio_viz_uml_sections_clist
+\fp_new:N \l_semio_viz_uml_cursor_fp
+\int_new:N \l_semio_viz_uml_k_int
+
+% 📇 Binds the `uml-class` option names onto the diagram-graph state plus the member/section/stereotype registers.
+\keys_define:nn { semio / viz / family / uml-class } {
+  data    .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  members .tl_set:N = \l_semio_viz_uml_members_tl,
+  edges   .tl_set:N = \l_semio_viz_dg_edges_tl,
+  id      .tl_set:N = \l_semio_viz_dg_col_id_tl,
+  label   .tl_set:N = \l_semio_viz_dg_col_label_tl,
+  row     .tl_set:N = \l_semio_viz_dg_col_row_tl,
+  col     .tl_set:N = \l_semio_viz_dg_col_col_tl,
+  tone    .tl_set:N = \l_semio_viz_dg_col_tone_tl,
+  stereotype .tl_set:N = \l_semio_viz_uml_stereo_tl,
+  owner   .tl_set:N = \l_semio_viz_uml_owner_tl,
+  section .tl_set:N = \l_semio_viz_uml_section_tl,
+  text    .tl_set:N = \l_semio_viz_uml_text_tl,
+  sections .clist_set:N = \l_semio_viz_uml_sections_clist,
+  title-style .tl_set:N = \l_semio_viz_uml_titlestyle_tl,
+  shape   .tl_set:N = \l_semio_viz_dg_shape_tl,
+  routing .tl_set:N = \l_semio_viz_dg_routing_tl,
+  col-gap .fp_set:N = \l_semio_viz_dg_colgap_fp,
+  row-gap .fp_set:N = \l_semio_viz_dg_rowgap_fp,
+  groups  .bool_set:N = \l_semio_viz_dg_groups_bool,
+  group   .tl_set:N = \l_semio_viz_dg_col_group_tl,
+  width   .fp_set:N = \l_semio_viz_dg_w_fp,
+  height  .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 🏛️ Entry point of the `uml-class` family: seeds the demo tables, applies the options, lays out the grid, then draws relations and compartment boxes.
+\cs_new_protected:Npn \semio_viz_uml_class:n #1 {
+  \semio_viz_frame_require:n { uml-class }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-uml-class }
+  \tl_set:Nn \l_semio_viz_dg_edges_tl { demo-uml-class-edges }
+  \tl_set:Nn \l_semio_viz_uml_members_tl { demo-uml-class-members }
+  \tl_set:Nn \l_semio_viz_uml_owner_tl { owner }
+  \tl_set:Nn \l_semio_viz_uml_section_tl { section }
+  \tl_set:Nn \l_semio_viz_uml_text_tl { text }
+  \tl_set:Nn \l_semio_viz_uml_stereo_tl { stereotype }
+  \tl_set:Nn \l_semio_viz_uml_titlestyle_tl { plain }
+  \clist_set:Nn \l_semio_viz_uml_sections_clist { attribute, operation }
+  \tl_set:Nn \l_semio_viz_dg_routing_tl { straight }
+  \tl_set:Nn \l_semio_viz_dg_arrow_tl { none }
+  \keys_set:nn { semio / viz / family / uml-class } {#1}
+  \semio_viz_dg_layout:
+  \semio_viz_dg_draw_groups:
+  \semio_viz_uml_class_edges:
+  \exp_args:NV \semio_viz_uml_class_boxes:n \l_semio_viz_dg_nodes_tl
+}
+
+% 🔗 Draws the relation layer only when an edge table name was configured.
+\cs_new_protected:Npn \semio_viz_uml_class_edges: {
+  \tl_if_empty:NF \l_semio_viz_dg_edges_tl
+    { \exp_args:NV \semio_viz_uml_class_edges_run:n \l_semio_viz_dg_edges_tl }
+}
+
+% ➰ Walks every row of edge table #1 and routes one relation, styling its tip and dash from the kind column and appending the optional edge label.
+\cs_new_protected:Npn \semio_viz_uml_class_edges_run:n #1 {
+  \seq_if_in:NnT \g_semio_viz_table_names_seq {#1} {
+    \semio_viz_table_nrows:nN {#1} \l_semio_viz_dg_n_int
+    \int_step_inline:nn { \l_semio_viz_dg_n_int } {
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_source_tl } \l_semio_viz_dg_ta_tl
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_target_tl } \l_semio_viz_dg_tb_tl
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_edgekind_tl } \l_semio_viz_dg_cell_tl
+      \exp_args:NV \semio_viz_uml_relation:nNN \l_semio_viz_dg_cell_tl \l_semio_viz_uml_tip_tl \l_semio_viz_uml_dash_tl
+      \semio_viz_dg_route:nn { \l_semio_viz_dg_ta_tl } { \l_semio_viz_dg_tb_tl }
+      \use:x { \exp_not:N \semio_viz_dg_route_draw:nn
+        { semio-chrome-border-emphasized , line~width=\semio@stroke@hairline ,
+          \exp_not:V \l_semio_viz_uml_tip_tl \exp_not:V \l_semio_viz_uml_dash_tl } { } }
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_edgelabel_tl } \l_semio_viz_dg_label_tl
+      \tl_if_empty:NF \l_semio_viz_dg_label_tl { \semio_viz_dg_edge_label: }
+    }
+  }
+}
+
+% 🧱 Iterates the classifier table #1 and emits one compartment box per row.
+\cs_new_protected:Npn \semio_viz_uml_class_boxes:n #1 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_dg_n_int
+  \int_step_inline:nn { \l_semio_viz_dg_n_int } { \semio_viz_uml_class_box:nn {#1} {##1} }
+}
+
+% 🗃️ Draws classifier row #2 of table #1: the toned outline, an optional guillemet stereotype line, the (optionally underlined) title, then every configured compartment.
+\cs_new_protected:Npn \semio_viz_uml_class_box:nn #1#2 {
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_id_tl } \l_semio_viz_dg_id_tl
+  \tl_if_empty:NT \l_semio_viz_dg_id_tl { \tl_set:Nx \l_semio_viz_dg_id_tl { n#2 } }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_tone_tl } \l_semio_viz_dg_cell_tl
+  \tl_if_empty:NTF \l_semio_viz_dg_cell_tl
+    { \semio_viz_dg_tone:n { 0 } } { \exp_args:NV \semio_viz_dg_tone:n \l_semio_viz_dg_cell_tl }
+  \semio_viz_dg_get:n { \l_semio_viz_dg_id_tl }
+  \tl_if_empty:NF \l_semio_viz_dg_rec_tl {
+    \exp_args:NV \semio_viz_dg_shape_named:n \l_semio_viz_dg_shape_tl
+    \fp_set:Nn \l_semio_viz_uml_cursor_fp { \l_semio_viz_dg_b_fp + \l_semio_viz_dg_d_fp / 2 - 2 }
+    \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_uml_stereo_tl } \l_semio_viz_dg_ta_tl
+    \str_if_eq:VnT \l_semio_viz_uml_titlestyle_tl { stereotype } {
+      \tl_if_empty:NF \l_semio_viz_dg_ta_tl {
+        \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-text-normal , anchor=center , inner~sep=0pt ]
+          at ( \fp_eval:n { \l_semio_viz_dg_a_fp } , \fp_eval:n { \l_semio_viz_uml_cursor_fp } )
+          { \guillemotleft \tl_use:N \l_semio_viz_dg_ta_tl \guillemotright } ;
+        \fp_sub:Nn \l_semio_viz_uml_cursor_fp { 2.4 }
+      }
+    }
+    \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+    \node [ font=\c_semio_viz_theme_font_title_tl , text=semio-chrome-foreground , anchor=center , inner~sep=0pt ]
+      at ( \fp_eval:n { \l_semio_viz_dg_a_fp } , \fp_eval:n { \l_semio_viz_uml_cursor_fp } )
+      {
+        \str_if_eq:VnTF \l_semio_viz_uml_titlestyle_tl { underline }
+          { \underline { \tl_use:N \l_semio_viz_dg_label_tl } } { \tl_use:N \l_semio_viz_dg_label_tl }
+      } ;
+    \fp_sub:Nn \l_semio_viz_uml_cursor_fp { 2.4 }
+    \clist_map_inline:Nn \l_semio_viz_uml_sections_clist
+      { \semio_viz_uml_class_section:nn { \l_semio_viz_dg_id_tl } { ##1 } }
+  }
+}
+
+% 🧾 Prepares the compartment #2 of classifier #1 by remembering the owner id and resetting the per-section member counter.
+\cs_new_protected:Npn \semio_viz_uml_class_section:nn #1#2 {
+  \tl_set:Nx \l_semio_viz_dg_tb_tl {#1}
+  \int_zero:N \l_semio_viz_uml_k_int
+  \exp_args:NV \semio_viz_uml_class_section_run:nn \l_semio_viz_uml_members_tl {#2}
+}
+
+% ✒️ Scans member table #1 for rows of the current owner in section #2, drawing the separator rule before the first hit and one left-aligned member line per match.
+\cs_new_protected:Npn \semio_viz_uml_class_section_run:nn #1#2 {
+  \seq_if_in:NnT \g_semio_viz_table_names_seq {#1} {
+    \semio_viz_table_nrows:nN {#1} \l_semio_viz_dg_ib_int
+    \int_step_inline:nn { \l_semio_viz_dg_ib_int } {
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_uml_owner_tl } \l_semio_viz_dg_ta_tl
+      \str_if_eq:VVT \l_semio_viz_dg_ta_tl \l_semio_viz_dg_tb_tl {
+        \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_uml_section_tl } \l_semio_viz_dg_cell_tl
+        \str_if_eq:VnT \l_semio_viz_dg_cell_tl {#2} {
+          \int_compare:nNnT { \l_semio_viz_uml_k_int } = { 0 } {
+            \draw [ \l_semio_viz_dg_draw_tl , line~width=\semio@stroke@hairline ]
+              ( \fp_eval:n { \l_semio_viz_dg_a_fp - \l_semio_viz_dg_c_fp / 2 } , \fp_eval:n { \l_semio_viz_uml_cursor_fp + 1 } ) --
+              ( \fp_eval:n { \l_semio_viz_dg_a_fp + \l_semio_viz_dg_c_fp / 2 } , \fp_eval:n { \l_semio_viz_uml_cursor_fp + 1 } ) ;
+          }
+          \int_incr:N \l_semio_viz_uml_k_int
+          \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_uml_text_tl } \l_semio_viz_dg_label_tl
+          \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-text-normal , anchor=west , inner~sep=0pt ]
+            at ( \fp_eval:n { \l_semio_viz_dg_a_fp - \l_semio_viz_dg_c_fp / 2 + 1 } , \fp_eval:n { \l_semio_viz_uml_cursor_fp } )
+            { \tl_use:N \l_semio_viz_dg_label_tl } ;
+          \fp_sub:Nn \l_semio_viz_uml_cursor_fp { 2.1 }
+        }
+      }
+    }
+  }
+}
+% 📐 Registers `uml-class` as a viz family so documents can request it by name.
+\SemioVizFamily { uml-class } { \semio_viz_uml_class:n {#1} }
+
+%region 🔖️Keys-uml-usecase
+% 🗝️ `uml-usecase` places actors outside a system boundary and use-case ellipses inside it.
+%   actors   tl  actor table (default demo-uml-usecase-actors), columns id/label/side
+%   data     tl  use-case table (default demo-uml-usecase), columns id/label/row
+%   edges    tl  association table (default demo-uml-usecase-edges), columns from/to/kind
+%   side     tl  actor side column, values left|right (default side)
+%   system   tl  system boundary caption, empty for none (default empty)
+%   width/height fp  frame size in millimetres
+%endregion 🔖️Keys-uml-usecase
+\tl_new:N \l_semio_viz_uml_actors_tl
+\tl_new:N \l_semio_viz_uml_side_tl
+\tl_new:N \l_semio_viz_uml_system_tl
+\int_new:N \l_semio_viz_uml_left_int
+\int_new:N \l_semio_viz_uml_right_int
+
+% 🎛️ Binds the `uml-usecase` option names onto the actor table, case table, side column and system-boundary caption.
+\keys_define:nn { semio / viz / family / uml-usecase } {
+  actors .tl_set:N = \l_semio_viz_uml_actors_tl,
+  data   .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  edges  .tl_set:N = \l_semio_viz_dg_edges_tl,
+  id     .tl_set:N = \l_semio_viz_dg_col_id_tl,
+  label  .tl_set:N = \l_semio_viz_dg_col_label_tl,
+  side   .tl_set:N = \l_semio_viz_uml_side_tl,
+  system .tl_set:N = \l_semio_viz_uml_system_tl,
+  width  .fp_set:N = \l_semio_viz_dg_w_fp,
+  height .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 🎭 Entry point of the `uml-usecase` family: positions cases and actors, then draws the associations followed by both node layers.
+\cs_new_protected:Npn \semio_viz_uml_usecase:n #1 {
+  \semio_viz_frame_require:n { uml-usecase }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_uml_actors_tl { demo-uml-usecase-actors }
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-uml-usecase }
+  \tl_set:Nn \l_semio_viz_dg_edges_tl { demo-uml-usecase-edges }
+  \tl_set:Nn \l_semio_viz_uml_side_tl { side }
+  \tl_clear:N \l_semio_viz_uml_system_tl
+  \tl_set:Nn \l_semio_viz_dg_routing_tl { straight }
+  \keys_set:nn { semio / viz / family / uml-usecase } {#1}
+  \prop_clear:N \l_semio_viz_dg_node_prop
+  \exp_args:NV \semio_viz_uml_usecase_cases:n \l_semio_viz_dg_nodes_tl
+  \exp_args:NV \semio_viz_uml_usecase_actors:n \l_semio_viz_uml_actors_tl
+  \semio_viz_uml_class_edges:
+  \exp_args:NV \semio_viz_uml_usecase_draw:n \l_semio_viz_dg_nodes_tl
+  \exp_args:NV \semio_viz_uml_usecase_draw_actors:n \l_semio_viz_uml_actors_tl
+}
+
+% 🫧 Stacks the use cases of table #1 down the centre column, drawing the captioned system-boundary rectangle around them when one was named.
+\cs_new_protected:Npn \semio_viz_uml_usecase_cases:n #1 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_dg_n_int
+  \int_compare:nNnT { \l_semio_viz_dg_n_int } < { 1 } { \int_set:Nn \l_semio_viz_dg_n_int { 1 } }
+  \fp_set:Nn \l_semio_viz_dg_nw_fp { \l_semio_viz_dg_w_fp * 0.38 }
+  \fp_set:Nn \l_semio_viz_dg_nh_fp { min( ( \l_semio_viz_dg_h_fp - 6 ) / \l_semio_viz_dg_n_int - 1.5 , 8 ) }
+  \tl_if_empty:NF \l_semio_viz_uml_system_tl {
+    \draw [ semio-chrome-border-normal , line~width=\semio@stroke@hairline ]
+      ( \fp_eval:n { \l_semio_viz_dg_w_fp / 2 - \l_semio_viz_dg_nw_fp / 2 - 3 } , 1 )
+      rectangle ( \fp_eval:n { \l_semio_viz_dg_w_fp / 2 + \l_semio_viz_dg_nw_fp / 2 + 3 } , \fp_eval:n { \l_semio_viz_dg_h_fp - 1 } ) ;
+    \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-text-normal , anchor=north , inner~sep=0.4mm ]
+      at ( \fp_eval:n { \l_semio_viz_dg_w_fp / 2 } , \fp_eval:n { \l_semio_viz_dg_h_fp - 1.2 } )
+      { \tl_use:N \l_semio_viz_uml_system_tl } ;
+  }
+  \int_step_inline:nn { \l_semio_viz_dg_n_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_id_tl } \l_semio_viz_dg_id_tl
+    \tl_set:Nx \l_semio_viz_dg_rec_tl
+      {
+        \semio_viz_format_mm:n { \l_semio_viz_dg_w_fp / 2 } ,
+        \semio_viz_format_mm:n { \l_semio_viz_dg_h_fp - 5 - ( ##1 - 0.5 ) * ( \l_semio_viz_dg_h_fp - 7 ) / \l_semio_viz_dg_n_int } ,
+        \semio_viz_format_mm:n { \l_semio_viz_dg_nw_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_nh_fp } , usecase
+      }
+    \prop_put:NVV \l_semio_viz_dg_node_prop \l_semio_viz_dg_id_tl \l_semio_viz_dg_rec_tl
+  }
+}
+
+% 🚶 Counts the left- and right-hand actors of table #1, then spreads each side evenly along its own frame margin.
+\cs_new_protected:Npn \semio_viz_uml_usecase_actors:n #1 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_dg_ib_int
+  \int_zero:N \l_semio_viz_uml_left_int
+  \int_zero:N \l_semio_viz_uml_right_int
+  \int_step_inline:nn { \l_semio_viz_dg_ib_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_uml_side_tl } \l_semio_viz_dg_cell_tl
+    \str_if_eq:VnTF \l_semio_viz_dg_cell_tl { right }
+      { \int_incr:N \l_semio_viz_uml_right_int } { \int_incr:N \l_semio_viz_uml_left_int }
+  }
+  \int_zero:N \l_semio_viz_dg_ia_int
+  \int_zero:N \l_semio_viz_dg_j_int
+  \int_step_inline:nn { \l_semio_viz_dg_ib_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_id_tl } \l_semio_viz_dg_id_tl
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_uml_side_tl } \l_semio_viz_dg_cell_tl
+    \str_if_eq:VnTF \l_semio_viz_dg_cell_tl { right }
+      {
+        \int_incr:N \l_semio_viz_dg_j_int
+        \fp_set:Nn \l_semio_viz_dg_x_fp { \l_semio_viz_dg_w_fp - 5 }
+        \fp_set:Nn \l_semio_viz_dg_y_fp
+          { \l_semio_viz_dg_h_fp - 4 - ( \l_semio_viz_dg_j_int - 0.5 ) * ( \l_semio_viz_dg_h_fp - 6 ) / max( \l_semio_viz_uml_right_int , 1 ) }
+      }
+      {
+        \int_incr:N \l_semio_viz_dg_ia_int
+        \fp_set:Nn \l_semio_viz_dg_x_fp { 5 }
+        \fp_set:Nn \l_semio_viz_dg_y_fp
+          { \l_semio_viz_dg_h_fp - 4 - ( \l_semio_viz_dg_ia_int - 0.5 ) * ( \l_semio_viz_dg_h_fp - 6 ) / max( \l_semio_viz_uml_left_int , 1 ) }
+      }
+    \tl_set:Nx \l_semio_viz_dg_rec_tl
+      {
+        \semio_viz_format_mm:n { \l_semio_viz_dg_x_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_y_fp } , 7 , 9 , actor
+      }
+    \prop_put:NVV \l_semio_viz_dg_node_prop \l_semio_viz_dg_id_tl \l_semio_viz_dg_rec_tl
+  }
+}
+
+% 🥚 Paints every use case of table #1 as an ellipse with its label centred inside.
+\cs_new_protected:Npn \semio_viz_uml_usecase_draw:n #1 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_dg_n_int
+  \int_step_inline:nn { \l_semio_viz_dg_n_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_id_tl } \l_semio_viz_dg_id_tl
+    \semio_viz_dg_tone:n { 0 }
+    \semio_viz_dg_get:n { \l_semio_viz_dg_id_tl }
+    \semio_viz_dg_shape_named:n { usecase }
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+    \semio_viz_dg_label:nnnn { \l_semio_viz_dg_a_fp } { \l_semio_viz_dg_b_fp } { \l_semio_viz_dg_c_fp }
+      { \tl_use:N \l_semio_viz_dg_label_tl }
+  }
+}
+
+% 🧍 Paints every actor of table #1 as a stick figure with its name captioned underneath.
+\cs_new_protected:Npn \semio_viz_uml_usecase_draw_actors:n #1 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_dg_ib_int
+  \int_step_inline:nn { \l_semio_viz_dg_ib_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_id_tl } \l_semio_viz_dg_id_tl
+    \semio_viz_dg_tone:n { 0 }
+    \semio_viz_dg_get:n { \l_semio_viz_dg_id_tl }
+    \semio_viz_dg_shape_named:n { actor }
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+    \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-text-normal , anchor=north , inner~sep=0.4mm ]
+      at ( \fp_eval:n { \l_semio_viz_dg_a_fp } , \fp_eval:n { \l_semio_viz_dg_b_fp - \l_semio_viz_dg_d_fp / 2 } )
+      { \tl_use:N \l_semio_viz_dg_label_tl } ;
+  }
+}
+% 🎬 Registers `uml-usecase` as a viz family so documents can request it by name.
+\SemioVizFamily { uml-usecase } { \semio_viz_uml_usecase:n {#1} }
+
+%region 🔖️Keys-uml-sequence
+% 🗝️ `uml-sequence` draws lifelines, messages, activation bars and combined fragments.
+%   data      tl  participant table (default demo-uml-sequence), columns id/label/shape
+%   messages  tl  message table (default demo-uml-sequence-messages), columns from/to/label/kind/activate
+%   fragments tl  fragment table (default empty), columns label/first/last
+%   kind      tl  message kind column; values sync|async|return|create|destroy|self (default kind)
+%   activate  tl  activation column; `1` opens a bar on the target, `0` closes it (default activate)
+%   head      fp  participant head height in millimetres (default 6)
+%   step      fp  vertical distance between messages, `0` fits the frame (default 0)
+%   activation fp width of an activation bar (default 1.6)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-uml-sequence
+\tl_new:N \l_semio_viz_uml_msg_tl
+\tl_new:N \l_semio_viz_uml_frag_tl
+\tl_new:N \l_semio_viz_uml_kind_tl
+\tl_new:N \l_semio_viz_uml_activate_tl
+\fp_new:N \l_semio_viz_uml_head_fp
+\fp_new:N \l_semio_viz_uml_step_fp
+\fp_new:N \l_semio_viz_uml_act_fp
+\prop_new:N \l_semio_viz_uml_open_prop
+\int_new:N \l_semio_viz_uml_m_int
+\int_new:N \l_semio_viz_uml_levels_int
+
+% 🎚️ Binds the `uml-sequence` option names onto the participant/message/fragment tables and the head, step and activation-bar metrics.
+\keys_define:nn { semio / viz / family / uml-sequence } {
+  data      .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  messages  .tl_set:N = \l_semio_viz_uml_msg_tl,
+  fragments .tl_set:N = \l_semio_viz_uml_frag_tl,
+  id        .tl_set:N = \l_semio_viz_dg_col_id_tl,
+  label     .tl_set:N = \l_semio_viz_dg_col_label_tl,
+  shape     .tl_set:N = \l_semio_viz_dg_col_shape_tl,
+  kind      .tl_set:N = \l_semio_viz_uml_kind_tl,
+  activate  .tl_set:N = \l_semio_viz_uml_activate_tl,
+  head      .fp_set:N = \l_semio_viz_uml_head_fp,
+  step      .fp_set:N = \l_semio_viz_uml_step_fp,
+  activation .fp_set:N = \l_semio_viz_uml_act_fp,
+  width     .fp_set:N = \l_semio_viz_dg_w_fp,
+  height    .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 📨 Entry point of the `uml-sequence` family: clears the node and open-activation stores, draws the participant heads, then replays the message table.
+\cs_new_protected:Npn \semio_viz_uml_sequence:n #1 {
+  \semio_viz_frame_require:n { uml-sequence }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-uml-sequence }
+  \tl_set:Nn \l_semio_viz_uml_msg_tl { demo-uml-sequence-messages }
+  \tl_clear:N \l_semio_viz_uml_frag_tl
+  \tl_set:Nn \l_semio_viz_uml_kind_tl { kind }
+  \tl_set:Nn \l_semio_viz_uml_activate_tl { activate }
+  \fp_set:Nn \l_semio_viz_uml_head_fp { 6 }
+  \fp_zero:N \l_semio_viz_uml_step_fp
+  \fp_set:Nn \l_semio_viz_uml_act_fp { 1.6 }
+  \keys_set:nn { semio / viz / family / uml-sequence } {#1}
+  \prop_clear:N \l_semio_viz_dg_node_prop
+  \prop_clear:N \l_semio_viz_uml_open_prop
+  \exp_args:NV \semio_viz_uml_sequence_heads:n \l_semio_viz_dg_nodes_tl
+  \exp_args:NV \semio_viz_uml_sequence_messages:n \l_semio_viz_uml_msg_tl
+}
+
+% 🪧 Spaces the participants of table #1 across the top of the frame, dropping a dashed lifeline from each head down to the baseline.
+\cs_new_protected:Npn \semio_viz_uml_sequence_heads:n #1 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_dg_n_int
+  \int_compare:nNnT { \l_semio_viz_dg_n_int } < { 1 } { \int_set:Nn \l_semio_viz_dg_n_int { 1 } }
+  \fp_set:Nn \l_semio_viz_dg_nw_fp { min( ( \l_semio_viz_dg_w_fp - 2 ) / \l_semio_viz_dg_n_int - 2 , 24 ) }
+  \int_step_inline:nn { \l_semio_viz_dg_n_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_id_tl } \l_semio_viz_dg_id_tl
+    \fp_set:Nn \l_semio_viz_dg_x_fp
+      { 1 + ( ##1 - 0.5 ) * ( \l_semio_viz_dg_w_fp - 2 ) / \l_semio_viz_dg_n_int }
+    \fp_set:Nn \l_semio_viz_dg_y_fp { \l_semio_viz_dg_h_fp - \l_semio_viz_uml_head_fp / 2 }
+    \tl_set:Nx \l_semio_viz_dg_rec_tl
+      {
+        \semio_viz_format_mm:n { \l_semio_viz_dg_x_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_y_fp } ,
+        \semio_viz_format_mm:n { \l_semio_viz_dg_nw_fp } , \semio_viz_format_mm:n { \l_semio_viz_uml_head_fp } , process
+      }
+    \prop_put:NVV \l_semio_viz_dg_node_prop \l_semio_viz_dg_id_tl \l_semio_viz_dg_rec_tl
+    \draw [ semio-chrome-border-normal , line~width=\semio@stroke@hairline , dash~pattern=on~1pt~off~1pt ]
+      ( \fp_eval:n { \l_semio_viz_dg_x_fp } , \fp_eval:n { \l_semio_viz_dg_h_fp - \l_semio_viz_uml_head_fp } ) --
+      ( \fp_eval:n { \l_semio_viz_dg_x_fp } , 1 ) ;
+    \semio_viz_dg_tone:n { 0 }
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_shape_tl } \l_semio_viz_dg_cell_tl
+    \tl_if_empty:NT \l_semio_viz_dg_cell_tl { \tl_set:Nn \l_semio_viz_dg_cell_tl { process } }
+    \semio_viz_dg_get:n { \l_semio_viz_dg_id_tl }
+    \exp_args:NV \semio_viz_dg_shape_named:n \l_semio_viz_dg_cell_tl
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+    \semio_viz_dg_label:nnnn { \l_semio_viz_dg_a_fp } { \l_semio_viz_dg_b_fp } { \l_semio_viz_dg_c_fp }
+      { \tl_use:N \l_semio_viz_dg_label_tl }
+  }
+}
+
+% ⏬ Derives the vertical message pitch from the frame height when `step` is zero, then draws every row of message table #1 in order.
+\cs_new_protected:Npn \semio_viz_uml_sequence_messages:n #1 {
+  \seq_if_in:NnT \g_semio_viz_table_names_seq {#1} {
+    \semio_viz_table_nrows:nN {#1} \l_semio_viz_uml_m_int
+    \int_compare:nNnT { \l_semio_viz_uml_m_int } < { 1 } { \int_set:Nn \l_semio_viz_uml_m_int { 1 } }
+    \fp_compare:nT { \l_semio_viz_uml_step_fp <= 0 }
+      { \fp_set:Nn \l_semio_viz_uml_step_fp
+          { ( \l_semio_viz_dg_h_fp - \l_semio_viz_uml_head_fp - 3 ) / ( \l_semio_viz_uml_m_int + 0.5 ) } }
+    \int_step_inline:nn { \l_semio_viz_uml_m_int } { \semio_viz_uml_sequence_message:nn {#1} {##1} }
+  }
+}
+
+% ✉️ Draws message #2 of table #1 between its two lifelines, picking the arrow style from the kind column, captioning it, probing its geometry and toggling the activation bar.
+\cs_new_protected:Npn \semio_viz_uml_sequence_message:nn #1#2 {
+  \fp_set:Nn \l_semio_viz_dg_y_fp
+    { \l_semio_viz_dg_h_fp - \l_semio_viz_uml_head_fp - (#2) * \l_semio_viz_uml_step_fp }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_source_tl } \l_semio_viz_dg_ta_tl
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_target_tl } \l_semio_viz_dg_tb_tl
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_uml_kind_tl } \l_semio_viz_dg_cell_tl
+  \semio_viz_dg_get:n { \l_semio_viz_dg_ta_tl }
+  \fp_set_eq:NN \l_semio_viz_dg_xa_fp \l_semio_viz_dg_a_fp
+  \semio_viz_dg_get:n { \l_semio_viz_dg_tb_tl }
+  \fp_set_eq:NN \l_semio_viz_dg_xb_fp \l_semio_viz_dg_a_fp
+  \tl_set:Nn \l_semio_viz_dg_style_tl { semio-chrome-border-emphasized , line~width=\semio@stroke@hairline }
+  \str_case:VnF \l_semio_viz_dg_cell_tl {
+    { async } { \tl_put_right:Nn \l_semio_viz_dg_style_tl { , -{Straight~Barb[length=1.4mm,width=1.6mm]} } }
+    { return } { \tl_put_right:Nn \l_semio_viz_dg_style_tl { , dash~pattern=on~1.2pt~off~1pt , -{Straight~Barb[length=1.4mm,width=1.6mm]} } }
+    { create } { \tl_put_right:Nn \l_semio_viz_dg_style_tl { , dash~pattern=on~1.2pt~off~1pt , -{Latex[length=1.6mm,width=1.2mm]} } }
+    { destroy } { \tl_put_right:Nn \l_semio_viz_dg_style_tl { , semio-danger , -{Latex[length=1.6mm,width=1.2mm]} } }
+  } { \tl_put_right:Nn \l_semio_viz_dg_style_tl { , -{Latex[length=1.6mm,width=1.2mm]} } }
+  \fp_compare:nNnTF { abs( \l_semio_viz_dg_xb_fp - \l_semio_viz_dg_xa_fp ) } < { 0.01 }
+    { \semio_viz_uml_sequence_self: }
+    {
+      \use:x {
+        \exp_not:N \draw [ \exp_not:V \l_semio_viz_dg_style_tl ]
+          ( \fp_eval:n { \l_semio_viz_dg_xa_fp } , \fp_eval:n { \l_semio_viz_dg_y_fp } ) --
+          ( \fp_eval:n { \l_semio_viz_dg_xb_fp } , \fp_eval:n { \l_semio_viz_dg_y_fp } ) ;
+      }
+    }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_edgelabel_tl } \l_semio_viz_dg_label_tl
+  \tl_if_empty:NF \l_semio_viz_dg_label_tl {
+    \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-text-normal , anchor=south , inner~sep=0.3mm ]
+      at ( \fp_eval:n { ( \l_semio_viz_dg_xa_fp + \l_semio_viz_dg_xb_fp ) / 2 } , \fp_eval:n { \l_semio_viz_dg_y_fp + 0.4 } )
+      { \tl_use:N \l_semio_viz_dg_label_tl } ;
+  }
+  \semio_viz_probe_geometry:nx { diagram-message }
+    {
+      \semio_viz_format_mm:n { \l_semio_viz_dg_xa_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_y_fp } ,
+      \semio_viz_format_mm:n { \l_semio_viz_dg_xb_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_y_fp }
+    }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_uml_activate_tl } \l_semio_viz_dg_cell_tl
+  \tl_if_empty:NF \l_semio_viz_dg_cell_tl { \semio_viz_uml_sequence_activation: }
+}
+
+% ↩️ Draws a self-message as a small rectangular loop leaving and re-entering the same lifeline.
+\cs_new_protected:Npn \semio_viz_uml_sequence_self: {
+  \use:x {
+    \exp_not:N \draw [ \exp_not:V \l_semio_viz_dg_style_tl ]
+      ( \fp_eval:n { \l_semio_viz_dg_xa_fp } , \fp_eval:n { \l_semio_viz_dg_y_fp + 1 } ) --
+      ( \fp_eval:n { \l_semio_viz_dg_xa_fp + 4 } , \fp_eval:n { \l_semio_viz_dg_y_fp + 1 } ) --
+      ( \fp_eval:n { \l_semio_viz_dg_xa_fp + 4 } , \fp_eval:n { \l_semio_viz_dg_y_fp - 1 } ) --
+      ( \fp_eval:n { \l_semio_viz_dg_xa_fp } , \fp_eval:n { \l_semio_viz_dg_y_fp - 1 } ) ;
+  }
+}
+
+% 🔋 Remembers the opening height of an activation on `1`, and on close fills the bar from that height down to the current message and forgets it.
+\cs_new_protected:Npn \semio_viz_uml_sequence_activation: {
+  \str_if_eq:VnTF \l_semio_viz_dg_cell_tl { 1 }
+    { \prop_put:NVx \l_semio_viz_uml_open_prop \l_semio_viz_dg_tb_tl { \semio_viz_format_mm:n { \l_semio_viz_dg_y_fp } } }
+    {
+      \prop_get:NVNT \l_semio_viz_uml_open_prop \l_semio_viz_dg_tb_tl \l_semio_viz_dg_ta_tl {
+        \fill [ semio-chrome-panel , draw=semio-chrome-border-emphasized , line~width=\semio@stroke@hairline ]
+          ( \fp_eval:n { \l_semio_viz_dg_xb_fp - \l_semio_viz_uml_act_fp / 2 } , \fp_eval:n { \l_semio_viz_dg_ta_tl } )
+          rectangle ( \fp_eval:n { \l_semio_viz_dg_xb_fp + \l_semio_viz_uml_act_fp / 2 } , \fp_eval:n { \l_semio_viz_dg_y_fp } ) ;
+        \prop_remove:NV \l_semio_viz_uml_open_prop \l_semio_viz_dg_tb_tl
+      }
+    }
+}
+% 🗺️ Registers `uml-sequence` as a viz family so documents can request it by name.
+\SemioVizFamily { uml-sequence } { \semio_viz_uml_sequence:n {#1} }
+
+%region 🔖️Keys-uml-timing
+% 🗝️ `uml-timing` draws one state-over-time lane per lifeline as a step line.
+%   data     tl  lifeline table (default demo-uml-timing), columns id/label
+%   segments tl  segment table (default demo-uml-timing-segments), columns owner/state/start/end
+%   states   clist  state levels bottom to top (default idle,wait,active)
+%   domain   clist  time domain `min,max` (default 0,10)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-uml-timing
+\tl_new:N \l_semio_viz_uml_seg_tl
+\clist_new:N \l_semio_viz_uml_states_clist
+\clist_new:N \l_semio_viz_uml_domain_clist
+\fp_new:N \l_semio_viz_uml_tmin_fp
+\fp_new:N \l_semio_viz_uml_tmax_fp
+
+% 🎹 Binds the `uml-timing` option names onto the lifeline and segment tables, the state ladder and the time domain.
+\keys_define:nn { semio / viz / family / uml-timing } {
+  data     .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  segments .tl_set:N = \l_semio_viz_uml_seg_tl,
+  states   .clist_set:N = \l_semio_viz_uml_states_clist,
+  domain   .clist_set:N = \l_semio_viz_uml_domain_clist,
+  width    .fp_set:N = \l_semio_viz_dg_w_fp,
+  height   .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% ⏱️ Entry point of the `uml-timing` family: reads the time domain out of the `domain` list, then hands the lifeline table to the lane renderer.
+\cs_new_protected:Npn \semio_viz_uml_timing:n #1 {
+  \semio_viz_frame_require:n { uml-timing }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-uml-timing }
+  \tl_set:Nn \l_semio_viz_uml_seg_tl { demo-uml-timing-segments }
+  \clist_set:Nn \l_semio_viz_uml_states_clist { idle, wait, active }
+  \clist_set:Nn \l_semio_viz_uml_domain_clist { 0, 10 }
+  \keys_set:nn { semio / viz / family / uml-timing } {#1}
+  \fp_set:Nn \l_semio_viz_uml_tmin_fp { \clist_item:Nn \l_semio_viz_uml_domain_clist { 1 } }
+  \fp_set:Nn \l_semio_viz_uml_tmax_fp { \clist_item:Nn \l_semio_viz_uml_domain_clist { 2 } }
+  \exp_args:NV \semio_viz_uml_timing_run:n \l_semio_viz_dg_nodes_tl
+}
+
+% 🪜 Splits the frame into one equal-height lane per lifeline of table #1, drawing its faint baseline and left-hand name before filling the lane.
+\cs_new_protected:Npn \semio_viz_uml_timing_run:n #1 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_dg_n_int
+  \int_compare:nNnT { \l_semio_viz_dg_n_int } < { 1 } { \int_set:Nn \l_semio_viz_dg_n_int { 1 } }
+  \fp_set:Nn \l_semio_viz_dg_nh_fp { ( \l_semio_viz_dg_h_fp - 2 ) / \l_semio_viz_dg_n_int - 2 }
+  \int_step_inline:nn { \l_semio_viz_dg_n_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_id_tl } \l_semio_viz_dg_id_tl
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+    \fp_set:Nn \l_semio_viz_dg_y_fp
+      { \l_semio_viz_dg_h_fp - 1 - ( ##1 - 1 ) * ( \l_semio_viz_dg_h_fp - 2 ) / \l_semio_viz_dg_n_int - \l_semio_viz_dg_nh_fp }
+    \draw [ semio-chrome-border-normal , line~width=\semio@stroke@hairline , draw~opacity=0.5 ]
+      ( 14 , \fp_eval:n { \l_semio_viz_dg_y_fp } ) -- ( \fp_eval:n { \l_semio_viz_dg_w_fp - 1 } , \fp_eval:n { \l_semio_viz_dg_y_fp } ) ;
+    \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-foreground , anchor=west , inner~sep=0pt ]
+      at ( 1 , \fp_eval:n { \l_semio_viz_dg_y_fp + \l_semio_viz_dg_nh_fp / 2 } ) { \tl_use:N \l_semio_viz_dg_label_tl } ;
+    \semio_viz_dg_tone:n { ##1 }
+    \exp_args:NV \semio_viz_uml_timing_lane:n \l_semio_viz_uml_seg_tl
+  }
+}
+
+% 🧵 Picks the segments of segment table #1 that belong to the current lifeline, resolves each state name to its rung on the state ladder and emits the step.
+\cs_new_protected:Npn \semio_viz_uml_timing_lane:n #1 {
+  \seq_if_in:NnT \g_semio_viz_table_names_seq {#1} {
+    \semio_viz_table_nrows:nN {#1} \l_semio_viz_dg_ib_int
+    \int_step_inline:nn { \l_semio_viz_dg_ib_int } {
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { owner } \l_semio_viz_dg_ta_tl
+      \str_if_eq:VVT \l_semio_viz_dg_ta_tl \l_semio_viz_dg_id_tl {
+        \semio_viz_table_cell_opt:nnnN {#1} {##1} { state } \l_semio_viz_dg_tb_tl
+        \semio_viz_table_cell_opt:nnnN {#1} {##1} { start } \l_semio_viz_dg_cell_tl
+        \fp_set:Nn \l_semio_viz_dg_xa_fp { \l_semio_viz_dg_cell_tl }
+        \semio_viz_table_cell_opt:nnnN {#1} {##1} { end } \l_semio_viz_dg_cell_tl
+        \fp_set:Nn \l_semio_viz_dg_xb_fp { \l_semio_viz_dg_cell_tl }
+        \int_zero:N \l_semio_viz_uml_k_int
+        \int_zero:N \l_semio_viz_dg_j_int
+        \clist_map_inline:Nn \l_semio_viz_uml_states_clist {
+          \int_incr:N \l_semio_viz_dg_j_int
+          \str_if_eq:VnT \l_semio_viz_dg_tb_tl { ####1 }
+            { \int_set_eq:NN \l_semio_viz_uml_k_int \l_semio_viz_dg_j_int }
+        }
+        \semio_viz_uml_timing_step:
+      }
+    }
+  }
+}
+
+% 📏 Maps the pending segment's state rung and start/end times into lane coordinates, strokes the horizontal step and probes its geometry.
+\cs_new_protected:Npn \semio_viz_uml_timing_step: {
+  \int_compare:nNnT { \l_semio_viz_uml_k_int } < { 1 } { \int_set:Nn \l_semio_viz_uml_k_int { 1 } }
+  \int_set:Nn \l_semio_viz_uml_levels_int { \clist_count:N \l_semio_viz_uml_states_clist }
+  \int_compare:nNnT { \l_semio_viz_uml_levels_int } < { 1 } { \int_set:Nn \l_semio_viz_uml_levels_int { 1 } }
+  \fp_set:Nn \l_semio_viz_dg_ya_fp
+    { \l_semio_viz_dg_y_fp + \l_semio_viz_uml_k_int * \l_semio_viz_dg_nh_fp / \l_semio_viz_uml_levels_int }
+  \fp_set:Nn \l_semio_viz_dg_xa_fp
+    { 14 + ( \l_semio_viz_dg_xa_fp - \l_semio_viz_uml_tmin_fp ) / ( \l_semio_viz_uml_tmax_fp - \l_semio_viz_uml_tmin_fp ) * ( \l_semio_viz_dg_w_fp - 15 ) }
+  \fp_set:Nn \l_semio_viz_dg_xb_fp
+    { 14 + ( \l_semio_viz_dg_xb_fp - \l_semio_viz_uml_tmin_fp ) / ( \l_semio_viz_uml_tmax_fp - \l_semio_viz_uml_tmin_fp ) * ( \l_semio_viz_dg_w_fp - 15 ) }
+  \draw [ \l_semio_viz_dg_draw_tl , line~width=\semio@stroke@default ]
+    ( \fp_eval:n { \l_semio_viz_dg_xa_fp } , \fp_eval:n { \l_semio_viz_dg_ya_fp } ) --
+    ( \fp_eval:n { \l_semio_viz_dg_xb_fp } , \fp_eval:n { \l_semio_viz_dg_ya_fp } ) ;
+  \semio_viz_probe_geometry:nx { diagram-timing }
+    {
+      \semio_viz_format_mm:n { \l_semio_viz_dg_xa_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_ya_fp } ,
+      \semio_viz_format_mm:n { \l_semio_viz_dg_xb_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_ya_fp }
+    }
+}
+% 🕰️ Registers `uml-timing` as a viz family so documents can request it by name.
+\SemioVizFamily { uml-timing } { \semio_viz_uml_timing:n {#1} }
+
+%region 🔖️DemoData
+% 🧪 The UML fixtures every family in this package defaults to.
+\cs_new_protected:Npn \semio_viz_uml_demo: {
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-uml-class } {
+    \semio_viz_table_new:nn { demo-uml-class } { id, label, row, col, stereotype, tone, group }
+    \semio_viz_table_row:nn { demo-uml-class } { order, Order, 1, 1, entity, 1, sales }
+    \semio_viz_table_row:nn { demo-uml-class } { line, {Order line}, 2, 1, entity, 1, sales }
+    \semio_viz_table_row:nn { demo-uml-class } { customer, Customer, 1, 2, entity, 2, party }
+    \semio_viz_table_row:nn { demo-uml-class } { address, Address, 2, 2, value, 2, party }
+    \semio_viz_table_new:nn { demo-uml-class-members } { owner, section, text }
+    \semio_viz_table_row:nn { demo-uml-class-members } { order, attribute, {+ id} }
+    \semio_viz_table_row:nn { demo-uml-class-members } { order, attribute, {+ placed} }
+    \semio_viz_table_row:nn { demo-uml-class-members } { order, operation, {+ total()} }
+    \semio_viz_table_row:nn { demo-uml-class-members } { line, attribute, {+ qty} }
+    \semio_viz_table_row:nn { demo-uml-class-members } { customer, attribute, {+ name} }
+    \semio_viz_table_row:nn { demo-uml-class-members } { customer, operation, {+ rate()} }
+    \semio_viz_table_row:nn { demo-uml-class-members } { address, attribute, {+ city} }
+    \semio_viz_table_new:nn { demo-uml-class-edges } { from, to, kind, label }
+    \semio_viz_table_row:nn { demo-uml-class-edges } { order, line, composition, {1..*} }
+    \semio_viz_table_row:nn { demo-uml-class-edges } { order, customer, association, }
+    \semio_viz_table_row:nn { demo-uml-class-edges } { customer, address, aggregation, }
+    \semio_viz_table_row:nn { demo-uml-class-edges } { line, address, dependency, }
+  }
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-uml-usecase } {
+    \semio_viz_table_new:nn { demo-uml-usecase } { id, label }
+    \semio_viz_table_row:nn { demo-uml-usecase } { u1, {Place order} }
+    \semio_viz_table_row:nn { demo-uml-usecase } { u2, {Track parcel} }
+    \semio_viz_table_row:nn { demo-uml-usecase } { u3, {Issue refund} }
+    \semio_viz_table_new:nn { demo-uml-usecase-actors } { id, label, side }
+    \semio_viz_table_row:nn { demo-uml-usecase-actors } { a1, Customer, left }
+    \semio_viz_table_row:nn { demo-uml-usecase-actors } { a2, Agent, right }
+    \semio_viz_table_new:nn { demo-uml-usecase-edges } { from, to, kind, label }
+    \semio_viz_table_row:nn { demo-uml-usecase-edges } { a1, u1, association, }
+    \semio_viz_table_row:nn { demo-uml-usecase-edges } { a1, u2, association, }
+    \semio_viz_table_row:nn { demo-uml-usecase-edges } { a2, u3, association, }
+    \semio_viz_table_row:nn { demo-uml-usecase-edges } { u3, u2, dependency, }
+  }
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-uml-sequence } {
+    \semio_viz_table_new:nn { demo-uml-sequence } { id, label, shape }
+    \semio_viz_table_row:nn { demo-uml-sequence } { ui, {Web UI}, process }
+    \semio_viz_table_row:nn { demo-uml-sequence } { api, {Order API}, process }
+    \semio_viz_table_row:nn { demo-uml-sequence } { db, Ledger, database }
+    \semio_viz_table_new:nn { demo-uml-sequence-messages } { from, to, label, kind, activate }
+    \semio_viz_table_row:nn { demo-uml-sequence-messages } { ui, api, {submit()}, sync, 1 }
+    \semio_viz_table_row:nn { demo-uml-sequence-messages } { api, db, {append()}, sync, 1 }
+    \semio_viz_table_row:nn { demo-uml-sequence-messages } { db, api, {ok}, return, 0 }
+    \semio_viz_table_row:nn { demo-uml-sequence-messages } { api, api, {audit()}, self, }
+    \semio_viz_table_row:nn { demo-uml-sequence-messages } { api, ui, {202}, return, 0 }
+  }
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-uml-timing } {
+    \semio_viz_table_new:nn { demo-uml-timing } { id, label }
+    \semio_viz_table_row:nn { demo-uml-timing } { ui, {Web UI} }
+    \semio_viz_table_row:nn { demo-uml-timing } { api, {Order API} }
+    \semio_viz_table_new:nn { demo-uml-timing-segments } { owner, state, start, end }
+    \semio_viz_table_row:nn { demo-uml-timing-segments } { ui, idle, 0, 2 }
+    \semio_viz_table_row:nn { demo-uml-timing-segments } { ui, active, 2, 6 }
+    \semio_viz_table_row:nn { demo-uml-timing-segments } { ui, wait, 6, 10 }
+    \semio_viz_table_row:nn { demo-uml-timing-segments } { api, idle, 0, 3 }
+    \semio_viz_table_row:nn { demo-uml-timing-segments } { api, active, 3, 8 }
+    \semio_viz_table_row:nn { demo-uml-timing-segments } { api, idle, 8, 10 }
+  }
+}
+\semio_viz_uml_demo:
+%endregion 🔖️DemoData
+
+\ExplSyntaxOff

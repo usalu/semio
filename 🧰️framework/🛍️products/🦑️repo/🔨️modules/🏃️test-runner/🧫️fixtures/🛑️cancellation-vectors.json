@@ -1,0 +1,70 @@
+{
+  "plan": {
+    "invocations": [
+      {
+        "runner": "go",
+        "argv": [
+          "go",
+          "test",
+          "./..."
+        ],
+        "cwd": "/repo/bundles/go-core"
+      },
+      {
+        "runner": "cargo",
+        "argv": [
+          "cargo",
+          "test"
+        ],
+        "cwd": "/repo/bundles/rust-core"
+      },
+      {
+        "runner": "npx",
+        "argv": [
+          "npx",
+          "vitest",
+          "run"
+        ],
+        "cwd": "/repo/bundles/web"
+      }
+    ]
+  },
+  "cancelAfter": 1,
+  "transcripts": [
+    {
+      "argv": [
+        "go",
+        "test",
+        "./..."
+      ],
+      "output": {
+        "status": 0,
+        "stdout": "{\"Action\":\"pass\",\"Package\":\"example.com/go-core/pkg\",\"Test\":\"TestAlphaOne\",\"Elapsed\":0.01}\n",
+        "stderr": ""
+      }
+    },
+    {
+      "argv": [
+        "cargo",
+        "test"
+      ],
+      "output": {
+        "status": 0,
+        "stdout": "running 1 test\ntest planning::plans_a_bundle ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n",
+        "stderr": ""
+      }
+    },
+    {
+      "argv": [
+        "npx",
+        "vitest",
+        "run"
+      ],
+      "output": {
+        "status": 0,
+        "stdout": "{\"testResults\":[]}",
+        "stderr": ""
+      }
+    }
+  ]
+}

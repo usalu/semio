@@ -1,0 +1,252 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/repo/move/1",
+  "title": "🚚️ Repo move fixtures and wire shapes",
+  "description": "🚚️ The five vector files the move cases read. Every one of them records a workspace before an operation, the arguments of that operation, and the workspace, output lines and counters every implementation must produce from it. A workspace is a flat map of slash-separated relative paths, so a fixture never depends on a real filesystem.",
+  "$defs": {
+    "Slug": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "Tree": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["directories", "files"],
+      "description": "🗄️ One in-memory checkout: every directory that exists on its own, and every file with its content.",
+      "properties": {
+        "directories": { "type": "array", "items": { "type": "string" } },
+        "files": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "Messages": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "📣️ The command output lines, in order, leading newline included."
+    },
+    "RenameTokenVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "old", "new", "content", "expected"],
+      "description": "🔤️ One content-level rename. Only the UPPER, Title and lower foldings of the token are rewritten; a camel or pascal spelling that is neither of those three survives untouched, which is the behaviour under test.",
+      "properties": {
+        "name": { "$ref": "#/$defs/Slug" },
+        "old": { "type": "string" },
+        "new": { "type": "string" },
+        "content": { "type": "string" },
+        "expected": { "type": "string" }
+      }
+    },
+    "RenameTreeVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "old", "new", "scope", "before", "after", "stats", "messages"],
+      "properties": {
+        "name": { "$ref": "#/$defs/Slug" },
+        "old": { "type": "string" },
+        "new": { "type": "string" },
+        "scope": { "type": "string", "description": "📍️ The directory the walk is restricted to, empty for the whole workspace." },
+        "before": { "$ref": "#/$defs/Tree" },
+        "after": { "$ref": "#/$defs/Tree" },
+        "stats": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["filesChanged", "filesRenamed", "foldersRenamed"],
+          "properties": {
+            "filesChanged": { "type": "integer", "minimum": 0 },
+            "filesRenamed": { "type": "integer", "minimum": 0 },
+            "foldersRenamed": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "messages": { "$ref": "#/$defs/Messages" }
+      }
+    },
+    "RenameErrorVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "old", "new", "scope", "before", "expectedError"],
+      "properties": {
+        "name": { "$ref": "#/$defs/Slug" },
+        "old": { "type": "string" },
+        "new": { "type": "string" },
+        "scope": { "type": "string" },
+        "before": { "$ref": "#/$defs/Tree" },
+        "expectedError": { "type": "string" }
+      }
+    },
+    "RenameVectorFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "tokenVectors", "trees", "errors"],
+      "properties": {
+        "schema": { "type": "string" },
+        "tokenVectors": { "type": "array", "items": { "$ref": "#/$defs/RenameTokenVector" }, "minItems": 1 },
+        "trees": { "type": "array", "items": { "$ref": "#/$defs/RenameTreeVector" }, "minItems": 1 },
+        "errors": { "type": "array", "items": { "$ref": "#/$defs/RenameErrorVector" }, "minItems": 1 }
+      }
+    },
+    "SectionMoveVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "file", "content", "oldPath", "newPath", "expected", "messages"],
+      "properties": {
+        "name": { "$ref": "#/$defs/Slug" },
+        "file": { "type": "string" },
+        "content": { "type": "string" },
+        "oldPath": { "type": "string", "description": "🏷️ The section path; only the segment after the last `#` names the section." },
+        "newPath": { "type": "string" },
+        "expected": { "type": "string" },
+        "messages": { "$ref": "#/$defs/Messages" }
+      }
+    },
+    "SectionMoveFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "cases", "errors"],
+      "properties": {
+        "schema": { "type": "string" },
+        "cases": { "type": "array", "items": { "$ref": "#/$defs/SectionMoveVector" }, "minItems": 1 },
+        "errors": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "file", "oldPath", "newPath", "expectedError"],
+            "properties": {
+              "name": { "$ref": "#/$defs/Slug" },
+              "file": { "type": "string" },
+              "oldPath": { "type": "string" },
+              "newPath": { "type": "string" },
+              "expectedError": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "SectionExtractVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "sourceFile", "content", "section", "targetFile", "expectedTarget", "expectedSource", "messages"],
+      "properties": {
+        "name": { "$ref": "#/$defs/Slug" },
+        "sourceFile": { "type": "string" },
+        "content": { "type": "string" },
+        "section": { "type": "string" },
+        "targetFile": { "type": "string" },
+        "expectedTarget": { "type": "string", "description": "📄️ The new file: the source's header, package declaration and imports, then the section body without its markers." },
+        "expectedSource": { "type": "string" },
+        "messages": { "$ref": "#/$defs/Messages" }
+      }
+    },
+    "SectionExtractFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "cases", "errors"],
+      "properties": {
+        "schema": { "type": "string" },
+        "cases": { "type": "array", "items": { "$ref": "#/$defs/SectionExtractVector" }, "minItems": 1 },
+        "errors": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "sourceFile", "section", "targetFile", "expectedError"],
+            "properties": {
+              "name": { "$ref": "#/$defs/Slug" },
+              "sourceFile": { "type": "string" },
+              "section": { "type": "string" },
+              "targetFile": { "type": "string" },
+              "expectedError": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "FileIntegrateVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "sourceFile", "sourceContent", "targetFile", "targetContent", "targetSection", "parentSection", "expected", "messages"],
+      "properties": {
+        "name": { "$ref": "#/$defs/Slug" },
+        "sourceFile": { "type": "string" },
+        "sourceContent": { "type": "string" },
+        "targetFile": { "type": "string" },
+        "targetContent": { "type": "string" },
+        "targetSection": { "type": "string" },
+        "parentSection": { "type": "string", "description": "🪆️ The section the new one is nested inside, empty to append at the end of the body." },
+        "expected": { "type": "string" },
+        "messages": { "$ref": "#/$defs/Messages" }
+      }
+    },
+    "FileIntegrateFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "cases", "errors"],
+      "properties": {
+        "schema": { "type": "string" },
+        "cases": { "type": "array", "items": { "$ref": "#/$defs/FileIntegrateVector" }, "minItems": 1 },
+        "errors": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "sourceFile", "targetFile", "targetSection", "parentSection", "expectedError"],
+            "properties": {
+              "name": { "$ref": "#/$defs/Slug" },
+              "sourceFile": { "type": "string" },
+              "targetFile": { "type": "string" },
+              "targetSection": { "type": "string" },
+              "parentSection": { "type": "string" },
+              "expectedError": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "FileFolderMoveVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "kind", "source", "target", "before", "after", "messages"],
+      "properties": {
+        "name": { "$ref": "#/$defs/Slug" },
+        "kind": { "enum": ["file", "folder"] },
+        "source": { "type": "string" },
+        "target": { "type": "string" },
+        "before": { "$ref": "#/$defs/Tree" },
+        "after": { "$ref": "#/$defs/Tree" },
+        "messages": { "$ref": "#/$defs/Messages" }
+      }
+    },
+    "FileFolderMoveFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "cases", "errors"],
+      "properties": {
+        "schema": { "type": "string" },
+        "cases": { "type": "array", "items": { "$ref": "#/$defs/FileFolderMoveVector" }, "minItems": 1 },
+        "errors": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "kind", "source", "target", "expectedError"],
+            "properties": {
+              "name": { "$ref": "#/$defs/Slug" },
+              "kind": { "enum": ["file", "folder"] },
+              "source": { "type": "string" },
+              "target": { "type": "string" },
+              "expectedError": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "oneOf": [
+    { "$ref": "#/$defs/RenameVectorFile" },
+    { "$ref": "#/$defs/SectionMoveFile" },
+    { "$ref": "#/$defs/SectionExtractFile" },
+    { "$ref": "#/$defs/FileIntegrateFile" },
+    { "$ref": "#/$defs/FileFolderMoveFile" }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "id": "metrics-recorded-repository",
+  "logs": {
+    "": "COMMIT\t20839f5b1db78bc2765f18e09c8f2dc1b4b1b15e\tAda Lovelace\tada@semio-tech.com\t1767225600\n3\t0\tREADME.md\n4\t0\tdata/config.json\n3\t0\t\"\\360\\237\\247\\254\\357\\270\\217alpha.ts\"\n\nCOMMIT\t6980d7974e71edd8540e1b290d8b7dd8e051b75c\tGrace Hopper\tgrace@semio-tech.com\t1767232800\n3\t0\tpkg/main.go\n2\t1\t\"\\360\\237\\247\\254\\357\\270\\217alpha.ts\"\n\nCOMMIT\t8d1af13fc49a3015e8cc5d1048f8b6bd63a0abe8\tAda Lovelace\tada@semio-tech.com\t1767312000\n2\t1\t\"\\360\\237\\247\\254\\357\\270\\217alpha.ts\" => \"src/\\360\\237\\247\\254\\357\\270\\217beta.ts\"\n\nCOMMIT\t7cb6150968ac492807305e99e703b00dbd8a6540\tGrace Hopper\tgrace@semio-tech.com\t1767398400\n1\t0\t.hidden/secret.ts\n1\t0\t\".\\360\\237\\247\\254semio/\\360\\237\\246\\221\\357\\270\\217repo/note.md\"\n-\t-\tassets/logo.png\n\nCOMMIT\ta979b7a5c54bedf97adc1f9e7f5324139f87d5bb\tAda Lovelace\tada@semio-tech.com\t1769904000\n0\t3\tREADME.md\n2\t1\tdata/config.json\n2\t0\tpy/tool.py\n",
+    "⛳️wip": "COMMIT\t20839f5b1db78bc2765f18e09c8f2dc1b4b1b15e\tAda Lovelace\tada@semio-tech.com\t1767225600\n3\t0\tREADME.md\n4\t0\tdata/config.json\n3\t0\t\"\\360\\237\\247\\254\\357\\270\\217alpha.ts\"\n\nCOMMIT\t6980d7974e71edd8540e1b290d8b7dd8e051b75c\tGrace Hopper\tgrace@semio-tech.com\t1767232800\n3\t0\tpkg/main.go\n2\t1\t\"\\360\\237\\247\\254\\357\\270\\217alpha.ts\"\n\nCOMMIT\t8d1af13fc49a3015e8cc5d1048f8b6bd63a0abe8\tAda Lovelace\tada@semio-tech.com\t1767312000\n2\t1\t\"\\360\\237\\247\\254\\357\\270\\217alpha.ts\" => \"src/\\360\\237\\247\\254\\357\\270\\217beta.ts\"\n\nCOMMIT\t7cb6150968ac492807305e99e703b00dbd8a6540\tGrace Hopper\tgrace@semio-tech.com\t1767398400\n1\t0\t.hidden/secret.ts\n1\t0\t\".\\360\\237\\247\\254semio/\\360\\237\\246\\221\\357\\270\\217repo/note.md\"\n-\t-\tassets/logo.png\n\nCOMMIT\ta979b7a5c54bedf97adc1f9e7f5324139f87d5bb\tAda Lovelace\tada@semio-tech.com\t1769904000\n0\t3\tREADME.md\n2\t1\tdata/config.json\n2\t0\tpy/tool.py\n",
+    "🔀️with-merges": "COMMIT\t20839f5b1db78bc2765f18e09c8f2dc1b4b1b15e\tAda Lovelace\tada@semio-tech.com\t1767225600\n3\t0\tREADME.md\n4\t0\tdata/config.json\n3\t0\t\"\\360\\237\\247\\254\\357\\270\\217alpha.ts\"\n\nCOMMIT\t6980d7974e71edd8540e1b290d8b7dd8e051b75c\tGrace Hopper\tgrace@semio-tech.com\t1767232800\n3\t0\tpkg/main.go\n2\t1\t\"\\360\\237\\247\\254\\357\\270\\217alpha.ts\"\n\nCOMMIT\t8d1af13fc49a3015e8cc5d1048f8b6bd63a0abe8\tAda Lovelace\tada@semio-tech.com\t1767312000\n2\t1\t\"\\360\\237\\247\\254\\357\\270\\217alpha.ts\" => \"src/\\360\\237\\247\\254\\357\\270\\217beta.ts\"\n\nCOMMIT\t7cb6150968ac492807305e99e703b00dbd8a6540\tGrace Hopper\tgrace@semio-tech.com\t1767398400\n1\t0\t.hidden/secret.ts\n1\t0\t\".\\360\\237\\247\\254semio/\\360\\237\\246\\221\\357\\270\\217repo/note.md\"\n-\t-\tassets/logo.png\n\nCOMMIT\ta979b7a5c54bedf97adc1f9e7f5324139f87d5bb\tAda Lovelace\tada@semio-tech.com\t1769904000\n0\t3\tREADME.md\n2\t1\tdata/config.json\n2\t0\tpy/tool.py\n\nCOMMIT\t83d2a2864946e2913add9779dacda359d49f6637\tAda Lovelace\tada@semio-tech.com\t1769990400\n1\t0\tside.rs\n"
+  },
+  "tracked": {
+    "": [
+      ".hidden/secret.ts",
+      ".🧬semio/🦑️repo/note.md",
+      "assets/logo.png",
+      "data/config.json",
+      "pkg/main.go",
+      "py/tool.py",
+      "side.rs",
+      "src/🧬️beta.ts"
+    ],
+    "20839f5b1db78bc2765f18e09c8f2dc1b4b1b15e": [
+      "README.md",
+      "data/config.json",
+      "🧬️alpha.ts"
+    ],
+    "6980d7974e71edd8540e1b290d8b7dd8e051b75c": [
+      "README.md",
+      "data/config.json",
+      "pkg/main.go",
+      "🧬️alpha.ts"
+    ],
+    "8d1af13fc49a3015e8cc5d1048f8b6bd63a0abe8": [
+      "README.md",
+      "data/config.json",
+      "pkg/main.go",
+      "src/🧬️beta.ts"
+    ],
+    "7cb6150968ac492807305e99e703b00dbd8a6540": [
+      ".hidden/secret.ts",
+      ".🧬semio/🦑️repo/note.md",
+      "README.md",
+      "assets/logo.png",
+      "data/config.json",
+      "pkg/main.go",
+      "src/🧬️beta.ts"
+    ],
+    "a979b7a5c54bedf97adc1f9e7f5324139f87d5bb": [
+      ".hidden/secret.ts",
+      ".🧬semio/🦑️repo/note.md",
+      "assets/logo.png",
+      "data/config.json",
+      "pkg/main.go",
+      "py/tool.py",
+      "src/🧬️beta.ts"
+    ],
+    "83d2a2864946e2913add9779dacda359d49f6637": [
+      ".hidden/secret.ts",
+      ".🧬semio/🦑️repo/note.md",
+      "assets/logo.png",
+      "data/config.json",
+      "pkg/main.go",
+      "py/tool.py",
+      "side.rs",
+      "src/🧬️beta.ts"
+    ]
+  },
+  "blobs": {
+    "\u0001.hidden/secret.ts": "export const hidden = true;\n",
+    "\u0001.🧬semio/🦑️repo/note.md": "meta only\n",
+    "\u0001data/config.json": "{\n  \"a\": 1,\n  \"b\": { \"c\": 2, \"d\": [1, 2, { \"e\": 3 }] },\n  \"f\": 4\n}\n",
+    "\u0001pkg/main.go": "package main\n\nfunc main() {}\n",
+    "\u0001py/tool.py": "def main():\n    return 0\n",
+    "\u0001side.rs": "pub fn side() -> u8 { 1 }\n",
+    "\u0001src/🧬️beta.ts": "export const one = 1;\nexport const two = 22;\nexport const three = 33;\nexport const four = 4;\nexport const five = 5;\n",
+    "20839f5b1db78bc2765f18e09c8f2dc1b4b1b15e\u0001README.md": "# Fixture\n\nA recorded repository.\n",
+    "20839f5b1db78bc2765f18e09c8f2dc1b4b1b15e\u0001data/config.json": "{\n  \"a\": 1,\n  \"b\": { \"c\": 2 }\n}\n",
+    "20839f5b1db78bc2765f18e09c8f2dc1b4b1b15e\u0001🧬️alpha.ts": "export const one = 1;\nexport const two = 2;\nexport const three = 3;\n",
+    "6980d7974e71edd8540e1b290d8b7dd8e051b75c\u0001README.md": "# Fixture\n\nA recorded repository.\n",
+    "6980d7974e71edd8540e1b290d8b7dd8e051b75c\u0001data/config.json": "{\n  \"a\": 1,\n  \"b\": { \"c\": 2 }\n}\n",
+    "6980d7974e71edd8540e1b290d8b7dd8e051b75c\u0001pkg/main.go": "package main\n\nfunc main() {}\n",
+    "6980d7974e71edd8540e1b290d8b7dd8e051b75c\u0001🧬️alpha.ts": "export const one = 1;\nexport const two = 22;\nexport const three = 3;\nexport const four = 4;\n",
+    "8d1af13fc49a3015e8cc5d1048f8b6bd63a0abe8\u0001README.md": "# Fixture\n\nA recorded repository.\n",
+    "8d1af13fc49a3015e8cc5d1048f8b6bd63a0abe8\u0001data/config.json": "{\n  \"a\": 1,\n  \"b\": { \"c\": 2 }\n}\n",
+    "8d1af13fc49a3015e8cc5d1048f8b6bd63a0abe8\u0001pkg/main.go": "package main\n\nfunc main() {}\n",
+    "8d1af13fc49a3015e8cc5d1048f8b6bd63a0abe8\u0001src/🧬️beta.ts": "export const one = 1;\nexport const two = 22;\nexport const three = 33;\nexport const four = 4;\nexport const five = 5;\n",
+    "7cb6150968ac492807305e99e703b00dbd8a6540\u0001.hidden/secret.ts": "export const hidden = true;\n",
+    "7cb6150968ac492807305e99e703b00dbd8a6540\u0001.🧬semio/🦑️repo/note.md": "meta only\n",
+    "7cb6150968ac492807305e99e703b00dbd8a6540\u0001README.md": "# Fixture\n\nA recorded repository.\n",
+    "7cb6150968ac492807305e99e703b00dbd8a6540\u0001data/config.json": "{\n  \"a\": 1,\n  \"b\": { \"c\": 2 }\n}\n",
+    "7cb6150968ac492807305e99e703b00dbd8a6540\u0001pkg/main.go": "package main\n\nfunc main() {}\n",
+    "7cb6150968ac492807305e99e703b00dbd8a6540\u0001src/🧬️beta.ts": "export const one = 1;\nexport const two = 22;\nexport const three = 33;\nexport const four = 4;\nexport const five = 5;\n",
+    "a979b7a5c54bedf97adc1f9e7f5324139f87d5bb\u0001.hidden/secret.ts": "export const hidden = true;\n",
+    "a979b7a5c54bedf97adc1f9e7f5324139f87d5bb\u0001.🧬semio/🦑️repo/note.md": "meta only\n",
+    "a979b7a5c54bedf97adc1f9e7f5324139f87d5bb\u0001data/config.json": "{\n  \"a\": 1,\n  \"b\": { \"c\": 2, \"d\": [1, 2, { \"e\": 3 }] },\n  \"f\": 4\n}\n",
+    "a979b7a5c54bedf97adc1f9e7f5324139f87d5bb\u0001pkg/main.go": "package main\n\nfunc main() {}\n",
+    "a979b7a5c54bedf97adc1f9e7f5324139f87d5bb\u0001py/tool.py": "def main():\n    return 0\n",
+    "a979b7a5c54bedf97adc1f9e7f5324139f87d5bb\u0001src/🧬️beta.ts": "export const one = 1;\nexport const two = 22;\nexport const three = 33;\nexport const four = 4;\nexport const five = 5;\n",
+    "83d2a2864946e2913add9779dacda359d49f6637\u0001.hidden/secret.ts": "export const hidden = true;\n",
+    "83d2a2864946e2913add9779dacda359d49f6637\u0001.🧬semio/🦑️repo/note.md": "meta only\n",
+    "83d2a2864946e2913add9779dacda359d49f6637\u0001data/config.json": "{\n  \"a\": 1,\n  \"b\": { \"c\": 2, \"d\": [1, 2, { \"e\": 3 }] },\n  \"f\": 4\n}\n",
+    "83d2a2864946e2913add9779dacda359d49f6637\u0001pkg/main.go": "package main\n\nfunc main() {}\n",
+    "83d2a2864946e2913add9779dacda359d49f6637\u0001py/tool.py": "def main():\n    return 0\n",
+    "83d2a2864946e2913add9779dacda359d49f6637\u0001side.rs": "pub fn side() -> u8 { 1 }\n",
+    "83d2a2864946e2913add9779dacda359d49f6637\u0001src/🧬️beta.ts": "export const one = 1;\nexport const two = 22;\nexport const three = 33;\nexport const four = 4;\nexport const five = 5;\n"
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "schema": "https://semio.tech/schema/repo/move/1#/$defs/SectionExtractFile",
+  "cases": [
+    {
+      "name": "typescript-section-takes-the-imports",
+      "sourceFile": "sample.ts",
+      "content": "//#region 🧲️Header\n\n// 2026 Ueli Saluz\n\n//#endregion 🧲️Header\n\nimport { join } from \"node:path\";\n\n// #region 🔖️Alpha\nexport const alpha = join(\"a\");\n// #endregion 🔖️Alpha\n\n// #region 🔖️Beta\nexport const beta = 2;\n// #endregion 🔖️Beta\n",
+      "section": "Alpha",
+      "targetFile": "alpha.ts",
+      "expectedTarget": "//#region 🧲️Header\n\n// 2026 Ueli Saluz\n\n//#endregion 🧲️Header\n\nimport { join } from \"node:path\";\n\nexport const alpha = join(\"a\");\n",
+      "expectedSource": "//#region 🧲️Header\n\n// 2026 Ueli Saluz\n\n//#endregion 🧲️Header\n\nimport { join } from \"node:path\";\n\n\n// #region 🔖️Beta\nexport const beta = 2;\n// #endregion 🔖️Beta\n",
+      "messages": [
+        "\n🧩️Extracted Alpha from sample.ts to alpha.ts"
+      ]
+    },
+    {
+      "name": "go-section-takes-the-package-and-imports",
+      "sourceFile": "sample.go",
+      "content": "// #region 🔖️Header\n\n// 2026 Ueli Saluz\n\n// #endregion 🔖️Header\n\npackage sample\n\nimport (\n\t\"fmt\"\n\t\"strings\"\n)\n\n// #region 🔖️Alpha\nfunc Alpha() string { return fmt.Sprint(strings.ToUpper(\"a\")) }\n// #endregion 🔖️Alpha\n\n// #region 🔖️Beta\nfunc Beta() int { return 2 }\n// #endregion 🔖️Beta\n",
+      "section": "Beta",
+      "targetFile": "beta.go",
+      "expectedTarget": "// #region 🔖️Header\n\n// 2026 Ueli Saluz\n\n// #endregion 🔖️Header\n\npackage sample\n\nimport (\n\t\"fmt\"\n\t\"strings\"\n)\n\nfunc Beta() int { return 2 }\n",
+      "expectedSource": "// #region 🔖️Header\n\n// 2026 Ueli Saluz\n\n// #endregion 🔖️Header\n\npackage sample\n\nimport (\n\t\"fmt\"\n\t\"strings\"\n)\n\n// #region 🔖️Alpha\nfunc Alpha() string { return fmt.Sprint(strings.ToUpper(\"a\")) }\n// #endregion 🔖️Alpha\n\n",
+      "messages": [
+        "\n🧩️Extracted Beta from sample.go to beta.go"
+      ]
+    },
+    {
+      "name": "python-section-takes-the-imports",
+      "sourceFile": "sample.py",
+      "content": "# #region 🔖️Header\n\n# 2026 Ueli Saluz\n\n# #endregion 🔖️Header\n\nimport os\nfrom pathlib import Path\n\n# #region 🔖️Alpha\ndef alpha():\n    return os.sep + str(Path(\".\"))\n# #endregion 🔖️Alpha\n",
+      "section": "Alpha",
+      "targetFile": "alpha.py",
+      "expectedTarget": "# #region 🔖️Header\n\n# 2026 Ueli Saluz\n\n# #endregion 🔖️Header\n\nfrom pathlib import Path\nimport os\n\ndef alpha():\n    return os.sep + str(Path(\".\"))\n",
+      "expectedSource": "# #region 🔖️Header\n\n# 2026 Ueli Saluz\n\n# #endregion 🔖️Header\n\nimport os\nfrom pathlib import Path\n\n",
+      "messages": [
+        "\n🧩️Extracted Alpha from sample.py to alpha.py"
+      ]
+    },
+    {
+      "name": "markdown-section-has-no-imports",
+      "sourceFile": "sample.md",
+      "content": "# Title\n\n## Alpha\n\nSome alpha text.\n\n## Beta\n\nSome beta text.\n",
+      "section": "Alpha",
+      "targetFile": "alpha.md",
+      "expectedTarget": "\nSome alpha text.\n",
+      "expectedSource": "# Title\n\n## Beta\n\nSome beta text.\n",
+      "messages": [
+        "\n🧩️Extracted Alpha from sample.md to alpha.md"
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "name": "a-missing-source-is-refused",
+      "sourceFile": "absent.ts",
+      "section": "Alpha",
+      "targetFile": "out.ts",
+      "expectedError": "Source file not found: absent.ts"
+    },
+    {
+      "name": "a-missing-section-is-refused",
+      "sourceFile": "sample.ts",
+      "section": "Missing",
+      "targetFile": "out.ts",
+      "expectedError": "Section not found: Missing"
+    },
+    {
+      "name": "a-sectionless-language-is-refused",
+      "sourceFile": "plain.txt",
+      "section": "Alpha",
+      "targetFile": "out.txt",
+      "expectedError": "Source file type does not support sections"
+    }
+  ]
+}

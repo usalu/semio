@@ -1,0 +1,59 @@
+{
+  "_comment": "🎯️ The catalog, statute list and territory forest the goal/statute/territory tree case projects. The catalog is the port `📜️statutes` will satisfy in production: it owns every statute's metadata, artifact id, uri, display label and entity kind, so 🌳️tree only decides the shape and the priority icon.",
+  "catalog": {
+    "statutes": [
+      {
+        "id": "code/section/empty",
+        "artifactId": "📜️code📜️section📜️empty",
+        "uri": "repo://statute/📜️code📜️section📜️empty",
+        "label": "Code#Section#Empty",
+        "entityKind": "section",
+        "meta": { "policyId": "/code", "priority": "medium", "reason": "An empty region carries no meaning.", "solution": "Remove the region or fill it.", "autofixable": true }
+      },
+      {
+        "id": "code/definition/undocumented",
+        "artifactId": "📜️code📜️definition📜️undocumented",
+        "uri": "repo://statute/📜️code📜️definition📜️undocumented",
+        "label": "Code#Definition#Undocumented",
+        "entityKind": "definition",
+        "meta": { "policyId": "/code", "priority": "high", "reason": "Every definition carries a docstring.", "solution": "Write a docstring that starts with an emoji.", "autofixable": false }
+      },
+      {
+        "id": "code/definition/commented",
+        "artifactId": "📜️code📜️definition📜️commented",
+        "uri": "repo://statute/📜️code📜️definition📜️commented",
+        "label": "Code#Definition#Commented",
+        "entityKind": "definition",
+        "meta": { "policyId": "/code", "priority": "low", "reason": "A comment inside a definition explains what the code should say.", "solution": "Delete the comment.", "autofixable": true }
+      },
+      {
+        "id": "docs/readme/missing",
+        "artifactId": "📜️docs📜️readme📜️missing",
+        "uri": "repo://statute/📜️docs📜️readme📜️missing",
+        "label": "Docs#Readme#Missing",
+        "entityKind": "folder",
+        "meta": { "policyId": "/docs", "priority": "low", "reason": "A bundle without a readme cannot be entered.", "solution": "Add a README.md.", "autofixable": false }
+      }
+    ],
+    "territories": { "Sections": "🔷️sections", "Definitions": "🔷️definitions", "Docs": "🔷️docs" }
+  },
+  "statutes": ["code/section/empty", "code/definition/undocumented", "code/definition/commented", "docs/readme/missing"],
+  "territories": [
+    {
+      "name": "Sections",
+      "description": "Region markers.",
+      "scopes": ["code"],
+      "kinds": ["code/section/empty"],
+      "groups": [
+        {
+          "name": "Definitions",
+          "description": "Definition hygiene.",
+          "scopes": ["code"],
+          "kinds": ["code/definition/undocumented", "code/definition/commented"],
+          "groups": []
+        }
+      ]
+    },
+    { "name": "Docs", "description": "Entry points.", "scopes": ["docs"], "kinds": ["docs/readme/missing"], "groups": [] }
+  ]
+}

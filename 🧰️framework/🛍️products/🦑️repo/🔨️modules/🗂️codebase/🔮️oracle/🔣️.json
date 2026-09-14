@@ -1,0 +1,36 @@
+{
+  "$schema": "../../🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🔮️ Test-only references of the 🗂️codebase owner. Every case of this module rests on a recorded no-oracle decision: the TypeScript library's 🔍️discovery module was inspected for an equivalent artifact-id builder and implements a different vocabulary entirely (its `artifactId` is a directory name, not an emoji id chain), so no in-repository reference exists, and no published package walks a repository into this repository's own technology, bundle and emoji-id vocabulary. The gitignore semantics the ignore case leans on are judged against a real engine by 🏠️workspace's own oracle-backed cases.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "repo-codebase-walk",
+      "capabilities": ["repo.codebase.workspace-walk"],
+      "rationale": "The walk resolves a scope to the source files a repository considers, in the lexical order the directory descent produces, and groups them into this repository's own bundle vocabulary. No third party produces that list: the extension allow-list, the structural exclusions and the bundle labelling are all repository policy, and the aggregate counts are defined by this repository's section and definition parsing. Confidence comes from one committed synthetic tree exercised by two independently written implementations that must agree on the list, its order and every count.",
+      "substitutes": ["independent-implementations", "specification-vectors"],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-codebase-artifact-ids",
+      "capabilities": ["repo.codebase.artifact-ids"],
+      "rationale": "An artifact id is a chain of entity emojis and flattened names walking down from the owning bundle — a grammar this repository invented and that its own entity-emoji table defines. The TypeScript library's 🔍️discovery module was checked for an equivalent builder before recording this decision and has none; its `artifactId` names a directory and carries no emoji chain. Confidence comes from the vocabulary being loaded from 🪪️identity's shared table rather than restated, and from two independent implementations agreeing on every folder, file, section and definition vector, including the lab-file test reclassification and the unowned-path fallback.",
+      "substitutes": ["independent-implementations", "specification-vectors"],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-codebase-technology-detection",
+      "capabilities": ["repo.codebase.technology-detection"],
+      "rationale": "Detecting technologies and bundles reads a layout convention this repository defines: a front-matter-bearing README marks a technology, an AGENTS front matter carries the emoji, a project or package manifest declares the bundle kind, source root and tags, and `sites` expands one level deeper. No external tool reads that convention, so no reference implementation can exist. Confidence comes from a committed tree that exercises every branch — declared and derived kinds, declared and default emojis, site expansion, manifest fallback — against two independent implementations.",
+      "substitutes": ["independent-implementations", "specification-vectors"],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-codebase-ignore-integration",
+      "capabilities": ["repo.codebase.ignore-integration"],
+      "rationale": "What is compared here is how three deliberately independent exclusion rules combine, not what any one of them means. The gitignore semantics themselves already have a real oracle in 🏠️workspace's own cases; the structural exclusion list and the generated-folder detection are this repository's policy and have none. Confidence comes from vectors that separate the three verdicts per path — a path that is gitignored but not structurally excluded, one that is generated but still considered — checked by two independent implementations.",
+      "substitutes": ["independent-implementations", "metamorphic-laws"],
+      "coversMutations": false
+    }
+  ]
+}

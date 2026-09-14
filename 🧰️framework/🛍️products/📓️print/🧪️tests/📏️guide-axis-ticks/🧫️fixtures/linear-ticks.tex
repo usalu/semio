@@ -1,0 +1,25 @@
+% 🧪 Probe fixture of case guide-axis-ticks, scenario linear-ticks.
+% One record per domain of the feature's table, in table order, holding the tick values an axis
+% would draw. A guide never generates its own ticks: it asks the named scale through
+% \semio_viz_guide_scale_ticks:nnN, so that is what the probe asks too.
+\documentclass{article}
+\usepackage{semio-viz-guide}
+\ExplSyntaxOn
+\NewDocumentCommand \ProbeTicks { m m m m } {
+  \SemioVizScale{probe#1}{linear}{#2,#3}{0,100}
+  \semio_viz_guide_scale_ticks:nnN { probe#1 } {#4} \l_semio_viz_guide_ticks_seq
+  \semio_viz_probe_values:nx { ticks/#1 } { \seq_use:Nn \l_semio_viz_guide_ticks_seq { , } }
+}
+\ExplSyntaxOff
+\begin{document}
+\SemioVizProbeBegin{guide-axis-ticks}{linear-ticks}
+\ProbeTicks{0}{0}{10}{5}
+\ProbeTicks{1}{0}{1}{5}
+\ProbeTicks{2}{0}{1}{10}
+\ProbeTicks{3}{-5}{5}{4}
+\ProbeTicks{4}{1}{3}{5}
+\ProbeTicks{5}{0}{100}{7}
+\ProbeTicks{6}{0.5}{0.9}{4}
+\ProbeTicks{7}{10}{0}{5}
+\ProbeTicks{8}{2}{7}{3}
+\end{document}

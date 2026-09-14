@@ -1,0 +1,96 @@
+% 🧪 Probe fixture of case scale-continuous, every scenario.
+% One document per scale kind: the same scale is applied, inverted, ticked and niced, and each of
+% the four answers is written under its own key so a wrong transform is a named failure rather
+% than a single opaque mismatch.
+\documentclass{article}
+\usepackage{semio-viz-scale}
+\usepackage{semio-viz-probe}
+\ExplSyntaxOn
+\fp_new:N \l_probe_value_fp
+\seq_new:N \l_probe_seq
+
+% 📐 Writes the mapped values of one scale over a list of inputs.
+\cs_new_protected:Npn \probemap #1#2#3 {
+  \seq_clear:N \l_probe_seq
+  \clist_map_inline:nn {#3}
+    {
+      \semio_viz_scale_map:nnN {#2} {##1} \l_probe_value_fp
+      \seq_put_right:Nx \l_probe_seq { \fp_to_decimal:n { round( \l_probe_value_fp , 6 ) } }
+    }
+  \semio_viz_probe_values:nx {#1} { \seq_use:Nn \l_probe_seq { , } }
+}
+
+% ↩️ Writes the inverted values of one scale over a list of range positions.
+\cs_new_protected:Npn \probeinvert #1#2#3 {
+  \seq_clear:N \l_probe_seq
+  \clist_map_inline:nn {#3}
+    {
+      \semio_viz_scale_invert:nnN {#2} {##1} \l_probe_value_fp
+      \seq_put_right:Nx \l_probe_seq { \fp_to_decimal:n { round( \l_probe_value_fp , 6 ) } }
+    }
+  \semio_viz_probe_values:nx {#1} { \seq_use:Nn \l_probe_seq { , } }
+}
+
+% 📏 Writes the tick values of one scale.
+\cs_new_protected:Npn \probeticks #1#2#3 {
+  \semio_viz_scale_ticks_count:nnN {#2} {#3} \l_probe_seq
+  \semio_viz_probe_values:nx {#1} { \seq_use:Nn \l_probe_seq { , } }
+}
+
+% 🧹 Writes the domain of one scale, after any `nice` it was declared with.
+\cs_new_protected:Npn \probedomain #1#2 {
+  \semio_viz_probe_values:nx {#1}
+    { \clist_use:cn { g_semio_viz_scale_ \tl_to_str:n {#2} _domain_clist } { , } }
+}
+\ExplSyntaxOff
+\begin{document}
+
+\SemioVizProbeBegin{scale-continuous}{linear}
+\SemioVizScale{lin}{linear}{0,100}{0,180}
+\SemioVizScale{linrev}{linear}{-5,5}{100,0}
+\SemioVizScale{linclamp}{linear}{0,10}{0,1}[clamp]
+\probemap{map/lin}{lin}{0,25,42,100,150}
+\probemap{map/linrev}{linrev}{-5,0,2.5,5}
+\probemap{map/linclamp}{linclamp}{-3,0,5,10,17}
+\probeinvert{invert/lin}{lin}{0,45,75.6,180}
+\probeticks{ticks/lin}{lin}{10}
+\probeticks{ticks/linrev}{linrev}{5}
+
+\SemioVizProbeBegin{scale-continuous}{log}
+\SemioVizScale{lg}{log}{1,1000}{0,300}
+\SemioVizScale{lgsmall}{log}{0.001,1}{0,100}
+\probemap{map/lg}{lg}{1,10,100,1000,42}
+\probeinvert{invert/lg}{lg}{0,100,200,300}
+\probeticks{ticks/lg}{lg}{10}
+\probeticks{ticks/lgsmall}{lgsmall}{10}
+
+\SemioVizProbeBegin{scale-continuous}{pow}
+\SemioVizScale{pw}{pow}{0,10}{0,100}[exponent=2]
+\SemioVizScale{pwhalf}{pow}{0,16}{0,64}[exponent=0.5]
+\SemioVizScale{sq}{sqrt}{0,100}{0,10}
+\probemap{map/pw}{pw}{0,2.5,5,7.5,10}
+\probemap{map/pwhalf}{pwhalf}{0,1,4,9,16}
+\probemap{map/sq}{sq}{0,25,50,75,100}
+\probeinvert{invert/pw}{pw}{0,25,64,100}
+\probeinvert{invert/sq}{sq}{0,5,7.071068,10}
+
+\SemioVizProbeBegin{scale-continuous}{symlog}
+\SemioVizScale{sl}{symlog}{-100,100}{0,200}
+\SemioVizScale{slc}{symlog}{-100,100}{0,200}[constant=10]
+\probemap{map/sl}{sl}{-100,-10,-1,0,1,10,100}
+\probemap{map/slc}{slc}{-100,-10,0,10,100}
+\probeinvert{invert/sl}{sl}{0,48.042629,100,151.957371,200}
+\probeticks{ticks/sl}{sl}{5}
+
+\SemioVizProbeBegin{scale-continuous}{nice}
+\SemioVizScale{n1}{linear}{0.1,0.9}{0,1}[nice]
+\SemioVizScale{n2}{linear}{1.1,10.9}{0,1}[nice]
+\SemioVizScale{n3}{linear}{-0.5,17.3}{0,1}[nice=5]
+\SemioVizScale{n4}{linear}{12,87}{0,1}[nice=4]
+\probedomain{nice/n1}{n1}
+\probedomain{nice/n2}{n2}
+\probedomain{nice/n3}{n3}
+\probedomain{nice/n4}{n4}
+
+\SemioVizProbePage
+\end{document}

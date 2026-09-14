@@ -1,0 +1,30 @@
+[package]
+name = "semio-framework-repo-dashboard"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "semio repo dashboard: the wizard command tree, its pseudo-terminal windows, the session daemon and the repo-domain leaves the Rust domain crates answer in process"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+ui_tui = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["tui-terminal"], package = "semio-framework-ui" }
+ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+dispatch_macros = { path = "../../../../../../🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+semio-framework-repo-model = { path = "../../../📐️model/📦️packages/🦀️rust" }
+semio-framework-repo-events = { path = "../../../📡️events/📦️packages/🦀️rust" }
+semio-framework-repo-providers = { path = "../../../🧩️providers/📦️packages/🦀️rust" }
+semio-framework-repo-codebase = { path = "../../../🗂️codebase/📦️packages/🦀️rust" }
+semio-framework-repo-statutes = { path = "../../../📜️statutes/📦️packages/🦀️rust" }
+semio-framework-repo-tree = { path = "../../../🌳️tree/📦️packages/🦀️rust" }
+semio-framework-repo-tickets = { path = "../../../🎫️tickets/📦️packages/🦀️rust" }
+semio-framework-repo-goals = { path = "../../../🎯️goals/📦️packages/🦀️rust" }

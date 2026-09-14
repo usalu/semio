@@ -1,0 +1,17 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json",
+  "inputs": [
+    { "id": "fragment-definition", "source": "fragment Fields on Ticket { id }\n{ ticket { ...Fields } }", "note": "Valid GraphQL, rejected here: the grammar has no fragment production." },
+    { "id": "fragment-spread", "source": "{ ticket { ...Fields } }" },
+    { "id": "inline-fragment", "source": "{ node { ... on Ticket { id } } }" },
+    { "id": "block-string-argument", "source": "{ search(query: \"\"\"block\"\"\") }", "note": "Valid GraphQL, rejected here: the lexer has no triple-quoted production." },
+    { "id": "subscription-operation", "source": "subscription Watch { events }", "note": "Valid GraphQL; this grammar reads only `query` and `mutation` headers." },
+    { "id": "two-operations", "source": "{ a } { b }", "note": "Valid GraphQL; this grammar reads exactly one operation." },
+    { "id": "unicode-field-name", "source": "{ größe }", "note": "Invalid GraphQL and invalid here — the byte-oriented lexer refuses the multi-byte lead byte." },
+    { "id": "empty-selection-set", "source": "{ }", "note": "Invalid GraphQL, ACCEPTED here: the loop exits before it can require a field." },
+    { "id": "directive-without-a-name", "source": "{ a @ }", "note": "Invalid GraphQL, ACCEPTED here: an unnamed directive is skipped rather than diagnosed." },
+    { "id": "variable-definition-without-a-type", "source": "query ($x) { a }", "note": "Invalid GraphQL, ACCEPTED here: the variable definition group is skipped, never parsed." },
+    { "id": "unbalanced-directive-arguments", "source": "{ a @include(if: true }", "note": "The directive skip consumes to end of input." },
+    { "id": "empty-list-literal", "source": "{ a(b: []) }", "note": "ACCEPTED here, but the empty list and the null literal share one representation — see 🧬️schema/🔣️.json." }
+  ]
+}

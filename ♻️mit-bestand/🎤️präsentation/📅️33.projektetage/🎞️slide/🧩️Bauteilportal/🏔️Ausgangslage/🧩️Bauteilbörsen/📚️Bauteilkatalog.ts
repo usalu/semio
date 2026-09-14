@@ -1,4 +1,4 @@
-import type { SlideFile } from "@semio-tech/animate-presentation-core";
+import type { SlideFile } from "@semio-tech/presentation";
 import { CATALOGUE_EMBODIMENT_FULL, CATALOGUE_FRAME, CATALOGUE_PARTICIPANT, catalogueFocusMorphTo, mediaEmbodiments, mediaParticipants } from "@semio-tech/mit-bestand-praesentation-projektetage-spec";
 
 export default {

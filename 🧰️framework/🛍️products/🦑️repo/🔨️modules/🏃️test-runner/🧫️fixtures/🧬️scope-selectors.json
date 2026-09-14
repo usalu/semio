@@ -1,0 +1,13 @@
+{
+  "selectors": [
+    "",
+    "notavalidid",
+    "repo://p/🧰/semio",
+    "repo://p/🧰/semio/b/📚/go-core",
+    "repo://p/🧰/semio/b/📚/go-core/f/pkg/s/Alpha",
+    "repo://p/🧰/semio/b/📚/go-core/f/pkg/d/🧪/testalphaone",
+    "repo://f/bundles/go-core/pkg/thing_test.go",
+    "repo://f/some%20folder/s/Alpha",
+    "repo://p/🧰/semio/b/📚/missing-bundle"
+  ]
+}

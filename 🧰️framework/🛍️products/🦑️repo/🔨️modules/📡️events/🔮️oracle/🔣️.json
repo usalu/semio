@@ -1,0 +1,81 @@
+{
+  "$schema": "../../🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "📡️ Contribution of the repo events owner. Every entry is resolved from the repository's own node_modules or from the Node standard library, imported only from 🧪️tests/**/🟦️.ts, and never reachable from any implementation. `@oracle-<id>` and `@no-oracle-<id>` tags in the Gherkin features name these ids. Both ids are owner-scoped: the registry keys trust by id and an oracle is trusted only for the capability set it was surveyed against, so reusing print's `ajv` or mcp's `node-crypto-sha256` would mean editing another owner's survey.",
+  "oracles": [
+    {
+      "id": "ajv-repo-events",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "ajv",
+      "version": "8.20.0",
+      "entry": "ajv/dist/2020",
+      "source": {
+        "repository": "https://github.com/ajv-validator/ajv",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "ajv",
+        "implementation": "ajv",
+        "version": "8.20.0"
+      },
+      "capabilities": ["repo-event-kind-catalog", "repo-event-payload-encoding"],
+      "comparisonProfiles": ["ordered-json-v1"],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": ["darwin-arm64", "darwin-x64", "linux-x64", "linux-arm64", "win32-x64"],
+      "homepage": "https://ajv.js.org",
+      "rationale": "🔍️ The envelope and the 24 payload types are declared in 🧬️schema/🔣️.json as JSON Schema 2020-12. A Go struct-tag table and a serde attribute table can agree with each other while both misreading that schema, so the schema is judged by a conforming draft 2020-12 implementation instead of by either encoder. The kind catalogue is judged the same way: an envelope carrying an undeclared kind must be refused by the schema, not merely by a constant table both implementations copied."
+    },
+    {
+      "id": "node-crypto-repo-events",
+      "kind": "standards-reference-tool",
+      "ecosystem": "javascript",
+      "package": "node:crypto",
+      "version": "builtin",
+      "entry": "node:crypto",
+      "source": {
+        "repository": "https://github.com/nodejs/node",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "openssl",
+        "implementation": "node:crypto over OpenSSL",
+        "version": "builtin"
+      },
+      "capabilities": ["repo-event-store-append", "repo-event-export-content-hash"],
+      "comparisonProfiles": ["ordered-json-v1"],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": ["darwin-arm64", "darwin-x64", "linux-x64", "linux-arm64", "win32-x64"],
+      "homepage": "https://nodejs.org/api/crypto.html",
+      "rationale": "🔏️ Both implementations hand-roll SHA-256 — the crate carries its own `Sha256`, the Go package its own twin — so comparing them only to each other proves that one transcription was made twice. `node:crypto` reaches OpenSSL, an independent implementation of FIPS 180-4, and decides the record checksum, the staged-append digests and the export snapshot identity from outside this repository. What it cannot judge is the staged-append RECOVERY contract, which is why that half carries the recorded `repo-event-store-recovery` decision instead."
+    }
+  ],
+  "noOracleDecisions": [
+    {
+      "id": "repo-event-store-recovery",
+      "capabilities": ["repo-event-store-append"],
+      "rationale": "🚧️ No third party implements this repository's staged-append recovery contract — write the batch to a stage file, checksum the prefix, then truncate-or-keep on replay. A conforming SHA-256 tool judges the digests inside it but has no opinion on the recovery decision itself. The SHA-256 half is therefore held by `node-crypto-repo-events`; the recovery half is held by pairwise equivalence of the JSONL bytes the independently written Go and Rust implementations produce, and by each implementation's own unit tests over every interruption phase.",
+      "substitutes": ["independent-implementations"]
+    }
+  ],
+  "oracleHostPackages": [
+    {
+      "implementation": "typescript",
+      "package": "ajv",
+      "version": "8.20.0"
+    }
+  ],
+  "probes": [],
+  "comparisonProfiles": [],
+  "comparisonPipelines": [],
+  "toleranceProfiles": [],
+  "mutationCatalogs": [],
+  "mutationManifests": [],
+  "fixtureManifests": []
+}

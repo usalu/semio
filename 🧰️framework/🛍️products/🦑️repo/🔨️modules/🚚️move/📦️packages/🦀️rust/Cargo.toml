@@ -1,0 +1,24 @@
+[package]
+name = "semio-framework-repo-move"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "repo move: rename with casing variants, section move, extract, integrate, file and folder moves as planned change sets over an in-memory workspace"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+semio-framework-repo-workspace = { path = "../../../🏠️workspace/📦️packages/🦀️rust" }
+semio-framework-repo-identity = { path = "../../../🪪️identity/📦️packages/🦀️rust" }
+semio-framework-repo-model = { path = "../../../📐️model/📦️packages/🦀️rust" }
+semio-framework-repo-languages = { path = "../../../🗣️languages/📦️packages/🦀️rust" }
+semio-framework-repo-events = { path = "../../../📡️events/📦️packages/🦀️rust" }

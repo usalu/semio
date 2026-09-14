@@ -1,0 +1,34 @@
+{
+  "schema": "semio.repo.codebase.repo-tree/1",
+  "comment": "🌳️ One synthetic repository every codebase case materialises into its own work directory before walking it. Two technologies, four bundles (one of them a site), an ignored folder, a generated folder, a vendored folder, a hidden folder and one file whose extension is not a source extension. The empty `.git/` marker makes the tree self-rooting: Go's `workspace.SetRootDir` stores `FindRepoRoot(dir)`, which ascends for a `.git` entry, so without it the walk escapes the fixture and scans the whole monorepo. Both walks skip dot-directories, so the marker is invisible to every projection.",
+  "entries": [
+    { "path": "README.md", "content": "# synthetic root\n" },
+    { "path": ".gitignore", "content": "ignored/\n*.tmp\n" },
+    { "path": ".git/.keep", "content": "" },
+
+    { "path": "compose/README.md", "content": "---\nname: compose\nkind: user\n---\n\n# compose\n" },
+    { "path": "compose/AGENTS.md", "content": "---\nemoji: 🎼\n---\n" },
+
+    { "path": "compose/🖥️app/project.json", "content": "{\n  \"sourceRoot\": \"compose/🖥️app/src\",\n  \"tags\": [\"ui\", \"desktop\"],\n  \"bundleKind\": \"ui\"\n}\n" },
+    { "path": "compose/🖥️app/AGENTS.md", "content": "---\nbundle:\n  emoji: 🖥\n---\n" },
+    { "path": "compose/🖥️app/🧩️widget.ts", "content": "//#region 🔖️Widget\nexport const label = \"widget\";\nexport function render(): string {\n  return label;\n}\n//#endregion 🔖️Widget\n" },
+    { "path": "compose/🖥️app/ignored/💀️dead.ts", "content": "export const dead = true;\n" },
+    { "path": "compose/🖥️app/scratch.tmp", "content": "scratch\n" },
+
+    { "path": "compose/📚️core/package.json", "content": "{\n  \"name\": \"@compose/core\",\n  \"version\": \"1.2.3\"\n}\n" },
+    { "path": "compose/📚️core/🔧️util.rs", "content": "pub fn add(left: i64, right: i64) -> i64 {\n    left + right\n}\n" },
+    { "path": "compose/📚️core/generated/🤖️gen.ts", "content": "export const generated = true;\n" },
+    { "path": "compose/📚️core/🧪️util_test.rs", "content": "#[test]\nfn adds() {\n    assert_eq!(2, 2);\n}\n" },
+
+    { "path": "compose/sites/🌐️web/project.json", "content": "{\n  \"sourceRoot\": \"compose/sites/🌐️web/app\"\n}\n" },
+    { "path": "compose/sites/🌐️web/🌍️page.tsx", "content": "export default function Page() {\n  return null;\n}\n" },
+
+    { "path": "repo/README.md", "content": "---\nname: repo\nkind: infrastructure\n---\n\n# repo\n" },
+    { "path": "repo/🐹️tool/go.mod", "content": "module example.test/tool\n\ngo 1.25\n" },
+    { "path": "repo/🐹️tool/🔧️main.go", "content": "package main\n\nfunc main() {}\n" },
+
+    { "path": "docs/📖️guide.md", "content": "# guide\n" },
+    { "path": "node_modules/vendored/index.ts", "content": "export const vendored = true;\n" },
+    { "path": ".hidden/🙈️secret.ts", "content": "export const secret = true;\n" }
+  ]
+}

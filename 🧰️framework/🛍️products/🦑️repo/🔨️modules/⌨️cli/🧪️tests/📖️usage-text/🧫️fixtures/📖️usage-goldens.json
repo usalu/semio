@@ -1,0 +1,76 @@
+{
+  "_comment": "📖️ The usage text of a command is `<short>\\n\\nUsage:\\n  <use>`, and a command with subcommands then adds `\\n\\nCommands:\\n` and one `  <name padded to width 20> <short>` line per child. `goldens` states that text verbatim for representative commands; `structure` states the law every command in the tree obeys; `rootVerbs` states the verbs the root registers, in order.",
+  "goldens": [
+    {
+      "path": ["analyze"],
+      "text": "Analyze codebase for breachs\n\nUsage:\n  analyze [scope]"
+    },
+    {
+      "path": ["ticket", "close"],
+      "text": "Close a ticket\n\nUsage:\n  close [path] [summary] [files...]"
+    },
+    {
+      "path": ["entity-emojis"],
+      "text": "List all entity-identifying emojis\n\nUsage:\n  entity-emojis"
+    },
+    {
+      "path": ["sync"],
+      "text": "Synchronize monorepo artifacts\n\nUsage:\n  sync\n\nCommands:\n  github               Synchronize local state with GitHub\n  management           Synchronize local state with management provider\n"
+    },
+    {
+      "path": ["auth"],
+      "text": "Server authentication\n\nUsage:\n  auth\n\nCommands:\n  whoami               Show current authenticated developer\n  status               Show server connection status\n"
+    },
+    {
+      "path": ["mermaid"],
+      "text": "Generate mermaid diagram strings\n\nUsage:\n  mermaid <visualization>\n\nCommands:\n  loc-by-technologies-bundles-folders-files LOC treemap grouped by technology, bundle, folder, file\n  loc-by-contributors  LOC treemap grouped by contributor (via git blame)\n  loc-by-language      LOC treemap grouped by programming language\n"
+    }
+  ],
+  "structure": {
+    "rootPrefix": "Monorepo CLI for Compose\n\nUsage:\n  repo\n\nCommands:\n",
+    "usageMarker": "\n\nUsage:\n  ",
+    "commandsMarker": "\n\nCommands:\n",
+    "childIndent": "  ",
+    "childNameWidth": 20
+  },
+  "rootVerbs": [
+    "mcp",
+    "graphql",
+    "test",
+    "ticket",
+    "todo",
+    "goal",
+    "contributor",
+    "folder",
+    "file",
+    "section",
+    "move",
+    "integrate",
+    "extract",
+    "rename",
+    "sync",
+    "search",
+    "list",
+    "query",
+    "tree",
+    "export",
+    "hook",
+    "mermaid",
+    "loc",
+    "technology",
+    "bundle",
+    "analyze",
+    "entity-emojis",
+    "configure",
+    "micro-commit",
+    "benchmark",
+    "update",
+    "auth",
+    "autofix",
+    "statute",
+    "checkpoint",
+    "interaction",
+    "draft",
+    "definition"
+  ]
+}

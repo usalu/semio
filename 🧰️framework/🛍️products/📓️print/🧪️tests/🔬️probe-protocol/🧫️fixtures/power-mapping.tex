@@ -1,0 +1,19 @@
+% 🧪 Probe fixture of case probe-protocol, scenario power-mapping.
+% A square-root scale over domain 0..16 onto range 0..100, evaluated on the six inputs the feature
+% names. The document deliberately loads nothing but semio-viz-probe, so the round trip it proves is
+% the harness itself and not any kernel package another owner is still writing.
+\documentclass{article}
+\usepackage{semio-viz-probe}
+\begin{document}
+\SemioVizProbeBegin{probe-protocol}{power-mapping}
+\SemioVizProbePage
+\SemioVizProbePrecision{9}
+\SemioVizProbeEval{scale/pow}{
+  0+(100-0)*((0)^0.5-(0)^0.5)/((16)^0.5-(0)^0.5),
+  0+(100-0)*((0.25)^0.5-(0)^0.5)/((16)^0.5-(0)^0.5),
+  0+(100-0)*((1)^0.5-(0)^0.5)/((16)^0.5-(0)^0.5),
+  0+(100-0)*((4)^0.5-(0)^0.5)/((16)^0.5-(0)^0.5),
+  0+(100-0)*((9)^0.5-(0)^0.5)/((16)^0.5-(0)^0.5),
+  0+(100-0)*((16)^0.5-(0)^0.5)/((16)^0.5-(0)^0.5)
+}
+\end{document}

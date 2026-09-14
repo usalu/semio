@@ -1,0 +1,115 @@
+{
+  "schema": "semio.repo.todos.lifecycle-script/1",
+  "$comment": "🎫️ One ordered history over an in-memory tree, ticket opener and emitter. The refusals are part of the contract: a parent that is neither a directory nor a file, an identifier nothing carries, and promoting a todo that was already removed.",
+  "author": "ueli",
+  "files": [
+    {
+      "path": ".todos.md",
+      "content": "- TODO Rename Region: the header region has to be renamed\n"
+    },
+    {
+      "path": "src/app.ts",
+      "content": "export const value = 1;\n// TODO Cache Result: memoise the lookup\n"
+    },
+    {
+      "path": "src/script.py",
+      "content": "value = 1\n"
+    }
+  ],
+  "steps": [
+    {
+      "op": "list",
+      "input": {}
+    },
+    {
+      "op": "create",
+      "input": {
+        "parentId": "src",
+        "name": "Directory Todo",
+        "description": "appended to the directory markdown"
+      }
+    },
+    {
+      "op": "create",
+      "input": {
+        "parentId": "src/script.py",
+        "name": "File Todo",
+        "description": "appended in the file comment style"
+      }
+    },
+    {
+      "op": "create",
+      "input": {
+        "parentId": "src/missing.ts",
+        "name": "Nowhere",
+        "description": "the parent does not exist"
+      }
+    },
+    {
+      "op": "list",
+      "input": {}
+    },
+    {
+      "op": "find",
+      "input": {
+        "id": "cache-result"
+      }
+    },
+    {
+      "op": "change",
+      "input": {
+        "id": "cache-result",
+        "name": "Cache Result Twice",
+        "description": null
+      }
+    },
+    {
+      "op": "change",
+      "input": {
+        "id": "rename-region",
+        "name": null,
+        "description": "the header region was renamed"
+      }
+    },
+    {
+      "op": "change",
+      "input": {
+        "id": "does-not-exist",
+        "name": "Ignored",
+        "description": "nothing carries that identifier"
+      }
+    },
+    {
+      "op": "to-ticket",
+      "input": {
+        "id": "rename-region",
+        "title": "Rename The Header Region",
+        "prompt": "rename it everywhere"
+      }
+    },
+    {
+      "op": "to-ticket",
+      "input": {
+        "id": "rename-region",
+        "title": "Again",
+        "prompt": "the todo is gone"
+      }
+    },
+    {
+      "op": "delete",
+      "input": {
+        "id": "directory-todo"
+      }
+    },
+    {
+      "op": "delete",
+      "input": {
+        "id": "directory-todo"
+      }
+    },
+    {
+      "op": "list",
+      "input": {}
+    }
+  ]
+}

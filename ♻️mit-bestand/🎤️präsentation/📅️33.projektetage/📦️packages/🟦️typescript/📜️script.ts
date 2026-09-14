@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-/** 🧭️ `@semio-tech/mit-bestand-praesentation-projektetage` task router: `bun ./📜️script.ts <dev|build> [args…]`. */
-import { BundleScript, ScriptRouter, playPollingEnv, playgroundDevPortString, playgroundPortEnv, runBun, runBundleScriptMain, runViteBunxDev } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+/** 🧭️ `@semio-tech/mit-bestand-praesentation-projektetage` task router: `bun ./📜️script.ts <dev|build|test> [args…]`. */
+import { BundleScript, ScriptRouter, playPollingEnv, playgroundDevPortString, playgroundPortEnv, resolveTestLevel, runBun, runBundleScriptMain, runViteBunxDev, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 class DevScript extends BundleScript {
   run(segments: string[]): void {
@@ -20,6 +20,13 @@ class BuildScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("build", BuildScript);
+class TestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const { rest } = resolveTestLevel(segments);
+    await runVitest(this.root, rest, "🧪️vitest.config.ts");
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("build", BuildScript).register("test", TestScript);
 
 await runBundleScriptMain(router, import.meta.url);

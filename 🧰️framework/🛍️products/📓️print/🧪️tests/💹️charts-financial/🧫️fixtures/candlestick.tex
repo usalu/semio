@@ -1,0 +1,9 @@
+\documentclass{article}
+\usepackage{semio-viz-charts-financial}
+\begin{document}
+\SemioVizProbeOn
+\SemioVizProbeBegin{charts-financial}{candlestick}
+\begin{VizProbeCanvas}[80][40]
+\SemioVizRunFamily{financial}[data=demo-ohlc,mode=candlestick,axes=false,grid=none]
+\end{VizProbeCanvas}
+\end{document}

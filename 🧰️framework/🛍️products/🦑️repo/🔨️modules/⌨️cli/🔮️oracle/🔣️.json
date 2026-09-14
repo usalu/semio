@@ -1,0 +1,106 @@
+{
+  "$schema": "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ Oracle wiring for ⌨️cli. Every capability of this owner is a presentation or grammar decision this repository makes about its own command surface — an argv grammar, an event-stream presentation, a usage layout, the documents its verbs build and the way its `mcp` verb wires the production repository behind a protocol another owner already tests. No third party produces or consumes any of them, so every decision below is recorded honestly as a no-oracle decision with its substitutes, and the evidence is the committed specification vectors plus the reference Go implementation the vectors were read off.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "repo-cli-owned-command-grammar",
+      "capabilities": [
+        "repo.cli.command-parsing"
+      ],
+      "rationale": "🧭️ The argv grammar — subcommand selection stopping at the first operand, `--` ending flag parsing, `--help` short-circuiting at the command selected so far, a boolean flag never consuming the next token, a command with flag parsing disabled swallowing everything after its name, and the verbatim refusal messages — is this repository's own command framework, written in place of a third-party parser precisely so no external library appears in the runtime. A third-party argument parser would answer a DIFFERENT grammar, so comparing against one would test the wrong contract. The evidence is the vectors in 🧫️fixtures/🔣️argv-vectors.json, each stating either the whole projection or the verbatim message, read off the reference Go framework, plus the idempotence law.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-cli-owned-stream-presentation",
+      "capabilities": [
+        "repo.cli.stream-rendering"
+      ],
+      "rationale": "🖨️ The three renderers project this repository's own event stream into this repository's own presentation vocabulary: an NDJSON body that is only the result payload, a human line built from entity ids minted by 🪪️identity, and a markdown list of `repo://` links. Nothing outside this checkout produces or reads those bytes. The evidence is the vectors in 🧫️fixtures/📡️event-streams.json, which state the exact stdout, stderr and exit code for every format including the coloured terminal case, plus two laws: no escape sequence survives a non-terminal render, and all three formats report the exit code the `done` event carried.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-cli-owned-usage-presentation",
+      "capabilities": [
+        "repo.cli.usage-text"
+      ],
+      "rationale": "📖️ The usage layout — the summary, the two-space usage line, the child table padded to twenty columns — is this repository's own, and its command tree is the repo verb surface. A third party could only restate the layout, not decide it. The evidence is the verbatim goldens for representative commands, the structural law every command in the tree is held to, and the registered root verb list in declaration order.",
+      "substitutes": [
+        "specification-vectors"
+      ],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-cli-owned-verb-documents",
+      "capabilities": [
+        "repo.cli.graphql-verb-roundtrip"
+      ],
+      "rationale": "🔁️ Which GraphQL document a verb builds is a decision of this CLI; the execution of that document is already held against the `graphql` npm oracle by 🔗️graphql, so an oracle here would re-test a neighbour's contract rather than this one. The evidence is the committed documents executed against 🔗️graphql's frozen recording context — so the answer cannot drift with the filesystem — the markers each rendering owes, the refusal law that a failing document writes nothing to standard output and exits one, and the determinism law that two renders of the same document are byte-identical.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-cli-owned-mcp-verb-wiring",
+      "capabilities": [
+        "repo.cli.mcp-verb"
+      ],
+      "rationale": "🔌️ The Model Context Protocol itself is held against the `@modelcontextprotocol/sdk` oracle by 🔌️mcp, which owns the protocol, the session and the declared tool and resource vocabulary. What ⌨️cli owns is only the wiring: that `semio mcp` serves the production repository over stdio with the profile the environment names, that the shipped binary serves the same repository, and that `--dry-run` starts nothing. Re-running the SDK against this verb would measure the neighbour's contract. The evidence is the committed conversation, the vocabulary it must reproduce unchanged, and the leniency case that an initialize request carrying an unknown member is still accepted.",
+      "substitutes": [
+        "specification-vectors",
+        "cross-owner-contract"
+      ],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-cli-owned-test-verb-planning",
+      "capabilities": [
+        "repo.cli.test-verb-planning"
+      ],
+      "rationale": "🧪️ Which runner a testable entity's tests belong to — `go test ./...` for a module, `cargo test` for a crate, `npx vitest run` for a vitest manifest, `uv run pytest` for a Python bundle — and in which order a list of operands announces them, is this repository's own scope algebra over its own bundle taxonomy. A third party could run the runners but could not decide the mapping, and running them would measure the runners rather than the verb. The evidence is one frozen filesystem snapshot and the vectors in 🧫️fixtures/🧪️test-verb-vectors.json, each stating the `Running: …` lines in order and the refusals, plus the determinism law.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-cli-owned-export-batch",
+      "capabilities": [
+        "repo.cli.export-verb-records"
+      ],
+      "rationale": "📤️ The export batch is this repository's own snapshot vocabulary: which aggregates are enumerated and in which order, the `<kind>:<entity id>` input identity, and the `snapshot:<digest>:` namespace the batch is written under. The append-only store and its content hash are already held against Node `crypto` by 📡️events, and GraphQL execution against the `graphql` npm package by 🔗️graphql, so an oracle here would re-test a neighbour's contract. The evidence is the frozen recording context, the structural law every input id is held to, the sort order, and the determinism law.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws",
+        "cross-owner-contract"
+      ],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-cli-owned-hook-verb-wiring",
+      "capabilities": [
+        "repo.cli.hook-verb-dispatch"
+      ],
+      "rationale": "🪝️ The hook result vocabulary and the blocking policy belong to 🪝️hooks, which tests them; the native event names belong to 🧩️providers, which tests those. What ⌨️cli owns is the wiring: that the verb resolves a native event with the tool name it read off the payload, dispatches it with an inert environment, and writes the bytes the calling client reads — wrapped for Copilot Chat, plain under `--json`, and on standard error with exit code 2 for a refusal. No third party produces those bytes. The evidence is the committed invocations, the refusal case, and the determinism law.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws",
+        "cross-owner-contract"
+      ],
+      "coversMutations": false
+    }
+  ],
+  "oracleHostPackages": []
+}

@@ -1,0 +1,1163 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-scientific-physics}[2026/09/05 v0.2.0 semio viz namespace scientific-physics families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-scientific-field}
+
+\ExplSyntaxOn
+
+%region 🔖️Parsing
+\cs_generate_variant:Nn \seq_set_split:Nnn { Nnx }
+\cs_generate_variant:Nn \prop_put:Nnn { Nxx }
+\cs_generate_variant:Nn \prop_item:Nn { Ne }
+\seq_new:N \l_semio_viz_phys_rec_seq
+% ✂️ Splits one slash-separated record #1 into the shared field sequence.
+\cs_new_protected:Npn \semio_viz_phys_record:n #1
+  { \seq_set_split:Nnx \l_semio_viz_phys_rec_seq { / } {#1} }
+% 🔢 Expands to field #1 of the record most recently split.
+\cs_new:Npn \semio_viz_phys_field:n #1
+  { \seq_item:Nn \l_semio_viz_phys_rec_seq {#1} }
+%endregion 🔖️Parsing
+
+%region 🔖️Families
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-force` (§30 force and motion diagrams):
+%    mode (free-body|force|decomposition|motion, free-body).
+%    forces (clist of `magnitude/angle/label`): angle in degrees from the positive x axis.
+%    body (point|box|disc, box): the glyph the forces act on. bodySize (fp, 7): its size in millimetres.
+%    scale (fp, 5): millimetres per unit of force.
+%    frames (clist of `x/y/label`): the strobe positions of a motion diagram.
+\tl_new:N \l_semio_viz_phys_mode_tl
+\tl_new:N \l_semio_viz_phys_body_tl
+\clist_new:N \l_semio_viz_phys_forces_clist
+\clist_new:N \l_semio_viz_phys_frames_clist
+\fp_new:N \l_semio_viz_phys_scale_fp
+\fp_new:N \l_semio_viz_phys_bodysize_fp
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-force }
+% 🎯 Binds the `sci-force` option names onto the mode, force list, strobe frames and body-glyph registers.
+\keys_define:nn { semio / viz / family / sci-force }
+  {
+    mode     .tl_set:N    = \l_semio_viz_phys_mode_tl ,
+    forces   .clist_set:N = \l_semio_viz_phys_forces_clist ,
+    frames   .clist_set:N = \l_semio_viz_phys_frames_clist ,
+    body     .tl_set:N    = \l_semio_viz_phys_body_tl ,
+    bodySize .fp_set:N    = \l_semio_viz_phys_bodysize_fp ,
+    scale    .fp_set:N    = \l_semio_viz_phys_scale_fp ,
+  }
+
+% 🧱 §30 force and motion: free-body diagrams, force sums, component decomposition and strobe motion diagrams.
+\SemioVizFamily { sci-force }
+  {
+    \semio_viz_sci_enter:nnn { sci-force }
+      {
+        mode=free-body , body=box , bodySize=7 , scale=5 , axes=false , grid=false ,
+        forces={ 4/90/N , 4/270/W , 2.6/0/F , 1.4/180/f } ,
+        frames={ 0/0/t0 , 12/4/t1 , 26/10/t2 , 42/18/t3 , 60/28/t4 }
+      }
+      {#1}
+    \str_if_eq:VnTF \l_semio_viz_phys_mode_tl { motion }
+      { \semio_viz_phys_motion: }
+      {
+        \semio_viz_phys_body:
+        \str_if_eq:VnTF \l_semio_viz_phys_mode_tl { decomposition }
+          { \semio_viz_phys_decompose: }
+          { \semio_viz_phys_forces: }
+      }
+  }
+% 🧊 Draws the body the forces act on at the origin: a filled dot, a circle, or a square as the fallback.
+\cs_new_protected:Npn \semio_viz_phys_body:
+  {
+    \str_case:VnF \l_semio_viz_phys_body_tl
+      {
+        { point } { \fill [ fill=semio-chrome-foreground ] ( 0 , 0 ) circle [ radius=1.1 ] ; }
+        { disc }
+          {
+            \draw [ semio~sci~glyph ] ( 0 , 0 )
+              circle [ radius=\fp_eval:n { \l_semio_viz_phys_bodysize_fp / 2 } ] ;
+          }
+      }
+      {
+        \draw [ semio~sci~glyph ]
+          ( \fp_eval:n { - \l_semio_viz_phys_bodysize_fp / 2 } , \fp_eval:n { - \l_semio_viz_phys_bodysize_fp / 2 } )
+          rectangle
+          ( \fp_eval:n { \l_semio_viz_phys_bodysize_fp / 2 } , \fp_eval:n { \l_semio_viz_phys_bodysize_fp / 2 } ) ;
+      }
+  }
+% 🧲 Draws one labelled arrow per entry of the force list.
+\cs_new_protected:Npn \semio_viz_phys_forces:
+  {
+    \clist_map_inline:Nn \l_semio_viz_phys_forces_clist
+      {
+        \semio_viz_phys_record:n {##1}
+        \semio_viz_phys_arrow:nnn
+          { \semio_viz_phys_field:n { 1 } } { \semio_viz_phys_field:n { 2 } } { \semio_viz_phys_field:n { 3 } }
+      }
+  }
+% ➡️ Resolves magnitude #1 and degree angle #2 into a scaled vector from the origin, captions it #3 on the side away from the tip, and reports the components.
+\cs_new_protected:Npn \semio_viz_phys_arrow:nnn #1#2#3
+  {
+    \fp_set:Nn \l_semio_viz_sci_a_fp { \l_semio_viz_phys_scale_fp * (#1) * cosd (#2) }
+    \fp_set:Nn \l_semio_viz_sci_b_fp { \l_semio_viz_phys_scale_fp * (#1) * sind (#2) }
+    \draw [ semio~sci~vector ]
+      ( 0 , 0 ) -- ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) ;
+    \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , inner~sep=0.6mm ,
+            anchor=\fp_compare:nNnTF {#2} > { 90 } { east } { west } ]
+      at ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) {#3} ;
+    \semio_viz_sci_report_values:nn { force/vector }
+      { \fp_to_decimal:N \l_semio_viz_sci_a_fp , \fp_to_decimal:N \l_semio_viz_sci_b_fp }
+  }
+% 📐 Draws each force arrow together with the auxiliary right-angle path through its x and y components.
+\cs_new_protected:Npn \semio_viz_phys_decompose:
+  {
+    \clist_map_inline:Nn \l_semio_viz_phys_forces_clist
+      {
+        \semio_viz_phys_record:n {##1}
+        \semio_viz_phys_arrow:nnn
+          { \semio_viz_phys_field:n { 1 } } { \semio_viz_phys_field:n { 2 } } { \semio_viz_phys_field:n { 3 } }
+        \draw [ semio~sci~aux ]
+          ( 0 , 0 ) -- ( \fp_eval:n { \l_semio_viz_sci_a_fp } , 0 ) --
+          ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) ;
+      }
+  }
+% 🎞️ Draws a strobe motion diagram: one hue-cycled square per frame position with its time label underneath.
+\cs_new_protected:Npn \semio_viz_phys_motion:
+  {
+    \int_zero:N \l_tmpa_int
+    \clist_map_inline:Nn \l_semio_viz_phys_frames_clist
+      {
+        \int_incr:N \l_tmpa_int
+        \semio_viz_phys_record:n {##1}
+        \draw [ semio~sci~glyph , fill=\semio_viz_sci_hue:n { \l_tmpa_int } ]
+          ( \fp_eval:n { \semio_viz_phys_field:n { 1 } - \l_semio_viz_phys_bodysize_fp / 4 } ,
+            \fp_eval:n { \semio_viz_phys_field:n { 2 } - \l_semio_viz_phys_bodysize_fp / 4 } )
+          rectangle
+          ( \fp_eval:n { \semio_viz_phys_field:n { 1 } + \l_semio_viz_phys_bodysize_fp / 4 } ,
+            \fp_eval:n { \semio_viz_phys_field:n { 2 } + \l_semio_viz_phys_bodysize_fp / 4 } ) ;
+        \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal , anchor=north ]
+          at ( \semio_viz_phys_field:n { 1 } ,
+               \fp_eval:n { \semio_viz_phys_field:n { 2 } - \l_semio_viz_phys_bodysize_fp / 4 - 0.6 } )
+          { \semio_viz_phys_field:n { 3 } } ;
+      }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-kinematics` (§30 motion over time):
+%    mode (position|velocity|acceleration|projectile|orbital|phase-space, position).
+%    expr (l3fp over \SemioT): the position law of the graph modes.
+%    speed (fp, 22), angle (fp, 52), gravity (fp, 9.81): the projectile launch.
+%    mass (fp, 1), radius (fp, 1), eccentricity (fp, 0.6): the orbital element set.
+%    steps (int, 240), step (fp, 0.02): the integration budget of the computed trajectories.
+\tl_new:N \l_semio_viz_phys_expr_tl
+\fp_new:N \l_semio_viz_phys_speed_fp
+\fp_new:N \l_semio_viz_phys_angle_fp
+\fp_new:N \l_semio_viz_phys_gravity_fp
+\fp_new:N \l_semio_viz_phys_ecc_fp
+\fp_new:N \l_semio_viz_phys_radius_fp
+\fp_new:N \l_semio_viz_phys_step_fp
+\int_new:N \l_semio_viz_phys_steps_int
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-kinematics }
+% 🧭 Binds the `sci-kinematics` option names onto the position law, launch parameters, orbital elements and integration budget.
+\keys_define:nn { semio / viz / family / sci-kinematics }
+  {
+    mode         .tl_set:N  = \l_semio_viz_phys_mode_tl ,
+    expr         .tl_set:N  = \l_semio_viz_phys_expr_tl ,
+    speed        .fp_set:N  = \l_semio_viz_phys_speed_fp ,
+    angle        .fp_set:N  = \l_semio_viz_phys_angle_fp ,
+    gravity      .fp_set:N  = \l_semio_viz_phys_gravity_fp ,
+    radius       .fp_set:N  = \l_semio_viz_phys_radius_fp ,
+    eccentricity .fp_set:N  = \l_semio_viz_phys_ecc_fp ,
+    steps        .int_set:N = \l_semio_viz_phys_steps_int ,
+    step         .fp_set:N  = \l_semio_viz_phys_step_fp ,
+  }
+
+% 🚀 §30 motion over time: kinematic graphs derived from one position law, a computed projectile arc and a Kepler orbit.
+\SemioVizFamily { sci-kinematics }
+  {
+    \semio_viz_sci_enter:nnn { sci-kinematics }
+      {
+        mode=position , expr={ 3 * \SemioT - 0.5 * 9.81 * \SemioT * \SemioT / 4 } ,
+        speed=22 , angle=52 , gravity=9.81 , radius=1 , eccentricity=0.6 ,
+        steps=240 , step=0.02 , domain={0,3} , range={}
+      }
+      {#1}
+    \str_case:VnF \l_semio_viz_phys_mode_tl
+      {
+        { projectile }  { \semio_viz_phys_projectile: }
+        { orbital }     { \semio_viz_phys_orbit: }
+        { phase-space } { \semio_viz_phys_phase: }
+        { velocity }     { \semio_viz_phys_derivative:n { 1 } }
+        { acceleration } { \semio_viz_phys_derivative:n { 2 } }
+      }
+      { \semio_viz_phys_derivative:n { 0 } }
+  }
+% 🚀 The `#1`-th time derivative of the position law by a central difference, sampled over the domain.
+\cs_new_protected:Npn \semio_viz_phys_derivative:n #1
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \int_step_inline:nnnn { 0 } { 1 } { 120 }
+      {
+        \fp_set:Nn \l_semio_viz_sci_g_fp
+          {
+            \clist_item:Nn \l_semio_viz_sci_domain_clist { 1 }
+            + ( \clist_item:Nn \l_semio_viz_sci_domain_clist { 2 }
+                - \clist_item:Nn \l_semio_viz_sci_domain_clist { 1 } ) * ##1 / 120
+          }
+        \fp_zero:N \l_semio_viz_sci_c_fp
+        \int_step_inline:nnnn { 0 } { 1 } {#1}
+          {
+            \fp_set:Nn \SemioT { \l_semio_viz_sci_g_fp + ( #1 / 2 - ####1 ) * 0.08 }
+            \fp_add:Nn \l_semio_viz_sci_c_fp
+              {
+                ( ####1 - 2 * floor ( ####1 / 2 ) == 0 ? 1 : -1 )
+                * exp ( \semio_viz_tr_dist_lgamma:n { #1 + 1 } - \semio_viz_tr_dist_lgamma:n { ####1 + 1 }
+                        - \semio_viz_tr_dist_lgamma:n { #1 - ####1 + 1 } )
+                * ( \l_semio_viz_phys_expr_tl )
+              }
+          }
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq { \l_semio_viz_sci_g_fp }
+          { \l_semio_viz_sci_c_fp / ( 0.08 ^ (#1) ) }
+      }
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.08 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_zero_lines:
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+  }
+% 🚀 Projectile arc integrated with the shared Runge–Kutta stepper, not a closed-form parabola.
+\cs_new_protected:Npn \semio_viz_phys_projectile:
+  {
+    \clist_clear:N \l_semio_viz_sci_domain_clist
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \fp_set:Nn \l_semio_viz_sci_c_fp { 0 }
+    \fp_set:Nn \l_semio_viz_sci_d_fp { 0 }
+    \fp_set:Nn \l_semio_viz_sci_e_fp { \l_semio_viz_phys_speed_fp * cosd ( \l_semio_viz_phys_angle_fp ) }
+    \fp_set:Nn \l_semio_viz_sci_f_fp { \l_semio_viz_phys_speed_fp * sind ( \l_semio_viz_phys_angle_fp ) }
+    \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_phys_steps_int }
+      { \semio_viz_phys_projectile_step: }
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.08 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+    \semio_viz_sci_report_values:nn { kinematics/range }
+      { \fp_to_decimal:N \l_semio_viz_sci_c_fp }
+  }
+% 🏹 Advances the projectile one time step, recording the point while it is still at or above ground and then updating the vertical velocity by gravity.
+\cs_new_protected:Npn \semio_viz_phys_projectile_step:
+  {
+    \fp_compare:nNnT { \l_semio_viz_sci_d_fp } > { -1e-9 }
+      { \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq { \l_semio_viz_sci_c_fp } { \l_semio_viz_sci_d_fp } }
+    \fp_add:Nn \l_semio_viz_sci_c_fp { \l_semio_viz_phys_step_fp * \l_semio_viz_sci_e_fp }
+    \fp_add:Nn \l_semio_viz_sci_d_fp
+      { \l_semio_viz_phys_step_fp * ( \l_semio_viz_sci_f_fp - \l_semio_viz_phys_gravity_fp * \l_semio_viz_phys_step_fp / 2 ) }
+    \fp_sub:Nn \l_semio_viz_sci_f_fp { \l_semio_viz_phys_step_fp * \l_semio_viz_phys_gravity_fp }
+  }
+% 🚀 Kepler orbit from the conic r = a(1−e²)/(1+e·cos θ), with the focus marked.
+\cs_new_protected:Npn \semio_viz_phys_orbit:
+  {
+    \clist_clear:N \l_semio_viz_sci_domain_clist
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \int_step_inline:nnnn { 0 } { 1 } { 240 }
+      {
+        \fp_set:Nn \SemioT { 2 * pi * ##1 / 240 }
+        \fp_set:Nn \l_semio_viz_sci_a_fp
+          {
+            \l_semio_viz_phys_radius_fp * ( 1 - \l_semio_viz_phys_ecc_fp * \l_semio_viz_phys_ecc_fp )
+            / ( 1 + \l_semio_viz_phys_ecc_fp * cos ( \SemioT ) )
+          }
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { \l_semio_viz_sci_a_fp * cos ( \SemioT ) } { \l_semio_viz_sci_a_fp * sin ( \SemioT ) }
+      }
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.12 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+    \semio_viz_sci_dot:nnn { 0 } { 0 } { semio-tertiary }
+  }
+% 🌀 Integrates the damped-oscillator field with the shared Runge–Kutta stepper and plots the resulting phase-space spiral.
+\cs_new_protected:Npn \semio_viz_phys_phase:
+  {
+    \clist_clear:N \l_semio_viz_sci_domain_clist
+    \semio_viz_sci_rkfour:nnnnnnN { \SemioY } { - \SemioX - 0.12 * \SemioY }
+      { 1.6 } { 0 } { \l_semio_viz_phys_step_fp * 4 } { \l_semio_viz_phys_steps_int } \l_semio_viz_sci_pts_seq
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.1 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_zero_lines:
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-spacetime` (§30 relativity diagrams):
+%    mode (spacetime|minkowski|light-cone, minkowski).
+%    beta (fp, 0.5): the boost velocity as a fraction of c, which sets the primed axes.
+%    worldlines (clist of `beta/label`): further world lines through the origin.
+%    events (clist of `x/t/label`): marked events. gridLines (int, 4): primed grid density.
+\fp_new:N \l_semio_viz_phys_beta_fp
+\clist_new:N \l_semio_viz_phys_worldlines_clist
+\clist_new:N \l_semio_viz_phys_events_clist
+\int_new:N \l_semio_viz_phys_gridlines_int
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-spacetime }
+% 💫 Binds the `sci-spacetime` option names onto the boost fraction β, the world-line list, the marked events and the primed grid density.
+\keys_define:nn { semio / viz / family / sci-spacetime }
+  {
+    mode       .tl_set:N    = \l_semio_viz_phys_mode_tl ,
+    beta       .fp_set:N    = \l_semio_viz_phys_beta_fp ,
+    worldlines .clist_set:N = \l_semio_viz_phys_worldlines_clist ,
+    events     .clist_set:N = \l_semio_viz_phys_events_clist ,
+    gridLines  .int_set:N   = \l_semio_viz_phys_gridlines_int ,
+  }
+
+% 🕰️ §30 relativity: light cones, the boosted Minkowski axes for a given β and the world lines through the origin.
+\SemioVizFamily { sci-spacetime }
+  {
+    \semio_viz_sci_enter:nnn { sci-spacetime }
+      {
+        mode=minkowski , beta=0.5 , gridLines=4 , domain={-2,2} , range={-2,2} , grid=false ,
+        worldlines={ 0/A , 0.3/B , -0.7/C } , events={ 0.8/1.2/E1 , -1.1/0.6/E2 }
+      }
+      {#1}
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_zero_lines:
+    \semio_viz_phys_lightcone:
+    \str_if_eq:VnT \l_semio_viz_phys_mode_tl { minkowski } { \semio_viz_phys_boosted_axes: }
+    \str_if_eq:VnF \l_semio_viz_phys_mode_tl { light-cone } { \semio_viz_phys_worldlines: }
+    \clist_map_inline:Nn \l_semio_viz_phys_events_clist
+      {
+        \semio_viz_phys_record:n {##1}
+        \semio_viz_sci_dot:nnn { \semio_viz_phys_field:n { 1 } } { \semio_viz_phys_field:n { 2 } } { semio-tertiary }
+        \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , anchor=south~west ]
+          at ( \semio_viz_sci_mx:n { \semio_viz_phys_field:n { 1 } } ,
+               \semio_viz_sci_my:n { \semio_viz_phys_field:n { 2 } } )
+          { \semio_viz_phys_field:n { 3 } } ;
+      }
+  }
+% 🔦 Shades the future and past light cones as two translucent triangles and strokes the two null rays through the origin.
+\cs_new_protected:Npn \semio_viz_phys_lightcone:
+  {
+    \fill [ fill=semio-warning , fill~opacity=0.14 ]
+      ( \semio_viz_sci_mx:n { 0 } , \semio_viz_sci_my:n { 0 } ) --
+      ( \semio_viz_sci_mx:n { \l_semio_viz_sci_dymax_fp } , \semio_viz_sci_my:n { \l_semio_viz_sci_dymax_fp } ) --
+      ( \semio_viz_sci_mx:n { - \l_semio_viz_sci_dymax_fp } , \semio_viz_sci_my:n { \l_semio_viz_sci_dymax_fp } ) -- cycle ;
+    \fill [ fill=semio-warning , fill~opacity=0.14 ]
+      ( \semio_viz_sci_mx:n { 0 } , \semio_viz_sci_my:n { 0 } ) --
+      ( \semio_viz_sci_mx:n { \l_semio_viz_sci_dymax_fp } , \semio_viz_sci_my:n { - \l_semio_viz_sci_dymax_fp } ) --
+      ( \semio_viz_sci_mx:n { - \l_semio_viz_sci_dymax_fp } , \semio_viz_sci_my:n { - \l_semio_viz_sci_dymax_fp } ) -- cycle ;
+    \int_step_inline:nnnn { -1 } { 2 } { 1 }
+      {
+        \draw [ semio~sci~thin , draw=semio-warning ]
+          ( \semio_viz_sci_mx:n { ##1 * \l_semio_viz_sci_dymin_fp } , \semio_viz_sci_my:n { \l_semio_viz_sci_dymin_fp } ) --
+          ( \semio_viz_sci_mx:n { ##1 * \l_semio_viz_sci_dymax_fp } , \semio_viz_sci_my:n { \l_semio_viz_sci_dymax_fp } ) ;
+      }
+  }
+% 🛰️ Draws the primed t′ and x′ axes tilted by β towards the light cone and reports the Lorentz factor γ.
+\cs_new_protected:Npn \semio_viz_phys_boosted_axes:
+  {
+    \draw [ semio~sci~curve ]
+      ( \semio_viz_sci_mx:n { \l_semio_viz_phys_beta_fp * \l_semio_viz_sci_dymin_fp } ,
+        \semio_viz_sci_my:n { \l_semio_viz_sci_dymin_fp } ) --
+      ( \semio_viz_sci_mx:n { \l_semio_viz_phys_beta_fp * \l_semio_viz_sci_dymax_fp } ,
+        \semio_viz_sci_my:n { \l_semio_viz_sci_dymax_fp } ) ;
+    \draw [ semio~sci~curve~alt ]
+      ( \semio_viz_sci_mx:n { \l_semio_viz_sci_dxmin_fp } ,
+        \semio_viz_sci_my:n { \l_semio_viz_phys_beta_fp * \l_semio_viz_sci_dxmin_fp } ) --
+      ( \semio_viz_sci_mx:n { \l_semio_viz_sci_dxmax_fp } ,
+        \semio_viz_sci_my:n { \l_semio_viz_phys_beta_fp * \l_semio_viz_sci_dxmax_fp } ) ;
+    \semio_viz_sci_report_values:nn { spacetime/gamma }
+      { \fp_to_decimal:n { 1 / sqrt ( 1 - \l_semio_viz_phys_beta_fp * \l_semio_viz_phys_beta_fp ) } }
+  }
+% 🧶 Strokes each listed world line through the origin at its own velocity, cycling the hue per entry.
+\cs_new_protected:Npn \semio_viz_phys_worldlines:
+  {
+    \int_zero:N \l_tmpa_int
+    \clist_map_inline:Nn \l_semio_viz_phys_worldlines_clist
+      {
+        \int_incr:N \l_tmpa_int
+        \semio_viz_phys_record:n {##1}
+        \draw [ semio~sci~thin , draw=\semio_viz_sci_hue:n { \l_tmpa_int } ]
+          ( \semio_viz_sci_mx:n { \semio_viz_phys_field:n { 1 } * \l_semio_viz_sci_dymin_fp } ,
+            \semio_viz_sci_my:n { \l_semio_viz_sci_dymin_fp } ) --
+          ( \semio_viz_sci_mx:n { \semio_viz_phys_field:n { 1 } * \l_semio_viz_sci_dymax_fp } ,
+            \semio_viz_sci_my:n { \l_semio_viz_sci_dymax_fp } ) ;
+      }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-feynman` (§30/§56 Feynman diagrams):
+%    vertices (clist of `id/x/y/label`): interaction points, in millimetres.
+%    propagators (clist of `from/to/style/label`): styles fermion, antifermion, photon, gluon, scalar, ghost.
+%    wiggle (fp, 1.6), coils (int, 7): the amplitude and count of the photon and gluon decorations.
+\clist_new:N \l_semio_viz_phys_vertices_clist
+\clist_new:N \l_semio_viz_phys_props_clist
+\fp_new:N \l_semio_viz_phys_wiggle_fp
+\int_new:N \l_semio_viz_phys_coils_int
+\tl_new:N \l_semio_viz_phys_style_tl
+\tl_new:N \l_semio_viz_phys_pot_tl
+\prop_new:N \l_semio_viz_phys_vx_prop
+\prop_new:N \l_semio_viz_phys_vy_prop
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-feynman }
+% 🧬 Binds the `sci-feynman` option names onto the vertex and propagator lists and the wiggle amplitude and coil count.
+\keys_define:nn { semio / viz / family / sci-feynman }
+  {
+    vertices    .clist_set:N = \l_semio_viz_phys_vertices_clist ,
+    propagators .clist_set:N = \l_semio_viz_phys_props_clist ,
+    wiggle      .fp_set:N    = \l_semio_viz_phys_wiggle_fp ,
+    coils       .int_set:N   = \l_semio_viz_phys_coils_int ,
+  }
+
+% ⚛️ §30/§56 Feynman diagrams: propagator lines drawn in their own style from a vertex-and-edge table.
+\SemioVizFamily { sci-feynman }
+  {
+    \semio_viz_sci_enter:nnn { sci-feynman }
+      {
+        wiggle=1.6 , coils=7 , axes=false , grid=false ,
+        vertices={ i1/0/18/e- , i2/0/2/e+ , v1/16/10/ , v2/38/10/ , o1/54/18/μ- , o2/54/2/μ+ } ,
+        propagators={ i1/v1/fermion/ , i2/v1/antifermion/ , v1/v2/photon/γ ,
+                      v2/o1/fermion/ , v2/o2/antifermion/ }
+      }
+      {#1}
+    \prop_clear:N \l_semio_viz_phys_vx_prop
+    \prop_clear:N \l_semio_viz_phys_vy_prop
+    \clist_map_inline:Nn \l_semio_viz_phys_vertices_clist
+      {
+        \semio_viz_phys_record:n {##1}
+        \prop_put:Nxx \l_semio_viz_phys_vx_prop
+          { \semio_viz_phys_field:n { 1 } } { \semio_viz_phys_field:n { 2 } }
+        \prop_put:Nxx \l_semio_viz_phys_vy_prop
+          { \semio_viz_phys_field:n { 1 } } { \semio_viz_phys_field:n { 3 } }
+      }
+    \clist_map_inline:Nn \l_semio_viz_phys_props_clist
+      {
+        \semio_viz_phys_record:n {##1}
+        \semio_viz_phys_propagator:
+      }
+    \clist_map_inline:Nn \l_semio_viz_phys_vertices_clist
+      {
+        \semio_viz_phys_record:n {##1}
+        \tl_set:Nx \l_semio_viz_phys_style_tl { \semio_viz_phys_field:n { 4 } }
+        \tl_if_empty:NF \l_semio_viz_phys_style_tl
+          {
+            \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , inner~sep=0.8mm ,
+                    fill=semio-chrome-base ]
+              at ( \semio_viz_phys_field:n { 2 } , \semio_viz_phys_field:n { 3 } )
+              { \semio_viz_phys_field:n { 4 } } ;
+          }
+      }
+  }
+% 🎽 Looks up the two endpoint vertices of the pending propagator record and strokes it in its own style: wavy photon, coiled gluon, dashed scalar, dotted ghost, or a fermion arrow that reverses for an antifermion.
+\cs_new_protected:Npn \semio_viz_phys_propagator:
+  {
+    \fp_set:Nn \l_semio_viz_sci_a_fp
+      { \prop_item:Ne \l_semio_viz_phys_vx_prop { \semio_viz_phys_field:n { 1 } } }
+    \fp_set:Nn \l_semio_viz_sci_b_fp
+      { \prop_item:Ne \l_semio_viz_phys_vy_prop { \semio_viz_phys_field:n { 1 } } }
+    \fp_set:Nn \l_semio_viz_sci_c_fp
+      { \prop_item:Ne \l_semio_viz_phys_vx_prop { \semio_viz_phys_field:n { 2 } } }
+    \fp_set:Nn \l_semio_viz_sci_d_fp
+      { \prop_item:Ne \l_semio_viz_phys_vy_prop { \semio_viz_phys_field:n { 2 } } }
+    \tl_set:Nx \l_semio_viz_phys_style_tl { \semio_viz_phys_field:n { 3 } }
+    \str_case:VnF \l_semio_viz_phys_style_tl
+      {
+        { photon } { \semio_viz_phys_wave_edge:n { 1 } }
+        { gluon }  { \semio_viz_phys_wave_edge:n { 2 } }
+        { scalar }
+          {
+            \draw [ semio~sci~thin , dash~pattern=on~1.4pt~off~1.2pt ]
+              ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) --
+              ( \fp_eval:n { \l_semio_viz_sci_c_fp } , \fp_eval:n { \l_semio_viz_sci_d_fp } ) ;
+          }
+        { ghost }
+          {
+            \draw [ semio~sci~thin , dotted ]
+              ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) --
+              ( \fp_eval:n { \l_semio_viz_sci_c_fp } , \fp_eval:n { \l_semio_viz_sci_d_fp } ) ;
+          }
+        { antifermion }
+          {
+            \draw [ semio~sci~arrow ]
+              ( \fp_eval:n { \l_semio_viz_sci_c_fp } , \fp_eval:n { \l_semio_viz_sci_d_fp } ) --
+              ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) ;
+          }
+      }
+      {
+        \draw [ semio~sci~arrow ]
+          ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) --
+          ( \fp_eval:n { \l_semio_viz_sci_c_fp } , \fp_eval:n { \l_semio_viz_sci_d_fp } ) ;
+      }
+    \semio_viz_sci_report_values:nn { feynman/propagator }
+      { \fp_to_decimal:N \l_semio_viz_sci_a_fp , \fp_to_decimal:N \l_semio_viz_sci_b_fp ,
+        \fp_to_decimal:N \l_semio_viz_sci_c_fp , \fp_to_decimal:N \l_semio_viz_sci_d_fp }
+  }
+% ⚛️ Wavy (`#1`=1) and coiled (`#1`=2) propagators, sampled along the edge and drawn as a polyline.
+\cs_new_protected:Npn \semio_viz_phys_wave_edge:n #1
+  {
+    \tl_clear:N \l_semio_viz_sci_path_tl
+    \int_step_inline:nnnn { 0 } { 1 } { 80 }
+      {
+        \fp_set:Nn \l_semio_viz_sci_e_fp { ##1 / 80 }
+        \fp_set:Nn \l_semio_viz_sci_f_fp
+          {
+            \l_semio_viz_phys_wiggle_fp
+            * sin ( 2 * pi * \l_semio_viz_phys_coils_int * \l_semio_viz_sci_e_fp )
+          }
+        \fp_set:Nn \l_semio_viz_sci_g_fp
+          {
+            atand ( \l_semio_viz_sci_d_fp - \l_semio_viz_sci_b_fp ,
+                    \l_semio_viz_sci_c_fp - \l_semio_viz_sci_a_fp ) + 90
+          }
+        \tl_if_empty:NF \l_semio_viz_sci_path_tl { \tl_put_right:Nn \l_semio_viz_sci_path_tl { -- } }
+        \tl_put_right:Nx \l_semio_viz_sci_path_tl
+          {
+            (
+              \fp_to_decimal:n
+                { \l_semio_viz_sci_a_fp + ( \l_semio_viz_sci_c_fp - \l_semio_viz_sci_a_fp ) * \l_semio_viz_sci_e_fp
+                  + \l_semio_viz_sci_f_fp * cosd ( \l_semio_viz_sci_g_fp )
+                  + ( #1 == 2 ? \l_semio_viz_phys_wiggle_fp * ( 1 - cos ( 2 * pi * \l_semio_viz_phys_coils_int * \l_semio_viz_sci_e_fp ) ) * 0.3 : 0 ) } ,
+              \fp_to_decimal:n
+                { \l_semio_viz_sci_b_fp + ( \l_semio_viz_sci_d_fp - \l_semio_viz_sci_b_fp ) * \l_semio_viz_sci_e_fp
+                  + \l_semio_viz_sci_f_fp * sind ( \l_semio_viz_sci_g_fp ) }
+            )
+          }
+      }
+    \use:x { \exp_not:N \draw [ semio~sci~thin ] \exp_not:V \l_semio_viz_sci_path_tl ; }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-levels` (§30 level and band diagrams):
+%    mode (energy-level|potential|band, energy-level).
+%    levels (clist of `energy/label`): the level ladder, energies in the plotted unit.
+%    transitions (clist of `from/to/label`): arrows between level indices.
+%    expr (l3fp over \SemioX): the potential curve of the `potential` mode.
+%    bands (clist of `bottom/top/label`): the band edges of the `band` mode.
+\int_new:N \l_semio_viz_phys_levels_int
+\clist_new:N \l_semio_viz_phys_levels_clist
+\clist_new:N \l_semio_viz_phys_trans_clist
+\clist_new:N \l_semio_viz_phys_bands_clist
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-levels }
+% 🧗 Binds the `sci-levels` option names onto the level ladder, transition list, band edges and potential expression.
+\keys_define:nn { semio / viz / family / sci-levels }
+  {
+    mode        .tl_set:N    = \l_semio_viz_phys_mode_tl ,
+    levels      .clist_set:N = \l_semio_viz_phys_levels_clist ,
+    transitions .clist_set:N = \l_semio_viz_phys_trans_clist ,
+    bands       .clist_set:N = \l_semio_viz_phys_bands_clist ,
+    expr        .tl_set:N    = \l_semio_viz_phys_expr_tl ,
+  }
+
+% 🪜 §30 level diagrams: an energy ladder with transitions, a potential well with its bound states, and a band structure.
+\SemioVizFamily { sci-levels }
+  {
+    \semio_viz_sci_enter:nnn { sci-levels }
+      {
+        mode=energy-level , expr={ 0.5 * \SemioX * \SemioX } ,
+        levels={ -13.6/n=1 , -3.4/n=2 , -1.51/n=3 , -0.85/n=4 , -0.54/n=5 } ,
+        transitions={ 2/1/Lyman~α , 3/2/Balmer~α } ,
+        bands={ -4/-1.2/valence , 0.8/3/conduction } ,
+        domain={-3,3} , range={-15,1} , grid=false
+      }
+      {#1}
+    \str_case:VnF \l_semio_viz_phys_mode_tl
+      {
+        { potential }
+          {
+            \semio_viz_sci_window_keys:
+            \semio_viz_sci_frame:
+            \semio_viz_sci_sample:Nnnnn \l_semio_viz_sci_pts_seq { \l_semio_viz_phys_expr_tl }
+              { \l_semio_viz_sci_dxmin_fp } { \l_semio_viz_sci_dxmax_fp } { 120 }
+            \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+            \semio_viz_phys_level_lines:
+          }
+        { band }
+          {
+            \semio_viz_sci_window_keys:
+            \semio_viz_sci_frame:
+            \clist_map_inline:Nn \l_semio_viz_phys_bands_clist
+              {
+                \semio_viz_phys_record:n {##1}
+                \fill [ fill=semio-primary , fill~opacity=0.24 ]
+                  ( \semio_viz_sci_mx:n { \l_semio_viz_sci_dxmin_fp } ,
+                    \semio_viz_sci_my:n { \semio_viz_phys_field:n { 1 } } )
+                  rectangle
+                  ( \semio_viz_sci_mx:n { \l_semio_viz_sci_dxmax_fp } ,
+                    \semio_viz_sci_my:n { \semio_viz_phys_field:n { 2 } } ) ;
+                \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , anchor=west ]
+                  at ( 1 , \semio_viz_sci_my:n
+                    { ( \semio_viz_phys_field:n { 1 } + \semio_viz_phys_field:n { 2 } ) / 2 } )
+                  { \semio_viz_phys_field:n { 3 } } ;
+              }
+          }
+      }
+      {
+        \semio_viz_sci_window_keys:
+        \semio_viz_sci_frame:
+        \semio_viz_phys_level_lines:
+        \semio_viz_phys_transitions:
+      }
+  }
+% 🪜 Strokes each energy level as a horizontal rung across the middle of the frame, captions it to the right and reports its energy.
+\cs_new_protected:Npn \semio_viz_phys_level_lines:
+  {
+    \clist_map_inline:Nn \l_semio_viz_phys_levels_clist
+      {
+        \semio_viz_phys_record:n {##1}
+        \draw [ semio~sci~curve ]
+          ( \fp_eval:n { 0.12 * \l_semio_viz_sci_w_fp } ,
+            \semio_viz_sci_my:n { \semio_viz_phys_field:n { 1 } } ) --
+          ( \fp_eval:n { 0.72 * \l_semio_viz_sci_w_fp } ,
+            \semio_viz_sci_my:n { \semio_viz_phys_field:n { 1 } } ) ;
+        \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal , anchor=west ]
+          at ( \fp_eval:n { 0.75 * \l_semio_viz_sci_w_fp } ,
+               \semio_viz_sci_my:n { \semio_viz_phys_field:n { 1 } } )
+          { \semio_viz_phys_field:n { 2 } } ;
+        \semio_viz_sci_report_values:nn { levels/line } { \semio_viz_phys_field:n { 1 } }
+      }
+  }
+% 🎇 Draws a hue-cycled vertical arrow between the two level indices of each transition and reports the energy difference.
+\cs_new_protected:Npn \semio_viz_phys_transitions:
+  {
+    \int_zero:N \l_tmpa_int
+    \clist_map_inline:Nn \l_semio_viz_phys_trans_clist
+      {
+        \int_incr:N \l_tmpa_int
+        \semio_viz_phys_record:n {##1}
+        \seq_set_split:Nnx \l_tmpb_seq { / }
+          { \clist_item:Nn \l_semio_viz_phys_levels_clist { \semio_viz_phys_field:n { 1 } } }
+        \fp_set:Nn \l_semio_viz_sci_a_fp { \seq_item:Nn \l_tmpb_seq { 1 } }
+        \seq_set_split:Nnx \l_tmpb_seq { / }
+          { \clist_item:Nn \l_semio_viz_phys_levels_clist { \semio_viz_phys_field:n { 2 } } }
+        \fp_set:Nn \l_semio_viz_sci_b_fp { \seq_item:Nn \l_tmpb_seq { 1 } }
+        \draw [ semio~sci~arrow , draw=\semio_viz_sci_hue:n { \l_tmpa_int } ]
+          ( \fp_eval:n { ( 0.2 + 0.16 * \l_tmpa_int ) * \l_semio_viz_sci_w_fp } ,
+            \semio_viz_sci_my:n { \l_semio_viz_sci_a_fp } ) --
+          ( \fp_eval:n { ( 0.2 + 0.16 * \l_tmpa_int ) * \l_semio_viz_sci_w_fp } ,
+            \semio_viz_sci_my:n { \l_semio_viz_sci_b_fp } ) ;
+        \semio_viz_sci_report_values:nn { levels/transition }
+          { \fp_to_decimal:n { \l_semio_viz_sci_a_fp - \l_semio_viz_sci_b_fp } }
+      }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-fieldlines` (§30 field maps):
+%    mode (field-lines|equipotential|both, field-lines).
+%    charges (clist of `x/y/q/label`): the sources; q is the signed strength.
+%    lines (int, 10): field lines seeded per positive charge. steps (int, 220), step (fp, 0.06): tracing budget.
+%    levels (int, 7): equipotential count.
+\clist_new:N \l_semio_viz_phys_charges_clist
+\int_new:N \l_semio_viz_phys_lines_int
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-fieldlines }
+% 🔌 Binds the `sci-fieldlines` option names onto the charge set, the seeds per source, the tracing budget and the equipotential count.
+\keys_define:nn { semio / viz / family / sci-fieldlines }
+  {
+    mode    .tl_set:N    = \l_semio_viz_phys_mode_tl ,
+    charges .clist_set:N = \l_semio_viz_phys_charges_clist ,
+    lines   .int_set:N   = \l_semio_viz_phys_lines_int ,
+    steps   .int_set:N   = \l_semio_viz_phys_steps_int ,
+    step    .fp_set:N    = \l_semio_viz_phys_step_fp ,
+    levels  .int_set:N   = \l_semio_viz_phys_levels_int ,
+  }
+
+% ⚡ §30 field maps: Coulomb field lines traced from each source and the equipotentials of the same charge set.
+\SemioVizFamily { sci-fieldlines }
+  {
+    \semio_viz_sci_enter:nnn { sci-fieldlines }
+      {
+        mode=field-lines , charges={ -1/0/1/+ , 1/0/-1/- } , lines=10 , steps=220 , step=0.06 ,
+        levels=7 , domain={-2.2,2.2} , range={-1.6,1.6} , grid=false
+      }
+      {#1}
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \str_if_eq:VnF \l_semio_viz_phys_mode_tl { equipotential } { \semio_viz_phys_lines: }
+    \str_if_eq:VnF \l_semio_viz_phys_mode_tl { field-lines } { \semio_viz_phys_equipotentials: }
+    \clist_map_inline:Nn \l_semio_viz_phys_charges_clist
+      {
+        \semio_viz_phys_record:n {##1}
+        \node [ semio~sci~glyph , circle , inner~sep=0.5mm , font=\c_semio_viz_theme_font_label_tl ,
+                fill=\fp_compare:nNnTF { \semio_viz_phys_field:n { 3 } } > { 0 } { semio-primary } { semio-secondary } ,
+                text=semio-chrome-base ]
+          at ( \semio_viz_sci_mx:n { \semio_viz_phys_field:n { 1 } } ,
+               \semio_viz_sci_my:n { \semio_viz_phys_field:n { 2 } } )
+          { \semio_viz_phys_field:n { 4 } } ;
+      }
+  }
+% ⚡ Field of the charge set at (\SemioX,\SemioY), components into a_fp and b_fp.
+\cs_new_protected:Npn \semio_viz_phys_field_at:
+  {
+    \fp_zero:N \l_semio_viz_sci_a_fp
+    \fp_zero:N \l_semio_viz_sci_b_fp
+    \clist_map_inline:Nn \l_semio_viz_phys_charges_clist
+      {
+        \seq_set_split:Nnn \l_tmpb_seq { / } {##1}
+        \fp_set:Nn \l_semio_viz_sci_g_fp
+          {
+            max ( 1e-3 ,
+              ( \SemioX - \seq_item:Nn \l_tmpb_seq { 1 } ) ^ 2
+              + ( \SemioY - \seq_item:Nn \l_tmpb_seq { 2 } ) ^ 2 )
+          }
+        \fp_add:Nn \l_semio_viz_sci_a_fp
+          {
+            \seq_item:Nn \l_tmpb_seq { 3 } * ( \SemioX - \seq_item:Nn \l_tmpb_seq { 1 } )
+            / ( \l_semio_viz_sci_g_fp ^ 1.5 )
+          }
+        \fp_add:Nn \l_semio_viz_sci_b_fp
+          {
+            \seq_item:Nn \l_tmpb_seq { 3 } * ( \SemioY - \seq_item:Nn \l_tmpb_seq { 2 } )
+            / ( \l_semio_viz_sci_g_fp ^ 1.5 )
+          }
+      }
+  }
+% 🌟 Seeds field lines evenly around every positive charge and traces each of them outward.
+\cs_new_protected:Npn \semio_viz_phys_lines:
+  {
+    \clist_map_inline:Nn \l_semio_viz_phys_charges_clist
+      {
+        \semio_viz_phys_record:n {##1}
+        \fp_compare:nNnT { \semio_viz_phys_field:n { 3 } } > { 0 }
+          {
+            \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_phys_lines_int - 1 }
+              {
+                \semio_viz_phys_trace:nnn
+                  { \semio_viz_phys_field:n { 1 } } { \semio_viz_phys_field:n { 2 } }
+                  { 360 * ####1 / \l_semio_viz_phys_lines_int }
+              }
+          }
+      }
+  }
+\bool_new:N \l_semio_viz_phys_tracing_bool
+% 🧵 Traces one field line that starts just off the charge at (#1,#2) in direction #3, stepping until the budget runs out or the walker leaves the window, then strokes it.
+\cs_new_protected:Npn \semio_viz_phys_trace:nnn #1#2#3
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \fp_set:Nn \SemioX { #1 + 0.08 * cosd (#3) }
+    \fp_set:Nn \SemioY { #2 + 0.08 * sind (#3) }
+    \bool_set_true:N \l_semio_viz_phys_tracing_bool
+    \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_phys_steps_int }
+      { \bool_if:NT \l_semio_viz_phys_tracing_bool { \semio_viz_phys_trace_step: } }
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~thin , draw=semio-primary }
+  }
+% 👣 Records the current walker position, then advances it one step along the normalised field direction and clears the tracing flag once it leaves the window.
+\cs_new_protected:Npn \semio_viz_phys_trace_step:
+  {
+    \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq { \SemioX } { \SemioY }
+    \semio_viz_phys_field_at:
+    \fp_set:Nn \l_semio_viz_sci_c_fp
+      { max ( 1e-6 , sqrt ( \l_semio_viz_sci_a_fp ^ 2 + \l_semio_viz_sci_b_fp ^ 2 ) ) }
+    \fp_add:Nn \SemioX { \l_semio_viz_phys_step_fp * \l_semio_viz_sci_a_fp / \l_semio_viz_sci_c_fp }
+    \fp_add:Nn \SemioY { \l_semio_viz_phys_step_fp * \l_semio_viz_sci_b_fp / \l_semio_viz_sci_c_fp }
+    \fp_compare:nF
+      {
+        \SemioX > \l_semio_viz_sci_dxmin_fp && \SemioX < \l_semio_viz_sci_dxmax_fp &&
+        \SemioY > \l_semio_viz_sci_dymin_fp && \SemioY < \l_semio_viz_sci_dymax_fp
+      }
+      { \bool_set_false:N \l_semio_viz_phys_tracing_bool }
+  }
+% 🗺️ Builds the potential expression and marches its contour on a 44×44 grid once per requested equipotential level.
+\cs_new_protected:Npn \semio_viz_phys_equipotentials:
+  {
+    \semio_viz_phys_potential_build:
+    \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_phys_levels_int }
+      {
+        \semio_viz_sci_marching:nnnnn
+          { \l_semio_viz_phys_pot_tl } { 44 } { 44 }
+          { \fp_eval:n { -3 + 6 * ##1 / ( \l_semio_viz_phys_levels_int + 1 ) } }
+          { semio~sci~aux , draw=semio-secondary }
+      }
+  }
+% ⚡ Builds the Coulomb potential of the charge set as one l3fp expression over \SemioX,\SemioY.
+\cs_new_protected:Npn \semio_viz_phys_potential_build:
+  {
+    \tl_set:Nn \l_semio_viz_phys_pot_tl { 0 }
+    \clist_map_inline:Nn \l_semio_viz_phys_charges_clist
+      {
+        \seq_set_split:Nnn \l_tmpb_seq { / } {##1}
+        \tl_put_right:Nx \l_semio_viz_phys_pot_tl
+          {
+            + \seq_item:Nn \l_tmpb_seq { 3 }
+            / max ( 0.06 , sqrt ( ( \exp_not:N \SemioX - \seq_item:Nn \l_tmpb_seq { 1 } ) ^ 2
+              + ( \exp_not:N \SemioY - \seq_item:Nn \l_tmpb_seq { 2 } ) ^ 2 ) )
+          }
+      }
+  }
+%region 🔖️Keys
+% 🔑 Keys of `sci-wave` (§30 wave phenomena):
+%    mode (travelling|standing|interference|diffraction|polarisation, travelling).
+%    wavelength (fp, 2), amplitude (fp, 1), phase (fp, 0): the wave parameters.
+%    harmonics (int, 3): standing-wave modes drawn. sources (clist of `x/y`): the interfering sources.
+%    slits (int, 2), slitWidth (fp, 0.4): the diffraction aperture. samples (int, 200): resolution.
+%    ellipticity (fp, 0.4), tilt (fp, 30): the polarisation ellipse.
+\int_new:N \l_semio_viz_phys_harmonics_int
+\int_new:N \l_semio_viz_phys_slits_int
+\int_new:N \l_semio_viz_phys_samples_int
+\fp_new:N \l_semio_viz_phys_wavelength_fp
+\fp_new:N \l_semio_viz_phys_amplitude_fp
+\fp_new:N \l_semio_viz_phys_phase_fp
+\fp_new:N \l_semio_viz_phys_slitwidth_fp
+\fp_new:N \l_semio_viz_phys_ellipticity_fp
+\fp_new:N \l_semio_viz_phys_tilt_fp
+\clist_new:N \l_semio_viz_phys_sources_clist
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-wave }
+% 🎵 Binds the `sci-wave` option names onto the wave parameters, harmonic count, source list, slit geometry, sampling resolution and polarisation ellipse.
+\keys_define:nn { semio / viz / family / sci-wave }
+  {
+    mode        .tl_set:N    = \l_semio_viz_phys_mode_tl ,
+    wavelength  .fp_set:N    = \l_semio_viz_phys_wavelength_fp ,
+    amplitude   .fp_set:N    = \l_semio_viz_phys_amplitude_fp ,
+    phase       .fp_set:N    = \l_semio_viz_phys_phase_fp ,
+    harmonics   .int_set:N   = \l_semio_viz_phys_harmonics_int ,
+    sources     .clist_set:N = \l_semio_viz_phys_sources_clist ,
+    slits       .int_set:N   = \l_semio_viz_phys_slits_int ,
+    slitWidth   .fp_set:N    = \l_semio_viz_phys_slitwidth_fp ,
+    samples     .int_set:N   = \l_semio_viz_phys_samples_int ,
+    ellipticity .fp_set:N    = \l_semio_viz_phys_ellipticity_fp ,
+    tilt        .fp_set:N    = \l_semio_viz_phys_tilt_fp ,
+  }
+
+% 🌊 §30 wave phenomena: travelling and standing waves, two-source interference, the Fraunhofer slit pattern and the polarisation ellipse.
+\SemioVizFamily { sci-wave }
+  {
+    \semio_viz_sci_enter:nnn { sci-wave }
+      {
+        mode=travelling , wavelength=2 , amplitude=1 , phase=0 , harmonics=3 ,
+        sources={ -1.4/0 , 1.4/0 } , slits=2 , slitWidth=0.4 , samples=200 ,
+        ellipticity=0.4 , tilt=30 , domain={-4,4} , range={-1.6,1.6} , grid=false
+      }
+      {#1}
+    \semio_viz_sci_window_keys:
+    \str_case:VnF \l_semio_viz_phys_mode_tl
+      {
+        { standing }     { \semio_viz_phys_standing: }
+        { interference } { \semio_viz_phys_interference: }
+        { diffraction }  { \semio_viz_phys_diffraction: }
+        { polarisation } { \semio_viz_phys_polarisation: }
+      }
+      { \semio_viz_phys_travelling: }
+  }
+% 🌊 Plots one sine over the domain and marks a wavelength with a measuring arrow below it.
+\cs_new_protected:Npn \semio_viz_phys_travelling:
+  {
+    \semio_viz_sci_frame:
+    \semio_viz_sci_zero_lines:
+    \semio_viz_sci_sample:Nnnnn \l_semio_viz_sci_pts_seq
+      {
+        \l_semio_viz_phys_amplitude_fp
+        * sin ( 2 * pi * \SemioX / \l_semio_viz_phys_wavelength_fp + \l_semio_viz_phys_phase_fp )
+      }
+      { \l_semio_viz_sci_dxmin_fp } { \l_semio_viz_sci_dxmax_fp } { \l_semio_viz_phys_samples_int }
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+    \semio_viz_sci_arrow:nnnnn
+      { \l_semio_viz_sci_dxmin_fp + 0.4 } { -1.3 }
+      { \l_semio_viz_sci_dxmin_fp + 0.4 + \l_semio_viz_phys_wavelength_fp } { -1.3 }
+      { semio~sci~vector }
+  }
+% 🎻 Overlays the requested standing-wave harmonics, each with nodes at both domain ends and an amplitude falling as 1/n.
+\cs_new_protected:Npn \semio_viz_phys_standing:
+  {
+    \semio_viz_sci_frame:
+    \semio_viz_sci_zero_lines:
+    \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_phys_harmonics_int }
+      {
+        \semio_viz_sci_sample:Nnnnn \l_semio_viz_sci_pts_seq
+          {
+            \l_semio_viz_phys_amplitude_fp / ##1
+            * sin ( ##1 * pi * ( \SemioX - \l_semio_viz_sci_dxmin_fp )
+              / ( \l_semio_viz_sci_dxmax_fp - \l_semio_viz_sci_dxmin_fp ) )
+          }
+          { \l_semio_viz_sci_dxmin_fp } { \l_semio_viz_sci_dxmax_fp } { \l_semio_viz_phys_samples_int }
+        \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq
+          { semio~sci~curve , draw=\semio_viz_sci_hue:n {##1} }
+      }
+  }
+% 💠 Paints the two-source interference field as a 40×28 raster and then dots the source positions on top of it.
+\cs_new_protected:Npn \semio_viz_phys_interference:
+  {
+    \int_step_inline:nnnn { 0 } { 1 } { 39 }
+      {
+        \int_step_inline:nnnn { 0 } { 1 } { 27 }
+          { \semio_viz_phys_interference_cell:nn {##1} {####1} }
+      }
+    \semio_viz_sci_frame:
+    \clist_map_inline:Nn \l_semio_viz_phys_sources_clist
+      {
+        \semio_viz_phys_record:n {##1}
+        \semio_viz_sci_dot:nnn { \semio_viz_phys_field:n { 1 } } { \semio_viz_phys_field:n { 2 } }
+          { semio-chrome-foreground }
+      }
+  }
+% 🟪 Sums the phase contribution of every source at raster cell (#1,#2) and fills that tile from the diverging colour ramp.
+\cs_new_protected:Npn \semio_viz_phys_interference_cell:nn #1#2
+  {
+    \fp_set:Nn \SemioX
+      { \l_semio_viz_sci_dxmin_fp + ( \l_semio_viz_sci_dxmax_fp - \l_semio_viz_sci_dxmin_fp ) * ( #1 + 0.5 ) / 40 }
+    \fp_set:Nn \SemioY
+      { \l_semio_viz_sci_dymin_fp + ( \l_semio_viz_sci_dymax_fp - \l_semio_viz_sci_dymin_fp ) * ( #2 + 0.5 ) / 28 }
+    \fp_zero:N \l_semio_viz_sci_a_fp
+    \clist_map_inline:Nn \l_semio_viz_phys_sources_clist
+      {
+        \seq_set_split:Nnn \l_tmpb_seq { / } {##1}
+        \fp_add:Nn \l_semio_viz_sci_a_fp
+          {
+            \l_semio_viz_phys_amplitude_fp
+            * cos ( 2 * pi
+              * sqrt ( ( \SemioX - \seq_item:Nn \l_tmpb_seq { 1 } ) ^ 2
+                + ( \SemioY - \seq_item:Nn \l_tmpb_seq { 2 } ) ^ 2 )
+              / \l_semio_viz_phys_wavelength_fp )
+          }
+      }
+    \fill [ fill=\semio_viz_sci_ramp_diverging:n { \l_semio_viz_sci_a_fp / 2 } ]
+      ( \fp_eval:n { \l_semio_viz_sci_w_fp * #1 / 40 } , \fp_eval:n { \l_semio_viz_sci_h_fp * #2 / 28 } )
+      rectangle
+      ( \fp_eval:n { \l_semio_viz_sci_w_fp * ( #1 + 1 ) / 40 } ,
+        \fp_eval:n { \l_semio_viz_sci_h_fp * ( #2 + 1 ) / 28 } ) ;
+  }
+% 🌊 Fraunhofer pattern of N slits: the single-slit envelope times the grating interference factor.
+\cs_new_protected:Npn \semio_viz_phys_diffraction:
+  {
+    \semio_viz_sci_window:nnnn { \l_semio_viz_sci_dxmin_fp } { \l_semio_viz_sci_dxmax_fp } { 0 } { 1.1 }
+    \semio_viz_sci_frame:
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_phys_samples_int }
+      {
+        \fp_set:Nn \SemioX
+          {
+            \l_semio_viz_sci_dxmin_fp
+            + ( \l_semio_viz_sci_dxmax_fp - \l_semio_viz_sci_dxmin_fp ) * ##1 / \l_semio_viz_phys_samples_int
+          }
+        \fp_set:Nn \l_semio_viz_sci_a_fp
+          { pi * \l_semio_viz_phys_slitwidth_fp * \SemioX / \l_semio_viz_phys_wavelength_fp }
+        \fp_set:Nn \l_semio_viz_sci_b_fp
+          { pi * \SemioX / \l_semio_viz_phys_wavelength_fp }
+        \fp_set:Nn \l_semio_viz_sci_c_fp
+          {
+            ( sin ( \l_semio_viz_sci_a_fp ) / ( abs ( \l_semio_viz_sci_a_fp ) < 1e-4
+              ? 1e-4 : \l_semio_viz_sci_a_fp ) ) ^ 2
+          }
+        \fp_compare:nNnT { abs ( \l_semio_viz_sci_a_fp ) } < { 1e-4 }
+          { \fp_set:Nn \l_semio_viz_sci_c_fp { 1 } }
+        \fp_set:Nn \l_semio_viz_sci_d_fp
+          {
+            ( sin ( \l_semio_viz_phys_slits_int * \l_semio_viz_sci_b_fp )
+              / ( ( abs ( sin ( \l_semio_viz_sci_b_fp ) ) < 1e-4 ? 1e-4 : sin ( \l_semio_viz_sci_b_fp ) )
+                * \l_semio_viz_phys_slits_int ) ) ^ 2
+          }
+        \fp_compare:nNnT { abs ( sin ( \l_semio_viz_sci_b_fp ) ) } < { 1e-4 }
+          { \fp_set:Nn \l_semio_viz_sci_d_fp { 1 } }
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq { \SemioX }
+          { \l_semio_viz_sci_c_fp * \l_semio_viz_sci_d_fp }
+      }
+    \semio_viz_sci_polyarea:Nnn \l_semio_viz_sci_pts_seq { semio~sci~band } { 0 }
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+  }
+% 🎨 Traces the polarisation ellipse once around, built from the amplitude, the ellipticity ratio and the tilt angle.
+\cs_new_protected:Npn \semio_viz_phys_polarisation:
+  {
+    \semio_viz_sci_frame:
+    \semio_viz_sci_zero_lines:
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \int_step_inline:nnnn { 0 } { 1 } { 120 }
+      {
+        \fp_set:Nn \SemioT { 2 * pi * ##1 / 120 }
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          {
+            \l_semio_viz_phys_amplitude_fp * cos ( \SemioT ) * cosd ( \l_semio_viz_phys_tilt_fp )
+            - \l_semio_viz_phys_amplitude_fp * \l_semio_viz_phys_ellipticity_fp * sin ( \SemioT )
+              * sind ( \l_semio_viz_phys_tilt_fp )
+          }
+          {
+            \l_semio_viz_phys_amplitude_fp * cos ( \SemioT ) * sind ( \l_semio_viz_phys_tilt_fp )
+            + \l_semio_viz_phys_amplitude_fp * \l_semio_viz_phys_ellipticity_fp * sin ( \SemioT )
+              * cosd ( \l_semio_viz_phys_tilt_fp )
+          }
+      }
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-optics` (§30 ray optics):
+%    mode (lens|mirror|ray, lens): the optical element traced.
+%    focal (fp, 18): the focal length in millimetres, negative for a diverging element.
+%    objectDistance (fp, 40), objectHeight (fp, 12): the object placement.
+%    rays (bool, true): draw the principal rays that construct the image.
+\fp_new:N \l_semio_viz_phys_focal_fp
+\fp_new:N \l_semio_viz_phys_objdist_fp
+\fp_new:N \l_semio_viz_phys_objheight_fp
+\bool_new:N \l_semio_viz_phys_rays_bool
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-optics }
+% 🔭 Binds the `sci-optics` option names onto the element mode, focal length, object placement and the principal-ray switch.
+\keys_define:nn { semio / viz / family / sci-optics }
+  {
+    mode           .tl_set:N   = \l_semio_viz_phys_mode_tl ,
+    focal          .fp_set:N   = \l_semio_viz_phys_focal_fp ,
+    objectDistance .fp_set:N   = \l_semio_viz_phys_objdist_fp ,
+    objectHeight   .fp_set:N   = \l_semio_viz_phys_objheight_fp ,
+    rays           .bool_set:N = \l_semio_viz_phys_rays_bool ,
+  }
+
+% 🔍 §30 ray optics: the image position and height solved from the thin-element equation, then the principal rays drawn to it.
+\SemioVizFamily { sci-optics }
+  {
+    \semio_viz_sci_enter:nnn { sci-optics }
+      {
+        mode=lens , focal=18 , objectDistance=40 , objectHeight=12 , rays=true ,
+        axes=false , grid=false
+      }
+      {#1}
+    \fp_set:Nn \l_semio_viz_sci_a_fp
+      {
+        \l_semio_viz_phys_objdist_fp * \l_semio_viz_phys_focal_fp
+        / ( \l_semio_viz_phys_objdist_fp - \l_semio_viz_phys_focal_fp )
+      }
+    \fp_set:Nn \l_semio_viz_sci_b_fp
+      { - \l_semio_viz_phys_objheight_fp * \l_semio_viz_sci_a_fp / \l_semio_viz_phys_objdist_fp }
+    \draw [ semio~sci~axis ]
+      ( \fp_eval:n { - \l_semio_viz_phys_objdist_fp - 8 } , 0 ) --
+      ( \fp_eval:n { abs ( \l_semio_viz_sci_a_fp ) + 12 } , 0 ) ;
+    \semio_viz_phys_element:
+    \draw [ semio~sci~vector , draw=semio-primary ]
+      ( \fp_eval:n { - \l_semio_viz_phys_objdist_fp } , 0 ) --
+      ( \fp_eval:n { - \l_semio_viz_phys_objdist_fp } , \fp_eval:n { \l_semio_viz_phys_objheight_fp } ) ;
+    \draw [ semio~sci~vector , draw=semio-secondary ]
+      ( \fp_eval:n { \l_semio_viz_sci_a_fp } , 0 ) --
+      ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) ;
+    \int_step_inline:nnnn { -1 } { 2 } { 1 }
+      {
+        \fill [ fill=semio-chrome-foreground ]
+          ( \fp_eval:n { ##1 * \l_semio_viz_phys_focal_fp } , 0 ) circle [ radius=0.7 ] ;
+      }
+    \bool_if:NT \l_semio_viz_phys_rays_bool { \semio_viz_phys_rays: }
+    \semio_viz_sci_report_values:nn { optics/image }
+      { \fp_to_decimal:N \l_semio_viz_sci_a_fp , \fp_to_decimal:N \l_semio_viz_sci_b_fp }
+  }
+% 🪞 Draws the optical element on the axis: one curved arc for a mirror, or a two-arc lens outline otherwise.
+\cs_new_protected:Npn \semio_viz_phys_element:
+  {
+    \str_if_eq:VnTF \l_semio_viz_phys_mode_tl { mirror }
+      {
+        \draw [ semio~sci~curve ]
+          ( 0 , -16 ) .. controls ( -5 , -6 ) and ( -5 , 6 ) .. ( 0 , 16 ) ;
+      }
+      {
+        \draw [ semio~sci~curve ]
+          ( 0 , -16 ) .. controls ( 5 , -6 ) and ( 5 , 6 ) .. ( 0 , 16 )
+          .. controls ( -5 , 6 ) and ( -5 , -6 ) .. ( 0 , -16 ) ;
+      }
+  }
+% 💡 Constructs the image with two principal rays from the object tip: the parallel ray bent at the element, and the straight ray through its centre.
+\cs_new_protected:Npn \semio_viz_phys_rays:
+  {
+    \draw [ semio~sci~thin , draw=semio-tertiary ]
+      ( \fp_eval:n { - \l_semio_viz_phys_objdist_fp } , \fp_eval:n { \l_semio_viz_phys_objheight_fp } ) --
+      ( 0 , \fp_eval:n { \l_semio_viz_phys_objheight_fp } ) --
+      ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) ;
+    \draw [ semio~sci~thin , draw=semio-tertiary ]
+      ( \fp_eval:n { - \l_semio_viz_phys_objdist_fp } , \fp_eval:n { \l_semio_viz_phys_objheight_fp } ) --
+      ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) ;
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-poincare` (§30 polarisation state space):
+%    states (clist of `s1/s2/s3/label`): Stokes vectors, normalised before projection.
+%    radius (fp, 24): sphere radius in millimetres. azimuth, elevation (fp, 35/25): the camera.
+%    meridians, parallels (int, 8/5): the wireframe density.
+\clist_new:N \l_semio_viz_phys_states_clist
+\fp_new:N \l_semio_viz_phys_sphere_fp
+\int_new:N \l_semio_viz_phys_meridians_int
+\int_new:N \l_semio_viz_phys_parallels_int
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-poincare }
+% 🌐 Binds the `sci-poincare` option names onto the Stokes-vector list, the sphere radius, the camera azimuth and elevation and the wireframe density.
+\keys_define:nn { semio / viz / family / sci-poincare }
+  {
+    states    .clist_set:N = \l_semio_viz_phys_states_clist ,
+    radius    .fp_set:N    = \l_semio_viz_phys_sphere_fp ,
+    azimuth   .fp_set:N    = \l_semio_viz_phys_angle_fp ,
+    elevation .fp_set:N    = \l_semio_viz_phys_beta_fp ,
+    meridians .int_set:N   = \l_semio_viz_phys_meridians_int ,
+    parallels .int_set:N   = \l_semio_viz_phys_parallels_int ,
+  }
+
+% 🔮 §30 Poincaré sphere: the wireframe of polarisation states with the given Stokes vectors marked on it.
+\SemioVizFamily { sci-poincare }
+  {
+    \semio_viz_sci_enter:nnn { sci-poincare }
+      {
+        radius=24 , azimuth=35 , elevation=25 , meridians=8 , parallels=5 , axes=false , grid=false ,
+        states={ 1/0/0/H , 0/1/0/D , 0/0/1/R , 0.5/0.5/0.7/E }
+      }
+      {#1}
+    \draw [ semio~sci~axis ] ( 0 , 0 ) circle [ radius=\fp_eval:n { \l_semio_viz_phys_sphere_fp } ] ;
+    \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_phys_meridians_int }
+      {
+        \draw [ semio~sci~grid ] ( 0 , 0 )
+          ellipse [ x~radius=\fp_eval:n { \l_semio_viz_phys_sphere_fp
+              * abs ( cosd ( 180 * ##1 / \l_semio_viz_phys_meridians_int ) ) } ,
+            y~radius=\fp_eval:n { \l_semio_viz_phys_sphere_fp } ] ;
+      }
+    \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_phys_parallels_int }
+      {
+        \draw [ semio~sci~grid ]
+          ( 0 , \fp_eval:n { \l_semio_viz_phys_sphere_fp
+              * cosd ( 180 * ##1 / ( \l_semio_viz_phys_parallels_int + 1 ) ) } )
+          ellipse [ x~radius=\fp_eval:n { \l_semio_viz_phys_sphere_fp
+              * sind ( 180 * ##1 / ( \l_semio_viz_phys_parallels_int + 1 ) ) } ,
+            y~radius=\fp_eval:n { 0.28 * \l_semio_viz_phys_sphere_fp
+              * sind ( 180 * ##1 / ( \l_semio_viz_phys_parallels_int + 1 ) ) } ] ;
+      }
+    \clist_map_inline:Nn \l_semio_viz_phys_states_clist
+      {
+        \semio_viz_phys_record:n {##1}
+        \semio_viz_phys_stokes:
+      }
+  }
+% 🔮 Normalises the pending Stokes vector, projects it onto the sphere through the camera angles, then dots and labels it and reports the screen position.
+\cs_new_protected:Npn \semio_viz_phys_stokes:
+  {
+    \fp_set:Nn \l_semio_viz_sci_g_fp
+      {
+        max ( 1e-6 , sqrt ( ( \semio_viz_phys_field:n { 1 } ) ^ 2
+          + ( \semio_viz_phys_field:n { 2 } ) ^ 2 + ( \semio_viz_phys_field:n { 3 } ) ^ 2 ) )
+      }
+    \fp_set:Nn \l_semio_viz_sci_a_fp
+      {
+        \l_semio_viz_phys_sphere_fp / \l_semio_viz_sci_g_fp
+        * ( - \semio_viz_phys_field:n { 1 } * sind ( \l_semio_viz_phys_angle_fp )
+            + \semio_viz_phys_field:n { 2 } * cosd ( \l_semio_viz_phys_angle_fp ) )
+      }
+    \fp_set:Nn \l_semio_viz_sci_b_fp
+      {
+        \l_semio_viz_phys_sphere_fp / \l_semio_viz_sci_g_fp
+        * ( - ( \semio_viz_phys_field:n { 1 } * cosd ( \l_semio_viz_phys_angle_fp )
+              + \semio_viz_phys_field:n { 2 } * sind ( \l_semio_viz_phys_angle_fp ) )
+              * sind ( \l_semio_viz_phys_beta_fp )
+            + \semio_viz_phys_field:n { 3 } * cosd ( \l_semio_viz_phys_beta_fp ) )
+      }
+    \fill [ fill=semio-primary ]
+      ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) circle [ radius=1.1 ] ;
+    \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , anchor=south~west ]
+      at ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } )
+      { \semio_viz_phys_field:n { 4 } } ;
+    \semio_viz_sci_report_values:nn { poincare/state }
+      { \fp_to_decimal:N \l_semio_viz_sci_a_fp , \fp_to_decimal:N \l_semio_viz_sci_b_fp }
+  }
+%endregion 🔖️Families
+
+
+\ExplSyntaxOff

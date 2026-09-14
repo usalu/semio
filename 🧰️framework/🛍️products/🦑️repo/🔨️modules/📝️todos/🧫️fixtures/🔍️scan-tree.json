@@ -1,0 +1,57 @@
+{
+  "schema": "semio.repo.todos.scan-tree/1",
+  "$comment": "🔍️ A whole tree stated as its own files. These are specification vectors, not recorded data: this checkout carries no `.todos.md` at all and only two genuine todo comments, both inside test literals, so nothing real could be copied — see the `repo-todos-scanning` decision. The tree covers a directory `.todos.md`, an item with no description, a description carrying a colon, a nested item, todo comments under each supported opener, an unsupported extension, a plural keyword, a comment with no colon, a markdown file that is not a `.todos.md`, and the three kinds of directory a filesystem scan refuses to descend into.",
+  "files": [
+    {
+      "path": ".todos.md",
+      "content": "# Todos of the root\n\n- TODO Rename Region: the header region has to be renamed\n- TODO Bare Item\n- TODO Colons: a description: carrying a colon\n  - TODO Indented Item: an item indented under another\nnot a todo line at all\n"
+    },
+    {
+      "path": "docs/.todos.md",
+      "content": "- TODO Write Guide: the guide is missing\n"
+    },
+    {
+      "path": "docs/notes.md",
+      "content": "- TODO Not Scanned: markdown items only count inside .todos.md\n"
+    },
+    {
+      "path": "src/app.ts",
+      "content": "export const value = 1;\n// TODO Cache Result: memoise the lookup\n  // TODO Indented Comment: keeps its indentation\n// TODOS Plural: the keyword has to stand alone\n// TODO NoColon\n// TODO Two: Colons: only the first one splits\n"
+    },
+    {
+      "path": "src/script.py",
+      "content": "value = 1\n# TODO Python Todo: the hash opener counts\n"
+    },
+    {
+      "path": "src/query.sql",
+      "content": "-- TODO Sql Todo: the dash opener counts but .sql is not scanned\n"
+    },
+    {
+      "path": "src/component.go",
+      "content": "package main\n\n// TODO Go Todo: the go file is scanned\n"
+    },
+    {
+      "path": "src/config.json",
+      "content": "{\n}\n"
+    },
+    {
+      "path": "node_modules/pkg/index.js",
+      "content": "// TODO Skipped Dependency: a dependency is never scanned\n"
+    },
+    {
+      "path": "dist/bundle.js",
+      "content": "// TODO Skipped Build: a build output is never scanned\n"
+    },
+    {
+      "path": ".cache/tool.ts",
+      "content": "// TODO Skipped Dotted: a dotted directory is never scanned\n"
+    }
+  ],
+  "searchTerms": [
+    "todo",
+    "GUIDE",
+    "memoise",
+    "nothing-matches",
+    ""
+  ]
+}

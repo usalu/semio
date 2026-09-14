@@ -1,0 +1,9 @@
+{
+  "name": "sample",
+  "shape": {
+    "sides": 3,
+    "label": "triangle"
+  },
+  "tags": ["a", "b"],
+  "enabled": true
+}

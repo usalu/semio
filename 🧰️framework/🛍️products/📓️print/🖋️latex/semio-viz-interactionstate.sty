@@ -1,0 +1,562 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-interactionstate}[2026/09/05 v0.2.0 semio viz static equivalents of interactive states]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-diagram-flowchart}
+
+\ExplSyntaxOn
+
+%region 🔖️Panels
+% 🖼️ Panel frame with an optional caption; the body is drawn inside a shifted, scaled scope.
+\fp_new:N \l_semio_viz_is_x_fp
+\fp_new:N \l_semio_viz_is_y_fp
+\fp_new:N \l_semio_viz_is_w_fp
+\fp_new:N \l_semio_viz_is_h_fp
+\int_new:N \l_semio_viz_is_n_int
+\int_new:N \l_semio_viz_is_i_int
+\tl_new:N \l_semio_viz_is_val_tl
+\tl_new:N \l_semio_viz_is_caption_tl
+
+\cs_new_protected:Npn \semio_viz_is_panel:nnnnn #1#2#3#4#5 {
+  \draw [ semio-chrome-border-normal , line~width=\semio@stroke@hairline , rounded~corners=0.6mm ]
+    ( \fp_eval:n {#1} , \fp_eval:n {#2} ) rectangle ( \fp_eval:n { (#1) + (#3) } , \fp_eval:n { (#2) + (#4) } ) ;
+  \tl_if_empty:nF {#5} {
+    \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-text-normal , anchor=north~west , inner~sep=0.4mm ]
+      at ( \fp_eval:n { (#1) + 0.4 } , \fp_eval:n { (#2) + (#4) - 0.2 } ) {#5} ;
+  }
+  \semio_viz_probe_geometry:nx { diagram-panel }
+    {
+      \semio_viz_format_mm:n {#1} , \semio_viz_format_mm:n {#2} ,
+      \semio_viz_format_mm:n {#3} , \semio_viz_format_mm:n {#4}
+    }
+}
+%endregion 🔖️Panels
+
+%region 🔖️Keys-state-overview
+% 🗝️ `state-overview` composes an overview panel with a detail panel and the selection rectangle
+%    that links them (overview+detail, focus+context, zoom inset, magnified region).
+%   data      tl   sample table (default demo-state-series), columns t/value
+%   brush     clist selection window `t0,t1` in data units (default 4,7)
+%   domain    clist data domain `min,max` of t (default 0,12)
+%   arrangement choice side-by-side|inset|stacked  (default side-by-side)
+%   detail-share fp  fraction of the frame taken by the detail panel (default 0.5)
+%   zoom      bool draw the leader lines from the selection to the detail panel (default true)
+%   caption-overview/caption-detail tl  panel captions (default Overview / Detail)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-state-overview
+\clist_new:N \l_semio_viz_is_brush_clist
+\clist_new:N \l_semio_viz_is_domain_clist
+\tl_new:N \l_semio_viz_is_arrange_tl
+\tl_new:N \l_semio_viz_is_capa_tl
+\tl_new:N \l_semio_viz_is_capb_tl
+\fp_new:N \l_semio_viz_is_share_fp
+\bool_new:N \l_semio_viz_is_zoom_bool
+\fp_new:N \l_semio_viz_is_tmin_fp
+\fp_new:N \l_semio_viz_is_tmax_fp
+\fp_new:N \l_semio_viz_is_ba_fp
+\fp_new:N \l_semio_viz_is_bb_fp
+
+% 🎛️ Binds the `state-overview` keys onto the sample table, the brush window and domain, the arrangement and detail share, the leader switch, the two captions and the frame size.
+\keys_define:nn { semio / viz / family / state-overview } {
+  data        .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  brush       .clist_set:N = \l_semio_viz_is_brush_clist,
+  domain      .clist_set:N = \l_semio_viz_is_domain_clist,
+  arrangement .tl_set:N = \l_semio_viz_is_arrange_tl,
+  detail-share .fp_set:N = \l_semio_viz_is_share_fp,
+  zoom        .bool_set:N = \l_semio_viz_is_zoom_bool,
+  caption-overview .tl_set:N = \l_semio_viz_is_capa_tl,
+  caption-detail   .tl_set:N = \l_semio_viz_is_capb_tl,
+  width       .fp_set:N = \l_semio_viz_dg_w_fp,
+  height      .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 🚪 Entry point of `state-overview`: demands a frame, resets the diagram state, installs the defaults, reads the keys, unpacks domain and brush into numbers and dispatches on the arrangement.
+\cs_new_protected:Npn \semio_viz_is_overview:n #1 {
+  \semio_viz_frame_require:n { state-overview }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-state-series }
+  \clist_set:Nn \l_semio_viz_is_brush_clist { 4, 7 }
+  \clist_set:Nn \l_semio_viz_is_domain_clist { 0, 12 }
+  \tl_set:Nn \l_semio_viz_is_arrange_tl { side-by-side }
+  \tl_set:Nn \l_semio_viz_is_capa_tl { Overview }
+  \tl_set:Nn \l_semio_viz_is_capb_tl { Detail }
+  \fp_set:Nn \l_semio_viz_is_share_fp { 0.5 }
+  \bool_set_true:N \l_semio_viz_is_zoom_bool
+  \keys_set:nn { semio / viz / family / state-overview } {#1}
+  \fp_set:Nn \l_semio_viz_is_tmin_fp { \clist_item:Nn \l_semio_viz_is_domain_clist { 1 } }
+  \fp_set:Nn \l_semio_viz_is_tmax_fp { \clist_item:Nn \l_semio_viz_is_domain_clist { 2 } }
+  \fp_set:Nn \l_semio_viz_is_ba_fp { \clist_item:Nn \l_semio_viz_is_brush_clist { 1 } }
+  \fp_set:Nn \l_semio_viz_is_bb_fp { \clist_item:Nn \l_semio_viz_is_brush_clist { 2 } }
+  \str_case:VnF \l_semio_viz_is_arrange_tl {
+    { inset } { \semio_viz_is_overview_inset: }
+    { stacked } { \semio_viz_is_overview_stacked: }
+  } { \semio_viz_is_overview_side: }
+}
+
+% 📉 One series polyline inside the current panel, clipped to the window [#1,#2] of the domain.
+\cs_new_protected:Npn \semio_viz_is_series:nn #1#2 {
+  \tl_clear:N \l_semio_viz_dg_path_tl
+  \exp_args:NV \semio_viz_is_series_run:nnn \l_semio_viz_dg_nodes_tl {#1} {#2}
+  \tl_if_empty:NF \l_semio_viz_dg_path_tl {
+    \draw [ semio-primary , line~width=\semio@stroke@default ] \l_semio_viz_dg_path_tl ;
+  }
+}
+
+% 📈 Builds the polyline: every sample whose time falls in the requested window is mapped across the panel width and up by its share of the column maximum.
+\cs_new_protected:Npn \semio_viz_is_series_run:nnn #1#2#3 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_is_n_int
+  \semio_viz_table_col_max:nnN {#1} { value } \l_semio_viz_dg_yb_fp
+  \fp_compare:nT { \l_semio_viz_dg_yb_fp <= 0 } { \fp_set:Nn \l_semio_viz_dg_yb_fp { 1 } }
+  \int_step_inline:nn { \l_semio_viz_is_n_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { t } \l_semio_viz_is_val_tl
+    \fp_set:Nn \l_semio_viz_dg_xa_fp { \l_semio_viz_is_val_tl }
+    \fp_compare:nT { \l_semio_viz_dg_xa_fp >= (#2) && \l_semio_viz_dg_xa_fp <= (#3) } {
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { value } \l_semio_viz_is_val_tl
+      \fp_set:Nn \l_semio_viz_dg_ya_fp { \l_semio_viz_is_val_tl }
+      \fp_set:Nn \l_semio_viz_dg_xb_fp
+        {
+          \l_semio_viz_is_x_fp +
+          ( \l_semio_viz_dg_xa_fp - (#2) ) / max( (#3) - (#2) , 0.0001 ) * \l_semio_viz_is_w_fp
+        }
+      \fp_set:Nn \l_semio_viz_dg_yb_fp
+        { \l_semio_viz_is_y_fp + 1 + \l_semio_viz_dg_ya_fp / \l_semio_viz_dg_yb_fp * ( \l_semio_viz_is_h_fp - 4 ) }
+      \tl_if_empty:NTF \l_semio_viz_dg_path_tl
+        { \tl_set:Nx \l_semio_viz_dg_path_tl { ( \semio_viz_format_mm:n { \l_semio_viz_dg_xb_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_yb_fp } ) } }
+        { \tl_put_right:Nx \l_semio_viz_dg_path_tl { -- ( \semio_viz_format_mm:n { \l_semio_viz_dg_xb_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_yb_fp } ) } }
+    }
+  }
+}
+
+% ↔️ Overview and detail as two panels beside each other, the detail taking its share of the width, with leader lines when zoom is on.
+\cs_new_protected:Npn \semio_viz_is_overview_side: {
+  \fp_set:Nn \l_semio_viz_is_w_fp { ( \l_semio_viz_dg_w_fp - 3 ) * ( 1 - \l_semio_viz_is_share_fp ) }
+  \fp_set:Nn \l_semio_viz_is_h_fp { \l_semio_viz_dg_h_fp - 2 }
+  \fp_set:Nn \l_semio_viz_is_x_fp { 1 }
+  \fp_set:Nn \l_semio_viz_is_y_fp { 1 }
+  \semio_viz_is_panel:nnnnn { \l_semio_viz_is_x_fp } { \l_semio_viz_is_y_fp } { \l_semio_viz_is_w_fp }
+    { \l_semio_viz_is_h_fp } { \tl_use:N \l_semio_viz_is_capa_tl }
+  \semio_viz_is_series:nn { \l_semio_viz_is_tmin_fp } { \l_semio_viz_is_tmax_fp }
+  \semio_viz_is_brush_rect:
+  \fp_set:Nn \l_semio_viz_is_x_fp { \l_semio_viz_is_w_fp + 2 }
+  \fp_set:Nn \l_semio_viz_is_w_fp { ( \l_semio_viz_dg_w_fp - 3 ) * \l_semio_viz_is_share_fp }
+  \semio_viz_is_panel:nnnnn { \l_semio_viz_is_x_fp } { \l_semio_viz_is_y_fp } { \l_semio_viz_is_w_fp }
+    { \l_semio_viz_is_h_fp } { \tl_use:N \l_semio_viz_is_capb_tl }
+  \semio_viz_is_series:nn { \l_semio_viz_is_ba_fp } { \l_semio_viz_is_bb_fp }
+  \bool_if:NT \l_semio_viz_is_zoom_bool { \semio_viz_is_leaders: }
+}
+
+% ⬇️ The same two panels full width, the overview with its brush at the bottom and the detail stacked above it.
+\cs_new_protected:Npn \semio_viz_is_overview_stacked: {
+  \fp_set:Nn \l_semio_viz_is_w_fp { \l_semio_viz_dg_w_fp - 2 }
+  \fp_set:Nn \l_semio_viz_is_h_fp { ( \l_semio_viz_dg_h_fp - 3 ) * ( 1 - \l_semio_viz_is_share_fp ) }
+  \fp_set:Nn \l_semio_viz_is_x_fp { 1 }
+  \fp_set:Nn \l_semio_viz_is_y_fp { 1 }
+  \semio_viz_is_panel:nnnnn { \l_semio_viz_is_x_fp } { \l_semio_viz_is_y_fp } { \l_semio_viz_is_w_fp }
+    { \l_semio_viz_is_h_fp } { \tl_use:N \l_semio_viz_is_capa_tl }
+  \semio_viz_is_series:nn { \l_semio_viz_is_tmin_fp } { \l_semio_viz_is_tmax_fp }
+  \semio_viz_is_brush_rect:
+  \fp_set:Nn \l_semio_viz_is_y_fp { \l_semio_viz_is_h_fp + 2 }
+  \fp_set:Nn \l_semio_viz_is_h_fp { ( \l_semio_viz_dg_h_fp - 3 ) * \l_semio_viz_is_share_fp }
+  \semio_viz_is_panel:nnnnn { \l_semio_viz_is_x_fp } { \l_semio_viz_is_y_fp } { \l_semio_viz_is_w_fp }
+    { \l_semio_viz_is_h_fp } { \tl_use:N \l_semio_viz_is_capb_tl }
+  \semio_viz_is_series:nn { \l_semio_viz_is_ba_fp } { \l_semio_viz_is_bb_fp }
+}
+
+% 🔍 The overview fills the frame and the detail sits on top of it as an opaque inset in the upper right corner.
+\cs_new_protected:Npn \semio_viz_is_overview_inset: {
+  \fp_set:Nn \l_semio_viz_is_w_fp { \l_semio_viz_dg_w_fp - 2 }
+  \fp_set:Nn \l_semio_viz_is_h_fp { \l_semio_viz_dg_h_fp - 2 }
+  \fp_set:Nn \l_semio_viz_is_x_fp { 1 }
+  \fp_set:Nn \l_semio_viz_is_y_fp { 1 }
+  \semio_viz_is_panel:nnnnn { \l_semio_viz_is_x_fp } { \l_semio_viz_is_y_fp } { \l_semio_viz_is_w_fp }
+    { \l_semio_viz_is_h_fp } { \tl_use:N \l_semio_viz_is_capa_tl }
+  \semio_viz_is_series:nn { \l_semio_viz_is_tmin_fp } { \l_semio_viz_is_tmax_fp }
+  \semio_viz_is_brush_rect:
+  \fp_set:Nn \l_semio_viz_dg_xa_fp { \l_semio_viz_is_x_fp }
+  \fp_set:Nn \l_semio_viz_dg_ya_fp { \l_semio_viz_is_y_fp }
+  \fp_set:Nn \l_semio_viz_is_x_fp { \l_semio_viz_dg_w_fp * 0.52 }
+  \fp_set:Nn \l_semio_viz_is_y_fp { \l_semio_viz_dg_h_fp * 0.52 }
+  \fp_set:Nn \l_semio_viz_is_w_fp { \l_semio_viz_dg_w_fp * 0.42 }
+  \fp_set:Nn \l_semio_viz_is_h_fp { \l_semio_viz_dg_h_fp * 0.42 }
+  \fill [ semio-chrome-canvas ]
+    ( \fp_eval:n { \l_semio_viz_is_x_fp } , \fp_eval:n { \l_semio_viz_is_y_fp } )
+    rectangle ( \fp_eval:n { \l_semio_viz_is_x_fp + \l_semio_viz_is_w_fp } , \fp_eval:n { \l_semio_viz_is_y_fp + \l_semio_viz_is_h_fp } ) ;
+  \semio_viz_is_panel:nnnnn { \l_semio_viz_is_x_fp } { \l_semio_viz_is_y_fp } { \l_semio_viz_is_w_fp }
+    { \l_semio_viz_is_h_fp } { \tl_use:N \l_semio_viz_is_capb_tl }
+  \semio_viz_is_series:nn { \l_semio_viz_is_ba_fp } { \l_semio_viz_is_bb_fp }
+}
+
+% 🖍️ The selection window frozen as a translucent, outlined rectangle over the overview panel, its two edges kept for the leader lines and reported as geometry.
+\cs_new_protected:Npn \semio_viz_is_brush_rect: {
+  \fp_set:Nn \l_semio_viz_dg_xa_fp
+    {
+      \l_semio_viz_is_x_fp +
+      ( \l_semio_viz_is_ba_fp - \l_semio_viz_is_tmin_fp ) / ( \l_semio_viz_is_tmax_fp - \l_semio_viz_is_tmin_fp ) * \l_semio_viz_is_w_fp
+    }
+  \fp_set:Nn \l_semio_viz_dg_xb_fp
+    {
+      \l_semio_viz_is_x_fp +
+      ( \l_semio_viz_is_bb_fp - \l_semio_viz_is_tmin_fp ) / ( \l_semio_viz_is_tmax_fp - \l_semio_viz_is_tmin_fp ) * \l_semio_viz_is_w_fp
+    }
+  \fill [ semio-primary , fill~opacity=0.14 ]
+    ( \fp_eval:n { \l_semio_viz_dg_xa_fp } , \fp_eval:n { \l_semio_viz_is_y_fp + 0.4 } )
+    rectangle ( \fp_eval:n { \l_semio_viz_dg_xb_fp } , \fp_eval:n { \l_semio_viz_is_y_fp + \l_semio_viz_is_h_fp - 0.4 } ) ;
+  \draw [ semio-primary , line~width=\semio@stroke@hairline ]
+    ( \fp_eval:n { \l_semio_viz_dg_xa_fp } , \fp_eval:n { \l_semio_viz_is_y_fp + 0.4 } )
+    rectangle ( \fp_eval:n { \l_semio_viz_dg_xb_fp } , \fp_eval:n { \l_semio_viz_is_y_fp + \l_semio_viz_is_h_fp - 0.4 } ) ;
+  \semio_viz_probe_geometry:nx { diagram-brush }
+    {
+      \semio_viz_format_mm:n { \l_semio_viz_dg_xa_fp } , \semio_viz_format_mm:n { \l_semio_viz_is_y_fp + 0.4 } ,
+      \semio_viz_format_mm:n { \l_semio_viz_dg_xb_fp } , \semio_viz_format_mm:n { \l_semio_viz_is_y_fp + \l_semio_viz_is_h_fp - 0.4 }
+    }
+}
+
+% ➰ Two dotted leaders tying the brush corners to the near corners of the detail panel, so the zoom relation reads without animation.
+\cs_new_protected:Npn \semio_viz_is_leaders: {
+  \draw [ semio-primary , line~width=\semio@stroke@hairline , dash~pattern=on~1pt~off~1pt ]
+    ( \fp_eval:n { \l_semio_viz_dg_xa_fp } , \fp_eval:n { \l_semio_viz_is_y_fp + \l_semio_viz_is_h_fp - 0.4 } ) --
+    ( \fp_eval:n { \l_semio_viz_is_x_fp } , \fp_eval:n { \l_semio_viz_is_y_fp + \l_semio_viz_is_h_fp } )
+    ( \fp_eval:n { \l_semio_viz_dg_xb_fp } , \fp_eval:n { \l_semio_viz_is_y_fp + 0.4 } ) --
+    ( \fp_eval:n { \l_semio_viz_is_x_fp } , \fp_eval:n { \l_semio_viz_is_y_fp } ) ;
+}
+% 🗺️ Registers `state-overview` as a viz family, so a key list in the document body draws the overview-and-detail pair.
+\SemioVizFamily { state-overview } { \semio_viz_is_overview:n {#1} }
+
+%region 🔖️Keys-state-selection
+% 🗝️ `state-selection` freezes one interactive selection state over a node/edge diagram:
+%    the selected node, its neighbourhood, a hover callout, or a filtered comparison.
+%   data/nodes/edges/id/label/row/col  as in the `flow` kernel; `data` binds the node table
+%   routing  choice edge routing of the `flow` kernel
+%   selected tl   id of the selected node (default check)
+%   mode     choice highlight|neighbourhood|callout|filtered  (default highlight)
+%   dim      fp    opacity of everything outside the selection (default 0.25)
+%   callout  tl    text of the hover callout, empty uses the selected node label (default empty)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-state-selection
+\tl_new:N \l_semio_viz_is_selected_tl
+\tl_new:N \l_semio_viz_is_mode_tl
+\tl_new:N \l_semio_viz_is_callout_tl
+\fp_new:N \l_semio_viz_is_dim_fp
+\int_new:N \l_semio_viz_is_kept_int
+\seq_new:N \l_semio_viz_is_keep_seq
+
+% 🎚️ Binds the `state-selection` keys onto the node and edge tables with their columns, the selected id, the state mode, the dimming opacity, the callout text, the routing and the frame size.
+\keys_define:nn { semio / viz / family / state-selection } {
+  % 📊 The catalogue binds every chart kind's table as `data=`; the selection reads its nodes from
+  % it, and an explicit `nodes=` later in the same option list still wins.
+  data     .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  nodes    .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  edges    .tl_set:N = \l_semio_viz_dg_edges_tl,
+  id       .tl_set:N = \l_semio_viz_dg_col_id_tl,
+  label    .tl_set:N = \l_semio_viz_dg_col_label_tl,
+  row      .tl_set:N = \l_semio_viz_dg_col_row_tl,
+  col      .tl_set:N = \l_semio_viz_dg_col_col_tl,
+  selected .tl_set:N = \l_semio_viz_is_selected_tl,
+  mode     .tl_set:N = \l_semio_viz_is_mode_tl,
+  dim      .fp_set:N = \l_semio_viz_is_dim_fp,
+  callout  .tl_set:N = \l_semio_viz_is_callout_tl,
+  routing  .tl_set:N = \l_semio_viz_dg_routing_tl,
+  width    .fp_set:N = \l_semio_viz_dg_w_fp,
+  height   .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 🛎️ Entry point of `state-selection`: defaults to highlighting one node, lays the graph out, works out what stays lit, then draws edges, nodes and, in callout mode, the bubble.
+\cs_new_protected:Npn \semio_viz_is_selection:n #1 {
+  \semio_viz_frame_require:n { state-selection }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_is_selected_tl { check }
+  \tl_set:Nn \l_semio_viz_is_mode_tl { highlight }
+  \tl_clear:N \l_semio_viz_is_callout_tl
+  \fp_set:Nn \l_semio_viz_is_dim_fp { 0.25 }
+  \keys_set:nn { semio / viz / family / state-selection } {#1}
+  \semio_viz_dg_layout:
+  \semio_viz_is_neighbourhood:
+  \semio_viz_is_selection_edges:
+  \exp_args:NV \semio_viz_is_selection_nodes:n \l_semio_viz_dg_nodes_tl
+  \str_if_eq:VnT \l_semio_viz_is_mode_tl { callout } { \semio_viz_is_callout: }
+}
+
+% 👥 Starts the kept set with the selected node alone, widening it to its neighbours only in neighbourhood mode.
+\cs_new_protected:Npn \semio_viz_is_neighbourhood: {
+  \seq_clear:N \l_semio_viz_is_keep_seq
+  \seq_put_right:NV \l_semio_viz_is_keep_seq \l_semio_viz_is_selected_tl
+  \str_if_eq:VnT \l_semio_viz_is_mode_tl { neighbourhood }
+    { \exp_args:NV \semio_viz_is_neighbours:n \l_semio_viz_dg_edges_tl }
+}
+
+% 🧲 Scans the edge table, adding the far end of every edge that touches the selected node to the kept set.
+\cs_new_protected:Npn \semio_viz_is_neighbours:n #1 {
+  \seq_if_in:NnT \g_semio_viz_table_names_seq {#1} {
+    \semio_viz_table_nrows:nN {#1} \l_semio_viz_is_n_int
+    \int_step_inline:nn { \l_semio_viz_is_n_int } {
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_source_tl } \l_semio_viz_dg_ta_tl
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_target_tl } \l_semio_viz_dg_tb_tl
+      \str_if_eq:VVT \l_semio_viz_dg_ta_tl \l_semio_viz_is_selected_tl
+        { \seq_put_right:NV \l_semio_viz_is_keep_seq \l_semio_viz_dg_tb_tl }
+      \str_if_eq:VVT \l_semio_viz_dg_tb_tl \l_semio_viz_is_selected_tl
+        { \seq_put_right:NV \l_semio_viz_is_keep_seq \l_semio_viz_dg_ta_tl }
+    }
+  }
+}
+
+% 🔗 Draws the edges only when an edge table was named at all.
+\cs_new_protected:Npn \semio_viz_is_selection_edges: {
+  \tl_if_empty:NF \l_semio_viz_dg_edges_tl
+    { \exp_args:NV \semio_viz_is_selection_edges_run:n \l_semio_viz_dg_edges_tl }
+}
+
+% 🪡 Routes every edge of the table, at full opacity when either end is in the kept set and at the dimming opacity otherwise.
+\cs_new_protected:Npn \semio_viz_is_selection_edges_run:n #1 {
+  \seq_if_in:NnT \g_semio_viz_table_names_seq {#1} {
+    \semio_viz_dg_arrow_style:N \l_semio_viz_dg_arrowstyle_tl
+    \semio_viz_table_nrows:nN {#1} \l_semio_viz_is_n_int
+    \int_step_inline:nn { \l_semio_viz_is_n_int } {
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_source_tl } \l_semio_viz_dg_ta_tl
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_target_tl } \l_semio_viz_dg_tb_tl
+      \seq_if_in:NVTF \l_semio_viz_is_keep_seq \l_semio_viz_dg_ta_tl
+        { \fp_set:Nn \l_semio_viz_dg_c_fp { 1 } }
+        {
+          \seq_if_in:NVTF \l_semio_viz_is_keep_seq \l_semio_viz_dg_tb_tl
+            { \fp_set:Nn \l_semio_viz_dg_c_fp { 1 } }
+            { \fp_set_eq:NN \l_semio_viz_dg_c_fp \l_semio_viz_is_dim_fp }
+        }
+      \semio_viz_dg_route:nn { \l_semio_viz_dg_ta_tl } { \l_semio_viz_dg_tb_tl }
+      \use:x { \exp_not:N \semio_viz_dg_route_draw:nn
+        { semio-chrome-border-emphasized , line~width=\semio@stroke@hairline ,
+          draw~opacity=\fp_eval:n { \l_semio_viz_dg_c_fp } , \exp_not:V \l_semio_viz_dg_arrowstyle_tl } { } }
+    }
+  }
+}
+
+% 🎨 Paints every node in its laid-out shape: kept nodes get the accent tone and border, the rest fall back to the muted tone, or to bare canvas in filtered mode.
+\cs_new_protected:Npn \semio_viz_is_selection_nodes:n #1 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_is_n_int
+  \int_step_inline:nn { \l_semio_viz_is_n_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_id_tl } \l_semio_viz_dg_id_tl
+    \seq_if_in:NVTF \l_semio_viz_is_keep_seq \l_semio_viz_dg_id_tl
+      {
+        \semio_viz_dg_tone:n { 1 }
+        \tl_set:Nn \l_semio_viz_dg_draw_tl { semio-primary }
+      }
+      {
+        \str_if_eq:VnTF \l_semio_viz_is_mode_tl { filtered }
+          { \tl_set:Nn \l_semio_viz_dg_fill_tl { semio-chrome-canvas } }
+          { \semio_viz_dg_tone:n { 0 } }
+        \tl_set:Nn \l_semio_viz_dg_draw_tl { semio-chrome-border-normal }
+      }
+    \semio_viz_dg_get:n { \l_semio_viz_dg_id_tl }
+    \tl_set:Nx \l_semio_viz_dg_tb_tl { \clist_item:Nn \l_semio_viz_dg_rec_tl { 5 } }
+    \exp_args:NV \semio_viz_dg_shape_named:n \l_semio_viz_dg_tb_tl
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+    \semio_viz_dg_label:nnnn { \l_semio_viz_dg_a_fp } { \l_semio_viz_dg_b_fp } { \l_semio_viz_dg_c_fp }
+      { \tl_use:N \l_semio_viz_dg_label_tl }
+    \seq_if_in:NVTF \l_semio_viz_is_keep_seq \l_semio_viz_dg_id_tl
+      { \int_set:Nn \l_semio_viz_is_kept_int { 1 } } { \int_zero:N \l_semio_viz_is_kept_int }
+    \semio_viz_probe_geometry:nx { diagram-selection }
+      {
+        \semio_viz_format_mm:n { \l_semio_viz_dg_a_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_b_fp } ,
+        \semio_viz_format_mm:n { \l_semio_viz_dg_c_fp } ,
+        \int_use:N \l_semio_viz_is_kept_int ,
+        \str_if_eq:VnTF \l_semio_viz_is_mode_tl { filtered } { 0 } { 1 }
+      }
+  }
+}
+
+% 💬 The frozen hover tooltip: a leader from the top of the selected node up to a rounded bubble carrying the callout text, or the node id when none was given.
+\cs_new_protected:Npn \semio_viz_is_callout: {
+  \semio_viz_dg_get:n { \l_semio_viz_is_selected_tl }
+  \tl_if_empty:NF \l_semio_viz_dg_rec_tl {
+    \draw [ semio-primary , line~width=\semio@stroke@hairline ]
+      ( \fp_eval:n { \l_semio_viz_dg_a_fp } , \fp_eval:n { \l_semio_viz_dg_b_fp + \l_semio_viz_dg_d_fp / 2 } ) --
+      ( \fp_eval:n { \l_semio_viz_dg_a_fp + 6 } , \fp_eval:n { \l_semio_viz_dg_b_fp + \l_semio_viz_dg_d_fp / 2 + 5 } ) ;
+    \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-foreground , fill=semio-chrome-canvas ,
+            draw=semio-primary , line~width=\semio@stroke@hairline , rounded~corners=0.6mm ,
+            anchor=south~west , inner~sep=0.6mm ]
+      at ( \fp_eval:n { \l_semio_viz_dg_a_fp + 6 } , \fp_eval:n { \l_semio_viz_dg_b_fp + \l_semio_viz_dg_d_fp / 2 + 5 } )
+      {
+        \tl_if_empty:NTF \l_semio_viz_is_callout_tl
+          { \tl_use:N \l_semio_viz_is_selected_tl } { \tl_use:N \l_semio_viz_is_callout_tl }
+      } ;
+    \semio_viz_probe_geometry:nx { diagram-tooltip }
+      {
+        \semio_viz_format_mm:n { \l_semio_viz_dg_a_fp } ,
+        \semio_viz_format_mm:n { \l_semio_viz_dg_b_fp + \l_semio_viz_dg_d_fp / 2 } ,
+        \semio_viz_format_mm:n { \l_semio_viz_dg_a_fp + 6 } ,
+        \semio_viz_format_mm:n { \l_semio_viz_dg_b_fp + \l_semio_viz_dg_d_fp / 2 + 5 }
+      }
+  }
+}
+% 👆 Registers `state-selection` as a viz family, so a key list in the document body freezes one selection state of a graph.
+\SemioVizFamily { state-selection } { \semio_viz_is_selection:n {#1} }
+
+%region 🔖️Keys-state-sequence
+% 🗝️ `state-sequence` lays out frames of a transition, morph or storyboard as small multiples.
+%   data     tl   frame table (default demo-state-frames), columns label/caption/value/tone
+%   frames   int  number of frames drawn; 0 uses the table length (default 0)
+%   columns  int  frames per row (default 4)
+%   depiction choice bar|position|radius|path  what the frame value drives (default bar)
+%   arrows   bool draw the transition arrow between frames (default true)
+%   ghost    bool draw the previous frame as a faint ghost (default false)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-state-sequence
+\tl_new:N \l_semio_viz_is_depiction_tl
+\int_new:N \l_semio_viz_is_frames_int
+\int_new:N \l_semio_viz_is_columns_int
+\bool_new:N \l_semio_viz_is_arrows_bool
+\bool_new:N \l_semio_viz_is_ghost_bool
+\fp_new:N \l_semio_viz_is_prev_fp
+\fp_new:N \l_semio_viz_is_max_fp
+
+% 🕹️ Binds the `state-sequence` keys onto the frame table and its columns, the frame and column counts, the depiction, the arrow and ghost switches and the frame size.
+\keys_define:nn { semio / viz / family / state-sequence } {
+  data      .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  label     .tl_set:N = \l_semio_viz_dg_col_label_tl,
+  tone      .tl_set:N = \l_semio_viz_dg_col_tone_tl,
+  frames    .int_set:N = \l_semio_viz_is_frames_int,
+  columns   .int_set:N = \l_semio_viz_is_columns_int,
+  depiction .tl_set:N = \l_semio_viz_is_depiction_tl,
+  arrows    .bool_set:N = \l_semio_viz_is_arrows_bool,
+  ghost     .bool_set:N = \l_semio_viz_is_ghost_bool,
+  width     .fp_set:N = \l_semio_viz_dg_w_fp,
+  height    .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 🎬 Entry point of `state-sequence`: demands a frame, resets the diagram state, defaults to bar depictions four to a row with arrows and no ghosts, then runs the named table.
+\cs_new_protected:Npn \semio_viz_is_sequence:n #1 {
+  \semio_viz_frame_require:n { state-sequence }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-state-frames }
+  \tl_set:Nn \l_semio_viz_is_depiction_tl { bar }
+  \int_zero:N \l_semio_viz_is_frames_int
+  \int_set:Nn \l_semio_viz_is_columns_int { 4 }
+  \bool_set_true:N \l_semio_viz_is_arrows_bool
+  \bool_set_false:N \l_semio_viz_is_ghost_bool
+  \keys_set:nn { semio / viz / family / state-sequence } {#1}
+  \exp_args:NV \semio_viz_is_sequence_run:n \l_semio_viz_dg_nodes_tl
+}
+
+% 📐 Settles how many frames to draw and over how many rows, takes the largest value as the common scale, sizes one cell of the grid and then draws the frames in order.
+\cs_new_protected:Npn \semio_viz_is_sequence_run:n #1 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_is_n_int
+  \int_compare:nNnT { \l_semio_viz_is_frames_int } > { 0 }
+    { \int_set_eq:NN \l_semio_viz_is_n_int \l_semio_viz_is_frames_int }
+  \int_compare:nNnT { \l_semio_viz_is_n_int } < { 1 } { \int_set:Nn \l_semio_viz_is_n_int { 1 } }
+  \int_compare:nNnT { \l_semio_viz_is_columns_int } < { 1 } { \int_set:Nn \l_semio_viz_is_columns_int { 1 } }
+  \semio_viz_table_col_max:nnN {#1} { value } \l_semio_viz_is_max_fp
+  \fp_compare:nT { \l_semio_viz_is_max_fp <= 0 } { \fp_set:Nn \l_semio_viz_is_max_fp { 1 } }
+  \int_set:Nn \l_semio_viz_dg_ia_int
+    { \int_div_truncate:nn { \l_semio_viz_is_n_int + \l_semio_viz_is_columns_int - 1 } { \l_semio_viz_is_columns_int } }
+  \fp_set:Nn \l_semio_viz_is_w_fp { ( \l_semio_viz_dg_w_fp - 2 ) / \l_semio_viz_is_columns_int - 1.6 }
+  \fp_set:Nn \l_semio_viz_is_h_fp { ( \l_semio_viz_dg_h_fp - 2 ) / \l_semio_viz_dg_ia_int - 1.6 }
+  \fp_zero:N \l_semio_viz_is_prev_fp
+  \int_step_inline:nn { \l_semio_viz_is_n_int } { \semio_viz_is_frame:nn {#1} {##1} }
+}
+
+% 🎞️ One small multiple: its row and column give it a captioned panel, the ghost of the previous value is drawn faintly under the current one, and a transition arrow follows unless the frame ends a row or the sequence.
+\cs_new_protected:Npn \semio_viz_is_frame:nn #1#2 {
+  \int_set:Nn \l_semio_viz_is_i_int { \int_mod:nn { (#2) - 1 } { \l_semio_viz_is_columns_int } }
+  \int_set:Nn \l_semio_viz_dg_ib_int { \int_div_truncate:nn { (#2) - 1 } { \l_semio_viz_is_columns_int } }
+  \fp_set:Nn \l_semio_viz_is_x_fp
+    { 1 + \l_semio_viz_is_i_int * ( ( \l_semio_viz_dg_w_fp - 2 ) / \l_semio_viz_is_columns_int ) }
+  \fp_set:Nn \l_semio_viz_is_y_fp
+    {
+      \l_semio_viz_dg_h_fp - 1 - ( \l_semio_viz_dg_ib_int + 1 ) * ( \l_semio_viz_dg_h_fp - 2 ) / \l_semio_viz_dg_ia_int + 1.6
+    }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+  \semio_viz_is_panel:nnnnn { \l_semio_viz_is_x_fp } { \l_semio_viz_is_y_fp } { \l_semio_viz_is_w_fp }
+    { \l_semio_viz_is_h_fp } { \tl_use:N \l_semio_viz_dg_label_tl }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { value } \l_semio_viz_is_val_tl
+  \tl_if_empty:NT \l_semio_viz_is_val_tl { \tl_set:Nn \l_semio_viz_is_val_tl { 0 } }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_tone_tl } \l_semio_viz_dg_cell_tl
+  \tl_if_empty:NTF \l_semio_viz_dg_cell_tl
+    { \semio_viz_dg_tone:n { 1 } } { \exp_args:NV \semio_viz_dg_tone:n \l_semio_viz_dg_cell_tl }
+  \bool_if:NT \l_semio_viz_is_ghost_bool {
+    \fp_compare:nT { \l_semio_viz_is_prev_fp > 0 }
+      { \semio_viz_is_depict:nn { \l_semio_viz_is_prev_fp } { 0.2 } }
+  }
+  \semio_viz_is_depict:nn { \l_semio_viz_is_val_tl } { 1 }
+  \fp_set:Nn \l_semio_viz_is_prev_fp { \l_semio_viz_is_val_tl }
+  \bool_if:NT \l_semio_viz_is_arrows_bool {
+    \int_compare:nNnF {#2} = { \l_semio_viz_is_n_int } {
+      \int_compare:nNnF { \l_semio_viz_is_i_int } = { \l_semio_viz_is_columns_int - 1 } {
+        \draw [ semio-chrome-border-normal , line~width=\semio@stroke@hairline , -{Latex[length=1.4mm,width=1mm]} ]
+          ( \fp_eval:n { \l_semio_viz_is_x_fp + \l_semio_viz_is_w_fp + 0.2 } , \fp_eval:n { \l_semio_viz_is_y_fp + \l_semio_viz_is_h_fp / 2 } ) --
+          ( \fp_eval:n { \l_semio_viz_is_x_fp + \l_semio_viz_is_w_fp + 1.4 } , \fp_eval:n { \l_semio_viz_is_y_fp + \l_semio_viz_is_h_fp / 2 } ) ;
+      }
+    }
+  }
+}
+
+% 🖌️ Renders one value inside the current panel at the given opacity: as a dot moved along, a growing circle, an arcing path, or by default a bar, and reports its geometry.
+\cs_new_protected:Npn \semio_viz_is_depict:nn #1#2 {
+  \fp_set:Nn \l_semio_viz_dg_xa_fp { (#1) / \l_semio_viz_is_max_fp }
+  \str_case:VnF \l_semio_viz_is_depiction_tl {
+    { position } {
+      \fill [ \l_semio_viz_dg_draw_tl , fill~opacity=#2 ]
+        ( \fp_eval:n { \l_semio_viz_is_x_fp + 1.4 + \l_semio_viz_dg_xa_fp * ( \l_semio_viz_is_w_fp - 2.8 ) } ,
+          \fp_eval:n { \l_semio_viz_is_y_fp + \l_semio_viz_is_h_fp / 2 - 1 } )
+        circle [ radius=1.4 ] ;
+    }
+    { radius } {
+      \fill [ \l_semio_viz_dg_draw_tl , fill~opacity=#2 ]
+        ( \fp_eval:n { \l_semio_viz_is_x_fp + \l_semio_viz_is_w_fp / 2 } ,
+          \fp_eval:n { \l_semio_viz_is_y_fp + \l_semio_viz_is_h_fp / 2 - 1 } )
+        circle [ radius=\fp_eval:n { 0.6 + \l_semio_viz_dg_xa_fp * ( min( \l_semio_viz_is_w_fp , \l_semio_viz_is_h_fp ) / 2 - 2 ) } ] ;
+    }
+    { path } {
+      \draw [ \l_semio_viz_dg_draw_tl , draw~opacity=#2 , line~width=\semio@stroke@default ]
+        ( \fp_eval:n { \l_semio_viz_is_x_fp + 1.4 } , \fp_eval:n { \l_semio_viz_is_y_fp + 1.4 } )
+        to [ out=60 , in=180 ]
+        ( \fp_eval:n { \l_semio_viz_is_x_fp + 1.4 + \l_semio_viz_dg_xa_fp * ( \l_semio_viz_is_w_fp - 2.8 ) } ,
+          \fp_eval:n { \l_semio_viz_is_y_fp + \l_semio_viz_is_h_fp - 3 } ) ;
+    }
+  }
+  {
+    \fill [ \l_semio_viz_dg_draw_tl , fill~opacity=#2 ]
+      ( \fp_eval:n { \l_semio_viz_is_x_fp + 1.4 } , \fp_eval:n { \l_semio_viz_is_y_fp + 1.4 } )
+      rectangle ( \fp_eval:n { \l_semio_viz_is_x_fp + 1.4 + \l_semio_viz_dg_xa_fp * ( \l_semio_viz_is_w_fp - 2.8 ) } ,
+                  \fp_eval:n { \l_semio_viz_is_y_fp + \l_semio_viz_is_h_fp - 3 } ) ;
+  }
+  \semio_viz_probe_geometry:nx { diagram-frame }
+    { \semio_viz_format_mm:n { \l_semio_viz_is_x_fp } , \semio_viz_format_mm:n { \l_semio_viz_is_y_fp } ,
+      \semio_viz_format_mm:n { \l_semio_viz_dg_xa_fp } ,
+      \str_case:VnF \l_semio_viz_is_depiction_tl
+        { { position } { 1 } { radius } { 2 } { path } { 3 } } { 0 } ,
+      \fp_to_decimal:n {#2} ,
+      \bool_if:NTF \l_semio_viz_is_arrows_bool { 1 } { 0 } }
+}
+% 📽️ Registers `state-sequence` as a viz family, so a key list in the document body lays a transition out as small multiples.
+\SemioVizFamily { state-sequence } { \semio_viz_is_sequence:n {#1} }
+
+%region 🔖️DemoData
+% 🧪 Interaction-state fixtures.
+\cs_new_protected:Npn \semio_viz_is_demo: {
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-state-series } {
+    \semio_viz_table_new:nn { demo-state-series } { t, value }
+    \semio_viz_table_row:nn { demo-state-series } { 0, 3 }
+    \semio_viz_table_row:nn { demo-state-series } { 1, 5 }
+    \semio_viz_table_row:nn { demo-state-series } { 2, 4 }
+    \semio_viz_table_row:nn { demo-state-series } { 3, 7 }
+    \semio_viz_table_row:nn { demo-state-series } { 4, 6 }
+    \semio_viz_table_row:nn { demo-state-series } { 5, 9 }
+    \semio_viz_table_row:nn { demo-state-series } { 6, 8 }
+    \semio_viz_table_row:nn { demo-state-series } { 7, 11 }
+    \semio_viz_table_row:nn { demo-state-series } { 8, 7 }
+    \semio_viz_table_row:nn { demo-state-series } { 9, 6 }
+    \semio_viz_table_row:nn { demo-state-series } { 10, 8 }
+    \semio_viz_table_row:nn { demo-state-series } { 11, 5 }
+    \semio_viz_table_row:nn { demo-state-series } { 12, 4 }
+  }
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-state-frames } {
+    \semio_viz_table_new:nn { demo-state-frames } { label, value, tone }
+    \semio_viz_table_row:nn { demo-state-frames } { {t = 0}, 2, 1 }
+    \semio_viz_table_row:nn { demo-state-frames } { {t = 1}, 5, 1 }
+    \semio_viz_table_row:nn { demo-state-frames } { {t = 2}, 8, 2 }
+    \semio_viz_table_row:nn { demo-state-frames } { {t = 3}, 10, 2 }
+  }
+}
+\semio_viz_is_demo:
+%endregion 🔖️DemoData
+
+\ExplSyntaxOff

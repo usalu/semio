@@ -1,0 +1,13 @@
+\documentclass{article}
+\usepackage{semio-viz-charts-distribution}
+\usepackage{semio-viz-transform}
+\begin{document}
+\ExplSyntaxOn
+\SemioVizProbeBegin{charts-histogram-density}{bins}
+\semio_viz_tr_stat_from_table:Nnn \l_tmpa_seq { demo-distribution } { value }
+\semio_viz_tr_stat_bin:Nn \l_tmpa_seq { 10 }
+\semio_viz_probe_values:nx { bin-lower } { \seq_use:Nn \g_semio_viz_tr_stat_bin_left_seq { , } }
+\semio_viz_probe_values:nx { bin-upper } { \seq_use:Nn \g_semio_viz_tr_stat_bin_right_seq { , } }
+\semio_viz_probe_values:nx { bin-count } { \seq_use:Nn \g_semio_viz_tr_stat_bin_n_seq { , } }
+\ExplSyntaxOff
+\end{document}

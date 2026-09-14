@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/repo/goals/🔣️.json",
+  "title": "🎯️ semio repo goals",
+  "$comment": "🧬️ The wire contract of the 🎯️goals module: the `🎯️goal.json` document as it is stored, the flat seeds the goal/ticket tree is assembled from, and the fixture files under 🧫️fixtures. GoalDocument states the member names and the `omitempty` rule exactly as the Go struct tags declare them — a member absent from `required` is the `omitempty` half of that tag — so a real document taken out of `.🧬semio/🦑️repo/🎯️goals` validates against it unchanged.",
+  "type": "object",
+  "$defs": {
+    "GoalStatus": {
+      "$comment": "🚦️ Lifecycle state of a goal.",
+      "type": "string",
+      "enum": ["open", "closed"]
+    },
+    "GoalDates": {
+      "$comment": "📅️ The dates a goal carries.",
+      "type": "object",
+      "properties": { "due": { "type": "string" } }
+    },
+    "GoalManagementData": {
+      "$comment": "🧩️ The management-provider link of a goal: a milestone for a root goal, an issue for anything below it.",
+      "type": "object",
+      "properties": {
+        "milestone": { "type": "string" },
+        "issue": { "type": "string" }
+      }
+    },
+    "GoalDocument": {
+      "$comment": "📄️ A stored `🎯️goal.json`. `parent` is the emoji compose identifier, never the filesystem path; the path form is derived from where the document sits.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "prompt": { "type": "string" },
+        "status": { "$ref": "#/$defs/GoalStatus" },
+        "summary": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "dates": { "$ref": "#/$defs/GoalDates" },
+        "client": { "type": "string" },
+        "llm": { "type": "string" },
+        "effort": { "type": "string" },
+        "parent": { "type": "string" },
+        "github": { "anyOf": [{ "$ref": "#/$defs/GoalManagementData" }, { "type": "null" }] }
+      },
+      "required": ["title", "description", "prompt", "status", "dates", "client", "llm"]
+    },
+    "GoalSeed": {
+      "$comment": "🌱️ The flat goal record the tree is assembled from.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "status": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "required": ["id"]
+    },
+    "TicketSeed": {
+      "$comment": "🎫️ The flat ticket record the tree is assembled from.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "slug": { "type": "string" },
+        "status": { "type": "string" },
+        "title": { "type": "string" },
+        "goal": { "type": "string" },
+        "parent": { "type": "string" },
+        "prompt": { "type": "string" },
+        "summary": { "type": "string" },
+        "created": { "type": "string" },
+        "finished": { "type": "string" }
+      },
+      "required": ["id"]
+    },
+    "GoalDocumentVectors": {
+      "$comment": "📄️ 🧫️fixtures/🎯️goal-documents.json — real documents copied verbatim out of this repository's own goals tree, each with the identifier the directory it sits in gives it.",
+      "type": "object",
+      "properties": {
+        "schema": { "type": "string" },
+        "documents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "json": { "type": "string" }
+            },
+            "required": ["id", "json"]
+          }
+        }
+      },
+      "required": ["documents"]
+    },
+    "IdVectors": {
+      "$comment": "🪪️ 🧫️fixtures/🪪️id-vectors.json — the inputs of the identifier scheme. Inputs only: an answer key written by hand would let a shared misreading pass.",
+      "type": "object",
+      "properties": {
+        "schema": { "type": "string" },
+        "paths": { "type": "array", "items": { "type": "string" } },
+        "titles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": { "parent": { "type": "string" }, "title": { "type": "string" } },
+            "required": ["parent", "title"]
+          }
+        },
+        "references": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["paths", "titles", "references"]
+    },
+    "TreeVectors": {
+      "$comment": "🌳️ 🧫️fixtures/🌳️tree-vectors.json — the seeds a rendering scenario assembles a tree from.",
+      "type": "object",
+      "properties": {
+        "schema": { "type": "string" },
+        "goals": { "type": "array", "items": { "$ref": "#/$defs/GoalSeed" } },
+        "tickets": { "type": "array", "items": { "$ref": "#/$defs/TicketSeed" } }
+      },
+      "required": ["goals", "tickets"]
+    },
+    "LifecycleStep": {
+      "$comment": "🔓️ One step of a lifecycle script: the operation and the arguments it carries.",
+      "type": "object",
+      "properties": {
+        "op": { "type": "string", "enum": ["create", "change", "close", "reopen", "delete", "read"] },
+        "input": { "type": "object" }
+      },
+      "required": ["op", "input"]
+    },
+    "LifecycleScript": {
+      "$comment": "🔓️ 🧫️fixtures/🔓️lifecycle-script.json — the ordered steps a lifecycle scenario replays against an in-memory store, an in-memory management provider and an in-memory emitter.",
+      "type": "object",
+      "properties": {
+        "schema": { "type": "string" },
+        "author": { "type": "string" },
+        "repoUrl": { "type": "string" },
+        "firstNumber": { "type": "integer" },
+        "steps": { "type": "array", "items": { "$ref": "#/$defs/LifecycleStep" } }
+      },
+      "required": ["author", "repoUrl", "firstNumber", "steps"]
+    }
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "_comment": "🗺️ Plan payloads as the IDEs send them (VS Code's `todoList` with `title`, the neutral `steps` with `name`), and the merge sequences that exercise the lifecycle timestamps.",
+  "payloads": [
+    {
+      "id": "a-vs-code-todo-list-at-the-top-level",
+      "input": { "todoList": [{ "title": "read the plan", "status": "completed" }, { "title": "write the crate", "status": "in-progress" }, { "title": "run the harness", "status": "not-started" }] },
+      "toolArgs": ""
+    },
+    {
+      "id": "a-vs-code-todo-list-under-tool-input",
+      "input": { "tool_name": "manage_todo_list", "tool_input": { "todoList": [{ "title": "one", "status": "not-started" }] } },
+      "toolArgs": ""
+    },
+    {
+      "id": "neutral-steps-under-tool-input",
+      "input": { "tool_input": { "steps": [{ "name": "alpha", "status": "in_progress" }, { "name": "beta", "status": "done" }] } },
+      "toolArgs": ""
+    },
+    {
+      "id": "both-shapes-in-one-payload-keep-todo-list-first",
+      "input": { "todoList": [{ "title": "from-todo", "status": "completed" }], "steps": [{ "name": "from-steps", "status": "started" }] },
+      "toolArgs": ""
+    },
+    {
+      "id": "an-entry-without-a-title-is-dropped",
+      "input": { "todoList": [{ "status": "completed" }, { "title": "kept", "status": "" }, { "title": "", "status": "done" }] },
+      "toolArgs": ""
+    },
+    {
+      "id": "a-non-object-entry-is-dropped",
+      "input": { "steps": ["not an object", { "name": "kept", "status": "done" }, 7] },
+      "toolArgs": ""
+    },
+    {
+      "id": "tool-args-carry-the-plan-when-there-is-no-payload",
+      "input": null,
+      "toolArgs": "{\"steps\":[{\"name\":\"from-args\",\"status\":\"in-progress\"}]}"
+    },
+    {
+      "id": "a-payload-with-no-plan-at-all",
+      "input": { "session_id": "s-1" },
+      "toolArgs": ""
+    },
+    {
+      "id": "a-tool-input-that-is-not-an-object-yields-nothing",
+      "input": { "tool_input": "todoList" },
+      "toolArgs": "{\"steps\":[{\"name\":\"ignored\",\"status\":\"done\"}]}"
+    },
+    {
+      "id": "malformed-tool-args-yield-nothing",
+      "input": null,
+      "toolArgs": "{not json"
+    }
+  ],
+  "merges": [
+    {
+      "id": "a-first-plan-ideates-every-step",
+      "second": "2026-09-06T10:00:00Z",
+      "existing": [],
+      "incoming": [{ "name": "one", "status": "not-started" }, { "name": "two", "status": "in-progress" }]
+    },
+    {
+      "id": "a-step-that-starts-gets-a-start-time",
+      "second": "2026-09-06T10:01:00Z",
+      "existing": [{ "id": "", "name": "one", "status": "not-started", "ideated": "2026-09-06T10:00:00Z" }],
+      "incoming": [{ "name": "one", "status": "started" }]
+    },
+    {
+      "id": "a-step-that-completes-without-ever-starting-gets-no-completion-time",
+      "second": "2026-09-06T10:02:00Z",
+      "existing": [{ "id": "", "name": "one", "status": "not-started", "ideated": "2026-09-06T10:00:00Z" }],
+      "incoming": [{ "name": "one", "status": "completed" }]
+    },
+    {
+      "id": "a-started-step-that-completes-gets-a-completion-time",
+      "second": "2026-09-06T10:03:00Z",
+      "existing": [{ "id": "", "name": "one", "status": "in-progress", "ideated": "2026-09-06T10:00:00Z", "started": "2026-09-06T10:01:00Z" }],
+      "incoming": [{ "name": "one", "status": "done" }]
+    },
+    {
+      "id": "a-dropped-step-that-never-moved-is-abandoned",
+      "second": "2026-09-06T10:04:00Z",
+      "existing": [{ "id": "", "name": "one", "status": "not-started", "ideated": "2026-09-06T10:00:00Z" }],
+      "incoming": [{ "name": "two", "status": "not-started" }]
+    },
+    {
+      "id": "a-dropped-step-that-had-started-is-kept-untouched",
+      "second": "2026-09-06T10:05:00Z",
+      "existing": [{ "id": "", "name": "one", "status": "in-progress", "ideated": "2026-09-06T10:00:00Z", "started": "2026-09-06T10:01:00Z" }],
+      "incoming": [{ "name": "two", "status": "not-started" }]
+    },
+    {
+      "id": "an-incoming-step-with-a-blank-name-is-ignored",
+      "second": "2026-09-06T10:06:00Z",
+      "existing": [],
+      "incoming": [{ "name": "   ", "status": "done" }, { "name": " padded ", "status": "in_progress" }]
+    },
+    {
+      "id": "reordering-an-unchanged-plan-changes-only-the-order",
+      "second": "2026-09-06T10:07:00Z",
+      "existing": [{ "id": "", "name": "one", "status": "done", "ideated": "2026-09-06T10:00:00Z", "started": "2026-09-06T10:01:00Z", "completed": "2026-09-06T10:02:00Z" }, { "id": "", "name": "two", "status": "in-progress", "ideated": "2026-09-06T10:00:00Z", "started": "2026-09-06T10:01:00Z" }],
+      "incoming": [{ "name": "two", "status": "in-progress" }, { "name": "one", "status": "done" }]
+    }
+  ]
+}

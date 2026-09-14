@@ -1,0 +1,80 @@
+{
+  "schema": "https://semio.tech/schema/repo/move/1#/$defs/SectionMoveFile",
+  "cases": [
+    {
+      "name": "typescript-markers",
+      "file": "sample.ts",
+      "content": "//#region 🧲️Header\n\n// 2026 Ueli Saluz\n\n//#endregion 🧲️Header\n\nimport { join } from \"node:path\";\n\n// #region 🔖️Alpha\nexport const alpha = join(\"a\");\n// #endregion 🔖️Alpha\n\n// #region 🔖️Beta\nexport const beta = 2;\n// #endregion 🔖️Beta\n",
+      "oldPath": "Alpha",
+      "newPath": "Gamma",
+      "expected": "//#region 🧲️Header\n\n// 2026 Ueli Saluz\n\n//#endregion 🧲️Header\n\nimport { join } from \"node:path\";\n\n// #region 🔖️Gamma\nexport const alpha = join(\"a\");\n// #endregion 🔖️Gamma\n\n// #region 🔖️Beta\nexport const beta = 2;\n// #endregion 🔖️Beta\n",
+      "messages": [
+        "\n🏷️Renamed section \"Alpha\" to \"Gamma\" in sample.ts"
+      ]
+    },
+    {
+      "name": "go-markers",
+      "file": "sample.go",
+      "content": "// #region 🔖️Header\n\n// 2026 Ueli Saluz\n\n// #endregion 🔖️Header\n\npackage sample\n\nimport (\n\t\"fmt\"\n\t\"strings\"\n)\n\n// #region 🔖️Alpha\nfunc Alpha() string { return fmt.Sprint(strings.ToUpper(\"a\")) }\n// #endregion 🔖️Alpha\n\n// #region 🔖️Beta\nfunc Beta() int { return 2 }\n// #endregion 🔖️Beta\n",
+      "oldPath": "Beta",
+      "newPath": "Delta",
+      "expected": "// #region 🔖️Header\n\n// 2026 Ueli Saluz\n\n// #endregion 🔖️Header\n\npackage sample\n\nimport (\n\t\"fmt\"\n\t\"strings\"\n)\n\n// #region 🔖️Alpha\nfunc Alpha() string { return fmt.Sprint(strings.ToUpper(\"a\")) }\n// #endregion 🔖️Alpha\n\n// #region 🔖️Delta\nfunc Beta() int { return 2 }\n// #endregion 🔖️Delta\n",
+      "messages": [
+        "\n🏷️Renamed section \"Beta\" to \"Delta\" in sample.go"
+      ]
+    },
+    {
+      "name": "markdown-headings",
+      "file": "sample.md",
+      "content": "# Title\n\n## Alpha\n\nSome alpha text.\n\n## Beta\n\nSome beta text.\n",
+      "oldPath": "Alpha",
+      "newPath": "Gamma",
+      "expected": "# Title\n\n## Gamma\n\nSome alpha text.\n\n## Beta\n\nSome beta text.\n",
+      "messages": [
+        "\n🏷️Renamed section \"Alpha\" to \"Gamma\" in sample.md"
+      ]
+    },
+    {
+      "name": "python-markers",
+      "file": "sample.py",
+      "content": "# #region 🔖️Header\n\n# 2026 Ueli Saluz\n\n# #endregion 🔖️Header\n\nimport os\nfrom pathlib import Path\n\n# #region 🔖️Alpha\ndef alpha():\n    return os.sep + str(Path(\".\"))\n# #endregion 🔖️Alpha\n",
+      "oldPath": "Alpha",
+      "newPath": "Gamma",
+      "expected": "# #region 🔖️Header\n\n# 2026 Ueli Saluz\n\n# #endregion 🔖️Header\n\nimport os\nfrom pathlib import Path\n\n# #region 🔖️Gamma\ndef alpha():\n    return os.sep + str(Path(\".\"))\n# #endregion 🔖️Gamma\n",
+      "messages": [
+        "\n🏷️Renamed section \"Alpha\" to \"Gamma\" in sample.py"
+      ]
+    },
+    {
+      "name": "nested-path-takes-the-leaf",
+      "file": "sample.ts",
+      "content": "//#region 🧲️Header\n\n// 2026 Ueli Saluz\n\n//#endregion 🧲️Header\n\nimport { join } from \"node:path\";\n\n// #region 🔖️Alpha\nexport const alpha = join(\"a\");\n// #endregion 🔖️Alpha\n\n// #region 🔖️Beta\nexport const beta = 2;\n// #endregion 🔖️Beta\n",
+      "oldPath": "Outer#Alpha",
+      "newPath": "Outer#Gamma",
+      "expected": "//#region 🧲️Header\n\n// 2026 Ueli Saluz\n\n//#endregion 🧲️Header\n\nimport { join } from \"node:path\";\n\n// #region 🔖️Gamma\nexport const alpha = join(\"a\");\n// #endregion 🔖️Gamma\n\n// #region 🔖️Beta\nexport const beta = 2;\n// #endregion 🔖️Beta\n",
+      "messages": [
+        "\n🏷️Renamed section \"Alpha\" to \"Gamma\" in sample.ts"
+      ]
+    },
+    {
+      "name": "an-absent-section-leaves-the-file-alone",
+      "file": "sample.ts",
+      "content": "//#region 🧲️Header\n\n// 2026 Ueli Saluz\n\n//#endregion 🧲️Header\n\nimport { join } from \"node:path\";\n\n// #region 🔖️Alpha\nexport const alpha = join(\"a\");\n// #endregion 🔖️Alpha\n\n// #region 🔖️Beta\nexport const beta = 2;\n// #endregion 🔖️Beta\n",
+      "oldPath": "Missing",
+      "newPath": "Gamma",
+      "expected": "//#region 🧲️Header\n\n// 2026 Ueli Saluz\n\n//#endregion 🧲️Header\n\nimport { join } from \"node:path\";\n\n// #region 🔖️Alpha\nexport const alpha = join(\"a\");\n// #endregion 🔖️Alpha\n\n// #region 🔖️Beta\nexport const beta = 2;\n// #endregion 🔖️Beta\n",
+      "messages": [
+        "\n🏷️Renamed section \"Missing\" to \"Gamma\" in sample.ts"
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "name": "a-missing-file-is-refused",
+      "file": "absent.ts",
+      "oldPath": "Alpha",
+      "newPath": "Gamma",
+      "expectedError": "File not found: absent.ts"
+    }
+  ]
+}

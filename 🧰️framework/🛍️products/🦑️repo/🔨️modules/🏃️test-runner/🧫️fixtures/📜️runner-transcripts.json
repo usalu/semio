@@ -1,0 +1,85 @@
+{
+  "vectors": [
+    {
+      "id": "go-test-json",
+      "runner": "go",
+      "output": {
+        "status": 1,
+        "stdout": "{\"Time\":\"2026-09-06T10:00:00Z\",\"Action\":\"run\",\"Package\":\"example.com/go-core/pkg\",\"Test\":\"TestAlphaOne\"}\n{\"Time\":\"2026-09-06T10:00:00Z\",\"Action\":\"output\",\"Package\":\"example.com/go-core/pkg\",\"Test\":\"TestAlphaOne\",\"Output\":\"=== RUN   TestAlphaOne\\n\"}\n{\"Time\":\"2026-09-06T10:00:01Z\",\"Action\":\"pass\",\"Package\":\"example.com/go-core/pkg\",\"Test\":\"TestAlphaOne\",\"Elapsed\":0.012}\n{\"Time\":\"2026-09-06T10:00:01Z\",\"Action\":\"run\",\"Package\":\"example.com/go-core/pkg\",\"Test\":\"TestAlphaTwo\"}\n{\"Time\":\"2026-09-06T10:00:01Z\",\"Action\":\"output\",\"Package\":\"example.com/go-core/pkg\",\"Test\":\"TestAlphaTwo\",\"Output\":\"    thing_test.go:12: want 2, got 3\\n\"}\n{\"Time\":\"2026-09-06T10:00:02Z\",\"Action\":\"fail\",\"Package\":\"example.com/go-core/pkg\",\"Test\":\"TestAlphaTwo\",\"Elapsed\":0.004}\n{\"Time\":\"2026-09-06T10:00:02Z\",\"Action\":\"run\",\"Package\":\"example.com/go-core/pkg\",\"Test\":\"TestAlphaThree\"}\n{\"Time\":\"2026-09-06T10:00:02Z\",\"Action\":\"skip\",\"Package\":\"example.com/go-core/pkg\",\"Test\":\"TestAlphaThree\",\"Elapsed\":0}\n{\"Time\":\"2026-09-06T10:00:02Z\",\"Action\":\"fail\",\"Package\":\"example.com/go-core/pkg\",\"Elapsed\":0.02}\n",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "vitest-json",
+      "runner": "npx",
+      "output": {
+        "status": 1,
+        "stdout": "{\n  \"numTotalTests\": 3,\n  \"numPassedTests\": 1,\n  \"numFailedTests\": 1,\n  \"numPendingTests\": 1,\n  \"success\": false,\n  \"testResults\": [\n    {\n      \"name\": \"/repo/bundles/web/src/app.test.ts\",\n      \"assertionResults\": [\n        {\n          \"fullName\": \"app renders\",\n          \"title\": \"renders\",\n          \"status\": \"passed\",\n          \"duration\": 3.5,\n          \"failureMessages\": []\n        },\n        {\n          \"fullName\": \"app explodes\",\n          \"title\": \"explodes\",\n          \"status\": \"failed\",\n          \"duration\": 1.25,\n          \"failureMessages\": [\n            \"expected 1 to be 2\"\n          ]\n        },\n        {\n          \"fullName\": \"app is pending\",\n          \"title\": \"is pending\",\n          \"status\": \"pending\",\n          \"duration\": 0,\n          \"failureMessages\": []\n        }\n      ]\n    }\n  ]\n}",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "pytest-verbose",
+      "runner": "pytest",
+      "output": {
+        "status": 1,
+        "stdout": "============================= test session starts =============================\ncollected 3 items\n\ntests/test_alpha.py::test_one PASSED                                      [ 33%]\ntests/test_alpha.py::test_two FAILED                                      [ 66%]\ntests/test_beta.py::test_three SKIPPED (needs network)                    [100%]\n\n=================== 1 failed, 1 passed, 1 skipped in 0.12s ===================\n",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "cargo-libtest",
+      "runner": "cargo",
+      "output": {
+        "status": 101,
+        "stdout": "running 3 tests\ntest planning::plans_a_bundle ... ok\ntest planning::plans_a_section ... FAILED\ntest planning::plans_a_definition ... ignored\n\nfailures:\n\n---- planning::plans_a_section stdout ----\nassertion failed: left == right\n\nfailures:\n    planning::plans_a_section\n\ntest result: FAILED. 1 passed; 1 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.01s\n",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "cargo-nextest",
+      "runner": "cargo-nextest",
+      "output": {
+        "status": 100,
+        "stdout": "    Starting 3 tests across 1 binary\n        PASS [   0.012s] semio-framework-repo-test-runner planning::plans_a_bundle\n        FAIL [   0.004s] semio-framework-repo-test-runner planning::plans_a_section\n        SKIP [   0.000s] semio-framework-repo-test-runner planning::plans_a_definition\n------------\n     Summary [   0.016s] 3 tests run: 1 passed, 1 failed, 1 skipped\n",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "dotnet-console-logger",
+      "runner": "dotnet",
+      "output": {
+        "status": 1,
+        "stdout": "Determining projects to restore...\n  Passed Semio.Repo.Tests.PlanningTests.PlansABundle [3 ms]\n  Failed Semio.Repo.Tests.PlanningTests.PlansASection [12 ms]\n  Skipped Semio.Repo.Tests.PlanningTests.PlansADefinition\n\nFailed!  - Failed:     1, Passed:     1, Skipped:     1, Total:     3, Duration: 15 ms\n",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "rspec-json",
+      "runner": "rspec",
+      "output": {
+        "status": 1,
+        "stdout": "{\n  \"version\": \"3.13.0\",\n  \"examples\": [\n    {\n      \"id\": \"./spec/planning_spec.rb[1:1]\",\n      \"description\": \"plans a bundle\",\n      \"full_description\": \"Planning plans a bundle\",\n      \"status\": \"passed\",\n      \"file_path\": \"./spec/planning_spec.rb\",\n      \"line_number\": 4,\n      \"run_time\": 0.002\n    },\n    {\n      \"id\": \"./spec/planning_spec.rb[1:2]\",\n      \"description\": \"plans a section\",\n      \"full_description\": \"Planning plans a section\",\n      \"status\": \"failed\",\n      \"file_path\": \"./spec/planning_spec.rb\",\n      \"line_number\": 8,\n      \"run_time\": 0.001,\n      \"exception\": {\n        \"class\": \"RSpec::Expectations::ExpectationNotMetError\",\n        \"message\": \"expected 1 to eq 2\"\n      }\n    },\n    {\n      \"id\": \"./spec/planning_spec.rb[1:3]\",\n      \"description\": \"plans a definition\",\n      \"full_description\": \"Planning plans a definition\",\n      \"status\": \"pending\",\n      \"file_path\": \"./spec/planning_spec.rb\",\n      \"line_number\": 12,\n      \"run_time\": 0.0\n    }\n  ],\n  \"summary\": {\n    \"duration\": 0.004,\n    \"example_count\": 3,\n    \"failure_count\": 1,\n    \"pending_count\": 1\n  },\n  \"summary_line\": \"3 examples, 1 failure, 1 pending\"\n}",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "green-go-run",
+      "runner": "go",
+      "output": {
+        "status": 0,
+        "stdout": "{\"Action\":\"pass\",\"Package\":\"example.com/go-core/pkg\",\"Test\":\"TestAlphaOne\",\"Elapsed\":0.01}\n",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "unparseable-output-yields-no-tests",
+      "runner": "npx",
+      "output": {
+        "status": 2,
+        "stdout": "ERR_MODULE_NOT_FOUND\n",
+        "stderr": "cannot find vitest\n"
+      }
+    }
+  ]
+}

@@ -1,0 +1,968 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-text}[2026/09/06 v0.3.0 semio viz text and language visualization families (taxonomy section 13)]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-plot}
+\RequirePackage{semio-viz-charts-distribution}
+
+\ExplSyntaxOn
+
+%region 🔖️DemoData
+% 🧪 Term frequencies with a document key and a polarity, the source of every cloud, of the
+% term-by-document heat grid and of the topic bands.
+\cs_new_protected:Npn \semio_viz_tx_demo_terms: {
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-text-terms } {
+    \semio_viz_table_new:nn { demo-text-terms } { term, count, doc, sentiment }
+    \clist_map_inline:nn
+      {
+        {model,42,D1,0.35},{data,36,D1,0.10},{graph,31,D2,-0.20},{layout,27,D2,0.45},
+        {scale,24,D1,0.05},{theme,21,D3,0.30},{family,19,D2,-0.15},{kernel,17,D3,0.25},
+        {probe,15,D1,-0.40},{axis,13,D3,0.15},{mark,11,D2,0.20},{figure,9,D3,-0.05},
+        {label,7,D1,0.40},{token,5,D2,-0.30}
+      }
+      { \semio_viz_table_row:nn { demo-text-terms } {##1} }
+  }
+}
+
+% 🧪 Token occurrences along a normalised text axis: the vector every lane plot reads.
+\cs_new_protected:Npn \semio_viz_tx_demo_positions: {
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-text-positions } {
+    \semio_viz_table_new:nn { demo-text-positions } { term, pos, weight }
+    \clist_map_inline:nn
+      {
+        {model,3,1},{model,11,2},{model,19,1},{model,44,3},{model,61,1},{model,88,2},
+        {data,7,2},{data,14,1},{data,15,1},{data,52,2},{data,73,3},{data,95,1},
+        {graph,22,1},{graph,29,2},{graph,35,1},{graph,66,1},{graph,79,2},
+        {layout,5,1},{layout,41,2},{layout,47,1},{layout,58,3},{layout,84,1},{layout,92,2}
+      }
+      { \semio_viz_table_row:nn { demo-text-positions } {##1} }
+  }
+}
+
+% 🧪 One row per reading window: mean polarity and the number of distinct types seen so far.
+\cs_new_protected:Npn \semio_viz_tx_demo_flow: {
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-text-flow } {
+    \semio_viz_table_new:nn { demo-text-flow } { t, sentiment, types }
+    \clist_map_inline:nn
+      {
+        {1,0.20,8},{2,0.45,15},{3,0.05,21},{4,-0.30,26},{5,-0.55,30},{6,-0.10,35},
+        {7,0.25,38},{8,0.60,41},{9,0.35,43},{10,0.15,44}
+      }
+      { \semio_viz_table_row:nn { demo-text-flow } {##1} }
+  }
+}
+
+% 🧪 Topic weights over time: the long table the river, the evolution chart and the bands stack.
+\cs_new_protected:Npn \semio_viz_tx_demo_topics: {
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-text-topics } {
+    \semio_viz_table_new:nn { demo-text-topics } { t, topic, weight }
+    \clist_map_inline:nn
+      {
+        {1,T1,6},{1,T2,2},{1,T3,1},{1,T4,3},
+        {2,T1,5},{2,T2,4},{2,T3,2},{2,T4,3},
+        {3,T1,3},{3,T2,7},{3,T3,3},{3,T4,2},
+        {4,T1,2},{4,T2,8},{4,T3,5},{4,T4,2},
+        {5,T1,2},{5,T2,5},{5,T3,8},{5,T4,4},
+        {6,T1,4},{6,T2,3},{6,T3,6},{6,T4,7}
+      }
+      { \semio_viz_table_row:nn { demo-text-topics } {##1} }
+  }
+}
+
+\semio_viz_tx_demo_terms:
+\semio_viz_tx_demo_positions:
+\semio_viz_tx_demo_flow:
+\semio_viz_tx_demo_topics:
+%endregion 🔖️DemoData
+
+%region 🔖️Keys-text-viz
+% 🔑 `text-viz` keys, l3keys family `semio / viz / family / text-viz`. Every §13 chart kind is one
+% option set over these; the twelve catalogue entries are pairwise distinct in `layout` or in the
+% options the chosen layout reads.
+% variant   (tl)     the catalogue slug, recorded by the registry
+% data      (table)  source table; default `demo-text-terms`
+% term      (column) token or type identity                        default `term`
+% count     (column) frequency                                     default `count`
+% document  (column) document key of the term-by-document grid     default `doc`
+% position  (column) occurrence position on the text axis          default `pos`
+% time      (column) reading window / time step                    default `t`
+% series    (column) topic identity of a long topic table          default `topic`
+% value     (column) numeric channel of the curve and river layouts default `weight`
+% layout    (choice `spiral|grid|matrix|lane|curve|band|river`)     default `spiral`
+% sort      (choice `none|count|term`)                             default `count`
+% sizemin   (mm)  smallest glyph body height                       default 1.8
+% sizemax   (mm)  largest glyph body height                        default 5.4
+% growth    (mm)  Archimedean spiral growth per radian             default 0.9
+% step      (rad) angular step of the placement spiral             default 0.35
+% tries     (int) placement attempts before a word is dropped      default 220
+% aspect    (fp)  horizontal stretch of the placement spiral       default 1.7
+% collide   (bool) reject a position whose box meets a placed box  default true
+% rotate    (bool) place every second word on its side             default false
+% columns   (int) columns of the grid layout                       default 4
+% marker    (choice `tick|dot|band`) lane occurrence glyph         default tick
+% context   (fp)  half width in text units of a KWIC band          default 4
+% guide     (bool) centre guide of the lane layouts                default false
+% baseline  (choice `zero|silhouette|wiggle`) river offset         default zero
+% area      (bool) fill the curve layouts                          default true
+% points    (bool) mark every sample of the curve layouts          default false
+% labels    (bool) print row, lane and axis captions               default true
+% padding   (fp)  relative gap between adjacent cells and bands    default 0.12
+\tl_new:N \l_semio_viz_tx_data_tl
+\tl_new:N \l_semio_viz_tx_term_col_tl
+\tl_new:N \l_semio_viz_tx_count_col_tl
+\tl_new:N \l_semio_viz_tx_doc_col_tl
+\tl_new:N \l_semio_viz_tx_pos_col_tl
+\tl_new:N \l_semio_viz_tx_time_col_tl
+\tl_new:N \l_semio_viz_tx_series_col_tl
+\tl_new:N \l_semio_viz_tx_value_col_tl
+\tl_new:N \l_semio_viz_tx_layout_tl
+\tl_new:N \l_semio_viz_tx_sort_tl
+\tl_new:N \l_semio_viz_tx_marker_tl
+\tl_new:N \l_semio_viz_tx_baseline_tl
+\fp_new:N \l_semio_viz_tx_sizemin_fp
+\fp_new:N \l_semio_viz_tx_sizemax_fp
+\fp_new:N \l_semio_viz_tx_growth_fp
+\fp_new:N \l_semio_viz_tx_step_fp
+\fp_new:N \l_semio_viz_tx_aspect_fp
+\fp_new:N \l_semio_viz_tx_context_fp
+\fp_new:N \l_semio_viz_tx_padding_fp
+\fp_new:N \l_semio_viz_tx_width_fp
+\fp_new:N \l_semio_viz_tx_height_fp
+\fp_new:N \l_semio_viz_tx_pad_fp
+\int_new:N \l_semio_viz_tx_tries_int
+\int_new:N \l_semio_viz_tx_columns_int
+\bool_new:N \l_semio_viz_tx_collide_bool
+\bool_new:N \l_semio_viz_tx_rotate_bool
+\bool_new:N \l_semio_viz_tx_guide_bool
+\bool_new:N \l_semio_viz_tx_area_bool
+\bool_new:N \l_semio_viz_tx_points_bool
+\bool_new:N \l_semio_viz_tx_labels_bool
+
+\keys_define:nn { semio / viz / family / text-viz } {
+  data     .tl_set:N   = \l_semio_viz_tx_data_tl,
+  term     .tl_set:N   = \l_semio_viz_tx_term_col_tl,
+  count    .tl_set:N   = \l_semio_viz_tx_count_col_tl,
+  document .tl_set:N   = \l_semio_viz_tx_doc_col_tl,
+  position .tl_set:N   = \l_semio_viz_tx_pos_col_tl,
+  time     .tl_set:N   = \l_semio_viz_tx_time_col_tl,
+  series   .tl_set:N   = \l_semio_viz_tx_series_col_tl,
+  value    .tl_set:N   = \l_semio_viz_tx_value_col_tl,
+  layout   .tl_set:N   = \l_semio_viz_tx_layout_tl,
+  sort     .tl_set:N   = \l_semio_viz_tx_sort_tl,
+  marker   .tl_set:N   = \l_semio_viz_tx_marker_tl,
+  baseline .tl_set:N   = \l_semio_viz_tx_baseline_tl,
+  sizemin  .fp_set:N   = \l_semio_viz_tx_sizemin_fp,
+  sizemax  .fp_set:N   = \l_semio_viz_tx_sizemax_fp,
+  growth   .fp_set:N   = \l_semio_viz_tx_growth_fp,
+  step     .fp_set:N   = \l_semio_viz_tx_step_fp,
+  aspect   .fp_set:N   = \l_semio_viz_tx_aspect_fp,
+  context  .fp_set:N   = \l_semio_viz_tx_context_fp,
+  padding  .fp_set:N   = \l_semio_viz_tx_padding_fp,
+  width    .fp_set:N   = \l_semio_viz_tx_width_fp,
+  height   .fp_set:N   = \l_semio_viz_tx_height_fp,
+  pad      .fp_set:N   = \l_semio_viz_tx_pad_fp,
+  tries    .int_set:N  = \l_semio_viz_tx_tries_int,
+  columns  .int_set:N  = \l_semio_viz_tx_columns_int,
+  collide  .bool_set:N = \l_semio_viz_tx_collide_bool,
+  rotate   .bool_set:N = \l_semio_viz_tx_rotate_bool,
+  guide    .bool_set:N = \l_semio_viz_tx_guide_bool,
+  area     .bool_set:N = \l_semio_viz_tx_area_bool,
+  points   .bool_set:N = \l_semio_viz_tx_points_bool,
+  labels   .bool_set:N = \l_semio_viz_tx_labels_bool,
+  unknown  .code:n     = { },
+}
+
+% ♻️ Restores every documented default before the option list of a catalogue entry is read.
+\cs_new_protected:Npn \semio_viz_tx_reset: {
+  \tl_set:Nn \l_semio_viz_tx_data_tl { demo-text-terms }
+  \tl_set:Nn \l_semio_viz_tx_term_col_tl { term }
+  \tl_set:Nn \l_semio_viz_tx_count_col_tl { count }
+  \tl_set:Nn \l_semio_viz_tx_doc_col_tl { doc }
+  \tl_set:Nn \l_semio_viz_tx_pos_col_tl { pos }
+  \tl_set:Nn \l_semio_viz_tx_time_col_tl { t }
+  \tl_set:Nn \l_semio_viz_tx_series_col_tl { topic }
+  \tl_set:Nn \l_semio_viz_tx_value_col_tl { weight }
+  \tl_set:Nn \l_semio_viz_tx_layout_tl { spiral }
+  \tl_set:Nn \l_semio_viz_tx_sort_tl { count }
+  \tl_set:Nn \l_semio_viz_tx_marker_tl { tick }
+  \tl_set:Nn \l_semio_viz_tx_baseline_tl { zero }
+  \fp_set:Nn \l_semio_viz_tx_sizemin_fp { 1.8 }
+  \fp_set:Nn \l_semio_viz_tx_sizemax_fp { 5.4 }
+  \fp_set:Nn \l_semio_viz_tx_growth_fp { 0.9 }
+  \fp_set:Nn \l_semio_viz_tx_step_fp { 0.35 }
+  \fp_set:Nn \l_semio_viz_tx_aspect_fp { 1.7 }
+  \fp_set:Nn \l_semio_viz_tx_context_fp { 4 }
+  \fp_set:Nn \l_semio_viz_tx_padding_fp { 0.12 }
+  \fp_set:Nn \l_semio_viz_tx_pad_fp { 2.5 }
+  \int_set:Nn \l_semio_viz_tx_tries_int { 220 }
+  \int_set:Nn \l_semio_viz_tx_columns_int { 4 }
+  \bool_set_true:N \l_semio_viz_tx_collide_bool
+  \bool_set_false:N \l_semio_viz_tx_rotate_bool
+  \bool_set_false:N \l_semio_viz_tx_guide_bool
+  \bool_set_true:N \l_semio_viz_tx_area_bool
+  \bool_set_false:N \l_semio_viz_tx_points_bool
+  \bool_set_true:N \l_semio_viz_tx_labels_bool
+  \semio_viz_tx_canvas:
+}
+
+% 📏 Canvas size: the enclosing VizFigure's millimetres when there is one, the fallback otherwise.
+\cs_new_protected:Npn \semio_viz_tx_canvas: {
+  \cs_if_exist:NTF \l_semio_viz_width_fp
+    { \fp_set_eq:NN \l_semio_viz_tx_width_fp \l_semio_viz_width_fp }
+    { \fp_set:Nn \l_semio_viz_tx_width_fp { 80 } }
+  \cs_if_exist:NTF \l_semio_viz_height_fp
+    { \fp_set_eq:NN \l_semio_viz_tx_height_fp \l_semio_viz_height_fp }
+    { \fp_set:Nn \l_semio_viz_tx_height_fp { 40 } }
+  \fp_compare:nNnT { \l_semio_viz_tx_width_fp } < { 8 } { \fp_set:Nn \l_semio_viz_tx_width_fp { 80 } }
+  \fp_compare:nNnT { \l_semio_viz_tx_height_fp } < { 8 } { \fp_set:Nn \l_semio_viz_tx_height_fp { 40 } }
+}
+%endregion 🔖️Keys-text-viz
+
+%region 🔖️Frame
+\fp_new:N \l_semio_viz_tx_xa_fp
+\fp_new:N \l_semio_viz_tx_ya_fp
+\fp_new:N \l_semio_viz_tx_xb_fp
+\fp_new:N \l_semio_viz_tx_yb_fp
+\fp_new:N \l_semio_viz_tx_a_fp
+\fp_new:N \l_semio_viz_tx_b_fp
+\fp_new:N \l_semio_viz_tx_c_fp
+\fp_new:N \l_semio_viz_tx_d_fp
+\fp_new:N \l_semio_viz_tx_x_fp
+\fp_new:N \l_semio_viz_tx_y_fp
+\fp_new:N \l_semio_viz_tx_w_fp
+\fp_new:N \l_semio_viz_tx_h_fp
+\fp_new:N \l_semio_viz_tx_lo_fp
+\fp_new:N \l_semio_viz_tx_hi_fp
+\int_new:N \l_semio_viz_tx_i_int
+\int_new:N \l_semio_viz_tx_j_int
+\int_new:N \l_semio_viz_tx_n_int
+\seq_new:N \l_semio_viz_tx_rows_seq
+\seq_new:N \l_semio_viz_tx_keys_seq
+\seq_new:N \l_semio_viz_tx_boxes_seq
+\seq_new:N \l_semio_viz_tx_series_seq
+\seq_new:N \l_semio_viz_tx_stack_seq
+\seq_new:N \l_semio_viz_tx_path_seq
+\prop_new:N \l_semio_viz_tx_bag_prop
+\tl_new:N \l_semio_viz_tx_cell_tl
+\tl_new:N \l_semio_viz_tx_key_tl
+\tl_new:N \l_semio_viz_tx_word_tl
+
+\cs_generate_variant:Nn \prop_put:Nnn { NVx }
+
+% 🧭 Sets the drawing rectangle from the canvas and the shared padding key.
+\cs_new_protected:Npn \semio_viz_tx_frame: {
+  \fp_set_eq:NN \l_semio_viz_tx_xa_fp \l_semio_viz_tx_pad_fp
+  \fp_set_eq:NN \l_semio_viz_tx_ya_fp \l_semio_viz_tx_pad_fp
+  \fp_set:Nn \l_semio_viz_tx_xb_fp { \l_semio_viz_tx_width_fp - \l_semio_viz_tx_pad_fp }
+  \fp_set:Nn \l_semio_viz_tx_yb_fp { \l_semio_viz_tx_height_fp - \l_semio_viz_tx_pad_fp }
+}
+
+% 🔤 A word set in a body height of #3 millimetres at (#1,#2), palette slot #4; the probe record
+% carries the placed box so a cloud is testable without rasterising a glyph.
+\cs_new_protected:Npn \semio_viz_tx_word:nnnnn #1#2#3#4#5 {
+  \tl_set:Nx \l_semio_viz_tx_word_tl {#5}
+  \semio_viz_probe_geometry:nx { word }
+    {
+      \fp_eval:n {#1}, \fp_eval:n {#2}, \fp_eval:n {#3},
+      \int_eval:n { \tl_count:N \l_semio_viz_tx_word_tl }
+    }
+  \bool_if:NF \g_semio_viz_charts_dry_bool {
+    \node [ anchor = center , inner~sep = 0pt , text = \semio_viz_palette:n {#4} ,
+            font = \fontsize { \fp_eval:n { (#3) * 2.55 } pt } { \fp_eval:n { (#3) * 3 } pt } \selectfont ]
+      at ( \fp_eval:n {#1} , \fp_eval:n {#2} ) { \tl_use:N \l_semio_viz_tx_word_tl } ;
+  }
+}
+
+% 🔤 The same word turned onto its side, for the tag cloud's alternating placement.
+\cs_new_protected:Npn \semio_viz_tx_word_turned:nnnnn #1#2#3#4#5 {
+  \tl_set:Nx \l_semio_viz_tx_word_tl {#5}
+  \semio_viz_probe_geometry:nx { word-turned }
+    {
+      \fp_eval:n {#1}, \fp_eval:n {#2}, \fp_eval:n {#3},
+      \int_eval:n { \tl_count:N \l_semio_viz_tx_word_tl }
+    }
+  \bool_if:NF \g_semio_viz_charts_dry_bool {
+    \node [ anchor = center , inner~sep = 0pt , rotate = 90 , text = \semio_viz_palette:n {#4} ,
+            font = \fontsize { \fp_eval:n { (#3) * 2.55 } pt } { \fp_eval:n { (#3) * 3 } pt } \selectfont ]
+      at ( \fp_eval:n {#1} , \fp_eval:n {#2} ) { \tl_use:N \l_semio_viz_tx_word_tl } ;
+  }
+}
+
+% 📥 Loads the term table into \l_semio_viz_tx_rows_seq as `{term}{count}{document}` items.
+\cs_new_protected:Npn \semio_viz_tx_load_terms: {
+  \seq_clear:N \l_semio_viz_tx_rows_seq
+  \semio_viz_table_nrows:VN \l_semio_viz_tx_data_tl \l_semio_viz_tx_n_int
+  \int_step_inline:nn { \l_semio_viz_tx_n_int } {
+    \semio_viz_table_cell:VnVN \l_semio_viz_tx_data_tl {##1} \l_semio_viz_tx_term_col_tl
+      \l_semio_viz_tx_word_tl
+    \semio_viz_table_cell:VnVN \l_semio_viz_tx_data_tl {##1} \l_semio_viz_tx_count_col_tl
+      \l_semio_viz_tx_cell_tl
+    \semio_viz_table_cell_opt:nnnN { \l_semio_viz_tx_data_tl } {##1}
+      { \l_semio_viz_tx_doc_col_tl } \l_semio_viz_tx_key_tl
+    \seq_put_right:Nx \l_semio_viz_tx_rows_seq
+      {
+        { \tl_use:N \l_semio_viz_tx_word_tl } { \tl_use:N \l_semio_viz_tx_cell_tl }
+        { \tl_use:N \l_semio_viz_tx_key_tl }
+      }
+  }
+  \semio_viz_tx_sort_rows:
+  \semio_viz_tx_extent:
+}
+
+% 🏷️ Picks the term out of a loaded `{term}{count}{document}` row.
+\cs_new:Npn \semio_viz_tx_field_a:nnn #1#2#3 {#1}
+% 🔢 Picks the count out of a loaded `{term}{count}{document}` row, the sort and size channel.
+\cs_new:Npn \semio_viz_tx_field_b:nnn #1#2#3 {#2}
+% 📄 Picks the document key out of a loaded `{term}{count}{document}` row.
+\cs_new:Npn \semio_viz_tx_field_c:nnn #1#2#3 {#3}
+
+% 🔠 Orders the loaded rows by the `sort` key; `none` keeps the table order.
+\cs_new_protected:Npn \semio_viz_tx_sort_rows: {
+  \str_case:Vn \l_semio_viz_tx_sort_tl {
+    { count }
+      {
+        \seq_sort:Nn \l_semio_viz_tx_rows_seq
+          {
+            \fp_compare:nNnTF { \semio_viz_tx_field_b:nnn ##1 } < { \semio_viz_tx_field_b:nnn ##2 }
+              { \sort_return_swapped: } { \sort_return_same: }
+          }
+      }
+    { term }
+      {
+        \seq_sort:Nn \l_semio_viz_tx_rows_seq
+          {
+            \str_compare:eNeTF { \semio_viz_tx_field_a:nnn ##1 } > { \semio_viz_tx_field_a:nnn ##2 }
+              { \sort_return_swapped: } { \sort_return_same: }
+          }
+      }
+  }
+}
+
+% 📐 Smallest and largest count of the loaded rows, the domain of the glyph size scale.
+\cs_new_protected:Npn \semio_viz_tx_extent: {
+  \fp_set:Nn \l_semio_viz_tx_lo_fp { 1e9 }
+  \fp_set:Nn \l_semio_viz_tx_hi_fp { -1e9 }
+  \seq_map_inline:Nn \l_semio_viz_tx_rows_seq {
+    \fp_set:Nn \l_semio_viz_tx_lo_fp
+      { min ( \l_semio_viz_tx_lo_fp , \semio_viz_tx_field_b:nnn ##1 ) }
+    \fp_set:Nn \l_semio_viz_tx_hi_fp
+      { max ( \l_semio_viz_tx_hi_fp , \semio_viz_tx_field_b:nnn ##1 ) }
+  }
+  \fp_compare:nNnT { \l_semio_viz_tx_hi_fp } < { \l_semio_viz_tx_lo_fp }
+    { \fp_set:Nn \l_semio_viz_tx_lo_fp { 0 } \fp_set:Nn \l_semio_viz_tx_hi_fp { 1 } }
+}
+
+% 📏 Glyph body height of a count under the sizemin/sizemax range.
+\cs_new:Npn \semio_viz_tx_size:n #1 {
+  \fp_eval:n
+    {
+      \l_semio_viz_tx_sizemin_fp
+      + ( \l_semio_viz_tx_sizemax_fp - \l_semio_viz_tx_sizemin_fp )
+        * ( (#1) - \l_semio_viz_tx_lo_fp )
+        / max ( 1e-9 , \l_semio_viz_tx_hi_fp - \l_semio_viz_tx_lo_fp )
+    }
+}
+
+% 🗃️ Distinct values of column #2 of table #1 in first-appearance order, into #3.
+\cs_new_protected:Npn \semio_viz_tx_levels:nnN #1#2#3 {
+  \seq_clear:N #3
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_tx_n_int
+  \int_step_inline:nn { \l_semio_viz_tx_n_int } {
+    \semio_viz_table_cell:nnnN {#1} {##1} {#2} \l_semio_viz_tx_cell_tl
+    \seq_if_in:NVF #3 \l_semio_viz_tx_cell_tl { \seq_put_right:NV #3 \l_semio_viz_tx_cell_tl }
+  }
+}
+\cs_generate_variant:Nn \semio_viz_tx_levels:nnN { VVN }
+%endregion 🔖️Frame
+
+%region 🔖️Layouts
+% ☁️ Archimedean spiral placement with axis-aligned collision rejection: the deterministic print
+% counterpart of the randomised d3-cloud walk. No random state, so the same table always yields
+% the same cloud.
+\cs_new_protected:Npn \semio_viz_tx_spiral: {
+  \seq_clear:N \l_semio_viz_tx_boxes_seq
+  \int_zero:N \l_semio_viz_tx_i_int
+  \seq_map_inline:Nn \l_semio_viz_tx_rows_seq {
+    \int_incr:N \l_semio_viz_tx_i_int
+    \semio_viz_tx_place:nn { \semio_viz_tx_field_a:nnn ##1 } { \semio_viz_tx_field_b:nnn ##1 }
+  }
+}
+
+% ☁️ Places one word: walks the spiral until the box is free and inside the frame, then draws it.
+\cs_new_protected:Npn \semio_viz_tx_place:nn #1#2 {
+  \tl_set:Nx \l_semio_viz_tx_key_tl {#1}
+  \fp_set:Nn \l_semio_viz_tx_h_fp { \semio_viz_tx_size:n {#2} }
+  \fp_set:Nn \l_semio_viz_tx_w_fp
+    { \l_semio_viz_tx_h_fp * 0.62 * \tl_count:N \l_semio_viz_tx_key_tl }
+  \bool_lazy_and:nnT
+    { \l_semio_viz_tx_rotate_bool }
+    { \int_if_odd_p:n { \l_semio_viz_tx_i_int } }
+    {
+      \fp_set:Nn \l_semio_viz_tx_a_fp { \l_semio_viz_tx_w_fp }
+      \fp_set_eq:NN \l_semio_viz_tx_w_fp \l_semio_viz_tx_h_fp
+      \fp_set_eq:NN \l_semio_viz_tx_h_fp \l_semio_viz_tx_a_fp
+    }
+  \fp_set:Nn \l_semio_viz_tx_x_fp { ( \l_semio_viz_tx_xa_fp + \l_semio_viz_tx_xb_fp ) / 2 }
+  \fp_set:Nn \l_semio_viz_tx_y_fp { ( \l_semio_viz_tx_ya_fp + \l_semio_viz_tx_yb_fp ) / 2 }
+  \semio_viz_tx_walk:
+  \seq_put_right:Nx \l_semio_viz_tx_boxes_seq
+    {
+      { \fp_eval:n { \l_semio_viz_tx_x_fp - \l_semio_viz_tx_w_fp / 2 } }
+      { \fp_eval:n { \l_semio_viz_tx_y_fp - \l_semio_viz_tx_h_fp / 2 } }
+      { \fp_eval:n { \l_semio_viz_tx_x_fp + \l_semio_viz_tx_w_fp / 2 } }
+      { \fp_eval:n { \l_semio_viz_tx_y_fp + \l_semio_viz_tx_h_fp / 2 } }
+    }
+  \bool_lazy_and:nnTF
+    { \l_semio_viz_tx_rotate_bool }
+    { \int_if_odd_p:n { \l_semio_viz_tx_i_int } }
+    {
+      \semio_viz_tx_word_turned:nnnnn { \l_semio_viz_tx_x_fp } { \l_semio_viz_tx_y_fp }
+        { \l_semio_viz_tx_w_fp } { \l_semio_viz_tx_i_int } {#1}
+    }
+    {
+      \semio_viz_tx_word:nnnnn { \l_semio_viz_tx_x_fp } { \l_semio_viz_tx_y_fp }
+        { \l_semio_viz_tx_h_fp } { \l_semio_viz_tx_i_int } {#1}
+    }
+}
+
+% 🌀 Advances the candidate centre along the spiral until it is free, or gives up after `tries`.
+% Without collision the word lands on a fixed arc of the same spiral, so the layout stays
+% deterministic and every word still gets its own place.
+\cs_new_protected:Npn \semio_viz_tx_walk: {
+  \int_zero:N \l_semio_viz_tx_j_int
+  \semio_viz_tx_arc:
+  \bool_if:NTF \l_semio_viz_tx_collide_bool
+    {
+      \semio_viz_tx_test:
+      \bool_until_do:nn
+        {
+          \l_semio_viz_tx_free_bool
+          || \int_compare_p:nNn { \l_semio_viz_tx_j_int } > { \l_semio_viz_tx_tries_int }
+        }
+        { \int_incr:N \l_semio_viz_tx_j_int \semio_viz_tx_arc: \semio_viz_tx_test: }
+    }
+    {
+      \int_set:Nn \l_semio_viz_tx_j_int { 6 * \l_semio_viz_tx_i_int }
+      \semio_viz_tx_arc:
+    }
+  \semio_viz_tx_clamp:
+}
+
+% 🌀 The candidate centre at the current spiral index.
+\cs_new_protected:Npn \semio_viz_tx_arc: {
+  \fp_set:Nn \l_semio_viz_tx_a_fp { \l_semio_viz_tx_j_int * \l_semio_viz_tx_step_fp }
+  \fp_set:Nn \l_semio_viz_tx_b_fp { \l_semio_viz_tx_growth_fp * \l_semio_viz_tx_a_fp }
+  \fp_set:Nn \l_semio_viz_tx_x_fp
+    {
+      ( \l_semio_viz_tx_xa_fp + \l_semio_viz_tx_xb_fp ) / 2
+      + \l_semio_viz_tx_aspect_fp * \l_semio_viz_tx_b_fp * cos ( \l_semio_viz_tx_a_fp )
+    }
+  \fp_set:Nn \l_semio_viz_tx_y_fp
+    {
+      ( \l_semio_viz_tx_ya_fp + \l_semio_viz_tx_yb_fp ) / 2
+      + \l_semio_viz_tx_b_fp * sin ( \l_semio_viz_tx_a_fp )
+    }
+}
+
+% 🚧 Keeps the candidate box inside the frame.
+\cs_new_protected:Npn \semio_viz_tx_clamp: {
+  \fp_set:Nn \l_semio_viz_tx_x_fp
+    {
+      min ( max ( \l_semio_viz_tx_x_fp , \l_semio_viz_tx_xa_fp + \l_semio_viz_tx_w_fp / 2 ) ,
+            \l_semio_viz_tx_xb_fp - \l_semio_viz_tx_w_fp / 2 )
+    }
+  \fp_set:Nn \l_semio_viz_tx_y_fp
+    {
+      min ( max ( \l_semio_viz_tx_y_fp , \l_semio_viz_tx_ya_fp + \l_semio_viz_tx_h_fp / 2 ) ,
+            \l_semio_viz_tx_yb_fp - \l_semio_viz_tx_h_fp / 2 )
+    }
+}
+
+% ❓ Raises the free flag when the candidate box meets no already placed box.
+\bool_new:N \l_semio_viz_tx_free_bool
+\cs_new_protected:Npn \semio_viz_tx_test: {
+  \bool_set_true:N \l_semio_viz_tx_free_bool
+  \seq_map_inline:Nn \l_semio_viz_tx_boxes_seq
+    { \semio_viz_tx_overlap:nnnn ##1 }
+}
+
+% ❌ Clears the free flag when the candidate box overlaps the placed box (#1,#2)-(#3,#4).
+\cs_new_protected:Npn \semio_viz_tx_overlap:nnnn #1#2#3#4 {
+  \bool_lazy_all:nT
+    {
+      { \fp_compare_p:n { \l_semio_viz_tx_x_fp - \l_semio_viz_tx_w_fp / 2 < (#3) } }
+      { \fp_compare_p:n { \l_semio_viz_tx_x_fp + \l_semio_viz_tx_w_fp / 2 > (#1) } }
+      { \fp_compare_p:n { \l_semio_viz_tx_y_fp - \l_semio_viz_tx_h_fp / 2 < (#4) } }
+      { \fp_compare_p:n { \l_semio_viz_tx_y_fp + \l_semio_viz_tx_h_fp / 2 > (#2) } }
+    }
+    { \bool_set_false:N \l_semio_viz_tx_free_bool }
+}
+
+% 🔡 Reading-order grid of glyphs: the frequency cloud, where position carries rank, not chance.
+\cs_new_protected:Npn \semio_viz_tx_grid: {
+  \int_set:Nn \l_semio_viz_tx_n_int { \seq_count:N \l_semio_viz_tx_rows_seq }
+  \fp_set:Nn \l_semio_viz_tx_w_fp
+    { ( \l_semio_viz_tx_xb_fp - \l_semio_viz_tx_xa_fp ) / \l_semio_viz_tx_columns_int }
+  \fp_set:Nn \l_semio_viz_tx_h_fp
+    {
+      ( \l_semio_viz_tx_yb_fp - \l_semio_viz_tx_ya_fp )
+      / max ( 1 , ceil ( \l_semio_viz_tx_n_int / \l_semio_viz_tx_columns_int ) )
+    }
+  \int_zero:N \l_semio_viz_tx_i_int
+  \seq_map_inline:Nn \l_semio_viz_tx_rows_seq {
+    \int_incr:N \l_semio_viz_tx_i_int
+    \semio_viz_tx_grid_cell:nn { \semio_viz_tx_field_a:nnn ##1 } { \semio_viz_tx_field_b:nnn ##1 }
+  }
+}
+
+% 🔡 One grid slot, its glyph height still carrying the frequency.
+\cs_new_protected:Npn \semio_viz_tx_grid_cell:nn #1#2 {
+  \fp_set:Nn \l_semio_viz_tx_x_fp
+    {
+      \l_semio_viz_tx_xa_fp
+      + ( \int_mod:nn { \l_semio_viz_tx_i_int - 1 } { \l_semio_viz_tx_columns_int } + 0.5 )
+        * \l_semio_viz_tx_w_fp
+    }
+  \fp_set:Nn \l_semio_viz_tx_y_fp
+    {
+      \l_semio_viz_tx_yb_fp
+      - ( floor ( ( \l_semio_viz_tx_i_int - 1 ) / \l_semio_viz_tx_columns_int ) + 0.5 )
+        * \l_semio_viz_tx_h_fp
+    }
+  \semio_viz_tx_word:nnnnn { \l_semio_viz_tx_x_fp } { \l_semio_viz_tx_y_fp }
+    { \semio_viz_tx_size:n {#2} } { \l_semio_viz_tx_i_int } {#1}
+}
+
+% 🔥 Term-by-document grid: rows are terms in the sorted order, columns the distinct documents.
+\cs_new_protected:Npn \semio_viz_tx_matrix: {
+  \semio_viz_tx_levels:VVN \l_semio_viz_tx_data_tl \l_semio_viz_tx_doc_col_tl
+    \l_semio_viz_tx_keys_seq
+  \int_set:Nn \l_semio_viz_tx_n_int { \seq_count:N \l_semio_viz_tx_rows_seq }
+  \fp_set:Nn \l_semio_viz_tx_w_fp
+    {
+      ( \l_semio_viz_tx_xb_fp - \l_semio_viz_tx_xa_fp - 10 )
+      / max ( 1 , \seq_count:N \l_semio_viz_tx_keys_seq )
+    }
+  \fp_set:Nn \l_semio_viz_tx_h_fp
+    { ( \l_semio_viz_tx_yb_fp - \l_semio_viz_tx_ya_fp ) / max ( 1 , \l_semio_viz_tx_n_int ) }
+  \int_zero:N \l_semio_viz_tx_i_int
+  \seq_map_inline:Nn \l_semio_viz_tx_rows_seq {
+    \int_incr:N \l_semio_viz_tx_i_int
+    \semio_viz_tx_matrix_row:nnn { \semio_viz_tx_field_a:nnn ##1 }
+      { \semio_viz_tx_field_b:nnn ##1 } { \semio_viz_tx_field_c:nnn ##1 }
+  }
+}
+
+% 🔥 One matrix row: the cell of the term's own document carries its count, the others are empty.
+\cs_new_protected:Npn \semio_viz_tx_matrix_row:nnn #1#2#3 {
+  \fp_set:Nn \l_semio_viz_tx_y_fp
+    { \l_semio_viz_tx_yb_fp - \l_semio_viz_tx_i_int * \l_semio_viz_tx_h_fp }
+  \int_zero:N \l_semio_viz_tx_j_int
+  \seq_map_inline:Nn \l_semio_viz_tx_keys_seq {
+    \int_incr:N \l_semio_viz_tx_j_int
+    \fp_set:Nn \l_semio_viz_tx_x_fp
+      { \l_semio_viz_tx_xa_fp + 10 + ( \l_semio_viz_tx_j_int - 1 ) * \l_semio_viz_tx_w_fp }
+    \str_if_eq:nnTF {##1} {#3}
+      { \fp_set:Nn \l_semio_viz_tx_c_fp { \semio_viz_tx_unit:n {#2} } }
+      { \fp_set:Nn \l_semio_viz_tx_c_fp { 0.04 } }
+    \semio_viz_g_rect:nnnnn
+      { \l_semio_viz_tx_x_fp + \l_semio_viz_tx_w_fp * \l_semio_viz_tx_padding_fp / 2 }
+      { \l_semio_viz_tx_y_fp + \l_semio_viz_tx_h_fp * \l_semio_viz_tx_padding_fp / 2 }
+      { \l_semio_viz_tx_w_fp * ( 1 - \l_semio_viz_tx_padding_fp ) }
+      { \l_semio_viz_tx_h_fp * ( 1 - \l_semio_viz_tx_padding_fp ) }
+      { fill = \semio_viz_theme_ramp:n { \l_semio_viz_tx_c_fp } , draw = none }
+  }
+  \bool_if:NT \l_semio_viz_tx_labels_bool {
+    \semio_viz_g_text:nnnn { \l_semio_viz_tx_xa_fp + 9 }
+      { \l_semio_viz_tx_y_fp + \l_semio_viz_tx_h_fp / 2 } { east } {#1}
+  }
+}
+
+% 📏 A count normalised onto [0,1] over the loaded extent.
+\cs_new:Npn \semio_viz_tx_unit:n #1 {
+  \fp_eval:n
+    {
+      ( (#1) - \l_semio_viz_tx_lo_fp )
+      / max ( 1e-9 , \l_semio_viz_tx_hi_fp - \l_semio_viz_tx_lo_fp )
+    }
+}
+
+% 📊 One lane per term over the normalised text axis; `marker` decides the occurrence glyph.
+\cs_new_protected:Npn \semio_viz_tx_lane: {
+  \semio_viz_tx_levels:VVN \l_semio_viz_tx_data_tl \l_semio_viz_tx_term_col_tl
+    \l_semio_viz_tx_keys_seq
+  \semio_viz_table_col_max:VVN \l_semio_viz_tx_data_tl \l_semio_viz_tx_pos_col_tl
+    \l_semio_viz_tx_hi_fp
+  \semio_viz_table_col_min:VVN \l_semio_viz_tx_data_tl \l_semio_viz_tx_pos_col_tl
+    \l_semio_viz_tx_lo_fp
+  \fp_set:Nn \l_semio_viz_tx_h_fp
+    {
+      ( \l_semio_viz_tx_yb_fp - \l_semio_viz_tx_ya_fp )
+      / max ( 1 , \seq_count:N \l_semio_viz_tx_keys_seq )
+    }
+  \fp_set:Nn \l_semio_viz_tx_w_fp { \l_semio_viz_tx_xb_fp - \l_semio_viz_tx_xa_fp - 12 }
+  \bool_if:NT \l_semio_viz_tx_guide_bool {
+    \semio_viz_g_line:nnnnn
+      { \l_semio_viz_tx_xa_fp + 12 + \l_semio_viz_tx_w_fp / 2 } { \l_semio_viz_tx_ya_fp }
+      { \l_semio_viz_tx_xa_fp + 12 + \l_semio_viz_tx_w_fp / 2 } { \l_semio_viz_tx_yb_fp }
+      { draw = semio-chrome-border-emphasized , line~width = \semio@stroke@hairline , dash~pattern = on~0.4mm~off~0.4mm }
+  }
+  \int_zero:N \l_semio_viz_tx_i_int
+  \seq_map_inline:Nn \l_semio_viz_tx_keys_seq {
+    \int_incr:N \l_semio_viz_tx_i_int
+    \semio_viz_tx_lane_row:n {##1}
+  }
+}
+
+% 📊 One lane: its baseline rule, its caption and every occurrence of the term.
+\cs_new_protected:Npn \semio_viz_tx_lane_row:n #1 {
+  \fp_set:Nn \l_semio_viz_tx_y_fp
+    { \l_semio_viz_tx_yb_fp - ( \l_semio_viz_tx_i_int - 0.5 ) * \l_semio_viz_tx_h_fp }
+  \semio_viz_g_line:nnnnn { \l_semio_viz_tx_xa_fp + 12 } { \l_semio_viz_tx_y_fp }
+    { \l_semio_viz_tx_xb_fp } { \l_semio_viz_tx_y_fp }
+    { draw = semio-chrome-border-normal , line~width = \semio@stroke@hairline }
+  \bool_if:NT \l_semio_viz_tx_labels_bool
+    {
+      \semio_viz_g_text:nnnn { \l_semio_viz_tx_xa_fp + 11 } { \l_semio_viz_tx_y_fp } { east } {#1}
+    }
+  \semio_viz_table_nrows:VN \l_semio_viz_tx_data_tl \l_semio_viz_tx_n_int
+  \int_step_inline:nn { \l_semio_viz_tx_n_int } {
+    \semio_viz_table_cell:VnVN \l_semio_viz_tx_data_tl {##1} \l_semio_viz_tx_term_col_tl
+      \l_semio_viz_tx_key_tl
+    \str_if_eq:VnT \l_semio_viz_tx_key_tl {#1} { \semio_viz_tx_lane_hit:n {##1} }
+  }
+}
+
+% 📍 One occurrence inside the current lane, drawn as a tick, a dot or a context band.
+\cs_new_protected:Npn \semio_viz_tx_lane_hit:n #1 {
+  \semio_viz_table_cell:VnVN \l_semio_viz_tx_data_tl {#1} \l_semio_viz_tx_pos_col_tl
+    \l_semio_viz_tx_cell_tl
+  \fp_set:Nn \l_semio_viz_tx_x_fp
+    {
+      \l_semio_viz_tx_xa_fp + 12
+      + ( \l_semio_viz_tx_cell_tl - \l_semio_viz_tx_lo_fp )
+        * \l_semio_viz_tx_w_fp / max ( 1e-9 , \l_semio_viz_tx_hi_fp - \l_semio_viz_tx_lo_fp )
+    }
+  \fp_set:Nn \l_semio_viz_tx_c_fp
+    {
+      \l_semio_viz_tx_context_fp * \l_semio_viz_tx_w_fp
+      / max ( 1e-9 , \l_semio_viz_tx_hi_fp - \l_semio_viz_tx_lo_fp )
+    }
+  \str_case:VnF \l_semio_viz_tx_marker_tl
+    {
+      { dot }
+        {
+          \semio_viz_g_circle:nnnn { \l_semio_viz_tx_x_fp } { \l_semio_viz_tx_y_fp }
+            { \l_semio_viz_tx_h_fp * 0.22 }
+            { fill = \semio_viz_palette:n { \l_semio_viz_tx_i_int } , draw = none }
+        }
+      { band }
+        {
+          \semio_viz_g_rect:nnnnn { \l_semio_viz_tx_x_fp - \l_semio_viz_tx_c_fp }
+            { \l_semio_viz_tx_y_fp - \l_semio_viz_tx_h_fp * 0.3 }
+            { 2 * \l_semio_viz_tx_c_fp } { \l_semio_viz_tx_h_fp * 0.6 }
+            {
+              fill = \semio_viz_palette:n { \l_semio_viz_tx_i_int } , fill~opacity = 0.25 ,
+              draw = none
+            }
+          \semio_viz_g_line:nnnnn { \l_semio_viz_tx_x_fp }
+            { \l_semio_viz_tx_y_fp - \l_semio_viz_tx_h_fp * 0.3 } { \l_semio_viz_tx_x_fp }
+            { \l_semio_viz_tx_y_fp + \l_semio_viz_tx_h_fp * 0.3 }
+            {
+              draw = \semio_viz_palette:n { \l_semio_viz_tx_i_int } ,
+              line~width = \semio@stroke@default
+            }
+        }
+    }
+    {
+      \semio_viz_g_line:nnnnn { \l_semio_viz_tx_x_fp }
+        { \l_semio_viz_tx_y_fp - \l_semio_viz_tx_h_fp * 0.36 } { \l_semio_viz_tx_x_fp }
+        { \l_semio_viz_tx_y_fp + \l_semio_viz_tx_h_fp * 0.36 }
+        {
+          draw = \semio_viz_palette:n { \l_semio_viz_tx_i_int } ,
+          line~width = \semio@stroke@hairline
+        }
+    }
+}
+
+% 📈 A single numeric channel over the reading windows; `area` fills it against its own baseline.
+\cs_new_protected:Npn \semio_viz_tx_curve: {
+  \semio_viz_table_nrows:VN \l_semio_viz_tx_data_tl \l_semio_viz_tx_n_int
+  \semio_viz_table_col_max:VVN \l_semio_viz_tx_data_tl \l_semio_viz_tx_value_col_tl
+    \l_semio_viz_tx_hi_fp
+  \semio_viz_table_col_min:VVN \l_semio_viz_tx_data_tl \l_semio_viz_tx_value_col_tl
+    \l_semio_viz_tx_lo_fp
+  \fp_compare:nNnT { \l_semio_viz_tx_lo_fp } > { 0 } { \fp_zero:N \l_semio_viz_tx_lo_fp }
+  \fp_set:Nn \l_semio_viz_tx_w_fp
+    { ( \l_semio_viz_tx_xb_fp - \l_semio_viz_tx_xa_fp ) / max ( 1 , \l_semio_viz_tx_n_int - 1 ) }
+  \fp_set:Nn \l_semio_viz_tx_y_fp
+    {
+      \l_semio_viz_tx_ya_fp
+      + ( 0 - \l_semio_viz_tx_lo_fp ) * ( \l_semio_viz_tx_yb_fp - \l_semio_viz_tx_ya_fp )
+        / max ( 1e-9 , \l_semio_viz_tx_hi_fp - \l_semio_viz_tx_lo_fp )
+    }
+  \seq_clear:N \l_semio_viz_tx_path_seq
+  \int_step_inline:nn { \l_semio_viz_tx_n_int } { \semio_viz_tx_curve_point:n {##1} }
+  \bool_if:NT \l_semio_viz_tx_area_bool { \semio_viz_tx_curve_area: }
+  \semio_viz_g_polyline:xn { \seq_use:Nn \l_semio_viz_tx_path_seq { , } }
+    { draw = \semio_viz_palette:n { 1 } , line~width = \semio@stroke@default }
+  \bool_if:NT \l_semio_viz_tx_points_bool { \semio_viz_tx_curve_points: }
+  \bool_if:NT \l_semio_viz_tx_guide_bool {
+    \semio_viz_g_line:nnnnn { \l_semio_viz_tx_xa_fp } { \l_semio_viz_tx_y_fp }
+      { \l_semio_viz_tx_xb_fp } { \l_semio_viz_tx_y_fp }
+      { draw = semio-chrome-border-emphasized , line~width = \semio@stroke@hairline }
+  }
+}
+
+% 📈 Appends sample #1 of the curve to the working path.
+\cs_new_protected:Npn \semio_viz_tx_curve_point:n #1 {
+  \semio_viz_table_cell:VnVN \l_semio_viz_tx_data_tl {#1} \l_semio_viz_tx_value_col_tl
+    \l_semio_viz_tx_cell_tl
+  \seq_put_right:Nx \l_semio_viz_tx_path_seq
+    { \fp_eval:n { \l_semio_viz_tx_xa_fp + ( (#1) - 1 ) * \l_semio_viz_tx_w_fp } }
+  \seq_put_right:Nx \l_semio_viz_tx_path_seq
+    {
+      \fp_eval:n
+        {
+          \l_semio_viz_tx_ya_fp
+          + ( \l_semio_viz_tx_cell_tl - \l_semio_viz_tx_lo_fp )
+            * ( \l_semio_viz_tx_yb_fp - \l_semio_viz_tx_ya_fp )
+            / max ( 1e-9 , \l_semio_viz_tx_hi_fp - \l_semio_viz_tx_lo_fp )
+        }
+    }
+}
+
+% 🌊 Closes the curve against its baseline and fills it.
+\cs_new_protected:Npn \semio_viz_tx_curve_area: {
+  \seq_set_eq:NN \l_semio_viz_tx_stack_seq \l_semio_viz_tx_path_seq
+  \seq_put_right:Nx \l_semio_viz_tx_stack_seq { \fp_eval:n { \l_semio_viz_tx_xb_fp } }
+  \seq_put_right:Nx \l_semio_viz_tx_stack_seq { \fp_eval:n { \l_semio_viz_tx_y_fp } }
+  \seq_put_right:Nx \l_semio_viz_tx_stack_seq { \fp_eval:n { \l_semio_viz_tx_xa_fp } }
+  \seq_put_right:Nx \l_semio_viz_tx_stack_seq { \fp_eval:n { \l_semio_viz_tx_y_fp } }
+  \semio_viz_g_polygon:xn { \seq_use:Nn \l_semio_viz_tx_stack_seq { , } }
+    { fill = \semio_viz_palette:n { 1 } , fill~opacity = 0.22 , draw = none }
+}
+
+% ⚪ A dot on every sample of the curve.
+\cs_new_protected:Npn \semio_viz_tx_curve_points: {
+  \int_step_inline:nn { \l_semio_viz_tx_n_int } {
+    \semio_viz_g_circle:nnnn
+      { \seq_item:Nn \l_semio_viz_tx_path_seq { 2 * ##1 - 1 } }
+      { \seq_item:Nn \l_semio_viz_tx_path_seq { 2 * ##1 } } { 0.5 }
+      { fill = \semio_viz_palette:n { 2 } , draw = none }
+  }
+}
+
+% 📚 Stacked bands over the time steps of a long topic table.
+\cs_new_protected:Npn \semio_viz_tx_band: {
+  \semio_viz_tx_levels:VVN \l_semio_viz_tx_data_tl \l_semio_viz_tx_time_col_tl
+    \l_semio_viz_tx_keys_seq
+  \semio_viz_tx_levels:VVN \l_semio_viz_tx_data_tl \l_semio_viz_tx_series_col_tl
+    \l_semio_viz_tx_series_seq
+  \fp_set:Nn \l_semio_viz_tx_w_fp
+    {
+      ( \l_semio_viz_tx_xb_fp - \l_semio_viz_tx_xa_fp )
+      / max ( 1 , \seq_count:N \l_semio_viz_tx_keys_seq )
+    }
+  \int_zero:N \l_semio_viz_tx_i_int
+  \seq_map_inline:Nn \l_semio_viz_tx_keys_seq {
+    \int_incr:N \l_semio_viz_tx_i_int
+    \semio_viz_tx_band_column:n {##1}
+  }
+}
+
+% 📚 One stacked column: every series segment scaled to the column total.
+\cs_new_protected:Npn \semio_viz_tx_band_column:n #1 {
+  \semio_viz_tx_column_values:n {#1}
+  \fp_zero:N \l_semio_viz_tx_c_fp
+  \seq_map_inline:Nn \l_semio_viz_tx_stack_seq { \fp_add:Nn \l_semio_viz_tx_c_fp {##1} }
+  \fp_set:Nn \l_semio_viz_tx_y_fp { \l_semio_viz_tx_ya_fp }
+  \int_zero:N \l_semio_viz_tx_j_int
+  \seq_map_inline:Nn \l_semio_viz_tx_stack_seq {
+    \int_incr:N \l_semio_viz_tx_j_int
+    \fp_set:Nn \l_semio_viz_tx_d_fp
+      {
+        ##1 / max ( 1e-9 , \l_semio_viz_tx_c_fp )
+        * ( \l_semio_viz_tx_yb_fp - \l_semio_viz_tx_ya_fp )
+      }
+    \semio_viz_g_rect:nnnnn
+      {
+        \l_semio_viz_tx_xa_fp + ( \l_semio_viz_tx_i_int - 1 ) * \l_semio_viz_tx_w_fp
+        + \l_semio_viz_tx_w_fp * \l_semio_viz_tx_padding_fp
+      }
+      { \l_semio_viz_tx_y_fp }
+      { \l_semio_viz_tx_w_fp * ( 1 - 2 * \l_semio_viz_tx_padding_fp ) }
+      { \l_semio_viz_tx_d_fp }
+      { fill = \semio_viz_palette:n { \l_semio_viz_tx_j_int } , draw = none , fill~opacity = 0.9 }
+    \fp_add:Nn \l_semio_viz_tx_y_fp { \l_semio_viz_tx_d_fp }
+  }
+  \bool_if:NT \l_semio_viz_tx_labels_bool {
+    \semio_viz_g_text:nnnn
+      {
+        \l_semio_viz_tx_xa_fp + ( \l_semio_viz_tx_i_int - 0.5 ) * \l_semio_viz_tx_w_fp
+      }
+      { \l_semio_viz_tx_ya_fp - 0.6 } { north } {#1}
+  }
+}
+
+% 🧮 Values of every series at the time step #1, in the series order, into the stack sequence.
+\cs_new_protected:Npn \semio_viz_tx_column_values:n #1 {
+  \seq_clear:N \l_semio_viz_tx_stack_seq
+  \semio_viz_table_nrows:VN \l_semio_viz_tx_data_tl \l_semio_viz_tx_n_int
+  \seq_map_inline:Nn \l_semio_viz_tx_series_seq {
+    \prop_put:Nnn \l_semio_viz_tx_bag_prop {##1} { 0 }
+  }
+  \int_step_inline:nn { \l_semio_viz_tx_n_int } {
+    \semio_viz_table_cell:VnVN \l_semio_viz_tx_data_tl {##1} \l_semio_viz_tx_time_col_tl
+      \l_semio_viz_tx_key_tl
+    \str_if_eq:VnT \l_semio_viz_tx_key_tl {#1} { \semio_viz_tx_column_cell:n {##1} }
+  }
+  \seq_map_inline:Nn \l_semio_viz_tx_series_seq {
+    \prop_get:NnN \l_semio_viz_tx_bag_prop {##1} \l_semio_viz_tx_cell_tl
+    \seq_put_right:NV \l_semio_viz_tx_stack_seq \l_semio_viz_tx_cell_tl
+  }
+}
+
+% 🧮 Adds row #1 to the bag of its own series.
+\cs_new_protected:Npn \semio_viz_tx_column_cell:n #1 {
+  \semio_viz_table_cell:VnVN \l_semio_viz_tx_data_tl {#1} \l_semio_viz_tx_series_col_tl
+    \l_semio_viz_tx_word_tl
+  \semio_viz_table_cell:VnVN \l_semio_viz_tx_data_tl {#1} \l_semio_viz_tx_value_col_tl
+    \l_semio_viz_tx_cell_tl
+  \prop_get:NVN \l_semio_viz_tx_bag_prop \l_semio_viz_tx_word_tl \l_semio_viz_tx_key_tl
+  \prop_put:NVx \l_semio_viz_tx_bag_prop \l_semio_viz_tx_word_tl
+    { \fp_eval:n { \l_semio_viz_tx_key_tl + \l_semio_viz_tx_cell_tl } }
+}
+
+% 🌊 Stacked streams over time; `baseline` chooses the zero, the symmetric or the wiggle offset.
+\cs_new_protected:Npn \semio_viz_tx_river: {
+  \semio_viz_tx_levels:VVN \l_semio_viz_tx_data_tl \l_semio_viz_tx_time_col_tl
+    \l_semio_viz_tx_keys_seq
+  \semio_viz_tx_levels:VVN \l_semio_viz_tx_data_tl \l_semio_viz_tx_series_col_tl
+    \l_semio_viz_tx_series_seq
+  \semio_viz_tx_river_extent:
+  \fp_set:Nn \l_semio_viz_tx_w_fp
+    {
+      ( \l_semio_viz_tx_xb_fp - \l_semio_viz_tx_xa_fp )
+      / max ( 1 , \seq_count:N \l_semio_viz_tx_keys_seq - 1 )
+    }
+  \int_zero:N \l_semio_viz_tx_j_int
+  \seq_map_inline:Nn \l_semio_viz_tx_series_seq {
+    \int_incr:N \l_semio_viz_tx_j_int
+    \semio_viz_tx_river_band:n {##1}
+  }
+}
+
+% 📐 The largest column total, the domain of the river's height.
+\cs_new_protected:Npn \semio_viz_tx_river_extent: {
+  \fp_set:Nn \l_semio_viz_tx_hi_fp { 1e-9 }
+  \seq_map_inline:Nn \l_semio_viz_tx_keys_seq {
+    \semio_viz_tx_column_values:n {##1}
+    \fp_zero:N \l_semio_viz_tx_c_fp
+    \seq_map_inline:Nn \l_semio_viz_tx_stack_seq { \fp_add:Nn \l_semio_viz_tx_c_fp {####1} }
+    \fp_set:Nn \l_semio_viz_tx_hi_fp { max ( \l_semio_viz_tx_hi_fp , \l_semio_viz_tx_c_fp ) }
+  }
+}
+
+% 🌊 One stream band, walked forward along its top edge and back along its bottom edge.
+\cs_new_protected:Npn \semio_viz_tx_river_band:n #1 {
+  \seq_clear:N \l_semio_viz_tx_path_seq
+  \seq_clear:N \l_semio_viz_tx_boxes_seq
+  \int_zero:N \l_semio_viz_tx_i_int
+  \seq_map_inline:Nn \l_semio_viz_tx_keys_seq {
+    \int_incr:N \l_semio_viz_tx_i_int
+    \semio_viz_tx_river_step:
+  }
+  \seq_set_eq:NN \l_semio_viz_tx_stack_seq \l_semio_viz_tx_path_seq
+  \int_step_inline:nn { \seq_count:N \l_semio_viz_tx_boxes_seq } {
+    \seq_put_right:Nx \l_semio_viz_tx_stack_seq
+      {
+        \seq_item:Nn \l_semio_viz_tx_boxes_seq
+          { \seq_count:N \l_semio_viz_tx_boxes_seq - ##1 + 1 }
+      }
+  }
+  \semio_viz_g_polygon:xn { \seq_use:Nn \l_semio_viz_tx_stack_seq { , } }
+    {
+      fill = \semio_viz_palette:n { \l_semio_viz_tx_j_int } , fill~opacity = 0.85 ,
+      draw = semio-chrome-canvas , line~width = \semio@stroke@hairline
+    }
+  \bool_if:NT \l_semio_viz_tx_labels_bool {
+    \semio_viz_g_text:nnnn { \l_semio_viz_tx_xb_fp + 0.6 }
+      { \l_semio_viz_tx_y_fp + \l_semio_viz_tx_d_fp / 2 } { west } {#1}
+  }
+}
+
+% 🌊 One time step of the current band: the offset baseline plus the band's own share.
+\cs_new_protected:Npn \semio_viz_tx_river_step: {
+  \semio_viz_tx_column_values:n
+    { \seq_item:Nn \l_semio_viz_tx_keys_seq { \l_semio_viz_tx_i_int } }
+  \fp_zero:N \l_semio_viz_tx_c_fp
+  \seq_map_inline:Nn \l_semio_viz_tx_stack_seq { \fp_add:Nn \l_semio_viz_tx_c_fp {##1} }
+  \fp_zero:N \l_semio_viz_tx_b_fp
+  \int_step_inline:nn { \l_semio_viz_tx_j_int - 1 } {
+    \fp_add:Nn \l_semio_viz_tx_b_fp { \seq_item:Nn \l_semio_viz_tx_stack_seq {##1} }
+  }
+  \fp_set:Nn \l_semio_viz_tx_d_fp
+    { \seq_item:Nn \l_semio_viz_tx_stack_seq { \l_semio_viz_tx_j_int } }
+  \fp_set:Nn \l_semio_viz_tx_a_fp { \semio_viz_tx_offset:n { \l_semio_viz_tx_c_fp } }
+  \fp_set:Nn \l_semio_viz_tx_x_fp
+    { \l_semio_viz_tx_xa_fp + ( \l_semio_viz_tx_i_int - 1 ) * \l_semio_viz_tx_w_fp }
+  \fp_set:Nn \l_semio_viz_tx_y_fp
+    { \l_semio_viz_tx_ya_fp + ( \l_semio_viz_tx_a_fp + \l_semio_viz_tx_b_fp ) * \semio_viz_tx_yscale: }
+  \fp_set:Nn \l_semio_viz_tx_d_fp { \l_semio_viz_tx_d_fp * \semio_viz_tx_yscale: }
+  \seq_put_right:Nx \l_semio_viz_tx_path_seq { \fp_eval:n { \l_semio_viz_tx_x_fp } }
+  \seq_put_right:Nx \l_semio_viz_tx_path_seq
+    { \fp_eval:n { \l_semio_viz_tx_y_fp + \l_semio_viz_tx_d_fp } }
+  \seq_put_left:Nx \l_semio_viz_tx_boxes_seq { \fp_eval:n { \l_semio_viz_tx_y_fp } }
+  \seq_put_left:Nx \l_semio_viz_tx_boxes_seq { \fp_eval:n { \l_semio_viz_tx_x_fp } }
+}
+
+% 📏 Millimetres per unit of stacked weight.
+\cs_new:Npn \semio_viz_tx_yscale: {
+  \fp_eval:n
+    {
+      ( \l_semio_viz_tx_yb_fp - \l_semio_viz_tx_ya_fp )
+      / max ( 1e-9 , \l_semio_viz_tx_hi_fp )
+    }
+}
+
+% 📐 Baseline offset of a column whose total is #1, under the active `baseline` rule.
+\cs_new:Npn \semio_viz_tx_offset:n #1 {
+  \str_case:VnF \l_semio_viz_tx_baseline_tl
+    {
+      { silhouette } { \fp_eval:n { ( \l_semio_viz_tx_hi_fp - (#1) ) / 2 } }
+      { wiggle }
+        {
+          \fp_eval:n
+            {
+              ( \l_semio_viz_tx_hi_fp - (#1) ) / 2
+              + 0.18 * \l_semio_viz_tx_hi_fp * sin ( \l_semio_viz_tx_i_int * 0.9 )
+            }
+        }
+    }
+    { 0 }
+}
+%endregion 🔖️Layouts
+
+%region 🔖️Families
+% 🔤 text-viz: every §13 chart kind. The `layout` key selects the placement algorithm, the other
+% keys parameterise it, and the twelve catalogue entries are twelve distinct option sets.
+\SemioVizFamily { text-viz } {
+  \semio_viz_tx_reset:
+  \keys_set:nn { semio / viz / family / text-viz } {#1}
+  \semio_viz_tx_frame:
+  \str_case:VnF \l_semio_viz_tx_layout_tl
+    {
+      { grid } { \semio_viz_tx_load_terms: \semio_viz_tx_grid: }
+      { matrix } { \semio_viz_tx_load_terms: \semio_viz_tx_matrix: }
+      { lane } { \semio_viz_tx_lane: }
+      { curve } { \semio_viz_tx_curve: }
+      { band } { \semio_viz_tx_band: }
+      { river } { \semio_viz_tx_river: }
+    }
+    { \semio_viz_tx_load_terms: \semio_viz_tx_spiral: }
+}
+%endregion 🔖️Families
+
+\ExplSyntaxOff

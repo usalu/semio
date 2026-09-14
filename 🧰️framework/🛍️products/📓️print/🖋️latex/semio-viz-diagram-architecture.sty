@@ -1,0 +1,997 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-diagram-architecture}[2026/09/05 v0.2.0 semio viz software-, engineering- and building-architecture diagram families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-diagram-flowchart}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys-arch-layer
+% 🗝️ `arch-layer` stacks tier bands and places the boxes of each tier side by side.
+%   data     tl   box table (default demo-arch-layer), columns id/label/tier/tone
+%   tier     tl   tier column name (default tier)
+%   tiers    clist tier names top to bottom; empty derives them in first-seen order (default empty)
+%   edges    tl   dependency table (default demo-arch-layer-edges), columns from/to/kind
+%   shape    tl   box shape (default process)
+%   tier-title bool draw the tier caption on the left (default true)
+%   gap      fp   millimetres between tier bands (default 2)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-arch-layer
+\tl_new:N \l_semio_viz_ar_tier_tl
+\clist_new:N \l_semio_viz_ar_tiers_clist
+\seq_new:N \l_semio_viz_ar_tiers_seq
+\bool_new:N \l_semio_viz_ar_tiertitle_bool
+\fp_new:N \l_semio_viz_ar_gap_fp
+\int_new:N \l_semio_viz_ar_i_int
+\int_new:N \l_semio_viz_ar_n_int
+\int_new:N \l_semio_viz_ar_k_int
+\fp_new:N \l_semio_viz_ar_u_fp
+\fp_new:N \l_semio_viz_ar_v_fp
+\tl_new:N \l_semio_viz_ar_tone_tl
+
+% 🗄️ The option surface of `arch-layer`: box and dependency tables, their columns, the tier banding
+% and the frame size.
+\keys_define:nn { semio / viz / family / arch-layer } {
+  data   .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  edges  .tl_set:N = \l_semio_viz_dg_edges_tl,
+  id     .tl_set:N = \l_semio_viz_dg_col_id_tl,
+  label  .tl_set:N = \l_semio_viz_dg_col_label_tl,
+  tone   .tl_set:N = \l_semio_viz_dg_col_tone_tl,
+  tier   .tl_set:N = \l_semio_viz_ar_tier_tl,
+  tiers  .clist_set:N = \l_semio_viz_ar_tiers_clist,
+  shape  .tl_set:N = \l_semio_viz_dg_shape_tl,
+  tier-title .bool_set:N = \l_semio_viz_ar_tiertitle_bool,
+  gap    .fp_set:N = \l_semio_viz_ar_gap_fp,
+  routing .tl_set:N = \l_semio_viz_dg_routing_tl,
+  arrow  .tl_set:N = \l_semio_viz_dg_arrow_tl,
+  width  .fp_set:N = \l_semio_viz_dg_w_fp,
+  height .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 🏢 Entry point of `arch-layer`: resets the diagram state to the tier defaults, applies #1 and runs.
+\cs_new_protected:Npn \semio_viz_ar_layer:n #1 {
+  \semio_viz_frame_require:n { arch-layer }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-arch-layer }
+  \tl_set:Nn \l_semio_viz_dg_edges_tl { demo-arch-layer-edges }
+  \tl_set:Nn \l_semio_viz_ar_tier_tl { tier }
+  \clist_clear:N \l_semio_viz_ar_tiers_clist
+  \bool_set_true:N \l_semio_viz_ar_tiertitle_bool
+  \fp_set:Nn \l_semio_viz_ar_gap_fp { 2 }
+  \keys_set:nn { semio / viz / family / arch-layer } {#1}
+  \exp_args:NV \semio_viz_ar_layer_run:n \l_semio_viz_dg_nodes_tl
+}
+
+% 📚 Collects the tier names (given or first-seen), splits the height between them, draws each band
+% and finally the dependency edges over all of them.
+\cs_new_protected:Npn \semio_viz_ar_layer_run:n #1 {
+  \seq_clear:N \l_semio_viz_ar_tiers_seq
+  \clist_if_empty:NTF \l_semio_viz_ar_tiers_clist
+    {
+      \semio_viz_table_nrows:nN {#1} \l_semio_viz_ar_n_int
+      \int_step_inline:nn { \l_semio_viz_ar_n_int } {
+        \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_ar_tier_tl } \l_semio_viz_dg_cell_tl
+        \exp_args:NNV \seq_if_in:NnF \l_semio_viz_ar_tiers_seq \l_semio_viz_dg_cell_tl
+          { \seq_put_right:NV \l_semio_viz_ar_tiers_seq \l_semio_viz_dg_cell_tl }
+      }
+    }
+    { \seq_set_from_clist:NN \l_semio_viz_ar_tiers_seq \l_semio_viz_ar_tiers_clist }
+  \int_set:Nn \l_semio_viz_ar_k_int { \seq_count:N \l_semio_viz_ar_tiers_seq }
+  \int_compare:nNnT { \l_semio_viz_ar_k_int } < { 1 } { \int_set:Nn \l_semio_viz_ar_k_int { 1 } }
+  \fp_set:Nn \l_semio_viz_dg_nh_fp
+    { ( \l_semio_viz_dg_h_fp - 2 ) / \l_semio_viz_ar_k_int - \l_semio_viz_ar_gap_fp }
+  \prop_clear:N \l_semio_viz_dg_node_prop
+  \int_zero:N \l_semio_viz_ar_i_int
+  \seq_map_inline:Nn \l_semio_viz_ar_tiers_seq {
+    \int_incr:N \l_semio_viz_ar_i_int
+    \semio_viz_ar_layer_tier:nn {#1} {##1}
+  }
+  \semio_viz_dg_draw_edges:
+}
+
+% 🎗️ One tier band: its tinted stripe, its optional caption, and the box width that its member count
+% leaves for each box.
+\cs_new_protected:Npn \semio_viz_ar_layer_tier:nn #1#2 {
+  \fp_set:Nn \l_semio_viz_dg_y_fp
+    { \l_semio_viz_dg_h_fp - 1 - ( \l_semio_viz_ar_i_int - 0.5 ) * ( \l_semio_viz_dg_h_fp - 2 ) / \l_semio_viz_ar_k_int }
+  \semio_viz_dg_hue:nN { \l_semio_viz_ar_i_int } \l_semio_viz_ar_tone_tl
+  \fill [ \l_semio_viz_ar_tone_tl , fill~opacity=0.07 ]
+    ( 0.5 , \fp_eval:n { \l_semio_viz_dg_y_fp - \l_semio_viz_dg_nh_fp / 2 } )
+    rectangle ( \fp_eval:n { \l_semio_viz_dg_w_fp - 0.5 } , \fp_eval:n { \l_semio_viz_dg_y_fp + \l_semio_viz_dg_nh_fp / 2 } ) ;
+  \bool_if:NT \l_semio_viz_ar_tiertitle_bool {
+    \node [ font=\c_semio_viz_theme_font_chip_tl , text=\l_semio_viz_ar_tone_tl , anchor=north~west , inner~sep=0.3mm ]
+      at ( 1 , \fp_eval:n { \l_semio_viz_dg_y_fp + \l_semio_viz_dg_nh_fp / 2 - 0.2 } ) {#2} ;
+  }
+  \int_zero:N \l_semio_viz_ar_n_int
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_dg_n_int
+  \int_step_inline:nn { \l_semio_viz_dg_n_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_ar_tier_tl } \l_semio_viz_dg_cell_tl
+    \str_if_eq:VnT \l_semio_viz_dg_cell_tl {#2} { \int_incr:N \l_semio_viz_ar_n_int }
+  }
+  \int_compare:nNnT { \l_semio_viz_ar_n_int } < { 1 } { \int_set:Nn \l_semio_viz_ar_n_int { 1 } }
+  \fp_set:Nn \l_semio_viz_dg_nw_fp { ( \l_semio_viz_dg_w_fp - 16 ) / \l_semio_viz_ar_n_int - 2 }
+  \fp_compare:nT { \l_semio_viz_dg_nw_fp < 6 } { \fp_set:Nn \l_semio_viz_dg_nw_fp { 6 } }
+  \semio_viz_ar_layer_boxes:nn {#1} {#2}
+}
+
+% 🧊 Walks the table again and draws the boxes of tier #2 side by side, registering each one under
+% its id so the edges can find it later.
+\cs_new_protected:Npn \semio_viz_ar_layer_boxes:nn #1#2 {
+  \int_zero:N \l_semio_viz_dg_j_int
+  \int_step_inline:nn { \l_semio_viz_dg_n_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_ar_tier_tl } \l_semio_viz_dg_cell_tl
+    \str_if_eq:VnT \l_semio_viz_dg_cell_tl {#2} {
+      \int_incr:N \l_semio_viz_dg_j_int
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_id_tl } \l_semio_viz_dg_id_tl
+      \fp_set:Nn \l_semio_viz_dg_x_fp
+        { 14 + ( \l_semio_viz_dg_j_int - 0.5 ) * ( \l_semio_viz_dg_w_fp - 16 ) / \l_semio_viz_ar_n_int }
+      \tl_set:Nx \l_semio_viz_dg_rec_tl
+        {
+          \semio_viz_format_mm:n { \l_semio_viz_dg_x_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_y_fp } ,
+          \semio_viz_format_mm:n { \l_semio_viz_dg_nw_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_nh_fp - 2 } ,
+          \l_semio_viz_dg_shape_tl
+        }
+      \prop_put:NVV \l_semio_viz_dg_node_prop \l_semio_viz_dg_id_tl \l_semio_viz_dg_rec_tl
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_tone_tl } \l_semio_viz_dg_cell_tl
+      \tl_if_empty:NTF \l_semio_viz_dg_cell_tl
+        { \semio_viz_dg_tone:n { 0 } } { \exp_args:NV \semio_viz_dg_tone:n \l_semio_viz_dg_cell_tl }
+      \semio_viz_dg_get:n { \l_semio_viz_dg_id_tl }
+      \exp_args:NV \semio_viz_dg_shape_named:n \l_semio_viz_dg_shape_tl
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+      \semio_viz_dg_label:nnnn { \l_semio_viz_dg_a_fp } { \l_semio_viz_dg_b_fp } { \l_semio_viz_dg_c_fp }
+        { \tl_use:N \l_semio_viz_dg_label_tl }
+      \semio_viz_probe_geometry:nx { diagram-node }
+        {
+          \semio_viz_format_mm:n { \l_semio_viz_dg_a_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_b_fp } ,
+          \semio_viz_format_mm:n { \l_semio_viz_dg_c_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_d_fp }
+        }
+    }
+  }
+}
+% 🏢 Publishes the tiered software-architecture family under the name `arch-layer`.
+\SemioVizFamily { arch-layer } { \semio_viz_ar_layer:n {#1} }
+
+%region 🔖️Keys-arch-plan
+% 🗝️ `arch-plan` draws room polygons from a vertex table (floor, site, warehouse, zoning, massing).
+%   data     tl   polygon table (default demo-arch-plan), columns id/label/points/tone/hatch
+%   points   tl   vertex column, `x y x y …` in plan units (default points)
+%   hatch    tl   hatch column, values solid|none (default hatch)
+%   domain   clist plan bounding box `xmin,ymin,xmax,ymax` (default 0,0,20,12)
+%   grid     fp   plan-unit spacing of a background grid, 0 for none (default 0)
+%   labels   bool draw the room captions (default true)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-arch-plan
+\tl_new:N \l_semio_viz_ar_points_tl
+\tl_new:N \l_semio_viz_ar_hatch_tl
+\clist_new:N \l_semio_viz_ar_domain_clist
+\fp_new:N \l_semio_viz_ar_grid_fp
+\fp_new:N \l_semio_viz_ar_xmin_fp
+\fp_new:N \l_semio_viz_ar_ymin_fp
+\fp_new:N \l_semio_viz_ar_xmax_fp
+\fp_new:N \l_semio_viz_ar_ymax_fp
+\fp_new:N \l_semio_viz_ar_scale_fp
+\seq_new:N \l_semio_viz_ar_pts_seq
+\tl_new:N \l_semio_viz_ar_path_tl
+
+% 🗝️ The option surface of `arch-plan`: the polygon table and its columns, the plan domain, the
+% background grid spacing and the frame size.
+\keys_define:nn { semio / viz / family / arch-plan } {
+  data   .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  id     .tl_set:N = \l_semio_viz_dg_col_id_tl,
+  label  .tl_set:N = \l_semio_viz_dg_col_label_tl,
+  tone   .tl_set:N = \l_semio_viz_dg_col_tone_tl,
+  points .tl_set:N = \l_semio_viz_ar_points_tl,
+  hatch  .tl_set:N = \l_semio_viz_ar_hatch_tl,
+  domain .clist_set:N = \l_semio_viz_ar_domain_clist,
+  grid   .fp_set:N = \l_semio_viz_ar_grid_fp,
+  labels .bool_set:N = \l_semio_viz_dg_labels_bool,
+  width  .fp_set:N = \l_semio_viz_dg_w_fp,
+  height .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 📐 Maps plan unit (#1,#2) onto the frame, result in \l_semio_viz_ar_u_fp / _v_fp.
+\cs_new_protected:Npn \semio_viz_ar_map:nn #1#2 {
+  \fp_set:Nn \l_semio_viz_ar_u_fp { 1 + ( (#1) - \l_semio_viz_ar_xmin_fp ) * \l_semio_viz_ar_scale_fp }
+  \fp_set:Nn \l_semio_viz_ar_v_fp { 1 + ( (#2) - \l_semio_viz_ar_ymin_fp ) * \l_semio_viz_ar_scale_fp }
+}
+
+% 🗺️ Entry point of `arch-plan`: reads the domain corners, derives the aspect-preserving plan scale,
+% optionally rules the grid, then draws the rooms.
+\cs_new_protected:Npn \semio_viz_ar_plan:n #1 {
+  \semio_viz_frame_require:n { arch-plan }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-arch-plan }
+  \tl_set:Nn \l_semio_viz_ar_points_tl { points }
+  \tl_set:Nn \l_semio_viz_ar_hatch_tl { hatch }
+  \clist_set:Nn \l_semio_viz_ar_domain_clist { 0, 0, 20, 12 }
+  \fp_zero:N \l_semio_viz_ar_grid_fp
+  \keys_set:nn { semio / viz / family / arch-plan } {#1}
+  \fp_set:Nn \l_semio_viz_ar_xmin_fp { \clist_item:Nn \l_semio_viz_ar_domain_clist { 1 } }
+  \fp_set:Nn \l_semio_viz_ar_ymin_fp { \clist_item:Nn \l_semio_viz_ar_domain_clist { 2 } }
+  \fp_set:Nn \l_semio_viz_ar_xmax_fp { \clist_item:Nn \l_semio_viz_ar_domain_clist { 3 } }
+  \fp_set:Nn \l_semio_viz_ar_ymax_fp { \clist_item:Nn \l_semio_viz_ar_domain_clist { 4 } }
+  \fp_set:Nn \l_semio_viz_ar_scale_fp
+    {
+      min(
+        ( \l_semio_viz_dg_w_fp - 2 ) / max( \l_semio_viz_ar_xmax_fp - \l_semio_viz_ar_xmin_fp , 0.001 ) ,
+        ( \l_semio_viz_dg_h_fp - 2 ) / max( \l_semio_viz_ar_ymax_fp - \l_semio_viz_ar_ymin_fp , 0.001 )
+      )
+    }
+  \fp_compare:nT { \l_semio_viz_ar_grid_fp > 0 } { \semio_viz_ar_plan_grid: }
+  \exp_args:NV \semio_viz_ar_plan_run:n \l_semio_viz_dg_nodes_tl
+}
+
+% 🧮 The faint background grid: one hairline per `grid` step of the domain, vertical then horizontal.
+\cs_new_protected:Npn \semio_viz_ar_plan_grid: {
+  \int_set:Nn \l_semio_viz_ar_n_int
+    { \fp_to_int:n { ( \l_semio_viz_ar_xmax_fp - \l_semio_viz_ar_xmin_fp ) / \l_semio_viz_ar_grid_fp } }
+  \int_step_inline:nn { \l_semio_viz_ar_n_int } {
+    \semio_viz_ar_map:nn { \l_semio_viz_ar_xmin_fp + ##1 * \l_semio_viz_ar_grid_fp } { \l_semio_viz_ar_ymin_fp }
+    \draw [ semio-chrome-border-normal , line~width=\semio@stroke@hairline , draw~opacity=0.25 ]
+      ( \fp_eval:n { \l_semio_viz_ar_u_fp } , \fp_eval:n { \l_semio_viz_ar_v_fp } ) --
+      ( \fp_eval:n { \l_semio_viz_ar_u_fp } ,
+        \fp_eval:n { 1 + ( \l_semio_viz_ar_ymax_fp - \l_semio_viz_ar_ymin_fp ) * \l_semio_viz_ar_scale_fp } ) ;
+  }
+  \int_set:Nn \l_semio_viz_ar_n_int
+    { \fp_to_int:n { ( \l_semio_viz_ar_ymax_fp - \l_semio_viz_ar_ymin_fp ) / \l_semio_viz_ar_grid_fp } }
+  \int_step_inline:nn { \l_semio_viz_ar_n_int } {
+    \semio_viz_ar_map:nn { \l_semio_viz_ar_xmin_fp } { \l_semio_viz_ar_ymin_fp + ##1 * \l_semio_viz_ar_grid_fp }
+    \draw [ semio-chrome-border-normal , line~width=\semio@stroke@hairline , draw~opacity=0.25 ]
+      ( \fp_eval:n { \l_semio_viz_ar_u_fp } , \fp_eval:n { \l_semio_viz_ar_v_fp } ) --
+      ( \fp_eval:n { 1 + ( \l_semio_viz_ar_xmax_fp - \l_semio_viz_ar_xmin_fp ) * \l_semio_viz_ar_scale_fp } ,
+        \fp_eval:n { \l_semio_viz_ar_v_fp } ) ;
+  }
+}
+
+% 🚪 Draws one room per row of the polygon table.
+\cs_new_protected:Npn \semio_viz_ar_plan_run:n #1 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_ar_n_int
+  \int_step_inline:nn { \l_semio_viz_ar_n_int } { \semio_viz_ar_plan_room:nn {#1} {##1} }
+}
+
+% 🧱 One room: its vertex pairs mapped into a closed path, outlined or filled by `hatch`, captioned
+% at the centroid of its corners.
+\cs_new_protected:Npn \semio_viz_ar_plan_room:nn #1#2 {
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_ar_points_tl } \l_semio_viz_dg_cell_tl
+  \semio_viz_dg_words:NN \l_semio_viz_ar_pts_seq \l_semio_viz_dg_cell_tl
+  \int_set:Nn \l_semio_viz_ar_k_int { \seq_count:N \l_semio_viz_ar_pts_seq / 2 }
+  \int_compare:nNnT { \l_semio_viz_ar_k_int } < { 2 } { \int_set:Nn \l_semio_viz_ar_k_int { 0 } }
+  \int_compare:nNnT { \l_semio_viz_ar_k_int } > { 1 } {
+    \tl_clear:N \l_semio_viz_ar_path_tl
+    \fp_zero:N \l_semio_viz_dg_x_fp
+    \fp_zero:N \l_semio_viz_dg_y_fp
+    \int_step_inline:nn { \l_semio_viz_ar_k_int } {
+      \semio_viz_ar_map:nn
+        { \seq_item:Nn \l_semio_viz_ar_pts_seq { 2 * ##1 - 1 } }
+        { \seq_item:Nn \l_semio_viz_ar_pts_seq { 2 * ##1 } }
+      \tl_if_empty:NTF \l_semio_viz_ar_path_tl
+        { \tl_set:Nx \l_semio_viz_ar_path_tl { ( \semio_viz_format_mm:n { \l_semio_viz_ar_u_fp } , \semio_viz_format_mm:n { \l_semio_viz_ar_v_fp } ) } }
+        { \tl_put_right:Nx \l_semio_viz_ar_path_tl { -- ( \semio_viz_format_mm:n { \l_semio_viz_ar_u_fp } , \semio_viz_format_mm:n { \l_semio_viz_ar_v_fp } ) } }
+      \fp_add:Nn \l_semio_viz_dg_x_fp { \l_semio_viz_ar_u_fp }
+      \fp_add:Nn \l_semio_viz_dg_y_fp { \l_semio_viz_ar_v_fp }
+      \semio_viz_probe_geometry:nx { diagram-vertex }
+        { \semio_viz_format_mm:n { \l_semio_viz_ar_u_fp } , \semio_viz_format_mm:n { \l_semio_viz_ar_v_fp } }
+    }
+    \tl_put_right:Nn \l_semio_viz_ar_path_tl { -- cycle }
+    \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_tone_tl } \l_semio_viz_dg_cell_tl
+    \tl_if_empty:NTF \l_semio_viz_dg_cell_tl
+      { \semio_viz_dg_tone:n { 0 } } { \exp_args:NV \semio_viz_dg_tone:n \l_semio_viz_dg_cell_tl }
+    \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_ar_hatch_tl } \l_semio_viz_dg_ta_tl
+    \str_if_eq:VnTF \l_semio_viz_dg_ta_tl { none }
+      { \draw [ \l_semio_viz_dg_draw_tl , line~width=\semio@stroke@default ] \l_semio_viz_ar_path_tl ; }
+      {
+        \draw [ \l_semio_viz_dg_draw_tl , fill=\l_semio_viz_dg_fill_tl , line~width=\semio@stroke@default ]
+          \l_semio_viz_ar_path_tl ;
+      }
+    \bool_if:NT \l_semio_viz_dg_labels_bool {
+      \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+      \tl_if_empty:NF \l_semio_viz_dg_label_tl {
+        \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-foreground , anchor=center , inner~sep=0pt ]
+          at ( \fp_eval:n { \l_semio_viz_dg_x_fp / \l_semio_viz_ar_k_int } ,
+               \fp_eval:n { \l_semio_viz_dg_y_fp / \l_semio_viz_ar_k_int } )
+          { \tl_use:N \l_semio_viz_dg_label_tl } ;
+      }
+    }
+  }
+}
+% 🏠 Publishes the floor and site plan family under the name `arch-plan`.
+\SemioVizFamily { arch-plan } { \semio_viz_ar_plan:n {#1} }
+
+%region 🔖️Keys-arch-profile
+% 🗝️ `arch-profile` draws a vertical section or elevation from a level table.
+%   data     tl   level table (default demo-arch-profile), columns label/base/height/width/offset
+%   base/height/width/offset tl  column names in plan units (default base/height/width/offset)
+%   domain   clist  section extent `xmin,ymin,xmax,ymax` (default 0,0,20,12)
+%   ground   bool  draw a ground line at ymin (default true)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-arch-profile
+\tl_new:N \l_semio_viz_ar_base_tl
+\tl_new:N \l_semio_viz_ar_height_tl
+\tl_new:N \l_semio_viz_ar_width_tl
+\tl_new:N \l_semio_viz_ar_offset_tl
+\bool_new:N \l_semio_viz_ar_ground_bool
+
+% 🗝️ The option surface of `arch-profile`: the level table and its geometry columns, the section
+% extent, the ground line and the frame size.
+\keys_define:nn { semio / viz / family / arch-profile } {
+  data   .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  label  .tl_set:N = \l_semio_viz_dg_col_label_tl,
+  tone   .tl_set:N = \l_semio_viz_dg_col_tone_tl,
+  base   .tl_set:N = \l_semio_viz_ar_base_tl,
+  height .tl_set:N = \l_semio_viz_ar_height_tl,
+  span   .tl_set:N = \l_semio_viz_ar_width_tl,
+  offset .tl_set:N = \l_semio_viz_ar_offset_tl,
+  domain .clist_set:N = \l_semio_viz_ar_domain_clist,
+  ground .bool_set:N = \l_semio_viz_ar_ground_bool,
+  frame-width  .fp_set:N = \l_semio_viz_dg_w_fp,
+  frame-height .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 🏔️ Entry point of `arch-profile`: scales the section extent into the frame, rules the ground line
+% at the domain floor, then draws the levels.
+\cs_new_protected:Npn \semio_viz_ar_profile:n #1 {
+  \semio_viz_frame_require:n { arch-profile }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-arch-profile }
+  \tl_set:Nn \l_semio_viz_ar_base_tl { base }
+  \tl_set:Nn \l_semio_viz_ar_height_tl { height }
+  \tl_set:Nn \l_semio_viz_ar_width_tl { span }
+  \tl_set:Nn \l_semio_viz_ar_offset_tl { offset }
+  \clist_set:Nn \l_semio_viz_ar_domain_clist { 0, 0, 20, 12 }
+  \bool_set_true:N \l_semio_viz_ar_ground_bool
+  \keys_set:nn { semio / viz / family / arch-profile } {#1}
+  \fp_set:Nn \l_semio_viz_ar_xmin_fp { \clist_item:Nn \l_semio_viz_ar_domain_clist { 1 } }
+  \fp_set:Nn \l_semio_viz_ar_ymin_fp { \clist_item:Nn \l_semio_viz_ar_domain_clist { 2 } }
+  \fp_set:Nn \l_semio_viz_ar_xmax_fp { \clist_item:Nn \l_semio_viz_ar_domain_clist { 3 } }
+  \fp_set:Nn \l_semio_viz_ar_ymax_fp { \clist_item:Nn \l_semio_viz_ar_domain_clist { 4 } }
+  \fp_set:Nn \l_semio_viz_ar_scale_fp
+    {
+      min(
+        ( \l_semio_viz_dg_w_fp - 2 ) / max( \l_semio_viz_ar_xmax_fp - \l_semio_viz_ar_xmin_fp , 0.001 ) ,
+        ( \l_semio_viz_dg_h_fp - 2 ) / max( \l_semio_viz_ar_ymax_fp - \l_semio_viz_ar_ymin_fp , 0.001 )
+      )
+    }
+  \bool_if:NT \l_semio_viz_ar_ground_bool {
+    \semio_viz_ar_map:nn { \l_semio_viz_ar_xmin_fp } { \l_semio_viz_ar_ymin_fp }
+    \draw [ semio-chrome-border-emphasized , line~width=\semio@stroke@default ]
+      ( \fp_eval:n { \l_semio_viz_ar_u_fp } , \fp_eval:n { \l_semio_viz_ar_v_fp } ) --
+      ( \fp_eval:n { \l_semio_viz_dg_w_fp - 1 } , \fp_eval:n { \l_semio_viz_ar_v_fp } ) ;
+  }
+  \exp_args:NV \semio_viz_ar_profile_run:n \l_semio_viz_dg_nodes_tl
+}
+
+% 🧗 Draws one storey slab per row of the level table.
+\cs_new_protected:Npn \semio_viz_ar_profile_run:n #1 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_ar_n_int
+  \int_step_inline:nn { \l_semio_viz_ar_n_int } { \semio_viz_ar_profile_level:nn {#1} {##1} }
+}
+
+% 🧱 One storey: offset and span give its horizontal edges, base and height its vertical ones, and
+% the rectangle is filled, captioned in the middle and recorded for the probe.
+\cs_new_protected:Npn \semio_viz_ar_profile_level:nn #1#2 {
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_ar_offset_tl } \l_semio_viz_dg_cell_tl
+  \fp_set:Nn \l_semio_viz_dg_xa_fp { \l_semio_viz_dg_cell_tl }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_ar_width_tl } \l_semio_viz_dg_cell_tl
+  \fp_set:Nn \l_semio_viz_dg_xb_fp { \l_semio_viz_dg_xa_fp + \l_semio_viz_dg_cell_tl }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_ar_base_tl } \l_semio_viz_dg_cell_tl
+  \fp_set:Nn \l_semio_viz_dg_ya_fp { \l_semio_viz_dg_cell_tl }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_ar_height_tl } \l_semio_viz_dg_cell_tl
+  \fp_set:Nn \l_semio_viz_dg_yb_fp { \l_semio_viz_dg_ya_fp + \l_semio_viz_dg_cell_tl }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_tone_tl } \l_semio_viz_dg_cell_tl
+  \tl_if_empty:NTF \l_semio_viz_dg_cell_tl
+    { \semio_viz_dg_tone:n {#2} } { \exp_args:NV \semio_viz_dg_tone:n \l_semio_viz_dg_cell_tl }
+  \semio_viz_ar_map:nn { \l_semio_viz_dg_xa_fp } { \l_semio_viz_dg_ya_fp }
+  \fp_set:Nn \l_semio_viz_dg_x_fp { \l_semio_viz_ar_u_fp }
+  \fp_set:Nn \l_semio_viz_dg_y_fp { \l_semio_viz_ar_v_fp }
+  \semio_viz_ar_map:nn { \l_semio_viz_dg_xb_fp } { \l_semio_viz_dg_yb_fp }
+  \draw [ \l_semio_viz_dg_draw_tl , fill=\l_semio_viz_dg_fill_tl , line~width=\semio@stroke@hairline ]
+    ( \fp_eval:n { \l_semio_viz_dg_x_fp } , \fp_eval:n { \l_semio_viz_dg_y_fp } )
+    rectangle ( \fp_eval:n { \l_semio_viz_ar_u_fp } , \fp_eval:n { \l_semio_viz_ar_v_fp } ) ;
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+  \semio_viz_dg_label:nnnn
+    { ( \l_semio_viz_dg_x_fp + \l_semio_viz_ar_u_fp ) / 2 } { ( \l_semio_viz_dg_y_fp + \l_semio_viz_ar_v_fp ) / 2 }
+    { \l_semio_viz_ar_u_fp - \l_semio_viz_dg_x_fp } { \tl_use:N \l_semio_viz_dg_label_tl }
+  \semio_viz_probe_geometry:nx { diagram-level }
+    {
+      \semio_viz_format_mm:n { \l_semio_viz_dg_x_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_y_fp } ,
+      \semio_viz_format_mm:n { \l_semio_viz_ar_u_fp } , \semio_viz_format_mm:n { \l_semio_viz_ar_v_fp }
+    }
+}
+% 🏗️ Publishes the section and elevation family under the name `arch-profile`.
+\SemioVizFamily { arch-profile } { \semio_viz_ar_profile:n {#1} }
+
+%region 🔖️Keys-arch-axonometric
+% 🗝️ `arch-axonometric` projects boxes with a 2.5D helper (axonometric, isometric, exploded).
+%   data     tl   box table (default demo-arch-axo), columns label/x/y/z/dx/dy/dz/tone
+%   angle-x/angle-y fp  screen angles of the plan axes in degrees (default 30 / 150)
+%   scale-z  fp   vertical foreshortening (default 1)
+%   explode  fp   factor applied to each box z-offset for an exploded view (default 0)
+%   unit     fp   millimetres per model unit, 0 fits the frame (default 0)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-arch-axonometric
+\fp_new:N \l_semio_viz_ar_ax_fp
+\fp_new:N \l_semio_viz_ar_ay_fp
+\fp_new:N \l_semio_viz_ar_sz_fp
+\fp_new:N \l_semio_viz_ar_explode_fp
+\fp_new:N \l_semio_viz_ar_unit_fp
+\fp_new:N \l_semio_viz_ar_px_fp
+\fp_new:N \l_semio_viz_ar_py_fp
+
+% 🗝️ The option surface of `arch-axonometric`: the box table, the two plan-axis angles, the vertical
+% foreshortening, the explode factor and the model unit.
+\keys_define:nn { semio / viz / family / arch-axonometric } {
+  data    .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  label   .tl_set:N = \l_semio_viz_dg_col_label_tl,
+  tone    .tl_set:N = \l_semio_viz_dg_col_tone_tl,
+  angle-x .fp_set:N = \l_semio_viz_ar_ax_fp,
+  angle-y .fp_set:N = \l_semio_viz_ar_ay_fp,
+  scale-z .fp_set:N = \l_semio_viz_ar_sz_fp,
+  explode .fp_set:N = \l_semio_viz_ar_explode_fp,
+  unit    .fp_set:N = \l_semio_viz_ar_unit_fp,
+  labels  .bool_set:N = \l_semio_viz_dg_labels_bool,
+  width   .fp_set:N = \l_semio_viz_dg_w_fp,
+  height  .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 🧊 2.5D projection: model (#1,#2,#3) to screen \l_semio_viz_ar_px_fp / _py_fp.
+\cs_new_protected:Npn \semio_viz_ar_project:nnn #1#2#3 {
+  \fp_set:Nn \l_semio_viz_ar_px_fp
+    { \l_semio_viz_ar_unit_fp * ( (#1) * cosd( \l_semio_viz_ar_ax_fp ) + (#2) * cosd( \l_semio_viz_ar_ay_fp ) ) }
+  \fp_set:Nn \l_semio_viz_ar_py_fp
+    {
+      \l_semio_viz_ar_unit_fp *
+      ( (#1) * sind( \l_semio_viz_ar_ax_fp ) + (#2) * sind( \l_semio_viz_ar_ay_fp ) + (#3) * \l_semio_viz_ar_sz_fp )
+    }
+}
+
+% 📦 Entry point of `arch-axonometric`: sets the default view angles and unforeshortened height,
+% applies #1 and projects the boxes.
+\cs_new_protected:Npn \semio_viz_ar_axo:n #1 {
+  \semio_viz_frame_require:n { arch-axonometric }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-arch-axo }
+  \fp_set:Nn \l_semio_viz_ar_ax_fp { -30 }
+  \fp_set:Nn \l_semio_viz_ar_ay_fp { 30 }
+  \fp_set:Nn \l_semio_viz_ar_sz_fp { 1 }
+  \fp_zero:N \l_semio_viz_ar_explode_fp
+  \fp_zero:N \l_semio_viz_ar_unit_fp
+  \keys_set:nn { semio / viz / family / arch-axonometric } {#1}
+  \exp_args:NV \semio_viz_ar_axo_run:n \l_semio_viz_dg_nodes_tl
+}
+
+% 📏 Falls back to a frame-derived model unit when `unit` is left at zero, then draws every box.
+\cs_new_protected:Npn \semio_viz_ar_axo_run:n #1 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_ar_n_int
+  \fp_compare:nT { \l_semio_viz_ar_unit_fp <= 0 }
+    { \fp_set:Nn \l_semio_viz_ar_unit_fp { min( \l_semio_viz_dg_w_fp , \l_semio_viz_dg_h_fp ) / 14 } }
+  \int_step_inline:nn { \l_semio_viz_ar_n_int } { \semio_viz_ar_axo_box:nn {#1} {##1} }
+}
+
+% 🧊 One cuboid: reads its origin and extents, lifts it by the explode factor, draws top, front and
+% side faces, and sets its caption on the top face.
+\cs_new_protected:Npn \semio_viz_ar_axo_box:nn #1#2 {
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { x } \l_semio_viz_dg_cell_tl
+  \fp_set:Nn \l_semio_viz_dg_xa_fp { \l_semio_viz_dg_cell_tl }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { y } \l_semio_viz_dg_cell_tl
+  \fp_set:Nn \l_semio_viz_dg_ya_fp { \l_semio_viz_dg_cell_tl }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { z } \l_semio_viz_dg_cell_tl
+  \fp_set:Nn \l_semio_viz_dg_xb_fp { \l_semio_viz_dg_cell_tl * ( 1 + \l_semio_viz_ar_explode_fp ) }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { dx } \l_semio_viz_dg_cell_tl
+  \fp_set:Nn \l_semio_viz_dg_wa_fp { \l_semio_viz_dg_cell_tl }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { dy } \l_semio_viz_dg_cell_tl
+  \fp_set:Nn \l_semio_viz_dg_ha_fp { \l_semio_viz_dg_cell_tl }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { dz } \l_semio_viz_dg_cell_tl
+  \fp_set:Nn \l_semio_viz_dg_wb_fp { \l_semio_viz_dg_cell_tl }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_tone_tl } \l_semio_viz_dg_cell_tl
+  \tl_if_empty:NTF \l_semio_viz_dg_cell_tl
+    { \semio_viz_dg_tone:n {#2} } { \exp_args:NV \semio_viz_dg_tone:n \l_semio_viz_dg_cell_tl }
+  \fp_set:Nn \l_semio_viz_dg_x_fp { \l_semio_viz_dg_w_fp / 2 }
+  \fp_set:Nn \l_semio_viz_dg_y_fp { \l_semio_viz_dg_h_fp * 0.28 }
+  \semio_viz_ar_axo_face:nnnnnn
+    { \l_semio_viz_dg_xa_fp } { \l_semio_viz_dg_ya_fp } { \l_semio_viz_dg_xb_fp + \l_semio_viz_dg_wb_fp }
+    { \l_semio_viz_dg_wa_fp } { \l_semio_viz_dg_ha_fp } { top }
+  \semio_viz_ar_axo_face:nnnnnn
+    { \l_semio_viz_dg_xa_fp } { \l_semio_viz_dg_ya_fp } { \l_semio_viz_dg_xb_fp }
+    { \l_semio_viz_dg_wa_fp } { \l_semio_viz_dg_wb_fp } { front }
+  \semio_viz_ar_axo_face:nnnnnn
+    { \l_semio_viz_dg_xa_fp + \l_semio_viz_dg_wa_fp } { \l_semio_viz_dg_ya_fp } { \l_semio_viz_dg_xb_fp }
+    { \l_semio_viz_dg_ha_fp } { \l_semio_viz_dg_wb_fp } { side }
+  \bool_if:NT \l_semio_viz_dg_labels_bool {
+    \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+    \tl_if_empty:NF \l_semio_viz_dg_label_tl {
+      \semio_viz_ar_project:nnn
+        { \l_semio_viz_dg_xa_fp + \l_semio_viz_dg_wa_fp / 2 } { \l_semio_viz_dg_ya_fp + \l_semio_viz_dg_ha_fp / 2 }
+        { \l_semio_viz_dg_xb_fp + \l_semio_viz_dg_wb_fp }
+      \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-foreground , anchor=center , inner~sep=0pt ]
+        at ( \fp_eval:n { \l_semio_viz_dg_x_fp + \l_semio_viz_ar_px_fp } ,
+             \fp_eval:n { \l_semio_viz_dg_y_fp + \l_semio_viz_ar_py_fp } )
+        { \tl_use:N \l_semio_viz_dg_label_tl } ;
+    }
+  }
+}
+
+% 🔷 One quadrilateral face named by #6, the top drawn opaque and the two vertical faces shaded back.
+\cs_new_protected:Npn \semio_viz_ar_axo_face:nnnnnn #1#2#3#4#5#6 {
+  \tl_clear:N \l_semio_viz_ar_path_tl
+  \str_case:nn {#6} {
+    { top } {
+      \semio_viz_ar_axo_point:nnn {#1} {#2} {#3}
+      \semio_viz_ar_axo_point:nnn { (#1) + (#4) } {#2} {#3}
+      \semio_viz_ar_axo_point:nnn { (#1) + (#4) } { (#2) + (#5) } {#3}
+      \semio_viz_ar_axo_point:nnn {#1} { (#2) + (#5) } {#3}
+    }
+    { front } {
+      \semio_viz_ar_axo_point:nnn {#1} {#2} {#3}
+      \semio_viz_ar_axo_point:nnn { (#1) + (#4) } {#2} {#3}
+      \semio_viz_ar_axo_point:nnn { (#1) + (#4) } {#2} { (#3) + (#5) }
+      \semio_viz_ar_axo_point:nnn {#1} {#2} { (#3) + (#5) }
+    }
+    { side } {
+      \semio_viz_ar_axo_point:nnn {#1} {#2} {#3}
+      \semio_viz_ar_axo_point:nnn {#1} { (#2) + (#4) } {#3}
+      \semio_viz_ar_axo_point:nnn {#1} { (#2) + (#4) } { (#3) + (#5) }
+      \semio_viz_ar_axo_point:nnn {#1} {#2} { (#3) + (#5) }
+    }
+  }
+  \tl_put_right:Nn \l_semio_viz_ar_path_tl { -- cycle }
+  \str_if_eq:nnTF {#6} { top }
+    { \draw [ \l_semio_viz_dg_draw_tl , fill=\l_semio_viz_dg_fill_tl , line~width=\semio@stroke@hairline ] \l_semio_viz_ar_path_tl ; }
+    { \draw [ \l_semio_viz_dg_draw_tl , fill=\l_semio_viz_dg_fill_tl , fill~opacity=0.75 , line~width=\semio@stroke@hairline ] \l_semio_viz_ar_path_tl ; }
+}
+
+% 📍 Projects model point (#1,#2,#3) and appends it to the face path, recording it for the probe.
+\cs_new_protected:Npn \semio_viz_ar_axo_point:nnn #1#2#3 {
+  \semio_viz_ar_project:nnn {#1} {#2} {#3}
+  \tl_if_empty:NTF \l_semio_viz_ar_path_tl
+    {
+      \tl_set:Nx \l_semio_viz_ar_path_tl
+        { ( \semio_viz_format_mm:n { \l_semio_viz_dg_x_fp + \l_semio_viz_ar_px_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_y_fp + \l_semio_viz_ar_py_fp } ) }
+    }
+    {
+      \tl_put_right:Nx \l_semio_viz_ar_path_tl
+        { -- ( \semio_viz_format_mm:n { \l_semio_viz_dg_x_fp + \l_semio_viz_ar_px_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_y_fp + \l_semio_viz_ar_py_fp } ) }
+    }
+  \semio_viz_probe_geometry:nx { diagram-axo }
+    { \semio_viz_format_mm:n { \l_semio_viz_ar_px_fp } , \semio_viz_format_mm:n { \l_semio_viz_ar_py_fp } }
+}
+% 🧱 Publishes the 2.5D massing family under the name `arch-axonometric`.
+\SemioVizFamily { arch-axonometric } { \semio_viz_ar_axo:n {#1} }
+
+%region 🔖️Keys-arch-bubble
+% 🗝️ `arch-bubble` places value-sized bubbles on a circle and links adjacent ones.
+%   data     tl   space table (default demo-arch-bubble), columns id/label/value/tone
+%   edges    tl   adjacency table (default demo-arch-bubble-edges), columns from/to/kind
+%   value    tl   area column (default value)
+%   radius   fp   millimetre radius of the placement circle, 0 fits the frame (default 0)
+%   scale    fp   millimetres per square root of value (default 1.6)
+%   start    fp   degrees of the first bubble (default 90)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-arch-bubble
+\tl_new:N \l_semio_viz_ar_value_tl
+\fp_new:N \l_semio_viz_ar_radius_fp
+\fp_new:N \l_semio_viz_ar_bscale_fp
+\fp_new:N \l_semio_viz_ar_start_fp
+
+% 🗝️ The option surface of `arch-bubble`: the space and adjacency tables, the area column, the ring
+% radius, the area-to-millimetre scale and the starting angle.
+\keys_define:nn { semio / viz / family / arch-bubble } {
+  data   .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  edges  .tl_set:N = \l_semio_viz_dg_edges_tl,
+  id     .tl_set:N = \l_semio_viz_dg_col_id_tl,
+  label  .tl_set:N = \l_semio_viz_dg_col_label_tl,
+  tone   .tl_set:N = \l_semio_viz_dg_col_tone_tl,
+  value  .tl_set:N = \l_semio_viz_ar_value_tl,
+  radius .fp_set:N = \l_semio_viz_ar_radius_fp,
+  scale  .fp_set:N = \l_semio_viz_ar_bscale_fp,
+  start  .fp_set:N = \l_semio_viz_ar_start_fp,
+  routing .tl_set:N = \l_semio_viz_dg_routing_tl,
+  arrow  .tl_set:N = \l_semio_viz_dg_arrow_tl,
+  width  .fp_set:N = \l_semio_viz_dg_w_fp,
+  height .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 🫧 Entry point of `arch-bubble`: defaults to straight, headless adjacency links, applies #1 and
+% places the bubbles.
+\cs_new_protected:Npn \semio_viz_ar_bubble:n #1 {
+  \semio_viz_frame_require:n { arch-bubble }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-arch-bubble }
+  \tl_set:Nn \l_semio_viz_dg_edges_tl { demo-arch-bubble-edges }
+  \tl_set:Nn \l_semio_viz_ar_value_tl { value }
+  \fp_zero:N \l_semio_viz_ar_radius_fp
+  \fp_set:Nn \l_semio_viz_ar_bscale_fp { 1.6 }
+  \fp_set:Nn \l_semio_viz_ar_start_fp { 90 }
+  \tl_set:Nn \l_semio_viz_dg_routing_tl { straight }
+  \tl_set:Nn \l_semio_viz_dg_arrow_tl { none }
+  \keys_set:nn { semio / viz / family / arch-bubble } {#1}
+  \exp_args:NV \semio_viz_ar_bubble_run:n \l_semio_viz_dg_nodes_tl
+}
+
+% ⭕ Spaces the rows evenly around the ring, sizing each bubble by the square root of its value, then
+% draws the adjacency links first and the captioned bubbles over them.
+\cs_new_protected:Npn \semio_viz_ar_bubble_run:n #1 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_ar_n_int
+  \int_compare:nNnT { \l_semio_viz_ar_n_int } < { 1 } { \int_set:Nn \l_semio_viz_ar_n_int { 1 } }
+  \fp_compare:nT { \l_semio_viz_ar_radius_fp <= 0 }
+    { \fp_set:Nn \l_semio_viz_ar_radius_fp { min( \l_semio_viz_dg_w_fp , \l_semio_viz_dg_h_fp ) / 2 - 8 } }
+  \prop_clear:N \l_semio_viz_dg_node_prop
+  \int_step_inline:nn { \l_semio_viz_ar_n_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_id_tl } \l_semio_viz_dg_id_tl
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_ar_value_tl } \l_semio_viz_dg_cell_tl
+    \fp_set:Nn \l_semio_viz_ar_u_fp
+      { \l_semio_viz_ar_bscale_fp * sqrt( max( \l_semio_viz_dg_cell_tl , 0.01 ) ) }
+    \fp_set:Nn \l_semio_viz_ar_v_fp
+      { \l_semio_viz_ar_start_fp - 360 * ( ##1 - 1 ) / \l_semio_viz_ar_n_int }
+    \tl_set:Nx \l_semio_viz_dg_rec_tl
+      {
+        \semio_viz_format_mm:n { \l_semio_viz_dg_w_fp / 2 + \l_semio_viz_ar_radius_fp * cosd( \l_semio_viz_ar_v_fp ) } ,
+        \semio_viz_format_mm:n { \l_semio_viz_dg_h_fp / 2 + \l_semio_viz_ar_radius_fp * sind( \l_semio_viz_ar_v_fp ) } ,
+        \semio_viz_format_mm:n { 2 * \l_semio_viz_ar_u_fp } , \semio_viz_format_mm:n { 2 * \l_semio_viz_ar_u_fp } , circle
+      }
+    \prop_put:NVV \l_semio_viz_dg_node_prop \l_semio_viz_dg_id_tl \l_semio_viz_dg_rec_tl
+  }
+  \semio_viz_dg_draw_edges:
+  \int_step_inline:nn { \l_semio_viz_ar_n_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_id_tl } \l_semio_viz_dg_id_tl
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_tone_tl } \l_semio_viz_dg_cell_tl
+    \tl_if_empty:NTF \l_semio_viz_dg_cell_tl
+      { \semio_viz_dg_tone:n { ##1 } } { \exp_args:NV \semio_viz_dg_tone:n \l_semio_viz_dg_cell_tl }
+    \semio_viz_dg_get:n { \l_semio_viz_dg_id_tl }
+    \semio_viz_dg_shape_named:n { circle }
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+    \semio_viz_dg_label:nnnn { \l_semio_viz_dg_a_fp } { \l_semio_viz_dg_b_fp } { \l_semio_viz_dg_c_fp }
+      { \tl_use:N \l_semio_viz_dg_label_tl }
+    \semio_viz_probe_geometry:nx { diagram-node }
+      {
+        \semio_viz_format_mm:n { \l_semio_viz_dg_a_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_b_fp } ,
+        \semio_viz_format_mm:n { \l_semio_viz_dg_c_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_d_fp }
+      }
+  }
+}
+% 🫧 Publishes the room-programme bubble family under the name `arch-bubble`.
+\SemioVizFamily { arch-bubble } { \semio_viz_ar_bubble:n {#1} }
+
+%region 🔖️Keys-arch-sunpath
+% 🗝️ `arch-sunpath` computes solar altitude and azimuth and plots the day arc or the shadow fan.
+%   latitude  fp   degrees north, negative south (default 52.37)
+%   longitude fp   degrees east, negative west (default 9.73)
+%   date      tl   ISO calendar day `YYYY-MM-DD` of the arc (default 2026-06-21)
+%   hours     clist local solar hours in UTC to sample (default 4,6,8,10,12,14,16,18,20)
+%   mode      choice stereographic|shadow  polar sun chart or a shadow fan (default stereographic)
+%   pole      fp    millimetre radius of the horizon circle, 0 fits the frame (default 0)
+%   object    fp    metres of object height used by mode=shadow (default 3)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-arch-sunpath
+\fp_new:N \l_semio_viz_ar_lat_fp
+\fp_new:N \l_semio_viz_ar_lon_fp
+\fp_new:N \l_semio_viz_ar_days_fp
+\fp_new:N \l_semio_viz_ar_alt_fp
+\fp_new:N \l_semio_viz_ar_azi_fp
+\fp_new:N \l_semio_viz_ar_dec_fp
+\fp_new:N \l_semio_viz_ar_ra_fp
+\fp_new:N \l_semio_viz_ar_pole_fp
+\fp_new:N \l_semio_viz_ar_object_fp
+\tl_new:N \l_semio_viz_ar_date_tl
+\tl_new:N \l_semio_viz_ar_mode_tl
+\clist_new:N \l_semio_viz_ar_hours_clist
+
+% 🗝️ The option surface of `arch-sunpath`: the site coordinates, the day and the hours to sample,
+% the chart mode, the horizon radius and the object height.
+\keys_define:nn { semio / viz / family / arch-sunpath } {
+  latitude  .fp_set:N = \l_semio_viz_ar_lat_fp,
+  longitude .fp_set:N = \l_semio_viz_ar_lon_fp,
+  date      .tl_set:N = \l_semio_viz_ar_date_tl,
+  hours     .clist_set:N = \l_semio_viz_ar_hours_clist,
+  mode      .tl_set:N = \l_semio_viz_ar_mode_tl,
+  pole      .fp_set:N = \l_semio_viz_ar_pole_fp,
+  object    .fp_set:N = \l_semio_viz_ar_object_fp,
+  width     .fp_set:N = \l_semio_viz_dg_w_fp,
+  height    .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 🗓️ Days since J2000.0 for the Gregorian date #1-#2-#3 at UTC hour #4 (Fliegel–Van Flandern).
+\cs_new_protected:Npn \semio_viz_ar_days:nnnn #1#2#3#4 {
+  \fp_set:Nn \l_semio_viz_ar_days_fp
+    {
+      367 * (#1)
+      - trunc( 7 * ( (#1) + trunc( ( (#2) + 9 ) / 12 , 0 ) ) / 4 , 0 )
+      + trunc( 275 * (#2) / 9 , 0 )
+      + (#3) + 1721013.5 + (#4) / 24 - 2451545
+    }
+}
+
+% ☀️ Solar altitude and azimuth in degrees for the current day number, latitude and longitude.
+%    Mirrors the SunCalc mean-anomaly model: M, equation of centre C, ecliptic longitude L,
+%    declination, right ascension, sidereal time and hour angle.
+\cs_new_protected:Npn \semio_viz_ar_sun: {
+  \fp_set:Nn \l_semio_viz_dg_xa_fp { 357.5291 + 0.98560028 * \l_semio_viz_ar_days_fp }
+  \fp_set:Nn \l_semio_viz_dg_ya_fp
+    {
+      1.9148 * sind( \l_semio_viz_dg_xa_fp ) + 0.02 * sind( 2 * \l_semio_viz_dg_xa_fp )
+      + 0.0003 * sind( 3 * \l_semio_viz_dg_xa_fp )
+    }
+  \fp_set:Nn \l_semio_viz_dg_xb_fp { \l_semio_viz_dg_xa_fp + \l_semio_viz_dg_ya_fp + 102.9372 + 180 }
+  \fp_set:Nn \l_semio_viz_ar_dec_fp { asind( sind( 23.4397 ) * sind( \l_semio_viz_dg_xb_fp ) ) }
+  \fp_set:Nn \l_semio_viz_ar_ra_fp
+    { atand( sind( \l_semio_viz_dg_xb_fp ) * cosd( 23.4397 ) , cosd( \l_semio_viz_dg_xb_fp ) ) }
+  \fp_set:Nn \l_semio_viz_dg_yb_fp
+    { 280.16 + 360.9856235 * \l_semio_viz_ar_days_fp + \l_semio_viz_ar_lon_fp - \l_semio_viz_ar_ra_fp }
+  \fp_set:Nn \l_semio_viz_ar_alt_fp
+    {
+      asind(
+        sind( \l_semio_viz_ar_lat_fp ) * sind( \l_semio_viz_ar_dec_fp )
+        + cosd( \l_semio_viz_ar_lat_fp ) * cosd( \l_semio_viz_ar_dec_fp ) * cosd( \l_semio_viz_dg_yb_fp )
+      )
+    }
+  \fp_set:Nn \l_semio_viz_ar_azi_fp
+    {
+      atand(
+        sind( \l_semio_viz_dg_yb_fp ) ,
+        cosd( \l_semio_viz_dg_yb_fp ) * sind( \l_semio_viz_ar_lat_fp )
+        - tand( \l_semio_viz_ar_dec_fp ) * cosd( \l_semio_viz_ar_lat_fp )
+      )
+    }
+}
+
+% 🌞 Entry point of `arch-sunpath`: Hannover as the default site and the June solstice as the default
+% day, then fits the horizon circle and hands the date on to be split.
+\cs_new_protected:Npn \semio_viz_ar_sunpath:n #1 {
+  \semio_viz_frame_require:n { arch-sunpath }
+  \semio_viz_dg_reset:
+  \fp_set:Nn \l_semio_viz_ar_lat_fp { 52.37 }
+  \fp_set:Nn \l_semio_viz_ar_lon_fp { 9.73 }
+  \tl_set:Nn \l_semio_viz_ar_date_tl { 2026-06-21 }
+  \clist_set:Nn \l_semio_viz_ar_hours_clist { 4, 6, 8, 10, 12, 14, 16, 18, 20 }
+  \tl_set:Nn \l_semio_viz_ar_mode_tl { stereographic }
+  \fp_zero:N \l_semio_viz_ar_pole_fp
+  \fp_set:Nn \l_semio_viz_ar_object_fp { 3 }
+  \keys_set:nn { semio / viz / family / arch-sunpath } {#1}
+  \fp_compare:nT { \l_semio_viz_ar_pole_fp <= 0 }
+    { \fp_set:Nn \l_semio_viz_ar_pole_fp { min( \l_semio_viz_dg_w_fp , \l_semio_viz_dg_h_fp ) / 2 - 3 } }
+  \exp_args:NV \semio_viz_ar_sunpath_date:n \l_semio_viz_ar_date_tl
+}
+
+% 📆 Delimits the ISO date so the parser below can see its hyphens.
+\cs_new_protected:Npn \semio_viz_ar_sunpath_date:n #1 { \semio_viz_ar_sunpath_split:w #1 \q_stop }
+% ✂️ Splits `YYYY-MM-DD` into year, month and day, then draws the chart for that date.
+\cs_new_protected:Npn \semio_viz_ar_sunpath_split:w #1-#2-#3 \q_stop {
+  \tl_set:Nn \l_semio_viz_dg_ta_tl {#1}
+  \tl_set:Nn \l_semio_viz_dg_tb_tl {#2}
+  \tl_set:Nn \l_semio_viz_dg_cell_tl {#3}
+  \semio_viz_ar_sunpath_draw:
+}
+
+% 🧭 The horizon circle, then every sampled hour, and finally the day arc through the daylight ones.
+\cs_new_protected:Npn \semio_viz_ar_sunpath_draw: {
+  \fp_set:Nn \l_semio_viz_dg_x_fp { \l_semio_viz_dg_w_fp / 2 }
+  \fp_set:Nn \l_semio_viz_dg_y_fp { \l_semio_viz_dg_h_fp / 2 }
+  \draw [ semio-chrome-border-normal , line~width=\semio@stroke@hairline ]
+    ( \fp_eval:n { \l_semio_viz_dg_x_fp } , \fp_eval:n { \l_semio_viz_dg_y_fp } )
+    circle [ radius=\fp_eval:n { \l_semio_viz_ar_pole_fp } ] ;
+  \tl_clear:N \l_semio_viz_ar_path_tl
+  \clist_map_inline:Nn \l_semio_viz_ar_hours_clist { \semio_viz_ar_sunpath_hour:n {##1} }
+  \tl_if_empty:NF \l_semio_viz_ar_path_tl {
+    \draw [ semio-warning , line~width=\semio@stroke@default ] \l_semio_viz_ar_path_tl ;
+  }
+}
+
+% 🕐 One sampled hour: solves the sun position and, while it is above the horizon, either casts the
+% shadow ray or extends the stereographic arc.
+\cs_new_protected:Npn \semio_viz_ar_sunpath_hour:n #1 {
+  \semio_viz_ar_days:nnnn
+    { \l_semio_viz_dg_ta_tl } { \l_semio_viz_dg_tb_tl } { \l_semio_viz_dg_cell_tl } {#1}
+  \semio_viz_ar_sun:
+  \semio_viz_probe_geometry:nx { diagram-sun }
+    { \semio_viz_format_mm:n { \l_semio_viz_ar_alt_fp } , \semio_viz_format_mm:n { \l_semio_viz_ar_azi_fp } }
+  \fp_compare:nT { \l_semio_viz_ar_alt_fp > 0 } {
+    \str_if_eq:VnTF \l_semio_viz_ar_mode_tl { shadow }
+      {
+        \fp_set:Nn \l_semio_viz_ar_u_fp
+          { min( \l_semio_viz_ar_object_fp / tand( max( \l_semio_viz_ar_alt_fp , 1 ) ) , \l_semio_viz_ar_pole_fp ) }
+        \draw [ semio-chrome-border-emphasized , line~width=\semio@stroke@hairline ]
+          ( \fp_eval:n { \l_semio_viz_dg_x_fp } , \fp_eval:n { \l_semio_viz_dg_y_fp } ) --
+          ( \fp_eval:n { \l_semio_viz_dg_x_fp - \l_semio_viz_ar_u_fp * sind( \l_semio_viz_ar_azi_fp ) } ,
+            \fp_eval:n { \l_semio_viz_dg_y_fp - \l_semio_viz_ar_u_fp * cosd( \l_semio_viz_ar_azi_fp ) } ) ;
+      }
+      {
+        \fp_set:Nn \l_semio_viz_ar_u_fp
+          { \l_semio_viz_ar_pole_fp * ( 90 - \l_semio_viz_ar_alt_fp ) / 90 }
+        \fp_set:Nn \l_semio_viz_ar_v_fp { \l_semio_viz_ar_azi_fp + 180 }
+        \tl_if_empty:NTF \l_semio_viz_ar_path_tl
+          {
+            \tl_set:Nx \l_semio_viz_ar_path_tl
+              {
+                ( \semio_viz_format_mm:n { \l_semio_viz_dg_x_fp + \l_semio_viz_ar_u_fp * sind( \l_semio_viz_ar_v_fp ) } ,
+                  \semio_viz_format_mm:n { \l_semio_viz_dg_y_fp + \l_semio_viz_ar_u_fp * cosd( \l_semio_viz_ar_v_fp ) } )
+              }
+          }
+          {
+            \tl_put_right:Nx \l_semio_viz_ar_path_tl
+              {
+                -- ( \semio_viz_format_mm:n { \l_semio_viz_dg_x_fp + \l_semio_viz_ar_u_fp * sind( \l_semio_viz_ar_v_fp ) } ,
+                     \semio_viz_format_mm:n { \l_semio_viz_dg_y_fp + \l_semio_viz_ar_u_fp * cosd( \l_semio_viz_ar_v_fp ) } )
+              }
+          }
+      }
+  }
+}
+% ☀️ Publishes the solar chart family under the name `arch-sunpath`.
+\SemioVizFamily { arch-sunpath } { \semio_viz_ar_sunpath:n {#1} }
+
+%region 🔖️Keys-arch-schematic
+% 🗝️ `arch-schematic` lays a symbol library out on the kernel grid and joins it with process lines.
+%   data     tl   component table (default demo-arch-schematic), columns id/label/symbol/row/col
+%   edges    tl   line table (default demo-arch-schematic-edges), columns from/to/kind
+%   symbol   tl   symbol column; pump|valve|tank|heater|cylinder|filter|sensor|controller|actuator|junction
+%   routing  choice orthogonal|straight|curved (default orthogonal)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-arch-schematic
+\tl_new:N \l_semio_viz_ar_symbol_tl
+
+% 🗝️ The option surface of `arch-schematic`: the component and line tables, the grid columns, the
+% symbol column and the routing of the process lines.
+\keys_define:nn { semio / viz / family / arch-schematic } {
+  data   .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  edges  .tl_set:N = \l_semio_viz_dg_edges_tl,
+  id     .tl_set:N = \l_semio_viz_dg_col_id_tl,
+  label  .tl_set:N = \l_semio_viz_dg_col_label_tl,
+  row    .tl_set:N = \l_semio_viz_dg_col_row_tl,
+  col    .tl_set:N = \l_semio_viz_dg_col_col_tl,
+  symbol .tl_set:N = \l_semio_viz_ar_symbol_tl,
+  routing .tl_set:N = \l_semio_viz_dg_routing_tl,
+  arrow  .tl_set:N = \l_semio_viz_dg_arrow_tl,
+  col-gap .fp_set:N = \l_semio_viz_dg_colgap_fp,
+  row-gap .fp_set:N = \l_semio_viz_dg_rowgap_fp,
+  width  .fp_set:N = \l_semio_viz_dg_w_fp,
+  height .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% ⚙️ Entry point of `arch-schematic`: lays the components out on the kernel grid, draws the process
+% lines, then stamps the symbols on top of them.
+\cs_new_protected:Npn \semio_viz_ar_schematic:n #1 {
+  \semio_viz_frame_require:n { arch-schematic }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-arch-schematic }
+  \tl_set:Nn \l_semio_viz_dg_edges_tl { demo-arch-schematic-edges }
+  \tl_set:Nn \l_semio_viz_ar_symbol_tl { symbol }
+  \keys_set:nn { semio / viz / family / arch-schematic } {#1}
+  \semio_viz_dg_layout:
+  \semio_viz_dg_draw_edges:
+  \exp_args:NV \semio_viz_ar_schematic_symbols:n \l_semio_viz_dg_nodes_tl
+}
+
+% 🔧 Draws each component's symbol at its laid-out record and hangs its caption under the glyph.
+\cs_new_protected:Npn \semio_viz_ar_schematic_symbols:n #1 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_ar_n_int
+  \int_step_inline:nn { \l_semio_viz_ar_n_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_id_tl } \l_semio_viz_dg_id_tl
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_ar_symbol_tl } \l_semio_viz_dg_cell_tl
+    \semio_viz_dg_tone:n { 0 }
+    \semio_viz_dg_get:n { \l_semio_viz_dg_id_tl }
+    \exp_args:NV \semio_viz_ar_symbol:n \l_semio_viz_dg_cell_tl
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+    \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-text-normal , anchor=north , inner~sep=0.4mm ]
+      at ( \fp_eval:n { \l_semio_viz_dg_a_fp } , \fp_eval:n { \l_semio_viz_dg_b_fp - \l_semio_viz_dg_d_fp / 2 } )
+      { \tl_use:N \l_semio_viz_dg_label_tl } ;
+  }
+}
+
+% 🔩 One engineering symbol centred on the current node record.
+\cs_new_protected:Npn \semio_viz_ar_symbol:n #1 {
+  \fp_set:Nn \l_semio_viz_ar_u_fp { min( \l_semio_viz_dg_c_fp , \l_semio_viz_dg_d_fp ) / 2 }
+  \str_case:nnF {#1} {
+    { pump } {
+      \semio_viz_dg_shape:nnnnn { circle } { \l_semio_viz_dg_a_fp } { \l_semio_viz_dg_b_fp }
+        { \fp_eval:n { 2 * \l_semio_viz_ar_u_fp } } { \fp_eval:n { 2 * \l_semio_viz_ar_u_fp } }
+      \draw [ \l_semio_viz_dg_draw_tl , line~width=\semio@stroke@hairline ]
+        ( \fp_eval:n { \l_semio_viz_dg_a_fp - \l_semio_viz_ar_u_fp } , \fp_eval:n { \l_semio_viz_dg_b_fp } ) --
+        ( \fp_eval:n { \l_semio_viz_dg_a_fp + \l_semio_viz_ar_u_fp } , \fp_eval:n { \l_semio_viz_dg_b_fp } ) --
+        ( \fp_eval:n { \l_semio_viz_dg_a_fp } , \fp_eval:n { \l_semio_viz_dg_b_fp + \l_semio_viz_ar_u_fp } ) -- cycle ;
+    }
+    { valve } {
+      \draw [ \l_semio_viz_dg_draw_tl , fill=\l_semio_viz_dg_fill_tl , line~width=\semio@stroke@hairline ]
+        ( \fp_eval:n { \l_semio_viz_dg_a_fp - \l_semio_viz_ar_u_fp } , \fp_eval:n { \l_semio_viz_dg_b_fp - \l_semio_viz_ar_u_fp } ) --
+        ( \fp_eval:n { \l_semio_viz_dg_a_fp - \l_semio_viz_ar_u_fp } , \fp_eval:n { \l_semio_viz_dg_b_fp + \l_semio_viz_ar_u_fp } ) --
+        ( \fp_eval:n { \l_semio_viz_dg_a_fp + \l_semio_viz_ar_u_fp } , \fp_eval:n { \l_semio_viz_dg_b_fp - \l_semio_viz_ar_u_fp } ) --
+        ( \fp_eval:n { \l_semio_viz_dg_a_fp + \l_semio_viz_ar_u_fp } , \fp_eval:n { \l_semio_viz_dg_b_fp + \l_semio_viz_ar_u_fp } ) -- cycle ;
+    }
+    { tank } { \semio_viz_dg_shape_named:n { database } }
+    { heater } {
+      \semio_viz_dg_shape_named:n { process }
+      \draw [ \l_semio_viz_dg_draw_tl , line~width=\semio@stroke@hairline ]
+        ( \fp_eval:n { \l_semio_viz_dg_a_fp - \l_semio_viz_ar_u_fp } , \fp_eval:n { \l_semio_viz_dg_b_fp - \l_semio_viz_ar_u_fp } ) --
+        ( \fp_eval:n { \l_semio_viz_dg_a_fp + \l_semio_viz_ar_u_fp } , \fp_eval:n { \l_semio_viz_dg_b_fp + \l_semio_viz_ar_u_fp } ) ;
+    }
+    { cylinder } {
+      \semio_viz_dg_shape_named:n { process }
+      \draw [ \l_semio_viz_dg_draw_tl , line~width=\semio@stroke@default ]
+        ( \fp_eval:n { \l_semio_viz_dg_a_fp } , \fp_eval:n { \l_semio_viz_dg_b_fp - \l_semio_viz_ar_u_fp } ) --
+        ( \fp_eval:n { \l_semio_viz_dg_a_fp } , \fp_eval:n { \l_semio_viz_dg_b_fp + \l_semio_viz_ar_u_fp } ) ;
+    }
+    { filter } { \semio_viz_dg_shape_named:n { hexagon } }
+    { sensor } { \semio_viz_dg_shape_named:n { circle } }
+    { controller } { \semio_viz_dg_shape_named:n { terminator } }
+    { actuator } { \semio_viz_dg_shape_named:n { trapezoid } }
+    { junction } {
+      \fill [ \l_semio_viz_dg_draw_tl ]
+        ( \fp_eval:n { \l_semio_viz_dg_a_fp } , \fp_eval:n { \l_semio_viz_dg_b_fp } ) circle [ radius=0.8 ] ;
+    }
+  } { \semio_viz_dg_shape_named:n { process } }
+}
+% 🛠️ Publishes the engineering schematic family under the name `arch-schematic`.
+\SemioVizFamily { arch-schematic } { \semio_viz_ar_schematic:n {#1} }
+
+%region 🔖️DemoData
+% 🧪 Architecture fixtures every family in this package defaults to.
+\cs_new_protected:Npn \semio_viz_ar_demo: {
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-arch-layer } {
+    \semio_viz_table_new:nn { demo-arch-layer } { id, label, tier, tone }
+    \semio_viz_table_row:nn { demo-arch-layer } { web, {Web app}, Presentation, 1 }
+    \semio_viz_table_row:nn { demo-arch-layer } { cli, {CLI}, Presentation, 1 }
+    \semio_viz_table_row:nn { demo-arch-layer } { api, {Order API}, Application, 2 }
+    \semio_viz_table_row:nn { demo-arch-layer } { auth, {Identity}, Application, 2 }
+    \semio_viz_table_row:nn { demo-arch-layer } { rules, {Pricing}, Domain, 3 }
+    \semio_viz_table_row:nn { demo-arch-layer } { store, {Ledger}, Infrastructure, 4 }
+    \semio_viz_table_row:nn { demo-arch-layer } { queue, {Bus}, Infrastructure, 4 }
+    \semio_viz_table_new:nn { demo-arch-layer-edges } { from, to, kind, label }
+    \semio_viz_table_row:nn { demo-arch-layer-edges } { web, api, plain, }
+    \semio_viz_table_row:nn { demo-arch-layer-edges } { cli, api, plain, }
+    \semio_viz_table_row:nn { demo-arch-layer-edges } { api, rules, plain, }
+    \semio_viz_table_row:nn { demo-arch-layer-edges } { api, auth, dashed, }
+    \semio_viz_table_row:nn { demo-arch-layer-edges } { rules, store, plain, }
+    \semio_viz_table_row:nn { demo-arch-layer-edges } { api, queue, dotted, }
+  }
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-arch-plan } {
+    \semio_viz_table_new:nn { demo-arch-plan } { id, label, points, tone, hatch }
+    \semio_viz_table_row:nn { demo-arch-plan } { hall, {Hall}, {0~0~8~0~8~5~0~5}, 1, solid }
+    \semio_viz_table_row:nn { demo-arch-plan } { lab, {Lab}, {8~0~20~0~20~7~8~7}, 2, solid }
+    \semio_viz_table_row:nn { demo-arch-plan } { office, {Office}, {0~5~8~5~8~12~0~12}, 3, solid }
+    \semio_viz_table_row:nn { demo-arch-plan } { yard, {Yard}, {8~7~20~7~20~12~8~12}, 0, none }
+  }
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-arch-profile } {
+    \semio_viz_table_new:nn { demo-arch-profile } { label, base, height, span, offset, tone }
+    \semio_viz_table_row:nn { demo-arch-profile } { {Basement}, 0, 2, 16, 2, 1 }
+    \semio_viz_table_row:nn { demo-arch-profile } { {Ground}, 2, 3.5, 16, 2, 2 }
+    \semio_viz_table_row:nn { demo-arch-profile } { {First}, 5.5, 3, 12, 4, 3 }
+    \semio_viz_table_row:nn { demo-arch-profile } { {Roof}, 8.5, 1.5, 12, 4, 4 }
+  }
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-arch-axo } {
+    \semio_viz_table_new:nn { demo-arch-axo } { label, x, y, z, dx, dy, dz, tone }
+    \semio_viz_table_row:nn { demo-arch-axo } { {Plinth}, 0, 0, 0, 6, 4, 1, 1 }
+    \semio_viz_table_row:nn { demo-arch-axo } { {Body}, 0.5, 0.5, 1, 5, 3, 2.5, 2 }
+    \semio_viz_table_row:nn { demo-arch-axo } { {Roof}, 0, 0, 3.5, 6, 4, 0.6, 3 }
+  }
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-arch-bubble } {
+    \semio_viz_table_new:nn { demo-arch-bubble } { id, label, value, tone }
+    \semio_viz_table_row:nn { demo-arch-bubble } { entry, {Entry}, 12, 1 }
+    \semio_viz_table_row:nn { demo-arch-bubble } { work, {Workshop}, 40, 2 }
+    \semio_viz_table_row:nn { demo-arch-bubble } { meet, {Meeting}, 20, 3 }
+    \semio_viz_table_row:nn { demo-arch-bubble } { store, {Storage}, 16, 4 }
+    \semio_viz_table_row:nn { demo-arch-bubble } { serve, {Services}, 8, 5 }
+    \semio_viz_table_new:nn { demo-arch-bubble-edges } { from, to, kind, label }
+    \semio_viz_table_row:nn { demo-arch-bubble-edges } { entry, work, plain, }
+    \semio_viz_table_row:nn { demo-arch-bubble-edges } { entry, meet, dashed, }
+    \semio_viz_table_row:nn { demo-arch-bubble-edges } { work, store, plain, }
+    \semio_viz_table_row:nn { demo-arch-bubble-edges } { work, serve, dotted, }
+  }
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-arch-schematic } {
+    \semio_viz_table_new:nn { demo-arch-schematic } { id, label, symbol, row, col }
+    \semio_viz_table_row:nn { demo-arch-schematic } { t1, {Tank}, tank, 1, 1 }
+    \semio_viz_table_row:nn { demo-arch-schematic } { p1, {Pump}, pump, 1, 2 }
+    \semio_viz_table_row:nn { demo-arch-schematic } { v1, {Valve}, valve, 1, 3 }
+    \semio_viz_table_row:nn { demo-arch-schematic } { h1, {Heater}, heater, 2, 3 }
+    \semio_viz_table_row:nn { demo-arch-schematic } { s1, {Sensor}, sensor, 2, 2 }
+    \semio_viz_table_row:nn { demo-arch-schematic } { c1, {Control}, controller, 2, 1 }
+    \semio_viz_table_new:nn { demo-arch-schematic-edges } { from, to, kind, label }
+    \semio_viz_table_row:nn { demo-arch-schematic-edges } { t1, p1, plain, }
+    \semio_viz_table_row:nn { demo-arch-schematic-edges } { p1, v1, plain, }
+    \semio_viz_table_row:nn { demo-arch-schematic-edges } { v1, h1, plain, }
+    \semio_viz_table_row:nn { demo-arch-schematic-edges } { h1, s1, plain, }
+    \semio_viz_table_row:nn { demo-arch-schematic-edges } { s1, c1, dashed, }
+  }
+}
+\semio_viz_ar_demo:
+%endregion 🔖️DemoData
+
+\ExplSyntaxOff

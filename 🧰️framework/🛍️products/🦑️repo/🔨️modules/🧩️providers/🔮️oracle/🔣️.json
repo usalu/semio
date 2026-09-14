@@ -1,0 +1,60 @@
+{
+  "$schema": "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ Reference registrations for the repo providers module. Nothing here is linked into production: the git entry names the machine's own git binary, invoked from the TypeScript oracle host, and the transcript reader is a second in-repo implementation that lives only in the case's 🟦️.ts adapter. No oracleHostPackages are declared, so no external distribution enters 🔒️dependencies.json through this manifest.",
+  "oracles": [
+    {
+      "id": "git-cli",
+      "kind": "third-party-cli",
+      "ecosystem": "javascript",
+      "package": "git",
+      "engine": { "family": "git", "implementation": "git", "version": "2.x" },
+      "capabilities": ["repo.providers.git-version-control"],
+      "comparisonProfiles": ["ordered-json-v1"],
+      "license": "GPL-2.0-only",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "rationale": "🌿️ The version control provider's whole contract is 'what git would say', so git itself is the only reference that can adjudicate it. It is reached as an external CLI from the TypeScript oracle host — no distribution is linked, nothing is installed, and the oracle adapter builds its own throwaway repository under the case work directory, so this registration is unreachable from production even though the same binary is what the provider drives at run time. `ecosystem` is `javascript` because that names the HOST the oracle runs in; the reference is the `git` executable, not an npm package."
+    },
+    {
+      "id": "gh-transcript-reader-typescript",
+      "kind": "cross-semio-implementation",
+      "ecosystem": "javascript",
+      "package": "",
+      "engine": { "family": "none", "implementation": "semio-providers-transcript-reader", "version": "1" },
+      "capabilities": ["repo.providers.github-management"],
+      "comparisonProfiles": ["ordered-json-v1"],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "rationale": "🐙️ A second reader of the same recorded `gh` output, written in TypeScript inside `🧪️tests/🐙️github-management-transcripts/🟦️.ts` from the documented argv and the GitHub REST payload shape, not from the Rust source. It is registered as `cross-semio-implementation` precisely because it is NOT independent evidence: it is a second implementation in this repository, and the accompanying `repo-gh-cli-transcript` no-oracle decision records why nothing outside the repository can take its place — no third-party library consumes the GitHub CLI's own repo-shaped `--json` projections, and reaching the GitHub REST API instead would put the network inside a test."
+    }
+  ],
+  "probes": [],
+  "noOracleDecisions": [
+    {
+      "id": "repo-gh-cli-transcript",
+      "capabilities": ["repo.providers.github-management"],
+      "rationale": "No third-party library consumes the GitHub CLI's own output: `gh issue view --json url,state,milestone,labels,title,body` and `gh api repos/:owner/:repo/milestones --jq .[]` are projections the CLI itself defines, and every client library that exists talks to the REST or GraphQL API directly instead, which would put the network and a live repository inside a test. Confidence therefore comes from frozen specification vectors — recorded transcripts that pin both the argv the provider must issue and the bytes it must parse back — plus a second, independently written reader of those same vectors in TypeScript. This decision covers no runtime mutation capability.",
+      "substitutes": ["specification-vectors", "independent-implementations"],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-editor-hook-output",
+      "capabilities": ["repo.providers.editor-hook-output"],
+      "rationale": "The hook output format is this repository's own contract with eight editors: seven of them receive the marshalled hook result verbatim and VS Code receives it wrapped in a `hookSpecificOutput` member whose shape is dictated by VS Code's hook API but whose CONTENT rule — allow versus deny, reason versus additional context — is ours. Nothing third party produces it, so there is no reference to compare against. Confidence comes from two independently written implementations, Rust and Go, formatting the same frozen fixture events for all eight editors and projecting the same parsed records. This decision covers no runtime mutation capability.",
+      "substitutes": ["independent-implementations"],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-mcp-client-identity",
+      "capabilities": ["repo.providers.mcp-client-identity"],
+      "rationale": "Which IDE is talking, which MCP server name it is served under and which hook client slug it maps to is a closed vocabulary this repository defines for its own entry points; the Model Context Protocol specification says nothing about it. No external implementation of the mapping exists to compare against. Confidence comes from two independently written implementations projecting the same answer for every accepted spelling and for the inputs that must be rejected. This decision covers no runtime mutation capability.",
+      "substitutes": ["independent-implementations"],
+      "coversMutations": false
+    }
+  ],
+  "oracleHostPackages": []
+}

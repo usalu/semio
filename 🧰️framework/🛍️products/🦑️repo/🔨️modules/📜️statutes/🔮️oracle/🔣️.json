@@ -1,0 +1,31 @@
+{
+  "$comment": "🔮️ References of the repo statutes module. The statute vocabulary, the breach shape, the ignore directives and the analysis itself are this repository's own law and have no third party that knows them; the compressed cache envelope is DEFLATE and SHA-256, both standards with a reference implementation shipped by the runtime.",
+  "schemaVersion": 2,
+  "oracles": [
+    {
+      "id": "node-zlib-crypto",
+      "kind": "standards-reference-tool",
+      "ecosystem": "javascript",
+      "package": "node:zlib+node:crypto",
+      "version": "runtime",
+      "engine": { "family": "none", "implementation": "zlib-and-openssl-via-node-builtins", "version": "runtime" },
+      "capabilities": ["repo-statutes-breach-cache"],
+      "comparisonProfiles": ["ordered-json-v1"],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "rationale": "RFC 1951 DEFLATE, RFC 1952 gzip and FIPS 180-4 SHA-256 decide what a compressed breach-cache member is and what its digest is. The hand-rolled gzip writer, the hand-rolled inflate reader and the hand-rolled SHA-256 in this module must not be allowed to agree only with themselves: the runtime's own zlib and OpenSSL bindings judge whether a member this module wrote is readable elsewhere, whether a member written elsewhere is readable here, and whether the digest is the published one."
+    }
+  ],
+  "noOracleDecisions": [
+    {
+      "id": "repo-statutes-owned-law",
+      "capabilities": ["repo-statutes-catalog", "repo-statutes-analyze", "repo-statutes-autofix", "repo-statutes-ignore-directives"],
+      "rationale": "The statute vocabulary, the policy and territory tree, the breach identifier grammar, the `// compose-ignore-` directive and every rule the analysis enforces are this repository's own law, defined once in `🧬️schema/🔣️statutes.json` and in the ported policy functions. No linter anywhere knows these statutes, so there is nothing to compare against. Confidence comes from the schema-driven catalog both implementations read, from the committed golden trees whose breach list and repaired text are reviewed by hand, and from two independently written implementations of the same rules.",
+      "substitutes": ["specification-vectors", "independent-implementations"],
+      "coversMutations": false
+    }
+  ],
+  "oracleHostPackages": []
+}

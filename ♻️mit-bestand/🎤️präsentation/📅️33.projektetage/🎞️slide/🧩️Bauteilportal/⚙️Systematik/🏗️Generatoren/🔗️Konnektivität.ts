@@ -1,4 +1,4 @@
-import { PRESENTATION_DEFAULT_SLIDE_ASPECT, type DispositionPosition, type SlideFile } from "@semio-tech/animate-presentation-core";
+import { PRESENTATION_DEFAULT_SLIDE_ASPECT, type DispositionPosition, type SlideFile } from "@semio-tech/presentation";
 
 const FIGURE_PARTICIPANT = "konnektivität-beispiel-3d";
 const FIGURE_EMBODIMENT = "konnektivität-beispiel-3d--figure";

@@ -1,0 +1,62 @@
+\documentclass{article}
+\usepackage{semio-viz-hierarchy}
+
+\ExplSyntaxOn
+% 📤 One record per node field, in the hierarchy's own preorder (d3 eachBefore).
+\cs_new_protected:Npn \VizProbeField #1#2#3 {
+  \tl_clear:N \l_tmpa_tl
+  \semio_viz_hierarchy_map_pre:nn {#2} {
+    \tl_put_right:Nx \l_tmpa_tl
+      { \tl_if_empty:NF \l_tmpa_tl { , } \semio_viz_hierarchy_get:nnn {#2} {#3} {##1} }
+  }
+  \semio_viz_probe_values:nV {#1} \l_tmpa_tl
+}
+\ExplSyntaxOff
+
+\begin{document}
+
+\SemioVizProbeBegin{hierarchy-tree-cluster}{tree-size}
+\SemioVizHierarchyBuild{deep}[data=demo-hierarchy-deep]
+\SemioVizHierarchyBuild{unb}[data=demo-hierarchy-unbalanced]
+\SemioVizLayout{tree}{deep}{t1}[size={100,60}]
+\VizProbeField{id/deep}{t1}{id}
+\VizProbeField{x/deep}{t1}{x}
+\VizProbeField{y/deep}{t1}{y}
+\SemioVizLayout{tree}{unb}{t2}[size={100,60}]
+\VizProbeField{id/unbalanced}{t2}{id}
+\VizProbeField{x/unbalanced}{t2}{x}
+\VizProbeField{y/unbalanced}{t2}{y}
+
+\SemioVizProbeBegin{hierarchy-tree-cluster}{tree-node-size}
+\SemioVizLayout{tree}{deep}{t3}[nodeSize={12,20}]
+\VizProbeField{x/deep}{t3}{x}
+\VizProbeField{y/deep}{t3}{y}
+\SemioVizLayout{tree}{unb}{t4}[nodeSize={12,20}]
+\VizProbeField{x/unbalanced}{t4}{x}
+\VizProbeField{y/unbalanced}{t4}{y}
+
+\SemioVizProbeBegin{hierarchy-tree-cluster}{tree-separation}
+\SemioVizLayout{tree}{deep}{t5}[size={100,60}, separationSame=1, separationOther=2.5]
+\VizProbeField{x/deep}{t5}{x}
+\SemioVizLayout{tree}{unb}{t6}[nodeSize={10,10}, separationSame=2, separationOther=3]
+\VizProbeField{x/unbalanced}{t6}{x}
+
+\SemioVizProbeBegin{hierarchy-tree-cluster}{cluster-size}
+\SemioVizLayout{cluster}{deep}{c1}[size={100,60}]
+\VizProbeField{id/deep}{c1}{id}
+\VizProbeField{x/deep}{c1}{x}
+\VizProbeField{y/deep}{c1}{y}
+\SemioVizLayout{cluster}{unb}{c2}[size={100,60}]
+\VizProbeField{id/unbalanced}{c2}{id}
+\VizProbeField{x/unbalanced}{c2}{x}
+\VizProbeField{y/unbalanced}{c2}{y}
+
+\SemioVizProbeBegin{hierarchy-tree-cluster}{cluster-node-size}
+\SemioVizLayout{cluster}{deep}{c3}[nodeSize={12,20}]
+\VizProbeField{x/deep}{c3}{x}
+\VizProbeField{y/deep}{c3}{y}
+\SemioVizLayout{cluster}{unb}{c4}[nodeSize={12,20}, separationSame=1.5, separationOther=3]
+\VizProbeField{x/unbalanced}{c4}{x}
+\VizProbeField{y/unbalanced}{c4}{y}
+
+\end{document}

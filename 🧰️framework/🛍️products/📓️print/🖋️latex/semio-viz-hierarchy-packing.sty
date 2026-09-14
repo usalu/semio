@@ -1,0 +1,716 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-hierarchy-packing}[2026/09/05 v0.3.0 semio viz hierarchy packing: enclosing circles and circle packing]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-data}
+\RequirePackage{semio-viz-layout}
+\RequirePackage{semio-viz-probe}
+\RequirePackage{semio-viz-theme}
+\RequirePackage{tikz}
+% 🌳 The tree store and its readers live in `semio-viz-hierarchy`, which requires this file back:
+% the three hierarchy packages are one module split by size, so every entry point loads all of it.
+% `\ProvidesPackage` above has already registered this file, so the mutual load terminates here.
+\RequirePackage{semio-viz-hierarchy}
+
+\ExplSyntaxOn
+
+%region 🔖️LayoutPack
+% 🎲 d3-hierarchy `lcg`: the linear congruential generator seeded with 1 that
+% makes circle packing deterministic. The shuffle index is evaluated as
+% floor(s*m / 2^32) so the integer arithmetic stays exact in l3fp's 16 digits.
+\fp_new:N \g_semio_viz_hierarchy_lcg_fp
+\fp_new:N \l_semio_viz_hierarchy_lcg_hi_fp
+\fp_new:N \l_semio_viz_hierarchy_lcg_lo_fp
+
+\cs_new_protected:Npn \semio_viz_hierarchy_lcg_reset: {
+  \fp_gset:Nn \g_semio_viz_hierarchy_lcg_fp { 1 }
+}
+
+% 🎲 s := (1664525 s + 1013904223) mod 2^32, split into 16-bit halves so that every
+% intermediate stays well inside l3fp's 16 exact digits.
+\cs_new_protected:Npn \semio_viz_hierarchy_lcg_step: {
+  \fp_set:Nn \l_semio_viz_hierarchy_lcg_hi_fp { trunc ( \g_semio_viz_hierarchy_lcg_fp / 65536 ) }
+  \fp_set:Nn \l_semio_viz_hierarchy_lcg_lo_fp
+    { \g_semio_viz_hierarchy_lcg_fp - \l_semio_viz_hierarchy_lcg_hi_fp * 65536 }
+  \fp_set:Nn \l_semio_viz_hierarchy_lcg_lo_fp { 1664525 * \l_semio_viz_hierarchy_lcg_lo_fp + 1013904223 }
+  \fp_set:Nn \l_semio_viz_hierarchy_lcg_hi_fp { 1664525 * \l_semio_viz_hierarchy_lcg_hi_fp }
+  \fp_set:Nn \l_semio_viz_hierarchy_lcg_hi_fp
+    { \l_semio_viz_hierarchy_lcg_hi_fp - trunc ( \l_semio_viz_hierarchy_lcg_hi_fp / 65536 ) * 65536 }
+  \fp_gset:Nn \g_semio_viz_hierarchy_lcg_fp
+    { \l_semio_viz_hierarchy_lcg_hi_fp * 65536 + \l_semio_viz_hierarchy_lcg_lo_fp }
+  \fp_gset:Nn \g_semio_viz_hierarchy_lcg_fp
+    { \g_semio_viz_hierarchy_lcg_fp
+      - trunc ( \g_semio_viz_hierarchy_lcg_fp / 4294967296 ) * 4294967296 }
+}
+
+\int_new:N \l_semio_viz_hierarchy_pk_a_int
+\int_new:N \l_semio_viz_hierarchy_pk_b_int
+\int_new:N \l_semio_viz_hierarchy_pk_c_int
+\int_new:N \l_semio_viz_hierarchy_pk_j_int
+\int_new:N \l_semio_viz_hierarchy_pk_k_int
+\int_new:N \l_semio_viz_hierarchy_pk_i_int
+\int_new:N \l_semio_viz_hierarchy_pk_n_int
+\int_new:N \l_semio_viz_hierarchy_pk_cc_int
+\int_new:N \l_semio_viz_hierarchy_pk_swap_int
+\int_new:N \l_semio_viz_hierarchy_pk_bn_int
+\int_new:N \l_semio_viz_hierarchy_pk_en_n_int
+\int_new:N \l_semio_viz_hierarchy_pk_en_i_int
+\int_new:N \l_semio_viz_hierarchy_pk_en_j_int
+\int_new:N \l_semio_viz_hierarchy_pk_en_k_int
+\int_new:N \l_semio_viz_hierarchy_pk_en_swap_int
+\int_new:N \l_semio_viz_hierarchy_pk_en_bn_int
+\int_new:N \l_semio_viz_hierarchy_pk_p_int
+\int_new:N \l_semio_viz_hierarchy_pk_root_int
+\fp_new:N \l_semio_viz_hierarchy_pk_scale_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_kfac_fp
+\bool_new:N \l_semio_viz_hierarchy_pk_hit_bool
+\fp_new:N \l_semio_viz_hierarchy_pk_sj_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_sk_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_aa_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_ca_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_x_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_y_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_dsq_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_asq_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_bsq_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_dx_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_dy_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_ex_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_ey_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_er_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_cx_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_cy_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_cr_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_pad_fp
+\bool_new:N \l_semio_viz_hierarchy_pk_cont_bool
+\bool_new:N \l_semio_viz_hierarchy_pk_found_bool
+\bool_new:N \l_semio_viz_hierarchy_pk_edef_bool
+\bool_new:N \l_semio_viz_hierarchy_pk_ok_bool
+\seq_new:N \l_semio_viz_hierarchy_pk_basis_seq
+
+% 📍 d3 `place(b, a, c)`: puts circle #4 tangent to the circles #2 and #3.
+\cs_new_protected:Npn \semio_viz_hierarchy_pk_place:nnnn #1#2#3#4 {
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_dx_fp
+    { \semio_viz_hierarchy_get:nnn {#1} { x } {#2} - \semio_viz_hierarchy_get:nnn {#1} { x } {#3} }
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_dy_fp
+    { \semio_viz_hierarchy_get:nnn {#1} { y } {#2} - \semio_viz_hierarchy_get:nnn {#1} { y } {#3} }
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_dsq_fp
+    { \l_semio_viz_hierarchy_pk_dx_fp * \l_semio_viz_hierarchy_pk_dx_fp
+      + \l_semio_viz_hierarchy_pk_dy_fp * \l_semio_viz_hierarchy_pk_dy_fp }
+  \fp_compare:nNnTF { \l_semio_viz_hierarchy_pk_dsq_fp } = { 0 } {
+    \semio_viz_hierarchy_set:nnnn {#1} { x } {#4}
+      { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { x } {#3}
+        + \semio_viz_hierarchy_get:nnn {#1} { r } {#4} } }
+    \semio_viz_hierarchy_set:nnnn {#1} { y } {#4}
+      { \semio_viz_hierarchy_get:nnn {#1} { y } {#3} }
+  } {
+    \fp_set:Nn \l_semio_viz_hierarchy_pk_asq_fp
+      { ( \semio_viz_hierarchy_get:nnn {#1} { r } {#3} + \semio_viz_hierarchy_get:nnn {#1} { r } {#4} ) ^ 2 }
+    \fp_set:Nn \l_semio_viz_hierarchy_pk_bsq_fp
+      { ( \semio_viz_hierarchy_get:nnn {#1} { r } {#2} + \semio_viz_hierarchy_get:nnn {#1} { r } {#4} ) ^ 2 }
+    \fp_compare:nNnTF { \l_semio_viz_hierarchy_pk_asq_fp } > { \l_semio_viz_hierarchy_pk_bsq_fp } {
+      \fp_set:Nn \l_semio_viz_hierarchy_pk_x_fp
+        { ( \l_semio_viz_hierarchy_pk_dsq_fp + \l_semio_viz_hierarchy_pk_bsq_fp
+          - \l_semio_viz_hierarchy_pk_asq_fp ) / ( 2 * \l_semio_viz_hierarchy_pk_dsq_fp ) }
+      \fp_set:Nn \l_semio_viz_hierarchy_pk_y_fp
+        { sqrt ( max ( 0 , \l_semio_viz_hierarchy_pk_bsq_fp / \l_semio_viz_hierarchy_pk_dsq_fp
+          - \l_semio_viz_hierarchy_pk_x_fp * \l_semio_viz_hierarchy_pk_x_fp ) ) }
+      \semio_viz_hierarchy_set:nnnn {#1} { x } {#4}
+        { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { x } {#2}
+          - \l_semio_viz_hierarchy_pk_x_fp * \l_semio_viz_hierarchy_pk_dx_fp
+          - \l_semio_viz_hierarchy_pk_y_fp * \l_semio_viz_hierarchy_pk_dy_fp } }
+      \semio_viz_hierarchy_set:nnnn {#1} { y } {#4}
+        { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { y } {#2}
+          - \l_semio_viz_hierarchy_pk_x_fp * \l_semio_viz_hierarchy_pk_dy_fp
+          + \l_semio_viz_hierarchy_pk_y_fp * \l_semio_viz_hierarchy_pk_dx_fp } }
+    } {
+      \fp_set:Nn \l_semio_viz_hierarchy_pk_x_fp
+        { ( \l_semio_viz_hierarchy_pk_dsq_fp + \l_semio_viz_hierarchy_pk_asq_fp
+          - \l_semio_viz_hierarchy_pk_bsq_fp ) / ( 2 * \l_semio_viz_hierarchy_pk_dsq_fp ) }
+      \fp_set:Nn \l_semio_viz_hierarchy_pk_y_fp
+        { sqrt ( max ( 0 , \l_semio_viz_hierarchy_pk_asq_fp / \l_semio_viz_hierarchy_pk_dsq_fp
+          - \l_semio_viz_hierarchy_pk_x_fp * \l_semio_viz_hierarchy_pk_x_fp ) ) }
+      \semio_viz_hierarchy_set:nnnn {#1} { x } {#4}
+        { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { x } {#3}
+          + \l_semio_viz_hierarchy_pk_x_fp * \l_semio_viz_hierarchy_pk_dx_fp
+          - \l_semio_viz_hierarchy_pk_y_fp * \l_semio_viz_hierarchy_pk_dy_fp } }
+      \semio_viz_hierarchy_set:nnnn {#1} { y } {#4}
+        { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { y } {#3}
+          + \l_semio_viz_hierarchy_pk_x_fp * \l_semio_viz_hierarchy_pk_dy_fp
+          + \l_semio_viz_hierarchy_pk_y_fp * \l_semio_viz_hierarchy_pk_dx_fp } }
+    }
+  }
+}
+
+\fp_new:N \l_semio_viz_hierarchy_pk_dr_fp
+
+% ❓ d3 `intersects`: overlap of two placed circles, with d3's 1e-6 slack. The
+% radius slack is evaluated once because l3fp parsing, not the csname lookup, is
+% what the front chain spends its time on.
+\prg_new_protected_conditional:Npnn \semio_viz_hierarchy_pk_intersects:nnn #1#2#3 { T, F, TF } {
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_dr_fp
+    { \semio_viz_hierarchy_get:nnn {#1} { r } {#2} + \semio_viz_hierarchy_get:nnn {#1} { r } {#3}
+      - 1e-6 }
+  \fp_compare:nTF {
+    \l_semio_viz_hierarchy_pk_dr_fp > 0 &&
+    \l_semio_viz_hierarchy_pk_dr_fp * \l_semio_viz_hierarchy_pk_dr_fp >
+      ( \semio_viz_hierarchy_get:nnn {#1} { x } {#3}
+        - \semio_viz_hierarchy_get:nnn {#1} { x } {#2} ) ^ 2
+    + ( \semio_viz_hierarchy_get:nnn {#1} { y } {#3}
+        - \semio_viz_hierarchy_get:nnn {#1} { y } {#2} ) ^ 2
+  } { \prg_return_true: } { \prg_return_false: }
+}
+
+\int_new:N \l_semio_viz_hierarchy_pk_nx_int
+\fp_new:N \l_semio_viz_hierarchy_pk_ar_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_br_fp
+
+% 🎯 d3 `score`: squared distance of the weighted midpoint of a front-chain pair,
+% left in #3. The successor is read once instead of once per occurrence.
+\cs_new_protected:Npn \semio_viz_hierarchy_pk_score:nnN #1#2#3 {
+  \int_set:Nn \l_semio_viz_hierarchy_pk_nx_int { \semio_viz_hierarchy_get:nnn {#1} { pnx } {#2} }
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_ar_fp { \semio_viz_hierarchy_get:nnn {#1} { r } {#2} }
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_br_fp
+    { \semio_viz_hierarchy_get:nnn {#1} { r } { \l_semio_viz_hierarchy_pk_nx_int } }
+  \fp_set:Nn #3 {
+    ( ( \semio_viz_hierarchy_get:nnn {#1} { x } {#2} * \l_semio_viz_hierarchy_pk_br_fp
+      + \semio_viz_hierarchy_get:nnn {#1} { x } { \l_semio_viz_hierarchy_pk_nx_int }
+        * \l_semio_viz_hierarchy_pk_ar_fp )
+      / ( \l_semio_viz_hierarchy_pk_ar_fp + \l_semio_viz_hierarchy_pk_br_fp ) ) ^ 2
+    + ( ( \semio_viz_hierarchy_get:nnn {#1} { y } {#2} * \l_semio_viz_hierarchy_pk_br_fp
+      + \semio_viz_hierarchy_get:nnn {#1} { y } { \l_semio_viz_hierarchy_pk_nx_int }
+        * \l_semio_viz_hierarchy_pk_ar_fp )
+      / ( \l_semio_viz_hierarchy_pk_ar_fp + \l_semio_viz_hierarchy_pk_br_fp ) ) ^ 2
+  }
+}
+
+% ⭕ d3 `encloseBasis1/2/3`: the smallest circle through one, two or three given
+% circles; the result lands in the pk_cx/cy/cr triple.
+\cs_new_protected:Npn \semio_viz_hierarchy_pk_enc_one:nn #1#2 {
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_cx_fp { \semio_viz_hierarchy_get:nnn {#1} { x } {#2} }
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_cy_fp { \semio_viz_hierarchy_get:nnn {#1} { y } {#2} }
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_cr_fp { \semio_viz_hierarchy_get:nnn {#1} { r } {#2} }
+}
+
+% ⭕ `encloseBasis2`: the smallest circle through the two circles #2 and #3.
+\cs_new_protected:Npn \semio_viz_hierarchy_pk_enc_two:nnn #1#2#3 {
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_dx_fp
+    { \semio_viz_hierarchy_get:nnn {#1} { x } {#3} - \semio_viz_hierarchy_get:nnn {#1} { x } {#2} }
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_dy_fp
+    { \semio_viz_hierarchy_get:nnn {#1} { y } {#3} - \semio_viz_hierarchy_get:nnn {#1} { y } {#2} }
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_dsq_fp
+    { \semio_viz_hierarchy_get:nnn {#1} { r } {#3} - \semio_viz_hierarchy_get:nnn {#1} { r } {#2} }
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_asq_fp
+    { sqrt ( \l_semio_viz_hierarchy_pk_dx_fp * \l_semio_viz_hierarchy_pk_dx_fp
+      + \l_semio_viz_hierarchy_pk_dy_fp * \l_semio_viz_hierarchy_pk_dy_fp ) }
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_cx_fp
+    { ( \semio_viz_hierarchy_get:nnn {#1} { x } {#2} + \semio_viz_hierarchy_get:nnn {#1} { x } {#3}
+      + \l_semio_viz_hierarchy_pk_dx_fp / \l_semio_viz_hierarchy_pk_asq_fp
+        * \l_semio_viz_hierarchy_pk_dsq_fp ) / 2 }
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_cy_fp
+    { ( \semio_viz_hierarchy_get:nnn {#1} { y } {#2} + \semio_viz_hierarchy_get:nnn {#1} { y } {#3}
+      + \l_semio_viz_hierarchy_pk_dy_fp / \l_semio_viz_hierarchy_pk_asq_fp
+        * \l_semio_viz_hierarchy_pk_dsq_fp ) / 2 }
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_cr_fp
+    { ( \l_semio_viz_hierarchy_pk_asq_fp + \semio_viz_hierarchy_get:nnn {#1} { r } {#2}
+      + \semio_viz_hierarchy_get:nnn {#1} { r } {#3} ) / 2 }
+}
+
+\fp_new:N \l_semio_viz_hierarchy_pk_xa_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_xb_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_ya_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_yb_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_qa_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_qb_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_qc_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_ab_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_dsuma_fp
+\fp_new:N \l_semio_viz_hierarchy_pk_dsumc_fp
+
+% ⭕ `encloseBasis3`: the smallest circle through the three circles #2, #3 and #4.
+\cs_new_protected:Npn \semio_viz_hierarchy_pk_enc_three:nnnn #1#2#3#4 {
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_dsuma_fp
+    { ( \semio_viz_hierarchy_get:nnn {#1} { x } {#2} ) ^ 2 + ( \semio_viz_hierarchy_get:nnn {#1} { y } {#2} ) ^ 2
+      - ( \semio_viz_hierarchy_get:nnn {#1} { r } {#2} ) ^ 2 }
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_dsq_fp
+    { \l_semio_viz_hierarchy_pk_dsuma_fp - ( \semio_viz_hierarchy_get:nnn {#1} { x } {#3} ) ^ 2
+      - ( \semio_viz_hierarchy_get:nnn {#1} { y } {#3} ) ^ 2 + ( \semio_viz_hierarchy_get:nnn {#1} { r } {#3} ) ^ 2 }
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_dsumc_fp
+    { \l_semio_viz_hierarchy_pk_dsuma_fp - ( \semio_viz_hierarchy_get:nnn {#1} { x } {#4} ) ^ 2
+      - ( \semio_viz_hierarchy_get:nnn {#1} { y } {#4} ) ^ 2 + ( \semio_viz_hierarchy_get:nnn {#1} { r } {#4} ) ^ 2 }
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_ab_fp
+    { ( \semio_viz_hierarchy_get:nnn {#1} { x } {#2} - \semio_viz_hierarchy_get:nnn {#1} { x } {#4} )
+      * ( \semio_viz_hierarchy_get:nnn {#1} { y } {#2} - \semio_viz_hierarchy_get:nnn {#1} { y } {#3} )
+    - ( \semio_viz_hierarchy_get:nnn {#1} { x } {#2} - \semio_viz_hierarchy_get:nnn {#1} { x } {#3} )
+      * ( \semio_viz_hierarchy_get:nnn {#1} { y } {#2} - \semio_viz_hierarchy_get:nnn {#1} { y } {#4} ) }
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_xa_fp
+    { ( ( \semio_viz_hierarchy_get:nnn {#1} { y } {#2} - \semio_viz_hierarchy_get:nnn {#1} { y } {#3} )
+        * \l_semio_viz_hierarchy_pk_dsumc_fp
+      - ( \semio_viz_hierarchy_get:nnn {#1} { y } {#2} - \semio_viz_hierarchy_get:nnn {#1} { y } {#4} )
+        * \l_semio_viz_hierarchy_pk_dsq_fp ) / ( \l_semio_viz_hierarchy_pk_ab_fp * 2 )
+      - \semio_viz_hierarchy_get:nnn {#1} { x } {#2} }
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_xb_fp
+    { ( ( \semio_viz_hierarchy_get:nnn {#1} { y } {#2} - \semio_viz_hierarchy_get:nnn {#1} { y } {#4} )
+        * ( \semio_viz_hierarchy_get:nnn {#1} { r } {#3} - \semio_viz_hierarchy_get:nnn {#1} { r } {#2} )
+      - ( \semio_viz_hierarchy_get:nnn {#1} { y } {#2} - \semio_viz_hierarchy_get:nnn {#1} { y } {#3} )
+        * ( \semio_viz_hierarchy_get:nnn {#1} { r } {#4} - \semio_viz_hierarchy_get:nnn {#1} { r } {#2} ) )
+      / \l_semio_viz_hierarchy_pk_ab_fp }
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_ya_fp
+    { ( ( \semio_viz_hierarchy_get:nnn {#1} { x } {#2} - \semio_viz_hierarchy_get:nnn {#1} { x } {#4} )
+        * \l_semio_viz_hierarchy_pk_dsq_fp
+      - ( \semio_viz_hierarchy_get:nnn {#1} { x } {#2} - \semio_viz_hierarchy_get:nnn {#1} { x } {#3} )
+        * \l_semio_viz_hierarchy_pk_dsumc_fp ) / ( \l_semio_viz_hierarchy_pk_ab_fp * 2 )
+      - \semio_viz_hierarchy_get:nnn {#1} { y } {#2} }
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_yb_fp
+    { ( ( \semio_viz_hierarchy_get:nnn {#1} { x } {#2} - \semio_viz_hierarchy_get:nnn {#1} { x } {#3} )
+        * ( \semio_viz_hierarchy_get:nnn {#1} { r } {#4} - \semio_viz_hierarchy_get:nnn {#1} { r } {#2} )
+      - ( \semio_viz_hierarchy_get:nnn {#1} { x } {#2} - \semio_viz_hierarchy_get:nnn {#1} { x } {#4} )
+        * ( \semio_viz_hierarchy_get:nnn {#1} { r } {#3} - \semio_viz_hierarchy_get:nnn {#1} { r } {#2} ) )
+      / \l_semio_viz_hierarchy_pk_ab_fp }
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_qa_fp
+    { ( \l_semio_viz_hierarchy_pk_xb_fp ) ^ 2 + ( \l_semio_viz_hierarchy_pk_yb_fp ) ^ 2 - 1 }
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_qb_fp
+    { 2 * ( \semio_viz_hierarchy_get:nnn {#1} { r } {#2}
+      + \l_semio_viz_hierarchy_pk_xa_fp * \l_semio_viz_hierarchy_pk_xb_fp
+      + \l_semio_viz_hierarchy_pk_ya_fp * \l_semio_viz_hierarchy_pk_yb_fp ) }
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_qc_fp
+    { ( \l_semio_viz_hierarchy_pk_xa_fp ) ^ 2 + ( \l_semio_viz_hierarchy_pk_ya_fp ) ^ 2
+      - ( \semio_viz_hierarchy_get:nnn {#1} { r } {#2} ) ^ 2 }
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_cr_fp {
+    - ( abs ( \l_semio_viz_hierarchy_pk_qa_fp ) > 1e-6
+      ? ( \l_semio_viz_hierarchy_pk_qb_fp + sqrt ( ( \l_semio_viz_hierarchy_pk_qb_fp ) ^ 2
+          - 4 * \l_semio_viz_hierarchy_pk_qa_fp * \l_semio_viz_hierarchy_pk_qc_fp ) )
+        / ( 2 * \l_semio_viz_hierarchy_pk_qa_fp )
+      : \l_semio_viz_hierarchy_pk_qc_fp / \l_semio_viz_hierarchy_pk_qb_fp ) }
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_cx_fp
+    { \semio_viz_hierarchy_get:nnn {#1} { x } {#2} + \l_semio_viz_hierarchy_pk_xa_fp
+      + \l_semio_viz_hierarchy_pk_xb_fp * \l_semio_viz_hierarchy_pk_cr_fp }
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_cy_fp
+    { \semio_viz_hierarchy_get:nnn {#1} { y } {#2} + \l_semio_viz_hierarchy_pk_ya_fp
+      + \l_semio_viz_hierarchy_pk_yb_fp * \l_semio_viz_hierarchy_pk_cr_fp }
+}
+
+% ❓ d3 `enclosesWeak(a, b)` with an explicit circle #1,#2,#3 against node #5.
+\prg_new_protected_conditional:Npnn \semio_viz_hierarchy_pk_weak:nnnnn #1#2#3#4#5 { T, F, TF } {
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_dr_fp
+    { (#2) - \semio_viz_hierarchy_get:nnn {#4} { r } {#5}
+      + max ( #2 , \semio_viz_hierarchy_get:nnn {#4} { r } {#5} , 1 ) * 1e-9 }
+  \fp_compare:nTF {
+    \l_semio_viz_hierarchy_pk_dr_fp > 0 &&
+    \l_semio_viz_hierarchy_pk_dr_fp * \l_semio_viz_hierarchy_pk_dr_fp >
+      ( \semio_viz_hierarchy_get:nnn {#4} { x } {#5} - (#1) ) ^ 2
+    + ( \semio_viz_hierarchy_get:nnn {#4} { y } {#5} - (#3) ) ^ 2
+  } { \prg_return_true: } { \prg_return_false: }
+}
+
+% ❓ d3 `enclosesNot(a, b)` with an explicit circle #1,#2,#3 against node #5.
+\prg_new_protected_conditional:Npnn \semio_viz_hierarchy_pk_not:nnnnn #1#2#3#4#5 { T, F, TF } {
+  \fp_set:Nn \l_semio_viz_hierarchy_pk_dr_fp
+    { (#2) - \semio_viz_hierarchy_get:nnn {#4} { r } {#5} }
+  \fp_compare:nTF {
+    \l_semio_viz_hierarchy_pk_dr_fp < 0 ||
+    \l_semio_viz_hierarchy_pk_dr_fp * \l_semio_viz_hierarchy_pk_dr_fp <
+      ( \semio_viz_hierarchy_get:nnn {#4} { x } {#5} - (#1) ) ^ 2
+    + ( \semio_viz_hierarchy_get:nnn {#4} { y } {#5} - (#3) ) ^ 2
+  } { \prg_return_true: } { \prg_return_false: }
+}
+
+% ❓ d3 `enclosesWeakAll`: the explicit circle must weakly enclose every basis node.
+\prg_new_protected_conditional:Npnn \semio_viz_hierarchy_pk_weak_all:nnnn #1#2#3#4 { T, F, TF } {
+  \bool_set_true:N \l_semio_viz_hierarchy_pk_ok_bool
+  \seq_map_inline:Nn \l_semio_viz_hierarchy_pk_basis_seq {
+    \semio_viz_hierarchy_pk_weak:nnnnnF {#1} {#2} {#3} {#4} {##1}
+      { \bool_set_false:N \l_semio_viz_hierarchy_pk_ok_bool \seq_map_break: }
+  }
+  \bool_if:NTF \l_semio_viz_hierarchy_pk_ok_bool { \prg_return_true: } { \prg_return_false: }
+}
+
+% 🧺 d3 `encloseBasis`: dispatches on the basis size.
+\cs_new_protected:Npn \semio_viz_hierarchy_pk_enc_basis:n #1 {
+  \int_case:nn { \seq_count:N \l_semio_viz_hierarchy_pk_basis_seq } {
+    { 1 } { \semio_viz_hierarchy_pk_enc_one:nn {#1} { \seq_item:Nn \l_semio_viz_hierarchy_pk_basis_seq { 1 } } }
+    { 2 } { \semio_viz_hierarchy_pk_enc_two:nnn {#1}
+              { \seq_item:Nn \l_semio_viz_hierarchy_pk_basis_seq { 1 } }
+              { \seq_item:Nn \l_semio_viz_hierarchy_pk_basis_seq { 2 } } }
+    { 3 } { \semio_viz_hierarchy_pk_enc_three:nnnn {#1}
+              { \seq_item:Nn \l_semio_viz_hierarchy_pk_basis_seq { 1 } }
+              { \seq_item:Nn \l_semio_viz_hierarchy_pk_basis_seq { 2 } }
+              { \seq_item:Nn \l_semio_viz_hierarchy_pk_basis_seq { 3 } } }
+  }
+}
+
+\seq_new:N \l_semio_viz_hierarchy_pk_trial_seq
+\int_new:N \l_semio_viz_hierarchy_pk_bi_int
+\int_new:N \l_semio_viz_hierarchy_pk_bj_int
+
+% 🧱 d3 `extendBasis`: grows the support set of the smallest enclosing circle.
+\cs_new_protected:Npn \semio_viz_hierarchy_pk_extend:nn #1#2 {
+  \int_set:Nn \l_semio_viz_hierarchy_pk_p_int {#2}
+  \semio_viz_hierarchy_pk_weak_all:nnnnTF
+    { \semio_viz_hierarchy_get:nnn {#1} { x } {#2} }
+    { \semio_viz_hierarchy_get:nnn {#1} { r } {#2} }
+    { \semio_viz_hierarchy_get:nnn {#1} { y } {#2} } {#1}
+    {
+      \seq_clear:N \l_semio_viz_hierarchy_pk_basis_seq
+      \seq_put_right:Nx \l_semio_viz_hierarchy_pk_basis_seq { \int_use:N \l_semio_viz_hierarchy_pk_p_int }
+    }
+    {
+      \bool_set_false:N \l_semio_viz_hierarchy_pk_hit_bool
+      \seq_set_eq:NN \l_semio_viz_hierarchy_pk_trial_seq \l_semio_viz_hierarchy_pk_basis_seq
+      \seq_map_inline:Nn \l_semio_viz_hierarchy_pk_trial_seq {
+        \semio_viz_hierarchy_pk_not:nnnnnT
+          { \semio_viz_hierarchy_get:nnn {#1} { x } {#2} }
+          { \semio_viz_hierarchy_get:nnn {#1} { r } {#2} }
+          { \semio_viz_hierarchy_get:nnn {#1} { y } {#2} } {#1} {##1}
+          {
+            \semio_viz_hierarchy_pk_enc_two:nnn {#1} {##1} {#2}
+            \semio_viz_hierarchy_pk_weak_all:nnnnT
+              { \l_semio_viz_hierarchy_pk_cx_fp } { \l_semio_viz_hierarchy_pk_cr_fp }
+              { \l_semio_viz_hierarchy_pk_cy_fp } {#1}
+              {
+                \bool_set_true:N \l_semio_viz_hierarchy_pk_hit_bool
+                \seq_clear:N \l_semio_viz_hierarchy_pk_basis_seq
+                \seq_put_right:Nn \l_semio_viz_hierarchy_pk_basis_seq {##1}
+                \seq_put_right:Nx \l_semio_viz_hierarchy_pk_basis_seq
+                  { \int_use:N \l_semio_viz_hierarchy_pk_p_int }
+                \seq_map_break:
+              }
+          }
+      }
+      \bool_if:NF \l_semio_viz_hierarchy_pk_hit_bool {
+        \int_step_inline:nn { \seq_count:N \l_semio_viz_hierarchy_pk_trial_seq - 1 } {
+          \bool_if:NF \l_semio_viz_hierarchy_pk_hit_bool {
+            \int_step_inline:nnn { ##1 + 1 } { \seq_count:N \l_semio_viz_hierarchy_pk_trial_seq } {
+              \bool_if:NF \l_semio_viz_hierarchy_pk_hit_bool {
+                \semio_viz_hierarchy_pk_triple:nnnn {#1} {#2}
+                  { \seq_item:Nn \l_semio_viz_hierarchy_pk_trial_seq {##1} }
+                  { \seq_item:Nn \l_semio_viz_hierarchy_pk_trial_seq {####1} }
+              }
+            }
+          }
+        }
+      }
+    }
+}
+
+% 🔺 The three-circle branch of d3 `extendBasis`, kept apart so the four guards
+% short-circuit instead of computing every candidate basis.
+\cs_new_protected:Npn \semio_viz_hierarchy_pk_triple:nnnn #1#2#3#4 {
+  \semio_viz_hierarchy_pk_enc_two:nnn {#1} {#3} {#4}
+  \semio_viz_hierarchy_pk_not:nnnnnT
+    { \l_semio_viz_hierarchy_pk_cx_fp } { \l_semio_viz_hierarchy_pk_cr_fp }
+    { \l_semio_viz_hierarchy_pk_cy_fp } {#1} {#2}
+    {
+      \semio_viz_hierarchy_pk_enc_two:nnn {#1} {#3} {#2}
+      \semio_viz_hierarchy_pk_not:nnnnnT
+        { \l_semio_viz_hierarchy_pk_cx_fp } { \l_semio_viz_hierarchy_pk_cr_fp }
+        { \l_semio_viz_hierarchy_pk_cy_fp } {#1} {#4}
+        {
+          \semio_viz_hierarchy_pk_enc_two:nnn {#1} {#4} {#2}
+          \semio_viz_hierarchy_pk_not:nnnnnT
+            { \l_semio_viz_hierarchy_pk_cx_fp } { \l_semio_viz_hierarchy_pk_cr_fp }
+            { \l_semio_viz_hierarchy_pk_cy_fp } {#1} {#3}
+            {
+              \semio_viz_hierarchy_pk_enc_three:nnnn {#1} {#3} {#4} {#2}
+              \semio_viz_hierarchy_pk_weak_all:nnnnT
+                { \l_semio_viz_hierarchy_pk_cx_fp } { \l_semio_viz_hierarchy_pk_cr_fp }
+                { \l_semio_viz_hierarchy_pk_cy_fp } {#1}
+                {
+                  \bool_set_true:N \l_semio_viz_hierarchy_pk_hit_bool
+                  \seq_clear:N \l_semio_viz_hierarchy_pk_basis_seq
+                  \seq_put_right:Nx \l_semio_viz_hierarchy_pk_basis_seq { \int_eval:n {#3} }
+                  \seq_put_right:Nx \l_semio_viz_hierarchy_pk_basis_seq { \int_eval:n {#4} }
+                  \seq_put_right:Nx \l_semio_viz_hierarchy_pk_basis_seq { \int_eval:n {#2} }
+                }
+            }
+        }
+    }
+}
+
+% 🫧 d3 `packEncloseRandom` (Welzl with the shuffled move-to-front): the smallest
+% circle enclosing the front chain, left in the pk_ex/ey/er triple. The shuffle
+% consumes the same LCG stream as d3, so the result matches exactly.
+\cs_new_protected:Npn \semio_viz_hierarchy_pk_enclose:nN #1#2 {
+  \int_set:Nn \l_semio_viz_hierarchy_pk_en_n_int { \seq_count:N #2 }
+  \int_zero:N \l_semio_viz_hierarchy_pk_en_i_int
+  \seq_map_inline:Nn #2 {
+    \int_incr:N \l_semio_viz_hierarchy_pk_en_i_int
+    \semio_viz_hierarchy_set:nnnn {#1} { pkl } { \l_semio_viz_hierarchy_pk_en_i_int } {##1}
+  }
+  \int_set_eq:NN \l_semio_viz_hierarchy_pk_en_j_int \l_semio_viz_hierarchy_pk_en_n_int
+  \bool_while_do:nn { \int_compare_p:nNn { \l_semio_viz_hierarchy_pk_en_j_int } > { 0 } } {
+    \semio_viz_hierarchy_lcg_step:
+    \int_set:Nn \l_semio_viz_hierarchy_pk_en_k_int
+      { \fp_to_int:n { trunc ( \g_semio_viz_hierarchy_lcg_fp * \l_semio_viz_hierarchy_pk_en_j_int
+        / 4294967296 ) } + 1 }
+    \int_decr:N \l_semio_viz_hierarchy_pk_en_j_int
+    \int_set:Nn \l_semio_viz_hierarchy_pk_en_swap_int
+      { \semio_viz_hierarchy_get:nnn {#1} { pkl } { \l_semio_viz_hierarchy_pk_en_j_int + 1 } }
+    \semio_viz_hierarchy_set:nnnn {#1} { pkl } { \l_semio_viz_hierarchy_pk_en_j_int + 1 }
+      { \semio_viz_hierarchy_get:nnn {#1} { pkl } { \l_semio_viz_hierarchy_pk_en_k_int } }
+    \semio_viz_hierarchy_set:nnnn {#1} { pkl } { \l_semio_viz_hierarchy_pk_en_k_int }
+      { \int_use:N \l_semio_viz_hierarchy_pk_en_swap_int }
+  }
+  \seq_clear:N \l_semio_viz_hierarchy_pk_basis_seq
+  \bool_set_false:N \l_semio_viz_hierarchy_pk_edef_bool
+  \int_zero:N \l_semio_viz_hierarchy_pk_en_i_int
+  \bool_while_do:nn
+    { \int_compare_p:nNn { \l_semio_viz_hierarchy_pk_en_i_int } < { \l_semio_viz_hierarchy_pk_en_n_int } } {
+    \int_set:Nn \l_semio_viz_hierarchy_pk_en_bn_int
+      { \semio_viz_hierarchy_get:nnn {#1} { pkl } { \l_semio_viz_hierarchy_pk_en_i_int + 1 } }
+    \bool_set_false:N \l_semio_viz_hierarchy_pk_ok_bool
+    \bool_if:NT \l_semio_viz_hierarchy_pk_edef_bool {
+      \semio_viz_hierarchy_pk_weak:nnnnnT { \l_semio_viz_hierarchy_pk_ex_fp }
+        { \l_semio_viz_hierarchy_pk_er_fp } { \l_semio_viz_hierarchy_pk_ey_fp } {#1}
+        { \l_semio_viz_hierarchy_pk_en_bn_int }
+        { \bool_set_true:N \l_semio_viz_hierarchy_pk_ok_bool }
+    }
+    \bool_if:NTF \l_semio_viz_hierarchy_pk_ok_bool
+      { \int_incr:N \l_semio_viz_hierarchy_pk_en_i_int }
+      {
+        \semio_viz_hierarchy_pk_extend:nn {#1} { \l_semio_viz_hierarchy_pk_en_bn_int }
+        \semio_viz_hierarchy_pk_enc_basis:n {#1}
+        \fp_set_eq:NN \l_semio_viz_hierarchy_pk_ex_fp \l_semio_viz_hierarchy_pk_cx_fp
+        \fp_set_eq:NN \l_semio_viz_hierarchy_pk_ey_fp \l_semio_viz_hierarchy_pk_cy_fp
+        \fp_set_eq:NN \l_semio_viz_hierarchy_pk_er_fp \l_semio_viz_hierarchy_pk_cr_fp
+        \bool_set_true:N \l_semio_viz_hierarchy_pk_edef_bool
+        \int_zero:N \l_semio_viz_hierarchy_pk_en_i_int
+      }
+  }
+}
+
+\seq_new:N \l_semio_viz_hierarchy_pk_chain_seq
+\fp_new:N \l_semio_viz_hierarchy_pk_result_fp
+
+% 🧿 d3 `packSiblingsRandom`: the front-chain circle packing of the children of
+% node #2. Complexity O(k) amortised per parent plus the Welzl enclosure.
+\cs_new_protected:Npn \semio_viz_hierarchy_pk_siblings:nn #1#2 {
+  \int_set:Nn \l_semio_viz_hierarchy_pk_n_int { \semio_viz_hierarchy_nk:nn {#1} {#2} }
+  \fp_zero:N \l_semio_viz_hierarchy_pk_result_fp
+  \int_compare:nNnT { \l_semio_viz_hierarchy_pk_n_int } > { 0 } {
+    \int_set:Nn \l_semio_viz_hierarchy_pk_a_int { \semio_viz_hierarchy_kid:nnn {#1} {#2} { 1 } }
+    \semio_viz_hierarchy_set:nnnn {#1} { x } { \l_semio_viz_hierarchy_pk_a_int } { 0 }
+    \semio_viz_hierarchy_set:nnnn {#1} { y } { \l_semio_viz_hierarchy_pk_a_int } { 0 }
+    \fp_set:Nn \l_semio_viz_hierarchy_pk_result_fp
+      { \semio_viz_hierarchy_get:nnn {#1} { r } { \l_semio_viz_hierarchy_pk_a_int } }
+  }
+  \int_compare:nNnT { \l_semio_viz_hierarchy_pk_n_int } > { 1 } {
+    \int_set:Nn \l_semio_viz_hierarchy_pk_b_int { \semio_viz_hierarchy_kid:nnn {#1} {#2} { 2 } }
+    \semio_viz_hierarchy_set:nnnn {#1} { x } { \l_semio_viz_hierarchy_pk_a_int }
+      { \fp_eval:n { - \semio_viz_hierarchy_get:nnn {#1} { r } { \l_semio_viz_hierarchy_pk_b_int } } }
+    \semio_viz_hierarchy_set:nnnn {#1} { x } { \l_semio_viz_hierarchy_pk_b_int }
+      { \semio_viz_hierarchy_get:nnn {#1} { r } { \l_semio_viz_hierarchy_pk_a_int } }
+    \semio_viz_hierarchy_set:nnnn {#1} { y } { \l_semio_viz_hierarchy_pk_b_int } { 0 }
+    \fp_set:Nn \l_semio_viz_hierarchy_pk_result_fp
+      { \semio_viz_hierarchy_get:nnn {#1} { r } { \l_semio_viz_hierarchy_pk_a_int }
+        + \semio_viz_hierarchy_get:nnn {#1} { r } { \l_semio_viz_hierarchy_pk_b_int } }
+  }
+  \int_compare:nNnT { \l_semio_viz_hierarchy_pk_n_int } > { 2 } {
+    \int_set:Nn \l_semio_viz_hierarchy_pk_c_int { \semio_viz_hierarchy_kid:nnn {#1} {#2} { 3 } }
+    \semio_viz_hierarchy_pk_place:nnnn {#1} { \l_semio_viz_hierarchy_pk_b_int }
+      { \l_semio_viz_hierarchy_pk_a_int } { \l_semio_viz_hierarchy_pk_c_int }
+    \semio_viz_hierarchy_pk_link:nnn {#1} { \l_semio_viz_hierarchy_pk_a_int } { \l_semio_viz_hierarchy_pk_b_int }
+    \semio_viz_hierarchy_pk_link:nnn {#1} { \l_semio_viz_hierarchy_pk_b_int } { \l_semio_viz_hierarchy_pk_c_int }
+    \semio_viz_hierarchy_pk_link:nnn {#1} { \l_semio_viz_hierarchy_pk_c_int } { \l_semio_viz_hierarchy_pk_a_int }
+    \int_set:Nn \l_semio_viz_hierarchy_pk_i_int { 3 }
+    \bool_while_do:nn
+      { \int_compare_p:nNn { \l_semio_viz_hierarchy_pk_i_int } < { \l_semio_viz_hierarchy_pk_n_int } } {
+      \int_set:Nn \l_semio_viz_hierarchy_pk_c_int
+        { \semio_viz_hierarchy_kid:nnn {#1} {#2} { \l_semio_viz_hierarchy_pk_i_int + 1 } }
+      \semio_viz_hierarchy_pk_place:nnnn {#1} { \l_semio_viz_hierarchy_pk_a_int }
+        { \l_semio_viz_hierarchy_pk_b_int } { \l_semio_viz_hierarchy_pk_c_int }
+      \int_set:Nn \l_semio_viz_hierarchy_pk_j_int
+        { \semio_viz_hierarchy_get:nnn {#1} { pnx } { \l_semio_viz_hierarchy_pk_b_int } }
+      \int_set:Nn \l_semio_viz_hierarchy_pk_k_int
+        { \semio_viz_hierarchy_get:nnn {#1} { ppv } { \l_semio_viz_hierarchy_pk_a_int } }
+      \fp_set:Nn \l_semio_viz_hierarchy_pk_sj_fp
+        { \semio_viz_hierarchy_get:nnn {#1} { r } { \l_semio_viz_hierarchy_pk_b_int } }
+      \fp_set:Nn \l_semio_viz_hierarchy_pk_sk_fp
+        { \semio_viz_hierarchy_get:nnn {#1} { r } { \l_semio_viz_hierarchy_pk_a_int } }
+      \bool_set_false:N \l_semio_viz_hierarchy_pk_found_bool
+      \bool_set_true:N \l_semio_viz_hierarchy_pk_cont_bool
+      \bool_while_do:Nn \l_semio_viz_hierarchy_pk_cont_bool {
+        \fp_compare:nNnTF { \l_semio_viz_hierarchy_pk_sj_fp } > { \l_semio_viz_hierarchy_pk_sk_fp } {
+          \semio_viz_hierarchy_pk_intersects:nnnTF {#1} { \l_semio_viz_hierarchy_pk_k_int }
+            { \l_semio_viz_hierarchy_pk_c_int }
+            {
+              \int_set_eq:NN \l_semio_viz_hierarchy_pk_a_int \l_semio_viz_hierarchy_pk_k_int
+              \semio_viz_hierarchy_pk_link:nnn {#1} { \l_semio_viz_hierarchy_pk_a_int }
+                { \l_semio_viz_hierarchy_pk_b_int }
+              \bool_set_true:N \l_semio_viz_hierarchy_pk_found_bool
+              \bool_set_false:N \l_semio_viz_hierarchy_pk_cont_bool
+            }
+            {
+              \fp_add:Nn \l_semio_viz_hierarchy_pk_sk_fp
+                { \semio_viz_hierarchy_get:nnn {#1} { r } { \l_semio_viz_hierarchy_pk_k_int } }
+              \int_set:Nn \l_semio_viz_hierarchy_pk_k_int
+                { \semio_viz_hierarchy_get:nnn {#1} { ppv } { \l_semio_viz_hierarchy_pk_k_int } }
+            }
+        } {
+          \semio_viz_hierarchy_pk_intersects:nnnTF {#1} { \l_semio_viz_hierarchy_pk_j_int }
+            { \l_semio_viz_hierarchy_pk_c_int }
+            {
+              \int_set_eq:NN \l_semio_viz_hierarchy_pk_b_int \l_semio_viz_hierarchy_pk_j_int
+              \semio_viz_hierarchy_pk_link:nnn {#1} { \l_semio_viz_hierarchy_pk_a_int }
+                { \l_semio_viz_hierarchy_pk_b_int }
+              \bool_set_true:N \l_semio_viz_hierarchy_pk_found_bool
+              \bool_set_false:N \l_semio_viz_hierarchy_pk_cont_bool
+            }
+            {
+              \fp_add:Nn \l_semio_viz_hierarchy_pk_sj_fp
+                { \semio_viz_hierarchy_get:nnn {#1} { r } { \l_semio_viz_hierarchy_pk_j_int } }
+              \int_set:Nn \l_semio_viz_hierarchy_pk_j_int
+                { \semio_viz_hierarchy_get:nnn {#1} { pnx } { \l_semio_viz_hierarchy_pk_j_int } }
+            }
+        }
+        \bool_if:NF \l_semio_viz_hierarchy_pk_found_bool {
+          \bool_set:Nn \l_semio_viz_hierarchy_pk_cont_bool
+            { ! \int_compare_p:nNn { \l_semio_viz_hierarchy_pk_j_int } =
+              { \semio_viz_hierarchy_get:nnn {#1} { pnx } { \l_semio_viz_hierarchy_pk_k_int } } }
+        }
+      }
+      \bool_if:NF \l_semio_viz_hierarchy_pk_found_bool {
+        \semio_viz_hierarchy_pk_link:nnn {#1} { \l_semio_viz_hierarchy_pk_c_int }
+          { \l_semio_viz_hierarchy_pk_b_int }
+        \semio_viz_hierarchy_pk_link:nnn {#1} { \l_semio_viz_hierarchy_pk_a_int }
+          { \l_semio_viz_hierarchy_pk_c_int }
+        \int_set_eq:NN \l_semio_viz_hierarchy_pk_b_int \l_semio_viz_hierarchy_pk_c_int
+        \semio_viz_hierarchy_pk_score:nnN {#1} { \l_semio_viz_hierarchy_pk_a_int }
+          \l_semio_viz_hierarchy_pk_aa_fp
+        \int_set:Nn \l_semio_viz_hierarchy_pk_cc_int
+          { \semio_viz_hierarchy_get:nnn {#1} { pnx } { \l_semio_viz_hierarchy_pk_c_int } }
+        \bool_while_do:nn { ! \int_compare_p:nNn { \l_semio_viz_hierarchy_pk_cc_int }
+          = { \l_semio_viz_hierarchy_pk_b_int } } {
+          \semio_viz_hierarchy_pk_score:nnN {#1} { \l_semio_viz_hierarchy_pk_cc_int }
+            \l_semio_viz_hierarchy_pk_ca_fp
+          \fp_compare:nNnT { \l_semio_viz_hierarchy_pk_ca_fp } < { \l_semio_viz_hierarchy_pk_aa_fp } {
+            \int_set_eq:NN \l_semio_viz_hierarchy_pk_a_int \l_semio_viz_hierarchy_pk_cc_int
+            \fp_set_eq:NN \l_semio_viz_hierarchy_pk_aa_fp \l_semio_viz_hierarchy_pk_ca_fp
+          }
+          \int_set:Nn \l_semio_viz_hierarchy_pk_cc_int
+            { \semio_viz_hierarchy_get:nnn {#1} { pnx } { \l_semio_viz_hierarchy_pk_cc_int } }
+        }
+        \int_set:Nn \l_semio_viz_hierarchy_pk_b_int
+          { \semio_viz_hierarchy_get:nnn {#1} { pnx } { \l_semio_viz_hierarchy_pk_a_int } }
+        \int_incr:N \l_semio_viz_hierarchy_pk_i_int
+      }
+    }
+    \seq_clear:N \l_semio_viz_hierarchy_pk_chain_seq
+    \seq_put_right:Nx \l_semio_viz_hierarchy_pk_chain_seq { \int_use:N \l_semio_viz_hierarchy_pk_b_int }
+    \int_set:Nn \l_semio_viz_hierarchy_pk_cc_int
+      { \semio_viz_hierarchy_get:nnn {#1} { pnx } { \l_semio_viz_hierarchy_pk_b_int } }
+    \bool_while_do:nn { ! \int_compare_p:nNn { \l_semio_viz_hierarchy_pk_cc_int }
+      = { \l_semio_viz_hierarchy_pk_b_int } } {
+      \seq_put_right:Nx \l_semio_viz_hierarchy_pk_chain_seq { \int_use:N \l_semio_viz_hierarchy_pk_cc_int }
+      \int_set:Nn \l_semio_viz_hierarchy_pk_cc_int
+        { \semio_viz_hierarchy_get:nnn {#1} { pnx } { \l_semio_viz_hierarchy_pk_cc_int } }
+    }
+    \semio_viz_hierarchy_pk_enclose:nN {#1} \l_semio_viz_hierarchy_pk_chain_seq
+    \int_step_inline:nn { \l_semio_viz_hierarchy_pk_n_int } {
+      \int_set:Nn \l_semio_viz_hierarchy_k_int { \semio_viz_hierarchy_kid:nnn {#1} {#2} {##1} }
+      \semio_viz_hierarchy_set:nnnn {#1} { x } { \l_semio_viz_hierarchy_k_int }
+        { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { x } { \l_semio_viz_hierarchy_k_int }
+          - \l_semio_viz_hierarchy_pk_ex_fp } }
+      \semio_viz_hierarchy_set:nnnn {#1} { y } { \l_semio_viz_hierarchy_k_int }
+        { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { y } { \l_semio_viz_hierarchy_k_int }
+          - \l_semio_viz_hierarchy_pk_ey_fp } }
+    }
+    \fp_set_eq:NN \l_semio_viz_hierarchy_pk_result_fp \l_semio_viz_hierarchy_pk_er_fp
+  }
+}
+
+% ⛓️ Front-chain link: #3 follows #2.
+\cs_new_protected:Npn \semio_viz_hierarchy_pk_link:nnn #1#2#3 {
+  \semio_viz_hierarchy_set:nnnn {#1} { pnx } {#2} { \int_eval:n {#3} }
+  \semio_viz_hierarchy_set:nnnn {#1} { ppv } {#3} { \int_eval:n {#2} }
+}
+
+% 🧮 d3 `packChildrenRandom`: pads the children radii, packs them and stores the
+% enclosing radius on the parent.
+\cs_new_protected:Npn \semio_viz_hierarchy_pk_children:nnn #1#2#3 {
+  \int_compare:nNnT { \semio_viz_hierarchy_nk:nn {#1} {#2} } > { 0 } {
+    \fp_set:Nn \l_semio_viz_hierarchy_pk_pad_fp {#3}
+    \fp_compare:nNnF { \l_semio_viz_hierarchy_pk_pad_fp } = { 0 } {
+      \int_step_inline:nn { \semio_viz_hierarchy_nk:nn {#1} {#2} } {
+        \semio_viz_hierarchy_set:nnnn {#1} { r } { \semio_viz_hierarchy_kid:nnn {#1} {#2} {##1} }
+          { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { r }
+            { \semio_viz_hierarchy_kid:nnn {#1} {#2} {##1} } + \l_semio_viz_hierarchy_pk_pad_fp } }
+      }
+    }
+    \semio_viz_hierarchy_pk_siblings:nn {#1} {#2}
+    \fp_compare:nNnF { \l_semio_viz_hierarchy_pk_pad_fp } = { 0 } {
+      \int_step_inline:nn { \semio_viz_hierarchy_nk:nn {#1} {#2} } {
+        \semio_viz_hierarchy_set:nnnn {#1} { r } { \semio_viz_hierarchy_kid:nnn {#1} {#2} {##1} }
+          { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { r }
+            { \semio_viz_hierarchy_kid:nnn {#1} {#2} {##1} } - \l_semio_viz_hierarchy_pk_pad_fp } }
+      }
+    }
+    \semio_viz_hierarchy_set:nnnn {#1} { r } {#2}
+      { \fp_eval:n { \l_semio_viz_hierarchy_pk_result_fp + \l_semio_viz_hierarchy_pk_pad_fp } }
+  }
+}
+
+% 🌀 d3 `radiusLeaf`: leaf radius from the `radius` key.
+\cs_new_protected:Npn \semio_viz_hierarchy_pk_radius:nn #1#2 {
+  \int_compare:nNnT { \semio_viz_hierarchy_nk:nn {#1} {#2} } = { 0 } {
+    \str_case:VnF \l_semio_viz_hierarchy_radius_tl {
+      { auto }  { \semio_viz_hierarchy_set:nnnn {#1} { r } {#2}
+                    { \fp_eval:n { max ( 0 , sqrt ( \semio_viz_hierarchy_get:nnn {#1} { val } {#2} ) ) } } }
+      { value } { \semio_viz_hierarchy_set:nnnn {#1} { r } {#2}
+                    { \fp_eval:n { max ( 0 , \semio_viz_hierarchy_get:nnn {#1} { val } {#2} ) } } }
+    }
+    { \semio_viz_hierarchy_set:nnnn {#1} { r } {#2}
+        { \fp_eval:n { max ( 0 , \l_semio_viz_hierarchy_radius_tl ) } } }
+  }
+}
+
+% 🚚 d3 `translateChild`: rescales every circle and re-anchors it on its parent.
+\cs_new_protected:Npn \semio_viz_hierarchy_pk_translate:nnn #1#2#3 {
+  \semio_viz_hierarchy_set:nnnn {#1} { r } {#2}
+    { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { r } {#2} * (#3) } }
+  \int_compare:nNnT { \semio_viz_hierarchy_get:nnn {#1} { pi } {#2} } > { 0 } {
+    \semio_viz_hierarchy_set:nnnn {#1} { x } {#2}
+      { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { x }
+          { \semio_viz_hierarchy_get:nnn {#1} { pi } {#2} }
+        + (#3) * \semio_viz_hierarchy_get:nnn {#1} { x } {#2} } }
+    \semio_viz_hierarchy_set:nnnn {#1} { y } {#2}
+      { \fp_eval:n { \semio_viz_hierarchy_get:nnn {#1} { y }
+          { \semio_viz_hierarchy_get:nnn {#1} { pi } {#2} }
+        + (#3) * \semio_viz_hierarchy_get:nnn {#1} { y } {#2} } }
+  }
+}
+
+% 🫧 d3-hierarchy `pack()`: enclosing-circle packing of the whole hierarchy.
+% Complexity O(n) front-chain steps plus the expected-linear Welzl enclosures.
+\cs_new_protected:Npn \semio_viz_hierarchy_layout_pack:n #1 {
+  \semio_viz_hierarchy_lcg_reset:
+  \int_set:Nn \l_semio_viz_hierarchy_pk_root_int { \semio_viz_hierarchy_get:nnn {#1} { root } { 0 } }
+  \semio_viz_hierarchy_set:nnnn {#1} { x } { \l_semio_viz_hierarchy_pk_root_int }
+    { \fp_eval:n { \l_semio_viz_hierarchy_dx_fp / 2 } }
+  \semio_viz_hierarchy_set:nnnn {#1} { y } { \l_semio_viz_hierarchy_pk_root_int }
+    { \fp_eval:n { \l_semio_viz_hierarchy_dy_fp / 2 } }
+  \semio_viz_hierarchy_map_pre:nn {#1} { \semio_viz_hierarchy_pk_radius:nn {#1} {##1} }
+  \str_if_eq:VnTF \l_semio_viz_hierarchy_radius_tl { auto } {
+    \semio_viz_hierarchy_map_post:nn {#1} { \semio_viz_hierarchy_pk_children:nnn {#1} {##1} { 0 } }
+    \fp_set:Nn \l_semio_viz_hierarchy_pk_scale_fp
+      { \l_semio_viz_hierarchy_padding_fp
+        * \semio_viz_hierarchy_get:nnn {#1} { r } { \l_semio_viz_hierarchy_pk_root_int }
+        / min ( \l_semio_viz_hierarchy_dx_fp , \l_semio_viz_hierarchy_dy_fp ) }
+    \semio_viz_hierarchy_map_post:nn {#1}
+      { \semio_viz_hierarchy_pk_children:nnn {#1} {##1} { \l_semio_viz_hierarchy_pk_scale_fp } }
+    \fp_set:Nn \l_semio_viz_hierarchy_pk_kfac_fp
+      { min ( \l_semio_viz_hierarchy_dx_fp , \l_semio_viz_hierarchy_dy_fp )
+        / ( 2 * \semio_viz_hierarchy_get:nnn {#1} { r } { \l_semio_viz_hierarchy_pk_root_int } ) }
+    \semio_viz_hierarchy_map_pre:nn {#1}
+      { \semio_viz_hierarchy_pk_translate:nnn {#1} {##1} { \l_semio_viz_hierarchy_pk_kfac_fp } }
+  } {
+    \semio_viz_hierarchy_map_post:nn {#1}
+      { \semio_viz_hierarchy_pk_children:nnn {#1} {##1}
+        { \fp_eval:n { \l_semio_viz_hierarchy_padding_fp / 2 } } }
+    \semio_viz_hierarchy_map_pre:nn {#1} { \semio_viz_hierarchy_pk_translate:nnn {#1} {##1} { 1 } }
+  }
+}
+%endregion 🔖️LayoutPack
+
+\ExplSyntaxOff

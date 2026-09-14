@@ -10,6 +10,13 @@
         "responsibility": "Writes the canonical LaTeX stylesheet from the framework design-token document."
       },
       {
+        "directory": "📊️viz-catalog-generation",
+        "generator": "bun nx run @semio-tech/print:generate-viz",
+        "id": "framework.print.command.viz-catalog-generation",
+        "kind": "command",
+        "responsibility": "Emits the generated visualization catalogue packages and the per-section gallery documents from the chart-kind catalogue."
+      },
+      {
         "directory": "🔤print-font-provisioning",
         "id": "framework.print.command.print-font-provisioning",
         "kind": "command",

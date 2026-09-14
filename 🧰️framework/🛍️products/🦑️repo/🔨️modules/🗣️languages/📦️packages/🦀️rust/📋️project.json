@@ -1,0 +1,42 @@
+{
+  "name": "@semio-tech/repo-languages-rs",
+  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udde3\ufe0flanguages/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udde3\ufe0flanguages/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test"
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udde3\ufe0flanguages/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test quick"
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udde3\ufe0flanguages/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test long"
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udde3\ufe0flanguages/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test exhaustive"
+      }
+    }
+  }
+}

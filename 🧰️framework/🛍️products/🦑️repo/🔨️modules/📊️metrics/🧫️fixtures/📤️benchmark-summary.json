@@ -1,0 +1,110 @@
+{
+  "results": [
+    {
+      "test": "serialize",
+      "lang": "Typescript",
+      "time": "0.412s"
+    },
+    {
+      "test": "deserialize",
+      "lang": "Typescript",
+      "time": "0.208s"
+    },
+    {
+      "test": "serialize",
+      "lang": "Python",
+      "time": "1.204s"
+    },
+    {
+      "test": "deserialize",
+      "lang": "Python",
+      "time": "0.930s"
+    },
+    {
+      "test": "serialize",
+      "lang": "Go",
+      "time": "0.180s"
+    },
+    {
+      "test": "deserialize",
+      "lang": "Go",
+      "time": "0.096s"
+    },
+    {
+      "test": "round-trip",
+      "lang": "Go",
+      "time": "0.400s"
+    },
+    {
+      "test": "serialize",
+      "lang": "C#",
+      "time": "0.350s"
+    },
+    {
+      "test": "deserialize",
+      "lang": "C#",
+      "time": "0.201s"
+    },
+    {
+      "test": "serialize",
+      "lang": "Rust",
+      "time": "0.090s"
+    },
+    {
+      "test": "deserialize",
+      "lang": "Rust",
+      "time": "0.044s"
+    },
+    {
+      "test": "round-trip",
+      "lang": "Rust",
+      "time": "0.150s"
+    }
+  ],
+  "summary": {
+    "tests": [
+      "deserialize",
+      "round-trip",
+      "serialize"
+    ],
+    "languages": [
+      "Typescript",
+      "Python",
+      "Go",
+      "C#",
+      "Rust"
+    ],
+    "rows": [
+      {
+        "test": "deserialize",
+        "timings": {
+          "Typescript": "0.208s",
+          "Python": "0.930s",
+          "Go": "0.096s",
+          "C#": "0.201s",
+          "Rust": "0.044s"
+        },
+        "fastest": "Rust"
+      },
+      {
+        "test": "round-trip",
+        "timings": {
+          "Go": "0.400s",
+          "Rust": "0.150s"
+        },
+        "fastest": "Rust"
+      },
+      {
+        "test": "serialize",
+        "timings": {
+          "Typescript": "0.412s",
+          "Python": "1.204s",
+          "Go": "0.180s",
+          "C#": "0.350s",
+          "Rust": "0.090s"
+        },
+        "fastest": "Rust"
+      }
+    ]
+  }
+}

@@ -1,0 +1,216 @@
+{
+  "_comment": "🔎️ The filter tree and the filter vectors, taken from the Go original's own `TestFilterMonorepoTree`: the same three categories, the same two bundles, the same two tickets across two years and the same two contributors. Every vector states the surviving outline in full, so a filter that keeps one node too many or one too few fails immediately.",
+  "tree": {
+    "kind": "category",
+    "label": ".",
+    "children": [
+      {
+        "kind": "category",
+        "id": "codebase",
+        "label": "Codebase",
+        "children": [
+          {
+            "kind": "technology",
+            "id": "proj1",
+            "label": "proj1",
+            "children": [
+              {
+                "kind": "bundle",
+                "id": "b1",
+                "label": "bundle1",
+                "subKind": "library",
+                "children": [
+                  {
+                    "kind": "folder",
+                    "id": "f1",
+                    "label": "src",
+                    "subKind": "organization",
+                    "children": [
+                      { "kind": "file", "id": "file1", "label": "index.ts", "subKind": "code" },
+                      { "kind": "file", "id": "file2", "label": "README.md", "subKind": "docs" }
+                    ]
+                  }
+                ]
+              },
+              { "kind": "bundle", "id": "b2", "label": "bundle2", "subKind": "schema" }
+            ]
+          }
+        ]
+      },
+      {
+        "kind": "category",
+        "id": "goals",
+        "label": "Goals",
+        "children": [
+          {
+            "kind": "goal",
+            "id": "g1",
+            "label": "Goal1",
+            "status": "open",
+            "children": [
+              { "kind": "ticket", "id": "t1", "label": "Ticket1", "status": "open", "year": 2026, "month": 2, "day": 5 },
+              { "kind": "ticket", "id": "t2", "label": "Ticket2", "status": "closed", "year": 2025, "month": 12, "day": 1 }
+            ]
+          }
+        ]
+      },
+      {
+        "kind": "category",
+        "id": "contributors",
+        "label": "Contributors",
+        "children": [
+          { "kind": "contributor", "id": "c1", "label": "usalu", "contributor": "usalu" },
+          { "kind": "contributor", "id": "c2", "label": "other", "contributor": "other" }
+        ]
+      }
+    ]
+  },
+  "vectors": [
+    {
+      "id": "empty-filter-keeps-everything",
+      "filter": {},
+      "outline": [
+        "0|category||.",
+        "1|category|codebase|Codebase",
+        "2|technology|proj1|proj1",
+        "3|bundle|b1|bundle1",
+        "4|folder|f1|src",
+        "5|file|file1|index.ts",
+        "5|file|file2|README.md",
+        "3|bundle|b2|bundle2",
+        "1|category|goals|Goals",
+        "2|goal|g1|Goal1",
+        "3|ticket|t1|Ticket1",
+        "3|ticket|t2|Ticket2",
+        "1|category|contributors|Contributors",
+        "2|contributor|c1|usalu",
+        "2|contributor|c2|other"
+      ]
+    },
+    {
+      "id": "exclude-bundle-collapses-bundles",
+      "filter": { "excludeKinds": ["bundle"] },
+      "outline": [
+        "0|category||.",
+        "1|category|codebase|Codebase",
+        "2|technology|proj1|proj1",
+        "3|folder|f1|src",
+        "4|file|file1|index.ts",
+        "4|file|file2|README.md",
+        "1|category|goals|Goals",
+        "2|goal|g1|Goal1",
+        "3|ticket|t1|Ticket1",
+        "3|ticket|t2|Ticket2",
+        "1|category|contributors|Contributors",
+        "2|contributor|c1|usalu",
+        "2|contributor|c2|other"
+      ]
+    },
+    {
+      "id": "exclude-folder-promotes-files",
+      "filter": { "excludeKinds": ["folder"] },
+      "outline": [
+        "0|category||.",
+        "1|category|codebase|Codebase",
+        "2|technology|proj1|proj1",
+        "3|bundle|b1|bundle1",
+        "4|file|file1|index.ts",
+        "4|file|file2|README.md",
+        "3|bundle|b2|bundle2",
+        "1|category|goals|Goals",
+        "2|goal|g1|Goal1",
+        "3|ticket|t1|Ticket1",
+        "3|ticket|t2|Ticket2",
+        "1|category|contributors|Contributors",
+        "2|contributor|c1|usalu",
+        "2|contributor|c2|other"
+      ]
+    },
+    {
+      "id": "only-library-sub-kind",
+      "filter": { "onlySubKinds": { "bundle": ["library"] } },
+      "outline": [
+        "0|category||.",
+        "1|category|codebase|Codebase",
+        "2|technology|proj1|proj1",
+        "3|bundle|b1|bundle1",
+        "4|folder|f1|src",
+        "5|file|file1|index.ts",
+        "5|file|file2|README.md",
+        "1|category|goals|Goals",
+        "2|goal|g1|Goal1",
+        "3|ticket|t1|Ticket1",
+        "3|ticket|t2|Ticket2",
+        "1|category|contributors|Contributors",
+        "2|contributor|c1|usalu",
+        "2|contributor|c2|other"
+      ]
+    },
+    {
+      "id": "only-open-status",
+      "filter": { "onlyStatus": "open" },
+      "outline": [
+        "0|category||.",
+        "1|category|codebase|Codebase",
+        "2|technology|proj1|proj1",
+        "3|bundle|b1|bundle1",
+        "4|folder|f1|src",
+        "5|file|file1|index.ts",
+        "5|file|file2|README.md",
+        "3|bundle|b2|bundle2",
+        "1|category|goals|Goals",
+        "2|goal|g1|Goal1",
+        "3|ticket|t1|Ticket1",
+        "1|category|contributors|Contributors",
+        "2|contributor|c1|usalu",
+        "2|contributor|c2|other"
+      ]
+    },
+    {
+      "id": "exclude-year-2025",
+      "filter": { "excludeYears": [2025] },
+      "outline": [
+        "0|category||.",
+        "1|category|codebase|Codebase",
+        "2|technology|proj1|proj1",
+        "3|bundle|b1|bundle1",
+        "4|folder|f1|src",
+        "5|file|file1|index.ts",
+        "5|file|file2|README.md",
+        "3|bundle|b2|bundle2",
+        "1|category|goals|Goals",
+        "2|goal|g1|Goal1",
+        "3|ticket|t1|Ticket1",
+        "1|category|contributors|Contributors",
+        "2|contributor|c1|usalu",
+        "2|contributor|c2|other"
+      ]
+    },
+    {
+      "id": "exclude-contributor-usalu",
+      "filter": { "excludeContributors": ["usalu"] },
+      "outline": [
+        "0|category||.",
+        "1|category|codebase|Codebase",
+        "2|technology|proj1|proj1",
+        "3|bundle|b1|bundle1",
+        "4|folder|f1|src",
+        "5|file|file1|index.ts",
+        "5|file|file2|README.md",
+        "3|bundle|b2|bundle2",
+        "1|category|goals|Goals",
+        "2|goal|g1|Goal1",
+        "3|ticket|t1|Ticket1",
+        "3|ticket|t2|Ticket2",
+        "1|category|contributors|Contributors",
+        "2|contributor|c2|other"
+      ]
+    },
+    {
+      "id": "only-technology-drops-every-other-entity",
+      "_comment": "🧮️ An allow list of one kind removes every other entity node AND its subtree, because a hidden node with no surviving child is dropped by `filterNode` before `collapseFilteredKinds` ever sees it. Categories that end up empty are dropped too, so only the codebase category survives.",
+      "filter": { "onlyKinds": ["technology"] },
+      "outline": ["0|category||.", "1|category|codebase|Codebase", "2|technology|proj1|proj1"]
+    }
+  ]
+}

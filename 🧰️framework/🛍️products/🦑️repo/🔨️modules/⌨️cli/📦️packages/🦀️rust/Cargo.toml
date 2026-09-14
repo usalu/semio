@@ -18,9 +18,31 @@ path = "../../🦀️.rs"
 name = "semio"
 path = "../../🚪️entrypoint/🦀️.rs"
 
+[[bin]]
+name = "semio-repo-mcp"
+path = "📦️mcp-main.rs"
+
 [dependencies]
-ui_tui = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["tui-terminal"], package = "semio-framework-ui" }
-ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
-dispatch_macros = { path = "../../../../../../🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
-serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.140"
+semio-framework-repo-dashboard = { path = "../../../🎛️dashboard/📦️packages/🦀️rust" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+semio-framework-repo-workspace = { path = "../../../🏠️workspace/📦️packages/🦀️rust" }
+semio-framework-repo-identity = { path = "../../../🪪️identity/📦️packages/🦀️rust" }
+semio-framework-repo-model = { path = "../../../📐️model/📦️packages/🦀️rust" }
+semio-framework-repo-languages = { path = "../../../🗣️languages/📦️packages/🦀️rust" }
+semio-framework-repo-codebase = { path = "../../../🗂️codebase/📦️packages/🦀️rust" }
+semio-framework-repo-statutes = { path = "../../../📜️statutes/📦️packages/🦀️rust" }
+semio-framework-repo-tree = { path = "../../../🌳️tree/📦️packages/🦀️rust" }
+semio-framework-repo-tickets = { path = "../../../🎫️tickets/📦️packages/🦀️rust" }
+semio-framework-repo-goals = { path = "../../../🎯️goals/📦️packages/🦀️rust" }
+semio-framework-repo-contributors = { path = "../../../🧑️contributors/📦️packages/🦀️rust" }
+semio-framework-repo-todos = { path = "../../../📝️todos/📦️packages/🦀️rust" }
+semio-framework-repo-move = { path = "../../../🚚️move/📦️packages/🦀️rust" }
+semio-framework-repo-metrics = { path = "../../../📊️metrics/📦️packages/🦀️rust" }
+semio-framework-repo-hooks = { path = "../../../🪝️hooks/📦️packages/🦀️rust" }
+semio-framework-repo-test-runner = { path = "../../../🏃️test-runner/📦️packages/🦀️rust" }
+semio-framework-repo-providers = { path = "../../../🧩️providers/📦️packages/🦀️rust" }
+semio-framework-repo-events = { path = "../../../📡️events/📦️packages/🦀️rust" }
+semio-framework-repo-search = { path = "../../../🔎️search/📦️packages/🦀️rust" }
+semio-framework-repo-graphql = { path = "../../../🔗️graphql/📦️packages/🦀️rust" }
+semio-framework-repo-mcp = { path = "../../../🔌️mcp/📦️packages/🦀️rust" }

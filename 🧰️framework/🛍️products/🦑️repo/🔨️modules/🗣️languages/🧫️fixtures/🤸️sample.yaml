@@ -1,0 +1,9 @@
+# region Alpha
+package:
+  name: sample
+# endregion Alpha
+
+# region Beta
+dependencies:
+  - serde
+# endregion Beta

@@ -1,0 +1,16 @@
+{
+  "$schema": "../../🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎛️ Test-only references of the 🎛️dashboard owner. The dashboard ships no reference-able format: its command tree is a projection of this repository's own nx manifests, its own taxonomy segment rule and its own repo domain, so the only entry here is a recorded no-oracle decision.",
+  "oracles": [],
+  "probes": [],
+  "noOracleDecisions": [
+    {
+      "id": "repo-dashboard-command-tree",
+      "capabilities": ["repo.dashboard.command-tree"],
+      "rationale": "What the dashboard offers is derived from this repository alone: which nx targets exist, which taxonomy segments are noise, which verbs sort first, which tickets and goals `.🧬semio/🦑️repo` carries, and which repo-domain operations the Rust crates answer in process. No task runner, no launcher and no third-party menu builder projects that tree, so there is nothing to compare against, and reaching the real repository would put a developer's own `.🧬semio` and every nx manifest of the monorepo inside a test. Confidence comes from a frozen workspace vector materialised into the case's work directory, so the whole projection — every wizard path, every process leaf and every repo leaf with both its action key and its Go argv — is pinned rather than sampled, and from the metamorphic law that the order the workspace files were written in does not reach the projection. A differential half arrives when a second implementation of the discovery walk exists; until then this is conformance against those vectors, stated here rather than dressed up as differential evidence. This decision covers no runtime mutation capability: the scenarios only read the materialised workspace copy.",
+      "substitutes": ["specification-vectors", "metamorphic-laws"],
+      "coversMutations": false
+    }
+  ]
+}

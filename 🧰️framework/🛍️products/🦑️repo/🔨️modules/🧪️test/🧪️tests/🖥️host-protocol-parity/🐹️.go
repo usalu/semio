@@ -37,7 +37,7 @@ func workDirectoryIsCacheLocal(ctx *host.Context) (host.Outcome, error) {
 	workDir := strings.ReplaceAll(ctx.WorkDir, "\\", "/")
 	_, statErr := os.Stat(filepath.Join(ctx.WorkDir, "🧾️marker.json"))
 	return host.Outcome{Projection: map[string]any{
-		"insideTestCache":   strings.Contains(workDir, "/.🧬semio/🦑️repo/⚡️cache/tests/"),
+		"insideTestCache":    strings.Contains(workDir, "/.🧬semio/🦑️repo/⚡️cache/tests/"),
 		"hasOwnershipMarker": !errors.Is(statErr, os.ErrNotExist),
 	}}, nil
 }

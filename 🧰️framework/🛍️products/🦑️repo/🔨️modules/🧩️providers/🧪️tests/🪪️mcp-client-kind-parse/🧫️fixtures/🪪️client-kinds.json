@@ -1,0 +1,5 @@
+{
+  "inputs": ["", "generic", "client", "cursor", "kiro", "copilot", "claude", "codex", "CURSOR", "  codex  ", "Client", "\tKIRO\n", "cursor-chat", "unknown", "repo", "mcp", " ", "CoPiLoT"],
+  "kinds": ["generic", "cursor", "kiro", "copilot", "claude", "codex"],
+  "resolvedClients": ["cursor-chat", "cursor", "kiro-cli", "copilot-chat", "claude-code", "codex", "droid", "windsurf-chat", "antigravity-chat", "", "  "]
+}

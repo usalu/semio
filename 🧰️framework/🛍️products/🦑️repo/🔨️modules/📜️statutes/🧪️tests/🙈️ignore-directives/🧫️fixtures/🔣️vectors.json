@@ -1,0 +1,56 @@
+{
+  "$comment": "🧫️ Specification vectors of the `// compose-ignore-` directive. `content` is the file text a directive block is parsed from; `probes` are the (line, statute) pairs whose suppression decision is asserted.",
+  "documents": [
+    {
+      "name": "single-prefix",
+      "content": "// #region 🧲️Header\n// compose-ignore-code/section\nconst a = 1;\nconst b = 2;\n",
+      "probes": [
+        { "line": 1, "kind": "code/section/empty" },
+        { "line": 2, "kind": "code/section/empty" },
+        { "line": 3, "kind": "code/section/empty" },
+        { "line": 3, "kind": "code/definition/missing-summary" },
+        { "line": 102, "kind": "code/section/empty" },
+        { "line": 103, "kind": "code/section/empty" }
+      ]
+    },
+    {
+      "name": "comma-separated-prefixes",
+      "content": "// compose-ignore-code/section/empty, code/definition\nconst a = 1;\n",
+      "probes": [
+        { "line": 2, "kind": "code/section/empty" },
+        { "line": 2, "kind": "code/section/missing-summary" },
+        { "line": 2, "kind": "code/definition/missing-summary" },
+        { "line": 2, "kind": "code/definition/missing-requirements" },
+        { "line": 2, "kind": "code/file/missing-summary" }
+      ]
+    },
+    {
+      "name": "indented-and-blank-entries",
+      "content": "const a = 1;\n    // compose-ignore-folder/name,,  ,file/name\nconst b = 2;\n",
+      "probes": [
+        { "line": 1, "kind": "folder/name/missing-emoji" },
+        { "line": 3, "kind": "folder/name/missing-emoji" },
+        { "line": 3, "kind": "file/name/missing-emoji" },
+        { "line": 3, "kind": "code/section/empty" }
+      ]
+    },
+    {
+      "name": "two-directives",
+      "content": "// compose-ignore-code/file\nconst a = 1;\n// compose-ignore-code/comment\nconst b = 2;\n",
+      "probes": [
+        { "line": 2, "kind": "code/file/missing-summary" },
+        { "line": 2, "kind": "code/comment/inline" },
+        { "line": 4, "kind": "code/file/missing-summary" },
+        { "line": 4, "kind": "code/comment/inline" }
+      ]
+    },
+    {
+      "name": "no-directive",
+      "content": "// a plain comment\nconst a = 1;\n",
+      "probes": [
+        { "line": 1, "kind": "code/section/empty" },
+        { "line": 2, "kind": "code/section/empty" }
+      ]
+    }
+  ]
+}

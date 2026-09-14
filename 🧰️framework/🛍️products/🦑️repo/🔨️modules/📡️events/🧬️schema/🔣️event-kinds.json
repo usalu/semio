@@ -1,0 +1,289 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/repo/events/event-kinds.json",
+  "title": "Repo event kinds",
+  "description": "📋️ Single source of truth for every repo event kind string. Go and Rust both load this file.",
+  "schemaVersion": 1,
+  "kinds": [
+    {
+      "constant": "EventTicketOpenStarting",
+      "kind": "ticket.open.starting"
+    },
+    {
+      "constant": "EventTicketOpenEnded",
+      "kind": "ticket.open.ended"
+    },
+    {
+      "constant": "EventTicketCloseStarting",
+      "kind": "ticket.close.starting"
+    },
+    {
+      "constant": "EventTicketCloseEnded",
+      "kind": "ticket.close.ended"
+    },
+    {
+      "constant": "EventTicketReopenStarting",
+      "kind": "ticket.reopen.starting"
+    },
+    {
+      "constant": "EventTicketReopenEnded",
+      "kind": "ticket.reopen.ended"
+    },
+    {
+      "constant": "EventTicketChangeStarting",
+      "kind": "ticket.change.starting"
+    },
+    {
+      "constant": "EventTicketChangeEnded",
+      "kind": "ticket.change.ended"
+    },
+    {
+      "constant": "EventTicketReadStarting",
+      "kind": "ticket.read.starting"
+    },
+    {
+      "constant": "EventTicketReadEnded",
+      "kind": "ticket.read.ended"
+    },
+    {
+      "constant": "EventGoalOpenStarting",
+      "kind": "goal.open.starting"
+    },
+    {
+      "constant": "EventGoalOpenEnded",
+      "kind": "goal.open.ended"
+    },
+    {
+      "constant": "EventGoalCloseStarting",
+      "kind": "goal.close.starting"
+    },
+    {
+      "constant": "EventGoalCloseEnded",
+      "kind": "goal.close.ended"
+    },
+    {
+      "constant": "EventGoalReopenStarting",
+      "kind": "goal.reopen.starting"
+    },
+    {
+      "constant": "EventGoalReopenEnded",
+      "kind": "goal.reopen.ended"
+    },
+    {
+      "constant": "EventGoalChangeStarting",
+      "kind": "goal.change.starting"
+    },
+    {
+      "constant": "EventGoalChangeEnded",
+      "kind": "goal.change.ended"
+    },
+    {
+      "constant": "EventContributorAddStarting",
+      "kind": "contributor.add.starting"
+    },
+    {
+      "constant": "EventContributorAddEnded",
+      "kind": "contributor.add.ended"
+    },
+    {
+      "constant": "EventContributorRemoveStarting",
+      "kind": "contributor.remove.starting"
+    },
+    {
+      "constant": "EventContributorRemoveEnded",
+      "kind": "contributor.remove.ended"
+    },
+    {
+      "constant": "EventCheckpointStarting",
+      "kind": "checkpoint.starting"
+    },
+    {
+      "constant": "EventCheckpointEnded",
+      "kind": "checkpoint.ended"
+    },
+    {
+      "constant": "EventTodoCreateStarting",
+      "kind": "todo.create.starting"
+    },
+    {
+      "constant": "EventTodoCreateEnded",
+      "kind": "todo.create.ended"
+    },
+    {
+      "constant": "EventTodoChangeStarting",
+      "kind": "todo.change.starting"
+    },
+    {
+      "constant": "EventTodoChangeEnded",
+      "kind": "todo.change.ended"
+    },
+    {
+      "constant": "EventTodoDeleteStarting",
+      "kind": "todo.delete.starting"
+    },
+    {
+      "constant": "EventTodoDeleteEnded",
+      "kind": "todo.delete.ended"
+    },
+    {
+      "constant": "EventDraftCreateStarting",
+      "kind": "draft.create.starting"
+    },
+    {
+      "constant": "EventDraftCreateEnded",
+      "kind": "draft.create.ended"
+    },
+    {
+      "constant": "EventDraftDeleteStarting",
+      "kind": "draft.delete.starting"
+    },
+    {
+      "constant": "EventDraftDeleteEnded",
+      "kind": "draft.delete.ended"
+    },
+    {
+      "constant": "EventFileCreateStarting",
+      "kind": "file.create.starting"
+    },
+    {
+      "constant": "EventFileCreateEnded",
+      "kind": "file.create.ended"
+    },
+    {
+      "constant": "EventFileMoveStarting",
+      "kind": "file.move.starting"
+    },
+    {
+      "constant": "EventFileMoveEnded",
+      "kind": "file.move.ended"
+    },
+    {
+      "constant": "EventFileDeleteStarting",
+      "kind": "file.delete.starting"
+    },
+    {
+      "constant": "EventFileDeleteEnded",
+      "kind": "file.delete.ended"
+    },
+    {
+      "constant": "EventFolderCreateStarting",
+      "kind": "folder.create.starting"
+    },
+    {
+      "constant": "EventFolderCreateEnded",
+      "kind": "folder.create.ended"
+    },
+    {
+      "constant": "EventFolderMoveStarting",
+      "kind": "folder.move.starting"
+    },
+    {
+      "constant": "EventFolderMoveEnded",
+      "kind": "folder.move.ended"
+    },
+    {
+      "constant": "EventFolderDeleteStarting",
+      "kind": "folder.delete.starting"
+    },
+    {
+      "constant": "EventFolderDeleteEnded",
+      "kind": "folder.delete.ended"
+    },
+    {
+      "constant": "EventSectionCreateStarting",
+      "kind": "section.create.starting"
+    },
+    {
+      "constant": "EventSectionCreateEnded",
+      "kind": "section.create.ended"
+    },
+    {
+      "constant": "EventSectionMoveStarting",
+      "kind": "section.move.starting"
+    },
+    {
+      "constant": "EventSectionMoveEnded",
+      "kind": "section.move.ended"
+    },
+    {
+      "constant": "EventSectionDeleteStarting",
+      "kind": "section.delete.starting"
+    },
+    {
+      "constant": "EventSectionDeleteEnded",
+      "kind": "section.delete.ended"
+    },
+    {
+      "constant": "EventIntegrateStarting",
+      "kind": "integrate.starting"
+    },
+    {
+      "constant": "EventIntegrateEnded",
+      "kind": "integrate.ended"
+    },
+    {
+      "constant": "EventExtractStarting",
+      "kind": "extract.starting"
+    },
+    {
+      "constant": "EventExtractEnded",
+      "kind": "extract.ended"
+    },
+    {
+      "constant": "EventExportStarting",
+      "kind": "export.starting"
+    },
+    {
+      "constant": "EventExportEnded",
+      "kind": "export.ended"
+    },
+    {
+      "constant": "EventAnalyzeStarting",
+      "kind": "analyze.starting"
+    },
+    {
+      "constant": "EventAnalyzeEnded",
+      "kind": "analyze.ended"
+    },
+    {
+      "constant": "EventFixStarting",
+      "kind": "fix.starting"
+    },
+    {
+      "constant": "EventFixEnded",
+      "kind": "fix.ended"
+    },
+    {
+      "constant": "EventTreeStarting",
+      "kind": "tree.starting"
+    },
+    {
+      "constant": "EventTreeEnded",
+      "kind": "tree.ended"
+    },
+    {
+      "constant": "EventGraphqlStarting",
+      "kind": "graphql.starting"
+    },
+    {
+      "constant": "EventGraphqlEnded",
+      "kind": "graphql.ended"
+    },
+    {
+      "constant": "EventMoveStarting",
+      "kind": "move.starting"
+    },
+    {
+      "constant": "EventMoveEnded",
+      "kind": "move.ended"
+    },
+    {
+      "constant": "EventPolicyCheckStarting",
+      "kind": "policy.check.starting"
+    },
+    {
+      "constant": "EventPolicyCheckEnded",
+      "kind": "policy.check.ended"
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+\documentclass{article}
+\usepackage{semio-viz-hierarchy}
+
+\ExplSyntaxOn
+% 📤 One record per node field, in the hierarchy's own preorder (d3 eachBefore).
+\cs_new_protected:Npn \VizProbeField #1#2#3 {
+  \tl_clear:N \l_tmpa_tl
+  \semio_viz_hierarchy_map_pre:nn {#2} {
+    \tl_put_right:Nx \l_tmpa_tl
+      { \tl_if_empty:NF \l_tmpa_tl { , } \semio_viz_hierarchy_get:nnn {#2} {#3} {##1} }
+  }
+  \semio_viz_probe_values:nV {#1} \l_tmpa_tl
+}
+% 📥 The same field in the postorder (d3 eachAfter).
+\cs_new_protected:Npn \VizProbeFieldPost #1#2#3 {
+  \tl_clear:N \l_tmpa_tl
+  \semio_viz_hierarchy_map_post:nn {#2} {
+    \tl_put_right:Nx \l_tmpa_tl
+      { \tl_if_empty:NF \l_tmpa_tl { , } \semio_viz_hierarchy_get:nnn {#2} {#3} {##1} }
+  }
+  \semio_viz_probe_values:nV {#1} \l_tmpa_tl
+}
+% 🍃 The identifiers of every leaf, in preorder.
+\cs_new_protected:Npn \VizProbeLeaves #1#2 {
+  \seq_clear:N \l_tmpa_seq
+  \semio_viz_hierarchy_leaves:nN {#2} \l_tmpb_seq
+  \seq_map_inline:Nn \l_tmpb_seq
+    { \seq_put_right:Nx \l_tmpa_seq { \semio_viz_hierarchy_get:nnn {#2} { id } {##1} } }
+  \semio_viz_probe_values:nx {#1} { \seq_use:Nn \l_tmpa_seq { , } }
+}
+% 🧬 The identifiers on the path from a node up to the root.
+\cs_new_protected:Npn \VizProbeAncestors #1#2#3 {
+  \seq_clear:N \l_tmpa_seq
+  \semio_viz_hierarchy_ancestors:nnN {#2} {#3} \l_tmpb_seq
+  \seq_map_inline:Nn \l_tmpb_seq
+    { \seq_put_right:Nx \l_tmpa_seq { \semio_viz_hierarchy_get:nnn {#2} { id } {##1} } }
+  \semio_viz_probe_values:nx {#1} { \seq_use:Nn \l_tmpa_seq { , } }
+}
+% 🔗 Every parent/child pair, source then target, in preorder.
+\cs_new_protected:Npn \VizProbeLinks #1#2 {
+  \seq_clear:N \l_tmpa_seq
+  \semio_viz_hierarchy_map_links:nn {#2} {
+    \seq_put_right:Nx \l_tmpa_seq
+      { \semio_viz_hierarchy_get:nnn {#2} { id } { \l_semio_viz_hierarchy_source_int } }
+    \seq_put_right:Nx \l_tmpa_seq
+      { \semio_viz_hierarchy_get:nnn {#2} { id } { \l_semio_viz_hierarchy_target_int } }
+  }
+  \semio_viz_probe_values:nx {#1} { \seq_use:Nn \l_tmpa_seq { , } }
+}
+\ExplSyntaxOff
+
+\begin{document}
+
+\SemioVizProbeBegin{hierarchy-aggregates}{sum-and-count}
+\SemioVizHierarchyBuild{deep}[data=demo-hierarchy-deep]
+\VizProbeField{id}{deep}{id}
+\VizProbeField{sum}{deep}{val}
+\SemioVizHierarchyBuild{deepcount}[data=demo-hierarchy-deep, aggregate=count]
+\VizProbeField{count}{deepcount}{val}
+\SemioVizHierarchyBuild{unb}[data=demo-hierarchy-unbalanced]
+\VizProbeField{id/unbalanced}{unb}{id}
+\VizProbeField{sum/unbalanced}{unb}{val}
+\SemioVizHierarchyBuild{unbcount}[data=demo-hierarchy-unbalanced, aggregate=count]
+\VizProbeField{count/unbalanced}{unbcount}{val}
+
+\SemioVizProbeBegin{hierarchy-aggregates}{depth-and-height}
+\VizProbeField{depth}{deep}{dep}
+\VizProbeField{height}{deep}{hgt}
+\VizProbeField{depth/unbalanced}{unb}{dep}
+\VizProbeField{height/unbalanced}{unb}{hgt}
+\VizProbeFieldPost{postorder}{deep}{id}
+\VizProbeFieldPost{postorder/unbalanced}{unb}{id}
+
+\SemioVizProbeBegin{hierarchy-aggregates}{sort}
+\SemioVizHierarchyBuild{s1}[data=demo-hierarchy-deep, sort=value-descending]
+\VizProbeField{value-descending}{s1}{id}
+\SemioVizHierarchyBuild{s2}[data=demo-hierarchy-deep, sort=value-ascending]
+\VizProbeField{value-ascending}{s2}{id}
+\SemioVizHierarchyBuild{s3}[data=demo-hierarchy-deep, sort=name-descending]
+\VizProbeField{name-descending}{s3}{id}
+\SemioVizHierarchyBuild{s4}[data=demo-hierarchy-unbalanced, sort=height-descending]
+\VizProbeField{height-descending}{s4}{id}
+\SemioVizHierarchyBuild{s5}[data=demo-hierarchy-unbalanced, sort=height-ascending]
+\VizProbeField{height-ascending}{s5}{id}
+
+\SemioVizProbeBegin{hierarchy-aggregates}{traversal}
+\VizProbeLeaves{leaves}{deep}
+\VizProbeLeaves{leaves/unbalanced}{unb}
+\VizProbeAncestors{ancestors}{deep}{12}
+\VizProbeAncestors{ancestors/unbalanced}{unb}{9}
+\VizProbeLinks{links}{deep}
+
+\SemioVizProbeBegin{hierarchy-aggregates}{path-stratify}
+\SemioVizHierarchyBuild{p}[data=demo-hierarchy-path, path=path, delimiter=/]
+\VizProbeField{id}{p}{id}
+\VizProbeField{sum}{p}{val}
+\VizProbeField{depth}{p}{dep}
+
+\end{document}

@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio-tech.com/repo/statutes/🔣️.json",
+  "title": "📜️ Repo statutes",
+  "description": "📜️ The statute and policy catalog both implementations load, the breach record they emit, the ignore directives that suppress one, and the breach cache envelope.",
+  "type": "object",
+  "required": ["schemaVersion", "statutes", "policies"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "statutes": { "type": "array", "items": { "$ref": "#/$defs/StatuteMeta" } },
+    "policies": { "type": "array", "items": { "$ref": "#/$defs/Policy" } }
+  },
+  "$defs": {
+    "Statute": {
+      "description": "📜️ The slash-separated identifier of one statute.",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*(?:/[a-z0-9]+(?:-[a-z0-9]+)*)*$"
+    },
+    "BreachPriority": {
+      "description": "🚦️ How urgently a breach of the statute must be repaired.",
+      "type": "string",
+      "enum": ["high", "medium", "low"]
+    },
+    "StatuteMeta": {
+      "description": "🔖️ The declared metadata of one statute.",
+      "type": "object",
+      "required": ["kind", "policyId", "priority", "reason", "solution", "autofixable"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "$ref": "#/$defs/Statute" },
+        "policyId": { "type": "string" },
+        "priority": { "$ref": "#/$defs/BreachPriority" },
+        "reason": { "type": "string", "minLength": 1 },
+        "solution": { "type": "string", "minLength": 1 },
+        "autofixable": { "type": "boolean" }
+      }
+    },
+    "Territory": {
+      "description": "🟣️ A named grouping of statutes and nested territories.",
+      "type": "object",
+      "required": ["name", "description"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "scopes": { "type": "array", "items": { "type": "string" } },
+        "groups": { "type": "array", "items": { "$ref": "#/$defs/Territory" } },
+        "kinds": { "type": "array", "items": { "$ref": "#/$defs/Statute" } }
+      }
+    },
+    "Policy": {
+      "description": "🏛️ A scoped set of territories and statutes.",
+      "type": "object",
+      "required": ["id", "name", "scopes", "groups"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": ["string", "null"] },
+        "scopes": { "type": ["array", "null"], "items": { "type": "string" } },
+        "priority": { "$ref": "#/$defs/BreachPriority" },
+        "groups": { "type": ["array", "null"], "items": { "$ref": "#/$defs/Territory" } },
+        "statutes": { "type": ["array", "null"], "items": { "$ref": "#/$defs/StatuteMeta" } }
+      }
+    },
+    "Breach": {
+      "description": "🔶️ One detected violation of a statute.",
+      "type": "object",
+      "required": ["id", "summary", "kind", "scope"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^repo/breach/" },
+        "summary": { "type": "string", "minLength": 1 },
+        "kind": { "$ref": "#/$defs/Statute" },
+        "scope": { "type": "string", "minLength": 1 },
+        "line": { "type": "integer", "minimum": 0 },
+        "column": { "type": "integer", "minimum": 0 },
+        "excerpt": { "type": "string" },
+        "priority": { "$ref": "#/$defs/BreachPriority" },
+        "autofixable": { "type": "boolean" },
+        "reason": { "type": "string" },
+        "solution": { "type": "string" }
+      }
+    },
+    "IgnoreDirectives": {
+      "description": "🙈️ The statute prefixes each `// compose-ignore-` line suppresses, keyed by its one-based line number. A directive reaches the hundred lines that follow it and never its own line.",
+      "type": "object",
+      "propertyNames": { "pattern": "^[1-9][0-9]*$" },
+      "additionalProperties": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 }
+    },
+    "BreachCacheEnvelope": {
+      "description": "🧷️ One breach cache document. The compressed form is a gzip member over this document's canonical JSON encoding; its key is the SHA-256 digest of that same encoding.",
+      "type": "object",
+      "required": ["entityId", "script", "breachs"],
+      "additionalProperties": false,
+      "properties": {
+        "entityId": { "type": "string" },
+        "script": { "type": "string" },
+        "breachs": { "type": "array", "items": { "$ref": "#/$defs/Breach" } }
+      }
+    }
+  }
+}

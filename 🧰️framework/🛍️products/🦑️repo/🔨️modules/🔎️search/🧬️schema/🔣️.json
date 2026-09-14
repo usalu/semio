@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/repo/search/1",
+  "title": "🔎️ Repo search fixtures and wire shapes",
+  "description": "🔎️ The ranking vector file the `🔍️ranked-search` case reads, the persisted index event, and the projection every implementation must produce.",
+  "$defs": {
+    "MatchTerm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["term", "fuzziness"],
+      "properties": {
+        "term": { "type": "string" },
+        "fuzziness": { "type": "integer", "minimum": 0, "description": "🎚️ The largest edit distance a word may be away from the term." }
+      }
+    },
+    "RankingVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "documents", "terms", "size"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "documents": { "type": "object", "additionalProperties": { "type": "string" }, "description": "📚️ Documents indexed first, in key order." },
+        "deleted": { "type": "array", "items": { "type": "string" }, "description": "🗑️ Identifiers deleted after the initial indexing." },
+        "reindexed": { "type": "object", "additionalProperties": { "type": "string" }, "description": "♻️ Identifiers re-indexed with new text after the initial indexing." },
+        "terms": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/MatchTerm" }, "description": "🔎️ The conjunction; every term must match." },
+        "size": { "type": "integer", "description": "✂️ Hits retained; a negative size retains everything." }
+      }
+    },
+    "RankingVectorFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "vectors"],
+      "properties": {
+        "$comment": { "type": "string" },
+        "schema": { "const": "semio.repo.search.ranking-vectors/1" },
+        "vectors": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/RankingVector" } }
+      }
+    },
+    "IndexEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "seq", "kind", "id"],
+      "description": "📨️ One line of the persisted append-only index log.",
+      "properties": {
+        "schema": { "const": "semio.search.event/1" },
+        "seq": { "type": "integer", "minimum": 1, "description": "🔢️ One-based, gapless; a gap is a corrupt index." },
+        "kind": { "enum": ["indexed", "deleted"] },
+        "id": { "type": "string", "minLength": 1 },
+        "text": { "type": "string" }
+      }
+    },
+    "RankingProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rankings"],
+      "properties": {
+        "rankings": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "🎯️ `<vector name>=<total>:<id>@<score>,<id>@<score>…` — the total counted before truncation, then the retained hits best first."
+        }
+      }
+    }
+  },
+  "oneOf": [{ "$ref": "#/$defs/RankingVectorFile" }]
+}

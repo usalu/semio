@@ -1,0 +1,310 @@
+{
+  "schema": "semio.repo.mcp.descriptions/1",
+  "kinds": [
+    "generic",
+    "cursor",
+    "kiro",
+    "copilot",
+    "claude",
+    "codex"
+  ],
+  "descriptions": {
+    "arg_plan_id": {
+      "cursor": "Set when a `.cursor/plans/*_<id>.plan.md` file exists and must be archived into the ticket on close.",
+      "copilot": "Set when a Copilot project memory file for this id exists and must be archived into the ticket on close.",
+      "claude": "Set when a `.claude/plan/<id>.md` file exists and must be archived into the ticket on close.",
+      "codex": "Set when a `.codex/memory/<repo>/<id>.md` file exists and must be archived into the ticket on close."
+    },
+    "arg_spec_id": {
+      "kiro": "Set when a `.kiro/specs/<id>/` directory exists and must be archived into the ticket on close."
+    },
+    "prompt_comply": {
+      "generic": "Use when the tree is red and you must converge implementation to passing tests without deleting assertions.",
+      "cursor": "Use when the Cursor agent must converge a red workspace to passing tests without deleting assertions.",
+      "kiro": "Use when the Kiro agent must converge a red workspace to passing tests without deleting assertions.",
+      "copilot": "Use when the Copilot agent must converge a red workspace to passing tests without deleting assertions.",
+      "claude": "Use when Claude Code must converge a red workspace to passing tests without deleting assertions.",
+      "codex": "Use when Codex must converge a red workspace to passing tests without deleting assertions."
+    },
+    "prompt_enhance": {
+      "generic": "Use when you are about to add behavior and must align the change with repository rules before editing.",
+      "cursor": "Use when the Cursor agent is about to add behavior and must align the change with repository rules before editing.",
+      "kiro": "Use when the Kiro agent is about to add behavior and must align the change with repository rules before editing.",
+      "copilot": "Use when the Copilot agent is about to add behavior and must align the change with repository rules before editing.",
+      "claude": "Use when Claude Code is about to add behavior and must align the change with repository rules before editing.",
+      "codex": "Use when Codex is about to add behavior and must align the change with repository rules before editing."
+    },
+    "prompt_refactor": {
+      "generic": "Use when a refactor is required and you must not regress behavior or tests.",
+      "cursor": "Use when the Cursor agent must refactor without regressing behavior or tests.",
+      "kiro": "Use when the Kiro agent must refactor without regressing behavior or tests.",
+      "copilot": "Use when the Copilot agent must refactor without regressing behavior or tests.",
+      "claude": "Use when Claude Code must refactor without regressing behavior or tests.",
+      "codex": "Use when Codex must refactor without regressing behavior or tests."
+    },
+    "prompt_test": {
+      "generic": "Use when tests must be extended before you claim coverage for new paths.",
+      "cursor": "Use when the Cursor agent must extend tests before claiming coverage for new paths.",
+      "kiro": "Use when the Kiro agent must extend tests before claiming coverage for new paths.",
+      "copilot": "Use when the Copilot agent must extend tests before claiming coverage for new paths.",
+      "claude": "Use when Claude Code must extend tests before claiming coverage for new paths.",
+      "codex": "Use when Codex must extend tests before claiming coverage for new paths."
+    },
+    "res_bundle_one": {
+      "generic": "Fetch when a single bundle context gate is required before editing that bundle.",
+      "cursor": "Fetch when the Cursor agent needs one bundle context gate before editing that bundle.",
+      "kiro": "Fetch when the Kiro agent needs one bundle context gate before editing that bundle.",
+      "copilot": "Fetch when the Copilot agent needs one bundle context gate before editing that bundle.",
+      "claude": "Fetch when Claude Code needs one bundle context gate before editing that bundle.",
+      "codex": "Fetch when Codex needs one bundle context gate before editing that bundle."
+    },
+    "res_bundles": {
+      "generic": "Fetch when bundle inventory is required before choosing a technology subtree.",
+      "cursor": "Fetch when bundle inventory is required before the Cursor agent chooses a technology subtree.",
+      "kiro": "Fetch when bundle inventory is required before the Kiro agent chooses a technology subtree.",
+      "copilot": "Fetch when bundle inventory is required before the Copilot agent chooses a technology subtree.",
+      "claude": "Fetch when bundle inventory is required before Claude Code chooses a technology subtree.",
+      "codex": "Fetch when bundle inventory is required before Codex chooses a technology subtree."
+    },
+    "res_checkpoint_one": {
+      "generic": "Fetch when one checkpoint record must be read before tying hooks or tickets to history.",
+      "cursor": "Fetch when the Cursor agent must read one checkpoint record before tying hooks or tickets to history.",
+      "kiro": "Fetch when the Kiro agent must read one checkpoint record before tying hooks or tickets to history.",
+      "copilot": "Fetch when the Copilot agent must read one checkpoint record before tying hooks or tickets to history.",
+      "claude": "Fetch when Claude Code must read one checkpoint record before tying hooks or tickets to history.",
+      "codex": "Fetch when Codex must read one checkpoint record before tying hooks or tickets to history."
+    },
+    "res_checkpoints": {
+      "generic": "Fetch when checkpoint inventory is required before comparing versions.",
+      "cursor": "Fetch when checkpoint inventory is required before the Cursor agent compares versions.",
+      "kiro": "Fetch when checkpoint inventory is required before the Kiro agent compares versions.",
+      "copilot": "Fetch when checkpoint inventory is required before the Copilot agent compares versions.",
+      "claude": "Fetch when checkpoint inventory is required before Claude Code compares versions.",
+      "codex": "Fetch when checkpoint inventory is required before Codex compares versions."
+    },
+    "res_contributor_one": {
+      "generic": "Fetch when one contributor record must be read before ownership-sensitive edits.",
+      "cursor": "Fetch when the Cursor agent must read one contributor record before ownership-sensitive edits.",
+      "kiro": "Fetch when the Kiro agent must read one contributor record before ownership-sensitive edits.",
+      "copilot": "Fetch when the Copilot agent must read one contributor record before ownership-sensitive edits.",
+      "claude": "Fetch when Claude Code must read one contributor record before ownership-sensitive edits.",
+      "codex": "Fetch when Codex must read one contributor record before ownership-sensitive edits."
+    },
+    "res_contributors": {
+      "generic": "Fetch when contributor listing is required before attributing sessions or checkpoints.",
+      "cursor": "Fetch when contributor listing is required before the Cursor agent attributes sessions or checkpoints.",
+      "kiro": "Fetch when contributor listing is required before the Kiro agent attributes sessions or checkpoints.",
+      "copilot": "Fetch when contributor listing is required before the Copilot agent attributes sessions or checkpoints.",
+      "claude": "Fetch when contributor listing is required before Claude Code attributes sessions or checkpoints.",
+      "codex": "Fetch when contributor listing is required before Codex attributes sessions or checkpoints."
+    },
+    "res_definition_one": {
+      "generic": "Fetch when one definition record must be confirmed before renaming or extracting it.",
+      "cursor": "Fetch when the Cursor agent must confirm one definition record before renaming or extracting it.",
+      "kiro": "Fetch when the Kiro agent must confirm one definition record before renaming or extracting it.",
+      "copilot": "Fetch when the Copilot agent must confirm one definition record before renaming or extracting it.",
+      "claude": "Fetch when Claude Code must confirm one definition record before renaming or extracting it.",
+      "codex": "Fetch when Codex must confirm one definition record before renaming or extracting it."
+    },
+    "res_definitions": {
+      "generic": "Fetch when definition discovery is required before symbol-level work.",
+      "cursor": "Fetch when definition discovery is required before the Cursor agent performs symbol-level work.",
+      "kiro": "Fetch when definition discovery is required before the Kiro agent performs symbol-level work.",
+      "copilot": "Fetch when definition discovery is required before the Copilot agent performs symbol-level work.",
+      "claude": "Fetch when definition discovery is required before Claude Code performs symbol-level work.",
+      "codex": "Fetch when definition discovery is required before Codex performs symbol-level work."
+    },
+    "res_file_one": {
+      "generic": "Fetch when a single file identity must be verified before a targeted edit.",
+      "cursor": "Fetch when the Cursor agent must verify a single file identity before a targeted edit.",
+      "kiro": "Fetch when the Kiro agent must verify a single file identity before a targeted edit.",
+      "copilot": "Fetch when the Copilot agent must verify a single file identity before a targeted edit.",
+      "claude": "Fetch when Claude Code must verify a single file identity before a targeted edit.",
+      "codex": "Fetch when Codex must verify a single file identity before a targeted edit."
+    },
+    "res_files": {
+      "generic": "Fetch when file listing is required before batch reads across a scope.",
+      "cursor": "Fetch when file listing is required before the Cursor agent batch-reads a scope.",
+      "kiro": "Fetch when file listing is required before the Kiro agent batch-reads a scope.",
+      "copilot": "Fetch when file listing is required before the Copilot agent batch-reads a scope.",
+      "claude": "Fetch when file listing is required before Claude Code batch-reads a scope.",
+      "codex": "Fetch when file listing is required before Codex batch-reads a scope."
+    },
+    "res_folder_one": {
+      "generic": "Fetch when one folder subtree must be confirmed before moves or renames under it.",
+      "cursor": "Fetch when the Cursor agent must confirm one folder subtree before moves or renames under it.",
+      "kiro": "Fetch when the Kiro agent must confirm one folder subtree before moves or renames under it.",
+      "copilot": "Fetch when the Copilot agent must confirm one folder subtree before moves or renames under it.",
+      "claude": "Fetch when Claude Code must confirm one folder subtree before moves or renames under it.",
+      "codex": "Fetch when Codex must confirm one folder subtree before moves or renames under it."
+    },
+    "res_folders": {
+      "generic": "Fetch when folder enumeration is required before path-sensitive edits.",
+      "cursor": "Fetch when folder enumeration is required before the Cursor agent performs path-sensitive edits.",
+      "kiro": "Fetch when folder enumeration is required before the Kiro agent performs path-sensitive edits.",
+      "copilot": "Fetch when folder enumeration is required before the Copilot agent performs path-sensitive edits.",
+      "claude": "Fetch when folder enumeration is required before Claude Code performs path-sensitive edits.",
+      "codex": "Fetch when folder enumeration is required before Codex performs path-sensitive edits."
+    },
+    "res_goal_one": {
+      "generic": "Fetch when one goal record must be confirmed before milestone or ticket association.",
+      "cursor": "Fetch when the Cursor agent must confirm one goal record before milestone or ticket association.",
+      "kiro": "Fetch when the Kiro agent must confirm one goal record before milestone or ticket association.",
+      "copilot": "Fetch when the Copilot agent must confirm one goal record before milestone or ticket association.",
+      "claude": "Fetch when Claude Code must confirm one goal record before milestone or ticket association.",
+      "codex": "Fetch when Codex must confirm one goal record before milestone or ticket association."
+    },
+    "res_goals": {
+      "generic": "Fetch when goal document is required before opening or linking a ticket.",
+      "cursor": "Fetch when goal document is required before the Cursor agent opens or links a ticket.",
+      "kiro": "Fetch when goal document is required before the Kiro agent opens or links a ticket.",
+      "copilot": "Fetch when goal document is required before the Copilot agent opens or links a ticket.",
+      "claude": "Fetch when goal document is required before Claude Code opens or links a ticket.",
+      "codex": "Fetch when goal document is required before Codex opens or links a ticket."
+    },
+    "res_policies": {
+      "generic": "Fetch when policy inventory is required before an audit or autofix pass.",
+      "cursor": "Fetch when policy inventory is required before the Cursor agent starts an audit or autofix pass.",
+      "kiro": "Fetch when policy inventory is required before the Kiro agent starts an audit or autofix pass.",
+      "copilot": "Fetch when policy inventory is required before the Copilot agent starts an audit or autofix pass.",
+      "claude": "Fetch when policy inventory is required before Claude Code starts an audit or autofix pass.",
+      "codex": "Fetch when policy inventory is required before Codex starts an audit or autofix pass."
+    },
+    "res_policy_one": {
+      "generic": "Fetch when one policy scope must be verified before interpreting breaches.",
+      "cursor": "Fetch when the Cursor agent must verify one policy scope before interpreting breaches.",
+      "kiro": "Fetch when the Kiro agent must verify one policy scope before interpreting breaches.",
+      "copilot": "Fetch when the Copilot agent must verify one policy scope before interpreting breaches.",
+      "claude": "Fetch when Claude Code must verify one policy scope before interpreting breaches.",
+      "codex": "Fetch when Codex must verify one policy scope before interpreting breaches."
+    },
+    "res_root": {
+      "generic": "Fetch when the session anchor for the repository root is required before any scoped read.",
+      "cursor": "Fetch when the Cursor session anchor for the repository root is required before any scoped read.",
+      "kiro": "Fetch when the Kiro session anchor for the repository root is required before any scoped read.",
+      "copilot": "Fetch when the Copilot session anchor for the repository root is required before any scoped read.",
+      "claude": "Fetch when Claude Code needs the repository root anchor before any scoped read.",
+      "codex": "Fetch when Codex needs the repository root anchor before any scoped read."
+    },
+    "res_section_one": {
+      "generic": "Fetch when one section boundary must be loaded before a surgical edit inside that section.",
+      "cursor": "Fetch when the Cursor agent must load one section boundary before a surgical edit inside that section.",
+      "kiro": "Fetch when the Kiro agent must load one section boundary before a surgical edit inside that section.",
+      "copilot": "Fetch when the Copilot agent must load one section boundary before a surgical edit inside that section.",
+      "claude": "Fetch when Claude Code must load one section boundary before a surgical edit inside that section.",
+      "codex": "Fetch when Codex must load one section boundary before a surgical edit inside that section."
+    },
+    "res_sections": {
+      "generic": "Fetch when section discovery is required before region-scoped refactors.",
+      "cursor": "Fetch when section discovery is required before the Cursor agent runs region-scoped refactors.",
+      "kiro": "Fetch when section discovery is required before the Kiro agent runs region-scoped refactors.",
+      "copilot": "Fetch when section discovery is required before the Copilot agent runs region-scoped refactors.",
+      "claude": "Fetch when section discovery is required before Claude Code runs region-scoped refactors.",
+      "codex": "Fetch when section discovery is required before Codex runs region-scoped refactors."
+    },
+    "res_statute_one": {
+      "generic": "Fetch when one breach-kind record must be read before applying a fix strategy.",
+      "cursor": "Fetch when the Cursor agent must read one breach-kind record before applying a fix strategy.",
+      "kiro": "Fetch when the Kiro agent must read one breach-kind record before applying a fix strategy.",
+      "copilot": "Fetch when the Copilot agent must read one breach-kind record before applying a fix strategy.",
+      "claude": "Fetch when Claude Code must read one breach-kind record before applying a fix strategy.",
+      "codex": "Fetch when Codex must read one breach-kind record before applying a fix strategy."
+    },
+    "res_statutes": {
+      "generic": "Fetch when breach-kind listing is required before triage ordering.",
+      "cursor": "Fetch when breach-kind listing is required before the Cursor agent orders triage.",
+      "kiro": "Fetch when breach-kind listing is required before the Kiro agent orders triage.",
+      "copilot": "Fetch when breach-kind listing is required before the Copilot agent orders triage.",
+      "claude": "Fetch when breach-kind listing is required before Claude Code orders triage.",
+      "codex": "Fetch when breach-kind listing is required before Codex orders triage."
+    },
+    "res_ticket_one": {
+      "generic": "Fetch when one ticket record must be read before closing or reopening that ticket.",
+      "cursor": "Fetch when the Cursor agent must read one ticket record before closing or reopening that ticket.",
+      "kiro": "Fetch when the Kiro agent must read one ticket record before closing or reopening that ticket.",
+      "copilot": "Fetch when the Copilot agent must read one ticket record before closing or reopening that ticket.",
+      "claude": "Fetch when Claude Code must read one ticket record before closing or reopening that ticket.",
+      "codex": "Fetch when Codex must read one ticket record before closing or reopening that ticket."
+    },
+    "res_tickets": {
+      "generic": "Fetch when ticket inventory is required before choosing where to attach work.",
+      "cursor": "Fetch when ticket inventory is required before the Cursor agent chooses where to attach work.",
+      "kiro": "Fetch when ticket inventory is required before the Kiro agent chooses where to attach work.",
+      "copilot": "Fetch when ticket inventory is required before the Copilot agent chooses where to attach work.",
+      "claude": "Fetch when ticket inventory is required before Claude Code chooses where to attach work.",
+      "codex": "Fetch when ticket inventory is required before Codex chooses where to attach work."
+    },
+    "tool_file_integrate": {
+      "generic": "Use when two files must be merged at a named region boundary without losing section markers.",
+      "cursor": "Use when the Cursor agent must merge two files at a named region boundary without losing section markers.",
+      "kiro": "Use when the Kiro agent must merge two files at a named region boundary without losing section markers.",
+      "copilot": "Use when the Copilot agent must merge two files at a named region boundary without losing section markers.",
+      "claude": "Use when Claude Code must merge two files at a named region boundary without losing section markers.",
+      "codex": "Use when Codex must merge two files at a named region boundary without losing section markers."
+    },
+    "tool_goal_close": {
+      "generic": "Call when a goal is fulfilled and must be closed with an evidence summary.",
+      "cursor": "Call when the Cursor agent has fulfilled a goal and must close it with an evidence summary.",
+      "kiro": "Call when the Kiro agent has fulfilled a goal and must close it with an evidence summary.",
+      "copilot": "Call when the Copilot agent has fulfilled a goal and must close it with an evidence summary.",
+      "claude": "Call when Claude Code has fulfilled a goal and must close it with an evidence summary.",
+      "codex": "Call when Codex has fulfilled a goal and must close it with an evidence summary."
+    },
+    "tool_goal_open": {
+      "generic": "Call when a new goal must be recorded before any ticket can reference it.",
+      "cursor": "Call when the Cursor agent must record a new goal before any ticket references it.",
+      "kiro": "Call when the Kiro agent must record a new goal before any ticket references it.",
+      "copilot": "Call when the Copilot agent must record a new goal before any ticket references it.",
+      "claude": "Call when Claude Code must record a new goal before any ticket references it.",
+      "codex": "Call when Codex must record a new goal before any ticket references it."
+    },
+    "tool_goal_reopen": {
+      "generic": "Call when a closed goal must be reopened because its outcome did not hold.",
+      "cursor": "Call when the Cursor agent must reopen a closed goal because its outcome did not hold.",
+      "kiro": "Call when the Kiro agent must reopen a closed goal because its outcome did not hold.",
+      "copilot": "Call when the Copilot agent must reopen a closed goal because its outcome did not hold.",
+      "claude": "Call when Claude Code must reopen a closed goal because its outcome did not hold.",
+      "codex": "Call when Codex must reopen a closed goal because its outcome did not hold."
+    },
+    "tool_section_extract": {
+      "generic": "Use when a region must be split out into its own file before shrinking the original module.",
+      "cursor": "Use when the Cursor agent must split a region into its own file before shrinking the original module.",
+      "kiro": "Use when the Kiro agent must split a region into its own file before shrinking the original module.",
+      "copilot": "Use when the Copilot agent must split a region into its own file before shrinking the original module.",
+      "claude": "Use when Claude Code must split a region into its own file before shrinking the original module.",
+      "codex": "Use when Codex must split a region into its own file before shrinking the original module."
+    },
+    "tool_section_move": {
+      "generic": "Use when a region rename is required and the surrounding file context is already loaded.",
+      "cursor": "Use when the Cursor agent must rename a region and the surrounding file context is already loaded.",
+      "kiro": "Use when the Kiro agent must rename a region and the surrounding file context is already loaded.",
+      "copilot": "Use when the Copilot agent must rename a region and the surrounding file context is already loaded.",
+      "claude": "Use when Claude Code must rename a region and the surrounding file context is already loaded.",
+      "codex": "Use when Codex must rename a region and the surrounding file context is already loaded."
+    },
+    "tool_ticket_close": {
+      "generic": "Use only when the tracked task is finished, the summary is final, and the touched paths list is complete. Oversized ticket-folder artifacts (files above 5 MiB, folders above 10 MiB) are deleted automatically on close.",
+      "cursor": "Use only when the Cursor agent task is finished, the summary is final, the touched paths list is complete, and any bound plan should be archived into the ticket folder. Oversized ticket-folder artifacts (files above 5 MiB, folders above 10 MiB) are deleted automatically on close.",
+      "kiro": "Use only when the Kiro agent task is finished, the summary is final, the touched paths list is complete, and any bound spec should be archived into the ticket folder. Oversized ticket-folder artifacts (files above 5 MiB, folders above 10 MiB) are deleted automatically on close.",
+      "copilot": "Use only when the Copilot agent task is finished, the summary is final, the touched paths list is complete, and any bound memory plan should be archived into the ticket folder. Oversized ticket-folder artifacts (files above 5 MiB, folders above 10 MiB) are deleted automatically on close.",
+      "claude": "Use only when the Claude Code task is finished, the summary is final, the touched paths list is complete, and any bound plan should be archived into the ticket folder. Oversized ticket-folder artifacts (files above 5 MiB, folders above 10 MiB) are deleted automatically on close.",
+      "codex": "Use only when the Codex task is finished, the summary is final, the touched paths list is complete, and any bound memory should be archived into the ticket folder. Oversized ticket-folder artifacts (files above 5 MiB, folders above 10 MiB) are deleted automatically on close."
+    },
+    "tool_ticket_open": {
+      "generic": "Use at the start of any tracked task that will touch the repository and needs a durable workspace folder.",
+      "cursor": "Use at the start of a Cursor agent task that will touch the repository and needs a durable workspace folder; use when a plan id should be bound for later archival on close.",
+      "kiro": "Use at the start of a Kiro agent task that will touch the repository and needs a durable workspace folder; use when a spec id should be bound for later archival on close.",
+      "copilot": "Use at the start of a Copilot agent task that will touch the repository and needs a durable workspace folder; use when a memory plan id should be bound for later archival on close.",
+      "claude": "Use at the start of a Claude Code task that will touch the repository and needs a durable workspace folder; use when a plan id should be bound for later archival on close.",
+      "codex": "Use at the start of a Codex task that will touch the repository and needs a durable workspace folder; use when a memory id should be bound for later archival on close."
+    },
+    "tool_ticket_reopen": {
+      "generic": "Use when work must continue on a closed ticket before any new edits land.",
+      "cursor": "Use when the Cursor agent must continue a closed ticket before new edits; use when rebinding a plan id for archival on the next close.",
+      "kiro": "Use when the Kiro agent must continue a closed ticket before new edits; use when rebinding a spec id for archival on the next close.",
+      "copilot": "Use when the Copilot agent must continue a closed ticket before new edits; use when rebinding a memory plan id for archival on the next close.",
+      "claude": "Use when Claude Code must continue a closed ticket before new edits; use when rebinding a plan id for archival on the next close.",
+      "codex": "Use when Codex must continue a closed ticket before new edits; use when rebinding a memory id for archival on the next close."
+    }
+  }
+}

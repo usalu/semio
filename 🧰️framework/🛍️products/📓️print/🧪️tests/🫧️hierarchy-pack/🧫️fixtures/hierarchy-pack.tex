@@ -1,0 +1,50 @@
+\documentclass{article}
+\usepackage{semio-viz-hierarchy}
+
+\ExplSyntaxOn
+% 📤 One record per node field, in the hierarchy's own preorder (d3 eachBefore).
+\cs_new_protected:Npn \VizProbeField #1#2#3 {
+  \tl_clear:N \l_tmpa_tl
+  \semio_viz_hierarchy_map_pre:nn {#2} {
+    \tl_put_right:Nx \l_tmpa_tl
+      { \tl_if_empty:NF \l_tmpa_tl { , } \semio_viz_hierarchy_get:nnn {#2} {#3} {##1} }
+  }
+  \semio_viz_probe_values:nV {#1} \l_tmpa_tl
+}
+% ⭕ Centre and radius of every circle of a laid-out hierarchy.
+\cs_new_protected:Npn \VizProbeCircles #1#2 {
+  \VizProbeField{#1/x}{#2}{x}
+  \VizProbeField{#1/y}{#2}{y}
+  \VizProbeField{#1/r}{#2}{r}
+}
+\ExplSyntaxOff
+
+\begin{document}
+
+\SemioVizProbeBegin{hierarchy-pack}{default-radius}
+\SemioVizHierarchyBuild{deep}[data=demo-hierarchy-deep]
+\VizProbeField{id}{deep}{id}
+\SemioVizLayout{pack}{deep}{k1}[size={100,100}]
+\VizProbeCircles{plain}{k1}
+\SemioVizLayout{pack}{deep}{k2}[size={120,80}]
+\VizProbeCircles{oblong}{k2}
+
+\SemioVizProbeBegin{hierarchy-pack}{padding}
+\SemioVizLayout{pack}{deep}{k3}[size={100,100}, padding=3]
+\VizProbeCircles{padded}{k3}
+
+\SemioVizProbeBegin{hierarchy-pack}{explicit-radius}
+\SemioVizLayout{pack}{deep}{k4}[size={100,100}, radius=value]
+\VizProbeCircles{value}{k4}
+\SemioVizLayout{pack}{deep}{k5}[size={100,100}, radius=4]
+\VizProbeCircles{constant}{k5}
+
+\SemioVizProbeBegin{hierarchy-pack}{unbalanced}
+\SemioVizHierarchyBuild{unb}[data=demo-hierarchy-unbalanced]
+\VizProbeField{id}{unb}{id}
+\SemioVizLayout{pack}{unb}{k6}[size={90,90}]
+\VizProbeCircles{plain}{k6}
+\SemioVizLayout{pack}{unb}{k7}[size={90,90}, padding=2]
+\VizProbeCircles{padded}{k7}
+
+\end{document}

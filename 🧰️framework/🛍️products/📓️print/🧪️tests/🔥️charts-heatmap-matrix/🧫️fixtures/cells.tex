@@ -1,0 +1,10 @@
+\documentclass{article}
+\usepackage{semio-viz-matrix-heatmap}
+\begin{document}
+\ExplSyntaxOn
+\SemioVizProbeOn
+\SemioVizChartsDryRun
+\SemioVizProbeBegin{charts-heatmap-matrix}{cells}
+\SemioVizRunFamily{heatmap}[data=demo-matrix, labels=false, width=64, height=40, pad=4]
+\ExplSyntaxOff
+\end{document}

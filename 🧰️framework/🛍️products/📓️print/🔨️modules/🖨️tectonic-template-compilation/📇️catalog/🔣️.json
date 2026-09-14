@@ -461,10 +461,10 @@
     },
     {
       "id": "viz-api",
-      "texPath": "🧾️template/📊️viz-gallery/🔓️viz-api.tex",
+      "texPath": "🧾️template/📊️viz-api/🔓️viz-api.tex",
       "collection": "visualizations",
       "sources": [
-        "🧾️template/📊️viz-gallery/🔓️viz-api.tex"
+        "🧾️template/📊️viz-api/🔓️viz-api.tex"
       ]
     },
     {

@@ -1,0 +1,22 @@
+{
+  "schema": "semio.repo.goals.goal-documents/1",
+  "$comment": "📄️ Real 🎯️goal.json documents copied verbatim out of .🧬semio/🦑️repo/🎯️goals by 🏗️build-goals-fixtures.ts. Recorded from 57 goals in the tree.",
+  "documents": [
+    {
+      "id": "AI-OPTIMIZED-REPO",
+      "json": "{\n  \"title\": \"AI-optimized Repo\",\n  \"description\": \"AI-optimized Repo goal\",\n  \"prompt\": \"Goal for AI-optimized repository improvements\",\n  \"status\": \"open\",\n  \"dates\": {\n    \"due\": \"2026-12-31\"\n  },\n  \"client\": \"windsurf-chat\",\n  \"llm\": \"sonnet-4-5\",\n  \"github\": {\n    \"milestone\": \"https://github.com/usalu/semio/milestone/39\"\n  }\n}\n"
+    },
+    {
+      "id": "AI-OPTIMIZED-REPO/CONSISTENT-REPO-HISTORY",
+      "json": "{\n  \"title\": \"Consistent Repo History\",\n  \"description\": \"Goal for Consistent Repo History\",\n  \"prompt\": \"Instructions for Consistent Repo History\",\n  \"status\": \"open\",\n  \"dates\": {\n    \"due\": \"2026-02-15\"\n  },\n  \"client\": \"copilot-chat\",\n  \"llm\": \"gemini-3-pro\",\n  \"parent\": \"🎯️aioptimizedrepo\",\n  \"github\": {\n    \"issue\": \"https://github.com/usalu/semio/issues/404\"\n  }\n}\n"
+    },
+    {
+      "id": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+      "json": "{\n  \"title\": \"Repo CLI\",\n  \"description\": \"Goal for Repo CLI\",\n  \"prompt\": \"Instructions for Repo CLI\",\n  \"status\": \"open\",\n  \"dates\": {\n    \"due\": \"2026-02-15\"\n  },\n  \"client\": \"copilot-chat\",\n  \"llm\": \"gemini-3-pro\",\n  \"parent\": \"🎯️aioptimizedrepo🎯️repoclient🎯️repobinary\",\n  \"github\": {\n    \"issue\": \"https://github.com/usalu/semio/issues/366\"\n  }\n}\n"
+    },
+    {
+      "id": "ANIMATE",
+      "json": "{\n  \"title\": \"Animate\",\n  \"description\": \"Manim-class Rust animation compiler: Sobject scene graph, imperative Scene timeline, headless video and present engines.\",\n  \"prompt\": \"Build animate technology with full Manim parity — animate/core, animate/video, animate/present — replacing framework/product/presentation.\",\n  \"status\": \"open\",\n  \"dates\": {\n    \"due\": \"2026-12-31\"\n  },\n  \"client\": \"cursor-chat\",\n  \"llm\": \"composer-2.5\"\n}\n"
+    }
+  ]
+}

@@ -1,8 +1,31 @@
 go 1.25
 
 use (
-	./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli
-	./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp
-	./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library
-	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧾️yaml/📦️packages/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/📦️packages/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🪪️identity/📦️packages/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/📐️model/📦️packages/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🗣️languages/📦️packages/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/📡️events/📦️packages/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧩️providers/📦️packages/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/📦️packages/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🗂️codebase/📦️packages/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/📊️metrics/📦️packages/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🚚️move/📦️packages/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧑️contributors/📦️packages/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🎯️goals/📦️packages/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/📦️packages/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/📝️todos/📦️packages/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🏃️test-runner/📦️packages/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🪝️hooks/📦️packages/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🌳️tree/📦️packages/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🐹️go/🚀️bin
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🚀️bin
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go/📦️main
 )

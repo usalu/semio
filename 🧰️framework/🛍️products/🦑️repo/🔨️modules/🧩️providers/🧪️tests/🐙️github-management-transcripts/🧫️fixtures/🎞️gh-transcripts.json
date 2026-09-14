@@ -1,0 +1,76 @@
+{
+  "issue-view-is-parsed": {
+    "exchanges": [
+      {
+        "argv": ["gh", "issue", "view", "https://github.com/usalu/semio/issues/412", "--json", "url,state,milestone,labels,title,body"],
+        "stdout": "{\"url\":\"https://github.com/usalu/semio/issues/412\",\"state\":\"OPEN\",\"title\":\"Split the godfile\",\"body\":\"One package per domain.\",\"milestone\":{\"number\":17,\"title\":\"26/09\"},\"labels\":[{\"name\":\"ticket\"},{\"name\":\"@repo\"}]}\n",
+        "stderr": "",
+        "status": 0
+      }
+    ]
+  },
+  "milestone-list-is-scanned-for-a-title": {
+    "exchanges": [
+      {
+        "argv": ["gh", "api", "repos/:owner/:repo/milestones", "-X", "GET", "-F", "state=all", "-F", "per_page=100", "--paginate", "--jq", ".[]"],
+        "stdout": "{\"number\":16,\"title\":\"26/08\",\"description\":\"August\",\"url\":\"https://api.github.com/repos/usalu/semio/milestones/16\",\"due_on\":\"2026-08-31T00:00:00Z\",\"state\":\"closed\"}\n{\"number\":17,\"title\":\"26/09\",\"description\":\"September\",\"url\":\"https://api.github.com/repos/usalu/semio/milestones/17\",\"due_on\":\"2026-09-30T00:00:00Z\",\"state\":\"open\"}\n",
+        "stderr": "",
+        "status": 0
+      }
+    ]
+  },
+  "label-catalog-is-listed": {
+    "exchanges": [
+      {
+        "argv": ["gh", "label", "list", "--json", "name", "--limit", "1000"],
+        "stdout": "[{\"name\":\"ticket\"},{\"name\":\"@repo\"},{\"name\":\"@stale\"}]\n",
+        "stderr": "",
+        "status": 0
+      }
+    ]
+  },
+  "create-issue-resolves-the-milestone-title-first": {
+    "exchanges": [
+      {
+        "argv": ["gh", "api", "repos/{owner}/{repo}/milestones/17", "--jq", ".title"],
+        "stdout": "26/09\n",
+        "stderr": "",
+        "status": 0
+      },
+      {
+        "argv": ["gh", "issue", "create", "--title", "Split the godfile", "--body", "One package per domain.", "--label", "ticket", "--milestone", "26/09"],
+        "stdout": "",
+        "stderr": "Creating issue in usalu/semio\nhttps://github.com/usalu/semio/issues/412\n",
+        "status": 0
+      },
+      {
+        "argv": ["gh", "project", "item-add", "2", "--owner", "usalu", "--url", "https://github.com/usalu/semio/issues/412"],
+        "stdout": "",
+        "stderr": "",
+        "status": 0
+      },
+      {
+        "argv": ["gh", "api", "user", "--jq", ".login"],
+        "stdout": "usalu\n",
+        "stderr": "",
+        "status": 0
+      },
+      {
+        "argv": ["gh", "issue", "edit", "https://github.com/usalu/semio/issues/412", "--add-assignee", "usalu"],
+        "stdout": "",
+        "stderr": "",
+        "status": 0
+      }
+    ]
+  },
+  "a-failing-call-carries-the-trimmed-stderr": {
+    "exchanges": [
+      {
+        "argv": ["gh", "issue", "view", "https://github.com/usalu/semio/issues/999", "--json", "url,state,milestone,labels,title,body"],
+        "stdout": "",
+        "stderr": "  could not resolve to an Issue with the number 999  \n",
+        "status": 1
+      }
+    ]
+  }
+}

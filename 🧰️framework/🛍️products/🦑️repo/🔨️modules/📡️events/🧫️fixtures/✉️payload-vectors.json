@@ -1,0 +1,341 @@
+{
+  "schema": "semio.repo.events.payload/1",
+  "$comment": "✉️ Golden encodings per payload type. `input` is the loosely populated value; `encoded` is the exact JSON the implementation must marshal, including field order and omit-empty semantics.",
+  "cases": [
+    {
+      "id": "TicketPayload-0",
+      "type": "TicketPayload",
+      "input": {
+        "id": "26/09/06/SOME-SLUG",
+        "year": 2026,
+        "month": 9,
+        "day": 6,
+        "slug": "SOME-SLUG"
+      },
+      "encoded": "{\"id\":\"26/09/06/SOME-SLUG\",\"year\":2026,\"month\":9,\"day\":6,\"slug\":\"SOME-SLUG\"}"
+    },
+    {
+      "id": "TicketPayload-1",
+      "type": "TicketPayload",
+      "input": {
+        "id": "26/09/06/SOME-SLUG"
+      },
+      "encoded": "{\"id\":\"26/09/06/SOME-SLUG\"}"
+    },
+    {
+      "id": "TicketOpenPayload-2",
+      "type": "TicketOpenPayload",
+      "input": {
+        "id": "26/09/06/A",
+        "year": 2026,
+        "month": 9,
+        "day": 6,
+        "slug": "A",
+        "title": "A Title",
+        "prompt": "do it",
+        "client": "claude-code",
+        "goal": "g/sub",
+        "llm": "opus-5",
+        "effort": "high",
+        "author": "ueli",
+        "parent": "26/09/05/P"
+      },
+      "encoded": "{\"id\":\"26/09/06/A\",\"year\":2026,\"month\":9,\"day\":6,\"slug\":\"A\",\"title\":\"A Title\",\"prompt\":\"do it\",\"llm\":\"opus-5\",\"effort\":\"high\",\"client\":\"claude-code\",\"author\":\"ueli\",\"goal\":\"g/sub\",\"parent\":\"26/09/05/P\"}"
+    },
+    {
+      "id": "TicketOpenPayload-3",
+      "type": "TicketOpenPayload",
+      "input": {
+        "id": "26/09/06/A",
+        "title": "A Title",
+        "prompt": "do it",
+        "client": "claude-code",
+        "goal": "g/sub",
+        "llm": "",
+        "effort": "",
+        "author": "",
+        "parent": ""
+      },
+      "encoded": "{\"id\":\"26/09/06/A\",\"title\":\"A Title\",\"prompt\":\"do it\",\"client\":\"claude-code\",\"goal\":\"g/sub\"}"
+    },
+    {
+      "id": "TicketClosePayload-4",
+      "type": "TicketClosePayload",
+      "input": {
+        "id": "26/09/06/A",
+        "summary": "done",
+        "files": [
+          "a.go",
+          "b.rs"
+        ],
+        "author": "ueli"
+      },
+      "encoded": "{\"id\":\"26/09/06/A\",\"summary\":\"done\",\"files\":[\"a.go\",\"b.rs\"],\"author\":\"ueli\"}"
+    },
+    {
+      "id": "TicketClosePayload-5",
+      "type": "TicketClosePayload",
+      "input": {
+        "id": "26/09/06/A",
+        "summary": "done",
+        "files": null
+      },
+      "encoded": "{\"id\":\"26/09/06/A\",\"summary\":\"done\",\"files\":null}"
+    },
+    {
+      "id": "TicketReopenPayload-6",
+      "type": "TicketReopenPayload",
+      "input": {
+        "id": "26/09/06/A",
+        "prompt": "again",
+        "client": "codex"
+      },
+      "encoded": "{\"id\":\"26/09/06/A\",\"prompt\":\"again\",\"client\":\"codex\"}"
+    },
+    {
+      "id": "TicketChangePayload-7",
+      "type": "TicketChangePayload",
+      "input": {
+        "id": "26/09/06/A",
+        "title": "New",
+        "goal": null,
+        "author": "ueli"
+      },
+      "encoded": "{\"id\":\"26/09/06/A\",\"title\":\"New\",\"author\":\"ueli\"}"
+    },
+    {
+      "id": "TicketChangePayload-8",
+      "type": "TicketChangePayload",
+      "input": {
+        "id": "26/09/06/A"
+      },
+      "encoded": "{\"id\":\"26/09/06/A\"}"
+    },
+    {
+      "id": "GoalPayload-9",
+      "type": "GoalPayload",
+      "input": {
+        "id": "root/leaf"
+      },
+      "encoded": "{\"id\":\"root/leaf\"}"
+    },
+    {
+      "id": "GoalOpenPayload-10",
+      "type": "GoalOpenPayload",
+      "input": {
+        "id": "root/leaf",
+        "title": "Leaf",
+        "description": "d"
+      },
+      "encoded": "{\"id\":\"root/leaf\",\"title\":\"Leaf\",\"description\":\"d\"}"
+    },
+    {
+      "id": "GoalClosePayload-11",
+      "type": "GoalClosePayload",
+      "input": {
+        "id": "root/leaf",
+        "summary": "s"
+      },
+      "encoded": "{\"id\":\"root/leaf\",\"summary\":\"s\"}"
+    },
+    {
+      "id": "GoalReopenPayload-12",
+      "type": "GoalReopenPayload",
+      "input": {
+        "id": "root/leaf",
+        "prompt": "p",
+        "client": "cursor",
+        "effort": "low"
+      },
+      "encoded": "{\"id\":\"root/leaf\",\"prompt\":\"p\",\"client\":\"cursor\",\"effort\":\"low\"}"
+    },
+    {
+      "id": "GoalChangePayload-13",
+      "type": "GoalChangePayload",
+      "input": {
+        "id": "root/leaf",
+        "description": null,
+        "parent": "root"
+      },
+      "encoded": "{\"id\":\"root/leaf\",\"parent\":\"root\"}"
+    },
+    {
+      "id": "ContributorPayload-14",
+      "type": "ContributorPayload",
+      "input": {
+        "github": "usalu",
+        "author": "ueli"
+      },
+      "encoded": "{\"github\":\"usalu\",\"author\":\"ueli\"}"
+    },
+    {
+      "id": "ContributorPayload-15",
+      "type": "ContributorPayload",
+      "input": {
+        "github": "usalu"
+      },
+      "encoded": "{\"github\":\"usalu\"}"
+    },
+    {
+      "id": "CheckpointPayload-16",
+      "type": "CheckpointPayload",
+      "input": {
+        "author": "ueli",
+        "github": "usalu",
+        "sha": "deadbeef",
+        "message": "m",
+        "files": [
+          "a"
+        ],
+        "technologies": [
+          "go"
+        ],
+        "sections": [
+          "S"
+        ]
+      },
+      "encoded": "{\"author\":\"ueli\",\"github\":\"usalu\",\"sha\":\"deadbeef\",\"message\":\"m\",\"files\":[\"a\"],\"technologies\":[\"go\"],\"sections\":[\"S\"]}"
+    },
+    {
+      "id": "CheckpointPayload-17",
+      "type": "CheckpointPayload",
+      "input": {
+        "author": "ueli",
+        "github": "usalu",
+        "sha": "deadbeef",
+        "message": "m",
+        "files": null,
+        "technologies": []
+      },
+      "encoded": "{\"author\":\"ueli\",\"github\":\"usalu\",\"sha\":\"deadbeef\",\"message\":\"m\",\"files\":null}"
+    },
+    {
+      "id": "TodoPayload-18",
+      "type": "TodoPayload",
+      "input": {
+        "id": "t1",
+        "parent_id": "t0",
+        "name": "n",
+        "author": "ueli"
+      },
+      "encoded": "{\"id\":\"t1\",\"parent_id\":\"t0\",\"name\":\"n\",\"author\":\"ueli\"}"
+    },
+    {
+      "id": "TodoCreatePayload-19",
+      "type": "TodoCreatePayload",
+      "input": {
+        "id": "t1"
+      },
+      "encoded": "{\"id\":\"t1\"}"
+    },
+    {
+      "id": "TodoChangePayload-20",
+      "type": "TodoChangePayload",
+      "input": {
+        "id": "t1",
+        "name": "renamed",
+        "description": null
+      },
+      "encoded": "{\"id\":\"t1\",\"name\":\"renamed\"}"
+    },
+    {
+      "id": "TodoDeletePayload-21",
+      "type": "TodoDeletePayload",
+      "input": {
+        "id": "t1",
+        "name": "n"
+      },
+      "encoded": "{\"id\":\"t1\",\"name\":\"n\"}"
+    },
+    {
+      "id": "WorkItem-22",
+      "type": "WorkItem",
+      "input": {
+        "kind": "file",
+        "id": "a.go"
+      },
+      "encoded": "{\"kind\":\"file\",\"id\":\"a.go\"}"
+    },
+    {
+      "id": "ContributorWork-23",
+      "type": "ContributorWork",
+      "input": {
+        "github": "usalu",
+        "tickets": [
+          "t"
+        ],
+        "goals": null,
+        "todos": [],
+        "technologies": null,
+        "bundles": null,
+        "folders": null,
+        "files": [
+          "a.go"
+        ],
+        "sections": null,
+        "definitions": null
+      },
+      "encoded": "{\"github\":\"usalu\",\"tickets\":[\"t\"],\"goals\":null,\"todos\":[],\"technologies\":null,\"bundles\":null,\"folders\":null,\"files\":[\"a.go\"],\"sections\":null,\"definitions\":null}"
+    },
+    {
+      "id": "DraftPayload-24",
+      "type": "DraftPayload",
+      "input": {
+        "slug": "d",
+        "title": "D"
+      },
+      "encoded": "{\"slug\":\"d\",\"title\":\"D\"}"
+    },
+    {
+      "id": "FilePayload-25",
+      "type": "FilePayload",
+      "input": {
+        "path": "a.go",
+        "from": "b.go",
+        "author": "ueli"
+      },
+      "encoded": "{\"path\":\"a.go\",\"from\":\"b.go\",\"author\":\"ueli\"}"
+    },
+    {
+      "id": "FolderPayload-26",
+      "type": "FolderPayload",
+      "input": {
+        "path": "a",
+        "from": ""
+      },
+      "encoded": "{\"path\":\"a\"}"
+    },
+    {
+      "id": "SectionPayload-27",
+      "type": "SectionPayload",
+      "input": {
+        "file": "a.go",
+        "name": "N",
+        "old_name": "O",
+        "parent": "P"
+      },
+      "encoded": "{\"file\":\"a.go\",\"name\":\"N\",\"old_name\":\"O\",\"parent\":\"P\"}"
+    },
+    {
+      "id": "IntegratePayload-28",
+      "type": "IntegratePayload",
+      "input": {
+        "source": "a.go",
+        "target_file": "b.go",
+        "target_section": "S"
+      },
+      "encoded": "{\"source\":\"a.go\",\"target_file\":\"b.go\",\"target_section\":\"S\"}"
+    },
+    {
+      "id": "ExtractPayload-29",
+      "type": "ExtractPayload",
+      "input": {
+        "source_file": "a.go",
+        "source_section": "S",
+        "target_file": "b.go",
+        "author": "ueli"
+      },
+      "encoded": "{\"source_file\":\"a.go\",\"source_section\":\"S\",\"target_file\":\"b.go\",\"author\":\"ueli\"}"
+    }
+  ]
+}

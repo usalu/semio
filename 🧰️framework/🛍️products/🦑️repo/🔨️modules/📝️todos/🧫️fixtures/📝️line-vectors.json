@@ -1,0 +1,69 @@
+{
+  "schema": "semio.repo.todos.line-vectors/1",
+  "$comment": "📝️ The two documents a todo can live in and the rewrites applied to them. A rewrite is judged by re-parsing what it wrote, so the grammar and the rewrite have to agree; the vectors include a rename that keeps the indentation and the comment opener, a name that no line carries, and a line number outside the document.",
+  "markdownPath": "docs/.todos.md",
+  "markdown": "# Todos\n\n- TODO Write Guide: the guide is missing\n- TODO Bare Item\n- TODO Colons: a description: carrying a colon\nprose between the items\n- TODO Last Item: the final entry\n",
+  "sourcePath": "src/app.ts",
+  "source": "export const value = 1;\n// TODO Cache Result: memoise the lookup\n\n  // TODO Indented Comment: keeps its indentation\nexport const other = 2;\n# TODO Hash Todo: the hash opener counts\n-- TODO Dash Todo: the dash opener counts\n",
+  "markdownRewrites": [
+    {
+      "oldName": "Write Guide",
+      "newName": "Write Guide",
+      "newDescription": "the guide is still missing"
+    },
+    {
+      "oldName": "Colons",
+      "newName": "Renamed Colons",
+      "newDescription": "another: colon"
+    },
+    {
+      "oldName": "Last Item",
+      "newName": "Final Item",
+      "newDescription": ""
+    },
+    {
+      "oldName": "Nothing Here",
+      "newName": "Ignored",
+      "newDescription": "no line carries that name"
+    }
+  ],
+  "sourceRewrites": [
+    {
+      "line": 2,
+      "newName": "Cache Result",
+      "newDescription": "memoise the lookup twice"
+    },
+    {
+      "line": 4,
+      "newName": "Renamed Indented",
+      "newDescription": "still indented"
+    },
+    {
+      "line": 1,
+      "newName": "Not A Todo",
+      "newDescription": "line one is no todo"
+    },
+    {
+      "line": 99,
+      "newName": "Out Of Range",
+      "newDescription": "the document is shorter than that"
+    },
+    {
+      "line": 0,
+      "newName": "Zero",
+      "newDescription": "line numbers are one based"
+    }
+  ],
+  "openerPaths": [
+    "src/app.ts",
+    "src/script.py",
+    "src/query.sql",
+    "src/deploy.sh",
+    "src/values.yaml",
+    "src/values.yml",
+    "src/query.lua",
+    "src/main.go",
+    "README",
+    "archive.tar.gz"
+  ]
+}

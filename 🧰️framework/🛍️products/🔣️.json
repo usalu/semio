@@ -15,6 +15,12 @@
         "responsibility": "Builds and verifies canonical print templates, fonts, and generated LaTeX assets."
       },
       {
+        "directory": "🎤️presentation",
+        "id": "framework.product.presentation",
+        "kind": "product",
+        "responsibility": "Provides the render-independent declarative presentation model and its React + reveal.js renderer for slide decks."
+      },
+      {
         "directory": "🦑️repo",
         "id": "framework.product.repo",
         "kind": "product",

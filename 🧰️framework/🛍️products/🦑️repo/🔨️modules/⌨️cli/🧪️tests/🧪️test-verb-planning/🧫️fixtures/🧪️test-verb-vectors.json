@@ -1,0 +1,78 @@
+{
+  "_comment": "🧪️ Specification vectors for the `test` verb. One frozen filesystem snapshot stands in for the machine; each vector states the operands `semio test …` was given and the `Running: …` lines the verb owes, in order, plus the planner refusals it reports. Nothing is executed: the verb's whole decision is which scopes the operands name and which runner each scope plans.",
+  "snapshot": {
+    "root": "/repo",
+    "uvAvailable": true,
+    "bundles": [
+      { "name": "@demo/core", "root": "js/core" },
+      { "name": "@demo/engine", "root": "go/engine" },
+      { "name": "@demo/kernel", "root": "rs/kernel" },
+      { "name": "@lab/probe", "root": "py/probe" }
+    ],
+    "entries": [
+      { "path": "/repo/js/core", "kind": "directory" },
+      { "path": "/repo/js/core/package.json", "kind": "file", "contents": "{\"name\":\"@demo/core\",\"devDependencies\":{\"vitest\":\"1.0.0\"}}" },
+      { "path": "/repo/js/core/index.ts", "kind": "file" },
+      { "path": "/repo/go/engine", "kind": "directory" },
+      { "path": "/repo/go/engine/go.mod", "kind": "file" },
+      { "path": "/repo/go/engine/engine_test.go", "kind": "file", "contents": "package engine\n\n// #region 🔖️Alpha\nfunc TestAlpha(t *testing.T) {}\n// #endregion 🔖️Alpha\n" },
+      { "path": "/repo/rs/kernel", "kind": "directory" },
+      { "path": "/repo/rs/kernel/Cargo.toml", "kind": "file" },
+      { "path": "/repo/py/probe", "kind": "directory" },
+      { "path": "/repo/py/probe/pyproject.toml", "kind": "file" }
+    ]
+  },
+  "vectors": [
+    {
+      "id": "no-operand-plans-every-detectable-bundle",
+      "operands": [],
+      "lines": [
+        "Running: npx vitest run (in /repo/js/core)",
+        "Running: go test ./... (in /repo/go/engine)",
+        "Running: cargo test (in /repo/rs/kernel)",
+        "Running: uv run pytest (in /repo/py/probe)"
+      ],
+      "problems": []
+    },
+    {
+      "id": "technology-uri-plans-only-that-technology",
+      "operands": ["repo://p/u/demo"],
+      "lines": [
+        "Running: npx vitest run (in /repo/js/core)",
+        "Running: go test ./... (in /repo/go/engine)",
+        "Running: cargo test (in /repo/rs/kernel)"
+      ],
+      "problems": []
+    },
+    {
+      "id": "bundle-uri-plans-one-runner",
+      "operands": ["repo://p/u/@demo/b/l/engine"],
+      "lines": ["Running: go test ./... (in /repo/go/engine)"],
+      "problems": []
+    },
+    {
+      "id": "rust-bundle-uri-plans-cargo",
+      "operands": ["repo://p/u/@demo/b/l/kernel"],
+      "lines": ["Running: cargo test (in /repo/rs/kernel)"],
+      "problems": []
+    },
+    {
+      "id": "file-uri-plans-a-file-run",
+      "operands": ["repo://f/go%20engine/engine_test.go"],
+      "lines": [],
+      "problems": ["no bundle found for file go engine"]
+    },
+    {
+      "id": "two-operands-plan-in-operand-order",
+      "operands": ["repo://p/u/@demo/b/l/kernel", "repo://p/u/@demo/b/l/engine"],
+      "lines": ["Running: cargo test (in /repo/rs/kernel)", "Running: go test ./... (in /repo/go/engine)"],
+      "problems": []
+    },
+    {
+      "id": "an-unknown-bundle-falls-back-to-its-name-and-refuses",
+      "operands": ["repo://p/u/@demo/b/l/absent"],
+      "lines": [],
+      "problems": ["unknown language \"\" for bundle demo/absent"]
+    }
+  ]
+}

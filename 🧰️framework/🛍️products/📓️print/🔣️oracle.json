@@ -1,0 +1,59 @@
+{
+  "$comment": "🔮 Test-only third-party references of the print product. Every entry is a devDependency of 📦️packages/🟦️typescript and is imported only from 🧪️tests/**; no runtime code may depend on one. `@oracle-<id>` tags in the Gherkin features name these ids.",
+  "schemaVersion": 1,
+  "oracles": [
+    {
+      "id": "ajv",
+      "package": "ajv",
+      "version": "8.20.0",
+      "entry": "ajv/dist/2020",
+      "covers": [
+        "viz-catalog-coverage"
+      ],
+      "reason": "Judges 🖼️assets/🔣️viz-catalog.json against 🧬️schema/🔣️.json with a real JSON Schema draft 2020-12 implementation instead of erased TypeScript types."
+    },
+    {
+      "id": "d3-array",
+      "package": "d3-array",
+      "version": "3.2.4",
+      "covers": [
+        "charts-histogram-density",
+        "charts-box-violin",
+        "charts-evaluation-curves"
+      ],
+      "reason": "Judges the binning, tick, quantile and ordering transforms of semio-viz-transform against the implementation they are ported from, so a rounding rule cannot agree with itself."
+    },
+    {
+      "id": "d3-scale",
+      "package": "d3-scale",
+      "version": "4.0.2",
+      "covers": [
+        "charts-heatmap-matrix",
+        "charts-polar-radar",
+        "charts-quadrant-table",
+        "charts-bar-layout"
+      ],
+      "reason": "Judges the band and linear scales the families place their cells and marks with, instead of restating the same arithmetic in the test."
+    },
+    {
+      "id": "d3-shape",
+      "package": "d3-shape",
+      "version": "3.2.0",
+      "covers": [
+        "charts-pie-donut",
+        "charts-bar-layout"
+      ],
+      "reason": "Judges the pie angle assignment, including the sort order, pad angle and partial-circle handling that the arc families depend on."
+    },
+    {
+      "id": "markdown-it",
+      "package": "markdown-it",
+      "version": "14.3.0",
+      "covers": [
+        "viz-catalog-coverage",
+        "print-pipeline"
+      ],
+      "reason": "Reads the taxonomy leaf set out of a CommonMark token stream, so the product's own line-oriented parser cannot agree with itself."
+    }
+  ]
+}

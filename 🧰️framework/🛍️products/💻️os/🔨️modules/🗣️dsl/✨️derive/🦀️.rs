@@ -528,10 +528,17 @@ fn parse_mutation_leaf_attrs(input: &DeriveInput) -> syn::Result<MutationLeafAtt
 
 fn mutation_leaf_portable_path(path: &Path) -> Result<String, String> { path.to_str().map(|path| path.replace('\\', "/")).filter(|path| !path.is_empty()).ok_or_else(|| "metadata path is not UTF-8".to_string()) }
 
+/// 🧭️ Canonical path without the Windows verbatim prefix, so a canonical root and a canonical member share one prefix on every platform.
+fn mutation_authority_canonical(path: &Path) -> Result<PathBuf, String> {
+    let canonical = fs::canonicalize(path).map_err(|error| error.to_string())?;
+    Ok(match canonical.to_str().and_then(|value| value.strip_prefix(r"\\?\")) { Some(plain) => PathBuf::from(plain), None => canonical })
+}
+
 fn mutation_authority_workspace_token(workspace_root: &Path, taxonomy_path: &Path) -> Result<[u8; 32], String> {
-    let workspace_root = fs::canonicalize(workspace_root).map_err(|error| error.to_string())?;
+    let workspace_root = mutation_authority_canonical(workspace_root)?;
+    let taxonomy_path = mutation_authority_canonical(taxonomy_path)?;
     let workspace = mutation_leaf_portable_path(&workspace_root)?;
-    let taxonomy = mutation_authority_relative(&workspace_root, taxonomy_path)?;
+    let taxonomy = mutation_authority_relative(&workspace_root, &taxonomy_path)?;
     let mut input = b"semio.mutation-source-provenance/v1\0".to_vec();
     for value in [workspace.as_bytes(), taxonomy.as_bytes()] { let length = u64::try_from(value.len()).map_err(|_| "metadata token component exceeds u64".to_string())?; input.extend_from_slice(&length.to_be_bytes()); input.extend_from_slice(value); }
     Ok(semio_framework_hash::Sha256::digest(&input))

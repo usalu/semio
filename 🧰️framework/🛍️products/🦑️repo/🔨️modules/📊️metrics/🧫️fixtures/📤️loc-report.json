@@ -1,0 +1,117 @@
+{
+  "branch": "",
+  "snapshot": {
+    "TypeScript": {
+      "loc": 6,
+      "percent": 28.57,
+      "wip_percent": 33.33,
+      "edited": 9,
+      "added": 7,
+      "removed": 2
+    },
+    "Go": {
+      "loc": 4,
+      "percent": 19.05,
+      "wip_percent": 11.11,
+      "edited": 3,
+      "added": 3,
+      "removed": 0
+    },
+    "C#": {
+      "loc": 0,
+      "percent": 0,
+      "wip_percent": 0,
+      "edited": 0,
+      "added": 0,
+      "removed": 0
+    },
+    "Python": {
+      "loc": 3,
+      "percent": 14.29,
+      "wip_percent": 7.41,
+      "edited": 2,
+      "added": 2,
+      "removed": 0
+    },
+    "Rust": {
+      "loc": 2,
+      "percent": 9.52,
+      "wip_percent": 0,
+      "edited": 0,
+      "added": 0,
+      "removed": 0
+    },
+    "Markup": {
+      "loc": 0,
+      "percent": 0,
+      "wip_percent": 22.22,
+      "edited": 6,
+      "added": 3,
+      "removed": 3
+    },
+    "Data": {
+      "loc": 6,
+      "percent": 28.57,
+      "wip_percent": 25.93,
+      "edited": 7,
+      "added": 6,
+      "removed": 1
+    },
+    "Code": {
+      "loc": 15,
+      "percent": 71.43,
+      "wip_percent": 51.85,
+      "edited": 14,
+      "added": 12,
+      "removed": 2
+    },
+    "Total": {
+      "loc": 21,
+      "percent": 100,
+      "wip_percent": 100,
+      "edited": 27,
+      "added": 21,
+      "removed": 6
+    }
+  },
+  "scan": {
+    "TypeScript": 6,
+    "Go": 4,
+    "C#": 0,
+    "Python": 3,
+    "Rust": 2,
+    "Markup": 0,
+    "Data": 6
+  },
+  "cumulative": {
+    "TypeScript": {
+      "added": 7,
+      "removed": 2
+    },
+    "Go": {
+      "added": 3,
+      "removed": 0
+    },
+    "C#": {
+      "added": 0,
+      "removed": 0
+    },
+    "Python": {
+      "added": 2,
+      "removed": 0
+    },
+    "Rust": {
+      "added": 0,
+      "removed": 0
+    },
+    "Markup": {
+      "added": 3,
+      "removed": 3
+    },
+    "Data": {
+      "added": 6,
+      "removed": 1
+    }
+  },
+  "wipDenominator": 27
+}

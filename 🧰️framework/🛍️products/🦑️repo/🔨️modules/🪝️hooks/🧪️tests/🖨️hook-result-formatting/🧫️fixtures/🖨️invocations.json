@@ -1,0 +1,143 @@
+{
+  "_comment": "🖨️ One hook invocation per row, and the pinned facts about what must leave the process for it. `expectedAllowed` and `expectedExit` are the specification; `expectedWrapped` records that Copilot Chat is the only client whose record is wrapped in `hookSpecificOutput`.",
+  "clients": ["copilot-chat", "cursor-chat", "windsurf-chat", "claude-code", "droid", "codex", "antigravity-chat", "kiro-cli"],
+  "invocations": [
+    {
+      "id": "an-allowed-terminal-start",
+      "event": "agent.tool.terminal.starting",
+      "toolName": "run_in_terminal",
+      "toolArgs": "",
+      "parentInfo": "",
+      "input": { "session_id": "s-1", "tool_name": "run_in_terminal", "tool_input": { "command": "ls -la" } },
+      "expectedAllowed": true,
+      "expectedExit": 0,
+      "expectedWrapped": true
+    },
+    {
+      "id": "a-refused-terminal-start",
+      "event": "agent.tool.terminal.starting",
+      "toolName": "run_in_terminal",
+      "toolArgs": "",
+      "parentInfo": "",
+      "input": { "session_id": "s-2", "tool_name": "run_in_terminal", "tool_input": { "command": "git stash" } },
+      "expectedAllowed": false,
+      "expectedExit": 2,
+      "expectedWrapped": true
+    },
+    {
+      "id": "a-refused-generic-tool-start",
+      "event": "agent.tool.starting",
+      "toolName": "rm",
+      "toolArgs": "",
+      "parentInfo": "",
+      "input": { "session_id": "s-3", "tool_name": "rm" },
+      "expectedAllowed": false,
+      "expectedExit": 2,
+      "expectedWrapped": true
+    },
+    {
+      "id": "an-agent-start-with-a-parent",
+      "event": "agent.started",
+      "toolName": "",
+      "toolArgs": "",
+      "parentInfo": "subagent",
+      "input": { "session_id": "s-4", "agent_id": "sub-1", "parent_session_id": "root-1" },
+      "expectedAllowed": true,
+      "expectedExit": 0,
+      "expectedWrapped": true
+    },
+    {
+      "id": "an-agent-end-with-a-report",
+      "event": "agent.ended",
+      "toolName": "",
+      "toolArgs": "",
+      "parentInfo": "",
+      "input": { "session_id": "s-5", "report": "  the split landed  " },
+      "expectedAllowed": true,
+      "expectedExit": 0,
+      "expectedWrapped": true
+    },
+    {
+      "id": "a-prompt-submission",
+      "event": "agent.prompt.submitting",
+      "toolName": "",
+      "toolArgs": "",
+      "parentInfo": "",
+      "input": { "session_id": "s-6", "prompt": "keep the plan in the ticket", "model": "opus-5", "reasoning_effort": "high" },
+      "expectedAllowed": true,
+      "expectedExit": 0,
+      "expectedWrapped": true
+    },
+    {
+      "id": "a-code-edit-end",
+      "event": "agent.tool.code.edit.ended",
+      "toolName": "Edit",
+      "toolArgs": "",
+      "parentInfo": "",
+      "input": { "session_id": "s-7", "tool_name": "Edit", "tool_input": { "filePath": "a.rs", "oldString": "x", "newString": "y", "replaceAll": true } },
+      "expectedAllowed": true,
+      "expectedExit": 0,
+      "expectedWrapped": true
+    },
+    {
+      "id": "a-plan-update-end",
+      "event": "agent.tool.plan.updating.ended",
+      "toolName": "manage_todo_list",
+      "toolArgs": "",
+      "parentInfo": "",
+      "input": { "session_id": "s-8", "tool_input": { "todoList": [{ "title": "one", "status": "completed" }] } },
+      "expectedAllowed": true,
+      "expectedExit": 0,
+      "expectedWrapped": true
+    },
+    {
+      "id": "a-thinking-end-carries-its-text-as-the-message",
+      "event": "agent.thinking.ended",
+      "toolName": "",
+      "toolArgs": "",
+      "parentInfo": "",
+      "input": { "session_id": "s-9", "text": "considering the taxonomy" },
+      "expectedAllowed": true,
+      "expectedExit": 0,
+      "expectedWrapped": true
+    },
+    {
+      "id": "a-version-checkpoint-start-has-no-agent-fields",
+      "event": "version.checkpoint.starting",
+      "toolName": "",
+      "toolArgs": "",
+      "parentInfo": "",
+      "input": { "sha": "0123456789abcdef", "message": "  a checkpoint  " },
+      "expectedAllowed": true,
+      "expectedExit": 0,
+      "expectedWrapped": true
+    },
+    {
+      "id": "a-search-start-with-a-line-range",
+      "event": "agent.file.read.starting",
+      "toolName": "Read",
+      "toolArgs": "",
+      "parentInfo": "",
+      "input": { "session_id": "s-10", "tool_input": { "file_path": "a.rs", "startLine": 10, "endLine": 20 } },
+      "expectedAllowed": true,
+      "expectedExit": 0,
+      "expectedWrapped": true
+    },
+    {
+      "id": "a-terminal-end-with-output",
+      "event": "agent.tool.terminal.ended",
+      "toolName": "run_in_terminal",
+      "toolArgs": "",
+      "parentInfo": "",
+      "input": { "session_id": "s-11", "tool_input": { "command": "ls" }, "pid": 4242, "terminated": true, "stdout": "a\nb\n", "stderr": "" },
+      "expectedAllowed": true,
+      "expectedExit": 0,
+      "expectedWrapped": true
+    }
+  ],
+  "microCommit": [
+    { "id": "reset", "args": ["reset"] },
+    { "id": "prepare-commit-msg", "args": ["prepare-commit-msg", ".git/COMMIT_EDITMSG"] },
+    { "id": "no-subcommand", "args": [] }
+  ]
+}

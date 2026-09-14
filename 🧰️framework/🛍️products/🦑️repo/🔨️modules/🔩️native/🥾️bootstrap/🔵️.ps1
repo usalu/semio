@@ -242,7 +242,7 @@ function Install-EditorExtensions {
 
     $extensionsPath = Join-Path $RepoRoot ".vscode\extensions.json"
     $recommendations = (Get-Content $extensionsPath -Raw | ConvertFrom-Json).recommendations
-    $vsixPath = Join-Path $RepoRoot "🧰️framework\🛍️products\🦑️repo\🔨️modules\💻️client\🧩️vscode\📦️packages\🟦️typescript\🧩️repo.vsix"
+    $vsixPath = Join-Path $RepoRoot "🧰️framework\🛍️products\🦑️repo\🔨️modules\🧩️vscode\📦️packages\🟦️typescript\🧩️repo.vsix"
 
     $bunPathLocal = Get-CommandPathOrThrow -Label "bun" -Candidates @("bun.exe", "bun")
     Invoke-RepoCommand -FilePath $bunPathLocal -ArgumentList @("nx", "run", "@semio-tech/repo-vscode:build") -WorkingDirectory $RepoRoot

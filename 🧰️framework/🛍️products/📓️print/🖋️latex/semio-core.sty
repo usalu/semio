@@ -116,7 +116,7 @@
 \NewDocumentCommand{\antragstellendeinstitution}{m}{\tl_set:Nn \l_semio_antragstellendeinstitution_tl {#1}}
 \NewDocumentCommand{\kooperationspartner}{m}{\tl_set:Nn \l_semio_kooperationspartner_tl {#1}}
 \NewDocumentCommand{\doi}{m}{\tl_set:Nn \l_semio_doi_tl {#1}}
-\RenewDocumentCommand{\subtitle}{m}{\tl_set:Nn \l_semio_subtitle_tl {#1}}
+\DeclareDocumentCommand{\subtitle}{m}{\tl_set:Nn \l_semio_subtitle_tl {#1}}
 
 \cs_new_protected:Npn \semio_begindocument_hook: {
   \semio_language_apply:

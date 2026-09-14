@@ -27,18 +27,13 @@ export default defineConfig({
     react(),
   ],
   build: playgroundStaticSiteBuildOptions(),
+  define: { "import.meta.vitest": "undefined" },
   server: {
     fs: { allow: [repoRoot] },
   },
   resolve: {
     alias: [
-      { find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx") },
-      { find: "@semio-tech/animate-presentation-core", replacement: resolve(repoRoot, "./✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️presentation/⚡️implementations/🟦️typescript/🟦️.ts") },
-      { find: "@semio-tech/animate-js", replacement: resolve(repoRoot, "./✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/🟦️.ts") },
-      { find: "@semio-tech/framework", replacement: resolve(repoRoot, "./🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts") },
-      {
-        find: "@semio-tech/mit-bestand-praesentation-projektetage-spec",
-        replacement: resolve(bundleRoot, "🟦️.ts"),
+:♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/⚙️vite.config.ts
       },
     ],
   },

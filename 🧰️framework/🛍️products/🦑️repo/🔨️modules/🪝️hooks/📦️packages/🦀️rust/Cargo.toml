@@ -1,0 +1,24 @@
+[package]
+name = "semio-framework-repo-hooks"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "semio repo hooks: native IDE hook payload normalisation, tool blocking policy, plan-step extraction, hook result formatting, session logging and micro-commit delegation"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+semio-framework-repo-model = { path = "../../../📐️model/📦️packages/🦀️rust" }
+semio-framework-repo-workspace = { path = "../../../🏠️workspace/📦️packages/🦀️rust" }
+semio-framework-repo-providers = { path = "../../../🧩️providers/📦️packages/🦀️rust" }
+semio-framework-repo-test-runner = { path = "../../../🏃️test-runner/📦️packages/🦀️rust" }
+semio-framework-repo-codebase = { path = "../../../🗂️codebase/📦️packages/🦀️rust" }

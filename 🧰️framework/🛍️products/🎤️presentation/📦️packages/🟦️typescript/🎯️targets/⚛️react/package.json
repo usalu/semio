@@ -1,0 +1,49 @@
+{
+  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@semio-tech/presentation-react",
+  "version": "0.1.0",
+  "description": "presentation · React + reveal.js renderer for @semio-tech/presentation",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./🟦️.tsx",
+    "./🎨️.css": "./🎨️.css"
+  },
+  "license": "LGPL-3.0-or-later",
+  "semio": {
+    "role": "framework",
+    "id": "presentation-react"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react"
+  },
+  "bundleKind": "ui",
+  "dependencies": {
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/presentation": "workspace:*",
+    "@semio-tech/ui-react": "workspace:*",
+    "pdfjs-dist": "^5.4.296",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "reveal.js": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.8",
+    "@types/react-dom": "^19.2.3",
+    "@types/reveal.js": "^5.2.0",
+    "@vitejs/plugin-react": "^5.1.2",
+    "jsdom": "^24.1.3",
+    "rehype-stringify": "10.0.1",
+    "remark-gfm": "4.0.1",
+    "remark-parse": "11.0.0",
+    "remark-rehype": "11.1.2",
+    "typescript": "^5.9.3",
+    "unified": "11.0.5",
+    "vitest": "^4.0.17"
+  },
+  "nx": {
+    "includedScripts": []
+  }
+}

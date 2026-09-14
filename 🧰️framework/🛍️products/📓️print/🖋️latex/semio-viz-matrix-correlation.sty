@@ -1,0 +1,545 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-matrix-correlation}[2026/09/05 v0.3.0 semio viz namespace matrix-correlation families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-transform}
+\RequirePackage{semio-viz-spatial}
+\RequirePackage{semio-viz-matrix-heatmap}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 🔑 Correlation keys, `semio / viz / family / correlation`.
+% columns (clist, default `ex,ey,load`) numeric columns whose pairwise correlation is shown
+% cell    (choice `square|circle|ellipse|value|mixed`, default square) mark drawn per cell
+% triangle (choice `full|lower|upper`, default full) part of the symmetric matrix drawn
+% values  (bool, default false)  print the coefficient inside every cell
+% labels  (bool, default true)   print the column names
+\clist_new:N \l_semio_viz_corr_columns_clist
+\tl_new:N \l_semio_viz_corr_cell_tl
+\tl_new:N \l_semio_viz_corr_triangle_tl
+\bool_new:N \l_semio_viz_corr_values_bool
+\bool_new:N \l_semio_viz_corr_labels_bool
+
+\keys_define:nn { semio / viz / family / correlation } {
+  columns  .clist_set:N = \l_semio_viz_corr_columns_clist,
+  cell     .tl_set:N = \l_semio_viz_corr_cell_tl,
+  triangle .tl_set:N = \l_semio_viz_corr_triangle_tl,
+  values   .bool_set:N = \l_semio_viz_corr_values_bool,
+  labels   .bool_set:N = \l_semio_viz_corr_labels_bool,
+  unknown  .code:n = { },
+}
+
+% 🔑 Scatter-matrix keys, `semio / viz / family / scatter-matrix`.
+% columns  (clist, default `ex,ey,load`) numeric columns forming the panel grid
+% diagonal (choice `density|histogram|label|blank`, default density) content of the diagonal panels
+% radius   (mm, default 0.6)  point radius in the off-diagonal panels
+% labels   (bool, default true) print the column names down the left edge of the grid
+\clist_new:N \l_semio_viz_pair_columns_clist
+\tl_new:N \l_semio_viz_pair_diagonal_tl
+\fp_new:N \l_semio_viz_pair_radius_fp
+\bool_new:N \l_semio_viz_pair_labels_bool
+
+\keys_define:nn { semio / viz / family / scatter-matrix } {
+  columns  .clist_set:N = \l_semio_viz_pair_columns_clist,
+  diagonal .tl_set:N = \l_semio_viz_pair_diagonal_tl,
+  radius   .fp_set:N = \l_semio_viz_pair_radius_fp,
+  labels   .bool_set:N = \l_semio_viz_pair_labels_bool,
+  unknown  .code:n = { },
+}
+
+% 🔑 Hexbin keys, `semio / viz / family / hexbin`.
+% xcol   (column, default `ex`)  horizontal column
+% ycol   (column, default `ey`)  vertical column
+% radius (mm, default 3)         hexagon circumradius
+% mark   (choice `hex|circle|square`, default hex) mark drawn for every occupied bin
+% density (bool, default false)  shade a bin by its share of all points instead of by its share of
+%                                the busiest bin, so the shading is a density and not a rank
+\tl_new:N \l_semio_viz_hex_x_tl
+\tl_new:N \l_semio_viz_hex_y_tl
+\fp_new:N \l_semio_viz_hex_radius_fp
+\tl_new:N \l_semio_viz_hex_mark_tl
+\bool_new:N \l_semio_viz_hex_density_bool
+
+\keys_define:nn { semio / viz / family / hexbin } {
+  xcol    .tl_set:N = \l_semio_viz_hex_x_tl,
+  ycol    .tl_set:N = \l_semio_viz_hex_y_tl,
+  radius  .fp_set:N = \l_semio_viz_hex_radius_fp,
+  mark    .tl_set:N = \l_semio_viz_hex_mark_tl,
+  density .bool_set:N = \l_semio_viz_hex_density_bool,
+  unknown .code:n = { },
+}
+%endregion 🔖️Keys
+
+%region 🔖️HexbinAdapter
+% 🐝 The hex lattice itself is semio-viz-spatial's `\semio_viz_spatial_hexbin:nn`, the verbatim
+% d3-hexbin. This adapter is only the shape change: the family holds its cloud as two parallel
+% sequences, the kernel takes a named point set and answers with `{id}{x}{y}` entries plus a
+% count per id, so the centres and counts come back as the three sequences the renderer walks.
+\seq_new:N \g_semio_viz_hex_cx_seq
+\seq_new:N \g_semio_viz_hex_cy_seq
+\seq_new:N \g_semio_viz_hex_n_seq
+\tl_new:N \l_semio_viz_hex_points_tl
+\int_new:N \l_semio_viz_hex_i_int
+
+\cs_new_protected:Npn \semio_viz_hex_bin:NNn #1#2#3 {
+  \tl_clear:N \l_semio_viz_hex_points_tl
+  \int_zero:N \l_semio_viz_hex_i_int
+  \seq_map_inline:Nn #1 {
+    \int_incr:N \l_semio_viz_hex_i_int
+    \tl_put_right:Nx \l_semio_viz_hex_points_tl
+      {
+        \tl_if_empty:NF \l_semio_viz_hex_points_tl { ; }
+        \fp_eval:n {##1} , \fp_eval:n { \seq_item:Nn #2 { \l_semio_viz_hex_i_int } }
+      }
+  }
+  \use:x
+    {
+      \exp_not:N \semio_viz_points_new:nn { semio-viz-hexbin-cloud }
+        { \exp_not:V \l_semio_viz_hex_points_tl }
+    }
+  \use:x
+    {
+      \exp_not:N \semio_viz_spatial_hexbin:nn { semio-viz-hexbin-cloud }
+        { \fp_to_decimal:n {#3} }
+    }
+  \int_set_eq:NN \l_semio_viz_hex_total_int \l_semio_viz_hex_i_int
+  \seq_gclear:N \g_semio_viz_hex_cx_seq
+  \seq_gclear:N \g_semio_viz_hex_cy_seq
+  \seq_gclear:N \g_semio_viz_hex_n_seq
+  \seq_map_inline:Nn \g_semio_viz_spatial_bins_seq { \semio_viz_hex_collect:nnn ##1 }
+}
+\int_new:N \l_semio_viz_hex_total_int
+
+% 🐝 One bin of the kernel result: its id carries the count, its centre the two coordinates.
+\cs_new_protected:Npn \semio_viz_hex_collect:nnn #1#2#3 {
+  \seq_gput_right:Nn \g_semio_viz_hex_cx_seq {#2}
+  \seq_gput_right:Nn \g_semio_viz_hex_cy_seq {#3}
+  \seq_gput_right:Nx \g_semio_viz_hex_n_seq { \semio_viz_spatial_bin_count:n {#1} }
+}
+%endregion 🔖️HexbinAdapter
+
+%region 🔖️Families
+\seq_new:N \l_semio_viz_corr_a_seq
+\seq_new:N \l_semio_viz_corr_b_seq
+\seq_new:N \l_semio_viz_corr_names_seq
+
+% 🔗 Correlation matrix, correlogram, correlation heatmap, bubble and ellipse correlation plots.
+\SemioVizFamily { correlation } {
+  \semio_viz_cb_reset:
+  \tl_set:Nn \l_semio_viz_cb_data_tl { demo-embedding }
+  \clist_set:Nn \l_semio_viz_corr_columns_clist { ex, ey, load }
+  \tl_set:Nn \l_semio_viz_corr_cell_tl { square }
+  \tl_set:Nn \l_semio_viz_corr_triangle_tl { full }
+  \bool_set_false:N \l_semio_viz_corr_values_bool
+  \bool_set_true:N \l_semio_viz_corr_labels_bool
+  \keys_set:nn { semio / viz / family / common } {#1}
+  \keys_set:nn { semio / viz / family / correlation } {#1}
+  \semio_viz_cb_frame:
+  \semio_viz_corr_render:
+}
+
+% 🔗 Runs the correlation family once its keys are set.
+\cs_new_protected:Npn \semio_viz_corr_render: {
+  \seq_set_from_clist:NN \l_semio_viz_corr_names_seq \l_semio_viz_corr_columns_clist
+  \int_set:Nn \l_semio_viz_cb_i_int { \seq_count:N \l_semio_viz_corr_names_seq }
+  \fp_set:Nn \l_semio_viz_cb_w_fp
+    { ( \l_semio_viz_cb_xb_fp - \l_semio_viz_cb_xa_fp ) / \l_semio_viz_cb_i_int }
+  \fp_set:Nn \l_semio_viz_cb_h_fp
+    { ( \l_semio_viz_cb_yb_fp - \l_semio_viz_cb_ya_fp ) / \l_semio_viz_cb_i_int }
+  \int_step_inline:nn { \l_semio_viz_cb_i_int } {
+    \int_step_inline:nn { \l_semio_viz_cb_i_int } { \semio_viz_corr_cell:nn {##1} {####1} }
+  }
+  \bool_if:NT \l_semio_viz_corr_labels_bool {
+    \int_zero:N \l_semio_viz_cb_j_int
+    \seq_map_inline:Nn \l_semio_viz_corr_names_seq {
+      \int_incr:N \l_semio_viz_cb_j_int
+      \semio_viz_g_text:nnnn { \l_semio_viz_cb_xa_fp - 0.6 }
+        {
+          \l_semio_viz_cb_ya_fp + ( \l_semio_viz_cb_j_int - 0.5 ) * \l_semio_viz_cb_h_fp
+        }
+        { east } {##1}
+    }
+  }
+}
+
+% 🔗 One correlation cell between column #1 and column #2.
+\cs_new_protected:Npn \semio_viz_corr_cell:nn #1#2 {
+  \bool_lazy_or:nnF
+    {
+      \bool_lazy_and_p:nn
+        { \str_if_eq_p:Vn \l_semio_viz_corr_triangle_tl { lower } }
+        { \int_compare_p:nNn {#2} > {#1} }
+    }
+    {
+      \bool_lazy_and_p:nn
+        { \str_if_eq_p:Vn \l_semio_viz_corr_triangle_tl { upper } }
+        { \int_compare_p:nNn {#2} < {#1} }
+    }
+    {
+      \semio_viz_tr_stat_from_table:Nnn \l_semio_viz_corr_a_seq { \l_semio_viz_cb_data_tl }
+        { \seq_item:Nn \l_semio_viz_corr_names_seq {#1} }
+      \semio_viz_tr_stat_from_table:Nnn \l_semio_viz_corr_b_seq { \l_semio_viz_cb_data_tl }
+        { \seq_item:Nn \l_semio_viz_corr_names_seq {#2} }
+      \semio_viz_tr_corr_pearson:NNN \l_semio_viz_corr_a_seq \l_semio_viz_corr_b_seq
+        \l_semio_viz_cb_c_fp
+      \semio_viz_probe_geometry:nx { correlation }
+        { #1, #2, \fp_eval:n { \l_semio_viz_cb_c_fp } }
+      \fp_set:Nn \l_semio_viz_cb_t_fp
+        { \l_semio_viz_cb_xa_fp + ( (#2) - 1 ) * \l_semio_viz_cb_w_fp }
+      \fp_set:Nn \l_semio_viz_cb_u_fp
+        { \l_semio_viz_cb_ya_fp + ( (#1) - 1 ) * \l_semio_viz_cb_h_fp }
+      \semio_viz_corr_mark:
+    }
+}
+
+% 🔗 Draws the mark of the current correlation cell.
+\cs_new_protected:Npn \semio_viz_corr_mark: {
+  \str_case:VnF \l_semio_viz_corr_cell_tl
+    {
+      { circle }
+        {
+          \semio_viz_g_circle:nnnn
+            { \l_semio_viz_cb_t_fp + \l_semio_viz_cb_w_fp / 2 }
+            { \l_semio_viz_cb_u_fp + \l_semio_viz_cb_h_fp / 2 }
+            {
+              min ( \l_semio_viz_cb_w_fp , \l_semio_viz_cb_h_fp ) / 2 * 0.9
+              * sqrt ( abs ( \l_semio_viz_cb_c_fp ) )
+            }
+            { fill = \semio_viz_corr_colour: , draw = none , fill~opacity = 0.85 }
+        }
+      { ellipse }
+        {
+          \semio_viz_g_polygon:xn { \semio_viz_corr_ellipse: }
+            { fill = \semio_viz_corr_colour: , fill~opacity = 0.6 , draw = none }
+        }
+      { value } { \semio_viz_corr_value: }
+      { mixed }
+        {
+          \int_compare:nNnTF { 1 } = { 1 }
+            {
+              \semio_viz_g_circle:nnnn
+                { \l_semio_viz_cb_t_fp + \l_semio_viz_cb_w_fp / 2 }
+                { \l_semio_viz_cb_u_fp + \l_semio_viz_cb_h_fp / 2 }
+                {
+                  min ( \l_semio_viz_cb_w_fp , \l_semio_viz_cb_h_fp ) / 2 * 0.9
+                  * sqrt ( abs ( \l_semio_viz_cb_c_fp ) )
+                }
+                { fill = \semio_viz_corr_colour: , draw = none , fill~opacity = 0.6 }
+              \semio_viz_corr_value:
+            }
+            { }
+        }
+    }
+    {
+      \semio_viz_g_rect:nnnnn { \l_semio_viz_cb_t_fp + 0.2 } { \l_semio_viz_cb_u_fp + 0.2 }
+        { \l_semio_viz_cb_w_fp - 0.4 } { \l_semio_viz_cb_h_fp - 0.4 }
+        {
+          fill = \semio_viz_corr_colour: ,
+          fill~opacity = \fp_eval:n { 0.12 + 0.8 * abs ( \l_semio_viz_cb_c_fp ) } ,
+          draw = none
+        }
+    }
+  \bool_if:NT \l_semio_viz_corr_values_bool { \semio_viz_corr_value: }
+}
+
+% 🔤 Prints the coefficient of the current cell.
+\cs_new_protected:Npn \semio_viz_corr_value: {
+  \semio_viz_g_text:nnnn
+    { \l_semio_viz_cb_t_fp + \l_semio_viz_cb_w_fp / 2 }
+    { \l_semio_viz_cb_u_fp + \l_semio_viz_cb_h_fp / 2 } { center }
+    { \fp_to_decimal:n { round ( \l_semio_viz_cb_c_fp , 2 ) } }
+}
+
+% 🎨 Positive correlations take the first palette hue, negative ones the second.
+\cs_new:Npn \semio_viz_corr_colour: {
+  \fp_compare:nNnTF { \l_semio_viz_cb_c_fp } < { 0 }
+    { \semio_viz_palette:n { 2 } } { \semio_viz_palette:n { 1 } }
+}
+
+% 🥚 Correlation ellipse: a twelve-gon whose eccentricity follows the coefficient.
+\cs_new:Npn \semio_viz_corr_ellipse: {
+  \int_step_function:nnN { 0 } { 11 } \semio_viz_corr_ellipse_point:n
+}
+
+% 🥚 One vertex of the correlation ellipse.
+\cs_new:Npn \semio_viz_corr_ellipse_point:n #1 {
+  \int_compare:nNnF {#1} = { 0 } { , }
+  \fp_eval:n
+    {
+      \l_semio_viz_cb_t_fp + \l_semio_viz_cb_w_fp / 2
+      + \l_semio_viz_cb_w_fp * 0.42
+        * ( cos ( 2 * pi * (#1) / 12 ) * sqrt ( ( 1 + \l_semio_viz_cb_c_fp ) / 2 )
+            - sin ( 2 * pi * (#1) / 12 ) * sqrt ( ( 1 - \l_semio_viz_cb_c_fp ) / 2 ) )
+    }
+  ,
+  \fp_eval:n
+    {
+      \l_semio_viz_cb_u_fp + \l_semio_viz_cb_h_fp / 2
+      + \l_semio_viz_cb_h_fp * 0.42
+        * ( cos ( 2 * pi * (#1) / 12 ) * sqrt ( ( 1 + \l_semio_viz_cb_c_fp ) / 2 )
+            + sin ( 2 * pi * (#1) / 12 ) * sqrt ( ( 1 - \l_semio_viz_cb_c_fp ) / 2 ) )
+    }
+}
+
+% 🔲 Scatterplot matrix and pair plot: a panel grid of pairwise scatterplots.
+\SemioVizFamily { scatter-matrix } {
+  \semio_viz_cb_reset:
+  \tl_set:Nn \l_semio_viz_cb_data_tl { demo-embedding }
+  \clist_set:Nn \l_semio_viz_pair_columns_clist { ex, ey, load }
+  \tl_set:Nn \l_semio_viz_pair_diagonal_tl { density }
+  \fp_set:Nn \l_semio_viz_pair_radius_fp { 0.6 }
+  \bool_set_true:N \l_semio_viz_pair_labels_bool
+  \keys_set:nn { semio / viz / family / common } {#1}
+  \keys_set:nn { semio / viz / family / scatter-matrix } {#1}
+  \semio_viz_cb_frame:
+  \semio_viz_pair_render:
+}
+
+% 🔲 Runs the scatter-matrix family once its keys are set.
+\cs_new_protected:Npn \semio_viz_pair_render: {
+  \seq_set_from_clist:NN \l_semio_viz_corr_names_seq \l_semio_viz_pair_columns_clist
+  \int_set:Nn \l_semio_viz_cb_i_int { \seq_count:N \l_semio_viz_corr_names_seq }
+  \fp_set:Nn \l_semio_viz_cb_w_fp
+    { ( \l_semio_viz_cb_xb_fp - \l_semio_viz_cb_xa_fp ) / \l_semio_viz_cb_i_int }
+  \fp_set:Nn \l_semio_viz_cb_h_fp
+    { ( \l_semio_viz_cb_yb_fp - \l_semio_viz_cb_ya_fp ) / \l_semio_viz_cb_i_int }
+  \int_step_inline:nn { \l_semio_viz_cb_i_int } {
+    \int_step_inline:nn { \l_semio_viz_cb_i_int } { \semio_viz_pair_panel:nn {##1} {####1} }
+  }
+  \bool_if:NT \l_semio_viz_pair_labels_bool {
+    \int_zero:N \l_semio_viz_cb_j_int
+    \seq_map_inline:Nn \l_semio_viz_corr_names_seq {
+      \int_incr:N \l_semio_viz_cb_j_int
+      \semio_viz_g_text:nnnn { \l_semio_viz_cb_xa_fp - 0.6 }
+        { \l_semio_viz_cb_ya_fp + ( \l_semio_viz_cb_j_int - 0.5 ) * \l_semio_viz_cb_h_fp }
+        { east } {##1}
+    }
+  }
+}
+
+% 🔲 One panel of the scatterplot matrix at row #1, column #2.
+\cs_new_protected:Npn \semio_viz_pair_panel:nn #1#2 {
+  \fp_set:Nn \l_semio_viz_cb_t_fp
+    { \l_semio_viz_cb_xa_fp + ( (#2) - 1 ) * \l_semio_viz_cb_w_fp }
+  \fp_set:Nn \l_semio_viz_cb_u_fp
+    { \l_semio_viz_cb_ya_fp + ( (#1) - 1 ) * \l_semio_viz_cb_h_fp }
+  \semio_viz_g_rect:nnnnn { \l_semio_viz_cb_t_fp } { \l_semio_viz_cb_u_fp }
+    { \l_semio_viz_cb_w_fp } { \l_semio_viz_cb_h_fp }
+    { fill = none , draw = semio-chrome-border-normal , line~width = \semio@stroke@hairline ,
+      draw~opacity = 0.4 }
+  \int_compare:nNnTF {#1} = {#2}
+    { \semio_viz_pair_diagonal:n {#1} }
+    { \semio_viz_pair_scatter:nn {#1} {#2} }
+}
+
+% 🔲 Diagonal panel: the marginal density, histogram or the column name.
+\cs_new_protected:Npn \semio_viz_pair_diagonal:n #1 {
+  \semio_viz_tr_stat_from_table:Nnn \l_semio_viz_corr_a_seq { \l_semio_viz_cb_data_tl }
+    { \seq_item:Nn \l_semio_viz_corr_names_seq {#1} }
+  \str_case:VnF \l_semio_viz_pair_diagonal_tl
+    {
+      { blank } { }
+      { label }
+        {
+          \semio_viz_g_text:nnnn
+            { \l_semio_viz_cb_t_fp + \l_semio_viz_cb_w_fp / 2 }
+            { \l_semio_viz_cb_u_fp + \l_semio_viz_cb_h_fp / 2 } { center }
+            { \seq_item:Nn \l_semio_viz_corr_names_seq {#1} }
+        }
+    }
+    { \semio_viz_pair_curve: }
+}
+
+% 🌊 Marginal kernel density inside the current diagonal panel.
+\cs_new_protected:Npn \semio_viz_pair_curve: {
+  \semio_viz_tr_stat_min:NN \l_semio_viz_corr_a_seq \l_semio_viz_cb_a_fp
+  \semio_viz_tr_stat_max:NN \l_semio_viz_corr_a_seq \l_semio_viz_cb_b_fp
+  \semio_viz_tr_stat_kde:Nnnnn \l_semio_viz_corr_a_seq { 0 } { 20 }
+    { \l_semio_viz_cb_a_fp } { \l_semio_viz_cb_b_fp }
+  \semio_viz_tr_stat_max:NN \g_semio_viz_tr_stat_curve_y_seq \l_semio_viz_cb_c_fp
+  \fp_compare:nT { \l_semio_viz_cb_c_fp <= 0 } { \fp_set:Nn \l_semio_viz_cb_c_fp { 1 } }
+  \tl_clear:N \l_semio_viz_cb_points_tl
+  \int_zero:N \l_semio_viz_cb_j_int
+  \seq_map_inline:Nn \g_semio_viz_tr_stat_curve_x_seq {
+    \int_incr:N \l_semio_viz_cb_j_int
+    \tl_put_right:Nx \l_semio_viz_cb_points_tl
+      {
+        \tl_if_empty:NF \l_semio_viz_cb_points_tl { , }
+        \fp_eval:n
+          {
+            \l_semio_viz_cb_t_fp
+            + \l_semio_viz_cb_w_fp * ( ##1 - \l_semio_viz_cb_a_fp )
+              / max ( 1e-9 , \l_semio_viz_cb_b_fp - \l_semio_viz_cb_a_fp )
+          } ,
+        \fp_eval:n
+          {
+            \l_semio_viz_cb_u_fp
+            + \l_semio_viz_cb_h_fp * 0.9
+              * \seq_item:Nn \g_semio_viz_tr_stat_curve_y_seq { \l_semio_viz_cb_j_int }
+              / \l_semio_viz_cb_c_fp
+          }
+      }
+  }
+  \semio_viz_g_polyline:Vn \l_semio_viz_cb_points_tl
+    { draw = \semio_viz_palette:n { 2 } , line~width = \semio@stroke@hairline }
+}
+
+% 🔵 Off-diagonal panel: the scatter of column #2 against column #1.
+\cs_new_protected:Npn \semio_viz_pair_scatter:nn #1#2 {
+  \semio_viz_tr_stat_from_table:Nnn \l_semio_viz_corr_a_seq { \l_semio_viz_cb_data_tl }
+    { \seq_item:Nn \l_semio_viz_corr_names_seq {#2} }
+  \semio_viz_tr_stat_from_table:Nnn \l_semio_viz_corr_b_seq { \l_semio_viz_cb_data_tl }
+    { \seq_item:Nn \l_semio_viz_corr_names_seq {#1} }
+  \semio_viz_tr_stat_min:NN \l_semio_viz_corr_a_seq \l_semio_viz_cb_a_fp
+  \semio_viz_tr_stat_max:NN \l_semio_viz_corr_a_seq \l_semio_viz_cb_b_fp
+  \semio_viz_tr_stat_min:NN \l_semio_viz_corr_b_seq \l_semio_viz_cb_c_fp
+  \semio_viz_tr_stat_max:NN \l_semio_viz_corr_b_seq \l_semio_viz_cb_h_fpx
+  \int_zero:N \l_semio_viz_cb_j_int
+  \seq_map_inline:Nn \l_semio_viz_corr_a_seq {
+    \int_incr:N \l_semio_viz_cb_j_int
+    \semio_viz_g_circle:nnnn
+      {
+        \l_semio_viz_cb_t_fp
+        + \l_semio_viz_cb_w_fp * ( ##1 - \l_semio_viz_cb_a_fp )
+          / max ( 1e-9 , \l_semio_viz_cb_b_fp - \l_semio_viz_cb_a_fp )
+      }
+      {
+        \l_semio_viz_cb_u_fp
+        + \l_semio_viz_cb_h_fp
+          * ( \seq_item:Nn \l_semio_viz_corr_b_seq { \l_semio_viz_cb_j_int }
+              - \l_semio_viz_cb_c_fp )
+          / max ( 1e-9 , \l_semio_viz_cb_h_fpx - \l_semio_viz_cb_c_fp )
+      }
+      { \l_semio_viz_pair_radius_fp }
+      { fill = \semio_viz_palette:n { 1 } , draw = none , fill~opacity = 0.8 }
+  }
+}
+\fp_new:N \l_semio_viz_cb_h_fpx
+
+% 🐝 Hexbin, 2D density, binned and contour scatter of a point cloud.
+\SemioVizFamily { hexbin } {
+  \semio_viz_cb_reset:
+  \tl_set:Nn \l_semio_viz_cb_data_tl { demo-embedding }
+  \tl_set:Nn \l_semio_viz_hex_x_tl { ex }
+  \tl_set:Nn \l_semio_viz_hex_y_tl { ey }
+  \fp_set:Nn \l_semio_viz_hex_radius_fp { 3 }
+  \tl_set:Nn \l_semio_viz_hex_mark_tl { hex }
+  \bool_set_false:N \l_semio_viz_hex_density_bool
+  \keys_set:nn { semio / viz / family / common } {#1}
+  \keys_set:nn { semio / viz / family / hexbin } {#1}
+  \semio_viz_cb_frame:
+  \semio_viz_hexfam_render:
+}
+
+% 🐝 Runs the hexbin family once its keys are set.
+\cs_new_protected:Npn \semio_viz_hexfam_render: {
+  \semio_viz_tr_stat_from_table:Nnn \l_semio_viz_corr_a_seq { \l_semio_viz_cb_data_tl }
+    { \l_semio_viz_hex_x_tl }
+  \semio_viz_tr_stat_from_table:Nnn \l_semio_viz_corr_b_seq { \l_semio_viz_cb_data_tl }
+    { \l_semio_viz_hex_y_tl }
+  \semio_viz_tr_stat_min:NN \l_semio_viz_corr_a_seq \l_semio_viz_cb_a_fp
+  \semio_viz_tr_stat_max:NN \l_semio_viz_corr_a_seq \l_semio_viz_cb_b_fp
+  \semio_viz_tr_stat_min:NN \l_semio_viz_corr_b_seq \l_semio_viz_cb_c_fp
+  \semio_viz_tr_stat_max:NN \l_semio_viz_corr_b_seq \l_semio_viz_cb_h_fpx
+  \seq_clear:N \l_semio_viz_hex_px_seq
+  \seq_clear:N \l_semio_viz_hex_py_seq
+  \int_zero:N \l_semio_viz_cb_j_int
+  \seq_map_inline:Nn \l_semio_viz_corr_a_seq {
+    \int_incr:N \l_semio_viz_cb_j_int
+    \seq_put_right:Nx \l_semio_viz_hex_px_seq
+      {
+        \fp_eval:n
+          {
+            \l_semio_viz_cb_xa_fp
+            + ( \l_semio_viz_cb_xb_fp - \l_semio_viz_cb_xa_fp )
+              * ( ##1 - \l_semio_viz_cb_a_fp )
+              / max ( 1e-9 , \l_semio_viz_cb_b_fp - \l_semio_viz_cb_a_fp )
+          }
+      }
+    \seq_put_right:Nx \l_semio_viz_hex_py_seq
+      {
+        \fp_eval:n
+          {
+            \l_semio_viz_cb_ya_fp
+            + ( \l_semio_viz_cb_yb_fp - \l_semio_viz_cb_ya_fp )
+              * ( \seq_item:Nn \l_semio_viz_corr_b_seq { \l_semio_viz_cb_j_int }
+                  - \l_semio_viz_cb_c_fp )
+              / max ( 1e-9 , \l_semio_viz_cb_h_fpx - \l_semio_viz_cb_c_fp )
+          }
+      }
+  }
+  \semio_viz_hex_bin:NNn \l_semio_viz_hex_px_seq \l_semio_viz_hex_py_seq
+    { \l_semio_viz_hex_radius_fp }
+  \semio_viz_tr_stat_max:NN \g_semio_viz_hex_n_seq \l_semio_viz_cb_c_fp
+  \fp_compare:nT { \l_semio_viz_cb_c_fp <= 0 } { \fp_set:Nn \l_semio_viz_cb_c_fp { 1 } }
+  \int_zero:N \l_semio_viz_cb_j_int
+  \seq_map_inline:Nn \g_semio_viz_hex_cx_seq {
+    \int_incr:N \l_semio_viz_cb_j_int
+    \semio_viz_hexfam_mark:nn {##1}
+      { \seq_item:Nn \g_semio_viz_hex_cy_seq { \l_semio_viz_cb_j_int } }
+  }
+}
+\seq_new:N \l_semio_viz_hex_px_seq
+\seq_new:N \l_semio_viz_hex_py_seq
+
+% 🐝 One occupied bin at (#1,#2) drawn in the chosen mark shape.
+\cs_new_protected:Npn \semio_viz_hexfam_mark:nn #1#2 {
+  \fp_set:Nn \l_semio_viz_cb_a_fp
+    {
+      \seq_item:Nn \g_semio_viz_hex_n_seq { \l_semio_viz_cb_j_int }
+      / \bool_if:NTF \l_semio_viz_hex_density_bool
+          { max ( 1 , \l_semio_viz_hex_total_int ) } { \l_semio_viz_cb_c_fp }
+    }
+  \semio_viz_probe_geometry:nx { hexbin }
+    {
+      \fp_eval:n {#1}, \fp_eval:n {#2},
+      \seq_item:Nn \g_semio_viz_hex_n_seq { \l_semio_viz_cb_j_int }
+    }
+  \str_case:VnF \l_semio_viz_hex_mark_tl
+    {
+      { circle }
+        {
+          \semio_viz_g_circle:nnnn {#1} {#2}
+            { \l_semio_viz_hex_radius_fp * sqrt ( \l_semio_viz_cb_a_fp ) }
+            { fill = \semio_viz_palette:n { 1 } , draw = none , fill~opacity = 0.8 }
+        }
+      { square }
+        {
+          \semio_viz_g_rect:nnnnn
+            { (#1) - \l_semio_viz_hex_radius_fp * 0.8 }
+            { (#2) - \l_semio_viz_hex_radius_fp * 0.8 }
+            { \l_semio_viz_hex_radius_fp * 1.6 } { \l_semio_viz_hex_radius_fp * 1.6 }
+            {
+              fill = \semio_viz_palette:n { 1 } , draw = none ,
+              fill~opacity = \fp_eval:n { 0.15 + 0.8 * \l_semio_viz_cb_a_fp }
+            }
+        }
+    }
+    { \semio_viz_hexfam_hex:nn {#1} {#2} }
+}
+
+% ⬡ Regular hexagon of the bin radius at (#1,#2).
+\cs_new_protected:Npn \semio_viz_hexfam_hex:nn #1#2 {
+  \tl_clear:N \l_semio_viz_cb_points_tl
+  \int_step_inline:nnn { 0 } { 5 } {
+    \tl_put_right:Nx \l_semio_viz_cb_points_tl
+      {
+        \tl_if_empty:NF \l_semio_viz_cb_points_tl { , }
+        \fp_eval:n
+          { (#1) + \l_semio_viz_hex_radius_fp * sin ( 2 * pi * ##1 / 6 ) } ,
+        \fp_eval:n
+          { (#2) + \l_semio_viz_hex_radius_fp * cos ( 2 * pi * ##1 / 6 ) }
+      }
+  }
+  \semio_viz_g_polygon:Vn \l_semio_viz_cb_points_tl
+    {
+      fill = \semio_viz_palette:n { 1 } , draw = semio-chrome-canvas ,
+      line~width = \semio@stroke@hairline ,
+      fill~opacity = \fp_eval:n { 0.15 + 0.8 * \l_semio_viz_cb_a_fp }
+    }
+}
+%endregion 🔖️Families
+
+\ExplSyntaxOff

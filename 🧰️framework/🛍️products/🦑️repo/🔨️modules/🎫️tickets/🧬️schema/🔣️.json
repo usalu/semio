@@ -1,0 +1,270 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio-tech.com/schema/repo/tickets/1",
+  "title": "🎫️ semio repo tickets",
+  "description": "The wire shapes of the ticket domain: the persisted 🎫️ticket.json document, the ticket identity, the open/close/reopen/change requests and their outcomes, the important-document transaction journal, the plan attachment and the file scope of a close. Objects are deliberately open: neither implementation refuses an unknown member — a document may carry members such as `note`, `closedAt`, `files` or `contributors`, and the codec reads and then DROPS them.",
+  "$defs": {
+    "TicketStatus": {
+      "description": "🔖️ The closed lifecycle vocabulary. A document without an explicit status is refused rather than defaulted.",
+      "type": "string",
+      "enum": ["open", "closed"]
+    },
+    "McpClientKind": {
+      "description": "🪪️ Which IDE surface a plan or spec id is resolved against.",
+      "type": "string",
+      "enum": ["generic", "cursor", "kiro", "copilot", "claude", "codex"]
+    },
+    "TicketId": {
+      "description": "🪪️ The dated identity of a ticket. `id` is YY/MM/DD/SLUG, `relPath` is 🎆️YY/🌙️MM/☀️DD/SLUG. A slug may itself carry `/` for a child ticket.",
+      "type": "object",
+      "properties": {
+        "year": { "type": "integer" },
+        "month": { "type": "integer", "minimum": 1, "maximum": 12 },
+        "day": { "type": "integer", "minimum": 1, "maximum": 31 },
+        "slug": { "type": "string", "minLength": 1 }
+      },
+      "required": ["year", "month", "day", "slug"]
+    },
+    "TicketManagementData": {
+      "description": "🐙️ The management-provider link of a ticket. Written under the member name `github`.",
+      "type": "object",
+      "properties": { "issue": { "type": "string" } }
+    },
+    "TicketPlan": {
+      "description": "🗺️ The plan or spec bound to a ticket. `source` is the absolute path while the ticket is open; the close moves the file into the ticket folder and swaps `source` for `local`.",
+      "type": "object",
+      "properties": {
+        "client": { "type": "string" },
+        "id": { "type": "string" },
+        "source": { "type": "string" },
+        "local": { "type": "string" }
+      }
+    },
+    "TicketDocument": {
+      "description": "🎫️ The persisted 🎫️ticket.json. Members are written in exactly this order, and every member other than `title` and `status` is omitted when empty. `parent` is READ but never written — the Go struct tags it `json:\"-\"` while its decoding alias declares `parent,omitempty`.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "emoji": { "type": "string" },
+        "status": { "$ref": "#/$defs/TicketStatus" },
+        "description": { "type": "string" },
+        "summary": { "type": "string" },
+        "github": { "$ref": "#/$defs/TicketManagementData" },
+        "goal": { "type": "string" },
+        "plan": { "$ref": "#/$defs/TicketPlan" },
+        "sessions": { "type": "array", "items": { "type": "string" } },
+        "parent": { "description": "📥️ Read-only: absorbed on decoding, never re-encoded.", "type": "string" },
+        "prompt": { "description": "📥️ Pre-schema spelling of `description`, absorbed when `description` is absent.", "type": "string" },
+        "interactions": { "description": "📥️ Pre-schema interaction log, absorbed but never re-encoded.", "type": "array" },
+        "agents": { "description": "📥️ Pre-schema agent log, absorbed but never re-encoded.", "type": "array" }
+      },
+      "required": ["title", "status"]
+    },
+    "TicketOpenRequest": {
+      "type": "object",
+      "properties": {
+        "emoji": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "prompt": { "type": "string" },
+        "llm": { "type": "string" },
+        "effort": { "type": "string" },
+        "client": { "type": "string" },
+        "goal": { "type": "string", "minLength": 1 },
+        "parent": { "type": "string" },
+        "noIssue": { "type": "boolean" },
+        "noManagement": { "type": "boolean" },
+        "issue": { "type": "string" },
+        "session": { "type": "string" },
+        "planId": { "type": "string" },
+        "specId": { "type": "string" }
+      },
+      "required": ["emoji", "title", "prompt", "client", "goal"]
+    },
+    "TicketCloseRequest": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "summary": { "type": "string" },
+        "files": { "type": "array", "items": { "type": "string" } },
+        "noManagement": { "type": "boolean" },
+        "bulk": { "type": "boolean" }
+      },
+      "required": ["id", "summary"]
+    },
+    "TicketReopenRequest": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "prompt": { "type": "string" },
+        "llm": { "type": "string" },
+        "effort": { "type": "string" },
+        "client": { "type": "string", "minLength": 1 },
+        "goal": { "type": "string" },
+        "parent": { "type": "string" },
+        "noManagement": { "type": "boolean" },
+        "session": { "type": "string" },
+        "planId": { "type": "string" },
+        "specId": { "type": "string" }
+      },
+      "required": ["id", "prompt", "client"]
+    },
+    "TicketChangeRequest": {
+      "description": "♻️ An absent member leaves the ticket's value alone; a present one replaces it.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": ["string", "null"] },
+        "description": { "type": ["string", "null"] },
+        "goal": { "type": ["string", "null"] },
+        "parent": { "type": ["string", "null"] },
+        "noManagement": { "type": "boolean" }
+      },
+      "required": ["id"]
+    },
+    "JournalStep": {
+      "description": "📓️ One step of an important-document transaction, in the order it was attempted.",
+      "type": "object",
+      "properties": {
+        "op": { "type": "string", "enum": ["inspect", "restore", "remove-file", "remove-dir", "ensure", "ensure-dir", "rollback-file", "rollback-dir", "create-important", "rename", "save"] },
+        "path": { "type": "string" },
+        "outcome": { "type": "string", "enum": ["ok", "failed", "created", "preserved"] }
+      },
+      "required": ["op", "path", "outcome"]
+    },
+    "TransactionJournal": {
+      "type": "object",
+      "properties": { "steps": { "type": "array", "items": { "$ref": "#/$defs/JournalStep" } } },
+      "required": ["steps"]
+    },
+    "ImportantPreimage": {
+      "description": "🖼️ The exact empty-document bundle a close must find. The document must be a regular file, empty, and the only child of its directory.",
+      "type": "object",
+      "properties": { "path": { "type": "string" }, "dir": { "type": "string" }, "mode": { "type": "integer" } },
+      "required": ["path", "dir", "mode"]
+    },
+    "ImportantCreation": {
+      "description": "✨️ What a reopen created, so a failed save removes exactly that and nothing else.",
+      "type": "object",
+      "properties": { "path": { "type": "string" }, "dir": { "type": "string" }, "file_created": { "type": "boolean" }, "dir_created": { "type": "boolean" } },
+      "required": ["path", "dir", "file_created", "dir_created"]
+    },
+    "TicketOutcome": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "relPath": { "type": "string" },
+        "status": { "$ref": "#/$defs/TicketStatus" },
+        "document": { "type": "string" },
+        "journal": { "$ref": "#/$defs/TransactionJournal" },
+        "warnings": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["id", "relPath", "status", "document"]
+    },
+    "PurgeReport": {
+      "description": "🧹️ What an artifact purge removed. A file above 5 MiB and a subfolder whose files total above 10 MiB go; 🎫️ticket.json never does.",
+      "type": "object",
+      "properties": {
+        "removedDirectories": { "type": "array", "items": { "type": "string" } },
+        "removedFiles": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["removedDirectories", "removedFiles"]
+    },
+    "DiffLines": {
+      "type": "object",
+      "properties": {
+        "added": { "type": "array", "items": { "type": "integer" } },
+        "removed": { "type": "array", "items": { "type": "integer" } }
+      },
+      "required": ["added", "removed"]
+    },
+    "TicketFileScope": {
+      "type": "object",
+      "properties": {
+        "files": { "type": "array", "items": { "type": "string" } },
+        "excluded": { "type": "array", "items": { "type": "string" } },
+        "diff_lines": { "type": "object", "additionalProperties": { "$ref": "#/$defs/DiffLines" } },
+        "statuses": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["files", "excluded", "diff_lines", "statuses"]
+    },
+    "PlanSource": {
+      "type": "object",
+      "properties": { "path": { "type": "string" }, "is_directory": { "type": "boolean" } },
+      "required": ["path", "is_directory"]
+    },
+    "TicketError": {
+      "type": "object",
+      "properties": {
+        "class": { "type": "string", "enum": ["invalid", "not-found", "store", "conflict"] },
+        "message": { "type": "string" }
+      },
+      "required": ["class", "message"]
+    },
+    "IdVectorFile": {
+      "description": "🪪️ The fixture shape of the ticket id scheme case.",
+      "type": "object",
+      "properties": {
+        "ids": { "type": "array", "items": { "type": "string" } },
+        "titles": { "type": "array", "items": { "type": "string" } },
+        "emojiTitles": { "type": "array", "items": { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2 } },
+        "invalidIds": { "type": "array", "items": { "type": "string" } },
+        "repoMetaDir": { "type": "string" }
+      },
+      "required": ["ids", "titles", "emojiTitles", "invalidIds", "repoMetaDir"]
+    },
+    "DocumentVectorFile": {
+      "description": "📄️ The fixture shape of the codec case: real committed documents plus the paths they came from.",
+      "type": "object",
+      "properties": {
+        "documents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "source": { "type": "string" },
+              "text": { "type": "string" }
+            },
+            "required": ["source", "text"]
+          }
+        },
+        "refused": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["documents", "refused"]
+    },
+    "LifecycleVectorFile": {
+      "description": "🔓️ The fixture shape of the lifecycle case.",
+      "type": "object",
+      "properties": {
+        "repoMetaDir": { "type": "string" },
+        "clock": { "type": "object", "properties": { "year": { "type": "integer" }, "month": { "type": "integer" }, "day": { "type": "integer" }, "stamp": { "type": "string" } }, "required": ["year", "month", "day", "stamp"] },
+        "open": { "$ref": "#/$defs/TicketOpenRequest" },
+        "close": { "$ref": "#/$defs/TicketCloseRequest" },
+        "reopen": { "$ref": "#/$defs/TicketReopenRequest" },
+        "change": { "$ref": "#/$defs/TicketChangeRequest" },
+        "purge": { "type": "object", "properties": { "oversizedFile": { "type": "string" }, "smallFile": { "type": "string" } }, "required": ["oversizedFile", "smallFile"] }
+      },
+      "required": ["repoMetaDir", "clock", "open", "close", "reopen", "change", "purge"]
+    },
+    "TransactionVectorFile": {
+      "description": "💾️ The fixture shape of the important-document transaction case.",
+      "type": "object",
+      "properties": {
+        "repoMetaDir": { "type": "string" },
+        "id": { "type": "string" },
+        "failurePath": { "type": "string" },
+        "failureMessage": { "type": "string" },
+        "modes": { "type": "array", "items": { "type": "string", "enum": ["missing", "not-empty", "not-a-file", "extra-sibling"] } }
+      },
+      "required": ["repoMetaDir", "id", "failurePath", "failureMessage", "modes"]
+    },
+    "IssueSyncVectorFile": {
+      "description": "🐙️ The fixture shape of the issue synchronisation case: recorded `gh` exchanges per scenario.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": { "exchanges": { "type": "array", "items": { "type": "object", "properties": { "argv": { "type": "array", "items": { "type": "string" } }, "stdout": { "type": "string" }, "stderr": { "type": "string" }, "status": { "type": "integer" } }, "required": ["argv", "status"] } } },
+        "required": ["exchanges"]
+      }
+    }
+  }
+}

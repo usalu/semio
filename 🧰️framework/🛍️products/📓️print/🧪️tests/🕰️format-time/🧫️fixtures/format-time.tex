@@ -1,0 +1,52 @@
+% 🧪 Probe fixture of case format-time, every scenario.
+% \SemioVizTimeFormat is d3-time-format's directive grammar over an ISO timestamp read as UTC, so
+% the same directive list runs over the same timestamps in both locales. The transport encoding is
+% the one of case format-number: a leading vertical bar keeps every result a JSON string, the
+% result is brace wrapped so a comma inside a formatted date survives, and the padding space of
+% `%e` becomes an underscore.
+\documentclass{article}
+\usepackage{semio-viz-format}
+\usepackage{semio-viz-probe}
+\ExplSyntaxOn
+\str_new:N \l_probe_out_str
+\int_new:N \l_probe_index_int
+
+% 🕒 Formats one timestamp and writes it under `time/<index>`.
+\cs_new_protected:Npn \probetime #1#2 {
+  \semio_viz_time_format:nnN {#1} {#2} \l_probe_out_str
+  \str_replace_all:Nnn \l_probe_out_str { ~ } { _ }
+  \semio_viz_probe_values:xx { time/ \int_use:N \l_probe_index_int } { { | \l_probe_out_str } }
+  \int_incr:N \l_probe_index_int
+}
+\char_set_catcode_other:n { 37 }
+\ExplSyntaxOff
+\begin{document}
+
+\ExplSyntaxOn
+\cs_new_protected:Npn \probeall {
+  \int_zero:N \l_probe_index_int
+  \probetime { %Y-%m-%d } { 2026-09-05 }
+  \probetime { %A~%B~%e,~%Y } { 2026-09-05 }
+  \probetime { %a~%b~%d } { 2024-02-29T13:07:09 }
+  \probetime { %H:%M:%S~%p } { 2024-02-29T13:07:09 }
+  \probetime { %j~%U~%W~%Z } { 2024-02-29T13:07:09 }
+  \probetime { %y/%I~%p } { 1999-01-03T00:30 }
+  \probetime { %A } { 2000-01-01 }
+  \probetime { %B~%Y } { 2026-03-01 }
+  \probetime { %d.%m.%Y } { 2026-12-31 }
+  \probetime { %U~%W } { 2021-01-01 }
+  \probetime { %j } { 2020-12-31 }
+  \probetime { 100%%~%b } { 2026-05-04 }
+}
+\ExplSyntaxOff
+
+\SemioVizProbeBegin{format-time}{en-locale}
+\SemioVizLocale{en}
+\probeall
+
+\SemioVizProbeBegin{format-time}{de-locale}
+\SemioVizLocale{de}
+\probeall
+
+\SemioVizProbePage
+\end{document}

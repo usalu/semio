@@ -1,0 +1,21 @@
+{
+  "schema": "semio.repo.mcp.handshake/1",
+  "requestedProtocolVersion": "2025-06-18",
+  "clientInfo": {
+    "name": "conformance-client",
+    "title": "Conformance Client",
+    "version": "1.0.0"
+  },
+  "capabilities": {
+    "roots": { "listChanged": true },
+    "sampling": {},
+    "elicitation": {},
+    "tasks": { "requests": { "cancel": true } }
+  },
+  "expected": {
+    "accepted": true,
+    "protocolVersionEchoed": true,
+    "serverVersion": "1.0.0",
+    "capabilities": ["prompts", "resources", "tools"]
+  }
+}

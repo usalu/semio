@@ -1,0 +1,16 @@
+# #region 🔖️Alpha
+type Shape {
+  sides: Int!
+}
+
+extend type Query {
+  shape: Shape
+}
+# #endregion 🔖️Alpha
+
+# #region 🔖️Beta
+enum Corner {
+  ROUND
+  SHARP
+}
+# #endregion 🔖️Beta

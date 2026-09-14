@@ -1,0 +1,7 @@
+{
+  "Typescript": "warning: something,ignored\nserialize,0.412s\ndeserialize,0.208s\nC:/tmp/path,1.0s\n",
+  "Python": "serialize,1.204s\ndeserialize,0.930s\n",
+  "Go": "serialize,0.180s\ndeserialize,0.096s\nround-trip,0.400s\n",
+  "C#": "serialize,0.350s\ndeserialize,0.201s\n",
+  "Rust": "serialize,0.090s\ndeserialize,0.044s\nround-trip,0.150s\n"
+}

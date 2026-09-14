@@ -1,0 +1,1950 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-spatial}[2026/09/05 v0.3.0 semio viz spatial algorithms: delaunay, voronoi, hull, hexbin, contour, density, beeswarm]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-data}
+\RequirePackage{semio-viz-layout}
+\RequirePackage{semio-viz-probe}
+
+\ExplSyntaxOn
+
+\cs_generate_variant:Nn \clist_item:nn { on }
+
+%region 🔖️Diagnostics
+\msg_new:nnn { semio-viz } { spatial-degenerate }
+  { Spatial~algorithm~'#1'~needs~at~least~#2~distinct~points. }
+%endregion 🔖️Diagnostics
+
+%region 🔖️Limits
+% 🚦 Documented working limits: the triangulation is O(n^2) in TeX floating point, so a point set beyond these sizes is refused rather than silently slow.
+\int_const:Nn \c_semio_viz_spatial_maxpoints_int { 120 }
+\int_const:Nn \c_semio_viz_spatial_maxcells_int { 4096 }
+\fp_const:Nn \c_semio_viz_spatial_eps_fp { 1e-9 }
+%endregion 🔖️Limits
+
+%region 🔖️Working
+% 🗄️ The active point set is unpacked into indexed fp arrays once, so no algorithm re-parses coordinate strings inside its inner loop.
+\int_new:N \l_semio_viz_spatial_n_int
+\int_new:N \l_semio_viz_spatial_i_int
+\int_new:N \l_semio_viz_spatial_j_int
+\int_new:N \l_semio_viz_spatial_k_int
+\fp_new:N \l_semio_viz_spatial_a_fp
+\fp_new:N \l_semio_viz_spatial_b_fp
+\fp_new:N \l_semio_viz_spatial_c_fp
+\fp_new:N \l_semio_viz_spatial_d_fp
+\fp_new:N \l_semio_viz_spatial_e_fp
+\fp_new:N \l_semio_viz_spatial_f_fp
+\fp_new:N \l_semio_viz_spatial_cx_fp
+\fp_new:N \l_semio_viz_spatial_cy_fp
+\fp_new:N \l_semio_viz_spatial_cr_fp
+\fp_new:N \l_semio_viz_spatial_xmin_fp
+\fp_new:N \l_semio_viz_spatial_ymin_fp
+\fp_new:N \l_semio_viz_spatial_xmax_fp
+\fp_new:N \l_semio_viz_spatial_ymax_fp
+
+\cs_new:Npn \semio_viz_spatial_x:n #1
+  { \use:c { g_semio_viz_spatial_px_ \int_eval:n {#1} _fp } }
+% 📐 Ordinate of the loaded point #1.
+\cs_new:Npn \semio_viz_spatial_y:n #1
+  { \use:c { g_semio_viz_spatial_py_ \int_eval:n {#1} _fp } }
+
+% 📥 Loads a named point set into the indexed fp arrays and records its bounding box.
+\cs_new_protected:Npn \semio_viz_spatial_load:n #1
+  {
+    \semio_viz_points_require:n {#1}
+    \int_zero:N \l_semio_viz_spatial_n_int
+    \fp_set:Nn \l_semio_viz_spatial_xmin_fp { inf }
+    \fp_set:Nn \l_semio_viz_spatial_ymin_fp { inf }
+    \fp_set:Nn \l_semio_viz_spatial_xmax_fp { -inf }
+    \fp_set:Nn \l_semio_viz_spatial_ymax_fp { -inf }
+    \seq_map_inline:cn
+      { g_semio_viz_points_ \l_semio_viz_store_name_tl _seq }
+      { \semio_viz_spatial_load_point:n {##1} }
+  }
+
+% 📍 Stores one `x,y` entry as the next indexed point and widens the bounding box to hold it.
+\cs_new_protected:Npn \semio_viz_spatial_load_point:n #1
+  {
+    \tl_set:Nn \l_tmpa_tl {#1}
+    \tl_trim_spaces:N \l_tmpa_tl
+    \tl_if_empty:NF \l_tmpa_tl
+      {
+        \int_incr:N \l_semio_viz_spatial_n_int
+        \fp_gzero_new:c
+          { g_semio_viz_spatial_px_ \int_use:N \l_semio_viz_spatial_n_int _fp }
+        \fp_gzero_new:c
+          { g_semio_viz_spatial_py_ \int_use:N \l_semio_viz_spatial_n_int _fp }
+        \fp_gset:cn
+          { g_semio_viz_spatial_px_ \int_use:N \l_semio_viz_spatial_n_int _fp }
+          { \clist_item:nn {#1} { 1 } }
+        \fp_gset:cn
+          { g_semio_viz_spatial_py_ \int_use:N \l_semio_viz_spatial_n_int _fp }
+          { \clist_item:nn {#1} { 2 } }
+        \semio_viz_spatial_vertex_set:nnn
+          { \l_semio_viz_spatial_n_int }
+          { \clist_item:nn {#1} { 1 } } { \clist_item:nn {#1} { 2 } }
+        \fp_set:Nn \l_semio_viz_spatial_xmin_fp
+          { min ( \l_semio_viz_spatial_xmin_fp , \clist_item:nn {#1} { 1 } ) }
+        \fp_set:Nn \l_semio_viz_spatial_xmax_fp
+          { max ( \l_semio_viz_spatial_xmax_fp , \clist_item:nn {#1} { 1 } ) }
+        \fp_set:Nn \l_semio_viz_spatial_ymin_fp
+          { min ( \l_semio_viz_spatial_ymin_fp , \clist_item:nn {#1} { 2 } ) }
+        \fp_set:Nn \l_semio_viz_spatial_ymax_fp
+          { max ( \l_semio_viz_spatial_ymax_fp , \clist_item:nn {#1} { 2 } ) }
+      }
+  }
+%endregion 🔖️Working
+
+%region 🔖️Delaunay
+% 🔺 Bowyer–Watson incremental triangulation: points are inserted in input order, so the result is deterministic and
+% 🔺 identical between runs. The triangle set equals Delaunator's (d3-delaunay) for point sets in general position;
+% 🔺 triangle order and vertex rotation are not part of the contract, so tests compare canonicalised triangle sets.
+\seq_new:N \g_semio_viz_spatial_tri_seq
+\seq_new:N \l_semio_viz_spatial_bad_seq
+\seq_new:N \l_semio_viz_spatial_keep_seq
+\seq_new:N \l_semio_viz_spatial_edge_seq
+\fp_new:N \l_semio_viz_spatial_px_fp
+\fp_new:N \l_semio_viz_spatial_py_fp
+
+% ⭕ Circumcentre and squared circumradius of the triangle with indices #1 #2 #3 (super-triangle indices allowed).
+\cs_new_protected:Npn \semio_viz_spatial_circum:nnn #1#2#3
+  {
+    \fp_set:Nn \l_semio_viz_spatial_a_fp { \semio_viz_spatial_vx:n {#1} }
+    \fp_set:Nn \l_semio_viz_spatial_b_fp { \semio_viz_spatial_vy:n {#1} }
+    \fp_set:Nn \l_semio_viz_spatial_c_fp { \semio_viz_spatial_vx:n {#2} }
+    \fp_set:Nn \l_semio_viz_spatial_d_fp { \semio_viz_spatial_vy:n {#2} }
+    \fp_set:Nn \l_semio_viz_spatial_e_fp { \semio_viz_spatial_vx:n {#3} }
+    \fp_set:Nn \l_semio_viz_spatial_f_fp { \semio_viz_spatial_vy:n {#3} }
+    \fp_set:Nn \l_semio_viz_spatial_cr_fp
+      {
+        2 * ( \l_semio_viz_spatial_a_fp
+              * ( \l_semio_viz_spatial_d_fp - \l_semio_viz_spatial_f_fp )
+              + \l_semio_viz_spatial_c_fp
+                * ( \l_semio_viz_spatial_f_fp - \l_semio_viz_spatial_b_fp )
+              + \l_semio_viz_spatial_e_fp
+                * ( \l_semio_viz_spatial_b_fp - \l_semio_viz_spatial_d_fp ) )
+      }
+    \fp_set:Nn \l_semio_viz_spatial_cx_fp
+      {
+        ( ( \l_semio_viz_spatial_a_fp ** 2 + \l_semio_viz_spatial_b_fp ** 2 )
+            * ( \l_semio_viz_spatial_d_fp - \l_semio_viz_spatial_f_fp )
+          + ( \l_semio_viz_spatial_c_fp ** 2 + \l_semio_viz_spatial_d_fp ** 2 )
+            * ( \l_semio_viz_spatial_f_fp - \l_semio_viz_spatial_b_fp )
+          + ( \l_semio_viz_spatial_e_fp ** 2 + \l_semio_viz_spatial_f_fp ** 2 )
+            * ( \l_semio_viz_spatial_b_fp - \l_semio_viz_spatial_d_fp ) )
+        / \l_semio_viz_spatial_cr_fp
+      }
+    \fp_set:Nn \l_semio_viz_spatial_cy_fp
+      {
+        ( ( \l_semio_viz_spatial_a_fp ** 2 + \l_semio_viz_spatial_b_fp ** 2 )
+            * ( \l_semio_viz_spatial_e_fp - \l_semio_viz_spatial_c_fp )
+          + ( \l_semio_viz_spatial_c_fp ** 2 + \l_semio_viz_spatial_d_fp ** 2 )
+            * ( \l_semio_viz_spatial_a_fp - \l_semio_viz_spatial_e_fp )
+          + ( \l_semio_viz_spatial_e_fp ** 2 + \l_semio_viz_spatial_f_fp ** 2 )
+            * ( \l_semio_viz_spatial_c_fp - \l_semio_viz_spatial_a_fp ) )
+        / \l_semio_viz_spatial_cr_fp
+      }
+    \fp_set:Nn \l_semio_viz_spatial_cr_fp
+      {
+        ( \l_semio_viz_spatial_a_fp - \l_semio_viz_spatial_cx_fp ) ** 2
+        + ( \l_semio_viz_spatial_b_fp - \l_semio_viz_spatial_cy_fp ) ** 2
+      }
+  }
+
+% 📐 Coordinate accessors that also serve the three virtual super-triangle vertices n+1, n+2, n+3.
+\cs_new:Npn \semio_viz_spatial_vx:n #1
+  { \use:c { g_semio_viz_spatial_vx_ \int_eval:n {#1} _fp } }
+% 📐 Ordinate of triangulation vertex #1, real or super-triangle.
+\cs_new:Npn \semio_viz_spatial_vy:n #1
+  { \use:c { g_semio_viz_spatial_vy_ \int_eval:n {#1} _fp } }
+
+% 📌 Sets triangulation vertex #1 to (#2,#3).
+\cs_new_protected:Npn \semio_viz_spatial_vertex_set:nnn #1#2#3
+  {
+    \fp_gzero_new:c { g_semio_viz_spatial_vx_ \int_eval:n {#1} _fp }
+    \fp_gzero_new:c { g_semio_viz_spatial_vy_ \int_eval:n {#1} _fp }
+    \fp_gset:cn { g_semio_viz_spatial_vx_ \int_eval:n {#1} _fp } {#2}
+    \fp_gset:cn { g_semio_viz_spatial_vy_ \int_eval:n {#1} _fp } {#3}
+  }
+
+% 🔺 The Delaunay triangulation of point set #1; fewer than three points is an error, not an
+% empty result, because a caller asking for a mesh has to hear that it cannot have one.
+\cs_new_protected:Npn \semio_viz_spatial_delaunay:n #1
+  {
+    \semio_viz_spatial_load:n {#1}
+    \int_compare:nNnTF \l_semio_viz_spatial_n_int < { 3 }
+      { \msg_error:nnnn { semio-viz } { spatial-degenerate } { delaunay } { 3 } }
+      { \semio_viz_spatial_delaunay_run: }
+  }
+
+% 🔺 Bowyer-Watson: a super-triangle around the whole point set, every point inserted in turn,
+% then the triangles touching the super-triangle stripped away again.
+\cs_new_protected:Npn \semio_viz_spatial_delaunay_run:
+  {
+    \fp_set:Nn \l_semio_viz_spatial_a_fp
+      {
+        20 * max ( \l_semio_viz_spatial_xmax_fp - \l_semio_viz_spatial_xmin_fp ,
+                   \l_semio_viz_spatial_ymax_fp - \l_semio_viz_spatial_ymin_fp )
+        + 20
+      }
+    \fp_set:Nn \l_semio_viz_spatial_b_fp
+      { ( \l_semio_viz_spatial_xmin_fp + \l_semio_viz_spatial_xmax_fp ) / 2 }
+    \fp_set:Nn \l_semio_viz_spatial_c_fp
+      { ( \l_semio_viz_spatial_ymin_fp + \l_semio_viz_spatial_ymax_fp ) / 2 }
+    \semio_viz_spatial_vertex_set:nnn
+      { \l_semio_viz_spatial_n_int + 1 }
+      { \l_semio_viz_spatial_b_fp - \l_semio_viz_spatial_a_fp }
+      { \l_semio_viz_spatial_c_fp - \l_semio_viz_spatial_a_fp }
+    \semio_viz_spatial_vertex_set:nnn
+      { \l_semio_viz_spatial_n_int + 2 }
+      { \l_semio_viz_spatial_b_fp + \l_semio_viz_spatial_a_fp }
+      { \l_semio_viz_spatial_c_fp - \l_semio_viz_spatial_a_fp }
+    \semio_viz_spatial_vertex_set:nnn
+      { \l_semio_viz_spatial_n_int + 3 }
+      { \l_semio_viz_spatial_b_fp }
+      { \l_semio_viz_spatial_c_fp + \l_semio_viz_spatial_a_fp }
+    \seq_gclear:N \g_semio_viz_spatial_tri_seq
+    \seq_gput_right:Nx \g_semio_viz_spatial_tri_seq
+      {
+        { \int_eval:n { \l_semio_viz_spatial_n_int + 1 } }
+        { \int_eval:n { \l_semio_viz_spatial_n_int + 2 } }
+        { \int_eval:n { \l_semio_viz_spatial_n_int + 3 } }
+      }
+    \int_step_inline:nn { \l_semio_viz_spatial_n_int }
+      { \semio_viz_spatial_insert:n {##1} }
+    \semio_viz_spatial_strip_super:
+  }
+
+% ➕ Inserts one vertex: removes every triangle whose circumcircle contains it and re-triangulates the resulting hole.
+\cs_new_protected:Npn \semio_viz_spatial_insert:n #1
+  {
+    \fp_set:Nn \l_semio_viz_spatial_px_fp { \semio_viz_spatial_vx:n {#1} }
+    \fp_set:Nn \l_semio_viz_spatial_py_fp { \semio_viz_spatial_vy:n {#1} }
+    \seq_clear:N \l_semio_viz_spatial_keep_seq
+    \seq_clear:N \l_semio_viz_spatial_edge_seq
+    \seq_map_inline:Nn \g_semio_viz_spatial_tri_seq
+      { \semio_viz_spatial_classify:nnn ##1 }
+    \seq_gset_eq:NN \g_semio_viz_spatial_tri_seq \l_semio_viz_spatial_keep_seq
+    \semio_viz_spatial_boundary:n {#1}
+  }
+
+% ⭕ One triangle against the point being inserted: inside its circumcircle it is dissolved into
+% hole edges, outside it is kept.
+\cs_new_protected:Npn \semio_viz_spatial_classify:nnn #1#2#3
+  {
+    \semio_viz_spatial_circum:nnn {#1}{#2}{#3}
+    \fp_compare:nNnTF
+      {
+        ( \l_semio_viz_spatial_px_fp - \l_semio_viz_spatial_cx_fp ) ** 2
+        + ( \l_semio_viz_spatial_py_fp - \l_semio_viz_spatial_cy_fp ) ** 2
+      }
+      < { \l_semio_viz_spatial_cr_fp - \c_semio_viz_spatial_eps_fp }
+      {
+        \semio_viz_spatial_edge_add:nn {#1}{#2}
+        \semio_viz_spatial_edge_add:nn {#2}{#3}
+        \semio_viz_spatial_edge_add:nn {#3}{#1}
+      }
+      {
+        \seq_put_right:Nn \l_semio_viz_spatial_keep_seq { {#1}{#2}{#3} }
+      }
+  }
+
+% ➖ Files edge #1-#2 with its endpoints in ascending order, so the two sides of a shared edge
+% are recorded identically and can be counted against each other.
+\cs_new_protected:Npn \semio_viz_spatial_edge_add:nn #1#2
+  {
+    \int_compare:nNnTF {#1} < {#2}
+      { \seq_put_right:Nn \l_semio_viz_spatial_edge_seq { {#1}{#2} } }
+      { \seq_put_right:Nn \l_semio_viz_spatial_edge_seq { {#2}{#1} } }
+  }
+
+\int_new:N \l_semio_viz_spatial_count_int
+
+% 🕳️ Every hole edge that occurs exactly once becomes a triangle with the new vertex.
+\cs_new_protected:Npn \semio_viz_spatial_boundary:n #1
+  {
+    \seq_map_indexed_inline:Nn \l_semio_viz_spatial_edge_seq
+      {
+        \int_zero:N \l_semio_viz_spatial_count_int
+        \seq_map_inline:Nn \l_semio_viz_spatial_edge_seq
+          {
+            \tl_if_eq:nnT {##2} {####1}
+              { \int_incr:N \l_semio_viz_spatial_count_int }
+          }
+        \int_compare:nNnT \l_semio_viz_spatial_count_int = { 1 }
+          { \semio_viz_spatial_triangle_add:nnn ##2 {#1} }
+      }
+  }
+
+% 🔺 Files the triangle on the vertices #1, #2, #3.
+\cs_new_protected:Npn \semio_viz_spatial_triangle_add:nnn #1#2#3
+  { \seq_gput_right:Nn \g_semio_viz_spatial_tri_seq { {#1}{#2}{#3} } }
+
+% 🧹 Drops every triangle that still touches a super-triangle vertex.
+\cs_new_protected:Npn \semio_viz_spatial_strip_super:
+  {
+    \seq_clear:N \l_semio_viz_spatial_keep_seq
+    \seq_map_inline:Nn \g_semio_viz_spatial_tri_seq
+      { \semio_viz_spatial_strip_one:nnn ##1 }
+    \seq_gset_eq:NN \g_semio_viz_spatial_tri_seq \l_semio_viz_spatial_keep_seq
+  }
+
+% 🔎 Keeps the triangle #1-#2-#3 only when all three of its vertices are real points.
+\cs_new_protected:Npn \semio_viz_spatial_strip_one:nnn #1#2#3
+  {
+    \bool_lazy_all:nT
+      {
+        { \int_compare_p:n { #1 <= \l_semio_viz_spatial_n_int } }
+        { \int_compare_p:n { #2 <= \l_semio_viz_spatial_n_int } }
+        { \int_compare_p:n { #3 <= \l_semio_viz_spatial_n_int } }
+      }
+      { \seq_put_right:Nn \l_semio_viz_spatial_keep_seq { {#1}{#2}{#3} } }
+  }
+%endregion 🔖️Delaunay
+
+%region 🔖️Voronoi
+% 🔷 Cells are the circumcentres of the triangles incident to a site, sorted by angle about the site; hull sites get
+% 🔷 two far ray endpoints along the outward edge normals. The polygon is then Sutherland–Hodgman clipped to the
+% 🔷 rectangle, matching d3-delaunay's voronoi(bounds).cellPolygon up to the starting vertex and winding.
+\seq_new:N \g_semio_viz_spatial_cells_seq
+\seq_new:N \l_semio_viz_spatial_cell_seq
+\seq_new:N \l_semio_viz_spatial_clip_seq
+\fp_new:N \l_semio_viz_spatial_bx_fp
+\fp_new:N \l_semio_viz_spatial_by_fp
+\fp_new:N \l_semio_viz_spatial_bxx_fp
+\fp_new:N \l_semio_viz_spatial_byy_fp
+\fp_new:N \l_semio_viz_spatial_far_fp
+
+\cs_new_protected:Npn \semio_viz_spatial_voronoi:nnnnn #1#2#3#4#5
+  {
+    \semio_viz_spatial_delaunay:n {#1}
+    \fp_set:Nn \l_semio_viz_spatial_bx_fp {#2}
+    \fp_set:Nn \l_semio_viz_spatial_by_fp {#3}
+    \fp_set:Nn \l_semio_viz_spatial_bxx_fp {#4}
+    \fp_set:Nn \l_semio_viz_spatial_byy_fp {#5}
+    \fp_set:Nn \l_semio_viz_spatial_far_fp
+      {
+        1000 * max ( \l_semio_viz_spatial_bxx_fp - \l_semio_viz_spatial_bx_fp ,
+                     \l_semio_viz_spatial_byy_fp - \l_semio_viz_spatial_by_fp )
+      }
+    \seq_gclear:N \g_semio_viz_spatial_cells_seq
+    \semio_viz_spatial_boundary_edges:
+    \int_step_inline:nn { \l_semio_viz_spatial_n_int }
+      { \semio_viz_spatial_cell:n {##1} }
+  }
+
+\seq_new:N \l_semio_viz_spatial_ray_seq
+
+% 🔷 The Voronoi cell of site #1: the circumcentres of the triangles around it, the rays of the
+% hull edges it lies on, sorted by angle and clipped to the extent.
+\cs_new_protected:Npn \semio_viz_spatial_cell:n #1
+  {
+    \seq_clear:N \l_semio_viz_spatial_cell_seq
+    \seq_clear:N \l_semio_viz_spatial_ray_seq
+    \seq_map_inline:Nn \g_semio_viz_spatial_tri_seq
+      { \semio_viz_spatial_cell_tri:nnnn {#1} ##1 }
+    \semio_viz_spatial_cell_rays:n {#1}
+    \semio_viz_spatial_cell_sort:n {#1}
+    \semio_viz_spatial_clip_rect:
+    \seq_gput_right:Nx \g_semio_viz_spatial_cells_seq
+      {
+        {#1}
+        { \seq_use:Nn \l_semio_viz_spatial_clip_seq { ; } }
+      }
+  }
+
+% ⭕ Contributes the circumcentre of triangle #2-#3-#4 to site #1's cell, when that site is a corner.
+\cs_new_protected:Npn \semio_viz_spatial_cell_tri:nnnn #1#2#3#4
+  {
+    \bool_lazy_any:nT
+      {
+        { \int_compare_p:nNn {#2} = {#1} }
+        { \int_compare_p:nNn {#3} = {#1} }
+        { \int_compare_p:nNn {#4} = {#1} }
+      }
+      {
+        \semio_viz_spatial_circum:nnn {#2}{#3}{#4}
+        \seq_put_right:Nx \l_semio_viz_spatial_cell_seq
+          {
+            \fp_eval:n { \l_semio_viz_spatial_cx_fp } ,
+            \fp_eval:n { \l_semio_viz_spatial_cy_fp }
+          }
+      }
+  }
+
+% 🧱 The boundary edges of the triangulation, computed once per diagram: an edge belonging to exactly one triangle
+% 🧱 is a hull edge. Recomputing this per site would make the diagram O(n·E²) instead of O(E² + n·E).
+\seq_new:N \l_semio_viz_spatial_boundary_seq
+
+\cs_new_protected:Npn \semio_viz_spatial_boundary_edges:
+  {
+    \seq_clear:N \l_semio_viz_spatial_edge_seq
+    \seq_map_inline:Nn \g_semio_viz_spatial_tri_seq
+      { \semio_viz_spatial_edge_collect:nnn ##1 }
+    \seq_clear:N \l_semio_viz_spatial_boundary_seq
+    \seq_map_indexed_inline:Nn \l_semio_viz_spatial_edge_seq
+      {
+        \int_zero:N \l_semio_viz_spatial_count_int
+        \seq_map_inline:Nn \l_semio_viz_spatial_edge_seq
+          {
+            \tl_if_eq:nnT {##2} {####1}
+              { \int_incr:N \l_semio_viz_spatial_count_int }
+          }
+        \int_compare:nNnT \l_semio_viz_spatial_count_int = { 1 }
+          { \seq_put_right:Nn \l_semio_viz_spatial_boundary_seq {##2} }
+      }
+  }
+
+% ➡️ For a hull site the cell is unbounded: every boundary edge at the site contributes a far point along the outward normal.
+\cs_new_protected:Npn \semio_viz_spatial_cell_rays:n #1
+  {
+    \seq_map_inline:Nn \l_semio_viz_spatial_boundary_seq
+      { \semio_viz_spatial_ray:nnn {#1} ##1 }
+  }
+
+% ➖ Files all three edges of the triangle #1-#2-#3, for the hull-edge count.
+\cs_new_protected:Npn \semio_viz_spatial_edge_collect:nnn #1#2#3
+  {
+    \semio_viz_spatial_edge_add:nn {#1}{#2}
+    \semio_viz_spatial_edge_add:nn {#2}{#3}
+    \semio_viz_spatial_edge_add:nn {#3}{#1}
+  }
+
+% ➡️ Adds the outward ray of hull edge #2-#3 to site #1's cell, when that site is an endpoint —
+% which is how a cell on the hull is closed at all.
+\cs_new_protected:Npn \semio_viz_spatial_ray:nnn #1#2#3
+  {
+    \bool_lazy_or:nnT
+      { \int_compare_p:nNn {#2} = {#1} }
+      { \int_compare_p:nNn {#3} = {#1} }
+      { \semio_viz_spatial_ray_add:nn {#2}{#3} }
+  }
+
+% ➡️ The ray itself: from the midpoint of edge #1-#2 along its outward normal, far enough to leave
+% the extent, so the clip closes the cell against the frame.
+\cs_new_protected:Npn \semio_viz_spatial_ray_add:nn #1#2
+  {
+    \fp_set:Nn \l_semio_viz_spatial_a_fp
+      {
+        ( \semio_viz_spatial_vx:n {#1} + \semio_viz_spatial_vx:n {#2} ) / 2
+      }
+    \fp_set:Nn \l_semio_viz_spatial_b_fp
+      {
+        ( \semio_viz_spatial_vy:n {#1} + \semio_viz_spatial_vy:n {#2} ) / 2
+      }
+    \fp_set:Nn \l_semio_viz_spatial_c_fp
+      { \semio_viz_spatial_vy:n {#2} - \semio_viz_spatial_vy:n {#1} }
+    \fp_set:Nn \l_semio_viz_spatial_d_fp
+      { \semio_viz_spatial_vx:n {#1} - \semio_viz_spatial_vx:n {#2} }
+    \fp_set:Nn \l_semio_viz_spatial_e_fp
+      {
+        sqrt ( \l_semio_viz_spatial_c_fp ** 2 + \l_semio_viz_spatial_d_fp ** 2 )
+      }
+    \fp_set:Nn \l_semio_viz_spatial_f_fp
+      {
+        ( \l_semio_viz_spatial_a_fp
+          - ( \l_semio_viz_spatial_xmin_fp + \l_semio_viz_spatial_xmax_fp ) / 2 )
+          * \l_semio_viz_spatial_c_fp
+        + ( \l_semio_viz_spatial_b_fp
+            - ( \l_semio_viz_spatial_ymin_fp + \l_semio_viz_spatial_ymax_fp ) / 2 )
+          * \l_semio_viz_spatial_d_fp
+        < 0 ? -1 : 1
+      }
+    \seq_put_right:Nx \l_semio_viz_spatial_cell_seq
+      {
+        \fp_eval:n
+          {
+            \l_semio_viz_spatial_a_fp + \l_semio_viz_spatial_f_fp
+            * \l_semio_viz_spatial_far_fp * \l_semio_viz_spatial_c_fp
+            / \l_semio_viz_spatial_e_fp
+          } ,
+        \fp_eval:n
+          {
+            \l_semio_viz_spatial_b_fp + \l_semio_viz_spatial_f_fp
+            * \l_semio_viz_spatial_far_fp * \l_semio_viz_spatial_d_fp
+            / \l_semio_viz_spatial_e_fp
+          }
+      }
+  }
+
+% 🔄 Orders the cell vertices counter-clockwise about the site (insertion sort on the polar angle).
+\seq_new:N \l_semio_viz_spatial_sorted_seq
+\cs_new_protected:Npn \semio_viz_spatial_cell_sort:n #1
+  {
+    \fp_set:Nn \l_semio_viz_spatial_px_fp { \semio_viz_spatial_vx:n {#1} }
+    \fp_set:Nn \l_semio_viz_spatial_py_fp { \semio_viz_spatial_vy:n {#1} }
+    \seq_sort:Nn \l_semio_viz_spatial_cell_seq
+      {
+        \fp_compare:nNnTF
+          {
+            atand ( \clist_item:nn {##1} { 2 } - \l_semio_viz_spatial_py_fp ,
+                    \clist_item:nn {##1} { 1 } - \l_semio_viz_spatial_px_fp )
+          }
+          <
+          {
+            atand ( \clist_item:nn {##2} { 2 } - \l_semio_viz_spatial_py_fp ,
+                    \clist_item:nn {##2} { 1 } - \l_semio_viz_spatial_px_fp )
+          }
+          { \sort_return_same: }
+          { \sort_return_swapped: }
+      }
+  }
+
+% ✂️ Sutherland–Hodgman clip of the cell polygon against the rectangle, one half-plane per side.
+\cs_new_protected:Npn \semio_viz_spatial_clip_rect:
+  {
+    \seq_set_eq:NN \l_semio_viz_spatial_clip_seq \l_semio_viz_spatial_cell_seq
+    \semio_viz_spatial_clip_half:nnn { 1 } { 1 } { \l_semio_viz_spatial_bx_fp }
+    \semio_viz_spatial_clip_half:nnn { 1 } { -1 } { \l_semio_viz_spatial_bxx_fp }
+    \semio_viz_spatial_clip_half:nnn { 2 } { 1 } { \l_semio_viz_spatial_by_fp }
+    \semio_viz_spatial_clip_half:nnn { 2 } { -1 } { \l_semio_viz_spatial_byy_fp }
+  }
+
+\tl_new:N \l_semio_viz_spatial_prev_tl
+\seq_new:N \l_semio_viz_spatial_out_seq
+\int_new:N \l_semio_viz_spatial_axis_int
+\int_new:N \l_semio_viz_spatial_side_int
+\fp_new:N \l_semio_viz_spatial_lim_fp
+
+% ➖ Keeps the side of coordinate axis #1 (1 = x, 2 = y) on which side*(v - limit) >= 0, inserting edge crossings.
+\cs_new_protected:Npn \semio_viz_spatial_clip_half:nnn #1#2#3
+  {
+    \int_set:Nn \l_semio_viz_spatial_axis_int {#1}
+    \int_set:Nn \l_semio_viz_spatial_side_int {#2}
+    \fp_set:Nn \l_semio_viz_spatial_lim_fp {#3}
+    \seq_clear:N \l_semio_viz_spatial_out_seq
+    \seq_if_empty:NF \l_semio_viz_spatial_clip_seq
+      {
+        \tl_set:Nx \l_semio_viz_spatial_prev_tl
+          {
+            \seq_item:Nn \l_semio_viz_spatial_clip_seq
+              { \seq_count:N \l_semio_viz_spatial_clip_seq }
+          }
+        \seq_map_inline:Nn \l_semio_viz_spatial_clip_seq
+          { \semio_viz_spatial_clip_step:n {##1} }
+        \seq_set_eq:NN \l_semio_viz_spatial_clip_seq \l_semio_viz_spatial_out_seq
+      }
+  }
+
+% ✂️ One Sutherland-Hodgman step: vertex #1 is kept when it is inside, and a crossing vertex is
+% inserted whenever the edge from the previous vertex changes side.
+\cs_new_protected:Npn \semio_viz_spatial_clip_step:n #1
+  {
+    \fp_set:Nn \l_semio_viz_spatial_a_fp
+      {
+        \l_semio_viz_spatial_side_int *
+        ( \clist_item:nn {#1} { \l_semio_viz_spatial_axis_int }
+          - \l_semio_viz_spatial_lim_fp )
+      }
+    \fp_set:Nn \l_semio_viz_spatial_b_fp
+      {
+        \l_semio_viz_spatial_side_int *
+        ( \clist_item:on { \l_semio_viz_spatial_prev_tl }
+            { \l_semio_viz_spatial_axis_int }
+          - \l_semio_viz_spatial_lim_fp )
+      }
+    \fp_compare:nNnT
+      { \l_semio_viz_spatial_a_fp * \l_semio_viz_spatial_b_fp } < { 0 }
+      { \semio_viz_spatial_clip_cross:n {#1} }
+    \fp_compare:nT { \l_semio_viz_spatial_a_fp >= 0 }
+      { \seq_put_right:Nn \l_semio_viz_spatial_out_seq {#1} }
+    \tl_set:Nn \l_semio_viz_spatial_prev_tl {#1}
+  }
+
+% ✖️ The crossing vertex on the edge from the previous vertex to #1, by linear interpolation.
+\cs_new_protected:Npn \semio_viz_spatial_clip_cross:n #1
+  {
+    \fp_set:Nn \l_semio_viz_spatial_c_fp
+      {
+        \l_semio_viz_spatial_b_fp
+        / ( \l_semio_viz_spatial_b_fp - \l_semio_viz_spatial_a_fp )
+      }
+    \seq_put_right:Nx \l_semio_viz_spatial_out_seq
+      {
+        \fp_eval:n
+          {
+            \clist_item:on { \l_semio_viz_spatial_prev_tl } { 1 }
+            + \l_semio_viz_spatial_c_fp *
+              ( \clist_item:nn {#1} { 1 }
+                - \clist_item:on { \l_semio_viz_spatial_prev_tl } { 1 } )
+          } ,
+        \fp_eval:n
+          {
+            \clist_item:on { \l_semio_viz_spatial_prev_tl } { 2 }
+            + \l_semio_viz_spatial_c_fp *
+              ( \clist_item:nn {#1} { 2 }
+                - \clist_item:on { \l_semio_viz_spatial_prev_tl } { 2 } )
+          }
+      }
+  }
+%endregion 🔖️Voronoi
+
+%region 🔖️Hull
+% 🔶 Andrew's monotone chain, counter-clockwise, starting at the lexicographically smallest point; identical output to d3-polygon's hull up to that starting vertex.
+\seq_new:N \g_semio_viz_spatial_hull_seq
+\seq_new:N \l_semio_viz_spatial_order_seq
+\seq_new:N \l_semio_viz_spatial_lower_seq
+\seq_new:N \l_semio_viz_spatial_upper_seq
+
+\cs_new_protected:Npn \semio_viz_spatial_hull:n #1
+  {
+    \semio_viz_spatial_load:n {#1}
+    \seq_clear:N \l_semio_viz_spatial_order_seq
+    \int_step_inline:nn { \l_semio_viz_spatial_n_int }
+      { \seq_put_right:Nn \l_semio_viz_spatial_order_seq {##1} }
+    \seq_sort:Nn \l_semio_viz_spatial_order_seq
+      {
+        \fp_compare:nNnTF
+          { \semio_viz_spatial_vx:n {##1} } < { \semio_viz_spatial_vx:n {##2} }
+          { \sort_return_same: }
+          {
+            \bool_lazy_and:nnTF
+              {
+                \fp_compare_p:nNn { \semio_viz_spatial_vx:n {##1} }
+                  = { \semio_viz_spatial_vx:n {##2} }
+              }
+              {
+                \fp_compare_p:nNn { \semio_viz_spatial_vy:n {##1} }
+                  < { \semio_viz_spatial_vy:n {##2} }
+              }
+              { \sort_return_same: }
+              { \sort_return_swapped: }
+          }
+      }
+    \seq_clear:N \l_semio_viz_spatial_lower_seq
+    \seq_map_inline:Nn \l_semio_viz_spatial_order_seq
+      { \semio_viz_spatial_chain:nN {##1} \l_semio_viz_spatial_lower_seq }
+    \seq_clear:N \l_semio_viz_spatial_upper_seq
+    \seq_set_eq:NN \l_semio_viz_spatial_out_seq \l_semio_viz_spatial_order_seq
+    \seq_reverse:N \l_semio_viz_spatial_out_seq
+    \seq_map_inline:Nn \l_semio_viz_spatial_out_seq
+      { \semio_viz_spatial_chain:nN {##1} \l_semio_viz_spatial_upper_seq }
+    \seq_pop_right:NN \l_semio_viz_spatial_lower_seq \l_tmpa_tl
+    \seq_pop_right:NN \l_semio_viz_spatial_upper_seq \l_tmpa_tl
+    \seq_gset_eq:NN \g_semio_viz_spatial_hull_seq \l_semio_viz_spatial_lower_seq
+    \seq_map_inline:Nn \l_semio_viz_spatial_upper_seq
+      { \seq_gput_right:Nn \g_semio_viz_spatial_hull_seq {##1} }
+  }
+
+% 🪝 Pops while the last turn is not a left turn, then appends; the shared half of the monotone chain.
+\cs_new_protected:Npn \semio_viz_spatial_chain:nN #1#2
+  {
+    \bool_while_do:nn
+      {
+        \bool_lazy_and_p:nn
+          { \int_compare_p:nNn { \seq_count:N #2 } > { 1 } }
+          { ! \semio_viz_spatial_left_turn_p:nN {#1} #2 }
+      }
+      { \seq_pop_right:NN #2 \l_tmpa_tl }
+    \seq_put_right:Nn #2 {#1}
+  }
+
+% ↩️ True when point #1 turns left off the last two points of chain #2.
+\prg_new_conditional:Npnn \semio_viz_spatial_left_turn:nN #1#2 { p, T, F, TF }
+  {
+    \fp_compare:nNnTF
+      {
+        ( \semio_viz_spatial_vx:n
+            { \seq_item:Nn #2 { \seq_count:N #2 } }
+          - \semio_viz_spatial_vx:n
+            { \seq_item:Nn #2 { \seq_count:N #2 - 1 } } )
+        * ( \semio_viz_spatial_vy:n {#1}
+            - \semio_viz_spatial_vy:n
+              { \seq_item:Nn #2 { \seq_count:N #2 - 1 } } )
+        - ( \semio_viz_spatial_vy:n
+              { \seq_item:Nn #2 { \seq_count:N #2 } }
+            - \semio_viz_spatial_vy:n
+              { \seq_item:Nn #2 { \seq_count:N #2 - 1 } } )
+          * ( \semio_viz_spatial_vx:n {#1}
+              - \semio_viz_spatial_vx:n
+                { \seq_item:Nn #2 { \seq_count:N #2 - 1 } } )
+      }
+      > { 0 }
+      { \prg_return_true: }
+      { \prg_return_false: }
+  }
+%endregion 🔖️Hull
+
+%region 🔖️Hexbin
+% 🍯 d3-hexbin verbatim: dx = 2 r sin(60 deg), dy = 1.5 r, with d3's nearest-of-two-candidates correction and JS half-up rounding.
+\seq_new:N \g_semio_viz_spatial_bins_seq
+\prop_new:N \l_semio_viz_spatial_bins_prop
+\fp_new:N \l_semio_viz_spatial_hdx_fp
+\fp_new:N \l_semio_viz_spatial_hdy_fp
+\int_new:N \l_semio_viz_spatial_pi_int
+\int_new:N \l_semio_viz_spatial_pj_int
+\fp_new:N \l_semio_viz_spatial_hpx_fp
+\fp_new:N \l_semio_viz_spatial_hpy_fp
+\fp_new:N \l_semio_viz_spatial_hoff_fp
+
+% 🔢 JavaScript Math.round: half away from minus infinity, i.e. floor(v + 0.5).
+\cs_new:Npn \semio_viz_spatial_jsround:n #1 { \fp_eval:n { floor ( (#1) + 0.5 ) } }
+
+% 🍯 Bins point set #1 into a hexagonal lattice of radius #2, one entry per occupied bin.
+\cs_new_protected:Npn \semio_viz_spatial_hexbin:nn #1#2
+  {
+    \semio_viz_spatial_load:n {#1}
+    \fp_set:Nn \l_semio_viz_spatial_hdy_fp { 1.5 * (#2) }
+    \fp_set:Nn \l_semio_viz_spatial_hdx_fp { (#2) * 2 * sind ( 60 ) }
+    \prop_clear:N \l_semio_viz_spatial_bins_prop
+    \seq_gclear:N \g_semio_viz_spatial_bins_seq
+    \int_step_inline:nn { \l_semio_viz_spatial_n_int }
+      { \semio_viz_spatial_hexbin_point:n {##1} }
+  }
+
+% 🍯 The lattice cell point #1 falls in: the row from its ordinate, the column from its abscissa
+% with the row's own half-cell offset.
+\cs_new_protected:Npn \semio_viz_spatial_hexbin_point:n #1
+  {
+    \fp_set:Nn \l_semio_viz_spatial_hpy_fp
+      { \semio_viz_spatial_y:n {#1} / \l_semio_viz_spatial_hdy_fp }
+    \fp_set:Nn \l_semio_viz_spatial_b_fp
+      { \semio_viz_spatial_jsround:n { \l_semio_viz_spatial_hpy_fp } }
+    \fp_set:Nn \l_semio_viz_spatial_hoff_fp
+      { abs ( \l_semio_viz_spatial_b_fp - 2 * floor ( \l_semio_viz_spatial_b_fp / 2 ) ) }
+    \fp_set:Nn \l_semio_viz_spatial_hpx_fp
+      {
+        \semio_viz_spatial_x:n {#1} / \l_semio_viz_spatial_hdx_fp
+        - ( \l_semio_viz_spatial_hoff_fp = 1 ? 0.5 : 0 )
+      }
+    \fp_set:Nn \l_semio_viz_spatial_a_fp
+      { \semio_viz_spatial_jsround:n { \l_semio_viz_spatial_hpx_fp } }
+    \fp_set:Nn \l_semio_viz_spatial_c_fp
+      { \l_semio_viz_spatial_hpy_fp - \l_semio_viz_spatial_b_fp }
+    \fp_compare:nNnT { abs ( \l_semio_viz_spatial_c_fp ) * 3 } > { 1 }
+      { \semio_viz_spatial_hexbin_correct: }
+    \semio_viz_spatial_hexbin_store:
+  }
+
+% 🎯 d3's correction: the rounded cell and its diagonal neighbour are both tried, and the nearer
+% centre wins — without it the lattice's seams bin points to the wrong hexagon.
+\cs_new_protected:Npn \semio_viz_spatial_hexbin_correct:
+  {
+    \fp_set:Nn \l_semio_viz_spatial_d_fp
+      { \l_semio_viz_spatial_hpx_fp - \l_semio_viz_spatial_a_fp }
+    \fp_set:Nn \l_semio_viz_spatial_e_fp
+      {
+        \l_semio_viz_spatial_a_fp
+        + ( \l_semio_viz_spatial_hpx_fp < \l_semio_viz_spatial_a_fp ? -1 : 1 ) / 2
+      }
+    \fp_set:Nn \l_semio_viz_spatial_f_fp
+      {
+        \l_semio_viz_spatial_b_fp
+        + ( \l_semio_viz_spatial_hpy_fp < \l_semio_viz_spatial_b_fp ? -1 : 1 )
+      }
+    \fp_compare:nNnT
+      {
+        \l_semio_viz_spatial_d_fp ** 2 + \l_semio_viz_spatial_c_fp ** 2
+      }
+      >
+      {
+        ( \l_semio_viz_spatial_hpx_fp - \l_semio_viz_spatial_e_fp ) ** 2
+        + ( \l_semio_viz_spatial_hpy_fp - \l_semio_viz_spatial_f_fp ) ** 2
+      }
+      {
+        \fp_set:Nn \l_semio_viz_spatial_a_fp
+          {
+            \l_semio_viz_spatial_e_fp
+            + ( abs ( \l_semio_viz_spatial_b_fp
+                      - 2 * floor ( \l_semio_viz_spatial_b_fp / 2 ) ) = 1
+                ? 1 : -1 ) / 2
+          }
+        \fp_set_eq:NN \l_semio_viz_spatial_b_fp \l_semio_viz_spatial_f_fp
+      }
+  }
+
+% 📥 Counts the current point into its bin, filing the bin's own centre the first time it is hit.
+\cs_new_protected:Npn \semio_viz_spatial_hexbin_store:
+  {
+    \tl_set:Nx \l_tmpa_tl
+      {
+        \fp_eval:n { \l_semio_viz_spatial_a_fp } -
+        \fp_eval:n { \l_semio_viz_spatial_b_fp }
+      }
+    \prop_get:NVNTF \l_semio_viz_spatial_bins_prop \l_tmpa_tl \l_tmpb_tl
+      {
+        \prop_put:NVx \l_semio_viz_spatial_bins_prop \l_tmpa_tl
+          { \int_eval:n { \l_tmpb_tl + 1 } }
+      }
+      {
+        \prop_put:NVn \l_semio_viz_spatial_bins_prop \l_tmpa_tl { 1 }
+        \seq_gput_right:Nx \g_semio_viz_spatial_bins_seq
+          {
+            { \l_tmpa_tl }
+            {
+              \fp_eval:n
+                {
+                  ( \l_semio_viz_spatial_a_fp
+                    + ( abs ( \l_semio_viz_spatial_b_fp
+                              - 2 * floor ( \l_semio_viz_spatial_b_fp / 2 ) ) = 1
+                        ? 0.5 : 0 ) )
+                  * \l_semio_viz_spatial_hdx_fp
+                }
+            }
+            {
+              \fp_eval:n
+                { \l_semio_viz_spatial_b_fp * \l_semio_viz_spatial_hdy_fp }
+            }
+          }
+      }
+  }
+
+% 🔢 Reads back the point count of a stored bin id.
+\cs_new:Npn \semio_viz_spatial_bin_count:n #1
+  { \prop_item:Nn \l_semio_viz_spatial_bins_prop {#1} }
+%endregion 🔖️Hexbin
+
+%region 🔖️Beeswarm
+% 🐝 Deterministic one-dimensional collision layout: points are placed in input order at the smallest offset that
+% 🐝 clears every already placed neighbour within the collision radius, alternating sides so the swarm stays centred.
+\seq_new:N \g_semio_viz_spatial_swarm_seq
+\fp_new:N \l_semio_viz_spatial_off_fp
+\fp_new:N \l_semio_viz_spatial_step_fp
+
+\cs_new_protected:Npn \semio_viz_spatial_beeswarm:nn #1#2
+  {
+    \semio_viz_spatial_load:n {#1}
+    \seq_gclear:N \g_semio_viz_spatial_swarm_seq
+    \fp_set:Nn \l_semio_viz_spatial_step_fp { (#2) / 4 }
+    \int_step_inline:nn { \l_semio_viz_spatial_n_int }
+      { \semio_viz_spatial_swarm_place:nn {##1} {#2} }
+  }
+
+\bool_new:N \l_semio_viz_spatial_free_bool
+
+% 🐝 Places point #1 at the smallest offset from the axis that clears every point already placed
+% within radius #2, trying the two sides in turn so the swarm stays centred.
+\cs_new_protected:Npn \semio_viz_spatial_swarm_place:nn #1#2
+  {
+    \fp_zero:N \l_semio_viz_spatial_off_fp
+    \bool_set_false:N \l_semio_viz_spatial_free_bool
+    \bool_while_do:nn
+      { ! \l_semio_viz_spatial_free_bool }
+      {
+        \semio_viz_spatial_swarm_test:nn {#1} {#2}
+        \bool_if:NF \l_semio_viz_spatial_free_bool
+          {
+            \fp_compare:nNnTF \l_semio_viz_spatial_off_fp > { 0 }
+              {
+                \fp_set:Nn \l_semio_viz_spatial_off_fp
+                  { - \l_semio_viz_spatial_off_fp }
+              }
+              {
+                \fp_set:Nn \l_semio_viz_spatial_off_fp
+                  {
+                    - \l_semio_viz_spatial_off_fp
+                    + \l_semio_viz_spatial_step_fp
+                  }
+              }
+          }
+      }
+    \seq_gput_right:Nx \g_semio_viz_spatial_swarm_seq
+      {
+        \fp_eval:n { \semio_viz_spatial_x:n {#1} } ,
+        \fp_eval:n
+          {
+            \semio_viz_spatial_y:n {#1} + \l_semio_viz_spatial_off_fp
+          }
+      }
+  }
+
+% 🔍 Sets free_bool when the candidate offset clears every already placed neighbour.
+\cs_new_protected:Npn \semio_viz_spatial_swarm_test:nn #1#2
+  {
+    \bool_set_true:N \l_semio_viz_spatial_free_bool
+    \seq_map_inline:Nn \g_semio_viz_spatial_swarm_seq
+      {
+        \fp_compare:nNnT
+          {
+            ( \semio_viz_spatial_x:n {#1} - \clist_item:nn {##1} { 1 } ) ** 2
+            + ( \semio_viz_spatial_y:n {#1} + \l_semio_viz_spatial_off_fp
+                - \clist_item:nn {##1} { 2 } ) ** 2
+          }
+          < { ( (#2) ** 2 ) - \c_semio_viz_spatial_eps_fp }
+          {
+            \bool_set_false:N \l_semio_viz_spatial_free_bool
+            \seq_map_break:
+          }
+      }
+  }
+
+% 🎲 Deterministic jitter: a fixed 32-bit linear congruential sequence keyed by the point index, so a rebuild is byte-identical.
+\cs_new_protected:Npn \semio_viz_spatial_jitter:nn #1#2
+  {
+    \semio_viz_spatial_load:n {#1}
+    \seq_gclear:N \g_semio_viz_spatial_swarm_seq
+    \int_step_inline:nn { \l_semio_viz_spatial_n_int }
+      {
+        \seq_gput_right:Nx \g_semio_viz_spatial_swarm_seq
+          {
+            \fp_eval:n { \semio_viz_spatial_x:n {##1} } ,
+            \fp_eval:n
+              {
+                \semio_viz_spatial_y:n {##1}
+                + (#2) * ( 2 * \semio_viz_spatial_rand:n {##1} - 1 )
+              }
+          }
+      }
+  }
+
+% 🎲 The unit-interval value of the LCG x_{k+1} = (1103515245 x_k + 12345) mod 2^31 seeded with the index.
+\cs_new:Npn \semio_viz_spatial_rand:n #1
+  {
+    \fp_eval:n
+      {
+        (
+          ( 1103515245 * ( 1103515245 * (#1) + 12345 ) + 12345 )
+          - 2147483648 * floor
+            ( ( 1103515245 * ( 1103515245 * (#1) + 12345 ) + 12345 )
+              / 2147483648 )
+        ) / 2147483648
+      }
+  }
+%endregion 🔖️Beeswarm
+
+%region 🔖️Contour
+% 〰️ Marching squares over a row-major grid. A cell contributes one or two segments; segments are then joined end to
+% 〰️ end into rings. Vertices sit on grid edges at the linear crossing fraction, the same interpolation d3-contour's
+% 〰️ `smooth` applies, expressed in grid coordinates where node (i,j) is at (i,j) — d3 reports the same rings shifted
+% 〰️ by -0.5 in both axes because its case table is written on half-integer cell corners.
+\seq_new:N \g_semio_viz_spatial_seg_seq
+\seq_new:N \g_semio_viz_spatial_rings_seq
+\int_new:N \l_semio_viz_spatial_w_int
+\int_new:N \l_semio_viz_spatial_h_int
+\fp_new:N \l_semio_viz_spatial_thr_fp
+\fp_new:N \l_semio_viz_spatial_va_fp
+\fp_new:N \l_semio_viz_spatial_vb_fp
+\fp_new:N \l_semio_viz_spatial_vc_fp
+\fp_new:N \l_semio_viz_spatial_vd_fp
+\int_new:N \l_semio_viz_spatial_case_int
+
+\cs_new:Npn \semio_viz_spatial_gv:nn #1#2
+  {
+    \seq_item:cn
+      { g_semio_viz_grid_ \l_semio_viz_store_name_tl _seq }
+      { (#2) * \l_semio_viz_spatial_w_int + (#1) + 1 }
+  }
+
+% 〰️ The isolines of grid #1 at threshold #2: every cell classified, its segments collected, then
+% joined end to end into rings.
+\cs_new_protected:Npn \semio_viz_spatial_contour:nn #1#2
+  {
+    \semio_viz_grid_require:n {#1}
+    \int_set:Nn \l_semio_viz_spatial_w_int
+      { \use:c { g_semio_viz_grid_ \l_semio_viz_store_name_tl _w_int } }
+    \int_set:Nn \l_semio_viz_spatial_h_int
+      { \use:c { g_semio_viz_grid_ \l_semio_viz_store_name_tl _h_int } }
+    \fp_set:Nn \l_semio_viz_spatial_thr_fp {#2}
+    \seq_gclear:N \g_semio_viz_spatial_seg_seq
+    \int_step_inline:nnn { 0 } { \l_semio_viz_spatial_h_int - 2 }
+      {
+        \int_step_inline:nnn { 0 } { \l_semio_viz_spatial_w_int - 2 }
+          { \semio_viz_spatial_msquare:nn {####1} {##1} }
+      }
+    \semio_viz_spatial_join_rings:
+  }
+
+% 🔲 One marching-squares cell with lower-left node (#1,#2); corners a=(x,y) b=(x+1,y) c=(x+1,y+1) d=(x,y+1).
+\cs_new_protected:Npn \semio_viz_spatial_msquare:nn #1#2
+  {
+    \fp_set:Nn \l_semio_viz_spatial_va_fp { \semio_viz_spatial_gv:nn {#1} {#2} }
+    \fp_set:Nn \l_semio_viz_spatial_vb_fp
+      { \semio_viz_spatial_gv:nn { #1 + 1 } {#2} }
+    \fp_set:Nn \l_semio_viz_spatial_vc_fp
+      { \semio_viz_spatial_gv:nn { #1 + 1 } { #2 + 1 } }
+    \fp_set:Nn \l_semio_viz_spatial_vd_fp
+      { \semio_viz_spatial_gv:nn {#1} { #2 + 1 } }
+    \int_set:Nn \l_semio_viz_spatial_case_int
+      {
+        \fp_compare:nTF
+          { \l_semio_viz_spatial_va_fp >= \l_semio_viz_spatial_thr_fp }
+          { 1 } { 0 }
+        + \fp_compare:nTF
+          { \l_semio_viz_spatial_vb_fp >= \l_semio_viz_spatial_thr_fp }
+          { 2 } { 0 }
+        + \fp_compare:nTF
+          { \l_semio_viz_spatial_vc_fp >= \l_semio_viz_spatial_thr_fp }
+          { 4 } { 0 }
+        + \fp_compare:nTF
+          { \l_semio_viz_spatial_vd_fp >= \l_semio_viz_spatial_thr_fp }
+          { 8 } { 0 }
+      }
+    \semio_viz_spatial_case:nn {#1} {#2}
+  }
+
+% ⤵️ Crossing point on the bottom / right / top / left edge of the cell, as `x,y` in grid coordinates.
+\cs_new:Npn \semio_viz_spatial_eb:nn #1#2
+  {
+    \fp_eval:n
+      {
+        (#1) + ( \l_semio_viz_spatial_thr_fp - \l_semio_viz_spatial_va_fp )
+        / ( \l_semio_viz_spatial_vb_fp - \l_semio_viz_spatial_va_fp )
+      } , \fp_eval:n { #2 }
+  }
+% ➡️ Crossing point on the right edge of cell (#1,#2).
+\cs_new:Npn \semio_viz_spatial_er:nn #1#2
+  {
+    \fp_eval:n { #1 + 1 } , \fp_eval:n
+      {
+        (#2) + ( \l_semio_viz_spatial_thr_fp - \l_semio_viz_spatial_vb_fp )
+        / ( \l_semio_viz_spatial_vc_fp - \l_semio_viz_spatial_vb_fp )
+      }
+  }
+% ⬆️ Crossing point on the top edge of cell (#1,#2).
+\cs_new:Npn \semio_viz_spatial_et:nn #1#2
+  {
+    \fp_eval:n
+      {
+        (#1) + ( \l_semio_viz_spatial_thr_fp - \l_semio_viz_spatial_vd_fp )
+        / ( \l_semio_viz_spatial_vc_fp - \l_semio_viz_spatial_vd_fp )
+      } , \fp_eval:n { #2 + 1 }
+  }
+% ⬅️ Crossing point on the left edge of cell (#1,#2).
+\cs_new:Npn \semio_viz_spatial_el:nn #1#2
+  {
+    \fp_eval:n { #1 } , \fp_eval:n
+      {
+        (#2) + ( \l_semio_viz_spatial_thr_fp - \l_semio_viz_spatial_va_fp )
+        / ( \l_semio_viz_spatial_vd_fp - \l_semio_viz_spatial_va_fp )
+      }
+  }
+
+% ➖ Files one contour segment from vertex #1 to vertex #2.
+\cs_new_protected:Npn \semio_viz_spatial_seg:nn #1#2
+  { \seq_gput_right:Nx \g_semio_viz_spatial_seg_seq { {#1} {#2} } }
+
+% 🗺️ The sixteen marching-squares cases; ambiguous cases 5 and 10 are resolved by the cell mean, as d3-contour does.
+\cs_new_protected:Npn \semio_viz_spatial_case:nn #1#2
+  {
+    \int_case:nn \l_semio_viz_spatial_case_int
+      {
+        { 1 } { \semio_viz_spatial_seg:nn
+                  { \semio_viz_spatial_el:nn {#1}{#2} }
+                  { \semio_viz_spatial_eb:nn {#1}{#2} } }
+        { 2 } { \semio_viz_spatial_seg:nn
+                  { \semio_viz_spatial_eb:nn {#1}{#2} }
+                  { \semio_viz_spatial_er:nn {#1}{#2} } }
+        { 3 } { \semio_viz_spatial_seg:nn
+                  { \semio_viz_spatial_el:nn {#1}{#2} }
+                  { \semio_viz_spatial_er:nn {#1}{#2} } }
+        { 4 } { \semio_viz_spatial_seg:nn
+                  { \semio_viz_spatial_er:nn {#1}{#2} }
+                  { \semio_viz_spatial_et:nn {#1}{#2} } }
+        { 5 } { \semio_viz_spatial_saddle:nn {#1}{#2} }
+        { 6 } { \semio_viz_spatial_seg:nn
+                  { \semio_viz_spatial_eb:nn {#1}{#2} }
+                  { \semio_viz_spatial_et:nn {#1}{#2} } }
+        { 7 } { \semio_viz_spatial_seg:nn
+                  { \semio_viz_spatial_el:nn {#1}{#2} }
+                  { \semio_viz_spatial_et:nn {#1}{#2} } }
+        { 8 } { \semio_viz_spatial_seg:nn
+                  { \semio_viz_spatial_et:nn {#1}{#2} }
+                  { \semio_viz_spatial_el:nn {#1}{#2} } }
+        { 9 } { \semio_viz_spatial_seg:nn
+                  { \semio_viz_spatial_et:nn {#1}{#2} }
+                  { \semio_viz_spatial_eb:nn {#1}{#2} } }
+        { 10 } { \semio_viz_spatial_saddle_alt:nn {#1}{#2} }
+        { 11 } { \semio_viz_spatial_seg:nn
+                   { \semio_viz_spatial_et:nn {#1}{#2} }
+                   { \semio_viz_spatial_er:nn {#1}{#2} } }
+        { 12 } { \semio_viz_spatial_seg:nn
+                   { \semio_viz_spatial_er:nn {#1}{#2} }
+                   { \semio_viz_spatial_el:nn {#1}{#2} } }
+        { 13 } { \semio_viz_spatial_seg:nn
+                   { \semio_viz_spatial_er:nn {#1}{#2} }
+                   { \semio_viz_spatial_eb:nn {#1}{#2} } }
+        { 14 } { \semio_viz_spatial_seg:nn
+                   { \semio_viz_spatial_eb:nn {#1}{#2} }
+                   { \semio_viz_spatial_el:nn {#1}{#2} } }
+      }
+  }
+
+% ⌛ Case 5, the ambiguous saddle: the two corners above the threshold are separated, so the cell
+% contributes two segments and not one.
+\cs_new_protected:Npn \semio_viz_spatial_saddle:nn #1#2
+  {
+    \semio_viz_spatial_seg:nn
+      { \semio_viz_spatial_el:nn {#1}{#2} } { \semio_viz_spatial_et:nn {#1}{#2} }
+    \semio_viz_spatial_seg:nn
+      { \semio_viz_spatial_er:nn {#1}{#2} } { \semio_viz_spatial_eb:nn {#1}{#2} }
+  }
+
+% ⌛ Case 10, the other saddle: the same two segments on the other diagonal.
+\cs_new_protected:Npn \semio_viz_spatial_saddle_alt:nn #1#2
+  {
+    \semio_viz_spatial_seg:nn
+      { \semio_viz_spatial_eb:nn {#1}{#2} } { \semio_viz_spatial_er:nn {#1}{#2} }
+    \semio_viz_spatial_seg:nn
+      { \semio_viz_spatial_et:nn {#1}{#2} } { \semio_viz_spatial_el:nn {#1}{#2} }
+  }
+
+% 🔗 Joins the unordered segment soup into rings by matching each segment's end to another segment's start.
+\seq_new:N \l_semio_viz_spatial_pool_seq
+\tl_new:N \l_semio_viz_spatial_head_tl
+\tl_new:N \l_semio_viz_spatial_tail_tl
+\seq_new:N \l_semio_viz_spatial_ring_seq
+\bool_new:N \l_semio_viz_spatial_grew_bool
+
+\cs_new_protected:Npn \semio_viz_spatial_join_rings:
+  {
+    \seq_gclear:N \g_semio_viz_spatial_rings_seq
+    \seq_set_eq:NN \l_semio_viz_spatial_pool_seq \g_semio_viz_spatial_seg_seq
+    \bool_while_do:nn
+      { ! \seq_if_empty_p:N \l_semio_viz_spatial_pool_seq }
+      { \semio_viz_spatial_grow_ring: }
+  }
+
+% 🔗 Grows one ring out of the segment pool: take a segment, extend it while a neighbour matches,
+% drop the repeated vertices, and file the result.
+\cs_new_protected:Npn \semio_viz_spatial_grow_ring:
+  {
+    \seq_pop_left:NN \l_semio_viz_spatial_pool_seq \l_tmpa_tl
+    \exp_after:wN \semio_viz_spatial_ring_start:nn \l_tmpa_tl
+    \bool_set_true:N \l_semio_viz_spatial_grew_bool
+    \bool_while_do:nn { \l_semio_viz_spatial_grew_bool }
+      { \semio_viz_spatial_ring_extend: }
+    \semio_viz_spatial_ring_dedupe:
+    \seq_gput_right:Nx \g_semio_viz_spatial_rings_seq
+      { \seq_use:Nn \l_semio_viz_spatial_ring_seq { ; } }
+  }
+
+% 🧹 Adjacent cells share an edge crossing, so consecutive identical vertices appear where two segments meet exactly at a grid node.
+\cs_new_protected:Npn \semio_viz_spatial_ring_dedupe:
+  {
+    \seq_clear:N \l_semio_viz_spatial_out_seq
+    \tl_clear:N \l_semio_viz_spatial_prev_tl
+    \seq_map_inline:Nn \l_semio_viz_spatial_ring_seq
+      {
+        \tl_if_eq:NnF \l_semio_viz_spatial_prev_tl {##1}
+          { \seq_put_right:Nn \l_semio_viz_spatial_out_seq {##1} }
+        \tl_set:Nn \l_semio_viz_spatial_prev_tl {##1}
+      }
+    \seq_set_eq:NN \l_semio_viz_spatial_ring_seq \l_semio_viz_spatial_out_seq
+  }
+
+% 🌱 Starts a ring on the segment from #1 to #2.
+\cs_new_protected:Npn \semio_viz_spatial_ring_start:nn #1#2
+  {
+    \seq_clear:N \l_semio_viz_spatial_ring_seq
+    \seq_put_right:Nn \l_semio_viz_spatial_ring_seq {#1}
+    \seq_put_right:Nn \l_semio_viz_spatial_ring_seq {#2}
+    \tl_set:Nn \l_semio_viz_spatial_head_tl {#1}
+    \tl_set:Nn \l_semio_viz_spatial_tail_tl {#2}
+  }
+
+% ➕ One extension round: looks through the pool for a segment starting where the ring now ends.
+\cs_new_protected:Npn \semio_viz_spatial_ring_extend:
+  {
+    \bool_set_false:N \l_semio_viz_spatial_grew_bool
+    \seq_map_indexed_inline:Nn \l_semio_viz_spatial_pool_seq
+      { \semio_viz_spatial_ring_try:nnn {##1} ##2 }
+  }
+
+% 🔎 Tests pool entry #1 (the segment from #2 to #3) against the ring's current end.
+\cs_new_protected:Npn \semio_viz_spatial_ring_try:nnn #1#2#3
+  {
+    \tl_if_eq:NnT \l_semio_viz_spatial_tail_tl {#2}
+      {
+        \seq_put_right:Nn \l_semio_viz_spatial_ring_seq {#3}
+        \tl_set:Nn \l_semio_viz_spatial_tail_tl {#3}
+        \seq_remove_all:Nn \l_semio_viz_spatial_pool_seq { {#2}{#3} }
+        \bool_set_true:N \l_semio_viz_spatial_grew_bool
+        \seq_map_break:
+      }
+    \tl_if_eq:NnT \l_semio_viz_spatial_head_tl {#3}
+      {
+        \seq_put_left:Nn \l_semio_viz_spatial_ring_seq {#2}
+        \tl_set:Nn \l_semio_viz_spatial_head_tl {#2}
+        \seq_remove_all:Nn \l_semio_viz_spatial_pool_seq { {#2}{#3} }
+        \bool_set_true:N \l_semio_viz_spatial_grew_bool
+        \seq_map_break:
+      }
+  }
+%endregion 🔖️Contour
+
+%region 🔖️Density
+% 🌫️ Two-dimensional kernel density on a regular grid. Unlike d3-contour's contourDensity, which approximates the
+% 🌫️ Gaussian with three box blurs, this evaluates the Gaussian sum exactly, so it is a specification rather than a
+% 🌫️ d3 replica; the test compares it against an oracle computing the same exact sum, and the isoline extraction that
+% 🌫️ consumes the grid is the one validated against d3-contour.
+\fp_new:N \l_semio_viz_spatial_gx_fp
+\fp_new:N \l_semio_viz_spatial_gy_fp
+\fp_new:N \l_semio_viz_spatial_bw_fp
+\fp_new:N \l_semio_viz_spatial_acc_fp
+\clist_new:N \l_semio_viz_spatial_values_clist
+
+\cs_new_protected:Npn \semio_viz_spatial_density:nnnnnnn #1#2#3#4#5#6#7
+  {
+    \semio_viz_spatial_load:n {#1}
+    \fp_set:Nn \l_semio_viz_spatial_bw_fp {#7}
+    \clist_clear:N \l_semio_viz_spatial_values_clist
+    \int_step_inline:nnn { 0 } { (#3) - 1 }
+      {
+        \int_step_inline:nnn { 0 } { (#2) - 1 }
+          {
+            \fp_set:Nn \l_semio_viz_spatial_gx_fp { (#4) + ####1 * (#6) }
+            \fp_set:Nn \l_semio_viz_spatial_gy_fp { (#5) + ##1 * (#6) }
+            \semio_viz_spatial_density_at:
+            \clist_put_right:Nx \l_semio_viz_spatial_values_clist
+              { \fp_eval:n { \l_semio_viz_spatial_acc_fp } }
+          }
+      }
+    \use:x
+      {
+        \exp_not:N \semio_viz_grid_new:nnnn { \tl_to_str:n {#1} -density }
+          {#2} {#3} { \exp_not:V \l_semio_viz_spatial_values_clist }
+      }
+  }
+
+% 🔔 Sum over all points of exp(-r^2 / (2 h^2)) / (2 pi h^2) at the current grid node.
+\cs_new_protected:Npn \semio_viz_spatial_density_at:
+  {
+    \fp_zero:N \l_semio_viz_spatial_acc_fp
+    \int_step_inline:nn { \l_semio_viz_spatial_n_int }
+      {
+        \fp_add:Nn \l_semio_viz_spatial_acc_fp
+          {
+            exp
+              (
+                - ( ( \l_semio_viz_spatial_gx_fp
+                      - \semio_viz_spatial_x:n {##1} ) ** 2
+                    + ( \l_semio_viz_spatial_gy_fp
+                        - \semio_viz_spatial_y:n {##1} ) ** 2 )
+                / ( 2 * \l_semio_viz_spatial_bw_fp ** 2 )
+              )
+            / ( 2 * pi * \l_semio_viz_spatial_bw_fp ** 2 )
+          }
+      }
+  }
+%endregion 🔖️Density
+
+%region 🔖️DemoData
+% 🧪 Demo point sets and grids: a scatter for triangulation and hulls, and a smooth bump grid for contours.
+\cs_new_protected:Npn \semio_viz_spatial_demo_data:
+  {
+    \seq_if_in:NnF \g_semio_viz_points_names_seq { demo-points }
+      {
+        \semio_viz_points_new:nn { demo-points }
+          {
+            12,14; 28,9; 41,26; 19,33; 55,17; 63,31; 34,41;
+            8,27; 47,7; 58,44; 25,20; 39,13
+          }
+        \semio_viz_points_new:nn { demo-points-dense }
+          {
+            6,8; 14,11; 22,7; 30,14; 38,9; 46,16; 54,10; 62,18;
+            9,22; 17,28; 25,24; 33,31; 41,26; 49,33; 57,27; 65,35;
+            11,38; 19,44; 27,40; 35,47; 43,42; 51,49; 59,43; 67,51
+          }
+        \semio_viz_grid_new:nnnn { demo-grid } { 6 } { 5 }
+          {
+            0, 1, 2, 2, 1, 0,
+            1, 3, 5, 5, 3, 1,
+            2, 5, 9, 8, 5, 2,
+            1, 4, 6, 6, 4, 1,
+            0, 1, 2, 2, 1, 0
+          }
+      }
+  }
+\semio_viz_spatial_demo_data:
+%endregion 🔖️DemoData
+
+%region 🔖️FieldGeometry
+% ✂️ Sutherland–Hodgman clip of the polygon `#1` (a point sequence) against the half-plane a·x+b·y ≤ c, result in `#2`.
+\cs_new_protected:Npn \semio_viz_spatial_clip:NNnnn #1#2#3#4#5
+  {
+    \seq_clear:N #2
+    \int_set:Nn \l_tmpa_int { \seq_count:N #1 }
+    \int_step_inline:nnnn { 1 } { 1 } { \l_tmpa_int }
+      {
+        \semio_viz_spatial_clip_edge:Nnnnnn #2
+          { \seq_item:Nn #1 {##1} }
+          { \seq_item:Nn #1 { \int_mod:nn {##1} { \l_tmpa_int } + 1 } }
+          {#3} {#4} {#5}
+      }
+  }
+% ✂️ One edge of that clip: the polygon edge from #2 to #3 against the half-plane #4·x+#5·y ≤ #6,
+% contributing to #1 the vertices that survive and the crossing where the edge leaves.
+\cs_new_protected:Npn \semio_viz_spatial_clip_edge:Nnnnnn #1#2#3#4#5#6
+  {
+    \fp_set:Nn \l_semio_viz_sci_a_fp { #4 * \semio_viz_points_x:n {#2} + #5 * \semio_viz_points_y:n {#2} - (#6) }
+    \fp_set:Nn \l_semio_viz_sci_b_fp { #4 * \semio_viz_points_x:n {#3} + #5 * \semio_viz_points_y:n {#3} - (#6) }
+    \fp_compare:nNnT { \l_semio_viz_sci_a_fp } < { 1e-9 }
+      { \seq_put_right:Nx #1 { \semio_viz_points_x:n {#2} , \semio_viz_points_y:n {#2} } }
+    \fp_compare:nNnT { \l_semio_viz_sci_a_fp * \l_semio_viz_sci_b_fp } < { 0 }
+      {
+        \semio_viz_points_put:Nnn #1
+          { \semio_viz_points_x:n {#2} + ( \semio_viz_points_x:n {#3} - \semio_viz_points_x:n {#2} )
+            * \l_semio_viz_sci_a_fp / ( \l_semio_viz_sci_a_fp - \l_semio_viz_sci_b_fp ) }
+          { \semio_viz_points_y:n {#2} + ( \semio_viz_points_y:n {#3} - \semio_viz_points_y:n {#2} )
+            * \l_semio_viz_sci_a_fp / ( \l_semio_viz_sci_a_fp - \l_semio_viz_sci_b_fp ) }
+      }
+  }
+%endregion 🔖️FieldGeometry
+
+%region 🔖️LayoutRegistry
+\cs_generate_variant:Nn \seq_use:Nn { cn }
+
+% 📋 `semio / viz / spatial / layout` -- options every spatial algorithm reads through
+% \SemioVizLayout. Each algorithm documents which subset it uses.
+%   x0, y0, x1, y1  (clip rectangle of the voronoi cells)   default 0, 0, 100, 100
+%   radius          (hexbin radius, beeswarm collision)     default 4
+%   amount          (jitter amplitude)                      default 2
+%   threshold       (contour isoline level)                 default 0.5
+%   bandwidth       (density kernel bandwidth)              default 8
+%   cell            (density grid step)                     default 4
+%   width, height   (density grid size in cells)            default 20, 20
+\fp_new:N \l_semio_viz_spatial_opt_xlo_fp
+\fp_new:N \l_semio_viz_spatial_opt_ylo_fp
+\fp_new:N \l_semio_viz_spatial_opt_xhi_fp
+\fp_new:N \l_semio_viz_spatial_opt_yhi_fp
+\fp_new:N \l_semio_viz_spatial_opt_radius_fp
+\fp_new:N \l_semio_viz_spatial_opt_amount_fp
+\fp_new:N \l_semio_viz_spatial_opt_threshold_fp
+\fp_new:N \l_semio_viz_spatial_opt_bandwidth_fp
+\fp_new:N \l_semio_viz_spatial_opt_cell_fp
+\int_new:N \l_semio_viz_spatial_opt_w_int
+\int_new:N \l_semio_viz_spatial_opt_h_int
+
+\keys_define:nn { semio / viz / spatial / layout }
+  {
+    x0 .fp_set:N = \l_semio_viz_spatial_opt_xlo_fp ,
+    y0 .fp_set:N = \l_semio_viz_spatial_opt_ylo_fp ,
+    x1 .fp_set:N = \l_semio_viz_spatial_opt_xhi_fp ,
+    y1 .fp_set:N = \l_semio_viz_spatial_opt_yhi_fp ,
+    radius .fp_set:N = \l_semio_viz_spatial_opt_radius_fp ,
+    amount .fp_set:N = \l_semio_viz_spatial_opt_amount_fp ,
+    threshold .fp_set:N = \l_semio_viz_spatial_opt_threshold_fp ,
+    bandwidth .fp_set:N = \l_semio_viz_spatial_opt_bandwidth_fp ,
+    cell .fp_set:N = \l_semio_viz_spatial_opt_cell_fp ,
+    width .int_set:N = \l_semio_viz_spatial_opt_w_int ,
+    height .int_set:N = \l_semio_viz_spatial_opt_h_int ,
+  }
+
+% ♻️ Puts every spatial layout option back to its documented default, then reads the list #1.
+\cs_new_protected:Npn \semio_viz_spatial_layout_keys:n #1
+  {
+    \fp_zero:N \l_semio_viz_spatial_opt_xlo_fp
+    \fp_zero:N \l_semio_viz_spatial_opt_ylo_fp
+    \fp_set:Nn \l_semio_viz_spatial_opt_xhi_fp { 100 }
+    \fp_set:Nn \l_semio_viz_spatial_opt_yhi_fp { 100 }
+    \fp_set:Nn \l_semio_viz_spatial_opt_radius_fp { 4 }
+    \fp_set:Nn \l_semio_viz_spatial_opt_amount_fp { 2 }
+    \fp_set:Nn \l_semio_viz_spatial_opt_threshold_fp { 0.5 }
+    \fp_set:Nn \l_semio_viz_spatial_opt_bandwidth_fp { 8 }
+    \fp_set:Nn \l_semio_viz_spatial_opt_cell_fp { 4 }
+    \int_set:Nn \l_semio_viz_spatial_opt_w_int { 20 }
+    \int_set:Nn \l_semio_viz_spatial_opt_h_int { 20 }
+    \keys_set:nn { semio / viz / spatial / layout } {#1}
+  }
+
+% 📤 Publishes the current planar result as the named point set #1, one `x,y` per item.
+\cs_new_protected:Npn \semio_viz_spatial_publish_points:nN #1#2
+  {
+    \use:x
+      {
+        \exp_not:N \semio_viz_points_new:nn { \exp_not:n {#1} }
+          { \seq_use:Nn #2 { ; } }
+      }
+  }
+
+% 📤 Publishes ring geometry as the named collection #1, one part of kind #2 per ring.
+\cs_new_protected:Npn \semio_viz_spatial_publish_rings:nnN #1#2#3
+  {
+    \semio_viz_geom_new:n {#1}
+    \seq_map_inline:Nn #3
+      { \semio_viz_geom_part:nnnn {#1} {#2} { } {##1} }
+  }
+
+% 🔺 Triangles as a ring geometry: each triangle becomes one polygon of its three vertices.
+\cs_new_protected:Npn \semio_viz_spatial_publish_triangles:n #1
+  {
+    \semio_viz_geom_new:n {#1}
+    \seq_map_inline:Nn \g_semio_viz_spatial_tri_seq
+      { \semio_viz_spatial_publish_triangle:nnnn {#1} ##1 }
+  }
+% 🔺 One triangle of collection #1 from the vertices #2, #3, #4.
+\cs_new_protected:Npn \semio_viz_spatial_publish_triangle:nnnn #1#2#3#4
+  {
+    \use:x
+      {
+        \exp_not:N \semio_viz_geom_part:nnnn { \exp_not:n {#1} } { polygon } { }
+          {
+            \fp_eval:n { \semio_viz_spatial_x:n {#2} } , \fp_eval:n { \semio_viz_spatial_y:n {#2} } ;
+            \fp_eval:n { \semio_viz_spatial_x:n {#3} } , \fp_eval:n { \semio_viz_spatial_y:n {#3} } ;
+            \fp_eval:n { \semio_viz_spatial_x:n {#4} } , \fp_eval:n { \semio_viz_spatial_y:n {#4} }
+          }
+      }
+  }
+
+% 🔶 Hull indices as one polygon of the named collection.
+\cs_new_protected:Npn \semio_viz_spatial_publish_hull:n #1
+  {
+    \seq_clear:N \l_semio_viz_spatial_publish_seq
+    \seq_map_inline:Nn \g_semio_viz_spatial_hull_seq
+      {
+        \seq_put_right:Nx \l_semio_viz_spatial_publish_seq
+          {
+            \fp_eval:n { \semio_viz_spatial_x:n {##1} } ,
+            \fp_eval:n { \semio_viz_spatial_y:n {##1} }
+          }
+      }
+    \semio_viz_geom_new:n {#1}
+    \use:x
+      {
+        \exp_not:N \semio_viz_geom_part:nnnn { \exp_not:n {#1} } { polygon } { }
+          { \seq_use:Nn \l_semio_viz_spatial_publish_seq { ; } }
+      }
+  }
+
+% 🍯 Hexbin centres as a point set; the bin record is `{id}{cx}{cy}`.
+\cs_new_protected:Npn \semio_viz_spatial_publish_bins:n #1
+  {
+    \seq_clear:N \l_semio_viz_spatial_publish_seq
+    \seq_map_inline:Nn \g_semio_viz_spatial_bins_seq
+      { \semio_viz_spatial_publish_bin:nnn ##1 }
+    \semio_viz_spatial_publish_points:nN {#1} \l_semio_viz_spatial_publish_seq
+  }
+% 🍯 One bin centre (#2,#3) of the published point set.
+\cs_new_protected:Npn \semio_viz_spatial_publish_bin:nnn #1#2#3
+  { \seq_put_right:Nn \l_semio_viz_spatial_publish_seq { #2,#3 } }
+
+% 🔷 Voronoi cells as polygons; the cell record is `{index}{x,y;…}`.
+\cs_new_protected:Npn \semio_viz_spatial_publish_cells:n #1
+  {
+    \semio_viz_geom_new:n {#1}
+    \seq_map_inline:Nn \g_semio_viz_spatial_cells_seq
+      { \semio_viz_spatial_publish_cell:nnn {#1} ##1 }
+  }
+% 🔷 One Voronoi cell #2 of collection #1, from its vertex list #3.
+\cs_new_protected:Npn \semio_viz_spatial_publish_cell:nnn #1#2#3
+  { \semio_viz_geom_part:nnnn {#1} { polygon } { id = #2 } {#3} }
+
+\seq_new:N \l_semio_viz_spatial_publish_seq
+
+% 🔺 `delaunay`: the triangulation of a point set as a geometry collection of triangles.
+\semio_viz_layout_define:nn { delaunay }
+  {
+    \semio_viz_spatial_layout_keys:n {#3}
+    \semio_viz_spatial_delaunay:n {#1}
+    \semio_viz_spatial_publish_triangles:n {#2}
+  }
+% 🔷 `voronoi`: the cells of a point set, clipped to the `x0`/`y0`/`x1`/`y1` rectangle.
+\semio_viz_layout_define:nn { voronoi }
+  {
+    \semio_viz_spatial_layout_keys:n {#3}
+    \semio_viz_spatial_voronoi:nnnnn {#1}
+      { \fp_use:N \l_semio_viz_spatial_opt_xlo_fp } { \fp_use:N \l_semio_viz_spatial_opt_ylo_fp }
+      { \fp_use:N \l_semio_viz_spatial_opt_xhi_fp } { \fp_use:N \l_semio_viz_spatial_opt_yhi_fp }
+    \semio_viz_spatial_publish_cells:n {#2}
+  }
+% 🔶 `hull`: the convex hull of a point set as one polygon.
+\semio_viz_layout_define:nn { hull }
+  {
+    \semio_viz_spatial_layout_keys:n {#3}
+    \semio_viz_spatial_hull:n {#1}
+    \semio_viz_spatial_publish_hull:n {#2}
+  }
+% 🍯 `hexbin`: the occupied bin centres of a point set under the `radius` lattice, as a point set.
+\semio_viz_layout_define:nn { hexbin }
+  {
+    \semio_viz_spatial_layout_keys:n {#3}
+    \semio_viz_spatial_hexbin:nn {#1} { \fp_use:N \l_semio_viz_spatial_opt_radius_fp }
+    \semio_viz_spatial_publish_bins:n {#2}
+  }
+% 🐝 `beeswarm`: the point set spread off its axis so no two points come closer than `radius`.
+\semio_viz_layout_define:nn { beeswarm }
+  {
+    \semio_viz_spatial_layout_keys:n {#3}
+    \semio_viz_spatial_beeswarm:nn {#1} { \fp_use:N \l_semio_viz_spatial_opt_radius_fp }
+    \semio_viz_spatial_publish_points:nN {#2} \g_semio_viz_spatial_swarm_seq
+  }
+% 🎲 `jitter`: the point set displaced deterministically by up to `amount`, so ties stop hiding.
+\semio_viz_layout_define:nn { jitter }
+  {
+    \semio_viz_spatial_layout_keys:n {#3}
+    \semio_viz_spatial_jitter:nn {#1} { \fp_use:N \l_semio_viz_spatial_opt_amount_fp }
+    \semio_viz_spatial_publish_points:nN {#2} \g_semio_viz_spatial_swarm_seq
+  }
+% 〰️ `contour`: the isolines of a grid at `threshold`, as a geometry collection of rings.
+\semio_viz_layout_define:nn { contour }
+  {
+    \semio_viz_spatial_layout_keys:n {#3}
+    \semio_viz_spatial_contour:nn {#1} { \fp_use:N \l_semio_viz_spatial_opt_threshold_fp }
+    \semio_viz_spatial_publish_rings:nnN {#2} { line } \g_semio_viz_spatial_rings_seq
+  }
+% 🌡️ `density`: a kernel density estimate of a point set on a `width` by `height` grid.
+\semio_viz_layout_define:nn { density }
+  {
+    \semio_viz_spatial_layout_keys:n {#3}
+    \semio_viz_spatial_density:nnnnnnn {#1}
+      { \int_use:N \l_semio_viz_spatial_opt_w_int } { \int_use:N \l_semio_viz_spatial_opt_h_int }
+      { \fp_use:N \l_semio_viz_spatial_opt_xlo_fp } { \fp_use:N \l_semio_viz_spatial_opt_ylo_fp }
+      { \fp_use:N \l_semio_viz_spatial_opt_cell_fp }
+      { \fp_use:N \l_semio_viz_spatial_opt_bandwidth_fp }
+    \semio_viz_spatial_grid_alias:nn {#1} {#2}
+  }
+
+% 🔁 The density kernel writes the grid `<pointset>-density`; the dispatcher's `out` name aliases it.
+\cs_new_protected:Npn \semio_viz_spatial_grid_alias:nn #1#2
+  {
+    \str_if_eq:eeF { #1-density } { \tl_to_str:n {#2} }
+      {
+        \semio_viz_grid_require:n { #1-density }
+        \use:x
+          {
+            \exp_not:N \semio_viz_grid_new:nnnn { \exp_not:n {#2} }
+              { \int_use:c { g_semio_viz_grid_ \tl_to_str:n {#1} -density _w_int } }
+              { \int_use:c { g_semio_viz_grid_ \tl_to_str:n {#1} -density _h_int } }
+              { \seq_use:cn { g_semio_viz_grid_ \tl_to_str:n {#1} -density _seq } { , } }
+          }
+      }
+  }
+%endregion 🔖️LayoutRegistry
+
+%region 🔖️Quadtree
+% 🌳 The spatial index the collision layouts stand on: d3-quadtree's tree, node for node. The square
+% the tree covers is grown by doubling towards a point that falls outside it, exactly as d3's
+% `cover` does, so two implementations reading the same points agree on the extent and not only on
+% the answers. A node is empty, a leaf holding a chain of coincident points, or an internal node
+% with four children; the quadrant of a point is `(y >= ym) * 2 + (x >= xm)`, d3's own numbering.
+%
+% Determinism: `find` walks the tree depth first, nearest quadrant first, and keeps a candidate only
+% when it is *strictly* closer than the best so far, so the earliest point of a tie survives. d3
+% also keeps the first it meets, but it meets them in its own traversal order, so the two agree on
+% every input without two equidistant candidates — which is what the differential case measures.
+%
+% @see https://d3js.org/d3-quadtree
+\int_new:N \g_semio_viz_qt_n_int
+\int_new:N \g_semio_viz_qt_nodes_int
+\int_new:N \g_semio_viz_qt_found_int
+\int_new:N \l_semio_viz_qt_node_int
+\int_new:N \l_semio_viz_qt_parent_int
+\int_new:N \l_semio_viz_qt_quad_int
+\int_new:N \l_semio_viz_qt_other_int
+\int_new:N \l_semio_viz_qt_tail_int
+\int_new:N \l_semio_viz_qt_kind_int
+\bool_new:N \g_semio_viz_qt_covered_bool
+\fp_new:N \l_semio_viz_qt_bxlo_fp
+\fp_new:N \l_semio_viz_qt_bylo_fp
+\fp_new:N \l_semio_viz_qt_bxhi_fp
+\fp_new:N \l_semio_viz_qt_byhi_fp
+\fp_new:N \g_semio_viz_qt_xlo_fp
+\fp_new:N \g_semio_viz_qt_ylo_fp
+\fp_new:N \g_semio_viz_qt_xhi_fp
+\fp_new:N \g_semio_viz_qt_yhi_fp
+\fp_new:N \g_semio_viz_qt_best_fp
+\fp_new:N \l_semio_viz_qt_side_fp
+\fp_new:N \l_semio_viz_qt_x_fp
+\fp_new:N \l_semio_viz_qt_y_fp
+\fp_new:N \l_semio_viz_qt_xm_fp
+\fp_new:N \l_semio_viz_qt_ym_fp
+\tl_new:N \l_semio_viz_qt_xcol_tl
+\tl_new:N \l_semio_viz_qt_ycol_tl
+\tl_new:N \l_semio_viz_qt_cell_tl
+
+% 🔑 semio / viz / quadtree — which two columns of the table carry the coordinates.
+% x  (column)  abscissa column, default `x`
+% y  (column)  ordinate column, default `y`
+\keys_define:nn { semio / viz / quadtree } {
+  x .tl_set:N = \l_semio_viz_qt_xcol_tl,
+  y .tl_set:N = \l_semio_viz_qt_ycol_tl,
+}
+
+% 🗄️ The indexed control sequence #1<index>#2, with the index evaluated to digits before the name
+% is built: a `\the\numexpr` inside a `\csname` inside an `\edef` is exactly what the recursion
+% would otherwise hand TeX, and TeX refuses it.
+\cs_new:Npn \semio_viz_qt_slot:nnn #1#2#3
+  { \exp_args:Nf \semio_viz_qt_slot_aux:nnn { \int_eval:n {#2} } {#1} {#3} }
+% 🔗 The name half of that: with the index already digits, joins prefix, index and suffix into the cs.
+\cs_new:Npn \semio_viz_qt_slot_aux:nnn #1#2#3 { \use:c { #2 #1 #3 } }
+
+% 📐 Abscissa of the indexed point #1 of the active quadtree.
+\cs_new:Npn \semio_viz_qt_x:n #1 { \semio_viz_qt_slot:nnn { g_semio_viz_qt_px_ } {#1} { _fp } }
+% 📐 Ordinate of the indexed point #1 of the active quadtree.
+\cs_new:Npn \semio_viz_qt_y:n #1 { \semio_viz_qt_slot:nnn { g_semio_viz_qt_py_ } {#1} { _fp } }
+% 🏷️ Kind of node #1: 0 empty, 1 leaf, 2 internal.
+\cs_new:Npn \semio_viz_qt_kind:n #1 { \semio_viz_qt_slot:nnn { g_semio_viz_qt_kind_ } {#1} { _int } }
+% 🌿 First point of leaf #1; the rest of a coincident chain follows `next`.
+\cs_new:Npn \semio_viz_qt_head:n #1 { \semio_viz_qt_slot:nnn { g_semio_viz_qt_head_ } {#1} { _int } }
+% 🌿 Point after #1 in its leaf chain, 0 at the end.
+\cs_new:Npn \semio_viz_qt_next:n #1 { \semio_viz_qt_slot:nnn { g_semio_viz_qt_next_ } {#1} { _int } }
+% 🌲 Child #2 (0..3) of internal node #1, 0 when that quadrant is empty.
+\cs_new:Npn \semio_viz_qt_child:nn #1#2
+  { \exp_args:Nf \semio_viz_qt_child_aux:nn { \int_eval:n {#2} } {#1} }
+% 🌲 The same in two steps: the quadrant number, already digits, becomes part of the slot prefix.
+\cs_new:Npn \semio_viz_qt_child_aux:nn #1#2
+  { \semio_viz_qt_slot:nnn { g_semio_viz_qt_c #1 _ } {#2} { _int } }
+
+% 🧱 Declares one indexed control sequence of the tree, once.
+\cs_new_protected:Npn \semio_viz_qt_int_new:n #1
+  { \cs_if_exist:cF {#1} { \int_new:c {#1} } }
+% 🧱 The same for a floating-point slot: allocated once, reused by every later tree.
+\cs_new_protected:Npn \semio_viz_qt_fp_new:n #1
+  { \cs_if_exist:cF {#1} { \fp_new:c {#1} } }
+
+% 🌱 Allocates the next node and returns its index in \l_semio_viz_qt_node_int, empty to start with.
+\cs_new_protected:Npn \semio_viz_qt_node_new: {
+  \int_gincr:N \g_semio_viz_qt_nodes_int
+  \int_set_eq:NN \l_semio_viz_qt_node_int \g_semio_viz_qt_nodes_int
+  \semio_viz_qt_int_new:n { g_semio_viz_qt_kind_ \int_use:N \l_semio_viz_qt_node_int _int }
+  \semio_viz_qt_int_new:n { g_semio_viz_qt_head_ \int_use:N \l_semio_viz_qt_node_int _int }
+  \int_step_inline:nnn { 0 } { 3 }
+    { \semio_viz_qt_int_new:n { g_semio_viz_qt_c ##1 _ \int_use:N \l_semio_viz_qt_node_int _int } }
+  \int_gzero:c { g_semio_viz_qt_kind_ \int_use:N \l_semio_viz_qt_node_int _int }
+  \int_gzero:c { g_semio_viz_qt_head_ \int_use:N \l_semio_viz_qt_node_int _int }
+  \int_step_inline:nnn { 0 } { 3 }
+    { \int_gzero:c { g_semio_viz_qt_c ##1 _ \int_use:N \l_semio_viz_qt_node_int _int } }
+}
+
+% 📏 Grows the covering square by doubling until it holds (#1, #2), d3-quadtree's `cover`.
+\cs_new_protected:Npn \semio_viz_qt_cover:nn #1#2 {
+  \bool_if:NTF \g_semio_viz_qt_covered_bool
+    {
+      \bool_do_while:nn
+        {
+          \fp_compare_p:n { \g_semio_viz_qt_xlo_fp > (#1) } ||
+          \fp_compare_p:n { (#1) >= \g_semio_viz_qt_xhi_fp } ||
+          \fp_compare_p:n { \g_semio_viz_qt_ylo_fp > (#2) } ||
+          \fp_compare_p:n { (#2) >= \g_semio_viz_qt_yhi_fp }
+        }
+        { \semio_viz_qt_cover_step:nn {#1} {#2} }
+    }
+    {
+      \bool_gset_true:N \g_semio_viz_qt_covered_bool
+      \fp_gset:Nn \g_semio_viz_qt_xlo_fp { floor (#1) }
+      \fp_gset:Nn \g_semio_viz_qt_ylo_fp { floor (#2) }
+      \fp_gset:Nn \g_semio_viz_qt_xhi_fp { \g_semio_viz_qt_xlo_fp + 1 }
+      \fp_gset:Nn \g_semio_viz_qt_yhi_fp { \g_semio_viz_qt_ylo_fp + 1 }
+    }
+}
+
+% 📏 One doubling of the covering square towards (#1, #2).
+\cs_new_protected:Npn \semio_viz_qt_cover_step:nn #1#2 {
+  \fp_set:Nn \l_semio_viz_qt_side_fp
+    { 2 * ( \g_semio_viz_qt_xhi_fp - \g_semio_viz_qt_xlo_fp ) }
+  \int_set:Nn \l_semio_viz_qt_quad_int
+    {
+      \fp_compare:nNnTF {#2} < { \g_semio_viz_qt_ylo_fp } { 2 } { 0 }
+      + \fp_compare:nNnTF {#1} < { \g_semio_viz_qt_xlo_fp } { 1 } { 0 }
+    }
+  \int_case:nn { \l_semio_viz_qt_quad_int }
+    {
+      { 0 }
+        {
+          \fp_gset:Nn \g_semio_viz_qt_xhi_fp { \g_semio_viz_qt_xlo_fp + \l_semio_viz_qt_side_fp }
+          \fp_gset:Nn \g_semio_viz_qt_yhi_fp { \g_semio_viz_qt_ylo_fp + \l_semio_viz_qt_side_fp }
+        }
+      { 1 }
+        {
+          \fp_gset:Nn \g_semio_viz_qt_xlo_fp { \g_semio_viz_qt_xhi_fp - \l_semio_viz_qt_side_fp }
+          \fp_gset:Nn \g_semio_viz_qt_yhi_fp { \g_semio_viz_qt_ylo_fp + \l_semio_viz_qt_side_fp }
+        }
+      { 2 }
+        {
+          \fp_gset:Nn \g_semio_viz_qt_xhi_fp { \g_semio_viz_qt_xlo_fp + \l_semio_viz_qt_side_fp }
+          \fp_gset:Nn \g_semio_viz_qt_ylo_fp { \g_semio_viz_qt_yhi_fp - \l_semio_viz_qt_side_fp }
+        }
+      { 3 }
+        {
+          \fp_gset:Nn \g_semio_viz_qt_xlo_fp { \g_semio_viz_qt_xhi_fp - \l_semio_viz_qt_side_fp }
+          \fp_gset:Nn \g_semio_viz_qt_ylo_fp { \g_semio_viz_qt_yhi_fp - \l_semio_viz_qt_side_fp }
+        }
+    }
+}
+
+% 📥 Reads the two coordinate columns of the table #1 into the indexed point arrays, recording the
+% bounding box the cover is then grown from.
+\cs_new_protected:Npn \semio_viz_qt_read:n #1 {
+  \int_gzero:N \g_semio_viz_qt_n_int
+  \fp_set:Nn \l_semio_viz_qt_bxlo_fp { inf }
+  \fp_set:Nn \l_semio_viz_qt_bylo_fp { inf }
+  \fp_set:Nn \l_semio_viz_qt_bxhi_fp { -inf }
+  \fp_set:Nn \l_semio_viz_qt_byhi_fp { -inf }
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_spatial_i_int
+  \int_step_inline:nn { \l_semio_viz_spatial_i_int } { \semio_viz_qt_read_row:nn {#1} {##1} }
+}
+
+% 📍 Stores one row of the table #1 as the next point of the tree and widens the bounding box.
+\cs_new_protected:Npn \semio_viz_qt_read_row:nn #1#2 {
+  \int_gincr:N \g_semio_viz_qt_n_int
+  \semio_viz_qt_fp_new:n { g_semio_viz_qt_px_ \int_use:N \g_semio_viz_qt_n_int _fp }
+  \semio_viz_qt_fp_new:n { g_semio_viz_qt_py_ \int_use:N \g_semio_viz_qt_n_int _fp }
+  \semio_viz_qt_int_new:n { g_semio_viz_qt_next_ \int_use:N \g_semio_viz_qt_n_int _int }
+  \int_gzero:c { g_semio_viz_qt_next_ \int_use:N \g_semio_viz_qt_n_int _int }
+  \semio_viz_table_cell:nnVN {#1} {#2} \l_semio_viz_qt_xcol_tl \l_semio_viz_qt_cell_tl
+  \fp_gset:cn { g_semio_viz_qt_px_ \int_use:N \g_semio_viz_qt_n_int _fp } { \l_semio_viz_qt_cell_tl }
+  \semio_viz_table_cell:nnVN {#1} {#2} \l_semio_viz_qt_ycol_tl \l_semio_viz_qt_cell_tl
+  \fp_gset:cn { g_semio_viz_qt_py_ \int_use:N \g_semio_viz_qt_n_int _fp } { \l_semio_viz_qt_cell_tl }
+  \fp_set:Nn \l_semio_viz_qt_bxlo_fp
+    { min ( \l_semio_viz_qt_bxlo_fp , \semio_viz_qt_x:n { \g_semio_viz_qt_n_int } ) }
+  \fp_set:Nn \l_semio_viz_qt_bxhi_fp
+    { max ( \l_semio_viz_qt_bxhi_fp , \semio_viz_qt_x:n { \g_semio_viz_qt_n_int } ) }
+  \fp_set:Nn \l_semio_viz_qt_bylo_fp
+    { min ( \l_semio_viz_qt_bylo_fp , \semio_viz_qt_y:n { \g_semio_viz_qt_n_int } ) }
+  \fp_set:Nn \l_semio_viz_qt_byhi_fp
+    { max ( \l_semio_viz_qt_byhi_fp , \semio_viz_qt_y:n { \g_semio_viz_qt_n_int } ) }
+}
+
+% 🧊 Calls #1 with the point index #2, the node index #3 and the box (#4,#5)-(#6,#7) frozen into
+% literal numbers. Insertion recurses, and every one of those numbers would otherwise be an
+% expression over the very scratch variables the recursion reassigns.
+\cs_new_protected:Npn \semio_viz_qt_call:Nnnnnnn #1#2#3#4#5#6#7 {
+  \use:x
+    {
+      \exp_not:N #1 { \int_eval:n {#2} } { \int_eval:n {#3} }
+        { \fp_to_decimal:n {#4} } { \fp_to_decimal:n {#5} }
+        { \fp_to_decimal:n {#6} } { \fp_to_decimal:n {#7} }
+    }
+}
+
+% 🌱 Inserts point #1 into the tree, subdividing until it no longer shares a leaf with another.
+\cs_new_protected:Npn \semio_viz_qt_add:n #1 {
+  \semio_viz_qt_call:Nnnnnnn \semio_viz_qt_descend:nnnnnn {#1} { 1 }
+    { \g_semio_viz_qt_xlo_fp } { \g_semio_viz_qt_ylo_fp }
+    { \g_semio_viz_qt_xhi_fp } { \g_semio_viz_qt_yhi_fp }
+}
+
+% 🌱 Inserts point #1 under node #2 covering (#3,#4)-(#5,#6).
+\cs_new_protected:Npn \semio_viz_qt_descend:nnnnnn #1#2#3#4#5#6 {
+  \int_set:Nn \l_semio_viz_qt_kind_int { \semio_viz_qt_kind:n {#2} }
+  \int_compare:nNnTF { \l_semio_viz_qt_kind_int } = { 0 }
+    {
+      \int_gset:cn { g_semio_viz_qt_kind_ \int_eval:n {#2} _int } { 1 }
+      \int_gset:cn { g_semio_viz_qt_head_ \int_eval:n {#2} _int } {#1}
+    }
+    {
+      \int_compare:nNnTF { \l_semio_viz_qt_kind_int } = { 1 }
+        { \semio_viz_qt_split:nnnnnn {#1} {#2} {#3} {#4} {#5} {#6} }
+        { \semio_viz_qt_into_child:nnnnnn {#1} {#2} {#3} {#4} {#5} {#6} }
+    }
+}
+
+% 🌲 Sends point #1 into the quadrant of internal node #2 that holds it, creating it when empty.
+\cs_new_protected:Npn \semio_viz_qt_into_child:nnnnnn #1#2#3#4#5#6 {
+  \fp_set:Nn \l_semio_viz_qt_x_fp { \semio_viz_qt_x:n {#1} }
+  \fp_set:Nn \l_semio_viz_qt_y_fp { \semio_viz_qt_y:n {#1} }
+  \fp_set:Nn \l_semio_viz_qt_xm_fp { ( (#3) + (#5) ) / 2 }
+  \fp_set:Nn \l_semio_viz_qt_ym_fp { ( (#4) + (#6) ) / 2 }
+  \int_set:Nn \l_semio_viz_qt_quad_int
+    {
+      \fp_compare:nNnTF { \l_semio_viz_qt_y_fp } < { \l_semio_viz_qt_ym_fp } { 0 } { 2 }
+      + \fp_compare:nNnTF { \l_semio_viz_qt_x_fp } < { \l_semio_viz_qt_xm_fp } { 0 } { 1 }
+    }
+  \int_set:Nn \l_semio_viz_qt_other_int
+    { \semio_viz_qt_child:nn {#2} { \l_semio_viz_qt_quad_int } }
+  \int_compare:nNnT { \l_semio_viz_qt_other_int } = { 0 }
+    {
+      \int_set_eq:NN \l_semio_viz_qt_parent_int \l_semio_viz_qt_quad_int
+      \semio_viz_qt_node_new:
+      \int_gset:cn
+        { g_semio_viz_qt_c \int_use:N \l_semio_viz_qt_parent_int _ \int_eval:n {#2} _int }
+        { \l_semio_viz_qt_node_int }
+      \int_set_eq:NN \l_semio_viz_qt_other_int \l_semio_viz_qt_node_int
+      \int_set_eq:NN \l_semio_viz_qt_quad_int \l_semio_viz_qt_parent_int
+    }
+  \use:x
+    {
+      \exp_not:N \semio_viz_qt_quadrant:nnnnnnn
+        { \int_use:N \l_semio_viz_qt_quad_int } { \int_use:N \l_semio_viz_qt_other_int }
+        { \int_eval:n {#1} }
+        { \fp_to_decimal:n {#3} } { \fp_to_decimal:n {#4} }
+        { \fp_to_decimal:n {#5} } { \fp_to_decimal:n {#6} }
+    }
+}
+
+% 🧭 Recurses into quadrant #1 (node #2) of the box (#4,#5)-(#6,#7), for point #3.
+\cs_new_protected:Npn \semio_viz_qt_quadrant:nnnnnnn #1#2#3#4#5#6#7 {
+  \semio_viz_qt_call:Nnnnnnn \semio_viz_qt_descend:nnnnnn {#3} {#2}
+    { \int_mod:nn {#1} { 2 } ? ( ( (#4) + (#6) ) / 2 ) : (#4) }
+    { \int_div_truncate:nn {#1} { 2 } ? ( ( (#5) + (#7) ) / 2 ) : (#5) }
+    { \int_mod:nn {#1} { 2 } ? (#6) : ( ( (#4) + (#6) ) / 2 ) }
+    { \int_div_truncate:nn {#1} { 2 } ? (#7) : ( ( (#5) + (#7) ) / 2 ) }
+}
+
+% 🍂 Point #1 met the leaf #2: either it is coincident with the leaf's points and joins the chain,
+% or the leaf becomes internal and every point of the old chain descends one level further.
+\cs_new_protected:Npn \semio_viz_qt_split:nnnnnn #1#2#3#4#5#6 {
+  \int_set:Nn \l_semio_viz_qt_other_int { \semio_viz_qt_head:n {#2} }
+  \bool_lazy_and:nnTF
+    { \fp_compare_p:n { \semio_viz_qt_x:n { \l_semio_viz_qt_other_int } = \semio_viz_qt_x:n {#1} } }
+    { \fp_compare_p:n { \semio_viz_qt_y:n { \l_semio_viz_qt_other_int } = \semio_viz_qt_y:n {#1} } }
+    {
+      \int_gset:cn { g_semio_viz_qt_next_ \int_eval:n {#1} _int } { \l_semio_viz_qt_other_int }
+      \int_gset:cn { g_semio_viz_qt_head_ \int_eval:n {#2} _int } {#1}
+    }
+    {
+      \int_gset:cn { g_semio_viz_qt_kind_ \int_eval:n {#2} _int } { 2 }
+      \int_gzero:c { g_semio_viz_qt_head_ \int_eval:n {#2} _int }
+      \semio_viz_qt_call:Nnnnnnn \semio_viz_qt_reinsert:nnnnnn
+        { \l_semio_viz_qt_other_int } {#2} {#3} {#4} {#5} {#6}
+      \semio_viz_qt_into_child:nnnnnn {#1} {#2} {#3} {#4} {#5} {#6}
+    }
+}
+
+% 🍂 Puts the chain that used to sit in the split leaf back under the now internal node. The rest of
+% the chain is frozen out of the point's `next` slot before anything else runs, because inserting
+% the point is exactly what overwrites the scratch the tail would otherwise be read from.
+\cs_new_protected:Npn \semio_viz_qt_reinsert:nnnnnn #1#2#3#4#5#6 {
+  \use:x
+    {
+      \exp_not:N \semio_viz_qt_reinsert_tail:nnnnnnn
+        { \int_eval:n { \semio_viz_qt_next:n {#1} } } { \int_eval:n {#1} }
+        \exp_not:n { {#2} {#3} {#4} {#5} {#6} }
+    }
+}
+
+% 🍂 Reinserts point #2 and then the tail #1 of its old chain, under node #3 in the box (#4,#5)-(#6,#7).
+\cs_new_protected:Npn \semio_viz_qt_reinsert_tail:nnnnnnn #1#2#3#4#5#6#7 {
+  \int_gzero:c { g_semio_viz_qt_next_ \int_eval:n {#2} _int }
+  \semio_viz_qt_into_child:nnnnnn {#2} {#3} {#4} {#5} {#6} {#7}
+  \int_compare:nNnT {#1} > { 0 }
+    { \semio_viz_qt_reinsert:nnnnnn {#1} {#3} {#4} {#5} {#6} {#7} }
+}
+
+% 🌳 Builds the tree of the table #1 under the column options #2.
+\cs_new_protected:Npn \semio_viz_qt_build:nn #1#2 {
+  \tl_set:Nn \l_semio_viz_qt_xcol_tl { x }
+  \tl_set:Nn \l_semio_viz_qt_ycol_tl { y }
+  \keys_set:nn { semio / viz / quadtree } {#2}
+  \int_gzero:N \g_semio_viz_qt_nodes_int
+  \bool_gset_false:N \g_semio_viz_qt_covered_bool
+  \fp_gzero:N \g_semio_viz_qt_xlo_fp
+  \fp_gzero:N \g_semio_viz_qt_ylo_fp
+  \fp_gzero:N \g_semio_viz_qt_xhi_fp
+  \fp_gzero:N \g_semio_viz_qt_yhi_fp
+  \semio_viz_qt_read:n {#1}
+  \int_compare:nNnT { \g_semio_viz_qt_n_int } > { 0 }
+    {
+      \semio_viz_qt_cover:nn { \l_semio_viz_qt_bxlo_fp } { \l_semio_viz_qt_bylo_fp }
+      \semio_viz_qt_cover:nn { \l_semio_viz_qt_bxhi_fp } { \l_semio_viz_qt_byhi_fp }
+      \semio_viz_qt_node_new:
+      \int_step_inline:nn { \g_semio_viz_qt_n_int } { \semio_viz_qt_add:n {##1} }
+    }
+  \semio_viz_probe_geometry:nx { quadtree/extent }
+    {
+      \fp_to_decimal:N \g_semio_viz_qt_xlo_fp , \fp_to_decimal:N \g_semio_viz_qt_ylo_fp ,
+      \fp_to_decimal:N \g_semio_viz_qt_xhi_fp , \fp_to_decimal:N \g_semio_viz_qt_yhi_fp
+    }
+  \semio_viz_probe_geometry:nx { quadtree/size }
+    { \int_use:N \g_semio_viz_qt_n_int , \int_use:N \g_semio_viz_qt_nodes_int }
+}
+
+% 🔎 The nearest point to (#1, #2) within #3, as its 1-based row index; 0 when the tree holds none.
+\cs_new_protected:Npn \semio_viz_qt_find:nnn #1#2#3 {
+  \int_gzero:N \g_semio_viz_qt_found_int
+  \fp_gset:Nn \g_semio_viz_qt_best_fp { (#3) * (#3) }
+  \int_compare:nNnT { \g_semio_viz_qt_nodes_int } > { 0 }
+    {
+      \semio_viz_qt_visit:nnnnnnn { 1 } {#1} {#2}
+        { \g_semio_viz_qt_xlo_fp } { \g_semio_viz_qt_ylo_fp }
+        { \g_semio_viz_qt_xhi_fp } { \g_semio_viz_qt_yhi_fp }
+    }
+}
+
+% 🔎 Visits node #1 covering (#4,#5)-(#6,#7) while it can still hold something closer to (#2,#3)
+% than the best candidate so far; a leaf offers its chain, an internal node its four quadrants with
+% the one holding the query point first.
+\cs_new_protected:Npn \semio_viz_qt_visit:nnnnnnn #1#2#3#4#5#6#7 {
+  \bool_lazy_any:nF
+    {
+      { \int_compare_p:n { (#1) = 0 } }
+      { \fp_compare_p:n { \semio_viz_qt_gap:nnn {#2} {#4} {#6} ^ 2 + \semio_viz_qt_gap:nnn {#3} {#5} {#7} ^ 2 > \g_semio_viz_qt_best_fp } }
+    }
+    {
+      \int_set:Nn \l_semio_viz_qt_kind_int { \semio_viz_qt_kind:n {#1} }
+      \int_compare:nNnTF { \l_semio_viz_qt_kind_int } = { 1 }
+        { \semio_viz_qt_offer:nnn { \semio_viz_qt_head:n {#1} } {#2} {#3} }
+        { \semio_viz_qt_visit_children:nnnnnnn {#1} {#2} {#3} {#4} {#5} {#6} {#7} }
+    }
+}
+
+% 📐 How far #1 lies outside the interval (#2, #3); zero when it lies inside.
+\cs_new:Npn \semio_viz_qt_gap:nnn #1#2#3
+  { max ( 0 , (#2) - (#1) , (#1) - (#3) ) }
+
+% 🔎 Visits the four quadrants of internal node #1, nearest first. The preferred quadrant is frozen
+% into a literal before the first descent, because the descent reassigns the scratch it is held in.
+\cs_new_protected:Npn \semio_viz_qt_visit_children:nnnnnnn #1#2#3#4#5#6#7 {
+  \int_set:Nn \l_semio_viz_qt_quad_int
+    {
+      \fp_compare:nNnTF {#3} < { ( (#5) + (#7) ) / 2 } { 0 } { 2 }
+      + \fp_compare:nNnTF {#2} < { ( (#4) + (#6) ) / 2 } { 0 } { 1 }
+    }
+  \use:x
+    {
+      \exp_not:N \semio_viz_qt_visit_order:nnnnnnnn
+        { \int_use:N \l_semio_viz_qt_quad_int }
+        \exp_not:n { {#1} {#2} {#3} {#4} {#5} {#6} {#7} }
+    }
+}
+
+% 🔎 Visits the quadrant #1 of node #2 first and the other three after it.
+\cs_new_protected:Npn \semio_viz_qt_visit_order:nnnnnnnn #1#2#3#4#5#6#7#8 {
+  \semio_viz_qt_visit_quadrant:nnnnnnnn {#1} {#2} {#3} {#4} {#5} {#6} {#7} {#8}
+  \int_step_inline:nnn { 0 } { 3 }
+    {
+      \int_compare:nNnF { ##1 } = {#1}
+        { \semio_viz_qt_visit_quadrant:nnnnnnnn { ##1 } {#2} {#3} {#4} {#5} {#6} {#7} {#8} }
+    }
+}
+
+% 🔎 Visits quadrant #1 of internal node #2 inside the box (#5,#6)-(#7,#8).
+\cs_new_protected:Npn \semio_viz_qt_visit_quadrant:nnnnnnnn #1#2#3#4#5#6#7#8 {
+  \semio_viz_qt_visit:nnnnnnn { \semio_viz_qt_child:nn {#2} {#1} } {#3} {#4}
+    { \int_mod:nn {#1} { 2 } ? ( ( (#5) + (#7) ) / 2 ) : (#5) }
+    { \int_div_truncate:nn {#1} { 2 } ? ( ( (#6) + (#8) ) / 2 ) : (#6) }
+    { \int_mod:nn {#1} { 2 } ? (#7) : ( ( (#5) + (#7) ) / 2 ) }
+    { \int_div_truncate:nn {#1} { 2 } ? (#8) : ( ( (#6) + (#8) ) / 2 ) }
+}
+
+% 🔎 Offers the chain starting at point #1 as candidates for the query (#2, #3).
+\cs_new_protected:Npn \semio_viz_qt_offer:nnn #1#2#3 {
+  \int_compare:nNnT {#1} > { 0 }
+    {
+      \fp_compare:nNnT
+        {
+          ( \semio_viz_qt_x:n {#1} - (#2) ) ^ 2 + ( \semio_viz_qt_y:n {#1} - (#3) ) ^ 2
+        }
+        < { \g_semio_viz_qt_best_fp }
+        {
+          \fp_gset:Nn \g_semio_viz_qt_best_fp
+            { ( \semio_viz_qt_x:n {#1} - (#2) ) ^ 2 + ( \semio_viz_qt_y:n {#1} - (#3) ) ^ 2 }
+          \int_gset:Nn \g_semio_viz_qt_found_int {#1}
+        }
+      \semio_viz_qt_offer:nnn { \semio_viz_qt_next:n {#1} } {#2} {#3}
+    }
+}
+%endregion 🔖️Quadtree
+
+%region 🔖️PublicApi
+% 🌳 \SemioVizQuadtree{table}[x=,y=]: builds the spatial index of a table's two coordinate columns.
+\NewDocumentCommand \SemioVizQuadtree { m O{} } { \semio_viz_qt_build:nn {#1} {#2} }
+% 🔎 \SemioVizQuadtreeFind{x}{y}[radius]: typesets the 1-based row index of the nearest point of the
+% active quadtree within the search radius, or 0 when it holds none.
+\NewDocumentCommand \SemioVizQuadtreeFind { m m O{inf} }
+  {
+    \semio_viz_qt_find:nnn {#1} {#2} {#3}
+    \int_use:N \g_semio_viz_qt_found_int
+  }
+% 🔺 \SemioVizDelaunay{pointset}: triangles into \g_semio_viz_spatial_tri_seq as `{i}{j}{k}` (1-based indices).
+\NewDocumentCommand \SemioVizDelaunay { m } { \semio_viz_spatial_delaunay:n {#1} }
+% 🔷 \SemioVizVoronoi{pointset}{x0}{y0}{x1}{y1}: clipped cells into \g_semio_viz_spatial_cells_seq as `{i}{x,y;…}`.
+\NewDocumentCommand \SemioVizVoronoi { m m m m m }
+  { \semio_viz_spatial_voronoi:nnnnn {#1}{#2}{#3}{#4}{#5} }
+% 🔶 \SemioVizHull{pointset}: convex hull indices into \g_semio_viz_spatial_hull_seq.
+\NewDocumentCommand \SemioVizHull { m } { \semio_viz_spatial_hull:n {#1} }
+% 🍯 \SemioVizHexbin{pointset}{radius}: bins into \g_semio_viz_spatial_bins_seq as `{id}{cx}{cy}`.
+\NewDocumentCommand \SemioVizHexbin { m m } { \semio_viz_spatial_hexbin:nn {#1}{#2} }
+% 🐝 \SemioVizBeeswarm{pointset}{radius}: collision-free positions into \g_semio_viz_spatial_swarm_seq.
+\NewDocumentCommand \SemioVizBeeswarm { m m } { \semio_viz_spatial_beeswarm:nn {#1}{#2} }
+% 🎲 \SemioVizJitter{pointset}{amount}: deterministic jittered positions into \g_semio_viz_spatial_swarm_seq.
+\NewDocumentCommand \SemioVizJitter { m m } { \semio_viz_spatial_jitter:nn {#1}{#2} }
+% 〰️ \SemioVizContour{grid}{threshold}: isolines into \g_semio_viz_spatial_rings_seq as `x,y;x,y;…`.
+\NewDocumentCommand \SemioVizContour { m m } { \semio_viz_spatial_contour:nn {#1}{#2} }
+% 🌫️ \SemioVizDensity{pointset}{w}{h}{x0}{y0}{cell}{bandwidth}: writes the grid `<pointset>-density`.
+\NewDocumentCommand \SemioVizDensity { m m m m m m m }
+  { \semio_viz_spatial_density:nnnnnnn {#1}{#2}{#3}{#4}{#5}{#6}{#7} }
+%endregion 🔖️PublicApi
+
+\ExplSyntaxOff

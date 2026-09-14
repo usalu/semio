@@ -1,0 +1,245 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-network-arc}[2026/09/05 v0.3.0 semio viz namespace network-arc families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-network-graph}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 🔑 semio / viz / family / arc-diagram — the linear and circular arc views of taxonomy §8.
+%   data        (table, default demo-graph-community)
+%   order       (index|name|degree|group|component|cluster, default index)  position along the axis
+%   mode        (linear|circular, default linear)   straight axis with bows, or a ring with chords
+%   side        (above|below|both, default above)   which half the bows of a linear diagram occupy
+%   bow         (number, default 0.5)               bow height as a fraction of the span
+%   directed, weightWidth, signed, labels, size, linkWidth, colorBy, padding as in `graph`
+\tl_new:N \l_semio_viz_arc_mode_tl
+\tl_new:N \l_semio_viz_arc_side_tl
+\fp_new:N \l_semio_viz_arc_bow_fp
+\fp_new:N \l_semio_viz_arc_step_fp
+\fp_new:N \l_semio_viz_arc_axis_fp
+
+\cs_new_protected:Npn \semio_viz_arc_keys_add:n #1 {
+  \semio_viz_net_keys_add:n {#1}
+  \keys_define:nn {#1} {
+    mode .tl_set:N = \l_semio_viz_arc_mode_tl,
+    side .tl_set:N = \l_semio_viz_arc_side_tl,
+    bow  .fp_set:N = \l_semio_viz_arc_bow_fp,
+  }
+}
+% ♻️ Restores the arc defaults over the network reset: the `arc` layout, linear mode, bows above, half height.
+\cs_new_protected:Npn \semio_viz_arc_keys_reset: {
+  \semio_viz_net_keys_reset:
+  \tl_set:Nn \l_semio_viz_net_layout_tl { arc }
+  \tl_set:Nn \l_semio_viz_arc_mode_tl { linear }
+  \tl_set:Nn \l_semio_viz_arc_side_tl { above }
+  \fp_set:Nn \l_semio_viz_arc_bow_fp { 0.5 }
+  \bool_set_true:N \l_semio_viz_net_labels_bool
+}
+%endregion 🔖️Keys
+
+%region 🔖️Arc
+\tl_const:Nn \c_semio_viz_arc_layout_tl { arc }
+
+% 〰️ Axis coordinates of the node at ordering position `rank`.
+\cs_new:Npn \semio_viz_arc_ax:n #1
+  {
+    \l_semio_viz_net_xlo_fp
+    + ( \semio_viz_network_n:nn { rank } {#1} - 1 ) * \l_semio_viz_arc_step_fp
+  }
+
+% 〰️ One bow between two axis positions; the side alternates when `side=both`.
+\cs_new_protected:Npn \semio_viz_arc_bow_draw:n #1 {
+  \semio_viz_net_link_style:n {#1}
+  \fp_set:Nn \l_semio_viz_net_c_fp
+    {
+      \str_if_eq:VnTF \l_semio_viz_arc_side_tl { below } { - 1 } {
+        \str_if_eq:VnTF \l_semio_viz_arc_side_tl { both }
+          { ( #1 - 2 * floor( #1 / 2 ) = 1 ? { 1 } : { -1 } ) } { 1 } }
+      * \l_semio_viz_arc_bow_fp
+    }
+  \semio_viz_net_draw_curve:nnnnnn
+    { \semio_viz_arc_ax:n { \semio_viz_network_n:nn { es } {#1} } } { \l_semio_viz_arc_axis_fp }
+    { \semio_viz_arc_ax:n { \semio_viz_network_n:nn { et } {#1} } } { \l_semio_viz_arc_axis_fp }
+    { \l_semio_viz_net_e_fp } { \l_semio_viz_net_c_fp }
+}
+
+% 🍩 One chord of the circular variant: a bow across the ring between the two node angles.
+\cs_new_protected:Npn \semio_viz_arc_chord_draw:n #1 {
+  \semio_viz_net_link_style:n {#1}
+  \semio_viz_net_draw_curve:nnnnnn
+    { \semio_viz_net_nx:n { \semio_viz_network_n:nn { es } {#1} } }
+    { \semio_viz_net_ny:n { \semio_viz_network_n:nn { es } {#1} } }
+    { \semio_viz_net_nx:n { \semio_viz_network_n:nn { et } {#1} } }
+    { \semio_viz_net_ny:n { \semio_viz_network_n:nn { et } {#1} } }
+    { \l_semio_viz_net_e_fp } { \l_semio_viz_arc_bow_fp - 0.5 }
+}
+
+% 📏 The straight variant: spaces the ranks across the canvas, seats the axis according to `side`, then bows and nodes.
+\cs_new_protected:Npn \semio_viz_arc_linear: {
+  \fp_set:Nn \l_semio_viz_arc_step_fp
+    {
+      ( \l_semio_viz_net_xhi_fp - \l_semio_viz_net_xlo_fp )
+      / max( 1 , \l_semio_viz_network_n_int - 1 )
+    }
+  \fp_set:Nn \l_semio_viz_arc_axis_fp
+    {
+      \str_if_eq:VnTF \l_semio_viz_arc_side_tl { above }
+        { \l_semio_viz_net_ylo_fp + 4 }
+        {
+          \str_if_eq:VnTF \l_semio_viz_arc_side_tl { below }
+            { \l_semio_viz_net_yhi_fp - 2 }
+            { ( \l_semio_viz_net_ylo_fp + \l_semio_viz_net_yhi_fp ) / 2 }
+        }
+    }
+  \int_step_inline:nn { \l_semio_viz_network_m_int } { \semio_viz_arc_bow_draw:n {##1} }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } { \semio_viz_arc_node_draw:n {##1} }
+}
+% 🔵 One node on the straight axis, with its caption set clear of the mark below the axis line.
+\cs_new_protected:Npn \semio_viz_arc_node_draw:n #1 {
+  \semio_viz_net_node_fill_pick:n {#1}
+  \semio_viz_net_node_size:n {#1}
+  \semio_viz_net_draw_node:nnn
+    { \semio_viz_arc_ax:n {#1} } { \l_semio_viz_arc_axis_fp } { \l_semio_viz_net_v_fp }
+  \bool_if:NT \l_semio_viz_net_labels_bool {
+    \semio_viz_net_draw_text:nnn
+      { \semio_viz_arc_ax:n {#1} }
+      { \l_semio_viz_arc_axis_fp - \l_semio_viz_net_v_fp - 1.6 }
+      { \semio_viz_network_id:n {#1} }
+  }
+}
+
+% ⭕ The ring variant: fits the ring to the canvas, then draws every chord and the shared ring nodes.
+\cs_new_protected:Npn \semio_viz_arc_circular: {
+  \semio_viz_net_fit:n { \fp_eval:n { 2.2 * \l_semio_viz_net_size_fp } }
+  \int_step_inline:nn { \l_semio_viz_network_m_int } { \semio_viz_arc_chord_draw:n {##1} }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } { \semio_viz_net_node_draw:n {##1} }
+}
+
+% 〰️ arc-diagram — one axis, one ordering, one bow per link; `mode=circular` bends the axis into a ring.
+\cs_new_protected:Npn \semio_viz_arc_render:n #1 {
+  \semio_viz_frame_require:n { SemioVizRunFamily }
+  \semio_viz_arc_keys_reset:
+  \keys_set:nn { semio / viz / family / arc-diagram } {#1}
+  \semio_viz_net_layopts_build:
+  \str_if_eq:VnTF \l_semio_viz_arc_mode_tl { circular }
+    {
+      \semio_viz_layout_run:VVnV \c_semio_viz_arc_ring_tl \l_semio_viz_net_data_tl
+        { semio-net-arc } \l_semio_viz_net_layopts_tl
+    }
+    {
+      \semio_viz_layout_run:VVnV \c_semio_viz_arc_layout_tl \l_semio_viz_net_data_tl
+        { semio-net-arc } \l_semio_viz_net_layopts_tl
+    }
+  \semio_viz_network_components:
+  \semio_viz_net_groups_build:
+  \semio_viz_net_extremes:
+  \semio_viz_net_canvas:
+  \str_if_eq:VnTF \l_semio_viz_arc_mode_tl { circular }
+    { \semio_viz_arc_circular: } { \semio_viz_arc_linear: }
+}
+\tl_const:Nn \c_semio_viz_arc_ring_tl { circular }
+
+\semio_viz_arc_keys_add:n { semio / viz / family / arc-diagram }
+% 🏹 Registers the `arc-diagram` catalogue entry on the arc renderer.
+\SemioVizFamily { arc-diagram } { \semio_viz_arc_render:n {#1} }
+%endregion 🔖️Arc
+
+%region 🔖️Hive
+% 🐝 hive-plot — the nodes of each group live on their own straight axis radiating from the centre,
+% ordered along it by degree, and every link is a curve between two axes (taxonomy §8).
+\int_new:N \l_semio_viz_hive_axes_int
+\fp_new:N \l_semio_viz_hive_rin_fp
+\fp_new:N \l_semio_viz_hive_rout_fp
+
+\cs_new_protected:Npn \semio_viz_hive_place: {
+  \semio_viz_net_groups_build:
+  \int_set:Nn \l_semio_viz_hive_axes_int { \seq_count:N \l_semio_viz_net_groups_seq }
+  \semio_viz_network_n_ensure:nn { hslot } { \l_semio_viz_hive_axes_int }
+  \semio_viz_network_n_ensure:nn { hcount } { \l_semio_viz_hive_axes_int }
+  \int_step_inline:nn { \l_semio_viz_hive_axes_int } {
+    \semio_viz_network_nset:nnn { hslot } {##1} { 0 }
+    \semio_viz_network_nset:nnn { hcount } {##1} { 0 }
+  }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } { \semio_viz_hive_count:n {##1} }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } { \semio_viz_hive_one:n {##1} }
+}
+% 🧮 Tallies node #1 onto its group's axis, so every axis knows how many nodes it must space.
+\cs_new_protected:Npn \semio_viz_hive_count:n #1 {
+  \semio_viz_net_group_pos:n {#1}
+  \semio_viz_network_nset:nnn { hcount } { \l_semio_viz_net_k_int }
+    { \semio_viz_network_n:nn { hcount } { \l_semio_viz_net_k_int } + 1 }
+}
+% 📍 Takes the next free slot on node #1's axis and writes the polar position back as its x and y.
+\cs_new_protected:Npn \semio_viz_hive_one:n #1 {
+  \semio_viz_net_group_pos:n {#1}
+  \semio_viz_network_nset:nnn { hslot } { \l_semio_viz_net_k_int }
+    { \semio_viz_network_n:nn { hslot } { \l_semio_viz_net_k_int } + 1 }
+  \fp_set:Nn \l_semio_viz_net_a_fp
+    { 6.283185307179586 * ( \l_semio_viz_net_k_int - 1 ) / \l_semio_viz_hive_axes_int }
+  \fp_set:Nn \l_semio_viz_net_b_fp
+    {
+      \l_semio_viz_hive_rin_fp
+      + ( \l_semio_viz_hive_rout_fp - \l_semio_viz_hive_rin_fp )
+        * ( \semio_viz_network_n:nn { hslot } { \l_semio_viz_net_k_int } - 1 )
+        / max( 1 , \semio_viz_network_n:nn { hcount } { \l_semio_viz_net_k_int } - 1 )
+    }
+  \semio_viz_network_fset:nnn { x } {#1}
+    { \l_semio_viz_net_b_fp * cos( \l_semio_viz_net_a_fp ) }
+  \semio_viz_network_fset:nnn { y } {#1}
+    { \l_semio_viz_net_b_fp * sin( \l_semio_viz_net_a_fp ) }
+}
+
+% 🕸️ Draws the spoke of every group axis.
+\cs_new_protected:Npn \semio_viz_hive_axes_draw: {
+  \int_step_inline:nn { \l_semio_viz_hive_axes_int } { \semio_viz_hive_axis_draw:n {##1} }
+}
+% 📐 Spoke #1 in its group colour, from the inner to the outer radius at that axis's angle.
+\cs_new_protected:Npn \semio_viz_hive_axis_draw:n #1 {
+  \semio_viz_net_color:nN {#1} \l_semio_viz_net_stroke_tl
+  \fp_set:Nn \l_semio_viz_net_a_fp
+    { 6.283185307179586 * ( (#1) - 1 ) / \l_semio_viz_hive_axes_int }
+  \semio_viz_net_draw_link:nnnnn
+    { \semio_viz_net_px:n { \l_semio_viz_hive_rin_fp * cos( \l_semio_viz_net_a_fp ) } }
+    { \semio_viz_net_py:n { \l_semio_viz_hive_rin_fp * sin( \l_semio_viz_net_a_fp ) } }
+    { \semio_viz_net_px:n { \l_semio_viz_hive_rout_fp * cos( \l_semio_viz_net_a_fp ) } }
+    { \semio_viz_net_py:n { \l_semio_viz_hive_rout_fp * sin( \l_semio_viz_net_a_fp ) } }
+    { 0.12 }
+}
+
+% 🐝 hive-plot — runs the adjacency layout for degree order, seats the nodes on the spokes, then draws axes, chords and nodes.
+\cs_new_protected:Npn \semio_viz_hive_render:n #1 {
+  \semio_viz_frame_require:n { SemioVizRunFamily }
+  \semio_viz_arc_keys_reset:
+  \tl_set:Nn \l_semio_viz_net_order_tl { degree }
+  \tl_set:Nn \l_semio_viz_net_layout_tl { adjacency }
+  \fp_set:Nn \l_semio_viz_hive_rin_fp { 0.3 }
+  \fp_set:Nn \l_semio_viz_hive_rout_fp { 1 }
+  \keys_set:nn { semio / viz / family / hive-plot } {#1}
+  \semio_viz_net_layopts_build:
+  \semio_viz_layout_run:VVnV \c_semio_viz_hive_layout_tl \l_semio_viz_net_data_tl
+    { semio-net-hive } \l_semio_viz_net_layopts_tl
+  \semio_viz_hive_place:
+  \semio_viz_network_components:
+  \semio_viz_net_extremes:
+  \semio_viz_net_canvas:
+  \semio_viz_net_fit:n { \fp_eval:n { 2.2 * \l_semio_viz_net_size_fp } }
+  \semio_viz_hive_axes_draw:
+  \int_step_inline:nn { \l_semio_viz_network_m_int } { \semio_viz_arc_chord_draw:n {##1} }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } { \semio_viz_net_node_draw:n {##1} }
+}
+\tl_const:Nn \c_semio_viz_hive_layout_tl { adjacency }
+
+\semio_viz_arc_keys_add:n { semio / viz / family / hive-plot }
+% 🔑 Adds the two radii that bound a hive spoke on top of the shared arc key family.
+\keys_define:nn { semio / viz / family / hive-plot } {
+  innerRadius .fp_set:N = \l_semio_viz_hive_rin_fp,
+  outerRadius .fp_set:N = \l_semio_viz_hive_rout_fp,
+}
+% 🍯 Registers the `hive-plot` catalogue entry on the hive renderer.
+\SemioVizFamily { hive-plot } { \semio_viz_hive_render:n {#1} }
+%endregion 🔖️Hive
+
+\ExplSyntaxOff

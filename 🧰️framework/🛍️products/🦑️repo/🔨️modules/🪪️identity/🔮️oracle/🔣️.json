@@ -1,0 +1,31 @@
+{
+  "$comment": "🔮️ References of the repo identity module. Grapheme segmentation is a Unicode standard, so it is judged by a standards implementation shipped with the runtime; the compose-id and artifact-reference codecs are this repository's own conventions and are recorded as having no reference.",
+  "schemaVersion": 2,
+  "oracles": [
+    {
+      "id": "intl-segmenter",
+      "kind": "standards-reference-tool",
+      "ecosystem": "javascript",
+      "package": "Intl.Segmenter",
+      "version": "ecma-402",
+      "engine": { "family": "none", "implementation": "icu-via-javascriptcore", "version": "ecma-402" },
+      "capabilities": ["repo-identity-leading-grapheme"],
+      "comparisonProfiles": ["ordered-json-v1"],
+      "license": "Unicode-3.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "rationale": "UAX #29 extended grapheme cluster segmentation, implemented by the ICU data the JavaScript runtime ships, decides where the leading emoji grapheme of a string ends. The owned rune scanner in this module reimplements that boundary by hand and must not be allowed to agree with itself about zero-width joiner sequences, keycaps, regional-indicator pairs, skin-tone modifiers and variation selectors."
+    }
+  ],
+  "noOracleDecisions": [
+    {
+      "id": "repo-identity-owned-codecs",
+      "capabilities": ["repo-identity-entity-emoji", "repo-identity-artifact-ref", "repo-identity-compose-id", "repo-identity-generation"],
+      "rationale": "The entity-emoji vocabulary, the presentation-selector normalisation for the text-default code points, the artifact reference prefixes and the goal and contributor compose-id formats are this repository's own conventions, defined by `🧬️schema/🔣️entity-emojis.json`. Identifier generation is judged by shape and by reproducibility under an injected seed, not by a reference, because a random identifier has no correct value. Confidence comes from the schema-driven specification vectors plus two independently written implementations reading the same table.",
+      "substitutes": ["specification-vectors", "independent-implementations"],
+      "coversMutations": false
+    }
+  ],
+  "oracleHostPackages": []
+}

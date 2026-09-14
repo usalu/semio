@@ -1,0 +1,7 @@
+{
+  "repoMetaDir": "/repo/.🧬semio/🦑️repo",
+  "id": "26/09/06/IMPORTANT-DOCUMENT-TRANSACTION",
+  "failurePath": "/repo/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️06/IMPORTANT-DOCUMENT-TRANSACTION/🎫️ticket.json",
+  "failureMessage": "injected: the document could not be written",
+  "modes": ["missing", "not-empty", "not-a-file", "extra-sibling"]
+}

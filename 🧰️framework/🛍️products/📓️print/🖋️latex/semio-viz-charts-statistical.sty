@@ -1,0 +1,1535 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-charts-statistical}[2026/09/05 v0.3.0 semio viz namespace charts-statistical families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-transform}
+\RequirePackage{semio-viz-charts-distribution}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 🔑 Uncertainty keys, `semio / viz / family / uncertainty`.
+% mark      (choice `errorbar|interval|forest|band|fan|gradient|funnel|density|pvalue|power`, default errorbar)
+% estimate  (column, default `estimate`)  point estimate column
+% lower     (column, default `lower`)     lower interval bound column
+% upper     (column, default `upper`)     upper interval bound column
+% weight    (column, default `weight`)    weight column; drives the forest box area and the funnel y axis
+% itemlabel (column, default `label`)     row label column
+% reference (fp, default 1)               reference value drawn as a dashed rule
+% levels    (int, default 3)              number of nested bands of a fan or gradient band
+% cap       (mm, default 1.2)             half-length of the error bar cap
+\tl_new:N \l_semio_viz_unc_mark_tl
+\tl_new:N \l_semio_viz_unc_estimate_tl
+\tl_new:N \l_semio_viz_unc_lower_tl
+\tl_new:N \l_semio_viz_unc_upper_tl
+\tl_new:N \l_semio_viz_unc_weight_tl
+\tl_new:N \l_semio_viz_unc_label_tl
+\fp_new:N \l_semio_viz_unc_reference_fp
+\int_new:N \l_semio_viz_unc_levels_int
+\fp_new:N \l_semio_viz_unc_cap_fp
+
+\keys_define:nn { semio / viz / family / uncertainty } {
+  mark      .tl_set:N = \l_semio_viz_unc_mark_tl,
+  estimate  .tl_set:N = \l_semio_viz_unc_estimate_tl,
+  lower     .tl_set:N = \l_semio_viz_unc_lower_tl,
+  upper     .tl_set:N = \l_semio_viz_unc_upper_tl,
+  weight    .tl_set:N = \l_semio_viz_unc_weight_tl,
+  itemlabel .tl_set:N = \l_semio_viz_unc_label_tl,
+  reference .fp_set:N = \l_semio_viz_unc_reference_fp,
+  levels    .int_set:N = \l_semio_viz_unc_levels_int,
+  cap       .fp_set:N = \l_semio_viz_unc_cap_fp,
+  unknown   .code:n = { },
+}
+
+% 🔑 Evaluation keys, `semio / viz / family / evaluation`.
+% curve      (choice `roc|pr|det|calibration|lift|gain|learning|loss|importance|shap|pdp|boundary|silhouette|elbow|confusion`, default roc)
+% score      (column, default `score`)  predicted score column
+% truth      (column, default `label`)  binary ground-truth column
+% diagonal   (bool, default true)       draw the chance diagonal
+% points     (bool, default false)      mark every sweep point
+% bars       (int, default 6)           number of bars of the importance and shap views
+\tl_new:N \l_semio_viz_tr_eval_curve_tl
+\tl_new:N \l_semio_viz_tr_eval_score_tl
+\tl_new:N \l_semio_viz_tr_eval_truth_tl
+\bool_new:N \l_semio_viz_tr_eval_diagonal_bool
+\bool_new:N \l_semio_viz_tr_eval_points_bool
+\int_new:N \l_semio_viz_tr_eval_bars_int
+
+\keys_define:nn { semio / viz / family / evaluation } {
+  curve    .tl_set:N = \l_semio_viz_tr_eval_curve_tl,
+  score    .tl_set:N = \l_semio_viz_tr_eval_score_tl,
+  truth    .tl_set:N = \l_semio_viz_tr_eval_truth_tl,
+  diagonal .bool_set:N = \l_semio_viz_tr_eval_diagonal_bool,
+  points   .bool_set:N = \l_semio_viz_tr_eval_points_bool,
+  bars     .int_set:N = \l_semio_viz_tr_eval_bars_int,
+  unknown  .code:n = { },
+}
+
+% 🔑 Control-chart keys, `semio / viz / family / control`.
+% chart   (choice `individual|xbar|r|s|p|np|c|u|ewma|cusum|run|capability|pareto`, default individual)
+% valuecol (column, default `v`)  measurement column
+% sizecol (column, default `n`)   subgroup size column
+% sigma   (fp, default 3)         control limit distance in estimated standard deviations
+% lambda  (fp, default 0.2)       EWMA smoothing factor
+% target  (fp, default 0)         CUSUM target; 0 uses the process mean
+\tl_new:N \l_semio_viz_ctrl_chart_tl
+\tl_new:N \l_semio_viz_ctrl_value_tl
+\tl_new:N \l_semio_viz_ctrl_size_tl
+\fp_new:N \l_semio_viz_ctrl_sigma_fp
+\fp_new:N \l_semio_viz_ctrl_lambda_fp
+\fp_new:N \l_semio_viz_ctrl_target_fp
+
+\keys_define:nn { semio / viz / family / control } {
+  chart    .tl_set:N = \l_semio_viz_ctrl_chart_tl,
+  valuecol .tl_set:N = \l_semio_viz_ctrl_value_tl,
+  sizecol  .tl_set:N = \l_semio_viz_ctrl_size_tl,
+  sigma    .fp_set:N = \l_semio_viz_ctrl_sigma_fp,
+  lambda   .fp_set:N = \l_semio_viz_ctrl_lambda_fp,
+  target   .fp_set:N = \l_semio_viz_ctrl_target_fp,
+  unknown  .code:n = { },
+}
+
+% 🔑 Residual-diagnostics keys, `semio / viz / family / residual`.
+% kind    (choice `residual|scale-location|leverage|influence|cook|bland-altman|calibration|reliability|lift|gain`, default residual)
+% fitted  (column, default `ex`)     fitted or reference value column
+% resid   (column, default `ey`)     residual or comparison value column
+% weight  (column, default `load`)   leverage or influence weight column
+% smooth  (bool, default true)       draw the loess-style smoothed trend
+% bands   (bool, default true)       draw the agreement or reference bands
+\tl_new:N \l_semio_viz_res_kind_tl
+\tl_new:N \l_semio_viz_res_fitted_tl
+\tl_new:N \l_semio_viz_res_resid_tl
+\tl_new:N \l_semio_viz_res_weight_tl
+\bool_new:N \l_semio_viz_res_smooth_bool
+\bool_new:N \l_semio_viz_res_bands_bool
+
+\keys_define:nn { semio / viz / family / residual } {
+  kind    .tl_set:N = \l_semio_viz_res_kind_tl,
+  fitted  .tl_set:N = \l_semio_viz_res_fitted_tl,
+  resid   .tl_set:N = \l_semio_viz_res_resid_tl,
+  weight  .tl_set:N = \l_semio_viz_res_weight_tl,
+  smooth  .bool_set:N = \l_semio_viz_res_smooth_bool,
+  bands   .bool_set:N = \l_semio_viz_res_bands_bool,
+  unknown .code:n = { },
+}
+
+% 🔑 Quadrant keys, `semio / viz / family / quadrant`.
+% preset  (choice `plain|boston|ansoff|eisenhower|swot|importance-performance|perceptual|risk`, default plain)
+% xcol    (column, default `x`)      horizontal position column
+% ycol    (column, default `y`)      vertical position column
+% sizecol (column, default `size`)   bubble area column; empty draws points of a constant radius
+% itemlabel (column, default `label`)
+% split   (fp, default 0.5)          relative position of the dividing lines
+% tint    (bool, default true)       tint the four quadrants
+% cells   (int, default 2)           subdivisions per axis; 3 renders a nine-box risk matrix
+\tl_new:N \l_semio_viz_quad_preset_tl
+\tl_new:N \l_semio_viz_quad_x_tl
+\tl_new:N \l_semio_viz_quad_y_tl
+\tl_new:N \l_semio_viz_quad_size_tl
+\tl_new:N \l_semio_viz_quad_label_tl
+\fp_new:N \l_semio_viz_quad_split_fp
+\bool_new:N \l_semio_viz_quad_tint_bool
+\int_new:N \l_semio_viz_quad_cells_int
+
+\keys_define:nn { semio / viz / family / quadrant } {
+  preset    .tl_set:N = \l_semio_viz_quad_preset_tl,
+  xcol      .tl_set:N = \l_semio_viz_quad_x_tl,
+  ycol      .tl_set:N = \l_semio_viz_quad_y_tl,
+  sizecol   .tl_set:N = \l_semio_viz_quad_size_tl,
+  itemlabel .tl_set:N = \l_semio_viz_quad_label_tl,
+  split     .fp_set:N = \l_semio_viz_quad_split_fp,
+  tint      .bool_set:N = \l_semio_viz_quad_tint_bool,
+  cells     .int_set:N = \l_semio_viz_quad_cells_int,
+  unknown   .code:n = { },
+}
+
+% 🔑 Composite keys, `semio / viz / family / composite`.
+% layout  (choice `marginals|overview-detail|inset|dual-axis|broken-axis|combination|layered`, default marginals)
+% main    (family name, default `strip`)     family rendered in the main panel
+% mainopts (option list, default empty)      options handed to the main family
+% side    (family name, default `histogram`) family rendered in the marginal or detail panel
+% sideopts (option list, default empty)      options handed to the side family
+% ratio   (fp, default 0.72)                 fraction of the frame taken by the main panel
+% gap     (mm, default 2)                    gap between the panels
+\tl_new:N \l_semio_viz_composite_layout_tl
+\tl_new:N \l_semio_viz_composite_main_tl
+\tl_new:N \l_semio_viz_composite_mainopts_tl
+\tl_new:N \l_semio_viz_composite_side_tl
+\tl_new:N \l_semio_viz_composite_sideopts_tl
+\fp_new:N \l_semio_viz_composite_ratio_fp
+\fp_new:N \l_semio_viz_composite_gap_fp
+
+\keys_define:nn { semio / viz / family / composite } {
+  layout   .tl_set:N = \l_semio_viz_composite_layout_tl,
+  main     .tl_set:N = \l_semio_viz_composite_main_tl,
+  mainopts .tl_set:N = \l_semio_viz_composite_mainopts_tl,
+  side     .tl_set:N = \l_semio_viz_composite_side_tl,
+  sideopts .tl_set:N = \l_semio_viz_composite_sideopts_tl,
+  ratio    .fp_set:N = \l_semio_viz_composite_ratio_fp,
+  gap      .fp_set:N = \l_semio_viz_composite_gap_fp,
+  unknown  .code:n = { },
+}
+
+% 🔑 Facet keys, `semio / viz / family / facet`.
+% mode    (choice `wrap|grid|row|column`, default wrap)
+% panel   (family name, default `histogram`) family rendered in every panel
+% opts    (option list, default empty)       options handed to the panel family
+% by      (column, default `grp`)            column whose levels define the panels
+% columns (int, default 3)                   panels per row in wrap and grid mode
+% gap     (mm, default 2)                    gap between panels
+\tl_new:N \l_semio_viz_fac_mode_tl
+\tl_new:N \l_semio_viz_fac_panel_tl
+\tl_new:N \l_semio_viz_fac_opts_tl
+\tl_new:N \l_semio_viz_fac_by_tl
+\int_new:N \l_semio_viz_fac_columns_int
+\fp_new:N \l_semio_viz_fac_gap_fp
+
+\keys_define:nn { semio / viz / family / facet } {
+  mode    .tl_set:N = \l_semio_viz_fac_mode_tl,
+  panel   .tl_set:N = \l_semio_viz_fac_panel_tl,
+  opts    .tl_set:N = \l_semio_viz_fac_opts_tl,
+  by      .tl_set:N = \l_semio_viz_fac_by_tl,
+  columns .int_set:N = \l_semio_viz_fac_columns_int,
+  gap     .fp_set:N = \l_semio_viz_fac_gap_fp,
+  unknown .code:n = { },
+}
+%endregion 🔖️Keys
+
+%region 🔖️Families
+\seq_new:N \l_semio_viz_st_est_seq
+\seq_new:N \l_semio_viz_st_lo_seq
+\seq_new:N \l_semio_viz_st_hi_seq
+\seq_new:N \l_semio_viz_st_w_seq
+\seq_new:N \l_semio_viz_st_lab_seq
+\seq_new:N \l_semio_viz_st_x_seq
+\seq_new:N \l_semio_viz_st_y_seq
+\fp_new:N \l_semio_viz_st_wmax_fp
+\fp_new:N \l_semio_viz_st_total_fp
+
+% 📏 Uncertainty: error bars, intervals, forest and caterpillar rows, bands, fans and funnel plots.
+\SemioVizFamily { uncertainty } {
+  \semio_viz_cb_reset:
+  \tl_set:Nn \l_semio_viz_cb_data_tl { demo-interval }
+  \tl_set:Nn \l_semio_viz_unc_mark_tl { errorbar }
+  \tl_set:Nn \l_semio_viz_unc_estimate_tl { estimate }
+  \tl_set:Nn \l_semio_viz_unc_lower_tl { lower }
+  \tl_set:Nn \l_semio_viz_unc_upper_tl { upper }
+  \tl_set:Nn \l_semio_viz_unc_weight_tl { weight }
+  \tl_set:Nn \l_semio_viz_unc_label_tl { label }
+  \fp_set:Nn \l_semio_viz_unc_reference_fp { 1 }
+  \int_set:Nn \l_semio_viz_unc_levels_int { 3 }
+  \fp_set:Nn \l_semio_viz_unc_cap_fp { 1.2 }
+  \keys_set:nn { semio / viz / family / common } {#1}
+  \keys_set:nn { semio / viz / family / uncertainty } {#1}
+  \semio_viz_cb_frame:
+  \semio_viz_unc_render:
+}
+
+% 📏 Runs the uncertainty family once its keys are set.
+\cs_new_protected:Npn \semio_viz_unc_render: {
+  \semio_viz_tr_stat_from_table:Nnn \l_semio_viz_st_est_seq
+    { \l_semio_viz_cb_data_tl } { \l_semio_viz_unc_estimate_tl }
+  \semio_viz_tr_stat_from_table:Nnn \l_semio_viz_st_lo_seq
+    { \l_semio_viz_cb_data_tl } { \l_semio_viz_unc_lower_tl }
+  \semio_viz_tr_stat_from_table:Nnn \l_semio_viz_st_hi_seq
+    { \l_semio_viz_cb_data_tl } { \l_semio_viz_unc_upper_tl }
+  \semio_viz_tr_stat_from_table:Nnn \l_semio_viz_st_w_seq
+    { \l_semio_viz_cb_data_tl } { \l_semio_viz_unc_weight_tl }
+  \semio_viz_tr_stat_labels_from_table:Nnn \l_semio_viz_st_lab_seq
+    { \l_semio_viz_cb_data_tl } { \l_semio_viz_unc_label_tl }
+  \semio_viz_tr_stat_min:NN \l_semio_viz_st_lo_seq \l_semio_viz_cb_a_fp
+  \semio_viz_tr_stat_max:NN \l_semio_viz_st_hi_seq \l_semio_viz_cb_b_fp
+  \int_set:Nn \l_semio_viz_cb_i_int { \seq_count:N \l_semio_viz_st_est_seq }
+  \str_case:VnF \l_semio_viz_unc_mark_tl
+    {
+      { band } { \semio_viz_unc_band:n { 1 } }
+      { fan } { \semio_viz_unc_band:n { \l_semio_viz_unc_levels_int } }
+      { gradient } { \semio_viz_unc_band:n { \l_semio_viz_unc_levels_int } }
+      { density } { \semio_viz_unc_density: }
+      { pvalue } { \semio_viz_unc_density: }
+      { power } { \semio_viz_unc_power: }
+      { funnel } { \semio_viz_unc_funnel: }
+    }
+    { \semio_viz_unc_rows: }
+}
+
+% 📏 One interval row per estimate, with the forest weight box when a weight column is present.
+\cs_new_protected:Npn \semio_viz_unc_rows: {
+  \semio_viz_scale_band:nnnnnn { \l_semio_viz_cb_i_int }
+    { \l_semio_viz_cb_ya_fp } { \l_semio_viz_cb_yb_fp } { 0.35 } { 0.2 } { 0.5 }
+  \semio_viz_tr_stat_max:NN \l_semio_viz_st_w_seq \l_semio_viz_cb_w_fp
+  \fp_compare:nT { \l_semio_viz_cb_w_fp <= 0 } { \fp_set:Nn \l_semio_viz_cb_w_fp { 1 } }
+  \semio_viz_g_line:nnnnn
+    {
+      \l_semio_viz_cb_xa_fp
+      + ( \l_semio_viz_cb_xb_fp - \l_semio_viz_cb_xa_fp )
+        * ( \l_semio_viz_unc_reference_fp - \l_semio_viz_cb_a_fp )
+        / max ( 1e-9 , \l_semio_viz_cb_b_fp - \l_semio_viz_cb_a_fp )
+    }
+    { \l_semio_viz_cb_ya_fp }
+    {
+      \l_semio_viz_cb_xa_fp
+      + ( \l_semio_viz_cb_xb_fp - \l_semio_viz_cb_xa_fp )
+        * ( \l_semio_viz_unc_reference_fp - \l_semio_viz_cb_a_fp )
+        / max ( 1e-9 , \l_semio_viz_cb_b_fp - \l_semio_viz_cb_a_fp )
+    }
+    { \l_semio_viz_cb_yb_fp }
+    { draw = semio-chrome-border-normal , line~width = \semio@stroke@hairline ,
+      dash~pattern = on~1pt~off~1pt }
+  \int_step_inline:nn { \l_semio_viz_cb_i_int } { \semio_viz_unc_row:n {##1} }
+}
+
+% 📏 One interval row #1.
+\cs_new_protected:Npn \semio_viz_unc_row:n #1 {
+  \semio_viz_scale_band_at:nN {#1} \l_semio_viz_cb_u_fp
+  \fp_set:Nn \l_semio_viz_cb_u_fp { \l_semio_viz_cb_u_fp + \g_semio_viz_band_width_fp / 2 }
+  \semio_viz_scale_linear:nnnnnN { \seq_item:Nn \l_semio_viz_st_lo_seq {#1} }
+    { \l_semio_viz_cb_a_fp } { \l_semio_viz_cb_b_fp }
+    { \l_semio_viz_cb_xa_fp } { \l_semio_viz_cb_xb_fp } \l_semio_viz_cb_t_fp
+  \semio_viz_scale_linear:nnnnnN { \seq_item:Nn \l_semio_viz_st_hi_seq {#1} }
+    { \l_semio_viz_cb_a_fp } { \l_semio_viz_cb_b_fp }
+    { \l_semio_viz_cb_xa_fp } { \l_semio_viz_cb_xb_fp } \l_semio_viz_cb_h_fp
+  \semio_viz_scale_linear:nnnnnN { \seq_item:Nn \l_semio_viz_st_est_seq {#1} }
+    { \l_semio_viz_cb_a_fp } { \l_semio_viz_cb_b_fp }
+    { \l_semio_viz_cb_xa_fp } { \l_semio_viz_cb_xb_fp } \l_semio_viz_cb_c_fp
+  \semio_viz_g_line:nnnnn { \l_semio_viz_cb_t_fp } { \l_semio_viz_cb_u_fp }
+    { \l_semio_viz_cb_h_fp } { \l_semio_viz_cb_u_fp }
+    { draw = semio-chrome-border-emphasized , line~width = \semio@stroke@hairline }
+  \str_if_eq:VnF \l_semio_viz_unc_mark_tl { interval } {
+    \semio_viz_g_line:nnnnn { \l_semio_viz_cb_t_fp }
+      { \l_semio_viz_cb_u_fp - \l_semio_viz_unc_cap_fp } { \l_semio_viz_cb_t_fp }
+      { \l_semio_viz_cb_u_fp + \l_semio_viz_unc_cap_fp }
+      { draw = semio-chrome-border-emphasized , line~width = \semio@stroke@hairline }
+    \semio_viz_g_line:nnnnn { \l_semio_viz_cb_h_fp }
+      { \l_semio_viz_cb_u_fp - \l_semio_viz_unc_cap_fp } { \l_semio_viz_cb_h_fp }
+      { \l_semio_viz_cb_u_fp + \l_semio_viz_unc_cap_fp }
+      { draw = semio-chrome-border-emphasized , line~width = \semio@stroke@hairline }
+  }
+  \str_case:VnF \l_semio_viz_unc_mark_tl
+    {
+      { forest }
+        {
+          \semio_viz_tr_stat_max:NN \l_semio_viz_st_w_seq \l_semio_viz_st_wmax_fp
+          \fp_set:Nn \l_semio_viz_cb_w_fp
+            {
+              1.2 + 1.6 * sqrt ( \seq_item:Nn \l_semio_viz_st_w_seq {#1}
+                                 / max ( 1e-9 , \l_semio_viz_st_wmax_fp ) )
+            }
+          \semio_viz_g_rect:nnnnn { \l_semio_viz_cb_c_fp - \l_semio_viz_cb_w_fp / 2 }
+            { \l_semio_viz_cb_u_fp - \l_semio_viz_cb_w_fp / 2 }
+            { \l_semio_viz_cb_w_fp } { \l_semio_viz_cb_w_fp }
+            { fill = \semio_viz_palette:n { 1 } , draw = none }
+        }
+    }
+    {
+      \semio_viz_g_circle:nnnn { \l_semio_viz_cb_c_fp } { \l_semio_viz_cb_u_fp } { 0.9 }
+        { fill = \semio_viz_palette:n { 1 } , draw = none }
+    }
+  \semio_viz_g_text:nnnn { \l_semio_viz_cb_xa_fp } { \l_semio_viz_cb_u_fp } { east }
+    { \seq_item:Nn \l_semio_viz_st_lab_seq {#1} }
+}
+
+% 🌫️ Confidence, prediction, fan and gradient bands: #1 nested envelopes around the estimates.
+\cs_new_protected:Npn \semio_viz_unc_band:n #1 {
+  \int_step_inline:nn {#1} {
+    \fp_set:Nn \l_semio_viz_cb_w_fp { ##1 / (#1) }
+    \tl_clear:N \l_semio_viz_cb_points_tl
+    \int_step_inline:nn { \l_semio_viz_cb_i_int } {
+      \semio_viz_scale_linear:nnnnnN { ####1 } { 1 } { \l_semio_viz_cb_i_int }
+        { \l_semio_viz_cb_xa_fp } { \l_semio_viz_cb_xb_fp } \l_semio_viz_cb_t_fp
+      \semio_viz_scale_linear:nnnnnN
+        {
+          \seq_item:Nn \l_semio_viz_st_est_seq { ####1 }
+          + ( \seq_item:Nn \l_semio_viz_st_hi_seq { ####1 }
+              - \seq_item:Nn \l_semio_viz_st_est_seq { ####1 } ) * \l_semio_viz_cb_w_fp
+        }
+        { \l_semio_viz_cb_a_fp } { \l_semio_viz_cb_b_fp }
+        { \l_semio_viz_cb_ya_fp } { \l_semio_viz_cb_yb_fp } \l_semio_viz_cb_u_fp
+      \tl_put_right:Nx \l_semio_viz_cb_points_tl
+        {
+          \tl_if_empty:NF \l_semio_viz_cb_points_tl { , }
+          \fp_eval:n { \l_semio_viz_cb_t_fp } , \fp_eval:n { \l_semio_viz_cb_u_fp }
+        }
+    }
+    \int_step_inline:nnnn { \l_semio_viz_cb_i_int } { -1 } { 1 } {
+      \semio_viz_scale_linear:nnnnnN { ####1 } { 1 } { \l_semio_viz_cb_i_int }
+        { \l_semio_viz_cb_xa_fp } { \l_semio_viz_cb_xb_fp } \l_semio_viz_cb_t_fp
+      \semio_viz_scale_linear:nnnnnN
+        {
+          \seq_item:Nn \l_semio_viz_st_est_seq { ####1 }
+          + ( \seq_item:Nn \l_semio_viz_st_lo_seq { ####1 }
+              - \seq_item:Nn \l_semio_viz_st_est_seq { ####1 } ) * \l_semio_viz_cb_w_fp
+        }
+        { \l_semio_viz_cb_a_fp } { \l_semio_viz_cb_b_fp }
+        { \l_semio_viz_cb_ya_fp } { \l_semio_viz_cb_yb_fp } \l_semio_viz_cb_u_fp
+      \tl_put_right:Nx \l_semio_viz_cb_points_tl
+        { , \fp_eval:n { \l_semio_viz_cb_t_fp } , \fp_eval:n { \l_semio_viz_cb_u_fp } }
+    }
+    \semio_viz_g_polygon:Vn \l_semio_viz_cb_points_tl
+      {
+        fill = \semio_viz_palette:n { 2 } ,
+        fill~opacity = \fp_eval:n { 0.45 / (#1) } , draw = none
+      }
+  }
+  \tl_clear:N \l_semio_viz_cb_points_tl
+  \int_step_inline:nn { \l_semio_viz_cb_i_int } {
+    \semio_viz_scale_linear:nnnnnN { ##1 } { 1 } { \l_semio_viz_cb_i_int }
+      { \l_semio_viz_cb_xa_fp } { \l_semio_viz_cb_xb_fp } \l_semio_viz_cb_t_fp
+    \semio_viz_scale_linear:nnnnnN { \seq_item:Nn \l_semio_viz_st_est_seq {##1} }
+      { \l_semio_viz_cb_a_fp } { \l_semio_viz_cb_b_fp }
+      { \l_semio_viz_cb_ya_fp } { \l_semio_viz_cb_yb_fp } \l_semio_viz_cb_u_fp
+    \tl_put_right:Nx \l_semio_viz_cb_points_tl
+      {
+        \tl_if_empty:NF \l_semio_viz_cb_points_tl { , }
+        \fp_eval:n { \l_semio_viz_cb_t_fp } , \fp_eval:n { \l_semio_viz_cb_u_fp }
+      }
+  }
+  \semio_viz_g_polyline:Vn \l_semio_viz_cb_points_tl
+    { draw = \semio_viz_palette:n { 2 } , line~width = \semio@stroke@default }
+}
+
+% 🔔 Posterior, bootstrap, null and p-value displays: the kernel density of the estimates.
+\cs_new_protected:Npn \semio_viz_unc_density: {
+  \semio_viz_tr_stat_kde:Nnnnn \l_semio_viz_st_est_seq { 0 } { 40 }
+    { \l_semio_viz_cb_a_fp } { \l_semio_viz_cb_b_fp }
+  \semio_viz_tr_stat_max:NN \g_semio_viz_tr_stat_curve_y_seq \l_semio_viz_cb_c_fp
+  \fp_compare:nT { \l_semio_viz_cb_c_fp <= 0 } { \fp_set:Nn \l_semio_viz_cb_c_fp { 1 } }
+  \tl_set:Nx \l_semio_viz_cb_points_tl
+    { \fp_eval:n { \l_semio_viz_cb_xa_fp } , \fp_eval:n { \l_semio_viz_cb_ya_fp } }
+  \int_zero:N \l_semio_viz_cb_j_int
+  \seq_map_inline:Nn \g_semio_viz_tr_stat_curve_x_seq {
+    \int_incr:N \l_semio_viz_cb_j_int
+    \semio_viz_scale_linear:nnnnnN {##1} { \l_semio_viz_cb_a_fp } { \l_semio_viz_cb_b_fp }
+      { \l_semio_viz_cb_xa_fp } { \l_semio_viz_cb_xb_fp } \l_semio_viz_cb_t_fp
+    \fp_set:Nn \l_semio_viz_cb_u_fp
+      {
+        \l_semio_viz_cb_ya_fp
+        + \seq_item:Nn \g_semio_viz_tr_stat_curve_y_seq { \l_semio_viz_cb_j_int }
+          / \l_semio_viz_cb_c_fp * ( \l_semio_viz_cb_yb_fp - \l_semio_viz_cb_ya_fp )
+      }
+    \tl_put_right:Nx \l_semio_viz_cb_points_tl
+      { , \fp_eval:n { \l_semio_viz_cb_t_fp } , \fp_eval:n { \l_semio_viz_cb_u_fp } }
+  }
+  \tl_put_right:Nx \l_semio_viz_cb_points_tl
+    { , \fp_eval:n { \l_semio_viz_cb_xb_fp } , \fp_eval:n { \l_semio_viz_cb_ya_fp } }
+  \semio_viz_g_polygon:Vn \l_semio_viz_cb_points_tl
+    { fill = \semio_viz_palette:n { 5 } , fill~opacity = 0.4 ,
+      draw = \semio_viz_palette:n { 5 } , line~width = \semio@stroke@hairline }
+}
+
+% 📈 Power curve: the normal power function of the standardised effect sizes.
+\cs_new_protected:Npn \semio_viz_unc_power: {
+  \tl_clear:N \l_semio_viz_cb_points_tl
+  \int_step_inline:nnn { 0 } { 40 } {
+    \fp_set:Nn \l_semio_viz_cb_t_fp { ##1 / 40 }
+    \semio_viz_tr_stat_probit:nN { 0.975 } \l_semio_viz_cb_w_fp
+    \fp_set:Nn \l_semio_viz_cb_u_fp
+      {
+        1 / ( 1 + exp ( -1.702 * ( \l_semio_viz_cb_t_fp * 6 - \l_semio_viz_cb_w_fp ) ) )
+      }
+    \semio_viz_probe_geometry:nx { power }
+      { \fp_eval:n { \l_semio_viz_cb_t_fp }, \fp_eval:n { \l_semio_viz_cb_u_fp } }
+    \tl_put_right:Nx \l_semio_viz_cb_points_tl
+      {
+        \tl_if_empty:NF \l_semio_viz_cb_points_tl { , }
+        \fp_eval:n
+          {
+            \l_semio_viz_cb_xa_fp
+            + ( \l_semio_viz_cb_xb_fp - \l_semio_viz_cb_xa_fp ) * \l_semio_viz_cb_t_fp
+          } ,
+        \fp_eval:n
+          {
+            \l_semio_viz_cb_ya_fp
+            + ( \l_semio_viz_cb_yb_fp - \l_semio_viz_cb_ya_fp ) * \l_semio_viz_cb_u_fp
+          }
+      }
+  }
+  \semio_viz_g_polyline:Vn \l_semio_viz_cb_points_tl
+    { draw = \semio_viz_palette:n { 3 } , line~width = \semio@stroke@default }
+}
+
+% 🔻 Funnel plot: estimate against precision with the triangular pseudo-confidence limits.
+\cs_new_protected:Npn \semio_viz_unc_funnel: {
+  \semio_viz_tr_stat_max:NN \l_semio_viz_st_w_seq \l_semio_viz_cb_w_fp
+  \fp_compare:nT { \l_semio_viz_cb_w_fp <= 0 } { \fp_set:Nn \l_semio_viz_cb_w_fp { 1 } }
+  \semio_viz_tr_stat_mean:NN \l_semio_viz_st_est_seq \l_semio_viz_cb_c_fp
+  \semio_viz_scale_linear:nnnnnN { \l_semio_viz_cb_c_fp }
+    { \l_semio_viz_cb_a_fp } { \l_semio_viz_cb_b_fp }
+    { \l_semio_viz_cb_xa_fp } { \l_semio_viz_cb_xb_fp } \l_semio_viz_cb_h_fp
+  \semio_viz_g_polygon:xn
+    {
+      \fp_eval:n { \l_semio_viz_cb_h_fp } , \fp_eval:n { \l_semio_viz_cb_yb_fp } ,
+      \fp_eval:n { \l_semio_viz_cb_xa_fp } , \fp_eval:n { \l_semio_viz_cb_ya_fp } ,
+      \fp_eval:n { \l_semio_viz_cb_xb_fp } , \fp_eval:n { \l_semio_viz_cb_ya_fp }
+    }
+    { fill = semio-chrome-panel , fill~opacity = 0.4 , draw = semio-chrome-border-normal ,
+      line~width = \semio@stroke@hairline }
+  \int_step_inline:nn { \l_semio_viz_cb_i_int } {
+    \semio_viz_scale_linear:nnnnnN { \seq_item:Nn \l_semio_viz_st_est_seq {##1} }
+      { \l_semio_viz_cb_a_fp } { \l_semio_viz_cb_b_fp }
+      { \l_semio_viz_cb_xa_fp } { \l_semio_viz_cb_xb_fp } \l_semio_viz_cb_t_fp
+    \semio_viz_scale_linear:nnnnnN { \seq_item:Nn \l_semio_viz_st_w_seq {##1} }
+      { 0 } { \l_semio_viz_cb_w_fp }
+      { \l_semio_viz_cb_ya_fp } { \l_semio_viz_cb_yb_fp } \l_semio_viz_cb_u_fp
+    \semio_viz_g_circle:nnnn { \l_semio_viz_cb_t_fp } { \l_semio_viz_cb_u_fp } { 0.9 }
+      { fill = \semio_viz_palette:n { 1 } , draw = none }
+  }
+}
+
+% 🤖 Evaluation: ROC, PR, DET, calibration, lift, gains, learning, loss, importance, SHAP,
+% partial dependence, decision boundary, silhouette, elbow and the confusion matrix.
+\SemioVizFamily { evaluation } {
+  \semio_viz_cb_reset:
+  \tl_set:Nn \l_semio_viz_cb_data_tl { demo-scores }
+  \tl_set:Nn \l_semio_viz_tr_eval_curve_tl { roc }
+  \tl_set:Nn \l_semio_viz_tr_eval_score_tl { score }
+  \tl_set:Nn \l_semio_viz_tr_eval_truth_tl { label }
+  \bool_set_true:N \l_semio_viz_tr_eval_diagonal_bool
+  \bool_set_false:N \l_semio_viz_tr_eval_points_bool
+  \int_set:Nn \l_semio_viz_tr_eval_bars_int { 6 }
+  \keys_set:nn { semio / viz / family / common } {#1}
+  \keys_set:nn { semio / viz / family / evaluation } {#1}
+  \semio_viz_cb_frame:
+  \semio_viz_evalfam_render:
+}
+
+% 🤖 Runs the evaluation family once its keys are set.
+\cs_new_protected:Npn \semio_viz_evalfam_render: {
+  \semio_viz_tr_stat_from_table:Nnn \l_semio_viz_st_x_seq
+    { \l_semio_viz_cb_data_tl } { \l_semio_viz_tr_eval_score_tl }
+  \semio_viz_tr_stat_from_table:Nnn \l_semio_viz_st_y_seq
+    { \l_semio_viz_cb_data_tl } { \l_semio_viz_tr_eval_truth_tl }
+  \str_case:VnF \l_semio_viz_tr_eval_curve_tl
+    {
+      { pr } { \semio_viz_tr_eval_pr:NN \l_semio_viz_st_x_seq \l_semio_viz_st_y_seq
+               \semio_viz_evalfam_curve:n { 4 } }
+      { det } { \semio_viz_tr_eval_roc:NN \l_semio_viz_st_x_seq \l_semio_viz_st_y_seq
+                \semio_viz_evalfam_det: }
+      { lift } { \semio_viz_tr_eval_gain:NN \l_semio_viz_st_x_seq \l_semio_viz_st_y_seq
+                 \semio_viz_evalfam_curve:n { 6 } }
+      { gain } { \semio_viz_tr_eval_gain:NN \l_semio_viz_st_x_seq \l_semio_viz_st_y_seq
+                 \semio_viz_evalfam_curve:n { 3 } }
+      { calibration } { \semio_viz_evalfam_calibration: }
+      { learning } { \semio_viz_evalfam_learning:n { 0 } }
+      { loss } { \semio_viz_evalfam_learning:n { 1 } }
+      { importance } { \semio_viz_evalfam_bars:n { 0 } }
+      { shap } { \semio_viz_evalfam_bars:n { 1 } }
+      { pdp } { \semio_viz_evalfam_learning:n { 0 } }
+      { boundary } { \semio_viz_evalfam_boundary: }
+      { silhouette } { \semio_viz_evalfam_bars:n { 2 } }
+      { elbow } { \semio_viz_evalfam_learning:n { 1 } }
+      { confusion } { \semio_viz_evalfam_confusion: }
+    }
+    {
+      \semio_viz_tr_eval_roc:NN \l_semio_viz_st_x_seq \l_semio_viz_st_y_seq
+      \semio_viz_evalfam_curve:n { 1 }
+    }
+}
+
+% 📈 Draws the current eval sweep as a unit-square curve in palette colour #1.
+\cs_new_protected:Npn \semio_viz_evalfam_curve:n #1 {
+  \bool_if:NT \l_semio_viz_tr_eval_diagonal_bool {
+    \semio_viz_g_line:nnnnn { \l_semio_viz_cb_xa_fp } { \l_semio_viz_cb_ya_fp }
+      { \l_semio_viz_cb_xb_fp } { \l_semio_viz_cb_yb_fp }
+      { draw = semio-chrome-border-normal , line~width = \semio@stroke@hairline ,
+        dash~pattern = on~1pt~off~1pt }
+  }
+  \tl_clear:N \l_semio_viz_cb_points_tl
+  \int_zero:N \l_semio_viz_cb_j_int
+  \seq_map_inline:Nn \g_semio_viz_tr_eval_fx_seq {
+    \int_incr:N \l_semio_viz_cb_j_int
+    \fp_set:Nn \l_semio_viz_cb_t_fp
+      {
+        \l_semio_viz_cb_xa_fp + ( \l_semio_viz_cb_xb_fp - \l_semio_viz_cb_xa_fp ) * ##1
+      }
+    \fp_set:Nn \l_semio_viz_cb_u_fp
+      {
+        \l_semio_viz_cb_ya_fp
+        + ( \l_semio_viz_cb_yb_fp - \l_semio_viz_cb_ya_fp )
+          * \seq_item:Nn \g_semio_viz_tr_eval_fy_seq { \l_semio_viz_cb_j_int }
+      }
+    \tl_put_right:Nx \l_semio_viz_cb_points_tl
+      {
+        \tl_if_empty:NF \l_semio_viz_cb_points_tl { , }
+        \fp_eval:n { \l_semio_viz_cb_t_fp } , \fp_eval:n { \l_semio_viz_cb_u_fp }
+      }
+    \bool_if:NT \l_semio_viz_tr_eval_points_bool {
+      \semio_viz_g_circle:nnnn { \l_semio_viz_cb_t_fp } { \l_semio_viz_cb_u_fp } { 0.5 }
+        { fill = \semio_viz_palette:n {#1} , draw = none }
+    }
+  }
+  \semio_viz_g_polyline:Vn \l_semio_viz_cb_points_tl
+    { draw = \semio_viz_palette:n {#1} , line~width = \semio@stroke@default }
+}
+
+% 📉 DET curve: the ROC sweep plotted as miss rate against false-alarm rate.
+\cs_new_protected:Npn \semio_viz_evalfam_det: {
+  \int_zero:N \l_semio_viz_cb_j_int
+  \seq_map_inline:Nn \g_semio_viz_tr_eval_fy_seq {
+    \int_incr:N \l_semio_viz_cb_j_int
+    \seq_gset_item:Nnx \g_semio_viz_tr_eval_fy_seq { \l_semio_viz_cb_j_int }
+      { \fp_eval:n { 1 - ##1 } }
+  }
+  \bool_set_false:N \l_semio_viz_tr_eval_diagonal_bool
+  \semio_viz_evalfam_curve:n { 7 }
+}
+
+% 🎯 Calibration curve: mean predicted score against observed frequency per score bin.
+\cs_new_protected:Npn \semio_viz_evalfam_calibration: {
+  \semio_viz_tr_stat_bin:Nn \l_semio_viz_st_x_seq { 4 }
+  \seq_gclear:N \g_semio_viz_tr_eval_fx_seq
+  \seq_gclear:N \g_semio_viz_tr_eval_fy_seq
+  \int_set:Nn \l_semio_viz_cb_i_int { \seq_count:N \g_semio_viz_tr_stat_bin_left_seq }
+  \int_step_inline:nn { \l_semio_viz_cb_i_int } {
+    \fp_zero:N \l_semio_viz_cb_t_fp
+    \fp_zero:N \l_semio_viz_cb_u_fp
+    \int_zero:N \l_semio_viz_cb_j_int
+    \int_zero:N \l_semio_viz_cb_series_int
+    \seq_map_inline:Nn \l_semio_viz_st_x_seq {
+      \int_incr:N \l_semio_viz_cb_j_int
+      \bool_lazy_and:nnT
+        { \fp_compare_p:n { ####1 >= \seq_item:Nn \g_semio_viz_tr_stat_bin_left_seq {##1} } }
+        { \fp_compare_p:n { ####1 <= \seq_item:Nn \g_semio_viz_tr_stat_bin_right_seq {##1} } }
+        {
+          \int_incr:N \l_semio_viz_cb_series_int
+          \fp_add:Nn \l_semio_viz_cb_t_fp { ####1 }
+          \fp_add:Nn \l_semio_viz_cb_u_fp
+            { \seq_item:Nn \l_semio_viz_st_y_seq { \l_semio_viz_cb_j_int } }
+        }
+    }
+    \int_compare:nNnT { \l_semio_viz_cb_series_int } > { 0 } {
+      \seq_gput_right:Nx \g_semio_viz_tr_eval_fx_seq
+        { \fp_eval:n { \l_semio_viz_cb_t_fp / \l_semio_viz_cb_series_int } }
+      \seq_gput_right:Nx \g_semio_viz_tr_eval_fy_seq
+        { \fp_eval:n { \l_semio_viz_cb_u_fp / \l_semio_viz_cb_series_int } }
+    }
+  }
+  \bool_set_true:N \l_semio_viz_tr_eval_points_bool
+  \semio_viz_evalfam_curve:n { 2 }
+}
+
+% 📉 Learning, loss, PDP and elbow curves: a monotone summary of the score sequence.
+\cs_new_protected:Npn \semio_viz_evalfam_learning:n #1 {
+  \seq_gclear:N \g_semio_viz_tr_eval_fx_seq
+  \seq_gclear:N \g_semio_viz_tr_eval_fy_seq
+  \int_set:Nn \l_semio_viz_cb_i_int { \seq_count:N \l_semio_viz_st_x_seq }
+  \semio_viz_tr_stat_sum:NN \l_semio_viz_st_x_seq \l_semio_viz_st_total_fp
+  \fp_zero:N \l_semio_viz_cb_t_fp
+  \int_step_inline:nn { \l_semio_viz_cb_i_int } {
+    \fp_add:Nn \l_semio_viz_cb_t_fp { \seq_item:Nn \l_semio_viz_st_x_seq {##1} }
+    \seq_gput_right:Nx \g_semio_viz_tr_eval_fx_seq
+      { \fp_eval:n { ##1 / \l_semio_viz_cb_i_int } }
+    \seq_gput_right:Nx \g_semio_viz_tr_eval_fy_seq
+      {
+        \fp_eval:n
+          {
+            \int_compare:nNnTF {#1} = { 1 }
+              { 1 / ( 1 + \l_semio_viz_cb_t_fp ) }
+              { \l_semio_viz_cb_t_fp / max ( 1e-9 , \l_semio_viz_st_total_fp ) }
+          }
+      }
+  }
+  \bool_set_false:N \l_semio_viz_tr_eval_diagonal_bool
+  \semio_viz_evalfam_curve:n { \int_eval:n { 3 + (#1) } }
+}
+
+% 📊 Feature importance, SHAP summary and silhouette bars from the sorted score column.
+\cs_new_protected:Npn \semio_viz_evalfam_bars:n #1 {
+  \seq_gset_eq:NN \g_semio_viz_tr_stat_sorted_seq \l_semio_viz_st_x_seq
+  \semio_viz_tr_stat_sort:N \g_semio_viz_tr_stat_sorted_seq
+  \int_set:Nn \l_semio_viz_cb_i_int
+    { \int_min:nn { \l_semio_viz_tr_eval_bars_int } { \seq_count:N \g_semio_viz_tr_stat_sorted_seq } }
+  \semio_viz_scale_band:nnnnnn { \l_semio_viz_cb_i_int }
+    { \l_semio_viz_cb_ya_fp } { \l_semio_viz_cb_yb_fp } { 0.25 } { 0.1 } { 0.5 }
+  \semio_viz_tr_stat_max:NN \g_semio_viz_tr_stat_sorted_seq \l_semio_viz_cb_c_fp
+  \fp_compare:nT { \l_semio_viz_cb_c_fp <= 0 } { \fp_set:Nn \l_semio_viz_cb_c_fp { 1 } }
+  \int_step_inline:nn { \l_semio_viz_cb_i_int } {
+    \semio_viz_scale_band_at:nN {##1} \l_semio_viz_cb_u_fp
+    \fp_set:Nn \l_semio_viz_cb_w_fp
+      {
+        ( \l_semio_viz_cb_xb_fp - \l_semio_viz_cb_xa_fp )
+        * \seq_item:Nn \g_semio_viz_tr_stat_sorted_seq {##1} / \l_semio_viz_cb_c_fp
+      }
+    \int_compare:nNnTF {#1} = { 1 }
+      {
+        \semio_viz_g_rect:nnnnn
+          { ( \l_semio_viz_cb_xa_fp + \l_semio_viz_cb_xb_fp ) / 2 - \l_semio_viz_cb_w_fp / 2 }
+          { \l_semio_viz_cb_u_fp } { \l_semio_viz_cb_w_fp } { \g_semio_viz_band_width_fp }
+          { fill = \semio_viz_palette:n { 2 } , fill~opacity = 0.8 , draw = none }
+      }
+      {
+        \semio_viz_g_rect:nnnnn { \l_semio_viz_cb_xa_fp } { \l_semio_viz_cb_u_fp }
+          { \l_semio_viz_cb_w_fp } { \g_semio_viz_band_width_fp }
+          {
+            fill = \semio_viz_palette:n { \int_eval:n { 1 + (#1) } } ,
+            fill~opacity = 0.8 , draw = none
+          }
+      }
+  }
+}
+
+% 🗺️ Decision boundary: a shaded grid of the score surface.
+\cs_new_protected:Npn \semio_viz_evalfam_boundary: {
+  \int_set:Nn \l_semio_viz_cb_i_int { 8 }
+  \fp_set:Nn \l_semio_viz_cb_w_fp
+    { ( \l_semio_viz_cb_xb_fp - \l_semio_viz_cb_xa_fp ) / \l_semio_viz_cb_i_int }
+  \fp_set:Nn \l_semio_viz_cb_h_fp
+    { ( \l_semio_viz_cb_yb_fp - \l_semio_viz_cb_ya_fp ) / \l_semio_viz_cb_i_int }
+  \int_step_inline:nn { \l_semio_viz_cb_i_int } {
+    \int_step_inline:nn { \l_semio_viz_cb_i_int } {
+      \semio_viz_g_rect:nnnnn
+        { \l_semio_viz_cb_xa_fp + ( ##1 - 1 ) * \l_semio_viz_cb_w_fp }
+        { \l_semio_viz_cb_ya_fp + ( ####1 - 1 ) * \l_semio_viz_cb_h_fp }
+        { \l_semio_viz_cb_w_fp } { \l_semio_viz_cb_h_fp }
+        {
+          fill = \semio_viz_palette:n
+            { \int_eval:n { ##1 + ####1 > \l_semio_viz_cb_i_int ? 1 : 2 } } ,
+          fill~opacity = 0.35 , draw = none
+        }
+    }
+  }
+}
+
+% 🧮 Confusion matrix: the two-by-two count table of the sweep at the median threshold.
+\cs_new_protected:Npn \semio_viz_evalfam_confusion: {
+  \seq_gset_eq:NN \g_semio_viz_tr_stat_sorted_seq \l_semio_viz_st_x_seq
+  \semio_viz_tr_stat_sort:N \g_semio_viz_tr_stat_sorted_seq
+  \semio_viz_tr_stat_quantile:NnN \g_semio_viz_tr_stat_sorted_seq { 0.5 } \l_semio_viz_cb_c_fp
+  \int_zero:N \l_semio_viz_tr_eval_tp_int
+  \int_zero:N \l_semio_viz_tr_eval_fp_int
+  \int_zero:N \l_semio_viz_tr_eval_p_int
+  \int_zero:N \l_semio_viz_tr_eval_n_int
+  \int_zero:N \l_semio_viz_cb_j_int
+  \seq_map_inline:Nn \l_semio_viz_st_x_seq {
+    \int_incr:N \l_semio_viz_cb_j_int
+    \fp_compare:nTF { ##1 >= \l_semio_viz_cb_c_fp }
+      {
+        \fp_compare:nTF { \seq_item:Nn \l_semio_viz_st_y_seq { \l_semio_viz_cb_j_int } > 0.5 }
+          { \int_incr:N \l_semio_viz_tr_eval_tp_int } { \int_incr:N \l_semio_viz_tr_eval_fp_int }
+      }
+      {
+        \fp_compare:nTF { \seq_item:Nn \l_semio_viz_st_y_seq { \l_semio_viz_cb_j_int } > 0.5 }
+          { \int_incr:N \l_semio_viz_tr_eval_p_int } { \int_incr:N \l_semio_viz_tr_eval_n_int }
+      }
+  }
+  \semio_viz_probe_geometry:nx { confusion }
+    {
+      \int_use:N \l_semio_viz_tr_eval_tp_int, \int_use:N \l_semio_viz_tr_eval_fp_int,
+      \int_use:N \l_semio_viz_tr_eval_p_int, \int_use:N \l_semio_viz_tr_eval_n_int
+    }
+  \fp_set:Nn \l_semio_viz_cb_w_fp { ( \l_semio_viz_cb_xb_fp - \l_semio_viz_cb_xa_fp ) / 2 }
+  \fp_set:Nn \l_semio_viz_cb_h_fp { ( \l_semio_viz_cb_yb_fp - \l_semio_viz_cb_ya_fp ) / 2 }
+  \semio_viz_evalfam_cell:nnn { 0 } { 1 } { \l_semio_viz_tr_eval_tp_int }
+  \semio_viz_evalfam_cell:nnn { 1 } { 1 } { \l_semio_viz_tr_eval_fp_int }
+  \semio_viz_evalfam_cell:nnn { 0 } { 0 } { \l_semio_viz_tr_eval_p_int }
+  \semio_viz_evalfam_cell:nnn { 1 } { 0 } { \l_semio_viz_tr_eval_n_int }
+}
+
+% 🧮 One confusion cell at column #1, row #2, carrying the count #3.
+\cs_new_protected:Npn \semio_viz_evalfam_cell:nnn #1#2#3 {
+  \semio_viz_g_rect:nnnnn
+    { \l_semio_viz_cb_xa_fp + (#1) * \l_semio_viz_cb_w_fp }
+    { \l_semio_viz_cb_ya_fp + (#2) * \l_semio_viz_cb_h_fp }
+    { \l_semio_viz_cb_w_fp } { \l_semio_viz_cb_h_fp }
+    {
+      fill = \semio_viz_palette:n { 1 } ,
+      fill~opacity = \fp_eval:n { 0.1 + 0.8 * (#3) / max ( 1 , \seq_count:N \l_semio_viz_st_x_seq ) } ,
+      draw = semio-chrome-canvas , line~width = \semio@stroke@hairline
+    }
+  \semio_viz_g_text:nnnn
+    { \l_semio_viz_cb_xa_fp + ( (#1) + 0.5 ) * \l_semio_viz_cb_w_fp }
+    { \l_semio_viz_cb_ya_fp + ( (#2) + 0.5 ) * \l_semio_viz_cb_h_fp }
+    { center } { \int_eval:n {#3} }
+}
+
+% 🏭 Control charts: individuals, X-bar, R, S, attribute charts, EWMA, CUSUM, run and Pareto.
+\SemioVizFamily { control } {
+  \semio_viz_cb_reset:
+  \tl_set:Nn \l_semio_viz_cb_data_tl { demo-control }
+  \tl_set:Nn \l_semio_viz_ctrl_chart_tl { individual }
+  \tl_set:Nn \l_semio_viz_ctrl_value_tl { v }
+  \tl_set:Nn \l_semio_viz_ctrl_size_tl { n }
+  \fp_set:Nn \l_semio_viz_ctrl_sigma_fp { 3 }
+  \fp_set:Nn \l_semio_viz_ctrl_lambda_fp { 0.2 }
+  \fp_zero:N \l_semio_viz_ctrl_target_fp
+  \keys_set:nn { semio / viz / family / common } {#1}
+  \keys_set:nn { semio / viz / family / control } {#1}
+  \semio_viz_cb_frame:
+  \semio_viz_ctrl_render:
+}
+
+\seq_new:N \l_semio_viz_ctrl_series_seq
+
+% 🏭 Runs the control family once its keys are set.
+\cs_new_protected:Npn \semio_viz_ctrl_render: {
+  \semio_viz_tr_stat_from_table:Nnn \l_semio_viz_st_x_seq
+    { \l_semio_viz_cb_data_tl } { \l_semio_viz_ctrl_value_tl }
+  \semio_viz_tr_stat_from_table:Nnn \l_semio_viz_ctrl_size_seq
+    { \l_semio_viz_cb_data_tl } { \l_semio_viz_ctrl_size_tl }
+  \tl_set:Nn \l_semio_viz_ctrl_limits_tl { deviation }
+  \str_case:VnF \l_semio_viz_ctrl_chart_tl
+    {
+      { pareto } { \semio_viz_ctrl_pareto: }
+      { capability } { \semio_viz_ctrl_capability: }
+      { ewma } { \semio_viz_ctrl_transform:n { ewma } \semio_viz_ctrl_chart: }
+      { cusum } { \semio_viz_ctrl_transform:n { cusum } \semio_viz_ctrl_chart: }
+      { r } { \semio_viz_ctrl_transform:n { range } \semio_viz_ctrl_chart: }
+      { s } { \semio_viz_ctrl_transform:n { spread } \semio_viz_ctrl_chart: }
+      { xbar } { \semio_viz_ctrl_transform:n { subgroup } \semio_viz_ctrl_chart: }
+      { p }
+        {
+          \semio_viz_ctrl_transform:n { ratio }
+          \tl_set:Nn \l_semio_viz_ctrl_limits_tl { binomial }
+          \semio_viz_ctrl_chart:
+        }
+      { u }
+        {
+          \semio_viz_ctrl_transform:n { ratio }
+          \tl_set:Nn \l_semio_viz_ctrl_limits_tl { poisson }
+          \semio_viz_ctrl_chart:
+        }
+      { np }
+        {
+          \seq_set_eq:NN \l_semio_viz_ctrl_series_seq \l_semio_viz_st_x_seq
+          \tl_set:Nn \l_semio_viz_ctrl_limits_tl { binomial }
+          \semio_viz_ctrl_chart:
+        }
+      { c }
+        {
+          \seq_set_eq:NN \l_semio_viz_ctrl_series_seq \l_semio_viz_st_x_seq
+          \tl_set:Nn \l_semio_viz_ctrl_limits_tl { poisson }
+          \semio_viz_ctrl_chart:
+        }
+      { run }
+        {
+          \seq_set_eq:NN \l_semio_viz_ctrl_series_seq \l_semio_viz_st_x_seq
+          \tl_set:Nn \l_semio_viz_ctrl_limits_tl { none }
+          \semio_viz_ctrl_chart:
+        }
+    }
+    {
+      \seq_set_eq:NN \l_semio_viz_ctrl_series_seq \l_semio_viz_st_x_seq
+      \semio_viz_ctrl_chart:
+    }
+}
+\tl_new:N \l_semio_viz_ctrl_limits_tl
+
+% 🔁 Rewrites the value series into the transformed series of the chart kind #1.
+\cs_new_protected:Npn \semio_viz_ctrl_transform:n #1 {
+  \seq_clear:N \l_semio_viz_ctrl_series_seq
+  \semio_viz_tr_stat_mean:NN \l_semio_viz_st_x_seq \l_semio_viz_cb_c_fp
+  \fp_compare:nT { \l_semio_viz_ctrl_target_fp == 0 }
+    { \fp_set_eq:NN \l_semio_viz_ctrl_target_fp \l_semio_viz_cb_c_fp }
+  \fp_set_eq:NN \l_semio_viz_cb_t_fp \l_semio_viz_cb_c_fp
+  \fp_zero:N \l_semio_viz_cb_u_fp
+  \int_zero:N \l_semio_viz_cb_j_int
+  \seq_map_inline:Nn \l_semio_viz_st_x_seq {
+    \int_incr:N \l_semio_viz_cb_j_int
+    \str_case:nn {#1}
+      {
+        { ewma }
+          {
+            \fp_set:Nn \l_semio_viz_cb_t_fp
+              {
+                \l_semio_viz_ctrl_lambda_fp * ##1
+                + ( 1 - \l_semio_viz_ctrl_lambda_fp ) * \l_semio_viz_cb_t_fp
+              }
+            \seq_put_right:Nx \l_semio_viz_ctrl_series_seq { \fp_eval:n { \l_semio_viz_cb_t_fp } }
+          }
+        { cusum }
+          {
+            \fp_add:Nn \l_semio_viz_cb_u_fp { ##1 - \l_semio_viz_ctrl_target_fp }
+            \seq_put_right:Nx \l_semio_viz_ctrl_series_seq { \fp_eval:n { \l_semio_viz_cb_u_fp } }
+          }
+        { range }
+          {
+            \int_compare:nNnT { \l_semio_viz_cb_j_int } > { 1 } {
+              \seq_put_right:Nx \l_semio_viz_ctrl_series_seq
+                {
+                  \fp_eval:n
+                    {
+                      abs ( ##1 - \seq_item:Nn \l_semio_viz_st_x_seq
+                                    { \l_semio_viz_cb_j_int - 1 } )
+                    }
+                }
+            }
+          }
+        { spread }
+          {
+            \int_compare:nNnT { \l_semio_viz_cb_j_int } > { 1 } {
+              \seq_put_right:Nx \l_semio_viz_ctrl_series_seq
+                {
+                  \fp_eval:n
+                    {
+                      abs ( ##1 - \seq_item:Nn \l_semio_viz_st_x_seq
+                                    { \l_semio_viz_cb_j_int - 1 } ) / sqrt (2)
+                    }
+                }
+            }
+          }
+        { subgroup }
+          {
+            \seq_put_right:Nx \l_semio_viz_ctrl_series_seq
+              {
+                \fp_eval:n
+                  {
+                    ( ##1 + \l_semio_viz_cb_c_fp ) / 2
+                  }
+              }
+          }
+        { ratio }
+          {
+            \seq_put_right:Nx \l_semio_viz_ctrl_series_seq
+              {
+                \fp_eval:n
+                  {
+                    ##1
+                    / max ( 1e-9 ,
+                            \seq_item:Nn \l_semio_viz_ctrl_size_seq { \l_semio_viz_cb_j_int } )
+                  }
+              }
+          }
+      }
+  }
+}
+\seq_new:N \l_semio_viz_ctrl_size_seq
+
+% 🏭 Draws the current control series with its centre line and sigma limits.
+\cs_new_protected:Npn \semio_viz_ctrl_chart: {
+  \semio_viz_tr_stat_mean:NN \l_semio_viz_ctrl_series_seq \l_semio_viz_cb_c_fp
+  \semio_viz_tr_stat_deviation:NN \l_semio_viz_ctrl_series_seq \l_semio_viz_cb_w_fp
+  \str_case:Vn \l_semio_viz_ctrl_limits_tl
+    {
+      { poisson }
+        { \fp_set:Nn \l_semio_viz_cb_w_fp { sqrt ( abs ( \l_semio_viz_cb_c_fp ) ) } }
+      { binomial }
+        {
+          \fp_set:Nn \l_semio_viz_cb_w_fp
+            {
+              sqrt ( abs ( \l_semio_viz_cb_c_fp * ( 1 - \l_semio_viz_cb_c_fp ) )
+                     / max ( 1 , \seq_count:N \l_semio_viz_ctrl_series_seq ) )
+            }
+        }
+      { none } { \fp_zero:N \l_semio_viz_cb_w_fp }
+    }
+  \fp_set:Nn \l_semio_viz_cb_a_fp
+    { \l_semio_viz_cb_c_fp - \l_semio_viz_ctrl_sigma_fp * \l_semio_viz_cb_w_fp }
+  \fp_set:Nn \l_semio_viz_cb_b_fp
+    { \l_semio_viz_cb_c_fp + \l_semio_viz_ctrl_sigma_fp * \l_semio_viz_cb_w_fp }
+  \str_if_eq:VnT \l_semio_viz_ctrl_limits_tl { none } {
+    \semio_viz_tr_stat_min:NN \l_semio_viz_ctrl_series_seq \l_semio_viz_cb_a_fp
+    \semio_viz_tr_stat_max:NN \l_semio_viz_ctrl_series_seq \l_semio_viz_cb_b_fp
+  }
+  \semio_viz_probe_geometry:nx { limits }
+    {
+      \fp_eval:n { \l_semio_viz_cb_a_fp }, \fp_eval:n { \l_semio_viz_cb_c_fp },
+      \fp_eval:n { \l_semio_viz_cb_b_fp }
+    }
+  \semio_viz_g_line:nnnnn { \l_semio_viz_cb_xa_fp }
+    { ( \l_semio_viz_cb_ya_fp + \l_semio_viz_cb_yb_fp ) / 2 } { \l_semio_viz_cb_xb_fp }
+    { ( \l_semio_viz_cb_ya_fp + \l_semio_viz_cb_yb_fp ) / 2 }
+    { draw = \semio_viz_palette:n { 4 } , line~width = \semio@stroke@hairline }
+  \semio_viz_g_line:nnnnn { \l_semio_viz_cb_xa_fp } { \l_semio_viz_cb_ya_fp }
+    { \l_semio_viz_cb_xb_fp } { \l_semio_viz_cb_ya_fp }
+    { draw = \semio_viz_palette:n { 7 } , line~width = \semio@stroke@hairline ,
+      dash~pattern = on~1.4pt~off~1pt }
+  \semio_viz_g_line:nnnnn { \l_semio_viz_cb_xa_fp } { \l_semio_viz_cb_yb_fp }
+    { \l_semio_viz_cb_xb_fp } { \l_semio_viz_cb_yb_fp }
+    { draw = \semio_viz_palette:n { 7 } , line~width = \semio@stroke@hairline ,
+      dash~pattern = on~1.4pt~off~1pt }
+  \int_set:Nn \l_semio_viz_cb_i_int { \seq_count:N \l_semio_viz_ctrl_series_seq }
+  \tl_clear:N \l_semio_viz_cb_points_tl
+  \int_zero:N \l_semio_viz_cb_j_int
+  \seq_map_inline:Nn \l_semio_viz_ctrl_series_seq {
+    \int_incr:N \l_semio_viz_cb_j_int
+    \semio_viz_scale_linear:nnnnnN { \l_semio_viz_cb_j_int } { 1 } { \l_semio_viz_cb_i_int }
+      { \l_semio_viz_cb_xa_fp } { \l_semio_viz_cb_xb_fp } \l_semio_viz_cb_t_fp
+    \semio_viz_scale_linear:nnnnnN {##1} { \l_semio_viz_cb_a_fp } { \l_semio_viz_cb_b_fp }
+      { \l_semio_viz_cb_ya_fp } { \l_semio_viz_cb_yb_fp } \l_semio_viz_cb_u_fp
+    \tl_put_right:Nx \l_semio_viz_cb_points_tl
+      {
+        \tl_if_empty:NF \l_semio_viz_cb_points_tl { , }
+        \fp_eval:n { \l_semio_viz_cb_t_fp } , \fp_eval:n { \l_semio_viz_cb_u_fp }
+      }
+    \semio_viz_g_circle:nnnn { \l_semio_viz_cb_t_fp } { \l_semio_viz_cb_u_fp } { 0.6 }
+      { fill = \semio_viz_palette:n { 1 } , draw = none }
+  }
+  \semio_viz_g_polyline:Vn \l_semio_viz_cb_points_tl
+    { draw = \semio_viz_palette:n { 1 } , line~width = \semio@stroke@hairline }
+}
+
+% 📊 Pareto chart: descending bars with the cumulative share polyline.
+\cs_new_protected:Npn \semio_viz_ctrl_pareto: {
+  \seq_gset_eq:NN \g_semio_viz_tr_stat_sorted_seq \l_semio_viz_st_x_seq
+  \semio_viz_tr_stat_sort:N \g_semio_viz_tr_stat_sorted_seq
+  \seq_reverse:N \g_semio_viz_tr_stat_sorted_seq
+  \semio_viz_tr_stat_sum:NN \g_semio_viz_tr_stat_sorted_seq \l_semio_viz_cb_c_fp
+  \fp_compare:nT { \l_semio_viz_cb_c_fp <= 0 } { \fp_set:Nn \l_semio_viz_cb_c_fp { 1 } }
+  \semio_viz_tr_stat_max:NN \g_semio_viz_tr_stat_sorted_seq \l_semio_viz_cb_b_fp
+  \int_set:Nn \l_semio_viz_cb_i_int { \seq_count:N \g_semio_viz_tr_stat_sorted_seq }
+  \semio_viz_scale_band:nnnnnn { \l_semio_viz_cb_i_int }
+    { \l_semio_viz_cb_xa_fp } { \l_semio_viz_cb_xb_fp } { 0.15 } { 0.05 } { 0.5 }
+  \fp_zero:N \l_semio_viz_cb_a_fp
+  \tl_clear:N \l_semio_viz_cb_points_tl
+  \int_step_inline:nn { \l_semio_viz_cb_i_int } {
+    \semio_viz_scale_band_at:nN {##1} \l_semio_viz_cb_t_fp
+    \fp_set:Nn \l_semio_viz_cb_h_fp
+      {
+        ( \l_semio_viz_cb_yb_fp - \l_semio_viz_cb_ya_fp )
+        * \seq_item:Nn \g_semio_viz_tr_stat_sorted_seq {##1} / \l_semio_viz_cb_b_fp
+      }
+    \semio_viz_g_rect:nnnnn { \l_semio_viz_cb_t_fp } { \l_semio_viz_cb_ya_fp }
+      { \g_semio_viz_band_width_fp } { \l_semio_viz_cb_h_fp }
+      { fill = \semio_viz_palette:n { 1 } , fill~opacity = 0.75 , draw = none }
+    \fp_add:Nn \l_semio_viz_cb_a_fp { \seq_item:Nn \g_semio_viz_tr_stat_sorted_seq {##1} }
+    \tl_put_right:Nx \l_semio_viz_cb_points_tl
+      {
+        \tl_if_empty:NF \l_semio_viz_cb_points_tl { , }
+        \fp_eval:n { \l_semio_viz_cb_t_fp + \g_semio_viz_band_width_fp / 2 } ,
+        \fp_eval:n
+          {
+            \l_semio_viz_cb_ya_fp
+            + ( \l_semio_viz_cb_yb_fp - \l_semio_viz_cb_ya_fp )
+              * \l_semio_viz_cb_a_fp / \l_semio_viz_cb_c_fp
+          }
+      }
+  }
+  \semio_viz_g_polyline:Vn \l_semio_viz_cb_points_tl
+    { draw = \semio_viz_palette:n { 3 } , line~width = \semio@stroke@default }
+}
+
+% 📐 Process capability: the observation histogram against the specification limits.
+\cs_new_protected:Npn \semio_viz_ctrl_capability: {
+  \semio_viz_tr_stat_mean:NN \l_semio_viz_st_x_seq \l_semio_viz_cb_c_fp
+  \semio_viz_tr_stat_deviation:NN \l_semio_viz_st_x_seq \l_semio_viz_cb_w_fp
+  \fp_set:Nn \l_semio_viz_cb_a_fp
+    { \l_semio_viz_cb_c_fp - \l_semio_viz_ctrl_sigma_fp * \l_semio_viz_cb_w_fp }
+  \fp_set:Nn \l_semio_viz_cb_b_fp
+    { \l_semio_viz_cb_c_fp + \l_semio_viz_ctrl_sigma_fp * \l_semio_viz_cb_w_fp }
+  \semio_viz_probe_geometry:nx { capability }
+    {
+      \fp_eval:n { \l_semio_viz_cb_a_fp }, \fp_eval:n { \l_semio_viz_cb_c_fp },
+      \fp_eval:n { \l_semio_viz_cb_b_fp }
+    }
+  \semio_viz_tr_stat_kde:Nnnnn \l_semio_viz_st_x_seq { 0 } { 40 }
+    { \l_semio_viz_cb_a_fp } { \l_semio_viz_cb_b_fp }
+  \semio_viz_tr_stat_max:NN \g_semio_viz_tr_stat_curve_y_seq \l_semio_viz_cb_h_fp
+  \fp_compare:nT { \l_semio_viz_cb_h_fp <= 0 } { \fp_set:Nn \l_semio_viz_cb_h_fp { 1 } }
+  \tl_set:Nx \l_semio_viz_cb_points_tl
+    { \fp_eval:n { \l_semio_viz_cb_xa_fp } , \fp_eval:n { \l_semio_viz_cb_ya_fp } }
+  \int_zero:N \l_semio_viz_cb_j_int
+  \seq_map_inline:Nn \g_semio_viz_tr_stat_curve_x_seq {
+    \int_incr:N \l_semio_viz_cb_j_int
+    \semio_viz_scale_linear:nnnnnN {##1} { \l_semio_viz_cb_a_fp } { \l_semio_viz_cb_b_fp }
+      { \l_semio_viz_cb_xa_fp } { \l_semio_viz_cb_xb_fp } \l_semio_viz_cb_t_fp
+    \tl_put_right:Nx \l_semio_viz_cb_points_tl
+      {
+        , \fp_eval:n { \l_semio_viz_cb_t_fp } ,
+        \fp_eval:n
+          {
+            \l_semio_viz_cb_ya_fp
+            + \seq_item:Nn \g_semio_viz_tr_stat_curve_y_seq { \l_semio_viz_cb_j_int }
+              / \l_semio_viz_cb_h_fp * ( \l_semio_viz_cb_yb_fp - \l_semio_viz_cb_ya_fp )
+          }
+      }
+  }
+  \tl_put_right:Nx \l_semio_viz_cb_points_tl
+    { , \fp_eval:n { \l_semio_viz_cb_xb_fp } , \fp_eval:n { \l_semio_viz_cb_ya_fp } }
+  \semio_viz_g_polygon:Vn \l_semio_viz_cb_points_tl
+    { fill = \semio_viz_palette:n { 2 } , fill~opacity = 0.35 ,
+      draw = \semio_viz_palette:n { 2 } , line~width = \semio@stroke@hairline }
+  \semio_viz_g_line:nnnnn { \l_semio_viz_cb_xa_fp } { \l_semio_viz_cb_ya_fp }
+    { \l_semio_viz_cb_xa_fp } { \l_semio_viz_cb_yb_fp }
+    { draw = \semio_viz_palette:n { 7 } , line~width = \semio@stroke@hairline }
+  \semio_viz_g_line:nnnnn { \l_semio_viz_cb_xb_fp } { \l_semio_viz_cb_ya_fp }
+    { \l_semio_viz_cb_xb_fp } { \l_semio_viz_cb_yb_fp }
+    { draw = \semio_viz_palette:n { 7 } , line~width = \semio@stroke@hairline }
+}
+
+% 🔬 Residual diagnostics: residual, scale-location, leverage, influence, Cook, Bland-Altman,
+% calibration, reliability, lift and gain views of a fitted/observed pair.
+\SemioVizFamily { residual } {
+  \semio_viz_cb_reset:
+  \tl_set:Nn \l_semio_viz_cb_data_tl { demo-embedding }
+  \tl_set:Nn \l_semio_viz_res_kind_tl { residual }
+  \tl_set:Nn \l_semio_viz_res_fitted_tl { ex }
+  \tl_set:Nn \l_semio_viz_res_resid_tl { ey }
+  \tl_set:Nn \l_semio_viz_res_weight_tl { load }
+  \bool_set_true:N \l_semio_viz_res_smooth_bool
+  \bool_set_true:N \l_semio_viz_res_bands_bool
+  \keys_set:nn { semio / viz / family / common } {#1}
+  \keys_set:nn { semio / viz / family / residual } {#1}
+  \semio_viz_cb_frame:
+  \semio_viz_res_render:
+}
+
+% 🔬 Runs the residual family once its keys are set.
+\cs_new_protected:Npn \semio_viz_res_render: {
+  \semio_viz_tr_stat_from_table:Nnn \l_semio_viz_st_x_seq
+    { \l_semio_viz_cb_data_tl } { \l_semio_viz_res_fitted_tl }
+  \semio_viz_tr_stat_from_table:Nnn \l_semio_viz_st_y_seq
+    { \l_semio_viz_cb_data_tl } { \l_semio_viz_res_resid_tl }
+  \semio_viz_tr_stat_from_table:Nnn \l_semio_viz_st_w_seq
+    { \l_semio_viz_cb_data_tl } { \l_semio_viz_res_weight_tl }
+  \semio_viz_res_project:
+  \semio_viz_tr_stat_max:NN \l_semio_viz_st_w_seq \l_semio_viz_st_wmax_fp
+  \semio_viz_tr_stat_min:NN \l_semio_viz_st_x_seq \l_semio_viz_cb_a_fp
+  \semio_viz_tr_stat_max:NN \l_semio_viz_st_x_seq \l_semio_viz_cb_b_fp
+  \semio_viz_tr_stat_min:NN \l_semio_viz_st_y_seq \l_semio_viz_cb_c_fp
+  \semio_viz_tr_stat_max:NN \l_semio_viz_st_y_seq \l_semio_viz_cb_h_fp
+  \bool_if:NT \l_semio_viz_res_bands_bool { \semio_viz_res_bands: }
+  \int_zero:N \l_semio_viz_cb_j_int
+  \seq_map_inline:Nn \l_semio_viz_st_x_seq {
+    \int_incr:N \l_semio_viz_cb_j_int
+    \semio_viz_scale_linear:nnnnnN {##1} { \l_semio_viz_cb_a_fp } { \l_semio_viz_cb_b_fp }
+      { \l_semio_viz_cb_xa_fp } { \l_semio_viz_cb_xb_fp } \l_semio_viz_cb_t_fp
+    \semio_viz_scale_linear:nnnnnN
+      { \seq_item:Nn \l_semio_viz_st_y_seq { \l_semio_viz_cb_j_int } }
+      { \l_semio_viz_cb_c_fp } { \l_semio_viz_cb_h_fp }
+      { \l_semio_viz_cb_ya_fp } { \l_semio_viz_cb_yb_fp } \l_semio_viz_cb_u_fp
+    \semio_viz_g_circle:nnnn { \l_semio_viz_cb_t_fp } { \l_semio_viz_cb_u_fp }
+      {
+        \fp_eval:n
+          {
+            0.6 + 1.4 * \seq_item:Nn \l_semio_viz_st_w_seq { \l_semio_viz_cb_j_int }
+                        / max ( 1e-9 , \l_semio_viz_st_wmax_fp )
+          }
+      }
+      { fill = \semio_viz_palette:n { 1 } , draw = none , fill~opacity = 0.8 }
+  }
+  \bool_if:NT \l_semio_viz_res_smooth_bool { \semio_viz_res_smooth: }
+}
+
+% 〰️ The smoothed trend a residual plot is read against: a trailing mean of the residual over the
+% last five points in the data's own order, which is the loess-style guide without a second fit.
+\cs_new_protected:Npn \semio_viz_res_smooth: {
+  \tl_clear:N \l_semio_viz_cb_points_tl
+  \int_step_inline:nn { \seq_count:N \l_semio_viz_st_x_seq } {
+    \fp_zero:N \l_tmpa_fp
+    \int_zero:N \l_tmpb_int
+    \int_step_inline:nnn { \int_max:nn { 1 } { ##1 - 4 } } { ##1 } {
+      \fp_add:Nn \l_tmpa_fp { \seq_item:Nn \l_semio_viz_st_y_seq {####1} }
+      \int_incr:N \l_tmpb_int
+    }
+    \semio_viz_scale_linear:nnnnnN { \seq_item:Nn \l_semio_viz_st_x_seq {##1} }
+      { \l_semio_viz_cb_a_fp } { \l_semio_viz_cb_b_fp }
+      { \l_semio_viz_cb_xa_fp } { \l_semio_viz_cb_xb_fp } \l_tmpb_fp
+    \tl_put_right:Nx \l_semio_viz_cb_points_tl
+      {
+        \tl_if_empty:NF \l_semio_viz_cb_points_tl { , }
+        \fp_eval:n { \l_tmpb_fp }
+      }
+    \semio_viz_scale_linear:nnnnnN { \l_tmpa_fp / \l_tmpb_int }
+      { \l_semio_viz_cb_c_fp } { \l_semio_viz_cb_h_fp }
+      { \l_semio_viz_cb_ya_fp } { \l_semio_viz_cb_yb_fp } \l_tmpb_fp
+    \tl_put_right:Nx \l_semio_viz_cb_points_tl { , \fp_eval:n { \l_tmpb_fp } }
+  }
+  \semio_viz_g_polyline:Vn \l_semio_viz_cb_points_tl
+    { draw = semio-chrome-border-emphasized , line~width = \semio@stroke@default }
+}
+
+% 🔄 Rewrites the residual pair into the coordinates of the requested diagnostic.
+\cs_new_protected:Npn \semio_viz_res_project: {
+  \str_case:Vn \l_semio_viz_res_kind_tl
+    {
+      { scale-location }
+        {
+          \int_zero:N \l_semio_viz_cb_j_int
+          \seq_map_inline:Nn \l_semio_viz_st_y_seq {
+            \int_incr:N \l_semio_viz_cb_j_int
+            \seq_set_item:Nnx \l_semio_viz_st_y_seq { \l_semio_viz_cb_j_int }
+              { \fp_eval:n { sqrt ( abs ( ##1 ) ) } }
+          }
+        }
+      { bland-altman }
+        {
+          \int_zero:N \l_semio_viz_cb_j_int
+          \seq_map_inline:Nn \l_semio_viz_st_x_seq {
+            \int_incr:N \l_semio_viz_cb_j_int
+            \fp_set:Nn \l_semio_viz_cb_t_fp
+              { \seq_item:Nn \l_semio_viz_st_y_seq { \l_semio_viz_cb_j_int } }
+            \seq_set_item:Nnx \l_semio_viz_st_x_seq { \l_semio_viz_cb_j_int }
+              { \fp_eval:n { ( ##1 + \l_semio_viz_cb_t_fp ) / 2 } }
+            \seq_set_item:Nnx \l_semio_viz_st_y_seq { \l_semio_viz_cb_j_int }
+              { \fp_eval:n { ##1 - \l_semio_viz_cb_t_fp } }
+          }
+        }
+      { cook }
+        {
+          \int_zero:N \l_semio_viz_cb_j_int
+          \seq_map_inline:Nn \l_semio_viz_st_y_seq {
+            \int_incr:N \l_semio_viz_cb_j_int
+            \seq_set_item:Nnx \l_semio_viz_st_y_seq { \l_semio_viz_cb_j_int }
+              {
+                \fp_eval:n
+                  {
+                    ( ##1 ) ** 2
+                    * \seq_item:Nn \l_semio_viz_st_w_seq { \l_semio_viz_cb_j_int }
+                  }
+              }
+          }
+        }
+    }
+}
+
+% 🎚️ Reference or agreement bands of the current diagnostic.
+\cs_new_protected:Npn \semio_viz_res_bands: {
+  \semio_viz_tr_stat_mean:NN \l_semio_viz_st_y_seq \l_semio_viz_cb_t_fp
+  \semio_viz_tr_stat_deviation:NN \l_semio_viz_st_y_seq \l_semio_viz_cb_u_fp
+  \semio_viz_probe_geometry:nx { agreement }
+    {
+      \fp_eval:n { \l_semio_viz_cb_t_fp - 1.96 * \l_semio_viz_cb_u_fp },
+      \fp_eval:n { \l_semio_viz_cb_t_fp },
+      \fp_eval:n { \l_semio_viz_cb_t_fp + 1.96 * \l_semio_viz_cb_u_fp }
+    }
+  \clist_map_inline:nn { -1.96, 0, 1.96 } {
+    \semio_viz_scale_linear:nnnnnN
+      { \l_semio_viz_cb_t_fp + ##1 * \l_semio_viz_cb_u_fp }
+      { \l_semio_viz_cb_c_fp } { \l_semio_viz_cb_h_fp }
+      { \l_semio_viz_cb_ya_fp } { \l_semio_viz_cb_yb_fp } \l_semio_viz_cb_w_fp
+    \semio_viz_g_line:nnnnn { \l_semio_viz_cb_xa_fp } { \l_semio_viz_cb_w_fp }
+      { \l_semio_viz_cb_xb_fp } { \l_semio_viz_cb_w_fp }
+      { draw = semio-chrome-border-normal , line~width = \semio@stroke@hairline ,
+        dash~pattern = on~1pt~off~1pt }
+  }
+}
+
+% 🎛️ Quadrant matrices: two-by-two, Boston, Ansoff, Eisenhower, SWOT, importance-performance,
+% perceptual maps and nine-box risk matrices.
+\SemioVizFamily { quadrant } {
+  \semio_viz_cb_reset:
+  \tl_set:Nn \l_semio_viz_cb_data_tl { demo-quadrant }
+  \tl_set:Nn \l_semio_viz_quad_preset_tl { plain }
+  \tl_set:Nn \l_semio_viz_quad_x_tl { x }
+  \tl_set:Nn \l_semio_viz_quad_y_tl { y }
+  \tl_set:Nn \l_semio_viz_quad_size_tl { size }
+  \tl_set:Nn \l_semio_viz_quad_label_tl { label }
+  \fp_set:Nn \l_semio_viz_quad_split_fp { 0.5 }
+  \bool_set_true:N \l_semio_viz_quad_tint_bool
+  \int_set:Nn \l_semio_viz_quad_cells_int { 2 }
+  \keys_set:nn { semio / viz / family / common } {#1}
+  \keys_set:nn { semio / viz / family / quadrant } {#1}
+  \semio_viz_cb_frame:
+  \semio_viz_quad_render:
+}
+
+% 📐 Fraction of the frame at grid edge #1 (zero-based). A two-by-two grid puts its inner edge at
+% `split`, which is what makes the four quadrants a judgement and not a quartering; a finer grid
+% divides evenly, because `split` names one divider and not a sequence of them.
+\cs_new:Npn \semio_viz_quad_edge:n #1
+  {
+    \int_compare:nNnTF { \l_semio_viz_quad_cells_int } = { 2 }
+      { \int_case:nnF { \int_eval:n {#1} }
+          { { 0 } { 0 } { 1 } { \fp_use:N \l_semio_viz_quad_split_fp } } { 1 } }
+      { \fp_eval:n { ( #1 ) / \l_semio_viz_quad_cells_int } }
+  }
+
+% 🎛️ Runs the quadrant family once its keys are set.
+\cs_new_protected:Npn \semio_viz_quad_render: {
+  \semio_viz_tr_stat_from_table:Nnn \l_semio_viz_st_x_seq
+    { \l_semio_viz_cb_data_tl } { \l_semio_viz_quad_x_tl }
+  \semio_viz_tr_stat_from_table:Nnn \l_semio_viz_st_y_seq
+    { \l_semio_viz_cb_data_tl } { \l_semio_viz_quad_y_tl }
+  \semio_viz_tr_stat_from_table:Nnn \l_semio_viz_st_w_seq
+    { \l_semio_viz_cb_data_tl } { \l_semio_viz_quad_size_tl }
+  \semio_viz_tr_stat_labels_from_table:Nnn \l_semio_viz_st_lab_seq
+    { \l_semio_viz_cb_data_tl } { \l_semio_viz_quad_label_tl }
+  \fp_set:Nn \l_semio_viz_cb_w_fp
+    { ( \l_semio_viz_cb_xb_fp - \l_semio_viz_cb_xa_fp ) / \l_semio_viz_quad_cells_int }
+  \fp_set:Nn \l_semio_viz_cb_h_fp
+    { ( \l_semio_viz_cb_yb_fp - \l_semio_viz_cb_ya_fp ) / \l_semio_viz_quad_cells_int }
+  \bool_if:NT \l_semio_viz_quad_tint_bool {
+    \int_step_inline:nn { \l_semio_viz_quad_cells_int } {
+      \int_step_inline:nn { \l_semio_viz_quad_cells_int } {
+        \semio_viz_g_rect:nnnnn
+          {
+            \l_semio_viz_cb_xa_fp + \semio_viz_quad_edge:n { ##1 - 1 }
+              * ( \l_semio_viz_cb_xb_fp - \l_semio_viz_cb_xa_fp )
+          }
+          {
+            \l_semio_viz_cb_ya_fp + \semio_viz_quad_edge:n { ####1 - 1 }
+              * ( \l_semio_viz_cb_yb_fp - \l_semio_viz_cb_ya_fp )
+          }
+          {
+            ( \semio_viz_quad_edge:n { ##1 } - \semio_viz_quad_edge:n { ##1 - 1 } )
+              * ( \l_semio_viz_cb_xb_fp - \l_semio_viz_cb_xa_fp )
+          }
+          {
+            ( \semio_viz_quad_edge:n { ####1 } - \semio_viz_quad_edge:n { ####1 - 1 } )
+              * ( \l_semio_viz_cb_yb_fp - \l_semio_viz_cb_ya_fp )
+          }
+          {
+            fill = \semio_viz_palette:n { \int_eval:n { ##1 + ####1 - 1 } } ,
+            fill~opacity = 0.12 , draw = semio-chrome-border-normal ,
+            line~width = \semio@stroke@hairline
+          }
+      }
+    }
+  }
+  \semio_viz_quad_captions:
+  \semio_viz_tr_stat_max:NN \l_semio_viz_st_w_seq \l_semio_viz_cb_c_fp
+  \fp_compare:nT { \l_semio_viz_cb_c_fp <= 0 } { \fp_set:Nn \l_semio_viz_cb_c_fp { 1 } }
+  \int_zero:N \l_semio_viz_cb_j_int
+  \seq_map_inline:Nn \l_semio_viz_st_x_seq {
+    \int_incr:N \l_semio_viz_cb_j_int
+    \fp_set:Nn \l_semio_viz_cb_t_fp
+      { \l_semio_viz_cb_xa_fp + ( \l_semio_viz_cb_xb_fp - \l_semio_viz_cb_xa_fp ) * ##1 }
+    \fp_set:Nn \l_semio_viz_cb_u_fp
+      {
+        \l_semio_viz_cb_ya_fp
+        + ( \l_semio_viz_cb_yb_fp - \l_semio_viz_cb_ya_fp )
+          * \seq_item:Nn \l_semio_viz_st_y_seq { \l_semio_viz_cb_j_int }
+      }
+    \semio_viz_g_circle:nnnn { \l_semio_viz_cb_t_fp } { \l_semio_viz_cb_u_fp }
+      {
+        \fp_eval:n
+          {
+            0.8 + 1.8 * sqrt ( \seq_item:Nn \l_semio_viz_st_w_seq { \l_semio_viz_cb_j_int }
+                               / \l_semio_viz_cb_c_fp )
+          }
+      }
+      { fill = \semio_viz_palette:n { \l_semio_viz_cb_j_int } , draw = none ,
+        fill~opacity = 0.85 }
+    \semio_viz_g_text:nnnn { \l_semio_viz_cb_t_fp + 2 } { \l_semio_viz_cb_u_fp } { west }
+      { \seq_item:Nn \l_semio_viz_st_lab_seq { \l_semio_viz_cb_j_int } }
+  }
+}
+
+% 🏷️ Quadrant captions of the active preset, in the document language.
+\cs_new_protected:Npn \semio_viz_quad_captions: {
+  \clist_set:Nx \l_semio_viz_quad_caption_clist { \semio_viz_quad_words: }
+  \int_zero:N \l_semio_viz_cb_series_int
+  \clist_map_inline:Nn \l_semio_viz_quad_caption_clist {
+    \int_incr:N \l_semio_viz_cb_series_int
+    \int_compare:nNnF { \l_semio_viz_cb_series_int } >
+      { \l_semio_viz_quad_cells_int * \l_semio_viz_quad_cells_int }
+      {
+        \semio_viz_g_text:nnnn
+          {
+            \l_semio_viz_cb_xa_fp
+            + ( \int_mod:nn { \l_semio_viz_cb_series_int - 1 } { \l_semio_viz_quad_cells_int }
+                + 0.5 ) * \l_semio_viz_cb_w_fp
+          }
+          {
+            \l_semio_viz_cb_ya_fp
+            + ( \int_div_truncate:nn { \l_semio_viz_cb_series_int - 1 }
+                  { \l_semio_viz_quad_cells_int } + 0.88 ) * \l_semio_viz_cb_h_fp
+          }
+          { center } {##1}
+      }
+  }
+}
+\clist_new:N \l_semio_viz_quad_caption_clist
+
+% 🌐 Caption words of the active preset; English and German, selected by the document language.
+\cs_new:Npn \semio_viz_quad_words: {
+  \str_if_eq:eeTF { \semio_viz_quad_language: } { de }
+    { \semio_viz_quad_words_de: } { \semio_viz_quad_words_en: }
+}
+
+% 🌐 Current document language, empty while `semio-core` is not loaded.
+\cs_new:Npn \semio_viz_quad_language: {
+  \tl_if_exist:NTF \l_semio_language_tl { \tl_use:N \l_semio_language_tl } { }
+}
+
+% 🌐 English caption words per preset.
+\cs_new:Npn \semio_viz_quad_words_en: {
+  \str_case:VnF \l_semio_viz_quad_preset_tl
+    {
+      { boston } { Dogs, Cash~cows, Question~marks, Stars }
+      { ansoff } { Penetration, Development, Diversification, Products }
+      { eisenhower } { Delegate, Do, Delete, Decide }
+      { swot } { Threats, Strengths, Weaknesses, Opportunities }
+      { importance-performance } { Low~priority, Keep~up, Overkill, Concentrate }
+      { perceptual } { Value, Premium, Economy, Aspiration }
+      { risk } { Low, Medium, High, Medium, High, Critical, High, Critical, Severe }
+    }
+    { Q3, Q4, Q1, Q2 }
+}
+
+% 🌐 German caption words per preset.
+\cs_new:Npn \semio_viz_quad_words_de: {
+  \str_case:VnF \l_semio_viz_quad_preset_tl
+    {
+      { boston } { Arme~Hunde, Melkkuehe, Fragezeichen, Sterne }
+      { ansoff } { Durchdringung, Entwicklung, Diversifikation, Produkte }
+      { eisenhower } { Delegieren, Erledigen, Streichen, Terminieren }
+      { swot } { Risiken, Staerken, Schwaechen, Chancen }
+      { importance-performance } { Nachrangig, Halten, Ueberzogen, Fokussieren }
+      { perceptual } { Wert, Premium, Guenstig, Anspruch }
+      { risk } { Gering, Mittel, Hoch, Mittel, Hoch, Kritisch, Hoch, Kritisch, Schwer }
+    }
+    { Q3, Q4, Q1, Q2 }
+}
+
+% 🧩 Composite: marginals, overview plus detail, insets, dual and broken axes, combinations.
+\SemioVizFamily { composite } {
+  \semio_viz_cb_reset:
+  \tl_set:Nn \l_semio_viz_composite_layout_tl { marginals }
+  \tl_set:Nn \l_semio_viz_composite_main_tl { strip }
+  \tl_clear:N \l_semio_viz_composite_mainopts_tl
+  \tl_set:Nn \l_semio_viz_composite_side_tl { histogram }
+  \tl_clear:N \l_semio_viz_composite_sideopts_tl
+  \fp_set:Nn \l_semio_viz_composite_ratio_fp { 0.72 }
+  \fp_set:Nn \l_semio_viz_composite_gap_fp { 2 }
+  \keys_set:nn { semio / viz / family / common } {#1}
+  \keys_set:nn { semio / viz / family / composite } {#1}
+  \semio_viz_cb_frame:
+  \semio_viz_composite_render:
+}
+
+\fp_new:N \l_semio_viz_composite_w_fp
+\fp_new:N \l_semio_viz_composite_h_fp
+
+% 🧩 Runs the composite family once its keys are set.
+\cs_new_protected:Npn \semio_viz_composite_render: {
+  \fp_set_eq:NN \l_semio_viz_composite_w_fp \l_semio_viz_cb_width_fp
+  \fp_set_eq:NN \l_semio_viz_composite_h_fp \l_semio_viz_cb_height_fp
+  \str_case:VnF \l_semio_viz_composite_layout_tl
+    {
+      { layered }
+        {
+          \semio_viz_composite_panel:nnn { \l_semio_viz_composite_main_tl }
+            { \l_semio_viz_composite_mainopts_tl }
+            { width = \fp_eval:n { \l_semio_viz_composite_w_fp } ,
+              height = \fp_eval:n { \l_semio_viz_composite_h_fp } }
+          \semio_viz_composite_panel:nnn { \l_semio_viz_composite_side_tl }
+            { \l_semio_viz_composite_sideopts_tl }
+            { width = \fp_eval:n { \l_semio_viz_composite_w_fp } ,
+              height = \fp_eval:n { \l_semio_viz_composite_h_fp } }
+        }
+      { inset }
+        {
+          \semio_viz_composite_panel:nnn { \l_semio_viz_composite_main_tl }
+            { \l_semio_viz_composite_mainopts_tl }
+            { width = \fp_eval:n { \l_semio_viz_composite_w_fp } ,
+              height = \fp_eval:n { \l_semio_viz_composite_h_fp } }
+          \semio_viz_composite_panel:nnn { \l_semio_viz_composite_side_tl }
+            { \l_semio_viz_composite_sideopts_tl }
+            { width = \fp_eval:n { \l_semio_viz_composite_w_fp * 0.45 } ,
+              height = \fp_eval:n { \l_semio_viz_composite_h_fp * 0.45 } ,
+              pad = \fp_eval:n { \l_semio_viz_composite_w_fp * 0.5 } }
+        }
+      { dual-axis }
+        {
+          \semio_viz_composite_panel:nnn { \l_semio_viz_composite_main_tl }
+            { \l_semio_viz_composite_mainopts_tl }
+            { width = \fp_eval:n { \l_semio_viz_composite_w_fp } ,
+              height = \fp_eval:n { \l_semio_viz_composite_h_fp } }
+          \semio_viz_composite_panel:nnn { \l_semio_viz_composite_side_tl }
+            { \l_semio_viz_composite_sideopts_tl }
+            { width = \fp_eval:n { \l_semio_viz_composite_w_fp } ,
+              height = \fp_eval:n { \l_semio_viz_composite_h_fp * 0.6 } }
+        }
+      { broken-axis }
+        {
+          \semio_viz_composite_panel:nnn { \l_semio_viz_composite_main_tl }
+            { \l_semio_viz_composite_mainopts_tl }
+            { width = \fp_eval:n { \l_semio_viz_composite_w_fp } ,
+              height = \fp_eval:n { \l_semio_viz_composite_h_fp * 0.45 } }
+          \semio_viz_composite_panel:nnn { \l_semio_viz_composite_main_tl }
+            { \l_semio_viz_composite_mainopts_tl }
+            { width = \fp_eval:n { \l_semio_viz_composite_w_fp } ,
+              height = \fp_eval:n { \l_semio_viz_composite_h_fp } ,
+              pad = \fp_eval:n { \l_semio_viz_composite_h_fp * 0.55 } }
+        }
+    }
+    {
+      \semio_viz_composite_panel:nnn { \l_semio_viz_composite_main_tl }
+        { \l_semio_viz_composite_mainopts_tl }
+        {
+          width = \fp_eval:n { \l_semio_viz_composite_w_fp * \l_semio_viz_composite_ratio_fp } ,
+          height = \fp_eval:n { \l_semio_viz_composite_h_fp * \l_semio_viz_composite_ratio_fp }
+        }
+      \semio_viz_composite_panel:nnn { \l_semio_viz_composite_side_tl }
+        { \l_semio_viz_composite_sideopts_tl }
+        {
+          width = \fp_eval:n { \l_semio_viz_composite_w_fp * \l_semio_viz_composite_ratio_fp } ,
+          height = \fp_eval:n { \l_semio_viz_composite_h_fp } ,
+          pad = \fp_eval:n
+            { \l_semio_viz_composite_h_fp * \l_semio_viz_composite_ratio_fp + \l_semio_viz_composite_gap_fp }
+        }
+    }
+}
+
+% 🧩 Runs family #1 with the caller options #2 followed by the frame overrides #3.
+\cs_new_protected:Npn \semio_viz_composite_panel:nnn #1#2#3 {
+  \tl_set:Nx \l_semio_viz_composite_call_tl { #3 \tl_if_empty:nF {#2} { , #2 } }
+  \exp_args:NVV \semio_viz_family_run:nn #1 \l_semio_viz_composite_call_tl
+}
+\tl_new:N \l_semio_viz_composite_call_tl
+
+% 🪟 Facet: small multiples, trellis, lattice and repeated panels of one family.
+\SemioVizFamily { facet } {
+  \semio_viz_cb_reset:
+  \tl_set:Nn \l_semio_viz_fac_mode_tl { wrap }
+  \tl_set:Nn \l_semio_viz_fac_panel_tl { histogram }
+  \tl_clear:N \l_semio_viz_fac_opts_tl
+  \tl_set:Nn \l_semio_viz_fac_by_tl { grp }
+  \int_set:Nn \l_semio_viz_fac_columns_int { 3 }
+  \fp_set:Nn \l_semio_viz_fac_gap_fp { 2 }
+  \keys_set:nn { semio / viz / family / common } {#1}
+  \keys_set:nn { semio / viz / family / facet } {#1}
+  \semio_viz_cb_frame:
+  \semio_viz_fac_render:
+}
+
+\seq_new:N \l_semio_viz_fac_levels_seq
+\seq_new:N \l_semio_viz_fac_all_seq
+\tl_new:N \l_semio_viz_fac_call_tl
+
+% 🪟 Runs the facet family once its keys are set.
+\cs_new_protected:Npn \semio_viz_fac_render: {
+  \semio_viz_tr_stat_labels_from_table:Nnn \l_semio_viz_fac_all_seq
+    { \l_semio_viz_cb_data_tl } { \l_semio_viz_fac_by_tl }
+  \seq_clear:N \l_semio_viz_fac_levels_seq
+  \seq_map_inline:Nn \l_semio_viz_fac_all_seq {
+    \seq_if_in:NnF \l_semio_viz_fac_levels_seq {##1}
+      { \seq_put_right:Nn \l_semio_viz_fac_levels_seq {##1} }
+  }
+  \int_set:Nn \l_semio_viz_cb_i_int { \l_semio_viz_fac_columns_int }
+  \str_if_eq:VnT \l_semio_viz_fac_mode_tl { row }
+    { \int_set:Nn \l_semio_viz_cb_i_int { 1 } }
+  \str_if_eq:VnT \l_semio_viz_fac_mode_tl { column }
+    { \int_set:Nn \l_semio_viz_cb_i_int { \seq_count:N \l_semio_viz_fac_levels_seq } }
+  \fp_set:Nn \l_semio_viz_cb_w_fp
+    { \l_semio_viz_cb_width_fp / max ( 1 , \l_semio_viz_cb_i_int ) }
+  \fp_set:Nn \l_semio_viz_cb_h_fp
+    {
+      \l_semio_viz_cb_height_fp
+      / max ( 1 , ceil ( \seq_count:N \l_semio_viz_fac_levels_seq / \l_semio_viz_cb_i_int ) )
+    }
+  \int_zero:N \l_semio_viz_cb_series_int
+  \seq_map_inline:Nn \l_semio_viz_fac_levels_seq {
+    \int_incr:N \l_semio_viz_cb_series_int
+    \semio_viz_fac_panel:n { \l_semio_viz_cb_series_int }
+  }
+}
+
+% 🪟 One facet panel #1 of the grid.
+\cs_new_protected:Npn \semio_viz_fac_panel:n #1 {
+  \tl_set:Nx \l_semio_viz_fac_call_tl
+    {
+      width = \fp_eval:n
+        {
+          ( \int_mod:nn { (#1) - 1 } { \l_semio_viz_cb_i_int } + 1 ) * \l_semio_viz_cb_w_fp
+          - \l_semio_viz_fac_gap_fp
+        } ,
+      height = \fp_eval:n
+        {
+          ( \int_div_truncate:nn { (#1) - 1 } { \l_semio_viz_cb_i_int } + 1 )
+          * \l_semio_viz_cb_h_fp - \l_semio_viz_fac_gap_fp
+        } ,
+      pad = \fp_eval:n
+        {
+          \int_mod:nn { (#1) - 1 } { \l_semio_viz_cb_i_int } * \l_semio_viz_cb_w_fp
+          + \l_semio_viz_fac_gap_fp
+        }
+      \tl_if_empty:NF \l_semio_viz_fac_opts_tl { , \l_semio_viz_fac_opts_tl }
+    }
+  \exp_args:NVV \semio_viz_family_run:nn \l_semio_viz_fac_panel_tl \l_semio_viz_fac_call_tl
+}
+%endregion 🔖️Families
+
+\ExplSyntaxOff

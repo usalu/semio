@@ -1,0 +1,21 @@
+\documentclass{article}
+\usepackage{semio-viz-geo}
+\begin{document}
+\SemioVizProbeBegin{geo-projections}{inverse-projection}
+\SemioVizProbePage
+\SemioVizProbePrecision{9}
+\ExplSyntaxOn
+\clist_map_inline:nn
+  {
+    equirectangular, mercator, transverse-mercator, equal-earth, natural-earth1,
+    orthographic, stereographic, gnomonic, azimuthal-equal-area,
+    azimuthal-equidistant, conic-conformal, conic-equal-area,
+    conic-equidistant, albers
+  }
+  {
+    \SemioVizProjection { probe } [ kind = #1 ]
+    \SemioVizGeoInvert { probe } { 500 } { 130 }
+    \SemioVizProbeEval { geo/inverse } { \l_semio_viz_geo_lon_fp , \l_semio_viz_geo_lat_fp }
+  }
+\ExplSyntaxOff
+\end{document}

@@ -1,0 +1,2325 @@
+{
+ "semio-viz-scientific-field.sty#0|width": {
+  "type": "number",
+  "default": 60,
+  "description": {
+   "en": "Canvas width in millimetres.",
+   "de": "Zeichenflächenbreite in Millimetern."
+  }
+ },
+ "semio-viz-scientific-field.sty#0|height": {
+  "type": "number",
+  "default": 40,
+  "description": {
+   "en": "Canvas height in millimetres.",
+   "de": "Zeichenflächenhöhe in Millimetern."
+  }
+ },
+ "semio-viz-scientific-field.sty#0|ticks": {
+  "type": "integer",
+  "default": 4,
+  "description": {
+   "en": "Tick divisions per axis.",
+   "de": "Teilstriche je Achse."
+  }
+ },
+ "semio-viz-scientific-field.sty#0|grid": {
+  "type": "boolean",
+  "default": true,
+  "description": {
+   "en": "Draw the background grid behind the family.",
+   "de": "Das Hintergrundgitter hinter der Familie zeichnen."
+  }
+ },
+ "semio-viz-scientific-field.sty#0|axes": {
+  "type": "boolean",
+  "default": true,
+  "description": {
+   "en": "Draw the frame and the tick labels.",
+   "de": "Rahmen und Achsenbeschriftungen zeichnen."
+  }
+ },
+ "semio-viz-scientific-field.sty#0|title": {
+  "type": "string",
+  "description": {
+   "en": "Caption printed above the canvas.",
+   "de": "Über der Zeichenfläche gesetzte Überschrift."
+  }
+ },
+ "semio-viz-scientific-field.sty#0|xlabel": {
+  "type": "string",
+  "description": {
+   "en": "Caption of the horizontal axis.",
+   "de": "Beschriftung der waagerechten Achse."
+  }
+ },
+ "semio-viz-scientific-field.sty#0|ylabel": {
+  "type": "string",
+  "description": {
+   "en": "Caption of the vertical axis.",
+   "de": "Beschriftung der senkrechten Achse."
+  }
+ },
+ "semio-viz-scientific-field.sty#0|seed": {
+  "type": "integer",
+  "default": 20260905,
+  "description": {
+   "en": "Seed of the pseudo-random stream, so a sampled family draws the same picture on every run.",
+   "de": "Startwert des Pseudozufallsstroms, damit eine abgetastete Familie bei jedem Lauf dasselbe Bild zeichnet."
+  }
+ },
+ "semio-viz-charts-distribution.sty#0|data": {
+  "type": "string",
+  "default": "demo-distribution",
+  "description": {
+   "en": "Name of the source table.",
+   "de": "Name der Quelltabelle."
+  }
+ },
+ "semio-viz-charts-distribution.sty#0|value": {
+  "type": "string",
+  "default": "value",
+  "description": {
+   "en": "Column holding the observations.",
+   "de": "Spalte mit den Beobachtungen."
+  }
+ },
+ "semio-viz-charts-distribution.sty#0|group": {
+  "type": "string",
+  "default": "grp",
+  "description": {
+   "en": "Column splitting the observations into series.",
+   "de": "Spalte, die die Beobachtungen in Reihen teilt."
+  }
+ },
+ "semio-viz-charts-distribution.sty#0|label": {
+  "type": "string",
+  "description": {
+   "en": "Column carrying the item labels; empty draws none.",
+   "de": "Spalte mit den Elementbeschriftungen; leer zeichnet keine."
+  }
+ },
+ "semio-viz-charts-distribution.sty#0|width": {
+  "type": "number",
+  "default": 60,
+  "description": {
+   "en": "Drawing width in millimetres.",
+   "de": "Zeichenbreite in Millimetern."
+  }
+ },
+ "semio-viz-charts-distribution.sty#0|pad": {
+  "type": "number",
+  "default": 3,
+  "description": {
+   "en": "Inner padding on all four sides, in millimetres.",
+   "de": "Innenabstand auf allen vier Seiten, in Millimetern."
+  }
+ },
+ "semio-viz-geo.sty#0|center": {
+  "type": "string",
+  "description": {
+   "en": "Projection centre as `lon,lat` in degrees; empty keeps the d3 default of the projection kind.",
+   "de": "Projektionsmittelpunkt als `lon,lat` in Grad; leer behält die d3-Vorgabe der Projektionsart."
+  }
+ },
+ "semio-viz-geo.sty#0|translate": {
+  "type": "string",
+  "default": "480,250",
+  "description": {
+   "en": "Plane translation as `x,y` in millimetres, the d3 default.",
+   "de": "Verschiebung in der Ebene als `x,y` in Millimetern, die d3-Vorgabe."
+  }
+ },
+ "semio-viz-geo.sty#0|clipAngle": {
+  "type": "string",
+  "description": {
+   "en": "Great-circle clip radius in degrees; empty disables clipping.",
+   "de": "Großkreis-Beschneidungsradius in Grad; leer schaltet das Beschneiden ab."
+  }
+ },
+ "semio-viz-geo.sty#0|clipExtent": {
+  "type": "string",
+  "description": {
+   "en": "Plane clip rectangle `x0,y0,x1,y1`; empty disables clipping.",
+   "de": "Beschneidungsrechteck der Ebene `x0,y0,x1,y1`; leer schaltet das Beschneiden ab."
+  }
+ },
+ "semio-viz-geo.sty#0|precision": {
+  "type": "number",
+  "description": {
+   "en": "Adaptive resampling tolerance in plane units, d3's default sqrt(0.5); 0 disables resampling.",
+   "de": "Toleranz der adaptiven Neuabtastung in Ebeneneinheiten, d3-Vorgabe sqrt(0.5); 0 schaltet die Neuabtastung ab."
+  }
+ },
+ "semio-viz-geo.sty#1|fit": {
+  "type": "string",
+  "enum": [
+   "geometry",
+   "world"
+  ],
+  "description": {
+   "en": "What the projection is fitted to; families that draw a graticule default to `world`.",
+   "de": "Woran die Projektion eingepasst wird; Familien mit Gradnetz verwenden `world`."
+  }
+ },
+ "semio-viz-geo.sty#1|parallels": {
+  "type": "string",
+  "default": "0,60",
+  "description": {
+   "en": "Conic standard parallels `p0,p1` in degrees.",
+   "de": "Standardparallelen `p0,p1` der Kegelprojektion in Grad."
+  }
+ },
+ "semio-viz-geo.sty#1|rotate": {
+  "type": "string",
+  "default": "0,0,0",
+  "description": {
+   "en": "Projection rotation `lambda,phi,gamma` in degrees.",
+   "de": "Projektionsdrehung `lambda,phi,gamma` in Grad."
+  }
+ },
+ "semio-viz-geo.sty#1|stroke": {
+  "type": "string",
+  "default": "semio-chrome-border-emphasized",
+  "description": {
+   "en": "Outline colour token.",
+   "de": "Farbtoken der Umrisslinie."
+  }
+ },
+ "semio-viz-geo.sty#1|lineWidth": {
+  "type": "string",
+  "description": {
+   "en": "Outline width as a TeX dimension; the hairline stroke token by default.",
+   "de": "Umrissbreite als TeX-Dimension; standardmäßig das Haarlinien-Token."
+  }
+ },
+ "semio-viz-mark.sty#0|size": {
+  "type": "number",
+  "default": 6,
+  "description": {
+   "en": "Mark area in square millimetres, with d3-symbol semantics.",
+   "de": "Markenfläche in Quadratmillimetern, mit der Semantik von d3-symbol."
+  }
+ },
+ "semio-viz-mark.sty#0|fill": {
+  "type": "string",
+  "description": {
+   "en": "Fill colour token, or `none` for an unfilled mark; the theme's slot 0 by default.",
+   "de": "Farbtoken der Füllung, oder `none` für eine ungefüllte Marke; standardmäßig Slot 0 des Themas."
+  }
+ },
+ "semio-viz-mark.sty#0|stroke": {
+  "type": "string",
+  "default": "semio-chrome-border-emphasized",
+  "description": {
+   "en": "Stroke colour token, or `none`.",
+   "de": "Farbtoken der Kontur, oder `none`."
+  }
+ },
+ "semio-viz-mark.sty#0|strokeWidth": {
+  "type": "string",
+  "description": {
+   "en": "Stroke width as a TeX dimension; the default stroke token by default.",
+   "de": "Konturbreite als TeX-Dimension; standardmäßig das Standard-Konturtoken."
+  }
+ },
+ "semio-viz-mark.sty#0|opacity": {
+  "type": "number",
+  "default": 1,
+  "description": {
+   "en": "Draw opacity of the whole mark.",
+   "de": "Zeichendeckkraft der gesamten Marke."
+  }
+ },
+ "semio-viz-mark.sty#0|rotate": {
+  "type": "number",
+  "default": 0,
+  "description": {
+   "en": "Rotation in degrees about the mark's own point.",
+   "de": "Drehung in Grad um den eigenen Punkt der Marke."
+  }
+ },
+ "semio-viz-mark.sty#0|pattern": {
+  "type": "string",
+  "default": "none",
+  "enum": [
+   "none",
+   "hatch",
+   "crosshatch",
+   "dots",
+   "grid"
+  ],
+  "description": {
+   "en": "Grayscale-safe fill pattern drawn instead of a flat fill.",
+   "de": "Graustufensicheres Füllmuster anstelle einer flächigen Füllung."
+  }
+ },
+ "semio-viz-mark.sty#0|points": {
+  "type": "string",
+  "description": {
+   "en": "Point list `x,y; x,y; …` in figure millimetres.",
+   "de": "Punktliste `x,y; x,y; …` in Abbildungsmillimetern."
+  }
+ },
+ "semio-viz-mark.sty#0|points2": {
+  "type": "string",
+  "description": {
+   "en": "The second boundary of a band, envelope or ribbon.",
+   "de": "Die zweite Begrenzung eines Bandes, einer Hüllkurve oder eines Bandflusses."
+  }
+ },
+ "semio-viz-mark.sty#0|curve": {
+  "type": "string",
+  "default": "linear",
+  "description": {
+   "en": "Name of the interpolator the path is drawn with.",
+   "de": "Name des Interpolators, mit dem der Pfad gezeichnet wird."
+  }
+ },
+ "semio-viz-mark.sty#0|tension": {
+  "type": "number",
+  "default": 0,
+  "description": {
+   "en": "Tension parameter of the cardinal and bundle interpolators.",
+   "de": "Spannungsparameter der Cardinal- und Bündel-Interpolatoren."
+  }
+ },
+ "semio-viz-mark.sty#0|alpha": {
+  "type": "number",
+  "default": 0.5,
+  "description": {
+   "en": "Alpha parameter of the Catmull-Rom interpolator.",
+   "de": "Alpha-Parameter des Catmull-Rom-Interpolators."
+  }
+ },
+ "semio-viz-mark.sty#0|beta": {
+  "type": "number",
+  "default": 0.85,
+  "description": {
+   "en": "Beta parameter of the bundle interpolator.",
+   "de": "Beta-Parameter des Bündel-Interpolators."
+  }
+ },
+ "semio-viz-mark.sty#0|closed": {
+  "type": "boolean",
+  "default": false,
+  "description": {
+   "en": "Close the path after the last point.",
+   "de": "Den Pfad nach dem letzten Punkt schließen."
+  }
+ },
+ "semio-viz-mark.sty#0|dash": {
+  "type": "string",
+  "default": "none",
+  "description": {
+   "en": "`none`, `dashed`, `dotted`, `dash-dot`, or an explicit dash pattern.",
+   "de": "`none`, `dashed`, `dotted`, `dash-dot`, oder ein ausdrückliches Strichmuster."
+  }
+ },
+ "semio-viz-mark.sty#0|arrow": {
+  "type": "string",
+  "default": "none",
+  "enum": [
+   "none",
+   "end",
+   "start",
+   "both"
+  ],
+  "description": {
+   "en": "Which ends of the path carry an arrowhead.",
+   "de": "Welche Enden des Pfades eine Pfeilspitze tragen."
+  }
+ },
+ "semio-viz-mark.sty#0|arrowSize": {
+  "type": "string",
+  "default": "1.6mm",
+  "description": {
+   "en": "Arrowhead length as a TeX dimension.",
+   "de": "Länge der Pfeilspitze als TeX-Dimension."
+  }
+ },
+ "semio-viz-mark.sty#0|radius": {
+  "type": "string",
+  "description": {
+   "en": "Arc radius in millimetres; `rx` and `ry` default to it.",
+   "de": "Bogenradius in Millimetern; `rx` und `ry` übernehmen ihn."
+  }
+ },
+ "semio-viz-mark.sty#0|rx": {
+  "type": "string",
+  "description": {
+   "en": "Horizontal radius of an elliptical arc; defaults to `radius`.",
+   "de": "Waagerechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+  }
+ },
+ "semio-viz-mark.sty#0|ry": {
+  "type": "string",
+  "description": {
+   "en": "Vertical radius of an elliptical arc; defaults to `radius`.",
+   "de": "Senkrechter Radius eines elliptischen Bogens; Vorgabe ist `radius`."
+  }
+ },
+ "semio-viz-mark.sty#0|innerRadius": {
+  "type": "number",
+  "default": 0,
+  "description": {
+   "en": "Inner radius of an annulus, sector or wedge.",
+   "de": "Innenradius eines Rings, Sektors oder Keils."
+  }
+ },
+ "semio-viz-mark.sty#0|outerRadius": {
+  "type": "string",
+  "description": {
+   "en": "Outer radius of an annulus, sector or wedge; defaults to `radius`.",
+   "de": "Außenradius eines Rings, Sektors oder Keils; Vorgabe ist `radius`."
+  }
+ },
+ "semio-viz-mark.sty#0|startAngle": {
+  "type": "number",
+  "default": 0,
+  "description": {
+   "en": "Start angle in radians, clockwise from twelve o'clock as in d3-arc.",
+   "de": "Startwinkel im Bogenmaß, im Uhrzeigersinn ab zwölf Uhr wie in d3-arc."
+  }
+ },
+ "semio-viz-mark.sty#0|endAngle": {
+  "type": "number",
+  "description": {
+   "en": "End angle in radians, clockwise from twelve o'clock; pi/2 by default.",
+   "de": "Endwinkel im Bogenmaß, im Uhrzeigersinn ab zwölf Uhr; Vorgabe pi/2."
+  }
+ },
+ "semio-viz-mark.sty#0|padAngle": {
+  "type": "number",
+  "default": 0,
+  "description": {
+   "en": "Angular padding between two arcs, as in d3-arc.",
+   "de": "Winkelabstand zwischen zwei Bögen, wie in d3-arc."
+  }
+ },
+ "semio-viz-mark.sty#0|padRadius": {
+  "type": "string",
+  "description": {
+   "en": "Radius the angular padding is measured at; empty uses the arc's own radius.",
+   "de": "Radius, an dem der Winkelabstand gemessen wird; leer nimmt den Radius des Bogens."
+  }
+ },
+ "semio-viz-mark.sty#0|cornerRadius": {
+  "type": "number",
+  "default": 0,
+  "description": {
+   "en": "Corner rounding of an arc or a rectangle, in millimetres.",
+   "de": "Eckenrundung eines Bogens oder Rechtecks, in Millimetern."
+  }
+ },
+ "semio-viz-mark.sty#0|route": {
+  "type": "string",
+  "default": "hv",
+  "enum": [
+   "hv",
+   "vh"
+  ],
+  "description": {
+   "en": "Leg order of an orthogonal connector: horizontal first or vertical first.",
+   "de": "Reihenfolge der Schenkel eines rechtwinkligen Verbinders: erst waagerecht oder erst senkrecht."
+  }
+ },
+ "semio-viz-mark.sty#0|curvature": {
+  "type": "number",
+  "default": 0.4,
+  "description": {
+   "en": "Bow of a curved connector, as a fraction of the span.",
+   "de": "Bauch eines gebogenen Verbinders, als Anteil der Spannweite."
+  }
+ },
+ "semio-viz-mark.sty#0|via": {
+  "type": "string",
+  "description": {
+   "en": "Waypoints of a bundled connector.",
+   "de": "Zwischenpunkte eines gebündelten Verbinders."
+  }
+ },
+ "semio-viz-mark.sty#0|concavity": {
+  "type": "number",
+  "default": 20,
+  "description": {
+   "en": "Longest edge a concave hull will not dig into.",
+   "de": "Längste Kante, in die sich eine konkave Hülle nicht eingräbt."
+  }
+ },
+ "semio-viz-mark.sty#0|aspect": {
+  "type": "number",
+  "default": 2,
+  "description": {
+   "en": "Width-to-height ratio of the rectangle mark.",
+   "de": "Verhältnis von Breite zu Höhe der Rechteckmarke."
+  }
+ },
+ "semio-viz-mark.sty#0|symbol": {
+  "type": "string",
+  "default": "circle",
+  "description": {
+   "en": "d3 symbol drawn inside an icon mark.",
+   "de": "d3-Symbol, das in einer Symbolmarke gezeichnet wird."
+  }
+ },
+ "semio-viz-mark.sty#0|file": {
+  "type": "string",
+  "description": {
+   "en": "Image file of an image mark.",
+   "de": "Bilddatei einer Bildmarke."
+  }
+ },
+ "semio-viz-mark.sty#0|extent": {
+  "type": "string",
+  "description": {
+   "en": "`lo,hi` span of a reference band, bracket or brace.",
+   "de": "`lo,hi`-Spanne eines Referenzbandes, einer Klammer oder eines Schweifs."
+  }
+ },
+ "semio-viz-mark.sty#1|targetRadius": {
+  "type": "string",
+  "default": 2,
+  "description": {
+   "en": "Radius of the far side of a ribbon.",
+   "de": "Radius der Gegenseite eines Bandflusses."
+  }
+ },
+ "semio-viz-mark.sty#1|targetStartAngle": {
+  "type": "number",
+  "default": 2,
+  "description": {
+   "en": "Start angle of the far side of a ribbon, in radians.",
+   "de": "Startwinkel der Gegenseite eines Bandflusses, im Bogenmaß."
+  }
+ },
+ "semio-viz-mark.sty#1|targetEndAngle": {
+  "type": "number",
+  "default": 2.8,
+  "description": {
+   "en": "End angle of the far side of a ribbon, in radians.",
+   "de": "Endwinkel der Gegenseite eines Bandflusses, im Bogenmaß."
+  }
+ },
+ "semio-viz-mark.sty#2|width": {
+  "type": "string",
+  "description": {
+   "en": "Width of the text mark's node box; empty lets the text set it.",
+   "de": "Breite des Textkastens der Textmarke; leer bestimmt der Text sie."
+  }
+ },
+ "semio-viz-mark.sty#2|height": {
+  "type": "string",
+  "description": {
+   "en": "Height of the text mark's node box; empty lets the text set it.",
+   "de": "Höhe des Textkastens der Textmarke; leer bestimmt der Text sie."
+  }
+ },
+ "semio-viz-mark.sty#2|anchor": {
+  "type": "string",
+  "description": {
+   "en": "Anchor of the text node relative to the mark's own point.",
+   "de": "Ankerpunkt des Textknotens relativ zum eigenen Punkt der Marke."
+  }
+ },
+ "semio-viz-mark.sty#2|align": {
+  "type": "string",
+  "description": {
+   "en": "Paragraph alignment inside the text node.",
+   "de": "Absatzausrichtung innerhalb des Textknotens."
+  }
+ },
+ "semio-viz-mark.sty#2|style": {
+  "type": "string",
+  "description": {
+   "en": "Further TikZ style applied to the text node.",
+   "de": "Weiterer TikZ-Stil, der auf den Textknoten angewendet wird."
+  }
+ },
+ "semio-viz-mark.sty#2|font": {
+  "type": "string",
+  "description": {
+   "en": "Font of the text node; empty takes the kind's own theme font.",
+   "de": "Schrift des Textknotens; leer übernimmt die Themenschrift der Art."
+  }
+ },
+ "semio-viz-mark.sty#3|data": {
+  "type": "string",
+  "default": "demo",
+  "description": {
+   "en": "Name of the table the mark family reads.",
+   "de": "Name der Tabelle, die die Markenfamilie liest."
+  }
+ },
+ "semio-viz-mark.sty#3|x": {
+  "type": "string",
+  "default": "t",
+  "description": {
+   "en": "Column bound to the horizontal channel.",
+   "de": "Spalte, die dem waagerechten Kanal zugeordnet ist."
+  }
+ },
+ "semio-viz-mark.sty#3|y": {
+  "type": "string",
+  "default": "val",
+  "description": {
+   "en": "Column bound to the vertical channel.",
+   "de": "Spalte, die dem senkrechten Kanal zugeordnet ist."
+  }
+ },
+ "semio-viz-scale.sty#0|nice": {
+  "type": "string",
+  "default": false,
+  "description": {
+   "en": "Extend the domain to round tick values; an integer asks for that many ticks.",
+   "de": "Den Definitionsbereich auf runde Teilstrichwerte erweitern; eine ganze Zahl fordert so viele Teilstriche."
+  }
+ },
+ "semio-viz-scale.sty#0|clamp": {
+  "type": "string",
+  "default": false,
+  "description": {
+   "en": "Clamp inputs outside the domain onto its extent.",
+   "de": "Eingaben außerhalb des Definitionsbereichs auf dessen Grenzen begrenzen."
+  }
+ },
+ "semio-viz-scale.sty#0|paddingInner": {
+  "type": "string",
+  "default": 0,
+  "description": {
+   "en": "Band inner padding, as a fraction of the step.",
+   "de": "Innerer Bandabstand, als Anteil der Schrittweite."
+  }
+ },
+ "semio-viz-scale.sty#0|paddingOuter": {
+  "type": "string",
+  "default": 0,
+  "description": {
+   "en": "Band outer padding, as a fraction of the step.",
+   "de": "Äußerer Bandabstand, als Anteil der Schrittweite."
+  }
+ },
+ "semio-viz-scale.sty#0|align": {
+  "type": "string",
+  "default": 0.5,
+  "description": {
+   "en": "How the leftover space of a band or point scale is distributed, 0 left to 1 right.",
+   "de": "Wie der Restraum einer Band- oder Punktskala verteilt wird, 0 links bis 1 rechts."
+  }
+ },
+ "semio-viz-scale.sty#0|base": {
+  "type": "string",
+  "default": 10,
+  "description": {
+   "en": "Base of the logarithmic scale, used by its tick generator.",
+   "de": "Basis der logarithmischen Skala, verwendet von ihrem Teilstrichgenerator."
+  }
+ },
+ "semio-viz-scale.sty#0|exponent": {
+  "type": "string",
+  "default": 1,
+  "description": {
+   "en": "Exponent of the power scale; the square-root scale fixes it to 0.5.",
+   "de": "Exponent der Potenzskala; die Wurzelskala legt ihn auf 0,5 fest."
+  }
+ },
+ "semio-viz-scale.sty#0|constant": {
+  "type": "string",
+  "default": 1,
+  "description": {
+   "en": "Width of the symlog scale's linear region around zero.",
+   "de": "Breite des linearen Bereichs der Symlog-Skala um null."
+  }
+ },
+ "semio-viz-scale.sty#0|tickValues": {
+  "type": "string",
+  "description": {
+   "en": "Explicit tick values, overriding the generator.",
+   "de": "Ausdrückliche Teilstrichwerte, die den Generator übergehen."
+  }
+ },
+ "semio-viz-scale.sty#0|tickFormat": {
+  "type": "string",
+  "description": {
+   "en": "d3-format specifier for the tick labels.",
+   "de": "d3-format-Angabe für die Teilstrichbeschriftungen."
+  }
+ },
+ "semio-viz-scale.sty#0|interpolator": {
+  "type": "string",
+  "default": "oklab",
+  "description": {
+   "en": "Colour space the sequential and diverging ramps interpolate in.",
+   "de": "Farbraum, in dem die sequenziellen und divergierenden Farbverläufe interpolieren."
+  }
+ },
+ "semio-viz-scale.sty#0|scheme": {
+  "type": "string",
+  "description": {
+   "en": "Named colour scheme, resolved by semio-viz-theme.",
+   "de": "Benanntes Farbschema, aufgelöst von semio-viz-theme."
+  }
+ },
+ "semio-viz-scale.sty#0|reverse": {
+  "type": "string",
+  "default": false,
+  "description": {
+   "en": "Reverse the range, so the domain maps onto it backwards.",
+   "de": "Den Wertebereich umkehren, sodass der Definitionsbereich rückwärts abgebildet wird."
+  }
+ },
+ "semio-viz-scale.sty#0|round": {
+  "type": "string",
+  "default": false,
+  "description": {
+   "en": "Round band positions to whole millimetres.",
+   "de": "Bandpositionen auf ganze Millimeter runden."
+  }
+ },
+ "semio-viz-scale.sty#0|interval": {
+  "type": "string",
+  "default": "auto",
+  "enum": [
+   "auto",
+   "day",
+   "week",
+   "month",
+   "year"
+  ],
+  "description": {
+   "en": "Temporal tick interval.",
+   "de": "Zeitliches Teilstrichintervall."
+  }
+ },
+ "semio-viz-scientific-field.sty#0|data": {
+  "type": "string",
+  "description": {
+   "en": "Name of the source table. A scientific family usually carries its own literal vectors instead, so the table name is recorded for the kinds that do read one rather than refused for the kinds that do not.",
+   "de": "Name der Quelltabelle. Eine wissenschaftliche Familie trägt ihre Vektoren meist selbst als Literale, daher wird der Tabellenname für die Arten festgehalten, die eine Tabelle lesen, statt für die anderen zurückgewiesen zu werden."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|data": {
+  "type": "string",
+  "description": {
+   "en": "Name of the node table the diagram reads; an explicit `nodes` later in the same option list still wins.",
+   "de": "Name der Knotentabelle, die das Diagramm liest; ein späteres ausdrückliches `nodes` in derselben Optionsliste gewinnt weiterhin."
+  }
+ },
+ "semio-viz-guide.sty#0|scale": {
+  "type": "string",
+  "default": "x",
+  "description": {
+   "en": "Name of the scale whose domain the axis describes.",
+   "de": "Name der Skala, deren Definitionsbereich die Achse beschreibt."
+  }
+ },
+ "semio-viz-guide.sty#0|orient": {
+  "type": "string",
+  "default": "bottom",
+  "enum": [
+   "bottom",
+   "top",
+   "left",
+   "right",
+   "segment",
+   "angular",
+   "radial"
+  ],
+  "description": {
+   "en": "Where the axis sits and in which coordinate system it runs.",
+   "de": "Wo die Achse liegt und in welchem Koordinatensystem sie verläuft."
+  }
+ },
+ "semio-viz-guide.sty#0|at": {
+  "type": "string",
+  "description": {
+   "en": "Cross-axis position of the axis line in millimetres; empty puts it on the frame edge.",
+   "de": "Position der Achsenlinie quer zur Achse in Millimetern; leer legt sie an den Rahmenrand."
+  }
+ },
+ "semio-viz-guide.sty#0|offset": {
+  "type": "number",
+  "default": 0,
+  "description": {
+   "en": "Outward shift of the axis line in millimetres, for a second axis beside the first.",
+   "de": "Verschiebung der Achsenlinie nach außen in Millimetern, für eine zweite Achse neben der ersten."
+  }
+ },
+ "semio-viz-guide.sty#0|from": {
+  "type": "string",
+  "description": {
+   "en": "Start point `x,y` of the axis when `orient=segment`.",
+   "de": "Anfangspunkt `x,y` der Achse bei `orient=segment`."
+  }
+ },
+ "semio-viz-guide.sty#0|to": {
+  "type": "string",
+  "description": {
+   "en": "End point `x,y` of the axis when `orient=segment`.",
+   "de": "Endpunkt `x,y` der Achse bei `orient=segment`."
+  }
+ },
+ "semio-viz-guide.sty#0|center": {
+  "type": "string",
+  "description": {
+   "en": "Polar centre `x,y` when `orient=angular` or `radial`; empty is the frame centre.",
+   "de": "Polarmittelpunkt `x,y` bei `orient=angular` oder `radial`; leer ist die Rahmenmitte."
+  }
+ },
+ "semio-viz-guide.sty#0|innerRadius": {
+  "type": "number",
+  "default": 0,
+  "description": {
+   "en": "Polar inner radius in millimetres.",
+   "de": "Innerer Polarradius in Millimetern."
+  }
+ },
+ "semio-viz-guide.sty#0|outerRadius": {
+  "type": "number",
+  "description": {
+   "en": "Polar outer radius in millimetres; the default is half the smaller frame side minus the padding.",
+   "de": "Äußerer Polarradius in Millimetern; Vorgabe ist die halbe kleinere Rahmenseite abzüglich des Randes."
+  }
+ },
+ "semio-viz-guide.sty#0|startAngle": {
+  "type": "number",
+  "default": 0,
+  "description": {
+   "en": "Start of the angular sweep in degrees.",
+   "de": "Beginn des Winkelbereichs in Grad."
+  }
+ },
+ "semio-viz-guide.sty#0|endAngle": {
+  "type": "number",
+  "default": 360,
+  "description": {
+   "en": "End of the angular sweep in degrees.",
+   "de": "Ende des Winkelbereichs in Grad."
+  }
+ },
+ "semio-viz-guide.sty#0|angle": {
+  "type": "number",
+  "default": 90,
+  "description": {
+   "en": "Direction of a radial axis in degrees.",
+   "de": "Richtung einer radialen Achse in Grad."
+  }
+ },
+ "semio-viz-guide.sty#0|titleAnchor": {
+  "type": "string",
+  "default": "middle",
+  "enum": [
+   "start",
+   "middle",
+   "end"
+  ],
+  "description": {
+   "en": "Where the axis title sits along the axis.",
+   "de": "Wo der Achsentitel entlang der Achse sitzt."
+  }
+ },
+ "semio-viz-guide.sty#0|titleGap": {
+  "type": "number",
+  "default": 5,
+  "description": {
+   "en": "Distance from the tick labels to the axis title, in millimetres.",
+   "de": "Abstand von den Teilstrichbeschriftungen zum Achsentitel, in Millimetern."
+  }
+ },
+ "semio-viz-guide.sty#0|tickSize": {
+  "type": "number",
+  "default": 1.4,
+  "description": {
+   "en": "Inner tick length in millimetres.",
+   "de": "Innere Teilstrichlänge in Millimetern."
+  }
+ },
+ "semio-viz-guide.sty#0|tickSizeOuter": {
+  "type": "number",
+  "default": 1.4,
+  "description": {
+   "en": "Length of the domain line's end caps, in millimetres.",
+   "de": "Länge der Endkappen der Achsenlinie, in Millimetern."
+  }
+ },
+ "semio-viz-guide.sty#0|tickPadding": {
+  "type": "number",
+  "default": 0.8,
+  "description": {
+   "en": "Gap between the end of a tick and its label, in millimetres.",
+   "de": "Abstand zwischen Teilstrichende und Beschriftung, in Millimetern."
+  }
+ },
+ "semio-viz-guide.sty#0|minor": {
+  "type": "boolean",
+  "default": false,
+  "description": {
+   "en": "Draw minor ticks between the major ones.",
+   "de": "Nebenteilstriche zwischen den Hauptteilstrichen zeichnen."
+  }
+ },
+ "semio-viz-guide.sty#0|minorTicks": {
+  "type": "integer",
+  "default": 4,
+  "description": {
+   "en": "Minor subdivisions per major interval.",
+   "de": "Nebenunterteilungen je Hauptintervall."
+  }
+ },
+ "semio-viz-guide.sty#0|minorSize": {
+  "type": "number",
+  "default": 0.7,
+  "description": {
+   "en": "Minor tick length in millimetres.",
+   "de": "Länge eines Nebenteilstrichs in Millimetern."
+  }
+ },
+ "semio-viz-guide.sty#0|grid": {
+  "type": "boolean",
+  "default": false,
+  "description": {
+   "en": "Draw a grid line at every major tick.",
+   "de": "An jedem Hauptteilstrich eine Gitterlinie zeichnen."
+  }
+ },
+ "semio-viz-guide.sty#0|gridLength": {
+  "type": "string",
+  "description": {
+   "en": "Grid line length in millimetres; empty runs it across the plot area.",
+   "de": "Länge der Gitterlinie in Millimetern; leer zieht sie über die Zeichenfläche."
+  }
+ },
+ "semio-viz-guide.sty#0|domainLine": {
+  "type": "boolean",
+  "default": true,
+  "description": {
+   "en": "Draw the axis line itself.",
+   "de": "Die Achsenlinie selbst zeichnen."
+  }
+ },
+ "semio-viz-guide.sty#0|labelRotate": {
+  "type": "number",
+  "default": 0,
+  "description": {
+   "en": "Tick label rotation in degrees.",
+   "de": "Drehung der Teilstrichbeschriftungen in Grad."
+  }
+ },
+ "semio-viz-guide.sty#0|labelAlign": {
+  "type": "string",
+  "default": "auto",
+  "enum": [
+   "auto",
+   "start",
+   "middle",
+   "end"
+  ],
+  "description": {
+   "en": "Alignment of a tick label against its tick.",
+   "de": "Ausrichtung einer Teilstrichbeschriftung zu ihrem Teilstrich."
+  }
+ },
+ "semio-viz-guide.sty#0|labels": {
+  "type": "boolean",
+  "default": true,
+  "description": {
+   "en": "Draw the tick labels.",
+   "de": "Die Teilstrichbeschriftungen zeichnen."
+  }
+ },
+ "semio-viz-guide.sty#0|broken": {
+  "type": "string",
+  "description": {
+   "en": "Data interval `lo,hi` removed from the axis; empty keeps the axis unbroken.",
+   "de": "Datenintervall `lo,hi`, das aus der Achse entfernt wird; leer lässt die Achse ungebrochen."
+  }
+ },
+ "semio-viz-guide.sty#0|breakGap": {
+  "type": "number",
+  "default": 2,
+  "description": {
+   "en": "Width the removed interval collapses to, in millimetres.",
+   "de": "Breite, auf die das entfernte Intervall zusammenfällt, in Millimetern."
+  }
+ },
+ "semio-viz-guide.sty#0|breakMarks": {
+  "type": "integer",
+  "default": 2,
+  "description": {
+   "en": "Slashes drawn across the break.",
+   "de": "Schrägstriche, die über den Bruch gezeichnet werden."
+  }
+ },
+ "semio-viz-guide.sty#1|scale": {
+  "type": "string",
+  "description": {
+   "en": "Name of the scale the legend entries come from.",
+   "de": "Name der Skala, aus der die Legendeneinträge stammen."
+  }
+ },
+ "semio-viz-guide.sty#1|kind": {
+  "type": "string",
+  "default": "swatch",
+  "enum": [
+   "swatch",
+   "line",
+   "symbol",
+   "gradient",
+   "size",
+   "pattern"
+  ],
+  "description": {
+   "en": "How one legend entry depicts its value.",
+   "de": "Wie ein Legendeneintrag seinen Wert darstellt."
+  }
+ },
+ "semio-viz-guide.sty#1|orient": {
+  "type": "string",
+  "default": "vertical",
+  "enum": [
+   "horizontal",
+   "vertical"
+  ],
+  "description": {
+   "en": "Direction the legend entries are stacked in.",
+   "de": "Richtung, in der die Legendeneinträge gestapelt werden."
+  }
+ },
+ "semio-viz-guide.sty#1|at": {
+  "type": "string",
+  "description": {
+   "en": "Top-left corner `x,y` of the legend; empty places it inside the frame's top right.",
+   "de": "Linke obere Ecke `x,y` der Legende; leer setzt sie in die rechte obere Rahmenecke."
+  }
+ },
+ "semio-viz-guide.sty#1|title": {
+  "type": "string",
+  "description": {
+   "en": "Legend title.",
+   "de": "Titel der Legende."
+  }
+ },
+ "semio-viz-guide.sty#1|format": {
+  "type": "string",
+  "description": {
+   "en": "semio-viz-format specifier for numeric entries.",
+   "de": "semio-viz-format-Angabe für numerische Einträge."
+  }
+ },
+ "semio-viz-guide.sty#1|itemGap": {
+  "type": "number",
+  "default": 1.2,
+  "description": {
+   "en": "Gap between two legend entries, in millimetres.",
+   "de": "Abstand zwischen zwei Legendeneinträgen, in Millimetern."
+  }
+ },
+ "semio-viz-guide.sty#1|labelGap": {
+  "type": "number",
+  "default": 1.2,
+  "description": {
+   "en": "Gap between a swatch and its label, in millimetres.",
+   "de": "Abstand zwischen einem Farbfeld und seiner Beschriftung, in Millimetern."
+  }
+ },
+ "semio-viz-guide.sty#1|swatchSize": {
+  "type": "number",
+  "default": 2.6,
+  "description": {
+   "en": "Edge length of one swatch, in millimetres.",
+   "de": "Kantenlänge eines Farbfelds, in Millimetern."
+  }
+ },
+ "semio-viz-guide.sty#1|length": {
+  "type": "number",
+  "default": 24,
+  "description": {
+   "en": "Length of the gradient bar, in millimetres.",
+   "de": "Länge des Farbverlaufsbalkens, in Millimetern."
+  }
+ },
+ "semio-viz-guide.sty#1|symbol": {
+  "type": "string",
+  "default": "circle",
+  "enum": [
+   "circle",
+   "square",
+   "triangle",
+   "diamond"
+  ],
+  "description": {
+   "en": "Glyph drawn for a symbol legend.",
+   "de": "Zeichen, das für eine Symbollegende gezeichnet wird."
+  }
+ },
+ "semio-viz-guide.sty#1|hatchLines": {
+  "type": "integer",
+  "default": 3,
+  "description": {
+   "en": "Hatch lines drawn across a pattern swatch.",
+   "de": "Schraffurlinien über einem Musterfeld."
+  }
+ },
+ "semio-viz-hierarchy.sty#0|data": {
+  "type": "string",
+  "description": {
+   "en": "Name of the table the tree is built from; required.",
+   "de": "Name der Tabelle, aus der der Baum gebaut wird; erforderlich."
+  }
+ },
+ "semio-viz-hierarchy.sty#0|id": {
+  "type": "string",
+  "description": {
+   "en": "Column holding the node identifier; the table's id role by default.",
+   "de": "Spalte mit der Knotenkennung; standardmäßig die id-Rolle der Tabelle."
+  }
+ },
+ "semio-viz-hierarchy.sty#0|parent": {
+  "type": "string",
+  "description": {
+   "en": "Column holding the parent identifier; the table's parent role by default.",
+   "de": "Spalte mit der Elternkennung; standardmäßig die parent-Rolle der Tabelle."
+  }
+ },
+ "semio-viz-hierarchy.sty#0|value": {
+  "type": "string",
+  "description": {
+   "en": "Column holding a node's own value; `none` disables it, the table's value role is the default.",
+   "de": "Spalte mit dem Eigenwert eines Knotens; `none` schaltet ihn ab, Vorgabe ist die value-Rolle der Tabelle."
+  }
+ },
+ "semio-viz-hierarchy.sty#0|delimiter": {
+  "type": "string",
+  "default": "/",
+  "description": {
+   "en": "Single token separating the segments of a path-shaped identifier.",
+   "de": "Einzelzeichen, das die Segmente einer pfadförmigen Kennung trennt."
+  }
+ },
+ "semio-viz-hierarchy.sty#0|aggregate": {
+  "type": "string",
+  "default": "sum",
+  "enum": [
+   "sum",
+   "count",
+   "none"
+  ],
+  "description": {
+   "en": "How a branch's value is derived from its children.",
+   "de": "Wie sich der Wert eines Astes aus seinen Kindern ergibt."
+  }
+ },
+ "semio-viz-hierarchy.sty#1|size": {
+  "type": "string",
+  "description": {
+   "en": "Extent `w,h` the layout fills, in millimetres.",
+   "de": "Ausdehnung `w,h`, die das Layout füllt, in Millimetern."
+  }
+ },
+ "semio-viz-hierarchy.sty#1|nodeSize": {
+  "type": "string",
+  "description": {
+   "en": "Extent `w,h` repeated per node instead of a fixed layout box.",
+   "de": "Ausdehnung `w,h`, die je Knoten wiederholt wird, statt eines festen Layoutkastens."
+  }
+ },
+ "semio-viz-hierarchy.sty#1|separationSame": {
+  "type": "number",
+  "description": {
+   "en": "Separation between two siblings of the same parent.",
+   "de": "Abstand zwischen zwei Geschwistern desselben Elternknotens."
+  }
+ },
+ "semio-viz-hierarchy.sty#1|radial": {
+  "type": "boolean",
+  "default": false,
+  "description": {
+   "en": "Lay the tree out radially instead of along a straight axis.",
+   "de": "Den Baum radial statt entlang einer geraden Achse anordnen."
+  }
+ },
+ "semio-viz-hierarchy.sty#1|ratio": {
+  "type": "number",
+  "description": {
+   "en": "Target aspect ratio of the squarify and strip tilings; the golden ratio by default.",
+   "de": "Ziel-Seitenverhältnis der Squarify- und Strip-Parkettierung; standardmäßig der goldene Schnitt."
+  }
+ },
+ "semio-viz-hierarchy.sty#1|paddingInner": {
+  "type": "number",
+  "default": 0,
+  "description": {
+   "en": "Treemap gap between two siblings, in millimetres.",
+   "de": "Treemap-Abstand zwischen zwei Geschwistern, in Millimetern."
+  }
+ },
+ "semio-viz-hierarchy.sty#1|paddingOuter": {
+  "type": "string",
+  "default": 0,
+  "description": {
+   "en": "Treemap gap inside a parent, on all four sides, in millimetres.",
+   "de": "Treemap-Abstand innerhalb eines Elternknotens, auf allen vier Seiten, in Millimetern."
+  }
+ },
+ "semio-viz-hierarchy.sty#1|paddingTop": {
+  "type": "number",
+  "default": 0,
+  "description": {
+   "en": "Treemap gap inside a parent along its top edge, in millimetres.",
+   "de": "Treemap-Abstand innerhalb eines Elternknotens an dessen Oberkante, in Millimetern."
+  }
+ },
+ "semio-viz-hierarchy.sty#1|paddingRight": {
+  "type": "number",
+  "default": 0,
+  "description": {
+   "en": "Treemap gap inside a parent along its right edge, in millimetres.",
+   "de": "Treemap-Abstand innerhalb eines Elternknotens an dessen rechter Kante, in Millimetern."
+  }
+ },
+ "semio-viz-hierarchy.sty#1|paddingBottom": {
+  "type": "number",
+  "default": 0,
+  "description": {
+   "en": "Treemap gap inside a parent along its bottom edge, in millimetres.",
+   "de": "Treemap-Abstand innerhalb eines Elternknotens an dessen Unterkante, in Millimetern."
+  }
+ },
+ "semio-viz-hierarchy.sty#1|paddingLeft": {
+  "type": "number",
+  "default": 0,
+  "description": {
+   "en": "Treemap gap inside a parent along its left edge, in millimetres.",
+   "de": "Treemap-Abstand innerhalb eines Elternknotens an dessen linker Kante, in Millimetern."
+  }
+ },
+ "semio-viz-hierarchy.sty#2|width": {
+  "type": "number",
+  "description": {
+   "en": "Canvas width in millimetres; the figure frame's own width by default.",
+   "de": "Zeichenflächenbreite in Millimetern; standardmäßig die Breite des Abbildungsrahmens."
+  }
+ },
+ "semio-viz-hierarchy.sty#2|height": {
+  "type": "number",
+  "description": {
+   "en": "Canvas height in millimetres; the figure frame's own height by default.",
+   "de": "Zeichenflächenhöhe in Millimetern; standardmäßig die Höhe des Abbildungsrahmens."
+  }
+ },
+ "semio-viz-hierarchy.sty#2|inset": {
+  "type": "number",
+  "default": 4,
+  "description": {
+   "en": "Margin kept free inside the canvas, in millimetres.",
+   "de": "Innerhalb der Zeichenfläche freigehaltener Rand, in Millimetern."
+  }
+ },
+ "semio-viz-hierarchy.sty#2|labelColumn": {
+  "type": "string",
+  "description": {
+   "en": "Column holding the caption; the table's label role by default.",
+   "de": "Spalte mit der Beschriftung; standardmäßig die label-Rolle der Tabelle."
+  }
+ },
+ "semio-viz-hierarchy.sty#2|leafLabels": {
+  "type": "boolean",
+  "default": false,
+  "description": {
+   "en": "Put labels on the leaves only.",
+   "de": "Beschriftungen nur an den Blättern anbringen."
+  }
+ },
+ "semio-viz-hierarchy.sty#2|opacity": {
+  "type": "number",
+  "default": 1,
+  "description": {
+   "en": "Fill opacity of a node, between 0 and 1.",
+   "de": "Deckkraft der Knotenfüllung, zwischen 0 und 1."
+  }
+ },
+ "semio-viz-hierarchy.sty#2|stroke": {
+  "type": "string",
+  "default": "semio-chrome-foreground",
+  "description": {
+   "en": "Stroke colour token of a node outline.",
+   "de": "Farbtoken der Knotenkontur."
+  }
+ },
+ "semio-viz-hierarchy.sty#2|strokeWidth": {
+  "type": "string",
+  "description": {
+   "en": "Stroke width of a node outline as a TeX dimension; the hairline token by default.",
+   "de": "Konturbreite eines Knotens als TeX-Dimension; standardmäßig das Haarlinien-Token."
+  }
+ },
+ "semio-viz-data.sty#0|parent": {
+  "type": "string",
+  "description": {
+   "en": "Column carrying the parent role of a declared structure.",
+   "de": "Spalte, die die parent-Rolle einer deklarierten Struktur trägt."
+  }
+ },
+ "semio-viz-data.sty#0|value": {
+  "type": "string",
+  "description": {
+   "en": "Column carrying the value role of a declared structure.",
+   "de": "Spalte, die die value-Rolle einer deklarierten Struktur trägt."
+  }
+ },
+ "semio-viz-data.sty#0|edges": {
+  "type": "string",
+  "description": {
+   "en": "Name of the table holding the edge rows of a declared graph.",
+   "de": "Name der Tabelle mit den Kantenzeilen eines deklarierten Graphen."
+  }
+ },
+ "semio-viz-data.sty#0|row": {
+  "type": "string",
+  "description": {
+   "en": "Column carrying the row role of a declared grid.",
+   "de": "Spalte, die die row-Rolle eines deklarierten Rasters trägt."
+  }
+ },
+ "semio-viz-data.sty#0|col": {
+  "type": "string",
+  "description": {
+   "en": "Column carrying the column role of a declared grid.",
+   "de": "Spalte, die die column-Rolle eines deklarierten Rasters trägt."
+  }
+ },
+ "semio-viz-data.sty#0|ring": {
+  "type": "string",
+  "description": {
+   "en": "Column grouping consecutive rows into one polygon ring.",
+   "de": "Spalte, die aufeinanderfolgende Zeilen zu einem Polygonring gruppiert."
+  }
+ },
+ "semio-viz-data.sty#0|lon": {
+  "type": "string",
+  "description": {
+   "en": "Column carrying the longitude role in degrees.",
+   "de": "Spalte, die die Längengrad-Rolle in Grad trägt."
+  }
+ },
+ "semio-viz-data.sty#0|lat": {
+  "type": "string",
+  "description": {
+   "en": "Column carrying the latitude role in degrees.",
+   "de": "Spalte, die die Breitengrad-Rolle in Grad trägt."
+  }
+ },
+ "semio-viz-data.sty#0|domain": {
+  "type": "string",
+  "description": {
+   "en": "Input interval `min,max` a generated table is sampled over.",
+   "de": "Eingabeintervall `min,max`, über dem eine erzeugte Tabelle abgetastet wird."
+  }
+ },
+ "semio-viz-data.sty#0|samples": {
+  "type": "integer",
+  "description": {
+   "en": "Number of samples a generated table carries.",
+   "de": "Anzahl der Abtastwerte einer erzeugten Tabelle."
+  }
+ },
+ "semio-viz-data.sty#0|delimiter": {
+  "type": "string",
+  "description": {
+   "en": "Field separator the CSV reader splits a line on.",
+   "de": "Feldtrennzeichen, an dem der CSV-Leser eine Zeile teilt."
+  }
+ },
+ "semio-viz-data.sty#0|quote": {
+  "type": "string",
+  "description": {
+   "en": "Quote character the CSV reader honours inside a field.",
+   "de": "Anführungszeichen, das der CSV-Leser innerhalb eines Feldes beachtet."
+  }
+ },
+ "semio-viz-data.sty#0|header": {
+  "type": "boolean",
+  "default": true,
+  "description": {
+   "en": "Read the first CSV line as the column names.",
+   "de": "Die erste CSV-Zeile als Spaltennamen lesen."
+  }
+ },
+ "semio-viz-data.sty#1|id": {
+  "type": "string",
+  "description": {
+   "en": "Column holding the identity of one geometry part.",
+   "de": "Spalte mit der Kennung eines Geometrieteils."
+  }
+ },
+ "semio-viz-data.sty#2|ring": {
+  "type": "string",
+  "default": "ring",
+  "description": {
+   "en": "Column grouping consecutive rows into one polygon ring of the built collection.",
+   "de": "Spalte, die aufeinanderfolgende Zeilen zu einem Polygonring der gebauten Sammlung gruppiert."
+  }
+ },
+ "semio-viz-data.sty#2|lon": {
+  "type": "string",
+  "default": "lon",
+  "description": {
+   "en": "Column holding the longitude of a vertex, in degrees.",
+   "de": "Spalte mit dem Längengrad eines Stützpunkts, in Grad."
+  }
+ },
+ "semio-viz-data.sty#2|lat": {
+  "type": "string",
+  "default": "lat",
+  "description": {
+   "en": "Column holding the latitude of a vertex, in degrees.",
+   "de": "Spalte mit dem Breitengrad eines Stützpunkts, in Grad."
+  }
+ },
+ "semio-viz-data.sty#2|value": {
+  "type": "string",
+  "description": {
+   "en": "Column holding the value carried by a built geometry part.",
+   "de": "Spalte mit dem Wert, den ein gebautes Geometrieteil trägt."
+  }
+ },
+ "semio-viz-transform.sty#0|filter": {
+  "type": "string",
+  "description": {
+   "en": "Floating-point predicate over bare column names, for example `val > 4 && val2 < 6`.",
+   "de": "Gleitkomma-Prädikat über blanken Spaltennamen, etwa `val > 4 && val2 < 6`."
+  }
+ },
+ "semio-viz-transform.sty#0|sort": {
+  "type": "string",
+  "description": {
+   "en": "Column to sort by; `descending` reverses the order.",
+   "de": "Spalte, nach der sortiert wird; `descending` kehrt die Reihenfolge um."
+  }
+ },
+ "semio-viz-transform.sty#0|rollup": {
+  "type": "string",
+  "description": {
+   "en": "`<agg>:<column>`, where the aggregate is sum, mean, min, max, count or median.",
+   "de": "`<agg>:<column>`, wobei die Aggregation sum, mean, min, max, count oder median ist."
+  }
+ },
+ "semio-viz-transform.sty#0|bin": {
+  "type": "string",
+  "description": {
+   "en": "Column binned into the columns `x0`, `x1` and `count`.",
+   "de": "Spalte, die in die Spalten `x0`, `x1` und `count` klassiert wird."
+  }
+ },
+ "semio-viz-transform.sty#0|thresholds": {
+  "type": "string",
+  "description": {
+   "en": "`sturges`, `count:<n>`, `width:<w>`, or an explicit `a;b;c` list of bin edges.",
+   "de": "`sturges`, `count:<n>`, `width:<w>`, oder eine ausdrückliche `a;b;c`-Liste von Klassengrenzen."
+  }
+ },
+ "semio-viz-transform.sty#0|stack": {
+  "type": "string",
+  "description": {
+   "en": "`<xColumn>:<seriesColumn>:<valueColumn>`, stacked into `x`, `series`, `y0` and `y1`.",
+   "de": "`<xColumn>:<seriesColumn>:<valueColumn>`, gestapelt zu `x`, `series`, `y0` und `y1`."
+  }
+ },
+ "semio-viz-transform.sty#0|offset": {
+  "type": "string",
+  "description": {
+   "en": "Stack offset: none, expand, diverging, silhouette or wiggle.",
+   "de": "Stapelversatz: none, expand, diverging, silhouette oder wiggle."
+  }
+ },
+ "semio-viz-transform.sty#0|order": {
+  "type": "string",
+  "description": {
+   "en": "Stack order: none, ascending, descending, inside-out, reverse or appearance.",
+   "de": "Stapelreihenfolge: none, ascending, descending, inside-out, reverse oder appearance."
+  }
+ },
+ "semio-viz-transform.sty#0|kde": {
+  "type": "string",
+  "description": {
+   "en": "Column estimated into the columns `x` and `density`.",
+   "de": "Spalte, die zu den Spalten `x` und `density` geschätzt wird."
+  }
+ },
+ "semio-viz-transform.sty#0|kernel": {
+  "type": "string",
+  "enum": [
+   "gaussian",
+   "epanechnikov"
+  ],
+  "description": {
+   "en": "Kernel the density estimate uses.",
+   "de": "Kern, den die Dichteschätzung verwendet."
+  }
+ },
+ "semio-viz-transform.sty#0|bandwidth": {
+  "type": "string",
+  "description": {
+   "en": "Kernel bandwidth; `0` selects Silverman's rule of thumb.",
+   "de": "Kernbandbreite; `0` wählt Silvermans Faustregel."
+  }
+ },
+ "semio-viz-transform.sty#0|quantile": {
+  "type": "string",
+  "description": {
+   "en": "Column reduced to the columns `p` and `value`.",
+   "de": "Spalte, die auf die Spalten `p` und `value` reduziert wird."
+  }
+ },
+ "semio-viz-transform.sty#0|probabilities": {
+  "type": "string",
+  "default": "0,0.25,0.5,0.75,1",
+  "description": {
+   "en": "Probabilities the quantile operation evaluates.",
+   "de": "Wahrscheinlichkeiten, die die Quantiloperation auswertet."
+  }
+ },
+ "semio-viz-transform.sty#0|regression": {
+  "type": "string",
+  "description": {
+   "en": "`<kind>:<xColumn>:<yColumn>`, where the kind is linear, poly, exp, log or pow.",
+   "de": "`<kind>:<xColumn>:<yColumn>`, wobei die Art linear, poly, exp, log oder pow ist."
+  }
+ },
+ "semio-viz-transform.sty#0|degree": {
+  "type": "integer",
+  "default": 2,
+  "description": {
+   "en": "Polynomial degree of a `poly` regression.",
+   "de": "Polynomgrad einer `poly`-Regression."
+  }
+ },
+ "semio-viz-transform.sty#0|window": {
+  "type": "string",
+  "description": {
+   "en": "`<kind>:<column>:<size>`, where the kind is movingAverage, cumulativeSum, rank or lag.",
+   "de": "`<kind>:<column>:<size>`, wobei die Art movingAverage, cumulativeSum, rank oder lag ist."
+  }
+ },
+ "semio-viz-transform.sty#0|normalize": {
+  "type": "string",
+  "description": {
+   "en": "Column divided by the sum of its own values.",
+   "de": "Spalte, die durch die Summe ihrer eigenen Werte geteilt wird."
+  }
+ },
+ "semio-viz-transform.sty#0|fold": {
+  "type": "string",
+  "description": {
+   "en": "`<idColumn>:<c1>;<c2>;…`, folded into the long-form columns `key` and `value`.",
+   "de": "`<idColumn>:<c1>;<c2>;…`, gefaltet zu den Langform-Spalten `key` und `value`."
+  }
+ },
+ "semio-viz-transform.sty#0|pivot": {
+  "type": "string",
+  "description": {
+   "en": "`<keyColumn>:<valueColumn>`; the group column stays as the row key.",
+   "de": "`<keyColumn>:<valueColumn>`; die Gruppenspalte bleibt der Zeilenschlüssel."
+  }
+ },
+ "semio-viz-transform.sty#0|join": {
+  "type": "string",
+  "description": {
+   "en": "`<table>:<leftColumn>:<rightColumn>`, an inner join on equal keys.",
+   "de": "`<table>:<leftColumn>:<rightColumn>`, ein innerer Verbund über gleiche Schlüssel."
+  }
+ },
+ "semio-viz-annotation.sty#0|text": {
+  "type": "string",
+  "description": {
+   "en": "Text the annotation prints.",
+   "de": "Text, den die Anmerkung setzt."
+  }
+ },
+ "semio-viz-annotation.sty#0|anchor": {
+  "type": "string",
+  "default": "south west",
+  "description": {
+   "en": "TikZ anchor of the annotation's text node.",
+   "de": "TikZ-Anker des Textknotens der Anmerkung."
+  }
+ },
+ "semio-viz-annotation.sty#0|rotate": {
+  "type": "number",
+  "default": 0,
+  "description": {
+   "en": "Text rotation in degrees.",
+   "de": "Textdrehung in Grad."
+  }
+ },
+ "semio-viz-annotation.sty#0|color": {
+  "type": "string",
+  "description": {
+   "en": "Colour token of the annotation; empty takes the theme's annotation role.",
+   "de": "Farbtoken der Anmerkung; leer übernimmt die Anmerkungsrolle des Themas."
+  }
+ },
+ "semio-viz-annotation.sty#0|arrow": {
+  "type": "boolean",
+  "default": true,
+  "description": {
+   "en": "Draw an arrow tip on a callout or a leader.",
+   "de": "Eine Pfeilspitze an Sprechblase oder Führungslinie zeichnen."
+  }
+ },
+ "semio-viz-annotation.sty#0|dash": {
+  "type": "boolean",
+  "default": false,
+  "description": {
+   "en": "Stroke the annotation dashed.",
+   "de": "Die Anmerkung gestrichelt zeichnen."
+  }
+ },
+ "semio-viz-annotation.sty#0|size": {
+  "type": "number",
+  "default": 1,
+  "description": {
+   "en": "Marker radius in millimetres.",
+   "de": "Markenradius in Millimetern."
+  }
+ },
+ "semio-viz-annotation.sty#0|depth": {
+  "type": "number",
+  "default": 1.6,
+  "description": {
+   "en": "Bracket arm length or brace amplitude, in millimetres.",
+   "de": "Armlänge einer Klammer oder Amplitude eines Schweifs, in Millimetern."
+  }
+ },
+ "semio-viz-annotation.sty#0|fillOpacity": {
+  "type": "number",
+  "default": 0.12,
+  "description": {
+   "en": "Fill opacity of a highlight or a reference band.",
+   "de": "Füllungsdeckkraft einer Hervorhebung oder eines Referenzbandes."
+  }
+ },
+ "semio-viz-annotation.sty#0|span": {
+  "type": "boolean",
+  "default": true,
+  "description": {
+   "en": "Let a reference line span the whole plot area.",
+   "de": "Eine Referenzlinie über die gesamte Zeichenfläche ziehen."
+  }
+ },
+ "semio-viz-annotation.sty#0|shape": {
+  "type": "string",
+  "default": "rect",
+  "enum": [
+   "rect",
+   "ellipse",
+   "polygon"
+  ],
+  "description": {
+   "en": "Outline a highlight is drawn with.",
+   "de": "Umriss, mit dem eine Hervorhebung gezeichnet wird."
+  }
+ },
+ "semio-viz-annotation.sty#0|points": {
+  "type": "string",
+  "description": {
+   "en": "Polygon outline `{x,y}{x,y}…` of a polygon highlight.",
+   "de": "Polygonumriss `{x,y}{x,y}…` einer Polygon-Hervorhebung."
+  }
+ },
+ "semio-viz-annotation.sty#0|x2": {
+  "type": "string",
+  "description": {
+   "en": "Second data coordinate on the x axis: the far end of a band, the opposite corner of a highlight.",
+   "de": "Zweite Datenkoordinate auf der x-Achse: das ferne Ende eines Bandes, die Gegenecke einer Hervorhebung."
+  }
+ },
+ "semio-viz-composition.sty#0|style": {
+  "type": "string",
+  "description": {
+   "en": "TikZ style scoped to the layer.",
+   "de": "TikZ-Stil, der auf die Ebene beschränkt ist."
+  }
+ },
+ "semio-viz-composition.sty#0|name": {
+  "type": "string",
+  "description": {
+   "en": "Name of the layer, so a later reference can address it.",
+   "de": "Name der Ebene, damit eine spätere Referenz sie ansprechen kann."
+  }
+ },
+ "semio-viz-composition.sty#0|opacity": {
+  "type": "number",
+  "description": {
+   "en": "Draw opacity of everything inside the layer.",
+   "de": "Zeichendeckkraft von allem innerhalb der Ebene."
+  }
+ },
+ "semio-viz-composition.sty#1|direction": {
+  "type": "string",
+  "description": {
+   "en": "Direction the concatenated items are laid out in.",
+   "de": "Richtung, in der die aneinandergereihten Elemente angeordnet werden."
+  }
+ },
+ "semio-viz-composition.sty#2|frame": {
+  "type": "boolean",
+  "description": {
+   "en": "Draw a frame around the inset.",
+   "de": "Einen Rahmen um das Einsatzbild zeichnen."
+  }
+ },
+ "semio-viz-composition.sty#2|link": {
+  "type": "boolean",
+  "description": {
+   "en": "Join the inset to the host region it magnifies.",
+   "de": "Das Einsatzbild mit der vergrößerten Wirtsregion verbinden."
+  }
+ },
+ "semio-viz-composition.sty#2|zoom": {
+  "type": "string",
+  "description": {
+   "en": "Host region `x1,y1,x2,y2` the inset magnifies, marked with a rectangle on the host.",
+   "de": "Wirtsregion `x1,y1,x2,y2`, die das Einsatzbild vergrößert, auf dem Wirt als Rechteck markiert."
+  }
+ },
+ "semio-viz-composition.sty#3|rows": {
+  "type": "integer",
+  "description": {
+   "en": "Rows of the dashboard grid.",
+   "de": "Zeilen des Dashboard-Rasters."
+  }
+ },
+ "semio-viz-composition.sty#4|colspan": {
+  "type": "integer",
+  "default": 1,
+  "description": {
+   "en": "Columns of the dashboard grid one cell spans.",
+   "de": "Spalten des Dashboard-Rasters, über die sich eine Zelle erstreckt."
+  }
+ },
+ "semio-viz-composition.sty#4|rowspan": {
+  "type": "integer",
+  "default": 1,
+  "description": {
+   "en": "Rows of the dashboard grid one cell spans.",
+   "de": "Zeilen des Dashboard-Rasters, über die sich eine Zelle erstreckt."
+  }
+ },
+ "semio-viz-composition.sty#5|panels": {
+  "type": "integer",
+  "default": 6,
+  "description": {
+   "en": "Cells the dashboard-shaped variants lay out.",
+   "de": "Zellen, die die dashboardförmigen Varianten anlegen."
+  }
+ },
+ "semio-viz-composition.sty#5|panelColumns": {
+  "type": "integer",
+  "default": 3,
+  "description": {
+   "en": "Columns of that dashboard grid.",
+   "de": "Spalten dieses Dashboard-Rasters."
+  }
+ },
+ "semio-viz-facet.sty#0|row": {
+  "type": "string",
+  "description": {
+   "en": "Group values, one panel row each.",
+   "de": "Gruppenwerte, je einer eine Tafelzeile."
+  }
+ },
+ "semio-viz-facet.sty#0|column": {
+  "type": "string",
+  "description": {
+   "en": "Group values, one panel column each.",
+   "de": "Gruppenwerte, je einer eine Tafelspalte."
+  }
+ },
+ "semio-viz-facet.sty#0|wrap": {
+  "type": "string",
+  "description": {
+   "en": "Group values laid out left to right and wrapped into `columns`.",
+   "de": "Gruppenwerte, von links nach rechts angeordnet und in `columns` umbrochen."
+  }
+ },
+ "semio-viz-facet.sty#0|width": {
+  "type": "string",
+  "description": {
+   "en": "Total width of the facet block in millimetres; empty takes the figure width.",
+   "de": "Gesamtbreite des Tafelblocks in Millimetern; leer übernimmt die Abbildungsbreite."
+  }
+ },
+ "semio-viz-facet.sty#0|height": {
+  "type": "string",
+  "description": {
+   "en": "Total height of the facet block in millimetres; empty takes the figure height.",
+   "de": "Gesamthöhe des Tafelblocks in Millimetern; leer übernimmt die Abbildungshöhe."
+  }
+ },
+ "semio-viz-facet.sty#0|pad": {
+  "type": "number",
+  "default": 6,
+  "description": {
+   "en": "Plot inset inside each panel, in millimetres.",
+   "de": "Zeichenrand innerhalb jeder Tafel, in Millimetern."
+  }
+ },
+ "semio-viz-facet.sty#0|header": {
+  "type": "boolean",
+  "default": true,
+  "description": {
+   "en": "Draw the group value above each panel.",
+   "de": "Den Gruppenwert über jeder Tafel zeichnen."
+  }
+ },
+ "semio-viz-facet.sty#0|headerGap": {
+  "type": "number",
+  "default": 3.4,
+  "description": {
+   "en": "Height reserved for the panel header, in millimetres.",
+   "de": "Für die Tafelüberschrift reservierte Höhe, in Millimetern."
+  }
+ },
+ "semio-viz-facet.sty#0|sharedX": {
+  "type": "boolean",
+  "default": true,
+  "description": {
+   "en": "Draw the x axis on the bottom row only.",
+   "de": "Die x-Achse nur in der untersten Zeile zeichnen."
+  }
+ },
+ "semio-viz-facet.sty#0|sharedY": {
+  "type": "boolean",
+  "default": true,
+  "description": {
+   "en": "Draw the y axis on the leftmost column only.",
+   "de": "Die y-Achse nur in der linken Spalte zeichnen."
+  }
+ },
+ "semio-viz-facet.sty#0|xScale": {
+  "type": "string",
+  "default": "x",
+  "description": {
+   "en": "Scale re-ranged to each panel's x extent.",
+   "de": "Skala, die auf die x-Ausdehnung jeder Tafel neu gespannt wird."
+  }
+ },
+ "semio-viz-facet.sty#0|yScale": {
+  "type": "string",
+  "default": "y",
+  "description": {
+   "en": "Scale re-ranged to each panel's y extent.",
+   "de": "Skala, die auf die y-Ausdehnung jeder Tafel neu gespannt wird."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|nodes": {
+  "type": "string",
+  "description": {
+   "en": "Name of the table holding the node rows.",
+   "de": "Name der Tabelle mit den Knotenzeilen."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|edges": {
+  "type": "string",
+  "description": {
+   "en": "Name of the table holding the edge rows.",
+   "de": "Name der Tabelle mit den Kantenzeilen."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|id": {
+  "type": "string",
+  "description": {
+   "en": "Node table column holding the identity the edges refer to.",
+   "de": "Spalte der Knotentabelle mit der Kennung, auf die sich die Kanten beziehen."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|label": {
+  "type": "string",
+  "description": {
+   "en": "Node table column holding the caption.",
+   "de": "Spalte der Knotentabelle mit der Beschriftung."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|shape": {
+  "type": "string",
+  "description": {
+   "en": "Node table column holding the node shape.",
+   "de": "Spalte der Knotentabelle mit der Knotenform."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|row": {
+  "type": "string",
+  "description": {
+   "en": "Node table column holding the grid row.",
+   "de": "Spalte der Knotentabelle mit der Rasterzeile."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|col": {
+  "type": "string",
+  "description": {
+   "en": "Node table column holding the grid column.",
+   "de": "Spalte der Knotentabelle mit der Rasterspalte."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|lane": {
+  "type": "string",
+  "description": {
+   "en": "Node table column holding the lane a node belongs to.",
+   "de": "Spalte der Knotentabelle mit der Bahn, zu der ein Knoten gehört."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|group": {
+  "type": "string",
+  "description": {
+   "en": "Node table column holding the group a node belongs to.",
+   "de": "Spalte der Knotentabelle mit der Gruppe, zu der ein Knoten gehört."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|tone": {
+  "type": "string",
+  "description": {
+   "en": "Node table column holding the colour slot.",
+   "de": "Spalte der Knotentabelle mit dem Farbslot."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|source": {
+  "type": "string",
+  "description": {
+   "en": "Edge table column holding the source node identity.",
+   "de": "Spalte der Kantentabelle mit der Kennung des Quellknotens."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|target": {
+  "type": "string",
+  "description": {
+   "en": "Edge table column holding the target node identity.",
+   "de": "Spalte der Kantentabelle mit der Kennung des Zielknotens."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|edge-label": {
+  "type": "string",
+  "description": {
+   "en": "Edge table column holding the edge caption.",
+   "de": "Spalte der Kantentabelle mit der Kantenbeschriftung."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|edge-kind": {
+  "type": "string",
+  "description": {
+   "en": "Edge table column holding the edge kind.",
+   "de": "Spalte der Kantentabelle mit der Kantenart."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|node-width": {
+  "type": "string",
+  "default": "auto",
+  "description": {
+   "en": "Node width in millimetres, or `auto` to fill the grid cell.",
+   "de": "Knotenbreite in Millimetern, oder `auto`, um die Rasterzelle zu füllen."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|node-height": {
+  "type": "string",
+  "default": "auto",
+  "description": {
+   "en": "Node height in millimetres, or `auto` to fill the grid cell.",
+   "de": "Knotenhöhe in Millimetern, oder `auto`, um die Rasterzelle zu füllen."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|col-gap": {
+  "type": "number",
+  "default": 6,
+  "description": {
+   "en": "Millimetres between two grid columns.",
+   "de": "Millimeter zwischen zwei Rasterspalten."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|row-gap": {
+  "type": "number",
+  "default": 6,
+  "description": {
+   "en": "Millimetres between two grid rows.",
+   "de": "Millimeter zwischen zwei Rasterzeilen."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|pad": {
+  "type": "number",
+  "default": 3,
+  "description": {
+   "en": "Millimetre inset of the grid inside the frame.",
+   "de": "Millimeter-Einzug des Rasters innerhalb des Rahmens."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|width": {
+  "type": "number",
+  "description": {
+   "en": "Frame width override in millimetres.",
+   "de": "Überschreibung der Rahmenbreite in Millimetern."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|height": {
+  "type": "number",
+  "description": {
+   "en": "Frame height override in millimetres.",
+   "de": "Überschreibung der Rahmenhöhe in Millimetern."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|frame": {
+  "type": "boolean",
+  "default": false,
+  "description": {
+   "en": "Draw the diagram's bounding frame.",
+   "de": "Den umschließenden Rahmen des Diagramms zeichnen."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|labels": {
+  "type": "boolean",
+  "default": true,
+  "description": {
+   "en": "Draw the node label text.",
+   "de": "Den Beschriftungstext der Knoten zeichnen."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|title": {
+  "type": "string",
+  "description": {
+   "en": "Optional caption drawn above the diagram, `en//de`.",
+   "de": "Optionale Überschrift über dem Diagramm, `en//de`."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|lane-title": {
+  "type": "string",
+  "description": {
+   "en": "Lane header text, `en//de`; empty draws no header.",
+   "de": "Kopftext der Bahn, `en//de`; leer zeichnet keinen Kopf."
+  }
+ },
+ "semio-viz-diagram-flowchart.sty#0|legend": {
+  "type": "string",
+  "description": {
+   "en": "Comma-separated `label=token` entries; empty draws no legend.",
+   "de": "Kommagetrennte `label=token`-Einträge; leer zeichnet keine Legende."
+  }
+ },
+ "semio-viz-diagram-uml.sty#0|row-gap": {
+  "type": "number",
+  "description": {
+   "en": "Millimetres between two rows of the class grid.",
+   "de": "Millimeter zwischen zwei Zeilen des Klassenrasters."
+  }
+ },
+ "semio-viz-diagram-architecture.sty#2|frame-width": {
+  "type": "number",
+  "description": {
+   "en": "Frame width of the profile in millimetres.",
+   "de": "Rahmenbreite des Schnitts in Millimetern."
+  }
+ },
+ "semio-viz-diagram-architecture.sty#2|frame-height": {
+  "type": "number",
+  "description": {
+   "en": "Frame height of the profile in millimetres.",
+   "de": "Rahmenhöhe des Schnitts in Millimetern."
+  }
+ },
+ "semio-viz-diagram-architecture.sty#3|angle-x": {
+  "type": "number",
+  "default": 30,
+  "description": {
+   "en": "Screen angle of the first plan axis, in degrees.",
+   "de": "Bildschirmwinkel der ersten Grundrissachse, in Grad."
+  }
+ },
+ "semio-viz-diagram-architecture.sty#3|angle-y": {
+  "type": "number",
+  "default": 150,
+  "description": {
+   "en": "Screen angle of the second plan axis, in degrees.",
+   "de": "Bildschirmwinkel der zweiten Grundrissachse, in Grad."
+  }
+ },
+ "semio-viz-diagram-concept.sty#1|labels-outside": {
+  "type": "boolean",
+  "default": false,
+  "description": {
+   "en": "Put the level captions beside the figure instead of inside it.",
+   "de": "Die Ebenenbeschriftungen neben die Abbildung statt hinein setzen."
+  }
+ },
+ "semio-viz-interactionstate.sty#0|caption-overview": {
+  "type": "string",
+  "description": {
+   "en": "Caption of the overview panel.",
+   "de": "Beschriftung der Übersichtstafel."
+  }
+ },
+ "semio-viz-interactionstate.sty#0|caption-detail": {
+  "type": "string",
+  "description": {
+   "en": "Caption of the detail panel.",
+   "de": "Beschriftung der Detailtafel."
+  }
+ },
+ "semio-viz-scientific-3d.sty#0|obliqueAngle": {
+  "type": "number",
+  "default": 45,
+  "description": {
+   "en": "Screen angle of the depth axis in the cabinet projection, in degrees.",
+   "de": "Bildschirmwinkel der Tiefenachse in der Kabinettprojektion, in Grad."
+  }
+ },
+ "semio-viz-scientific-3d.sty#0|obliqueScale": {
+  "type": "number",
+  "default": 0.5,
+  "description": {
+   "en": "Foreshortening of the depth axis in the cabinet projection.",
+   "de": "Verkürzung der Tiefenachse in der Kabinettprojektion."
+  }
+ },
+ "semio-viz-showcase.sty#4|data": {
+  "type": "string",
+  "default": "demo",
+  "description": {
+   "en": "Table the sample values are read from.",
+   "de": "Tabelle, aus der die Beispielwerte gelesen werden."
+  }
+ },
+ "semio-viz-showcase.sty#4|column": {
+  "type": "string",
+  "default": "val",
+  "description": {
+   "en": "Numeric column sampled onto the scale.",
+   "de": "Numerische Spalte, die auf die Skala abgetastet wird."
+  }
+ },
+ "semio-viz-showcase.sty#4|category": {
+  "type": "string",
+  "default": "cat",
+  "description": {
+   "en": "Categorical column feeding the discrete kinds.",
+   "de": "Kategoriale Spalte, die die diskreten Arten speist."
+  }
+ },
+ "semio-viz-showcase.sty#4|date": {
+  "type": "string",
+  "default": "date",
+  "description": {
+   "en": "ISO date column feeding the temporal kind.",
+   "de": "ISO-Datumsspalte, die die zeitliche Art speist."
+  }
+ },
+ "semio-viz-showcase.sty#4|timeData": {
+  "type": "string",
+  "default": "demo-time",
+  "description": {
+   "en": "Table the temporal kind reads.",
+   "de": "Tabelle, die die zeitliche Art liest."
+  }
+ },
+ "semio-viz-showcase.sty#4|timeDomain": {
+  "type": "string",
+  "default": "2026-01-01,2026-12-01",
+  "description": {
+   "en": "Input domain of the temporal kind.",
+   "de": "Definitionsbereich der zeitlichen Art."
+  }
+ },
+ "semio-viz-showcase.sty#4|logDomain": {
+  "type": "string",
+  "default": "1,10",
+  "description": {
+   "en": "Input domain of the logarithmic kind.",
+   "de": "Definitionsbereich der logarithmischen Art."
+  }
+ },
+ "semio-viz-showcase.sty#4|divergingDomain": {
+  "type": "string",
+  "default": "-10,0,10",
+  "description": {
+   "en": "Three-point domain of the diverging kind.",
+   "de": "Dreipunkt-Definitionsbereich der divergierenden Art."
+  }
+ },
+ "semio-viz-showcase.sty#4|thresholds": {
+  "type": "string",
+  "default": "4,6",
+  "description": {
+   "en": "Cut points of the threshold kind.",
+   "de": "Schnittpunkte der Schwellenwert-Art."
+  }
+ },
+ "semio-viz-showcase.sty#4|base": {
+  "type": "number",
+  "default": 10,
+  "description": {
+   "en": "Base of the logarithmic kind.",
+   "de": "Basis der logarithmischen Art."
+  }
+ },
+ "semio-viz-showcase.sty#4|exponent": {
+  "type": "number",
+  "default": 2,
+  "description": {
+   "en": "Exponent of the power kind.",
+   "de": "Exponent der Potenz-Art."
+  }
+ },
+ "semio-viz-showcase.sty#4|constant": {
+  "type": "number",
+  "default": 1,
+  "description": {
+   "en": "Linear-region constant of the symlog kind.",
+   "de": "Konstante des linearen Bereichs der Symlog-Art."
+  }
+ },
+ "semio-viz-showcase.sty#4|bins": {
+  "type": "integer",
+  "default": 4,
+  "description": {
+   "en": "Range entries of the binned and ordinal kinds.",
+   "de": "Wertebereichseinträge der klassierten und ordinalen Arten."
+  }
+ },
+ "semio-viz-showcase.sty#4|ticks": {
+  "type": "integer",
+  "default": 5,
+  "description": {
+   "en": "Target tick count of the axis and the gradient legend.",
+   "de": "Angestrebte Teilstrichzahl der Achse und der Verlaufslegende."
+  }
+ },
+ "semio-viz-showcase.sty#4|swatch": {
+  "type": "number",
+  "default": 4,
+  "description": {
+   "en": "Edge length of one discrete swatch, in millimetres.",
+   "de": "Kantenlänge eines diskreten Farbfelds, in Millimetern."
+  }
+ },
+ "semio-viz-showcase.sty#5|data": {
+  "type": "string",
+  "default": "demo",
+  "description": {
+   "en": "Table the shape generators read.",
+   "de": "Tabelle, die die Formgeneratoren lesen."
+  }
+ },
+ "semio-viz-showcase.sty#5|y": {
+  "type": "string",
+  "default": "val",
+  "description": {
+   "en": "Column mapped onto the vertical axis.",
+   "de": "Spalte, die auf die senkrechte Achse abgebildet wird."
+  }
+ },
+ "semio-viz-showcase.sty#5|count": {
+  "type": "integer",
+  "default": 4,
+  "description": {
+   "en": "Repetitions of the generator.",
+   "de": "Wiederholungen des Generators."
+  }
+ },
+ "semio-viz-showcase.sty#5|curves": {
+  "type": "string",
+  "description": {
+   "en": "Interpolators the lines and areas kinds cycle through.",
+   "de": "Interpolatoren, die die Linien- und Flächenarten durchlaufen."
+  }
+ },
+ "semio-viz-showcase.sty#5|innerRadius": {
+  "type": "number",
+  "default": 4,
+  "description": {
+   "en": "Inner radius of the arcs kind, in millimetres.",
+   "de": "Innenradius der Bogenart, in Millimetern."
+  }
+ },
+ "semio-viz-showcase.sty#5|outerRadius": {
+  "type": "number",
+  "default": 14,
+  "description": {
+   "en": "Outer radius of the arcs and ribbons kinds, in millimetres.",
+   "de": "Außenradius der Bogen- und Bandarten, in Millimetern."
+  }
+ },
+ "semio-viz-showcase.sty#5|padAngle": {
+  "type": "number",
+  "default": 0.04,
+  "description": {
+   "en": "Pad angle between two arcs or two ribbon ends.",
+   "de": "Winkelabstand zwischen zwei Bögen oder zwei Bandenden."
+  }
+ },
+ "semio-viz-showcase.sty#5|corner": {
+  "type": "number",
+  "default": 0.6,
+  "description": {
+   "en": "Corner radius of the arcs kind, in millimetres.",
+   "de": "Eckenradius der Bogenart, in Millimetern."
+  }
+ },
+ "semio-viz-showcase.sty#8|value": {
+  "type": "string",
+  "default": "value",
+  "description": {
+   "en": "Numeric column the distribution operations consume.",
+   "de": "Numerische Spalte, die die Verteilungsoperationen verbrauchen."
+  }
+ },
+ "semio-viz-showcase.sty#8|bins": {
+  "type": "integer",
+  "default": 8,
+  "description": {
+   "en": "Bin count of the bin kind.",
+   "de": "Klassenzahl der Klassierungsart."
+  }
+ },
+ "semio-viz-showcase.sty#8|fit": {
+  "type": "string",
+  "default": "linear",
+  "enum": [
+   "linear",
+   "poly",
+   "exp",
+   "log",
+   "pow"
+  ],
+  "description": {
+   "en": "Regression kind the fit operation runs.",
+   "de": "Regressionsart, die die Anpassung ausführt."
+  }
+ },
+ "semio-viz-showcase.sty#8|fitData": {
+  "type": "string",
+  "default": "demo",
+  "description": {
+   "en": "Source table of the regression kind.",
+   "de": "Quelltabelle der Regressionsart."
+  }
+ },
+ "semio-viz-showcase.sty#8|x": {
+  "type": "string",
+  "default": "t",
+  "description": {
+   "en": "Predictor column of the regression kind.",
+   "de": "Prädiktorspalte der Regressionsart."
+  }
+ },
+ "semio-viz-showcase.sty#8|y": {
+  "type": "string",
+  "default": "val",
+  "description": {
+   "en": "Response column of the regression kind.",
+   "de": "Antwortspalte der Regressionsart."
+  }
+ },
+ "semio-viz-interactionstate.sty#1|data": {
+  "type": "string",
+  "description": {
+   "en": "Name of the node table the frozen selection is laid out from; an explicit `nodes` later in the same option list still wins.",
+   "de": "Name der Knotentabelle, aus der die eingefrorene Auswahl angeordnet wird; ein späteres ausdrückliches `nodes` in derselben Optionsliste gewinnt weiterhin."
+  }
+ }
+}

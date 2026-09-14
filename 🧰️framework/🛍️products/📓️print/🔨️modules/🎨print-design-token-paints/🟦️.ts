@@ -6,7 +6,14 @@ import { oklabMix } from "../../../../🔨️modules/🖱️ui/🎨️styling/�
 //#region 🎨️DesignTokenPaints
 export type PrintTheme = "light" | "dark";
 
+export type PrintPresenceTokens = {
+  readonly hues: readonly number[];
+  readonly light: { readonly s: number; readonly l: number };
+  readonly dark: { readonly s: number; readonly l: number };
+};
+
 export type PrintDesignTokens = {
+  readonly presence?: PrintPresenceTokens;
   readonly colors: Record<string, string>;
   readonly spacing: Record<string, string>;
   readonly strokes?: Record<string, number | number[]>;
@@ -119,7 +126,60 @@ export function renderPrintLatexTokenStylesheet(tokens: PrintDesignTokens = load
     lines.push(`\\definecolor{semio-chrome-${theme}-canvas}{HTML}{${resolvePaint(tokens.colors, basePaint).replace(/^#/, "")}}`);
     for (const name of PRINT_LEVEL_SURFACE_KEYS) lines.push(`\\definecolor{semio-chrome-${theme}-${name}}{HTML}{${levelSurfaceHex(tokens, theme, name).replace(/^#/, "")}}`);
   }
+  lines.push("");
+  lines.push(...renderVisualizationPalette(tokens));
   return `${lines.join("\n")}\n`;
+}
+
+/** 📊️ Renders the categorical presence palette and the sequential/diverging scheme stops that `semio-viz-theme` reads. */
+export function renderVisualizationPalette(tokens: PrintDesignTokens = loadPrintDesignTokens()): string[] {
+  const lines: string[] = ["% Visualization palette: categorical presence hues plus scheme stops, per appearance."];
+  const hues = tokens.presence?.hues ?? [];
+  const entries: string[] = [];
+  for (const theme of ["light", "dark"] as const) {
+    const tone = tokens.presence?.[theme];
+    if (!tone) continue;
+    hues.forEach((hue, index) => lines.push(`\\definecolor{semio-presence-${theme}-${index}}{HTML}{${hslToHex(hue, tone.s, tone.l).replace(/^#/, "")}}`));
+    for (const [name, stops] of Object.entries(schemeStops(tokens, theme))) entries.push(`    ${name}/${theme} = { ${stops.map((stop) => stop.replace(/^#/, "")).join(",")} } ,`);
+  }
+  lines.push("\\ExplSyntaxOn");
+  lines.push("% 🔢 Categorical slots the presence palette offers; semio-viz-theme wraps its wheel on this.");
+  lines.push(`\\int_const:Nn \\c_semio_viz_theme_presence_int { ${hues.length} }`);
+  lines.push("% 🌈 Stop lists of every sequential and diverging scheme, keyed `<scheme> / <appearance>`.");
+  lines.push("\\prop_const_from_keyval:Nn \\c_semio_viz_theme_scheme_prop");
+  lines.push("  {");
+  lines.push(...entries);
+  lines.push("  }");
+  lines.push("\\ExplSyntaxOff");
+  return lines;
+}
+
+function schemeStops(tokens: PrintDesignTokens, theme: PrintTheme): Record<string, string[]> {
+  const colors = tokens.colors;
+  const surface = levelSurfaceHex(tokens, theme, "base");
+  const foreground = resolvePaint(colors, tokens.appearances![theme]!.chrome!.foreground!);
+  const deepen = (hex: string) => rgba8ToHex(oklabMix(hexToRgba8(hex), hexToRgba8(foreground), 0.55));
+  const hues = tokens.presence?.hues ?? [];
+  const tone = tokens.presence?.[theme] ?? { s: 0.68, l: 0.32 };
+  const presence = (index: number) => hslToHex(hues[index] ?? 0, tone.s, tone.l);
+  return {
+    primary: [surface, colors.primary!, deepen(colors.primary!)],
+    secondary: [surface, colors.secondary!, deepen(colors.secondary!)],
+    tertiary: [surface, colors.tertiary!, deepen(colors.tertiary!)],
+    grays: theme === "dark" ? [colors.dark!, colors.gray!, colors.light!] : [colors.light!, colors.gray!, colors.dark!],
+    "viridis-like": [deepen(presence(8)), presence(8), presence(5), presence(2), presence(7)],
+    "primary-secondary": [colors.primary!, surface, colors.secondary!],
+    "danger-success": [colors.danger!, surface, colors.success!],
+  };
+}
+
+function hslToHex(hue: number, saturation: number, lightness: number): string {
+  const chroma = (1 - Math.abs(2 * lightness - 1)) * saturation;
+  const sector = ((hue % 360) + 360) % 360 / 60;
+  const second = chroma * (1 - Math.abs((sector % 2) - 1));
+  const base = lightness - chroma / 2;
+  const [red, green, blue] = sector < 1 ? [chroma, second, 0] : sector < 2 ? [second, chroma, 0] : sector < 3 ? [0, chroma, second] : sector < 4 ? [0, second, chroma] : sector < 5 ? [second, 0, chroma] : [chroma, 0, second];
+  return `#${[red, green, blue].map((value) => Math.round((value + base) * 255).toString(16).padStart(2, "0")).join("")}`;
 }
 
 /** 🎨️ Writes the generated LaTeX design-token stylesheet. */

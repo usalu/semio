@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schemas/repo/dashboard/command-tree.json",
+  "title": "🌳️ Dashboard command tree",
+  "description": "🎛️ The wizard command tree the dashboard discovers at boot: one node per wizard step, a leaf carrying either the process the pseudo-terminal window runs or the repo-domain action the Rust domain crates answer in process. `semio command-tree --dump-tree` prints exactly this document.",
+  "$ref": "#/$defs/CommandNode",
+  "$defs": {
+    "CommandNode": {
+      "type": "object",
+      "description": "🌳️ One wizard step. A node without `children` is a leaf and carries a `leaf`.",
+      "properties": {
+        "key": { "type": "string", "description": "🔑️ The stable, emoji-free key the wizard path is built from." },
+        "label": { "type": "string", "description": "🏷️ The line the wizard shows." },
+        "leaf": { "$ref": "#/$defs/CommandLeaf" },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/CommandNode" }, "description": "🌿️ The next wizard step, sorted by verb rank at the root and alphabetically below it." }
+      },
+      "required": ["key", "label"],
+      "additionalProperties": false
+    },
+    "CommandLeaf": {
+      "description": "🍃️ What activating the leaf does.",
+      "oneOf": [{ "$ref": "#/$defs/ProcessLeaf" }, { "$ref": "#/$defs/RepoLeaf" }]
+    },
+    "ProcessLeaf": {
+      "type": "object",
+      "description": "▶️ A process spawned into a pseudo-terminal window.",
+      "properties": {
+        "kind": { "const": "process" },
+        "cmd": { "type": "string" },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "cwd": { "type": "string", "description": "📁️ Repository-relative working directory, forward-slashed; empty for the repository root." },
+        "env": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": { "name": { "type": "string" }, "value": { "type": "string" } },
+            "required": ["name", "value"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["kind", "cmd", "args", "cwd", "env"],
+      "additionalProperties": false
+    },
+    "RepoLeaf": {
+      "type": "object",
+      "description": "🦑️ A repo-domain operation the Rust domain crates answer in process; `goArgv` states the same operation for the Go implementation, which `SEMIO_REPO_IMPLEMENTATION=go` spawns instead.",
+      "properties": {
+        "kind": { "const": "repo" },
+        "action": {
+          "type": "string",
+          "description": "🔑️ The action key: a bare name, or `<name>:<argument>` for a ticket or an analysis scope.",
+          "pattern": "^(ticket\\.(show|files|close|reopen):.+|goals\\.(list|tree)|analyze:[a-z]+|tree\\.(monorepo|goal|statute|territory)|statutes\\.catalog)$"
+        },
+        "goArgv": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+      },
+      "required": ["kind", "action", "goArgv"],
+      "additionalProperties": false
+    }
+  }
+}

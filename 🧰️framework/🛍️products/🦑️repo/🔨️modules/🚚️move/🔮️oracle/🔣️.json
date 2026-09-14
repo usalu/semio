@@ -1,0 +1,29 @@
+{
+  "$comment": "🔮️ Test-only third-party references of the repo move module. There are none: every operation this module performs is defined by this repository's own conventions, so the evidence is recorded specification vectors plus metamorphic laws. Once the Go twin package exists the committed 🐹️.go adapters become subjects automatically and pairwise cross-implementation parity is added on top of, not instead of, these decisions.",
+  "schemaVersion": 2,
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "repo-move-token-casings",
+      "capabilities": ["repo.move.rename-casings"],
+      "rationale": "The repository-wide rename rewrites exactly three foldings of a token — the whole token upper-cased, the whole token lower-cased, and the lower-cased token with its first byte upper-cased — and nothing else. A general case-conversion library instead re-splits a token into words and re-spells it, so it disagrees by construction on every camel, pascal, kebab and snake spelling this repository actually renames. There is no third party that shares this definition; confidence comes from recorded vectors covering all five spellings plus the tree-level walk order.",
+      "substitutes": ["specification-vectors", "metamorphic-laws"],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-move-sections",
+      "capabilities": ["repo.move.section-move", "repo.move.section-extract", "repo.move.file-integrate"],
+      "rationale": "Section markers, the header region, the import block and the package declaration are this repository's own file grammar, driven by its own language table. No external tool knows that a section is a comment-prefixed region marker whose name carries an entity emoji, that a header is the section literally called Header, or that integrating merges two headers by inserting the unseen source lines above the target's closing marker. Confidence comes from recorded before-and-after vectors across five languages plus the round trip that renaming a section back restores the file byte for byte.",
+      "substitutes": ["specification-vectors", "metamorphic-laws"],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-move-paths",
+      "capabilities": ["repo.move.file-folder-move"],
+      "rationale": "Moving a file or a folder also rewrites the AGENTS.md headings that name the old path, which is a convention of this repository and of nothing else. A filesystem library moves bytes and knows nothing about the documentation index. Confidence comes from recorded before-and-after workspaces plus the round trip that moving a subtree back restores the whole workspace, documentation index included.",
+      "substitutes": ["specification-vectors", "metamorphic-laws"],
+      "coversMutations": false
+    }
+  ],
+  "oracleHostPackages": []
+}

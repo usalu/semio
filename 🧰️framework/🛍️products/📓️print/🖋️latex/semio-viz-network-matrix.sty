@@ -1,0 +1,357 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-network-matrix}[2026/09/05 v0.3.0 semio viz namespace network-matrix families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-network-graph}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 🔑 semio / viz / family / adjacency-matrix — the dense alternative to a node-link view (taxonomy §8).
+%   data       (table, default demo-graph-community)  graph table
+%   order      (index|name|degree|group|component|cluster, default index)  row and column ordering
+%   symmetric  (boolean, default true)   mirror every edge so an undirected graph fills both triangles
+%   cellGap    (mm, default 0.15)        gap between cells
+%   scaleBy    (weight|binary, default weight)  cell shade from |weight| or from presence alone
+%   diagonal   (boolean, default false)  draw the diagonal cells
+%   labels     (boolean, default true)   row and column captions
+%   labelWidth (mm, default 9)           reserved for the row captions
+%   blocks     (boolean, default false)  hairlines between consecutive ordering groups
+%   padding    (mm, default 3)
+\tl_new:N \l_semio_viz_mat_scale_tl
+\fp_new:N \l_semio_viz_mat_gap_fp
+\fp_new:N \l_semio_viz_mat_label_w_fp
+\fp_new:N \l_semio_viz_mat_cell_fp
+\fp_new:N \l_semio_viz_mat_x_fp
+\fp_new:N \l_semio_viz_mat_y_fp
+\fp_new:N \l_semio_viz_mat_max_fp
+\bool_new:N \l_semio_viz_mat_symmetric_bool
+\bool_new:N \l_semio_viz_mat_diagonal_bool
+\bool_new:N \l_semio_viz_mat_blocks_bool
+\bool_new:N \l_semio_viz_mat_split_bool
+
+\cs_new_protected:Npn \semio_viz_mat_keys_add:n #1 {
+  \semio_viz_net_keys_add:n {#1}
+  \keys_define:nn {#1} {
+    symmetric  .bool_set:N = \l_semio_viz_mat_symmetric_bool,
+    symmetric  .default:n = { true },
+    cellGap    .fp_set:N = \l_semio_viz_mat_gap_fp,
+    scaleBy    .tl_set:N = \l_semio_viz_mat_scale_tl,
+    diagonal   .bool_set:N = \l_semio_viz_mat_diagonal_bool,
+    diagonal   .default:n = { true },
+    labelWidth .fp_set:N = \l_semio_viz_mat_label_w_fp,
+    blocks     .bool_set:N = \l_semio_viz_mat_blocks_bool,
+    blocks     .default:n = { true },
+    split      .bool_set:N = \l_semio_viz_mat_split_bool,
+    split      .default:n = { true },
+  }
+}
+% ♻️ Restores the matrix defaults over the network reset: adjacency layout, mirrored cells, no diagonal, no blocks.
+\cs_new_protected:Npn \semio_viz_mat_keys_reset: {
+  \semio_viz_net_keys_reset:
+  \tl_set:Nn \l_semio_viz_net_layout_tl { adjacency }
+  \bool_set_true:N \l_semio_viz_mat_symmetric_bool
+  \bool_set_false:N \l_semio_viz_mat_diagonal_bool
+  \bool_set_false:N \l_semio_viz_mat_blocks_bool
+  \bool_set_false:N \l_semio_viz_mat_split_bool
+  \bool_set_true:N \l_semio_viz_net_labels_bool
+  \fp_set:Nn \l_semio_viz_mat_gap_fp { 0.15 }
+  \fp_set:Nn \l_semio_viz_mat_label_w_fp { 9 }
+  \tl_set:Nn \l_semio_viz_mat_scale_tl { weight }
+}
+%endregion 🔖️Keys
+
+%region 🔖️Matrix
+% 🔲 Weight of the ordered cell (row #1, column #2) of the bound graph, mirrored when `symmetric`.
+\cs_new_protected:Npn \semio_viz_mat_cell:nn #1#2 {
+  \fp_zero:N \l_semio_viz_mat_cell_fp
+  \int_step_inline:nn { \l_semio_viz_network_m_int } { \semio_viz_mat_cell_add:nnn {#1} {#2} {##1} }
+}
+% ➕ Adds edge #3's weight to the running cell when its ranked endpoints hit (#1,#2), or the transpose when mirrored.
+\cs_new_protected:Npn \semio_viz_mat_cell_add:nnn #1#2#3 {
+  \int_compare:nNnT { \semio_viz_network_n:nn { rank } { \semio_viz_network_n:nn { es } {#3} } } = {#1}
+    {
+      \int_compare:nNnT { \semio_viz_network_n:nn { rank } { \semio_viz_network_n:nn { et } {#3} } } = {#2}
+        { \fp_add:Nn \l_semio_viz_mat_cell_fp { \semio_viz_network_f:nn { ew } {#3} } }
+    }
+  \bool_if:NT \l_semio_viz_mat_symmetric_bool {
+    \int_compare:nNnT { \semio_viz_network_n:nn { rank } { \semio_viz_network_n:nn { et } {#3} } } = {#1}
+      {
+        \int_compare:nNnT { \semio_viz_network_n:nn { rank } { \semio_viz_network_n:nn { es } {#3} } } = {#2}
+          { \fp_add:Nn \l_semio_viz_mat_cell_fp { \semio_viz_network_f:nn { ew } {#3} } }
+      }
+  }
+}
+
+% 🔲 Node index at ordering position #1.
+\cs_new:Npn \semio_viz_mat_at:n #1 { \seq_item:Nn \l_semio_viz_network_sorted_seq {#1} }
+
+% 📊 Largest absolute edge weight, the divisor of the cell shading; falls back to one when all weights vanish.
+\cs_new_protected:Npn \semio_viz_mat_extent: {
+  \fp_set:Nn \l_semio_viz_mat_max_fp { 0 }
+  \int_step_inline:nn { \l_semio_viz_network_m_int } {
+    \fp_set:Nn \l_semio_viz_mat_max_fp
+      { max( \l_semio_viz_mat_max_fp , abs( \semio_viz_network_f:nn { ew } {##1} ) ) }
+  }
+  \fp_compare:nNnT \l_semio_viz_mat_max_fp = { 0 } { \fp_set:Nn \l_semio_viz_mat_max_fp { 1 } }
+}
+
+% 🔲 Draws the ordered adjacency grid inside the drawing rectangle, leaving room for the captions.
+\cs_new_protected:Npn \semio_viz_mat_grid_draw: {
+  \fp_set:Nn \l_semio_viz_mat_x_fp
+    {
+      min( ( \l_semio_viz_net_xhi_fp - \l_semio_viz_net_xlo_fp
+             - \bool_if:NTF \l_semio_viz_net_labels_bool { \l_semio_viz_mat_label_w_fp } { 0 } ) ,
+           ( \l_semio_viz_net_yhi_fp - \l_semio_viz_net_ylo_fp
+             - \bool_if:NTF \l_semio_viz_net_labels_bool { \l_semio_viz_mat_label_w_fp } { 0 } ) )
+      / \l_semio_viz_network_n_int
+    }
+  \fp_set:Nn \l_semio_viz_mat_y_fp
+    {
+      \l_semio_viz_net_yhi_fp
+      - \bool_if:NTF \l_semio_viz_net_labels_bool { \l_semio_viz_mat_label_w_fp } { 0 }
+    }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } { \semio_viz_mat_row_draw:n {##1} }
+  \bool_if:NT \l_semio_viz_net_labels_bool { \semio_viz_mat_labels_draw: }
+  \bool_if:NT \l_semio_viz_mat_blocks_bool { \semio_viz_mat_blocks_draw: }
+}
+% ↔️ Walks row #1 across every column of the grid.
+\cs_new_protected:Npn \semio_viz_mat_row_draw:n #1 {
+  \int_step_inline:nn { \l_semio_viz_network_n_int } { \semio_viz_mat_cell_draw:nn {#1} {##1} }
+}
+% 🚦 Lets a cell through unless it is on the diagonal and the `diagonal` key is off.
+\cs_new_protected:Npn \semio_viz_mat_cell_draw:nn #1#2 {
+  \bool_lazy_or:nnT
+    { \int_compare_p:n { #1 != #2 } }
+    { \bool_if_p:N \l_semio_viz_mat_diagonal_bool }
+    { \semio_viz_mat_cell_paint:nn {#1} {#2} }
+}
+% 🎨 Paints a non-empty cell as a gap-inset quad, shaded by `scaleBy` and flipped to danger when negative.
+\cs_new_protected:Npn \semio_viz_mat_cell_paint:nn #1#2 {
+  \semio_viz_mat_cell:nn {#1} {#2}
+  \fp_compare:nNnT { abs( \l_semio_viz_mat_cell_fp ) } > { 0 } {
+    \str_if_eq:VnTF \l_semio_viz_mat_scale_tl { binary }
+      { \tl_set:Nn \l_semio_viz_net_fill_tl { semio-primary } }
+      {
+        \semio_viz_net_shade:nxN { semio-primary }
+          { 0.25 + 0.75 * abs( \l_semio_viz_mat_cell_fp ) / \l_semio_viz_mat_max_fp }
+          \l_semio_viz_net_fill_tl
+      }
+    \fp_compare:nNnT \l_semio_viz_mat_cell_fp < { 0 }
+      { \tl_set:Nn \l_semio_viz_net_fill_tl { semio-danger } }
+    \semio_viz_net_draw_poly:xx
+      {
+        ( \fp_eval:n { \semio_viz_mat_cx:n {#2} } , \fp_eval:n { \semio_viz_mat_cy:n {#1} } ) --
+        ( \fp_eval:n { \semio_viz_mat_cx:n { #2 + 1 } - \l_semio_viz_mat_gap_fp } ,
+          \fp_eval:n { \semio_viz_mat_cy:n {#1} } ) --
+        ( \fp_eval:n { \semio_viz_mat_cx:n { #2 + 1 } - \l_semio_viz_mat_gap_fp } ,
+          \fp_eval:n { \semio_viz_mat_cy:n { #1 + 1 } + \l_semio_viz_mat_gap_fp } ) --
+        ( \fp_eval:n { \semio_viz_mat_cx:n {#2} } ,
+          \fp_eval:n { \semio_viz_mat_cy:n { #1 + 1 } + \l_semio_viz_mat_gap_fp } )
+      }
+      {
+        \fp_eval:n { round( \semio_viz_mat_cx:n {#2} , 4 ) } ,
+        \fp_eval:n { round( \semio_viz_mat_cy:n { #1 + 1 } , 4 ) } ,
+        \fp_eval:n { round( \l_semio_viz_mat_x_fp - \l_semio_viz_mat_gap_fp , 4 ) } ,
+        \fp_eval:n { round( \l_semio_viz_mat_cell_fp , 4 ) }
+      }
+  }
+}
+% 📍 Left edge of column #1, after the caption gutter when labels are on.
+\cs_new:Npn \semio_viz_mat_cx:n #1
+  {
+    \l_semio_viz_net_xlo_fp
+    + \bool_if:NTF \l_semio_viz_net_labels_bool { \l_semio_viz_mat_label_w_fp } { 0 }
+    + ( (#1) - 1 ) * \l_semio_viz_mat_x_fp
+  }
+% 📍 Top edge of row #1, counted downwards from the grid's top.
+\cs_new:Npn \semio_viz_mat_cy:n #1
+  { \l_semio_viz_mat_y_fp - ( (#1) - 1 ) * \l_semio_viz_mat_x_fp }
+
+% 🏷️ Captions every ordering position twice: once in the left gutter, once above the columns.
+\cs_new_protected:Npn \semio_viz_mat_labels_draw: {
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \semio_viz_net_draw_text:nnn
+      { \l_semio_viz_net_xlo_fp + \l_semio_viz_mat_label_w_fp - 1 }
+      { \semio_viz_mat_cy:n { ##1 + 0.5 } }
+      { \semio_viz_network_id:n { \semio_viz_mat_at:n {##1} } }
+    \semio_viz_net_draw_text:nnn
+      { \semio_viz_mat_cx:n { ##1 + 0.5 } }
+      { \l_semio_viz_mat_y_fp + 1.6 }
+      { \semio_viz_network_id:n { \semio_viz_mat_at:n {##1} } }
+  }
+}
+
+% 🧱 Tests every adjacent pair of positions for a group change that would earn a separating rule.
+\cs_new_protected:Npn \semio_viz_mat_blocks_draw: {
+  \int_step_inline:nn { \l_semio_viz_network_n_int - 1 } { \semio_viz_mat_block_rule:n {##1} }
+}
+% ➖ When positions #1 and #1+1 fall in different groups, rules the full horizontal and vertical block edge.
+\cs_new_protected:Npn \semio_viz_mat_block_rule:n #1 {
+  \semio_viz_net_group_pos:n { \semio_viz_mat_at:n {#1} }
+  \int_set:Nn \l_semio_viz_net_i_int { \l_semio_viz_net_k_int }
+  \semio_viz_net_group_pos:n { \semio_viz_mat_at:n { #1 + 1 } }
+  \int_compare:nNnF \l_semio_viz_net_i_int = \l_semio_viz_net_k_int {
+    \draw [ draw=semio-chrome-border-emphasized , line~width=\semio@stroke@hairline ]
+      ( \fp_eval:n { \semio_viz_mat_cx:n { 1 } } , \fp_eval:n { \semio_viz_mat_cy:n { #1 + 1 } } )
+      -- ( \fp_eval:n { \semio_viz_mat_cx:n { \l_semio_viz_network_n_int + 1 } } ,
+           \fp_eval:n { \semio_viz_mat_cy:n { #1 + 1 } } ) ;
+    \draw [ draw=semio-chrome-border-emphasized , line~width=\semio@stroke@hairline ]
+      ( \fp_eval:n { \semio_viz_mat_cx:n { #1 + 1 } } , \fp_eval:n { \semio_viz_mat_cy:n { 1 } } )
+      -- ( \fp_eval:n { \semio_viz_mat_cx:n { #1 + 1 } } ,
+           \fp_eval:n { \semio_viz_mat_cy:n { \l_semio_viz_network_n_int + 1 } } ) ;
+  }
+}
+
+% 🔲 adjacency-matrix — the ordered dense view; `order` is the whole story of the chart.
+\cs_new_protected:Npn \semio_viz_mat_render:n #1 {
+  \semio_viz_frame_require:n { SemioVizRunFamily }
+  \semio_viz_mat_keys_reset:
+  \keys_set:nn { semio / viz / family / adjacency-matrix } {#1}
+  \semio_viz_net_layopts_build:
+  \semio_viz_layout_run:VVnV \c_semio_viz_mat_layout_tl \l_semio_viz_net_data_tl
+    { semio-net-order } \l_semio_viz_net_layopts_tl
+  \semio_viz_net_groups_build:
+  \semio_viz_mat_extent:
+  \semio_viz_net_canvas:
+  \semio_viz_mat_grid_draw:
+}
+\tl_const:Nn \c_semio_viz_mat_layout_tl { adjacency }
+
+\semio_viz_mat_keys_add:n { semio / viz / family / adjacency-matrix }
+% 🔲 Registers the `adjacency-matrix` catalogue entry on the dense grid renderer.
+\SemioVizFamily { adjacency-matrix } { \semio_viz_mat_render:n {#1} }
+%endregion 🔖️Matrix
+
+%region 🔖️NodeLinkMatrix
+% 🔳 node-link-matrix — the hybrid of taxonomy §8: the ordered matrix on the left, the same ordering
+% drawn as an arc-linked node line on the right, so both readings share one permutation.
+\cs_new_protected:Npn \semio_viz_mat_hybrid_render:n #1 {
+  \semio_viz_frame_require:n { SemioVizRunFamily }
+  \semio_viz_mat_keys_reset:
+  \bool_set_true:N \l_semio_viz_mat_split_bool
+  \keys_set:nn { semio / viz / family / node-link-matrix } {#1}
+  \semio_viz_net_layopts_build:
+  \semio_viz_layout_run:VVnV \c_semio_viz_mat_layout_tl \l_semio_viz_net_data_tl
+    { semio-net-order } \l_semio_viz_net_layopts_tl
+  \semio_viz_net_groups_build:
+  \semio_viz_mat_extent:
+  \semio_viz_net_extremes:
+  \semio_viz_net_canvas:
+  \fp_set:Nn \l_semio_viz_net_e_fp { \l_semio_viz_net_xhi_fp }
+  \fp_set:Nn \l_semio_viz_net_xhi_fp
+    { \l_semio_viz_net_xlo_fp + 0.52 * ( \l_semio_viz_net_e_fp - \l_semio_viz_net_xlo_fp ) }
+  \semio_viz_mat_grid_draw:
+  \fp_set:Nn \l_semio_viz_net_xlo_fp { \l_semio_viz_net_xhi_fp + 2 }
+  \fp_set_eq:NN \l_semio_viz_net_xhi_fp \l_semio_viz_net_e_fp
+  \semio_viz_mat_line_draw:
+}
+
+% 🔳 The node line of the hybrid: the same ordering top to bottom, links as bows to the right.
+\cs_new_protected:Npn \semio_viz_mat_line_draw: {
+  \fp_set:Nn \l_semio_viz_mat_x_fp
+    {
+      ( \l_semio_viz_net_yhi_fp - \l_semio_viz_net_ylo_fp - \l_semio_viz_mat_label_w_fp )
+      / max( 1 , \l_semio_viz_network_n_int - 1 )
+    }
+  \int_step_inline:nn { \l_semio_viz_network_m_int } { \semio_viz_mat_bow_draw:n {##1} }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } { \semio_viz_mat_dot_draw:n {##1} }
+}
+% 📍 Height of node #1 on the hybrid's right-hand line, from the same rank the matrix rows use.
+\cs_new:Npn \semio_viz_mat_ly:n #1
+  {
+    \l_semio_viz_net_yhi_fp - \l_semio_viz_mat_label_w_fp
+    - ( \semio_viz_network_n:nn { rank } {#1} - 1 ) * \l_semio_viz_mat_x_fp
+  }
+% 🌈 Link #1 as a bow off the vertical node line, both ends on the same x so it bulges to the right.
+\cs_new_protected:Npn \semio_viz_mat_bow_draw:n #1 {
+  \semio_viz_net_link_style:n {#1}
+  \semio_viz_net_draw_curve:nnnnnn
+    { \l_semio_viz_net_xlo_fp } { \semio_viz_mat_ly:n { \semio_viz_network_n:nn { es } {#1} } }
+    { \l_semio_viz_net_xlo_fp } { \semio_viz_mat_ly:n { \semio_viz_network_n:nn { et } {#1} } }
+    { \l_semio_viz_net_e_fp } { 0.5 }
+}
+% ⚫ Node #1 as a circle on the hybrid's line, the shape forced round whatever the graph asked for.
+\cs_new_protected:Npn \semio_viz_mat_dot_draw:n #1 {
+  \semio_viz_net_node_fill_pick:n {#1}
+  \tl_set:Nn \l_semio_viz_net_shape_tl { circle }
+  \semio_viz_net_draw_node:nnn
+    { \l_semio_viz_net_xlo_fp } { \semio_viz_mat_ly:n {#1} } { \l_semio_viz_net_size_fp }
+}
+
+\semio_viz_mat_keys_add:n { semio / viz / family / node-link-matrix }
+% 🔳 Registers the `node-link-matrix` catalogue entry on the split matrix-and-line renderer.
+\SemioVizFamily { node-link-matrix } { \semio_viz_mat_hybrid_render:n {#1} }
+%endregion 🔖️NodeLinkMatrix
+
+%region 🔖️Biofabric
+% 🧵 biofabric — nodes are horizontal lines, edges are vertical lines, the two orderings are
+% independent (taxonomy §8); `order` sets the node order, edges keep their declaration order.
+\cs_new_protected:Npn \semio_viz_mat_fabric_render:n #1 {
+  \semio_viz_frame_require:n { SemioVizRunFamily }
+  \semio_viz_mat_keys_reset:
+  \keys_set:nn { semio / viz / family / biofabric } {#1}
+  \semio_viz_net_layopts_build:
+  \semio_viz_layout_run:VVnV \c_semio_viz_mat_layout_tl \l_semio_viz_net_data_tl
+    { semio-net-order } \l_semio_viz_net_layopts_tl
+  \semio_viz_net_groups_build:
+  \semio_viz_net_extremes:
+  \semio_viz_net_canvas:
+  \fp_set:Nn \l_semio_viz_mat_x_fp
+    {
+      ( \l_semio_viz_net_yhi_fp - \l_semio_viz_net_ylo_fp )
+      / max( 1 , \l_semio_viz_network_n_int )
+    }
+  \fp_set:Nn \l_semio_viz_mat_y_fp
+    {
+      ( \l_semio_viz_net_xhi_fp - \l_semio_viz_net_xlo_fp - \l_semio_viz_mat_label_w_fp )
+      / max( 1 , \l_semio_viz_network_m_int )
+    }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } { \semio_viz_mat_fabric_row:n {##1} }
+  \int_step_inline:nn { \l_semio_viz_network_m_int } { \semio_viz_mat_fabric_col:n {##1} }
+}
+% 📏 Height of node #1's horizontal fabric line, one band per rank counted down from the top.
+\cs_new:Npn \semio_viz_mat_fy:n #1
+  {
+    \l_semio_viz_net_yhi_fp
+    - ( \semio_viz_network_n:nn { rank } {#1} - 0.5 ) * \l_semio_viz_mat_x_fp
+  }
+% 📐 Abscissa of edge column #1, one band per edge to the right of the caption gutter.
+\cs_new:Npn \semio_viz_mat_fx:n #1
+  {
+    \l_semio_viz_net_xlo_fp + \l_semio_viz_mat_label_w_fp
+    + ( (#1) - 0.5 ) * \l_semio_viz_mat_y_fp
+  }
+% 🧶 One node line of the fabric, stroked in its group colour and captioned in the gutter.
+\cs_new_protected:Npn \semio_viz_mat_fabric_row:n #1 {
+  \semio_viz_net_group_pos:n { \semio_viz_mat_at:n {#1} }
+  \semio_viz_net_color:VN \l_semio_viz_net_k_int \l_semio_viz_net_stroke_tl
+  \semio_viz_net_draw_link:nnnnn
+    { \l_semio_viz_net_xlo_fp + \l_semio_viz_mat_label_w_fp }
+    { \semio_viz_mat_fy:n { \semio_viz_mat_at:n {#1} } }
+    { \l_semio_viz_net_xhi_fp }
+    { \semio_viz_mat_fy:n { \semio_viz_mat_at:n {#1} } }
+    { \l_semio_viz_net_link_width_fp }
+  \bool_if:NT \l_semio_viz_net_labels_bool {
+    \semio_viz_net_draw_text:nnn
+      { \l_semio_viz_net_xlo_fp + \l_semio_viz_mat_label_w_fp - 1.4 }
+      { \semio_viz_mat_fy:n { \semio_viz_mat_at:n {#1} } }
+      { \semio_viz_network_id:n { \semio_viz_mat_at:n {#1} } }
+  }
+}
+% ⬇️ One edge column of the fabric, dropped from its source node line to its target node line.
+\cs_new_protected:Npn \semio_viz_mat_fabric_col:n #1 {
+  \semio_viz_net_link_style:n {#1}
+  \semio_viz_net_draw_link:nnnnn
+    { \semio_viz_mat_fx:n {#1} } { \semio_viz_mat_fy:n { \semio_viz_network_n:nn { es } {#1} } }
+    { \semio_viz_mat_fx:n {#1} } { \semio_viz_mat_fy:n { \semio_viz_network_n:nn { et } {#1} } }
+    { \l_semio_viz_net_e_fp }
+}
+
+\semio_viz_mat_keys_add:n { semio / viz / family / biofabric }
+% 🧵 Registers the `biofabric` catalogue entry on the lines-for-nodes, columns-for-edges renderer.
+\SemioVizFamily { biofabric } { \semio_viz_mat_fabric_render:n {#1} }
+%endregion 🔖️Biofabric
+
+\ExplSyntaxOff

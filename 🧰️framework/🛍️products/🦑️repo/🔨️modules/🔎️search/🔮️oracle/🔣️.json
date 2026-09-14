@@ -1,0 +1,31 @@
+{
+  "$comment": "🔮️ References of the repo search module. There is no third-party engine that implements THIS ranking function, so the registered reference is a second implementation written inside this repository from the same specification — a required supplement, never a substitute — and the gap is recorded as a no-oracle decision.",
+  "schemaVersion": 2,
+  "oracles": [
+    {
+      "id": "semio-search-reference-ts",
+      "kind": "cross-semio-implementation",
+      "ecosystem": "javascript",
+      "package": "semio-repo-search-reference",
+      "version": "0.1.0",
+      "engine": { "family": "none", "implementation": "semio-typescript-reference", "version": "0.1.0" },
+      "capabilities": ["repo-search-rank"],
+      "comparisonProfiles": ["ordered-json-v1"],
+      "license": "AGPL-3.0-or-later",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "rationale": "A third implementation of the conjunction, the bounded edit distance, the tie ordering and the truncation rule, written in TypeScript against the same schema and using nothing but the Node standard library. It raises the cost of a shared misreading; it does not remove it, which is why the no-oracle decision below stands alongside it."
+    }
+  ],
+  "noOracleDecisions": [
+    {
+      "id": "repo-search-owned-ranking",
+      "capabilities": ["repo-search-rank", "repo-search-append-replay"],
+      "rationale": "The ranking function is this repository's own: a conjunction over terms, a per-term score of `fuzziness - distance + 1`, a whole-text substring shortcut, word splitting that keeps every non-ASCII run together, ties broken by identifier, and a total that is counted before truncation. No third-party search engine implements that combination, and adapting one would compare against a different specification rather than this one. Confidence comes from the specification vectors plus three independently written implementations.",
+      "substitutes": ["specification-vectors", "independent-implementations"],
+      "coversMutations": false
+    }
+  ],
+  "oracleHostPackages": []
+}

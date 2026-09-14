@@ -1,0 +1,327 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio-tech.com/schema/repo/tree.json",
+  "title": "🌳️ Repository tree",
+  "description": "🌳️ The wire shapes of the `🌳️tree` domain: the record set a tree is projected from, the tree node and filter literals the fixtures state, the Mermaid treemap and the tree cache envelope. Both implementations (`semio-framework-repo-tree` and `github.com/usalu/semio/repo/tree`) read and write exactly these shapes. The tree node and filter themselves belong to `📐️model`; what this schema adds are the compact literals a fixture may state and the records a `TreeSource` supplies.",
+  "type": "object",
+  "$defs": {
+    "TreeNodeKind": {
+      "description": "🏷️ The entity level of a tree node. `category` is structural: it survives every filter and mints no artifact id.",
+      "enum": ["technology", "bundle", "folder", "file", "section", "definition", "goal", "ticket", "draft", "todo", "policy", "breach", "contributor", "checkpoint", "session", "statute", "category"]
+    },
+    "TreeNodeSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "🌿️ A compact tree-node literal. Every field but `kind` defaults, so a fixture states only what the scenario is about.",
+      "required": ["kind"],
+      "properties": {
+        "kind": { "$ref": "#/$defs/TreeNodeKind" },
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "uri": { "type": "string" },
+        "subKind": { "type": "string", "description": "🔖️ The kind within the kind: a bundle's `library`, a file's `code`, a statute's `autofixable`." },
+        "description": { "type": "string" },
+        "summary": { "type": "string" },
+        "year": { "type": "integer" },
+        "month": { "type": "integer" },
+        "day": { "type": "integer" },
+        "status": { "type": "string" },
+        "contributor": { "type": "string" },
+        "data": { "type": "object", "description": "🗃️ The entity payload the renderers and the artifact-id builder read." },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/TreeNodeSpec" } }
+      }
+    },
+    "TreeFilterSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "🧹️ A compact tree-filter literal. An empty literal is the filter that keeps everything; an `onlyKinds` list is an allow list and wins over `excludeKinds`.",
+      "properties": {
+        "query": { "type": "string" },
+        "onlyKinds": { "type": "array", "items": { "$ref": "#/$defs/TreeNodeKind" } },
+        "excludeKinds": { "type": "array", "items": { "$ref": "#/$defs/TreeNodeKind" } },
+        "onlySubKinds": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } },
+        "excludeSubKinds": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } },
+        "onlyYears": { "type": "array", "items": { "type": "integer" } },
+        "excludeYears": { "type": "array", "items": { "type": "integer" } },
+        "onlyMonths": { "type": "array", "items": { "type": "integer" } },
+        "excludeMonths": { "type": "array", "items": { "type": "integer" } },
+        "onlyDays": { "type": "array", "items": { "type": "integer" } },
+        "excludeDays": { "type": "array", "items": { "type": "integer" } },
+        "onlyStatus": { "type": "string" },
+        "onlyContributors": { "type": "array", "items": { "type": "string" } },
+        "excludeContributors": { "type": "array", "items": { "type": "string" } },
+        "onlyPolicies": { "type": "array", "items": { "type": "string" } },
+        "excludePolicies": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "BundleRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "📦️ One bundle of a technology. `sourceRoot`, when present, replaces `root` as the prefix that decides which folders and files the bundle owns.",
+      "required": ["id", "name", "uri", "kind"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "description": "🏷️ `<technology>/<bundle>`; the segment before the slash names the owning technology." },
+        "uri": { "type": "string" },
+        "kind": { "type": "string" },
+        "emoji": { "type": "string" },
+        "root": { "type": "string" },
+        "sourceRoot": { "type": "string" }
+      }
+    },
+    "TechnologyRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "uri", "kind"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "uri": { "type": "string" },
+        "kind": { "type": "string" },
+        "emoji": { "type": "string" },
+        "bundles": { "type": "array", "items": { "$ref": "#/$defs/BundleRecord" } }
+      }
+    },
+    "FolderRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "path", "name", "uri", "kind"],
+      "properties": { "id": { "type": "string" }, "path": { "type": "string" }, "name": { "type": "string" }, "uri": { "type": "string" }, "kind": { "type": "string" } }
+    },
+    "FileRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "path", "name", "uri", "kind"],
+      "properties": { "id": { "type": "string" }, "path": { "type": "string" }, "name": { "type": "string" }, "uri": { "type": "string" }, "kind": { "type": "string" } }
+    },
+    "DefinitionRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "uri", "kind"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "uri": { "type": "string" },
+        "kind": { "type": "string" },
+        "filePath": { "type": "string" },
+        "startLine": { "type": "integer" },
+        "endLine": { "type": "integer" }
+      }
+    },
+    "SectionRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "📑️ One parsed section. Its definitions render before its nested sections.",
+      "required": ["id", "path", "name", "uri"],
+      "properties": {
+        "id": { "type": "string" },
+        "path": { "type": "string" },
+        "name": { "type": "string" },
+        "uri": { "type": "string" },
+        "startLine": { "type": "integer" },
+        "endLine": { "type": "integer" },
+        "definitions": { "type": "array", "items": { "$ref": "#/$defs/DefinitionRecord" } },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/SectionRecord" } }
+      }
+    },
+    "GoalRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "🎯️ One goal. The slash-separated `id` is also the nesting path: `quality/tests` hangs under `quality`.",
+      "required": ["id", "title", "uri"],
+      "properties": {
+        "id": { "type": "string" },
+        "artifactId": { "type": "string", "description": "🆔️ The artifact id the tree node carries; the goal id is used when absent." },
+        "title": { "type": "string" },
+        "uri": { "type": "string" },
+        "status": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "TicketRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "slug", "title"],
+      "properties": {
+        "id": { "type": "string" },
+        "slug": { "type": "string" },
+        "title": { "type": "string" },
+        "uri": { "type": "string", "description": "🔗️ Built from the ticket emoji and the flattened slug when absent." },
+        "description": { "type": "string" },
+        "summary": { "type": "string" },
+        "goal": { "type": "string" },
+        "parent": { "type": "string" },
+        "year": { "type": "integer" },
+        "month": { "type": "integer" },
+        "day": { "type": "integer" },
+        "status": { "type": "string" },
+        "started": { "type": "string" },
+        "finished": { "type": "string" }
+      }
+    },
+    "DraftRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "uri"],
+      "properties": { "id": { "type": "string" }, "uri": { "type": "string" }, "artifactId": { "type": "string" } }
+    },
+    "Territory": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "🟣️ A named grouping of statutes and nested territories, as `📐️model` declares it.",
+      "required": ["name", "description"],
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "scopes": { "type": "array", "items": { "type": "string" } },
+        "kinds": { "type": "array", "items": { "type": "string" } },
+        "groups": { "type": "array", "items": { "$ref": "#/$defs/Territory" } }
+      }
+    },
+    "PolicyRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name"],
+      "properties": { "id": { "type": "string" }, "name": { "type": "string" }, "description": { "type": "string" }, "groups": { "type": "array", "items": { "$ref": "#/$defs/Territory" } } }
+    },
+    "ContributorRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "alias", "uri"],
+      "properties": {
+        "id": { "type": "string" },
+        "alias": { "type": "string" },
+        "uri": { "type": "string" },
+        "name": { "type": "string" },
+        "aliases": { "type": "array", "items": { "type": "string" } },
+        "github": { "type": "string" },
+        "githubs": { "type": "array", "items": { "type": "string" } },
+        "names": { "type": "array", "items": { "type": "string" } },
+        "email": { "type": "string" },
+        "emails": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "CheckpointRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "sha", "title", "uri"],
+      "properties": {
+        "id": { "type": "string" },
+        "sha": { "type": "string" },
+        "title": { "type": "string" },
+        "uri": { "type": "string" },
+        "year": { "type": "integer" },
+        "month": { "type": "integer" },
+        "day": { "type": "integer" },
+        "authorId": { "type": "string" }
+      }
+    },
+    "SessionRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "⚪️ One agent session. Sessions render newest first, by `startedAt` descending.",
+      "required": ["id", "uuid", "uri"],
+      "properties": {
+        "id": { "type": "string" },
+        "uuid": { "type": "string" },
+        "uri": { "type": "string" },
+        "kind": { "type": "string" },
+        "kindEmoji": { "type": "string" },
+        "client": { "type": "string" },
+        "startedAt": { "type": "string" },
+        "year": { "type": "integer" },
+        "month": { "type": "integer" },
+        "day": { "type": "integer" },
+        "checkpoint": { "type": "string" }
+      }
+    },
+    "MemoryTreeSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "🗄️ The whole record set a monorepo tree is projected from. Every field defaults to empty, so a fixture states only the categories its scenario is about. `sections` is keyed by file path and read only when sections are requested.",
+      "properties": {
+        "_comment": { "type": "string" },
+        "technologies": { "type": "array", "items": { "$ref": "#/$defs/TechnologyRecord" } },
+        "folders": { "type": "array", "items": { "$ref": "#/$defs/FolderRecord" } },
+        "files": { "type": "array", "items": { "$ref": "#/$defs/FileRecord" } },
+        "sections": { "type": "object", "additionalProperties": { "type": "array", "items": { "$ref": "#/$defs/SectionRecord" } } },
+        "goals": { "type": "array", "items": { "$ref": "#/$defs/GoalRecord" } },
+        "tickets": { "type": "array", "items": { "$ref": "#/$defs/TicketRecord" } },
+        "drafts": { "type": "array", "items": { "$ref": "#/$defs/DraftRecord" } },
+        "policies": { "type": "array", "items": { "$ref": "#/$defs/PolicyRecord" } },
+        "contributors": { "type": "array", "items": { "$ref": "#/$defs/ContributorRecord" } },
+        "checkpoints": { "type": "array", "items": { "$ref": "#/$defs/CheckpointRecord" } },
+        "sessions": { "type": "array", "items": { "$ref": "#/$defs/SessionRecord" } }
+      }
+    },
+    "StatuteCatalogEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "📜️ One declared statute of the catalog port. `📜️statutes` owns this data in production; a fixture states it so the tree shape can be tested without that module.",
+      "required": ["id", "artifactId", "uri", "label", "entityKind", "meta"],
+      "properties": {
+        "id": { "type": "string", "description": "🆔️ The slash-separated statute path, for example `code/section/empty`." },
+        "artifactId": { "type": "string" },
+        "uri": { "type": "string" },
+        "label": { "type": "string", "description": "🏷️ The display label without the priority icon." },
+        "entityKind": { "type": "string", "description": "🧱️ The entity kind the statute applies to; the policy view groups by it." },
+        "meta": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["priority"],
+          "properties": {
+            "policyId": { "type": "string" },
+            "priority": { "enum": ["low", "medium", "high"] },
+            "reason": { "type": "string" },
+            "solution": { "type": "string" },
+            "autofixable": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "MemoryStatuteCatalog": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "statutes": { "type": "array", "items": { "$ref": "#/$defs/StatuteCatalogEntry" } },
+        "territories": { "type": "object", "additionalProperties": { "type": "string" }, "description": "🆔️ Artifact id per territory name." }
+      }
+    },
+    "MermaidNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "🧜️ One treemap node. A node with a `value` and no children renders as a leaf `\"label\": value`; every other node renders as a group.",
+      "required": ["label"],
+      "properties": { "label": { "type": "string" }, "value": { "type": "integer" }, "children": { "type": "array", "items": { "$ref": "#/$defs/MermaidNode" } } }
+    },
+    "MermaidTreemap": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "🧜️ A `treemap-beta` diagram: the header line, the quoted title, then four spaces of indent per level.",
+      "required": ["title"],
+      "properties": { "title": { "type": "string" }, "nodes": { "type": "array", "items": { "$ref": "#/$defs/MermaidNode" } } }
+    },
+    "TreeCacheMeta": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "📌️ The metadata a cached tree carries. A cached build is reused only when the schema version, the repository fingerprint and the section choice all still match; the content digest identifies the tree itself.",
+      "required": ["SchemaVersion", "Fingerprint", "IncludeSections"],
+      "properties": {
+        "SchemaVersion": { "type": "integer", "const": 3 },
+        "Fingerprint": { "type": "string" },
+        "IncludeSections": { "type": "boolean" },
+        "ContentDigest": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    }
+  },
+  "properties": {
+    "source": { "$ref": "#/$defs/MemoryTreeSource" },
+    "catalog": { "$ref": "#/$defs/MemoryStatuteCatalog" },
+    "tree": { "$ref": "#/$defs/TreeNodeSpec" },
+    "filter": { "$ref": "#/$defs/TreeFilterSpec" },
+    "treemap": { "$ref": "#/$defs/MermaidTreemap" },
+    "cache": { "$ref": "#/$defs/TreeCacheMeta" }
+  }
+}

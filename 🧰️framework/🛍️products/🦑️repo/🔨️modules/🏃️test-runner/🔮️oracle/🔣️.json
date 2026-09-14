@@ -1,0 +1,60 @@
+{
+  "$schema": "../../🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🔮️ Oracle contribution of the 🏃️test-runner module. Nothing third party implements this repository's scope→argv mapping, so the planning capabilities rest on frozen specification vectors; the transcript parsers rest on a second, independently written parser plus those vectors.",
+  "oracles": [
+    {
+      "id": "repo-test-runner-second-parser",
+      "kind": "cross-semio-implementation",
+      "ecosystem": "javascript",
+      "package": "semio-repo-test-runner-second-parser",
+      "version": "0.1.0",
+      "engine": {
+        "family": "none",
+        "implementation": "typescript-second-parser",
+        "version": "0.1.0"
+      },
+      "capabilities": [
+        "repo.test-runner.result-parsing"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "LGPL-3.0-or-later",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "hostPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏃️test-runner/🧪️tests/📊️result-parsing/🟦️.ts",
+      "rationale": "The six runner report dialects are emitted by the runners themselves, and no single published library parses go test -json, the vitest JSON reporter, pytest's terminal report, libtest, cargo-nextest, the dotnet console logger and rspec --format json into one common model — a library per dialect would be six oracles for one capability and four of the six have none at all. The reference is therefore a second parser written independently against the same recorded transcripts (the 🟦️.ts adapter), together with those transcripts as frozen specification vectors. vitest is a root dependency of this repository and was considered as a real oracle: it can produce the reporter document but cannot consume one, so it is evidence for the fixture's shape, not for the parse. Registered as a cross-semio-implementation reference rather than as a qualifying third-party oracle, which is exactly what it is: a second parser written inside this repository, deliberately sharing no code with the subject."
+    }
+  ],
+  "probes": [],
+  "noOracleDecisions": [
+    {
+      "id": "repo-test-runner-planning",
+      "capabilities": [
+        "repo.test-runner.runner-detection",
+        "repo.test-runner.invocation-planning",
+        "repo.test-runner.cancellation"
+      ],
+      "rationale": "Which bundle manifest selects which runner, and which argv a repo:// scope becomes, is this repository's own vocabulary — the bundle table, the entity-URI grammar and the narrowing order are defined nowhere outside semio, so no third-party library, CLI or standards tool can be a reference for them. Confidence comes instead from specification vectors frozen in 🧫️fixtures/🧭️detection-vectors.json and 🧫️fixtures/🗺️planning-vectors.json, each carrying the exact expected language and argv transcribed from the Go implementation this port reproduces, plus metamorphic laws asserted in the features (narrowing a scope never widens its plan; a filter only ever adds arguments; planning is idempotent).",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-test-runner-scope-identifiers",
+      "capabilities": [
+        "repo.test-runner.scope-identifiers"
+      ],
+      "rationale": "Flattening and URI-path decoding are semio identifier rules with no external counterpart, but they are reachable today from two independently written implementations — the committed Go client and the new Rust crate — so this decision rests on those, cross-checked pairwise by the harness, plus the frozen selector vectors.",
+      "substitutes": [
+        "independent-implementations",
+        "specification-vectors"
+      ],
+      "coversMutations": false
+    }
+  ]
+}

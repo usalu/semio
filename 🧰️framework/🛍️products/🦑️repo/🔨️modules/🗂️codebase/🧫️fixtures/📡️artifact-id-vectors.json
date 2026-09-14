@@ -1,0 +1,151 @@
+{
+  "schema": "semio.repo.codebase.artifact-id-vectors/1",
+  "comment": "🪪️ Every path an id is built for, against the repository materialised from 📡️repo-tree.json. `kind` selects the builder: folder, file, section or definition.",
+  "vectors": [
+    {
+      "name": "bundle-root-folder",
+      "kind": "folder",
+      "path": "compose/🖥️app"
+    },
+    {
+      "name": "nested-folder",
+      "kind": "folder",
+      "path": "compose/🖥️app/ignored"
+    },
+    {
+      "name": "site-bundle-folder",
+      "kind": "folder",
+      "path": "compose/sites/🌐️web"
+    },
+    {
+      "name": "unowned-folder",
+      "kind": "folder",
+      "path": "docs"
+    },
+    {
+      "name": "repository-root-folder",
+      "kind": "folder",
+      "path": "."
+    },
+    {
+      "name": "code-file-in-bundle-root",
+      "kind": "file",
+      "path": "compose/🖥️app/🧩️widget.ts"
+    },
+    {
+      "name": "code-file-in-nested-folder",
+      "kind": "file",
+      "path": "compose/🖥️app/ignored/💀️dead.ts"
+    },
+    {
+      "name": "lab-file",
+      "kind": "file",
+      "path": "compose/📚️core/🧪️util_test.rs"
+    },
+    {
+      "name": "config-file",
+      "kind": "file",
+      "path": "compose/📚️core/package.json"
+    },
+    {
+      "name": "docs-file-outside-any-bundle",
+      "kind": "file",
+      "path": "docs/📖️guide.md"
+    },
+    {
+      "name": "license-file",
+      "kind": "file",
+      "path": "LICENSE.md"
+    },
+    {
+      "name": "root-level-file",
+      "kind": "file",
+      "path": "README.md"
+    },
+    {
+      "name": "emoji-named-file-keeps-its-leading-emoji",
+      "kind": "file",
+      "path": "compose/🖥️app/🧩️widget.ts"
+    },
+    {
+      "name": "emoji-named-folder-keeps-its-leading-emoji",
+      "kind": "folder",
+      "path": "compose/🖥️app"
+    },
+    {
+      "name": "single-section",
+      "kind": "section",
+      "path": "compose/🖥️app/🧩️widget.ts",
+      "sectionPath": [
+        "🔖️Widget"
+      ]
+    },
+    {
+      "name": "nested-section",
+      "kind": "section",
+      "path": "compose/🖥️app/🧩️widget.ts",
+      "sectionPath": [
+        "🔖️Widget",
+        "Nested"
+      ]
+    },
+    {
+      "name": "unprefixed-section",
+      "kind": "section",
+      "path": "compose/🖥️app/🧩️widget.ts",
+      "sectionPath": [
+        "Header"
+      ]
+    },
+    {
+      "name": "empty-section-path",
+      "kind": "section",
+      "path": "compose/🖥️app/🧩️widget.ts",
+      "sectionPath": []
+    },
+    {
+      "name": "implementation-definition",
+      "kind": "definition",
+      "path": "compose/🖥️app/🧩️widget.ts",
+      "sectionPath": [
+        "🔖️Widget"
+      ],
+      "definitionName": "render",
+      "definitionKind": "implementation"
+    },
+    {
+      "name": "constant-definition",
+      "kind": "definition",
+      "path": "compose/🖥️app/🧩️widget.ts",
+      "sectionPath": [
+        "🔖️Widget"
+      ],
+      "definitionName": "label",
+      "definitionKind": "constant"
+    },
+    {
+      "name": "interface-definition",
+      "kind": "definition",
+      "path": "compose/🖥️app/🧩️widget.ts",
+      "sectionPath": [],
+      "definitionName": "Renderable",
+      "definitionKind": "interface"
+    },
+    {
+      "name": "test-definition-in-lab-file",
+      "kind": "definition",
+      "path": "compose/📚️core/🧪️util_test.rs",
+      "sectionPath": [],
+      "definitionName": "TestAdds",
+      "definitionKind": "implementation"
+    },
+    {
+      "name": "plain-definition-in-code-file",
+      "kind": "definition",
+      "path": "compose/📚️core/🔧️util.rs",
+      "sectionPath": [],
+      "definitionName": "TestAdds",
+      "definitionKind": "implementation"
+    }
+  ]
+}

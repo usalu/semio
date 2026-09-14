@@ -1,0 +1,2050 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-network}[2026/09/05 v0.3.0 semio viz network kernel: graph store, graph algorithms, deterministic layouts]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-data}
+\RequirePackage{semio-viz-layout}
+\RequirePackage{semio-viz-probe}
+
+\ExplSyntaxOn
+
+%region 🔖️Diagnostics
+\msg_new:nnn { semio-viz } { unknown-force }
+  { Unknown~force~'#1'~(link,~many-body,~center,~collide,~x,~y,~radial). }
+%endregion 🔖️Diagnostics
+
+%region 🔖️Keys
+% ⚙️ Applies a family's documented defaults and then the caller's options, so no layout call inherits
+% the option state of the previous one.
+\tl_new:N \l_semio_viz_network_rest_tl
+\cs_new_protected:Npn \semio_viz_network_keys:nNn #1#2#3 {
+  \keys_set:nV { semio / viz / #1 } #2
+  \keys_set_known:nnN { semio / viz / graph / bind } {#3} \l_semio_viz_network_rest_tl
+  \keys_set:nV { semio / viz / #1 } \l_semio_viz_network_rest_tl
+}
+%endregion 🔖️Keys
+
+%region 🔖️GraphStore
+% 🔁 Argument variants the l3 kernel does not ship; guarded so a later kernel definition wins.
+\cs_if_exist:NF \prop_item:cV { \cs_generate_variant:Nn \prop_item:Nn { cV } }
+\cs_if_exist:NF \prop_gput:cVn { \cs_generate_variant:Nn \prop_gput:Nnn { cVn } }
+\cs_if_exist:NF \seq_map_indexed_inline:cn { \cs_generate_variant:Nn \seq_map_indexed_inline:Nn { c } }
+\cs_if_exist:NF \seq_map_function:cN { \cs_generate_variant:Nn \seq_map_function:NN { c } }
+\cs_if_exist:NF \clist_if_in:cnTF { \prg_generate_conditional_variant:Nnn \clist_if_in:Nn { cn } { T, F, TF } }
+
+% 🕸️ Column bindings of the graph currently being read; they follow the roles declared by \SemioVizGraph
+% in semio-viz-data, and fall back to the conventional column names when a role is missing.
+\tl_new:N \l_semio_viz_network_nodes_tl
+\tl_new:N \l_semio_viz_network_edges_tl
+\tl_new:N \l_semio_viz_network_id_tl
+\tl_new:N \l_semio_viz_network_source_tl
+\tl_new:N \l_semio_viz_network_target_tl
+\tl_new:N \l_semio_viz_network_weight_tl
+\tl_new:N \l_semio_viz_network_group_tl
+\tl_new:N \l_semio_viz_network_name_tl
+\tl_new:N \l_semio_viz_network_cell_tl
+\tl_new:N \l_semio_viz_network_cell_two_tl
+\tl_new:N \l_semio_viz_network_cell_three_tl
+\tl_new:N \l_semio_viz_network_kind_tl
+\bool_new:N \l_semio_viz_network_has_group_bool
+\bool_new:N \l_semio_viz_network_has_weight_bool
+\int_new:N \l_semio_viz_network_scan_int
+\seq_new:N \g_semio_viz_graph_names_seq
+
+% ❓ True when table #1 declares column #2.
+\prg_new_protected_conditional:Npnn \semio_viz_network_column_if:nn #1#2 { T, F, TF } {
+  \clist_if_in:cnTF { g_semio_viz_table_ #1 _cols_clist } {#2}
+    { \prg_return_true: } { \prg_return_false: }
+}
+\prg_generate_conditional_variant:Nnn \semio_viz_network_column_if:nn { VV } { T, F, TF }
+
+% 🎭 Reads role #2 of table #1 into #3, leaving #3 empty when the table carries no role map.
+\cs_new_protected:Npn \semio_viz_network_role:nnN #1#2#3 {
+  \prop_if_exist:cTF { g_semio_viz_table_ #1 _roles_prop }
+    { \tl_set:Nx #3 { \prop_item:cn { g_semio_viz_table_ #1 _roles_prop } {#2} } }
+    { \tl_clear:N #3 }
+}
+\cs_generate_variant:Nn \semio_viz_network_role:nnN { VnN }
+
+% 🎭 Resolves every column binding of graph table #1: node and edge tables, id, source, target, weight, group.
+\cs_new_protected:Npn \semio_viz_network_roles_read:n #1 {
+  \semio_viz_network_role:nnN {#1} { nodes } \l_semio_viz_network_nodes_tl
+  \semio_viz_network_role:nnN {#1} { edges } \l_semio_viz_network_edges_tl
+  \semio_viz_network_role:nnN {#1} { source } \l_semio_viz_network_source_tl
+  \semio_viz_network_role:nnN {#1} { target } \l_semio_viz_network_target_tl
+  \semio_viz_network_role:nnN {#1} { weight } \l_semio_viz_network_weight_tl
+  \tl_if_empty:NT \l_semio_viz_network_edges_tl { \tl_set:Nn \l_semio_viz_network_edges_tl {#1} }
+  \tl_if_empty:NT \l_semio_viz_network_source_tl { \tl_set:Nn \l_semio_viz_network_source_tl { source } }
+  \tl_if_empty:NT \l_semio_viz_network_target_tl { \tl_set:Nn \l_semio_viz_network_target_tl { target } }
+  \tl_if_empty:NT \l_semio_viz_network_weight_tl { \tl_set:Nn \l_semio_viz_network_weight_tl { weight } }
+  \tl_if_empty:NTF \l_semio_viz_network_nodes_tl
+    {
+      \tl_set:Nn \l_semio_viz_network_id_tl { id }
+      \tl_set:Nn \l_semio_viz_network_group_tl { group }
+    }
+    {
+      \semio_viz_network_role:VnN \l_semio_viz_network_nodes_tl { id } \l_semio_viz_network_id_tl
+      \semio_viz_network_role:VnN \l_semio_viz_network_nodes_tl { group } \l_semio_viz_network_group_tl
+      \tl_if_empty:NT \l_semio_viz_network_id_tl { \tl_set:Nn \l_semio_viz_network_id_tl { id } }
+      \tl_if_empty:NT \l_semio_viz_network_group_tl { \tl_set:Nn \l_semio_viz_network_group_tl { group } }
+    }
+  \semio_viz_network_column_if:VVTF \l_semio_viz_network_edges_tl \l_semio_viz_network_weight_tl
+    { \bool_set_true:N \l_semio_viz_network_has_weight_bool }
+    { \bool_set_false:N \l_semio_viz_network_has_weight_bool }
+}
+
+% 🔵 Registers node id #2 of graph #1 if it is new, keeping first-appearance order.
+\cs_new_protected:Npn \semio_viz_network_node_add:nn #1#2 {
+  \prop_if_in:cnF { g_semio_viz_graph_ #1 _index_prop } {#2} {
+    \seq_gput_right:cn { g_semio_viz_graph_ #1 _nodes_seq } {#2}
+    \prop_gput:cnx { g_semio_viz_graph_ #1 _index_prop } {#2}
+      { \int_eval:n { \seq_count:c { g_semio_viz_graph_ #1 _nodes_seq } } }
+    \seq_gput_right:cn { g_semio_viz_graph_ #1 _groups_seq } { }
+  }
+}
+
+% 🔵 Appends row #2 of the node table to graph #1, with its group label when the column exists.
+\cs_new_protected:Npn \semio_viz_network_node_read:nn #1#2 {
+  \semio_viz_table_cell:nnnN { \l_semio_viz_network_nodes_tl } {#2}
+    { \l_semio_viz_network_id_tl } \l_semio_viz_network_cell_tl
+  \seq_gput_right:cV { g_semio_viz_graph_ #1 _nodes_seq } \l_semio_viz_network_cell_tl
+  \prop_gput:cVn { g_semio_viz_graph_ #1 _index_prop } \l_semio_viz_network_cell_tl {#2}
+  \bool_if:NTF \l_semio_viz_network_has_group_bool
+    {
+      \semio_viz_table_cell:nnnN { \l_semio_viz_network_nodes_tl } {#2}
+        { \l_semio_viz_network_group_tl } \l_semio_viz_network_cell_two_tl
+    }
+    { \tl_clear:N \l_semio_viz_network_cell_two_tl }
+  \seq_gput_right:cV { g_semio_viz_graph_ #1 _groups_seq } \l_semio_viz_network_cell_two_tl
+}
+
+% ➖ Appends edge row #2 as the index triple {source}{target}{weight} to graph #1.
+\cs_new_protected:Npn \semio_viz_network_edge_read:nn #1#2 {
+  \semio_viz_table_cell:nnnN { \l_semio_viz_network_edges_tl } {#2}
+    { \l_semio_viz_network_source_tl } \l_semio_viz_network_cell_tl
+  \semio_viz_table_cell:nnnN { \l_semio_viz_network_edges_tl } {#2}
+    { \l_semio_viz_network_target_tl } \l_semio_viz_network_cell_two_tl
+  \bool_if:NTF \l_semio_viz_network_has_weight_bool
+    {
+      \semio_viz_table_cell:nnnN { \l_semio_viz_network_edges_tl } {#2}
+        { \l_semio_viz_network_weight_tl } \l_semio_viz_network_cell_three_tl
+    }
+    { \tl_set:Nn \l_semio_viz_network_cell_three_tl { 1 } }
+  \tl_if_empty:NT \l_semio_viz_network_cell_three_tl { \tl_set:Nn \l_semio_viz_network_cell_three_tl { 1 } }
+  \seq_gput_right:cx { g_semio_viz_graph_ #1 _edges_seq }
+    {
+      { \prop_item:cV { g_semio_viz_graph_ #1 _index_prop } \l_semio_viz_network_cell_tl }
+      { \prop_item:cV { g_semio_viz_graph_ #1 _index_prop } \l_semio_viz_network_cell_two_tl }
+      { \tl_use:N \l_semio_viz_network_cell_three_tl }
+    }
+}
+
+% 🔵 Registers both endpoints of edge row #2, used when the graph has no separate node table.
+\cs_new_protected:Npn \semio_viz_network_endpoints_read:nn #1#2 {
+  \semio_viz_table_cell:nnnN { \l_semio_viz_network_edges_tl } {#2}
+    { \l_semio_viz_network_source_tl } \l_semio_viz_network_cell_tl
+  \semio_viz_table_cell:nnnN { \l_semio_viz_network_edges_tl } {#2}
+    { \l_semio_viz_network_target_tl } \l_semio_viz_network_cell_two_tl
+  \exp_args:NnV \semio_viz_network_node_add:nn {#1} \l_semio_viz_network_cell_tl
+  \exp_args:NnV \semio_viz_network_node_add:nn {#1} \l_semio_viz_network_cell_two_tl
+}
+
+% 🎭 Per-call overrides of the column bindings, for callers whose table carries no roles or
+% other ones (`\SemioVizLayout{sankey}{demo-flow}{out}[...]` with `weight=value`, say).
+\keys_define:nn { semio / viz / graph / bind } {
+  nodes  .tl_set:N = \l_semio_viz_network_nodes_tl,
+  edges  .tl_set:N = \l_semio_viz_network_edges_tl,
+  id     .tl_set:N = \l_semio_viz_network_id_tl,
+  source .tl_set:N = \l_semio_viz_network_source_tl,
+  target .tl_set:N = \l_semio_viz_network_target_tl,
+  weight .tl_set:N = \l_semio_viz_network_weight_tl,
+  group  .tl_set:N = \l_semio_viz_network_group_tl,
+}
+
+% 🧱 Reads graph table #1 into the global node/edge structures; nodes come from the node table when the
+% `nodes` role names one, otherwise from the first appearance of every endpoint in the edge list.
+\cs_new_protected:Npn \semio_viz_network_graph_build:nn #1#2 {
+  \tl_set:Nn \l_semio_viz_network_name_tl {#1}
+  \seq_if_in:NnF \g_semio_viz_graph_names_seq {#1} { \seq_gput_right:Nn \g_semio_viz_graph_names_seq {#1} }
+  \seq_clear_new:c { g_semio_viz_graph_ #1 _nodes_seq }
+  \seq_clear_new:c { g_semio_viz_graph_ #1 _groups_seq }
+  \seq_clear_new:c { g_semio_viz_graph_ #1 _edges_seq }
+  \prop_clear_new:c { g_semio_viz_graph_ #1 _index_prop }
+  \semio_viz_network_roles_read:n {#1}
+  \keys_set_known:nn { semio / viz / graph / bind } {#2}
+  \semio_viz_network_column_if:VVTF \l_semio_viz_network_edges_tl \l_semio_viz_network_weight_tl
+    { \bool_set_true:N \l_semio_viz_network_has_weight_bool }
+    { \bool_set_false:N \l_semio_viz_network_has_weight_bool }
+  \tl_if_empty:NTF \l_semio_viz_network_nodes_tl
+    {
+      \semio_viz_table_nrows:nN { \l_semio_viz_network_edges_tl } \l_semio_viz_network_scan_int
+      \int_step_inline:nn { \l_semio_viz_network_scan_int } { \semio_viz_network_endpoints_read:nn {#1} {##1} }
+    }
+    {
+      \semio_viz_network_column_if:VVTF \l_semio_viz_network_nodes_tl \l_semio_viz_network_group_tl
+        { \bool_set_true:N \l_semio_viz_network_has_group_bool }
+        { \bool_set_false:N \l_semio_viz_network_has_group_bool }
+      \semio_viz_table_nrows:nN { \l_semio_viz_network_nodes_tl } \l_semio_viz_network_scan_int
+      \int_step_inline:nn { \l_semio_viz_network_scan_int } { \semio_viz_network_node_read:nn {#1} {##1} }
+    }
+  \semio_viz_table_nrows:nN { \l_semio_viz_network_edges_tl } \l_semio_viz_network_scan_int
+  \int_step_inline:nn { \l_semio_viz_network_scan_int } { \semio_viz_network_edge_read:nn {#1} {##1} }
+}
+%endregion 🔖️GraphStore
+
+
+%region 🔖️Arrays
+% 🧮 Indexed working arrays: fp for reals, tl for integers (no register pressure), seq for adjacency lists.
+\cs_new_protected:Npn \semio_viz_network_fp_ensure:nn #1#2 {
+  \int_step_inline:nn {#2}
+    { \cs_if_exist:cF { l_semio_viz_network_ #1 _ ##1 _fp } { \fp_new:c { l_semio_viz_network_ #1 _ ##1 _fp } } }
+}
+% 🧮 Declares and empties the integer array #1 for #2 nodes.
+\cs_new_protected:Npn \semio_viz_network_n_ensure:nn #1#2 {
+  \int_step_inline:nn {#2} { \tl_clear_new:c { l_semio_viz_network_ #1 _ ##1 _tl } }
+}
+% 🧮 Declares and empties the adjacency array #1 for #2 nodes.
+\cs_new_protected:Npn \semio_viz_network_seq_ensure:nn #1#2 {
+  \int_step_inline:nn {#2} { \seq_clear_new:c { l_semio_viz_network_ #1 _ ##1 _seq } }
+}
+
+% 🔎 Entry #2 of the real array #1.
+\cs_new:Npn \semio_viz_network_f:nn #1#2 { \use:c { l_semio_viz_network_ #1 _ \int_eval:n {#2} _fp } }
+% 🔎 Entry #2 of the integer array #1.
+\cs_new:Npn \semio_viz_network_n:nn #1#2 { \use:c { l_semio_viz_network_ #1 _ \int_eval:n {#2} _tl } }
+% ✏️ Sets entry #2 of the real array #1 to #3.
+\cs_new_protected:Npn \semio_viz_network_fset:nnn #1#2#3
+  { \fp_set:cn { l_semio_viz_network_ #1 _ \int_eval:n {#2} _fp } {#3} }
+% ➕ Adds #3 to entry #2 of the real array #1.
+\cs_new_protected:Npn \semio_viz_network_fadd:nnn #1#2#3
+  { \fp_add:cn { l_semio_viz_network_ #1 _ \int_eval:n {#2} _fp } {#3} }
+% ✏️ Sets entry #2 of the integer array #1 to #3.
+\cs_new_protected:Npn \semio_viz_network_nset:nnn #1#2#3
+  { \tl_set:cx { l_semio_viz_network_ #1 _ \int_eval:n {#2} _tl } { \int_eval:n {#3} } }
+% ➕ Appends #3 to entry #2 of the adjacency array #1.
+\cs_new_protected:Npn \semio_viz_network_sput:nnn #1#2#3
+  { \seq_put_right:cn { l_semio_viz_network_ #1 _ \int_eval:n {#2} _seq } {#3} }
+%endregion 🔖️Arrays
+
+%region 🔖️Random
+% 🎲 d3's linear congruential generator, seed s=1, a=1664525, c=1013904223, m=2^32; the only randomness in this kernel.
+\fp_new:N \g_semio_viz_network_lcg_fp
+\fp_gset:Nn \g_semio_viz_network_lcg_fp { 1 }
+\fp_new:N \l_semio_viz_network_rand_fp
+
+% 🎲 Resets the generator state; the documented default seed is 1, exactly d3-force's.
+\cs_new_protected:Npn \semio_viz_network_seed:n #1 { \fp_gset:Nn \g_semio_viz_network_lcg_fp {#1} }
+
+% 🎲 Advances the generator; the next value in [0,1) lands in \l_semio_viz_network_rand_fp.
+\fp_new:N \l_semio_viz_network_lcg_hi_fp
+\fp_new:N \l_semio_viz_network_lcg_lo_fp
+\cs_new_protected:Npn \semio_viz_network_random: {
+  \fp_set:Nn \l_semio_viz_network_lcg_hi_fp { floor( \g_semio_viz_network_lcg_fp / 65536 ) }
+  \fp_set:Nn \l_semio_viz_network_lcg_lo_fp
+    { \g_semio_viz_network_lcg_fp - 65536 * \l_semio_viz_network_lcg_hi_fp }
+  \fp_set:Nn \l_semio_viz_network_lcg_hi_fp
+    {
+      1664525 * \l_semio_viz_network_lcg_hi_fp
+      - 65536 * floor( 1664525 * \l_semio_viz_network_lcg_hi_fp / 65536 )
+    }
+  \fp_gset:Nn \g_semio_viz_network_lcg_fp
+    { \l_semio_viz_network_lcg_hi_fp * 65536 + 1664525 * \l_semio_viz_network_lcg_lo_fp + 1013904223 }
+  \fp_gset:Nn \g_semio_viz_network_lcg_fp
+    { \g_semio_viz_network_lcg_fp - 4294967296 * floor( \g_semio_viz_network_lcg_fp / 4294967296 ) }
+  \fp_set:Nn \l_semio_viz_network_rand_fp { \g_semio_viz_network_lcg_fp / 4294967296 }
+}
+
+% 🎲 d3-force's jiggle: (random() - 0.5) * 1e-6, used only when a coordinate difference is exactly zero.
+\cs_new_protected:Npn \semio_viz_network_jiggle:N #1 {
+  \semio_viz_network_random:
+  \fp_set:Nn #1 { ( \l_semio_viz_network_rand_fp - 0.5 ) * 1e-6 }
+}
+%endregion 🔖️Random
+
+%region 🔖️Binding
+\int_new:N \l_semio_viz_network_n_int
+\int_new:N \l_semio_viz_network_m_int
+\int_new:N \l_semio_viz_network_i_int
+\int_new:N \l_semio_viz_network_j_int
+\int_new:N \l_semio_viz_network_k_int
+\int_new:N \l_semio_viz_network_layers_int
+\int_new:N \l_semio_viz_network_components_int
+\tl_new:N \l_semio_viz_network_bound_tl
+\seq_new:N \l_semio_viz_network_ids_seq
+\seq_new:N \l_semio_viz_network_group_seq
+\seq_new:N \l_semio_viz_network_queue_seq
+\seq_new:N \l_semio_viz_network_stack_seq
+\seq_new:N \l_semio_viz_network_scratch_seq
+\seq_new:N \l_semio_viz_network_order_seq
+
+% 🔗 Stores edge #1 as source/target/weight arrays and extends the degree and adjacency structures.
+\cs_new_protected:Npn \semio_viz_network_edge_set:nnnn #1#2#3#4 {
+  \semio_viz_network_nset:nnn { es } {#1} {#2}
+  \semio_viz_network_nset:nnn { et } {#1} {#3}
+  \semio_viz_network_fset:nnn { ew } {#1} {#4}
+  \semio_viz_network_nset:nnn { erev } {#1} { 0 }
+  \semio_viz_network_sput:nnn { adj } {#2} {#3}
+  \semio_viz_network_sput:nnn { adj } {#3} {#2}
+  \semio_viz_network_sput:nnn { outadj } {#2} {#3}
+  \semio_viz_network_sput:nnn { inadj } {#3} {#2}
+  \semio_viz_network_sput:nnn { inc } {#2} {#1}
+  \semio_viz_network_sput:nnn { inc } {#3} {#1}
+  \semio_viz_network_nset:nnn { deg } {#2} { \semio_viz_network_n:nn { deg } {#2} + 1 }
+  \semio_viz_network_nset:nnn { deg } {#3} { \semio_viz_network_n:nn { deg } {#3} + 1 }
+  \semio_viz_network_nset:nnn { outdeg } {#2} { \semio_viz_network_n:nn { outdeg } {#2} + 1 }
+  \semio_viz_network_nset:nnn { indeg } {#3} { \semio_viz_network_n:nn { indeg } {#3} + 1 }
+}
+% 📥 Unwraps one braced edge record #2 into the four arguments the edge setter expects.
+\cs_new_protected:Npn \semio_viz_network_edge_load:nn #1#2 { \semio_viz_network_edge_set:nnnn {#1} #2 }
+
+% 🧷 Loads graph #1 into the working arrays: ids, groups, edges, weights, degrees, adjacency lists.
+\cs_new_protected:Npn \semio_viz_network_use:nn #1#2 {
+  \semio_viz_network_graph_build:nn {#1} {#2}
+  \tl_set:Nn \l_semio_viz_network_bound_tl {#1}
+  \seq_set_eq:Nc \l_semio_viz_network_ids_seq { g_semio_viz_graph_ #1 _nodes_seq }
+  \seq_set_eq:Nc \l_semio_viz_network_group_seq { g_semio_viz_graph_ #1 _groups_seq }
+  \int_set:Nn \l_semio_viz_network_n_int { \seq_count:N \l_semio_viz_network_ids_seq }
+  \int_set:Nn \l_semio_viz_network_m_int { \seq_count:c { g_semio_viz_graph_ #1 _edges_seq } }
+  \semio_viz_network_n_ensure:nn { es } { \l_semio_viz_network_m_int }
+  \semio_viz_network_n_ensure:nn { et } { \l_semio_viz_network_m_int }
+  \semio_viz_network_n_ensure:nn { erev } { \l_semio_viz_network_m_int }
+  \semio_viz_network_fp_ensure:nn { ew } { \l_semio_viz_network_m_int }
+  \semio_viz_network_n_ensure:nn { deg } { \l_semio_viz_network_n_int }
+  \semio_viz_network_n_ensure:nn { indeg } { \l_semio_viz_network_n_int }
+  \semio_viz_network_n_ensure:nn { outdeg } { \l_semio_viz_network_n_int }
+  \semio_viz_network_seq_ensure:nn { adj } { \l_semio_viz_network_n_int }
+  \semio_viz_network_seq_ensure:nn { outadj } { \l_semio_viz_network_n_int }
+  \semio_viz_network_seq_ensure:nn { inadj } { \l_semio_viz_network_n_int }
+  \semio_viz_network_seq_ensure:nn { inc } { \l_semio_viz_network_n_int }
+  \semio_viz_network_fp_ensure:nn { x } { \l_semio_viz_network_n_int }
+  \semio_viz_network_fp_ensure:nn { y } { \l_semio_viz_network_n_int }
+  \semio_viz_network_fp_ensure:nn { vx } { \l_semio_viz_network_n_int }
+  \semio_viz_network_fp_ensure:nn { vy } { \l_semio_viz_network_n_int }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \semio_viz_network_nset:nnn { deg } {##1} { 0 }
+    \semio_viz_network_nset:nnn { indeg } {##1} { 0 }
+    \semio_viz_network_nset:nnn { outdeg } {##1} { 0 }
+  }
+  \seq_map_indexed_inline:cn { g_semio_viz_graph_ #1 _edges_seq } { \semio_viz_network_edge_load:nn {##1} {##2} }
+}
+
+% 🏷️ Leaves the id of node #1 of the bound graph.
+\cs_new:Npn \semio_viz_network_id:n #1 { \seq_item:Nn \l_semio_viz_network_ids_seq {#1} }
+% 🎨 Leaves the group of node #1 of the bound graph.
+\cs_new:Npn \semio_viz_network_group:n #1 { \seq_item:Nn \l_semio_viz_network_group_seq {#1} }
+%endregion 🔖️Binding
+
+%region 🔖️Algorithms
+% 🚿 Clears the visit marks and BFS depths of the bound graph.
+\cs_new_protected:Npn \semio_viz_network_visit_reset: {
+  \semio_viz_network_n_ensure:nn { seen } { \l_semio_viz_network_n_int }
+  \semio_viz_network_n_ensure:nn { depth } { \l_semio_viz_network_n_int }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \semio_viz_network_nset:nnn { seen } {##1} { 0 }
+    \semio_viz_network_nset:nnn { depth } {##1} { 0 }
+  }
+}
+
+% ➕ Queues node #1, discovered from #2, once, and records its depth one below #2's.
+\cs_new_protected:Npn \semio_viz_network_bfs_push:nn #1#2 {
+  \int_compare:nNnF { \semio_viz_network_n:nn { seen } {#1} } = { 1 } {
+    \semio_viz_network_nset:nnn { seen } {#1} { 1 }
+    \semio_viz_network_nset:nnn { depth } {#1} { \semio_viz_network_n:nn { depth } {#2} + 1 }
+    \seq_put_right:Nn \l_semio_viz_network_queue_seq {#1}
+  }
+}
+% 🌊 Queues every neighbour of node #1 along the adjacency the walk was opened with.
+\cs_new_protected:Npn \semio_viz_network_bfs_expand:n #1 {
+  \seq_map_inline:cn { l_semio_viz_network_ \l_semio_viz_network_walk_tl _ #1 _seq }
+    { \semio_viz_network_bfs_push:nn {##1} {#1} }
+}
+\tl_new:N \l_semio_viz_network_walk_tl
+
+% 🌊 Breadth-first traversal from node #1 over adjacency #2 (adj, outadj, inadj), appending to \l_semio_viz_network_order_seq.
+\cs_new_protected:Npn \semio_viz_network_bfs_from:nn #1#2 {
+  \tl_set:Nn \l_semio_viz_network_walk_tl {#2}
+  \int_compare:nNnF { \semio_viz_network_n:nn { seen } {#1} } = { 1 } {
+    \seq_clear:N \l_semio_viz_network_queue_seq
+    \seq_put_right:Nn \l_semio_viz_network_queue_seq {#1}
+    \semio_viz_network_nset:nnn { seen } {#1} { 1 }
+    \bool_until_do:nn { \seq_if_empty_p:N \l_semio_viz_network_queue_seq } {
+      \seq_pop_left:NN \l_semio_viz_network_queue_seq \l_semio_viz_network_cell_tl
+      \seq_put_right:NV \l_semio_viz_network_order_seq \l_semio_viz_network_cell_tl
+      \exp_args:NV \semio_viz_network_bfs_expand:n \l_semio_viz_network_cell_tl
+    }
+  }
+}
+
+% 🪜 Pushes the neighbours of node #1 in reverse, so the stack pops them in declaration order.
+\cs_new_protected:Npn \semio_viz_network_dfs_expand:n #1 {
+  \seq_set_eq:Nc \l_semio_viz_network_scratch_seq { l_semio_viz_network_ \l_semio_viz_network_walk_tl _ #1 _seq }
+  \seq_reverse:N \l_semio_viz_network_scratch_seq
+  \seq_map_inline:Nn \l_semio_viz_network_scratch_seq { \seq_put_left:Nn \l_semio_viz_network_stack_seq {##1} }
+}
+
+% 🪜 Depth-first preorder traversal from node #1 over adjacency #2, neighbours in declaration order.
+\cs_new_protected:Npn \semio_viz_network_dfs_from:nn #1#2 {
+  \tl_set:Nn \l_semio_viz_network_walk_tl {#2}
+  \seq_clear:N \l_semio_viz_network_stack_seq
+  \seq_put_left:Nn \l_semio_viz_network_stack_seq {#1}
+  \bool_until_do:nn { \seq_if_empty_p:N \l_semio_viz_network_stack_seq } {
+    \seq_pop_left:NN \l_semio_viz_network_stack_seq \l_semio_viz_network_cell_tl
+    \int_compare:nNnF { \semio_viz_network_n:nn { seen } { \l_semio_viz_network_cell_tl } } = { 1 } {
+      \semio_viz_network_nset:nnn { seen } { \l_semio_viz_network_cell_tl } { 1 }
+      \seq_put_right:NV \l_semio_viz_network_order_seq \l_semio_viz_network_cell_tl
+      \exp_args:NV \semio_viz_network_dfs_expand:n \l_semio_viz_network_cell_tl
+    }
+  }
+}
+
+% 🏷️ Labels node #1 with the component number currently being discovered.
+\cs_new_protected:Npn \semio_viz_network_component_mark:n #1
+  { \semio_viz_network_nset:nnn { comp } {#1} { \l_semio_viz_network_components_int } }
+
+% 🧩 Labels every node with its connected component, discovered in index order and numbered from 1.
+\cs_new_protected:Npn \semio_viz_network_components: {
+  \semio_viz_network_visit_reset:
+  \semio_viz_network_n_ensure:nn { comp } { \l_semio_viz_network_n_int }
+  \int_zero:N \l_semio_viz_network_components_int
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \int_compare:nNnF { \semio_viz_network_n:nn { seen } {##1} } = { 1 } {
+      \int_incr:N \l_semio_viz_network_components_int
+      \seq_clear:N \l_semio_viz_network_order_seq
+      \semio_viz_network_bfs_from:nn {##1} { adj }
+      \seq_map_function:NN \l_semio_viz_network_order_seq \semio_viz_network_component_mark:n
+    }
+  }
+}
+
+% ➖ Takes one incoming edge off node #1's pending count, as its predecessor is emitted.
+\cs_new_protected:Npn \semio_viz_network_topo_relax:n #1
+  { \semio_viz_network_nset:nnn { pend } {#1} { \semio_viz_network_n:nn { pend } {#1} - 1 } }
+
+% 🪢 One Kahn round: the first node with nothing pending is emitted and its successors relaxed;
+% no such node means the graph has a cycle, and the walk stops.
+\cs_new_protected:Npn \semio_viz_network_topo_step: {
+  \int_zero:N \l_semio_viz_network_k_int
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \int_compare:nNnT \l_semio_viz_network_k_int = { 0 } {
+      \int_compare:nNnT { \semio_viz_network_n:nn { done } {##1} } = { 0 } {
+        \int_compare:nNnT { \semio_viz_network_n:nn { pend } {##1} } = { 0 }
+          { \int_set:Nn \l_semio_viz_network_k_int {##1} }
+      }
+    }
+  }
+  \int_compare:nNnF \l_semio_viz_network_k_int = { 0 } {
+    \semio_viz_network_nset:nnn { done } { \l_semio_viz_network_k_int } { 1 }
+    \seq_put_right:Nx \l_semio_viz_network_order_seq { \int_use:N \l_semio_viz_network_k_int }
+    \seq_map_function:cN { l_semio_viz_network_outadj_ \int_use:N \l_semio_viz_network_k_int _seq }
+      \semio_viz_network_topo_relax:n
+  }
+}
+
+% 🪢 Kahn topological order of the bound digraph, ties broken by node index; result in \l_semio_viz_network_order_seq.
+\cs_new_protected:Npn \semio_viz_network_topological: {
+  \semio_viz_network_n_ensure:nn { pend } { \l_semio_viz_network_n_int }
+  \semio_viz_network_n_ensure:nn { done } { \l_semio_viz_network_n_int }
+  \seq_clear:N \l_semio_viz_network_order_seq
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \semio_viz_network_nset:nnn { pend } {##1} { \semio_viz_network_n:nn { indeg } {##1} }
+    \semio_viz_network_nset:nnn { done } {##1} { 0 }
+  }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } { \semio_viz_network_topo_step: }
+}
+
+% ✂️ One outgoing edge #2 of node #1 in the cycle-breaking walk: an unseen head is descended into,
+% a head still on the stack means #2 is a back edge and is marked reversed.
+\cs_new_protected:Npn \semio_viz_network_acyclic_edge:nn #1#2 {
+  \int_compare:nNnT { \semio_viz_network_n:nn { es } {#2} } = {#1} {
+    \int_case:nnF { \semio_viz_network_n:nn { state } { \semio_viz_network_n:nn { et } {#2} } }
+      {
+        { 0 } { \semio_viz_network_acyclic_visit:n { \semio_viz_network_n:nn { et } {#2} } }
+        { 1 } { \semio_viz_network_nset:nnn { erev } {#2} { 1 } }
+      }
+      { }
+  }
+}
+% 🪜 Visits node #1 in that walk: on the stack while its edges are followed, finished afterwards.
+\cs_new_protected:Npn \semio_viz_network_acyclic_visit:n #1 {
+  \semio_viz_network_nset:nnn { state } {#1} { 1 }
+  \seq_map_inline:cn { l_semio_viz_network_inc_ \int_eval:n {#1} _seq }
+    { \semio_viz_network_acyclic_edge:nn {#1} {##1} }
+  \semio_viz_network_nset:nnn { state } {#1} { 2 }
+}
+
+% ✂️ Marks the back edges found by a DFS in index order as reversed, making the bound digraph acyclic.
+\cs_new_protected:Npn \semio_viz_network_acyclic: {
+  \semio_viz_network_n_ensure:nn { state } { \l_semio_viz_network_n_int }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } { \semio_viz_network_nset:nnn { state } {##1} { 0 } }
+  \int_step_inline:nn { \l_semio_viz_network_m_int } { \semio_viz_network_nset:nnn { erev } {##1} { 0 } }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \int_compare:nNnT { \semio_viz_network_n:nn { state } {##1} } = { 0 }
+      { \semio_viz_network_acyclic_visit:n {##1} }
+  }
+}
+
+% 🪜 Pushes node #2 one layer past node #1, when it is not already at least that far.
+\cs_new_protected:Npn \semio_viz_network_layer_push:nn #1#2 {
+  \int_compare:nNnT { \semio_viz_network_n:nn { layer } {#2} } < { \semio_viz_network_n:nn { layer } {#1} + 1 }
+    { \semio_viz_network_nset:nnn { layer } {#2} { \semio_viz_network_n:nn { layer } {#1} + 1 } }
+}
+% ➡️ Applies edge #1 in its effective direction, which is the other way round for a reversed edge.
+\cs_new_protected:Npn \semio_viz_network_layer_edge:n #1 {
+  \int_compare:nNnTF { \semio_viz_network_n:nn { erev } {#1} } = { 1 }
+    { \semio_viz_network_layer_push:nn { \semio_viz_network_n:nn { et } {#1} } { \semio_viz_network_n:nn { es } {#1} } }
+    { \semio_viz_network_layer_push:nn { \semio_viz_network_n:nn { es } {#1} } { \semio_viz_network_n:nn { et } {#1} } }
+}
+% 🔁 One relaxation sweep over every edge; repeating it until nothing moves gives the longest-path
+% layering.
+\cs_new_protected:Npn \semio_viz_network_layer_relax:
+  { \int_step_inline:nn { \l_semio_viz_network_m_int } { \semio_viz_network_layer_edge:n {##1} } }
+
+% 🪜 Longest-path layering after cycle removal; the layer count lands in \l_semio_viz_network_layers_int.
+\cs_new_protected:Npn \semio_viz_network_layering: {
+  \semio_viz_network_acyclic:
+  \semio_viz_network_n_ensure:nn { layer } { \l_semio_viz_network_n_int }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } { \semio_viz_network_nset:nnn { layer } {##1} { 0 } }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } { \semio_viz_network_layer_relax: }
+  \int_set:Nn \l_semio_viz_network_layers_int { 1 }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \int_compare:nNnT { \semio_viz_network_n:nn { layer } {##1} + 1 } > \l_semio_viz_network_layers_int
+      { \int_set:Nn \l_semio_viz_network_layers_int { \semio_viz_network_n:nn { layer } {##1} + 1 } }
+  }
+}
+%endregion 🔖️Algorithms
+
+%region 🔖️Output
+\cs_if_exist:NF \semio_viz_table_row:nx { \cs_generate_variant:Nn \semio_viz_table_row:nn { nx } }
+
+% 📤 Declares an output table with a fixed, documented column list.
+\cs_new_protected:Npn \semio_viz_network_out_new:nn #1#2 { \semio_viz_table_new:nn {#1} {#2} }
+% 📤 Appends one fully expanded row to an output table.
+\cs_new_protected:Npn \semio_viz_network_out_row:nn #1#2 { \semio_viz_table_row:nx {#1} {#2} }
+%endregion 🔖️Output
+
+
+%region 🔖️ForceKeys
+% 🔑 semio / viz / layout / force — the options of the `force` layout. Every default is
+% d3-force's own, so a bare call reproduces `d3.forceSimulation()` with `forceLink`,
+% `forceManyBody` and `forceCenter`, ticked by hand.
+%   iterations         (integer, default 300)   ticks; cost is O(iterations * (n^2 + m))
+%   alpha              (number, default 1)      starting alpha
+%   alpha-min          (number, default 0.001)  only used to derive the automatic decay
+%   alpha-decay        (number, default -1)     -1 means 1 - alpha-min^(1/300), as d3 does
+%   alpha-target       (number, default 0)      alpha decays towards this
+%   velocity-decay     (number, default 0.4)    d3's public value; the multiplier is 1 - it
+%   forces             (clist, default {link, many-body, center})
+%                      the forces, applied in the order they are listed; the oracle has to
+%                      register them in the same order for the comparison to mean anything
+%   link-distance      (number, default 30)     rest length of a link
+%   link-strength      (number, default -1)     -1 means 1/min(deg s, deg t), as d3 does
+%   link-iterations    (integer, default 1)     passes of the link force per tick
+%   many-body-strength (number, default -30)    charge of every node
+%   distance-min       (number, default 1)      the many-body clamp, squared internally
+%   distance-max       (number, default -1)     -1 means no upper cutoff
+%   center-x/-y        (number, default 0)      where the centroid is pulled to
+%   center-strength    (number, default 1)
+%   collide-radius     (number, default 1)      one radius for every node
+%   collide-strength   (number, default 0.7)
+%   collide-iterations (integer, default 1)
+%   x-target/-strength (number, default 0 / 0.1)   the per-axis springs
+%   y-target/-strength (number, default 0 / 0.1)
+%   radial-radius      (number, default 100)    the circle forceRadial pulls towards
+%   radial-x/-y        (number, default 0)      its centre
+%   radial-strength    (number, default 0.1)
+%   seed               (number, default 1)      seed of the LCG behind jiggle()
+% `theta` is deliberately absent: the many-body force is evaluated exactly, once per
+% unordered pair, which is what d3 computes when theta is 0.
+\int_new:N \l_semio_viz_network_force_iter_int
+\int_new:N \l_semio_viz_network_link_iter_int
+\int_new:N \l_semio_viz_network_collide_iter_int
+\fp_new:N \l_semio_viz_network_alpha_fp
+\fp_new:N \l_semio_viz_network_alpha_min_fp
+\fp_new:N \l_semio_viz_network_alpha_decay_fp
+\fp_new:N \l_semio_viz_network_alpha_target_fp
+\fp_new:N \l_semio_viz_network_vdecay_fp
+\fp_new:N \l_semio_viz_network_link_distance_fp
+\fp_new:N \l_semio_viz_network_link_strength_fp
+\fp_new:N \l_semio_viz_network_charge_fp
+\fp_new:N \l_semio_viz_network_dmin_fp
+\fp_new:N \l_semio_viz_network_dmax_fp
+\fp_new:N \l_semio_viz_network_center_x_fp
+\fp_new:N \l_semio_viz_network_center_y_fp
+\fp_new:N \l_semio_viz_network_center_strength_fp
+\fp_new:N \l_semio_viz_network_collide_radius_fp
+\fp_new:N \l_semio_viz_network_collide_strength_fp
+\fp_new:N \l_semio_viz_network_xforce_target_fp
+\fp_new:N \l_semio_viz_network_xforce_strength_fp
+\fp_new:N \l_semio_viz_network_yforce_target_fp
+\fp_new:N \l_semio_viz_network_yforce_strength_fp
+\fp_new:N \l_semio_viz_network_radial_radius_fp
+\fp_new:N \l_semio_viz_network_radial_x_fp
+\fp_new:N \l_semio_viz_network_radial_y_fp
+\fp_new:N \l_semio_viz_network_radial_strength_fp
+\fp_new:N \l_semio_viz_network_seed_fp
+\clist_new:N \l_semio_viz_network_forces_clist
+
+\keys_define:nn { semio / viz / layout / force } {
+  iterations        .int_set:N = \l_semio_viz_network_force_iter_int,
+  alpha             .fp_set:N  = \l_semio_viz_network_alpha_fp,
+  alpha-min         .fp_set:N  = \l_semio_viz_network_alpha_min_fp,
+  alpha-decay       .fp_set:N  = \l_semio_viz_network_alpha_decay_fp,
+  alpha-target      .fp_set:N  = \l_semio_viz_network_alpha_target_fp,
+  velocity-decay    .fp_set:N  = \l_semio_viz_network_vdecay_fp,
+  forces            .clist_set:N = \l_semio_viz_network_forces_clist,
+  link-distance     .fp_set:N  = \l_semio_viz_network_link_distance_fp,
+  link-strength     .fp_set:N  = \l_semio_viz_network_link_strength_fp,
+  link-iterations   .int_set:N = \l_semio_viz_network_link_iter_int,
+  many-body-strength .fp_set:N = \l_semio_viz_network_charge_fp,
+  distance-min      .fp_set:N  = \l_semio_viz_network_dmin_fp,
+  distance-max      .fp_set:N  = \l_semio_viz_network_dmax_fp,
+  center-x          .fp_set:N  = \l_semio_viz_network_center_x_fp,
+  center-y          .fp_set:N  = \l_semio_viz_network_center_y_fp,
+  center-strength   .fp_set:N  = \l_semio_viz_network_center_strength_fp,
+  collide-radius    .fp_set:N  = \l_semio_viz_network_collide_radius_fp,
+  collide-strength  .fp_set:N  = \l_semio_viz_network_collide_strength_fp,
+  collide-iterations .int_set:N = \l_semio_viz_network_collide_iter_int,
+  x-target          .fp_set:N  = \l_semio_viz_network_xforce_target_fp,
+  x-strength        .fp_set:N  = \l_semio_viz_network_xforce_strength_fp,
+  y-target          .fp_set:N  = \l_semio_viz_network_yforce_target_fp,
+  y-strength        .fp_set:N  = \l_semio_viz_network_yforce_strength_fp,
+  radial-radius     .fp_set:N  = \l_semio_viz_network_radial_radius_fp,
+  radial-x          .fp_set:N  = \l_semio_viz_network_radial_x_fp,
+  radial-y          .fp_set:N  = \l_semio_viz_network_radial_y_fp,
+  radial-strength   .fp_set:N  = \l_semio_viz_network_radial_strength_fp,
+  seed              .fp_set:N  = \l_semio_viz_network_seed_fp,
+}
+
+\tl_const:Nn \c_semio_viz_network_force_defaults_tl
+  { iterations = 300, alpha = 1, alpha-min = 0.001, alpha-decay = -1, alpha-target = 0, velocity-decay = 0.4, forces = {link, many-body, center}, link-distance = 30, link-strength = -1, link-iterations = 1, many-body-strength = -30, distance-min = 1, distance-max = -1, center-x = 0, center-y = 0, center-strength = 1, collide-radius = 1, collide-strength = 0.7, collide-iterations = 1, x-target = 0, x-strength = 0.1, y-target = 0, y-strength = 0.1, radial-radius = 100, radial-x = 0, radial-y = 0, radial-strength = 0.1, seed = 1 }
+%endregion 🔖️ForceKeys
+
+%region 🔖️ForceSimulation
+\fp_new:N \l_semio_viz_network_dx_fp
+\fp_new:N \l_semio_viz_network_dy_fp
+\fp_new:N \l_semio_viz_network_dl_fp
+\fp_new:N \l_semio_viz_network_dw_fp
+\fp_new:N \l_semio_viz_network_acc_x_fp
+\fp_new:N \l_semio_viz_network_acc_y_fp
+\fp_new:N \l_semio_viz_network_bias_fp
+\fp_new:N \l_semio_viz_network_run_alpha_fp
+\int_new:N \l_semio_viz_network_pair_int
+
+% 🌻 d3-force's phyllotaxis start: radius 10*sqrt(0.5+i), angle i*pi*(3-sqrt 5), velocities zero.
+\cs_new_protected:Npn \semio_viz_network_phyllotaxis: {
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \semio_viz_network_fset:nnn { x } {##1}
+      { 10 * sqrt( 0.5 + ##1 - 1 ) * cos( ( ##1 - 1 ) * pi * ( 3 - sqrt(5) ) ) }
+    \semio_viz_network_fset:nnn { y } {##1}
+      { 10 * sqrt( 0.5 + ##1 - 1 ) * sin( ( ##1 - 1 ) * pi * ( 3 - sqrt(5) ) ) }
+    \semio_viz_network_fset:nnn { vx } {##1} { 0 }
+    \semio_viz_network_fset:nnn { vy } {##1} { 0 }
+  }
+}
+
+% 🔗 Link force initialisation: per-link strength 1/min(deg s,deg t) and bias deg s/(deg s+deg t), exactly d3's defaults.
+\cs_new_protected:Npn \semio_viz_network_link_init: {
+  \semio_viz_network_fp_ensure:nn { lstr } { \l_semio_viz_network_m_int }
+  \semio_viz_network_fp_ensure:nn { lbias } { \l_semio_viz_network_m_int }
+  \semio_viz_network_fp_ensure:nn { ldist } { \l_semio_viz_network_m_int }
+  \int_step_inline:nn { \l_semio_viz_network_m_int } { \semio_viz_network_link_init_one:n {##1} }
+}
+% 🔗 Strength, bias and rest length of link #1; a negative `link-strength` means d3's own default.
+\cs_new_protected:Npn \semio_viz_network_link_init_one:n #1 {
+  \fp_compare:nNnTF \l_semio_viz_network_link_strength_fp < { 0 }
+    {
+      \semio_viz_network_fset:nnn { lstr } {#1}
+        {
+          1 / min( \semio_viz_network_n:nn { deg } { \semio_viz_network_n:nn { es } {#1} } ,
+                   \semio_viz_network_n:nn { deg } { \semio_viz_network_n:nn { et } {#1} } )
+        }
+    }
+    { \semio_viz_network_fset:nnn { lstr } {#1} { \l_semio_viz_network_link_strength_fp } }
+  \semio_viz_network_fset:nnn { lbias } {#1}
+    {
+      \semio_viz_network_n:nn { deg } { \semio_viz_network_n:nn { es } {#1} }
+      / ( \semio_viz_network_n:nn { deg } { \semio_viz_network_n:nn { es } {#1} }
+        + \semio_viz_network_n:nn { deg } { \semio_viz_network_n:nn { et } {#1} } )
+    }
+  \semio_viz_network_fset:nnn { ldist } {#1} { \l_semio_viz_network_link_distance_fp }
+}
+
+% 🔗 One spring: link #1 pulls its two ends towards its rest length, the heavier end moving less.
+\cs_new_protected:Npn \semio_viz_network_force_link_edge:n #1 {
+  \fp_set:Nn \l_semio_viz_network_dx_fp
+    {
+      \semio_viz_network_f:nn { x } { \semio_viz_network_n:nn { et } {#1} }
+      + \semio_viz_network_f:nn { vx } { \semio_viz_network_n:nn { et } {#1} }
+      - \semio_viz_network_f:nn { x } { \semio_viz_network_n:nn { es } {#1} }
+      - \semio_viz_network_f:nn { vx } { \semio_viz_network_n:nn { es } {#1} }
+    }
+  \fp_set:Nn \l_semio_viz_network_dy_fp
+    {
+      \semio_viz_network_f:nn { y } { \semio_viz_network_n:nn { et } {#1} }
+      + \semio_viz_network_f:nn { vy } { \semio_viz_network_n:nn { et } {#1} }
+      - \semio_viz_network_f:nn { y } { \semio_viz_network_n:nn { es } {#1} }
+      - \semio_viz_network_f:nn { vy } { \semio_viz_network_n:nn { es } {#1} }
+    }
+  \fp_compare:nNnT \l_semio_viz_network_dx_fp = { 0 } { \semio_viz_network_jiggle:N \l_semio_viz_network_dx_fp }
+  \fp_compare:nNnT \l_semio_viz_network_dy_fp = { 0 } { \semio_viz_network_jiggle:N \l_semio_viz_network_dy_fp }
+  \fp_set:Nn \l_semio_viz_network_dl_fp
+    { sqrt( \l_semio_viz_network_dx_fp * \l_semio_viz_network_dx_fp
+          + \l_semio_viz_network_dy_fp * \l_semio_viz_network_dy_fp ) }
+  \fp_set:Nn \l_semio_viz_network_dl_fp
+    {
+      ( \l_semio_viz_network_dl_fp - \semio_viz_network_f:nn { ldist } {#1} ) / \l_semio_viz_network_dl_fp
+      * \l_semio_viz_network_run_alpha_fp * \semio_viz_network_f:nn { lstr } {#1}
+    }
+  \fp_set:Nn \l_semio_viz_network_dx_fp { \l_semio_viz_network_dx_fp * \l_semio_viz_network_dl_fp }
+  \fp_set:Nn \l_semio_viz_network_dy_fp { \l_semio_viz_network_dy_fp * \l_semio_viz_network_dl_fp }
+  \fp_set:Nn \l_semio_viz_network_bias_fp { \semio_viz_network_f:nn { lbias } {#1} }
+  \semio_viz_network_fadd:nnn { vx } { \semio_viz_network_n:nn { et } {#1} }
+    { - \l_semio_viz_network_dx_fp * \l_semio_viz_network_bias_fp }
+  \semio_viz_network_fadd:nnn { vy } { \semio_viz_network_n:nn { et } {#1} }
+    { - \l_semio_viz_network_dy_fp * \l_semio_viz_network_bias_fp }
+  \semio_viz_network_fadd:nnn { vx } { \semio_viz_network_n:nn { es } {#1} }
+    { \l_semio_viz_network_dx_fp * ( 1 - \l_semio_viz_network_bias_fp ) }
+  \semio_viz_network_fadd:nnn { vy } { \semio_viz_network_n:nn { es } {#1} }
+    { \l_semio_viz_network_dy_fp * ( 1 - \l_semio_viz_network_bias_fp ) }
+}
+
+% 🔗 One pass of d3's forceLink over the links in declaration order, repeated `link-iterations` times.
+\cs_new_protected:Npn \semio_viz_network_force_link: {
+  \int_step_inline:nn { \l_semio_viz_network_link_iter_int }
+    { \int_step_inline:nn { \l_semio_viz_network_m_int } { \semio_viz_network_force_link_edge:n {####1} } }
+}
+
+% 🧲 Exact O(n^2) many-body force: d3's forceManyBody with theta=0, evaluated once per unordered pair.
+% Each pair costs four l3fp evaluations; the row accumulates its own half in registers and writes it back once.
+\fp_new:N \l_semio_viz_network_xi_fp
+\fp_new:N \l_semio_viz_network_yi_fp
+\fp_new:N \l_semio_viz_network_dminsq_fp
+\cs_new_protected:Npn \semio_viz_network_force_charge: {
+  \fp_set:Nn \l_semio_viz_network_dminsq_fp
+    { \l_semio_viz_network_dmin_fp * \l_semio_viz_network_dmin_fp }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } { \semio_viz_network_force_charge_row:n {##1} }
+}
+% 🧲 Node #1 against every node after it; its own half of the pair sums in registers and is written
+% back once, which is what keeps the quadratic pass affordable.
+\cs_new_protected:Npn \semio_viz_network_force_charge_row:n #1 {
+  \int_compare:nNnF {#1} = \l_semio_viz_network_n_int {
+    \fp_set:Nn \l_semio_viz_network_xi_fp { \semio_viz_network_f:nn { x } {#1} }
+    \fp_set:Nn \l_semio_viz_network_yi_fp { \semio_viz_network_f:nn { y } {#1} }
+    \fp_zero:N \l_semio_viz_network_acc_x_fp
+    \fp_zero:N \l_semio_viz_network_acc_y_fp
+    \int_step_inline:nn { \l_semio_viz_network_n_int - #1 }
+      { \semio_viz_network_force_charge_pair:n { #1 + ##1 } }
+    \semio_viz_network_fadd:nnn { vx } {#1} { \l_semio_viz_network_acc_x_fp }
+    \semio_viz_network_fadd:nnn { vy } {#1} { \l_semio_viz_network_acc_y_fp }
+  }
+}
+% 🎲 d3's jiggle: two coincident nodes get a deterministic nudge apart, so the force stays finite.
+\cs_new_protected:Npn \semio_viz_network_force_charge_jiggle: {
+  \fp_compare:nNnT \l_semio_viz_network_dx_fp = { 0 }
+    { \semio_viz_network_jiggle:N \l_semio_viz_network_dx_fp }
+  \fp_compare:nNnT \l_semio_viz_network_dy_fp = { 0 }
+    { \semio_viz_network_jiggle:N \l_semio_viz_network_dy_fp }
+}
+% 🧲 The repulsion between the row's node and node #1, softened below the minimum distance.
+\cs_new_protected:Npn \semio_viz_network_force_charge_pair:n #1 {
+  \fp_set:Nn \l_semio_viz_network_dx_fp
+    { \semio_viz_network_f:nn { x } {#1} - \l_semio_viz_network_xi_fp }
+  \fp_set:Nn \l_semio_viz_network_dy_fp
+    { \semio_viz_network_f:nn { y } {#1} - \l_semio_viz_network_yi_fp }
+  \fp_compare:nNnT { \l_semio_viz_network_dx_fp * \l_semio_viz_network_dy_fp } = { 0 }
+    { \semio_viz_network_force_charge_jiggle: }
+  \fp_set:Nn \l_semio_viz_network_dw_fp
+    {
+      \l_semio_viz_network_charge_fp * \l_semio_viz_network_run_alpha_fp
+      /
+      (
+        \l_semio_viz_network_dx_fp * \l_semio_viz_network_dx_fp
+        + \l_semio_viz_network_dy_fp * \l_semio_viz_network_dy_fp < \l_semio_viz_network_dminsq_fp
+        ?
+        {
+          sqrt( \l_semio_viz_network_dminsq_fp
+            * ( \l_semio_viz_network_dx_fp * \l_semio_viz_network_dx_fp
+              + \l_semio_viz_network_dy_fp * \l_semio_viz_network_dy_fp ) )
+        }
+        :
+        {
+          \l_semio_viz_network_dx_fp * \l_semio_viz_network_dx_fp
+          + \l_semio_viz_network_dy_fp * \l_semio_viz_network_dy_fp
+        }
+      )
+    }
+  \bool_lazy_or:nnT
+    { \fp_compare_p:nNn { \l_semio_viz_network_dmax_fp } < { 0 } }
+    {
+      \fp_compare_p:nNn
+        {
+          \l_semio_viz_network_dx_fp * \l_semio_viz_network_dx_fp
+          + \l_semio_viz_network_dy_fp * \l_semio_viz_network_dy_fp
+        }
+        < { \l_semio_viz_network_dmax_fp * \l_semio_viz_network_dmax_fp }
+    }
+    {
+      \fp_add:Nn \l_semio_viz_network_acc_x_fp
+        { \l_semio_viz_network_dx_fp * \l_semio_viz_network_dw_fp }
+      \fp_add:Nn \l_semio_viz_network_acc_y_fp
+        { \l_semio_viz_network_dy_fp * \l_semio_viz_network_dw_fp }
+      \semio_viz_network_fadd:nnn { vx } {#1}
+        { - \l_semio_viz_network_dx_fp * \l_semio_viz_network_dw_fp }
+      \semio_viz_network_fadd:nnn { vy } {#1}
+        { - \l_semio_viz_network_dy_fp * \l_semio_viz_network_dw_fp }
+    }
+}
+
+% 🎯 d3's forceCenter: translates the positions so their centroid sits at (center-x, center-y).
+\cs_new_protected:Npn \semio_viz_network_force_center: {
+  \fp_zero:N \l_semio_viz_network_acc_x_fp
+  \fp_zero:N \l_semio_viz_network_acc_y_fp
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \fp_add:Nn \l_semio_viz_network_acc_x_fp { \semio_viz_network_f:nn { x } {##1} }
+    \fp_add:Nn \l_semio_viz_network_acc_y_fp { \semio_viz_network_f:nn { y } {##1} }
+  }
+  \fp_set:Nn \l_semio_viz_network_acc_x_fp
+    { ( \l_semio_viz_network_acc_x_fp / \l_semio_viz_network_n_int - \l_semio_viz_network_center_x_fp )
+      * \l_semio_viz_network_center_strength_fp }
+  \fp_set:Nn \l_semio_viz_network_acc_y_fp
+    { ( \l_semio_viz_network_acc_y_fp / \l_semio_viz_network_n_int - \l_semio_viz_network_center_y_fp )
+      * \l_semio_viz_network_center_strength_fp }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \semio_viz_network_fadd:nnn { x } {##1} { - \l_semio_viz_network_acc_x_fp }
+    \semio_viz_network_fadd:nnn { y } {##1} { - \l_semio_viz_network_acc_y_fp }
+  }
+}
+
+% 🎯 d3's forceX and forceY: a per-axis spring towards a target coordinate.
+\cs_new_protected:Npn \semio_viz_network_force_x: {
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \semio_viz_network_fadd:nnn { vx } {##1}
+      { ( \l_semio_viz_network_xforce_target_fp - \semio_viz_network_f:nn { x } {##1} )
+        * \l_semio_viz_network_xforce_strength_fp * \l_semio_viz_network_run_alpha_fp }
+  }
+}
+% 🎯 The same spring on the other axis.
+\cs_new_protected:Npn \semio_viz_network_force_y: {
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \semio_viz_network_fadd:nnn { vy } {##1}
+      { ( \l_semio_viz_network_yforce_target_fp - \semio_viz_network_f:nn { y } {##1} )
+        * \l_semio_viz_network_yforce_strength_fp * \l_semio_viz_network_run_alpha_fp }
+  }
+}
+
+% 🎯 d3's forceRadial: a spring towards a circle of radius `radial-radius` around (radial-x, radial-y).
+\cs_new_protected:Npn \semio_viz_network_force_radial: {
+  \int_step_inline:nn { \l_semio_viz_network_n_int } { \semio_viz_network_force_radial_one:n {##1} }
+}
+% 🎯 The radial spring on node #1, pulling it onto the circle rather than to its centre.
+\cs_new_protected:Npn \semio_viz_network_force_radial_one:n #1 {
+  \fp_set:Nn \l_semio_viz_network_dx_fp
+    { \semio_viz_network_f:nn { x } {#1} - \l_semio_viz_network_radial_x_fp }
+  \fp_set:Nn \l_semio_viz_network_dy_fp
+    { \semio_viz_network_f:nn { y } {#1} - \l_semio_viz_network_radial_y_fp }
+  \fp_compare:nNnT \l_semio_viz_network_dx_fp = { 0 } { \fp_set:Nn \l_semio_viz_network_dx_fp { 1e-6 } }
+  \fp_compare:nNnT \l_semio_viz_network_dy_fp = { 0 } { \fp_set:Nn \l_semio_viz_network_dy_fp { 1e-6 } }
+  \fp_set:Nn \l_semio_viz_network_dl_fp
+    { sqrt( \l_semio_viz_network_dx_fp * \l_semio_viz_network_dx_fp
+          + \l_semio_viz_network_dy_fp * \l_semio_viz_network_dy_fp ) }
+  \fp_set:Nn \l_semio_viz_network_dw_fp
+    { ( \l_semio_viz_network_radial_radius_fp - \l_semio_viz_network_dl_fp )
+      * \l_semio_viz_network_radial_strength_fp * \l_semio_viz_network_run_alpha_fp
+      / \l_semio_viz_network_dl_fp }
+  \semio_viz_network_fadd:nnn { vx } {#1} { \l_semio_viz_network_dx_fp * \l_semio_viz_network_dw_fp }
+  \semio_viz_network_fadd:nnn { vy } {#1} { \l_semio_viz_network_dy_fp * \l_semio_viz_network_dw_fp }
+}
+
+% 💥 d3's forceCollide with a constant radius: every pair is visited once per iteration, i < j, from stale (x+v) of i.
+\cs_new_protected:Npn \semio_viz_network_force_collide: {
+  \int_step_inline:nn { \l_semio_viz_network_collide_iter_int } {
+    \int_step_inline:nn { \l_semio_viz_network_n_int } { \semio_viz_network_force_collide_row:n {####1} }
+  }
+}
+% 💥 Node #1 against every node after it, from its own projected position, as d3 does.
+\cs_new_protected:Npn \semio_viz_network_force_collide_row:n #1 {
+  \fp_set:Nn \l_semio_viz_network_acc_x_fp
+    { \semio_viz_network_f:nn { x } {#1} + \semio_viz_network_f:nn { vx } {#1} }
+  \fp_set:Nn \l_semio_viz_network_acc_y_fp
+    { \semio_viz_network_f:nn { y } {#1} + \semio_viz_network_f:nn { vy } {#1} }
+  \int_set:Nn \l_semio_viz_network_pair_int { #1 + 1 }
+  \int_compare:nNnF \l_semio_viz_network_pair_int > \l_semio_viz_network_n_int {
+    \int_step_inline:nn { \l_semio_viz_network_n_int - #1 }
+      { \semio_viz_network_force_collide_pair:nn {#1} { #1 + ##1 } }
+  }
+}
+% 💥 Tests whether the discs of #1 and #2 overlap, and pushes them apart only when they do.
+\cs_new_protected:Npn \semio_viz_network_force_collide_pair:nn #1#2 {
+  \fp_set:Nn \l_semio_viz_network_dx_fp
+    { \l_semio_viz_network_acc_x_fp - \semio_viz_network_f:nn { x } {#2} - \semio_viz_network_f:nn { vx } {#2} }
+  \fp_set:Nn \l_semio_viz_network_dy_fp
+    { \l_semio_viz_network_acc_y_fp - \semio_viz_network_f:nn { y } {#2} - \semio_viz_network_f:nn { vy } {#2} }
+  \fp_set:Nn \l_semio_viz_network_dl_fp
+    { \l_semio_viz_network_dx_fp * \l_semio_viz_network_dx_fp
+    + \l_semio_viz_network_dy_fp * \l_semio_viz_network_dy_fp }
+  \fp_compare:nNnT \l_semio_viz_network_dl_fp <
+    { 4 * \l_semio_viz_network_collide_radius_fp * \l_semio_viz_network_collide_radius_fp }
+    { \semio_viz_network_force_collide_push:nn {#1} {#2} }
+}
+% ↔️ Splits the overlap between #1 and #2 evenly along their line of centres.
+\cs_new_protected:Npn \semio_viz_network_force_collide_push:nn #1#2 {
+  \fp_compare:nNnT \l_semio_viz_network_dx_fp = { 0 } {
+    \semio_viz_network_jiggle:N \l_semio_viz_network_dx_fp
+    \fp_add:Nn \l_semio_viz_network_dl_fp { \l_semio_viz_network_dx_fp * \l_semio_viz_network_dx_fp }
+  }
+  \fp_compare:nNnT \l_semio_viz_network_dy_fp = { 0 } {
+    \semio_viz_network_jiggle:N \l_semio_viz_network_dy_fp
+    \fp_add:Nn \l_semio_viz_network_dl_fp { \l_semio_viz_network_dy_fp * \l_semio_viz_network_dy_fp }
+  }
+  \fp_set:Nn \l_semio_viz_network_dl_fp { sqrt( \l_semio_viz_network_dl_fp ) }
+  \fp_set:Nn \l_semio_viz_network_dl_fp
+    { ( 2 * \l_semio_viz_network_collide_radius_fp - \l_semio_viz_network_dl_fp )
+      / \l_semio_viz_network_dl_fp * \l_semio_viz_network_collide_strength_fp }
+  \fp_set:Nn \l_semio_viz_network_dx_fp { \l_semio_viz_network_dx_fp * \l_semio_viz_network_dl_fp }
+  \fp_set:Nn \l_semio_viz_network_dy_fp { \l_semio_viz_network_dy_fp * \l_semio_viz_network_dl_fp }
+  \semio_viz_network_fadd:nnn { vx } {#1} { \l_semio_viz_network_dx_fp / 2 }
+  \semio_viz_network_fadd:nnn { vy } {#1} { \l_semio_viz_network_dy_fp / 2 }
+  \semio_viz_network_fadd:nnn { vx } {#2} { - \l_semio_viz_network_dx_fp / 2 }
+  \semio_viz_network_fadd:nnn { vy } {#2} { - \l_semio_viz_network_dy_fp / 2 }
+}
+
+% 🎛️ Applies the force named #1; the `forces` list decides which run and in which order.
+\cs_new_protected:Npn \semio_viz_network_force_dispatch:n #1 {
+  \str_case:nnF {#1}
+    {
+      { link }      { \semio_viz_network_force_link: }
+      { many-body } { \semio_viz_network_force_charge: }
+      { center }    { \semio_viz_network_force_center: }
+      { collide }   { \semio_viz_network_force_collide: }
+      { x }         { \semio_viz_network_force_x: }
+      { y }         { \semio_viz_network_force_y: }
+      { radial }    { \semio_viz_network_force_radial: }
+    }
+    { \msg_error:nnn { semio-viz } { unknown-force } {#1} }
+}
+
+% ⏱️ One d3 tick: decay alpha, apply every configured force in the given order, integrate with velocity Verlet.
+\cs_new_protected:Npn \semio_viz_network_force_tick: {
+  \fp_add:Nn \l_semio_viz_network_run_alpha_fp
+    { ( \l_semio_viz_network_alpha_target_fp - \l_semio_viz_network_run_alpha_fp )
+      * \l_semio_viz_network_alpha_decay_fp }
+  \clist_map_function:NN \l_semio_viz_network_forces_clist \semio_viz_network_force_dispatch:n
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \semio_viz_network_fset:nnn { vx } {##1}
+      { \semio_viz_network_f:nn { vx } {##1} * ( 1 - \l_semio_viz_network_vdecay_fp ) }
+    \semio_viz_network_fadd:nnn { x } {##1} { \semio_viz_network_f:nn { vx } {##1} }
+    \semio_viz_network_fset:nnn { vy } {##1}
+      { \semio_viz_network_f:nn { vy } {##1} * ( 1 - \l_semio_viz_network_vdecay_fp ) }
+    \semio_viz_network_fadd:nnn { y } {##1} { \semio_viz_network_f:nn { vy } {##1} }
+  }
+}
+
+% 🌀 Runs the whole simulation: seeded generator, phyllotaxis start, `iterations` ticks. O(iterations * (n^2 + m)).
+\cs_new_protected:Npn \semio_viz_network_force_run: {
+  \exp_args:NV \semio_viz_network_seed:n \l_semio_viz_network_seed_fp
+  \fp_compare:nNnT \l_semio_viz_network_alpha_decay_fp < { 0 }
+    {
+      \fp_set:Nn \l_semio_viz_network_alpha_decay_fp
+        { 1 - \l_semio_viz_network_alpha_min_fp ** ( 1 / 300 ) }
+    }
+  \semio_viz_network_phyllotaxis:
+  \semio_viz_network_link_init:
+  \fp_set_eq:NN \l_semio_viz_network_run_alpha_fp \l_semio_viz_network_alpha_fp
+  \int_step_inline:nn { \l_semio_viz_network_force_iter_int } { \semio_viz_network_force_tick: }
+}
+
+% 🌀 `force`: d3-force's simulation, deterministic under its own seeded generator, written out as
+% one row per node with its position and velocity.
+\semio_viz_layout_define:nn { force } {
+  \semio_viz_network_use:nn {#1} {#3}
+  \semio_viz_network_keys:nNn { layout / force } \c_semio_viz_network_force_defaults_tl {#3}
+  \semio_viz_network_force_run:
+  \semio_viz_network_out_new:nn {#2} { index, id, x, y, vx, vy }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \semio_viz_network_out_row:nn {#2}
+      {
+        ##1 , \semio_viz_network_id:n {##1} ,
+        \fp_to_decimal:n { \semio_viz_network_f:nn { x } {##1} } ,
+        \fp_to_decimal:n { \semio_viz_network_f:nn { y } {##1} } ,
+        \fp_to_decimal:n { \semio_viz_network_f:nn { vx } {##1} } ,
+        \fp_to_decimal:n { \semio_viz_network_f:nn { vy } {##1} }
+      }
+    \semio_viz_probe_geometry:nx { layout/force }
+      {
+        ##1 ,
+        \fp_to_decimal:n { \semio_viz_network_f:nn { x } {##1} } ,
+        \fp_to_decimal:n { \semio_viz_network_f:nn { y } {##1} }
+      }
+  }
+}
+%endregion 🔖️ForceSimulation
+
+
+%region 🔖️Ordering
+% 🔤 Node orderings shared by the circular, shell, grid, arc, adjacency and matrix layouts.
+\tl_new:N \l_semio_viz_network_order_tl
+\seq_new:N \l_semio_viz_network_sorted_seq
+
+\cs_new_protected:Npn \semio_viz_network_order_identity: {
+  \seq_clear:N \l_semio_viz_network_sorted_seq
+  \int_step_inline:nn { \l_semio_viz_network_n_int } { \seq_put_right:Nn \l_semio_viz_network_sorted_seq {##1} }
+}
+
+% 🔤 Builds \l_semio_viz_network_sorted_seq for ordering #1: index, name, degree, group, component or cluster.
+\cs_new_protected:Npn \semio_viz_network_order_build:n #1 {
+  \semio_viz_network_order_identity:
+  \str_case:nn {#1}
+    {
+      { name }
+        {
+          \seq_sort:Nn \l_semio_viz_network_sorted_seq
+            {
+              \str_compare:nNnTF { \semio_viz_network_id:n {##1} } > { \semio_viz_network_id:n {##2} }
+                { \sort_return_swapped: } { \sort_return_same: }
+            }
+        }
+      { degree }
+        {
+          \seq_sort:Nn \l_semio_viz_network_sorted_seq
+            {
+              \int_compare:nNnTF { \semio_viz_network_n:nn { deg } {##1} }
+                < { \semio_viz_network_n:nn { deg } {##2} }
+                { \sort_return_swapped: } { \sort_return_same: }
+            }
+        }
+      { group }
+        {
+          \seq_sort:Nn \l_semio_viz_network_sorted_seq
+            {
+              \str_compare:nNnTF { \semio_viz_network_group:n {##1} } > { \semio_viz_network_group:n {##2} }
+                { \sort_return_swapped: } { \sort_return_same: }
+            }
+        }
+      { component }
+        {
+          \semio_viz_network_components:
+          \seq_sort:Nn \l_semio_viz_network_sorted_seq
+            {
+              \int_compare:nNnTF { \semio_viz_network_n:nn { comp } {##1} }
+                > { \semio_viz_network_n:nn { comp } {##2} }
+                { \sort_return_swapped: } { \sort_return_same: }
+            }
+        }
+      { cluster }
+        {
+          \semio_viz_network_components:
+          \seq_sort:Nn \l_semio_viz_network_sorted_seq
+            {
+              \int_compare:nNnTF { \semio_viz_network_n:nn { deg } {##1} }
+                < { \semio_viz_network_n:nn { deg } {##2} }
+                { \sort_return_swapped: } { \sort_return_same: }
+            }
+          \seq_sort:Nn \l_semio_viz_network_sorted_seq
+            {
+              \int_compare:nNnTF { \semio_viz_network_n:nn { comp } {##1} }
+                > { \semio_viz_network_n:nn { comp } {##2} }
+                { \sort_return_swapped: } { \sort_return_same: }
+            }
+        }
+    }
+  \semio_viz_network_n_ensure:nn { rank } { \l_semio_viz_network_n_int }
+  \seq_map_indexed_inline:Nn \l_semio_viz_network_sorted_seq
+    { \semio_viz_network_nset:nnn { rank } {##2} {##1} }
+}
+%endregion 🔖️Ordering
+
+%region 🔖️PlacementKeys
+% 🔑 semio / viz / layout / place — the options of every closed-form placement
+% (`circular`, `shell`, `grid`, `arc`, `adjacency`, `radial`, `spectral`, `layered`,
+% `bundling`). Angles are radians, so they line up with d3's own conventions.
+%   order            (index|name|degree|group|component|cluster, default index)
+%                    the permutation every placement walks; `degree` is descending with the
+%                    declaration order as the tie-break, `cluster` is component then degree
+%   radius           (number, default 1)     radius of the circle a ring layout places on
+%   inner-radius     (number, default 0)     radius of the innermost shell / of the hubs
+%   radius-step      (number, default 1)     distance between two shells or two BFS rings
+%   center-x         (number, default 0)     centre of the polar placements
+%   center-y         (number, default 0)
+%   start-angle      (radians, default 0)    first node of a ring
+%   end-angle        (radians, default 2*pi) one turn past the last node
+%   columns          (integer, default 0)    grid columns; 0 picks ceil(sqrt n)
+%   dx               (number, default 1)     grid column pitch, layered layer pitch
+%   dy               (number, default 1)     grid row pitch
+%   origin-x         (number, default 0)     first grid cell, first arc node, layer zero
+%   origin-y         (number, default 0)
+%   spacing          (number, default 1)     arc node pitch, layered within-layer pitch
+%   shells           (clist, default empty)  explicit shell sizes; empty is one shell
+%   root             (integer, default 1)    where the radial BFS starts
+%   power-iterations (integer, default 200)  power iterations of the spectral layout
+%   sweeps           (integer, default 4)    barycenter ordering passes of `layered`
+%   orientation      (horizontal|vertical, default horizontal)  direction of the layers
+%   beta             (number, default 0.85) bundle tension of `bundling`
+%   seed             (number, default 1)    seed of the deterministic generator
+\fp_new:N \l_semio_viz_network_radius_fp
+\fp_new:N \l_semio_viz_network_inner_radius_fp
+\fp_new:N \l_semio_viz_network_radius_step_fp
+\fp_new:N \l_semio_viz_network_cx_fp
+\fp_new:N \l_semio_viz_network_cy_fp
+\fp_new:N \l_semio_viz_network_start_angle_fp
+\fp_new:N \l_semio_viz_network_end_angle_fp
+\fp_new:N \l_semio_viz_network_dx_step_fp
+\fp_new:N \l_semio_viz_network_dy_step_fp
+\fp_new:N \l_semio_viz_network_origin_x_fp
+\fp_new:N \l_semio_viz_network_origin_y_fp
+\fp_new:N \l_semio_viz_network_spacing_fp
+\int_new:N \l_semio_viz_network_columns_int
+\int_new:N \l_semio_viz_network_root_int
+\int_new:N \l_semio_viz_network_power_int
+\int_new:N \l_semio_viz_network_sweeps_int
+\clist_new:N \l_semio_viz_network_shells_clist
+\tl_new:N \l_semio_viz_network_orientation_tl
+
+\keys_define:nn { semio / viz / layout / place } {
+  order         .tl_set:N = \l_semio_viz_network_order_tl,
+  radius        .fp_set:N = \l_semio_viz_network_radius_fp,
+  inner-radius  .fp_set:N = \l_semio_viz_network_inner_radius_fp,
+  radius-step   .fp_set:N = \l_semio_viz_network_radius_step_fp,
+  center-x      .fp_set:N = \l_semio_viz_network_cx_fp,
+  center-y      .fp_set:N = \l_semio_viz_network_cy_fp,
+  start-angle   .fp_set:N = \l_semio_viz_network_start_angle_fp,
+  end-angle     .fp_set:N = \l_semio_viz_network_end_angle_fp,
+  columns       .int_set:N = \l_semio_viz_network_columns_int,
+  dx            .fp_set:N = \l_semio_viz_network_dx_step_fp,
+  dy            .fp_set:N = \l_semio_viz_network_dy_step_fp,
+  origin-x      .fp_set:N = \l_semio_viz_network_origin_x_fp,
+  origin-y      .fp_set:N = \l_semio_viz_network_origin_y_fp,
+  spacing       .fp_set:N = \l_semio_viz_network_spacing_fp,
+  shells        .clist_set:N = \l_semio_viz_network_shells_clist,
+  root          .int_set:N = \l_semio_viz_network_root_int,
+  power-iterations .int_set:N = \l_semio_viz_network_power_int,
+  sweeps        .int_set:N = \l_semio_viz_network_sweeps_int,
+  orientation   .tl_set:N = \l_semio_viz_network_orientation_tl,
+  beta          .fp_set:N = \l_semio_viz_network_beta_fp,
+  seed          .fp_set:N = \l_semio_viz_network_seed_fp,
+}
+
+\tl_const:Nn \c_semio_viz_network_place_defaults_tl
+  { order = index, radius = 1, inner-radius = 0, radius-step = 1, center-x = 0, center-y = 0, start-angle = 0, end-angle = 6.283185307179586, columns = 0, dx = 1, dy = 1, origin-x = 0, origin-y = 0, spacing = 1, shells = , root = 1, power-iterations = 200, sweeps = 4, orientation = horizontal, beta = 0.85 }
+
+% 📤 Emits the standard node placement table: index, id, x, y, angle, radius.
+\cs_new_protected:Npn \semio_viz_network_emit_nodes:nn #1#2 {
+  \semio_viz_network_out_new:nn {#1} { index, id, x, y, angle, radius }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \semio_viz_network_out_row:nn {#1}
+      {
+        ##1 , \semio_viz_network_id:n {##1} ,
+        \fp_to_decimal:n { \semio_viz_network_f:nn { x } {##1} } ,
+        \fp_to_decimal:n { \semio_viz_network_f:nn { y } {##1} } ,
+        \fp_to_decimal:n { \semio_viz_network_f:nn { na } {##1} } ,
+        \fp_to_decimal:n { \semio_viz_network_f:nn { nr } {##1} }
+      }
+    \semio_viz_probe_geometry:nx { layout/#2 }
+      {
+        ##1 ,
+        \fp_to_decimal:n { \semio_viz_network_f:nn { x } {##1} } ,
+        \fp_to_decimal:n { \semio_viz_network_f:nn { y } {##1} }
+      }
+  }
+}
+
+% 🧭 Stores polar coordinates and their cartesian image for node #1.
+\cs_new_protected:Npn \semio_viz_network_polar_set:nnn #1#2#3 {
+  \semio_viz_network_fset:nnn { na } {#1} {#2}
+  \semio_viz_network_fset:nnn { nr } {#1} {#3}
+  \semio_viz_network_fset:nnn { x } {#1}
+    { \l_semio_viz_network_cx_fp + ( #3 ) * cos( #2 ) }
+  \semio_viz_network_fset:nnn { y } {#1}
+    { \l_semio_viz_network_cy_fp + ( #3 ) * sin( #2 ) }
+}
+
+% 🧭 Common preparation of every placement layout: the option list #1, empty polar arrays, and the
+% node order the `order` key names.
+\cs_new_protected:Npn \semio_viz_network_place_prepare:n #1 {
+  \semio_viz_network_keys:nNn { layout / place } \c_semio_viz_network_place_defaults_tl {#1}
+  \semio_viz_network_fp_ensure:nn { na } { \l_semio_viz_network_n_int }
+  \semio_viz_network_fp_ensure:nn { nr } { \l_semio_viz_network_n_int }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \semio_viz_network_fset:nnn { na } {##1} { 0 }
+    \semio_viz_network_fset:nnn { nr } {##1} { 0 }
+  }
+  \exp_args:NV \semio_viz_network_order_build:n \l_semio_viz_network_order_tl
+}
+%endregion 🔖️PlacementKeys
+
+%region 🔖️Circular
+% ⭕ Equal angular spacing on one circle in the chosen node ordering.
+\semio_viz_layout_define:nn { circular } {
+  \semio_viz_network_use:nn {#1} {#3}
+  \semio_viz_network_place_prepare:n {#3}
+  \seq_map_indexed_inline:Nn \l_semio_viz_network_sorted_seq {
+    \semio_viz_network_polar_set:nnn {##2}
+      {
+        \l_semio_viz_network_start_angle_fp
+        + ( \l_semio_viz_network_end_angle_fp - \l_semio_viz_network_start_angle_fp )
+          * ( ##1 - 1 ) / \l_semio_viz_network_n_int
+      }
+      { \l_semio_viz_network_radius_fp }
+  }
+  \semio_viz_network_emit_nodes:nn {#2} { circular }
+}
+%endregion 🔖️Circular
+
+%region 🔖️Shell
+% 🐚 Concentric shells: explicit `shells={n1,n2,…}` counts, otherwise one shell per distinct ordering key value.
+\int_new:N \l_semio_viz_network_shell_int
+\int_new:N \l_semio_viz_network_shell_size_int
+\int_new:N \l_semio_viz_network_shell_pos_int
+\seq_new:N \l_semio_viz_network_shell_seq
+
+\cs_new_protected:Npn \semio_viz_network_shell_place:nn #1#2 {
+  \int_zero:N \l_semio_viz_network_shell_pos_int
+  \int_step_inline:nn {#2} {
+    \int_incr:N \l_semio_viz_network_shell_pos_int
+    \semio_viz_network_shell_node:nn
+      { \seq_item:Nn \l_semio_viz_network_sorted_seq { #1 + ##1 } } {#2}
+  }
+}
+% 🐚 Places node #1 at its own slot of a shell of #2 nodes, on the shell's own radius.
+\cs_new_protected:Npn \semio_viz_network_shell_node:nn #1#2 {
+  \semio_viz_network_polar_set:nnn {#1}
+    {
+      \l_semio_viz_network_start_angle_fp
+      + ( \l_semio_viz_network_end_angle_fp - \l_semio_viz_network_start_angle_fp )
+        * ( \l_semio_viz_network_shell_pos_int - 1 ) / (#2)
+    }
+    {
+      \l_semio_viz_network_inner_radius_fp
+      + \l_semio_viz_network_radius_step_fp * ( \l_semio_viz_network_shell_int - 1 )
+    }
+}
+
+% 🐚 `shell`: concentric rings, their sizes from `shells` or from the ordering key's own values.
+\semio_viz_layout_define:nn { shell } {
+  \semio_viz_network_use:nn {#1} {#3}
+  \semio_viz_network_place_prepare:n {#3}
+  \clist_if_empty:NT \l_semio_viz_network_shells_clist
+    {
+      \clist_set:Nx \l_semio_viz_network_shells_clist
+        { \int_eval:n { \l_semio_viz_network_n_int } }
+    }
+  \int_zero:N \l_semio_viz_network_shell_int
+  \int_zero:N \l_semio_viz_network_shell_size_int
+  \clist_map_inline:Nn \l_semio_viz_network_shells_clist {
+    \int_incr:N \l_semio_viz_network_shell_int
+    \semio_viz_network_shell_place:nn { \l_semio_viz_network_shell_size_int } {##1}
+    \int_add:Nn \l_semio_viz_network_shell_size_int {##1}
+  }
+  \semio_viz_network_emit_nodes:nn {#2} { shell }
+}
+%endregion 🔖️Shell
+
+%region 🔖️Grid
+% ▦ Row-major grid; `columns=0` picks ceil(sqrt n), rows grow downwards.
+\semio_viz_layout_define:nn { grid } {
+  \semio_viz_network_use:nn {#1} {#3}
+  \semio_viz_network_place_prepare:n {#3}
+  \int_compare:nNnT \l_semio_viz_network_columns_int < { 1 }
+    {
+      \int_set:Nn \l_semio_viz_network_columns_int
+        { \fp_to_int:n { ceil( sqrt( \l_semio_viz_network_n_int ) ) } }
+    }
+  \seq_map_indexed_inline:Nn \l_semio_viz_network_sorted_seq {
+    \semio_viz_network_fset:nnn { x } {##2}
+      {
+        \l_semio_viz_network_origin_x_fp
+        + \l_semio_viz_network_dx_step_fp
+          * ( ( ##1 - 1 ) - \l_semio_viz_network_columns_int * floor( ( ##1 - 1 ) / \l_semio_viz_network_columns_int ) )
+      }
+    \semio_viz_network_fset:nnn { y } {##2}
+      {
+        \l_semio_viz_network_origin_y_fp
+        - \l_semio_viz_network_dy_step_fp * floor( ( ##1 - 1 ) / \l_semio_viz_network_columns_int )
+      }
+  }
+  \semio_viz_network_emit_nodes:nn {#2} { grid }
+}
+%endregion 🔖️Grid
+
+%region 🔖️Arc
+% 〰️ Linear ordering along one axis; the arc family draws the edges as semicircles above the line.
+\semio_viz_layout_define:nn { arc } {
+  \semio_viz_network_use:nn {#1} {#3}
+  \semio_viz_network_place_prepare:n {#3}
+  \seq_map_indexed_inline:Nn \l_semio_viz_network_sorted_seq {
+    \str_if_eq:VnTF \l_semio_viz_network_orientation_tl { vertical }
+      {
+        \semio_viz_network_fset:nnn { x } {##2} { \l_semio_viz_network_origin_x_fp }
+        \semio_viz_network_fset:nnn { y } {##2}
+          { \l_semio_viz_network_origin_y_fp + \l_semio_viz_network_spacing_fp * ( ##1 - 1 ) }
+      }
+      {
+        \semio_viz_network_fset:nnn { x } {##2}
+          { \l_semio_viz_network_origin_x_fp + \l_semio_viz_network_spacing_fp * ( ##1 - 1 ) }
+        \semio_viz_network_fset:nnn { y } {##2} { \l_semio_viz_network_origin_y_fp }
+      }
+  }
+  \semio_viz_network_emit_nodes:nn {#2} { arc }
+}
+%endregion 🔖️Arc
+
+%region 🔖️Adjacency
+% ▩ Ordering-only layout: the matrix families read `rank` as the row and column position.
+\semio_viz_layout_define:nn { adjacency } {
+  \semio_viz_network_use:nn {#1} {#3}
+  \semio_viz_network_place_prepare:n {#3}
+  \seq_map_indexed_inline:Nn \l_semio_viz_network_sorted_seq {
+    \semio_viz_network_fset:nnn { x } {##2}
+      { \l_semio_viz_network_origin_x_fp + \l_semio_viz_network_spacing_fp * ( ##1 - 1 ) }
+    \semio_viz_network_fset:nnn { y } {##2}
+      { \l_semio_viz_network_origin_y_fp - \l_semio_viz_network_spacing_fp * ( ##1 - 1 ) }
+  }
+  \semio_viz_network_out_new:nn {#2} { index, id, x, y, order }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \semio_viz_network_out_row:nn {#2}
+      {
+        ##1 , \semio_viz_network_id:n {##1} ,
+        \fp_to_decimal:n { \semio_viz_network_f:nn { x } {##1} } ,
+        \fp_to_decimal:n { \semio_viz_network_f:nn { y } {##1} } ,
+        \semio_viz_network_n:nn { rank } {##1}
+      }
+    \semio_viz_probe_geometry:nx { layout/adjacency }
+      { ##1 , \semio_viz_network_n:nn { rank } {##1} }
+  }
+}
+%endregion 🔖️Adjacency
+
+%region 🔖️Radial
+% ☀️ BFS rings around `root`: ring index is the hop distance, the angle spreads the ring evenly.
+\int_new:N \l_semio_viz_network_ring_int
+\cs_new_protected:Npn \semio_viz_network_ring_count:n #1 {
+  \int_zero:N \l_semio_viz_network_ring_int
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \int_compare:nNnT { \semio_viz_network_n:nn { depth } {##1} } = {#1}
+      { \int_incr:N \l_semio_viz_network_ring_int }
+  }
+}
+
+% ☀️ `radial`: rings of hop distance around `root`, each ring spread evenly over the angular span.
+\semio_viz_layout_define:nn { radial } {
+  \semio_viz_network_use:nn {#1} {#3}
+  \semio_viz_network_place_prepare:n {#3}
+  \semio_viz_network_visit_reset:
+  \seq_clear:N \l_semio_viz_network_order_seq
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \semio_viz_network_bfs_from:nn
+      { \int_eval:n { 1 + \int_mod:nn { \l_semio_viz_network_root_int - 1 + ##1 - 1 } { \l_semio_viz_network_n_int } } }
+      { adj }
+  }
+  \semio_viz_network_n_ensure:nn { ringpos } { \l_semio_viz_network_n_int }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \semio_viz_network_nset:nnn { ringpos } {##1} { 0 }
+  }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } { \semio_viz_network_radial_place:n {##1} }
+  \semio_viz_network_emit_nodes:nn {#2} { radial }
+}
+
+% ☀️ Places node #1 on its own ring, at the slot its index within that ring gives it.
+\cs_new_protected:Npn \semio_viz_network_radial_place:n #1 {
+  \semio_viz_network_ring_count:n { \semio_viz_network_n:nn { depth } {#1} }
+  \int_zero:N \l_semio_viz_network_j_int
+  \int_step_inline:nn {#1} {
+    \int_compare:nNnT { \semio_viz_network_n:nn { depth } {##1} }
+      = { \semio_viz_network_n:nn { depth } {#1} }
+      { \int_incr:N \l_semio_viz_network_j_int }
+  }
+  \semio_viz_network_polar_set:nnn {#1}
+    {
+      \l_semio_viz_network_start_angle_fp
+      + ( \l_semio_viz_network_end_angle_fp - \l_semio_viz_network_start_angle_fp )
+        * ( \l_semio_viz_network_j_int - 1 ) / \l_semio_viz_network_ring_int
+    }
+    {
+      \l_semio_viz_network_inner_radius_fp
+      + \l_semio_viz_network_radius_step_fp * \semio_viz_network_n:nn { depth } {#1}
+    }
+}
+%endregion 🔖️Radial
+
+%region 🔖️Spectral
+% 🎼 Spectral layout: power iteration on cI - L deflated against the constant vector, an approximation whose
+% accuracy is set by `power-iterations` (default 200); it converges to the Fiedler pair for connected graphs.
+\fp_new:N \l_semio_viz_network_shift_fp
+\fp_new:N \l_semio_viz_network_norm_fp
+\fp_new:N \l_semio_viz_network_dot_fp
+
+\cs_new_protected:Npn \semio_viz_network_spectral_apply:nn #1#2 {
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \semio_viz_network_fset:nnn {#2} {##1}
+      {
+        ( \l_semio_viz_network_shift_fp - \semio_viz_network_n:nn { deg } {##1} )
+        * \semio_viz_network_f:nn {#1} {##1}
+      }
+  }
+  \int_step_inline:nn { \l_semio_viz_network_m_int } {
+    \semio_viz_network_fadd:nnn {#2} { \semio_viz_network_n:nn { es } {##1} }
+      { \semio_viz_network_f:nn {#1} { \semio_viz_network_n:nn { et } {##1} } }
+    \semio_viz_network_fadd:nnn {#2} { \semio_viz_network_n:nn { et } {##1} }
+      { \semio_viz_network_f:nn {#1} { \semio_viz_network_n:nn { es } {##1} } }
+  }
+}
+
+% 📐 Takes the component of vector #2 out of vector #1, which is what deflates the constant vector.
+\cs_new_protected:Npn \semio_viz_network_spectral_orthogonalise:nn #1#2 {
+  \fp_zero:N \l_semio_viz_network_dot_fp
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \fp_add:Nn \l_semio_viz_network_dot_fp
+      { \semio_viz_network_f:nn {#1} {##1} * \semio_viz_network_f:nn {#2} {##1} }
+  }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \semio_viz_network_fadd:nnn {#1} {##1}
+      { - \l_semio_viz_network_dot_fp * \semio_viz_network_f:nn {#2} {##1} }
+  }
+}
+
+% 📏 Scales vector #1 to unit length; a zero vector is left alone.
+\cs_new_protected:Npn \semio_viz_network_spectral_normalise:n #1 {
+  \fp_zero:N \l_semio_viz_network_norm_fp
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \fp_add:Nn \l_semio_viz_network_norm_fp
+      { \semio_viz_network_f:nn {#1} {##1} * \semio_viz_network_f:nn {#1} {##1} }
+  }
+  \fp_set:Nn \l_semio_viz_network_norm_fp { sqrt( \l_semio_viz_network_norm_fp ) }
+  \fp_compare:nNnF \l_semio_viz_network_norm_fp = { 0 } {
+    \int_step_inline:nn { \l_semio_viz_network_n_int } {
+      \semio_viz_network_fset:nnn {#1} {##1}
+        { \semio_viz_network_f:nn {#1} {##1} / \l_semio_viz_network_norm_fp }
+    }
+  }
+}
+
+% 🔁 `power-iterations` rounds of power iteration on vector #1, deflated against #2 each round.
+\cs_new_protected:Npn \semio_viz_network_spectral_iterate:nn #1#2 {
+  \int_step_inline:nn { \l_semio_viz_network_power_int } {
+    \semio_viz_network_spectral_orthogonalise:nn {#1} { ev0 }
+    \tl_if_blank:nF {#2} { \semio_viz_network_spectral_orthogonalise:nn {#1} {#2} }
+    \semio_viz_network_spectral_normalise:n {#1}
+    \semio_viz_network_spectral_apply:nn {#1} { evt }
+    \int_step_inline:nn { \l_semio_viz_network_n_int } {
+      \semio_viz_network_fset:nnn {#1} {####1} { \semio_viz_network_f:nn { evt } {####1} }
+    }
+  }
+  \semio_viz_network_spectral_orthogonalise:nn {#1} { ev0 }
+  \tl_if_blank:nF {#2} { \semio_viz_network_spectral_orthogonalise:nn {#1} {#2} }
+  \semio_viz_network_spectral_normalise:n {#1}
+}
+
+% 🎼 `spectral`: the two leading eigenvectors of the deflated Laplacian as the two coordinates.
+\semio_viz_layout_define:nn { spectral } {
+  \semio_viz_network_use:nn {#1} {#3}
+  \semio_viz_network_place_prepare:n {#3}
+  \semio_viz_network_fp_ensure:nn { ev0 } { \l_semio_viz_network_n_int }
+  \semio_viz_network_fp_ensure:nn { ev1 } { \l_semio_viz_network_n_int }
+  \semio_viz_network_fp_ensure:nn { ev2 } { \l_semio_viz_network_n_int }
+  \semio_viz_network_fp_ensure:nn { evt } { \l_semio_viz_network_n_int }
+  \fp_set:Nn \l_semio_viz_network_shift_fp { 1 }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \fp_compare:nNnT { 2 * \semio_viz_network_n:nn { deg } {##1} + 1 } > \l_semio_viz_network_shift_fp
+      { \fp_set:Nn \l_semio_viz_network_shift_fp { 2 * \semio_viz_network_n:nn { deg } {##1} + 1 } }
+    \semio_viz_network_fset:nnn { ev0 } {##1} { 1 / sqrt( \l_semio_viz_network_n_int ) }
+    \semio_viz_network_fset:nnn { ev1 } {##1} { sin( ##1 * 2.399963229728653 ) }
+    \semio_viz_network_fset:nnn { ev2 } {##1} { cos( ##1 * 2.399963229728653 ) }
+  }
+  \semio_viz_network_spectral_iterate:nn { ev1 } { }
+  \semio_viz_network_spectral_iterate:nn { ev2 } { ev1 }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \semio_viz_network_fset:nnn { x } {##1}
+      { \l_semio_viz_network_origin_x_fp + \l_semio_viz_network_radius_fp * \semio_viz_network_f:nn { ev1 } {##1} }
+    \semio_viz_network_fset:nnn { y } {##1}
+      { \l_semio_viz_network_origin_y_fp + \l_semio_viz_network_radius_fp * \semio_viz_network_f:nn { ev2 } {##1} }
+  }
+  \semio_viz_network_emit_nodes:nn {#2} { spectral }
+}
+%endregion 🔖️Spectral
+
+%region 🔖️Layered
+% 🪜 Sugiyama: DFS cycle removal, longest-path layering, `sweeps` barycenter ordering passes,
+% then median coordinate assignment with overlap resolution. Compared against dagre on ranks and order only.
+\int_new:N \l_semio_viz_network_layer_size_int
+\seq_new:N \l_semio_viz_network_layer_seq
+\fp_new:N \l_semio_viz_network_bary_fp
+\int_new:N \l_semio_viz_network_bary_n_int
+
+\cs_new_protected:Npn \semio_viz_network_layer_collect:n #1 {
+  \seq_clear:N \l_semio_viz_network_layer_seq
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \int_compare:nNnT { \semio_viz_network_n:nn { layer } {##1} } = {#1}
+      { \seq_put_right:Nn \l_semio_viz_network_layer_seq {##1} }
+  }
+  \seq_sort:Nn \l_semio_viz_network_layer_seq
+    {
+      \int_compare:nNnTF { \semio_viz_network_n:nn { pos } {##1} } > { \semio_viz_network_n:nn { pos } {##2} }
+        { \sort_return_swapped: } { \sort_return_same: }
+    }
+  \seq_map_indexed_inline:Nn \l_semio_viz_network_layer_seq
+    { \semio_viz_network_nset:nnn { pos } {##2} {##1} }
+  \int_set:Nn \l_semio_viz_network_layer_size_int { \seq_count:N \l_semio_viz_network_layer_seq }
+}
+
+% ⚖️ The barycentre of node #1 over adjacency #2: the mean position of its neighbours in the
+% adjacent layer, or its own position when it has none.
+\cs_new_protected:Npn \semio_viz_network_barycenter:nn #1#2 {
+  \fp_zero:N \l_semio_viz_network_bary_fp
+  \int_zero:N \l_semio_viz_network_bary_n_int
+  \seq_map_inline:cn { l_semio_viz_network_ #2 _ \int_eval:n {#1} _seq } {
+    \fp_add:Nn \l_semio_viz_network_bary_fp { \semio_viz_network_n:nn { pos } {##1} }
+    \int_incr:N \l_semio_viz_network_bary_n_int
+  }
+  \int_compare:nNnTF \l_semio_viz_network_bary_n_int = { 0 }
+    { \semio_viz_network_fset:nnn { bary } {#1} { \semio_viz_network_n:nn { pos } {#1} } }
+    {
+      \semio_viz_network_fset:nnn { bary } {#1}
+        { \l_semio_viz_network_bary_fp / \l_semio_viz_network_bary_n_int }
+    }
+}
+
+% 🧹 One ordering sweep over layer #1: its nodes re-sorted by their barycentres over adjacency #2,
+% which is what pulls the edges between two layers apart.
+\cs_new_protected:Npn \semio_viz_network_layer_sweep:nn #1#2 {
+  \semio_viz_network_layer_collect:n {#1}
+  \seq_map_inline:Nn \l_semio_viz_network_layer_seq { \semio_viz_network_barycenter:nn {##1} {#2} }
+  \seq_sort:Nn \l_semio_viz_network_layer_seq
+    {
+      \fp_compare:nNnTF { \semio_viz_network_f:nn { bary } {##1} } > { \semio_viz_network_f:nn { bary } {##2} }
+        { \sort_return_swapped: } { \sort_return_same: }
+    }
+  \seq_map_indexed_inline:Nn \l_semio_viz_network_layer_seq
+    { \semio_viz_network_nset:nnn { pos } {##2} {##1} }
+}
+
+% 📐 Turns the layer and position of every node into coordinates, one layer per rank.
+\cs_new_protected:Npn \semio_viz_network_layer_coords: {
+  \int_step_inline:nn { \l_semio_viz_network_layers_int } {
+    \semio_viz_network_layer_collect:n { ##1 - 1 }
+    \seq_map_indexed_inline:Nn \l_semio_viz_network_layer_seq {
+      \semio_viz_network_fset:nnn { cross } {####2}
+        {
+          \l_semio_viz_network_spacing_fp
+          * ( ####1 - 1 - ( \l_semio_viz_network_layer_size_int - 1 ) / 2 )
+        }
+    }
+  }
+}
+
+% 🪜 `layered`: Sugiyama — cycles broken, ranks assigned, `sweeps` ordering passes, coordinates.
+\semio_viz_layout_define:nn { layered } {
+  \semio_viz_network_use:nn {#1} {#3}
+  \semio_viz_network_place_prepare:n {#3}
+  \semio_viz_network_layering:
+  \semio_viz_network_n_ensure:nn { pos } { \l_semio_viz_network_n_int }
+  \semio_viz_network_fp_ensure:nn { bary } { \l_semio_viz_network_n_int }
+  \semio_viz_network_fp_ensure:nn { cross } { \l_semio_viz_network_n_int }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } { \semio_viz_network_nset:nnn { pos } {##1} {##1} }
+  \int_step_inline:nn { \l_semio_viz_network_layers_int } { \semio_viz_network_layer_collect:n { ##1 - 1 } }
+  \int_step_inline:nn { \l_semio_viz_network_sweeps_int } {
+    \int_step_inline:nn { \l_semio_viz_network_layers_int - 1 }
+      { \semio_viz_network_layer_sweep:nn { ####1 } { inadj } }
+    \int_step_inline:nn { \l_semio_viz_network_layers_int - 1 }
+      { \semio_viz_network_layer_sweep:nn { \l_semio_viz_network_layers_int - 1 - ####1 } { outadj } }
+  }
+  \semio_viz_network_layer_coords:
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \str_if_eq:VnTF \l_semio_viz_network_orientation_tl { horizontal }
+      {
+        \semio_viz_network_fset:nnn { x } {##1}
+          { \l_semio_viz_network_origin_x_fp
+            + \l_semio_viz_network_dx_step_fp * \semio_viz_network_n:nn { layer } {##1} }
+        \semio_viz_network_fset:nnn { y } {##1}
+          { \l_semio_viz_network_origin_y_fp + \semio_viz_network_f:nn { cross } {##1} }
+      }
+      {
+        \semio_viz_network_fset:nnn { x } {##1}
+          { \l_semio_viz_network_origin_x_fp + \semio_viz_network_f:nn { cross } {##1} }
+        \semio_viz_network_fset:nnn { y } {##1}
+          { \l_semio_viz_network_origin_y_fp
+            - \l_semio_viz_network_dy_step_fp * \semio_viz_network_n:nn { layer } {##1} }
+      }
+  }
+  \semio_viz_network_out_new:nn {#2} { index, id, x, y, layer, order }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \semio_viz_network_out_row:nn {#2}
+      {
+        ##1 , \semio_viz_network_id:n {##1} ,
+        \fp_to_decimal:n { \semio_viz_network_f:nn { x } {##1} } ,
+        \fp_to_decimal:n { \semio_viz_network_f:nn { y } {##1} } ,
+        \semio_viz_network_n:nn { layer } {##1} ,
+        \semio_viz_network_n:nn { pos } {##1}
+      }
+    \semio_viz_probe_geometry:nx { layout/layered }
+      {
+        ##1 , \semio_viz_network_n:nn { layer } {##1} , \semio_viz_network_n:nn { pos } {##1} ,
+        \fp_to_decimal:n { \semio_viz_network_f:nn { x } {##1} } ,
+        \fp_to_decimal:n { \semio_viz_network_f:nn { y } {##1} }
+      }
+  }
+}
+%endregion 🔖️Layered
+
+
+%region 🔖️Chord
+% 🔑 semio / viz / layout / chord — the options of the `chord` layout; every
+% default is d3.chord()'s own.
+%   pad-angle      (radians, default 0)     gap between two group arcs (d3 padAngle)
+%   sort-groups    (none|ascending|descending, default none)     order of the group arcs
+%   sort-subgroups (none|ascending|descending, default none)     order inside a group
+%   symmetric      (boolean, default false) mirror every edge into the transposed cell
+\cs_if_exist:NF \prop_item:NV { \cs_generate_variant:Nn \prop_item:Nn { NV } }
+\cs_if_exist:NF \prop_put:NVx { \cs_generate_variant:Nn \prop_put:Nnn { NVx } }
+
+\fp_new:N \l_semio_viz_network_pad_angle_fp
+\tl_new:N \l_semio_viz_network_sort_groups_tl
+\tl_new:N \l_semio_viz_network_sort_subgroups_tl
+\bool_new:N \l_semio_viz_network_symmetric_bool
+\fp_new:N \l_semio_viz_network_total_fp
+\fp_new:N \l_semio_viz_network_scale_fp
+\fp_new:N \l_semio_viz_network_gap_fp
+\fp_new:N \l_semio_viz_network_cursor_fp
+\fp_new:N \l_semio_viz_network_group_start_fp
+\int_new:N \l_semio_viz_network_ribbon_int
+\seq_new:N \l_semio_viz_network_group_order_seq
+\seq_new:N \l_semio_viz_network_sub_order_seq
+
+% 🔑 The chord layout's own keys, as documented in the block above.
+\keys_define:nn { semio / viz / layout / chord } {
+  pad-angle      .fp_set:N = \l_semio_viz_network_pad_angle_fp,
+  sort-groups    .tl_set:N = \l_semio_viz_network_sort_groups_tl,
+  sort-subgroups .tl_set:N = \l_semio_viz_network_sort_subgroups_tl,
+  symmetric      .bool_set:N = \l_semio_viz_network_symmetric_bool,
+}
+
+\tl_const:Nn \c_semio_viz_network_chord_defaults_tl
+  { pad-angle = 0, sort-groups = none, sort-subgroups = none, symmetric = false }
+
+% 🔎 Cell (#1,#2) of the dense weight matrix.
+\cs_new:Npn \semio_viz_network_mat:nn #1#2
+  { \use:c { l_semio_viz_network_mat_ \int_eval:n {#1} _ \int_eval:n {#2} _fp } }
+
+% ➕ Adds edge #1's weight into its own cell, and into the transposed cell under `symmetric`.
+\cs_new_protected:Npn \semio_viz_network_matrix_edge:n #1 {
+  \semio_viz_network_fadd:nnn { mat_ \semio_viz_network_n:nn { es } {#1} }
+    { \semio_viz_network_n:nn { et } {#1} } { \semio_viz_network_f:nn { ew } {#1} }
+  \bool_if:NT \l_semio_viz_network_symmetric_bool {
+    \semio_viz_network_fadd:nnn { mat_ \semio_viz_network_n:nn { et } {#1} }
+      { \semio_viz_network_n:nn { es } {#1} } { \semio_viz_network_f:nn { ew } {#1} }
+  }
+}
+
+% 🧮 Builds the dense n-by-n weight matrix of the bound graph; `symmetric` mirrors every edge.
+\cs_new_protected:Npn \semio_viz_network_matrix_build: {
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \semio_viz_network_fp_ensure:nn { mat_ ##1 } { \l_semio_viz_network_n_int }
+    \int_step_inline:nn { \l_semio_viz_network_n_int }
+      { \semio_viz_network_fset:nnn { mat_ ##1 } {####1} { 0 } }
+  }
+  \int_step_inline:nn { \l_semio_viz_network_m_int } { \semio_viz_network_matrix_edge:n {##1} }
+}
+
+% 🔃 Sorts the index sequence #1 by the value function #2 in the direction #3; `none` leaves the
+% sequence in its own order, which is d3.chord()'s default.
+\cs_new_protected:Npn \semio_viz_network_chord_sort:Nnn #1#2#3 {
+  \str_case:nn {#3}
+    {
+      { ascending }
+        {
+          \seq_sort:Nn #1
+            { \fp_compare:nNnTF { #2 {##1} } > { #2 {##2} } { \sort_return_swapped: } { \sort_return_same: } }
+        }
+      { descending }
+        {
+          \seq_sort:Nn #1
+            { \fp_compare:nNnTF { #2 {##1} } < { #2 {##2} } { \sort_return_swapped: } { \sort_return_same: } }
+        }
+    }
+}
+
+% 🧮 Total weight of group #1, the value the group order is sorted by.
+\cs_new:Npn \semio_viz_network_group_sum:n #1 { \semio_viz_network_f:nn { gsum } {#1} }
+% 🧮 The value the subgroup order is sorted by; the group being laid out redefines it each time.
+\cs_new:Npn \semio_viz_network_sub_value:n #1 { 0 }
+
+% 🍩 One subgroup arc: group #1's share pointing at partner #2, laid out inside the group's angular span.
+\cs_new_protected:Npn \semio_viz_network_chord_subgroup:nn #1#2 {
+  \semio_viz_network_fset:nnn { sga_ #1 } {#2} { \l_semio_viz_network_cursor_fp }
+  \fp_add:Nn \l_semio_viz_network_cursor_fp
+    { \semio_viz_network_mat:nn {#1} {#2} * \l_semio_viz_network_scale_fp }
+  \semio_viz_network_fset:nnn { sgb_ #1 } {#2} { \l_semio_viz_network_cursor_fp }
+}
+
+% 🔃 The order the subgroups of group #1 are laid out in, under `sort-subgroups`.
+\cs_new_protected:Npn \semio_viz_network_chord_sub_order:n #1 {
+  \seq_clear:N \l_semio_viz_network_sub_order_seq
+  \int_step_inline:nn { \l_semio_viz_network_n_int }
+    { \seq_put_right:Nn \l_semio_viz_network_sub_order_seq {##1} }
+  \cs_set:Npn \semio_viz_network_sub_value:n ##1 { \semio_viz_network_mat:nn {#1} {##1} }
+  \exp_args:NNNV \semio_viz_network_chord_sort:Nnn \l_semio_viz_network_sub_order_seq
+    \semio_viz_network_sub_value:n \l_semio_viz_network_sort_subgroups_tl
+}
+
+% 🍩 One group arc: its subgroups laid end to end from the running cursor, then the group's own
+% span recorded and the pad angle skipped before the next group.
+\cs_new_protected:Npn \semio_viz_network_chord_group:n #1 {
+  \semio_viz_network_chord_sub_order:n {#1}
+  \fp_set_eq:NN \l_semio_viz_network_group_start_fp \l_semio_viz_network_cursor_fp
+  \seq_map_inline:Nn \l_semio_viz_network_sub_order_seq
+    { \semio_viz_network_chord_subgroup:nn {#1} {##1} }
+  \semio_viz_network_fset:nnn { ga } {#1} { \l_semio_viz_network_group_start_fp }
+  \semio_viz_network_fset:nnn { gb } {#1} { \l_semio_viz_network_cursor_fp }
+  \fp_add:Nn \l_semio_viz_network_cursor_fp { \l_semio_viz_network_gap_fp }
+}
+
+% 📤 The two output rows of the ribbon between groups #2 and #3, and its probe record.
+\cs_new_protected:Npn \semio_viz_network_chord_rows:nnn #1#2#3 {
+  \semio_viz_network_out_row:nn {#1}
+    {
+      source , \int_use:N \l_semio_viz_network_ribbon_int , #2 , #3 ,
+      \fp_to_decimal:n { \semio_viz_network_f:nn { sga_ #2 } {#3} } ,
+      \fp_to_decimal:n { \semio_viz_network_f:nn { sgb_ #2 } {#3} } ,
+      \fp_to_decimal:n { \semio_viz_network_mat:nn {#2} {#3} }
+    }
+  \semio_viz_network_out_row:nn {#1}
+    {
+      target , \int_use:N \l_semio_viz_network_ribbon_int , #3 , #2 ,
+      \fp_to_decimal:n { \semio_viz_network_f:nn { sga_ #3 } {#2} } ,
+      \fp_to_decimal:n { \semio_viz_network_f:nn { sgb_ #3 } {#2} } ,
+      \fp_to_decimal:n { \semio_viz_network_mat:nn {#3} {#2} }
+    }
+  \semio_viz_probe_geometry:nx { layout/chord-ribbon }
+    {
+      \int_use:N \l_semio_viz_network_ribbon_int , #2 , #3 ,
+      \fp_to_decimal:n { \semio_viz_network_f:nn { sga_ #2 } {#3} } ,
+      \fp_to_decimal:n { \semio_viz_network_f:nn { sgb_ #2 } {#3} } ,
+      \fp_to_decimal:n { \semio_viz_network_f:nn { sga_ #3 } {#2} } ,
+      \fp_to_decimal:n { \semio_viz_network_f:nn { sgb_ #3 } {#2} }
+    }
+}
+
+% 🍩 One ribbon between groups #2 and #3, its two ends written with the heavier direction first,
+% which is the order d3.chord() reports.
+\cs_new_protected:Npn \semio_viz_network_chord_emit_pair:nnn #1#2#3 {
+  \int_incr:N \l_semio_viz_network_ribbon_int
+  \fp_compare:nNnTF { \semio_viz_network_mat:nn {#2} {#3} } < { \semio_viz_network_mat:nn {#3} {#2} }
+    { \semio_viz_network_chord_rows:nnn {#1} {#3} {#2} }
+    { \semio_viz_network_chord_rows:nnn {#1} {#2} {#3} }
+}
+% 🍩 Normalises the pair indices before they are pasted into subgroup variable names.
+\cs_new_protected:Npn \semio_viz_network_chord_scan:nnn #1#2#3 {
+  \exp_args:Nnnx \semio_viz_network_chord_emit:nnn {#1} {#2} { \int_eval:n {#3} }
+}
+% 🍩 Emits the pair (#2,#3) only when it carries weight in at least one direction.
+\cs_new_protected:Npn \semio_viz_network_chord_emit:nnn #1#2#3 {
+  \fp_compare:nNnT
+    { abs( \semio_viz_network_mat:nn {#2} {#3} ) + abs( \semio_viz_network_mat:nn {#3} {#2} ) } > { 0 }
+    { \semio_viz_network_chord_emit_pair:nnn {#1} {#2} {#3} }
+}
+
+% 🍩 d3-chord's layout: group sums, optional sorting, padded angular scale, subgroup arcs, ribbon endpoints.
+\semio_viz_layout_define:nn { chord } {
+  \semio_viz_network_use:nn {#1} {#3}
+  \semio_viz_network_keys:nNn { layout / chord } \c_semio_viz_network_chord_defaults_tl {#3}
+  \semio_viz_network_matrix_build:
+  \semio_viz_network_fp_ensure:nn { gsum } { \l_semio_viz_network_n_int }
+  \semio_viz_network_fp_ensure:nn { ga } { \l_semio_viz_network_n_int }
+  \semio_viz_network_fp_ensure:nn { gb } { \l_semio_viz_network_n_int }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \semio_viz_network_fp_ensure:nn { sga_ ##1 } { \l_semio_viz_network_n_int }
+    \semio_viz_network_fp_ensure:nn { sgb_ ##1 } { \l_semio_viz_network_n_int }
+  }
+  \fp_zero:N \l_semio_viz_network_total_fp
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \semio_viz_network_fset:nnn { gsum } {##1} { 0 }
+    \int_step_inline:nn { \l_semio_viz_network_n_int }
+      { \semio_viz_network_fadd:nnn { gsum } {##1} { \semio_viz_network_mat:nn {##1} {####1} } }
+    \fp_add:Nn \l_semio_viz_network_total_fp { \semio_viz_network_f:nn { gsum } {##1} }
+  }
+  \seq_clear:N \l_semio_viz_network_group_order_seq
+  \int_step_inline:nn { \l_semio_viz_network_n_int }
+    { \seq_put_right:Nn \l_semio_viz_network_group_order_seq {##1} }
+  \exp_args:NNNV \semio_viz_network_chord_sort:Nnn \l_semio_viz_network_group_order_seq
+    \semio_viz_network_group_sum:n \l_semio_viz_network_sort_groups_tl
+  \fp_set:Nn \l_semio_viz_network_scale_fp
+    {
+      \l_semio_viz_network_total_fp = 0 ? { 0 } :
+      { max( 0 , 6.283185307179586 - \l_semio_viz_network_pad_angle_fp * \l_semio_viz_network_n_int )
+        / \l_semio_viz_network_total_fp }
+    }
+  \fp_set:Nn \l_semio_viz_network_gap_fp
+    {
+      \l_semio_viz_network_scale_fp = 0 ? { 6.283185307179586 / \l_semio_viz_network_n_int }
+        : { \l_semio_viz_network_pad_angle_fp }
+    }
+  \fp_zero:N \l_semio_viz_network_cursor_fp
+  \seq_map_function:NN \l_semio_viz_network_group_order_seq \semio_viz_network_chord_group:n
+  \semio_viz_network_out_new:nn {#2} { kind, ribbon, i, j, a0, a1, v }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \semio_viz_network_out_row:nn {#2}
+      {
+        group , 0 , ##1 , ##1 ,
+        \fp_to_decimal:n { \semio_viz_network_f:nn { ga } {##1} } ,
+        \fp_to_decimal:n { \semio_viz_network_f:nn { gb } {##1} } ,
+        \fp_to_decimal:n { \semio_viz_network_f:nn { gsum } {##1} }
+      }
+    \semio_viz_probe_geometry:nx { layout/chord-group }
+      {
+        ##1 ,
+        \fp_to_decimal:n { \semio_viz_network_f:nn { ga } {##1} } ,
+        \fp_to_decimal:n { \semio_viz_network_f:nn { gb } {##1} } ,
+        \fp_to_decimal:n { \semio_viz_network_f:nn { gsum } {##1} }
+      }
+  }
+  \int_zero:N \l_semio_viz_network_ribbon_int
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \int_step_inline:nn { \l_semio_viz_network_n_int - ##1 + 1 }
+      { \semio_viz_network_chord_scan:nnn {#2} {##1} { ##1 + ####1 - 1 } }
+  }
+}
+%endregion 🔖️Chord
+
+%region 🔖️Bundling
+% 🎋 Hierarchical edge bundling over a two-level hierarchy (root, group hub, leaf): leaves sit on a circle
+% in the chosen ordering, hubs at `inner-radius` on the mean angle of their leaves, the root at the centre.
+% The control polygon is then relaxed towards the straight chord by d3's bundle tension beta.
+\fp_new:N \l_semio_viz_network_bundle_x_fp
+\fp_new:N \l_semio_viz_network_bundle_y_fp
+\fp_new:N \l_semio_viz_network_bundle_xa_fp
+\fp_new:N \l_semio_viz_network_bundle_ya_fp
+\seq_new:N \l_semio_viz_network_hubs_seq
+\prop_new:N \l_semio_viz_network_hub_prop
+
+\cs_new_protected:Npn \semio_viz_network_hub_record:n #1 {
+  \tl_set:Nx \l_semio_viz_network_cell_tl { \semio_viz_network_group:n {#1} }
+  \seq_if_in:NVF \l_semio_viz_network_hubs_seq \l_semio_viz_network_cell_tl {
+    \seq_put_right:NV \l_semio_viz_network_hubs_seq \l_semio_viz_network_cell_tl
+    \prop_put:NVx \l_semio_viz_network_hub_prop \l_semio_viz_network_cell_tl
+      { \int_eval:n { \seq_count:N \l_semio_viz_network_hubs_seq } }
+  }
+}
+% 🎋 Files leaf #1 under its own hub and adds its angle to that hub's running mean.
+\cs_new_protected:Npn \semio_viz_network_hub_accumulate:n #1 {
+  \tl_set:Nx \l_semio_viz_network_cell_tl { \semio_viz_network_group:n {#1} }
+  \semio_viz_network_nset:nnn { hub } {#1}
+    { \prop_item:NV \l_semio_viz_network_hub_prop \l_semio_viz_network_cell_tl }
+  \semio_viz_network_fadd:nnn { huba } { \semio_viz_network_n:nn { hub } {#1} }
+    { \semio_viz_network_f:nn { na } {#1} }
+  \semio_viz_network_nset:nnn { hubn } { \semio_viz_network_n:nn { hub } {#1} }
+    { \semio_viz_network_n:nn { hubn } { \semio_viz_network_n:nn { hub } {#1} } + 1 }
+}
+
+% 🎋 Collects the distinct group labels in ordering position and averages each hub's leaf angle.
+\cs_new_protected:Npn \semio_viz_network_hubs_build: {
+  \seq_clear:N \l_semio_viz_network_hubs_seq
+  \prop_clear:N \l_semio_viz_network_hub_prop
+  \semio_viz_network_n_ensure:nn { hub } { \l_semio_viz_network_n_int }
+  \seq_map_function:NN \l_semio_viz_network_sorted_seq \semio_viz_network_hub_record:n
+  \semio_viz_network_fp_ensure:nn { huba } { \seq_count:N \l_semio_viz_network_hubs_seq }
+  \semio_viz_network_n_ensure:nn { hubn } { \seq_count:N \l_semio_viz_network_hubs_seq }
+  \int_step_inline:nn { \seq_count:N \l_semio_viz_network_hubs_seq } {
+    \semio_viz_network_fset:nnn { huba } {##1} { 0 }
+    \semio_viz_network_nset:nnn { hubn } {##1} { 0 }
+  }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } { \semio_viz_network_hub_accumulate:n {##1} }
+  \int_step_inline:nn { \seq_count:N \l_semio_viz_network_hubs_seq } {
+    \int_compare:nNnF { \semio_viz_network_n:nn { hubn } {##1} } = { 0 }
+      {
+        \semio_viz_network_fset:nnn { huba } {##1}
+          { \semio_viz_network_f:nn { huba } {##1} / \semio_viz_network_n:nn { hubn } {##1} }
+      }
+  }
+}
+
+% 🎋 Writes control point #3 of #6 for edge #2, relaxed from (#4,#5) towards the straight chord by beta.
+\cs_new_protected:Npn \semio_viz_network_bundle_point:nnnnnn #1#2#3#4#5#6 {
+  \semio_viz_network_out_row:nn {#1}
+    {
+      #2 , #3 ,
+      \fp_to_decimal:n
+        {
+          \l_semio_viz_network_beta_fp * (#4) + ( 1 - \l_semio_viz_network_beta_fp )
+          * ( \l_semio_viz_network_bundle_xa_fp + (#3) / ( (#6) - 1 )
+            * ( \l_semio_viz_network_bundle_x_fp - \l_semio_viz_network_bundle_xa_fp ) )
+        } ,
+      \fp_to_decimal:n
+        {
+          \l_semio_viz_network_beta_fp * (#5) + ( 1 - \l_semio_viz_network_beta_fp )
+          * ( \l_semio_viz_network_bundle_ya_fp + (#3) / ( (#6) - 1 )
+            * ( \l_semio_viz_network_bundle_y_fp - \l_semio_viz_network_bundle_ya_fp ) )
+        }
+    }
+}
+
+% 🎋 Abscissa of leaf #1's hub, on the inner radius at the hub's own mean angle.
+\cs_new:Npn \semio_viz_network_hub_x:n #1
+  {
+    \l_semio_viz_network_cx_fp + \l_semio_viz_network_inner_radius_fp
+      * cos( \semio_viz_network_f:nn { huba } { \semio_viz_network_n:nn { hub } {#1} } )
+  }
+% 🎋 Ordinate of the same hub point.
+\cs_new:Npn \semio_viz_network_hub_y:n #1
+  {
+    \l_semio_viz_network_cy_fp + \l_semio_viz_network_inner_radius_fp
+      * sin( \semio_viz_network_f:nn { huba } { \semio_viz_network_n:nn { hub } {#1} } )
+  }
+
+% 🎋 An edge inside one hub: three control points, through that hub alone.
+\cs_new_protected:Npn \semio_viz_network_bundle_short:nnn #1#2#3 {
+  \semio_viz_network_bundle_point:nnnnnn {#1} {#2} { 0 }
+    { \l_semio_viz_network_bundle_xa_fp } { \l_semio_viz_network_bundle_ya_fp } { 3 }
+  \semio_viz_network_bundle_point:nnnnnn {#1} {#2} { 1 }
+    { \semio_viz_network_hub_x:n {#3} } { \semio_viz_network_hub_y:n {#3} } { 3 }
+  \semio_viz_network_bundle_point:nnnnnn {#1} {#2} { 2 }
+    { \l_semio_viz_network_bundle_x_fp } { \l_semio_viz_network_bundle_y_fp } { 3 }
+}
+% 🎋 An edge between two hubs: five control points, through both hubs and the common centre, which
+% is what makes edges with the same route share a visible bundle.
+\cs_new_protected:Npn \semio_viz_network_bundle_long:nnnn #1#2#3#4 {
+  \semio_viz_network_bundle_point:nnnnnn {#1} {#2} { 0 }
+    { \l_semio_viz_network_bundle_xa_fp } { \l_semio_viz_network_bundle_ya_fp } { 5 }
+  \semio_viz_network_bundle_point:nnnnnn {#1} {#2} { 1 }
+    { \semio_viz_network_hub_x:n {#3} } { \semio_viz_network_hub_y:n {#3} } { 5 }
+  \semio_viz_network_bundle_point:nnnnnn {#1} {#2} { 2 }
+    { \l_semio_viz_network_cx_fp } { \l_semio_viz_network_cy_fp } { 5 }
+  \semio_viz_network_bundle_point:nnnnnn {#1} {#2} { 3 }
+    { \semio_viz_network_hub_x:n {#4} } { \semio_viz_network_hub_y:n {#4} } { 5 }
+  \semio_viz_network_bundle_point:nnnnnn {#1} {#2} { 4 }
+    { \l_semio_viz_network_bundle_x_fp } { \l_semio_viz_network_bundle_y_fp } { 5 }
+}
+
+% 🎋 The control points of the edge from node #2 to node #3: the short route inside one hub, the
+% long one through both.
+\cs_new_protected:Npn \semio_viz_network_bundle_edge:nnn #1#2#3 {
+  \fp_set:Nn \l_semio_viz_network_bundle_xa_fp { \semio_viz_network_f:nn { x } {#2} }
+  \fp_set:Nn \l_semio_viz_network_bundle_ya_fp { \semio_viz_network_f:nn { y } {#2} }
+  \fp_set:Nn \l_semio_viz_network_bundle_x_fp { \semio_viz_network_f:nn { x } {#3} }
+  \fp_set:Nn \l_semio_viz_network_bundle_y_fp { \semio_viz_network_f:nn { y } {#3} }
+  \int_compare:nNnTF { \semio_viz_network_n:nn { hub } {#2} } = { \semio_viz_network_n:nn { hub } {#3} }
+    { \semio_viz_network_bundle_short:nnn {#1} { \l_semio_viz_network_k_int } {#2} }
+    { \semio_viz_network_bundle_long:nnnn {#1} { \l_semio_viz_network_k_int } {#2} {#3} }
+}
+
+% 🎋 `bundling`: Holten's hierarchical edge bundling — leaves on a circle, one hub per group, and
+% every edge routed through its hubs and relaxed towards its own chord by `beta`.
+\semio_viz_layout_define:nn { bundling } {
+  \semio_viz_network_use:nn {#1} {#3}
+  \semio_viz_network_place_prepare:n {#3}
+  \seq_map_indexed_inline:Nn \l_semio_viz_network_sorted_seq {
+    \semio_viz_network_polar_set:nnn {##2}
+      {
+        \l_semio_viz_network_start_angle_fp
+        + ( \l_semio_viz_network_end_angle_fp - \l_semio_viz_network_start_angle_fp )
+          * ( ##1 - 1 ) / \l_semio_viz_network_n_int
+      }
+      { \l_semio_viz_network_radius_fp }
+  }
+  \semio_viz_network_hubs_build:
+  \semio_viz_network_out_new:nn {#2} { edge, step, x, y }
+  \int_step_inline:nn { \l_semio_viz_network_m_int } {
+    \int_set:Nn \l_semio_viz_network_k_int {##1}
+    \semio_viz_network_bundle_edge:nnn {#2}
+      { \semio_viz_network_n:nn { es } {##1} } { \semio_viz_network_n:nn { et } {##1} }
+  }
+}
+%endregion 🔖️Bundling
+
+
+%region 🔖️PublicApi
+% 🔑 semio / viz / graph / walk — the options of \SemioVizGraphOrder.
+%   mode      (bfs|dfs|topological, default bfs)  which order is produced
+%   root      (integer, default 1)                where a traversal starts; the remaining components
+%                                                 follow in index order so every node appears once
+%   direction (adj|outadj|inadj, default adj)     which adjacency a traversal follows
+\tl_new:N \l_semio_viz_network_walk_mode_tl
+\tl_new:N \l_semio_viz_network_walk_dir_tl
+\int_new:N \l_semio_viz_network_walk_root_int
+
+\keys_define:nn { semio / viz / graph / walk } {
+  mode      .tl_set:N = \l_semio_viz_network_walk_mode_tl,
+  root      .int_set:N = \l_semio_viz_network_walk_root_int,
+  direction .tl_set:N = \l_semio_viz_network_walk_dir_tl,
+}
+\tl_const:Nn \c_semio_viz_network_walk_defaults_tl { mode = bfs, root = 1, direction = adj }
+
+% 📊 Degrees, connected component and longest-path layer of every node of graph #1.
+\cs_new_protected:Npn \semio_viz_network_metrics:nnn #1#2#3 {
+  \semio_viz_network_use:nn {#1} {#3}
+  \semio_viz_network_components:
+  \semio_viz_network_layering:
+  \semio_viz_network_out_new:nn {#2} { index, id, degree, indegree, outdegree, component, layer }
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \semio_viz_network_out_row:nn {#2}
+      {
+        ##1 , \semio_viz_network_id:n {##1} ,
+        \semio_viz_network_n:nn { deg } {##1} ,
+        \semio_viz_network_n:nn { indeg } {##1} ,
+        \semio_viz_network_n:nn { outdeg } {##1} ,
+        \semio_viz_network_n:nn { comp } {##1} ,
+        \semio_viz_network_n:nn { layer } {##1}
+      }
+    \semio_viz_probe_geometry:nx { graph/metrics }
+      {
+        ##1 ,
+        \semio_viz_network_n:nn { deg } {##1} ,
+        \semio_viz_network_n:nn { indeg } {##1} ,
+        \semio_viz_network_n:nn { outdeg } {##1} ,
+        \semio_viz_network_n:nn { comp } {##1} ,
+        \semio_viz_network_n:nn { layer } {##1}
+      }
+  }
+}
+
+% 🧭 Starts the traversal at `root` and then at every still unvisited node in index order.
+\cs_new_protected:Npn \semio_viz_network_walk_all:n #1 {
+  \int_step_inline:nn { \l_semio_viz_network_n_int } {
+    \semio_viz_network_walk_one:nn
+      {
+        \int_eval:n
+          {
+            1 + \int_mod:nn
+              { \l_semio_viz_network_walk_root_int - 1 + ##1 - 1 } { \l_semio_viz_network_n_int }
+          }
+      }
+      {#1}
+  }
+}
+% 🧭 One traversal from node #1 in mode #2, over the adjacency the `direction` key names.
+\cs_new_protected:Npn \semio_viz_network_walk_one:nn #1#2 {
+  \str_if_eq:nnTF {#2} { dfs }
+    { \semio_viz_network_dfs_from:nn {#1} { \l_semio_viz_network_walk_dir_tl } }
+    { \semio_viz_network_bfs_from:nn {#1} { \l_semio_viz_network_walk_dir_tl } }
+}
+
+% 🧭 A breadth-first, depth-first or topological order of graph #1 as an ordered table.
+\cs_new_protected:Npn \semio_viz_network_order_run:nnn #1#2#3 {
+  \semio_viz_network_use:nn {#1} {#3}
+  \semio_viz_network_keys:nNn { graph / walk } \c_semio_viz_network_walk_defaults_tl {#3}
+  \semio_viz_network_visit_reset:
+  \seq_clear:N \l_semio_viz_network_order_seq
+  \str_if_eq:VnTF \l_semio_viz_network_walk_mode_tl { topological }
+    { \semio_viz_network_topological: }
+    { \exp_args:NV \semio_viz_network_walk_all:n \l_semio_viz_network_walk_mode_tl }
+  \semio_viz_network_out_new:nn {#2} { step, index, id, depth }
+  \seq_map_indexed_inline:Nn \l_semio_viz_network_order_seq {
+    \semio_viz_network_out_row:nn {#2}
+      {
+        ##1 , ##2 , \semio_viz_network_id:n {##2} ,
+        \semio_viz_network_n:nn { depth } {##2}
+      }
+    \semio_viz_probe_geometry:nx { graph/order }
+      { ##1 , ##2 , \semio_viz_network_n:nn { depth } {##2} }
+  }
+}
+
+% 📊 \SemioVizGraphMetrics{graph}{out}[bindings]: degree, in/out degree, component and layer per node.
+\NewDocumentCommand \SemioVizGraphMetrics { m m O{} } { \semio_viz_network_metrics:nnn {#1} {#2} {#3} }
+% 🧭 \SemioVizGraphOrder{graph}{out}[mode=,root=,direction=,bindings]: an ordered traversal table.
+\NewDocumentCommand \SemioVizGraphOrder { m m O{} } { \semio_viz_network_order_run:nnn {#1} {#2} {#3} }
+% 🎲 \SemioVizGraphSeed{value}: reseeds the deterministic generator; the documented default is 1.
+\NewDocumentCommand \SemioVizGraphSeed { m } { \semio_viz_network_seed:n {#1} }
+% 🎲 \SemioVizGraphRandom: advances the generator; the new state is \l_semio_viz_network_rand_fp * 2^32.
+\NewDocumentCommand \SemioVizGraphRandom { } { \semio_viz_network_random: }
+%endregion 🔖️PublicApi
+
+\ExplSyntaxOff

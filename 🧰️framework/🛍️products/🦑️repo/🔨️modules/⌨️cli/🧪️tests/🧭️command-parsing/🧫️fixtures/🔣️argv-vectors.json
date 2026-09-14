@@ -1,0 +1,140 @@
+{
+  "_comment": "🧭️ Specification vectors for argv → parsed command projection. Each vector states one argv and either the projection it owes or the verbatim refusal message. `flags` lists ONLY the flags the caller passed; defaults are deliberately absent so a vector states an intent rather than the whole flag table.",
+  "vectors": [
+    {
+      "id": "bare-verb",
+      "argv": ["analyze"],
+      "expect": { "path": ["repo", "analyze"], "positional": [], "flags": {}, "help": false }
+    },
+    {
+      "id": "verb-with-operand",
+      "argv": ["analyze", "some/scope"],
+      "expect": { "path": ["repo", "analyze"], "positional": ["some/scope"], "flags": {}, "help": false }
+    },
+    {
+      "id": "subcommand-selection",
+      "argv": ["ticket", "close", "26/09/06/SOME-TICKET", "done"],
+      "expect": { "path": ["repo", "ticket", "close"], "positional": ["26/09/06/SOME-TICKET", "done"], "flags": {}, "help": false }
+    },
+    {
+      "id": "persistent-flag-before-verb",
+      "argv": ["--json", "ticket", "list"],
+      "expect": { "path": ["repo", "ticket", "list"], "positional": [], "flags": { "json": true }, "help": false }
+    },
+    {
+      "id": "persistent-flag-after-verb",
+      "argv": ["ticket", "list", "--json"],
+      "expect": { "path": ["repo", "ticket", "list"], "positional": [], "flags": { "json": true }, "help": false }
+    },
+    {
+      "id": "string-flag-takes-next-token",
+      "argv": ["graphql", "--query", "{ repo { id } }"],
+      "expect": { "path": ["repo", "graphql"], "positional": [], "flags": { "query": "{ repo { id } }" }, "help": false }
+    },
+    {
+      "id": "inline-flag-value",
+      "argv": ["graphql", "--query={ repo { id } }"],
+      "expect": { "path": ["repo", "graphql"], "positional": [], "flags": { "query": "{ repo { id } }" }, "help": false }
+    },
+    {
+      "id": "shorthand-flag",
+      "argv": ["graphql", "{ repo { id } }", "-v", "{\"a\":1}"],
+      "expect": { "path": ["repo", "graphql"], "positional": ["{ repo { id } }"], "flags": { "vars": "{\"a\":1}" }, "help": false }
+    },
+    {
+      "id": "boolean-flag-consumes-nothing",
+      "argv": ["list", "--sorted", "widget"],
+      "expect": { "path": ["repo", "list"], "positional": ["widget"], "flags": { "sorted": true }, "help": false }
+    },
+    {
+      "id": "integer-flag",
+      "argv": ["list", "--limit", "7"],
+      "expect": { "path": ["repo", "list"], "positional": [], "flags": { "limit": 7 }, "help": false }
+    },
+    {
+      "id": "integer-list-flag",
+      "argv": ["list", "--only-year", "24,25,26"],
+      "expect": { "path": ["repo", "list"], "positional": [], "flags": { "only-year": [24, 25, 26] }, "help": false }
+    },
+    {
+      "id": "string-list-flag",
+      "argv": ["ticket", "close", "--files", "a.rs,b.rs"],
+      "expect": { "path": ["repo", "ticket", "close"], "positional": [], "flags": { "files": ["a.rs", "b.rs"] }, "help": false }
+    },
+    {
+      "id": "duration-flag",
+      "argv": ["--timeout", "90s", "analyze"],
+      "expect": { "path": ["repo", "analyze"], "positional": [], "flags": { "timeout": 90000 }, "help": false }
+    },
+    {
+      "id": "duration-flag-compound",
+      "argv": ["--timeout", "1h30m", "analyze"],
+      "expect": { "path": ["repo", "analyze"], "positional": [], "flags": { "timeout": 5400000 }, "help": false }
+    },
+    {
+      "id": "double-dash-ends-flag-parsing",
+      "argv": ["query", "--", "--json", "widget"],
+      "expect": { "path": ["repo", "query"], "positional": ["--json", "widget"], "flags": {}, "help": false }
+    },
+    {
+      "id": "subcommand-selection-stops-at-first-operand",
+      "argv": ["query", "list", "search"],
+      "expect": { "path": ["repo", "query"], "positional": ["list", "search"], "flags": {}, "help": false }
+    },
+    {
+      "id": "help-short-circuits-at-the-selected-command",
+      "argv": ["ticket", "close", "--help"],
+      "expect": { "path": ["repo", "ticket", "close"], "positional": [], "flags": {}, "help": true }
+    },
+    {
+      "id": "help-shorthand",
+      "argv": ["-h"],
+      "expect": { "path": ["repo"], "positional": [], "flags": {}, "help": true }
+    },
+    {
+      "id": "flag-parsing-disabled-passes-everything-through",
+      "argv": ["micro-commit", "stage", "--all", "-x"],
+      "expect": { "path": ["repo", "micro-commit"], "positional": ["stage", "--all", "-x"], "flags": {}, "help": false }
+    },
+    {
+      "id": "unknown-flag-is-refused",
+      "argv": ["analyze", "--nope"],
+      "error": "unknown flag: --nope"
+    },
+    {
+      "id": "flag-without-argument-is-refused",
+      "argv": ["graphql", "--query"],
+      "error": "flag needs an argument: --query"
+    },
+    {
+      "id": "too-many-operands-are-refused",
+      "argv": ["analyze", "one", "two"],
+      "error": "accepts at most 1 arg(s), received 2"
+    },
+    {
+      "id": "exact-arity-is-enforced",
+      "argv": ["ticket", "change"],
+      "error": "accepts 1 arg(s), received 0"
+    },
+    {
+      "id": "range-arity-is-enforced",
+      "argv": ["rename", "old"],
+      "error": "accepts between 2 and 3 arg(s), received 1"
+    },
+    {
+      "id": "no-arity-is-enforced",
+      "argv": ["entity-emojis", "extra"],
+      "error": "accepts 0 arg(s), received 1"
+    },
+    {
+      "id": "invalid-integer-is-refused",
+      "argv": ["list", "--limit", "seven"],
+      "error": "invalid integer for --limit: seven"
+    },
+    {
+      "id": "invalid-duration-is-refused",
+      "argv": ["--timeout", "soon", "analyze"],
+      "error": "invalid duration for --timeout: soon"
+    }
+  ]
+}

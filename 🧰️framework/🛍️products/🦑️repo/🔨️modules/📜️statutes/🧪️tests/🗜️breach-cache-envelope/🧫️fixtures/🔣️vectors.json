@@ -1,0 +1,19 @@
+{
+  "$comment": "🧫️ Digest and compression vectors of the breach cache envelope. `digests` are the FIPS 180-4 sample messages plus repository payloads; `payloads` are the texts a gzip member must carry unchanged.",
+  "digests": [
+    "",
+    "abc",
+    "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+    "repo/breach/📁️some/📁️folder/🟦️.tsx#Header#2",
+    "🧬semio"
+  ],
+  "payloads": [
+    "",
+    "{}",
+    "{\"entityId\":\"🦑️repo\",\"script\":\"lint\",\"breachs\":[]}",
+    "{\"entityId\":\"🦑️repo\",\"script\":\"lint\",\"breachs\":[{\"id\":\"repo/breach/a#1\",\"summary\":\"Empty section\",\"kind\":\"code/section/empty\",\"scope\":\"a#Types\",\"line\":1}]}",
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "🧲️🧩️📜️🦑️ 2026 statutes cache payload with a repeated tail tail tail tail tail tail tail tail"
+  ],
+  "envelope": "{\"entityId\":\"🦑️repo\",\"script\":\"lint\",\"breachs\":[{\"id\":\"repo/breach/a#1\",\"summary\":\"Empty section\",\"kind\":\"code/section/empty\",\"scope\":\"a#Types\",\"line\":1}]}"
+}

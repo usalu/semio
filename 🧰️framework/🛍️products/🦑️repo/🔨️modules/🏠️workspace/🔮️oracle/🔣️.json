@@ -1,0 +1,63 @@
+{
+  "$comment": "🔮️ Test-only third-party references of the repo workspace module. Both packages are devDependencies of 📦️packages/🟦️typescript and are imported only from 🧪️tests/**; no runtime code may depend on either.",
+  "schemaVersion": 2,
+  "oracles": [
+    {
+      "id": "micromatch",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "micromatch",
+      "version": "4.0.8",
+      "engine": { "family": "none", "implementation": "picomatch", "version": "4.0.8" },
+      "capabilities": ["repo-workspace-glob-match"],
+      "comparisonProfiles": ["ordered-json-v1"],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "rationale": "A widely used glob engine decides what each pattern means, so the owned regular-expression translation cannot agree with itself about `**`, character classes or segment boundaries."
+    },
+    {
+      "id": "gitignore-js",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "ignore",
+      "version": "7.0.5",
+      "engine": { "family": "none", "implementation": "kael-ignore", "version": "7.0.5" },
+      "capabilities": ["repo-workspace-ignore-match"],
+      "comparisonProfiles": ["ordered-json-v1"],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "rationale": "A gitignore-conformant matcher decides precedence, directory rules and negation for the vector set the owned matcher claims to agree with git on."
+    }
+  ],
+  "noOracleDecisions": [
+    {
+      "id": "repo-workspace-root-discovery",
+      "capabilities": ["repo-workspace-root-discovery", "repo-workspace-layout", "repo-workspace-config"],
+      "rationale": "Repository-root discovery, the `.🧬semio` layout vocabulary and the `📋️config.toml` reader are this repository's own conventions. Nothing third party knows that a semio monorepo root is recognised by a legacy CLI entry point, then a git checkout, then a Go module, or that `[logging] detail` has three levels. Confidence comes from specification vectors materialised into a work-directory tree plus two independently written implementations.",
+      "substitutes": ["specification-vectors", "independent-implementations"],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-workspace-glob-divergence",
+      "capabilities": ["repo-workspace-glob-divergence"],
+      "rationale": "The owned matcher accepts the POSIX `[!…]` character-class negation spelling, which picomatch — and therefore micromatch — reads as a literal class containing an exclamation mark. Inside a negated class every member is literal, so `[!a-c]` excludes the three characters and the hyphen rather than a range. A picomatch-based oracle disagrees by construction, so this spelling is held by the two subjects agreeing with the recorded expectation instead.",
+      "substitutes": ["specification-vectors", "independent-implementations"],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-workspace-ignore-divergence",
+      "capabilities": ["repo-workspace-ignore-divergence"],
+      "rationale": "Two rule shapes are deliberately NOT git-compatible: a leading slash is not treated as a root anchor, and a negation can re-include a file underneath an excluded directory. A gitignore-conformant oracle disagrees by construction, so these two vectors are held by the two subjects agreeing with each other and with the recorded expectation instead.",
+      "substitutes": ["specification-vectors", "independent-implementations"],
+      "coversMutations": false
+    }
+  ],
+  "oracleHostPackages": [
+    { "implementation": "typescript", "package": "micromatch", "version": "4.0.8" },
+    { "implementation": "typescript", "package": "ignore", "version": "7.0.5" }
+  ]
+}

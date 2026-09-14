@@ -1,0 +1,19 @@
+[package]
+name = "semio-framework-repo-yaml"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "repo yaml: the bounded YAML data decoder and deterministic YAML-compatible encoder"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }

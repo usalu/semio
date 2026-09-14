@@ -1,0 +1,21 @@
+{
+  "schema": "semio.repo.goals.tree-vectors/1",
+  "$comment": "🌳️ Seeds of the goal/ticket tree. The goal identifiers and titles are real ones from .🧬semio/🦑️repo/🎯️goals; the due dates are deliberately out of identifier order so the sort has something to do, one goal carries no due date at all so the blank-last rule is exercised, one ticket hangs under a ticket, and one ticket names a goal nobody has so the trailing `No Goal` node appears.",
+  "goals": [
+    { "id": "AI-OPTIMIZED-REPO", "title": "AI-optimized Repo", "status": "open", "dueDate": "2026-12-31", "createdAt": "", "description": "AI-optimized Repo goal" },
+    { "id": "AI-OPTIMIZED-REPO/REPO-CLIENT", "title": "Repo Client", "status": "open", "dueDate": "2026-02-15", "createdAt": "", "description": "Goal for Repo Client" },
+    { "id": "AI-OPTIMIZED-REPO/REPO-SERVER", "title": "Repo Server", "status": "closed", "dueDate": "2026-01-01", "createdAt": "", "description": "Goal for Repo Server" },
+    { "id": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY", "title": "Repo Binary", "status": "open", "dueDate": "", "createdAt": "", "description": "Goal for Repo Binary" },
+    { "id": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION", "title": "Repo VSCode Extension", "status": "open", "dueDate": "2026-03-01", "createdAt": "", "description": "Goal for Repo VSCode Extension" },
+    { "id": "ANIMATE", "title": "Animate", "status": "open", "dueDate": "2026-12-31", "createdAt": "", "description": "Animation compiler" },
+    { "id": "ORPHANED/SUBGOAL", "title": "Orphaned Subgoal", "status": "open", "dueDate": "2026-06-01", "createdAt": "", "description": "Its parent is not in the tree" }
+  ],
+  "tickets": [
+    { "id": "t1", "slug": "REPO-RUST-IMPLEMENTATION", "status": "open", "title": "Repo Rust Implementation", "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT", "parent": "", "prompt": "Port the repo client to Rust", "summary": "", "created": "2026-09-06", "finished": "" },
+    { "id": "t2", "slug": "REPO-RUST-GOALS", "status": "open", "title": "Repo Rust Goals", "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT", "parent": "t1", "prompt": "Port the goals module", "summary": "", "created": "2026-09-06", "finished": "" },
+    { "id": "t3", "slug": "REPO-RUST-TODOS", "status": "closed", "title": "Repo Rust Todos", "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT", "parent": "t1", "prompt": "Port the todos module", "summary": "Done", "created": "2026-09-05", "finished": "2026-09-06" },
+    { "id": "t4", "slug": "ANIMATE-SCENE-GRAPH", "status": "open", "title": "Animate Scene Graph", "goal": "ANIMATE", "parent": "", "prompt": "Build the scene graph", "summary": "", "created": "2026-09-01", "finished": "" },
+    { "id": "t5", "slug": "NO-GOAL-TICKET", "status": "open", "title": "No Goal Ticket", "goal": "", "parent": "", "prompt": "Belongs to nothing", "summary": "", "created": "2026-08-01", "finished": "" },
+    { "id": "t6", "slug": "UNKNOWN-GOAL-TICKET", "status": "closed", "title": "Unknown Goal Ticket", "goal": "GOAL-THAT-DOES-NOT-EXIST", "parent": "", "prompt": "Names a goal nobody has", "summary": "Abandoned", "created": "2026-07-01", "finished": "2026-07-02" }
+  ]
+}

@@ -1,0 +1,25 @@
+% 🧪 Probe fixture of case guide-axis-ticks, scenario tick-format-labels.
+% The tick labels an axis writes: the scale's tick values run through semio-viz-format's specifier,
+% once per locale. One record per label rather than one clist per locale, because a German label
+% carries a decimal comma and a comma list could not hold it unambiguously.
+\documentclass{article}
+\usepackage{semio-viz-guide}
+\ExplSyntaxOn
+\NewDocumentCommand \ProbeLabels { m m m m m } {
+  \SemioVizLocale{#2}
+  \SemioVizScale{probelabel#2}{linear}{#3,#4}{0,100}
+  \semio_viz_guide_scale_ticks:nnN { probelabel#2 } {#5} \l_semio_viz_guide_ticks_seq
+  \int_zero:N \l_semio_viz_guide_i_int
+  \seq_map_inline:Nn \l_semio_viz_guide_ticks_seq {
+    \semio_viz_guide_format:nnN {#1} {##1} \l_semio_viz_guide_label_tl
+    \semio_viz_probe_values:xx { label/#2/ \int_use:N \l_semio_viz_guide_i_int }
+      { { \exp_not:V \l_semio_viz_guide_label_tl } }
+    \int_incr:N \l_semio_viz_guide_i_int
+  }
+}
+\ExplSyntaxOff
+\begin{document}
+\SemioVizProbeBegin{guide-axis-ticks}{tick-format-labels}
+\ProbeLabels{.1f}{en}{0}{1}{5}
+\ProbeLabels{.1f}{de}{0}{1}{5}
+\end{document}

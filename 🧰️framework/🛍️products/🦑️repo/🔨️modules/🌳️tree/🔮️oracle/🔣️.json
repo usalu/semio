@@ -1,0 +1,30 @@
+{
+  "$schema": "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ Oracle wiring for 🌳️tree. There is no third party to check this domain against: a monorepo tree, a statute tree and a territory tree are this repository's own projections of its own records, and the Mermaid `treemap-beta` dialect has no linkable parser in this checkout. Every decision below is therefore recorded honestly as a no-oracle decision with its substitutes, and the evidence is the committed specification vectors plus two independently written implementations agreeing on them.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "repo-tree-projection",
+      "capabilities": ["repo.tree.monorepo-build", "repo.tree.goal-statute-territory"],
+      "rationale": "🌳️ Which category a record lands in, how a subgoal hangs under its goal, how a statute path becomes categories and how a territory lists its statutes are decisions this repository makes about its own artifacts. No third party produces or reads these trees, so no reference implementation exists to be had. The evidence is the record set and the expected outlines committed under `🧫️fixtures`, which restate the shape the Go original builds, plus two independently written implementations that must agree on them line for line. Both implementations additionally take their entity rendering and artifact ids through ports the fixture states, so a drift in 🪪️identity or the CLI renderers cannot silently repair a wrong tree.",
+      "substitutes": ["specification-vectors", "independent-implementations"],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-tree-filtering-and-sorting",
+      "capabilities": ["repo.tree.filtering", "repo.tree.child-sorting"],
+      "rationale": "🔎️ The filter vocabulary (an allow list, an exclusion list, sub kinds per kind, dates, status, contributor) and the collapse rule that lifts a hidden node's children into its parent are this repository's own semantics, as is the folders-before-files order. The vectors in `shared://🔎️filter-vectors.json` and `shared://🔀️sort-vectors.json` restate the assertions of the Go original's own `TestFilterMonorepoTree` and `TestSortTreeChildren` and state every surviving outline in full, and both scenarios are additionally held to a metamorphic law: applying the same filter or the same sort twice must change nothing.",
+      "substitutes": ["specification-vectors", "metamorphic-laws", "independent-implementations"],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-tree-mermaid",
+      "capabilities": ["repo.tree.mermaid-rendering"],
+      "rationale": "🧜️ `treemap-beta` is a Mermaid diagram type, so a real oracle would be the Mermaid parser itself. Neither `mermaid` nor `@mermaid-js/mermaid-cli` is installed in this repository, and pulling in the CLI would mean a headless browser in the test path for a text format of four production rules, so the decision is recorded rather than the dependency added. The evidence is the committed line lists — which pin the header, the quoted title, the four-space indent per level, the `: <value>` leaf suffix, the zero-is-a-value case and the empty diagram — plus the escaping law that a double quote never survives into a label and that escaping is idempotent. If the Mermaid parser ever lands in the root manifest, this decision is replaced by a real oracle that parses the rendered text.",
+      "substitutes": ["specification-vectors", "metamorphic-laws", "independent-implementations"],
+      "coversMutations": false
+    }
+  ],
+  "oracleHostPackages": []
+}

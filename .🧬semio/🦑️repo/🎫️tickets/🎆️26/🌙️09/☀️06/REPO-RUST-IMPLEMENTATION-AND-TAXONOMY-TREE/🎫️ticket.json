@@ -1,0 +1,31 @@
+{
+  "title": "Repo Rust Implementation and Taxonomy Tree",
+  "emoji": "🦀️",
+  "status": "closed",
+  "description": "Give the repo product a clean domain-driven, implementation-neutral taxonomy tree, implement the whole repo product in Rust next to the Go implementation so both fulfil the same language-agnostic tests, and make the terminal dashboard use the Rust implementation by default. Coordinated from Claude Fable 5.1 with Opus 5 implementers and Sonnet 5 read-only explorers working alongside other concurrent fleets.",
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary",
+  "sessions": [
+    "⚪5b49befacd0c465faf943d28e7c9ed64"
+  ],
+  "summary": "Repo product restructured into 29 domain modules with Go and Rust twins under one language-agnostic test harness (25 owners, parity green, third-party oracles), the Rust semio binary carrying every verb plus the MCP server as the default for all IDE entry points and the terminal dashboard, Go selectable via SEMIO_REPO_IMPLEMENTATION=go. Details: 📓️closing-summary.md, 📓️audit-final.md.",
+  "files": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/**",
+    "go.work",
+    "Cargo.toml",
+    "package.json",
+    ".gitignore",
+    ".vscode/🧩️launch.seed.jsonc",
+    ".vscode/launch.json",
+    "📜️script.ts",
+    ".devcontainer/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+    "removed: 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/**",
+    "removed: 🧰️framework/🛍️products/🦑️repo/🎮️commands/**",
+    "removed: repo/**"
+  ],
+  "dates": {
+    "closed": "2026-09-06"
+  }
+}

@@ -1,0 +1,857 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-scientific-chemistry}[2026/09/05 v0.2.0 semio viz namespace scientific-chemistry families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-scientific-field}
+
+\ExplSyntaxOn
+
+%region 🔖️Parsing
+\cs_generate_variant:Nn \seq_set_split:Nnn { Nnx }
+\cs_generate_variant:Nn \prop_put:Nnn { Nxx }
+\cs_generate_variant:Nn \prop_item:Nn { Ne }
+\tl_new:N \l_semio_viz_chem_key_tl
+\seq_new:N \l_semio_viz_chem_rec_seq
+% ✂️ Splits one slash-separated record #1 into the shared field sequence.
+\cs_new_protected:Npn \semio_viz_chem_record:n #1
+  { \seq_set_split:Nnx \l_semio_viz_chem_rec_seq { / } {#1} }
+% 🔢 Expands to field #1 of the record most recently split.
+\cs_new:Npn \semio_viz_chem_field:n #1
+  { \seq_item:Nn \l_semio_viz_chem_rec_seq {#1} }
+%endregion 🔖️Parsing
+
+%region 🔖️Families
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-molecule` (§33 structural formulae):
+%    mode (skeletal|lewis|reaction, skeletal).
+%    atoms (clist of `id/x/y/element`): an empty element is an implicit carbon vertex.
+%    bonds (clist of `from/to/order/style`): order 1–3, style plain, wedge, dash, aromatic.
+%    lonePairs (clist of `atom/count`): the Lewis dots drawn around an atom.
+%    arrow (clist of `x1/y1/x2/y2/label`): the reaction arrow of the reaction mode.
+%    bondGap (fp, 0.7): the offset of the second and third bond lines in millimetres.
+\tl_new:N \l_semio_viz_chem_mode_tl
+\clist_new:N \l_semio_viz_chem_atoms_clist
+\clist_new:N \l_semio_viz_chem_bonds_clist
+\clist_new:N \l_semio_viz_chem_pairs_clist
+\clist_new:N \l_semio_viz_chem_arrow_clist
+\fp_new:N \l_semio_viz_chem_gap_fp
+\prop_new:N \l_semio_viz_chem_ax_prop
+\prop_new:N \l_semio_viz_chem_ay_prop
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-molecule }
+% 🧪 Binds the `sci-molecule` option names onto the atom, bond, lone-pair and reaction-arrow lists and the multiple-bond gap.
+\keys_define:nn { semio / viz / family / sci-molecule }
+  {
+    mode      .tl_set:N    = \l_semio_viz_chem_mode_tl ,
+    atoms     .clist_set:N = \l_semio_viz_chem_atoms_clist ,
+    bonds     .clist_set:N = \l_semio_viz_chem_bonds_clist ,
+    lonePairs .clist_set:N = \l_semio_viz_chem_pairs_clist ,
+    arrow     .clist_set:N = \l_semio_viz_chem_arrow_clist ,
+    bondGap   .fp_set:N    = \l_semio_viz_chem_gap_fp ,
+  }
+
+% ⚗️ §33 structural formulae: skeletal and Lewis structures and reaction schemes, drawn from an atom and bond table.
+\SemioVizFamily { sci-molecule }
+  {
+    \semio_viz_sci_enter:nnn { sci-molecule }
+      {
+        mode=skeletal , bondGap=0.7 , axes=false , grid=false ,
+        atoms={ a1/0/0/ , a2/7/4/ , a3/14/0/ , a4/21/4/ , a5/28/0/O , a6/14/-8/N } ,
+        bonds={ a1/a2/1/plain , a2/a3/2/plain , a3/a4/1/plain , a4/a5/2/plain , a3/a6/1/wedge } ,
+        lonePairs={ a5/2 , a6/1 } ,
+        arrow={ 34/0/48/0/Δ }
+      }
+      {#1}
+    \prop_clear:N \l_semio_viz_chem_ax_prop
+    \prop_clear:N \l_semio_viz_chem_ay_prop
+    \clist_map_inline:Nn \l_semio_viz_chem_atoms_clist
+      {
+        \semio_viz_chem_record:n {##1}
+        \prop_put:Nxx \l_semio_viz_chem_ax_prop
+          { \semio_viz_chem_field:n { 1 } } { \semio_viz_chem_field:n { 2 } }
+        \prop_put:Nxx \l_semio_viz_chem_ay_prop
+          { \semio_viz_chem_field:n { 1 } } { \semio_viz_chem_field:n { 3 } }
+      }
+    \clist_map_inline:Nn \l_semio_viz_chem_bonds_clist
+      {
+        \semio_viz_chem_record:n {##1}
+        \semio_viz_chem_bond:
+      }
+    \clist_map_inline:Nn \l_semio_viz_chem_atoms_clist
+      {
+        \semio_viz_chem_record:n {##1}
+        \tl_set:Nx \l_semio_viz_chem_key_tl { \semio_viz_chem_field:n { 4 } }
+        \tl_if_empty:NF \l_semio_viz_chem_key_tl
+          {
+            \node [ font=\c_semio_viz_theme_font_title_tl , text=semio-chrome-foreground ,
+                    fill=semio-chrome-base , inner~sep=0.5mm ]
+              at ( \semio_viz_chem_field:n { 2 } , \semio_viz_chem_field:n { 3 } )
+              { \tl_use:N \l_semio_viz_chem_key_tl } ;
+          }
+      }
+    \str_if_eq:VnT \l_semio_viz_chem_mode_tl { lewis } { \semio_viz_chem_pairs: }
+    \str_if_eq:VnT \l_semio_viz_chem_mode_tl { reaction } { \semio_viz_chem_arrow: }
+  }
+% 🔗 Looks up the two atoms of the pending bond record and draws it as a solid wedge, a widening hash ladder, or plain parallel lines, then reports its endpoints and order.
+\cs_new_protected:Npn \semio_viz_chem_bond:
+  {
+    \fp_set:Nn \l_semio_viz_sci_a_fp
+      { \prop_item:Ne \l_semio_viz_chem_ax_prop { \semio_viz_chem_field:n { 1 } } }
+    \fp_set:Nn \l_semio_viz_sci_b_fp
+      { \prop_item:Ne \l_semio_viz_chem_ay_prop { \semio_viz_chem_field:n { 1 } } }
+    \fp_set:Nn \l_semio_viz_sci_c_fp
+      { \prop_item:Ne \l_semio_viz_chem_ax_prop { \semio_viz_chem_field:n { 2 } } }
+    \fp_set:Nn \l_semio_viz_sci_d_fp
+      { \prop_item:Ne \l_semio_viz_chem_ay_prop { \semio_viz_chem_field:n { 2 } } }
+    \fp_set:Nn \l_semio_viz_sci_e_fp
+      {
+        atand ( \l_semio_viz_sci_d_fp - \l_semio_viz_sci_b_fp ,
+                \l_semio_viz_sci_c_fp - \l_semio_viz_sci_a_fp ) + 90
+      }
+    \tl_set:Nx \l_semio_viz_chem_key_tl { \semio_viz_chem_field:n { 4 } }
+    \str_case:VnF \l_semio_viz_chem_key_tl
+      {
+        { wedge }
+          {
+            \fill [ fill=semio-chrome-foreground ]
+              ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) --
+              ( \fp_eval:n { \l_semio_viz_sci_c_fp + 1.1 * cosd ( \l_semio_viz_sci_e_fp ) } ,
+                \fp_eval:n { \l_semio_viz_sci_d_fp + 1.1 * sind ( \l_semio_viz_sci_e_fp ) } ) --
+              ( \fp_eval:n { \l_semio_viz_sci_c_fp - 1.1 * cosd ( \l_semio_viz_sci_e_fp ) } ,
+                \fp_eval:n { \l_semio_viz_sci_d_fp - 1.1 * sind ( \l_semio_viz_sci_e_fp ) } ) -- cycle ;
+          }
+        { dash }
+          {
+            \int_step_inline:nnnn { 1 } { 1 } { 5 }
+              {
+                \draw [ semio~sci~thin ]
+                  ( \fp_eval:n { \l_semio_viz_sci_a_fp
+                      + ( \l_semio_viz_sci_c_fp - \l_semio_viz_sci_a_fp ) * ##1 / 5
+                      + 0.24 * ##1 * cosd ( \l_semio_viz_sci_e_fp ) } ,
+                    \fp_eval:n { \l_semio_viz_sci_b_fp
+                      + ( \l_semio_viz_sci_d_fp - \l_semio_viz_sci_b_fp ) * ##1 / 5
+                      + 0.24 * ##1 * sind ( \l_semio_viz_sci_e_fp ) } ) --
+                  ( \fp_eval:n { \l_semio_viz_sci_a_fp
+                      + ( \l_semio_viz_sci_c_fp - \l_semio_viz_sci_a_fp ) * ##1 / 5
+                      - 0.24 * ##1 * cosd ( \l_semio_viz_sci_e_fp ) } ,
+                    \fp_eval:n { \l_semio_viz_sci_b_fp
+                      + ( \l_semio_viz_sci_d_fp - \l_semio_viz_sci_b_fp ) * ##1 / 5
+                      - 0.24 * ##1 * sind ( \l_semio_viz_sci_e_fp ) } ) ;
+              }
+          }
+      }
+      { \semio_viz_chem_bond_lines: }
+    \semio_viz_sci_report_values:nn { molecule/bond }
+      { \fp_to_decimal:N \l_semio_viz_sci_a_fp , \fp_to_decimal:N \l_semio_viz_sci_b_fp ,
+        \fp_to_decimal:N \l_semio_viz_sci_c_fp , \fp_to_decimal:N \l_semio_viz_sci_d_fp ,
+        \semio_viz_chem_field:n { 3 } }
+  }
+% ⏸️ Strokes as many parallel bond lines as the bond order, spread symmetrically about the atom-to-atom axis by the configured gap.
+\cs_new_protected:Npn \semio_viz_chem_bond_lines:
+  {
+    \int_set:Nn \l_tmpa_int { \semio_viz_chem_field:n { 3 } }
+    \int_step_inline:nnnn { 1 } { 1 } { \l_tmpa_int }
+      {
+        \fp_set:Nn \l_semio_viz_sci_f_fp
+          { \l_semio_viz_chem_gap_fp * ( ##1 - ( \l_tmpa_int + 1 ) / 2 ) * 2 }
+        \draw [ semio~sci~thin ]
+          ( \fp_eval:n { \l_semio_viz_sci_a_fp + \l_semio_viz_sci_f_fp * cosd ( \l_semio_viz_sci_e_fp ) } ,
+            \fp_eval:n { \l_semio_viz_sci_b_fp + \l_semio_viz_sci_f_fp * sind ( \l_semio_viz_sci_e_fp ) } ) --
+          ( \fp_eval:n { \l_semio_viz_sci_c_fp + \l_semio_viz_sci_f_fp * cosd ( \l_semio_viz_sci_e_fp ) } ,
+            \fp_eval:n { \l_semio_viz_sci_d_fp + \l_semio_viz_sci_f_fp * sind ( \l_semio_viz_sci_e_fp ) } ) ;
+      }
+  }
+% 👥 Looks up each lone-pair owner's position and draws the requested number of pairs around it.
+\cs_new_protected:Npn \semio_viz_chem_pairs:
+  {
+    \clist_map_inline:Nn \l_semio_viz_chem_pairs_clist
+      {
+        \semio_viz_chem_record:n {##1}
+        \fp_set:Nn \l_semio_viz_sci_a_fp
+          { \prop_item:Ne \l_semio_viz_chem_ax_prop { \semio_viz_chem_field:n { 1 } } }
+        \fp_set:Nn \l_semio_viz_sci_b_fp
+          { \prop_item:Ne \l_semio_viz_chem_ay_prop { \semio_viz_chem_field:n { 1 } } }
+        \int_step_inline:nnnn { 1 } { 1 } { \semio_viz_chem_field:n { 2 } }
+          { \semio_viz_chem_pair:n {####1} }
+      }
+  }
+% ⚫ Places one Lewis pair as two small dots on side #1 of the current atom, offset perpendicular to that direction.
+\cs_new_protected:Npn \semio_viz_chem_pair:n #1
+  {
+    \int_step_inline:nnnn { -1 } { 2 } { 1 }
+      {
+        \fill [ fill=semio-chrome-foreground ]
+          ( \fp_eval:n { \l_semio_viz_sci_a_fp + 2.6 * cosd ( 90 * (#1) ) + 0.7 * ##1 * cosd ( 90 * (#1) + 90 ) } ,
+            \fp_eval:n { \l_semio_viz_sci_b_fp + 2.6 * sind ( 90 * (#1) ) + 0.7 * ##1 * sind ( 90 * (#1) + 90 ) } )
+          circle [ radius=0.32 ] ;
+      }
+  }
+% ➡️ Draws each reaction arrow between its two endpoints with the condition text set above the shaft.
+\cs_new_protected:Npn \semio_viz_chem_arrow:
+  {
+    \clist_map_inline:Nn \l_semio_viz_chem_arrow_clist
+      {
+        \semio_viz_chem_record:n {##1}
+        \draw [ semio~sci~arrow ]
+          ( \semio_viz_chem_field:n { 1 } , \semio_viz_chem_field:n { 2 } ) --
+          node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal , above ]
+            { \semio_viz_chem_field:n { 5 } }
+          ( \semio_viz_chem_field:n { 3 } , \semio_viz_chem_field:n { 4 } ) ;
+      }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-energy-profile` (§33 reaction coordinate):
+%    states (clist of `coordinate/energy/label`): minima and maxima along the reaction coordinate.
+%    smooth (bool, true): interpolate the profile with a cosine ramp between consecutive states.
+%    labels (bool, true), barriers (bool, true): print state labels and the activation barriers.
+\clist_new:N \l_semio_viz_chem_states_clist
+\bool_new:N \l_semio_viz_chem_smooth_bool
+\bool_new:N \l_semio_viz_chem_labels_bool
+\bool_new:N \l_semio_viz_chem_barriers_bool
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-energy-profile }
+% 🎢 Binds the `sci-energy-profile` option names onto the stationary-point list and the smoothing, labelling and barrier switches.
+\keys_define:nn { semio / viz / family / sci-energy-profile }
+  {
+    states   .clist_set:N = \l_semio_viz_chem_states_clist ,
+    smooth   .bool_set:N  = \l_semio_viz_chem_smooth_bool ,
+    labels   .bool_set:N  = \l_semio_viz_chem_labels_bool ,
+    barriers .bool_set:N  = \l_semio_viz_chem_barriers_bool ,
+  }
+
+% ⚗️ §33 reaction coordinate: the energy profile interpolated between its stationary points, with the activation barrier measured.
+\SemioVizFamily { sci-energy-profile }
+  {
+    \semio_viz_sci_enter:nnn { sci-energy-profile }
+      {
+        smooth=true , labels=true , barriers=true , domain={} , range={} ,
+        states={ 0/0/R , 1.4/62/TS1 , 2.6/18/I , 3.8/44/TS2 , 5/-24/P }
+      }
+      {#1}
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \clist_map_inline:Nn \l_semio_viz_chem_states_clist
+      {
+        \semio_viz_chem_record:n {##1}
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { \semio_viz_chem_field:n { 1 } } { \semio_viz_chem_field:n { 2 } }
+      }
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.1 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \bool_if:NTF \l_semio_viz_chem_smooth_bool
+      { \semio_viz_chem_profile_smooth: }
+      { \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve } }
+    \bool_if:NT \l_semio_viz_chem_labels_bool
+      {
+        \clist_map_inline:Nn \l_semio_viz_chem_states_clist
+          {
+            \semio_viz_chem_record:n {##1}
+            \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , anchor=south ]
+              at ( \semio_viz_sci_mx:n { \semio_viz_chem_field:n { 1 } } ,
+                   \fp_eval:n { \semio_viz_sci_my:n { \semio_viz_chem_field:n { 2 } } + 1 } )
+              { \semio_viz_chem_field:n { 3 } } ;
+          }
+      }
+    \bool_if:NT \l_semio_viz_chem_barriers_bool { \semio_viz_chem_barrier: }
+  }
+% 🪶 Rebuilds the profile as a dense point sequence by ramping every consecutive pair of states, then strokes it as one curve.
+\cs_new_protected:Npn \semio_viz_chem_profile_smooth:
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_b_seq
+    \int_step_inline:nnnn { 1 } { 1 } { \seq_count:N \l_semio_viz_sci_pts_seq - 1 }
+      { \semio_viz_chem_profile_segment:n {##1} }
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_b_seq { semio~sci~curve }
+  }
+% 🌗 Emits twenty samples between state #1 and its successor, linear in the reaction coordinate and cosine-eased in energy.
+\cs_new_protected:Npn \semio_viz_chem_profile_segment:n #1
+  {
+    \int_step_inline:nnnn { 0 } { 1 } { 20 }
+      {
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_b_seq
+          {
+            \semio_viz_points_x:n { \seq_item:Nn \l_semio_viz_sci_pts_seq {#1} }
+            + ( \semio_viz_points_x:n { \seq_item:Nn \l_semio_viz_sci_pts_seq { #1 + 1 } }
+              - \semio_viz_points_x:n { \seq_item:Nn \l_semio_viz_sci_pts_seq {#1} } ) * ##1 / 20
+          }
+          {
+            \semio_viz_points_y:n { \seq_item:Nn \l_semio_viz_sci_pts_seq {#1} }
+            + ( \semio_viz_points_y:n { \seq_item:Nn \l_semio_viz_sci_pts_seq { #1 + 1 } }
+              - \semio_viz_points_y:n { \seq_item:Nn \l_semio_viz_sci_pts_seq {#1} } )
+              * ( 1 - cos ( pi * ##1 / 20 ) ) / 2
+          }
+      }
+  }
+% 📊 Measures the first activation barrier as a vertical rule from the reactant energy up to the first transition state and reports its height.
+\cs_new_protected:Npn \semio_viz_chem_barrier:
+  {
+    \fp_set:Nn \l_semio_viz_sci_a_fp
+      { \semio_viz_points_y:n { \seq_item:Nn \l_semio_viz_sci_pts_seq { 1 } } }
+    \fp_set:Nn \l_semio_viz_sci_b_fp
+      { \semio_viz_points_y:n { \seq_item:Nn \l_semio_viz_sci_pts_seq { 2 } } }
+    \draw [ semio~sci~aux , draw=semio-secondary ]
+      ( \semio_viz_sci_mx:n { \semio_viz_points_x:n { \seq_item:Nn \l_semio_viz_sci_pts_seq { 2 } } } ,
+        \semio_viz_sci_my:n { \l_semio_viz_sci_a_fp } ) --
+      ( \semio_viz_sci_mx:n { \semio_viz_points_x:n { \seq_item:Nn \l_semio_viz_sci_pts_seq { 2 } } } ,
+        \semio_viz_sci_my:n { \l_semio_viz_sci_b_fp } ) ;
+    \semio_viz_sci_report_values:nn { profile/barrier }
+      { \fp_to_decimal:n { \l_semio_viz_sci_b_fp - \l_semio_viz_sci_a_fp } }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-orbital` (§33 electronic structure):
+%    mode (molecular-orbital|configuration|orbital, molecular-orbital).
+%    levels (clist of `side/energy/label/electrons`): side -1 left fragment, 0 molecular, 1 right fragment.
+%    shells (clist of `label/electrons/capacity`): the configuration boxes.
+%    lobes (int, 2): lobe count of the sketched orbital.
+\clist_new:N \l_semio_viz_chem_levels_clist
+\clist_new:N \l_semio_viz_chem_shells_clist
+\int_new:N \l_semio_viz_chem_lobes_int
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-orbital }
+% 🌀 Binds the `sci-orbital` option names onto the correlation-level list, the configuration shells and the lobe count.
+\keys_define:nn { semio / viz / family / sci-orbital }
+  {
+    mode   .tl_set:N    = \l_semio_viz_chem_mode_tl ,
+    levels .clist_set:N = \l_semio_viz_chem_levels_clist ,
+    shells .clist_set:N = \l_semio_viz_chem_shells_clist ,
+    lobes  .int_set:N   = \l_semio_viz_chem_lobes_int ,
+  }
+
+% ⚛️ §33 electronic structure: molecular-orbital correlation diagrams, electron configurations and sketched orbital lobes.
+\SemioVizFamily { sci-orbital }
+  {
+    \semio_viz_sci_enter:nnn { sci-orbital }
+      {
+        mode=molecular-orbital , lobes=2 , domain={-1,1} , range={-8,8} , axes=false , grid=false ,
+        levels={ -1/-2/1s/1 , 1/-2/1s/1 , 0/-5/σ/2 , 0/4/σ*/0 } ,
+        shells={ 1s/2/2 , 2s/2/2 , 2p/4/6 , 3s/1/2 }
+      }
+      {#1}
+    \str_case:VnF \l_semio_viz_chem_mode_tl
+      {
+        { configuration } { \semio_viz_chem_configuration: }
+        { orbital }       { \semio_viz_chem_lobes: }
+      }
+      { \semio_viz_chem_mo: }
+  }
+% 🪟 Draws the correlation diagram: each level as a short rung in its own column (left fragment, molecular, right fragment), captioned and filled with its electrons.
+\cs_new_protected:Npn \semio_viz_chem_mo:
+  {
+    \semio_viz_sci_window_keys:
+    \clist_map_inline:Nn \l_semio_viz_chem_levels_clist
+      {
+        \semio_viz_chem_record:n {##1}
+        \fp_set:Nn \l_semio_viz_sci_a_fp
+          { ( \semio_viz_chem_field:n { 1 } + 1 ) * \l_semio_viz_sci_w_fp / 2 }
+        \draw [ semio~sci~curve ]
+          ( \fp_eval:n { \l_semio_viz_sci_a_fp - 6 } ,
+            \semio_viz_sci_my:n { \semio_viz_chem_field:n { 2 } } ) --
+          ( \fp_eval:n { \l_semio_viz_sci_a_fp + 6 } ,
+            \semio_viz_sci_my:n { \semio_viz_chem_field:n { 2 } } ) ;
+        \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal , anchor=south ]
+          at ( \fp_eval:n { \l_semio_viz_sci_a_fp } ,
+               \fp_eval:n { \semio_viz_sci_my:n { \semio_viz_chem_field:n { 2 } } + 0.6 } )
+          { \semio_viz_chem_field:n { 3 } } ;
+        \semio_viz_chem_electrons:
+      }
+  }
+% ⬆️ Draws one spin arrow per electron occupying the current level, spaced left and right of its centre.
+\cs_new_protected:Npn \semio_viz_chem_electrons:
+  {
+    \int_step_inline:nnnn { 1 } { 1 } { \semio_viz_chem_field:n { 4 } }
+      {
+        \draw [ semio~sci~arrow ]
+          ( \fp_eval:n { \l_semio_viz_sci_a_fp + ( 2 * ##1 - 3 ) * 1.6 } ,
+            \fp_eval:n { \semio_viz_sci_my:n { \semio_viz_chem_field:n { 2 } } - 1.6 } ) --
+          ( \fp_eval:n { \l_semio_viz_sci_a_fp + ( 2 * ##1 - 3 ) * 1.6 } ,
+            \fp_eval:n { \semio_viz_sci_my:n { \semio_viz_chem_field:n { 2 } } + 1.6 } ) ;
+      }
+  }
+% 📚 Stacks the shells downwards, naming each on the left and drawing one orbital box per pair of its capacity.
+\cs_new_protected:Npn \semio_viz_chem_configuration:
+  {
+    \int_zero:N \l_tmpa_int
+    \clist_map_inline:Nn \l_semio_viz_chem_shells_clist
+      {
+        \int_incr:N \l_tmpa_int
+        \semio_viz_chem_record:n {##1}
+        \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal , anchor=east ]
+          at ( -1 , \fp_eval:n { - \l_tmpa_int * 7 } ) { \semio_viz_chem_field:n { 1 } } ;
+        \int_step_inline:nnnn { 1 } { 1 } { \semio_viz_chem_field:n { 3 } / 2 }
+          { \semio_viz_chem_orbital_box:n {####1} }
+      }
+  }
+% 🔲 Draws orbital box #1 of the current shell and fills it with up to two opposed spin arrows, as far as the shell's electron count reaches.
+\cs_new_protected:Npn \semio_viz_chem_orbital_box:n #1
+  {
+    \draw [ semio~sci~box ]
+      ( \fp_eval:n { ( #1 - 1 ) * 6 } , \fp_eval:n { - \l_tmpa_int * 7 - 2.4 } ) rectangle
+      ( \fp_eval:n { #1 * 6 - 1 } , \fp_eval:n { - \l_tmpa_int * 7 + 2.4 } ) ;
+    \int_step_inline:nnnn { 1 } { 1 } { 2 }
+      {
+        \int_compare:nNnT { 2 * ( #1 - 1 ) + ##1 } < { \semio_viz_chem_field:n { 2 } + 1 }
+          {
+            \draw [ semio~sci~arrow ]
+              ( \fp_eval:n { ( #1 - 1 ) * 6 + 1.4 + 2.2 * ( ##1 - 1 ) } ,
+                \fp_eval:n { - \l_tmpa_int * 7 + ( ##1 == 1 ? -1.8 : 1.8 ) } ) --
+              ( \fp_eval:n { ( #1 - 1 ) * 6 + 1.4 + 2.2 * ( ##1 - 1 ) } ,
+                \fp_eval:n { - \l_tmpa_int * 7 + ( ##1 == 1 ? 1.8 : -1.8 ) } ) ;
+          }
+      }
+  }
+% 🎈 Sketches an orbital as translucent hue-cycled teardrop lobes fanned evenly about the nucleus dot.
+\cs_new_protected:Npn \semio_viz_chem_lobes:
+  {
+    \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_chem_lobes_int - 1 }
+      {
+        \fill [ fill=\semio_viz_sci_hue:n { ##1 + 1 } , fill~opacity=0.35 ,
+                rotate=\fp_eval:n { 360 * ##1 / \l_semio_viz_chem_lobes_int } ]
+          ( 0 , 0 ) .. controls ( 12 , 9 ) and ( 12 , -9 ) .. ( 0 , 0 ) ;
+      }
+    \fill [ fill=semio-chrome-foreground ] ( 0 , 0 ) circle [ radius=0.8 ] ;
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-phase-diagram` (§33 phase behaviour):
+%    mode (binary|unary|ternary, unary): the coordinate system of the diagram.
+%    boundaries (clist of `x1/y1/x2/y2/label`): the phase boundaries, in the diagram's own units.
+%    points (clist of `x/y/label`): invariant points such as triple or eutectic points.
+%    regions (clist of `x/y/label`): region labels. side (fp, 44): triangle side of the ternary mode.
+\clist_new:N \l_semio_viz_chem_bounds_clist
+\clist_new:N \l_semio_viz_chem_points_clist
+\clist_new:N \l_semio_viz_chem_regions_clist
+\fp_new:N \l_semio_viz_chem_side_fp
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-phase-diagram }
+% 🌡️ Binds the `sci-phase-diagram` option names onto the boundary, invariant-point and region lists and the ternary triangle side.
+\keys_define:nn { semio / viz / family / sci-phase-diagram }
+  {
+    mode       .tl_set:N    = \l_semio_viz_chem_mode_tl ,
+    boundaries .clist_set:N = \l_semio_viz_chem_bounds_clist ,
+    points     .clist_set:N = \l_semio_viz_chem_points_clist ,
+    regions    .clist_set:N = \l_semio_viz_chem_regions_clist ,
+    side       .fp_set:N    = \l_semio_viz_chem_side_fp ,
+  }
+
+% 🌡️ §33 phase behaviour: unary and binary phase diagrams in cartesian coordinates and the ternary diagram in barycentric ones.
+\SemioVizFamily { sci-phase-diagram }
+  {
+    \semio_viz_sci_enter:nnn { sci-phase-diagram }
+      {
+        mode=unary , side=44 , domain={0,1} , range={0,1} ,
+        boundaries={ 0.18/0.22/0.5/0.9/ , 0.18/0.22/0.86/0.62/ , 0.18/0.22/0.04/0.06/ } ,
+        points={ 0.18/0.22/T , 0.86/0.62/C } ,
+        regions={ 0.1/0.7/solid , 0.5/0.35/liquid , 0.7/0.85/gas }
+      }
+      {#1}
+    \str_if_eq:VnTF \l_semio_viz_chem_mode_tl { ternary }
+      { \semio_viz_chem_ternary: }
+      {
+        \semio_viz_sci_window_keys:
+        \semio_viz_sci_frame:
+        \clist_map_inline:Nn \l_semio_viz_chem_bounds_clist
+          {
+            \semio_viz_chem_record:n {##1}
+            \draw [ semio~sci~curve ]
+              ( \semio_viz_sci_mx:n { \semio_viz_chem_field:n { 1 } } ,
+                \semio_viz_sci_my:n { \semio_viz_chem_field:n { 2 } } ) --
+              ( \semio_viz_sci_mx:n { \semio_viz_chem_field:n { 3 } } ,
+                \semio_viz_sci_my:n { \semio_viz_chem_field:n { 4 } } ) ;
+          }
+        \clist_map_inline:Nn \l_semio_viz_chem_points_clist
+          {
+            \semio_viz_chem_record:n {##1}
+            \semio_viz_sci_dot:nnn { \semio_viz_chem_field:n { 1 } } { \semio_viz_chem_field:n { 2 } }
+              { semio-primary }
+            \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , anchor=south~west ]
+              at ( \semio_viz_sci_mx:n { \semio_viz_chem_field:n { 1 } } ,
+                   \semio_viz_sci_my:n { \semio_viz_chem_field:n { 2 } } )
+              { \semio_viz_chem_field:n { 3 } } ;
+          }
+        \clist_map_inline:Nn \l_semio_viz_chem_regions_clist
+          {
+            \semio_viz_chem_record:n {##1}
+            \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal ]
+              at ( \semio_viz_sci_mx:n { \semio_viz_chem_field:n { 1 } } ,
+                   \semio_viz_sci_my:n { \semio_viz_chem_field:n { 2 } } )
+              { \semio_viz_chem_field:n { 3 } } ;
+          }
+      }
+  }
+% 🔺 Draws the equilateral composition triangle and dots each point after converting its barycentric fractions into triangle coordinates.
+\cs_new_protected:Npn \semio_viz_chem_ternary:
+  {
+    \draw [ semio~sci~axis ]
+      ( 0 , 0 ) -- ( \fp_eval:n { \l_semio_viz_chem_side_fp } , 0 ) --
+      ( \fp_eval:n { \l_semio_viz_chem_side_fp / 2 } ,
+        \fp_eval:n { \l_semio_viz_chem_side_fp * sqrt (3) / 2 } ) -- cycle ;
+    \clist_map_inline:Nn \l_semio_viz_chem_points_clist
+      {
+        \semio_viz_chem_record:n {##1}
+        \fp_set:Nn \l_semio_viz_sci_a_fp
+          {
+            \l_semio_viz_chem_side_fp
+            * ( \semio_viz_chem_field:n { 2 } + ( 1 - \semio_viz_chem_field:n { 1 }
+                - \semio_viz_chem_field:n { 2 } ) / 2 )
+          }
+        \fp_set:Nn \l_semio_viz_sci_b_fp
+          {
+            \l_semio_viz_chem_side_fp * sqrt (3) / 2
+            * ( 1 - \semio_viz_chem_field:n { 1 } - \semio_viz_chem_field:n { 2 } )
+          }
+        \fill [ fill=semio-primary ]
+          ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } )
+          circle [ radius=1 ] ;
+      }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-electrochem` (§33 redox diagrams):
+%    mode (pourbaix|frost|latimer, pourbaix).
+%    species (clist of `n/energy/label`): oxidation state, nE° value and species name for the Frost diagram.
+%    couples (clist of `from/to/potential`): the Latimer chain.
+%    regions (clist of `x1/y1/x2/y2/label`): the Pourbaix boundaries in pH–potential space.
+\clist_new:N \l_semio_viz_chem_species_clist
+\clist_new:N \l_semio_viz_chem_couples_clist
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-electrochem }
+% 🔋 Binds the `sci-electrochem` option names onto the Frost species list, the Latimer couple chain and the Pourbaix boundary list.
+\keys_define:nn { semio / viz / family / sci-electrochem }
+  {
+    mode    .tl_set:N    = \l_semio_viz_chem_mode_tl ,
+    species .clist_set:N = \l_semio_viz_chem_species_clist ,
+    couples .clist_set:N = \l_semio_viz_chem_couples_clist ,
+    regions .clist_set:N = \l_semio_viz_chem_bounds_clist ,
+  }
+
+% 🔋 §33 redox diagrams: the Pourbaix stability map, the Frost nE° plot and the Latimer potential chain.
+\SemioVizFamily { sci-electrochem }
+  {
+    \semio_viz_sci_enter:nnn { sci-electrochem }
+      {
+        mode=pourbaix , domain={0,14} , range={-1.2,1.6} ,
+        species={ 0/0/Mn , 2/-1.18/Mn2+ , 3/1.5/Mn3+ , 4/2.8/MnO2 , 7/5.29/MnO4- } ,
+        couples={ MnO4-/MnO2/1.70 , MnO2/Mn3+/0.95 , Mn3+/Mn2+/1.51 , Mn2+/Mn/-1.18 } ,
+        regions={ 0/1.23/14/0.4/O2 , 0/0/14/-0.83/H2 }
+      }
+      {#1}
+    \str_case:VnF \l_semio_viz_chem_mode_tl
+      {
+        { frost }   { \semio_viz_chem_frost: }
+        { latimer } { \semio_viz_chem_latimer: }
+      }
+      { \semio_viz_chem_pourbaix: }
+  }
+% 🗾 Draws each Pourbaix stability boundary as a straight line in pH–potential space with its species name set along the slope.
+\cs_new_protected:Npn \semio_viz_chem_pourbaix:
+  {
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \clist_map_inline:Nn \l_semio_viz_chem_bounds_clist
+      {
+        \semio_viz_chem_record:n {##1}
+        \draw [ semio~sci~aux , draw=semio-secondary ]
+          ( \semio_viz_sci_mx:n { \semio_viz_chem_field:n { 1 } } ,
+            \semio_viz_sci_my:n { \semio_viz_chem_field:n { 2 } } ) --
+          node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal , above , sloped ]
+            { \semio_viz_chem_field:n { 5 } }
+          ( \semio_viz_sci_mx:n { \semio_viz_chem_field:n { 3 } } ,
+            \semio_viz_sci_my:n { \semio_viz_chem_field:n { 4 } } ) ;
+      }
+  }
+% 📉 Plots nE° against oxidation state as one polyline through the species, then dots and names every species on it.
+\cs_new_protected:Npn \semio_viz_chem_frost:
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \clist_map_inline:Nn \l_semio_viz_chem_species_clist
+      {
+        \semio_viz_chem_record:n {##1}
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { \semio_viz_chem_field:n { 1 } } { \semio_viz_chem_field:n { 2 } }
+      }
+    \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_seq { 0.12 }
+    \semio_viz_sci_window_keys:
+    \semio_viz_sci_frame:
+    \semio_viz_sci_zero_lines:
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+    \clist_map_inline:Nn \l_semio_viz_chem_species_clist
+      {
+        \semio_viz_chem_record:n {##1}
+        \semio_viz_sci_dot:nnn { \semio_viz_chem_field:n { 1 } } { \semio_viz_chem_field:n { 2 } }
+          { semio-primary }
+        \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , anchor=south ]
+          at ( \semio_viz_sci_mx:n { \semio_viz_chem_field:n { 1 } } ,
+               \fp_eval:n { \semio_viz_sci_my:n { \semio_viz_chem_field:n { 2 } } + 1 } )
+          { \semio_viz_chem_field:n { 3 } } ;
+      }
+  }
+% 🔤 Lays the Latimer chain out along one row: each couple as an arrow carrying its potential between the two species names.
+\cs_new_protected:Npn \semio_viz_chem_latimer:
+  {
+    \int_zero:N \l_tmpa_int
+    \clist_map_inline:Nn \l_semio_viz_chem_couples_clist
+      {
+        \int_incr:N \l_tmpa_int
+        \semio_viz_chem_record:n {##1}
+        \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground ]
+          at ( \fp_eval:n { ( \l_tmpa_int - 1 ) * 20 } , 0 ) { \semio_viz_chem_field:n { 1 } } ;
+        \draw [ semio~sci~arrow ]
+          ( \fp_eval:n { ( \l_tmpa_int - 1 ) * 20 + 5 } , 0 ) --
+          node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal , above ]
+            { \semio_viz_chem_field:n { 3 } }
+          ( \fp_eval:n { \l_tmpa_int * 20 - 5 } , 0 ) ;
+        \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground ]
+          at ( \fp_eval:n { \l_tmpa_int * 20 } , 0 ) { \semio_viz_chem_field:n { 2 } } ;
+      }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-spectrum-peaks` (§33 spectroscopy):
+%    kind (nmr|ir|ms|uv-vis|chromatogram, nmr): sets the axis direction and the peak shape.
+%    peaks (clist of `position/intensity/width/label`): the peak table; width in axis units.
+%    reversed (bool, true for nmr and ir): draw the x axis right to left.
+%    baseline (fp, 0): the drawn baseline. samples (int, 300): profile resolution.
+\tl_new:N \l_semio_viz_chem_kind_tl
+\clist_new:N \l_semio_viz_chem_peaks_clist
+\bool_new:N \l_semio_viz_chem_reversed_bool
+\int_new:N \l_semio_viz_chem_samples_int
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-spectrum-peaks }
+% 📡 Binds the `sci-spectrum-peaks` option names onto the technique kind, the peak table, the axis-reversal switch and the profile resolution.
+\keys_define:nn { semio / viz / family / sci-spectrum-peaks }
+  {
+    kind     .tl_set:N    = \l_semio_viz_chem_kind_tl ,
+    peaks    .clist_set:N = \l_semio_viz_chem_peaks_clist ,
+    reversed .bool_set:N  = \l_semio_viz_chem_reversed_bool ,
+    samples  .int_set:N   = \l_semio_viz_chem_samples_int ,
+  }
+
+% 📈 §33 spectroscopy: NMR, IR, mass, UV–Vis spectra and chromatograms, each a Lorentzian or bar profile of the same peak table.
+\SemioVizFamily { sci-spectrum-peaks }
+  {
+    \semio_viz_sci_enter:nnn { sci-spectrum-peaks }
+      {
+        kind=nmr , reversed=true , samples=300 , domain={0,10} , range={} ,
+        peaks={ 7.26/1/0.05/CDCl3 , 3.7/3/0.05/OMe , 2.1/2/0.06/CH2 , 1.25/6/0.05/CH3 }
+      }
+      {#1}
+    \str_if_eq:VnTF \l_semio_viz_chem_kind_tl { ms }
+      { \semio_viz_chem_bars: }
+      { \semio_viz_chem_profile: }
+  }
+% 🏔️ Samples the spectrum across the domain as the sum of one Lorentzian per peak, then frames, strokes and labels it.
+\cs_new_protected:Npn \semio_viz_chem_profile:
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_chem_samples_int }
+      {
+        \fp_set:Nn \SemioX
+          {
+            \clist_item:Nn \l_semio_viz_sci_domain_clist { 1 }
+            + ( \clist_item:Nn \l_semio_viz_sci_domain_clist { 2 }
+                - \clist_item:Nn \l_semio_viz_sci_domain_clist { 1 } )
+              * ##1 / \l_semio_viz_chem_samples_int
+          }
+        \fp_zero:N \l_semio_viz_sci_a_fp
+        \clist_map_inline:Nn \l_semio_viz_chem_peaks_clist
+          {
+            \seq_set_split:Nnn \l_tmpb_seq { / } {####1}
+            \fp_add:Nn \l_semio_viz_sci_a_fp
+              {
+                \seq_item:Nn \l_tmpb_seq { 2 }
+                / ( 1 + ( ( \SemioX - \seq_item:Nn \l_tmpb_seq { 1 } )
+                    / \seq_item:Nn \l_tmpb_seq { 3 } ) ^ 2 )
+              }
+          }
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq { \SemioX } { \l_semio_viz_sci_a_fp }
+      }
+    \semio_viz_chem_frame_directed:
+    \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
+    \semio_viz_chem_peak_labels:
+  }
+% 🎋 Renders a mass spectrum as one bar per peak rising from the baseline, then reports the peak set and labels it.
+\cs_new_protected:Npn \semio_viz_chem_bars:
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_seq
+    \clist_map_inline:Nn \l_semio_viz_chem_peaks_clist
+      {
+        \semio_viz_chem_record:n {##1}
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_seq
+          { \semio_viz_chem_field:n { 1 } } { \semio_viz_chem_field:n { 2 } }
+      }
+    \semio_viz_chem_frame_directed:
+    \seq_map_inline:Nn \l_semio_viz_sci_pts_seq
+      {
+        \draw [ semio~sci~curve ]
+          ( \semio_viz_sci_mx:n { \semio_viz_points_x:n {##1} } , \semio_viz_sci_my:n { 0 } ) --
+          ( \semio_viz_sci_mx:n { \semio_viz_points_x:n {##1} } , \semio_viz_sci_my:n { \semio_viz_points_y:n {##1} } ) ;
+      }
+    \semio_viz_sci_report:Nn \l_semio_viz_sci_pts_seq { peak }
+    \semio_viz_chem_peak_labels:
+  }
+% 📈 The frame, with the x axis reversed when the technique plots decreasing shift or wavenumber.
+\cs_new_protected:Npn \semio_viz_chem_frame_directed:
+  {
+    \semio_viz_sci_extent:N \l_semio_viz_sci_pts_seq
+    \bool_if:NTF \l_semio_viz_chem_reversed_bool
+      {
+        \semio_viz_sci_window:nnnn
+          { \clist_item:Nn \l_semio_viz_sci_domain_clist { 2 } }
+          { \clist_item:Nn \l_semio_viz_sci_domain_clist { 1 } }
+          { 0 } { \l_semio_viz_sci_ymax_fp * 1.15 }
+      }
+      {
+        \semio_viz_sci_window:nnnn
+          { \clist_item:Nn \l_semio_viz_sci_domain_clist { 1 } }
+          { \clist_item:Nn \l_semio_viz_sci_domain_clist { 2 } }
+          { 0 } { \l_semio_viz_sci_ymax_fp * 1.15 }
+      }
+    \int_compare:nNnT { \clist_count:N \l_semio_viz_sci_range_clist } = { 2 }
+      { \semio_viz_sci_window_keys: }
+    \semio_viz_sci_frame:
+  }
+% 🏷️ Sets the name of every peak that carries one upright above its tip, rotated a quarter turn.
+\cs_new_protected:Npn \semio_viz_chem_peak_labels:
+  {
+    \clist_map_inline:Nn \l_semio_viz_chem_peaks_clist
+      {
+        \semio_viz_chem_record:n {##1}
+        \tl_set:Nx \l_semio_viz_chem_key_tl { \semio_viz_chem_field:n { 4 } }
+        \tl_if_empty:NF \l_semio_viz_chem_key_tl
+          {
+            \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal , anchor=south , rotate=90 ]
+              at ( \semio_viz_sci_mx:n { \semio_viz_chem_field:n { 1 } } ,
+                   \fp_eval:n { \semio_viz_sci_my:n { \semio_viz_chem_field:n { 2 } } + 1.2 } )
+              { \tl_use:N \l_semio_viz_chem_key_tl } ;
+          }
+      }
+  }
+
+%region 🔖️Keys
+% 🔑 Keys of `sci-crystal` (§33 crystal structures):
+%    lattice (cubic|body-centred|face-centred|hexagonal, cubic): which sites are occupied.
+%    cell (fp, 22): edge length in millimetres. azimuth, elevation (fp, 45/30): the isometric camera.
+%    radius (fp, 1.6): atom radius. bonds (bool, true): draw the cell edges.
+\tl_new:N \l_semio_viz_chem_lattice_tl
+\fp_new:N \l_semio_viz_chem_cell_fp
+\fp_new:N \l_semio_viz_chem_azimuth_fp
+\fp_new:N \l_semio_viz_chem_elevation_fp
+\fp_new:N \l_semio_viz_chem_radius_fp
+\bool_new:N \l_semio_viz_chem_bonds_bool
+%endregion 🔖️Keys
+
+\semio_viz_sci_keys_canvas:n { sci-crystal }
+% 💎 Binds the `sci-crystal` option names onto the Bravais lattice, the cell edge, the camera angles, the atom radius and the cell-edge switch.
+\keys_define:nn { semio / viz / family / sci-crystal }
+  {
+    lattice   .tl_set:N   = \l_semio_viz_chem_lattice_tl ,
+    cell      .fp_set:N   = \l_semio_viz_chem_cell_fp ,
+    azimuth   .fp_set:N   = \l_semio_viz_chem_azimuth_fp ,
+    elevation .fp_set:N   = \l_semio_viz_chem_elevation_fp ,
+    radius    .fp_set:N   = \l_semio_viz_chem_radius_fp ,
+    bonds     .bool_set:N = \l_semio_viz_chem_bonds_bool ,
+  }
+
+% 🧊 §33 unit cells: the eight corner sites plus the body or face sites of the chosen Bravais lattice, in an axonometric view.
+\SemioVizFamily { sci-crystal }
+  {
+    \semio_viz_sci_enter:nnn { sci-crystal }
+      {
+        lattice=face-centred , cell=22 , azimuth=45 , elevation=30 , radius=1.6 , bonds=true ,
+        axes=false , grid=false
+      }
+      {#1}
+    \bool_if:NT \l_semio_viz_chem_bonds_bool { \semio_viz_chem_cell_edges: }
+    \int_step_inline:nnnn { 0 } { 1 } { 1 }
+      {
+        \int_step_inline:nnnn { 0 } { 1 } { 1 }
+          { \semio_viz_chem_corner_column:nn {##1} {####1} }
+      }
+    \str_case:VnF \l_semio_viz_chem_lattice_tl
+      {
+        { body-centred } { \semio_viz_chem_site:nnn { 0.5 } { 0.5 } { 0.5 } }
+        { face-centred }
+          {
+            \semio_viz_chem_site:nnn { 0.5 } { 0.5 } { 0 }
+            \semio_viz_chem_site:nnn { 0.5 } { 0.5 } { 1 }
+            \semio_viz_chem_site:nnn { 0.5 } { 0 } { 0.5 }
+            \semio_viz_chem_site:nnn { 0.5 } { 1 } { 0.5 }
+            \semio_viz_chem_site:nnn { 0 } { 0.5 } { 0.5 }
+            \semio_viz_chem_site:nnn { 1 } { 0.5 } { 0.5 }
+          }
+        { hexagonal }
+          {
+            \semio_viz_chem_site:nnn { 0.3333 } { 0.6667 } { 0.5 }
+            \semio_viz_chem_site:nnn { 0.6667 } { 0.3333 } { 0.5 }
+          }
+      }
+      { }
+  }
+% 🏗️ Places the two corner sites above each other at cell column (#1,#2), one at the bottom face and one at the top.
+\cs_new_protected:Npn \semio_viz_chem_corner_column:nn #1#2
+  {
+    \semio_viz_chem_site:nnn {#1} {#2} { 0 }
+    \semio_viz_chem_site:nnn {#1} {#2} { 1 }
+  }
+% 🧊 Local axonometric projection: chemistry loads before the 3D package, so the unit cell carries its own camera.
+\cs_new_protected:Npn \semio_viz_chem_project:nnn #1#2#3
+  {
+    \fp_set:Nn \l_semio_viz_sci_a_fp
+      {
+        \l_semio_viz_chem_cell_fp
+        * ( - ( #1 ) * sind ( \l_semio_viz_chem_azimuth_fp ) + ( #2 ) * cosd ( \l_semio_viz_chem_azimuth_fp ) )
+      }
+    \fp_set:Nn \l_semio_viz_sci_b_fp
+      {
+        \l_semio_viz_chem_cell_fp
+        * ( - ( ( #1 ) * cosd ( \l_semio_viz_chem_azimuth_fp ) + ( #2 ) * sind ( \l_semio_viz_chem_azimuth_fp ) )
+              * sind ( \l_semio_viz_chem_elevation_fp )
+            + ( #3 ) * cosd ( \l_semio_viz_chem_elevation_fp ) )
+      }
+  }
+% 🔵 Projects fractional site (#1,#2,#3), fills an atom of the configured radius there and reports its screen position.
+\cs_new_protected:Npn \semio_viz_chem_site:nnn #1#2#3
+  {
+    \semio_viz_chem_project:nnn {#1} {#2} {#3}
+    \draw [ semio~sci~glyph , fill=semio-primary ]
+      ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } )
+      circle [ radius=\fp_eval:n { \l_semio_viz_chem_radius_fp } ] ;
+    \semio_viz_sci_report_values:nn { crystal/site }
+      { \fp_to_decimal:N \l_semio_viz_sci_a_fp , \fp_to_decimal:N \l_semio_viz_sci_b_fp }
+  }
+% 🕸️ Draws the twelve edges of the unit cell, four along each of the three axes.
+\cs_new_protected:Npn \semio_viz_chem_cell_edges:
+  {
+    \int_step_inline:nnnn { 0 } { 1 } { 1 }
+      {
+        \int_step_inline:nnnn { 0 } { 1 } { 1 }
+          {
+            \semio_viz_chem_edge:nnnnnn {##1} {####1} { 0 } {##1} {####1} { 1 }
+            \semio_viz_chem_edge:nnnnnn {##1} { 0 } {####1} {##1} { 1 } {####1}
+            \semio_viz_chem_edge:nnnnnn { 0 } {##1} {####1} { 1 } {##1} {####1}
+          }
+      }
+  }
+% 📎 Projects both ends of the cell edge from (#1,#2,#3) to (#4,#5,#6) and strokes it in the border colour.
+\cs_new_protected:Npn \semio_viz_chem_edge:nnnnnn #1#2#3#4#5#6
+  {
+    \semio_viz_chem_project:nnn {#1} {#2} {#3}
+    \fp_set:Nn \l_semio_viz_sci_c_fp { \l_semio_viz_sci_a_fp }
+    \fp_set:Nn \l_semio_viz_sci_d_fp { \l_semio_viz_sci_b_fp }
+    \semio_viz_chem_project:nnn {#4} {#5} {#6}
+    \draw [ semio~sci~thin , draw=semio-chrome-border-normal ]
+      ( \fp_eval:n { \l_semio_viz_sci_c_fp } , \fp_eval:n { \l_semio_viz_sci_d_fp } ) --
+      ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) ;
+  }
+%endregion 🔖️Families
+
+\ExplSyntaxOff

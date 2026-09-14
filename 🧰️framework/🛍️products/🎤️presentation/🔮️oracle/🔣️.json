@@ -1,0 +1,67 @@
+{
+  "$schema": "../../../🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧪️ The presentation product's contribution to the repository test platform. Every entry is a test-only reference implementation for one part of the slide authoring pipeline; the subject is the product's own compiler under 📦️packages/🟦️typescript. Every package listed here is a devDependency of the declared hostPath and is imported only from 🧪️tests/**.",
+  "oracles": [
+    {
+      "id": "remark",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "unified",
+      "packages": [
+        {
+          "package": "remark-parse",
+          "version": "11.0.0",
+          "license": "MIT",
+          "homepage": "https://github.com/remarkjs/remark/tree/main/packages/remark-parse",
+          "role": "CommonMark parser — markdown text to an mdast syntax tree."
+        },
+        {
+          "package": "remark-gfm",
+          "version": "4.0.1",
+          "license": "MIT",
+          "homepage": "https://github.com/remarkjs/remark-gfm",
+          "role": "GitHub Flavoured Markdown extension — the table syntax the slide compiler claims."
+        },
+        {
+          "package": "remark-rehype",
+          "version": "11.1.2",
+          "license": "MIT",
+          "homepage": "https://github.com/remarkjs/remark-rehype",
+          "role": "mdast to hast — the markdown tree read as an HTML tree."
+        },
+        {
+          "package": "rehype-stringify",
+          "version": "10.0.1",
+          "license": "MIT",
+          "homepage": "https://github.com/rehypejs/rehype/tree/main/packages/rehype-stringify",
+          "role": "hast to an HTML fragment, including the character references the fragment escapes with."
+        }
+      ],
+      "version": "11.0.5",
+      "capabilities": [
+        "presentation-markdown-html"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1",
+        "utf8-text-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/remarkjs/remark",
+      "rationale": "The reading of CommonMark and GFM the JavaScript ecosystem is measured against. The presentation product owns its slide markdown compiler — a deck must not ship a markdown runtime, and the fragment it emits is a safety boundary — so without an external reference that compiler would only ever agree with itself. The stack is composed rather than singular because the contract spans four stages: parse (remark-parse), the GFM table extension (remark-gfm), the markdown-to-HTML tree mapping (remark-rehype) and the fragment serialisation with its character references (rehype-stringify). unified is the pipeline that binds them and is the primary package the entry is pinned on.",
+      "hostPath": "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react",
+      "engine": {
+        "family": "unified",
+        "implementation": "unified",
+        "version": "11.0.5"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    }
+  ],
+  "noOracleDecisions": [],
+  "migrationStatus": {
+    "🧰️framework/🛍️products/🎤️presentation": "parity-green"
+  }
+}

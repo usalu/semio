@@ -1,0 +1,117 @@
+% 🧪 Probe fixture of case theme-palettes, every scenario.
+% The theme kernel is the one place a renderer is allowed to name a colour, so what it answers has
+% to be adjudicated on its own: which categorical slot a series index lands on, which hatch the
+% grayscale theme pairs with it, and what colour a named scheme produces at a position. Names and
+% hexadecimal digits travel as strings prefixed with a vertical bar so no digit is lost to the
+% probe protocol's numeric classification.
+\documentclass{article}
+\usepackage{semio-viz-theme}
+\usepackage{semio-viz-probe}
+\ExplSyntaxOn
+\tl_new:N \l_probe_name_tl
+\str_new:N \l_probe_hex_str
+\seq_new:N \l_probe_seq
+\int_new:N \l_probe_count_int
+
+% 🎨 Writes the categorical colour names of the slots #2 under the active theme.
+\cs_new_protected:Npn \probeslots #1#2 {
+  \seq_clear:N \l_probe_seq
+  \clist_map_inline:nn {#2}
+    {
+      \semio_viz_theme_color:nN {##1} \l_probe_name_tl
+      \seq_put_right:Nx \l_probe_seq { { | \l_probe_name_tl } }
+    }
+  \semio_viz_probe_values:nx {#1} { \seq_use:Nn \l_probe_seq { , } }
+}
+
+% ▨ Writes the hatch patterns of the slots #2, with the spaces of a TikZ pattern name closed up so
+% one pattern is one probe value.
+\cs_new_protected:Npn \probepatterns #1#2 {
+  \seq_clear:N \l_probe_seq
+  \clist_map_inline:nn {#2}
+    {
+      \semio_viz_theme_pattern:nN {##1} \l_probe_name_tl
+      \seq_put_right:Nx \l_probe_seq { { | \tl_to_str:N \l_probe_name_tl } }
+    }
+  \semio_viz_probe_values:nx {#1} { \seq_use:Nn \l_probe_seq { , } }
+}
+
+% 🔢 Writes how many distinct categorical slots the active theme offers.
+\cs_new_protected:Npn \probecount #1 {
+  \semio_viz_theme_color_count:N \l_probe_count_int
+  \semio_viz_probe_values:nx {#1} { \int_use:N \l_probe_count_int }
+}
+
+% 🌈 Writes the stop list of the named scheme in the active appearance.
+\cs_new_protected:Npn \probestops #1#2 {
+  \semio_viz_theme_scheme_stops:nN {#2} \l_probe_name_tl
+  \seq_set_from_clist:NN \l_probe_seq \l_probe_name_tl
+  \seq_set_map_x:NNn \l_probe_seq \l_probe_seq { { | ##1 } }
+  \semio_viz_probe_values:nx {#1} { \seq_use:Nn \l_probe_seq { , } }
+}
+
+% 🌈 Writes the colour of the named scheme #2 at the position #3, in the active interpolator.
+\cs_new_protected:Npn \probescheme #1#2#3 {
+  \semio_viz_theme_scheme_hex:nnN {#2} {#3} \l_probe_hex_str
+  \semio_viz_probe_values:nx {#1} { { | \l_probe_hex_str } }
+}
+\ExplSyntaxOff
+\begin{document}
+
+\SemioVizProbeBegin{theme-palettes}{categorical-wrap}
+\SemioVizTheme{default}[appearance=light]
+\probeslots{slot/presence}{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17}
+\probecount{count/presence}
+\SemioVizTheme{default}[appearance=light,palette=brand]
+\probeslots{slot/brand}{0,1,2,3,4,5,6,7,8,9,10,11,12,13}
+\probecount{count/brand}
+\SemioVizTheme{grayscale}[appearance=light]
+\probeslots{slot/gray}{0,1,2,3,4,5,6,7,8,9,10,11,12,13}
+\probecount{count/gray}
+
+\SemioVizProbeBegin{theme-palettes}{pattern-wrap}
+\SemioVizTheme{pattern}[appearance=light]
+\probepatterns{pattern/hatch}{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}
+
+\SemioVizProbeBegin{theme-palettes}{scheme-stops}
+\SemioVizTheme{default}[appearance=light]
+\probestops{stops/light/primary}{primary}
+\probestops{stops/light/grays}{grays}
+\probestops{stops/light/viridis-like}{viridis-like}
+\probestops{stops/light/danger-success}{danger-success}
+\SemioVizTheme{default}[appearance=dark]
+\probestops{stops/dark/primary}{primary}
+\probestops{stops/dark/grays}{grays}
+\probestops{stops/dark/viridis-like}{viridis-like}
+\probestops{stops/dark/danger-success}{danger-success}
+
+\SemioVizProbeBegin{theme-palettes}{scheme-ramp-lab}
+\SemioVizTheme{default}[appearance=light,interpolator=lab]
+\probescheme{ramp/lab/viridis-like/0}{viridis-like}{0}
+\probescheme{ramp/lab/viridis-like/1}{viridis-like}{0.125}
+\probescheme{ramp/lab/viridis-like/2}{viridis-like}{0.5}
+\probescheme{ramp/lab/viridis-like/3}{viridis-like}{0.8}
+\probescheme{ramp/lab/viridis-like/4}{viridis-like}{1}
+\probescheme{ramp/lab/danger-success/0}{danger-success}{0.25}
+\probescheme{ramp/lab/danger-success/1}{danger-success}{0.75}
+
+\SemioVizProbeBegin{theme-palettes}{scheme-ramp-hcl}
+\SemioVizTheme{default}[appearance=light,interpolator=hcl]
+\probescheme{ramp/hcl/primary/0}{primary}{0}
+\probescheme{ramp/hcl/primary/1}{primary}{0.25}
+\probescheme{ramp/hcl/primary/2}{primary}{0.5}
+\probescheme{ramp/hcl/primary/3}{primary}{0.75}
+\probescheme{ramp/hcl/primary/4}{primary}{1}
+\probescheme{ramp/hcl/grays/0}{grays}{0.375}
+\probescheme{ramp/hcl/grays/1}{grays}{0.625}
+
+\SemioVizProbeBegin{theme-palettes}{scheme-ramp-oklab}
+\SemioVizTheme{default}[appearance=light]
+\probescheme{ramp/oklab/viridis-like/0}{viridis-like}{0}
+\probescheme{ramp/oklab/viridis-like/1}{viridis-like}{0.25}
+\probescheme{ramp/oklab/viridis-like/2}{viridis-like}{0.5}
+\probescheme{ramp/oklab/viridis-like/3}{viridis-like}{0.75}
+\probescheme{ramp/oklab/viridis-like/4}{viridis-like}{1}
+
+\SemioVizProbePage
+\end{document}

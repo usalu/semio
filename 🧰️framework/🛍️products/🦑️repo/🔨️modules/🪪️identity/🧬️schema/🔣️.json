@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/repo/identity/1",
+  "title": "🪪️ Repo identity fixtures and wire shapes",
+  "description": "🪪️ The entity-emoji vocabulary both implementations load, the vector file the `😀️entity-emoji-codec` case reads, and the projections it compares.",
+  "$defs": {
+    "EntityEmojiTable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "textDefaultEmojis", "entities", "collections", "allEntityOrder", "sectionRefEmojis", "definitionRefEmojis", "folderRefEmojis", "fileRefEmojis"],
+      "description": "🔣️ The single source of truth `🧬️schema/🔣️entity-emojis.json` holds. Go reads it through a module-relative path at first use; Rust embeds it with `include_str!`. Every emoji is stored WITHOUT the U+FE0F presentation selector.",
+      "properties": {
+        "$comment": { "type": "string" },
+        "schema": { "const": "semio.repo.identity.entity-emojis/1" },
+        "textDefaultEmojis": { "type": "array", "items": { "type": "string", "minLength": 1 }, "description": "📝️ Code points whose Unicode default presentation is text, and which therefore get U+FE0F re-added." },
+        "entities": { "type": "object", "additionalProperties": { "type": "string" }, "description": "🧱️ One emoji per entity kind." },
+        "collections": { "type": "object", "additionalProperties": { "type": "string" }, "description": "🗃️ One emoji per collection kind; an empty string means the collection is unlabelled." },
+        "allEntityOrder": { "type": "array", "items": { "type": "string" }, "description": "📜️ The order the deduplicated vocabulary is reported in." },
+        "sectionRefEmojis": { "type": "array", "items": { "type": "string" } },
+        "definitionRefEmojis": { "type": "array", "items": { "type": "string" } },
+        "folderRefEmojis": { "type": "array", "items": { "type": "string" } },
+        "fileRefEmojis": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "NamedInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "input"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "input": { "type": "string" }
+      }
+    },
+    "EmojiVectorFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "graphemes", "normalizations", "refs", "goalPaths", "contributors", "identifierSeeds"],
+      "properties": {
+        "$comment": { "type": "string" },
+        "schema": { "const": "semio.repo.identity.emoji-vectors/1" },
+        "graphemes": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/NamedInput" }, "description": "🧲️ Strings whose leading emoji grapheme must be split off." },
+        "normalizations": { "type": "array", "items": { "type": "string" }, "description": "😀️ Emojis run through the presentation normaliser." },
+        "refs": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/NamedInput" }, "description": "🟦️ Artifact references to classify." },
+        "goalPaths": { "type": "array", "items": { "type": "string" } },
+        "contributors": { "type": "array", "items": { "type": "string" } },
+        "identifierSeeds": { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+      }
+    },
+    "GraphemeProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["graphemes"],
+      "properties": {
+        "graphemes": { "type": "array", "items": { "type": "string" }, "description": "🧲️ `<vector name>=<leading emoji>|<remaining text>`; the emoji half is empty when the string does not start with one." }
+      }
+    },
+    "CodecProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["normalizations", "refs", "goals", "contributors", "identifiers", "vocabulary"],
+      "properties": {
+        "normalizations": { "type": "array", "items": { "type": "string" }, "description": "😀️ `<input code points>=<normalised code points>`, both as `U+XXXX` sequences so the projection is readable and selector-exact." },
+        "refs": { "type": "array", "items": { "type": "string" }, "description": "🟦️ `<vector name>=<kind>|<path>|<section parts joined by #>`." },
+        "goals": { "type": "array", "items": { "type": "string" }, "description": "🎯️ `<goal path>=<compose id>|<segments joined by /`>." },
+        "contributors": { "type": "array", "items": { "type": "string" }, "description": "🤝️ `<alias>=<compose id>|<flattened alias>`." },
+        "identifiers": { "type": "array", "items": { "type": "string" }, "description": "🆔️ `<seed>=<identifier>`; identical for the same seed in every implementation." },
+        "vocabulary": { "type": "array", "items": { "type": "string" }, "description": "🔣️ The deduplicated entity emoji vocabulary, as `U+XXXX` sequences." }
+      }
+    }
+  },
+  "oneOf": [{ "$ref": "#/$defs/EntityEmojiTable" }, { "$ref": "#/$defs/EmojiVectorFile" }]
+}

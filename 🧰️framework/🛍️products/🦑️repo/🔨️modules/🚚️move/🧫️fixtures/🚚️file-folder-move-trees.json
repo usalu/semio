@@ -1,0 +1,183 @@
+{
+  "schema": "https://semio.tech/schema/repo/move/1#/$defs/FileFolderMoveFile",
+  "cases": [
+    {
+      "name": "a-folder-carries-its-subtree",
+      "kind": "folder",
+      "source": "src/old",
+      "target": "src/new",
+      "before": {
+        "directories": [
+          "src",
+          "src/old",
+          "src/old/deep",
+          "src/target"
+        ],
+        "files": {
+          "AGENTS.md": "# Agents\n\n## 📁️src/old/\n\nThe old home.\n\n### 📄️src/old/main.ts\n\nOne file.\n",
+          "src/keep.ts": "export const keep = 3;\n",
+          "src/old/deep/util.ts": "export const util = 2;\n",
+          "src/old/main.ts": "export const main = 1;\n"
+        }
+      },
+      "after": {
+        "directories": [
+          "src",
+          "src/new",
+          "src/new/deep",
+          "src/target"
+        ],
+        "files": {
+          "AGENTS.md": "# Agents\n\n## 📁️src/new/\n\nThe old home.\n\n### 📄️src/new/main.ts\n\nOne file.\n",
+          "src/keep.ts": "export const keep = 3;\n",
+          "src/new/deep/util.ts": "export const util = 2;\n",
+          "src/new/main.ts": "export const main = 1;\n"
+        }
+      },
+      "messages": [
+        "\n📁️Moved folder: src/old → src/new"
+      ]
+    },
+    {
+      "name": "a-folder-into-an-existing-parent",
+      "kind": "folder",
+      "source": "src/old",
+      "target": "src/target/moved",
+      "before": {
+        "directories": [
+          "src",
+          "src/old",
+          "src/old/deep",
+          "src/target"
+        ],
+        "files": {
+          "AGENTS.md": "# Agents\n\n## 📁️src/old/\n\nThe old home.\n\n### 📄️src/old/main.ts\n\nOne file.\n",
+          "src/keep.ts": "export const keep = 3;\n",
+          "src/old/deep/util.ts": "export const util = 2;\n",
+          "src/old/main.ts": "export const main = 1;\n"
+        }
+      },
+      "after": {
+        "directories": [
+          "src",
+          "src/target",
+          "src/target/moved",
+          "src/target/moved/deep"
+        ],
+        "files": {
+          "AGENTS.md": "# Agents\n\n## 📁️src/target/moved/\n\nThe old home.\n\n### 📄️src/target/moved/main.ts\n\nOne file.\n",
+          "src/keep.ts": "export const keep = 3;\n",
+          "src/target/moved/deep/util.ts": "export const util = 2;\n",
+          "src/target/moved/main.ts": "export const main = 1;\n"
+        }
+      },
+      "messages": [
+        "\n📁️Moved folder: src/old → src/target/moved"
+      ]
+    },
+    {
+      "name": "a-file-moves-alone",
+      "kind": "file",
+      "source": "src/old/main.ts",
+      "target": "src/target/main.ts",
+      "before": {
+        "directories": [
+          "src",
+          "src/old",
+          "src/old/deep",
+          "src/target"
+        ],
+        "files": {
+          "AGENTS.md": "# Agents\n\n## 📁️src/old/\n\nThe old home.\n\n### 📄️src/old/main.ts\n\nOne file.\n",
+          "src/keep.ts": "export const keep = 3;\n",
+          "src/old/deep/util.ts": "export const util = 2;\n",
+          "src/old/main.ts": "export const main = 1;\n"
+        }
+      },
+      "after": {
+        "directories": [
+          "src",
+          "src/old",
+          "src/old/deep",
+          "src/target"
+        ],
+        "files": {
+          "AGENTS.md": "# Agents\n\n## 📁️src/old/\n\nThe old home.\n\n### 📄️src/target/main.ts\n\nOne file.\n",
+          "src/keep.ts": "export const keep = 3;\n",
+          "src/old/deep/util.ts": "export const util = 2;\n",
+          "src/target/main.ts": "export const main = 1;\n"
+        }
+      },
+      "messages": [
+        "\n📄️Moved file: src/old/main.ts → src/target/main.ts"
+      ]
+    },
+    {
+      "name": "a-file-with-no-docs-entry",
+      "kind": "file",
+      "source": "src/keep.ts",
+      "target": "src/kept.ts",
+      "before": {
+        "directories": [
+          "src",
+          "src/old",
+          "src/old/deep",
+          "src/target"
+        ],
+        "files": {
+          "AGENTS.md": "# Agents\n\n## 📁️src/old/\n\nThe old home.\n\n### 📄️src/old/main.ts\n\nOne file.\n",
+          "src/keep.ts": "export const keep = 3;\n",
+          "src/old/deep/util.ts": "export const util = 2;\n",
+          "src/old/main.ts": "export const main = 1;\n"
+        }
+      },
+      "after": {
+        "directories": [
+          "src",
+          "src/old",
+          "src/old/deep",
+          "src/target"
+        ],
+        "files": {
+          "AGENTS.md": "# Agents\n\n## 📁️src/old/\n\nThe old home.\n\n### 📄️src/old/main.ts\n\nOne file.\n",
+          "src/kept.ts": "export const keep = 3;\n",
+          "src/old/deep/util.ts": "export const util = 2;\n",
+          "src/old/main.ts": "export const main = 1;\n"
+        }
+      },
+      "messages": [
+        "\n📄️Moved file: src/keep.ts → src/kept.ts"
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "name": "a-missing-source-folder-is-refused",
+      "kind": "folder",
+      "source": "src/absent",
+      "target": "src/new",
+      "expectedError": "Source folder not found: src/absent"
+    },
+    {
+      "name": "an-occupied-folder-target-is-refused",
+      "kind": "folder",
+      "source": "src/old",
+      "target": "src/target",
+      "expectedError": "Target folder already exists: src/target"
+    },
+    {
+      "name": "a-missing-source-file-is-refused",
+      "kind": "file",
+      "source": "src/absent.ts",
+      "target": "src/new.ts",
+      "expectedError": "Source file not found: src/absent.ts"
+    },
+    {
+      "name": "an-occupied-file-target-is-refused",
+      "kind": "file",
+      "source": "src/keep.ts",
+      "target": "src/old/main.ts",
+      "expectedError": "Target file already exists: src/old/main.ts"
+    }
+  ]
+}

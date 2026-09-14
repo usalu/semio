@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/repo/yaml/1",
+  "title": "🧾️ Repo YAML codec fixtures and wire shapes",
+  "description": "🧾️ The vector file the `🔁️codec-roundtrip` case reads and the projection every implementation of the codec must produce for it.",
+  "type": "object",
+  "$defs": {
+    "CodecVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "source"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "description": "🏷️ Stable vector identifier, used as the projection key prefix." },
+        "source": { "type": "string", "description": "📄️ The YAML (or JSON superset) document to decode." }
+      }
+    },
+    "CodecVectorFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "vectors"],
+      "properties": {
+        "$comment": { "type": "string" },
+        "schema": { "const": "semio.repo.yaml.codec-vectors/1" },
+        "vectors": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/CodecVector" } }
+      }
+    },
+    "CodecProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decoded"],
+      "description": "🎯️ One canonical-JSON rendering per vector, in vector order. Canonical means: object members sorted by key, integers without a fractional part, no insignificant whitespace — so the projection carries no host-language number or ordering artefacts.",
+      "properties": {
+        "decoded": { "type": "array", "items": { "type": "string" }, "description": "📥️ `<vector name>=<canonical JSON of the decoded value>`, or `<vector name>!<error text prefix>` when the decoder rejects the document." }
+      }
+    },
+    "RoundTripProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reDecoded"],
+      "description": "🔁️ The value obtained by decoding, re-encoding with the owned encoder, and decoding the result again.",
+      "properties": {
+        "reDecoded": { "type": "array", "items": { "type": "string" }, "description": "🔁️ `<vector name>=<canonical JSON of the re-decoded value>`." }
+      }
+    }
+  },
+  "oneOf": [{ "$ref": "#/$defs/CodecVectorFile" }]
+}

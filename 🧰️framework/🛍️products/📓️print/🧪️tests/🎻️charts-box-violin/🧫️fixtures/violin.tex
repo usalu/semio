@@ -1,0 +1,10 @@
+\documentclass{article}
+\usepackage{semio-viz-charts-distribution}
+\begin{document}
+\ExplSyntaxOn
+\SemioVizProbeOn
+\SemioVizChartsDryRun
+\SemioVizProbeBegin{charts-box-violin}{violin}
+\SemioVizRunFamily{violin}[data=demo-distribution, value=value, group=grp, box=true, samples=8]
+\ExplSyntaxOff
+\end{document}

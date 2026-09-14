@@ -1,52 +1,72 @@
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{semio-viz}[2026/08/18 v0.1.0 semio viz]
+\ProvidesPackage{semio-viz}[2026/09/05 v0.2.0 semio viz bundle]
 
 \RequirePackage{expl3}
 \RequirePackage{xparse}
+\RequirePackage{tikz}
 \RequirePackage{semio-core}
 \RequirePackage{semio-fonts}
 \RequirePackage{semio-window}
 \RequirePackage{semio-viz-data}
-\RequirePackage{semio-viz-scale}
-\RequirePackage{semio-viz-mark}
-\RequirePackage{semio-viz-axis}
 \RequirePackage{semio-viz-layout}
+\RequirePackage{semio-viz-transform}
+\RequirePackage{semio-viz-scale}
+\RequirePackage{semio-viz-format}
+\RequirePackage{semio-viz-theme}
+\RequirePackage{semio-viz-mark}
+\RequirePackage{semio-viz-shape}
+\RequirePackage{semio-viz-coordinate}
+\RequirePackage{semio-viz-guide}
+\RequirePackage{semio-viz-annotation}
+\RequirePackage{semio-viz-label}
+\RequirePackage{semio-viz-facet}
+\RequirePackage{semio-viz-composition}
+\RequirePackage{semio-viz-family}
+\RequirePackage{semio-viz-probe}
 \usetikzlibrary{calc,arrows.meta,shapes.geometric,decorations.pathreplacing}
-
-\providecommand{\semio@viz@frame@width}{80}
-\providecommand{\semio@viz@frame@height}{40}
 
 \ExplSyntaxOn
 
-%region Diagnostics
+%region 🔖️Diagnostics
 \msg_new:nnn { semio-viz } { unknown-chart }
   { Unknown~viz~chart~kind~'#1'. }
 \msg_new:nnn { semio-viz } { unknown-demo }
   { Unknown~viz~demo~'#1'~(not~a~mark~or~chart~kind). }
 \msg_new:nnn { semio-viz } { unit-in-number }
   { Viz~key~'#1'~takes~a~plain~millimetre~number,~got~'#2'. }
-%endregion Diagnostics
+%endregion 🔖️Diagnostics
 
-%region StyleVocabulary
+%region 🔖️StyleVocabulary
 \tikzset{
   semio~viz~picture/.style={
     x=1mm, y=1mm,
     every~node/.append~style={ outer~sep=0pt, font=\SemioSans },
   },
+  % 📏 The hairline that separates two VizSection bands, in the theme's own chrome weight.
+  semio~viz~rule/.style={
+    draw=semio-chrome-border-normal,
+    line~width=\semio_viz_theme_stroke:n { hairline },
+  },
 }
-%endregion StyleVocabulary
+%endregion 🔖️StyleVocabulary
 
-%region Keys
+%region 🔖️Keys
 \tl_new:N \l_semio_viz_title_tl
 \tl_new:N \l_semio_viz_window_tl
 \tl_new:N \l_semio_viz_width_tl
 \tl_new:N \l_semio_viz_height_tl
 
+% 🚫 Rejects a millimetre key that carries a unit: every viz number is a bare millimetre count.
 \cs_new_protected:Npn \semio_viz_number_check:nn #1#2 {
   \regex_match:nnT { [a-zA-Z] } {#2}
     { \msg_error:nnnn { semio-viz } { unit-in-number } {#1} {#2} }
 }
 
+% ⚙️ Vocabulary of a VizFigure window.
+%   title  text     default empty   caption of the figure window
+%   window keyval   default empty   options passed straight to the Figure environment
+%   width  number   default 80      canvas width in millimetres
+%   height number   default 40      canvas height in millimetres; omitting it lets content grow
 \keys_define:nn { semio / viz / figure } {
   title  .tl_set:N = \l_semio_viz_title_tl,
   window .tl_set:N = \l_semio_viz_window_tl,
@@ -62,16 +82,22 @@
 }
 
 \bool_new:N \l_semio_viz_height_auto_bool
+% 🧹 Restores every figure key to the documented default before a new VizFigure reads its options.
 \cs_new_protected:Npn \semio_viz_figure_keys_reset: {
   \tl_clear:N \l_semio_viz_title_tl
   \tl_clear:N \l_semio_viz_window_tl
-  \tl_set:Nn \l_semio_viz_width_tl { \semio@viz@frame@width }
-  \tl_set:Nn \l_semio_viz_height_tl { \semio@viz@frame@height }
+  \tl_set:Nn \l_semio_viz_width_tl { \c_semio_viz_frame_width_tl }
+  \tl_set:Nn \l_semio_viz_height_tl { \c_semio_viz_frame_height_tl }
   \bool_set_true:N \l_semio_viz_height_auto_bool
 }
-%endregion Keys
+%endregion 🔖️Keys
 
-%region Figure
+%region 🔖️Figure
+% 🪟 Opens the Figure window and the millimetre TikZ canvas, and pins the bounding box: an
+% explicit height fixes it, an automatic one lets pgf grow it from whatever the body draws.
+% 🪢 A bare \path pins the horizontal extent only, so an automatic height is whatever the
+% VizSection and VizColumn bodies actually draw -- a label wrapping to three lines pushes the
+% rest of the figure down with nobody measuring it.
 \cs_new_protected:Npn \semio_viz_figure_open:n #1 {
   \begin{Figure}[#1]
   \begin{tikzpicture}[ semio~viz~picture ]
@@ -79,12 +105,6 @@
   \fp_set:Nn \l_semio_viz_width_fp { \l_semio_viz_width_tl }
   \bool_if:NTF \l_semio_viz_height_auto_bool
     {
-      % 🪢 Height left to grow with content, per semio-tree.sty's own
-      % \path (0,0)--(width,0) idiom: a bare \path pins the horizontal
-      % extent only, and pgf computes the vertical bounding box from
-      % whatever VizSection/VizColumn calls actually draw -- what lets a
-      % section that wraps to three lines push the rest of the figure down
-      % without anyone measuring it.
       \use:x { \exp_not:N \path (0,0) -- ( \l_semio_viz_width_tl , 0 ) ; }
       \fp_set:Nn \l_semio_viz_height_fp { \l_semio_viz_width_fp }
     }
@@ -94,6 +114,8 @@
     }
 }
 
+% 🎬 Starts a VizFigure: reads the keys, opens the window, loads the demo tables and the
+% default x/y scales every mark falls back on.
 \cs_new_protected:Npn \semio_viz_figure_begin:n #1 {
   \semio_viz_figure_keys_reset:
   \keys_set:nn { semio / viz / figure } {#1}
@@ -108,6 +130,8 @@
   \semio_viz_figure_scales:
 }
 
+% 📏 Declares the figure's three fallback scales -- a categorical x band, a linear y and a
+% logarithmic y -- spanning the canvas the keys just fixed.
 \cs_new_protected:Npn \semio_viz_figure_scales: {
   \use:x {
     \exp_not:N \semio_viz_scale_define:nnnn { x } { band } { A, B, C, D, E }
@@ -119,6 +143,7 @@
   }
 }
 
+% 🏁 Closes the canvas and the Figure window, and marks the figure scope as left.
 \cs_new_protected:Npn \semio_viz_figure_end: {
   \bool_set_false:N \l_semio_viz_in_figure_bool
   \end{tikzpicture}
@@ -129,20 +154,17 @@
 \NewDocumentEnvironment { VizFigure } { O{} }
   { \semio_viz_figure_begin:n {#1} }
   { \semio_viz_figure_end: }
-%endregion Figure
+%endregion 🔖️Figure
 
-%region Sections
+%region 🔖️Sections
 % 🪜 VizSection/VizColumn replace a stacked-panel figure's hand-placed
 % section origins (skalierung.tex's eight hardcoded Y separators) the same
 % way semio-tree.sty replaces a hand-placed hierarchy: no y-accumulator, no
 % measured line heights. Each section is a `local bounding box` scope --
 % pgf computes it from what was actually drawn inside -- shifted to sit on
 % the PREVIOUS section's own measured `.south west`. A three-line label
-% pushes every section below it down with nobody counting lines.
-\providecommand{\semio@viz@section@gap}{2.5mm}
-\providecommand{\semio@viz@section@content@gap}{4.5mm}
-\providecommand{\semio@viz@section@note@gap}{4mm}
-\providecommand{\semio@viz@column@gutter}{4mm}
+% pushes every section below it down with nobody counting lines. The gaps
+% and the gutter are semio-viz-guide's frame metrics.
 
 \tl_new:N \l_semio_viz_section_title_tl
 \tl_new:N \l_semio_viz_section_aside_tl
@@ -153,32 +175,39 @@
 \fp_new:N \g_semio_viz_column_cursor_fp
 \fp_new:N \l_semio_viz_saved_width_fp
 
+% ⚙️ Vocabulary of one VizSection band.
+%   title text     default empty   heading drawn at the band's north west
+%   aside text     default empty   right-aligned annotation on the heading line
+%   rule  boolean  default true    draw the hairline that separates the band from the one above
 \keys_define:nn { semio / viz / section } {
   title .tl_set:N = \l_semio_viz_section_title_tl,
   aside .tl_set:N = \l_semio_viz_section_aside_tl,
   rule  .bool_set:N = \l_semio_viz_section_rule_bool,
 }
 
+% 🧹 Restores the section keys to their documented defaults before a new band reads its options.
 \cs_new_protected:Npn \semio_viz_section_keys_reset: {
   \tl_clear:N \l_semio_viz_section_title_tl
   \tl_clear:N \l_semio_viz_section_aside_tl
   \bool_set_true:N \l_semio_viz_section_rule_bool
 }
 
+% 🏷️ Draws a band's own furniture: the separating rule, the title and the right-hand aside.
 \cs_new_protected:Npn \semio_viz_section_chrome: {
   \bool_if:NT \l_semio_viz_section_rule_bool {
     \use:x { \exp_not:N \draw [ semio~viz~rule ] ( 0 , 0 ) -- ( \fp_eval:n { \l_semio_viz_width_fp } , 0 ) ; }
   }
   \tl_if_empty:NF \l_semio_viz_section_title_tl {
-    \node [ font=\semio@viz@font@title, text=semio-chrome-foreground, anchor=north~west ]
+    \node [ font=\c_semio_viz_theme_font_title_tl, text=semio-chrome-foreground, anchor=north~west ]
       at ( 0 , -1.4 ) { \exp_not:V \l_semio_viz_section_title_tl } ;
   }
   \tl_if_empty:NF \l_semio_viz_section_aside_tl {
-    \node [ font=\semio@viz@font@label, text=semio-chrome-text-normal, anchor=north~east ]
+    \node [ font=\c_semio_viz_theme_font_label_tl, text=semio-chrome-text-normal, anchor=north~east ]
       at ( \fp_eval:n { \l_semio_viz_width_fp } , -1.4 ) { \exp_not:V \l_semio_viz_section_aside_tl } ;
   }
 }
 
+% 📐 Opens a band: names its bounding box, anchors it under the previous band and draws the chrome.
 \cs_new_protected:Npn \semio_viz_section_open:n #1 {
   \semio_viz_frame_require:n { VizSection }
   \semio_viz_section_keys_reset:
@@ -190,14 +219,15 @@
     { \begin{scope} }
     {
       \begin{scope}[
-        shift={([yshift=-\semio@viz@section@gap]\g_semio_viz_section_prev_tl)}
+        shift={([yshift=-\c_semio_viz_section_gap_tl]\g_semio_viz_section_prev_tl)}
       ]
     }
   \begin{scope}[ local~bounding~box=\l_semio_viz_section_name_tl ]
   \semio_viz_section_chrome:
-  \begin{scope}[ yshift=-\semio@viz@section@content@gap ]
+  \begin{scope}[ yshift=-\c_semio_viz_section_content_gap_tl ]
 }
 
+% 📏 Closes a band and records its measured south-west corner as the anchor of the next one.
 \cs_new_protected:Npn \semio_viz_section_close: {
   \end{scope}
   \end{scope}
@@ -221,6 +251,10 @@
 \tl_new:N \l_semio_viz_column_title_tl
 \tl_new:N \l_semio_viz_column_note_tl
 
+% ⚙️ Vocabulary of one VizColumn slot.
+%   width number  default the section width   slot width in millimetres
+%   title text    default empty              heading above the slot
+%   note  text    default empty              caption-weight paragraph under the heading
 \keys_define:nn { semio / viz / column } {
   width .fp_set:N = \l_semio_viz_column_width_fp,
   title .tl_set:N = \l_semio_viz_column_title_tl,
@@ -228,17 +262,18 @@
 }
 
 % 📝 A note draws below any title, in the caption weight already used
-% throughout (font@label), and reserves its own gap before content starts --
+% throughout (\c_semio_viz_theme_font_label_tl), and reserves its own gap before content starts --
 % the mechanism-level replacement for skalierung.tex's H1/H2 caption lines,
 % which used to be a bare \node followed by a hand-tuned \begin{scope}[yshift=
 % -4mm] compensating for the caption's own height. text width is the column's
 % own real width, not a number copied from the call site.
 \cs_new_protected:Npn \semio_viz_column_note_draw: {
-  \node [ font=\semio@viz@font@label, text=semio-chrome-text-normal,
+  \node [ font=\c_semio_viz_theme_font_label_tl, text=semio-chrome-text-normal,
           anchor=north~west, align=left, text~width=\fp_eval:n{\l_semio_viz_width_fp}mm ]
     at ( 0 , 0 ) { \exp_not:V \l_semio_viz_column_note_tl } ;
 }
 
+% 🏛️ Opens a slot at the section's running cursor and narrows the figure width to the slot.
 \cs_new_protected:Npn \semio_viz_column_open:n #1 {
   \semio_viz_frame_require:n { VizColumn }
   \fp_set_eq:NN \l_semio_viz_column_width_fp \l_semio_viz_width_fp
@@ -251,24 +286,25 @@
   \tl_if_empty:NTF \l_semio_viz_column_title_tl
     { \begin{scope} }
     {
-      \node [ font=\semio@viz@font@title, text=semio-chrome-foreground, anchor=north~west ]
+      \node [ font=\c_semio_viz_theme_font_title_tl, text=semio-chrome-foreground, anchor=north~west ]
         at ( 0 , 0 ) { \exp_not:V \l_semio_viz_column_title_tl } ;
-      \begin{scope}[ yshift=-\semio@viz@section@content@gap ]
+      \begin{scope}[ yshift=-\c_semio_viz_section_content_gap_tl ]
     }
   \tl_if_empty:NTF \l_semio_viz_column_note_tl
     { \begin{scope} }
     {
       \semio_viz_column_note_draw:
-      \begin{scope}[ yshift=-\semio@viz@section@note@gap ]
+      \begin{scope}[ yshift=-\c_semio_viz_section_note_gap_tl ]
     }
 }
 
+% 🧾 Closes a slot, advances the cursor by its width plus the gutter and restores the figure width.
 \cs_new_protected:Npn \semio_viz_column_close: {
   \end{scope}
   \end{scope}
   \end{scope}
   \fp_gset:Nn \g_semio_viz_column_cursor_fp
-    { \fp_eval:n { \g_semio_viz_column_cursor_fp + \l_semio_viz_column_width_fp + \semio@viz@column@gutter } }
+    { \fp_eval:n { \g_semio_viz_column_cursor_fp + \l_semio_viz_column_width_fp + \c_semio_viz_column_gutter_tl } }
   \fp_set_eq:NN \l_semio_viz_width_fp \l_semio_viz_saved_width_fp
 }
 
@@ -284,60 +320,100 @@
 % matrix: the position tracks the data instead of needing manual retuning
 % whenever a row is added or removed.
 \cs_new_protected:Npn \semio_viz_note_below:nnn #1#2#3 {
-  \node [ font=\semio@viz@font@label, text=semio-chrome-text-normal,
+  \node [ font=\c_semio_viz_theme_font_label_tl, text=semio-chrome-text-normal,
           anchor=north~west, align=left, text~width=\fp_eval:n{#2}mm ]
-    at ( [ yshift=-\semio@viz@section@note@gap ] #1 ) { \exp_not:n {#3} } ;
+    at ( [ yshift=-\c_semio_viz_section_note_gap_tl ] #1 ) { \exp_not:n {#3} } ;
 }
 % 🪧 Places caption text below a \SemioVizLayout anchor= coordinate.
 \NewDocumentCommand \SemioVizNoteBelow { m m m } { \semio_viz_note_below:nnn {#1}{#2}{#3} }
-%endregion Sections
+%endregion 🔖️Sections
 
-%region ChartKinds
-\seq_new:N \g_semio_viz_chart_kinds_seq
-\prop_new:N \g_semio_viz_chart_family_prop
-\prop_new:N \g_semio_viz_chart_opts_prop
+%region 🔖️Demo
+% 🧪 The five-point polyline every section 0 mark is shown on: a mark reads it through
+% its `points` key, a path primitive is the polyline itself.
+\tl_const:Nn \c_semio_viz_demo_points_tl { 8,8; 22,28; 40,12; 58,30; 72,16 }
 
-\cs_new_protected:Npn \semio_viz_chart_kind_define:nnn #1#2#3 {
-  \seq_if_in:NnF \g_semio_viz_chart_kinds_seq {#1}
-    { \seq_gput_right:Nn \g_semio_viz_chart_kinds_seq {#1} }
-  \prop_gput:Nnn \g_semio_viz_chart_family_prop {#1} {#2}
-  \prop_gput:Nnn \g_semio_viz_chart_opts_prop {#1} {#3}
-}
-
-% 🏷️ Registers a chart kind as a layout family plus default keys.
-\NewDocumentCommand \SemioVizChartKind { m m m } { \semio_viz_chart_kind_define:nnn {#1} {#2} {#3} }
-
-\cs_generate_variant:Nn \semio_viz_layout:nn { VV }
-
-\cs_new_protected:Npn \semio_viz_chart:nn #1#2 {
-  \semio_viz_frame_require:n { SemioVizChart }
-  \seq_if_in:NnTF \g_semio_viz_chart_kinds_seq {#1}
-    {
-      \prop_get:NnN \g_semio_viz_chart_family_prop {#1} \l_semio_viz_family_tl
-      \prop_get:NnN \g_semio_viz_chart_opts_prop {#1} \l_tmpa_tl
-      \tl_if_empty:nF {#2} { \tl_put_right:Nn \l_tmpa_tl { , #2 } }
-      \semio_viz_layout:VV \l_semio_viz_family_tl \l_tmpa_tl
-    }
-    { \msg_error:nnn { semio-viz } { unknown-chart } {#1} }
-}
-
+% 🧪 Gallery helper: draws a mark primitive or, for a catalogue slug, its chart kind on the entry's demo data.
 \cs_new_protected:Npn \semio_viz_demo:n #1 {
   \semio_viz_frame_require:n { SemioVizDemo }
   \seq_if_in:NnTF \g_semio_viz_mark_kinds_seq {#1}
-    { \semio_viz_mark_demo:n {#1} }
     {
-      \seq_if_in:NnTF \g_semio_viz_chart_kinds_seq {#1}
-        { \semio_viz_chart:nn {#1} { data=demo, x=cat, y=val } }
-        { \msg_error:nnn { semio-viz } { unknown-demo } {#1} }
+      \use:x
+        {
+          \exp_not:N \semio_viz_mark_draw:nnn {#1}
+            { points = { \exp_not:V \c_semio_viz_demo_points_tl } } { 40 , 20 }
+        }
     }
+    { \semio_viz_kind_run:nn {#1} { } }
 }
 
-% 📊 Draws a registered chart kind inside the current VizFigure.
-\NewDocumentCommand \SemioVizChart { m O{} } { \semio_viz_chart:nn {#1} {#2} }
-% 🧪 Gallery helper: mark primitive or chart kind on the demo table.
+% 🧪 \SemioVizDemo{name}: mark primitive or catalogue chart kind on its own demo table.
 \NewDocumentCommand \SemioVizDemo { m } { \semio_viz_demo:n {#1} }
-%endregion ChartKinds
+%endregion 🔖️Demo
 
 \ExplSyntaxOff
 
-\RequirePackage{semio-viz-charts}
+%region 🔖️Bundle
+% 📦 Load order is fixed here: grammar entry point, layout kernels, namespaces (taxonomy 76), then the generated catalogue.
+\RequirePackage{semio-viz-plot}
+\RequirePackage{semio-viz-hierarchy}
+\RequirePackage{semio-viz-network}
+\RequirePackage{semio-viz-flow}
+\RequirePackage{semio-viz-geo}
+\RequirePackage{semio-viz-spatial}
+\RequirePackage{semio-viz-charts-bar}
+\RequirePackage{semio-viz-charts-line}
+\RequirePackage{semio-viz-charts-area}
+\RequirePackage{semio-viz-charts-scatter}
+\RequirePackage{semio-viz-charts-financial}
+\RequirePackage{semio-viz-charts-timeline}
+\RequirePackage{semio-viz-charts-dashboard}
+\RequirePackage{semio-viz-charts-funnel}
+\RequirePackage{semio-viz-charts-distribution}
+\RequirePackage{semio-viz-charts-statistical}
+\RequirePackage{semio-viz-charts-polar}
+\RequirePackage{semio-viz-matrix-heatmap}
+\RequirePackage{semio-viz-matrix-correlation}
+\RequirePackage{semio-viz-table}
+\RequirePackage{semio-viz-hierarchy-tree}
+\RequirePackage{semio-viz-hierarchy-dendrogram}
+\RequirePackage{semio-viz-hierarchy-treemap}
+\RequirePackage{semio-viz-hierarchy-partition}
+\RequirePackage{semio-viz-hierarchy-pack}
+\RequirePackage{semio-viz-network-graph}
+\RequirePackage{semio-viz-network-matrix}
+\RequirePackage{semio-viz-network-arc}
+\RequirePackage{semio-viz-network-chord}
+\RequirePackage{semio-viz-network-bundling}
+\RequirePackage{semio-viz-flow-sankey}
+\RequirePackage{semio-viz-flow-alluvial}
+\RequirePackage{semio-viz-flow-parallelsets}
+\RequirePackage{semio-viz-geo-map}
+\RequirePackage{semio-viz-geo-projection}
+\RequirePackage{semio-viz-geo-choropleth}
+\RequirePackage{semio-viz-geo-symbols}
+\RequirePackage{semio-viz-geo-contours}
+\RequirePackage{semio-viz-geo-routes}
+\RequirePackage{semio-viz-diagram-flowchart}
+\RequirePackage{semio-viz-diagram-uml}
+\RequirePackage{semio-viz-diagram-architecture}
+\RequirePackage{semio-viz-diagram-process}
+\RequirePackage{semio-viz-diagram-concept}
+\RequirePackage{semio-viz-infographic}
+\RequirePackage{semio-viz-interactionstate}
+\RequirePackage{semio-viz-scientific-field}
+\RequirePackage{semio-viz-scientific-surface}
+\RequirePackage{semio-viz-scientific-signal}
+\RequirePackage{semio-viz-scientific-physics}
+\RequirePackage{semio-viz-scientific-chemistry}
+\RequirePackage{semio-viz-scientific-biology}
+\RequirePackage{semio-viz-scientific-engineering}
+\RequirePackage{semio-viz-scientific-mathematics}
+\RequirePackage{semio-viz-scientific-geometry}
+\RequirePackage{semio-viz-scientific-3d}
+\RequirePackage{semio-viz-showcase}
+\RequirePackage{semio-viz-text}
+\RequirePackage{semio-viz-domain}
+\RequirePackage{semio-viz-catalog-labels}
+\RequirePackage{semio-viz-catalog}
+%endregion 🔖️Bundle

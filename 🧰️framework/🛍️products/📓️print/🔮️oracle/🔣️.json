@@ -1,0 +1,1420 @@
+{
+  "$schema": "../../../🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧪️ The print product's contribution to the repository test platform. Every entry is a test-only reference implementation for one part of the print visualization grammar; the subject is the LaTeX kernel under latex/, probed numerically through semio-viz-probe.sty. Owned by the TESTS-HARNESS agent of ticket PRINT-VISUALIZATION-LIBRARY; ask there before adding an entry.",
+  "oracles": [
+    {
+      "id": "ajv",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "ajv",
+      "version": "8.20.0",
+      "capabilities": [
+        "viz-catalog-coverage",
+        "viz-catalog-schema",
+        "viz-catalog-validity",
+        "viz-probe-schema",
+        "viz-schema-conformance",
+        "viz-taxonomy-schema"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://ajv.js.org",
+      "rationale": "The JSON Schema 2020-12 reference that validates the machine catalogue and every ProbeRecord against the print schema. The schema is the specification; ajv is what makes 'valid' a measured claim rather than a hand-read one. Registered here because print's catalogue and probe cases are the first to hold a schema as a normative contract.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "ajv",
+        "implementation": "ajv",
+        "version": "8.20.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "productionDebt": {
+        "reachableFrom": [
+          "🧰️framework/🛍️products/💻️os/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🧪️tests/🧪️transaction-process-ownership/🧪️test/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/↪️rust-divergence-callback/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/♻️taxonomy-pattern-compiler-reuse/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/✍️rust-writable-path-authority/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/❄️frozen-markdown-coordinates/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🌐️registry-import-language/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🍃️artifact-support-leaf-authority/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎟️reference-coverage-selection/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🏺️historical-package-owner-identity/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/👀️readme-reviewed-fixture-inputs/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/💠️inventory-artifact-shards/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/💥️nested-cargo-collision-authority/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📈️reference-coordinate-progress/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📍️draw-destination-observation/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔎️json-reference-owner-lookup/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔏️path-emoji-statutes/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔖️readme-current-source-revision/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔗️markdown-inline-references/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔤️taxonomy-leading-grapheme/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🕰️historical-json-source-encoding/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🗺️testing-readme-coordinates/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚚️readme-move-source-authority/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛟️transaction-recovery-authority/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛤️typescript-path-collection/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛫️preflight-reference-basis/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟢️readme-current-source-activation/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥒️gherkin-description-inline-code/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥤️rust-finite-target-consumption/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧲️rust-physical-reference-context/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🪢️cargo-provider-binding/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🪶️artifact-empty-facet-authoring/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🫙️artifact-empty-facet-authority/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📋️mutation-inventory/🎭️source-roster-roles/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🔬️index.test.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧫️fixtures/📜️script.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/📤️macro-exports/📜️script.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🛂️mutation-source-authority/📜️script.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️store.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-complete.test.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🚀️launch.test.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📤️return/🟦️.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌲️fixture-projection/📜️script.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📜️script.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📥️poll/🏘️composition/🟦️.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🟦️.tsx",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🔬️index.test.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🚪️opening.test.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧯️router-plugin-faults.test.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🩺️window-fault.test.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧪️tests/🧩️package-integration.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔎️scalar-witness/📜️script.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/📜️script.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📦️packages/🟨️javascript/📜️script.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📦️packages/🟨️javascript/🧪️tests/🟨️.js",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📦️packages/🟨️javascript/🧪️tests/🧪️flow-host.test.js",
+          "🧰️framework/🔨️modules/🗺️surface/🧪️tests/🟦️.ts",
+          "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🧪️tests/🟦️.ts",
+          "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌲️built/📜️script.ts",
+          "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/📜️script.ts",
+          "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/♻️retirement/🌲️tree/📜️script.ts",
+          "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx",
+          "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🟦️.ts",
+          "🧰️framework/🔨️modules/🕸️graph/🧪️tests/🟦️.ts",
+          "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/📜️script.ts",
+          "🧰️framework/🔨️modules/🎯️action-bus/🧹️wire-retirement/📜️script.ts",
+          "🧰️framework/🔨️modules/🎭️actor/📃️page/🟦️.ts",
+          "🧰️framework/🔨️modules/🎭️actor/📤️return/🟦️.ts",
+          "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
+          "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts",
+          "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts",
+          "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts",
+          "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🟦️.ts",
+          "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/🟦️.ts",
+          "🧰️framework/🔨️modules/🌱️value/💾️resident/📜️script.ts",
+          "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/📜️script.ts",
+          "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧫️fixtures/📜️script.ts",
+          "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+          "🌎️hub/📦️packages/🟦️typescript/🤝️index.test.ts",
+          "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+          "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/📜️script.ts",
+          "✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript/📜️script.ts",
+          "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/📜️script.ts",
+          "✏️s/🔌️plugins/🗒️note/🧪️action-cohort/🧪️component.test.ts",
+          "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📜️script.ts",
+          "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📜️script.ts",
+          "✏️s/🔌️plugins/🏭️process/📦️packages/🟦️typescript/📜️script.ts",
+          "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/📜️script.ts",
+          "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/📜️script.ts",
+          "✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript/📜️script.ts",
+          "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/📜️script.ts",
+          "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/📜️script.ts"
+        ],
+        "owner": "🧰️framework/🛍️products/💻️os",
+        "plan": "ajv was already the repository's JSON Schema validator in production and in dozens of unmanaged tests long before print registered it as the reference for its own schema. Print created none of these paths and can retire none of them; they shrink as each listed owner either moves its validation behind the framework's own schema layer or moves its test onto the platform, where the import is test-owned by construction. Shrink-only: no path may be added to this list, and print's own tree appears nowhere in it."
+      }
+    },
+    {
+      "id": "d3-array",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "d3-array",
+      "version": "3.2.4",
+      "capabilities": [
+        "network-graph-algorithms",
+        "network-placement-layouts",
+        "network-placement-layouts-twin",
+        "viz-array-extent",
+        "viz-array-ticks",
+        "viz-charts-distribution",
+        "viz-charts-statistical",
+        "viz-domain-families",
+        "viz-transform-bin",
+        "viz-transform-bin-twin",
+        "viz-transform-filter",
+        "viz-transform-fold",
+        "viz-transform-group",
+        "viz-transform-join",
+        "viz-transform-kde",
+        "viz-transform-normalize",
+        "viz-transform-pivot",
+        "viz-transform-quantile",
+        "viz-transform-rollup",
+        "viz-transform-sort",
+        "viz-transform-statistics",
+        "viz-transform-statistics-twin",
+        "viz-transform-window"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "ISC",
+      "testOnly": true,
+      "homepage": "https://d3js.org/d3-array/",
+      "rationale": "The reference for the aggregation half of semio-viz-transform: histogram thresholds (Sturges, Scott, Freedman-Diaconis), the R-7 quantile definition, group/rollup semantics and the tick step algorithm shared with d3-scale.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "d3",
+        "implementation": "d3-array",
+        "version": "3.2.4"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "d3-chord",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "d3-chord",
+      "version": "3.0.1",
+      "capabilities": [
+        "network-chord-layout",
+        "viz-layout-chord",
+        "viz-network-chord",
+        "viz-shape-link-twin",
+        "network-chord-layout-twin"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "ISC",
+      "testOnly": true,
+      "homepage": "https://d3js.org/d3-chord/",
+      "rationale": "The reference for chord group and ribbon angles from a square matrix, including padAngle distribution and the sort orders.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "d3",
+        "implementation": "d3-chord",
+        "version": "3.0.1"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "d3-color",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "d3-color",
+      "version": "3.1.0",
+      "capabilities": [
+        "viz-colour-parse",
+        "viz-theme-palettes",
+        "viz-colour-space",
+        "viz-theme-grayscale-safe",
+        "viz-theme-palette",
+        "viz-scale-color-twin"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "ISC",
+      "testOnly": true,
+      "homepage": "https://d3js.org/d3-color/",
+      "rationale": "The reference for colour parsing and for the rgb/hsl/lab/hcl conversions the grayscale-safe encodings of semio-viz-theme depend on.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "d3",
+        "implementation": "d3-color",
+        "version": "3.1.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "d3-contour",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "d3-contour",
+      "version": "4.0.2",
+      "capabilities": [
+        "viz-layout-contour",
+        "viz-layout-density",
+        "viz-scientific-field",
+        "viz-layout-contour-twin"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "ISC",
+      "testOnly": true,
+      "homepage": "https://d3js.org/d3-contour/",
+      "rationale": "The reference for marching squares over a value grid and for the blurred-grid 2D density estimator, both of which semio-viz-spatial reimplements. Threshold selection and ring winding are part of the compared projection.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "d3",
+        "implementation": "d3-contour",
+        "version": "4.0.2"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "d3-delaunay",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "d3-delaunay",
+      "version": "6.0.4",
+      "capabilities": [
+        "viz-spatial-delaunay",
+        "viz-spatial-hull",
+        "viz-spatial-layout",
+        "viz-spatial-voronoi",
+        "viz-spatial-delaunay-twin",
+        "viz-spatial-hull-twin"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "ISC",
+      "testOnly": true,
+      "homepage": "https://github.com/d3/d3-delaunay",
+      "rationale": "The reference for Delaunay triangulation, its Voronoi dual and the convex hull of semio-viz-spatial. A different engine family from d3's own numerics (it sits on Delaunator), which is why it counts independently.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "delaunator",
+        "implementation": "d3-delaunay",
+        "version": "6.0.4"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "d3-dsv",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "d3-dsv",
+      "version": "3.0.1",
+      "capabilities": [
+        "viz-data-csv",
+        "viz-data-table"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "ISC",
+      "testOnly": true,
+      "homepage": "https://d3js.org/d3-dsv/",
+      "rationale": "The RFC 4180 reference for SemioVizTableFromCSV: quoting, embedded separators and newlines, and type inference boundaries.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "d3",
+        "implementation": "d3-dsv",
+        "version": "3.0.1"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "d3-force",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "d3-force",
+      "version": "3.0.0",
+      "capabilities": [
+        "network-force-layout",
+        "viz-layout-force",
+        "viz-network-layout",
+        "network-force-layout-twin"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "ISC",
+      "testOnly": true,
+      "homepage": "https://d3js.org/d3-force/",
+      "rationale": "The reference for the force simulation of semio-viz-network-graph. Comparable only under a fixed iteration count and the phyllotaxis initial placement d3 itself uses, with no random jitter, which is exactly how the subject is specified. Compared under the coarse profile because a Barnes-Hut approximation is not bit-reproducible across arithmetic.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "d3",
+        "implementation": "d3-force",
+        "version": "3.0.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "productionDebt": {
+        "reachableFrom": [
+          "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript/📜️script.ts"
+        ],
+        "owner": "♻️mit-bestand/📋️bericht",
+        "plan": "Already production-reachable when print registered the package as its force-layout reference. That report script builds a figure with d3-force at build time; the fix is to precompute the layout into a committed data file so the runtime keeps no d3 dependency. Shrink-only: no new path may be added to this list."
+      }
+    },
+    {
+      "id": "d3-format",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "d3-format",
+      "version": "3.1.0",
+      "capabilities": [
+        "viz-annotation-label",
+        "viz-format-number",
+        "viz-guide-tick-format",
+        "viz-format-number-twin"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "ISC",
+      "testOnly": true,
+      "homepage": "https://d3js.org/d3-format/",
+      "rationale": "The published grammar SemioVizFormat implements a subset of: fill/align/sign/symbol/zero/width/comma/precision and the d f e g s % r types. The grammar is the specification, so agreement is the whole contract inside the subset.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "d3",
+        "implementation": "d3-format",
+        "version": "3.1.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "d3-geo",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "d3-geo",
+      "version": "3.1.1",
+      "capabilities": [
+        "geo-projection",
+        "viz-coordinate-geographic",
+        "viz-geo-choropleth",
+        "viz-geo-measure",
+        "viz-geo-path",
+        "viz-geo-projection",
+        "geo-projection-twin",
+        "viz-geo-path-twin"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "ISC",
+      "testOnly": true,
+      "homepage": "https://d3js.org/d3-geo/",
+      "rationale": "The reference for the projections, spherical area/centroid/distance measures and clipping of semio-viz-geo-projection. The projection formulas are published mathematics, so agreement inside the claimed projection set is the whole contract.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "d3",
+        "implementation": "d3-geo",
+        "version": "3.1.1"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "d3-hexbin",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "d3-hexbin",
+      "version": "0.2.2",
+      "capabilities": [
+        "viz-layout-hexbin",
+        "viz-spatial-hexbin",
+        "viz-spatial-hexbin-twin"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "homepage": "https://github.com/d3/d3-hexbin",
+      "rationale": "The reference for hexagonal binning: bin centre assignment for a given radius and the canonical hexagon outline.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "d3",
+        "implementation": "d3-hexbin",
+        "version": "0.2.2"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "d3-hierarchy",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "d3-hierarchy",
+      "version": "3.1.2",
+      "capabilities": [
+        "viz-hierarchy-aggregates",
+        "viz-hierarchy-layout",
+        "viz-hierarchy-pack",
+        "viz-hierarchy-partition",
+        "viz-hierarchy-stratify",
+        "viz-hierarchy-tree",
+        "viz-hierarchy-treemap",
+        "viz-layout-cluster",
+        "viz-layout-dendrogram",
+        "viz-layout-pack",
+        "viz-layout-partition",
+        "viz-layout-tree",
+        "viz-layout-treemap",
+        "viz-hierarchy-aggregates-twin",
+        "viz-hierarchy-pack-twin",
+        "viz-hierarchy-partition-twin",
+        "viz-hierarchy-sunburst-twin",
+        "viz-hierarchy-tree-twin",
+        "viz-hierarchy-cluster-twin",
+        "viz-hierarchy-treemap-twin"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "ISC",
+      "testOnly": true,
+      "homepage": "https://d3js.org/d3-hierarchy/",
+      "rationale": "The reference for every hierarchy layout of semio-viz-hierarchy, including the six treemap tilings, the Reingold-Tilford/Buchheim tidy tree and enclosing-circle packing. Deterministic for a fixed input order.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "d3",
+        "implementation": "d3-hierarchy",
+        "version": "3.1.2"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "d3-interpolate",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "d3-interpolate",
+      "version": "3.0.1",
+      "capabilities": [
+        "viz-interpolate-array",
+        "viz-interpolate-colour",
+        "viz-interpolate-kinds",
+        "viz-interpolate-number",
+        "viz-scale-color-twin",
+        "viz-scale-interpolator",
+        "viz-theme-palettes"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "ISC",
+      "testOnly": true,
+      "homepage": "https://d3js.org/d3-interpolate/",
+      "rationale": "The reference for the interpolators sequential and diverging scales are built on, including the colour-space interpolations semio-viz-theme claims.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "d3",
+        "implementation": "d3-interpolate",
+        "version": "3.0.1"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "d3-path",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "d3-path",
+      "version": "3.1.0",
+      "capabilities": [
+        "viz-mark-emission",
+        "viz-path-arc-to",
+        "viz-path-serialization"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "ISC",
+      "testOnly": true,
+      "homepage": "https://d3js.org/d3-path/",
+      "rationale": "The path builder d3-shape emits through; the reference for arc/arcTo/quadratic/bezier segment construction that semio-viz-mark's path emission must agree with numerically.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "d3",
+        "implementation": "d3-path",
+        "version": "3.1.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "d3-quadtree",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "d3-quadtree",
+      "version": "3.0.1",
+      "capabilities": [
+        "viz-spatial-quadtree"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "ISC",
+      "testOnly": true,
+      "homepage": "https://d3js.org/d3-quadtree/",
+      "rationale": "The spatial index d3-force's collision and many-body forces are built on, and the reference for the one thing a quadtree makes observable from outside: the square it covers, which grows by doubling towards a point that falls outside it, and the nearest neighbour a query finds within a radius. semio-viz-spatial's own quadtree is what the collision layouts stand on, so the two have to agree on the extent and not only on the answers. Test-only, never reachable from production code, and already present in the workspace as a dependency of the d3-force oracle; it is declared here so it is a surveyed dependency and not an accident of hoisting.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "d3",
+        "implementation": "d3-quadtree",
+        "version": "3.0.1"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "d3-regression",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "d3-regression",
+      "version": "1.3.10",
+      "capabilities": [
+        "viz-charts-scatter",
+        "viz-statistical-regression",
+        "viz-transform-regression",
+        "viz-transform-statistics-twin"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "homepage": "https://github.com/HarryStevens/d3-regression",
+      "rationale": "The reference for the regression transform of semio-viz-transform (linear, exponential, logarithmic, quadratic, polynomial, power, LOESS). An independent engine family: it is not part of d3 core and shares no numerics with it.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "d3-regression",
+        "implementation": "d3-regression",
+        "version": "1.3.10"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "d3-sankey",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "d3-sankey",
+      "version": "0.12.3",
+      "capabilities": [
+        "flow-sankey-layout",
+        "viz-flow-layout",
+        "viz-layout-sankey",
+        "flow-sankey-layout-twin"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "homepage": "https://github.com/d3/d3-sankey",
+      "rationale": "The reference for the Sankey node depth assignment, iterative relaxation and link path geometry of semio-viz-flow-sankey. Iterative, so it is compared under the coarse profile at a fixed iteration count.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "d3",
+        "implementation": "d3-sankey",
+        "version": "0.12.3"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "d3-scale",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "d3-scale",
+      "version": "4.0.2",
+      "capabilities": [
+        "viz-annotation",
+        "viz-charts-bar",
+        "viz-charts-financial",
+        "viz-charts-polar",
+        "viz-charts-statistical",
+        "viz-guide-axis",
+        "viz-guide-grid",
+        "viz-guide-legend",
+        "viz-matrix-heatmap",
+        "viz-plot-encoding",
+        "viz-plot-grammar",
+        "viz-probe-round-trip",
+        "viz-scale-band",
+        "viz-scale-color",
+        "viz-scale-color-twin",
+        "viz-scale-continuous",
+        "viz-scale-continuous-twin",
+        "viz-scale-discrete",
+        "viz-scale-discrete-twin",
+        "viz-scale-diverging",
+        "viz-scale-identity",
+        "viz-scale-linear",
+        "viz-scale-log",
+        "viz-scale-nice",
+        "viz-scale-ordinal",
+        "viz-scale-point",
+        "viz-scale-pow",
+        "viz-scale-quantile",
+        "viz-scale-quantize",
+        "viz-scale-sequential",
+        "viz-scale-sqrt",
+        "viz-scale-symlog",
+        "viz-scale-temporal",
+        "viz-scale-temporal-twin",
+        "viz-scale-threshold",
+        "viz-scale-ticks",
+        "viz-theme-palettes"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "ISC",
+      "testOnly": true,
+      "homepage": "https://d3js.org/d3-scale/",
+      "rationale": "The reference implementation of the scale grammar semio-viz-scale reimplements in expl3: domain/range mapping, nice/clamp, band and point padding and alignment, quantile and threshold breakpoints, and the tick algorithm. Deterministic, pure, offline.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "d3",
+        "implementation": "d3-scale",
+        "version": "4.0.2"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "d3-scale-chromatic",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "d3-scale-chromatic",
+      "version": "3.1.0",
+      "capabilities": [
+        "viz-scheme-categorical",
+        "viz-scheme-diverging",
+        "viz-scheme-sequential",
+        "viz-theme-scheme"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "ISC",
+      "testOnly": true,
+      "homepage": "https://d3js.org/d3-scale-chromatic/",
+      "rationale": "The canonical colour schemes semio-viz-theme names (category10, viridis, RdBu). The subject reads the same scheme tables through design tokens, so the oracle adjudicates interpolation and swatch selection, not palette taste.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "d3",
+        "implementation": "d3-scale-chromatic",
+        "version": "3.1.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "d3-shape",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "d3-shape",
+      "version": "3.2.0",
+      "capabilities": [
+        "viz-charts-dashboard",
+        "viz-charts-line",
+        "viz-charts-polar",
+        "viz-composition-layer",
+        "viz-coordinate-polar",
+        "viz-layout-stack",
+        "viz-mark-path",
+        "viz-mark-primitive",
+        "viz-shape-arc",
+        "viz-shape-area",
+        "viz-shape-curve",
+        "viz-shape-curves",
+        "viz-shape-line",
+        "viz-shape-link",
+        "viz-shape-pie",
+        "viz-shape-pie-layout",
+        "viz-shape-ribbon",
+        "viz-shape-symbol",
+        "viz-transform-stack",
+        "viz-transform-stack-twin",
+        "viz-shape-arc-twin",
+        "viz-shape-curves-twin",
+        "viz-shape-link-twin",
+        "viz-shape-symbol-twin"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "ISC",
+      "testOnly": true,
+      "homepage": "https://d3js.org/d3-shape/",
+      "rationale": "The reference for semio-viz-shape's generators and for every curve interpolator the grammar claims (basis, cardinal, catmull-rom, monotone, natural, step family) plus the stack offsets and orders of semio-viz-layout. Compared on the sampled control points the probe emits rather than on an SVG path string, so the comparison measures geometry and not serialization.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "d3",
+        "implementation": "d3-shape",
+        "version": "3.2.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "d3-time",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "d3-time",
+      "version": "3.1.0",
+      "capabilities": [
+        "viz-temporal-axis",
+        "viz-time-interval",
+        "viz-time-ticks",
+        "viz-scale-temporal-twin"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "ISC",
+      "testOnly": true,
+      "homepage": "https://d3js.org/d3-time/",
+      "rationale": "The reference for calendar interval arithmetic behind temporal scales: floor/ceil/offset/range per interval and the tick interval chosen for a time domain.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "d3",
+        "implementation": "d3-time",
+        "version": "3.1.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "d3-time-format",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "d3-time-format",
+      "version": "4.1.0",
+      "capabilities": [
+        "viz-format-time",
+        "viz-guide-time-axis",
+        "viz-format-time-twin"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "ISC",
+      "testOnly": true,
+      "homepage": "https://d3js.org/d3-time-format/",
+      "rationale": "The reference for SemioVizTimeFormat's strftime subset and for its en/de locale tables. Compared on UTC instants only: a local-timezone comparison would measure the machine, not the implementation.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "d3",
+        "implementation": "d3-time-format",
+        "version": "4.1.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "dagre",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "dagre",
+      "version": "0.8.5",
+      "capabilities": [
+        "network-layered-layout",
+        "viz-diagram-layout",
+        "viz-layout-dag",
+        "network-layered-layout-twin"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/dagrejs/dagre",
+      "rationale": "d3 has no Sugiyama layered layout, so the DAG layering, ordering and coordinate assignment of semio-viz-diagram-flowchart is adjudicated by dagre instead. Compared on the layer index and the relative ordering within a layer, which are the specified outputs; absolute coordinates depend on node sizing conventions that are ours.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "dagre",
+        "implementation": "dagre",
+        "version": "0.8.5"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "productionDebt": {
+        "reachableFrom": [
+          "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/📦️packages/🟨️javascript/🧪️tests/🟨️.js"
+        ],
+        "owner": "✏️s/🔌️plugins/🎬️sequence",
+        "plan": "Already present when print registered dagre as its Sugiyama reference: that file is a test living outside the canonical owner-root test tree, so the scan classifies it as production source. It disappears when the sequence editor's tests move onto the platform. Shrink-only."
+      }
+    },
+    {
+      "id": "fft-js",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "fft.js",
+      "version": "4.0.4",
+      "capabilities": [
+        "viz-scientific-signal"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://d3js.org/d3-shape/",
+      "rationale": "The reference for semio-viz-shape's generators and for every curve interpolator the grammar claims (basis, cardinal, catmull-rom, monotone, natural, step family) plus the stack offsets and orders of semio-viz-layout. Compared on the sampled control points the probe emits rather than on an SVG path string, so the comparison measures geometry and not serialization.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "d3",
+        "implementation": "d3-shape",
+        "version": "3.2.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "gl-matrix",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "gl-matrix",
+      "version": "3.4.3",
+      "capabilities": [
+        "viz-scientific-3d"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://d3js.org/d3-shape/",
+      "rationale": "The reference for semio-viz-shape's generators and for every curve interpolator the grammar claims (basis, cardinal, catmull-rom, monotone, natural, step family) plus the stack offsets and orders of semio-viz-layout. Compared on the sampled control points the probe emits rather than on an SVG path string, so the comparison measures geometry and not serialization.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "d3",
+        "implementation": "d3-shape",
+        "version": "3.2.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "jstat",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "jstat",
+      "version": "1.9.6",
+      "capabilities": [
+        "viz-scientific-distributions"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://d3js.org/d3-shape/",
+      "rationale": "The reference for semio-viz-shape's generators and for every curve interpolator the grammar claims (basis, cardinal, catmull-rom, monotone, natural, step family) plus the stack offsets and orders of semio-viz-layout. Compared on the sampled control points the probe emits rather than on an SVG path string, so the comparison measures geometry and not serialization.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "d3",
+        "implementation": "d3-shape",
+        "version": "3.2.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "markdown-it",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "markdown-it",
+      "version": "14.3.0",
+      "capabilities": [
+        "viz-taxonomy-coverage",
+        "viz-taxonomy-leaf-parse",
+        "viz-taxonomy-parse",
+        "viz-taxonomy-section-parse",
+        "viz-taxonomy-structure"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/markdown-it/markdown-it",
+      "rationale": "The CommonMark reference used to parse the visualization taxonomy markdown into sections and leaves independently of print's own line-based parser, so coverage is measured against a real Markdown reading of the taxonomy.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "markdown-it",
+        "implementation": "markdown-it",
+        "version": "14.3.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "productionDebt": {
+        "reachableFrom": [
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🍃️artifact-support-leaf-authority/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥒️gherkin-description-inline-code/🟦️.ts",
+          "🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🟦️.ts"
+        ],
+        "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+        "plan": "Three files already parsed CommonMark with markdown-it before print registered it as the taxonomy reference. Two are repo-library adapters whose owner must move the import into its own oracle host; the third is print's legacy pipeline verification, which the platform case 🧪️tests/taxonomy-coverage supersedes. Shrink-only."
+      }
+    },
+    {
+      "id": "mathjs",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "mathjs",
+      "version": "14.0.0",
+      "capabilities": [
+        "viz-scientific-function-sampling"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://d3js.org/d3-shape/",
+      "rationale": "The reference for semio-viz-shape's generators and for every curve interpolator the grammar claims (basis, cardinal, catmull-rom, monotone, natural, step family) plus the stack offsets and orders of semio-viz-layout. Compared on the sampled control points the probe emits rather than on an SVG path string, so the comparison measures geometry and not serialization.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "d3",
+        "implementation": "d3-shape",
+        "version": "3.2.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "print-viz-kernel-twin",
+      "kind": "cross-semio-implementation",
+      "ecosystem": "javascript",
+      "package": "@semio-tech/print-viz-kernel",
+      "version": "workspace",
+      "capabilities": [
+        "viz-kernel-twin-parity",
+        "viz-plot-grammar"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1"
+      ],
+      "license": "LGPL-3.0-or-later",
+      "testOnly": true,
+      "homepage": "https://github.com/usalu/semio",
+      "rationale": "The second implementation of the semio visualization kernel, written in TypeScript against the same specification as the LaTeX packages and adjudicated module by module against d3 in its own harness. It is registered as a SUPPLEMENT, never as independent evidence: it shares this repository, this specification and these authors with the subject it is compared to. What it buys is the one comparison d3 cannot make - the two copies of the kernel drifting apart, including where d3 has no opinion.",
+      "engine": {
+        "family": "semio",
+        "implementation": "@semio-tech/print-viz-kernel",
+        "version": "workspace"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "suncalc",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "suncalc",
+      "version": "1.9.0",
+      "capabilities": [
+        "diagram-solar-position"
+      ],
+      "comparisonProfiles": [
+        "viz-probe-v1",
+        "viz-probe-coarse-v1",
+        "viz-probe-exact-v1",
+        "floating-point-v1",
+        "ordered-json-v1"
+      ],
+      "license": "BSD-2-Clause",
+      "testOnly": true,
+      "homepage": "https://d3js.org/d3-shape/",
+      "rationale": "The reference for semio-viz-shape's generators and for every curve interpolator the grammar claims (basis, cardinal, catmull-rom, monotone, natural, step family) plus the stack offsets and orders of semio-viz-layout. Compared on the sampled control points the probe emits rather than on an SVG path string, so the comparison measures geometry and not serialization.",
+      "hostPath": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+      "engine": {
+        "family": "d3",
+        "implementation": "d3-shape",
+        "version": "3.2.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    }
+  ],
+  "noOracleDecisions": [
+    {
+      "id": "composition-geometry",
+      "capabilities": [
+        "viz-composition"
+      ],
+      "rationale": "d3 has no composition layer: nothing in it concatenates frames, places insets or lays out dashboard cells, and no other credible library computes the sub-rectangles semio-viz-composition hands to a body. The arithmetic is therefore specified in the feature — cursor advance by width plus gap, grid cell from column and row slots with spans consuming slots, inset placed verbatim — and the probe is compared against those written rectangles.",
+      "substitutes": [
+        "specification-vectors"
+      ]
+    },
+    {
+      "id": "critical-path-method",
+      "capabilities": [
+        "diagram-gantt-cpm"
+      ],
+      "rationale": "No npm library in the approved registry implements the critical path method over a task table; d3 has no scheduling module. Earliest/latest start and finish, float and the critical set are therefore computed by an independent second implementation in the adapter (forward and backward pass over the same dependency table) and asserted as specification vectors. Covers no runtime mutation.",
+      "substitutes": [
+        "specification-vectors"
+      ]
+    },
+    {
+      "id": "diagram-edge-routing",
+      "capabilities": [
+        "diagram-routing"
+      ],
+      "rationale": "Orthogonal face-port routing with a mid step, straight centre-ray intersection and curved bend routing are specified geometrically in the feature; no third-party library exposes the same routing model, so the waypoints are asserted as specification vectors. Covers no runtime mutation.",
+      "substitutes": [
+        "specification-vectors"
+      ]
+    },
+    {
+      "id": "diagram-grid-placement",
+      "capabilities": [
+        "diagram-layout-lanes"
+      ],
+      "rationale": "Declared grid placement (row/col columns, lanes, direction transpose) is a semio layout rule with no third-party reference; the cell rectangles are written out in the feature as specification vectors. Covers no runtime mutation.",
+      "substitutes": [
+        "specification-vectors"
+      ]
+    },
+    {
+      "id": "diagram-sequence-messages",
+      "capabilities": [
+        "diagram-sequence"
+      ],
+      "rationale": "UML sequence-diagram geometry (lifelines, activations, message y-positions, self calls) has no numeric third-party reference; the feature writes the positions out as specification vectors. Covers no runtime mutation.",
+      "substitutes": [
+        "specification-vectors"
+      ]
+    },
+    {
+      "id": "domain-families",
+      "capabilities": [
+        "viz-domain-families"
+      ],
+      "rationale": "No library renders a gear train, a cause-effect diagram, a constituency cartogram or a circuit mesh, and none defines when two drawings count as different, so the sixteen long-tail domain families of semio-viz-text and semio-viz-domain have no third-party reference. The specification is written in the feature instead: a family that owns n catalogue kinds must yield n non-empty geometry streams with n distinct signatures when every kind is run with exactly the option set the catalogue holds, which is architecture section 4's rule that two kinds of one family with different options must render differently. The one part a third party does define, the term glyph scale of section 13, is compared against d3-array in the same case.",
+      "substitutes": [
+        "specification-vectors"
+      ]
+    },
+    {
+      "id": "facet-grid",
+      "capabilities": [
+        "viz-facet"
+      ],
+      "rationale": "d3 does not facet. Vega-Lite does, but its panel arithmetic is bound to its own view-composition sizing model rather than to a published algorithm, so comparing against it would measure a different specification. The panel rectangles — block minus gaps divided by the implied column and row counts, filled left to right and top to bottom — are written out in the feature instead, and sharedX/sharedY are asserted as which panels carry an axis rather than as a movement.",
+      "substitutes": [
+        "specification-vectors"
+      ]
+    },
+    {
+      "id": "kernel-density",
+      "capabilities": [
+        "viz-transform-kde",
+        "viz-transform-kde-twin"
+      ],
+      "rationale": "d3 ships no kernel density estimator at version 3 (d3-contour offers only 2D grid density). The kde transform is therefore checked against an independent second implementation written in the adapter from the textbook estimator (sum of kernels over the sample divided by n*h) on the feature vectors, and the bandwidth rule (Silverman) is asserted as a specification vector. This decision covers no runtime mutation.",
+      "substitutes": [
+        "specification-vectors",
+        "independent-implementations"
+      ]
+    },
+    {
+      "id": "l-system",
+      "capabilities": [
+        "geometry-tilings-fractals"
+      ],
+      "rationale": "Tilings, Penrose substitution, hyperbolic tilings and L-system turtle drawings have no third-party numeric reference; vertex counts and sample points are specification vectors in the feature. Covers no runtime mutation.",
+      "substitutes": [
+        "specification-vectors"
+      ]
+    },
+    {
+      "id": "projectile-integration",
+      "capabilities": [
+        "viz-scientific-physics"
+      ],
+      "rationale": "No package in the registry integrates an ordinary differential equation: mathjs evaluates expressions and jStat samples distributions, and d3-force steps a damped velocity-Verlet simulation of a different problem. The velocity-Verlet projectile and the fourth-order Runge-Kutta oscillator are therefore adjudicated by an independent second implementation written in the adapter over the same initial conditions, step size and step count, sharing only the published formula with the l3fp subject, and by the closed-form parabola and analytic circle the same scenarios assert. Covers no runtime mutation.",
+      "substitutes": [
+        "specification-vectors"
+      ]
+    },
+    {
+      "id": "render-scene",
+      "capabilities": [
+        "viz-render-scene-graph"
+      ],
+      "rationale": "The TypeScript twin of the kernel (🔨️modules/📊️viz-kernel) renders a taxonomy §79 chart specification into the dependency-free 2D scene graph of 🧰️framework/🔨️modules/◻️2d and, from the same resolved item list, into TikZ source text. Nothing in d3 adjudicates that stage: d3 has no scene graph, no TikZ emitter and no notion of a chart specification — its shape generators stop at a path string, and vega's scenegraph is bound to its own view-composition sizing model rather than to a published algorithm, so comparing against it would measure a different specification. The arithmetic underneath the renderer is separately adjudicated against the registered d3 oracles by the kernel's own differential harness (237 checks over thirteen modules, `bun ./📜️script.ts test` in 📊️viz-kernel/📦️packages/🟦️typescript), so this decision covers only the specification-to-primitive step: the primitive census, the rectangles the scales imply, one TikZ statement per resolved item, and that two option sets of one mark do not render identically.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    },
+    {
+      "id": "rk-field-integration",
+      "capabilities": [
+        "field-integration"
+      ],
+      "rationale": "d3 ships no ODE integrator. d3-force steps a damped velocity-Verlet simulation, which is a different scheme solving a different problem, so it cannot adjudicate a classical fourth-order Runge-Kutta streamline. The integrator is therefore checked against a second RK4 implementation written in the adapter over the same five analytic fields, the same seeds and the same step size; the two programs share only the formula (expl3 fixed point vs IEEE double, macro expansion vs expressions, string switch vs object lookup). Covers no runtime mutation.",
+      "substitutes": [
+        "specification-vectors"
+      ]
+    },
+    {
+      "id": "survival-product-limit",
+      "capabilities": [
+        "viz-scientific-survival"
+      ],
+      "rationale": "jStat carries distributions, not survival analysis: it has no product-limit estimator, no censoring vocabulary and no cumulative hazard, so it cannot adjudicate a Kaplan-Meier curve even though it adjudicates the distribution case. The estimator, its censoring rule and the Nelson-Aalen hazard are therefore checked against an independent second implementation written in the adapter from the published product-limit definition over the same event records. Covers no runtime mutation.",
+      "substitutes": [
+        "specification-vectors"
+      ]
+    },
+    {
+      "id": "table-layout",
+      "capabilities": [
+        "viz-charts-quadrant-table"
+      ],
+      "rationale": "No third-party library lays out quadrant matrices or viz tables the way the semio presets specify (cell = block divided by the declared column and row counts, quadrant labels at the declared anchors). The feature writes the cell rectangles out as specification vectors and the probe is compared against them. Covers no runtime mutation.",
+      "substitutes": [
+        "specification-vectors"
+      ]
+    },
+    {
+      "id": "viz-coordinate",
+      "capabilities": [
+        "viz-coordinate"
+      ],
+      "rationale": "Cartesian, polar, log-polar, ternary/barycentric and parallel coordinate mappings are closed-form formulas written out in the feature; d3 exposes no standalone coordinate-system module (geographic projections are adjudicated separately by d3-geo). Covers no runtime mutation.",
+      "substitutes": [
+        "specification-vectors"
+      ]
+    },
+    {
+      "id": "viz-mark-geometry",
+      "capabilities": [
+        "viz-mark-geometry"
+      ],
+      "rationale": "The fifty-six taxonomy section 0 primitives are semio marks; d3-shape adjudicates the curve, arc, symbol, link and ribbon arithmetic in the shape cases, while the remaining primitives (connectors, regions, annotation glyphs) have no third-party reference and are asserted as specification vectors plus pairwise distinctness. Covers no runtime mutation.",
+      "substitutes": [
+        "specification-vectors"
+      ]
+    },
+    {
+      "id": "viz-timeline-intervals",
+      "capabilities": [
+        "viz-charts-timeline"
+      ],
+      "rationale": "A Gantt-shaped interval timeline has no d3 equivalent: d3 ships scales and shapes, not a lane assignment. Bar x-extents are adjudicated by d3-scale in the scale cases; lane placement is specified in the feature as vectors. Covers no runtime mutation.",
+      "substitutes": [
+        "specification-vectors"
+      ]
+    },
+    {
+      "id": "viz-typeset-appearance",
+      "capabilities": [
+        "viz-render-determinism",
+        "viz-render-theme-parity",
+        "viz-render-language-parity",
+        "viz-render-distinctness"
+      ],
+      "rationale": "No third-party library renders a semio LaTeX document, so nothing can adjudicate what the produced PDF looks like. The exhaustive level therefore asserts SPECIFICATION properties instead: every catalogue kind produces a page in both themes and both languages, the extracted page text matches its committed fixture, the stable hash is reproducible across rebuilds, and two kinds of one family with different options produce different geometry probes. The numeric half of every renderer is separately adjudicated by the registered d3 oracles through the probe protocol, so this decision covers appearance only, never arithmetic.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws",
+        "second-parser"
+      ]
+    },
+    {
+      "id": "showcase-families",
+      "capabilities": [
+        "viz-showcase-families"
+      ],
+      "rationale": "Taxonomy sections 74 to 79 enumerate the library's own capabilities — namespaces, encoding channels, grammar elements and figure facilities — and no third-party library draws a taxonomy of print visualization capabilities, so nothing can adjudicate what a capability figure should look like. The catalogue is therefore the specification: every kind it registers for the nine families of semio-viz-showcase must emit geometry through the probe, and no two kinds of one family may emit the same geometry. The arithmetic underneath every showcase figure — scales, shape generators, stack layouts and data transforms — is separately adjudicated against the registered d3 oracles by the scale, shape, transform and layout cases, so this decision covers presence and distinctness only, never numbers.",
+      "substitutes": [
+        "specification-vectors"
+      ]
+    },
+    {
+      "id": "infographic-kinds",
+      "capabilities": [
+        "viz-infographic-kinds"
+      ],
+      "rationale": "Taxonomy section 44 is the infographic vocabulary — the number card, the badge list, the unit chart and the annotated silhouette — and nothing in the registry draws one: d3 has no infographic module, and no other approved package lays out a badge list or punches a cutaway wedge out of a silhouette. The catalogue is therefore the specification, as it already is for showcase-families: every kind it registers for the four families of semio-viz-infographic must emit geometry through the probe, and no two kinds of one family may emit the same geometry. The numbers underneath — the scale the number card reads, the grid the unit chart wraps into — are separately adjudicated against the registered d3 oracles by the scale and layout cases, so this decision covers presence and distinctness only, never numbers.",
+      "substitutes": [
+        "specification-vectors"
+      ]
+    },
+    {
+      "id": "interactionstate-kinds",
+      "capabilities": [
+        "viz-interactionstate-kinds"
+      ],
+      "rationale": "Taxonomy section 45 depicts on paper what an interactive view does: the overview beside its detail panel, the brush rectangle linking them, one selection frozen on a node-link diagram, the storyboard a transition would have animated through. d3 has interaction behaviours, not depictions of them, and nothing else in the registry lays out an overview-plus-detail pair or draws the ghost of a previous keyframe. The catalogue is therefore the specification: every kind it registers for the three families of semio-viz-interactionstate must emit geometry through the probe, and no two kinds of one family may emit the same geometry. Every number underneath — the scale the overview series is drawn on, the layout the selection diagram is placed by — is adjudicated against the registered d3 oracles by the scale and layout cases, so this decision covers presence and distinctness only, never numbers.",
+      "substitutes": [
+        "specification-vectors"
+      ]
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "viz-probe-v1",
+      "description": "Numeric probe records from a LaTeX subject against an IEEE-double reference. 1e-6 is the resolution expl3 fixed-point arithmetic at millimetre scale actually carries; 1e-9 would measure TeX's arithmetic, not the algorithm.",
+      "tolerance": 0.000001
+    },
+    {
+      "id": "viz-probe-coarse-v1",
+      "description": "Iterative layouts (force, sankey relaxation, contour thresholding) where two correct implementations legitimately differ in the last digits after a fixed iteration count.",
+      "tolerance": 0.001
+    },
+    {
+      "id": "viz-probe-exact-v1",
+      "description": "Probe records whose values are strings or integers: format output, scheme swatches, ordinal domains, layer indices. No tolerance, array order significant."
+    }
+  ],
+  "toleranceProfiles": [
+    {
+      "id": "viz-millimetre",
+      "description": "Print geometry in the millimetre coordinate space of a VizFigure, for cases that declare a measured comparison pipeline rather than a structural projection.",
+      "absoluteLength": 0.0001,
+      "relativeLength": 0.000001,
+      "absoluteArea": 0.0001,
+      "relativeArea": 0.00001,
+      "absoluteVolume": 0.0001,
+      "relativeVolume": 0.00001,
+      "normalizedHausdorffMax": 0.00001,
+      "normalizedCentroidDistanceMax": 0.000001,
+      "maxOverrideFactor": 10
+    }
+  ],
+  "oracleHostPackages": [],
+  "migrationStatus": {
+    "🧰️framework/🛍️products/📓️print": "harness-bootstrapping"
+  }
+}

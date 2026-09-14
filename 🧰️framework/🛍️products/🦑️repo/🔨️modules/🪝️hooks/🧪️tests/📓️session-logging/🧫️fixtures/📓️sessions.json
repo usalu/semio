@@ -1,0 +1,56 @@
+{
+  "_comment": "📓️ One sequence of hook invocations per session, plus the `[logging]` configurations they are replayed under. The config documents are real `📋️config.toml` fragments so the parse and the behaviour are pinned together.",
+  "configs": [
+    { "id": "defaults-log-nothing", "document": "" },
+    { "id": "session-on-standard", "document": "[logging]\nsession = true\noperations = true\nplan = true\ndetail = \"standard\"\n" },
+    { "id": "session-on-minimal", "document": "[logging]\nsession = on\ndetail = 'minimal'\n" },
+    { "id": "session-on-full", "document": "[logging]\nsession = \"yes\"\ndetail = \"full\"\n" },
+    { "id": "session-on-plan-off", "document": "[logging]\nsession = 1\nplan = false\n" },
+    { "id": "session-off-explicitly", "document": "[logging]\nsession = false\ndetail = \"full\"\n" },
+    { "id": "another-section-is-ignored", "document": "[other]\nsession = true\n\n# a comment\n[logging]\nsession = true\n" }
+  ],
+  "sessions": [
+    {
+      "id": "an-agent-session-that-plans-and-is-refused",
+      "client": "claude-code",
+      "invocations": [
+        { "event": "agent.started", "second": "2026-09-06T12:00:00Z", "toolArgs": "", "input": { "session_id": "log-1", "transcript_path": "/logs/log-1.jsonl", "model": "opus-5" } },
+        { "event": "agent.tool.plan.updating.ended", "second": "2026-09-06T12:01:00Z", "toolArgs": "", "input": { "session_id": "log-1", "tool_input": { "todoList": [{ "title": "read", "status": "completed" }, { "title": "write", "status": "in-progress" }] } } },
+        { "event": "agent.tool.terminal.starting", "second": "2026-09-06T12:02:00Z", "toolArgs": "", "input": { "session_id": "log-1", "tool_name": "run_in_terminal", "tool_input": { "command": "git stash" } } },
+        { "event": "agent.tool.plan.updating.ended", "second": "2026-09-06T12:03:00Z", "toolArgs": "", "input": { "session_id": "log-1", "tool_input": { "todoList": [{ "title": "write", "status": "completed" }] } } },
+        { "event": "agent.ended", "second": "2026-09-06T12:04:00Z", "toolArgs": "", "input": { "session_id": "log-1", "report": "done" } }
+      ]
+    },
+    {
+      "id": "a-version-hook-is-never-recorded",
+      "client": "claude-code",
+      "invocations": [
+        { "event": "version.checkpoint.starting", "second": "2026-09-06T12:00:00Z", "toolArgs": "", "input": { "sha": "abc", "message": "a checkpoint" } },
+        { "event": "version.checkpoint.ended", "second": "2026-09-06T12:00:01Z", "toolArgs": "", "input": { "sha": "abc" } },
+        { "event": "version.checkin.starting", "second": "2026-09-06T12:00:02Z", "toolArgs": "", "input": { "sha": "abc" } }
+      ]
+    },
+    {
+      "id": "a-session-whose-payload-never-identifies-it",
+      "client": "cursor-chat",
+      "invocations": [
+        { "event": "agent.started", "second": "2026-09-06T12:00:00Z", "toolArgs": "", "input": { "unrelated": true } },
+        { "event": "agent.prompt.submitting", "second": "2026-09-06T12:00:01Z", "toolArgs": "", "input": { "prompt": "hello" } }
+      ]
+    },
+    {
+      "id": "a-kiro-session-identified-by-its-parent-process",
+      "client": "kiro-cli",
+      "kiroParentPid": 4242,
+      "invocations": [{ "event": "agent.started", "second": "2026-09-06T12:00:00Z", "toolArgs": "", "input": { "unrelated": true } }]
+    },
+    {
+      "id": "a-session-whose-first-event-carries-no-second",
+      "client": "codex",
+      "invocations": [
+        { "event": "agent.started", "second": "", "toolArgs": "", "input": { "session_id": "log-5", "second": "2026-09-06T09:00:00Z" } },
+        { "event": "agent.ended", "second": "2026-09-06T12:00:00Z", "toolArgs": "", "input": { "session_id": "log-5" } }
+      ]
+    }
+  ]
+}

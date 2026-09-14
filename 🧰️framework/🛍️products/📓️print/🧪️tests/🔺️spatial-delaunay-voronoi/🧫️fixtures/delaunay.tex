@@ -1,0 +1,43 @@
+\documentclass{article}
+\usepackage{semio-viz-spatial}
+\ExplSyntaxOn
+% 📤 Canonical triangle code: the three 1-based indices sorted ascending and packed as i*10000 + j*100 + k,
+% 📤 so neither the triangle order nor the vertex rotation — neither of which is part of the contract — can differ.
+\cs_new_protected:Npn \semio_probe_triangle:nnn #1#2#3
+  {
+    \seq_put_right:Nx \l_tmpa_seq
+      {
+        \fp_eval:n
+          { round (
+            
+            min ( #1 , min ( #2 , #3 ) ) * 10000
+            + ( #1 + #2 + #3 - min ( #1 , min ( #2 , #3 ) ) - max ( #1 , max ( #2 , #3 ) ) ) * 100
+            + max ( #1 , max ( #2 , #3 ) ) , 0 )
+          }
+      }
+  }
+\cs_new_protected:Npn \semio_probe_triangles:
+  {
+    \seq_clear:N \l_tmpa_seq
+    \seq_map_inline:Nn \g_semio_viz_spatial_tri_seq { \semio_probe_triangle:nnn ##1 }
+    \seq_sort:Nn \l_tmpa_seq
+      {
+        \int_compare:nNnTF {##1} < {##2}
+          { \sort_return_same: } { \sort_return_swapped: }
+      }
+    \use:x
+      {
+        \exp_not:N \SemioVizProbeEval { spatial/delaunay }
+          { \seq_use:Nn \l_tmpa_seq { , } }
+      }
+  }
+\ExplSyntaxOff
+\begin{document}
+\SemioVizProbeBegin{spatial-delaunay-voronoi}{delaunay-triangles}
+\SemioVizProbePage
+\SemioVizProbePrecision{9}
+\SemioVizDelaunay{demo-points}
+\ExplSyntaxOn
+\semio_probe_triangles:
+\ExplSyntaxOff
+\end{document}

@@ -1,0 +1,62 @@
+% 🧪 Probe fixture of case spatial-quadtree, every scenario.
+% A quadtree makes two things observable from outside: the square it covers, which grows by
+% doubling towards a point that falls outside it, and the nearest point a query finds within a
+% radius. The build emits the extent and the node count through the probe; the query is called
+% through the protected form behind `\SemioVizQuadtreeFind`, because the public command typesets
+% and is therefore not expandable.
+\documentclass{article}
+\usepackage{semio-viz-spatial}
+\usepackage{semio-viz-probe}
+\ExplSyntaxOn
+% 🔎 Writes the 1-based row index the query (#2, #3) finds within the radius #4, 0 for none.
+\cs_new_protected:Npn \probefind #1#2#3#4 {
+  \semio_viz_qt_find:nnn {#2} {#3} {#4}
+  \semio_viz_probe_values:nx {#1} { \int_use:N \g_semio_viz_qt_found_int }
+}
+\ExplSyntaxOff
+\begin{document}
+
+\SemioVizTable{qt-scatter}{x, y}
+\SemioVizRow{qt-scatter}{1, 1}
+\SemioVizRow{qt-scatter}{5, 2}
+\SemioVizRow{qt-scatter}{2, 7}
+\SemioVizRow{qt-scatter}{9, 9}
+\SemioVizRow{qt-scatter}{4, 4}
+\SemioVizRow{qt-scatter}{7.5, 3.25}
+\SemioVizRow{qt-scatter}{0.5, 8.5}
+
+\SemioVizTable{qt-shifted}{u, v}
+\SemioVizRow{qt-shifted}{-3, -2}
+\SemioVizRow{qt-shifted}{12, 6}
+\SemioVizRow{qt-shifted}{-7, 11}
+\SemioVizRow{qt-shifted}{2.5, -6.5}
+
+\SemioVizProbeBegin{spatial-quadtree}{cover}
+\SemioVizProbeOn
+\SemioVizQuadtree{qt-scatter}
+\SemioVizQuadtree{qt-shifted}[x=u, y=v]
+\SemioVizProbeOff
+
+\SemioVizProbeBegin{spatial-quadtree}{find}
+\SemioVizQuadtree{qt-scatter}
+\ExplSyntaxOn
+\probefind{find/0}{4.4}{4.1}{inf}
+\probefind{find/1}{9}{1}{inf}
+\probefind{find/2}{0}{0}{inf}
+\probefind{find/3}{2.2}{7.4}{inf}
+\probefind{find/4}{6}{2.5}{inf}
+\probefind{find/5}{10}{10}{inf}
+\ExplSyntaxOff
+
+\SemioVizProbeBegin{spatial-quadtree}{find-radius}
+\SemioVizQuadtree{qt-scatter}
+\ExplSyntaxOn
+\probefind{radius/0}{9}{1}{2}
+\probefind{radius/1}{9}{1}{3}
+\probefind{radius/2}{0}{0}{1}
+\probefind{radius/3}{0}{0}{2}
+\probefind{radius/4}{6}{6}{2.5}
+\ExplSyntaxOff
+
+\SemioVizProbePage
+\end{document}

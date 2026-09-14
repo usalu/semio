@@ -1,0 +1,38 @@
+{
+  "$comment": "🧫️ Immutable vectors for the entity-emoji codec. `graphemes` are the strings whose LEADING emoji grapheme must be split off the same way `Intl.Segmenter` segments them; `refs` are artifact references; `goalPaths` and `contributors` are compose-id round trips; `ids` are seeded identifier renderings.",
+  "schema": "semio.repo.identity.emoji-vectors/1",
+  "graphemes": [
+    { "name": "plain-text-has-no-emoji", "input": "plain" },
+    { "name": "empty-string", "input": "" },
+    { "name": "goal-with-presentation-selector", "input": "🎯️goal" },
+    { "name": "goal-without-presentation-selector", "input": "🎯goal" },
+    { "name": "zero-width-joiner-sequence", "input": "🧑‍💻dev" },
+    { "name": "keycap-sequence", "input": "1️⃣one" },
+    { "name": "bare-digit-is-not-a-keycap", "input": "5plain" },
+    { "name": "regional-indicator-pair", "input": "🇩🇪flag" },
+    { "name": "skin-tone-modifier", "input": "👋🏽wave" },
+    { "name": "text-default-gear", "input": "⚙️config.toml" },
+    { "name": "text-default-sun", "input": "☀️05" },
+    { "name": "ticket-then-year", "input": "🎫️26" },
+    { "name": "emoji-only", "input": "🎯️" },
+    { "name": "two-emojis-in-a-row", "input": "🎆️🌙️09" }
+  ],
+  "normalizations": ["⚙", "⚙️", "🎯", "🎯️", "☀", "☀︎", "🧑‍💻", "🛠", "✂", "⚖", "🏗", "⌨", "🖱", "🗃", "🏷", "🛡", "🗑", "⏱", "✏", "👮", "📌", "🔖", "🧪", "🪨"],
+  "refs": [
+    { "name": "file-with-code-emoji", "input": "💻️a/b.go" },
+    { "name": "file-with-script-emoji", "input": "📜️📜️script.ts" },
+    { "name": "section-with-one-part", "input": "🔖️a/b.go#Header" },
+    { "name": "section-with-two-parts", "input": "🔖️a/b.go#Outer#Inner" },
+    { "name": "definition-with-impl-emoji", "input": "🛠️a/b.go" },
+    { "name": "definition-with-interface-emoji", "input": "✂️a/b.go" },
+    { "name": "folder-with-org-emoji", "input": "🗃️a/b/" },
+    { "name": "bare-folder-by-trailing-slash", "input": "a/b/" },
+    { "name": "bare-file", "input": "a/b.go" },
+    { "name": "bare-section-by-hash", "input": "a/b.go#Header" },
+    { "name": "backslashes-are-normalized", "input": "💻️a\\b.go" },
+    { "name": "leading-dot-slash-is-dropped", "input": "💻️./a/b.go" }
+  ],
+  "goalPaths": ["AI-OPTIMIZED-REPO", "AI-OPTIMIZED-REPO/REPO-CLI", "A/B/C", "single"],
+  "contributors": ["ueli", "Ueli-Saluz", "unknown", ""],
+  "identifierSeeds": [0, 1, 42, 4294967296]
+}

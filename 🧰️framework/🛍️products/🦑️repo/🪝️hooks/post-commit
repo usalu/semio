@@ -35,14 +35,17 @@ compose_resolve_repo_cli() {
     echo "$REPO_CLI_BIN"
     return
   fi
-  if [ -x "$ROOT/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client" ]; then
-    echo "$ROOT/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client"
-    return
+  if [ "$SEMIO_REPO_IMPLEMENTATION" = "go" ]; then
+    COMPOSE_REPO_CLI_CANDIDATES="$ROOT/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/semio-repo $ROOT/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/semio-repo.exe"
+  else
+    COMPOSE_REPO_CLI_CANDIDATES="$ROOT/target/release/semio $ROOT/target/release/semio.exe"
   fi
-  if [ -x "$ROOT/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client.exe" ]; then
-    echo "$ROOT/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client.exe"
-    return
-  fi
+  for candidate in $COMPOSE_REPO_CLI_CANDIDATES; do
+    if [ -x "$candidate" ]; then
+      echo "$candidate"
+      return
+    fi
+  done
 }
 compose_resolve_bun() {
   ROOT="$1"

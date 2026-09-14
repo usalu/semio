@@ -1,0 +1,192 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-coordinate}[2026/09/05 v0.3.0 semio viz coordinate systems: cartesian, polar, ternary, barycentric, parallel, logpolar, geographic]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-mark}
+
+\ExplSyntaxOn
+
+%region 🔖️Diagnostics
+\msg_new:nnn { semio-viz } { unknown-coordinate }
+  { Unknown~viz~coordinate~system~'#1'. }
+\msg_new:nnn { semio-viz } { missing-projection }
+  { The~geographic~coordinate~system~needs~a~projection;~semio-viz-geo-projection~installs~one. }
+%endregion 🔖️Diagnostics
+
+%region 🔖️Keys
+% 🎛️ Coordinate keys, all with documented defaults. Every family reads the two
+% data channels through \semio_viz_coordinate_map:nnNN, so a chart never has to
+% know which system it is drawn in.
+%   kind (tl, cartesian)      cartesian|polar|ternary|barycentric|parallel|logpolar|geographic
+%   width / height (fp, 80 / 40)   the frame the system maps into, in millimetres
+%   originX / originY (fp, 0)      lower-left corner of that frame
+%   flipY (bool, false)       map the y channel downwards, for image-like data
+%   startAngle (fp, 0)        polar angle of the first datum, radians clockwise from twelve o'clock
+%   endAngle (fp, 2*pi)       polar angle one full turn later
+%   innerRadius (fp, 0)       polar radius the domain minimum maps to
+%   outerRadius (fp, 20)      polar radius the domain maximum maps to
+%   clockwise (bool, true)    direction the polar angle grows in
+%   base (fp, 10)             logarithm base of the logpolar radius
+%   axes (int, 3)             number of parallel axes; the x channel is the axis index, 1-based
+%   size (fp, 60)             edge length of the ternary triangle
+%   domainX / domainY (clist, 0,1)  the data range each channel spans before mapping
+\tl_new:N \l_semio_viz_coord_kind_tl
+\clist_new:N \l_semio_viz_coord_dx_clist
+\clist_new:N \l_semio_viz_coord_dy_clist
+\fp_new:N \l_semio_viz_coord_width_fp
+\fp_new:N \l_semio_viz_coord_height_fp
+\fp_new:N \l_semio_viz_coord_ox_fp
+\fp_new:N \l_semio_viz_coord_oy_fp
+\fp_new:N \l_semio_viz_coord_start_fp
+\fp_new:N \l_semio_viz_coord_end_fp
+\fp_new:N \l_semio_viz_coord_inner_fp
+\fp_new:N \l_semio_viz_coord_outer_fp
+\fp_new:N \l_semio_viz_coord_base_fp
+\fp_new:N \l_semio_viz_coord_size_fp
+\int_new:N \l_semio_viz_coord_axes_int
+\bool_new:N \l_semio_viz_coord_flip_bool
+\bool_new:N \l_semio_viz_coord_cw_bool
+
+\keys_define:nn { semio / viz / coordinate } {
+  kind        .tl_set:N   = \l_semio_viz_coord_kind_tl,
+  width       .fp_set:N   = \l_semio_viz_coord_width_fp,
+  height      .fp_set:N   = \l_semio_viz_coord_height_fp,
+  originX     .fp_set:N   = \l_semio_viz_coord_ox_fp,
+  originY     .fp_set:N   = \l_semio_viz_coord_oy_fp,
+  flipY       .bool_set:N = \l_semio_viz_coord_flip_bool,
+  startAngle  .fp_set:N   = \l_semio_viz_coord_start_fp,
+  endAngle    .fp_set:N   = \l_semio_viz_coord_end_fp,
+  innerRadius .fp_set:N   = \l_semio_viz_coord_inner_fp,
+  outerRadius .fp_set:N   = \l_semio_viz_coord_outer_fp,
+  clockwise   .bool_set:N = \l_semio_viz_coord_cw_bool,
+  base        .fp_set:N   = \l_semio_viz_coord_base_fp,
+  axes        .int_set:N  = \l_semio_viz_coord_axes_int,
+  size        .fp_set:N   = \l_semio_viz_coord_size_fp,
+  domainX     .clist_set:N = \l_semio_viz_coord_dx_clist,
+  domainY     .clist_set:N = \l_semio_viz_coord_dy_clist,
+}
+
+% 🧹 Restores every coordinate key to the documented default before a new system reads its options.
+\cs_new_protected:Npn \semio_viz_coordinate_reset: {
+  \tl_set:Nn \l_semio_viz_coord_kind_tl { cartesian }
+  \fp_set:Nn \l_semio_viz_coord_width_fp { 80 }
+  \fp_set:Nn \l_semio_viz_coord_height_fp { 40 }
+  \fp_zero:N \l_semio_viz_coord_ox_fp
+  \fp_zero:N \l_semio_viz_coord_oy_fp
+  \bool_set_false:N \l_semio_viz_coord_flip_bool
+  \fp_zero:N \l_semio_viz_coord_start_fp
+  \fp_set:Nn \l_semio_viz_coord_end_fp { 2*pi }
+  \fp_zero:N \l_semio_viz_coord_inner_fp
+  \fp_set:Nn \l_semio_viz_coord_outer_fp { 20 }
+  \bool_set_true:N \l_semio_viz_coord_cw_bool
+  \fp_set:Nn \l_semio_viz_coord_base_fp { 10 }
+  \int_set:Nn \l_semio_viz_coord_axes_int { 3 }
+  \fp_set:Nn \l_semio_viz_coord_size_fp { 60 }
+  \clist_set:Nn \l_semio_viz_coord_dx_clist { 0,1 }
+  \clist_set:Nn \l_semio_viz_coord_dy_clist { 0,1 }
+}
+\semio_viz_coordinate_reset:
+
+% 📐 \SemioVizCoordinate{kind}[options]: installs the active coordinate system.
+\NewDocumentCommand \SemioVizCoordinate { m O{} } {
+  \semio_viz_coordinate_reset:
+  \tl_set:Nn \l_semio_viz_coord_kind_tl {#1}
+  \keys_set:nn { semio / viz / coordinate } {#2}
+  \seq_if_in:NnF \g_semio_viz_coord_kinds_seq {#1}
+    { \msg_error:nnn { semio-viz } { unknown-coordinate } {#1} }
+}
+\seq_new:N \g_semio_viz_coord_kinds_seq
+\clist_map_inline:nn { cartesian, polar, ternary, barycentric, parallel, logpolar, geographic }
+  { \seq_gput_right:Nn \g_semio_viz_coord_kinds_seq {#1} }
+%endregion 🔖️Keys
+
+%region 🔖️Mapping
+% 🧭 Normalises a data value against its domain; the sole place a domain is read.
+\cs_new_protected:Npn \semio_viz_coord_unit:NNn #1#2#3 {
+  \fp_set:Nn #1 { ( (#3) - \clist_item:Nn #2 { 1 } )
+    / ( \clist_item:Nn #2 { 2 } - \clist_item:Nn #2 { 1 } ) }
+}
+\fp_new:N \l_semio_viz_coord_u_fp
+\fp_new:N \l_semio_viz_coord_v_fp
+\fp_new:N \l_semio_viz_coord_a_fp
+\fp_new:N \l_semio_viz_coord_r_fp
+
+% 🧭 \semio_viz_coordinate_map:nnNN {x-data}{y-data} <fp x> <fp y>: the one call every
+% family makes. The data channels mean whatever the active system says they mean --
+% angle and radius in polar, axis index and value in parallel, longitude and latitude
+% in geographic -- and the result is always figure millimetres.
+\cs_new_protected:Npn \semio_viz_coordinate_map:nnNN #1#2#3#4 {
+  \semio_viz_coord_unit:NNn \l_semio_viz_coord_u_fp \l_semio_viz_coord_dx_clist {#1}
+  \semio_viz_coord_unit:NNn \l_semio_viz_coord_v_fp \l_semio_viz_coord_dy_clist {#2}
+  \exp_args:NV \str_case:nnF \l_semio_viz_coord_kind_tl {
+    { cartesian }   { \semio_viz_coord_cartesian:NN #3 #4 }
+    { polar }       { \semio_viz_coord_polar:nNN { 1 } #3 #4 }
+    { logpolar }    { \semio_viz_coord_polar:nNN { 0 } #3 #4 }
+    { ternary }     { \semio_viz_coord_ternary:nnNN {#1} {#2} #3 #4 }
+    { barycentric } { \semio_viz_coord_ternary:nnNN {#1} {#2} #3 #4 }
+    { parallel }    { \semio_viz_coord_parallel:nNN {#1} #3 #4 }
+    { geographic }  { \semio_viz_coordinate_project:nnNN {#1} {#2} #3 #4 }
+  } { \semio_viz_coord_cartesian:NN #3 #4 }
+}
+\cs_generate_variant:Nn \semio_viz_coordinate_map:nnNN { VVNN, nVNN, VnNN }
+
+% 📐 Cartesian: the unit square onto the frame, with `flip` turning the y channel upside down.
+\cs_new_protected:Npn \semio_viz_coord_cartesian:NN #1#2 {
+  \fp_set:Nn #1 { \l_semio_viz_coord_ox_fp + \l_semio_viz_coord_u_fp * \l_semio_viz_coord_width_fp }
+  \fp_set:Nn #2 { \l_semio_viz_coord_oy_fp + \bool_if:NTF \l_semio_viz_coord_flip_bool
+    { ( 1 - \l_semio_viz_coord_v_fp ) } { \l_semio_viz_coord_v_fp } * \l_semio_viz_coord_height_fp }
+}
+
+% 🧭 Polar and log-polar: #1 is 1 for a linear radius and 0 for a logarithmic one.
+\cs_new_protected:Npn \semio_viz_coord_polar:nNN #1#2#3 {
+  \fp_set:Nn \l_semio_viz_coord_a_fp { \l_semio_viz_coord_start_fp
+    + \bool_if:NTF \l_semio_viz_coord_cw_bool { 1 } { -1 } * \l_semio_viz_coord_u_fp
+      * ( \l_semio_viz_coord_end_fp - \l_semio_viz_coord_start_fp ) }
+  \fp_set:Nn \l_semio_viz_coord_r_fp { \l_semio_viz_coord_inner_fp
+    + \int_compare:nNnTF {#1} = { 1 } { \l_semio_viz_coord_v_fp }
+      { ln( 1 + \l_semio_viz_coord_v_fp * ( \l_semio_viz_coord_base_fp - 1 ) )
+        / ln( \l_semio_viz_coord_base_fp ) }
+      * ( \l_semio_viz_coord_outer_fp - \l_semio_viz_coord_inner_fp ) }
+  \fp_set:Nn #2 { \l_semio_viz_coord_ox_fp + \l_semio_viz_coord_r_fp * sin( \l_semio_viz_coord_a_fp ) }
+  \fp_set:Nn #3 { \l_semio_viz_coord_oy_fp + \l_semio_viz_coord_r_fp * cos( \l_semio_viz_coord_a_fp ) }
+}
+
+% 🔺 Ternary and barycentric: the two data channels are the a and b shares and c is what is
+% left, with a at the apex, b at the lower right corner and c at the lower left one.
+\cs_new_protected:Npn \semio_viz_coord_ternary:nnNN #1#2#3#4 {
+  \fp_set:Nn #3 { \l_semio_viz_coord_ox_fp
+    + \l_semio_viz_coord_size_fp * ( (#2) + (#1) / 2 ) }
+  \fp_set:Nn #4 { \l_semio_viz_coord_oy_fp
+    + \l_semio_viz_coord_size_fp * sqrt(3) / 2 * (#1) }
+}
+
+% 🪜 Parallel coordinates: the x channel is a 1-based axis index, the y channel the value on it.
+\cs_new_protected:Npn \semio_viz_coord_parallel:nNN #1#2#3 {
+  \fp_set:Nn #2 { \l_semio_viz_coord_ox_fp + \l_semio_viz_coord_width_fp
+    * ( (#1) - 1 ) / max( 1 , \l_semio_viz_coord_axes_int - 1 ) }
+  \fp_set:Nn #3 { \l_semio_viz_coord_oy_fp + \bool_if:NTF \l_semio_viz_coord_flip_bool
+    { ( 1 - \l_semio_viz_coord_v_fp ) } { \l_semio_viz_coord_v_fp } * \l_semio_viz_coord_height_fp }
+}
+
+% 🌍 The geographic hook. GEO-SPATIAL replaces this with the real projection pipeline;
+% until it does, an equirectangular projection keeps every geographic chart drawable.
+\cs_new_protected:Npn \semio_viz_coordinate_project:nnNN #1#2#3#4 {
+  \fp_set:Nn #3 { \l_semio_viz_coord_ox_fp + \l_semio_viz_coord_width_fp * ( (#1) + 180 ) / 360 }
+  \fp_set:Nn #4 { \l_semio_viz_coord_oy_fp + \l_semio_viz_coord_height_fp * ( (#2) + 90 ) / 180 }
+}
+
+% 📐 \SemioVizProject{x}{y}: maps one data point into the active system.
+\NewDocumentCommand \SemioVizProject { m m }
+  { \semio_viz_coordinate_map:nnNN {#1} {#2} \l_semio_viz_coord_px_fp \l_semio_viz_coord_py_fp }
+% 📐 The last mapped point as `x,y` in figure millimetres; expandable, so it goes
+% straight into a TikZ coordinate or a probe record.
+\NewExpandableDocumentCommand \SemioVizProjected { }
+  { \fp_to_decimal:N \l_semio_viz_coord_px_fp , \fp_to_decimal:N \l_semio_viz_coord_py_fp }
+\NewExpandableDocumentCommand \SemioVizProjectedX { } { \fp_to_decimal:N \l_semio_viz_coord_px_fp }
+\NewExpandableDocumentCommand \SemioVizProjectedY { } { \fp_to_decimal:N \l_semio_viz_coord_py_fp }
+\fp_new:N \l_semio_viz_coord_px_fp
+\fp_new:N \l_semio_viz_coord_py_fp
+%endregion 🔖️Mapping
+
+\ExplSyntaxOff

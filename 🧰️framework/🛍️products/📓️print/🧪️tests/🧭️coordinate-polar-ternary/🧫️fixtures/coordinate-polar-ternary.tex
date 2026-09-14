@@ -1,0 +1,50 @@
+\documentclass{article}
+\usepackage{semio-viz-probe}
+\usepackage{semio-viz-coordinate}
+\ExplSyntaxOn
+% 🧭 Maps one data point through the active system and records where it landed.
+\cs_new_protected:Npn \semio_probe_point:nnn #1#2#3 {
+  \SemioVizProject{#2}{#3}
+  \exp_args:Nnx \SemioVizProbeValues { coordinate/#1 } { \SemioVizProjected }
+}
+\ExplSyntaxOff
+\begin{document}
+\ExplSyntaxOn
+\SemioVizProbeBegin{coordinate-polar-ternary}{cartesian}
+\SemioVizCoordinate{cartesian}[width=80, height=40]
+\semio_probe_point:nnn { cartesian-origin } { 0 } { 0 }
+\semio_probe_point:nnn { cartesian-middle } { 0.5 } { 0.25 }
+\semio_probe_point:nnn { cartesian-corner } { 1 } { 1 }
+\SemioVizCoordinate{cartesian}[width=80, height=40, flipY=true, originX=10, originY=5]
+\semio_probe_point:nnn { cartesian-flipped } { 0.5 } { 0.25 }
+\SemioVizCoordinate{cartesian}[width=80, height=40, domainX={0,10}, domainY={-5,5}]
+\semio_probe_point:nnn { cartesian-domain } { 2.5 } { 0 }
+\SemioVizProbeBegin{coordinate-polar-ternary}{polar}
+\SemioVizCoordinate{polar}[outerRadius=20]
+\semio_probe_point:nnn { polar-quarter } { 0.25 } { 1 }
+\semio_probe_point:nnn { polar-noon } { 0 } { 1 }
+\semio_probe_point:nnn { polar-half } { 0.5 } { 0.5 }
+\SemioVizCoordinate{polar}[outerRadius=20, innerRadius=8, clockwise=false]
+\semio_probe_point:nnn { polar-counter } { 0.25 } { 0 }
+\SemioVizCoordinate{logpolar}[outerRadius=20, base=10]
+\semio_probe_point:nnn { logpolar-half } { 0 } { 0.5 }
+\semio_probe_point:nnn { logpolar-full } { 0 } { 1 }
+\SemioVizProbeBegin{coordinate-polar-ternary}{ternary}
+\SemioVizCoordinate{ternary}[size=60]
+\semio_probe_point:nnn { ternary-a } { 1 } { 0 }
+\semio_probe_point:nnn { ternary-b } { 0 } { 1 }
+\semio_probe_point:nnn { ternary-c } { 0 } { 0 }
+\semio_probe_point:nnn { ternary-mid } { 0.5 } { 0.25 }
+\SemioVizProbeBegin{coordinate-polar-ternary}{parallel}
+\SemioVizCoordinate{parallel}[axes=4, width=90, height=50]
+\semio_probe_point:nnn { parallel-first } { 1 } { 0 }
+\semio_probe_point:nnn { parallel-third } { 3 } { 0.5 }
+\semio_probe_point:nnn { parallel-last } { 4 } { 1 }
+\SemioVizProbeBegin{coordinate-polar-ternary}{geographic}
+\SemioVizCoordinate{geographic}[width=360, height=180]
+\semio_probe_point:nnn { geographic-null } { 0 } { 0 }
+\semio_probe_point:nnn { geographic-hannover } { 9.72 } { 52.37 }
+\semio_probe_point:nnn { geographic-antimeridian } { 180 } { -90 }
+\SemioVizProbeEnd
+\ExplSyntaxOff
+\end{document}

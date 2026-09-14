@@ -1,0 +1,5 @@
+{
+  "seed": { "stream": "coordinator", "id": "evt-seed", "generation": 1, "type": "ticket.recorded", "payload": { "id": "T-seed", "status": "open" } },
+  "second": { "stream": "coordinator", "id": "evt-second", "generation": 1, "type": "ticket.recorded", "payload": { "id": "T-second", "status": "open" } },
+  "failAt": [1, 2, 3, 4, 5, 6, 7, 8]
+}

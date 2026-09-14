@@ -1,0 +1,1489 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-diagram-process}[2026/09/05 v0.2.0 semio viz planning, schedule, matrix, seating and notation families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-diagram-flowchart}
+
+\ExplSyntaxOn
+
+%region 🔖️Cpm
+% ⏱️ Critical-path method over a task table: forward pass, backward pass, total float.
+%    Records are kept in four props keyed by task id and emitted as `diagram-cpm` records.
+\prop_new:N \l_semio_viz_pm_es_prop
+\prop_new:N \l_semio_viz_pm_ef_prop
+\prop_new:N \l_semio_viz_pm_ls_prop
+\prop_new:N \l_semio_viz_pm_lf_prop
+\prop_new:N \l_semio_viz_pm_dur_prop
+\prop_new:N \l_semio_viz_pm_deps_prop
+\seq_new:N \l_semio_viz_pm_ids_seq
+\seq_new:N \l_semio_viz_pm_dep_seq
+\fp_new:N \l_semio_viz_pm_end_fp
+\fp_new:N \l_semio_viz_pm_t_fp
+\fp_new:N \l_semio_viz_pm_u_fp
+\fp_new:N \l_semio_viz_pm_v_fp
+\int_new:N \l_semio_viz_pm_n_int
+\int_new:N \l_semio_viz_pm_i_int
+\int_new:N \l_semio_viz_pm_j_int
+\tl_new:N \l_semio_viz_pm_id_tl
+\tl_new:N \l_semio_viz_pm_key_tl
+\tl_new:N \l_semio_viz_pm_val_tl
+
+% 🧮 Reads table #1 (columns id/duration/deps) and fills the CPM props.
+\cs_new_protected:Npn \semio_viz_pm_cpm:nnn #1#2#3 {
+  \prop_clear:N \l_semio_viz_pm_es_prop
+  \prop_clear:N \l_semio_viz_pm_ef_prop
+  \prop_clear:N \l_semio_viz_pm_ls_prop
+  \prop_clear:N \l_semio_viz_pm_lf_prop
+  \prop_clear:N \l_semio_viz_pm_dur_prop
+  \prop_clear:N \l_semio_viz_pm_deps_prop
+  \seq_clear:N \l_semio_viz_pm_ids_seq
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_pm_n_int
+  \int_step_inline:nn { \l_semio_viz_pm_n_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_id_tl } \l_semio_viz_pm_id_tl
+    \seq_put_right:NV \l_semio_viz_pm_ids_seq \l_semio_viz_pm_id_tl
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} {#2} \l_semio_viz_pm_val_tl
+    \tl_if_empty:NT \l_semio_viz_pm_val_tl { \tl_set:Nn \l_semio_viz_pm_val_tl { 0 } }
+    \prop_put:NVV \l_semio_viz_pm_dur_prop \l_semio_viz_pm_id_tl \l_semio_viz_pm_val_tl
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} {#3} \l_semio_viz_pm_val_tl
+    \prop_put:NVV \l_semio_viz_pm_deps_prop \l_semio_viz_pm_id_tl \l_semio_viz_pm_val_tl
+    \prop_put:NVn \l_semio_viz_pm_es_prop \l_semio_viz_pm_id_tl { 0 }
+  }
+  \int_step_inline:nn { \l_semio_viz_pm_n_int } { \semio_viz_pm_forward: }
+  \semio_viz_pm_project_end:
+  \seq_map_inline:Nn \l_semio_viz_pm_ids_seq
+    { \prop_put:Nnx \l_semio_viz_pm_lf_prop {##1} { \fp_to_decimal:N \l_semio_viz_pm_end_fp } }
+  \int_step_inline:nn { \l_semio_viz_pm_n_int } { \semio_viz_pm_backward: }
+  \semio_viz_pm_emit:
+}
+
+% ⏭️ One relaxation round of the forward pass: early start is the largest early finish among the predecessors, early finish adds the duration.
+\cs_new_protected:Npn \semio_viz_pm_forward: {
+  \seq_map_inline:Nn \l_semio_viz_pm_ids_seq {
+    \fp_zero:N \l_semio_viz_pm_t_fp
+    \prop_get:NnN \l_semio_viz_pm_deps_prop {##1} \l_semio_viz_pm_val_tl
+    \semio_viz_dg_words:NN \l_semio_viz_pm_dep_seq \l_semio_viz_pm_val_tl
+    \seq_map_inline:Nn \l_semio_viz_pm_dep_seq {
+      \prop_get:NnNT \l_semio_viz_pm_ef_prop {####1} \l_semio_viz_pm_key_tl
+        { \fp_set:Nn \l_semio_viz_pm_t_fp { max( \l_semio_viz_pm_t_fp , \l_semio_viz_pm_key_tl ) } }
+    }
+    \prop_put:Nnx \l_semio_viz_pm_es_prop {##1} { \fp_to_decimal:N \l_semio_viz_pm_t_fp }
+    \prop_get:NnN \l_semio_viz_pm_dur_prop {##1} \l_semio_viz_pm_key_tl
+    \prop_put:Nnx \l_semio_viz_pm_ef_prop {##1}
+      { \fp_to_decimal:n { \l_semio_viz_pm_t_fp + \l_semio_viz_pm_key_tl } }
+  }
+}
+
+% 🏁 Sets the project end to the largest early finish over all tasks.
+\cs_new_protected:Npn \semio_viz_pm_project_end: {
+  \fp_zero:N \l_semio_viz_pm_end_fp
+  \seq_map_inline:Nn \l_semio_viz_pm_ids_seq {
+    \prop_get:NnNT \l_semio_viz_pm_ef_prop {##1} \l_semio_viz_pm_key_tl
+      { \fp_set:Nn \l_semio_viz_pm_end_fp { max( \l_semio_viz_pm_end_fp , \l_semio_viz_pm_key_tl ) } }
+  }
+}
+
+% ⏮️ One relaxation round of the backward pass: late start is late finish minus duration, and each predecessor's late finish is pulled down to it.
+\cs_new_protected:Npn \semio_viz_pm_backward: {
+  \seq_map_inline:Nn \l_semio_viz_pm_ids_seq {
+    \prop_get:NnN \l_semio_viz_pm_lf_prop {##1} \l_semio_viz_pm_key_tl
+    \prop_get:NnN \l_semio_viz_pm_dur_prop {##1} \l_semio_viz_pm_val_tl
+    \prop_put:Nnx \l_semio_viz_pm_ls_prop {##1}
+      { \fp_to_decimal:n { \l_semio_viz_pm_key_tl - \l_semio_viz_pm_val_tl } }
+  }
+  \seq_map_inline:Nn \l_semio_viz_pm_ids_seq {
+    \prop_get:NnN \l_semio_viz_pm_deps_prop {##1} \l_semio_viz_pm_val_tl
+    \prop_get:NnN \l_semio_viz_pm_ls_prop {##1} \l_semio_viz_pm_key_tl
+    \semio_viz_dg_words:NN \l_semio_viz_pm_dep_seq \l_semio_viz_pm_val_tl
+    \seq_map_inline:Nn \l_semio_viz_pm_dep_seq {
+      \prop_get:NnNT \l_semio_viz_pm_lf_prop {####1} \l_semio_viz_pm_id_tl
+        {
+          \fp_compare:nT { \l_semio_viz_pm_key_tl < \l_semio_viz_pm_id_tl }
+            { \prop_put:Nnx \l_semio_viz_pm_lf_prop {####1} { \l_semio_viz_pm_key_tl } }
+        }
+    }
+  }
+}
+
+% 📤 Probes one `diagram-cpm` record per task carrying its ES, EF, LS, LF and total float.
+\cs_new_protected:Npn \semio_viz_pm_emit: {
+  \seq_map_inline:Nn \l_semio_viz_pm_ids_seq {
+    \prop_get:NnN \l_semio_viz_pm_es_prop {##1} \l_semio_viz_pm_key_tl
+    \prop_get:NnN \l_semio_viz_pm_ef_prop {##1} \l_semio_viz_pm_val_tl
+    \prop_get:NnN \l_semio_viz_pm_ls_prop {##1} \l_semio_viz_pm_id_tl
+    \prop_get:NnN \l_semio_viz_pm_lf_prop {##1} \l_semio_viz_dg_ta_tl
+    \semio_viz_probe_geometry:nx { diagram-cpm }
+      {
+        \semio_viz_format_mm:n { \l_semio_viz_pm_key_tl } , \semio_viz_format_mm:n { \l_semio_viz_pm_val_tl } ,
+        \semio_viz_format_mm:n { \l_semio_viz_pm_id_tl } , \semio_viz_format_mm:n { \l_semio_viz_dg_ta_tl } ,
+        \semio_viz_format_mm:n { \l_semio_viz_pm_id_tl - \l_semio_viz_pm_key_tl }
+      }
+  }
+}
+
+% ❓ True when task #1 carries zero total float, i.e. lies on the critical path.
+\prg_new_protected_conditional:Npnn \semio_viz_pm_critical:n #1 { T, F, TF } {
+  \prop_get:NnN \l_semio_viz_pm_es_prop {#1} \l_semio_viz_pm_key_tl
+  \prop_get:NnN \l_semio_viz_pm_ls_prop {#1} \l_semio_viz_pm_val_tl
+  \fp_compare:nTF { abs( \l_semio_viz_pm_val_tl - \l_semio_viz_pm_key_tl ) < 0.0001 }
+    { \prg_return_true: } { \prg_return_false: }
+}
+%endregion 🔖️Cpm
+
+%region 🔖️Keys-pm-gantt
+% 🗝️ `pm-gantt` draws duration bars on a time axis with dependency links and the critical path.
+%   data      tl   task table (default demo-pm-gantt), columns id/label/start/duration/deps/lane/tone
+%   duration  tl   duration column (default duration)
+%   deps      tl   space-separated predecessor id column (default deps)
+%   lane      tl   optional swimlane column (default lane)
+%   schedule  choice cpm|explicit  bar start from the CPM forward pass or from a `start` column (default cpm)
+%   start     tl   explicit start column used by schedule=explicit (default start)
+%   domain    clist time domain `min,max`; empty derives it from the schedule (default empty)
+%   links     bool draw the dependency arrows (default true)
+%   critical  bool highlight the zero-float chain (default true)
+%   milestone tl   column marking zero-duration milestones (default milestone)
+%   axis      fp   time-axis tick spacing, 0 for no axis (default 0)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-pm-gantt
+\tl_new:N \l_semio_viz_pm_duration_tl
+\tl_new:N \l_semio_viz_pm_deps_tl
+\tl_new:N \l_semio_viz_pm_start_tl
+\tl_new:N \l_semio_viz_pm_schedule_tl
+\tl_new:N \l_semio_viz_pm_milestone_tl
+\clist_new:N \l_semio_viz_pm_domain_clist
+\bool_new:N \l_semio_viz_pm_links_bool
+\bool_new:N \l_semio_viz_pm_critical_bool
+\fp_new:N \l_semio_viz_pm_axis_fp
+\fp_new:N \l_semio_viz_pm_tmin_fp
+\fp_new:N \l_semio_viz_pm_tmax_fp
+\fp_new:N \l_semio_viz_pm_left_fp
+
+% 🗓️ The `pm-gantt` option list: task table and its columns, scheduling mode, time domain, link and critical-path switches, axis spacing and frame size.
+\keys_define:nn { semio / viz / family / pm-gantt } {
+  data      .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  id        .tl_set:N = \l_semio_viz_dg_col_id_tl,
+  label     .tl_set:N = \l_semio_viz_dg_col_label_tl,
+  tone      .tl_set:N = \l_semio_viz_dg_col_tone_tl,
+  lane      .tl_set:N = \l_semio_viz_dg_col_lane_tl,
+  duration  .tl_set:N = \l_semio_viz_pm_duration_tl,
+  deps      .tl_set:N = \l_semio_viz_pm_deps_tl,
+  start     .tl_set:N = \l_semio_viz_pm_start_tl,
+  schedule  .tl_set:N = \l_semio_viz_pm_schedule_tl,
+  domain    .clist_set:N = \l_semio_viz_pm_domain_clist,
+  links     .bool_set:N = \l_semio_viz_pm_links_bool,
+  critical  .bool_set:N = \l_semio_viz_pm_critical_bool,
+  milestone .tl_set:N = \l_semio_viz_pm_milestone_tl,
+  axis      .fp_set:N = \l_semio_viz_pm_axis_fp,
+  gutter    .fp_set:N = \l_semio_viz_pm_left_fp,
+  width     .fp_set:N = \l_semio_viz_dg_w_fp,
+  height    .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 📊 Entry point of `pm-gantt`: resets the kernel, restores the CPM defaults and the 18mm label gutter, applies #1 and renders the task table.
+\cs_new_protected:Npn \semio_viz_pm_gantt:n #1 {
+  \semio_viz_frame_require:n { pm-gantt }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-pm-gantt }
+  \tl_set:Nn \l_semio_viz_pm_duration_tl { duration }
+  \tl_set:Nn \l_semio_viz_pm_deps_tl { deps }
+  \tl_set:Nn \l_semio_viz_pm_start_tl { start }
+  \tl_set:Nn \l_semio_viz_pm_schedule_tl { cpm }
+  \tl_set:Nn \l_semio_viz_pm_milestone_tl { milestone }
+  \clist_clear:N \l_semio_viz_pm_domain_clist
+  \bool_set_true:N \l_semio_viz_pm_links_bool
+  \bool_set_true:N \l_semio_viz_pm_critical_bool
+  \fp_zero:N \l_semio_viz_pm_axis_fp
+  \fp_set:Nn \l_semio_viz_pm_left_fp { 18 }
+  \keys_set:nn { semio / viz / family / pm-gantt } {#1}
+  \exp_args:NV \semio_viz_pm_gantt_run:n \l_semio_viz_dg_nodes_tl
+}
+
+% 🏗️ Runs the CPM over table #1, fixes the time domain and row height, then places the bars, draws the dependency links and paints the bars.
+\cs_new_protected:Npn \semio_viz_pm_gantt_run:n #1 {
+  \use:x
+    {
+      \exp_not:N \semio_viz_pm_cpm:nnn {#1}
+        { \exp_not:V \l_semio_viz_pm_duration_tl } { \exp_not:V \l_semio_viz_pm_deps_tl }
+    }
+  \clist_if_empty:NTF \l_semio_viz_pm_domain_clist
+    {
+      \fp_zero:N \l_semio_viz_pm_tmin_fp
+      \fp_set_eq:NN \l_semio_viz_pm_tmax_fp \l_semio_viz_pm_end_fp
+    }
+    {
+      \fp_set:Nn \l_semio_viz_pm_tmin_fp { \clist_item:Nn \l_semio_viz_pm_domain_clist { 1 } }
+      \fp_set:Nn \l_semio_viz_pm_tmax_fp { \clist_item:Nn \l_semio_viz_pm_domain_clist { 2 } }
+    }
+  \fp_compare:nT { \l_semio_viz_pm_tmax_fp <= \l_semio_viz_pm_tmin_fp }
+    { \fp_set:Nn \l_semio_viz_pm_tmax_fp { \l_semio_viz_pm_tmin_fp + 1 } }
+  \fp_compare:nT { \l_semio_viz_pm_axis_fp > 0 } { \semio_viz_pm_gantt_axis: }
+  \fp_set:Nn \l_semio_viz_dg_nh_fp { ( \l_semio_viz_dg_h_fp - 4 ) / \l_semio_viz_pm_n_int - 1.4 }
+  \fp_compare:nT { \l_semio_viz_dg_nh_fp < 2 } { \fp_set:Nn \l_semio_viz_dg_nh_fp { 2 } }
+  \prop_clear:N \l_semio_viz_dg_node_prop
+  \int_step_inline:nn { \l_semio_viz_pm_n_int } { \semio_viz_pm_gantt_place:nn {#1} {##1} }
+  \bool_if:NT \l_semio_viz_pm_links_bool { \semio_viz_pm_gantt_links:n {#1} }
+  \int_step_inline:nn { \l_semio_viz_pm_n_int } { \semio_viz_pm_gantt_bar:nn {#1} {##1} }
+}
+
+% 📏 Maps a schedule time onto the millimetre axis.
+\cs_new:Npn \semio_viz_pm_x:n #1 {
+  \fp_eval:n
+    {
+      \l_semio_viz_pm_left_fp +
+      ( (#1) - \l_semio_viz_pm_tmin_fp ) / ( \l_semio_viz_pm_tmax_fp - \l_semio_viz_pm_tmin_fp )
+      * ( \l_semio_viz_dg_w_fp - \l_semio_viz_pm_left_fp - 2 )
+    }
+}
+
+% 🕰️ Draws the faint vertical time gridline and its numeric caption at every `axis` step across the domain.
+\cs_new_protected:Npn \semio_viz_pm_gantt_axis: {
+  \int_set:Nn \l_semio_viz_pm_j_int
+    { \fp_to_int:n { ( \l_semio_viz_pm_tmax_fp - \l_semio_viz_pm_tmin_fp ) / \l_semio_viz_pm_axis_fp } }
+  \int_step_inline:nnn { 0 } { \l_semio_viz_pm_j_int } {
+    \draw [ semio-chrome-border-normal , line~width=\semio@stroke@hairline , draw~opacity=0.3 ]
+      ( \semio_viz_pm_x:n { \l_semio_viz_pm_tmin_fp + ##1 * \l_semio_viz_pm_axis_fp } , 2 ) --
+      ( \semio_viz_pm_x:n { \l_semio_viz_pm_tmin_fp + ##1 * \l_semio_viz_pm_axis_fp } ,
+        \fp_eval:n { \l_semio_viz_dg_h_fp - 1 } ) ;
+    \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-text-normal , anchor=north , inner~sep=0.3mm ]
+      at ( \semio_viz_pm_x:n { \l_semio_viz_pm_tmin_fp + ##1 * \l_semio_viz_pm_axis_fp } , 2 )
+      { \semio_viz_format_count:n { \l_semio_viz_pm_tmin_fp + ##1 * \l_semio_viz_pm_axis_fp } } ;
+  }
+}
+
+% 📍 Turns task row #2 into a bar record: start from the CPM early start or the explicit column, end from the duration, row from the task index.
+\cs_new_protected:Npn \semio_viz_pm_gantt_place:nn #1#2 {
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_id_tl } \l_semio_viz_pm_id_tl
+  \str_if_eq:VnTF \l_semio_viz_pm_schedule_tl { explicit }
+    {
+      \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_pm_start_tl } \l_semio_viz_pm_val_tl
+      \fp_set:Nn \l_semio_viz_pm_u_fp { \l_semio_viz_pm_val_tl }
+    }
+    {
+      \prop_get:NVN \l_semio_viz_pm_es_prop \l_semio_viz_pm_id_tl \l_semio_viz_pm_val_tl
+      \fp_set:Nn \l_semio_viz_pm_u_fp { \l_semio_viz_pm_val_tl }
+    }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_pm_duration_tl } \l_semio_viz_pm_val_tl
+  \tl_if_empty:NT \l_semio_viz_pm_val_tl { \tl_set:Nn \l_semio_viz_pm_val_tl { 0 } }
+  \fp_set:Nn \l_semio_viz_pm_v_fp { \l_semio_viz_pm_u_fp + \l_semio_viz_pm_val_tl }
+  \fp_set:Nn \l_semio_viz_dg_y_fp
+    { \l_semio_viz_dg_h_fp - 3 - ( (#2) - 0.5 ) * ( \l_semio_viz_dg_h_fp - 4 ) / \l_semio_viz_pm_n_int }
+  \tl_set:Nx \l_semio_viz_dg_rec_tl
+    {
+      \semio_viz_format_mm:n { ( \semio_viz_pm_x:n { \l_semio_viz_pm_u_fp } + \semio_viz_pm_x:n { \l_semio_viz_pm_v_fp } ) / 2 } ,
+      \semio_viz_format_mm:n { \l_semio_viz_dg_y_fp } ,
+      \semio_viz_format_mm:n { max( \semio_viz_pm_x:n { \l_semio_viz_pm_v_fp } - \semio_viz_pm_x:n { \l_semio_viz_pm_u_fp } , 0.8 ) } ,
+      \semio_viz_format_mm:n { \l_semio_viz_dg_nh_fp } , process
+    }
+  \prop_put:NVV \l_semio_viz_dg_node_prop \l_semio_viz_pm_id_tl \l_semio_viz_dg_rec_tl
+}
+
+% 🔗 Draws an orthogonal arrow from every predecessor named in the deps column of table #1 to the task that depends on it.
+\cs_new_protected:Npn \semio_viz_pm_gantt_links:n #1 {
+  \tl_set:Nn \l_semio_viz_dg_routing_tl { orthogonal }
+  \semio_viz_dg_arrow_style:N \l_semio_viz_dg_arrowstyle_tl
+  \int_step_inline:nn { \l_semio_viz_pm_n_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_id_tl } \l_semio_viz_pm_id_tl
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_pm_deps_tl } \l_semio_viz_pm_val_tl
+    \semio_viz_dg_words:NN \l_semio_viz_pm_dep_seq \l_semio_viz_pm_val_tl
+    \seq_map_inline:Nn \l_semio_viz_pm_dep_seq {
+      \tl_if_empty:nF {####1} {
+        \semio_viz_dg_route:nn { ####1 } { \l_semio_viz_pm_id_tl }
+        \use:x { \exp_not:N \semio_viz_dg_route_draw:nn
+          { semio-chrome-border-normal , line~width=\semio@stroke@hairline , \exp_not:V \l_semio_viz_dg_arrowstyle_tl } { } }
+      }
+    }
+  }
+}
+
+% 🟩 Paints bar #2 in its tone, recolours it danger when the task has zero float, draws a milestone diamond for zero-duration rows and sets the gutter label.
+\cs_new_protected:Npn \semio_viz_pm_gantt_bar:nn #1#2 {
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_id_tl } \l_semio_viz_pm_id_tl
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_tone_tl } \l_semio_viz_dg_cell_tl
+  \tl_if_empty:NTF \l_semio_viz_dg_cell_tl
+    { \semio_viz_dg_tone:n { 1 } } { \exp_args:NV \semio_viz_dg_tone:n \l_semio_viz_dg_cell_tl }
+  \bool_if:NT \l_semio_viz_pm_critical_bool {
+    \prop_get:NVN \l_semio_viz_pm_es_prop \l_semio_viz_pm_id_tl \l_semio_viz_pm_key_tl
+    \prop_get:NVN \l_semio_viz_pm_ls_prop \l_semio_viz_pm_id_tl \l_semio_viz_pm_val_tl
+    \fp_compare:nT { abs( \l_semio_viz_pm_val_tl - \l_semio_viz_pm_key_tl ) < 0.0001 }
+      {
+        \tl_set:Nn \l_semio_viz_dg_fill_tl { semio-danger!25!semio-chrome-canvas }
+        \tl_set:Nn \l_semio_viz_dg_draw_tl { semio-danger }
+      }
+  }
+  \semio_viz_dg_get:n { \l_semio_viz_pm_id_tl }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_pm_milestone_tl } \l_semio_viz_dg_cell_tl
+  \str_if_eq:VnTF \l_semio_viz_dg_cell_tl { 1 }
+    {
+      \semio_viz_dg_shape:nnnnn { diamond } { \l_semio_viz_dg_a_fp } { \l_semio_viz_dg_b_fp }
+        { \fp_eval:n { \l_semio_viz_dg_d_fp } } { \fp_eval:n { \l_semio_viz_dg_d_fp } }
+    }
+    { \semio_viz_dg_shape_named:n { terminator } }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+  \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-foreground , anchor=east , inner~sep=0.4mm ]
+    at ( \fp_eval:n { \l_semio_viz_pm_left_fp - 1 } , \fp_eval:n { \l_semio_viz_dg_b_fp } )
+    { \tl_use:N \l_semio_viz_dg_label_tl } ;
+}
+% 📆 Registers `pm-gantt` as a family for scheduled bar charts of a task table.
+\SemioVizFamily { pm-gantt } { \semio_viz_pm_gantt:n {#1} }
+
+%region 🔖️Keys-pm-network
+% 🗝️ `pm-network` is the activity-on-node view of the same task table: each node shows ES/EF/LS/LF.
+%   data/id/label/duration/deps  as in `pm-gantt`
+%   row/col   tl  grid position columns (default row/col); missing columns place by CPM start
+%   times     bool print the four schedule numbers inside the node (default true)
+%   critical  bool highlight the zero-float chain (default true)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-pm-network
+\bool_new:N \l_semio_viz_pm_times_bool
+
+% 🕸️ The `pm-network` option list: the same task table plus grid position columns, the times and critical switches, routing and frame size.
+\keys_define:nn { semio / viz / family / pm-network } {
+  data     .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  id       .tl_set:N = \l_semio_viz_dg_col_id_tl,
+  label    .tl_set:N = \l_semio_viz_dg_col_label_tl,
+  row      .tl_set:N = \l_semio_viz_dg_col_row_tl,
+  col      .tl_set:N = \l_semio_viz_dg_col_col_tl,
+  duration .tl_set:N = \l_semio_viz_pm_duration_tl,
+  deps     .tl_set:N = \l_semio_viz_pm_deps_tl,
+  times    .bool_set:N = \l_semio_viz_pm_times_bool,
+  critical .bool_set:N = \l_semio_viz_pm_critical_bool,
+  routing  .tl_set:N = \l_semio_viz_dg_routing_tl,
+  width    .fp_set:N = \l_semio_viz_dg_w_fp,
+  height   .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 🗺️ Entry point of `pm-network`: applies #1, runs the CPM, lays the tasks out on the kernel grid and draws arcs then nodes.
+\cs_new_protected:Npn \semio_viz_pm_network:n #1 {
+  \semio_viz_frame_require:n { pm-network }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-pm-gantt }
+  \tl_set:Nn \l_semio_viz_pm_duration_tl { duration }
+  \tl_set:Nn \l_semio_viz_pm_deps_tl { deps }
+  \bool_set_true:N \l_semio_viz_pm_times_bool
+  \bool_set_true:N \l_semio_viz_pm_critical_bool
+  \keys_set:nn { semio / viz / family / pm-network } {#1}
+  \use:x
+    {
+      \exp_not:N \semio_viz_pm_cpm:nnn { \exp_not:V \l_semio_viz_dg_nodes_tl }
+        { \exp_not:V \l_semio_viz_pm_duration_tl } { \exp_not:V \l_semio_viz_pm_deps_tl }
+    }
+  \semio_viz_dg_layout:
+  \exp_args:NV \semio_viz_pm_network_links:n \l_semio_viz_dg_nodes_tl
+  \exp_args:NV \semio_viz_pm_network_nodes:n \l_semio_viz_dg_nodes_tl
+}
+
+% 🪝 Draws an emphasized arrow from every predecessor listed in the deps column of table #1 to its successor node.
+\cs_new_protected:Npn \semio_viz_pm_network_links:n #1 {
+  \semio_viz_dg_arrow_style:N \l_semio_viz_dg_arrowstyle_tl
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_pm_n_int
+  \int_step_inline:nn { \l_semio_viz_pm_n_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_id_tl } \l_semio_viz_pm_id_tl
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_pm_deps_tl } \l_semio_viz_pm_val_tl
+    \semio_viz_dg_words:NN \l_semio_viz_pm_dep_seq \l_semio_viz_pm_val_tl
+    \seq_map_inline:Nn \l_semio_viz_pm_dep_seq {
+      \tl_if_empty:nF {####1} {
+        \semio_viz_dg_route:nn { ####1 } { \l_semio_viz_pm_id_tl }
+        \use:x { \exp_not:N \semio_viz_dg_route_draw:nn
+          { semio-chrome-border-emphasized , line~width=\semio@stroke@hairline , \exp_not:V \l_semio_viz_dg_arrowstyle_tl } { } }
+      }
+    }
+  }
+}
+
+% 🖼️ Draws every activity box of table #1, tinting the zero-float ones danger and adding the schedule numbers when `times` is on.
+\cs_new_protected:Npn \semio_viz_pm_network_nodes:n #1 {
+  \int_step_inline:nn { \l_semio_viz_pm_n_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_id_tl } \l_semio_viz_pm_id_tl
+    \semio_viz_dg_tone:n { 0 }
+    \bool_if:NT \l_semio_viz_pm_critical_bool {
+      \prop_get:NVN \l_semio_viz_pm_es_prop \l_semio_viz_pm_id_tl \l_semio_viz_pm_key_tl
+      \prop_get:NVN \l_semio_viz_pm_ls_prop \l_semio_viz_pm_id_tl \l_semio_viz_pm_val_tl
+      \fp_compare:nT { abs( \l_semio_viz_pm_val_tl - \l_semio_viz_pm_key_tl ) < 0.0001 }
+        {
+          \tl_set:Nn \l_semio_viz_dg_fill_tl { semio-danger!18!semio-chrome-canvas }
+          \tl_set:Nn \l_semio_viz_dg_draw_tl { semio-danger }
+        }
+    }
+    \semio_viz_dg_get:n { \l_semio_viz_pm_id_tl }
+    \semio_viz_dg_shape_named:n { process }
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+    \semio_viz_dg_label:nnnn { \l_semio_viz_dg_a_fp } { \l_semio_viz_dg_b_fp } { \l_semio_viz_dg_c_fp }
+      { \tl_use:N \l_semio_viz_dg_label_tl }
+    \bool_if:NT \l_semio_viz_pm_times_bool { \semio_viz_pm_network_times: }
+  }
+}
+
+% 🕓 Prints ES and EF in the upper corners of the current node box and LS and LF in the lower ones.
+\cs_new_protected:Npn \semio_viz_pm_network_times: {
+  \prop_get:NVN \l_semio_viz_pm_es_prop \l_semio_viz_pm_id_tl \l_semio_viz_pm_key_tl
+  \prop_get:NVN \l_semio_viz_pm_ef_prop \l_semio_viz_pm_id_tl \l_semio_viz_pm_val_tl
+  \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-text-normal , anchor=south~west , inner~sep=0.2mm ]
+    at ( \fp_eval:n { \l_semio_viz_dg_a_fp - \l_semio_viz_dg_c_fp / 2 } ,
+         \fp_eval:n { \l_semio_viz_dg_b_fp + \l_semio_viz_dg_d_fp / 2 } )
+    { \semio_viz_format_mm:n { \l_semio_viz_pm_key_tl } } ;
+  \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-text-normal , anchor=south~east , inner~sep=0.2mm ]
+    at ( \fp_eval:n { \l_semio_viz_dg_a_fp + \l_semio_viz_dg_c_fp / 2 } ,
+         \fp_eval:n { \l_semio_viz_dg_b_fp + \l_semio_viz_dg_d_fp / 2 } )
+    { \semio_viz_format_mm:n { \l_semio_viz_pm_val_tl } } ;
+  \prop_get:NVN \l_semio_viz_pm_ls_prop \l_semio_viz_pm_id_tl \l_semio_viz_pm_key_tl
+  \prop_get:NVN \l_semio_viz_pm_lf_prop \l_semio_viz_pm_id_tl \l_semio_viz_pm_val_tl
+  \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-text-normal , anchor=north~west , inner~sep=0.2mm ]
+    at ( \fp_eval:n { \l_semio_viz_dg_a_fp - \l_semio_viz_dg_c_fp / 2 } ,
+         \fp_eval:n { \l_semio_viz_dg_b_fp - \l_semio_viz_dg_d_fp / 2 } )
+    { \semio_viz_format_mm:n { \l_semio_viz_pm_key_tl } } ;
+  \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-text-normal , anchor=north~east , inner~sep=0.2mm ]
+    at ( \fp_eval:n { \l_semio_viz_dg_a_fp + \l_semio_viz_dg_c_fp / 2 } ,
+         \fp_eval:n { \l_semio_viz_dg_b_fp - \l_semio_viz_dg_d_fp / 2 } )
+    { \semio_viz_format_mm:n { \l_semio_viz_pm_val_tl } } ;
+}
+% 🧭 Registers `pm-network` as a family for the activity-on-node view of a task table.
+\SemioVizFamily { pm-network } { \semio_viz_pm_network:n {#1} }
+
+%region 🔖️Keys-pm-board
+% 🗝️ `pm-board` renders a card wall: one column per status, cards stacked inside.
+%   data     tl   card table (default demo-pm-board), columns label/status/tone/size
+%   status   tl   column key (default status)
+%   columns  clist column order; empty derives it in first-seen order (default empty)
+%   wip      clist per-column limits drawn in the header, empty for none (default empty)
+%   size     tl   optional effort column shown as a chip (default size)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-pm-board
+\tl_new:N \l_semio_viz_pm_status_tl
+\tl_new:N \l_semio_viz_pm_size_tl
+\clist_new:N \l_semio_viz_pm_columns_clist
+\clist_new:N \l_semio_viz_pm_wip_clist
+\seq_new:N \l_semio_viz_pm_cols_seq
+
+% 🗂️ The `pm-board` option list: card table, its label, tone and status columns, the column order, WIP limits, effort column and frame size.
+\keys_define:nn { semio / viz / family / pm-board } {
+  data    .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  label   .tl_set:N = \l_semio_viz_dg_col_label_tl,
+  tone    .tl_set:N = \l_semio_viz_dg_col_tone_tl,
+  status  .tl_set:N = \l_semio_viz_pm_status_tl,
+  columns .clist_set:N = \l_semio_viz_pm_columns_clist,
+  wip     .clist_set:N = \l_semio_viz_pm_wip_clist,
+  size    .tl_set:N = \l_semio_viz_pm_size_tl,
+  width   .fp_set:N = \l_semio_viz_dg_w_fp,
+  height  .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 📋 Entry point of `pm-board`: resets the kernel, restores the status and size column names, applies #1 and renders the card table.
+\cs_new_protected:Npn \semio_viz_pm_board:n #1 {
+  \semio_viz_frame_require:n { pm-board }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-pm-board }
+  \tl_set:Nn \l_semio_viz_pm_status_tl { status }
+  \tl_set:Nn \l_semio_viz_pm_size_tl { size }
+  \clist_clear:N \l_semio_viz_pm_columns_clist
+  \clist_clear:N \l_semio_viz_pm_wip_clist
+  \keys_set:nn { semio / viz / family / pm-board } {#1}
+  \exp_args:NV \semio_viz_pm_board_run:n \l_semio_viz_dg_nodes_tl
+}
+
+% 🧱 Derives the column order from the `columns` key or from first appearance in table #1, sizes the columns and draws each one.
+\cs_new_protected:Npn \semio_viz_pm_board_run:n #1 {
+  \seq_clear:N \l_semio_viz_pm_cols_seq
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_pm_n_int
+  \clist_if_empty:NTF \l_semio_viz_pm_columns_clist
+    {
+      \int_step_inline:nn { \l_semio_viz_pm_n_int } {
+        \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_pm_status_tl } \l_semio_viz_dg_cell_tl
+        \exp_args:NNV \seq_if_in:NnF \l_semio_viz_pm_cols_seq \l_semio_viz_dg_cell_tl
+          { \seq_put_right:NV \l_semio_viz_pm_cols_seq \l_semio_viz_dg_cell_tl }
+      }
+    }
+    { \seq_set_from_clist:NN \l_semio_viz_pm_cols_seq \l_semio_viz_pm_columns_clist }
+  \int_set:Nn \l_semio_viz_pm_j_int { \seq_count:N \l_semio_viz_pm_cols_seq }
+  \int_compare:nNnT { \l_semio_viz_pm_j_int } < { 1 } { \int_set:Nn \l_semio_viz_pm_j_int { 1 } }
+  \fp_set:Nn \l_semio_viz_dg_nw_fp { ( \l_semio_viz_dg_w_fp - 2 ) / \l_semio_viz_pm_j_int - 1.6 }
+  \int_zero:N \l_semio_viz_pm_i_int
+  \seq_map_inline:Nn \l_semio_viz_pm_cols_seq {
+    \int_incr:N \l_semio_viz_pm_i_int
+    \semio_viz_pm_board_column:nn {#1} {##1}
+  }
+}
+
+% 🗒️ Fills the tinted lane of status #2, captions it with its WIP limit and stacks the matching cards of table #1 as rounded chips.
+\cs_new_protected:Npn \semio_viz_pm_board_column:nn #1#2 {
+  \fp_set:Nn \l_semio_viz_dg_x_fp
+    { 1 + ( \l_semio_viz_pm_i_int - 0.5 ) * ( \l_semio_viz_dg_w_fp - 2 ) / \l_semio_viz_pm_j_int }
+  \semio_viz_dg_hue:nN { \l_semio_viz_pm_i_int } \l_semio_viz_dg_ta_tl
+  \fill [ \l_semio_viz_dg_ta_tl , fill~opacity=0.07 ]
+    ( \fp_eval:n { \l_semio_viz_dg_x_fp - \l_semio_viz_dg_nw_fp / 2 } , 1 )
+    rectangle ( \fp_eval:n { \l_semio_viz_dg_x_fp + \l_semio_viz_dg_nw_fp / 2 } , \fp_eval:n { \l_semio_viz_dg_h_fp - 1 } ) ;
+  \node [ font=\c_semio_viz_theme_font_chip_tl , text=\l_semio_viz_dg_ta_tl , anchor=north , inner~sep=0.4mm ]
+    at ( \fp_eval:n { \l_semio_viz_dg_x_fp } , \fp_eval:n { \l_semio_viz_dg_h_fp - 1.2 } )
+    {
+      #2
+      \clist_if_empty:NF \l_semio_viz_pm_wip_clist
+        { ~( \clist_item:Nn \l_semio_viz_pm_wip_clist { \l_semio_viz_pm_i_int } ) }
+    } ;
+  \int_zero:N \l_semio_viz_dg_j_int
+  \int_step_inline:nn { \l_semio_viz_pm_n_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_pm_status_tl } \l_semio_viz_dg_cell_tl
+    \str_if_eq:VnT \l_semio_viz_dg_cell_tl {#2} {
+      \int_incr:N \l_semio_viz_dg_j_int
+      \fp_set:Nn \l_semio_viz_dg_y_fp
+        { \l_semio_viz_dg_h_fp - 6 - ( \l_semio_viz_dg_j_int - 0.5 ) * 7 }
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_tone_tl } \l_semio_viz_dg_cell_tl
+      \tl_if_empty:NTF \l_semio_viz_dg_cell_tl
+        { \semio_viz_dg_tone:n { 0 } } { \exp_args:NV \semio_viz_dg_tone:n \l_semio_viz_dg_cell_tl }
+      \semio_viz_dg_shape:nnnnn { terminator } { \l_semio_viz_dg_x_fp } { \l_semio_viz_dg_y_fp }
+        { \fp_eval:n { \l_semio_viz_dg_nw_fp - 2 } } { 6 }
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+      \semio_viz_dg_label:nnnn { \l_semio_viz_dg_x_fp } { \l_semio_viz_dg_y_fp }
+        { \fp_eval:n { \l_semio_viz_dg_nw_fp - 2 } } { \tl_use:N \l_semio_viz_dg_label_tl }
+    }
+  }
+}
+% 📌 Registers `pm-board` as a family for kanban-style card walls.
+\SemioVizFamily { pm-board } { \semio_viz_pm_board:n {#1} }
+
+%region 🔖️Keys-matrix-grid
+% 🗝️ `matrix-grid` is the diagrammatic matrix: a labelled cell grid with optional axis captions.
+%   data     tl   cell table (default demo-matrix-grid), columns row/col/label/tone
+%   rows     clist row captions top to bottom (default High,Medium,Low)
+%   columns  clist column captions left to right (default Low,Medium,High)
+%   axis-x/axis-y tl  axis captions, empty for none (default empty)
+%   diagonal bool draw the leading diagonal, e.g. for a compatibility matrix (default false)
+%   roof     bool draw the QFD correlation roof above the columns (default false)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-matrix-grid
+\clist_new:N \l_semio_viz_pm_rows_clist
+\clist_new:N \l_semio_viz_pm_mcols_clist
+\tl_new:N \l_semio_viz_pm_axisx_tl
+\tl_new:N \l_semio_viz_pm_axisy_tl
+\bool_new:N \l_semio_viz_pm_diagonal_bool
+\bool_new:N \l_semio_viz_pm_roof_bool
+\fp_new:N \l_semio_viz_pm_cw_fp
+\fp_new:N \l_semio_viz_pm_ch_fp
+\fp_new:N \l_semio_viz_pm_ox_fp
+\fp_new:N \l_semio_viz_pm_oy_fp
+
+% 🔢 The `matrix-grid` option list: cell table and its row/col/label/tone columns, the two caption lists, axis titles, diagonal and roof switches and frame size.
+\keys_define:nn { semio / viz / family / matrix-grid } {
+  data     .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  label    .tl_set:N = \l_semio_viz_dg_col_label_tl,
+  tone     .tl_set:N = \l_semio_viz_dg_col_tone_tl,
+  row      .tl_set:N = \l_semio_viz_dg_col_row_tl,
+  col      .tl_set:N = \l_semio_viz_dg_col_col_tl,
+  rows     .clist_set:N = \l_semio_viz_pm_rows_clist,
+  columns  .clist_set:N = \l_semio_viz_pm_mcols_clist,
+  axis-x   .tl_set:N = \l_semio_viz_pm_axisx_tl,
+  axis-y   .tl_set:N = \l_semio_viz_pm_axisy_tl,
+  diagonal .bool_set:N = \l_semio_viz_pm_diagonal_bool,
+  roof     .bool_set:N = \l_semio_viz_pm_roof_bool,
+  width    .fp_set:N = \l_semio_viz_dg_w_fp,
+  height   .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 🧊 Entry point of `matrix-grid`: applies #1, derives the cell size from the caption counts and the roof reserve, then draws frame, cells and roof.
+\cs_new_protected:Npn \semio_viz_pm_matrix:n #1 {
+  \semio_viz_frame_require:n { matrix-grid }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-matrix-grid }
+  \clist_set:Nn \l_semio_viz_pm_rows_clist { High, Medium, Low }
+  \clist_set:Nn \l_semio_viz_pm_mcols_clist { Low, Medium, High }
+  \tl_clear:N \l_semio_viz_pm_axisx_tl
+  \tl_clear:N \l_semio_viz_pm_axisy_tl
+  \bool_set_false:N \l_semio_viz_pm_diagonal_bool
+  \bool_set_false:N \l_semio_viz_pm_roof_bool
+  \keys_set:nn { semio / viz / family / matrix-grid } {#1}
+  \int_set:Nn \l_semio_viz_pm_i_int { \clist_count:N \l_semio_viz_pm_rows_clist }
+  \int_set:Nn \l_semio_viz_pm_j_int { \clist_count:N \l_semio_viz_pm_mcols_clist }
+  \int_compare:nNnT { \l_semio_viz_pm_i_int } < { 1 } { \int_set:Nn \l_semio_viz_pm_i_int { 1 } }
+  \int_compare:nNnT { \l_semio_viz_pm_j_int } < { 1 } { \int_set:Nn \l_semio_viz_pm_j_int { 1 } }
+  \fp_set:Nn \l_semio_viz_pm_ox_fp { 14 }
+  \fp_set:Nn \l_semio_viz_pm_oy_fp { 5 }
+  \bool_if:NTF \l_semio_viz_pm_roof_bool
+    { \fp_set:Nn \l_semio_viz_pm_ch_fp { ( \l_semio_viz_dg_h_fp - \l_semio_viz_pm_oy_fp - 12 ) / \l_semio_viz_pm_i_int } }
+    { \fp_set:Nn \l_semio_viz_pm_ch_fp { ( \l_semio_viz_dg_h_fp - \l_semio_viz_pm_oy_fp - 4 ) / \l_semio_viz_pm_i_int } }
+  \fp_set:Nn \l_semio_viz_pm_cw_fp { ( \l_semio_viz_dg_w_fp - \l_semio_viz_pm_ox_fp - 1 ) / \l_semio_viz_pm_j_int }
+  \semio_viz_pm_matrix_frame:
+  \exp_args:NV \semio_viz_pm_matrix_cells:n \l_semio_viz_dg_nodes_tl
+  \bool_if:NT \l_semio_viz_pm_roof_bool { \semio_viz_pm_matrix_roof: }
+}
+
+% 🖋️ Sets the row captions down the left margin, the column captions above the grid and the two optional axis titles.
+\cs_new_protected:Npn \semio_viz_pm_matrix_frame: {
+  \int_zero:N \l_semio_viz_pm_n_int
+  \clist_map_inline:Nn \l_semio_viz_pm_rows_clist {
+    \int_incr:N \l_semio_viz_pm_n_int
+    \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-text-normal , anchor=east , inner~sep=0.4mm ]
+      at ( \fp_eval:n { \l_semio_viz_pm_ox_fp - 1 } ,
+           \fp_eval:n { \l_semio_viz_dg_h_fp - \l_semio_viz_pm_oy_fp - ( \l_semio_viz_pm_n_int - 0.5 ) * \l_semio_viz_pm_ch_fp } )
+      { ##1 } ;
+  }
+  \int_zero:N \l_semio_viz_pm_n_int
+  \clist_map_inline:Nn \l_semio_viz_pm_mcols_clist {
+    \int_incr:N \l_semio_viz_pm_n_int
+    \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-text-normal , anchor=south , inner~sep=0.4mm ]
+      at ( \fp_eval:n { \l_semio_viz_pm_ox_fp + ( \l_semio_viz_pm_n_int - 0.5 ) * \l_semio_viz_pm_cw_fp } ,
+           \fp_eval:n { \l_semio_viz_dg_h_fp - \l_semio_viz_pm_oy_fp + 0.4 } )
+      { ##1 } ;
+  }
+  \tl_if_empty:NF \l_semio_viz_pm_axisx_tl {
+    \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , anchor=north , inner~sep=0.4mm ]
+      at ( \fp_eval:n { \l_semio_viz_dg_w_fp / 2 } , 3.6 ) { \tl_use:N \l_semio_viz_pm_axisx_tl } ;
+  }
+  \tl_if_empty:NF \l_semio_viz_pm_axisy_tl {
+    \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , anchor=south , rotate=90 , inner~sep=0.4mm ]
+      at ( 1 , \fp_eval:n { \l_semio_viz_dg_h_fp / 2 } ) { \tl_use:N \l_semio_viz_pm_axisy_tl } ;
+  }
+}
+
+% 🎛️ Walks the full row-by-column grid and draws every cell against table #1.
+\cs_new_protected:Npn \semio_viz_pm_matrix_cells:n #1 {
+  \int_step_inline:nn { \l_semio_viz_pm_i_int } {
+    \int_step_inline:nn { \l_semio_viz_pm_j_int } { \semio_viz_pm_matrix_cell:nnn {#1} { ##1 } { ####1 } }
+  }
+}
+
+% 🔲 Looks up the row #2 / column #3 entry of table #1, draws the tinted cell with its label, the optional diagonal stroke and a geometry probe.
+\cs_new_protected:Npn \semio_viz_pm_matrix_cell:nnn #1#2#3 {
+  \fp_set:Nn \l_semio_viz_dg_x_fp { \l_semio_viz_pm_ox_fp + ( (#3) - 0.5 ) * \l_semio_viz_pm_cw_fp }
+  \fp_set:Nn \l_semio_viz_dg_y_fp
+    { \l_semio_viz_dg_h_fp - \l_semio_viz_pm_oy_fp - ( (#2) - 0.5 ) * \l_semio_viz_pm_ch_fp }
+  \tl_clear:N \l_semio_viz_dg_label_tl
+  \int_zero:N \l_semio_viz_pm_n_int
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_dg_n_int
+  \int_step_inline:nn { \l_semio_viz_dg_n_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_row_tl } \l_semio_viz_dg_ta_tl
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_col_tl } \l_semio_viz_dg_tb_tl
+    \bool_lazy_and:nnT { \str_if_eq_p:Vn \l_semio_viz_dg_ta_tl {#2} } { \str_if_eq_p:Vn \l_semio_viz_dg_tb_tl {#3} } {
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_tone_tl } \l_semio_viz_dg_cell_tl
+      \tl_if_empty:NTF \l_semio_viz_dg_cell_tl
+        { \int_set:Nn \l_semio_viz_pm_n_int { 0 } }
+        { \int_set:Nn \l_semio_viz_pm_n_int { \l_semio_viz_dg_cell_tl } }
+    }
+  }
+  \semio_viz_dg_tone:n { \l_semio_viz_pm_n_int }
+  \semio_viz_dg_shape:nnnnn { process } { \l_semio_viz_dg_x_fp } { \l_semio_viz_dg_y_fp }
+    { \l_semio_viz_pm_cw_fp } { \l_semio_viz_pm_ch_fp }
+  \bool_if:NT \l_semio_viz_pm_diagonal_bool {
+    \int_compare:nNnT {#2} = {#3} {
+      \draw [ \l_semio_viz_dg_draw_tl , line~width=\semio@stroke@hairline ]
+        ( \fp_eval:n { \l_semio_viz_dg_x_fp - \l_semio_viz_pm_cw_fp / 2 } , \fp_eval:n { \l_semio_viz_dg_y_fp - \l_semio_viz_pm_ch_fp / 2 } ) --
+        ( \fp_eval:n { \l_semio_viz_dg_x_fp + \l_semio_viz_pm_cw_fp / 2 } , \fp_eval:n { \l_semio_viz_dg_y_fp + \l_semio_viz_pm_ch_fp / 2 } ) ;
+    }
+  }
+  \semio_viz_dg_label:nnnn { \l_semio_viz_dg_x_fp } { \l_semio_viz_dg_y_fp } { \l_semio_viz_pm_cw_fp }
+    { \tl_use:N \l_semio_viz_dg_label_tl }
+  \semio_viz_probe_geometry:nx { diagram-cell }
+    {
+      \semio_viz_format_mm:n { \l_semio_viz_dg_x_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_y_fp } ,
+      \semio_viz_format_mm:n { \l_semio_viz_pm_cw_fp } , \semio_viz_format_mm:n { \l_semio_viz_pm_ch_fp }
+    }
+}
+
+% 🏠 Draws the QFD correlation roof as the two diagonals rising from each column boundary above the grid.
+\cs_new_protected:Npn \semio_viz_pm_matrix_roof: {
+  \int_step_inline:nn { \l_semio_viz_pm_j_int } {
+    \draw [ semio-chrome-border-normal , line~width=\semio@stroke@hairline ]
+      ( \fp_eval:n { \l_semio_viz_pm_ox_fp + ( ##1 - 1 ) * \l_semio_viz_pm_cw_fp } ,
+        \fp_eval:n { \l_semio_viz_dg_h_fp - \l_semio_viz_pm_oy_fp + 1.6 } ) --
+      ( \fp_eval:n { \l_semio_viz_pm_ox_fp + ( ##1 - 1 ) * \l_semio_viz_pm_cw_fp + ( \l_semio_viz_pm_j_int - ##1 + 1 ) * \l_semio_viz_pm_cw_fp / 2 } ,
+        \fp_eval:n { \l_semio_viz_dg_h_fp - \l_semio_viz_pm_oy_fp + 1.6 + ( \l_semio_viz_pm_j_int - ##1 + 1 ) * \l_semio_viz_pm_cw_fp / 2 } ) ;
+    \draw [ semio-chrome-border-normal , line~width=\semio@stroke@hairline ]
+      ( \fp_eval:n { \l_semio_viz_pm_ox_fp + ##1 * \l_semio_viz_pm_cw_fp } ,
+        \fp_eval:n { \l_semio_viz_dg_h_fp - \l_semio_viz_pm_oy_fp + 1.6 } ) --
+      ( \fp_eval:n { \l_semio_viz_pm_ox_fp + ##1 * \l_semio_viz_pm_cw_fp - ##1 * \l_semio_viz_pm_cw_fp / 2 } ,
+        \fp_eval:n { \l_semio_viz_dg_h_fp - \l_semio_viz_pm_oy_fp + 1.6 + ##1 * \l_semio_viz_pm_cw_fp / 2 } ) ;
+  }
+}
+% 🧩 Registers `matrix-grid` as a family for labelled cell grids such as risk and QFD matrices.
+\SemioVizFamily { matrix-grid } { \semio_viz_pm_matrix:n {#1} }
+
+%region 🔖️Keys-schedule-calendar
+% 🗝️ `schedule-calendar` draws a resource/day grid with interval blocks.
+%   data     tl   interval table (default demo-schedule), columns label/resource/start/end/tone
+%   resource tl   lane column (default resource)
+%   lanes    clist lane order; empty derives it in first-seen order (default empty)
+%   start/end tl  numeric interval columns in domain units (default start/end)
+%   domain   clist  `min,max` of the time axis (default 0,24)
+%   ticks    fp    axis tick spacing, 0 for none (default 6)
+%   orientation choice horizontal|vertical  lanes as rows or as columns (default horizontal)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-schedule-calendar
+\tl_new:N \l_semio_viz_pm_resource_tl
+\tl_new:N \l_semio_viz_pm_end_tl
+\tl_new:N \l_semio_viz_pm_orient_tl
+\clist_new:N \l_semio_viz_pm_lanes_clist
+\seq_new:N \l_semio_viz_pm_lanes_seq
+\fp_new:N \l_semio_viz_pm_ticks_fp
+
+% 📅 The `schedule-calendar` option list: interval table, its resource, start and end columns, the lane order, time domain, tick spacing, orientation and frame size.
+\keys_define:nn { semio / viz / family / schedule-calendar } {
+  data     .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  label    .tl_set:N = \l_semio_viz_dg_col_label_tl,
+  tone     .tl_set:N = \l_semio_viz_dg_col_tone_tl,
+  resource .tl_set:N = \l_semio_viz_pm_resource_tl,
+  lanes    .clist_set:N = \l_semio_viz_pm_lanes_clist,
+  start    .tl_set:N = \l_semio_viz_pm_start_tl,
+  end      .tl_set:N = \l_semio_viz_pm_end_tl,
+  domain   .clist_set:N = \l_semio_viz_pm_domain_clist,
+  ticks    .fp_set:N = \l_semio_viz_pm_ticks_fp,
+  orientation .tl_set:N = \l_semio_viz_pm_orient_tl,
+  width    .fp_set:N = \l_semio_viz_dg_w_fp,
+  height   .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% ⏰ Entry point of `schedule-calendar`: restores the 0..24 horizontal defaults, applies #1, unpacks the domain and the 12mm lane gutter, then renders the intervals.
+\cs_new_protected:Npn \semio_viz_pm_calendar:n #1 {
+  \semio_viz_frame_require:n { schedule-calendar }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-schedule }
+  \tl_set:Nn \l_semio_viz_pm_resource_tl { resource }
+  \tl_set:Nn \l_semio_viz_pm_start_tl { start }
+  \tl_set:Nn \l_semio_viz_pm_end_tl { end }
+  \tl_set:Nn \l_semio_viz_pm_orient_tl { horizontal }
+  \clist_set:Nn \l_semio_viz_pm_domain_clist { 0, 24 }
+  \clist_clear:N \l_semio_viz_pm_lanes_clist
+  \fp_set:Nn \l_semio_viz_pm_ticks_fp { 6 }
+  \keys_set:nn { semio / viz / family / schedule-calendar } {#1}
+  \fp_set:Nn \l_semio_viz_pm_tmin_fp { \clist_item:Nn \l_semio_viz_pm_domain_clist { 1 } }
+  \fp_set:Nn \l_semio_viz_pm_tmax_fp { \clist_item:Nn \l_semio_viz_pm_domain_clist { 2 } }
+  \fp_set:Nn \l_semio_viz_pm_left_fp { 12 }
+  \exp_args:NV \semio_viz_pm_calendar_run:n \l_semio_viz_dg_nodes_tl
+}
+
+% 🚏 Derives the lane order from the `lanes` key or from first appearance in table #1, draws the tick grid and then each lane.
+\cs_new_protected:Npn \semio_viz_pm_calendar_run:n #1 {
+  \seq_clear:N \l_semio_viz_pm_lanes_seq
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_pm_n_int
+  \clist_if_empty:NTF \l_semio_viz_pm_lanes_clist
+    {
+      \int_step_inline:nn { \l_semio_viz_pm_n_int } {
+        \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_pm_resource_tl } \l_semio_viz_dg_cell_tl
+        \exp_args:NNV \seq_if_in:NnF \l_semio_viz_pm_lanes_seq \l_semio_viz_dg_cell_tl
+          { \seq_put_right:NV \l_semio_viz_pm_lanes_seq \l_semio_viz_dg_cell_tl }
+      }
+    }
+    { \seq_set_from_clist:NN \l_semio_viz_pm_lanes_seq \l_semio_viz_pm_lanes_clist }
+  \int_set:Nn \l_semio_viz_pm_j_int { \seq_count:N \l_semio_viz_pm_lanes_seq }
+  \int_compare:nNnT { \l_semio_viz_pm_j_int } < { 1 } { \int_set:Nn \l_semio_viz_pm_j_int { 1 } }
+  \fp_compare:nT { \l_semio_viz_pm_ticks_fp > 0 } { \semio_viz_pm_calendar_ticks: }
+  \int_zero:N \l_semio_viz_pm_i_int
+  \seq_map_inline:Nn \l_semio_viz_pm_lanes_seq {
+    \int_incr:N \l_semio_viz_pm_i_int
+    \semio_viz_pm_calendar_lane:nn {#1} {##1}
+  }
+}
+
+% 🕐 Draws a faint gridline and its numeric caption per tick, running across for vertical lanes and down the frame otherwise.
+\cs_new_protected:Npn \semio_viz_pm_calendar_ticks: {
+  \int_set:Nn \l_semio_viz_pm_n_int
+    { \fp_to_int:n { ( \l_semio_viz_pm_tmax_fp - \l_semio_viz_pm_tmin_fp ) / \l_semio_viz_pm_ticks_fp } }
+  \int_step_inline:nnn { 0 } { \l_semio_viz_pm_n_int } {
+    \str_if_eq:VnTF \l_semio_viz_pm_orient_tl { vertical }
+      {
+        \draw [ semio-chrome-border-normal , line~width=\semio@stroke@hairline , draw~opacity=0.3 ]
+          ( \fp_eval:n { \l_semio_viz_pm_left_fp } ,
+            \fp_eval:n { \l_semio_viz_dg_h_fp - 4 - ##1 * \l_semio_viz_pm_ticks_fp * ( \l_semio_viz_dg_h_fp - 6 ) / ( \l_semio_viz_pm_tmax_fp - \l_semio_viz_pm_tmin_fp ) } ) --
+          ( \fp_eval:n { \l_semio_viz_dg_w_fp - 1 } ,
+            \fp_eval:n { \l_semio_viz_dg_h_fp - 4 - ##1 * \l_semio_viz_pm_ticks_fp * ( \l_semio_viz_dg_h_fp - 6 ) / ( \l_semio_viz_pm_tmax_fp - \l_semio_viz_pm_tmin_fp ) } ) ;
+        \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-text-normal , anchor=east , inner~sep=0.3mm ]
+          at ( \fp_eval:n { \l_semio_viz_pm_left_fp - 0.6 } ,
+               \fp_eval:n { \l_semio_viz_dg_h_fp - 4 - ##1 * \l_semio_viz_pm_ticks_fp * ( \l_semio_viz_dg_h_fp - 6 ) / ( \l_semio_viz_pm_tmax_fp - \l_semio_viz_pm_tmin_fp ) } )
+          { \semio_viz_format_count:n { \l_semio_viz_pm_tmin_fp + ##1 * \l_semio_viz_pm_ticks_fp } } ;
+      }
+      {
+        \draw [ semio-chrome-border-normal , line~width=\semio@stroke@hairline , draw~opacity=0.3 ]
+          ( \semio_viz_pm_x:n { \l_semio_viz_pm_tmin_fp + ##1 * \l_semio_viz_pm_ticks_fp } , 3 ) --
+          ( \semio_viz_pm_x:n { \l_semio_viz_pm_tmin_fp + ##1 * \l_semio_viz_pm_ticks_fp } , \fp_eval:n { \l_semio_viz_dg_h_fp - 1 } ) ;
+        \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-text-normal , anchor=north , inner~sep=0.3mm ]
+          at ( \semio_viz_pm_x:n { \l_semio_viz_pm_tmin_fp + ##1 * \l_semio_viz_pm_ticks_fp } , 3 )
+          { \semio_viz_format_count:n { \l_semio_viz_pm_tmin_fp + ##1 * \l_semio_viz_pm_ticks_fp } } ;
+      }
+  }
+}
+
+% 🛣️ Fixes the track position of lane #2, captions it above or to the left of the grid and draws its intervals.
+\cs_new_protected:Npn \semio_viz_pm_calendar_lane:nn #1#2 {
+  \str_if_eq:VnTF \l_semio_viz_pm_orient_tl { vertical }
+    {
+      \fp_set:Nn \l_semio_viz_dg_x_fp
+        { \l_semio_viz_pm_left_fp + ( \l_semio_viz_pm_i_int - 0.5 ) * ( \l_semio_viz_dg_w_fp - \l_semio_viz_pm_left_fp - 1 ) / \l_semio_viz_pm_j_int }
+      \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-text-normal , anchor=south , inner~sep=0.3mm ]
+        at ( \fp_eval:n { \l_semio_viz_dg_x_fp } , \fp_eval:n { \l_semio_viz_dg_h_fp - 3.6 } ) {#2} ;
+    }
+    {
+      \fp_set:Nn \l_semio_viz_dg_y_fp
+        { \l_semio_viz_dg_h_fp - 4 - ( \l_semio_viz_pm_i_int - 0.5 ) * ( \l_semio_viz_dg_h_fp - 6 ) / \l_semio_viz_pm_j_int }
+      \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-text-normal , anchor=east , inner~sep=0.3mm ]
+        at ( \fp_eval:n { \l_semio_viz_pm_left_fp - 0.6 } , \fp_eval:n { \l_semio_viz_dg_y_fp } ) {#2} ;
+    }
+  \int_step_inline:nn { \l_semio_viz_pm_n_int } { }
+  \semio_viz_pm_calendar_blocks:nn {#1} {#2}
+}
+
+% 🧰 Picks the rows of table #1 that belong to lane #2, reads their start, end, tone and label and emits one block each.
+\cs_new_protected:Npn \semio_viz_pm_calendar_blocks:nn #1#2 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_dg_n_int
+  \int_step_inline:nn { \l_semio_viz_dg_n_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_pm_resource_tl } \l_semio_viz_dg_cell_tl
+    \str_if_eq:VnT \l_semio_viz_dg_cell_tl {#2} {
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_pm_start_tl } \l_semio_viz_pm_val_tl
+      \fp_set:Nn \l_semio_viz_pm_u_fp { \l_semio_viz_pm_val_tl }
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_pm_end_tl } \l_semio_viz_pm_val_tl
+      \fp_set:Nn \l_semio_viz_pm_v_fp { \l_semio_viz_pm_val_tl }
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_tone_tl } \l_semio_viz_dg_cell_tl
+      \tl_if_empty:NTF \l_semio_viz_dg_cell_tl
+        { \semio_viz_dg_tone:n { \l_semio_viz_pm_i_int } } { \exp_args:NV \semio_viz_dg_tone:n \l_semio_viz_dg_cell_tl }
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+      \semio_viz_pm_calendar_block:
+    }
+  }
+}
+
+% 🟨 Draws the current interval as a rounded box spanning start to end, along the lane column when vertical and along the time axis otherwise.
+\cs_new_protected:Npn \semio_viz_pm_calendar_block: {
+  \str_if_eq:VnTF \l_semio_viz_pm_orient_tl { vertical }
+    {
+      \fp_set:Nn \l_semio_viz_dg_ya_fp
+        { \l_semio_viz_dg_h_fp - 4 - ( \l_semio_viz_pm_u_fp - \l_semio_viz_pm_tmin_fp ) * ( \l_semio_viz_dg_h_fp - 6 ) / ( \l_semio_viz_pm_tmax_fp - \l_semio_viz_pm_tmin_fp ) }
+      \fp_set:Nn \l_semio_viz_dg_yb_fp
+        { \l_semio_viz_dg_h_fp - 4 - ( \l_semio_viz_pm_v_fp - \l_semio_viz_pm_tmin_fp ) * ( \l_semio_viz_dg_h_fp - 6 ) / ( \l_semio_viz_pm_tmax_fp - \l_semio_viz_pm_tmin_fp ) }
+      \fp_set:Nn \l_semio_viz_dg_nw_fp
+        { ( \l_semio_viz_dg_w_fp - \l_semio_viz_pm_left_fp - 1 ) / \l_semio_viz_pm_j_int - 1.6 }
+      \semio_viz_dg_shape:nnnnn { terminator } { \l_semio_viz_dg_x_fp }
+        { \fp_eval:n { ( \l_semio_viz_dg_ya_fp + \l_semio_viz_dg_yb_fp ) / 2 } }
+        { \l_semio_viz_dg_nw_fp } { \fp_eval:n { abs( \l_semio_viz_dg_yb_fp - \l_semio_viz_dg_ya_fp ) } }
+      \semio_viz_dg_label:nnnn { \l_semio_viz_dg_x_fp }
+        { ( \l_semio_viz_dg_ya_fp + \l_semio_viz_dg_yb_fp ) / 2 } { \l_semio_viz_dg_nw_fp }
+        { \tl_use:N \l_semio_viz_dg_label_tl }
+      \semio_viz_probe_geometry:nx { diagram-block }
+        {
+          \semio_viz_format_mm:n { \l_semio_viz_dg_x_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_ya_fp } ,
+          \semio_viz_format_mm:n { \l_semio_viz_dg_x_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_yb_fp }
+        }
+    }
+    {
+      \fp_set:Nn \l_semio_viz_dg_xa_fp { \semio_viz_pm_x:n { \l_semio_viz_pm_u_fp } }
+      \fp_set:Nn \l_semio_viz_dg_xb_fp { \semio_viz_pm_x:n { \l_semio_viz_pm_v_fp } }
+      \fp_set:Nn \l_semio_viz_dg_nh_fp { ( \l_semio_viz_dg_h_fp - 6 ) / \l_semio_viz_pm_j_int - 1.4 }
+      \semio_viz_dg_shape:nnnnn { terminator }
+        { \fp_eval:n { ( \l_semio_viz_dg_xa_fp + \l_semio_viz_dg_xb_fp ) / 2 } } { \l_semio_viz_dg_y_fp }
+        { \fp_eval:n { abs( \l_semio_viz_dg_xb_fp - \l_semio_viz_dg_xa_fp ) } } { \l_semio_viz_dg_nh_fp }
+      \semio_viz_dg_label:nnnn { ( \l_semio_viz_dg_xa_fp + \l_semio_viz_dg_xb_fp ) / 2 } { \l_semio_viz_dg_y_fp }
+        { abs( \l_semio_viz_dg_xb_fp - \l_semio_viz_dg_xa_fp ) } { \tl_use:N \l_semio_viz_dg_label_tl }
+      \semio_viz_probe_geometry:nx { diagram-block }
+        {
+          \semio_viz_format_mm:n { \l_semio_viz_dg_xa_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_y_fp } ,
+          \semio_viz_format_mm:n { \l_semio_viz_dg_xb_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_y_fp }
+        }
+    }
+}
+% 📇 Registers `schedule-calendar` as a family for resource-versus-time interval grids.
+\SemioVizFamily { schedule-calendar } { \semio_viz_pm_calendar:n {#1} }
+
+%region 🔖️Keys-schedule-timedistance
+% 🗝️ `schedule-timedistance` is the train-graph: distance on one axis, time on the other,
+%    one polyline per service.
+%   data      tl  stop table (default demo-timedistance), columns service/stop/distance/time/tone
+%   service   tl  service column (default service)
+%   distance  tl  distance column (default distance)
+%   time      tl  time column (default time)
+%   stops     tl  stop-name column drawn as horizontal guides (default stop)
+%   domain-x  clist time domain `min,max` (default 0,24)
+%   domain-y  clist distance domain `min,max` (default 0,100)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-schedule-timedistance
+\tl_new:N \l_semio_viz_pm_service_tl
+\tl_new:N \l_semio_viz_pm_distance_tl
+\tl_new:N \l_semio_viz_pm_time_tl
+\tl_new:N \l_semio_viz_pm_stop_tl
+\clist_new:N \l_semio_viz_pm_domx_clist
+\clist_new:N \l_semio_viz_pm_domy_clist
+\fp_new:N \l_semio_viz_pm_dmin_fp
+\fp_new:N \l_semio_viz_pm_dmax_fp
+\seq_new:N \l_semio_viz_pm_services_seq
+
+% 🚆 The `schedule-timedistance` option list: stop table, its service, distance, time and stop columns, both axis domains and the frame size.
+\keys_define:nn { semio / viz / family / schedule-timedistance } {
+  data     .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  service  .tl_set:N = \l_semio_viz_pm_service_tl,
+  distance .tl_set:N = \l_semio_viz_pm_distance_tl,
+  time     .tl_set:N = \l_semio_viz_pm_time_tl,
+  stops    .tl_set:N = \l_semio_viz_pm_stop_tl,
+  domain-x .clist_set:N = \l_semio_viz_pm_domx_clist,
+  domain-y .clist_set:N = \l_semio_viz_pm_domy_clist,
+  width    .fp_set:N = \l_semio_viz_dg_w_fp,
+  height   .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 🚉 Entry point of `schedule-timedistance`: restores the 0..24 by 0..100 defaults and the 14mm gutter, applies #1, unpacks both domains and renders the stop table.
+\cs_new_protected:Npn \semio_viz_pm_timedistance:n #1 {
+  \semio_viz_frame_require:n { schedule-timedistance }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-timedistance }
+  \tl_set:Nn \l_semio_viz_pm_service_tl { service }
+  \tl_set:Nn \l_semio_viz_pm_distance_tl { distance }
+  \tl_set:Nn \l_semio_viz_pm_time_tl { time }
+  \tl_set:Nn \l_semio_viz_pm_stop_tl { stop }
+  \clist_set:Nn \l_semio_viz_pm_domx_clist { 0, 24 }
+  \clist_set:Nn \l_semio_viz_pm_domy_clist { 0, 100 }
+  \fp_set:Nn \l_semio_viz_pm_left_fp { 14 }
+  \keys_set:nn { semio / viz / family / schedule-timedistance } {#1}
+  \fp_set:Nn \l_semio_viz_pm_tmin_fp { \clist_item:Nn \l_semio_viz_pm_domx_clist { 1 } }
+  \fp_set:Nn \l_semio_viz_pm_tmax_fp { \clist_item:Nn \l_semio_viz_pm_domx_clist { 2 } }
+  \fp_set:Nn \l_semio_viz_pm_dmin_fp { \clist_item:Nn \l_semio_viz_pm_domy_clist { 1 } }
+  \fp_set:Nn \l_semio_viz_pm_dmax_fp { \clist_item:Nn \l_semio_viz_pm_domy_clist { 2 } }
+  \exp_args:NV \semio_viz_pm_timedistance_run:n \l_semio_viz_dg_nodes_tl
+}
+
+% 📐 Maps a distance value onto the vertical millimetre axis of the frame.
+\cs_new:Npn \semio_viz_pm_y:n #1 {
+  \fp_eval:n
+    {
+      2 + ( (#1) - \l_semio_viz_pm_dmin_fp ) / ( \l_semio_viz_pm_dmax_fp - \l_semio_viz_pm_dmin_fp )
+      * ( \l_semio_viz_dg_h_fp - 4 )
+    }
+}
+
+% 🛤️ Collects the distinct services of table #1, rules a faint guide at every stop distance and draws one polyline per service.
+\cs_new_protected:Npn \semio_viz_pm_timedistance_run:n #1 {
+  \seq_clear:N \l_semio_viz_pm_services_seq
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_pm_n_int
+  \int_step_inline:nn { \l_semio_viz_pm_n_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_pm_service_tl } \l_semio_viz_dg_cell_tl
+    \exp_args:NNV \seq_if_in:NnF \l_semio_viz_pm_services_seq \l_semio_viz_dg_cell_tl
+      { \seq_put_right:NV \l_semio_viz_pm_services_seq \l_semio_viz_dg_cell_tl }
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_pm_stop_tl } \l_semio_viz_dg_label_tl
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_pm_distance_tl } \l_semio_viz_pm_val_tl
+    \int_compare:nNnT { ##1 } < { 99 } {
+      \draw [ semio-chrome-border-normal , line~width=\semio@stroke@hairline , draw~opacity=0.25 ]
+        ( \fp_eval:n { \l_semio_viz_pm_left_fp } , \semio_viz_pm_y:n { \l_semio_viz_pm_val_tl } ) --
+        ( \fp_eval:n { \l_semio_viz_dg_w_fp - 1 } , \semio_viz_pm_y:n { \l_semio_viz_pm_val_tl } ) ;
+    }
+  }
+  \int_zero:N \l_semio_viz_pm_i_int
+  \seq_map_inline:Nn \l_semio_viz_pm_services_seq {
+    \int_incr:N \l_semio_viz_pm_i_int
+    \semio_viz_pm_timedistance_line:nn {#1} {##1}
+  }
+}
+
+% 🚂 Chains the stops of service #2 into one time-versus-distance path, probes each point and strokes the path in the service hue.
+\cs_new_protected:Npn \semio_viz_pm_timedistance_line:nn #1#2 {
+  \tl_clear:N \l_semio_viz_dg_path_tl
+  \int_step_inline:nn { \l_semio_viz_pm_n_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_pm_service_tl } \l_semio_viz_dg_cell_tl
+    \str_if_eq:VnT \l_semio_viz_dg_cell_tl {#2} {
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_pm_time_tl } \l_semio_viz_pm_val_tl
+      \fp_set:Nn \l_semio_viz_dg_xa_fp { \semio_viz_pm_x:n { \l_semio_viz_pm_val_tl } }
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_pm_distance_tl } \l_semio_viz_pm_val_tl
+      \fp_set:Nn \l_semio_viz_dg_ya_fp { \semio_viz_pm_y:n { \l_semio_viz_pm_val_tl } }
+      \tl_if_empty:NTF \l_semio_viz_dg_path_tl
+        { \tl_set:Nx \l_semio_viz_dg_path_tl { ( \semio_viz_format_mm:n { \l_semio_viz_dg_xa_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_ya_fp } ) } }
+        { \tl_put_right:Nx \l_semio_viz_dg_path_tl { -- ( \semio_viz_format_mm:n { \l_semio_viz_dg_xa_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_ya_fp } ) } }
+      \semio_viz_probe_geometry:nx { diagram-run }
+        { \semio_viz_format_mm:n { \l_semio_viz_dg_xa_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_ya_fp } }
+    }
+  }
+  \tl_if_empty:NF \l_semio_viz_dg_path_tl {
+    \semio_viz_dg_hue:nN { \l_semio_viz_pm_i_int } \l_semio_viz_dg_ta_tl
+    \draw [ \l_semio_viz_dg_ta_tl , line~width=\semio@stroke@default ] \l_semio_viz_dg_path_tl ;
+  }
+}
+% 🚞 Registers `schedule-timedistance` as a family for train-graph style service diagrams.
+\SemioVizFamily { schedule-timedistance } { \semio_viz_pm_timedistance:n {#1} }
+
+%region 🔖️Keys-seating
+% 🗝️ `seating` places seats in rows, arcs, a circle or a rectangle.
+%   data     tl   seat-block table (default demo-seating), columns label/count/tone
+%   count    tl   seat-count column (default count)
+%   shape    choice hemicycle|rows|circle|rectangle|theatre (default hemicycle)
+%   rows     int   seat rows for hemicycle/theatre/rectangle (default 4)
+%   seat     fp    millimetre seat radius (default 1.1)
+%   start/sweep fp degrees of the arc for hemicycle and circle (default 180 / 180)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-seating
+\tl_new:N \l_semio_viz_pm_count_tl
+\tl_new:N \l_semio_viz_pm_shape_tl
+\int_new:N \l_semio_viz_pm_rows_int
+\int_new:N \l_semio_viz_pm_total_int
+\int_new:N \l_semio_viz_pm_seat_int
+\fp_new:N \l_semio_viz_pm_seatr_fp
+\fp_new:N \l_semio_viz_pm_sstart_fp
+\fp_new:N \l_semio_viz_pm_ssweep_fp
+
+% 💺 The `seating` option list: block table, its label, tone and count columns, the arrangement, row count, seat radius, arc start and sweep and frame size.
+\keys_define:nn { semio / viz / family / seating } {
+  data   .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  label  .tl_set:N = \l_semio_viz_dg_col_label_tl,
+  tone   .tl_set:N = \l_semio_viz_dg_col_tone_tl,
+  count  .tl_set:N = \l_semio_viz_pm_count_tl,
+  shape  .tl_set:N = \l_semio_viz_pm_shape_tl,
+  rows   .int_set:N = \l_semio_viz_pm_rows_int,
+  seat   .fp_set:N = \l_semio_viz_pm_seatr_fp,
+  start  .fp_set:N = \l_semio_viz_pm_sstart_fp,
+  sweep  .fp_set:N = \l_semio_viz_pm_ssweep_fp,
+  width  .fp_set:N = \l_semio_viz_dg_w_fp,
+  height .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 🎟️ Entry point of `seating`: restores the four-row hemicycle defaults, applies #1 and renders the seat-block table.
+\cs_new_protected:Npn \semio_viz_pm_seating:n #1 {
+  \semio_viz_frame_require:n { seating }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-seating }
+  \tl_set:Nn \l_semio_viz_pm_count_tl { count }
+  \tl_set:Nn \l_semio_viz_pm_shape_tl { hemicycle }
+  \int_set:Nn \l_semio_viz_pm_rows_int { 4 }
+  \fp_set:Nn \l_semio_viz_pm_seatr_fp { 1.1 }
+  \fp_set:Nn \l_semio_viz_pm_sstart_fp { 180 }
+  \fp_set:Nn \l_semio_viz_pm_ssweep_fp { 180 }
+  \keys_set:nn { semio / viz / family / seating } {#1}
+  \exp_args:NV \semio_viz_pm_seating_run:n \l_semio_viz_dg_nodes_tl
+}
+
+% 🧾 Sums the seat counts of table #1 into the running total, clamps the counters and draws every block in table order.
+\cs_new_protected:Npn \semio_viz_pm_seating_run:n #1 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_pm_n_int
+  \int_zero:N \l_semio_viz_pm_total_int
+  \int_step_inline:nn { \l_semio_viz_pm_n_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_pm_count_tl } \l_semio_viz_pm_val_tl
+    \int_add:Nn \l_semio_viz_pm_total_int { \l_semio_viz_pm_val_tl }
+  }
+  \int_compare:nNnT { \l_semio_viz_pm_total_int } < { 1 } { \int_set:Nn \l_semio_viz_pm_total_int { 1 } }
+  \int_compare:nNnT { \l_semio_viz_pm_rows_int } < { 1 } { \int_set:Nn \l_semio_viz_pm_rows_int { 1 } }
+  \int_zero:N \l_semio_viz_pm_seat_int
+  \int_step_inline:nn { \l_semio_viz_pm_n_int } { \semio_viz_pm_seating_block:nn {#1} {##1} }
+}
+
+% 🎨 Sets the tone of block #2 and emits as many seats as its count column asks for, continuing the global seat numbering.
+\cs_new_protected:Npn \semio_viz_pm_seating_block:nn #1#2 {
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_pm_count_tl } \l_semio_viz_pm_val_tl
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_tone_tl } \l_semio_viz_dg_cell_tl
+  \tl_if_empty:NTF \l_semio_viz_dg_cell_tl
+    { \semio_viz_dg_tone:n {#2} } { \exp_args:NV \semio_viz_dg_tone:n \l_semio_viz_dg_cell_tl }
+  \int_step_inline:nn { \l_semio_viz_pm_val_tl } {
+    \int_incr:N \l_semio_viz_pm_seat_int
+    \semio_viz_pm_seat_at:
+  }
+}
+
+% 🪑 Turns the running seat number into a row and index, places it per arrangement (rows, rectangle, raked theatre, full circle or the default hemicycle) and fills the seat dot.
+\cs_new_protected:Npn \semio_viz_pm_seat_at: {
+  \int_set:Nn \l_semio_viz_dg_ia_int
+    { \int_div_truncate:nn { \l_semio_viz_pm_seat_int - 1 } { \int_div_truncate:nn { \l_semio_viz_pm_total_int } { \l_semio_viz_pm_rows_int } + 1 } }
+  \int_compare:nNnT { \l_semio_viz_dg_ia_int } > { \l_semio_viz_pm_rows_int - 1 }
+    { \int_set:Nn \l_semio_viz_dg_ia_int { \l_semio_viz_pm_rows_int - 1 } }
+  \int_set:Nn \l_semio_viz_dg_ib_int
+    { \int_div_truncate:nn { \l_semio_viz_pm_total_int } { \l_semio_viz_pm_rows_int } + 1 }
+  \int_set:Nn \l_semio_viz_dg_j_int
+    { \l_semio_viz_pm_seat_int - \l_semio_viz_dg_ia_int * \l_semio_viz_dg_ib_int }
+  \str_case:VnF \l_semio_viz_pm_shape_tl {
+    { rows } {
+      \fp_set:Nn \l_semio_viz_dg_x_fp
+        { 2 + ( \l_semio_viz_dg_j_int - 0.5 ) * ( \l_semio_viz_dg_w_fp - 4 ) / \l_semio_viz_dg_ib_int }
+      \fp_set:Nn \l_semio_viz_dg_y_fp
+        { \l_semio_viz_dg_h_fp - 2 - ( \l_semio_viz_dg_ia_int + 0.5 ) * ( \l_semio_viz_dg_h_fp - 4 ) / \l_semio_viz_pm_rows_int }
+    }
+    { rectangle } {
+      \fp_set:Nn \l_semio_viz_dg_x_fp
+        { 2 + ( \l_semio_viz_dg_j_int - 0.5 ) * ( \l_semio_viz_dg_w_fp - 4 ) / \l_semio_viz_dg_ib_int }
+      \fp_set:Nn \l_semio_viz_dg_y_fp
+        { \l_semio_viz_dg_h_fp - 2 - ( \l_semio_viz_dg_ia_int + 0.5 ) * ( \l_semio_viz_dg_h_fp - 4 ) / \l_semio_viz_pm_rows_int }
+    }
+    { theatre } {
+      \fp_set:Nn \l_semio_viz_dg_x_fp
+        {
+          \l_semio_viz_dg_w_fp / 2 +
+          ( \l_semio_viz_dg_j_int - ( \l_semio_viz_dg_ib_int + 1 ) / 2 ) *
+          ( \l_semio_viz_dg_w_fp - 6 ) / \l_semio_viz_dg_ib_int * ( 1 + 0.08 * \l_semio_viz_dg_ia_int )
+        }
+      \fp_set:Nn \l_semio_viz_dg_y_fp
+        { 3 + \l_semio_viz_dg_ia_int * ( \l_semio_viz_dg_h_fp - 6 ) / \l_semio_viz_pm_rows_int }
+    }
+    { circle } {
+      \fp_set:Nn \l_semio_viz_dg_ya_fp
+        { \l_semio_viz_pm_sstart_fp + 360 * ( \l_semio_viz_pm_seat_int - 1 ) / \l_semio_viz_pm_total_int }
+      \fp_set:Nn \l_semio_viz_dg_xa_fp { min( \l_semio_viz_dg_w_fp , \l_semio_viz_dg_h_fp ) / 2 - 3 }
+      \fp_set:Nn \l_semio_viz_dg_x_fp { \l_semio_viz_dg_w_fp / 2 + \l_semio_viz_dg_xa_fp * cosd( \l_semio_viz_dg_ya_fp ) }
+      \fp_set:Nn \l_semio_viz_dg_y_fp { \l_semio_viz_dg_h_fp / 2 + \l_semio_viz_dg_xa_fp * sind( \l_semio_viz_dg_ya_fp ) }
+    }
+  }
+  {
+    \fp_set:Nn \l_semio_viz_dg_xa_fp
+      {
+        ( min( \l_semio_viz_dg_w_fp / 2 , \l_semio_viz_dg_h_fp ) - 3 ) *
+        ( 0.45 + 0.55 * \l_semio_viz_dg_ia_int / max( \l_semio_viz_pm_rows_int - 1 , 1 ) )
+      }
+    \fp_set:Nn \l_semio_viz_dg_ya_fp
+      { \l_semio_viz_pm_sstart_fp - \l_semio_viz_pm_ssweep_fp * ( \l_semio_viz_dg_j_int - 0.5 ) / \l_semio_viz_dg_ib_int }
+    \fp_set:Nn \l_semio_viz_dg_x_fp { \l_semio_viz_dg_w_fp / 2 + \l_semio_viz_dg_xa_fp * cosd( \l_semio_viz_dg_ya_fp ) }
+    \fp_set:Nn \l_semio_viz_dg_y_fp { 3 + \l_semio_viz_dg_xa_fp * abs( sind( \l_semio_viz_dg_ya_fp ) ) }
+  }
+  \fill [ \l_semio_viz_dg_draw_tl ]
+    ( \fp_eval:n { \l_semio_viz_dg_x_fp } , \fp_eval:n { \l_semio_viz_dg_y_fp } )
+    circle [ radius=\fp_eval:n { \l_semio_viz_pm_seatr_fp } ] ;
+  \semio_viz_probe_geometry:nx { diagram-seat }
+    { \semio_viz_format_mm:n { \l_semio_viz_dg_x_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_y_fp } }
+}
+% 🏟️ Registers `seating` as a family for chamber, hall and auditorium seat plans.
+\SemioVizFamily { seating } { \semio_viz_pm_seating:n {#1} }
+
+%region 🔖️Keys-notation-board
+% 🗝️ `notation-board` draws a game board and its pieces.
+%   files/ranks int  board size (default 8 / 8)
+%   checker  bool alternate the cell fill, off for a Go grid (default true)
+%   lines    bool draw pieces on the intersections instead of in the cells (default false)
+%   data     tl   piece table (default demo-board), columns file/rank/piece/tone
+%   coords   bool draw the file and rank captions (default true)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-notation-board
+\int_new:N \l_semio_viz_pm_files_int
+\int_new:N \l_semio_viz_pm_ranks_int
+\bool_new:N \l_semio_viz_pm_checker_bool
+\bool_new:N \l_semio_viz_pm_lines_bool
+\bool_new:N \l_semio_viz_pm_coords_bool
+
+% ♟️ The `notation-board` option list: piece table, board size in files and ranks, the checker, intersection and coordinate switches and frame size.
+\keys_define:nn { semio / viz / family / notation-board } {
+  data    .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  files   .int_set:N = \l_semio_viz_pm_files_int,
+  ranks   .int_set:N = \l_semio_viz_pm_ranks_int,
+  checker .bool_set:N = \l_semio_viz_pm_checker_bool,
+  lines   .bool_set:N = \l_semio_viz_pm_lines_bool,
+  coords  .bool_set:N = \l_semio_viz_pm_coords_bool,
+  width   .fp_set:N = \l_semio_viz_dg_w_fp,
+  height  .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 🎲 Entry point of `notation-board`: restores the 8 by 8 checkered defaults, applies #1, derives a square cell size and centres the board, then draws cells and pieces.
+\cs_new_protected:Npn \semio_viz_pm_board_game:n #1 {
+  \semio_viz_frame_require:n { notation-board }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-board }
+  \int_set:Nn \l_semio_viz_pm_files_int { 8 }
+  \int_set:Nn \l_semio_viz_pm_ranks_int { 8 }
+  \bool_set_true:N \l_semio_viz_pm_checker_bool
+  \bool_set_false:N \l_semio_viz_pm_lines_bool
+  \bool_set_true:N \l_semio_viz_pm_coords_bool
+  \keys_set:nn { semio / viz / family / notation-board } {#1}
+  \fp_set:Nn \l_semio_viz_pm_cw_fp
+    {
+      min(
+        ( \l_semio_viz_dg_w_fp - 4 ) / \l_semio_viz_pm_files_int ,
+        ( \l_semio_viz_dg_h_fp - 4 ) / \l_semio_viz_pm_ranks_int
+      )
+    }
+  \fp_set:Nn \l_semio_viz_pm_ox_fp { ( \l_semio_viz_dg_w_fp - \l_semio_viz_pm_cw_fp * \l_semio_viz_pm_files_int ) / 2 }
+  \fp_set:Nn \l_semio_viz_pm_oy_fp { ( \l_semio_viz_dg_h_fp - \l_semio_viz_pm_cw_fp * \l_semio_viz_pm_ranks_int ) / 2 }
+  \semio_viz_pm_board_cells:
+  \exp_args:NV \semio_viz_pm_board_pieces:n \l_semio_viz_dg_nodes_tl
+}
+
+% 🔳 Draws a Go-style grid of crossing lines when `lines` is on, otherwise the shaded cells inside an outer border.
+\cs_new_protected:Npn \semio_viz_pm_board_cells: {
+  \bool_if:NTF \l_semio_viz_pm_lines_bool
+    {
+      \int_step_inline:nn { \l_semio_viz_pm_files_int } {
+        \draw [ semio-chrome-border-emphasized , line~width=\semio@stroke@hairline ]
+          ( \fp_eval:n { \l_semio_viz_pm_ox_fp + ( ##1 - 0.5 ) * \l_semio_viz_pm_cw_fp } , \fp_eval:n { \l_semio_viz_pm_oy_fp + 0.5 * \l_semio_viz_pm_cw_fp } ) --
+          ( \fp_eval:n { \l_semio_viz_pm_ox_fp + ( ##1 - 0.5 ) * \l_semio_viz_pm_cw_fp } ,
+            \fp_eval:n { \l_semio_viz_pm_oy_fp + ( \l_semio_viz_pm_ranks_int - 0.5 ) * \l_semio_viz_pm_cw_fp } ) ;
+      }
+      \int_step_inline:nn { \l_semio_viz_pm_ranks_int } {
+        \draw [ semio-chrome-border-emphasized , line~width=\semio@stroke@hairline ]
+          ( \fp_eval:n { \l_semio_viz_pm_ox_fp + 0.5 * \l_semio_viz_pm_cw_fp } , \fp_eval:n { \l_semio_viz_pm_oy_fp + ( ##1 - 0.5 ) * \l_semio_viz_pm_cw_fp } ) --
+          ( \fp_eval:n { \l_semio_viz_pm_ox_fp + ( \l_semio_viz_pm_files_int - 0.5 ) * \l_semio_viz_pm_cw_fp } ,
+            \fp_eval:n { \l_semio_viz_pm_oy_fp + ( ##1 - 0.5 ) * \l_semio_viz_pm_cw_fp } ) ;
+      }
+    }
+    {
+      \int_step_inline:nn { \l_semio_viz_pm_files_int } {
+        \int_step_inline:nn { \l_semio_viz_pm_ranks_int } { \semio_viz_pm_board_cell:nn { ##1 } { ####1 } }
+      }
+      \draw [ semio-chrome-border-emphasized , line~width=\semio@stroke@hairline ]
+        ( \fp_eval:n { \l_semio_viz_pm_ox_fp } , \fp_eval:n { \l_semio_viz_pm_oy_fp } )
+        rectangle ( \fp_eval:n { \l_semio_viz_pm_ox_fp + \l_semio_viz_pm_files_int * \l_semio_viz_pm_cw_fp } ,
+                    \fp_eval:n { \l_semio_viz_pm_oy_fp + \l_semio_viz_pm_ranks_int * \l_semio_viz_pm_cw_fp } ) ;
+    }
+}
+
+% ⬛ Fills the square at file #1, rank #2 with the panel tone on the dark half of the checker pattern.
+\cs_new_protected:Npn \semio_viz_pm_board_cell:nn #1#2 {
+  \bool_if:NT \l_semio_viz_pm_checker_bool {
+    \int_compare:nNnT { \int_mod:nn { (#1) + (#2) } { 2 } } = { 0 } {
+      \fill [ semio-chrome-panel ]
+        ( \fp_eval:n { \l_semio_viz_pm_ox_fp + ( (#1) - 1 ) * \l_semio_viz_pm_cw_fp } ,
+          \fp_eval:n { \l_semio_viz_pm_oy_fp + ( (#2) - 1 ) * \l_semio_viz_pm_cw_fp } )
+        rectangle ( \fp_eval:n { \l_semio_viz_pm_ox_fp + (#1) * \l_semio_viz_pm_cw_fp } ,
+                    \fp_eval:n { \l_semio_viz_pm_oy_fp + (#2) * \l_semio_viz_pm_cw_fp } ) ;
+    }
+  }
+}
+
+% ⚫ Draws each row of the piece table #1 as a toned disc on its file/rank square with the piece glyph on top.
+\cs_new_protected:Npn \semio_viz_pm_board_pieces:n #1 {
+  \seq_if_in:NnT \g_semio_viz_table_names_seq {#1} {
+    \semio_viz_table_nrows:nN {#1} \l_semio_viz_pm_n_int
+    \int_step_inline:nn { \l_semio_viz_pm_n_int } {
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { file } \l_semio_viz_pm_val_tl
+      \fp_set:Nn \l_semio_viz_dg_x_fp
+        { \l_semio_viz_pm_ox_fp + ( \l_semio_viz_pm_val_tl - 0.5 ) * \l_semio_viz_pm_cw_fp }
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { rank } \l_semio_viz_pm_val_tl
+      \fp_set:Nn \l_semio_viz_dg_y_fp
+        { \l_semio_viz_pm_oy_fp + ( \l_semio_viz_pm_val_tl - 0.5 ) * \l_semio_viz_pm_cw_fp }
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { tone } \l_semio_viz_dg_cell_tl
+      \tl_if_empty:NTF \l_semio_viz_dg_cell_tl
+        { \semio_viz_dg_tone:n { 0 } } { \exp_args:NV \semio_viz_dg_tone:n \l_semio_viz_dg_cell_tl }
+      \draw [ \l_semio_viz_dg_draw_tl , fill=\l_semio_viz_dg_fill_tl , line~width=\semio@stroke@hairline ]
+        ( \fp_eval:n { \l_semio_viz_dg_x_fp } , \fp_eval:n { \l_semio_viz_dg_y_fp } )
+        circle [ radius=\fp_eval:n { \l_semio_viz_pm_cw_fp * 0.36 } ] ;
+      \semio_viz_table_cell_opt:nnnN {#1} {##1} { piece } \l_semio_viz_dg_label_tl
+      \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-foreground , anchor=center , inner~sep=0pt ]
+        at ( \fp_eval:n { \l_semio_viz_dg_x_fp } , \fp_eval:n { \l_semio_viz_dg_y_fp } )
+        { \tl_use:N \l_semio_viz_dg_label_tl } ;
+    }
+  }
+}
+% 🎮 Registers `notation-board` as a family for chess, draughts and Go position diagrams.
+\SemioVizFamily { notation-board } { \semio_viz_pm_board_game:n {#1} }
+
+%region 🔖️Keys-notation-railroad
+% 🗝️ `notation-railroad` draws a syntax railroad track from a term table.
+%   data     tl   term table (default demo-railroad), columns label/kind/branch
+%   kind     tl   term kind column; terminal|nonterminal|skip (default kind)
+%   branch   tl   branch index column; `0` is the main line (default branch)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-notation-railroad
+\tl_new:N \l_semio_viz_pm_kind_tl
+\tl_new:N \l_semio_viz_pm_branch_tl
+
+% 🚧 The `notation-railroad` option list: term table, its label, kind and branch columns and the frame size.
+\keys_define:nn { semio / viz / family / notation-railroad } {
+  data   .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  label  .tl_set:N = \l_semio_viz_dg_col_label_tl,
+  kind   .tl_set:N = \l_semio_viz_pm_kind_tl,
+  branch .tl_set:N = \l_semio_viz_pm_branch_tl,
+  width  .fp_set:N = \l_semio_viz_dg_w_fp,
+  height .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 🚄 Entry point of `notation-railroad`: restores the kind and branch column names, applies #1 and renders the term table.
+\cs_new_protected:Npn \semio_viz_pm_railroad:n #1 {
+  \semio_viz_frame_require:n { notation-railroad }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-railroad }
+  \tl_set:Nn \l_semio_viz_pm_kind_tl { kind }
+  \tl_set:Nn \l_semio_viz_pm_branch_tl { branch }
+  \keys_set:nn { semio / viz / family / notation-railroad } {#1}
+  \exp_args:NV \semio_viz_pm_railroad_run:n \l_semio_viz_dg_nodes_tl
+}
+
+% 🧵 Sizes the term boxes from the row count, draws the arrowed main line across the frame and places every term on it.
+\cs_new_protected:Npn \semio_viz_pm_railroad_run:n #1 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_pm_n_int
+  \int_compare:nNnT { \l_semio_viz_pm_n_int } < { 1 } { \int_set:Nn \l_semio_viz_pm_n_int { 1 } }
+  \fp_set:Nn \l_semio_viz_dg_y_fp { \l_semio_viz_dg_h_fp / 2 }
+  \fp_set:Nn \l_semio_viz_dg_nw_fp { ( \l_semio_viz_dg_w_fp - 8 ) / \l_semio_viz_pm_n_int - 2 }
+  \fp_compare:nT { \l_semio_viz_dg_nw_fp < 6 } { \fp_set:Nn \l_semio_viz_dg_nw_fp { 6 } }
+  \draw [ semio-chrome-border-emphasized , line~width=\semio@stroke@hairline , -{Latex[length=1.6mm,width=1.2mm]} ]
+    ( 1 , \fp_eval:n { \l_semio_viz_dg_y_fp } ) -- ( \fp_eval:n { \l_semio_viz_dg_w_fp - 1 } , \fp_eval:n { \l_semio_viz_dg_y_fp } ) ;
+  \int_step_inline:nn { \l_semio_viz_pm_n_int } { \semio_viz_pm_railroad_term:nn {#1} {##1} }
+}
+
+% 🎫 Offsets term #2 by its branch index, draws the detour track back to the main line and boxes the term as terminal or nonterminal unless its kind is `skip`.
+\cs_new_protected:Npn \semio_viz_pm_railroad_term:nn #1#2 {
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_pm_branch_tl } \l_semio_viz_pm_val_tl
+  \tl_if_empty:NT \l_semio_viz_pm_val_tl { \tl_set:Nn \l_semio_viz_pm_val_tl { 0 } }
+  \fp_set:Nn \l_semio_viz_dg_x_fp
+    { 4 + ( (#2) - 0.5 ) * ( \l_semio_viz_dg_w_fp - 8 ) / \l_semio_viz_pm_n_int }
+  \fp_set:Nn \l_semio_viz_dg_ya_fp
+    { \l_semio_viz_dg_y_fp - \l_semio_viz_pm_val_tl * ( \l_semio_viz_dg_h_fp / 2 - 4 ) / 2 }
+  \fp_compare:nT { abs( \l_semio_viz_pm_val_tl ) > 0.001 } {
+    \draw [ semio-chrome-border-emphasized , line~width=\semio@stroke@hairline ]
+      ( \fp_eval:n { \l_semio_viz_dg_x_fp - \l_semio_viz_dg_nw_fp / 2 - 2 } , \fp_eval:n { \l_semio_viz_dg_y_fp } ) --
+      ( \fp_eval:n { \l_semio_viz_dg_x_fp - \l_semio_viz_dg_nw_fp / 2 } , \fp_eval:n { \l_semio_viz_dg_ya_fp } ) --
+      ( \fp_eval:n { \l_semio_viz_dg_x_fp + \l_semio_viz_dg_nw_fp / 2 } , \fp_eval:n { \l_semio_viz_dg_ya_fp } ) --
+      ( \fp_eval:n { \l_semio_viz_dg_x_fp + \l_semio_viz_dg_nw_fp / 2 + 2 } , \fp_eval:n { \l_semio_viz_dg_y_fp } ) ;
+  }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_pm_kind_tl } \l_semio_viz_dg_cell_tl
+  \str_if_eq:VnF \l_semio_viz_dg_cell_tl { skip } {
+    \str_if_eq:VnTF \l_semio_viz_dg_cell_tl { nonterminal }
+      { \semio_viz_dg_tone:n { 2 } } { \semio_viz_dg_tone:n { 1 } }
+    \str_if_eq:VnTF \l_semio_viz_dg_cell_tl { nonterminal }
+      {
+        \semio_viz_dg_shape:nnnnn { process } { \l_semio_viz_dg_x_fp } { \l_semio_viz_dg_ya_fp }
+          { \l_semio_viz_dg_nw_fp } { 5 }
+      }
+      {
+        \semio_viz_dg_shape:nnnnn { terminator } { \l_semio_viz_dg_x_fp } { \l_semio_viz_dg_ya_fp }
+          { \l_semio_viz_dg_nw_fp } { 5 }
+      }
+    \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+    \semio_viz_dg_label:nnnn { \l_semio_viz_dg_x_fp } { \l_semio_viz_dg_ya_fp } { \l_semio_viz_dg_nw_fp }
+      { \tl_use:N \l_semio_viz_dg_label_tl }
+  }
+}
+% 🚝 Registers `notation-railroad` as a family for syntax railroad tracks.
+\SemioVizFamily { notation-railroad } { \semio_viz_pm_railroad:n {#1} }
+
+%region 🔖️Keys-notation-petri
+% 🗝️ `notation-petri` draws places, transitions and arcs of a Petri net.
+%   data     tl  node table (default demo-petri), columns id/label/kind/row/col/tokens
+%   edges    tl  arc table (default demo-petri-edges), columns from/to/label
+%   kind     tl  node kind column; place|transition (default kind)
+%   tokens   tl  token-count column drawn inside a place (default tokens)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-notation-petri
+\tl_new:N \l_semio_viz_pm_tokens_tl
+
+% 🕳️ The `notation-petri` option list: node and arc tables, their id, label and grid columns, the kind and token columns, routing and frame size.
+\keys_define:nn { semio / viz / family / notation-petri } {
+  data   .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  edges  .tl_set:N = \l_semio_viz_dg_edges_tl,
+  id     .tl_set:N = \l_semio_viz_dg_col_id_tl,
+  label  .tl_set:N = \l_semio_viz_dg_col_label_tl,
+  row    .tl_set:N = \l_semio_viz_dg_col_row_tl,
+  col    .tl_set:N = \l_semio_viz_dg_col_col_tl,
+  kind   .tl_set:N = \l_semio_viz_pm_kind_tl,
+  tokens .tl_set:N = \l_semio_viz_pm_tokens_tl,
+  routing .tl_set:N = \l_semio_viz_dg_routing_tl,
+  width  .fp_set:N = \l_semio_viz_dg_w_fp,
+  height .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% ⚗️ Entry point of `notation-petri`: restores the demo tables and straight routing, applies #1, lays the net out on the kernel grid, draws the arcs and then the nodes.
+\cs_new_protected:Npn \semio_viz_pm_petri:n #1 {
+  \semio_viz_frame_require:n { notation-petri }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-petri }
+  \tl_set:Nn \l_semio_viz_dg_edges_tl { demo-petri-edges }
+  \tl_set:Nn \l_semio_viz_pm_kind_tl { kind }
+  \tl_set:Nn \l_semio_viz_pm_tokens_tl { tokens }
+  \tl_set:Nn \l_semio_viz_dg_routing_tl { straight }
+  \keys_set:nn { semio / viz / family / notation-petri } {#1}
+  \semio_viz_dg_layout:
+  \semio_viz_dg_draw_edges:
+  \exp_args:NV \semio_viz_pm_petri_nodes:n \l_semio_viz_dg_nodes_tl
+}
+
+% 🪙 Draws each node of table #1 as a narrow transition bar or as a place circle carrying a token dot, and captions it below the shape.
+\cs_new_protected:Npn \semio_viz_pm_petri_nodes:n #1 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_pm_n_int
+  \int_step_inline:nn { \l_semio_viz_pm_n_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_id_tl } \l_semio_viz_dg_id_tl
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_pm_kind_tl } \l_semio_viz_dg_cell_tl
+    \semio_viz_dg_tone:n { 0 }
+    \semio_viz_dg_get:n { \l_semio_viz_dg_id_tl }
+    \fp_set:Nn \l_semio_viz_pm_u_fp { min( \l_semio_viz_dg_c_fp , \l_semio_viz_dg_d_fp , 11 ) }
+    \str_if_eq:VnTF \l_semio_viz_dg_cell_tl { transition }
+      {
+        \semio_viz_dg_shape:nnnnn { process } { \l_semio_viz_dg_a_fp } { \l_semio_viz_dg_b_fp }
+          { 2.4 } { \fp_eval:n { \l_semio_viz_pm_u_fp } }
+      }
+      {
+        \semio_viz_dg_shape:nnnnn { circle } { \l_semio_viz_dg_a_fp } { \l_semio_viz_dg_b_fp }
+          { \fp_eval:n { \l_semio_viz_pm_u_fp } } { \fp_eval:n { \l_semio_viz_pm_u_fp } }
+        \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_pm_tokens_tl } \l_semio_viz_pm_val_tl
+        \tl_if_empty:NF \l_semio_viz_pm_val_tl {
+          \int_compare:nNnT { \l_semio_viz_pm_val_tl } > { 0 } {
+            \fill [ semio-chrome-foreground ]
+              ( \fp_eval:n { \l_semio_viz_dg_a_fp } , \fp_eval:n { \l_semio_viz_dg_b_fp } ) circle [ radius=0.7 ] ;
+          }
+        }
+      }
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+    \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-text-normal , anchor=north , inner~sep=0.4mm ]
+      at ( \fp_eval:n { \l_semio_viz_dg_a_fp } , \fp_eval:n { \l_semio_viz_dg_b_fp - \l_semio_viz_dg_d_fp / 2 } )
+      { \tl_use:N \l_semio_viz_dg_label_tl } ;
+  }
+}
+% 🔬 Registers `notation-petri` as a family for Petri-net place/transition diagrams.
+\SemioVizFamily { notation-petri } { \semio_viz_pm_petri:n {#1} }
+
+%region 🔖️DemoData
+% 🧪 Planning, schedule, matrix, seating and notation fixtures.
+\cs_new_protected:Npn \semio_viz_pm_demo: {
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-pm-gantt } {
+    \semio_viz_table_new:nn { demo-pm-gantt } { id, label, duration, deps, row, col, milestone, tone }
+    \semio_viz_table_row:nn { demo-pm-gantt } { a, {Survey}, 3, , 1, 1, 0, 1 }
+    \semio_viz_table_row:nn { demo-pm-gantt } { b, {Concept}, 4, a, 1, 2, 0, 1 }
+    \semio_viz_table_row:nn { demo-pm-gantt } { c, {Permit}, 6, a, 2, 2, 0, 2 }
+    \semio_viz_table_row:nn { demo-pm-gantt } { d, {Detail}, 5, b, 1, 3, 0, 1 }
+    \semio_viz_table_row:nn { demo-pm-gantt } { e, {Tender}, 2, {c~d}, 2, 4, 0, 3 }
+    \semio_viz_table_row:nn { demo-pm-gantt } { f, {Handover}, 0, e, 1, 5, 1, 4 }
+  }
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-pm-board } {
+    \semio_viz_table_new:nn { demo-pm-board } { label, status, size, tone }
+    \semio_viz_table_row:nn { demo-pm-board } { {Survey site}, Backlog, 3, 1 }
+    \semio_viz_table_row:nn { demo-pm-board } { {Draft plan}, Backlog, 5, 1 }
+    \semio_viz_table_row:nn { demo-pm-board } { {Model roof}, Doing, 8, 2 }
+    \semio_viz_table_row:nn { demo-pm-board } { {Cost check}, Doing, 2, 2 }
+    \semio_viz_table_row:nn { demo-pm-board } { {Site photos}, Done, 1, 3 }
+  }
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-matrix-grid } {
+    \semio_viz_table_new:nn { demo-matrix-grid } { row, col, label, tone }
+    \semio_viz_table_row:nn { demo-matrix-grid } { 1, 1, {Watch}, 2 }
+    \semio_viz_table_row:nn { demo-matrix-grid } { 1, 3, {Act now}, 7 }
+    \semio_viz_table_row:nn { demo-matrix-grid } { 2, 2, {Plan}, 5 }
+    \semio_viz_table_row:nn { demo-matrix-grid } { 3, 1, {Accept}, 5 }
+    \semio_viz_table_row:nn { demo-matrix-grid } { 3, 3, {Mitigate}, 6 }
+  }
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-schedule } {
+    \semio_viz_table_new:nn { demo-schedule } { label, resource, start, end, tone }
+    \semio_viz_table_row:nn { demo-schedule } { {Early}, {Crew A}, 6, 14, 1 }
+    \semio_viz_table_row:nn { demo-schedule } { {Late}, {Crew A}, 15, 22, 2 }
+    \semio_viz_table_row:nn { demo-schedule } { {Full}, {Crew B}, 8, 17, 3 }
+    \semio_viz_table_row:nn { demo-schedule } { {Night}, {Crew C}, 0, 6, 4 }
+    \semio_viz_table_row:nn { demo-schedule } { {Setup}, {Crew C}, 18, 24, 4 }
+  }
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-timedistance } {
+    \semio_viz_table_new:nn { demo-timedistance } { service, stop, distance, time }
+    \semio_viz_table_row:nn { demo-timedistance } { {IC 1}, {Hannover}, 0, 6 }
+    \semio_viz_table_row:nn { demo-timedistance } { {IC 1}, {Celle}, 40, 7 }
+    \semio_viz_table_row:nn { demo-timedistance } { {IC 1}, {Uelzen}, 70, 8 }
+    \semio_viz_table_row:nn { demo-timedistance } { {IC 1}, {Lueneburg}, 100, 9 }
+    \semio_viz_table_row:nn { demo-timedistance } { {RE 2}, {Lueneburg}, 100, 7 }
+    \semio_viz_table_row:nn { demo-timedistance } { {RE 2}, {Uelzen}, 70, 9 }
+    \semio_viz_table_row:nn { demo-timedistance } { {RE 2}, {Celle}, 40, 11 }
+    \semio_viz_table_row:nn { demo-timedistance } { {RE 2}, {Hannover}, 0, 13 }
+  }
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-seating } {
+    \semio_viz_table_new:nn { demo-seating } { label, count, tone }
+    \semio_viz_table_row:nn { demo-seating } { {Group A}, 18, 1 }
+    \semio_viz_table_row:nn { demo-seating } { {Group B}, 14, 2 }
+    \semio_viz_table_row:nn { demo-seating } { {Group C}, 9, 3 }
+    \semio_viz_table_row:nn { demo-seating } { {Group D}, 7, 4 }
+    \semio_viz_table_row:nn { demo-seating } { {Independent}, 4, 5 }
+  }
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-board } {
+    \semio_viz_table_new:nn { demo-board } { file, rank, piece, tone }
+    \semio_viz_table_row:nn { demo-board } { 4, 4, K, 1 }
+    \semio_viz_table_row:nn { demo-board } { 5, 6, Q, 1 }
+    \semio_viz_table_row:nn { demo-board } { 2, 7, R, 2 }
+    \semio_viz_table_row:nn { demo-board } { 7, 2, N, 2 }
+  }
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-railroad } {
+    \semio_viz_table_new:nn { demo-railroad } { label, kind, branch }
+    \semio_viz_table_row:nn { demo-railroad } { {SELECT}, terminal, 0 }
+    \semio_viz_table_row:nn { demo-railroad } { {columns}, nonterminal, 0 }
+    \semio_viz_table_row:nn { demo-railroad } { {FROM}, terminal, 0 }
+    \semio_viz_table_row:nn { demo-railroad } { {table}, nonterminal, 0 }
+    \semio_viz_table_row:nn { demo-railroad } { {WHERE}, terminal, 1 }
+    \semio_viz_table_row:nn { demo-railroad } { {predicate}, nonterminal, 1 }
+  }
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-petri } {
+    \semio_viz_table_new:nn { demo-petri } { id, label, kind, row, col, tokens }
+    \semio_viz_table_row:nn { demo-petri } { p1, {Queued}, place, 1, 1, 2 }
+    \semio_viz_table_row:nn { demo-petri } { t1, {Start}, transition, 1, 2, 0 }
+    \semio_viz_table_row:nn { demo-petri } { p2, {Running}, place, 1, 3, 1 }
+    \semio_viz_table_row:nn { demo-petri } { t2, {Finish}, transition, 1, 4, 0 }
+    \semio_viz_table_row:nn { demo-petri } { p3, {Done}, place, 1, 5, 0 }
+    \semio_viz_table_new:nn { demo-petri-edges } { from, to, kind, label }
+    \semio_viz_table_row:nn { demo-petri-edges } { p1, t1, plain, }
+    \semio_viz_table_row:nn { demo-petri-edges } { t1, p2, plain, }
+    \semio_viz_table_row:nn { demo-petri-edges } { p2, t2, plain, }
+    \semio_viz_table_row:nn { demo-petri-edges } { t2, p3, plain, }
+  }
+}
+\semio_viz_pm_demo:
+%endregion 🔖️DemoData
+
+\ExplSyntaxOff

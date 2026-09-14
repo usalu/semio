@@ -1,0 +1,469 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-theme}[2026/09/05 v0.3.0 semio viz design-token driven palettes, schemes, strokes, fonts]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{xcolor}
+\RequirePackage{semio-tokens}
+\RequirePackage{semio-fonts}
+\RequirePackage{semio-viz-scale}
+
+\ExplSyntaxOn
+
+%region 🔖️Diagnostics
+\msg_new:nnn { semio-viz } { unknown-theme }
+  { Unknown~viz~theme~'#1'~(known:~default,~grayscale,~pattern). }
+\msg_new:nnn { semio-viz } { unknown-scheme }
+  { Unknown~viz~colour~scheme~'#1'. }
+%endregion 🔖️Diagnostics
+
+%region 🔖️Keys
+% ⚙️ Theme vocabulary. Every renderer of the library reads its colours, strokes and fonts here
+% and nowhere else, so a document changes its whole visual language through these keys.
+%   appearance   light|dark    default: the document theme, otherwise light
+%   palette      name          default presence   categorical palette: presence or brand
+%   scheme       name          default primary    sequential or diverging ramp of the theme
+%   interpolator name          default oklab      colour space the ramp is sampled in
+%   grayscale    boolean       default false      replace hues by the gray ramp
+%   patterns     boolean       default false      pair every categorical slot with a hatch
+%   stroke       name          default default    hairline|default|focus, from the design tokens
+%   font         name          default sans       sans|serif|mono, from semio-fonts
+\tl_new:N \l_semio_viz_theme_appearance_tl
+\tl_new:N \l_semio_viz_theme_palette_tl
+\tl_new:N \l_semio_viz_theme_scheme_tl
+\tl_new:N \l_semio_viz_theme_interpolator_tl
+\tl_new:N \l_semio_viz_theme_stroke_tl
+\bool_new:N \l_semio_viz_theme_grayscale_bool
+\bool_new:N \l_semio_viz_theme_patterns_bool
+
+\keys_define:nn { semio / viz / theme }
+  {
+    appearance .tl_set:N = \l_semio_viz_theme_appearance_tl,
+    palette .tl_set:N = \l_semio_viz_theme_palette_tl,
+    scheme .tl_set:N = \l_semio_viz_theme_scheme_tl,
+    interpolator .tl_set:N = \l_semio_viz_theme_interpolator_tl,
+    grayscale .bool_set:N = \l_semio_viz_theme_grayscale_bool,
+    grayscale .default:n = { true },
+    patterns .bool_set:N = \l_semio_viz_theme_patterns_bool,
+    patterns .default:n = { true },
+    stroke .tl_set:N = \l_semio_viz_theme_stroke_tl,
+  }
+
+% 🌗 Resolves the appearance: an explicit key wins, otherwise the document theme decides.
+\cs_new_protected:Npn \semio_viz_theme_appearance:N #1 {
+  \tl_if_empty:NTF \l_semio_viz_theme_appearance_tl
+    {
+      \tl_if_exist:NTF \l_semio_theme_tl
+        { \tl_set_eq:NN #1 \l_semio_theme_tl }
+        { \tl_set:Nn #1 { light } }
+    }
+    { \tl_set_eq:NN #1 \l_semio_viz_theme_appearance_tl }
+}
+\tl_new:N \l_semio_viz_theme_mode_tl
+
+% 🧹 Restores every theme key to its documented default.
+\cs_new_protected:Npn \semio_viz_theme_reset: {
+  \tl_clear:N \l_semio_viz_theme_appearance_tl
+  \tl_set:Nn \l_semio_viz_theme_palette_tl { presence }
+  \tl_set:Nn \l_semio_viz_theme_scheme_tl { primary }
+  \tl_set:Nn \l_semio_viz_theme_interpolator_tl { oklab }
+  \bool_set_false:N \l_semio_viz_theme_grayscale_bool
+  \bool_set_false:N \l_semio_viz_theme_patterns_bool
+  \tl_set:Nn \l_semio_viz_theme_stroke_tl { default }
+}
+
+\semio_viz_theme_reset:
+
+% 🎨 Named themes: presets over the same key vocabulary.
+\cs_new_protected:Npn \semio_viz_theme_use:n #1 {
+  \str_case:nnF {#1}
+    {
+      { default } { \semio_viz_theme_reset: }
+      { grayscale }
+        {
+          \semio_viz_theme_reset:
+          \bool_set_true:N \l_semio_viz_theme_grayscale_bool
+          \tl_set:Nn \l_semio_viz_theme_scheme_tl { grays }
+        }
+      { pattern }
+        {
+          \semio_viz_theme_reset:
+          \bool_set_true:N \l_semio_viz_theme_grayscale_bool
+          \bool_set_true:N \l_semio_viz_theme_patterns_bool
+          \tl_set:Nn \l_semio_viz_theme_scheme_tl { grays }
+        }
+    }
+    { \msg_error:nnn { semio-viz } { unknown-theme } {#1} }
+}
+%endregion 🔖️Keys
+
+%region 🔖️Categorical
+\int_new:N \l_semio_viz_theme_slot_int
+\clist_const:Nn \c_semio_viz_theme_brand_clist
+  {
+    semio-primary, semio-secondary, semio-tertiary, semio-info, semio-success,
+    semio-warning, semio-danger
+  }
+\clist_const:Nn \c_semio_viz_theme_gray_clist
+  {
+    semio-dark, semio-gray-300, semio-gray, semio-gray-600, semio-gray-800,
+    semio-gray-200, semio-light-gray
+  }
+
+% 🎨 Colour of the categorical slot #1 (zero based, wrapping): a colour name usable by TikZ.
+\cs_new_protected:Npn \semio_viz_theme_color:nN #1#2 {
+  \bool_if:NTF \l_semio_viz_theme_grayscale_bool
+    {
+      \int_set:Nn \l_semio_viz_theme_slot_int
+        {
+          \int_mod:nn { \int_max:nn { 0 } {#1} }
+            { \clist_count:N \c_semio_viz_theme_gray_clist } + 1
+        }
+      \tl_set:Nx #2
+        { \clist_item:Nn \c_semio_viz_theme_gray_clist { \l_semio_viz_theme_slot_int } }
+    }
+    {
+      \str_if_eq:VnTF \l_semio_viz_theme_palette_tl { brand }
+        {
+          \int_set:Nn \l_semio_viz_theme_slot_int
+            {
+              \int_mod:nn { \int_max:nn { 0 } {#1} }
+                { \clist_count:N \c_semio_viz_theme_brand_clist } + 1
+            }
+          \tl_set:Nx #2
+            { \clist_item:Nn \c_semio_viz_theme_brand_clist { \l_semio_viz_theme_slot_int } }
+        }
+        {
+          \semio_viz_theme_appearance:N \l_semio_viz_theme_mode_tl
+          \int_set:Nn \l_semio_viz_theme_slot_int
+            { \int_mod:nn { \int_max:nn { 0 } {#1} } { \c_semio_viz_theme_presence_int } }
+          \tl_set:Nx #2
+            {
+              semio-presence- \l_semio_viz_theme_mode_tl -
+              \int_use:N \l_semio_viz_theme_slot_int
+            }
+        }
+    }
+}
+\cs_generate_variant:Nn \semio_viz_theme_color:nN { VN }
+
+% 🔢 Number of distinct categorical slots the active palette offers.
+\cs_new_protected:Npn \semio_viz_theme_color_count:N #1 {
+  \bool_if:NTF \l_semio_viz_theme_grayscale_bool
+    { \int_set:Nn #1 { \clist_count:N \c_semio_viz_theme_gray_clist } }
+    {
+      \str_if_eq:VnTF \l_semio_viz_theme_palette_tl { brand }
+        { \int_set:Nn #1 { \clist_count:N \c_semio_viz_theme_brand_clist } }
+        { \int_set:Nn #1 { \c_semio_viz_theme_presence_int } }
+    }
+}
+
+% 🔢 Expandable twin of the same count, for a ramp that must divide the wheel inside a TikZ
+% option list: the number of categorical slots the active palette offers.
+\cs_new:Npn \semio_viz_theme_color_count:
+  {
+    \bool_if:NTF \l_semio_viz_theme_grayscale_bool
+      { \clist_count:N \c_semio_viz_theme_gray_clist }
+      {
+        \str_if_eq:VnTF \l_semio_viz_theme_palette_tl { brand }
+          { \clist_count:N \c_semio_viz_theme_brand_clist }
+          { \int_use:N \c_semio_viz_theme_presence_int }
+      }
+  }
+
+% 🎨 Expandable form of the same lookup: the colour name of the categorical slot #1 (zero based,
+% wrapping), usable straight inside a TikZ option list where a protected macro cannot run.
+\cs_new:Npn \semio_viz_theme_color:n #1
+  {
+    \bool_if:NTF \l_semio_viz_theme_grayscale_bool
+      {
+        \clist_item:Nn \c_semio_viz_theme_gray_clist
+          { \int_mod:nn { \int_max:nn { 0 } {#1} }
+            { \clist_count:N \c_semio_viz_theme_gray_clist } + 1 }
+      }
+      {
+        \str_if_eq:VnTF \l_semio_viz_theme_palette_tl { brand }
+          {
+            \clist_item:Nn \c_semio_viz_theme_brand_clist
+              { \int_mod:nn { \int_max:nn { 0 } {#1} }
+                { \clist_count:N \c_semio_viz_theme_brand_clist } + 1 }
+          }
+          {
+            semio-presence- \semio_viz_theme_appearance:
+            - \int_eval:n
+              { \int_mod:nn { \int_max:nn { 0 } {#1} } { \c_semio_viz_theme_presence_int } }
+          }
+      }
+  }
+
+% 🌗 Expandable appearance: `dark` only when the document or an explicit key asks for it.
+\cs_new:Npn \semio_viz_theme_appearance:
+  {
+    \tl_if_empty:NTF \l_semio_viz_theme_appearance_tl
+      {
+        \tl_if_exist:NTF \l_semio_theme_tl
+          { \str_if_eq:VnTF \l_semio_theme_tl { dark } { dark } { light } }
+          { light }
+      }
+      { \str_if_eq:VnTF \l_semio_viz_theme_appearance_tl { dark } { dark } { light } }
+  }
+
+% 🌡️ Sequential shade of one hue: 0 fades the hue into the canvas, 1 is the full hue. The blend
+% never drops below 8 % so a zero-valued cell still reads as a cell and not as a hole.
+\cs_new_protected:Npn \semio_viz_theme_shade:nnN #1#2#3 {
+  \tl_set:Nx #3
+    { #1 ! \fp_eval:n { round( max( 8 , min( 100 , 100 * (#2) ) ) , 1 ) } ! semio-chrome-canvas }
+}
+\cs_generate_variant:Nn \semio_viz_theme_shade:nnN { VnN , VxN , nxN , VVN }
+% 🌡️ Expandable sequential ramp: a fraction in [0,1] as an xcolor expression between the primary
+% hue and the neutral window tone, for a field, surface or density that paints inside a TikZ option
+% list where a protected macro cannot run.
+\cs_new:Npn \semio_viz_theme_ramp:n #1
+  {
+    \semio_viz_theme_color:n { 0 }
+    ! \fp_eval:n { round ( 100 * min ( 1 , max ( 0 , #1 ) ) , 1 ) } ! semio-chrome-window
+  }
+
+% 🌗 Expandable diverging ramp: a fraction in [-1,1] through the neutral window tone, the two
+% halves carrying the first two categorical hues.
+\cs_new:Npn \semio_viz_theme_ramp_diverging:n #1
+  {
+    \fp_compare:nNnTF {#1} < { 0 }
+      { \semio_viz_theme_color:n { 1 } } { \semio_viz_theme_color:n { 0 } }
+    ! \fp_eval:n { round ( 100 * min ( 1 , abs (#1) ) , 1 ) } ! semio-chrome-window
+  }
+
+% 🌈 Expandable cyclic ramp: an angle in radians onto the categorical wheel, for phase maps and
+% domain colouring, where 0 and 2pi must land on the same colour. The wheel is exactly as wide as
+% the active palette, so a 12-hue presence palette turns through twelve hues and not through seven.
+\cs_new:Npn \semio_viz_theme_ramp_cyclic:n #1
+  {
+    \semio_viz_theme_color:n
+      { \fp_eval:n { floor ( \semio_viz_theme_color_count: * \semio_viz_theme_turn:n {#1} ) } }
+    ! \fp_eval:n
+        {
+          round ( 55 + 45 * ( \semio_viz_theme_color_count: * \semio_viz_theme_turn:n {#1}
+            - floor ( \semio_viz_theme_color_count: * \semio_viz_theme_turn:n {#1} ) ) , 1 )
+        }
+    ! semio-chrome-window
+  }
+
+% 🔄 The fractional turn of an angle in radians, always in [0,1).
+\cs_new:Npn \semio_viz_theme_turn:n #1
+  { ( #1 / (2*pi) ) - floor ( #1 / (2*pi) ) }
+%endregion 🔖️Categorical
+
+%region 🔖️Semantic
+% 🚦 Semantic roles are the one place a renderer may not take a categorical slot: an up/down
+% candle, a pass/fail gauge or a threshold band means something by its colour. The default theme
+% spends the brand's own signal hues on them; the grayscale theme spends four separated gray
+% steps instead, so the same figure still reads when it is printed without colour.
+\clist_const:Nn \c_semio_viz_theme_semantic_clist { negative, positive, caution, informational }
+
+% 🚦 Expandable colour of a semantic role, usable straight inside a TikZ option list.
+\cs_new:Npn \semio_viz_theme_semantic:n #1
+  {
+    \bool_if:NTF \l_semio_viz_theme_grayscale_bool
+      {
+        \str_case:nnF {#1}
+          {
+            { positive } { semio-light-gray }
+            { caution } { semio-gray }
+            { informational } { semio-gray-300 }
+          }
+          { semio-dark }
+      }
+      {
+        \str_case:nnF {#1}
+          {
+            { positive } { semio-success }
+            { caution } { semio-warning }
+            { informational } { semio-info }
+          }
+          { semio-danger }
+      }
+  }
+
+% 🚦 Protected form of the same lookup, storing the colour name in #2.
+\cs_new_protected:Npn \semio_viz_theme_semantic:nN #1#2
+  { \tl_set:Nx #2 { \semio_viz_theme_semantic:n {#1} } }
+\cs_generate_variant:Nn \semio_viz_theme_semantic:nN { VN }
+%endregion 🔖️Semantic
+
+%region 🔖️ChromeFallback
+% 🪟 The unprefixed chrome aliases are normally produced by semio-core's theme switch. A probe
+% document loads the viz packages without the `semio` class and therefore without that switch,
+% so the light values of semio-tokens stand in; under the class every one of these is a no-op.
+\providecolor{semio-chrome-canvas}{HTML}{f7f3e3}
+\providecolor{semio-chrome-base}{HTML}{f7f3e3}
+\providecolor{semio-chrome-window}{HTML}{e9e6d7}
+\providecolor{semio-chrome-panel}{HTML}{cccdc1}
+\providecolor{semio-chrome-border-normal}{HTML}{7b827d}
+\providecolor{semio-chrome-border-emphasized}{HTML}{001117}
+\providecolor{semio-chrome-foreground}{HTML}{001117}
+\providecolor{semio-chrome-text-normal}{HTML}{7b827d}
+\providecolor{semio-chrome-accent}{HTML}{ff344f}
+%endregion 🔖️ChromeFallback
+
+%region 🔖️Chrome
+\tl_new:N \l_semio_viz_theme_chrome_tl
+
+% 🪟 Chrome colour name of a page role, resolved for the theme's own appearance straight from
+% the design tokens, so a guide, frame or label never depends on a document class having run
+% semio-core's \colorlet aliases. Roles: border-normal, border-emphasized, foreground, canvas,
+% text-normal -- every `semio-chrome-<appearance>-<role>` the token package defines.
+\cs_new_protected:Npn \semio_viz_theme_chrome:nN #1#2 {
+  \semio_viz_theme_appearance:N \l_semio_viz_theme_chrome_tl
+  \str_if_eq:VnF \l_semio_viz_theme_chrome_tl { dark }
+    { \tl_set:Nn \l_semio_viz_theme_chrome_tl { light } }
+  \tl_set:Nx #2 { semio-chrome- \l_semio_viz_theme_chrome_tl -#1 }
+}
+\cs_generate_variant:Nn \semio_viz_theme_chrome:nN { VN }
+%endregion 🔖️Chrome
+
+%region 🔖️Schemes
+\int_new:N \g_semio_viz_theme_ramp_int
+\str_new:N \l_semio_viz_theme_hex_str
+\tl_new:N \l_semio_viz_theme_stops_tl
+\tl_new:N \l_semio_viz_theme_key_tl
+\cs_generate_variant:Nn \prop_get:NnNF { NVNF }
+
+% 🌈 The stop list of the named scheme in the active appearance.
+\cs_new_protected:Npn \semio_viz_theme_scheme_stops:nN #1#2 {
+  \semio_viz_theme_appearance:N \l_semio_viz_theme_mode_tl
+  \tl_set:Nx \l_semio_viz_theme_key_tl { #1 / \l_semio_viz_theme_mode_tl }
+  \prop_get:NVNF \c_semio_viz_theme_scheme_prop \l_semio_viz_theme_key_tl #2
+    { \msg_error:nnn { semio-viz } { unknown-scheme } {#1} }
+}
+\cs_generate_variant:Nn \semio_viz_theme_scheme_stops:nN { VN }
+
+% 🌈 Hexadecimal colour of the scheme #1 at the normalized position #2.
+\cs_new_protected:Npn \semio_viz_theme_scheme_hex:nnN #1#2#3 {
+  \semio_viz_theme_scheme_stops:nN {#1} \l_semio_viz_theme_stops_tl
+  \semio_viz_color_ramp:VVnN \l_semio_viz_theme_interpolator_tl \l_semio_viz_theme_stops_tl
+    {#2} #3
+}
+\cs_generate_variant:Nn \semio_viz_theme_scheme_hex:nnN { VnN , nVN , VVN }
+
+% 🌈 Colour name of the scheme #1 at the normalized position #2, defined on demand for TikZ.
+\cs_new_protected:Npn \semio_viz_theme_scheme_color:nnN #1#2#3 {
+  \semio_viz_theme_scheme_hex:nnN {#1} {#2} \l_semio_viz_theme_hex_str
+  \int_gincr:N \g_semio_viz_theme_ramp_int
+  \tl_set:Nx #3 { semio-viz-ramp- \int_use:N \g_semio_viz_theme_ramp_int }
+  \use:x
+    {
+      \exp_not:N \definecolor { \tl_use:N #3 } { HTML }
+        { \str_range:Nnn \l_semio_viz_theme_hex_str { -6 } { -1 } }
+    }
+}
+\cs_generate_variant:Nn \semio_viz_theme_scheme_color:nnN { VnN , nVN , VVN }
+
+% 🌈 Colour name of the active scheme at the normalized position #1.
+\cs_new_protected:Npn \semio_viz_theme_ramp_color:nN #1#2
+  { \semio_viz_theme_scheme_color:VnN \l_semio_viz_theme_scheme_tl {#1} #2 }
+%endregion 🔖️Schemes
+
+%region 🔖️Strokes
+% 📏 Stroke width of the named weight, straight from the design tokens. The role is trimmed
+% first: a caller writing `{ hairline }` in expl3 source means the same weight as `{hairline}`.
+\cs_new:Npn \semio_viz_theme_stroke:n #1
+  { \exp_args:Ne \semio_viz_theme_stroke_aux:n { \tl_trim_spaces:n {#1} } }
+
+% 📏 The lookup itself, on an already trimmed role.
+\cs_new:Npn \semio_viz_theme_stroke_aux:n #1
+  {
+    \str_case:nnF {#1}
+      {
+        { hairline } { \semio@stroke@hairline }
+        { focus } { \semio@stroke@focus }
+      }
+      { \semio@stroke@default }
+  }
+
+% 📏 Stroke width of the theme's default weight.
+\cs_new:Npn \semio_viz_theme_stroke:
+  { \semio_viz_theme_stroke:n { \l_semio_viz_theme_stroke_tl } }
+
+% 🔤 Font switch of the named role.
+\cs_new:Npn \semio_viz_theme_font:n #1
+  {
+    \str_case:nnF {#1}
+      {
+        { serif } { \SemioSerif }
+        { mono } { \SemioMono }
+      }
+      { \SemioSans }
+  }
+%endregion 🔖️Strokes
+
+%region 🔖️Fonts
+% 🔤 Body text of a cell node: the reading size of a matrix, table or module box.
+\tl_const:Nn \c_semio_viz_theme_font_cell_tl { \SemioSans \fontsize {7.2pt} {9.4pt} \selectfont }
+% 🔤 Monospaced text of a chip: the small tag riding on a cell or an edge.
+\tl_const:Nn \c_semio_viz_theme_font_chip_tl { \SemioMono \fontsize {6.4pt} {7pt} \selectfont }
+% 🔤 Heading of a figure section, column or panel.
+\tl_const:Nn \c_semio_viz_theme_font_title_tl { \SemioMono \fontsize {7.2pt} {8.4pt} \selectfont }
+% 🔤 Caption weight of every axis tick, legend entry, note and data label.
+\tl_const:Nn \c_semio_viz_theme_font_label_tl { \SemioSans \fontsize {6.6pt} {7.6pt} \selectfont }
+% 🔤 Monospaced weight of a printed number, so digits align in a column.
+\tl_const:Nn \c_semio_viz_theme_font_value_tl { \SemioMono \fontsize {6.6pt} {7.6pt} \selectfont }
+%endregion 🔖️Fonts
+
+%region 🔖️Insets
+% 📦 Horizontal padding between a cell node's border and its text.
+\tl_const:Nn \c_semio_viz_theme_cell_inset_x_tl { 0.55em }
+% 📦 Vertical padding between a cell node's border and its text.
+\tl_const:Nn \c_semio_viz_theme_cell_inset_y_tl { 0.34em }
+% 📦 Horizontal padding of a chip node, tighter than a cell so a tag stays a tag.
+\tl_const:Nn \c_semio_viz_theme_chip_inset_x_tl { 0.2em }
+% 📦 Vertical padding of a chip node.
+\tl_const:Nn \c_semio_viz_theme_chip_inset_y_tl { 0.08em }
+%endregion 🔖️Insets
+
+%region 🔖️Frame
+% 📐 Width in millimetres a family falls back to when no figure chrome has sized the drawing area,
+% as in a bare kernel probe document. A family never writes a frame size of its own.
+\fp_const:Nn \c_semio_viz_theme_frame_width_fp { 80 }
+% 📐 Height in millimetres of the same fallback frame, in the 5:3 proportion of a figure block.
+\fp_const:Nn \c_semio_viz_theme_frame_height_fp { 48 }
+%endregion 🔖️Frame
+
+%region 🔖️Patterns
+% ▨ Grayscale-safe hatch pattern of the categorical slot #1, for print without colour.
+\clist_const:Nn \c_semio_viz_theme_patterns_clist
+  {
+    north~east~lines, horizontal~lines, vertical~lines, north~west~lines,
+    crosshatch, dots, grid, crosshatch~dots
+  }
+
+% 🪡 TikZ pattern of the categorical slot #1 (zero based, wrapping), for a figure that must read
+% without colour: the grayscale theme separates its series by hatch, not by hue.
+\cs_new_protected:Npn \semio_viz_theme_pattern:nN #1#2 {
+  \int_set:Nn \l_semio_viz_theme_slot_int
+    {
+      \int_mod:nn { \int_max:nn { 0 } {#1} }
+        { \clist_count:N \c_semio_viz_theme_patterns_clist } + 1
+    }
+  \tl_set:Nx #2
+    { \clist_item:Nn \c_semio_viz_theme_patterns_clist { \l_semio_viz_theme_slot_int } }
+}
+
+% ❓ True when the theme asks for hatch fills alongside the categorical colours.
+\prg_new_protected_conditional:Npnn \semio_viz_theme_if_patterns: { T, F, TF }
+  {
+    \bool_if:NTF \l_semio_viz_theme_patterns_bool { \prg_return_true: } { \prg_return_false: }
+  }
+%endregion 🔖️Patterns
+
+%region 🔖️PublicApi
+% 🎨 \SemioVizTheme{name}[keys]: selects a theme preset and overrides individual keys.
+\NewDocumentCommand \SemioVizTheme { m O{} }
+  {
+    \semio_viz_theme_use:n {#1}
+    \keys_set:nn { semio / viz / theme } {#2}
+  }
+% 🎨 \SemioVizThemeSet[keys]: overrides theme keys without changing the preset.
+\NewDocumentCommand \SemioVizThemeSet { O{} } { \keys_set:nn { semio / viz / theme } {#1} }
+%endregion 🔖️PublicApi
+
+\ExplSyntaxOff

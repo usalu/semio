@@ -1,0 +1,70 @@
+% 🧪 Probe fixture of case format-number, every scenario.
+% \SemioVizFormat is d3-format's grammar reimplemented in l3fp, so this document runs the same
+% specifier list through the same values in both locales and writes the rendered strings out.
+% Three encodings keep the probe protocol lossless: every result is prefixed with a vertical bar so
+% that the probe classifies it as a string and no digit is lost to numeric parsing, the result is
+% brace wrapped so a grouped or
+% German number keeps its commas inside one comma-list item, and the fill spaces of a padded
+% result become underscores, which the adapter mirrors on the oracle side.
+\documentclass{article}
+\usepackage{semio-viz-format}
+\usepackage{semio-viz-probe}
+\ExplSyntaxOn
+\str_new:N \l_probe_out_str
+\int_new:N \l_probe_index_int
+
+% 🖨️ Formats one value and writes it under `format/<index>`.
+\cs_new_protected:Npn \probeformat #1#2 {
+  \semio_viz_format:nnN {#1} {#2} \l_probe_out_str
+  \str_replace_all:Nnn \l_probe_out_str { ~ } { _ }
+  \semio_viz_probe_values:xx { format/ \int_use:N \l_probe_index_int } { { | \l_probe_out_str } }
+  \int_incr:N \l_probe_index_int
+}
+\char_set_catcode_other:n { 37 }
+\ExplSyntaxOff
+\begin{document}
+
+\ExplSyntaxOn
+\cs_new_protected:Npn \probeall {
+  \int_zero:N \l_probe_index_int
+  \probeformat { .2f } { 3.14159 }
+  \probeformat { .0f } { 2.5 }
+  \probeformat { d } { 42.6 }
+  \probeformat { , } { 1234567.891 }
+  \probeformat { ,.2f } { 1234567.891 }
+  \probeformat { .3e } { 42 }
+  \probeformat { .3s } { 1234567 }
+  \probeformat { .2s } { 0.00042 }
+  \probeformat { .1% } { 0.234 }
+  \probeformat { .2p } { 0.1234 }
+  \probeformat { .3r } { 123456 }
+  \probeformat { .4g } { 0.00012367 }
+  \exp_args:Nx \probeformat { .3 \c_tilde_str f } { 1.5 }
+  \probeformat { } { 1234.5678 }
+  \probeformat { +.2f } { 3.14159 }
+  \probeformat { 08.2f } { -3.14159 }
+  \probeformat { >10.2f } { 3.1 }
+  \probeformat { <10.2f } { 3.1 }
+  \probeformat { ^10.2f } { 3.1 }
+  \probeformat { =10.2f } { -3.1 }
+  \probeformat { 012,.2f } { 1234.5 }
+  \probeformat { (.2f } { -3.5 }
+  \probeformat { .2f } { -0.001 }
+  \probeformat { x } { 255 }
+  \probeformat { X } { 255 }
+  \probeformat { b } { 10 }
+  \probeformat { o } { 64 }
+  \probeformat { c } { unit }
+}
+\ExplSyntaxOff
+
+\SemioVizProbeBegin{format-number}{en-locale}
+\SemioVizLocale{en}
+\probeall
+
+\SemioVizProbeBegin{format-number}{de-locale}
+\SemioVizLocale{de}
+\probeall
+
+\SemioVizProbePage
+\end{document}

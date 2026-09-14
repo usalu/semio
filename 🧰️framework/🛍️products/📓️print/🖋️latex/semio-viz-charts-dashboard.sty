@@ -1,0 +1,692 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-charts-dashboard}[2026/09/05 v0.3.0 semio viz namespace charts-dashboard families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-charts-line}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 🔑 semio / viz / family / kpi — the card-shaped indicators of taxonomy §18.
+%   mode      (card|big-number|delta|trend|sparkline|bullet|traffic-light|badge|scorecard|tile,
+%             default card)
+%   value     (column, default value)    the measured column
+%   target    (column, default target)   the comparison column
+%   delta     (column, default delta)    the change column
+%   label     (column, default label)    the caption column
+%   columns   (integer, default 3)       cards per row
+%   unit      (text, default empty)      suffix printed after the number
+\tl_new:N \l_semio_viz_kpi_mode_tl
+\tl_new:N \l_semio_viz_kpi_value_tl
+\tl_new:N \l_semio_viz_kpi_target_tl
+\tl_new:N \l_semio_viz_kpi_delta_tl
+\tl_new:N \l_semio_viz_kpi_unit_tl
+\int_new:N \l_semio_viz_kpi_columns_int
+
+\semio_viz_cart_family_keys:n { semio / viz / family / kpi }
+% 🔑 The KPI card's own keys, on top of the cartesian family keys inherited above.
+\keys_define:nn { semio / viz / family / kpi } {
+  mode    .tl_set:N = \l_semio_viz_kpi_mode_tl,
+  value   .tl_set:N = \l_semio_viz_kpi_value_tl,
+  target  .tl_set:N = \l_semio_viz_kpi_target_tl,
+  delta   .tl_set:N = \l_semio_viz_kpi_delta_tl,
+  unit    .tl_set:N = \l_semio_viz_kpi_unit_tl,
+  columns .int_set:N = \l_semio_viz_kpi_columns_int,
+}
+
+% 🔑 semio / viz / family / gauge — the gauges and progress indicators of taxonomy §18.
+%   mode        (linear|radial|dial|speedometer|thermometer|progress-bar|progress-ring|donut,
+%                default radial)
+%   value       (column, default value)   the measured column
+%   target      (column, default target)  the target marker
+%   min / max   (columns, default min / max)  the gauge domain columns
+%   startAngle  (degrees, default 180)    where the arc begins
+%   endAngle    (degrees, default 0)      where the arc ends
+%   thickness   (mm, default 3)           ring or bar thickness
+%   ticks       (integer, default 5)      scale ticks on the arc
+\tl_new:N \l_semio_viz_gauge_mode_tl
+\tl_new:N \l_semio_viz_gauge_min_tl
+\tl_new:N \l_semio_viz_gauge_max_tl
+\fp_new:N \l_semio_viz_gauge_start_fp
+\fp_new:N \l_semio_viz_gauge_end_fp
+\fp_new:N \l_semio_viz_gauge_thick_fp
+\int_new:N \l_semio_viz_gauge_ticks_int
+
+\semio_viz_cart_family_keys:n { semio / viz / family / gauge }
+% 🔑 The gauge's own keys, on top of the cartesian family keys inherited above.
+\keys_define:nn { semio / viz / family / gauge } {
+  mode       .tl_set:N = \l_semio_viz_gauge_mode_tl,
+  value      .tl_set:N = \l_semio_viz_kpi_value_tl,
+  target     .tl_set:N = \l_semio_viz_kpi_target_tl,
+  min        .tl_set:N = \l_semio_viz_gauge_min_tl,
+  max        .tl_set:N = \l_semio_viz_gauge_max_tl,
+  startAngle .fp_set:N = \l_semio_viz_gauge_start_fp,
+  endAngle   .fp_set:N = \l_semio_viz_gauge_end_fp,
+  thickness  .fp_set:N = \l_semio_viz_gauge_thick_fp,
+  ticks      .int_set:N = \l_semio_viz_gauge_ticks_int,
+}
+
+% 🔑 semio / viz / family / statepanel — the static equivalents of interactive D3 patterns (§73).
+%   mode   (overview-detail|focus-context|brush|zoom-inset|magnify|hover|selected-node|
+%           filter-compare|filter-panels|frames|keyframe|transition|animated-path|morph|
+%           storyboard, default overview-detail)
+%   frames (integer, default 4)              frames of the frame-based modes
+%   from / to (numbers, default 2 / 5)       the selected data window
+\tl_new:N \l_semio_viz_state_mode_tl
+\int_new:N \l_semio_viz_state_frames_int
+\fp_new:N \l_semio_viz_state_from_fp
+\fp_new:N \l_semio_viz_state_to_fp
+
+\semio_viz_cart_family_keys:n { semio / viz / family / statepanel }
+% 🔑 The state panel's own keys, on top of the cartesian family keys inherited above.
+\keys_define:nn { semio / viz / family / statepanel } {
+  mode   .tl_set:N = \l_semio_viz_state_mode_tl,
+  frames .int_set:N = \l_semio_viz_state_frames_int,
+  from   .fp_set:N = \l_semio_viz_state_from_fp,
+  to     .fp_set:N = \l_semio_viz_state_to_fp,
+}
+%endregion 🔖️Keys
+
+%region 🔖️Families
+% 🧮 kpi — the card-shaped indicators of taxonomy §18, laid out as a grid of tiles.
+\fp_new:N \l_semio_viz_kpi_w_fp
+\fp_new:N \l_semio_viz_kpi_h_fp
+\fp_new:N \l_semio_viz_kpi_x_fp
+\fp_new:N \l_semio_viz_kpi_y_fp
+\fp_new:N \l_semio_viz_kpi_val_fp
+\fp_new:N \l_semio_viz_kpi_tgt_fp
+\fp_new:N \l_semio_viz_kpi_dlt_fp
+\tl_new:N \l_semio_viz_kpi_cell_tl
+
+\cs_new_protected:Npn \semio_viz_kpi_keys_reset: {
+  \semio_viz_cart_keys_reset:
+  \tl_set:Nn \l_semio_viz_cart_data_tl { demo-kpi }
+  \tl_set:Nn \l_semio_viz_cart_label_tl { label }
+  \tl_set:Nn \l_semio_viz_kpi_mode_tl { card }
+  \tl_set:Nn \l_semio_viz_kpi_value_tl { value }
+  \tl_set:Nn \l_semio_viz_kpi_target_tl { target }
+  \tl_set:Nn \l_semio_viz_kpi_delta_tl { delta }
+  \tl_clear:N \l_semio_viz_kpi_unit_tl
+  \int_set:Nn \l_semio_viz_kpi_columns_int { 3 }
+  \bool_set_false:N \l_semio_viz_cart_axes_bool
+  \fp_set:Nn \l_semio_viz_cart_pad_l_fp { 2 }
+  \fp_set:Nn \l_semio_viz_cart_pad_b_fp { 2 }
+}
+
+% 📥 Reads data row #1 into the card variables — value, target, delta and label — and works out
+% the cell of the card grid this row occupies.
+\cs_new_protected:Npn \semio_viz_kpi_read:n #1 {
+  \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {#1} \l_semio_viz_kpi_value_tl
+    \l_semio_viz_kpi_cell_tl
+  \fp_set:Nn \l_semio_viz_kpi_val_fp { \l_semio_viz_kpi_cell_tl }
+  \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {#1} \l_semio_viz_kpi_target_tl
+    \l_semio_viz_kpi_cell_tl
+  \fp_set:Nn \l_semio_viz_kpi_tgt_fp { \l_semio_viz_kpi_cell_tl }
+  \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {#1} \l_semio_viz_kpi_delta_tl
+    \l_semio_viz_kpi_cell_tl
+  \fp_set:Nn \l_semio_viz_kpi_dlt_fp { \l_semio_viz_kpi_cell_tl }
+  \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {#1} \l_semio_viz_cart_label_tl
+    \l_semio_viz_bar_lbl_tl
+  \fp_set:Nn \l_semio_viz_kpi_x_fp
+    { \l_semio_viz_cart_xlo_fp
+      + \int_mod:nn { (#1) - 1 } { \l_semio_viz_kpi_columns_int } * \l_semio_viz_kpi_w_fp }
+  \fp_set:Nn \l_semio_viz_kpi_y_fp
+    { \l_semio_viz_cart_yhi_fp
+      - ( \int_div_truncate:nn { (#1) - 1 } { \l_semio_viz_kpi_columns_int } + 1 )
+        * \l_semio_viz_kpi_h_fp }
+}
+
+% 🪟 The card's own panel, which is what separates one KPI from the next on a dense dashboard.
+\cs_new_protected:Npn \semio_viz_kpi_frame: {
+  \tl_set:Nn \l_semio_viz_cart_fill_tl { semio-chrome-window }
+  \semio_viz_cart_draw_rect:nnnn { \fp_eval:n { \l_semio_viz_kpi_x_fp } }
+    { \fp_eval:n { \l_semio_viz_kpi_y_fp } }
+    { \fp_eval:n { \l_semio_viz_kpi_w_fp * 0.92 } }
+    { \fp_eval:n { \l_semio_viz_kpi_h_fp * 0.88 } }
+}
+
+% 🔢 The headline figure with its unit, and the card's caption underneath it.
+\cs_new_protected:Npn \semio_viz_kpi_number: {
+  \node [ anchor=north~west , font=\c_semio_viz_theme_font_title_tl , text=semio-chrome-foreground ]
+    at ( \fp_eval:n { \l_semio_viz_kpi_x_fp + 1.4 } ,
+         \fp_eval:n { \l_semio_viz_kpi_y_fp + \l_semio_viz_kpi_h_fp * 0.72 } )
+    { \fp_eval:n { round( \l_semio_viz_kpi_val_fp , 1 ) } \l_semio_viz_kpi_unit_tl } ;
+  \node [ anchor=south~west , font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal ]
+    at ( \fp_eval:n { \l_semio_viz_kpi_x_fp + 1.4 } ,
+         \fp_eval:n { \l_semio_viz_kpi_y_fp + 1 } ) { \l_semio_viz_bar_lbl_tl } ;
+}
+
+% 🔺 The change indicator: a triangle pointing the way the value moved, in the semantic colour of
+% that direction, so the sign reads without the number being parsed.
+\cs_new_protected:Npn \semio_viz_kpi_delta_mark: {
+  \fp_compare:nNnTF { \l_semio_viz_kpi_dlt_fp } < { 0 }
+    { \tl_set:Nn \l_semio_viz_cart_fill_tl { \semio_viz_theme_semantic:n { negative } } }
+    { \tl_set:Nn \l_semio_viz_cart_fill_tl { \semio_viz_theme_semantic:n { positive } } }
+  \fill [ \l_semio_viz_cart_fill_tl ]
+    ( \fp_eval:n { \l_semio_viz_kpi_x_fp + \l_semio_viz_kpi_w_fp * 0.7 } ,
+      \fp_eval:n { \l_semio_viz_kpi_y_fp + \l_semio_viz_kpi_h_fp * 0.42
+        + 1.6 * ( \l_semio_viz_kpi_dlt_fp < 0 ? -1 : 1 ) } )
+    -- ( \fp_eval:n { \l_semio_viz_kpi_x_fp + \l_semio_viz_kpi_w_fp * 0.7 - 1.4 } ,
+         \fp_eval:n { \l_semio_viz_kpi_y_fp + \l_semio_viz_kpi_h_fp * \l_semio_viz_state_inset_fp } )
+    -- ( \fp_eval:n { \l_semio_viz_kpi_x_fp + \l_semio_viz_kpi_w_fp * 0.7 + 1.4 } ,
+         \fp_eval:n { \l_semio_viz_kpi_y_fp + \l_semio_viz_kpi_h_fp * \l_semio_viz_state_inset_fp } ) -- cycle ;
+  \semio_viz_probe_geometry:nx { glyph }
+    { \fp_eval:n { round( \l_semio_viz_kpi_x_fp + \l_semio_viz_kpi_w_fp * 0.7 , 4 ) } ,
+      \fp_eval:n { round( \l_semio_viz_kpi_dlt_fp , 4 ) } }
+}
+
+% 📊 Few's bullet graph: the value bar inside its range track, with the target as a cross hair.
+\cs_new_protected:Npn \semio_viz_kpi_bullet: {
+  \tl_set:Nn \l_semio_viz_cart_fill_tl { semio-chrome-panel }
+  \semio_viz_cart_draw_rect:nnnn { \fp_eval:n { \l_semio_viz_kpi_x_fp + 1.4 } }
+    { \fp_eval:n { \l_semio_viz_kpi_y_fp + \l_semio_viz_kpi_h_fp * 0.3 } }
+    { \fp_eval:n { \l_semio_viz_kpi_w_fp * 0.78 } } { 2.6 }
+  \tl_set:Nn \l_semio_viz_cart_fill_tl { \semio_viz_theme_color:n { 0 } }
+  \semio_viz_cart_draw_rect:nnnn { \fp_eval:n { \l_semio_viz_kpi_x_fp + 1.4 } }
+    { \fp_eval:n { \l_semio_viz_kpi_y_fp + \l_semio_viz_kpi_h_fp * 0.3 + 0.6 } }
+    { \fp_eval:n { \l_semio_viz_kpi_w_fp * 0.78 * \l_semio_viz_kpi_val_fp / 100 } } { 1.4 }
+  \tl_set:Nn \l_semio_viz_cart_stroke_tl { semio-chrome-border-emphasized }
+  \semio_viz_cart_draw_seg:nnnn
+    { \fp_eval:n { \l_semio_viz_kpi_x_fp + 1.4
+      + \l_semio_viz_kpi_w_fp * 0.78 * \l_semio_viz_kpi_tgt_fp / 100 } }
+    { \fp_eval:n { \l_semio_viz_kpi_y_fp + \l_semio_viz_kpi_h_fp * 0.3 - 0.4 } }
+    { \fp_eval:n { \l_semio_viz_kpi_x_fp + 1.4
+      + \l_semio_viz_kpi_w_fp * 0.78 * \l_semio_viz_kpi_tgt_fp / 100 } }
+    { \fp_eval:n { \l_semio_viz_kpi_y_fp + \l_semio_viz_kpi_h_fp * 0.3 + 3 } }
+}
+
+% 🚦 The traffic light: three lamps, the one the value falls into lit in its semantic colour.
+\cs_new_protected:Npn \semio_viz_kpi_traffic: {
+  \int_step_variable:nNn { 3 } \l_semio_viz_cart_i_int {
+    \fp_set:Nn \l_semio_viz_cart_a_fp
+      { \l_semio_viz_kpi_val_fp >= 90 ? 1 : ( \l_semio_viz_kpi_val_fp >= 60 ? 2 : 3 ) }
+    \fp_compare:nTF { \l_semio_viz_cart_i_int == \l_semio_viz_cart_a_fp }
+      {
+        \tl_set:Nx \l_semio_viz_cart_fill_tl {
+          \int_case:nnF { \l_semio_viz_cart_i_int }
+            { { 1 } { \semio_viz_theme_semantic:n { positive } } { 2 } { \semio_viz_theme_semantic:n { caution } } } { \semio_viz_theme_semantic:n { negative } }
+        }
+      }
+      { \tl_set:Nn \l_semio_viz_cart_fill_tl { semio-chrome-panel } }
+    \semio_viz_cart_draw_dot:nnn
+      { \fp_eval:n { \l_semio_viz_kpi_x_fp + \l_semio_viz_kpi_w_fp * 0.5 } }
+      { \fp_eval:n { \l_semio_viz_kpi_y_fp + \l_semio_viz_kpi_h_fp
+        * ( 0.75 - 0.22 * ( \l_semio_viz_cart_i_int - 1 ) ) } } { 1.5 }
+  }
+}
+
+% 〰️ The card's sparkline: a seven-point trace under the headline figure.
+\cs_new_protected:Npn \semio_viz_kpi_spark: {
+  \seq_clear:N \l_semio_viz_cart_pts_seq
+  \int_step_variable:nNn { 7 } \l_semio_viz_cart_i_int {
+    \seq_put_right:Nx \l_semio_viz_cart_pts_seq {
+      \fp_eval:n { \l_semio_viz_kpi_x_fp + 1.4
+        + ( \l_semio_viz_cart_i_int - 1 ) * \l_semio_viz_kpi_w_fp * 0.13 } ,
+      \fp_eval:n { \l_semio_viz_kpi_y_fp + \l_semio_viz_kpi_h_fp * 0.3
+        + \l_semio_viz_kpi_h_fp * 0.3
+          * ( 0.4 + 0.6 * sin( \l_semio_viz_cart_i_int + \l_semio_viz_kpi_val_fp / 20 ) ) }
+    }
+  }
+  \tl_set:Nn \l_semio_viz_cart_stroke_tl { \semio_viz_theme_color:n { 0 } }
+  \semio_viz_cart_draw_path:N \l_semio_viz_cart_pts_seq
+}
+
+% 🗃️ The current card, assembled from the pieces the `mode` asks for.
+\cs_new_protected:Npn \semio_viz_kpi_card_one: {
+  \str_case:VnF \l_semio_viz_kpi_mode_tl {
+    { big-number } { \semio_viz_kpi_number: }
+    { delta } { \semio_viz_kpi_frame: \semio_viz_kpi_number: \semio_viz_kpi_delta_mark: }
+    { trend } {
+      \semio_viz_kpi_frame: \semio_viz_kpi_number:
+      \semio_viz_kpi_spark: \semio_viz_kpi_delta_mark:
+    }
+    { sparkline } { \semio_viz_kpi_frame: \semio_viz_kpi_number: \semio_viz_kpi_spark: }
+    { bullet } { \semio_viz_kpi_frame: \semio_viz_kpi_number: \semio_viz_kpi_bullet: }
+    { traffic-light } { \semio_viz_kpi_frame: \semio_viz_kpi_traffic: }
+    { badge } {
+      \fp_set:Nn \l_semio_viz_cart_corner_fp { 1.4 }
+      \semio_viz_kpi_frame:
+      \fp_zero:N \l_semio_viz_cart_corner_fp
+      \semio_viz_kpi_number:
+    }
+    { scorecard } {
+      \semio_viz_kpi_frame: \semio_viz_kpi_number:
+      \semio_viz_kpi_bullet: \semio_viz_kpi_delta_mark:
+    }
+    { tile } {
+      \semio_viz_cart_shade:nxN { \semio_viz_theme_color:n { 0 } }
+        { \fp_eval:n { \l_semio_viz_kpi_val_fp / 100 } } \l_semio_viz_cart_fill_tl
+      \semio_viz_cart_draw_rect:nnnn { \fp_eval:n { \l_semio_viz_kpi_x_fp } }
+        { \fp_eval:n { \l_semio_viz_kpi_y_fp } }
+        { \fp_eval:n { \l_semio_viz_kpi_w_fp * 0.92 } }
+        { \fp_eval:n { \l_semio_viz_kpi_h_fp * 0.88 } }
+      \semio_viz_kpi_number:
+    }
+  } { \semio_viz_kpi_frame: \semio_viz_kpi_number: }
+}
+
+% 🔁 One card per data row, filling the grid row by row.
+\cs_new_protected:Npn \semio_viz_kpi_cards_run: {
+  \int_step_inline:nn { \l_semio_viz_cart_nrows_int } {
+    \semio_viz_kpi_read:n {##1}
+    \semio_viz_kpi_card_one:
+  }
+}
+
+% ▶️ The whole family run: defaults, the option list #1, the card grid sized from `columns` and the
+% row count, then the cards.
+\cs_new_protected:Npn \semio_viz_kpi_render:n #1 {
+  \semio_viz_frame_require:n { SemioVizRunFamily }
+  \semio_viz_kpi_keys_reset:
+  \keys_set:nn { semio / viz / family / kpi } {#1}
+  \semio_viz_cart_rect_compute:
+  \semio_viz_table_nrows:VN \l_semio_viz_cart_data_tl \l_semio_viz_cart_nrows_int
+  \fp_set:Nn \l_semio_viz_kpi_w_fp
+    { ( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp ) / \l_semio_viz_kpi_columns_int }
+  \int_set:Nn \l_semio_viz_cart_n_int
+    { \int_div_truncate:nn { \l_semio_viz_cart_nrows_int - 1 } { \l_semio_viz_kpi_columns_int } + 1 }
+  \fp_set:Nn \l_semio_viz_kpi_h_fp
+    { ( \l_semio_viz_cart_yhi_fp - \l_semio_viz_cart_ylo_fp ) / \l_semio_viz_cart_n_int }
+  \semio_viz_kpi_cards_run:
+}
+
+% 🧮 §18: the KPI card grid — big number, delta, trend, bullet and traffic-light cards.
+\SemioVizFamily { kpi } { \semio_viz_kpi_render:n {#1} }
+
+% 🎛️ gauge — the linear, radial and progress gauges of taxonomy §18.
+\fp_new:N \l_semio_viz_gauge_lo_fp
+\fp_new:N \l_semio_viz_gauge_hi_fp
+\fp_new:N \l_semio_viz_gauge_frac_fp
+\fp_new:N \l_semio_viz_gauge_angle_fp
+\fp_new:N \l_semio_viz_gauge_r_fp
+\fp_new:N \l_semio_viz_gauge_cx_fp
+\fp_new:N \l_semio_viz_gauge_cy_fp
+
+\cs_new_protected:Npn \semio_viz_gauge_keys_reset: {
+  \semio_viz_cart_keys_reset:
+  \tl_set:Nn \l_semio_viz_cart_data_tl { demo-kpi }
+  \tl_set:Nn \l_semio_viz_cart_label_tl { label }
+  \tl_set:Nn \l_semio_viz_gauge_mode_tl { radial }
+  \tl_set:Nn \l_semio_viz_kpi_value_tl { value }
+  \tl_set:Nn \l_semio_viz_kpi_target_tl { target }
+  \tl_set:Nn \l_semio_viz_gauge_min_tl { min }
+  \tl_set:Nn \l_semio_viz_gauge_max_tl { max }
+  \fp_set:Nn \l_semio_viz_gauge_start_fp { 180 }
+  \fp_set:Nn \l_semio_viz_gauge_end_fp { 0 }
+  \fp_set:Nn \l_semio_viz_gauge_thick_fp { 3 }
+  \int_set:Nn \l_semio_viz_gauge_ticks_int { 5 }
+  \bool_set_false:N \l_semio_viz_cart_axes_bool
+}
+
+% 📐 Reads the first row and turns it into the gauge fraction and its arc angle.
+\cs_new_protected:Npn \semio_viz_gauge_read: {
+  \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } { 1 } \l_semio_viz_kpi_value_tl
+    \l_semio_viz_kpi_cell_tl
+  \fp_set:Nn \l_semio_viz_kpi_val_fp { \l_semio_viz_kpi_cell_tl }
+  \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } { 1 } \l_semio_viz_kpi_target_tl
+    \l_semio_viz_kpi_cell_tl
+  \fp_set:Nn \l_semio_viz_kpi_tgt_fp { \l_semio_viz_kpi_cell_tl }
+  \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } { 1 } \l_semio_viz_gauge_min_tl
+    \l_semio_viz_kpi_cell_tl
+  \fp_set:Nn \l_semio_viz_gauge_lo_fp { \l_semio_viz_kpi_cell_tl }
+  \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } { 1 } \l_semio_viz_gauge_max_tl
+    \l_semio_viz_kpi_cell_tl
+  \fp_set:Nn \l_semio_viz_gauge_hi_fp { \l_semio_viz_kpi_cell_tl }
+  \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } { 1 } \l_semio_viz_cart_label_tl
+    \l_semio_viz_bar_lbl_tl
+  \fp_set:Nn \l_semio_viz_gauge_frac_fp
+    { min( 1 , max( 0 , ( \l_semio_viz_kpi_val_fp - \l_semio_viz_gauge_lo_fp )
+      / ( \l_semio_viz_gauge_hi_fp - \l_semio_viz_gauge_lo_fp ) ) ) }
+  \fp_set:Nn \l_semio_viz_gauge_angle_fp
+    { \l_semio_viz_gauge_start_fp
+      + \l_semio_viz_gauge_frac_fp * ( \l_semio_viz_gauge_end_fp - \l_semio_viz_gauge_start_fp ) }
+  \fp_set:Nn \l_semio_viz_gauge_cx_fp
+    { ( \l_semio_viz_cart_xlo_fp + \l_semio_viz_cart_xhi_fp ) / 2 }
+  \fp_set:Nn \l_semio_viz_gauge_cy_fp
+    { ( \l_semio_viz_cart_ylo_fp + \l_semio_viz_cart_yhi_fp ) / 2 }
+  \fp_set:Nn \l_semio_viz_gauge_r_fp
+    { min( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp ,
+           \l_semio_viz_cart_yhi_fp - \l_semio_viz_cart_ylo_fp ) / 2 - 2 }
+}
+
+% 🌗 One annular arc between two angles, with its geometry recorded for the probe.
+\cs_new_protected:Npn \semio_viz_gauge_arc:nnn #1#2#3 {
+  \draw [ #3 , line~width=\fp_eval:n { \l_semio_viz_gauge_thick_fp } mm ]
+    ( \fp_eval:n { \l_semio_viz_gauge_cx_fp + \l_semio_viz_gauge_r_fp * cosd(#1) } ,
+      \fp_eval:n { \l_semio_viz_gauge_cy_fp + \l_semio_viz_gauge_r_fp * sind(#1) } )
+    arc [ start~angle=\fp_eval:n {#1} , end~angle=\fp_eval:n {#2} ,
+          radius=\fp_eval:n { \l_semio_viz_gauge_r_fp } mm ] ;
+  \semio_viz_probe_geometry:nx { arc }
+    { \fp_eval:n { round( \l_semio_viz_gauge_cx_fp , 4 ) } ,
+      \fp_eval:n { round( \l_semio_viz_gauge_cy_fp , 4 ) } ,
+      \fp_eval:n { round( \l_semio_viz_gauge_r_fp , 4 ) } ,
+      \fp_eval:n { round(#1,4) } , \fp_eval:n { round(#2,4) } ,
+      \fp_eval:n { round( \l_semio_viz_gauge_thick_fp , 4 ) } }
+  \semio_viz_probe_geometry:nx { arc-centroid }
+    { \fp_eval:n { round( \l_semio_viz_gauge_cx_fp
+        + \l_semio_viz_gauge_r_fp * cosd( ( (#1) + (#2) ) / 2 ) , 6 ) } ,
+      \fp_eval:n { round( \l_semio_viz_gauge_cy_fp
+        + \l_semio_viz_gauge_r_fp * sind( ( (#1) + (#2) ) / 2 ) , 6 ) } }
+}
+
+% 🎚️ The gauge's scale marks: `ticks` hairlines standing outside the dial between its two angles.
+\cs_new_protected:Npn \semio_viz_gauge_ticks: {
+  \int_step_variable:nNn { \l_semio_viz_gauge_ticks_int } \l_semio_viz_cart_i_int {
+    \fp_set:Nn \l_semio_viz_cart_a_fp
+      { \l_semio_viz_gauge_start_fp + ( \l_semio_viz_cart_i_int - 1 )
+        / ( \l_semio_viz_gauge_ticks_int - 1 )
+        * ( \l_semio_viz_gauge_end_fp - \l_semio_viz_gauge_start_fp ) }
+    \tl_set:Nn \l_semio_viz_cart_stroke_tl { semio-chrome-border-normal }
+    \semio_viz_cart_draw_hair:nnnn
+      { \fp_eval:n { \l_semio_viz_gauge_cx_fp
+        + ( \l_semio_viz_gauge_r_fp + \l_semio_viz_gauge_thick_fp * 0.6 )
+          * cosd( \l_semio_viz_cart_a_fp ) } }
+      { \fp_eval:n { \l_semio_viz_gauge_cy_fp
+        + ( \l_semio_viz_gauge_r_fp + \l_semio_viz_gauge_thick_fp * 0.6 )
+          * sind( \l_semio_viz_cart_a_fp ) } }
+      { \fp_eval:n { \l_semio_viz_gauge_cx_fp
+        + ( \l_semio_viz_gauge_r_fp + \l_semio_viz_gauge_thick_fp * 1.1 )
+          * cosd( \l_semio_viz_cart_a_fp ) } }
+      { \fp_eval:n { \l_semio_viz_gauge_cy_fp
+        + ( \l_semio_viz_gauge_r_fp + \l_semio_viz_gauge_thick_fp * 1.1 )
+          * sind( \l_semio_viz_cart_a_fp ) } }
+  }
+}
+
+% 🧭 The needle: a segment from the hub to the value's angle, with the hub drawn over its foot.
+\cs_new_protected:Npn \semio_viz_gauge_needle: {
+  \tl_set:Nn \l_semio_viz_cart_stroke_tl { semio-chrome-border-emphasized }
+  \semio_viz_cart_draw_seg:nnnn { \fp_eval:n { \l_semio_viz_gauge_cx_fp } }
+    { \fp_eval:n { \l_semio_viz_gauge_cy_fp } }
+    { \fp_eval:n { \l_semio_viz_gauge_cx_fp
+      + \l_semio_viz_gauge_r_fp * 0.82 * cosd( \l_semio_viz_gauge_angle_fp ) } }
+    { \fp_eval:n { \l_semio_viz_gauge_cy_fp
+      + \l_semio_viz_gauge_r_fp * 0.82 * sind( \l_semio_viz_gauge_angle_fp ) } }
+  \tl_set:Nn \l_semio_viz_cart_fill_tl { semio-chrome-border-emphasized }
+  \semio_viz_cart_draw_dot:nnn { \fp_eval:n { \l_semio_viz_gauge_cx_fp } }
+    { \fp_eval:n { \l_semio_viz_gauge_cy_fp } } { 1.1 }
+}
+
+% 📶 The linear gauge: a horizontal track with the value's share of it filled.
+\cs_new_protected:Npn \semio_viz_gauge_linear: {
+  \tl_set:Nn \l_semio_viz_cart_fill_tl { semio-chrome-panel }
+  \semio_viz_cart_draw_rect:nnnn { \fp_eval:n { \l_semio_viz_cart_xlo_fp } }
+    { \fp_eval:n { \l_semio_viz_gauge_cy_fp - \l_semio_viz_gauge_thick_fp / 2 } }
+    { \fp_eval:n { \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp } }
+    { \fp_eval:n { \l_semio_viz_gauge_thick_fp } }
+  \tl_set:Nn \l_semio_viz_cart_fill_tl { \semio_viz_theme_color:n { 0 } }
+  \semio_viz_cart_draw_rect:nnnn { \fp_eval:n { \l_semio_viz_cart_xlo_fp } }
+    { \fp_eval:n { \l_semio_viz_gauge_cy_fp - \l_semio_viz_gauge_thick_fp / 2 } }
+    { \fp_eval:n { ( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp )
+      * \l_semio_viz_gauge_frac_fp } }
+    { \fp_eval:n { \l_semio_viz_gauge_thick_fp } }
+}
+
+% 🌡️ The thermometer: the same track stood on end, with a bulb at its foot.
+\cs_new_protected:Npn \semio_viz_gauge_thermometer: {
+  \tl_set:Nn \l_semio_viz_cart_fill_tl { semio-chrome-panel }
+  \semio_viz_cart_draw_rect:nnnn
+    { \fp_eval:n { \l_semio_viz_gauge_cx_fp - \l_semio_viz_gauge_thick_fp / 2 } }
+    { \fp_eval:n { \l_semio_viz_cart_ylo_fp + 3 } }
+    { \fp_eval:n { \l_semio_viz_gauge_thick_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_yhi_fp - \l_semio_viz_cart_ylo_fp - 4 } }
+  \tl_set:Nn \l_semio_viz_cart_fill_tl { \semio_viz_theme_semantic:n { negative } }
+  \semio_viz_cart_draw_rect:nnnn
+    { \fp_eval:n { \l_semio_viz_gauge_cx_fp - \l_semio_viz_gauge_thick_fp / 2 } }
+    { \fp_eval:n { \l_semio_viz_cart_ylo_fp + 3 } }
+    { \fp_eval:n { \l_semio_viz_gauge_thick_fp } }
+    { \fp_eval:n { ( \l_semio_viz_cart_yhi_fp - \l_semio_viz_cart_ylo_fp - 4 )
+      * \l_semio_viz_gauge_frac_fp } }
+  \semio_viz_cart_draw_dot:nnn { \fp_eval:n { \l_semio_viz_gauge_cx_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_ylo_fp + 2.4 } }
+    { \fp_eval:n { \l_semio_viz_gauge_thick_fp } }
+}
+
+% ▶️ The whole family run: defaults, the option list #1, the dial geometry, then the gauge the
+% `mode` asks for, with the value printed at its centre.
+\cs_new_protected:Npn \semio_viz_gauge_render:n #1 {
+  \semio_viz_frame_require:n { SemioVizRunFamily }
+  \semio_viz_gauge_keys_reset:
+  \keys_set:nn { semio / viz / family / gauge } {#1}
+  \semio_viz_cart_rect_compute:
+  \semio_viz_gauge_read:
+  \str_case:VnF \l_semio_viz_gauge_mode_tl {
+    { linear } { \semio_viz_gauge_linear: }
+    { progress-bar } { \semio_viz_gauge_linear: }
+    { thermometer } { \semio_viz_gauge_thermometer: }
+    { dial } {
+      \semio_viz_gauge_arc:nnn { \l_semio_viz_gauge_start_fp } { \l_semio_viz_gauge_end_fp }
+        { semio-chrome-panel }
+      \semio_viz_gauge_ticks:
+      \semio_viz_gauge_needle:
+    }
+    { speedometer } {
+      \fp_set:Nn \l_semio_viz_gauge_start_fp { 210 }
+      \fp_set:Nn \l_semio_viz_gauge_end_fp { -30 }
+      \semio_viz_gauge_read:
+      \semio_viz_gauge_arc:nnn { \l_semio_viz_gauge_start_fp } { \l_semio_viz_gauge_end_fp }
+        { semio-chrome-panel }
+      \semio_viz_gauge_arc:nnn { \l_semio_viz_gauge_start_fp } { \l_semio_viz_gauge_angle_fp }
+        { \semio_viz_theme_color:n { 0 } }
+      \semio_viz_gauge_ticks:
+      \semio_viz_gauge_needle:
+    }
+    { progress-ring } {
+      \fp_set:Nn \l_semio_viz_gauge_start_fp { 90 }
+      \fp_set:Nn \l_semio_viz_gauge_end_fp { -270 }
+      \semio_viz_gauge_read:
+      \semio_viz_gauge_arc:nnn { 90 } { -270 } { semio-chrome-panel }
+      \semio_viz_gauge_arc:nnn { \l_semio_viz_gauge_start_fp } { \l_semio_viz_gauge_angle_fp }
+        { \semio_viz_theme_color:n { 0 } }
+    }
+    { donut } {
+      \fp_set:Nn \l_semio_viz_gauge_thick_fp { \l_semio_viz_gauge_thick_fp * 2 }
+      \fp_set:Nn \l_semio_viz_gauge_start_fp { 90 }
+      \fp_set:Nn \l_semio_viz_gauge_end_fp { -270 }
+      \semio_viz_gauge_read:
+      \semio_viz_gauge_arc:nnn { 90 } { -270 } { semio-chrome-panel }
+      \semio_viz_gauge_arc:nnn { \l_semio_viz_gauge_start_fp } { \l_semio_viz_gauge_angle_fp }
+        { \semio_viz_theme_color:n { 0 } }
+    }
+  } {
+    \semio_viz_gauge_arc:nnn { \l_semio_viz_gauge_start_fp } { \l_semio_viz_gauge_end_fp }
+      { semio-chrome-panel }
+    \semio_viz_gauge_arc:nnn { \l_semio_viz_gauge_start_fp } { \l_semio_viz_gauge_angle_fp }
+      { \semio_viz_theme_color:n { 0 } }
+    \semio_viz_gauge_ticks:
+  }
+  \node [ anchor=north , font=\c_semio_viz_theme_font_title_tl , text=semio-chrome-foreground ]
+    at ( \fp_eval:n { \l_semio_viz_gauge_cx_fp } , \fp_eval:n { \l_semio_viz_gauge_cy_fp - 0.5 } )
+    { \fp_eval:n { round( \l_semio_viz_kpi_val_fp , 0 ) } } ;
+}
+
+% 🎛️ §18: radial, donut, linear, thermometer and progress gauges.
+\SemioVizFamily { gauge } { \semio_viz_gauge_render:n {#1} }
+
+% 🖼️ statepanel — the static equivalents of interactive D3 patterns of taxonomy §73.
+\cs_new_protected:Npn \semio_viz_state_keys_reset: {
+  \semio_viz_line_keys_reset:
+  \tl_set:Nn \l_semio_viz_state_mode_tl { overview-detail }
+  \int_set:Nn \l_semio_viz_state_frames_int { 4 }
+  \fp_set:Nn \l_semio_viz_state_inset_fp { 0.42 }
+  \fp_set:Nn \l_semio_viz_state_from_fp { 2 }
+  \fp_set:Nn \l_semio_viz_state_to_fp { 5 }
+}
+
+% 📈 The panel's base series, drawn once so every interaction state is a change to the same picture.
+\cs_new_protected:Npn \semio_viz_state_series: {
+  \seq_map_indexed_inline:Nn \l_semio_viz_cart_groups_seq {
+    \int_set:Nn \l_semio_viz_bar_gi_int {##1}
+    \tl_set:Nn \l_semio_viz_bar_grp_tl {##2}
+    \semio_viz_line_series_color:
+    \exp_args:NV \semio_viz_line_scan:n \l_semio_viz_cart_y_tl
+    \semio_viz_cart_draw_path:N \l_semio_viz_cart_pts_seq
+  }
+}
+
+% 🔲 The selection rectangle shared by brush, focus+context and overview+detail.
+\cs_new_protected:Npn \semio_viz_state_selection: {
+  \semio_viz_cart_xmap:VN \l_semio_viz_state_from_fp \l_semio_viz_cart_c_fp
+  \semio_viz_cart_xmap:VN \l_semio_viz_state_to_fp \l_semio_viz_cart_d_fp
+  \fill [ \semio_viz_theme_color:n { 0 } , fill~opacity=0.14 ]
+    ( \fp_eval:n { \l_semio_viz_cart_c_fp } , \fp_eval:n { \l_semio_viz_cart_ylo_fp } )
+    rectangle ( \fp_eval:n { \l_semio_viz_cart_d_fp } , \fp_eval:n { \l_semio_viz_cart_yhi_fp } ) ;
+  \tl_set:Nn \l_semio_viz_cart_stroke_tl { \semio_viz_theme_color:n { 0 } }
+  \semio_viz_cart_draw_hair:nnnn { \fp_eval:n { \l_semio_viz_cart_c_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_ylo_fp } } { \fp_eval:n { \l_semio_viz_cart_c_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_yhi_fp } }
+  \semio_viz_cart_draw_hair:nnnn { \fp_eval:n { \l_semio_viz_cart_d_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_ylo_fp } } { \fp_eval:n { \l_semio_viz_cart_d_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_yhi_fp } }
+  \semio_viz_probe_geometry:nx { region }
+    { \fp_eval:n { round( \l_semio_viz_cart_c_fp , 4 ) } ,
+      \fp_eval:n { round( \l_semio_viz_cart_d_fp , 4 ) } }
+}
+
+\fp_new:N \l_semio_viz_state_inset_fp
+
+% 🔍 The magnified inset: the selection redrawn at a larger scale in the upper right corner.
+\cs_new_protected:Npn \semio_viz_state_inset: {
+  \tl_set:Nn \l_semio_viz_cart_fill_tl { semio-chrome-window }
+  \semio_viz_cart_draw_rect:nnnn
+    { \fp_eval:n { \l_semio_viz_cart_xhi_fp - ( \l_semio_viz_cart_xhi_fp
+      - \l_semio_viz_cart_xlo_fp ) * \l_semio_viz_state_inset_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_yhi_fp - ( \l_semio_viz_cart_yhi_fp
+      - \l_semio_viz_cart_ylo_fp ) * \l_semio_viz_state_inset_fp * 1.2 } }
+    { \fp_eval:n { ( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp ) * \l_semio_viz_state_inset_fp } }
+    { \fp_eval:n { ( \l_semio_viz_cart_yhi_fp - \l_semio_viz_cart_ylo_fp ) * \l_semio_viz_state_inset_fp * 1.2 } }
+  \tl_set:Nn \l_semio_viz_cart_stroke_tl { \semio_viz_theme_color:n { 0 } }
+  \semio_viz_cart_draw_hair:nnnn { \fp_eval:n { \l_semio_viz_cart_c_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_yhi_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_xhi_fp - ( \l_semio_viz_cart_xhi_fp
+      - \l_semio_viz_cart_xlo_fp ) * \l_semio_viz_state_inset_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_yhi_fp - ( \l_semio_viz_cart_yhi_fp
+      - \l_semio_viz_cart_ylo_fp ) * \l_semio_viz_state_inset_fp * 1.2 } }
+}
+
+% 🎬 Frames: the same series repeated in equal panels, progressively revealed.
+\cs_new_protected:Npn \semio_viz_state_frames_run: {
+  \fp_set:Nn \l_semio_viz_cart_e_fp
+    { ( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp ) / \l_semio_viz_state_frames_int }
+  \int_step_variable:nNn { \l_semio_viz_state_frames_int } \l_semio_viz_cart_i_int {
+    \tl_set:Nn \l_semio_viz_cart_stroke_tl { semio-chrome-border-normal }
+    \semio_viz_cart_draw_hair:nnnn
+      { \fp_eval:n { \l_semio_viz_cart_xlo_fp
+        + \l_semio_viz_cart_i_int * \l_semio_viz_cart_e_fp } }
+      { \fp_eval:n { \l_semio_viz_cart_ylo_fp } }
+      { \fp_eval:n { \l_semio_viz_cart_xlo_fp
+        + \l_semio_viz_cart_i_int * \l_semio_viz_cart_e_fp } }
+      { \fp_eval:n { \l_semio_viz_cart_yhi_fp } }
+    \semio_viz_state_frame_path:
+  }
+}
+
+% 🎞️ The series inside one frame of the sequence, revealed up to that frame's own share of it.
+\cs_new_protected:Npn \semio_viz_state_frame_path: {
+  \seq_clear:N \l_semio_viz_cart_pts_seq
+  \int_step_variable:nNn { 9 } \l_semio_viz_cart_j_int {
+    \fp_set:Nn \l_semio_viz_cart_v_fp { ( \l_semio_viz_cart_j_int - 1 ) / 8 }
+    \seq_put_right:Nx \l_semio_viz_cart_pts_seq {
+      \fp_eval:n { \l_semio_viz_cart_xlo_fp
+        + ( \l_semio_viz_cart_i_int - 1 ) * \l_semio_viz_cart_e_fp
+        + \l_semio_viz_cart_v_fp * \l_semio_viz_cart_e_fp * 0.9 } ,
+      \fp_eval:n { \l_semio_viz_cart_ylo_fp
+        + ( \l_semio_viz_cart_yhi_fp - \l_semio_viz_cart_ylo_fp )
+        * ( 0.2 + 0.6 * \l_semio_viz_cart_v_fp
+            * \l_semio_viz_cart_i_int / \l_semio_viz_state_frames_int ) }
+    }
+  }
+  \semio_viz_cart_color:VN \l_semio_viz_cart_i_int \l_semio_viz_cart_stroke_tl
+  \semio_viz_cart_draw_path:N \l_semio_viz_cart_pts_seq
+}
+
+% 🪟 The context strip: the same series compressed into a band under the main panel.
+\cs_new_protected:Npn \semio_viz_state_context: {
+  \fp_set:Nn \l_semio_viz_cart_e_fp { \l_semio_viz_cart_yhi_fp }
+  \fp_set:Nn \l_semio_viz_cart_yhi_fp
+    { \l_semio_viz_cart_ylo_fp + ( \l_semio_viz_cart_e_fp - \l_semio_viz_cart_ylo_fp ) * 0.22 }
+  \semio_viz_cart_scale_value:nn { linear } { v }
+  \tl_set:Nn \l_semio_viz_cart_stroke_tl { semio-chrome-border-normal }
+  \semio_viz_state_series:
+  \semio_viz_state_selection:
+  \fp_set_eq:NN \l_semio_viz_cart_yhi_fp \l_semio_viz_cart_e_fp
+  \semio_viz_cart_scale_value:nn { linear } { v }
+}
+
+% ✂️ Brush handles: the selection edges drawn as grips, without the shaded body.
+\cs_new_protected:Npn \semio_viz_state_handles: {
+  \semio_viz_cart_xmap:VN \l_semio_viz_state_from_fp \l_semio_viz_cart_c_fp
+  \semio_viz_cart_xmap:VN \l_semio_viz_state_to_fp \l_semio_viz_cart_d_fp
+  \tl_set:Nn \l_semio_viz_cart_fill_tl { \semio_viz_theme_color:n { 0 } }
+  \semio_viz_cart_draw_rect:nnnn { \fp_eval:n { \l_semio_viz_cart_c_fp - 0.7 } }
+    { \fp_eval:n { \l_semio_viz_cart_ylo_fp } } { 1.4 }
+    { \fp_eval:n { \l_semio_viz_cart_yhi_fp - \l_semio_viz_cart_ylo_fp } }
+  \semio_viz_cart_draw_rect:nnnn { \fp_eval:n { \l_semio_viz_cart_d_fp - 0.7 } }
+    { \fp_eval:n { \l_semio_viz_cart_ylo_fp } } { 1.4 }
+    { \fp_eval:n { \l_semio_viz_cart_yhi_fp - \l_semio_viz_cart_ylo_fp } }
+}
+
+% 🔀 Filter comparison: the unfiltered series in the chrome grey, the filtered one accented.
+\cs_new_protected:Npn \semio_viz_state_filter: {
+  \tl_set:Nn \l_semio_viz_line_highlight_tl { Alpha }
+  \semio_viz_state_series:
+  \tl_clear:N \l_semio_viz_line_highlight_tl
+  \semio_viz_state_selection:
+}
+
+% ▶️ The whole family run: defaults, the option list #1, the frame, then the interaction state the
+% `mode` names — hover, focus-context, brush, filter, selection and the rest, each drawn statically.
+\cs_new_protected:Npn \semio_viz_state_render:n #1 {
+  \semio_viz_frame_require:n { SemioVizRunFamily }
+  \semio_viz_state_keys_reset:
+  \keys_set:nn { semio / viz / family / statepanel } {#1}
+  \semio_viz_cart_rect_compute:
+  \semio_viz_line_groups:
+  \semio_viz_line_domain:
+  \semio_viz_line_axis_x:
+  \semio_viz_cart_scale_value:nn { linear } { v }
+  \semio_viz_cart_axis_frame:
+  \str_case:VnF \l_semio_viz_state_mode_tl {
+    { frames } { \semio_viz_state_frames_run: }
+    { keyframe } { \semio_viz_state_frames_run: }
+    { transition } { \semio_viz_state_frames_run: }
+    { animated-path } { \semio_viz_state_frames_run: }
+    { morph } { \semio_viz_state_frames_run: }
+    { storyboard } { \semio_viz_state_frames_run: }
+    { filter-panels } { \semio_viz_state_frames_run: }
+    { zoom-inset } { \semio_viz_state_series: \semio_viz_state_selection: \semio_viz_state_inset: }
+    { magnify } {
+      \fp_set:Nn \l_semio_viz_state_inset_fp { 0.58 }
+      \semio_viz_state_series: \semio_viz_state_selection: \semio_viz_state_inset:
+    }
+    { hover } {
+      \semio_viz_state_series:
+      \tl_set:Nn \l_semio_viz_anno_mode_tl { callout }
+      \tl_set:Nn \l_semio_viz_anno_note_tl { }
+      \semio_viz_anno_default_note:
+      \fp_set_eq:NN \l_semio_viz_anno_at_fp \l_semio_viz_state_from_fp
+      \fp_set:Nn \l_semio_viz_anno_value_fp { 6 }
+      \semio_viz_anno_mark:
+    }
+    { focus-context } { \semio_viz_state_series: \semio_viz_state_selection: \semio_viz_state_context: }
+    { overview-detail } { \semio_viz_state_context: \semio_viz_state_series: }
+    { brush } { \semio_viz_state_series: \semio_viz_state_handles: }
+    { filter-compare } { \semio_viz_state_filter: }
+    { selected-node } {
+      \semio_viz_state_series:
+      \semio_viz_cart_xmap:VN \l_semio_viz_state_from_fp \l_semio_viz_cart_c_fp
+      \semio_viz_cart_ymap:nN { 6 } \l_semio_viz_cart_d_fp
+      \tl_set:Nn \l_semio_viz_cart_fill_tl { \semio_viz_theme_color:n { 0 } }
+      \semio_viz_cart_draw_dot:nnn { \fp_eval:n { \l_semio_viz_cart_c_fp } }
+        { \fp_eval:n { \l_semio_viz_cart_d_fp } } { 2.4 }
+    }
+  } { \semio_viz_state_series: \semio_viz_state_selection: }
+  \semio_viz_cart_axis_ticks:n { v }
+}
+
+% 🖼️ §73: the static equivalents of the interactive D3 patterns, one state per kind.
+\SemioVizFamily { statepanel } { \semio_viz_state_render:n {#1} }
+%endregion 🔖️Families
+
+\ExplSyntaxOff

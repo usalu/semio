@@ -1,0 +1,81 @@
+{
+  "_comment": "📤️ The expected goal, statute, territory and entity-kind projections. Regenerate only together with the inputs.",
+  "entityKindTree": [
+    "0|category|entitykind:definition|definition",
+    "1|statute|📜️code📜️definition📜️commented|🟢️Code#Definition#Commented",
+    "1|statute|📜️code📜️definition📜️undocumented|🔴️Code#Definition#Undocumented",
+    "0|category|entitykind:folder|folder",
+    "1|statute|📜️docs📜️readme📜️missing|🟢️Docs#Readme#Missing",
+    "0|category|entitykind:section|section",
+    "1|statute|📜️code📜️section📜️empty|🟡️Code#Section#Empty"
+  ],
+  "goalTree": [
+    "0|goal|quality|Quality",
+    "1|goal|quality/tests|Tests",
+    "2|ticket|🎫️tree-rust|TREE-RUST",
+    "3|ticket|🎫️tree-mermaid|TREE-MERMAID",
+    "0|goal|delivery|Delivery",
+    "1|ticket|🎫️ship-cli|SHIP-CLI",
+    "0|goal||No Goal",
+    "1|ticket|🎫️stray|STRAY"
+  ],
+  "goalTreeMarkdown": [
+    "- [goal#Quality]",
+    "  - [goal#Tests]",
+    "    - [ticket#Tree Rust Implementation]",
+    "      - [ticket#Mermaid Rendering]",
+    "- [goal#Delivery]",
+    "  - [ticket#Ship The CLI]",
+    "- [goal#No Goal]",
+    "  - [ticket#Stray Ticket]",
+    ""
+  ],
+  "goalTreeText": [
+    "goal#Quality",
+    "└️─️─️ goal#Tests",
+    "    └️─️─️ ticket#Tree Rust Implementation",
+    "        └️─️─️ ticket#Mermaid Rendering",
+    "goal#Delivery",
+    "└️─️─️ ticket#Ship The CLI",
+    "goal#No Goal",
+    "└️─️─️ ticket#Stray Ticket",
+    ""
+  ],
+  "openSubgoals": [
+    {
+      "goal": "quality",
+      "subgoals": 1,
+      "tickets": 1
+    },
+    {
+      "goal": "delivery",
+      "subgoals": 0,
+      "tickets": 1
+    },
+    {
+      "goal": "",
+      "subgoals": 0,
+      "tickets": 1
+    }
+  ],
+  "statuteTree": [
+    "0|category|breachCategory:code|code",
+    "1|category|breachCategory:code/definition|definition",
+    "2|statute|code/definition/commented|🟢️commented",
+    "2|statute|code/definition/undocumented|🔴️undocumented",
+    "1|category|breachCategory:code/section|section",
+    "2|statute|code/section/empty|🟡️empty",
+    "0|category|breachCategory:docs|docs",
+    "1|category|breachCategory:docs/readme|readme",
+    "2|statute|docs/readme/missing|🟢️missing"
+  ],
+  "territoryTree": [
+    "0|category|Sections|Sections",
+    "1|statute|📜️code📜️section📜️empty|🟡️Code#Section#Empty",
+    "1|category|Definitions|Definitions",
+    "2|statute|📜️code📜️definition📜️undocumented|🔴️Code#Definition#Undocumented",
+    "2|statute|📜️code📜️definition📜️commented|🟢️Code#Definition#Commented",
+    "0|category|Docs|Docs",
+    "1|statute|📜️docs📜️readme📜️missing|🟢️Docs#Readme#Missing"
+  ]
+}

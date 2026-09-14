@@ -1,0 +1,231 @@
+{
+  "_comment": "🔀️ Frozen specification vectors: one native payload per IDE, written from the hook configurations committed in .claude/settings.json, .cursor/hooks.json, .windsurf/hooks.json and .kiro/agents/repo.json, plus the payload shapes each of those IDEs documents. `expectedEvent` and `expectedParent` are the pinned answers — this file IS the specification, so a change to either column is a deliberate change of contract.",
+  "vectors": [
+    {
+      "id": "copilot-session-start",
+      "client": "copilot-chat",
+      "nativeEvent": "SessionStart",
+      "toolName": "",
+      "payload": { "hook_event_name": "SessionStart", "session_id": "cop-1", "cwd": "/repo" },
+      "expectedEvent": "agent.started",
+      "expectedParent": ""
+    },
+    {
+      "id": "copilot-subagent-start-carries-the-parent-shape",
+      "client": "copilot-chat",
+      "nativeEvent": "SubagentStart",
+      "toolName": "",
+      "payload": { "hook_event_name": "SubagentStart", "session_id": "cop-2", "agent_id": "sub-9", "parent_session_id": "cop-1" },
+      "expectedEvent": "agent.started",
+      "expectedParent": "subagent"
+    },
+    {
+      "id": "copilot-pre-tool-use-of-a-terminal-tool",
+      "client": "copilot-chat",
+      "nativeEvent": "PreToolUse",
+      "toolName": "run_in_terminal",
+      "payload": { "hook_event_name": "PreToolUse", "session_id": "cop-3", "tool_name": "run_in_terminal", "tool_input": { "command": "ls -la" } },
+      "expectedEvent": "agent.file.read.starting",
+      "expectedParent": ""
+    },
+    {
+      "id": "copilot-pre-tool-use-of-a-test-command",
+      "client": "copilot-chat",
+      "nativeEvent": "PreToolUse",
+      "toolName": "run_in_terminal",
+      "payload": { "hook_event_name": "PreToolUse", "session_id": "cop-4", "tool_name": "run_in_terminal", "tool_input": { "command": "cargo test -p semio-framework-repo-hooks" } },
+      "expectedEvent": "agent.tool.test.starting",
+      "expectedParent": ""
+    },
+    {
+      "id": "copilot-before-shell-execution-without-a-classified-command",
+      "client": "copilot-chat",
+      "nativeEvent": "beforeShellExecution",
+      "toolName": "",
+      "payload": { "hook_event_name": "beforeShellExecution", "session_id": "cop-5" },
+      "expectedEvent": "agent.tool.terminal.starting",
+      "expectedParent": ""
+    },
+    {
+      "id": "copilot-after-tab-file-edit",
+      "client": "copilot-chat",
+      "nativeEvent": "afterTabFileEdit",
+      "toolName": "",
+      "payload": { "hook_event_name": "afterTabFileEdit", "session_id": "cop-6" },
+      "expectedEvent": "agent.tool.code.edit.ended",
+      "expectedParent": ""
+    },
+    {
+      "id": "cursor-before-submit-prompt",
+      "client": "cursor-chat",
+      "nativeEvent": "beforeSubmitPrompt",
+      "toolName": "",
+      "payload": { "conversation_id": "cur-1", "prompt": "keep the plan in the ticket" },
+      "expectedEvent": "agent.prompt.submitting",
+      "expectedParent": ""
+    },
+    {
+      "id": "cursor-after-agent-thought",
+      "client": "cursor-chat",
+      "nativeEvent": "afterAgentThought",
+      "toolName": "",
+      "payload": { "conversation_id": "cur-2", "text": "considering the taxonomy" },
+      "expectedEvent": "agent.thinking.ended",
+      "expectedParent": ""
+    },
+    {
+      "id": "cursor-post-tool-use-of-an-edit-tool",
+      "client": "cursor-chat",
+      "nativeEvent": "postToolUse",
+      "toolName": "Edit",
+      "payload": { "conversation_id": "cur-3", "tool_name": "Edit", "tool_input": { "filePath": "a.rs", "oldString": "x", "newString": "y" } },
+      "expectedEvent": "agent.tool.code.edit.ended",
+      "expectedParent": ""
+    },
+    {
+      "id": "windsurf-pre-user-prompt",
+      "client": "windsurf-chat",
+      "nativeEvent": "pre_user_prompt",
+      "toolName": "",
+      "payload": { "trajectory_id": "win-1" },
+      "expectedEvent": "agent.prompt.submitting",
+      "expectedParent": ""
+    },
+    {
+      "id": "windsurf-pre-run-command-with-a-search-command",
+      "client": "windsurf-chat",
+      "nativeEvent": "pre_run_command",
+      "toolName": "",
+      "payload": { "trajectory_id": "win-2", "tool_input": { "command": "rg --files" } },
+      "expectedEvent": "agent.file.read.starting",
+      "expectedParent": ""
+    },
+    {
+      "id": "windsurf-post-write-code",
+      "client": "windsurf-chat",
+      "nativeEvent": "post_write_code",
+      "toolName": "",
+      "payload": { "trajectory_id": "win-3" },
+      "expectedEvent": "agent.tool.code.edit.ended",
+      "expectedParent": ""
+    },
+    {
+      "id": "claude-permission-request-of-a-plan-tool",
+      "client": "claude-code",
+      "nativeEvent": "PermissionRequest",
+      "toolName": "TodoWrite",
+      "payload": { "session_id": "cla-1", "tool_name": "TodoWrite", "transcript_path": "/tmp/cla-1.jsonl" },
+      "expectedEvent": "agent.tool.plan.updating.starting",
+      "expectedParent": ""
+    },
+    {
+      "id": "claude-task-completed",
+      "client": "claude-code",
+      "nativeEvent": "TaskCompleted",
+      "toolName": "",
+      "payload": { "session_id": "cla-2" },
+      "expectedEvent": "agent.tool.plan.updating.ended",
+      "expectedParent": ""
+    },
+    {
+      "id": "claude-glob-is-generic-even-though-the-tool-table-calls-it-a-search",
+      "client": "claude-code",
+      "nativeEvent": "PreToolUse",
+      "toolName": "Glob",
+      "payload": { "session_id": "cla-3", "tool_name": "Glob", "tool_input": { "pattern": "**/*.rs" } },
+      "expectedEvent": "agent.tool.starting",
+      "expectedParent": ""
+    },
+    {
+      "id": "droid-session-end",
+      "client": "droid",
+      "nativeEvent": "SessionEnd",
+      "toolName": "",
+      "payload": { "session_id": "dro-1", "report": "  finished the split  " },
+      "expectedEvent": "agent.ended",
+      "expectedParent": ""
+    },
+    {
+      "id": "codex-user-prompt-submit",
+      "client": "codex",
+      "nativeEvent": "UserPromptSubmit",
+      "toolName": "",
+      "payload": { "session_id": "cod-1", "model": "gpt-5", "reasoning_effort": "high" },
+      "expectedEvent": "agent.prompt.submitting",
+      "expectedParent": ""
+    },
+    {
+      "id": "antigravity-pre-compact",
+      "client": "antigravity-chat",
+      "nativeEvent": "PreCompact",
+      "toolName": "",
+      "payload": { "session_id": "ant-1", "chat": "  a long conversation  " },
+      "expectedEvent": "agent.compacting",
+      "expectedParent": ""
+    },
+    {
+      "id": "kiro-agent-spawn",
+      "client": "kiro-cli",
+      "nativeEvent": "agentSpawn",
+      "toolName": "",
+      "payload": { "agent_id": "kir-1" },
+      "expectedEvent": "agent.started",
+      "expectedParent": ""
+    },
+    {
+      "id": "kiro-pre-tool-use-of-a-write-tool",
+      "client": "kiro-cli",
+      "nativeEvent": "preToolUse",
+      "toolName": "fs_write",
+      "payload": { "agent_id": "kir-2", "tool_name": "fs_write", "tool_input": { "path": "b.ts" } },
+      "expectedEvent": "agent.tool.code.edit.starting",
+      "expectedParent": ""
+    },
+    {
+      "id": "a-neutral-slug-passes-through-whatever-the-client",
+      "client": "kiro-cli",
+      "nativeEvent": "agent.tool.build.ended",
+      "toolName": "",
+      "payload": { "agent_id": "kir-3" },
+      "expectedEvent": "agent.tool.build.ended",
+      "expectedParent": ""
+    }
+  ],
+  "refusals": [
+    { "id": "copilot-does-not-know-a-windsurf-event", "client": "copilot-chat", "nativeEvent": "pre_run_command", "toolName": "" },
+    { "id": "windsurf-does-not-know-a-copilot-event", "client": "windsurf-chat", "nativeEvent": "SessionStart", "toolName": "" },
+    { "id": "kiro-does-not-know-a-compaction-event", "client": "kiro-cli", "nativeEvent": "preCompact", "toolName": "" },
+    { "id": "an-invented-event-is-refused-everywhere", "client": "claude-code", "nativeEvent": "NoSuchEvent", "toolName": "" },
+    { "id": "an-unknown-client-falls-back-to-the-claude-table-and-still-refuses", "client": "no-such-ide", "nativeEvent": "pre_run_command", "toolName": "" }
+  ],
+  "payloadFacts": [
+    {
+      "id": "a-flat-claude-payload",
+      "payload": { "session_id": "s-1", "transcript_path": "/logs/s-1.jsonl", "tool_name": "Bash", "tool_input": { "command": "go test ./...", "cwd": "sub/dir" }, "model": "opus-5", "reasoning_effort": "high", "messageId": "m-1", "parent_session_id": "p-1" }
+    },
+    {
+      "id": "a-payload-nested-under-event",
+      "payload": { "event": { "tool_input": { "command": "bun test" }, "parent": "p-2" }, "sessionId": "s-2" }
+    },
+    {
+      "id": "a-payload-nested-under-native-event",
+      "payload": { "native": { "event": { "tool_input": { "command": "cargo build" }, "parentId": "p-3" } }, "trajectory_id": "s-3" }
+    },
+    {
+      "id": "a-payload-whose-only-identity-is-a-transcript",
+      "payload": { "transcript": "/var/tmp/session-4.log" }
+    },
+    {
+      "id": "a-payload-whose-parent-is-the-literal-subagent",
+      "payload": { "session_id": "s-5", "parent": "subagent" }
+    },
+    {
+      "id": "a-payload-with-no-identity-at-all",
+      "payload": { "unrelated": true }
+    },
+    {
+      "id": "a-payload-carrying-a-command-line-rather-than-a-command",
+      "payload": { "session_id": "s-7", "tool_info": { "command_line": "npm run test" } }
+    }
+  ]
+}

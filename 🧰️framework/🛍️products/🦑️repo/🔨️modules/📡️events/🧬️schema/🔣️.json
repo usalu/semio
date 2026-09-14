@@ -1,0 +1,950 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/repo/events.json",
+  "title": "Repo events",
+  "description": "✉️ Wire shapes of the repo event envelope, of every typed payload and of the append-only event store record. Kind strings live in 🔣️event-kinds.json.",
+  "$defs": {
+    "TicketPayload": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "year": {
+          "type": "integer"
+        },
+        "month": {
+          "type": "integer"
+        },
+        "day": {
+          "type": "integer"
+        },
+        "slug": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "TicketOpenPayload": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "year": {
+          "type": "integer"
+        },
+        "month": {
+          "type": "integer"
+        },
+        "day": {
+          "type": "integer"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "llm": {
+          "type": "string"
+        },
+        "effort": {
+          "type": "string"
+        },
+        "client": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "goal": {
+          "type": "string"
+        },
+        "parent": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "prompt",
+        "client",
+        "goal"
+      ],
+      "additionalProperties": false
+    },
+    "TicketClosePayload": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "year": {
+          "type": "integer"
+        },
+        "month": {
+          "type": "integer"
+        },
+        "day": {
+          "type": "integer"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "files": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "author": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "summary",
+        "files"
+      ],
+      "additionalProperties": false
+    },
+    "TicketReopenPayload": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "year": {
+          "type": "integer"
+        },
+        "month": {
+          "type": "integer"
+        },
+        "day": {
+          "type": "integer"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "llm": {
+          "type": "string"
+        },
+        "effort": {
+          "type": "string"
+        },
+        "client": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "prompt",
+        "client"
+      ],
+      "additionalProperties": false
+    },
+    "TicketChangePayload": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "year": {
+          "type": "integer"
+        },
+        "month": {
+          "type": "integer"
+        },
+        "day": {
+          "type": "integer"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "prompt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "llm": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "effort": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "goal": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "parent": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "author": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "GoalPayload": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "GoalOpenPayload": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "llm": {
+          "type": "string"
+        },
+        "effort": {
+          "type": "string"
+        },
+        "parent": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title"
+      ],
+      "additionalProperties": false
+    },
+    "GoalClosePayload": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "summary"
+      ],
+      "additionalProperties": false
+    },
+    "GoalReopenPayload": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "client": {
+          "type": "string"
+        },
+        "llm": {
+          "type": "string"
+        },
+        "effort": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "prompt",
+        "client"
+      ],
+      "additionalProperties": false
+    },
+    "GoalChangePayload": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "llm": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "effort": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "parent": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "author": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "ContributorPayload": {
+      "type": "object",
+      "properties": {
+        "github": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "github"
+      ],
+      "additionalProperties": false
+    },
+    "CheckpointPayload": {
+      "type": "object",
+      "properties": {
+        "author": {
+          "type": "string"
+        },
+        "github": {
+          "type": "string"
+        },
+        "sha": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "files": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "technologies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "bundles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "folders": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "files_changed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "definitions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "author",
+        "github",
+        "sha",
+        "message",
+        "files"
+      ],
+      "additionalProperties": false
+    },
+    "TodoPayload": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "parent_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "TodoCreatePayload": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "parent_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "TodoChangePayload": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "parent_id": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "TodoDeletePayload": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "parent_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "WorkItem": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "ContributorWork": {
+      "type": "object",
+      "properties": {
+        "github": {
+          "type": "string"
+        },
+        "tickets": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "goals": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "todos": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "technologies": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "bundles": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "folders": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "files": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "sections": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "definitions": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "github",
+        "tickets",
+        "goals",
+        "todos",
+        "technologies",
+        "bundles",
+        "folders",
+        "files",
+        "sections",
+        "definitions"
+      ],
+      "additionalProperties": false
+    },
+    "DraftPayload": {
+      "type": "object",
+      "properties": {
+        "slug": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "slug"
+      ],
+      "additionalProperties": false
+    },
+    "FilePayload": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "FolderPayload": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "SectionPayload": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "old_name": {
+          "type": "string"
+        },
+        "parent": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "file",
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "IntegratePayload": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "target_file": {
+          "type": "string"
+        },
+        "target_section": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "target_file",
+        "target_section"
+      ],
+      "additionalProperties": false
+    },
+    "ExtractPayload": {
+      "type": "object",
+      "properties": {
+        "source_file": {
+          "type": "string"
+        },
+        "source_section": {
+          "type": "string"
+        },
+        "target_file": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_file",
+        "source_section",
+        "target_file"
+      ],
+      "additionalProperties": false
+    },
+    "Event": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "ticket.open.starting",
+            "ticket.open.ended",
+            "ticket.close.starting",
+            "ticket.close.ended",
+            "ticket.reopen.starting",
+            "ticket.reopen.ended",
+            "ticket.change.starting",
+            "ticket.change.ended",
+            "ticket.read.starting",
+            "ticket.read.ended",
+            "goal.open.starting",
+            "goal.open.ended",
+            "goal.close.starting",
+            "goal.close.ended",
+            "goal.reopen.starting",
+            "goal.reopen.ended",
+            "goal.change.starting",
+            "goal.change.ended",
+            "contributor.add.starting",
+            "contributor.add.ended",
+            "contributor.remove.starting",
+            "contributor.remove.ended",
+            "checkpoint.starting",
+            "checkpoint.ended",
+            "todo.create.starting",
+            "todo.create.ended",
+            "todo.change.starting",
+            "todo.change.ended",
+            "todo.delete.starting",
+            "todo.delete.ended",
+            "draft.create.starting",
+            "draft.create.ended",
+            "draft.delete.starting",
+            "draft.delete.ended",
+            "file.create.starting",
+            "file.create.ended",
+            "file.move.starting",
+            "file.move.ended",
+            "file.delete.starting",
+            "file.delete.ended",
+            "folder.create.starting",
+            "folder.create.ended",
+            "folder.move.starting",
+            "folder.move.ended",
+            "folder.delete.starting",
+            "folder.delete.ended",
+            "section.create.starting",
+            "section.create.ended",
+            "section.move.starting",
+            "section.move.ended",
+            "section.delete.starting",
+            "section.delete.ended",
+            "integrate.starting",
+            "integrate.ended",
+            "extract.starting",
+            "extract.ended",
+            "export.starting",
+            "export.ended",
+            "analyze.starting",
+            "analyze.ended",
+            "fix.starting",
+            "fix.ended",
+            "tree.starting",
+            "tree.ended",
+            "graphql.starting",
+            "graphql.ended",
+            "move.starting",
+            "move.ended",
+            "policy.check.starting",
+            "policy.check.ended"
+          ]
+        },
+        "source": {
+          "type": "string"
+        },
+        "payload": true
+      },
+      "required": [
+        "kind",
+        "source",
+        "payload"
+      ],
+      "additionalProperties": false
+    },
+    "StoreEvent": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "semio.event/1"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "data": true,
+        "checksum": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "schema",
+        "sequence",
+        "id",
+        "kind",
+        "data",
+        "checksum"
+      ],
+      "additionalProperties": false
+    },
+    "ExportResult": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "snapshot": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "technologies": {
+          "type": "integer"
+        },
+        "bundles": {
+          "type": "integer"
+        },
+        "folders": {
+          "type": "integer"
+        },
+        "files": {
+          "type": "integer"
+        },
+        "sections": {
+          "type": "integer"
+        },
+        "definitions": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "path",
+        "snapshot",
+        "technologies",
+        "bundles",
+        "folders",
+        "files",
+        "sections",
+        "definitions"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$ref": "#/$defs/Event"
+}

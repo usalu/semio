@@ -10,7 +10,6 @@ import { TestScript } from "../../🧪️tests/🏃️execution/🟦️.ts";
 import { VerifyScript } from "../../🧪️tests/✅️verification/🟦️.ts";
 import { BenchPluginsScript } from "../../📊️benchmarks/🔌️plugins/🏃️execution/🟦️.ts";
 import { ScaleFixtureGenerateScript, ScaleFixturePreviewGeneratedScript, ScaleFixtureCheckScript } from "../../../../🧫️fixtures/⚖️scale/📤️publication/🟦️.ts";
-import { DistributionBundleScript } from "../../🚚️distribution/🏃️execution/🟦️.ts";
 import { CapabilityLayeringLintScript } from "../../🧪️tests/🧹️layering-policy/🟦️.ts";
 import { PluginIndexExportPathLintScript } from "../../🧪️tests/🧹️export-path-policy/🟦️.ts";
 import { HostHandleReachLintScript } from "../../🧪️tests/🧹️host-handle-policy/🟦️.ts";
@@ -55,7 +54,12 @@ const router = new ScriptRouter(import.meta.dir)
     }
   })
   .register("preview-generated", ScaleFixturePreviewGeneratedScript)
-  .register("distribution", DistributionBundleScript)
+  .register("distribution", class extends BundleScript {
+    async run(segments: string[]): Promise<void> {
+      const { DistributionBundleScript } = await import("../../🚚️distribution/🏃️execution/🟦️.ts");
+      return new DistributionBundleScript(this.root).run(segments);
+    }
+  })
   .register("layer-lint", CapabilityLayeringLintScript)
   .register("index-lint", PluginIndexExportPathLintScript)
   .register("host-handle-lint", HostHandleReachLintScript)

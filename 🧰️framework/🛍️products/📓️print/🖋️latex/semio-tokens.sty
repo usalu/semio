@@ -89,3 +89,51 @@
 \definecolor{semio-chrome-dark-panel}{HTML}{1c2d31}
 \definecolor{semio-chrome-dark-dialog}{HTML}{27373a}
 \definecolor{semio-chrome-dark-menu}{HTML}{324143}
+
+% Visualization palette: categorical presence hues plus scheme stops, per appearance.
+\definecolor{semio-presence-light-0}{HTML}{891a1a}
+\definecolor{semio-presence-light-1}{HTML}{1a5289}
+\definecolor{semio-presence-light-2}{HTML}{1a891a}
+\definecolor{semio-presence-light-3}{HTML}{89521a}
+\definecolor{semio-presence-light-4}{HTML}{521a89}
+\definecolor{semio-presence-light-5}{HTML}{1a8989}
+\definecolor{semio-presence-light-6}{HTML}{891a52}
+\definecolor{semio-presence-light-7}{HTML}{89891a}
+\definecolor{semio-presence-light-8}{HTML}{1a1a89}
+\definecolor{semio-presence-light-9}{HTML}{1a8952}
+\definecolor{semio-presence-light-10}{HTML}{891a89}
+\definecolor{semio-presence-light-11}{HTML}{52891a}
+\definecolor{semio-presence-dark-0}{HTML}{e45858}
+\definecolor{semio-presence-dark-1}{HTML}{589ee4}
+\definecolor{semio-presence-dark-2}{HTML}{58e458}
+\definecolor{semio-presence-dark-3}{HTML}{e49e58}
+\definecolor{semio-presence-dark-4}{HTML}{9e58e4}
+\definecolor{semio-presence-dark-5}{HTML}{58e4e4}
+\definecolor{semio-presence-dark-6}{HTML}{e4589e}
+\definecolor{semio-presence-dark-7}{HTML}{e4e458}
+\definecolor{semio-presence-dark-8}{HTML}{5858e4}
+\definecolor{semio-presence-dark-9}{HTML}{58e49e}
+\definecolor{semio-presence-dark-10}{HTML}{e458e4}
+\definecolor{semio-presence-dark-11}{HTML}{9ee458}
+\ExplSyntaxOn
+% 🔢 Categorical slots the presence palette offers; semio-viz-theme wraps its wheel on this.
+\int_const:Nn \c_semio_viz_theme_presence_int { 12 }
+% 🌈 Stop lists of every sequential and diverging scheme, keyed `<scheme> / <appearance>`.
+\prop_const_from_keyval:Nn \c_semio_viz_theme_scheme_prop
+  {
+    primary/light = { f7f3e3,ff344f,6b2c32 } ,
+    secondary/light = { f7f3e3,34d1bf,0f5f5c } ,
+    tertiary/light = { f7f3e3,fa9500,664a28 } ,
+    grays/light = { f7f3e3,7b827d,001117 } ,
+    viridis-like/light = { 051a47,1a1a89,1a8989,1a891a,89891a } ,
+    primary-secondary/light = { ff344f,f7f3e3,34d1bf } ,
+    danger-success/light = { a60009,f7f3e3,7eb77f } ,
+    primary/dark = { 001117,ff344f,ffa9a0 } ,
+    secondary/dark = { 001117,34d1bf,b1e5d3 } ,
+    tertiary/dark = { 001117,fa9500,fbca96 } ,
+    grays/dark = { 001117,7b827d,f7f3e3 } ,
+    viridis-like/dark = { a8b1ea,5858e4,58e4e4,58e458,e4e458 } ,
+    primary-secondary/dark = { ff344f,001117,34d1bf } ,
+    danger-success/dark = { a60009,001117,7eb77f } ,
+  }
+\ExplSyntaxOff

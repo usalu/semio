@@ -1,0 +1,47 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-hierarchy-pack}[2026/09/05 v0.3.0 semio viz namespace hierarchy-pack families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-hierarchy}
+\RequirePackage{semio-viz-family}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 📋 `semio / viz / family / pack` accepts every key of `semio / viz / hierarchy`
+% (data, id, parent, value, path, delimiter, aggregate, sort), of
+% `… / hierarchy / layout` (size, padding, radius) and of `… / hierarchy / render`
+% (width, height, inset, labels, labelColumn, fill, opacity, stroke, strokeWidth)
+% plus its own:
+%   depth  (first depth that is drawn; 0 keeps the enclosing circle) default 0
+\int_new:N \l_semio_viz_hierarchy_pack_depth_int
+
+\keys_define:nn { semio / viz / family / pack } {
+  depth .int_set:N = \l_semio_viz_hierarchy_pack_depth_int,
+}
+%endregion 🔖️Keys
+
+%region 🔖️Families
+% 🫧 The d3 enclosing-circle packing: circle packing, bubble packing and, with
+% `depth=1`, the leaf-only bubble chart. `radius=value` packs by the raw value
+% instead of its square root, `padding` separates the circles.
+\SemioVizFamily{pack}{
+  \int_set:Nn \l_semio_viz_hierarchy_pack_depth_int { 0 }
+  \semio_viz_hierarchy_family_setup:nnn { pack }
+    { fill = branch, sort = value-descending, labels = true } {#1}
+  \bool_if:NF \l_semio_viz_hierarchy_size_given_bool {
+    \fp_set:Nn \l_semio_viz_hierarchy_dx_fp
+      { min ( \semio_viz_hierarchy_canvas_x: , \semio_viz_hierarchy_canvas_y: ) }
+    \fp_set_eq:NN \l_semio_viz_hierarchy_dy_fp \l_semio_viz_hierarchy_dx_fp
+    \bool_set_true:N \l_semio_viz_hierarchy_size_given_bool
+  }
+  \semio_viz_hierarchy_build_now:V \c_semio_viz_hierarchy_family_tl
+  \semio_viz_hierarchy_layout_now:nVV { pack }
+    \c_semio_viz_hierarchy_family_tl \c_semio_viz_hierarchy_family_tl
+  \semio_viz_hierarchy_draw_circles:VVn \c_semio_viz_hierarchy_family_tl
+    \l_semio_viz_hierarchy_table_tl { \l_semio_viz_hierarchy_pack_depth_int }
+}
+%endregion 🔖️Families
+
+\ExplSyntaxOff

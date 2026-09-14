@@ -16,7 +16,8 @@ adapter per implementation.
 ├── 🧫️fixtures/                     immutable testing input owned by this domain
 ├── 📚️examples/<example>/           executable usage projects, with their own 🧪️tests
 ├── 🔮️oracles/<oracle>/             real reference or comparator implementations, with their own 🧪️tests
-├── 🧪️tests/<kebab-case>/
+├── 🧪️tests/<emoji><kebab-case>/    one leading emoji identity, exactly as every other path segment
+│   ├── 🧫️fixtures/                 immutable, private to this case
 │   ├── 🥒️.feature                 the normative, language-neutral contract
 │   ├── 🦀️.rs                      one adapter per implementation that claims the capability
 │   ├── 🟦️.ts
@@ -69,7 +70,10 @@ selector.
 
 1. **Declare the owner and capability.** Find the smallest language-neutral owner that defines the
    behaviour.
-2. **Create the case.** `🧪️tests/<kebab-case>/🥒️.feature`.
+2. **Create the case.** `🧪️tests/<emoji><kebab-case>/🥒️.feature`. The directory carries one leading
+   emoji grapheme followed by a kebab-case slug — `testCaseSlugPattern` in `🔣️taxonomy.json` — so a
+   case obeys the same path-emoji statute as every other directory while the derived Nx project name
+   (which drops the emoji) stays typable.
 3. **Research a reference implementation.** Search `📇️registry/🔣️.json` first, then the
    existing test dependencies. Only when no approved library can support the behaviour do you compare
    new candidates — on feature coverage, standard conformance, determinism, platform support,
@@ -157,6 +161,19 @@ An external host package is a third-party test dependency, so it is classified i
 package: it must be registered, it must not be production-reachable, and the production scan looks
 for each ecosystem's own import syntax (`import x` / `from x import` for Python, `use x` for Rust,
 `from "x"` / `require("x")` for JavaScript) in that ecosystem's own files.
+
+### Workspace-permitted crates
+
+One exemption, and only one: a Rust crate pinned in the ROOT `Cargo.toml` `[workspace.dependencies]`
+table as an external distribution — today `serde`, `serde_json`, `wasm-bindgen`, `tokio` — is a
+production dependency the workspace has already decided on. Registering a reader built on such a
+crate as an oracle does not make production reach a reference; the reach predates the registration
+and is governed by the workspace table. `dependency` prints every such package as
+`workspace-permitted`, and `oracle-in-production`, `oracle-production-reachable` and
+`probe-production-reachable` do not fire for it. The exemption is DERIVED from the root manifest, not
+declared per registry entry, so removing a crate from `[workspace.dependencies]` re-arms the purity
+rule for it in the same commit. Every other ecosystem, and every Rust crate outside that table, is
+held to the unchanged rule.
 
 ## Rules and current enforcement
 

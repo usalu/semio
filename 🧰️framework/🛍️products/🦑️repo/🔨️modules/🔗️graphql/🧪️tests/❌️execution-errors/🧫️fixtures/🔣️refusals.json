@@ -1,0 +1,76 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json",
+  "_comment": "❌️ The refusal corpus. Every input MUST fail, and MUST fail with exactly `message` — the verbatim text the CLI prints. `mutation` marks the inputs the second scenario replays to prove a refusal leaves no trace: no event, no changed record.",
+  "refusals": [
+    {
+      "id": "unknown-root-field",
+      "source": "{ nope }",
+      "message": "graphql errors: [unknown field \"nope\" on Query]",
+      "boundary": "A field the query root does not carry is named, not ignored."
+    },
+    {
+      "id": "unknown-nested-field",
+      "source": "{ tickets { nope } }",
+      "message": "graphql errors: [tickets: unknown field \"nope\" on Ticket]",
+      "boundary": "A nested refusal is wrapped in the `field: cause` chain that says where it happened."
+    },
+    {
+      "id": "unknown-field-two-levels-down",
+      "source": "{ tickets { dates { nope } } }",
+      "message": "graphql errors: [tickets: dates: unknown field \"nope\" on TicketDate]",
+      "boundary": "The chain nests as deep as the selection does."
+    },
+    {
+      "id": "mutation-field-selected-as-a-query",
+      "source": "{ syncManagement }",
+      "message": "graphql errors: [unknown field \"syncManagement\" on Query]",
+      "boundary": "The two roots are separate field tables; a mutation is not reachable from a query."
+    },
+    {
+      "id": "unknown-mutation-field",
+      "source": "mutation { nope }",
+      "message": "graphql errors: [unknown field \"nope\" on Mutation]",
+      "boundary": "The mutation root refuses the same way the query root does."
+    },
+    {
+      "id": "malformed-document",
+      "source": "{ tickets ",
+      "message": "graphql errors: [unterminated selection set]",
+      "boundary": "A document the grammar cannot read never reaches a resolver."
+    },
+    {
+      "id": "unresolvable-node-id",
+      "source": "{ node(id: \"garbage\") { id } }",
+      "message": "graphql errors: [node: invalid node id format: garbage]",
+      "boundary": "An id in no recognised shape is refused rather than answered with null."
+    },
+    {
+      "id": "close-a-ticket-no-record-carries",
+      "source": "mutation { ticketClose(input: { year: 2026, month: 9, day: 6, slug: \"NO-SUCH-TICKET\", summary: \"never\" }) { status } }",
+      "message": "graphql errors: [ticketClose: ticket 2026/9/6/NO-SUCH-TICKET not found]",
+      "mutation": true,
+      "boundary": "A write against an aggregate that does not exist refuses instead of inventing one."
+    },
+    {
+      "id": "change-a-goal-no-record-carries",
+      "source": "mutation { goalChange(id: \"no-such-goal\", input: { title: \"never\" }) { id } }",
+      "message": "graphql errors: [goalChange: goal no-such-goal not found]",
+      "mutation": true,
+      "boundary": "The same rule holds for every aggregate, not only for tickets."
+    },
+    {
+      "id": "move-a-folder-no-record-carries",
+      "source": "mutation { folderMove(src: \"nowhere\", dst: \"elsewhere\") { path } }",
+      "message": "graphql errors: [folderMove: folder nowhere not found]",
+      "mutation": true,
+      "boundary": "A move names its source; an absent source is a refusal, not a create."
+    },
+    {
+      "id": "reopen-a-ticket-no-record-carries",
+      "source": "mutation { ticketReopen(input: { year: 1999, month: 1, day: 1, slug: \"NOPE\", prompt: \"p\", client: CODEX, llm: \"gpt\" }) { status } }",
+      "message": "graphql errors: [ticketReopen: ticket 1999/1/1/NOPE not found]",
+      "mutation": true,
+      "boundary": "A reopen is a write like any other and refuses on the same terms."
+    }
+  ]
+}

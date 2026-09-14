@@ -1,0 +1,20 @@
+{
+  "schema": "semio.repo.contributors.checkpoint-log/1",
+  "$comment": "🏁️ Real `git log --pretty=format:%H|%aN|%ad|%s --date=iso-strict` output of this repository, plus the identity lines `git log`/`git shortlog` produce for the same commits, recorded by 🏗️build-contributors-fixtures.ts. `malformed` states the lines a reader has to reject rather than guess at.",
+  "log": "5e03e56997ce369da4d8873d8004bb1947f6816b|Ueli Saluz|2026-09-06T03:51:24+02:00|🐙️ueli🎆️26🌙️06☀️04🚩️592\n3a6a9d6bfc12ceb9e7fc06a830b960b3cd660f99|Ueli Saluz|2026-09-05T22:02:04+02:00|🐙️ueli🎆️26🌙️06☀️04🚩️591\nb0dfa0f09b23a4561222316ff057c19995a0a054|Ueli Saluz|2026-09-05T19:04:38+02:00|🐙️ueli🎆️26🌙️06☀️04🚩️590\nfe7c8a8f8bd96c6c97e559525c64b0445898c1fa|Ueli Saluz|2026-09-05T03:53:30+02:00|🐙️ueli🎆️26🌙️06☀️04🚩️589\n0a908f6c661c75b0bba19fc99334edcfb064171c|Ueli Saluz|2026-09-04T01:18:32+02:00|🐙️ueli🎆️26🌙️06☀️04🚩️588\n03100691d5eed403cd3bf330d330577e9a43b672|Ueli Saluz|2026-09-03T18:13:43+02:00|🐙️ueli🎆️26🌙️06☀️04🚩️587\n7ad363fd1ec91cb0c83cf716bc66522be99a4785|Ueli Saluz|2026-09-03T12:49:41+02:00|🐙️ueli🎆️26🌙️06☀️04🚩️586\n96aa4f8c1211f8f9645b8c7d06c48afec6d95972|Ueli Saluz|2026-09-02T17:38:16+02:00|🐙️ueli🎆️26🌙️06☀️04🚩️585\na807c0706c63eb4527de4541173d4f8fd704471f|Ueli Saluz|2026-09-02T15:18:09+02:00|🐙️ueli🎆️26🌙️06☀️04🚩️584\ne5465a2c1ce7d7eb6e9e87d529e1f1099717c7b8|Ueli Saluz|2026-09-02T13:31:56+02:00|🐙️ueli🎆️26🌙️06☀️04🚩️583\n21fbcd3538ff7d2dae0a91554f6f056318c50569|Ueli Saluz|2026-09-02T12:19:02+02:00|🐙️ueli🎆️26🌙️06☀️04🚩️582\nf15dbf0d83a08efb2eb46bca2d61c57ff0d05c31|Ueli Saluz|2026-09-01T22:47:40+02:00|🐙️ueli🎆️26🌙️06☀️04🚩️581",
+  "identities": [
+    "2026 Ueli Saluz <ueli@semio-tech.com>",
+    "   599\tUeli Saluz <ueli@semio-tech.com>",
+    "     5\tKinan Sarakbi <kinan.sarak@gmail.com>"
+  ],
+  "malformed": [
+    "",
+    "no separators at all",
+    "sha|author",
+    "sha|author|date",
+    "|||",
+    "1999 no angle brackets",
+    "Ueli Saluz <ueli@semio-tech.com>",
+    "12345 Too Many Digits <a@b.c>"
+  ]
+}

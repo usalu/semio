@@ -1,0 +1,28 @@
+% 🧪 Probe fixture of case composition-concat-inset, scenario dashboard-span.
+\documentclass{article}
+\usepackage{semio-viz-composition}
+\ExplSyntaxOn
+\NewDocumentEnvironment { ProbeFrame } { }
+  {
+    \bool_set_true:N \l_semio_viz_in_figure_bool
+    \fp_set:Nn \l_semio_viz_width_fp { 120 }
+    \fp_set:Nn \l_semio_viz_height_fp { 60 }
+    \fp_set:Nn \l_semio_viz_pad_fp { 8 }
+    \begin{tikzpicture}[ x=1mm , y=1mm ]
+  }
+  { \end{tikzpicture} \bool_set_false:N \l_semio_viz_in_figure_bool }
+\ExplSyntaxOff
+\begin{document}
+\SemioVizProbeBegin{composition-concat-inset}{dashboard-span}
+\SemioVizProbeOn
+\SemioVizScale{x}{linear}{0,10}{8,118}
+\begin{ProbeFrame}
+\begin{VizDashboard}[columns=3,rows=2,gap=3]
+\SemioVizCell{}
+\SemioVizCell[colspan=2]{}
+\SemioVizCell{}
+\SemioVizCell{}
+\SemioVizCell{}
+\end{VizDashboard}
+\end{ProbeFrame}
+\end{document}

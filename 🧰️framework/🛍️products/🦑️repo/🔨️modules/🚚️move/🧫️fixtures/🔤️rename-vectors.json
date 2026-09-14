@@ -1,0 +1,290 @@
+{
+  "schema": "https://semio.tech/schema/repo/move/1#/$defs/RenameVectorFile",
+  "tokenVectors": [
+    {
+      "name": "plain-lower-token",
+      "old": "model",
+      "new": "representation",
+      "content": "the model of a model is a MODEL and a Model",
+      "expected": "the representation of a representation is a REPRESENTATION and a Representation"
+    },
+    {
+      "name": "screaming-and-title",
+      "old": "kit",
+      "new": "collection",
+      "content": "KIT Kit kit kITs",
+      "expected": "COLLECTION Collection collection kITs"
+    },
+    {
+      "name": "kebab-token",
+      "old": "design-piece",
+      "new": "layout-part",
+      "content": "DESIGN-PIECE Design-piece design-piece",
+      "expected": "LAYOUT-PART Layout-part layout-part"
+    },
+    {
+      "name": "snake-token",
+      "old": "type_id",
+      "new": "kind_id",
+      "content": "TYPE_ID Type_id type_id",
+      "expected": "KIND_ID Kind_id kind_id"
+    },
+    {
+      "name": "camel-token",
+      "old": "typeId",
+      "new": "kindId",
+      "content": "TYPEID TypeId typeid typeId",
+      "expected": "KINDID TypeId kindid typeId"
+    },
+    {
+      "name": "pascal-token",
+      "old": "TypeId",
+      "new": "KindId",
+      "content": "TYPEID TypeId typeid",
+      "expected": "KINDID TypeId kindid"
+    },
+    {
+      "name": "token-inside-a-path",
+      "old": "model",
+      "new": "shape",
+      "content": "🔨️modules/📐️model/📦️packages/MODEL.ts",
+      "expected": "🔨️modules/📐️shape/📦️packages/SHAPE.ts"
+    },
+    {
+      "name": "no-occurrence",
+      "old": "absent",
+      "new": "present",
+      "content": "nothing to see here",
+      "expected": "nothing to see here"
+    }
+  ],
+  "trees": [
+    {
+      "name": "whole-tree",
+      "old": "model",
+      "new": "shape",
+      "scope": "",
+      "before": {
+        "directories": [
+          ".git",
+          "docs",
+          "empty-model",
+          "model",
+          "model/nested",
+          "node_modules",
+          "node_modules/model"
+        ],
+        "files": {
+          ".git/config": "[core]\n\tmodel = true\n",
+          "docs/readme.md": "The model is not the Model.\n",
+          "model/model.ts": "export const model = \"MODEL\";\n// Model of a model\n",
+          "model/nested/Model.md": "# Model\n\nA MODEL describes a model.\n",
+          "node_modules/model/index.js": "module.exports = \"model\";\n"
+        }
+      },
+      "after": {
+        "directories": [
+          ".git",
+          "docs",
+          "empty-shape",
+          "node_modules",
+          "node_modules/model",
+          "shape",
+          "shape/nested"
+        ],
+        "files": {
+          ".git/config": "[core]\n\tmodel = true\n",
+          "docs/readme.md": "The shape is not the Shape.\n",
+          "node_modules/model/index.js": "module.exports = \"model\";\n",
+          "shape/nested/Shape.md": "# Shape\n\nA SHAPE describes a shape.\n",
+          "shape/shape.ts": "export const shape = \"SHAPE\";\n// Shape of a shape\n"
+        }
+      },
+      "stats": {
+        "filesChanged": 3,
+        "filesRenamed": 2,
+        "foldersRenamed": 2
+      },
+      "messages": [
+        "\n🔤️Renamed model → shape: 3 files edited, 2 files renamed, 2 folders renamed"
+      ]
+    },
+    {
+      "name": "scoped-to-one-directory",
+      "old": "model",
+      "new": "shape",
+      "scope": "model",
+      "before": {
+        "directories": [
+          ".git",
+          "docs",
+          "empty-model",
+          "model",
+          "model/nested",
+          "node_modules",
+          "node_modules/model"
+        ],
+        "files": {
+          ".git/config": "[core]\n\tmodel = true\n",
+          "docs/readme.md": "The model is not the Model.\n",
+          "model/model.ts": "export const model = \"MODEL\";\n// Model of a model\n",
+          "model/nested/Model.md": "# Model\n\nA MODEL describes a model.\n",
+          "node_modules/model/index.js": "module.exports = \"model\";\n"
+        }
+      },
+      "after": {
+        "directories": [
+          ".git",
+          "docs",
+          "empty-model",
+          "node_modules",
+          "node_modules/model",
+          "shape",
+          "shape/nested"
+        ],
+        "files": {
+          ".git/config": "[core]\n\tmodel = true\n",
+          "docs/readme.md": "The model is not the Model.\n",
+          "node_modules/model/index.js": "module.exports = \"model\";\n",
+          "shape/nested/Shape.md": "# Shape\n\nA SHAPE describes a shape.\n",
+          "shape/shape.ts": "export const shape = \"SHAPE\";\n// Shape of a shape\n"
+        }
+      },
+      "stats": {
+        "filesChanged": 2,
+        "filesRenamed": 2,
+        "foldersRenamed": 1
+      },
+      "messages": [
+        "\n🔤️Renamed model → shape: 2 files edited, 2 files renamed, 1 folders renamed"
+      ]
+    },
+    {
+      "name": "only-a-filename-changes",
+      "old": "readme",
+      "new": "overview",
+      "scope": "docs",
+      "before": {
+        "directories": [
+          ".git",
+          "docs",
+          "empty-model",
+          "model",
+          "model/nested",
+          "node_modules",
+          "node_modules/model"
+        ],
+        "files": {
+          ".git/config": "[core]\n\tmodel = true\n",
+          "docs/readme.md": "The model is not the Model.\n",
+          "model/model.ts": "export const model = \"MODEL\";\n// Model of a model\n",
+          "model/nested/Model.md": "# Model\n\nA MODEL describes a model.\n",
+          "node_modules/model/index.js": "module.exports = \"model\";\n"
+        }
+      },
+      "after": {
+        "directories": [
+          ".git",
+          "docs",
+          "empty-model",
+          "model",
+          "model/nested",
+          "node_modules",
+          "node_modules/model"
+        ],
+        "files": {
+          ".git/config": "[core]\n\tmodel = true\n",
+          "docs/overview.md": "The model is not the Model.\n",
+          "model/model.ts": "export const model = \"MODEL\";\n// Model of a model\n",
+          "model/nested/Model.md": "# Model\n\nA MODEL describes a model.\n",
+          "node_modules/model/index.js": "module.exports = \"model\";\n"
+        }
+      },
+      "stats": {
+        "filesChanged": 0,
+        "filesRenamed": 1,
+        "foldersRenamed": 0
+      },
+      "messages": [
+        "\n🔤️Renamed readme → overview: 0 files edited, 1 files renamed, 0 folders renamed"
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "name": "an-empty-token-is-refused",
+      "old": "",
+      "new": "target",
+      "scope": "",
+      "before": {
+        "directories": [
+          ".git",
+          "docs",
+          "empty-model",
+          "model",
+          "model/nested",
+          "node_modules",
+          "node_modules/model"
+        ],
+        "files": {
+          ".git/config": "[core]\n\tmodel = true\n",
+          "docs/readme.md": "The model is not the Model.\n",
+          "model/model.ts": "export const model = \"MODEL\";\n// Model of a model\n",
+          "model/nested/Model.md": "# Model\n\nA MODEL describes a model.\n",
+          "node_modules/model/index.js": "module.exports = \"model\";\n"
+        }
+      },
+      "expectedError": "Old and new token must be non-empty"
+    },
+    {
+      "name": "an-identical-token-is-refused",
+      "old": "Model",
+      "new": "model",
+      "scope": "",
+      "before": {
+        "directories": [
+          ".git",
+          "docs",
+          "empty-model",
+          "model",
+          "model/nested",
+          "node_modules",
+          "node_modules/model"
+        ],
+        "files": {
+          ".git/config": "[core]\n\tmodel = true\n",
+          "docs/readme.md": "The model is not the Model.\n",
+          "model/model.ts": "export const model = \"MODEL\";\n// Model of a model\n",
+          "model/nested/Model.md": "# Model\n\nA MODEL describes a model.\n",
+          "node_modules/model/index.js": "module.exports = \"model\";\n"
+        }
+      },
+      "expectedError": "Old and new token are identical"
+    },
+    {
+      "name": "an-unknown-scope-is-refused",
+      "old": "model",
+      "new": "shape",
+      "scope": "nowhere",
+      "before": {
+        "directories": [
+          ".git",
+          "docs",
+          "empty-model",
+          "model",
+          "model/nested",
+          "node_modules",
+          "node_modules/model"
+        ],
+        "files": {
+          ".git/config": "[core]\n\tmodel = true\n",
+          "docs/readme.md": "The model is not the Model.\n",
+          "model/model.ts": "export const model = \"MODEL\";\n// Model of a model\n",
+          "model/nested/Model.md": "# Model\n\nA MODEL describes a model.\n",
+          "node_modules/model/index.js": "module.exports = \"model\";\n"
+        }
+      },
+      "expectedError": "Scope is not a directory: nowhere"
+    }
+  ]
+}

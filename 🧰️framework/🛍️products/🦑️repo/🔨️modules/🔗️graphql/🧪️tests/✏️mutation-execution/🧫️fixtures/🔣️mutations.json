@@ -1,0 +1,39 @@
+{
+  "_comment": "✍️ The write script. Every mutation runs in order against ONE context built from the shared repository records, so a later mutation sees what an earlier one wrote. The projection is the payload of each mutation, then the event trail, then the record set as it stands at the end — a mutation that silently did nothing fails the same way one that did the wrong thing does.",
+  "mutations": [
+    {
+      "id": "goal-create",
+      "source": "mutation { goalCreate(input: { title: \"Rust Executor\", description: \"Port the executor\", prompt: \"port it\", dueDate: \"2026-11-30\", llm: \"opus\", effort: \"high\", client: \"claude-code\", parent: \"repo-rust\", milestone: \"milestones/13\" }) { id title status dueDate milestone parent } }"
+    },
+    { "id": "goal-change", "source": "mutation { goalChange(id: \"rust-executor\", input: { title: \"Rust Executor Half\", dueDate: \"2026-12-15\" }) { id title dueDate } }" },
+    { "id": "goal-close", "source": "mutation { goalClose(input: { id: \"docs\", summary: \"the docs are written\" }) { id status } }" },
+    { "id": "goal-reopen", "source": "mutation { goalReopen(input: { id: \"docs\", prompt: \"more docs\", client: \"codex\", llm: \"gpt\" }) { id status prompt client llm } }" },
+    { "id": "todo-create", "source": "mutation { todoCreate(input: { name: \"Port The Errors\", description: \"the failing half\", parentId: \"file:repo/rust/lib.rs\" }) { id name description parentId } }" },
+    { "id": "todo-change", "source": "mutation { todoChange(input: { id: \"port-the-errors\", description: \"the refusing half\" }) { id description } }" },
+    { "id": "todo-delete", "source": "mutation { todoDelete(id: \"write-docs\") }" },
+    { "id": "draft-create", "source": "mutation { draftCreate(input: { title: \"Executor Draft\", files: [\"repo/rust/lib.rs\"] }) { id } }" },
+    { "id": "draft-delete", "source": "mutation { draftDelete(id: \"draft-two\") }" },
+    {
+      "id": "ticket-open",
+      "source": "mutation { ticketOpen(input: { emoji: \"🧱️\", title: \"Port The Resolvers\", prompt: \"port the resolvers\", llm: \"opus\", effort: \"high\", client: CLAUDE_CODE, goal: \"repo-rust\", parent: \"PORT-EXECUTOR\" }) { id year month day slug title emoji status prompt llm effort client goal parent path dates { started finished } } }"
+    },
+    { "id": "ticket-change", "source": "mutation { ticketChange(input: { year: 2026, month: 9, day: 6, slug: \"PORT-THE-RESOLVERS\", title: \"Port The Resolver Half\", goal: \"docs\" }) { slug title goal } }" },
+    { "id": "ticket-close", "source": "mutation { ticketClose(input: { year: 2026, month: 9, day: 6, slug: \"PORT-THE-RESOLVERS\", summary: \"resolvers ported\", files: [\"repo/rust/lib.rs\"] }) { slug status dates { finished } interactions { kind prompt author } } }" },
+    { "id": "ticket-reopen", "source": "mutation { ticketReopen(input: { year: 2026, month: 9, day: 5, slug: \"SPLIT-GO\", prompt: \"split it again\", client: CODEX, llm: \"gpt\", effort: \"medium\" }) { slug status llm client } }" },
+    { "id": "contributor-add", "source": "mutation { contributorAdd(input: { github: \"fable\", name: \"Fable\", names: [\"Fable\"], email: \"fable@example.com\", emails: [\"fable@example.com\"], fingerprint: \"DDEEFF\" }) { id github name email fingerprint } }" },
+    { "id": "contributor-remove", "source": "mutation { contributorRemove(github: \"opus\") }" },
+    { "id": "folder-create", "source": "mutation { folderCreate(path: \"repo/docs\") { id path uri name kind } }" },
+    { "id": "folder-move", "source": "mutation { folderMove(src: \"repo/docs\", dst: \"repo/manual\") { path name uri } }" },
+    { "id": "folder-delete", "source": "mutation { folderDelete(path: \"repo/rust\") }" },
+    { "id": "file-create", "source": "mutation { fileCreate(path: \"repo/manual/index.md\") { id path uri name extension kind } }" },
+    { "id": "file-move", "source": "mutation { fileMove(src: \"repo/manual/index.md\", dst: \"repo/manual/README.md\") { path name uri } }" },
+    { "id": "file-delete", "source": "mutation { fileDelete(path: \"README.md\") }" },
+    { "id": "section-create", "source": "mutation { sectionCreate(file: \"repo/go/main.go\", name: \"Footer\") { id name path } }" },
+    { "id": "section-move", "source": "mutation { sectionMove(file: \"repo/go/main.go\", oldName: \"Footer\", newName: \"Trailer\") { name path } }" },
+    { "id": "section-delete", "source": "mutation { sectionDelete(file: \"repo/go/main.go\", name: \"Header\") }" },
+    { "id": "extract", "source": "mutation { extract(sourceFile: \"repo/go/main.go\", sourceSection: \"Trailer\", targetFile: \"repo/go/trailer.go\") { path name } }" },
+    { "id": "integrate", "source": "mutation { integrate(source: \"repo/go/trailer.go\", targetSection: \"Header\", targetFile: \"repo/go/main.go\") { path name } }" },
+    { "id": "sync-management", "source": "mutation { syncManagement }" },
+    { "id": "goal-delete-via-variables", "source": "mutation Close($id: String!) { goalClose(input: { id: $id, summary: \"closed by variable\" }) { id status summary: id } }", "variables": { "id": "rust-executor" } }
+  ]
+}

@@ -1,0 +1,113 @@
+% 🧪 Probe fixture of case scale-discrete, every scenario.
+% Band and point scales are measured through the three answers d3 exposes — the start of each band,
+% its width and the step between neighbours — because a family that draws a bar needs all three.
+% The binned kinds are measured through the range entry they assign to a value.
+\documentclass{article}
+\usepackage{semio-viz-scale}
+\usepackage{semio-viz-probe}
+\ExplSyntaxOn
+\fp_new:N \l_probe_lo_fp
+\fp_new:N \l_probe_hi_fp
+\fp_new:N \l_probe_value_fp
+\seq_new:N \l_probe_seq
+\tl_new:N \l_probe_item_tl
+
+% 📦 Writes the left edge of every band of a band or point scale.
+\cs_new_protected:Npn \probestarts #1#2#3 {
+  \seq_clear:N \l_probe_seq
+  \clist_map_inline:nn {#3}
+    {
+      \semio_viz_scale_band_edges:nnNN {#2} {##1} \l_probe_lo_fp \l_probe_hi_fp
+      \seq_put_right:Nx \l_probe_seq { \fp_to_decimal:n { round( \l_probe_lo_fp , 6 ) } }
+    }
+  \semio_viz_probe_values:nx {#1} { \seq_use:Nn \l_probe_seq { , } }
+}
+
+% 📏 Writes the bandwidth and the step of a band or point scale.
+\cs_new_protected:Npn \probemetrics #1#2 {
+  \semio_viz_scale_band_width:nN {#2} \l_probe_lo_fp
+  \semio_viz_scale_band_step:nN {#2} \l_probe_hi_fp
+  \semio_viz_probe_values:nx {#1}
+    {
+      \fp_to_decimal:n { round( \l_probe_lo_fp , 6 ) } ,
+      \fp_to_decimal:n { round( \l_probe_hi_fp , 6 ) }
+    }
+}
+
+% 🎯 Writes the range entry a binned or ordinal scale assigns to each input.
+\cs_new_protected:Npn \probeitems #1#2#3 {
+  \seq_clear:N \l_probe_seq
+  \clist_map_inline:nn {#3}
+    {
+      \semio_viz_scale_binned_item:nnN {#2} {##1} \l_probe_item_tl
+      \seq_put_right:NV \l_probe_seq \l_probe_item_tl
+    }
+  \semio_viz_probe_values:nx {#1} { \seq_use:Nn \l_probe_seq { , } }
+}
+
+% 🔤 Writes the range entry an ordinal scale assigns to each category.
+\cs_new_protected:Npn \probeordinal #1#2#3 {
+  \seq_clear:N \l_probe_seq
+  \clist_map_inline:nn {#3}
+    {
+      \semio_viz_scale_ordinal_item:nnN {#2} {##1} \l_probe_item_tl
+      \seq_put_right:NV \l_probe_seq \l_probe_item_tl
+    }
+  \semio_viz_probe_values:nx {#1} { \seq_use:Nn \l_probe_seq { , } }
+}
+
+% 🪜 Writes the thresholds a binned scale derives from its domain and range.
+\cs_new_protected:Npn \probethresholds #1#2 {
+  \semio_viz_scale_thresholds:n {#2}
+  \semio_viz_probe_values:nx {#1}
+    { \seq_use:Nn \l_semio_viz_scale_thresholds_seq { , } }
+}
+\ExplSyntaxOff
+\begin{document}
+
+\SemioVizProbeBegin{scale-discrete}{band}
+\SemioVizScale{plain}{band}{A,B,C,D,E}{0,100}
+\SemioVizScale{padded}{band}{A,B,C,D}{0,120}[paddingInner=0.1,paddingOuter=0.2]
+\SemioVizScale{aligned}{band}{A,B,C}{0,90}[paddingInner=0.5,paddingOuter=0.5,align=0]
+\SemioVizScale{reversed}{band}{A,B,C,D}{120,0}[paddingInner=0.2]
+\probestarts{band/plain}{plain}{A,B,C,D,E}
+\probemetrics{metrics/plain}{plain}
+\probestarts{band/padded}{padded}{A,B,C,D}
+\probemetrics{metrics/padded}{padded}
+\probestarts{band/aligned}{aligned}{A,B,C}
+\probemetrics{metrics/aligned}{aligned}
+\probestarts{band/reversed}{reversed}{A,B,C,D}
+\probemetrics{metrics/reversed}{reversed}
+
+\SemioVizProbeBegin{scale-discrete}{point}
+\SemioVizScale{pt}{point}{A,B,C,D}{0,120}
+\SemioVizScale{ptpad}{point}{A,B,C,D}{0,120}[padding=0.5]
+\probestarts{point/pt}{pt}{A,B,C,D}
+\probemetrics{metrics/pt}{pt}
+\probestarts{point/ptpad}{ptpad}{A,B,C,D}
+\probemetrics{metrics/ptpad}{ptpad}
+
+\SemioVizProbeBegin{scale-discrete}{ordinal}
+\SemioVizScale{ord}{ordinal}{A,B,C,D,E}{10,20,30}
+\probeordinal{ordinal/ord}{ord}{A,B,C,D,E}
+
+\SemioVizProbeBegin{scale-discrete}{quantize}
+\SemioVizScale{qz}{quantize}{0,1}{1,2,3,4}
+\SemioVizScale{qzwide}{quantize}{-10,10}{a,b,c}
+\probeitems{quantize/qz}{qz}{-1,0,0.1,0.25,0.5,0.6,0.9,1,2}
+\probethresholds{thresholds/qz}{qz}
+\probeitems{quantize/qzwide}{qzwide}{-10,-4,0,4,10}
+\probethresholds{thresholds/qzwide}{qzwide}
+
+\SemioVizProbeBegin{scale-discrete}{quantile}
+\SemioVizScale{ql}{quantile}{1,2,3,4,5,6,7,8,9,10}{10,20,30,40}
+\probeitems{quantile/ql}{ql}{1,3,5,7,9,10}
+\probethresholds{thresholds/ql}{ql}
+
+\SemioVizProbeBegin{scale-discrete}{threshold}
+\SemioVizScale{th}{threshold}{0,1}{low,mid,high}
+\probeitems{threshold/th}{th}{-1,0,0.5,1,2}
+\probethresholds{thresholds/th}{th}
+
+\SemioVizProbePage
+\end{document}

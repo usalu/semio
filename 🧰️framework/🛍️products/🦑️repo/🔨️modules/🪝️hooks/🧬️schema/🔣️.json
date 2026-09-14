@@ -1,0 +1,259 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/repo/hooks.json",
+  "title": "🪝️ repo hooks",
+  "description": "🪝️ Wire shapes of the repo hooks module: the native payload each IDE writes to the hook binary's stdin, the neutral hook context it is normalised into, the hook result records that come back, and the session log the invocation is recorded in.",
+  "type": "object",
+  "$defs": {
+    "HookEvent": {
+      "description": "📡️ A neutral lifecycle event slug. The six `version.*` slugs are version control hooks; everything else is agent work. Defined by `🧩️providers` and repeated here because it is this module's wire vocabulary.",
+      "enum": [
+        "version.checkpoint.starting",
+        "version.checkpoint.ended",
+        "version.checkin.starting",
+        "version.checkin.ended",
+        "version.checkout.starting",
+        "version.checkout.ended",
+        "agent.started",
+        "agent.ended",
+        "agent.prompt.submitting",
+        "agent.compacting",
+        "agent.tool.starting",
+        "agent.tool.ended",
+        "agent.tool.plan.updating.starting",
+        "agent.tool.plan.updating.ended",
+        "agent.file.read.starting",
+        "agent.file.read.ended",
+        "agent.tool.code.edit.starting",
+        "agent.tool.code.edit.ended",
+        "agent.tool.test.starting",
+        "agent.tool.test.ended",
+        "agent.tool.build.starting",
+        "agent.tool.build.ended",
+        "agent.tool.terminal.starting",
+        "agent.tool.terminal.ended",
+        "agent.thinking.starting",
+        "agent.thinking.ended"
+      ]
+    },
+    "HookKind": {
+      "description": "🏷️ Whether an event belongs to the version control lifecycle or to an agent session. Only agent events are recorded in a session log.",
+      "enum": ["version", "agent"]
+    },
+    "ToolKind": {
+      "description": "🏛️ The categorized execution kind a pre/post tool event is resolved against, derived from the tool name and, when the payload carries one, from the shell command itself.",
+      "enum": ["generic", "plan", "code-search", "code-edit", "test", "build", "terminal"]
+    },
+    "EditorClient": {
+      "description": "🎆️ The client slug that identifies which IDE is invoking the hook. Every one of these has a native event table in `🧩️providers`.",
+      "enum": ["copilot-chat", "cursor-chat", "windsurf-chat", "claude-code", "droid", "codex", "antigravity-chat", "kiro-cli"]
+    },
+    "NativeHookPayload": {
+      "description": "📨️ What an IDE writes to the hook binary's stdin. Every member is optional and every IDE spells the same fact differently, which is exactly why normalisation exists: `tool_input` may sit at the top level, under `event`, or under `native.event`; the session is any of eight spellings; the parent may name a session or the literal `subagent`.",
+      "type": "object",
+      "properties": {
+        "hook_event_name": { "type": "string", "description": "📡️ The native event name, when the IDE repeats it in the payload rather than only on the command line." },
+        "session_id": { "type": "string" },
+        "transcript_path": { "type": "string", "description": "🧾️ The transcript file; its basename is the session id of last resort." },
+        "cwd": { "type": "string" },
+        "tool_name": { "type": "string" },
+        "tool_input": { "type": "object", "description": "🧰️ The tool's arguments as the IDE passed them." },
+        "tool_response": {},
+        "tool_output": {},
+        "event": { "type": "object", "description": "🪆️ One nesting level some IDEs wrap their payload in." },
+        "native": { "type": "object", "description": "🪆️ A second nesting level, carrying `event` inside it." }
+      }
+    },
+    "HookContext": {
+      "description": "🎯️ The neutral context one hook invocation is normalised into.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event"],
+      "properties": {
+        "event": { "$ref": "#/$defs/HookEvent" },
+        "client": { "$ref": "#/$defs/EditorClient" },
+        "second": { "type": "string", "description": "🕰️ The RFC 3339 second the invocation is stamped with." },
+        "repoRoot": { "type": "string" },
+        "toolName": { "type": "string" },
+        "toolArgs": { "type": "string", "description": "🧰️ The raw tool argument string, parsed as JSON when the payload carries no `tool_input`." },
+        "filePath": { "type": "string" },
+        "parentInfo": { "type": "string", "description": "👪️ Either the literal `subagent` or a parent session id." },
+        "extra": { "type": "object", "additionalProperties": { "type": "string" } },
+        "input": { "$ref": "#/$defs/NativeHookPayload" }
+      }
+    },
+    "HookResult": {
+      "description": "🔶️ What a hook answered. `allowed` and `message` are the two members every client reads; every remaining member is the event-specific record, which is why additional properties are allowed here.",
+      "type": "object",
+      "required": ["allowed"],
+      "properties": {
+        "allowed": { "type": "boolean", "description": "🛡️ False only when the blocking policy refused the invocation." },
+        "message": { "type": "string", "description": "💬️ The refusal reason, or the text an allowed hook wants surfaced." },
+        "checkpoint": { "type": "string" },
+        "session": { "type": "string" },
+        "second": { "type": "string" },
+        "client": { "type": "string" },
+        "llm": { "type": "string" },
+        "effort": { "type": "string" },
+        "transcript": { "type": "string" },
+        "message_id": { "type": "string" },
+        "parent": { "type": "string", "description": "👪️ Always present on an agent result, empty when the session has no parent." },
+        "steps": { "type": "array", "items": { "$ref": "#/$defs/HookPlanStep" } },
+        "pages": { "type": "array", "items": { "type": "string" } },
+        "ranges": { "type": "array", "items": { "type": "string" }, "description": "📄️ File line coverage as `path#Lstart` or `path#Lstart-Lend`." },
+        "path": { "type": "string" },
+        "old": { "type": "string" },
+        "new": { "type": "string" },
+        "all": { "type": "boolean" },
+        "labs": { "type": "array", "items": { "type": "string" } },
+        "tests": { "type": "array", "items": { "type": "string" } },
+        "timeout": { "type": "string" },
+        "files": { "type": "array", "items": { "type": "string" } },
+        "succeeded": { "type": "array", "items": { "type": "string" } },
+        "failed": { "type": "array", "items": { "type": "string" } },
+        "command": { "type": "string" },
+        "pid": { "type": "integer" },
+        "terminated": { "type": "boolean" },
+        "stdout": { "type": "string" },
+        "stderr": { "type": "string" },
+        "report": { "type": "string" },
+        "prompt": { "type": "string" },
+        "chat": { "type": "string" },
+        "description": { "type": "string" },
+        "name": { "type": "string" },
+        "input": {},
+        "response": {}
+      }
+    },
+    "VsCodeHookOutput": {
+      "description": "💻️ How Copilot Chat and VS Code read a hook result: the record itself plus a `hookSpecificOutput` member carrying the permission decision for `PreToolUse` and additional context for every other event. Every other editor receives the record verbatim.",
+      "type": "object",
+      "required": ["allowed"],
+      "properties": {
+        "hookSpecificOutput": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "hookEventName": { "type": "string" },
+            "permissionDecision": { "enum": ["allow", "deny"] },
+            "permissionDecisionReason": { "type": "string" },
+            "additionalContext": { "type": "string" }
+          }
+        }
+      }
+    },
+    "HookOutput": {
+      "description": "🖨️ What the repo binary writes and with which exit code. Exit code 2 is how a refusal reaches a client that does not read a wrapped record.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stdout", "stderr", "exitCode"],
+      "properties": {
+        "stdout": { "type": "string" },
+        "stderr": { "type": "string" },
+        "exitCode": { "type": "integer", "enum": [0, 2] }
+      }
+    },
+    "BlockingDecision": {
+      "description": "🛡️ The outcome of the blocking policy for one invocation.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["blocked"],
+      "properties": {
+        "blocked": { "type": "boolean" },
+        "reason": { "type": "string", "description": "🚫️ `blocked: <what>` followed by the concurrency note; empty when nothing is blocked." }
+      }
+    },
+    "HookPlanStep": {
+      "description": "🔁️ One step of a plan update event, as the payload carries it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "status": { "type": "string", "description": "🚦️ Free text; `in-progress`/`in_progress`/`started` and `completed`/`done` are the spellings that move a timestamp." }
+      }
+    },
+    "SessionResponse": {
+      "description": "📤️ What the hook answered, recorded at `standard` and `full` detail only.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "blocked": { "type": "boolean" },
+        "message": { "type": "string" },
+        "reason": { "type": "string" }
+      }
+    },
+    "SessionEventEntry": {
+      "description": "📍️ One recorded hook invocation. `native` survives only at `full` detail.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event"],
+      "properties": {
+        "event": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "client", "session", "second", "checkpoint", "contributor"],
+          "properties": {
+            "kind": { "$ref": "#/$defs/HookEvent" },
+            "client": { "type": "string" },
+            "session": { "type": "string" },
+            "second": { "type": "string" },
+            "checkpoint": { "type": "string" },
+            "contributor": { "type": "string" },
+            "transcript": { "type": "string" }
+          }
+        },
+        "native": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event"],
+          "properties": { "event": { "$ref": "#/$defs/NativeHookPayload" } }
+        },
+        "response": { "$ref": "#/$defs/SessionResponse" }
+      }
+    },
+    "SessionMeta": {
+      "description": "🔸️ The `session.json` record under `.🧬semio/🦑️repo/⚡️cache/🤖️generated/🎆️YY/🌙️MM/☀️DD/<session>/`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string" },
+        "uri": { "type": "string", "pattern": "^repo://session/" },
+        "client": { "type": "string" },
+        "second": { "type": "string" },
+        "checkpoint": { "type": "string" },
+        "contributor": { "type": "string" },
+        "transcript": { "type": "string" },
+        "events": { "type": "array", "items": { "$ref": "#/$defs/SessionEventEntry" } },
+        "plan": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "steps": { "type": "array", "items": { "type": "object" } } }
+        }
+      }
+    },
+    "LoggingConfig": {
+      "description": "📋️ The `[logging]` section of `.🧬semio/🦑️repo/📋️config.toml`, owned by `🏠️workspace` and consumed here. `session` off means no session log is written at all.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["session", "operations", "plan", "detail"],
+      "properties": {
+        "session": { "type": "boolean", "default": false },
+        "operations": { "type": "boolean", "default": true },
+        "plan": { "type": "boolean", "default": true },
+        "detail": { "enum": ["minimal", "standard", "full"], "default": "standard" }
+      }
+    },
+    "MicroCommitDelegation": {
+      "description": "🔖️ The argv the repo binary hands to bun so every git hook reaches one micro-commit implementation.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["argv"],
+      "properties": {
+        "argv": { "type": "array", "items": { "type": "string" }, "minItems": 3 },
+        "cwd": { "type": "string" }
+      }
+    }
+  }
+}

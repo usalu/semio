@@ -1,0 +1,159 @@
+{
+  "_comment": "🗄️ The frozen repository the executor answers from. Every implementation of this owner loads exactly these records into its context port, so a disagreement between two executions is a disagreement about GraphQL execution and never about the filesystem.",
+  "rootDir": "/repo",
+  "now": "2026-09-06 08:00:00",
+  "technologies": [
+    { "name": "repo", "root": "/repo", "kind": "🧰️", "emoji": "", "bundles": [] },
+    { "name": "compose", "root": "/repo/compose", "kind": "👤️", "emoji": "", "bundles": [] }
+  ],
+  "bundles": [
+    { "name": "repo/go", "root": "repo/go", "sourceRoot": "repo/go/src", "technologyName": "repo", "tags": ["lang:go"], "kind": "library", "emoji": "", "packages": [{ "name": "semio-repo", "version": "0.1.0", "path": "repo/go", "kind": "go" }] },
+    { "name": "repo/rust", "root": "repo/rust", "technologyName": "repo", "tags": ["lang:rust"], "kind": "library", "emoji": "", "packages": [] },
+    { "name": "compose/ui", "root": "compose/ui", "technologyName": "compose", "tags": [], "kind": "ui", "emoji": "", "packages": [] }
+  ],
+  "folders": [
+    { "id": "folder:repo", "path": "repo", "uri": "file:///repo/repo", "name": "repo", "kind": "organization", "emoji": "", "ignored": false, "generated": false },
+    { "id": "folder:repo/go", "path": "repo/go", "uri": "file:///repo/repo/go", "name": "go", "parentId": "folder:repo", "bundleId": "repo/go", "kind": "required", "emoji": "", "ignored": false, "generated": false },
+    { "id": "folder:repo/rust", "path": "repo/rust", "uri": "file:///repo/repo/rust", "name": "rust", "parentId": "folder:repo", "bundleId": "repo/rust", "kind": "required", "emoji": "", "ignored": false, "generated": true }
+  ],
+  "files": [
+    { "id": "file:repo/go/main.go", "path": "repo/go/main.go", "uri": "file:///repo/repo/go/main.go", "name": "main.go", "extension": ".go", "folderId": "folder:repo/go", "bundleId": "repo/go", "kind": "code", "emoji": "", "ignored": false, "generated": false },
+    { "id": "file:repo/rust/lib.rs", "path": "repo/rust/lib.rs", "uri": "file:///repo/repo/rust/lib.rs", "name": "lib.rs", "extension": ".rs", "folderId": "folder:repo/rust", "bundleId": "repo/rust", "kind": "code", "emoji": "", "ignored": false, "generated": false },
+    { "id": "file:README.md", "path": "README.md", "uri": "file:///repo/README.md", "name": "README.md", "extension": ".md", "kind": "docs", "emoji": "", "ignored": false, "generated": false }
+  ],
+  "sections": [
+    {
+      "id": "section:repo/go/main.go#Header",
+      "name": "Header",
+      "path": "Header",
+      "filePath": "repo/go/main.go",
+      "emoji": "🧲️",
+      "startLine": 1,
+      "endLine": 8,
+      "startIndex": 0,
+      "endIndex": 120,
+      "children": [],
+      "definitions": [{ "id": "definition:main", "name": "main", "kind": "implementation", "filePath": "repo/go/main.go", "sectionPath": "Header", "emoji": "🛠️", "startLine": 4, "endLine": 6, "startIndex": 40, "endIndex": 90 }]
+    },
+    {
+      "id": "section:repo/rust/lib.rs#Executor",
+      "name": "Executor",
+      "path": "Executor",
+      "filePath": "repo/rust/lib.rs",
+      "emoji": "🧱️",
+      "startLine": 10,
+      "endLine": 60,
+      "startIndex": 200,
+      "endIndex": 900,
+      "children": [
+        { "id": "section:repo/rust/lib.rs#Executor#Project", "name": "Project", "path": "Executor#Project", "filePath": "repo/rust/lib.rs", "emoji": "🔖️", "startLine": 30, "endLine": 45, "startIndex": 500, "endIndex": 700, "children": [], "definitions": [] }
+      ],
+      "definitions": [{ "id": "definition:execute", "name": "execute", "kind": "interface", "filePath": "repo/rust/lib.rs", "sectionPath": "Executor", "emoji": "✂️", "startLine": 12, "endLine": 20, "startIndex": 220, "endIndex": 400 }]
+    }
+  ],
+  "definitions": [
+    { "id": "definition:main", "name": "main", "kind": "implementation", "filePath": "repo/go/main.go", "sectionPath": "Header", "emoji": "🛠️", "startLine": 4, "endLine": 6, "startIndex": 40, "endIndex": 90 },
+    { "id": "definition:execute", "name": "execute", "kind": "interface", "filePath": "repo/rust/lib.rs", "sectionPath": "Executor", "emoji": "✂️", "startLine": 12, "endLine": 20, "startIndex": 220, "endIndex": 400 },
+    { "id": "definition:MAX", "name": "MAX", "kind": "constant", "filePath": "repo/rust/lib.rs", "sectionPath": "Executor", "emoji": "🪨️", "startLine": 22, "endLine": 22, "startIndex": 410, "endIndex": 440 }
+  ],
+  "contributors": [
+    {
+      "alias": "ueli",
+      "emoji": "",
+      "github": "usalu",
+      "name": "Ueli Saluz",
+      "names": ["Ueli Saluz"],
+      "email": "ueli@semio-tech.com",
+      "emails": ["ueli@semio-tech.com"],
+      "links": { "site": "https://semio-tech.com", "mastodon": "https://mastodon.social/@usalu" },
+      "fingerprint": "AABBCC"
+    },
+    { "alias": "agent", "emoji": "", "github": "opus", "name": "Opus", "names": [], "email": "opus@example.com", "emails": ["opus@example.com"], "links": {}, "fingerprint": "" }
+  ],
+  "checkpoints": [
+    { "id": "checkpoint:c2", "sha": "c2", "title": "Second", "authorId": "usalu", "date": "2026-09-06T09:00:00Z" },
+    { "id": "checkpoint:c1", "sha": "c1", "title": "First", "date": "2026-09-05T09:00:00Z" }
+  ],
+  "goals": [
+    { "id": "repo-rust", "title": "Repo Rust", "description": "Port the repo product to Rust", "prompt": "port it", "status": "open", "dueDate": "2026-12-31", "dates": { "due": "2026-12-31" }, "client": "claude-code", "llm": "opus", "effort": "high", "github": { "milestone": "milestones/12", "issue": "42" } },
+    { "id": "docs", "title": "Docs", "description": "Write the docs", "prompt": "document it", "status": "closed", "summary": "written", "dates": { "due": "2026-06-30" }, "client": "codex", "llm": "gpt", "parent": "repo-rust" }
+  ],
+  "tickets": [
+    {
+      "year": 2026,
+      "month": 9,
+      "day": 6,
+      "slug": "PORT-EXECUTOR",
+      "title": "Port Executor",
+      "emoji": "🧱️",
+      "status": "open",
+      "description": "",
+      "goal": "repo-rust",
+      "folderPath": "tickets/2026/09/06/PORT-EXECUTOR",
+      "interactions": [
+        { "kind": "ticket.open", "date": "2026-09-06 08:00:00", "author": "Ueli Saluz <ueli@semio-tech.com>", "system": "cli", "client": "claude-code", "checkpoint": "c2", "prompt": "port the executor", "llm": "opus", "effort": "high" }
+      ]
+    },
+    {
+      "year": 2026,
+      "month": 9,
+      "day": 5,
+      "slug": "SPLIT-GO",
+      "title": "Split Go",
+      "status": "closed",
+      "description": "split the god file",
+      "summary": "",
+      "goal": "repo-rust",
+      "parent": "PORT-EXECUTOR",
+      "folderPath": "tickets/2026/09/05/SPLIT-GO",
+      "interactions": [
+        { "kind": "ticket.open", "date": "2026-09-05 07:00:00", "author": "Ueli Saluz <ueli@semio-tech.com>", "system": "cli", "client": "codex", "checkpoint": "c1", "prompt": "split it", "llm": "gpt", "effort": "medium" },
+        { "kind": "ticket.close.ended", "date": "2026-09-05 18:30:00", "author": "Ueli Saluz <ueli@semio-tech.com>", "system": "cli", "client": "codex", "checkpoint": "c1", "prompt": "", "summary": "done", "llm": "gpt", "effort": "medium" }
+      ]
+    },
+    { "year": 2025, "month": 12, "day": 24, "slug": "OLD-TICKET", "title": "Old Ticket", "status": "closed", "description": "an old one", "folderPath": "tickets/2025/12/24/OLD-TICKET", "interactions": [] }
+  ],
+  "drafts": [{ "id": "draft-one" }, { "id": "draft-two" }],
+  "todos": [
+    { "id": "port-mutations", "name": "Port mutations", "description": "the write half", "parentId": "file:repo/rust/lib.rs", "location": { "filePath": "repo/rust/lib.rs", "line": 42, "column": 5 } },
+    { "id": "write-docs", "name": "Write docs", "description": "", "parentId": "file:README.md" }
+  ],
+  "statutes": [
+    { "kind": "code/section/empty", "policyId": "repo/lint", "priority": "high", "reason": "A section without content carries no meaning", "solution": "Remove the section", "autofixable": true },
+    { "kind": "code/definition/undocumented", "policyId": "repo/lint", "priority": "medium", "reason": "A definition without a docstring cannot be read", "solution": "Add a docstring", "autofixable": false },
+    { "kind": "docs/readme/missing", "policyId": "repo/docs", "priority": "low", "reason": "A bundle without a readme cannot be found", "solution": "Add a README.md", "autofixable": false }
+  ],
+  "policies": [
+    {
+      "id": "repo/lint",
+      "name": "Lint",
+      "description": "The code statutes",
+      "scopes": ["**/*.go", "**/*.rs"],
+      "groups": [{ "name": "Sections", "description": "Section statutes", "scopes": ["**/*"], "groups": [], "kinds": ["code/section/empty"] }],
+      "statutes": [
+        { "kind": "code/section/empty", "policyId": "repo/lint", "priority": "high", "reason": "A section without content carries no meaning", "solution": "Remove the section", "autofixable": true },
+        { "kind": "code/definition/undocumented", "policyId": "repo/lint", "priority": "medium", "reason": "A definition without a docstring cannot be read", "solution": "Add a docstring", "autofixable": false }
+      ]
+    },
+    {
+      "id": "repo/docs",
+      "name": "Docs",
+      "description": "The documentation statutes",
+      "scopes": ["**/*.md"],
+      "groups": [],
+      "statutes": [{ "kind": "docs/readme/missing", "policyId": "repo/docs", "priority": "low", "reason": "A bundle without a readme cannot be found", "solution": "Add a README.md", "autofixable": false }]
+    }
+  ],
+  "interactions": [
+    { "kind": "ticket.open", "date": "2026-09-06 08:00:00", "author": "Ueli Saluz <ueli@semio-tech.com>", "system": "cli", "client": "claude-code", "checkpoint": "c2", "prompt": "port the executor", "llm": "opus", "effort": "high", "sourceKind": "ticket", "sourceId": "2026/09/06/PORT-EXECUTOR", "ticketId": "2026/09/06/PORT-EXECUTOR" },
+    { "kind": "goal.open", "date": "2026-01-02 10:00:00", "author": "Ueli Saluz <ueli@semio-tech.com>", "system": "cli", "client": "codex", "checkpoint": "c1", "prompt": "start the goal", "llm": "gpt", "effort": "", "sourceKind": "goal", "sourceId": "repo-rust", "goalId": "repo-rust" }
+  ],
+  "analyze": {
+    "breachs": [
+      { "id": "b1", "summary": "Section Header is empty", "kind": "code/section/empty", "scope": "repo/go/main.go", "line": 1, "column": 1, "excerpt": "// #region Header" },
+      { "id": "b2", "summary": "Definition execute is undocumented", "kind": "code/definition/undocumented", "scope": "repo/rust/lib.rs", "line": 12, "column": 1, "priority": "high", "autofixable": true, "reason": "Overridden reason" }
+    ],
+    "metrics": { "total": 2, "byPriority": { "high": 2, "medium": 0, "low": 0 }, "autofixable": 2 }
+  },
+  "fix": { "fixed": 1, "remaining": 1, "breachs": [{ "id": "b2", "summary": "Definition execute is undocumented", "kind": "code/definition/undocumented", "scope": "repo/rust/lib.rs", "line": 12, "column": 1 }] }
+}

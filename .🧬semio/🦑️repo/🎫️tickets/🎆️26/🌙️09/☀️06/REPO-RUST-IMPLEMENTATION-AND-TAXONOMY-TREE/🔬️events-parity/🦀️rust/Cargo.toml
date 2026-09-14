@@ -1,0 +1,13 @@
+# 🧭️ Ticket-local probe crate: its own workspace so it never joins the repository workspace.
+[workspace]
+
+[package]
+name = "ticket-events-parity"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+semio-framework-repo-events = { path = "../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📡️events/📦️packages/🦀️rust" }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"

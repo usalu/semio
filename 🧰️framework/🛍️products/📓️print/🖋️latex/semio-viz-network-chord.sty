@@ -1,0 +1,224 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-network-chord}[2026/09/05 v0.3.0 semio viz namespace network-chord families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-network-graph}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 🔑 semio / viz / family / chord — d3-chord's group arcs and ribbons (taxonomy §8 and §9).
+%   data          (table, default demo-graph-community)
+%   padAngle      (radians, default 0.04)      gap between the group arcs
+%   sortGroups    (none|ascending|descending, default none)
+%   sortSubgroups (none|ascending|descending, default none)
+%   symmetric     (boolean, default true)      mirror every edge into the transposed cell
+%   innerRadius   (fraction of the outer radius, default 0.86)  inner edge of the group band
+%   ribbonInset   (fraction, default 0.86)     radius the ribbons start from
+%   tension       (number, default 0.55)       how strongly a ribbon is pulled towards the centre
+%   labels        (boolean, default true)      group captions outside the band
+%   padding       (mm, default 3)
+\fp_new:N \l_semio_viz_chord_pad_fp
+\fp_new:N \l_semio_viz_chord_inner_fp
+\fp_new:N \l_semio_viz_chord_ribbon_fp
+\fp_new:N \l_semio_viz_chord_tension_fp
+\fp_new:N \l_semio_viz_chord_r_fp
+\fp_new:N \l_semio_viz_chord_cx_fp
+\fp_new:N \l_semio_viz_chord_cy_fp
+\tl_new:N \l_semio_viz_chord_sortg_tl
+\tl_new:N \l_semio_viz_chord_sorts_tl
+\bool_new:N \l_semio_viz_chord_symmetric_bool
+\int_new:N \l_semio_viz_chord_rows_int
+\tl_new:N \l_semio_viz_chord_kind_tl
+
+\cs_new_protected:Npn \semio_viz_chord_keys_add:n #1 {
+  \semio_viz_net_keys_add:n {#1}
+  \keys_define:nn {#1} {
+    padAngle      .fp_set:N = \l_semio_viz_chord_pad_fp,
+    sortGroups    .tl_set:N = \l_semio_viz_chord_sortg_tl,
+    sortSubgroups .tl_set:N = \l_semio_viz_chord_sorts_tl,
+    symmetric     .bool_set:N = \l_semio_viz_chord_symmetric_bool,
+    symmetric     .default:n = { true },
+    innerRadius   .fp_set:N = \l_semio_viz_chord_inner_fp,
+    ribbonInset   .fp_set:N = \l_semio_viz_chord_ribbon_fp,
+    tension       .fp_set:N = \l_semio_viz_chord_tension_fp,
+  }
+}
+% ♻️ Restores the documented chord defaults on top of the shared network reset, labels back on.
+\cs_new_protected:Npn \semio_viz_chord_keys_reset: {
+  \semio_viz_net_keys_reset:
+  \fp_set:Nn \l_semio_viz_chord_pad_fp { 0.04 }
+  \fp_set:Nn \l_semio_viz_chord_inner_fp { 0.86 }
+  \fp_set:Nn \l_semio_viz_chord_ribbon_fp { 0.86 }
+  \fp_set:Nn \l_semio_viz_chord_tension_fp { 0.55 }
+  \bool_set_true:N \l_semio_viz_chord_symmetric_bool
+  \tl_set:Nn \l_semio_viz_chord_sortg_tl { none }
+  \tl_set:Nn \l_semio_viz_chord_sorts_tl { none }
+  \bool_set_true:N \l_semio_viz_net_labels_bool
+}
+%endregion 🔖️Keys
+
+%region 🔖️Chord
+% 🍩 Point on the layout circle at angle #1 (radians, clockwise from twelve o'clock like d3-chord).
+\cs_new:Npn \semio_viz_chord_x:nn #1#2
+  { \l_semio_viz_chord_cx_fp + (#2) * \l_semio_viz_chord_r_fp * sin( #1 ) }
+% 📐 The matching ordinate, so angle zero sits on top and the pair traces the circle clockwise.
+\cs_new:Npn \semio_viz_chord_y:nn #1#2
+  { \l_semio_viz_chord_cy_fp + (#2) * \l_semio_viz_chord_r_fp * cos( #1 ) }
+
+% 🍩 One group band: the annulus sector between the two angles, sampled as a polygon.
+\seq_new:N \l_semio_viz_chord_path_seq
+\cs_new_protected:Npn \semio_viz_chord_band:nnnn #1#2#3#4 {
+  \semio_viz_net_color:nN {#1} \l_semio_viz_net_fill_tl
+  \seq_clear:N \l_semio_viz_chord_path_seq
+  \int_step_inline:nn { 13 } {
+    \seq_put_right:Nx \l_semio_viz_chord_path_seq
+      {
+        ( \fp_eval:n { \semio_viz_chord_x:nn { (#2) + ( (#3) - (#2) ) * ( ##1 - 1 ) / 12 } { 1 } } ,
+          \fp_eval:n { \semio_viz_chord_y:nn { (#2) + ( (#3) - (#2) ) * ( ##1 - 1 ) / 12 } { 1 } } )
+      }
+  }
+  \int_step_inline:nn { 13 } {
+    \seq_put_right:Nx \l_semio_viz_chord_path_seq
+      {
+        ( \fp_eval:n { \semio_viz_chord_x:nn { (#3) - ( (#3) - (#2) ) * ( ##1 - 1 ) / 12 }
+            { \l_semio_viz_chord_inner_fp } } ,
+          \fp_eval:n { \semio_viz_chord_y:nn { (#3) - ( (#3) - (#2) ) * ( ##1 - 1 ) / 12 }
+            { \l_semio_viz_chord_inner_fp } } )
+      }
+  }
+  \semio_viz_net_draw_poly:xx
+    { \seq_use:Nn \l_semio_viz_chord_path_seq { -- } }
+    { \fp_eval:n { round(#2,6) } , \fp_eval:n { round(#3,6) } , \fp_eval:n { round(#4,6) } }
+  \bool_if:NT \l_semio_viz_net_labels_bool {
+    \semio_viz_net_draw_text:nnn
+      { \semio_viz_chord_x:nn { ( (#2) + (#3) ) / 2 } { 1.12 } }
+      { \semio_viz_chord_y:nn { ( (#2) + (#3) ) / 2 } { 1.12 } }
+      { \semio_viz_network_id:n {#1} }
+  }
+}
+
+
+% 🎀 One ribbon: the two subgroup arcs joined by two quadratic curves pulled towards the centre.
+\cs_new_protected:Npn \semio_viz_chord_ribbon:nnnnnn #1#2#3#4#5#6 {
+  \semio_viz_net_color:nN {#1} \l_semio_viz_net_fill_tl
+  \use:x {
+    \exp_not:N \fill [ \l_semio_viz_net_fill_tl , opacity=0.55 ,
+        draw=semio-chrome-border-normal , line~width=\semio@stroke@hairline ]
+      ( \fp_eval:n { \semio_viz_chord_x:nn {#3} { \l_semio_viz_chord_ribbon_fp } } ,
+        \fp_eval:n { \semio_viz_chord_y:nn {#3} { \l_semio_viz_chord_ribbon_fp } } )
+      arc~[ start~angle=\fp_eval:n { 90 - deg(#3) } ,
+            end~angle=\fp_eval:n { 90 - deg(#4) } ,
+            radius=\fp_eval:n { \l_semio_viz_chord_ribbon_fp * \l_semio_viz_chord_r_fp } mm ]
+      .. controls ( \fp_eval:n { \l_semio_viz_chord_cx_fp
+            + ( 1 - \l_semio_viz_chord_tension_fp )
+              * ( \semio_viz_chord_x:nn {#4} { \l_semio_viz_chord_ribbon_fp }
+                - \l_semio_viz_chord_cx_fp ) } ,
+          \fp_eval:n { \l_semio_viz_chord_cy_fp
+            + ( 1 - \l_semio_viz_chord_tension_fp )
+              * ( \semio_viz_chord_y:nn {#4} { \l_semio_viz_chord_ribbon_fp }
+                - \l_semio_viz_chord_cy_fp ) } ) ..
+      ( \fp_eval:n { \semio_viz_chord_x:nn {#5} { \l_semio_viz_chord_ribbon_fp } } ,
+        \fp_eval:n { \semio_viz_chord_y:nn {#5} { \l_semio_viz_chord_ribbon_fp } } )
+      arc~[ start~angle=\fp_eval:n { 90 - deg(#5) } ,
+            end~angle=\fp_eval:n { 90 - deg(#6) } ,
+            radius=\fp_eval:n { \l_semio_viz_chord_ribbon_fp * \l_semio_viz_chord_r_fp } mm ]
+      .. controls ( \fp_eval:n { \l_semio_viz_chord_cx_fp
+            + ( 1 - \l_semio_viz_chord_tension_fp )
+              * ( \semio_viz_chord_x:nn {#3} { \l_semio_viz_chord_ribbon_fp }
+                - \l_semio_viz_chord_cx_fp ) } ,
+          \fp_eval:n { \l_semio_viz_chord_cy_fp
+            + ( 1 - \l_semio_viz_chord_tension_fp )
+              * ( \semio_viz_chord_y:nn {#3} { \l_semio_viz_chord_ribbon_fp }
+                - \l_semio_viz_chord_cy_fp ) } ) ..
+      cycle ;
+  }
+  \semio_viz_probe_geometry:nx { ribbon }
+    { #1 , #2 , \fp_eval:n { round(#3,6) } , \fp_eval:n { round(#4,6) } ,
+      \fp_eval:n { round(#5,6) } , \fp_eval:n { round(#6,6) } }
+}
+
+% 🍩 Reads one row of the chord layout output and draws the band or the ribbon it describes.
+\cs_new_protected:Npn \semio_viz_chord_row:n #1 {
+  \semio_viz_table_cell:nnnN { semio-net-chord } {#1} { kind } \l_semio_viz_chord_kind_tl
+  \str_case:Vn \l_semio_viz_chord_kind_tl
+    {
+      { group } { \semio_viz_chord_row_group:n {#1} }
+      { source } { \semio_viz_chord_row_ribbon:n {#1} }
+    }
+}
+\tl_new:N \l_semio_viz_chord_i_tl
+\tl_new:N \l_semio_viz_chord_j_tl
+\tl_new:N \l_semio_viz_chord_a_tl
+\tl_new:N \l_semio_viz_chord_b_tl
+\tl_new:N \l_semio_viz_chord_v_tl
+\tl_new:N \l_semio_viz_chord_c_tl
+\tl_new:N \l_semio_viz_chord_d_tl
+% 🧿 A `group` row: reads its index, its two angles and its weight, and bands it unless degenerate.
+\cs_new_protected:Npn \semio_viz_chord_row_group:n #1 {
+  \semio_viz_table_cell:nnnN { semio-net-chord } {#1} { i } \l_semio_viz_chord_i_tl
+  \semio_viz_table_cell:nnnN { semio-net-chord } {#1} { a0 } \l_semio_viz_chord_a_tl
+  \semio_viz_table_cell:nnnN { semio-net-chord } {#1} { a1 } \l_semio_viz_chord_b_tl
+  \semio_viz_table_cell:nnnN { semio-net-chord } {#1} { v } \l_semio_viz_chord_v_tl
+  \fp_compare:nNnT { \l_semio_viz_chord_b_tl - \l_semio_viz_chord_a_tl } > { 1e-9 }
+    {
+      \semio_viz_chord_band:nnnn { \l_semio_viz_chord_i_tl }
+        { \l_semio_viz_chord_a_tl } { \l_semio_viz_chord_b_tl } { \l_semio_viz_chord_v_tl }
+    }
+}
+% 🔗 A `source` row: pairs its arc with the target arc on the following row and draws the ribbon.
+\cs_new_protected:Npn \semio_viz_chord_row_ribbon:n #1 {
+  \semio_viz_table_cell:nnnN { semio-net-chord } {#1} { i } \l_semio_viz_chord_i_tl
+  \semio_viz_table_cell:nnnN { semio-net-chord } {#1} { a0 } \l_semio_viz_chord_a_tl
+  \semio_viz_table_cell:nnnN { semio-net-chord } {#1} { a1 } \l_semio_viz_chord_b_tl
+  \semio_viz_table_cell:nnnN { semio-net-chord } { #1 + 1 } { a0 } \l_semio_viz_chord_c_tl
+  \semio_viz_table_cell:nnnN { semio-net-chord } { #1 + 1 } { a1 } \l_semio_viz_chord_d_tl
+  \semio_viz_table_cell:nnnN { semio-net-chord } {#1} { ribbon } \l_semio_viz_chord_j_tl
+  \semio_viz_chord_ribbon:nnnnnn { \l_semio_viz_chord_i_tl } { \l_semio_viz_chord_j_tl }
+    { \l_semio_viz_chord_a_tl } { \l_semio_viz_chord_b_tl }
+    { \l_semio_viz_chord_c_tl } { \l_semio_viz_chord_d_tl }
+}
+
+% 🍩 chord — the ribbon view of a weighted directed graph; `dependency-wheel` is the same family
+% with `symmetric=false` and the sorted, padded band arrangement of a dependency listing.
+\cs_new_protected:Npn \semio_viz_chord_render:nn #1#2 {
+  \semio_viz_frame_require:n { SemioVizRunFamily }
+  \semio_viz_chord_keys_reset:
+  \keys_set:nn { semio / viz / family / #1 } {#2}
+  \semio_viz_net_bind_build:
+  \tl_set:Nx \l_semio_viz_net_layopts_tl
+    {
+      \l_semio_viz_net_bind_tl
+      pad-angle = \fp_use:N \l_semio_viz_chord_pad_fp ,
+      sort-groups = \l_semio_viz_chord_sortg_tl ,
+      sort-subgroups = \l_semio_viz_chord_sorts_tl ,
+      symmetric = \bool_if:NTF \l_semio_viz_chord_symmetric_bool { true } { false }
+    }
+  \semio_viz_layout_run:VVnV \c_semio_viz_chord_layout_tl \l_semio_viz_net_data_tl
+    { semio-net-chord } \l_semio_viz_net_layopts_tl
+  \semio_viz_net_canvas:
+  \fp_set:Nn \l_semio_viz_chord_cx_fp
+    { ( \l_semio_viz_net_xlo_fp + \l_semio_viz_net_xhi_fp ) / 2 }
+  \fp_set:Nn \l_semio_viz_chord_cy_fp
+    { ( \l_semio_viz_net_ylo_fp + \l_semio_viz_net_yhi_fp ) / 2 }
+  \fp_set:Nn \l_semio_viz_chord_r_fp
+    {
+      min( \l_semio_viz_net_xhi_fp - \l_semio_viz_chord_cx_fp ,
+           \l_semio_viz_net_yhi_fp - \l_semio_viz_chord_cy_fp )
+      / \bool_if:NTF \l_semio_viz_net_labels_bool { 1.24 } { 1.02 }
+    }
+  \semio_viz_table_nrows:nN { semio-net-chord } \l_semio_viz_chord_rows_int
+  \int_step_inline:nn { \l_semio_viz_chord_rows_int } { \semio_viz_chord_row:n {##1} }
+}
+\tl_const:Nn \c_semio_viz_chord_layout_tl { chord }
+
+\semio_viz_chord_keys_add:n { semio / viz / family / chord }
+% 🎡 Registers the `chord` catalogue entry on the renderer, keeping its own key family.
+\SemioVizFamily { chord } { \semio_viz_chord_render:nn { chord } {#1} }
+\semio_viz_chord_keys_add:n { semio / viz / family / dependency-wheel }
+% 🛞 Registers `dependency-wheel` on the same renderer under its own directed-by-default key set.
+\SemioVizFamily { dependency-wheel } { \semio_viz_chord_render:nn { dependency-wheel } {#1} }
+%endregion 🔖️Chord
+
+\ExplSyntaxOff

@@ -1,0 +1,10 @@
+\documentclass{article}
+\usepackage{semio-viz-charts-polar}
+\begin{document}
+\ExplSyntaxOn
+\SemioVizProbeOn
+\SemioVizChartsDryRun
+\SemioVizProbeBegin{charts-polar-radar}{radar}
+\SemioVizRunFamily{radar}[data=demo-profile, axis=axis, series={s1}, levels=1, labels=false, shape=polygon, width=60, height=40, pad=4]
+\ExplSyntaxOff
+\end{document}

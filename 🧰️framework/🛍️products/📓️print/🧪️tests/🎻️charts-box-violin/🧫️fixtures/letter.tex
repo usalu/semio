@@ -1,0 +1,10 @@
+\documentclass{article}
+\usepackage{semio-viz-charts-distribution}
+\begin{document}
+\ExplSyntaxOn
+\SemioVizProbeOn
+\SemioVizChartsDryRun
+\SemioVizProbeBegin{charts-box-violin}{letter}
+\SemioVizRunFamily{box}[data=demo-distribution, value=value, group=grp, grouped=true, letter=3]
+\ExplSyntaxOff
+\end{document}

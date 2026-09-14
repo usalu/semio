@@ -1,0 +1,102 @@
+\documentclass{article}
+\usepackage{tikz}
+\usetikzlibrary{calc,arrows.meta,shapes.geometric,decorations.pathreplacing,patterns}
+\usepackage{semio-viz-family}
+\usepackage{semio-viz-guide}
+\usepackage{semio-viz-annotation}
+\usepackage{semio-viz-label}
+\usepackage{semio-viz-facet}
+\usepackage{semio-viz-composition}
+\usepackage{semio-viz-plot}
+\usepackage{semio-viz-hierarchy}
+\usepackage{semio-viz-network}
+\usepackage{semio-viz-flow}
+\usepackage{semio-viz-geo}
+\usepackage{semio-viz-spatial}
+\usepackage{semio-viz-charts-bar}
+\usepackage{semio-viz-charts-line}
+\usepackage{semio-viz-charts-area}
+\usepackage{semio-viz-charts-scatter}
+\usepackage{semio-viz-charts-financial}
+\usepackage{semio-viz-charts-timeline}
+\usepackage{semio-viz-charts-dashboard}
+\usepackage{semio-viz-charts-funnel}
+\usepackage{semio-viz-charts-distribution}
+\usepackage{semio-viz-charts-statistical}
+\usepackage{semio-viz-charts-polar}
+\usepackage{semio-viz-matrix-heatmap}
+\usepackage{semio-viz-matrix-correlation}
+\usepackage{semio-viz-table}
+\usepackage{semio-viz-hierarchy-tree}
+\usepackage{semio-viz-hierarchy-dendrogram}
+\usepackage{semio-viz-hierarchy-treemap}
+\usepackage{semio-viz-hierarchy-partition}
+\usepackage{semio-viz-hierarchy-pack}
+\usepackage{semio-viz-network-graph}
+\usepackage{semio-viz-network-matrix}
+\usepackage{semio-viz-network-arc}
+\usepackage{semio-viz-network-chord}
+\usepackage{semio-viz-network-bundling}
+\usepackage{semio-viz-flow-sankey}
+\usepackage{semio-viz-flow-alluvial}
+\usepackage{semio-viz-flow-parallelsets}
+\usepackage{semio-viz-geo-map}
+\usepackage{semio-viz-geo-projection}
+\usepackage{semio-viz-geo-choropleth}
+\usepackage{semio-viz-geo-symbols}
+\usepackage{semio-viz-geo-contours}
+\usepackage{semio-viz-geo-routes}
+\usepackage{semio-viz-diagram-flowchart}
+\usepackage{semio-viz-diagram-uml}
+\usepackage{semio-viz-diagram-architecture}
+\usepackage{semio-viz-diagram-process}
+\usepackage{semio-viz-diagram-concept}
+\usepackage{semio-viz-infographic}
+\usepackage{semio-viz-interactionstate}
+\usepackage{semio-viz-scientific-field}
+\usepackage{semio-viz-scientific-surface}
+\usepackage{semio-viz-scientific-signal}
+\usepackage{semio-viz-scientific-physics}
+\usepackage{semio-viz-scientific-chemistry}
+\usepackage{semio-viz-scientific-biology}
+\usepackage{semio-viz-scientific-engineering}
+\usepackage{semio-viz-scientific-mathematics}
+\usepackage{semio-viz-scientific-geometry}
+\usepackage{semio-viz-scientific-3d}
+\usepackage{semio-viz-showcase}
+\usepackage{semio-viz-text}
+\usepackage{semio-viz-domain}
+\usepackage{semio-viz-probe}
+\ExplSyntaxOn
+% 🧪 One §76 namespace kind: its own probe scenario, then the namespace family run with nothing
+% but the variant the catalogue entry carries.
+\cs_new_protected:Npn \semio_probe_namespace:n #1 {
+  \semio_viz_probe_begin:nn { showcase-families } { namespace/#1 }
+  \semio_viz_family_run:nn { namespace } { variant = #1 }
+}
+\ExplSyntaxOff
+\begin{document}
+\ExplSyntaxOn
+\tl_set:Nn \l_semio_language_tl { en }
+\bool_set_true:N \l_semio_viz_in_figure_bool
+\ExplSyntaxOff
+\SemioVizProbeOn
+\begin{tikzpicture}[x=1mm,y=1mm]
+\ExplSyntaxOn
+\fp_set:Nn \l_semio_viz_width_fp { 80 }
+\fp_set:Nn \l_semio_viz_height_fp { 40 }
+\clist_map_inline:nn {
+  adjacency, alluvial, annotation, arc, architecture, area,
+  axis, bar, biology, bundling, charts, chemistry,
+  chord, choropleth, concept, contours, correlation, diagram,
+  distribution, engineering, field, financial, flow, geo,
+  graph, hierarchy, infographic, interactionstate, layout, legend,
+  line, map, matrix, network, network-matrix, pack,
+  parallelsets, partition, physics, polar, process, projection,
+  routes, scale, scatter, scientific, signal, statistical,
+  surface, symbols, table, theme, tree, uml
+} { \semio_probe_namespace:n {#1} }
+\ExplSyntaxOff
+\end{tikzpicture}
+\SemioVizProbeEnd
+\end{document}

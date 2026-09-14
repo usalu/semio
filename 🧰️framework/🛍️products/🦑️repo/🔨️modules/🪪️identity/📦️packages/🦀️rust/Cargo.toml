@@ -1,0 +1,19 @@
+[package]
+name = "semio-framework-repo-identity"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "repo identity: entity emojis, semantic ids, artifact refs, humanized time, identifier generation"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }

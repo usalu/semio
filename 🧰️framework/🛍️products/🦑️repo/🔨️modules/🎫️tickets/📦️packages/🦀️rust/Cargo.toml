@@ -1,0 +1,23 @@
+[package]
+name = "semio-framework-repo-tickets"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "semio repo tickets: the ticket id and path scheme, the 🎫️ticket.json codec, the open/close/reopen/change lifecycle, the important-document transaction, issue synchronisation through the providers issue-tracker port and plan/spec source resolution"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+semio-framework-repo-model = { path = "../../../📐️model/📦️packages/🦀️rust" }
+semio-framework-repo-identity = { path = "../../../🪪️identity/📦️packages/🦀️rust" }
+semio-framework-repo-providers = { path = "../../../🧩️providers/📦️packages/🦀️rust" }
+semio-framework-repo-events = { path = "../../../📡️events/📦️packages/🦀️rust" }

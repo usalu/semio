@@ -5922,9 +5922,269 @@ dependencies = [
 name = "semio-framework-repo-cli"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-repo-codebase",
+ "semio-framework-repo-contributors",
+ "semio-framework-repo-dashboard",
+ "semio-framework-repo-events",
+ "semio-framework-repo-goals",
+ "semio-framework-repo-graphql",
+ "semio-framework-repo-hooks",
+ "semio-framework-repo-identity",
+ "semio-framework-repo-languages",
+ "semio-framework-repo-mcp",
+ "semio-framework-repo-metrics",
+ "semio-framework-repo-model",
+ "semio-framework-repo-move",
+ "semio-framework-repo-providers",
+ "semio-framework-repo-search",
+ "semio-framework-repo-statutes",
+ "semio-framework-repo-test-runner",
+ "semio-framework-repo-tickets",
+ "semio-framework-repo-todos",
+ "semio-framework-repo-tree",
+ "semio-framework-repo-workspace",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-repo-codebase"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-repo-identity",
+ "semio-framework-repo-languages",
+ "semio-framework-repo-model",
+ "semio-framework-repo-workspace",
+ "semio-framework-repo-yaml",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-repo-contributors"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-repo-events",
+ "semio-framework-repo-identity",
+ "semio-framework-repo-model",
+ "semio-framework-repo-workspace",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-repo-coordinator"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-repo-events",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-repo-dashboard"
+version = "0.1.0"
+dependencies = [
  "semio-framework-dispatch-macros",
+ "semio-framework-repo-codebase",
+ "semio-framework-repo-events",
+ "semio-framework-repo-goals",
+ "semio-framework-repo-model",
+ "semio-framework-repo-providers",
+ "semio-framework-repo-statutes",
+ "semio-framework-repo-tickets",
+ "semio-framework-repo-tree",
  "semio-framework-ui",
  "semio-framework-ui-styling",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-repo-events"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-repo-goals"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-repo-events",
+ "semio-framework-repo-identity",
+ "semio-framework-repo-model",
+ "semio-framework-repo-workspace",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-repo-graphql"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-repo-identity",
+ "semio-framework-repo-model",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-repo-hooks"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-repo-codebase",
+ "semio-framework-repo-model",
+ "semio-framework-repo-providers",
+ "semio-framework-repo-test-runner",
+ "semio-framework-repo-workspace",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-repo-identity"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-repo-languages"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-repo-model",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-repo-mcp"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-repo-metrics"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-repo-model",
+ "semio-framework-repo-workspace",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-repo-model"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-repo-identity",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-repo-move"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-repo-events",
+ "semio-framework-repo-identity",
+ "semio-framework-repo-languages",
+ "semio-framework-repo-model",
+ "semio-framework-repo-workspace",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-repo-providers"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dispatch-macros",
+ "semio-framework-repo-workspace",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-repo-search"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-repo-statutes"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-repo-languages",
+ "semio-framework-repo-model",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-repo-test-runner"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-repo-model",
+ "semio-framework-repo-workspace",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-repo-tickets"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-repo-events",
+ "semio-framework-repo-identity",
+ "semio-framework-repo-model",
+ "semio-framework-repo-providers",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-repo-todos"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-repo-events",
+ "semio-framework-repo-identity",
+ "semio-framework-repo-model",
+ "semio-framework-repo-workspace",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-repo-tree"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-repo-identity",
+ "semio-framework-repo-model",
+ "semio-framework-repo-statutes",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-repo-workspace"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-repo-yaml"
+version = "0.1.0"
+dependencies = [
  "serde",
  "serde_json",
 ]

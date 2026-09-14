@@ -1,0 +1,22 @@
+[package]
+name = "semio-framework-repo-tree"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "semio repo tree: monorepo/goal/statute/territory tree projection, parent-id propagation, filtering, deterministic sorting, text/markdown/Mermaid rendering and the content-digest tree cache"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+semio-framework-repo-model = { path = "../../../📐️model/📦️packages/🦀️rust" }
+semio-framework-repo-identity = { path = "../../../🪪️identity/📦️packages/🦀️rust" }
+semio-framework-repo-statutes = { path = "../../../📜️statutes/📦️packages/🦀️rust" }

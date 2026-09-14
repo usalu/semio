@@ -1,0 +1,12 @@
+{
+  "title": "Print Visualization Library",
+  "emoji": "📊️",
+  "status": "closed",
+  "description": "Turn the print product's visualization layer into a full, d3-like static component library in semio style: every visualization component configurable through a documented key-value API, every component covered by a language-agnostic test plus a third-party cross-validation, taxonomy-complete coverage, and zero-touch cross-platform build, test and launch commands.",
+  "goal": "🎯️r2602🎯️updateddocs🎯️updateduserdocs🎯️updatedexamples",
+  "sessions": [
+    "⚪1fd063ff-99f3-4043-b5e2-0a7a1d24d32a"
+  ],
+  "note": "Ticket bookkeeping done manually on disk: repo MCP failed to connect at session start (2026-09-05).",
+  "summary": "Rebuilt the print visualization layer into semio-viz, a d3-like grammar-of-graphics library in LaTeX3 with a TypeScript twin. 1,966 taxonomy leaves are covered exactly once by 1,738 catalogue chart kinds over 246 registered families in 80 semio-viz packages (kernel: data, transform, scale, format, coordinate, mark, shape, layout with 30 algorithms, guide, annotation, label, facet, composition, plot grammar, theme, probe; namespaces per taxonomy section 76). Every family is option-driven with schema-documented keys in English and German; every kind renders distinctly. 106 language-neutral Gherkin cases (330+ scenarios) run on the repo test platform with 30 third-party oracles (d3 modules, dagre, mathjs, jstat, fft.js, gl-matrix, suncalc, ajv, markdown-it) plus the TypeScript twin as cross-implementation oracle: fundamental 17/17, parity quick 550/550, parity long 630/630, 0 contract breaches. Generated catalogue packages and gallery documents, a 172-page bilingual API reference, README, nx targets and launch entries. Toolchain bootstrapped on Windows (generated layer, bun 1.4.2, tectonic in-process extraction). Exhaustive 320-variant gallery sweep left running (documented); two small follow-ups noted for a separate ticket."
+}

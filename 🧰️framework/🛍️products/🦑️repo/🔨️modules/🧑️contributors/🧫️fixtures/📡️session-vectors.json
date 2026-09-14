@@ -1,0 +1,78 @@
+{
+  "schema": "semio.repo.contributors.session-vectors/1",
+  "$comment": "📡️ Session directories stated as their own files and the age of their newest write, one per branch of the kind derivation: a session.json that records an agent-ended event, one that records other events and was written recently, one that records other events and went silent, one whose session.json is unreadable so the file names decide, one with an agent-ended file name and no session.json, one that is empty, and one whose second and client can only be found by reading an event file. These are specification vectors, not recorded data — this checkout carries no session directory to copy — which is what `repo-contributors-sessions` records.",
+  "sessions": [
+    {
+      "year": 26,
+      "month": 9,
+      "day": 6,
+      "uuid": "0000-completed-by-event",
+      "ageSeconds": 10,
+      "files": {
+        "session.json": "{\"id\":\"0000-completed-by-event\",\"client\":\"claude-code\",\"second\":\"2026-09-06T04:20:00Z\",\"checkpoint\":\"5e03e56997ce369da4d8873d8004bb1947f6816b\",\"events\":[{\"event\":{\"kind\":\"agent.started\",\"client\":\"claude-code\",\"second\":\"2026-09-06T04:20:00Z\"}},{\"event\":{\"kind\":\"agent.ended\",\"client\":\"claude-code\",\"second\":\"2026-09-06T04:41:00Z\"}}]}"
+      }
+    },
+    {
+      "year": 26,
+      "month": 9,
+      "day": 6,
+      "uuid": "1111-running-recent-write",
+      "ageSeconds": 60,
+      "files": {
+        "session.json": "{\"id\":\"1111-running-recent-write\",\"client\":\"codex\",\"events\":[{\"event\":{\"kind\":\"tool.used\",\"client\":\"codex\",\"second\":\"2026-09-06T04:31:00Z\"}},{\"event\":{\"kind\":\"tool.used\",\"client\":\"codex\",\"second\":\"2026-09-06T04:30:00Z\"}}]}"
+      }
+    },
+    {
+      "year": 26,
+      "month": 9,
+      "day": 5,
+      "uuid": "2222-interrupted-went-silent",
+      "ageSeconds": 7200,
+      "files": {
+        "session.json": "{\"id\":\"2222-interrupted-went-silent\",\"events\":[{\"event\":{\"kind\":\"tool.used\",\"second\":\"2026-09-05T22:02:04Z\"}}]}"
+      }
+    },
+    {
+      "year": 26,
+      "month": 9,
+      "day": 5,
+      "uuid": "3333-unreadable-meta",
+      "ageSeconds": 30,
+      "files": {
+        "session.json": "{ this is not json",
+        "0001-tool-used.json": "{\"event\":{\"kind\":\"tool.used\",\"client\":\"cursor-chat\",\"second\":\"2026-09-05T19:04:38Z\"}}"
+      }
+    },
+    {
+      "year": 26,
+      "month": 9,
+      "day": 4,
+      "uuid": "4444-completed-by-file-name",
+      "ageSeconds": 86400,
+      "files": {
+        "0001-agent-started.json": "{\"event\":{\"kind\":\"agent.started\",\"client\":\"droid\",\"second\":\"2026-09-04T01:18:32Z\"}}",
+        "0002-agent-ended.json": "{\"event\":{\"kind\":\"agent.ended\",\"client\":\"droid\",\"second\":\"2026-09-04T01:59:00Z\"}}"
+      }
+    },
+    {
+      "year": 26,
+      "month": 9,
+      "day": 4,
+      "uuid": "5555-empty-directory",
+      "ageSeconds": null,
+      "files": {}
+    },
+    {
+      "year": 26,
+      "month": 9,
+      "day": 3,
+      "uuid": "6666-second-from-event-files",
+      "ageSeconds": 172800,
+      "files": {
+        "0002-later.json": "{\"event\":{\"kind\":\"tool.used\",\"client\":\"windsurf-chat\",\"second\":\"2026-09-03T18:13:43Z\"}}",
+        "0001-earlier.json": "{\"event\":{\"kind\":\"tool.used\",\"second\":\"2026-09-03T08:00:00Z\"}}",
+        "0003-not-json.txt": "not a json file at all"
+      }
+    }
+  ]
+}

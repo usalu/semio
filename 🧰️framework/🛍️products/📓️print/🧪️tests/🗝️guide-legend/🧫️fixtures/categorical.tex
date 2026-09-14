@@ -1,0 +1,29 @@
+% 🧪 Probe fixture of case guide-legend, scenarios categorical-entries and vertical-layout.
+% A vertical swatch legend over an ordinal scale: the entries come from the scale's domain, the
+% origins from the legend's own stacking rule.
+\documentclass{article}
+\usepackage{semio-viz-guide}
+\ExplSyntaxOn
+\NewDocumentEnvironment { ProbeFrame } { }
+  {
+    \bool_set_true:N \l_semio_viz_in_figure_bool
+    \fp_set:Nn \l_semio_viz_width_fp { 80 }
+    \fp_set:Nn \l_semio_viz_height_fp { 40 }
+    \fp_set:Nn \l_semio_viz_pad_fp { 8 }
+    \begin{tikzpicture}[ x=1mm , y=1mm ]
+  }
+  { \end{tikzpicture} \bool_set_false:N \l_semio_viz_in_figure_bool }
+\ExplSyntaxOff
+\begin{document}
+\SemioVizProbeBegin{guide-legend}{categorical-entries}
+\SemioVizScale{series}{ordinal}{A,B,C,D,E}{0,1}
+\ExplSyntaxOn
+\semio_viz_guide_domain_items:nN { series } \l_semio_viz_guide_ticks_seq
+\semio_viz_probe_values:nx { legend/entries } { \seq_use:Nn \l_semio_viz_guide_ticks_seq { , } }
+\ExplSyntaxOff
+\SemioVizProbeBegin{guide-legend}{vertical-layout}
+\SemioVizProbeOn
+\begin{ProbeFrame}
+\SemioVizLegend[scale=series,kind=swatch,orient=vertical,at={4,36},swatchSize=2.6,itemGap=1.2]
+\end{ProbeFrame}
+\end{document}

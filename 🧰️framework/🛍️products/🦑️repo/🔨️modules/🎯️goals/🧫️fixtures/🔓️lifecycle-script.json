@@ -1,0 +1,26 @@
+{
+  "schema": "semio.repo.goals.lifecycle-script/1",
+  "$comment": "🔓️ An ordered lifecycle replayed against an in-memory store, an in-memory management provider that hands out deterministic milestone and issue numbers, and an in-memory emitter. Every step states only what a caller supplies; what the step produces — the identifier, the stored document, the provider calls, the emitted envelopes and the refusals — is what the implementations have to agree on. The refusing steps are deliberate: a blank member, an unknown model, a duplicate identifier, a slug used as a title, closing a closed goal and reopening an open one.",
+  "author": "ueli",
+  "repoUrl": "https://github.com/usalu/semio",
+  "firstNumber": 100,
+  "steps": [
+    { "op": "create", "input": { "title": "Rust Repo Implementation", "description": "Every Go domain gets a Rust twin", "prompt": "Port the repo product to Rust", "dueDate": "2026-12-31", "llm": "opus-4-5", "client": "claude-code" } },
+    { "op": "create", "input": { "title": "Goals Module", "description": "The goal aggregate", "prompt": "Port the goals module", "dueDate": "2026-10-01", "llm": "sonnet-4-5", "client": "claude-code", "parent": "RUST-REPO-IMPLEMENTATION" } },
+    { "op": "create", "input": { "title": "Goal Tree Rendering", "description": "The goal and ticket forest", "prompt": "Port the tree renderer", "dueDate": "2026-10-15", "llm": "sonnet-4-5", "effort": "high", "client": "claude-code", "parent": "RUST-REPO-IMPLEMENTATION/GOALS-MODULE" } },
+    { "op": "create", "input": { "title": "", "description": "d", "prompt": "p", "dueDate": "2026-10-01", "llm": "opus-4-5", "client": "claude-code" } },
+    { "op": "create", "input": { "title": "Missing Prompt", "description": "d", "prompt": "", "dueDate": "2026-10-01", "llm": "opus-4-5", "client": "claude-code" } },
+    { "op": "create", "input": { "title": "Unknown Model", "description": "d", "prompt": "p", "dueDate": "2026-10-01", "llm": "not-a-model", "client": "claude-code" } },
+    { "op": "create", "input": { "title": "Goals Module", "description": "A second one", "prompt": "p", "dueDate": "2026-10-01", "llm": "opus-4-5", "client": "claude-code", "parent": "RUST-REPO-IMPLEMENTATION" } },
+    { "op": "read", "input": { "id": "RUST-REPO-IMPLEMENTATION/GOALS-MODULE" } },
+    { "op": "change", "input": { "id": "RUST-REPO-IMPLEMENTATION/GOALS-MODULE", "title": "Goals And Contributors Module", "description": "The goal and contributor aggregates" } },
+    { "op": "change", "input": { "id": "RUST-REPO-IMPLEMENTATION", "title": "RUST-REPO-IMPLEMENTATION" } },
+    { "op": "change", "input": { "id": "RUST-REPO-IMPLEMENTATION", "dueDate": "2027-01-31", "llm": "opus-4-6" } },
+    { "op": "close", "input": { "id": "RUST-REPO-IMPLEMENTATION/GOALS-AND-CONTRIBUTORS-MODULE", "summary": "Both aggregates ported" } },
+    { "op": "close", "input": { "id": "RUST-REPO-IMPLEMENTATION/GOALS-AND-CONTRIBUTORS-MODULE", "summary": "Again" } },
+    { "op": "reopen", "input": { "id": "RUST-REPO-IMPLEMENTATION/GOALS-AND-CONTRIBUTORS-MODULE", "prompt": "One more pass", "client": "claude-code", "llm": "opus-4-6", "effort": "max" } },
+    { "op": "reopen", "input": { "id": "RUST-REPO-IMPLEMENTATION/GOALS-AND-CONTRIBUTORS-MODULE", "prompt": "Yet again", "client": "claude-code", "llm": "opus-4-6" } },
+    { "op": "delete", "input": { "id": "RUST-REPO-IMPLEMENTATION/GOALS-AND-CONTRIBUTORS-MODULE" } },
+    { "op": "read", "input": { "id": "RUST-REPO-IMPLEMENTATION/GOALS-AND-CONTRIBUTORS-MODULE" } }
+  ]
+}

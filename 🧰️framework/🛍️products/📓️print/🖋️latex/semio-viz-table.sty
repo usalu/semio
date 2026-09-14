@@ -1,0 +1,508 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-table}[2026/09/05 v0.3.0 semio viz namespace table families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-charts-distribution}
+\RequirePackage{semio-viz-format}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 🔑 Table keys, `semio / viz / family / table`.
+% columns  (clist, default `label,estimate,lower,upper`) columns rendered left to right
+% headers  (clist, default empty)   header labels; empty reuses the column names
+% cells    (clist, default empty)   per-column cell renderer, one of
+%                                   `text|number|bar|heat|spark|icon|highlight|rank|interval|mini`;
+%                                   missing entries fall back to `text` for the first column and
+%                                   `number` for the rest
+% rows     (int, default 0)         maximum number of body rows; 0 draws every row
+% rowheight (mm, default 4.2)       height of one body row
+% headrule (bool, default true)     rule below the header row
+% zebra    (bool, default false)    tint every second body row
+% sortby   (column, default empty)  column the rows are sorted by, descending
+% total    (bool, default false)    append a summary row of the column totals
+% decimals (int, default 2)         digits printed by the number and interval cells
+\clist_new:N \l_semio_viz_tab_columns_clist
+\clist_new:N \l_semio_viz_tab_headers_clist
+\clist_new:N \l_semio_viz_tab_cells_clist
+\int_new:N \l_semio_viz_tab_rows_int
+\fp_new:N \l_semio_viz_tab_rowheight_fp
+\bool_new:N \l_semio_viz_tab_headrule_bool
+\bool_new:N \l_semio_viz_tab_zebra_bool
+\tl_new:N \l_semio_viz_tab_sortby_tl
+\bool_new:N \l_semio_viz_tab_total_bool
+\int_new:N \l_semio_viz_tab_decimals_int
+
+% preset   (choice, default `plain`) one of `plain|statistical|comparison|crosstab|pivot|
+%                                   frequency|contingency|heatmapped|bar-in-cell|sparkline|icon|
+%                                   highlight|ranked|league|confidence|mini|matrix`; sets the
+%                                   columns, headers, cell renderers and the summary row, and is
+%                                   applied before the explicit keys so they always win
+\tl_new:N \l_semio_viz_tab_preset_tl
+
+\keys_define:nn { semio / viz / family / table } {
+  preset    .code:n = { \semio_viz_tab_preset:n {#1} },
+  columns   .clist_set:N = \l_semio_viz_tab_columns_clist,
+  headers   .clist_set:N = \l_semio_viz_tab_headers_clist,
+  cells     .clist_set:N = \l_semio_viz_tab_cells_clist,
+  rows      .int_set:N = \l_semio_viz_tab_rows_int,
+  rowheight .fp_set:N = \l_semio_viz_tab_rowheight_fp,
+  headrule  .bool_set:N = \l_semio_viz_tab_headrule_bool,
+  zebra     .bool_set:N = \l_semio_viz_tab_zebra_bool,
+  sortby    .tl_set:N = \l_semio_viz_tab_sortby_tl,
+  total     .bool_set:N = \l_semio_viz_tab_total_bool,
+  decimals  .int_set:N = \l_semio_viz_tab_decimals_int,
+  unknown   .code:n = { },
+}
+% 🧾 Applies one of the table presets: the column list, header labels, cell renderers and extras.
+\cs_new_protected:Npn \semio_viz_tab_preset:n #1 {
+  \tl_set:Nn \l_semio_viz_tab_preset_tl {#1}
+  \str_case:nnF {#1}
+    {
+      { statistical }
+        {
+          \clist_set:Nn \l_semio_viz_tab_columns_clist { label, estimate, lower, upper, weight }
+          \clist_set:Nn \l_semio_viz_tab_cells_clist { text, number, number, number, number }
+          \bool_set_true:N \l_semio_viz_tab_total_bool
+        }
+      { comparison }
+        {
+          \clist_set:Nn \l_semio_viz_tab_columns_clist { label, estimate, weight }
+          \clist_set:Nn \l_semio_viz_tab_cells_clist { text, bar, bar }
+        }
+      { crosstab }
+        {
+          \clist_set:Nn \l_semio_viz_tab_columns_clist { label, lower, estimate, upper }
+          \clist_set:Nn \l_semio_viz_tab_cells_clist { text, number, number, number }
+          \bool_set_true:N \l_semio_viz_tab_total_bool
+          \bool_set_true:N \l_semio_viz_tab_zebra_bool
+        }
+      { pivot }
+        {
+          \clist_set:Nn \l_semio_viz_tab_columns_clist { label, weight, estimate }
+          \clist_set:Nn \l_semio_viz_tab_cells_clist { text, number, heat }
+          \bool_set_true:N \l_semio_viz_tab_total_bool
+        }
+      { frequency }
+        {
+          \clist_set:Nn \l_semio_viz_tab_columns_clist { label, weight }
+          \clist_set:Nn \l_semio_viz_tab_cells_clist { text, bar }
+          \bool_set_true:N \l_semio_viz_tab_total_bool
+          \int_set:Nn \l_semio_viz_tab_decimals_int { 0 }
+        }
+      { contingency }
+        {
+          \clist_set:Nn \l_semio_viz_tab_columns_clist { label, lower, upper, weight }
+          \clist_set:Nn \l_semio_viz_tab_cells_clist { text, number, number, number }
+          \bool_set_true:N \l_semio_viz_tab_total_bool
+          \int_set:Nn \l_semio_viz_tab_decimals_int { 0 }
+        }
+      { heatmapped }
+        {
+          \clist_set:Nn \l_semio_viz_tab_columns_clist { label, estimate, lower, upper }
+          \clist_set:Nn \l_semio_viz_tab_cells_clist { text, heat, heat, heat }
+        }
+      { bar-in-cell }
+        {
+          \clist_set:Nn \l_semio_viz_tab_columns_clist { label, estimate, weight }
+          \clist_set:Nn \l_semio_viz_tab_cells_clist { text, bar, number }
+        }
+      { sparkline }
+        {
+          \clist_set:Nn \l_semio_viz_tab_columns_clist { label, estimate, weight }
+          \clist_set:Nn \l_semio_viz_tab_cells_clist { text, spark, number }
+        }
+      { icon }
+        {
+          \clist_set:Nn \l_semio_viz_tab_columns_clist { label, weight, estimate }
+          \clist_set:Nn \l_semio_viz_tab_cells_clist { text, icon, number }
+        }
+      { highlight }
+        {
+          \clist_set:Nn \l_semio_viz_tab_columns_clist { label, estimate, weight }
+          \clist_set:Nn \l_semio_viz_tab_cells_clist { text, highlight, number }
+        }
+      { ranked }
+        {
+          \clist_set:Nn \l_semio_viz_tab_columns_clist { label, weight, estimate }
+          \clist_set:Nn \l_semio_viz_tab_cells_clist { rank, text, number }
+          \tl_set:Nn \l_semio_viz_tab_sortby_tl { weight }
+        }
+      { league }
+        {
+          \clist_set:Nn \l_semio_viz_tab_columns_clist { label, weight, estimate, upper }
+          \clist_set:Nn \l_semio_viz_tab_cells_clist { rank, text, number, bar }
+          \tl_set:Nn \l_semio_viz_tab_sortby_tl { estimate }
+          \bool_set_true:N \l_semio_viz_tab_zebra_bool
+        }
+      { confidence }
+        {
+          \clist_set:Nn \l_semio_viz_tab_columns_clist { label, estimate, lower, upper }
+          \clist_set:Nn \l_semio_viz_tab_cells_clist { text, number, number, interval }
+        }
+      { mini }
+        {
+          \clist_set:Nn \l_semio_viz_tab_columns_clist { label, estimate, weight, upper }
+          \clist_set:Nn \l_semio_viz_tab_cells_clist { text, mini, icon, bar }
+        }
+      { matrix }
+        {
+          \clist_set:Nn \l_semio_viz_tab_columns_clist { label, lower, estimate, upper, weight }
+          \clist_set:Nn \l_semio_viz_tab_cells_clist { text, heat, heat, heat, heat }
+        }
+    }
+    {
+      \clist_set:Nn \l_semio_viz_tab_columns_clist { label, estimate, lower, upper }
+      \clist_clear:N \l_semio_viz_tab_cells_clist
+    }
+}
+%endregion 🔖️Keys
+
+%region 🔖️Families
+\seq_new:N \l_semio_viz_tab_cols_seq
+\seq_new:N \l_semio_viz_tab_kinds_seq
+\seq_new:N \l_semio_viz_tab_order_seq
+\seq_new:N \l_semio_viz_tab_min_seq
+\seq_new:N \l_semio_viz_tab_max_seq
+\seq_new:N \l_semio_viz_tab_col_seq
+\int_new:N \l_semio_viz_tab_n_int
+\int_new:N \l_semio_viz_tab_c_int
+\fp_new:N \l_semio_viz_tab_x_fp
+\fp_new:N \l_semio_viz_tab_y_fp
+\fp_new:N \l_semio_viz_tab_cw_fp
+\tl_new:N \l_semio_viz_tab_kind_tl
+\tl_new:N \l_semio_viz_tab_cell_tl
+
+% 📋 Table: the plain, statistical, comparison, crosstab, pivot, frequency, contingency,
+% heatmapped, bar-in-cell, sparkline, icon, highlight, ranked, league, interval and
+% mini-visualisation tables, all one family with per-column cell renderers.
+\SemioVizFamily { table } {
+  \semio_viz_cb_reset:
+  \tl_set:Nn \l_semio_viz_cb_data_tl { demo-interval }
+  \tl_set:Nn \l_semio_viz_tab_preset_tl { plain }
+  \clist_set:Nn \l_semio_viz_tab_columns_clist { label, estimate, lower, upper }
+  \clist_clear:N \l_semio_viz_tab_headers_clist
+  \clist_clear:N \l_semio_viz_tab_cells_clist
+  \int_zero:N \l_semio_viz_tab_rows_int
+  \fp_set:Nn \l_semio_viz_tab_rowheight_fp { 4.2 }
+  \bool_set_true:N \l_semio_viz_tab_headrule_bool
+  \bool_set_false:N \l_semio_viz_tab_zebra_bool
+  \tl_clear:N \l_semio_viz_tab_sortby_tl
+  \bool_set_false:N \l_semio_viz_tab_total_bool
+  \int_set:Nn \l_semio_viz_tab_decimals_int { 2 }
+  \keys_set:nn { semio / viz / family / common } {#1}
+  \keys_set:nn { semio / viz / family / table } {#1}
+  \semio_viz_cb_frame:
+  \semio_viz_tab_render:
+}
+
+% 📋 Runs the table family once its keys are set.
+\cs_new_protected:Npn \semio_viz_tab_render: {
+  \seq_set_from_clist:NN \l_semio_viz_tab_cols_seq \l_semio_viz_tab_columns_clist
+  \seq_set_from_clist:NN \l_semio_viz_tab_kinds_seq \l_semio_viz_tab_cells_clist
+  \int_set:Nn \l_semio_viz_tab_c_int { \seq_count:N \l_semio_viz_tab_cols_seq }
+  \semio_viz_table_nrows:nN { \l_semio_viz_cb_data_tl } \l_semio_viz_tab_n_int
+  \int_compare:nNnT { \l_semio_viz_tab_rows_int } > { 0 }
+    {
+      \int_set:Nn \l_semio_viz_tab_n_int
+        { \int_min:nn { \l_semio_viz_tab_n_int } { \l_semio_viz_tab_rows_int } }
+    }
+  \semio_viz_tab_ranges:
+  \semio_viz_tab_order:
+  \fp_set:Nn \l_semio_viz_tab_cw_fp
+    { ( \l_semio_viz_cb_xb_fp - \l_semio_viz_cb_xa_fp ) / \l_semio_viz_tab_c_int }
+  \fp_set_eq:NN \l_semio_viz_tab_y_fp \l_semio_viz_cb_yb_fp
+  \semio_viz_tab_header:
+  \int_step_inline:nn { \l_semio_viz_tab_n_int } { \semio_viz_tab_row:n {##1} }
+  \bool_if:NT \l_semio_viz_tab_total_bool { \semio_viz_tab_total: }
+}
+
+% 📐 Column ranges of the numeric columns, used by the bar, heat and mini cells.
+\cs_new_protected:Npn \semio_viz_tab_ranges: {
+  \seq_clear:N \l_semio_viz_tab_min_seq
+  \seq_clear:N \l_semio_viz_tab_max_seq
+  \seq_map_inline:Nn \l_semio_viz_tab_cols_seq {
+    \semio_viz_tab_numeric:n {##1}
+    \semio_viz_tr_stat_min:NN \l_semio_viz_tab_col_seq \l_semio_viz_cb_a_fp
+    \semio_viz_tr_stat_max:NN \l_semio_viz_tab_col_seq \l_semio_viz_cb_b_fp
+    \seq_put_right:Nx \l_semio_viz_tab_min_seq { \fp_eval:n { \l_semio_viz_cb_a_fp } }
+    \seq_put_right:Nx \l_semio_viz_tab_max_seq { \fp_eval:n { \l_semio_viz_cb_b_fp } }
+  }
+}
+
+% 🔢 Fills \l_semio_viz_tab_col_seq with the numeric cells of column #1, non-numeric cells as zero.
+\cs_new_protected:Npn \semio_viz_tab_numeric:n #1 {
+  \seq_clear:N \l_semio_viz_tab_col_seq
+  \int_step_inline:nn { \l_semio_viz_tab_n_int } {
+    \semio_viz_table_cell:nnnN { \l_semio_viz_cb_data_tl } {##1} {#1} \l_semio_viz_tab_cell_tl
+    \exp_args:Nno \regex_match:nnTF { \A -? [0-9]+ (\.[0-9]+)? \Z }
+      { \l_semio_viz_tab_cell_tl }
+      { \seq_put_right:Nx \l_semio_viz_tab_col_seq { \fp_eval:n { \l_semio_viz_tab_cell_tl } } }
+      { \seq_put_right:Nn \l_semio_viz_tab_col_seq { 0 } }
+  }
+}
+
+% ↕️ Row order, descending by the sortby column when one is named.
+\cs_new_protected:Npn \semio_viz_tab_order: {
+  \seq_clear:N \l_semio_viz_tab_order_seq
+  \int_step_inline:nn { \l_semio_viz_tab_n_int }
+    { \seq_put_right:Nn \l_semio_viz_tab_order_seq {##1} }
+  \tl_if_empty:NF \l_semio_viz_tab_sortby_tl {
+    \semio_viz_tab_numeric:V \l_semio_viz_tab_sortby_tl
+    \seq_sort:Nn \l_semio_viz_tab_order_seq
+      {
+        \fp_compare:nTF
+          { \seq_item:Nn \l_semio_viz_tab_col_seq {##1} < \seq_item:Nn \l_semio_viz_tab_col_seq {##2} }
+          { \sort_return_swapped: } { \sort_return_same: }
+      }
+  }
+}
+\cs_generate_variant:Nn \semio_viz_tab_numeric:n { V }
+
+% 🧾 Header row plus the optional rule below it.
+\cs_new_protected:Npn \semio_viz_tab_header: {
+  \int_zero:N \l_semio_viz_cb_j_int
+  \seq_map_inline:Nn \l_semio_viz_tab_cols_seq {
+    \int_incr:N \l_semio_viz_cb_j_int
+    \clist_if_empty:NTF \l_semio_viz_tab_headers_clist
+      { \tl_set:Nn \l_semio_viz_tab_cell_tl {##1} }
+      {
+        \tl_set:Nx \l_semio_viz_tab_cell_tl
+          { \clist_item:Nn \l_semio_viz_tab_headers_clist { \l_semio_viz_cb_j_int } }
+      }
+    \semio_viz_g_text:nnnn
+      { \l_semio_viz_cb_xa_fp + ( \l_semio_viz_cb_j_int - 1 ) * \l_semio_viz_tab_cw_fp }
+      { \l_semio_viz_tab_y_fp } { west } { \l_semio_viz_tab_cell_tl }
+  }
+  \fp_set:Nn \l_semio_viz_tab_y_fp
+    { \l_semio_viz_tab_y_fp - \l_semio_viz_tab_rowheight_fp * 0.6 }
+  \bool_if:NT \l_semio_viz_tab_headrule_bool {
+    \semio_viz_g_line:nnnnn { \l_semio_viz_cb_xa_fp } { \l_semio_viz_tab_y_fp }
+      { \l_semio_viz_cb_xb_fp } { \l_semio_viz_tab_y_fp }
+      { draw = semio-chrome-border-emphasized , line~width = \semio@stroke@hairline }
+  }
+  \fp_set:Nn \l_semio_viz_tab_y_fp
+    { \l_semio_viz_tab_y_fp - \l_semio_viz_tab_rowheight_fp * 0.4 }
+}
+
+% 🧾 One body row: #1 is the position in the row order.
+\cs_new_protected:Npn \semio_viz_tab_row:n #1 {
+  \int_set:Nn \l_semio_viz_cb_i_int { \seq_item:Nn \l_semio_viz_tab_order_seq {#1} }
+  \fp_set:Nn \l_semio_viz_tab_y_fp
+    { \l_semio_viz_tab_y_fp - \l_semio_viz_tab_rowheight_fp }
+  \bool_if:NT \l_semio_viz_tab_zebra_bool {
+    \int_compare:nNnT { \int_mod:nn {#1} { 2 } } = { 0 } {
+      \semio_viz_g_rect:nnnnn { \l_semio_viz_cb_xa_fp } { \l_semio_viz_tab_y_fp - 0.6 }
+        { \l_semio_viz_cb_xb_fp - \l_semio_viz_cb_xa_fp }
+        { \l_semio_viz_tab_rowheight_fp }
+        { fill = semio-chrome-panel , fill~opacity = 0.5 , draw = none }
+    }
+  }
+  \int_zero:N \l_semio_viz_cb_j_int
+  \seq_map_inline:Nn \l_semio_viz_tab_cols_seq {
+    \int_incr:N \l_semio_viz_cb_j_int
+    \semio_viz_tab_kind:
+    \fp_set:Nn \l_semio_viz_tab_x_fp
+      { \l_semio_viz_cb_xa_fp + ( \l_semio_viz_cb_j_int - 1 ) * \l_semio_viz_tab_cw_fp }
+    \semio_viz_table_cell:nnnN { \l_semio_viz_cb_data_tl } { \l_semio_viz_cb_i_int } {##1}
+      \l_semio_viz_tab_cell_tl
+    \semio_viz_tab_cell:n {#1}
+  }
+}
+
+% 🎛️ Resolves the renderer of the current column into \l_semio_viz_tab_kind_tl.
+\cs_new_protected:Npn \semio_viz_tab_kind: {
+  \int_compare:nNnTF { \seq_count:N \l_semio_viz_tab_kinds_seq } < { \l_semio_viz_cb_j_int }
+    {
+      \int_compare:nNnTF { \l_semio_viz_cb_j_int } = { 1 }
+        { \tl_set:Nn \l_semio_viz_tab_kind_tl { text } }
+        { \tl_set:Nn \l_semio_viz_tab_kind_tl { number } }
+    }
+    {
+      \tl_set:Nx \l_semio_viz_tab_kind_tl
+        { \seq_item:Nn \l_semio_viz_tab_kinds_seq { \l_semio_viz_cb_j_int } }
+    }
+}
+
+% 🧾 Draws the current cell in the resolved renderer; #1 is the body row position.
+\cs_new_protected:Npn \semio_viz_tab_cell:n #1 {
+  \str_case:VnF \l_semio_viz_tab_kind_tl
+    {
+      { number } { \semio_viz_tab_number: }
+      { bar } { \semio_viz_tab_bar: }
+      { heat } { \semio_viz_tab_heat: }
+      { spark } { \semio_viz_tab_spark: }
+      { mini } { \semio_viz_tab_spark: }
+      { icon } { \semio_viz_tab_icon: }
+      { highlight } { \semio_viz_tab_highlight: }
+      { rank } { \semio_viz_tab_rank:n {#1} }
+      { interval } { \semio_viz_tab_interval: }
+    }
+    {
+      \semio_viz_g_text:nnnn { \l_semio_viz_tab_x_fp } { \l_semio_viz_tab_y_fp } { west }
+        { \l_semio_viz_tab_cell_tl }
+    }
+}
+
+% 🔢 Right-aligned number with the configured number of decimals.
+\cs_new_protected:Npn \semio_viz_tab_number: {
+  \semio_viz_g_text:nnnn
+    { \l_semio_viz_tab_x_fp + \l_semio_viz_tab_cw_fp - 1.2 } { \l_semio_viz_tab_y_fp } { east }
+    {
+      \fp_to_decimal:n
+        { round ( \l_semio_viz_tab_cell_tl , \l_semio_viz_tab_decimals_int ) }
+    }
+}
+
+% 📊 In-cell bar scaled by the column range.
+\cs_new_protected:Npn \semio_viz_tab_bar: {
+  \semio_viz_tab_share:
+  \semio_viz_g_rect:nnnnn { \l_semio_viz_tab_x_fp } { \l_semio_viz_tab_y_fp - 0.9 }
+    {
+      ( \l_semio_viz_tab_cw_fp - 1.4 ) * \l_semio_viz_cb_a_fp
+    }
+    { \l_semio_viz_tab_rowheight_fp * 0.55 }
+    { fill = \semio_viz_palette:n { 1 } , fill~opacity = 0.8 , draw = none }
+}
+
+% 🔥 Heat-shaded cell background plus the value.
+\cs_new_protected:Npn \semio_viz_tab_heat: {
+  \semio_viz_tab_share:
+  \semio_viz_g_rect:nnnnn { \l_semio_viz_tab_x_fp } { \l_semio_viz_tab_y_fp - 1.1 }
+    { \l_semio_viz_tab_cw_fp - 1 } { \l_semio_viz_tab_rowheight_fp * 0.8 }
+    {
+      fill = \semio_viz_palette:n { 1 } ,
+      fill~opacity = \fp_eval:n { 0.12 + 0.7 * \l_semio_viz_cb_a_fp } , draw = none
+    }
+  \semio_viz_tab_number:
+}
+
+% 〰️ Sparkline of the whole column with the current row marked.
+\cs_new_protected:Npn \semio_viz_tab_spark: {
+  \semio_viz_tab_share:
+  \tl_clear:N \l_semio_viz_cb_points_tl
+  \int_zero:N \l_semio_viz_cb_series_int
+  \seq_map_inline:Nn \l_semio_viz_tab_col_seq {
+    \int_incr:N \l_semio_viz_cb_series_int
+    \tl_put_right:Nx \l_semio_viz_cb_points_tl
+      {
+        \tl_if_empty:NF \l_semio_viz_cb_points_tl { , }
+        \fp_eval:n
+          {
+            \l_semio_viz_tab_x_fp
+            + ( \l_semio_viz_tab_cw_fp - 1.4 ) * ( \l_semio_viz_cb_series_int - 1 )
+              / max ( 1 , \seq_count:N \l_semio_viz_tab_col_seq - 1 )
+          } ,
+        \fp_eval:n
+          {
+            \l_semio_viz_tab_y_fp - 0.9
+            + \l_semio_viz_tab_rowheight_fp * 0.6
+              * ( ##1 - \seq_item:Nn \l_semio_viz_tab_min_seq { \l_semio_viz_cb_j_int } )
+              / max ( 1e-9 ,
+                      \seq_item:Nn \l_semio_viz_tab_max_seq { \l_semio_viz_cb_j_int }
+                      - \seq_item:Nn \l_semio_viz_tab_min_seq { \l_semio_viz_cb_j_int } )
+          }
+      }
+  }
+  \semio_viz_g_polyline:Vn \l_semio_viz_cb_points_tl
+    { draw = \semio_viz_palette:n { 2 } , line~width = \semio@stroke@hairline }
+}
+
+% ⚫ Icon cell: as many dots as the value contributes to the column maximum, at most five.
+\cs_new_protected:Npn \semio_viz_tab_icon: {
+  \semio_viz_tab_share:
+  \int_step_inline:nn { \fp_to_int:n { max ( 1 , round ( 5 * \l_semio_viz_cb_a_fp ) ) } } {
+    \semio_viz_g_circle:nnnn
+      { \l_semio_viz_tab_x_fp + ( ##1 - 0.5 ) * 1.6 }
+      { \l_semio_viz_tab_y_fp + 0.4 } { 0.55 }
+      { fill = \semio_viz_palette:n { 3 } , draw = none }
+  }
+}
+
+% ✨ Highlight cell: tinted when the value sits in the upper half of the column range.
+\cs_new_protected:Npn \semio_viz_tab_highlight: {
+  \semio_viz_tab_share:
+  \fp_compare:nT { \l_semio_viz_cb_a_fp >= 0.5 } {
+    \semio_viz_g_rect:nnnnn { \l_semio_viz_tab_x_fp } { \l_semio_viz_tab_y_fp - 1.1 }
+      { \l_semio_viz_tab_cw_fp - 1 } { \l_semio_viz_tab_rowheight_fp * 0.8 }
+      { fill = \semio_viz_palette:n { 4 } , fill~opacity = 0.28 , draw = none }
+  }
+  \semio_viz_tab_number:
+}
+
+% 🥇 Rank cell: the position of the row in the current order.
+\cs_new_protected:Npn \semio_viz_tab_rank:n #1 {
+  \semio_viz_g_text:nnnn
+    { \l_semio_viz_tab_x_fp + \l_semio_viz_tab_cw_fp - 1.2 } { \l_semio_viz_tab_y_fp } { east }
+    { \int_eval:n {#1} }
+}
+
+% 📏 Interval cell: the value with a confidence whisker across the cell width.
+\cs_new_protected:Npn \semio_viz_tab_interval: {
+  \semio_viz_tab_share:
+  \semio_viz_g_line:nnnnn { \l_semio_viz_tab_x_fp } { \l_semio_viz_tab_y_fp + 0.4 }
+    { \l_semio_viz_tab_x_fp + \l_semio_viz_tab_cw_fp - 1.4 } { \l_semio_viz_tab_y_fp + 0.4 }
+    { draw = semio-chrome-border-normal , line~width = \semio@stroke@hairline }
+  \semio_viz_g_circle:nnnn
+    {
+      \l_semio_viz_tab_x_fp + ( \l_semio_viz_tab_cw_fp - 1.4 ) * \l_semio_viz_cb_a_fp
+    }
+    { \l_semio_viz_tab_y_fp + 0.4 } { 0.7 }
+    { fill = \semio_viz_palette:n { 1 } , draw = none }
+}
+
+% 📐 Normalised share of the current cell inside its column range.
+\cs_new_protected:Npn \semio_viz_tab_share: {
+  \semio_viz_tab_numeric:e { \seq_item:Nn \l_semio_viz_tab_cols_seq { \l_semio_viz_cb_j_int } }
+  \fp_set:Nn \l_semio_viz_cb_a_fp
+    {
+      ( \seq_item:Nn \l_semio_viz_tab_col_seq { \l_semio_viz_cb_i_int }
+        - \seq_item:Nn \l_semio_viz_tab_min_seq { \l_semio_viz_cb_j_int } )
+      / max ( 1e-9 ,
+              \seq_item:Nn \l_semio_viz_tab_max_seq { \l_semio_viz_cb_j_int }
+              - \seq_item:Nn \l_semio_viz_tab_min_seq { \l_semio_viz_cb_j_int } )
+    }
+}
+\cs_generate_variant:Nn \semio_viz_tab_numeric:n { e }
+
+% ➕ Summary row of the column totals.
+\cs_new_protected:Npn \semio_viz_tab_total: {
+  \fp_set:Nn \l_semio_viz_tab_y_fp
+    { \l_semio_viz_tab_y_fp - \l_semio_viz_tab_rowheight_fp }
+  \semio_viz_g_line:nnnnn { \l_semio_viz_cb_xa_fp }
+    { \l_semio_viz_tab_y_fp + \l_semio_viz_tab_rowheight_fp * 0.55 } { \l_semio_viz_cb_xb_fp }
+    { \l_semio_viz_tab_y_fp + \l_semio_viz_tab_rowheight_fp * 0.55 }
+    { draw = semio-chrome-border-emphasized , line~width = \semio@stroke@hairline }
+  \int_zero:N \l_semio_viz_cb_j_int
+  \seq_map_inline:Nn \l_semio_viz_tab_cols_seq {
+    \int_incr:N \l_semio_viz_cb_j_int
+    \semio_viz_tab_numeric:n {##1}
+    \semio_viz_tr_stat_sum:NN \l_semio_viz_tab_col_seq \l_semio_viz_cb_c_fp
+    \fp_set:Nn \l_semio_viz_tab_x_fp
+      { \l_semio_viz_cb_xa_fp + ( \l_semio_viz_cb_j_int - 1 ) * \l_semio_viz_tab_cw_fp }
+    \int_compare:nNnTF { \l_semio_viz_cb_j_int } = { 1 }
+      {
+        \semio_viz_g_text:nnnn { \l_semio_viz_tab_x_fp } { \l_semio_viz_tab_y_fp } { west }
+          { \semio_viz_tab_total_label: }
+      }
+      {
+        \semio_viz_g_text:nnnn
+          { \l_semio_viz_tab_x_fp + \l_semio_viz_tab_cw_fp - 1.2 } { \l_semio_viz_tab_y_fp }
+          { east }
+          {
+            \fp_to_decimal:n
+              { round ( \l_semio_viz_cb_c_fp , \l_semio_viz_tab_decimals_int ) }
+          }
+      }
+  }
+}
+
+% 🌐 Localised label of the summary row; the document language selects it through the format
+% kernel's locale, and neither language is a fallback baked into code.
+\cs_new_protected:Npn \semio_viz_tab_total_label: {
+  \semio_viz_format_localized:nn { Total } { Summe }
+}
+%endregion 🔖️Families
+
+\ExplSyntaxOff

@@ -1,0 +1,173 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-probe}[2026/09/05 v0.2.0 semio viz numeric probe protocol]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-data}
+
+\ExplSyntaxOn
+
+%region 🔖️State
+\iow_new:N \g_semio_viz_probe_iow
+\bool_new:N \g_semio_viz_probe_open_bool
+\bool_new:N \g_semio_viz_probe_geometry_bool
+\str_new:N \g_semio_viz_probe_case_str
+\str_new:N \g_semio_viz_probe_scenario_str
+\str_new:N \l_semio_viz_probe_key_str
+\str_new:N \l_semio_viz_probe_item_str
+\tl_new:N \l_semio_viz_probe_array_tl
+\seq_new:N \l_semio_viz_probe_items_seq
+\seq_new:N \l_semio_viz_probe_json_seq
+\int_new:N \g_semio_viz_probe_precision_int
+\int_gset:Nn \g_semio_viz_probe_precision_int { 6 }
+%endregion 🔖️State
+
+%region 🔖️Json
+% 🧵 Stores #1 as a JSON string body in the str variable #2 (backslash and quote escaped).
+\cs_new_protected:Npn \semio_viz_probe_escape:nN #1#2 {
+  \str_set:Nn #2 {#1}
+  \exp_args:NNVx \str_replace_all:Nnn #2 \c_backslash_str { \c_backslash_str \c_backslash_str }
+  \exp_args:NNnx \str_replace_all:Nnn #2 { " } { \c_backslash_str " }
+}
+
+% 🔢 Renders a comma list as a JSON array into #2: numbers stay bare, everything else becomes a quoted string.
+\cs_new_protected:Npn \semio_viz_probe_json_array:nN #1#2 {
+  \seq_set_from_clist:Nn \l_semio_viz_probe_items_seq {#1}
+  \seq_clear:N \l_semio_viz_probe_json_seq
+  \seq_map_inline:Nn \l_semio_viz_probe_items_seq {
+    \regex_match:nnTF { \A -? [0-9]+ (\.[0-9]+)? ([eE][-+]?[0-9]+)? \Z } {##1}
+      { \seq_put_right:Nn \l_semio_viz_probe_json_seq {##1} }
+      {
+        \semio_viz_probe_escape:nN {##1} \l_semio_viz_probe_item_str
+        \seq_put_right:Nx \l_semio_viz_probe_json_seq { " \l_semio_viz_probe_item_str " }
+      }
+  }
+  \tl_set:Nx #2 { [ \seq_use:Nn \l_semio_viz_probe_json_seq { , } ] }
+}
+%endregion 🔖️Json
+
+%region 🔖️Protocol
+% 🧪 Opens \jobname.probe.jsonl once per document and fixes the case/scenario identity of the following records.
+\cs_new_protected:Npn \semio_viz_probe_begin:nn #1#2 {
+  \bool_if:NF \g_semio_viz_probe_open_bool {
+    \iow_open:Nn \g_semio_viz_probe_iow { \jobname .probe.jsonl }
+    \bool_gset_true:N \g_semio_viz_probe_open_bool
+  }
+  \semio_viz_probe_escape:nN {#1} \l_semio_viz_probe_item_str
+  \str_gset_eq:NN \g_semio_viz_probe_case_str \l_semio_viz_probe_item_str
+  \semio_viz_probe_escape:nN {#2} \l_semio_viz_probe_item_str
+  \str_gset_eq:NN \g_semio_viz_probe_scenario_str \l_semio_viz_probe_item_str
+}
+
+% 📤 Writes one record {"case":…,"scenario":…,"key":…,"values":[…]}.
+\cs_new_protected:Npn \semio_viz_probe_values:nn #1#2 {
+  \semio_viz_probe_escape:nN {#1} \l_semio_viz_probe_key_str
+  \semio_viz_probe_json_array:nN {#2} \l_semio_viz_probe_array_tl
+  \iow_now:Nx \g_semio_viz_probe_iow {
+    \c_left_brace_str
+    "case":" \g_semio_viz_probe_case_str ",
+    "scenario":" \g_semio_viz_probe_scenario_str ",
+    "key":" \l_semio_viz_probe_key_str ",
+    "values": \l_semio_viz_probe_array_tl
+    \c_right_brace_str
+  }
+}
+\cs_generate_variant:Nn \semio_viz_probe_values:nn { nx, nV, xx, xn }
+
+% 📍 Writes a record whose values are the flattened x,y pairs of a coordinate list `{x,y}{x,y}…`.
+\cs_new_protected:Npn \semio_viz_probe_points:nn #1#2 {
+  \seq_clear:N \l_semio_viz_probe_items_seq
+  \tl_map_inline:nn {#2} { \seq_put_right:Nn \l_semio_viz_probe_items_seq {##1} }
+  \semio_viz_probe_values:nx {#1} { \seq_use:Nn \l_semio_viz_probe_items_seq { , } }
+}
+
+% 🧮 Evaluates one floating-point expression onto the emission grid; a negative precision emits the full expl3 result.
+\cs_new:Npn \semio_viz_probe_number:n #1 {
+  \int_compare:nNnTF { \g_semio_viz_probe_precision_int } < { 0 }
+    { \fp_eval:n {#1} }
+    { \fp_eval:n { round ( #1 , \g_semio_viz_probe_precision_int ) } }
+}
+
+% 🧮 Writes one record whose values are floating-point EXPRESSIONS, each evaluated on the emission grid.
+\cs_new_protected:Npn \semio_viz_probe_eval:nn #1#2 {
+  \seq_set_from_clist:Nn \l_semio_viz_probe_items_seq {#2}
+  \seq_set_map_x:NNn \l_semio_viz_probe_items_seq \l_semio_viz_probe_items_seq { \semio_viz_probe_number:n {##1} }
+  \semio_viz_probe_values:nx {#1} { \seq_use:Nn \l_semio_viz_probe_items_seq { , } }
+}
+
+% 📝 Writes one record carrying a single string value, so a text payload is never split on its commas.
+\cs_new_protected:Npn \semio_viz_probe_string:nn #1#2 {
+  \semio_viz_probe_escape:nN {#1} \l_semio_viz_probe_key_str
+  \semio_viz_probe_escape:nN {#2} \l_semio_viz_probe_item_str
+  \iow_now:Nx \g_semio_viz_probe_iow {
+    \c_left_brace_str
+    "case":" \g_semio_viz_probe_case_str ",
+    "scenario":" \g_semio_viz_probe_scenario_str ",
+    "key":" \l_semio_viz_probe_key_str ",
+    "values":[" \l_semio_viz_probe_item_str "]
+    \c_right_brace_str
+  }
+}
+
+% 📄 Typesets the probe identity so the document ships a page: a TeX run that produces none writes no
+% output files at all, and the probe stream would be discarded together with the PDF.
+\bool_new:N \g_semio_viz_probe_page_bool
+
+\cs_new_protected:Npn \semio_viz_probe_page: {
+  \bool_gset_true:N \g_semio_viz_probe_page_bool
+  \leavevmode
+  probe~ \g_semio_viz_probe_case_str \c_space_tl / \c_space_tl \g_semio_viz_probe_scenario_str
+  \par
+}
+
+% 📄 A TeX run that ships no page writes no files at all, and the probe stream goes with them. A
+% probe that renders nothing gets its identifying line here rather than having to remember one.
+\AtEndDocument{ \bool_if:NF \g_semio_viz_probe_page_bool { \semio_viz_probe_page: } }
+
+% 🧭 Geometry hook: marks and families call this with a primitive kind and its numeric payload; active only after \SemioVizProbeOn.
+\cs_new_protected:Npn \semio_viz_probe_geometry:nn #1#2 {
+  \bool_if:NT \g_semio_viz_probe_geometry_bool { \semio_viz_probe_values:nn { geometry/#1 } {#2} }
+}
+\cs_generate_variant:Nn \semio_viz_probe_geometry:nn { nx , xx }
+
+% 🔚 Closes the stream; also runs automatically at end of document.
+\cs_new_protected:Npn \semio_viz_probe_end: {
+  \bool_if:NT \g_semio_viz_probe_open_bool {
+    \iow_close:N \g_semio_viz_probe_iow
+    \bool_gset_false:N \g_semio_viz_probe_open_bool
+  }
+}
+\AddToHook{enddocument}{ \semio_viz_probe_end: }
+%endregion 🔖️Protocol
+
+%region 🔖️PublicApi
+% 🧪 \SemioVizProbeBegin{case}{scenario}: subsequent records carry this identity.
+\NewDocumentCommand \SemioVizProbeBegin { m m } { \semio_viz_probe_begin:nn {#1} {#2} }
+% 📤 \SemioVizProbeValues{key}{clist}: one record with numeric or string values.
+\NewDocumentCommand \SemioVizProbeValues { m m } { \semio_viz_probe_values:nn {#1} {#2} }
+% 📍 \SemioVizProbePoints{key}{{x,y}{x,y}…}: one record with flattened coordinates.
+\NewDocumentCommand \SemioVizProbePoints { m m } { \semio_viz_probe_points:nn {#1} {#2} }
+% 📄 \SemioVizProbePage: typesets one line naming case and scenario, at the point of the call. A probe that renders nothing gets the same line automatically at the end of the document.
+\NewDocumentCommand \SemioVizProbePage { } { \semio_viz_probe_page: }
+% 🧮 \SemioVizProbeEval{key}{clist of fp expressions}: one record with each expression evaluated on the emission grid.
+\NewDocumentCommand \SemioVizProbeEval { m m } { \semio_viz_probe_eval:nn {#1} {#2} }
+% 📝 \SemioVizProbeString{key}{text}: one record with a single string value, commas included.
+\NewDocumentCommand \SemioVizProbeString { m m } { \semio_viz_probe_string:nn {#1} {#2} }
+% 🎚 \SemioVizProbePrecision{decimals}: decimal places every evaluated number is emitted on; negative emits the raw expl3 result.
+\NewDocumentCommand \SemioVizProbePrecision { m } { \int_gset:Nn \g_semio_viz_probe_precision_int {#1} }
+% 🧭 \SemioVizProbeOn / \SemioVizProbeOff: toggle geometry emission from marks and families.
+\NewDocumentCommand \SemioVizProbeOn { } { \bool_gset_true:N \g_semio_viz_probe_geometry_bool }
+% 🧭 \SemioVizProbeOff: stops geometry emission again.
+\NewDocumentCommand \SemioVizProbeOff { } { \bool_gset_false:N \g_semio_viz_probe_geometry_bool }
+% 🧪 \SemioVizChartsDryRun / \SemioVizChartsRender: a dry run makes every family compute and emit
+% its geometry records while drawing nothing, so a probe document can exercise a whole family
+% without a page of output to compare.
+\bool_new:N \g_semio_viz_charts_dry_bool
+\NewDocumentCommand \SemioVizChartsDryRun { } { \bool_gset_true:N \g_semio_viz_charts_dry_bool }
+% 🖼️ \SemioVizChartsRender: back to drawing, records and all.
+\NewDocumentCommand \SemioVizChartsRender { } { \bool_gset_false:N \g_semio_viz_charts_dry_bool }
+% 🔚 \SemioVizProbeEnd: closes the stream early.
+\NewDocumentCommand \SemioVizProbeEnd { } { \semio_viz_probe_end: }
+%endregion 🔖️PublicApi
+
+\ExplSyntaxOff

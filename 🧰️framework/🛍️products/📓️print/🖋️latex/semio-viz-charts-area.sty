@@ -1,0 +1,365 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-charts-area}[2026/09/05 v0.3.0 semio viz namespace charts-area families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-charts-line}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 🔑 semio / viz / family / area — the area charts of taxonomy §2 and §61.
+%   stack     (none|stack|percent|silhouette|wiggle, default none)  how series share the value axis
+%   offset    (zero|expand|silhouette|wiggle, default zero)         d3-stack offset the stack uses
+%   baseline  (number, default 0)                                   value the first layer sits on
+%   horizon   (integer, default 0)                                  bands of a horizon chart, 0 = off
+%   difference (boolean, default false)                             two series with a signed band
+%   range     (boolean, default false)                              lo/hi band instead of a value area
+%   lo / hi   (columns, default lo / hi)                            the range/confidence columns
+%   curve     (inherited)                                           interpolation of the boundary
+\tl_new:N \l_semio_viz_area_stack_tl
+\tl_new:N \l_semio_viz_area_offset_tl
+\int_new:N \l_semio_viz_area_horizon_int
+\bool_new:N \l_semio_viz_area_difference_bool
+\bool_new:N \l_semio_viz_area_range_bool
+\fp_new:N \l_semio_viz_area_base_fp
+
+\semio_viz_cart_family_keys:n { semio / viz / family / area }
+% 🔑 The area chart's own keys, on top of the cartesian family keys inherited above.
+\keys_define:nn { semio / viz / family / area } {
+  stack      .tl_set:N = \l_semio_viz_area_stack_tl,
+  offset     .tl_set:N = \l_semio_viz_area_offset_tl,
+  baseline   .fp_set:N = \l_semio_viz_area_base_fp,
+  horizon    .int_set:N = \l_semio_viz_area_horizon_int,
+  difference .bool_set:N = \l_semio_viz_area_difference_bool,
+  range      .bool_set:N = \l_semio_viz_area_range_bool,
+  lo         .tl_set:N = \l_semio_viz_line_lo_tl,
+  hi         .tl_set:N = \l_semio_viz_line_hi_tl,
+}
+%endregion 🔖️Keys
+
+%region 🔖️Stack
+% 🧮 The running stack baseline per x position; the offset key decides how it is seeded.
+\prop_new:N \l_semio_viz_area_base_prop
+\seq_new:N \l_semio_viz_area_lower_seq
+\seq_new:N \l_semio_viz_area_upper_seq
+\fp_new:N \l_semio_viz_area_total_fp
+\prop_new:N \l_semio_viz_area_total_prop
+
+% 🔁 One layer of the stack: raw values of the current series, stacked onto the running baseline.
+\cs_new_protected:Npn \semio_viz_area_layer_run: {
+  \seq_clear:N \l_semio_viz_area_lower_seq
+  \seq_clear:N \l_semio_viz_area_upper_seq
+  \int_step_inline:nn { \l_semio_viz_cart_nrows_int } {
+    \bool_set_true:N \l_semio_viz_line_row_bool
+    \tl_if_empty:NF \l_semio_viz_cart_group_tl {
+      \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {##1} \l_semio_viz_cart_group_tl
+        \l_semio_viz_line_gcell_tl
+      \tl_if_eq:NNF \l_semio_viz_line_gcell_tl \l_semio_viz_bar_grp_tl
+        { \bool_set_false:N \l_semio_viz_line_row_bool }
+    }
+    \bool_if:NT \l_semio_viz_line_row_bool { \semio_viz_area_layer_row:n {##1} }
+  }
+}
+
+% 📈 One data row of the layer being scanned: its x and y cells become the next boundary point,
+% stacked onto the running floor when the family is stacking.
+\cs_new_protected:Npn \semio_viz_area_layer_row:n #1 {
+  \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {#1} \l_semio_viz_cart_x_tl
+    \l_semio_viz_line_xcell_tl
+  \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {#1} \l_semio_viz_cart_y_tl
+    \l_semio_viz_line_ycell_tl
+  \fp_set:Nn \l_semio_viz_cart_v_fp { \l_semio_viz_line_ycell_tl }
+  \str_if_eq:VnT \l_semio_viz_area_offset_tl { expand } {
+    \prop_get:NVNT \l_semio_viz_area_total_prop \l_semio_viz_line_xcell_tl \l_tmpb_tl
+      { \fp_set:Nn \l_semio_viz_cart_v_fp { 100 * \l_semio_viz_cart_v_fp / \l_tmpb_tl } }
+  }
+  \semio_viz_cart_acc_get:NVN \l_semio_viz_area_base_prop \l_semio_viz_line_xcell_tl
+    \l_semio_viz_cart_a_fp
+  \fp_set:Nn \l_semio_viz_cart_b_fp { \l_semio_viz_cart_a_fp + \l_semio_viz_cart_v_fp }
+  \prop_put:NVx \l_semio_viz_area_base_prop \l_semio_viz_line_xcell_tl
+    { \fp_eval:n { \l_semio_viz_cart_b_fp } }
+  \semio_viz_cart_xmap:VN \l_semio_viz_line_xcell_tl \l_semio_viz_cart_c_fp
+  \semio_viz_cart_ymap:VN \l_semio_viz_cart_a_fp \l_semio_viz_cart_d_fp
+  \seq_put_right:Nx \l_semio_viz_area_lower_seq
+    { \fp_eval:n { \l_semio_viz_cart_c_fp } , \fp_eval:n { \l_semio_viz_cart_d_fp } }
+  \semio_viz_cart_ymap:VN \l_semio_viz_cart_b_fp \l_semio_viz_cart_d_fp
+  \seq_put_right:Nx \l_semio_viz_area_upper_seq
+    { \fp_eval:n { \l_semio_viz_cart_c_fp } , \fp_eval:n { \l_semio_viz_cart_d_fp } }
+}
+
+% 🌊 Seeds the running baseline: zero, centred (silhouette) or wiggle-approximated per x position.
+\cs_new_protected:Npn \semio_viz_area_seed_run: {
+  \prop_clear:N \l_semio_viz_area_base_prop
+  \str_case:VnF \l_semio_viz_area_offset_tl {
+    { silhouette } {
+      \prop_map_inline:Nn \l_semio_viz_area_total_prop
+        { \prop_put:Nnx \l_semio_viz_area_base_prop {##1} { \fp_eval:n { - (##2) / 2 } } }
+    }
+    { wiggle } {
+      \prop_map_inline:Nn \l_semio_viz_area_total_prop
+        { \prop_put:Nnx \l_semio_viz_area_base_prop {##1} { \fp_eval:n { - (##2) / 3 } } }
+    }
+    { expand } {
+      \prop_map_inline:Nn \l_semio_viz_area_total_prop
+        { \prop_put:Nnn \l_semio_viz_area_base_prop {##1} { 0 } }
+    }
+  } {
+    \prop_map_inline:Nn \l_semio_viz_area_total_prop
+      { \prop_put:Nnx \l_semio_viz_area_base_prop {##1}
+          { \fp_eval:n { \l_semio_viz_area_base_fp } } }
+  }
+}
+
+% 📐 Value domain of the stacked layers under the chosen offset.
+\cs_new_protected:Npn \semio_viz_area_domain: {
+  \semio_viz_cart_totals:VVVN \l_semio_viz_cart_data_tl \l_semio_viz_cart_x_tl
+    \l_semio_viz_cart_y_tl \l_semio_viz_area_total_prop
+  \fp_zero:N \l_semio_viz_area_total_fp
+  \prop_map_inline:Nn \l_semio_viz_area_total_prop
+    { \fp_set:Nn \l_semio_viz_area_total_fp { max( \l_semio_viz_area_total_fp , ##2 ) } }
+  \str_case:VnF \l_semio_viz_area_offset_tl {
+    { expand } {
+      \fp_zero:N \l_semio_viz_cart_ymin_fp
+      \fp_set:Nn \l_semio_viz_cart_ymax_fp { 100 }
+    }
+    { silhouette } {
+      \fp_set:Nn \l_semio_viz_cart_ymin_fp { - \l_semio_viz_area_total_fp / 2 }
+      \fp_set:Nn \l_semio_viz_cart_ymax_fp { \l_semio_viz_area_total_fp / 2 }
+    }
+    { wiggle } {
+      \fp_set:Nn \l_semio_viz_cart_ymin_fp { - \l_semio_viz_area_total_fp / 3 }
+      \fp_set:Nn \l_semio_viz_cart_ymax_fp { 2 * \l_semio_viz_area_total_fp / 3 }
+    }
+  } {
+    \str_if_eq:VnTF \l_semio_viz_area_stack_tl { none }
+      { \semio_viz_cart_domain_plain: }
+      {
+        \fp_set_eq:NN \l_semio_viz_cart_ymin_fp \l_semio_viz_area_base_fp
+        \fp_set:Nn \l_semio_viz_cart_ymax_fp
+          { \l_semio_viz_area_base_fp + \l_semio_viz_area_total_fp }
+      }
+  }
+  \bool_if:NT \l_semio_viz_cart_ymin_user_bool { }
+  \fp_compare:nNnT { \l_semio_viz_cart_ymax_fp } = { \l_semio_viz_cart_ymin_fp }
+    { \fp_add:Nn \l_semio_viz_cart_ymax_fp { 1 } }
+}
+%endregion 🔖️Stack
+
+%region 🔖️Families
+% 🟦 area — area, stacked area, streamgraph, theme river, horizon, difference and range areas.
+\cs_new_protected:Npn \semio_viz_area_keys_reset: {
+  \semio_viz_line_keys_reset:
+  \tl_set:Nn \l_semio_viz_area_stack_tl { none }
+  \tl_set:Nn \l_semio_viz_area_offset_tl { zero }
+  \int_zero:N \l_semio_viz_area_horizon_int
+  \bool_set_false:N \l_semio_viz_area_difference_bool
+  \bool_set_false:N \l_semio_viz_area_range_bool
+  \fp_zero:N \l_semio_viz_area_base_fp
+}
+
+% 🪜 Horizon bands: the value range is folded into `horizon` bands of rising colour intensity.
+\cs_new_protected:Npn \semio_viz_area_horizon: {
+  \fp_set:Nn \l_semio_viz_cart_e_fp
+    { ( \l_semio_viz_cart_ymax_fp - \l_semio_viz_cart_ymin_fp ) / \l_semio_viz_area_horizon_int }
+  \int_step_variable:nNn { \l_semio_viz_area_horizon_int } \l_semio_viz_cart_i_int {
+    \fp_set:Nn \l_semio_viz_cart_ymin_fp
+      { \l_semio_viz_cart_ymin_fp }
+    \semio_viz_cart_shade:nxN { \semio_viz_theme_color:n { 0 } }
+      { \fp_eval:n { \l_semio_viz_cart_i_int / \l_semio_viz_area_horizon_int } }
+      \l_semio_viz_cart_fill_tl
+    \semio_viz_area_horizon_band:
+  }
+}
+
+% 🪟 One horizon band: the series clipped to the band's value window and drawn at full frame height,
+% which is what lets a horizon chart read several bands in the space of one.
+\cs_new_protected:Npn \semio_viz_area_horizon_band: {
+  \fp_set:Nn \l_semio_viz_cart_a_fp
+    { \l_semio_viz_cart_ymin_fp + ( \l_semio_viz_cart_i_int - 1 ) * \l_semio_viz_cart_e_fp }
+  \fp_set:Nn \l_semio_viz_cart_b_fp
+    { \l_semio_viz_cart_ymin_fp + \l_semio_viz_cart_i_int * \l_semio_viz_cart_e_fp }
+  \exp_args:NV \semio_viz_line_scan:n \l_semio_viz_cart_y_tl
+  \semio_viz_area_clip_run:
+  \semio_viz_area_floor_run:
+  \semio_viz_cart_draw_band:NN \l_semio_viz_area_upper_seq \l_semio_viz_area_lower_seq
+}
+
+% ✂️ Clips the current point sequence into the active horizon band and rebases it on the floor.
+\cs_new_protected:Npn \semio_viz_area_clip_run: {
+  \semio_viz_cart_ymap:VN \l_semio_viz_cart_a_fp \l_semio_viz_cart_c_fp
+  \semio_viz_cart_ymap:VN \l_semio_viz_cart_b_fp \l_semio_viz_cart_d_fp
+  \seq_clear:N \l_semio_viz_area_upper_seq
+  \seq_map_inline:Nn \l_semio_viz_cart_pts_seq {
+    \seq_put_right:Nx \l_semio_viz_area_upper_seq {
+      \clist_item:nn {##1} { 1 } ,
+      \fp_eval:n { min( max( \clist_item:nn {##1} { 2 } , \l_semio_viz_cart_c_fp ) ,
+                        \l_semio_viz_cart_d_fp )
+                   - ( \l_semio_viz_cart_c_fp - \l_semio_viz_cart_ylo_fp ) }
+    }
+  }
+}
+
+% ⬇️ The lower boundary of an unstacked area: the upper boundary's x positions on the frame floor.
+\cs_new_protected:Npn \semio_viz_area_floor_run: {
+  \seq_clear:N \l_semio_viz_area_lower_seq
+  \seq_map_inline:Nn \l_semio_viz_area_upper_seq {
+    \seq_put_right:Nx \l_semio_viz_area_lower_seq
+      { \clist_item:nn {##1} { 1 } , \fp_eval:n { \l_semio_viz_cart_ylo_fp } }
+  }
+}
+
+% ↔️ The signed band between two series, positive and negative halves in different hues.
+\cs_new_protected:Npn \semio_viz_area_difference: {
+  \tl_set:Nx \l_semio_viz_bar_grp_tl { \seq_item:Nn \l_semio_viz_cart_groups_seq { 1 } }
+  \exp_args:NV \semio_viz_line_scan:n \l_semio_viz_cart_y_tl
+  \seq_set_eq:NN \l_semio_viz_area_upper_seq \l_semio_viz_cart_pts_seq
+  \tl_set:Nx \l_semio_viz_bar_grp_tl { \seq_item:Nn \l_semio_viz_cart_groups_seq { 2 } }
+  \exp_args:NV \semio_viz_line_scan:n \l_semio_viz_cart_y_tl
+  \seq_set_eq:NN \l_semio_viz_area_lower_seq \l_semio_viz_cart_pts_seq
+  \tl_set:Nn \l_semio_viz_cart_fill_tl { \semio_viz_theme_color:n { 1 } }
+  \semio_viz_cart_draw_band:NN \l_semio_viz_area_upper_seq \l_semio_viz_area_lower_seq
+  \tl_set:Nn \l_semio_viz_cart_stroke_tl { \semio_viz_theme_color:n { 0 } }
+  \semio_viz_cart_draw_path:N \l_semio_viz_area_upper_seq
+  \tl_set:Nn \l_semio_viz_cart_stroke_tl { \semio_viz_theme_color:n { 2 } }
+  \semio_viz_cart_draw_path:N \l_semio_viz_area_lower_seq
+}
+
+% 📶 The lo/hi band of a range area, confidence band or fan chart.
+\cs_new_protected:Npn \semio_viz_area_range: {
+  \exp_args:NV \semio_viz_line_scan:n \l_semio_viz_line_hi_tl
+  \seq_set_eq:NN \l_semio_viz_area_upper_seq \l_semio_viz_cart_pts_seq
+  \exp_args:NV \semio_viz_line_scan:n \l_semio_viz_line_lo_tl
+  \seq_set_eq:NN \l_semio_viz_area_lower_seq \l_semio_viz_cart_pts_seq
+  \semio_viz_cart_draw_band:NN \l_semio_viz_area_upper_seq \l_semio_viz_area_lower_seq
+  \exp_args:NV \semio_viz_line_scan:n \l_semio_viz_cart_y_tl
+  \semio_viz_cart_draw_path:N \l_semio_viz_cart_pts_seq
+}
+
+% 🥞 The stacked case: every series in turn rides on the floor the series before it left behind.
+\cs_new_protected:Npn \semio_viz_area_layers: {
+  \semio_viz_area_seed_run:
+  \semio_viz_table_nrows:VN \l_semio_viz_cart_data_tl \l_semio_viz_cart_nrows_int
+  \seq_map_indexed_inline:Nn \l_semio_viz_cart_groups_seq {
+    \int_set:Nn \l_semio_viz_bar_gi_int {##1}
+    \tl_set:Nn \l_semio_viz_bar_grp_tl {##2}
+    \semio_viz_line_series_color:
+    \semio_viz_area_layer_run:
+    \semio_viz_cart_draw_band:NN \l_semio_viz_area_upper_seq \l_semio_viz_area_lower_seq
+    \semio_viz_cart_draw_path:N \l_semio_viz_area_upper_seq
+  }
+}
+
+% 🏔️ The unstacked case: every series drawn from the frame floor to its own boundary.
+\cs_new_protected:Npn \semio_viz_area_plain: {
+  \semio_viz_table_nrows:VN \l_semio_viz_cart_data_tl \l_semio_viz_cart_nrows_int
+  \seq_map_indexed_inline:Nn \l_semio_viz_cart_groups_seq {
+    \int_set:Nn \l_semio_viz_bar_gi_int {##1}
+    \tl_set:Nn \l_semio_viz_bar_grp_tl {##2}
+    \semio_viz_line_series_color:
+    \exp_args:NV \semio_viz_line_scan:n \l_semio_viz_cart_y_tl
+    \seq_set_eq:NN \l_semio_viz_area_upper_seq \l_semio_viz_cart_pts_seq
+    \semio_viz_area_floor_run:
+    \semio_viz_cart_draw_band:NN \l_semio_viz_area_upper_seq \l_semio_viz_area_lower_seq
+    \semio_viz_cart_draw_path:N \l_semio_viz_area_upper_seq
+  }
+}
+
+% ▶️ The whole family run: defaults, the option list #1, the frame, then the case the keys select
+% — horizon bands, difference band, range band, stacked layers or plain areas — with axes and legend.
+\cs_new_protected:Npn \semio_viz_area_render:n #1 {
+  \semio_viz_frame_require:n { SemioVizRunFamily }
+  \semio_viz_area_keys_reset:
+  \keys_set:nn { semio / viz / family / area } {#1}
+  \semio_viz_cart_rect_compute:
+  \tl_if_empty:NTF \l_semio_viz_cart_group_tl
+    {
+      \seq_clear:N \l_semio_viz_cart_groups_seq
+      \seq_put_right:Nn \l_semio_viz_cart_groups_seq { }
+    }
+    { \semio_viz_cart_cats:VVN \l_semio_viz_cart_data_tl \l_semio_viz_cart_group_tl
+        \l_semio_viz_cart_groups_seq }
+  \semio_viz_area_domain:
+  \semio_viz_line_axis_x:
+  \semio_viz_cart_scale_value:nn { linear } { v }
+  \semio_viz_cart_grid_y:
+  \semio_viz_cart_axis_frame:
+  \semio_viz_table_nrows:VN \l_semio_viz_cart_data_tl \l_semio_viz_cart_nrows_int
+  \int_compare:nNnTF { \l_semio_viz_area_horizon_int } > { 0 }
+    {
+      \tl_set:Nx \l_semio_viz_bar_grp_tl { \seq_item:Nn \l_semio_viz_cart_groups_seq { 1 } }
+      \semio_viz_area_horizon:
+    }
+    {
+      \bool_if:NTF \l_semio_viz_area_difference_bool
+        { \semio_viz_area_difference: }
+        {
+          \bool_if:NTF \l_semio_viz_area_range_bool
+            {
+              \tl_set:Nx \l_semio_viz_bar_grp_tl { \seq_item:Nn \l_semio_viz_cart_groups_seq { 1 } }
+              \semio_viz_cart_color:nN { 1 } \l_semio_viz_cart_fill_tl
+              \tl_set_eq:NN \l_semio_viz_cart_stroke_tl \l_semio_viz_cart_fill_tl
+              \semio_viz_area_range:
+            }
+            {
+              \str_if_eq:VnTF \l_semio_viz_area_stack_tl { none }
+                { \semio_viz_area_plain: }
+                { \semio_viz_area_layers: }
+            }
+        }
+    }
+  \semio_viz_cart_axis_ticks:n { v }
+  \semio_viz_cart_legend:N \l_semio_viz_cart_groups_seq
+}
+
+% 🏔️ §2 and §61: area, stacked area, streamgraph, horizon, difference and range charts.
+\SemioVizFamily { area } { \semio_viz_area_render:n {#1} }
+%endregion 🔖️Families
+
+%region 🔖️Composition
+% 🍰 composition-bar — the part-of-whole readings of taxonomy §6. All three answer "how does the
+% whole divide", and the variant chooses whether the parts keep their magnitude (stacked bar), are
+% normalised away (100 % stacked bar) or are read as a flow over the ordering (stacked area). The
+% option list carries only `variant`, so the family supplies the channel binding of `demo-parts`.
+% It lives here, above both renderers, because it delegates to the bar family and to the area
+% family and so must see them both.
+%region 🔖️Keys
+%   variant (tl, required)  `stacked-bar`, `100percent-stacked-bar` or `stacked-area`
+\tl_new:N \l_semio_viz_composition_variant_tl
+% 🔑 The composition family's only key; every other key is forwarded to the family it delegates to.
+\keys_define:nn { semio / viz / family / composition-bar } {
+  variant .tl_set:N = \l_semio_viz_composition_variant_tl,
+  data    .tl_set:N = \l_semio_viz_cart_data_tl,
+}
+%endregion 🔖️Keys
+
+% ▶️ The whole family run: the `variant` chooses the stacked bar, the percentage stack or the
+% stacked area, and the rest of the option list is passed on to that family unchanged.
+\cs_new_protected:Npn \semio_viz_composition_render:n #1 {
+  \tl_clear:N \l_semio_viz_composition_variant_tl
+  \tl_set:Nn \l_semio_viz_cart_data_tl { demo-parts }
+  \keys_set:nn { semio / viz / family / composition-bar } {#1}
+  \str_case:VnF \l_semio_viz_composition_variant_tl
+    {
+      { stacked-area }
+        {
+          \exp_args:Nx \semio_viz_area_render:n
+            { data = \l_semio_viz_cart_data_tl , x = t , y = val , group = series , stack = zero }
+        }
+      { 100percent-stacked-bar }
+        {
+          \exp_args:Nx \semio_viz_bar_render:n
+            { data = \l_semio_viz_cart_data_tl , x = part , y = share , group = group , mode = percent }
+        }
+    }
+    {
+      \exp_args:Nx \semio_viz_bar_render:n
+        { data = \l_semio_viz_cart_data_tl , x = part , y = share , group = group , mode = stacked }
+    }
+}
+
+% 🥞 §1: the part-to-whole comparisons, each delegating to the family that already draws it.
+\SemioVizFamily { composition-bar } { \semio_viz_composition_render:n {#1} }
+%endregion 🔖️Composition
+
+\ExplSyntaxOff

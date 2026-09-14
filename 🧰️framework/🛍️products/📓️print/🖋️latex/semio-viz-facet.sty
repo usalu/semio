@@ -1,0 +1,290 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-facet}[2026/09/05 v0.2.0 semio viz faceting: row, column, wrap, shared or independent scales]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-guide}
+
+\ExplSyntaxOn
+
+%region 🔖️Diagnostics
+\msg_new:nnn { semio-viz } { facet-no-groups }
+  { \iow_char:N\\SemioVizFacet~needs~wrap=,~row=~or~column=~with~at~least~one~group. }
+%endregion 🔖️Diagnostics
+
+%region 🔖️Keys
+% 🔑 semio / viz / facet keys
+%   wrap     (clist) group values laid out left to right and wrapped into `columns`
+%   row      (clist) group values, one panel row each
+%   column   (clist) group values, one panel column each
+%   columns  (int)   panels per row for wrap=, default 3
+%   sharedX  (bool)  x axis drawn only on the bottom row, default true
+%   sharedY  (bool)  y axis drawn only on the leftmost column, default true
+%   gap      (mm)    gap between panels, default 4
+%   header   (bool)  draw the group value above each panel, default true
+%   headerGap(mm)    height reserved for the header, default 3.4
+%   width    (mm)    total width of the facet block; empty = the figure width
+%   height   (mm)    total height; empty = the figure height
+%   xScale   (name)  scale re-ranged to each panel's x extent, default `x`
+%   yScale   (name)  scale re-ranged to each panel's y extent, default `y`
+%   pad      (mm)    plot inset inside each panel, default 6
+\clist_new:N \l_semio_viz_facet_wrap_clist
+\clist_new:N \l_semio_viz_facet_row_clist
+\clist_new:N \l_semio_viz_facet_column_clist
+\tl_new:N \l_semio_viz_facet_width_tl
+\tl_new:N \l_semio_viz_facet_height_tl
+\tl_new:N \l_semio_viz_facet_xscale_tl
+\tl_new:N \l_semio_viz_facet_yscale_tl
+\int_new:N \l_semio_viz_facet_columns_int
+\fp_new:N \l_semio_viz_facet_gap_fp
+\fp_new:N \l_semio_viz_facet_header_gap_fp
+\fp_new:N \l_semio_viz_facet_pad_fp
+\bool_new:N \l_semio_viz_facet_sharedx_bool
+\bool_new:N \l_semio_viz_facet_sharedy_bool
+\bool_new:N \l_semio_viz_facet_header_bool
+
+\keys_define:nn { semio / viz / facet } {
+  wrap .clist_set:N = \l_semio_viz_facet_wrap_clist,
+  row .clist_set:N = \l_semio_viz_facet_row_clist,
+  column .clist_set:N = \l_semio_viz_facet_column_clist,
+  columns .int_set:N = \l_semio_viz_facet_columns_int,
+  sharedX .bool_set:N = \l_semio_viz_facet_sharedx_bool,
+  sharedY .bool_set:N = \l_semio_viz_facet_sharedy_bool,
+  gap .fp_set:N = \l_semio_viz_facet_gap_fp,
+  header .bool_set:N = \l_semio_viz_facet_header_bool,
+  headerGap .fp_set:N = \l_semio_viz_facet_header_gap_fp,
+  width .tl_set:N = \l_semio_viz_facet_width_tl,
+  height .tl_set:N = \l_semio_viz_facet_height_tl,
+  xScale .tl_set:N = \l_semio_viz_facet_xscale_tl,
+  yScale .tl_set:N = \l_semio_viz_facet_yscale_tl,
+  pad .fp_set:N = \l_semio_viz_facet_pad_fp,
+}
+
+% 🧹 Restores every facet key to the documented default before a new SemioVizFacet reads its options.
+\cs_new_protected:Npn \semio_viz_facet_keys_reset: {
+  \clist_clear:N \l_semio_viz_facet_wrap_clist
+  \clist_clear:N \l_semio_viz_facet_row_clist
+  \clist_clear:N \l_semio_viz_facet_column_clist
+  \tl_clear:N \l_semio_viz_facet_width_tl
+  \tl_clear:N \l_semio_viz_facet_height_tl
+  \tl_set:Nn \l_semio_viz_facet_xscale_tl { x }
+  \tl_set:Nn \l_semio_viz_facet_yscale_tl { y }
+  \int_set:Nn \l_semio_viz_facet_columns_int { 3 }
+  \fp_set:Nn \l_semio_viz_facet_gap_fp { 4 }
+  \fp_set:Nn \l_semio_viz_facet_header_gap_fp { 3.4 }
+  \fp_set:Nn \l_semio_viz_facet_pad_fp { 6 }
+  \bool_set_true:N \l_semio_viz_facet_sharedx_bool
+  \bool_set_true:N \l_semio_viz_facet_sharedy_bool
+  \bool_set_true:N \l_semio_viz_facet_header_bool
+}
+%endregion 🔖️Keys
+
+%region 🔖️Panels
+% 🧱 Panel geometry: the block's own width and height minus the gaps, divided by
+% the grid the group lists imply. A panel is a scope shifted onto its cell with
+% the frame variables rebound to the cell, so every guide, mark and annotation
+% inside a panel uses the same millimetre vocabulary as a whole figure does.
+\int_new:N \l_semio_viz_facet_cols_int
+\int_new:N \l_semio_viz_facet_rows_int
+\int_new:N \l_semio_viz_facet_count_int
+\int_new:N \l_semio_viz_facet_index_int
+\int_new:N \l_semio_viz_facet_col_int
+\int_new:N \l_semio_viz_facet_row_int
+\fp_new:N \l_semio_viz_facet_block_w_fp
+\fp_new:N \l_semio_viz_facet_block_h_fp
+\fp_new:N \l_semio_viz_facet_cell_w_fp
+\fp_new:N \l_semio_viz_facet_cell_h_fp
+\fp_new:N \l_semio_viz_facet_x_fp
+\fp_new:N \l_semio_viz_facet_y_fp
+\fp_new:N \l_semio_viz_facet_saved_w_fp
+\fp_new:N \l_semio_viz_facet_saved_h_fp
+\fp_new:N \l_semio_viz_facet_saved_pad_fp
+\seq_new:N \l_semio_viz_facet_groups_seq
+\tl_new:N \l_semio_viz_facet_value_tl
+\tl_new:N \l_semio_viz_facet_body_tl
+\bool_new:N \l_semio_viz_facet_bottom_bool
+\bool_new:N \l_semio_viz_facet_left_bool
+
+\cs_new_protected:Npn \semio_viz_facet_grid_resolve: {
+  \seq_clear:N \l_semio_viz_facet_groups_seq
+  \clist_if_empty:NTF \l_semio_viz_facet_wrap_clist
+    {
+      \clist_if_empty:NTF \l_semio_viz_facet_column_clist
+        {
+          \seq_set_from_clist:NN \l_semio_viz_facet_groups_seq \l_semio_viz_facet_row_clist
+          \int_set:Nn \l_semio_viz_facet_cols_int { 1 }
+        }
+        {
+          \clist_if_empty:NTF \l_semio_viz_facet_row_clist
+            {
+              \seq_set_from_clist:NN \l_semio_viz_facet_groups_seq \l_semio_viz_facet_column_clist
+              \int_set:Nn \l_semio_viz_facet_cols_int { \clist_count:N \l_semio_viz_facet_column_clist }
+            }
+            {
+              \clist_map_inline:Nn \l_semio_viz_facet_row_clist {
+                \clist_map_inline:Nn \l_semio_viz_facet_column_clist
+                  { \seq_put_right:Nn \l_semio_viz_facet_groups_seq { ##1 ~ / ~ ####1 } }
+              }
+              \int_set:Nn \l_semio_viz_facet_cols_int { \clist_count:N \l_semio_viz_facet_column_clist }
+            }
+        }
+    }
+    {
+      \seq_set_from_clist:NN \l_semio_viz_facet_groups_seq \l_semio_viz_facet_wrap_clist
+      \int_set_eq:NN \l_semio_viz_facet_cols_int \l_semio_viz_facet_columns_int
+    }
+  \int_set:Nn \l_semio_viz_facet_count_int { \seq_count:N \l_semio_viz_facet_groups_seq }
+  \int_compare:nNnT \l_semio_viz_facet_count_int = { 0 }
+    { \msg_error:nn { semio-viz } { facet-no-groups } }
+  \int_compare:nNnT \l_semio_viz_facet_cols_int < { 1 }
+    { \int_set:Nn \l_semio_viz_facet_cols_int { 1 } }
+  \int_set:Nn \l_semio_viz_facet_rows_int
+    { \int_div_truncate:nn { \l_semio_viz_facet_count_int + \l_semio_viz_facet_cols_int - 1 }
+                           { \l_semio_viz_facet_cols_int } }
+}
+
+% 📐 Turns the resolved grid into millimetres: the block the panels share, then one cell of it.
+\cs_new_protected:Npn \semio_viz_facet_sizes: {
+  \tl_if_empty:NTF \l_semio_viz_facet_width_tl
+    { \fp_set_eq:NN \l_semio_viz_facet_block_w_fp \l_semio_viz_width_fp }
+    { \fp_set:Nn \l_semio_viz_facet_block_w_fp { \l_semio_viz_facet_width_tl } }
+  \tl_if_empty:NTF \l_semio_viz_facet_height_tl
+    { \fp_set_eq:NN \l_semio_viz_facet_block_h_fp \l_semio_viz_height_fp }
+    { \fp_set:Nn \l_semio_viz_facet_block_h_fp { \l_semio_viz_facet_height_tl } }
+  \fp_set:Nn \l_semio_viz_facet_cell_w_fp {
+    ( \l_semio_viz_facet_block_w_fp - ( \l_semio_viz_facet_cols_int - 1 ) * \l_semio_viz_facet_gap_fp )
+      / \l_semio_viz_facet_cols_int
+  }
+  \fp_set:Nn \l_semio_viz_facet_cell_h_fp {
+    ( \l_semio_viz_facet_block_h_fp - ( \l_semio_viz_facet_rows_int - 1 ) * \l_semio_viz_facet_gap_fp )
+      / \l_semio_viz_facet_rows_int
+  }
+}
+
+% 📐 Redefines a named scale with the same kind and domain over a new range --
+% what makes a panel's scale the figure's scale seen through the panel's extent.
+\cs_new_protected:Npn \semio_viz_facet_rerange:nnn #1#2#3 {
+  \use:x {
+    \exp_not:N \semio_viz_scale_define:nnnn {#1}
+      { \tl_use:c { g_semio_viz_scale_ \tl_to_str:n {#1} _kind_tl } }
+      { \clist_use:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { , } }
+      { \fp_eval:n {#2} , \fp_eval:n {#3} }
+  }
+}
+\cs_generate_variant:Nn \semio_viz_facet_rerange:nnn { Vnn }
+
+% 📐 Rebinds the frame to one cell and re-ranges the panel scales onto it.
+\cs_new_protected:Npn \semio_viz_facet_panel_scales: {
+  \semio_viz_facet_rerange:Vnn \l_semio_viz_facet_xscale_tl
+    { \l_semio_viz_facet_pad_fp } { \l_semio_viz_facet_cell_w_fp - 2 }
+  \semio_viz_facet_rerange:Vnn \l_semio_viz_facet_yscale_tl
+    { \l_semio_viz_facet_pad_fp }
+    { \l_semio_viz_facet_cell_h_fp - 2 - \l_semio_viz_facet_header_gap_fp }
+}
+
+% 🏷️ Draws the strip label of the current panel, in the guide kernel's own title style.
+\cs_new_protected:Npn \semio_viz_facet_header_draw: {
+  \bool_if:NT \l_semio_viz_facet_header_bool {
+    \semio_viz_guide_style:nN { title } \l_semio_viz_guide_style_tl
+    \use:x {
+      \exp_not:N \node [ \exp_not:V \l_semio_viz_guide_style_tl , anchor=north~west ]
+        at ( \fp_eval:n { \l_semio_viz_facet_pad_fp } ,
+             \fp_eval:n { \l_semio_viz_facet_cell_h_fp } )
+        { \exp_not:V \l_semio_viz_facet_value_tl } ;
+    }
+  }
+}
+
+% 🎬 Runs a SemioVizFacet: reads the keys, resolves the grid, sizes it, and replays the body once
+% per panel with the panel's own scales in force.
+\cs_new_protected:Npn \semio_viz_facet_run:n #1 {
+  \semio_viz_frame_require:n { SemioVizFacet }
+  \semio_viz_facet_keys_reset:
+  \keys_set:nn { semio / viz / facet } {#1}
+  \semio_viz_facet_grid_resolve:
+  \semio_viz_facet_sizes:
+  \fp_set_eq:NN \l_semio_viz_facet_saved_w_fp \l_semio_viz_width_fp
+  \fp_set_eq:NN \l_semio_viz_facet_saved_h_fp \l_semio_viz_height_fp
+  \fp_set_eq:NN \l_semio_viz_facet_saved_pad_fp \l_semio_viz_pad_fp
+  \int_zero:N \l_semio_viz_facet_index_int
+  \seq_map_inline:Nn \l_semio_viz_facet_groups_seq {
+    \tl_set:Nn \l_semio_viz_facet_value_tl {##1}
+    \int_set:Nn \l_semio_viz_facet_col_int
+      { \int_mod:nn { \l_semio_viz_facet_index_int } { \l_semio_viz_facet_cols_int } }
+    \int_set:Nn \l_semio_viz_facet_row_int
+      { \int_div_truncate:nn { \l_semio_viz_facet_index_int } { \l_semio_viz_facet_cols_int } }
+    \fp_set:Nn \l_semio_viz_facet_x_fp
+      { \l_semio_viz_facet_col_int * ( \l_semio_viz_facet_cell_w_fp + \l_semio_viz_facet_gap_fp ) }
+    \fp_set:Nn \l_semio_viz_facet_y_fp
+      { \l_semio_viz_facet_block_h_fp - ( \l_semio_viz_facet_row_int + 1 ) * \l_semio_viz_facet_cell_h_fp
+        - \l_semio_viz_facet_row_int * \l_semio_viz_facet_gap_fp }
+    \bool_set:Nn \l_semio_viz_facet_bottom_bool
+      { \int_compare_p:nNn { \l_semio_viz_facet_index_int + \l_semio_viz_facet_cols_int }
+                           > { \l_semio_viz_facet_count_int - 1 } }
+    \bool_set:Nn \l_semio_viz_facet_left_bool
+      { \int_compare_p:nNn { \l_semio_viz_facet_col_int } = { 0 } }
+    \fp_set_eq:NN \l_semio_viz_width_fp \l_semio_viz_facet_cell_w_fp
+    \fp_set:Nn \l_semio_viz_height_fp
+      { \l_semio_viz_facet_cell_h_fp - \l_semio_viz_facet_header_gap_fp }
+    \fp_set_eq:NN \l_semio_viz_pad_fp \l_semio_viz_facet_pad_fp
+    \semio_viz_facet_panel_scales:
+    \semio_viz_probe_geometry:nx { facet-panel } {
+      \int_use:N \l_semio_viz_facet_index_int ,
+      \fp_eval:n { \l_semio_viz_facet_x_fp } , \fp_eval:n { \l_semio_viz_facet_y_fp } ,
+      \fp_eval:n { \l_semio_viz_facet_cell_w_fp } , \fp_eval:n { \l_semio_viz_facet_cell_h_fp }
+    }
+    \use:x {
+      \exp_not:N \begin { scope } [ shift={( \fp_eval:n { \l_semio_viz_facet_x_fp } ,
+                                              \fp_eval:n { \l_semio_viz_facet_y_fp } )} ]
+    }
+    \semio_viz_facet_header_draw:
+    \tl_use:N \l_semio_viz_facet_body_tl
+    \end { scope }
+    \int_incr:N \l_semio_viz_facet_index_int
+  }
+  \fp_set_eq:NN \l_semio_viz_width_fp \l_semio_viz_facet_saved_w_fp
+  \fp_set_eq:NN \l_semio_viz_height_fp \l_semio_viz_facet_saved_h_fp
+  \fp_set_eq:NN \l_semio_viz_pad_fp \l_semio_viz_facet_saved_pad_fp
+}
+
+% 🪟 The panel's own axes, honouring sharedX/sharedY: a shared axis is drawn only
+% on the bottom row and the leftmost column, an independent one on every panel.
+\cs_new_protected:Npn \semio_viz_facet_axes:n #1 {
+  \bool_lazy_or:nnT
+    { \bool_not_p:n { \l_semio_viz_facet_sharedx_bool } }
+    { \l_semio_viz_facet_bottom_bool }
+    {
+      \use:x {
+        \exp_not:N \semio_viz_guide_axis_draw:n
+          { scale = \exp_not:V \l_semio_viz_facet_xscale_tl , orient = bottom , \exp_not:n {#1} }
+      }
+    }
+  \bool_lazy_or:nnT
+    { \bool_not_p:n { \l_semio_viz_facet_sharedy_bool } }
+    { \l_semio_viz_facet_left_bool }
+    {
+      \use:x {
+        \exp_not:N \semio_viz_guide_axis_draw:n
+          { scale = \exp_not:V \l_semio_viz_facet_yscale_tl , orient = left , \exp_not:n {#1} }
+      }
+    }
+}
+%endregion 🔖️Panels
+
+%region 🔖️PublicApi
+% 🧩 Repeats its body once per group, on a computed panel grid inside the current figure.
+\NewDocumentEnvironment { VizFacet } { O{} +b }
+  { \tl_set:Nn \l_semio_viz_facet_body_tl {#2} \semio_viz_facet_run:n {#1} }
+  { }
+% 🧩 Command form: \SemioVizFacet[keys]{body}.
+\NewDocumentCommand \SemioVizFacet { O{} +m }
+  { \tl_set:Nn \l_semio_viz_facet_body_tl {#2} \semio_viz_facet_run:n {#1} }
+% 🏷️ The current panel's group value, usable inside a facet body.
+\NewDocumentCommand \SemioVizFacetValue { } { \tl_use:N \l_semio_viz_facet_value_tl }
+% 🔢 The current panel's zero-based index.
+\NewDocumentCommand \SemioVizFacetIndex { } { \int_use:N \l_semio_viz_facet_index_int }
+% 📏 The current panel's axes, drawn only where sharedX/sharedY allow.
+\NewDocumentCommand \SemioVizFacetAxes { O{} } { \semio_viz_facet_axes:n {#1} }
+%endregion 🔖️PublicApi
+
+\ExplSyntaxOff

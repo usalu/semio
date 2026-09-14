@@ -1,0 +1,12 @@
+\documentclass{article}
+\usepackage{semio-viz-charts-distribution}
+\usepackage{semio-viz-transform}
+\begin{document}
+\ExplSyntaxOn
+\SemioVizProbeBegin{charts-histogram-density}{ecdf}
+\semio_viz_tr_stat_from_table:Nnn \l_tmpa_seq { demo-distribution } { value }
+\semio_viz_tr_stat_ecdf:N \l_tmpa_seq
+\semio_viz_probe_values:nx { ecdf-x } { \seq_use:Nn \g_semio_viz_tr_stat_curve_x_seq { , } }
+\semio_viz_probe_values:nx { ecdf-y } { \seq_use:Nn \g_semio_viz_tr_stat_curve_y_seq { , } }
+\ExplSyntaxOff
+\end{document}

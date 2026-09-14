@@ -1,0 +1,34 @@
+\documentclass{article}
+\usepackage{semio-viz-spatial}
+\ExplSyntaxOn
+% 📤 Emits one record per isoline ring of the kernel-density grid, in the same grid coordinates as the contour probe.
+\cs_new_protected:Npn \semio_probe_ring:n #1
+  {
+    \tl_set:Nn \l_tmpa_tl {#1}
+    \tl_replace_all:Nnn \l_tmpa_tl { ; } { , }
+    \use:x
+      {
+        \exp_not:N \SemioVizProbeEval { spatial/density-contour }
+          { \exp_not:V \l_tmpa_tl }
+      }
+  }
+\ExplSyntaxOff
+\begin{document}
+\SemioVizProbeBegin{spatial-contours-density}{kernel-density}
+\SemioVizProbePage
+\SemioVizProbePrecision{9}
+\SemioVizDensity{demo-points}{7}{5}{6}{6}{9}{11}
+\ExplSyntaxOn
+\semio_viz_grid_require:n { demo-points-density }
+\use:x
+  {
+    \exp_not:N \SemioVizProbeEval { spatial/density }
+      {
+        \seq_use:cn
+          { g_semio_viz_grid_ \l_semio_viz_store_name_tl _seq } { , }
+      }
+  }
+\SemioVizContour { demo-points-density } { 0.0046 }
+\seq_map_inline:Nn \g_semio_viz_spatial_rings_seq { \semio_probe_ring:n {#1} }
+\ExplSyntaxOff
+\end{document}

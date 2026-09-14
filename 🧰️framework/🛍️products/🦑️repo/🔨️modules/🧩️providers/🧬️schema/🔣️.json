@@ -1,0 +1,199 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/repo/providers.json",
+  "title": "🧩️ repo providers",
+  "description": "🧩️ Wire shapes of the repo providers module: the process transcripts its fixtures replay, the hook output records its editor providers format, and the GitHub DTOs its management provider parses out of `gh`.",
+  "type": "object",
+  "$defs": {
+    "Argv": {
+      "description": "📨️ A process invocation. `argv[0]` is the program; the runner never re-splits a word.",
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "ProcessExchange": {
+      "description": "🎞️ One recorded exchange: what was asked of the operating system and what came back.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["argv", "status"],
+      "properties": {
+        "argv": { "$ref": "#/$defs/Argv" },
+        "stdin": { "type": "string" },
+        "stdout": { "type": "string", "default": "" },
+        "stderr": { "type": "string", "default": "" },
+        "status": { "type": "integer", "description": "🔢️ The process exit code; 127 is what a runner reports for an exchange it cannot serve." }
+      }
+    },
+    "ProcessTranscript": {
+      "description": "🎬️ A whole transcript. A recorded runner serves the first not-yet-consumed exchange whose `argv` matches exactly, so optional calls may be omitted without reordering the rest.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exchanges"],
+      "properties": {
+        "exchanges": { "type": "array", "items": { "$ref": "#/$defs/ProcessExchange" } }
+      }
+    },
+    "ProcessRequest": {
+      "description": "📨️ What a provider hands the runner.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["argv"],
+      "properties": {
+        "argv": { "$ref": "#/$defs/Argv" },
+        "cwd": { "type": "string" },
+        "stdin": { "type": "string" }
+      }
+    },
+    "ProcessOutcome": {
+      "description": "📬️ What the runner hands back.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "stdout": { "type": "string", "default": "" },
+        "stderr": { "type": "string", "default": "" },
+        "status": { "type": "integer" }
+      }
+    },
+    "ToolKind": {
+      "description": "🏷️ The categorized tool execution kind a native pre/post-tool event is resolved against.",
+      "enum": ["generic", "plan", "code-search", "code-edit", "test", "build", "terminal"]
+    },
+    "HookEvent": {
+      "description": "📡️ The neutral lifecycle event slug every editor's native event is mapped onto.",
+      "enum": [
+        "version.checkpoint.starting",
+        "version.checkpoint.ended",
+        "version.checkin.starting",
+        "version.checkin.ended",
+        "version.checkout.starting",
+        "version.checkout.ended",
+        "agent.started",
+        "agent.ended",
+        "agent.prompt.submitting",
+        "agent.compacting",
+        "agent.tool.starting",
+        "agent.tool.ended",
+        "agent.tool.plan.updating.starting",
+        "agent.tool.plan.updating.ended",
+        "agent.file.read.starting",
+        "agent.file.read.ended",
+        "agent.tool.code.edit.starting",
+        "agent.tool.code.edit.ended",
+        "agent.tool.test.starting",
+        "agent.tool.test.ended",
+        "agent.tool.build.starting",
+        "agent.tool.build.ended",
+        "agent.tool.terminal.starting",
+        "agent.tool.terminal.ended",
+        "agent.thinking.starting",
+        "agent.thinking.ended"
+      ]
+    },
+    "EditorKind": {
+      "description": "📝️ The eight editor client slugs the registry hands out, in registration order.",
+      "enum": ["copilot-chat", "cursor-chat", "windsurf-chat", "claude-code", "droid", "codex", "antigravity-chat", "kiro-cli"]
+    },
+    "McpClientKind": {
+      "description": "🪪️ Which IDE-native MCP surface is talking. Editor identity, not MCP protocol.",
+      "enum": ["generic", "cursor", "kiro", "copilot", "claude", "codex"]
+    },
+    "HookResult": {
+      "description": "🔶️ The outcome of a hook invocation: the two fields every result exposes, plus the event-specific payload the editor providers marshal alongside them.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allowed"],
+      "properties": {
+        "allowed": { "type": "boolean" },
+        "message": { "type": "string", "default": "", "description": "🗒️ Omitted from the marshalled payload when empty, exactly as Go's `omitempty` does." },
+        "extra": { "type": "object", "description": "➕️ Event-specific fields (checkpoint, session, prompt, report, …).", "additionalProperties": true }
+      }
+    },
+    "HookOutputRecord": {
+      "description": "🪝️ One case of the hook output format: the native hook event name, the result to format, and which editors are asked to format it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "hookEventName", "result"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "hookEventName": { "type": "string", "description": "🔤️ The IDE-native hook event name; the empty string means the caller supplied none." },
+        "result": { "$ref": "#/$defs/HookResult" },
+        "nativeEventFrom": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event"],
+          "properties": {
+            "event": { "$ref": "#/$defs/HookEvent" },
+            "parentInfo": { "type": "string", "default": "" }
+          }
+        }
+      }
+    },
+    "ManagementLabel": {
+      "description": "🏷️ A label record as `gh label list --json name` reports it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": { "name": { "type": "string" } }
+    },
+    "ManagementIssueMilestone": {
+      "description": "🎯️ The milestone an issue carries.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "number": { "type": "integer" },
+        "title": { "type": "string" }
+      }
+    },
+    "ManagementIssue": {
+      "description": "💿️ An issue record as `gh issue view --json url,state,milestone,labels,title,body` reports it.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "url": { "type": "string" },
+        "state": { "type": "string" },
+        "title": { "type": "string" },
+        "body": { "type": "string" },
+        "milestone": { "oneOf": [{ "$ref": "#/$defs/ManagementIssueMilestone" }, { "type": "null" }] },
+        "labels": { "type": "array", "items": { "$ref": "#/$defs/ManagementLabel" } }
+      }
+    },
+    "ManagementMilestone": {
+      "description": "🎯️ A milestone record as the GitHub REST payload relayed by `gh api repos/:owner/:repo/milestones` carries it. `due_on` keeps its REST spelling.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "number": { "type": "integer" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "url": { "type": "string" },
+        "due_on": { "type": "string" },
+        "state": { "type": "string" }
+      }
+    },
+    "ManagementTranscriptCase": {
+      "description": "🐙️ One transcript case: the call to make, the transcript that serves it, and nothing else. The projection a subject emits is the parsed record plus the argv sequence the provider issued.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "call", "transcript"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "call": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["method"],
+          "properties": {
+            "method": { "type": "string", "description": "🔤️ The ManagementProvider method under test, in kebab-case." },
+            "arguments": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "transcript": { "$ref": "#/$defs/ProcessTranscript" }
+      }
+    }
+  },
+  "properties": {
+    "transcript": { "$ref": "#/$defs/ProcessTranscript" },
+    "hookOutputs": { "type": "array", "items": { "$ref": "#/$defs/HookOutputRecord" } },
+    "managementCases": { "type": "array", "items": { "$ref": "#/$defs/ManagementTranscriptCase" } }
+  }
+}

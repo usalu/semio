@@ -1,0 +1,1295 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-guide}[2026/09/05 v0.2.0 semio viz guides: axis, legend, grid]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-fonts}
+\RequirePackage{tikz}
+\usetikzlibrary{calc,arrows.meta,shapes.geometric,decorations.pathreplacing}
+\RequirePackage{semio-viz-scale}\RequirePackage{semio-viz-format}\RequirePackage{semio-viz-mark}\RequirePackage{semio-viz-theme}\RequirePackage{semio-viz-probe}\RequirePackage{semio-viz-family}
+
+\ExplSyntaxOn
+
+%region 🔖️Diagnostics
+\msg_new:nnn { semio-viz } { unknown-guide-orient }
+  { Unknown~viz~axis~orient~'#1'~(bottom,~top,~left,~right,~segment,~angular,~radial). }
+\msg_new:nnn { semio-viz } { unknown-legend-kind }
+  { Unknown~viz~legend~kind~'#1'~(swatch,~line,~symbol,~gradient,~size,~pattern). }
+%endregion 🔖️Diagnostics
+
+%region 🔖️Frame
+% 📐 Plot-area inset in millimetres: the distance from the VizFigure edge to the
+% axis lines. Frame state lives with the guides because the guides are what
+% turns a bare canvas into a plot area.
+\fp_new:N \l_semio_viz_pad_fp
+\fp_set:Nn \l_semio_viz_pad_fp { 8 }
+
+% 🖼️ Default canvas width of a VizFigure in millimetres, used when the figure declares no width.
+\tl_const:Nn \c_semio_viz_frame_width_tl { 80 }
+% 🖼️ Default canvas height of a VizFigure in millimetres, used when the figure declares no height.
+\tl_const:Nn \c_semio_viz_frame_height_tl { 40 }
+% ↕️ Vertical air between one VizSection band and the next.
+\tl_const:Nn \c_semio_viz_section_gap_tl { 2.5mm }
+% ↕️ Vertical air between a VizSection title rule and the content below it.
+\tl_const:Nn \c_semio_viz_section_content_gap_tl { 4.5mm }
+% ↕️ Vertical air a caption note reserves before the content it introduces.
+\tl_const:Nn \c_semio_viz_section_note_gap_tl { 4mm }
+% ↔️ Horizontal air between two VizColumn slots of one section.
+\tl_const:Nn \c_semio_viz_column_gutter_tl { 4mm }
+
+% 📏 The enclosing figure's extent in millimetres, owned here because every guide,
+% frame and family reads it: VizFigure sets it, a renderer never redeclares it.
+\fp_new:N \l_semio_viz_width_fp
+\fp_new:N \l_semio_viz_height_fp
+
+% 🖼️ Hairline rectangle around the plot area.
+\cs_new_protected:Npn \semio_viz_plot_frame:nn #1#2 {
+  \semio_viz_guide_style:nN { grid } \l_semio_viz_guide_style_tl
+  \use:x {
+    \exp_not:N \draw [ \exp_not:V \l_semio_viz_guide_style_tl ]
+      ( \fp_eval:n { \l_semio_viz_pad_fp } , \fp_eval:n { \l_semio_viz_pad_fp } )
+      rectangle ( \fp_eval:n { #1 - 2 } , \fp_eval:n { #2 - 2 } ) ;
+  }
+  \semio_viz_probe_geometry:nx { frame } {
+    \fp_eval:n { \l_semio_viz_pad_fp } , \fp_eval:n { \l_semio_viz_pad_fp } ,
+    \fp_eval:n { #1 - 2 } , \fp_eval:n { #2 - 2 }
+  }
+}
+%endregion 🔖️Frame
+
+%region 🔖️Style
+\tl_new:N \l_semio_viz_guide_chrome_tl
+
+% 🖌️ TikZ style of a guide role, built from the theme's colours, strokes and fonts.
+% Roles: domain, tick, tick-minor, grid, grid-minor, label, title.
+\tl_new:N \l_semio_viz_guide_style_tl
+
+\cs_new_protected:Npn \semio_viz_guide_style:nN #1#2 {
+  \str_case:nnF {#1} {
+    { domain } {
+      \semio_viz_theme_chrome:nN { border-emphasized } \l_semio_viz_guide_chrome_tl
+      \tl_set:Nx #2 { \l_semio_viz_guide_chrome_tl , line~width=\semio_viz_theme_stroke:n { hairline } }
+    }
+    { tick } {
+      \semio_viz_theme_chrome:nN { border-emphasized } \l_semio_viz_guide_chrome_tl
+      \tl_set:Nx #2 { \l_semio_viz_guide_chrome_tl , line~width=\semio_viz_theme_stroke:n { hairline } }
+    }
+    { tick-minor } {
+      \semio_viz_theme_chrome:nN { border-normal } \l_semio_viz_guide_chrome_tl
+      \tl_set:Nx #2 { \l_semio_viz_guide_chrome_tl , line~width=\semio_viz_theme_stroke:n { hairline } ,
+                      draw~opacity=0.6 }
+    }
+    { grid } {
+      \semio_viz_theme_chrome:nN { border-normal } \l_semio_viz_guide_chrome_tl
+      \tl_set:Nx #2 { \l_semio_viz_guide_chrome_tl , line~width=\semio_viz_theme_stroke:n { hairline } ,
+                      draw~opacity=0.45 }
+    }
+    { grid-minor } {
+      \semio_viz_theme_chrome:nN { border-normal } \l_semio_viz_guide_chrome_tl
+      \tl_set:Nx #2 { \l_semio_viz_guide_chrome_tl , line~width=\semio_viz_theme_stroke:n { hairline } ,
+                      draw~opacity=0.22 }
+    }
+    { label } {
+      \semio_viz_theme_chrome:nN { foreground } \l_semio_viz_guide_chrome_tl
+      \tl_set:Nx #2 { font=\exp_not:N \c_semio_viz_theme_font_label_tl ,
+                      text=\l_semio_viz_guide_chrome_tl }
+    }
+    { title } {
+      \semio_viz_theme_chrome:nN { foreground } \l_semio_viz_guide_chrome_tl
+      \tl_set:Nx #2 { font=\exp_not:N \c_semio_viz_theme_font_title_tl ,
+                      text=\l_semio_viz_guide_chrome_tl }
+    }
+  } {
+    \semio_viz_theme_chrome:nN { border-normal } \l_semio_viz_guide_chrome_tl
+    \tl_set_eq:NN #2 \l_semio_viz_guide_chrome_tl
+  }
+}
+%endregion 🔖️Style
+
+%region 🔖️TickText
+% 🔢 Tick and legend text: the value through semio-viz-format's specifier grammar,
+% or the bare value when no specifier was given -- an empty spec is not the same
+% as the specifier `` and must not go through the formatter.
+\cs_new_protected:Npn \semio_viz_guide_format:nnN #1#2#3 {
+  \tl_if_empty:nTF {#1}
+    { \tl_set:Nn #3 {#2} }
+    { \semio_viz_format:nnN {#1} {#2} #3 }
+}
+\cs_generate_variant:Nn \semio_viz_guide_format:nnN { VnN , VVN }
+%endregion 🔖️TickText
+
+%region 🔖️ScaleReads
+\fp_new:N \l_semio_viz_guide_lo_fp
+\fp_new:N \l_semio_viz_guide_hi_fp
+\int_new:N \l_semio_viz_guide_i_int
+
+% 🎚️ Tick values of any named scale, straight from semio-viz-scale: it already knows the
+% discrete kinds, the log decades, the temporal intervals and an explicit `tickValues`
+% option, so a guide never generates its own ticks.
+\cs_new_protected:Npn \semio_viz_guide_scale_ticks:nnN #1#2#3
+  { \semio_viz_scale_ticks_count:nnN {#1} {#2} #3 }
+\cs_generate_variant:Nn \semio_viz_guide_scale_ticks:nnN { VnN , VVN }
+
+% 🏷️ The categories a discrete scale's domain lists, in declaration order.
+\cs_new_protected:Npn \semio_viz_guide_domain_items:nN #1#2 {
+  \clist_map_inline:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist }
+    { \seq_put_right:Nn #2 {##1} }
+}
+
+% 📐 First and last domain value of a scale.
+\cs_new_protected:Npn \semio_viz_guide_domain_bounds:nNN #1#2#3 {
+  \fp_set:Nn #2 { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { 1 } }
+  \fp_set:Nn #3 { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { -1 } }
+}
+
+% 📐 First and last range value of a scale, in figure millimetres.
+\cs_new_protected:Npn \semio_viz_guide_range_bounds:nNN #1#2#3 {
+  \fp_set:Nn #2 { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } { 1 } }
+  \fp_set:Nn #3 { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } { -1 } }
+}
+\cs_generate_variant:Nn \semio_viz_guide_range_bounds:nNN { VNN }
+\cs_generate_variant:Nn \semio_viz_guide_domain_bounds:nNN { VNN }
+%endregion 🔖️ScaleReads
+
+
+%region 🔖️Keys
+% 🔑 semio / viz / axis keys, all optional, defaults in \semio_viz_guide_keys_reset:
+%   scale        (name)   scale whose domain the axis describes, default `x`
+%   orient       (choice) bottom|top|left|right|segment|angular|radial, default bottom
+%   at           (mm)     cross-axis position of the axis line; empty = frame edge
+%   offset       (mm)     outward shift of the axis line, for dual axes, default 0
+%   from,to      (x,y)    segment endpoints when orient=segment
+%   center       (x,y)    polar centre when orient=angular|radial, default frame centre
+%   innerRadius  (mm)     polar inner radius, default 0
+%   outerRadius  (mm)     polar outer radius, default half the smaller frame side minus pad
+%   startAngle   (deg)    angular sweep start, default 0
+%   endAngle     (deg)    angular sweep end, default 360
+%   angle        (deg)    direction of a radial axis, default 90
+%   title        (text)   axis title
+%   titleAnchor  (choice) start|middle|end, default middle
+%   titleGap     (mm)     distance from the tick labels to the title, default 5
+%   ticks        (int)    target tick count for continuous scales, default 5
+%   tickValues   (clist)  explicit tick values, overrides ticks
+%   tickFormat   (spec)   semio-viz-format spec for tick labels, default empty
+%   tickSize     (mm)     inner tick length, default 1.4
+%   tickSizeOuter(mm)     length of the domain line's end caps, default 1.4
+%   tickPadding  (mm)     gap between tick end and label, default 0.8
+%   minor        (bool)   draw minor ticks, default false
+%   minorTicks   (int)    minor subdivisions per major interval, default 4
+%   minorSize    (mm)     minor tick length, default 0.7
+%   grid         (bool)   draw a grid line at every major tick, default false
+%   gridLength   (mm)     grid line length; empty = across the plot area
+%   domainLine   (bool)   draw the axis line itself, default true
+%   labelRotate  (deg)    tick label rotation, default 0
+%   labelAlign   (choice) auto|start|middle|end, default auto
+%   labels       (bool)   draw tick labels, default true
+%   broken       (lo,hi)  data interval removed from the axis, default empty
+%   breakGap     (mm)     width the removed interval collapses to, default 2
+%   breakMarks   (int)    slashes drawn across the break, default 2
+\tl_new:N \l_semio_viz_axis_scale_tl
+\tl_new:N \l_semio_viz_axis_orient_tl
+\tl_new:N \l_semio_viz_axis_at_tl
+\tl_new:N \l_semio_viz_axis_from_tl
+\tl_new:N \l_semio_viz_axis_to_tl
+\tl_new:N \l_semio_viz_axis_center_tl
+\tl_new:N \l_semio_viz_axis_title_tl
+\tl_new:N \l_semio_viz_axis_title_anchor_tl
+\tl_new:N \l_semio_viz_axis_tick_format_tl
+\tl_new:N \l_semio_viz_axis_label_align_tl
+\tl_new:N \l_semio_viz_axis_grid_length_tl
+\clist_new:N \l_semio_viz_axis_tick_values_clist
+\clist_new:N \l_semio_viz_axis_broken_clist
+\int_new:N \l_semio_viz_axis_ticks_int
+\int_new:N \l_semio_viz_axis_minor_ticks_int
+\int_new:N \l_semio_viz_axis_break_marks_int
+\fp_new:N \l_semio_viz_axis_offset_fp
+\fp_new:N \l_semio_viz_axis_tick_size_fp
+\fp_new:N \l_semio_viz_axis_tick_size_outer_fp
+\fp_new:N \l_semio_viz_axis_tick_padding_fp
+\fp_new:N \l_semio_viz_axis_minor_size_fp
+\fp_new:N \l_semio_viz_axis_title_gap_fp
+\fp_new:N \l_semio_viz_axis_label_rotate_fp
+\fp_new:N \l_semio_viz_axis_inner_radius_fp
+\fp_new:N \l_semio_viz_axis_outer_radius_fp
+\fp_new:N \l_semio_viz_axis_start_angle_fp
+\fp_new:N \l_semio_viz_axis_end_angle_fp
+\fp_new:N \l_semio_viz_axis_angle_fp
+\fp_new:N \l_semio_viz_axis_break_gap_fp
+\bool_new:N \l_semio_viz_axis_minor_bool
+\bool_new:N \l_semio_viz_axis_grid_bool
+\bool_new:N \l_semio_viz_axis_domain_bool
+\bool_new:N \l_semio_viz_axis_labels_bool
+
+\keys_define:nn { semio / viz / axis } {
+  scale .tl_set:N = \l_semio_viz_axis_scale_tl,
+  orient .tl_set:N = \l_semio_viz_axis_orient_tl,
+  at .tl_set:N = \l_semio_viz_axis_at_tl,
+  offset .fp_set:N = \l_semio_viz_axis_offset_fp,
+  from .tl_set:N = \l_semio_viz_axis_from_tl,
+  to .tl_set:N = \l_semio_viz_axis_to_tl,
+  center .tl_set:N = \l_semio_viz_axis_center_tl,
+  innerRadius .fp_set:N = \l_semio_viz_axis_inner_radius_fp,
+  outerRadius .fp_set:N = \l_semio_viz_axis_outer_radius_fp,
+  startAngle .fp_set:N = \l_semio_viz_axis_start_angle_fp,
+  endAngle .fp_set:N = \l_semio_viz_axis_end_angle_fp,
+  angle .fp_set:N = \l_semio_viz_axis_angle_fp,
+  title .tl_set:N = \l_semio_viz_axis_title_tl,
+  titleAnchor .tl_set:N = \l_semio_viz_axis_title_anchor_tl,
+  titleGap .fp_set:N = \l_semio_viz_axis_title_gap_fp,
+  ticks .int_set:N = \l_semio_viz_axis_ticks_int,
+  tickValues .clist_set:N = \l_semio_viz_axis_tick_values_clist,
+  tickFormat .tl_set:N = \l_semio_viz_axis_tick_format_tl,
+  tickSize .fp_set:N = \l_semio_viz_axis_tick_size_fp,
+  tickSizeOuter .fp_set:N = \l_semio_viz_axis_tick_size_outer_fp,
+  tickPadding .fp_set:N = \l_semio_viz_axis_tick_padding_fp,
+  minor .bool_set:N = \l_semio_viz_axis_minor_bool,
+  minorTicks .int_set:N = \l_semio_viz_axis_minor_ticks_int,
+  minorSize .fp_set:N = \l_semio_viz_axis_minor_size_fp,
+  grid .bool_set:N = \l_semio_viz_axis_grid_bool,
+  gridLength .tl_set:N = \l_semio_viz_axis_grid_length_tl,
+  domainLine .bool_set:N = \l_semio_viz_axis_domain_bool,
+  labelRotate .fp_set:N = \l_semio_viz_axis_label_rotate_fp,
+  labelAlign .tl_set:N = \l_semio_viz_axis_label_align_tl,
+  labels .bool_set:N = \l_semio_viz_axis_labels_bool,
+  broken .clist_set:N = \l_semio_viz_axis_broken_clist,
+  breakGap .fp_set:N = \l_semio_viz_axis_break_gap_fp,
+  breakMarks .int_set:N = \l_semio_viz_axis_break_marks_int,
+}
+
+% ♻️ Puts every axis key back to its documented default before an option list is read.
+\cs_new_protected:Npn \semio_viz_guide_keys_reset: {
+  \tl_set:Nn \l_semio_viz_axis_scale_tl { x }
+  \tl_set:Nn \l_semio_viz_axis_orient_tl { bottom }
+  \tl_clear:N \l_semio_viz_axis_at_tl
+  \tl_clear:N \l_semio_viz_axis_from_tl
+  \tl_clear:N \l_semio_viz_axis_to_tl
+  \tl_clear:N \l_semio_viz_axis_center_tl
+  \tl_clear:N \l_semio_viz_axis_title_tl
+  \tl_set:Nn \l_semio_viz_axis_title_anchor_tl { middle }
+  \tl_clear:N \l_semio_viz_axis_tick_format_tl
+  \tl_set:Nn \l_semio_viz_axis_label_align_tl { auto }
+  \tl_clear:N \l_semio_viz_axis_grid_length_tl
+  \clist_clear:N \l_semio_viz_axis_tick_values_clist
+  \clist_clear:N \l_semio_viz_axis_broken_clist
+  \int_set:Nn \l_semio_viz_axis_ticks_int { 5 }
+  \int_set:Nn \l_semio_viz_axis_minor_ticks_int { 4 }
+  \fp_zero:N \l_semio_viz_axis_offset_fp
+  \fp_set:Nn \l_semio_viz_axis_tick_size_fp { 1.4 }
+  \fp_set:Nn \l_semio_viz_axis_tick_size_outer_fp { 1.4 }
+  \fp_set:Nn \l_semio_viz_axis_tick_padding_fp { 0.8 }
+  \fp_set:Nn \l_semio_viz_axis_minor_size_fp { 0.7 }
+  \fp_set:Nn \l_semio_viz_axis_title_gap_fp { 5 }
+  \fp_zero:N \l_semio_viz_axis_label_rotate_fp
+  \fp_zero:N \l_semio_viz_axis_inner_radius_fp
+  \fp_set:Nn \l_semio_viz_axis_outer_radius_fp
+    { max( 1 , min( \l_semio_viz_width_fp , \l_semio_viz_height_fp ) / 2 - \l_semio_viz_pad_fp ) }
+  \fp_zero:N \l_semio_viz_axis_start_angle_fp
+  \fp_set:Nn \l_semio_viz_axis_end_angle_fp { 360 }
+  \fp_set:Nn \l_semio_viz_axis_angle_fp { 90 }
+  \fp_set:Nn \l_semio_viz_axis_break_gap_fp { 2 }
+  \int_set:Nn \l_semio_viz_axis_break_marks_int { 2 }
+  \bool_set_false:N \l_semio_viz_axis_minor_bool
+  \bool_set_false:N \l_semio_viz_axis_grid_bool
+  \bool_set_true:N \l_semio_viz_axis_domain_bool
+  \bool_set_true:N \l_semio_viz_axis_labels_bool
+}
+%endregion 🔖️Keys
+
+%region 🔖️AxisGeometry
+% 🧭 The one geometry every straight axis resolves to: a segment (x1,y1)-(x2,y2)
+% carrying the scale range from r0 to r1, plus the outward unit normal (nx,ny)
+% along which ticks, labels and the title stack. Grid lines run inward, -n.
+\fp_new:N \l_semio_viz_guide_ax_fp
+\fp_new:N \l_semio_viz_guide_ay_fp
+\fp_new:N \l_semio_viz_guide_bx_fp
+\fp_new:N \l_semio_viz_guide_by_fp
+\fp_new:N \l_semio_viz_guide_nx_fp
+\fp_new:N \l_semio_viz_guide_ny_fp
+\fp_new:N \l_semio_viz_guide_rangelo_fp
+\fp_new:N \l_semio_viz_guide_rangehi_fp
+\fp_new:N \l_semio_viz_guide_cx_fp
+\fp_new:N \l_semio_viz_guide_cy_fp
+\fp_new:N \l_semio_viz_guide_px_fp
+\fp_new:N \l_semio_viz_guide_py_fp
+\fp_new:N \l_semio_viz_guide_gridlen_fp
+\fp_new:N \l_semio_viz_guide_break_lo_fp
+\fp_new:N \l_semio_viz_guide_break_hi_fp
+\fp_new:N \l_semio_viz_guide_break_shift_fp
+\fp_new:N \l_semio_viz_guide_p_fp
+\fp_new:N \l_semio_viz_guide_a_fp
+\fp_new:N \l_semio_viz_guide_b_fp
+\fp_new:N \l_semio_viz_guide_frac_fp
+\seq_new:N \l_semio_viz_guide_exp_seq
+\tl_new:N \l_semio_viz_guide_labelstyle_tl
+\bool_new:N \l_semio_viz_guide_broken_bool
+\bool_new:N \l_semio_viz_guide_polar_bool
+
+
+\cs_new_protected:Npn \semio_viz_guide_pair:nNN #1#2#3 {
+  \fp_set:Nn #2 { \clist_item:nn {#1} { 1 } }
+  \fp_set:Nn #3 { \clist_item:nn {#1} { 2 } }
+}
+\cs_generate_variant:Nn \semio_viz_guide_pair:nNN { VNN }
+
+% ✂️ A broken axis collapses [lo,hi] to breakGap: every position beyond hi moves
+% back by the removed length, and the axis end r1 moves with it.
+\cs_new_protected:Npn \semio_viz_guide_break_prep: {
+  \bool_set_false:N \l_semio_viz_guide_broken_bool
+  \fp_zero:N \l_semio_viz_guide_break_shift_fp
+  \int_compare:nNnT { \clist_count:N \l_semio_viz_axis_broken_clist } = { 2 } {
+    \bool_set_true:N \l_semio_viz_guide_broken_bool
+    \semio_viz_scale_map:VnN \l_semio_viz_axis_scale_tl
+      { \clist_item:Nn \l_semio_viz_axis_broken_clist { 1 } } \l_semio_viz_guide_break_lo_fp
+    \semio_viz_scale_map:VnN \l_semio_viz_axis_scale_tl
+      { \clist_item:Nn \l_semio_viz_axis_broken_clist { 2 } } \l_semio_viz_guide_break_hi_fp
+    \fp_set:Nn \l_semio_viz_guide_break_shift_fp
+      { \l_semio_viz_guide_break_hi_fp - \l_semio_viz_guide_break_lo_fp - \l_semio_viz_axis_break_gap_fp }
+  }
+}
+
+% 📍 Scale position of a value, corrected for the break.
+\cs_new_protected:Npn \semio_viz_guide_pos:nN #1#2 {
+  \semio_viz_scale_map:VnN \l_semio_viz_axis_scale_tl {#1} #2
+  \bool_if:NT \l_semio_viz_guide_broken_bool {
+    \fp_compare:nNnT {#2} > { \l_semio_viz_guide_break_hi_fp }
+      { \fp_sub:Nn #2 { \l_semio_viz_guide_break_shift_fp } }
+  }
+}
+
+% 🧱 Resolves orient into segment, normal and range; true when the axis is polar.
+\cs_new_protected:Npn \semio_viz_guide_frame_resolve: {
+  \semio_viz_guide_range_bounds:VNN \l_semio_viz_axis_scale_tl
+    \l_semio_viz_guide_rangelo_fp \l_semio_viz_guide_rangehi_fp
+  \bool_if:NT \l_semio_viz_guide_broken_bool
+    { \fp_sub:Nn \l_semio_viz_guide_rangehi_fp { \l_semio_viz_guide_break_shift_fp } }
+  \bool_set_false:N \l_semio_viz_guide_polar_bool
+  \tl_if_empty:NTF \l_semio_viz_axis_center_tl
+    {
+      \fp_set:Nn \l_semio_viz_guide_cx_fp { \l_semio_viz_width_fp / 2 }
+      \fp_set:Nn \l_semio_viz_guide_cy_fp { \l_semio_viz_height_fp / 2 }
+    }
+    { \semio_viz_guide_pair:VNN \l_semio_viz_axis_center_tl \l_semio_viz_guide_cx_fp \l_semio_viz_guide_cy_fp }
+  \str_case:VnF \l_semio_viz_axis_orient_tl {
+    { bottom } {
+      \fp_set:Nn \l_semio_viz_guide_ay_fp
+        { \tl_if_empty:NTF \l_semio_viz_axis_at_tl { \l_semio_viz_pad_fp } { \l_semio_viz_axis_at_tl } - \l_semio_viz_axis_offset_fp }
+      \fp_set_eq:NN \l_semio_viz_guide_by_fp \l_semio_viz_guide_ay_fp
+      \fp_set_eq:NN \l_semio_viz_guide_ax_fp \l_semio_viz_guide_rangelo_fp
+      \fp_set_eq:NN \l_semio_viz_guide_bx_fp \l_semio_viz_guide_rangehi_fp
+      \fp_zero:N \l_semio_viz_guide_nx_fp
+      \fp_set:Nn \l_semio_viz_guide_ny_fp { -1 }
+      \fp_set:Nn \l_semio_viz_guide_gridlen_fp { \l_semio_viz_height_fp - 2 - \l_semio_viz_guide_ay_fp }
+    }
+    { top } {
+      \fp_set:Nn \l_semio_viz_guide_ay_fp
+        { \tl_if_empty:NTF \l_semio_viz_axis_at_tl { \l_semio_viz_height_fp - 2 } { \l_semio_viz_axis_at_tl } + \l_semio_viz_axis_offset_fp }
+      \fp_set_eq:NN \l_semio_viz_guide_by_fp \l_semio_viz_guide_ay_fp
+      \fp_set_eq:NN \l_semio_viz_guide_ax_fp \l_semio_viz_guide_rangelo_fp
+      \fp_set_eq:NN \l_semio_viz_guide_bx_fp \l_semio_viz_guide_rangehi_fp
+      \fp_zero:N \l_semio_viz_guide_nx_fp
+      \fp_set:Nn \l_semio_viz_guide_ny_fp { 1 }
+      \fp_set:Nn \l_semio_viz_guide_gridlen_fp { \l_semio_viz_guide_ay_fp - \l_semio_viz_pad_fp }
+    }
+    { left } {
+      \fp_set:Nn \l_semio_viz_guide_ax_fp
+        { \tl_if_empty:NTF \l_semio_viz_axis_at_tl { \l_semio_viz_pad_fp } { \l_semio_viz_axis_at_tl } - \l_semio_viz_axis_offset_fp }
+      \fp_set_eq:NN \l_semio_viz_guide_bx_fp \l_semio_viz_guide_ax_fp
+      \fp_set_eq:NN \l_semio_viz_guide_ay_fp \l_semio_viz_guide_rangelo_fp
+      \fp_set_eq:NN \l_semio_viz_guide_by_fp \l_semio_viz_guide_rangehi_fp
+      \fp_set:Nn \l_semio_viz_guide_nx_fp { -1 }
+      \fp_zero:N \l_semio_viz_guide_ny_fp
+      \fp_set:Nn \l_semio_viz_guide_gridlen_fp { \l_semio_viz_width_fp - 2 - \l_semio_viz_guide_ax_fp }
+    }
+    { right } {
+      \fp_set:Nn \l_semio_viz_guide_ax_fp
+        { \tl_if_empty:NTF \l_semio_viz_axis_at_tl { \l_semio_viz_width_fp - 2 } { \l_semio_viz_axis_at_tl } + \l_semio_viz_axis_offset_fp }
+      \fp_set_eq:NN \l_semio_viz_guide_bx_fp \l_semio_viz_guide_ax_fp
+      \fp_set_eq:NN \l_semio_viz_guide_ay_fp \l_semio_viz_guide_rangelo_fp
+      \fp_set_eq:NN \l_semio_viz_guide_by_fp \l_semio_viz_guide_rangehi_fp
+      \fp_set:Nn \l_semio_viz_guide_nx_fp { 1 }
+      \fp_zero:N \l_semio_viz_guide_ny_fp
+      \fp_set:Nn \l_semio_viz_guide_gridlen_fp { \l_semio_viz_guide_ax_fp - \l_semio_viz_pad_fp }
+    }
+    { segment } {
+      \semio_viz_guide_pair:VNN \l_semio_viz_axis_from_tl \l_semio_viz_guide_ax_fp \l_semio_viz_guide_ay_fp
+      \semio_viz_guide_pair:VNN \l_semio_viz_axis_to_tl \l_semio_viz_guide_bx_fp \l_semio_viz_guide_by_fp
+      \fp_set:Nn \l_semio_viz_guide_a_fp
+        { max( 1e-9 , sqrt( ( \l_semio_viz_guide_bx_fp - \l_semio_viz_guide_ax_fp ) ^ 2 + ( \l_semio_viz_guide_by_fp - \l_semio_viz_guide_ay_fp ) ^ 2 ) ) }
+      \fp_set:Nn \l_semio_viz_guide_nx_fp { ( \l_semio_viz_guide_by_fp - \l_semio_viz_guide_ay_fp ) / \l_semio_viz_guide_a_fp }
+      \fp_set:Nn \l_semio_viz_guide_ny_fp { - ( \l_semio_viz_guide_bx_fp - \l_semio_viz_guide_ax_fp ) / \l_semio_viz_guide_a_fp }
+      \fp_set_eq:NN \l_semio_viz_guide_gridlen_fp \l_semio_viz_guide_a_fp
+    }
+    { angular } {
+      \bool_set_true:N \l_semio_viz_guide_polar_bool
+      \fp_set_eq:NN \l_semio_viz_guide_gridlen_fp \l_semio_viz_axis_outer_radius_fp
+    }
+    { radial } {
+      \fp_set:Nn \l_semio_viz_guide_ax_fp
+        { \l_semio_viz_guide_cx_fp + \l_semio_viz_axis_inner_radius_fp * cosd( \l_semio_viz_axis_angle_fp ) }
+      \fp_set:Nn \l_semio_viz_guide_ay_fp
+        { \l_semio_viz_guide_cy_fp + \l_semio_viz_axis_inner_radius_fp * sind( \l_semio_viz_axis_angle_fp ) }
+      \fp_set:Nn \l_semio_viz_guide_bx_fp
+        { \l_semio_viz_guide_cx_fp + \l_semio_viz_axis_outer_radius_fp * cosd( \l_semio_viz_axis_angle_fp ) }
+      \fp_set:Nn \l_semio_viz_guide_by_fp
+        { \l_semio_viz_guide_cy_fp + \l_semio_viz_axis_outer_radius_fp * sind( \l_semio_viz_axis_angle_fp ) }
+      \fp_set:Nn \l_semio_viz_guide_nx_fp { sind( \l_semio_viz_axis_angle_fp ) }
+      \fp_set:Nn \l_semio_viz_guide_ny_fp { - cosd( \l_semio_viz_axis_angle_fp ) }
+      \fp_set_eq:NN \l_semio_viz_guide_gridlen_fp \l_semio_viz_axis_outer_radius_fp
+    }
+  } { \msg_error:nnx { semio-viz } { unknown-guide-orient } { \tl_use:N \l_semio_viz_axis_orient_tl } }
+  \tl_if_empty:NF \l_semio_viz_axis_grid_length_tl
+    { \fp_set:Nn \l_semio_viz_guide_gridlen_fp { \l_semio_viz_axis_grid_length_tl } }
+}
+
+% 🎯 Point on the axis for a scale position, along the resolved segment.
+\cs_new_protected:Npn \semio_viz_guide_point:n #1 {
+  \bool_if:NTF \l_semio_viz_guide_polar_bool
+    {
+      \fp_set:Nn \l_semio_viz_guide_px_fp
+        { \l_semio_viz_guide_cx_fp + \l_semio_viz_axis_outer_radius_fp * cosd(#1) }
+      \fp_set:Nn \l_semio_viz_guide_py_fp
+        { \l_semio_viz_guide_cy_fp + \l_semio_viz_axis_outer_radius_fp * sind(#1) }
+      \fp_set:Nn \l_semio_viz_guide_nx_fp { cosd(#1) }
+      \fp_set:Nn \l_semio_viz_guide_ny_fp { sind(#1) }
+    }
+    {
+      \fp_set:Nn \l_semio_viz_guide_frac_fp
+        { ( (#1) - \l_semio_viz_guide_rangelo_fp ) / ( \l_semio_viz_guide_rangehi_fp - \l_semio_viz_guide_rangelo_fp + 1e-12 ) }
+      \fp_set:Nn \l_semio_viz_guide_px_fp
+        { \l_semio_viz_guide_ax_fp + \l_semio_viz_guide_frac_fp * ( \l_semio_viz_guide_bx_fp - \l_semio_viz_guide_ax_fp ) }
+      \fp_set:Nn \l_semio_viz_guide_py_fp
+        { \l_semio_viz_guide_ay_fp + \l_semio_viz_guide_frac_fp * ( \l_semio_viz_guide_by_fp - \l_semio_viz_guide_ay_fp ) }
+    }
+}
+%endregion 🔖️AxisGeometry
+
+%region 🔖️AxisRender
+\seq_new:N \l_semio_viz_guide_ticks_seq
+\seq_new:N \l_semio_viz_guide_labels_seq
+\seq_new:N \l_semio_viz_guide_coords_seq
+\tl_new:N \l_semio_viz_guide_label_tl
+\tl_new:N \l_semio_viz_guide_anchor_tl
+\tl_new:N \l_semio_viz_guide_arc_tl
+
+% 🪜 The tick values of this axis: the explicit `tickValues` list, or the scale's own ticks, split
+% into the two sides of the break when the axis is broken.
+\cs_new_protected:Npn \semio_viz_guide_tick_values: {
+  \clist_if_empty:NTF \l_semio_viz_axis_tick_values_clist
+    {
+      \semio_viz_guide_scale_ticks:VnN \l_semio_viz_axis_scale_tl
+        { \l_semio_viz_axis_ticks_int } \l_semio_viz_guide_ticks_seq
+    }
+    {
+      \seq_set_from_clist:NN \l_semio_viz_guide_ticks_seq \l_semio_viz_axis_tick_values_clist
+    }
+  \bool_if:NT \l_semio_viz_guide_broken_bool {
+    \seq_set_filter:NNn \l_semio_viz_guide_exp_seq \l_semio_viz_guide_ticks_seq {
+      \fp_compare_p:n { ##1 <= \clist_item:Nn \l_semio_viz_axis_broken_clist { 1 } }
+        || \fp_compare_p:n { ##1 >= \clist_item:Nn \l_semio_viz_axis_broken_clist { 2 } }
+    }
+    \seq_set_eq:NN \l_semio_viz_guide_ticks_seq \l_semio_viz_guide_exp_seq
+  }
+}
+
+% 🔤 Anchor of a tick label from the outward normal, unless labelAlign forces one.
+\cs_new_protected:Npn \semio_viz_guide_label_anchor: {
+  \str_case:VnF \l_semio_viz_axis_label_align_tl {
+    { start } { \tl_set:Nn \l_semio_viz_guide_anchor_tl { west } }
+    { middle } { \tl_set:Nn \l_semio_viz_guide_anchor_tl { center } }
+    { end } { \tl_set:Nn \l_semio_viz_guide_anchor_tl { east } }
+  } {
+    \fp_compare:nNnTF { abs( \l_semio_viz_guide_nx_fp ) } > { abs( \l_semio_viz_guide_ny_fp ) }
+      {
+        \fp_compare:nNnTF { \l_semio_viz_guide_nx_fp } > { 0 }
+          { \tl_set:Nn \l_semio_viz_guide_anchor_tl { west } }
+          { \tl_set:Nn \l_semio_viz_guide_anchor_tl { east } }
+      }
+      {
+        \fp_compare:nNnTF { \l_semio_viz_guide_ny_fp } > { 0 }
+          { \tl_set:Nn \l_semio_viz_guide_anchor_tl { south } }
+          { \tl_set:Nn \l_semio_viz_guide_anchor_tl { north } }
+      }
+  }
+}
+
+% ➖ The domain line: a straight segment on a cartesian axis, a polyline along the arc on a polar one.
+\cs_new_protected:Npn \semio_viz_guide_domain_draw: {
+  \semio_viz_guide_style:nN { domain } \l_semio_viz_guide_style_tl
+  \bool_if:NTF \l_semio_viz_guide_polar_bool
+    {
+      \int_set:Nn \l_semio_viz_guide_i_int
+        { \int_max:nn { 8 } { \fp_to_int:n { ceil( abs( \l_semio_viz_axis_end_angle_fp - \l_semio_viz_axis_start_angle_fp ) / 3 ) } } }
+      \tl_clear:N \l_semio_viz_guide_arc_tl
+      \int_step_inline:nnn { 0 } { \l_semio_viz_guide_i_int } {
+        \tl_put_right:Nx \l_semio_viz_guide_arc_tl {
+          \tl_if_empty:NF \l_semio_viz_guide_arc_tl { -- }
+          ( \fp_eval:n { \l_semio_viz_guide_cx_fp + \l_semio_viz_axis_outer_radius_fp
+              * cosd( \l_semio_viz_axis_start_angle_fp + ##1 / \l_semio_viz_guide_i_int
+                      * ( \l_semio_viz_axis_end_angle_fp - \l_semio_viz_axis_start_angle_fp ) ) } ,
+            \fp_eval:n { \l_semio_viz_guide_cy_fp + \l_semio_viz_axis_outer_radius_fp
+              * sind( \l_semio_viz_axis_start_angle_fp + ##1 / \l_semio_viz_guide_i_int
+                      * ( \l_semio_viz_axis_end_angle_fp - \l_semio_viz_axis_start_angle_fp ) ) } )
+        }
+      }
+      \use:x {
+        \exp_not:N \draw [ \exp_not:V \l_semio_viz_guide_style_tl ]
+          \exp_not:V \l_semio_viz_guide_arc_tl ;
+      }
+      \semio_viz_probe_geometry:nx { axis-domain-arc } {
+        \fp_eval:n { \l_semio_viz_guide_cx_fp } , \fp_eval:n { \l_semio_viz_guide_cy_fp } ,
+        \fp_eval:n { \l_semio_viz_axis_outer_radius_fp } ,
+        \fp_eval:n { \l_semio_viz_axis_start_angle_fp } , \fp_eval:n { \l_semio_viz_axis_end_angle_fp }
+      }
+    }
+    {
+      \use:x {
+        \exp_not:N \draw [ \exp_not:V \l_semio_viz_guide_style_tl ]
+          ( \fp_eval:n { \l_semio_viz_guide_ax_fp + \l_semio_viz_guide_nx_fp * \l_semio_viz_axis_tick_size_outer_fp } ,
+            \fp_eval:n { \l_semio_viz_guide_ay_fp + \l_semio_viz_guide_ny_fp * \l_semio_viz_axis_tick_size_outer_fp } )
+          -- ( \fp_eval:n { \l_semio_viz_guide_ax_fp } , \fp_eval:n { \l_semio_viz_guide_ay_fp } )
+          -- ( \fp_eval:n { \l_semio_viz_guide_bx_fp } , \fp_eval:n { \l_semio_viz_guide_by_fp } )
+          -- ( \fp_eval:n { \l_semio_viz_guide_bx_fp + \l_semio_viz_guide_nx_fp * \l_semio_viz_axis_tick_size_outer_fp } ,
+               \fp_eval:n { \l_semio_viz_guide_by_fp + \l_semio_viz_guide_ny_fp * \l_semio_viz_axis_tick_size_outer_fp } ) ;
+      }
+      \semio_viz_probe_geometry:nx { axis-domain } {
+        \fp_eval:n { \l_semio_viz_guide_ax_fp } , \fp_eval:n { \l_semio_viz_guide_ay_fp } ,
+        \fp_eval:n { \l_semio_viz_guide_bx_fp } , \fp_eval:n { \l_semio_viz_guide_by_fp }
+      }
+    }
+}
+
+% ✂️ The two slashes that mark a broken axis, so the reader sees the domain is not continuous.
+\cs_new_protected:Npn \semio_viz_guide_break_draw: {
+  \bool_if:NT \l_semio_viz_guide_broken_bool {
+    \semio_viz_guide_style:nN { domain } \l_semio_viz_guide_style_tl
+    \semio_viz_guide_point:n { \l_semio_viz_guide_break_lo_fp }
+    \int_step_inline:nn { \l_semio_viz_axis_break_marks_int } {
+      \use:x {
+        \exp_not:N \draw [ \exp_not:V \l_semio_viz_guide_style_tl ]
+          ( \fp_eval:n { \l_semio_viz_guide_px_fp + ( ##1 - ( \l_semio_viz_axis_break_marks_int + 1 ) / 2 ) * \l_semio_viz_axis_break_gap_fp * 0.6
+                         - \l_semio_viz_guide_nx_fp * 1.1 - \l_semio_viz_guide_ny_fp * 0.8 } ,
+            \fp_eval:n { \l_semio_viz_guide_py_fp + ( ##1 - ( \l_semio_viz_axis_break_marks_int + 1 ) / 2 ) * \l_semio_viz_axis_break_gap_fp * 0.6
+                         - \l_semio_viz_guide_ny_fp * 1.1 + \l_semio_viz_guide_nx_fp * 0.8 } )
+          -- ( \fp_eval:n { \l_semio_viz_guide_px_fp + ( ##1 - ( \l_semio_viz_axis_break_marks_int + 1 ) / 2 ) * \l_semio_viz_axis_break_gap_fp * 0.6
+                            + \l_semio_viz_guide_nx_fp * 1.1 + \l_semio_viz_guide_ny_fp * 0.8 } ,
+               \fp_eval:n { \l_semio_viz_guide_py_fp + ( ##1 - ( \l_semio_viz_axis_break_marks_int + 1 ) / 2 ) * \l_semio_viz_axis_break_gap_fp * 0.6
+                            + \l_semio_viz_guide_ny_fp * 1.1 - \l_semio_viz_guide_nx_fp * 0.8 } ) ;
+      }
+    }
+    \semio_viz_probe_geometry:nx { axis-break } {
+      \fp_eval:n { \l_semio_viz_guide_px_fp } , \fp_eval:n { \l_semio_viz_guide_py_fp } ,
+      \fp_eval:n { \l_semio_viz_axis_break_gap_fp }
+    }
+  }
+}
+
+% 🎚️ One tick at the current point: a mark #1 long along the axis normal, labelled when #2 is `true`.
+\cs_new_protected:Npn \semio_viz_guide_tick_draw:nn #1#2 {
+  \semio_viz_guide_style:nN { tick } \l_semio_viz_guide_style_tl
+  \use:x {
+    \exp_not:N \draw [ \exp_not:V \l_semio_viz_guide_style_tl ]
+      ( \fp_eval:n { \l_semio_viz_guide_px_fp } , \fp_eval:n { \l_semio_viz_guide_py_fp } )
+      -- ( \fp_eval:n { \l_semio_viz_guide_px_fp + \l_semio_viz_guide_nx_fp * (#1) } ,
+           \fp_eval:n { \l_semio_viz_guide_py_fp + \l_semio_viz_guide_ny_fp * (#1) } ) ;
+  }
+  \str_if_eq:nnT {#2} { true } {
+    \bool_if:NT \l_semio_viz_axis_labels_bool {
+      \semio_viz_guide_label_anchor:
+      \semio_viz_guide_style:nN { label } \l_semio_viz_guide_labelstyle_tl
+      \use:x {
+        \exp_not:N \node [ \exp_not:V \l_semio_viz_guide_labelstyle_tl , anchor=\exp_not:V \l_semio_viz_guide_anchor_tl ,
+                           rotate=\fp_eval:n { \l_semio_viz_axis_label_rotate_fp } ]
+          at ( \fp_eval:n { \l_semio_viz_guide_px_fp
+                            + \l_semio_viz_guide_nx_fp * ( (#1) + \l_semio_viz_axis_tick_padding_fp ) } ,
+               \fp_eval:n { \l_semio_viz_guide_py_fp
+                            + \l_semio_viz_guide_ny_fp * ( (#1) + \l_semio_viz_axis_tick_padding_fp ) } )
+          { \exp_not:V \l_semio_viz_guide_label_tl } ;
+      }
+    }
+  }
+  \semio_viz_probe_geometry:nx { axis-tick } {
+    \fp_eval:n { \l_semio_viz_guide_px_fp } , \fp_eval:n { \l_semio_viz_guide_py_fp } ,
+    \fp_eval:n { \l_semio_viz_guide_px_fp + \l_semio_viz_guide_nx_fp * (#1) } ,
+    \fp_eval:n { \l_semio_viz_guide_py_fp + \l_semio_viz_guide_ny_fp * (#1) }
+  }
+}
+
+% 📏 The grid line of the current tick: the same point carried across the frame, and probed.
+\cs_new_protected:Npn \semio_viz_guide_grid_line: {
+  \semio_viz_guide_style:nN { grid } \l_semio_viz_guide_style_tl
+  \use:x {
+    \exp_not:N \draw [ \exp_not:V \l_semio_viz_guide_style_tl ]
+      ( \fp_eval:n { \l_semio_viz_guide_px_fp } , \fp_eval:n { \l_semio_viz_guide_py_fp } )
+      -- ( \fp_eval:n { \l_semio_viz_guide_px_fp - \l_semio_viz_guide_nx_fp * \l_semio_viz_guide_gridlen_fp } ,
+           \fp_eval:n { \l_semio_viz_guide_py_fp - \l_semio_viz_guide_ny_fp * \l_semio_viz_guide_gridlen_fp } ) ;
+  }
+  \semio_viz_probe_geometry:nx { grid-line } {
+    \fp_eval:n { \l_semio_viz_guide_px_fp } , \fp_eval:n { \l_semio_viz_guide_py_fp } ,
+    \fp_eval:n { \l_semio_viz_guide_px_fp - \l_semio_viz_guide_nx_fp * \l_semio_viz_guide_gridlen_fp } ,
+    \fp_eval:n { \l_semio_viz_guide_py_fp - \l_semio_viz_guide_ny_fp * \l_semio_viz_guide_gridlen_fp }
+  }
+}
+
+% 🪶 Minor ticks subdivide each interval between consecutive major tick positions.
+\cs_new_protected:Npn \semio_viz_guide_minor_draw: {
+  \bool_if:NT \l_semio_viz_axis_minor_bool {
+    \int_compare:nNnT { \seq_count:N \l_semio_viz_guide_coords_seq } > { 1 } {
+      \int_step_inline:nn { \seq_count:N \l_semio_viz_guide_coords_seq - 1 } {
+        \fp_set:Nn \l_semio_viz_guide_a_fp { \seq_item:Nn \l_semio_viz_guide_coords_seq { ##1 } }
+        \fp_set:Nn \l_semio_viz_guide_b_fp { \seq_item:Nn \l_semio_viz_guide_coords_seq { ##1 + 1 } }
+        \int_step_inline:nn { \l_semio_viz_axis_minor_ticks_int - 1 } {
+          \semio_viz_guide_point:n
+            { \l_semio_viz_guide_a_fp + ####1 / \l_semio_viz_axis_minor_ticks_int
+              * ( \l_semio_viz_guide_b_fp - \l_semio_viz_guide_a_fp ) }
+          \semio_viz_guide_style:nN { tick-minor } \l_semio_viz_guide_style_tl
+          \use:x {
+            \exp_not:N \draw [ \exp_not:V \l_semio_viz_guide_style_tl ]
+              ( \fp_eval:n { \l_semio_viz_guide_px_fp } , \fp_eval:n { \l_semio_viz_guide_py_fp } )
+              -- ( \fp_eval:n { \l_semio_viz_guide_px_fp + \l_semio_viz_guide_nx_fp * \l_semio_viz_axis_minor_size_fp } ,
+                   \fp_eval:n { \l_semio_viz_guide_py_fp + \l_semio_viz_guide_ny_fp * \l_semio_viz_axis_minor_size_fp } ) ;
+          }
+          \semio_viz_probe_geometry:nx { axis-tick-minor } {
+            \fp_eval:n { \l_semio_viz_guide_px_fp } , \fp_eval:n { \l_semio_viz_guide_py_fp }
+          }
+        }
+      }
+    }
+  }
+}
+
+% 🏷️ The axis title, set at the start, centre or end of the domain line by `titleAnchor`.
+\cs_new_protected:Npn \semio_viz_guide_title_draw: {
+  \tl_if_empty:NF \l_semio_viz_axis_title_tl {
+    \str_case:VnF \l_semio_viz_axis_title_anchor_tl {
+      { start } { \fp_set:Nn \l_semio_viz_guide_a_fp { 0 } }
+      { end } { \fp_set:Nn \l_semio_viz_guide_a_fp { 1 } }
+    } { \fp_set:Nn \l_semio_viz_guide_a_fp { 0.5 } }
+    \semio_viz_guide_style:nN { title } \l_semio_viz_guide_style_tl
+    \use:x {
+      \exp_not:N \node [ \exp_not:V \l_semio_viz_guide_style_tl , anchor=center ]
+        at ( \fp_eval:n { \l_semio_viz_guide_ax_fp + \l_semio_viz_guide_a_fp * ( \l_semio_viz_guide_bx_fp - \l_semio_viz_guide_ax_fp )
+                          + \l_semio_viz_guide_nx_fp * ( \l_semio_viz_axis_tick_size_fp + \l_semio_viz_axis_title_gap_fp ) } ,
+             \fp_eval:n { \l_semio_viz_guide_ay_fp + \l_semio_viz_guide_a_fp * ( \l_semio_viz_guide_by_fp - \l_semio_viz_guide_ay_fp )
+                          + \l_semio_viz_guide_ny_fp * ( \l_semio_viz_axis_tick_size_fp + \l_semio_viz_axis_title_gap_fp ) } )
+        { \exp_not:V \l_semio_viz_axis_title_tl } ;
+    }
+  }
+}
+
+% 📐 The whole axis under the option list #1: domain, ticks and their labels, grid, minor ticks,
+% break marks and title, in the order that puts the grid under the data and the labels on top.
+\cs_new_protected:Npn \semio_viz_guide_axis_draw:n #1 {
+  \semio_viz_frame_require:n { SemioVizAxis }
+  \semio_viz_guide_keys_reset:
+  \keys_set:nn { semio / viz / axis } {#1}
+  \semio_viz_guide_break_prep:
+  \semio_viz_guide_frame_resolve:
+  \semio_viz_guide_tick_values:
+  \seq_clear:N \l_semio_viz_guide_coords_seq
+  \seq_map_inline:Nn \l_semio_viz_guide_ticks_seq {
+    \semio_viz_guide_pos:nN {##1} \l_semio_viz_guide_p_fp
+    \seq_put_right:Nx \l_semio_viz_guide_coords_seq { \fp_use:N \l_semio_viz_guide_p_fp }
+    \semio_viz_guide_point:n { \l_semio_viz_guide_p_fp }
+    \bool_if:NT \l_semio_viz_axis_grid_bool { \semio_viz_guide_grid_line: }
+    \semio_viz_guide_format:VnN \l_semio_viz_axis_tick_format_tl {##1} \l_semio_viz_guide_label_tl
+    \semio_viz_guide_tick_draw:nn { \l_semio_viz_axis_tick_size_fp } { true }
+  }
+  \semio_viz_guide_minor_draw:
+  \bool_if:NT \l_semio_viz_axis_domain_bool { \semio_viz_guide_domain_draw: }
+  \semio_viz_guide_break_draw:
+  \semio_viz_guide_title_draw:
+  \semio_viz_probe_geometry:nx { axis-tick-positions }
+    { \seq_use:Nn \l_semio_viz_guide_coords_seq { , } }
+  \semio_viz_probe_geometry:nx { axis-tick-values }
+    { \seq_use:Nn \l_semio_viz_guide_ticks_seq { , } }
+}
+%endregion 🔖️AxisRender
+
+%region 🔖️Grid
+% 🪟 A standalone grid: one axis' worth of grid lines per named scale, no ticks,
+% no labels, no domain line -- the same geometry the axis uses with grid=true.
+\tl_new:N \l_semio_viz_grid_x_tl
+\tl_new:N \l_semio_viz_grid_y_tl
+\bool_new:N \l_semio_viz_grid_minor_bool
+\int_new:N \l_semio_viz_grid_ticks_int
+
+\keys_define:nn { semio / viz / grid } {
+  x .tl_set:N = \l_semio_viz_grid_x_tl,
+  y .tl_set:N = \l_semio_viz_grid_y_tl,
+  minor .bool_set:N = \l_semio_viz_grid_minor_bool,
+  ticks .int_set:N = \l_semio_viz_grid_ticks_int,
+}
+
+% 🔳 The stand-alone grid: one invisible axis per named scale, drawn for its grid lines only.
+\cs_new_protected:Npn \semio_viz_grid_draw:n #1 {
+  \semio_viz_frame_require:n { SemioVizGrid }
+  \tl_clear:N \l_semio_viz_grid_x_tl
+  \tl_clear:N \l_semio_viz_grid_y_tl
+  \bool_set_false:N \l_semio_viz_grid_minor_bool
+  \int_set:Nn \l_semio_viz_grid_ticks_int { 5 }
+  \keys_set:nn { semio / viz / grid } {#1}
+  \tl_if_empty:NF \l_semio_viz_grid_x_tl {
+    \use:x {
+      \exp_not:N \semio_viz_guide_axis_draw:n {
+        scale = \exp_not:V \l_semio_viz_grid_x_tl , orient = bottom , grid = true ,
+        domainLine = false , labels = false , tickSize = 0 ,
+        ticks = \int_use:N \l_semio_viz_grid_ticks_int ,
+        minor = \bool_if:NTF \l_semio_viz_grid_minor_bool { true } { false }
+      }
+    }
+  }
+  \tl_if_empty:NF \l_semio_viz_grid_y_tl {
+    \use:x {
+      \exp_not:N \semio_viz_guide_axis_draw:n {
+        scale = \exp_not:V \l_semio_viz_grid_y_tl , orient = left , grid = true ,
+        domainLine = false , labels = false , tickSize = 0 ,
+        ticks = \int_use:N \l_semio_viz_grid_ticks_int ,
+        minor = \bool_if:NTF \l_semio_viz_grid_minor_bool { true } { false }
+      }
+    }
+  }
+}
+%endregion 🔖️Grid
+
+%region 🔖️Legend
+% 🔑 semio / viz / legend keys
+%   scale       (name)   scale the entries come from
+%   kind        (choice) swatch|line|symbol|gradient|size|pattern, default swatch
+%   title       (text)   legend title
+%   orient      (choice) horizontal|vertical, default vertical
+%   columns     (int)    entries per row (horizontal) or per column block, default 1
+%   at          (x,y)    top-left corner; empty = inside the frame's top-right
+%   itemGap     (mm)     gap between entries, default 1.2
+%   swatchSize  (mm)     swatch edge length, default 2.6
+%   labelGap    (mm)     gap between swatch and label, default 1.2
+%   format      (spec)   semio-viz-format spec for numeric entries
+%   ticks       (int)    entry count for gradient/size legends, default 5
+%   length      (mm)     gradient bar length, default 24
+%   symbol      (choice) circle|square|triangle|diamond, default circle
+%   hatchLines  (int)    hatch lines across a pattern swatch, default 3
+\tl_new:N \l_semio_viz_legend_scale_tl
+\tl_new:N \l_semio_viz_legend_kind_tl
+\tl_new:N \l_semio_viz_legend_title_tl
+\tl_new:N \l_semio_viz_legend_orient_tl
+\tl_new:N \l_semio_viz_legend_at_tl
+\tl_new:N \l_semio_viz_legend_format_tl
+\tl_new:N \l_semio_viz_legend_symbol_tl
+\tl_new:N \l_semio_viz_legend_color_tl
+\int_new:N \l_semio_viz_legend_columns_int
+\int_new:N \l_semio_viz_legend_ticks_int
+\int_new:N \l_semio_viz_legend_index_int
+\int_new:N \l_semio_viz_legend_slices_int
+\int_new:N \l_semio_viz_legend_hatch_int
+\fp_new:N \l_semio_viz_legend_text_fp
+\fp_new:N \l_semio_viz_legend_value_fp
+\fp_new:N \l_semio_viz_legend_item_gap_fp
+\fp_new:N \l_semio_viz_legend_swatch_fp
+\fp_new:N \l_semio_viz_legend_label_gap_fp
+\fp_new:N \l_semio_viz_legend_length_fp
+\fp_new:N \l_semio_viz_legend_x_fp
+\fp_new:N \l_semio_viz_legend_y_fp
+\fp_new:N \l_semio_viz_legend_col_fp
+\fp_new:N \l_semio_viz_legend_row_fp
+\fp_new:N \l_semio_viz_legend_width_fp
+\seq_new:N \l_semio_viz_legend_entries_seq
+\box_new:N \l_semio_viz_legend_box
+
+\keys_define:nn { semio / viz / legend } {
+  scale .tl_set:N = \l_semio_viz_legend_scale_tl,
+  kind .tl_set:N = \l_semio_viz_legend_kind_tl,
+  title .tl_set:N = \l_semio_viz_legend_title_tl,
+  orient .tl_set:N = \l_semio_viz_legend_orient_tl,
+  at .tl_set:N = \l_semio_viz_legend_at_tl,
+  columns .int_set:N = \l_semio_viz_legend_columns_int,
+  ticks .int_set:N = \l_semio_viz_legend_ticks_int,
+  itemGap .fp_set:N = \l_semio_viz_legend_item_gap_fp,
+  swatchSize .fp_set:N = \l_semio_viz_legend_swatch_fp,
+  labelGap .fp_set:N = \l_semio_viz_legend_label_gap_fp,
+  length .fp_set:N = \l_semio_viz_legend_length_fp,
+  format .tl_set:N = \l_semio_viz_legend_format_tl,
+  symbol .tl_set:N = \l_semio_viz_legend_symbol_tl,
+  hatchLines .int_set:N = \l_semio_viz_legend_hatch_int,
+}
+
+% ♻️ Puts every legend key back to its documented default before an option list is read.
+\cs_new_protected:Npn \semio_viz_legend_keys_reset: {
+  \tl_set:Nn \l_semio_viz_legend_scale_tl { x }
+  \tl_set:Nn \l_semio_viz_legend_kind_tl { swatch }
+  \tl_clear:N \l_semio_viz_legend_title_tl
+  \tl_set:Nn \l_semio_viz_legend_orient_tl { vertical }
+  \tl_clear:N \l_semio_viz_legend_at_tl
+  \tl_clear:N \l_semio_viz_legend_format_tl
+  \tl_set:Nn \l_semio_viz_legend_symbol_tl { circle }
+  \int_set:Nn \l_semio_viz_legend_columns_int { 1 }
+  \int_set:Nn \l_semio_viz_legend_ticks_int { 5 }
+  \int_set:Nn \l_semio_viz_legend_hatch_int { 3 }
+  \fp_set:Nn \l_semio_viz_legend_item_gap_fp { 1.2 }
+  \fp_set:Nn \l_semio_viz_legend_swatch_fp { 2.6 }
+  \fp_set:Nn \l_semio_viz_legend_label_gap_fp { 1.2 }
+  \fp_set:Nn \l_semio_viz_legend_length_fp { 24 }
+}
+
+% 📏 Width of typeset legend text in millimetres, so a horizontal legend advances
+% by what the label actually occupies instead of a guessed column width.
+\cs_new_protected:Npn \semio_viz_legend_text_width:nN #1#2 {
+  \hbox_set:Nn \l_semio_viz_legend_box { \normalfont \c_semio_viz_theme_font_label_tl #1 }
+  \fp_set:Nn #2 { \dim_to_fp:n { \box_wd:N \l_semio_viz_legend_box } / \dim_to_fp:n { 1mm } }
+}
+
+% 📋 The entries the legend will show: the explicit list, the scale's levels, or its ticks when the
+% legend is a gradient or a size ramp.
+\cs_new_protected:Npn \semio_viz_legend_entries: {
+  \seq_clear:N \l_semio_viz_legend_entries_seq
+  \str_case:VnF \l_semio_viz_legend_kind_tl {
+    { gradient } {
+      \semio_viz_guide_scale_ticks:VnN \l_semio_viz_legend_scale_tl
+        { \l_semio_viz_legend_ticks_int } \l_semio_viz_legend_entries_seq
+    }
+    { size } {
+      \semio_viz_guide_scale_ticks:VnN \l_semio_viz_legend_scale_tl
+        { \l_semio_viz_legend_ticks_int } \l_semio_viz_legend_entries_seq
+    }
+  } {
+    \exp_args:NV \semio_viz_guide_domain_items:nN \l_semio_viz_legend_scale_tl
+      \l_semio_viz_legend_entries_seq
+  }
+}
+
+% 🟦 One categorical entry: its glyph and its label, both anchored on the entry origin.
+\cs_new_protected:Npn \semio_viz_legend_glyph:n #1 {
+  \str_case:VnF \l_semio_viz_legend_kind_tl {
+    { line } {
+      \use:x {
+        \exp_not:N \draw [ \exp_not:V \l_semio_viz_legend_color_tl , line~width=\semio_viz_theme_stroke: ]
+          ( \fp_eval:n { \l_semio_viz_legend_col_fp } ,
+            \fp_eval:n { \l_semio_viz_legend_row_fp + \l_semio_viz_legend_swatch_fp / 2 } )
+          -- ( \fp_eval:n { \l_semio_viz_legend_col_fp + \l_semio_viz_legend_swatch_fp } ,
+               \fp_eval:n { \l_semio_viz_legend_row_fp + \l_semio_viz_legend_swatch_fp / 2 } ) ;
+      }
+    }
+    { symbol } {
+      \use:x {
+        \exp_not:N \node [ \exp_not:V \l_semio_viz_legend_symbol_tl , fill=\exp_not:V \l_semio_viz_legend_color_tl ,
+                           draw=none , inner~sep=0pt ,
+                           minimum~size=\fp_eval:n { \l_semio_viz_legend_swatch_fp } mm ]
+          at ( \fp_eval:n { \l_semio_viz_legend_col_fp + \l_semio_viz_legend_swatch_fp / 2 } ,
+               \fp_eval:n { \l_semio_viz_legend_row_fp + \l_semio_viz_legend_swatch_fp / 2 } ) {} ;
+      }
+    }
+    { pattern } {
+      \use:x {
+        \exp_not:N \draw [ \exp_not:V \l_semio_viz_legend_color_tl , line~width=\semio_viz_theme_stroke:n { hairline } ]
+          ( \fp_eval:n { \l_semio_viz_legend_col_fp } , \fp_eval:n { \l_semio_viz_legend_row_fp } )
+          rectangle ( \fp_eval:n { \l_semio_viz_legend_col_fp + \l_semio_viz_legend_swatch_fp } ,
+                      \fp_eval:n { \l_semio_viz_legend_row_fp + \l_semio_viz_legend_swatch_fp } ) ;
+      }
+      \int_step_inline:nn { \l_semio_viz_legend_hatch_int } {
+        \use:x {
+          \exp_not:N \draw [ \exp_not:V \l_semio_viz_legend_color_tl , line~width=\semio_viz_theme_stroke:n { hairline } ]
+            ( \fp_eval:n { \l_semio_viz_legend_col_fp
+                + ##1 / ( \l_semio_viz_legend_hatch_int + 1 ) * \l_semio_viz_legend_swatch_fp } ,
+              \fp_eval:n { \l_semio_viz_legend_row_fp } )
+            -- ( \fp_eval:n { \l_semio_viz_legend_col_fp } ,
+                 \fp_eval:n { \l_semio_viz_legend_row_fp
+                   + ##1 / ( \l_semio_viz_legend_hatch_int + 1 ) * \l_semio_viz_legend_swatch_fp } ) ;
+        }
+      }
+    }
+  } {
+    \use:x {
+      \exp_not:N \fill [ \exp_not:V \l_semio_viz_legend_color_tl ]
+        ( \fp_eval:n { \l_semio_viz_legend_col_fp } , \fp_eval:n { \l_semio_viz_legend_row_fp } )
+        rectangle ( \fp_eval:n { \l_semio_viz_legend_col_fp + \l_semio_viz_legend_swatch_fp } ,
+                    \fp_eval:n { \l_semio_viz_legend_row_fp + \l_semio_viz_legend_swatch_fp } ) ;
+    }
+  }
+  \semio_viz_probe_geometry:nx { legend-swatch } {
+    \fp_eval:n { \l_semio_viz_legend_col_fp } , \fp_eval:n { \l_semio_viz_legend_row_fp } ,
+    \fp_eval:n { \l_semio_viz_legend_swatch_fp } , \fp_eval:n { \l_semio_viz_legend_swatch_fp }
+  }
+}
+
+% 🎨 The categorical legend: one swatch and label per entry, down a column or across `columns`.
+\cs_new_protected:Npn \semio_viz_legend_categorical: {
+  \int_zero:N \l_semio_viz_legend_index_int
+  \seq_map_inline:Nn \l_semio_viz_legend_entries_seq {
+    \semio_viz_theme_color:nN { \l_semio_viz_legend_index_int } \l_semio_viz_legend_color_tl
+    \str_if_eq:VnT \l_semio_viz_legend_orient_tl { vertical }
+      {
+        \fp_set:Nn \l_semio_viz_legend_col_fp { \l_semio_viz_legend_x_fp
+          + \int_mod:nn { \l_semio_viz_legend_index_int } { \l_semio_viz_legend_columns_int }
+            * ( \l_semio_viz_legend_length_fp / \l_semio_viz_legend_columns_int ) }
+        \fp_set:Nn \l_semio_viz_legend_row_fp { \l_semio_viz_legend_y_fp
+          - \l_semio_viz_legend_swatch_fp
+          - \int_div_truncate:nn { \l_semio_viz_legend_index_int } { \l_semio_viz_legend_columns_int }
+            * ( \l_semio_viz_legend_swatch_fp + \l_semio_viz_legend_item_gap_fp ) }
+      }
+    \str_if_eq:VnT \l_semio_viz_legend_orient_tl { horizontal }
+      {
+        \fp_set:Nn \l_semio_viz_legend_col_fp { \l_semio_viz_legend_x_fp + \l_semio_viz_legend_width_fp }
+        \fp_set:Nn \l_semio_viz_legend_row_fp { \l_semio_viz_legend_y_fp - \l_semio_viz_legend_swatch_fp }
+      }
+    \semio_viz_legend_glyph:n {##1}
+    \semio_viz_guide_format:VnN \l_semio_viz_legend_format_tl {##1} \l_semio_viz_guide_label_tl
+    \semio_viz_guide_style:nN { label } \l_semio_viz_guide_labelstyle_tl
+    \use:x {
+      \exp_not:N \node [ \exp_not:V \l_semio_viz_guide_labelstyle_tl , anchor=west ]
+        at ( \fp_eval:n { \l_semio_viz_legend_col_fp + \l_semio_viz_legend_swatch_fp + \l_semio_viz_legend_label_gap_fp } ,
+             \fp_eval:n { \l_semio_viz_legend_row_fp + \l_semio_viz_legend_swatch_fp / 2 } )
+        { \exp_not:V \l_semio_viz_guide_label_tl } ;
+    }
+    \semio_viz_probe_geometry:nx { legend-item } {
+      \int_use:N \l_semio_viz_legend_index_int ,
+      \fp_eval:n { \l_semio_viz_legend_col_fp } , \fp_eval:n { \l_semio_viz_legend_row_fp }
+    }
+    \exp_args:NV \semio_viz_legend_text_width:nN \l_semio_viz_guide_label_tl \l_semio_viz_legend_text_fp
+    \fp_add:Nn \l_semio_viz_legend_width_fp
+      { \l_semio_viz_legend_swatch_fp + \l_semio_viz_legend_label_gap_fp
+        + \l_semio_viz_legend_text_fp + \l_semio_viz_legend_item_gap_fp * 2 }
+    \int_incr:N \l_semio_viz_legend_index_int
+  }
+}
+
+% 🌈 A gradient legend is a bar of stacked slices between the scale's endpoint
+% colours, ticked like an axis; the slice count is fixed so the output is stable.
+\cs_new_protected:Npn \semio_viz_legend_gradient: {
+  \int_set:Nn \l_semio_viz_legend_slices_int { 48 }
+  \semio_viz_guide_domain_bounds:VNN \l_semio_viz_legend_scale_tl
+    \l_semio_viz_guide_lo_fp \l_semio_viz_guide_hi_fp
+  \int_step_inline:nn { \l_semio_viz_legend_slices_int } {
+    \semio_viz_theme_ramp_color:nN
+      { \fp_eval:n { ( ##1 - 0.5 ) / \l_semio_viz_legend_slices_int } } \l_semio_viz_legend_color_tl
+    \use:x {
+      \exp_not:N \fill [ \exp_not:V \l_semio_viz_legend_color_tl ]
+        ( \fp_eval:n { \l_semio_viz_legend_x_fp + ( ##1 - 1 ) / \l_semio_viz_legend_slices_int * \l_semio_viz_legend_length_fp } ,
+          \fp_eval:n { \l_semio_viz_legend_y_fp - \l_semio_viz_legend_swatch_fp } )
+        rectangle ( \fp_eval:n { \l_semio_viz_legend_x_fp + ##1 / \l_semio_viz_legend_slices_int * \l_semio_viz_legend_length_fp } ,
+                    \fp_eval:n { \l_semio_viz_legend_y_fp } ) ;
+    }
+  }
+  \semio_viz_probe_geometry:nx { legend-gradient } {
+    \fp_eval:n { \l_semio_viz_legend_x_fp } ,
+    \fp_eval:n { \l_semio_viz_legend_y_fp - \l_semio_viz_legend_swatch_fp } ,
+    \fp_eval:n { \l_semio_viz_legend_length_fp } , \fp_eval:n { \l_semio_viz_legend_swatch_fp }
+  }
+  \seq_map_inline:Nn \l_semio_viz_legend_entries_seq {
+    \fp_set:Nn \l_semio_viz_legend_col_fp {
+      \l_semio_viz_legend_x_fp
+        + ( ( ##1 ) - \l_semio_viz_guide_lo_fp )
+          / ( \l_semio_viz_guide_hi_fp - \l_semio_viz_guide_lo_fp + 1e-12 ) * \l_semio_viz_legend_length_fp
+    }
+    \semio_viz_guide_format:VnN \l_semio_viz_legend_format_tl {##1} \l_semio_viz_guide_label_tl
+    \semio_viz_guide_style:nN { label } \l_semio_viz_guide_labelstyle_tl
+    \use:x {
+      \exp_not:N \node [ \exp_not:V \l_semio_viz_guide_labelstyle_tl , anchor=north ]
+        at ( \fp_eval:n { \l_semio_viz_legend_col_fp } ,
+             \fp_eval:n { \l_semio_viz_legend_y_fp - \l_semio_viz_legend_swatch_fp - 0.5 } )
+        { \exp_not:V \l_semio_viz_guide_label_tl } ;
+    }
+    \semio_viz_probe_geometry:nx { legend-item } {
+      \fp_eval:n { \l_semio_viz_legend_col_fp } ,
+      \fp_eval:n { \l_semio_viz_legend_y_fp - \l_semio_viz_legend_swatch_fp }
+    }
+  }
+}
+
+% ⚪ A size legend: one circle per tick, radius taken from the scale's own mapping.
+\cs_new_protected:Npn \semio_viz_legend_size: {
+  \fp_zero:N \l_semio_viz_legend_width_fp
+  \seq_map_inline:Nn \l_semio_viz_legend_entries_seq {
+    \semio_viz_guide_style:nN { domain } \l_semio_viz_guide_style_tl
+    \semio_viz_scale_map:VnN \l_semio_viz_legend_scale_tl {##1} \l_semio_viz_legend_value_fp
+    \fp_set:Nn \l_semio_viz_legend_col_fp
+      { \l_semio_viz_legend_x_fp + \l_semio_viz_legend_width_fp + \l_semio_viz_legend_value_fp }
+    \fp_set:Nn \l_semio_viz_legend_row_fp { \l_semio_viz_legend_y_fp - \l_semio_viz_legend_swatch_fp }
+    \use:x {
+      \exp_not:N \draw [ \exp_not:V \l_semio_viz_guide_style_tl ]
+        ( \fp_eval:n { \l_semio_viz_legend_col_fp } , \fp_eval:n { \l_semio_viz_legend_row_fp } )
+        circle [ radius=\fp_eval:n { \l_semio_viz_legend_value_fp } mm ] ;
+    }
+    \semio_viz_guide_format:VnN \l_semio_viz_legend_format_tl {##1} \l_semio_viz_guide_label_tl
+    \semio_viz_guide_style:nN { label } \l_semio_viz_guide_labelstyle_tl
+    \use:x {
+      \exp_not:N \node [ \exp_not:V \l_semio_viz_guide_labelstyle_tl , anchor=north ]
+        at ( \fp_eval:n { \l_semio_viz_legend_col_fp } ,
+             \fp_eval:n { \l_semio_viz_legend_row_fp - \l_semio_viz_legend_value_fp - 0.5 } )
+        { \exp_not:V \l_semio_viz_guide_label_tl } ;
+    }
+    \semio_viz_probe_geometry:nx { legend-item } {
+      \fp_eval:n { \l_semio_viz_legend_col_fp } , \fp_eval:n { \l_semio_viz_legend_row_fp } ,
+      \fp_eval:n { \l_semio_viz_legend_value_fp }
+    }
+    \fp_add:Nn \l_semio_viz_legend_width_fp
+      { 2 * \l_semio_viz_legend_value_fp + \l_semio_viz_legend_item_gap_fp }
+  }
+}
+
+% 🗂️ The whole legend under the option list #1: its place in the frame, its title, and the block
+% its `kind` asks for — swatches, a gradient ramp, a size ramp or a symbol list.
+\cs_new_protected:Npn \semio_viz_legend_draw:n #1 {
+  \semio_viz_frame_require:n { SemioVizLegend }
+  \semio_viz_legend_keys_reset:
+  \keys_set:nn { semio / viz / legend } {#1}
+  \tl_if_empty:NTF \l_semio_viz_legend_at_tl
+    {
+      \fp_set:Nn \l_semio_viz_legend_x_fp { \l_semio_viz_width_fp - 2 - \l_semio_viz_legend_length_fp }
+      \fp_set:Nn \l_semio_viz_legend_y_fp { \l_semio_viz_height_fp - 2 }
+    }
+    { \semio_viz_guide_pair:VNN \l_semio_viz_legend_at_tl \l_semio_viz_legend_x_fp \l_semio_viz_legend_y_fp }
+  \tl_if_empty:NF \l_semio_viz_legend_title_tl {
+    \semio_viz_guide_style:nN { title } \l_semio_viz_guide_labelstyle_tl
+    \use:x {
+      \exp_not:N \node [ \exp_not:V \l_semio_viz_guide_labelstyle_tl , anchor=north~west ]
+        at ( \fp_eval:n { \l_semio_viz_legend_x_fp } , \fp_eval:n { \l_semio_viz_legend_y_fp } )
+        { \exp_not:V \l_semio_viz_legend_title_tl } ;
+    }
+    \fp_sub:Nn \l_semio_viz_legend_y_fp { \l_semio_viz_legend_swatch_fp + \l_semio_viz_legend_item_gap_fp }
+  }
+  \semio_viz_legend_entries:
+  \fp_zero:N \l_semio_viz_legend_width_fp
+  \str_case:VnF \l_semio_viz_legend_kind_tl {
+    { gradient } { \semio_viz_legend_gradient: }
+    { size } { \semio_viz_legend_size: }
+    { swatch } { \semio_viz_legend_categorical: }
+    { line } { \semio_viz_legend_categorical: }
+    { symbol } { \semio_viz_legend_categorical: }
+    { pattern } { \semio_viz_legend_categorical: }
+  } { \msg_error:nnx { semio-viz } { unknown-legend-kind } { \tl_use:N \l_semio_viz_legend_kind_tl } }
+}
+%endregion 🔖️Legend
+
+%region 🔖️Family
+% 🔑 semio / viz / family / axis — the §78 axis capabilities as catalogue kinds.
+%   variant (choice) cartesian|polar|ternary|geographic|multiple-axes|broken-axes, default cartesian
+%   data    (table)  demo table the axes describe, default `demo`
+%   x       (column) categorical column bound to the x scale, default `cat`
+%   y       (column) numeric column bound to the y scale, default `val`
+%   y2      (column) numeric column bound to the second scale of multiple-axes, default `val2`
+%   ticks   (int)    target tick count of the continuous axes, default 5
+%   grid    (bool)   draw the grid, default false
+%   minor   (bool)   draw minor ticks, default false
+%   title   (text)   title of the primary axis, default empty
+%   broken  (lo,hi)  data interval the broken-axes variant removes, default 3,6
+\tl_new:N \l_semio_viz_faxis_variant_tl
+\tl_new:N \l_semio_viz_faxis_data_tl
+\tl_new:N \l_semio_viz_faxis_x_tl
+\tl_new:N \l_semio_viz_faxis_y_tl
+\tl_new:N \l_semio_viz_faxis_ytwo_tl
+\tl_new:N \l_semio_viz_faxis_title_tl
+\clist_new:N \l_semio_viz_faxis_broken_clist
+\int_new:N \l_semio_viz_faxis_ticks_int
+\bool_new:N \l_semio_viz_faxis_grid_bool
+\bool_new:N \l_semio_viz_faxis_minor_bool
+\seq_new:N \l_semio_viz_faxis_values_seq
+\fp_new:N \l_semio_viz_faxis_max_fp
+\fp_new:N \l_semio_viz_faxis_maxtwo_fp
+
+\keys_define:nn { semio / viz / family / axis } {
+  variant .tl_set:N = \l_semio_viz_faxis_variant_tl,
+  data .tl_set:N = \l_semio_viz_faxis_data_tl,
+  x .tl_set:N = \l_semio_viz_faxis_x_tl,
+  y .tl_set:N = \l_semio_viz_faxis_y_tl,
+  y2 .tl_set:N = \l_semio_viz_faxis_ytwo_tl,
+  ticks .int_set:N = \l_semio_viz_faxis_ticks_int,
+  grid .bool_set:N = \l_semio_viz_faxis_grid_bool,
+  minor .bool_set:N = \l_semio_viz_faxis_minor_bool,
+  title .tl_set:N = \l_semio_viz_faxis_title_tl,
+  broken .clist_set:N = \l_semio_viz_faxis_broken_clist,
+}
+
+% ♻️ Puts every axis-family key back to its documented default before an option list is read.
+\cs_new_protected:Npn \semio_viz_faxis_keys_reset: {
+  \tl_set:Nn \l_semio_viz_faxis_variant_tl { cartesian }
+  \tl_set:Nn \l_semio_viz_faxis_data_tl { demo }
+  \tl_set:Nn \l_semio_viz_faxis_x_tl { cat }
+  \tl_set:Nn \l_semio_viz_faxis_y_tl { val }
+  \tl_set:Nn \l_semio_viz_faxis_ytwo_tl { val2 }
+  \tl_clear:N \l_semio_viz_faxis_title_tl
+  \clist_set:Nn \l_semio_viz_faxis_broken_clist { 3 , 6 }
+  \int_set:Nn \l_semio_viz_faxis_ticks_int { 5 }
+  \bool_set_false:N \l_semio_viz_faxis_grid_bool
+  \bool_set_false:N \l_semio_viz_faxis_minor_bool
+}
+
+% 📊 Scales `family-x`, `family-y` and `family-y2` built from the bound table's own
+% columns, so a kind that binds another column really gets another axis.
+\cs_new_protected:Npn \semio_viz_faxis_scales: {
+  \use:x {
+    \exp_not:N \semio_viz_table_col_values:nnN
+      { \exp_not:V \l_semio_viz_faxis_data_tl } { \exp_not:V \l_semio_viz_faxis_x_tl }
+      \exp_not:N \l_semio_viz_faxis_values_seq
+    \exp_not:N \semio_viz_table_col_max:nnN
+      { \exp_not:V \l_semio_viz_faxis_data_tl } { \exp_not:V \l_semio_viz_faxis_y_tl }
+      \exp_not:N \l_semio_viz_faxis_max_fp
+    \exp_not:N \semio_viz_table_col_max:nnN
+      { \exp_not:V \l_semio_viz_faxis_data_tl } { \exp_not:V \l_semio_viz_faxis_ytwo_tl }
+      \exp_not:N \l_semio_viz_faxis_maxtwo_fp
+  }
+  \use:x {
+    \exp_not:N \semio_viz_scale_define:nnnn { family-x } { band }
+      { \seq_use:Nn \l_semio_viz_faxis_values_seq { , } }
+      { \fp_eval:n { \l_semio_viz_pad_fp } , \fp_eval:n { \l_semio_viz_width_fp - 2 } }
+    \exp_not:N \semio_viz_scale_define:nnnn { family-y } { linear }
+      { 0 , \fp_eval:n { \l_semio_viz_faxis_max_fp } }
+      { \fp_eval:n { \l_semio_viz_pad_fp } , \fp_eval:n { \l_semio_viz_height_fp - 2 } }
+    \exp_not:N \semio_viz_scale_define:nnnn { family-y-second } { linear }
+      { 0 , \fp_eval:n { \l_semio_viz_faxis_maxtwo_fp } }
+      { \fp_eval:n { \l_semio_viz_pad_fp } , \fp_eval:n { \l_semio_viz_height_fp - 2 } }
+    \exp_not:N \semio_viz_scale_define:nnnn { family-angle } { linear }
+      { 0 , \fp_eval:n { \l_semio_viz_faxis_max_fp } } { 0 , 360 }
+    \exp_not:N \semio_viz_scale_define:nnnn { family-radius } { linear }
+      { 0 , \fp_eval:n { \l_semio_viz_faxis_max_fp } }
+      { 0 , \fp_eval:n { min( \l_semio_viz_width_fp , \l_semio_viz_height_fp ) / 2 - \l_semio_viz_pad_fp } }
+  }
+}
+
+% 📈 The bound series as a polyline, so an axis kind always describes real data.
+\cs_new_protected:Npn \semio_viz_faxis_series: {
+  \tl_clear:N \l_semio_viz_guide_arc_tl
+  \int_zero:N \l_semio_viz_guide_i_int
+  \seq_map_inline:Nn \l_semio_viz_faxis_values_seq {
+    \int_incr:N \l_semio_viz_guide_i_int
+    \semio_viz_scale_map:nnN { family-x } {##1} \l_semio_viz_guide_px_fp
+    \use:x {
+      \exp_not:N \semio_viz_table_cell:nnnN
+        { \exp_not:V \l_semio_viz_faxis_data_tl } { \int_use:N \l_semio_viz_guide_i_int }
+        { \exp_not:V \l_semio_viz_faxis_y_tl } \exp_not:N \l_semio_viz_guide_label_tl
+    }
+    \semio_viz_scale_map:VnN \l_semio_viz_guide_series_scale_tl { \l_semio_viz_guide_label_tl }
+      \l_semio_viz_guide_py_fp
+    \tl_put_right:Nx \l_semio_viz_guide_arc_tl {
+      \tl_if_empty:NF \l_semio_viz_guide_arc_tl { -- }
+      ( \fp_eval:n { \l_semio_viz_guide_px_fp } , \fp_eval:n { \l_semio_viz_guide_py_fp } )
+    }
+  }
+  \semio_viz_theme_color:nN { 0 } \l_semio_viz_guide_chrome_tl
+  \use:x {
+    \exp_not:N \draw [ \exp_not:V \l_semio_viz_guide_chrome_tl ,
+                       line~width=\semio_viz_theme_stroke: ]
+      \exp_not:V \l_semio_viz_guide_arc_tl ;
+  }
+}
+\tl_new:N \l_semio_viz_guide_series_scale_tl
+
+% 📐 The ordinary pair of axes: scale #1 along the bottom and scale #2 up the left edge.
+\cs_new_protected:Npn \semio_viz_faxis_common:nn #1#2 {
+  \use:x {
+    \exp_not:N \semio_viz_guide_axis_draw:n {
+      scale = #1 , orient = bottom , ticks = \int_use:N \l_semio_viz_faxis_ticks_int ,
+      grid = \bool_if:NTF \l_semio_viz_faxis_grid_bool { true } { false } ,
+      minor = \bool_if:NTF \l_semio_viz_faxis_minor_bool { true } { false } ,
+      title = { \exp_not:V \l_semio_viz_faxis_title_tl }
+    }
+    \exp_not:N \semio_viz_guide_axis_draw:n {
+      scale = #2 , orient = left , ticks = \int_use:N \l_semio_viz_faxis_ticks_int ,
+      grid = \bool_if:NTF \l_semio_viz_faxis_grid_bool { true } { false } ,
+      minor = \bool_if:NTF \l_semio_viz_faxis_minor_bool { true } { false }
+    }
+  }
+}
+
+% ▶️ The whole axis-family run: defaults, the option list #1, the scales, then the frame the
+% `variant` asks for — cartesian, polar, dual, broken, logarithmic and the rest.
+\cs_new_protected:Npn \semio_viz_faxis_render:n #1 {
+  \semio_viz_frame_require:n { SemioVizChart }
+  \semio_viz_faxis_keys_reset:
+  \keys_set:nn { semio / viz / family / axis } {#1}
+  \semio_viz_faxis_scales:
+  \tl_set:Nn \l_semio_viz_guide_series_scale_tl { family-y }
+  \str_case:VnF \l_semio_viz_faxis_variant_tl {
+    { polar } {
+      \use:x {
+        \exp_not:N \semio_viz_guide_axis_draw:n {
+          scale = family-angle , orient = angular , ticks = \int_use:N \l_semio_viz_faxis_ticks_int ,
+          center = { \fp_eval:n { \l_semio_viz_width_fp / 2 } , \fp_eval:n { \l_semio_viz_height_fp / 2 } } ,
+          grid = \bool_if:NTF \l_semio_viz_faxis_grid_bool { true } { false }
+        }
+        \exp_not:N \semio_viz_guide_axis_draw:n {
+          scale = family-radius , orient = radial , angle = 90 ,
+          ticks = \int_use:N \l_semio_viz_faxis_ticks_int ,
+          center = { \fp_eval:n { \l_semio_viz_width_fp / 2 } , \fp_eval:n { \l_semio_viz_height_fp / 2 } }
+        }
+      }
+    }
+    { ternary } {
+      \semio_viz_faxis_ternary:
+    }
+    { geographic } {
+      \use:x {
+        \exp_not:N \semio_viz_scale_define:nnnn { family-lon } { linear } { -180 , 180 }
+          { \fp_eval:n { \l_semio_viz_pad_fp } , \fp_eval:n { \l_semio_viz_width_fp - 2 } }
+        \exp_not:N \semio_viz_scale_define:nnnn { family-lat } { linear } { -90 , 90 }
+          { \fp_eval:n { \l_semio_viz_pad_fp } , \fp_eval:n { \l_semio_viz_height_fp - 2 } }
+      }
+      \semio_viz_faxis_common:nn { family-lon } { family-lat }
+      \tl_set:Nn \l_semio_viz_guide_series_scale_tl { family-y }
+    }
+    { multiple-axes } {
+      \semio_viz_faxis_common:nn { family-x } { family-y }
+      \use:x {
+        \exp_not:N \semio_viz_guide_axis_draw:n {
+          scale = family-y-second , orient = right ,
+          ticks = \int_use:N \l_semio_viz_faxis_ticks_int
+        }
+      }
+    }
+    { broken-axes } {
+      \use:x {
+        \exp_not:N \semio_viz_guide_axis_draw:n {
+          scale = family-y , orient = left , ticks = \int_use:N \l_semio_viz_faxis_ticks_int ,
+          broken = { \clist_use:Nn \l_semio_viz_faxis_broken_clist { , } }
+        }
+        \exp_not:N \semio_viz_guide_axis_draw:n {
+          scale = family-x , orient = bottom , title = { \exp_not:V \l_semio_viz_faxis_title_tl }
+        }
+      }
+    }
+  } { \semio_viz_faxis_common:nn { family-x } { family-y } }
+  \str_case:VnF \l_semio_viz_faxis_variant_tl { { polar } { } { ternary } { } }
+    { \semio_viz_faxis_series: }
+}
+
+% 🔺 A ternary axis is three segment axes on the edges of an equilateral triangle
+% inscribed in the plot area -- the same guide code, three different segments.
+\cs_new_protected:Npn \semio_viz_faxis_ternary: {
+  \fp_set:Nn \l_semio_viz_guide_a_fp { \l_semio_viz_width_fp - 2 * \l_semio_viz_pad_fp }
+  \fp_set:Nn \l_semio_viz_guide_b_fp
+    { min( \l_semio_viz_guide_a_fp * 0.8660254037844386 , \l_semio_viz_height_fp - 2 * \l_semio_viz_pad_fp ) }
+  \use:x {
+    \exp_not:N \semio_viz_guide_axis_draw:n {
+      scale = family-radius , orient = segment ,
+      from = { \fp_eval:n { \l_semio_viz_pad_fp } , \fp_eval:n { \l_semio_viz_pad_fp } } ,
+      to = { \fp_eval:n { \l_semio_viz_pad_fp + \l_semio_viz_guide_a_fp } , \fp_eval:n { \l_semio_viz_pad_fp } } ,
+      ticks = \int_use:N \l_semio_viz_faxis_ticks_int
+    }
+    \exp_not:N \semio_viz_guide_axis_draw:n {
+      scale = family-radius , orient = segment ,
+      from = { \fp_eval:n { \l_semio_viz_pad_fp + \l_semio_viz_guide_a_fp } , \fp_eval:n { \l_semio_viz_pad_fp } } ,
+      to = { \fp_eval:n { \l_semio_viz_pad_fp + \l_semio_viz_guide_a_fp / 2 } ,
+             \fp_eval:n { \l_semio_viz_pad_fp + \l_semio_viz_guide_b_fp } } ,
+      ticks = \int_use:N \l_semio_viz_faxis_ticks_int
+    }
+    \exp_not:N \semio_viz_guide_axis_draw:n {
+      scale = family-radius , orient = segment ,
+      from = { \fp_eval:n { \l_semio_viz_pad_fp + \l_semio_viz_guide_a_fp / 2 } ,
+               \fp_eval:n { \l_semio_viz_pad_fp + \l_semio_viz_guide_b_fp } } ,
+      to = { \fp_eval:n { \l_semio_viz_pad_fp } , \fp_eval:n { \l_semio_viz_pad_fp } } ,
+      ticks = \int_use:N \l_semio_viz_faxis_ticks_int
+    }
+  }
+}
+
+% 📐 The §78 axis capabilities, rendered as catalogue kinds through the guide itself.
+\SemioVizFamily{axis}{ \semio_viz_faxis_render:n {#1} }
+%endregion 🔖️Family
+
+%region 🔖️PublicApi
+% 📏 One axis of a plot: d3-axis geometry over any named scale, cartesian, polar or along a segment.
+\NewDocumentCommand \SemioVizAxis { O{} } { \semio_viz_guide_axis_draw:n {#1} }
+% 🪟 Grid lines at the ticks of the named x and/or y scale.
+\NewDocumentCommand \SemioVizGrid { O{} } { \semio_viz_grid_draw:n {#1} }
+% 🎨 Legend generated from a scale's domain (categorical) or ticks (gradient, size).
+\NewDocumentCommand \SemioVizLegend { O{} } { \semio_viz_legend_draw:n {#1} }
+%endregion 🔖️PublicApi
+
+\ExplSyntaxOff

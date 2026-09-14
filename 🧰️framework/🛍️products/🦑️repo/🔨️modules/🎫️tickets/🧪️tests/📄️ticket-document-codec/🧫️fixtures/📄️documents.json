@@ -1,0 +1,35 @@
+{
+  "documents": [
+    {
+      "source": "🎆️25/🌙️11/☀️24/LOG-SYSTEM",
+      "text": "{\n  \"title\": \"\\u003ee-\",\n  \"emoji\": \"📋️\",\n  \"status\": \"closed\",\n  \"description\": \"\\u003ee-\",\n  \"goal\": \"🎯️aioptimizedrepo\"\n}\n"
+    },
+    {
+      "source": "🎆️26/🌙️01/☀️19/ADD-SH-LANGUAGE-TO-REPO-BINARY",
+      "text": "{\n  \"title\": \"Add Sh Language to Repo Binary\",\n  \"emoji\": \"➕️\",\n  \"status\": \"closed\",\n  \"github\": {\n    \"issue\": \"https://github.com/usalu/semio/issues/167\"\n  },\n  \"goal\": \"🎯️aioptimizedrepo🎯️repoclient🎯️repobinary\"\n}\n"
+    },
+    {
+      "source": "🎆️26/🌙️04/☀️26/KIT-COMMAND-SCOPE-REFACTOR",
+      "text": "{\n  \"title\": \"Kit Command Scope Refactor\",\n  \"emoji\": \"🔖️\",\n  \"status\": \"closed\",\n  \"description\": \"Refactor compose/rs, compose/graphql, compose/js, compose/react, compose/sketchpad so every kit mutation is scoped: kit or alternative latest checkpoint -\\u003e draft -\\u003e transaction -\\u003e command batch. Add KitWriteScope in Rust, typed GraphQL command inputs (no JSON scalars for writes), JS KitStore scoped APIs, React scope providers/hooks, Sketchpad routing through scoped commands. Bind plan kit_command_scopes_b02844b8.\",\n  \"goal\": \"🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️kitapp\",\n  \"plan\": {\n    \"client\": \"cursor\",\n    \"id\": \"b02844b8\",\n    \"local\": \"kit_command_scopes_b02844b8.plan.md\"\n  },\n  \"sessions\": [\"⚪️07b7aef48dff49fe96e055baf4568778\"],\n  \"summary\": \"Rust: removed unscoped live kit mutations (ChangeKitCommands, ChangeKitWithInverse, Design) from LiveBatchCommandInput; only WIP undo/redo remain on live. Regenerated schema.graphql. JS: KitStore tracks session/draft/transaction anchors, buildSessionScopedTopLevelCommand + runScopedTransactionBatch for all kit/design writes and submitChangeKitCommands; undo/redo use live batch; fixed vcsState query brace, read queries for metadata/coloredConnectors, TypeStore metadata null coercion; WasmKitStoreClient exposes get/set KitWriteScope + finalize/abort transaction. React: optional kitWriteScope on KitScope, re-export KitWriteScope, test stubs updated. Engine schema test asserts kitStore.batch. Storybook composeWasm uses kitStore.batch. Rebuilt compose/rs/pkg with wasm-pack.\",\n  \"files\": [\n    \"compose/rs/lib.rs\",\n    \"compose/graphql/schema.graphql\",\n    \"compose/js/index.ts\",\n    \"compose/react/index.tsx\",\n    \"compose/engine/test.ts\",\n    \"compose/algorithms/.storybook/stories/kit-store/composeWasm.ts\",\n    \"compose/algorithms/.storybook/stories/kit-store/HistoryControls.tsx\",\n    \".repo/🎫️/26/04/26/KIT-COMMAND-SCOPE-REFACTOR/ticket.json\"\n  ]\n}\n"
+    },
+    {
+      "source": "🎆️26/🌙️09/☀️05/BLOCK-PLUGIN-END-TO-END",
+      "text": "{\n  \"title\": \"Block Plugin End To End\",\n  \"emoji\": \"🧱️\",\n  \"status\": \"open\",\n  \"description\": \"Get the 🧱️block plugin (apps block2d, block3d, block5d of ✏️s/🔌️plugins/🧱️block) working end to end: the crate builds natively and for wasm32-wasip2, its tests pass, the descriptor is regenerated, and `bun run dev:block:2d|3d|5d` boots with every window rendering non-empty content, examples loading and switchable, and editor actions dispatching at runtime.\",\n  \"goal\": \"🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps\",\n  \"sessions\": [\"⚪2adc84fa-a75f-469f-a9a2-90ac34b45277\"],\n  \"note\": \"Ticket bookkeeping done manually on disk: repo MCP timed out at session start (2026-09-05).\"\n}\n"
+    },
+    {
+      "source": "🎆️26/🌙️09/☀️05/WINDOWS-CHECKOUT-ILLEGAL-FILENAMES",
+      "text": "{\n  \"title\": \"Windows Checkout Illegal Filenames\",\n  \"emoji\": \"🪟\",\n  \"status\": \"closed\",\n  \"description\": \"Dev cannot check out the repo on Windows because tracked paths contain Windows-illegal filename components (e.g. a whitespace-only filename inside a ticket folder). Audit all tracked paths for Windows-illegal components (forbidden chars <>:\\\"|?*, control chars, trailing space/dot, leading space, reserved device names CON/PRN/AUX/NUL/COM#/LPT#, empty/whitespace-only names), remove or rename the offenders, and make sure `bun ./📜️script.ts clean` (the workspace `windows-illegal` removal kind already implemented in 📜️script.ts) actually detects and deletes any such paths going forward, including inside open (non-closed) tickets.\",\n  \"goal\": \"AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-FILE-MECHANISM\",\n  \"sessions\": [\n    \"⚪09b0b4cd096c4504acbeef46a87b0cb8\"\n  ],\n  \"closedAt\": \"2026-09-05\",\n  \"summary\": \"Audited all 72772 tracked paths twice (independent scan + the real cleanIsWindowsIllegalName imported straight from 📜️script.ts): 0 Windows-illegal filenames exist right now, and no case-insensitive collisions either. Confirmed clean's existing windows-illegal removal already really deletes (git rm -f, bypasses ticket-open protection) rather than just reporting, so no code change was warranted for the described symptom. The actual likely blocker for the Windows checkout is path length: 204 tracked paths would exceed Win32's 260-char MAX_PATH with a modest checkout root, some up to 293 UTF-16 units, mostly legitimate deep taxonomy-driven content (norm/DIN16798 fixtures) or debris in two open tickets (SEMANTIC-MUTATIONS-OVERHAUL, ENFORCE-UNIQUE-SEMANTIC-EMOJIS-ACROSS-REPOSITORY) that this session did not touch since one was being actively written to by another session. Recommended fix is non-destructive: enable `git config core.longpaths true` + Windows LongPathsEnabled, not deleting/renaming legitimate content. Findings and scan scripts kept in this ticket folder. repo/semio MCP failed to connect this session (dispatcher verified alive via `client entity-emojis`); ticket bookkeeping done by hand on disk.\"\n}\n"
+    },
+    {
+      "source": "🎆️26/🌙️09/☀️05/CONFINE-DWG-CODECS-TO-ARTIFACT-I-O",
+      "text": "{\n  \"title\": \"Confine DWG Codecs to Artifact I/O\",\n  \"emoji\": \"🖊️\",\n  \"status\": \"closed\",\n  \"description\": \"Remove DWG-specific framework APIs and native-dwg-codec dependency; preserve conversion behavior under DWG artifacts and artifact I/O, with ownership regression checks.\",\n  \"summary\": \"Confined DWG codecs to the DWG artifact and consuming artifact I/O. Removed native-dwg-codec and framework DWG APIs; genericized mesh interfaces, rewired artifact conversions and Flow bindings, moved misplaced schema/editor helpers and tests, and added ownership regression checks. Ownership/AJV, declarations, source gates, syntax checks, and focused usvg-to-DWG runtime passed. Full browser run hit the existing WASM trap; native crate tests did not complete dependency compilation. Details in 📓️ownership.md; generated outputs removed.\",\n  \"goal\": \"🎯aioptimizedrepo\",\n  \"sessions\": [\n    \"⚪ee7cddc57c464f4c9b848bef06b7725b\"\n  ]\n}"
+    }
+  ],
+  "refused": [
+    "{\"title\":\"no status\"}",
+    "{\"title\":\"bad status\",\"status\":\"OPEN\"}",
+    "{\"title\":\"bad status\",\"status\":\"\"}",
+    "[]",
+    "{"
+  ]
+}

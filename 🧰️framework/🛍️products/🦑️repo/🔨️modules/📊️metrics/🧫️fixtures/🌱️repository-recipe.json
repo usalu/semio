@@ -1,0 +1,143 @@
+{
+  "author": {
+    "name": "Ada Lovelace",
+    "email": "ada@semio-tech.com"
+  },
+  "secondAuthor": {
+    "name": "Grace Hopper",
+    "email": "grace@semio-tech.com"
+  },
+  "branch": "⛳️wip",
+  "commits": [
+    {
+      "message": "seed the tree",
+      "when": 1767225600,
+      "author": {
+        "name": "Ada Lovelace",
+        "email": "ada@semio-tech.com"
+      },
+      "changes": [
+        {
+          "path": "🧬️alpha.ts",
+          "content": "export const one = 1;\nexport const two = 2;\nexport const three = 3;\n"
+        },
+        {
+          "path": "README.md",
+          "content": "# Fixture\n\nA recorded repository.\n"
+        },
+        {
+          "path": "data/config.json",
+          "content": "{\n  \"a\": 1,\n  \"b\": { \"c\": 2 }\n}\n"
+        }
+      ]
+    },
+    {
+      "message": "grow the code",
+      "when": 1767232800,
+      "author": {
+        "name": "Grace Hopper",
+        "email": "grace@semio-tech.com"
+      },
+      "changes": [
+        {
+          "path": "🧬️alpha.ts",
+          "content": "export const one = 1;\nexport const two = 22;\nexport const three = 3;\nexport const four = 4;\n"
+        },
+        {
+          "path": "pkg/main.go",
+          "content": "package main\n\nfunc main() {}\n"
+        }
+      ]
+    },
+    {
+      "message": "rename into src",
+      "when": 1767312000,
+      "author": {
+        "name": "Ada Lovelace",
+        "email": "ada@semio-tech.com"
+      },
+      "changes": [
+        {
+          "path": "src/🧬️beta.ts",
+          "rename": "🧬️alpha.ts",
+          "content": "export const one = 1;\nexport const two = 22;\nexport const three = 33;\nexport const four = 4;\nexport const five = 5;\n"
+        }
+      ]
+    },
+    {
+      "message": "add a binary asset and a hidden file",
+      "when": 1767398400,
+      "author": {
+        "name": "Grace Hopper",
+        "email": "grace@semio-tech.com"
+      },
+      "changes": [
+        {
+          "path": "assets/logo.png",
+          "bytes": [
+            137,
+            80,
+            78,
+            71,
+            13,
+            10,
+            26,
+            10,
+            0,
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "path": ".hidden/secret.ts",
+          "content": "export const hidden = true;\n"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/note.md",
+          "content": "meta only\n"
+        }
+      ]
+    },
+    {
+      "message": "drop the readme, extend the data",
+      "when": 1769904000,
+      "author": {
+        "name": "Ada Lovelace",
+        "email": "ada@semio-tech.com"
+      },
+      "changes": [
+        {
+          "path": "README.md",
+          "delete": true
+        },
+        {
+          "path": "data/config.json",
+          "content": "{\n  \"a\": 1,\n  \"b\": { \"c\": 2, \"d\": [1, 2, { \"e\": 3 }] },\n  \"f\": 4\n}\n"
+        },
+        {
+          "path": "py/tool.py",
+          "content": "def main():\n    return 0\n"
+        }
+      ]
+    }
+  ],
+  "side": {
+    "from": 1,
+    "branch": "side",
+    "path": "side.rs",
+    "content": "pub fn side() -> u8 { 1 }\n",
+    "message": "side work",
+    "when": 1767318000,
+    "author": {
+      "name": "Grace Hopper",
+      "email": "grace@semio-tech.com"
+    },
+    "mergeMessage": "merge side",
+    "mergeWhen": 1769990400,
+    "mergeAuthor": {
+      "name": "Ada Lovelace",
+      "email": "ada@semio-tech.com"
+    }
+  }
+}

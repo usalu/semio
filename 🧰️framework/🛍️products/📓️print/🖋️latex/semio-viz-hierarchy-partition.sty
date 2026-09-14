@@ -1,0 +1,65 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-hierarchy-partition}[2026/09/05 v0.3.0 semio viz namespace hierarchy-partition families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-hierarchy}
+\RequirePackage{semio-viz-family}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 📋 `semio / viz / family / partition` and `… / sunburst` accept every key of
+% `semio / viz / hierarchy` (data, id, parent, value, path, delimiter, aggregate,
+% sort), of `… / hierarchy / layout` (size, padding, round) and of
+% `… / hierarchy / render` (width, height, inset, orientation, labels, labelColumn,
+% fill, opacity, stroke, strokeWidth, innerRadius) plus their own:
+%   depth  (first depth that is drawn; 1 hides the root band) default 0 for
+%          partition, 1 for sunburst
+\int_new:N \l_semio_viz_hierarchy_partition_depth_int
+
+\keys_define:nn { semio / viz / family / partition } {
+  depth .int_set:N = \l_semio_viz_hierarchy_partition_depth_int,
+}
+% ⚙️ `sunburst` takes the same `depth` key on its own name; its default hides the root disc.
+\keys_define:nn { semio / viz / family / sunburst } {
+  depth .int_set:N = \l_semio_viz_hierarchy_partition_depth_int,
+}
+%endregion 🔖️Keys
+
+%region 🔖️Families
+% 🧊 The d3 partition layout drawn as adjacent bands: `orientation=top-down` is
+% the icicle plot, `left-right` the flame-style partition diagram.
+\SemioVizFamily{partition}{
+  \int_set:Nn \l_semio_viz_hierarchy_partition_depth_int { 0 }
+  \semio_viz_hierarchy_family_setup:nnn { partition }
+    { fill = branch, sort = value-descending } {#1}
+  \semio_viz_hierarchy_family_layout:n { partition }
+  \semio_viz_hierarchy_draw_rects:VVn \c_semio_viz_hierarchy_family_tl
+    \l_semio_viz_hierarchy_table_tl { \l_semio_viz_hierarchy_partition_depth_int }
+}
+
+% 🌈 The same partition mapped onto polar coordinates: the abscissa becomes the
+% angle over a full turn, the ordinate the radius, and every node an annular
+% sector — the sunburst.
+\SemioVizFamily{sunburst}{
+  \int_set:Nn \l_semio_viz_hierarchy_partition_depth_int { 1 }
+  \semio_viz_hierarchy_family_setup:nnn { sunburst }
+    { fill = branch, sort = value-descending, labels = false } {#1}
+  \bool_if:NF \l_semio_viz_hierarchy_size_given_bool {
+    \fp_set:Nn \l_semio_viz_hierarchy_dx_fp { 2 * pi }
+    \fp_set:Nn \l_semio_viz_hierarchy_dy_fp
+      { max ( 1 , min ( \l_semio_viz_hierarchy_rd_width_fp ,
+        \l_semio_viz_hierarchy_rd_height_fp ) / 2
+        - \l_semio_viz_hierarchy_rd_inset_fp - \l_semio_viz_hierarchy_rd_inner_fp ) }
+    \bool_set_true:N \l_semio_viz_hierarchy_size_given_bool
+  }
+  \semio_viz_hierarchy_build_now:V \c_semio_viz_hierarchy_family_tl
+  \semio_viz_hierarchy_layout_now:nVV { partition }
+    \c_semio_viz_hierarchy_family_tl \c_semio_viz_hierarchy_family_tl
+  \semio_viz_hierarchy_draw_arcs:VVn \c_semio_viz_hierarchy_family_tl
+    \l_semio_viz_hierarchy_table_tl { \l_semio_viz_hierarchy_partition_depth_int }
+}
+%endregion 🔖️Families
+
+\ExplSyntaxOff

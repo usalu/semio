@@ -1,0 +1,1013 @@
+{
+  "$schema": "./🔣️.json",
+  "schemaVersion": 1,
+  "statutes": [
+    {
+      "kind": "code/file/missing-header-region",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Header region with license, filename, and contributors is required",
+      "solution": "Add header region with SPDX license, filename, and contributors",
+      "autofixable": true
+    },
+    {
+      "kind": "code/file/wrong-header-region-format",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Header region format is incorrect (missing License or Requirements subregion)",
+      "solution": "Add License and Requirements subregions inside Header",
+      "autofixable": false
+    },
+    {
+      "kind": "code/file/missing-contributors",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Contributors must be documented in header",
+      "solution": "Add contributor line in header region",
+      "autofixable": false
+    },
+    {
+      "kind": "code/file/missing-summary",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Summary must be documented in header",
+      "solution": "Add summary line in header region after the file ID",
+      "autofixable": false
+    },
+    {
+      "kind": "code/file/missing-license",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "License text is required in header License subregion",
+      "solution": "Add AGPL license text in License subregion",
+      "autofixable": true
+    },
+    {
+      "kind": "code/file/wrong-license",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "License must be AGPL-3.0-or-later",
+      "solution": "Replace license with AGPL-3.0-or-later",
+      "autofixable": true
+    },
+    {
+      "kind": "code/file/missing-requirements",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Requirements subregion is required inside Header",
+      "solution": "Add Requirements subregion inside Header",
+      "autofixable": false
+    },
+    {
+      "kind": "code/file/missing-docs",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "File must be documented in bundle README.md Docs section",
+      "solution": "Add file documentation to bundle README.md",
+      "autofixable": false
+    },
+    {
+      "kind": "code/section/empty",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Empty sections should be removed",
+      "solution": "Remove empty section or add content",
+      "autofixable": true
+    },
+    {
+      "kind": "code/section/orphan-definition",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "All code must be inside named sections",
+      "solution": "Move code into an existing section or add a new section",
+      "autofixable": false
+    },
+    {
+      "kind": "code/section/missing-start-name",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Section start marker must have a name",
+      "solution": "Add name to section start marker",
+      "autofixable": false
+    },
+    {
+      "kind": "code/section/missing-end-name",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Section end marker should have matching name",
+      "solution": "Add matching name to section end marker",
+      "autofixable": true
+    },
+    {
+      "kind": "code/section/name-mismatch",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Section start and end names must match",
+      "solution": "Fix section end name to match start name",
+      "autofixable": true
+    },
+    {
+      "kind": "code/section/wrong-format",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Section region marker format is incorrect",
+      "solution": "Use correct region marker format with emoji bookmark",
+      "autofixable": false
+    },
+    {
+      "kind": "code/section/wrong-format/summary/too-long-summary",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Section summary must not exceed 256 characters",
+      "solution": "Shorten the section summary to 256 characters or less",
+      "autofixable": false
+    },
+    {
+      "kind": "code/section/wrong-format/newline-after-region",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "No blank lines allowed between region start marker and region information comments",
+      "solution": "Remove blank lines between region start marker and the first comment line",
+      "autofixable": true
+    },
+    {
+      "kind": "code/section/wrong-format/requirements/split-block",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Spec comment block must be contiguous without blank lines",
+      "solution": "Remove blank lines between spec comment lines",
+      "autofixable": true
+    },
+    {
+      "kind": "code/section/wrong-format/docs",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Section docs format is incorrect",
+      "solution": "Fix the section docs format",
+      "autofixable": false
+    },
+    {
+      "kind": "code/section/missing-summary",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Section must have a summary comment after the region start",
+      "solution": "Add summary comment after section region start marker",
+      "autofixable": true
+    },
+    {
+      "kind": "code/section/missing-requirements",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Section must have requirements comments after the summary",
+      "solution": "Add requirements comments after section summary",
+      "autofixable": false
+    },
+    {
+      "kind": "code/section/missing-docs",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Section must be documented in bundle README.md Docs section",
+      "solution": "Add section documentation to bundle README.md",
+      "autofixable": false
+    },
+    {
+      "kind": "code/definition/wrong-format",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Definition does not have a proper docstring",
+      "solution": "Add language-native docstring to definition",
+      "autofixable": false
+    },
+    {
+      "kind": "code/definition/wrong-format/not-native-docstring",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Definition must use language-native docstring format (JSDoc for TS/JS, /// for C#/Rust)",
+      "solution": "Convert line comments to language-native docstring format",
+      "autofixable": true
+    },
+    {
+      "kind": "code/definition/missing-summary",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Definition must have a summary in its docstring",
+      "solution": "Add summary line to definition docstring",
+      "autofixable": true
+    },
+    {
+      "kind": "code/definition/missing-requirements",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Definition must have requirements in its docstring",
+      "solution": "Add requirements to definition docstring",
+      "autofixable": true
+    },
+    {
+      "kind": "code/definition/missing-docs",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Definition must be documented in bundle README.md Docs section",
+      "solution": "Add definition documentation to bundle README.md",
+      "autofixable": false
+    },
+    {
+      "kind": "code/comment/inline",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Inline comments are forbidden",
+      "solution": "Remove inline comment",
+      "autofixable": true
+    },
+    {
+      "kind": "code/comment/block",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Block comments are forbidden",
+      "solution": "Remove block comment",
+      "autofixable": true
+    },
+    {
+      "kind": "code/comment/jsdoc",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "JSDoc comments are forbidden",
+      "solution": "Remove JSDoc comment",
+      "autofixable": true
+    },
+    {
+      "kind": "code/requirements/implementation-syntax",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Requirements must be implementation-agnostic and must not contain code syntax",
+      "solution": "Remove backticks, function calls, and other code syntax from spec text",
+      "autofixable": false
+    },
+    {
+      "kind": "code/doc/missing-readme",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Bundle or folder is missing a README.md with summary and requirements",
+      "solution": "Add a README.md with # Summary and # 💯️Requirements sections",
+      "autofixable": false
+    },
+    {
+      "kind": "dev-docs/missing-file",
+      "policyId": "dev-docs",
+      "priority": "low",
+      "reason": "File exists but has no section in AGENTS.md Codebase",
+      "solution": "Add ## 📄️PATH section in AGENTS.md",
+      "autofixable": true
+    },
+    {
+      "kind": "dev-docs/missing-folder",
+      "policyId": "dev-docs",
+      "priority": "low",
+      "reason": "Folder exists but has no section in AGENTS.md Codebase",
+      "solution": "Add ## 📁️PATH section in AGENTS.md",
+      "autofixable": true
+    },
+    {
+      "kind": "dev-docs/wrong-file-path",
+      "policyId": "dev-docs",
+      "priority": "low",
+      "reason": "File section path does not match actual file path",
+      "solution": "Update file section path to match actual path",
+      "autofixable": true
+    },
+    {
+      "kind": "dev-docs/wrong-folder-path",
+      "policyId": "dev-docs",
+      "priority": "low",
+      "reason": "Folder section path does not match actual folder path",
+      "solution": "Update folder section path to match actual path",
+      "autofixable": true
+    },
+    {
+      "kind": "dev-docs/wrong-file-name",
+      "policyId": "dev-docs",
+      "priority": "low",
+      "reason": "File section name format is incorrect (should be ## 📄️PATH)",
+      "solution": "Rename section to ## 📄️PATH",
+      "autofixable": true
+    },
+    {
+      "kind": "dev-docs/wrong-folder-name",
+      "policyId": "dev-docs",
+      "priority": "low",
+      "reason": "Folder section name format is incorrect (should be ## 📁️PATH/)",
+      "solution": "Rename section to ## 📁️PATH/",
+      "autofixable": true
+    },
+    {
+      "kind": "dev-docs/wrong-file-order",
+      "policyId": "dev-docs",
+      "priority": "low",
+      "reason": "File sections are not in alphabetical order",
+      "solution": "Reorder file sections alphabetically",
+      "autofixable": true
+    },
+    {
+      "kind": "dev-docs/wrong-folder-order",
+      "policyId": "dev-docs",
+      "priority": "low",
+      "reason": "Folder sections are not in alphabetical order",
+      "solution": "Reorder folder sections alphabetically",
+      "autofixable": true
+    },
+    {
+      "kind": "dev-docs/missing-component",
+      "policyId": "dev-docs",
+      "priority": "low",
+      "reason": "Package.json workspace has no corresponding component in README.md",
+      "solution": "Add component section in README.md Components",
+      "autofixable": true
+    },
+    {
+      "kind": "dev-docs/wrong-component-name",
+      "policyId": "dev-docs",
+      "priority": "low",
+      "reason": "Component section name does not match workspace name",
+      "solution": "Rename component section to match workspace",
+      "autofixable": true
+    },
+    {
+      "kind": "dev-docs/wrong-component-order",
+      "policyId": "dev-docs",
+      "priority": "low",
+      "reason": "Component sections are not in package.json workspaces order",
+      "solution": "Reorder components to match package.json workspaces",
+      "autofixable": true
+    },
+    {
+      "kind": "sketchpad/import/third-party-outside-elements",
+      "policyId": "sketchpad",
+      "priority": "high",
+      "reason": "Third party imports must only be in elements.tsx",
+      "solution": "Move third party import to elements.tsx and re-export from there",
+      "autofixable": false
+    },
+    {
+      "kind": "sketchpad/state/multiple-machines",
+      "policyId": "sketchpad",
+      "priority": "high",
+      "reason": "Only one state machine is allowed (createMachine can only be used once)",
+      "solution": "Consolidate state management into a single state machine",
+      "autofixable": false
+    },
+    {
+      "kind": "sketchpad/state/create-actor-usage",
+      "policyId": "sketchpad",
+      "priority": "high",
+      "reason": "createActor is forbidden in sketchpad",
+      "solution": "Remove createActor usage and use the single state machine instead",
+      "autofixable": false
+    },
+    {
+      "kind": "sketchpad/state/yjs-app-state",
+      "policyId": "sketchpad",
+      "priority": "high",
+      "reason": "Yjs app state is forbidden in sketchpad state management",
+      "solution": "Keep app state in the single state machine and use Yjs only for synchronized document data",
+      "autofixable": false
+    },
+    {
+      "kind": "sketchpad/state/forbidden-store",
+      "policyId": "sketchpad",
+      "priority": "high",
+      "reason": "Stores outside of State Management sections are forbidden",
+      "solution": "Move store to a State Management section or remove it",
+      "autofixable": false
+    },
+    {
+      "kind": "sketchpad/hook/non-triadic",
+      "policyId": "sketchpad",
+      "priority": "high",
+      "reason": "Client elements must use triadic hooks pattern [state, setState, canSetState]=useSELECTOR()",
+      "solution": "Refactor to use triadic hook pattern with useSELECTOR",
+      "autofixable": false
+    },
+    {
+      "kind": "code/unicode/emoji-variation",
+      "policyId": "code",
+      "priority": "low",
+      "reason": "Emoji variation selectors (VS15/VS16) are forbidden",
+      "solution": "Strip variation selectors from emoji",
+      "autofixable": true
+    },
+    {
+      "kind": "repo/missing-command",
+      "policyId": "repo",
+      "priority": "high",
+      "reason": "Command is missing from parity implementation (CLI, MCP, VS Code)",
+      "solution": "Implement the command in the missing platform",
+      "autofixable": false
+    },
+    {
+      "kind": "repo/missing-ticket-tracking",
+      "policyId": "repo",
+      "priority": "high",
+      "reason": "Ticket tracking code is missing or incomplete",
+      "solution": "Implement strict ticket tracking (open/close/log)",
+      "autofixable": false
+    },
+    {
+      "kind": "system/devcontainer/vscode/settings-outside-devcontainer",
+      "policyId": "system",
+      "priority": "high",
+      "reason": "VSCode settings must be inside devcontainer.json customizations, not in .vscode/settings.json",
+      "solution": "Move .vscode/settings.json to customizations.vscode.settings inside .devcontainer/devcontainer.json",
+      "autofixable": true
+    },
+    {
+      "kind": "system/devcontainer/vscode/extensions-outside-devcontainer",
+      "policyId": "system",
+      "priority": "high",
+      "reason": "Host editors (Cursor, VS Code) read .vscode/extensions.json for workspace recommendations; it must include every extension from devcontainer customizations.vscode.extensions",
+      "solution": "Sync .vscode/extensions.json recommendations with customizations.vscode.extensions in .devcontainer/devcontainer.json (host-only extras such as Dev Containers are allowed)",
+      "autofixable": true
+    },
+    {
+      "kind": "folder/illegal/empty",
+      "policyId": "folder",
+      "priority": "low",
+      "reason": "Empty folders are not allowed",
+      "solution": "Remove the empty folder",
+      "autofixable": true
+    },
+    {
+      "kind": "folder/name/missing-emoji",
+      "policyId": "folder",
+      "priority": "high",
+      "reason": "Every non-reserved file and folder requires exactly one handpicked, meaningful emoji unique among all siblings; reserved filenames remain literal",
+      "solution": "Handpick one meaningful sibling-unique emoji, or restore the unprefixed reserved name, and update only resolved path references",
+      "autofixable": false
+    },
+    {
+      "kind": "folder/name/generic-emoji",
+      "policyId": "folder",
+      "priority": "high",
+      "reason": "Every non-reserved file and folder requires exactly one handpicked, meaningful emoji unique among all siblings; reserved filenames remain literal",
+      "solution": "Handpick one meaningful sibling-unique emoji, or restore the unprefixed reserved name, and update only resolved path references",
+      "autofixable": false
+    },
+    {
+      "kind": "folder/name/noncanonical-emoji-presentation",
+      "policyId": "folder",
+      "priority": "high",
+      "reason": "Every non-reserved file and folder requires exactly one handpicked, meaningful emoji unique among all siblings; reserved filenames remain literal",
+      "solution": "Handpick one meaningful sibling-unique emoji, or restore the unprefixed reserved name, and update only resolved path references",
+      "autofixable": false
+    },
+    {
+      "kind": "folder/name/whitespace-after-emoji",
+      "policyId": "folder",
+      "priority": "high",
+      "reason": "Every non-reserved file and folder requires exactly one handpicked, meaningful emoji unique among all siblings; reserved filenames remain literal",
+      "solution": "Handpick one meaningful sibling-unique emoji, or restore the unprefixed reserved name, and update only resolved path references",
+      "autofixable": false
+    },
+    {
+      "kind": "folder/name/emoji-not-unique",
+      "policyId": "folder",
+      "priority": "high",
+      "reason": "Every non-reserved file and folder requires exactly one handpicked, meaningful emoji unique among all siblings; reserved filenames remain literal",
+      "solution": "Handpick one meaningful sibling-unique emoji, or restore the unprefixed reserved name, and update only resolved path references",
+      "autofixable": false
+    },
+    {
+      "kind": "folder/name/multiple-emojis",
+      "policyId": "folder",
+      "priority": "high",
+      "reason": "Every non-reserved file and folder requires exactly one handpicked, meaningful emoji unique among all siblings; reserved filenames remain literal",
+      "solution": "Handpick one meaningful sibling-unique emoji, or restore the unprefixed reserved name, and update only resolved path references",
+      "autofixable": false
+    },
+    {
+      "kind": "file/illegal/use-godfile",
+      "policyId": "file",
+      "priority": "high",
+      "reason": "File is not listed in .🧬semio/🦑️repo/📁️files.json godfile",
+      "solution": "Add the file to .🧬semio/🦑️repo/📁️files.json or remove it",
+      "autofixable": false
+    },
+    {
+      "kind": "file/name/missing-emoji",
+      "policyId": "file",
+      "priority": "high",
+      "reason": "Every non-reserved file and folder requires exactly one handpicked, meaningful emoji unique among all siblings; reserved filenames remain literal",
+      "solution": "Handpick one meaningful sibling-unique emoji, or restore the unprefixed reserved name, and update only resolved path references",
+      "autofixable": false
+    },
+    {
+      "kind": "file/name/generic-emoji",
+      "policyId": "file",
+      "priority": "high",
+      "reason": "Every non-reserved file and folder requires exactly one handpicked, meaningful emoji unique among all siblings; reserved filenames remain literal",
+      "solution": "Handpick one meaningful sibling-unique emoji, or restore the unprefixed reserved name, and update only resolved path references",
+      "autofixable": false
+    },
+    {
+      "kind": "file/name/noncanonical-emoji-presentation",
+      "policyId": "file",
+      "priority": "high",
+      "reason": "Every non-reserved file and folder requires exactly one handpicked, meaningful emoji unique among all siblings; reserved filenames remain literal",
+      "solution": "Handpick one meaningful sibling-unique emoji, or restore the unprefixed reserved name, and update only resolved path references",
+      "autofixable": false
+    },
+    {
+      "kind": "file/name/whitespace-after-emoji",
+      "policyId": "file",
+      "priority": "high",
+      "reason": "Every non-reserved file and folder requires exactly one handpicked, meaningful emoji unique among all siblings; reserved filenames remain literal",
+      "solution": "Handpick one meaningful sibling-unique emoji, or restore the unprefixed reserved name, and update only resolved path references",
+      "autofixable": false
+    },
+    {
+      "kind": "file/name/emoji-not-unique",
+      "policyId": "file",
+      "priority": "high",
+      "reason": "Every non-reserved file and folder requires exactly one handpicked, meaningful emoji unique among all siblings; reserved filenames remain literal",
+      "solution": "Handpick one meaningful sibling-unique emoji, or restore the unprefixed reserved name, and update only resolved path references",
+      "autofixable": false
+    },
+    {
+      "kind": "file/name/multiple-emojis",
+      "policyId": "file",
+      "priority": "high",
+      "reason": "Every non-reserved file and folder requires exactly one handpicked, meaningful emoji unique among all siblings; reserved filenames remain literal",
+      "solution": "Handpick one meaningful sibling-unique emoji, or restore the unprefixed reserved name, and update only resolved path references",
+      "autofixable": false
+    },
+    {
+      "kind": "file/name/reserved-name-has-emoji",
+      "policyId": "file",
+      "priority": "high",
+      "reason": "Every non-reserved file and folder requires exactly one handpicked, meaningful emoji unique among all siblings; reserved filenames remain literal",
+      "solution": "Handpick one meaningful sibling-unique emoji, or restore the unprefixed reserved name, and update only resolved path references",
+      "autofixable": false
+    },
+    {
+      "kind": "compose/import/no-ui-dependency",
+      "policyId": "compose",
+      "priority": "high",
+      "reason": "compose.* files must be self-contained and not import from UI dependencies",
+      "solution": "Remove the UI dependency import and use only non-UI alternatives",
+      "autofixable": false
+    },
+    {
+      "kind": "dependency-boundary/import/direct-third-party",
+      "policyId": "dependency-boundary",
+      "priority": "high",
+      "reason": "Third-party packages must only be imported in adapter regions or adapter paths",
+      "solution": "Move the import into a //#region 🔌️Adapter (or /adapters/) module and depend on a first-party port interface elsewhere",
+      "autofixable": false
+    },
+    {
+      "kind": "compose/description/missing-emoji",
+      "policyId": "",
+      "priority": "medium",
+      "reason": "Every entity description must start with an emoji as the first symbol",
+      "solution": "Add a leading emoji to the description",
+      "autofixable": false
+    },
+    {
+      "kind": "compose/description/emoji-not-unique",
+      "policyId": "",
+      "priority": "medium",
+      "reason": "Every entity must have a unique emoji among its siblings",
+      "solution": "Change the leading emoji to one that is not already used by a sibling entity",
+      "autofixable": false
+    },
+    {
+      "kind": "code/rust/region-comment-instead-of-mod",
+      "policyId": "code",
+      "priority": "high",
+      "reason": "Rust files must use mod blocks for sections instead of region comments",
+      "solution": "Replace // #region with mod section_name { // 🔖️Name and // #endregion with } // 🔖️Name",
+      "autofixable": false
+    }
+  ],
+  "policies": [
+    {
+      "id": "code",
+      "name": "Code",
+      "description": "Validates source file headers, sections, and comments",
+      "scopes": [
+        "**/*.{ts,tsx,py,cs,go,rs}"
+      ],
+      "priority": "low",
+      "groups": [
+        {
+          "name": "File",
+          "description": "File header region breachs",
+          "scopes": [
+            "**/*.{ts,tsx,py,cs,go,rs}"
+          ],
+          "groups": [],
+          "kinds": [
+            "code/file/missing-header-region",
+            "code/file/wrong-header-region-format",
+            "code/file/missing-contributors",
+            "code/file/missing-summary",
+            "code/file/missing-license",
+            "code/file/wrong-license",
+            "code/file/missing-requirements",
+            "code/file/missing-docs"
+          ]
+        },
+        {
+          "name": "Section",
+          "description": "Section structure breachs",
+          "scopes": [
+            "**/*.{ts,tsx,py,cs,go,rs}"
+          ],
+          "groups": [
+            {
+              "name": "Wrong Format",
+              "description": "Section format breachs",
+              "groups": [
+                {
+                  "name": "Summary",
+                  "description": "Section summary format breachs",
+                  "kinds": [
+                    "code/section/wrong-format/summary/too-long-summary"
+                  ]
+                },
+                {
+                  "name": "Requirements",
+                  "description": "Section requirements format breachs",
+                  "kinds": [
+                    "code/section/wrong-format/requirements/split-block"
+                  ]
+                }
+              ],
+              "kinds": [
+                "code/section/wrong-format",
+                "code/section/wrong-format/newline-after-region",
+                "code/section/wrong-format/docs"
+              ]
+            }
+          ],
+          "kinds": [
+            "code/section/empty",
+            "code/section/orphan-definition",
+            "code/section/missing-start-name",
+            "code/section/missing-end-name",
+            "code/section/name-mismatch",
+            "code/section/missing-summary",
+            "code/section/missing-requirements",
+            "code/section/missing-docs"
+          ]
+        },
+        {
+          "name": "Definition",
+          "description": "Definition documentation breachs",
+          "scopes": [
+            "**/*.{ts,tsx,py,cs,go,rs}"
+          ],
+          "groups": [
+            {
+              "name": "Wrong Format",
+              "description": "Definition format breachs",
+              "kinds": [
+                "code/definition/wrong-format",
+                "code/definition/wrong-format/not-native-docstring"
+              ]
+            }
+          ],
+          "kinds": [
+            "code/definition/missing-summary",
+            "code/definition/missing-requirements",
+            "code/definition/missing-docs"
+          ]
+        },
+        {
+          "name": "Comment",
+          "description": "Forbidden comment breachs",
+          "scopes": [
+            "**/*.{ts,tsx,py,cs,go,rs}"
+          ],
+          "kinds": [
+            "code/comment/inline",
+            "code/comment/block",
+            "code/comment/jsdoc"
+          ]
+        },
+        {
+          "name": "Requirements",
+          "description": "Specification content breachs",
+          "scopes": [
+            "**/*.{ts,tsx,py,cs,go,rs}"
+          ],
+          "kinds": [
+            "code/requirements/implementation-syntax"
+          ]
+        },
+        {
+          "name": "Unicode",
+          "description": "Unicode character breachs",
+          "scopes": [
+            "**/*.{ts,tsx,py,cs,go,rs}"
+          ],
+          "kinds": [
+            "code/unicode/emoji-variation"
+          ]
+        },
+        {
+          "name": "Docs",
+          "description": "Documentation file breachs",
+          "scopes": [
+            "**/*.{ts,tsx,py,cs,go,rs}"
+          ],
+          "kinds": [
+            "code/doc/missing-readme"
+          ]
+        },
+        {
+          "name": "Rust",
+          "description": "Rust-specific section breachs",
+          "scopes": [
+            "**/*.rs"
+          ],
+          "kinds": [
+            "code/rust/region-comment-instead-of-mod"
+          ]
+        }
+      ],
+      "statutes": null
+    },
+    {
+      "id": "dev-docs",
+      "name": "DevDocs",
+      "description": "Validates README.md and AGENTS.md documentation structure",
+      "scopes": [
+        "README.md",
+        "AGENTS.md"
+      ],
+      "priority": "low",
+      "groups": [
+        {
+          "name": "File",
+          "description": "File documentation breachs",
+          "scopes": [
+            "AGENTS.md"
+          ],
+          "kinds": [
+            "dev-docs/missing-file",
+            "dev-docs/wrong-file-path",
+            "dev-docs/wrong-file-name",
+            "dev-docs/wrong-file-order"
+          ]
+        },
+        {
+          "name": "Folder",
+          "description": "Folder documentation breachs",
+          "scopes": [
+            "AGENTS.md"
+          ],
+          "kinds": [
+            "dev-docs/missing-folder",
+            "dev-docs/wrong-folder-path",
+            "dev-docs/wrong-folder-name",
+            "dev-docs/wrong-folder-order"
+          ]
+        },
+        {
+          "name": "Component",
+          "description": "Component documentation breachs",
+          "scopes": [
+            "README.md"
+          ],
+          "kinds": [
+            "dev-docs/missing-component",
+            "dev-docs/wrong-component-name",
+            "dev-docs/wrong-component-order"
+          ]
+        }
+      ],
+      "statutes": null
+    },
+    {
+      "id": "sketchpad",
+      "name": "Sketchpad",
+      "description": "Validates sketchpad imports, state management, and hook patterns",
+      "scopes": [
+        "js/sketchpad/**/*.{ts,tsx}"
+      ],
+      "priority": "high",
+      "groups": [
+        {
+          "name": "Import",
+          "description": "Import restriction breachs",
+          "scopes": [
+            "js/sketchpad/**/*.{ts,tsx}"
+          ],
+          "kinds": [
+            "sketchpad/import/third-party-outside-elements"
+          ]
+        },
+        {
+          "name": "State",
+          "description": "State management breachs",
+          "scopes": [
+            "js/sketchpad/**/*.{ts,tsx}"
+          ],
+          "kinds": [
+            "sketchpad/state/multiple-machines",
+            "sketchpad/state/create-actor-usage",
+            "sketchpad/state/yjs-app-state",
+            "sketchpad/state/forbidden-store"
+          ]
+        },
+        {
+          "name": "Hooks",
+          "description": "Hook pattern breachs",
+          "scopes": [
+            "js/sketchpad/**/*.{ts,tsx}"
+          ],
+          "kinds": [
+            "sketchpad/hook/non-triadic"
+          ]
+        }
+      ],
+      "statutes": null
+    },
+    {
+      "id": "repo",
+      "name": "Repo",
+      "description": "Validates strict repo command implementation parity and ticket tracking",
+      "scopes": [
+        "go/repo/main.go",
+        "js/vscode/package.json",
+        "graphql/repo/🔣️schema.graphql"
+      ],
+      "priority": "high",
+      "groups": [
+        {
+          "name": "Parity",
+          "description": "Command parity breachs",
+          "scopes": [
+            "go/repo/main.go",
+            "js/vscode/package.json",
+            "graphql/repo/🔣️schema.graphql"
+          ],
+          "kinds": [
+            "repo/missing-command",
+            "repo/missing-ticket-tracking"
+          ]
+        }
+      ],
+      "statutes": null
+    },
+    {
+      "id": "system",
+      "name": "System",
+      "description": "Validates system configuration files like devcontainer and editor settings",
+      "scopes": [
+        ".vscode/settings.json",
+        ".vscode/extensions.json",
+        ".devcontainer/devcontainer.json"
+      ],
+      "priority": "high",
+      "groups": [
+        {
+          "name": "Devcontainer",
+          "description": "Devcontainer configuration breachs",
+          "groups": [
+            {
+              "name": "VSCode",
+              "description": "VSCode settings and extensions must be inside devcontainer.json",
+              "kinds": [
+                "system/devcontainer/vscode/settings-outside-devcontainer",
+                "system/devcontainer/vscode/extensions-outside-devcontainer"
+              ]
+            }
+          ]
+        }
+      ],
+      "statutes": null
+    },
+    {
+      "id": "folder",
+      "name": "Folder",
+      "description": "Validates folder structure and detects illegal empty folders",
+      "scopes": [
+        "**/*"
+      ],
+      "priority": "low",
+      "groups": [
+        {
+          "name": "Name",
+          "description": "Folder emoji identity breaches",
+          "kinds": [
+            "folder/name/missing-emoji",
+            "folder/name/generic-emoji",
+            "folder/name/noncanonical-emoji-presentation",
+            "folder/name/whitespace-after-emoji",
+            "folder/name/emoji-not-unique",
+            "folder/name/multiple-emojis"
+          ]
+        },
+        {
+          "name": "Illegal",
+          "description": "Illegal folder breachs",
+          "groups": [
+            {
+              "name": "Empty",
+              "description": "Empty folders that should be removed",
+              "kinds": [
+                "folder/illegal/empty"
+              ]
+            }
+          ]
+        }
+      ],
+      "statutes": null
+    },
+    {
+      "id": "file",
+      "name": "File",
+      "description": "Validates file existence against the godfile allowlist",
+      "scopes": [
+        "**/*"
+      ],
+      "priority": "high",
+      "groups": [
+        {
+          "name": "Name",
+          "description": "File emoji identity breaches",
+          "kinds": [
+            "file/name/missing-emoji",
+            "file/name/generic-emoji",
+            "file/name/noncanonical-emoji-presentation",
+            "file/name/whitespace-after-emoji",
+            "file/name/emoji-not-unique",
+            "file/name/multiple-emojis",
+            "file/name/reserved-name-has-emoji"
+          ]
+        },
+        {
+          "name": "Illegal",
+          "description": "Illegal file breachs",
+          "groups": [
+            {
+              "name": "Use Godfile",
+              "description": "Files not listed in .🧬semio/🦑️repo/📁️files.json godfile",
+              "kinds": [
+                "file/illegal/use-godfile"
+              ]
+            }
+          ]
+        }
+      ],
+      "statutes": null
+    },
+    {
+      "id": "compose",
+      "name": "Compose",
+      "description": "Validates that compose.* files are self-contained and do not import UI dependencies",
+      "scopes": [
+        "**/*.{ts,tsx}"
+      ],
+      "priority": "high",
+      "groups": [
+        {
+          "name": "Import",
+          "description": "Import restriction breachs",
+          "groups": [
+            {
+              "name": "No Ui Dependency",
+              "description": "compose.* files must not import from UI dependencies",
+              "kinds": [
+                "compose/import/no-ui-dependency"
+              ]
+            }
+          ]
+        }
+      ],
+      "statutes": null
+    },
+    {
+      "id": "dependency-boundary",
+      "name": "Dependency Boundary",
+      "description": "Third-party libraries must only be imported behind adapter boundaries",
+      "scopes": [
+        "**/*"
+      ],
+      "priority": "high",
+      "groups": [
+        {
+          "name": "Import",
+          "description": "Direct third-party import breachs",
+          "scopes": [
+            "**/*"
+          ],
+          "kinds": [
+            "dependency-boundary/import/direct-third-party"
+          ]
+        }
+      ],
+      "statutes": null
+    }
+  ]
+}

@@ -1,0 +1,745 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-charts-financial}[2026/09/05 v0.3.0 semio viz namespace charts-financial families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-charts-line}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 🔑 semio / viz / family / financial — the price charts and indicators of taxonomy §17.
+%   mode      (candlestick|ohlc|hlc|heikin-ashi|renko|kagi|point-and-figure|line|volume|
+%              price-volume|volume-profile, default candlestick)
+%   overlay   (none|ma|bollinger, default none)   price overlay drawn on the same panel
+%   window    (integer, default 3)                window of the moving average and the bands
+%   boxSize   (number, default 1)                 brick / box height of renko and point-and-figure
+%   indicator (none|macd|rsi|momentum|drawdown|equity|return|cumulative-return, default none)
+%   open / high / low / close / volume (columns, defaults open high low close volume)
+\tl_new:N \l_semio_viz_fin_mode_tl
+\tl_new:N \l_semio_viz_fin_overlay_tl
+\tl_new:N \l_semio_viz_fin_indicator_tl
+\tl_new:N \l_semio_viz_fin_open_tl
+\tl_new:N \l_semio_viz_fin_high_tl
+\tl_new:N \l_semio_viz_fin_low_tl
+\tl_new:N \l_semio_viz_fin_close_tl
+\tl_new:N \l_semio_viz_fin_volume_tl
+\int_new:N \l_semio_viz_fin_window_int
+\fp_new:N \l_semio_viz_fin_box_fp
+
+\semio_viz_cart_family_keys:n { semio / viz / family / financial }
+% 🔑 The price chart's own keys, on top of the cartesian family keys inherited above.
+\keys_define:nn { semio / viz / family / financial } {
+  mode      .tl_set:N = \l_semio_viz_fin_mode_tl,
+  overlay   .tl_set:N = \l_semio_viz_fin_overlay_tl,
+  indicator .tl_set:N = \l_semio_viz_fin_indicator_tl,
+  window    .int_set:N = \l_semio_viz_fin_window_int,
+  boxSize   .fp_set:N = \l_semio_viz_fin_box_fp,
+  open      .tl_set:N = \l_semio_viz_fin_open_tl,
+  high      .tl_set:N = \l_semio_viz_fin_high_tl,
+  low       .tl_set:N = \l_semio_viz_fin_low_tl,
+  close     .tl_set:N = \l_semio_viz_fin_close_tl,
+  volume    .tl_set:N = \l_semio_viz_fin_volume_tl,
+}
+
+% 🔑 semio / viz / family / waterfall — the bridge and variance charts of taxonomy §17.
+%   mode      (waterfall|bridge|variance|actual-budget, default waterfall)
+%   connector (boolean, default false)  the step rule between consecutive bars
+%   total     (boolean, default true)   a closing total bar from the baseline
+%   padding   (0..0.9, default 0.3)     fraction of the band left empty
+\tl_new:N \l_semio_viz_wf_mode_tl
+\bool_new:N \l_semio_viz_wf_connector_bool
+\bool_new:N \l_semio_viz_wf_total_bool
+
+\semio_viz_cart_family_keys:n { semio / viz / family / waterfall }
+% 🔑 The waterfall's own keys, on top of the cartesian family keys inherited above.
+\keys_define:nn { semio / viz / family / waterfall } {
+  mode      .tl_set:N = \l_semio_viz_wf_mode_tl,
+  connector .bool_set:N = \l_semio_viz_wf_connector_bool,
+  total     .bool_set:N = \l_semio_viz_wf_total_bool,
+  padding   .fp_set:N = \l_semio_viz_bar_padding_fp,
+}
+
+% 🔑 semio / viz / family / curve — the analytic economics curves of taxonomy §17.
+%   mode    (supply-demand|lorenz|phillips|ppf|indifference|engel|yield|term-structure,
+%            default supply-demand)
+%   samples (integer, default 24)   points the curve is sampled at
+%   shift   (number, default 0)     shifts the second curve of a two-curve mode
+\tl_new:N \l_semio_viz_curve_mode_tl
+\int_new:N \l_semio_viz_curve_samples_int
+\fp_new:N \l_semio_viz_curve_shift_fp
+
+\semio_viz_cart_family_keys:n { semio / viz / family / curve }
+% 🔑 The economic curve's own keys, on top of the cartesian family keys inherited above.
+\keys_define:nn { semio / viz / family / curve } {
+  mode    .tl_set:N = \l_semio_viz_curve_mode_tl,
+  samples .int_set:N = \l_semio_viz_curve_samples_int,
+  shift   .fp_set:N = \l_semio_viz_curve_shift_fp,
+}
+%endregion 🔖️Keys
+
+%region 🔖️Series
+% 💹 The OHLC row store every financial mode reads: one clist `t,o,h,l,c,v` per period.
+\seq_new:N \l_semio_viz_fin_rows_seq
+\seq_new:N \l_semio_viz_fin_closes_seq
+\seq_new:N \l_semio_viz_fin_aux_seq
+\fp_new:N \l_semio_viz_fin_o_fp
+\fp_new:N \l_semio_viz_fin_h_fp
+\fp_new:N \l_semio_viz_fin_l_fp
+\fp_new:N \l_semio_viz_fin_c_fp
+\fp_new:N \l_semio_viz_fin_v_fp
+\fp_new:N \l_semio_viz_fin_t_fp
+\fp_new:N \l_semio_viz_fin_prev_fp
+\fp_new:N \l_semio_viz_fin_vmax_fp
+\tl_new:N \l_semio_viz_fin_cell_tl
+
+\cs_new_protected:Npn \semio_viz_fin_load_run: {
+  \seq_clear:N \l_semio_viz_fin_rows_seq
+  \seq_clear:N \l_semio_viz_fin_closes_seq
+  \fp_zero:N \l_semio_viz_fin_vmax_fp
+  \int_step_inline:nn { \l_semio_viz_cart_nrows_int } {
+    \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {##1} \l_semio_viz_cart_x_tl
+      \l_semio_viz_fin_cell_tl
+    \tl_set_eq:NN \l_semio_viz_cart_cell_tl \l_semio_viz_fin_cell_tl
+    \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {##1} \l_semio_viz_fin_open_tl
+      \l_semio_viz_fin_cell_tl
+    \tl_put_right:Nx \l_semio_viz_cart_cell_tl { , \l_semio_viz_fin_cell_tl }
+    \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {##1} \l_semio_viz_fin_high_tl
+      \l_semio_viz_fin_cell_tl
+    \tl_put_right:Nx \l_semio_viz_cart_cell_tl { , \l_semio_viz_fin_cell_tl }
+    \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {##1} \l_semio_viz_fin_low_tl
+      \l_semio_viz_fin_cell_tl
+    \tl_put_right:Nx \l_semio_viz_cart_cell_tl { , \l_semio_viz_fin_cell_tl }
+    \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {##1} \l_semio_viz_fin_close_tl
+      \l_semio_viz_fin_cell_tl
+    \tl_put_right:Nx \l_semio_viz_cart_cell_tl { , \l_semio_viz_fin_cell_tl }
+    \seq_put_right:NV \l_semio_viz_fin_closes_seq \l_semio_viz_fin_cell_tl
+    \semio_viz_table_cell:nnVN { \l_semio_viz_cart_data_tl } {##1} \l_semio_viz_fin_volume_tl
+      \l_semio_viz_fin_cell_tl
+    \tl_put_right:Nx \l_semio_viz_cart_cell_tl { , \l_semio_viz_fin_cell_tl }
+    \fp_set:Nn \l_semio_viz_fin_vmax_fp
+      { max( \l_semio_viz_fin_vmax_fp , \l_semio_viz_fin_cell_tl ) }
+    \seq_put_right:NV \l_semio_viz_fin_rows_seq \l_semio_viz_cart_cell_tl
+  }
+}
+
+% 🔎 Unpacks one stored row into the o/h/l/c/v scratch registers.
+\cs_new_protected:Npn \semio_viz_fin_row:n #1 {
+  \fp_set:Nn \l_semio_viz_fin_t_fp { \clist_item:nn {#1} { 1 } }
+  \fp_set:Nn \l_semio_viz_fin_o_fp { \clist_item:nn {#1} { 2 } }
+  \fp_set:Nn \l_semio_viz_fin_h_fp { \clist_item:nn {#1} { 3 } }
+  \fp_set:Nn \l_semio_viz_fin_l_fp { \clist_item:nn {#1} { 4 } }
+  \fp_set:Nn \l_semio_viz_fin_c_fp { \clist_item:nn {#1} { 5 } }
+  \fp_set:Nn \l_semio_viz_fin_v_fp { \clist_item:nn {#1} { 6 } }
+}
+
+% 🕯️ Heikin-Ashi replaces the stored rows by their smoothed equivalents before drawing.
+\cs_new_protected:Npn \semio_viz_fin_heikin_run: {
+  \seq_clear:N \l_semio_viz_fin_aux_seq
+  \fp_set:Nn \l_semio_viz_fin_prev_fp { -1 }
+  \seq_map_inline:Nn \l_semio_viz_fin_rows_seq {
+    \semio_viz_fin_row:n {##1}
+    \fp_set:Nn \l_semio_viz_cart_a_fp
+      { ( \l_semio_viz_fin_o_fp + \l_semio_viz_fin_h_fp + \l_semio_viz_fin_l_fp
+          + \l_semio_viz_fin_c_fp ) / 4 }
+    \fp_compare:nNnTF { \l_semio_viz_fin_prev_fp } < { 0 }
+      { \fp_set:Nn \l_semio_viz_cart_b_fp
+          { ( \l_semio_viz_fin_o_fp + \l_semio_viz_fin_c_fp ) / 2 } }
+      { \fp_set:Nn \l_semio_viz_cart_b_fp
+          { ( \l_semio_viz_fin_prev_fp + \l_semio_viz_cart_a_fp ) / 2 } }
+    \seq_put_right:Nx \l_semio_viz_fin_aux_seq {
+      \fp_eval:n { \l_semio_viz_fin_t_fp } , \fp_eval:n { \l_semio_viz_cart_b_fp } ,
+      \fp_eval:n { max( \l_semio_viz_fin_h_fp , max( \l_semio_viz_cart_a_fp , \l_semio_viz_cart_b_fp ) ) } ,
+      \fp_eval:n { min( \l_semio_viz_fin_l_fp , min( \l_semio_viz_cart_a_fp , \l_semio_viz_cart_b_fp ) ) } ,
+      \fp_eval:n { \l_semio_viz_cart_a_fp } , \fp_eval:n { \l_semio_viz_fin_v_fp }
+    }
+    \fp_set_eq:NN \l_semio_viz_fin_prev_fp \l_semio_viz_cart_b_fp
+  }
+  \seq_set_eq:NN \l_semio_viz_fin_rows_seq \l_semio_viz_fin_aux_seq
+}
+
+% 📈 Derived indicator series in place of the close series.
+\cs_new_protected:Npn \semio_viz_fin_indicator_run: {
+  \seq_clear:N \l_semio_viz_fin_aux_seq
+  \fp_set:Nn \l_semio_viz_fin_prev_fp { -1 }
+  \fp_zero:N \l_semio_viz_cart_e_fp
+  \seq_map_inline:Nn \l_semio_viz_fin_closes_seq {
+    \fp_compare:nNnTF { \l_semio_viz_fin_prev_fp } < { 0 }
+      { \fp_zero:N \l_semio_viz_cart_a_fp }
+      { \fp_set:Nn \l_semio_viz_cart_a_fp
+          { 100 * ( ##1 - \l_semio_viz_fin_prev_fp ) / \l_semio_viz_fin_prev_fp } }
+    \fp_add:Nn \l_semio_viz_cart_e_fp { \l_semio_viz_cart_a_fp }
+    \str_case:VnF \l_semio_viz_fin_indicator_tl {
+      { return } { \seq_put_right:Nx \l_semio_viz_fin_aux_seq
+          { \fp_eval:n { \l_semio_viz_cart_a_fp } } }
+      { cumulative-return } { \seq_put_right:Nx \l_semio_viz_fin_aux_seq
+          { \fp_eval:n { \l_semio_viz_cart_e_fp } } }
+      { momentum } { \seq_put_right:Nx \l_semio_viz_fin_aux_seq
+          { \fp_eval:n { ##1 - \l_semio_viz_fin_prev_fp } } }
+      { macd } { \seq_put_right:Nx \l_semio_viz_fin_aux_seq
+          { \fp_eval:n { ##1 - \l_semio_viz_cart_e_fp / 4 } } }
+      { rsi } { \seq_put_right:Nx \l_semio_viz_fin_aux_seq
+          { \fp_eval:n { 50 + 50 * \l_semio_viz_cart_a_fp / 20 } } }
+      { equity } { \seq_put_right:Nx \l_semio_viz_fin_aux_seq
+          { \fp_eval:n { 100 + \l_semio_viz_cart_e_fp } } }
+      { drawdown } { \seq_put_right:Nx \l_semio_viz_fin_aux_seq
+          { \fp_eval:n { min( 0 , \l_semio_viz_cart_e_fp ) } } }
+    } { \seq_put_right:Nx \l_semio_viz_fin_aux_seq { \fp_eval:n { \l_semio_viz_cart_a_fp } } }
+    \fp_set:Nn \l_semio_viz_fin_prev_fp { ##1 }
+  }
+}
+%endregion 🔖️Series
+
+%region 🔖️Families
+% 💹 financial — every price chart, volume view and indicator of taxonomy §17.
+\cs_new_protected:Npn \semio_viz_fin_keys_reset: {
+  \semio_viz_cart_keys_reset:
+  \tl_set:Nn \l_semio_viz_cart_data_tl { demo-ohlc }
+  \tl_set:Nn \l_semio_viz_cart_x_tl { t }
+  \tl_clear:N \l_semio_viz_cart_group_tl
+  \tl_set:Nn \l_semio_viz_fin_mode_tl { candlestick }
+  \tl_set:Nn \l_semio_viz_fin_overlay_tl { none }
+  \tl_set:Nn \l_semio_viz_fin_indicator_tl { none }
+  \tl_set:Nn \l_semio_viz_fin_open_tl { open }
+  \tl_set:Nn \l_semio_viz_fin_high_tl { high }
+  \tl_set:Nn \l_semio_viz_fin_low_tl { low }
+  \tl_set:Nn \l_semio_viz_fin_close_tl { close }
+  \tl_set:Nn \l_semio_viz_fin_volume_tl { volume }
+  \int_set:Nn \l_semio_viz_fin_window_int { 3 }
+  \fp_set:Nn \l_semio_viz_fin_box_fp { 1 }
+  \tl_set:Nn \l_semio_viz_cart_grid_tl { y }
+}
+
+\fp_new:N \l_semio_viz_fin_slot_fp
+
+% 📏 Width of one period's slot: the frame divided by the period count, with a gap left between them.
+\cs_new_protected:Npn \semio_viz_fin_slot: {
+  \fp_set:Nn \l_semio_viz_fin_slot_fp
+    { ( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp )
+      / ( \seq_count:N \l_semio_viz_fin_rows_seq ) * 0.62 }
+}
+
+% 🐂 Colours the current period by its direction: the positive semantic when it closed up, the
+% negative one when it closed down.
+\cs_new_protected:Npn \semio_viz_fin_bull_color: {
+  \fp_compare:nNnTF { \l_semio_viz_fin_c_fp } < { \l_semio_viz_fin_o_fp }
+    { \tl_set:Nn \l_semio_viz_cart_fill_tl { \semio_viz_theme_semantic:n { negative } } }
+    { \tl_set:Nn \l_semio_viz_cart_fill_tl { \semio_viz_theme_semantic:n { positive } } }
+  \tl_set_eq:NN \l_semio_viz_cart_stroke_tl \l_semio_viz_cart_fill_tl
+}
+
+% 🕯️ One candle: the high-low wick with the open-close body across it.
+\cs_new_protected:Npn \semio_viz_fin_candle: {
+  \semio_viz_cart_xmap:VN \l_semio_viz_fin_t_fp \l_semio_viz_cart_c_fp
+  \semio_viz_fin_bull_color:
+  \semio_viz_cart_ymap:VN \l_semio_viz_fin_l_fp \l_semio_viz_cart_a_fp
+  \semio_viz_cart_ymap:VN \l_semio_viz_fin_h_fp \l_semio_viz_cart_b_fp
+  \semio_viz_cart_draw_hair:nnnn { \fp_eval:n { \l_semio_viz_cart_c_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_a_fp } } { \fp_eval:n { \l_semio_viz_cart_c_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_b_fp } }
+  \semio_viz_cart_ymap:VN \l_semio_viz_fin_o_fp \l_semio_viz_cart_a_fp
+  \semio_viz_cart_ymap:VN \l_semio_viz_fin_c_fp \l_semio_viz_cart_b_fp
+  \semio_viz_cart_draw_rect:nnnn
+    { \fp_eval:n { \l_semio_viz_cart_c_fp - \l_semio_viz_fin_slot_fp / 2 } }
+    { \fp_eval:n { min( \l_semio_viz_cart_a_fp , \l_semio_viz_cart_b_fp ) } }
+    { \fp_eval:n { \l_semio_viz_fin_slot_fp } }
+    { \fp_eval:n { max( 0.4 , abs( \l_semio_viz_cart_b_fp - \l_semio_viz_cart_a_fp ) ) } }
+}
+
+% 📊 One price bar: the high-low stem with a close tick to the right, and an open tick to the left
+% as well when #1 is `ohlc`.
+\cs_new_protected:Npn \semio_viz_fin_bar:n #1 {
+  \semio_viz_cart_xmap:VN \l_semio_viz_fin_t_fp \l_semio_viz_cart_c_fp
+  \semio_viz_fin_bull_color:
+  \semio_viz_cart_ymap:VN \l_semio_viz_fin_l_fp \l_semio_viz_cart_a_fp
+  \semio_viz_cart_ymap:VN \l_semio_viz_fin_h_fp \l_semio_viz_cart_b_fp
+  \semio_viz_cart_draw_seg:nnnn { \fp_eval:n { \l_semio_viz_cart_c_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_a_fp } } { \fp_eval:n { \l_semio_viz_cart_c_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_b_fp } }
+  \str_if_eq:nnT {#1} { ohlc } {
+    \semio_viz_cart_ymap:VN \l_semio_viz_fin_o_fp \l_semio_viz_cart_d_fp
+    \semio_viz_cart_draw_seg:nnnn
+      { \fp_eval:n { \l_semio_viz_cart_c_fp - \l_semio_viz_fin_slot_fp / 2 } }
+      { \fp_eval:n { \l_semio_viz_cart_d_fp } } { \fp_eval:n { \l_semio_viz_cart_c_fp } }
+      { \fp_eval:n { \l_semio_viz_cart_d_fp } }
+  }
+  \semio_viz_cart_ymap:VN \l_semio_viz_fin_c_fp \l_semio_viz_cart_d_fp
+  \semio_viz_cart_draw_seg:nnnn { \fp_eval:n { \l_semio_viz_cart_c_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_d_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_c_fp + \l_semio_viz_fin_slot_fp / 2 } }
+    { \fp_eval:n { \l_semio_viz_cart_d_fp } }
+}
+
+% 📶 One volume bar, standing on the frame floor in the lower third so it never fights the price.
+\cs_new_protected:Npn \semio_viz_fin_volume_bar: {
+  \semio_viz_cart_xmap:VN \l_semio_viz_fin_t_fp \l_semio_viz_cart_c_fp
+  \semio_viz_fin_bull_color:
+  \fp_set:Nn \l_semio_viz_cart_d_fp
+    { \l_semio_viz_cart_ylo_fp + ( \l_semio_viz_cart_yhi_fp - \l_semio_viz_cart_ylo_fp )
+      * 0.3 * \l_semio_viz_fin_v_fp / \l_semio_viz_fin_vmax_fp }
+  \semio_viz_cart_draw_rect:nnnn
+    { \fp_eval:n { \l_semio_viz_cart_c_fp - \l_semio_viz_fin_slot_fp / 2 } }
+    { \fp_eval:n { \l_semio_viz_cart_ylo_fp } } { \fp_eval:n { \l_semio_viz_fin_slot_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_d_fp - \l_semio_viz_cart_ylo_fp } }
+}
+
+% 🧱 Renko bricks: one box per full boxSize move of the close, columns advancing left to right.
+\cs_new_protected:Npn \semio_viz_fin_renko_run: {
+  \fp_set:Nn \l_semio_viz_fin_prev_fp { \seq_item:Nn \l_semio_viz_fin_closes_seq { 1 } }
+  \int_zero:N \l_semio_viz_cart_j_int
+  \semio_viz_fin_slot:
+  \seq_map_inline:Nn \l_semio_viz_fin_closes_seq {
+    \fp_set:Nn \l_semio_viz_cart_a_fp { ( ##1 - \l_semio_viz_fin_prev_fp ) }
+    \fp_compare:nT { abs( \l_semio_viz_cart_a_fp ) >= \l_semio_viz_fin_box_fp } {
+      \int_incr:N \l_semio_viz_cart_j_int
+      \fp_compare:nNnTF { \l_semio_viz_cart_a_fp } < { 0 }
+        { \tl_set:Nn \l_semio_viz_cart_fill_tl { \semio_viz_theme_semantic:n { negative } } }
+        { \tl_set:Nn \l_semio_viz_cart_fill_tl { \semio_viz_theme_semantic:n { positive } } }
+      \semio_viz_cart_ymap:VN \l_semio_viz_fin_prev_fp \l_semio_viz_cart_c_fp
+      \semio_viz_cart_ymap:nN { ##1 } \l_semio_viz_cart_d_fp
+      \semio_viz_cart_draw_rect:nnnn
+        { \fp_eval:n { \l_semio_viz_cart_xlo_fp
+          + ( \l_semio_viz_cart_j_int - 1 ) * \l_semio_viz_fin_slot_fp * 1.4 } }
+        { \fp_eval:n { min( \l_semio_viz_cart_c_fp , \l_semio_viz_cart_d_fp ) } }
+        { \fp_eval:n { \l_semio_viz_fin_slot_fp } }
+        { \fp_eval:n { abs( \l_semio_viz_cart_d_fp - \l_semio_viz_cart_c_fp ) } }
+      \fp_set:Nn \l_semio_viz_fin_prev_fp { ##1 }
+    }
+  }
+}
+
+% 🪜 Kagi: a single line that only turns when the close reverses by more than boxSize.
+\cs_new_protected:Npn \semio_viz_fin_kagi_run: {
+  \seq_clear:N \l_semio_viz_cart_pts_seq
+  \fp_set:Nn \l_semio_viz_fin_prev_fp { \seq_item:Nn \l_semio_viz_fin_closes_seq { 1 } }
+  \int_zero:N \l_semio_viz_cart_j_int
+  \seq_map_inline:Nn \l_semio_viz_fin_closes_seq {
+    \int_incr:N \l_semio_viz_cart_j_int
+    \fp_compare:nT { abs( ##1 - \l_semio_viz_fin_prev_fp ) >= \l_semio_viz_fin_box_fp } {
+      \fp_set:Nn \l_semio_viz_cart_c_fp
+        { \l_semio_viz_cart_xlo_fp + ( \l_semio_viz_cart_j_int - 1 )
+          * ( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp )
+          / \seq_count:N \l_semio_viz_fin_closes_seq }
+      \semio_viz_cart_ymap:VN \l_semio_viz_fin_prev_fp \l_semio_viz_cart_d_fp
+      \seq_put_right:Nx \l_semio_viz_cart_pts_seq
+        { \fp_eval:n { \l_semio_viz_cart_c_fp } , \fp_eval:n { \l_semio_viz_cart_d_fp } }
+      \semio_viz_cart_ymap:nN { ##1 } \l_semio_viz_cart_d_fp
+      \seq_put_right:Nx \l_semio_viz_cart_pts_seq
+        { \fp_eval:n { \l_semio_viz_cart_c_fp } , \fp_eval:n { \l_semio_viz_cart_d_fp } }
+      \fp_set:Nn \l_semio_viz_fin_prev_fp { ##1 }
+    }
+  }
+  \tl_set:Nn \l_semio_viz_cart_curve_tl { step-after }
+  \tl_set:Nn \l_semio_viz_cart_stroke_tl { semio-chrome-border-emphasized }
+  \semio_viz_cart_draw_path:N \l_semio_viz_cart_pts_seq
+}
+
+% ❌⭕ Point and figure: a column of X marks while rising, of O marks while falling.
+\cs_new_protected:Npn \semio_viz_fin_pnf_run: {
+  \fp_set:Nn \l_semio_viz_fin_prev_fp { \seq_item:Nn \l_semio_viz_fin_closes_seq { 1 } }
+  \int_zero:N \l_semio_viz_cart_j_int
+  \semio_viz_fin_slot:
+  \seq_map_inline:Nn \l_semio_viz_fin_closes_seq {
+    \fp_compare:nT { abs( ##1 - \l_semio_viz_fin_prev_fp ) >= \l_semio_viz_fin_box_fp } {
+      \int_incr:N \l_semio_viz_cart_j_int
+      \fp_set:Nn \l_semio_viz_cart_c_fp
+        { \l_semio_viz_cart_xlo_fp + ( \l_semio_viz_cart_j_int - 0.5 )
+          * \l_semio_viz_fin_slot_fp * 1.4 }
+      \semio_viz_cart_ymap:nN { ##1 } \l_semio_viz_cart_d_fp
+      \fp_compare:nNnTF { ##1 } < { \l_semio_viz_fin_prev_fp }
+        {
+          \tl_set:Nn \l_semio_viz_cart_stroke_tl { \semio_viz_theme_semantic:n { negative } }
+          \draw [ \semio_viz_theme_semantic:n { negative } , line~width=\semio@stroke@hairline ]
+            ( \fp_eval:n { \l_semio_viz_cart_c_fp } , \fp_eval:n { \l_semio_viz_cart_d_fp } )
+            circle [ radius=\fp_eval:n { \l_semio_viz_fin_slot_fp / 2 } mm ] ;
+          \semio_viz_probe_geometry:nx { glyph }
+            { \fp_eval:n { round( \l_semio_viz_cart_c_fp , 4 ) } ,
+              \fp_eval:n { round( \l_semio_viz_cart_d_fp , 4 ) } , 0 }
+        }
+        {
+          \tl_set:Nn \l_semio_viz_cart_stroke_tl { \semio_viz_theme_semantic:n { positive } }
+          \semio_viz_cart_draw_seg:nnnn
+            { \fp_eval:n { \l_semio_viz_cart_c_fp - \l_semio_viz_fin_slot_fp / 2 } }
+            { \fp_eval:n { \l_semio_viz_cart_d_fp - \l_semio_viz_fin_slot_fp / 2 } }
+            { \fp_eval:n { \l_semio_viz_cart_c_fp + \l_semio_viz_fin_slot_fp / 2 } }
+            { \fp_eval:n { \l_semio_viz_cart_d_fp + \l_semio_viz_fin_slot_fp / 2 } }
+          \semio_viz_cart_draw_seg:nnnn
+            { \fp_eval:n { \l_semio_viz_cart_c_fp - \l_semio_viz_fin_slot_fp / 2 } }
+            { \fp_eval:n { \l_semio_viz_cart_d_fp + \l_semio_viz_fin_slot_fp / 2 } }
+            { \fp_eval:n { \l_semio_viz_cart_c_fp + \l_semio_viz_fin_slot_fp / 2 } }
+            { \fp_eval:n { \l_semio_viz_cart_d_fp - \l_semio_viz_fin_slot_fp / 2 } }
+        }
+      \fp_set:Nn \l_semio_viz_fin_prev_fp { ##1 }
+    }
+  }
+}
+
+% 📊 Volume profile: volume accumulated into price buckets and drawn as horizontal bars.
+\prop_new:N \l_semio_viz_fin_profile_prop
+\cs_new_protected:Npn \semio_viz_fin_profile_run: {
+  \prop_clear:N \l_semio_viz_fin_profile_prop
+  \seq_map_inline:Nn \l_semio_viz_fin_rows_seq {
+    \semio_viz_fin_row:n {##1}
+    \int_set:Nn \l_semio_viz_cart_j_int { \fp_to_int:n { round( \l_semio_viz_fin_c_fp ) } }
+    \semio_viz_cart_acc_get:NVN \l_semio_viz_fin_profile_prop \l_semio_viz_cart_j_int
+      \l_semio_viz_cart_a_fp
+    \prop_put:NVx \l_semio_viz_fin_profile_prop \l_semio_viz_cart_j_int
+      { \fp_eval:n { \l_semio_viz_cart_a_fp + \l_semio_viz_fin_v_fp } }
+  }
+  \semio_viz_cart_color:nN { 2 } \l_semio_viz_cart_fill_tl
+  \prop_map_inline:Nn \l_semio_viz_fin_profile_prop {
+    \semio_viz_cart_ymap:nN {##1} \l_semio_viz_cart_d_fp
+    \semio_viz_cart_draw_rect:nnnn { \fp_eval:n { \l_semio_viz_cart_xlo_fp } }
+      { \fp_eval:n { \l_semio_viz_cart_d_fp - 1 } }
+      { \fp_eval:n { ( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp )
+        * 0.6 * (##2) / \l_semio_viz_fin_vmax_fp } } { 2 }
+  }
+}
+
+% 〰️ The moving-average overlay and its Bollinger bands, both over the close series.
+\cs_new_protected:Npn \semio_viz_fin_overlay_draw: {
+  \semio_viz_cart_window_mean:Nn \l_semio_viz_fin_closes_seq { \l_semio_viz_fin_window_int }
+  \seq_set_eq:NN \l_semio_viz_fin_aux_seq \l_semio_viz_cart_out_seq
+  \semio_viz_probe_geometry:nx { window-mean }
+    { \seq_use:Nn \l_semio_viz_fin_aux_seq { , } }
+  \semio_viz_fin_overlay_points:n { 0 }
+  \str_if_eq:VnT \l_semio_viz_fin_overlay_tl { bollinger } {
+    \seq_set_eq:NN \l_semio_viz_cart_pts_b_seq \l_semio_viz_cart_pts_seq
+    \semio_viz_fin_overlay_points:n { 1.4 }
+    \seq_set_eq:NN \l_semio_viz_cart_map_seq \l_semio_viz_cart_pts_seq
+    \semio_viz_fin_overlay_points:n { -1.4 }
+    \tl_set:Nn \l_semio_viz_cart_fill_tl { \semio_viz_theme_color:n { 1 } }
+    \semio_viz_cart_draw_band:NN \l_semio_viz_cart_map_seq \l_semio_viz_cart_pts_seq
+    \seq_set_eq:NN \l_semio_viz_cart_pts_seq \l_semio_viz_cart_pts_b_seq
+  }
+  \tl_set:Nn \l_semio_viz_cart_stroke_tl { \semio_viz_theme_color:n { 2 } }
+  \semio_viz_cart_draw_path:N \l_semio_viz_cart_pts_seq
+}
+
+% 〰️ The overlay's points, offset by #1 — which is what turns one moving average into the three
+% lines of a Bollinger band.
+\cs_new_protected:Npn \semio_viz_fin_overlay_points:n #1 {
+  \seq_clear:N \l_semio_viz_cart_pts_seq
+  \int_zero:N \l_semio_viz_cart_j_int
+  \fp_set:Nn \l_semio_viz_cart_e_fp {#1}
+  \semio_viz_fin_overlay_points_run:
+}
+
+% 🔁 Walks the overlay sequence, placing each value at its own period's centre.
+\cs_new_protected:Npn \semio_viz_fin_overlay_points_run: {
+  \seq_map_inline:Nn \l_semio_viz_fin_aux_seq {
+    \int_incr:N \l_semio_viz_cart_j_int
+    \fp_set:Nn \l_semio_viz_cart_a_fp
+      { \l_semio_viz_cart_xlo_fp + ( \l_semio_viz_cart_j_int - 0.5 )
+        * ( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp )
+        / \seq_count:N \l_semio_viz_fin_aux_seq }
+    \semio_viz_cart_ymap:nN { ##1 + \l_semio_viz_cart_e_fp } \l_semio_viz_cart_d_fp
+    \seq_put_right:Nx \l_semio_viz_cart_pts_seq
+      { \fp_eval:n { \l_semio_viz_cart_a_fp } , \fp_eval:n { \l_semio_viz_cart_d_fp } }
+  }
+}
+
+% 📐 The value axis of a price chart: the lows give its floor and the highs its ceiling.
+\cs_new_protected:Npn \semio_viz_fin_price_domain: {
+  \semio_viz_cart_extent:VVNN \l_semio_viz_cart_data_tl \l_semio_viz_fin_low_tl
+    \l_semio_viz_cart_ymin_fp \l_semio_viz_cart_a_fp
+  \semio_viz_cart_extent:VVNN \l_semio_viz_cart_data_tl \l_semio_viz_fin_high_tl
+    \l_semio_viz_cart_b_fp \l_semio_viz_cart_ymax_fp
+}
+
+% 📐 The value axis of an indicator panel: the unit interval widened to hold the indicator itself.
+\cs_new_protected:Npn \semio_viz_fin_indicator_domain: {
+  \fp_set:Nn \l_semio_viz_cart_ymin_fp { 0 }
+  \fp_set:Nn \l_semio_viz_cart_ymax_fp { 1 }
+  \seq_map_inline:Nn \l_semio_viz_fin_aux_seq {
+    \fp_set:Nn \l_semio_viz_cart_ymin_fp { min( \l_semio_viz_cart_ymin_fp , ##1 ) }
+    \fp_set:Nn \l_semio_viz_cart_ymax_fp { max( \l_semio_viz_cart_ymax_fp , ##1 ) }
+  }
+}
+
+% 🕯️ The price body of the chart: whichever of the twelve §17 renderings the `mode` names.
+\cs_new_protected:Npn \semio_viz_fin_rows_draw: {
+  \semio_viz_fin_slot:
+  \str_case:VnF \l_semio_viz_fin_mode_tl {
+    { ohlc } { \semio_viz_fin_each:n { ohlc } }
+    { hlc } { \semio_viz_fin_each:n { hlc } }
+    { volume } { \semio_viz_fin_each:n { volume } }
+    { price-volume } { \semio_viz_fin_each:n { volume } \semio_viz_fin_each:n { close-line } }
+    { volume-profile } { \semio_viz_fin_profile_run: }
+    { renko } { \semio_viz_fin_renko_run: }
+    { kagi } { \semio_viz_fin_kagi_run: }
+    { point-and-figure } { \semio_viz_fin_pnf_run: }
+    { line } { \semio_viz_fin_each:n { close-line } }
+  } { \semio_viz_fin_each:n { candle } }
+}
+
+% 🔁 Runs the per-period renderer named #1 over every period.
+\cs_new_protected:Npn \semio_viz_fin_each:n #1 {
+  \tl_set:Nn \l_semio_viz_cart_arg_name_tl {#1}
+  \semio_viz_fin_each_run:
+}
+
+% 🔂 The walk itself: each period read, then drawn by the selected renderer; a close line is
+% collected as it goes and stroked once at the end.
+\cs_new_protected:Npn \semio_viz_fin_each_run: {
+  \seq_clear:N \l_semio_viz_cart_pts_seq
+  \seq_map_inline:Nn \l_semio_viz_fin_rows_seq {
+    \semio_viz_fin_row:n {##1}
+    \str_case:VnF \l_semio_viz_cart_arg_name_tl {
+      { ohlc } { \semio_viz_fin_bar:n { ohlc } }
+      { hlc } { \semio_viz_fin_bar:n { hlc } }
+      { volume } { \semio_viz_fin_volume_bar: }
+      { close-line } {
+        \semio_viz_cart_xmap:VN \l_semio_viz_fin_t_fp \l_semio_viz_cart_c_fp
+        \semio_viz_cart_ymap:VN \l_semio_viz_fin_c_fp \l_semio_viz_cart_d_fp
+        \seq_put_right:Nx \l_semio_viz_cart_pts_seq
+          { \fp_eval:n { \l_semio_viz_cart_c_fp } , \fp_eval:n { \l_semio_viz_cart_d_fp } }
+      }
+    } { \semio_viz_fin_candle: }
+  }
+  \str_if_eq:VnT \l_semio_viz_cart_arg_name_tl { close-line } {
+    \tl_set:Nn \l_semio_viz_cart_stroke_tl { \semio_viz_theme_color:n { 0 } }
+    \semio_viz_cart_draw_path:N \l_semio_viz_cart_pts_seq
+  }
+}
+
+% ▶️ The whole family run: defaults, the option list #1, the periods, the value axis the mode and
+% indicator ask for, the price body, the overlay, then the axes.
+\cs_new_protected:Npn \semio_viz_fin_render:n #1 {
+  \semio_viz_frame_require:n { SemioVizRunFamily }
+  \semio_viz_fin_keys_reset:
+  \keys_set:nn { semio / viz / family / financial } {#1}
+  \semio_viz_cart_rect_compute:
+  \semio_viz_cart_extent:VVNN \l_semio_viz_cart_data_tl \l_semio_viz_cart_x_tl
+    \l_semio_viz_cart_xmin_fp \l_semio_viz_cart_xmax_fp
+  \semio_viz_cart_scale_x:n { linear }
+  \semio_viz_table_nrows:VN \l_semio_viz_cart_data_tl \l_semio_viz_cart_nrows_int
+  \semio_viz_fin_load_run:
+  \str_if_eq:VnT \l_semio_viz_fin_mode_tl { heikin-ashi } { \semio_viz_fin_heikin_run: }
+  \str_if_eq:VnTF \l_semio_viz_fin_indicator_tl { none }
+    { \semio_viz_fin_price_domain: }
+    { \semio_viz_fin_indicator_run: \semio_viz_fin_indicator_domain: }
+  \semio_viz_cart_scale_value:nn { linear } { v }
+  \semio_viz_cart_grid_y:
+  \semio_viz_cart_axis_frame:
+  \str_if_eq:VnTF \l_semio_viz_fin_indicator_tl { none }
+    {
+      \semio_viz_fin_rows_draw:
+      \str_if_eq:VnF \l_semio_viz_fin_overlay_tl { none } { \semio_viz_fin_overlay_draw: }
+    }
+    {
+      \semio_viz_fin_overlay_points:n { 0 }
+      \tl_set:Nn \l_semio_viz_cart_stroke_tl { \semio_viz_theme_color:n { 0 } }
+      \semio_viz_cart_draw_path:N \l_semio_viz_cart_pts_seq
+    }
+  \semio_viz_cart_axis_ticks:n { v }
+}
+
+% 🕯️ §17: candlestick, OHLC, HLC, volume, renko, kagi, point-and-figure and their indicators.
+\SemioVizFamily { financial } { \semio_viz_fin_render:n {#1} }
+
+% 🧾 waterfall — bridge, variance and actual-versus-budget charts of taxonomy §17.
+\cs_new_protected:Npn \semio_viz_wf_keys_reset: {
+  \semio_viz_cart_keys_reset:
+  \tl_set:Nn \l_semio_viz_cart_data_tl { demo }
+  \tl_set:Nn \l_semio_viz_cart_x_tl { cat }
+  \tl_set:Nn \l_semio_viz_cart_y_tl { val }
+  \tl_clear:N \l_semio_viz_cart_group_tl
+  \tl_set:Nn \l_semio_viz_wf_mode_tl { waterfall }
+  \bool_set_false:N \l_semio_viz_wf_connector_bool
+  \bool_set_true:N \l_semio_viz_wf_total_bool
+  \fp_set:Nn \l_semio_viz_bar_padding_fp { 0.3 }
+  \fp_zero:N \l_semio_viz_bar_width_fp
+  \fp_zero:N \l_semio_viz_bar_baseline_fp
+  \tl_set:Nn \l_semio_viz_bar_orient_tl { vertical }
+  \bool_set_false:N \l_semio_viz_bar_lollipop_bool
+  \tl_set:Nn \l_semio_viz_cart_labels_tl { none }
+}
+
+% 🧾 Walks the categories, carrying the running total from one bar's top to the next bar's floor.
+\cs_new_protected:Npn \semio_viz_wf_bars_run: {
+  \fp_zero:N \l_semio_viz_cart_e_fp
+  \fp_set:Nn \l_semio_viz_cart_v_fp { -1 }
+  \seq_map_indexed_inline:Nn \l_semio_viz_cart_cats_seq {
+    \int_set:Nn \l_semio_viz_bar_gi_int {##1}
+    \tl_set:Nn \l_semio_viz_bar_cat_tl {##2}
+    \tl_clear:N \l_semio_viz_bar_grp_tl
+    \semio_viz_bar_band:V \l_semio_viz_bar_cat_tl
+    \semio_viz_bar_slot:nn { 1 } { 1 }
+    \semio_viz_bar_cell_value:
+    \bool_if:NT \l_semio_viz_bar_found_bool { \semio_viz_wf_bar_one: }
+  }
+  \bool_if:NT \l_semio_viz_wf_total_bool { \semio_viz_wf_total: }
+}
+
+% 🧱 One bridge bar: from the running total to the total plus this step, coloured by the `mode`,
+% with the connector back to the previous bar's top.
+\cs_new_protected:Npn \semio_viz_wf_bar_one: {
+  \fp_set:Nn \l_semio_viz_cart_b_fp { \l_semio_viz_cart_e_fp + \l_semio_viz_bar_va_fp }
+  \str_case:VnF \l_semio_viz_wf_mode_tl {
+    { variance } {
+      \fp_compare:nNnTF { \l_semio_viz_bar_va_fp } < { 5 }
+        { \tl_set:Nn \l_semio_viz_cart_fill_tl { \semio_viz_theme_semantic:n { negative } } }
+        { \tl_set:Nn \l_semio_viz_cart_fill_tl { \semio_viz_theme_semantic:n { positive } } }
+    }
+    { actual-budget } { \semio_viz_cart_color:VN \l_semio_viz_bar_gi_int \l_semio_viz_cart_fill_tl }
+  } {
+    \fp_compare:nNnTF { \l_semio_viz_bar_va_fp } < { 0 }
+      { \tl_set:Nn \l_semio_viz_cart_fill_tl { \semio_viz_theme_semantic:n { negative } } }
+      { \tl_set:Nn \l_semio_viz_cart_fill_tl { \semio_viz_theme_semantic:n { positive } } }
+  }
+  \semio_viz_cart_ymap:VN \l_semio_viz_cart_e_fp \l_semio_viz_cart_c_fp
+  \semio_viz_cart_ymap:VN \l_semio_viz_cart_b_fp \l_semio_viz_cart_d_fp
+  \bool_if:NT \l_semio_viz_wf_connector_bool {
+    \fp_compare:nNnF { \l_semio_viz_cart_v_fp } < { 0 } {
+      \tl_set:Nn \l_semio_viz_cart_stroke_tl { semio-chrome-border-normal }
+      \semio_viz_cart_draw_hair:nnnn { \fp_eval:n { \l_semio_viz_cart_v_fp } }
+        { \fp_eval:n { \l_semio_viz_cart_c_fp } }
+        { \fp_eval:n { \l_semio_viz_bar_left_fp } } { \fp_eval:n { \l_semio_viz_cart_c_fp } }
+    }
+  }
+  \semio_viz_cart_draw_rect:nnnn { \fp_eval:n { \l_semio_viz_bar_left_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_c_fp } } { \fp_eval:n { \l_semio_viz_bar_slot_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_d_fp - \l_semio_viz_cart_c_fp } }
+  \fp_set:Nn \l_semio_viz_cart_v_fp
+    { \l_semio_viz_bar_left_fp + \l_semio_viz_bar_slot_fp }
+  \fp_set_eq:NN \l_semio_viz_cart_e_fp \l_semio_viz_cart_b_fp
+}
+
+% 🟰 The closing bar of the bridge: the accumulated total, standing on the baseline.
+\cs_new_protected:Npn \semio_viz_wf_total: {
+  \tl_set:Nn \l_semio_viz_cart_fill_tl { semio-chrome-border-emphasized }
+  \semio_viz_cart_ymap:nN { 0 } \l_semio_viz_cart_c_fp
+  \semio_viz_cart_ymap:VN \l_semio_viz_cart_e_fp \l_semio_viz_cart_d_fp
+  \semio_viz_cart_draw_rect:nnnn
+    { \fp_eval:n { \l_semio_viz_cart_xhi_fp - \l_semio_viz_bar_slot_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_c_fp } } { \fp_eval:n { \l_semio_viz_bar_slot_fp } }
+    { \fp_eval:n { \l_semio_viz_cart_d_fp - \l_semio_viz_cart_c_fp } }
+}
+
+% ▶️ The whole family run: defaults, the option list #1, the frame and scales, then the bridge.
+\cs_new_protected:Npn \semio_viz_wf_render:n #1 {
+  \semio_viz_frame_require:n { SemioVizRunFamily }
+  \semio_viz_wf_keys_reset:
+  \keys_set:nn { semio / viz / family / waterfall } {#1}
+  \semio_viz_cart_prepare:
+  \semio_viz_cart_domain_stacked:
+  \semio_viz_cart_scale_band:Nn \l_semio_viz_cart_cats_seq { cart-band }
+  \semio_viz_cart_scale_value:nn { linear } { v }
+  \semio_viz_cart_grid_y:
+  \semio_viz_cart_axis_frame:
+  \semio_viz_wf_bars_run:
+  \semio_viz_cart_axis_labels_band:Nn \l_semio_viz_cart_cats_seq { cart-band }
+  \semio_viz_cart_axis_ticks:n { v }
+}
+
+% 🧾 §17: bridge, variance and actual-versus-budget bars, each standing where the last one ended.
+\SemioVizFamily { waterfall } { \semio_viz_wf_render:n {#1} }
+
+% 📐 curve — the analytic economics curves of taxonomy §17, sampled from closed formulas.
+\cs_new_protected:Npn \semio_viz_curve_keys_reset: {
+  \semio_viz_cart_keys_reset:
+  \tl_set:Nn \l_semio_viz_curve_mode_tl { supply-demand }
+  \int_set:Nn \l_semio_viz_curve_samples_int { 24 }
+  \fp_zero:N \l_semio_viz_curve_shift_fp
+  \tl_set:Nn \l_semio_viz_cart_grid_tl { both }
+}
+
+% 📐 Samples the named curve #1 at `samples` points across the unit interval, into figure space.
+\cs_new_protected:Npn \semio_viz_curve_sample:n #1 {
+  \seq_clear:N \l_semio_viz_cart_pts_seq
+  \tl_set:Nn \l_semio_viz_cart_arg_name_tl {#1}
+  \semio_viz_curve_sample_run:
+}
+
+% 🧮 The closed formula of each named curve, evaluated at the current abscissa.
+\cs_new_protected:Npn \semio_viz_curve_sample_run: {
+  \int_step_variable:nNn { \l_semio_viz_curve_samples_int } \l_semio_viz_cart_i_int {
+    \fp_set:Nn \l_semio_viz_cart_a_fp
+      { ( \l_semio_viz_cart_i_int - 1 ) / ( \l_semio_viz_curve_samples_int - 1 ) }
+    \semio_viz_curve_eval:
+    \seq_put_right:Nx \l_semio_viz_cart_pts_seq {
+      \fp_eval:n { \l_semio_viz_cart_xlo_fp + \l_semio_viz_cart_a_fp
+        * ( \l_semio_viz_cart_xhi_fp - \l_semio_viz_cart_xlo_fp ) } ,
+      \fp_eval:n { \l_semio_viz_cart_ylo_fp
+        + min( 1 , max( 0 , \l_semio_viz_cart_b_fp ) )
+        * ( \l_semio_viz_cart_yhi_fp - \l_semio_viz_cart_ylo_fp ) }
+    }
+  }
+}
+
+% 📚 The closed forms: each curve is a normalised function of u, shifted by the shift key.
+\cs_new_protected:Npn \semio_viz_curve_eval: {
+  \str_case:VnF \l_semio_viz_cart_arg_name_tl {
+    { supply } { \fp_set:Nn \l_semio_viz_cart_b_fp
+      { 0.15 + 0.7 * \l_semio_viz_cart_a_fp + \l_semio_viz_curve_shift_fp } }
+    { demand } { \fp_set:Nn \l_semio_viz_cart_b_fp
+      { 0.85 - 0.7 * \l_semio_viz_cart_a_fp + \l_semio_viz_curve_shift_fp } }
+    { lorenz } { \fp_set:Nn \l_semio_viz_cart_b_fp { \l_semio_viz_cart_a_fp ^ 2.2 } }
+    { equality } { \fp_set:Nn \l_semio_viz_cart_b_fp { \l_semio_viz_cart_a_fp } }
+    { phillips } { \fp_set:Nn \l_semio_viz_cart_b_fp
+      { 0.12 + 0.7 / ( 1 + 6 * \l_semio_viz_cart_a_fp ) } }
+    { ppf } { \fp_set:Nn \l_semio_viz_cart_b_fp
+      { sqrt( max( 0 , 1 - \l_semio_viz_cart_a_fp ^ 2 ) ) * 0.9 } }
+    { indifference } { \fp_set:Nn \l_semio_viz_cart_b_fp
+      { 0.16 / max( 0.06 , \l_semio_viz_cart_a_fp ) } }
+    { engel } { \fp_set:Nn \l_semio_viz_cart_b_fp { 0.9 * \l_semio_viz_cart_a_fp ^ 0.55 } }
+    { yield } { \fp_set:Nn \l_semio_viz_cart_b_fp
+      { 0.2 + 0.65 * ( 1 - exp( -3 * \l_semio_viz_cart_a_fp ) ) } }
+    { term-structure } { \fp_set:Nn \l_semio_viz_cart_b_fp
+      { 0.3 + 0.5 * sin( 3.14159 * \l_semio_viz_cart_a_fp ) } }
+  } { \fp_set:Nn \l_semio_viz_cart_b_fp { \l_semio_viz_cart_a_fp } }
+}
+
+% ➰ Strokes the named curve #1 in the colour #2.
+\cs_new_protected:Npn \semio_viz_curve_draw:nn #1#2 {
+  \tl_set:Nn \l_semio_viz_cart_stroke_tl {#2}
+  \semio_viz_curve_sample:n {#1}
+  \semio_viz_cart_draw_path:N \l_semio_viz_cart_pts_seq
+}
+
+% ▶️ The whole family run: defaults, the option list #1, the unit frame, then the one or two curves
+% the `mode` names — a supply-demand pair, a Lorenz curve against equality, and so on.
+\cs_new_protected:Npn \semio_viz_curve_render:n #1 {
+  \semio_viz_frame_require:n { SemioVizRunFamily }
+  \semio_viz_curve_keys_reset:
+  \keys_set:nn { semio / viz / family / curve } {#1}
+  \semio_viz_cart_rect_compute:
+  \fp_zero:N \l_semio_viz_cart_ymin_fp
+  \fp_set:Nn \l_semio_viz_cart_ymax_fp { 1 }
+  \fp_zero:N \l_semio_viz_cart_xmin_fp
+  \fp_set:Nn \l_semio_viz_cart_xmax_fp { 1 }
+  \semio_viz_cart_scale_x:n { linear }
+  \semio_viz_cart_scale_value:nn { linear } { v }
+  \semio_viz_cart_grid_y:
+  \semio_viz_cart_grid_x:
+  \semio_viz_cart_axis_frame:
+  \tl_set:Nn \l_semio_viz_cart_curve_tl { catmull-rom }
+  \str_case:VnF \l_semio_viz_curve_mode_tl {
+    { supply-demand } {
+      \semio_viz_curve_draw:nn { supply } { \semio_viz_theme_color:n { 0 } }
+      \semio_viz_curve_draw:nn { demand } { \semio_viz_theme_color:n { 1 } }
+    }
+    { lorenz } {
+      \semio_viz_curve_draw:nn { equality } { semio-chrome-border-normal }
+      \semio_viz_curve_draw:nn { lorenz } { \semio_viz_theme_color:n { 0 } }
+    }
+    { phillips } { \semio_viz_curve_draw:nn { phillips } { \semio_viz_theme_color:n { 0 } } }
+    { ppf } { \semio_viz_curve_draw:nn { ppf } { \semio_viz_theme_color:n { 0 } } }
+    { indifference } {
+      \semio_viz_curve_draw:nn { indifference } { \semio_viz_theme_color:n { 0 } }
+      \fp_add:Nn \l_semio_viz_curve_shift_fp { 0.18 }
+      \semio_viz_curve_draw:nn { indifference } { \semio_viz_theme_color:n { 1 } }
+    }
+    { engel } { \semio_viz_curve_draw:nn { engel } { \semio_viz_theme_color:n { 0 } } }
+    { yield } { \semio_viz_curve_draw:nn { yield } { \semio_viz_theme_color:n { 0 } } }
+    { term-structure } { \semio_viz_curve_draw:nn { term-structure } { \semio_viz_theme_color:n { 0 } } }
+  } { \semio_viz_curve_draw:nn { equality } { \semio_viz_theme_color:n { 0 } } }
+  \semio_viz_cart_axis_ticks:n { v }
+}
+
+% 📐 §17: the analytic economics curves, sampled from closed formulas rather than from a table.
+\SemioVizFamily { curve } { \semio_viz_curve_render:n {#1} }
+%endregion 🔖️Families
+
+\ExplSyntaxOff

@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/repo/workspace/1",
+  "title": "🏠️ Repo workspace fixtures and wire shapes",
+  "description": "🏠️ The three vector files the workspace cases read, and the projections every implementation of root discovery, layout, config, glob matching and ignore matching must produce.",
+  "$defs": {
+    "GlobVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "pattern", "path", "expected"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "pattern": { "type": "string", "description": "🃏️ The slash-separated glob pattern." },
+        "path": { "type": "string", "description": "🛤️ The path the pattern is applied to." },
+        "expected": { "type": "boolean", "description": "✅️ The verdict the owned matcher and the oracle agree on." }
+      }
+    },
+    "IgnoreVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "rules", "path", "expected"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "rules": { "type": "array", "items": { "type": "string" }, "description": "📜️ The whole ignore file, in order — precedence is positional." },
+        "path": { "type": "string" },
+        "expected": { "type": "boolean" }
+      }
+    },
+    "DivergentIgnoreVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "rules", "path", "owned", "git"],
+      "description": "⚠️ A rule shape where the owned matcher and git deliberately disagree; recorded so the difference is a decision, not a surprise.",
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "rules": { "type": "array", "items": { "type": "string" } },
+        "path": { "type": "string" },
+        "owned": { "type": "boolean", "description": "🏠️ What this repository's matcher returns." },
+        "git": { "type": "boolean", "description": "🐙️ What a gitignore-conformant matcher returns." }
+      }
+    },
+    "RootDiscoveryTree": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "directories", "files", "startAt", "expectedRoot"],
+      "description": "🌳️ A workspace shape materialised inside the case work directory, because its markers (`.git`) cannot be committed.",
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "directories": { "type": "array", "items": { "type": "string" } },
+        "files": { "type": "object", "additionalProperties": { "type": "string" } },
+        "startAt": { "type": "string", "description": "📍️ The directory discovery starts from, relative to the tree root." },
+        "expectedRoot": { "type": "string", "description": "🧭️ The directory discovery must return, relative to the tree root." }
+      }
+    },
+    "ConfigDocument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "document", "expected"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "document": { "type": ["string", "null"], "description": "📋️ The `📋️config.toml` body, or null when the file is absent." },
+        "expected": { "type": "string", "description": "🎯️ The rendered settings, as `session=… operations=… plan=… detail=…`." }
+      }
+    },
+    "GlobVectorFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "vectors"],
+      "properties": {
+        "$comment": { "type": "string" },
+        "schema": { "const": "semio.repo.workspace.glob-vectors/1" },
+        "vectors": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/GlobVector" } }
+      }
+    },
+    "IgnoreVectorFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "vectors", "divergentVectors"],
+      "properties": {
+        "$comment": { "type": "string" },
+        "schema": { "const": "semio.repo.workspace.ignore-vectors/1" },
+        "vectors": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/IgnoreVector" } },
+        "divergentVectors": { "type": "array", "items": { "$ref": "#/$defs/DivergentIgnoreVector" } }
+      }
+    },
+    "RootDiscoveryFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "trees", "layout", "configDocuments"],
+      "properties": {
+        "$comment": { "type": "string" },
+        "schema": { "const": "semio.repo.workspace.root-discovery-trees/1" },
+        "trees": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/RootDiscoveryTree" } },
+        "layout": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["semioDirName", "repoDirName", "ticketsDirName", "goalsDirName", "devsDirName", "filesIndexName", "configFileName"],
+          "properties": {
+            "semioDirName": { "type": "string" },
+            "repoDirName": { "type": "string" },
+            "ticketsDirName": { "type": "string" },
+            "goalsDirName": { "type": "string" },
+            "devsDirName": { "type": "string" },
+            "filesIndexName": { "type": "string" },
+            "configFileName": { "type": "string" }
+          }
+        },
+        "configDocuments": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ConfigDocument" } }
+      }
+    },
+    "VerdictProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verdicts"],
+      "description": "🎯️ One `<vector name>=<true|false>` entry per vector, in vector order.",
+      "properties": { "verdicts": { "type": "array", "items": { "type": "string" } } }
+    },
+    "RootDiscoveryProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["roots", "layout", "configs"],
+      "properties": {
+        "roots": { "type": "array", "items": { "type": "string" }, "description": "🧭️ `<tree name>=<discovered root, relative to the tree root, forward slashes>`." },
+        "layout": { "type": "array", "items": { "type": "string" }, "description": "🧱️ `<layout key>=<path relative to the repo root, forward slashes>`." },
+        "configs": { "type": "array", "items": { "type": "string" }, "description": "📋️ `<document name>=session=… operations=… plan=… detail=…`." }
+      }
+    }
+  },
+  "oneOf": [{ "$ref": "#/$defs/GlobVectorFile" }, { "$ref": "#/$defs/IgnoreVectorFile" }, { "$ref": "#/$defs/RootDiscoveryFile" }]
+}

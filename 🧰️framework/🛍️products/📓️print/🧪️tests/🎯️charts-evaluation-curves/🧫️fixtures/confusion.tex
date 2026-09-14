@@ -1,0 +1,10 @@
+\documentclass{article}
+\usepackage{semio-viz-charts-statistical}
+\begin{document}
+\ExplSyntaxOn
+\SemioVizProbeOn
+\SemioVizChartsDryRun
+\SemioVizProbeBegin{charts-evaluation-curves}{confusion}
+\SemioVizRunFamily{evaluation}[data=demo-scores, curve=confusion, width=40, height=40, pad=0]
+\ExplSyntaxOff
+\end{document}

@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/repo/todos/🔣️.json",
+  "title": "📝️ semio repo todos",
+  "$comment": "🧬️ The wire contract of the 📝️todos module: a todo is a line of source rather than a stored document, so the shapes here are the todo a scan yields, the draft a store keeps, and the fixture files under 🧫️fixtures that state the trees, the lines and the scripts every implementation replays.",
+  "type": "object",
+  "$defs": {
+    "Location": {
+      "$comment": "📍️ Where a todo lives: the file, the one based line and the one based column. A todo appended to a file has line 0 until the next scan reads it back.",
+      "type": "object",
+      "properties": {
+        "filePath": { "type": "string" },
+        "line": { "type": "integer" },
+        "column": { "type": "integer" }
+      },
+      "required": ["filePath", "line", "column"]
+    },
+    "Todo": {
+      "$comment": "✅️ One todo. The identifier is the slug of the name, the parent is the directory whose `.todos.md` carries it or the file whose comment it is.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "parentId": { "type": "string" },
+        "location": { "$ref": "#/$defs/Location" }
+      },
+      "required": ["id", "name", "parentId"]
+    },
+    "Draft": {
+      "$comment": "🎨️ One draft: a directory of copied files under the repository's notes tree, addressed by the slug of its title.",
+      "type": "object",
+      "properties": { "id": { "type": "string" } },
+      "required": ["id"]
+    },
+    "TreeFile": {
+      "$comment": "📄️ One file of a stated tree: a `/` separated path relative to the scan root and the exact text at that path.",
+      "type": "object",
+      "properties": {
+        "path": { "type": "string" },
+        "content": { "type": "string" }
+      },
+      "required": ["path", "content"]
+    },
+    "ScanTreeVectors": {
+      "$comment": "🔍️ 🧫️fixtures/🔍️scan-tree.json — a whole tree stated as its own files, covering every branch a scan has to answer for: a directory `.todos.md`, todo comments in each supported extension and comment opener, an unsupported extension, a skipped directory, a dotted directory, an item with no description, a description carrying colons and a comment that only looks like a todo. These are specification vectors, not recorded data: this checkout carries no `.todos.md` at all, which the no-oracle decision states.",
+      "type": "object",
+      "properties": {
+        "schema": { "type": "string" },
+        "files": { "type": "array", "items": { "$ref": "#/$defs/TreeFile" } },
+        "searchTerms": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["files", "searchTerms"]
+    },
+    "LineVectors": {
+      "$comment": "📝️ 🧫️fixtures/📝️line-vectors.json — the two documents a todo can live in and the rewrites applied to them. `markdown` is a whole `.todos.md`, `source` is a whole commented file, and each rewrite names the line it touches and what it becomes, so a round trip re-parses what a rewrite wrote.",
+      "type": "object",
+      "properties": {
+        "schema": { "type": "string" },
+        "markdown": { "type": "string" },
+        "markdownPath": { "type": "string" },
+        "source": { "type": "string" },
+        "sourcePath": { "type": "string" },
+        "markdownRewrites": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "oldName": { "type": "string" },
+              "newName": { "type": "string" },
+              "newDescription": { "type": "string" }
+            },
+            "required": ["oldName", "newName", "newDescription"]
+          }
+        },
+        "sourceRewrites": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "line": { "type": "integer" },
+              "newName": { "type": "string" },
+              "newDescription": { "type": "string" }
+            },
+            "required": ["line", "newName", "newDescription"]
+          }
+        },
+        "openerPaths": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["markdown", "markdownPath", "source", "sourcePath", "markdownRewrites", "sourceRewrites", "openerPaths"]
+    },
+    "TodoStep": {
+      "$comment": "🎬️ One step of the todo lifecycle script. `op` is `create`, `change`, `delete`, `to-ticket`, `find` or `list`; `input` carries whatever that operation reads.",
+      "type": "object",
+      "properties": {
+        "op": { "type": "string", "enum": ["create", "change", "delete", "to-ticket", "find", "list"] },
+        "input": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "parentId": { "type": "string" },
+            "name": { "type": ["string", "null"] },
+            "description": { "type": ["string", "null"] },
+            "title": { "type": "string" },
+            "prompt": { "type": "string" }
+          }
+        }
+      },
+      "required": ["op", "input"]
+    },
+    "TodoScript": {
+      "$comment": "🎫️ 🧫️fixtures/🔓️lifecycle-script.json — one ordered history over an in-memory tree, ticket opener and emitter, including the refusals a caller has to get back.",
+      "type": "object",
+      "properties": {
+        "schema": { "type": "string" },
+        "author": { "type": "string" },
+        "files": { "type": "array", "items": { "$ref": "#/$defs/TreeFile" } },
+        "steps": { "type": "array", "items": { "$ref": "#/$defs/TodoStep" } }
+      },
+      "required": ["author", "files", "steps"]
+    },
+    "DraftStep": {
+      "$comment": "🎬️ One step of the draft script. `op` is `create`, `delete` or `list`.",
+      "type": "object",
+      "properties": {
+        "op": { "type": "string", "enum": ["create", "delete", "list"] },
+        "input": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "title": { "type": "string" },
+            "files": { "type": "array", "items": { "$ref": "#/$defs/TreeFile" } }
+          }
+        }
+      },
+      "required": ["op", "input"]
+    },
+    "DraftScript": {
+      "$comment": "✏️ 🧫️fixtures/✏️draft-script.json — one ordered history over an in-memory draft store, including a title carrying no slug, a duplicate identifier and a removal of a draft that never existed.",
+      "type": "object",
+      "properties": {
+        "schema": { "type": "string" },
+        "steps": { "type": "array", "items": { "$ref": "#/$defs/DraftStep" } }
+      },
+      "required": ["steps"]
+    }
+  }
+}

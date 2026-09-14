@@ -14,7 +14,7 @@
   ],
   "vizSections": 80,
   "vizLeaves": 1966,
-  "vizApiCommands": 17,
+  "vizApiCommands": 21,
   "vizText": ["Cell text", "Module text", "Chip text", "Label text", "Title text", "42"],
   "documentCommands": [
     "SemioOpenAny",

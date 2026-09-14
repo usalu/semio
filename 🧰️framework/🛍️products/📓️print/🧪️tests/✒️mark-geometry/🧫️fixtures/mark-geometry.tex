@@ -1,0 +1,46 @@
+\documentclass{article}
+\usepackage{semio-viz-probe}
+\usepackage{semio-viz-mark}
+\ExplSyntaxOn
+% ⚫ Draws one section 0 mark with no ink at all, so the record is pure geometry.
+\cs_new_protected:Npn \semio_probe_mark:n #1 {
+  \semio_viz_mark_draw:nnn {#1}
+    {
+      fill = none, stroke = none, size = 12, radius = 9,
+      points = { 4,4; 14,18; 26,8; 38,22; 50,10 },
+      points2 = { 4,2; 14,3; 26,2; 38,4; 50,3 },
+      via = { 20,30; 34,6 },
+      extent = { 4,50 }
+    }
+    { 28, 12 }
+}
+\ExplSyntaxOff
+\begin{document}
+\ExplSyntaxOn
+\bool_set_true:N \l_semio_viz_in_figure_bool
+\ExplSyntaxOff
+\SemioVizProbeOn
+\ExplSyntaxOn
+\SemioVizProbeBegin{mark-geometry}{primitives}
+\ExplSyntaxOff
+\begin{tikzpicture}[x=1mm,y=1mm]
+\ExplSyntaxOn
+\clist_map_inline:nn {
+  dot, circle, square, rectangle, triangle, diamond,
+  cross, plus, star, custom-glyph, icon-mark, image-mark,
+  text-mark, straight-line, polyline, step-line, curved-line, bezier-curve,
+  spline, catmull-rom-spline, basis-spline, cardinal-spline, monotone-spline, closed-curve,
+  polygon, filled-path, ribbon, band, envelope, circular-arc,
+  elliptical-arc, annular-arc, sector, wedge, straight-connector, orthogonal-connector,
+  curved-connector, elbow-connector, bundled-connector, arrow, bidirectional-arrow, rectangular-region,
+  circular-region, polygonal-region, voronoi-region, convex-hull, concave-hull, label,
+  callout, leader-line, bracket, brace, highlight-region, reference-line,
+  reference-band, reference-point
+} { \semio_probe_mark:n {#1} }
+\ExplSyntaxOn
+\ExplSyntaxOff
+\end{tikzpicture}
+\ExplSyntaxOn
+\SemioVizProbeEnd
+\ExplSyntaxOff
+\end{document}

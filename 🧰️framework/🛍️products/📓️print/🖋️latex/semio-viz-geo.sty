@@ -1,0 +1,2727 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-geo}[2026/09/05 v0.3.0 semio viz geographic projections, paths, graticules]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-data}
+\RequirePackage{semio-viz-layout}
+\RequirePackage{semio-viz-probe}
+\RequirePackage{semio-viz-theme}
+
+\ExplSyntaxOn
+
+\cs_generate_variant:Nn \prop_gput:Nnn { NVx }
+\cs_generate_variant:Nn \str_case:nn { Vn }
+\cs_generate_variant:Nn \str_case:nnF { VnF }
+
+%region 🔖️Diagnostics
+\msg_new:nnn { semio-viz } { unknown-projection }
+  { Unknown~viz~projection~'#1'.~Define~it~with~\SemioVizProjection~first. }
+\msg_new:nnn { semio-viz } { unknown-projection-kind }
+  { Unknown~viz~projection~kind~'#1'. }
+\msg_new:nnn { semio-viz } { geo-no-inverse }
+  { Projection~kind~'#1'~has~no~closed-form~inverse~in~semio-viz-geo. }
+%endregion 🔖️Diagnostics
+
+%region 🔖️Constants
+% 🔢 Degree/radian conversion and the d3-geo tolerances, named so that no renderer spells a magic number.
+\fp_const:Nn \c_semio_viz_geo_radians_fp { pi / 180 }
+\fp_const:Nn \c_semio_viz_geo_degrees_fp { 180 / pi }
+\fp_const:Nn \c_semio_viz_geo_halfpi_fp { pi / 2 }
+\fp_const:Nn \c_semio_viz_geo_tau_fp { 2 * pi }
+\fp_const:Nn \c_semio_viz_geo_epsilon_fp { 1e-6 }
+\fp_const:Nn \c_semio_viz_geo_cosmindistance_fp { cosd ( 30 ) }
+\int_const:Nn \c_semio_viz_geo_maxdepth_int { 16 }
+\int_const:Nn \c_semio_viz_geo_newton_int { 25 }
+%endregion 🔖️Constants
+
+%region 🔖️State
+\fp_new:N \l_semio_viz_geo_k_fp
+\fp_new:N \l_semio_viz_geo_tx_fp
+\fp_new:N \l_semio_viz_geo_ty_fp
+\fp_new:N \l_semio_viz_geo_dl_fp
+\fp_new:N \l_semio_viz_geo_dp_fp
+\fp_new:N \l_semio_viz_geo_dg_fp
+\fp_new:N \l_semio_viz_geo_ox_fp
+\fp_new:N \l_semio_viz_geo_oy_fp
+\fp_new:N \l_semio_viz_geo_n_fp
+\fp_new:N \l_semio_viz_geo_f_fp
+\fp_new:N \l_semio_viz_geo_c_fp
+\fp_new:N \l_semio_viz_geo_rzero_fp
+\fp_new:N \l_semio_viz_geo_g_fp
+\fp_new:N \l_semio_viz_geo_cosphistd_fp
+\fp_new:N \l_semio_viz_geo_clip_fp
+\fp_new:N \l_semio_viz_geo_deltasq_fp
+\tl_new:N \l_semio_viz_geo_raw_tl
+\fp_new:N \l_semio_viz_geo_lam_fp
+\fp_new:N \l_semio_viz_geo_phi_fp
+\fp_new:N \l_semio_viz_geo_px_fp
+\fp_new:N \l_semio_viz_geo_py_fp
+\fp_new:N \l_semio_viz_geo_x_fp
+\fp_new:N \l_semio_viz_geo_y_fp
+\fp_new:N \l_semio_viz_geo_lon_fp
+\fp_new:N \l_semio_viz_geo_lat_fp
+\fp_new:N \l_semio_viz_geo_tmpa_fp
+\fp_new:N \l_semio_viz_geo_tmpb_fp
+\fp_new:N \l_semio_viz_geo_tmpc_fp
+\fp_new:N \l_semio_viz_geo_tmpd_fp
+\fp_new:N \l_semio_viz_geo_rx_fp
+\fp_new:N \l_semio_viz_geo_ry_fp
+\fp_new:N \l_semio_viz_geo_rz_fp
+\fp_new:N \l_semio_viz_geo_rk_fp
+%endregion 🔖️State
+
+%region 🔖️Rotation
+% 🌐 d3-geo rotateRadians: the lambda shift first, then the phi/gamma rotation of the cartesian frame.
+\cs_new_protected:Npn \semio_viz_geo_rotate:
+  {
+    \fp_add:Nn \l_semio_viz_geo_lam_fp { \l_semio_viz_geo_dl_fp }
+    \fp_compare:nNnT { abs ( \l_semio_viz_geo_lam_fp ) } > { pi }
+      {
+        \fp_sub:Nn \l_semio_viz_geo_lam_fp
+          { round ( \l_semio_viz_geo_lam_fp / ( 2 * pi ) ) * 2 * pi }
+      }
+    \bool_lazy_and:nnF
+      { \fp_compare_p:nNn { abs ( \l_semio_viz_geo_dp_fp ) } = { 0 } }
+      { \fp_compare_p:nNn { abs ( \l_semio_viz_geo_dg_fp ) } = { 0 } }
+      { \semio_viz_geo_rotate_phigamma: }
+  }
+
+% 🔄 The pitch and roll of the rotation, applied on the unit sphere after the yaw.
+\cs_new_protected:Npn \semio_viz_geo_rotate_phigamma:
+  {
+    \fp_set:Nn \l_semio_viz_geo_rx_fp
+      { cos ( \l_semio_viz_geo_lam_fp ) * cos ( \l_semio_viz_geo_phi_fp ) }
+    \fp_set:Nn \l_semio_viz_geo_ry_fp
+      { sin ( \l_semio_viz_geo_lam_fp ) * cos ( \l_semio_viz_geo_phi_fp ) }
+    \fp_set:Nn \l_semio_viz_geo_rz_fp { sin ( \l_semio_viz_geo_phi_fp ) }
+    \fp_set:Nn \l_semio_viz_geo_rk_fp
+      {
+        \l_semio_viz_geo_rz_fp * cos ( \l_semio_viz_geo_dp_fp )
+        + \l_semio_viz_geo_rx_fp * sin ( \l_semio_viz_geo_dp_fp )
+      }
+    \fp_set:Nn \l_semio_viz_geo_lam_fp
+      {
+        atan
+          (
+            \l_semio_viz_geo_ry_fp * cos ( \l_semio_viz_geo_dg_fp )
+            - \l_semio_viz_geo_rk_fp * sin ( \l_semio_viz_geo_dg_fp ) ,
+            \l_semio_viz_geo_rx_fp * cos ( \l_semio_viz_geo_dp_fp )
+            - \l_semio_viz_geo_rz_fp * sin ( \l_semio_viz_geo_dp_fp )
+          )
+      }
+    \fp_set:Nn \l_semio_viz_geo_phi_fp
+      {
+        asin
+          (
+            \l_semio_viz_geo_rk_fp * cos ( \l_semio_viz_geo_dg_fp )
+            + \l_semio_viz_geo_ry_fp * sin ( \l_semio_viz_geo_dg_fp )
+          )
+      }
+  }
+
+% 🔁 Inverse rotation: the phi/gamma frame first, then the lambda shift removed.
+\cs_new_protected:Npn \semio_viz_geo_rotate_invert:
+  {
+    \bool_lazy_and:nnF
+      { \fp_compare_p:nNn { abs ( \l_semio_viz_geo_dp_fp ) } = { 0 } }
+      { \fp_compare_p:nNn { abs ( \l_semio_viz_geo_dg_fp ) } = { 0 } }
+      { \semio_viz_geo_rotate_phigamma_invert: }
+    \fp_sub:Nn \l_semio_viz_geo_lam_fp { \l_semio_viz_geo_dl_fp }
+    \fp_compare:nNnT { abs ( \l_semio_viz_geo_lam_fp ) } > { pi }
+      {
+        \fp_sub:Nn \l_semio_viz_geo_lam_fp
+          { round ( \l_semio_viz_geo_lam_fp / ( 2 * pi ) ) * 2 * pi }
+      }
+  }
+
+% 🔄 The inverse of that pitch and roll, for the way back from the plane to the sphere.
+\cs_new_protected:Npn \semio_viz_geo_rotate_phigamma_invert:
+  {
+    \fp_set:Nn \l_semio_viz_geo_rx_fp
+      { cos ( \l_semio_viz_geo_lam_fp ) * cos ( \l_semio_viz_geo_phi_fp ) }
+    \fp_set:Nn \l_semio_viz_geo_ry_fp
+      { sin ( \l_semio_viz_geo_lam_fp ) * cos ( \l_semio_viz_geo_phi_fp ) }
+    \fp_set:Nn \l_semio_viz_geo_rz_fp { sin ( \l_semio_viz_geo_phi_fp ) }
+    \fp_set:Nn \l_semio_viz_geo_rk_fp
+      {
+        \l_semio_viz_geo_rz_fp * cos ( \l_semio_viz_geo_dg_fp )
+        - \l_semio_viz_geo_ry_fp * sin ( \l_semio_viz_geo_dg_fp )
+      }
+    \fp_set:Nn \l_semio_viz_geo_lam_fp
+      {
+        atan
+          (
+            \l_semio_viz_geo_ry_fp * cos ( \l_semio_viz_geo_dg_fp )
+            + \l_semio_viz_geo_rz_fp * sin ( \l_semio_viz_geo_dg_fp ) ,
+            \l_semio_viz_geo_rx_fp * cos ( \l_semio_viz_geo_dp_fp )
+            + \l_semio_viz_geo_rk_fp * sin ( \l_semio_viz_geo_dp_fp )
+          )
+      }
+    \fp_set:Nn \l_semio_viz_geo_phi_fp
+      {
+        asin
+          (
+            \l_semio_viz_geo_rk_fp * cos ( \l_semio_viz_geo_dp_fp )
+            - \l_semio_viz_geo_rx_fp * sin ( \l_semio_viz_geo_dp_fp )
+          )
+      }
+  }
+%endregion 🔖️Rotation
+
+%region 🔖️RawProjections
+% 🗺️ Raw projections, verbatim d3-geo: unit sphere in radians, plane coordinates out, no scale or translate.
+\cs_new_protected:Npn \semio_viz_geo_raw:
+  { \exp_args:NV \semio_viz_geo_raw_aux:n \l_semio_viz_geo_raw_tl }
+
+% 🗺️ Dispatches to the raw projection named #1; an unknown name is an error, not a fallback.
+\cs_new_protected:Npn \semio_viz_geo_raw_aux:n #1
+  {
+    \str_case:nnF {#1}
+      {
+        { equirectangular } { \semio_viz_geo_raw_equirectangular: }
+        { mercator } { \semio_viz_geo_raw_mercator: }
+        { transverse-mercator } { \semio_viz_geo_raw_transverse_mercator: }
+        { equal-earth } { \semio_viz_geo_raw_equal_earth: }
+        { natural-earth1 } { \semio_viz_geo_raw_naturalearth: }
+        { orthographic } { \semio_viz_geo_raw_orthographic: }
+        { stereographic } { \semio_viz_geo_raw_stereographic: }
+        { gnomonic } { \semio_viz_geo_raw_gnomonic: }
+        { azimuthal-equal-area } { \semio_viz_geo_raw_azimuthal_equal_area: }
+        { azimuthal-equidistant } { \semio_viz_geo_raw_azimuthal_equidistant: }
+        { conic-conformal } { \semio_viz_geo_raw_conic_conformal: }
+        { conic-equal-area } { \semio_viz_geo_raw_conic_equal_area: }
+        { conic-equidistant } { \semio_viz_geo_raw_conic_equidistant: }
+        { cylindrical-equal-area } { \semio_viz_geo_raw_cylindrical_equal_area: }
+      }
+      { \msg_error:nnn { semio-viz } { unknown-projection-kind } {#1} }
+  }
+
+% 🗺️ `equirectangular`: longitude and latitude taken as the two plane coordinates unchanged.
+\cs_new_protected:Npn \semio_viz_geo_raw_equirectangular:
+  {
+    \fp_set_eq:NN \l_semio_viz_geo_px_fp \l_semio_viz_geo_lam_fp
+    \fp_set_eq:NN \l_semio_viz_geo_py_fp \l_semio_viz_geo_phi_fp
+  }
+
+% 🗺️ `mercator`: conformal, the latitude through the Gudermannian, so angles survive and areas do not.
+\cs_new_protected:Npn \semio_viz_geo_raw_mercator:
+  {
+    \fp_set_eq:NN \l_semio_viz_geo_px_fp \l_semio_viz_geo_lam_fp
+    \fp_set:Nn \l_semio_viz_geo_py_fp
+      { ln ( tan ( ( pi / 2 + \l_semio_viz_geo_phi_fp ) / 2 ) ) }
+  }
+
+% 🗺️ `transverse-mercator`: the same conformal cylinder laid on its side.
+\cs_new_protected:Npn \semio_viz_geo_raw_transverse_mercator:
+  {
+    \fp_set:Nn \l_semio_viz_geo_px_fp
+      { ln ( tan ( ( pi / 2 + \l_semio_viz_geo_phi_fp ) / 2 ) ) }
+    \fp_set:Nn \l_semio_viz_geo_py_fp { - \l_semio_viz_geo_lam_fp }
+  }
+
+\fp_const:Nn \c_semio_viz_geo_ee_ka_fp { 1.340264 }
+\fp_const:Nn \c_semio_viz_geo_ee_kb_fp { -0.081106 }
+\fp_const:Nn \c_semio_viz_geo_ee_kc_fp { 0.000893 }
+\fp_const:Nn \c_semio_viz_geo_ee_kd_fp { 0.003796 }
+\fp_const:Nn \c_semio_viz_geo_ee_m_fp { sqrt ( 3 ) / 2 }
+
+% 🗺️ `equal-earth`: Šavrič, Patterson and Jenny's equal-area pseudocylindrical polynomial.
+\cs_new_protected:Npn \semio_viz_geo_raw_equal_earth:
+  {
+    \fp_set:Nn \l_semio_viz_geo_tmpa_fp
+      { asin ( \c_semio_viz_geo_ee_m_fp * sin ( \l_semio_viz_geo_phi_fp ) ) }
+    \fp_set:Nn \l_semio_viz_geo_tmpb_fp
+      { \l_semio_viz_geo_tmpa_fp * \l_semio_viz_geo_tmpa_fp }
+    \fp_set:Nn \l_semio_viz_geo_tmpc_fp
+      {
+        \l_semio_viz_geo_tmpb_fp * \l_semio_viz_geo_tmpb_fp
+        * \l_semio_viz_geo_tmpb_fp
+      }
+    \fp_set:Nn \l_semio_viz_geo_px_fp
+      {
+        \l_semio_viz_geo_lam_fp * cos ( \l_semio_viz_geo_tmpa_fp )
+        /
+        (
+          \c_semio_viz_geo_ee_m_fp *
+          (
+            \c_semio_viz_geo_ee_ka_fp
+            + 3 * \c_semio_viz_geo_ee_kb_fp * \l_semio_viz_geo_tmpb_fp
+            + \l_semio_viz_geo_tmpc_fp *
+              ( 7 * \c_semio_viz_geo_ee_kc_fp
+                + 9 * \c_semio_viz_geo_ee_kd_fp * \l_semio_viz_geo_tmpb_fp )
+          )
+        )
+      }
+    \fp_set:Nn \l_semio_viz_geo_py_fp
+      {
+        \l_semio_viz_geo_tmpa_fp *
+        (
+          \c_semio_viz_geo_ee_ka_fp
+          + \c_semio_viz_geo_ee_kb_fp * \l_semio_viz_geo_tmpb_fp
+          + \l_semio_viz_geo_tmpc_fp *
+            ( \c_semio_viz_geo_ee_kc_fp
+              + \c_semio_viz_geo_ee_kd_fp * \l_semio_viz_geo_tmpb_fp )
+        )
+      }
+  }
+
+% 🗺️ `natural-earth1`: Patterson's compromise pseudocylindrical, neither conformal nor equal-area.
+\cs_new_protected:Npn \semio_viz_geo_raw_naturalearth:
+  {
+    \fp_set:Nn \l_semio_viz_geo_tmpa_fp
+      { \l_semio_viz_geo_phi_fp * \l_semio_viz_geo_phi_fp }
+    \fp_set:Nn \l_semio_viz_geo_tmpb_fp
+      { \l_semio_viz_geo_tmpa_fp * \l_semio_viz_geo_tmpa_fp }
+    \fp_set:Nn \l_semio_viz_geo_px_fp
+      {
+        \l_semio_viz_geo_lam_fp *
+        ( 0.8707 - 0.131979 * \l_semio_viz_geo_tmpa_fp
+          + \l_semio_viz_geo_tmpb_fp *
+            ( -0.013791 + \l_semio_viz_geo_tmpb_fp *
+              ( 0.003971 * \l_semio_viz_geo_tmpa_fp
+                - 0.001529 * \l_semio_viz_geo_tmpb_fp ) ) )
+      }
+    \fp_set:Nn \l_semio_viz_geo_py_fp
+      {
+        \l_semio_viz_geo_phi_fp *
+        ( 1.007226 + \l_semio_viz_geo_tmpa_fp *
+          ( 0.015085 + \l_semio_viz_geo_tmpb_fp *
+            ( -0.044475 + 0.028874 * \l_semio_viz_geo_tmpa_fp
+              - 0.005916 * \l_semio_viz_geo_tmpb_fp ) ) )
+      }
+  }
+
+% 🌐 `orthographic`: the sphere as seen from infinitely far away; only the near half is visible.
+\cs_new_protected:Npn \semio_viz_geo_raw_orthographic:
+  {
+    \fp_set:Nn \l_semio_viz_geo_px_fp
+      { cos ( \l_semio_viz_geo_phi_fp ) * sin ( \l_semio_viz_geo_lam_fp ) }
+    \fp_set:Nn \l_semio_viz_geo_py_fp { sin ( \l_semio_viz_geo_phi_fp ) }
+  }
+
+% 🌐 `stereographic`: the conformal azimuthal projection from the antipode.
+\cs_new_protected:Npn \semio_viz_geo_raw_stereographic:
+  {
+    \fp_set:Nn \l_semio_viz_geo_tmpa_fp { cos ( \l_semio_viz_geo_phi_fp ) }
+    \fp_set:Nn \l_semio_viz_geo_tmpb_fp
+      { 1 + cos ( \l_semio_viz_geo_lam_fp ) * \l_semio_viz_geo_tmpa_fp }
+    \fp_set:Nn \l_semio_viz_geo_px_fp
+      {
+        \l_semio_viz_geo_tmpa_fp * sin ( \l_semio_viz_geo_lam_fp )
+        / \l_semio_viz_geo_tmpb_fp
+      }
+    \fp_set:Nn \l_semio_viz_geo_py_fp
+      { sin ( \l_semio_viz_geo_phi_fp ) / \l_semio_viz_geo_tmpb_fp }
+  }
+
+% 🌐 `gnomonic`: the projection from the sphere's own centre, on which every great circle is straight.
+\cs_new_protected:Npn \semio_viz_geo_raw_gnomonic:
+  {
+    \fp_set:Nn \l_semio_viz_geo_tmpa_fp { cos ( \l_semio_viz_geo_phi_fp ) }
+    \fp_set:Nn \l_semio_viz_geo_tmpb_fp
+      { cos ( \l_semio_viz_geo_lam_fp ) * \l_semio_viz_geo_tmpa_fp }
+    \fp_set:Nn \l_semio_viz_geo_px_fp
+      {
+        \l_semio_viz_geo_tmpa_fp * sin ( \l_semio_viz_geo_lam_fp )
+        / \l_semio_viz_geo_tmpb_fp
+      }
+    \fp_set:Nn \l_semio_viz_geo_py_fp
+      { sin ( \l_semio_viz_geo_phi_fp ) / \l_semio_viz_geo_tmpb_fp }
+  }
+
+% 🧭 d3-geo azimuthalRaw: k = scale(cos lambda cos phi) supplied as #1, x = k cos(phi) sin(lambda), y = k sin(phi).
+\cs_new_protected:Npn \semio_viz_geo_azimuthal:n #1
+  {
+    \fp_set:Nn \l_semio_viz_geo_tmpc_fp
+      { cos ( \l_semio_viz_geo_lam_fp ) * cos ( \l_semio_viz_geo_phi_fp ) }
+    \fp_set:Nn \l_semio_viz_geo_tmpd_fp {#1}
+    \fp_set:Nn \l_semio_viz_geo_px_fp
+      {
+        \l_semio_viz_geo_tmpd_fp * cos ( \l_semio_viz_geo_phi_fp )
+        * sin ( \l_semio_viz_geo_lam_fp )
+      }
+    \fp_set:Nn \l_semio_viz_geo_py_fp
+      { \l_semio_viz_geo_tmpd_fp * sin ( \l_semio_viz_geo_phi_fp ) }
+  }
+
+% 🌐 `azimuthal-equal-area`: Lambert's azimuthal projection, areas preserved about the centre.
+\cs_new_protected:Npn \semio_viz_geo_raw_azimuthal_equal_area:
+  { \semio_viz_geo_azimuthal:n { sqrt ( 2 / ( 1 + \l_semio_viz_geo_tmpc_fp ) ) } }
+
+% 🧭 The k of azimuthalEquidistantRaw; at the projection centre c and sin(c) both vanish and d3's `c && c / sin(c)` yields 1.
+\cs_new_protected:Npn \semio_viz_geo_raw_azimuthal_equidistant:
+  {
+    \fp_set:Nn \l_semio_viz_geo_tmpc_fp
+      { cos ( \l_semio_viz_geo_lam_fp ) * cos ( \l_semio_viz_geo_phi_fp ) }
+    \fp_compare:nNnTF { abs ( \l_semio_viz_geo_tmpc_fp - 1 ) } < { 1e-14 }
+      { \semio_viz_geo_azimuthal:n { 1 } }
+      {
+        \semio_viz_geo_azimuthal:n
+          {
+            acos ( \l_semio_viz_geo_tmpc_fp )
+            / sin ( acos ( \l_semio_viz_geo_tmpc_fp ) )
+          }
+      }
+  }
+
+% 🗺️ `cylindrical-equal-area`: Lambert's cylinder, the sine of the latitude as the ordinate.
+\cs_new_protected:Npn \semio_viz_geo_raw_cylindrical_equal_area:
+  {
+    \fp_set:Nn \l_semio_viz_geo_px_fp
+      { \l_semio_viz_geo_lam_fp * \l_semio_viz_geo_cosphistd_fp }
+    \fp_set:Nn \l_semio_viz_geo_py_fp
+      { sin ( \l_semio_viz_geo_phi_fp ) / \l_semio_viz_geo_cosphistd_fp }
+  }
+
+% 🗺️ `conic-conformal`: Lambert's conformal cone on the two standard parallels; equal parallels
+% degenerate to the Mercator cylinder, which is what the guarded branch handles.
+\cs_new_protected:Npn \semio_viz_geo_raw_conic_conformal:
+  {
+    \fp_compare:nNnTF \l_semio_viz_geo_f_fp > { 0 }
+      {
+        \fp_compare:nNnT \l_semio_viz_geo_phi_fp < { - pi / 2 + 1e-6 }
+          { \fp_set:Nn \l_semio_viz_geo_phi_fp { - pi / 2 + 1e-6 } }
+      }
+      {
+        \fp_compare:nNnT \l_semio_viz_geo_phi_fp > { pi / 2 - 1e-6 }
+          { \fp_set:Nn \l_semio_viz_geo_phi_fp { pi / 2 - 1e-6 } }
+      }
+    \fp_set:Nn \l_semio_viz_geo_tmpa_fp
+      {
+        \l_semio_viz_geo_f_fp
+        / ( tan ( ( pi / 2 + \l_semio_viz_geo_phi_fp ) / 2 )
+            ** \l_semio_viz_geo_n_fp )
+      }
+    \fp_set:Nn \l_semio_viz_geo_px_fp
+      {
+        \l_semio_viz_geo_tmpa_fp
+        * sin ( \l_semio_viz_geo_n_fp * \l_semio_viz_geo_lam_fp )
+      }
+    \fp_set:Nn \l_semio_viz_geo_py_fp
+      {
+        \l_semio_viz_geo_f_fp - \l_semio_viz_geo_tmpa_fp
+        * cos ( \l_semio_viz_geo_n_fp * \l_semio_viz_geo_lam_fp )
+      }
+  }
+
+% 🗺️ `conic-equal-area`: Albers' cone; equal parallels degenerate to the cylindrical equal-area case.
+\cs_new_protected:Npn \semio_viz_geo_raw_conic_equal_area:
+  {
+    \fp_set:Nn \l_semio_viz_geo_tmpa_fp
+      {
+        sqrt ( \l_semio_viz_geo_c_fp
+               - 2 * \l_semio_viz_geo_n_fp * sin ( \l_semio_viz_geo_phi_fp ) )
+        / \l_semio_viz_geo_n_fp
+      }
+    \fp_set:Nn \l_semio_viz_geo_tmpb_fp
+      { \l_semio_viz_geo_n_fp * \l_semio_viz_geo_lam_fp }
+    \fp_set:Nn \l_semio_viz_geo_px_fp
+      { \l_semio_viz_geo_tmpa_fp * sin ( \l_semio_viz_geo_tmpb_fp ) }
+    \fp_set:Nn \l_semio_viz_geo_py_fp
+      {
+        \l_semio_viz_geo_rzero_fp
+        - \l_semio_viz_geo_tmpa_fp * cos ( \l_semio_viz_geo_tmpb_fp )
+      }
+  }
+
+% 🗺️ `conic-equidistant`: the cone on which distances along the meridians are true.
+\cs_new_protected:Npn \semio_viz_geo_raw_conic_equidistant:
+  {
+    \fp_set:Nn \l_semio_viz_geo_tmpa_fp
+      { \l_semio_viz_geo_g_fp - \l_semio_viz_geo_phi_fp }
+    \fp_set:Nn \l_semio_viz_geo_tmpb_fp
+      { \l_semio_viz_geo_n_fp * \l_semio_viz_geo_lam_fp }
+    \fp_set:Nn \l_semio_viz_geo_px_fp
+      { \l_semio_viz_geo_tmpa_fp * sin ( \l_semio_viz_geo_tmpb_fp ) }
+    \fp_set:Nn \l_semio_viz_geo_py_fp
+      {
+        \l_semio_viz_geo_g_fp
+        - \l_semio_viz_geo_tmpa_fp * cos ( \l_semio_viz_geo_tmpb_fp )
+      }
+  }
+%endregion 🔖️RawProjections
+
+%region 🔖️RawInverse
+% 🔄 Closed-form raw inverses; equal-earth and natural-earth1 run d3-geo's own Newton iterations.
+\cs_new_protected:Npn \semio_viz_geo_raw_invert:
+  { \exp_args:NV \semio_viz_geo_raw_invert_aux:n \l_semio_viz_geo_raw_tl }
+
+% 🔙 Dispatches to the inverse of the raw projection named #1; an unknown name is an error.
+\cs_new_protected:Npn \semio_viz_geo_raw_invert_aux:n #1
+  {
+    \str_case:nnF {#1}
+      {
+        { equirectangular }
+          {
+            \fp_set_eq:NN \l_semio_viz_geo_lam_fp \l_semio_viz_geo_px_fp
+            \fp_set_eq:NN \l_semio_viz_geo_phi_fp \l_semio_viz_geo_py_fp
+          }
+        { mercator }
+          {
+            \fp_set_eq:NN \l_semio_viz_geo_lam_fp \l_semio_viz_geo_px_fp
+            \fp_set:Nn \l_semio_viz_geo_phi_fp
+              { 2 * atan ( exp ( \l_semio_viz_geo_py_fp ) ) - pi / 2 }
+          }
+        { transverse-mercator }
+          {
+            \fp_set:Nn \l_semio_viz_geo_lam_fp { - \l_semio_viz_geo_py_fp }
+            \fp_set:Nn \l_semio_viz_geo_phi_fp
+              { 2 * atan ( exp ( \l_semio_viz_geo_px_fp ) ) - pi / 2 }
+          }
+        { cylindrical-equal-area }
+          {
+            \fp_set:Nn \l_semio_viz_geo_lam_fp
+              { \l_semio_viz_geo_px_fp / \l_semio_viz_geo_cosphistd_fp }
+            \fp_set:Nn \l_semio_viz_geo_phi_fp
+              { asin ( \l_semio_viz_geo_py_fp * \l_semio_viz_geo_cosphistd_fp ) }
+          }
+        { equal-earth } { \semio_viz_geo_invert_equal_earth: }
+        { natural-earth1 } { \semio_viz_geo_invert_naturalearth: }
+        { orthographic }
+          { \semio_viz_geo_azimuthal_invert:n { asin ( \l_semio_viz_geo_tmpa_fp ) } }
+        { stereographic }
+          { \semio_viz_geo_azimuthal_invert:n { 2 * atan ( \l_semio_viz_geo_tmpa_fp ) } }
+        { gnomonic }
+          { \semio_viz_geo_azimuthal_invert:n { atan ( \l_semio_viz_geo_tmpa_fp ) } }
+        { azimuthal-equal-area }
+          { \semio_viz_geo_azimuthal_invert:n { 2 * asin ( \l_semio_viz_geo_tmpa_fp / 2 ) } }
+        { azimuthal-equidistant }
+          { \semio_viz_geo_azimuthal_invert:n { \l_semio_viz_geo_tmpa_fp } }
+        { conic-conformal } { \semio_viz_geo_invert_conic_conformal: }
+        { conic-equal-area } { \semio_viz_geo_invert_conic_equal_area: }
+        { conic-equidistant } { \semio_viz_geo_invert_conic_equidistant: }
+      }
+      { \msg_error:nnn { semio-viz } { geo-no-inverse } {#1} }
+  }
+
+% 🧭 d3-geo azimuthalInvert: tmpa is the plane radius z, tmpb the angular distance c produced by #1.
+\cs_new_protected:Npn \semio_viz_geo_azimuthal_invert:n #1
+  {
+    \fp_set:Nn \l_semio_viz_geo_tmpa_fp
+      {
+        sqrt ( \l_semio_viz_geo_px_fp * \l_semio_viz_geo_px_fp
+               + \l_semio_viz_geo_py_fp * \l_semio_viz_geo_py_fp )
+      }
+    \fp_set:Nn \l_semio_viz_geo_tmpb_fp {#1}
+    \fp_set:Nn \l_semio_viz_geo_lam_fp
+      {
+        atan ( \l_semio_viz_geo_px_fp * sin ( \l_semio_viz_geo_tmpb_fp ) ,
+               \l_semio_viz_geo_tmpa_fp * cos ( \l_semio_viz_geo_tmpb_fp ) )
+      }
+    \fp_compare:nNnTF \l_semio_viz_geo_tmpa_fp = { 0 }
+      { \fp_zero:N \l_semio_viz_geo_phi_fp }
+      {
+        \fp_set:Nn \l_semio_viz_geo_phi_fp
+          {
+            asin ( \l_semio_viz_geo_py_fp * sin ( \l_semio_viz_geo_tmpb_fp )
+                   / \l_semio_viz_geo_tmpa_fp )
+          }
+      }
+  }
+
+% 🔙 The inverse of `equal-earth`: the polynomial has none in closed form, so it is Newton's method
+% on the ordinate, to d3's own tolerance.
+\cs_new_protected:Npn \semio_viz_geo_invert_equal_earth:
+  {
+    \fp_set_eq:NN \l_semio_viz_geo_tmpa_fp \l_semio_viz_geo_py_fp
+    \int_step_inline:nn { \l_semio_viz_geo_invert_steps_int }
+      {
+        \fp_set:Nn \l_semio_viz_geo_tmpb_fp
+          { \l_semio_viz_geo_tmpa_fp * \l_semio_viz_geo_tmpa_fp }
+        \fp_set:Nn \l_semio_viz_geo_tmpc_fp
+          {
+            \l_semio_viz_geo_tmpb_fp * \l_semio_viz_geo_tmpb_fp
+            * \l_semio_viz_geo_tmpb_fp
+          }
+        \fp_set:Nn \l_semio_viz_geo_tmpd_fp
+          {
+            (
+              \l_semio_viz_geo_tmpa_fp *
+              ( \c_semio_viz_geo_ee_ka_fp
+                + \c_semio_viz_geo_ee_kb_fp * \l_semio_viz_geo_tmpb_fp
+                + \l_semio_viz_geo_tmpc_fp *
+                  ( \c_semio_viz_geo_ee_kc_fp
+                    + \c_semio_viz_geo_ee_kd_fp * \l_semio_viz_geo_tmpb_fp ) )
+              - \l_semio_viz_geo_py_fp
+            )
+            /
+            ( \c_semio_viz_geo_ee_ka_fp
+              + 3 * \c_semio_viz_geo_ee_kb_fp * \l_semio_viz_geo_tmpb_fp
+              + \l_semio_viz_geo_tmpc_fp *
+                ( 7 * \c_semio_viz_geo_ee_kc_fp
+                  + 9 * \c_semio_viz_geo_ee_kd_fp * \l_semio_viz_geo_tmpb_fp ) )
+          }
+        \fp_sub:Nn \l_semio_viz_geo_tmpa_fp { \l_semio_viz_geo_tmpd_fp }
+      }
+    \fp_set:Nn \l_semio_viz_geo_tmpb_fp
+      { \l_semio_viz_geo_tmpa_fp * \l_semio_viz_geo_tmpa_fp }
+    \fp_set:Nn \l_semio_viz_geo_tmpc_fp
+      {
+        \l_semio_viz_geo_tmpb_fp * \l_semio_viz_geo_tmpb_fp
+        * \l_semio_viz_geo_tmpb_fp
+      }
+    \fp_set:Nn \l_semio_viz_geo_lam_fp
+      {
+        \c_semio_viz_geo_ee_m_fp * \l_semio_viz_geo_px_fp *
+        ( \c_semio_viz_geo_ee_ka_fp
+          + 3 * \c_semio_viz_geo_ee_kb_fp * \l_semio_viz_geo_tmpb_fp
+          + \l_semio_viz_geo_tmpc_fp *
+            ( 7 * \c_semio_viz_geo_ee_kc_fp
+              + 9 * \c_semio_viz_geo_ee_kd_fp * \l_semio_viz_geo_tmpb_fp ) )
+        / cos ( \l_semio_viz_geo_tmpa_fp )
+      }
+    \fp_set:Nn \l_semio_viz_geo_phi_fp
+      { asin ( sin ( \l_semio_viz_geo_tmpa_fp ) / \c_semio_viz_geo_ee_m_fp ) }
+  }
+
+% 🔙 The inverse of `natural-earth1`, likewise by Newton's method on the ordinate.
+\cs_new_protected:Npn \semio_viz_geo_invert_naturalearth:
+  {
+    \fp_set_eq:NN \l_semio_viz_geo_tmpa_fp \l_semio_viz_geo_py_fp
+    \int_step_inline:nn { \c_semio_viz_geo_newton_int }
+      {
+        \fp_set:Nn \l_semio_viz_geo_tmpb_fp
+          { \l_semio_viz_geo_tmpa_fp * \l_semio_viz_geo_tmpa_fp }
+        \fp_set:Nn \l_semio_viz_geo_tmpc_fp
+          { \l_semio_viz_geo_tmpb_fp * \l_semio_viz_geo_tmpb_fp }
+        \fp_set:Nn \l_semio_viz_geo_tmpd_fp
+          {
+            (
+              \l_semio_viz_geo_tmpa_fp *
+              ( 1.007226 + \l_semio_viz_geo_tmpb_fp *
+                ( 0.015085 + \l_semio_viz_geo_tmpc_fp *
+                  ( -0.044475 + 0.028874 * \l_semio_viz_geo_tmpb_fp
+                    - 0.005916 * \l_semio_viz_geo_tmpc_fp ) ) )
+              - \l_semio_viz_geo_py_fp
+            )
+            /
+            ( 1.007226 + \l_semio_viz_geo_tmpb_fp *
+              ( 0.015085 * 3 + \l_semio_viz_geo_tmpc_fp *
+                ( -0.044475 * 7 + 0.028874 * 9 * \l_semio_viz_geo_tmpb_fp
+                  - 0.005916 * 11 * \l_semio_viz_geo_tmpc_fp ) ) )
+          }
+        \fp_sub:Nn \l_semio_viz_geo_tmpa_fp { \l_semio_viz_geo_tmpd_fp }
+      }
+    \fp_set:Nn \l_semio_viz_geo_tmpb_fp
+      { \l_semio_viz_geo_tmpa_fp * \l_semio_viz_geo_tmpa_fp }
+    \fp_set:Nn \l_semio_viz_geo_tmpc_fp
+      { \l_semio_viz_geo_tmpb_fp * \l_semio_viz_geo_tmpb_fp }
+    \fp_set_eq:NN \l_semio_viz_geo_phi_fp \l_semio_viz_geo_tmpa_fp
+    \fp_set:Nn \l_semio_viz_geo_lam_fp
+      {
+        \l_semio_viz_geo_px_fp /
+        ( 0.8707 - 0.131979 * \l_semio_viz_geo_tmpb_fp
+          + \l_semio_viz_geo_tmpc_fp *
+            ( -0.013791 + \l_semio_viz_geo_tmpc_fp *
+              ( 0.003971 * \l_semio_viz_geo_tmpb_fp
+                - 0.001529 * \l_semio_viz_geo_tmpc_fp ) ) )
+      }
+  }
+
+% 🔺 Shared conic inverse angle: tmpa is the signed radial offset, tmpc becomes the conic longitude.
+\cs_new_protected:Npn \semio_viz_geo_conic_angle:
+  {
+    \fp_set:Nn \l_semio_viz_geo_tmpc_fp
+      {
+        atan ( \l_semio_viz_geo_px_fp , abs ( \l_semio_viz_geo_tmpa_fp ) )
+        * sign ( \l_semio_viz_geo_tmpa_fp )
+      }
+    \fp_compare:nNnT { \l_semio_viz_geo_tmpa_fp * \l_semio_viz_geo_n_fp } < { 0 }
+      {
+        \fp_sub:Nn \l_semio_viz_geo_tmpc_fp
+          {
+            pi * sign ( \l_semio_viz_geo_px_fp )
+            * sign ( \l_semio_viz_geo_tmpa_fp )
+          }
+      }
+    \fp_set:Nn \l_semio_viz_geo_lam_fp
+      { \l_semio_viz_geo_tmpc_fp / \l_semio_viz_geo_n_fp }
+  }
+
+% 🔙 The inverse of `conic-conformal`, with the same degenerate branch as the forward projection.
+\cs_new_protected:Npn \semio_viz_geo_invert_conic_conformal:
+  {
+    \fp_set:Nn \l_semio_viz_geo_tmpa_fp
+      { \l_semio_viz_geo_f_fp - \l_semio_viz_geo_py_fp }
+    \fp_set:Nn \l_semio_viz_geo_tmpb_fp
+      {
+        sign ( \l_semio_viz_geo_n_fp ) *
+        sqrt ( \l_semio_viz_geo_px_fp * \l_semio_viz_geo_px_fp
+               + \l_semio_viz_geo_tmpa_fp * \l_semio_viz_geo_tmpa_fp )
+      }
+    \semio_viz_geo_conic_angle:
+    \fp_set:Nn \l_semio_viz_geo_phi_fp
+      {
+        2 * atan ( ( \l_semio_viz_geo_f_fp / \l_semio_viz_geo_tmpb_fp )
+                   ** ( 1 / \l_semio_viz_geo_n_fp ) )
+        - pi / 2
+      }
+  }
+
+% 🔙 The inverse of `conic-equal-area`, with the same degenerate branch.
+\cs_new_protected:Npn \semio_viz_geo_invert_conic_equal_area:
+  {
+    \fp_set:Nn \l_semio_viz_geo_tmpa_fp
+      { \l_semio_viz_geo_rzero_fp - \l_semio_viz_geo_py_fp }
+    \semio_viz_geo_conic_angle:
+    \fp_set:Nn \l_semio_viz_geo_phi_fp
+      {
+        asin
+          (
+            ( \l_semio_viz_geo_c_fp
+              - ( \l_semio_viz_geo_px_fp * \l_semio_viz_geo_px_fp
+                  + \l_semio_viz_geo_tmpa_fp * \l_semio_viz_geo_tmpa_fp )
+                * \l_semio_viz_geo_n_fp * \l_semio_viz_geo_n_fp )
+            / ( 2 * \l_semio_viz_geo_n_fp )
+          )
+      }
+  }
+
+% 🔙 The inverse of `conic-equidistant`.
+\cs_new_protected:Npn \semio_viz_geo_invert_conic_equidistant:
+  {
+    \fp_set:Nn \l_semio_viz_geo_tmpa_fp
+      { \l_semio_viz_geo_g_fp - \l_semio_viz_geo_py_fp }
+    \semio_viz_geo_conic_angle:
+    \fp_set:Nn \l_semio_viz_geo_phi_fp
+      {
+        \l_semio_viz_geo_g_fp - sign ( \l_semio_viz_geo_n_fp ) *
+        sqrt ( \l_semio_viz_geo_px_fp * \l_semio_viz_geo_px_fp
+               + \l_semio_viz_geo_tmpa_fp * \l_semio_viz_geo_tmpa_fp )
+      }
+  }
+%endregion 🔖️RawInverse
+
+%region 🔖️Registry
+% 🗂️ A projection is a frozen bundle of derived numbers; defining it once keeps every per-point call free of key parsing.
+\seq_new:N \g_semio_viz_geo_proj_seq
+\prop_new:N \g_semio_viz_geo_proj_prop
+\tl_new:N \l_semio_viz_geo_name_tl
+\tl_new:N \l_semio_viz_geo_kind_tl
+\clist_new:N \l_semio_viz_geo_translate_clist
+\clist_new:N \l_semio_viz_geo_center_clist
+\clist_new:N \l_semio_viz_geo_rotate_clist
+\clist_new:N \l_semio_viz_geo_parallels_clist
+\clist_new:N \l_semio_viz_geo_clipextent_clist
+\tl_new:N \l_semio_viz_geo_clipangle_tl
+\fp_new:N \l_semio_viz_geo_precision_fp
+
+%region 🔖️Keys
+% 🔑 semio / viz / geo / projection
+% 🔑 kind        (choice)   equirectangular | mercator | transverse-mercator | equal-earth | natural-earth1 |
+% 🔑                        orthographic | stereographic | gnomonic | azimuthal-equal-area | azimuthal-equidistant |
+% 🔑                        conic-conformal | conic-equal-area | conic-equidistant | albers.  Default equirectangular.
+% 🔑 scale       (number)   d3 scale k; default is the d3 default of the kind.
+% 🔑 translate   (x,y)      plane translation in millimetres; default 480,250 (the d3 default).
+% 🔑 center      (lon,lat)  degrees; default is the d3 default of the kind.
+% 🔑 rotate      (l,p,g)    degrees; default is the d3 default of the kind. transverse-mercator adds d3's own +90 gamma.
+% 🔑 parallels   (p0,p1)    degrees, conic kinds only; default is the d3 default of the kind.
+% 🔑 clipAngle   (number)   great-circle clip radius in degrees; empty disables clipping.
+% 🔑 clipExtent  (x0,y0,x1,y1) plane clip rectangle; empty disables clipping.
+% 🔑 precision   (number)   adaptive resampling tolerance in plane units; d3's default sqrt(0.5). 0 disables resampling.
+\keys_define:nn { semio / viz / geo / projection }
+  {
+    kind .tl_set:N = \l_semio_viz_geo_kind_tl ,
+    scale .fp_set:N = \l_semio_viz_geo_k_fp ,
+    translate .clist_set:N = \l_semio_viz_geo_translate_clist ,
+    center .clist_set:N = \l_semio_viz_geo_center_clist ,
+    rotate .clist_set:N = \l_semio_viz_geo_rotate_clist ,
+    parallels .clist_set:N = \l_semio_viz_geo_parallels_clist ,
+    clipAngle .tl_set:N = \l_semio_viz_geo_clipangle_tl ,
+    clipExtent .clist_set:N = \l_semio_viz_geo_clipextent_clist ,
+    precision .fp_set:N = \l_semio_viz_geo_precision_fp ,
+  }
+
+% 🔧 The two iteration counts of the numeric solvers, shared by every projection.
+\int_new:N \l_semio_viz_geo_invert_steps_int
+\int_new:N \l_semio_viz_geo_clip_steps_int
+\int_set:Nn \l_semio_viz_geo_invert_steps_int { 12 }
+\int_set:Nn \l_semio_viz_geo_clip_steps_int { 48 }
+
+% 🔑 semio / viz / geo / solver
+% 🔑 invertSteps (int) Newton steps of the equal-earth inverse; default 12, d3's own count.
+% 🔑 clipSteps   (int) halvings that bisect a great-circle segment to the clip boundary; default 48.
+\keys_define:nn { semio / viz / geo / solver }
+  {
+    invertSteps .int_set:N = \l_semio_viz_geo_invert_steps_int ,
+    clipSteps .int_set:N = \l_semio_viz_geo_clip_steps_int ,
+  }
+%endregion 🔖️Keys
+
+% 🎚️ The d3 default scale, center, rotate, parallels and clip angle of every kind, so an unconfigured projection matches d3 exactly.
+\cs_new_protected:Npn \semio_viz_geo_kind_defaults:n #1
+  {
+    \clist_set:Nn \l_semio_viz_geo_translate_clist { 480, 250 }
+    \clist_set:Nn \l_semio_viz_geo_center_clist { 0, 0 }
+    \clist_set:Nn \l_semio_viz_geo_rotate_clist { 0, 0, 0 }
+    \clist_set:Nn \l_semio_viz_geo_parallels_clist { 0, 60 }
+    \tl_clear:N \l_semio_viz_geo_clipangle_tl
+    \clist_clear:N \l_semio_viz_geo_clipextent_clist
+    \fp_set:Nn \l_semio_viz_geo_precision_fp { sqrt ( 0.5 ) }
+    \str_case:nnF {#1}
+      {
+        { equirectangular } { \fp_set:Nn \l_semio_viz_geo_k_fp { 152.63 } }
+        { mercator } { \fp_set:Nn \l_semio_viz_geo_k_fp { 961 / ( 2 * pi ) } }
+        { transverse-mercator }
+          {
+            \fp_set:Nn \l_semio_viz_geo_k_fp { 159.155 }
+          }
+        { equal-earth } { \fp_set:Nn \l_semio_viz_geo_k_fp { 177.158 } }
+        { natural-earth1 } { \fp_set:Nn \l_semio_viz_geo_k_fp { 175.295 } }
+        { orthographic }
+          {
+            \fp_set:Nn \l_semio_viz_geo_k_fp { 249.5 }
+            \tl_set:Nn \l_semio_viz_geo_clipangle_tl { 90.000001 }
+          }
+        { stereographic }
+          {
+            \fp_set:Nn \l_semio_viz_geo_k_fp { 250 }
+            \tl_set:Nn \l_semio_viz_geo_clipangle_tl { 142 }
+          }
+        { gnomonic }
+          {
+            \fp_set:Nn \l_semio_viz_geo_k_fp { 144.049 }
+            \tl_set:Nn \l_semio_viz_geo_clipangle_tl { 60 }
+          }
+        { azimuthal-equal-area }
+          {
+            \fp_set:Nn \l_semio_viz_geo_k_fp { 124.75 }
+            \tl_set:Nn \l_semio_viz_geo_clipangle_tl { 179.999 }
+          }
+        { azimuthal-equidistant }
+          {
+            \fp_set:Nn \l_semio_viz_geo_k_fp { 79.4188 }
+            \tl_set:Nn \l_semio_viz_geo_clipangle_tl { 179.999 }
+          }
+        { conic-conformal }
+          {
+            \fp_set:Nn \l_semio_viz_geo_k_fp { 109.5 }
+            \clist_set:Nn \l_semio_viz_geo_parallels_clist { 30, 30 }
+          }
+        { conic-equal-area }
+          {
+            \fp_set:Nn \l_semio_viz_geo_k_fp { 155.424 }
+            \clist_set:Nn \l_semio_viz_geo_center_clist { 0, 33.6442 }
+          }
+        { conic-equidistant }
+          {
+            \fp_set:Nn \l_semio_viz_geo_k_fp { 131.154 }
+            \clist_set:Nn \l_semio_viz_geo_center_clist { 0, 13.9389 }
+          }
+        { albers }
+          {
+            \fp_set:Nn \l_semio_viz_geo_k_fp { 1070 }
+            \clist_set:Nn \l_semio_viz_geo_center_clist { -0.6, 38.7 }
+            \clist_set:Nn \l_semio_viz_geo_rotate_clist { 96, 0, 0 }
+            \clist_set:Nn \l_semio_viz_geo_parallels_clist { 29.5, 45.5 }
+          }
+      }
+      { \msg_error:nnn { semio-viz } { unknown-projection-kind } {#1} }
+  }
+
+% 🧮 Turns the kind and its parallels into the effective raw projection and its conic constants (d3 conicProjection).
+\cs_new_protected:Npn \semio_viz_geo_derive_conic:
+  {
+    \fp_set:Nn \l_semio_viz_geo_tmpa_fp
+      {
+        \clist_item:Nn \l_semio_viz_geo_parallels_clist { 1 }
+        * \c_semio_viz_geo_radians_fp
+      }
+    \fp_set:Nn \l_semio_viz_geo_tmpb_fp
+      {
+        \clist_item:Nn \l_semio_viz_geo_parallels_clist { 2 }
+        * \c_semio_viz_geo_radians_fp
+      }
+    \fp_set:Nn \l_semio_viz_geo_cosphistd_fp { cos ( \l_semio_viz_geo_tmpa_fp ) }
+    \exp_args:NV \semio_viz_geo_derive_dispatch:n \l_semio_viz_geo_raw_tl
+  }
+
+% 🧮 Derives the conic constants of the kind #1; a non-conic kind has none and needs no branch.
+\cs_new_protected:Npn \semio_viz_geo_derive_dispatch:n #1
+  {
+    \str_case:nn {#1}
+      {
+        { conic-conformal } { \semio_viz_geo_derive_conformal: }
+        { conic-equal-area } { \semio_viz_geo_derive_equal_area: }
+        { conic-equidistant } { \semio_viz_geo_derive_equidistant: }
+      }
+  }
+
+% 🧮 The cone constant and scale of `conic-conformal`; a vanishing constant means the cone has
+% opened into the Mercator cylinder, and the raw projection is swapped for it.
+\cs_new_protected:Npn \semio_viz_geo_derive_conformal:
+  {
+    \fp_compare:nNnTF \l_semio_viz_geo_tmpa_fp = \l_semio_viz_geo_tmpb_fp
+      {
+        \fp_set:Nn \l_semio_viz_geo_n_fp { sin ( \l_semio_viz_geo_tmpa_fp ) }
+      }
+      {
+        \fp_set:Nn \l_semio_viz_geo_n_fp
+          {
+            ln ( cos ( \l_semio_viz_geo_tmpa_fp )
+                 / cos ( \l_semio_viz_geo_tmpb_fp ) )
+            / ln ( tan ( ( pi / 2 + \l_semio_viz_geo_tmpb_fp ) / 2 )
+                   / tan ( ( pi / 2 + \l_semio_viz_geo_tmpa_fp ) / 2 ) )
+          }
+      }
+    \fp_compare:nNnTF \l_semio_viz_geo_n_fp = { 0 }
+      { \tl_set:Nn \l_semio_viz_geo_raw_tl { mercator } }
+      {
+        \fp_set:Nn \l_semio_viz_geo_f_fp
+          {
+            cos ( \l_semio_viz_geo_tmpa_fp )
+            * ( tan ( ( pi / 2 + \l_semio_viz_geo_tmpa_fp ) / 2 )
+                ** \l_semio_viz_geo_n_fp )
+            / \l_semio_viz_geo_n_fp
+          }
+      }
+  }
+
+% 🧮 The cone constants of `conic-equal-area`; a vanishing constant swaps in the equal-area cylinder.
+\cs_new_protected:Npn \semio_viz_geo_derive_equal_area:
+  {
+    \fp_set:Nn \l_semio_viz_geo_n_fp
+      {
+        ( sin ( \l_semio_viz_geo_tmpa_fp ) + sin ( \l_semio_viz_geo_tmpb_fp ) )
+        / 2
+      }
+    \fp_compare:nNnTF { abs ( \l_semio_viz_geo_n_fp ) }
+      < { \c_semio_viz_geo_epsilon_fp }
+      { \tl_set:Nn \l_semio_viz_geo_raw_tl { cylindrical-equal-area } }
+      {
+        \fp_set:Nn \l_semio_viz_geo_c_fp
+          {
+            1 + sin ( \l_semio_viz_geo_tmpa_fp )
+            * ( 2 * \l_semio_viz_geo_n_fp - sin ( \l_semio_viz_geo_tmpa_fp ) )
+          }
+        \fp_set:Nn \l_semio_viz_geo_rzero_fp
+          { sqrt ( \l_semio_viz_geo_c_fp ) / \l_semio_viz_geo_n_fp }
+      }
+  }
+
+% 🧮 The cone constants of `conic-equidistant`; equal parallels leave the equirectangular case.
+\cs_new_protected:Npn \semio_viz_geo_derive_equidistant:
+  {
+    \fp_compare:nNnTF \l_semio_viz_geo_tmpa_fp = \l_semio_viz_geo_tmpb_fp
+      {
+        \fp_set:Nn \l_semio_viz_geo_n_fp { sin ( \l_semio_viz_geo_tmpa_fp ) }
+      }
+      {
+        \fp_set:Nn \l_semio_viz_geo_n_fp
+          {
+            ( cos ( \l_semio_viz_geo_tmpa_fp )
+              - cos ( \l_semio_viz_geo_tmpb_fp ) )
+            / ( \l_semio_viz_geo_tmpb_fp - \l_semio_viz_geo_tmpa_fp )
+          }
+      }
+    \fp_compare:nNnTF { abs ( \l_semio_viz_geo_n_fp ) }
+      < { \c_semio_viz_geo_epsilon_fp }
+      { \tl_set:Nn \l_semio_viz_geo_raw_tl { equirectangular } }
+      {
+        \fp_set:Nn \l_semio_viz_geo_g_fp
+          {
+            cos ( \l_semio_viz_geo_tmpa_fp ) / \l_semio_viz_geo_n_fp
+            + \l_semio_viz_geo_tmpa_fp
+          }
+      }
+  }
+
+% 🗺️ Defines a named projection: parses keys, derives conic constants, the rotation angles and the center offset, and freezes them.
+\cs_new_protected:Npn \semio_viz_geo_define:nn #1#2
+  {
+    \tl_set:Nn \l_semio_viz_geo_kind_tl { equirectangular }
+    \keys_set:nn { semio / viz / geo / projection } { kind = equirectangular }
+    \keys_set:nn { semio / viz / geo / projection } {#2}
+    \exp_args:NV \semio_viz_geo_define_aux:nn \l_semio_viz_geo_kind_tl {#2}
+    \tl_set:Nx \l_semio_viz_geo_name_tl {#1}
+    \tl_set:Nx \l_semio_viz_geo_name_tl { \tl_to_str:N \l_semio_viz_geo_name_tl }
+    \seq_if_in:NVF \g_semio_viz_geo_proj_seq \l_semio_viz_geo_name_tl
+      { \seq_gput_right:NV \g_semio_viz_geo_proj_seq \l_semio_viz_geo_name_tl }
+    \prop_gput:NVx \g_semio_viz_geo_proj_prop \l_semio_viz_geo_name_tl
+      {
+        { \l_semio_viz_geo_raw_tl }
+        { \fp_use:N \l_semio_viz_geo_k_fp }
+        { \fp_use:N \l_semio_viz_geo_tx_fp }
+        { \fp_use:N \l_semio_viz_geo_ty_fp }
+        { \fp_use:N \l_semio_viz_geo_dl_fp }
+        { \fp_use:N \l_semio_viz_geo_dp_fp }
+        { \fp_use:N \l_semio_viz_geo_dg_fp }
+        { \fp_use:N \l_semio_viz_geo_ox_fp }
+        { \fp_use:N \l_semio_viz_geo_oy_fp }
+        { \fp_use:N \l_semio_viz_geo_n_fp }
+        { \fp_use:N \l_semio_viz_geo_f_fp }
+        { \fp_use:N \l_semio_viz_geo_c_fp }
+        { \fp_use:N \l_semio_viz_geo_rzero_fp }
+        { \fp_use:N \l_semio_viz_geo_g_fp }
+        { \fp_use:N \l_semio_viz_geo_cosphistd_fp }
+        { \fp_use:N \l_semio_viz_geo_clip_fp }
+        { \fp_use:N \l_semio_viz_geo_deltasq_fp }
+        { \clist_use:Nn \l_semio_viz_geo_clipextent_clist { , } }
+      }
+  }
+
+% 🗺️ The definition's own work for kind #1 under the option list #2: the kind's presets first, then
+% the caller's keys on top of them, then the conic constants and the offsets they imply.
+\cs_new_protected:Npn \semio_viz_geo_define_aux:nn #1#2
+  {
+    \semio_viz_geo_kind_defaults:n {#1}
+    \keys_set:nn { semio / viz / geo / projection } {#2}
+    \tl_set:Nn \l_semio_viz_geo_raw_tl {#1}
+    \str_if_eq:nnT {#1} { albers }
+      { \tl_set:Nn \l_semio_viz_geo_raw_tl { conic-equal-area } }
+    \semio_viz_geo_derive_conic:
+    \fp_set:Nn \l_semio_viz_geo_tx_fp
+      { \clist_item:Nn \l_semio_viz_geo_translate_clist { 1 } }
+    \fp_set:Nn \l_semio_viz_geo_ty_fp
+      { \clist_item:Nn \l_semio_viz_geo_translate_clist { 2 } }
+    \fp_set:Nn \l_semio_viz_geo_dl_fp
+      {
+        \clist_item:Nn \l_semio_viz_geo_rotate_clist { 1 }
+        * \c_semio_viz_geo_radians_fp
+      }
+    \fp_set:Nn \l_semio_viz_geo_dp_fp
+      {
+        \clist_item:Nn \l_semio_viz_geo_rotate_clist { 2 }
+        * \c_semio_viz_geo_radians_fp
+      }
+    \fp_set:Nn \l_semio_viz_geo_dg_fp
+      {
+        \clist_item:Nn \l_semio_viz_geo_rotate_clist { 3 }
+        * \c_semio_viz_geo_radians_fp
+      }
+    \str_if_eq:nnT {#1} { transverse-mercator }
+      { \fp_add:Nn \l_semio_viz_geo_dg_fp { pi / 2 } }
+    \fp_set:Nn \l_semio_viz_geo_lam_fp
+      {
+        \clist_item:Nn \l_semio_viz_geo_center_clist { 1 }
+        * \c_semio_viz_geo_radians_fp
+      }
+    \fp_set:Nn \l_semio_viz_geo_phi_fp
+      {
+        \clist_item:Nn \l_semio_viz_geo_center_clist { 2 }
+        * \c_semio_viz_geo_radians_fp
+      }
+    \semio_viz_geo_raw:
+    \fp_set_eq:NN \l_semio_viz_geo_ox_fp \l_semio_viz_geo_px_fp
+    \fp_set_eq:NN \l_semio_viz_geo_oy_fp \l_semio_viz_geo_py_fp
+    \tl_if_empty:NTF \l_semio_viz_geo_clipangle_tl
+      { \fp_set:Nn \l_semio_viz_geo_clip_fp { -1 } }
+      {
+        \fp_set:Nn \l_semio_viz_geo_clip_fp
+          { \l_semio_viz_geo_clipangle_tl * \c_semio_viz_geo_radians_fp }
+      }
+    \fp_set:Nn \l_semio_viz_geo_deltasq_fp
+      { \l_semio_viz_geo_precision_fp * \l_semio_viz_geo_precision_fp }
+  }
+
+% ▶️ Loads a stored projection into the working registers; every forward or inverse call runs against these.
+\cs_new_protected:Npn \semio_viz_geo_use:n #1
+  {
+    \tl_set:Nx \l_semio_viz_geo_name_tl {#1}
+    \tl_set:Nx \l_semio_viz_geo_name_tl { \tl_to_str:N \l_semio_viz_geo_name_tl }
+    \prop_get:NVNTF \g_semio_viz_geo_proj_prop \l_semio_viz_geo_name_tl \l_tmpa_tl
+      { \exp_after:wN \semio_viz_geo_load_a:nnnnnnnnn \l_tmpa_tl }
+      { \msg_error:nnn { semio-viz } { unknown-projection } {#1} }
+  }
+
+% 📥 The first nine frozen fields of a stored projection: the raw kind, the scale, the translation
+% and the three rotation angles.
+\cs_new_protected:Npn \semio_viz_geo_load_a:nnnnnnnnn #1#2#3#4#5#6#7#8#9
+  {
+    \tl_set:Nn \l_semio_viz_geo_raw_tl {#1}
+    \fp_set:Nn \l_semio_viz_geo_k_fp {#2}
+    \fp_set:Nn \l_semio_viz_geo_tx_fp {#3}
+    \fp_set:Nn \l_semio_viz_geo_ty_fp {#4}
+    \fp_set:Nn \l_semio_viz_geo_dl_fp {#5}
+    \fp_set:Nn \l_semio_viz_geo_dp_fp {#6}
+    \fp_set:Nn \l_semio_viz_geo_dg_fp {#7}
+    \fp_set:Nn \l_semio_viz_geo_ox_fp {#8}
+    \fp_set:Nn \l_semio_viz_geo_oy_fp {#9}
+    \semio_viz_geo_load_b:nnnnnnnnn
+  }
+
+% 📥 The remaining fields: the conic constants, the clip angle and extent, and the precision.
+\cs_new_protected:Npn \semio_viz_geo_load_b:nnnnnnnnn #1#2#3#4#5#6#7#8#9
+  {
+    \fp_set:Nn \l_semio_viz_geo_n_fp {#1}
+    \fp_set:Nn \l_semio_viz_geo_f_fp {#2}
+    \fp_set:Nn \l_semio_viz_geo_c_fp {#3}
+    \fp_set:Nn \l_semio_viz_geo_rzero_fp {#4}
+    \fp_set:Nn \l_semio_viz_geo_g_fp {#5}
+    \fp_set:Nn \l_semio_viz_geo_cosphistd_fp {#6}
+    \fp_set:Nn \l_semio_viz_geo_clip_fp {#7}
+    \fp_set:Nn \l_semio_viz_geo_deltasq_fp {#8}
+    \clist_set:Nn \l_semio_viz_geo_clipextent_clist {#9}
+  }
+
+% ✏️ Overrides the live scale and translate without redefining the projection (used by fitExtent).
+\cs_new_protected:Npn \semio_viz_geo_set_scale_translate:nnn #1#2#3
+  {
+    \fp_set:Nn \l_semio_viz_geo_k_fp {#1}
+    \fp_set:Nn \l_semio_viz_geo_tx_fp {#2}
+    \fp_set:Nn \l_semio_viz_geo_ty_fp {#3}
+    \prop_gput:NVx \g_semio_viz_geo_proj_prop \l_semio_viz_geo_name_tl
+      {
+        { \l_semio_viz_geo_raw_tl }
+        { \fp_use:N \l_semio_viz_geo_k_fp }
+        { \fp_use:N \l_semio_viz_geo_tx_fp }
+        { \fp_use:N \l_semio_viz_geo_ty_fp }
+        { \fp_use:N \l_semio_viz_geo_dl_fp }
+        { \fp_use:N \l_semio_viz_geo_dp_fp }
+        { \fp_use:N \l_semio_viz_geo_dg_fp }
+        { \fp_use:N \l_semio_viz_geo_ox_fp }
+        { \fp_use:N \l_semio_viz_geo_oy_fp }
+        { \fp_use:N \l_semio_viz_geo_n_fp }
+        { \fp_use:N \l_semio_viz_geo_f_fp }
+        { \fp_use:N \l_semio_viz_geo_c_fp }
+        { \fp_use:N \l_semio_viz_geo_rzero_fp }
+        { \fp_use:N \l_semio_viz_geo_g_fp }
+        { \fp_use:N \l_semio_viz_geo_cosphistd_fp }
+        { \fp_use:N \l_semio_viz_geo_clip_fp }
+        { \fp_use:N \l_semio_viz_geo_deltasq_fp }
+        { \clist_use:Nn \l_semio_viz_geo_clipextent_clist { , } }
+      }
+  }
+%endregion 🔖️Registry
+
+%region 🔖️Transform
+% 📐 Raw projection plus d3's scaleTranslate: x = tx - k*ox + k*px, y = ty + k*oy - k*py.
+\cs_new_protected:Npn \semio_viz_geo_transform:
+  {
+    \semio_viz_geo_raw:
+    \fp_set:Nn \l_semio_viz_geo_x_fp
+      {
+        \l_semio_viz_geo_tx_fp
+        + \l_semio_viz_geo_k_fp
+          * ( \l_semio_viz_geo_px_fp - \l_semio_viz_geo_ox_fp )
+      }
+    \fp_set:Nn \l_semio_viz_geo_y_fp
+      {
+        \l_semio_viz_geo_ty_fp
+        - \l_semio_viz_geo_k_fp
+          * ( \l_semio_viz_geo_py_fp - \l_semio_viz_geo_oy_fp )
+      }
+  }
+
+% 🌍 Full forward: degrees in, rotation, raw projection, scale and translate; results in x_fp / y_fp.
+\cs_new_protected:Npn \semio_viz_geo_forward:nn #1#2
+  {
+    \fp_set:Nn \l_semio_viz_geo_lam_fp { (#1) * \c_semio_viz_geo_radians_fp }
+    \fp_set:Nn \l_semio_viz_geo_phi_fp { (#2) * \c_semio_viz_geo_radians_fp }
+    \semio_viz_geo_rotate:
+    \semio_viz_geo_transform:
+  }
+
+% 🌍 Full inverse: plane coordinates in, degrees out in lon_fp / lat_fp.
+\cs_new_protected:Npn \semio_viz_geo_inverse:nn #1#2
+  {
+    \fp_set:Nn \l_semio_viz_geo_px_fp
+      {
+        ( (#1) - \l_semio_viz_geo_tx_fp ) / \l_semio_viz_geo_k_fp
+        + \l_semio_viz_geo_ox_fp
+      }
+    \fp_set:Nn \l_semio_viz_geo_py_fp
+      {
+        ( \l_semio_viz_geo_ty_fp - (#2) ) / \l_semio_viz_geo_k_fp
+        + \l_semio_viz_geo_oy_fp
+      }
+    \semio_viz_geo_raw_invert:
+    \semio_viz_geo_rotate_invert:
+    \fp_set:Nn \l_semio_viz_geo_lon_fp
+      { \l_semio_viz_geo_lam_fp * \c_semio_viz_geo_degrees_fp }
+    \fp_set:Nn \l_semio_viz_geo_lat_fp
+      { \l_semio_viz_geo_phi_fp * \c_semio_viz_geo_degrees_fp }
+  }
+%endregion 🔖️Transform
+
+%region 🔖️Resample
+% 🔬 d3-geo's adaptive resampling, verbatim: recursion is scoped by TeX groups so the twelve segment registers restore themselves.
+\fp_new:N \l_semio_viz_geo_rs_xa_fp
+\fp_new:N \l_semio_viz_geo_rs_ya_fp
+\fp_new:N \l_semio_viz_geo_rs_lama_fp
+\fp_new:N \l_semio_viz_geo_rs_ua_fp
+\fp_new:N \l_semio_viz_geo_rs_va_fp
+\fp_new:N \l_semio_viz_geo_rs_wa_fp
+\fp_new:N \l_semio_viz_geo_rs_xb_fp
+\fp_new:N \l_semio_viz_geo_rs_yb_fp
+\fp_new:N \l_semio_viz_geo_rs_lamb_fp
+\fp_new:N \l_semio_viz_geo_rs_ub_fp
+\fp_new:N \l_semio_viz_geo_rs_vb_fp
+\fp_new:N \l_semio_viz_geo_rs_wb_fp
+\fp_new:N \l_semio_viz_geo_rs_xm_fp
+\fp_new:N \l_semio_viz_geo_rs_ym_fp
+\fp_new:N \l_semio_viz_geo_rs_lamm_fp
+\fp_new:N \l_semio_viz_geo_rs_u_fp
+\fp_new:N \l_semio_viz_geo_rs_v_fp
+\fp_new:N \l_semio_viz_geo_rs_w_fp
+\fp_new:N \l_semio_viz_geo_rs_m_fp
+\fp_new:N \l_semio_viz_geo_rs_dx_fp
+\fp_new:N \l_semio_viz_geo_rs_dy_fp
+\fp_new:N \l_semio_viz_geo_rs_dsq_fp
+\int_new:N \l_semio_viz_geo_rs_depth_int
+\seq_new:N \g_semio_viz_geo_pts_seq
+\seq_new:N \g_semio_viz_geo_path_seq
+\int_new:N \l_semio_viz_geo_line_count_int
+
+% 📤 Appends one plane vertex to the subpath under construction.
+\cs_new_protected:Npn \semio_viz_geo_emit:nn #1#2
+  { \seq_gput_right:Nx \g_semio_viz_geo_pts_seq { \fp_eval:n {#1} , \fp_eval:n {#2} } }
+
+% 🔬 One recursion step: the segment is split when its midpoint departs far enough from the chord,
+% or when the split is lopsided enough that d3 would split it anyway.
+\cs_new_protected:Npn \semio_viz_geo_resample_rec:
+  {
+    \fp_set:Nn \l_semio_viz_geo_rs_dx_fp
+      { \l_semio_viz_geo_rs_xb_fp - \l_semio_viz_geo_rs_xa_fp }
+    \fp_set:Nn \l_semio_viz_geo_rs_dy_fp
+      { \l_semio_viz_geo_rs_yb_fp - \l_semio_viz_geo_rs_ya_fp }
+    \fp_set:Nn \l_semio_viz_geo_rs_dsq_fp
+      {
+        \l_semio_viz_geo_rs_dx_fp * \l_semio_viz_geo_rs_dx_fp
+        + \l_semio_viz_geo_rs_dy_fp * \l_semio_viz_geo_rs_dy_fp
+      }
+    \bool_lazy_and:nnT
+      {
+        \fp_compare_p:nNn \l_semio_viz_geo_rs_dsq_fp >
+          { 4 * \l_semio_viz_geo_deltasq_fp }
+      }
+      { \int_compare_p:nNn \l_semio_viz_geo_rs_depth_int > { 0 } }
+      { \semio_viz_geo_resample_split: }
+  }
+
+% ✂️ Splits the segment at its own spherical midpoint and recurses into both halves.
+\cs_new_protected:Npn \semio_viz_geo_resample_split:
+  {
+    \fp_set:Nn \l_semio_viz_geo_rs_u_fp
+      { \l_semio_viz_geo_rs_ua_fp + \l_semio_viz_geo_rs_ub_fp }
+    \fp_set:Nn \l_semio_viz_geo_rs_v_fp
+      { \l_semio_viz_geo_rs_va_fp + \l_semio_viz_geo_rs_vb_fp }
+    \fp_set:Nn \l_semio_viz_geo_rs_w_fp
+      { \l_semio_viz_geo_rs_wa_fp + \l_semio_viz_geo_rs_wb_fp }
+    \fp_set:Nn \l_semio_viz_geo_rs_m_fp
+      {
+        sqrt ( \l_semio_viz_geo_rs_u_fp * \l_semio_viz_geo_rs_u_fp
+               + \l_semio_viz_geo_rs_v_fp * \l_semio_viz_geo_rs_v_fp
+               + \l_semio_viz_geo_rs_w_fp * \l_semio_viz_geo_rs_w_fp )
+      }
+    \fp_set:Nn \l_semio_viz_geo_rs_w_fp
+      { \l_semio_viz_geo_rs_w_fp / \l_semio_viz_geo_rs_m_fp }
+    \fp_set:Nn \l_semio_viz_geo_rs_lamm_fp
+      {
+        (
+          abs ( abs ( \l_semio_viz_geo_rs_w_fp ) - 1 )
+            < \c_semio_viz_geo_epsilon_fp
+          ||
+          abs ( \l_semio_viz_geo_rs_lama_fp - \l_semio_viz_geo_rs_lamb_fp )
+            < \c_semio_viz_geo_epsilon_fp
+        )
+          ? ( \l_semio_viz_geo_rs_lama_fp + \l_semio_viz_geo_rs_lamb_fp ) / 2
+          : atan ( \l_semio_viz_geo_rs_v_fp , \l_semio_viz_geo_rs_u_fp )
+      }
+    \fp_set_eq:NN \l_semio_viz_geo_lam_fp \l_semio_viz_geo_rs_lamm_fp
+    \fp_set:Nn \l_semio_viz_geo_phi_fp { asin ( \l_semio_viz_geo_rs_w_fp ) }
+    \semio_viz_geo_transform:
+    \fp_set_eq:NN \l_semio_viz_geo_rs_xm_fp \l_semio_viz_geo_x_fp
+    \fp_set_eq:NN \l_semio_viz_geo_rs_ym_fp \l_semio_viz_geo_y_fp
+    \fp_set:Nn \l_semio_viz_geo_tmpa_fp
+      { \l_semio_viz_geo_rs_xm_fp - \l_semio_viz_geo_rs_xa_fp }
+    \fp_set:Nn \l_semio_viz_geo_tmpb_fp
+      { \l_semio_viz_geo_rs_ym_fp - \l_semio_viz_geo_rs_ya_fp }
+    \fp_set:Nn \l_semio_viz_geo_tmpc_fp
+      {
+        \l_semio_viz_geo_rs_dy_fp * \l_semio_viz_geo_tmpa_fp
+        - \l_semio_viz_geo_rs_dx_fp * \l_semio_viz_geo_tmpb_fp
+      }
+    \bool_lazy_any:nT
+      {
+        {
+          \fp_compare_p:nNn
+            {
+              \l_semio_viz_geo_tmpc_fp * \l_semio_viz_geo_tmpc_fp
+              / \l_semio_viz_geo_rs_dsq_fp
+            }
+            > { \l_semio_viz_geo_deltasq_fp }
+        }
+        {
+          \fp_compare_p:nNn
+            {
+              abs
+                (
+                  ( \l_semio_viz_geo_rs_dx_fp * \l_semio_viz_geo_tmpa_fp
+                    + \l_semio_viz_geo_rs_dy_fp * \l_semio_viz_geo_tmpb_fp )
+                  / \l_semio_viz_geo_rs_dsq_fp - 0.5
+                )
+            }
+            > { 0.3 }
+        }
+        {
+          \fp_compare_p:nNn
+            {
+              \l_semio_viz_geo_rs_ua_fp * \l_semio_viz_geo_rs_ub_fp
+              + \l_semio_viz_geo_rs_va_fp * \l_semio_viz_geo_rs_vb_fp
+              + \l_semio_viz_geo_rs_wa_fp * \l_semio_viz_geo_rs_wb_fp
+            }
+            < { \c_semio_viz_geo_cosmindistance_fp }
+        }
+      }
+      { \semio_viz_geo_resample_halves: }
+  }
+
+% 🔬 The two halves, each in its own TeX group, so the twelve segment registers restore themselves
+% on the way back out of the recursion.
+\cs_new_protected:Npn \semio_viz_geo_resample_halves:
+  {
+    \fp_set:Nn \l_semio_viz_geo_rs_u_fp
+      { \l_semio_viz_geo_rs_u_fp / \l_semio_viz_geo_rs_m_fp }
+    \fp_set:Nn \l_semio_viz_geo_rs_v_fp
+      { \l_semio_viz_geo_rs_v_fp / \l_semio_viz_geo_rs_m_fp }
+    \group_begin:
+      \fp_set_eq:NN \l_semio_viz_geo_rs_xb_fp \l_semio_viz_geo_rs_xm_fp
+      \fp_set_eq:NN \l_semio_viz_geo_rs_yb_fp \l_semio_viz_geo_rs_ym_fp
+      \fp_set_eq:NN \l_semio_viz_geo_rs_lamb_fp \l_semio_viz_geo_rs_lamm_fp
+      \fp_set_eq:NN \l_semio_viz_geo_rs_ub_fp \l_semio_viz_geo_rs_u_fp
+      \fp_set_eq:NN \l_semio_viz_geo_rs_vb_fp \l_semio_viz_geo_rs_v_fp
+      \fp_set_eq:NN \l_semio_viz_geo_rs_wb_fp \l_semio_viz_geo_rs_w_fp
+      \int_decr:N \l_semio_viz_geo_rs_depth_int
+      \semio_viz_geo_resample_rec:
+    \group_end:
+    \semio_viz_geo_emit:nn
+      { \l_semio_viz_geo_rs_xm_fp } { \l_semio_viz_geo_rs_ym_fp }
+    \group_begin:
+      \fp_set_eq:NN \l_semio_viz_geo_rs_xa_fp \l_semio_viz_geo_rs_xm_fp
+      \fp_set_eq:NN \l_semio_viz_geo_rs_ya_fp \l_semio_viz_geo_rs_ym_fp
+      \fp_set_eq:NN \l_semio_viz_geo_rs_lama_fp \l_semio_viz_geo_rs_lamm_fp
+      \fp_set_eq:NN \l_semio_viz_geo_rs_ua_fp \l_semio_viz_geo_rs_u_fp
+      \fp_set_eq:NN \l_semio_viz_geo_rs_va_fp \l_semio_viz_geo_rs_v_fp
+      \fp_set_eq:NN \l_semio_viz_geo_rs_wa_fp \l_semio_viz_geo_rs_w_fp
+      \int_decr:N \l_semio_viz_geo_rs_depth_int
+      \semio_viz_geo_resample_rec:
+    \group_end:
+  }
+%endregion 🔖️Resample
+
+%region 🔖️Clip
+% ✂️ clipAngle visibility test, d3-geo clipCircle: cos(lambda)cos(phi) > cos(radius) on the rotated sphere.
+\prg_new_conditional:Npnn \semio_viz_geo_visible: { T, F, TF }
+  {
+    \fp_compare:nNnTF \l_semio_viz_geo_clip_fp < { 0 }
+      { \prg_return_true: }
+      {
+        \fp_compare:nNnTF
+          { cos ( \l_semio_viz_geo_lam_fp ) * cos ( \l_semio_viz_geo_phi_fp ) }
+          > { cos ( \l_semio_viz_geo_clip_fp ) }
+          { \prg_return_true: }
+          { \prg_return_false: }
+      }
+  }
+
+\fp_new:N \l_semio_viz_geo_cl_la_fp
+\fp_new:N \l_semio_viz_geo_cl_pa_fp
+\fp_new:N \l_semio_viz_geo_cl_lb_fp
+\fp_new:N \l_semio_viz_geo_cl_pb_fp
+\fp_new:N \l_semio_viz_geo_cl_t_fp
+
+% 🎯 Bisects a great-circle segment to the clip boundary (`clipSteps` halvings, 48 of them, i.e. below 1e-14 rad); d3 solves it analytically, the crossing is the same point.
+\cs_new_protected:Npn \semio_viz_geo_clip_cross:
+  {
+    \fp_zero:N \l_semio_viz_geo_tmpa_fp
+    \fp_set:Nn \l_semio_viz_geo_tmpb_fp { 1 }
+    \int_step_inline:nn { \l_semio_viz_geo_clip_steps_int }
+      {
+        \fp_set:Nn \l_semio_viz_geo_cl_t_fp
+          {
+            ( \l_semio_viz_geo_tmpa_fp + \l_semio_viz_geo_tmpb_fp ) / 2
+          }
+        \semio_viz_geo_slerp:
+        \semio_viz_geo_visible:TF
+          { \fp_set_eq:NN \l_semio_viz_geo_tmpa_fp \l_semio_viz_geo_cl_t_fp }
+          { \fp_set_eq:NN \l_semio_viz_geo_tmpb_fp \l_semio_viz_geo_cl_t_fp }
+      }
+    \semio_viz_geo_slerp:
+  }
+
+% 🧵 Spherical linear interpolation between the clip endpoints at parameter cl_t, in radians.
+\cs_new_protected:Npn \semio_viz_geo_slerp:
+  {
+    \fp_set:Nn \l_semio_viz_geo_rx_fp
+      {
+        ( 1 - \l_semio_viz_geo_cl_t_fp )
+        * cos ( \l_semio_viz_geo_cl_pa_fp ) * cos ( \l_semio_viz_geo_cl_la_fp )
+        + \l_semio_viz_geo_cl_t_fp
+        * cos ( \l_semio_viz_geo_cl_pb_fp ) * cos ( \l_semio_viz_geo_cl_lb_fp )
+      }
+    \fp_set:Nn \l_semio_viz_geo_ry_fp
+      {
+        ( 1 - \l_semio_viz_geo_cl_t_fp )
+        * cos ( \l_semio_viz_geo_cl_pa_fp ) * sin ( \l_semio_viz_geo_cl_la_fp )
+        + \l_semio_viz_geo_cl_t_fp
+        * cos ( \l_semio_viz_geo_cl_pb_fp ) * sin ( \l_semio_viz_geo_cl_lb_fp )
+      }
+    \fp_set:Nn \l_semio_viz_geo_rz_fp
+      {
+        ( 1 - \l_semio_viz_geo_cl_t_fp ) * sin ( \l_semio_viz_geo_cl_pa_fp )
+        + \l_semio_viz_geo_cl_t_fp * sin ( \l_semio_viz_geo_cl_pb_fp )
+      }
+    \fp_set:Nn \l_semio_viz_geo_lam_fp
+      { atan ( \l_semio_viz_geo_ry_fp , \l_semio_viz_geo_rx_fp ) }
+    \fp_set:Nn \l_semio_viz_geo_phi_fp
+      {
+        atan ( \l_semio_viz_geo_rz_fp ,
+               sqrt ( \l_semio_viz_geo_rx_fp * \l_semio_viz_geo_rx_fp
+                      + \l_semio_viz_geo_ry_fp * \l_semio_viz_geo_ry_fp ) )
+      }
+  }
+%endregion 🔖️Clip
+
+%region 🔖️Path
+% 🧭 One projected subpath: lineStart / linePoint / lineEnd, with the ring variant resampling the closing segment like d3.
+\bool_new:N \l_semio_viz_geo_first_bool
+\bool_new:N \l_semio_viz_geo_prev_vis_bool
+\bool_new:N \l_semio_viz_geo_closed_bool
+\fp_new:N \l_semio_viz_geo_ring_x_fp
+\fp_new:N \l_semio_viz_geo_ring_y_fp
+\fp_new:N \l_semio_viz_geo_ring_lam_fp
+\fp_new:N \l_semio_viz_geo_ring_u_fp
+\fp_new:N \l_semio_viz_geo_ring_v_fp
+\fp_new:N \l_semio_viz_geo_ring_w_fp
+\fp_new:N \l_semio_viz_geo_prev_lon_fp
+\fp_new:N \l_semio_viz_geo_prev_lat_fp
+
+\cs_new_protected:Npn \semio_viz_geo_line_start:
+  {
+    \seq_gclear:N \g_semio_viz_geo_pts_seq
+    \bool_set_true:N \l_semio_viz_geo_first_bool
+  }
+
+% 📤 Closes the subpath and files it under the part type #1, unless it collected no vertex at all.
+\cs_new_protected:Npn \semio_viz_geo_line_end:n #1
+  {
+    \seq_if_empty:NF \g_semio_viz_geo_pts_seq
+      {
+        \seq_gput_right:Nx \g_semio_viz_geo_path_seq
+          {
+            {#1}
+            { \seq_use:Nn \g_semio_viz_geo_pts_seq { ; } }
+          }
+      }
+    \seq_gclear:N \g_semio_viz_geo_pts_seq
+  }
+
+% 📍 Adds one lon/lat vertex: rotate, clip, project, resample the segment from the previous vertex, then emit.
+\cs_new_protected:Npn \semio_viz_geo_line_point:nn #1#2
+  {
+    \fp_set:Nn \l_semio_viz_geo_lam_fp { (#1) * \c_semio_viz_geo_radians_fp }
+    \fp_set:Nn \l_semio_viz_geo_phi_fp { (#2) * \c_semio_viz_geo_radians_fp }
+    \semio_viz_geo_rotate:
+    \semio_viz_geo_visible:TF
+      { \semio_viz_geo_line_point_visible: }
+      { \semio_viz_geo_line_point_hidden: }
+  }
+
+% 👁️ A vertex inside the clip: the crossing back in is emitted first when the previous one was out.
+\cs_new_protected:Npn \semio_viz_geo_line_point_visible:
+  {
+    \bool_lazy_and:nnT
+      { \bool_not_p:n { \l_semio_viz_geo_first_bool } }
+      { \bool_not_p:n { \l_semio_viz_geo_prev_vis_bool } }
+      { \semio_viz_geo_reenter: }
+    \semio_viz_geo_line_point_add:
+    \bool_set_true:N \l_semio_viz_geo_prev_vis_bool
+  }
+
+% 🙈 A vertex outside the clip: the crossing out is emitted when the previous one was in, and the
+% vertex itself is only remembered.
+\cs_new_protected:Npn \semio_viz_geo_line_point_hidden:
+  {
+    \bool_lazy_and:nnT
+      { \bool_not_p:n { \l_semio_viz_geo_first_bool } }
+      { \l_semio_viz_geo_prev_vis_bool }
+      { \semio_viz_geo_exit: }
+    \bool_set_false:N \l_semio_viz_geo_prev_vis_bool
+    \bool_set_false:N \l_semio_viz_geo_first_bool
+    \fp_set_eq:NN \l_semio_viz_geo_prev_lon_fp \l_semio_viz_geo_lam_fp
+    \fp_set_eq:NN \l_semio_viz_geo_prev_lat_fp \l_semio_viz_geo_phi_fp
+  }
+
+% 🚪 Emits the point at which the line leaves the clip, so the subpath ends on the clip boundary.
+\cs_new_protected:Npn \semio_viz_geo_exit:
+  {
+    \fp_set_eq:NN \l_semio_viz_geo_cl_la_fp \l_semio_viz_geo_prev_lon_fp
+    \fp_set_eq:NN \l_semio_viz_geo_cl_pa_fp \l_semio_viz_geo_prev_lat_fp
+    \fp_set_eq:NN \l_semio_viz_geo_cl_lb_fp \l_semio_viz_geo_lam_fp
+    \fp_set_eq:NN \l_semio_viz_geo_cl_pb_fp \l_semio_viz_geo_phi_fp
+    \fp_set_eq:NN \l_semio_viz_geo_tmpd_fp \l_semio_viz_geo_lam_fp
+    \fp_set_eq:NN \l_semio_viz_geo_rk_fp \l_semio_viz_geo_phi_fp
+    \semio_viz_geo_clip_cross:
+    \semio_viz_geo_transform:
+    \semio_viz_geo_emit:nn { \l_semio_viz_geo_x_fp } { \l_semio_viz_geo_y_fp }
+    \fp_set_eq:NN \l_semio_viz_geo_lam_fp \l_semio_viz_geo_tmpd_fp
+    \fp_set_eq:NN \l_semio_viz_geo_phi_fp \l_semio_viz_geo_rk_fp
+  }
+
+% 🚪 Emits the point at which the line comes back into the clip, the mirror of the exit above.
+\cs_new_protected:Npn \semio_viz_geo_reenter:
+  {
+    \fp_set_eq:NN \l_semio_viz_geo_cl_la_fp \l_semio_viz_geo_lam_fp
+    \fp_set_eq:NN \l_semio_viz_geo_cl_pa_fp \l_semio_viz_geo_phi_fp
+    \fp_set_eq:NN \l_semio_viz_geo_cl_lb_fp \l_semio_viz_geo_prev_lon_fp
+    \fp_set_eq:NN \l_semio_viz_geo_cl_pb_fp \l_semio_viz_geo_prev_lat_fp
+    \fp_set_eq:NN \l_semio_viz_geo_tmpd_fp \l_semio_viz_geo_lam_fp
+    \fp_set_eq:NN \l_semio_viz_geo_rk_fp \l_semio_viz_geo_phi_fp
+    \semio_viz_geo_clip_cross:
+    \semio_viz_geo_transform:
+    \semio_viz_geo_emit:nn { \l_semio_viz_geo_x_fp } { \l_semio_viz_geo_y_fp }
+    \fp_set_eq:NN \l_semio_viz_geo_lam_fp \l_semio_viz_geo_tmpd_fp
+    \fp_set_eq:NN \l_semio_viz_geo_phi_fp \l_semio_viz_geo_rk_fp
+    \bool_set_true:N \l_semio_viz_geo_first_bool
+  }
+
+% 📍 Projects the current vertex, resamples the segment from the previous one, and emits it.
+\cs_new_protected:Npn \semio_viz_geo_line_point_add:
+  {
+    \fp_set:Nn \l_semio_viz_geo_rs_ub_fp
+      { cos ( \l_semio_viz_geo_phi_fp ) * cos ( \l_semio_viz_geo_lam_fp ) }
+    \fp_set:Nn \l_semio_viz_geo_rs_vb_fp
+      { cos ( \l_semio_viz_geo_phi_fp ) * sin ( \l_semio_viz_geo_lam_fp ) }
+    \fp_set:Nn \l_semio_viz_geo_rs_wb_fp { sin ( \l_semio_viz_geo_phi_fp ) }
+    \fp_set_eq:NN \l_semio_viz_geo_rs_lamb_fp \l_semio_viz_geo_lam_fp
+    \fp_set_eq:NN \l_semio_viz_geo_prev_lon_fp \l_semio_viz_geo_lam_fp
+    \fp_set_eq:NN \l_semio_viz_geo_prev_lat_fp \l_semio_viz_geo_phi_fp
+    \semio_viz_geo_transform:
+    \fp_set_eq:NN \l_semio_viz_geo_rs_xb_fp \l_semio_viz_geo_x_fp
+    \fp_set_eq:NN \l_semio_viz_geo_rs_yb_fp \l_semio_viz_geo_y_fp
+    \bool_lazy_and:nnT
+      { \bool_not_p:n { \l_semio_viz_geo_first_bool } }
+      { \fp_compare_p:nNn \l_semio_viz_geo_deltasq_fp > { 0 } }
+      {
+        \int_set_eq:NN \l_semio_viz_geo_rs_depth_int
+          \c_semio_viz_geo_maxdepth_int
+        \semio_viz_geo_resample_rec:
+      }
+    \bool_if:NT \l_semio_viz_geo_first_bool
+      {
+        \fp_set_eq:NN \l_semio_viz_geo_ring_x_fp \l_semio_viz_geo_rs_xb_fp
+        \fp_set_eq:NN \l_semio_viz_geo_ring_y_fp \l_semio_viz_geo_rs_yb_fp
+        \fp_set_eq:NN \l_semio_viz_geo_ring_lam_fp \l_semio_viz_geo_rs_lamb_fp
+        \fp_set_eq:NN \l_semio_viz_geo_ring_u_fp \l_semio_viz_geo_rs_ub_fp
+        \fp_set_eq:NN \l_semio_viz_geo_ring_v_fp \l_semio_viz_geo_rs_vb_fp
+        \fp_set_eq:NN \l_semio_viz_geo_ring_w_fp \l_semio_viz_geo_rs_wb_fp
+      }
+    \semio_viz_geo_emit:nn
+      { \l_semio_viz_geo_rs_xb_fp } { \l_semio_viz_geo_rs_yb_fp }
+    \fp_set_eq:NN \l_semio_viz_geo_rs_xa_fp \l_semio_viz_geo_rs_xb_fp
+    \fp_set_eq:NN \l_semio_viz_geo_rs_ya_fp \l_semio_viz_geo_rs_yb_fp
+    \fp_set_eq:NN \l_semio_viz_geo_rs_lama_fp \l_semio_viz_geo_rs_lamb_fp
+    \fp_set_eq:NN \l_semio_viz_geo_rs_ua_fp \l_semio_viz_geo_rs_ub_fp
+    \fp_set_eq:NN \l_semio_viz_geo_rs_va_fp \l_semio_viz_geo_rs_vb_fp
+    \fp_set_eq:NN \l_semio_viz_geo_rs_wa_fp \l_semio_viz_geo_rs_wb_fp
+    \bool_set_false:N \l_semio_viz_geo_first_bool
+  }
+
+% 🔁 Resamples the closing segment of a ring back to its first vertex without repeating that vertex.
+\cs_new_protected:Npn \semio_viz_geo_ring_close:
+  {
+    \fp_set_eq:NN \l_semio_viz_geo_rs_xb_fp \l_semio_viz_geo_ring_x_fp
+    \fp_set_eq:NN \l_semio_viz_geo_rs_yb_fp \l_semio_viz_geo_ring_y_fp
+    \fp_set_eq:NN \l_semio_viz_geo_rs_lamb_fp \l_semio_viz_geo_ring_lam_fp
+    \fp_set_eq:NN \l_semio_viz_geo_rs_ub_fp \l_semio_viz_geo_ring_u_fp
+    \fp_set_eq:NN \l_semio_viz_geo_rs_vb_fp \l_semio_viz_geo_ring_v_fp
+    \fp_set_eq:NN \l_semio_viz_geo_rs_wb_fp \l_semio_viz_geo_ring_w_fp
+    \fp_compare:nNnT \l_semio_viz_geo_deltasq_fp > { 0 }
+      {
+        \int_set_eq:NN \l_semio_viz_geo_rs_depth_int
+          \c_semio_viz_geo_maxdepth_int
+        \semio_viz_geo_resample_rec:
+      }
+  }
+
+% 🛤️ Projects one `lon,lat; …` coordinate list into g_semio_viz_geo_path_seq as a closed (#1 = 1) or open subpath.
+\cs_new_protected:Npn \semio_viz_geo_project_coords:nn #1#2
+  {
+    \semio_viz_geo_line_start:
+    \bool_set_false:N \l_semio_viz_geo_prev_vis_bool
+    \seq_set_split:Nnn \l_tmpa_seq { ; } {#2}
+    \seq_map_inline:Nn \l_tmpa_seq
+      {
+        \tl_set:Nn \l_tmpb_tl {##1}
+        \tl_trim_spaces:N \l_tmpb_tl
+        \tl_if_empty:NF \l_tmpb_tl
+          {
+            \semio_viz_geo_line_point:nn
+              { \clist_item:nn {##1} { 1 } }
+              { \clist_item:nn {##1} { 2 } }
+          }
+      }
+    \bool_lazy_and:nnT
+      { \int_compare_p:nNn {#1} = { 1 } }
+      { \l_semio_viz_geo_prev_vis_bool }
+      { \semio_viz_geo_ring_close: }
+    \semio_viz_geo_line_end:n {#1}
+  }
+
+% 🗺️ geoPath: projects every part of a geometry into g_semio_viz_geo_path_seq (subpaths as `{closed}{x,y;x,y;…}`).
+\cs_new_protected:Npn \semio_viz_geo_path:nn #1#2
+  {
+    \semio_viz_geo_use:n {#1}
+    \seq_gclear:N \g_semio_viz_geo_path_seq
+    \semio_viz_geom_map_inline:nn {#2}
+      { \semio_viz_geo_path_part:nnnn ##1 }
+  }
+
+% 🧩 One geometry part: a polygon is projected as a closed ring, a line and a point are not.
+\cs_new_protected:Npn \semio_viz_geo_path_part:nnnn #1#2#3#4
+  {
+    \str_case:nn {#1}
+      {
+        { polygon } { \semio_viz_geo_project_coords:nn { 1 } {#4} }
+        { line } { \semio_viz_geo_project_coords:nn { 0 } {#4} }
+        { point } { \semio_viz_geo_project_coords:nn { 0 } {#4} }
+      }
+  }
+%endregion 🔖️Path
+
+%region 🔖️Fit
+% 📏 Plane bounds of a projected geometry, computed like d3's path bounds (after resampling).
+\fp_new:N \l_semio_viz_geo_bxmin_fp
+\fp_new:N \l_semio_viz_geo_bymin_fp
+\fp_new:N \l_semio_viz_geo_bxmax_fp
+\fp_new:N \l_semio_viz_geo_bymax_fp
+
+\cs_new_protected:Npn \semio_viz_geo_path_bounds:
+  {
+    \fp_set:Nn \l_semio_viz_geo_bxmin_fp { inf }
+    \fp_set:Nn \l_semio_viz_geo_bymin_fp { inf }
+    \fp_set:Nn \l_semio_viz_geo_bxmax_fp { -inf }
+    \fp_set:Nn \l_semio_viz_geo_bymax_fp { -inf }
+    \seq_map_inline:Nn \g_semio_viz_geo_path_seq
+      { \semio_viz_geo_bounds_sub:nn ##1 }
+  }
+
+% 📐 Widens the running bounding box to hold every vertex of one projected subpath.
+\cs_new_protected:Npn \semio_viz_geo_bounds_sub:nn #1#2
+  {
+    \seq_set_split:Nnn \l_tmpb_seq { ; } {#2}
+    \seq_map_inline:Nn \l_tmpb_seq
+      {
+        \fp_set:Nn \l_semio_viz_geo_bxmin_fp
+          { min ( \l_semio_viz_geo_bxmin_fp , \clist_item:nn {##1} { 1 } ) }
+        \fp_set:Nn \l_semio_viz_geo_bxmax_fp
+          { max ( \l_semio_viz_geo_bxmax_fp , \clist_item:nn {##1} { 1 } ) }
+        \fp_set:Nn \l_semio_viz_geo_bymin_fp
+          { min ( \l_semio_viz_geo_bymin_fp , \clist_item:nn {##1} { 2 } ) }
+        \fp_set:Nn \l_semio_viz_geo_bymax_fp
+          { max ( \l_semio_viz_geo_bymax_fp , \clist_item:nn {##1} { 2 } ) }
+      }
+  }
+
+% 🔍 d3 fitExtent: measure at scale 150 / translate 0,0, then set scale 150k and the centering translation.
+\cs_new_protected:Npn \semio_viz_geo_fit_extent:nnnnnn #1#2#3#4#5#6
+  {
+    \semio_viz_geo_use:n {#1}
+    \semio_viz_geo_set_scale_translate:nnn { 150 } { 0 } { 0 }
+    \seq_gclear:N \g_semio_viz_geo_path_seq
+    \semio_viz_geom_map_inline:nn {#2} { \semio_viz_geo_path_part:nnnn ##1 }
+    \semio_viz_geo_path_bounds:
+    \fp_set:Nn \l_semio_viz_geo_tmpa_fp { (#5) - (#3) }
+    \fp_set:Nn \l_semio_viz_geo_tmpb_fp { (#6) - (#4) }
+    \fp_set:Nn \l_semio_viz_geo_tmpc_fp
+      {
+        min
+          (
+            \l_semio_viz_geo_tmpa_fp
+              / ( \l_semio_viz_geo_bxmax_fp - \l_semio_viz_geo_bxmin_fp ) ,
+            \l_semio_viz_geo_tmpb_fp
+              / ( \l_semio_viz_geo_bymax_fp - \l_semio_viz_geo_bymin_fp )
+          )
+      }
+    \semio_viz_geo_set_scale_translate:nnn
+      { 150 * \l_semio_viz_geo_tmpc_fp }
+      {
+        (#3) + ( \l_semio_viz_geo_tmpa_fp - \l_semio_viz_geo_tmpc_fp
+                 * ( \l_semio_viz_geo_bxmax_fp + \l_semio_viz_geo_bxmin_fp ) ) / 2
+      }
+      {
+        (#4) + ( \l_semio_viz_geo_tmpb_fp - \l_semio_viz_geo_tmpc_fp
+                 * ( \l_semio_viz_geo_bymax_fp + \l_semio_viz_geo_bymin_fp ) ) / 2
+      }
+  }
+
+% 🔍 d3 fitWidth: scale so the plane width matches, then push the top edge to y = 0.
+\cs_new_protected:Npn \semio_viz_geo_fit_width:nnn #1#2#3
+  {
+    \semio_viz_geo_use:n {#1}
+    \semio_viz_geo_set_scale_translate:nnn { 150 } { 0 } { 0 }
+    \seq_gclear:N \g_semio_viz_geo_path_seq
+    \semio_viz_geom_map_inline:nn {#2} { \semio_viz_geo_path_part:nnnn ##1 }
+    \semio_viz_geo_path_bounds:
+    \fp_set:Nn \l_semio_viz_geo_tmpc_fp
+      { (#3) / ( \l_semio_viz_geo_bxmax_fp - \l_semio_viz_geo_bxmin_fp ) }
+    \semio_viz_geo_set_scale_translate:nnn
+      { 150 * \l_semio_viz_geo_tmpc_fp }
+      {
+        ( (#3) - \l_semio_viz_geo_tmpc_fp
+          * ( \l_semio_viz_geo_bxmax_fp + \l_semio_viz_geo_bxmin_fp ) ) / 2
+      }
+      { - \l_semio_viz_geo_tmpc_fp * \l_semio_viz_geo_bymin_fp }
+  }
+%endregion 🔖️Fit
+
+%region 🔖️Graticule
+% 🕸️ d3-geo graticule: major meridians and parallels first, then the minor ones that are not already major.
+\fp_new:N \l_semio_viz_geo_gr_dx_fp
+\fp_new:N \l_semio_viz_geo_gr_dy_fp
+\fp_new:N \l_semio_viz_geo_gr_Dx_fp
+\fp_new:N \l_semio_viz_geo_gr_Dy_fp
+\fp_new:N \l_semio_viz_geo_gr_prec_fp
+\clist_new:N \l_semio_viz_geo_gr_minor_clist
+\clist_new:N \l_semio_viz_geo_gr_major_clist
+\tl_new:N \l_semio_viz_geo_gr_coords_tl
+\seq_new:N \g_semio_viz_geo_gr_seq
+
+%region 🔖️Keys
+% 🔑 semio / viz / geo / graticule
+% 🔑 step        (dx,dy)    minor and major step in degrees at once; default only sets the minor step.
+% 🔑 stepMinor   (dx,dy)    default 10,10.
+% 🔑 stepMajor   (dx,dy)    default 90,360.
+% 🔑 extent      (x0,y0,x1,y1) sets both extents; default only sets the minor extent.
+% 🔑 extentMinor (x0,y0,x1,y1) default -180,-80.000001,180,80.000001.
+% 🔑 extentMajor (x0,y0,x1,y1) default -180,-89.999999,180,89.999999.
+% 🔑 precision   (number)   sampling step in degrees along a parallel; default 2.5.
+\keys_define:nn { semio / viz / geo / graticule }
+  {
+    step .code:n =
+      {
+        \fp_set:Nn \l_semio_viz_geo_gr_dx_fp { \clist_item:nn {#1} { 1 } }
+        \fp_set:Nn \l_semio_viz_geo_gr_dy_fp { \clist_item:nn {#1} { 2 } }
+        \fp_set_eq:NN \l_semio_viz_geo_gr_Dx_fp \l_semio_viz_geo_gr_dx_fp
+        \fp_set_eq:NN \l_semio_viz_geo_gr_Dy_fp \l_semio_viz_geo_gr_dy_fp
+      } ,
+    stepMinor .code:n =
+      {
+        \fp_set:Nn \l_semio_viz_geo_gr_dx_fp { \clist_item:nn {#1} { 1 } }
+        \fp_set:Nn \l_semio_viz_geo_gr_dy_fp { \clist_item:nn {#1} { 2 } }
+      } ,
+    stepMajor .code:n =
+      {
+        \fp_set:Nn \l_semio_viz_geo_gr_Dx_fp { \clist_item:nn {#1} { 1 } }
+        \fp_set:Nn \l_semio_viz_geo_gr_Dy_fp { \clist_item:nn {#1} { 2 } }
+      } ,
+    extent .code:n =
+      {
+        \clist_set:Nn \l_semio_viz_geo_gr_minor_clist {#1}
+        \clist_set:Nn \l_semio_viz_geo_gr_major_clist {#1}
+      } ,
+    extentMinor .clist_set:N = \l_semio_viz_geo_gr_minor_clist ,
+    extentMajor .clist_set:N = \l_semio_viz_geo_gr_major_clist ,
+    precision .fp_set:N = \l_semio_viz_geo_gr_prec_fp ,
+  }
+%endregion 🔖️Keys
+
+% ♻️ Puts every graticule key back to d3.geoGraticule()'s own default.
+\cs_new_protected:Npn \semio_viz_geo_graticule_defaults:
+  {
+    \fp_set:Nn \l_semio_viz_geo_gr_dx_fp { 10 }
+    \fp_set:Nn \l_semio_viz_geo_gr_dy_fp { 10 }
+    \fp_set:Nn \l_semio_viz_geo_gr_Dx_fp { 90 }
+    \fp_set:Nn \l_semio_viz_geo_gr_Dy_fp { 360 }
+    \fp_set:Nn \l_semio_viz_geo_gr_prec_fp { 2.5 }
+    \clist_set:Nn \l_semio_viz_geo_gr_minor_clist
+      { -180, -80.000001, 180, 80.000001 }
+    \clist_set:Nn \l_semio_viz_geo_gr_major_clist
+      { -180, -89.999999, 180, 89.999999 }
+  }
+
+% 〰️ One meridian at longitude #1 sampled from #2 to #3 every 90 degrees plus the end latitude (d3 graticuleX).
+\cs_new_protected:Npn \semio_viz_geo_gr_meridian:nnn #1#2#3
+  {
+    \tl_clear:N \l_semio_viz_geo_gr_coords_tl
+    \fp_set:Nn \l_semio_viz_geo_tmpa_fp {#2}
+    \bool_while_do:nn
+      {
+        \fp_compare_p:nNn \l_semio_viz_geo_tmpa_fp <
+          { (#3) - \c_semio_viz_geo_epsilon_fp }
+      }
+      {
+        \tl_put_right:Nx \l_semio_viz_geo_gr_coords_tl
+          { \fp_eval:n {#1} , \fp_use:N \l_semio_viz_geo_tmpa_fp ; }
+        \fp_add:Nn \l_semio_viz_geo_tmpa_fp { 90 }
+      }
+    \tl_put_right:Nx \l_semio_viz_geo_gr_coords_tl
+      { \fp_eval:n {#1} , \fp_eval:n {#3} }
+    \seq_gput_right:NV \g_semio_viz_geo_gr_seq \l_semio_viz_geo_gr_coords_tl
+  }
+
+% 〰️ One parallel at latitude #1 sampled from #2 to #3 every `precision` degrees plus the end longitude (d3 graticuleY).
+\cs_new_protected:Npn \semio_viz_geo_gr_parallel:nnn #1#2#3
+  {
+    \tl_clear:N \l_semio_viz_geo_gr_coords_tl
+    \fp_set:Nn \l_semio_viz_geo_tmpa_fp {#2}
+    \bool_while_do:nn
+      {
+        \fp_compare_p:nNn \l_semio_viz_geo_tmpa_fp <
+          { (#3) - \c_semio_viz_geo_epsilon_fp }
+      }
+      {
+        \tl_put_right:Nx \l_semio_viz_geo_gr_coords_tl
+          { \fp_use:N \l_semio_viz_geo_tmpa_fp , \fp_eval:n {#1} ; }
+        \fp_add:Nn \l_semio_viz_geo_tmpa_fp { \l_semio_viz_geo_gr_prec_fp }
+      }
+    \tl_put_right:Nx \l_semio_viz_geo_gr_coords_tl
+      { \fp_eval:n {#3} , \fp_eval:n {#1} }
+    \seq_gput_right:NV \g_semio_viz_geo_gr_seq \l_semio_viz_geo_gr_coords_tl
+  }
+
+% 🌐 The whole graticule under the option list #1: the two major lines first, then the minor grid.
+\cs_new_protected:Npn \semio_viz_geo_graticule_lines:n #1
+  {
+    \semio_viz_geo_graticule_defaults:
+    \keys_set:nn { semio / viz / geo / graticule } {#1}
+    \seq_gclear:N \g_semio_viz_geo_gr_seq
+    \semio_viz_geo_gr_major_meridians:
+    \semio_viz_geo_gr_major_parallels:
+    \semio_viz_geo_gr_minor_meridians:
+    \semio_viz_geo_gr_minor_parallels:
+  }
+
+% 🌐 The major meridians, every `stepMajor` degrees across the major extent.
+\cs_new_protected:Npn \semio_viz_geo_gr_major_meridians:
+  {
+    \fp_set:Nn \l_semio_viz_geo_tmpb_fp
+      {
+        ceil ( \clist_item:Nn \l_semio_viz_geo_gr_major_clist { 1 }
+               / \l_semio_viz_geo_gr_Dx_fp ) * \l_semio_viz_geo_gr_Dx_fp
+      }
+    \bool_while_do:nn
+      {
+        \fp_compare_p:nNn \l_semio_viz_geo_tmpb_fp <
+          { \clist_item:Nn \l_semio_viz_geo_gr_major_clist { 3 } }
+      }
+      {
+        \semio_viz_geo_gr_meridian:nnn { \l_semio_viz_geo_tmpb_fp }
+          { \clist_item:Nn \l_semio_viz_geo_gr_major_clist { 2 } }
+          { \clist_item:Nn \l_semio_viz_geo_gr_major_clist { 4 } }
+        \fp_add:Nn \l_semio_viz_geo_tmpb_fp { \l_semio_viz_geo_gr_Dx_fp }
+      }
+  }
+
+% 🌐 The major parallels, on the same major grid.
+\cs_new_protected:Npn \semio_viz_geo_gr_major_parallels:
+  {
+    \fp_set:Nn \l_semio_viz_geo_tmpb_fp
+      {
+        ceil ( \clist_item:Nn \l_semio_viz_geo_gr_major_clist { 2 }
+               / \l_semio_viz_geo_gr_Dy_fp ) * \l_semio_viz_geo_gr_Dy_fp
+      }
+    \bool_while_do:nn
+      {
+        \fp_compare_p:nNn \l_semio_viz_geo_tmpb_fp <
+          { \clist_item:Nn \l_semio_viz_geo_gr_major_clist { 4 } }
+      }
+      {
+        \semio_viz_geo_gr_parallel:nnn { \l_semio_viz_geo_tmpb_fp }
+          { \clist_item:Nn \l_semio_viz_geo_gr_major_clist { 1 } }
+          { \clist_item:Nn \l_semio_viz_geo_gr_major_clist { 3 } }
+        \fp_add:Nn \l_semio_viz_geo_tmpb_fp { \l_semio_viz_geo_gr_Dy_fp }
+      }
+  }
+
+% 🌐 The minor meridians, every `stepMinor` degrees, skipping those a major line already carries.
+\cs_new_protected:Npn \semio_viz_geo_gr_minor_meridians:
+  {
+    \fp_set:Nn \l_semio_viz_geo_tmpb_fp
+      {
+        ceil ( \clist_item:Nn \l_semio_viz_geo_gr_minor_clist { 1 }
+               / \l_semio_viz_geo_gr_dx_fp ) * \l_semio_viz_geo_gr_dx_fp
+      }
+    \bool_while_do:nn
+      {
+        \fp_compare_p:nNn \l_semio_viz_geo_tmpb_fp <
+          { \clist_item:Nn \l_semio_viz_geo_gr_minor_clist { 3 } }
+      }
+      {
+        \fp_compare:nNnT
+          {
+            abs ( \l_semio_viz_geo_tmpb_fp
+                  - round ( \l_semio_viz_geo_tmpb_fp
+                            / \l_semio_viz_geo_gr_Dx_fp , 0 )
+                    * \l_semio_viz_geo_gr_Dx_fp )
+          }
+          > { \c_semio_viz_geo_epsilon_fp }
+          {
+            \semio_viz_geo_gr_meridian:nnn { \l_semio_viz_geo_tmpb_fp }
+              { \clist_item:Nn \l_semio_viz_geo_gr_minor_clist { 2 } }
+              { \clist_item:Nn \l_semio_viz_geo_gr_minor_clist { 4 } }
+          }
+        \fp_add:Nn \l_semio_viz_geo_tmpb_fp { \l_semio_viz_geo_gr_dx_fp }
+      }
+  }
+
+% 🌐 The minor parallels, on the same minor grid and with the same skip.
+\cs_new_protected:Npn \semio_viz_geo_gr_minor_parallels:
+  {
+    \fp_set:Nn \l_semio_viz_geo_tmpb_fp
+      {
+        ceil ( \clist_item:Nn \l_semio_viz_geo_gr_minor_clist { 2 }
+               / \l_semio_viz_geo_gr_dy_fp ) * \l_semio_viz_geo_gr_dy_fp
+      }
+    \bool_while_do:nn
+      {
+        \fp_compare_p:nNn \l_semio_viz_geo_tmpb_fp <
+          { \clist_item:Nn \l_semio_viz_geo_gr_minor_clist { 4 } }
+      }
+      {
+        \fp_compare:nNnT
+          {
+            abs ( \l_semio_viz_geo_tmpb_fp
+                  - round ( \l_semio_viz_geo_tmpb_fp
+                            / \l_semio_viz_geo_gr_Dy_fp , 0 )
+                    * \l_semio_viz_geo_gr_Dy_fp )
+          }
+          > { \c_semio_viz_geo_epsilon_fp }
+          {
+            \semio_viz_geo_gr_parallel:nnn { \l_semio_viz_geo_tmpb_fp }
+              { \clist_item:Nn \l_semio_viz_geo_gr_minor_clist { 1 } }
+              { \clist_item:Nn \l_semio_viz_geo_gr_minor_clist { 3 } }
+          }
+        \fp_add:Nn \l_semio_viz_geo_tmpb_fp { \l_semio_viz_geo_gr_dy_fp }
+      }
+  }
+%endregion 🔖️Graticule
+
+%region 🔖️Measures
+% 📐 d3-geo spherical measures on a `lon,lat; …` ring or point pair; all angles in radians internally.
+\fp_new:N \l_semio_viz_geo_ms_a_fp
+\fp_new:N \l_semio_viz_geo_ms_b_fp
+\fp_new:N \l_semio_viz_geo_ms_c_fp
+\fp_new:N \l_semio_viz_geo_ms_d_fp
+\fp_new:N \l_semio_viz_geo_ms_sum_fp
+\fp_new:N \l_semio_viz_geo_ms_lamprev_fp
+\fp_new:N \l_semio_viz_geo_ms_cosprev_fp
+\fp_new:N \l_semio_viz_geo_ms_sinprev_fp
+\fp_new:N \l_semio_viz_geo_area_fp
+\fp_new:N \l_semio_viz_geo_dist_fp
+\clist_new:N \l_semio_viz_geo_ms_clist
+
+% 🧮 Spherical polygon area in steradians (d3 geoArea on a single ring).
+\cs_new_protected:Npn \semio_viz_geo_ring_area:n #1
+  {
+    \seq_set_split:Nnn \l_tmpa_seq { ; } {#1}
+    \fp_zero:N \l_semio_viz_geo_ms_sum_fp
+    \int_zero:N \l_tmpa_int
+    \seq_map_inline:Nn \l_tmpa_seq
+      {
+        \tl_set:Nn \l_tmpb_tl {##1}
+        \tl_trim_spaces:N \l_tmpb_tl
+        \tl_if_empty:NF \l_tmpb_tl
+          {
+            \semio_viz_geo_area_point:nn
+              { \clist_item:nn {##1} { 1 } }
+              { \clist_item:nn {##1} { 2 } }
+          }
+      }
+    \clist_set:Nx \l_semio_viz_geo_ms_clist { \seq_item:Nn \l_tmpa_seq { 1 } }
+    \semio_viz_geo_area_point:nn
+      { \clist_item:Nn \l_semio_viz_geo_ms_clist { 1 } }
+      { \clist_item:Nn \l_semio_viz_geo_ms_clist { 2 } }
+    \fp_set:Nn \l_semio_viz_geo_area_fp
+      {
+        (
+          \l_semio_viz_geo_ms_sum_fp < 0
+            ? 2 * pi + \l_semio_viz_geo_ms_sum_fp
+            : \l_semio_viz_geo_ms_sum_fp
+        ) * 2
+      }
+  }
+
+% 📐 One vertex of the spherical area sum: the signed contribution of the segment from the previous
+% vertex, in steradians.
+\cs_new_protected:Npn \semio_viz_geo_area_point:nn #1#2
+  {
+    \fp_set:Nn \l_semio_viz_geo_ms_a_fp { (#1) * \c_semio_viz_geo_radians_fp }
+    \fp_set:Nn \l_semio_viz_geo_ms_b_fp
+      { (#2) * \c_semio_viz_geo_radians_fp / 2 + pi / 4 }
+    \int_compare:nNnTF \l_tmpa_int = { 0 }
+      {
+        \fp_set_eq:NN \l_semio_viz_geo_ms_lamprev_fp \l_semio_viz_geo_ms_a_fp
+        \fp_set:Nn \l_semio_viz_geo_ms_cosprev_fp
+          { cos ( \l_semio_viz_geo_ms_b_fp ) }
+        \fp_set:Nn \l_semio_viz_geo_ms_sinprev_fp
+          { sin ( \l_semio_viz_geo_ms_b_fp ) }
+        \int_set:Nn \l_tmpa_int { 1 }
+      }
+      {
+        \fp_set:Nn \l_semio_viz_geo_ms_c_fp
+          { \l_semio_viz_geo_ms_a_fp - \l_semio_viz_geo_ms_lamprev_fp }
+        \fp_set:Nn \l_semio_viz_geo_ms_d_fp
+          { \l_semio_viz_geo_ms_c_fp >= 0 ? 1 : -1 }
+        \fp_add:Nn \l_semio_viz_geo_ms_sum_fp
+          {
+            atan
+              (
+                \l_semio_viz_geo_ms_sinprev_fp * sin ( \l_semio_viz_geo_ms_b_fp )
+                * \l_semio_viz_geo_ms_d_fp
+                * sin ( \l_semio_viz_geo_ms_d_fp * \l_semio_viz_geo_ms_c_fp ) ,
+                \l_semio_viz_geo_ms_cosprev_fp * cos ( \l_semio_viz_geo_ms_b_fp )
+                + \l_semio_viz_geo_ms_sinprev_fp * sin ( \l_semio_viz_geo_ms_b_fp )
+                  * cos ( \l_semio_viz_geo_ms_d_fp * \l_semio_viz_geo_ms_c_fp )
+              )
+          }
+        \fp_set_eq:NN \l_semio_viz_geo_ms_lamprev_fp \l_semio_viz_geo_ms_a_fp
+        \fp_set:Nn \l_semio_viz_geo_ms_cosprev_fp
+          { cos ( \l_semio_viz_geo_ms_b_fp ) }
+        \fp_set:Nn \l_semio_viz_geo_ms_sinprev_fp
+          { sin ( \l_semio_viz_geo_ms_b_fp ) }
+      }
+  }
+
+% 📏 d3 geoDistance: the great-circle angle between two lon/lat points in radians.
+\cs_new_protected:Npn \semio_viz_geo_distance:nnnn #1#2#3#4
+  {
+    \fp_set:Nn \l_semio_viz_geo_ms_a_fp
+      { ( (#3) - (#1) ) * \c_semio_viz_geo_radians_fp }
+    \fp_set:Nn \l_semio_viz_geo_ms_b_fp { (#2) * \c_semio_viz_geo_radians_fp }
+    \fp_set:Nn \l_semio_viz_geo_ms_c_fp { (#4) * \c_semio_viz_geo_radians_fp }
+    \fp_set:Nn \l_semio_viz_geo_dist_fp
+      {
+        atan
+          (
+            sqrt
+              (
+                ( cos ( \l_semio_viz_geo_ms_c_fp )
+                  * sin ( \l_semio_viz_geo_ms_a_fp ) ) ** 2
+                + ( cos ( \l_semio_viz_geo_ms_b_fp )
+                    * sin ( \l_semio_viz_geo_ms_c_fp )
+                    - sin ( \l_semio_viz_geo_ms_b_fp )
+                      * cos ( \l_semio_viz_geo_ms_c_fp )
+                      * cos ( \l_semio_viz_geo_ms_a_fp ) ) ** 2
+              ) ,
+            sin ( \l_semio_viz_geo_ms_b_fp ) * sin ( \l_semio_viz_geo_ms_c_fp )
+            + cos ( \l_semio_viz_geo_ms_b_fp ) * cos ( \l_semio_viz_geo_ms_c_fp )
+              * cos ( \l_semio_viz_geo_ms_a_fp )
+          )
+      }
+  }
+
+% 🛰️ d3 geoInterpolate: point at parameter #5 along the great circle from (#1,#2) to (#3,#4); degrees into lon_fp/lat_fp.
+\cs_new_protected:Npn \semio_viz_geo_interpolate:nnnnn #1#2#3#4#5
+  {
+    \semio_viz_geo_distance:nnnn {#1}{#2}{#3}{#4}
+    \fp_compare:nNnTF \l_semio_viz_geo_dist_fp = { 0 }
+      {
+        \fp_set:Nn \l_semio_viz_geo_lon_fp {#1}
+        \fp_set:Nn \l_semio_viz_geo_lat_fp {#2}
+      }
+      { \semio_viz_geo_interpolate_aux:nnnnn {#1}{#2}{#3}{#4}{#5} }
+  }
+
+% 🛫 The general case of the great-circle interpolation: the two endpoints weighted by the sines of
+% the arc they subtend, which is the slerp d3 uses.
+\cs_new_protected:Npn \semio_viz_geo_interpolate_aux:nnnnn #1#2#3#4#5
+  {
+    \fp_set:Nn \l_semio_viz_geo_ms_a_fp
+      {
+        sin ( (#5) * \l_semio_viz_geo_dist_fp )
+        / sin ( \l_semio_viz_geo_dist_fp )
+      }
+    \fp_set:Nn \l_semio_viz_geo_ms_b_fp
+      {
+        sin ( ( 1 - (#5) ) * \l_semio_viz_geo_dist_fp )
+        / sin ( \l_semio_viz_geo_dist_fp )
+      }
+    \fp_set:Nn \l_semio_viz_geo_rx_fp
+      {
+        \l_semio_viz_geo_ms_b_fp * cosd (#2) * cosd (#1)
+        + \l_semio_viz_geo_ms_a_fp * cosd (#4) * cosd (#3)
+      }
+    \fp_set:Nn \l_semio_viz_geo_ry_fp
+      {
+        \l_semio_viz_geo_ms_b_fp * cosd (#2) * sind (#1)
+        + \l_semio_viz_geo_ms_a_fp * cosd (#4) * sind (#3)
+      }
+    \fp_set:Nn \l_semio_viz_geo_rz_fp
+      {
+        \l_semio_viz_geo_ms_b_fp * sind (#2)
+        + \l_semio_viz_geo_ms_a_fp * sind (#4)
+      }
+    \fp_set:Nn \l_semio_viz_geo_lon_fp
+      {
+        atan ( \l_semio_viz_geo_ry_fp , \l_semio_viz_geo_rx_fp )
+        * \c_semio_viz_geo_degrees_fp
+      }
+    \fp_set:Nn \l_semio_viz_geo_lat_fp
+      {
+        atan ( \l_semio_viz_geo_rz_fp ,
+               sqrt ( \l_semio_viz_geo_rx_fp * \l_semio_viz_geo_rx_fp
+                      + \l_semio_viz_geo_ry_fp * \l_semio_viz_geo_ry_fp ) )
+        * \c_semio_viz_geo_degrees_fp
+      }
+  }
+
+% 🎯 d3 geoCentroid for a single spherical ring: the area-weighted cartesian centroid, degrees into lon_fp/lat_fp.
+\fp_new:N \l_semio_viz_geo_ct_x_fp
+\fp_new:N \l_semio_viz_geo_ct_y_fp
+\fp_new:N \l_semio_viz_geo_ct_z_fp
+\fp_new:N \l_semio_viz_geo_ct_xprev_fp
+\fp_new:N \l_semio_viz_geo_ct_yprev_fp
+\fp_new:N \l_semio_viz_geo_ct_zprev_fp
+
+\cs_new_protected:Npn \semio_viz_geo_ring_centroid:n #1
+  {
+    \seq_set_split:Nnn \l_tmpa_seq { ; } {#1}
+    \fp_zero:N \l_semio_viz_geo_ct_x_fp
+    \fp_zero:N \l_semio_viz_geo_ct_y_fp
+    \fp_zero:N \l_semio_viz_geo_ct_z_fp
+    \fp_zero:N \l_semio_viz_geo_ct_mx_fp
+    \fp_zero:N \l_semio_viz_geo_ct_my_fp
+    \fp_zero:N \l_semio_viz_geo_ct_mz_fp
+    \int_zero:N \l_semio_viz_geo_ct_n_int
+    \int_zero:N \l_tmpa_int
+    \seq_map_inline:Nn \l_tmpa_seq
+      {
+        \tl_set:Nn \l_tmpb_tl {##1}
+        \tl_trim_spaces:N \l_tmpb_tl
+        \tl_if_empty:NF \l_tmpb_tl
+          {
+            \semio_viz_geo_centroid_point:nn
+              { \clist_item:nn {##1} { 1 } }
+              { \clist_item:nn {##1} { 2 } }
+          }
+      }
+    \clist_set:Nx \l_semio_viz_geo_ms_clist { \seq_item:Nn \l_tmpa_seq { 1 } }
+    \semio_viz_geo_centroid_point:nn
+      { \clist_item:Nn \l_semio_viz_geo_ms_clist { 1 } }
+      { \clist_item:Nn \l_semio_viz_geo_ms_clist { 2 } }
+    \fp_set:Nn \l_semio_viz_geo_ms_sum_fp
+      {
+        sqrt ( \l_semio_viz_geo_ct_x_fp * \l_semio_viz_geo_ct_x_fp
+               + \l_semio_viz_geo_ct_y_fp * \l_semio_viz_geo_ct_y_fp
+               + \l_semio_viz_geo_ct_z_fp * \l_semio_viz_geo_ct_z_fp )
+      }
+    \fp_compare:nNnT \l_semio_viz_geo_ms_sum_fp < { 1e-12 }
+      { \semio_viz_geo_centroid_mean: }
+    \fp_set:Nn \l_semio_viz_geo_lon_fp
+      {
+        atan ( \l_semio_viz_geo_ct_y_fp , \l_semio_viz_geo_ct_x_fp )
+        * \c_semio_viz_geo_degrees_fp
+      }
+    \fp_set:Nn \l_semio_viz_geo_lat_fp
+      {
+        asin ( \l_semio_viz_geo_ct_z_fp / \l_semio_viz_geo_ms_sum_fp )
+        * \c_semio_viz_geo_degrees_fp
+      }
+  }
+
+% 🎯 Degenerate ring (a line, a repeated vertex, a single point): d3 falls back to the plain cartesian mean, and so does this.
+\fp_new:N \l_semio_viz_geo_ct_mx_fp
+\fp_new:N \l_semio_viz_geo_ct_my_fp
+\fp_new:N \l_semio_viz_geo_ct_mz_fp
+\int_new:N \l_semio_viz_geo_ct_n_int
+
+\cs_new_protected:Npn \semio_viz_geo_centroid_mean:
+  {
+    \fp_set_eq:NN \l_semio_viz_geo_ct_x_fp \l_semio_viz_geo_ct_mx_fp
+    \fp_set_eq:NN \l_semio_viz_geo_ct_y_fp \l_semio_viz_geo_ct_my_fp
+    \fp_set_eq:NN \l_semio_viz_geo_ct_z_fp \l_semio_viz_geo_ct_mz_fp
+    \fp_set:Nn \l_semio_viz_geo_ms_sum_fp
+      {
+        max ( 1e-12 ,
+          sqrt ( \l_semio_viz_geo_ct_x_fp * \l_semio_viz_geo_ct_x_fp
+                 + \l_semio_viz_geo_ct_y_fp * \l_semio_viz_geo_ct_y_fp
+                 + \l_semio_viz_geo_ct_z_fp * \l_semio_viz_geo_ct_z_fp ) )
+      }
+  }
+
+% 🎯 One vertex of the spherical centroid sum: its own unit vector and the segment it closes.
+\cs_new_protected:Npn \semio_viz_geo_centroid_point:nn #1#2
+  {
+    \fp_set:Nn \l_semio_viz_geo_rx_fp { cosd (#2) * cosd (#1) }
+    \fp_set:Nn \l_semio_viz_geo_ry_fp { cosd (#2) * sind (#1) }
+    \fp_set:Nn \l_semio_viz_geo_rz_fp { sind (#2) }
+    \int_incr:N \l_semio_viz_geo_ct_n_int
+    \fp_add:Nn \l_semio_viz_geo_ct_mx_fp { \l_semio_viz_geo_rx_fp }
+    \fp_add:Nn \l_semio_viz_geo_ct_my_fp { \l_semio_viz_geo_ry_fp }
+    \fp_add:Nn \l_semio_viz_geo_ct_mz_fp { \l_semio_viz_geo_rz_fp }
+    \int_compare:nNnTF \l_tmpa_int = { 0 }
+      { \int_set:Nn \l_tmpa_int { 1 } }
+      {
+        \fp_set:Nn \l_semio_viz_geo_ms_a_fp
+          {
+            \l_semio_viz_geo_ct_yprev_fp * \l_semio_viz_geo_rz_fp
+            - \l_semio_viz_geo_ct_zprev_fp * \l_semio_viz_geo_ry_fp
+          }
+        \fp_set:Nn \l_semio_viz_geo_ms_b_fp
+          {
+            \l_semio_viz_geo_ct_zprev_fp * \l_semio_viz_geo_rx_fp
+            - \l_semio_viz_geo_ct_xprev_fp * \l_semio_viz_geo_rz_fp
+          }
+        \fp_set:Nn \l_semio_viz_geo_ms_c_fp
+          {
+            \l_semio_viz_geo_ct_xprev_fp * \l_semio_viz_geo_ry_fp
+            - \l_semio_viz_geo_ct_yprev_fp * \l_semio_viz_geo_rx_fp
+          }
+        \fp_set:Nn \l_semio_viz_geo_ms_d_fp
+          {
+            sqrt ( \l_semio_viz_geo_ms_a_fp * \l_semio_viz_geo_ms_a_fp
+                   + \l_semio_viz_geo_ms_b_fp * \l_semio_viz_geo_ms_b_fp
+                   + \l_semio_viz_geo_ms_c_fp * \l_semio_viz_geo_ms_c_fp )
+          }
+        \fp_compare:nNnTF \l_semio_viz_geo_ms_d_fp = { 0 }
+          { \fp_zero:N \l_semio_viz_geo_ms_sum_fp }
+          {
+            \fp_set:Nn \l_semio_viz_geo_ms_sum_fp
+              {
+                - asin ( \l_semio_viz_geo_ms_d_fp )
+                / \l_semio_viz_geo_ms_d_fp
+              }
+          }
+        \fp_add:Nn \l_semio_viz_geo_ct_x_fp
+          { \l_semio_viz_geo_ms_sum_fp * \l_semio_viz_geo_ms_a_fp }
+        \fp_add:Nn \l_semio_viz_geo_ct_y_fp
+          { \l_semio_viz_geo_ms_sum_fp * \l_semio_viz_geo_ms_b_fp }
+        \fp_add:Nn \l_semio_viz_geo_ct_z_fp
+          { \l_semio_viz_geo_ms_sum_fp * \l_semio_viz_geo_ms_c_fp }
+      }
+    \fp_set_eq:NN \l_semio_viz_geo_ct_xprev_fp \l_semio_viz_geo_rx_fp
+    \fp_set_eq:NN \l_semio_viz_geo_ct_yprev_fp \l_semio_viz_geo_ry_fp
+    \fp_set_eq:NN \l_semio_viz_geo_ct_zprev_fp \l_semio_viz_geo_rz_fp
+  }
+
+% ⭕ d3 geoCircle: a small circle of radius #3 degrees about (#1,#2), sampled every #4 degrees, as a `lon,lat; …` ring.
+\tl_new:N \l_semio_viz_geo_circle_tl
+\cs_new_protected:Npn \semio_viz_geo_circle:nnnn #1#2#3#4
+  {
+    \tl_clear:N \l_semio_viz_geo_circle_tl
+    \fp_set:Nn \l_semio_viz_geo_ms_a_fp { (#3) * \c_semio_viz_geo_radians_fp }
+    \fp_set:Nn \l_semio_viz_geo_ms_b_fp { (#4) * \c_semio_viz_geo_radians_fp }
+    \fp_set:Nn \l_semio_viz_geo_dl_fp { - (#1) * \c_semio_viz_geo_radians_fp }
+    \fp_set:Nn \l_semio_viz_geo_dp_fp { - (#2) * \c_semio_viz_geo_radians_fp }
+    \fp_zero:N \l_semio_viz_geo_dg_fp
+    \fp_set:Nn \l_semio_viz_geo_ms_c_fp
+      { \l_semio_viz_geo_ms_a_fp + 2 * pi }
+    \fp_set:Nn \l_semio_viz_geo_ms_d_fp
+      { \l_semio_viz_geo_ms_a_fp - \l_semio_viz_geo_ms_b_fp / 2 }
+    \bool_while_do:nn
+      {
+        \fp_compare_p:nNn \l_semio_viz_geo_ms_c_fp >
+          \l_semio_viz_geo_ms_d_fp
+      }
+      {
+        \fp_set:Nn \l_semio_viz_geo_lam_fp
+          {
+            atan ( - sin ( \l_semio_viz_geo_ms_a_fp )
+                     * cos ( \l_semio_viz_geo_ms_c_fp ) ,
+                   cos ( \l_semio_viz_geo_ms_a_fp ) )
+          }
+        \fp_set:Nn \l_semio_viz_geo_phi_fp
+          {
+            asin ( - sin ( \l_semio_viz_geo_ms_a_fp )
+                     * sin ( \l_semio_viz_geo_ms_c_fp ) )
+          }
+        \semio_viz_geo_rotate_invert:
+        \tl_put_right:Nx \l_semio_viz_geo_circle_tl
+          {
+            \fp_eval:n
+              { \l_semio_viz_geo_lam_fp * \c_semio_viz_geo_degrees_fp } ,
+            \fp_eval:n
+              { \l_semio_viz_geo_phi_fp * \c_semio_viz_geo_degrees_fp } ;
+          }
+        \fp_sub:Nn \l_semio_viz_geo_ms_c_fp { \l_semio_viz_geo_ms_b_fp }
+      }
+  }
+%endregion 🔖️Measures
+
+%region 🔖️Rendering
+% 🖌️ Strokes and fills whatever \semio_viz_geo_path:nn produced, and mirrors every subpath into the probe stream.
+\tl_new:N \l_semio_viz_geo_style_tl
+\tl_new:N \l_semio_viz_geo_draw_tl
+
+\seq_new:N \l_semio_viz_geo_draw_seq
+
+\cs_new_protected:Npn \semio_viz_geo_draw_subpath:nnn #1#2#3
+  {
+    \seq_set_split:Nnn \l_tmpb_seq { ; } {#3}
+    \seq_clear:N \l_semio_viz_geo_draw_seq
+    \seq_map_inline:Nn \l_tmpb_seq
+      { \seq_put_right:Nn \l_semio_viz_geo_draw_seq { ( ##1 ) } }
+    \int_compare:nNnT { \seq_count:N \l_semio_viz_geo_draw_seq } > { 1 }
+      {
+        \tl_set:Nx \l_semio_viz_geo_draw_tl
+          { \seq_use:Nn \l_semio_viz_geo_draw_seq { -- } }
+        \int_compare:nNnT {#2} = { 1 }
+          { \tl_put_right:Nn \l_semio_viz_geo_draw_tl { -- cycle } }
+        \use:x
+          {
+            \exp_not:N \path [ \exp_not:V \l_semio_viz_geo_style_tl ]
+              \exp_not:V \l_semio_viz_geo_draw_tl ;
+          }
+        \semio_viz_probe_geometry:nx { path }
+          { \seq_use:Nn \l_tmpb_seq { , } }
+      }
+  }
+
+% 🖌️ Strokes every subpath the last projection produced under the TikZ style #1, and mirrors each
+% one into the probe stream.
+\cs_new_protected:Npn \semio_viz_geo_draw:n #1
+  {
+    \tl_set:Nx \l_semio_viz_geo_style_tl {#1}
+    \seq_map_inline:Nn \g_semio_viz_geo_path_seq
+      { \semio_viz_geo_draw_subpath:nnn {#1} ##1 }
+  }
+
+% 🎨 Draws every part of a geometry with a per-part style: #3 is expanded with {type}{id}{value} and must yield TikZ keys.
+\tl_new:N \l_semio_viz_geo_partstyle_tl
+\tl_new:N \l_semio_viz_geo_partid_tl
+\tl_new:N \l_semio_viz_geo_partvalue_tl
+
+\cs_new_protected:Npn \semio_viz_geo_draw_geometry:nnn #1#2#3
+  {
+    \semio_viz_geo_use:n {#1}
+    \tl_set:Nn \l_semio_viz_geo_partstyle_tl {#3}
+    \semio_viz_geom_map_inline:nn {#2}
+      { \semio_viz_geo_draw_part:nnnn ##1 }
+  }
+
+% 🎨 One part of the geometry, projected on its own and stroked with the per-part style expanded
+% from its type, id and value — which is what lets a choropleth colour each part differently.
+\cs_new_protected:Npn \semio_viz_geo_draw_part:nnnn #1#2#3#4
+  {
+    \tl_set:Nn \l_semio_viz_geo_partid_tl {#2}
+    \tl_set:Nn \l_semio_viz_geo_partvalue_tl {#3}
+    \seq_gclear:N \g_semio_viz_geo_path_seq
+    \semio_viz_geo_path_part:nnnn {#1}{#2}{#3}{#4}
+    \exp_args:NV \semio_viz_geo_draw:n \l_semio_viz_geo_partstyle_tl
+  }
+
+% 📍 Projects a geometry's parts to their first vertex and runs #3 with the plane x, y, id and value.
+\cs_new_protected:Npn \semio_viz_geo_map_anchors:nnn #1#2#3
+  {
+    \semio_viz_geo_use:n {#1}
+    \tl_set:Nn \l_semio_viz_geo_partstyle_tl {#3}
+    \semio_viz_geom_map_inline:nn {#2}
+      { \semio_viz_geo_anchor:nnnn ##1 }
+  }
+
+% 📍 The anchor of one part: its centroid in figure coordinates, handed to the caller's code
+% together with the part's own id and value.
+\cs_new_protected:Npn \semio_viz_geo_anchor:nnnn #1#2#3#4
+  {
+    \str_if_eq:nnTF {#1} { point }
+      {
+        \semio_viz_geo_forward:nn
+          { \clist_item:nn {#4} { 1 } } { \clist_item:nn {#4} { 2 } }
+      }
+      {
+        \semio_viz_geo_ring_centroid:n {#4}
+        \semio_viz_geo_forward:nn
+          { \l_semio_viz_geo_lon_fp } { \l_semio_viz_geo_lat_fp }
+      }
+    \use:x
+      {
+        \exp_not:V \l_semio_viz_geo_partstyle_tl
+          { \fp_eval:n { \l_semio_viz_geo_x_fp } }
+          { \fp_eval:n { \l_semio_viz_geo_y_fp } }
+          { \exp_not:n {#2} } { \exp_not:n {#3} }
+      }
+  }
+
+% 🔚 First and last vertex of a `lon,lat; …` coordinate list, as two clists the families read component-wise.
+\seq_new:N \l_semio_viz_geo_vtx_seq
+\clist_new:N \l_semio_viz_geo_pta_clist
+\clist_new:N \l_semio_viz_geo_ptb_clist
+
+\cs_new_protected:Npn \semio_viz_geo_endpoints:n #1
+  {
+    \seq_set_split:Nnn \l_semio_viz_geo_vtx_seq { ; } {#1}
+    \clist_set:Nx \l_semio_viz_geo_pta_clist
+      { \seq_item:Nn \l_semio_viz_geo_vtx_seq { 1 } }
+    \clist_set:Nx \l_semio_viz_geo_ptb_clist
+      {
+        \seq_item:Nn \l_semio_viz_geo_vtx_seq
+          { \seq_count:N \l_semio_viz_geo_vtx_seq }
+      }
+  }
+
+% 📊 Minimum and maximum of a geometry's part values, for the colour and size scales of the statistical families.
+\fp_new:N \l_semio_viz_geo_vmin_fp
+\fp_new:N \l_semio_viz_geo_vmax_fp
+
+\cs_new_protected:Npn \semio_viz_geo_value_extent:n #1
+  {
+    \fp_set:Nn \l_semio_viz_geo_vmin_fp { inf }
+    \fp_set:Nn \l_semio_viz_geo_vmax_fp { -inf }
+    \semio_viz_geom_map_inline:nn {#1}
+      { \semio_viz_geo_value_extent_part:nnnn ##1 }
+  }
+
+% 📐 Widens the running value extent to hold one part's own value.
+\cs_new_protected:Npn \semio_viz_geo_value_extent_part:nnnn #1#2#3#4
+  {
+    \fp_set:Nn \l_semio_viz_geo_vmin_fp
+      { min ( \l_semio_viz_geo_vmin_fp , #3 ) }
+    \fp_set:Nn \l_semio_viz_geo_vmax_fp
+      { max ( \l_semio_viz_geo_vmax_fp , #3 ) }
+  }
+%endregion 🔖️Rendering
+
+%region 🔖️FamilyBase
+% 🧱 The option vocabulary every geo family shares, so no namespace package re-invents projection, extent or palette keys.
+%region 🔖️Keys
+% 🔑 semio / viz / geo / base
+% 🔑 projection (kind)   projection kind for the figure; default equirectangular.
+% 🔑 rotate     (l,p,g)  projection rotation in degrees; default 0,0,0.
+% 🔑 parallels  (p0,p1)  conic standard parallels in degrees; default 0,60.
+% 🔑 geometry   (name)   geometry collection to draw; default demo-geo-regions.
+% 🔑 width      (mm)     drawing width; default 76.
+% 🔑 height     (mm)     drawing height; default 44.
+% 🔑 palette    (choice) sequential | diverging | terrain | bathymetric | neutral; default sequential.
+% 🔑 stroke     (colour) outline colour token; default semio-chrome-border-emphasized.
+% 🔑 lineWidth  (dim)    outline width; default \semio@stroke@hairline.
+% 🔑 opacity    (0..1)   fill opacity; default 1.
+% 🔑 steps      (int)    number of discrete ramp steps; default 5.
+% 🔑 fit        (choice) geometry | world; what the projection is fitted to. Families that draw a graticule default to world.
+\tl_new:N \l_semio_viz_geo_f_projection_tl
+\clist_new:N \l_semio_viz_geo_f_rotate_clist
+\clist_new:N \l_semio_viz_geo_f_parallels_clist
+\tl_new:N \l_semio_viz_geo_f_geometry_tl
+\fp_new:N \l_semio_viz_geo_f_width_fp
+\fp_new:N \l_semio_viz_geo_f_height_fp
+\tl_new:N \l_semio_viz_geo_f_palette_tl
+\tl_new:N \l_semio_viz_geo_f_stroke_tl
+\tl_new:N \l_semio_viz_geo_f_linewidth_tl
+\fp_new:N \l_semio_viz_geo_f_opacity_fp
+\int_new:N \l_semio_viz_geo_f_steps_int
+\tl_new:N \l_semio_viz_geo_f_fit_tl
+
+\keys_define:nn { semio / viz / geo / base }
+  {
+    projection .tl_set:N = \l_semio_viz_geo_f_projection_tl ,
+    rotate .clist_set:N = \l_semio_viz_geo_f_rotate_clist ,
+    parallels .clist_set:N = \l_semio_viz_geo_f_parallels_clist ,
+    geometry .tl_set:N = \l_semio_viz_geo_f_geometry_tl ,
+    width .fp_set:N = \l_semio_viz_geo_f_width_fp ,
+    height .fp_set:N = \l_semio_viz_geo_f_height_fp ,
+    palette .tl_set:N = \l_semio_viz_geo_f_palette_tl ,
+    stroke .tl_set:N = \l_semio_viz_geo_f_stroke_tl ,
+    lineWidth .tl_set:N = \l_semio_viz_geo_f_linewidth_tl ,
+    opacity .fp_set:N = \l_semio_viz_geo_f_opacity_fp ,
+    steps .int_set:N = \l_semio_viz_geo_f_steps_int ,
+    fit .tl_set:N = \l_semio_viz_geo_f_fit_tl ,
+    unknown .code:n = { } ,
+  }
+%endregion 🔖️Keys
+
+% ♻️ Puts the geo family keys every map family shares back to their documented defaults.
+\cs_new_protected:Npn \semio_viz_geo_base_reset:
+  {
+    \tl_set:Nn \l_semio_viz_geo_f_projection_tl { equirectangular }
+    \clist_set:Nn \l_semio_viz_geo_f_rotate_clist { 0, 0, 0 }
+    \clist_set:Nn \l_semio_viz_geo_f_parallels_clist { 0, 60 }
+    \tl_set:Nn \l_semio_viz_geo_f_geometry_tl { demo-geo-regions }
+    \fp_set:Nn \l_semio_viz_geo_f_width_fp { 76 }
+    \fp_set:Nn \l_semio_viz_geo_f_height_fp { 44 }
+    \tl_set:Nn \l_semio_viz_geo_f_palette_tl { sequential }
+    \tl_set:Nn \l_semio_viz_geo_f_stroke_tl { semio-chrome-border-emphasized }
+    \tl_set:Nn \l_semio_viz_geo_f_linewidth_tl { \semio@stroke@hairline }
+    \fp_set:Nn \l_semio_viz_geo_f_opacity_fp { 1 }
+    \int_set:Nn \l_semio_viz_geo_f_steps_int { 5 }
+    \tl_set:Nn \l_semio_viz_geo_f_fit_tl { geometry }
+  }
+
+% 🖼️ Defines the figure's projection `semio-family` and fits the named geometry into the width/height box.
+\cs_new_protected:Npn \semio_viz_geo_base_frame:n #1
+  {
+    \use:x
+      {
+        \exp_not:N \semio_viz_geo_define:nn { semio-family }
+          {
+            kind = \l_semio_viz_geo_f_projection_tl ,
+            rotate = { \exp_not:V \l_semio_viz_geo_f_rotate_clist } ,
+            parallels = { \exp_not:V \l_semio_viz_geo_f_parallels_clist } ,
+          }
+      }
+    \str_if_eq:VnTF \l_semio_viz_geo_f_fit_tl { world }
+      { \semio_viz_geo_base_fit:n { demo-geo-world } }
+      { \semio_viz_geo_base_fit:n {#1} }
+  }
+
+% 📐 Runs the fit against the chosen reference geometry.
+\cs_new_protected:Npn \semio_viz_geo_base_fit:n #1
+  {
+    \semio_viz_geo_fit_extent:nnnnnn { semio-family } {#1}
+      { 0 } { 0 }
+      { \fp_eval:n { \l_semio_viz_geo_f_width_fp } }
+      { \fp_eval:n { \l_semio_viz_geo_f_height_fp } }
+  }
+
+% 🎨 A TikZ colour expression for the palette at normalised position #1 in [0,1], quantised to `steps` levels.
+\cs_new:Npn \semio_viz_geo_ramp:n #1
+  {
+    \str_case:VnF \l_semio_viz_geo_f_palette_tl
+      {
+        { diverging }
+          {
+            \semio_viz_theme_color:n { \fp_compare:nTF { (#1) < 0.5 } { 1 } { 0 } }
+            ! \semio_viz_geo_ramp_pct:n {#1} ! semio-chrome-canvas
+          }
+        { terrain }
+          {
+            \semio_viz_theme_color:n { 2 }
+            ! \semio_viz_geo_ramp_pct:n {#1} ! \semio_viz_theme_color:n { 3 }
+          }
+        { bathymetric }
+          { \semio_viz_theme_color:n { 1 } ! \semio_viz_geo_ramp_pct:n {#1} ! semio-chrome-canvas }
+        { neutral }
+          { semio-chrome-text-normal ! \semio_viz_geo_ramp_pct:n {#1} ! semio-chrome-canvas }
+      }
+      { \semio_viz_theme_color:n { 0 } ! \semio_viz_geo_ramp_pct:n {#1} ! semio-chrome-canvas }
+  }
+
+% 🔢 The quantised mixing percentage: `steps` levels between 18 % and 100 %, diverging measured from the midpoint.
+\cs_new:Npn \semio_viz_geo_ramp_pct:n #1
+  {
+    \semio_viz_geo_ramp_quant:n
+      {
+        \str_if_eq:VnTF \l_semio_viz_geo_f_palette_tl { diverging }
+          { abs ( 2 * (#1) - 1 ) }
+          { min ( 1 , max ( 0 , #1 ) ) }
+      }
+  }
+
+% 🎨 Snaps the ramp position #1 onto one of `steps` classes, so a stepped ramp reads as classes.
+\cs_new:Npn \semio_viz_geo_ramp_quant:n #1
+  {
+    \fp_eval:n
+      {
+        round
+          (
+            min ( 100 , max ( 0 ,
+              18 + 82 *
+              round ( min ( 1 , max ( 0 , #1 ) )
+                      * ( \l_semio_viz_geo_f_steps_int - 1 ) )
+              / ( \l_semio_viz_geo_f_steps_int - 1 ) ) )
+            , 0
+          )
+      }
+  }
+
+% 🔢 Normalises a part value into [0,1] against the geometry's own value extent.
+\cs_new:Npn \semio_viz_geo_norm:n #1
+  {
+    \fp_eval:n
+      {
+        \l_semio_viz_geo_vmax_fp - \l_semio_viz_geo_vmin_fp = 0
+          ? 0.5
+          : ( (#1) - \l_semio_viz_geo_vmin_fp )
+            / ( \l_semio_viz_geo_vmax_fp - \l_semio_viz_geo_vmin_fp )
+      }
+  }
+%endregion 🔖️FamilyBase
+
+%region 🔖️DemoData
+% 🧪 A four-region demo landmass plus its capitals: enough rings to exercise choropleth, symbol, cartogram and route families.
+\cs_new_protected:Npn \semio_viz_geo_demo_data:
+  {
+    \seq_if_in:NnF \g_semio_viz_geom_names_seq { demo-geo-regions }
+      {
+        \semio_viz_geom_new:n { demo-geo-regions }
+        \semio_viz_geom_part:nnnn { demo-geo-regions } { polygon }
+          { id = north, value = 42 }
+          { -10,50; 6,52; 10,46; -4,44 }
+        \semio_viz_geom_part:nnnn { demo-geo-regions } { polygon }
+          { id = east, value = 17 }
+          { 10,46; 24,48; 28,38; 12,36 }
+        \semio_viz_geom_part:nnnn { demo-geo-regions } { polygon }
+          { id = south, value = 63 }
+          { -4,44; 10,46; 12,36; -2,34 }
+        \semio_viz_geom_part:nnnn { demo-geo-regions } { polygon }
+          { id = west, value = 28 }
+          { -24,46; -10,50; -4,44; -18,40 }
+        \semio_viz_geom_new:n { demo-geo-world }
+        \tl_clear:N \l_tmpa_tl
+        \clist_map_inline:nn
+          { -180, -150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150, 180 }
+          { \tl_put_right:Nn \l_tmpa_tl { ##1, 84 ; } }
+        \clist_map_inline:nn
+          { 180, 150, 120, 90, 60, 30, 0, -30, -60, -90, -120, -150 }
+          { \tl_put_right:Nn \l_tmpa_tl { ##1, -84 ; } }
+        \tl_put_right:Nn \l_tmpa_tl { -180, -84 }
+        \use:x
+          {
+            \exp_not:N \semio_viz_geom_part:nnnn { demo-geo-world } { polygon }
+              { id = world, value = 1 } { \exp_not:V \l_tmpa_tl }
+          }
+        \semio_viz_geom_new:n { demo-geo-cities }
+        \semio_viz_geom_part:nnnn { demo-geo-cities } { point }
+          { id = alta, value = 9 } { -2,48 }
+        \semio_viz_geom_part:nnnn { demo-geo-cities } { point }
+          { id = beta, value = 5 } { 18,43 }
+        \semio_viz_geom_part:nnnn { demo-geo-cities } { point }
+          { id = gamma, value = 12 } { 4,39 }
+        \semio_viz_geom_part:nnnn { demo-geo-cities } { point }
+          { id = delta, value = 3 } { -16,44 }
+        \semio_viz_geom_new:n { demo-geo-routes }
+        \semio_viz_geom_part:nnnn { demo-geo-routes } { line }
+          { id = ab, value = 8 } { -2,48; 18,43 }
+        \semio_viz_geom_part:nnnn { demo-geo-routes } { line }
+          { id = ac, value = 4 } { -2,48; 4,39 }
+        \semio_viz_geom_part:nnnn { demo-geo-routes } { line }
+          { id = ad, value = 6 } { -2,48; -16,44 }
+      }
+  }
+\semio_viz_geo_demo_data:
+%endregion 🔖️DemoData
+
+%region 🔖️LayoutRegistry
+% 📋 `semio / viz / geo / layout` -- options of the `projection` layout algorithm.
+%   projection  (name of a projection defined with \SemioVizProjection)  default `equirectangular`
+%   fit         (`none` or `extent`)                                     default `extent`
+%   x0,y0,x1,y1 (millimetre rectangle the geometry is fitted into)       default 0,0,100,60
+\tl_new:N \l_semio_viz_geo_layout_proj_tl
+\tl_new:N \l_semio_viz_geo_layout_fit_tl
+\fp_new:N \l_semio_viz_geo_layout_xlo_fp
+\fp_new:N \l_semio_viz_geo_layout_ylo_fp
+\fp_new:N \l_semio_viz_geo_layout_xhi_fp
+\fp_new:N \l_semio_viz_geo_layout_yhi_fp
+\seq_new:N \l_semio_viz_geo_layout_pts_seq
+\seq_new:N \l_semio_viz_geo_layout_src_seq
+
+\keys_define:nn { semio / viz / geo / layout }
+  {
+    projection .tl_set:N = \l_semio_viz_geo_layout_proj_tl ,
+    fit .tl_set:N = \l_semio_viz_geo_layout_fit_tl ,
+    x0 .fp_set:N = \l_semio_viz_geo_layout_xlo_fp ,
+    y0 .fp_set:N = \l_semio_viz_geo_layout_ylo_fp ,
+    x1 .fp_set:N = \l_semio_viz_geo_layout_xhi_fp ,
+    y1 .fp_set:N = \l_semio_viz_geo_layout_yhi_fp ,
+  }
+
+% ♻️ Puts the projection layout's options back to their defaults, then reads the list #1.
+\cs_new_protected:Npn \semio_viz_geo_layout_keys:n #1
+  {
+    \tl_set:Nn \l_semio_viz_geo_layout_proj_tl { equirectangular }
+    \tl_set:Nn \l_semio_viz_geo_layout_fit_tl { extent }
+    \fp_zero:N \l_semio_viz_geo_layout_xlo_fp
+    \fp_zero:N \l_semio_viz_geo_layout_ylo_fp
+    \fp_set:Nn \l_semio_viz_geo_layout_xhi_fp { 100 }
+    \fp_set:Nn \l_semio_viz_geo_layout_yhi_fp { 60 }
+    \keys_set:nn { semio / viz / geo / layout } {#1}
+  }
+
+% 🌐 Projects every part of a geometry into plane millimetres and stores the result as the
+% geometry collection #2, so a renderer draws projected parts exactly like source parts.
+\cs_new_protected:Npn \semio_viz_geo_layout_project:nn #1#2
+  {
+    \semio_viz_geom_new:n {#2}
+    \semio_viz_geom_map_inline:nn {#1}
+      { \semio_viz_geo_layout_part:nnnnn {#2} ##1 }
+  }
+
+% 🧩 One part of the projection layout: its vertices projected into the plane and filed as a part
+% of the output collection #1, keeping the part's own type, id and value.
+\cs_new_protected:Npn \semio_viz_geo_layout_part:nnnnn #1#2#3#4#5
+  {
+    \seq_clear:N \l_semio_viz_geo_layout_pts_seq
+    \seq_set_split:Nnn \l_semio_viz_geo_layout_src_seq { ; } {#5}
+    \seq_map_inline:Nn \l_semio_viz_geo_layout_src_seq
+      { \semio_viz_geo_layout_vertex:n {##1} }
+    \use:x
+      {
+        \exp_not:N \semio_viz_geom_part:nnnn { \exp_not:n {#1} } { \exp_not:n {#2} }
+          { id = \exp_not:n {#3} , value = \exp_not:n {#4} }
+          { \seq_use:Nn \l_semio_viz_geo_layout_pts_seq { ; } }
+      }
+  }
+
+% 📍 One lon/lat vertex #1 of that part, projected and appended to the part being built.
+\cs_new_protected:Npn \semio_viz_geo_layout_vertex:n #1
+  {
+    \semio_viz_geo_forward:nn { \clist_item:nn {#1} { 1 } } { \clist_item:nn {#1} { 2 } }
+    \seq_put_right:Nx \l_semio_viz_geo_layout_pts_seq
+      {
+        \fp_eval:n { \l_semio_viz_geo_x_fp } , \fp_eval:n { \l_semio_viz_geo_y_fp }
+      }
+  }
+
+% 🗺️ `projection`: a geographic collection projected into plane coordinates as a new collection,
+% so any planar family can draw geography without knowing what a projection is.
+\semio_viz_layout_define:nn { projection }
+  {
+    \semio_viz_geo_layout_keys:n {#3}
+    \str_if_eq:VnT \l_semio_viz_geo_layout_fit_tl { extent }
+      {
+        \use:x
+          {
+            \exp_not:N \semio_viz_geo_fit_extent:nnnnnn
+              { \exp_not:V \l_semio_viz_geo_layout_proj_tl } { \exp_not:n {#1} }
+              { \fp_use:N \l_semio_viz_geo_layout_xlo_fp } { \fp_use:N \l_semio_viz_geo_layout_ylo_fp }
+              { \fp_use:N \l_semio_viz_geo_layout_xhi_fp } { \fp_use:N \l_semio_viz_geo_layout_yhi_fp }
+          }
+      }
+    \exp_args:NV \semio_viz_geo_use:n \l_semio_viz_geo_layout_proj_tl
+    \semio_viz_geo_layout_project:nn {#1} {#2}
+  }
+%endregion 🔖️LayoutRegistry
+
+%region 🔖️PublicApi
+% 🔧 \SemioVizGeoSolver[keys]: sets the `invertSteps` and `clipSteps` iteration counts.
+\NewDocumentCommand \SemioVizGeoSolver { O{} }
+  { \keys_set:nn { semio / viz / geo / solver } {#1} }
+% 🗺️ \SemioVizProjection{name}[keys]: defines a named d3-equivalent projection.
+\NewDocumentCommand \SemioVizProjection { m O{} }
+  { \semio_viz_geo_define:nn {#1} {#2} }
+% 📍 \SemioVizGeoProject{name}{lon}{lat}: leaves the plane coordinates in \SemioVizGeoX / \SemioVizGeoY.
+\NewDocumentCommand \SemioVizGeoProject { m m m }
+  { \semio_viz_geo_use:n {#1} \semio_viz_geo_forward:nn {#2} {#3} }
+% 🔄 \SemioVizGeoInvert{name}{x}{y}: leaves the degrees in \SemioVizGeoLon / \SemioVizGeoLat.
+\NewDocumentCommand \SemioVizGeoInvert { m m m }
+  { \semio_viz_geo_use:n {#1} \semio_viz_geo_inverse:nn {#2} {#3} }
+% 📐 Expandable accessors for the last projection or inverse result.
+\NewExpandableDocumentCommand \SemioVizGeoX { } { \fp_use:N \l_semio_viz_geo_x_fp }
+\NewExpandableDocumentCommand \SemioVizGeoY { } { \fp_use:N \l_semio_viz_geo_y_fp }
+\NewExpandableDocumentCommand \SemioVizGeoLon { } { \fp_use:N \l_semio_viz_geo_lon_fp }
+\NewExpandableDocumentCommand \SemioVizGeoLat { } { \fp_use:N \l_semio_viz_geo_lat_fp }
+% 🛤️ \SemioVizGeoPath{projection}{geometry}[tikz style]: projects and strokes every part.
+\NewDocumentCommand \SemioVizGeoPath { m m O{} }
+  { \semio_viz_geo_path:nn {#1} {#2} \semio_viz_geo_draw:n {#3} }
+% 🔍 \SemioVizGeoFit{projection}{geometry}{x0}{y0}{x1}{y1}: d3 fitExtent onto a millimetre rectangle.
+\NewDocumentCommand \SemioVizGeoFit { m m m m m m }
+  { \semio_viz_geo_fit_extent:nnnnnn {#1}{#2}{#3}{#4}{#5}{#6} }
+% 🔍 \SemioVizGeoFitSize{projection}{geometry}{w}{h}: d3 fitSize.
+\NewDocumentCommand \SemioVizGeoFitSize { m m m m }
+  { \semio_viz_geo_fit_extent:nnnnnn {#1}{#2}{0}{0}{#3}{#4} }
+% 🔍 \SemioVizGeoFitWidth{projection}{geometry}{w}: d3 fitWidth.
+\NewDocumentCommand \SemioVizGeoFitWidth { m m m }
+  { \semio_viz_geo_fit_width:nnn {#1}{#2}{#3} }
+% 🕸️ \SemioVizGraticule{projection}[keys][tikz style]: builds and strokes a d3 graticule.
+\NewDocumentCommand \SemioVizGraticule { m O{} O{} }
+  {
+    \semio_viz_geo_graticule_lines:n {#2}
+    \semio_viz_geo_use:n {#1}
+    \seq_gclear:N \g_semio_viz_geo_path_seq
+    \seq_map_inline:Nn \g_semio_viz_geo_gr_seq
+      { \semio_viz_geo_project_coords:nn { 0 } {##1} }
+    \semio_viz_geo_draw:n {#3}
+  }
+% 🧮 \SemioVizGeoArea{ring}: spherical area in steradians, in \SemioVizGeoAreaValue.
+\NewDocumentCommand \SemioVizGeoArea { m } { \semio_viz_geo_ring_area:n {#1} }
+\NewExpandableDocumentCommand \SemioVizGeoAreaValue { }
+  { \fp_use:N \l_semio_viz_geo_area_fp }
+% 📏 \SemioVizGeoDistance{lon0}{lat0}{lon1}{lat1}: great-circle angle in radians, in \SemioVizGeoDistanceValue.
+\NewDocumentCommand \SemioVizGeoDistance { m m m m }
+  { \semio_viz_geo_distance:nnnn {#1}{#2}{#3}{#4} }
+\NewExpandableDocumentCommand \SemioVizGeoDistanceValue { }
+  { \fp_use:N \l_semio_viz_geo_dist_fp }
+% 🛰️ \SemioVizGeoInterpolate{lon0}{lat0}{lon1}{lat1}{t}: great-circle point into \SemioVizGeoLon / \SemioVizGeoLat.
+\NewDocumentCommand \SemioVizGeoInterpolate { m m m m m }
+  { \semio_viz_geo_interpolate:nnnnn {#1}{#2}{#3}{#4}{#5} }
+% 🎯 \SemioVizGeoCentroid{ring}: spherical centroid into \SemioVizGeoLon / \SemioVizGeoLat.
+\NewDocumentCommand \SemioVizGeoCentroid { m } { \semio_viz_geo_ring_centroid:n {#1} }
+% ⭕ \SemioVizGeoCircle{lon}{lat}{radius}{precision}: small-circle ring into \SemioVizGeoCircleRing.
+\NewDocumentCommand \SemioVizGeoCircle { m m m m }
+  { \semio_viz_geo_circle:nnnn {#1}{#2}{#3}{#4} }
+\NewExpandableDocumentCommand \SemioVizGeoCircleRing { }
+  { \tl_use:N \l_semio_viz_geo_circle_tl }
+%endregion 🔖️PublicApi
+
+\ExplSyntaxOff

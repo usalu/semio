@@ -1,0 +1,40 @@
+{
+  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@semio-tech/print-viz-kernel",
+  "version": "0.1.0",
+  "description": "print · TypeScript twin of the semio-viz LaTeX visualization kernel",
+  "type": "module",
+  "private": true,
+  "license": "LGPL-3.0-or-later",
+  "semio": {
+    "role": "framework",
+    "id": "print.viz-kernel"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "🧰️framework/🛍️products/📓️print/🔨️modules/📊️viz-kernel/📦️packages/🟦️typescript"
+  },
+  "bundleKind": "asset",
+  "exports": {
+    ".": "./🟦️.ts"
+  },
+  "devDependencies": {
+    "d3-array": "3.2.4",
+    "d3-chord": "3.0.1",
+    "d3-contour": "4.0.2",
+    "d3-delaunay": "6.0.4",
+    "d3-force": "3.0.0",
+    "d3-format": "3.1.0",
+    "d3-geo": "3.1.1",
+    "d3-hexbin": "0.2.2",
+    "d3-hierarchy": "3.1.2",
+    "d3-interpolate": "3.0.1",
+    "d3-path": "3.1.0",
+    "d3-sankey": "0.12.3",
+    "d3-scale": "4.0.2",
+    "d3-shape": "3.2.0",
+    "d3-time": "3.1.0",
+    "d3-time-format": "4.1.0"
+  }
+}

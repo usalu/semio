@@ -1,0 +1,19 @@
+{
+  "_comment": "🤝️ The stdio conversation `semio mcp` owes a client. `requests` are written one JSON-RPC message per line; `expect` states the members of the initialize result and the tool and resource names the server must declare. The tool and resource vocabulary is owned by 🔌️mcp; this case proves the CLI verb serves that vocabulary rather than restating it.",
+  "profileEnvironment": "SEMIO_REPO_MCP_CLIENT",
+  "profile": "generic",
+  "requests": [
+    "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-06-18\",\"capabilities\":{},\"clientInfo\":{\"name\":\"parity-probe\",\"version\":\"1\"},\"unknownMember\":\"ignored\"}}",
+    "{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}",
+    "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\",\"params\":{}}",
+    "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"resources/list\",\"params\":{}}"
+  ],
+  "expect": {
+    "protocolVersion": "2025-06-18",
+    "serverName": "repo",
+    "serverVersion": "1.0.0",
+    "capabilities": ["prompts", "resources", "tools"],
+    "tools": ["file_integrate", "goal_close", "goal_open", "goal_reopen", "section_extract", "section_move", "ticket_close", "ticket_open", "ticket_reopen"],
+    "resources": ["repo://", "repo://bundles", "repo://contributors", "repo://files", "repo://folders", "repo://goals", "repo://policies", "repo://tickets"]
+  }
+}

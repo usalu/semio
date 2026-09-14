@@ -1,0 +1,82 @@
+{
+  "_comment": "🪝️ Specification vectors for the `hook` verb. Each vector is one native invocation — the event slug the caller named, the client, the tool it reports and the payload it piped — and states the bytes the verb writes and the code it exits with. The environment and the test-file resolver are inert, so a vector is a pure function of its request.",
+  "vectors": [
+    {
+      "id": "a-neutral-agent-event-in-json-mode-writes-one-record",
+      "request": { "event": "agent.started", "client": "claude-code", "second": "2026-09-06T08:00:00Z", "json": true, "input": {} }
+    },
+    {
+      "id": "a-neutral-agent-event-in-plain-mode-writes-nothing",
+      "request": { "event": "agent.started", "client": "claude-code", "second": "2026-09-06T08:00:00Z", "json": false, "input": {} }
+    },
+    {
+      "id": "a-blocked-terminal-command-refuses-with-exit-code-two",
+      "request": {
+        "event": "agent.tool.terminal.starting",
+        "client": "claude-code",
+        "second": "2026-09-06T08:00:00Z",
+        "json": false,
+        "input": { "tool_name": "Bash", "tool_input": { "command": "git commit -m x" } }
+      }
+    },
+    {
+      "id": "a-blocked-terminal-command-in-json-mode-still-exits-zero",
+      "request": {
+        "event": "agent.tool.terminal.starting",
+        "client": "claude-code",
+        "second": "2026-09-06T08:00:00Z",
+        "json": true,
+        "input": { "tool_name": "Bash", "tool_input": { "command": "git commit -m x" } }
+      }
+    },
+    {
+      "id": "an-allowed-terminal-command-announces-nothing",
+      "request": {
+        "event": "agent.tool.terminal.starting",
+        "client": "claude-code",
+        "second": "2026-09-06T08:00:00Z",
+        "json": false,
+        "input": { "tool_name": "Bash", "tool_input": { "command": "cargo test -p demo" } }
+      }
+    },
+    {
+      "id": "copilot-chat-wraps-its-record-and-always-exits-zero",
+      "request": {
+        "event": "PreToolUse",
+        "client": "copilot-chat",
+        "second": "2026-09-06T08:00:00Z",
+        "json": false,
+        "input": { "tool_name": "Bash", "tool_input": { "command": "ls" } }
+      }
+    },
+    {
+      "id": "copilot-chat-denies-a-blocked-command-inside-the-record",
+      "request": {
+        "event": "PreToolUse",
+        "client": "copilot-chat",
+        "second": "2026-09-06T08:00:00Z",
+        "json": false,
+        "input": { "tool_name": "Bash", "tool_input": { "command": "git commit -m x" } }
+      }
+    },
+    {
+      "id": "a-subagent-parent-hint-reaches-the-record",
+      "request": { "event": "agent.started", "client": "claude-code", "parent": "subagent", "second": "2026-09-06T08:00:00Z", "json": true, "input": { "session_id": "s1", "agent_id": "a1" } }
+    },
+    {
+      "id": "a-code-edit-event-carries-the-edited-path",
+      "request": {
+        "event": "agent.tool.code.edit.ended",
+        "client": "claude-code",
+        "second": "2026-09-06T08:00:00Z",
+        "json": true,
+        "input": { "tool_name": "Edit", "tool_input": { "file_path": "js/core/index.ts" } }
+      }
+    },
+    {
+      "id": "an-unknown-event-slug-is-refused-before-anything-runs",
+      "request": { "event": "agent.does.not.exist", "client": "claude-code", "second": "2026-09-06T08:00:00Z", "json": true, "input": {} },
+      "refused": true
+    }
+  ]
+}

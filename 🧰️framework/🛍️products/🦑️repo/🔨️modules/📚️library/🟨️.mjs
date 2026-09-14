@@ -12,11 +12,27 @@ const TEST_LEVELS = ["quick", "long", "exhaustive"];
 
 const LIBRARY_ROOT = dirname(fileURLToPath(import.meta.url));
 const RUNTIME_COMPONENT_MODULE = "🕸️dependencies/🧩️runtime/🟨️.mjs";
-const runtimeRevision = createHash("sha256").update(readFileSync(join(LIBRARY_ROOT, RUNTIME_COMPONENT_MODULE))).digest("hex");
-const { runtimeComponentClosure } = await importRevision(new URL(`./${RUNTIME_COMPONENT_MODULE}`, import.meta.url), runtimeRevision);
 const SOURCE_INPUT_MODULE = "🕸️dependencies/🟦️typescript/🟨️.mjs";
-const sourceInputRevision = createHash("sha256").update(readFileSync(join(LIBRARY_ROOT, SOURCE_INPUT_MODULE))).digest("hex");
-const { readSourceInputContract, relativeSourceInputs } = await importRevision(new URL(`./${SOURCE_INPUT_MODULE}`, import.meta.url), sourceInputRevision);
+
+/** 🔁️ Evicts Bun's canonical module entry and retains Node's revision-specific ESM identity. */
+async function importRevision(source, revision) {
+  const require = createRequire(import.meta.url), url = new URL(source);
+  delete require.cache[require.resolve(fileURLToPath(url))];
+  url.searchParams.set("revision", revision);
+  return import(url.href);
+}
+
+let runtimeComponentClosure;
+let readSourceInputContract;
+let relativeSourceInputs;
+const libraryBootstrap = importRevision(new URL(`./${RUNTIME_COMPONENT_MODULE}`, import.meta.url), createHash("sha256").update(readFileSync(join(LIBRARY_ROOT, RUNTIME_COMPONENT_MODULE))).digest("hex")).then((runtime) => {
+  runtimeComponentClosure = runtime.runtimeComponentClosure;
+  return importRevision(new URL(`./${SOURCE_INPUT_MODULE}`, import.meta.url), createHash("sha256").update(readFileSync(join(LIBRARY_ROOT, SOURCE_INPUT_MODULE))).digest("hex"));
+}).then((source) => {
+  readSourceInputContract = source.readSourceInputContract;
+  relativeSourceInputs = source.relativeSourceInputs;
+});
+
 const POLICY = JSON.parse(readFileSync(join(LIBRARY_ROOT, "⚡️caching/🔣️policy.json"), "utf8"));
 const TAXONOMY = JSON.parse(readFileSync(join(LIBRARY_ROOT, "🔣️taxonomy.json"), "utf8"));
 const IMPLEMENTATION_REVISION = new URL(import.meta.url).searchParams.get("revision") ?? implementationRevision();
@@ -1149,26 +1165,20 @@ function implementationRevision() {
   return createHash("sha256").update(readFileSync(fileURLToPath(import.meta.url))).update(readFileSync(join(LIBRARY_ROOT, "⚡️caching/🔣️policy.json"))).update(readFileSync(join(LIBRARY_ROOT, "🔣️taxonomy.json"))).update(readFileSync(join(LIBRARY_ROOT, RUNTIME_COMPONENT_MODULE))).update(readFileSync(join(LIBRARY_ROOT, SOURCE_INPUT_MODULE))).digest("hex");
 }
 
-/** 🔁️ Evicts Bun's canonical module entry and retains Node's revision-specific ESM identity. */
-async function importRevision(source, revision) {
-  const require = createRequire(import.meta.url), url = new URL(source);
-  delete require.cache[require.resolve(fileURLToPath(url))];
-  url.searchParams.set("revision", revision);
-  return import(url.href);
-}
-
 let reloadedImplementation;
 
 function invokeCurrentImplementation(kind, args) {
-  const revision = implementationRevision();
-  if (revision === IMPLEMENTATION_REVISION) return kind === "nodes" ? emojiProjectJsonNodes(...args) : createDependenciesImplementation(...args);
-  if (reloadedImplementation?.revision !== revision) {
-    const entry = { revision, module: importRevision(import.meta.url, revision).catch((error) => { if (reloadedImplementation === entry) reloadedImplementation = undefined; throw error; }) };
-    reloadedImplementation = entry;
-  }
-  return reloadedImplementation.module.then((module) => {
-    if (module.cacheInternals === cacheInternals) throw new Error("Graph runtime retained an obsolete implementation");
-    return kind === "nodes" ? module.default.createNodesV2[1](...args) : module.createDependencies(...args);
+  return libraryBootstrap.then(() => {
+    const revision = implementationRevision();
+    if (revision === IMPLEMENTATION_REVISION) return kind === "nodes" ? emojiProjectJsonNodes(...args) : createDependenciesImplementation(...args);
+    if (reloadedImplementation?.revision !== revision) {
+      const entry = { revision, module: importRevision(import.meta.url, revision).catch((error) => { if (reloadedImplementation === entry) reloadedImplementation = undefined; throw error; }) };
+      reloadedImplementation = entry;
+    }
+    return reloadedImplementation.module.then((module) => {
+      if (module.cacheInternals === cacheInternals) throw new Error("Graph runtime retained an obsolete implementation");
+      return kind === "nodes" ? module.default.createNodesV2[1](...args) : module.createDependencies(...args);
+    });
   });
 }
 

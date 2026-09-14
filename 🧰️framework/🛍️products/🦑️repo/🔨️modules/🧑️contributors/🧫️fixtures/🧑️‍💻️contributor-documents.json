@@ -1,0 +1,26 @@
+{
+  "schema": "semio.repo.contributors.contributor-documents/1",
+  "$comment": "🧑️ Real 🧑️‍💻️contributor.json documents copied verbatim out of .🧬semio/🦑️repo/🧑️‍💻️devs by 🏗️build-contributors-fixtures.ts.",
+  "documents": [
+    {
+      "directory": "🐙️ueli",
+      "json": "{\n  \"alias\": \"ueli\",\n  \"aliases\": [\"ueli.saluz\"],\n  \"emoji\": \"🐙️\",\n  \"github\": \"https://github.com/usalu\",\n  \"githubs\": [\"https://github.com/zulasu\", \"https://github.com/usaluz\"],\n  \"name\": \"Ueli Saluz\",\n  \"email\": \"ueli@semio-tech.com\",\n  \"emails\": [\"ueli.saluz@iek.uni-hannover.de\"],\n  \"fingerprint\": \"2WqkU0K8sI1dp0ceZefVPQ1wdUuvUAW3Nlc5cVTsFf8\",\n  \"fingerprints\": [\"2WqkU0K8sI1dp0ceZefVPQ1wdUuvUAW3Nlc5cVTsFf8\"],\n  \"orcid\": \"https://orcid.org/0009-0007-1089-9792\"\n}\n"
+    },
+    {
+      "directory": "🐳️ kinan",
+      "json": "{\n  \"alias\": \"kinan\",\n  \"emoji\": \"🐳️\",\n  \"github\": \"kinansarak\",\n  \"name\": \"Kinan Sarakbi\",\n  \"email\": \"\",\n  \"emails\": [\"kinan.sarak@gmail.com\"],\n  \"links\": {\n    \"github\": \"https://github.com/kinansarak\"\n  },\n  \"contributions\": {}\n}\n"
+    },
+    {
+      "directory": "🦅️adrian",
+      "json": "{\n  \"alias\": \"adrian\",\n  \"emoji\": \"🦅️\",\n  \"github\": \"AdrianoCelentano\",\n  \"name\": \"Adrian Schäfer\",\n  \"links\": {\n    \"github\": \"https://github.com/AdrianoCelentano\"\n  }\n}\n"
+    },
+    {
+      "directory": "🦉️jonathan",
+      "json": "{\n  \"alias\": \"jonathan\",\n  \"emoji\": \"🦉️\",\n  \"github\": \"kaatzjo\",\n  \"name\": \"Jonathan Kaatz\",\n  \"links\": {\n    \"github\": \"https://github.com/kaatzjo\"\n  }\n}\n"
+    },
+    {
+      "directory": "🦊️christian",
+      "json": "{\n  \"alias\": \"christian\",\n  \"emoji\": \"🦊️\",\n  \"github\": \"EinMysterium\",\n  \"name\": \"Christian Hödtke\",\n  \"links\": {\n    \"github\": \"https://github.com/EinMysterium\"\n  }\n}\n"
+    }
+  ]
+}

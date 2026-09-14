@@ -1,0 +1,9 @@
+\documentclass{article}
+\usepackage{semio-viz-charts-financial}
+\begin{document}
+\SemioVizProbeOn
+\SemioVizProbeBegin{charts-financial}{moving-average}
+\begin{VizProbeCanvas}[80][40]
+\SemioVizRunFamily{financial}[data=demo-ohlc,mode=line,overlay=ma,window=3,axes=false,grid=none]
+\end{VizProbeCanvas}
+\end{document}

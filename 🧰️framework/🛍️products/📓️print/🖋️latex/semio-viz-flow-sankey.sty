@@ -1,0 +1,272 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-flow-sankey}[2026/09/05 v0.3.0 semio viz namespace flow-sankey families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-network-graph}
+\RequirePackage{semio-viz-flow}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 🔑 semio / viz / family / sankey — d3-sankey's node rectangles and link ribbons (taxonomy §9).
+%   data        (table, default demo-flow)   flow table; `weight` names the value column
+%   weight      (column, default value)      per-call binding override
+%   nodeWidth   (mm, default 4)              width of a node rectangle
+%   nodePadding (mm, default 2.4)            vertical gap between the nodes of one column
+%   nodeAlign   (left|right|center|justify, default justify)
+%   nodeSort    (auto|none, default auto)    auto keeps d3's "sort each column by y0"
+%   linkSort    (auto|none, default auto)
+%   iterations  (integer, default 6)         relaxation passes
+%   curvature   (number, default 0.5)        horizontal control-point fraction of a link ribbon
+%   labels      (boolean, default true)      node captions
+%   labelWidth  (mm, default 11)             room reserved left and right for the captions
+%   colorBy     (source|target|group|none, default source)   ribbon hue
+%   padding     (mm, default 3)
+\fp_new:N \l_semio_viz_snk_width_fp
+\fp_new:N \l_semio_viz_snk_padding_fp
+\fp_new:N \l_semio_viz_snk_curv_fp
+\fp_new:N \l_semio_viz_snk_label_w_fp
+\int_new:N \l_semio_viz_snk_iterations_int
+\int_new:N \l_semio_viz_snk_rows_int
+\tl_new:N \l_semio_viz_snk_align_tl
+\tl_new:N \l_semio_viz_snk_node_sort_tl
+\tl_new:N \l_semio_viz_snk_link_sort_tl
+\tl_new:N \l_semio_viz_snk_kind_tl
+\tl_new:N \l_semio_viz_snk_i_tl
+\tl_new:N \l_semio_viz_snk_j_tl
+\tl_new:N \l_semio_viz_snk_x_tl
+\tl_new:N \l_semio_viz_snk_y_tl
+\tl_new:N \l_semio_viz_snk_xb_tl
+\tl_new:N \l_semio_viz_snk_yb_tl
+\tl_new:N \l_semio_viz_snk_w_tl
+\tl_new:N \l_semio_viz_snk_id_tl
+
+\cs_new_protected:Npn \semio_viz_snk_keys_add:n #1 {
+  \semio_viz_net_keys_add:n {#1}
+  \keys_define:nn {#1} {
+    nodeWidth   .fp_set:N = \l_semio_viz_snk_width_fp,
+    nodePadding .fp_set:N = \l_semio_viz_snk_padding_fp,
+    nodeAlign   .tl_set:N = \l_semio_viz_snk_align_tl,
+    nodeSort    .tl_set:N = \l_semio_viz_snk_node_sort_tl,
+    linkSort    .tl_set:N = \l_semio_viz_snk_link_sort_tl,
+    labelWidth  .fp_set:N = \l_semio_viz_snk_label_w_fp,
+  }
+}
+% ♻️ Puts every flow key back to its documented default, on top of the network kernel's own reset.
+\cs_new_protected:Npn \semio_viz_snk_keys_reset: {
+  \semio_viz_net_keys_reset:
+  \tl_set:Nn \l_semio_viz_net_data_tl { demo-flow }
+  \tl_set:Nn \l_semio_viz_net_weight_tl { value }
+  \fp_set:Nn \l_semio_viz_snk_width_fp { 4 }
+  \fp_set:Nn \l_semio_viz_snk_padding_fp { 2.4 }
+  \fp_set:Nn \l_semio_viz_snk_curv_fp { 0.5 }
+  \fp_set:Nn \l_semio_viz_snk_label_w_fp { 11 }
+  \int_set:Nn \l_semio_viz_snk_iterations_int { 6 }
+  \tl_set:Nn \l_semio_viz_snk_align_tl { justify }
+  \tl_set:Nn \l_semio_viz_snk_node_sort_tl { auto }
+  \tl_set:Nn \l_semio_viz_snk_link_sort_tl { auto }
+  \tl_set:Nn \l_semio_viz_net_colorby_tl { source }
+  \bool_set_true:N \l_semio_viz_net_labels_bool
+  \fp_set:Nn \l_semio_viz_net_curvature_fp { 0.5 }
+}
+%endregion 🔖️Keys
+
+%region 🔖️Sankey
+% 💧 One node rectangle of the layout output, with its caption on the side the flow leaves it.
+\cs_new_protected:Npn \semio_viz_snk_node_draw:n #1 {
+  \semio_viz_table_cell:nnnN { semio-net-flow } {#1} { i } \l_semio_viz_snk_i_tl
+  \semio_viz_table_cell:nnnN { semio-net-flow } {#1} { x0 } \l_semio_viz_snk_x_tl
+  \semio_viz_table_cell:nnnN { semio-net-flow } {#1} { y0 } \l_semio_viz_snk_y_tl
+  \semio_viz_table_cell:nnnN { semio-net-flow } {#1} { x1 } \l_semio_viz_snk_xb_tl
+  \semio_viz_table_cell:nnnN { semio-net-flow } {#1} { y1 } \l_semio_viz_snk_yb_tl
+  \semio_viz_table_cell:nnnN { semio-net-flow } {#1} { id } \l_semio_viz_snk_id_tl
+  \semio_viz_snk_fill:n { \l_semio_viz_snk_i_tl }
+  \semio_viz_net_draw_poly:xx
+    {
+      ( \fp_to_decimal:n { \semio_viz_snk_x:n { \l_semio_viz_snk_x_tl } } ,
+        \fp_to_decimal:n { \semio_viz_snk_y:n { \l_semio_viz_snk_y_tl } } ) --
+      ( \fp_to_decimal:n { \semio_viz_snk_x:n { \l_semio_viz_snk_xb_tl } } ,
+        \fp_to_decimal:n { \semio_viz_snk_y:n { \l_semio_viz_snk_y_tl } } ) --
+      ( \fp_to_decimal:n { \semio_viz_snk_x:n { \l_semio_viz_snk_xb_tl } } ,
+        \fp_to_decimal:n { \semio_viz_snk_y:n { \l_semio_viz_snk_yb_tl } } ) --
+      ( \fp_to_decimal:n { \semio_viz_snk_x:n { \l_semio_viz_snk_x_tl } } ,
+        \fp_to_decimal:n { \semio_viz_snk_y:n { \l_semio_viz_snk_yb_tl } } )
+    }
+    {
+      \fp_eval:n { round( \semio_viz_snk_x:n { \l_semio_viz_snk_x_tl } , 4 ) } ,
+      \fp_eval:n { round( \semio_viz_snk_y:n { \l_semio_viz_snk_yb_tl } , 4 ) } ,
+      \fp_eval:n { round( \semio_viz_snk_x:n { \l_semio_viz_snk_xb_tl }
+        - \semio_viz_snk_x:n { \l_semio_viz_snk_x_tl } , 4 ) } ,
+      \fp_eval:n { round( \semio_viz_snk_y:n { \l_semio_viz_snk_y_tl }
+        - \semio_viz_snk_y:n { \l_semio_viz_snk_yb_tl } , 4 ) }
+    }
+  \bool_if:NT \l_semio_viz_net_labels_bool {
+    \seq_if_empty:cTF { l_semio_viz_network_slink_ \int_eval:n { \l_semio_viz_snk_i_tl } _seq }
+      {
+        \node [ anchor=east , font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , inner~sep=0pt ]
+          at ( \fp_to_decimal:n { \semio_viz_snk_x:n { \l_semio_viz_snk_x_tl } - 0.9 } ,
+               \fp_to_decimal:n { ( \semio_viz_snk_y:n { \l_semio_viz_snk_y_tl }
+                 + \semio_viz_snk_y:n { \l_semio_viz_snk_yb_tl } ) / 2 } )
+          { \l_semio_viz_snk_id_tl } ;
+      }
+      {
+        \node [ anchor=west , font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , inner~sep=0pt ]
+          at ( \fp_to_decimal:n { \semio_viz_snk_x:n { \l_semio_viz_snk_xb_tl } + 0.9 } ,
+               \fp_to_decimal:n { ( \semio_viz_snk_y:n { \l_semio_viz_snk_y_tl }
+                 + \semio_viz_snk_y:n { \l_semio_viz_snk_yb_tl } ) / 2 } )
+          { \l_semio_viz_snk_id_tl } ;
+      }
+  }
+}
+
+% 💧 One link ribbon: two cubic curves with horizontal control points, exactly d3's sankeyLinkHorizontal.
+\cs_new_protected:Npn \semio_viz_snk_link_draw:n #1 {
+  \semio_viz_table_cell:nnnN { semio-net-flow } {#1} { i } \l_semio_viz_snk_i_tl
+  \semio_viz_table_cell:nnnN { semio-net-flow } {#1} { j } \l_semio_viz_snk_j_tl
+  \semio_viz_table_cell:nnnN { semio-net-flow } {#1} { x0 } \l_semio_viz_snk_x_tl
+  \semio_viz_table_cell:nnnN { semio-net-flow } {#1} { y0 } \l_semio_viz_snk_y_tl
+  \semio_viz_table_cell:nnnN { semio-net-flow } {#1} { x1 } \l_semio_viz_snk_xb_tl
+  \semio_viz_table_cell:nnnN { semio-net-flow } {#1} { y1 } \l_semio_viz_snk_yb_tl
+  \semio_viz_table_cell:nnnN { semio-net-flow } {#1} { width } \l_semio_viz_snk_w_tl
+  \str_if_eq:VnTF \l_semio_viz_net_colorby_tl { target }
+    { \semio_viz_snk_fill:n { \l_semio_viz_snk_j_tl } }
+    { \semio_viz_snk_fill:n { \l_semio_viz_snk_i_tl } }
+  \use:x {
+    \exp_not:N \fill [ \l_semio_viz_net_fill_tl , opacity=0.5 ]
+      ( \fp_to_decimal:n { \semio_viz_snk_x:n { \l_semio_viz_snk_x_tl } } ,
+        \fp_to_decimal:n { \semio_viz_snk_y:n
+          { \l_semio_viz_snk_y_tl - \l_semio_viz_snk_w_tl / 2 } } )
+      .. controls
+        ( \fp_to_decimal:n { \semio_viz_snk_cx: } ,
+          \fp_to_decimal:n { \semio_viz_snk_y:n
+            { \l_semio_viz_snk_y_tl - \l_semio_viz_snk_w_tl / 2 } } )
+        and ( \fp_to_decimal:n { \semio_viz_snk_dx: } ,
+          \fp_to_decimal:n { \semio_viz_snk_y:n
+            { \l_semio_viz_snk_yb_tl - \l_semio_viz_snk_w_tl / 2 } } ) ..
+      ( \fp_to_decimal:n { \semio_viz_snk_x:n { \l_semio_viz_snk_xb_tl } } ,
+        \fp_to_decimal:n { \semio_viz_snk_y:n
+          { \l_semio_viz_snk_yb_tl - \l_semio_viz_snk_w_tl / 2 } } )
+      -- ( \fp_to_decimal:n { \semio_viz_snk_x:n { \l_semio_viz_snk_xb_tl } } ,
+        \fp_to_decimal:n { \semio_viz_snk_y:n
+          { \l_semio_viz_snk_yb_tl + \l_semio_viz_snk_w_tl / 2 } } )
+      .. controls
+        ( \fp_to_decimal:n { \semio_viz_snk_dx: } ,
+          \fp_to_decimal:n { \semio_viz_snk_y:n
+            { \l_semio_viz_snk_yb_tl + \l_semio_viz_snk_w_tl / 2 } } )
+        and ( \fp_to_decimal:n { \semio_viz_snk_cx: } ,
+          \fp_to_decimal:n { \semio_viz_snk_y:n
+            { \l_semio_viz_snk_y_tl + \l_semio_viz_snk_w_tl / 2 } } ) ..
+      ( \fp_to_decimal:n { \semio_viz_snk_x:n { \l_semio_viz_snk_x_tl } } ,
+        \fp_to_decimal:n { \semio_viz_snk_y:n
+          { \l_semio_viz_snk_y_tl + \l_semio_viz_snk_w_tl / 2 } } )
+      -- cycle ;
+  }
+  \semio_viz_probe_geometry:nx { flow-link }
+    {
+      \l_semio_viz_snk_i_tl , \l_semio_viz_snk_j_tl ,
+      \fp_eval:n { round( \semio_viz_snk_y:n { \l_semio_viz_snk_y_tl } , 4 ) } ,
+      \fp_eval:n { round( \semio_viz_snk_y:n { \l_semio_viz_snk_yb_tl } , 4 ) } ,
+      \fp_eval:n { round( \l_semio_viz_snk_w_tl * \l_semio_viz_snk_k_fp , 4 ) }
+    }
+}
+% 〰️ First Bézier control abscissa of a link ribbon: `curvature` of the way to the target column.
+\cs_new:Npn \semio_viz_snk_cx:
+  {
+    \semio_viz_snk_x:n { \l_semio_viz_snk_x_tl }
+    + \l_semio_viz_snk_curv_fp * ( \semio_viz_snk_x:n { \l_semio_viz_snk_xb_tl }
+      - \semio_viz_snk_x:n { \l_semio_viz_snk_x_tl } )
+  }
+% 〰️ Second Bézier control abscissa of a link ribbon, the mirror of the first at the target end.
+\cs_new:Npn \semio_viz_snk_dx:
+  {
+    \semio_viz_snk_x:n { \l_semio_viz_snk_xb_tl }
+    - \l_semio_viz_snk_curv_fp * ( \semio_viz_snk_x:n { \l_semio_viz_snk_xb_tl }
+      - \semio_viz_snk_x:n { \l_semio_viz_snk_x_tl } )
+  }
+
+% 💧 Layout space is the unit-height extent the kernel was given; these map it into the drawing rectangle.
+\fp_new:N \l_semio_viz_snk_k_fp
+\cs_new:Npn \semio_viz_snk_x:n #1 { \l_semio_viz_snk_ox_fp + (#1) * \l_semio_viz_snk_k_fp }
+% 💧 Drawing-space ordinate of a layout ordinate; the y axis is flipped on the way.
+\cs_new:Npn \semio_viz_snk_y:n #1 { \l_semio_viz_snk_oy_fp - (#1) * \l_semio_viz_snk_k_fp }
+\fp_new:N \l_semio_viz_snk_ox_fp
+\fp_new:N \l_semio_viz_snk_oy_fp
+
+% 🎨 Fill of the node or link #1 under the `colorby` rule: one colour, the group's, or its own.
+\cs_new_protected:Npn \semio_viz_snk_fill:n #1 {
+  \str_case:VnF \l_semio_viz_net_colorby_tl
+    {
+      { none } { \tl_set:Nn \l_semio_viz_net_fill_tl { \semio_viz_theme_color:n { 0 } } }
+      { group }
+        {
+          \semio_viz_net_group_pos:n {#1}
+          \semio_viz_net_color:VN \l_semio_viz_net_k_int \l_semio_viz_net_fill_tl
+        }
+    }
+    { \semio_viz_net_color:nN {#1} \l_semio_viz_net_fill_tl }
+}
+
+% 💧 Walks the layout output: link ribbons first so the node rectangles sit on top.
+\cs_new_protected:Npn \semio_viz_snk_draw: {
+  \semio_viz_table_nrows:nN { semio-net-flow } \l_semio_viz_snk_rows_int
+  \int_step_inline:nn { \l_semio_viz_snk_rows_int } { \semio_viz_snk_row:nn { link } {##1} }
+  \int_step_inline:nn { \l_semio_viz_snk_rows_int } { \semio_viz_snk_row:nn { node } {##1} }
+}
+% 💧 Draws the layout row #2 when it is of kind #1, so one pass over the output draws one layer.
+\cs_new_protected:Npn \semio_viz_snk_row:nn #1#2 {
+  \semio_viz_table_cell:nnnN { semio-net-flow } {#2} { kind } \l_semio_viz_snk_kind_tl
+  \str_if_eq:VnT \l_semio_viz_snk_kind_tl {#1} {
+    \str_if_eq:nnTF {#1} { node }
+      { \semio_viz_snk_node_draw:n {#2} } { \semio_viz_snk_link_draw:n {#2} }
+  }
+}
+
+% 💧 The shared render of the three flow families: run the kernel layout, map, draw.
+\cs_new_protected:Npn \semio_viz_snk_render:nnn #1#2#3 {
+  \semio_viz_frame_require:n { SemioVizRunFamily }
+  \semio_viz_snk_keys_reset:
+  \str_if_eq:nnT {#2} { parallel-sets } { \fp_zero:N \l_semio_viz_snk_padding_fp }
+  \keys_set:nn { semio / viz / family / #1 } {#3}
+  \semio_viz_net_bind_build:
+  \semio_viz_net_canvas:
+  \fp_set:Nn \l_semio_viz_snk_ox_fp
+    {
+      \l_semio_viz_net_xlo_fp
+      + \bool_if:NTF \l_semio_viz_net_labels_bool { \l_semio_viz_snk_label_w_fp } { 0 }
+    }
+  \fp_set:Nn \l_semio_viz_snk_oy_fp { \l_semio_viz_net_yhi_fp }
+  \fp_set:Nn \l_semio_viz_snk_k_fp { \l_semio_viz_net_yhi_fp - \l_semio_viz_net_ylo_fp }
+  \tl_set:Nx \l_semio_viz_net_layopts_tl
+    {
+      \l_semio_viz_net_bind_tl
+      node-width = \fp_eval:n { \l_semio_viz_snk_width_fp / \l_semio_viz_snk_k_fp } ,
+      node-padding = \fp_eval:n { \l_semio_viz_snk_padding_fp / \l_semio_viz_snk_k_fp } ,
+      node-align = \l_semio_viz_snk_align_tl ,
+      node-sort = \l_semio_viz_snk_node_sort_tl ,
+      link-sort = \l_semio_viz_snk_link_sort_tl ,
+      iterations = \int_use:N \l_semio_viz_snk_iterations_int ,
+      x0 = 0 , y0 = 0 , y1 = 1 ,
+      x1 = \fp_eval:n
+        {
+          ( \l_semio_viz_net_xhi_fp - \l_semio_viz_snk_ox_fp
+            - \bool_if:NTF \l_semio_viz_net_labels_bool { \l_semio_viz_snk_label_w_fp } { 0 } )
+          / \l_semio_viz_snk_k_fp
+        }
+    }
+  \semio_viz_layout_run:nVnV {#2} \l_semio_viz_net_data_tl { semio-net-flow } \l_semio_viz_net_layopts_tl
+  \semio_viz_net_groups_build:
+  \semio_viz_snk_draw:
+}
+
+\semio_viz_snk_keys_add:n { semio / viz / family / sankey }
+% 🔑 The sankey's own keys on top of the shared flow keys: relaxation passes and ribbon curvature.
+\keys_define:nn { semio / viz / family / sankey } {
+  iterations .int_set:N = \l_semio_viz_snk_iterations_int,
+  curvature  .fp_set:N = \l_semio_viz_snk_curv_fp,
+}
+% 💧 §22: the sankey diagram, laid out by the `sankey` layout algorithm of the flow kernel.
+\SemioVizFamily { sankey } { \semio_viz_snk_render:nnn { sankey } { sankey } {#1} }
+%endregion 🔖️Sankey
+
+\ExplSyntaxOff

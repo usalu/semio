@@ -1,0 +1,19 @@
+[package]
+name = "semio-framework-repo-search"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "repo search: the deterministic, cancellable, append-replayed text index"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }

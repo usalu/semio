@@ -1,0 +1,291 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-shape}[2026/09/05 v0.3.0 semio viz shape generators: line, area, arc, pie, link, symbol, ribbon]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-mark}
+
+\ExplSyntaxOn
+
+%region 🔖️Diagnostics
+\msg_new:nnn { semio-viz } { unknown-shape }
+  { Unknown~viz~shape~'#1'. }
+\msg_new:nnn { semio-viz } { unknown-shape-result }
+  { No~viz~shape~result~named~'#1';~generate~it~with~name=#1~first. }
+%endregion 🔖️Diagnostics
+
+%region 🔖️Keys
+% 🎛️ Shape keys; every key not listed here is forwarded to `semio / viz / mark`,
+% so a generator takes the full mark style vocabulary without duplicating it.
+%   name (tl, empty)        stores the generated path under this name for later reuse
+%   draw (bool, true)       render the generated path; false computes the numbers only
+%   at (tl, 0,0)            figure point the centred generators (arc, symbol, ribbon) sit on
+%   type (tl, circle)       d3 symbol type of \SemioVizSymbol
+%   kind (tl, horizontal)   link flavour: horizontal, vertical or radial
+%   source / target (tl)    the two endpoints of a link, as `x,y` (or `angle,radius` when radial)
+%   value (tl, empty)       the pie's values, a comma list
+%   sort (tl, descending)   pie layout order: descending, ascending or none
+%   baseline (tl, empty)    constant lower boundary of an area when points2 is empty
+%   defined (tl, empty)     per-point 0/1 flags; a 0 breaks the line, as d3's `defined` does
+\tl_new:N \l_semio_viz_shape_name_tl
+\tl_new:N \l_semio_viz_shape_at_tl
+\tl_new:N \l_semio_viz_shape_type_tl
+\tl_new:N \l_semio_viz_shape_kind_tl
+\tl_new:N \l_semio_viz_shape_source_tl
+\tl_new:N \l_semio_viz_shape_target_tl
+\tl_new:N \l_semio_viz_shape_value_tl
+\tl_new:N \l_semio_viz_shape_sort_tl
+\tl_new:N \l_semio_viz_shape_baseline_tl
+\tl_new:N \l_semio_viz_shape_defined_tl
+\bool_new:N \l_semio_viz_shape_draw_bool
+\prop_new:N \g_semio_viz_shape_prop
+\tl_new:N \g_semio_viz_shape_result_tl
+\tl_new:N \g_semio_viz_shape_centroid_tl
+
+\keys_define:nn { semio / viz / shape } {
+  name     .tl_set:N   = \l_semio_viz_shape_name_tl,
+  draw     .bool_set:N = \l_semio_viz_shape_draw_bool,
+  at       .tl_set:N   = \l_semio_viz_shape_at_tl,
+  type     .tl_set:N   = \l_semio_viz_shape_type_tl,
+  kind     .tl_set:N   = \l_semio_viz_shape_kind_tl,
+  source   .tl_set:N   = \l_semio_viz_shape_source_tl,
+  target   .tl_set:N   = \l_semio_viz_shape_target_tl,
+  value    .tl_set:N   = \l_semio_viz_shape_value_tl,
+  sort     .tl_set:N   = \l_semio_viz_shape_sort_tl,
+  baseline .tl_set:N   = \l_semio_viz_shape_baseline_tl,
+  defined  .tl_set:N   = \l_semio_viz_shape_defined_tl,
+  unknown  .code:n     = { \exp_args:Nnx \keys_set:nn { semio / viz / mark }
+                            { \l_keys_key_str = { \exp_not:n {#1} } } },
+}
+
+% ♻️ Puts every shape key and the mark keys a shape borrows back to their documented defaults.
+\cs_new_protected:Npn \semio_viz_shape_reset: {
+  \semio_viz_mark_keys_reset:
+  \tl_clear:N \l_semio_viz_shape_name_tl
+  \bool_set_true:N \l_semio_viz_shape_draw_bool
+  \tl_set:Nn \l_semio_viz_shape_at_tl { 0,0 }
+  \tl_set:Nn \l_semio_viz_shape_type_tl { circle }
+  \tl_set:Nn \l_semio_viz_shape_kind_tl { horizontal }
+  \tl_clear:N \l_semio_viz_shape_source_tl
+  \tl_clear:N \l_semio_viz_shape_target_tl
+  \tl_clear:N \l_semio_viz_shape_value_tl
+  \tl_set:Nn \l_semio_viz_shape_sort_tl { descending }
+  \tl_clear:N \l_semio_viz_shape_baseline_tl
+  \tl_clear:N \l_semio_viz_shape_defined_tl
+  \fp_set:Nn \l_semio_viz_mark_size_fp { 64 }
+  \tl_set:Nn \l_semio_viz_mark_stroke_tl { none }
+  \fp_set:Nn \l_semio_viz_mark_end_fp { pi/2 }
+}
+
+% 🚦 Opens a shape generator: defaults, then the option list #1, then the `points` list.
+\cs_new_protected:Npn \semio_viz_shape_begin:n #1 {
+  \semio_viz_shape_reset:
+  \keys_set:nn { semio / viz / shape } {#1}
+  \semio_viz_points_load:
+}
+% 💾 Publishes the generated path: always in the result variable, and under `name` when one was given.
+\cs_new_protected:Npn \semio_viz_shape_finish:n #1 {
+  \tl_gset_eq:NN \g_semio_viz_shape_result_tl \l_semio_viz_path_cmd_tl
+  \tl_if_empty:NF \l_semio_viz_shape_name_tl
+    { \prop_gput:NVV \g_semio_viz_shape_prop \l_semio_viz_shape_name_tl \l_semio_viz_path_cmd_tl }
+  \semio_viz_mark_probe:nV { shape/#1 } \l_semio_viz_path_cmd_tl
+  \bool_if:NT \l_semio_viz_shape_draw_bool
+    { \semio_viz_mark_options: \semio_viz_mark_stroke_path: }
+}
+%endregion 🔖️Keys
+
+%region 🔖️LineArea
+% 📈 d3-line: the `points` list through the chosen interpolator, with `defined`
+% breaking the line into separate subpaths exactly where d3 would.
+\cs_generate_variant:Nn \seq_set_from_clist:Nn { NV }
+\seq_new:N \l_semio_viz_shape_defined_seq
+\bool_new:N \l_semio_viz_shape_open_bool
+\cs_new_protected:Npn \semio_viz_shape_defined_load: {
+  \seq_set_from_clist:NV \l_semio_viz_shape_defined_seq \l_semio_viz_shape_defined_tl
+}
+% ❓ True when the #1-th point is defined; an empty `defined` list means every point is.
+\prg_new_conditional:Npnn \semio_viz_shape_defined:n #1 { p, T, F, TF } {
+  \seq_if_empty:NTF \l_semio_viz_shape_defined_seq
+    { \prg_return_true: }
+    {
+      \str_if_eq:eeTF { \seq_item:Nn \l_semio_viz_shape_defined_seq {#1} } { 0 }
+        { \prg_return_false: } { \prg_return_true: }
+    }
+}
+
+% 〰️ Runs the interpolator over the points, opening a fresh subpath after every undefined gap.
+\cs_new_protected:Npn \semio_viz_shape_line_run: {
+  \semio_viz_shape_defined_load:
+  \bool_set_false:N \l_semio_viz_shape_open_bool
+  \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_pt_n_int } {
+    \semio_viz_shape_defined:nTF {##1}
+      {
+        \bool_if:NF \l_semio_viz_shape_open_bool {
+          \semio_viz_curve_begin:VV \l_semio_viz_mark_curve_tl \l_semio_viz_shape_curve_opts_tl
+          \bool_set_true:N \l_semio_viz_shape_open_bool
+        }
+        \semio_viz_curve_point:nn { \semio_viz_px:n {##1} } { \semio_viz_py:n {##1} }
+      }
+      {
+        \bool_if:NT \l_semio_viz_shape_open_bool
+          { \semio_viz_curve_end: \bool_set_false:N \l_semio_viz_shape_open_bool }
+      }
+  }
+  \bool_if:NT \l_semio_viz_shape_open_bool { \semio_viz_curve_end: }
+}
+\tl_new:N \l_semio_viz_shape_curve_opts_tl
+% 🎚️ Freezes the curve's tension, alpha and beta into one option list for the interpolator.
+\cs_new_protected:Npn \semio_viz_shape_curve_opts: {
+  \tl_set:Nx \l_semio_viz_shape_curve_opts_tl { \semio_viz_mark_curve_opts: }
+}
+
+% 📈 \SemioVizLine[points=,curve=,tension=,alpha=,beta=,defined=,name=,draw=]
+\NewDocumentCommand \SemioVizLine { O{} } {
+  \semio_viz_shape_begin:n {#1}
+  \semio_viz_shape_curve_opts:
+  \semio_viz_path_begin:nnn { 0 } { 0 } { \c_false_bool }
+  \semio_viz_shape_line_run:
+  \semio_viz_shape_finish:n { line }
+}
+
+% 🏔️ \SemioVizArea[points=,points2=,baseline=,curve=,defined=]: d3-area, which
+% runs BOTH boundaries through the same interpolator and closes the ring; `defined`
+% splits it into one closed piece per run of defined data, exactly as d3 does.
+\NewDocumentCommand \SemioVizArea { O{} } {
+  \semio_viz_shape_begin:n {#1}
+  \semio_viz_shape_curve_opts:
+  \semio_viz_path_begin:nnn { 0 } { 0 } { \c_false_bool }
+  \semio_viz_shape_defined_load:
+  \semio_viz_curve_begin:VV \l_semio_viz_mark_curve_tl \l_semio_viz_shape_curve_opts_tl
+  \int_zero:N \l_semio_viz_shape_run_int
+  \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_pt_n_int + 1 } {
+    \bool_lazy_and:nnTF { \int_compare_p:nNn {##1} < { \l_semio_viz_pt_n_int + 1 } }
+      { \semio_viz_shape_defined_p:n {##1} }
+      { \int_compare:nNnT { \l_semio_viz_shape_run_int } = { 0 }
+          { \int_set:Nn \l_semio_viz_shape_run_int {##1} \semio_viz_shape_area_open: }
+        \semio_viz_curve_point:nn { \semio_viz_px:n {##1} } { \semio_viz_py:n {##1} } }
+      { \int_compare:nNnT { \l_semio_viz_shape_run_int } > { 0 }
+          { \semio_viz_shape_area_close:nn { \l_semio_viz_shape_run_int } { ##1 - 1 }
+            \int_zero:N \l_semio_viz_shape_run_int } }
+  }
+  \semio_viz_shape_finish:n { area }
+}
+\int_new:N \l_semio_viz_shape_run_int
+% 🔂 Opens one area piece: an area boundary and the line boundary that rides on top of it.
+\cs_new_protected:Npn \semio_viz_shape_area_open: {
+  \semio_viz_curve_area_start:
+  \semio_viz_curve_line_start:
+}
+% 🔁 Closes one area piece: the lower boundary is replayed backwards through the
+% same interpolator, which is why an area's underside curves like its top.
+\cs_new_protected:Npn \semio_viz_shape_area_close:nn #1#2 {
+  \semio_viz_curve_end:
+  \semio_viz_curve_line_start:
+  \int_step_inline:nnnn {#2} { -1 } {#1} {
+    \semio_viz_curve_point:nn
+      { \seq_if_empty:NTF \l_semio_viz_pt_ax_seq { \semio_viz_px:n {##1} }
+        { \seq_item:Nn \l_semio_viz_pt_ax_seq {##1} } }
+      { \seq_if_empty:NTF \l_semio_viz_pt_ax_seq
+        { \tl_if_empty:NTF \l_semio_viz_shape_baseline_tl { 0 } { \l_semio_viz_shape_baseline_tl } }
+        { \seq_item:Nn \l_semio_viz_pt_ay_seq {##1} } }
+  }
+  \semio_viz_curve_end:
+  \semio_viz_curve_area_end:
+}
+%endregion 🔖️LineArea
+
+%region 🔖️ArcPie
+% 🥧 \SemioVizArc[innerRadius=,outerRadius=,startAngle=,endAngle=,padAngle=,padRadius=,cornerRadius=,at=]
+% Angles are radians clockwise from twelve o'clock, as in d3; the centroid lands in
+% \SemioVizArcCentroid.
+\NewDocumentCommand \SemioVizArc { O{} } {
+  \semio_viz_shape_begin:n {#1}
+  \semio_viz_shape_at:
+  \semio_viz_arc_path:nnnnnVn { \l_semio_viz_mark_inner_fp } { \l_semio_viz_mark_outer_fp }
+    { \l_semio_viz_mark_start_fp } { \l_semio_viz_mark_end_fp } { \l_semio_viz_mark_pad_fp }
+    { \l_semio_viz_mark_padradius_tl } { \l_semio_viz_mark_corner_fp }
+  \tl_gset:Nx \g_semio_viz_shape_centroid_tl {
+    \semio_viz_arc_centroid_x:nnnn { \l_semio_viz_mark_inner_fp } { \l_semio_viz_mark_outer_fp }
+      { \l_semio_viz_mark_start_fp } { \l_semio_viz_mark_end_fp } ,
+    \semio_viz_arc_centroid_y:nnnn { \l_semio_viz_mark_inner_fp } { \l_semio_viz_mark_outer_fp }
+      { \l_semio_viz_mark_start_fp } { \l_semio_viz_mark_end_fp }
+  }
+  \semio_viz_mark_probe:nV { shape/arc/centroid } \g_semio_viz_shape_centroid_tl
+  \semio_viz_shape_finish:n { arc }
+}
+% 📍 Starts the path buffer at the shape's `at` point, with the y axis flipped into figure space.
+\cs_new_protected:Npn \semio_viz_shape_at: {
+  \exp_args:NV \semio_viz_xy:n \l_semio_viz_shape_at_tl
+  \semio_viz_path_begin:nnn { \l_semio_viz_mx_fp } { \l_semio_viz_my_fp } { \c_true_bool }
+}
+% 🎯 The centroid of the arc last generated, as `x,y` in d3 space.
+\NewDocumentCommand \SemioVizArcCentroid { } { \tl_use:N \g_semio_viz_shape_centroid_tl }
+
+% 🥧 \SemioVizPie[value=,sort=,startAngle=,endAngle=,padAngle=]: start and end angle per datum.
+\NewDocumentCommand \SemioVizPie { O{} } {
+  \semio_viz_shape_begin:n {#1}
+  \exp_args:NVVVVV \semio_viz_pie_compute:nnnnn \l_semio_viz_shape_value_tl
+    \l_semio_viz_mark_start_fp \l_semio_viz_mark_end_fp \l_semio_viz_mark_pad_fp \l_semio_viz_shape_sort_tl
+  \semio_viz_mark_probe:nx { shape/pie }
+    { \seq_use:Nn \g_semio_viz_pie_start_seq { , } , \seq_use:Nn \g_semio_viz_pie_end_seq { , } }
+}
+\cs_generate_variant:Nn \semio_viz_pie_compute:nnnnn { VVVVV }
+% 🥧 Start angle of the i-th pie datum, in the data's own order.
+\NewDocumentCommand \SemioVizPieStart { m } { \seq_item:Nn \g_semio_viz_pie_start_seq {#1} }
+% 🥧 End angle of the i-th pie datum, in the data's own order.
+\NewDocumentCommand \SemioVizPieEnd { m } { \seq_item:Nn \g_semio_viz_pie_end_seq {#1} }
+% 🥧 Number of data the last pie layout produced angles for.
+\NewDocumentCommand \SemioVizPieCount { } { \seq_count:N \g_semio_viz_pie_start_seq }
+%endregion 🔖️ArcPie
+
+%region 🔖️LinkSymbolRibbon
+% 🔗 \SemioVizLink[kind=horizontal|vertical|radial, source={x,y}, target={x,y}]
+\NewDocumentCommand \SemioVizLink { O{} } {
+  \semio_viz_shape_begin:n {#1}
+  \semio_viz_path_begin:nnn { 0 } { 0 } { \c_false_bool }
+  \use:x {
+    \exp_not:N \semio_viz_link_path:nnnnn { \l_semio_viz_shape_kind_tl }
+      { \clist_item:Nn \l_semio_viz_shape_source_tl { 1 } }
+      { \clist_item:Nn \l_semio_viz_shape_source_tl { 2 } }
+      { \clist_item:Nn \l_semio_viz_shape_target_tl { 1 } }
+      { \clist_item:Nn \l_semio_viz_shape_target_tl { 2 } }
+  }
+  \semio_viz_shape_finish:n { link }
+}
+
+% 🔣 \SemioVizSymbol[type=,size=,at=]: a d3 symbol of the given AREA, centred on `at`.
+\NewDocumentCommand \SemioVizSymbol { O{} } {
+  \semio_viz_shape_begin:n {#1}
+  \semio_viz_shape_at:
+  \exp_args:NV \semio_viz_symbol_draw:nn \l_semio_viz_shape_type_tl { \l_semio_viz_mark_size_fp }
+  \semio_viz_shape_finish:n { symbol }
+}
+% 🔣 Every d3 symbol type this package draws, as a comma list.
+\NewDocumentCommand \SemioVizSymbolTypes { } { \seq_use:Nn \g_semio_viz_symbol_types_seq { , } }
+
+% 🎀 \SemioVizRibbon[radius=,startAngle=,endAngle=,targetRadius=,targetStartAngle=,targetEndAngle=,padAngle=,at=]
+\NewDocumentCommand \SemioVizRibbon { O{} } {
+  \semio_viz_shape_begin:n {#1}
+  \bool_if:NF \l_semio_viz_mark_tradius_set_bool
+    { \fp_set_eq:NN \l_semio_viz_mark_tradius_fp \l_semio_viz_mark_radius_fp }
+  \semio_viz_shape_at:
+  \semio_viz_ribbon_path:nnnnnnn { \l_semio_viz_mark_radius_fp }
+    { \l_semio_viz_mark_start_fp } { \l_semio_viz_mark_end_fp }
+    { \l_semio_viz_mark_tradius_fp } { \l_semio_viz_mark_tstart_fp } { \l_semio_viz_mark_tend_fp }
+    { \l_semio_viz_mark_pad_fp }
+  \semio_viz_shape_finish:n { ribbon }
+}
+%endregion 🔖️LinkSymbolRibbon
+
+%region 🔖️Results
+% 💾 The path a named generator produced, as the d3 SVG token list.
+\NewDocumentCommand \SemioVizShapePath { m } {
+  \prop_if_in:NnTF \g_semio_viz_shape_prop {#1}
+    { \prop_item:Nn \g_semio_viz_shape_prop {#1} }
+    { \msg_error:nnn { semio-viz } { unknown-shape-result } {#1} }
+}
+% 💾 The path the last generator produced.
+\NewDocumentCommand \SemioVizShapeResult { } { \tl_use:N \g_semio_viz_shape_result_tl }
+%endregion 🔖️Results
+
+\ExplSyntaxOff

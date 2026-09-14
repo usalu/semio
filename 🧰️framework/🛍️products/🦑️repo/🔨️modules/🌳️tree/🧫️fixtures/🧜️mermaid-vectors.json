@@ -1,0 +1,80 @@
+{
+  "_comment": "🧜️ `treemap-beta` rendering vectors. The dialect is the one the Go `mermaid` verb emits: the bare header line, the quoted title, four spaces of indent per level, a quoted label, and `: <value>` on a leaf. A double quote inside a label would close the quoted label, so it becomes an apostrophe. The expected text is stated as a line list so a trailing-newline difference cannot hide.",
+  "vectors": [
+    {
+      "id": "loc-by-technologies-bundles-folders-files",
+      "treemap": {
+        "title": "Lines of Code",
+        "nodes": [
+          {
+            "label": "🧪️semio",
+            "children": [
+              {
+                "label": "⌨️cli",
+                "children": [
+                  { "label": "📜️index.ts", "value": 120 },
+                  { "label": "📁️core", "children": [{ "label": "📜️engine.ts", "value": 340 }] }
+                ]
+              },
+              { "label": "📚️docs", "children": [{ "label": "📖️README.md", "value": 42 }] }
+            ]
+          }
+        ]
+      },
+      "lines": [
+        "treemap-beta",
+        "\"Lines of Code\"",
+        "    \"🧪️semio\"",
+        "        \"⌨️cli\"",
+        "            \"📜️index.ts\": 120",
+        "            \"📁️core\"",
+        "                \"📜️engine.ts\": 340",
+        "        \"📚️docs\"",
+        "            \"📖️README.md\": 42",
+        ""
+      ]
+    },
+    {
+      "id": "loc-by-contributors",
+      "treemap": {
+        "title": "Lines of Code by Contributor",
+        "nodes": [
+          { "label": "Ueli Saluz", "value": 5120 },
+          { "label": "someone \"quoted\"", "value": 17 }
+        ]
+      },
+      "lines": ["treemap-beta", "\"Lines of Code by Contributor\"", "    \"Ueli Saluz\": 5120", "    \"someone 'quoted'\": 17", ""]
+    },
+    {
+      "id": "empty-treemap-is-still-a-diagram",
+      "treemap": { "title": "Lines of Code by Language", "nodes": [] },
+      "lines": ["treemap-beta", "\"Lines of Code by Language\"", ""]
+    },
+    {
+      "id": "zero-is-a-value-not-an-absent-value",
+      "treemap": { "title": "Lines of Code", "nodes": [{ "label": "empty.ts", "value": 0 }] },
+      "lines": ["treemap-beta", "\"Lines of Code\"", "    \"empty.ts\": 0", ""]
+    }
+  ],
+  "projection": {
+    "_comment": "🌳️ A monorepo tree projected into a treemap: a node whose data carries the weight key becomes a leaf of that weight, every other node becomes a group.",
+    "weightKey": "loc",
+    "title": "Lines of Code",
+    "tree": {
+      "kind": "category",
+      "label": ".",
+      "children": [
+        {
+          "kind": "bundle",
+          "id": "b1",
+          "label": "cli",
+          "children": [
+            { "kind": "file", "id": "f1", "label": "index.ts", "data": { "loc": 120 } },
+            { "kind": "file", "id": "f2", "label": "engine.ts", "data": { "loc": 340 } }
+          ]
+        }
+      ]
+    },
+    "lines": ["treemap-beta", "\"Lines of Code\"", "    \"cli\"", "        \"index.ts\": 120", "        \"engine.ts\": 340", ""]
+  }
+}

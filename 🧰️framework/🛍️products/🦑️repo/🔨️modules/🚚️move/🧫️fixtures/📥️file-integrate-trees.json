@@ -1,0 +1,84 @@
+{
+  "schema": "https://semio.tech/schema/repo/move/1#/$defs/FileIntegrateFile",
+  "cases": [
+    {
+      "name": "typescript-appended-at-the-end",
+      "sourceFile": "gamma.ts",
+      "sourceContent": "//#region 🧲️Header\n\n// 2026 Someone Else\n\n//#endregion 🧲️Header\n\nimport { basename } from \"node:path\";\n\nexport const gamma = basename(\"g\");\n",
+      "targetFile": "sample.ts",
+      "targetContent": "//#region 🧲️Header\n\n// 2026 Ueli Saluz\n\n//#endregion 🧲️Header\n\nimport { join } from \"node:path\";\n\n// #region 🔖️Alpha\nexport const alpha = join(\"a\");\n// #endregion 🔖️Alpha\n\n// #region 🔖️Beta\nexport const beta = 2;\n// #endregion 🔖️Beta\n",
+      "targetSection": "Gamma",
+      "parentSection": "",
+      "expected": "//#region 🧲️Header\n\n// 2026 Ueli Saluz\n\n// 2026 Someone Else\n//#endregion 🧲️Header\n\nimport { join } from \"node:path\";\nimport { basename } from \"node:path\";\n\n\n\n\n// #region 🔖️Alpha\nexport const alpha = join(\"a\");\n// #endregion 🔖️Alpha\n\n// #region 🔖️Beta\nexport const beta = 2;\n// #endregion 🔖️Beta\n\n// #region 🔖️Gamma\n\n\n\nexport const gamma = basename(\"g\");\n// #endregion 🔖️Gamma\n",
+      "messages": [
+        "Splitting headers...",
+        "Source Header len: 73, Source Body len: 77",
+        "\n🧩️Integrated gamma.ts into Gamma section of sample.ts"
+      ]
+    },
+    {
+      "name": "typescript-inside-a-parent-section",
+      "sourceFile": "gamma.ts",
+      "sourceContent": "//#region 🧲️Header\n\n// 2026 Someone Else\n\n//#endregion 🧲️Header\n\nimport { basename } from \"node:path\";\n\nexport const gamma = basename(\"g\");\n",
+      "targetFile": "sample.ts",
+      "targetContent": "//#region 🧲️Header\n\n// 2026 Ueli Saluz\n\n//#endregion 🧲️Header\n\nimport { join } from \"node:path\";\n\n// #region 🔖️Alpha\nexport const alpha = join(\"a\");\n// #endregion 🔖️Alpha\n\n// #region 🔖️Beta\nexport const beta = 2;\n// #endregion 🔖️Beta\n",
+      "targetSection": "Gamma",
+      "parentSection": "Beta",
+      "expected": "//#region 🧲️Header\n\n// 2026 Ueli Saluz\n\n// 2026 Someone Else\n//#endregion 🧲️Header\n\nimport { join } from \"node:path\";\nimport { basename } from \"node:path\";\n\n\n\n\n// #region 🔖️Alpha\nexport const alpha = join(\"a\");\n// #endregion 🔖️Alpha\n\n// #region 🔖️Beta\nexport const beta = 2;\n// #region 🔖️Gamma\n\n\n\nexport const gamma = basename(\"g\");\n// #endregion 🔖️Gamma\n// #endregion 🔖️Beta\n",
+      "messages": [
+        "Splitting headers...",
+        "Source Header len: 73, Source Body len: 77",
+        "\n🧩️Integrated gamma.ts into Gamma section of sample.ts"
+      ]
+    },
+    {
+      "name": "go-keeps-the-target-package",
+      "sourceFile": "gamma.go",
+      "sourceContent": "// #region 🔖️Header\n\n// 2026 Someone Else\n\n// #endregion 🔖️Header\n\npackage other\n\nimport (\n\t\"errors\"\n\t\"fmt\"\n)\n\nfunc Gamma() error { return fmt.Errorf(\"%w\", errors.New(\"g\")) }\n",
+      "targetFile": "sample.go",
+      "targetContent": "// #region 🔖️Header\n\n// 2026 Ueli Saluz\n\n// #endregion 🔖️Header\n\npackage sample\n\nimport (\n\t\"fmt\"\n\t\"strings\"\n)\n\n// #region 🔖️Alpha\nfunc Alpha() string { return fmt.Sprint(strings.ToUpper(\"a\")) }\n// #endregion 🔖️Alpha\n\n// #region 🔖️Beta\nfunc Beta() int { return 2 }\n// #endregion 🔖️Beta\n",
+      "targetSection": "Gamma",
+      "parentSection": "",
+      "expected": "// #region 🔖️Header\n\n// 2026 Ueli Saluz\n\n// 2026 Someone Else\n// #endregion 🔖️Header\n\npackage sample\n\nimport (\n\t\"errors\"\n\t\"fmt\"\n\t\"strings\"\n)\n\n\n\n\n\n// #region 🔖️Alpha\nfunc Alpha() string { return fmt.Sprint(strings.ToUpper(\"a\")) }\n// #endregion 🔖️Alpha\n\n// #region 🔖️Beta\nfunc Beta() int { return 2 }\n// #endregion 🔖️Beta\n\n// #region 🔖️Gamma\n\n\n\n\nfunc Gamma() error { return fmt.Errorf(\"%w\", errors.New(\"g\")) }\n// #endregion 🔖️Gamma\n",
+      "messages": [
+        "Splitting headers...",
+        "Source Header len: 75, Source Body len: 110",
+        "\n🧩️Integrated gamma.go into Gamma section of sample.go"
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "name": "a-missing-source-is-refused",
+      "sourceFile": "absent.ts",
+      "targetFile": "sample.ts",
+      "targetSection": "Gamma",
+      "parentSection": "",
+      "expectedError": "Source file not found: absent.ts"
+    },
+    {
+      "name": "a-missing-target-is-refused",
+      "sourceFile": "gamma.ts",
+      "targetFile": "absent.ts",
+      "targetSection": "Gamma",
+      "parentSection": "",
+      "expectedError": "Target file not found: absent.ts"
+    },
+    {
+      "name": "a-sectionless-target-is-refused",
+      "sourceFile": "gamma.ts",
+      "targetFile": "plain.txt",
+      "targetSection": "Gamma",
+      "parentSection": "",
+      "expectedError": "Target file type does not support sections"
+    },
+    {
+      "name": "an-unknown-parent-section-is-refused",
+      "sourceFile": "gamma.ts",
+      "targetFile": "sample.ts",
+      "targetSection": "Gamma",
+      "parentSection": "Missing",
+      "expectedError": "Parent section not found: Missing"
+    }
+  ]
+}

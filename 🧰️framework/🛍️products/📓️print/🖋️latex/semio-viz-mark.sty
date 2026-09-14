@@ -1,90 +1,2140 @@
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{semio-viz-mark}[2026/08/18 v0.1.0 semio viz marks]
+\ProvidesPackage{semio-viz-mark}[2026/09/05 v0.3.0 semio viz geometry kernel and section 0 mark primitives]
 
 \RequirePackage{expl3}
 \RequirePackage{xparse}
+\RequirePackage{tikz}
 \RequirePackage{semio-tokens}
+\RequirePackage{semio-viz-data}
+\RequirePackage{semio-viz-family}
+\RequirePackage{semio-viz-probe}
+\RequirePackage{semio-viz-theme}
+\usetikzlibrary{arrows.meta,patterns,decorations.pathreplacing,calc}
 
 \ExplSyntaxOn
 
-%region StyleVocabulary
-% 🎨 The Systemkarte's cell/chip/edge/bar vocabulary, formerly a \tikzset
-% block re-declared in every document preamble (forschungsbericht.tex,
-% zwischenbericht.tex) under \makeatletter -- moved here so no report
-% redeclares it, matching semio-graph.sty / semio-tree.sty. Namespaced
-% `semio viz *` so it can never collide with a document's own `semio edge`
-% (which historically carried plain -latex, not -{Latex}).
-\providecommand{\semio@viz@cell@inset@x}{0.55em}
-\providecommand{\semio@viz@cell@inset@y}{0.34em}
-\providecommand{\semio@viz@chip@inset@x}{0.2em}
-\providecommand{\semio@viz@chip@inset@y}{0.08em}
-\providecommand{\semio@viz@guide@opacity}{0.28}
-\providecommand{\semio@viz@rule@opacity}{0.55}
-\providecommand{\semio@viz@font@cell}{\SemioSans\fontsize{7.2pt}{9.4pt}\selectfont}
-\providecommand{\semio@viz@font@chip}{\SemioMono\fontsize{6.4pt}{7pt}\selectfont}
-\providecommand{\semio@viz@font@title}{\SemioMono\fontsize{7.2pt}{8.4pt}\selectfont}
-\providecommand{\semio@viz@font@label}{\SemioSans\fontsize{6.6pt}{7.6pt}\selectfont}
-\providecommand{\semio@viz@font@value}{\SemioMono\fontsize{6.6pt}{7.6pt}\selectfont}
+%region 🔖️Diagnostics
+\msg_new:nnn { semio-viz } { unknown-mark }
+  { Unknown~viz~mark~kind~'#1'. }
+\msg_new:nnn { semio-viz } { unknown-curve }
+  { Unknown~viz~curve~'#1'.~See~the~Keys~region~of~semio-viz-mark. }
+\msg_new:nnn { semio-viz } { unknown-symbol }
+  { Unknown~viz~symbol~type~'#1'. }
+\msg_new:nnn { semio-viz } { unknown-text-kind }
+  { Unknown~viz~text~kind~'#1'. }
+\msg_new:nnn { semio-viz } { outside-figure }
+  { '#1'~must~be~used~inside~a~VizFigure. }
+\msg_new:nnn { semio-viz } { too-few-points }
+  { Viz~mark~'#1'~needs~at~least~#2~points~in~its~`points`~key. }
+%endregion 🔖️Diagnostics
 
+%region 🔖️StyleVocabulary
+% 🎨 The Systemkarte's cell/chip/edge/bar vocabulary, formerly a \tikzset
+% block re-declared in every document preamble under \makeatletter -- moved
+% here so no report redeclares it, matching semio-graph.sty / semio-tree.sty.
+% Its fonts, insets and stroke weights come from semio-viz-theme.
 \tikzset{
   semio~viz~cell/.style={
-    draw=semio-chrome-border-normal, line~width=\semio@stroke@hairline,
+    draw=semio-chrome-border-normal, line~width=\semio_viz_theme_stroke:n { hairline },
     fill=semio-chrome-canvas, align=left, anchor=center,
-    inner~xsep=\semio@viz@cell@inset@x, inner~ysep=\semio@viz@cell@inset@y,
-    font=\semio@viz@font@cell, text=semio-chrome-text-normal,
+    inner~xsep=\c_semio_viz_theme_cell_inset_x_tl, inner~ysep=\c_semio_viz_theme_cell_inset_y_tl,
+    font=\c_semio_viz_theme_font_cell_tl, text=semio-chrome-text-normal,
   },
   semio~viz~module/.style={ semio~viz~cell, fill=semio-chrome-window, text=semio-chrome-foreground },
   semio~viz~chip/.style={
-    draw=semio-chrome-border-normal, line~width=\semio@stroke@hairline,
+    draw=semio-chrome-border-normal, line~width=\semio_viz_theme_stroke:n { hairline },
     fill=semio-chrome-panel, text=semio-chrome-foreground,
-    font=\semio@viz@font@chip,
-    inner~xsep=\semio@viz@chip@inset@x, inner~ysep=\semio@viz@chip@inset@y,
-  },
-  semio~viz~edge/.style={
-    draw=semio-chrome-border-emphasized, line~width=\semio@stroke@hairline, -{Latex},
-  },
-  semio~viz~edge~analytic/.style={ semio~viz~edge, dash~pattern=on~2.25pt~off~1.5pt },
-  semio~viz~bar/.style={
-    draw=semio-chrome-border-normal, line~width=\semio@stroke@hairline, fill=semio-chrome-panel,
-  },
-  semio~viz~guide/.style={
-    draw=semio-chrome-border-normal, line~width=\semio@stroke@hairline, draw~opacity=\semio@viz@guide@opacity,
-  },
-  semio~viz~rule/.style={
-    draw=semio-chrome-border-normal, line~width=\semio@stroke@hairline, draw~opacity=\semio@viz@rule@opacity,
+    font=\c_semio_viz_theme_font_chip_tl,
+    inner~xsep=\c_semio_viz_theme_chip_inset_x_tl, inner~ysep=\c_semio_viz_theme_chip_inset_y_tl,
+    rounded~corners=0.2em, anchor=center,
   },
 }
-%endregion StyleVocabulary
+%endregion 🔖️StyleVocabulary
 
-%region Diagnostics
-\msg_new:nnn { semio-viz } { unknown-mark }
-  { Unknown~viz~mark~'#1'. }
-\msg_new:nnn { semio-viz } { outside-figure }
-  { \iow_char:N\\#1~needs~an~enclosing~VizFigure. }
-\msg_new:nnn { semio-viz } { unknown-text-kind }
-  { Unknown~viz~text~kind~'#1'. }
-%endregion Diagnostics
+%region 🔖️PathBuffer
+% 📐 An expl3 twin of d3-path's `Path`: the same commands in the same order
+% with the same arguments, so a probe record is literally the token stream of
+% d3's own SVG path string and the oracle only has to tokenise it. Numbers are
+% recorded in d3/SVG space (y down); the TikZ fragment is transformed on the
+% fly by the offset (ox,oy) and the y sign, which is what turns d3 geometry
+% into a right-way-up figure without ever touching the recorded numbers.
+\tl_new:N \l_semio_viz_path_cmd_tl
+\tl_new:N \l_semio_viz_path_tikz_tl
+\fp_new:N \l_semio_viz_path_sx_fp
+\fp_new:N \l_semio_viz_path_sy_fp
+\fp_new:N \l_semio_viz_path_cx_fp
+\fp_new:N \l_semio_viz_path_cy_fp
+\fp_new:N \l_semio_viz_path_ox_fp
+\fp_new:N \l_semio_viz_path_oy_fp
+\fp_new:N \l_semio_viz_path_sgn_fp
+\bool_new:N \l_semio_viz_path_empty_bool
 
-%region Registry
-\seq_new:N \g_semio_viz_mark_kinds_seq
+% 🔢 Fixed-point decimal rendering; never scientific, so the probe's JSON stays a plain number.
+\cs_new:Npn \semio_viz_num:n #1 { \fp_to_decimal:n {#1} }
+% 📐 Figure-space x of a buffer x.
+\cs_new:Npn \semio_viz_path_tx:n #1 { \fp_to_decimal:n { \l_semio_viz_path_ox_fp + (#1) } }
+% 📐 Figure-space y of a buffer y.
+\cs_new:Npn \semio_viz_path_ty:n #1 { \fp_to_decimal:n { \l_semio_viz_path_oy_fp + \l_semio_viz_path_sgn_fp * (#1) } }
+% 📐 Figure-space angle in degrees of a buffer angle in radians.
+\cs_new:Npn \semio_viz_path_ta:n #1 { \fp_to_decimal:n { \l_semio_viz_path_sgn_fp * (#1) * 180 / pi } }
+
+% 📝 Appends the token #1 to the recorded d3 path, comma-separated.
+\cs_new_protected:Npn \semio_viz_path_put:n #1 {
+  \tl_if_empty:NTF \l_semio_viz_path_cmd_tl
+    { \tl_set:Nn \l_semio_viz_path_cmd_tl {#1} }
+    { \tl_put_right:Nn \l_semio_viz_path_cmd_tl { , #1 } }
+}
+\cs_generate_variant:Nn \semio_viz_path_put:n { x }
+
+% 🧹 Starts a fresh path recorded in d3 space and rendered at (#1,#2) with the y axis flipped when #3 is true.
+\cs_new_protected:Npn \semio_viz_path_begin:nnn #1#2#3 {
+  \tl_clear:N \l_semio_viz_path_cmd_tl
+  \tl_clear:N \l_semio_viz_path_tikz_tl
+  \bool_set_true:N \l_semio_viz_path_empty_bool
+  \fp_set:Nn \l_semio_viz_path_ox_fp {#1}
+  \fp_set:Nn \l_semio_viz_path_oy_fp {#2}
+  \fp_set:Nn \l_semio_viz_path_sgn_fp { \bool_if:nTF {#3} { -1 } { 1 } }
+}
+
+% ✒️ d3-path's `moveTo`: starts a subpath at (#1,#2) in d3 space.
+\cs_new_protected:Npn \semio_viz_path_move_to:nn #1#2 {
+  \fp_set:Nn \l_semio_viz_path_sx_fp {#1}
+  \fp_set:Nn \l_semio_viz_path_sy_fp {#2}
+  \fp_set:Nn \l_semio_viz_path_cx_fp {#1}
+  \fp_set:Nn \l_semio_viz_path_cy_fp {#2}
+  \bool_set_false:N \l_semio_viz_path_empty_bool
+  \semio_viz_path_put:x { M , \semio_viz_num:n {#1} , \semio_viz_num:n {#2} }
+  \tl_put_right:Nx \l_semio_viz_path_tikz_tl
+    { ~ ( \semio_viz_path_tx:n {#1} mm , \semio_viz_path_ty:n {#2} mm ) }
+}
+
+% ✒️ d3-path's `lineTo`: a straight segment to (#1,#2).
+\cs_new_protected:Npn \semio_viz_path_line_to:nn #1#2 {
+  \fp_set:Nn \l_semio_viz_path_cx_fp {#1}
+  \fp_set:Nn \l_semio_viz_path_cy_fp {#2}
+  \semio_viz_path_put:x { L , \semio_viz_num:n {#1} , \semio_viz_num:n {#2} }
+  \tl_put_right:Nx \l_semio_viz_path_tikz_tl
+    { ~--~ ( \semio_viz_path_tx:n {#1} mm , \semio_viz_path_ty:n {#2} mm ) }
+}
+
+% ✒️ d3-path's `bezierCurveTo`: a cubic through the controls (#1,#2) and (#3,#4) to (#5,#6).
+\cs_new_protected:Npn \semio_viz_path_bezier_to:nnnnnn #1#2#3#4#5#6 {
+  \fp_set:Nn \l_semio_viz_path_cx_fp {#5}
+  \fp_set:Nn \l_semio_viz_path_cy_fp {#6}
+  \semio_viz_path_put:x { C , \semio_viz_num:n {#1} , \semio_viz_num:n {#2} ,
+    \semio_viz_num:n {#3} , \semio_viz_num:n {#4} , \semio_viz_num:n {#5} , \semio_viz_num:n {#6} }
+  \tl_put_right:Nx \l_semio_viz_path_tikz_tl
+    { ~..~controls~ ( \semio_viz_path_tx:n {#1} mm , \semio_viz_path_ty:n {#2} mm )
+      ~and~ ( \semio_viz_path_tx:n {#3} mm , \semio_viz_path_ty:n {#4} mm )
+      ~..~ ( \semio_viz_path_tx:n {#5} mm , \semio_viz_path_ty:n {#6} mm ) }
+}
+
+% 〰️ Quadratic segment; TikZ has cubics only, so the render arm raises the degree while the record keeps d3's Q.
+\cs_new_protected:Npn \semio_viz_path_quad_to:nnnn #1#2#3#4 {
+  \tl_put_right:Nx \l_semio_viz_path_tikz_tl
+    { ~..~controls~ ( \semio_viz_path_tx:n { \l_semio_viz_path_cx_fp + 2 * ( (#1) - \l_semio_viz_path_cx_fp ) / 3 } mm ,
+        \semio_viz_path_ty:n { \l_semio_viz_path_cy_fp + 2 * ( (#2) - \l_semio_viz_path_cy_fp ) / 3 } mm )
+      ~and~ ( \semio_viz_path_tx:n { (#3) + 2 * ( (#1) - (#3) ) / 3 } mm ,
+        \semio_viz_path_ty:n { (#4) + 2 * ( (#2) - (#4) ) / 3 } mm )
+      ~..~ ( \semio_viz_path_tx:n {#3} mm , \semio_viz_path_ty:n {#4} mm ) }
+  \fp_set:Nn \l_semio_viz_path_cx_fp {#3}
+  \fp_set:Nn \l_semio_viz_path_cy_fp {#4}
+  \semio_viz_path_put:x { Q , \semio_viz_num:n {#1} , \semio_viz_num:n {#2} ,
+    \semio_viz_num:n {#3} , \semio_viz_num:n {#4} }
+}
+
+% 🔒 d3-path's `closePath`: joins back to the subpath's start, and does nothing on an empty path.
+\cs_new_protected:Npn \semio_viz_path_close: {
+  \bool_if:NF \l_semio_viz_path_empty_bool {
+    \fp_set_eq:NN \l_semio_viz_path_cx_fp \l_semio_viz_path_sx_fp
+    \fp_set_eq:NN \l_semio_viz_path_cy_fp \l_semio_viz_path_sy_fp
+    \semio_viz_path_put:n { Z }
+    \tl_put_right:Nn \l_semio_viz_path_tikz_tl { ~--~cycle }
+  }
+}
+
+% ▭ d3-path's rect: one move plus the horizontal/vertical shorthands, recorded letter for letter.
+\cs_new_protected:Npn \semio_viz_path_rect:nnnn #1#2#3#4 {
+  \fp_set:Nn \l_semio_viz_path_sx_fp {#1}
+  \fp_set:Nn \l_semio_viz_path_sy_fp {#2}
+  \fp_set:Nn \l_semio_viz_path_cx_fp {#1}
+  \fp_set:Nn \l_semio_viz_path_cy_fp {#2}
+  \bool_set_false:N \l_semio_viz_path_empty_bool
+  \semio_viz_path_put:x { M , \semio_viz_num:n {#1} , \semio_viz_num:n {#2} , h , \semio_viz_num:n {#3} ,
+    v , \semio_viz_num:n {#4} , h , \semio_viz_num:n { -(#3) } , Z }
+  \tl_put_right:Nx \l_semio_viz_path_tikz_tl
+    { ~ ( \semio_viz_path_tx:n {#1} mm , \semio_viz_path_ty:n {#2} mm )
+      ~rectangle~ ( \semio_viz_path_tx:n { (#1) + (#3) } mm , \semio_viz_path_ty:n { (#2) + (#4) } mm ) }
+}
+
+% ⭕ d3-path's arc, including its implicit move/line-to and its two-arc full circle.
+\cs_new_protected:Npn \semio_viz_path_arc:nnnnnn #1#2#3#4#5#6 {
+  \fp_set:Nn \l_tmpa_fp { (#3) * cos(#4) }
+  \fp_set:Nn \l_tmpb_fp { (#3) * sin(#4) }
+  \fp_set:Nn \l_semio_viz_arc_xa_fp { (#1) + \l_tmpa_fp }
+  \fp_set:Nn \l_semio_viz_arc_ya_fp { (#2) + \l_tmpb_fp }
+  \fp_set:Nn \l_semio_viz_arc_cw_fp { \bool_if:nTF {#6} { 0 } { 1 } }
+  \fp_set:Nn \l_semio_viz_arc_da_fp { \bool_if:nTF {#6} { (#4) - (#5) } { (#5) - (#4) } }
+  \bool_if:NTF \l_semio_viz_path_empty_bool
+    { \semio_viz_path_move_to:nn { \l_semio_viz_arc_xa_fp } { \l_semio_viz_arc_ya_fp } }
+    {
+      \fp_compare:nNnTF { abs( \l_semio_viz_path_cx_fp - \l_semio_viz_arc_xa_fp ) } > { 1e-6 }
+        { \semio_viz_path_line_to:nn { \l_semio_viz_arc_xa_fp } { \l_semio_viz_arc_ya_fp } }
+        {
+          \fp_compare:nNnT { abs( \l_semio_viz_path_cy_fp - \l_semio_viz_arc_ya_fp ) } > { 1e-6 }
+            { \semio_viz_path_line_to:nn { \l_semio_viz_arc_xa_fp } { \l_semio_viz_arc_ya_fp } }
+        }
+    }
+  \fp_compare:nNnF {#3} = { 0 } {
+    \fp_compare:nNnT { \l_semio_viz_arc_da_fp } < { 0 }
+      { \fp_set:Nn \l_semio_viz_arc_da_fp
+          { \l_semio_viz_arc_da_fp - 2*pi*trunc( \l_semio_viz_arc_da_fp / (2*pi) ) + 2*pi } }
+    \fp_compare:nNnTF { \l_semio_viz_arc_da_fp } > { 2*pi - 1e-6 }
+      { \semio_viz_path_arc_full:nnnnn {#1} {#2} {#3} { \l_tmpa_fp } { \l_tmpb_fp } }
+      {
+        \fp_compare:nNnT { \l_semio_viz_arc_da_fp } > { 1e-6 }
+          { \semio_viz_path_arc_part:nnnn {#1} {#2} {#3} {#5} }
+      }
+  }
+}
+
+\fp_new:N \l_semio_viz_arc_xa_fp
+\fp_new:N \l_semio_viz_arc_ya_fp
+\fp_new:N \l_semio_viz_arc_cw_fp
+\fp_new:N \l_semio_viz_arc_da_fp
+
+% ⭕ A whole circle of radius #3 about (#1,#2), recorded as d3's two half-turn arcs.
+\cs_new_protected:Npn \semio_viz_path_arc_full:nnnnn #1#2#3#4#5 {
+  \semio_viz_path_put:x { A , \semio_viz_num:n {#3} , \semio_viz_num:n {#3} , 0 , 1 ,
+    \semio_viz_num:n { \l_semio_viz_arc_cw_fp } ,
+    \semio_viz_num:n { (#1) - (#4) } , \semio_viz_num:n { (#2) - (#5) } ,
+    A , \semio_viz_num:n {#3} , \semio_viz_num:n {#3} , 0 , 1 ,
+    \semio_viz_num:n { \l_semio_viz_arc_cw_fp } ,
+    \semio_viz_num:n { \l_semio_viz_arc_xa_fp } , \semio_viz_num:n { \l_semio_viz_arc_ya_fp } }
+  \tl_put_right:Nx \l_semio_viz_path_tikz_tl {
+    ~circle~ [ radius= \semio_viz_num:n {#3} mm ]
+    ~ ( \semio_viz_path_tx:n { \l_semio_viz_arc_xa_fp } mm , \semio_viz_path_ty:n { \l_semio_viz_arc_ya_fp } mm )
+  }
+}
+
+% 🌗 A partial arc of radius #3 about (#1,#2) ending at angle #4, with d3's own large-arc flag.
+\cs_new_protected:Npn \semio_viz_path_arc_part:nnnn #1#2#3#4 {
+  \semio_viz_path_put:x { A , \semio_viz_num:n {#3} , \semio_viz_num:n {#3} , 0 ,
+    \fp_compare:nNnTF { \l_semio_viz_arc_da_fp } < { pi } { 0 } { 1 } ,
+    \semio_viz_num:n { \l_semio_viz_arc_cw_fp } ,
+    \semio_viz_num:n { (#1) + (#3) * cos(#4) } , \semio_viz_num:n { (#2) + (#3) * sin(#4) } }
+  \fp_set:Nn \l_tmpa_fp { \l_semio_viz_arc_da_fp }
+  \fp_compare:nNnT { \l_semio_viz_arc_cw_fp } = { 0 } { \fp_set:Nn \l_tmpa_fp { - \l_semio_viz_arc_da_fp } }
+  \fp_set:Nn \l_semio_viz_path_cx_fp { (#1) + (#3) * cos(#4) }
+  \fp_set:Nn \l_semio_viz_path_cy_fp { (#2) + (#3) * sin(#4) }
+  \tl_put_right:Nx \l_semio_viz_path_tikz_tl {
+    ~arc~ [ start~angle= \semio_viz_path_ta:n { atand( \l_semio_viz_arc_ya_fp - (#2) , \l_semio_viz_arc_xa_fp - (#1) ) * pi / 180 } ,
+      end~angle= \semio_viz_path_ta:n { atand( \l_semio_viz_arc_ya_fp - (#2) , \l_semio_viz_arc_xa_fp - (#1) ) * pi / 180 + \l_tmpa_fp } ,
+      radius= \semio_viz_num:n {#3} mm ]
+  }
+}
+
+% 🥚 An SVG elliptical arc; d3-path has none, so this is the one command beyond the twin.
+\cs_new_protected:Npn \semio_viz_path_ellipse_arc:nnnnnn #1#2#3#4#5#6 {
+  \fp_set:Nn \l_semio_viz_arc_xa_fp { (#1) + (#3) * cos(#5) }
+  \fp_set:Nn \l_semio_viz_arc_ya_fp { (#2) + (#4) * sin(#5) }
+  \bool_if:NT \l_semio_viz_path_empty_bool
+    { \semio_viz_path_move_to:nn { \l_semio_viz_arc_xa_fp } { \l_semio_viz_arc_ya_fp } }
+  \semio_viz_path_put:x { A , \semio_viz_num:n {#3} , \semio_viz_num:n {#4} , 0 ,
+    \fp_compare:nNnTF { abs( (#6) - (#5) ) } < { pi } { 0 } { 1 } ,
+    \fp_compare:nNnTF {#6} > {#5} { 1 } { 0 } ,
+    \semio_viz_num:n { (#1) + (#3) * cos(#6) } , \semio_viz_num:n { (#2) + (#4) * sin(#6) } }
+  \fp_set:Nn \l_semio_viz_path_cx_fp { (#1) + (#3) * cos(#6) }
+  \fp_set:Nn \l_semio_viz_path_cy_fp { (#2) + (#4) * sin(#6) }
+  \tl_put_right:Nx \l_semio_viz_path_tikz_tl {
+    ~arc~ [ start~angle= \semio_viz_path_ta:n {#5} , end~angle= \semio_viz_path_ta:n {#6} ,
+      x~radius= \semio_viz_num:n {#3} mm , y~radius= \semio_viz_num:n {#4} mm ]
+  }
+}
+%endregion 🔖️PathBuffer
+
+
+%region 🔖️Curves
+% 〰️ Real d3-shape interpolators, transcribed state machine for state machine
+% from d3-shape/src/curve: `lineStart`, `point`, `lineEnd` with d3's own
+% `_point` counter and `_line` flag, so the emitted cubic control points are
+% the numbers d3 would have written into its SVG path. `_line` is an integer:
+% 0 and 1 are d3's own values, 2 stands for both `undefined` (a plain line
+% generator) and `NaN` (after `areaEnd`) -- the two behave identically in every
+% branch d3 tests, being falsy but not `=== 0`.
+\int_new:N \l_semio_viz_c_point_int
+\int_new:N \l_semio_viz_c_line_int
+\fp_new:N \l_semio_viz_c_ga_fp
+\fp_new:N \l_semio_viz_c_gb_fp
+\int_new:N \l_semio_viz_c_n_int
+\int_new:N \l_semio_viz_c_m_int
+\int_new:N \l_semio_viz_c_i_int
+\bool_new:N \l_semio_viz_c_reflect_bool
+\fp_new:N \l_semio_viz_c_xa_fp \fp_new:N \l_semio_viz_c_ya_fp
+\fp_new:N \l_semio_viz_c_xb_fp \fp_new:N \l_semio_viz_c_yb_fp
+\fp_new:N \l_semio_viz_c_xc_fp \fp_new:N \l_semio_viz_c_yc_fp
+\fp_new:N \l_semio_viz_c_xd_fp \fp_new:N \l_semio_viz_c_yd_fp
+\fp_new:N \l_semio_viz_c_xe_fp \fp_new:N \l_semio_viz_c_ye_fp
+\fp_new:N \l_semio_viz_c_xf_fp \fp_new:N \l_semio_viz_c_yf_fp
+\fp_new:N \l_semio_viz_c_sx_fp \fp_new:N \l_semio_viz_c_sy_fp
+\fp_new:N \l_semio_viz_c_k_fp
+\fp_new:N \l_semio_viz_c_t_fp
+\fp_new:N \l_semio_viz_c_alpha_fp
+\fp_new:N \l_semio_viz_c_beta_fp
+\fp_new:N \l_semio_viz_c_ta_fp
+\fp_new:N \l_semio_viz_c_laa_fp \fp_new:N \l_semio_viz_c_lba_fp \fp_new:N \l_semio_viz_c_lca_fp
+\fp_new:N \l_semio_viz_c_lab_fp \fp_new:N \l_semio_viz_c_lbb_fp \fp_new:N \l_semio_viz_c_lcb_fp
+\seq_new:N \l_semio_viz_c_bx_seq
+\seq_new:N \l_semio_viz_c_by_seq
+\tl_new:N \l_semio_viz_c_name_tl
+\prop_new:N \l_semio_viz_c_a_prop
+\prop_new:N \l_semio_viz_c_b_prop
+\prop_new:N \l_semio_viz_c_r_prop
+
+\cs_new_protected:Npn \semio_viz_c_move:nn #1#2 {
+  \bool_if:NTF \l_semio_viz_c_reflect_bool
+    { \semio_viz_path_move_to:nn {#2} {#1} } { \semio_viz_path_move_to:nn {#1} {#2} }
+}
+% ✏️ `lineTo` through the interpolator's axis reflection, for the y-major curves.
+\cs_new_protected:Npn \semio_viz_c_line:nn #1#2 {
+  \bool_if:NTF \l_semio_viz_c_reflect_bool
+    { \semio_viz_path_line_to:nn {#2} {#1} } { \semio_viz_path_line_to:nn {#1} {#2} }
+}
+% ✏️ `bezierCurveTo` through the same reflection.
+\cs_new_protected:Npn \semio_viz_c_bez:nnnnnn #1#2#3#4#5#6 {
+  \bool_if:NTF \l_semio_viz_c_reflect_bool
+    { \semio_viz_path_bezier_to:nnnnnn {#2} {#1} {#4} {#3} {#6} {#5} }
+    { \semio_viz_path_bezier_to:nnnnnn {#1} {#2} {#3} {#4} {#5} {#6} }
+}
+% ✏️ d3's `this._line ? lineTo : moveTo`.
+\cs_new_protected:Npn \semio_viz_c_start:nn #1#2 {
+  \int_compare:nNnTF \l_semio_viz_c_line_int = { 1 }
+    { \semio_viz_c_line:nn {#1} {#2} } { \semio_viz_c_move:nn {#1} {#2} }
+}
+% 🔒 d3's `if (this._line || (this._line !== 0 && this._point === 1)) closePath()`, then `_line = 1 - _line`.
+\cs_new_protected:Npn \semio_viz_c_finish: {
+  \int_compare:nNnTF \l_semio_viz_c_line_int = { 1 }
+    { \semio_viz_path_close: }
+    {
+      \int_compare:nNnT \l_semio_viz_c_line_int = { 2 }
+        { \int_compare:nNnT \l_semio_viz_c_point_int = { 1 } { \semio_viz_path_close: } }
+    }
+  \int_compare:nNnF \l_semio_viz_c_line_int = { 2 }
+    { \int_set:Nn \l_semio_viz_c_line_int { 1 - \l_semio_viz_c_line_int } }
+}
+
+% 🔑 The three interpolator parameters, `semio / viz / curve`: cardinal tension, Catmull-Rom
+% alpha and bundle beta, each read only by the curves that define it.
+\keys_define:nn { semio / viz / curve } {
+  tension .fp_set:N = \l_semio_viz_c_tension_fp,
+  alpha   .fp_set:N = \l_semio_viz_c_alpha_fp,
+  beta    .fp_set:N = \l_semio_viz_c_beta_fp,
+}
+
+% 🎛️ Curve names: user vocabulary (hyphenated, taxonomy spelling) to internal id.
+\prop_new:N \g_semio_viz_c_alias_prop
+\clist_map_inline:nn {
+  linear, linear-closed, step, step-before, step-after,
+  basis, basis-open, basis-closed, bundle,
+  cardinal, cardinal-open, cardinal-closed,
+  catmull-rom, catmull-rom-open, catmull-rom-closed,
+  monotone-x, monotone-y, natural, bezier
+} { \prop_gput:Nnn \g_semio_viz_c_alias_prop {#1} {#1} }
+
+% 🏷️ Internal id of the curve named #1 into #2; an unknown name is an error and falls back to linear.
+\cs_new_protected:Npn \semio_viz_c_id:nN #1#2 {
+  \prop_get:NnNF \g_semio_viz_c_alias_prop {#1} #2
+    { \msg_error:nnn { semio-viz } { unknown-curve } {#1} \tl_set:Nn #2 { linear } }
+  \tl_replace_all:Nnn #2 { - } { _ }
+}
+
+% 🧵 Opens a curve: #1 is the curve name, #2 its option list (tension, alpha, beta).
+\cs_new_protected:Npn \semio_viz_curve_begin:nn #1#2 {
+  \fp_set:Nn \l_semio_viz_c_tension_fp { 0 }
+  \fp_set:Nn \l_semio_viz_c_alpha_fp { 0.5 }
+  \fp_set:Nn \l_semio_viz_c_beta_fp { 0.85 }
+  \keys_set:nn { semio / viz / curve } {#2}
+  \semio_viz_c_id:nN {#1} \l_semio_viz_c_name_tl
+  \fp_set:Nn \l_semio_viz_c_k_fp { ( 1 - \l_semio_viz_c_tension_fp ) / 6 }
+  \bool_set_false:N \l_semio_viz_c_reflect_bool
+  \int_set:Nn \l_semio_viz_c_point_int { 0 }
+  \int_set:Nn \l_semio_viz_c_line_int { 2 }
+  \seq_clear:N \l_semio_viz_c_bx_seq
+  \seq_clear:N \l_semio_viz_c_by_seq
+  \fp_zero:N \l_semio_viz_c_laa_fp \fp_zero:N \l_semio_viz_c_lba_fp \fp_zero:N \l_semio_viz_c_lca_fp
+  \fp_zero:N \l_semio_viz_c_lab_fp \fp_zero:N \l_semio_viz_c_lbb_fp \fp_zero:N \l_semio_viz_c_lcb_fp
+  \exp_args:NV \str_case:nnF \l_semio_viz_c_name_tl {
+    { step }        { \fp_set:Nn \l_semio_viz_c_t_fp { 0.5 } }
+    { step_before } { \fp_set:Nn \l_semio_viz_c_t_fp { 0 } }
+    { step_after }  { \fp_set:Nn \l_semio_viz_c_t_fp { 1 } }
+    { monotone_y }  { \bool_set_true:N \l_semio_viz_c_reflect_bool }
+  } { }
+  \fp_compare:nNnT { \l_semio_viz_c_alpha_fp } = { 0 } {
+    \exp_args:NV \str_case:nnF \l_semio_viz_c_name_tl {
+      { catmull_rom }        { \tl_set:Nn \l_semio_viz_c_name_tl { cardinal } }
+      { catmull_rom_open }   { \tl_set:Nn \l_semio_viz_c_name_tl { cardinal_open } }
+      { catmull_rom_closed } { \tl_set:Nn \l_semio_viz_c_name_tl { cardinal_closed } }
+    } { }
+    \fp_set:Nn \l_semio_viz_c_k_fp { 1 / 6 }
+  }
+  \semio_viz_curve_line_start:
+}
+
+% 🔄 d3's `lineStart`: the per-line state resets, the interpolator's own
+% parameters and the area flag survive, which is what lets an area run its two
+% boundaries through one and the same curve.
+\cs_new_protected:Npn \semio_viz_curve_line_start: {
+  \int_set:Nn \l_semio_viz_c_point_int { 0 }
+  \seq_clear:N \l_semio_viz_c_bx_seq
+  \seq_clear:N \l_semio_viz_c_by_seq
+  \fp_zero:N \l_semio_viz_c_laa_fp \fp_zero:N \l_semio_viz_c_lba_fp \fp_zero:N \l_semio_viz_c_lca_fp
+  \fp_zero:N \l_semio_viz_c_lab_fp \fp_zero:N \l_semio_viz_c_lbb_fp \fp_zero:N \l_semio_viz_c_lcb_fp
+  \clist_map_inline:nn { xa, ya, xb, yb, xc, yc, xd, yd, xe, ye, xf, yf, sx, sy }
+    { \fp_set:cn { l_semio_viz_c_ ##1 _fp } { nan } }
+  \fp_set:Nn \l_semio_viz_c_ta_fp { nan }
+}
+
+% 🏔️ d3's `areaStart` / `areaEnd`: the flag that makes the second boundary a
+% lineTo onto the first and closes the ring.
+\cs_new_protected:Npn \semio_viz_curve_area_start: { \int_set:Nn \l_semio_viz_c_line_int { 0 } }
+% 🏔️ The other half of that flag: the area is finished and the next line starts fresh.
+\cs_new_protected:Npn \semio_viz_curve_area_end: { \int_set:Nn \l_semio_viz_c_line_int { 2 } }
+
+% 📍 Feeds one point through the active interpolator.
+\cs_new_protected:Npn \semio_viz_curve_point:nn #1#2 {
+  \use:c { semio_viz_c_ \l_semio_viz_c_name_tl _point:nn } {#1} {#2}
+}
+% 🔚 Closes the active interpolator.
+\cs_new_protected:Npn \semio_viz_curve_end: {
+  \use:c { semio_viz_c_ \l_semio_viz_c_name_tl _end: }
+}
+
+%region 🔖️CurveLinear
+% ➖ `linear`: the first point opens the subpath, every later one is a straight segment.
+\cs_new_protected:Npn \semio_viz_c_linear_point:nn #1#2 {
+  \int_compare:nNnTF \l_semio_viz_c_point_int = { 0 }
+    { \int_set:Nn \l_semio_viz_c_point_int { 1 } \semio_viz_c_start:nn {#1} {#2} }
+    { \int_set:Nn \l_semio_viz_c_point_int { 2 } \semio_viz_c_line:nn {#1} {#2} }
+}
+% 🔚 `linear`'s line end: nothing to flush, only the shared close-and-flip.
+\cs_new_protected:Npn \semio_viz_c_linear_end: { \semio_viz_c_finish: }
+
+% 🔁 `linear-closed`: the same, but every line is a ring, so the first point never becomes a `lineTo`.
+\cs_new_protected:Npn \semio_viz_c_linear_closed_point:nn #1#2 {
+  \int_compare:nNnTF \l_semio_viz_c_point_int = { 0 }
+    { \int_set:Nn \l_semio_viz_c_point_int { 1 } \semio_viz_c_move:nn {#1} {#2} }
+    { \semio_viz_c_line:nn {#1} {#2} }
+}
+% 🔚 `linear-closed`'s line end: the ring is closed unconditionally.
+\cs_new_protected:Npn \semio_viz_c_linear_closed_end: {
+  \int_compare:nNnF \l_semio_viz_c_point_int = { 0 } { \semio_viz_path_close: }
+}
+%endregion 🔖️CurveLinear
+
+%region 🔖️CurveStep
+% 🪜 `step`, `step-before` and `step-after`: the riser sits at the fraction `t` between the two
+% points, which is what the three variants differ in.
+\cs_new_protected:Npn \semio_viz_c_step_point:nn #1#2 {
+  \int_compare:nNnTF \l_semio_viz_c_point_int = { 0 }
+    { \int_set:Nn \l_semio_viz_c_point_int { 1 } \semio_viz_c_start:nn {#1} {#2} }
+    {
+      \int_set:Nn \l_semio_viz_c_point_int { 2 }
+      \fp_compare:nNnTF { \l_semio_viz_c_t_fp } > { 0 }
+        {
+          \fp_set:Nn \l_tmpa_fp { \l_semio_viz_c_sx_fp * ( 1 - \l_semio_viz_c_t_fp ) + (#1) * \l_semio_viz_c_t_fp }
+          \semio_viz_c_line:nn { \l_tmpa_fp } { \l_semio_viz_c_sy_fp }
+          \semio_viz_c_line:nn { \l_tmpa_fp } {#2}
+        }
+        {
+          \semio_viz_c_line:nn { \l_semio_viz_c_sx_fp } {#2}
+          \semio_viz_c_line:nn {#1} {#2}
+        }
+    }
+  \fp_set:Nn \l_semio_viz_c_sx_fp {#1}
+  \fp_set:Nn \l_semio_viz_c_sy_fp {#2}
+}
+% 🔚 `step`'s line end: the last tread is flushed, and `t` is mirrored for an area's return boundary.
+\cs_new_protected:Npn \semio_viz_c_step_end: {
+  \fp_compare:nTF { 0 < \l_semio_viz_c_t_fp < 1 }
+    { \int_compare:nNnT \l_semio_viz_c_point_int = { 2 }
+        { \semio_viz_c_line:nn { \l_semio_viz_c_sx_fp } { \l_semio_viz_c_sy_fp } } }
+    { }
+  \semio_viz_c_finish:
+  \int_compare:nNnF \l_semio_viz_c_line_int = { 2 }
+    { \fp_set:Nn \l_semio_viz_c_t_fp { 1 - \l_semio_viz_c_t_fp } }
+}
+\cs_new_eq:cc { semio_viz_c_step_before_point:nn } { semio_viz_c_step_point:nn }
+\cs_new_eq:cc { semio_viz_c_step_before_end: } { semio_viz_c_step_end: }
+\cs_new_eq:cc { semio_viz_c_step_after_point:nn } { semio_viz_c_step_point:nn }
+\cs_new_eq:cc { semio_viz_c_step_after_end: } { semio_viz_c_step_end: }
+%endregion 🔖️CurveStep
+
+%region 🔖️CurveBasis
+% 🌀 The cubic B-spline segment over the two buffered points and the new point (#1,#2).
+\cs_new_protected:Npn \semio_viz_c_basis_emit:nn #1#2 {
+  \semio_viz_c_bez:nnnnnn
+    { ( 2 * \l_semio_viz_c_xa_fp + \l_semio_viz_c_xb_fp ) / 3 }
+    { ( 2 * \l_semio_viz_c_ya_fp + \l_semio_viz_c_yb_fp ) / 3 }
+    { ( \l_semio_viz_c_xa_fp + 2 * \l_semio_viz_c_xb_fp ) / 3 }
+    { ( \l_semio_viz_c_ya_fp + 2 * \l_semio_viz_c_yb_fp ) / 3 }
+    { ( \l_semio_viz_c_xa_fp + 4 * \l_semio_viz_c_xb_fp + (#1) ) / 6 }
+    { ( \l_semio_viz_c_ya_fp + 4 * \l_semio_viz_c_yb_fp + (#2) ) / 6 }
+}
+% ➡️ Slides the two-point window on by (#1,#2).
+\cs_new_protected:Npn \semio_viz_c_basis_shift:nn #1#2 {
+  \fp_set_eq:NN \l_semio_viz_c_xa_fp \l_semio_viz_c_xb_fp
+  \fp_set_eq:NN \l_semio_viz_c_ya_fp \l_semio_viz_c_yb_fp
+  \fp_set:Nn \l_semio_viz_c_xb_fp {#1}
+  \fp_set:Nn \l_semio_viz_c_yb_fp {#2}
+}
+% 🌀 `basis`: the spline is pinned to the first point, so the opening segment is a straight run
+% onto the first control point before the B-spline proper starts.
+\cs_new_protected:Npn \semio_viz_c_basis_point:nn #1#2 {
+  \int_case:nnF { \l_semio_viz_c_point_int } {
+    { 0 } { \int_set:Nn \l_semio_viz_c_point_int { 1 } \semio_viz_c_start:nn {#1} {#2} }
+    { 1 } { \int_set:Nn \l_semio_viz_c_point_int { 2 } }
+    { 2 } {
+      \int_set:Nn \l_semio_viz_c_point_int { 3 }
+      \semio_viz_c_line:nn { ( 5 * \l_semio_viz_c_xa_fp + \l_semio_viz_c_xb_fp ) / 6 }
+        { ( 5 * \l_semio_viz_c_ya_fp + \l_semio_viz_c_yb_fp ) / 6 }
+      \semio_viz_c_basis_emit:nn {#1} {#2}
+    }
+  } { \semio_viz_c_basis_emit:nn {#1} {#2} }
+  \semio_viz_c_basis_shift:nn {#1} {#2}
+}
+% 🔚 `basis`'s line end: the closing segment and the straight run onto the last point.
+\cs_new_protected:Npn \semio_viz_c_basis_end: {
+  \int_compare:nNnT \l_semio_viz_c_point_int = { 3 }
+    { \semio_viz_c_basis_emit:nn { \l_semio_viz_c_xb_fp } { \l_semio_viz_c_yb_fp } }
+  \int_compare:nNnT \l_semio_viz_c_point_int > { 1 }
+    { \semio_viz_c_line:nn { \l_semio_viz_c_xb_fp } { \l_semio_viz_c_yb_fp } }
+  \semio_viz_c_finish:
+}
+
+% 🌀 `basis-open`: the spline is not pinned, so it starts at the first control point and the two
+% end points of the data are only tangents.
+\cs_new_protected:Npn \semio_viz_c_basis_open_point:nn #1#2 {
+  \int_case:nnF { \l_semio_viz_c_point_int } {
+    { 0 } { \int_set:Nn \l_semio_viz_c_point_int { 1 } }
+    { 1 } { \int_set:Nn \l_semio_viz_c_point_int { 2 } }
+    { 2 } {
+      \int_set:Nn \l_semio_viz_c_point_int { 3 }
+      \semio_viz_c_start:nn { ( \l_semio_viz_c_xa_fp + 4 * \l_semio_viz_c_xb_fp + (#1) ) / 6 }
+        { ( \l_semio_viz_c_ya_fp + 4 * \l_semio_viz_c_yb_fp + (#2) ) / 6 }
+    }
+    { 3 } { \int_set:Nn \l_semio_viz_c_point_int { 4 } \semio_viz_c_basis_emit:nn {#1} {#2} }
+  } { \semio_viz_c_basis_emit:nn {#1} {#2} }
+  \semio_viz_c_basis_shift:nn {#1} {#2}
+}
+% 🔚 `basis-open`'s line end: nothing is flushed, only the close-and-flip.
+\cs_new_protected:Npn \semio_viz_c_basis_open_end: {
+  \int_compare:nNnTF \l_semio_viz_c_line_int = { 1 }
+    { \semio_viz_path_close: }
+    {
+      \int_compare:nNnT \l_semio_viz_c_line_int = { 2 }
+        { \int_compare:nNnT \l_semio_viz_c_point_int = { 3 } { \semio_viz_path_close: } }
+    }
+  \int_compare:nNnF \l_semio_viz_c_line_int = { 2 }
+    { \int_set:Nn \l_semio_viz_c_line_int { 1 - \l_semio_viz_c_line_int } }
+}
+
+% 🔁 `basis-closed`: the first three points are kept so the ring can be closed through them again.
+\cs_new_protected:Npn \semio_viz_c_basis_closed_point:nn #1#2 {
+  \int_case:nnF { \l_semio_viz_c_point_int } {
+    { 0 } { \int_set:Nn \l_semio_viz_c_point_int { 1 }
+            \fp_set:Nn \l_semio_viz_c_xc_fp {#1} \fp_set:Nn \l_semio_viz_c_yc_fp {#2} }
+    { 1 } { \int_set:Nn \l_semio_viz_c_point_int { 2 }
+            \fp_set:Nn \l_semio_viz_c_xd_fp {#1} \fp_set:Nn \l_semio_viz_c_yd_fp {#2} }
+    { 2 } { \int_set:Nn \l_semio_viz_c_point_int { 3 }
+            \fp_set:Nn \l_semio_viz_c_xe_fp {#1} \fp_set:Nn \l_semio_viz_c_ye_fp {#2}
+            \semio_viz_c_move:nn { ( \l_semio_viz_c_xa_fp + 4 * \l_semio_viz_c_xb_fp + (#1) ) / 6 }
+              { ( \l_semio_viz_c_ya_fp + 4 * \l_semio_viz_c_yb_fp + (#2) ) / 6 } }
+  } { \semio_viz_c_basis_emit:nn {#1} {#2} }
+  \semio_viz_c_basis_shift:nn {#1} {#2}
+}
+% 🔚 `basis-closed`'s line end: the three wrap-around segments back through the saved points.
+\cs_new_protected:Npn \semio_viz_c_basis_closed_end: {
+  \int_case:nn { \l_semio_viz_c_point_int } {
+    { 1 } { \semio_viz_c_move:nn { \l_semio_viz_c_xc_fp } { \l_semio_viz_c_yc_fp } \semio_viz_path_close: }
+    { 2 } {
+      \semio_viz_c_move:nn { ( \l_semio_viz_c_xc_fp + 2 * \l_semio_viz_c_xd_fp ) / 3 }
+        { ( \l_semio_viz_c_yc_fp + 2 * \l_semio_viz_c_yd_fp ) / 3 }
+      \semio_viz_c_line:nn { ( \l_semio_viz_c_xd_fp + 2 * \l_semio_viz_c_xc_fp ) / 3 }
+        { ( \l_semio_viz_c_yd_fp + 2 * \l_semio_viz_c_yc_fp ) / 3 }
+      \semio_viz_path_close:
+    }
+    { 3 } {
+      \fp_set:Nn \l_tmpa_fp { \l_semio_viz_c_xc_fp } \fp_set:Nn \l_tmpb_fp { \l_semio_viz_c_yc_fp }
+      \semio_viz_c_basis_closed_point:nn { \l_tmpa_fp } { \l_tmpb_fp }
+      \fp_set:Nn \l_tmpa_fp { \l_semio_viz_c_xd_fp } \fp_set:Nn \l_tmpb_fp { \l_semio_viz_c_yd_fp }
+      \semio_viz_c_basis_closed_point:nn { \l_tmpa_fp } { \l_tmpb_fp }
+      \fp_set:Nn \l_tmpa_fp { \l_semio_viz_c_xe_fp } \fp_set:Nn \l_tmpb_fp { \l_semio_viz_c_ye_fp }
+      \semio_viz_c_basis_closed_point:nn { \l_tmpa_fp } { \l_tmpb_fp }
+    }
+  }
+}
+%endregion 🔖️CurveBasis
+
+%region 🔖️CurveBundle
+% 🎀 curveBundle(beta) buffers the whole line, straightens it towards its chord and replays it through basis.
+\cs_new_protected:Npn \semio_viz_c_bundle_point:nn #1#2 {
+  \seq_put_right:Nx \l_semio_viz_c_bx_seq { \fp_to_decimal:n {#1} }
+  \seq_put_right:Nx \l_semio_viz_c_by_seq { \fp_to_decimal:n {#2} }
+}
+% 🎀 `bundle`'s line end: every buffered point is pulled `beta` of the way towards the chord from
+% the first point to the last, and the straightened line is replayed through `basis`.
+\cs_new_protected:Npn \semio_viz_c_bundle_end: {
+  \int_set:Nn \l_tmpa_int { \seq_count:N \l_semio_viz_c_bx_seq - 1 }
+  \int_compare:nNnT { \l_tmpa_int } > { 0 } {
+    \fp_set:Nn \l_semio_viz_c_xa_fp { \seq_item:Nn \l_semio_viz_c_bx_seq { 1 } }
+    \fp_set:Nn \l_semio_viz_c_ya_fp { \seq_item:Nn \l_semio_viz_c_by_seq { 1 } }
+    \fp_set:Nn \l_semio_viz_c_xf_fp
+      { \seq_item:Nn \l_semio_viz_c_bx_seq { \l_tmpa_int + 1 } - \l_semio_viz_c_xa_fp }
+    \fp_set:Nn \l_semio_viz_c_yf_fp
+      { \seq_item:Nn \l_semio_viz_c_by_seq { \l_tmpa_int + 1 } - \l_semio_viz_c_ya_fp }
+    \seq_set_eq:NN \l_tmpa_seq \l_semio_viz_c_bx_seq
+    \seq_set_eq:NN \l_tmpb_seq \l_semio_viz_c_by_seq
+    \fp_set:Nn \l_semio_viz_c_xe_fp { \l_semio_viz_c_xa_fp }
+    \fp_set:Nn \l_semio_viz_c_ye_fp { \l_semio_viz_c_ya_fp }
+    \fp_set:Nn \l_semio_viz_c_xd_fp { \l_semio_viz_c_xf_fp }
+    \fp_set:Nn \l_semio_viz_c_yd_fp { \l_semio_viz_c_yf_fp }
+    \tl_set:Nn \l_semio_viz_c_name_tl { basis }
+    \int_set:Nn \l_semio_viz_c_point_int { 0 }
+    \int_step_inline:nnnn { 0 } { 1 } { \l_tmpa_int } {
+      \fp_set:Nn \l_semio_viz_c_tt_fp { ##1 / \l_tmpa_int }
+      \semio_viz_c_basis_point:nn
+        { \l_semio_viz_c_beta_fp * \seq_item:Nn \l_tmpa_seq { ##1 + 1 }
+          + ( 1 - \l_semio_viz_c_beta_fp ) * ( \l_semio_viz_c_xe_fp + \l_semio_viz_c_tt_fp * \l_semio_viz_c_xd_fp ) }
+        { \l_semio_viz_c_beta_fp * \seq_item:Nn \l_tmpb_seq { ##1 + 1 }
+          + ( 1 - \l_semio_viz_c_beta_fp ) * ( \l_semio_viz_c_ye_fp + \l_semio_viz_c_tt_fp * \l_semio_viz_c_yd_fp ) }
+    }
+  }
+  \semio_viz_c_basis_end:
+}
+\fp_new:N \l_semio_viz_c_tt_fp
+%endregion 🔖️CurveBundle
+
+%region 🔖️CurveCardinal
+% 🃏 The cardinal segment: the two control points are the chord through the window's neighbours,
+% scaled by the tension, which is exactly what `tension` controls.
+\cs_new_protected:Npn \semio_viz_c_cardinal_emit:nn #1#2 {
+  \semio_viz_c_bez:nnnnnn
+    { \l_semio_viz_c_xb_fp + \l_semio_viz_c_k_fp * ( \l_semio_viz_c_xc_fp - \l_semio_viz_c_xa_fp ) }
+    { \l_semio_viz_c_yb_fp + \l_semio_viz_c_k_fp * ( \l_semio_viz_c_yc_fp - \l_semio_viz_c_ya_fp ) }
+    { \l_semio_viz_c_xc_fp + \l_semio_viz_c_k_fp * ( \l_semio_viz_c_xb_fp - (#1) ) }
+    { \l_semio_viz_c_yc_fp + \l_semio_viz_c_k_fp * ( \l_semio_viz_c_yb_fp - (#2) ) }
+    { \l_semio_viz_c_xc_fp } { \l_semio_viz_c_yc_fp }
+}
+% ➡️ Slides the cardinal's three-point window on by (#1,#2).
+\cs_new_protected:Npn \semio_viz_c_cardinal_shift:nn #1#2 {
+  \fp_set_eq:NN \l_semio_viz_c_xa_fp \l_semio_viz_c_xb_fp
+  \fp_set_eq:NN \l_semio_viz_c_xb_fp \l_semio_viz_c_xc_fp
+  \fp_set:Nn \l_semio_viz_c_xc_fp {#1}
+  \fp_set_eq:NN \l_semio_viz_c_ya_fp \l_semio_viz_c_yb_fp
+  \fp_set_eq:NN \l_semio_viz_c_yb_fp \l_semio_viz_c_yc_fp
+  \fp_set:Nn \l_semio_viz_c_yc_fp {#2}
+}
+% 🃏 `cardinal`: the curve passes through every data point, the tangents coming from its neighbours.
+\cs_new_protected:Npn \semio_viz_c_cardinal_point:nn #1#2 {
+  \int_case:nnF { \l_semio_viz_c_point_int } {
+    { 0 } { \int_set:Nn \l_semio_viz_c_point_int { 1 } \semio_viz_c_start:nn {#1} {#2} }
+    { 1 } { \int_set:Nn \l_semio_viz_c_point_int { 2 }
+            \fp_set:Nn \l_semio_viz_c_xb_fp {#1} \fp_set:Nn \l_semio_viz_c_yb_fp {#2} }
+    { 2 } { \int_set:Nn \l_semio_viz_c_point_int { 3 } \semio_viz_c_cardinal_emit:nn {#1} {#2} }
+  } { \semio_viz_c_cardinal_emit:nn {#1} {#2} }
+  \semio_viz_c_cardinal_shift:nn {#1} {#2}
+}
+% 🔚 `cardinal`'s line end: the closing segment onto the last point.
+\cs_new_protected:Npn \semio_viz_c_cardinal_end: {
+  \int_case:nn { \l_semio_viz_c_point_int } {
+    { 2 } { \semio_viz_c_line:nn { \l_semio_viz_c_xc_fp } { \l_semio_viz_c_yc_fp } }
+    { 3 } { \semio_viz_c_cardinal_emit:nn { \l_semio_viz_c_xb_fp } { \l_semio_viz_c_yb_fp } }
+  }
+  \semio_viz_c_finish:
+}
+
+% 🃏 `cardinal-open`: the two end points of the data are tangents only, so the drawn curve starts
+% and ends one point inside them.
+\cs_new_protected:Npn \semio_viz_c_cardinal_open_point:nn #1#2 {
+  \int_case:nnF { \l_semio_viz_c_point_int } {
+    { 0 } { \int_set:Nn \l_semio_viz_c_point_int { 1 } }
+    { 1 } { \int_set:Nn \l_semio_viz_c_point_int { 2 } }
+    { 2 } { \int_set:Nn \l_semio_viz_c_point_int { 3 }
+            \semio_viz_c_start:nn { \l_semio_viz_c_xc_fp } { \l_semio_viz_c_yc_fp } }
+    { 3 } { \int_set:Nn \l_semio_viz_c_point_int { 4 } \semio_viz_c_cardinal_emit:nn {#1} {#2} }
+  } { \semio_viz_c_cardinal_emit:nn {#1} {#2} }
+  \semio_viz_c_cardinal_shift:nn {#1} {#2}
+}
+\cs_new_eq:NN \semio_viz_c_cardinal_open_end: \semio_viz_c_basis_open_end:
+
+% 🔁 `cardinal-closed`: the first three points are kept so the ring can be closed through them again.
+\cs_new_protected:Npn \semio_viz_c_cardinal_closed_point:nn #1#2 {
+  \int_case:nnF { \l_semio_viz_c_point_int } {
+    { 0 } { \int_set:Nn \l_semio_viz_c_point_int { 1 }
+            \fp_set:Nn \l_semio_viz_c_xd_fp {#1} \fp_set:Nn \l_semio_viz_c_yd_fp {#2} }
+    { 1 } { \int_set:Nn \l_semio_viz_c_point_int { 2 }
+            \fp_set:Nn \l_semio_viz_c_xe_fp {#1} \fp_set:Nn \l_semio_viz_c_ye_fp {#2}
+            \semio_viz_c_move:nn {#1} {#2} }
+    { 2 } { \int_set:Nn \l_semio_viz_c_point_int { 3 }
+            \fp_set:Nn \l_semio_viz_c_xf_fp {#1} \fp_set:Nn \l_semio_viz_c_yf_fp {#2} }
+  } { \semio_viz_c_cardinal_emit:nn {#1} {#2} }
+  \semio_viz_c_cardinal_shift:nn {#1} {#2}
+}
+% 🔚 `cardinal-closed`'s line end: the three wrap-around segments back through the saved points.
+\cs_new_protected:Npn \semio_viz_c_cardinal_closed_end: {
+  \int_case:nn { \l_semio_viz_c_point_int } {
+    { 1 } { \semio_viz_c_move:nn { \l_semio_viz_c_xd_fp } { \l_semio_viz_c_yd_fp } \semio_viz_path_close: }
+    { 2 } { \semio_viz_c_line:nn { \l_semio_viz_c_xd_fp } { \l_semio_viz_c_yd_fp } \semio_viz_path_close: }
+    { 3 } {
+      \fp_set:Nn \l_tmpa_fp { \l_semio_viz_c_xd_fp } \fp_set:Nn \l_tmpb_fp { \l_semio_viz_c_yd_fp }
+      \semio_viz_c_cardinal_closed_point:nn { \l_tmpa_fp } { \l_tmpb_fp }
+      \fp_set:Nn \l_tmpa_fp { \l_semio_viz_c_xe_fp } \fp_set:Nn \l_tmpb_fp { \l_semio_viz_c_ye_fp }
+      \semio_viz_c_cardinal_closed_point:nn { \l_tmpa_fp } { \l_tmpb_fp }
+      \fp_set:Nn \l_tmpa_fp { \l_semio_viz_c_xf_fp } \fp_set:Nn \l_tmpb_fp { \l_semio_viz_c_yf_fp }
+      \semio_viz_c_cardinal_closed_point:nn { \l_tmpa_fp } { \l_tmpb_fp }
+    }
+  }
+}
+%endregion 🔖️CurveCardinal
+
+%region 🔖️CurveCatmullRom
+% 🪢 The Catmull-Rom segment: the two controls are weighted by the chord lengths raised to `alpha`,
+% which is what makes the curve free of cusps and self-intersections at alpha = 0.5.
+\cs_new_protected:Npn \semio_viz_c_cr_emit:nn #1#2 {
+  \fp_set_eq:NN \l_semio_viz_c_cxa_fp \l_semio_viz_c_xb_fp
+  \fp_set_eq:NN \l_semio_viz_c_cya_fp \l_semio_viz_c_yb_fp
+  \fp_set_eq:NN \l_semio_viz_c_cxb_fp \l_semio_viz_c_xc_fp
+  \fp_set_eq:NN \l_semio_viz_c_cyb_fp \l_semio_viz_c_yc_fp
+  \fp_compare:nNnT { \l_semio_viz_c_laa_fp } > { 1e-12 } {
+    \fp_set:Nn \l_semio_viz_c_ga_fp { 2 * \l_semio_viz_c_lab_fp
+      + 3 * \l_semio_viz_c_laa_fp * \l_semio_viz_c_lba_fp + \l_semio_viz_c_lbb_fp }
+    \fp_set:Nn \l_semio_viz_c_gb_fp { 3 * \l_semio_viz_c_laa_fp * ( \l_semio_viz_c_laa_fp + \l_semio_viz_c_lba_fp ) }
+    \fp_set:Nn \l_semio_viz_c_cxa_fp { ( \l_semio_viz_c_xb_fp * \l_semio_viz_c_ga_fp
+      - \l_semio_viz_c_xa_fp * \l_semio_viz_c_lbb_fp + \l_semio_viz_c_xc_fp * \l_semio_viz_c_lab_fp ) / \l_semio_viz_c_gb_fp }
+    \fp_set:Nn \l_semio_viz_c_cya_fp { ( \l_semio_viz_c_yb_fp * \l_semio_viz_c_ga_fp
+      - \l_semio_viz_c_ya_fp * \l_semio_viz_c_lbb_fp + \l_semio_viz_c_yc_fp * \l_semio_viz_c_lab_fp ) / \l_semio_viz_c_gb_fp }
+  }
+  \fp_compare:nNnT { \l_semio_viz_c_lca_fp } > { 1e-12 } {
+    \fp_set:Nn \l_semio_viz_c_ga_fp { 2 * \l_semio_viz_c_lcb_fp
+      + 3 * \l_semio_viz_c_lca_fp * \l_semio_viz_c_lba_fp + \l_semio_viz_c_lbb_fp }
+    \fp_set:Nn \l_semio_viz_c_gb_fp { 3 * \l_semio_viz_c_lca_fp * ( \l_semio_viz_c_lca_fp + \l_semio_viz_c_lba_fp ) }
+    \fp_set:Nn \l_semio_viz_c_cxb_fp { ( \l_semio_viz_c_xc_fp * \l_semio_viz_c_ga_fp
+      + \l_semio_viz_c_xb_fp * \l_semio_viz_c_lcb_fp - (#1) * \l_semio_viz_c_lbb_fp ) / \l_semio_viz_c_gb_fp }
+    \fp_set:Nn \l_semio_viz_c_cyb_fp { ( \l_semio_viz_c_yc_fp * \l_semio_viz_c_ga_fp
+      + \l_semio_viz_c_yb_fp * \l_semio_viz_c_lcb_fp - (#2) * \l_semio_viz_c_lbb_fp ) / \l_semio_viz_c_gb_fp }
+  }
+  \semio_viz_c_bez:nnnnnn { \l_semio_viz_c_cxa_fp } { \l_semio_viz_c_cya_fp }
+    { \l_semio_viz_c_cxb_fp } { \l_semio_viz_c_cyb_fp }
+    { \l_semio_viz_c_xc_fp } { \l_semio_viz_c_yc_fp }
+}
+\fp_new:N \l_semio_viz_c_cxa_fp \fp_new:N \l_semio_viz_c_cya_fp
+\fp_new:N \l_semio_viz_c_cxb_fp \fp_new:N \l_semio_viz_c_cyb_fp
+
+% 📏 The chord length from the window's last point to (#1,#2), raised to `alpha` and to `2 alpha`.
+\cs_new_protected:Npn \semio_viz_c_cr_measure:nn #1#2 {
+  \int_compare:nNnF \l_semio_viz_c_point_int = { 0 } {
+    \fp_set:Nn \l_semio_viz_c_lcb_fp
+      { ( ( \l_semio_viz_c_xc_fp - (#1) )**2 + ( \l_semio_viz_c_yc_fp - (#2) )**2 ) ** \l_semio_viz_c_alpha_fp }
+    \fp_set:Nn \l_semio_viz_c_lca_fp { sqrt( \l_semio_viz_c_lcb_fp ) }
+  }
+}
+% ➡️ Slides the Catmull-Rom window and its three chord lengths on by (#1,#2).
+\cs_new_protected:Npn \semio_viz_c_cr_shift:nn #1#2 {
+  \fp_set_eq:NN \l_semio_viz_c_laa_fp \l_semio_viz_c_lba_fp
+  \fp_set_eq:NN \l_semio_viz_c_lba_fp \l_semio_viz_c_lca_fp
+  \fp_set_eq:NN \l_semio_viz_c_lab_fp \l_semio_viz_c_lbb_fp
+  \fp_set_eq:NN \l_semio_viz_c_lbb_fp \l_semio_viz_c_lcb_fp
+  \semio_viz_c_cardinal_shift:nn {#1} {#2}
+}
+% 🪢 `catmull-rom`: the curve passes through every data point, its tangents chord-length weighted.
+\cs_new_protected:Npn \semio_viz_c_catmull_rom_point:nn #1#2 {
+  \semio_viz_c_cr_measure:nn {#1} {#2}
+  \int_case:nnF { \l_semio_viz_c_point_int } {
+    { 0 } { \int_set:Nn \l_semio_viz_c_point_int { 1 } \semio_viz_c_start:nn {#1} {#2} }
+    { 1 } { \int_set:Nn \l_semio_viz_c_point_int { 2 } }
+    { 2 } { \int_set:Nn \l_semio_viz_c_point_int { 3 } \semio_viz_c_cr_emit:nn {#1} {#2} }
+  } { \semio_viz_c_cr_emit:nn {#1} {#2} }
+  \semio_viz_c_cr_shift:nn {#1} {#2}
+}
+% 🔚 `catmull-rom`'s line end: the closing segment onto the last point.
+\cs_new_protected:Npn \semio_viz_c_catmull_rom_end: {
+  \int_case:nn { \l_semio_viz_c_point_int } {
+    { 2 } { \semio_viz_c_line:nn { \l_semio_viz_c_xc_fp } { \l_semio_viz_c_yc_fp } }
+    { 3 } {
+      \fp_set:Nn \l_tmpa_fp { \l_semio_viz_c_xc_fp } \fp_set:Nn \l_tmpb_fp { \l_semio_viz_c_yc_fp }
+      \semio_viz_c_catmull_rom_point:nn { \l_tmpa_fp } { \l_tmpb_fp }
+    }
+  }
+  \semio_viz_c_finish:
+}
+
+% 🪢 `catmull-rom-open`: the two end points of the data are tangents only.
+\cs_new_protected:Npn \semio_viz_c_catmull_rom_open_point:nn #1#2 {
+  \semio_viz_c_cr_measure:nn {#1} {#2}
+  \int_case:nnF { \l_semio_viz_c_point_int } {
+    { 0 } { \int_set:Nn \l_semio_viz_c_point_int { 1 } }
+    { 1 } { \int_set:Nn \l_semio_viz_c_point_int { 2 } }
+    { 2 } { \int_set:Nn \l_semio_viz_c_point_int { 3 }
+            \semio_viz_c_start:nn { \l_semio_viz_c_xc_fp } { \l_semio_viz_c_yc_fp } }
+    { 3 } { \int_set:Nn \l_semio_viz_c_point_int { 4 } \semio_viz_c_cr_emit:nn {#1} {#2} }
+  } { \semio_viz_c_cr_emit:nn {#1} {#2} }
+  \semio_viz_c_cr_shift:nn {#1} {#2}
+}
+\cs_new_eq:NN \semio_viz_c_catmull_rom_open_end: \semio_viz_c_basis_open_end:
+
+% 🔁 `catmull-rom-closed`: the first three points are kept so the ring closes through them again.
+\cs_new_protected:Npn \semio_viz_c_catmull_rom_closed_point:nn #1#2 {
+  \semio_viz_c_cr_measure:nn {#1} {#2}
+  \int_case:nnF { \l_semio_viz_c_point_int } {
+    { 0 } { \int_set:Nn \l_semio_viz_c_point_int { 1 }
+            \fp_set:Nn \l_semio_viz_c_xd_fp {#1} \fp_set:Nn \l_semio_viz_c_yd_fp {#2} }
+    { 1 } { \int_set:Nn \l_semio_viz_c_point_int { 2 }
+            \fp_set:Nn \l_semio_viz_c_xe_fp {#1} \fp_set:Nn \l_semio_viz_c_ye_fp {#2}
+            \semio_viz_c_move:nn {#1} {#2} }
+    { 2 } { \int_set:Nn \l_semio_viz_c_point_int { 3 }
+            \fp_set:Nn \l_semio_viz_c_xf_fp {#1} \fp_set:Nn \l_semio_viz_c_yf_fp {#2} }
+  } { \semio_viz_c_cr_emit:nn {#1} {#2} }
+  \semio_viz_c_cr_shift:nn {#1} {#2}
+}
+% 🔚 `catmull-rom-closed`'s line end: the three wrap-around segments back through the saved points.
+\cs_new_protected:Npn \semio_viz_c_catmull_rom_closed_end: {
+  \int_case:nn { \l_semio_viz_c_point_int } {
+    { 1 } { \semio_viz_c_move:nn { \l_semio_viz_c_xd_fp } { \l_semio_viz_c_yd_fp } \semio_viz_path_close: }
+    { 2 } { \semio_viz_c_line:nn { \l_semio_viz_c_xd_fp } { \l_semio_viz_c_yd_fp } \semio_viz_path_close: }
+    { 3 } {
+      \fp_set:Nn \l_tmpa_fp { \l_semio_viz_c_xd_fp } \fp_set:Nn \l_tmpb_fp { \l_semio_viz_c_yd_fp }
+      \semio_viz_c_catmull_rom_closed_point:nn { \l_tmpa_fp } { \l_tmpb_fp }
+      \fp_set:Nn \l_tmpa_fp { \l_semio_viz_c_xe_fp } \fp_set:Nn \l_tmpb_fp { \l_semio_viz_c_ye_fp }
+      \semio_viz_c_catmull_rom_closed_point:nn { \l_tmpa_fp } { \l_tmpb_fp }
+      \fp_set:Nn \l_tmpa_fp { \l_semio_viz_c_xf_fp } \fp_set:Nn \l_tmpb_fp { \l_semio_viz_c_yf_fp }
+      \semio_viz_c_catmull_rom_closed_point:nn { \l_tmpa_fp } { \l_tmpb_fp }
+    }
+  }
+}
+%endregion 🔖️CurveCatmullRom
+
+%region 🔖️CurveMonotone
+% 📈 Steffen's monotone Hermite tangents, expressed as cubic Bezier control points exactly as d3 does.
+\cs_new:Npn \semio_viz_c_sign:n #1 { \fp_compare:nNnTF {#1} < { 0 } { -1 } { 1 } }
+% 📐 Steffen's three-point slope at the window's middle point, clamped so the curve stays monotone.
+\cs_new_protected:Npn \semio_viz_c_slope_three:nn #1#2 {
+  \fp_set:Nn \l_semio_viz_c_ha_fp { \l_semio_viz_c_xb_fp - \l_semio_viz_c_xa_fp }
+  \fp_set:Nn \l_semio_viz_c_hb_fp { (#1) - \l_semio_viz_c_xb_fp }
+  \fp_set:Nn \l_semio_viz_c_sa_fp { ( \l_semio_viz_c_yb_fp - \l_semio_viz_c_ya_fp ) /
+    \fp_compare:nNnTF { \l_semio_viz_c_ha_fp } = { 0 }
+      { \fp_compare:nNnTF { \l_semio_viz_c_hb_fp } < { 0 } { -0 } { 0 } } { \l_semio_viz_c_ha_fp } }
+  \fp_set:Nn \l_semio_viz_c_sb_fp { ( (#2) - \l_semio_viz_c_yb_fp ) /
+    \fp_compare:nNnTF { \l_semio_viz_c_hb_fp } = { 0 }
+      { \fp_compare:nNnTF { \l_semio_viz_c_ha_fp } < { 0 } { -0 } { 0 } } { \l_semio_viz_c_hb_fp } }
+  \fp_set:Nn \l_semio_viz_c_p_fp { ( \l_semio_viz_c_sa_fp * \l_semio_viz_c_hb_fp
+    + \l_semio_viz_c_sb_fp * \l_semio_viz_c_ha_fp ) / ( \l_semio_viz_c_ha_fp + \l_semio_viz_c_hb_fp ) }
+  \fp_set:Nn \l_semio_viz_c_slope_fp { ( \semio_viz_c_sign:n { \l_semio_viz_c_sa_fp }
+    + \semio_viz_c_sign:n { \l_semio_viz_c_sb_fp } )
+    * min( abs( \l_semio_viz_c_sa_fp ) , abs( \l_semio_viz_c_sb_fp ) , 0.5 * abs( \l_semio_viz_c_p_fp ) ) }
+  \fp_compare:nNnF { \l_semio_viz_c_slope_fp } = { \l_semio_viz_c_slope_fp }
+    { \fp_zero:N \l_semio_viz_c_slope_fp }
+}
+\fp_new:N \l_semio_viz_c_ha_fp \fp_new:N \l_semio_viz_c_hb_fp
+\fp_new:N \l_semio_viz_c_sa_fp \fp_new:N \l_semio_viz_c_sb_fp
+\fp_new:N \l_semio_viz_c_p_fp \fp_new:N \l_semio_viz_c_slope_fp
+\fp_new:N \l_semio_viz_c_tb_fp
+
+% 📐 The one-sided slope at an end point, from the chord and the neighbouring slope #1.
+\cs_new:Npn \semio_viz_c_slope_two:n #1 {
+  \fp_compare:nNnTF { \l_semio_viz_c_xb_fp - \l_semio_viz_c_xa_fp } = { 0 }
+    { #1 }
+    { ( 3 * ( \l_semio_viz_c_yb_fp - \l_semio_viz_c_ya_fp ) / ( \l_semio_viz_c_xb_fp - \l_semio_viz_c_xa_fp ) - (#1) ) / 2 }
+}
+% 📈 The monotone segment: the Hermite tangents #1 and #2 written as cubic Bézier controls.
+\cs_new_protected:Npn \semio_viz_c_mono_emit:nn #1#2 {
+  \fp_set:Nn \l_tmpa_fp { ( \l_semio_viz_c_xb_fp - \l_semio_viz_c_xa_fp ) / 3 }
+  \semio_viz_c_bez:nnnnnn
+    { \l_semio_viz_c_xa_fp + \l_tmpa_fp } { \l_semio_viz_c_ya_fp + \l_tmpa_fp * (#1) }
+    { \l_semio_viz_c_xb_fp - \l_tmpa_fp } { \l_semio_viz_c_yb_fp - \l_tmpa_fp * (#2) }
+    { \l_semio_viz_c_xb_fp } { \l_semio_viz_c_yb_fp }
+}
+% 📈 `monotone-x`: a repeated point is ignored, and every other point closes the segment behind it
+% with Steffen's slope, so the curve never overshoots between two data points.
+\cs_new_protected:Npn \semio_viz_c_monotone_x_point:nn #1#2 {
+  \bool_lazy_and:nnTF
+    { \fp_compare_p:nNn {#1} = { \l_semio_viz_c_xb_fp } }
+    { \fp_compare_p:nNn {#2} = { \l_semio_viz_c_yb_fp } }
+    { }
+    {
+      \int_case:nnF { \l_semio_viz_c_point_int } {
+        { 0 } { \int_set:Nn \l_semio_viz_c_point_int { 1 } \semio_viz_c_start:nn {#1} {#2}
+                \fp_set:Nn \l_semio_viz_c_tb_fp { nan } }
+        { 1 } { \int_set:Nn \l_semio_viz_c_point_int { 2 } \fp_set:Nn \l_semio_viz_c_tb_fp { nan } }
+        { 2 } { \int_set:Nn \l_semio_viz_c_point_int { 3 }
+                \semio_viz_c_slope_three:nn {#1} {#2}
+                \fp_set_eq:NN \l_semio_viz_c_tb_fp \l_semio_viz_c_slope_fp
+                \semio_viz_c_mono_emit:nn { \semio_viz_c_slope_two:n { \l_semio_viz_c_tb_fp } } { \l_semio_viz_c_tb_fp } }
+      } {
+        \semio_viz_c_slope_three:nn {#1} {#2}
+        \fp_set_eq:NN \l_semio_viz_c_tb_fp \l_semio_viz_c_slope_fp
+        \semio_viz_c_mono_emit:nn { \l_semio_viz_c_ta_fp } { \l_semio_viz_c_tb_fp }
+      }
+      \fp_set_eq:NN \l_semio_viz_c_xa_fp \l_semio_viz_c_xb_fp
+      \fp_set:Nn \l_semio_viz_c_xb_fp {#1}
+      \fp_set_eq:NN \l_semio_viz_c_ya_fp \l_semio_viz_c_yb_fp
+      \fp_set:Nn \l_semio_viz_c_yb_fp {#2}
+      \fp_set_eq:NN \l_semio_viz_c_ta_fp \l_semio_viz_c_tb_fp
+    }
+}
+% 🔚 `monotone-x`'s line end: the closing segment with the one-sided slope at the last point.
+\cs_new_protected:Npn \semio_viz_c_monotone_x_end: {
+  \int_case:nn { \l_semio_viz_c_point_int } {
+    { 2 } { \semio_viz_c_line:nn { \l_semio_viz_c_xb_fp } { \l_semio_viz_c_yb_fp } }
+    { 3 } { \semio_viz_c_mono_emit:nn { \l_semio_viz_c_ta_fp }
+              { \semio_viz_c_slope_two:n { \l_semio_viz_c_ta_fp } } }
+  }
+  \semio_viz_c_finish:
+}
+% 🔁 MonotoneY is MonotoneX with the arguments and every emission mirrored, exactly d3's ReflectContext.
+\cs_new_protected:Npn \semio_viz_c_monotone_y_point:nn #1#2 { \semio_viz_c_monotone_x_point:nn {#2} {#1} }
+\cs_new_eq:NN \semio_viz_c_monotone_y_end: \semio_viz_c_monotone_x_end:
+%endregion 🔖️CurveMonotone
+
+%region 🔖️CurveNatural
+% 🌿 `natural`: the whole line is buffered, because a natural cubic spline is a global solve.
+\cs_new_protected:Npn \semio_viz_c_natural_point:nn #1#2 {
+  \seq_put_right:Nx \l_semio_viz_c_bx_seq { \fp_to_decimal:n {#1} }
+  \seq_put_right:Nx \l_semio_viz_c_by_seq { \fp_to_decimal:n {#2} }
+}
+% 🗄️ Integer-keyed fp array over a prop: the key is evaluated, so a computed index and a literal one meet.
+\cs_generate_variant:Nn \prop_put:Nnn { Nxx }
+\cs_generate_variant:Nn \prop_item:Nn { Ne }
+\cs_new_protected:Npn \semio_viz_c_arr_put:Nnn #1#2#3 {
+  \prop_put:Nxx #1 { \int_eval:n {#2} } { \fp_to_decimal:n {#3} }
+}
+% 🔢 Entry #2 of the property list #1, used as a zero-based numeric array.
+\cs_new:Npn \semio_viz_c_arr:Nn #1#2 { \prop_item:Ne #1 { \int_eval:n {#2} } }
+
+% 🧮 Thomas-algorithm control points of the natural cubic spline (d3's controlPoints).
+\cs_new_protected:Npn \semio_viz_c_natural_cp:N #1 {
+  \int_set:Nn \l_semio_viz_c_m_int { \seq_count:N #1 - 1 }
+  \prop_clear:N \l_semio_viz_c_a_prop
+  \prop_clear:N \l_semio_viz_c_b_prop
+  \prop_clear:N \l_semio_viz_c_r_prop
+  \semio_viz_c_arr_put:Nnn \l_semio_viz_c_a_prop { 0 } { 0 }
+  \semio_viz_c_arr_put:Nnn \l_semio_viz_c_b_prop { 0 } { 2 }
+  \semio_viz_c_arr_put:Nnn \l_semio_viz_c_r_prop { 0 }
+    { \seq_item:Nn #1 { 1 } + 2 * \seq_item:Nn #1 { 2 } }
+  \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_c_m_int - 2 } {
+    \semio_viz_c_arr_put:Nnn \l_semio_viz_c_a_prop {##1} { 1 }
+    \semio_viz_c_arr_put:Nnn \l_semio_viz_c_b_prop {##1} { 4 }
+    \semio_viz_c_arr_put:Nnn \l_semio_viz_c_r_prop {##1}
+      { 4 * \seq_item:Nn #1 { ##1 + 1 } + 2 * \seq_item:Nn #1 { ##1 + 2 } }
+  }
+  \semio_viz_c_arr_put:Nnn \l_semio_viz_c_a_prop { \l_semio_viz_c_m_int - 1 } { 2 }
+  \semio_viz_c_arr_put:Nnn \l_semio_viz_c_b_prop { \l_semio_viz_c_m_int - 1 } { 7 }
+  \semio_viz_c_arr_put:Nnn \l_semio_viz_c_r_prop { \l_semio_viz_c_m_int - 1 }
+    { 8 * \seq_item:Nn #1 { \l_semio_viz_c_m_int } + \seq_item:Nn #1 { \l_semio_viz_c_m_int + 1 } }
+  \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_c_m_int - 1 } {
+    \fp_set:Nn \l_tmpb_fp { \semio_viz_c_arr:Nn \l_semio_viz_c_a_prop {##1}
+      / \semio_viz_c_arr:Nn \l_semio_viz_c_b_prop { ##1 - 1 } }
+    \semio_viz_c_arr_put:Nnn \l_semio_viz_c_b_prop {##1}
+      { \semio_viz_c_arr:Nn \l_semio_viz_c_b_prop {##1} - \l_tmpb_fp }
+    \semio_viz_c_arr_put:Nnn \l_semio_viz_c_r_prop {##1}
+      { \semio_viz_c_arr:Nn \l_semio_viz_c_r_prop {##1}
+        - \l_tmpb_fp * \semio_viz_c_arr:Nn \l_semio_viz_c_r_prop { ##1 - 1 } }
+  }
+  \semio_viz_c_arr_put:Nnn \l_semio_viz_c_a_prop { \l_semio_viz_c_m_int - 1 }
+    { \semio_viz_c_arr:Nn \l_semio_viz_c_r_prop { \l_semio_viz_c_m_int - 1 }
+      / \semio_viz_c_arr:Nn \l_semio_viz_c_b_prop { \l_semio_viz_c_m_int - 1 } }
+  \int_step_inline:nnnn { \l_semio_viz_c_m_int - 2 } { -1 } { 0 } {
+    \semio_viz_c_arr_put:Nnn \l_semio_viz_c_a_prop {##1}
+      { ( \semio_viz_c_arr:Nn \l_semio_viz_c_r_prop {##1}
+        - \semio_viz_c_arr:Nn \l_semio_viz_c_a_prop { ##1 + 1 } )
+        / \semio_viz_c_arr:Nn \l_semio_viz_c_b_prop {##1} }
+  }
+  \semio_viz_c_arr_put:Nnn \l_semio_viz_c_b_prop { \l_semio_viz_c_m_int - 1 }
+    { ( \seq_item:Nn #1 { \l_semio_viz_c_m_int + 1 }
+      + \semio_viz_c_arr:Nn \l_semio_viz_c_a_prop { \l_semio_viz_c_m_int - 1 } ) / 2 }
+  \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_c_m_int - 2 } {
+    \semio_viz_c_arr_put:Nnn \l_semio_viz_c_b_prop {##1}
+      { 2 * \seq_item:Nn #1 { ##1 + 2 }
+        - \semio_viz_c_arr:Nn \l_semio_viz_c_a_prop { ##1 + 1 } }
+  }
+}
+\prop_new:N \l_semio_viz_c_ax_prop \prop_new:N \l_semio_viz_c_bx_prop
+\prop_new:N \l_semio_viz_c_ay_prop \prop_new:N \l_semio_viz_c_by_prop
+% 🔚 `natural`'s line end: the tridiagonal system solved once per axis, then one cubic per interval.
+\cs_new_protected:Npn \semio_viz_c_natural_end: {
+  \int_set:Nn \l_semio_viz_c_n_int { \seq_count:N \l_semio_viz_c_bx_seq }
+  \int_compare:nNnT { \l_semio_viz_c_n_int } > { 0 } {
+    \semio_viz_c_start:nn { \seq_item:Nn \l_semio_viz_c_bx_seq { 1 } }
+      { \seq_item:Nn \l_semio_viz_c_by_seq { 1 } }
+    \int_compare:nNnTF { \l_semio_viz_c_n_int } = { 2 }
+      { \semio_viz_c_line:nn { \seq_item:Nn \l_semio_viz_c_bx_seq { 2 } }
+          { \seq_item:Nn \l_semio_viz_c_by_seq { 2 } } }
+      {
+        \int_compare:nNnT { \l_semio_viz_c_n_int } > { 2 } {
+          \semio_viz_c_natural_cp:N \l_semio_viz_c_bx_seq
+          \prop_set_eq:NN \l_semio_viz_c_ax_prop \l_semio_viz_c_a_prop
+          \prop_set_eq:NN \l_semio_viz_c_bx_prop \l_semio_viz_c_b_prop
+          \semio_viz_c_natural_cp:N \l_semio_viz_c_by_seq
+          \prop_set_eq:NN \l_semio_viz_c_ay_prop \l_semio_viz_c_a_prop
+          \prop_set_eq:NN \l_semio_viz_c_by_prop \l_semio_viz_c_b_prop
+          \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_c_n_int - 2 } {
+            \semio_viz_c_bez:nnnnnn
+              { \semio_viz_c_arr:Nn \l_semio_viz_c_ax_prop {##1} } { \semio_viz_c_arr:Nn \l_semio_viz_c_ay_prop {##1} }
+              { \semio_viz_c_arr:Nn \l_semio_viz_c_bx_prop {##1} } { \semio_viz_c_arr:Nn \l_semio_viz_c_by_prop {##1} }
+              { \seq_item:Nn \l_semio_viz_c_bx_seq { ##1 + 2 } } { \seq_item:Nn \l_semio_viz_c_by_seq { ##1 + 2 } }
+          }
+        }
+      }
+  }
+  \int_compare:nNnTF \l_semio_viz_c_line_int = { 1 }
+    { \semio_viz_path_close: }
+    {
+      \int_compare:nNnT \l_semio_viz_c_line_int = { 2 }
+        { \int_compare:nNnT { \l_semio_viz_c_n_int } = { 1 } { \semio_viz_path_close: } }
+    }
+  \int_compare:nNnF \l_semio_viz_c_line_int = { 2 }
+    { \int_set:Nn \l_semio_viz_c_line_int { 1 - \l_semio_viz_c_line_int } }
+}
+%endregion 🔖️CurveNatural
+
+%region 🔖️CurveBezier
+% ✒️ semio's own interpolator: the point list IS the cubic Bezier control polygon
+% (anchor, then triples of control, control, anchor); a trailing pair degrades to
+% a quadratic and a trailing single point to a line, so no control point is ever dropped.
+\cs_new_eq:NN \semio_viz_c_bezier_point:nn \semio_viz_c_natural_point:nn
+% 🔚 `bezier`'s line end: the buffered points read as explicit cubic control points, three at a time.
+\cs_new_protected:Npn \semio_viz_c_bezier_end: {
+  \int_set:Nn \l_semio_viz_c_n_int { \seq_count:N \l_semio_viz_c_bx_seq }
+  \int_compare:nNnT { \l_semio_viz_c_n_int } > { 0 } {
+    \semio_viz_c_start:nn { \seq_item:Nn \l_semio_viz_c_bx_seq { 1 } }
+      { \seq_item:Nn \l_semio_viz_c_by_seq { 1 } }
+    \int_set:Nn \l_semio_viz_c_i_int { 2 }
+    \bool_do_while:nn { \int_compare_p:nNn { \l_semio_viz_c_i_int + 2 } < { \l_semio_viz_c_n_int + 1 } } {
+      \semio_viz_c_bez:nnnnnn
+        { \seq_item:Nn \l_semio_viz_c_bx_seq { \l_semio_viz_c_i_int } } { \seq_item:Nn \l_semio_viz_c_by_seq { \l_semio_viz_c_i_int } }
+        { \seq_item:Nn \l_semio_viz_c_bx_seq { \l_semio_viz_c_i_int + 1 } } { \seq_item:Nn \l_semio_viz_c_by_seq { \l_semio_viz_c_i_int + 1 } }
+        { \seq_item:Nn \l_semio_viz_c_bx_seq { \l_semio_viz_c_i_int + 2 } } { \seq_item:Nn \l_semio_viz_c_by_seq { \l_semio_viz_c_i_int + 2 } }
+      \int_add:Nn \l_semio_viz_c_i_int { 3 }
+    }
+    \int_compare:nNnT { \l_semio_viz_c_n_int - \l_semio_viz_c_i_int } = { 1 } {
+      \semio_viz_path_quad_to:nnnn
+        { \seq_item:Nn \l_semio_viz_c_bx_seq { \l_semio_viz_c_i_int } } { \seq_item:Nn \l_semio_viz_c_by_seq { \l_semio_viz_c_i_int } }
+        { \seq_item:Nn \l_semio_viz_c_bx_seq { \l_semio_viz_c_i_int + 1 } } { \seq_item:Nn \l_semio_viz_c_by_seq { \l_semio_viz_c_i_int + 1 } }
+    }
+    \int_compare:nNnT { \l_semio_viz_c_n_int - \l_semio_viz_c_i_int } = { 0 } {
+      \semio_viz_c_line:nn { \seq_item:Nn \l_semio_viz_c_bx_seq { \l_semio_viz_c_i_int } }
+        { \seq_item:Nn \l_semio_viz_c_by_seq { \l_semio_viz_c_i_int } }
+    }
+  }
+  \semio_viz_c_finish:
+}
+%endregion 🔖️CurveBezier
+%endregion 🔖️Curves
+
+%region 🔖️Symbols
+% 🔣 d3-symbol's thirteen draw routines, transcribed constant for constant.
+% `size` is an AREA, exactly as in d3, so symbols of different types read as
+% equally heavy; the geometry is centred on the origin and the caller's path
+% offset places it.
+\fp_const:Nn \c_semio_viz_sqrt_three_fp { sqrt(3) }
+\fp_const:Nn \c_semio_viz_star_ka_fp { 0.89081309152928522810 }
+\fp_const:Nn \c_semio_viz_star_kr_fp { sin(pi/10) / sin(7*pi/10) }
+\fp_const:Nn \c_semio_viz_star_kx_fp { sin(2*pi/10) * sin(pi/10) / sin(7*pi/10) }
+\fp_const:Nn \c_semio_viz_star_ky_fp { -cos(2*pi/10) * sin(pi/10) / sin(7*pi/10) }
+\fp_const:Nn \c_semio_viz_diamond_tan_fp { sqrt(1/3) }
+\fp_const:Nn \c_semio_viz_wye_k_fp { 1 / sqrt(12) }
+\fp_const:Nn \c_semio_viz_wye_a_fp { ( 1/sqrt(12) / 2 + 1 ) * 3 }
+\fp_const:Nn \c_semio_viz_wye_s_fp { sqrt(3) / 2 }
+
+\fp_new:N \l_semio_viz_sym_r_fp
+\fp_new:N \l_semio_viz_sym_x_fp
+\fp_new:N \l_semio_viz_sym_y_fp
+\fp_new:N \l_semio_viz_sym_t_fp
+\fp_new:N \l_semio_viz_sym_u_fp
+\fp_new:N \l_semio_viz_sym_a_fp
+\fp_new:N \l_semio_viz_sym_c_fp
+\fp_new:N \l_semio_viz_sym_s_fp
+\seq_new:N \g_semio_viz_symbol_types_seq
+\clist_map_inline:nn
+  { circle, cross, diamond, diamond2, plus, square, square2, star, times, triangle, triangle2, wye, asterisk }
+  { \seq_gput_right:Nn \g_semio_viz_symbol_types_seq {#1} }
+
+% 🔣 Draws symbol type #1 of area #2 into the current path buffer.
+\cs_new_protected:Npn \semio_viz_symbol_draw:nn #1#2 {
+  \str_case:nnF {#1} {
+    { circle } {
+      \fp_set:Nn \l_semio_viz_sym_r_fp { sqrt( (#2) / pi ) }
+      \semio_viz_path_move_to:nn { \l_semio_viz_sym_r_fp } { 0 }
+      \semio_viz_path_arc:nnnnnn { 0 } { 0 } { \l_semio_viz_sym_r_fp } { 0 } { 2*pi } { \c_false_bool }
+    }
+    { cross } {
+      \fp_set:Nn \l_semio_viz_sym_r_fp { sqrt( (#2) / 5 ) / 2 }
+      \semio_viz_path_move_to:nn { -3 * \l_semio_viz_sym_r_fp } { - \l_semio_viz_sym_r_fp }
+      \clist_map_inline:nn { {-1,-1}, {-1,-3}, {1,-3}, {1,-1}, {3,-1}, {3,1}, {1,1}, {1,3}, {-1,3}, {-1,1}, {-3,1} }
+        { \semio_viz_path_line_to:nn { \clist_item:nn {##1} { 1 } * \l_semio_viz_sym_r_fp }
+            { \clist_item:nn {##1} { 2 } * \l_semio_viz_sym_r_fp } }
+      \semio_viz_path_close:
+    }
+    { diamond } {
+      \fp_set:Nn \l_semio_viz_sym_y_fp { sqrt( (#2) / ( 2 * \c_semio_viz_diamond_tan_fp ) ) }
+      \fp_set:Nn \l_semio_viz_sym_x_fp { \l_semio_viz_sym_y_fp * \c_semio_viz_diamond_tan_fp }
+      \semio_viz_path_move_to:nn { 0 } { - \l_semio_viz_sym_y_fp }
+      \semio_viz_path_line_to:nn { \l_semio_viz_sym_x_fp } { 0 }
+      \semio_viz_path_line_to:nn { 0 } { \l_semio_viz_sym_y_fp }
+      \semio_viz_path_line_to:nn { - \l_semio_viz_sym_x_fp } { 0 }
+      \semio_viz_path_close:
+    }
+    { diamond2 } {
+      \fp_set:Nn \l_semio_viz_sym_r_fp { sqrt(#2) * 0.62625 }
+      \semio_viz_path_move_to:nn { 0 } { - \l_semio_viz_sym_r_fp }
+      \semio_viz_path_line_to:nn { \l_semio_viz_sym_r_fp } { 0 }
+      \semio_viz_path_line_to:nn { 0 } { \l_semio_viz_sym_r_fp }
+      \semio_viz_path_line_to:nn { - \l_semio_viz_sym_r_fp } { 0 }
+      \semio_viz_path_close:
+    }
+    { plus } {
+      \fp_set:Nn \l_semio_viz_sym_r_fp { sqrt( (#2) - min( (#2) / 7 , 2 ) ) * 0.87559 }
+      \semio_viz_path_move_to:nn { - \l_semio_viz_sym_r_fp } { 0 }
+      \semio_viz_path_line_to:nn { \l_semio_viz_sym_r_fp } { 0 }
+      \semio_viz_path_move_to:nn { 0 } { \l_semio_viz_sym_r_fp }
+      \semio_viz_path_line_to:nn { 0 } { - \l_semio_viz_sym_r_fp }
+    }
+    { square } {
+      \fp_set:Nn \l_semio_viz_sym_r_fp { sqrt(#2) }
+      \semio_viz_path_rect:nnnn { - \l_semio_viz_sym_r_fp / 2 } { - \l_semio_viz_sym_r_fp / 2 }
+        { \l_semio_viz_sym_r_fp } { \l_semio_viz_sym_r_fp }
+    }
+    { square2 } {
+      \fp_set:Nn \l_semio_viz_sym_r_fp { sqrt(#2) * 0.4431 }
+      \semio_viz_path_move_to:nn { \l_semio_viz_sym_r_fp } { \l_semio_viz_sym_r_fp }
+      \semio_viz_path_line_to:nn { \l_semio_viz_sym_r_fp } { - \l_semio_viz_sym_r_fp }
+      \semio_viz_path_line_to:nn { - \l_semio_viz_sym_r_fp } { - \l_semio_viz_sym_r_fp }
+      \semio_viz_path_line_to:nn { - \l_semio_viz_sym_r_fp } { \l_semio_viz_sym_r_fp }
+      \semio_viz_path_close:
+    }
+    { star } {
+      \fp_set:Nn \l_semio_viz_sym_r_fp { sqrt( (#2) * \c_semio_viz_star_ka_fp ) }
+      \fp_set:Nn \l_semio_viz_sym_x_fp { \c_semio_viz_star_kx_fp * \l_semio_viz_sym_r_fp }
+      \fp_set:Nn \l_semio_viz_sym_y_fp { \c_semio_viz_star_ky_fp * \l_semio_viz_sym_r_fp }
+      \semio_viz_path_move_to:nn { 0 } { - \l_semio_viz_sym_r_fp }
+      \semio_viz_path_line_to:nn { \l_semio_viz_sym_x_fp } { \l_semio_viz_sym_y_fp }
+      \int_step_inline:nnnn { 1 } { 1 } { 4 } {
+        \fp_set:Nn \l_semio_viz_sym_a_fp { 2 * pi * ##1 / 5 }
+        \fp_set:Nn \l_semio_viz_sym_c_fp { cos( \l_semio_viz_sym_a_fp ) }
+        \fp_set:Nn \l_semio_viz_sym_s_fp { sin( \l_semio_viz_sym_a_fp ) }
+        \semio_viz_path_line_to:nn { \l_semio_viz_sym_s_fp * \l_semio_viz_sym_r_fp }
+          { - \l_semio_viz_sym_c_fp * \l_semio_viz_sym_r_fp }
+        \semio_viz_path_line_to:nn
+          { \l_semio_viz_sym_c_fp * \l_semio_viz_sym_x_fp - \l_semio_viz_sym_s_fp * \l_semio_viz_sym_y_fp }
+          { \l_semio_viz_sym_s_fp * \l_semio_viz_sym_x_fp + \l_semio_viz_sym_c_fp * \l_semio_viz_sym_y_fp }
+      }
+      \semio_viz_path_close:
+    }
+    { times } {
+      \fp_set:Nn \l_semio_viz_sym_r_fp { sqrt( (#2) - min( (#2) / 6 , 1.7 ) ) * 0.6189 }
+      \semio_viz_path_move_to:nn { - \l_semio_viz_sym_r_fp } { - \l_semio_viz_sym_r_fp }
+      \semio_viz_path_line_to:nn { \l_semio_viz_sym_r_fp } { \l_semio_viz_sym_r_fp }
+      \semio_viz_path_move_to:nn { - \l_semio_viz_sym_r_fp } { \l_semio_viz_sym_r_fp }
+      \semio_viz_path_line_to:nn { \l_semio_viz_sym_r_fp } { - \l_semio_viz_sym_r_fp }
+    }
+    { triangle } {
+      \fp_set:Nn \l_semio_viz_sym_y_fp { - sqrt( (#2) / ( \c_semio_viz_sqrt_three_fp * 3 ) ) }
+      \semio_viz_path_move_to:nn { 0 } { \l_semio_viz_sym_y_fp * 2 }
+      \semio_viz_path_line_to:nn { - \c_semio_viz_sqrt_three_fp * \l_semio_viz_sym_y_fp } { - \l_semio_viz_sym_y_fp }
+      \semio_viz_path_line_to:nn { \c_semio_viz_sqrt_three_fp * \l_semio_viz_sym_y_fp } { - \l_semio_viz_sym_y_fp }
+      \semio_viz_path_close:
+    }
+    { triangle2 } {
+      \fp_set:Nn \l_semio_viz_sym_s_fp { sqrt(#2) * 0.6824 }
+      \fp_set:Nn \l_semio_viz_sym_t_fp { \l_semio_viz_sym_s_fp / 2 }
+      \fp_set:Nn \l_semio_viz_sym_u_fp { \l_semio_viz_sym_s_fp * \c_semio_viz_sqrt_three_fp / 2 }
+      \semio_viz_path_move_to:nn { 0 } { - \l_semio_viz_sym_s_fp }
+      \semio_viz_path_line_to:nn { \l_semio_viz_sym_u_fp } { \l_semio_viz_sym_t_fp }
+      \semio_viz_path_line_to:nn { - \l_semio_viz_sym_u_fp } { \l_semio_viz_sym_t_fp }
+      \semio_viz_path_close:
+    }
+    { wye } {
+      \fp_set:Nn \l_semio_viz_sym_r_fp { sqrt( (#2) / \c_semio_viz_wye_a_fp ) }
+      \fp_set:Nn \l_semio_viz_sym_x_fp { \l_semio_viz_sym_r_fp / 2 }
+      \fp_set:Nn \l_semio_viz_sym_y_fp { \l_semio_viz_sym_r_fp * \c_semio_viz_wye_k_fp }
+      \fp_set:Nn \l_semio_viz_sym_t_fp { \l_semio_viz_sym_r_fp * \c_semio_viz_wye_k_fp + \l_semio_viz_sym_r_fp }
+      \semio_viz_path_move_to:nn { \l_semio_viz_sym_x_fp } { \l_semio_viz_sym_y_fp }
+      \semio_viz_path_line_to:nn { \l_semio_viz_sym_x_fp } { \l_semio_viz_sym_t_fp }
+      \semio_viz_path_line_to:nn { - \l_semio_viz_sym_x_fp } { \l_semio_viz_sym_t_fp }
+      \semio_viz_wye_spoke:nnn { -0.5 } { \c_semio_viz_wye_s_fp } { a }
+      \semio_viz_wye_spoke:nnn { -0.5 } { \c_semio_viz_wye_s_fp } { b }
+      \semio_viz_path_close:
+    }
+    { asterisk } {
+      \fp_set:Nn \l_semio_viz_sym_r_fp { sqrt( (#2) + min( (#2) / 28 , 0.75 ) ) * 0.59436 }
+      \fp_set:Nn \l_semio_viz_sym_t_fp { \l_semio_viz_sym_r_fp / 2 }
+      \fp_set:Nn \l_semio_viz_sym_u_fp { \l_semio_viz_sym_t_fp * \c_semio_viz_sqrt_three_fp }
+      \semio_viz_path_move_to:nn { 0 } { \l_semio_viz_sym_r_fp }
+      \semio_viz_path_line_to:nn { 0 } { - \l_semio_viz_sym_r_fp }
+      \semio_viz_path_move_to:nn { - \l_semio_viz_sym_u_fp } { - \l_semio_viz_sym_t_fp }
+      \semio_viz_path_line_to:nn { \l_semio_viz_sym_u_fp } { \l_semio_viz_sym_t_fp }
+      \semio_viz_path_move_to:nn { - \l_semio_viz_sym_u_fp } { \l_semio_viz_sym_t_fp }
+      \semio_viz_path_line_to:nn { \l_semio_viz_sym_u_fp } { - \l_semio_viz_sym_t_fp }
+    }
+  } { \msg_error:nnn { semio-viz } { unknown-symbol } {#1} }
+}
+
+% ⑂ One rotated arm of the wye: d3 rotates the three arm points by ±120 degrees.
+\cs_new_protected:Npn \semio_viz_wye_spoke:nnn #1#2#3 {
+  \fp_set:Nn \l_semio_viz_sym_c_fp {#1}
+  \fp_set:Nn \l_semio_viz_sym_s_fp { \str_if_eq:nnTF {#3} { a } { #2 } { -(#2) } }
+  \semio_viz_path_line_to:nn
+    { \l_semio_viz_sym_c_fp * \l_semio_viz_sym_x_fp - \l_semio_viz_sym_s_fp * \l_semio_viz_sym_y_fp }
+    { \l_semio_viz_sym_s_fp * \l_semio_viz_sym_x_fp + \l_semio_viz_sym_c_fp * \l_semio_viz_sym_y_fp }
+  \semio_viz_path_line_to:nn
+    { \l_semio_viz_sym_c_fp * \l_semio_viz_sym_x_fp - \l_semio_viz_sym_s_fp * \l_semio_viz_sym_t_fp }
+    { \l_semio_viz_sym_s_fp * \l_semio_viz_sym_x_fp + \l_semio_viz_sym_c_fp * \l_semio_viz_sym_t_fp }
+  \semio_viz_path_line_to:nn
+    { \l_semio_viz_sym_c_fp * ( - \l_semio_viz_sym_x_fp ) - \l_semio_viz_sym_s_fp * \l_semio_viz_sym_t_fp }
+    { \l_semio_viz_sym_s_fp * ( - \l_semio_viz_sym_x_fp ) + \l_semio_viz_sym_c_fp * \l_semio_viz_sym_t_fp }
+}
+%endregion 🔖️Symbols
+
+%region 🔖️ArcGeometry
+% 🥧 d3-arc, including padAngle, padRadius and cornerRadius, branch for branch.
+% Angles are radians clockwise from twelve o'clock, as in d3; the half turn that
+% turns them into SVG angles is d3's own `- halfPi`.
+\fp_new:N \l_semio_viz_ag_ri_fp \fp_new:N \l_semio_viz_ag_ro_fp
+\fp_new:N \l_semio_viz_ag_aa_fp \fp_new:N \l_semio_viz_ag_ab_fp
+\fp_new:N \l_semio_viz_ag_da_fp \fp_new:N \l_semio_viz_ag_ap_fp
+\fp_new:N \l_semio_viz_ag_rp_fp \fp_new:N \l_semio_viz_ag_rc_fp
+\fp_new:N \l_semio_viz_ag_rci_fp \fp_new:N \l_semio_viz_ag_rco_fp
+\fp_new:N \l_semio_viz_ag_dai_fp \fp_new:N \l_semio_viz_ag_dao_fp
+\fp_new:N \l_semio_viz_ag_aoa_fp \fp_new:N \l_semio_viz_ag_aob_fp
+\fp_new:N \l_semio_viz_ag_aia_fp \fp_new:N \l_semio_viz_ag_aib_fp
+\fp_new:N \l_semio_viz_ag_xoa_fp \fp_new:N \l_semio_viz_ag_yoa_fp
+\fp_new:N \l_semio_viz_ag_xob_fp \fp_new:N \l_semio_viz_ag_yob_fp
+\fp_new:N \l_semio_viz_ag_xia_fp \fp_new:N \l_semio_viz_ag_yia_fp
+\fp_new:N \l_semio_viz_ag_xib_fp \fp_new:N \l_semio_viz_ag_yib_fp
+\fp_new:N \l_semio_viz_ag_pi_fp \fp_new:N \l_semio_viz_ag_po_fp
+\bool_new:N \l_semio_viz_ag_cw_bool
+\fp_new:N \l_semio_viz_ct_cx_fp \fp_new:N \l_semio_viz_ct_cy_fp
+\fp_new:N \l_semio_viz_ct_ax_fp \fp_new:N \l_semio_viz_ct_ay_fp
+\fp_new:N \l_semio_viz_ct_bx_fp \fp_new:N \l_semio_viz_ct_by_fp
+\clist_map_inline:nn { ta, tb } {
+  \fp_new:c { l_semio_viz_ #1 _cx_fp } \fp_new:c { l_semio_viz_ #1 _cy_fp }
+  \fp_new:c { l_semio_viz_ #1 _ax_fp } \fp_new:c { l_semio_viz_ #1 _ay_fp }
+  \fp_new:c { l_semio_viz_ #1 _bx_fp } \fp_new:c { l_semio_viz_ #1 _by_fp }
+}
+\fp_new:N \l_semio_viz_ix_fp \fp_new:N \l_semio_viz_iy_fp
+\bool_new:N \l_semio_viz_ihit_bool
+
+% ✚ d3-arc's `intersect`: the crossing of the two corner-defining chords, or nothing when they are parallel.
+\cs_new_protected:Npn \semio_viz_arc_intersect:nnnnnnnn #1#2#3#4#5#6#7#8 {
+  \fp_set:Nn \l_tmpa_fp { ( (#8) - (#6) ) * ( (#3) - (#1) ) - ( (#7) - (#5) ) * ( (#4) - (#2) ) }
+  \fp_compare:nNnTF { \l_tmpa_fp * \l_tmpa_fp } < { 1e-12 }
+    { \bool_set_false:N \l_semio_viz_ihit_bool }
+    {
+      \bool_set_true:N \l_semio_viz_ihit_bool
+      \fp_set:Nn \l_tmpb_fp
+        { ( ( (#7) - (#5) ) * ( (#2) - (#6) ) - ( (#8) - (#6) ) * ( (#1) - (#5) ) ) / \l_tmpa_fp }
+      \fp_set:Nn \l_semio_viz_ix_fp { (#1) + \l_tmpb_fp * ( (#3) - (#1) ) }
+      \fp_set:Nn \l_semio_viz_iy_fp { (#2) + \l_tmpb_fp * ( (#4) - (#2) ) }
+    }
+}
+
+% ⌒ d3-arc's `cornerTangents`: centre and the two tangent offsets of one rounded corner.
+\cs_new_protected:Npn \semio_viz_arc_corner:nnnnnnn #1#2#3#4#5#6#7 {
+  \fp_set:Nn \l_semio_viz_cta_fp { (#1) - (#3) }
+  \fp_set:Nn \l_semio_viz_ctb_fp { (#2) - (#4) }
+  \fp_set:Nn \l_semio_viz_ctl_fp { \bool_if:nTF {#7} { (#6) } { -(#6) }
+    / sqrt( \l_semio_viz_cta_fp * \l_semio_viz_cta_fp + \l_semio_viz_ctb_fp * \l_semio_viz_ctb_fp ) }
+  \fp_set:Nn \l_semio_viz_ctox_fp { \l_semio_viz_ctl_fp * \l_semio_viz_ctb_fp }
+  \fp_set:Nn \l_semio_viz_ctoy_fp { - \l_semio_viz_ctl_fp * \l_semio_viz_cta_fp }
+  \fp_set:Nn \l_semio_viz_ctxa_fp { (#1) + \l_semio_viz_ctox_fp }
+  \fp_set:Nn \l_semio_viz_ctya_fp { (#2) + \l_semio_viz_ctoy_fp }
+  \fp_set:Nn \l_semio_viz_ctxb_fp { (#3) + \l_semio_viz_ctox_fp }
+  \fp_set:Nn \l_semio_viz_ctyb_fp { (#4) + \l_semio_viz_ctoy_fp }
+  \fp_set:Nn \l_semio_viz_ctmx_fp { ( \l_semio_viz_ctxa_fp + \l_semio_viz_ctxb_fp ) / 2 }
+  \fp_set:Nn \l_semio_viz_ctmy_fp { ( \l_semio_viz_ctya_fp + \l_semio_viz_ctyb_fp ) / 2 }
+  \fp_set:Nn \l_semio_viz_ctdx_fp { \l_semio_viz_ctxb_fp - \l_semio_viz_ctxa_fp }
+  \fp_set:Nn \l_semio_viz_ctdy_fp { \l_semio_viz_ctyb_fp - \l_semio_viz_ctya_fp }
+  \fp_set:Nn \l_semio_viz_ctdd_fp
+    { \l_semio_viz_ctdx_fp * \l_semio_viz_ctdx_fp + \l_semio_viz_ctdy_fp * \l_semio_viz_ctdy_fp }
+  \fp_set:Nn \l_semio_viz_ctr_fp { (#5) - (#6) }
+  \fp_set:Nn \l_semio_viz_ctcap_fp
+    { \l_semio_viz_ctxa_fp * \l_semio_viz_ctyb_fp - \l_semio_viz_ctxb_fp * \l_semio_viz_ctya_fp }
+  \fp_set:Nn \l_semio_viz_ctd_fp
+    { \fp_compare:nNnTF { \l_semio_viz_ctdy_fp } < { 0 } { -1 } { 1 }
+      * sqrt( max( 0 , \l_semio_viz_ctr_fp * \l_semio_viz_ctr_fp * \l_semio_viz_ctdd_fp
+        - \l_semio_viz_ctcap_fp * \l_semio_viz_ctcap_fp ) ) }
+  \fp_set:Nn \l_semio_viz_ctpx_fp
+    { ( \l_semio_viz_ctcap_fp * \l_semio_viz_ctdy_fp - \l_semio_viz_ctdx_fp * \l_semio_viz_ctd_fp ) / \l_semio_viz_ctdd_fp }
+  \fp_set:Nn \l_semio_viz_ctpy_fp
+    { ( - \l_semio_viz_ctcap_fp * \l_semio_viz_ctdx_fp - \l_semio_viz_ctdy_fp * \l_semio_viz_ctd_fp ) / \l_semio_viz_ctdd_fp }
+  \fp_set:Nn \l_semio_viz_ctqx_fp
+    { ( \l_semio_viz_ctcap_fp * \l_semio_viz_ctdy_fp + \l_semio_viz_ctdx_fp * \l_semio_viz_ctd_fp ) / \l_semio_viz_ctdd_fp }
+  \fp_set:Nn \l_semio_viz_ctqy_fp
+    { ( - \l_semio_viz_ctcap_fp * \l_semio_viz_ctdx_fp + \l_semio_viz_ctdy_fp * \l_semio_viz_ctd_fp ) / \l_semio_viz_ctdd_fp }
+  \fp_compare:nNnT
+    { ( \l_semio_viz_ctpx_fp - \l_semio_viz_ctmx_fp )**2 + ( \l_semio_viz_ctpy_fp - \l_semio_viz_ctmy_fp )**2 }
+    > { ( \l_semio_viz_ctqx_fp - \l_semio_viz_ctmx_fp )**2 + ( \l_semio_viz_ctqy_fp - \l_semio_viz_ctmy_fp )**2 }
+    {
+      \fp_set_eq:NN \l_semio_viz_ctpx_fp \l_semio_viz_ctqx_fp
+      \fp_set_eq:NN \l_semio_viz_ctpy_fp \l_semio_viz_ctqy_fp
+    }
+  \fp_set_eq:NN \l_semio_viz_ct_cx_fp \l_semio_viz_ctpx_fp
+  \fp_set_eq:NN \l_semio_viz_ct_cy_fp \l_semio_viz_ctpy_fp
+  \fp_set:Nn \l_semio_viz_ct_ax_fp { - \l_semio_viz_ctox_fp }
+  \fp_set:Nn \l_semio_viz_ct_ay_fp { - \l_semio_viz_ctoy_fp }
+  \fp_set:Nn \l_semio_viz_ct_bx_fp { \l_semio_viz_ctpx_fp * ( (#5) / \l_semio_viz_ctr_fp - 1 ) }
+  \fp_set:Nn \l_semio_viz_ct_by_fp { \l_semio_viz_ctpy_fp * ( (#5) / \l_semio_viz_ctr_fp - 1 ) }
+}
+\clist_map_inline:nn { cta, ctb, ctl, ctox, ctoy, ctxa, ctya, ctxb, ctyb, ctmx, ctmy,
+  ctdx, ctdy, ctdd, ctr, ctcap, ctd, ctpx, ctpy, ctqx, ctqy }
+  { \fp_new:c { l_semio_viz_ #1 _fp } }
+
+% 💾 Copies the last cornerTangents result into slot #1 (ta or tb).
+\cs_new_protected:Npn \semio_viz_arc_corner_store:n #1 {
+  \clist_map_inline:nn { cx, cy, ax, ay, bx, by }
+    { \fp_set_eq:cc { l_semio_viz_ #1 _ ##1 _fp } { l_semio_viz_ct_ ##1 _fp } }
+}
+% 🔎 Reads coordinate #2 of the stored cornerTangents slot #1.
+\cs_new:Npn \semio_viz_ct:nn #1#2 { \fp_use:c { l_semio_viz_ #1 _ #2 _fp } }
+%endregion 🔖️ArcGeometry
+
+%region 🔖️ArcPath
+% 🧮 d3's clamped inverse trigonometry: out-of-range arguments saturate instead of erroring.
+\cs_new:Npn \semio_viz_asin:n #1 {
+  \fp_compare:nNnTF {#1} > { 1 } { pi/2 }
+    { \fp_compare:nNnTF {#1} < { -1 } { -pi/2 } { asin(#1) } }
+}
+% 🧮 The clamped arc cosine of the same family.
+\cs_new:Npn \semio_viz_acos:n #1 {
+  \fp_compare:nNnTF {#1} > { 1 } { 0 }
+    { \fp_compare:nNnTF {#1} < { -1 } { pi } { acos(#1) } }
+}
+% 🔄 The reverse of the arc's own sweep, for the boundary that runs back along it.
+\cs_new:Npn \semio_viz_not_cw: { \bool_if:NTF \l_semio_viz_ag_cw_bool { \c_false_bool } { \c_true_bool } }
+
+\fp_new:N \l_semio_viz_ag_kc_fp \fp_new:N \l_semio_viz_ag_lc_fp
+
+% 🥧 Fills the current path buffer with one d3 arc; angles are radians clockwise from twelve o'clock.
+\cs_new_protected:Npn \semio_viz_arc_path:nnnnnnn #1#2#3#4#5#6#7 {
+  \fp_set:Nn \l_semio_viz_ag_ri_fp { min( (#1) , (#2) ) }
+  \fp_set:Nn \l_semio_viz_ag_ro_fp { max( (#1) , (#2) ) }
+  \fp_set:Nn \l_semio_viz_ag_aa_fp { (#3) - pi/2 }
+  \fp_set:Nn \l_semio_viz_ag_ab_fp { (#4) - pi/2 }
+  \fp_set:Nn \l_semio_viz_ag_da_fp { abs( \l_semio_viz_ag_ab_fp - \l_semio_viz_ag_aa_fp ) }
+  \bool_set:Nn \l_semio_viz_ag_cw_bool
+    { \fp_compare_p:nNn { \l_semio_viz_ag_ab_fp } > { \l_semio_viz_ag_aa_fp } }
+  \fp_compare:nNnTF { \l_semio_viz_ag_ro_fp } > { 1e-12 }
+    {
+      \fp_compare:nNnTF { \l_semio_viz_ag_da_fp } > { 2*pi - 1e-12 }
+        { \semio_viz_arc_ring: }
+        { \semio_viz_arc_sector:nnn {#5} {#6} {#7} }
+    }
+    { \semio_viz_path_move_to:nn { 0 } { 0 } }
+  \semio_viz_path_close:
+}
+
+\cs_generate_variant:Nn \semio_viz_arc_path:nnnnnnn { nnnnnVn }
+
+% 💍 The full-turn case: the outer circle, and the inner one back the other way when there is one.
+\cs_new_protected:Npn \semio_viz_arc_ring: {
+  \semio_viz_path_move_to:nn { \l_semio_viz_ag_ro_fp * cos( \l_semio_viz_ag_aa_fp ) }
+    { \l_semio_viz_ag_ro_fp * sin( \l_semio_viz_ag_aa_fp ) }
+  \semio_viz_path_arc:nnnnnn { 0 } { 0 } { \l_semio_viz_ag_ro_fp }
+    { \l_semio_viz_ag_aa_fp } { \l_semio_viz_ag_ab_fp } { \semio_viz_not_cw: }
+  \fp_compare:nNnT { \l_semio_viz_ag_ri_fp } > { 1e-12 } {
+    \semio_viz_path_move_to:nn { \l_semio_viz_ag_ri_fp * cos( \l_semio_viz_ag_ab_fp ) }
+      { \l_semio_viz_ag_ri_fp * sin( \l_semio_viz_ag_ab_fp ) }
+    \semio_viz_path_arc:nnnnnn { 0 } { 0 } { \l_semio_viz_ag_ri_fp }
+      { \l_semio_viz_ag_ab_fp } { \l_semio_viz_ag_aa_fp } { \l_semio_viz_ag_cw_bool }
+  }
+}
+
+% 🍰 The circular or annular sector, with padding and rounded corners applied as d3 applies them.
+\cs_new_protected:Npn \semio_viz_arc_sector:nnn #1#2#3 {
+  \fp_set_eq:NN \l_semio_viz_ag_aoa_fp \l_semio_viz_ag_aa_fp
+  \fp_set_eq:NN \l_semio_viz_ag_aob_fp \l_semio_viz_ag_ab_fp
+  \fp_set_eq:NN \l_semio_viz_ag_aia_fp \l_semio_viz_ag_aa_fp
+  \fp_set_eq:NN \l_semio_viz_ag_aib_fp \l_semio_viz_ag_ab_fp
+  \fp_set_eq:NN \l_semio_viz_ag_dai_fp \l_semio_viz_ag_da_fp
+  \fp_set_eq:NN \l_semio_viz_ag_dao_fp \l_semio_viz_ag_da_fp
+  \fp_set:Nn \l_semio_viz_ag_ap_fp { (#1) / 2 }
+  \fp_set:Nn \l_semio_viz_ag_rp_fp
+    { \tl_if_blank:nTF {#2}
+        { sqrt( \l_semio_viz_ag_ri_fp * \l_semio_viz_ag_ri_fp + \l_semio_viz_ag_ro_fp * \l_semio_viz_ag_ro_fp ) }
+        { #2 } }
+  \fp_compare:nNnF { \l_semio_viz_ag_ap_fp } > { 1e-12 } { \fp_zero:N \l_semio_viz_ag_rp_fp }
+  \fp_set:Nn \l_semio_viz_ag_rc_fp { min( abs( \l_semio_viz_ag_ro_fp - \l_semio_viz_ag_ri_fp ) / 2 , (#3) ) }
+  \fp_set_eq:NN \l_semio_viz_ag_rci_fp \l_semio_viz_ag_rc_fp
+  \fp_set_eq:NN \l_semio_viz_ag_rco_fp \l_semio_viz_ag_rc_fp
+  \fp_compare:nNnT { \l_semio_viz_ag_rp_fp } > { 1e-12 } { \semio_viz_arc_pad: }
+  \fp_set:Nn \l_semio_viz_ag_xoa_fp { \l_semio_viz_ag_ro_fp * cos( \l_semio_viz_ag_aoa_fp ) }
+  \fp_set:Nn \l_semio_viz_ag_yoa_fp { \l_semio_viz_ag_ro_fp * sin( \l_semio_viz_ag_aoa_fp ) }
+  \fp_set:Nn \l_semio_viz_ag_xib_fp { \l_semio_viz_ag_ri_fp * cos( \l_semio_viz_ag_aib_fp ) }
+  \fp_set:Nn \l_semio_viz_ag_yib_fp { \l_semio_viz_ag_ri_fp * sin( \l_semio_viz_ag_aib_fp ) }
+  \fp_compare:nNnT { \l_semio_viz_ag_rc_fp } > { 1e-12 } { \semio_viz_arc_corner_limit: }
+  \fp_compare:nNnTF { \l_semio_viz_ag_dao_fp } > { 1e-12 }
+    {
+      \fp_compare:nNnTF { \l_semio_viz_ag_rco_fp } > { 1e-12 }
+        { \semio_viz_arc_outer_round: }
+        {
+          \semio_viz_path_move_to:nn { \l_semio_viz_ag_xoa_fp } { \l_semio_viz_ag_yoa_fp }
+          \semio_viz_path_arc:nnnnnn { 0 } { 0 } { \l_semio_viz_ag_ro_fp }
+            { \l_semio_viz_ag_aoa_fp } { \l_semio_viz_ag_aob_fp } { \semio_viz_not_cw: }
+        }
+    }
+    { \semio_viz_path_move_to:nn { \l_semio_viz_ag_xoa_fp } { \l_semio_viz_ag_yoa_fp } }
+  \bool_lazy_and:nnTF
+    { \fp_compare_p:nNn { \l_semio_viz_ag_ri_fp } > { 1e-12 } }
+    { \fp_compare_p:nNn { \l_semio_viz_ag_dai_fp } > { 1e-12 } }
+    {
+      \fp_compare:nNnTF { \l_semio_viz_ag_rci_fp } > { 1e-12 }
+        { \semio_viz_arc_inner_round: }
+        {
+          \semio_viz_path_arc:nnnnnn { 0 } { 0 } { \l_semio_viz_ag_ri_fp }
+            { \l_semio_viz_ag_aib_fp } { \l_semio_viz_ag_aia_fp } { \l_semio_viz_ag_cw_bool }
+        }
+    }
+    { \semio_viz_path_line_to:nn { \l_semio_viz_ag_xib_fp } { \l_semio_viz_ag_yib_fp } }
+}
+
+% ↔️ d3's padding step: the inner and outer edges lose the angle a gap of `padRadius` subtends.
+\cs_new_protected:Npn \semio_viz_arc_pad: {
+  \fp_set:Nn \l_semio_viz_ag_pi_fp
+    { \fp_compare:nNnTF { \l_semio_viz_ag_ri_fp } > { 1e-12 }
+        { \semio_viz_asin:n { \l_semio_viz_ag_rp_fp / \l_semio_viz_ag_ri_fp * sin( \l_semio_viz_ag_ap_fp ) } }
+        { pi/2 } }
+  \fp_set:Nn \l_semio_viz_ag_po_fp
+    { \semio_viz_asin:n { \l_semio_viz_ag_rp_fp / \l_semio_viz_ag_ro_fp * sin( \l_semio_viz_ag_ap_fp ) } }
+  \fp_set:Nn \l_semio_viz_ag_dai_fp { \l_semio_viz_ag_dai_fp - 2 * \l_semio_viz_ag_pi_fp }
+  \fp_compare:nNnTF { \l_semio_viz_ag_dai_fp } > { 1e-12 }
+    {
+      \bool_if:NF \l_semio_viz_ag_cw_bool { \fp_set:Nn \l_semio_viz_ag_pi_fp { - \l_semio_viz_ag_pi_fp } }
+      \fp_add:Nn \l_semio_viz_ag_aia_fp { \l_semio_viz_ag_pi_fp }
+      \fp_sub:Nn \l_semio_viz_ag_aib_fp { \l_semio_viz_ag_pi_fp }
+    }
+    {
+      \fp_zero:N \l_semio_viz_ag_dai_fp
+      \fp_set:Nn \l_semio_viz_ag_aia_fp { ( \l_semio_viz_ag_aa_fp + \l_semio_viz_ag_ab_fp ) / 2 }
+      \fp_set_eq:NN \l_semio_viz_ag_aib_fp \l_semio_viz_ag_aia_fp
+    }
+  \fp_set:Nn \l_semio_viz_ag_dao_fp { \l_semio_viz_ag_dao_fp - 2 * \l_semio_viz_ag_po_fp }
+  \fp_compare:nNnTF { \l_semio_viz_ag_dao_fp } > { 1e-12 }
+    {
+      \bool_if:NF \l_semio_viz_ag_cw_bool { \fp_set:Nn \l_semio_viz_ag_po_fp { - \l_semio_viz_ag_po_fp } }
+      \fp_add:Nn \l_semio_viz_ag_aoa_fp { \l_semio_viz_ag_po_fp }
+      \fp_sub:Nn \l_semio_viz_ag_aob_fp { \l_semio_viz_ag_po_fp }
+    }
+    {
+      \fp_zero:N \l_semio_viz_ag_dao_fp
+      \fp_set:Nn \l_semio_viz_ag_aoa_fp { ( \l_semio_viz_ag_aa_fp + \l_semio_viz_ag_ab_fp ) / 2 }
+      \fp_set_eq:NN \l_semio_viz_ag_aob_fp \l_semio_viz_ag_aoa_fp
+    }
+}
+
+% 📏 Shrinks the corner radius to what the sector's own angle admits; d3 disables it when the chords do not meet.
+\cs_new_protected:Npn \semio_viz_arc_corner_limit: {
+  \fp_set:Nn \l_semio_viz_ag_xob_fp { \l_semio_viz_ag_ro_fp * cos( \l_semio_viz_ag_aob_fp ) }
+  \fp_set:Nn \l_semio_viz_ag_yob_fp { \l_semio_viz_ag_ro_fp * sin( \l_semio_viz_ag_aob_fp ) }
+  \fp_set:Nn \l_semio_viz_ag_xia_fp { \l_semio_viz_ag_ri_fp * cos( \l_semio_viz_ag_aia_fp ) }
+  \fp_set:Nn \l_semio_viz_ag_yia_fp { \l_semio_viz_ag_ri_fp * sin( \l_semio_viz_ag_aia_fp ) }
+  \fp_compare:nNnT { \l_semio_viz_ag_da_fp } < { pi } {
+    \semio_viz_arc_intersect:nnnnnnnn
+      { \l_semio_viz_ag_xoa_fp } { \l_semio_viz_ag_yoa_fp } { \l_semio_viz_ag_xia_fp } { \l_semio_viz_ag_yia_fp }
+      { \l_semio_viz_ag_xob_fp } { \l_semio_viz_ag_yob_fp } { \l_semio_viz_ag_xib_fp } { \l_semio_viz_ag_yib_fp }
+    \bool_if:NTF \l_semio_viz_ihit_bool {
+      \fp_set:Nn \l_semio_viz_ag_kc_fp { 1 / sin( \semio_viz_acos:n {
+        ( ( \l_semio_viz_ag_xoa_fp - \l_semio_viz_ix_fp ) * ( \l_semio_viz_ag_xob_fp - \l_semio_viz_ix_fp )
+        + ( \l_semio_viz_ag_yoa_fp - \l_semio_viz_iy_fp ) * ( \l_semio_viz_ag_yob_fp - \l_semio_viz_iy_fp ) ) /
+        ( sqrt( ( \l_semio_viz_ag_xoa_fp - \l_semio_viz_ix_fp )**2 + ( \l_semio_viz_ag_yoa_fp - \l_semio_viz_iy_fp )**2 )
+        * sqrt( ( \l_semio_viz_ag_xob_fp - \l_semio_viz_ix_fp )**2 + ( \l_semio_viz_ag_yob_fp - \l_semio_viz_iy_fp )**2 ) ) }
+        / 2 ) }
+      \fp_set:Nn \l_semio_viz_ag_lc_fp
+        { sqrt( \l_semio_viz_ix_fp * \l_semio_viz_ix_fp + \l_semio_viz_iy_fp * \l_semio_viz_iy_fp ) }
+      \fp_set:Nn \l_semio_viz_ag_rci_fp { min( \l_semio_viz_ag_rc_fp ,
+        ( \l_semio_viz_ag_ri_fp - \l_semio_viz_ag_lc_fp ) / ( \l_semio_viz_ag_kc_fp - 1 ) ) }
+      \fp_set:Nn \l_semio_viz_ag_rco_fp { min( \l_semio_viz_ag_rc_fp ,
+        ( \l_semio_viz_ag_ro_fp - \l_semio_viz_ag_lc_fp ) / ( \l_semio_viz_ag_kc_fp + 1 ) ) }
+    } {
+      \fp_zero:N \l_semio_viz_ag_rci_fp
+      \fp_zero:N \l_semio_viz_ag_rco_fp
+    }
+  }
+}
+
+% 🌗 The outer boundary with rounded corners: the two corner circles and the arc between them.
+\cs_new_protected:Npn \semio_viz_arc_outer_round: {
+  \semio_viz_arc_corner:nnnnnnn { \l_semio_viz_ag_xia_fp } { \l_semio_viz_ag_yia_fp }
+    { \l_semio_viz_ag_xoa_fp } { \l_semio_viz_ag_yoa_fp }
+    { \l_semio_viz_ag_ro_fp } { \l_semio_viz_ag_rco_fp } { \l_semio_viz_ag_cw_bool }
+  \semio_viz_arc_corner_store:n { ta }
+  \semio_viz_arc_corner:nnnnnnn { \l_semio_viz_ag_xob_fp } { \l_semio_viz_ag_yob_fp }
+    { \l_semio_viz_ag_xib_fp } { \l_semio_viz_ag_yib_fp }
+    { \l_semio_viz_ag_ro_fp } { \l_semio_viz_ag_rco_fp } { \l_semio_viz_ag_cw_bool }
+  \semio_viz_arc_corner_store:n { tb }
+  \semio_viz_path_move_to:nn { \semio_viz_ct:nn { ta } { cx } + \semio_viz_ct:nn { ta } { ax } }
+    { \semio_viz_ct:nn { ta } { cy } + \semio_viz_ct:nn { ta } { ay } }
+  \fp_compare:nNnTF { \l_semio_viz_ag_rco_fp } < { \l_semio_viz_ag_rc_fp }
+    {
+      \semio_viz_path_arc:nnnnnn { \semio_viz_ct:nn { ta } { cx } } { \semio_viz_ct:nn { ta } { cy } }
+        { \l_semio_viz_ag_rco_fp }
+        { atan( \semio_viz_ct:nn { ta } { ay } , \semio_viz_ct:nn { ta } { ax } ) }
+        { atan( \semio_viz_ct:nn { tb } { ay } , \semio_viz_ct:nn { tb } { ax } ) } { \semio_viz_not_cw: }
+    }
+    {
+      \semio_viz_path_arc:nnnnnn { \semio_viz_ct:nn { ta } { cx } } { \semio_viz_ct:nn { ta } { cy } }
+        { \l_semio_viz_ag_rco_fp }
+        { atan( \semio_viz_ct:nn { ta } { ay } , \semio_viz_ct:nn { ta } { ax } ) }
+        { atan( \semio_viz_ct:nn { ta } { by } , \semio_viz_ct:nn { ta } { bx } ) } { \semio_viz_not_cw: }
+      \semio_viz_path_arc:nnnnnn { 0 } { 0 } { \l_semio_viz_ag_ro_fp }
+        { atan( \semio_viz_ct:nn { ta } { cy } + \semio_viz_ct:nn { ta } { by } ,
+                \semio_viz_ct:nn { ta } { cx } + \semio_viz_ct:nn { ta } { bx } ) }
+        { atan( \semio_viz_ct:nn { tb } { cy } + \semio_viz_ct:nn { tb } { by } ,
+                \semio_viz_ct:nn { tb } { cx } + \semio_viz_ct:nn { tb } { bx } ) } { \semio_viz_not_cw: }
+      \semio_viz_path_arc:nnnnnn { \semio_viz_ct:nn { tb } { cx } } { \semio_viz_ct:nn { tb } { cy } }
+        { \l_semio_viz_ag_rco_fp }
+        { atan( \semio_viz_ct:nn { tb } { by } , \semio_viz_ct:nn { tb } { bx } ) }
+        { atan( \semio_viz_ct:nn { tb } { ay } , \semio_viz_ct:nn { tb } { ax } ) } { \semio_viz_not_cw: }
+    }
+}
+
+% 🌘 The inner boundary with rounded corners, run back the other way to close the sector.
+\cs_new_protected:Npn \semio_viz_arc_inner_round: {
+  \semio_viz_arc_corner:nnnnnnn { \l_semio_viz_ag_xib_fp } { \l_semio_viz_ag_yib_fp }
+    { \l_semio_viz_ag_xob_fp } { \l_semio_viz_ag_yob_fp }
+    { \l_semio_viz_ag_ri_fp } { - \l_semio_viz_ag_rci_fp } { \l_semio_viz_ag_cw_bool }
+  \semio_viz_arc_corner_store:n { ta }
+  \semio_viz_arc_corner:nnnnnnn { \l_semio_viz_ag_xoa_fp } { \l_semio_viz_ag_yoa_fp }
+    { \l_semio_viz_ag_xia_fp } { \l_semio_viz_ag_yia_fp }
+    { \l_semio_viz_ag_ri_fp } { - \l_semio_viz_ag_rci_fp } { \l_semio_viz_ag_cw_bool }
+  \semio_viz_arc_corner_store:n { tb }
+  \semio_viz_path_line_to:nn { \semio_viz_ct:nn { ta } { cx } + \semio_viz_ct:nn { ta } { ax } }
+    { \semio_viz_ct:nn { ta } { cy } + \semio_viz_ct:nn { ta } { ay } }
+  \fp_compare:nNnTF { \l_semio_viz_ag_rci_fp } < { \l_semio_viz_ag_rc_fp }
+    {
+      \semio_viz_path_arc:nnnnnn { \semio_viz_ct:nn { ta } { cx } } { \semio_viz_ct:nn { ta } { cy } }
+        { \l_semio_viz_ag_rci_fp }
+        { atan( \semio_viz_ct:nn { ta } { ay } , \semio_viz_ct:nn { ta } { ax } ) }
+        { atan( \semio_viz_ct:nn { tb } { ay } , \semio_viz_ct:nn { tb } { ax } ) } { \semio_viz_not_cw: }
+    }
+    {
+      \semio_viz_path_arc:nnnnnn { \semio_viz_ct:nn { ta } { cx } } { \semio_viz_ct:nn { ta } { cy } }
+        { \l_semio_viz_ag_rci_fp }
+        { atan( \semio_viz_ct:nn { ta } { ay } , \semio_viz_ct:nn { ta } { ax } ) }
+        { atan( \semio_viz_ct:nn { ta } { by } , \semio_viz_ct:nn { ta } { bx } ) } { \semio_viz_not_cw: }
+      \semio_viz_path_arc:nnnnnn { 0 } { 0 } { \l_semio_viz_ag_ri_fp }
+        { atan( \semio_viz_ct:nn { ta } { cy } + \semio_viz_ct:nn { ta } { by } ,
+                \semio_viz_ct:nn { ta } { cx } + \semio_viz_ct:nn { ta } { bx } ) }
+        { atan( \semio_viz_ct:nn { tb } { cy } + \semio_viz_ct:nn { tb } { by } ,
+                \semio_viz_ct:nn { tb } { cx } + \semio_viz_ct:nn { tb } { bx } ) } { \l_semio_viz_ag_cw_bool }
+      \semio_viz_path_arc:nnnnnn { \semio_viz_ct:nn { tb } { cx } } { \semio_viz_ct:nn { tb } { cy } }
+        { \l_semio_viz_ag_rci_fp }
+        { atan( \semio_viz_ct:nn { tb } { by } , \semio_viz_ct:nn { tb } { bx } ) }
+        { atan( \semio_viz_ct:nn { tb } { ay } , \semio_viz_ct:nn { tb } { ax } ) } { \semio_viz_not_cw: }
+    }
+}
+
+% 🎯 d3's arc centroid: the midpoint in both radius and angle.
+\cs_new:Npn \semio_viz_arc_centroid_x:nnnn #1#2#3#4
+  { \fp_to_decimal:n { cos( ( (#3) + (#4) ) / 2 - pi/2 ) * ( (#1) + (#2) ) / 2 } }
+% 🎯 The ordinate of that centroid.
+\cs_new:Npn \semio_viz_arc_centroid_y:nnnn #1#2#3#4
+  { \fp_to_decimal:n { sin( ( (#3) + (#4) ) / 2 - pi/2 ) * ( (#1) + (#2) ) / 2 } }
+%endregion 🔖️ArcPath
+
+%region 🔖️Pie
+% 🥧 d3-pie: start and end angle per datum, in the data's own order, with the
+% pad angle taken out of the available turn before the values are scaled.
+\seq_new:N \g_semio_viz_pie_start_seq
+\seq_new:N \g_semio_viz_pie_end_seq
+\seq_new:N \g_semio_viz_pie_index_seq
+\seq_new:N \l_semio_viz_pie_values_seq
+\seq_new:N \l_semio_viz_pie_order_seq
+\fp_new:N \l_semio_viz_pie_sum_fp \fp_new:N \l_semio_viz_pie_da_fp
+\fp_new:N \l_semio_viz_pie_pad_fp \fp_new:N \l_semio_viz_pie_k_fp
+\fp_new:N \l_semio_viz_pie_cursor_fp \fp_new:N \l_semio_viz_pie_pa_fp
+\prop_new:N \l_semio_viz_pie_start_prop
+\prop_new:N \l_semio_viz_pie_end_prop
+
+% 🥧 #1 values (clist), #2 startAngle, #3 endAngle, #4 padAngle, #5 sort: none|descending|ascending.
+\cs_new_protected:Npn \semio_viz_pie_compute:nnnnn #1#2#3#4#5 {
+  \seq_set_from_clist:Nn \l_semio_viz_pie_values_seq {#1}
+  \int_set:Nn \l_semio_viz_c_n_int { \seq_count:N \l_semio_viz_pie_values_seq }
+  \fp_zero:N \l_semio_viz_pie_sum_fp
+  \seq_map_inline:Nn \l_semio_viz_pie_values_seq
+    { \fp_compare:nNnT {##1} > { 0 } { \fp_add:Nn \l_semio_viz_pie_sum_fp {##1} } }
+  \fp_set:Nn \l_semio_viz_pie_cursor_fp {#2}
+  \fp_set:Nn \l_semio_viz_pie_da_fp { min( 2*pi , max( -2*pi , (#3) - (#2) ) ) }
+  \fp_set:Nn \l_semio_viz_pie_pad_fp
+    { min( abs( \l_semio_viz_pie_da_fp ) / \l_semio_viz_c_n_int , (#4) ) }
+  \fp_set:Nn \l_semio_viz_pie_pa_fp
+    { \fp_compare:nNnTF { \l_semio_viz_pie_da_fp } < { 0 } { - \l_semio_viz_pie_pad_fp } { \l_semio_viz_pie_pad_fp } }
+  \fp_set:Nn \l_semio_viz_pie_k_fp
+    { \fp_compare:nNnTF { \l_semio_viz_pie_sum_fp } = { 0 } { 0 }
+      { ( \l_semio_viz_pie_da_fp - \l_semio_viz_c_n_int * \l_semio_viz_pie_pa_fp ) / \l_semio_viz_pie_sum_fp } }
+  \semio_viz_pie_order:n {#5}
+  \prop_clear:N \l_semio_viz_pie_start_prop
+  \prop_clear:N \l_semio_viz_pie_end_prop
+  \seq_map_inline:Nn \l_semio_viz_pie_order_seq {
+    \prop_put:Nnx \l_semio_viz_pie_start_prop {##1} { \fp_to_decimal:N \l_semio_viz_pie_cursor_fp }
+    \fp_add:Nn \l_semio_viz_pie_cursor_fp {
+      \fp_compare:nNnTF { \seq_item:Nn \l_semio_viz_pie_values_seq {##1} } > { 0 }
+        { \seq_item:Nn \l_semio_viz_pie_values_seq {##1} * \l_semio_viz_pie_k_fp } { 0 }
+      + \l_semio_viz_pie_pa_fp }
+    \prop_put:Nnx \l_semio_viz_pie_end_prop {##1} { \fp_to_decimal:N \l_semio_viz_pie_cursor_fp }
+  }
+  \seq_gclear:N \g_semio_viz_pie_start_seq
+  \seq_gclear:N \g_semio_viz_pie_end_seq
+  \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_c_n_int } {
+    \seq_gput_right:Nx \g_semio_viz_pie_start_seq { \prop_item:Nn \l_semio_viz_pie_start_prop {##1} }
+    \seq_gput_right:Nx \g_semio_viz_pie_end_seq { \prop_item:Nn \l_semio_viz_pie_end_prop {##1} }
+  }
+}
+
+% 🔢 The order the arcs are laid out in; d3 sorts the INDEX, not the data, so the results stay in input order.
+\cs_new_protected:Npn \semio_viz_pie_order:n #1 {
+  \seq_clear:N \l_semio_viz_pie_order_seq
+  \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_c_n_int }
+    { \seq_put_right:Nn \l_semio_viz_pie_order_seq {##1} }
+  \str_case:nn {#1} {
+    { descending } {
+      \seq_sort:Nn \l_semio_viz_pie_order_seq {
+        \fp_compare:nNnTF { \seq_item:Nn \l_semio_viz_pie_values_seq {##1} }
+          < { \seq_item:Nn \l_semio_viz_pie_values_seq {##2} }
+          { \sort_return_swapped: } { \sort_return_same: }
+      }
+    }
+    { ascending } {
+      \seq_sort:Nn \l_semio_viz_pie_order_seq {
+        \fp_compare:nNnTF { \seq_item:Nn \l_semio_viz_pie_values_seq {##1} }
+          > { \seq_item:Nn \l_semio_viz_pie_values_seq {##2} }
+          { \sort_return_swapped: } { \sort_return_same: }
+      }
+    }
+  }
+}
+% 🥧 The same generator on a sequence: a family that has already pulled its value column into a
+% seq (pie rings, sunburst rings) hands it over without rebuilding a comma list at the call site.
+\cs_new_protected:Npn \semio_viz_pie_from_seq:Nnnnn #1#2#3#4#5 {
+  \use:x
+    {
+      \exp_not:N \semio_viz_pie_compute:nnnnn { \seq_use:Nn #1 { , } }
+        { \fp_to_decimal:n {#2} } { \fp_to_decimal:n {#3} } { \fp_to_decimal:n {#4} } {#5}
+    }
+}
+%endregion 🔖️Pie
+
+%region 🔖️Link
+% 🔗 d3-shape's link generators: a single bump between two points, horizontal,
+% vertical or radial. The radial form maps (angle, radius) through d3's own
+% pointRadial, which measures the angle clockwise from twelve o'clock.
+\cs_new:Npn \semio_viz_point_radial_x:nn #1#2 { \fp_to_decimal:n { (#2) * cos( (#1) - pi/2 ) } }
+% 🧭 The ordinate of the same polar point.
+\cs_new:Npn \semio_viz_point_radial_y:nn #1#2 { \fp_to_decimal:n { (#2) * sin( (#1) - pi/2 ) } }
+
+% 🔗 #1 kind (horizontal|vertical|radial), then source x/y and target x/y (angle/radius when radial).
+\cs_new_protected:Npn \semio_viz_link_path:nnnnn #1#2#3#4#5 {
+  \str_case:nnF {#1} {
+    { horizontal } {
+      \semio_viz_path_move_to:nn {#2} {#3}
+      \semio_viz_path_bezier_to:nnnnnn { ( (#2) + (#4) ) / 2 } {#3} { ( (#2) + (#4) ) / 2 } {#5} {#4} {#5}
+    }
+    { vertical } {
+      \semio_viz_path_move_to:nn {#2} {#3}
+      \semio_viz_path_bezier_to:nnnnnn {#2} { ( (#3) + (#5) ) / 2 } {#4} { ( (#3) + (#5) ) / 2 } {#4} {#5}
+    }
+    { radial } {
+      \semio_viz_path_move_to:nn { \semio_viz_point_radial_x:nn {#2} {#3} }
+        { \semio_viz_point_radial_y:nn {#2} {#3} }
+      \semio_viz_path_bezier_to:nnnnnn
+        { \semio_viz_point_radial_x:nn {#2} { ( (#3) + (#5) ) / 2 } }
+        { \semio_viz_point_radial_y:nn {#2} { ( (#3) + (#5) ) / 2 } }
+        { \semio_viz_point_radial_x:nn {#4} { ( (#3) + (#5) ) / 2 } }
+        { \semio_viz_point_radial_y:nn {#4} { ( (#3) + (#5) ) / 2 } }
+        { \semio_viz_point_radial_x:nn {#4} {#5} } { \semio_viz_point_radial_y:nn {#4} {#5} }
+    }
+  } { \msg_error:nnn { semio-viz } { unknown-mark } { link/#1 } }
+}
+%endregion 🔖️Link
+
+%region 🔖️Ribbon
+% 🎀 d3-chord's ribbon: two arcs on the same circle joined by quadratics through
+% the centre. #1 source radius, #2 source start, #3 source end, #4 target radius,
+% #5 target start, #6 target end, #7 pad angle.
+\fp_new:N \l_semio_viz_rb_sa_fp \fp_new:N \l_semio_viz_rb_sb_fp
+\fp_new:N \l_semio_viz_rb_taa_fp \fp_new:N \l_semio_viz_rb_tab_fp
+\fp_new:N \l_semio_viz_rb_ap_fp
+\cs_new_protected:Npn \semio_viz_ribbon_path:nnnnnnn #1#2#3#4#5#6#7 {
+  \fp_set:Nn \l_semio_viz_rb_ap_fp { (#7) / 2 }
+  \fp_set:Nn \l_semio_viz_rb_sa_fp { (#2) - pi/2 }
+  \fp_set:Nn \l_semio_viz_rb_sb_fp { (#3) - pi/2 }
+  \fp_set:Nn \l_semio_viz_rb_taa_fp { (#5) - pi/2 }
+  \fp_set:Nn \l_semio_viz_rb_tab_fp { (#6) - pi/2 }
+  \fp_compare:nNnT { \l_semio_viz_rb_ap_fp } > { 1e-12 } {
+    \semio_viz_ribbon_pad:NN \l_semio_viz_rb_sa_fp \l_semio_viz_rb_sb_fp
+    \semio_viz_ribbon_pad:NN \l_semio_viz_rb_taa_fp \l_semio_viz_rb_tab_fp
+  }
+  \semio_viz_path_move_to:nn { (#1) * cos( \l_semio_viz_rb_sa_fp ) } { (#1) * sin( \l_semio_viz_rb_sa_fp ) }
+  \semio_viz_path_arc:nnnnnn { 0 } { 0 } {#1}
+    { \l_semio_viz_rb_sa_fp } { \l_semio_viz_rb_sb_fp } { \c_false_bool }
+  \bool_lazy_and:nnF
+    { \fp_compare_p:nNn { \l_semio_viz_rb_sa_fp } = { \l_semio_viz_rb_taa_fp } }
+    { \fp_compare_p:nNn { \l_semio_viz_rb_sb_fp } = { \l_semio_viz_rb_tab_fp } }
+    {
+      \semio_viz_path_quad_to:nnnn { 0 } { 0 }
+        { (#4) * cos( \l_semio_viz_rb_taa_fp ) } { (#4) * sin( \l_semio_viz_rb_taa_fp ) }
+      \semio_viz_path_arc:nnnnnn { 0 } { 0 } {#4}
+        { \l_semio_viz_rb_taa_fp } { \l_semio_viz_rb_tab_fp } { \c_false_bool }
+    }
+  \semio_viz_path_quad_to:nnnn { 0 } { 0 }
+    { (#1) * cos( \l_semio_viz_rb_sa_fp ) } { (#1) * sin( \l_semio_viz_rb_sa_fp ) }
+  \semio_viz_path_close:
+}
+% ↔️ Takes the pad angle out of the span from #1 to #2, collapsing it to its midpoint when the span
+% is too narrow to pad — which is what keeps a hairline ribbon from turning inside out.
+\cs_new_protected:Npn \semio_viz_ribbon_pad:NN #1#2 {
+  \fp_compare:nNnTF { abs( #2 - #1 ) } > { 2 * \l_semio_viz_rb_ap_fp + 1e-12 }
+    {
+      \fp_compare:nNnTF {#2} > {#1}
+        { \fp_add:Nn #1 { \l_semio_viz_rb_ap_fp } \fp_sub:Nn #2 { \l_semio_viz_rb_ap_fp } }
+        { \fp_sub:Nn #1 { \l_semio_viz_rb_ap_fp } \fp_add:Nn #2 { \l_semio_viz_rb_ap_fp } }
+    }
+    {
+      \fp_set:Nn \l_tmpa_fp { ( #1 + #2 ) / 2 }
+      \fp_set_eq:NN #1 \l_tmpa_fp
+      \fp_set_eq:NN #2 \l_tmpa_fp
+    }
+}
+%endregion 🔖️Ribbon
+
+%region 🔖️Points
+% 📍 The `points` vocabulary: `x,y; x,y; …` in figure millimetres, parsed once
+% into two parallel fp sequences so every consumer indexes instead of re-parsing.
+\seq_new:N \l_semio_viz_pt_x_seq
+\seq_new:N \l_semio_viz_pt_y_seq
+\seq_new:N \l_semio_viz_pt_ax_seq
+\seq_new:N \l_semio_viz_pt_ay_seq
+\int_new:N \l_semio_viz_pt_n_int
+\seq_new:N \l_semio_viz_pt_raw_seq
+
+\cs_new_protected:Npn \semio_viz_points_parse:nNN #1#2#3 {
+  \seq_clear:N #2
+  \seq_clear:N #3
+  \seq_set_split:Nnn \l_semio_viz_pt_raw_seq { ; } {#1}
+  \seq_map_inline:Nn \l_semio_viz_pt_raw_seq {
+    \tl_set:Nn \l_tmpa_tl {##1}
+    \tl_trim_spaces:N \l_tmpa_tl
+    \tl_if_empty:NF \l_tmpa_tl {
+      \seq_put_right:Nx #2 { \fp_to_decimal:n { \clist_item:Nn \l_tmpa_tl { 1 } } }
+      \seq_put_right:Nx #3 { \fp_to_decimal:n { \clist_item:Nn \l_tmpa_tl { 2 } } }
+    }
+  }
+}
+\cs_generate_variant:Nn \semio_viz_points_parse:nNN { VNN }
+
+% 📥 Parses the mark's `points` and `points2` lists into the indexed coordinate sequences.
+\cs_new_protected:Npn \semio_viz_points_load: {
+  \semio_viz_points_parse:VNN \l_semio_viz_mark_points_tl \l_semio_viz_pt_x_seq \l_semio_viz_pt_y_seq
+  \int_set:Nn \l_semio_viz_pt_n_int { \seq_count:N \l_semio_viz_pt_x_seq }
+  \semio_viz_points_parse:VNN \l_semio_viz_mark_points_alt_tl \l_semio_viz_pt_ax_seq \l_semio_viz_pt_ay_seq
+}
+% 📐 Abscissa of the loaded point #1.
+\cs_new:Npn \semio_viz_px:n #1 { \seq_item:Nn \l_semio_viz_pt_x_seq {#1} }
+% 📐 Ordinate of the loaded point #1.
+\cs_new:Npn \semio_viz_py:n #1 { \seq_item:Nn \l_semio_viz_pt_y_seq {#1} }
+
+%endregion 🔖️Points
+
+%region 🔖️Keys
+% 🎛️ Mark keys, all with documented defaults.
+%   size (fp, 6)                mark AREA in square millimetres, d3-symbol semantics
+%   fill (tl, theme~slot~0)     fill colour, or `none` for an unfilled mark
+%   stroke (tl, semio-chrome-border-emphasized)  stroke colour, or `none`
+%   strokeWidth (tl, \semio@stroke@default)      stroke width, a TeX dimension
+%   opacity (fp, 1)             draw opacity of the whole mark
+%   rotate (fp, 0)              rotation in degrees about the mark's own point
+%   pattern (tl, none)          none|hatch|crosshatch|dots|grid, a grayscale-safe fill
+%   points (tl, empty)          `x,y; x,y; …` in figure millimetres
+%   points2 (tl, empty)         the second boundary of a band, envelope or ribbon
+%   curve (tl, linear)          interpolator name, see the Curves region
+%   tension / alpha / beta (fp) curve parameters (0, 0.5, 0.85)
+%   closed (bool, false)        close the path after the last point
+%   dash (tl, none)             none|dashed|dotted|dash-dot, or an explicit dash pattern
+%   arrow (tl, none)            none|end|start|both
+%   arrowSize (tl, 1.6mm)       arrowhead length
+%   radius / rx / ry (fp)       arc radii; rx and ry default to radius
+%   innerRadius / outerRadius (fp)  annulus radii (0, radius)
+%   startAngle / endAngle (fp)  radians clockwise from twelve o'clock (0, pi/2)
+%   padAngle / padRadius / cornerRadius  d3-arc padding and rounding (0, empty, 0)
+%   route (tl, hv)              orthogonal connector order: hv or vh
+%   curvature (fp, 0.4)         curved connector bow, as a fraction of the span
+%   via (tl, empty)             waypoints of a bundled connector
+%   concavity (fp, 20)          longest edge a concave hull will not dig into
+%   aspect (fp, 2)              width-to-height ratio of the rectangle mark
+%   symbol (tl, circle)         d3 symbol drawn inside an icon mark
+%   file (tl, empty)            image file of an image mark
+%   extent (tl, empty)          `lo,hi` span of a reference band, bracket or brace
+\tl_new:N \l_semio_viz_mark_fill_tl
+\tl_new:N \l_semio_viz_mark_stroke_tl
+\tl_new:N \l_semio_viz_mark_width_tl
+\tl_new:N \l_semio_viz_mark_pattern_tl
+\tl_new:N \l_semio_viz_mark_points_tl
+\tl_new:N \l_semio_viz_mark_points_alt_tl
+\tl_new:N \l_semio_viz_mark_curve_tl
+\tl_new:N \l_semio_viz_mark_dash_tl
+\tl_new:N \l_semio_viz_mark_arrow_tl
+\tl_new:N \l_semio_viz_mark_arrow_size_tl
+\tl_new:N \l_semio_viz_mark_route_tl
+\tl_new:N \l_semio_viz_mark_via_tl
+\tl_new:N \l_semio_viz_mark_symbol_tl
+\tl_new:N \l_semio_viz_mark_file_tl
+\tl_new:N \l_semio_viz_mark_extent_tl
+\tl_new:N \l_semio_viz_mark_padradius_tl
+\fp_new:N \l_semio_viz_mark_size_fp
+\fp_new:N \l_semio_viz_mark_opacity_fp
+\fp_new:N \l_semio_viz_mark_rotate_fp
+\fp_new:N \l_semio_viz_mark_tension_fp
+\fp_new:N \l_semio_viz_mark_alpha_fp
+\fp_new:N \l_semio_viz_mark_beta_fp
+\fp_new:N \l_semio_viz_mark_radius_fp
+\fp_new:N \l_semio_viz_mark_rx_fp
+\fp_new:N \l_semio_viz_mark_ry_fp
+\fp_new:N \l_semio_viz_mark_inner_fp
+\fp_new:N \l_semio_viz_mark_outer_fp
+\fp_new:N \l_semio_viz_mark_start_fp
+\fp_new:N \l_semio_viz_mark_end_fp
+\fp_new:N \l_semio_viz_mark_pad_fp
+\fp_new:N \l_semio_viz_mark_corner_fp
+\fp_new:N \l_semio_viz_mark_curvature_fp
+\fp_new:N \l_semio_viz_mark_concavity_fp
+\fp_new:N \l_semio_viz_mark_aspect_fp
+\bool_new:N \l_semio_viz_mark_closed_bool
+\bool_new:N \l_semio_viz_mark_rx_set_bool
+\bool_new:N \l_semio_viz_mark_ry_set_bool
+\bool_new:N \l_semio_viz_mark_outer_set_bool
+
+\keys_define:nn { semio / viz / mark } {
+  size        .fp_set:N   = \l_semio_viz_mark_size_fp,
+  fill        .tl_set:N   = \l_semio_viz_mark_fill_tl,
+  stroke      .tl_set:N   = \l_semio_viz_mark_stroke_tl,
+  strokeWidth .tl_set:N   = \l_semio_viz_mark_width_tl,
+  opacity     .fp_set:N   = \l_semio_viz_mark_opacity_fp,
+  rotate      .fp_set:N   = \l_semio_viz_mark_rotate_fp,
+  pattern     .tl_set:N   = \l_semio_viz_mark_pattern_tl,
+  points      .tl_set:N   = \l_semio_viz_mark_points_tl,
+  points2     .tl_set:N   = \l_semio_viz_mark_points_alt_tl,
+  curve       .tl_set:N   = \l_semio_viz_mark_curve_tl,
+  tension     .fp_set:N   = \l_semio_viz_mark_tension_fp,
+  alpha       .fp_set:N   = \l_semio_viz_mark_alpha_fp,
+  beta        .fp_set:N   = \l_semio_viz_mark_beta_fp,
+  closed      .bool_set:N = \l_semio_viz_mark_closed_bool,
+  dash        .tl_set:N   = \l_semio_viz_mark_dash_tl,
+  arrow       .tl_set:N   = \l_semio_viz_mark_arrow_tl,
+  arrowSize   .tl_set:N   = \l_semio_viz_mark_arrow_size_tl,
+  radius      .code:n     = {
+    \fp_set:Nn \l_semio_viz_mark_radius_fp {#1}
+    \bool_if:NF \l_semio_viz_mark_outer_set_bool { \fp_set:Nn \l_semio_viz_mark_outer_fp {#1} }
+    \bool_if:NF \l_semio_viz_mark_rx_set_bool { \fp_set:Nn \l_semio_viz_mark_rx_fp {#1} }
+    \bool_if:NF \l_semio_viz_mark_ry_set_bool { \fp_set:Nn \l_semio_viz_mark_ry_fp {#1} }
+  },
+  rx          .code:n     = { \fp_set:Nn \l_semio_viz_mark_rx_fp {#1} \bool_set_true:N \l_semio_viz_mark_rx_set_bool },
+  ry          .code:n     = { \fp_set:Nn \l_semio_viz_mark_ry_fp {#1} \bool_set_true:N \l_semio_viz_mark_ry_set_bool },
+  innerRadius .fp_set:N   = \l_semio_viz_mark_inner_fp,
+  outerRadius .code:n     = { \fp_set:Nn \l_semio_viz_mark_outer_fp {#1} \bool_set_true:N \l_semio_viz_mark_outer_set_bool },
+  startAngle  .fp_set:N   = \l_semio_viz_mark_start_fp,
+  endAngle    .fp_set:N   = \l_semio_viz_mark_end_fp,
+  padAngle    .fp_set:N   = \l_semio_viz_mark_pad_fp,
+  padRadius   .tl_set:N   = \l_semio_viz_mark_padradius_tl,
+  cornerRadius .fp_set:N  = \l_semio_viz_mark_corner_fp,
+  route       .tl_set:N   = \l_semio_viz_mark_route_tl,
+  curvature   .fp_set:N   = \l_semio_viz_mark_curvature_fp,
+  via         .tl_set:N   = \l_semio_viz_mark_via_tl,
+  concavity   .fp_set:N   = \l_semio_viz_mark_concavity_fp,
+  aspect      .fp_set:N   = \l_semio_viz_mark_aspect_fp,
+  symbol      .tl_set:N   = \l_semio_viz_mark_symbol_tl,
+  file        .tl_set:N   = \l_semio_viz_mark_file_tl,
+  extent      .tl_set:N   = \l_semio_viz_mark_extent_tl,
+}
+
+% ♻️ Puts every mark key back to its documented default before an option list is read.
+\cs_new_protected:Npn \semio_viz_mark_keys_reset: {
+  \fp_set:Nn \l_semio_viz_mark_size_fp { 6 }
+  \tl_set:Nn \l_semio_viz_mark_fill_tl { \semio_viz_theme_color:n { 0 } }
+  \tl_set:Nn \l_semio_viz_mark_stroke_tl { semio-chrome-border-emphasized }
+  \tl_set:Nn \l_semio_viz_mark_width_tl { \semio@stroke@default }
+  \fp_set:Nn \l_semio_viz_mark_opacity_fp { 1 }
+  \fp_zero:N \l_semio_viz_mark_rotate_fp
+  \tl_set:Nn \l_semio_viz_mark_pattern_tl { none }
+  \tl_clear:N \l_semio_viz_mark_points_tl
+  \tl_clear:N \l_semio_viz_mark_points_alt_tl
+  \tl_set:Nn \l_semio_viz_mark_curve_tl { linear }
+  \fp_zero:N \l_semio_viz_mark_tension_fp
+  \fp_set:Nn \l_semio_viz_mark_alpha_fp { 0.5 }
+  \fp_set:Nn \l_semio_viz_mark_beta_fp { 0.85 }
+  \bool_set_false:N \l_semio_viz_mark_closed_bool
+  \tl_set:Nn \l_semio_viz_mark_dash_tl { none }
+  \tl_set:Nn \l_semio_viz_mark_arrow_tl { none }
+  \tl_set:Nn \l_semio_viz_mark_arrow_size_tl { 1.6mm }
+  \fp_set:Nn \l_semio_viz_mark_radius_fp { 8 }
+  \fp_set:Nn \l_semio_viz_mark_rx_fp { 8 }
+  \fp_set:Nn \l_semio_viz_mark_ry_fp { 5 }
+  \fp_zero:N \l_semio_viz_mark_inner_fp
+  \fp_set:Nn \l_semio_viz_mark_outer_fp { 8 }
+  \fp_zero:N \l_semio_viz_mark_start_fp
+  \fp_set:Nn \l_semio_viz_mark_end_fp { pi/2 }
+  \fp_zero:N \l_semio_viz_mark_pad_fp
+  \tl_clear:N \l_semio_viz_mark_padradius_tl
+  \fp_zero:N \l_semio_viz_mark_corner_fp
+  \tl_set:Nn \l_semio_viz_mark_route_tl { hv }
+  \fp_set:Nn \l_semio_viz_mark_curvature_fp { 0.4 }
+  \tl_clear:N \l_semio_viz_mark_via_tl
+  \fp_set:Nn \l_semio_viz_mark_concavity_fp { 20 }
+  \fp_set:Nn \l_semio_viz_mark_aspect_fp { 2 }
+  \tl_set:Nn \l_semio_viz_mark_symbol_tl { circle }
+  \tl_clear:N \l_semio_viz_mark_file_tl
+  \tl_clear:N \l_semio_viz_mark_extent_tl
+  \bool_set_false:N \l_semio_viz_mark_rx_set_bool
+  \bool_set_false:N \l_semio_viz_mark_ry_set_bool
+  \bool_set_false:N \l_semio_viz_mark_outer_set_bool
+}
+% 🎚️ The mark's curve parameters as one option list for the interpolator.
+\cs_new:Npn \semio_viz_mark_curve_opts: {
+  tension = \fp_use:N \l_semio_viz_mark_tension_fp ,
+  alpha = \fp_use:N \l_semio_viz_mark_alpha_fp ,
+  beta = \fp_use:N \l_semio_viz_mark_beta_fp
+}
+%endregion 🔖️Keys
+
+%region 🔖️Render
+% 🖌️ Turns the recorded path into one TikZ operation, honouring fill, stroke,
+% pattern, dash and arrowheads. `none` on fill or stroke removes that half.
+\tl_new:N \l_semio_viz_mark_opts_tl
 \bool_new:N \l_semio_viz_in_figure_bool
+
+\cs_new_protected:Npn \semio_viz_frame_require:n #1 {
+  \bool_if:NF \l_semio_viz_in_figure_bool
+    { \msg_error:nnn { semio-viz } { outside-figure } {#1} }
+}
+
+% 🎨 The TikZ option list of the current mark: fill, pattern, stroke, width, dash, arrow tips and
+% opacity, each read from the mark keys and never written into a renderer.
+\cs_new_protected:Npn \semio_viz_mark_options: {
+  \tl_clear:N \l_semio_viz_mark_opts_tl
+  \str_if_eq:VnF \l_semio_viz_mark_stroke_tl { none }
+    { \tl_put_right:Nx \l_semio_viz_mark_opts_tl
+        { draw= \l_semio_viz_mark_stroke_tl , line~width= \exp_not:V \l_semio_viz_mark_width_tl , } }
+  \str_if_eq:VnF \l_semio_viz_mark_fill_tl { none }
+    { \tl_put_right:Nx \l_semio_viz_mark_opts_tl { fill= \l_semio_viz_mark_fill_tl , } }
+  \str_case:Vn \l_semio_viz_mark_pattern_tl {
+    { hatch }      { \tl_put_right:Nx \l_semio_viz_mark_opts_tl
+                       { pattern=north~east~lines , pattern~color= \l_semio_viz_mark_fill_tl , } }
+    { crosshatch } { \tl_put_right:Nx \l_semio_viz_mark_opts_tl
+                       { pattern=crosshatch , pattern~color= \l_semio_viz_mark_fill_tl , } }
+    { dots }       { \tl_put_right:Nx \l_semio_viz_mark_opts_tl
+                       { pattern=dots , pattern~color= \l_semio_viz_mark_fill_tl , } }
+    { grid }       { \tl_put_right:Nx \l_semio_viz_mark_opts_tl
+                       { pattern=grid , pattern~color= \l_semio_viz_mark_fill_tl , } }
+  }
+  \str_case:Vn \l_semio_viz_mark_dash_tl {
+    { dashed }   { \tl_put_right:Nn \l_semio_viz_mark_opts_tl { dashed , } }
+    { dotted }   { \tl_put_right:Nn \l_semio_viz_mark_opts_tl { dotted , } }
+    { dash-dot } { \tl_put_right:Nn \l_semio_viz_mark_opts_tl { dash~pattern=on~2pt~off~1pt~on~0.4pt~off~1pt , } }
+    { none }     { }
+  }
+  \str_if_eq:VnF \l_semio_viz_mark_dash_tl { none }
+    { \str_case:VnF \l_semio_viz_mark_dash_tl { { dashed } { } { dotted } { } { dash-dot } { } }
+        { \tl_put_right:Nx \l_semio_viz_mark_opts_tl { dash~pattern= \l_semio_viz_mark_dash_tl , } } }
+  \str_case:Vn \l_semio_viz_mark_arrow_tl {
+    { end }   { \tl_put_right:Nx \l_semio_viz_mark_opts_tl
+                  { -{Latex[length=\exp_not:V \l_semio_viz_mark_arrow_size_tl]} , } }
+    { start } { \tl_put_right:Nx \l_semio_viz_mark_opts_tl
+                  { {Latex[length=\exp_not:V \l_semio_viz_mark_arrow_size_tl]}- , } }
+    { both }  { \tl_put_right:Nx \l_semio_viz_mark_opts_tl
+                  { {Latex[length=\exp_not:V \l_semio_viz_mark_arrow_size_tl]}-{Latex[length=\exp_not:V \l_semio_viz_mark_arrow_size_tl]} , } }
+  }
+  \tl_put_right:Nx \l_semio_viz_mark_opts_tl { opacity= \fp_to_decimal:N \l_semio_viz_mark_opacity_fp }
+}
+
+% 🌀 The `rotate around` option of the current mark, built with a catcode-12 colon so that
+% TikZ still splits the angle from the pivot when the option is assembled under `\ExplSyntaxOn`.
+\tl_new:N \l_semio_viz_mark_rotate_tl
+
+% 🔄 Opens a TikZ scope carrying the already-expanded option text #1.
+\cs_new_protected:Npn \semio_viz_mark_scope_begin:n #1 { \begin{scope} [#1] }
+\cs_generate_variant:Nn \semio_viz_mark_scope_begin:n { V }
+
+% 🖼️ Draws the buffered path and, when probing, emits its geometry.
+\cs_new_protected:Npn \semio_viz_mark_emit:n #1 {
+  \semio_viz_mark_options:
+  \semio_viz_mark_probe:nx { #1 } { \l_semio_viz_path_cmd_tl }
+  \fp_compare:nNnTF { \l_semio_viz_mark_rotate_fp } = { 0 }
+    { \semio_viz_mark_stroke_path: }
+    {
+      \tl_set:Nx \l_semio_viz_mark_rotate_tl
+        { rotate~around= { \fp_to_decimal:N \l_semio_viz_mark_rotate_fp \c_colon_str
+            ( \fp_to_decimal:N \l_semio_viz_path_ox_fp mm ,
+              \fp_to_decimal:N \l_semio_viz_path_oy_fp mm ) } }
+      \semio_viz_mark_scope_begin:V \l_semio_viz_mark_rotate_tl
+      \semio_viz_mark_stroke_path:
+      \end{scope}
+    }
+}
+% 🖌️ Hands the buffered TikZ fragment to `\path` under the mark's own options.
+\cs_new_protected:Npn \semio_viz_mark_stroke_path: {
+  \use:x { \exp_not:N \path [ \exp_not:V \l_semio_viz_mark_opts_tl ] \exp_not:V \l_semio_viz_path_tikz_tl ; }
+}
+% 🧭 Geometry probing is optional: a document may load the marks without the probe package.
+\cs_new_protected:Npn \semio_viz_mark_probe:nn #1#2 {
+  \cs_if_exist:NT \semio_viz_probe_geometry:nn { \semio_viz_probe_geometry:nn {#1} {#2} }
+}
+\cs_generate_variant:Nn \semio_viz_mark_probe:nn { nx, nV }
+%endregion 🔖️Render
+
+%region 🔖️Hull
+% 🪢 Andrew's monotone chain: the convex hull of the loaded points, counter-clockwise in figure space.
+\seq_new:N \l_semio_viz_hull_order_seq
+\seq_new:N \l_semio_viz_hull_seq
+\seq_new:N \l_semio_viz_hull_lower_seq
+\seq_new:N \l_semio_viz_hull_upper_seq
+\cs_new:Npn \semio_viz_cross:nnn #1#2#3 {
+  \fp_to_decimal:n {
+    ( \semio_viz_px:n {#2} - \semio_viz_px:n {#1} ) * ( \semio_viz_py:n {#3} - \semio_viz_py:n {#1} )
+    - ( \semio_viz_py:n {#2} - \semio_viz_py:n {#1} ) * ( \semio_viz_px:n {#3} - \semio_viz_px:n {#1} ) }
+}
+% 🪝 One half of the monotone chain over the point order #1: pop while the last turn is not a left
+% turn, then append.
+\cs_new_protected:Npn \semio_viz_hull_chain:N #1 {
+  \seq_map_inline:Nn #1 {
+    \bool_while_do:nn {
+      \bool_lazy_and_p:nn
+        { \int_compare_p:nNn { \seq_count:N \l_semio_viz_hull_seq } > { 1 } }
+        { \fp_compare_p:nNn { \semio_viz_cross:nnn
+          { \seq_item:Nn \l_semio_viz_hull_seq { \seq_count:N \l_semio_viz_hull_seq - 1 } }
+          { \seq_item:Nn \l_semio_viz_hull_seq { \seq_count:N \l_semio_viz_hull_seq } } {##1} } < { 1e-12 } }
+    } { \seq_pop_right:NN \l_semio_viz_hull_seq \l_tmpa_tl }
+    \seq_put_right:Nn \l_semio_viz_hull_seq {##1}
+  }
+}
+% 🪢 The convex hull: the points sorted, then the lower and upper chains joined into one ring.
+\cs_new_protected:Npn \semio_viz_hull_convex: {
+  \seq_clear:N \l_semio_viz_hull_order_seq
+  \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_pt_n_int }
+    { \seq_put_right:Nn \l_semio_viz_hull_order_seq {##1} }
+  \seq_sort:Nn \l_semio_viz_hull_order_seq {
+    \bool_lazy_or:nnTF
+      { \fp_compare_p:nNn { \semio_viz_px:n {##1} } > { \semio_viz_px:n {##2} } }
+      { \bool_lazy_and_p:nn
+          { \fp_compare_p:nNn { \semio_viz_px:n {##1} } = { \semio_viz_px:n {##2} } }
+          { \fp_compare_p:nNn { \semio_viz_py:n {##1} } > { \semio_viz_py:n {##2} } } }
+      { \sort_return_swapped: } { \sort_return_same: }
+  }
+  \seq_clear:N \l_semio_viz_hull_seq
+  \semio_viz_hull_chain:N \l_semio_viz_hull_order_seq
+  \seq_pop_right:NN \l_semio_viz_hull_seq \l_tmpa_tl
+  \seq_set_eq:NN \l_semio_viz_hull_lower_seq \l_semio_viz_hull_seq
+  \seq_clear:N \l_semio_viz_hull_seq
+  \seq_reverse:N \l_semio_viz_hull_order_seq
+  \semio_viz_hull_chain:N \l_semio_viz_hull_order_seq
+  \seq_pop_right:NN \l_semio_viz_hull_seq \l_tmpa_tl
+  \seq_set_eq:NN \l_semio_viz_hull_upper_seq \l_semio_viz_hull_seq
+  \seq_concat:NNN \l_semio_viz_hull_seq \l_semio_viz_hull_lower_seq \l_semio_viz_hull_upper_seq
+}
+
+% 🪝 Chi-shape digging: every hull edge longer than `concavity` adopts the nearest
+% interior point whose two new edges cross nothing, until nothing more can be dug.
+\bool_new:N \l_semio_viz_hull_dug_bool
+\int_new:N \l_semio_viz_hull_best_int
+\fp_new:N \l_semio_viz_hull_bestd_fp
+\cs_new:Npn \semio_viz_dist:nn #1#2 {
+  \fp_to_decimal:n { sqrt( ( \semio_viz_px:n {#1} - \semio_viz_px:n {#2} )**2
+    + ( \semio_viz_py:n {#1} - \semio_viz_py:n {#2} )**2 ) }
+}
+% 🕳️ The concave hull: the convex one, then dug in repeatedly until nothing more can be adopted.
+\cs_new_protected:Npn \semio_viz_hull_concave: {
+  \semio_viz_hull_convex:
+  \bool_set_true:N \l_semio_viz_hull_dug_bool
+  \bool_do_while:nn { \l_semio_viz_hull_dug_bool } {
+    \bool_set_false:N \l_semio_viz_hull_dug_bool
+    \int_step_inline:nnnn { 1 } { 1 } { \seq_count:N \l_semio_viz_hull_seq } {
+      \bool_if:NF \l_semio_viz_hull_dug_bool { \semio_viz_hull_dig:n {##1} }
+    }
+  }
+}
+% 🪝 Digs hull edge #1 in, when it is longer than `concavity`, towards the nearest interior point
+% whose two new edges are both shorter than the edge it replaces.
+\cs_new_protected:Npn \semio_viz_hull_dig:n #1 {
+  \int_set:Nn \l_tmpa_int { \seq_item:Nn \l_semio_viz_hull_seq {#1} }
+  \int_set:Nn \l_semio_viz_c_i_int
+    { \seq_item:Nn \l_semio_viz_hull_seq
+      { \int_compare:nNnTF {#1} = { \seq_count:N \l_semio_viz_hull_seq } { 1 } { #1 + 1 } } }
+  \fp_compare:nNnT { \semio_viz_dist:nn { \l_tmpa_int } { \l_semio_viz_c_i_int } }
+    > { \l_semio_viz_mark_concavity_fp } {
+    \int_zero:N \l_semio_viz_hull_best_int
+    \fp_set:Nn \l_semio_viz_hull_bestd_fp { inf }
+    \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_pt_n_int } {
+      \seq_if_in:NnF \l_semio_viz_hull_seq {##1} {
+        \bool_lazy_all:nT {
+          { \fp_compare_p:nNn
+            { max( \semio_viz_dist:nn { \l_tmpa_int } {##1} , \semio_viz_dist:nn {##1} { \l_semio_viz_c_i_int } ) }
+            < { \l_semio_viz_hull_bestd_fp } }
+          { \fp_compare_p:nNn { \semio_viz_dist:nn { \l_tmpa_int } {##1} }
+            < { \semio_viz_dist:nn { \l_tmpa_int } { \l_semio_viz_c_i_int } } }
+          { \fp_compare_p:nNn { \semio_viz_dist:nn {##1} { \l_semio_viz_c_i_int } }
+            < { \semio_viz_dist:nn { \l_tmpa_int } { \l_semio_viz_c_i_int } } }
+        } {
+          \int_set:Nn \l_semio_viz_hull_best_int {##1}
+          \fp_set:Nn \l_semio_viz_hull_bestd_fp
+            { max( \semio_viz_dist:nn { \l_tmpa_int } {##1} , \semio_viz_dist:nn {##1} { \l_semio_viz_c_i_int } ) }
+        }
+      }
+    }
+    \int_compare:nNnT { \l_semio_viz_hull_best_int } > { 0 } {
+      \semio_viz_hull_insert:nn {#1} { \l_semio_viz_hull_best_int }
+      \bool_set_true:N \l_semio_viz_hull_dug_bool
+    }
+  }
+}
+% ➕ Inserts point #2 into the hull ring just after position #1.
+\cs_new_protected:Npn \semio_viz_hull_insert:nn #1#2 {
+  \seq_clear:N \l_tmpb_seq
+  \int_step_inline:nnnn { 1 } { 1 } { \seq_count:N \l_semio_viz_hull_seq } {
+    \seq_put_right:Nx \l_tmpb_seq { \seq_item:Nn \l_semio_viz_hull_seq {##1} }
+    \int_compare:nNnT {##1} = {#1} { \seq_put_right:Nx \l_tmpb_seq { \int_eval:n {#2} } }
+  }
+  \seq_set_eq:NN \l_semio_viz_hull_seq \l_tmpb_seq
+}
+% 🧵 Feeds an index sequence of loaded points through the active curve.
+\cs_new_protected:Npn \semio_viz_hull_emit:N #1 {
+  \semio_viz_curve_begin:nn { linear-closed } { }
+  \seq_map_inline:Nn #1
+    { \semio_viz_curve_point:nn { \semio_viz_px:n {##1} } { \semio_viz_py:n {##1} } }
+  \semio_viz_curve_end:
+}
+%endregion 🔖️Hull
+
+%region 🔖️MarkRegistry
+% ⚫ Every taxonomy section 0 primitive, one entry per leaf. A kind sets its own
+% defaults (an unfilled circle, a stroked connector, a translucent region) before
+% the caller's options are applied, so two kinds of the same shape family still
+% render differently.
+%   targetRadius / targetStartAngle / targetEndAngle  the far side of a ribbon (radius, 2, 2.8)
+\fp_new:N \l_semio_viz_mark_tradius_fp
+\fp_new:N \l_semio_viz_mark_tstart_fp
+\fp_new:N \l_semio_viz_mark_tend_fp
+\bool_new:N \l_semio_viz_mark_tradius_set_bool
+\keys_define:nn { semio / viz / mark } {
+  targetRadius     .code:n   = { \fp_set:Nn \l_semio_viz_mark_tradius_fp {#1}
+                                 \bool_set_true:N \l_semio_viz_mark_tradius_set_bool },
+  targetStartAngle .fp_set:N = \l_semio_viz_mark_tstart_fp,
+  targetEndAngle   .fp_set:N = \l_semio_viz_mark_tend_fp,
+}
+
+\seq_new:N \g_semio_viz_mark_kinds_seq
 \fp_new:N \l_semio_viz_mx_fp
 \fp_new:N \l_semio_viz_my_fp
-\tl_new:N \l_semio_viz_mark_fill_tl
-\tl_new:N \l_semio_viz_mark_draw_tl
-\tl_new:N \l_semio_viz_points_tl
-\fp_new:N \l_semio_viz_mark_size_fp
-
-\cs_new_protected:Npn \semio_viz_mark_kind_define:n #1 {
-  \seq_if_in:NnF \g_semio_viz_mark_kinds_seq {#1}
-    { \seq_gput_right:Nn \g_semio_viz_mark_kinds_seq {#1} }
-}
-
 \clist_map_inline:nn {
   dot, circle, square, rectangle, triangle, diamond, cross, plus, star,
-  custom-glyph, icon, icon-mark, image, image-mark, text, text-mark,
-  straight-line, polyline, step-line, curved-line, bezier, bezier-curve, spline,
-  catmull-rom, catmull-rom-spline, basis-spline, cardinal-spline, monotone-spline, closed-curve,
+  custom-glyph, icon-mark, image-mark, text-mark,
+  straight-line, polyline, step-line, curved-line, bezier-curve, spline,
+  catmull-rom-spline, basis-spline, cardinal-spline, monotone-spline, closed-curve,
   polygon, filled-path, ribbon, band, envelope,
   circular-arc, elliptical-arc, annular-arc, sector, wedge,
   straight-connector, orthogonal-connector, curved-connector, elbow-connector,
@@ -93,231 +2143,634 @@
   convex-hull, concave-hull,
   label, callout, leader-line, bracket, brace, highlight-region,
   reference-line, reference-band, reference-point
-} { \semio_viz_mark_kind_define:n {#1} }
+} { \seq_gput_right:Nn \g_semio_viz_mark_kinds_seq {#1} }
 
-\cs_new_protected:Npn \semio_viz_frame_require:n #1 {
-  \bool_if:NF \l_semio_viz_in_figure_bool
-    { \msg_error:nnn { semio-viz } { outside-figure } {#1} }
-}
-
-\cs_new_protected:Npn \semio_viz_mark_keys_reset: {
-  \fp_set:Nn \l_semio_viz_mark_size_fp { 2.2 }
-  \tl_set:Nn \l_semio_viz_mark_fill_tl { semio-primary }
-  \tl_set:Nn \l_semio_viz_mark_draw_tl { semio-chrome-border-emphasized }
-  \tl_set:Nn \l_semio_viz_points_tl { 8,8; 22,28; 40,12; 58,30; 72,16 }
-}
-
-\keys_define:nn { semio / viz / mark } {
-  size .fp_set:N = \l_semio_viz_mark_size_fp,
-  fill .tl_set:N = \l_semio_viz_mark_fill_tl,
-  draw .tl_set:N = \l_semio_viz_mark_draw_tl,
-  points .tl_set:N = \l_semio_viz_points_tl,
-}
-
+% 📍 Reads the mark's own point `x,y` from #1 into the two figure-space coordinates.
 \cs_new_protected:Npn \semio_viz_xy:n #1 {
   \fp_set:Nn \l_semio_viz_mx_fp { \clist_item:nn {#1} { 1 } }
   \fp_set:Nn \l_semio_viz_my_fp { \clist_item:nn {#1} { 2 } }
 }
 
-\cs_new:Npn \semio_viz_polar:nn #1#2 {
-  \fp_eval:n { (#2) * cosd(#1) } , \fp_eval:n { (#2) * sind(#1) }
-}
-
-\seq_new:N \l_semio_viz_points_seq
-\tl_new:N \l_semio_viz_path_coords_tl
-
-\cs_new_protected:Npn \semio_viz_points_parse: {
-  \seq_clear:N \l_semio_viz_points_seq
-  \exp_args:NV \semio_viz_points_parse_aux:n \l_semio_viz_points_tl
-}
-\cs_new_protected:Npn \semio_viz_points_parse_aux:n #1 {
-  \seq_set_split:Nnn \l_semio_viz_points_seq { ; } {#1}
-}
-
-\cs_new_protected:Npn \semio_viz_points_coords: {
-  \semio_viz_points_parse:
-  \tl_clear:N \l_semio_viz_path_coords_tl
-  \seq_map_inline:Nn \l_semio_viz_points_seq {
-    \tl_set:Nn \l_tmpa_tl {##1}
-    \tl_trim_spaces:N \l_tmpa_tl
-    \tl_if_empty:NF \l_tmpa_tl {
-      \tl_put_right:Nx \l_semio_viz_path_coords_tl { ( \clist_item:Nn \l_tmpa_tl { 1 } , \clist_item:Nn \l_tmpa_tl { 2 } ) }
-    }
+% 🎚️ Per-kind defaults, applied before the caller's option list.
+\cs_new_protected:Npn \semio_viz_mark_defaults:n #1 {
+  \str_case:nn {#1} {
+    { dot }             { \tl_set:Nn \l_semio_viz_mark_stroke_tl { none } }
+    { circle }          { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { star }            { \tl_set:Nn \l_semio_viz_mark_stroke_tl { none } }
+    { cross }           { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { plus }            { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { custom-glyph }    { \tl_set:Nn \l_semio_viz_mark_stroke_tl { none } }
+    { text-mark }       { \tl_set:Nn \l_semio_viz_mark_fill_tl { none }
+                          \tl_set:Nn \l_semio_viz_mark_stroke_tl { none } }
+    { polygon }         { \fp_set:Nn \l_semio_viz_mark_opacity_fp { 0.85 } }
+    { filled-path }     { \tl_set:Nn \l_semio_viz_mark_stroke_tl { none }
+                          \fp_set:Nn \l_semio_viz_mark_opacity_fp { 0.75 } }
+    { band }            { \tl_set:Nn \l_semio_viz_mark_stroke_tl { none }
+                          \fp_set:Nn \l_semio_viz_mark_opacity_fp { 0.35 } }
+    { ribbon }          { \tl_set:Nn \l_semio_viz_mark_stroke_tl { none }
+                          \fp_set:Nn \l_semio_viz_mark_opacity_fp { 0.5 }
+                          \fp_set:Nn \l_semio_viz_mark_radius_fp { 18 }
+                          \fp_set:Nn \l_semio_viz_mark_end_fp { 0.9 } }
+    { envelope }        { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { circular-arc }    { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { elliptical-arc }  { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { annular-arc }     { \tl_set:Nn \l_semio_viz_mark_stroke_tl { none }
+                          \fp_set:Nn \l_semio_viz_mark_inner_fp { 5 } }
+    { sector }          { \tl_set:Nn \l_semio_viz_mark_stroke_tl { none } }
+    { wedge }           { \tl_set:Nn \l_semio_viz_mark_stroke_tl { none }
+                          \fp_set:Nn \l_semio_viz_mark_pad_fp { 0.04 }
+                          \fp_set:Nn \l_semio_viz_mark_corner_fp { 1 } }
+    { arrow }           { \tl_set:Nn \l_semio_viz_mark_fill_tl { none }
+                          \tl_set:Nn \l_semio_viz_mark_arrow_tl { end } }
+    { bidirectional-arrow } { \tl_set:Nn \l_semio_viz_mark_fill_tl { none }
+                          \tl_set:Nn \l_semio_viz_mark_arrow_tl { both } }
+    { bundled-connector } { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { rectangular-region } { \fp_set:Nn \l_semio_viz_mark_opacity_fp { 0.2 }
+                          \tl_set:Nn \l_semio_viz_mark_dash_tl { dashed } }
+    { circular-region } { \fp_set:Nn \l_semio_viz_mark_opacity_fp { 0.2 }
+                          \tl_set:Nn \l_semio_viz_mark_dash_tl { dashed } }
+    { polygonal-region } { \fp_set:Nn \l_semio_viz_mark_opacity_fp { 0.2 } }
+    { voronoi-region }  { \fp_set:Nn \l_semio_viz_mark_opacity_fp { 0.2 } }
+    { convex-hull }     { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { concave-hull }    { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { label }           { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { callout }         { \tl_set:Nn \l_semio_viz_mark_fill_tl { semio-chrome-canvas } }
+    { leader-line }     { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { bracket }         { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { brace }           { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { highlight-region } { \tl_set:Nn \l_semio_viz_mark_stroke_tl { none }
+                          \fp_set:Nn \l_semio_viz_mark_opacity_fp { 0.25 } }
+    { reference-line }  { \tl_set:Nn \l_semio_viz_mark_fill_tl { none }
+                          \tl_set:Nn \l_semio_viz_mark_dash_tl { dashed } }
+    { reference-band }  { \tl_set:Nn \l_semio_viz_mark_stroke_tl { none }
+                          \fp_set:Nn \l_semio_viz_mark_opacity_fp { 0.18 } }
   }
-}
-
-\cs_new_protected:Npn \semio_viz_points_plot:n #1 {
-  \semio_viz_points_coords:
-  \tl_if_empty:nTF {#1} {
-    \use:x { \exp_not:N \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] plot coordinates { \l_semio_viz_path_coords_tl } ; }
-  } {
-    \use:x { \exp_not:N \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] plot [ #1 ] coordinates { \l_semio_viz_path_coords_tl } ; }
+  \str_case:nn {#1} {
+    { step-line }          { \tl_set:Nn \l_semio_viz_mark_curve_tl { step } }
+    { curved-line }        { \tl_set:Nn \l_semio_viz_mark_curve_tl { cardinal } }
+    { bezier-curve }       { \tl_set:Nn \l_semio_viz_mark_curve_tl { bezier } }
+    { spline }             { \tl_set:Nn \l_semio_viz_mark_curve_tl { natural } }
+    { catmull-rom-spline } { \tl_set:Nn \l_semio_viz_mark_curve_tl { catmull-rom } }
+    { basis-spline }       { \tl_set:Nn \l_semio_viz_mark_curve_tl { basis } }
+    { cardinal-spline }    { \tl_set:Nn \l_semio_viz_mark_curve_tl { cardinal } }
+    { monotone-spline }    { \tl_set:Nn \l_semio_viz_mark_curve_tl { monotone-x } }
+    { closed-curve }       { \tl_set:Nn \l_semio_viz_mark_curve_tl { catmull-rom-closed }
+                             \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
   }
-}
-
-\tl_new:N \l_semio_viz_pta_tl
-\tl_new:N \l_semio_viz_ptb_tl
-\cs_new_protected:Npn \semio_viz_points_ends: { % first and last parsed point, for a 2-point connector
-  \semio_viz_points_parse:
-  \tl_set:Nx \l_semio_viz_pta_tl { \seq_item:Nn \l_semio_viz_points_seq { 1 } }
-  \tl_set:Nx \l_semio_viz_ptb_tl { \seq_item:Nn \l_semio_viz_points_seq { \seq_count:N \l_semio_viz_points_seq } }
-}
-
-\cs_new_protected:Npn \semio_viz_points_step: {
-  \semio_viz_points_parse:
-  \tl_clear:N \l_semio_viz_path_coords_tl
-  \int_zero:N \l_tmpa_int
-  \seq_map_inline:Nn \l_semio_viz_points_seq {
-    \tl_set:Nn \l_tmpa_tl {##1}
-    \tl_trim_spaces:N \l_tmpa_tl
-    \tl_if_empty:NF \l_tmpa_tl {
-      \int_incr:N \l_tmpa_int
-      \int_compare:nNnTF \l_tmpa_int = { 1 }
-        { \tl_set:Nx \l_semio_viz_path_coords_tl { ( \clist_item:Nn \l_tmpa_tl { 1 } , \clist_item:Nn \l_tmpa_tl { 2 } ) } }
-        { \tl_put_right:Nx \l_semio_viz_path_coords_tl { -| ( \clist_item:Nn \l_tmpa_tl { 1 } , \clist_item:Nn \l_tmpa_tl { 2 } ) } }
-    }
+  \str_case:nn {#1} {
+    { straight-line } { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { polyline }      { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { step-line }     { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { curved-line }   { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { bezier-curve }  { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { spline }        { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { catmull-rom-spline } { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { basis-spline }  { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { cardinal-spline } { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { monotone-spline } { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { straight-connector } { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { orthogonal-connector } { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { curved-connector } { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
+    { elbow-connector } { \tl_set:Nn \l_semio_viz_mark_fill_tl { none } }
   }
-  \use:x { \exp_not:N \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] \l_semio_viz_path_coords_tl ; }
+  \bool_set_false:N \l_semio_viz_mark_tradius_set_bool
+  \fp_set:Nn \l_semio_viz_mark_tstart_fp { 2 }
+  \fp_set:Nn \l_semio_viz_mark_tend_fp { 2.8 }
 }
 
+% ⚫ The one entry point: kind, option list, and the mark's own point in figure millimetres.
 \cs_new_protected:Npn \semio_viz_mark_draw:nnn #1#2#3 {
   \semio_viz_frame_require:n { SemioVizMark }
   \seq_if_in:NnF \g_semio_viz_mark_kinds_seq {#1}
     { \msg_error:nnn { semio-viz } { unknown-mark } {#1} }
   \semio_viz_mark_keys_reset:
+  \semio_viz_mark_defaults:n {#1}
   \keys_set:nn { semio / viz / mark } {#2}
+  \bool_if:NF \l_semio_viz_mark_tradius_set_bool
+    { \fp_set_eq:NN \l_semio_viz_mark_tradius_fp \l_semio_viz_mark_radius_fp }
   \semio_viz_xy:n {#3}
-  \tl_set:Nn \l_tmpb_tl {#1}
-  \str_case:nn {#1} {
-    { icon-mark } { \tl_set:Nn \l_tmpb_tl { icon } }
-    { image-mark } { \tl_set:Nn \l_tmpb_tl { image } }
-    { text-mark } { \tl_set:Nn \l_tmpb_tl { text } }
-    { bezier-curve } { \tl_set:Nn \l_tmpb_tl { bezier } }
-    { catmull-rom-spline } { \tl_set:Nn \l_tmpb_tl { catmull-rom } }
+  \semio_viz_points_load:
+  \semio_viz_mark_probe:nx { mark/#1/at }
+    { \fp_to_decimal:N \l_semio_viz_mx_fp , \fp_to_decimal:N \l_semio_viz_my_fp ,
+      \fp_to_decimal:N \l_semio_viz_mark_rotate_fp , \fp_to_decimal:N \l_semio_viz_mark_size_fp }
+  \semio_viz_mark_probe:nx { mark/#1/style }
+    { \exp_not:V \l_semio_viz_mark_fill_tl , \exp_not:V \l_semio_viz_mark_stroke_tl ,
+      \exp_not:V \l_semio_viz_mark_dash_tl , \exp_not:V \l_semio_viz_mark_arrow_tl ,
+      \exp_not:V \l_semio_viz_mark_pattern_tl , \fp_to_decimal:N \l_semio_viz_mark_opacity_fp }
+  \semio_viz_mark_body:n {#1}
+}
+
+% 🧭 Centred geometry (symbols, arcs, ribbons) is built in d3 space and flipped onto the mark's point.
+\cs_new_protected:Npn \semio_viz_mark_local: {
+  \semio_viz_path_begin:nnn { \l_semio_viz_mx_fp } { \l_semio_viz_my_fp } { \c_true_bool }
+}
+% 🗺️ Point-list geometry is already in figure space, so it is recorded and drawn unchanged.
+\cs_new_protected:Npn \semio_viz_mark_global: {
+  \semio_viz_path_begin:nnn { 0 } { 0 } { \c_false_bool }
+}
+% 🧵 Runs the caller's curve over the loaded points, closing when asked.
+\cs_new_protected:Npn \semio_viz_mark_curve_points: {
+  \semio_viz_curve_begin:VV \l_semio_viz_mark_curve_tl \l_semio_viz_mark_curve_opts_tl
+  \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_pt_n_int }
+    { \semio_viz_curve_point:nn { \semio_viz_px:n {##1} } { \semio_viz_py:n {##1} } }
+  \semio_viz_curve_end:
+  \bool_if:NT \l_semio_viz_mark_closed_bool { \semio_viz_path_close: }
+}
+\tl_new:N \l_semio_viz_mark_curve_opts_tl
+\cs_generate_variant:Nn \semio_viz_curve_begin:nn { nV, VV, Vn }
+
+% 🧱 The body of mark kind #1: the one branch table that maps every registered §0 kind to the
+% geometry it draws, so a new kind is a row here and nowhere else.
+\cs_new_protected:Npn \semio_viz_mark_body:n #1 {
+  \tl_set:Nx \l_semio_viz_mark_curve_opts_tl { \semio_viz_mark_curve_opts: }
+  \str_case:nnF {#1} {
+    { dot }         { \semio_viz_mark_symbolic:nn { circle } { dot } }
+    { circle }      { \semio_viz_mark_symbolic:nn { circle } { circle } }
+    { square }      { \semio_viz_mark_symbolic:nn { square } { square } }
+    { triangle }    { \semio_viz_mark_symbolic:nn { triangle } { triangle } }
+    { diamond }     { \semio_viz_mark_symbolic:nn { diamond } { diamond } }
+    { cross }       { \semio_viz_mark_symbolic:nn { times } { cross } }
+    { plus }        { \semio_viz_mark_symbolic:nn { plus } { plus } }
+    { star }        { \semio_viz_mark_symbolic:nn { star } { star } }
+    { rectangle }   { \semio_viz_mark_rectangle: }
+    { custom-glyph } { \semio_viz_mark_glyph: }
+    { icon-mark }   { \semio_viz_mark_icon: }
+    { image-mark }  { \semio_viz_mark_image: }
+    { text-mark }   { \semio_viz_mark_anchor: }
+    { polygon }        { \semio_viz_mark_global: \semio_viz_curve_begin:nn { linear-closed } { }
+                         \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_pt_n_int }
+                           { \semio_viz_curve_point:nn { \semio_viz_px:n {##1} } { \semio_viz_py:n {##1} } }
+                         \semio_viz_curve_end: \semio_viz_mark_emit:n { mark/#1 } }
+    { filled-path }    { \semio_viz_mark_global: \bool_set_true:N \l_semio_viz_mark_closed_bool
+                         \semio_viz_mark_curve_points: \semio_viz_mark_emit:n { mark/#1 } }
+    { band }           { \semio_viz_mark_area:n { mark/#1 } }
+    { envelope }       { \semio_viz_mark_envelope: }
+    { ribbon }         { \semio_viz_mark_ribbon: }
+    { circular-arc }   { \semio_viz_mark_local:
+                         \semio_viz_path_arc:nnnnnn { 0 } { 0 } { \l_semio_viz_mark_radius_fp }
+                           { \l_semio_viz_mark_start_fp - pi/2 } { \l_semio_viz_mark_end_fp - pi/2 } { \c_false_bool }
+                         \semio_viz_mark_emit:n { mark/#1 } }
+    { elliptical-arc } { \semio_viz_mark_local:
+                         \semio_viz_mark_ellipse_radii:
+                         \semio_viz_path_ellipse_arc:nnnnnn { 0 } { 0 }
+                           { \l_semio_viz_mark_rx_fp } { \l_semio_viz_mark_ry_fp }
+                           { \l_semio_viz_mark_start_fp - pi/2 } { \l_semio_viz_mark_end_fp - pi/2 }
+                         \semio_viz_mark_emit:n { mark/#1 } }
+    { annular-arc }    { \semio_viz_mark_arc:n { mark/#1 } }
+    { sector }         { \fp_zero:N \l_semio_viz_mark_inner_fp \semio_viz_mark_arc:n { mark/#1 } }
+    { wedge }          { \fp_zero:N \l_semio_viz_mark_inner_fp \semio_viz_mark_arc:n { mark/#1 } }
+    { straight-connector }   { \semio_viz_mark_ends:n { mark/#1 } \semio_viz_mark_terminals: }
+    { arrow }                { \semio_viz_mark_ends:n { mark/#1 } }
+    { bidirectional-arrow }  { \semio_viz_mark_ends:n { mark/#1 } }
+    { orthogonal-connector } { \semio_viz_mark_orthogonal:nn { mark/#1 } { 2 } }
+    { elbow-connector }      { \semio_viz_mark_orthogonal:nn { mark/#1 } { 3 } }
+    { curved-connector }     { \semio_viz_mark_curved: }
+    { bundled-connector }    { \semio_viz_mark_bundled: }
+    { rectangular-region }   { \semio_viz_mark_box:n { mark/#1 } }
+    { highlight-region }     { \semio_viz_mark_box:n { mark/#1 } }
+    { circular-region }      { \semio_viz_mark_local:
+                               \semio_viz_path_move_to:nn { \l_semio_viz_mark_radius_fp } { 0 }
+                               \semio_viz_path_arc:nnnnnn { 0 } { 0 } { \l_semio_viz_mark_radius_fp }
+                                 { 0 } { 2*pi } { \c_false_bool }
+                               \semio_viz_mark_emit:n { mark/#1 } }
+    { polygonal-region }     { \semio_viz_mark_global: \semio_viz_hull_ring: \semio_viz_mark_emit:n { mark/#1 } }
+    { voronoi-region }       { \semio_viz_mark_global: \semio_viz_hull_ring: \semio_viz_mark_emit:n { mark/#1 }
+                               \semio_viz_mark_site: }
+    { convex-hull }          { \semio_viz_mark_global: \semio_viz_hull_convex:
+                               \semio_viz_hull_emit:N \l_semio_viz_hull_seq
+                               \semio_viz_mark_emit:n { mark/#1 } }
+    { concave-hull }         { \semio_viz_mark_global: \semio_viz_hull_concave:
+                               \semio_viz_hull_emit:N \l_semio_viz_hull_seq
+                               \semio_viz_mark_emit:n { mark/#1 } }
+    { label }                { \semio_viz_mark_tick: }
+    { callout }              { \semio_viz_mark_callout: }
+    { leader-line }          { \semio_viz_mark_global: \semio_viz_curve_begin:nn { linear } { }
+                               \semio_viz_curve_point:nn { \l_semio_viz_mx_fp } { \l_semio_viz_my_fp }
+                               \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_pt_n_int }
+                                 { \semio_viz_curve_point:nn { \semio_viz_px:n {##1} } { \semio_viz_py:n {##1} } }
+                               \semio_viz_curve_end: \semio_viz_mark_emit:n { mark/#1 } }
+    { bracket }              { \semio_viz_mark_bracket: }
+    { brace }                { \semio_viz_mark_brace: }
+    { reference-line }       { \semio_viz_mark_reference_line: }
+    { reference-band }       { \semio_viz_mark_reference_band: }
+    { reference-point }      { \semio_viz_mark_reference_point: }
+  } { \semio_viz_mark_global: \semio_viz_mark_curve_points: \semio_viz_mark_emit:n { mark/#1 } }
+}
+%endregion 🔖️MarkRegistry
+
+%region 🔖️MarkBodies
+% ⚫ A d3 symbol #1 of the mark's own area, recorded under the kind name #2.
+\cs_new_protected:Npn \semio_viz_mark_symbolic:nn #1#2 {
+  \semio_viz_mark_local:
+  \semio_viz_symbol_draw:nn {#1} { \l_semio_viz_mark_size_fp }
+  \semio_viz_mark_emit:n { mark/#2 }
+}
+% ▭ A rectangle of the mark's area at the mark's own aspect ratio.
+\cs_new_protected:Npn \semio_viz_mark_rectangle: {
+  \semio_viz_mark_local:
+  \fp_set:Nn \l_semio_viz_sym_x_fp { sqrt( \l_semio_viz_mark_size_fp * \l_semio_viz_mark_aspect_fp ) }
+  \fp_set:Nn \l_semio_viz_sym_y_fp { \l_semio_viz_mark_size_fp / \l_semio_viz_sym_x_fp }
+  \semio_viz_path_rect:nnnn { - \l_semio_viz_sym_x_fp / 2 } { - \l_semio_viz_sym_y_fp / 2 }
+    { \l_semio_viz_sym_x_fp } { \l_semio_viz_sym_y_fp }
+  \semio_viz_mark_emit:n { mark/rectangle }
+}
+% 🖋️ A caller-supplied outline, scaled so its bounding box carries the mark's area.
+\cs_new_protected:Npn \semio_viz_mark_glyph: {
+  \semio_viz_mark_local:
+  \int_compare:nNnTF { \l_semio_viz_pt_n_int } > { 2 } {
+    \fp_set:Nn \l_semio_viz_sym_x_fp { \semio_viz_px:n { 1 } }
+    \fp_set:Nn \l_semio_viz_sym_y_fp { \semio_viz_px:n { 1 } }
+    \fp_set:Nn \l_semio_viz_sym_t_fp { \semio_viz_py:n { 1 } }
+    \fp_set:Nn \l_semio_viz_sym_u_fp { \semio_viz_py:n { 1 } }
+    \int_step_inline:nnnn { 2 } { 1 } { \l_semio_viz_pt_n_int } {
+      \fp_set:Nn \l_semio_viz_sym_x_fp { min( \l_semio_viz_sym_x_fp , \semio_viz_px:n {##1} ) }
+      \fp_set:Nn \l_semio_viz_sym_y_fp { max( \l_semio_viz_sym_y_fp , \semio_viz_px:n {##1} ) }
+      \fp_set:Nn \l_semio_viz_sym_t_fp { min( \l_semio_viz_sym_t_fp , \semio_viz_py:n {##1} ) }
+      \fp_set:Nn \l_semio_viz_sym_u_fp { max( \l_semio_viz_sym_u_fp , \semio_viz_py:n {##1} ) }
+    }
+    \fp_set:Nn \l_semio_viz_sym_r_fp { sqrt( \l_semio_viz_mark_size_fp /
+      max( 1e-9 , ( \l_semio_viz_sym_y_fp - \l_semio_viz_sym_x_fp )
+        * ( \l_semio_viz_sym_u_fp - \l_semio_viz_sym_t_fp ) ) ) }
+    \semio_viz_curve_begin:nn { linear-closed } { }
+    \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_pt_n_int } {
+      \semio_viz_curve_point:nn
+        { ( \semio_viz_px:n {##1} - ( \l_semio_viz_sym_x_fp + \l_semio_viz_sym_y_fp ) / 2 ) * \l_semio_viz_sym_r_fp }
+        { - ( \semio_viz_py:n {##1} - ( \l_semio_viz_sym_t_fp + \l_semio_viz_sym_u_fp ) / 2 ) * \l_semio_viz_sym_r_fp }
+    }
+    \semio_viz_curve_end:
+  } { \semio_viz_symbol_draw:nn { diamond2 } { \l_semio_viz_mark_size_fp } }
+  \semio_viz_mark_emit:n { mark/custom-glyph }
+}
+% 🏷️ A badge frame with a d3 symbol inside it, so an icon set is data, not a font.
+\cs_new_protected:Npn \semio_viz_mark_icon: {
+  \semio_viz_mark_local:
+  \fp_set:Nn \l_semio_viz_sym_r_fp { sqrt( \l_semio_viz_mark_size_fp ) }
+  \semio_viz_path_rect:nnnn { - \l_semio_viz_sym_r_fp / 2 } { - \l_semio_viz_sym_r_fp / 2 }
+    { \l_semio_viz_sym_r_fp } { \l_semio_viz_sym_r_fp }
+  \exp_args:NV \semio_viz_symbol_draw:nn \l_semio_viz_mark_symbol_tl { 0.36 * \l_semio_viz_mark_size_fp }
+  \semio_viz_mark_emit:n { mark/icon-mark }
+}
+% 🖼️ The image frame is geometry; the picture itself is a node so it scales with the figure.
+% 🖼️ An image mark: the picture at the mark's point when `file` names one, its placeholder box
+% with a cross through it when it does not, so the figure still says an image belongs there.
+\cs_new_protected:Npn \semio_viz_mark_image: {
+  \semio_viz_mark_local:
+  \fp_set:Nn \l_semio_viz_sym_x_fp { sqrt( \l_semio_viz_mark_size_fp * \l_semio_viz_mark_aspect_fp ) }
+  \fp_set:Nn \l_semio_viz_sym_y_fp { \l_semio_viz_mark_size_fp / \l_semio_viz_sym_x_fp }
+  \semio_viz_path_rect:nnnn { - \l_semio_viz_sym_x_fp / 2 } { - \l_semio_viz_sym_y_fp / 2 }
+    { \l_semio_viz_sym_x_fp } { \l_semio_viz_sym_y_fp }
+  \tl_if_empty:NT \l_semio_viz_mark_file_tl {
+    \semio_viz_path_move_to:nn { - \l_semio_viz_sym_x_fp / 2 } { - \l_semio_viz_sym_y_fp / 2 }
+    \semio_viz_path_line_to:nn { \l_semio_viz_sym_x_fp / 2 } { \l_semio_viz_sym_y_fp / 2 }
+    \semio_viz_path_move_to:nn { - \l_semio_viz_sym_x_fp / 2 } { \l_semio_viz_sym_y_fp / 2 }
+    \semio_viz_path_line_to:nn { \l_semio_viz_sym_x_fp / 2 } { - \l_semio_viz_sym_y_fp / 2 }
   }
-  \exp_args:NV \semio_viz_mark_draw_kind:n \l_tmpb_tl
+  \semio_viz_mark_emit:n { mark/image-mark }
+  \tl_if_empty:NF \l_semio_viz_mark_file_tl {
+    \node at ( \fp_to_decimal:N \l_semio_viz_mx_fp mm , \fp_to_decimal:N \l_semio_viz_my_fp mm )
+      { \includegraphics [ width= \fp_to_decimal:N \l_semio_viz_sym_x_fp mm ] { \l_semio_viz_mark_file_tl } } ;
+  }
 }
-
-\cs_new_protected:Npn \semio_viz_mark_draw_kind:n #1 {
-  \str_case:nnF {#1} {
-    { dot } { \fill [ \l_semio_viz_mark_fill_tl ] ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_my_fp } ) circle [ radius=\fp_eval:n { \l_semio_viz_mark_size_fp } ] ; }
-    { circle } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@hairline ] ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_my_fp } ) circle [ radius=\fp_eval:n { \l_semio_viz_mark_size_fp } ] ; }
-    { square } { \draw [ \l_semio_viz_mark_draw_tl , fill=\l_semio_viz_mark_fill_tl , line~width=\semio@stroke@hairline ] ( \fp_eval:n { \l_semio_viz_mx_fp - \l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp - \l_semio_viz_mark_size_fp } ) rectangle ( \fp_eval:n { \l_semio_viz_mx_fp + \l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp + \l_semio_viz_mark_size_fp } ) ; }
-    { rectangle } { \draw [ \l_semio_viz_mark_draw_tl , fill=\l_semio_viz_mark_fill_tl , line~width=\semio@stroke@hairline ] ( \fp_eval:n { \l_semio_viz_mx_fp - 2*\l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp - \l_semio_viz_mark_size_fp } ) rectangle ( \fp_eval:n { \l_semio_viz_mx_fp + 2*\l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp + \l_semio_viz_mark_size_fp } ) ; }
-    { triangle } { \draw [ \l_semio_viz_mark_draw_tl , fill=\l_semio_viz_mark_fill_tl , line~width=\semio@stroke@hairline ] ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_my_fp + \l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp - \l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp - \l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp + \l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp - \l_semio_viz_mark_size_fp } ) -- cycle ; }
-    { diamond } { \draw [ \l_semio_viz_mark_draw_tl , fill=\l_semio_viz_mark_fill_tl , line~width=\semio@stroke@hairline ] ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_my_fp + \l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp + \l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_my_fp - \l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp - \l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp } ) -- cycle ; }
-    { cross } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( \fp_eval:n { \l_semio_viz_mx_fp - \l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp - \l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp + \l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp + \l_semio_viz_mark_size_fp } ) ( \fp_eval:n { \l_semio_viz_mx_fp - \l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp + \l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp + \l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp - \l_semio_viz_mark_size_fp } ) ; }
-    { plus } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( \fp_eval:n { \l_semio_viz_mx_fp - \l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp + \l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp } ) ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_my_fp - \l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_my_fp + \l_semio_viz_mark_size_fp } ) ; }
-    { star } { \fill [ \l_semio_viz_mark_fill_tl ] ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_my_fp + \l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp + 0.4*\l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp + 0.3*\l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp + \l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp + 0.3*\l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp + 0.5*\l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp - 0.1*\l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp + 0.7*\l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp - \l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_my_fp - 0.4*\l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp - 0.7*\l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp - \l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp - 0.5*\l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp - 0.1*\l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp - \l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp + 0.3*\l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp - 0.4*\l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp + 0.3*\l_semio_viz_mark_size_fp } ) -- cycle ; }
-    { custom-glyph } { \node [ font=\SemioMono, text=\l_semio_viz_mark_draw_tl ] at ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_my_fp } ) { * } ; }
-    { icon } { \node [ font=\SemioSans, text=\l_semio_viz_mark_fill_tl ] at ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_my_fp } ) { + } ; }
-    { image } { \fill [ \l_semio_viz_mark_fill_tl ] ( \fp_eval:n { \l_semio_viz_mx_fp - 6 } , \fp_eval:n { \l_semio_viz_my_fp - 4 } ) rectangle ( \fp_eval:n { \l_semio_viz_mx_fp + 6 } , \fp_eval:n { \l_semio_viz_my_fp + 4 } ) ; }
-    { text } { \node [ font=\SemioSans, text=\l_semio_viz_mark_draw_tl ] at ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_my_fp } ) { Aa } ; }
-    { label } { \node [ font=\SemioSans, text=\l_semio_viz_mark_draw_tl, anchor=west ] at ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_my_fp } ) { label } ; }
-    { callout } {
-      \draw [ \l_semio_viz_mark_draw_tl , fill=semio-chrome-canvas, line~width=\semio@stroke@hairline ]
-        ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_my_fp } ) -- ++( 6, 8 ) -- ++( 18, 0 ) -- ++( 0, 8 ) -- ++( -22, 0 ) -- cycle ;
-      \node [ font=\SemioSans, text=\l_semio_viz_mark_draw_tl ] at ( \fp_eval:n { \l_semio_viz_mx_fp + 12 } , \fp_eval:n { \l_semio_viz_my_fp + 12 } ) { note } ;
+% ⌖ A text mark carries no ink of its own; its geometry is the anchor \SemioVizText will set the node on.
+\cs_new_protected:Npn \semio_viz_mark_anchor: {
+  \semio_viz_mark_local:
+  \semio_viz_path_move_to:nn { 0 } { 0 }
+  \semio_viz_mark_probe:nx { mark/text-mark } { \l_semio_viz_path_cmd_tl }
+}
+% 🥧 An annular sector recorded under the kind name #1, from the mark's radii, angles, pad and
+% corner radius.
+\cs_new_protected:Npn \semio_viz_mark_arc:n #1 {
+  \semio_viz_mark_local:
+  \semio_viz_arc_path:nnnnnVn { \l_semio_viz_mark_inner_fp } { \l_semio_viz_mark_outer_fp }
+    { \l_semio_viz_mark_start_fp } { \l_semio_viz_mark_end_fp } { \l_semio_viz_mark_pad_fp }
+    { \l_semio_viz_mark_padradius_tl } { \l_semio_viz_mark_corner_fp }
+  \semio_viz_mark_emit:n {#1}
+}
+% 🎗️ A chord ribbon between the mark's two angular spans, on its source and target radii.
+\cs_new_protected:Npn \semio_viz_mark_ribbon: {
+  \semio_viz_mark_local:
+  \semio_viz_ribbon_path:nnnnnnn { \l_semio_viz_mark_radius_fp }
+    { \l_semio_viz_mark_start_fp } { \l_semio_viz_mark_end_fp }
+    { \l_semio_viz_mark_tradius_fp } { \l_semio_viz_mark_tstart_fp } { \l_semio_viz_mark_tend_fp }
+    { \l_semio_viz_mark_pad_fp }
+  \semio_viz_mark_emit:n { mark/ribbon }
+}
+% 🎗️ The closed area between the two boundaries, each drawn with the caller's curve.
+\cs_new_protected:Npn \semio_viz_mark_area:n #1 {
+  \semio_viz_mark_global:
+  \semio_viz_curve_begin:VV \l_semio_viz_mark_curve_tl \l_semio_viz_mark_curve_opts_tl
+  \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_pt_n_int }
+    { \semio_viz_curve_point:nn { \semio_viz_px:n {##1} } { \semio_viz_py:n {##1} } }
+  \semio_viz_curve_end:
+  \int_step_inline:nnnn { \seq_count:N \l_semio_viz_pt_ax_seq } { -1 } { 1 }
+    { \semio_viz_path_line_to:nn { \seq_item:Nn \l_semio_viz_pt_ax_seq {##1} }
+        { \seq_item:Nn \l_semio_viz_pt_ay_seq {##1} } }
+  \semio_viz_path_close:
+  \semio_viz_mark_emit:n {#1}
+}
+% 〰️ An envelope: the two point lists as two open curves, not joined into a closed area.
+\cs_new_protected:Npn \semio_viz_mark_envelope: {
+  \semio_viz_mark_global:
+  \semio_viz_curve_begin:VV \l_semio_viz_mark_curve_tl \l_semio_viz_mark_curve_opts_tl
+  \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_pt_n_int }
+    { \semio_viz_curve_point:nn { \semio_viz_px:n {##1} } { \semio_viz_py:n {##1} } }
+  \semio_viz_curve_end:
+  \semio_viz_curve_begin:VV \l_semio_viz_mark_curve_tl \l_semio_viz_mark_curve_opts_tl
+  \int_step_inline:nnnn { 1 } { 1 } { \seq_count:N \l_semio_viz_pt_ax_seq }
+    { \semio_viz_curve_point:nn { \seq_item:Nn \l_semio_viz_pt_ax_seq {##1} }
+        { \seq_item:Nn \l_semio_viz_pt_ay_seq {##1} } }
+  \semio_viz_curve_end:
+  \semio_viz_mark_emit:n { mark/envelope }
+}
+% ➖ A straight run from the first loaded point to the last, recorded under the kind name #1.
+\cs_new_protected:Npn \semio_viz_mark_ends:n #1 {
+  \semio_viz_mark_global:
+  \semio_viz_path_move_to:nn { \semio_viz_px:n { 1 } } { \semio_viz_py:n { 1 } }
+  \semio_viz_path_line_to:nn { \semio_viz_px:n { \l_semio_viz_pt_n_int } }
+    { \semio_viz_py:n { \l_semio_viz_pt_n_int } }
+  \semio_viz_mark_emit:n {#1}
+}
+% 📐 Two-segment (orthogonal) or three-segment (elbow) right-angled routing.
+\cs_new_protected:Npn \semio_viz_mark_orthogonal:nn #1#2 {
+  \semio_viz_mark_global:
+  \fp_set:Nn \l_semio_viz_sym_x_fp { \semio_viz_px:n { 1 } }
+  \fp_set:Nn \l_semio_viz_sym_y_fp { \semio_viz_py:n { 1 } }
+  \fp_set:Nn \l_semio_viz_sym_t_fp { \semio_viz_px:n { \l_semio_viz_pt_n_int } }
+  \fp_set:Nn \l_semio_viz_sym_u_fp { \semio_viz_py:n { \l_semio_viz_pt_n_int } }
+  \semio_viz_path_move_to:nn { \l_semio_viz_sym_x_fp } { \l_semio_viz_sym_y_fp }
+  \int_compare:nNnTF {#2} = { 2 }
+    {
+      \str_if_eq:VnTF \l_semio_viz_mark_route_tl { hv }
+        { \semio_viz_path_line_to:nn { \l_semio_viz_sym_t_fp } { \l_semio_viz_sym_y_fp } }
+        { \semio_viz_path_line_to:nn { \l_semio_viz_sym_x_fp } { \l_semio_viz_sym_u_fp } }
     }
-    { leader-line } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@hairline ] ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_my_fp } ) -- ++( 16, 10 ) node [ anchor=west, font=\SemioSans ] { leader } ; }
-    { bracket } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( \fp_eval:n { \l_semio_viz_mx_fp - 10 } , \fp_eval:n { \l_semio_viz_my_fp } ) -- ++( 0, 8 ) -- ++( 20, 0 ) -- ++( 0, -8 ) ; }
-    { brace } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@hairline, decorate, decoration={brace,amplitude=2mm} ] ( \fp_eval:n { \l_semio_viz_mx_fp - 12 } , \fp_eval:n { \l_semio_viz_my_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp + 12 } , \fp_eval:n { \l_semio_viz_my_fp } ) ; }
-    { highlight-region } { \fill [ \l_semio_viz_mark_fill_tl , fill~opacity=0.25 ] ( \fp_eval:n { \l_semio_viz_mx_fp - 12 } , \fp_eval:n { \l_semio_viz_my_fp - 8 } ) rectangle ( \fp_eval:n { \l_semio_viz_mx_fp + 12 } , \fp_eval:n { \l_semio_viz_my_fp + 8 } ) ; }
-    { reference-line } { \draw [ \l_semio_viz_mark_draw_tl , dashed, line~width=\semio@stroke@hairline ] ( 4 , \fp_eval:n { \l_semio_viz_my_fp } ) -- ( 76 , \fp_eval:n { \l_semio_viz_my_fp } ) ; }
-    { reference-band } { \fill [ \l_semio_viz_mark_fill_tl , fill~opacity=0.18 ] ( 4 , \fp_eval:n { \l_semio_viz_my_fp - 4 } ) rectangle ( 76 , \fp_eval:n { \l_semio_viz_my_fp + 4 } ) ; }
-    { reference-point } { \fill [ \l_semio_viz_mark_fill_tl ] ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_my_fp } ) circle [ radius=1.4pt ] ; \draw [ \l_semio_viz_mark_draw_tl ] ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_my_fp } ) circle [ radius=2.6pt ] ; }
-    { rectangular-region } { \draw [ \l_semio_viz_mark_draw_tl , fill=\l_semio_viz_mark_fill_tl , fill~opacity=0.2, line~width=\semio@stroke@hairline, dashed ] ( \fp_eval:n { \l_semio_viz_mx_fp - 14 } , \fp_eval:n { \l_semio_viz_my_fp - 8 } ) rectangle ( \fp_eval:n { \l_semio_viz_mx_fp + 14 } , \fp_eval:n { \l_semio_viz_my_fp + 8 } ) ; }
-    { circular-region } { \draw [ \l_semio_viz_mark_draw_tl , fill=\l_semio_viz_mark_fill_tl , fill~opacity=0.2, dashed ] ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_my_fp } ) circle [ radius=10 ] ; }
-    { polygonal-region } { \draw [ \l_semio_viz_mark_draw_tl , fill=\l_semio_viz_mark_fill_tl , fill~opacity=0.2 ] ( \fp_eval:n { \l_semio_viz_mx_fp - 10 } , \fp_eval:n { \l_semio_viz_my_fp } ) -- ++( 8, 10 ) -- ++( 12, -4 ) -- ++( -4, -12 ) -- cycle ; }
-    { voronoi-region } { \semio_viz_path_demo:n { voronoi-region } }
-    { convex-hull } { \semio_viz_path_demo:n { convex-hull } }
-    { concave-hull } { \semio_viz_path_demo:n { concave-hull } }
-  } { \semio_viz_path_demo:n {#1} }
-}
-
-\cs_new_protected:Npn \semio_viz_path_demo:n #1 {
-  \tl_if_empty:NT \l_semio_viz_mark_draw_tl { \semio_viz_mark_keys_reset: }
-  \str_case:nnF {#1} {
-    { straight-line } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( 8, 10 ) -- ( 72, 28 ) ; }
-    { polyline } { \semio_viz_points_plot:n { } }
-    { step-line } { \semio_viz_points_step: }
-    { curved-line } { \semio_viz_points_plot:n { smooth } }
-    { bezier } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( 8, 8 ) .. controls ( 24, 32 ) and ( 48, 0 ) .. ( 72, 24 ) ; }
-    { spline } { \semio_viz_points_plot:n { smooth } }
-    { catmull-rom } { \semio_viz_points_plot:n { smooth, tension=0.7 } }
-    { basis-spline } { \semio_viz_points_plot:n { smooth, tension=0.2 } }
-    { cardinal-spline } { \semio_viz_points_plot:n { smooth, tension=0.9 } }
-    { monotone-spline } { \semio_viz_points_plot:n { smooth } }
-    { closed-curve } { \draw [ \l_semio_viz_mark_draw_tl , fill=\l_semio_viz_mark_fill_tl , fill~opacity=0.2, line~width=\semio@stroke@default ] plot [ smooth~cycle ] coordinates { (24,10) (48,12) (60,24) (40,32) (16,24) } ; }
-    { polygon } { \draw [ \l_semio_viz_mark_draw_tl , fill=\l_semio_viz_mark_fill_tl , fill~opacity=0.35, line~width=\semio@stroke@hairline ] ( 20, 8 ) -- ( 60, 10 ) -- ( 68, 28 ) -- ( 36, 34 ) -- ( 12, 22 ) -- cycle ; }
-    { filled-path } {
-      \semio_viz_points_coords:
-      \use:x { \exp_not:N \fill [ \l_semio_viz_mark_fill_tl , fill~opacity=0.45 ] plot coordinates { \l_semio_viz_path_coords_tl } -- cycle ; }
+    {
+      \str_if_eq:VnTF \l_semio_viz_mark_route_tl { hv }
+        {
+          \semio_viz_path_line_to:nn { ( \l_semio_viz_sym_x_fp + \l_semio_viz_sym_t_fp ) / 2 } { \l_semio_viz_sym_y_fp }
+          \semio_viz_path_line_to:nn { ( \l_semio_viz_sym_x_fp + \l_semio_viz_sym_t_fp ) / 2 } { \l_semio_viz_sym_u_fp }
+        }
+        {
+          \semio_viz_path_line_to:nn { \l_semio_viz_sym_x_fp } { ( \l_semio_viz_sym_y_fp + \l_semio_viz_sym_u_fp ) / 2 }
+          \semio_viz_path_line_to:nn { \l_semio_viz_sym_t_fp } { ( \l_semio_viz_sym_y_fp + \l_semio_viz_sym_u_fp ) / 2 }
+        }
     }
-    { ribbon } { \fill [ \l_semio_viz_mark_fill_tl , fill~opacity=0.35 ] ( 8, 10 ) -- ( 72, 22 ) -- ( 72, 14 ) -- ( 8, 4 ) -- cycle ; }
-    { band } { \fill [ \l_semio_viz_mark_fill_tl , fill~opacity=0.3 ] ( 8, 12 ) -- ( 24, 22 ) -- ( 40, 16 ) -- ( 56, 28 ) -- ( 72, 20 ) -- ( 72, 12 ) -- ( 56, 18 ) -- ( 40, 8 ) -- ( 24, 14 ) -- ( 8, 6 ) -- cycle ; }
-    { envelope } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@hairline ] ( 8, 22 ) -- ( 24, 30 ) -- ( 40, 24 ) -- ( 56, 32 ) -- ( 72, 26 ) ( 8, 8 ) -- ( 24, 12 ) -- ( 40, 10 ) -- ( 56, 14 ) -- ( 72, 10 ) ; }
-    { circular-arc } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( 40, 20 ) ++( \semio_viz_polar:nn {20} {14} ) arc [ start~angle=20, end~angle=200, radius=14 ] ; }
-    { elliptical-arc } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( 40, 20 ) ++( \semio_viz_polar:nn {0} {18} ) arc [ start~angle=0, end~angle=180, x~radius=18, y~radius=10 ] ; }
-    { annular-arc } { \fill [ \l_semio_viz_mark_fill_tl ] ( 40, 20 ) ++( \semio_viz_polar:nn {20} {14} ) arc [ start~angle=20, end~angle=200, radius=14 ] -- ++( \semio_viz_polar:nn {200} {-6} ) arc [ start~angle=200, end~angle=20, radius=8 ] -- cycle ; }
-    { sector } { \fill [ \l_semio_viz_mark_fill_tl ] ( 40, 20 ) -- ++( \semio_viz_polar:nn {10} {14} ) arc [ start~angle=10, end~angle=110, radius=14 ] -- cycle ; }
-    { wedge } { \fill [ \l_semio_viz_mark_fill_tl ] ( 40, 20 ) -- ++( \semio_viz_polar:nn {40} {16} ) arc [ start~angle=40, end~angle=80, radius=16 ] -- cycle ; }
-    { straight-connector } { \semio_viz_points_ends: \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( \l_semio_viz_pta_tl ) -- ( \l_semio_viz_ptb_tl ) ; \fill [ \l_semio_viz_mark_draw_tl ] ( \l_semio_viz_pta_tl ) circle [ radius=1.2pt ] ( \l_semio_viz_ptb_tl ) circle [ radius=1.2pt ] ; }
-    { orthogonal-connector } { \semio_viz_points_ends: \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( \l_semio_viz_pta_tl ) -| ( \l_semio_viz_ptb_tl ) ; }
-    { curved-connector } { \semio_viz_points_ends: \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( \l_semio_viz_pta_tl ) to [ out=20, in=200 ] ( \l_semio_viz_ptb_tl ) ; }
-    { elbow-connector } { \semio_viz_points_ends: \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( \l_semio_viz_pta_tl ) |- ( \l_semio_viz_ptb_tl ) ; }
-    { bundled-connector } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@hairline ] ( 10, 8 ) to [ out=90, in=180 ] ( 40, 20 ) to [ out=0, in=90 ] ( 70, 8 ) ( 10, 32 ) to [ out=-90, in=180 ] ( 40, 20 ) to [ out=0, in=-90 ] ( 70, 32 ) ; }
-    { arrow } { \semio_viz_points_ends: \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default, -{Latex} ] ( \l_semio_viz_pta_tl ) -- ( \l_semio_viz_ptb_tl ) ; }
-    { bidirectional-arrow } { \semio_viz_points_ends: \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default, {Latex}-{Latex} ] ( \l_semio_viz_pta_tl ) -- ( \l_semio_viz_ptb_tl ) ; }
-    { voronoi-region } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@hairline ] ( 20, 8 ) -- ( 40, 20 ) -- ( 20, 32 ) -- cycle ( 40, 20 ) -- ( 64, 8 ) -- ( 64, 32 ) -- cycle ; \fill [ \l_semio_viz_mark_fill_tl ] ( 28, 20 ) circle [ radius=1pt ] ( 52, 20 ) circle [ radius=1pt ] ; }
-    { convex-hull } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( 16, 8 ) -- ( 64, 10 ) -- ( 68, 28 ) -- ( 24, 32 ) -- cycle ; \fill [ \l_semio_viz_mark_fill_tl ] ( 22, 14 ) circle [ radius=1pt ] ( 40, 22 ) circle [ radius=1pt ] ( 56, 16 ) circle [ radius=1pt ] ; }
-    { concave-hull } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( 16, 8 ) -- ( 40, 16 ) -- ( 64, 8 ) -- ( 68, 28 ) -- ( 40, 22 ) -- ( 16, 30 ) -- cycle ; }
-  } { \draw [ \l_semio_viz_mark_draw_tl ] ( 8, 8 ) -- ( 72, 28 ) ; }
+  \semio_viz_path_line_to:nn { \l_semio_viz_sym_t_fp } { \l_semio_viz_sym_u_fp }
+  \semio_viz_mark_emit:n {#1}
 }
-
-\cs_new_protected:Npn \semio_viz_mark_demo:n #1 {
-  \semio_viz_mark_draw:nnn {#1} { } { 40, 20 }
+% ⤳ A quadratic bow whose sagitta is `curvature` times the span, normal to the chord.
+% 〰️ A curved connector: one cubic between the two ends, bulging by `curvature`.
+\cs_new_protected:Npn \semio_viz_mark_curved: {
+  \semio_viz_mark_global:
+  \fp_set:Nn \l_semio_viz_sym_x_fp { \semio_viz_px:n { 1 } }
+  \fp_set:Nn \l_semio_viz_sym_y_fp { \semio_viz_py:n { 1 } }
+  \fp_set:Nn \l_semio_viz_sym_t_fp { \semio_viz_px:n { \l_semio_viz_pt_n_int } }
+  \fp_set:Nn \l_semio_viz_sym_u_fp { \semio_viz_py:n { \l_semio_viz_pt_n_int } }
+  \semio_viz_path_move_to:nn { \l_semio_viz_sym_x_fp } { \l_semio_viz_sym_y_fp }
+  \semio_viz_path_quad_to:nnnn
+    { ( \l_semio_viz_sym_x_fp + \l_semio_viz_sym_t_fp ) / 2
+      - \l_semio_viz_mark_curvature_fp * ( \l_semio_viz_sym_u_fp - \l_semio_viz_sym_y_fp ) }
+    { ( \l_semio_viz_sym_y_fp + \l_semio_viz_sym_u_fp ) / 2
+      + \l_semio_viz_mark_curvature_fp * ( \l_semio_viz_sym_t_fp - \l_semio_viz_sym_x_fp ) }
+    { \l_semio_viz_sym_t_fp } { \l_semio_viz_sym_u_fp }
+  \semio_viz_mark_emit:n { mark/curved-connector }
 }
+% 🎋 A basis spline through the endpoints and the caller's waypoints, d3's edge-bundling shape.
+\cs_new_protected:Npn \semio_viz_mark_bundled: {
+  \semio_viz_mark_global:
+  \semio_viz_points_parse:VNN \l_semio_viz_mark_via_tl \l_semio_viz_pt_ax_seq \l_semio_viz_pt_ay_seq
+  \semio_viz_curve_begin:nx { bundle } { beta = \fp_use:N \l_semio_viz_mark_beta_fp }
+  \semio_viz_curve_point:nn { \semio_viz_px:n { 1 } } { \semio_viz_py:n { 1 } }
+  \int_step_inline:nnnn { 1 } { 1 } { \seq_count:N \l_semio_viz_pt_ax_seq }
+    { \semio_viz_curve_point:nn { \seq_item:Nn \l_semio_viz_pt_ax_seq {##1} }
+        { \seq_item:Nn \l_semio_viz_pt_ay_seq {##1} } }
+  \semio_viz_curve_point:nn { \semio_viz_px:n { \l_semio_viz_pt_n_int } }
+    { \semio_viz_py:n { \l_semio_viz_pt_n_int } }
+  \semio_viz_curve_end:
+  \semio_viz_mark_emit:n { mark/bundled-connector }
+}
+\cs_generate_variant:Nn \semio_viz_curve_begin:nn { nx }
+% ▭ A box from two opposite corners in `points`, or from the mark's point and its radius.
+\cs_new_protected:Npn \semio_viz_mark_box:n #1 {
+  \semio_viz_mark_global:
+  \int_compare:nNnTF { \l_semio_viz_pt_n_int } > { 1 }
+    {
+      \semio_viz_path_rect:nnnn { \semio_viz_px:n { 1 } } { \semio_viz_py:n { 1 } }
+        { \semio_viz_px:n { \l_semio_viz_pt_n_int } - \semio_viz_px:n { 1 } }
+        { \semio_viz_py:n { \l_semio_viz_pt_n_int } - \semio_viz_py:n { 1 } }
+    }
+    {
+      \semio_viz_path_rect:nnnn
+        { \l_semio_viz_mx_fp - \l_semio_viz_mark_rx_fp } { \l_semio_viz_my_fp - \l_semio_viz_mark_ry_fp }
+        { 2 * \l_semio_viz_mark_rx_fp } { 2 * \l_semio_viz_mark_ry_fp }
+    }
+  \semio_viz_mark_emit:n {#1}
+}
+% 🪢 The hull indices as one closed ring in the path buffer, in the order the chain produced.
+\cs_new_protected:Npn \semio_viz_hull_ring: {
+  \semio_viz_curve_begin:nn { linear-closed } { }
+  \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_pt_n_int }
+    { \semio_viz_curve_point:nn { \semio_viz_px:n {##1} } { \semio_viz_py:n {##1} } }
+  \semio_viz_curve_end:
+}
+% ⏺️ The generating site of a Voronoi cell, drawn as a small solid dot at the mark's point.
+\cs_new_protected:Npn \semio_viz_mark_site: {
+  \semio_viz_mark_local:
+  \semio_viz_symbol_draw:nn { circle } { 0.6 }
+  \tl_set:Nn \l_semio_viz_mark_stroke_tl { none }
+  \fp_set:Nn \l_semio_viz_mark_opacity_fp { 1 }
+  \semio_viz_mark_emit:n { mark/voronoi-region }
+}
+% ⌐ A short right-angled tick at the labelled point; the text itself is a \SemioVizText node.
+\cs_new_protected:Npn \semio_viz_mark_tick: {
+  \semio_viz_mark_local:
+  \fp_set:Nn \l_semio_viz_sym_r_fp { sqrt( \l_semio_viz_mark_size_fp ) }
+  \semio_viz_path_move_to:nn { 0 } { 0 }
+  \semio_viz_path_line_to:nn { \l_semio_viz_sym_r_fp } { 0 }
+  \semio_viz_mark_emit:n { mark/label }
+}
+% 💬 A leader from the point to a box of `extent` (width, height) offset by the first `points` entry.
+\cs_new_protected:Npn \semio_viz_mark_callout: {
+  \semio_viz_mark_global:
+  \fp_set:Nn \l_semio_viz_sym_x_fp
+    { \int_compare:nNnTF { \l_semio_viz_pt_n_int } > { 0 } { \semio_viz_px:n { 1 } }
+      { \l_semio_viz_mx_fp + 10 } }
+  \fp_set:Nn \l_semio_viz_sym_y_fp
+    { \int_compare:nNnTF { \l_semio_viz_pt_n_int } > { 0 } { \semio_viz_py:n { 1 } }
+      { \l_semio_viz_my_fp + 10 } }
+  \fp_set:Nn \l_semio_viz_sym_t_fp
+    { \tl_if_empty:NTF \l_semio_viz_mark_extent_tl { 18 }
+      { \clist_item:Nn \l_semio_viz_mark_extent_tl { 1 } } }
+  \fp_set:Nn \l_semio_viz_sym_u_fp
+    { \tl_if_empty:NTF \l_semio_viz_mark_extent_tl { 8 }
+      { \clist_item:Nn \l_semio_viz_mark_extent_tl { 2 } } }
+  \semio_viz_path_move_to:nn { \l_semio_viz_mx_fp } { \l_semio_viz_my_fp }
+  \semio_viz_path_line_to:nn { \l_semio_viz_sym_x_fp } { \l_semio_viz_sym_y_fp }
+  \semio_viz_path_rect:nnnn { \l_semio_viz_sym_x_fp } { \l_semio_viz_sym_y_fp }
+    { \l_semio_viz_sym_t_fp } { \l_semio_viz_sym_u_fp }
+  \semio_viz_mark_emit:n { mark/callout }
+}
+% ⎡ A square bracket spanning `extent` along `route`'s axis, with a depth of `radius`.
+\cs_new_protected:Npn \semio_viz_mark_bracket: {
+  \semio_viz_mark_global:
+  \semio_viz_mark_extent_pair:
+  \str_if_eq:VnTF \l_semio_viz_mark_route_tl { hv }
+    {
+      \semio_viz_path_move_to:nn { \l_semio_viz_sym_x_fp } { \l_semio_viz_my_fp - \l_semio_viz_mark_radius_fp }
+      \semio_viz_path_line_to:nn { \l_semio_viz_sym_x_fp } { \l_semio_viz_my_fp }
+      \semio_viz_path_line_to:nn { \l_semio_viz_sym_y_fp } { \l_semio_viz_my_fp }
+      \semio_viz_path_line_to:nn { \l_semio_viz_sym_y_fp } { \l_semio_viz_my_fp - \l_semio_viz_mark_radius_fp }
+    }
+    {
+      \semio_viz_path_move_to:nn { \l_semio_viz_mx_fp - \l_semio_viz_mark_radius_fp } { \l_semio_viz_sym_x_fp }
+      \semio_viz_path_line_to:nn { \l_semio_viz_mx_fp } { \l_semio_viz_sym_x_fp }
+      \semio_viz_path_line_to:nn { \l_semio_viz_mx_fp } { \l_semio_viz_sym_y_fp }
+      \semio_viz_path_line_to:nn { \l_semio_viz_mx_fp - \l_semio_viz_mark_radius_fp } { \l_semio_viz_sym_y_fp }
+    }
+  \semio_viz_mark_emit:n { mark/bracket }
+}
+% ⏝ TikZ's own brace decoration over the same span; the geometry record is the span it decorates.
+\cs_new_protected:Npn \semio_viz_mark_brace: {
+  \semio_viz_mark_global:
+  \semio_viz_mark_extent_pair:
+  \semio_viz_path_move_to:nn { \l_semio_viz_sym_x_fp } { \l_semio_viz_my_fp }
+  \semio_viz_path_line_to:nn { \l_semio_viz_sym_y_fp } { \l_semio_viz_my_fp }
+  \semio_viz_mark_options:
+  \semio_viz_mark_probe:nx { mark/brace } { \l_semio_viz_path_cmd_tl }
+  \use:x {
+    \exp_not:N \draw [ \exp_not:V \l_semio_viz_mark_opts_tl , decorate ,
+      decoration={ brace , amplitude= \fp_to_decimal:N \l_semio_viz_mark_radius_fp mm } ]
+    \exp_not:V \l_semio_viz_path_tikz_tl ;
+  }
+}
+% 📏 Reads the mark's `extent` as the two ends of a span into the two scratch coordinates.
+\cs_new_protected:Npn \semio_viz_mark_extent_pair: {
+  \fp_set:Nn \l_semio_viz_sym_x_fp
+    { \tl_if_empty:NTF \l_semio_viz_mark_extent_tl { \l_semio_viz_mx_fp - 12 }
+      { \clist_item:Nn \l_semio_viz_mark_extent_tl { 1 } } }
+  \fp_set:Nn \l_semio_viz_sym_y_fp
+    { \tl_if_empty:NTF \l_semio_viz_mark_extent_tl { \l_semio_viz_mx_fp + 12 }
+      { \clist_item:Nn \l_semio_viz_mark_extent_tl { 2 } } }
+}
+% ┈ A rule across `extent`, horizontal for route hv and vertical for vh.
+\cs_new_protected:Npn \semio_viz_mark_reference_line: {
+  \semio_viz_mark_global:
+  \semio_viz_mark_extent_pair:
+  \str_if_eq:VnTF \l_semio_viz_mark_route_tl { hv }
+    {
+      \semio_viz_path_move_to:nn { \l_semio_viz_sym_x_fp } { \l_semio_viz_my_fp }
+      \semio_viz_path_line_to:nn { \l_semio_viz_sym_y_fp } { \l_semio_viz_my_fp }
+    }
+    {
+      \semio_viz_path_move_to:nn { \l_semio_viz_mx_fp } { \l_semio_viz_sym_x_fp }
+      \semio_viz_path_line_to:nn { \l_semio_viz_mx_fp } { \l_semio_viz_sym_y_fp }
+    }
+  \semio_viz_mark_emit:n { mark/reference-line }
+}
+% ▤ The band between two reference values; `radius` is its half-thickness across the span.
+\cs_new_protected:Npn \semio_viz_mark_reference_band: {
+  \semio_viz_mark_global:
+  \semio_viz_mark_extent_pair:
+  \str_if_eq:VnTF \l_semio_viz_mark_route_tl { hv }
+    {
+      \semio_viz_path_rect:nnnn { \l_semio_viz_sym_x_fp } { \l_semio_viz_my_fp - \l_semio_viz_mark_radius_fp }
+        { \l_semio_viz_sym_y_fp - \l_semio_viz_sym_x_fp } { 2 * \l_semio_viz_mark_radius_fp }
+    }
+    {
+      \semio_viz_path_rect:nnnn { \l_semio_viz_mx_fp - \l_semio_viz_mark_radius_fp } { \l_semio_viz_sym_x_fp }
+        { 2 * \l_semio_viz_mark_radius_fp } { \l_semio_viz_sym_y_fp - \l_semio_viz_sym_x_fp }
+    }
+  \semio_viz_mark_emit:n { mark/reference-band }
+}
+% ◉ A filled dot inside an open ring, the classic "this one" annotation.
+\cs_new_protected:Npn \semio_viz_mark_reference_point: {
+  \semio_viz_mark_local:
+  \semio_viz_symbol_draw:nn { circle } { \l_semio_viz_mark_size_fp / 3 }
+  \semio_viz_symbol_draw:nn { circle } { \l_semio_viz_mark_size_fp }
+  \semio_viz_mark_emit:n { mark/reference-point }
+}
+% ⏺️ The terminal discs that tell a connector from a plain line.
+\cs_new_protected:Npn \semio_viz_mark_terminals: {
+  \semio_viz_path_begin:nnn { \semio_viz_px:n { 1 } } { \semio_viz_py:n { 1 } } { \c_true_bool }
+  \semio_viz_symbol_draw:nn { circle } { 0.8 }
+  \semio_viz_mark_emit:n { mark/straight-connector }
+  \semio_viz_path_begin:nnn { \semio_viz_px:n { \l_semio_viz_pt_n_int } }
+    { \semio_viz_py:n { \l_semio_viz_pt_n_int } } { \c_true_bool }
+  \semio_viz_symbol_draw:nn { circle } { 0.8 }
+  \semio_viz_mark_emit:n { mark/straight-connector }
+}
+% 🥚 An elliptical arc given only a radius is flattened, so it never coincides with the circular one.
+\cs_new_protected:Npn \semio_viz_mark_ellipse_radii: {
+  \bool_if:NF \l_semio_viz_mark_ry_set_bool
+    { \fp_set:Nn \l_semio_viz_mark_ry_fp { 0.6 * \l_semio_viz_mark_rx_fp } }
+}
+%endregion 🔖️MarkBodies
 
-% ⚫ Draws a registered mark at a millimetre xy point.
-\NewDocumentCommand \SemioVizMark { m O{} m } { \semio_viz_mark_draw:nnn {#1} {#2} {#3} }
-% 〰️ Draws a registered line, area, arc, or connector demo.
-\NewDocumentCommand \SemioVizPath { m O{} } { \semio_viz_mark_keys_reset: \keys_set:nn { semio / viz / mark } {#2} \semio_viz_path_demo:n {#1} }
-%endregion Registry
+%region 🔖️PathApi
+% 〰️ \SemioVizPath{kind}[options]: the line, area and connector primitives of
+% section 0 driven entirely by `points` and `curve`.
+\cs_new_protected:Npn \semio_viz_path_draw:nn #1#2 {
+  \semio_viz_frame_require:n { SemioVizPath }
+  \seq_if_in:NnF \g_semio_viz_mark_kinds_seq {#1}
+    { \msg_error:nnn { semio-viz } { unknown-mark } {#1} }
+  \semio_viz_mark_keys_reset:
+  \semio_viz_mark_defaults:n {#1}
+  \keys_set:nn { semio / viz / mark } {#2}
+  \bool_if:NF \l_semio_viz_mark_tradius_set_bool
+    { \fp_set_eq:NN \l_semio_viz_mark_tradius_fp \l_semio_viz_mark_radius_fp }
+  \semio_viz_points_load:
+  \int_compare:nNnTF { \l_semio_viz_pt_n_int } > { 0 }
+    {
+      \fp_set:Nn \l_semio_viz_mx_fp { \semio_viz_px:n { 1 } }
+      \fp_set:Nn \l_semio_viz_my_fp { \semio_viz_py:n { 1 } }
+    }
+    { \fp_zero:N \l_semio_viz_mx_fp \fp_zero:N \l_semio_viz_my_fp }
+  \str_if_eq:nnTF {#1} { straight-line }
+    { \semio_viz_mark_ends:n { mark/straight-line } }
+    { \semio_viz_mark_body:n {#1} }
+}
+%endregion 🔖️PathApi
 
-%region TextMarks
-% 🔠 Text-carrying marks: a SEPARATE command from \SemioVizMark, not a
-% `text=` key on it -- l3keys splits key-value lists on commas, and German
-% prose is nothing but commas ("Zusammenhang, keine Kausalität"); one missing
-% brace and a value silently splits into two keys. Content is the mark's own
-% trailing argument instead, never a key.
+%region 🔖️TextMarks
+% 🔠 Text-carrying marks: a SEPARATE command from \SemioVizMark, not a `text=`
+% key on it -- l3keys splits key-value lists on commas, and German prose is
+% nothing but commas ("Zusammenhang, keine Kausalität"); one missing brace and a
+% value silently splits into two keys. Content is the mark's own trailing
+% argument instead, never a key.
 \tl_new:N \l_semio_viz_text_width_tl
 \tl_new:N \l_semio_viz_text_height_tl
 \tl_new:N \l_semio_viz_text_anchor_tl
 \tl_new:N \l_semio_viz_text_align_tl
 \tl_new:N \l_semio_viz_text_style_tl
 \tl_new:N \l_semio_viz_text_font_tl
+\tl_new:N \l_semio_viz_text_opts_tl
 
 \seq_new:N \g_semio_viz_text_kinds_seq
-\clist_map_inline:nn { cell, module, chip, label, title, value }
+\clist_map_inline:nn { cell, module, chip, label, title, value, callout, leader }
   { \seq_gput_right:Nn \g_semio_viz_text_kinds_seq {#1} }
 
-\cs_new_protected:Npn \semio_viz_text_keys_reset:n #1 { % kind -> its own defaults
+% ♻️ Puts every text-mark key back to the default of kind #1: its node style, anchor, alignment
+% and font, so a cell reads as a cell and a chip as a chip without the caller saying so.
+\cs_new_protected:Npn \semio_viz_text_keys_reset:n #1 {
   \tl_clear:N \l_semio_viz_text_width_tl
   \tl_clear:N \l_semio_viz_text_height_tl
   \tl_set:Nn \l_semio_viz_text_anchor_tl { north~west }
   \tl_set:Nn \l_semio_viz_text_align_tl { left }
-  \tl_set:Nn \l_semio_viz_text_font_tl { \semio@viz@font@label }
+  \tl_set:Nn \l_semio_viz_text_font_tl { \c_semio_viz_theme_font_label_tl }
   \tl_clear:N \l_semio_viz_text_style_tl
   \str_case:nn {#1} {
-    { cell }   { \tl_set:Nn \l_semio_viz_text_style_tl { semio~viz~cell } \tl_set:Nn \l_semio_viz_text_anchor_tl { center } \tl_set:Nn \l_semio_viz_text_align_tl { center } \tl_clear:N \l_semio_viz_text_font_tl }
-    { module } { \tl_set:Nn \l_semio_viz_text_style_tl { semio~viz~module } \tl_set:Nn \l_semio_viz_text_anchor_tl { center } \tl_set:Nn \l_semio_viz_text_align_tl { center } \tl_clear:N \l_semio_viz_text_font_tl }
-    { chip }   { \tl_set:Nn \l_semio_viz_text_style_tl { semio~viz~chip } \tl_set:Nn \l_semio_viz_text_anchor_tl { center } \tl_clear:N \l_semio_viz_text_font_tl }
-    { title }  { \tl_set:Nn \l_semio_viz_text_font_tl { \semio@viz@font@title } }
-    { value }  { \tl_set:Nn \l_semio_viz_text_font_tl { \semio@viz@font@value } \tl_set:Nn \l_semio_viz_text_anchor_tl { east } }
-  } { }
+    { cell }    { \tl_set:Nn \l_semio_viz_text_style_tl { semio~viz~cell } \tl_set:Nn \l_semio_viz_text_anchor_tl { center } \tl_set:Nn \l_semio_viz_text_align_tl { center } \tl_clear:N \l_semio_viz_text_font_tl }
+    { module }  { \tl_set:Nn \l_semio_viz_text_style_tl { semio~viz~module } \tl_set:Nn \l_semio_viz_text_anchor_tl { center } \tl_set:Nn \l_semio_viz_text_align_tl { center } \tl_clear:N \l_semio_viz_text_font_tl }
+    { chip }    { \tl_set:Nn \l_semio_viz_text_style_tl { semio~viz~chip } \tl_set:Nn \l_semio_viz_text_anchor_tl { center } \tl_clear:N \l_semio_viz_text_font_tl }
+    { title }   { \tl_set:Nn \l_semio_viz_text_font_tl { \c_semio_viz_theme_font_title_tl } }
+    { value }   { \tl_set:Nn \l_semio_viz_text_font_tl { \c_semio_viz_theme_font_value_tl } \tl_set:Nn \l_semio_viz_text_anchor_tl { east } }
+    { callout } { \tl_set:Nn \l_semio_viz_text_style_tl { semio~viz~cell } \tl_set:Nn \l_semio_viz_text_anchor_tl { south~west } \tl_clear:N \l_semio_viz_text_font_tl }
+    { leader }  { \tl_set:Nn \l_semio_viz_text_anchor_tl { west } }
+  }
 }
 
+% 🔑 The text-mark keys, `semio / viz / text`: the node's box, its anchor, its alignment, its font
+% and any further TikZ style. The content itself is never a key — see the note above.
 \keys_define:nn { semio / viz / text } {
   width  .tl_set:N = \l_semio_viz_text_width_tl,
   height .tl_set:N = \l_semio_viz_text_height_tl,
@@ -327,11 +2780,13 @@
   font   .tl_set:N = \l_semio_viz_text_font_tl,
 }
 
-\tl_new:N \l_semio_viz_text_opts_tl
+% 🔠 Sets the content #2 as a TikZ node with the option list #1 at the mark's own point.
 \cs_new_protected:Npn \semio_viz_text_node:nn #1#2 {
   \node [#1] at ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_my_fp } ) {#2} ;
 }
-\cs_new_protected:Npn \semio_viz_text_draw:nnnn #1#2#3#4 { % kind, keys, xy, content
+% 🔠 A text mark of kind #1 with the options #2 at the point #3, carrying the content #4, and its
+% anchor recorded for the probe.
+\cs_new_protected:Npn \semio_viz_text_draw:nnnn #1#2#3#4 {
   \semio_viz_frame_require:n { SemioVizText }
   \seq_if_in:NnF \g_semio_viz_text_kinds_seq {#1}
     { \msg_error:nnn { semio-viz } { unknown-text-kind } {#1} }
@@ -348,17 +2803,231 @@
   \tl_if_empty:NF \l_semio_viz_text_font_tl
     { \tl_put_right:Nx \l_semio_viz_text_opts_tl { font={ \exp_not:V \l_semio_viz_text_font_tl }, } }
   \tl_put_right:Nx \l_semio_viz_text_opts_tl {
-    anchor= \l_semio_viz_text_anchor_tl ,
-    align= \l_semio_viz_text_align_tl ,
-    outer~sep=0pt,
+    anchor= \l_semio_viz_text_anchor_tl , align= \l_semio_viz_text_align_tl , outer~sep=0pt,
   }
+  \semio_viz_mark_probe:nx { text/#1 }
+    { \fp_to_decimal:N \l_semio_viz_mx_fp , \fp_to_decimal:N \l_semio_viz_my_fp }
   \exp_args:NV \semio_viz_text_node:nn \l_semio_viz_text_opts_tl {#4}
 }
+%endregion 🔖️TextMarks
 
-% 🔠 Text-carrying mark: kind (cell/module/chip/label/title/value), keys, a
-% millimetre point, and the content as its own argument -- never a key, so
-% prose commas and braces pass through untouched.
+%region 🔖️PublicApi
+% ⚫ Draws a section 0 mark at a millimetre point.
+\NewDocumentCommand \SemioVizMark { m O{} m } { \semio_viz_mark_draw:nnn {#1} {#2} {#3} }
+% 〰️ Draws a section 0 line, area, region or connector from its `points` list.
+\NewDocumentCommand \SemioVizPath { m O{} } { \semio_viz_path_draw:nn {#1} {#2} }
+% 🔠 Text-carrying mark: kind, keys, a millimetre point, and the content as its own argument.
 \NewDocumentCommand \SemioVizText { m O{} m m } { \semio_viz_text_draw:nnnn {#1}{#2}{#3}{#4} }
-%endregion TextMarks
+%endregion 🔖️PublicApi
+
+%region 🔖️MarkFamilies
+% 🏷️ The seven renderers behind taxonomy section 0. Every one of them reads its
+% bound table -- the marks sit where the data puts them -- and every variant of a
+% family draws different geometry, which is what the distinctness test checks.
+% Registration waits for the document because the family registry is loaded after
+% the kernel; the loader order is fixed and nobody edits it.
+%region 🔖️Keys
+%   variant (tl, per family)   the section 0 slug this preset renders
+%   data (tl, demo)            the table the family reads
+%   x (tl, t) / y (tl, val)    the columns bound to the horizontal and vertical channel
+%   every other key            forwarded to `semio / viz / mark`
+\tl_new:N \l_semio_viz_fam_variant_tl
+\tl_new:N \l_semio_viz_fam_data_tl
+\tl_new:N \l_semio_viz_fam_x_tl
+\tl_new:N \l_semio_viz_fam_y_tl
+\fp_new:N \l_semio_viz_fam_w_fp
+\fp_new:N \l_semio_viz_fam_h_fp
+\fp_new:N \l_semio_viz_fam_pad_fp
+\int_new:N \l_semio_viz_fam_rows_int
+\fp_new:N \l_semio_viz_fam_xmin_fp \fp_new:N \l_semio_viz_fam_xmax_fp
+\fp_new:N \l_semio_viz_fam_ymin_fp \fp_new:N \l_semio_viz_fam_ymax_fp
+\tl_new:N \l_semio_viz_fam_cell_tl
+\tl_new:N \l_semio_viz_fam_points_tl
+\tl_new:N \l_semio_viz_fam_lower_tl
+
+% 🔑 The mark-family keys, `semio / viz / family / mark`; every key the family does not name is
+% forwarded to `semio / viz / mark`, so a catalogue entry can set any mark option.
+\keys_define:nn { semio / viz / family / mark } {
+  variant .tl_set:N = \l_semio_viz_fam_variant_tl,
+  data    .tl_set:N = \l_semio_viz_fam_data_tl,
+  x       .tl_set:N = \l_semio_viz_fam_x_tl,
+  y       .tl_set:N = \l_semio_viz_fam_y_tl,
+  unknown .code:n   = { \exp_args:Nnx \keys_set:nn { semio / viz / mark }
+                         { \l_keys_key_str = { \exp_not:n {#1} } } },
+}
+%endregion 🔖️Keys
+
+% 🚦 Opens a mark family run for variant #1 under the option list #2. The list is read twice on
+% purpose: once for the variant, then again after the variant's own mark defaults, so an explicit
+% option in a catalogue entry always wins over the default the variant brings with it.
+\cs_new_protected:Npn \semio_viz_fam_begin:nn #1#2 {
+  \semio_viz_mark_keys_reset:
+  \tl_set:Nn \l_semio_viz_fam_variant_tl {#1}
+  \tl_set:Nn \l_semio_viz_fam_data_tl { demo }
+  \tl_set:Nn \l_semio_viz_fam_x_tl { t }
+  \tl_set:Nn \l_semio_viz_fam_y_tl { val }
+  \fp_set:Nn \l_semio_viz_fam_w_fp { 80 }
+  \fp_set:Nn \l_semio_viz_fam_h_fp { 40 }
+  \fp_set:Nn \l_semio_viz_fam_pad_fp { 6 }
+  \keys_set:nn { semio / viz / family / mark } {#2}
+  \exp_args:NV \semio_viz_mark_defaults:n \l_semio_viz_fam_variant_tl
+  \keys_set:nn { semio / viz / family / mark } {#2}
+  \semio_viz_fam_scan:
+}
+
+% 📊 Reads the bound table once: the row count, both column ranges, and the mapped point list.
+\cs_generate_variant:Nn \semio_viz_mark_draw:nnn { Vxx }
+\cs_generate_variant:Nn \semio_viz_path_draw:nn { Vx }
+\seq_new:N \l_semio_viz_fam_vy_seq
+\fp_new:N \l_semio_viz_fam_vx_fp \fp_new:N \l_semio_viz_fam_vy_fp
+\cs_new_protected:Npn \semio_viz_fam_scan: {
+  \semio_viz_table_nrows:VN \l_semio_viz_fam_data_tl \l_semio_viz_fam_rows_int
+  \semio_viz_table_col_min:VVN \l_semio_viz_fam_data_tl \l_semio_viz_fam_x_tl \l_semio_viz_fam_xmin_fp
+  \semio_viz_table_col_max:VVN \l_semio_viz_fam_data_tl \l_semio_viz_fam_x_tl \l_semio_viz_fam_xmax_fp
+  \semio_viz_table_col_min:VVN \l_semio_viz_fam_data_tl \l_semio_viz_fam_y_tl \l_semio_viz_fam_ymin_fp
+  \semio_viz_table_col_max:VVN \l_semio_viz_fam_data_tl \l_semio_viz_fam_y_tl \l_semio_viz_fam_ymax_fp
+  \tl_clear:N \l_semio_viz_fam_points_tl
+  \tl_clear:N \l_semio_viz_fam_lower_tl
+  \seq_clear:N \l_semio_viz_fam_vy_seq
+  \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_fam_rows_int } {
+    \semio_viz_table_cell:VnVN \l_semio_viz_fam_data_tl {##1} \l_semio_viz_fam_x_tl \l_semio_viz_fam_cell_tl
+    \fp_set:Nn \l_semio_viz_fam_vx_fp { \l_semio_viz_fam_pad_fp
+      + ( \l_semio_viz_fam_cell_tl - \l_semio_viz_fam_xmin_fp )
+        / max( 1e-9 , \l_semio_viz_fam_xmax_fp - \l_semio_viz_fam_xmin_fp )
+        * ( \l_semio_viz_fam_w_fp - 2 * \l_semio_viz_fam_pad_fp ) }
+    \semio_viz_table_cell:VnVN \l_semio_viz_fam_data_tl {##1} \l_semio_viz_fam_y_tl \l_semio_viz_fam_cell_tl
+    \seq_put_right:Nx \l_semio_viz_fam_vy_seq { \fp_to_decimal:n { \l_semio_viz_fam_cell_tl } }
+    \fp_set:Nn \l_semio_viz_fam_vy_fp { \l_semio_viz_fam_pad_fp
+      + ( \l_semio_viz_fam_cell_tl - \l_semio_viz_fam_ymin_fp )
+        / max( 1e-9 , \l_semio_viz_fam_ymax_fp - \l_semio_viz_fam_ymin_fp )
+        * ( \l_semio_viz_fam_h_fp - 2 * \l_semio_viz_fam_pad_fp ) }
+    \tl_if_empty:NF \l_semio_viz_fam_points_tl {
+      \tl_put_right:Nn \l_semio_viz_fam_points_tl { ; }
+      \tl_put_right:Nn \l_semio_viz_fam_lower_tl { ; }
+    }
+    \tl_put_right:Nx \l_semio_viz_fam_points_tl
+      { \fp_to_decimal:N \l_semio_viz_fam_vx_fp , \fp_to_decimal:N \l_semio_viz_fam_vy_fp }
+    \tl_put_right:Nx \l_semio_viz_fam_lower_tl
+      { \fp_to_decimal:N \l_semio_viz_fam_vx_fp , \fp_to_decimal:N \l_semio_viz_fam_pad_fp }
+  }
+  \tl_set_eq:NN \l_semio_viz_mark_points_tl \l_semio_viz_fam_points_tl
+  \tl_set_eq:NN \l_semio_viz_mark_points_alt_tl \l_semio_viz_fam_lower_tl
+  \semio_viz_points_load:
+}
+% 🔢 The y value of one row, as read in the last scan.
+\cs_new:Npn \semio_viz_fam_value:n #1 { \seq_item:Nn \l_semio_viz_fam_vy_seq {#1} }
+
+%region 🔖️Renderers
+% ⚫ Point marks: one glyph per row, at the row's own place.
+\cs_new_protected:Npn \semio_viz_fam_points_render: {
+  \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_pt_n_int } {
+    \semio_viz_mark_draw:Vxx \l_semio_viz_fam_variant_tl
+      { points = { \exp_not:V \l_semio_viz_mark_points_tl } , \exp_not:V \l_semio_viz_fam_style_tl }
+      { \semio_viz_px:n {##1} , \semio_viz_py:n {##1} }
+  }
+}
+\tl_new:N \l_semio_viz_fam_style_tl
+% 🎨 The style the family collected, replayed onto each mark it draws.
+\cs_new_protected:Npn \semio_viz_fam_style: {
+  \tl_set:Nx \l_semio_viz_fam_style_tl {
+    size = \fp_to_decimal:N \l_semio_viz_mark_size_fp ,
+    fill = \exp_not:V \l_semio_viz_mark_fill_tl ,
+    stroke = \exp_not:V \l_semio_viz_mark_stroke_tl ,
+    strokeWidth = { \exp_not:V \l_semio_viz_mark_width_tl } ,
+    opacity = \fp_to_decimal:N \l_semio_viz_mark_opacity_fp ,
+    rotate = \fp_to_decimal:N \l_semio_viz_mark_rotate_fp ,
+    pattern = \exp_not:V \l_semio_viz_mark_pattern_tl ,
+    curve = \exp_not:V \l_semio_viz_mark_curve_tl ,
+    radius = \fp_to_decimal:N \l_semio_viz_mark_radius_fp ,
+    innerRadius = \fp_to_decimal:N \l_semio_viz_mark_inner_fp ,
+    outerRadius = \fp_to_decimal:N \l_semio_viz_mark_outer_fp ,
+    padAngle = \fp_to_decimal:N \l_semio_viz_mark_pad_fp ,
+    cornerRadius = \fp_to_decimal:N \l_semio_viz_mark_corner_fp ,
+    arrow = \exp_not:V \l_semio_viz_mark_arrow_tl ,
+    dash = \exp_not:V \l_semio_viz_mark_dash_tl ,
+    route = \exp_not:V \l_semio_viz_mark_route_tl
+  }
+}
+
+% 〰️ Path marks: one path through every row of the table.
+\cs_new_protected:Npn \semio_viz_fam_path_render: {
+  \semio_viz_path_draw:Vx \l_semio_viz_fam_variant_tl {
+    points = { \exp_not:V \l_semio_viz_fam_points_tl } ,
+    points2 = { \exp_not:V \l_semio_viz_fam_lower_tl } ,
+    via = { \exp_not:V \l_semio_viz_fam_points_tl } ,
+    \exp_not:V \l_semio_viz_fam_style_tl
+  }
+}
+
+% 🥧 Arc marks: one wedge per row, sized by the row's value.
+\cs_new_protected:Npn \semio_viz_fam_arc_render: {
+  \fp_set:Nn \l_semio_viz_fam_step_fp { 2 * pi / max( 1 , \l_semio_viz_fam_rows_int ) }
+  \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_fam_rows_int } {
+    \semio_viz_mark_draw:Vxx \l_semio_viz_fam_variant_tl
+      {
+        startAngle = \fp_to_decimal:n { ( ##1 - 1 ) * \l_semio_viz_fam_step_fp } ,
+        endAngle = \fp_to_decimal:n { ##1 * \l_semio_viz_fam_step_fp } ,
+        radius = \fp_to_decimal:n { 6 + 8 * ( \semio_viz_fam_value:n {##1}
+          - \l_semio_viz_fam_ymin_fp ) / max( 1e-9 , \l_semio_viz_fam_ymax_fp - \l_semio_viz_fam_ymin_fp ) } ,
+        outerRadius = \fp_to_decimal:n { 6 + 8 * ( \semio_viz_fam_value:n {##1}
+          - \l_semio_viz_fam_ymin_fp ) / max( 1e-9 , \l_semio_viz_fam_ymax_fp - \l_semio_viz_fam_ymin_fp ) } ,
+        \exp_not:V \l_semio_viz_fam_style_tl
+      }
+      { \fp_to_decimal:n { \l_semio_viz_fam_w_fp / 2 } , \fp_to_decimal:n { \l_semio_viz_fam_h_fp / 2 } }
+  }
+}
+\fp_new:N \l_semio_viz_fam_step_fp
+
+% 💬 Annotation marks: one annotation on the row that carries the extreme value.
+\cs_new_protected:Npn \semio_viz_fam_annotation_render: {
+  \int_zero:N \l_semio_viz_fam_peak_int
+  \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_fam_rows_int } {
+    \fp_compare:nNnT { \semio_viz_fam_value:n {##1} } = { \l_semio_viz_fam_ymax_fp }
+      { \int_compare:nNnT { \l_semio_viz_fam_peak_int } = { 0 }
+          { \int_set:Nn \l_semio_viz_fam_peak_int {##1} } }
+  }
+  \int_compare:nNnT { \l_semio_viz_fam_peak_int } = { 0 } { \int_set:Nn \l_semio_viz_fam_peak_int { 1 } }
+  \semio_viz_mark_draw:Vxx \l_semio_viz_fam_variant_tl
+    {
+      points = { \exp_not:V \l_semio_viz_fam_points_tl } ,
+      extent = { \fp_to_decimal:N \l_semio_viz_fam_pad_fp ,
+        \fp_to_decimal:n { \l_semio_viz_fam_w_fp - \l_semio_viz_fam_pad_fp } } ,
+      \exp_not:V \l_semio_viz_fam_style_tl
+    }
+    { \semio_viz_px:n { \l_semio_viz_fam_peak_int } , \semio_viz_py:n { \l_semio_viz_fam_peak_int } }
+}
+\int_new:N \l_semio_viz_fam_peak_int
+%endregion 🔖️Renderers
+
+% 🏷️ Registration, deferred to the point where the family registry exists.
+\cs_new_protected:Npn \semio_viz_fam_run:nnn #1#2#3 {
+  \semio_viz_fam_begin:nn {#2} {#3}
+  \semio_viz_fam_style:
+  \str_case:nnF {#1} {
+    { point }      { \semio_viz_fam_points_render: }
+    { arc }        { \semio_viz_fam_arc_render: }
+    { annotation } { \semio_viz_fam_annotation_render: }
+  } { \semio_viz_fam_path_render: }
+}
+
+\AddToHook{begindocument}{
+  \cs_if_exist:NT \semio_viz_family_define:nn {
+    \semio_viz_family_define:nn { mark-point }
+      { \semio_viz_fam_run:nnn { point } { dot } {#1} }
+    \semio_viz_family_define:nn { mark-line }
+      { \semio_viz_fam_run:nnn { path } { polyline } {#1} }
+    \semio_viz_family_define:nn { mark-area }
+      { \semio_viz_fam_run:nnn { path } { band } {#1} }
+    \semio_viz_family_define:nn { mark-arc }
+      { \semio_viz_fam_run:nnn { arc } { sector } {#1} }
+    \semio_viz_family_define:nn { mark-connector }
+      { \semio_viz_fam_run:nnn { path } { straight-connector } {#1} }
+    \semio_viz_family_define:nn { mark-region }
+      { \semio_viz_fam_run:nnn { path } { polygonal-region } {#1} }
+    \semio_viz_family_define:nn { mark-annotation }
+      { \semio_viz_fam_run:nnn { annotation } { label } {#1} }
+  }
+}
+%endregion 🔖️MarkFamilies
 
 \ExplSyntaxOff

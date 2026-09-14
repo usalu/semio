@@ -1,0 +1,46 @@
+% 🧪 Probe fixture of case data-csv, every scenario.
+% \SemioVizTableFromCSV parses a delimiter-separated file with l3file and RFC 4180 quoting, so the
+% probe writes every parsed column back out and the adapter compares it with d3-dsv's parse of the
+% same committed file. Cell text travels brace wrapped and prefixed with a vertical bar, so a cell
+% that contains the delimiter — or that looks like a number — is compared verbatim.
+\documentclass{article}
+\usepackage{semio-viz-data}
+\usepackage{semio-viz-probe}
+\ExplSyntaxOn
+\seq_new:N \l_probe_seq
+\seq_new:N \l_probe_out_seq
+
+% 📄 Writes one parsed column of a loaded table.
+\cs_new_protected:Npn \probecsv #1#2#3 {
+  \semio_viz_table_col_values:nnN {#2} {#3} \l_probe_seq
+  \seq_clear:N \l_probe_out_seq
+  \seq_map_inline:Nn \l_probe_seq { \seq_put_right:Nn \l_probe_out_seq { { | ##1 } } }
+  \semio_viz_probe_values:nx {#1} { \seq_use:Nn \l_probe_out_seq { , } }
+}
+
+% 🏷️ Writes the column names a loaded table carries.
+\cs_new_protected:Npn \probecolumns #1#2 {
+  \semio_viz_probe_values:nx {#1}
+    { \clist_use:cn { g_semio_viz_table_ \tl_to_str:n {#2} _cols_clist } { , } }
+}
+\ExplSyntaxOff
+\begin{document}
+
+\SemioVizProbeBegin{data-csv}{header-row}
+\SemioVizTableFromCSV{cities}{cities.csv}
+\probecolumns{csv/columns}{cities}
+\probecsv{csv/city}{cities}{city}
+\probecsv{csv/population}{cities}{population}
+
+\SemioVizProbeBegin{data-csv}{quoted-fields}
+\SemioVizTableFromCSV{quoted}{cities.csv}
+\probecsv{csv/note}{quoted}{note}
+
+\SemioVizProbeBegin{data-csv}{custom-delimiter}
+\SemioVizTableFromCSV{places}{places.tsv}[delimiter=;,header=false]
+\probecolumns{tsv/columns}{places}
+\probecsv{tsv/c1}{places}{c1}
+\probecsv{tsv/c3}{places}{c3}
+
+\SemioVizProbePage
+\end{document}

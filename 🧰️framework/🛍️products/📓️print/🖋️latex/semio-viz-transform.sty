@@ -1,0 +1,2323 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-transform}[2026/09/05 v0.3.0 semio viz transforms (taxonomy 78: filter, sort, group, rollup, pivot, fold, join, window, bin, stack, normalize, kde, quantile, regression)]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-data}
+\RequirePackage{semio-viz-layout}
+\RequirePackage{semio-viz-scale}
+
+\ExplSyntaxOn
+
+%region 🔖️Variants
+\prg_generate_conditional_variant:Nnn \regex_match:nn { nV } { TF }
+\prg_generate_conditional_variant:Nnn \str_compare:nNn { eNe } { p }
+\cs_generate_variant:Nn \seq_set_split:Nnn { NVV }
+%endregion 🔖️Variants
+
+%region 🔖️Diagnostics
+\msg_new:nnn { semio-viz } { unknown-rollup }
+  { Unknown~rollup~'#1'~(known:~sum,~mean,~min,~max,~count,~median). }
+\msg_new:nnn { semio-viz } { unknown-window }
+  { Unknown~window~'#1'~(known:~movingAverage,~cumulativeSum,~rank,~lag). }
+\msg_new:nnn { semio-viz } { unknown-regression }
+  { Unknown~regression~'#1'~(known:~linear,~poly,~exp,~log,~pow). }
+\msg_new:nnn { semio-viz } { unknown-kernel }
+  { Unknown~kernel~'#1'~(known:~gaussian,~epanechnikov). }
+%endregion 🔖️Diagnostics
+
+%region 🔖️WorkingTable
+% 🧰 Transforms run on a working table held in memory: a column list plus a sequence of rows.
+% Every operation reads the working table and replaces it, so operations compose in one call.
+\clist_new:N \l_semio_viz_tr_cols_clist
+\seq_new:N \l_semio_viz_tr_rows_seq
+\clist_new:N \l_semio_viz_tr_out_cols_clist
+\seq_new:N \l_semio_viz_tr_out_rows_seq
+\clist_new:N \l_semio_viz_tr_row_clist
+\tl_new:N \l_semio_viz_tr_cell_tl
+\int_new:N \l_semio_viz_tr_index_int
+
+% 📥 Loads a registered table into the working table.
+\cs_new_protected:Npn \semio_viz_tr_load:n #1 {
+  \semio_viz_table_require:n {#1}
+  \clist_set_eq:Nc \l_semio_viz_tr_cols_clist
+    { g_semio_viz_table_ \l_semio_viz_tab_tl _cols_clist }
+  \seq_set_eq:Nc \l_semio_viz_tr_rows_seq
+    { g_semio_viz_table_ \l_semio_viz_tab_tl _rows_seq }
+}
+
+% 📤 Writes the working table out under a name.
+\cs_new_protected:Npn \semio_viz_tr_store:n #1 {
+  \semio_viz_table_new:nx {#1} { \clist_use:Nn \l_semio_viz_tr_cols_clist { , } }
+  \seq_map_inline:Nn \l_semio_viz_tr_rows_seq { \semio_viz_table_row:nn {#1} {##1} }
+}
+
+% 🔁 Promotes the freshly built output table to the working table.
+\cs_new_protected:Npn \semio_viz_tr_commit: {
+  \clist_set_eq:NN \l_semio_viz_tr_cols_clist \l_semio_viz_tr_out_cols_clist
+  \seq_set_eq:NN \l_semio_viz_tr_rows_seq \l_semio_viz_tr_out_rows_seq
+}
+
+% 🔢 One-based index of a column of the working table; zero when it is absent.
+\cs_new_protected:Npn \semio_viz_tr_colindex:nN #1#2 {
+  \int_zero:N #2
+  \int_zero:N \l_semio_viz_tr_index_int
+  \clist_map_inline:Nn \l_semio_viz_tr_cols_clist
+    {
+      \int_incr:N \l_semio_viz_tr_index_int
+      \str_if_eq:nnT {##1} {#1} { \int_set_eq:NN #2 \l_semio_viz_tr_index_int }
+    }
+}
+\cs_generate_variant:Nn \semio_viz_tr_colindex:nN { VN }
+
+% 🧾 Cell of the row #1 in column #2 of the working table.
+\cs_new_protected:Npn \semio_viz_tr_get:nnN #1#2#3 {
+  \semio_viz_tr_colindex:nN {#2} \l_semio_viz_tr_col_int
+  \clist_set:Nn \l_semio_viz_tr_row_clist {#1}
+  \tl_set:Nx #3 { \clist_item:Nn \l_semio_viz_tr_row_clist { \l_semio_viz_tr_col_int } }
+}
+\int_new:N \l_semio_viz_tr_col_int
+\cs_generate_variant:Nn \semio_viz_tr_get:nnN { nVN , VnN , VVN }
+
+% 🧱 Appends a row built from the sequence #1 to the output table, brace-wrapping every field.
+\cs_new_protected:Npn \semio_viz_tr_put:N #1 {
+  \tl_clear:N \l_semio_viz_tr_text_tl
+  \bool_set_true:N \l_semio_viz_tr_first_bool
+  \seq_map_inline:Nn #1
+    {
+      \bool_if:NTF \l_semio_viz_tr_first_bool
+        { \bool_set_false:N \l_semio_viz_tr_first_bool }
+        { \tl_put_right:Nn \l_semio_viz_tr_text_tl { , } }
+      \tl_put_right:Nn \l_semio_viz_tr_text_tl { {##1} }
+    }
+  \seq_put_right:NV \l_semio_viz_tr_out_rows_seq \l_semio_viz_tr_text_tl
+}
+\tl_new:N \l_semio_viz_tr_text_tl
+\bool_new:N \l_semio_viz_tr_first_bool
+\seq_new:N \l_semio_viz_tr_build_seq
+
+% 🧮 Distinct values of a column of the working table, in order of first appearance.
+\cs_new_protected:Npn \semio_viz_tr_distinct:nN #1#2 {
+  \seq_clear:N #2
+  \seq_map_inline:Nn \l_semio_viz_tr_rows_seq
+    {
+      \semio_viz_tr_get:nnN {##1} {#1} \l_semio_viz_tr_cell_tl
+      \seq_if_in:NVF #2 \l_semio_viz_tr_cell_tl
+        { \seq_put_right:NV #2 \l_semio_viz_tr_cell_tl }
+    }
+}
+\cs_generate_variant:Nn \semio_viz_tr_distinct:nN { VN }
+%endregion 🔖️WorkingTable
+
+%region 🔖️Keys
+% ⚙️ Transform vocabulary. Operations are applied in this fixed, documented order:
+%   filter → sort → bin → group/rollup → fold → pivot → join → window → stack →
+%   normalize → quantile → kde → regression
+%   filter        fp predicate over bare column names, e.g. `val > 4 && val2 < 6`
+%   sort          column to sort by; `descending` reverses the order
+%   descending    boolean, default false
+%   group         column whose distinct values become the groups
+%   rollup        `<agg>:<column>`; agg is sum, mean, min, max, count or median
+%   pivot         `<keyColumn>:<valueColumn>`; the group column stays as the row key
+%   fold          `<idColumn>:<c1>;<c2>;…` long form with the columns `key` and `value`
+%   join          `<table>:<leftColumn>:<rightColumn>` inner join on equal keys
+%   window        `<kind>:<column>:<size>`; kind is movingAverage, cumulativeSum, rank or lag
+%   bin           `<column>` binned into the columns `x0`, `x1`, `count`
+%   thresholds    `sturges`, `count:<n>`, `width:<w>` or an explicit `a;b;c` list
+%   stack         `<xColumn>:<seriesColumn>:<valueColumn>` into `x`, `series`, `y0`, `y1`
+%   order         none, ascending, descending, inside-out, reverse or appearance
+%   offset        none, expand, diverging, silhouette or wiggle
+%   normalize     column divided by the sum of its values
+%   quantile      column reduced to the columns `p` and `value`
+%   probabilities the probabilities of the quantile operation, default `0,0.25,0.5,0.75,1`
+%   kde           column estimated into the columns `x` and `density`
+%   bandwidth     kernel bandwidth; `0` selects Silverman's rule of thumb
+%   kernel        gaussian or epanechnikov
+%   samples       sample count of the kde and function grids, default 50
+%   regression    `<kind>:<xColumn>:<yColumn>`; kind is linear, poly, exp, log or pow
+%   degree        polynomial degree, default 2
+\keys_define:nn { semio / viz / transform }
+  {
+    filter .tl_set:N = \l_semio_viz_tr_filter_tl,
+    sort .tl_set:N = \l_semio_viz_tr_sort_tl,
+    descending .bool_set:N = \l_semio_viz_tr_descending_bool,
+    descending .default:n = { true },
+    group .tl_set:N = \l_semio_viz_tr_group_tl,
+    rollup .tl_set:N = \l_semio_viz_tr_rollup_tl,
+    pivot .tl_set:N = \l_semio_viz_tr_pivot_tl,
+    fold .tl_set:N = \l_semio_viz_tr_fold_tl,
+    join .tl_set:N = \l_semio_viz_tr_join_tl,
+    window .tl_set:N = \l_semio_viz_tr_window_tl,
+    bin .tl_set:N = \l_semio_viz_tr_bin_tl,
+    thresholds .tl_set:N = \l_semio_viz_tr_thresholds_tl,
+    stack .tl_set:N = \l_semio_viz_tr_stack_tl,
+    order .tl_set:N = \l_semio_viz_tr_order_tl,
+    offset .tl_set:N = \l_semio_viz_tr_offset_tl,
+    normalize .tl_set:N = \l_semio_viz_tr_normalize_tl,
+    quantile .tl_set:N = \l_semio_viz_tr_quantile_tl,
+    probabilities .clist_set:N = \l_semio_viz_tr_probs_clist,
+    kde .tl_set:N = \l_semio_viz_tr_kde_tl,
+    bandwidth .tl_set:N = \l_semio_viz_tr_bandwidth_tl,
+    kernel .tl_set:N = \l_semio_viz_tr_kernel_tl,
+    samples .int_set:N = \l_semio_viz_tr_samples_int,
+    regression .tl_set:N = \l_semio_viz_tr_regression_tl,
+    degree .int_set:N = \l_semio_viz_tr_degree_int,
+  }
+
+% 🧹 Resets every transform key to its documented default.
+\cs_new_protected:Npn \semio_viz_tr_keys_reset: {
+  \tl_clear:N \l_semio_viz_tr_filter_tl
+  \tl_clear:N \l_semio_viz_tr_sort_tl
+  \bool_set_false:N \l_semio_viz_tr_descending_bool
+  \tl_clear:N \l_semio_viz_tr_group_tl
+  \tl_clear:N \l_semio_viz_tr_rollup_tl
+  \tl_clear:N \l_semio_viz_tr_pivot_tl
+  \tl_clear:N \l_semio_viz_tr_fold_tl
+  \tl_clear:N \l_semio_viz_tr_join_tl
+  \tl_clear:N \l_semio_viz_tr_window_tl
+  \tl_clear:N \l_semio_viz_tr_bin_tl
+  \tl_set:Nn \l_semio_viz_tr_thresholds_tl { sturges }
+  \tl_clear:N \l_semio_viz_tr_stack_tl
+  \tl_set:Nn \l_semio_viz_tr_order_tl { none }
+  \tl_set:Nn \l_semio_viz_tr_offset_tl { none }
+  \tl_clear:N \l_semio_viz_tr_normalize_tl
+  \tl_clear:N \l_semio_viz_tr_quantile_tl
+  \clist_set:Nn \l_semio_viz_tr_probs_clist { 0, 0.25, 0.5, 0.75, 1 }
+  \tl_clear:N \l_semio_viz_tr_kde_tl
+  \tl_set:Nn \l_semio_viz_tr_bandwidth_tl { 0 }
+  \tl_set:Nn \l_semio_viz_tr_kernel_tl { gaussian }
+  \int_set:Nn \l_semio_viz_tr_samples_int { 50 }
+  \tl_clear:N \l_semio_viz_tr_regression_tl
+  \int_set:Nn \l_semio_viz_tr_degree_int { 2 }
+}
+
+\seq_new:N \l_semio_viz_tr_args_seq
+
+% ✂️ Splits an operation argument `a:b:c` into three ready-to-use token lists. The value arrives
+% with the catcodes of the calling document, so it is stringified before the colon is looked for.
+\cs_new_protected:Npn \semio_viz_tr_args:N #1 {
+  \str_set:Nx \l_semio_viz_tr_argstr_str { \tl_to_str:N #1 }
+  \seq_set_split:NVV \l_semio_viz_tr_args_seq \c_colon_str \l_semio_viz_tr_argstr_str
+  \tl_set:Nx \l_semio_viz_tr_arga_tl { \seq_item:Nn \l_semio_viz_tr_args_seq { 1 } }
+  \tl_set:Nx \l_semio_viz_tr_argb_tl { \seq_item:Nn \l_semio_viz_tr_args_seq { 2 } }
+  \tl_set:Nx \l_semio_viz_tr_argc_tl { \seq_item:Nn \l_semio_viz_tr_args_seq { 3 } }
+}
+% 🔎 Argument #1 of the most recently split operation argument.
+\cs_new:Npn \semio_viz_tr_arg:n #1 { \seq_item:Nn \l_semio_viz_tr_args_seq {#1} }
+\str_new:N \l_semio_viz_tr_argstr_str
+\tl_new:N \l_semio_viz_tr_arga_tl
+\tl_new:N \l_semio_viz_tr_argb_tl
+\tl_new:N \l_semio_viz_tr_argc_tl
+%endregion 🔖️Keys
+
+%region 🔖️Predicate
+% 🔗 Binds every bare column name in an fp predicate to the value of that column in the row #1.
+% Neighbouring characters are consumed by the match, so the substitution loops until stable.
+\cs_new_protected:Npn \semio_viz_tr_predicate:nnN #1#2#3 {
+  \tl_set:Nn \l_semio_viz_tr_expr_tl { ( #2 ) }
+  \clist_map_inline:Nn \l_semio_viz_tr_cols_clist
+    {
+      \semio_viz_tr_get:nnN {#1} {##1} \l_semio_viz_tr_cell_tl
+      \tl_if_empty:NF \l_semio_viz_tr_cell_tl
+        { \semio_viz_tr_bind:nV {##1} \l_semio_viz_tr_cell_tl }
+    }
+  \fp_set:Nn #3 { \l_semio_viz_tr_expr_tl }
+}
+\tl_new:N \l_semio_viz_tr_expr_tl
+\tl_new:N \l_semio_viz_tr_before_tl
+\bool_new:N \l_semio_viz_tr_changed_bool
+\int_new:N \l_semio_viz_tr_pass_int
+
+% 🔗 Replaces every standalone occurrence of the identifier #1 in the predicate by the value #2.
+\cs_new_protected:Npn \semio_viz_tr_bind:nn #1#2 {
+  \bool_set_true:N \l_semio_viz_tr_changed_bool
+  \int_zero:N \l_semio_viz_tr_pass_int
+  \bool_while_do:nn
+    {
+      \l_semio_viz_tr_changed_bool &&
+      \int_compare_p:nNn { \l_semio_viz_tr_pass_int } < { 16 }
+    }
+    {
+      \tl_set_eq:NN \l_semio_viz_tr_before_tl \l_semio_viz_tr_expr_tl
+      \regex_replace_all:nnN { ([^a-zA-Z0-9_]) #1 ([^a-zA-Z0-9_]) }
+        { \1 (#2) \2 } \l_semio_viz_tr_expr_tl
+      \bool_set:Nn \l_semio_viz_tr_changed_bool
+        { ! \tl_if_eq_p:NN \l_semio_viz_tr_before_tl \l_semio_viz_tr_expr_tl }
+      \int_incr:N \l_semio_viz_tr_pass_int
+    }
+}
+\cs_generate_variant:Nn \semio_viz_tr_bind:nn { nV }
+%endregion 🔖️Predicate
+
+%region 🔖️Reshape
+% 🧹 Keeps only the rows whose predicate evaluates to a non-zero value.
+\cs_new_protected:Npn \semio_viz_tr_filter:n #1 {
+  \clist_set_eq:NN \l_semio_viz_tr_out_cols_clist \l_semio_viz_tr_cols_clist
+  \seq_clear:N \l_semio_viz_tr_out_rows_seq
+  \seq_map_inline:Nn \l_semio_viz_tr_rows_seq
+    {
+      \semio_viz_tr_predicate:nnN {##1} {#1} \l_semio_viz_tr_value_fp
+      \fp_compare:nNnF { \l_semio_viz_tr_value_fp } = { 0 }
+        { \seq_put_right:Nn \l_semio_viz_tr_out_rows_seq {##1} }
+    }
+  \semio_viz_tr_commit:
+}
+\fp_new:N \l_semio_viz_tr_value_fp
+
+% 🔃 Sorts the rows by a column, numerically when both cells are numbers.
+\cs_new_protected:Npn \semio_viz_tr_sort:n #1 {
+  \semio_viz_tr_colindex:nN {#1} \l_semio_viz_tr_sort_col_int
+  \seq_sort:Nn \l_semio_viz_tr_rows_seq
+    {
+      \semio_viz_tr_compare:nn {##1} {##2}
+      \bool_if:NTF \l_semio_viz_tr_after_bool
+        { \sort_return_swapped: } { \sort_return_same: }
+    }
+  \bool_if:NT \l_semio_viz_tr_descending_bool { \seq_reverse:N \l_semio_viz_tr_rows_seq }
+}
+\int_new:N \l_semio_viz_tr_sort_col_int
+\bool_new:N \l_semio_viz_tr_after_bool
+
+% ⚖️ Sets \l_semio_viz_tr_after_bool when the row #1 must sort after the row #2.
+\cs_new_protected:Npn \semio_viz_tr_compare:nn #1#2 {
+  \clist_set:Nn \l_semio_viz_tr_row_clist {#1}
+  \tl_set:Nx \l_semio_viz_tr_left_tl
+    { \clist_item:Nn \l_semio_viz_tr_row_clist { \l_semio_viz_tr_sort_col_int } }
+  \clist_set:Nn \l_semio_viz_tr_row_clist {#2}
+  \tl_set:Nx \l_semio_viz_tr_right_tl
+    { \clist_item:Nn \l_semio_viz_tr_row_clist { \l_semio_viz_tr_sort_col_int } }
+  \regex_match:nVTF { \A [-+]? [0-9]* \.? [0-9]+ ([eE][-+]?[0-9]+)? \Z }
+    \l_semio_viz_tr_left_tl
+    {
+      \bool_set:Nn \l_semio_viz_tr_after_bool
+        {
+          \fp_compare_p:nNn { \l_semio_viz_tr_left_tl } > { \l_semio_viz_tr_right_tl }
+        }
+    }
+    {
+      \bool_set:Nn \l_semio_viz_tr_after_bool
+        {
+          \str_compare_p:eNe { \l_semio_viz_tr_left_tl } > { \l_semio_viz_tr_right_tl }
+        }
+    }
+}
+\tl_new:N \l_semio_viz_tr_left_tl
+\tl_new:N \l_semio_viz_tr_right_tl
+
+% 🧺 Reduces the rows to one row per group, applying an aggregate to a value column.
+\cs_new_protected:Npn \semio_viz_tr_rollup:nnn #1#2#3 {
+  \semio_viz_tr_distinct:nN {#1} \l_semio_viz_tr_groups_seq
+  \clist_set:Nn \l_semio_viz_tr_out_cols_clist { #1, value }
+  \seq_clear:N \l_semio_viz_tr_out_rows_seq
+  \seq_map_inline:Nn \l_semio_viz_tr_groups_seq
+    {
+      \semio_viz_tr_group_values:nnn {#1} {##1} {#3}
+      \semio_viz_tr_aggregate:nN {#2} \l_semio_viz_tr_value_fp
+      \seq_clear:N \l_semio_viz_tr_build_seq
+      \seq_put_right:Nn \l_semio_viz_tr_build_seq {##1}
+      \seq_put_right:Nx \l_semio_viz_tr_build_seq
+        { \fp_to_decimal:n { round( \l_semio_viz_tr_value_fp , 6 ) } }
+      \semio_viz_tr_put:N \l_semio_viz_tr_build_seq
+    }
+  \semio_viz_tr_commit:
+}
+\seq_new:N \l_semio_viz_tr_groups_seq
+\seq_new:N \l_semio_viz_tr_values_seq
+
+% 🧺 Collects the values of column #3 for the rows whose column #1 equals #2.
+\cs_new_protected:Npn \semio_viz_tr_group_values:nnn #1#2#3 {
+  \seq_clear:N \l_semio_viz_tr_values_seq
+  \seq_map_inline:Nn \l_semio_viz_tr_rows_seq
+    {
+      \semio_viz_tr_get:nnN {##1} {#1} \l_semio_viz_tr_cell_tl
+      \str_if_eq:VnT \l_semio_viz_tr_cell_tl {#2}
+        {
+          \semio_viz_tr_get:nnN {##1} {#3} \l_semio_viz_tr_cell_tl
+          \seq_put_right:NV \l_semio_viz_tr_values_seq \l_semio_viz_tr_cell_tl
+        }
+    }
+}
+
+% 📊 Applies the aggregate #1 to \l_semio_viz_tr_values_seq.
+\cs_new_protected:Npn \semio_viz_tr_aggregate:nN #1#2 {
+  \str_case:nnF {#1}
+    {
+      { count } { \fp_set:Nn #2 { \seq_count:N \l_semio_viz_tr_values_seq } }
+      { sum } { \semio_viz_tr_sum:N #2 }
+      { mean }
+        {
+          \semio_viz_tr_sum:N #2
+          \fp_set:Nn #2 { #2 / \seq_count:N \l_semio_viz_tr_values_seq }
+        }
+      { min }
+        {
+          \fp_set:Nn #2 { \seq_item:Nn \l_semio_viz_tr_values_seq { 1 } }
+          \seq_map_inline:Nn \l_semio_viz_tr_values_seq { \fp_set:Nn #2 { min( #2 , ##1 ) } }
+        }
+      { max }
+        {
+          \fp_set:Nn #2 { \seq_item:Nn \l_semio_viz_tr_values_seq { 1 } }
+          \seq_map_inline:Nn \l_semio_viz_tr_values_seq { \fp_set:Nn #2 { max( #2 , ##1 ) } }
+        }
+      { median } { \semio_viz_tr_quantile_of:nN { 0.5 } #2 }
+    }
+    { \msg_error:nnn { semio-viz } { unknown-rollup } {#1} }
+}
+
+% ➕ Sum of \l_semio_viz_tr_values_seq.
+\cs_new_protected:Npn \semio_viz_tr_sum:N #1 {
+  \fp_zero:N #1
+  \seq_map_inline:Nn \l_semio_viz_tr_values_seq { \fp_add:Nn #1 { ##1 } }
+}
+
+% 📈 R-7 quantile of \l_semio_viz_tr_values_seq at probability #1.
+\cs_new_protected:Npn \semio_viz_tr_quantile_of:nN #1#2 {
+  \seq_set_eq:NN \l_semio_viz_tr_sorted_seq \l_semio_viz_tr_values_seq
+  \seq_sort:Nn \l_semio_viz_tr_sorted_seq
+    { \fp_compare:nNnTF {##1} > {##2} { \sort_return_swapped: } { \sort_return_same: } }
+  \int_set:Nn \l_semio_viz_tr_n_int { \seq_count:N \l_semio_viz_tr_sorted_seq }
+  \fp_set:Nn \l_semio_viz_tr_h_fp { ( \l_semio_viz_tr_n_int - 1 ) * (#1) }
+  \int_set:Nn \l_semio_viz_tr_lo_int { \fp_to_int:n { floor( \l_semio_viz_tr_h_fp ) } }
+  \fp_set:Nn #2
+    {
+      \seq_item:Nn \l_semio_viz_tr_sorted_seq { \l_semio_viz_tr_lo_int + 1 }
+        + ( \l_semio_viz_tr_h_fp - \l_semio_viz_tr_lo_int )
+          * ( \seq_item:Nn \l_semio_viz_tr_sorted_seq
+                { \int_min:nn { \l_semio_viz_tr_lo_int + 2 } { \l_semio_viz_tr_n_int } }
+              - \seq_item:Nn \l_semio_viz_tr_sorted_seq { \l_semio_viz_tr_lo_int + 1 } )
+    }
+}
+\seq_new:N \l_semio_viz_tr_sorted_seq
+\int_new:N \l_semio_viz_tr_n_int
+\int_new:N \l_semio_viz_tr_lo_int
+\fp_new:N \l_semio_viz_tr_h_fp
+
+% 🔄 Widens the working table: one row per group value, one column per key value.
+\cs_new_protected:Npn \semio_viz_tr_pivot:nnn #1#2#3 {
+  \tl_set:Nn \l_semio_viz_tr_pivot_value_tl {#3}
+  \semio_viz_tr_distinct:nN {#1} \l_semio_viz_tr_groups_seq
+  \semio_viz_tr_distinct:nN {#2} \l_semio_viz_tr_keys_seq
+  \clist_set:Nx \l_semio_viz_tr_out_cols_clist
+    { #1 , \seq_use:Nn \l_semio_viz_tr_keys_seq { , } }
+  \seq_clear:N \l_semio_viz_tr_out_rows_seq
+  \seq_map_inline:Nn \l_semio_viz_tr_groups_seq
+    {
+      \seq_clear:N \l_semio_viz_tr_build_seq
+      \seq_put_right:Nn \l_semio_viz_tr_build_seq {##1}
+      \seq_map_inline:Nn \l_semio_viz_tr_keys_seq
+        {
+          \semio_viz_tr_lookup:nnnnN {#1} {##1} {#2} {####1} \l_semio_viz_tr_cell_tl
+          \seq_put_right:NV \l_semio_viz_tr_build_seq \l_semio_viz_tr_cell_tl
+        }
+      \semio_viz_tr_put:N \l_semio_viz_tr_build_seq
+    }
+  \semio_viz_tr_commit:
+}
+\seq_new:N \l_semio_viz_tr_keys_seq
+\tl_new:N \l_semio_viz_tr_pivot_value_tl
+
+% 🔎 First value of \l_semio_viz_tr_pivot_value_tl whose columns #1 and #3 equal #2 and #4.
+\cs_new_protected:Npn \semio_viz_tr_lookup:nnnnN #1#2#3#4#5 {
+  \tl_clear:N \l_semio_viz_tr_found_tl
+  \seq_map_inline:Nn \l_semio_viz_tr_rows_seq
+    {
+      \semio_viz_tr_get:nnN {##1} {#1} \l_semio_viz_tr_probe_tl
+      \str_if_eq:VnT \l_semio_viz_tr_probe_tl {#2}
+        {
+          \semio_viz_tr_get:nnN {##1} {#3} \l_semio_viz_tr_probe_tl
+          \str_if_eq:VnT \l_semio_viz_tr_probe_tl {#4}
+            {
+              \tl_if_empty:NT \l_semio_viz_tr_found_tl
+                {
+                  \semio_viz_tr_get:nVN {##1} \l_semio_viz_tr_pivot_value_tl
+                    \l_semio_viz_tr_found_tl
+                }
+            }
+        }
+    }
+  \tl_set_eq:NN #5 \l_semio_viz_tr_found_tl
+}
+\tl_new:N \l_semio_viz_tr_found_tl
+\tl_new:N \l_semio_viz_tr_probe_tl
+\cs_generate_variant:Nn \semio_viz_tr_lookup:nnnnN { nVnnN }
+\tl_new:N \l_semio_viz_tr_series_tl
+
+% 🔽 Narrows several value columns into the pair of columns `key` and `value`.
+\cs_new_protected:Npn \semio_viz_tr_fold:nn #1#2 {
+  \clist_set:Nn \l_semio_viz_tr_out_cols_clist { #1, key, value }
+  \seq_clear:N \l_semio_viz_tr_out_rows_seq
+  \seq_set_split:Nnn \l_semio_viz_tr_keys_seq { ; } {#2}
+  \seq_map_inline:Nn \l_semio_viz_tr_rows_seq
+    {
+      \tl_set:Nn \l_semio_viz_tr_rowtext_tl {##1}
+      \seq_map_inline:Nn \l_semio_viz_tr_keys_seq
+        {
+          \seq_clear:N \l_semio_viz_tr_build_seq
+          \semio_viz_tr_get:VnN \l_semio_viz_tr_rowtext_tl {#1} \l_semio_viz_tr_cell_tl
+          \seq_put_right:NV \l_semio_viz_tr_build_seq \l_semio_viz_tr_cell_tl
+          \seq_put_right:Nn \l_semio_viz_tr_build_seq {####1}
+          \semio_viz_tr_get:VnN \l_semio_viz_tr_rowtext_tl {####1} \l_semio_viz_tr_cell_tl
+          \seq_put_right:NV \l_semio_viz_tr_build_seq \l_semio_viz_tr_cell_tl
+          \semio_viz_tr_put:N \l_semio_viz_tr_build_seq
+        }
+    }
+  \semio_viz_tr_commit:
+}
+\tl_new:N \l_semio_viz_tr_rowtext_tl
+
+% 🔗 Inner join of the working table with a registered table on equal key columns.
+\cs_new_protected:Npn \semio_viz_tr_join:nnn #1#2#3 {
+  \clist_set_eq:Nc \l_semio_viz_tr_other_cols_clist
+    { g_semio_viz_table_ \tl_to_str:n {#1} _cols_clist }
+  \seq_set_eq:Nc \l_semio_viz_tr_other_rows_seq
+    { g_semio_viz_table_ \tl_to_str:n {#1} _rows_seq }
+  \clist_set:Nx \l_semio_viz_tr_out_cols_clist
+    {
+      \clist_use:Nn \l_semio_viz_tr_cols_clist { , } ,
+      \clist_use:Nn \l_semio_viz_tr_other_cols_clist { , }
+    }
+  \seq_clear:N \l_semio_viz_tr_out_rows_seq
+  \clist_set_eq:NN \l_semio_viz_tr_keep_cols_clist \l_semio_viz_tr_cols_clist
+  \seq_map_inline:Nn \l_semio_viz_tr_rows_seq
+    {
+      \semio_viz_tr_get:nnN {##1} {#2} \l_semio_viz_tr_key_tl
+      \tl_set:Nn \l_semio_viz_tr_rowtext_tl {##1}
+      \seq_map_inline:Nn \l_semio_viz_tr_other_rows_seq
+        {
+          \clist_set_eq:NN \l_semio_viz_tr_cols_clist \l_semio_viz_tr_other_cols_clist
+          \semio_viz_tr_get:nnN {####1} {#3} \l_semio_viz_tr_cell_tl
+          \clist_set_eq:NN \l_semio_viz_tr_cols_clist \l_semio_viz_tr_keep_cols_clist
+          \str_if_eq:VVT \l_semio_viz_tr_cell_tl \l_semio_viz_tr_key_tl
+            {
+              \seq_put_right:Nx \l_semio_viz_tr_out_rows_seq
+                { \l_semio_viz_tr_rowtext_tl , \exp_not:n {####1} }
+            }
+        }
+    }
+  \semio_viz_tr_commit:
+}
+\clist_new:N \l_semio_viz_tr_other_cols_clist
+\clist_new:N \l_semio_viz_tr_keep_cols_clist
+\seq_new:N \l_semio_viz_tr_other_rows_seq
+\tl_new:N \l_semio_viz_tr_key_tl
+%endregion 🔖️Reshape
+
+%region 🔖️Window
+% 🪟 Appends a windowed column: moving average, cumulative sum, rank or lag.
+\cs_new_protected:Npn \semio_viz_tr_window:nnn #1#2#3 {
+  \semio_viz_tr_column_values:nN {#2} \l_semio_viz_tr_values_seq
+  \clist_set:Nx \l_semio_viz_tr_out_cols_clist
+    { \clist_use:Nn \l_semio_viz_tr_cols_clist { , } , #1 }
+  \seq_clear:N \l_semio_viz_tr_out_rows_seq
+  \int_set:Nn \l_semio_viz_tr_n_int { \seq_count:N \l_semio_viz_tr_values_seq }
+  \int_zero:N \l_semio_viz_tr_row_int
+  \seq_map_inline:Nn \l_semio_viz_tr_rows_seq
+    {
+      \int_incr:N \l_semio_viz_tr_row_int
+      \semio_viz_tr_window_value:nnN {#1} {#3} \l_semio_viz_tr_value_fp
+      \seq_put_right:Nx \l_semio_viz_tr_out_rows_seq
+        {
+          \exp_not:n {##1} ,
+          { \fp_to_decimal:n { round( \l_semio_viz_tr_value_fp , 6 ) } }
+        }
+    }
+  \semio_viz_tr_commit:
+}
+\int_new:N \l_semio_viz_tr_row_int
+
+% 🧺 Every value of a column of the working table, in row order.
+\cs_new_protected:Npn \semio_viz_tr_column_values:nN #1#2 {
+  \seq_clear:N #2
+  \seq_map_inline:Nn \l_semio_viz_tr_rows_seq
+    {
+      \semio_viz_tr_get:nnN {##1} {#1} \l_semio_viz_tr_cell_tl
+      \seq_put_right:NV #2 \l_semio_viz_tr_cell_tl
+    }
+}
+
+% 🪟 The windowed value at the current row index.
+\cs_new_protected:Npn \semio_viz_tr_window_value:nnN #1#2#3 {
+  \str_case:nnF {#1}
+    {
+      { movingAverage }
+        {
+          \int_set:Nn \l_semio_viz_tr_lo_int
+            { \int_max:nn { 1 } { \l_semio_viz_tr_row_int - (#2) + 1 } }
+          \fp_zero:N #3
+          \int_step_inline:nnn { \l_semio_viz_tr_lo_int } { \l_semio_viz_tr_row_int }
+            { \fp_add:Nn #3 { \seq_item:Nn \l_semio_viz_tr_values_seq { ##1 } } }
+          \fp_set:Nn #3 { #3 / ( \l_semio_viz_tr_row_int - \l_semio_viz_tr_lo_int + 1 ) }
+        }
+      { cumulativeSum }
+        {
+          \fp_zero:N #3
+          \int_step_inline:nn { \l_semio_viz_tr_row_int }
+            { \fp_add:Nn #3 { \seq_item:Nn \l_semio_viz_tr_values_seq { ##1 } } }
+        }
+      { rank }
+        {
+          \fp_set:Nn #3 { 1 }
+          \int_step_inline:nn { \l_semio_viz_tr_n_int }
+            {
+              \fp_compare:nNnT
+                { \seq_item:Nn \l_semio_viz_tr_values_seq { ##1 } }
+                < { \seq_item:Nn \l_semio_viz_tr_values_seq { \l_semio_viz_tr_row_int } }
+                { \fp_add:Nn #3 { 1 } }
+            }
+        }
+      { lag }
+        {
+          \int_compare:nNnTF { \l_semio_viz_tr_row_int - (#2) } < { 1 }
+            { \fp_zero:N #3 }
+            {
+              \fp_set:Nn #3
+                { \seq_item:Nn \l_semio_viz_tr_values_seq { \l_semio_viz_tr_row_int - (#2) } }
+            }
+        }
+    }
+    { \msg_error:nnn { semio-viz } { unknown-window } {#1} }
+}
+%endregion 🔖️Window
+
+%region 🔖️Bin
+\fp_new:N \l_semio_viz_tr_xlo_fp
+\fp_new:N \l_semio_viz_tr_xhi_fp
+\seq_new:N \l_semio_viz_tr_edges_seq
+
+% 🪣 Bins a numeric column into the columns `x0`, `x1` and `count`, following d3-array's bin.
+\cs_new_protected:Npn \semio_viz_tr_bin:n #1 {
+  \semio_viz_tr_column_values:nN {#1} \l_semio_viz_tr_values_seq
+  \int_set:Nn \l_semio_viz_tr_n_int { \seq_count:N \l_semio_viz_tr_values_seq }
+  \fp_set:Nn \l_semio_viz_tr_xlo_fp { \seq_item:Nn \l_semio_viz_tr_values_seq { 1 } }
+  \fp_set_eq:NN \l_semio_viz_tr_xhi_fp \l_semio_viz_tr_xlo_fp
+  \seq_map_inline:Nn \l_semio_viz_tr_values_seq
+    {
+      \fp_set:Nn \l_semio_viz_tr_xlo_fp { min( \l_semio_viz_tr_xlo_fp , ##1 ) }
+      \fp_set:Nn \l_semio_viz_tr_xhi_fp { max( \l_semio_viz_tr_xhi_fp , ##1 ) }
+    }
+  \semio_viz_tr_bin_edges:
+  \clist_set:Nn \l_semio_viz_tr_out_cols_clist { x0, x1, count }
+  \seq_clear:N \l_semio_viz_tr_out_rows_seq
+  \int_step_inline:nn { \seq_count:N \l_semio_viz_tr_edges_seq - 1 }
+    {
+      \int_zero:N \l_semio_viz_tr_count_int
+      \seq_map_inline:Nn \l_semio_viz_tr_values_seq
+        {
+          \fp_compare:nT
+            {
+              \seq_item:Nn \l_semio_viz_tr_edges_seq { ##1 } <= ####1
+            }
+            {
+              \bool_lazy_or:nnT
+                {
+                  \fp_compare_p:nNn { ####1 }
+                    < { \seq_item:Nn \l_semio_viz_tr_edges_seq { ##1 + 1 } }
+                }
+                {
+                  \int_compare_p:nNn { ##1 } = { \seq_count:N \l_semio_viz_tr_edges_seq - 1 }
+                }
+                { \int_incr:N \l_semio_viz_tr_count_int }
+            }
+        }
+      \seq_put_right:Nx \l_semio_viz_tr_out_rows_seq
+        {
+          { \seq_item:Nn \l_semio_viz_tr_edges_seq { ##1 } } ,
+          { \seq_item:Nn \l_semio_viz_tr_edges_seq { ##1 + 1 } } ,
+          { \int_use:N \l_semio_viz_tr_count_int }
+        }
+    }
+  \semio_viz_tr_commit:
+}
+\int_new:N \l_semio_viz_tr_count_int
+
+% 🪜 Builds the bin edges from the `thresholds` key: sturges, count:n, width:w or an explicit list.
+\cs_new_protected:Npn \semio_viz_tr_bin_edges: {
+  \semio_viz_tr_args:N \l_semio_viz_tr_thresholds_tl
+  \str_case:VnF \l_semio_viz_tr_arga_tl
+    {
+      { sturges }
+        {
+          \int_set:Nn \l_semio_viz_tr_bins_int
+            { \fp_to_int:n { ceil( ln( \l_semio_viz_tr_n_int ) / ln(2) ) } + 1 }
+          \semio_viz_tr_bin_ticks:
+        }
+      { count }
+        {
+          \int_set:Nn \l_semio_viz_tr_bins_int { \l_semio_viz_tr_argb_tl }
+          \semio_viz_tr_bin_ticks:
+        }
+      { width }
+        {
+          \seq_clear:N \l_semio_viz_tr_edges_seq
+          \fp_set:Nn \l_semio_viz_tr_step_fp { \l_semio_viz_tr_argb_tl }
+          \fp_set:Nn \l_semio_viz_tr_pos_fp
+            {
+              floor( \l_semio_viz_tr_xlo_fp / \l_semio_viz_tr_step_fp ) * \l_semio_viz_tr_step_fp
+            }
+          \bool_while_do:nn
+            { \fp_compare_p:n { \l_semio_viz_tr_pos_fp <= \l_semio_viz_tr_xhi_fp } }
+            {
+              \seq_put_right:Nx \l_semio_viz_tr_edges_seq
+                { \fp_to_decimal:n { round( \l_semio_viz_tr_pos_fp , 6 ) } }
+              \fp_add:Nn \l_semio_viz_tr_pos_fp { \l_semio_viz_tr_step_fp }
+            }
+          \seq_put_right:Nx \l_semio_viz_tr_edges_seq
+            { \fp_to_decimal:n { round( \l_semio_viz_tr_pos_fp , 6 ) } }
+        }
+    }
+    {
+      \seq_set_split:NnV \l_semio_viz_tr_edges_seq { ; } \l_semio_viz_tr_thresholds_tl
+      \seq_put_left:Nx \l_semio_viz_tr_edges_seq
+        { \fp_to_decimal:n { \l_semio_viz_tr_xlo_fp } }
+      \seq_put_right:Nx \l_semio_viz_tr_edges_seq
+        { \fp_to_decimal:n { \l_semio_viz_tr_xhi_fp } }
+    }
+}
+\int_new:N \l_semio_viz_tr_bins_int
+\fp_new:N \l_semio_viz_tr_step_fp
+\fp_new:N \l_semio_viz_tr_pos_fp
+\fp_new:N \l_semio_viz_tr_max_fp
+
+% 🪜 d3-array's bin edges for a bin count: nice the extent, take ticks, then trim and cap.
+\cs_new_protected:Npn \semio_viz_tr_bin_ticks: {
+  \fp_set_eq:NN \l_semio_viz_tr_max_fp \l_semio_viz_tr_xhi_fp
+  \semio_viz_scale_nice_pair:nnnNN { \l_semio_viz_tr_xlo_fp } { \l_semio_viz_tr_xhi_fp }
+    { \l_semio_viz_tr_bins_int } \l_semio_viz_tr_xlo_fp \l_semio_viz_tr_xhi_fp
+  \semio_viz_scale_tick_values:nnnN { \l_semio_viz_tr_xlo_fp } { \l_semio_viz_tr_xhi_fp }
+    { \l_semio_viz_tr_bins_int } \l_semio_viz_tr_edges_seq
+  \fp_compare:nT
+    { \seq_item:Nn \l_semio_viz_tr_edges_seq { -1 } >= \l_semio_viz_tr_xhi_fp }
+    {
+      \fp_compare:nTF { \l_semio_viz_tr_max_fp >= \l_semio_viz_tr_xhi_fp }
+        {
+          \semio_viz_scale_tick_increment:nnnN { \l_semio_viz_tr_xlo_fp }
+            { \l_semio_viz_tr_xhi_fp } { \l_semio_viz_tr_bins_int } \l_semio_viz_tr_step_fp
+          \fp_compare:nNnTF { \l_semio_viz_tr_step_fp } > { 0 }
+            {
+              \fp_set:Nn \l_semio_viz_tr_xhi_fp
+                {
+                  ( floor( \l_semio_viz_tr_xhi_fp / \l_semio_viz_tr_step_fp ) + 1 )
+                    * \l_semio_viz_tr_step_fp
+                }
+            }
+            {
+              \fp_compare:nNnT { \l_semio_viz_tr_step_fp } < { 0 }
+                {
+                  \fp_set:Nn \l_semio_viz_tr_xhi_fp
+                    {
+                      ( ceil( \l_semio_viz_tr_xhi_fp * -\l_semio_viz_tr_step_fp ) + 1 )
+                        / -\l_semio_viz_tr_step_fp
+                    }
+                }
+            }
+        }
+        { \seq_pop_right:NN \l_semio_viz_tr_edges_seq \l_tmpa_tl }
+    }
+  \bool_while_do:nn
+    {
+      ! \seq_if_empty_p:N \l_semio_viz_tr_edges_seq &&
+      \fp_compare_p:n
+        { \seq_item:Nn \l_semio_viz_tr_edges_seq { 1 } <= \l_semio_viz_tr_xlo_fp }
+    }
+    { \seq_pop_left:NN \l_semio_viz_tr_edges_seq \l_tmpa_tl }
+  \bool_while_do:nn
+    {
+      ! \seq_if_empty_p:N \l_semio_viz_tr_edges_seq &&
+      \fp_compare_p:n
+        { \seq_item:Nn \l_semio_viz_tr_edges_seq { -1 } > \l_semio_viz_tr_xhi_fp }
+    }
+    { \seq_pop_right:NN \l_semio_viz_tr_edges_seq \l_tmpa_tl }
+  \seq_put_left:Nx \l_semio_viz_tr_edges_seq { \fp_to_decimal:n { \l_semio_viz_tr_xlo_fp } }
+  \seq_put_right:Nx \l_semio_viz_tr_edges_seq { \fp_to_decimal:n { \l_semio_viz_tr_xhi_fp } }
+}
+%endregion 🔖️Bin
+
+%region 🔖️Stack
+\seq_new:N \l_semio_viz_tr_series_seq
+\seq_new:N \l_semio_viz_tr_xs_seq
+\seq_new:N \l_semio_viz_tr_order_seq
+\fp_new:N \l_semio_viz_tr_ylo_fp
+\fp_new:N \l_semio_viz_tr_yhi_fp
+
+% 🥞 Stacks a long-form table into the columns `x`, `series`, `y0` and `y1`.
+\cs_new_protected:Npn \semio_viz_tr_stack:nnn #1#2#3 {
+  \semio_viz_tr_distinct:nN {#1} \l_semio_viz_tr_xs_seq
+  \semio_viz_tr_distinct:nN {#2} \l_semio_viz_tr_series_seq
+  \tl_set:Nn \l_semio_viz_tr_pivot_value_tl {#3}
+  \semio_viz_tr_stack_matrix:nn {#1} {#2}
+  \semio_viz_tr_stack_order:
+  \semio_viz_tr_stack_offset:
+  \clist_set:Nn \l_semio_viz_tr_out_cols_clist { x, series, y0, y1 }
+  \seq_clear:N \l_semio_viz_tr_out_rows_seq
+  \int_step_inline:nn { \seq_count:N \l_semio_viz_tr_order_seq }
+    {
+      \int_step_inline:nn { \seq_count:N \l_semio_viz_tr_xs_seq }
+        {
+          \seq_put_right:Nx \l_semio_viz_tr_out_rows_seq
+            {
+              { \seq_item:Nn \l_semio_viz_tr_xs_seq { ####1 } } ,
+              {
+                \seq_item:Nn \l_semio_viz_tr_series_seq
+                  { \seq_item:Nn \l_semio_viz_tr_order_seq { ##1 } }
+              } ,
+              { \semio_viz_tr_y:nnn { 0 } { ##1 } { ####1 } } ,
+              { \semio_viz_tr_y:nnn { 1 } { ##1 } { ####1 } }
+            }
+        }
+    }
+  \semio_viz_tr_commit:
+}
+
+% 🧮 Reads the value matrix cell of the series at order position #2 and x position #3.
+\cs_new:Npn \semio_viz_tr_v:nn #1#2
+  { \seq_item:cn { l_semio_viz_tr_col_ \int_eval:n {#1} _seq } {#2} }
+% 🧮 Reads the stacked bound `#1` (0 or 1) of the series at order position #2 and x position #3.
+\cs_new:Npn \semio_viz_tr_y:nnn #1#2#3
+  { \seq_item:cn { l_semio_viz_tr_y #1 _ \int_eval:n {#2} _seq } {#3} }
+
+% 🧱 Materialises the value matrix: one sequence per series, indexed by x position.
+\cs_new_protected:Npn \semio_viz_tr_stack_matrix:nn #1#2 {
+  \int_step_inline:nn { \seq_count:N \l_semio_viz_tr_series_seq }
+    {
+      \seq_if_exist:cF { l_semio_viz_tr_col_ ##1 _seq }
+        { \seq_new:c { l_semio_viz_tr_col_ ##1 _seq } }
+      \seq_clear:c { l_semio_viz_tr_col_ ##1 _seq }
+      \tl_set:Nx \l_semio_viz_tr_series_tl { \seq_item:Nn \l_semio_viz_tr_series_seq { ##1 } }
+      \seq_map_inline:Nn \l_semio_viz_tr_xs_seq
+        {
+          \semio_viz_tr_lookup:nVnnN {#2} \l_semio_viz_tr_series_tl {#1} {####1}
+            \l_semio_viz_tr_cell_tl
+          \tl_if_empty:NT \l_semio_viz_tr_cell_tl { \tl_set:Nn \l_semio_viz_tr_cell_tl { 0 } }
+          \seq_put_right:cV { l_semio_viz_tr_col_ ##1 _seq } \l_semio_viz_tr_cell_tl
+        }
+    }
+}
+
+% 🔢 Series order: none, reverse, ascending, descending, appearance or inside-out.
+\cs_new_protected:Npn \semio_viz_tr_stack_order: {
+  \seq_clear:N \l_semio_viz_tr_order_seq
+  \int_step_inline:nn { \seq_count:N \l_semio_viz_tr_series_seq }
+    { \seq_put_right:Nn \l_semio_viz_tr_order_seq {##1} }
+  \str_case:VnF \l_semio_viz_tr_order_tl
+    {
+      { reverse } { \seq_reverse:N \l_semio_viz_tr_order_seq }
+      { ascending } { \semio_viz_tr_order_sums: }
+      { descending } { \semio_viz_tr_order_sums: \seq_reverse:N \l_semio_viz_tr_order_seq }
+      { appearance } { \semio_viz_tr_order_appearance: }
+      { inside-out } { \semio_viz_tr_order_inside_out: }
+    }
+    { }
+}
+
+% ➕ Orders the series by their total, ascending.
+\cs_new_protected:Npn \semio_viz_tr_order_sums: {
+  \seq_sort:Nn \l_semio_viz_tr_order_seq
+    {
+      \fp_compare:nNnTF { \semio_viz_tr_series_sum:n {##1} } > { \semio_viz_tr_series_sum:n {##2} }
+        { \sort_return_swapped: } { \sort_return_same: }
+    }
+}
+% ➕ Total of the series at order position #1 over every x position.
+\cs_new:Npn \semio_viz_tr_series_sum:n #1
+  { \fp_eval:n { \seq_use:cn { l_semio_viz_tr_col_ \int_eval:n {#1} _seq } { + } } }
+
+% 🥇 Orders the series by the x position of their largest value.
+\cs_new_protected:Npn \semio_viz_tr_order_appearance: {
+  \seq_sort:Nn \l_semio_viz_tr_order_seq
+    {
+      \int_compare:nNnTF { \semio_viz_tr_series_peak:n {##1} }
+        > { \semio_viz_tr_series_peak:n {##2} }
+        { \sort_return_swapped: } { \sort_return_same: }
+    }
+}
+\int_new:N \l_semio_viz_tr_peak_int
+\fp_new:N \l_semio_viz_tr_peak_fp
+% 🥇 The x position at which the series at order position #1 is largest.
+\cs_new:Npn \semio_viz_tr_series_peak:n #1
+  { \semio_viz_tr_series_peak_do:n {#1} \int_use:N \l_semio_viz_tr_peak_int }
+% 🔎 The scan behind `\semio_viz_tr_series_peak:n`; it leaves its answer in the peak integer.
+\cs_new_protected:Npn \semio_viz_tr_series_peak_do:n #1 {
+  \int_set:Nn \l_semio_viz_tr_peak_int { 1 }
+  \fp_set:Nn \l_semio_viz_tr_peak_fp { \semio_viz_tr_v:nn {#1} { 1 } }
+  \int_step_inline:nn { \seq_count:N \l_semio_viz_tr_xs_seq }
+    {
+      \fp_compare:nNnT { \semio_viz_tr_v:nn {#1} {##1} } > { \l_semio_viz_tr_peak_fp }
+        {
+          \fp_set:Nn \l_semio_viz_tr_peak_fp { \semio_viz_tr_v:nn {#1} {##1} }
+          \int_set:Nn \l_semio_viz_tr_peak_int {##1}
+        }
+    }
+}
+
+% 🌀 d3's inside-out order: appearance order, then alternately stacked from the middle outwards.
+\cs_new_protected:Npn \semio_viz_tr_order_inside_out: {
+  \semio_viz_tr_order_appearance:
+  \seq_clear:N \l_semio_viz_tr_top_seq
+  \seq_clear:N \l_semio_viz_tr_bottom_seq
+  \fp_zero:N \l_semio_viz_tr_top_fp
+  \fp_zero:N \l_semio_viz_tr_bottom_fp
+  \seq_map_inline:Nn \l_semio_viz_tr_order_seq
+    {
+      \fp_compare:nNnTF { \l_semio_viz_tr_top_fp } < { \l_semio_viz_tr_bottom_fp }
+        {
+          \fp_add:Nn \l_semio_viz_tr_top_fp { \semio_viz_tr_series_sum:n {##1} }
+          \seq_put_right:Nn \l_semio_viz_tr_top_seq {##1}
+        }
+        {
+          \fp_add:Nn \l_semio_viz_tr_bottom_fp { \semio_viz_tr_series_sum:n {##1} }
+          \seq_put_right:Nn \l_semio_viz_tr_bottom_seq {##1}
+        }
+    }
+  \seq_reverse:N \l_semio_viz_tr_bottom_seq
+  \seq_set_eq:NN \l_semio_viz_tr_order_seq \l_semio_viz_tr_bottom_seq
+  \seq_concat:NNN \l_semio_viz_tr_order_seq \l_semio_viz_tr_order_seq \l_semio_viz_tr_top_seq
+}
+\seq_new:N \l_semio_viz_tr_top_seq
+\seq_new:N \l_semio_viz_tr_bottom_seq
+\fp_new:N \l_semio_viz_tr_top_fp
+\fp_new:N \l_semio_viz_tr_bottom_fp
+
+% 📐 Baselines: none, expand, diverging, silhouette or wiggle, exactly as d3-shape.
+\cs_new_protected:Npn \semio_viz_tr_stack_offset: {
+  \int_step_inline:nn { \seq_count:N \l_semio_viz_tr_order_seq }
+    {
+      \seq_if_exist:cF { l_semio_viz_tr_y0_ ##1 _seq }
+        { \seq_new:c { l_semio_viz_tr_y0_ ##1 _seq } }
+      \seq_if_exist:cF { l_semio_viz_tr_y1_ ##1 _seq }
+        { \seq_new:c { l_semio_viz_tr_y1_ ##1 _seq } }
+      \seq_clear:c { l_semio_viz_tr_y0_ ##1 _seq }
+      \seq_clear:c { l_semio_viz_tr_y1_ ##1 _seq }
+    }
+  \int_step_inline:nn { \seq_count:N \l_semio_viz_tr_xs_seq }
+    { \semio_viz_tr_stack_column:n {##1} }
+  \str_case:VnF \l_semio_viz_tr_offset_tl
+    {
+      { expand } { \semio_viz_tr_offset_expand: }
+      { silhouette } { \semio_viz_tr_offset_silhouette: }
+      { wiggle } { \semio_viz_tr_offset_wiggle: }
+    }
+    { }
+}
+
+% 🧮 Cumulates one x position of the stack, splitting signs when the offset is `diverging`.
+\cs_new_protected:Npn \semio_viz_tr_stack_column:n #1 {
+  \fp_zero:N \l_semio_viz_tr_yhi_fp
+  \fp_zero:N \l_semio_viz_tr_bottom_fp
+  \int_step_inline:nn { \seq_count:N \l_semio_viz_tr_order_seq }
+    {
+      \fp_set:Nn \l_semio_viz_tr_value_fp
+        { \semio_viz_tr_v:nn { \seq_item:Nn \l_semio_viz_tr_order_seq { ##1 } } {#1} }
+      \bool_lazy_and:nnTF
+        { \str_if_eq_p:Vn \l_semio_viz_tr_offset_tl { diverging } }
+        { \fp_compare_p:nNn { \l_semio_viz_tr_value_fp } < { 0 } }
+        {
+          \fp_set_eq:NN \l_semio_viz_tr_ylo_fp \l_semio_viz_tr_bottom_fp
+          \fp_add:Nn \l_semio_viz_tr_bottom_fp { \l_semio_viz_tr_value_fp }
+          \seq_put_right:cx { l_semio_viz_tr_y0_ ##1 _seq }
+            { \fp_to_decimal:n { round( \l_semio_viz_tr_bottom_fp , 6 ) } }
+          \seq_put_right:cx { l_semio_viz_tr_y1_ ##1 _seq }
+            { \fp_to_decimal:n { round( \l_semio_viz_tr_ylo_fp , 6 ) } }
+        }
+        {
+          \fp_set_eq:NN \l_semio_viz_tr_ylo_fp \l_semio_viz_tr_yhi_fp
+          \fp_add:Nn \l_semio_viz_tr_yhi_fp { \l_semio_viz_tr_value_fp }
+          \seq_put_right:cx { l_semio_viz_tr_y0_ ##1 _seq }
+            { \fp_to_decimal:n { round( \l_semio_viz_tr_ylo_fp , 6 ) } }
+          \seq_put_right:cx { l_semio_viz_tr_y1_ ##1 _seq }
+            { \fp_to_decimal:n { round( \l_semio_viz_tr_yhi_fp , 6 ) } }
+        }
+    }
+}
+
+% 📏 Rescales every column to the unit interval.
+\cs_new_protected:Npn \semio_viz_tr_offset_expand: {
+  \int_step_inline:nn { \seq_count:N \l_semio_viz_tr_xs_seq }
+    {
+      \fp_set:Nn \l_semio_viz_tr_value_fp
+        {
+          \seq_item:cn
+            { l_semio_viz_tr_y1_ \int_eval:n { \seq_count:N \l_semio_viz_tr_order_seq } _seq }
+            {##1}
+        }
+      \fp_compare:nNnF { \l_semio_viz_tr_value_fp } = { 0 }
+        { \semio_viz_tr_scale_column:nn {##1} { \l_semio_viz_tr_value_fp } }
+    }
+}
+
+% ➗ Divides every stacked value of one x position by #2.
+\cs_new_protected:Npn \semio_viz_tr_scale_column:nn #1#2 {
+  \int_step_inline:nn { \seq_count:N \l_semio_viz_tr_order_seq }
+    {
+      \semio_viz_tr_edit_entry:nnnn { y0 } {##1} {#1} { / (#2) }
+      \semio_viz_tr_edit_entry:nnnn { y1 } {##1} {#1} { / (#2) }
+    }
+}
+
+% ⚖️ Centres every column on the horizontal axis.
+\cs_new_protected:Npn \semio_viz_tr_offset_silhouette: {
+  \int_step_inline:nn { \seq_count:N \l_semio_viz_tr_xs_seq }
+    {
+      \fp_set:Nn \l_semio_viz_tr_value_fp
+        {
+          -0.5 * \seq_item:cn
+            { l_semio_viz_tr_y1_ \int_eval:n { \seq_count:N \l_semio_viz_tr_order_seq } _seq }
+            {##1}
+        }
+      \semio_viz_tr_shift_column:nn {##1} { \l_semio_viz_tr_value_fp }
+    }
+}
+
+% 〰️ The streamgraph baseline: the wiggle offset of Byron and Wattenberg.
+\cs_new_protected:Npn \semio_viz_tr_offset_wiggle: {
+  \fp_zero:N \l_semio_viz_tr_shift_fp
+  \semio_viz_tr_shift_column:nn { 1 } { 0 }
+  \int_step_inline:nnn { 2 } { \seq_count:N \l_semio_viz_tr_xs_seq }
+    {
+      \fp_zero:N \l_semio_viz_tr_num_fp
+      \fp_zero:N \l_semio_viz_tr_den_fp
+      \int_step_inline:nn { \seq_count:N \l_semio_viz_tr_order_seq }
+        {
+          \fp_set:Nn \l_semio_viz_tr_delta_fp
+            {
+              \semio_viz_tr_v:nn { \seq_item:Nn \l_semio_viz_tr_order_seq { ####1 } } { ##1 }
+                - \semio_viz_tr_v:nn { \seq_item:Nn \l_semio_viz_tr_order_seq { ####1 } }
+                    { ##1 - 1 }
+            }
+          \fp_add:Nn \l_semio_viz_tr_num_fp
+            {
+              ( \semio_viz_tr_v:nn { \seq_item:Nn \l_semio_viz_tr_order_seq { ####1 } } { ##1 }
+                * 0.5 + \l_semio_viz_tr_den_fp ) * \l_semio_viz_tr_delta_fp
+            }
+          \fp_add:Nn \l_semio_viz_tr_den_fp
+            {
+              \semio_viz_tr_v:nn { \seq_item:Nn \l_semio_viz_tr_order_seq { ####1 } } { ##1 }
+            }
+        }
+      \fp_compare:nNnF { \l_semio_viz_tr_den_fp } = { 0 }
+        {
+          \fp_sub:Nn \l_semio_viz_tr_shift_fp
+            { \l_semio_viz_tr_num_fp / \l_semio_viz_tr_den_fp }
+        }
+      \semio_viz_tr_shift_column:nn { ##1 } { \l_semio_viz_tr_shift_fp }
+    }
+}
+\fp_new:N \l_semio_viz_tr_shift_fp
+\fp_new:N \l_semio_viz_tr_num_fp
+\fp_new:N \l_semio_viz_tr_den_fp
+\fp_new:N \l_semio_viz_tr_delta_fp
+
+% ↕️ Adds #2 to every stacked value of the x position #1.
+\cs_new_protected:Npn \semio_viz_tr_shift_column:nn #1#2 {
+  \int_step_inline:nn { \seq_count:N \l_semio_viz_tr_order_seq }
+    {
+      \semio_viz_tr_edit_entry:nnnn { y0 } {##1} {#1} { + (#2) }
+      \semio_viz_tr_edit_entry:nnnn { y1 } {##1} {#1} { + (#2) }
+    }
+}
+
+% ✏️ Rewrites entry #3 of the stacked column (#1, #2) by appending the fp fragment #4 to its value.
+\cs_new_protected:Npn \semio_viz_tr_edit_entry:nnnn #1#2#3#4 {
+  \seq_set_eq:Nc \l_semio_viz_tr_entry_seq { l_semio_viz_tr_ #1 _ \int_eval:n {#2} _seq }
+  \seq_clear:N \l_semio_viz_tr_entry_out_seq
+  \int_zero:N \l_semio_viz_tr_entry_int
+  \seq_map_inline:Nn \l_semio_viz_tr_entry_seq
+    {
+      \int_incr:N \l_semio_viz_tr_entry_int
+      \int_compare:nNnTF { \l_semio_viz_tr_entry_int } = {#3}
+        {
+          \seq_put_right:Nx \l_semio_viz_tr_entry_out_seq
+            { \fp_to_decimal:n { round( ( ##1 ) #4 , 6 ) } }
+        }
+        { \seq_put_right:Nn \l_semio_viz_tr_entry_out_seq {##1} }
+    }
+  \seq_set_eq:cN { l_semio_viz_tr_ #1 _ \int_eval:n {#2} _seq } \l_semio_viz_tr_entry_out_seq
+}
+\seq_new:N \l_semio_viz_tr_entry_seq
+\seq_new:N \l_semio_viz_tr_entry_out_seq
+\int_new:N \l_semio_viz_tr_entry_int
+%endregion 🔖️Stack
+
+%region 🔖️Statistics
+% 📏 Divides a column by the sum of its values.
+\cs_new_protected:Npn \semio_viz_tr_normalize:n #1 {
+  \semio_viz_tr_column_values:nN {#1} \l_semio_viz_tr_values_seq
+  \semio_viz_tr_sum:N \l_semio_viz_tr_total_fp
+  \semio_viz_tr_colindex:nN {#1} \l_semio_viz_tr_col_int
+  \clist_set_eq:NN \l_semio_viz_tr_out_cols_clist \l_semio_viz_tr_cols_clist
+  \seq_clear:N \l_semio_viz_tr_out_rows_seq
+  \seq_map_inline:Nn \l_semio_viz_tr_rows_seq
+    {
+      \clist_set:Nn \l_semio_viz_tr_row_clist {##1}
+      \seq_clear:N \l_semio_viz_tr_build_seq
+      \int_zero:N \l_semio_viz_tr_entry_int
+      \clist_map_inline:Nn \l_semio_viz_tr_row_clist
+        {
+          \int_incr:N \l_semio_viz_tr_entry_int
+          \int_compare:nNnTF { \l_semio_viz_tr_entry_int } = { \l_semio_viz_tr_col_int }
+            {
+              \seq_put_right:Nx \l_semio_viz_tr_build_seq
+                {
+                  \fp_to_decimal:n
+                    { round( (####1) / \l_semio_viz_tr_total_fp , 6 ) }
+                }
+            }
+            { \seq_put_right:Nn \l_semio_viz_tr_build_seq {####1} }
+        }
+      \semio_viz_tr_put:N \l_semio_viz_tr_build_seq
+    }
+  \semio_viz_tr_commit:
+}
+\fp_new:N \l_semio_viz_tr_total_fp
+
+% 📈 Reduces a column to the columns `p` and `value` at the configured probabilities.
+\cs_new_protected:Npn \semio_viz_tr_quantile:n #1 {
+  \semio_viz_tr_column_values:nN {#1} \l_semio_viz_tr_values_seq
+  \clist_set:Nn \l_semio_viz_tr_out_cols_clist { p, value }
+  \seq_clear:N \l_semio_viz_tr_out_rows_seq
+  \clist_map_inline:Nn \l_semio_viz_tr_probs_clist
+    {
+      \semio_viz_tr_quantile_of:nN {##1} \l_semio_viz_tr_value_fp
+      \seq_put_right:Nx \l_semio_viz_tr_out_rows_seq
+        {
+          {##1} , { \fp_to_decimal:n { round( \l_semio_viz_tr_value_fp , 6 ) } }
+        }
+    }
+  \semio_viz_tr_commit:
+}
+
+% 🔔 Kernel density estimate of a column into the columns `x` and `density`.
+\cs_new_protected:Npn \semio_viz_tr_kde:n #1 {
+  \semio_viz_tr_column_values:nN {#1} \l_semio_viz_tr_values_seq
+  \int_set:Nn \l_semio_viz_tr_n_int { \seq_count:N \l_semio_viz_tr_values_seq }
+  \fp_set:Nn \l_semio_viz_tr_xlo_fp { \seq_item:Nn \l_semio_viz_tr_values_seq { 1 } }
+  \fp_set_eq:NN \l_semio_viz_tr_xhi_fp \l_semio_viz_tr_xlo_fp
+  \seq_map_inline:Nn \l_semio_viz_tr_values_seq
+    {
+      \fp_set:Nn \l_semio_viz_tr_xlo_fp { min( \l_semio_viz_tr_xlo_fp , ##1 ) }
+      \fp_set:Nn \l_semio_viz_tr_xhi_fp { max( \l_semio_viz_tr_xhi_fp , ##1 ) }
+    }
+  \semio_viz_tr_bandwidth:
+  \clist_set:Nn \l_semio_viz_tr_out_cols_clist { x, density }
+  \seq_clear:N \l_semio_viz_tr_out_rows_seq
+  \int_step_inline:nn { \l_semio_viz_tr_samples_int }
+    {
+      \fp_set:Nn \l_semio_viz_tr_pos_fp
+        {
+          \l_semio_viz_tr_xlo_fp
+            + ( ##1 - 1 ) / ( \l_semio_viz_tr_samples_int - 1 )
+              * ( \l_semio_viz_tr_xhi_fp - \l_semio_viz_tr_xlo_fp )
+        }
+      \fp_zero:N \l_semio_viz_tr_value_fp
+      \seq_map_inline:Nn \l_semio_viz_tr_values_seq
+        {
+          \fp_add:Nn \l_semio_viz_tr_value_fp
+            {
+              \semio_viz_tr_kernel:n
+                { ( \l_semio_viz_tr_pos_fp - (####1) ) / \l_semio_viz_tr_h_fp }
+            }
+        }
+      \fp_set:Nn \l_semio_viz_tr_value_fp
+        {
+          \l_semio_viz_tr_value_fp / ( \l_semio_viz_tr_n_int * \l_semio_viz_tr_h_fp )
+        }
+      \seq_put_right:Nx \l_semio_viz_tr_out_rows_seq
+        {
+          { \fp_to_decimal:n { round( \l_semio_viz_tr_pos_fp , 6 ) } } ,
+          { \fp_to_decimal:n { round( \l_semio_viz_tr_value_fp , 6 ) } }
+        }
+    }
+  \semio_viz_tr_commit:
+}
+
+% 📐 Silverman's rule of thumb when no explicit bandwidth is given.
+\cs_new_protected:Npn \semio_viz_tr_bandwidth: {
+  \fp_set:Nn \l_semio_viz_tr_h_fp { \l_semio_viz_tr_bandwidth_tl }
+  \fp_compare:nNnT { \l_semio_viz_tr_h_fp } = { 0 }
+    {
+      \semio_viz_tr_sum:N \l_semio_viz_tr_total_fp
+      \fp_set:Nn \l_semio_viz_tr_mean_fp
+        { \l_semio_viz_tr_total_fp / \l_semio_viz_tr_n_int }
+      \fp_zero:N \l_semio_viz_tr_var_fp
+      \seq_map_inline:Nn \l_semio_viz_tr_values_seq
+        {
+          \fp_add:Nn \l_semio_viz_tr_var_fp
+            { ( ##1 - \l_semio_viz_tr_mean_fp ) ** 2 }
+        }
+      \fp_set:Nn \l_semio_viz_tr_var_fp
+        { sqrt( \l_semio_viz_tr_var_fp / ( \l_semio_viz_tr_n_int - 1 ) ) }
+      \fp_set:Nn \l_semio_viz_tr_h_fp
+        {
+          1.06 * \l_semio_viz_tr_var_fp * \l_semio_viz_tr_n_int ** ( -1 / 5 )
+        }
+    }
+}
+\fp_new:N \l_semio_viz_tr_mean_fp
+\fp_new:N \l_semio_viz_tr_var_fp
+
+% 🔔 The kernel selected by the `kernel` key, evaluated at #1.
+\cs_new:Npn \semio_viz_tr_kernel:n #1
+  {
+    ( \str_if_eq:VnTF \l_semio_viz_tr_kernel_tl { epanechnikov }
+      { ( abs(#1) < 1 ? 0.75 * ( 1 - (#1) * (#1) ) : 0 ) }
+      { exp( -0.5 * (#1) * (#1) ) / sqrt( 2 * pi ) } )
+  }
+%endregion 🔖️Statistics
+
+%region 🔖️Regression
+\fp_new:N \l_semio_viz_tr_sx_fp
+\fp_new:N \l_semio_viz_tr_sy_fp
+\fp_new:N \l_semio_viz_tr_sxy_fp
+\fp_new:N \l_semio_viz_tr_sxx_fp
+\seq_new:N \l_semio_viz_tr_xv_seq
+\seq_new:N \l_semio_viz_tr_yv_seq
+
+% 📉 Least-squares fits: linear, polynomial, exponential, logarithmic and power laws.
+% The result table has the columns `term` and `coefficient`; `a` is the intercept and
+% `b`, `c`, … the higher terms, matching d3-regression's coefficient order.
+\cs_new_protected:Npn \semio_viz_tr_regression:nnn #1#2#3 {
+  \semio_viz_tr_column_values:nN {#2} \l_semio_viz_tr_xv_seq
+  \semio_viz_tr_column_values:nN {#3} \l_semio_viz_tr_yv_seq
+  \int_set:Nn \l_semio_viz_tr_n_int { \seq_count:N \l_semio_viz_tr_xv_seq }
+  \clist_set:Nn \l_semio_viz_tr_out_cols_clist { term, coefficient }
+  \seq_clear:N \l_semio_viz_tr_out_rows_seq
+  \str_case:nnF {#1}
+    {
+      { linear } { \semio_viz_tr_ols:nn { X } { Y } }
+      { log } { \semio_viz_tr_ols:nn { L } { Y } }
+      { pow } { \semio_viz_tr_ols:nn { L } { M } \semio_viz_tr_exp_intercept: }
+      { exp } { \semio_viz_tr_regression_exp: }
+      { poly } { \semio_viz_tr_regression_poly: }
+    }
+    { \msg_error:nnn { semio-viz } { unknown-regression } {#1} }
+  \semio_viz_tr_commit:
+}
+
+% 🧮 Transformed coordinate of the sample #2: X the raw x, L its logarithm, Y the raw y, M its logarithm.
+\cs_new:Npn \semio_viz_tr_tx:nn #1#2
+  {
+    \str_case:nn {#1}
+      {
+        { X } { \seq_item:Nn \l_semio_viz_tr_xv_seq {#2} }
+        { L } { ln( \seq_item:Nn \l_semio_viz_tr_xv_seq {#2} ) }
+        { Y } { \seq_item:Nn \l_semio_viz_tr_yv_seq {#2} }
+        { M } { ln( \seq_item:Nn \l_semio_viz_tr_yv_seq {#2} ) }
+      }
+  }
+
+% 📉 Ordinary least squares on the transformed coordinates #1 and #2.
+\cs_new_protected:Npn \semio_viz_tr_ols:nn #1#2 {
+  \fp_zero:N \l_semio_viz_tr_sx_fp
+  \fp_zero:N \l_semio_viz_tr_sy_fp
+  \fp_zero:N \l_semio_viz_tr_sxy_fp
+  \fp_zero:N \l_semio_viz_tr_sxx_fp
+  \int_step_inline:nn { \l_semio_viz_tr_n_int }
+    {
+      \fp_add:Nn \l_semio_viz_tr_sx_fp { \semio_viz_tr_tx:nn {#1} {##1} }
+      \fp_add:Nn \l_semio_viz_tr_sy_fp { \semio_viz_tr_tx:nn {#2} {##1} }
+      \fp_add:Nn \l_semio_viz_tr_sxy_fp
+        { \semio_viz_tr_tx:nn {#1} {##1} * \semio_viz_tr_tx:nn {#2} {##1} }
+      \fp_add:Nn \l_semio_viz_tr_sxx_fp
+        { \semio_viz_tr_tx:nn {#1} {##1} ** 2 }
+    }
+  \fp_set:Nn \l_semio_viz_tr_slope_fp
+    {
+      ( \l_semio_viz_tr_n_int * \l_semio_viz_tr_sxy_fp
+        - \l_semio_viz_tr_sx_fp * \l_semio_viz_tr_sy_fp )
+        / ( \l_semio_viz_tr_n_int * \l_semio_viz_tr_sxx_fp - \l_semio_viz_tr_sx_fp ** 2 )
+    }
+  \fp_set:Nn \l_semio_viz_tr_intercept_fp
+    {
+      ( \l_semio_viz_tr_sy_fp - \l_semio_viz_tr_slope_fp * \l_semio_viz_tr_sx_fp )
+        / \l_semio_viz_tr_n_int
+    }
+  \semio_viz_tr_coefficients:
+}
+\fp_new:N \l_semio_viz_tr_slope_fp
+\fp_new:N \l_semio_viz_tr_intercept_fp
+
+% 📤 Emits the intercept and the slope as the rows `a` and `b`.
+\cs_new_protected:Npn \semio_viz_tr_coefficients: {
+  \seq_put_right:Nx \l_semio_viz_tr_out_rows_seq
+    { {a} , { \fp_to_decimal:n { round( \l_semio_viz_tr_intercept_fp , 6 ) } } }
+  \seq_put_right:Nx \l_semio_viz_tr_out_rows_seq
+    { {b} , { \fp_to_decimal:n { round( \l_semio_viz_tr_slope_fp , 6 ) } } }
+}
+
+% 🔁 Exponentiates the intercept of a fit performed in logarithmic space.
+\cs_new_protected:Npn \semio_viz_tr_exp_intercept: {
+  \seq_clear:N \l_semio_viz_tr_out_rows_seq
+  \fp_set:Nn \l_semio_viz_tr_intercept_fp { exp( \l_semio_viz_tr_intercept_fp ) }
+  \semio_viz_tr_coefficients:
+}
+
+% 📉 d3-regression's weighted exponential fit y = a e^{bx}.
+\cs_new_protected:Npn \semio_viz_tr_regression_exp: {
+  \fp_zero:N \l_semio_viz_tr_sy_fp
+  \fp_zero:N \l_semio_viz_tr_syl_fp
+  \fp_zero:N \l_semio_viz_tr_sxy_fp
+  \fp_zero:N \l_semio_viz_tr_sxyl_fp
+  \fp_zero:N \l_semio_viz_tr_sxxy_fp
+  \int_step_inline:nn { \l_semio_viz_tr_n_int }
+    {
+      \fp_set:Nn \l_semio_viz_tr_dx_fp { \seq_item:Nn \l_semio_viz_tr_xv_seq {##1} }
+      \fp_set:Nn \l_semio_viz_tr_dy_fp { \seq_item:Nn \l_semio_viz_tr_yv_seq {##1} }
+      \fp_add:Nn \l_semio_viz_tr_sy_fp
+        { ( \l_semio_viz_tr_dy_fp - \l_semio_viz_tr_sy_fp ) / ##1 }
+      \fp_add:Nn \l_semio_viz_tr_sxy_fp
+        {
+          ( \l_semio_viz_tr_dx_fp * \l_semio_viz_tr_dy_fp - \l_semio_viz_tr_sxy_fp ) / ##1
+        }
+      \fp_add:Nn \l_semio_viz_tr_sxxy_fp
+        {
+          ( \l_semio_viz_tr_dx_fp ** 2 * \l_semio_viz_tr_dy_fp - \l_semio_viz_tr_sxxy_fp ) / ##1
+        }
+      \fp_add:Nn \l_semio_viz_tr_syl_fp
+        {
+          ( \l_semio_viz_tr_dy_fp * ln( \l_semio_viz_tr_dy_fp ) - \l_semio_viz_tr_syl_fp ) / ##1
+        }
+      \fp_add:Nn \l_semio_viz_tr_sxyl_fp
+        {
+          ( \l_semio_viz_tr_dx_fp * \l_semio_viz_tr_dy_fp * ln( \l_semio_viz_tr_dy_fp )
+            - \l_semio_viz_tr_sxyl_fp ) / ##1
+        }
+    }
+  \fp_set:Nn \l_semio_viz_tr_slope_fp
+    {
+      ( \l_semio_viz_tr_sxyl_fp / \l_semio_viz_tr_sy_fp
+        - ( \l_semio_viz_tr_sxy_fp / \l_semio_viz_tr_sy_fp )
+          * ( \l_semio_viz_tr_syl_fp / \l_semio_viz_tr_sy_fp ) )
+        / ( \l_semio_viz_tr_sxxy_fp / \l_semio_viz_tr_sy_fp
+            - ( \l_semio_viz_tr_sxy_fp / \l_semio_viz_tr_sy_fp ) ** 2 )
+    }
+  \fp_set:Nn \l_semio_viz_tr_intercept_fp
+    {
+      exp( \l_semio_viz_tr_syl_fp / \l_semio_viz_tr_sy_fp
+        - \l_semio_viz_tr_slope_fp * \l_semio_viz_tr_sxy_fp / \l_semio_viz_tr_sy_fp )
+    }
+  \semio_viz_tr_coefficients:
+}
+\fp_new:N \l_semio_viz_tr_syl_fp
+\fp_new:N \l_semio_viz_tr_sxyl_fp
+\fp_new:N \l_semio_viz_tr_sxxy_fp
+\fp_new:N \l_semio_viz_tr_dx_fp
+\fp_new:N \l_semio_viz_tr_dy_fp
+
+% 📉 Polynomial fit of the configured degree through the normal equations.
+\cs_new_protected:Npn \semio_viz_tr_regression_poly: {
+  \int_set:Nn \l_semio_viz_tr_m_int { \l_semio_viz_tr_degree_int + 1 }
+  \int_step_inline:nn { \l_semio_viz_tr_m_int }
+    {
+      \int_step_inline:nn { \l_semio_viz_tr_m_int + 1 }
+        {
+          \cs_if_exist:cF { \semio_viz_tr_matrix:nn {##1} {####1} }
+            { \fp_new:c { \semio_viz_tr_matrix:nn {##1} {####1} } }
+          \fp_zero:c { \semio_viz_tr_matrix:nn {##1} {####1} }
+        }
+    }
+  \int_step_inline:nn { \l_semio_viz_tr_n_int }
+    {
+      \int_step_inline:nn { \l_semio_viz_tr_m_int }
+        {
+          \int_step_inline:nn { \l_semio_viz_tr_m_int }
+            {
+              \fp_add:cn { \semio_viz_tr_matrix:nn {####1} {########1} }
+                {
+                  \seq_item:Nn \l_semio_viz_tr_xv_seq {##1}
+                    ** ( ####1 + ########1 - 2 )
+                }
+            }
+          \fp_add:cn { \semio_viz_tr_matrix:nn {####1} { \l_semio_viz_tr_m_int + 1 } }
+            {
+              \seq_item:Nn \l_semio_viz_tr_xv_seq {##1} ** ( ####1 - 1 )
+                * \seq_item:Nn \l_semio_viz_tr_yv_seq {##1}
+            }
+        }
+    }
+  \semio_viz_tr_gauss:
+  \int_step_inline:nn { \l_semio_viz_tr_m_int }
+    {
+      \seq_put_right:Nx \l_semio_viz_tr_out_rows_seq
+        {
+          { \semio_viz_tr_term:n {##1} } ,
+          {
+            \fp_to_decimal:n
+              { round( \fp_use:c { \semio_viz_tr_matrix:nn {##1} { \l_semio_viz_tr_m_int + 1 } } , 6 ) }
+          }
+        }
+    }
+}
+\int_new:N \l_semio_viz_tr_m_int
+
+% 🔤 Name of the augmented-matrix cell (row, column) of the normal equations.
+\cs_new:Npn \semio_viz_tr_matrix:nn #1#2
+  { l_semio_viz_tr_mat_ \int_eval:n {#1} _ \int_eval:n {#2} _fp }
+
+% 🔤 Coefficient name of the polynomial term of index #1: a, b, c, …
+\cs_new:Npn \semio_viz_tr_term:n #1
+  { \int_to_alph:n {#1} }
+
+% 🧮 Gauss-Jordan elimination with partial pivoting on the augmented normal-equation matrix.
+\cs_new_protected:Npn \semio_viz_tr_gauss: {
+  \int_step_inline:nn { \l_semio_viz_tr_m_int }
+    {
+      \int_set:Nn \l_semio_viz_tr_pivot_int {##1}
+      \int_step_inline:nnn { ##1 + 1 } { \l_semio_viz_tr_m_int }
+        {
+          \fp_compare:nNnT
+            { abs( \fp_use:c { \semio_viz_tr_matrix:nn {####1} {##1} } ) }
+            > { abs( \fp_use:c { \semio_viz_tr_matrix:nn { \l_semio_viz_tr_pivot_int } {##1} } ) }
+            { \int_set:Nn \l_semio_viz_tr_pivot_int {####1} }
+        }
+      \int_compare:nNnF { \l_semio_viz_tr_pivot_int } = {##1}
+        { \semio_viz_tr_swap_rows:nn {##1} { \l_semio_viz_tr_pivot_int } }
+      \fp_set:Nn \l_semio_viz_tr_pivot_fp
+        { \fp_use:c { \semio_viz_tr_matrix:nn {##1} {##1} } }
+      \int_step_inline:nnn {##1} { \l_semio_viz_tr_m_int + 1 }
+        {
+          \fp_set:cn { \semio_viz_tr_matrix:nn {##1} {####1} }
+            {
+              \fp_use:c { \semio_viz_tr_matrix:nn {##1} {####1} } / \l_semio_viz_tr_pivot_fp
+            }
+        }
+      \int_step_inline:nn { \l_semio_viz_tr_m_int }
+        {
+          \int_compare:nNnF {####1} = {##1}
+            {
+              \fp_set:Nn \l_semio_viz_tr_factor_fp
+                { \fp_use:c { \semio_viz_tr_matrix:nn {####1} {##1} } }
+              \int_step_inline:nnn {##1} { \l_semio_viz_tr_m_int + 1 }
+                {
+                  \fp_set:cn { \semio_viz_tr_matrix:nn {####1} {########1} }
+                    {
+                      \fp_use:c { \semio_viz_tr_matrix:nn {####1} {########1} }
+                        - \l_semio_viz_tr_factor_fp
+                          * \fp_use:c { \semio_viz_tr_matrix:nn {##1} {########1} }
+                    }
+                }
+            }
+        }
+    }
+}
+\int_new:N \l_semio_viz_tr_pivot_int
+\fp_new:N \l_semio_viz_tr_pivot_fp
+\fp_new:N \l_semio_viz_tr_factor_fp
+
+% 🔀 Exchanges two rows of the augmented matrix.
+\cs_new_protected:Npn \semio_viz_tr_swap_rows:nn #1#2 {
+  \int_step_inline:nn { \l_semio_viz_tr_m_int + 1 }
+    {
+      \fp_set:Nn \l_semio_viz_tr_factor_fp
+        { \fp_use:c { \semio_viz_tr_matrix:nn {#1} {##1} } }
+      \fp_set:cn { \semio_viz_tr_matrix:nn {#1} {##1} }
+        { \fp_use:c { \semio_viz_tr_matrix:nn {#2} {##1} } }
+      \fp_set:cn { \semio_viz_tr_matrix:nn {#2} {##1} }
+        { \l_semio_viz_tr_factor_fp }
+    }
+}
+%endregion 🔖️Regression
+
+%region 🔖️SeqStatistics
+% 🧮 The sequence-level half of the transform vocabulary: the table transforms above take a
+% table and produce a table, while a family that has already pulled one column into a sequence --
+% a box plot, a histogram, a density curve -- needs the same d3-array algorithms on that sequence
+% directly. Every macro here is a faithful port of the named d3 routine, so the oracle comparison
+% in the tests is exact rather than approximate.
+% https://github.com/d3/d3-array/blob/main/src/bin.js
+% https://github.com/d3/d3-array/blob/main/src/quantile.js
+% 🧮 Statistical kernel written here because `semio-viz-transform` carries no expl3 API yet.
+% Every macro of this region belongs to that package and is a faithful port of the d3-array
+% algorithms, so the oracle comparison in the tests is exact rather than approximate.
+% https://github.com/d3/d3-array/blob/main/src/ticks.js
+% https://github.com/d3/d3-array/blob/main/src/bin.js
+% https://github.com/d3/d3-array/blob/main/src/quantile.js
+\seq_new:N \g_semio_viz_tr_stat_sorted_seq
+\seq_new:N \g_semio_viz_tr_stat_ticks_seq
+\seq_new:N \g_semio_viz_tr_stat_bin_left_seq
+\seq_new:N \g_semio_viz_tr_stat_bin_right_seq
+\seq_new:N \g_semio_viz_tr_stat_bin_n_seq
+\seq_new:N \g_semio_viz_tr_stat_curve_x_seq
+\seq_new:N \g_semio_viz_tr_stat_curve_y_seq
+\seq_new:N \l_semio_viz_tr_stat_order_seq
+\fp_new:N \g_semio_viz_tr_stat_lo_fp
+\fp_new:N \g_semio_viz_tr_stat_hi_fp
+\fp_new:N \g_semio_viz_tr_stat_band_fp
+\fp_new:N \l_semio_viz_tr_stat_a_fp
+\fp_new:N \l_semio_viz_tr_stat_b_fp
+\fp_new:N \l_semio_viz_tr_stat_c_fp
+\fp_new:N \l_semio_viz_tr_stat_datamax_fp
+\fp_new:N \l_semio_viz_tr_stat_step_fp
+\fp_new:N \l_semio_viz_tr_stat_power_fp
+\fp_new:N \l_semio_viz_tr_stat_error_fp
+\fp_new:N \l_semio_viz_tr_stat_factor_fp
+\fp_new:N \l_semio_viz_tr_stat_inc_fp
+\fp_new:N \l_semio_viz_tr_stat_sd_fp
+\fp_new:N \l_semio_viz_tr_stat_iqr_fp
+\fp_new:N \l_semio_viz_tr_stat_lq_fp
+\int_new:N \l_semio_viz_tr_stat_n_int
+\int_new:N \l_semio_viz_tr_stat_i_int
+\int_new:N \l_semio_viz_tr_stat_j_int
+\int_new:N \l_semio_viz_tr_stat_ia_int
+\int_new:N \l_semio_viz_tr_stat_ib_int
+\int_new:N \l_semio_viz_tr_stat_a_int
+\int_new:N \l_semio_viz_tr_stat_b_int
+\tl_new:N \l_semio_viz_tr_stat_cell_tl
+
+\cs_generate_variant:Nn \seq_gset_item:Nnn { Nnx }
+\cs_generate_variant:Nn \seq_set_item:Nnn { Nnx }
+
+% 🔢 Fills a sequence with the evaluated numbers of a comma list.
+\cs_new_protected:Npn \semio_viz_tr_stat_from_clist:Nn #1#2 {
+  \seq_clear:N #1
+  \clist_map_inline:nn {#2} { \seq_put_right:Nx #1 { \fp_eval:n {##1} } }
+}
+
+% 📋 Fills a sequence with the numeric cells of one table column, skipping empty cells.
+\cs_new_protected:Npn \semio_viz_tr_stat_from_table:Nnn #1#2#3 {
+  \seq_clear:N #1
+  \semio_viz_table_nrows:nN {#2} \l_semio_viz_tr_stat_j_int
+  \int_step_inline:nn { \l_semio_viz_tr_stat_j_int } {
+    \semio_viz_table_cell:nnnN {#2} {##1} {#3} \l_semio_viz_tr_stat_cell_tl
+    \tl_if_empty:NF \l_semio_viz_tr_stat_cell_tl
+      { \seq_put_right:Nx #1 { \fp_eval:n { \l_semio_viz_tr_stat_cell_tl } } }
+  }
+}
+
+% 🏷️ Fills a sequence with the verbatim cells of one table column.
+\cs_new_protected:Npn \semio_viz_tr_stat_labels_from_table:Nnn #1#2#3 {
+  \seq_clear:N #1
+  \semio_viz_table_nrows:nN {#2} \l_semio_viz_tr_stat_j_int
+  \int_step_inline:nn { \l_semio_viz_tr_stat_j_int } {
+    \semio_viz_table_cell:nnnN {#2} {##1} {#3} \l_semio_viz_tr_stat_cell_tl
+    \seq_put_right:Nx #1 { \l_semio_viz_tr_stat_cell_tl }
+  }
+}
+
+% ↕️ Sorts a numeric sequence ascending.
+\cs_new_protected:Npn \semio_viz_tr_stat_sort:N #1 {
+  \seq_sort:Nn #1
+    { \fp_compare:nNnTF {##1} > {##2} { \sort_return_swapped: } { \sort_return_same: } }
+}
+
+% 📉 Smallest item of a numeric sequence.
+\cs_new_protected:Npn \semio_viz_tr_stat_min:NN #1#2 {
+  \fp_set:Nn #2 { inf }
+  \seq_map_inline:Nn #1 { \fp_set:Nn #2 { min ( #2 , ##1 ) } }
+}
+
+% 📈 Largest item of a numeric sequence.
+\cs_new_protected:Npn \semio_viz_tr_stat_max:NN #1#2 {
+  \fp_set:Nn #2 { -inf }
+  \seq_map_inline:Nn #1 { \fp_set:Nn #2 { max ( #2 , ##1 ) } }
+}
+
+% ➕ Sum of a numeric sequence.
+\cs_new_protected:Npn \semio_viz_tr_stat_sum:NN #1#2 {
+  \fp_zero:N #2
+  \seq_map_inline:Nn #1 { \fp_add:Nn #2 {##1} }
+}
+
+% 🧮 Arithmetic mean; zero for an empty sequence.
+\cs_new_protected:Npn \semio_viz_tr_stat_mean:NN #1#2 {
+  \semio_viz_tr_stat_sum:NN #1 #2
+  \int_compare:nNnTF { \seq_count:N #1 } > { 0 }
+    { \fp_set:Nn #2 { #2 / \seq_count:N #1 } }
+    { \fp_zero:N #2 }
+}
+
+% 📐 Sample variance with Bessel's correction, matching d3.variance.
+\cs_new_protected:Npn \semio_viz_tr_stat_variance:NN #1#2 {
+  \semio_viz_tr_stat_mean:NN #1 \l_semio_viz_tr_stat_a_fp
+  \fp_zero:N #2
+  \seq_map_inline:Nn #1 { \fp_add:Nn #2 { ( ##1 - \l_semio_viz_tr_stat_a_fp ) ** 2 } }
+  \int_compare:nNnTF { \seq_count:N #1 } > { 1 }
+    { \fp_set:Nn #2 { #2 / ( \seq_count:N #1 - 1 ) } }
+    { \fp_zero:N #2 }
+}
+
+% 📏 Sample standard deviation, matching d3.deviation.
+\cs_new_protected:Npn \semio_viz_tr_stat_deviation:NN #1#2 {
+  \semio_viz_tr_stat_variance:NN #1 #2
+  \fp_set:Nn #2 { sqrt ( #2 ) }
+}
+
+% 🎯 R-7 quantile of an ascending sequence, matching d3.quantileSorted.
+\cs_new_protected:Npn \semio_viz_tr_stat_quantile:NnN #1#2#3 {
+  \int_set:Nn \l_semio_viz_tr_stat_n_int { \seq_count:N #1 }
+  \int_compare:nNnTF { \l_semio_viz_tr_stat_n_int } < { 1 }
+    { \fp_set:Nn #3 { nan } }
+    {
+      \int_compare:nNnTF { \l_semio_viz_tr_stat_n_int } = { 1 }
+        { \fp_set:Nn #3 { \seq_item:Nn #1 { 1 } } }
+        {
+          \fp_set:Nn \l_semio_viz_tr_stat_a_fp { ( \l_semio_viz_tr_stat_n_int - 1 ) * (#2) }
+          \int_set:Nn \l_semio_viz_tr_stat_i_int { \fp_to_int:n { floor ( \l_semio_viz_tr_stat_a_fp ) } }
+          \fp_set:Nn \l_semio_viz_tr_stat_b_fp { \l_semio_viz_tr_stat_a_fp - \l_semio_viz_tr_stat_i_int }
+          \fp_set:Nn #3 { \seq_item:Nn #1 { \l_semio_viz_tr_stat_i_int + 1 } }
+          \fp_compare:nNnT { \l_semio_viz_tr_stat_b_fp } > { 0 }
+            {
+              \fp_set:Nn #3
+                { #3 + ( \seq_item:Nn #1 { \l_semio_viz_tr_stat_i_int + 2 } - #3 )
+                       * \l_semio_viz_tr_stat_b_fp }
+            }
+        }
+    }
+}
+
+% 📶 d3.tickIncrement over a plain interval: the 1-2-5-10 step selection lives in semio-viz-scale,
+% which owns the tick vocabulary for named scales; a sequence-level caller reaches the same
+% routine here rather than carrying a second copy of the thresholds.
+\cs_new_protected:Npn \semio_viz_tr_stat_tick_increment:nnnN #1#2#3#4
+  { \semio_viz_scale_tick_increment:nnnN {#1} {#2} {#3} #4 }
+
+% 🪜 d3.ticks over an ascending domain into \g_semio_viz_tr_stat_ticks_seq; the tick values
+% themselves come from semio-viz-scale, which owns the d3-array tick generator.
+\cs_new_protected:Npn \semio_viz_tr_stat_ticks:nnn #1#2#3 {
+  \semio_viz_scale_tick_values:nnnN {#1} {#2} {#3} \l_semio_viz_tr_stat_ticks_seq
+  \seq_gset_eq:NN \g_semio_viz_tr_stat_ticks_seq \l_semio_viz_tr_stat_ticks_seq
+}
+\seq_new:N \l_semio_viz_tr_stat_ticks_seq
+
+% 🪄 d3.nice over a plain interval; the rounded bounds land in the lo/hi globals. The rounding
+% itself is semio-viz-scale's, so a scale and a bare sequence nice a domain the same way.
+\cs_new_protected:Npn \semio_viz_tr_stat_nice:nnn #1#2#3 {
+  \semio_viz_scale_nice_pair:nnnNN {#1} {#2} {#3}
+    \l_semio_viz_tr_stat_a_fp \l_semio_viz_tr_stat_b_fp
+  \fp_gset_eq:NN \g_semio_viz_tr_stat_lo_fp \l_semio_viz_tr_stat_a_fp
+  \fp_gset_eq:NN \g_semio_viz_tr_stat_hi_fp \l_semio_viz_tr_stat_b_fp
+}
+
+% 🧺 d3.bin with a threshold count: fills the bin x0/x1/count globals and the niced domain globals.
+\cs_new_protected:Npn \semio_viz_tr_stat_bin:Nn #1#2 {
+  \semio_viz_tr_stat_min:NN #1 \l_semio_viz_tr_stat_a_fp
+  \semio_viz_tr_stat_max:NN #1 \l_semio_viz_tr_stat_b_fp
+  \fp_set_eq:NN \l_semio_viz_tr_stat_datamax_fp \l_semio_viz_tr_stat_b_fp
+  \semio_viz_tr_stat_nice:nnn { \l_semio_viz_tr_stat_a_fp } { \l_semio_viz_tr_stat_b_fp } {#2}
+  \semio_viz_tr_stat_ticks:nnn { \g_semio_viz_tr_stat_lo_fp } { \g_semio_viz_tr_stat_hi_fp } {#2}
+  \int_set:Nn \l_semio_viz_tr_stat_n_int { \seq_count:N \g_semio_viz_tr_stat_ticks_seq }
+  \int_compare:nNnT { \l_semio_viz_tr_stat_n_int } > { 0 } {
+    \fp_compare:nT { \seq_item:Nn \g_semio_viz_tr_stat_ticks_seq { \l_semio_viz_tr_stat_n_int } >= \g_semio_viz_tr_stat_hi_fp }
+      {
+        \fp_compare:nTF { \l_semio_viz_tr_stat_datamax_fp >= \g_semio_viz_tr_stat_hi_fp }
+          { \semio_viz_tr_stat_bin_extend:n {#2} }
+          {
+            \seq_gpop_right:NN \g_semio_viz_tr_stat_ticks_seq \l_semio_viz_tr_stat_cell_tl
+            \int_decr:N \l_semio_viz_tr_stat_n_int
+          }
+      }
+  }
+  \int_set:Nn \l_semio_viz_tr_stat_a_int { 1 }
+  \int_set:Nn \l_semio_viz_tr_stat_b_int { \l_semio_viz_tr_stat_n_int }
+  \bool_while_do:nn
+    {
+      \int_compare_p:n { \l_semio_viz_tr_stat_a_int <= \l_semio_viz_tr_stat_b_int } &&
+      \fp_compare_p:n { \seq_item:Nn \g_semio_viz_tr_stat_ticks_seq { \l_semio_viz_tr_stat_a_int } <= \g_semio_viz_tr_stat_lo_fp }
+    }
+    { \int_incr:N \l_semio_viz_tr_stat_a_int }
+  \bool_while_do:nn
+    {
+      \int_compare_p:n { \l_semio_viz_tr_stat_b_int >= \l_semio_viz_tr_stat_a_int } &&
+      \fp_compare_p:nNn
+        { \seq_item:Nn \g_semio_viz_tr_stat_ticks_seq { \l_semio_viz_tr_stat_b_int } }
+        > { \g_semio_viz_tr_stat_hi_fp }
+    }
+    { \int_decr:N \l_semio_viz_tr_stat_b_int }
+  \semio_viz_tr_stat_bin_frame:
+  \seq_map_inline:Nn #1 {
+    \bool_lazy_and:nnT
+      { \fp_compare_p:n { \g_semio_viz_tr_stat_lo_fp <= ##1 } }
+      { \fp_compare_p:n { ##1 <= \g_semio_viz_tr_stat_hi_fp } }
+      { \semio_viz_tr_stat_bin_count:n {##1} }
+  }
+}
+
+% 🧺 d3's uniform-width rescue: the data maximum sits on the last threshold, so the niced upper
+% bound moves out by one tick increment instead of dropping that threshold.
+\cs_new_protected:Npn \semio_viz_tr_stat_bin_extend:n #1 {
+  \semio_viz_tr_stat_tick_increment:nnnN
+    { \g_semio_viz_tr_stat_lo_fp } { \g_semio_viz_tr_stat_hi_fp } {#1} \l_semio_viz_tr_stat_c_fp
+  \fp_compare:nNnTF { \l_semio_viz_tr_stat_c_fp } > { 0 }
+    {
+      \fp_gset:Nn \g_semio_viz_tr_stat_hi_fp
+        { ( floor ( \g_semio_viz_tr_stat_hi_fp / \l_semio_viz_tr_stat_c_fp ) + 1 ) * \l_semio_viz_tr_stat_c_fp }
+    }
+    {
+      \fp_compare:nNnT { \l_semio_viz_tr_stat_c_fp } < { 0 }
+        {
+          \fp_gset:Nn \g_semio_viz_tr_stat_hi_fp
+            { ( ceil ( \g_semio_viz_tr_stat_hi_fp * ( - \l_semio_viz_tr_stat_c_fp ) ) + 1 )
+              / ( - \l_semio_viz_tr_stat_c_fp ) }
+        }
+    }
+}
+
+% 🧺 Builds the empty bins from the trimmed thresholds and the niced domain.
+\cs_new_protected:Npn \semio_viz_tr_stat_bin_frame: {
+  \seq_gclear:N \g_semio_viz_tr_stat_bin_left_seq
+  \seq_gclear:N \g_semio_viz_tr_stat_bin_right_seq
+  \seq_gclear:N \g_semio_viz_tr_stat_bin_n_seq
+  \int_set:Nn \l_semio_viz_tr_stat_n_int { \l_semio_viz_tr_stat_b_int - \l_semio_viz_tr_stat_a_int + 1 }
+  \int_compare:nNnT { \l_semio_viz_tr_stat_n_int } < { 0 } { \int_zero:N \l_semio_viz_tr_stat_n_int }
+  \int_step_inline:nnn { 0 } { \l_semio_viz_tr_stat_n_int } {
+    \int_compare:nNnTF {##1} > { 0 }
+      {
+        \seq_gput_right:Nx \g_semio_viz_tr_stat_bin_left_seq
+          { \seq_item:Nn \g_semio_viz_tr_stat_ticks_seq { \l_semio_viz_tr_stat_a_int + ##1 - 1 } }
+      }
+      { \seq_gput_right:Nx \g_semio_viz_tr_stat_bin_left_seq { \fp_eval:n { \g_semio_viz_tr_stat_lo_fp } } }
+    \int_compare:nNnTF {##1} < { \l_semio_viz_tr_stat_n_int }
+      {
+        \seq_gput_right:Nx \g_semio_viz_tr_stat_bin_right_seq
+          { \seq_item:Nn \g_semio_viz_tr_stat_ticks_seq { \l_semio_viz_tr_stat_a_int + ##1 } }
+      }
+      { \seq_gput_right:Nx \g_semio_viz_tr_stat_bin_right_seq { \fp_eval:n { \g_semio_viz_tr_stat_hi_fp } } }
+    \seq_gput_right:Nn \g_semio_viz_tr_stat_bin_n_seq { 0 }
+  }
+}
+
+% 🧮 Bisect-right of one value into the trimmed thresholds; increments that bin's count.
+\cs_new_protected:Npn \semio_viz_tr_stat_bin_count:n #1 {
+  \int_zero:N \l_semio_viz_tr_stat_i_int
+  \int_step_inline:nnn { \l_semio_viz_tr_stat_a_int } { \l_semio_viz_tr_stat_b_int } {
+    \fp_compare:nT { \seq_item:Nn \g_semio_viz_tr_stat_ticks_seq {##1} <= #1 }
+      { \int_incr:N \l_semio_viz_tr_stat_i_int }
+  }
+  \seq_gset_item:Nnx \g_semio_viz_tr_stat_bin_n_seq { \l_semio_viz_tr_stat_i_int + 1 }
+    { \fp_eval:n { \seq_item:Nn \g_semio_viz_tr_stat_bin_n_seq { \l_semio_viz_tr_stat_i_int + 1 } + 1 } }
+}
+
+% 🔔 The kernel of the sequence-level estimate, at the standardised distance #1. The caller divides
+% the sum by `n h sqrt(2 pi)`, so the gaussian branch is that normalisation's own numerator and its
+% arithmetic is untouched; the Epanechnikov branch carries the factor the normalisation would
+% otherwise remove. The kernel is the transform kernel's own `kernel` key, so a family selects it by
+% setting that key and nothing else changes.
+\cs_new:Npn \semio_viz_tr_stat_kernel:n #1
+  {
+    \str_if_eq:VnTF \l_semio_viz_tr_kernel_tl { epanechnikov }
+      { ( abs ( #1 ) < 1 ? 0.75 * sqrt ( 2 * pi ) * ( 1 - ( #1 ) ** 2 ) : 0 ) }
+      { exp ( -0.5 * ( #1 ) ** 2 ) }
+  }
+
+% 🌊 Kernel density estimate on a regular grid; bandwidth 0 selects Silverman's rule
+% h = 1.06 * min(sd, iqr/1.349) * n^(-1/5) (Silverman 1986, eq. 3.31). d3 has no KDE, so the
+% test oracle reimplements exactly this formula in TypeScript on top of d3-array.
+\cs_new_protected:Npn \semio_viz_tr_stat_kde:Nnnnn #1#2#3#4#5 {
+  \seq_gset_eq:NN \g_semio_viz_tr_stat_sorted_seq #1
+  \semio_viz_tr_stat_sort:N \g_semio_viz_tr_stat_sorted_seq
+  \int_set:Nn \l_semio_viz_tr_stat_n_int { \seq_count:N #1 }
+  \fp_gset:Nn \g_semio_viz_tr_stat_band_fp {#2}
+  \fp_compare:nT { \g_semio_viz_tr_stat_band_fp <= 0 } {
+    \semio_viz_tr_stat_deviation:NN #1 \l_semio_viz_tr_stat_sd_fp
+    \semio_viz_tr_stat_quantile:NnN \g_semio_viz_tr_stat_sorted_seq { 0.75 } \l_semio_viz_tr_stat_iqr_fp
+    \semio_viz_tr_stat_quantile:NnN \g_semio_viz_tr_stat_sorted_seq { 0.25 } \l_semio_viz_tr_stat_lq_fp
+    \fp_set:Nn \l_semio_viz_tr_stat_iqr_fp
+      { ( \l_semio_viz_tr_stat_iqr_fp - \l_semio_viz_tr_stat_lq_fp ) / 1.349 }
+    \int_set:Nn \l_semio_viz_tr_stat_n_int { \seq_count:N #1 }
+    \fp_compare:nNnTF { \l_semio_viz_tr_stat_iqr_fp } > { 0 }
+      {
+        \fp_gset:Nn \g_semio_viz_tr_stat_band_fp
+          { min ( \l_semio_viz_tr_stat_sd_fp , \l_semio_viz_tr_stat_iqr_fp ) }
+      }
+      { \fp_gset:Nn \g_semio_viz_tr_stat_band_fp { \l_semio_viz_tr_stat_sd_fp } }
+    \fp_gset:Nn \g_semio_viz_tr_stat_band_fp
+      { 1.06 * \g_semio_viz_tr_stat_band_fp * \l_semio_viz_tr_stat_n_int ** ( -0.2 ) }
+  }
+  \fp_compare:nT { \g_semio_viz_tr_stat_band_fp <= 0 }
+    { \fp_gset:Nn \g_semio_viz_tr_stat_band_fp { 1 } }
+  \seq_gclear:N \g_semio_viz_tr_stat_curve_x_seq
+  \seq_gclear:N \g_semio_viz_tr_stat_curve_y_seq
+  \int_step_inline:nnn { 0 } { (#3) - 1 } {
+    \fp_set:Nn \l_semio_viz_tr_stat_b_fp { (#4) + ( (#5) - (#4) ) * ##1 / max ( 1 , (#3) - 1 ) }
+    \fp_zero:N \l_semio_viz_tr_stat_c_fp
+    \seq_map_inline:Nn #1 {
+      \fp_add:Nn \l_semio_viz_tr_stat_c_fp
+        { \semio_viz_tr_stat_kernel:n
+            { ( \l_semio_viz_tr_stat_b_fp - ####1 ) / \g_semio_viz_tr_stat_band_fp } }
+    }
+    \seq_gput_right:Nx \g_semio_viz_tr_stat_curve_x_seq { \fp_eval:n { \l_semio_viz_tr_stat_b_fp } }
+    \seq_gput_right:Nx \g_semio_viz_tr_stat_curve_y_seq
+      {
+        \fp_eval:n
+          { \l_semio_viz_tr_stat_c_fp
+            / ( \l_semio_viz_tr_stat_n_int * \g_semio_viz_tr_stat_band_fp * sqrt ( 2 * pi ) ) }
+      }
+  }
+}
+
+% 📶 Empirical CDF: one step per sorted observation with y = i/n.
+\cs_new_protected:Npn \semio_viz_tr_stat_ecdf:N #1 {
+  \seq_gset_eq:NN \g_semio_viz_tr_stat_sorted_seq #1
+  \semio_viz_tr_stat_sort:N \g_semio_viz_tr_stat_sorted_seq
+  \int_set:Nn \l_semio_viz_tr_stat_n_int { \seq_count:N \g_semio_viz_tr_stat_sorted_seq }
+  \seq_gclear:N \g_semio_viz_tr_stat_curve_x_seq
+  \seq_gclear:N \g_semio_viz_tr_stat_curve_y_seq
+  \int_step_inline:nn { \l_semio_viz_tr_stat_n_int } {
+    \seq_gput_right:Nx \g_semio_viz_tr_stat_curve_x_seq
+      { \seq_item:Nn \g_semio_viz_tr_stat_sorted_seq {##1} }
+    \seq_gput_right:Nx \g_semio_viz_tr_stat_curve_y_seq
+      { \fp_eval:n { ##1 / \l_semio_viz_tr_stat_n_int } }
+  }
+}
+
+% 🔢 Acklam's rational approximation of the standard normal quantile function.
+% https://web.archive.org/web/20151110174102/http://home.online.no/~pjacklam/notes/invnorm/
+\cs_new_protected:Npn \semio_viz_tr_stat_probit:nN #1#2 {
+  \fp_set:Nn \l_semio_viz_tr_stat_a_fp { min ( 1 - 1e-12 , max ( 1e-12 , (#1) ) ) }
+  \fp_compare:nNnTF { \l_semio_viz_tr_stat_a_fp } < { 0.02425 }
+    {
+      \fp_set:Nn \l_semio_viz_tr_stat_b_fp { sqrt ( -2 * ln ( \l_semio_viz_tr_stat_a_fp ) ) }
+      \semio_viz_tr_stat_probit_tail:N #2
+    }
+    {
+      \fp_compare:nNnTF { \l_semio_viz_tr_stat_a_fp } > { 0.97575 }
+        {
+          \fp_set:Nn \l_semio_viz_tr_stat_b_fp { sqrt ( -2 * ln ( 1 - \l_semio_viz_tr_stat_a_fp ) ) }
+          \semio_viz_tr_stat_probit_tail:N #2
+          \fp_set:Nn #2 { - #2 }
+        }
+        { \semio_viz_tr_stat_probit_central:N #2 }
+    }
+}
+
+% 🔢 Acklam central branch on the current \l_semio_viz_tr_stat_a_fp probability.
+\cs_new_protected:Npn \semio_viz_tr_stat_probit_central:N #1 {
+  \fp_set:Nn \l_semio_viz_tr_stat_b_fp { \l_semio_viz_tr_stat_a_fp - 0.5 }
+  \fp_set:Nn \l_semio_viz_tr_stat_c_fp { \l_semio_viz_tr_stat_b_fp * \l_semio_viz_tr_stat_b_fp }
+  \fp_set:Nn #1
+    {
+      ( ( ( ( ( -3.969683028665376e1 * \l_semio_viz_tr_stat_c_fp + 2.209460984245205e2 )
+              * \l_semio_viz_tr_stat_c_fp - 2.759285104469687e2 )
+            * \l_semio_viz_tr_stat_c_fp + 1.383577518672690e2 )
+          * \l_semio_viz_tr_stat_c_fp - 3.066479806614716e1 )
+        * \l_semio_viz_tr_stat_c_fp + 2.506628277459239e0 ) * \l_semio_viz_tr_stat_b_fp
+      / ( ( ( ( ( -5.447609879822406e1 * \l_semio_viz_tr_stat_c_fp + 1.615858368580409e2 )
+                * \l_semio_viz_tr_stat_c_fp - 1.556989798598866e2 )
+              * \l_semio_viz_tr_stat_c_fp + 6.680131188771972e1 )
+            * \l_semio_viz_tr_stat_c_fp - 1.328068155288572e1 ) * \l_semio_viz_tr_stat_c_fp + 1 )
+    }
+}
+
+% 🔢 Acklam tail branch on the current \l_semio_viz_tr_stat_b_fp radicand.
+\cs_new_protected:Npn \semio_viz_tr_stat_probit_tail:N #1 {
+  \fp_set:Nn #1
+    {
+      ( ( ( ( ( -7.784894002430293e-3 * \l_semio_viz_tr_stat_b_fp - 3.223964580411365e-1 )
+              * \l_semio_viz_tr_stat_b_fp - 2.400758277161838e0 )
+            * \l_semio_viz_tr_stat_b_fp - 2.549732539343734e0 )
+          * \l_semio_viz_tr_stat_b_fp + 4.374664141464968e0 )
+        * \l_semio_viz_tr_stat_b_fp + 2.938163982698783e0 )
+      / ( ( ( ( 7.784695709041462e-3 * \l_semio_viz_tr_stat_b_fp + 3.224671290700398e-1 )
+              * \l_semio_viz_tr_stat_b_fp + 2.445134137142996e0 )
+            * \l_semio_viz_tr_stat_b_fp + 3.754408661907416e0 ) * \l_semio_viz_tr_stat_b_fp + 1 )
+    }
+}
+%endregion 🔖️SeqStatistics
+
+%region 🔖️ModelEvaluation
+% 📈 Classifier sweeps: a scored sample plus its binary labels reduced to the curve a model
+% evaluation chart draws. Points come out in the order a descending-score threshold sweep visits
+% them, which is what the TypeScript oracle reproduces on top of d3-array.
+% 📈 Classifier sweeps and control limits; both belong to `semio-viz-transform` next to the
+% binning and quantile transforms. Points are emitted in the order a threshold sweep visits them,
+% which is what the TypeScript oracle reproduces on top of d3-array.
+\seq_new:N \g_semio_viz_tr_eval_fx_seq
+\seq_new:N \g_semio_viz_tr_eval_fy_seq
+\seq_new:N \l_semio_viz_tr_eval_order_seq
+\fp_new:N \g_semio_viz_tr_eval_auc_fp
+\int_new:N \l_semio_viz_tr_eval_p_int
+\int_new:N \l_semio_viz_tr_eval_n_int
+\int_new:N \l_semio_viz_tr_eval_tp_int
+\int_new:N \l_semio_viz_tr_eval_fp_int
+\int_new:N \l_semio_viz_tr_eval_i_int
+
+% 🔀 Descending score order of the two parallel sequences, ties keeping the input order.
+\cs_new_protected:Npn \semio_viz_tr_eval_order:N #1 {
+  \seq_clear:N \l_semio_viz_tr_eval_order_seq
+  \int_zero:N \l_semio_viz_tr_eval_i_int
+  \seq_map_inline:Nn #1 {
+    \int_incr:N \l_semio_viz_tr_eval_i_int
+    \seq_put_right:Nx \l_semio_viz_tr_eval_order_seq { \int_use:N \l_semio_viz_tr_eval_i_int }
+  }
+  \seq_sort:Nn \l_semio_viz_tr_eval_order_seq
+    {
+      \fp_compare:nTF { \seq_item:Nn #1 {##1} < \seq_item:Nn #1 {##2} }
+        { \sort_return_swapped: } { \sort_return_same: }
+    }
+}
+
+% 📈 ROC sweep of scores #1 against binary labels #2 into the eval curve globals, plus the AUC.
+\cs_new_protected:Npn \semio_viz_tr_eval_roc:NN #1#2 {
+  \semio_viz_tr_eval_order:N #1
+  \int_zero:N \l_semio_viz_tr_eval_p_int
+  \int_zero:N \l_semio_viz_tr_eval_n_int
+  \seq_map_inline:Nn #2 {
+    \fp_compare:nTF { ##1 > 0.5 }
+      { \int_incr:N \l_semio_viz_tr_eval_p_int } { \int_incr:N \l_semio_viz_tr_eval_n_int }
+  }
+  \int_compare:nNnT { \l_semio_viz_tr_eval_p_int } = { 0 } { \int_set:Nn \l_semio_viz_tr_eval_p_int { 1 } }
+  \int_compare:nNnT { \l_semio_viz_tr_eval_n_int } = { 0 } { \int_set:Nn \l_semio_viz_tr_eval_n_int { 1 } }
+  \seq_gclear:N \g_semio_viz_tr_eval_fx_seq
+  \seq_gclear:N \g_semio_viz_tr_eval_fy_seq
+  \seq_gput_right:Nn \g_semio_viz_tr_eval_fx_seq { 0 }
+  \seq_gput_right:Nn \g_semio_viz_tr_eval_fy_seq { 0 }
+  \int_zero:N \l_semio_viz_tr_eval_tp_int
+  \int_zero:N \l_semio_viz_tr_eval_fp_int
+  \fp_gzero:N \g_semio_viz_tr_eval_auc_fp
+  \seq_map_inline:Nn \l_semio_viz_tr_eval_order_seq {
+    \fp_compare:nTF { \seq_item:Nn #2 {##1} > 0.5 }
+      { \int_incr:N \l_semio_viz_tr_eval_tp_int }
+      {
+        \fp_gadd:Nn \g_semio_viz_tr_eval_auc_fp
+          {
+            \l_semio_viz_tr_eval_tp_int
+            / ( \l_semio_viz_tr_eval_p_int * \l_semio_viz_tr_eval_n_int )
+          }
+        \int_incr:N \l_semio_viz_tr_eval_fp_int
+      }
+    \seq_gput_right:Nx \g_semio_viz_tr_eval_fx_seq
+      { \fp_eval:n { \l_semio_viz_tr_eval_fp_int / \l_semio_viz_tr_eval_n_int } }
+    \seq_gput_right:Nx \g_semio_viz_tr_eval_fy_seq
+      { \fp_eval:n { \l_semio_viz_tr_eval_tp_int / \l_semio_viz_tr_eval_p_int } }
+  }
+}
+
+% 📈 Precision-recall sweep of scores #1 against binary labels #2 into the eval curve globals.
+\cs_new_protected:Npn \semio_viz_tr_eval_pr:NN #1#2 {
+  \semio_viz_tr_eval_order:N #1
+  \int_zero:N \l_semio_viz_tr_eval_p_int
+  \seq_map_inline:Nn #2 { \fp_compare:nT { ##1 > 0.5 } { \int_incr:N \l_semio_viz_tr_eval_p_int } }
+  \int_compare:nNnT { \l_semio_viz_tr_eval_p_int } = { 0 } { \int_set:Nn \l_semio_viz_tr_eval_p_int { 1 } }
+  \seq_gclear:N \g_semio_viz_tr_eval_fx_seq
+  \seq_gclear:N \g_semio_viz_tr_eval_fy_seq
+  \int_zero:N \l_semio_viz_tr_eval_tp_int
+  \int_zero:N \l_semio_viz_tr_eval_fp_int
+  \seq_map_inline:Nn \l_semio_viz_tr_eval_order_seq {
+    \fp_compare:nTF { \seq_item:Nn #2 {##1} > 0.5 }
+      { \int_incr:N \l_semio_viz_tr_eval_tp_int } { \int_incr:N \l_semio_viz_tr_eval_fp_int }
+    \seq_gput_right:Nx \g_semio_viz_tr_eval_fx_seq
+      { \fp_eval:n { \l_semio_viz_tr_eval_tp_int / \l_semio_viz_tr_eval_p_int } }
+    \seq_gput_right:Nx \g_semio_viz_tr_eval_fy_seq
+      {
+        \fp_eval:n
+          { \l_semio_viz_tr_eval_tp_int / ( \l_semio_viz_tr_eval_tp_int + \l_semio_viz_tr_eval_fp_int ) }
+      }
+  }
+}
+
+% 📈 Cumulative gains sweep: fraction of the population against the fraction of positives captured.
+\cs_new_protected:Npn \semio_viz_tr_eval_gain:NN #1#2 {
+  \semio_viz_tr_eval_order:N #1
+  \int_zero:N \l_semio_viz_tr_eval_p_int
+  \seq_map_inline:Nn #2 { \fp_compare:nT { ##1 > 0.5 } { \int_incr:N \l_semio_viz_tr_eval_p_int } }
+  \int_compare:nNnT { \l_semio_viz_tr_eval_p_int } = { 0 } { \int_set:Nn \l_semio_viz_tr_eval_p_int { 1 } }
+  \int_set:Nn \l_semio_viz_tr_eval_n_int { \seq_count:N #2 }
+  \seq_gclear:N \g_semio_viz_tr_eval_fx_seq
+  \seq_gclear:N \g_semio_viz_tr_eval_fy_seq
+  \seq_gput_right:Nn \g_semio_viz_tr_eval_fx_seq { 0 }
+  \seq_gput_right:Nn \g_semio_viz_tr_eval_fy_seq { 0 }
+  \int_zero:N \l_semio_viz_tr_eval_tp_int
+  \int_zero:N \l_semio_viz_tr_eval_i_int
+  \seq_map_inline:Nn \l_semio_viz_tr_eval_order_seq {
+    \int_incr:N \l_semio_viz_tr_eval_i_int
+    \fp_compare:nT { \seq_item:Nn #2 {##1} > 0.5 } { \int_incr:N \l_semio_viz_tr_eval_tp_int }
+    \seq_gput_right:Nx \g_semio_viz_tr_eval_fx_seq
+      { \fp_eval:n { \l_semio_viz_tr_eval_i_int / \l_semio_viz_tr_eval_n_int } }
+    \seq_gput_right:Nx \g_semio_viz_tr_eval_fy_seq
+      { \fp_eval:n { \l_semio_viz_tr_eval_tp_int / \l_semio_viz_tr_eval_p_int } }
+  }
+}
+%endregion 🔖️ModelEvaluation
+
+%region 🔖️MatrixReshape
+% 🧮 Matrix reshaping: a long row/column/value table becomes an ordered level list per axis
+% plus a dense value list, the sequence-level twin of the `pivot` transform above. Heat matrices,
+% correlation matrices and adjacency matrices all read their cells through it.
+% 🧮 Matrix reshaping: the long row/col/value table becomes an ordered level list per axis plus a
+% lookup, which is what `semio-viz-transform` will own as the `pivot` transform.
+\seq_new:N \g_semio_viz_tr_matrix_rows_seq
+\seq_new:N \g_semio_viz_tr_matrix_cols_seq
+\seq_new:N \g_semio_viz_tr_matrix_values_seq
+\seq_new:N \l_semio_viz_tr_matrix_rowcell_seq
+\seq_new:N \l_semio_viz_tr_matrix_colcell_seq
+\seq_new:N \l_semio_viz_tr_matrix_cellval_seq
+\fp_new:N \g_semio_viz_tr_matrix_min_fp
+\fp_new:N \g_semio_viz_tr_matrix_max_fp
+\int_new:N \l_semio_viz_tr_matrix_i_int
+\int_new:N \l_semio_viz_tr_matrix_j_int
+\int_new:N \l_semio_viz_tr_matrix_k_int
+
+% 🧮 Reads a long matrix table into the row/column level lists and the dense value list.
+\cs_new_protected:Npn \semio_viz_tr_matrix_load:nnnn #1#2#3#4 {
+  \semio_viz_tr_stat_labels_from_table:Nnn \l_semio_viz_tr_matrix_rowcell_seq {#1} {#2}
+  \semio_viz_tr_stat_labels_from_table:Nnn \l_semio_viz_tr_matrix_colcell_seq {#1} {#3}
+  \semio_viz_tr_stat_from_table:Nnn \l_semio_viz_tr_matrix_cellval_seq {#1} {#4}
+  \seq_gclear:N \g_semio_viz_tr_matrix_rows_seq
+  \seq_gclear:N \g_semio_viz_tr_matrix_cols_seq
+  \seq_map_inline:Nn \l_semio_viz_tr_matrix_rowcell_seq
+    { \seq_if_in:NnF \g_semio_viz_tr_matrix_rows_seq {##1} { \seq_gput_right:Nn \g_semio_viz_tr_matrix_rows_seq {##1} } }
+  \seq_map_inline:Nn \l_semio_viz_tr_matrix_colcell_seq
+    { \seq_if_in:NnF \g_semio_viz_tr_matrix_cols_seq {##1} { \seq_gput_right:Nn \g_semio_viz_tr_matrix_cols_seq {##1} } }
+  \seq_gclear:N \g_semio_viz_tr_matrix_values_seq
+  \int_step_inline:nn { \seq_count:N \g_semio_viz_tr_matrix_rows_seq } {
+    \int_step_inline:nn { \seq_count:N \g_semio_viz_tr_matrix_cols_seq }
+      { \seq_gput_right:Nn \g_semio_viz_tr_matrix_values_seq { nan } }
+  }
+  \int_zero:N \l_semio_viz_tr_matrix_k_int
+  \seq_map_inline:Nn \l_semio_viz_tr_matrix_rowcell_seq {
+    \int_incr:N \l_semio_viz_tr_matrix_k_int
+    \semio_viz_tr_matrix_place:n {##1}
+  }
+  \semio_viz_tr_stat_min:NN \l_semio_viz_tr_matrix_cellval_seq \g_semio_viz_tr_matrix_min_fp
+  \semio_viz_tr_stat_max:NN \l_semio_viz_tr_matrix_cellval_seq \g_semio_viz_tr_matrix_max_fp
+}
+
+% 🧮 Places the value of source row \l_semio_viz_tr_matrix_k_int at its dense matrix index.
+\cs_new_protected:Npn \semio_viz_tr_matrix_place:n #1 {
+  \int_zero:N \l_semio_viz_tr_matrix_i_int
+  \int_zero:N \l_semio_viz_tr_matrix_j_int
+  \int_zero:N \l_semio_viz_cb_i_int
+  \seq_map_inline:Nn \g_semio_viz_tr_matrix_rows_seq {
+    \int_incr:N \l_semio_viz_cb_i_int
+    \str_if_eq:nnT {##1} {#1} { \int_set_eq:NN \l_semio_viz_tr_matrix_i_int \l_semio_viz_cb_i_int }
+  }
+  \int_zero:N \l_semio_viz_cb_i_int
+  \seq_map_inline:Nn \g_semio_viz_tr_matrix_cols_seq {
+    \int_incr:N \l_semio_viz_cb_i_int
+    \str_if_eq:eeT {##1} { \seq_item:Nn \l_semio_viz_tr_matrix_colcell_seq { \l_semio_viz_tr_matrix_k_int } }
+      { \int_set_eq:NN \l_semio_viz_tr_matrix_j_int \l_semio_viz_cb_i_int }
+  }
+  \bool_lazy_and:nnT
+    { \int_compare_p:nNn { \l_semio_viz_tr_matrix_i_int } > { 0 } }
+    { \int_compare_p:nNn { \l_semio_viz_tr_matrix_j_int } > { 0 } }
+    {
+      \seq_gset_item:Nnx \g_semio_viz_tr_matrix_values_seq
+        {
+          ( \l_semio_viz_tr_matrix_i_int - 1 ) * \seq_count:N \g_semio_viz_tr_matrix_cols_seq
+          + \l_semio_viz_tr_matrix_j_int
+        }
+        { \seq_item:Nn \l_semio_viz_tr_matrix_cellval_seq { \l_semio_viz_tr_matrix_k_int } }
+    }
+}
+
+% 🔎 Dense matrix value at row #1, column #2 (one-based).
+\cs_new:Npn \semio_viz_tr_matrix_at:nn #1#2 {
+  \seq_item:Nn \g_semio_viz_tr_matrix_values_seq
+    { ( (#1) - 1 ) * \seq_count:N \g_semio_viz_tr_matrix_cols_seq + (#2) }
+}
+%endregion 🔖️MatrixReshape
+
+%region 🔖️Correlation
+% 🧮 Pearson product-moment correlation of two equally long numeric sequences: the pairwise
+% statistic behind a correlation matrix, a scatter-matrix diagonal and a correlogram cell.
+% 🧮 Pearson correlation of two equally long numeric sequences; belongs to `semio-viz-transform`.
+\fp_new:N \l_semio_viz_tr_corr_mx_fp
+\fp_new:N \l_semio_viz_tr_corr_my_fp
+\fp_new:N \l_semio_viz_tr_corr_sxy_fp
+\fp_new:N \l_semio_viz_tr_corr_sxx_fp
+\fp_new:N \l_semio_viz_tr_corr_syy_fp
+\int_new:N \l_semio_viz_tr_corr_i_int
+
+% 🧮 Pearson product-moment correlation of #1 and #2 into #3.
+\cs_new_protected:Npn \semio_viz_tr_corr_pearson:NNN #1#2#3 {
+  \semio_viz_tr_stat_mean:NN #1 \l_semio_viz_tr_corr_mx_fp
+  \semio_viz_tr_stat_mean:NN #2 \l_semio_viz_tr_corr_my_fp
+  \fp_zero:N \l_semio_viz_tr_corr_sxy_fp
+  \fp_zero:N \l_semio_viz_tr_corr_sxx_fp
+  \fp_zero:N \l_semio_viz_tr_corr_syy_fp
+  \int_zero:N \l_semio_viz_tr_corr_i_int
+  \seq_map_inline:Nn #1 {
+    \int_incr:N \l_semio_viz_tr_corr_i_int
+    \fp_add:Nn \l_semio_viz_tr_corr_sxy_fp
+      {
+        ( ##1 - \l_semio_viz_tr_corr_mx_fp )
+        * ( \seq_item:Nn #2 { \l_semio_viz_tr_corr_i_int } - \l_semio_viz_tr_corr_my_fp )
+      }
+    \fp_add:Nn \l_semio_viz_tr_corr_sxx_fp { ( ##1 - \l_semio_viz_tr_corr_mx_fp ) ** 2 }
+    \fp_add:Nn \l_semio_viz_tr_corr_syy_fp
+      {
+        ( \seq_item:Nn #2 { \l_semio_viz_tr_corr_i_int } - \l_semio_viz_tr_corr_my_fp ) ** 2
+      }
+  }
+  \fp_set:Nn #3
+    {
+      \l_semio_viz_tr_corr_sxy_fp
+      / max ( 1e-12 , sqrt ( \l_semio_viz_tr_corr_sxx_fp * \l_semio_viz_tr_corr_syy_fp ) )
+    }
+}
+%endregion 🔖️Correlation
+
+%region 🔖️Pipeline
+% 🚚 Runs the operations named by the key list over the input table into the output table.
+\cs_new_protected:Npn \semio_viz_transform:nnn #1#2#3 {
+  \semio_viz_tr_keys_reset:
+  \keys_set:nn { semio / viz / transform } {#3}
+  \semio_viz_tr_load:n {#2}
+  \tl_if_empty:NF \l_semio_viz_tr_filter_tl
+    { \semio_viz_tr_filter:V \l_semio_viz_tr_filter_tl }
+  \tl_if_empty:NF \l_semio_viz_tr_sort_tl
+    { \semio_viz_tr_sort:V \l_semio_viz_tr_sort_tl }
+  \tl_if_empty:NF \l_semio_viz_tr_bin_tl
+    { \semio_viz_tr_bin:V \l_semio_viz_tr_bin_tl }
+  \bool_lazy_and:nnT
+    { ! \tl_if_empty_p:N \l_semio_viz_tr_group_tl }
+    { ! \tl_if_empty_p:N \l_semio_viz_tr_rollup_tl }
+    {
+      \semio_viz_tr_args:N \l_semio_viz_tr_rollup_tl
+      \semio_viz_tr_rollup:VVV \l_semio_viz_tr_group_tl
+        \l_semio_viz_tr_arga_tl \l_semio_viz_tr_argb_tl
+    }
+  \tl_if_empty:NF \l_semio_viz_tr_fold_tl
+    {
+      \semio_viz_tr_args:N \l_semio_viz_tr_fold_tl
+      \semio_viz_tr_fold:VV \l_semio_viz_tr_arga_tl \l_semio_viz_tr_argb_tl
+    }
+  \tl_if_empty:NF \l_semio_viz_tr_pivot_tl
+    {
+      \semio_viz_tr_args:N \l_semio_viz_tr_pivot_tl
+      \semio_viz_tr_pivot:VVV \l_semio_viz_tr_group_tl
+        \l_semio_viz_tr_arga_tl \l_semio_viz_tr_argb_tl
+    }
+  \tl_if_empty:NF \l_semio_viz_tr_join_tl
+    {
+      \semio_viz_tr_args:N \l_semio_viz_tr_join_tl
+      \semio_viz_tr_join:VVV \l_semio_viz_tr_arga_tl \l_semio_viz_tr_argb_tl
+        \l_semio_viz_tr_argc_tl
+    }
+  \tl_if_empty:NF \l_semio_viz_tr_window_tl
+    {
+      \semio_viz_tr_args:N \l_semio_viz_tr_window_tl
+      \semio_viz_tr_window:VVV \l_semio_viz_tr_arga_tl \l_semio_viz_tr_argb_tl
+        \l_semio_viz_tr_argc_tl
+    }
+  \tl_if_empty:NF \l_semio_viz_tr_stack_tl
+    {
+      \semio_viz_tr_args:N \l_semio_viz_tr_stack_tl
+      \semio_viz_tr_stack:VVV \l_semio_viz_tr_arga_tl \l_semio_viz_tr_argb_tl
+        \l_semio_viz_tr_argc_tl
+    }
+  \tl_if_empty:NF \l_semio_viz_tr_normalize_tl
+    { \semio_viz_tr_normalize:V \l_semio_viz_tr_normalize_tl }
+  \tl_if_empty:NF \l_semio_viz_tr_quantile_tl
+    { \semio_viz_tr_quantile:V \l_semio_viz_tr_quantile_tl }
+  \tl_if_empty:NF \l_semio_viz_tr_kde_tl
+    { \semio_viz_tr_kde:V \l_semio_viz_tr_kde_tl }
+  \tl_if_empty:NF \l_semio_viz_tr_regression_tl
+    {
+      \semio_viz_tr_args:N \l_semio_viz_tr_regression_tl
+      \semio_viz_tr_regression:VVV \l_semio_viz_tr_arga_tl \l_semio_viz_tr_argb_tl
+        \l_semio_viz_tr_argc_tl
+    }
+  \semio_viz_tr_store:n {#1}
+}
+\cs_generate_variant:Nn \semio_viz_tr_filter:n { V }
+\cs_generate_variant:Nn \semio_viz_tr_sort:n { V }
+\cs_generate_variant:Nn \semio_viz_tr_bin:n { V }
+\cs_generate_variant:Nn \semio_viz_tr_normalize:n { V }
+\cs_generate_variant:Nn \semio_viz_tr_quantile:n { V }
+\cs_generate_variant:Nn \semio_viz_tr_kde:n { V }
+\cs_generate_variant:Nn \semio_viz_tr_fold:nn { VV }
+\cs_generate_variant:Nn \semio_viz_tr_rollup:nnn { VVV }
+\cs_generate_variant:Nn \semio_viz_tr_pivot:nnn { VVV }
+\cs_generate_variant:Nn \semio_viz_tr_join:nnn { VVV }
+\cs_generate_variant:Nn \semio_viz_tr_window:nnn { VVV }
+\cs_generate_variant:Nn \semio_viz_tr_stack:nnn { VVV }
+\cs_generate_variant:Nn \semio_viz_tr_regression:nnn { VVV }
+%endregion 🔖️Pipeline
+
+%region 🔖️Distributions
+\fp_new:N \l_semio_viz_sci_a_fp
+\fp_new:N \l_semio_viz_sci_b_fp
+\fp_new:N \l_semio_viz_sci_c_fp
+\fp_new:N \l_semio_viz_sci_d_fp
+\fp_new:N \l_semio_viz_sci_e_fp
+\fp_new:N \l_semio_viz_sci_f_fp
+\fp_new:N \l_semio_viz_sci_g_fp
+\fp_new:N \l_semio_viz_sci_h_step_fp
+\fp_new:N \SemioX
+\fp_new:N \SemioY
+\fp_new:N \SemioT
+
+% ✅ True when an fp expression is finite and inside the plottable magnitude window.
+\prg_new_conditional:Npnn \semio_viz_tr_finite:n #1 { T, F, TF }
+  {
+    \fp_compare:nNnTF {#1} = {#1}
+      { \fp_compare:nNnTF { abs (#1) } < { 1e8 } { \prg_return_true: } { \prg_return_false: } }
+      { \prg_return_false: }
+  }
+
+% 📐 Error function, Abramowitz–Stegun 7.1.26 (|error| < 1.5e-7), the base of every normal-law value.
+\cs_new:Npn \semio_viz_tr_dist_erf:n #1
+  {
+    \fp_eval:n
+      {
+        ( #1 < 0 ? -1 : 1 ) *
+        ( 1 - ( ( ( ( ( 1.061405429 * ( 1 / ( 1 + 0.3275911 * abs (#1) ) ) - 1.453152027 )
+          * ( 1 / ( 1 + 0.3275911 * abs (#1) ) ) + 1.421413741 )
+          * ( 1 / ( 1 + 0.3275911 * abs (#1) ) ) - 0.284496736 )
+          * ( 1 / ( 1 + 0.3275911 * abs (#1) ) ) + 0.254829592 )
+          * ( 1 / ( 1 + 0.3275911 * abs (#1) ) ) ) * exp ( - abs (#1) * abs (#1) ) )
+      }
+  }
+
+% 📐 Log-gamma of a positive argument by the Lanczos approximation (g=7, n=9), the base of every factorial-bearing mass function.
+\cs_new:Npn \semio_viz_tr_dist_lgamma:n #1
+  { \fp_eval:n { \semio_viz_tr_dist_lgamma_series:n {#1} } }
+% 📐 The bare Lanczos expression, so the fp evaluation happens once in the caller.
+\cs_new:Npn \semio_viz_tr_dist_lgamma_series:n #1
+  {
+    ( 0.5 * ln ( 2 * pi ) + ( #1 - 0.5 ) * ln ( #1 - 1 + 7.5 ) - ( #1 - 1 + 7.5 )
+      + ln ( 0.99999999999980993
+        + 676.5203681218851 / ( #1 - 1 + 1 )
+        - 1259.1392167224028 / ( #1 - 1 + 2 )
+        + 771.32342877765313 / ( #1 - 1 + 3 )
+        - 176.61502916214059 / ( #1 - 1 + 4 )
+        + 12.507343278686905 / ( #1 - 1 + 5 )
+        - 0.13857109526572012 / ( #1 - 1 + 6 )
+        + 9.9843695780195716e-6 / ( #1 - 1 + 7 )
+        + 1.5056327351493116e-7 / ( #1 - 1 + 8 ) ) )
+  }
+
+% 📐 Log binomial coefficient ln C(n,k).
+\cs_new:Npn \semio_viz_tr_dist_lchoose:nn #1#2
+  { \fp_eval:n { \semio_viz_tr_dist_lgamma:n { #1 + 1 } - \semio_viz_tr_dist_lgamma:n { #2 + 1 } - \semio_viz_tr_dist_lgamma:n { #1 - #2 + 1 } } }
+
+% 📐 Regularised incomplete beta I_x(a,b) by the Lentz continued fraction (200 terms, 1e-12 target).
+\fp_new:N \l_semio_viz_sci_ib_c_fp
+\fp_new:N \l_semio_viz_sci_ib_d_fp
+\fp_new:N \l_semio_viz_sci_ib_h_fp
+\fp_new:N \l_semio_viz_sci_ib_num_fp
+\int_new:N \l_semio_viz_sci_ib_int
+\cs_new_protected:Npn \semio_viz_tr_dist_ibeta:nnnN #1#2#3#4
+  {
+    \fp_compare:nNnTF {#3} > { ( #1 + 1 ) / ( #1 + #2 + 2 ) }
+      {
+        \semio_viz_tr_dist_ibeta_cf:nnnN {#2} {#1} { \fp_eval:n { 1 - #3 } } #4
+        \fp_set:Nn #4 { 1 - #4 }
+      }
+      { \semio_viz_tr_dist_ibeta_cf:nnnN {#1} {#2} {#3} #4 }
+  }
+% 🪜 Lentz's continued fraction for the regularised incomplete beta I_#3(#1,#2), 120 terms into #4.
+\cs_new_protected:Npn \semio_viz_tr_dist_ibeta_cf:nnnN #1#2#3#4
+  {
+    \fp_compare:nNnTF {#3} = { 0 }
+      { \fp_zero:N #4 }
+      {
+        \fp_set:Nn \l_semio_viz_sci_ib_c_fp { 1 }
+        \fp_set:Nn \l_semio_viz_sci_ib_d_fp { 1 / ( 1 - ( #1 + #2 ) * #3 / ( #1 + 1 ) ) }
+        \fp_set_eq:NN \l_semio_viz_sci_ib_h_fp \l_semio_viz_sci_ib_d_fp
+        \int_step_inline:nnnn { 1 } { 1 } { 120 }
+          {
+            \fp_set:Nn \l_semio_viz_sci_ib_num_fp
+              { ##1 * ( #2 - ##1 ) * #3 / ( ( #1 + 2 * ##1 - 1 ) * ( #1 + 2 * ##1 ) ) }
+            \semio_viz_tr_dist_ibeta_step:
+            \fp_set:Nn \l_semio_viz_sci_ib_num_fp
+              { - ( #1 + ##1 ) * ( #1 + #2 + ##1 ) * #3 / ( ( #1 + 2 * ##1 ) * ( #1 + 2 * ##1 + 1 ) ) }
+            \semio_viz_tr_dist_ibeta_step:
+          }
+        \fp_set:Nn #4
+          {
+            exp ( #1 * ln (#3) + #2 * ln ( 1 - #3 )
+              + \semio_viz_tr_dist_lgamma:n { #1 + #2 } - \semio_viz_tr_dist_lgamma:n {#1} - \semio_viz_tr_dist_lgamma:n {#2} )
+            * \l_semio_viz_sci_ib_h_fp / #1
+          }
+      }
+  }
+% ↪️ One Lentz iteration over the numerator already in place: update d, c and the running product.
+\cs_new_protected:Npn \semio_viz_tr_dist_ibeta_step:
+  {
+    \fp_set:Nn \l_semio_viz_sci_ib_d_fp { 1 / ( 1 + \l_semio_viz_sci_ib_num_fp * \l_semio_viz_sci_ib_d_fp ) }
+    \fp_set:Nn \l_semio_viz_sci_ib_c_fp { 1 + \l_semio_viz_sci_ib_num_fp / \l_semio_viz_sci_ib_c_fp }
+    \fp_set:Nn \l_semio_viz_sci_ib_h_fp { \l_semio_viz_sci_ib_h_fp * \l_semio_viz_sci_ib_c_fp * \l_semio_viz_sci_ib_d_fp }
+  }
+
+% 🎲 Density (pdf for continuous laws, pmf for discrete ones) of `#1` with parameters `#2`,`#3` at `#4`.
+\cs_new_protected:Npn \semio_viz_tr_dist_pdf:nnnnN #1#2#3#4#5
+  {
+    \str_case:nnF {#1}
+      {
+        { normal }      { \fp_set:Nn #5 { exp ( -0.5 * ( ( #4 - #2 ) / #3 ) ^ 2 ) / ( #3 * sqrt ( 2 * pi ) ) } }
+        { exponential } { \fp_set:Nn #5 { #4 < 0 ? 0 : #2 * exp ( - #2 * #4 ) } }
+        { uniform }     { \fp_set:Nn #5 { ( #4 < #2 || #4 > #3 ) ? 0 : 1 / ( #3 - #2 ) } }
+        { beta }        { \fp_set:Nn #5 { ( #4 <= 0 || #4 >= 1 ) ? 0 : exp (
+                            ( #2 - 1 ) * ln ( max ( 1e-12 , min ( 1 , #4 ) ) )
+                            + ( #3 - 1 ) * ln ( max ( 1e-12 , 1 - min ( 1 , max ( 0 , #4 ) ) ) )
+                            + \semio_viz_tr_dist_lgamma:n { #2 + #3 } - \semio_viz_tr_dist_lgamma:n {#2} - \semio_viz_tr_dist_lgamma:n {#3} ) } }
+        { binomial }    { \fp_set:Nn #5 { ( #4 < 0 || #4 > #2 ) ? 0 : exp (
+                            \semio_viz_tr_dist_lchoose:nn {#2} { min ( #2 , max ( 0 , #4 ) ) }
+                            + min ( #2 , max ( 0 , #4 ) ) * ln (#3)
+                            + ( #2 - min ( #2 , max ( 0 , #4 ) ) ) * ln ( 1 - #3 ) ) } }
+        { poisson }     { \fp_set:Nn #5 { #4 < 0 ? 0 : exp ( - #2 + max ( 0 , #4 ) * ln (#2)
+                            - \semio_viz_tr_dist_lgamma:n { max ( 0 , #4 ) + 1 } ) } }
+      }
+      { \fp_zero:N #5 }
+  }
+
+% 🎲 Cumulative distribution function of `#1` with parameters `#2`,`#3` at `#4`.
+\fp_new:N \l_semio_viz_sci_cdf_acc_fp
+\cs_new_protected:Npn \semio_viz_tr_dist_cdf:nnnnN #1#2#3#4#5
+  {
+    \str_case:nnF {#1}
+      {
+        { normal }      { \fp_set:Nn #5 { 0.5 * ( 1 + \semio_viz_tr_dist_erf:n { ( #4 - #2 ) / ( #3 * sqrt (2) ) } ) } }
+        { exponential } { \fp_set:Nn #5 { #4 < 0 ? 0 : 1 - exp ( - #2 * #4 ) } }
+        { uniform }     { \fp_set:Nn #5 { #4 < #2 ? 0 : ( #4 > #3 ? 1 : ( #4 - #2 ) / ( #3 - #2 ) ) } }
+        { beta }        { \semio_viz_tr_dist_ibeta:nnnN {#2} {#3} { \fp_eval:n { min ( 1 , max ( 0 , #4 ) ) } } #5 }
+        { binomial }    { \semio_viz_tr_dist_cdf_sum:nnnnN { binomial } {#2} {#3} {#4} #5 }
+        { poisson }     { \semio_viz_tr_dist_cdf_sum:nnnnN { poisson } {#2} {#3} {#4} #5 }
+      }
+      { \fp_zero:N #5 }
+  }
+% 🧮 Distribution function of a discrete law: the mass function of `#1` summed up to #4, into #5.
+\cs_new_protected:Npn \semio_viz_tr_dist_cdf_sum:nnnnN #1#2#3#4#5
+  {
+    \fp_zero:N \l_semio_viz_sci_cdf_acc_fp
+    \int_step_inline:nnnn { 0 } { 1 } { \fp_eval:n { max ( 0 , floor (#4) ) } }
+      {
+        \semio_viz_tr_dist_pdf:nnnnN {#1} {#2} {#3} {##1} \l_semio_viz_sci_a_fp
+        \fp_add:Nn \l_semio_viz_sci_cdf_acc_fp { \l_semio_viz_sci_a_fp }
+      }
+    \fp_set:Nn #5 { #4 < 0 ? 0 : \l_semio_viz_sci_cdf_acc_fp }
+  }
+
+\cs_generate_variant:Nn \semio_viz_tr_dist_pdf:nnnnN { VnnnN }
+\cs_generate_variant:Nn \semio_viz_tr_dist_cdf:nnnnN { VnnnN }
+\cs_generate_variant:Nn \semio_viz_tr_dist_cdf_sum:nnnnN { VnnnN }
+
+% 🎲 Quantile by 60 bisection steps on the cdf over the given search bracket.
+\fp_new:N \l_semio_viz_sci_q_lo_fp
+\fp_new:N \l_semio_viz_sci_q_hi_fp
+\fp_new:N \l_semio_viz_sci_q_mid_fp
+\tl_new:N \l_semio_viz_sci_law_tl
+\cs_new_protected:Npn \semio_viz_tr_dist_quantile:nnnnnnN #1#2#3#4#5#6#7
+  {
+    \tl_set:Nn \l_semio_viz_sci_law_tl {#1}
+    \fp_set:Nn \l_semio_viz_sci_q_lo_fp {#5}
+    \fp_set:Nn \l_semio_viz_sci_q_hi_fp {#6}
+    \int_step_inline:nnnn { 1 } { 1 } { 60 }
+      {
+        \fp_set:Nn \l_semio_viz_sci_q_mid_fp { ( \l_semio_viz_sci_q_lo_fp + \l_semio_viz_sci_q_hi_fp ) / 2 }
+        \semio_viz_tr_dist_cdf:VnnnN \l_semio_viz_sci_law_tl {#2} {#3} { \l_semio_viz_sci_q_mid_fp } \l_semio_viz_sci_a_fp
+        \fp_compare:nNnTF { \l_semio_viz_sci_a_fp } < {#4}
+          { \fp_set_eq:NN \l_semio_viz_sci_q_lo_fp \l_semio_viz_sci_q_mid_fp }
+          { \fp_set_eq:NN \l_semio_viz_sci_q_hi_fp \l_semio_viz_sci_q_mid_fp }
+      }
+    \fp_set:Nn #7 { ( \l_semio_viz_sci_q_lo_fp + \l_semio_viz_sci_q_hi_fp ) / 2 }
+  }
+%endregion 🔖️Distributions
+
+%region 🔖️LayoutRegistry
+% 📐 `stack` and `bin` are transforms in this kernel and layout algorithms in taxonomy 75, so the
+% layout dispatcher reaches them under their own names. The option list is the transform's own:
+% `\SemioVizLayout{stack}{in}{out}[stack={x,series,value}, order=…, offset=…]`.
+\semio_viz_layout_define:nn { stack }
+  { \semio_viz_transform:nnn {#2} {#1} {#3} }
+% 🪣 The same for `bin`: `\SemioVizLayout{bin}{in}{out}[bin=<column>, thresholds=…]`.
+\semio_viz_layout_define:nn { bin }
+  { \semio_viz_transform:nnn {#2} {#1} {#3} }
+%endregion 🔖️LayoutRegistry
+
+%region 🔖️PublicApi
+% 🚚 \SemioVizTransform{out}{in}[operations]: derives a table from another table.
+\NewDocumentCommand \SemioVizTransform { m m O{} } { \semio_viz_transform:nnn {#1} {#2} {#3} }
+%endregion 🔖️PublicApi
+
+\ExplSyntaxOff

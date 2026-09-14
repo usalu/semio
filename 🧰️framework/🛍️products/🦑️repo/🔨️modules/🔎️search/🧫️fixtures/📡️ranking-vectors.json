@@ -1,0 +1,116 @@
+{
+  "$comment": "🧫️ Immutable ranking vectors. The `g1-*` case is the one the retired `1️⃣g1-contract.json` fixture carried; the rest pin conjunction, tie breaking, truncation, tokenisation and bounded fuzziness. `size` of -1 means no truncation.",
+  "schema": "semio.repo.search.ranking-vectors/1",
+  "vectors": [
+    {
+      "name": "g1-conjunction-requires-every-term",
+      "documents": { "a": "deterministic event replay", "b": "recursive glob matcher", "c": "event storage" },
+      "terms": [{ "term": "event", "fuzziness": 0 }, { "term": "replay", "fuzziness": 0 }],
+      "size": 10
+    },
+    {
+      "name": "single-term-matches-several",
+      "documents": { "a": "deterministic event replay", "b": "recursive glob matcher", "c": "event storage" },
+      "terms": [{ "term": "event", "fuzziness": 0 }],
+      "size": 10
+    },
+    {
+      "name": "ties-break-on-the-identifier",
+      "documents": { "c": "alpha", "a": "alpha", "b": "alpha" },
+      "terms": [{ "term": "alpha", "fuzziness": 0 }],
+      "size": 10
+    },
+    {
+      "name": "size-truncates-but-total-does-not",
+      "documents": { "a": "alpha", "b": "alpha", "c": "alpha" },
+      "terms": [{ "term": "alpha", "fuzziness": 0 }],
+      "size": 2
+    },
+    {
+      "name": "size-zero-keeps-nothing",
+      "documents": { "a": "alpha", "b": "alpha" },
+      "terms": [{ "term": "alpha", "fuzziness": 0 }],
+      "size": 0
+    },
+    {
+      "name": "negative-size-keeps-everything",
+      "documents": { "a": "alpha", "b": "alpha", "c": "alpha" },
+      "terms": [{ "term": "alpha", "fuzziness": 0 }],
+      "size": -1
+    },
+    {
+      "name": "matching-is-case-insensitive",
+      "documents": { "a": "EVENT Replay" },
+      "terms": [{ "term": "event", "fuzziness": 0 }],
+      "size": 10
+    },
+    {
+      "name": "separators-split-words",
+      "documents": { "a": "event-replay", "b": "event_replay", "c": "event/replay" },
+      "terms": [{ "term": "replay", "fuzziness": 0 }],
+      "size": 10
+    },
+    {
+      "name": "a-substring-of-the-whole-text-matches",
+      "documents": { "a": "eventreplay" },
+      "terms": [{ "term": "ventrep", "fuzziness": 0 }],
+      "size": 10
+    },
+    {
+      "name": "exact-query-rejects-a-near-word",
+      "documents": { "a": "replay" },
+      "terms": [{ "term": "replayy", "fuzziness": 0 }],
+      "size": 10
+    },
+    {
+      "name": "fuzziness-one-admits-one-edit",
+      "documents": { "a": "replay", "b": "unrelated" },
+      "terms": [{ "term": "replayy", "fuzziness": 1 }],
+      "size": 10
+    },
+    {
+      "name": "fuzziness-one-rejects-two-edits",
+      "documents": { "a": "replay" },
+      "terms": [{ "term": "replya", "fuzziness": 1 }],
+      "size": 10
+    },
+    {
+      "name": "fuzziness-two-admits-a-transposition",
+      "documents": { "a": "replay" },
+      "terms": [{ "term": "replya", "fuzziness": 2 }],
+      "size": 10
+    },
+    {
+      "name": "an-exact-term-outscores-a-fuzzy-one",
+      "documents": { "a": "replay", "b": "replax" },
+      "terms": [{ "term": "replay", "fuzziness": 2 }],
+      "size": 10
+    },
+    {
+      "name": "non-ascii-runs-stay-one-word",
+      "documents": { "a": "🧰️framework module", "b": "plain module" },
+      "terms": [{ "term": "module", "fuzziness": 0 }],
+      "size": 10
+    },
+    {
+      "name": "nothing-matches",
+      "documents": { "a": "alpha", "b": "beta" },
+      "terms": [{ "term": "gamma", "fuzziness": 0 }],
+      "size": 10
+    },
+    {
+      "name": "a-deleted-document-is-gone",
+      "documents": { "a": "alpha", "b": "alpha" },
+      "deleted": ["a"],
+      "terms": [{ "term": "alpha", "fuzziness": 0 }],
+      "size": 10
+    },
+    {
+      "name": "reindexing-replaces-the-text",
+      "documents": { "a": "alpha" },
+      "reindexed": { "a": "beta" },
+      "terms": [{ "term": "alpha", "fuzziness": 0 }],
+      "size": 10
+    }
+  ]
+}

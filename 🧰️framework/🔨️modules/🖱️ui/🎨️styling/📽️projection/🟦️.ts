@@ -548,7 +548,7 @@ function validateStylingOutputManifest(artifacts: readonly StylingArtifact[]): v
   const manifest = JSON.parse(readFileSync(adaptersManifestPath, "utf8")) as StylingAdapterManifest;
   if (manifest.tokens !== "🔣️.json") throw new Error(`styling adapter manifest tokens must be 🔣️.json, got ${JSON.stringify(manifest.tokens)}`);
   const declared = manifest.adapters.flatMap((adapter) => adapter.outputs).sort();
-  const rendered = artifacts.map((artifact) => relative(stylingOwnerRoot, artifact.path)).sort();
+  const rendered = artifacts.map((artifact) => relative(stylingOwnerRoot, artifact.path).replaceAll("\\", "/")).sort();
   if (new Set(declared).size !== declared.length) throw new Error("styling adapter manifest contains duplicate outputs");
   if (JSON.stringify(declared) !== JSON.stringify(rendered)) throw new Error(`styling adapter manifest mismatch:\ndeclared=${JSON.stringify(declared)}\nrendered=${JSON.stringify(rendered)}`);
 }

@@ -1,20 +1,30 @@
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{semio-viz-scale}[2026/08/18 v0.1.0 semio viz scales]
+\ProvidesPackage{semio-viz-scale}[2026/09/05 v0.3.0 semio viz scales (taxonomy 78: 15 kinds, d3-compatible ticks, nice, invert, colour interpolation)]
 
 \RequirePackage{expl3}
 \RequirePackage{xparse}
 \RequirePackage{semio-viz-data}
+\RequirePackage{semio-viz-format}
 
 \ExplSyntaxOn
 
-%region Diagnostics
+%region 🔖️Diagnostics
 \msg_new:nnn { semio-viz } { unknown-scale }
   { Unknown~viz~scale~'#1'. }
 \msg_new:nnn { semio-viz } { unknown-scale-kind }
   { Unknown~viz~scale~kind~'#1'. }
-%endregion Diagnostics
+\msg_new:nnn { semio-viz } { unknown-interpolator }
+  { Unknown~interpolator~'#1'~(known:~number,~round,~array,~rgb,~lab,~hcl,~oklab). }
+\msg_new:nnn { semio-viz } { bad-color }
+  { Malformed~colour~'#1'~(expected~six~hexadecimal~digits). }
+%endregion 🔖️Diagnostics
 
-%region Registry
+%region 🔖️Variants
+\cs_generate_variant:Nn \seq_set_from_clist:NN { Nc }
+\cs_generate_variant:Nn \seq_set_from_clist:Nn { NV }
+%endregion 🔖️Variants
+
+%region 🔖️Registry
 \seq_new:N \g_semio_viz_scale_names_seq
 \seq_new:N \g_semio_viz_scale_kinds_seq
 \prop_new:N \g_semio_viz_scale_kind_prop
@@ -22,28 +32,126 @@
 \prop_new:N \g_semio_viz_scale_range_prop
 \clist_new:N \l_semio_viz_scale_pack_clist
 \tl_new:N \l_semio_viz_scale_kind_tl
+\tl_new:N \l_semio_viz_scale_opt_tl
 \fp_new:N \l_semio_viz_domain_lo_fp
 \fp_new:N \l_semio_viz_domain_hi_fp
 \fp_new:N \l_semio_viz_range_lo_fp
 \fp_new:N \l_semio_viz_range_hi_fp
 
+% 🏷️ Declares a scale kind name; the fifteen taxonomy §78 kinds are registered below.
 \cs_new_protected:Npn \semio_viz_scale_kind_define:n #1 {
   \seq_gput_right:Nn \g_semio_viz_scale_kinds_seq {#1}
 }
 
-\semio_viz_scale_kind_define:n { linear }
-\semio_viz_scale_kind_define:n { log }
-\semio_viz_scale_kind_define:n { symlog }
-\semio_viz_scale_kind_define:n { pow }
-\semio_viz_scale_kind_define:n { sqrt }
-\semio_viz_scale_kind_define:n { band }
-\semio_viz_scale_kind_define:n { point }
-\semio_viz_scale_kind_define:n { ordinal }
-\semio_viz_scale_kind_define:n { quantize }
-\semio_viz_scale_kind_define:n { quantile }
-\semio_viz_scale_kind_define:n { threshold }
+\clist_map_inline:nn
+  {
+    linear, log, pow, sqrt, symlog, identity, ordinal, band, point,
+    quantile, quantize, threshold, sequential, diverging, temporal
+  }
+  { \semio_viz_scale_kind_define:n {#1} }
+%endregion 🔖️Registry
 
-\cs_new_protected:Npn \semio_viz_scale_define:nnnn #1#2#3#4 {
+%region 🔖️Keys
+% ⚙️ Option vocabulary of every scale, mirroring the d3 accessors of the same names.
+%   nice          integer|true   default false   extend the domain to round tick values
+%   clamp         boolean        default false   clamp inputs to the domain extent
+%   padding       number         default 0       point/band outer padding (band: both paddings)
+%   paddingInner  number         default 0       band inner padding, fraction of the step
+%   paddingOuter  number         default 0       band outer padding, fraction of the step
+%   align         number         default 0.5     band/point alignment of the leftover space
+%   base          number         default 10      log base, used by the tick generator
+%   exponent      number         default 1       pow exponent (sqrt fixes it to 0.5)
+%   constant      number         default 1       symlog linear-region constant
+%   ticks         integer        default 10      default tick count
+%   tickValues    clist          default empty   explicit tick values, overriding the generator
+%   tickFormat    spec           default empty   d3-format specifier for tick labels
+%   interpolator  name           default oklab   colour space of sequential/diverging ramps
+%   scheme        name           default empty   named colour scheme resolved by semio-viz-theme
+%   reverse       boolean        default false   reverse the range
+%   round         boolean        default false   round band positions to whole millimetres
+%   interval      name           default auto    temporal tick interval: auto|day|week|month|year
+\prop_new:N \g_semio_viz_scale_defaults_prop
+\clist_const:Nn \c_semio_viz_scale_keys_clist
+  {
+    nice, clamp, padding, paddingInner, paddingOuter, align, base, exponent, constant,
+    ticks, tickValues, tickFormat, interpolator, scheme, reverse, round, interval
+  }
+
+\prop_gput:Nnn \g_semio_viz_scale_defaults_prop { nice } { 0 }
+\prop_gput:Nnn \g_semio_viz_scale_defaults_prop { clamp } { false }
+\prop_gput:Nnn \g_semio_viz_scale_defaults_prop { padding } { 0 }
+\prop_gput:Nnn \g_semio_viz_scale_defaults_prop { paddingInner } { 0 }
+\prop_gput:Nnn \g_semio_viz_scale_defaults_prop { paddingOuter } { 0 }
+\prop_gput:Nnn \g_semio_viz_scale_defaults_prop { align } { 0.5 }
+\prop_gput:Nnn \g_semio_viz_scale_defaults_prop { base } { 10 }
+\prop_gput:Nnn \g_semio_viz_scale_defaults_prop { exponent } { 1 }
+\prop_gput:Nnn \g_semio_viz_scale_defaults_prop { constant } { 1 }
+\prop_gput:Nnn \g_semio_viz_scale_defaults_prop { ticks } { 10 }
+\prop_gput:Nnn \g_semio_viz_scale_defaults_prop { tickValues } { }
+\prop_gput:Nnn \g_semio_viz_scale_defaults_prop { tickFormat } { }
+\prop_gput:Nnn \g_semio_viz_scale_defaults_prop { interpolator } { oklab }
+\prop_gput:Nnn \g_semio_viz_scale_defaults_prop { scheme } { }
+\prop_gput:Nnn \g_semio_viz_scale_defaults_prop { reverse } { false }
+\prop_gput:Nnn \g_semio_viz_scale_defaults_prop { round } { false }
+\prop_gput:Nnn \g_semio_viz_scale_defaults_prop { interval } { auto }
+
+\prop_new:N \l_semio_viz_scale_opts_prop
+
+% ⚙️ The option vocabulary of \SemioVizScale. Every key only records its value in the pending
+% option property list, so a scale keeps exactly what its call site named and reads everything else
+% from \g_semio_viz_scale_defaults_prop above, which is where each default is documented.
+\keys_define:nn { semio / viz / scale }
+  {
+    nice .code:n = { \prop_put:Nnn \l_semio_viz_scale_opts_prop { nice } {#1} },
+    nice .default:n = { 10 },
+    clamp .code:n = { \prop_put:Nnn \l_semio_viz_scale_opts_prop { clamp } {#1} },
+    clamp .default:n = { true },
+    padding .code:n = { \prop_put:Nnn \l_semio_viz_scale_opts_prop { padding } {#1} },
+    paddingInner .code:n = { \prop_put:Nnn \l_semio_viz_scale_opts_prop { paddingInner } {#1} },
+    paddingOuter .code:n = { \prop_put:Nnn \l_semio_viz_scale_opts_prop { paddingOuter } {#1} },
+    align .code:n = { \prop_put:Nnn \l_semio_viz_scale_opts_prop { align } {#1} },
+    base .code:n = { \prop_put:Nnn \l_semio_viz_scale_opts_prop { base } {#1} },
+    exponent .code:n = { \prop_put:Nnn \l_semio_viz_scale_opts_prop { exponent } {#1} },
+    constant .code:n = { \prop_put:Nnn \l_semio_viz_scale_opts_prop { constant } {#1} },
+    ticks .code:n = { \prop_put:Nnn \l_semio_viz_scale_opts_prop { ticks } {#1} },
+    tickValues .code:n = { \prop_put:Nnn \l_semio_viz_scale_opts_prop { tickValues } {#1} },
+    tickFormat .code:n = { \prop_put:Nnn \l_semio_viz_scale_opts_prop { tickFormat } {#1} },
+    interpolator .code:n = { \prop_put:Nnn \l_semio_viz_scale_opts_prop { interpolator } {#1} },
+    scheme .code:n = { \prop_put:Nnn \l_semio_viz_scale_opts_prop { scheme } {#1} },
+    reverse .code:n = { \prop_put:Nnn \l_semio_viz_scale_opts_prop { reverse } {#1} },
+    reverse .default:n = { true },
+    round .code:n = { \prop_put:Nnn \l_semio_viz_scale_opts_prop { round } {#1} },
+    round .default:n = { true },
+    interval .code:n = { \prop_put:Nnn \l_semio_viz_scale_opts_prop { interval } {#1} },
+  }
+
+% 🔍 Reads option #2 of scale #1 into the tl variable #3, falling back to the documented default.
+\cs_new_protected:Npn \semio_viz_scale_opt:nnN #1#2#3 {
+  \prop_get:cnNF { g_semio_viz_scale_ \tl_to_str:n {#1} _opts_prop } {#2} #3
+    { \prop_get:NnN \g_semio_viz_scale_defaults_prop {#2} #3 }
+}
+
+% ❓ True when option #2 of scale #1 is the string `true`.
+\prg_new_protected_conditional:Npnn \semio_viz_scale_flag:nn #1#2 { T, F, TF } {
+  \semio_viz_scale_opt:nnN {#1} {#2} \l_semio_viz_scale_opt_tl
+  \str_if_eq:VnTF \l_semio_viz_scale_opt_tl { true } { \prg_return_true: } { \prg_return_false: }
+}
+
+% 🔢 Numeric value of option #2 of scale #1, expandable for use inside fp expressions.
+\cs_new:Npn \semio_viz_scale_num:nn #1#2 {
+  \str_if_eq:eeTF { \prop_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _opts_prop } {#2} } { }
+    { \prop_item:Nn \g_semio_viz_scale_defaults_prop {#2} }
+    { \prop_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _opts_prop } {#2} }
+}
+
+% 🏷️ Kind of scale #1, expandable.
+\cs_new:Npn \semio_viz_scale_kind:n #1
+  { \tl_use:c { g_semio_viz_scale_ \tl_to_str:n {#1} _kind_tl } }
+%endregion 🔖️Keys
+
+%region 🔖️Definition
+% 📐 Registers a named scale: kind, domain, range and its option list.
+\cs_new_protected:Npn \semio_viz_scale_define:nnnnn #1#2#3#4#5 {
   \seq_if_in:NnF \g_semio_viz_scale_kinds_seq {#2}
     { \msg_error:nnn { semio-viz } { unknown-scale-kind } {#2} }
   \seq_if_in:NnF \g_semio_viz_scale_names_seq {#1}
@@ -57,6 +165,11 @@
   \clist_if_exist:cF { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist }
     { \clist_new:c { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } }
   \clist_gset:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } {#4}
+  \prop_if_exist:cF { g_semio_viz_scale_ \tl_to_str:n {#1} _opts_prop }
+    { \prop_new:c { g_semio_viz_scale_ \tl_to_str:n {#1} _opts_prop } }
+  \prop_clear:N \l_semio_viz_scale_opts_prop
+  \keys_set:nn { semio / viz / scale } {#5}
+  \prop_gset_eq:cN { g_semio_viz_scale_ \tl_to_str:n {#1} _opts_prop } \l_semio_viz_scale_opts_prop
   \prop_gput:Nnn \g_semio_viz_scale_kind_prop {#1} {#2}
   \clist_set:Nn \l_semio_viz_scale_pack_clist {#3}
   \tl_set:Nx \l_tmpa_tl { \clist_use:Nn \l_semio_viz_scale_pack_clist , }
@@ -64,216 +177,324 @@
   \clist_set:Nn \l_semio_viz_scale_pack_clist {#4}
   \tl_set:Nx \l_tmpa_tl { \clist_use:Nn \l_semio_viz_scale_pack_clist , }
   \prop_gput:NnV \g_semio_viz_scale_range_prop {#1} \l_tmpa_tl
+  \semio_viz_scale_flag:nnT {#1} { reverse } { \semio_viz_scale_range_reverse:n {#1} }
+  \semio_viz_scale_opt:nnN {#1} { nice } \l_semio_viz_scale_opt_tl
+  \str_if_eq:VnT \l_semio_viz_scale_opt_tl { true }
+    { \tl_set:Nn \l_semio_viz_scale_opt_tl { 10 } }
+  \int_compare:nNnT { 0 \l_semio_viz_scale_opt_tl } > { 0 }
+    { \semio_viz_scale_nice:nn {#1} { \l_semio_viz_scale_opt_tl } }
 }
 
+% ↩️ Reverses the stored range list in place.
+\cs_new_protected:Npn \semio_viz_scale_range_reverse:n #1 {
+  \seq_set_from_clist:Nc \l_semio_viz_scale_rev_seq
+    { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist }
+  \seq_reverse:N \l_semio_viz_scale_rev_seq
+  \clist_gset:cx { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist }
+    { \seq_use:Nn \l_semio_viz_scale_rev_seq { , } }
+}
+\seq_new:N \l_semio_viz_scale_rev_seq
+
+% 📐 Backwards-compatible four-argument definition used by the families still on the legacy layout.
+\cs_new_protected:Npn \semio_viz_scale_define:nnnn #1#2#3#4
+  { \semio_viz_scale_define:nnnnn {#1} {#2} {#3} {#4} { } }
+\cs_generate_variant:Nn \semio_viz_scale_define:nnnn { nnxx , nnVV }
+\cs_generate_variant:Nn \semio_viz_scale_define:nnnnn { nnxxn , nnVVn , nnxxV }
+
+% 🛡️ Raises `unknown-scale` unless #1 names a scale that was defined; every reader calls it first.
 \cs_new_protected:Npn \semio_viz_scale_require:n #1 {
   \seq_if_in:NnF \g_semio_viz_scale_names_seq {#1}
     { \msg_error:nnn { semio-viz } { unknown-scale } {#1} }
 }
 
+% ❓ True when a scale name is registered.
+\prg_new_protected_conditional:Npnn \semio_viz_scale_if_exist:n #1 { T, F, TF } {
+  \seq_if_in:NnTF \g_semio_viz_scale_names_seq {#1} { \prg_return_true: } { \prg_return_false: }
+}
+
+% 🎚️ Loads the first and last domain/range entries into the shared lo/hi registers;
+% a temporal domain is converted to epoch milliseconds on the way in.
 \cs_new_protected:Npn \semio_viz_scale_numeric_prep:n #1 {
   \semio_viz_scale_require:n {#1}
-  \fp_set:Nn \l_semio_viz_domain_lo_fp { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { 1 } }
-  \fp_set:Nn \l_semio_viz_domain_hi_fp { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { 2 } }
-  \fp_set:Nn \l_semio_viz_range_lo_fp { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } { 1 } }
-  \fp_set:Nn \l_semio_viz_range_hi_fp { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } { 2 } }
+  \str_if_eq:eeTF { \semio_viz_scale_kind:n {#1} } { temporal }
+    {
+      \semio_viz_scale_epoch_set:xN
+        { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { 1 } }
+        \l_semio_viz_domain_lo_fp
+      \semio_viz_scale_epoch_set:xN
+        { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { -1 } }
+        \l_semio_viz_domain_hi_fp
+    }
+    {
+      \fp_set:Nn \l_semio_viz_domain_lo_fp
+        { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { 1 } }
+      \fp_set:Nn \l_semio_viz_domain_hi_fp
+        { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { -1 } }
+    }
+  \fp_set:Nn \l_semio_viz_range_lo_fp
+    { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } { 1 } }
+  \fp_set:Nn \l_semio_viz_range_hi_fp
+    { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } { -1 } }
   \fp_compare:nNnT { \l_semio_viz_domain_hi_fp } = { \l_semio_viz_domain_lo_fp }
     { \fp_add:Nn \l_semio_viz_domain_hi_fp { 1 } }
 }
+%endregion 🔖️Definition
 
-\cs_new_protected:Npn \semio_viz_asinh:nN #1#2 {
-  \fp_set:Nn #2 { \fp_eval:n {
-    ( (#1) == 0 ) ? 0 : ( ( (#1) > 0 ) ? 1 : -1 ) * ln( 1 + abs(#1) )
-  } }
+%region 🔖️Temporal
+\fp_new:N \l_semio_viz_scale_epoch_fp
+
+% ⏱️ Epoch milliseconds of an ISO timestamp, matching `new Date(iso)` in UTC.
+\cs_new_protected:Npn \semio_viz_scale_epoch_set:nN #1#2 {
+  \semio_viz_time_parse:n {#1}
+  \fp_set:Nn #2
+    {
+      ( \l_semio_viz_time_epoch_int * 86400 + \l_semio_viz_time_hour_int * 3600
+        + \l_semio_viz_time_minute_int * 60 + \l_semio_viz_time_second_int ) * 1000
+    }
 }
 
+\cs_generate_variant:Nn \semio_viz_scale_epoch_set:nN { xN , VN }
+
+% 📅 ISO date `YYYY-MM-DD` of an epoch-millisecond value (UTC).
+\cs_new_protected:Npn \semio_viz_scale_epoch_iso:nN #1#2 {
+  \int_set:Nn \l_semio_viz_scale_days_int
+    { \fp_to_int:n { floor( (#1) / 86400000 ) } }
+  \semio_viz_scale_civil:nN { \l_semio_viz_scale_days_int } #2
+}
+\int_new:N \l_semio_viz_scale_days_int
+\int_new:N \l_semio_viz_scale_civil_y_int
+\int_new:N \l_semio_viz_scale_civil_m_int
+\int_new:N \l_semio_viz_scale_civil_d_int
+\int_new:N \l_semio_viz_scale_civil_e_int
+\int_new:N \l_semio_viz_scale_civil_doe_int
+\int_new:N \l_semio_viz_scale_civil_yoe_int
+\int_new:N \l_semio_viz_scale_civil_doy_int
+\int_new:N \l_semio_viz_scale_civil_mp_int
+
+% 🗓️ Civil date of a day number since the epoch (Howard Hinnant's `civil_from_days`).
+\cs_new_protected:Npn \semio_viz_scale_civil:nN #1#2 {
+  \int_set:Nn \l_semio_viz_scale_civil_e_int { #1 + 719468 }
+  \int_set:Nn \l_semio_viz_scale_civil_doe_int
+    { \l_semio_viz_scale_civil_e_int - 146097 * \semio_viz_scale_floor_div:nn { \l_semio_viz_scale_civil_e_int } { 146097 } }
+  \int_set:Nn \l_semio_viz_scale_civil_yoe_int
+    {
+      \int_div_truncate:nn
+        {
+          \l_semio_viz_scale_civil_doe_int
+            - \int_div_truncate:nn { \l_semio_viz_scale_civil_doe_int } { 1460 }
+            + \int_div_truncate:nn { \l_semio_viz_scale_civil_doe_int } { 36524 }
+            - \int_div_truncate:nn { \l_semio_viz_scale_civil_doe_int } { 146096 }
+        }
+        { 365 }
+    }
+  \int_set:Nn \l_semio_viz_scale_civil_doy_int
+    {
+      \l_semio_viz_scale_civil_doe_int
+        - ( 365 * \l_semio_viz_scale_civil_yoe_int
+            + \int_div_truncate:nn { \l_semio_viz_scale_civil_yoe_int } { 4 }
+            - \int_div_truncate:nn { \l_semio_viz_scale_civil_yoe_int } { 100 } )
+    }
+  \int_set:Nn \l_semio_viz_scale_civil_mp_int
+    { \int_div_truncate:nn { 5 * \l_semio_viz_scale_civil_doy_int + 2 } { 153 } }
+  \int_set:Nn \l_semio_viz_scale_civil_d_int
+    {
+      \l_semio_viz_scale_civil_doy_int
+        - \int_div_truncate:nn { 153 * \l_semio_viz_scale_civil_mp_int + 2 } { 5 } + 1
+    }
+  \int_set:Nn \l_semio_viz_scale_civil_m_int
+    {
+      \l_semio_viz_scale_civil_mp_int
+        + \int_compare:nNnTF { \l_semio_viz_scale_civil_mp_int } < { 10 } { 3 } { -9 }
+    }
+  \int_set:Nn \l_semio_viz_scale_civil_y_int
+    {
+      \l_semio_viz_scale_civil_yoe_int
+        + 400 * \semio_viz_scale_floor_div:nn { \l_semio_viz_scale_civil_e_int } { 146097 }
+        + \int_compare:nTF { \l_semio_viz_scale_civil_m_int <= 2 } { 1 } { 0 }
+    }
+  \str_set:Nx #2
+    {
+      \semio_viz_time_pad:nn { 4 } { \l_semio_viz_scale_civil_y_int } -
+      \semio_viz_time_pad:nn { 2 } { \l_semio_viz_scale_civil_m_int } -
+      \semio_viz_time_pad:nn { 2 } { \l_semio_viz_scale_civil_d_int }
+    }
+}
+
+% ⬇️ Floor division for possibly negative numerators.
+\cs_new:Npn \semio_viz_scale_floor_div:nn #1#2
+  {
+    \int_div_truncate:nn
+      { #1 - \int_compare:nNnTF {#1} < { 0 } { #2 - 1 } { 0 } } {#2}
+  }
+%endregion 🔖️Temporal
+
+%region 🔖️Transforms
+\fp_new:N \l_semio_viz_scale_tx_fp
+
+% ➡️ Forward transform of the continuous kind of scale #1 applied to #2.
+\cs_new_protected:Npn \semio_viz_scale_tx:nnN #1#2#3 {
+  \tl_set:Nx \l_semio_viz_scale_kind_tl
+    { \tl_use:c { g_semio_viz_scale_ \tl_to_str:n {#1} _kind_tl } }
+  \str_case:VnF \l_semio_viz_scale_kind_tl
+    {
+      { log }
+        {
+          \fp_compare:nNnTF { \l_semio_viz_domain_lo_fp } < { 0 }
+            { \fp_set:Nn #3 { -ln( -(#2) ) } }
+            { \fp_set:Nn #3 { ln( #2 ) } }
+        }
+      { pow }
+        {
+          \fp_set:Nn #3
+            {
+              ( (#2) < 0 ? -1 : 1 ) * abs(#2) ** ( \semio_viz_scale_num:nn {#1} { exponent } )
+            }
+        }
+      { sqrt } { \fp_set:Nn #3 { ( (#2) < 0 ? -1 : 1 ) * sqrt( abs(#2) ) } }
+      { symlog }
+        {
+          \fp_set:Nn #3
+            {
+              ( (#2) < 0 ? -1 : 1 )
+                * ln( 1 + abs( (#2) / ( \semio_viz_scale_num:nn {#1} { constant } ) ) )
+            }
+        }
+    }
+    { \fp_set:Nn #3 { #2 } }
+}
+
+% ⬅️ Inverse transform of the continuous kind of scale #1 applied to #2.
+\cs_new_protected:Npn \semio_viz_scale_utx:nnN #1#2#3 {
+  \tl_set:Nx \l_semio_viz_scale_kind_tl
+    { \tl_use:c { g_semio_viz_scale_ \tl_to_str:n {#1} _kind_tl } }
+  \str_case:VnF \l_semio_viz_scale_kind_tl
+    {
+      { log }
+        {
+          \fp_compare:nNnTF { \l_semio_viz_domain_lo_fp } < { 0 }
+            { \fp_set:Nn #3 { -exp( -(#2) ) } }
+            { \fp_set:Nn #3 { exp( #2 ) } }
+        }
+      { pow }
+        {
+          \fp_set:Nn #3
+            {
+              ( (#2) < 0 ? -1 : 1 )
+                * abs(#2) ** ( 1 / ( \semio_viz_scale_num:nn {#1} { exponent } ) )
+            }
+        }
+      { sqrt } { \fp_set:Nn #3 { ( (#2) < 0 ? -1 : 1 ) * (#2) * (#2) } }
+      { symlog }
+        {
+          \fp_set:Nn #3
+            {
+              ( (#2) < 0 ? -1 : 1 ) * ( \semio_viz_scale_num:nn {#1} { constant } )
+                * ( exp( abs(#2) ) - 1 )
+            }
+        }
+    }
+    { \fp_set:Nn #3 { #2 } }
+}
+%endregion 🔖️Transforms
+
+%region 🔖️Continuous
+\fp_new:N \l_semio_viz_scale_t_fp
+\fp_new:N \l_semio_viz_scale_a_fp
+\fp_new:N \l_semio_viz_scale_b_fp
+\fp_new:N \l_semio_viz_scale_x_fp
+
+% 📏 Normalized position of #2 inside the domain of the continuous scale #1.
+\cs_new_protected:Npn \semio_viz_scale_norm:nnN #1#2#3 {
+  \semio_viz_scale_numeric_prep:n {#1}
+  \fp_set:Nn \l_semio_viz_scale_x_fp {#2}
+  \semio_viz_scale_flag:nnT {#1} { clamp }
+    {
+      \fp_compare:nNnTF { \l_semio_viz_domain_lo_fp } < { \l_semio_viz_domain_hi_fp }
+        {
+          \fp_set:Nn \l_semio_viz_scale_x_fp
+            {
+              min( max( \l_semio_viz_scale_x_fp , \l_semio_viz_domain_lo_fp ) ,
+                \l_semio_viz_domain_hi_fp )
+            }
+        }
+        {
+          \fp_set:Nn \l_semio_viz_scale_x_fp
+            {
+              min( max( \l_semio_viz_scale_x_fp , \l_semio_viz_domain_hi_fp ) ,
+                \l_semio_viz_domain_lo_fp )
+            }
+        }
+    }
+  \semio_viz_scale_tx:nnN {#1} { \l_semio_viz_scale_x_fp } \l_semio_viz_scale_t_fp
+  \semio_viz_scale_tx:nnN {#1} { \l_semio_viz_domain_lo_fp } \l_semio_viz_scale_a_fp
+  \semio_viz_scale_tx:nnN {#1} { \l_semio_viz_domain_hi_fp } \l_semio_viz_scale_b_fp
+  \fp_set:Nn #3
+    {
+      ( \l_semio_viz_scale_t_fp - \l_semio_viz_scale_a_fp )
+        / ( \l_semio_viz_scale_b_fp - \l_semio_viz_scale_a_fp )
+    }
+}
+
+% 📐 Maps #2 through the continuous scale #1 onto its range.
+\cs_new_protected:Npn \semio_viz_scale_continuous_map:nnN #1#2#3 {
+  \semio_viz_scale_norm:nnN {#1} {#2} \l_semio_viz_scale_t_fp
+  \fp_set:Nn #3
+    {
+      \l_semio_viz_range_lo_fp
+        + \l_semio_viz_scale_t_fp * ( \l_semio_viz_range_hi_fp - \l_semio_viz_range_lo_fp )
+    }
+  \semio_viz_scale_flag:nnT {#1} { round } { \fp_set:Nn #3 { round(#3) } }
+}
+
+% ↩️ Inverts a range position back into the domain of the continuous scale #1.
+\cs_new_protected:Npn \semio_viz_scale_invert:nnN #1#2#3 {
+  \semio_viz_scale_numeric_prep:n {#1}
+  \semio_viz_scale_tx:nnN {#1} { \l_semio_viz_domain_lo_fp } \l_semio_viz_scale_a_fp
+  \semio_viz_scale_tx:nnN {#1} { \l_semio_viz_domain_hi_fp } \l_semio_viz_scale_b_fp
+  \fp_set:Nn \l_semio_viz_scale_t_fp
+    {
+      \l_semio_viz_scale_a_fp
+        + ( (#2) - \l_semio_viz_range_lo_fp )
+          / ( \l_semio_viz_range_hi_fp - \l_semio_viz_range_lo_fp )
+          * ( \l_semio_viz_scale_b_fp - \l_semio_viz_scale_a_fp )
+    }
+  \semio_viz_scale_utx:nnN {#1} { \l_semio_viz_scale_t_fp } #3
+  \semio_viz_scale_flag:nnT {#1} { clamp }
+    {
+      \fp_compare:nNnTF { \l_semio_viz_domain_lo_fp } < { \l_semio_viz_domain_hi_fp }
+        {
+          \fp_set:Nn #3
+            { min( max( #3 , \l_semio_viz_domain_lo_fp ) , \l_semio_viz_domain_hi_fp ) }
+        }
+        {
+          \fp_set:Nn #3
+            { min( max( #3 , \l_semio_viz_domain_hi_fp ) , \l_semio_viz_domain_lo_fp ) }
+        }
+    }
+}
+\cs_generate_variant:Nn \semio_viz_scale_invert:nnN { VnN , VVN }
+
+% 🧭 Legacy linear application against the prepared lo/hi registers.
 \cs_new_protected:Npn \semio_viz_scale_linear_apply:nN #1#2 {
-  \fp_set:Nn #2 { \fp_eval:n {
-    \l_semio_viz_range_lo_fp + ( (#1) - \l_semio_viz_domain_lo_fp )
-      / ( \l_semio_viz_domain_hi_fp - \l_semio_viz_domain_lo_fp )
-      * ( \l_semio_viz_range_hi_fp - \l_semio_viz_range_lo_fp )
-  } }
+  \fp_set:Nn #2
+    {
+      \l_semio_viz_range_lo_fp + ( (#1) - \l_semio_viz_domain_lo_fp )
+        / ( \l_semio_viz_domain_hi_fp - \l_semio_viz_domain_lo_fp )
+        * ( \l_semio_viz_range_hi_fp - \l_semio_viz_range_lo_fp )
+    }
 }
+%endregion 🔖️Continuous
 
-\cs_new_protected:Npn \semio_viz_scale_map:nnN #1#2#3 {
-  \semio_viz_scale_require:n {#1}
-  \prop_get:NnN \g_semio_viz_scale_kind_prop {#1} \l_semio_viz_scale_kind_tl
-  \str_case:VnF \l_semio_viz_scale_kind_tl {
-    { band } { \semio_viz_scale_band_map:nnN {#1} {#2} #3 }
-    { point } { \semio_viz_scale_band_map:nnN {#1} {#2} #3 }
-    { ordinal } { \semio_viz_scale_band_map:nnN {#1} {#2} #3 }
-    { threshold } { \semio_viz_scale_threshold_map:nnN {#1} {#2} #3 }
-    { quantile } { \semio_viz_scale_quantile_map:nnN {#1} {#2} #3 }
-    { quantize } {
-      \semio_viz_scale_numeric_prep:n {#1}
-      \semio_viz_scale_quantize_map:nN {#2} #3
-    }
-    { log } {
-      \semio_viz_scale_numeric_prep:n {#1}
-      \fp_set:Nn #3 { \fp_eval:n {
-        \l_semio_viz_range_lo_fp + ( ln(max(#2, 1e-9)) - ln(max(\l_semio_viz_domain_lo_fp, 1e-9)) )
-          / ( ln(max(\l_semio_viz_domain_hi_fp, 1e-8)) - ln(max(\l_semio_viz_domain_lo_fp, 1e-9)) )
-          * ( \l_semio_viz_range_hi_fp - \l_semio_viz_range_lo_fp )
-      } }
-    }
-    { sqrt } {
-      \semio_viz_scale_numeric_prep:n {#1}
-      \fp_set:Nn #3 { \fp_eval:n {
-        \l_semio_viz_range_lo_fp + ( sqrt(max(#2, 0)) - sqrt(max(\l_semio_viz_domain_lo_fp, 0)) )
-          / ( sqrt(max(\l_semio_viz_domain_hi_fp, 0)) - sqrt(max(\l_semio_viz_domain_lo_fp, 0)) + 1e-9 )
-          * ( \l_semio_viz_range_hi_fp - \l_semio_viz_range_lo_fp )
-      } }
-    }
-    { pow } {
-      \semio_viz_scale_numeric_prep:n {#1}
-      \fp_set:Nn #3 { \fp_eval:n {
-        \l_semio_viz_range_lo_fp + ( (#2)^2 - (\l_semio_viz_domain_lo_fp)^2 )
-          / ( (\l_semio_viz_domain_hi_fp)^2 - (\l_semio_viz_domain_lo_fp)^2 + 1e-9 )
-          * ( \l_semio_viz_range_hi_fp - \l_semio_viz_range_lo_fp )
-      } }
-    }
-    { symlog } {
-      \semio_viz_scale_numeric_prep:n {#1}
-      \semio_viz_asinh:nN {#2} \l_tmpa_fp
-      \semio_viz_asinh:nN { \fp_use:N \l_semio_viz_domain_lo_fp } \l_tmpb_fp
-      \semio_viz_asinh:nN { \fp_use:N \l_semio_viz_domain_hi_fp } \l_tmpc_fp
-      \fp_set:Nn #3 { \fp_eval:n {
-        \l_semio_viz_range_lo_fp + ( \l_tmpa_fp - \l_tmpb_fp )
-          / ( \l_tmpc_fp - \l_tmpb_fp + 1e-9 )
-          * ( \l_semio_viz_range_hi_fp - \l_semio_viz_range_lo_fp )
-      } }
-    }
-    { linear } {
-      \semio_viz_scale_numeric_prep:n {#1}
-      \semio_viz_scale_linear_apply:nN {#2} #3
-    }
-  } {
-    \msg_error:nnn { semio-viz } { unknown-scale-kind } { \l_semio_viz_scale_kind_tl }
-  }
-}
-\cs_generate_variant:Nn \semio_viz_scale_map:nnN { VnN , VVN }
-
+%region 🔖️Discrete
 \int_new:N \l_semio_viz_band_int
-\seq_new:N \l_semio_viz_quantile_seq
+\int_new:N \l_semio_viz_scale_count_int
+\fp_new:N \l_semio_viz_scale_step_fp
+\fp_new:N \l_semio_viz_scale_start_fp
+\fp_new:N \l_semio_viz_scale_bandwidth_fp
+\bool_new:N \l_semio_viz_scale_reverse_bool
 
-\cs_new_protected:Npn \semio_viz_scale_range_from_index:nN #1#2 {
-  \fp_set:Nn #2 { \fp_eval:n {
-    \l_semio_viz_range_lo_fp + ( #1 - 0.5 ) / \l_tmpb_int * ( \l_semio_viz_range_hi_fp - \l_semio_viz_range_lo_fp )
-  } }
-}
-
-\cs_new_protected:Npn \semio_viz_scale_quantize_map:nN #1#2 {
-  \int_set:Nn \l_tmpa_int { 4 }
-  \fp_set:Nn \l_tmpa_fp { floor( \l_tmpa_int * ( (#1) - \l_semio_viz_domain_lo_fp ) / ( \l_semio_viz_domain_hi_fp - \l_semio_viz_domain_lo_fp ) ) }
-  \fp_compare:nNnT { \l_tmpa_fp } < { 0 } { \fp_zero:N \l_tmpa_fp }
-  \fp_compare:nNnT { \l_tmpa_fp } > { \l_tmpa_int - 1 } { \fp_set:Nn \l_tmpa_fp { \l_tmpa_int - 1 } }
-  \fp_set:Nn #2 { \fp_eval:n {
-    \l_semio_viz_range_lo_fp + ( \l_tmpa_fp + 0.5 ) / \l_tmpa_int * ( \l_semio_viz_range_hi_fp - \l_semio_viz_range_lo_fp )
-  } }
-}
-
-\cs_new_protected:Npn \semio_viz_scale_threshold_map:nnN #1#2#3 {
-  \int_zero:N \l_semio_viz_band_int
-  \clist_map_inline:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } {
-    \fp_compare:nNnT {#2} >= {##1} { \int_incr:N \l_semio_viz_band_int }
-  }
-  \int_compare:nNnT \l_semio_viz_band_int = { 0 } { \int_set:Nn \l_semio_viz_band_int { 1 } }
-  \int_set:Nn \l_tmpb_int { \clist_count:c { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } }
-  \fp_set:Nn \l_semio_viz_range_lo_fp { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } { 1 } }
-  \fp_set:Nn \l_semio_viz_range_hi_fp { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } { 2 } }
-  \semio_viz_scale_range_from_index:nN { \l_semio_viz_band_int } #3
-}
-
-\cs_new_protected:Npn \semio_viz_scale_quantile_map:nnN #1#2#3 {
-  \seq_clear:N \l_semio_viz_quantile_seq
-  \clist_map_inline:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } {
-    \seq_put_right:Nn \l_semio_viz_quantile_seq {##1}
-  }
-  \seq_sort:Nn \l_semio_viz_quantile_seq {
-    \fp_compare:nNnTF {##1} > {##2} { \sort_return_swapped: } { \sort_return_same: }
-  }
-  \int_zero:N \l_semio_viz_band_int
-  \seq_map_inline:Nn \l_semio_viz_quantile_seq {
-    \fp_compare:nNnT {#2} >= {##1} { \int_incr:N \l_semio_viz_band_int }
-  }
-  \int_compare:nNnT \l_semio_viz_band_int = { 0 } { \int_set:Nn \l_semio_viz_band_int { 1 } }
-  \int_set:Nn \l_tmpb_int { \seq_count:N \l_semio_viz_quantile_seq }
-  \fp_set:Nn \l_semio_viz_range_lo_fp { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } { 1 } }
-  \fp_set:Nn \l_semio_viz_range_hi_fp { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } { 2 } }
-  \semio_viz_scale_range_from_index:nN { \l_semio_viz_band_int } #3
-}
-
-\cs_new_protected:Npn \semio_viz_scale_band_map:nnN #1#2#3 {
-  \int_zero:N \l_semio_viz_band_int
-  \int_zero:N \l_tmpa_int
-  \clist_map_inline:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } {
-    \int_incr:N \l_tmpa_int
-    \tl_if_eq:nnT {##1} {#2} { \int_set_eq:NN \l_semio_viz_band_int \l_tmpa_int }
-  }
-  \int_compare:nNnT \l_semio_viz_band_int = { 0 } { \int_set:Nn \l_semio_viz_band_int { 1 } }
-  \int_set:Nn \l_tmpb_int { \clist_count:c { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } }
-  \fp_set:Nn \l_semio_viz_range_lo_fp { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } { 1 } }
-  \fp_set:Nn \l_semio_viz_range_hi_fp { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } { 2 } }
-  \fp_set:Nn #3 { \fp_eval:n {
-    \l_semio_viz_range_lo_fp + ( \l_semio_viz_band_int - 0.5 )
-      / \l_tmpb_int * ( \l_semio_viz_range_hi_fp - \l_semio_viz_range_lo_fp )
-  } }
-}
-
-\seq_new:N \l_semio_viz_palette_seq
-\cs_new_protected:Npn \semio_viz_palette_categorical: {
-  \seq_set_from_clist:Nn \l_semio_viz_palette_seq {
-    semio-primary, semio-secondary, semio-tertiary, semio-info, semio-success, semio-warning, semio-danger
-  }
-}
-
-\cs_new_protected:Npn \semio_viz_scale_color:nnN #1#2#3 {
-  \semio_viz_palette_categorical:
-  \int_zero:N \l_tmpa_int
-  \int_zero:N \l_tmpb_int
-  \clist_map_inline:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } {
-    \int_incr:N \l_tmpa_int
-    \tl_if_eq:nnT {##1} {#2} { \int_set_eq:NN \l_tmpb_int \l_tmpa_int }
-  }
-  \int_compare:nNnT \l_tmpb_int = { 0 } { \int_set:Nn \l_tmpb_int { 1 } }
-  \int_set:Nn \l_tmpa_int { \int_mod:nn { \l_tmpb_int - 1 } { \seq_count:N \l_semio_viz_palette_seq } + 1 }
-  \tl_set:Nx #3 { \seq_item:Nn \l_semio_viz_palette_seq { \l_tmpa_int } }
-}
-
-\seq_new:N \l_semio_viz_ticks_seq
-\cs_new_protected:Npn \semio_viz_scale_ticks:nN #1#2 {
-  \semio_viz_scale_require:n {#1}
-  \seq_clear:N #2
-  \prop_get:NnN \g_semio_viz_scale_kind_prop {#1} \l_semio_viz_scale_kind_tl
-  \str_case:VnF \l_semio_viz_scale_kind_tl {
-    { band } { \clist_map_inline:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { \seq_put_right:Nn #2 {##1} } }
-    { point } { \clist_map_inline:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { \seq_put_right:Nn #2 {##1} } }
-    { ordinal } { \clist_map_inline:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { \seq_put_right:Nn #2 {##1} } }
-    { threshold } { \clist_map_inline:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { \seq_put_right:Nn #2 {##1} } }
-    { quantile } { \clist_map_inline:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { \seq_put_right:Nn #2 {##1} } }
-  } {
-    \semio_viz_scale_numeric_prep:n {#1}
-    \int_step_inline:nn { 5 } {
-      \seq_put_right:Nx #2 { \fp_eval:n { \l_semio_viz_domain_lo_fp + (##1 - 1) / 4 * ( \l_semio_viz_domain_hi_fp - \l_semio_viz_domain_lo_fp ) } }
-    }
-  }
-}
-
-% 📐 Named scale: kind, domain, range.
-\NewDocumentCommand \SemioVizScale { m m m m } { \semio_viz_scale_define:nnnn {#1} {#2} {#3} {#4} }
-%endregion Registry
-
-%region BandGeometry
-% ↕️ Band-scale edges: d3's band scale exposes bandwidth() and each band's own
-% start/end, not just its centre (semio_viz_scale_band_map:nnN above). Every
-% span bar, matrix cell and grid box needs an edge, not a point, so this
-% region completes the band scale rather than duplicating it. Dedicated
-% scratch fps (band_lo/band_hi), not \l_tmpa_fp -- band_map already clobbers
-% \l_tmpa_int/\l_tmpb_int and a span calls the edge finder twice.
-\fp_new:N \l_semio_viz_band_lo_fp
-\fp_new:N \l_semio_viz_band_hi_fp
-
-\cs_new_protected:Npn \semio_viz_scale_band_index:nnN #1#2#3 { % scale, category -> band index
+% 🔢 One-based index of the category #2 in the domain of scale #1; zero when absent.
+\cs_new_protected:Npn \semio_viz_scale_band_index:nnN #1#2#3 {
   \int_zero:N #3
   \int_zero:N \l_tmpa_int
   \clist_map_inline:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } {
@@ -283,42 +504,1165 @@
   \int_compare:nNnT #3 = { 0 } { \int_set:Nn #3 { 1 } }
 }
 
-\cs_new_protected:Npn \semio_viz_scale_band_range_prep:n #1 { % scale -> range lo/hi + band count
-  \int_set:Nn \l_tmpb_int { \clist_count:c { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } }
-  \fp_set:Nn \l_semio_viz_range_lo_fp { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } { 1 } }
-  \fp_set:Nn \l_semio_viz_range_hi_fp { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } { 2 } }
+% 📊 Computes step, start and bandwidth of a band or point scale exactly as d3's rescale().
+\cs_new_protected:Npn \semio_viz_scale_band_geometry:n #1 {
+  \int_set:Nn \l_semio_viz_scale_count_int
+    { \clist_count:c { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } }
+  \fp_set:Nn \l_semio_viz_range_lo_fp
+    { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } { 1 } }
+  \fp_set:Nn \l_semio_viz_range_hi_fp
+    { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } { -1 } }
+  \bool_set:Nn \l_semio_viz_scale_reverse_bool
+    { \fp_compare_p:nNn { \l_semio_viz_range_hi_fp } < { \l_semio_viz_range_lo_fp } }
+  \fp_set:Nn \l_semio_viz_scale_a_fp
+    {
+      min( \l_semio_viz_range_lo_fp , \l_semio_viz_range_hi_fp )
+    }
+  \fp_set:Nn \l_semio_viz_scale_b_fp
+    {
+      max( \l_semio_viz_range_lo_fp , \l_semio_viz_range_hi_fp )
+    }
+  \semio_viz_scale_band_padding:n {#1}
+  \fp_set:Nn \l_semio_viz_scale_step_fp
+    {
+      ( \l_semio_viz_scale_b_fp - \l_semio_viz_scale_a_fp )
+        / max( 1 , \l_semio_viz_scale_count_int - \l_semio_viz_scale_pad_in_fp
+          + \l_semio_viz_scale_pad_out_fp * 2 )
+    }
+  \semio_viz_scale_flag:nnT {#1} { round }
+    { \fp_set:Nn \l_semio_viz_scale_step_fp { floor( \l_semio_viz_scale_step_fp ) } }
+  \fp_set:Nn \l_semio_viz_scale_start_fp
+    {
+      \l_semio_viz_scale_a_fp
+        + ( \l_semio_viz_scale_b_fp - \l_semio_viz_scale_a_fp
+            - \l_semio_viz_scale_step_fp
+              * ( \l_semio_viz_scale_count_int - \l_semio_viz_scale_pad_in_fp ) )
+          * ( \semio_viz_scale_num:nn {#1} { align } )
+    }
+  \fp_set:Nn \l_semio_viz_scale_bandwidth_fp
+    { \l_semio_viz_scale_step_fp * ( 1 - \l_semio_viz_scale_pad_in_fp ) }
+  \semio_viz_scale_flag:nnT {#1} { round }
+    {
+      \fp_set:Nn \l_semio_viz_scale_start_fp { floor( \l_semio_viz_scale_start_fp + 0.5 ) }
+      \fp_set:Nn \l_semio_viz_scale_bandwidth_fp { floor( \l_semio_viz_scale_bandwidth_fp + 0.5 ) }
+    }
+}
+\fp_new:N \l_semio_viz_scale_pad_in_fp
+\fp_new:N \l_semio_viz_scale_pad_out_fp
+
+% 🧮 Resolves the inner and outer padding: `point` fixes the inner padding at one, `padding` sets both.
+\cs_new_protected:Npn \semio_viz_scale_band_padding:n #1 {
+  \tl_set:Nx \l_semio_viz_scale_kind_tl
+    { \tl_use:c { g_semio_viz_scale_ \tl_to_str:n {#1} _kind_tl } }
+  \fp_set:Nn \l_semio_viz_scale_pad_out_fp
+    {
+      max( \semio_viz_scale_num:nn {#1} { padding } ,
+        \semio_viz_scale_num:nn {#1} { paddingOuter } )
+    }
+  \str_if_eq:VnTF \l_semio_viz_scale_kind_tl { point }
+    { \fp_set:Nn \l_semio_viz_scale_pad_in_fp { 1 } }
+    {
+      \fp_set:Nn \l_semio_viz_scale_pad_in_fp
+        {
+          max( \semio_viz_scale_num:nn {#1} { padding } ,
+            \semio_viz_scale_num:nn {#1} { paddingInner } )
+        }
+    }
 }
 
-% 📏 Width of one band of a band/point/ordinal scale.
+% 📍 Left edge of the band of index #2 (one based).
+\cs_new_protected:Npn \semio_viz_scale_band_position:nnN #1#2#3 {
+  \bool_if:NTF \l_semio_viz_scale_reverse_bool
+    {
+      \fp_set:Nn #3
+        {
+          \l_semio_viz_scale_start_fp
+            + \l_semio_viz_scale_step_fp * ( \l_semio_viz_scale_count_int - (#2) )
+        }
+    }
+    { \fp_set:Nn #3 { \l_semio_viz_scale_start_fp + \l_semio_viz_scale_step_fp * ( (#2) - 1 ) } }
+}
+
+% 🎯 Maps a category through a band or point scale to the centre of its band.
+\cs_new_protected:Npn \semio_viz_scale_band_map:nnN #1#2#3 {
+  \semio_viz_scale_band_index:nnN {#1} {#2} \l_semio_viz_band_int
+  \semio_viz_scale_band_geometry:n {#1}
+  \semio_viz_scale_band_position:nnN {#1} { \l_semio_viz_band_int } #3
+  \fp_add:Nn #3 { \l_semio_viz_scale_bandwidth_fp / 2 }
+}
+
+% 🎨 Maps a category through an ordinal scale onto the cyclic range list.
+\cs_new_protected:Npn \semio_viz_scale_ordinal_item:nnN #1#2#3 {
+  \semio_viz_scale_band_index:nnN {#1} {#2} \l_semio_viz_band_int
+  \int_set:Nn \l_tmpa_int
+    {
+      \int_mod:nn { \l_semio_viz_band_int - 1 }
+        { \clist_count:c { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } } + 1
+    }
+  \tl_set:Nx #3
+    { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } { \l_tmpa_int } }
+}
+%endregion 🔖️Discrete
+
+%region 🔖️Binning
+\seq_new:N \l_semio_viz_scale_sorted_seq
+\seq_new:N \l_semio_viz_scale_thresholds_seq
+
+% 🪜 Number of range entries strictly below #2, i.e. d3's bisectRight over the threshold list.
+\cs_new_protected:Npn \semio_viz_scale_bisect:nNN #1#2#3 {
+  \int_zero:N #3
+  \seq_map_inline:Nn #2
+    { \fp_compare:nT { #1 >= ##1 } { \int_incr:N #3 } }
+}
+
+% 🧊 Threshold list of a quantize scale: d3's ((i+1)*x1 - (i-n)*x0) / (n+1).
+\cs_new_protected:Npn \semio_viz_scale_quantize_thresholds:n #1 {
+  \fp_set:Nn \l_semio_viz_domain_lo_fp
+    { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { 1 } }
+  \fp_set:Nn \l_semio_viz_domain_hi_fp
+    { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { -1 } }
+  \int_set:Nn \l_semio_viz_scale_count_int
+    { \clist_count:c { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } - 1 }
+  \seq_clear:N \l_semio_viz_scale_thresholds_seq
+  \int_step_inline:nn { \l_semio_viz_scale_count_int }
+    {
+      \seq_put_right:Nx \l_semio_viz_scale_thresholds_seq
+        {
+          \fp_to_decimal:n
+            {
+              ( ##1 * \l_semio_viz_domain_hi_fp
+                - ( ##1 - 1 - \l_semio_viz_scale_count_int ) * \l_semio_viz_domain_lo_fp )
+                / ( \l_semio_viz_scale_count_int + 1 )
+            }
+        }
+    }
+}
+
+% 🧊 Threshold list of a quantile scale: the R-7 quantiles of the sorted domain sample.
+\cs_new_protected:Npn \semio_viz_scale_quantile_thresholds:n #1 {
+  \seq_set_from_clist:Nc \l_semio_viz_scale_sorted_seq
+    { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist }
+  \seq_sort:Nn \l_semio_viz_scale_sorted_seq
+    { \fp_compare:nNnTF {##1} > {##2} { \sort_return_swapped: } { \sort_return_same: } }
+  \int_set:Nn \l_semio_viz_scale_count_int
+    { \clist_count:c { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } }
+  \seq_clear:N \l_semio_viz_scale_thresholds_seq
+  \int_step_inline:nn { \l_semio_viz_scale_count_int - 1 }
+    {
+      \semio_viz_scale_quantile_sorted:NnN \l_semio_viz_scale_sorted_seq
+        { ##1 / ( \l_semio_viz_scale_count_int ) } \l_semio_viz_scale_a_fp
+      \seq_put_right:Nx \l_semio_viz_scale_thresholds_seq
+        { \fp_to_decimal:n { \l_semio_viz_scale_a_fp } }
+    }
+}
+
+% 📈 R-7 quantile of the pre-sorted numeric sequence #1 at probability #2.
+\cs_new_protected:Npn \semio_viz_scale_quantile_sorted:NnN #1#2#3 {
+  \int_set:Nn \l_tmpa_int { \seq_count:N #1 }
+  \fp_set:Nn \l_semio_viz_scale_t_fp { ( \l_tmpa_int - 1 ) * (#2) }
+  \int_set:Nn \l_tmpb_int { \fp_to_int:n { floor( \l_semio_viz_scale_t_fp ) } }
+  \fp_set:Nn #3
+    {
+      \seq_item:Nn #1 { \l_tmpb_int + 1 }
+        + ( \l_semio_viz_scale_t_fp - \l_tmpb_int )
+          * ( \seq_item:Nn #1 { \int_min:nn { \l_tmpb_int + 2 } { \l_tmpa_int } }
+              - \seq_item:Nn #1 { \l_tmpb_int + 1 } )
+    }
+}
+
+% 🪜 Threshold list of a threshold scale: the domain itself.
+\cs_new_protected:Npn \semio_viz_scale_threshold_thresholds:n #1 {
+  \seq_set_from_clist:Nc \l_semio_viz_scale_thresholds_seq
+    { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist }
+}
+
+% 🧮 Builds the threshold list matching the kind of scale #1.
+\cs_new_protected:Npn \semio_viz_scale_thresholds:n #1 {
+  \tl_set:Nx \l_semio_viz_scale_kind_tl
+    { \tl_use:c { g_semio_viz_scale_ \tl_to_str:n {#1} _kind_tl } }
+  \str_case:VnF \l_semio_viz_scale_kind_tl
+    {
+      { quantize } { \semio_viz_scale_quantize_thresholds:n {#1} }
+      { quantile } { \semio_viz_scale_quantile_thresholds:n {#1} }
+    }
+    { \semio_viz_scale_threshold_thresholds:n {#1} }
+}
+
+% 🎯 Range entry that a binned scale assigns to #2.
+\cs_new_protected:Npn \semio_viz_scale_binned_item:nnN #1#2#3 {
+  \semio_viz_scale_thresholds:n {#1}
+  \semio_viz_scale_bisect:nNN {#2} \l_semio_viz_scale_thresholds_seq \l_semio_viz_band_int
+  \tl_set:Nx #3
+    {
+      \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist }
+        { \l_semio_viz_band_int + 1 }
+    }
+}
+%endregion 🔖️Binning
+
+%region 🔖️Map
+% 📐 Maps a value or category through any scale onto a number in its range.
+\cs_new_protected:Npn \semio_viz_scale_map:nnN #1#2#3 {
+  \semio_viz_scale_require:n {#1}
+  \tl_set:Nx \l_semio_viz_scale_kind_tl
+    { \tl_use:c { g_semio_viz_scale_ \tl_to_str:n {#1} _kind_tl } }
+  \str_case:VnF \l_semio_viz_scale_kind_tl
+    {
+      { band } { \semio_viz_scale_band_map:nnN {#1} {#2} #3 }
+      { point } { \semio_viz_scale_band_map:nnN {#1} {#2} #3 }
+      { ordinal } { \semio_viz_scale_band_map:nnN {#1} {#2} #3 }
+      { quantize } { \semio_viz_scale_binned_number:nnN {#1} {#2} #3 }
+      { quantile } { \semio_viz_scale_binned_number:nnN {#1} {#2} #3 }
+      { threshold } { \semio_viz_scale_binned_number:nnN {#1} {#2} #3 }
+      { sequential } { \semio_viz_scale_norm:nnN {#1} {#2} #3 }
+      { diverging } { \semio_viz_scale_diverging_norm:nnN {#1} {#2} #3 }
+      { temporal }
+        {
+          \semio_viz_scale_epoch_set:nN {#2} \l_semio_viz_scale_epoch_fp
+          \semio_viz_scale_continuous_map:nnN {#1} { \l_semio_viz_scale_epoch_fp } #3
+        }
+    }
+    { \semio_viz_scale_continuous_map:nnN {#1} {#2} #3 }
+}
+\cs_generate_variant:Nn \semio_viz_scale_map:nnN { VnN , VVN , nVN , nxN }
+\tl_new:N \l_semio_viz_scale_item_tl
+
+% 🔢 Numeric range entry of a binned scale, for the axis and legend generators.
+\cs_new_protected:Npn \semio_viz_scale_binned_number:nnN #1#2#3 {
+  \semio_viz_scale_binned_item:nnN {#1} {#2} \l_semio_viz_scale_item_tl
+  \fp_set:Nn #3 { \l_semio_viz_scale_item_tl }
+}
+
+% 🌗 Normalized position of #2 on a diverging scale with a three-point domain.
+\cs_new_protected:Npn \semio_viz_scale_diverging_norm:nnN #1#2#3 {
+  \fp_set:Nn \l_semio_viz_scale_a_fp
+    { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { 1 } }
+  \fp_set:Nn \l_semio_viz_scale_x_fp
+    { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { 2 } }
+  \fp_set:Nn \l_semio_viz_scale_b_fp
+    { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { 3 } }
+  \fp_compare:nNnTF {#2} < { \l_semio_viz_scale_x_fp }
+    {
+      \fp_set:Nn #3
+        {
+          0.5 * ( (#2) - \l_semio_viz_scale_a_fp )
+            / ( \l_semio_viz_scale_x_fp - \l_semio_viz_scale_a_fp )
+        }
+    }
+    {
+      \fp_set:Nn #3
+        {
+          0.5 + 0.5 * ( (#2) - \l_semio_viz_scale_x_fp )
+            / ( \l_semio_viz_scale_b_fp - \l_semio_viz_scale_x_fp )
+        }
+    }
+  \semio_viz_scale_flag:nnT {#1} { clamp }
+    { \fp_set:Nn #3 { min( max( #3 , 0 ) , 1 ) } }
+}
+%endregion 🔖️Map
+
+%region 🔖️Ticks
+\fp_const:Nn \c_semio_viz_scale_eten_fp { sqrt(50) }
+\fp_const:Nn \c_semio_viz_scale_efive_fp { sqrt(10) }
+\fp_const:Nn \c_semio_viz_scale_etwo_fp { sqrt(2) }
+\fp_new:N \l_semio_viz_scale_inc_fp
+\fp_new:N \l_semio_viz_scale_factor_fp
+\int_new:N \l_semio_viz_scale_ione_int
+\int_new:N \l_semio_viz_scale_itwo_int
+\int_new:N \l_semio_viz_scale_power_int
+\bool_new:N \l_semio_viz_scale_negpow_bool
+
+% 📏 d3-array's tickSpec: the first and last tick index plus the increment for [#1,#2] at #3 steps.
+\cs_new_protected:Npn \semio_viz_scale_tick_spec:nnn #1#2#3 {
+  \fp_set:Nn \l_semio_viz_scale_lo_fp {#1}
+  \fp_set:Nn \l_semio_viz_scale_hi_fp {#2}
+  \semio_viz_scale_tick_factor:nnn { \l_semio_viz_scale_lo_fp } { \l_semio_viz_scale_hi_fp } {#3}
+  \int_compare:nNnTF { \l_semio_viz_scale_power_int } < { 0 }
+    {
+      \bool_set_true:N \l_semio_viz_scale_negpow_bool
+      \fp_set:Nn \l_semio_viz_scale_inc_fp
+        { 10 ** ( -\l_semio_viz_scale_power_int ) / \l_semio_viz_scale_factor_fp }
+      \int_set:Nn \l_semio_viz_scale_ione_int
+        { \fp_to_int:n { floor( \l_semio_viz_scale_lo_fp * \l_semio_viz_scale_inc_fp + 0.5 ) } }
+      \int_set:Nn \l_semio_viz_scale_itwo_int
+        { \fp_to_int:n { floor( \l_semio_viz_scale_hi_fp * \l_semio_viz_scale_inc_fp + 0.5 ) } }
+      \fp_compare:nNnT { \l_semio_viz_scale_ione_int / \l_semio_viz_scale_inc_fp }
+        < { \l_semio_viz_scale_lo_fp }
+        { \int_incr:N \l_semio_viz_scale_ione_int }
+      \fp_compare:nNnT { \l_semio_viz_scale_itwo_int / \l_semio_viz_scale_inc_fp }
+        > { \l_semio_viz_scale_hi_fp }
+        { \int_decr:N \l_semio_viz_scale_itwo_int }
+    }
+    {
+      \bool_set_false:N \l_semio_viz_scale_negpow_bool
+      \fp_set:Nn \l_semio_viz_scale_inc_fp
+        { 10 ** \l_semio_viz_scale_power_int * \l_semio_viz_scale_factor_fp }
+      \int_set:Nn \l_semio_viz_scale_ione_int
+        { \fp_to_int:n { floor( \l_semio_viz_scale_lo_fp / \l_semio_viz_scale_inc_fp + 0.5 ) } }
+      \int_set:Nn \l_semio_viz_scale_itwo_int
+        { \fp_to_int:n { floor( \l_semio_viz_scale_hi_fp / \l_semio_viz_scale_inc_fp + 0.5 ) } }
+      \fp_compare:nNnT { \l_semio_viz_scale_ione_int * \l_semio_viz_scale_inc_fp }
+        < { \l_semio_viz_scale_lo_fp }
+        { \int_incr:N \l_semio_viz_scale_ione_int }
+      \fp_compare:nNnT { \l_semio_viz_scale_itwo_int * \l_semio_viz_scale_inc_fp }
+        > { \l_semio_viz_scale_hi_fp }
+        { \int_decr:N \l_semio_viz_scale_itwo_int }
+    }
+}
+\fp_new:N \l_semio_viz_scale_lo_fp
+\fp_new:N \l_semio_viz_scale_hi_fp
+\fp_new:N \l_semio_viz_scale_err_fp
+
+% 🔟 Shared head of tickSpec and tickIncrement: the decimal power and the 1-2-5-10 factor.
+\cs_new_protected:Npn \semio_viz_scale_tick_factor:nnn #1#2#3 {
+  \fp_set:Nn \l_semio_viz_scale_step_fp { ( (#2) - (#1) ) / max( 0 , #3 ) }
+  \int_set:Nn \l_semio_viz_scale_power_int
+    { \fp_to_int:n { floor( ln( \l_semio_viz_scale_step_fp ) / ln(10) ) } }
+  \fp_set:Nn \l_semio_viz_scale_err_fp
+    { \l_semio_viz_scale_step_fp / 10 ** \l_semio_viz_scale_power_int }
+  \fp_set:Nn \l_semio_viz_scale_factor_fp
+    {
+      \l_semio_viz_scale_err_fp >= \c_semio_viz_scale_eten_fp ? 10 :
+        ( \l_semio_viz_scale_err_fp >= \c_semio_viz_scale_efive_fp ? 5 :
+          ( \l_semio_viz_scale_err_fp >= \c_semio_viz_scale_etwo_fp ? 2 : 1 ) )
+    }
+}
+
+% 📏 d3-array's ticks(start, stop, count) into the sequence #4.
+\cs_new_protected:Npn \semio_viz_scale_tick_values:nnnN #1#2#3#4 {
+  \seq_clear:N #4
+  \int_compare:nNnT {#3} > { 0 }
+    {
+      \fp_compare:nNnTF {#1} = {#2}
+        { \seq_put_right:Nx #4 { \fp_to_decimal:n {#1} } }
+        {
+          \fp_compare:nNnTF {#2} < {#1}
+            {
+              \semio_viz_scale_tick_spec:nnn {#2} {#1} {#3}
+              \semio_viz_scale_tick_emit:NN #4 \c_true_bool
+            }
+            {
+              \semio_viz_scale_tick_spec:nnn {#1} {#2} {#3}
+              \semio_viz_scale_tick_emit:NN #4 \c_false_bool
+            }
+        }
+    }
+}
+
+% 📤 Emits the tick values between the computed indices, reversed when the domain descends.
+\cs_new_protected:Npn \semio_viz_scale_tick_emit:NN #1#2 {
+  \int_compare:nT { \l_semio_viz_scale_itwo_int >= \l_semio_viz_scale_ione_int }
+    {
+      \int_step_inline:nnn { \l_semio_viz_scale_ione_int } { \l_semio_viz_scale_itwo_int }
+        {
+          \bool_if:NTF \l_semio_viz_scale_negpow_bool
+            { \seq_put_right:Nx #1 { \fp_to_decimal:n { ##1 / \l_semio_viz_scale_inc_fp } } }
+            { \seq_put_right:Nx #1 { \fp_to_decimal:n { ##1 * \l_semio_viz_scale_inc_fp } } }
+        }
+      \bool_if:NT #2 { \seq_reverse:N #1 }
+    }
+}
+
+% 📐 d3-array's tickIncrement(start, stop, count).
+\cs_new_protected:Npn \semio_viz_scale_tick_increment:nnnN #1#2#3#4 {
+  \semio_viz_scale_tick_factor:nnn {#1} {#2} {#3}
+  \int_compare:nNnTF { \l_semio_viz_scale_power_int } < { 0 }
+    {
+      \fp_set:Nn #4
+        { -( 10 ** ( -\l_semio_viz_scale_power_int ) ) / \l_semio_viz_scale_factor_fp }
+    }
+    {
+      \fp_set:Nn #4
+        { \l_semio_viz_scale_factor_fp * 10 ** \l_semio_viz_scale_power_int }
+    }
+}
+
+% 🧹 Extends the domain of scale #1 to round tick values at #2 steps, as d3's nice().
+\cs_new_protected:Npn \semio_viz_scale_nice:nn #1#2 {
+  \semio_viz_scale_nice_pair:nnnNN
+    { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { 1 } }
+    { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { -1 } }
+    {#2} \l_semio_viz_scale_a_fp \l_semio_viz_scale_b_fp
+  \seq_set_from_clist:Nc \l_semio_viz_scale_rev_seq
+    { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist }
+  \seq_pop_left:NN \l_semio_viz_scale_rev_seq \l_tmpa_tl
+  \seq_pop_right:NN \l_semio_viz_scale_rev_seq \l_tmpa_tl
+  \seq_put_left:Nx \l_semio_viz_scale_rev_seq { \fp_to_decimal:n { \l_semio_viz_scale_a_fp } }
+  \seq_put_right:Nx \l_semio_viz_scale_rev_seq { \fp_to_decimal:n { \l_semio_viz_scale_b_fp } }
+  \clist_gset:cx { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist }
+    { \seq_use:Nn \l_semio_viz_scale_rev_seq { , } }
+}
+
+% 🔧 The iteration cap of nice(), d3-array's own maxIter.
+\int_new:N \l_semio_viz_scale_nice_iterations_int
+\int_set:Nn \l_semio_viz_scale_nice_iterations_int { 10 }
+
+% 🔑 semio / viz / scale / solver
+% 🔑 niceIterations (int) rounds nice() takes before it settles on a step; default 10, d3's own cap.
+\keys_define:nn { semio / viz / scale / solver }
+  { niceIterations .int_set:N = \l_semio_viz_scale_nice_iterations_int , }
+
+% 🔧 \SemioVizScaleSolver[keys]: sets the iteration cap of nice().
+\NewDocumentCommand \SemioVizScaleSolver { O{} }
+  { \keys_set:nn { semio / viz / scale / solver } {#1} }
+
+% 🧹 d3-array's nice(start, stop, count): the rounded interval lands in #4 and #5.
+\cs_new_protected:Npn \semio_viz_scale_nice_pair:nnnNN #1#2#3#4#5 {
+  \fp_set:Nn \l_semio_viz_scale_a_fp {#1}
+  \fp_set:Nn \l_semio_viz_scale_b_fp {#2}
+  \bool_set:Nn \l_semio_viz_scale_reverse_bool
+    { \fp_compare_p:nNn { \l_semio_viz_scale_b_fp } < { \l_semio_viz_scale_a_fp } }
+  \bool_if:NT \l_semio_viz_scale_reverse_bool
+    {
+      \fp_set_eq:NN \l_semio_viz_scale_x_fp \l_semio_viz_scale_a_fp
+      \fp_set_eq:NN \l_semio_viz_scale_a_fp \l_semio_viz_scale_b_fp
+      \fp_set_eq:NN \l_semio_viz_scale_b_fp \l_semio_viz_scale_x_fp
+    }
+  \fp_set:Nn \l_semio_viz_scale_prestep_fp { nan }
+  \int_step_inline:nn { \l_semio_viz_scale_nice_iterations_int }
+    {
+      \semio_viz_scale_tick_increment:nnnN { \l_semio_viz_scale_a_fp }
+        { \l_semio_viz_scale_b_fp } {#3} \l_semio_viz_scale_step_fp
+      \fp_compare:nNnF { \l_semio_viz_scale_step_fp } = { \l_semio_viz_scale_prestep_fp }
+        {
+          \fp_compare:nNnTF { \l_semio_viz_scale_step_fp } > { 0 }
+            {
+              \fp_set:Nn \l_semio_viz_scale_a_fp
+                {
+                  floor( \l_semio_viz_scale_a_fp / \l_semio_viz_scale_step_fp )
+                    * \l_semio_viz_scale_step_fp
+                }
+              \fp_set:Nn \l_semio_viz_scale_b_fp
+                {
+                  ceil( \l_semio_viz_scale_b_fp / \l_semio_viz_scale_step_fp )
+                    * \l_semio_viz_scale_step_fp
+                }
+            }
+            {
+              \fp_set:Nn \l_semio_viz_scale_a_fp
+                {
+                  ceil( \l_semio_viz_scale_a_fp * \l_semio_viz_scale_step_fp )
+                    / \l_semio_viz_scale_step_fp
+                }
+              \fp_set:Nn \l_semio_viz_scale_b_fp
+                {
+                  floor( \l_semio_viz_scale_b_fp * \l_semio_viz_scale_step_fp )
+                    / \l_semio_viz_scale_step_fp
+                }
+            }
+          \fp_set_eq:NN \l_semio_viz_scale_prestep_fp \l_semio_viz_scale_step_fp
+        }
+    }
+  \bool_if:NT \l_semio_viz_scale_reverse_bool
+    {
+      \fp_set_eq:NN \l_semio_viz_scale_x_fp \l_semio_viz_scale_a_fp
+      \fp_set_eq:NN \l_semio_viz_scale_a_fp \l_semio_viz_scale_b_fp
+      \fp_set_eq:NN \l_semio_viz_scale_b_fp \l_semio_viz_scale_x_fp
+    }
+  \fp_set_eq:NN #4 \l_semio_viz_scale_a_fp
+  \fp_set_eq:NN #5 \l_semio_viz_scale_b_fp
+}
+\fp_new:N \l_semio_viz_scale_prestep_fp
+
+% 🪵 d3's log tick generator: every integer multiple of each power of the base inside the domain.
+\cs_new_protected:Npn \semio_viz_scale_log_ticks:nnN #1#2#3 {
+  \seq_clear:N #3
+  \semio_viz_scale_numeric_prep:n {#1}
+  \fp_set:Nn \l_semio_viz_scale_a_fp
+    { min( \l_semio_viz_domain_lo_fp , \l_semio_viz_domain_hi_fp ) }
+  \fp_set:Nn \l_semio_viz_scale_b_fp
+    { max( \l_semio_viz_domain_lo_fp , \l_semio_viz_domain_hi_fp ) }
+  \fp_set:Nn \l_semio_viz_scale_base_fp { \semio_viz_scale_num:nn {#1} { base } }
+  \int_set:Nn \l_semio_viz_scale_ione_int
+    {
+      \fp_to_int:n
+        { floor( ln( abs( \l_semio_viz_scale_a_fp ) ) / ln( \l_semio_viz_scale_base_fp ) ) }
+    }
+  \int_set:Nn \l_semio_viz_scale_itwo_int
+    {
+      \fp_to_int:n
+        { ceil( ln( abs( \l_semio_viz_scale_b_fp ) ) / ln( \l_semio_viz_scale_base_fp ) ) }
+    }
+  \int_step_inline:nnn { \l_semio_viz_scale_ione_int } { \l_semio_viz_scale_itwo_int }
+    {
+      \int_step_inline:nnn { 1 } { \fp_to_int:n { \l_semio_viz_scale_base_fp } - 1 }
+        {
+          \fp_set:Nn \l_semio_viz_scale_x_fp
+            { ####1 * \l_semio_viz_scale_base_fp ** ##1 }
+          \fp_compare:nT
+            { \l_semio_viz_scale_a_fp <= \l_semio_viz_scale_x_fp <= \l_semio_viz_scale_b_fp }
+            { \seq_put_right:Nx #3 { \fp_to_decimal:n { \l_semio_viz_scale_x_fp } } }
+        }
+    }
+  \int_compare:nNnT { 2 * \seq_count:N #3 } < {#2}
+    {
+      \semio_viz_scale_tick_values:nnnN { \l_semio_viz_scale_a_fp }
+        { \l_semio_viz_scale_b_fp } {#2} #3
+    }
+  \fp_compare:nNnT { \l_semio_viz_domain_hi_fp } < { \l_semio_viz_domain_lo_fp }
+    { \seq_reverse:N #3 }
+}
+\fp_new:N \l_semio_viz_scale_base_fp
+
+% ⏱️ Temporal ticks at a fixed calendar interval between the domain bounds.
+\cs_new_protected:Npn \semio_viz_scale_temporal_ticks:nnN #1#2#3 {
+  \seq_clear:N #3
+  \semio_viz_scale_epoch_set:xN
+    { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { 1 } }
+    \l_semio_viz_scale_a_fp
+  \semio_viz_scale_epoch_set:xN
+    { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { -1 } }
+    \l_semio_viz_scale_b_fp
+  \int_set:Nn \l_semio_viz_scale_ione_int
+    { \fp_to_int:n { ceil( \l_semio_viz_scale_a_fp / 86400000 ) } }
+  \int_set:Nn \l_semio_viz_scale_itwo_int
+    { \fp_to_int:n { floor( \l_semio_viz_scale_b_fp / 86400000 ) } }
+  \str_case:nnF {#2}
+    {
+      { day }
+        {
+          \int_step_inline:nnn { \l_semio_viz_scale_ione_int } { \l_semio_viz_scale_itwo_int }
+            { \semio_viz_scale_temporal_put:nN {##1} #3 }
+        }
+      { week }
+        {
+          \int_step_inline:nnn { \l_semio_viz_scale_ione_int } { \l_semio_viz_scale_itwo_int }
+            {
+              \int_compare:nNnT { \int_mod:nn { ##1 + 4 } { 7 } } = { 0 }
+                { \semio_viz_scale_temporal_put:nN {##1} #3 }
+            }
+        }
+      { month }
+        {
+          \int_step_inline:nnn { \l_semio_viz_scale_ione_int } { \l_semio_viz_scale_itwo_int }
+            {
+              \semio_viz_scale_civil:nN {##1} \l_semio_viz_scale_iso_str
+              \str_if_eq:eeT { \str_range:Nnn \l_semio_viz_scale_iso_str { -2 } { -1 } } { 01 }
+                { \semio_viz_scale_temporal_put:nN {##1} #3 }
+            }
+        }
+      { year }
+        {
+          \int_step_inline:nnn { \l_semio_viz_scale_ione_int } { \l_semio_viz_scale_itwo_int }
+            {
+              \semio_viz_scale_civil:nN {##1} \l_semio_viz_scale_iso_str
+              \str_if_eq:eeT { \str_range:Nnn \l_semio_viz_scale_iso_str { -5 } { -1 } } { 01-01 }
+                { \semio_viz_scale_temporal_put:nN {##1} #3 }
+            }
+        }
+    }
+    {
+      \int_step_inline:nnn { \l_semio_viz_scale_ione_int } { \l_semio_viz_scale_itwo_int }
+        { \semio_viz_scale_temporal_put:nN {##1} #3 }
+    }
+}
+\str_new:N \l_semio_viz_scale_iso_str
+
+% 📥 Appends the ISO date of a day number to the tick sequence.
+\cs_new_protected:Npn \semio_viz_scale_temporal_put:nN #1#2 {
+  \semio_viz_scale_civil:nN {#1} \l_semio_viz_scale_iso_str
+  \seq_put_right:NV #2 \l_semio_viz_scale_iso_str
+}
+
+% 📏 Tick values of scale #1 at #2 requested steps, into the sequence #3.
+\cs_new_protected:Npn \semio_viz_scale_ticks_count:nnN #1#2#3 {
+  \semio_viz_scale_require:n {#1}
+  \semio_viz_scale_opt:nnN {#1} { tickValues } \l_semio_viz_scale_opt_tl
+  \tl_if_empty:NTF \l_semio_viz_scale_opt_tl
+    {
+      \tl_set:Nx \l_semio_viz_scale_kind_tl
+        { \tl_use:c { g_semio_viz_scale_ \tl_to_str:n {#1} _kind_tl } }
+      \str_case:VnF \l_semio_viz_scale_kind_tl
+        {
+          { band } { \seq_set_from_clist:Nc #3 { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } }
+          { point } { \seq_set_from_clist:Nc #3 { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } }
+          { ordinal } { \seq_set_from_clist:Nc #3 { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } }
+          { threshold } { \semio_viz_scale_thresholds:n {#1} \seq_set_eq:NN #3 \l_semio_viz_scale_thresholds_seq }
+          { quantile } { \semio_viz_scale_thresholds:n {#1} \seq_set_eq:NN #3 \l_semio_viz_scale_thresholds_seq }
+          { quantize } { \semio_viz_scale_thresholds:n {#1} \seq_set_eq:NN #3 \l_semio_viz_scale_thresholds_seq }
+          { log } { \semio_viz_scale_log_ticks:nnN {#1} {#2} #3 }
+          { temporal }
+            {
+              \semio_viz_scale_opt:nnN {#1} { interval } \l_semio_viz_scale_opt_tl
+              \semio_viz_scale_temporal_ticks:VnN \l_semio_viz_scale_opt_tl {#1} #3
+            }
+        }
+        {
+          \semio_viz_scale_numeric_prep:n {#1}
+          \semio_viz_scale_tick_values:nnnN { \l_semio_viz_domain_lo_fp }
+            { \l_semio_viz_domain_hi_fp } {#2} #3
+        }
+    }
+    { \seq_set_from_clist:NV #3 \l_semio_viz_scale_opt_tl }
+}
+
+% 🔁 Argument-swapped temporal tick generator so the interval can be expanded first.
+\cs_new_protected:Npn \semio_viz_scale_temporal_ticks_swapped:nnN #1#2#3
+  { \semio_viz_scale_temporal_ticks:nnN {#2} {#1} #3 }
+\cs_generate_variant:Nn \semio_viz_scale_temporal_ticks_swapped:nnN { VnN }
+\cs_new_eq:NN \semio_viz_scale_temporal_ticks:VnN \semio_viz_scale_temporal_ticks_swapped:VnN
+
+% 📏 Tick values of scale #1 at its configured tick count.
+\cs_new_protected:Npn \semio_viz_scale_ticks:nN #1#2
+  { \semio_viz_scale_ticks_count:nnN {#1} { \semio_viz_scale_num:nn {#1} { ticks } } #2 }
+
+% 🏷️ Tick labels of scale #1: the tick values run through its `tickFormat` specifier.
+\cs_new_protected:Npn \semio_viz_scale_tick_labels:nN #1#2 {
+  \semio_viz_scale_ticks:nN {#1} \l_semio_viz_scale_label_seq
+  \semio_viz_scale_opt:nnN {#1} { tickFormat } \l_semio_viz_scale_opt_tl
+  \seq_clear:N #2
+  \tl_if_empty:NTF \l_semio_viz_scale_opt_tl
+    { \seq_set_eq:NN #2 \l_semio_viz_scale_label_seq }
+    {
+      \seq_map_inline:Nn \l_semio_viz_scale_label_seq
+        {
+          \semio_viz_format:VnN \l_semio_viz_scale_opt_tl {##1} \l_semio_viz_scale_label_str
+          \seq_put_right:NV #2 \l_semio_viz_scale_label_str
+        }
+    }
+}
+\seq_new:N \l_semio_viz_scale_label_seq
+\str_new:N \l_semio_viz_scale_label_str
+%endregion 🔖️Ticks
+
+%region 🔖️Color
+\fp_new:N \l_semio_viz_color_r_fp
+\fp_new:N \l_semio_viz_color_g_fp
+\fp_new:N \l_semio_viz_color_b_fp
+\fp_new:N \l_semio_viz_color_l_fp
+\fp_new:N \l_semio_viz_color_m_fp
+\fp_new:N \l_semio_viz_color_s_fp
+\fp_new:N \l_semio_viz_color_ra_fp
+\fp_new:N \l_semio_viz_color_ga_fp
+\fp_new:N \l_semio_viz_color_ba_fp
+\fp_new:N \l_semio_viz_color_rb_fp
+\fp_new:N \l_semio_viz_color_gb_fp
+\fp_new:N \l_semio_viz_color_bb_fp
+\str_new:N \l_semio_viz_color_hex_str
+
+% 🎨 Splits `#RRGGBB` (or `RRGGBB`) into three channels on 0..255.
+\cs_new_protected:Npn \semio_viz_color_parse:nNNN #1#2#3#4 {
+  \str_set:Nn \l_semio_viz_color_hex_str {#1}
+  \int_compare:nNnF { \str_count:N \l_semio_viz_color_hex_str } > { 5 }
+    { \msg_error:nnn { semio-viz } { bad-color } {#1} }
+  \str_set:Nx \l_semio_viz_color_hex_str
+    { \str_range:Nnn \l_semio_viz_color_hex_str { -6 } { -1 } }
+  \fp_set:Nn #2
+    { \int_from_hex:e { \str_range:Nnn \l_semio_viz_color_hex_str { 1 } { 2 } } }
+  \fp_set:Nn #3
+    { \int_from_hex:e { \str_range:Nnn \l_semio_viz_color_hex_str { 3 } { 4 } } }
+  \fp_set:Nn #4
+    { \int_from_hex:e { \str_range:Nnn \l_semio_viz_color_hex_str { 5 } { 6 } } }
+}
+\cs_generate_variant:Nn \semio_viz_color_parse:nNNN { VNNN , xNNN }
+\cs_generate_variant:Nn \int_from_hex:n { e }
+
+% 🎨 Renders three 0..255 channels as a lowercase `#rrggbb` string.
+\cs_new_protected:Npn \semio_viz_color_hex:nnnN #1#2#3#4 {
+  \str_set:Nx #4
+    {
+      \c_hash_str
+      \semio_viz_color_byte:n {#1}
+      \semio_viz_color_byte:n {#2}
+      \semio_viz_color_byte:n {#3}
+    }
+}
+
+% 🔡 One clamped, rounded channel as two lowercase hexadecimal digits.
+\cs_new:Npn \semio_viz_color_byte:n #1 {
+  \int_compare:nNnT { \fp_to_int:n { min( max( floor( (#1) + 0.5 ) , 0 ) , 255 ) } } < { 16 } { 0 }
+  \int_to_hex:n { \fp_to_int:n { min( max( floor( (#1) + 0.5 ) , 0 ) , 255 ) } }
+}
+
+% 📉 sRGB channel (0..255) to linear light.
+\cs_new:Npn \semio_viz_color_linear:n #1
+  { ( (#1) / 255 <= 0.04045 ? (#1) / 255 / 12.92 : ( ( (#1) / 255 + 0.055 ) / 1.055 ) ** 2.4 ) }
+
+% 📈 Linear light back to an sRGB channel on 0..255.
+\cs_new:Npn \semio_viz_color_gamma:n #1
+  { ( 255 * ( (#1) <= 0.0031308 ? 12.92 * (#1) : 1.055 * abs(#1) ** ( 1 / 2.4 ) - 0.055 ) ) }
+
+% 🧪 sRGB to OKLab (Björn Ottosson's matrices).
+\cs_new_protected:Npn \semio_viz_color_to_oklab:NNNNNN #1#2#3#4#5#6 {
+  \fp_set:Nn \l_semio_viz_color_l_fp
+    {
+      ( 0.4122214708 * \semio_viz_color_linear:n {#1}
+        + 0.5363325363 * \semio_viz_color_linear:n {#2}
+        + 0.0514459929 * \semio_viz_color_linear:n {#3} ) ** ( 1 / 3 )
+    }
+  \fp_set:Nn \l_semio_viz_color_m_fp
+    {
+      ( 0.2119034982 * \semio_viz_color_linear:n {#1}
+        + 0.6806995451 * \semio_viz_color_linear:n {#2}
+        + 0.1073969566 * \semio_viz_color_linear:n {#3} ) ** ( 1 / 3 )
+    }
+  \fp_set:Nn \l_semio_viz_color_s_fp
+    {
+      ( 0.0883024619 * \semio_viz_color_linear:n {#1}
+        + 0.2817188376 * \semio_viz_color_linear:n {#2}
+        + 0.6299787005 * \semio_viz_color_linear:n {#3} ) ** ( 1 / 3 )
+    }
+  \fp_set:Nn #4
+    {
+      0.2104542553 * \l_semio_viz_color_l_fp + 0.7936177850 * \l_semio_viz_color_m_fp
+        - 0.0040720468 * \l_semio_viz_color_s_fp
+    }
+  \fp_set:Nn #5
+    {
+      1.9779984951 * \l_semio_viz_color_l_fp - 2.4285922050 * \l_semio_viz_color_m_fp
+        + 0.4505937099 * \l_semio_viz_color_s_fp
+    }
+  \fp_set:Nn #6
+    {
+      0.0259040371 * \l_semio_viz_color_l_fp + 0.7827717662 * \l_semio_viz_color_m_fp
+        - 0.8086757660 * \l_semio_viz_color_s_fp
+    }
+}
+
+% 🧪 OKLab back to sRGB channels on 0..255.
+\cs_new_protected:Npn \semio_viz_color_from_oklab:NNNNNN #1#2#3#4#5#6 {
+  \fp_set:Nn \l_semio_viz_color_l_fp
+    { ( #1 + 0.3963377774 * #2 + 0.2158037573 * #3 ) ** 3 }
+  \fp_set:Nn \l_semio_viz_color_m_fp
+    { ( #1 - 0.1055613458 * #2 - 0.0638541728 * #3 ) ** 3 }
+  \fp_set:Nn \l_semio_viz_color_s_fp
+    { ( #1 - 0.0894841775 * #2 - 1.2914855480 * #3 ) ** 3 }
+  \fp_set:Nn #4
+    {
+      \semio_viz_color_gamma:n
+        {
+          4.0767416621 * \l_semio_viz_color_l_fp - 3.3077115913 * \l_semio_viz_color_m_fp
+            + 0.2309699292 * \l_semio_viz_color_s_fp
+        }
+    }
+  \fp_set:Nn #5
+    {
+      \semio_viz_color_gamma:n
+        {
+          -1.2684380046 * \l_semio_viz_color_l_fp + 2.6097574011 * \l_semio_viz_color_m_fp
+            - 0.3413193965 * \l_semio_viz_color_s_fp
+        }
+    }
+  \fp_set:Nn #6
+    {
+      \semio_viz_color_gamma:n
+        {
+          -0.0041960863 * \l_semio_viz_color_l_fp - 0.7034186147 * \l_semio_viz_color_m_fp
+            + 1.7076147010 * \l_semio_viz_color_s_fp
+        }
+    }
+}
+
+\fp_const:Nn \c_semio_viz_color_xn_fp { 0.96422 }
+\fp_const:Nn \c_semio_viz_color_zn_fp { 0.82521 }
+\fp_const:Nn \c_semio_viz_color_tone_fp { 6 / 29 }
+\fp_const:Nn \c_semio_viz_color_ttwo_fp { 3 * ( 6 / 29 ) ** 2 }
+\fp_const:Nn \c_semio_viz_color_tthree_fp { ( 6 / 29 ) ** 3 }
+\fp_const:Nn \c_semio_viz_color_tzero_fp { 4 / 29 }
+
+% 📐 The CIE Lab companding function used by d3-color.
+\cs_new:Npn \semio_viz_color_xyz2lab:n #1
+  {
+    ( (#1) > \c_semio_viz_color_tthree_fp ? (#1) ** ( 1 / 3 )
+      : (#1) / \c_semio_viz_color_ttwo_fp + \c_semio_viz_color_tzero_fp )
+  }
+
+% 📐 The inverse CIE Lab companding function used by d3-color.
+\cs_new:Npn \semio_viz_color_lab2xyz:n #1
+  {
+    ( (#1) > \c_semio_viz_color_tone_fp ? (#1) ** 3
+      : \c_semio_viz_color_ttwo_fp * ( (#1) - \c_semio_viz_color_tzero_fp ) )
+  }
+
+% 🧪 sRGB to CIE Lab on the D50 white point, matching d3-color.
+\cs_new_protected:Npn \semio_viz_color_to_lab:NNNNNN #1#2#3#4#5#6 {
+  \fp_set:Nn \l_semio_viz_color_m_fp
+    {
+      \semio_viz_color_xyz2lab:n
+        {
+          0.2225045 * \semio_viz_color_linear:n {#1}
+            + 0.7168786 * \semio_viz_color_linear:n {#2}
+            + 0.0606169 * \semio_viz_color_linear:n {#3}
+        }
+    }
+  \fp_set:Nn \l_semio_viz_color_l_fp
+    {
+      \semio_viz_color_xyz2lab:n
+        {
+          ( 0.4360747 * \semio_viz_color_linear:n {#1}
+            + 0.3850649 * \semio_viz_color_linear:n {#2}
+            + 0.1430804 * \semio_viz_color_linear:n {#3} ) / \c_semio_viz_color_xn_fp
+        }
+    }
+  \fp_set:Nn \l_semio_viz_color_s_fp
+    {
+      \semio_viz_color_xyz2lab:n
+        {
+          ( 0.0139322 * \semio_viz_color_linear:n {#1}
+            + 0.0971045 * \semio_viz_color_linear:n {#2}
+            + 0.7141733 * \semio_viz_color_linear:n {#3} ) / \c_semio_viz_color_zn_fp
+        }
+    }
+  \fp_set:Nn #4 { 116 * \l_semio_viz_color_m_fp - 16 }
+  \fp_set:Nn #5 { 500 * ( \l_semio_viz_color_l_fp - \l_semio_viz_color_m_fp ) }
+  \fp_set:Nn #6 { 200 * ( \l_semio_viz_color_m_fp - \l_semio_viz_color_s_fp ) }
+}
+
+% 🧪 CIE Lab back to sRGB channels on 0..255.
+\cs_new_protected:Npn \semio_viz_color_from_lab:NNNNNN #1#2#3#4#5#6 {
+  \fp_set:Nn \l_semio_viz_color_m_fp { ( #1 + 16 ) / 116 }
+  \fp_set:Nn \l_semio_viz_color_l_fp { \l_semio_viz_color_m_fp + #2 / 500 }
+  \fp_set:Nn \l_semio_viz_color_s_fp { \l_semio_viz_color_m_fp - #3 / 200 }
+  \fp_set:Nn \l_semio_viz_color_l_fp
+    { \c_semio_viz_color_xn_fp * \semio_viz_color_lab2xyz:n { \l_semio_viz_color_l_fp } }
+  \fp_set:Nn \l_semio_viz_color_m_fp
+    { \semio_viz_color_lab2xyz:n { \l_semio_viz_color_m_fp } }
+  \fp_set:Nn \l_semio_viz_color_s_fp
+    { \c_semio_viz_color_zn_fp * \semio_viz_color_lab2xyz:n { \l_semio_viz_color_s_fp } }
+  \fp_set:Nn #4
+    {
+      \semio_viz_color_gamma:n
+        {
+          3.1338561 * \l_semio_viz_color_l_fp - 1.6168667 * \l_semio_viz_color_m_fp
+            - 0.4906146 * \l_semio_viz_color_s_fp
+        }
+    }
+  \fp_set:Nn #5
+    {
+      \semio_viz_color_gamma:n
+        {
+          -0.9787684 * \l_semio_viz_color_l_fp + 1.9161415 * \l_semio_viz_color_m_fp
+            + 0.0334540 * \l_semio_viz_color_s_fp
+        }
+    }
+  \fp_set:Nn #6
+    {
+      \semio_viz_color_gamma:n
+        {
+          0.0719453 * \l_semio_viz_color_l_fp - 0.2289914 * \l_semio_viz_color_m_fp
+            + 1.4052427 * \l_semio_viz_color_s_fp
+        }
+    }
+}
+
+\fp_new:N \l_semio_viz_color_la_fp
+\fp_new:N \l_semio_viz_color_aa_fp
+\fp_new:N \l_semio_viz_color_bba_fp
+\fp_new:N \l_semio_viz_color_lb_fp
+\fp_new:N \l_semio_viz_color_ab_fp
+\fp_new:N \l_semio_viz_color_bbb_fp
+\fp_new:N \l_semio_viz_color_lt_fp
+\fp_new:N \l_semio_viz_color_at_fp
+\fp_new:N \l_semio_viz_color_bt_fp
+
+% 🌈 Interpolates two `#RRGGBB` colours at #4 in the colour space #1 (rgb, lab, hcl, oklab).
+\cs_new_protected:Npn \semio_viz_color_interpolate:nnnnN #1#2#3#4#5 {
+  \semio_viz_color_parse:nNNN {#2} \l_semio_viz_color_ra_fp \l_semio_viz_color_ga_fp
+    \l_semio_viz_color_ba_fp
+  \semio_viz_color_parse:nNNN {#3} \l_semio_viz_color_rb_fp \l_semio_viz_color_gb_fp
+    \l_semio_viz_color_bb_fp
+  \str_case:nnF {#1}
+    {
+      { rgb }
+        {
+          \semio_viz_color_hex:nnnN
+            {
+              \l_semio_viz_color_ra_fp
+                + (#4) * ( \l_semio_viz_color_rb_fp - \l_semio_viz_color_ra_fp )
+            }
+            {
+              \l_semio_viz_color_ga_fp
+                + (#4) * ( \l_semio_viz_color_gb_fp - \l_semio_viz_color_ga_fp )
+            }
+            {
+              \l_semio_viz_color_ba_fp
+                + (#4) * ( \l_semio_viz_color_bb_fp - \l_semio_viz_color_ba_fp )
+            }
+            #5
+        }
+      { lab }
+        {
+          \semio_viz_color_to_lab:NNNNNN \l_semio_viz_color_ra_fp \l_semio_viz_color_ga_fp
+            \l_semio_viz_color_ba_fp \l_semio_viz_color_la_fp \l_semio_viz_color_aa_fp
+            \l_semio_viz_color_bba_fp
+          \semio_viz_color_to_lab:NNNNNN \l_semio_viz_color_rb_fp \l_semio_viz_color_gb_fp
+            \l_semio_viz_color_bb_fp \l_semio_viz_color_lb_fp \l_semio_viz_color_ab_fp
+            \l_semio_viz_color_bbb_fp
+          \semio_viz_color_mix_lab:nN {#4} #5
+        }
+      { hcl }
+        {
+          \semio_viz_color_to_lab:NNNNNN \l_semio_viz_color_ra_fp \l_semio_viz_color_ga_fp
+            \l_semio_viz_color_ba_fp \l_semio_viz_color_la_fp \l_semio_viz_color_aa_fp
+            \l_semio_viz_color_bba_fp
+          \semio_viz_color_to_lab:NNNNNN \l_semio_viz_color_rb_fp \l_semio_viz_color_gb_fp
+            \l_semio_viz_color_bb_fp \l_semio_viz_color_lb_fp \l_semio_viz_color_ab_fp
+            \l_semio_viz_color_bbb_fp
+          \semio_viz_color_mix_hcl:nN {#4} #5
+        }
+      { oklab }
+        {
+          \semio_viz_color_to_oklab:NNNNNN \l_semio_viz_color_ra_fp \l_semio_viz_color_ga_fp
+            \l_semio_viz_color_ba_fp \l_semio_viz_color_la_fp \l_semio_viz_color_aa_fp
+            \l_semio_viz_color_bba_fp
+          \semio_viz_color_to_oklab:NNNNNN \l_semio_viz_color_rb_fp \l_semio_viz_color_gb_fp
+            \l_semio_viz_color_bb_fp \l_semio_viz_color_lb_fp \l_semio_viz_color_ab_fp
+            \l_semio_viz_color_bbb_fp
+          \fp_set:Nn \l_semio_viz_color_lt_fp
+            { \l_semio_viz_color_la_fp + (#4) * ( \l_semio_viz_color_lb_fp - \l_semio_viz_color_la_fp ) }
+          \fp_set:Nn \l_semio_viz_color_at_fp
+            { \l_semio_viz_color_aa_fp + (#4) * ( \l_semio_viz_color_ab_fp - \l_semio_viz_color_aa_fp ) }
+          \fp_set:Nn \l_semio_viz_color_bt_fp
+            { \l_semio_viz_color_bba_fp + (#4) * ( \l_semio_viz_color_bbb_fp - \l_semio_viz_color_bba_fp ) }
+          \semio_viz_color_from_oklab:NNNNNN \l_semio_viz_color_lt_fp \l_semio_viz_color_at_fp
+            \l_semio_viz_color_bt_fp \l_semio_viz_color_r_fp \l_semio_viz_color_g_fp
+            \l_semio_viz_color_b_fp
+          \semio_viz_color_hex:nnnN { \l_semio_viz_color_r_fp } { \l_semio_viz_color_g_fp }
+            { \l_semio_viz_color_b_fp } #5
+        }
+    }
+    { \msg_error:nnn { semio-viz } { unknown-interpolator } {#1} }
+}
+\cs_generate_variant:Nn \semio_viz_color_interpolate:nnnnN { VnnnN , VVVnN , nVVnN }
+
+% 🎚️ Channel-wise Lab mix at #1 written as hex into #2.
+\cs_new_protected:Npn \semio_viz_color_mix_lab:nN #1#2 {
+  \fp_set:Nn \l_semio_viz_color_lt_fp
+    { \l_semio_viz_color_la_fp + (#1) * ( \l_semio_viz_color_lb_fp - \l_semio_viz_color_la_fp ) }
+  \fp_set:Nn \l_semio_viz_color_at_fp
+    { \l_semio_viz_color_aa_fp + (#1) * ( \l_semio_viz_color_ab_fp - \l_semio_viz_color_aa_fp ) }
+  \fp_set:Nn \l_semio_viz_color_bt_fp
+    { \l_semio_viz_color_bba_fp + (#1) * ( \l_semio_viz_color_bbb_fp - \l_semio_viz_color_bba_fp ) }
+  \semio_viz_color_from_lab:NNNNNN \l_semio_viz_color_lt_fp \l_semio_viz_color_at_fp
+    \l_semio_viz_color_bt_fp \l_semio_viz_color_r_fp \l_semio_viz_color_g_fp
+    \l_semio_viz_color_b_fp
+  \semio_viz_color_hex:nnnN { \l_semio_viz_color_r_fp } { \l_semio_viz_color_g_fp }
+    { \l_semio_viz_color_b_fp } #2
+}
+
+% 🎡 HCL mix at #1 with shortest-path hue interpolation, written as hex into #2.
+\cs_new_protected:Npn \semio_viz_color_mix_hcl:nN #1#2 {
+  \fp_set:Nn \l_semio_viz_color_ha_fp
+    {
+      atand( \l_semio_viz_color_bba_fp , \l_semio_viz_color_aa_fp ) < 0
+        ? atand( \l_semio_viz_color_bba_fp , \l_semio_viz_color_aa_fp ) + 360
+        : atand( \l_semio_viz_color_bba_fp , \l_semio_viz_color_aa_fp )
+    }
+  \fp_set:Nn \l_semio_viz_color_hb_fp
+    {
+      atand( \l_semio_viz_color_bbb_fp , \l_semio_viz_color_ab_fp ) < 0
+        ? atand( \l_semio_viz_color_bbb_fp , \l_semio_viz_color_ab_fp ) + 360
+        : atand( \l_semio_viz_color_bbb_fp , \l_semio_viz_color_ab_fp )
+    }
+  \fp_set:Nn \l_semio_viz_color_ca_fp
+    { sqrt( \l_semio_viz_color_aa_fp ** 2 + \l_semio_viz_color_bba_fp ** 2 ) }
+  \fp_set:Nn \l_semio_viz_color_cb_fp
+    { sqrt( \l_semio_viz_color_ab_fp ** 2 + \l_semio_viz_color_bbb_fp ** 2 ) }
+  \fp_set:Nn \l_semio_viz_color_dh_fp { \l_semio_viz_color_hb_fp - \l_semio_viz_color_ha_fp }
+  \bool_lazy_or:nnT
+    { \fp_compare_p:nNn { \l_semio_viz_color_dh_fp } > { 180 } }
+    { \fp_compare_p:nNn { \l_semio_viz_color_dh_fp } < { -180 } }
+    {
+      \fp_set:Nn \l_semio_viz_color_dh_fp
+        { \l_semio_viz_color_dh_fp - 360 * floor( \l_semio_viz_color_dh_fp / 360 + 0.5 ) }
+    }
+  \fp_set:Nn \l_semio_viz_color_ht_fp
+    { \l_semio_viz_color_ha_fp + (#1) * \l_semio_viz_color_dh_fp }
+  \fp_set:Nn \l_semio_viz_color_ct_fp
+    { \l_semio_viz_color_ca_fp + (#1) * ( \l_semio_viz_color_cb_fp - \l_semio_viz_color_ca_fp ) }
+  \fp_set:Nn \l_semio_viz_color_lt_fp
+    { \l_semio_viz_color_la_fp + (#1) * ( \l_semio_viz_color_lb_fp - \l_semio_viz_color_la_fp ) }
+  \fp_set:Nn \l_semio_viz_color_at_fp
+    { \l_semio_viz_color_ct_fp * cosd( \l_semio_viz_color_ht_fp ) }
+  \fp_set:Nn \l_semio_viz_color_bt_fp
+    { \l_semio_viz_color_ct_fp * sind( \l_semio_viz_color_ht_fp ) }
+  \semio_viz_color_from_lab:NNNNNN \l_semio_viz_color_lt_fp \l_semio_viz_color_at_fp
+    \l_semio_viz_color_bt_fp \l_semio_viz_color_r_fp \l_semio_viz_color_g_fp
+    \l_semio_viz_color_b_fp
+  \semio_viz_color_hex:nnnN { \l_semio_viz_color_r_fp } { \l_semio_viz_color_g_fp }
+    { \l_semio_viz_color_b_fp } #2
+}
+\fp_new:N \l_semio_viz_color_ha_fp
+\fp_new:N \l_semio_viz_color_hb_fp
+\fp_new:N \l_semio_viz_color_ca_fp
+\fp_new:N \l_semio_viz_color_cb_fp
+\fp_new:N \l_semio_viz_color_dh_fp
+\fp_new:N \l_semio_viz_color_ht_fp
+\fp_new:N \l_semio_viz_color_ct_fp
+
+% 🌈 Samples the multi-stop ramp #2 (a comma list of hex colours) at #3 in colour space #1.
+\cs_new_protected:Npn \semio_viz_color_ramp:nnnN #1#2#3#4 {
+  \seq_set_from_clist:Nn \l_semio_viz_color_stops_seq {#2}
+  \int_set:Nn \l_semio_viz_color_stops_int { \seq_count:N \l_semio_viz_color_stops_seq }
+  \int_compare:nNnTF { \l_semio_viz_color_stops_int } < { 2 }
+    { \str_set:Nx #4 { \seq_item:Nn \l_semio_viz_color_stops_seq { 1 } } }
+    {
+      \fp_set:Nn \l_semio_viz_color_t_fp
+        { min( max( #3 , 0 ) , 1 ) * ( \l_semio_viz_color_stops_int - 1 ) }
+      \int_set:Nn \l_semio_viz_color_seg_int
+        {
+          \int_min:nn { \fp_to_int:n { floor( \l_semio_viz_color_t_fp ) } }
+            { \l_semio_viz_color_stops_int - 2 }
+        }
+      \tl_set:Nx \l_semio_viz_color_stop_a_tl
+        { \seq_item:Nn \l_semio_viz_color_stops_seq { \l_semio_viz_color_seg_int + 1 } }
+      \tl_set:Nx \l_semio_viz_color_stop_b_tl
+        { \seq_item:Nn \l_semio_viz_color_stops_seq { \l_semio_viz_color_seg_int + 2 } }
+      \semio_viz_color_interpolate:nVVnN {#1}
+        \l_semio_viz_color_stop_a_tl \l_semio_viz_color_stop_b_tl
+        { \l_semio_viz_color_t_fp - \l_semio_viz_color_seg_int } #4
+    }
+}
+\seq_new:N \l_semio_viz_color_stops_seq
+\int_new:N \l_semio_viz_color_stops_int
+\int_new:N \l_semio_viz_color_seg_int
+\fp_new:N \l_semio_viz_color_t_fp
+\tl_new:N \l_semio_viz_color_stop_a_tl
+\tl_new:N \l_semio_viz_color_stop_b_tl
+\cs_generate_variant:Nn \semio_viz_color_ramp:nnnN { VVnN , VnnN , nVnN }
+%endregion 🔖️Color
+
+%region 🔖️BandGeometry
+% ↕️ Band-scale edges: d3's band scale exposes bandwidth() and each band's own start and end,
+% not just its centre. Every span bar, matrix cell and grid box needs an edge, not a point.
+\fp_new:N \l_semio_viz_band_lo_fp
+\fp_new:N \l_semio_viz_band_hi_fp
+
+% 📏 Width of one band of a band, point or ordinal scale.
 \cs_new_protected:Npn \semio_viz_scale_band_width:nN #1#2 {
-  \semio_viz_scale_band_range_prep:n {#1}
-  \fp_set:Nn #2 { \fp_eval:n { ( \l_semio_viz_range_hi_fp - \l_semio_viz_range_lo_fp ) / \l_tmpb_int } }
+  \semio_viz_scale_band_geometry:n {#1}
+  \fp_set_eq:NN #2 \l_semio_viz_scale_bandwidth_fp
+}
+
+% 📐 Distance between two neighbouring band starts.
+\cs_new_protected:Npn \semio_viz_scale_band_step:nN #1#2 {
+  \semio_viz_scale_band_geometry:n {#1}
+  \fp_set_eq:NN #2 \l_semio_viz_scale_step_fp
 }
 
 % 📦 Left and right edge of one named band.
 \cs_new_protected:Npn \semio_viz_scale_band_edges:nnNN #1#2#3#4 {
   \semio_viz_scale_band_index:nnN {#1} {#2} \l_semio_viz_band_int
-  \semio_viz_scale_band_range_prep:n {#1}
-  \fp_set:Nn #3 { \fp_eval:n { \l_semio_viz_range_lo_fp + ( \l_semio_viz_band_int - 1 ) / \l_tmpb_int * ( \l_semio_viz_range_hi_fp - \l_semio_viz_range_lo_fp ) } }
-  \fp_set:Nn #4 { \fp_eval:n { \l_semio_viz_range_lo_fp + \l_semio_viz_band_int / \l_tmpb_int * ( \l_semio_viz_range_hi_fp - \l_semio_viz_range_lo_fp ) } }
+  \semio_viz_scale_band_geometry:n {#1}
+  \semio_viz_scale_band_position:nnN {#1} { \l_semio_viz_band_int } #3
+  \fp_set:Nn #4 { #3 + \l_semio_viz_scale_bandwidth_fp }
 }
 
-% ↔️ Left edge of the "from" band through the right edge of the "to" band --
-% one span across the grid, for a Gantt-style bar between two named stages.
+% ↔️ Left edge of the "from" band through the right edge of the "to" band.
 \cs_new_protected:Npn \semio_viz_scale_band_span:nnnNN #1#2#3#4#5 {
   \semio_viz_scale_band_edges:nnNN {#1} {#2} #4 \l_semio_viz_band_hi_fp
   \semio_viz_scale_band_edges:nnNN {#1} {#3} \l_semio_viz_band_lo_fp #5
 }
 
-% A scale name and a category name almost always arrive from a key (a tl
-% variable) rather than as a literal, e.g. the scale a \SemioVizLayout call
-% names via `scale=`, or a category read out of a table cell -- so every
-% edge finder above needs a variant that expands its tl-variable arguments
-% to their VALUES before the n-type body runs. The two-name span needs all
-% three: the scale plus both endpoint categories.
+% A scale name and a category name almost always arrive from a key (a tl variable) rather than
+% as a literal, so every edge finder needs a variant expanding its tl arguments first.
 \cs_generate_variant:Nn \semio_viz_scale_band_edges:nnNN { VVNN }
 \cs_generate_variant:Nn \semio_viz_scale_band_span:nnnNN { VVVNN }
 \cs_generate_variant:Nn \semio_viz_scale_band_width:nN { V }
-%endregion BandGeometry
+\cs_generate_variant:Nn \semio_viz_scale_band_step:nN { V }
+%endregion 🔖️BandGeometry
+
+%region 🔖️AnonymousBand
+% 🎚️ The same d3 geometry as the named scales above, computed for a bare count instead of a
+% registered scale: a family that lays out n slots inside a millimetre span -- box plots per
+% category, histogram bins, matrix rows -- needs the step and the bandwidth without paying for
+% a scale registration and its domain. https://github.com/d3/d3-scale/blob/main/src/band.js
+\fp_new:N \g_semio_viz_band_step_fp
+\fp_new:N \g_semio_viz_band_width_fp
+\fp_new:N \g_semio_viz_band_start_fp
+
+% 📐 Linear interpolation of #1 from the domain [#2,#3] into the range [#4,#5].
+\cs_new_protected:Npn \semio_viz_scale_linear:nnnnnN #1#2#3#4#5#6 {
+  \fp_compare:nNnTF { (#3) - (#2) } = { 0 }
+    { \fp_set:Nn #6 {#4} }
+    { \fp_set:Nn #6 { (#4) + ( (#1) - (#2) ) / ( (#3) - (#2) ) * ( (#5) - (#4) ) } }
+}
+
+% 🎚️ Band geometry: #1 count, #2 r0, #3 r1, #4 paddingInner, #5 paddingOuter, #6 align.
+\cs_new_protected:Npn \semio_viz_scale_band:nnnnnn #1#2#3#4#5#6 {
+  \fp_gset:Nn \g_semio_viz_band_step_fp
+    { ( (#3) - (#2) ) / max ( 1 , (#1) - (#4) + (#5) * 2 ) }
+  \fp_gset:Nn \g_semio_viz_band_start_fp
+    { (#2) + ( (#3) - (#2) - \g_semio_viz_band_step_fp * ( (#1) - (#4) ) ) * (#6) }
+  \fp_gset:Nn \g_semio_viz_band_width_fp { \g_semio_viz_band_step_fp * ( 1 - (#4) ) }
+}
+
+% 📍 Left edge of band #1 (one-based) after \semio_viz_scale_band:nnnnnn.
+\cs_new_protected:Npn \semio_viz_scale_band_at:nN #1#2 {
+  \fp_set:Nn #2 { \g_semio_viz_band_start_fp + \g_semio_viz_band_step_fp * ( (#1) - 1 ) }
+}
+%endregion 🔖️AnonymousBand
+
+%region 🔖️Interpolate
+% 🔀 The interpolator kinds `\SemioVizInterpolate` dispatches on. `number` and `round` are the two
+% numeric ones d3-interpolate names; `rgb`, `lab`, `hcl` and `oklab` are the colour spaces the ramp
+% kernel already converts through; `array` walks two equally long comma lists element by element.
+\clist_const:Nn \c_semio_viz_interpolate_kinds_clist
+  { number , round , rgb , lab , hcl , oklab , array }
+
+\str_new:N \l_semio_viz_interpolate_hex_str
+\tl_new:N \l_semio_viz_interpolate_result_tl
+\seq_new:N \l_semio_viz_interpolate_a_seq
+\seq_new:N \l_semio_viz_interpolate_b_seq
+\seq_new:N \l_semio_viz_interpolate_out_seq
+
+% 🔢 One number between #1 and #2 at #3, on the emission grid the caller asked for.
+\cs_new:Npn \semio_viz_interpolate_number:nnn #1#2#3
+  { \fp_eval:n { (#1) + (#3) * ( (#2) - (#1) ) } }
+
+% 🔢 The same value rounded to the nearest integer, which is d3-interpolate's `interpolateRound`.
+\cs_new:Npn \semio_viz_interpolate_round:nnn #1#2#3
+  { \fp_eval:n { round ( (#1) + (#3) * ( (#2) - (#1) ) ) } }
+
+% 🧮 Two equally long comma lists interpolated element by element, into the comma list #4.
+\cs_new_protected:Npn \semio_viz_interpolate_array:nnnN #1#2#3#4 {
+  \seq_set_from_clist:Nn \l_semio_viz_interpolate_a_seq {#1}
+  \seq_set_from_clist:Nn \l_semio_viz_interpolate_b_seq {#2}
+  \seq_clear:N \l_semio_viz_interpolate_out_seq
+  \int_step_inline:nn { \seq_count:N \l_semio_viz_interpolate_a_seq }
+    {
+      \seq_put_right:Nx \l_semio_viz_interpolate_out_seq
+        {
+          \semio_viz_interpolate_number:nnn
+            { \seq_item:Nn \l_semio_viz_interpolate_a_seq {##1} }
+            { \seq_item:Nn \l_semio_viz_interpolate_b_seq {##1} } {#3}
+        }
+    }
+  \tl_set:Nx #4 { \seq_use:Nn \l_semio_viz_interpolate_out_seq { , } }
+}
+
+% 🔀 Interpolates #2 and #3 at #4 under the kind #1, into the token list #5. A colour comes back as
+% `#RRGGBB`, an array as a comma list, a number as an expl3 fixed-point decimal.
+\cs_new_protected:Npn \semio_viz_interpolate:nnnnN #1#2#3#4#5 {
+  \str_case:nnF {#1}
+    {
+      { number } { \tl_set:Nx #5 { \semio_viz_interpolate_number:nnn {#2} {#3} {#4} } }
+      { round }  { \tl_set:Nx #5 { \semio_viz_interpolate_round:nnn {#2} {#3} {#4} } }
+      { array }  { \semio_viz_interpolate_array:nnnN {#2} {#3} {#4} #5 }
+    }
+    {
+      \clist_if_in:NnTF \c_semio_viz_interpolate_kinds_clist {#1}
+        {
+          \semio_viz_color_interpolate:nnnnN {#1} {#2} {#3} {#4} \l_semio_viz_interpolate_hex_str
+          \tl_set:Nx #5 { \str_use:N \l_semio_viz_interpolate_hex_str }
+        }
+        { \msg_error:nnn { semio-viz } { unknown-interpolator } {#1} }
+    }
+}
+%endregion 🔖️Interpolate
+
+%region 🔖️PublicApi
+% 📐 \SemioVizScale{name}{kind}{domain}{range}[options]: declares a named scale.
+\NewDocumentCommand \SemioVizScale { m m m m O{} }
+  { \semio_viz_scale_define:nnnnn {#1} {#2} {#3} {#4} {#5} }
+% 🔀 \SemioVizInterpolate{kind}{a}{b}{t}: typesets the value between `a` and `b` at `t`. The kind is
+% `number`, `round`, one of the colour spaces `rgb`, `lab`, `hcl`, `oklab`, or `array` for two
+% equally long comma lists of numbers.
+\NewDocumentCommand \SemioVizInterpolate { m m m m }
+  {
+    \semio_viz_interpolate:nnnnN {#1} {#2} {#3} {#4} \l_semio_viz_interpolate_result_tl
+    \tl_use:N \l_semio_viz_interpolate_result_tl
+  }
+%endregion 🔖️PublicApi
 
 \ExplSyntaxOff

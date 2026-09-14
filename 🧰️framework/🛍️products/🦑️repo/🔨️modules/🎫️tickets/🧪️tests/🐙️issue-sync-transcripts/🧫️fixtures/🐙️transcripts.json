@@ -1,0 +1,36 @@
+{
+  "repoMetaDir": "/repo/.🧬semio/🦑️repo",
+  "goal": "🎯️aioptimizedrepo🎯️repoclient",
+  "issueUrl": "https://github.com/usalu/semio/issues/612",
+  "title": "Tree Text Short IDs",
+  "prompt": "Fix renderTreeNodeText so tree text output shows only the own ID segment.",
+  "summary": "Cleared the parent id before rendering and restored it afterwards.",
+  "labels": ["🦑️repo", "🧰️framework"],
+  "scripts": {
+    "a-new-ticket-creates-one-issue": {
+      "createdIssueUrl": "https://github.com/usalu/semio/issues/612",
+      "milestone": 42,
+      "milestoneTitle": "26/09",
+      "failures": []
+    },
+    "an-existing-open-issue-is-left-alone": {
+      "createdIssueUrl": "",
+      "issueState": "OPEN",
+      "failures": []
+    },
+    "a-closed-issue-is-reopened": {
+      "createdIssueUrl": "",
+      "issueState": "CLOSED",
+      "failures": []
+    },
+    "a-close-comments-labels-and-closes": {
+      "createdIssueUrl": "https://github.com/usalu/semio/issues/612",
+      "failures": []
+    },
+    "every-failure-becomes-a-warning": {
+      "createdIssueUrl": "",
+      "issueState": "CLOSED",
+      "failures": ["create_issue", "reopen_issue", "add_comment", "add_labels", "close_issue"]
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json",
+  "cases": [
+    { "id": "scalar-substitution", "source": "{ ticket(id: $id) }", "variables": { "id": "26/09/06/SLUG" }, "defaults": {} },
+    { "id": "int-substitution", "source": "{ tickets(limit: $limit) }", "variables": { "limit": 25 }, "defaults": {} },
+    { "id": "boolean-substitution", "source": "{ tickets(open: $open) }", "variables": { "open": true }, "defaults": {} },
+    { "id": "null-valued-variable", "source": "{ tickets(state: $state) }", "variables": { "state": null }, "defaults": {} },
+    { "id": "missing-variable-resolves-null", "source": "{ tickets(state: $state) }", "variables": {}, "defaults": {}, "note": "An unbound variable is null; it never falls back to a declared default." },
+    { "id": "missing-variable-beats-default", "source": "{ tickets(state: $state) }", "variables": {}, "defaults": { "state": "open" }, "note": "The argument NAME is present, so the default is not applied even though the value is null." },
+    { "id": "default-for-absent-argument", "source": "{ tickets }", "variables": {}, "defaults": { "state": "open", "limit": 25 } },
+    { "id": "explicit-argument-beats-default", "source": "{ tickets(limit: 5) }", "variables": {}, "defaults": { "limit": 25 } },
+    { "id": "null-default-is-not-applied", "source": "{ tickets }", "variables": {}, "defaults": { "state": null }, "note": "A nil default is indistinguishable from no default at all." },
+    { "id": "list-with-variable-members", "source": "{ tickets(ids: [$a, 2, $b]) }", "variables": { "a": 1, "b": 3 }, "defaults": {} },
+    { "id": "object-with-variable-members", "source": "{ ticketOpen(input: { title: $title, due: \"2026-09-30\" }) }", "variables": { "title": "Some Title" }, "defaults": {} },
+    { "id": "nested-object-variable", "source": "{ ticketOpen(input: { meta: { owner: $owner } }) }", "variables": { "owner": "ueli" }, "defaults": {} },
+    { "id": "whole-object-from-variable", "source": "{ ticketOpen(input: $input) }", "variables": { "input": { "title": "Some Title", "labels": ["a", "b"] } }, "defaults": {} },
+    { "id": "list-from-variable", "source": "{ tickets(ids: $ids) }", "variables": { "ids": [1, 2, 3] }, "defaults": {} },
+    { "id": "unused-variable-is-ignored", "source": "{ tickets(limit: 5) }", "variables": { "unused": "x" }, "defaults": {} },
+    { "id": "defaults-apply-to-every-root-selection", "source": "{ tickets goals }", "variables": {}, "defaults": { "limit": 10 } },
+    { "id": "enum-literal-is-not-substituted", "source": "{ tickets(state: OPEN) }", "variables": { "OPEN": "closed" }, "defaults": {}, "note": "A bare enum name is a literal, never a variable reference." },
+    { "id": "mixed-literals-and-variables", "source": "query Q($id: ID!) { ticket(id: $id, deep: true, ratio: 0.5, tags: [\"a\"], meta: { n: $n }) }", "variables": { "id": "x", "n": 7 }, "defaults": { "cursor": "start" }, "note": "An UNBOUND variable nested inside an input object is deliberately not in this corpus: the reference implementation omits such a member, while this executor keeps it as an explicit null. See 📓️opus-graphql-parser.md." }
+  ]
+}

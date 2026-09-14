@@ -47,13 +47,7 @@ print/asset/font/
 SPECS.md
 DOCS.md
 TODOS.md
-🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client
-🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client.exe
-🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client_bin
-🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/mcp
 #--------------------------------------GO--------------------------------------
-🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/⚡️implementations/🐹️go/client
-🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/⚡️implementations/🐹️go/client.exe
 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/⚡️implementations/🐹️go/server
 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/⚡️implementations/🐹️go/server.exe
 **/.coda/validators/programming

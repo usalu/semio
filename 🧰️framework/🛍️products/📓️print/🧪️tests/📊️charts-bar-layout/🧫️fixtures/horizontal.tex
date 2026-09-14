@@ -1,0 +1,9 @@
+\documentclass{article}
+\usepackage{semio-viz-charts-bar}
+\begin{document}
+\SemioVizProbeOn
+\SemioVizProbeBegin{charts-bar-layout}{horizontal}
+\begin{VizProbeCanvas}[80][40]
+\SemioVizRunFamily{bar}[data=demo-cartesian,x=cat,y=val,group=grp,mode=grouped,orient=horizontal,axes=false]
+\end{VizProbeCanvas}
+\end{document}

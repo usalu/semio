@@ -1,0 +1,30 @@
+{
+  "schema": "semio.repo.events.store/1",
+  "$comment": "🗄️ Append-only store vectors moved out of the CLI g1 contract fixture. `sequences` are the sequence numbers a replay of `inputs` must yield; `interruptPhases` are the progress steps at which a cancellation must leave the committed log byte-identical and leave no stage file.",
+  "inputs": [
+    {
+      "id": "folder:a",
+      "kind": "folder.recorded",
+      "data": {
+        "path": "a"
+      }
+    },
+    {
+      "id": "file:a/x.go",
+      "kind": "file.recorded",
+      "data": {
+        "path": "a/x.go"
+      }
+    }
+  ],
+  "sequences": [
+    1,
+    2
+  ],
+  "interruptPhases": [
+    "encoded",
+    "staged",
+    "appended",
+    "synced"
+  ]
+}

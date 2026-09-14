@@ -1,0 +1,21 @@
+[package]
+name = "semio-framework-repo-statutes"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "repo statutes: the statute and policy catalog, breach analysis, ignore directives, autofix and the breach cache envelope"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+semio-framework-repo-model = { path = "../../../📐️model/📦️packages/🦀️rust" }
+semio-framework-repo-languages = { path = "../../../🗣️languages/📦️packages/🦀️rust" }

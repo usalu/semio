@@ -355,7 +355,7 @@
 - Andrews curves `andrews-curves` chart
 - Bubble matrix `bubble-matrix` chart
 - Heatmap matrix `heatmap-matrix` chart
-- Scatterplot matrix `scatterplot-matrix-5` chart
+- Scatterplot matrix `scatterplot-matrix` chart
 - Attribute matrix `attribute-matrix` chart
 - Profile plot `profile-plot` chart
 - Ternary plot `ternary-plot` chart
@@ -414,8 +414,8 @@
 ### Unit composition
 
 - Waffle chart `waffle-chart` chart
-- Unit chart `unit-chart-6` chart
-- Icon array `icon-array-6` chart
+- Unit chart `unit-chart` chart
+- Icon array `icon-array` chart
 - Pictogram `pictogram` chart
 
 ### Specialized
@@ -455,7 +455,7 @@
 
 ### Space-filling hierarchies
 
-- Treemap `treemap-7` chart
+- Treemap `treemap` chart
 - Squarified treemap `squarified-treemap` chart
 - Slice-and-dice treemap `slice-and-dice-treemap` chart
 - Strip treemap `strip-treemap` chart
@@ -582,10 +582,10 @@
 
 - Sankey diagram `sankey-diagram` chart
 - Alluvial diagram `alluvial-diagram` chart
-- Parallel sets `parallel-sets-9` chart
+- Parallel sets `parallel-sets` chart
 - Flow map `flow-map` chart
-- Chord diagram `chord-diagram-9` chart
-- Dependency wheel `dependency-wheel-9` chart
+- Chord diagram `chord-diagram` chart
+- Dependency wheel `dependency-wheel` chart
 - Energy-flow diagram `energy-flow-diagram` chart
 - Material-flow diagram `material-flow-diagram` chart
 - Money-flow diagram `money-flow-diagram` chart
@@ -595,7 +595,7 @@
 - Conversion-flow diagram `conversion-flow-diagram` chart
 - Funnel-flow diagram `funnel-flow-diagram` chart
 - River-flow diagram `river-flow-diagram` chart
-- Streamgraph `streamgraph-9` chart
+- Streamgraph `streamgraph` chart
 - ThemeRiver `themeriver` chart
 - Flow network `flow-network` chart
 - Source-sink graph `source-sink-graph` chart
@@ -657,7 +657,7 @@
 - Origin-destination map `origin-destination-map` chart
 - Desire-line map `desire-line-map` chart
 - Migration map `migration-map` chart
-- Flow map `flow-map-10` chart
+- Flow map `flow-map` chart
 
 ### Continuous spatial fields
 
@@ -713,10 +713,10 @@
 - Heatmap `heatmap` chart
 - Clustered heatmap `clustered-heatmap` chart
 - Annotated heatmap `annotated-heatmap` chart
-- Calendar heatmap `calendar-heatmap-11` chart
-- Correlation heatmap `correlation-heatmap-11` chart
+- Calendar heatmap `calendar-heatmap` chart
+- Correlation heatmap `correlation-heatmap` chart
 - Confusion matrix `confusion-matrix` chart
-- Adjacency matrix `adjacency-matrix-11` chart
+- Adjacency matrix `adjacency-matrix` chart
 - Distance matrix `distance-matrix` chart
 - Similarity matrix `similarity-matrix` chart
 - Covariance matrix `covariance-matrix` chart
@@ -725,7 +725,7 @@
 - Presence/absence matrix `presence-absence-matrix` chart
 - Binary matrix `binary-matrix` chart
 - Dot matrix `dot-matrix` chart
-- Bubble matrix `bubble-matrix-11` chart
+- Bubble matrix `bubble-matrix` chart
 - Matrix plot `matrix-plot` chart
 - Matrix with marginal dendrograms `matrix-with-marginal-dendrograms` chart
 - Matrix with marginal histograms `matrix-with-marginal-histograms` chart
@@ -775,8 +775,8 @@
 - Sentiment matrix `sentiment-matrix` chart
 - Lexical dispersion plot `lexical-dispersion-plot` chart
 - Vocabulary-growth curve `vocabulary-growth-curve` chart
-- Co-occurrence network `co-occurrence-network-13` chart
-- Semantic network `semantic-network-13` chart
+- Co-occurrence network `co-occurrence-network` chart
+- Semantic network `semantic-network` chart
 - Dependency parse tree `dependency-parse-tree` chart
 - Constituency parse tree `constituency-parse-tree` chart
 - Syntax tree `syntax-tree` chart
@@ -809,7 +809,7 @@
 ### Logic diagrams
 
 - Decision diagram `decision-diagram` chart
-- Decision tree `decision-tree-14` chart
+- Decision tree `decision-tree` chart
 - Decision table `decision-table` chart
 - Cause-effect diagram `cause-effect-diagram` chart
 - Fishbone/Ishikawa diagram `fishbone-ishikawa-diagram` chart
@@ -870,8 +870,8 @@
 - Network topology diagram `network-topology-diagram` chart
 - Deployment topology `deployment-topology` chart
 - API dependency diagram `api-dependency-diagram` chart
-- Call graph `call-graph-15` chart
-- Control-flow graph `control-flow-graph-15` chart
+- Call graph `call-graph` chart
+- Control-flow graph `control-flow-graph` chart
 - Data-lineage diagram `data-lineage-diagram` chart
 - Data-pipeline diagram `data-pipeline-diagram` chart
 - ETL diagram `etl-diagram` chart
@@ -943,8 +943,8 @@
 
 ### Accounting/business
 
-- Waterfall chart `waterfall-chart-17` chart
-- Bridge chart `bridge-chart-17` chart
+- Waterfall chart `waterfall-chart` chart
+- Bridge chart `bridge-chart` chart
 - P&L bridge `pandl-bridge` chart
 - Revenue bridge `revenue-bridge` chart
 - Variance chart `variance-chart` chart
@@ -955,7 +955,7 @@
 ### Economics
 
 - Supply-demand graph `supply-demand-graph` chart
-- Lorenz curve `lorenz-curve-17` chart
+- Lorenz curve `lorenz-curve` chart
 - Phillips curve `phillips-curve` chart
 - Production-possibility frontier `production-possibility-frontier` chart
 - Indifference curve `indifference-curve` chart
@@ -1011,23 +1011,23 @@
 - Polar scatter plot `polar-scatter-plot` chart
 - Polar line plot `polar-line-plot` chart
 - Polar area plot `polar-area-plot` chart
-- Polar histogram `polar-histogram-20` chart
+- Polar histogram `polar-histogram` chart
 - Rose diagram `rose-diagram` chart
 - Wind rose `wind-rose` chart
 - Nightingale rose `nightingale-rose` chart
-- Coxcomb chart `coxcomb-chart-20` chart
-- Radar chart `radar-chart-20` chart
-- Spider chart `spider-chart-20` chart
+- Coxcomb chart `coxcomb-chart` chart
+- Radar chart `radar-chart` chart
+- Spider chart `spider-chart` chart
 - Radial bar chart `radial-bar-chart` chart
 - Radial column chart `radial-column-chart` chart
 - Radial stacked bar `radial-stacked-bar` chart
 - Radial heatmap `radial-heatmap` chart
 - Circular heatmap `circular-heatmap` chart
-- Radial timeline `radial-timeline-20` chart
-- Radial tree `radial-tree-20` chart
-- Radial dendrogram `radial-dendrogram-20` chart
-- Sunburst `sunburst-20` chart
-- Chord diagram `chord-diagram-20` chart
+- Radial timeline `radial-timeline` chart
+- Radial tree `radial-tree` chart
+- Radial dendrogram `radial-dendrogram` chart
+- Sunburst `sunburst` chart
+- Chord diagram `chord-diagram` chart
 - Circular network `circular-network` chart
 - Circular calendar `circular-calendar` chart
 - Circular genome plot `circular-genome-plot` chart
@@ -1038,7 +1038,7 @@
 ### General
 
 - Circos plot `circos-plot` chart
-- Circular genome plot `circular-genome-plot-21` chart
+- Circular genome plot `circular-genome-plot` chart
 - Ideogram `ideogram` chart
 - Karyotype diagram `karyotype-diagram` chart
 - Chromosome map `chromosome-map` chart
@@ -1058,7 +1058,7 @@
 - Read pileup `read-pileup` chart
 - Variant track `variant-track` chart
 - Hi-C contact map `hi-c-contact-map` chart
-- Phylogenetic tree `phylogenetic-tree-21` chart
+- Phylogenetic tree `phylogenetic-tree` chart
 - Phylogenetic network `phylogenetic-network` chart
 - Protein domain diagram `protein-domain-diagram` chart
 - Protein interaction network `protein-interaction-network` chart
@@ -1071,17 +1071,17 @@
 - Kaplan–Meier plot `kaplan-meier-plot` chart
 - Cumulative-hazard plot `cumulative-hazard-plot` chart
 - Forest plot `forest-plot` chart
-- Funnel plot `funnel-plot-22` chart
+- Funnel plot `funnel-plot` chart
 - ROC curve `roc-curve` chart
 - Precision-recall curve `precision-recall-curve` chart
-- Calibration plot `calibration-plot-22` chart
+- Calibration plot `calibration-plot` chart
 - Nomogram `nomogram` chart
 - Growth chart `growth-chart` chart
 - Dose-response curve `dose-response-curve` chart
-- Bland–Altman plot `bland-altman-plot-22` chart
+- Bland–Altman plot `bland-altman-plot` chart
 - Volcano plot `volcano-plot` chart
 - MA plot `ma-plot` chart
-- Manhattan plot `manhattan-plot-22` chart
+- Manhattan plot `manhattan-plot` chart
 - Gene-expression heatmap `gene-expression-heatmap` chart
 - Pathway diagram `pathway-diagram` chart
 - Metabolic-network diagram `metabolic-network-diagram` chart
@@ -1097,13 +1097,13 @@
 - Confidence-interval plot `confidence-interval-plot` chart
 - Interval plot `interval-plot` chart
 - Dot-and-whisker plot `dot-and-whisker-plot` chart
-- Forest plot `forest-plot-23` chart
+- Forest plot `forest-plot` chart
 - Caterpillar plot `caterpillar-plot` chart
 - Confidence band `confidence-band` chart
 - Prediction band `prediction-band` chart
 - Credible interval `credible-interval` chart
 - Highest-density interval `highest-density-interval` chart
-- Fan chart `fan-chart-23` chart
+- Fan chart `fan-chart` chart
 - Uncertainty ribbon `uncertainty-ribbon` chart
 - Gradient uncertainty band `gradient-uncertainty-band` chart
 - Hypothetical outcome plot `hypothetical-outcome-plot` chart
@@ -1115,16 +1115,16 @@
 - Null-distribution plot `null-distribution-plot` chart
 - P-value plot `p-value-plot` chart
 - Power curve `power-curve` chart
-- Funnel plot `funnel-plot-23` chart
+- Funnel plot `funnel-plot` chart
 - Meta-analysis forest plot `meta-analysis-forest-plot` chart
 
 ## 24. Model evaluation / machine-learning visualizations
 
 ### General
 
-- Confusion matrix `confusion-matrix-24` chart
-- ROC curve `roc-curve-24` chart
-- Precision-recall curve `precision-recall-curve-24` chart
+- Confusion matrix `confusion-matrix` chart
+- ROC curve `roc-curve` chart
+- Precision-recall curve `precision-recall-curve` chart
 - DET curve `det-curve` chart
 - Calibration curve `calibration-curve` chart
 - Lift curve `lift-curve` chart
@@ -1148,7 +1148,7 @@
 - Cluster plot `cluster-plot` chart
 - Silhouette plot `silhouette-plot` chart
 - Elbow plot `elbow-plot` chart
-- Dendrogram `dendrogram-24` chart
+- Dendrogram `dendrogram` chart
 - Embedding plot `embedding-plot` chart
 - Neural-network architecture diagram `neural-network-architecture-diagram` chart
 - Computational graph `computational-graph` chart
@@ -1209,8 +1209,8 @@
 - Coordinate geometry `coordinate-geometry` chart
 - Voronoi diagram `voronoi-diagram` chart
 - Delaunay triangulation `delaunay-triangulation` chart
-- Convex hull `convex-hull-26` chart
-- Concave hull `concave-hull-26` chart
+- Convex hull `convex-hull` chart
+- Concave hull `concave-hull` chart
 - Triangulation `triangulation` chart
 - Mesh `mesh` chart
 - Tessellation `tessellation` chart
@@ -1234,7 +1234,7 @@
 
 - Quiver plot `quiver-plot` chart
 - Vector field `vector-field` chart
-- Direction field `direction-field-27` chart
+- Direction field `direction-field` chart
 - Streamline plot `streamline-plot` chart
 - Streamplot `streamplot` chart
 - Particle-flow plot `particle-flow-plot` chart
@@ -1344,7 +1344,7 @@
 - Wiring diagram `wiring-diagram` chart
 - Block diagram `block-diagram` chart
 - Signal-flow graph `signal-flow-graph` chart
-- Timing diagram `timing-diagram-31` chart
+- Timing diagram `timing-diagram` chart
 - Waveform plot `waveform-plot` chart
 - Oscilloscope trace `oscilloscope-trace` chart
 - Nyquist plot `nyquist-plot` chart
@@ -1375,7 +1375,7 @@
 - Frequency spectrum `frequency-spectrum` chart
 - Power spectral density `power-spectral-density` chart
 - Periodogram `periodogram` chart
-- Spectrogram `spectrogram-32` chart
+- Spectrogram `spectrogram` chart
 - Scalogram `scalogram` chart
 - Wavelet plot `wavelet-plot` chart
 - Cepstrum `cepstrum` chart
@@ -1427,8 +1427,8 @@
 - Food web `food-web` chart
 - Food chain `food-chain` chart
 - Ecological network `ecological-network` chart
-- Phylogenetic tree `phylogenetic-tree-34` chart
-- Cladogram `cladogram-34` chart
+- Phylogenetic tree `phylogenetic-tree` chart
+- Cladogram `cladogram` chart
 - Pedigree `pedigree` chart
 - Punnett square `punnett-square` chart
 - Life-cycle diagram `life-cycle-diagram` chart
@@ -1444,14 +1444,14 @@
 
 ### General
 
-- Weather map `weather-map-35` chart
+- Weather map `weather-map` chart
 - Synoptic chart `synoptic-chart` chart
 - Weather fronts `weather-fronts` chart
 - Pressure contours `pressure-contours` chart
 - Isobar map `isobar-map` chart
 - Isotherm map `isotherm-map` chart
 - Wind-barb map `wind-barb-map` chart
-- Wind rose `wind-rose-35` chart
+- Wind rose `wind-rose` chart
 - Skew-T log-P diagram `skew-t-log-p-diagram` chart
 - Tephigram `tephigram` chart
 - Meteogram `meteogram` chart
@@ -1507,8 +1507,8 @@
 - Site plan `site-plan` chart
 - Section `section` chart
 - Elevation `elevation` chart
-- Axonometric drawing `axonometric-drawing-37` chart
-- Isometric drawing `isometric-drawing-37` chart
+- Axonometric drawing `axonometric-drawing` chart
+- Isometric drawing `isometric-drawing` chart
 - Exploded axonometric `exploded-axonometric` chart
 - Bubble diagram `bubble-diagram` chart
 - Adjacency diagram `adjacency-diagram` chart
@@ -1552,8 +1552,8 @@
 
 ### General
 
-- Venn diagram `venn-diagram-39` chart
-- Euler diagram `euler-diagram-39` chart
+- Venn diagram `venn-diagram` chart
+- Euler diagram `euler-diagram` chart
 - Area-proportional Venn diagram `area-proportional-venn-diagram` chart
 - Multi-set Venn diagram `multi-set-venn-diagram` chart
 - UpSet plot `upset-plot` chart
@@ -1569,16 +1569,16 @@
 - Constraint plot `constraint-plot` chart
 - Objective-function contours `objective-function-contours` chart
 - Pareto frontier `pareto-frontier` chart
-- Efficient frontier `efficient-frontier-40` chart
+- Efficient frontier `efficient-frontier` chart
 - Tradeoff curve `tradeoff-curve` chart
-- Decision tree `decision-tree-40` chart
+- Decision tree `decision-tree` chart
 - Decision lattice `decision-lattice` chart
 - Network-flow diagram `network-flow-diagram` chart
 - Transportation network `transportation-network` chart
 - Assignment matrix `assignment-matrix` chart
 - Scheduling chart `scheduling-chart` chart
-- Gantt chart `gantt-chart-40` chart
-- PERT chart `pert-chart-40` chart
+- Gantt chart `gantt-chart` chart
+- PERT chart `pert-chart` chart
 - Critical-path network `critical-path-network` chart
 - Queueing-network diagram `queueing-network-diagram` chart
 
@@ -1587,20 +1587,20 @@
 ### General
 
 - Probability tree `probability-tree` chart
-- Probability mass function `probability-mass-function-41` chart
-- Probability density function `probability-density-function-41` chart
-- CDF `cdf-41` chart
+- Probability mass function `probability-mass-function` chart
+- Probability density function `probability-density-function` chart
+- CDF `cdf` chart
 - Survival function `survival-function` chart
 - Hazard function `hazard-function` chart
-- Quantile function `quantile-function-41` chart
+- Quantile function `quantile-function` chart
 - Joint-density plot `joint-density-plot` chart
 - Marginal-density plot `marginal-density-plot` chart
 - Conditional-density plot `conditional-density-plot` chart
 - Copula plot `copula-plot` chart
 - Probability simplex `probability-simplex` chart
-- Bayesian network `bayesian-network-41` chart
-- Markov-chain diagram `markov-chain-diagram-41` chart
-- Transition matrix `transition-matrix-41` chart
+- Bayesian network `bayesian-network` chart
+- Markov-chain diagram `markov-chain-diagram` chart
+- Transition matrix `transition-matrix` chart
 - Random-walk plot `random-walk-plot` chart
 - Brownian-motion path `brownian-motion-path` chart
 - Monte-Carlo simulation plot `monte-carlo-simulation-plot` chart
@@ -1613,9 +1613,9 @@
 - Run chart `run-chart` chart
 - Process-capability plot `process-capability-plot` chart
 - Process-behavior chart `process-behavior-chart` chart
-- Funnel plot `funnel-plot-42` chart
+- Funnel plot `funnel-plot` chart
 - Fishbone diagram `fishbone-diagram` chart
-- Risk matrix `risk-matrix-42` chart
+- Risk matrix `risk-matrix` chart
 - Quadrant chart `quadrant-chart` chart
 - Four-quadrant matrix `four-quadrant-matrix` chart
 - Boston matrix `boston-matrix` chart
@@ -1645,7 +1645,7 @@
 - Shot chart `shot-chart` chart
 - Pitch map `pitch-map` chart
 - Pass network `pass-network` chart
-- Heatmap `heatmap-43` chart
+- Sports heatmap `sports-heatmap` chart
 - Player-position map `player-position-map` chart
 - Formation diagram `formation-diagram` chart
 - Race chart `race-chart` chart
@@ -1655,7 +1655,7 @@
 - Win-probability chart `win-probability-chart` chart
 - Tournament bracket `tournament-bracket` chart
 - Knockout bracket `knockout-bracket` chart
-- League table `league-table-43` chart
+- League table `league-table` chart
 - Standings chart `standings-chart` chart
 - Head-to-head matrix `head-to-head-matrix` chart
 - Spider/player profile `spider-player-profile` chart
@@ -1668,9 +1668,9 @@
 - Staff notation `staff-notation` chart
 - Piano roll `piano-roll` chart
 - Pitch contour `pitch-contour` chart
-- Waveform `waveform-44` chart
-- Spectrogram `spectrogram-44` chart
-- Chord diagram `chord-diagram-44` chart
+- Waveform `waveform` chart
+- Spectrogram `spectrogram` chart
+- Chord diagram `chord-diagram` chart
 - Tonnetz `tonnetz` chart
 - Circle of fifths `circle-of-fifths` chart
 - Harmonic-network diagram `harmonic-network-diagram` chart
@@ -1684,13 +1684,13 @@
 ### General
 
 - Concept map `concept-map` chart
-- Mind map `mind-map-45` chart
+- Mind map `mind-map` chart
 - Knowledge map `knowledge-map` chart
 - Learning map `learning-map` chart
 - Curriculum map `curriculum-map` chart
-- Argument map `argument-map-45` chart
+- Argument map `argument-map` chart
 - Causal map `causal-map` chart
-- Timeline `timeline-45` chart
+- Timeline `timeline` chart
 - Comparison diagram `comparison-diagram` chart
 - Cycle diagram `cycle-diagram` chart
 - Pyramid diagram `pyramid-diagram` chart
@@ -1782,7 +1782,7 @@
 
 ### General
 
-- Small multiples `small-multiples-49` chart
+- Small multiples `small-multiples` chart
 - Facet grid `facet-grid` chart
 - Facet wrap `facet-wrap` chart
 - Trellis display `trellis-display` chart
@@ -1840,12 +1840,12 @@
 - Cartesian plot `cartesian-plot` chart
 - Polar plot `polar-plot` chart
 - Radial plot `radial-plot` chart
-- Ternary plot `ternary-plot-52` chart
+- Ternary plot `ternary-plot` chart
 - Barycentric plot `barycentric-plot` chart
 - Geographic projection `geographic-projection` chart
 - Parallel-coordinate plot `parallel-coordinate-plot` chart
 - Log-polar plot `log-polar-plot` chart
-- Complex-plane plot `complex-plane-plot-52` chart
+- Complex-plane plot `complex-plane-plot` chart
 - 3D Cartesian plot `3d-cartesian-plot` chart
 - Spherical-coordinate plot `spherical-coordinate-plot` chart
 - Cylindrical-coordinate plot `cylindrical-coordinate-plot` chart
@@ -1858,9 +1858,9 @@
 - Quadrant matrix `quadrant-matrix` chart
 - 2×2 matrix `2-2-matrix` chart
 - 3×3 matrix `3-3-matrix` chart
-- Risk matrix `risk-matrix-53` chart
+- Risk matrix `risk-matrix` chart
 - Priority matrix `priority-matrix` chart
-- Confusion matrix `confusion-matrix-53` chart
+- Confusion matrix `confusion-matrix` chart
 - Compatibility matrix `compatibility-matrix` chart
 - Relationship matrix `relationship-matrix` chart
 - Responsibility matrix `responsibility-matrix` chart
@@ -1873,7 +1873,7 @@
 ### General
 
 - Calendar `calendar` chart
-- Calendar heatmap `calendar-heatmap-54` chart
+- Calendar heatmap `calendar-heatmap` chart
 - Weekly planner `weekly-planner` chart
 - Monthly planner `monthly-planner` chart
 - Academic calendar `academic-calendar` chart
@@ -1882,14 +1882,14 @@
 - Train timetable `train-timetable` chart
 - Transit timetable `transit-timetable` chart
 - Interval schedule `interval-schedule` chart
-- Gantt chart `gantt-chart-54` chart
-- Event timeline `event-timeline-54` chart
+- Gantt chart `gantt-chart` chart
+- Event timeline `event-timeline` chart
 
 ## 55. Circular seat / arrangement diagrams
 
 ### General
 
-- Parliament chart `parliament-chart-55` chart
+- Parliament chart `parliament-chart` chart
 - Hemicycle `hemicycle` chart
 - Seating chart `seating-chart` chart
 - Theater seating `theater-seating` chart
@@ -1906,8 +1906,8 @@
 - Chessboard `chessboard` chart
 - Go board `go-board` chart
 - Game board `game-board` chart
-- Feynman diagram `feynman-diagram-56` chart
-- Knot diagram `knot-diagram-56` chart
+- Feynman diagram `feynman-diagram` chart
+- Knot diagram `knot-diagram` chart
 - Circuit diagram `circuit-diagram` chart
 - Chemical diagram `chemical-diagram` chart
 - Music notation `music-notation` chart
@@ -1928,10 +1928,10 @@
 - Pushdown automaton `pushdown-automaton` chart
 - Turing-machine diagram `turing-machine-diagram` chart
 - State transition diagram `state-transition-diagram` chart
-- Petri net `petri-net-57` chart
+- Petri net `petri-net` chart
 - Railroad syntax diagram `railroad-syntax-diagram` chart
-- Parse tree `parse-tree-57` chart
-- Abstract syntax tree `abstract-syntax-tree-57` chart
+- Parse tree `parse-tree` chart
+- Abstract syntax tree `abstract-syntax-tree` chart
 - Trie `trie` chart
 - Suffix tree `suffix-tree` chart
 - Heap visualization `heap-visualization` chart
@@ -1950,7 +1950,7 @@
 ### General
 
 - Attack tree `attack-tree` chart
-- Attack graph `attack-graph-58` chart
+- Attack graph `attack-graph` chart
 - Threat model `threat-model` chart
 - Data-flow threat diagram `data-flow-threat-diagram` chart
 - Network topology `network-topology` chart
@@ -1971,7 +1971,7 @@
 - Schedule diagram `schedule-diagram` chart
 - Timetable `timetable` chart
 - Origin-destination matrix `origin-destination-matrix` chart
-- Flow map `flow-map-59` chart
+- Flow map `flow-map` chart
 - Shipment Sankey `shipment-sankey` chart
 - Supply-chain network `supply-chain-network` chart
 - Warehouse-layout diagram `warehouse-layout-diagram` chart
@@ -1990,7 +1990,7 @@
 - Measurement geometry `measurement-geometry` chart
 - Results panel `results-panel` chart
 - Parameter-sweep heatmap `parameter-sweep-heatmap` chart
-- Phase diagram `phase-diagram-60` chart
+- Phase diagram `phase-diagram` chart
 - Regime map `regime-map` chart
 - Parameter-space plot `parameter-space-plot` chart
 - Sensitivity plot `sensitivity-plot` chart
@@ -2004,56 +2004,56 @@
 
 ### General
 
-- Nightingale rose `nightingale-rose-61` chart
+- Nightingale rose `nightingale-rose` chart
 - Coxcomb `coxcomb` chart
 - Spiral chart `spiral-chart` chart
 - Spiral heatmap `spiral-heatmap` chart
-- Horizon chart `horizon-chart-61` chart
-- Bump chart `bump-chart-61` chart
-- Streamgraph `streamgraph-61` chart
-- ThemeRiver `themeriver-61` chart
-- Parallel sets `parallel-sets-61` chart
-- Hive plot `hive-plot-61` chart
-- Arc diagram `arc-diagram-61` chart
-- Chord diagram `chord-diagram-61` chart
-- Dependency wheel `dependency-wheel-61` chart
-- Circle packing `circle-packing-61` chart
-- Voronoi treemap `voronoi-treemap-61` chart
+- Horizon chart `horizon-chart` chart
+- Bump chart `bump-chart` chart
+- Streamgraph `streamgraph` chart
+- ThemeRiver `themeriver` chart
+- Parallel sets `parallel-sets` chart
+- Hive plot `hive-plot` chart
+- Arc diagram `arc-diagram` chart
+- Chord diagram `chord-diagram` chart
+- Dependency wheel `dependency-wheel` chart
+- Circle packing `circle-packing` chart
+- Voronoi treemap `voronoi-treemap` chart
 - Marimekko `marimekko` chart
 - Mosaic chart `mosaic-chart` chart
-- Waffle chart `waffle-chart-61` chart
-- Parliament chart `parliament-chart-61` chart
+- Waffle chart `waffle-chart` chart
+- Parliament chart `parliament-chart` chart
 - Sankey `sankey` chart
 - Alluvial plot `alluvial-plot` chart
-- Raincloud plot `raincloud-plot-61` chart
-- Ridgeline plot `ridgeline-plot-61` chart
-- Sina plot `sina-plot-61` chart
-- Boxen plot `boxen-plot-61` chart
-- UpSet plot `upset-plot-61` chart
-- Hexbin plot `hexbin-plot-61` chart
+- Raincloud plot `raincloud-plot` chart
+- Ridgeline plot `ridgeline-plot` chart
+- Sina plot `sina-plot` chart
+- Boxen plot `boxen-plot` chart
+- UpSet plot `upset-plot` chart
+- Hexbin plot `hexbin-plot` chart
 - Horizon graph `horizon-graph` chart
 - Flame graph `flame-graph` chart
 - Icicle chart `icicle-chart` chart
-- Sunburst `sunburst-61` chart
-- Calendar heatmap `calendar-heatmap-61` chart
-- Spiral timeline `spiral-timeline-61` chart
-- Barcode plot `barcode-plot-61` chart
-- Rug plot `rug-plot-61` chart
-- Joyplot `joyplot-61` chart
-- Bullet graph `bullet-graph-61` chart
-- Funnel plot `funnel-plot-61` chart
+- Sunburst `sunburst` chart
+- Calendar heatmap `calendar-heatmap` chart
+- Spiral timeline `spiral-timeline` chart
+- Barcode plot `barcode-plot` chart
+- Rug plot `rug-plot` chart
+- Joyplot `joyplot` chart
+- Bullet graph `bullet-graph` chart
+- Funnel plot `funnel-plot` chart
 - Dumbbell plot `dumbbell-plot` chart
-- Slopegraph `slopegraph-61` chart
+- Slopegraph `slopegraph` chart
 
 ## 62. Software-performance visualizations
 
 ### General
 
-- Flame graph `flame-graph-62` chart
+- Flame graph `flame-graph` chart
 - Flame chart `flame-chart` chart
 - Icicle flame graph `icicle-flame-graph` chart
 - Call tree `call-tree` chart
-- Call graph `call-graph-62` chart
+- Call graph `call-graph` chart
 - Trace timeline `trace-timeline` chart
 - Span timeline `span-timeline` chart
 - Waterfall request chart `waterfall-request-chart` chart
@@ -2084,7 +2084,7 @@
 ### General
 
 - Commit graph `commit-graph` chart
-- Branch graph `branch-graph-64` chart
+- Branch graph `branch-graph` chart
 - Merge graph `merge-graph` chart
 - Contribution heatmap `contribution-heatmap` chart
 - Commit timeline `commit-timeline` chart
@@ -2107,7 +2107,7 @@
 - Throughput chart `throughput-chart` chart
 - Availability timeline `availability-timeline` chart
 - Status history `status-history` chart
-- Incident timeline `incident-timeline-65` chart
+- Incident timeline `incident-timeline` chart
 - SLO burn-rate chart `slo-burn-rate-chart` chart
 
 ## 66. Database visualizations
@@ -2138,7 +2138,7 @@
 - Attention block `attention-block` chart
 - Encoder-decoder diagram `encoder-decoder-diagram` chart
 - Residual network `residual-network` chart
-- Computational graph `computational-graph-67` chart
+- Computational graph `computational-graph` chart
 - Tensor-shape diagram `tensor-shape-diagram` chart
 - Model pipeline `model-pipeline` chart
 - Training loop `training-loop` chart
@@ -2146,7 +2146,7 @@
 - GAN architecture `gan-architecture` chart
 - Autoencoder `autoencoder` chart
 - Graph neural network `graph-neural-network` chart
-- Attention heatmap `attention-heatmap-67` chart
+- Attention heatmap `attention-heatmap` chart
 - Saliency map `saliency-map` chart
 - Activation map `activation-map` chart
 - Feature map `feature-map` chart
@@ -2186,40 +2186,40 @@
 
 ### General
 
-- Electoral map `electoral-map-70` chart
+- Electoral map `electoral-map` chart
 - Choropleth election map `choropleth-election-map` chart
 - Swing map `swing-map` chart
-- Seat chart `seat-chart-70` chart
-- Parliament chart `parliament-chart-70` chart
-- Hemicycle `hemicycle-70` chart
+- Seat chart `seat-chart` chart
+- Parliament chart `parliament-chart` chart
+- Hemicycle `hemicycle` chart
 - Election-result bar chart `election-result-bar-chart` chart
 - Vote-share chart `vote-share-chart` chart
 - Swingometer `swingometer` chart
 - Coalition diagram `coalition-diagram` chart
 - Constituency cartogram `constituency-cartogram` chart
-- Polling trend `polling-trend-70` chart
+- Polling trend `polling-trend` chart
 - Seat projection chart `seat-projection-chart` chart
 
 ## 71. Relationship / conceptual diagrams
 
 ### General
 
-- Venn diagram `venn-diagram-71` chart
-- Euler diagram `euler-diagram-71` chart
-- Concept map `concept-map-71` chart
-- Mind map `mind-map-71` chart
+- Venn diagram `venn-diagram` chart
+- Euler diagram `euler-diagram` chart
+- Concept map `concept-map` chart
+- Mind map `mind-map` chart
 - Affinity diagram `affinity-diagram` chart
 - Stakeholder map `stakeholder-map` chart
 - Ecosystem map `ecosystem-map` chart
 - Relationship map `relationship-map` chart
 - Influence diagram `influence-diagram` chart
 - Causal diagram `causal-diagram` chart
-- Causal-loop diagram `causal-loop-diagram-71` chart
+- Causal-loop diagram `causal-loop-diagram` chart
 - Systems map `systems-map` chart
-- Dependency map `dependency-map-71` chart
-- Onion diagram `onion-diagram-71` chart
-- Layer diagram `layer-diagram-71` chart
-- Pyramid diagram `pyramid-diagram-71` chart
+- Dependency map `dependency-map` chart
+- Onion diagram `onion-diagram` chart
+- Layer diagram `layer-diagram` chart
+- Pyramid diagram `pyramid-diagram` chart
 
 ## 72. Storytelling / narrative visualization
 
@@ -2271,7 +2271,7 @@
 - Length `length` scale
 - Width `width` scale
 - Height `height` scale
-- Area `area` scale
+- Area encoding `area-encoding` scale
 - Radius `radius` scale
 - Stroke width `stroke-width` scale
 
@@ -2293,22 +2293,22 @@
 ### Orientation
 
 - Angle `angle` scale
-- Rotation `rotation-74` scale
+- Rotation encoding `rotation-encoding` scale
 - Direction `direction` scale
 
 ### Line encoding
 
-- Width `width-74` mark
+- Line width `line-width` mark
 - Dash `dash` mark
 - Curvature `curvature` mark
 - Arrowheads `arrowheads` mark
 
 ### Text encoding
 
-- Label `label-74` mark
+- Label `label` mark
 - Font weight `font-weight` mark
 - Font size `font-size` mark
-- Rotation `rotation-74-2` mark
+- Text rotation `text-rotation` mark
 
 ### Compound encodings
 
@@ -2326,7 +2326,7 @@
 - Streamgraph stack `streamgraph-stack` layout
 - Histogram binning `histogram-binning` layout
 - Hexagonal binning `hexagonal-binning` layout
-- Beeswarm layout `beeswarm-layout-75` layout
+- Beeswarm layout `beeswarm-layout` layout
 - Jitter layout `jitter-layout` layout
 - Pie layout `pie-layout` layout
 - Arc layout `arc-layout` layout
@@ -2335,32 +2335,32 @@
 - Treemap layout `treemap-layout` layout
 - Partition layout `partition-layout` layout
 - Pack layout `pack-layout` layout
-- Force layout `force-layout-75` layout
+- Force layout `force-layout` layout
 - Tree layout `tree-layout` layout
 - Cluster layout `cluster-layout` layout
 - DAG layout `dag-layout` layout
 - Edge bundling `edge-bundling` layout
 - Voronoi `voronoi` layout
 - Delaunay `delaunay` layout
-- Convex hull `convex-hull-75` layout
+- Convex hull `convex-hull` layout
 - Contour generation `contour-generation` layout
 - Density estimation `density-estimation` layout
-- Geographic projection `geographic-projection-75` layout
+- Geographic projection `geographic-projection` layout
 
 ## 76. Recommended top-level TikZ library namespaces
 
 ### General
 
-- timeline `timeline-76` layout
+- timeline `timeline` layout
 - table `table` layout
 - annotation `annotation` layout
-- dashboard `dashboard-76` layout
+- dashboard `dashboard` layout
 - infographic `infographic` layout
 - layout `layout` layout
 - scale `scale` layout
 - axis `axis` layout
 - legend `legend` layout
-- label `label-76` layout
+- label `label` layout
 - interactionstate `interactionstate` layout
 - theme `theme` layout
 
@@ -2369,7 +2369,7 @@
 - charts `charts` layout
 - bar `bar` layout
 - line `line` layout
-- area `area-76` layout
+- area `area` layout
 - scatter `scatter` layout
 - distribution `distribution` layout
 - statistical `statistical` layout
@@ -2380,8 +2380,8 @@
 
 - hierarchy `hierarchy` layout
 - tree `tree` layout
-- dendrogram `dendrogram-76` layout
-- treemap `treemap-76` layout
+- dendrogram `dendrogram` layout
+- treemap `treemap` layout
 - partition `partition` layout
 - pack `pack` layout
 
@@ -2389,7 +2389,7 @@
 
 - network `network` layout
 - graph `graph` layout
-- matrix `matrix` layout
+- Network matrix `network-matrix` layout
 - arc `arc` layout
 - chord `chord` layout
 - bundling `bundling` layout
@@ -2397,7 +2397,7 @@
 ### flow
 
 - flow `flow` layout
-- sankey `sankey-76` layout
+- sankey `sankey` layout
 - alluvial `alluvial` layout
 - parallelsets `parallelsets` layout
 
@@ -2413,15 +2413,15 @@
 
 ### matrix
 
-- matrix `matrix-76` layout
-- heatmap `heatmap-76` layout
+- matrix `matrix` layout
+- heatmap `heatmap` layout
 - correlation `correlation` layout
 - adjacency `adjacency` layout
 
 ### diagram
 
 - diagram `diagram` layout
-- flowchart `flowchart-76` layout
+- flowchart `flowchart` layout
 - uml `uml` layout
 - architecture `architecture` layout
 - process `process` layout
@@ -2451,14 +2451,14 @@
 - Grid composition `grid-composition` layout
 - Nested composition `nested-composition` layout
 - Inset `inset` layout
-- Zoom inset `zoom-inset-77` layout
+- Zoom inset `zoom-inset` layout
 - Shared axes `shared-axes` layout
 - Independent axes `independent-axes` layout
 - Shared legend `shared-legend` layout
 - Independent legends `independent-legends` layout
 - Linked annotations `linked-annotations` layout
 - Cross-panel reference lines `cross-panel-reference-lines` layout
-- Small multiples `small-multiples-77` layout
+- Small multiples `small-multiples` layout
 - Dashboard assembly `dashboard-assembly` layout
 - Figure/subfigure assembly `figure-subfigure-assembly` layout
 
@@ -2473,8 +2473,8 @@
 - Symlog `symlog` scale
 - Identity `identity` scale
 - Ordinal `ordinal` scale
-- Band `band-78` scale
-- Point `point` scale
+- Band scale `band-scale` scale
+- Point scale `point-scale` scale
 - Quantile `quantile` scale
 - Quantize `quantize` scale
 - Threshold `threshold` scale
@@ -2485,7 +2485,7 @@
 ### Axes
 
 - Cartesian `cartesian` axis
-- Polar `polar-78` axis
+- Polar `polar` axis
 - Ternary `ternary` axis
 - Geographic `geographic` axis
 - Multiple axes `multiple-axes` axis
@@ -2497,43 +2497,43 @@
 - Areas `areas` layout
 - Arcs `arcs` layout
 - Links `links` layout
-- Symbols `symbols-78` layout
+- Symbols `symbols` layout
 - Ribbons `ribbons` layout
 
 ### Statistical transforms
 
 - Bin `bin` layout
 - Aggregate `aggregate` layout
-- Stack `stack-78` layout
+- Stack `stack` layout
 - Normalize `normalize` layout
 - KDE `kde` layout
-- Quantile `quantile-78` layout
+- Quantile transform `quantile-transform` layout
 - Regression `regression` layout
-- Contours `contours-78` layout
+- Contours `contours` layout
 
 ### Geometric transforms
 
-- Projection `projection-78` layout
-- Voronoi `voronoi-78` layout
-- Delaunay `delaunay-78` layout
+- Projection `projection` layout
+- Voronoi `voronoi` layout
+- Delaunay `delaunay` layout
 - Hull `hull` layout
 - Clip `clip` layout
 - Interpolate `interpolate` layout
 
 ### Hierarchy transforms
 
-- Tree `tree-78` layout
+- Tree `tree` layout
 - Cluster `cluster` layout
-- Partition `partition-78` layout
-- Treemap `treemap-78` layout
-- Pack `pack-78` layout
+- Partition `partition` layout
+- Treemap `treemap` layout
+- Pack `pack` layout
 
 ### Network transforms
 
 - Force `force` layout
-- Sankey `sankey-78` layout
-- Chord `chord-78` layout
-- Bundling `bundling-78` layout
+- Sankey `sankey` layout
+- Chord `chord` layout
+- Bundling `bundling` layout
 
 ### Data transforms
 
@@ -2555,7 +2555,7 @@
 - Annotations `annotations` layout
 - Guides `guides` layout
 - Faceting `faceting` layout
-- Layout `layout-78` layout
+- Layout `layout` layout
 - Clipping `clipping` layout
 - Coordinate transformations `coordinate-transformations` layout
 - Responsive sizing `responsive-sizing` layout
@@ -2570,48 +2570,48 @@
 - data `data` layout
 - tabular `tabular` layout
 - hierarchical `hierarchical` layout
-- graph `graph-79` layout
-- geographic `geographic-79` layout
-- matrix `matrix-79` layout
+- graph `graph` layout
+- geographic `geographic` layout
+- matrix `matrix` layout
 - functional `functional` layout
 - transform `transform` layout
-- filter `filter-79` layout
-- aggregate `aggregate-79` layout
-- bin `bin-79` layout
-- stack `stack-79` layout
-- hierarchy `hierarchy-79` layout
+- filter `filter` layout
+- aggregate `aggregate` layout
+- bin `bin` layout
+- stack `stack` layout
+- hierarchy `hierarchy` layout
 - network layout `network-layout` layout
 - statistical transform `statistical-transform` layout
 - mark `mark` layout
-- point `point-79` layout
-- line `line-79` layout
-- area `area-79` layout
+- point `point` layout
+- line `line` layout
+- area `area` layout
 - rect `rect` layout
-- arc `arc-79` layout
-- text `text` layout
+- arc `arc` layout
+- Text mark `text-mark` layout
 - image `image` layout
 - link `link` layout
 - custom TikZ shape `custom-tikz-shape` layout
 - encoding `encoding` layout
 - x `x` layout
 - y `y` layout
-- angle `angle-79` layout
-- radius `radius-79` layout
+- angle `angle` layout
+- radius `radius` layout
 - size `size` layout
 - shape `shape` layout
-- fill `fill-79` layout
-- stroke `stroke-79` layout
-- opacity `opacity-79` layout
-- text `text-79` layout
-- scale `scale-79` layout
+- fill `fill` layout
+- stroke `stroke` layout
+- opacity `opacity` layout
+- text `text` layout
+- scale `scale` layout
 - coordinate system `coordinate-system` layout
-- layout `layout-79` layout
-- facet `facet-79` layout
+- layout `layout` layout
+- facet `facet` layout
 - guide `guide` layout
-- axis `axis-79` layout
-- legend `legend-79` layout
+- axis `axis` layout
+- legend `legend` layout
 - grid `grid` layout
-- annotation `annotation-79` layout
-- theme `theme-79` layout
+- annotation `annotation` layout
+- theme `theme` layout
 - composition `composition` layout
 

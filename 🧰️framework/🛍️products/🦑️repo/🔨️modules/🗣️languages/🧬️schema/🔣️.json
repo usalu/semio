@@ -1,0 +1,244 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/repo/languages.json",
+  "title": "🗣️ Repo language table and parsing records",
+  "description": "Single source of truth for the repo language plugins. `🔣️languages.json` validates against `#/$defs/languageTable`; every implementation (Rust, Go) loads that table verbatim and interprets the declarative pattern language below. Host regular expressions are forbidden: a pattern is an ordered token list matched anchored at the start of a single line with ordered backtracking, which reproduces Go RE2 leftmost-first submatch semantics exactly.",
+  "type": "object",
+  "$ref": "#/$defs/languageTable",
+  "$defs": {
+    "languageTable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "registry", "languages", "definitionKeywords", "definitionKindMap", "refinements"],
+      "properties": {
+        "$comment": { "type": "string" },
+        "schemaVersion": { "type": "integer", "const": 1 },
+        "definitionKeywords": {
+          "description": "🔑️ The vocabulary that turns a matched definition line into a raw kind. `multiWord` is searched first as a case-insensitive substring of the whole match, then the word immediately preceding the captured name, then the first non-modifier keyword.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["modifiers", "keywords", "multiWord", "fallback"],
+          "properties": {
+            "modifiers": { "type": "array", "items": { "type": "string" } },
+            "keywords": { "type": "array", "items": { "type": "string" } },
+            "multiWord": { "type": "array", "items": { "type": "string" } },
+            "fallback": { "type": "string" }
+          }
+        },
+        "definitionKindMap": {
+          "description": "🗺️ Lowercased raw kind to canonical definition kind. Anything unlisted is `implementation`.",
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/definitionKind" }
+        },
+        "refinements": {
+          "description": "✨️ Unanchored searches that promote a `const`/`let`/`var` binding to `function` when its initialiser is callable. Applied to the whole definition line.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["arrowFunction", "functionExpression", "classExpression", "promotes", "promotedTo"],
+          "properties": {
+            "arrowFunction": { "$ref": "#/$defs/pattern" },
+            "functionExpression": { "$ref": "#/$defs/pattern" },
+            "classExpression": { "$ref": "#/$defs/pattern" },
+            "promotes": { "type": "array", "items": { "type": "string" } },
+            "promotedTo": { "type": "string" }
+          }
+        },
+        "registry": {
+          "description": "🔢️ Ordered language names consulted by extension lookup. Order is behaviour: the first entry whose extension list contains the lowercased file extension wins.",
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "scopeRegionMarker": {
+          "description": "💬️ The comment-prefix-agnostic region marker reader used by the scope builder. Prefixes are stripped once each, in order, from a trimmed line before the keyword test; the marker only counts when the remaining text starts with an entity emoji.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["stripPrefixes", "stripSuffixes", "startKeyword", "endKeyword"],
+          "properties": {
+            "stripPrefixes": { "type": "array", "items": { "type": "string" } },
+            "stripSuffixes": { "type": "array", "items": { "type": "string" } },
+            "startKeyword": { "type": "string" },
+            "endKeyword": { "type": "string" }
+          }
+        },
+        "scopeDefinitionPatterns": {
+          "description": "🔭️ Extension-keyed patterns used by the scope builder. Deliberately coarser than a language's own definition pattern: a scope definition is one line, and the first pattern that matches wins.",
+          "type": "object",
+          "additionalProperties": { "type": "array", "items": { "$ref": "#/$defs/pattern" } }
+        },
+        "languages": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/language" }
+        }
+      }
+    },
+    "language": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "emoji", "extensions", "sectionEngine", "supportsHeaders", "usesIndentScoping"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z][a-z0-9]*$" },
+        "emoji": { "type": "string", "minLength": 1 },
+        "extensions": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^\\.[a-z0-9]+$" },
+          "minItems": 1
+        },
+        "sectionEngine": {
+          "description": "🧭️ Which section reader applies. `markers` walks sectionStart/sectionEnd patterns; `markdownHeadings` walks ATX headings with frontmatter offsetting; `jsonKeys` walks object keys with byte offsets; `none` produces no sections.",
+          "enum": ["markers", "markdownHeadings", "jsonKeys", "none"]
+        },
+        "sectionStart": { "$ref": "#/$defs/pattern" },
+        "sectionEnd": { "$ref": "#/$defs/pattern" },
+        "policySectionStart": { "$ref": "#/$defs/pattern" },
+        "policySectionEnd": { "$ref": "#/$defs/pattern" },
+        "definition": { "$ref": "#/$defs/pattern" },
+        "definitionEngine": {
+          "description": "📏️ How a matched definition line is given an end line. `braces` balances `{`/`}`; `indent` closes on the first non-blank line indented no deeper than the opener; `rubyEnd` tracks Ruby block depth and closes on `end`.",
+          "enum": ["braces", "indent", "rubyEnd"]
+        },
+        "orphanDefinitions": {
+          "description": "🧷️ Extra single-line definitions a language contributes outside the definition pattern.",
+          "enum": ["none", "goPackageAndImports", "rustModDeclarations", "rubyModules"]
+        },
+        "auxPatterns": {
+          "description": "🧰️ Extra named patterns a language's definition engine needs (Ruby's `end` line and block openers).",
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/pattern" }
+        },
+        "commentPrefix": { "type": "string" },
+        "blockCommentStart": { "type": "string" },
+        "blockCommentEnd": { "type": "string" },
+        "sectionStartFormat": { "$ref": "#/$defs/format" },
+        "sectionEndFormat": { "$ref": "#/$defs/format" },
+        "sectionBothFormat": { "$ref": "#/$defs/format" },
+        "supportsHeaders": { "type": "boolean" },
+        "usesIndentScoping": { "type": "boolean" },
+        "supportsDefinitionsOverride": { "type": "boolean" },
+        "supportsCommentsOverride": { "type": "boolean" },
+        "skipDirectives": { "type": "array", "items": { "type": "string" } },
+        "stringFeatures": {
+          "description": "🧵️ Lexical features a comment scanner must honour. Consumed by the statutes module, carried here because it is language data.",
+          "type": "array",
+          "items": { "enum": ["templates", "rawBackticks", "tripleQuotes", "verbatimStrings", "jsDoc"] }
+        },
+        "sectionNaming": {
+          "description": "🏷️ How a section name becomes the identifier written by the section formatters. `modName` lowercases and underscores the name for the Rust `mod` wrapper.",
+          "enum": ["verbatim", "modName"]
+        }
+      }
+    },
+    "format": {
+      "description": "🖊️ A section marker template. `{name}` is substituted with the section name; `{modName}` with its `modName` normalisation. No host format-string dialect is involved.",
+      "type": "string"
+    },
+    "pattern": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tokens"],
+      "properties": {
+        "ci": {
+          "description": "🔠️ Match ASCII letters case-insensitively, as Go's `(?i)` flag does.",
+          "type": "boolean",
+          "default": false
+        },
+        "tokens": { "type": "array", "items": { "$ref": "#/$defs/token" }, "minItems": 1 }
+      }
+    },
+    "token": {
+      "type": "object",
+      "required": ["t"],
+      "properties": {
+        "t": {
+          "enum": [
+            "ws", "ws1", "lit", "opt", "alt", "rep", "repChar", "anyOf", "cap",
+            "ident", "identScoped", "identUpper", "typeIdentUpper", "word",
+            "restTrim", "restTrimNonSpace", "until", "charIn", "end", "wordEnd", "lineStart", "wsChar"
+          ]
+        },
+        "v": {
+          "description": "🔤️ Literal text (`lit`), ordered literal set (`anyOf`), repeated character (`repChar`) or accepted character set (`charIn`).",
+          "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }]
+        },
+        "of": {
+          "description": "🧬️ Sub-token list (`opt`, `rep`), list of alternative token lists (`alt`) or the single captured token (`cap`).",
+          "oneOf": [
+            { "type": "array", "items": { "$ref": "#/$defs/token" } },
+            { "type": "array", "items": { "type": "array", "items": { "$ref": "#/$defs/token" } } },
+            { "$ref": "#/$defs/token" }
+          ]
+        },
+        "name": { "description": "🪪️ Capture name (`cap`, `repChar`).", "type": "string" },
+        "sep": { "description": "🔗️ Scope separator for `identScoped`.", "type": "string" },
+        "stop": { "description": "🛑️ Characters that terminate an `until` run.", "type": "string" },
+        "min": { "type": "integer", "minimum": 0 },
+        "max": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "section": {
+      "description": "📑️ One parsed section. Lines are 1-based inclusive; indices are 0-based byte offsets into the content.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "emoji", "startLine", "endLine", "startIndex", "endIndex"],
+      "properties": {
+        "name": { "type": "string" },
+        "emoji": { "type": "string" },
+        "path": { "type": "string" },
+        "filePath": { "type": "string" },
+        "startLine": { "type": "integer" },
+        "endLine": { "type": "integer" },
+        "startIndex": { "type": "integer" },
+        "endIndex": { "type": "integer" },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/section" } },
+        "definitions": { "type": "array", "items": { "$ref": "#/$defs/definition" } }
+      }
+    },
+    "definition": {
+      "description": "📖️ One parsed definition.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "kind", "startLine", "endLine"],
+      "properties": {
+        "name": { "type": "string" },
+        "kind": { "$ref": "#/$defs/definitionKind" },
+        "rawKind": { "type": "string" },
+        "filePath": { "type": "string" },
+        "sectionPath": { "type": "string" },
+        "emoji": { "type": "string" },
+        "startLine": { "type": "integer" },
+        "endLine": { "type": "integer" }
+      }
+    },
+    "definitionKind": { "enum": ["implementation", "interface", "constant", "test"] },
+    "scopeEntry": {
+      "description": "🪪️ One addressable scope inside a file. `id` follows the scope-id grammar: `file:<path>`, `section:<path>#<sectionPath>`, `def:<path>#<sectionPath>::<name>` and, with no section, `def:<path>#<name>`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "filePath", "startLine", "endLine"],
+      "properties": {
+        "kind": { "enum": ["file", "section", "definition"] },
+        "id": { "type": "string" },
+        "filePath": { "type": "string" },
+        "sectionPath": { "type": "string" },
+        "definition": { "type": "string" },
+        "startLine": { "type": "integer" },
+        "endLine": { "type": "integer" }
+      }
+    },
+    "header": {
+      "description": "🧾️ The decomposed fields of a file header region, as written and read back by the header formatter.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fileId", "fileUri"],
+      "properties": {
+        "fileId": { "type": "string" },
+        "fileUri": { "type": "string" },
+        "summary": { "type": "string" },
+        "contributors": { "type": "string" },
+        "license": { "type": "string" },
+        "requirements": { "type": "string" }
+      }
+    }
+  }
+}

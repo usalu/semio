@@ -1,0 +1,4893 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/repo/model/🔣️.json",
+  "title": "📐️ semio repo domain model",
+  "$comment": "🧬️ The wire contract of 🦑️repo's domain model. One $def per domain type, with the exact JSON member names the Go struct tags declare; a member absent from `required` is the `omitempty` half of that tag. Generated from 📦️packages/🦀️rust/🦀️.rs by $TICKET/🗑️generated/model/build-schema.ts so the schema and both implementations cannot drift. The slug vocabularies live beside this file in 🔣️allowed-values.json, which every implementation embeds.",
+  "type": "object",
+  "$defs": {
+    "DefinitionKind": {
+      "$comment": "📖️ What a definition is, derived from the raw keyword a language plugin reports.",
+      "type": "string",
+      "enum": [
+        "implementation",
+        "interface",
+        "constant",
+        "test"
+      ]
+    },
+    "TicketStatus": {
+      "$comment": "🎫️ Lifecycle state of a ticket.",
+      "type": "string",
+      "enum": [
+        "open",
+        "closed"
+      ]
+    },
+    "GoalStatus": {
+      "$comment": "🎯️ Lifecycle state of a goal.",
+      "type": "string",
+      "enum": [
+        "open",
+        "closed"
+      ]
+    },
+    "BreachPriority": {
+      "$comment": "🔸️ How urgently a breach must be dealt with.",
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "TechnologyKind": {
+      "$comment": "🛠️ Which family a technology belongs to. The wire value is the technology emoji itself.",
+      "type": "string",
+      "enum": [
+        "👤️",
+        "🧰️",
+        "🔬️",
+        "🌱️"
+      ]
+    },
+    "BundleKind": {
+      "$comment": "📦️ What a bundle produces.",
+      "type": "string",
+      "enum": [
+        "library",
+        "schema",
+        "binary",
+        "ui",
+        "site",
+        "assets",
+        "repo"
+      ]
+    },
+    "FolderKind": {
+      "$comment": "📁️ Whether a folder is required by a toolchain or purely organisational.",
+      "type": "string",
+      "enum": [
+        "organization",
+        "required",
+        "root"
+      ]
+    },
+    "FileKind": {
+      "$comment": "📄️ What role a file plays. The Go twin keeps these as bare string constants.",
+      "type": "string",
+      "enum": [
+        "code",
+        "script",
+        "config",
+        "lab",
+        "docs",
+        "resource",
+        "template",
+        "license"
+      ]
+    },
+    "SemanticChangeType": {
+      "$comment": "♻️ How an entity changed between two checkpoints.",
+      "type": "string",
+      "enum": [
+        "added",
+        "deleted",
+        "modified",
+        "renamed"
+      ]
+    },
+    "Range": {
+      "$comment": "💿️ A closed line range inside a file.",
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "integer"
+        },
+        "end": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ]
+    },
+    "LineMetrics": {
+      "$comment": "🟨️ Added and removed line counts.",
+      "type": "object",
+      "properties": {
+        "added": {
+          "type": "integer"
+        },
+        "removed": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "added",
+        "removed"
+      ]
+    },
+    "DiffLines": {
+      "$comment": "🟩️ The concrete line numbers a diff touched.",
+      "type": "object",
+      "properties": {
+        "Added": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "Removed": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "Added",
+        "Removed"
+      ]
+    },
+    "CountMetrics": {
+      "$comment": "🟦️ Added, updated and removed entity counts.",
+      "type": "object",
+      "properties": {
+        "added": {
+          "type": "integer"
+        },
+        "updated": {
+          "type": "integer"
+        },
+        "removed": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "added",
+        "updated",
+        "removed"
+      ]
+    },
+    "PriorityCount": {
+      "$comment": "🟫️ Breach counts split by priority.",
+      "type": "object",
+      "properties": {
+        "high": {
+          "type": "integer"
+        },
+        "medium": {
+          "type": "integer"
+        },
+        "low": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "AnalyzeMetrics": {
+      "$comment": "🔬️ Aggregate breach statistics of an analyze run.",
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer"
+        },
+        "byPriority": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PriorityCount"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "autofixable": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total",
+        "byPriority",
+        "autofixable"
+      ]
+    },
+    "Repo": {
+      "$comment": "💠️ The repository itself: the root of every artifact id.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "technologies": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Technology"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bundles": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Bundle"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "path",
+        "technologies",
+        "bundles"
+      ]
+    },
+    "Technology": {
+      "$comment": "📜️ A technology: the first grouping level under the repo root.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "root": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/TechnologyKind"
+        },
+        "emoji": {
+          "type": "string"
+        },
+        "bundles": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Bundle"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "root",
+        "kind",
+        "emoji",
+        "bundles"
+      ]
+    },
+    "Bundle": {
+      "$comment": "🔵️ A bundle: one buildable unit inside a technology.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "root": {
+          "type": "string"
+        },
+        "sourceRoot": {
+          "type": "string"
+        },
+        "technologyName": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "kind": {
+          "$ref": "#/$defs/BundleKind"
+        },
+        "emoji": {
+          "type": "string"
+        },
+        "packages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Package"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "root",
+        "technologyName",
+        "kind",
+        "emoji"
+      ]
+    },
+    "Package": {
+      "$comment": "🔴️ One published package produced by a bundle.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "path",
+        "kind"
+      ]
+    },
+    "Folder": {
+      "$comment": "🩷️ A directory inside the repository.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "parentId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bundleId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "$ref": "#/$defs/FolderKind"
+        },
+        "emoji": {
+          "type": "string"
+        },
+        "ignored": {
+          "type": "boolean"
+        },
+        "generated": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "path",
+        "uri",
+        "name",
+        "kind",
+        "emoji",
+        "ignored",
+        "generated"
+      ]
+    },
+    "File": {
+      "$comment": "📄️ A file inside the repository.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "extension": {
+          "type": "string"
+        },
+        "folderId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bundleId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "type": "string"
+        },
+        "emoji": {
+          "type": "string"
+        },
+        "ignored": {
+          "type": "boolean"
+        },
+        "generated": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "path",
+        "uri",
+        "name",
+        "extension",
+        "kind",
+        "emoji",
+        "ignored",
+        "generated"
+      ]
+    },
+    "Section": {
+      "$comment": "💗️ A named region inside a file, possibly nested.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "filePath": {
+          "type": "string"
+        },
+        "emoji": {
+          "type": "string"
+        },
+        "startLine": {
+          "type": "integer"
+        },
+        "endLine": {
+          "type": "integer"
+        },
+        "startIndex": {
+          "type": "integer"
+        },
+        "endIndex": {
+          "type": "integer"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Section"
+          }
+        },
+        "definitions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Definition"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "emoji",
+        "startLine",
+        "endLine",
+        "startIndex",
+        "endIndex"
+      ]
+    },
+    "Definition": {
+      "$comment": "💕️ A single declaration inside a section.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/DefinitionKind"
+        },
+        "filePath": {
+          "type": "string"
+        },
+        "sectionPath": {
+          "type": "string"
+        },
+        "emoji": {
+          "type": "string"
+        },
+        "startLine": {
+          "type": "integer"
+        },
+        "endLine": {
+          "type": "integer"
+        },
+        "startIndex": {
+          "type": "integer"
+        },
+        "endIndex": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "kind",
+        "emoji",
+        "startLine",
+        "endLine",
+        "startIndex",
+        "endIndex"
+      ]
+    },
+    "ContributorIcons": {
+      "$comment": "🤝️ Rendered avatar links of a contributor.",
+      "type": "object",
+      "properties": {
+        "avatar": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "avatarRound": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "github": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ContributorLink": {
+      "$comment": "🔗️ A named external link of a contributor.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "url"
+      ]
+    },
+    "ContributorTicket": {
+      "$comment": "🤍️ A ticket a contributor worked on, as stored in the contributor record.",
+      "type": "object",
+      "properties": {
+        "year": {
+          "type": "integer"
+        },
+        "month": {
+          "type": "integer"
+        },
+        "day": {
+          "type": "integer"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/TicketStatus"
+        },
+        "filePath": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "year",
+        "month",
+        "day",
+        "slug",
+        "status"
+      ]
+    },
+    "ContributorCheckpoint": {
+      "$comment": "🔀️ A checkpoint a contributor authored, as stored in the contributor record.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "sha": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "sha"
+      ]
+    },
+    "ContributorContributionsStorage": {
+      "$comment": "🖤️ The persisted contribution index of a contributor.",
+      "type": "object",
+      "properties": {
+        "bundles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "folders": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "regions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "definitions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tickets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContributorTicket"
+          }
+        },
+        "checkpoints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContributorCheckpoint"
+          }
+        },
+        "lines": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LineMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Contributor": {
+      "$comment": "🧑️‍💻️ A person or agent that contributes to the repository.",
+      "type": "object",
+      "properties": {
+        "alias": {
+          "type": "string"
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "emoji": {
+          "type": "string"
+        },
+        "github": {
+          "type": "string"
+        },
+        "githubs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "email": {
+          "type": "string"
+        },
+        "emails": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "links": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "fingerprint": {
+          "type": "string"
+        },
+        "fingerprints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "contributions": {
+          "$ref": "#/$defs/ContributorContributionsStorage"
+        }
+      },
+      "required": [
+        "alias",
+        "github",
+        "name",
+        "email",
+        "contributions"
+      ]
+    },
+    "ContributorDefinition": {
+      "$comment": "🔖️ Line totals a contributor owns inside one definition.",
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string"
+        },
+        "Lines": {
+          "$ref": "#/$defs/LineMetrics"
+        }
+      },
+      "required": [
+        "Name",
+        "Lines"
+      ]
+    },
+    "ContributorSection": {
+      "$comment": "🔖️ Line totals a contributor owns inside one section.",
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string"
+        },
+        "Lines": {
+          "$ref": "#/$defs/LineMetrics"
+        },
+        "Definitions": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ContributorDefinition"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "Name",
+        "Lines",
+        "Definitions"
+      ]
+    },
+    "ContributorFile": {
+      "$comment": "🔖️ Line totals a contributor owns inside one file.",
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string"
+        },
+        "Lines": {
+          "$ref": "#/$defs/LineMetrics"
+        },
+        "Sections": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ContributorSection"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "Name",
+        "Lines",
+        "Sections"
+      ]
+    },
+    "ContributorFolder": {
+      "$comment": "🔖️ Line totals a contributor owns inside one folder.",
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string"
+        },
+        "Lines": {
+          "$ref": "#/$defs/LineMetrics"
+        },
+        "Files": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ContributorFile"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "Name",
+        "Lines",
+        "Files"
+      ]
+    },
+    "ContributorBundle": {
+      "$comment": "🔖️ Line totals a contributor owns inside one bundle.",
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string"
+        },
+        "Lines": {
+          "$ref": "#/$defs/LineMetrics"
+        },
+        "Folders": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ContributorFolder"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "Name",
+        "Lines",
+        "Folders"
+      ]
+    },
+    "ContributorContributionsTree": {
+      "$comment": "🌳️ The expanded contribution tree of a contributor.",
+      "type": "object",
+      "properties": {
+        "Checkpoints": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Checkpoint"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "Tickets": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Ticket"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "Bundles": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ContributorBundle"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "Checkpoints",
+        "Tickets",
+        "Bundles"
+      ]
+    },
+    "ContributionBundle": {
+      "$comment": "🔖️ Count metrics of a contributor against one bundle.",
+      "type": "object",
+      "properties": {
+        "bundleId": {
+          "type": "string"
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CountMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "bundleId",
+        "metrics"
+      ]
+    },
+    "ContributionFolder": {
+      "$comment": "🔖️ Count metrics of a contributor against one folder.",
+      "type": "object",
+      "properties": {
+        "folderId": {
+          "type": "string"
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CountMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "folderId",
+        "metrics"
+      ]
+    },
+    "ContributionFile": {
+      "$comment": "🔖️ Line metrics of a contributor against one file.",
+      "type": "object",
+      "properties": {
+        "fileId": {
+          "type": "string"
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LineMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "fileId",
+        "metrics"
+      ]
+    },
+    "ContributionSection": {
+      "$comment": "🔖️ Line metrics of a contributor against one section.",
+      "type": "object",
+      "properties": {
+        "sectionId": {
+          "type": "string"
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LineMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "sectionId",
+        "metrics"
+      ]
+    },
+    "ContributionDefinition": {
+      "$comment": "🔖️ Line metrics of a contributor against one definition.",
+      "type": "object",
+      "properties": {
+        "definitionId": {
+          "type": "string"
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LineMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "definitionId",
+        "metrics"
+      ]
+    },
+    "ContributorContributions": {
+      "$comment": "🔖️ The contribution index of a contributor, keyed by artifact id.",
+      "type": "object",
+      "properties": {
+        "bundles": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ContributionBundle"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "folders": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ContributionFolder"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "files": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ContributionFile"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sections": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ContributionSection"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "definitions": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ContributionDefinition"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "bundles",
+        "folders",
+        "files",
+        "sections",
+        "definitions"
+      ]
+    },
+    "Checkpoint": {
+      "$comment": "✔️ A committed checkpoint of the repository.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "sha": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "authorId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "date": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "sha",
+        "title",
+        "date"
+      ]
+    },
+    "CheckpointDiffRename": {
+      "$comment": "💾️ A from/to pair for a renamed entity in a checkpoint diff.",
+      "type": "object",
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "from",
+        "to"
+      ]
+    },
+    "CheckpointDiffStats": {
+      "$comment": "🆕️ Deleted, renamed, modified and created entities of one diff category.",
+      "type": "object",
+      "properties": {
+        "deleted": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "renamed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CheckpointDiffRename"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "created": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "CheckpointDiff": {
+      "$comment": "📁️ The full entity diff of a checkpoint.",
+      "type": "object",
+      "properties": {
+        "technologies": {
+          "$ref": "#/$defs/CheckpointDiffStats"
+        },
+        "bundles": {
+          "$ref": "#/$defs/CheckpointDiffStats"
+        },
+        "folders": {
+          "$ref": "#/$defs/CheckpointDiffStats"
+        },
+        "files": {
+          "$ref": "#/$defs/CheckpointDiffStats"
+        },
+        "sections": {
+          "$ref": "#/$defs/CheckpointDiffStats"
+        },
+        "definitions": {
+          "$ref": "#/$defs/CheckpointDiffStats"
+        }
+      },
+      "required": [
+        "technologies",
+        "bundles",
+        "folders",
+        "files",
+        "sections",
+        "definitions"
+      ]
+    },
+    "InteractionFile": {
+      "$comment": "📄️ A file an interaction touched.",
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ]
+    },
+    "Interaction": {
+      "$comment": "🟫️ One recorded exchange between a contributor and the repository.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "system": {
+          "type": "string"
+        },
+        "client": {
+          "type": "string"
+        },
+        "checkpoint": {
+          "type": "string"
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "llm": {
+          "type": "string"
+        },
+        "effort": {
+          "type": "string"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/InteractionFile"
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "date",
+        "author",
+        "system",
+        "client",
+        "checkpoint"
+      ]
+    },
+    "InteractionResource": {
+      "$comment": "🎁️ An interaction flattened together with the artifact it was recorded on.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/Interaction"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "sourceKind": {
+              "type": "string"
+            },
+            "sourceId": {
+              "type": "string"
+            },
+            "goalId": {
+              "type": "string"
+            },
+            "ticketId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "sourceKind",
+            "sourceId"
+          ]
+        }
+      ]
+    },
+    "TicketPlan": {
+      "$comment": "🧷️ An IDE-native plan or spec file archived into the ticket folder on close.",
+      "type": "object",
+      "properties": {
+        "client": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "local": {
+          "type": "string"
+        }
+      }
+    },
+    "TicketAgentPlanStep": {
+      "$comment": "🎫️ One step of an agent's plan on a ticket.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "ideated": {
+          "type": "string"
+        },
+        "started": {
+          "type": "string"
+        },
+        "completed": {
+          "type": "string"
+        },
+        "abandoned": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "TicketAgentPlan": {
+      "$comment": "💠️ The plan an agent declared on a ticket.",
+      "type": "object",
+      "properties": {
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TicketAgentPlanStep"
+          }
+        }
+      }
+    },
+    "TicketAgent": {
+      "$comment": "🔳️ One agent session recorded on a ticket.",
+      "type": "object",
+      "properties": {
+        "session": {
+          "type": "string"
+        },
+        "contributor": {
+          "type": "string"
+        },
+        "system": {
+          "type": "string"
+        },
+        "client": {
+          "type": "string"
+        },
+        "llm": {
+          "type": "string"
+        },
+        "effort": {
+          "type": "string"
+        },
+        "transcript": {
+          "type": "string"
+        },
+        "plan": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TicketAgentPlan"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "session"
+      ]
+    },
+    "TicketManagementData": {
+      "$comment": "🐙️ The management-provider link of a ticket.",
+      "type": "object",
+      "properties": {
+        "issue": {
+          "type": "string"
+        }
+      }
+    },
+    "Ticket": {
+      "$comment": "🔖️ A ticket: one unit of work with a lifecycle and a contribution record. The Go twin carries a hand-written `UnmarshalJSON` that additionally rewrites goal and contributor compose-ids and absorbs pre-schema field spellings. Both belong to `🪪️identity` and `🎫️tickets`; this crate is the pure shape.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "emoji": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/TicketStatus"
+        },
+        "description": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "github": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TicketManagementData"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "goal": {
+          "type": "string"
+        },
+        "plan": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TicketPlan"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sessions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "title",
+        "status"
+      ]
+    },
+    "TicketData": {
+      "$comment": "◼ The persisted subset of a ticket, without any derived field.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/TicketStatus"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "github": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TicketManagementData"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "goal": {
+          "type": "string"
+        },
+        "parent": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "status"
+      ]
+    },
+    "TicketDate": {
+      "$comment": "🟪️ Creation and completion timestamps of a ticket.",
+      "type": "object",
+      "properties": {
+        "created": {
+          "type": "string"
+        },
+        "finished": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "created"
+      ]
+    },
+    "TicketFile": {
+      "$comment": "◾ A file a ticket touched, with its line metrics.",
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "lines": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LineMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "path"
+      ]
+    },
+    "TicketFileRenamed": {
+      "$comment": "◽ A file a ticket renamed.",
+      "type": "object",
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "lines": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LineMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "from",
+        "to"
+      ]
+    },
+    "TicketDiffSet": {
+      "$comment": "🗃️ The four change classes of one entity level.",
+      "type": "object",
+      "properties": {
+        "deleted": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/TicketFile"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "renamed": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/TicketFileRenamed"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "modified": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/TicketFile"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "added": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/TicketFile"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "deleted",
+        "renamed",
+        "modified",
+        "added"
+      ]
+    },
+    "TicketDiffs": {
+      "$comment": "◻ The semantic diff of a ticket across every entity level.",
+      "type": "object",
+      "properties": {
+        "bundles": {
+          "$ref": "#/$defs/TicketDiffSet"
+        },
+        "folders": {
+          "$ref": "#/$defs/TicketDiffSet"
+        },
+        "files": {
+          "$ref": "#/$defs/TicketDiffSet"
+        },
+        "sections": {
+          "$ref": "#/$defs/TicketDiffSet"
+        },
+        "definitions": {
+          "$ref": "#/$defs/TicketDiffSet"
+        }
+      },
+      "required": [
+        "bundles",
+        "folders",
+        "files",
+        "sections",
+        "definitions"
+      ]
+    },
+    "TicketSectionMetrics": {
+      "$comment": "📑️ The metrics a ticket accumulated inside one section.",
+      "type": "object",
+      "properties": {
+        "range": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Range"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "definitions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "lines": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LineMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "TicketSection": {
+      "$comment": "▫️ A named section a ticket touched.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "range": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Range"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "definitions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "lines": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LineMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "TicketFileMetricsEntry": {
+      "$comment": "📍️ The metrics a ticket accumulated inside one file, keyed by section name.",
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "lines": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LineMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sections": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/TicketSectionMetrics"
+          }
+        }
+      },
+      "required": [
+        "path"
+      ]
+    },
+    "TicketFileMetrics": {
+      "$comment": "🎫️ Section metrics of one file, keyed by section name.",
+      "type": "object",
+      "properties": {
+        "sections": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/$defs/TicketSectionMetrics"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "sections"
+      ]
+    },
+    "TicketBundleMetrics": {
+      "$comment": "📦️ File metrics of one bundle, keyed by file path.",
+      "type": "object",
+      "properties": {
+        "files": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/$defs/TicketFileMetrics"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "files"
+      ]
+    },
+    "TicketSectionContrib": {
+      "$comment": "🔖️ The definitions and metrics a ticket touched inside one section.",
+      "type": "object",
+      "properties": {
+        "sectionId": {
+          "type": "string"
+        },
+        "definitions": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LineMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "sectionId",
+        "definitions",
+        "metrics"
+      ]
+    },
+    "TicketFileContrib": {
+      "$comment": "🔖️ The sections a ticket touched inside one file.",
+      "type": "object",
+      "properties": {
+        "fileId": {
+          "type": "string"
+        },
+        "sections": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/TicketSectionContrib"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "fileId",
+        "sections"
+      ]
+    },
+    "TicketBundleContrib": {
+      "$comment": "🔖️ The files a ticket touched inside one bundle.",
+      "type": "object",
+      "properties": {
+        "bundleId": {
+          "type": "string"
+        },
+        "files": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/TicketFileContrib"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "bundleId",
+        "files"
+      ]
+    },
+    "GoalDates": {
+      "$comment": "🟠️ The dates a goal declares.",
+      "type": "object",
+      "properties": {
+        "due": {
+          "type": "string"
+        }
+      }
+    },
+    "GoalManagementData": {
+      "$comment": "🟡️ The management-provider link of a goal.",
+      "type": "object",
+      "properties": {
+        "milestone": {
+          "type": "string"
+        },
+        "issue": {
+          "type": "string"
+        }
+      }
+    },
+    "Goal": {
+      "$comment": "🔵️ A goal: the long-lived intent that tickets are opened against.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/GoalStatus"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "dueDate": {
+          "type": "string"
+        },
+        "dates": {
+          "$ref": "#/$defs/GoalDates"
+        },
+        "client": {
+          "type": "string"
+        },
+        "llm": {
+          "type": "string"
+        },
+        "effort": {
+          "type": "string"
+        },
+        "parent": {
+          "type": "string"
+        },
+        "github": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GoalManagementData"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "title",
+        "description",
+        "prompt",
+        "status",
+        "dates",
+        "client",
+        "llm"
+      ]
+    },
+    "Draft": {
+      "$comment": "💿️ A draft: a named set of files staged before a ticket exists.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "Location": {
+      "$comment": "🔷️ A position inside a file.",
+      "type": "object",
+      "properties": {
+        "filePath": {
+          "type": "string"
+        },
+        "line": {
+          "type": "integer"
+        },
+        "column": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "filePath",
+        "line",
+        "column"
+      ]
+    },
+    "Todo": {
+      "$comment": "✅️ A todo recorded against an artifact.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "parentId": {
+          "type": "string"
+        },
+        "location": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Location"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "parentId"
+      ]
+    },
+    "Statute": {
+      "$comment": "🟢️ The slash-separated identifier of a statute, for example `code/section/empty`. The closed vocabulary and its metadata belong to `📜️statutes`; the model only carries the id so that every artifact type can reference a statute without depending on that module.",
+      "type": "string"
+    },
+    "Territory": {
+      "$comment": "🟣️ A named grouping of statutes and nested territories.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Territory"
+          }
+        },
+        "kinds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Statute"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "description"
+      ]
+    },
+    "StatuteMeta": {
+      "$comment": "🔖️ The declared metadata of one statute.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/Statute"
+        },
+        "policyId": {
+          "type": "string"
+        },
+        "priority": {
+          "$ref": "#/$defs/BreachPriority"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "solution": {
+          "type": "string"
+        },
+        "autofixable": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kind",
+        "policyId",
+        "priority",
+        "reason",
+        "solution",
+        "autofixable"
+      ]
+    },
+    "Policy": {
+      "$comment": "🔖️ A policy: a scoped set of territories and statutes.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scopes": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "groups": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Territory"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "statutes": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/StatuteMeta"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "scopes",
+        "groups",
+        "statutes"
+      ]
+    },
+    "Breach": {
+      "$comment": "🔶️ One detected violation of a statute.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/Statute"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "line": {
+          "type": "integer"
+        },
+        "column": {
+          "type": "integer"
+        },
+        "excerpt": {
+          "type": "string"
+        },
+        "priority": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BreachPriority"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "autofixable": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "solution": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "summary",
+        "kind",
+        "scope"
+      ]
+    },
+    "AnalyzeResult": {
+      "$comment": "🔖️ The outcome of an analyze run.",
+      "type": "object",
+      "properties": {
+        "breachs": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Breach"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AnalyzeMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "breachs",
+        "metrics"
+      ]
+    },
+    "FixResult": {
+      "$comment": "🔖️ The outcome of a fix run.",
+      "type": "object",
+      "properties": {
+        "fixed": {
+          "type": "integer"
+        },
+        "remaining": {
+          "type": "integer"
+        },
+        "breachs": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Breach"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "fixed",
+        "remaining",
+        "breachs"
+      ]
+    },
+    "SemanticChange": {
+      "$comment": "🔖️ A single semantic change to one entity between two checkpoints.",
+      "type": "object",
+      "properties": {
+        "Kind": {
+          "type": "string"
+        },
+        "Status": {
+          "$ref": "#/$defs/SemanticChangeType"
+        },
+        "Path": {
+          "type": "string"
+        },
+        "FromPath": {
+          "type": "string"
+        },
+        "ToPath": {
+          "type": "string"
+        },
+        "Lines": {
+          "$ref": "#/$defs/LineMetrics"
+        }
+      },
+      "required": [
+        "Kind",
+        "Status",
+        "Path",
+        "FromPath",
+        "ToPath",
+        "Lines"
+      ]
+    },
+    "BundleMetricsInternal": {
+      "$comment": "💿️ Entity counts of one bundle in a codebase snapshot.",
+      "type": "object",
+      "properties": {
+        "folders": {
+          "type": "integer"
+        },
+        "files": {
+          "type": "integer"
+        },
+        "sections": {
+          "type": "integer"
+        },
+        "definitions": {
+          "type": "integer"
+        },
+        "lines": {
+          "type": "integer"
+        },
+        "breachs": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "folders",
+        "files",
+        "sections",
+        "definitions",
+        "lines",
+        "breachs"
+      ]
+    },
+    "FolderMetricsInternal": {
+      "$comment": "📁️ Entity counts of one folder in a codebase snapshot.",
+      "type": "object",
+      "properties": {
+        "files": {
+          "type": "integer"
+        },
+        "lines": {
+          "type": "integer"
+        },
+        "breachs": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "files",
+        "lines",
+        "breachs"
+      ]
+    },
+    "FileMetricsInternal": {
+      "$comment": "📄️ Entity counts of one file in a codebase snapshot.",
+      "type": "object",
+      "properties": {
+        "sections": {
+          "type": "integer"
+        },
+        "definitions": {
+          "type": "integer"
+        },
+        "lines": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "sections",
+        "definitions",
+        "lines"
+      ]
+    },
+    "SectionMetricsInternal": {
+      "$comment": "📑️ Entity counts of one section in a codebase snapshot.",
+      "type": "object",
+      "properties": {
+        "definitions": {
+          "type": "integer"
+        },
+        "lines": {
+          "type": "integer"
+        },
+        "breachs": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "definitions",
+        "lines",
+        "breachs"
+      ]
+    },
+    "DefinitionMetricsInternal": {
+      "$comment": "📖️ Entity counts of one definition in a codebase snapshot.",
+      "type": "object",
+      "properties": {
+        "definitions": {
+          "type": "integer"
+        },
+        "lines": {
+          "type": "integer"
+        },
+        "breachs": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "definitions",
+        "lines",
+        "breachs"
+      ]
+    },
+    "RangePosition": {
+      "$comment": "🔷️ A line and column position.",
+      "type": "object",
+      "properties": {
+        "line": {
+          "type": "integer"
+        },
+        "column": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "line",
+        "column"
+      ]
+    },
+    "FileRange": {
+      "$comment": "🔶️ A start/end position pair inside a file.",
+      "type": "object",
+      "properties": {
+        "start": {
+          "$ref": "#/$defs/RangePosition"
+        },
+        "end": {
+          "$ref": "#/$defs/RangePosition"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ]
+    },
+    "BreachFile": {
+      "$comment": "🔹️ The file a codebase breach points at.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        },
+        "range": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FileRange"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "path",
+        "uri"
+      ]
+    },
+    "BreachFolder": {
+      "$comment": "🔸️ The folder a codebase breach points at.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "path",
+        "uri"
+      ]
+    },
+    "CodebaseBreach": {
+      "$comment": "🔺️ A breach as stored in a codebase snapshot.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "folders": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BreachFolder"
+          }
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BreachFile"
+          }
+        },
+        "kind": {
+          "$ref": "#/$defs/Statute"
+        },
+        "priority": {
+          "$ref": "#/$defs/BreachPriority"
+        },
+        "autofixable": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "solution": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "priority",
+        "autofixable",
+        "reason",
+        "solution"
+      ]
+    },
+    "CodebaseBundle": {
+      "$comment": "📦️ A bundle as stored in a codebase snapshot.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "folder": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        },
+        "contributors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tickets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BundleMetricsInternal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "folder",
+        "uri"
+      ]
+    },
+    "CodebaseFolder": {
+      "$comment": "🔻️ A folder as stored in a codebase snapshot.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "parentId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bundleId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FolderMetricsInternal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "path",
+        "uri",
+        "name"
+      ]
+    },
+    "FileBreachRef": {
+      "$comment": "🔗️ The statute a file-level breach reference carries.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/Statute"
+        },
+        "priority": {
+          "$ref": "#/$defs/BreachPriority"
+        },
+        "autofixable": {
+          "type": "boolean"
+        },
+        "solution": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "priority",
+        "autofixable",
+        "solution"
+      ]
+    },
+    "CodebaseFile": {
+      "$comment": "⬛️ A file as stored in a codebase snapshot.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        },
+        "folderId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bundleId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FileMetricsInternal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "breachs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FileBreachRef"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "path",
+        "uri"
+      ]
+    },
+    "CodebaseSection": {
+      "$comment": "⬜️ A section as stored in a codebase snapshot.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SectionMetricsInternal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "path",
+        "uri"
+      ]
+    },
+    "CodebaseDefinition": {
+      "$comment": "🟥️ A definition as stored in a codebase snapshot.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DefinitionMetricsInternal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "path",
+        "uri"
+      ]
+    },
+    "ContributorBundleContrib": {
+      "$comment": "🤝️ A contributor's count metrics against one bundle in a snapshot.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CountMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "ContributorFolderContrib": {
+      "$comment": "🟧️ A contributor's count metrics against one folder in a snapshot.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CountMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "ContributorFileContrib": {
+      "$comment": "🟨️ A contributor's line metrics against one file in a snapshot.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LineMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "ContributorSectionContrib": {
+      "$comment": "🟩️ A contributor's line metrics against one section in a snapshot.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LineMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "ContributorDefinitionContrib": {
+      "$comment": "🟦️ A contributor's line metrics against one definition in a snapshot.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LineMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "ContributorContributionsInternal": {
+      "$comment": "🟪️ The full contribution index of a contributor in a snapshot.",
+      "type": "object",
+      "properties": {
+        "bundles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContributorBundleContrib"
+          }
+        },
+        "folders": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContributorFolderContrib"
+          }
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContributorFileContrib"
+          }
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContributorSectionContrib"
+          }
+        },
+        "definitions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContributorDefinitionContrib"
+          }
+        }
+      }
+    },
+    "ContributorMetricsInternal": {
+      "$comment": "🟫️ Aggregate counts of a contributor in a snapshot.",
+      "type": "object",
+      "properties": {
+        "checkpoints": {
+          "type": "integer"
+        },
+        "tickets": {
+          "type": "integer"
+        },
+        "bundles": {
+          "type": "integer"
+        },
+        "folders": {
+          "type": "integer"
+        },
+        "files": {
+          "type": "integer"
+        },
+        "lines": {
+          "type": "integer"
+        },
+        "sections": {
+          "type": "integer"
+        },
+        "definitions": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "checkpoints",
+        "tickets",
+        "bundles",
+        "folders",
+        "files",
+        "lines",
+        "sections",
+        "definitions"
+      ]
+    },
+    "CodebaseContributor": {
+      "$comment": "💠️ A contributor as stored in a codebase snapshot.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "icons": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ContributorIcons"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "emails": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "links": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "contributions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ContributorContributionsInternal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ContributorMetricsInternal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "uri",
+        "path"
+      ]
+    },
+    "TicketDateInfo": {
+      "$comment": "🎫️ The created/finished dates of a ticket in a snapshot.",
+      "type": "object",
+      "properties": {
+        "created": {
+          "type": "string"
+        },
+        "finished": {
+          "type": "string"
+        }
+      }
+    },
+    "TicketBundleContribInfo": {
+      "$comment": "🔳️ A ticket's count metrics against one bundle in a snapshot.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CountMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "TicketFolderContribInfo": {
+      "$comment": "🔲️ A ticket's count metrics against one folder in a snapshot.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CountMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "TicketFileContribInfo": {
+      "$comment": "▪️ A ticket's count metrics against one file in a snapshot.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CountMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "TicketSectionContribInfo": {
+      "$comment": "▫️ A ticket's count metrics against one section in a snapshot.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CountMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "TicketDefinitionContrib": {
+      "$comment": "◾ A ticket's line metrics against one definition in a snapshot.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LineMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "CodebaseTicket": {
+      "$comment": "🗃️ A ticket as stored in a codebase snapshot.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        },
+        "date": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TicketDateInfo"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "checkpoint": {
+          "type": "string"
+        },
+        "year": {
+          "type": "string"
+        },
+        "month": {
+          "type": "string"
+        },
+        "day": {
+          "type": "string"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "llm": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/TicketStatus"
+        },
+        "bundles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TicketBundleContribInfo"
+          }
+        },
+        "folders": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TicketFolderContribInfo"
+          }
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TicketFileContribInfo"
+          }
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TicketSectionContribInfo"
+          }
+        },
+        "definitions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TicketDefinitionContrib"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "path",
+        "uri",
+        "year",
+        "month",
+        "day",
+        "slug",
+        "status"
+      ]
+    },
+    "PolicyBreachRef": {
+      "$comment": "📜️ The statute a policy-level breach reference carries.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/Statute"
+        },
+        "priority": {
+          "$ref": "#/$defs/BreachPriority"
+        },
+        "autofixable": {
+          "type": "boolean"
+        },
+        "solution": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "priority",
+        "autofixable",
+        "solution"
+      ]
+    },
+    "CodebasePolicy": {
+      "$comment": "◽ A policy as stored in a codebase snapshot.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "breachs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PolicyBreachRef"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "CbTreeNodeKind": {
+      "$comment": "🌳️ The entity level of a codebase tree node.",
+      "type": "string",
+      "enum": [
+        "repo",
+        "bundle",
+        "folder",
+        "file",
+        "section",
+        "definition"
+      ]
+    },
+    "CbTreeNode": {
+      "$comment": "🌿️ One node of the codebase containment tree.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/CbTreeNodeKind"
+        },
+        "children": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/CbTreeNode"
+          }
+        }
+      },
+      "required": [
+        "kind"
+      ]
+    },
+    "Codebase": {
+      "$comment": "◻ A complete codebase snapshot.",
+      "type": "object",
+      "properties": {
+        "bundles": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/CodebaseBundle"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "folders": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/CodebaseFolder"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "files": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/CodebaseFile"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sections": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/CodebaseSection"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "definitions": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/CodebaseDefinition"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "contributors": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/CodebaseContributor"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tickets": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/CodebaseTicket"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "policies": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/CodebasePolicy"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "breachs": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/CodebaseBreach"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tree": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/$defs/CbTreeNode"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "bundles",
+        "folders",
+        "files",
+        "sections",
+        "definitions",
+        "contributors",
+        "tickets",
+        "policies",
+        "breachs",
+        "tree"
+      ]
+    },
+    "TreeNodeKind": {
+      "$comment": "🌳️ The entity level of a monorepo tree node.",
+      "type": "string",
+      "enum": [
+        "technology",
+        "bundle",
+        "folder",
+        "file",
+        "section",
+        "definition",
+        "goal",
+        "ticket",
+        "draft",
+        "todo",
+        "policy",
+        "breach",
+        "contributor",
+        "checkpoint",
+        "session",
+        "statute",
+        "category"
+      ]
+    },
+    "TreeNode": {
+      "$comment": "🌿️ One node of the monorepo tree. The Go twin declares no field tags, so the wire keys are the Go field names themselves.",
+      "type": "object",
+      "properties": {
+        "Kind": {
+          "$ref": "#/$defs/TreeNodeKind"
+        },
+        "ID": {
+          "type": "string"
+        },
+        "Label": {
+          "type": "string"
+        },
+        "URI": {
+          "type": "string"
+        },
+        "SubKind": {
+          "type": "string"
+        },
+        "Description": {
+          "type": "string"
+        },
+        "Summary": {
+          "type": "string"
+        },
+        "Year": {
+          "type": "integer"
+        },
+        "Month": {
+          "type": "integer"
+        },
+        "Day": {
+          "type": "integer"
+        },
+        "Status": {
+          "type": "string"
+        },
+        "Contributor": {
+          "type": "string"
+        },
+        "Data": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "Children": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/TreeNode"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "Kind",
+        "ID",
+        "Label",
+        "URI",
+        "SubKind",
+        "Description",
+        "Summary",
+        "Year",
+        "Month",
+        "Day",
+        "Status",
+        "Contributor",
+        "Data",
+        "Children"
+      ]
+    },
+    "TreeFilter": {
+      "$comment": "🧹️ The criteria a monorepo tree query filters by.",
+      "type": "object",
+      "properties": {
+        "Query": {
+          "type": "string"
+        },
+        "OnlyKinds": {
+          "anyOf": [
+            {
+              "type": "object",
+              "propertyNames": {
+                "$ref": "#/$defs/TreeNodeKind"
+              },
+              "additionalProperties": {
+                "type": "boolean"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ExcludeKinds": {
+          "anyOf": [
+            {
+              "type": "object",
+              "propertyNames": {
+                "$ref": "#/$defs/TreeNodeKind"
+              },
+              "additionalProperties": {
+                "type": "boolean"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "OnlySubKinds": {
+          "anyOf": [
+            {
+              "type": "object",
+              "propertyNames": {
+                "$ref": "#/$defs/TreeNodeKind"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ExcludeSubKinds": {
+          "anyOf": [
+            {
+              "type": "object",
+              "propertyNames": {
+                "$ref": "#/$defs/TreeNodeKind"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "OnlyYears": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ExcludeYears": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "OnlyMonths": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ExcludeMonths": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "OnlyDays": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ExcludeDays": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "OnlyStatus": {
+          "type": "string"
+        },
+        "OnlyContributors": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ExcludeContributors": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "OnlyPolicies": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ExcludePolicies": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "Query",
+        "OnlyKinds",
+        "ExcludeKinds",
+        "OnlySubKinds",
+        "ExcludeSubKinds",
+        "OnlyYears",
+        "ExcludeYears",
+        "OnlyMonths",
+        "ExcludeMonths",
+        "OnlyDays",
+        "ExcludeDays",
+        "OnlyStatus",
+        "OnlyContributors",
+        "ExcludeContributors",
+        "OnlyPolicies",
+        "ExcludePolicies"
+      ]
+    },
+    "TicketNode": {
+      "$comment": "🎫️ A ticket node of the goal/ticket tree.",
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string"
+        },
+        "Slug": {
+          "type": "string"
+        },
+        "Status": {
+          "type": "string"
+        },
+        "Title": {
+          "type": "string"
+        },
+        "URI": {
+          "type": "string"
+        },
+        "GoalID": {
+          "type": "string"
+        },
+        "ParentID": {
+          "type": "string"
+        },
+        "Children": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/TicketNode"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "Created": {
+          "type": "string"
+        },
+        "Finished": {
+          "type": "string"
+        },
+        "Description": {
+          "type": "string"
+        },
+        "Summary": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "ID",
+        "Slug",
+        "Status",
+        "Title",
+        "URI",
+        "GoalID",
+        "ParentID",
+        "Children",
+        "Created",
+        "Finished",
+        "Description",
+        "Summary"
+      ]
+    },
+    "GoalNode": {
+      "$comment": "💿️ A goal node of the goal/ticket tree.",
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string"
+        },
+        "Title": {
+          "type": "string"
+        },
+        "Status": {
+          "type": "string"
+        },
+        "DueDate": {
+          "type": "string"
+        },
+        "CreatedAt": {
+          "type": "string"
+        },
+        "Description": {
+          "type": "string"
+        },
+        "Children": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/GoalNode"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "Tickets": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/TicketNode"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "ID",
+        "Title",
+        "Status",
+        "DueDate",
+        "CreatedAt",
+        "Description",
+        "Children",
+        "Tickets"
+      ]
+    },
+    "FileListInput": {
+      "$comment": "💿️ The updated/created/removed file lists a mutation reports.",
+      "type": "object",
+      "properties": {
+        "updated": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "created": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "TicketOpenInput": {
+      "$comment": "🎫️ The arguments of a ticket-open mutation.",
+      "type": "object",
+      "properties": {
+        "emoji": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "llm": {
+          "type": "string"
+        },
+        "effort": {
+          "type": "string"
+        },
+        "client": {
+          "type": "string"
+        },
+        "noIssue": {
+          "type": "boolean"
+        },
+        "draft": {
+          "type": "string"
+        },
+        "goal": {
+          "type": "string"
+        },
+        "parent": {
+          "type": "string"
+        },
+        "noManagement": {
+          "type": "boolean"
+        },
+        "issue": {
+          "type": "string"
+        },
+        "planId": {
+          "type": "string"
+        },
+        "specId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "emoji",
+        "title",
+        "prompt",
+        "client",
+        "goal"
+      ]
+    },
+    "DraftCreateInput": {
+      "$comment": "🆕️ The arguments of a draft-create mutation.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "title"
+      ]
+    },
+    "GoalCreateInput": {
+      "$comment": "📝️ The arguments of a goal-create mutation.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "dueDate": {
+          "type": "string"
+        },
+        "llm": {
+          "type": "string"
+        },
+        "effort": {
+          "type": "string"
+        },
+        "client": {
+          "type": "string"
+        },
+        "noManagement": {
+          "type": "boolean"
+        },
+        "parent": {
+          "type": "string"
+        },
+        "milestone": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "description",
+        "prompt",
+        "dueDate",
+        "llm",
+        "client"
+      ]
+    },
+    "GoalChangeInput": {
+      "$comment": "♻️ The arguments of a goal-change mutation.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dueDate": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "llm": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effort": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "parent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "noManagement": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "GoalCloseInput": {
+      "$comment": "📪️ The arguments of a goal-close mutation.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "noManagement": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "summary"
+      ]
+    },
+    "GoalReopenInput": {
+      "$comment": "🔓️ The arguments of a goal-reopen mutation.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "client": {
+          "type": "string"
+        },
+        "llm": {
+          "type": "string"
+        },
+        "effort": {
+          "type": "string"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dueDate": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "parent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "noManagement": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "prompt",
+        "client",
+        "llm"
+      ]
+    },
+    "GoalDeleteInput": {
+      "$comment": "🗑️ The arguments of a goal-delete mutation.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "noManagement": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "TicketDeleteInput": {
+      "$comment": "🔷️ The arguments of a ticket-delete mutation.",
+      "type": "object",
+      "properties": {
+        "year": {
+          "type": "integer"
+        },
+        "month": {
+          "type": "integer"
+        },
+        "day": {
+          "type": "integer"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "noManagement": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "year",
+        "month",
+        "day",
+        "slug"
+      ]
+    },
+    "TicketCloseInput": {
+      "$comment": "🔶️ The arguments of a ticket-close mutation.",
+      "type": "object",
+      "properties": {
+        "year": {
+          "type": "integer"
+        },
+        "month": {
+          "type": "integer"
+        },
+        "day": {
+          "type": "integer"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "files": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "noManagement": {
+          "type": "boolean"
+        },
+        "all": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "year",
+        "month",
+        "day",
+        "slug",
+        "summary",
+        "files"
+      ]
+    },
+    "TicketReopenInput": {
+      "$comment": "📬️ The arguments of a ticket-reopen mutation.",
+      "type": "object",
+      "properties": {
+        "year": {
+          "type": "integer"
+        },
+        "month": {
+          "type": "integer"
+        },
+        "day": {
+          "type": "integer"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "llm": {
+          "type": "string"
+        },
+        "effort": {
+          "type": "string"
+        },
+        "client": {
+          "type": "string"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "draft": {
+          "type": "string"
+        },
+        "goal": {
+          "type": "string"
+        },
+        "parent": {
+          "type": "string"
+        },
+        "noManagement": {
+          "type": "boolean"
+        },
+        "planId": {
+          "type": "string"
+        },
+        "specId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "year",
+        "month",
+        "day",
+        "slug",
+        "prompt",
+        "client"
+      ]
+    },
+    "TicketChangeInput": {
+      "$comment": "🔹️ The arguments of a ticket-change mutation.",
+      "type": "object",
+      "properties": {
+        "year": {
+          "type": "integer"
+        },
+        "month": {
+          "type": "integer"
+        },
+        "day": {
+          "type": "integer"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "prompt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "llm": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effort": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "client": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "goal": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "parent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "noManagement": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "year",
+        "month",
+        "day",
+        "slug"
+      ]
+    },
+    "ContributorAddInput": {
+      "$comment": "🤝️ The arguments of a contributor-add mutation.",
+      "type": "object",
+      "properties": {
+        "github": {
+          "type": "string"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "email": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "emails": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fingerprint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fingerprints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "github"
+      ]
+    },
+    "TodoCreateInput": {
+      "$comment": "🆕️ The arguments of a todo-create mutation.",
+      "type": "object",
+      "properties": {
+        "parentId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "parentId",
+        "name",
+        "description"
+      ]
+    },
+    "TodoChangeInput": {
+      "$comment": "♻️ The arguments of a todo-change mutation.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description"
+      ]
+    },
+    "FilterInput": {
+      "$comment": "🧹️ The criteria a stream or list query filters by.",
+      "type": "object",
+      "properties": {
+        "filter": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "regex": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "matchCase": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "matchWholeWord": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "showIgnored": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "showGenerated": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "excludeKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "includeKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "TicketBundles": {
+      "$comment": "⬛️ Bundle metrics of a ticket, keyed by bundle id. A Go named map type, so the wire shape is the map itself.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/TicketBundleMetrics"
+      }
+    },
+    "AllowedValues": {
+      "$comment": "📋️ The shape of 🔣️allowed-values.json, the shared LLM / effort / client vocabulary both implementations embed.",
+      "type": "object",
+      "properties": {
+        "$comment": {
+          "type": "string"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "llms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "efforts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "clients": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "llms",
+        "efforts",
+        "clients"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,335 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-label}[2026/09/05 v0.2.0 semio viz label placement and collision avoidance]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-guide}\RequirePackage{semio-viz-mark}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 🔑 semio / viz / label keys
+%   at        (x,y)   anchor in plot millimetres; wins over the data coordinate
+%   x, y      (data)  anchor in data units, mapped through xScale / yScale
+%   xScale    (name)  scale for x, default `x`
+%   yScale    (name)  scale for y, default `y`
+%   text      (text)  label text; empty on a value label means the formatted value
+%   value     (num)   value rendered through labelFormat for a value label
+%   labelFormat (spec) semio-viz-format specifier for value labels, default empty
+%   priority  (int)   higher wins a collision, default 0
+%   anchor    (choice) auto|north|south|east|west|center; auto = away from the plot centre
+%   offset    (dx,dy) shift from the anchor point before collision solving, default 0,1
+%   leader    (bool)  draw a leader line when the label had to be displaced, default true
+%   padding   (mm)    extra gap enforced between two labels, default 0.4
+%   step      (mm)    displacement increment tried by the solver, default 1
+%   tries     (int)   displacement candidates per label before hiding it, default 12
+%   color     (token) text colour; empty = the theme's label role
+\clist_new:N \l_semio_viz_lbl_at_clist
+\clist_new:N \l_semio_viz_lbl_offset_clist
+\tl_new:N \l_semio_viz_lbl_x_tl
+\tl_new:N \l_semio_viz_lbl_y_tl
+\tl_new:N \l_semio_viz_lbl_xscale_tl
+\tl_new:N \l_semio_viz_lbl_yscale_tl
+\tl_new:N \l_semio_viz_lbl_text_tl
+\tl_new:N \l_semio_viz_lbl_value_tl
+\tl_new:N \l_semio_viz_lbl_format_tl
+\tl_new:N \l_semio_viz_lbl_anchor_tl
+\tl_new:N \l_semio_viz_lbl_color_tl
+\clist_new:N \l_semio_viz_lbl_texts_clist
+\clist_new:N \l_semio_viz_lbl_values_clist
+\tl_new:N \l_semio_viz_lbl_series_points_tl
+\int_new:N \l_semio_viz_lbl_priority_int
+\int_new:N \l_semio_viz_lbl_tries_int
+\fp_new:N \l_semio_viz_lbl_padding_fp
+\fp_new:N \l_semio_viz_lbl_step_fp
+\bool_new:N \l_semio_viz_lbl_leader_bool
+
+\keys_define:nn { semio / viz / label } {
+  at .clist_set:N = \l_semio_viz_lbl_at_clist,
+  offset .clist_set:N = \l_semio_viz_lbl_offset_clist,
+  x .tl_set:N = \l_semio_viz_lbl_x_tl,
+  y .tl_set:N = \l_semio_viz_lbl_y_tl,
+  xScale .tl_set:N = \l_semio_viz_lbl_xscale_tl,
+  yScale .tl_set:N = \l_semio_viz_lbl_yscale_tl,
+  text .tl_set:N = \l_semio_viz_lbl_text_tl,
+  value .tl_set:N = \l_semio_viz_lbl_value_tl,
+  labelFormat .tl_set:N = \l_semio_viz_lbl_format_tl,
+  anchor .tl_set:N = \l_semio_viz_lbl_anchor_tl,
+  color .tl_set:N = \l_semio_viz_lbl_color_tl,
+  points .tl_set:N = \l_semio_viz_lbl_series_points_tl,
+  labels .clist_set:N = \l_semio_viz_lbl_texts_clist,
+  values .clist_set:N = \l_semio_viz_lbl_values_clist,
+  priority .int_set:N = \l_semio_viz_lbl_priority_int,
+  tries .int_set:N = \l_semio_viz_lbl_tries_int,
+  padding .fp_set:N = \l_semio_viz_lbl_padding_fp,
+  step .fp_set:N = \l_semio_viz_lbl_step_fp,
+  leader .bool_set:N = \l_semio_viz_lbl_leader_bool,
+}
+
+% ♻️ Puts every label key back to its documented default before an option list is read.
+\cs_new_protected:Npn \semio_viz_lbl_keys_reset: {
+  \clist_clear:N \l_semio_viz_lbl_at_clist
+  \clist_set:Nn \l_semio_viz_lbl_offset_clist { 0 , 1 }
+  \tl_clear:N \l_semio_viz_lbl_x_tl
+  \tl_clear:N \l_semio_viz_lbl_y_tl
+  \tl_set:Nn \l_semio_viz_lbl_xscale_tl { x }
+  \tl_set:Nn \l_semio_viz_lbl_yscale_tl { y }
+  \tl_clear:N \l_semio_viz_lbl_text_tl
+  \tl_clear:N \l_semio_viz_lbl_value_tl
+  \tl_clear:N \l_semio_viz_lbl_format_tl
+  \tl_set:Nn \l_semio_viz_lbl_anchor_tl { auto }
+  \tl_clear:N \l_semio_viz_lbl_color_tl
+  \tl_clear:N \l_semio_viz_lbl_series_points_tl
+  \clist_clear:N \l_semio_viz_lbl_texts_clist
+  \clist_clear:N \l_semio_viz_lbl_values_clist
+  \int_zero:N \l_semio_viz_lbl_priority_int
+  \int_set:Nn \l_semio_viz_lbl_tries_int { 12 }
+  \fp_set:Nn \l_semio_viz_lbl_padding_fp { 0.4 }
+  \fp_set:Nn \l_semio_viz_lbl_step_fp { 1 }
+  \bool_set_true:N \l_semio_viz_lbl_leader_bool
+}
+%endregion 🔖️Keys
+
+%region 🔖️Queue
+% 🗂️ Labels are collected before they are drawn: a label's final position depends
+% on every other label, so nothing can be placed while candidates are still
+% arriving. One queue entry is {anchorX}{anchorY}{wantX}{wantY}{width}{height}{priority}{text}.
+\seq_new:N \g_semio_viz_lbl_queue_seq
+\seq_new:N \l_semio_viz_lbl_placed_seq
+\box_new:N \l_semio_viz_lbl_box
+\fp_new:N \l_semio_viz_lbl_ax_fp
+\fp_new:N \l_semio_viz_lbl_ay_fp
+\fp_new:N \l_semio_viz_lbl_wx_fp
+\fp_new:N \l_semio_viz_lbl_wy_fp
+\fp_new:N \l_semio_viz_lbl_w_fp
+\fp_new:N \l_semio_viz_lbl_h_fp
+\fp_new:N \l_semio_viz_lbl_try_x_fp
+\fp_new:N \l_semio_viz_lbl_try_y_fp
+\bool_new:N \l_semio_viz_lbl_hit_bool
+\int_new:N \l_semio_viz_lbl_index_int
+
+% 📏 Typeset extent of the label text in millimetres.
+\cs_new_protected:Npn \semio_viz_lbl_measure:n #1 {
+  \hbox_set:Nn \l_semio_viz_lbl_box { \c_semio_viz_theme_font_label_tl #1 }
+  \fp_set:Nn \l_semio_viz_lbl_w_fp
+    { \dim_to_fp:n { \box_wd:N \l_semio_viz_lbl_box } / \dim_to_fp:n { 1mm } }
+  \fp_set:Nn \l_semio_viz_lbl_h_fp
+    { ( \dim_to_fp:n { \box_ht:N \l_semio_viz_lbl_box }
+        + \dim_to_fp:n { \box_dp:N \l_semio_viz_lbl_box } ) / \dim_to_fp:n { 1mm } }
+  \fp_compare:nNnT { \l_semio_viz_lbl_w_fp } = { 0 }
+    { \fp_set:Nn \l_semio_viz_lbl_w_fp { 1.1 * \tl_count:n {#1} } }
+  \fp_compare:nNnT { \l_semio_viz_lbl_h_fp } = { 0 }
+    { \fp_set:Nn \l_semio_viz_lbl_h_fp { 2.2 } }
+}
+
+% 📍 The point the label belongs to: `at` when given, otherwise `x` and `y` through their scales.
+\cs_new_protected:Npn \semio_viz_lbl_anchor_point: {
+  \fp_zero:N \l_semio_viz_lbl_ax_fp
+  \fp_zero:N \l_semio_viz_lbl_ay_fp
+  \clist_if_empty:NTF \l_semio_viz_lbl_at_clist
+    {
+      \tl_if_empty:NF \l_semio_viz_lbl_x_tl
+        { \semio_viz_scale_map:VVN \l_semio_viz_lbl_xscale_tl \l_semio_viz_lbl_x_tl \l_semio_viz_lbl_ax_fp }
+      \tl_if_empty:NF \l_semio_viz_lbl_y_tl
+        { \semio_viz_scale_map:VVN \l_semio_viz_lbl_yscale_tl \l_semio_viz_lbl_y_tl \l_semio_viz_lbl_ay_fp }
+    }
+    {
+      \fp_set:Nn \l_semio_viz_lbl_ax_fp { \clist_item:Nn \l_semio_viz_lbl_at_clist { 1 } }
+      \fp_set:Nn \l_semio_viz_lbl_ay_fp { \clist_item:Nn \l_semio_viz_lbl_at_clist { 2 } }
+    }
+}
+
+% 📥 Measures one label and files it in the queue; nothing is drawn until the queue is flushed,
+% because a placement can only avoid the labels it already knows about.
+\cs_new_protected:Npn \semio_viz_lbl_enqueue: {
+  \tl_if_empty:NT \l_semio_viz_lbl_text_tl {
+    \semio_viz_guide_format:VVN \l_semio_viz_lbl_format_tl \l_semio_viz_lbl_value_tl
+      \l_semio_viz_lbl_text_tl
+  }
+  \semio_viz_lbl_anchor_point:
+  \exp_args:NV \semio_viz_lbl_measure:n \l_semio_viz_lbl_text_tl
+  \fp_set:Nn \l_semio_viz_lbl_wx_fp
+    { \l_semio_viz_lbl_ax_fp + \clist_item:Nn \l_semio_viz_lbl_offset_clist { 1 } }
+  \fp_set:Nn \l_semio_viz_lbl_wy_fp
+    { \l_semio_viz_lbl_ay_fp + \clist_item:Nn \l_semio_viz_lbl_offset_clist { 2 } }
+  \seq_gput_right:Nx \g_semio_viz_lbl_queue_seq {
+    { \fp_use:N \l_semio_viz_lbl_ax_fp } { \fp_use:N \l_semio_viz_lbl_ay_fp }
+    { \fp_use:N \l_semio_viz_lbl_wx_fp } { \fp_use:N \l_semio_viz_lbl_wy_fp }
+    { \fp_use:N \l_semio_viz_lbl_w_fp } { \fp_use:N \l_semio_viz_lbl_h_fp }
+    { \int_use:N \l_semio_viz_lbl_priority_int }
+    { \exp_not:V \l_semio_viz_lbl_text_tl }
+  }
+}
+%endregion 🔖️Queue
+
+%region 🔖️Placement
+% 🔢 The priority a queue entry carries, for the descending sort.
+\cs_new:Npn \semio_viz_lbl_priority:nnnnnnnn #1#2#3#4#5#6#7#8 {#7}
+
+% 🧮 Greedy solver: candidates are placed in descending priority, each keeping
+% the first of its displacement candidates whose box clears every box already
+% placed. The displacement walk is up, down, right, left at growing multiples of
+% `step`, so a label moves the least distance that frees it, and a label that
+% never clears is dropped rather than overprinted.
+\cs_new_protected:Npn \semio_viz_lbl_box_overlap:nnnn #1#2#3#4 {
+  \bool_set_false:N \l_semio_viz_lbl_hit_bool
+  \seq_map_inline:Nn \l_semio_viz_lbl_placed_seq {
+    \fp_compare:nT
+      {
+        ( (#1) - \l_semio_viz_lbl_padding_fp < \clist_item:nn {##1} { 3 } ) &&
+        ( (#3) + \l_semio_viz_lbl_padding_fp > \clist_item:nn {##1} { 1 } ) &&
+        ( (#2) - \l_semio_viz_lbl_padding_fp < \clist_item:nn {##1} { 4 } ) &&
+        ( (#4) + \l_semio_viz_lbl_padding_fp > \clist_item:nn {##1} { 2 } )
+      }
+      { \bool_set_true:N \l_semio_viz_lbl_hit_bool }
+  }
+}
+
+% 🎯 Candidate 0 is the label's own wanted position; candidates 1,2,3,… walk up,
+% down, right, left at one step, then at two, so the first free candidate is
+% always the smallest displacement that clears.
+\int_new:N \l_semio_viz_lbl_walk_int
+\cs_new_protected:Npn \semio_viz_lbl_candidate:n #1 {
+  \int_set:Nn \l_semio_viz_lbl_walk_int { \int_max:nn { 0 } { (#1) - 1 } }
+  \fp_set:Nn \l_semio_viz_lbl_try_x_fp {
+    \l_semio_viz_lbl_wx_fp + ( (#1) == 0 ? 0 : 1 )
+      * ( \int_mod:nn { \l_semio_viz_lbl_walk_int } { 4 } == 2 ? 1
+          : ( \int_mod:nn { \l_semio_viz_lbl_walk_int } { 4 } == 3 ? -1 : 0 ) )
+      * ( \int_div_truncate:nn { \l_semio_viz_lbl_walk_int } { 4 } + 1 ) * \l_semio_viz_lbl_step_fp
+  }
+  \fp_set:Nn \l_semio_viz_lbl_try_y_fp {
+    \l_semio_viz_lbl_wy_fp + ( (#1) == 0 ? 0 : 1 )
+      * ( \int_mod:nn { \l_semio_viz_lbl_walk_int } { 4 } == 0 ? 1
+          : ( \int_mod:nn { \l_semio_viz_lbl_walk_int } { 4 } == 1 ? -1 : 0 ) )
+      * ( \int_div_truncate:nn { \l_semio_viz_lbl_walk_int } { 4 } + 1 ) * \l_semio_viz_lbl_step_fp
+  }
+}
+
+% 🖊️ Sets the text #3 at (#1,#2) in the label style, or in the `color` the option list asked for.
+\cs_new_protected:Npn \semio_viz_lbl_draw_one:nnn #1#2#3 {
+  \tl_if_empty:NTF \l_semio_viz_lbl_color_tl
+    { \semio_viz_guide_style:nN { label } \l_semio_viz_guide_labelstyle_tl }
+    {
+      \tl_set:Nx \l_semio_viz_guide_labelstyle_tl
+        { font=\exp_not:N \c_semio_viz_theme_font_label_tl , text=\exp_not:V \l_semio_viz_lbl_color_tl }
+    }
+  \use:x {
+    \exp_not:N \node [ \exp_not:V \l_semio_viz_guide_labelstyle_tl , anchor=\str_if_eq:VnTF \l_semio_viz_lbl_anchor_tl { auto } { center } { \exp_not:V \l_semio_viz_lbl_anchor_tl } , inner~sep=0pt ]
+      at ( \fp_eval:n {#1} , \fp_eval:n {#2} ) { \exp_not:n {#3} } ;
+  }
+}
+
+% ↗️ Leader line from the anchor (#1,#2) to the placed label (#3,#4), drawn only once the label
+% has walked far enough from its anchor for the reader to lose the connection.
+\cs_new_protected:Npn \semio_viz_lbl_leader_draw:nnnn #1#2#3#4 {
+  \bool_if:NT \l_semio_viz_lbl_leader_bool {
+    \fp_compare:nT { abs( (#3) - (#1) ) + abs( (#4) - (#2) ) > 2 * \l_semio_viz_lbl_step_fp } {
+      \semio_viz_guide_style:nN { tick-minor } \l_semio_viz_guide_style_tl
+      \use:x {
+        \exp_not:N \draw [ \exp_not:V \l_semio_viz_guide_style_tl ]
+          ( \fp_eval:n {#1} , \fp_eval:n {#2} ) -- ( \fp_eval:n {#3} , \fp_eval:n {#4} ) ;
+      }
+      \semio_viz_probe_geometry:nx { label-leader }
+        { \fp_eval:n {#1} , \fp_eval:n {#2} , \fp_eval:n {#3} , \fp_eval:n {#4} }
+    }
+  }
+}
+
+% 🧲 Places one queued entry: the spiral walk moves the box off every label already placed, then
+% the leader and the text are drawn at the first free position it finds.
+\cs_new_protected:Npn \semio_viz_lbl_place_entry:nnnnnnnn #1#2#3#4#5#6#7#8 {
+  \fp_set:Nn \l_semio_viz_lbl_ax_fp {#1}
+  \fp_set:Nn \l_semio_viz_lbl_ay_fp {#2}
+  \fp_set:Nn \l_semio_viz_lbl_wx_fp {#3}
+  \fp_set:Nn \l_semio_viz_lbl_wy_fp {#4}
+  \fp_set:Nn \l_semio_viz_lbl_w_fp {#5}
+  \fp_set:Nn \l_semio_viz_lbl_h_fp {#6}
+  \bool_set_true:N \l_semio_viz_lbl_hit_bool
+  \int_step_inline:nn { \l_semio_viz_lbl_tries_int } {
+    \bool_if:NT \l_semio_viz_lbl_hit_bool {
+      \semio_viz_lbl_candidate:n { ##1 - 1 }
+      \semio_viz_lbl_box_overlap:nnnn
+        { \l_semio_viz_lbl_try_x_fp - \l_semio_viz_lbl_w_fp / 2 }
+        { \l_semio_viz_lbl_try_y_fp - \l_semio_viz_lbl_h_fp / 2 }
+        { \l_semio_viz_lbl_try_x_fp + \l_semio_viz_lbl_w_fp / 2 }
+        { \l_semio_viz_lbl_try_y_fp + \l_semio_viz_lbl_h_fp / 2 }
+      \bool_if:NF \l_semio_viz_lbl_hit_bool {
+        \seq_put_right:Nx \l_semio_viz_lbl_placed_seq {
+          \fp_eval:n { \l_semio_viz_lbl_try_x_fp - \l_semio_viz_lbl_w_fp / 2 } ,
+          \fp_eval:n { \l_semio_viz_lbl_try_y_fp - \l_semio_viz_lbl_h_fp / 2 } ,
+          \fp_eval:n { \l_semio_viz_lbl_try_x_fp + \l_semio_viz_lbl_w_fp / 2 } ,
+          \fp_eval:n { \l_semio_viz_lbl_try_y_fp + \l_semio_viz_lbl_h_fp / 2 }
+        }
+        \semio_viz_lbl_leader_draw:nnnn
+          { \l_semio_viz_lbl_ax_fp } { \l_semio_viz_lbl_ay_fp }
+          { \l_semio_viz_lbl_try_x_fp } { \l_semio_viz_lbl_try_y_fp }
+        \semio_viz_lbl_draw_one:nnn
+          { \l_semio_viz_lbl_try_x_fp } { \l_semio_viz_lbl_try_y_fp } {#8}
+        \semio_viz_probe_geometry:nx { label-placed } {
+          \fp_eval:n { \l_semio_viz_lbl_try_x_fp } , \fp_eval:n { \l_semio_viz_lbl_try_y_fp } ,
+          \fp_eval:n { \l_semio_viz_lbl_w_fp } , \fp_eval:n { \l_semio_viz_lbl_h_fp }
+        }
+      }
+    }
+  }
+  \bool_if:NT \l_semio_viz_lbl_hit_bool {
+    \semio_viz_probe_geometry:nx { label-hidden }
+      { \fp_eval:n { \l_semio_viz_lbl_ax_fp } , \fp_eval:n { \l_semio_viz_lbl_ay_fp } }
+  }
+}
+
+% 📤 Draws the whole queue under the option list #1, highest priority first, and empties it.
+\cs_new_protected:Npn \semio_viz_lbl_flush:n #1 {
+  \semio_viz_frame_require:n { SemioVizLabels }
+  \keys_set:nn { semio / viz / label } {#1}
+  \seq_clear:N \l_semio_viz_lbl_placed_seq
+  \seq_gsort:Nn \g_semio_viz_lbl_queue_seq {
+    \int_compare:nNnTF { \semio_viz_lbl_priority:nnnnnnnn ##1 }
+      < { \semio_viz_lbl_priority:nnnnnnnn ##2 }
+      { \sort_return_swapped: } { \sort_return_same: }
+  }
+  \seq_map_inline:Nn \g_semio_viz_lbl_queue_seq { \semio_viz_lbl_place_entry:nnnnnnnn ##1 }
+  \seq_gclear:N \g_semio_viz_lbl_queue_seq
+}
+%endregion 🔖️Placement
+
+%region 🔖️Series
+% 🧵 Direct labelling: one label per point of a series, the text taken from
+% labels= (or values= through labelFormat=), so a chart names its lines at the
+% line instead of in a legend.
+\cs_new_protected:Npn \semio_viz_lbl_series:n #1 {
+  \semio_viz_lbl_keys_reset:
+  \keys_set:nn { semio / viz / label } {#1}
+  \int_zero:N \l_semio_viz_lbl_index_int
+  \tl_map_inline:Nn \l_semio_viz_lbl_series_points_tl {
+    \int_incr:N \l_semio_viz_lbl_index_int
+    \clist_set:Nn \l_semio_viz_lbl_at_clist {##1}
+    \clist_if_empty:NTF \l_semio_viz_lbl_texts_clist
+      {
+        \tl_set:Nx \l_semio_viz_lbl_value_tl
+          { \clist_item:Nn \l_semio_viz_lbl_values_clist { \l_semio_viz_lbl_index_int } }
+        \tl_clear:N \l_semio_viz_lbl_text_tl
+      }
+      {
+        \tl_set:Nx \l_semio_viz_lbl_text_tl
+          { \clist_item:Nn \l_semio_viz_lbl_texts_clist { \l_semio_viz_lbl_index_int } }
+      }
+    \semio_viz_lbl_enqueue:
+  }
+}
+%endregion 🔖️Series
+
+%region 🔖️PublicApi
+% 🏷️ Queues one label; nothing is drawn until \SemioVizLabelsPlace resolves collisions.
+\NewDocumentCommand \SemioVizLabel { O{} } {
+  \semio_viz_lbl_keys_reset:
+  \keys_set:nn { semio / viz / label } {#1}
+  \semio_viz_lbl_enqueue:
+}
+% 🧵 Queues one label per point of a series (direct labelling, value labels on marks).
+\NewDocumentCommand \SemioVizLabelSeries { O{} } { \semio_viz_lbl_series:n {#1} }
+% 🧮 Places every queued label, displacing or hiding on collision and drawing leaders.
+\NewDocumentCommand \SemioVizLabelsPlace { O{} } { \semio_viz_lbl_flush:n {#1} }
+%endregion 🔖️PublicApi
+
+\ExplSyntaxOff

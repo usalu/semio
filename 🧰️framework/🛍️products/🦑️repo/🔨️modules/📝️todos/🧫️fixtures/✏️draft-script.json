@@ -1,0 +1,77 @@
+{
+  "schema": "semio.repo.todos.draft-script/1",
+  "$comment": "✏️ One ordered history over an in-memory draft store. A title carrying no slug, a duplicate identifier and a removal of a draft that never existed are as much part of the contract as the successes.",
+  "steps": [
+    {
+      "op": "list",
+      "input": {}
+    },
+    {
+      "op": "create",
+      "input": {
+        "title": "Sketch Of The Tree",
+        "files": [
+          {
+            "path": "notes/tree.md",
+            "content": "# tree\n"
+          },
+          {
+            "path": "notes/graph.svg",
+            "content": "<svg/>\n"
+          }
+        ]
+      }
+    },
+    {
+      "op": "create",
+      "input": {
+        "title": "sketch of the tree",
+        "files": [
+          {
+            "path": "notes/other.md",
+            "content": "# other\n"
+          }
+        ]
+      }
+    },
+    {
+      "op": "create",
+      "input": {
+        "title": "///",
+        "files": []
+      }
+    },
+    {
+      "op": "create",
+      "input": {
+        "title": "Second Draft",
+        "files": [
+          {
+            "path": "a/b/c/deep.txt",
+            "content": "deep\n"
+          }
+        ]
+      }
+    },
+    {
+      "op": "list",
+      "input": {}
+    },
+    {
+      "op": "delete",
+      "input": {
+        "id": "sketch-of-the-tree"
+      }
+    },
+    {
+      "op": "delete",
+      "input": {
+        "id": "sketch-of-the-tree"
+      }
+    },
+    {
+      "op": "list",
+      "input": {}
+    }
+  ]
+}

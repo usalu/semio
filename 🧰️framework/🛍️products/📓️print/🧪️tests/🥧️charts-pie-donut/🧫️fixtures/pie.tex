@@ -1,0 +1,13 @@
+\documentclass{article}
+\usepackage{semio-viz-charts-polar}
+\usepackage{semio-viz-transform}
+\usepackage{semio-viz-mark}
+\begin{document}
+\ExplSyntaxOn
+\SemioVizProbeBegin{charts-pie-donut}{pie}
+\semio_viz_tr_stat_from_table:Nnn \l_tmpa_seq { demo-parts } { share }
+\semio_viz_pie_from_seq:Nnnnn \l_tmpa_seq { 0 } { 6.283185307179586 } { 0 } { descending }
+\semio_viz_probe_values:nx { start-angle } { \seq_use:Nn \g_semio_viz_pie_start_seq { , } }
+\semio_viz_probe_values:nx { end-angle } { \seq_use:Nn \g_semio_viz_pie_end_seq { , } }
+\ExplSyntaxOff
+\end{document}

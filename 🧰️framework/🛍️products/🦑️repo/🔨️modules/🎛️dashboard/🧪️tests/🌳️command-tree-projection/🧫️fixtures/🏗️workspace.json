@@ -1,0 +1,28 @@
+{
+  "files": [
+    {
+      "path": "Cargo.toml",
+      "content": "[workspace]\nmembers = []\n"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+      "content": "{\"name\":\"@semio-tech/repo-dashboard-rs\",\"targets\":{\"build\":{},\"test\":{}}}\n"
+    },
+    {
+      "path": "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/📋️project.json",
+      "content": "{\"name\":\"@semio-tech/mathematical\",\"targets\":{\"test\":{},\"lint\":{}}}\n"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️06/DASHBOARD-COMMAND-TREE/🎫️ticket.json",
+      "content": "{\n  \"title\": \"Dashboard Command Tree\",\n  \"emoji\": \"🌳️\",\n  \"status\": \"open\",\n  \"description\": \"A ticket the wizard offers.\",\n  \"goal\": \"🎯️dashboard\"\n}\n"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️01/RETIRED-EXPERIMENT/🎫️ticket.json",
+      "content": "{\n  \"title\": \"Retired Experiment\",\n  \"emoji\": \"🧪️\",\n  \"status\": \"closed\",\n  \"summary\": \"Superseded.\",\n  \"goal\": \"🎯️dashboard\"\n}\n"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎯️goals/dashboard/🎯️goal.json",
+      "content": "{\n  \"title\": \"Dashboard\",\n  \"description\": \"Goal for the dashboard.\",\n  \"prompt\": \"Instructions for the dashboard.\",\n  \"status\": \"open\",\n  \"dates\": { \"due\": \"2026-12-31\" },\n  \"client\": \"claude-code\",\n  \"llm\": \"claude-opus-5\"\n}\n"
+    }
+  ]
+}

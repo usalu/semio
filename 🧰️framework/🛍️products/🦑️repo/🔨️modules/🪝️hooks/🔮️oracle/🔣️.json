@@ -1,0 +1,67 @@
+{
+  "$schema": "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🪝️ Reference registrations for the repo hooks module. Nothing here is linked into production and no external distribution is declared: both oracles are second implementations written inside the case's own 🟦️.ts adapter, and the two decisions that have no oracle at all rest on frozen specification vectors instead. No oracleHostPackages are declared, so nothing enters 🔒️dependencies.json through this manifest.",
+  "oracles": [
+    {
+      "id": "hooks-blocking-policy-typescript",
+      "kind": "cross-semio-implementation",
+      "ecosystem": "javascript",
+      "package": "",
+      "engine": { "family": "none", "implementation": "semio-hooks-blocking-policy", "version": "1" },
+      "capabilities": ["repo.hooks.tool-blocking-policy"],
+      "comparisonProfiles": ["ordered-json-v1"],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "rationale": "🛡️ A second implementation of the blocking policy in TypeScript, written from the prose in the case's `🥒️.feature` and the shapes in `🧬️schema/🔣️.json` rather than from the Rust source, and deliberately using a different strategy: the platform's regular expression engine where the subject hand-rolls a character scanner. It is registered as `cross-semio-implementation` because it is NOT independent evidence — it lives in this repository — and the `repo-hooks-blocking-vocabulary` decision beside it records why nothing outside can take its place: which git verbs a monorepo refuses its own agents is a policy this repository invents, and no third-party library adjudicates it. What the second implementation does buy is that a scanning mistake cannot hide, since a regular expression engine and a hand-rolled scanner fail differently."
+    },
+    {
+      "id": "hooks-plan-merge-typescript",
+      "kind": "cross-semio-implementation",
+      "ecosystem": "javascript",
+      "package": "",
+      "engine": { "family": "none", "implementation": "semio-hooks-plan-merge", "version": "1" },
+      "capabilities": ["repo.hooks.plan-step-extraction"],
+      "comparisonProfiles": ["ordered-json-v1"],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "rationale": "🗺️ A second implementation of plan extraction and of the fold that keeps a plan's history, written in TypeScript from the stated rules. The lifecycle — ideated on first sight, started on first progress, completed only after starting, abandoned when dropped without ever moving — is this repository's own definition of what an agent's plan means over time; no third-party task or todo library defines it, and the ones that exist define something else. A second implementation is what makes an off-by-one in the fold visible."
+    },
+    {
+      "id": "hooks-session-log-typescript",
+      "kind": "cross-semio-implementation",
+      "ecosystem": "javascript",
+      "package": "",
+      "engine": { "family": "none", "implementation": "semio-hooks-session-log", "version": "1" },
+      "capabilities": ["repo.hooks.session-logging"],
+      "comparisonProfiles": ["ordered-json-v1"],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "rationale": "📓️ A second implementation of the `[logging]` parse and of the `session.json` record in TypeScript. Both halves are this repository's own: the config file is ours and the record is the shape our own coordinator reads back. The session store is a port in both implementations, so the oracle records into a plain map and the subject into its memory store — neither reaches a disk, a clock or a process, and the comparison is therefore about the record and nothing else."
+    }
+  ],
+  "probes": [],
+  "noOracleDecisions": [
+    {
+      "id": "repo-hooks-native-normalisation",
+      "capabilities": ["repo.hooks.native-event-normalisation"],
+      "rationale": "The mapping from eight IDEs' native hook events onto one neutral event vocabulary is defined by this repository and by nothing else: the neutral slugs are ours, the tool-kind classification that decides which of them a `PreToolUse` becomes is ours, and each IDE's own documentation stops at the native name. No third-party library consumes any of it, and the IDEs themselves cannot be asked — they emit events, they do not adjudicate mappings, and driving eight editors from a test would put eight GUIs inside a test run. Confidence therefore comes from frozen specification vectors: `🧫️fixtures/🔀️native-events.json` pins the expected neutral event and parent hint beside every native one, written from the hook configurations this repository actually commits (`.claude/settings.json`, `.cursor/hooks.json`, `.windsurf/hooks.json`, `.kiro/agents/repo.json`), so an implementation must agree with the specification rather than with itself; the refusal vectors additionally pin that an unknown native name is an error and never a defaulted event. This decision covers no runtime mutation capability.",
+      "substitutes": ["specification-vectors"],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-hooks-result-formatting",
+      "capabilities": ["repo.hooks.result-formatting"],
+      "rationale": "Only the outer envelope of the wrapped record is VS Code's; its content rule — allow versus deny, reason versus additional context — and the whole plain-record path with its exit code 2 are this repository's contract with eight editors. Nothing third party produces or consumes either, so there is nothing to compare against. The same is true of the micro-commit delegation argv, which exists so that four git hooks reach one implementation. Confidence comes from frozen specification vectors: every invocation carries the verdict and exit code it must produce, the wrapped/plain distinction is asserted across all eight clients at once, and the delegation is replayed through a recorded process runner that answers exit 127 to any argv it was not given — so a changed argv cannot be mistaken for a delegation that still works. This decision covers no runtime mutation capability: the recorded runner never starts a process.",
+      "substitutes": ["specification-vectors"],
+      "coversMutations": false
+    }
+  ],
+  "oracleHostPackages": []
+}

@@ -1,0 +1,21 @@
+% 🧪 Probe fixture of case guide-axis-ticks, scenario band-ticks.
+% A band scale's tick positions: the centre of each band, which is what an axis marks.
+\documentclass{article}
+\usepackage{semio-viz-guide}
+\ExplSyntaxOn
+\NewDocumentCommand \ProbeBandCentres { m } {
+  \semio_viz_guide_scale_ticks:nnN {#1} { 5 } \l_semio_viz_guide_ticks_seq
+  \seq_clear:N \l_semio_viz_guide_coords_seq
+  \seq_map_inline:Nn \l_semio_viz_guide_ticks_seq {
+    \semio_viz_scale_map:nnN {#1} {##1} \l_semio_viz_guide_p_fp
+    \seq_put_right:Nx \l_semio_viz_guide_coords_seq { \fp_use:N \l_semio_viz_guide_p_fp }
+  }
+  \semio_viz_probe_values:nx { ticks/positions } { \seq_use:Nn \l_semio_viz_guide_coords_seq { , } }
+  \semio_viz_probe_values:nx { ticks/values } { \seq_use:Nn \l_semio_viz_guide_ticks_seq { , } }
+}
+\ExplSyntaxOff
+\begin{document}
+\SemioVizProbeBegin{guide-axis-ticks}{band-ticks}
+\SemioVizScale{x}{band}{A,B,C,D,E}{8,78}
+\ProbeBandCentres{x}
+\end{document}

@@ -1,0 +1,61 @@
+{
+  "schema": "semio.mcp.event.chain/1",
+  "inputs": [
+    {
+      "kind": "session.opened",
+      "peer": "fixture",
+      "generation": 1,
+      "payload": "{\"generation\":1}"
+    },
+    {
+      "kind": "request.received",
+      "peer": "fixture",
+      "generation": 1,
+      "requestId": "n:1",
+      "payload": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"ping\",\"params\":{}}"
+    },
+    {
+      "kind": "response.sent",
+      "peer": "fixture",
+      "generation": 1,
+      "requestId": "n:1",
+      "payload": "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{}}"
+    },
+    {
+      "kind": "notification.received",
+      "peer": "fixture",
+      "generation": 1,
+      "payload": "{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\",\"params\":{}}"
+    },
+    {
+      "kind": "request.received",
+      "peer": "fixture",
+      "generation": 1,
+      "requestId": "s:tool",
+      "payload": "{\"jsonrpc\":\"2.0\",\"id\":\"tool\",\"method\":\"tools/call\",\"params\":{\"name\":\"echo\",\"arguments\":{\"text\":\"a<b>c&d\"}}}"
+    },
+    {
+      "kind": "response.sent",
+      "peer": "fixture",
+      "generation": 1,
+      "requestId": "s:tool",
+      "payload": "{\"jsonrpc\":\"2.0\",\"id\":\"tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"a<b>c&d\"}]}}"
+    },
+    {
+      "kind": "session.closed",
+      "peer": "fixture",
+      "generation": 1,
+      "payload": "{\"reason\":\"closed\"}"
+    }
+  ],
+  "hashes": [
+    "62aef136b1505b5008840b2ac05dfc082510caa5f77f15f587b81f7128cbccc1",
+    "bf8d9d08db3fda1441827ee0687a729e18338abfb994c3b540df4de24e5364f5",
+    "4dbcc57e683bf79fed8b154cf83eca41cbc3d66b9f269ae0edf3c6c67e4af477",
+    "a981265979cca708623517f59d4f48b939a974cf639872f69585f25bacb4a210",
+    "e1a3d648609d7eab67206192511e0b8c29eedf19d101bdf2c21eda53921a5e4c",
+    "646a968fb97d4470f5f0b029d8abaaaabcece99f981341585ee4c2d73f16f85c",
+    "50656858be87c70bedd7a638982de6bcb170a14b9cd40fe64a2272b497c5cc48"
+  ],
+  "jsonl": "{\"schema\":\"semio.mcp.event/1\",\"sequence\":1,\"kind\":\"session.opened\",\"peer\":\"fixture\",\"generation\":1,\"payload\":{\"generation\":1},\"hash\":\"62aef136b1505b5008840b2ac05dfc082510caa5f77f15f587b81f7128cbccc1\"}\n{\"schema\":\"semio.mcp.event/1\",\"sequence\":2,\"kind\":\"request.received\",\"peer\":\"fixture\",\"generation\":1,\"requestId\":\"n:1\",\"payload\":{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"ping\",\"params\":{}},\"previous\":\"62aef136b1505b5008840b2ac05dfc082510caa5f77f15f587b81f7128cbccc1\",\"hash\":\"bf8d9d08db3fda1441827ee0687a729e18338abfb994c3b540df4de24e5364f5\"}\n{\"schema\":\"semio.mcp.event/1\",\"sequence\":3,\"kind\":\"response.sent\",\"peer\":\"fixture\",\"generation\":1,\"requestId\":\"n:1\",\"payload\":{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{}},\"previous\":\"bf8d9d08db3fda1441827ee0687a729e18338abfb994c3b540df4de24e5364f5\",\"hash\":\"4dbcc57e683bf79fed8b154cf83eca41cbc3d66b9f269ae0edf3c6c67e4af477\"}\n{\"schema\":\"semio.mcp.event/1\",\"sequence\":4,\"kind\":\"notification.received\",\"peer\":\"fixture\",\"generation\":1,\"payload\":{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\",\"params\":{}},\"previous\":\"4dbcc57e683bf79fed8b154cf83eca41cbc3d66b9f269ae0edf3c6c67e4af477\",\"hash\":\"a981265979cca708623517f59d4f48b939a974cf639872f69585f25bacb4a210\"}\n{\"schema\":\"semio.mcp.event/1\",\"sequence\":5,\"kind\":\"request.received\",\"peer\":\"fixture\",\"generation\":1,\"requestId\":\"s:tool\",\"payload\":{\"jsonrpc\":\"2.0\",\"id\":\"tool\",\"method\":\"tools/call\",\"params\":{\"name\":\"echo\",\"arguments\":{\"text\":\"a\\u003cb\\u003ec\\u0026d\"}}},\"previous\":\"a981265979cca708623517f59d4f48b939a974cf639872f69585f25bacb4a210\",\"hash\":\"e1a3d648609d7eab67206192511e0b8c29eedf19d101bdf2c21eda53921a5e4c\"}\n{\"schema\":\"semio.mcp.event/1\",\"sequence\":6,\"kind\":\"response.sent\",\"peer\":\"fixture\",\"generation\":1,\"requestId\":\"s:tool\",\"payload\":{\"jsonrpc\":\"2.0\",\"id\":\"tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"a\\u003cb\\u003ec\\u0026d\"}]}},\"previous\":\"e1a3d648609d7eab67206192511e0b8c29eedf19d101bdf2c21eda53921a5e4c\",\"hash\":\"646a968fb97d4470f5f0b029d8abaaaabcece99f981341585ee4c2d73f16f85c\"}\n{\"schema\":\"semio.mcp.event/1\",\"sequence\":7,\"kind\":\"session.closed\",\"peer\":\"fixture\",\"generation\":1,\"payload\":{\"reason\":\"closed\"},\"previous\":\"646a968fb97d4470f5f0b029d8abaaaabcece99f981341585ee4c2d73f16f85c\",\"hash\":\"50656858be87c70bedd7a638982de6bcb170a14b9cd40fe64a2272b497c5cc48\"}\n"
+}

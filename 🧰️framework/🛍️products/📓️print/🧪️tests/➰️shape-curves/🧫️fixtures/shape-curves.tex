@@ -1,0 +1,35 @@
+\documentclass{article}
+\usepackage{semio-viz-probe}
+\usepackage{semio-viz-shape}
+\ExplSyntaxOn
+% 〰️ Runs one interpolator over a point list and records the SVG path it produced.
+\cs_new_protected:Npn \semio_probe_curve:nnnn #1#2#3#4 {
+  \semio_viz_path_begin:nnn { 0 } { 0 } { \c_false_bool }
+  \semio_viz_curve_begin:nn {#2} {#3}
+  \clist_map_inline:nn {#4}
+    { \semio_viz_curve_point:nn { \clist_item:nn {##1} { 1 } } { \clist_item:nn {##1} { 2 } } }
+  \semio_viz_curve_end:
+  \exp_args:NnV \SemioVizProbeValues {#1} \l_semio_viz_path_cmd_tl
+}
+\ExplSyntaxOff
+\newcommand{\SeriesSix}{{0,0},{1,3},{2,1},{3,4},{4,2},{5,5}}
+\begin{document}
+\ExplSyntaxOn
+\SemioVizProbeBegin{shape-curves}{interpolators}
+\clist_map_inline:nn { linear, linear-closed, step, step-before, step-after, basis, basis-open,
+  basis-closed, bundle, cardinal, cardinal-open, cardinal-closed, catmull-rom, catmull-rom-open,
+  catmull-rom-closed, monotone-x, monotone-y, natural }
+  { \exp_args:Nnnnx \semio_probe_curve:nnnn { curve/#1 } {#1} { } { \SeriesSix } }
+\SemioVizProbeBegin{shape-curves}{parameters}
+\exp_args:Nnnnx \semio_probe_curve:nnnn { curve/cardinal-tension } { cardinal } { tension=0.5 } { \SeriesSix }
+\exp_args:Nnnnx \semio_probe_curve:nnnn { curve/catmull-rom-alpha-zero } { catmull-rom } { alpha=0 } { \SeriesSix }
+\exp_args:Nnnnx \semio_probe_curve:nnnn { curve/catmull-rom-alpha-one } { catmull-rom } { alpha=1 } { \SeriesSix }
+\exp_args:Nnnnx \semio_probe_curve:nnnn { curve/bundle-beta } { bundle } { beta=0.5 } { \SeriesSix }
+\SemioVizProbeBegin{shape-curves}{degenerate}
+\semio_probe_curve:nnnn { curve/one-point } { linear } { } { {2,7} }
+\semio_probe_curve:nnnn { curve/two-points } { basis } { } { {2,7},{4,9} }
+\semio_probe_curve:nnnn { curve/two-points-natural } { natural } { } { {2,7},{4,9} }
+\semio_probe_curve:nnnn { curve/three-points } { catmull-rom } { } { {2,7},{4,9},{6,3} }
+\SemioVizProbeEnd
+\ExplSyntaxOff
+\end{document}

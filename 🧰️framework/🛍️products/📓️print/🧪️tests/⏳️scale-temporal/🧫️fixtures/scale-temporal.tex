@@ -1,0 +1,66 @@
+% 🧪 Probe fixture of case scale-temporal, every scenario.
+% A temporal scale reads ISO timestamps as UTC epoch milliseconds and maps them linearly, so the
+% mapping is probed against d3's scaleUtc and the calendar tick intervals against d3-time's own
+% day, week, month and year ranges. Tick values travel as ISO dates, which are strings.
+\documentclass{article}
+\usepackage{semio-viz-scale}
+\usepackage{semio-viz-probe}
+\ExplSyntaxOn
+\fp_new:N \l_probe_value_fp
+\seq_new:N \l_probe_seq
+
+% 📐 Writes the mapped positions of a temporal scale over a list of timestamps.
+\cs_new_protected:Npn \probetimemap #1#2#3 {
+  \seq_clear:N \l_probe_seq
+  \clist_map_inline:nn {#3}
+    {
+      \semio_viz_scale_map:nnN {#2} {##1} \l_probe_value_fp
+      \seq_put_right:Nx \l_probe_seq { \fp_to_decimal:n { round( \l_probe_value_fp , 6 ) } }
+    }
+  \semio_viz_probe_values:nx {#1} { \seq_use:Nn \l_probe_seq { , } }
+}
+
+% ↩️ Writes the epoch milliseconds a temporal scale inverts a position back to.
+\cs_new_protected:Npn \probetimeinvert #1#2#3 {
+  \seq_clear:N \l_probe_seq
+  \clist_map_inline:nn {#3}
+    {
+      \semio_viz_scale_invert:nnN {#2} {##1} \l_probe_value_fp
+      \seq_put_right:Nx \l_probe_seq { \fp_to_decimal:n { round( \l_probe_value_fp , 0 ) } }
+    }
+  \semio_viz_probe_values:nx {#1} { \seq_use:Nn \l_probe_seq { , } }
+}
+
+% 📅 Writes the calendar ticks of a temporal scale as ISO dates.
+\cs_new_protected:Npn \probetimeticks #1#2 {
+  \semio_viz_scale_ticks:nN {#2} \l_probe_seq
+  \semio_viz_probe_values:nx {#1} { \seq_use:Nn \l_probe_seq { , } }
+}
+\ExplSyntaxOff
+\begin{document}
+
+\SemioVizProbeBegin{scale-temporal}{map}
+\SemioVizScale{tm}{temporal}{2026-01-01,2026-12-31}{0,364}
+\SemioVizScale{tmhours}{temporal}{2026-03-01T00:00,2026-03-02T00:00}{0,240}
+\probetimemap{map/tm}{tm}{2026-01-01,2026-04-01,2026-07-01,2026-12-31}
+\probetimemap{map/tmhours}{tmhours}{2026-03-01T00:00,2026-03-01T06:00,2026-03-01T12:00,2026-03-02T00:00}
+\probetimeinvert{invert/tm}{tm}{0,91,181,364}
+
+\SemioVizProbeBegin{scale-temporal}{day-ticks}
+\SemioVizScale{td}{temporal}{2026-02-25,2026-03-04}{0,100}[interval=day]
+\probetimeticks{ticks/day}{td}
+
+\SemioVizProbeBegin{scale-temporal}{week-ticks}
+\SemioVizScale{tw}{temporal}{2026-01-01,2026-03-01}{0,100}[interval=week]
+\probetimeticks{ticks/week}{tw}
+
+\SemioVizProbeBegin{scale-temporal}{month-ticks}
+\SemioVizScale{tmo}{temporal}{2026-01-01,2026-12-31}{0,100}[interval=month]
+\probetimeticks{ticks/month}{tmo}
+
+\SemioVizProbeBegin{scale-temporal}{year-ticks}
+\SemioVizScale{ty}{temporal}{2019-06-01,2024-06-01}{0,100}[interval=year]
+\probetimeticks{ticks/year}{ty}
+
+\SemioVizProbePage
+\end{document}

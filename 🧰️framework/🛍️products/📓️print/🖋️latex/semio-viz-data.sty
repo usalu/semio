@@ -6,47 +6,61 @@
 
 \ExplSyntaxOn
 
-%region Diagnostics
+%region 🔖️Diagnostics
 \msg_new:nnn { semio-viz } { unknown-table }
   { Unknown~viz~table~'#1'. }
 \msg_new:nnn { semio-viz } { unknown-column }
   { Unknown~column~'#2'~in~table~'#1'. }
 \msg_new:nnn { semio-viz } { empty-data }
   { Viz~table~'#1'~has~no~rows. }
-%endregion Diagnostics
+\msg_new:nnn { semio-viz } { unknown-pointset }
+  { Unknown~viz~point~set~'#1'.~Declare~it~with~\SemioVizPointSet. }
+\msg_new:nnn { semio-viz } { unknown-grid }
+  { Unknown~viz~grid~'#1'.~Declare~it~with~\SemioVizValueGrid. }
+\msg_new:nnn { semio-viz } { unknown-geometry }
+  { Unknown~viz~geometry~collection~'#1'.~Declare~it~with~\SemioVizGeoCollection. }
+%endregion 🔖️Diagnostics
 
-%region Tables
+%region 🔖️Tables
 \seq_new:N \g_semio_viz_table_names_seq
 \tl_new:N \l_semio_viz_cell_tl
 \int_new:N \l_semio_viz_col_int
 \int_new:N \l_semio_viz_row_int
 
+% 🏷️ Name of the sequence holding the rows of table #1.
 \cs_new_protected:Npn \semio_viz_table_cs:n #1 { g_semio_viz_table_ \tl_to_str:n {#1} _rows_seq }
+% 🏷️ Name of the comma list holding the column names of table #1.
 \cs_new_protected:Npn \semio_viz_table_cols_cs:n #1 { g_semio_viz_table_ \tl_to_str:n {#1} _cols_clist }
 
 \tl_new:N \l_semio_viz_tab_tl
 \tl_new:N \l_semio_viz_colname_tl
 
+% 📌 Fully expands the table name #1 once, so every csname built from it afterwards is the same.
 \cs_new_protected:Npn \semio_viz_table_bind:n #1 {
   \tl_set:Nx \l_semio_viz_tab_tl {#1}
 }
+% 📌 The same for a column name, so a column given through a variable resolves once.
 \cs_new_protected:Npn \semio_viz_table_bind_col:n #1 {
   \tl_set:Nx \l_semio_viz_colname_tl {#1}
 }
 
+% 🔒 Binds table #1 and stops with a diagnostic when no such table is declared.
 \cs_new_protected:Npn \semio_viz_table_require:n #1 {
   \semio_viz_table_bind:n {#1}
   \exp_args:NV \semio_viz_table_require_chk:n \l_semio_viz_tab_tl
 }
+% 🔎 The check behind it, on the already-expanded name.
 \cs_new_protected:Npn \semio_viz_table_require_chk:n #1 {
   \seq_if_in:NnF \g_semio_viz_table_names_seq {#1}
     { \msg_error:nnn { semio-viz } { unknown-table } {#1} }
 }
 
+% 📋 Declares table #1 with the column list #2; declaring an existing table empties it.
 \cs_new_protected:Npn \semio_viz_table_new:nn #1#2 {
   \semio_viz_table_bind:n {#1}
   \exp_args:NV \semio_viz_table_new_aux:nn \l_semio_viz_tab_tl {#2}
 }
+% 🧱 The declaration itself, on the already-expanded name.
 \cs_new_protected:Npn \semio_viz_table_new_aux:nn #1#2 {
   \seq_if_in:NnTF \g_semio_viz_table_names_seq {#1}
     {
@@ -61,17 +75,21 @@
     }
 }
 
+% ➕ Appends the comma-separated row #2 to table #1.
 \cs_new_protected:Npn \semio_viz_table_row:nn #1#2 {
   \semio_viz_table_require:n {#1}
   \seq_gput_right:cn { g_semio_viz_table_ \l_semio_viz_tab_tl _rows_seq } {#2}
 }
 
+% 🔢 Number of rows of table #1, into the integer #2.
 \cs_new_protected:Npn \semio_viz_table_nrows:nN #1#2 {
   \semio_viz_table_require:n {#1}
   \int_set:Nn #2 { \seq_count:c { g_semio_viz_table_ \l_semio_viz_tab_tl _rows_seq } }
 }
 
-\cs_new_protected:Npn \semio_viz_table_col_index:nnN #1#2#3 {
+% 🔎 1-based position of column #2 in table #1, zero when the table does not declare it.
+%    Silent: the caller decides whether an absent column is an error or an empty cell.
+\cs_new_protected:Npn \semio_viz_table_col_find:nnN #1#2#3 {
   \semio_viz_table_require:n {#1}
   \semio_viz_table_bind_col:n {#2}
   \int_zero:N #3
@@ -79,19 +97,76 @@
   \clist_map_inline:cn { g_semio_viz_table_ \l_semio_viz_tab_tl _cols_clist } {
     \int_incr:N \l_tmpa_int
     \tl_set:Nn \l_tmpb_tl {##1}
-    \tl_if_eq:NNT \l_semio_viz_colname_tl \l_tmpb_tl { \int_set_eq:NN #3 \l_tmpa_int }
+    \str_if_eq:VVT \l_semio_viz_colname_tl \l_tmpb_tl { \int_set_eq:NN #3 \l_tmpa_int }
   }
-  \int_compare:nNnT #3 = { 0 } { \msg_error:nnnn { semio-viz } { unknown-column } { \l_semio_viz_tab_tl } { \l_semio_viz_colname_tl } }
 }
 
-\clist_new:N \l_semio_viz_row_clist
+% ❓ True when table #1 declares a column named #2.
+\prg_new_protected_conditional:Npnn \semio_viz_table_col_exist:nn #1#2 { T, F, TF } {
+  \semio_viz_table_col_find:nnN {#1} {#2} \l_semio_viz_col_int
+  \int_compare:nNnTF \l_semio_viz_col_int > { 0 } { \prg_return_true: } { \prg_return_false: }
+}
 
+% 🔎 The same position as `col_find`, but an absent column is an error: this is the accessor a
+% renderer uses when the column is part of its contract.
+\cs_new_protected:Npn \semio_viz_table_col_index:nnN #1#2#3 {
+  \semio_viz_table_col_find:nnN {#1} {#2} #3
+  \int_compare:nNnT #3 = { 0 }
+    {
+      \msg_error:nnxx { semio-viz } { unknown-column }
+        { \tl_use:N \l_semio_viz_tab_tl } { \tl_use:N \l_semio_viz_colname_tl }
+    }
+}
+
+\seq_new:N \l_semio_viz_row_seq
+\tl_new:N \l_semio_viz_row_tl
+\cs_generate_variant:Nn \seq_set_split:Nnn { NnV }
+
+% 🧾 Loads row #2 of table #1 into \l_semio_viz_row_seq, one item per declared
+% column: a comma list drops empty items, and an empty cell is exactly how a
+% stratified table marks its root or a sparse matrix marks a hole.
+\cs_new_protected:Npn \semio_viz_table_row_load:nn #1#2 {
+  \semio_viz_table_require:n {#1}
+  \tl_set:Nx \l_semio_viz_row_tl
+    { \seq_item:cn { g_semio_viz_table_ \l_semio_viz_tab_tl _rows_seq } {#2} }
+  \seq_set_split:NnV \l_semio_viz_row_seq { , } \l_semio_viz_row_tl
+}
+
+% 🧾 Cell #1 of the loaded row by column index; index zero is no column.
+\cs_new_protected:Npn \semio_viz_table_row_cell:nN #1#2 {
+  \int_compare:nNnTF {#1} > { 0 }
+    { \tl_set:Nx #2 { \seq_item:Nn \l_semio_viz_row_seq {#1} } \tl_trim_spaces:N #2 }
+    { \tl_clear:N #2 }
+}
+
+% 🧾 Column index of #2 in table #1; a blank column name is no column, a named one
+%    that the table does not declare is an error.
+\cs_new_protected:Npn \semio_viz_table_col_index_opt:nnN #1#2#3 {
+  \tl_if_blank:nTF {#2}
+    { \int_zero:N #3 }
+    { \semio_viz_table_col_index:nnN {#1} {#2} #3 }
+}
+
+% 🧾 Cell (row #2, column #3) of table #1 into #4; a column the table does not declare is an error.
 \cs_new_protected:Npn \semio_viz_table_cell:nnnN #1#2#3#4 {
   \semio_viz_table_col_index:nnN {#1} {#3} \l_semio_viz_col_int
-  \clist_set:Nx \l_semio_viz_row_clist { \seq_item:cn { g_semio_viz_table_ \l_semio_viz_tab_tl _rows_seq } {#2} }
-  \tl_set:Nx #4 { \clist_item:Nn \l_semio_viz_row_clist { \int_use:N \l_semio_viz_col_int } }
+  \semio_viz_table_row_load:nn {#1} {#2}
+  \semio_viz_table_row_cell:nN { \l_semio_viz_col_int } #4
 }
 
+% 🧾 Cell (row #2, column #3) of table #1, empty when the table has no such column:
+%    the reader for optional columns a family only uses when the data carries them.
+\cs_new_protected:Npn \semio_viz_table_cell_opt:nnnN #1#2#3#4 {
+  \semio_viz_table_col_find:nnN {#1} {#3} \l_semio_viz_col_int
+  \int_compare:nNnTF \l_semio_viz_col_int = { 0 }
+    { \tl_clear:N #4 }
+    {
+      \semio_viz_table_row_load:nn {#1} {#2}
+      \semio_viz_table_row_cell:nN { \l_semio_viz_col_int } #4
+    }
+}
+
+% 📉 Smallest value of column #2 of table #1 into #3; empty cells take no part.
 \cs_new_protected:Npn \semio_viz_table_col_min:nnN #1#2#3 {
   \semio_viz_table_nrows:nN {#1} \l_semio_viz_row_int
   \fp_zero:N #3
@@ -107,6 +182,7 @@
   }
 }
 
+% 📈 Largest value of column #2 of table #1 into #3; an empty column leaves the unit maximum.
 \cs_new_protected:Npn \semio_viz_table_col_max:nnN #1#2#3 {
   \semio_viz_table_nrows:nN {#1} \l_semio_viz_row_int
   \fp_set:Nn #3 { 1 }
@@ -122,6 +198,7 @@
   }
 }
 
+% ➕ Total of column #2 of table #1 into #3, counting the non-empty cells for the mean below.
 \cs_new_protected:Npn \semio_viz_table_col_sum:nnN #1#2#3 {
   \semio_viz_table_nrows:nN {#1} \l_semio_viz_row_int
   \fp_zero:N #3
@@ -135,6 +212,7 @@
   }
 }
 
+% 🧮 Mean of column #2 of table #1 into #3, over its non-empty cells alone.
 \cs_new_protected:Npn \semio_viz_table_col_mean:nnN #1#2#3 {
   \semio_viz_table_col_sum:nnN {#1} {#2} #3
   \int_compare:nNnTF \l_tmpa_int = { 0 }
@@ -142,6 +220,7 @@
     { \fp_set:Nn #3 { \fp_eval:n { #3 / \l_tmpa_int } } }
 }
 
+% 🧪 Declares the generic `demo` table once, so any family can be drawn without a data set.
 \cs_new_protected:Npn \semio_viz_data_demo: {
   \seq_if_in:NnF \g_semio_viz_table_names_seq { demo } {
     % 🧪 Columns beyond cat/val/val2/grp/t (label/from/to/row/col/chip/s1-3)
@@ -163,6 +242,809 @@
 \NewDocumentCommand \SemioVizTable { m m } { \semio_viz_table_new:nn {#1} {#2} }
 % ➕ Appends one comma-separated row to a named table.
 \NewDocumentCommand \SemioVizRow { m m } { \semio_viz_table_row:nn {#1} {#2} }
-%endregion Tables
+%endregion 🔖️Tables
+
+%region 🔖️Columns
+\seq_new:N \l_semio_viz_table_values_seq
+\cs_generate_variant:Nn \semio_viz_table_cell:nnnN { nVnN , VnnN , VVnN , VnVN , nnVN }
+
+% 🧺 Collects every non-empty cell of column #2 of table #1 into the sequence #3.
+\cs_new_protected:Npn \semio_viz_table_col_values:nnN #1#2#3 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_row_int
+  \seq_clear:N #3
+  \int_step_inline:nn { \l_semio_viz_row_int }
+    {
+      \semio_viz_table_cell:nnnN {#1} {##1} {#2} \l_semio_viz_cell_tl
+      \tl_if_empty:NF \l_semio_viz_cell_tl { \seq_put_right:NV #3 \l_semio_viz_cell_tl }
+    }
+}
+
+% 🔢 Number of non-empty cells in column #2 of table #1.
+\cs_new_protected:Npn \semio_viz_table_col_count:nnN #1#2#3 {
+  \semio_viz_table_col_values:nnN {#1} {#2} \l_semio_viz_table_values_seq
+  \int_set:Nn #3 { \seq_count:N \l_semio_viz_table_values_seq }
+}
+
+% 📈 R-7 quantile at probability #3 of the numeric column #2 of table #1.
+\cs_new_protected:Npn \semio_viz_table_col_quantile:nnnN #1#2#3#4 {
+  \semio_viz_table_col_values:nnN {#1} {#2} \l_semio_viz_table_values_seq
+  \seq_sort:Nn \l_semio_viz_table_values_seq
+    { \fp_compare:nNnTF {##1} > {##2} { \sort_return_swapped: } { \sort_return_same: } }
+  \int_set:Nn \l_semio_viz_table_n_int { \seq_count:N \l_semio_viz_table_values_seq }
+  \fp_set:Nn \l_semio_viz_table_h_fp { ( \l_semio_viz_table_n_int - 1 ) * (#3) }
+  \int_set:Nn \l_semio_viz_table_lo_int { \fp_to_int:n { floor( \l_semio_viz_table_h_fp ) } }
+  \fp_set:Nn #4
+    {
+      \seq_item:Nn \l_semio_viz_table_values_seq { \l_semio_viz_table_lo_int + 1 }
+        + ( \l_semio_viz_table_h_fp - \l_semio_viz_table_lo_int )
+          * ( \seq_item:Nn \l_semio_viz_table_values_seq
+                { \int_min:nn { \l_semio_viz_table_lo_int + 2 } { \l_semio_viz_table_n_int } }
+              - \seq_item:Nn \l_semio_viz_table_values_seq { \l_semio_viz_table_lo_int + 1 } )
+    }
+}
+\int_new:N \l_semio_viz_table_n_int
+\int_new:N \l_semio_viz_table_lo_int
+\fp_new:N \l_semio_viz_table_h_fp
+
+% 📊 Median of the numeric column #2 of table #1.
+\cs_new_protected:Npn \semio_viz_table_col_median:nnN #1#2#3
+  { \semio_viz_table_col_quantile:nnnN {#1} {#2} { 0.5 } #3 }
+
+% 🔤 Every argument variant the table readers are called with, generated beside the base functions so
+% that a package which calls one only has to require `semio-viz-data`.
+\cs_generate_variant:Nn \semio_viz_table_nrows:nN { VN }
+\cs_generate_variant:Nn \semio_viz_table_col_min:nnN { nVN , VnN , VVN }
+\cs_generate_variant:Nn \semio_viz_table_col_max:nnN { nVN , VnN , VVN }
+\cs_generate_variant:Nn \semio_viz_table_col_values:nnN { VnN , VVN }
+%endregion 🔖️Columns
+
+%region 🔖️Roles
+% 🎭 Structured data sets are ordinary tables plus a role map: which column carries the id, the
+% parent, the value, the source, the target and so on. Renderers read roles, never fixed names.
+\prop_new:N \g_semio_viz_table_kind_prop
+
+\cs_new_protected:Npn \semio_viz_table_kind_set:nn #1#2 {
+  \semio_viz_table_require:n {#1}
+  \prop_gput:NVn \g_semio_viz_table_kind_prop \l_semio_viz_tab_tl {#2}
+  \prop_if_exist:cF { g_semio_viz_table_ \l_semio_viz_tab_tl _roles_prop }
+    { \prop_new:c { g_semio_viz_table_ \l_semio_viz_tab_tl _roles_prop } }
+}
+
+% 🎭 Binds role #2 of table #1 to its column #3.
+\cs_new_protected:Npn \semio_viz_table_role_set:nnn #1#2#3 {
+  \semio_viz_table_require:n {#1}
+  \prop_gput:cnn { g_semio_viz_table_ \l_semio_viz_tab_tl _roles_prop } {#2} {#3}
+}
+
+% 🎭 Column bound to role #2 of table #1; empty when the role is not declared.
+\cs_new:Npn \semio_viz_table_role:nn #1#2
+  { \prop_item:cn { g_semio_viz_table_ \tl_to_str:n {#1} _roles_prop } {#2} }
+
+% 🎭 Kind of table #1: table, hierarchy, graph, matrix, geometry or function.
+\cs_new:Npn \semio_viz_table_kind:n #1
+  { \prop_item:Nn \g_semio_viz_table_kind_prop {#1} }
+
+\tl_new:N \l_semio_viz_data_id_tl
+\tl_new:N \l_semio_viz_data_parent_tl
+\tl_new:N \l_semio_viz_data_value_tl
+\tl_new:N \l_semio_viz_data_source_tl
+\tl_new:N \l_semio_viz_data_target_tl
+\tl_new:N \l_semio_viz_data_weight_tl
+\tl_new:N \l_semio_viz_data_nodes_tl
+\tl_new:N \l_semio_viz_data_edges_tl
+\tl_new:N \l_semio_viz_data_row_tl
+\tl_new:N \l_semio_viz_data_col_tl
+\tl_new:N \l_semio_viz_data_ring_tl
+\tl_new:N \l_semio_viz_data_lon_tl
+\tl_new:N \l_semio_viz_data_lat_tl
+\tl_new:N \l_semio_viz_data_label_tl
+\clist_new:N \l_semio_viz_data_domain_clist
+\int_new:N \l_semio_viz_data_samples_int
+\tl_new:N \l_semio_viz_data_delimiter_tl
+\tl_new:N \l_semio_viz_data_quote_tl
+\bool_new:N \l_semio_viz_data_header_bool
+\clist_new:N \l_semio_viz_data_columns_clist
+
+% 🔑 The data vocabulary, `semio / viz / data`: which column carries which role when a table is
+% declared as a structure, plus the CSV reader's own delimiter, quote, header and column keys.
+\keys_define:nn { semio / viz / data }
+  {
+    id .tl_set:N = \l_semio_viz_data_id_tl,
+    parent .tl_set:N = \l_semio_viz_data_parent_tl,
+    value .tl_set:N = \l_semio_viz_data_value_tl,
+    source .tl_set:N = \l_semio_viz_data_source_tl,
+    target .tl_set:N = \l_semio_viz_data_target_tl,
+    weight .tl_set:N = \l_semio_viz_data_weight_tl,
+    nodes .tl_set:N = \l_semio_viz_data_nodes_tl,
+    edges .tl_set:N = \l_semio_viz_data_edges_tl,
+    row .tl_set:N = \l_semio_viz_data_row_tl,
+    col .tl_set:N = \l_semio_viz_data_col_tl,
+    ring .tl_set:N = \l_semio_viz_data_ring_tl,
+    lon .tl_set:N = \l_semio_viz_data_lon_tl,
+    lat .tl_set:N = \l_semio_viz_data_lat_tl,
+    label .tl_set:N = \l_semio_viz_data_label_tl,
+    domain .clist_set:N = \l_semio_viz_data_domain_clist,
+    samples .int_set:N = \l_semio_viz_data_samples_int,
+    delimiter .tl_set:N = \l_semio_viz_data_delimiter_tl,
+    quote .tl_set:N = \l_semio_viz_data_quote_tl,
+    header .bool_set:N = \l_semio_viz_data_header_bool,
+    header .default:n = { true },
+    columns .clist_set:N = \l_semio_viz_data_columns_clist,
+  }
+
+
+% 🧹 Resets every data key to its documented default before a key set is parsed.
+\cs_new_protected:Npn \semio_viz_data_keys_reset: {
+  \tl_set:Nn \l_semio_viz_data_id_tl { id }
+  \tl_set:Nn \l_semio_viz_data_parent_tl { parent }
+  \tl_set:Nn \l_semio_viz_data_value_tl { value }
+  \tl_set:Nn \l_semio_viz_data_source_tl { source }
+  \tl_set:Nn \l_semio_viz_data_target_tl { target }
+  \tl_set:Nn \l_semio_viz_data_weight_tl { weight }
+  \tl_clear:N \l_semio_viz_data_nodes_tl
+  \tl_clear:N \l_semio_viz_data_edges_tl
+  \tl_set:Nn \l_semio_viz_data_row_tl { row }
+  \tl_set:Nn \l_semio_viz_data_col_tl { col }
+  \tl_set:Nn \l_semio_viz_data_ring_tl { ring }
+  \tl_set:Nn \l_semio_viz_data_lon_tl { lon }
+  \tl_set:Nn \l_semio_viz_data_lat_tl { lat }
+  \tl_set:Nn \l_semio_viz_data_label_tl { label }
+  \clist_set:Nn \l_semio_viz_data_domain_clist { 0, 1 }
+  \int_set:Nn \l_semio_viz_data_samples_int { 100 }
+  \tl_set:Nn \l_semio_viz_data_delimiter_tl { , }
+  \tl_set:Nn \l_semio_viz_data_quote_tl { " }
+  \bool_set_true:N \l_semio_viz_data_header_bool
+  \clist_clear:N \l_semio_viz_data_columns_clist
+}
+%endregion 🔖️Roles
+
+%region 🔖️Csv
+\cs_generate_variant:Nn \str_if_eq:nnTF { eV }
+\ior_new:N \g_semio_viz_data_ior
+\seq_new:N \l_semio_viz_data_fields_seq
+\str_new:N \l_semio_viz_data_char_str
+\str_new:N \l_semio_viz_data_field_str
+\str_new:N \l_semio_viz_data_line_str
+\bool_new:N \l_semio_viz_data_quoted_bool
+\bool_new:N \l_semio_viz_data_first_bool
+
+% 📄 Splits one delimiter-separated line into \l_semio_viz_data_fields_seq, honouring quoted fields
+% and doubled quotes exactly as RFC 4180 (and therefore d3-dsv) does within a single record.
+\cs_new_protected:Npn \semio_viz_data_split_line:N #1 {
+  \seq_clear:N \l_semio_viz_data_fields_seq
+  \str_clear:N \l_semio_viz_data_field_str
+  \bool_set_false:N \l_semio_viz_data_quoted_bool
+  \int_zero:N \l_semio_viz_data_skip_int
+  \int_step_inline:nn { \str_count:N #1 }
+    {
+      \int_compare:nNnTF { \l_semio_viz_data_skip_int } > { 0 }
+        { \int_decr:N \l_semio_viz_data_skip_int }
+        {
+          \str_set:Nx \l_semio_viz_data_char_str { \str_range:Nnn #1 {##1} {##1} }
+          \bool_if:NTF \l_semio_viz_data_quoted_bool
+            {
+              \str_if_eq:VVTF \l_semio_viz_data_char_str \l_semio_viz_data_quote_str
+                {
+                  \str_if_eq:eVTF { \str_range:Nnn #1 { ##1 + 1 } { ##1 + 1 } }
+                    \l_semio_viz_data_quote_str
+                    {
+                      \str_put_right:NV \l_semio_viz_data_field_str \l_semio_viz_data_quote_str
+                      \int_set:Nn \l_semio_viz_data_skip_int { 1 }
+                    }
+                    { \bool_set_false:N \l_semio_viz_data_quoted_bool }
+                }
+                { \str_put_right:NV \l_semio_viz_data_field_str \l_semio_viz_data_char_str }
+            }
+            {
+              \str_if_eq:VVTF \l_semio_viz_data_char_str \l_semio_viz_data_delimiter_str
+                {
+                  \seq_put_right:NV \l_semio_viz_data_fields_seq \l_semio_viz_data_field_str
+                  \str_clear:N \l_semio_viz_data_field_str
+                }
+                {
+                  \str_if_eq:VVTF \l_semio_viz_data_char_str \l_semio_viz_data_quote_str
+                    { \bool_set_true:N \l_semio_viz_data_quoted_bool }
+                    { \str_put_right:NV \l_semio_viz_data_field_str \l_semio_viz_data_char_str }
+                }
+            }
+        }
+    }
+  \seq_put_right:NV \l_semio_viz_data_fields_seq \l_semio_viz_data_field_str
+}
+\int_new:N \l_semio_viz_data_skip_int
+\str_new:N \l_semio_viz_data_quote_str
+\str_new:N \l_semio_viz_data_delimiter_str
+
+% 📥 Loads a delimiter-separated file into a named table.
+\cs_new_protected:Npn \semio_viz_data_csv:nnn #1#2#3 {
+  \semio_viz_data_keys_reset:
+  \keys_set:nn { semio / viz / data } {#3}
+  \str_set:NV \l_semio_viz_data_delimiter_str \l_semio_viz_data_delimiter_tl
+  \str_set:NV \l_semio_viz_data_quote_str \l_semio_viz_data_quote_tl
+  \bool_set_true:N \l_semio_viz_data_first_bool
+  \clist_if_empty:NF \l_semio_viz_data_columns_clist
+    {
+      \semio_viz_table_new:nx {#1} { \clist_use:Nn \l_semio_viz_data_columns_clist { , } }
+      \bool_set_false:N \l_semio_viz_data_first_bool
+    }
+  \ior_open:Nn \g_semio_viz_data_ior {#2}
+  \ior_str_map_inline:Nn \g_semio_viz_data_ior
+    {
+      \str_set:Nn \l_semio_viz_data_line_str {##1}
+      \str_if_empty:NF \l_semio_viz_data_line_str
+        {
+          \semio_viz_data_split_line:N \l_semio_viz_data_line_str
+          \bool_lazy_and:nnTF
+            { \l_semio_viz_data_first_bool } { \l_semio_viz_data_header_bool }
+            {
+              \semio_viz_table_new:nx {#1}
+                { \seq_use:Nn \l_semio_viz_data_fields_seq { , } }
+              \bool_set_false:N \l_semio_viz_data_first_bool
+            }
+            {
+              \bool_if:NT \l_semio_viz_data_first_bool
+                {
+                  \semio_viz_table_new:nx {#1}
+                    {
+                      \semio_viz_data_generic_columns:n
+                        { \seq_count:N \l_semio_viz_data_fields_seq }
+                    }
+                  \bool_set_false:N \l_semio_viz_data_first_bool
+                }
+              \semio_viz_data_fields_row:
+              \semio_viz_table_row:nV {#1} \l_semio_viz_data_rowtext_tl
+            }
+        }
+    }
+  \ior_close:N \g_semio_viz_data_ior
+}
+
+% 🧱 Renders the parsed fields as a table row; each field is brace-wrapped so that a field may
+% itself contain the delimiter and still survive the comma-list row representation.
+\cs_new_protected:Npn \semio_viz_data_fields_row: {
+  \tl_clear:N \l_semio_viz_data_rowtext_tl
+  \bool_set_true:N \l_semio_viz_data_first_field_bool
+  \seq_map_inline:Nn \l_semio_viz_data_fields_seq
+    {
+      \bool_if:NTF \l_semio_viz_data_first_field_bool
+        { \bool_set_false:N \l_semio_viz_data_first_field_bool }
+        { \tl_put_right:Nn \l_semio_viz_data_rowtext_tl { , } }
+      \tl_put_right:Nn \l_semio_viz_data_rowtext_tl { {##1} }
+    }
+}
+\tl_new:N \l_semio_viz_data_rowtext_tl
+\bool_new:N \l_semio_viz_data_first_field_bool
+
+% 🏷️ Positional column names `c1..cn` for a headerless file.
+\cs_new:Npn \semio_viz_data_generic_columns:n #1
+  { c1 \int_step_function:nnnN { 2 } { 1 } {#1} \semio_viz_data_generic_column:n }
+% 🏷️ One more generic column name, for a CSV read without a header row.
+\cs_new:Npn \semio_viz_data_generic_column:n #1 { , c#1 }
+
+\cs_generate_variant:Nn \semio_viz_table_new:nn { nx }
+\cs_generate_variant:Nn \semio_viz_table_row:nn { nx , nV }
+%endregion 🔖️Csv
+
+%region 🔖️Structures
+% 🌳 Declares that a table is a hierarchy and which columns carry id, parent and value.
+\cs_new_protected:Npn \semio_viz_data_hierarchy:nn #1#2 {
+  \semio_viz_data_keys_reset:
+  \keys_set:nn { semio / viz / data } {#2}
+  \semio_viz_table_kind_set:nn {#1} { hierarchy }
+  \semio_viz_table_role_set:nnV {#1} { id } \l_semio_viz_data_id_tl
+  \semio_viz_table_role_set:nnV {#1} { parent } \l_semio_viz_data_parent_tl
+  \semio_viz_table_role_set:nnV {#1} { value } \l_semio_viz_data_value_tl
+  \semio_viz_table_role_set:nnV {#1} { label } \l_semio_viz_data_label_tl
+}
+
+% 🕸️ Declares that a table is an edge list and which columns carry source, target and weight.
+\cs_new_protected:Npn \semio_viz_data_graph:nn #1#2 {
+  \semio_viz_data_keys_reset:
+  \keys_set:nn { semio / viz / data } {#2}
+  \semio_viz_table_kind_set:nn {#1} { graph }
+  \semio_viz_table_role_set:nnV {#1} { source } \l_semio_viz_data_source_tl
+  \semio_viz_table_role_set:nnV {#1} { target } \l_semio_viz_data_target_tl
+  \semio_viz_table_role_set:nnV {#1} { weight } \l_semio_viz_data_weight_tl
+  \semio_viz_table_role_set:nnV {#1} { nodes } \l_semio_viz_data_nodes_tl
+  \semio_viz_table_role_set:nnV {#1} { edges } \l_semio_viz_data_edges_tl
+}
+
+% 🔲 Declares that a table is a matrix in long form.
+\cs_new_protected:Npn \semio_viz_data_matrix:nn #1#2 {
+  \semio_viz_data_keys_reset:
+  \keys_set:nn { semio / viz / data } {#2}
+  \semio_viz_table_kind_set:nn {#1} { matrix }
+  \semio_viz_table_role_set:nnV {#1} { row } \l_semio_viz_data_row_tl
+  \semio_viz_table_role_set:nnV {#1} { col } \l_semio_viz_data_col_tl
+  \semio_viz_table_role_set:nnV {#1} { value } \l_semio_viz_data_value_tl
+}
+
+% 🗺️ Declares that a table holds geographic rings of longitude/latitude vertices.
+\cs_new_protected:Npn \semio_viz_data_geometry:nn #1#2 {
+  \semio_viz_data_keys_reset:
+  \keys_set:nn { semio / viz / data } {#2}
+  \semio_viz_table_kind_set:nn {#1} { geometry }
+  \semio_viz_table_role_set:nnV {#1} { ring } \l_semio_viz_data_ring_tl
+  \semio_viz_table_role_set:nnV {#1} { lon } \l_semio_viz_data_lon_tl
+  \semio_viz_table_role_set:nnV {#1} { lat } \l_semio_viz_data_lat_tl
+  \semio_viz_table_role_set:nnV {#1} { label } \l_semio_viz_data_label_tl
+}
+
+% 🔗 Binds every standalone `x` of the sampled expression to the sampling variable. Neighbouring
+% characters are consumed by the match, so `x*x` needs a second pass; the loop runs until the
+% expression stops changing (l3regex here has no usable lookaround).
+\cs_new_protected:Npn \semio_viz_data_bind_x: {
+  \bool_set_true:N \l_semio_viz_data_changed_bool
+  \int_zero:N \l_semio_viz_data_pass_int
+  \bool_do_while:nn
+    {
+      \l_semio_viz_data_changed_bool &&
+      \int_compare_p:nNn { \l_semio_viz_data_pass_int } < { 16 }
+    }
+    {
+      \tl_set_eq:NN \l_semio_viz_data_before_tl \l_semio_viz_data_expr_tl
+      \regex_replace_all:nnN { ([^a-zA-Z0-9_])x([^a-zA-Z0-9_]) }
+        { \1 \c{l_semio_viz_data_x_fp} \2 } \l_semio_viz_data_expr_tl
+      \bool_set:Nn \l_semio_viz_data_changed_bool
+        { ! \tl_if_eq_p:NN \l_semio_viz_data_before_tl \l_semio_viz_data_expr_tl }
+      \int_incr:N \l_semio_viz_data_pass_int
+    }
+}
+\bool_new:N \l_semio_viz_data_changed_bool
+\int_new:N \l_semio_viz_data_pass_int
+\tl_new:N \l_semio_viz_data_before_tl
+
+% ➗ Samples an fp expression in `x` over a domain into a two-column table `x,y`.
+\cs_new_protected:Npn \semio_viz_data_function:nnn #1#2#3 {
+  \semio_viz_data_keys_reset:
+  \keys_set:nn { semio / viz / data } {#3}
+  \semio_viz_table_new:nn {#1} { x, y }
+  \semio_viz_table_kind_set:nn {#1} { function }
+  \semio_viz_table_role_set:nnn {#1} { x } { x }
+  \semio_viz_table_role_set:nnn {#1} { y } { y }
+  \fp_set:Nn \l_semio_viz_data_lo_fp { \clist_item:Nn \l_semio_viz_data_domain_clist { 1 } }
+  \fp_set:Nn \l_semio_viz_data_hi_fp { \clist_item:Nn \l_semio_viz_data_domain_clist { 2 } }
+  \tl_set:Nn \l_semio_viz_data_expr_tl { ( #2 ) }
+  \semio_viz_data_bind_x:
+  \int_step_inline:nn { \l_semio_viz_data_samples_int }
+    {
+      \fp_set:Nn \l_semio_viz_data_x_fp
+        {
+          \l_semio_viz_data_lo_fp
+            + ( ##1 - 1 ) / ( \l_semio_viz_data_samples_int - 1 )
+              * ( \l_semio_viz_data_hi_fp - \l_semio_viz_data_lo_fp )
+        }
+      \fp_set:Nn \l_semio_viz_data_y_fp { \l_semio_viz_data_expr_tl }
+      \semio_viz_table_row:nx {#1}
+        {
+          \fp_to_decimal:n { round( \l_semio_viz_data_x_fp , 6 ) } ,
+          \fp_to_decimal:n { round( \l_semio_viz_data_y_fp , 6 ) }
+        }
+    }
+}
+\fp_new:N \l_semio_viz_data_lo_fp
+\fp_new:N \l_semio_viz_data_hi_fp
+\fp_new:N \l_semio_viz_data_x_fp
+\fp_new:N \l_semio_viz_data_y_fp
+\tl_new:N \l_semio_viz_data_expr_tl
+
+\cs_generate_variant:Nn \semio_viz_table_role_set:nnn { nnV }
+%endregion 🔖️Structures
+
+%region 🔖️PointSets
+% 📍 Planar point sets and row-major value grids: the two coordinate stores every spatial and
+% field algorithm reads, addressed by name exactly like a table.
+\seq_new:N \g_semio_viz_points_names_seq
+\seq_new:N \g_semio_viz_grid_names_seq
+\tl_new:N \l_semio_viz_store_name_tl
+
+\cs_new_protected:Npn \semio_viz_points_new:nn #1#2
+  {
+    \tl_set:Nx \l_semio_viz_store_name_tl {#1}
+    \tl_set:Nx \l_semio_viz_store_name_tl { \tl_to_str:N \l_semio_viz_store_name_tl }
+    \seq_if_in:NVF \g_semio_viz_points_names_seq \l_semio_viz_store_name_tl
+      {
+        \seq_gput_right:NV \g_semio_viz_points_names_seq
+          \l_semio_viz_store_name_tl
+        \seq_new:c { g_semio_viz_points_ \l_semio_viz_store_name_tl _seq }
+      }
+    \seq_set_split:Nnn \l_tmpa_seq { ; } {#2}
+    \seq_gset_eq:cN { g_semio_viz_points_ \l_semio_viz_store_name_tl _seq }
+      \l_tmpa_seq
+  }
+
+% 🔒 Stops with a diagnostic when no point set named #1 is declared.
+\cs_new_protected:Npn \semio_viz_points_require:n #1
+  {
+    \tl_set:Nx \l_semio_viz_store_name_tl {#1}
+    \tl_set:Nx \l_semio_viz_store_name_tl { \tl_to_str:N \l_semio_viz_store_name_tl }
+    \seq_if_in:NVF \g_semio_viz_points_names_seq \l_semio_viz_store_name_tl
+      { \msg_error:nnn { semio-viz } { unknown-pointset } {#1} }
+  }
+
+% 🔢 Declares the grid #1 as #2 by #3 values, read row-major from the comma list #4.
+\cs_new_protected:Npn \semio_viz_grid_new:nnnn #1#2#3#4
+  {
+    \tl_set:Nx \l_semio_viz_store_name_tl {#1}
+    \tl_set:Nx \l_semio_viz_store_name_tl { \tl_to_str:N \l_semio_viz_store_name_tl }
+    \seq_if_in:NVF \g_semio_viz_grid_names_seq \l_semio_viz_store_name_tl
+      {
+        \seq_gput_right:NV \g_semio_viz_grid_names_seq
+          \l_semio_viz_store_name_tl
+        \seq_new:c { g_semio_viz_grid_ \l_semio_viz_store_name_tl _seq }
+        \int_new:c { g_semio_viz_grid_ \l_semio_viz_store_name_tl _w_int }
+        \int_new:c { g_semio_viz_grid_ \l_semio_viz_store_name_tl _h_int }
+      }
+    \int_gset:cn { g_semio_viz_grid_ \l_semio_viz_store_name_tl _w_int } {#2}
+    \int_gset:cn { g_semio_viz_grid_ \l_semio_viz_store_name_tl _h_int } {#3}
+    \seq_gset_from_clist:cn
+      { g_semio_viz_grid_ \l_semio_viz_store_name_tl _seq } {#4}
+  }
+
+% 🔒 Stops with a diagnostic when no grid named #1 is declared.
+\cs_new_protected:Npn \semio_viz_grid_require:n #1
+  {
+    \tl_set:Nx \l_semio_viz_store_name_tl {#1}
+    \tl_set:Nx \l_semio_viz_store_name_tl { \tl_to_str:N \l_semio_viz_store_name_tl }
+    \seq_if_in:NVF \g_semio_viz_grid_names_seq \l_semio_viz_store_name_tl
+      { \msg_error:nnn { semio-viz } { unknown-grid } {#1} }
+  }
+
+% 📐 A point is the comma list `x,y`; these three readers are the only way a routine takes one apart
+% or appends one, so a point sequence has the same shape everywhere in the library.
+\cs_generate_variant:Nn \clist_item:nn { fn }
+% ↔️ Abscissa of the point #1.
+\cs_new:Npn \semio_viz_points_x:n #1 { \clist_item:fn {#1} { 1 } }
+% ↕️ Ordinate of the point #1.
+\cs_new:Npn \semio_viz_points_y:n #1 { \clist_item:fn {#1} { 2 } }
+% ➕ Appends the point (#2,#3), both l3fp expressions, to the point sequence #1.
+\cs_new_protected:Npn \semio_viz_points_put:Nnn #1#2#3
+  { \seq_put_right:Nx #1 { \fp_to_decimal:n {#2} , \fp_to_decimal:n {#3} } }
+
+% 📍 Declares a named planar point set from `x,y; x,y; …`.
+\NewDocumentCommand \SemioVizPointSet { m m }
+  { \semio_viz_points_new:nn {#1} {#2} }
+% 🔢 Declares a named row-major value grid: name, width, height, comma-separated values.
+\NewDocumentCommand \SemioVizValueGrid { m m m m }
+  { \semio_viz_grid_new:nnnn {#1} {#2} {#3} {#4} }
+%endregion 🔖️PointSets
+
+%region 🔖️Geometry
+% 🗾 Geometry collections: named stores of rings, line strings and points in lon/lat that the
+% projector consumes. `\SemioVizGeometry` marks a *table* as geographic; this is the parts store
+% a projection actually walks, and a marked table is converted into one on first use.
+\seq_new:N \g_semio_viz_geom_names_seq
+\tl_new:N \l_semio_viz_geom_name_tl
+\tl_new:N \l_semio_viz_geom_id_tl
+\tl_new:N \l_semio_viz_geom_value_tl
+
+\keys_define:nn { semio / viz / geo / part }
+  {
+    id .tl_set:N = \l_semio_viz_geom_id_tl ,
+    value .tl_set:N = \l_semio_viz_geom_value_tl ,
+  }
+
+% 🗾 Declares the geometry collection #1, emptying it when it already exists.
+\cs_new_protected:Npn \semio_viz_geom_new:n #1
+  {
+    \tl_set:Nx \l_semio_viz_geom_name_tl {#1}
+    \tl_set:Nx \l_semio_viz_geom_name_tl { \tl_to_str:N \l_semio_viz_geom_name_tl }
+    \seq_if_in:NVTF \g_semio_viz_geom_names_seq \l_semio_viz_geom_name_tl
+      { \seq_gclear:c { g_semio_viz_geom_ \l_semio_viz_geom_name_tl _seq } }
+      {
+        \seq_gput_right:NV \g_semio_viz_geom_names_seq \l_semio_viz_geom_name_tl
+        \seq_new:c { g_semio_viz_geom_ \l_semio_viz_geom_name_tl _seq }
+      }
+  }
+
+% 🔒 Stops with a diagnostic when no geometry collection named #1 is declared.
+\cs_new_protected:Npn \semio_viz_geom_require:n #1
+  {
+    \tl_set:Nx \l_semio_viz_geom_name_tl {#1}
+    \tl_set:Nx \l_semio_viz_geom_name_tl { \tl_to_str:N \l_semio_viz_geom_name_tl }
+    \seq_if_in:NVF \g_semio_viz_geom_names_seq \l_semio_viz_geom_name_tl
+      { \msg_error:nnn { semio-viz } { unknown-geometry } {#1} }
+  }
+
+% 🧩 Appends one part to collection #1: its type #2, the `id`/`value` options #3, and the lon/lat
+% ring #4 as `lon,lat; lon,lat; …`.
+\cs_new_protected:Npn \semio_viz_geom_part:nnnn #1#2#3#4
+  {
+    \semio_viz_geom_require:n {#1}
+    \tl_clear:N \l_semio_viz_geom_id_tl
+    \tl_set:Nn \l_semio_viz_geom_value_tl { 0 }
+    \keys_set:nn { semio / viz / geo / part } {#3}
+    \seq_gput_right:cx { g_semio_viz_geom_ \l_semio_viz_geom_name_tl _seq }
+      {
+        {#2}
+        { \l_semio_viz_geom_id_tl }
+        { \l_semio_viz_geom_value_tl }
+        { \exp_not:n {#4} }
+      }
+  }
+
+% 🔁 A name that is not a collection but is a table marked with \SemioVizGeometry becomes one on first use.
+\cs_new_protected:Npn \semio_viz_geom_ensure:n #1
+  {
+    \tl_set:Nx \l_tmpb_tl {#1}
+    \tl_set:Nx \l_tmpb_tl { \tl_to_str:N \l_tmpb_tl }
+    \seq_if_in:NVF \g_semio_viz_geom_names_seq \l_tmpb_tl
+      {
+        \bool_set_false:N \l_semio_viz_geom_found_bool
+        \seq_map_inline:Nn \g_semio_viz_table_names_seq
+          {
+            \str_if_eq:VnT \l_tmpb_tl {##1}
+              {
+                \bool_set_true:N \l_semio_viz_geom_found_bool
+                \seq_map_break:
+              }
+          }
+        \bool_if:NT \l_semio_viz_geom_found_bool
+          { \semio_viz_geom_from_table:nnn {#1} {#1} { } }
+      }
+  }
+\bool_new:N \l_semio_viz_geom_found_bool
+
+% 🔁 Runs #2 over every part of collection #1, converting a marked table into one first.
+\cs_new_protected:Npn \semio_viz_geom_map_inline:nn #1#2
+  {
+    \semio_viz_geom_ensure:n {#1}
+    \semio_viz_geom_require:n {#1}
+    \seq_map_inline:cn { g_semio_viz_geom_ \l_semio_viz_geom_name_tl _seq } {#2}
+  }
+
+% 🔢 Number of parts of collection #1, into the integer #2.
+\cs_new_protected:Npn \semio_viz_geom_count:nN #1#2
+  {
+    \semio_viz_geom_ensure:n {#1}
+    \semio_viz_geom_require:n {#1}
+    \int_set:Nn #2
+      { \seq_count:c { g_semio_viz_geom_ \l_semio_viz_geom_name_tl _seq } }
+  }
+
+% 🗾 Declares an empty geometry collection addressed by name.
+\NewDocumentCommand \SemioVizGeoCollection { m O{} } { \semio_viz_geom_new:n {#1} }
+% 🔷 Appends a closed ring `lon,lat; lon,lat; …` (first vertex not repeated) to a geometry.
+\NewDocumentCommand \SemioVizGeoPolygon { m O{} m }
+  { \semio_viz_geom_part:nnnn {#1} { polygon } {#2} {#3} }
+% 〰️ Appends an open line string to a geometry.
+\NewDocumentCommand \SemioVizGeoLine { m O{} m }
+  { \semio_viz_geom_part:nnnn {#1} { line } {#2} {#3} }
+% 📍 Appends a single `lon,lat` point to a geometry.
+\NewDocumentCommand \SemioVizGeoPointPart { m O{} m }
+  { \semio_viz_geom_part:nnnn {#1} { point } {#2} {#3} }
+
+% 🔁 Builds a geometry collection from a table marked with \SemioVizGeometry (columns ring, lon, lat).
+% 🔁 A ring whose last vertex repeats its first loses that duplicate, because the projector treats rings as closed.
+\tl_new:N \l_semio_viz_geom_ringcol_tl
+\tl_new:N \l_semio_viz_geom_loncol_tl
+\tl_new:N \l_semio_viz_geom_latcol_tl
+\tl_new:N \l_semio_viz_geom_valcol_tl
+\tl_new:N \l_semio_viz_geom_ringvalue_tl
+\tl_new:N \l_semio_viz_geom_curring_tl
+\tl_new:N \l_semio_viz_geom_coords_tl
+\tl_new:N \l_semio_viz_geom_firstpt_tl
+\tl_new:N \l_semio_viz_geom_target_tl
+
+\keys_define:nn { semio / viz / geo / fromtable }
+  {
+    ring .tl_set:N = \l_semio_viz_geom_ringcol_tl ,
+    lon .tl_set:N = \l_semio_viz_geom_loncol_tl ,
+    lat .tl_set:N = \l_semio_viz_geom_latcol_tl ,
+    value .tl_set:N = \l_semio_viz_geom_valcol_tl ,
+  }
+
+% 🔁 Builds collection #1 from the geographic table #2 under the column options #3: consecutive
+% rows sharing a ring value become one polygon part.
+\cs_new_protected:Npn \semio_viz_geom_from_table:nnn #1#2#3
+  {
+    \tl_set:Nn \l_semio_viz_geom_ringcol_tl { ring }
+    \tl_set:Nn \l_semio_viz_geom_loncol_tl { lon }
+    \tl_set:Nn \l_semio_viz_geom_latcol_tl { lat }
+    \tl_clear:N \l_semio_viz_geom_valcol_tl
+    \keys_set:nn { semio / viz / geo / fromtable } {#3}
+    \semio_viz_geom_new:n {#1}
+    \tl_set:Nx \l_semio_viz_geom_target_tl { \tl_to_str:n {#1} }
+    \semio_viz_table_nrows:nN {#2} \l_tmpa_int
+    \tl_clear:N \l_semio_viz_geom_curring_tl
+    \tl_clear:N \l_semio_viz_geom_coords_tl
+    \int_step_inline:nn { \l_tmpa_int }
+      { \semio_viz_geom_from_row:nn {#2} {##1} }
+    \semio_viz_geom_flush_ring:
+  }
+
+% 📍 One row of that walk: a new ring value flushes the ring being built, and a vertex repeating
+% the ring's first one is dropped, because the projector treats every ring as closed.
+\cs_new_protected:Npn \semio_viz_geom_from_row:nn #1#2
+  {
+    \semio_viz_table_cell:nnnN {#1} {#2} { \l_semio_viz_geom_ringcol_tl }
+      \l_tmpb_tl
+    \tl_if_eq:NNF \l_tmpb_tl \l_semio_viz_geom_curring_tl
+      {
+        \semio_viz_geom_flush_ring:
+        \tl_set_eq:NN \l_semio_viz_geom_curring_tl \l_tmpb_tl
+        \tl_clear:N \l_semio_viz_geom_coords_tl
+        \tl_clear:N \l_semio_viz_geom_firstpt_tl
+      }
+    \semio_viz_table_cell:nnnN {#1} {#2} { \l_semio_viz_geom_loncol_tl }
+      \l_tmpa_tl
+    \semio_viz_table_cell:nnnN {#1} {#2} { \l_semio_viz_geom_latcol_tl }
+      \l_semio_viz_cell_tl
+    \tl_if_empty:NF \l_semio_viz_geom_valcol_tl
+      {
+        \semio_viz_table_cell:nnnN {#1} {#2} { \l_semio_viz_geom_valcol_tl }
+          \l_semio_viz_geom_ringvalue_tl
+      }
+    \tl_set:Nx \l_tmpb_tl
+      { \l_tmpa_tl , \l_semio_viz_cell_tl }
+    \tl_if_empty:NTF \l_semio_viz_geom_firstpt_tl
+      { \tl_set_eq:NN \l_semio_viz_geom_firstpt_tl \l_tmpb_tl }
+      { }
+    \tl_if_eq:NNF \l_tmpb_tl \l_semio_viz_geom_firstpt_tl
+      {
+        \tl_if_empty:NF \l_semio_viz_geom_coords_tl
+          { \tl_put_right:Nn \l_semio_viz_geom_coords_tl { ; } }
+        \tl_put_right:NV \l_semio_viz_geom_coords_tl \l_tmpb_tl
+      }
+    \tl_if_empty:NT \l_semio_viz_geom_coords_tl
+      { \tl_put_right:NV \l_semio_viz_geom_coords_tl \l_tmpb_tl }
+  }
+
+% 📤 Files the ring being built as a polygon part, unless it is empty.
+\cs_new_protected:Npn \semio_viz_geom_flush_ring:
+  {
+    \tl_if_empty:NF \l_semio_viz_geom_coords_tl
+      {
+        \use:x
+          {
+            \exp_not:N \semio_viz_geom_part:nnnn
+              { \exp_not:V \l_semio_viz_geom_target_tl } { polygon }
+              {
+                id = \exp_not:V \l_semio_viz_geom_curring_tl ,
+                value = \tl_if_empty:NTF \l_semio_viz_geom_valcol_tl
+                          { 1 } { \exp_not:V \l_semio_viz_geom_ringvalue_tl }
+              }
+              { \exp_not:V \l_semio_viz_geom_coords_tl }
+          }
+      }
+  }
+
+% 🔁 \SemioVizGeoFromTable{collection}{table}[ring=,lon=,lat=]: converts a geographic data table into a projectable collection.
+\NewDocumentCommand \SemioVizGeoFromTable { m m O{} }
+  { \semio_viz_geom_from_table:nnn {#1} {#2} {#3} }
+%endregion 🔖️Geometry
+
+%region 🔖️DemoData
+% 🧪 The demo data sets every family and every gallery preset draws from. Names are stable API:
+% `demo` keeps its original wide shape because the generated presets bind `data=demo`.
+\cs_new_protected:Npn \semio_viz_data_demo_series: {
+  \semio_viz_table_new:nn { demo-series } { series, t, value }
+  \clist_map_inline:nn { {alpha}{1}{4}, {alpha}{2}{7}, {alpha}{3}{6}, {alpha}{4}{9},
+    {alpha}{5}{8}, {alpha}{6}{12}, {alpha}{7}{11}, {alpha}{8}{14} }
+    { \semio_viz_data_demo_triple:n {##1} }
+  \clist_map_inline:nn { {beta}{1}{2}, {beta}{2}{3}, {beta}{3}{5}, {beta}{4}{4},
+    {beta}{5}{7}, {beta}{6}{6}, {beta}{7}{9}, {beta}{8}{8} }
+    { \semio_viz_data_demo_triple:n {##1} }
+  \clist_map_inline:nn { {gamma}{1}{6}, {gamma}{2}{5}, {gamma}{3}{3}, {gamma}{4}{5},
+    {gamma}{5}{2}, {gamma}{6}{4}, {gamma}{7}{3}, {gamma}{8}{5} }
+    { \semio_viz_data_demo_triple:n {##1} }
+}
+% 📥 Unwraps a braced triple `{a}{b}{c}` into a `demo-series` row.
+\cs_new_protected:Npn \semio_viz_data_demo_triple:n #1
+  { \semio_viz_data_demo_triple_aux:nnn #1 }
+% 📥 The row it writes, once the three fields are separate arguments.
+\cs_new_protected:Npn \semio_viz_data_demo_triple_aux:nnn #1#2#3
+  { \semio_viz_table_row:nn { demo-series } { #1, #2, #3 } }
+
+% 🧪 The remaining demo data sets: time, categories, flows, hierarchies, matrices, grids,
+% geography and distributions, each shaped for the families that draw it.
+\cs_new_protected:Npn \semio_viz_data_demo_rest: {
+  \semio_viz_table_new:nn { demo-time } { date, value }
+  \clist_map_inline:nn
+    {
+      {2026-01-01}{12}, {2026-02-01}{18}, {2026-03-01}{15}, {2026-04-01}{22},
+      {2026-05-01}{27}, {2026-06-01}{25}, {2026-07-01}{31}, {2026-08-01}{29},
+      {2026-09-01}{24}, {2026-10-01}{19}, {2026-11-01}{16}, {2026-12-01}{13}
+    }
+    { \semio_viz_data_demo_pair:nn { demo-time } {##1} }
+  \semio_viz_table_new:nn { demo-hierarchy } { id, parent, value, label }
+  \semio_viz_table_row:nn { demo-hierarchy } { root, {}, 0, {Root} }
+  \semio_viz_table_row:nn { demo-hierarchy } { a, root, 0, {Branch~A} }
+  \semio_viz_table_row:nn { demo-hierarchy } { b, root, 0, {Branch~B} }
+  \semio_viz_table_row:nn { demo-hierarchy } { a1, a, 6, {Leaf~A1} }
+  \semio_viz_table_row:nn { demo-hierarchy } { a2, a, 4, {Leaf~A2} }
+  \semio_viz_table_row:nn { demo-hierarchy } { a3, a, 3, {Leaf~A3} }
+  \semio_viz_table_row:nn { demo-hierarchy } { b1, b, 8, {Leaf~B1} }
+  \semio_viz_table_row:nn { demo-hierarchy } { b2, b, 5, {Leaf~B2} }
+  \semio_viz_table_row:nn { demo-hierarchy } { b3, b, 2, {Leaf~B3} }
+  \semio_viz_data_hierarchy:nn { demo-hierarchy } { id=id, parent=parent, value=value, label=label }
+  \semio_viz_table_new:nn { demo-graph } { source, target, weight }
+  \clist_map_inline:nn
+    {
+      {A}{B}{3}, {A}{C}{2}, {B}{C}{4}, {B}{D}{1}, {C}{E}{5},
+      {D}{E}{2}, {E}{F}{3}, {A}{F}{1}, {C}{D}{2}
+    }
+    { \semio_viz_data_demo_row:nn { demo-graph } {##1} }
+  \semio_viz_data_graph:nn { demo-graph } { source=source, target=target, weight=weight }
+  \semio_viz_table_new:nn { demo-flow } { source, target, value }
+  \clist_map_inline:nn
+    {
+      {Coal}{Electricity}{18}, {Gas}{Electricity}{24}, {Wind}{Electricity}{12},
+      {Solar}{Electricity}{9}, {Electricity}{Industry}{26},
+      {Electricity}{Housing}{21}, {Electricity}{Transport}{16}
+    }
+    { \semio_viz_data_demo_row:nn { demo-flow } {##1} }
+  \semio_viz_table_new:nn { demo-matrix } { row, col, value }
+  \clist_map_inline:nn
+    {
+      {R1}{C1}{4}, {R1}{C2}{7}, {R1}{C3}{2}, {R1}{C4}{9},
+      {R2}{C1}{6}, {R2}{C2}{1}, {R2}{C3}{8}, {R2}{C4}{3},
+      {R3}{C1}{5}, {R3}{C2}{9}, {R3}{C3}{4}, {R3}{C4}{6},
+      {R4}{C1}{2}, {R4}{C2}{3}, {R4}{C3}{7}, {R4}{C4}{8}
+    }
+    { \semio_viz_data_demo_row:nn { demo-matrix } {##1} }
+  \semio_viz_data_matrix:nn { demo-matrix } { row=row, col=col, value=value }
+  \semio_viz_table_new:nn { demo-geo } { ring, lon, lat, label }
+  \clist_map_inline:nn
+    {
+      {north}{4}{54}{North}, {north}{12}{54}{North}, {north}{12}{50}{North},
+      {north}{4}{50}{North}, {north}{4}{54}{North},
+      {south}{6}{49}{South}, {south}{14}{49}{South}, {south}{14}{46}{South},
+      {south}{6}{46}{South}, {south}{6}{49}{South},
+      {east}{14}{53}{East}, {east}{19}{53}{East}, {east}{19}{49}{East},
+      {east}{14}{49}{East}, {east}{14}{53}{East}
+    }
+    { \semio_viz_data_demo_quad:nn { demo-geo } {##1} }
+  \semio_viz_data_geometry:nn { demo-geo } { ring=ring, lon=lon, lat=lat, label=label }
+  \semio_viz_table_new:nn { demo-distribution } { value, grp }
+  \clist_map_inline:nn
+    {
+      {4.2}{x}, {5.1}{x}, {4.8}{x}, {6.3}{x}, {5.6}{x}, {5.9}{x}, {6.8}{x}, {4.5}{x},
+      {7.1}{x}, {5.4}{x}, {6.0}{x}, {5.2}{x}, {6.6}{x}, {4.9}{x}, {5.8}{x}, {7.4}{x},
+      {6.1}{x}, {5.5}{x}, {4.4}{x}, {6.9}{x},
+      {8.3}{y}, {7.6}{y}, {9.1}{y}, {8.8}{y}, {7.9}{y}, {8.1}{y}, {9.6}{y}, {7.2}{y},
+      {8.5}{y}, {9.3}{y}, {8.0}{y}, {7.7}{y}, {8.9}{y}, {9.8}{y}, {8.2}{y}, {7.4}{y},
+      {8.6}{y}, {9.0}{y}, {7.8}{y}, {8.4}{y},
+      {3.1}{z}, {2.6}{z}, {3.8}{z}, {2.9}{z}, {3.4}{z}, {2.2}{z}, {3.6}{z}, {2.8}{z}
+    }
+    { \semio_viz_data_demo_pair:nn { demo-distribution } {##1} }
+}
+% 📥 Unwraps a braced pair `{a}{b}` into a row of table #1.
+\cs_new_protected:Npn \semio_viz_data_demo_pair:nn #1#2
+  { \semio_viz_data_demo_pair_aux:nnn {#1} #2 }
+% 📥 The two-field row it writes.
+\cs_new_protected:Npn \semio_viz_data_demo_pair_aux:nnn #1#2#3
+  { \semio_viz_table_row:nn {#1} { #2, #3 } }
+% 📥 Unwraps a braced triple `{a}{b}{c}` into a row of table #1.
+\cs_new_protected:Npn \semio_viz_data_demo_row:nn #1#2
+  { \semio_viz_data_demo_row_aux:nnnn {#1} #2 }
+% 📥 The three-field row it writes.
+\cs_new_protected:Npn \semio_viz_data_demo_row_aux:nnnn #1#2#3#4
+  { \semio_viz_table_row:nn {#1} { #2, #3, #4 } }
+% 📥 Unwraps a braced quadruple `{a}{b}{c}{d}` into a row of table #1.
+\cs_new_protected:Npn \semio_viz_data_demo_quad:nn #1#2
+  { \semio_viz_data_demo_quad_aux:nnnnn {#1} #2 }
+% 📥 The four-field row it writes.
+\cs_new_protected:Npn \semio_viz_data_demo_quad_aux:nnnnn #1#2#3#4#5
+  { \semio_viz_table_row:nn {#1} { #2, #3, #4, #5 } }
+
+\semio_viz_data_demo_series:
+\semio_viz_data_demo_rest:
+%endregion 🔖️DemoData
+
+%region 🔖️PublicApi
+% 📄 \SemioVizTableFromCSV{name}{file}[delimiter=,quote=,header=,columns=]: loads a table from disk.
+\NewDocumentCommand \SemioVizTableFromCSV { m m O{} } { \semio_viz_data_csv:nnn {#1} {#2} {#3} }
+% 🌳 \SemioVizHierarchy{name}[id=,parent=,value=,label=]: marks a table as a parent-linked hierarchy.
+\NewDocumentCommand \SemioVizHierarchy { m O{} } { \semio_viz_data_hierarchy:nn {#1} {#2} }
+% 🕸️ \SemioVizGraph{name}[source=,target=,weight=,nodes=,edges=]: marks a table as an edge list.
+\NewDocumentCommand \SemioVizGraph { m O{} } { \semio_viz_data_graph:nn {#1} {#2} }
+% 🔲 \SemioVizMatrix{name}[row=,col=,value=]: marks a table as a matrix in long form.
+\NewDocumentCommand \SemioVizMatrix { m O{} } { \semio_viz_data_matrix:nn {#1} {#2} }
+% 🗺️ \SemioVizGeometry{name}[ring=,lon=,lat=,label=]: marks a table as geographic rings.
+\NewDocumentCommand \SemioVizGeometry { m O{} } { \semio_viz_data_geometry:nn {#1} {#2} }
+% ➗ \SemioVizFunction{name}{expr}[domain=,samples=]: samples an fp expression in `x` into a table.
+\NewDocumentCommand \SemioVizFunction { m m O{} } { \semio_viz_data_function:nnn {#1} {#2} {#3} }
+%endregion 🔖️PublicApi
 
 \ExplSyntaxOff

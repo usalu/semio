@@ -1,0 +1,16 @@
+{
+  "$comment": "🔮 Test-only third-party references of the presentation product. Every entry is a devDependency of 📦️packages/🟦️typescript/🎯️targets/⚛️react and is imported only from 🧪️tests/**; no runtime code may depend on one. `@oracle-<id>` tags in the Gherkin features name these ids.",
+  "schemaVersion": 1,
+  "oracles": [
+    {
+      "id": "remark",
+      "package": "unified",
+      "version": "11.0.5",
+      "entry": "unified",
+      "covers": [
+        "markdown-html-compilation"
+      ],
+      "reason": "Judges the owned slide markdown compiler against the CommonMark and GFM reading of the JavaScript ecosystem — remark-parse, remark-gfm, remark-rehype and rehype-stringify composed by unified — so a parsing or escaping rule cannot agree with itself."
+    }
+  ]
+}

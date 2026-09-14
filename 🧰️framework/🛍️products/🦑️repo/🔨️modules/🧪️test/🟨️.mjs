@@ -13,7 +13,14 @@ import { basename, dirname, join, relative } from "node:path";
 import { createHash } from "node:crypto";
 const dependencyModule = new URL("./🕸️dependencies/🟨️.mjs", import.meta.url);
 const dependencyRevision = createHash("sha256").update(readFileSync(dependencyModule)).digest("hex");
-const { cargoPackage, localPackagePath, rustSubjectPackage, ownerContributions, packagesForOwner } = await import(`${dependencyModule.href}?revision=${dependencyRevision}`);
+let cargoPackage, localPackagePath, rustSubjectPackage, ownerContributions, packagesForOwner;
+const testBootstrap = import(`${dependencyModule.href}?revision=${dependencyRevision}`).then((deps) => {
+  cargoPackage = deps.cargoPackage;
+  localPackagePath = deps.localPackagePath;
+  rustSubjectPackage = deps.rustSubjectPackage;
+  ownerContributions = deps.ownerContributions;
+  packagesForOwner = deps.packagesForOwner;
+});
 const implementationRevision = () => createHash("sha256").update(readFileSync(new URL(import.meta.url))).update(readFileSync(dependencyModule)).digest("hex");
 const loadedRevision = implementationRevision();
 
@@ -256,6 +263,7 @@ function testCaseDependencies(_options, context) {
 
 /** ♻️ Refreshes resident inference after authored source changes without discarding Nx state. */
 async function invokeCurrentImplementation(kind, args) {
+  await testBootstrap;
   const revision = implementationRevision();
   if (revision === loadedRevision) return kind === "nodes" ? testCaseProjects(...args) : testCaseDependencies(...args);
   const url = new URL(import.meta.url);

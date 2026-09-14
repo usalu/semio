@@ -1,4 +1,4 @@
-import { figureFrameForSourceAspect, type SlideFile } from "@semio-tech/animate-presentation-core";
+import { figureFrameForSourceAspect, type SlideFile } from "@semio-tech/presentation";
 
 const PARTICIPANT = "recherche-schweiz-zoom-in-3";
 const EMBODIMENT = "recherche-schweiz-zoom-in-3--figure";

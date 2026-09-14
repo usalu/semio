@@ -1,0 +1,856 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-scientific-field}[2026/09/05 v0.2.0 semio viz scientific kernel and field presets]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{tikz}
+\usetikzlibrary{calc,arrows.meta}
+\RequirePackage{semio-tokens}
+\RequirePackage{semio-viz-family}
+\RequirePackage{semio-viz-probe}
+\RequirePackage{semio-viz-theme}
+\RequirePackage{semio-viz-format}
+\RequirePackage{semio-viz-transform}
+\RequirePackage{semio-viz-spatial}
+\RequirePackage{semio-viz-guide}
+\RequirePackage{semio-viz-shape}
+
+% 🎨 Standalone use (probe documents that load a single package instead of the semio class) has no theme chrome yet; the class sets these before this package loads, so the fallback never fires in a real document.
+\@ifundefined{\string\color@semio-chrome-foreground}{%
+  \colorlet{semio-chrome-foreground}{semio-chrome-light-foreground}%
+  \colorlet{semio-chrome-text-normal}{semio-chrome-light-border-normal}%
+  \colorlet{semio-chrome-border-normal}{semio-chrome-light-border-normal}%
+  \colorlet{semio-chrome-base}{semio-chrome-light-base}%
+  \colorlet{semio-chrome-window}{semio-chrome-light-window}%
+  \colorlet{semio-chrome-panel}{semio-chrome-light-panel}%
+}{}
+
+%region 🔖️StyleVocabulary
+% 🎨 Every stroke width and colour a scientific family draws with, read from the design tokens; renderers never name a width or a colour themselves.
+\tikzset{
+  semio sci axis/.style={line width=\semio@stroke@hairline, draw=semio-chrome-border-normal},
+  semio sci grid/.style={line width=\semio@stroke@hairline, draw=semio-chrome-border-normal, opacity=0.3},
+  semio sci curve/.style={line width=\semio@stroke@default, line join=round, line cap=round, draw=semio-primary},
+  semio sci curve alt/.style={line width=\semio@stroke@default, line join=round, line cap=round, draw=semio-secondary},
+  semio sci thin/.style={line width=\semio@stroke@hairline, line join=round, draw=semio-chrome-foreground},
+  semio sci aux/.style={line width=\semio@stroke@hairline, draw=semio-chrome-text-normal, dash pattern=on 1.1pt off 1.1pt},
+  semio sci band/.style={draw=none, fill=semio-primary, fill opacity=0.18},
+  semio sci glyph/.style={line width=\semio@stroke@hairline, draw=semio-chrome-foreground, fill=semio-chrome-base},
+  semio sci box/.style={line width=\semio@stroke@hairline, draw=semio-chrome-border-normal, fill=semio-chrome-window},
+  semio sci arrow/.style={line width=\semio@stroke@hairline, draw=semio-chrome-foreground, -{Straight Barb[length=1.1mm,width=1.1mm]}},
+  semio sci vector/.style={line width=\semio@stroke@hairline, draw=semio-primary, -{Straight Barb[length=1mm,width=1mm]}},
+}
+%endregion 🔖️StyleVocabulary
+
+\ExplSyntaxOn
+
+%region 🔖️Diagnostics
+\msg_new:nnn { semio-viz-sci } { unknown-mode }
+  { Unknown~mode~'#2'~for~scientific~family~'#1'. }
+\msg_new:nnn { semio-viz-sci } { empty-samples }
+  { Scientific~family~'#1'~produced~no~finite~samples;~check~expression~and~domain. }
+%endregion 🔖️Diagnostics
+
+%region 🔖️Chrome
+% 🎨 The chrome vocabulary the ten scientific packages share, on top of the theme kernel. Their
+% series, modes and levels are numbered from one in the data, the theme's categorical slots from
+% zero, and the ramps are the theme's own so a field and a chart of the same document agree.
+\cs_new:Npn \semio_viz_sci_hue:n #1
+  { \semio_viz_theme_color:n { \int_eval:n { (#1) - 1 } } }
+% 🌡️ Sequential ramp colour at level #1, straight from the theme so field and chart agree.
+\cs_new:Npn \semio_viz_sci_ramp:n #1 { \semio_viz_theme_ramp:n {#1} }
+% ↔️ Diverging ramp colour at level #1, for quantities read against a zero in the middle.
+\cs_new:Npn \semio_viz_sci_ramp_diverging:n #1 { \semio_viz_theme_ramp_diverging:n {#1} }
+% 🔄 Cyclic ramp colour at level #1, for phase and other quantities that wrap.
+\cs_new:Npn \semio_viz_sci_ramp_cyclic:n #1 { \semio_viz_theme_ramp_cyclic:n {#1} }
+%endregion 🔖️Chrome
+
+%region 🔖️Language
+% 🗣️ Wording and numbers in the document language, through the format kernel's locale.
+\cs_new_protected:Npn \semio_viz_sci_text:nn #1#2
+  { \semio_viz_format_localized:nn {#1} {#2} }
+% 🔢 Typesets the number #1 to #2 decimals in the document locale's own separators.
+\cs_new_protected:Npn \semio_viz_sci_num:nn #1#2
+  { \semio_viz_format_decimal:nn {#1} {#2} }
+%endregion 🔖️Language
+
+%region 🔖️Samples
+% 🔤 Splits `#2` on a colon into `#1`. The colon is a letter inside expl3 and an ordinary character in a
+%    document, so both sides are string-normalised first and the split matches wherever the data came from.
+\cs_generate_variant:Nn \seq_set_split:Nnn { NVV }
+\tl_new:N \l_semio_viz_sci_split_tl
+\cs_new_protected:Npn \semio_viz_sci_split_colon:Nn #1#2
+  {
+    \tl_set:Nx \l_semio_viz_sci_split_tl { #2 }
+    \tl_set:Nx \l_semio_viz_sci_split_tl { \tl_to_str:N \l_semio_viz_sci_split_tl }
+    \seq_set_split:NVV #1 \c_colon_str \l_semio_viz_sci_split_tl
+  }
+
+% 📈 Point sequences: every item is the comma pair `x,y`; these accessors keep the pair opaque to renderers.
+\seq_new:N \l_semio_viz_sci_pts_seq
+\seq_new:N \l_semio_viz_sci_pts_b_seq
+\seq_new:N \l_semio_viz_sci_pts_c_seq
+
+% 📈 Uniform sampling of `#2` (an l3fp expression over \SemioX) on the domain `#3`..`#4` with `#5` points.
+\cs_new_protected:Npn \semio_viz_sci_sample:Nnnnn #1#2#3#4#5
+  {
+    \seq_clear:N #1
+    \int_step_inline:nnnn { 0 } { 1 } { \int_eval:n {#5} }
+      {
+        \fp_set:Nn \SemioX { #3 + ( #4 - #3 ) * ##1 / (#5) }
+        \semio_viz_tr_finite:nT {#2}
+          { \semio_viz_points_put:Nnn #1 { \SemioX } {#2} }
+      }
+  }
+
+% 📈 Adaptive refinement: `#3` passes inserting a midpoint wherever the chord sagitta exceeds `#4` of the y extent.
+\fp_new:N \l_semio_viz_sci_sag_fp
+\cs_new_protected:Npn \semio_viz_sci_refine:Nnnn #1#2#3#4
+  {
+    \int_step_inline:nnnn { 1 } { 1 } {#3}
+      {
+        \seq_clear:N \l_semio_viz_sci_pts_b_seq
+        \semio_viz_sci_extent:N #1
+        \fp_set:Nn \l_semio_viz_sci_sag_fp { #4 * max ( 1e-9 , \l_semio_viz_sci_ymax_fp - \l_semio_viz_sci_ymin_fp ) }
+        \int_step_inline:nnnn { 1 } { 1 } { \seq_count:N #1 - 1 }
+          {
+            \seq_put_right:Nx \l_semio_viz_sci_pts_b_seq { \seq_item:Nn #1 {####1} }
+            \semio_viz_sci_refine_pair:nnn { \seq_item:Nn #1 {####1} } { \seq_item:Nn #1 { ####1 + 1 } } {#2}
+          }
+        \seq_put_right:Nx \l_semio_viz_sci_pts_b_seq { \seq_item:Nn #1 { -1 } }
+        \seq_set_eq:NN #1 \l_semio_viz_sci_pts_b_seq
+      }
+  }
+% ➗ Tests the midpoint of the chord #1..#2 and keeps it only when its sag beats the pass threshold.
+\cs_new_protected:Npn \semio_viz_sci_refine_pair:nnn #1#2#3
+  {
+    \fp_set:Nn \SemioX { ( \semio_viz_points_x:n {#1} + \semio_viz_points_x:n {#2} ) / 2 }
+    \semio_viz_tr_finite:nT {#3}
+      {
+        \fp_compare:nNnT
+          { abs ( ( #3 ) - ( \semio_viz_points_y:n {#1} + \semio_viz_points_y:n {#2} ) / 2 ) } > { \l_semio_viz_sci_sag_fp }
+          { \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_b_seq { \SemioX } {#3} }
+      }
+  }
+
+% 📐 Data extent of a point sequence into the four extent variables.
+\fp_new:N \l_semio_viz_sci_xmin_fp
+\fp_new:N \l_semio_viz_sci_xmax_fp
+\fp_new:N \l_semio_viz_sci_ymin_fp
+\fp_new:N \l_semio_viz_sci_ymax_fp
+\cs_new_protected:Npn \semio_viz_sci_extent:N #1
+  {
+    \fp_set:Nn \l_semio_viz_sci_xmin_fp { inf }
+    \fp_set:Nn \l_semio_viz_sci_xmax_fp { -inf }
+    \fp_set:Nn \l_semio_viz_sci_ymin_fp { inf }
+    \fp_set:Nn \l_semio_viz_sci_ymax_fp { -inf }
+    \seq_map_inline:Nn #1
+      {
+        \fp_set:Nn \l_semio_viz_sci_xmin_fp { min ( \l_semio_viz_sci_xmin_fp , \semio_viz_points_x:n {##1} ) }
+        \fp_set:Nn \l_semio_viz_sci_xmax_fp { max ( \l_semio_viz_sci_xmax_fp , \semio_viz_points_x:n {##1} ) }
+        \fp_set:Nn \l_semio_viz_sci_ymin_fp { min ( \l_semio_viz_sci_ymin_fp , \semio_viz_points_y:n {##1} ) }
+        \fp_set:Nn \l_semio_viz_sci_ymax_fp { max ( \l_semio_viz_sci_ymax_fp , \semio_viz_points_y:n {##1} ) }
+      }
+  }
+
+%endregion 🔖️Samples
+
+%region 🔖️Numerics
+% ∫ Riemann sum of `#1` over `#2`..`#3` in `#4` bins with rule `#5` (left, right, mid, trapezoid); bin tops land in the point sequence `#6`.
+\fp_new:N \l_semio_viz_sci_riemann_fp
+% 🧮 Accumulates the sum bin by bin, the trapezoid rule averaging both ends, and records each bin top.
+\cs_new_protected:Npn \semio_viz_sci_riemann:nnnnnN #1#2#3#4#5#6
+  {
+    \fp_zero:N \l_semio_viz_sci_riemann_fp
+    \fp_set:Nn \l_semio_viz_sci_h_step_fp { ( #3 - #2 ) / (#4) }
+    \seq_clear:N #6
+    \int_step_inline:nnnn { 0 } { 1 } { #4 - 1 }
+      {
+        \str_case:nn {#5}
+          {
+            { left }      { \fp_set:Nn \SemioX { #2 + ##1 * \l_semio_viz_sci_h_step_fp } }
+            { right }     { \fp_set:Nn \SemioX { #2 + ( ##1 + 1 ) * \l_semio_viz_sci_h_step_fp } }
+            { mid }       { \fp_set:Nn \SemioX { #2 + ( ##1 + 0.5 ) * \l_semio_viz_sci_h_step_fp } }
+            { trapezoid } { \fp_set:Nn \SemioX { #2 + ##1 * \l_semio_viz_sci_h_step_fp } }
+          }
+        \str_if_eq:nnTF {#5} { trapezoid }
+          {
+            \fp_set:Nn \l_semio_viz_sci_a_fp {#1}
+            \fp_set:Nn \SemioX { #2 + ( ##1 + 1 ) * \l_semio_viz_sci_h_step_fp }
+            \fp_set:Nn \l_semio_viz_sci_b_fp {#1}
+            \fp_add:Nn \l_semio_viz_sci_riemann_fp
+              { \l_semio_viz_sci_h_step_fp * ( \l_semio_viz_sci_a_fp + \l_semio_viz_sci_b_fp ) / 2 }
+            \semio_viz_points_put:Nnn #6 { #2 + ##1 * \l_semio_viz_sci_h_step_fp } { \l_semio_viz_sci_a_fp }
+          }
+          {
+            \fp_set:Nn \l_semio_viz_sci_a_fp {#1}
+            \fp_add:Nn \l_semio_viz_sci_riemann_fp { \l_semio_viz_sci_h_step_fp * \l_semio_viz_sci_a_fp }
+            \semio_viz_points_put:Nnn #6 { #2 + ##1 * \l_semio_viz_sci_h_step_fp } { \l_semio_viz_sci_a_fp }
+          }
+      }
+  }
+
+% 🧮 Fourth-order Runge–Kutta of the autonomous system x'=#1, y'=#2 from (#3,#4) with step #5 for #6 steps into #7.
+\cs_new_protected:Npn \semio_viz_sci_rkfour:nnnnnnN #1#2#3#4#5#6#7
+  {
+    \seq_clear:N #7
+    \fp_set:Nn \SemioX {#3}
+    \fp_set:Nn \SemioY {#4}
+    \fp_zero:N \SemioT
+    \semio_viz_points_put:Nnn #7 { \SemioX } { \SemioY }
+    \int_step_inline:nnnn { 1 } { 1 } {#6}
+      {
+        \semio_viz_sci_rkfour_step:nnn {#1} {#2} {#5}
+        \semio_viz_points_put:Nnn #7 { \SemioX } { \SemioY }
+      }
+  }
+\fp_new:N \l_semio_viz_sci_kax_fp \fp_new:N \l_semio_viz_sci_kay_fp
+\fp_new:N \l_semio_viz_sci_kbx_fp \fp_new:N \l_semio_viz_sci_kby_fp
+\fp_new:N \l_semio_viz_sci_kcx_fp \fp_new:N \l_semio_viz_sci_kcy_fp
+\fp_new:N \l_semio_viz_sci_kdx_fp \fp_new:N \l_semio_viz_sci_kdy_fp
+\fp_new:N \l_semio_viz_sci_orgx_fp \fp_new:N \l_semio_viz_sci_orgy_fp \fp_new:N \l_semio_viz_sci_orgt_fp
+% 🪜 One RK4 step: the four slopes off the saved origin, combined 1-2-2-1 back into \SemioX, \SemioY and \SemioT.
+\cs_new_protected:Npn \semio_viz_sci_rkfour_step:nnn #1#2#3
+  {
+    \fp_set_eq:NN \l_semio_viz_sci_orgx_fp \SemioX
+    \fp_set_eq:NN \l_semio_viz_sci_orgy_fp \SemioY
+    \fp_set_eq:NN \l_semio_viz_sci_orgt_fp \SemioT
+    \fp_set:Nn \l_semio_viz_sci_kax_fp {#1} \fp_set:Nn \l_semio_viz_sci_kay_fp {#2}
+    \fp_set:Nn \SemioX { \l_semio_viz_sci_orgx_fp + #3 * \l_semio_viz_sci_kax_fp / 2 }
+    \fp_set:Nn \SemioY { \l_semio_viz_sci_orgy_fp + #3 * \l_semio_viz_sci_kay_fp / 2 }
+    \fp_set:Nn \SemioT { \l_semio_viz_sci_orgt_fp + #3 / 2 }
+    \fp_set:Nn \l_semio_viz_sci_kbx_fp {#1} \fp_set:Nn \l_semio_viz_sci_kby_fp {#2}
+    \fp_set:Nn \SemioX { \l_semio_viz_sci_orgx_fp + #3 * \l_semio_viz_sci_kbx_fp / 2 }
+    \fp_set:Nn \SemioY { \l_semio_viz_sci_orgy_fp + #3 * \l_semio_viz_sci_kby_fp / 2 }
+    \fp_set:Nn \l_semio_viz_sci_kcx_fp {#1} \fp_set:Nn \l_semio_viz_sci_kcy_fp {#2}
+    \fp_set:Nn \SemioX { \l_semio_viz_sci_orgx_fp + #3 * \l_semio_viz_sci_kcx_fp }
+    \fp_set:Nn \SemioY { \l_semio_viz_sci_orgy_fp + #3 * \l_semio_viz_sci_kcy_fp }
+    \fp_set:Nn \SemioT { \l_semio_viz_sci_orgt_fp + #3 }
+    \fp_set:Nn \l_semio_viz_sci_kdx_fp {#1} \fp_set:Nn \l_semio_viz_sci_kdy_fp {#2}
+    \fp_set:Nn \SemioX
+      { \l_semio_viz_sci_orgx_fp + #3 * ( \l_semio_viz_sci_kax_fp + 2 * \l_semio_viz_sci_kbx_fp
+        + 2 * \l_semio_viz_sci_kcx_fp + \l_semio_viz_sci_kdx_fp ) / 6 }
+    \fp_set:Nn \SemioY
+      { \l_semio_viz_sci_orgy_fp + #3 * ( \l_semio_viz_sci_kay_fp + 2 * \l_semio_viz_sci_kby_fp
+        + 2 * \l_semio_viz_sci_kcy_fp + \l_semio_viz_sci_kdy_fp ) / 6 }
+    \fp_set:Nn \SemioT { \l_semio_viz_sci_orgt_fp + #3 }
+  }
+
+% 🎲 Deterministic uniform pseudo-random stream (MINSTD, a=48271, m=2^31−1) so every figure redraws identically.
+%    The state lives in an fp because 48271·(m−1) ≈ 1.04e14 exceeds TeX's own integer range but not l3fp's 16 digits.
+\fp_new:N \g_semio_viz_sci_seed_fp
+\cs_new_protected:Npn \semio_viz_sci_seed:n #1
+  {
+    \fp_gset:Nn \g_semio_viz_sci_seed_fp
+      { max ( 1 , abs ( round (#1) ) - 2147483646 * floor ( abs ( round (#1) ) / 2147483646 ) ) }
+  }
+% 🎰 Advances the MINSTD state once and hands back the draw scaled onto the unit interval.
+\cs_new_protected:Npn \semio_viz_sci_random:N #1
+  {
+    \fp_gset:Nn \g_semio_viz_sci_seed_fp
+      {
+        48271 * \g_semio_viz_sci_seed_fp
+        - 2147483647 * floor ( 48271 * \g_semio_viz_sci_seed_fp / 2147483647 )
+      }
+    \fp_set:Nn #1 { \g_semio_viz_sci_seed_fp / 2147483647 }
+  }
+% 🎲 Standard normal deviate by the Box–Muller transform on the same stream.
+\cs_new_protected:Npn \semio_viz_sci_random_normal:N #1
+  {
+    \semio_viz_sci_random:N \l_semio_viz_sci_e_fp
+    \semio_viz_sci_random:N \l_semio_viz_sci_f_fp
+    \fp_set:Nn #1
+      { sqrt ( -2 * ln ( max ( 1e-9 , \l_semio_viz_sci_e_fp ) ) ) * cos ( 2 * pi * \l_semio_viz_sci_f_fp ) }
+  }
+
+% 🌊 Discrete Fourier transform of the real sample sequence `#1`; bin `k` magnitude and phase land in `#2` and `#3` as point sequences over the bin index.
+\fp_new:N \l_semio_viz_sci_re_fp
+\fp_new:N \l_semio_viz_sci_im_fp
+\cs_new_protected:Npn \semio_viz_sci_dft:NNN #1#2#3
+  {
+    \seq_clear:N #2
+    \seq_clear:N #3
+    \int_set:Nn \l_tmpa_int { \seq_count:N #1 }
+    \int_step_inline:nnnn { 0 } { 1 } { \int_eval:n { \l_tmpa_int / 2 } }
+      {
+        \fp_zero:N \l_semio_viz_sci_re_fp
+        \fp_zero:N \l_semio_viz_sci_im_fp
+        \int_step_inline:nnnn { 0 } { 1 } { \l_tmpa_int - 1 }
+          {
+            \fp_add:Nn \l_semio_viz_sci_re_fp
+              { \seq_item:Nn #1 { ####1 + 1 } * cos ( 2 * pi * ##1 * ####1 / \l_tmpa_int ) }
+            \fp_sub:Nn \l_semio_viz_sci_im_fp
+              { \seq_item:Nn #1 { ####1 + 1 } * sin ( 2 * pi * ##1 * ####1 / \l_tmpa_int ) }
+          }
+        \semio_viz_points_put:Nnn #2 {##1}
+          { sqrt ( \l_semio_viz_sci_re_fp ^ 2 + \l_semio_viz_sci_im_fp ^ 2 ) * 2 / \l_tmpa_int }
+        \semio_viz_points_put:Nnn #3 {##1}
+          { atand ( \l_semio_viz_sci_im_fp , \l_semio_viz_sci_re_fp ) }
+      }
+  }
+
+% 🧮 Complex value of the rational transfer function with numerator clist `#1` and denominator clist `#2` (descending powers) at s = i·`#3`; result in \l_semio_viz_sci_re_fp / _im_fp.
+\fp_new:N \l_semio_viz_sci_nre_fp \fp_new:N \l_semio_viz_sci_nim_fp
+\fp_new:N \l_semio_viz_sci_dre_fp \fp_new:N \l_semio_viz_sci_dim_fp
+\cs_new_protected:Npn \semio_viz_sci_poly_eval_jw:nnNN #1#2#3#4
+  {
+    \fp_zero:N #3
+    \fp_zero:N #4
+    \int_set:Nn \l_tmpb_int { \clist_count:n {#1} }
+    \int_step_inline:nnnn { 1 } { 1 } { \l_tmpb_int }
+      {
+        \fp_set:Nn \l_semio_viz_sci_g_fp { \clist_item:nn {#1} {##1} * (#2) ^ ( \l_tmpb_int - ##1 ) }
+        \int_case:nnF { \int_mod:nn { \l_tmpb_int - ##1 } { 4 } }
+          {
+            { 0 } { \fp_add:Nn #3 { \l_semio_viz_sci_g_fp } }
+            { 1 } { \fp_add:Nn #4 { \l_semio_viz_sci_g_fp } }
+            { 2 } { \fp_sub:Nn #3 { \l_semio_viz_sci_g_fp } }
+          }
+          { \fp_sub:Nn #4 { \l_semio_viz_sci_g_fp } }
+      }
+  }
+% 〰️ Divides the two polynomial values by multiplying with the conjugate denominator, leaving the quotient in _re_/_im_.
+\cs_new_protected:Npn \semio_viz_sci_tf:nnn #1#2#3
+  {
+    \semio_viz_sci_poly_eval_jw:nnNN {#1} {#3} \l_semio_viz_sci_nre_fp \l_semio_viz_sci_nim_fp
+    \semio_viz_sci_poly_eval_jw:nnNN {#2} {#3} \l_semio_viz_sci_dre_fp \l_semio_viz_sci_dim_fp
+    \fp_set:Nn \l_semio_viz_sci_g_fp { \l_semio_viz_sci_dre_fp ^ 2 + \l_semio_viz_sci_dim_fp ^ 2 }
+    \fp_set:Nn \l_semio_viz_sci_re_fp
+      { ( \l_semio_viz_sci_nre_fp * \l_semio_viz_sci_dre_fp + \l_semio_viz_sci_nim_fp * \l_semio_viz_sci_dim_fp ) / \l_semio_viz_sci_g_fp }
+    \fp_set:Nn \l_semio_viz_sci_im_fp
+      { ( \l_semio_viz_sci_nim_fp * \l_semio_viz_sci_dre_fp - \l_semio_viz_sci_nre_fp * \l_semio_viz_sci_dim_fp ) / \l_semio_viz_sci_g_fp }
+  }
+
+\cs_generate_variant:Nn \semio_viz_sci_tf:nnn { VVn }
+
+% 🧮 Durand–Kerner: all complex roots of the monic-normalised polynomial with coefficient clist `#1` (descending powers) into the point sequence `#2` as (re,im).
+\seq_new:N \l_semio_viz_sci_root_re_seq
+\seq_new:N \l_semio_viz_sci_root_im_seq
+\cs_generate_variant:Nn \seq_set_item:Nnn { Nnx }
+\cs_new_protected:Npn \semio_viz_sci_roots:nN #1#2
+  {
+    \int_set:Nn \l_tmpa_int { \clist_count:n {#1} - 1 }
+    \seq_clear:N \l_semio_viz_sci_root_re_seq
+    \seq_clear:N \l_semio_viz_sci_root_im_seq
+    \int_step_inline:nnnn { 1 } { 1 } { \l_tmpa_int }
+      {
+        \seq_put_right:Nx \l_semio_viz_sci_root_re_seq { \fp_to_decimal:n { 0.4 * cos ( 2 * pi * ##1 / \l_tmpa_int + 0.7 ) + 0.9 * cos ( 0.9 * ##1 ) } }
+        \seq_put_right:Nx \l_semio_viz_sci_root_im_seq { \fp_to_decimal:n { 0.4 * sin ( 2 * pi * ##1 / \l_tmpa_int + 0.7 ) + 0.9 * sin ( 0.9 * ##1 ) } }
+      }
+    \int_step_inline:nnnn { 1 } { 1 } { 80 } { \semio_viz_sci_roots_pass:n {#1} }
+    \seq_clear:N #2
+    \int_step_inline:nnnn { 1 } { 1 } { \l_tmpa_int }
+      {
+        \semio_viz_points_put:Nnn #2
+          { \seq_item:Nn \l_semio_viz_sci_root_re_seq {##1} }
+          { \seq_item:Nn \l_semio_viz_sci_root_im_seq {##1} }
+      }
+    \seq_sort:Nn #2
+      {
+        \fp_compare:nTF
+          {
+            \semio_viz_points_x:n {##1} > \semio_viz_points_x:n {##2} ||
+            ( \semio_viz_points_x:n {##1} == \semio_viz_points_x:n {##2} &&
+              \semio_viz_points_y:n {##1} > \semio_viz_points_y:n {##2} )
+          }
+          { \sort_return_swapped: } { \sort_return_same: }
+      }
+  }
+\fp_new:N \l_semio_viz_sci_pr_fp \fp_new:N \l_semio_viz_sci_pi_fp
+\fp_new:N \l_semio_viz_sci_qr_fp \fp_new:N \l_semio_viz_sci_qi_fp
+% 🔁 One Durand–Kerner sweep: each estimate is corrected by p(z) over the product of its distances to the others.
+\cs_new_protected:Npn \semio_viz_sci_roots_pass:n #1
+  {
+    \int_step_inline:nnnn { 1 } { 1 } { \l_tmpa_int }
+      {
+        \semio_viz_sci_poly_complex:nnn {#1}
+          { \seq_item:Nn \l_semio_viz_sci_root_re_seq {##1} }
+          { \seq_item:Nn \l_semio_viz_sci_root_im_seq {##1} }
+        \fp_set_eq:NN \l_semio_viz_sci_pr_fp \l_semio_viz_sci_re_fp
+        \fp_set_eq:NN \l_semio_viz_sci_pi_fp \l_semio_viz_sci_im_fp
+        \fp_set:Nn \l_semio_viz_sci_qr_fp { \clist_item:nn {#1} { 1 } }
+        \fp_zero:N \l_semio_viz_sci_qi_fp
+        \int_step_inline:nnnn { 1 } { 1 } { \l_tmpa_int }
+          {
+            \int_compare:nNnF {####1} = {##1}
+              {
+                \fp_set:Nn \l_semio_viz_sci_a_fp
+                  { \seq_item:Nn \l_semio_viz_sci_root_re_seq {##1} - \seq_item:Nn \l_semio_viz_sci_root_re_seq {####1} }
+                \fp_set:Nn \l_semio_viz_sci_b_fp
+                  { \seq_item:Nn \l_semio_viz_sci_root_im_seq {##1} - \seq_item:Nn \l_semio_viz_sci_root_im_seq {####1} }
+                \fp_set:Nn \l_semio_viz_sci_c_fp
+                  { \l_semio_viz_sci_qr_fp * \l_semio_viz_sci_a_fp - \l_semio_viz_sci_qi_fp * \l_semio_viz_sci_b_fp }
+                \fp_set:Nn \l_semio_viz_sci_qi_fp
+                  { \l_semio_viz_sci_qr_fp * \l_semio_viz_sci_b_fp + \l_semio_viz_sci_qi_fp * \l_semio_viz_sci_a_fp }
+                \fp_set_eq:NN \l_semio_viz_sci_qr_fp \l_semio_viz_sci_c_fp
+              }
+          }
+        \fp_set:Nn \l_semio_viz_sci_d_fp
+          { max ( 1e-12 , \l_semio_viz_sci_qr_fp ^ 2 + \l_semio_viz_sci_qi_fp ^ 2 ) }
+        \seq_set_item:Nnx \l_semio_viz_sci_root_re_seq {##1}
+          {
+            \fp_to_decimal:n
+              { \seq_item:Nn \l_semio_viz_sci_root_re_seq {##1}
+                - ( \l_semio_viz_sci_pr_fp * \l_semio_viz_sci_qr_fp + \l_semio_viz_sci_pi_fp * \l_semio_viz_sci_qi_fp ) / \l_semio_viz_sci_d_fp }
+          }
+        \seq_set_item:Nnx \l_semio_viz_sci_root_im_seq {##1}
+          {
+            \fp_to_decimal:n
+              { \seq_item:Nn \l_semio_viz_sci_root_im_seq {##1}
+                - ( \l_semio_viz_sci_pi_fp * \l_semio_viz_sci_qr_fp - \l_semio_viz_sci_pr_fp * \l_semio_viz_sci_qi_fp ) / \l_semio_viz_sci_d_fp }
+          }
+      }
+  }
+% 🧊 Horner evaluation of the coefficient clist #1 at the complex point (#2,#3), into _re_ and _im_.
+\cs_new_protected:Npn \semio_viz_sci_poly_complex:nnn #1#2#3
+  {
+    \fp_zero:N \l_semio_viz_sci_re_fp
+    \fp_zero:N \l_semio_viz_sci_im_fp
+    \clist_map_inline:nn {#1}
+      {
+        \fp_set:Nn \l_semio_viz_sci_c_fp
+          { \l_semio_viz_sci_re_fp * (#2) - \l_semio_viz_sci_im_fp * (#3) + ##1 }
+        \fp_set:Nn \l_semio_viz_sci_im_fp
+          { \l_semio_viz_sci_re_fp * (#3) + \l_semio_viz_sci_im_fp * (#2) }
+        \fp_set_eq:NN \l_semio_viz_sci_re_fp \l_semio_viz_sci_c_fp
+      }
+  }
+\cs_generate_variant:Nn \semio_viz_sci_roots:nN { VN }
+%endregion 🔖️Numerics
+
+%region 🔖️Canvas
+% 🖼️ Canvas state: millimetre size and the data window a family maps onto it.
+\fp_new:N \l_semio_viz_sci_w_fp
+\fp_new:N \l_semio_viz_sci_h_fp
+\fp_new:N \l_semio_viz_sci_dxmin_fp
+\fp_new:N \l_semio_viz_sci_dxmax_fp
+\fp_new:N \l_semio_viz_sci_dymin_fp
+\fp_new:N \l_semio_viz_sci_dymax_fp
+\int_new:N \l_semio_viz_sci_ticks_int
+\bool_new:N \l_semio_viz_sci_grid_bool
+\bool_new:N \l_semio_viz_sci_axes_bool
+\tl_new:N \l_semio_viz_sci_data_tl
+\tl_new:N \l_semio_viz_sci_title_tl
+\tl_new:N \l_semio_viz_sci_xlabel_tl
+\tl_new:N \l_semio_viz_sci_ylabel_tl
+
+% 📐 Data-to-millimetre projection of the current canvas window.
+\cs_new:Npn \semio_viz_sci_mx:n #1
+  { \fp_eval:n { \l_semio_viz_sci_w_fp * ( ( #1 ) - \l_semio_viz_sci_dxmin_fp )
+      / ( \l_semio_viz_sci_dxmax_fp - \l_semio_viz_sci_dxmin_fp ) } }
+% 📏 The matching vertical projection onto the canvas height.
+\cs_new:Npn \semio_viz_sci_my:n #1
+  { \fp_eval:n { \l_semio_viz_sci_h_fp * ( ( #1 ) - \l_semio_viz_sci_dymin_fp )
+      / ( \l_semio_viz_sci_dymax_fp - \l_semio_viz_sci_dymin_fp ) } }
+
+% 🪟 Sets the data window; a zero-extent axis is padded so a constant series still has a frame.
+\cs_new_protected:Npn \semio_viz_sci_window:nnnn #1#2#3#4
+  {
+    \fp_set:Nn \l_semio_viz_sci_dxmin_fp {#1}
+    \fp_set:Nn \l_semio_viz_sci_dxmax_fp {#2}
+    \fp_set:Nn \l_semio_viz_sci_dymin_fp {#3}
+    \fp_set:Nn \l_semio_viz_sci_dymax_fp {#4}
+    \fp_compare:nNnT { abs ( \l_semio_viz_sci_dxmax_fp - \l_semio_viz_sci_dxmin_fp ) } < { 1e-9 }
+      {
+        \fp_sub:Nn \l_semio_viz_sci_dxmin_fp { 1 }
+        \fp_add:Nn \l_semio_viz_sci_dxmax_fp { 1 }
+      }
+    \fp_compare:nNnT { abs ( \l_semio_viz_sci_dymax_fp - \l_semio_viz_sci_dymin_fp ) } < { 1e-9 }
+      {
+        \fp_sub:Nn \l_semio_viz_sci_dymin_fp { 1 }
+        \fp_add:Nn \l_semio_viz_sci_dymax_fp { 1 }
+      }
+  }
+
+% 🪟 Sets the data window from a point sequence with a relative margin on both axes.
+\cs_new_protected:Npn \semio_viz_sci_window_from:Nn #1#2
+  {
+    \semio_viz_sci_extent:N #1
+    \semio_viz_sci_window:nnnn
+      { \l_semio_viz_sci_xmin_fp - #2 * ( \l_semio_viz_sci_xmax_fp - \l_semio_viz_sci_xmin_fp ) }
+      { \l_semio_viz_sci_xmax_fp + #2 * ( \l_semio_viz_sci_xmax_fp - \l_semio_viz_sci_xmin_fp ) }
+      { \l_semio_viz_sci_ymin_fp - #2 * ( \l_semio_viz_sci_ymax_fp - \l_semio_viz_sci_ymin_fp ) }
+      { \l_semio_viz_sci_ymax_fp + #2 * ( \l_semio_viz_sci_ymax_fp - \l_semio_viz_sci_ymin_fp ) }
+  }
+
+% 🧭 Frame with optional grid, tick labels and axis titles; every renderer calls this instead of drawing its own box.
+\cs_new_protected:Npn \semio_viz_sci_frame:
+  {
+    \bool_if:NT \l_semio_viz_sci_grid_bool
+      {
+        \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_sci_ticks_int }
+          {
+            \draw [ semio~sci~grid ]
+              ( \fp_eval:n { \l_semio_viz_sci_w_fp * ##1 / \l_semio_viz_sci_ticks_int } , 0 ) --
+              ( \fp_eval:n { \l_semio_viz_sci_w_fp * ##1 / \l_semio_viz_sci_ticks_int } , \fp_eval:n { \l_semio_viz_sci_h_fp } ) ;
+            \draw [ semio~sci~grid ]
+              ( 0 , \fp_eval:n { \l_semio_viz_sci_h_fp * ##1 / \l_semio_viz_sci_ticks_int } ) --
+              ( \fp_eval:n { \l_semio_viz_sci_w_fp } , \fp_eval:n { \l_semio_viz_sci_h_fp * ##1 / \l_semio_viz_sci_ticks_int } ) ;
+          }
+      }
+    \bool_if:NT \l_semio_viz_sci_axes_bool
+      {
+        \draw [ semio~sci~axis ]
+          ( 0 , 0 ) rectangle ( \fp_eval:n { \l_semio_viz_sci_w_fp } , \fp_eval:n { \l_semio_viz_sci_h_fp } ) ;
+        \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_sci_ticks_int }
+          {
+            \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal , anchor=north ]
+              at ( \fp_eval:n { \l_semio_viz_sci_w_fp * ##1 / \l_semio_viz_sci_ticks_int } , -0.6 )
+              { \semio_viz_sci_num:nn
+                  { \l_semio_viz_sci_dxmin_fp + ( \l_semio_viz_sci_dxmax_fp - \l_semio_viz_sci_dxmin_fp ) * ##1 / \l_semio_viz_sci_ticks_int } { 2 } } ;
+            \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal , anchor=east ]
+              at ( -0.6 , \fp_eval:n { \l_semio_viz_sci_h_fp * ##1 / \l_semio_viz_sci_ticks_int } )
+              { \semio_viz_sci_num:nn
+                  { \l_semio_viz_sci_dymin_fp + ( \l_semio_viz_sci_dymax_fp - \l_semio_viz_sci_dymin_fp ) * ##1 / \l_semio_viz_sci_ticks_int } { 2 } } ;
+          }
+      }
+    \tl_if_empty:NF \l_semio_viz_sci_title_tl
+      {
+        \node [ font=\c_semio_viz_theme_font_title_tl , text=semio-chrome-foreground , anchor=south~west ]
+          at ( 0 , \fp_eval:n { \l_semio_viz_sci_h_fp + 1 } ) { \l_semio_viz_sci_title_tl } ;
+      }
+    \tl_if_empty:NF \l_semio_viz_sci_xlabel_tl
+      {
+        \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal , anchor=north~east ]
+          at ( \fp_eval:n { \l_semio_viz_sci_w_fp } , -3.4 ) { \l_semio_viz_sci_xlabel_tl } ;
+      }
+    \tl_if_empty:NF \l_semio_viz_sci_ylabel_tl
+      {
+        \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal , anchor=south~west , rotate=90 ]
+          at ( -4.2 , 0 ) { \l_semio_viz_sci_ylabel_tl } ;
+      }
+  }
+
+% 🧭 Zero lines of the current window, drawn only when the origin is inside it.
+\cs_new_protected:Npn \semio_viz_sci_zero_lines:
+  {
+    \fp_compare:nNnT { \l_semio_viz_sci_dymin_fp * \l_semio_viz_sci_dymax_fp } < { 0 }
+      { \draw [ semio~sci~axis ] ( 0 , \semio_viz_sci_my:n { 0 } ) -- ( \fp_eval:n { \l_semio_viz_sci_w_fp } , \semio_viz_sci_my:n { 0 } ) ; }
+    \fp_compare:nNnT { \l_semio_viz_sci_dxmin_fp * \l_semio_viz_sci_dxmax_fp } < { 0 }
+      { \draw [ semio~sci~axis ] ( \semio_viz_sci_mx:n { 0 } , 0 ) -- ( \semio_viz_sci_mx:n { 0 } , \fp_eval:n { \l_semio_viz_sci_h_fp } ) ; }
+  }
+%endregion 🔖️Canvas
+
+%region 🔖️Paths
+% ✏️ Draws a point sequence as a polyline in data coordinates and reports it as `geometry/path` in millimetres.
+\tl_new:N \l_semio_viz_sci_path_tl
+\cs_new_protected:Npn \semio_viz_sci_polyline:Nn #1#2
+  {
+    \int_compare:nNnT { \seq_count:N #1 } > { 1 }
+      {
+        \tl_clear:N \l_semio_viz_sci_path_tl
+        \seq_map_inline:Nn #1
+          {
+            \tl_if_empty:NF \l_semio_viz_sci_path_tl { \tl_put_right:Nn \l_semio_viz_sci_path_tl { -- } }
+            \tl_put_right:Nx \l_semio_viz_sci_path_tl
+              { ( \semio_viz_sci_mx:n { \semio_viz_points_x:n {##1} } , \semio_viz_sci_my:n { \semio_viz_points_y:n {##1} } ) }
+          }
+        \use:x { \exp_not:N \draw [ \exp_not:n {#2} ] \exp_not:V \l_semio_viz_sci_path_tl ; }
+        \semio_viz_sci_report:Nn #1 { path }
+      }
+  }
+
+% ✏️ Fills the area between a point sequence and the given baseline value.
+\cs_new_protected:Npn \semio_viz_sci_polyarea:Nnn #1#2#3
+  {
+    \int_compare:nNnT { \seq_count:N #1 } > { 1 }
+      {
+        \tl_clear:N \l_semio_viz_sci_path_tl
+        \tl_put_right:Nx \l_semio_viz_sci_path_tl
+          { ( \semio_viz_sci_mx:n { \semio_viz_points_x:n { \seq_item:Nn #1 { 1 } } } , \semio_viz_sci_my:n {#3} ) }
+        \seq_map_inline:Nn #1
+          {
+            \tl_put_right:Nx \l_semio_viz_sci_path_tl
+              { -- ( \semio_viz_sci_mx:n { \semio_viz_points_x:n {##1} } , \semio_viz_sci_my:n { \semio_viz_points_y:n {##1} } ) }
+          }
+        \tl_put_right:Nx \l_semio_viz_sci_path_tl
+          { -- ( \semio_viz_sci_mx:n { \semio_viz_points_x:n { \seq_item:Nn #1 { -1 } } } , \semio_viz_sci_my:n {#3} ) ~ -- ~ cycle }
+        \use:x { \exp_not:N \fill [ \exp_not:n {#2} ] \exp_not:V \l_semio_viz_sci_path_tl ; }
+      }
+  }
+
+% 🧭 Emits a point sequence as a probe geometry record, in millimetres of the current canvas.
+\cs_new_protected:Npn \semio_viz_sci_report:Nn #1#2
+  {
+    \seq_clear:N \l_semio_viz_sci_pts_c_seq
+    \seq_map_inline:Nn #1
+      {
+        \seq_put_right:Nx \l_semio_viz_sci_pts_c_seq
+          { \semio_viz_sci_mx:n { \semio_viz_points_x:n {##1} } , \semio_viz_sci_my:n { \semio_viz_points_y:n {##1} } }
+      }
+    \semio_viz_probe_geometry:nx {#2} { \seq_use:Nn \l_semio_viz_sci_pts_c_seq { , } }
+  }
+
+% 🧭 Emits raw numbers of a family's own computation (sums, roots, coefficients) as a probe record.
+\cs_new_protected:Npn \semio_viz_sci_report_values:nn #1#2
+  { \semio_viz_probe_geometry:nx {#1} {#2} }
+
+% ⭕ Marker glyph at a data point.
+\cs_new_protected:Npn \semio_viz_sci_dot:nnn #1#2#3
+  {
+    \fill [ fill=#3 ] ( \semio_viz_sci_mx:n {#1} , \semio_viz_sci_my:n {#2} ) circle [ radius=0.7 ] ;
+  }
+
+% ➡️ Arrow between two data points.
+\cs_new_protected:Npn \semio_viz_sci_arrow:nnnnn #1#2#3#4#5
+  {
+    \draw [ #5 ] ( \semio_viz_sci_mx:n {#1} , \semio_viz_sci_my:n {#2} ) --
+      ( \semio_viz_sci_mx:n {#3} , \semio_viz_sci_my:n {#4} ) ;
+  }
+%endregion 🔖️Paths
+
+%region 🔖️MarchingSquares
+% 🪢 Marching squares on `#1` (an l3fp expression over \SemioX,\SemioY) at level `#4`, on a
+% `#2`×`#3` lattice over the canvas domain, each crossing segment drawn with the options `#5`.
+% It reads the scientific canvas domain and draws through `\semio_viz_sci_polyline:Nn`, so it lives
+% with the canvas rather than in `semio-viz-spatial`; the generic clipper stays there.
+\fp_new:N \l_semio_viz_sci_ms_a_fp \fp_new:N \l_semio_viz_sci_ms_b_fp
+\fp_new:N \l_semio_viz_sci_ms_c_fp \fp_new:N \l_semio_viz_sci_ms_d_fp
+\fp_new:N \l_semio_viz_sci_ms_x_fp \fp_new:N \l_semio_viz_sci_ms_y_fp
+\fp_new:N \l_semio_viz_sci_ms_xn_fp \fp_new:N \l_semio_viz_sci_ms_yn_fp
+\seq_new:N \l_semio_viz_sci_ms_seq
+\cs_new_protected:Npn \semio_viz_sci_marching:nnnnn #1#2#3#4#5
+  {
+    \int_step_inline:nnnn { 0 } { 1 } { #2 - 1 }
+      {
+        \int_step_inline:nnnn { 0 } { 1 } { #3 - 1 }
+          {
+            \fp_set:Nn \l_semio_viz_sci_ms_x_fp
+              { \l_semio_viz_sci_dxmin_fp + ( \l_semio_viz_sci_dxmax_fp - \l_semio_viz_sci_dxmin_fp ) * ##1 / (#2) }
+            \fp_set:Nn \l_semio_viz_sci_ms_xn_fp
+              { \l_semio_viz_sci_dxmin_fp + ( \l_semio_viz_sci_dxmax_fp - \l_semio_viz_sci_dxmin_fp ) * ( ##1 + 1 ) / (#2) }
+            \fp_set:Nn \l_semio_viz_sci_ms_y_fp
+              { \l_semio_viz_sci_dymin_fp + ( \l_semio_viz_sci_dymax_fp - \l_semio_viz_sci_dymin_fp ) * ####1 / (#3) }
+            \fp_set:Nn \l_semio_viz_sci_ms_yn_fp
+              { \l_semio_viz_sci_dymin_fp + ( \l_semio_viz_sci_dymax_fp - \l_semio_viz_sci_dymin_fp ) * ( ####1 + 1 ) / (#3) }
+            \semio_viz_sci_marching_cell:nnn {#1} {#4} {#5}
+          }
+      }
+  }
+% 〰️ One cell of the analytic marching-squares pass: the expression #1 minus the level #2 sampled
+% at the four corners, then the crossings on the four edges joined and drawn in style #3.
+\cs_new_protected:Npn \semio_viz_sci_marching_cell:nnn #1#2#3
+  {
+    \fp_set:Nn \SemioX { \l_semio_viz_sci_ms_x_fp } \fp_set:Nn \SemioY { \l_semio_viz_sci_ms_y_fp }
+    \fp_set:Nn \l_semio_viz_sci_ms_a_fp { ( #1 ) - (#2) }
+    \fp_set:Nn \SemioX { \l_semio_viz_sci_ms_xn_fp }
+    \fp_set:Nn \l_semio_viz_sci_ms_b_fp { ( #1 ) - (#2) }
+    \fp_set:Nn \SemioY { \l_semio_viz_sci_ms_yn_fp }
+    \fp_set:Nn \l_semio_viz_sci_ms_c_fp { ( #1 ) - (#2) }
+    \fp_set:Nn \SemioX { \l_semio_viz_sci_ms_x_fp }
+    \fp_set:Nn \l_semio_viz_sci_ms_d_fp { ( #1 ) - (#2) }
+    \seq_clear:N \l_semio_viz_sci_ms_seq
+    \semio_viz_sci_marching_edge:NNnnnn \l_semio_viz_sci_ms_a_fp \l_semio_viz_sci_ms_b_fp
+      { \l_semio_viz_sci_ms_x_fp } { \l_semio_viz_sci_ms_y_fp } { \l_semio_viz_sci_ms_xn_fp } { \l_semio_viz_sci_ms_y_fp }
+    \semio_viz_sci_marching_edge:NNnnnn \l_semio_viz_sci_ms_b_fp \l_semio_viz_sci_ms_c_fp
+      { \l_semio_viz_sci_ms_xn_fp } { \l_semio_viz_sci_ms_y_fp } { \l_semio_viz_sci_ms_xn_fp } { \l_semio_viz_sci_ms_yn_fp }
+    \semio_viz_sci_marching_edge:NNnnnn \l_semio_viz_sci_ms_c_fp \l_semio_viz_sci_ms_d_fp
+      { \l_semio_viz_sci_ms_xn_fp } { \l_semio_viz_sci_ms_yn_fp } { \l_semio_viz_sci_ms_x_fp } { \l_semio_viz_sci_ms_yn_fp }
+    \semio_viz_sci_marching_edge:NNnnnn \l_semio_viz_sci_ms_d_fp \l_semio_viz_sci_ms_a_fp
+      { \l_semio_viz_sci_ms_x_fp } { \l_semio_viz_sci_ms_yn_fp } { \l_semio_viz_sci_ms_x_fp } { \l_semio_viz_sci_ms_y_fp }
+    \int_compare:nNnT { \seq_count:N \l_semio_viz_sci_ms_seq } > { 1 }
+      { \semio_viz_sci_polyline:Nn \l_semio_viz_sci_ms_seq {#3} }
+  }
+% ✖️ The crossing on the cell edge from (#3,#4) to (#5,#6), when the corner values #1 and #2 lie
+% on opposite sides of the level.
+\cs_new_protected:Npn \semio_viz_sci_marching_edge:NNnnnn #1#2#3#4#5#6
+  {
+    \fp_compare:nNnT { #1 * #2 } < { 0 }
+      {
+        \semio_viz_points_put:Nnn \l_semio_viz_sci_ms_seq
+          { #3 + ( #5 - #3 ) * #1 / ( #1 - #2 ) }
+          { #4 + ( #6 - #4 ) * #1 / ( #1 - #2 ) }
+      }
+  }
+%endregion 🔖️MarchingSquares
+
+%region 🔖️Keys
+% 🔑 Injects the canvas keys every scientific family shares into that family's key family.
+%    width (fp, 60): canvas width in mm. height (fp, 40): canvas height in mm.
+%    domain (clist of 2, family-specific): data x window. range (clist of 2): data y window; empty means fit to data.
+%    ticks (int, 4): tick divisions per axis. grid (bool, true): background grid. axes (bool, true): frame and tick labels.
+%    title/xlabel/ylabel (tl, empty): chrome text. seed (int, 20260905): pseudo-random stream seed.
+\clist_new:N \l_semio_viz_sci_domain_clist
+\clist_new:N \l_semio_viz_sci_range_clist
+\cs_new_protected:Npn \semio_viz_sci_keys_canvas:n #1
+  {
+    \keys_define:nn { semio / viz / family / #1 }
+      {
+        % 📊 The catalogue binds every chart kind's table as `data=`. A scientific family usually
+        % carries its own literal vectors instead (`segments=`, `tracks=`, `u=`/`v=`), so the table
+        % name is recorded for the ones that do read a table rather than refused for the ones that
+        % do not.
+        data    .tl_set:N    = \l_semio_viz_sci_data_tl ,
+        width   .fp_set:N    = \l_semio_viz_sci_w_fp ,
+        height  .fp_set:N    = \l_semio_viz_sci_h_fp ,
+        domain  .clist_set:N = \l_semio_viz_sci_domain_clist ,
+        range   .clist_set:N = \l_semio_viz_sci_range_clist ,
+        ticks   .int_set:N   = \l_semio_viz_sci_ticks_int ,
+        grid    .bool_set:N  = \l_semio_viz_sci_grid_bool ,
+        axes    .bool_set:N  = \l_semio_viz_sci_axes_bool ,
+        title   .tl_set:N    = \l_semio_viz_sci_title_tl ,
+        xlabel  .tl_set:N    = \l_semio_viz_sci_xlabel_tl ,
+        ylabel  .tl_set:N    = \l_semio_viz_sci_ylabel_tl ,
+        seed    .code:n      = { \semio_viz_sci_seed:n {##1} } ,
+      }
+  }
+
+% 🔄 Resets the shared canvas state to its documented defaults before a family reads its options.
+\cs_new_protected:Npn \semio_viz_sci_keys_reset:
+  {
+    \fp_set:Nn \l_semio_viz_sci_w_fp { 60 }
+    \fp_set:Nn \l_semio_viz_sci_h_fp { 40 }
+    \clist_clear:N \l_semio_viz_sci_domain_clist
+    \clist_clear:N \l_semio_viz_sci_range_clist
+    \int_set:Nn \l_semio_viz_sci_ticks_int { 4 }
+    \bool_set_true:N \l_semio_viz_sci_grid_bool
+    \bool_set_true:N \l_semio_viz_sci_axes_bool
+    \tl_clear:N \l_semio_viz_sci_title_tl
+    \tl_clear:N \l_semio_viz_sci_xlabel_tl
+    \tl_clear:N \l_semio_viz_sci_ylabel_tl
+    \semio_viz_sci_seed:n { 20260905 }
+    \semio_viz_sci_window:nnnn { 0 } { 1 } { 0 } { 1 }
+  }
+
+% 📖 Reads `domain` into the x window and `range` into the y window, leaving a missing one untouched.
+\cs_new_protected:Npn \semio_viz_sci_window_keys:
+  {
+    \int_compare:nNnT { \clist_count:N \l_semio_viz_sci_domain_clist } = { 2 }
+      {
+        \fp_set:Nn \l_semio_viz_sci_dxmin_fp { \clist_item:Nn \l_semio_viz_sci_domain_clist { 1 } }
+        \fp_set:Nn \l_semio_viz_sci_dxmax_fp { \clist_item:Nn \l_semio_viz_sci_domain_clist { 2 } }
+      }
+    \int_compare:nNnT { \clist_count:N \l_semio_viz_sci_range_clist } = { 2 }
+      {
+        \fp_set:Nn \l_semio_viz_sci_dymin_fp { \clist_item:Nn \l_semio_viz_sci_range_clist { 1 } }
+        \fp_set:Nn \l_semio_viz_sci_dymax_fp { \clist_item:Nn \l_semio_viz_sci_range_clist { 2 } }
+      }
+  }
+
+% 🚪 Family entry point: reset the shared canvas, apply the family's own defaults, then the caller's options.
+\cs_new_protected:Npn \semio_viz_sci_enter:nnn #1#2#3
+  {
+    \semio_viz_sci_keys_reset:
+    \keys_set:nn { semio / viz / family / #1 } {#2}
+    \keys_set:nn { semio / viz / family / #1 } {#3}
+  }
+%endregion 🔖️Keys
+
+%region 🔖️PublicApi
+% 📦 Probe documents accumulate numbers here and flush them as one record; nothing relies on expansion inside \iow.
+\clist_new:N \l_semio_viz_sci_out_clist
+
+% 🧪 \SemioVizSciSample{seq}{expr}{from}{to}{n}: uniform sampling of an l3fp expression over \SemioX.
+\NewDocumentCommand \SemioVizSciSample { m m m m m }
+  { \semio_viz_sci_sample:Nnnnn #1 {#2} {#3} {#4} {#5} }
+% 🧪 \SemioVizSciRefine{seq}{expr}{passes}{tolerance}: adaptive midpoint refinement of a sampled sequence.
+\NewDocumentCommand \SemioVizSciRefine { m m m m }
+  { \semio_viz_sci_refine:Nnnn #1 {#2} {#3} {#4} }
+% 🧪 \SemioVizSciRiemann{expr}{from}{to}{bins}{rule}: Riemann sum; the value is pushed with \SemioVizSciPushResult.
+\NewDocumentCommand \SemioVizSciRiemann { m m m m m }
+  { \semio_viz_sci_riemann:nnnnnN {#1} {#2} {#3} {#4} {#5} \l_semio_viz_sci_pts_seq }
+% 🧪 \SemioVizSciRK{x'}{y'}{x0}{y0}{h}{steps}{seq}: Runge–Kutta trajectory into a point sequence.
+\NewDocumentCommand \SemioVizSciRK { m m m m m m m }
+  { \semio_viz_sci_rkfour:nnnnnnN {#1} {#2} {#3} {#4} {#5} {#6} #7 }
+% 🧪 \SemioVizSciDFT{samples}{magnitude seq}{phase seq}: discrete Fourier transform of a clist of samples.
+\NewDocumentCommand \SemioVizSciDFT { m m m }
+  {
+    \seq_set_from_clist:Nn \l_semio_viz_sci_pts_c_seq {#1}
+    \semio_viz_sci_dft:NNN \l_semio_viz_sci_pts_c_seq #2 #3
+  }
+% 🧪 \SemioVizSciRoots{coefficients}{seq}: complex polynomial roots as (re,im) pairs.
+\NewDocumentCommand \SemioVizSciRoots { m m } { \semio_viz_sci_roots:nN {#1} #2 }
+
+% 🧪 \SemioVizSciPush{expr}: appends one l3fp value to the pending probe record.
+\NewDocumentCommand \SemioVizSciPush { m }
+  { \clist_put_right:Nx \l_semio_viz_sci_out_clist { \fp_to_decimal:n {#1} } }
+% 🧪 \SemioVizSciPushResult: appends the last Riemann sum.
+\NewDocumentCommand \SemioVizSciPushResult { }
+  { \clist_put_right:Nx \l_semio_viz_sci_out_clist { \fp_to_decimal:N \l_semio_viz_sci_riemann_fp } }
+% 🧪 \SemioVizSciPushPdf/Cdf{law}{p1}{p2}{x}: appends a distribution value.
+\NewDocumentCommand \SemioVizSciPushPdf { m m m m }
+  {
+    \semio_viz_tr_dist_pdf:nnnnN {#1}{#2}{#3}{#4} \l_semio_viz_sci_a_fp
+    \clist_put_right:Nx \l_semio_viz_sci_out_clist { \fp_to_decimal:N \l_semio_viz_sci_a_fp }
+  }
+% 🧪 \SemioVizSciPushCdf{law}{p1}{p2}{x}: appends the cumulative value of the same distribution.
+\NewDocumentCommand \SemioVizSciPushCdf { m m m m }
+  {
+    \semio_viz_tr_dist_cdf:nnnnN {#1}{#2}{#3}{#4} \l_semio_viz_sci_a_fp
+    \clist_put_right:Nx \l_semio_viz_sci_out_clist { \fp_to_decimal:N \l_semio_viz_sci_a_fp }
+  }
+% 🧪 \SemioVizSciPushQuantile{law}{p1}{p2}{p}{lo}{hi}: appends an inverse-cdf value.
+\NewDocumentCommand \SemioVizSciPushQuantile { m m m m m m }
+  {
+    \semio_viz_tr_dist_quantile:nnnnnnN {#1}{#2}{#3}{#4}{#5}{#6} \l_semio_viz_sci_a_fp
+    \clist_put_right:Nx \l_semio_viz_sci_out_clist { \fp_to_decimal:N \l_semio_viz_sci_a_fp }
+  }
+% 🧪 \SemioVizSciTF{numerator}{denominator}{omega}: evaluates the transfer function on the imaginary axis.
+\NewDocumentCommand \SemioVizSciTF { m m m } { \semio_viz_sci_tf:nnn {#1} {#2} {#3} }
+% 🧪 \SemioVizSciPushTF: appends the magnitude and the phase in degrees of the last \SemioVizSciTF.
+\NewDocumentCommand \SemioVizSciPushTF { }
+  {
+    \clist_put_right:Nx \l_semio_viz_sci_out_clist
+      { \fp_to_decimal:n { sqrt ( \l_semio_viz_sci_re_fp ^ 2 + \l_semio_viz_sci_im_fp ^ 2 ) } }
+    \clist_put_right:Nx \l_semio_viz_sci_out_clist
+      { \fp_to_decimal:n { atand ( \l_semio_viz_sci_im_fp , \l_semio_viz_sci_re_fp ) } }
+  }
+% 🧪 \SemioVizSciPushCount{seq}: appends the number of points a sequence holds.
+\NewDocumentCommand \SemioVizSciPushCount { m }
+  { \clist_put_right:Nx \l_semio_viz_sci_out_clist { \int_eval:n { \seq_count:N #1 } } }
+% 🧪 \SemioVizSciPushPoints{seq}: appends a point sequence flattened to x,y,x,y…
+\NewDocumentCommand \SemioVizSciPushPoints { m }
+  { \seq_map_inline:Nn #1 { \clist_put_right:Nn \l_semio_viz_sci_out_clist {##1} } }
+% 🧪 \SemioVizSciEmit{key}: writes the pending numbers as one probe record and clears them.
+\NewDocumentCommand \SemioVizSciEmit { m }
+  {
+    \semio_viz_probe_values:nV {#1} \l_semio_viz_sci_out_clist
+    \clist_clear:N \l_semio_viz_sci_out_clist
+  }
+% 🧪 \SemioVizSciSeq / \SemioVizSciSeqB / \SemioVizSciSeqC: shared scratch point sequences for probe documents.
+\cs_new_eq:NN \SemioVizSciSeq \l_semio_viz_sci_pts_seq
+\cs_new_eq:NN \SemioVizSciSeqB \l_semio_viz_sci_pts_b_seq
+\cs_new_eq:NN \SemioVizSciSeqC \l_semio_viz_sci_pts_c_seq
+%endregion 🔖️PublicApi
+
+%region 🔖️DemoData
+% 🗃️ Named demo tables the scientific catalogue entries point at; the families read their own option
+%    defaults, so these tables are what the catalogue's `data` reference resolves to.
+\AtBeginDocument
+  {
+    \SemioVizTable { demo-science } { x , y , label }
+    \SemioVizRow { demo-science } { 0 , 0.00 , a }
+    \SemioVizRow { demo-science } { 1 , 0.84 , b }
+    \SemioVizRow { demo-science } { 2 , 0.91 , c }
+    \SemioVizRow { demo-science } { 3 , 0.14 , d }
+    \SemioVizRow { demo-science } { 4 , -0.76 , e }
+    \SemioVizRow { demo-science } { 5 , -0.96 , f }
+    \SemioVizTable { demo-science-field } { x , y , u , v }
+    \SemioVizRow { demo-science-field } { -1 , -1 , -1 , 1 }
+    \SemioVizRow { demo-science-field } { 0 , -1 , -1 , 0 }
+    \SemioVizRow { demo-science-field } { 1 , -1 , -1 , -1 }
+    \SemioVizRow { demo-science-field } { -1 , 1 , 1 , 1 }
+    \SemioVizRow { demo-science-field } { 0 , 1 , 1 , 0 }
+    \SemioVizRow { demo-science-field } { 1 , 1 , 1 , -1 }
+    \SemioVizTable { demo-science-graph } { id , x , y , label }
+    \SemioVizRow { demo-science-graph } { a , 0 , 1 , A }
+    \SemioVizRow { demo-science-graph } { b , 1 , 1 , B }
+    \SemioVizRow { demo-science-graph } { c , 0 , 0 , C }
+    \SemioVizRow { demo-science-graph } { d , 1 , 0 , D }
+  }
+
+% 🗃️ Demo vectors every scientific family falls back to, so a catalogue kind renders without a data table.
+\clist_new:N \g_semio_viz_sci_demo_signal_clist
+\clist_gset:Nn \g_semio_viz_sci_demo_signal_clist
+  { 0.0 , 0.62 , 1.05 , 1.12 , 0.79 , 0.24 , -0.32 , -0.74 , -0.91 , -0.79 ,
+    -0.44 , 0.02 , 0.44 , 0.72 , 0.78 , 0.61 , 0.28 , -0.12 , -0.46 , -0.65 ,
+    -0.66 , -0.5 , -0.22 , 0.09 , 0.35 , 0.5 , 0.5 , 0.37 , 0.15 , -0.08 , -0.27 , -0.36 }
+\clist_new:N \g_semio_viz_sci_demo_peaks_clist
+\clist_gset:Nn \g_semio_viz_sci_demo_peaks_clist
+  { 1.2/0.9 , 2.1/0.35 , 3.4/0.62 , 4.0/1.0 , 5.6/0.28 , 6.9/0.55 , 7.4/0.18 }
+\clist_new:N \g_semio_viz_sci_demo_levels_clist
+\clist_gset:Nn \g_semio_viz_sci_demo_levels_clist
+  { -13.6/1s , -3.4/2s , -1.51/3s , -0.85/4s , -0.54/5s }
+%endregion 🔖️DemoData
+
+\ExplSyntaxOff

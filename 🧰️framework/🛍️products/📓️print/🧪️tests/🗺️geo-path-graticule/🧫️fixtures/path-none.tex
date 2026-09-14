@@ -1,0 +1,32 @@
+\documentclass{article}
+\usepackage{semio-viz-geo}
+\ExplSyntaxOn
+% 📤 Emits one record per projected subpath: the `x,y;x,y` list flattened into a bare number clist.
+\cs_new_protected:Npn \semio_probe_subpath:nn #1#2
+  {
+    \tl_set:Nn \l_tmpa_tl {#2}
+    \tl_replace_all:Nnn \l_tmpa_tl { ; } { , }
+    \use:x
+      {
+        \exp_not:N \SemioVizProbeEval { geo/path }
+          { \exp_not:V \l_tmpa_tl }
+      }
+  }
+\cs_new_protected:Npn \semio_probe_path:nn #1#2
+  {
+    \semio_viz_geo_path:nn {#1} {#2}
+    \seq_map_inline:Nn \g_semio_viz_geo_path_seq { \semio_probe_subpath:nn ##1 }
+  }
+\ExplSyntaxOff
+\begin{document}
+\SemioVizProbeBegin{geo-path-graticule}{path-without-resampling}
+\SemioVizProbePage
+\SemioVizProbePrecision{9}
+\ExplSyntaxOn
+\clist_map_inline:nn { equirectangular, mercator, equal-earth }
+  {
+    \SemioVizProjection { probe } [ kind = #1, precision = 0 ]
+    \semio_probe_path:nn { probe } { demo-geo-regions }
+  }
+\ExplSyntaxOff
+\end{document}

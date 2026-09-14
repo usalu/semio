@@ -1,0 +1,19 @@
+\documentclass{article}
+\usepackage{semio-viz-probe}
+\usepackage{semio-viz-shape}
+\ExplSyntaxOn
+% 🔣 Generates one symbol of one area and records the SVG path it produced.
+\cs_new_protected:Npn \semio_probe_symbol:nn #1#2 {
+  \SemioVizSymbol[ type=#1, size=#2, draw=false ]
+  \exp_args:NnV \SemioVizProbeValues { symbol/#1/#2 } \g_semio_viz_shape_result_tl
+}
+\ExplSyntaxOff
+\begin{document}
+\ExplSyntaxOn
+\SemioVizProbeBegin{shape-symbols}{symbol-paths}
+\clist_map_inline:nn { circle, cross, diamond, diamond2, plus, square, square2, star, times, triangle, triangle2, wye, asterisk } { \semio_probe_symbol:nn {#1} { 64 } }
+\clist_map_inline:nn { circle, cross, diamond, diamond2, plus, square, square2, star, times, triangle, triangle2, wye, asterisk } { \semio_probe_symbol:nn {#1} { 17.5 } }
+\clist_map_inline:nn { circle, cross, diamond, diamond2, plus, square, square2, star, times, triangle, triangle2, wye, asterisk } { \semio_probe_symbol:nn {#1} { 200 } }
+\SemioVizProbeEnd
+\ExplSyntaxOff
+\end{document}

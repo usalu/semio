@@ -1,0 +1,85 @@
+% 🧪 Probe fixture of case scale-color, every scenario.
+% A colour scale is two independent pieces: the position `t` a sequential or diverging scale
+% computes from its domain, and the colour an interpolator produces at that position. The two are
+% probed separately, so a wrong domain and a wrong colour space are different failures.
+% Colours travel as strings prefixed with a vertical bar so no hexadecimal digit is lost to the
+% probe protocol's numeric classification.
+\documentclass{article}
+\usepackage{semio-viz-scale}
+\usepackage{semio-viz-probe}
+\ExplSyntaxOn
+\fp_new:N \l_probe_value_fp
+\seq_new:N \l_probe_seq
+\str_new:N \l_probe_hex_str
+
+% 📐 Writes the normalized positions a sequential or diverging scale assigns.
+\cs_new_protected:Npn \probepositions #1#2#3 {
+  \seq_clear:N \l_probe_seq
+  \clist_map_inline:nn {#3}
+    {
+      \semio_viz_scale_map:nnN {#2} {##1} \l_probe_value_fp
+      \seq_put_right:Nx \l_probe_seq { \fp_to_decimal:n { round( \l_probe_value_fp , 6 ) } }
+    }
+  \semio_viz_probe_values:nx {#1} { \seq_use:Nn \l_probe_seq { , } }
+}
+
+% 🌈 Writes one interpolated colour of a two-stop ramp.
+\cs_new_protected:Npn \probemix #1#2#3#4#5 {
+  \semio_viz_color_interpolate:nnnnN {#2} {#3} {#4} {#5} \l_probe_hex_str
+  \semio_viz_probe_values:nx {#1} { { | \l_probe_hex_str } }
+}
+
+% 🌈 Writes one sample of a multi-stop ramp.
+\cs_new_protected:Npn \proberamp #1#2#3#4 {
+  \semio_viz_color_ramp:nnnN {#2} {#3} {#4} \l_probe_hex_str
+  \semio_viz_probe_values:nx {#1} { { | \l_probe_hex_str } }
+}
+\ExplSyntaxOff
+\begin{document}
+
+\SemioVizProbeBegin{scale-color}{sequential-position}
+\SemioVizScale{seq}{sequential}{0,100}{0,1}
+\SemioVizScale{seqclamp}{sequential}{0,100}{0,1}[clamp]
+\probepositions{position/seq}{seq}{-20,0,25,50,75,100,140}
+\probepositions{position/seqclamp}{seqclamp}{-20,0,25,50,75,100,140}
+
+\SemioVizProbeBegin{scale-color}{diverging-position}
+\SemioVizScale{div}{diverging}{-10,0,30}{0,1}
+\SemioVizScale{divoff}{diverging}{0,2,10}{0,1}
+\probepositions{position/div}{div}{-10,-5,0,15,30}
+\probepositions{position/divoff}{divoff}{0,1,2,6,10}
+
+\SemioVizProbeBegin{scale-color}{interpolate-rgb}
+\probemix{mix/rgb/0}{rgb}{ff344f}{34d1bf}{0}
+\probemix{mix/rgb/1}{rgb}{ff344f}{34d1bf}{0.25}
+\probemix{mix/rgb/2}{rgb}{ff344f}{34d1bf}{0.5}
+\probemix{mix/rgb/3}{rgb}{ff344f}{34d1bf}{0.75}
+\probemix{mix/rgb/4}{rgb}{ff344f}{34d1bf}{1}
+\probemix{mix/rgb/5}{rgb}{000000}{ffffff}{0.5}
+
+\SemioVizProbeBegin{scale-color}{interpolate-lab}
+\probemix{mix/lab/0}{lab}{ff344f}{34d1bf}{0}
+\probemix{mix/lab/1}{lab}{ff344f}{34d1bf}{0.25}
+\probemix{mix/lab/2}{lab}{ff344f}{34d1bf}{0.5}
+\probemix{mix/lab/3}{lab}{ff344f}{34d1bf}{0.75}
+\probemix{mix/lab/4}{lab}{ff344f}{34d1bf}{1}
+\probemix{mix/lab/5}{lab}{fa9500}{001117}{0.5}
+
+\SemioVizProbeBegin{scale-color}{interpolate-hcl}
+\probemix{mix/hcl/0}{hcl}{ff344f}{34d1bf}{0}
+\probemix{mix/hcl/1}{hcl}{ff344f}{34d1bf}{0.25}
+\probemix{mix/hcl/2}{hcl}{ff344f}{34d1bf}{0.5}
+\probemix{mix/hcl/3}{hcl}{ff344f}{34d1bf}{0.75}
+\probemix{mix/hcl/4}{hcl}{ff344f}{34d1bf}{1}
+\probemix{mix/hcl/5}{hcl}{7eb77f}{a60009}{0.5}
+
+\SemioVizProbeBegin{scale-color}{ramp-stops}
+\proberamp{ramp/0}{rgb}{ff344f,ffffff,34d1bf}{0}
+\proberamp{ramp/1}{rgb}{ff344f,ffffff,34d1bf}{0.25}
+\proberamp{ramp/2}{rgb}{ff344f,ffffff,34d1bf}{0.5}
+\proberamp{ramp/3}{rgb}{ff344f,ffffff,34d1bf}{0.75}
+\proberamp{ramp/4}{rgb}{ff344f,ffffff,34d1bf}{1}
+\proberamp{ramp/5}{lab}{ff344f,ffffff,34d1bf}{0.125}
+
+\SemioVizProbePage
+\end{document}

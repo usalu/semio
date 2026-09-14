@@ -1,0 +1,97 @@
+{
+  "$comment": "🧫️ Immutable descriptions of the workspace trees the root-discovery case materialises inside its own work directory. A tree is described rather than committed because the marker a checkout is recognised by is a `.git` directory, which cannot be committed inside this repository.",
+  "schema": "semio.repo.workspace.root-discovery-trees/1",
+  "trees": [
+    {
+      "name": "git-checkout-wins-over-an-outer-go-module",
+      "directories": [
+        "outer",
+        "outer/inner",
+        "outer/inner/.git",
+        "outer/inner/a/b/c"
+      ],
+      "files": {
+        "outer/go.mod": "module outer\n"
+      },
+      "startAt": "outer/inner/a/b/c",
+      "expectedRoot": "outer/inner"
+    },
+    {
+      "name": "legacy-cli-entry-point-wins-over-a-nearer-checkout",
+      "directories": [
+        "mono",
+        "mono/repo/cli",
+        "mono/nested",
+        "mono/nested/.git",
+        "mono/nested/deep"
+      ],
+      "files": {
+        "mono/repo/cli/main.go": "package main\n"
+      },
+      "startAt": "mono/nested/deep",
+      "expectedRoot": "mono"
+    },
+    {
+      "name": "an-inner-go-module-does-not-beat-an-enclosing-checkout",
+      "directories": [
+        "plain",
+        "plain/a",
+        "plain/a/b"
+      ],
+      "files": {
+        "plain/a/go.mod": "module a\n"
+      },
+      "startAt": "plain/a/b",
+      "expectedRoot": "outside"
+    },
+    {
+      "name": "the-nearest-checkout-wins",
+      "directories": [
+        "deep",
+        "deep/.git",
+        "deep/one",
+        "deep/one/.git",
+        "deep/one/two"
+      ],
+      "files": {},
+      "startAt": "deep/one/two",
+      "expectedRoot": "deep/one"
+    }
+  ],
+  "layout": {
+    "semioDirName": ".🧬semio",
+    "repoDirName": "🦑️repo",
+    "ticketsDirName": "🎫️tickets",
+    "goalsDirName": "🎯️goals",
+    "devsDirName": "🧑️‍💻️devs",
+    "filesIndexName": "📁️files.json",
+    "configFileName": "📋️config.toml"
+  },
+  "configDocuments": [
+    {
+      "name": "missing",
+      "document": null,
+      "expected": "session=false operations=true plan=true detail=standard"
+    },
+    {
+      "name": "empty",
+      "document": "",
+      "expected": "session=false operations=true plan=true detail=standard"
+    },
+    {
+      "name": "logging-section",
+      "document": "# a comment\n[logging]\nsession = \"on\"\noperations = no\nplan = 1\ndetail = 'full'\n",
+      "expected": "session=true operations=false plan=true detail=full"
+    },
+    {
+      "name": "other-sections-are-ignored",
+      "document": "[other]\nsession = true\n",
+      "expected": "session=false operations=true plan=true detail=standard"
+    },
+    {
+      "name": "empty-detail-keeps-the-default",
+      "document": "[logging]\ndetail = \"\"\n",
+      "expected": "session=false operations=true plan=true detail=standard"
+    }
+  ]
+}

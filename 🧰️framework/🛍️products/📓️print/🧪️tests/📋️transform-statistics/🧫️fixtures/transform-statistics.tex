@@ -1,0 +1,77 @@
+% 🧪 Probe fixture of case transform-statistics, every scenario.
+% Aggregates, quantiles, the kernel density estimate and the five least-squares fits, each written
+% out under its own key. The regression scenarios use a small point set whose coefficients are all
+% well conditioned, so the comparison measures the fit and not the numerics of a near-singular
+% normal-equation matrix.
+\documentclass{article}
+\usepackage{semio-viz-transform}
+\usepackage{semio-viz-probe}
+\ExplSyntaxOn
+\seq_new:N \l_probe_seq
+\tl_new:N \l_probe_cell_tl
+
+% 📊 Writes one column of a derived table.
+\cs_new_protected:Npn \probecolumn #1#2#3 {
+  \seq_clear:N \l_probe_seq
+  \semio_viz_tr_load:n {#2}
+  \seq_map_inline:cn { g_semio_viz_table_ \tl_to_str:n {#2} _rows_seq }
+    {
+      \semio_viz_tr_get:nnN {##1} {#3} \l_probe_cell_tl
+      \seq_put_right:NV \l_probe_seq \l_probe_cell_tl
+    }
+  \semio_viz_probe_values:nx {#1} { \seq_use:Nn \l_probe_seq { , } }
+}
+\ExplSyntaxOff
+\begin{document}
+
+\SemioVizProbeBegin{transform-statistics}{aggregates}
+\SemioVizTransform{a1}{demo-distribution}[group=grp,rollup=mean:value]
+\SemioVizTransform{a2}{demo-distribution}[group=grp,rollup=median:value]
+\SemioVizTransform{a3}{demo-distribution}[group=grp,rollup=sum:value]
+\SemioVizTransform{a4}{demo-distribution}[group=grp,rollup=min:value]
+\SemioVizTransform{a5}{demo-distribution}[group=grp,rollup=max:value]
+\SemioVizTransform{a6}{demo-distribution}[group=grp,rollup=count:value]
+\probecolumn{aggregate/groups}{a1}{grp}
+\probecolumn{aggregate/mean}{a1}{value}
+\probecolumn{aggregate/median}{a2}{value}
+\probecolumn{aggregate/sum}{a3}{value}
+\probecolumn{aggregate/min}{a4}{value}
+\probecolumn{aggregate/max}{a5}{value}
+\probecolumn{aggregate/count}{a6}{value}
+
+\SemioVizProbeBegin{transform-statistics}{quantiles}
+\SemioVizTransform{q1}{demo-distribution}[quantile=value]
+\SemioVizTransform{q2}{demo-distribution}[quantile=value,probabilities={0.1,0.33,0.66,0.9}]
+\probecolumn{quantile/default/p}{q1}{p}
+\probecolumn{quantile/default/value}{q1}{value}
+\probecolumn{quantile/custom/p}{q2}{p}
+\probecolumn{quantile/custom/value}{q2}{value}
+
+\SemioVizProbeBegin{transform-statistics}{kde}
+\SemioVizTransform{k1}{demo-distribution}[kde=value,bandwidth=1,samples=9]
+\SemioVizTransform{k2}{demo-distribution}[kde=value,bandwidth=1.5,kernel=epanechnikov,samples=9]
+\probecolumn{kde/gaussian/x}{k1}{x}
+\probecolumn{kde/gaussian/density}{k1}{density}
+\probecolumn{kde/epanechnikov/density}{k2}{density}
+
+\SemioVizProbeBegin{transform-statistics}{regression}
+\SemioVizTable{points}{x,y}
+\SemioVizRow{points}{1,2.1}
+\SemioVizRow{points}{2,3.9}
+\SemioVizRow{points}{3,6.2}
+\SemioVizRow{points}{4,7.8}
+\SemioVizRow{points}{5,10.3}
+\SemioVizRow{points}{6,11.9}
+\SemioVizTransform{r1}{points}[regression=linear:x:y]
+\SemioVizTransform{r2}{points}[regression=poly:x:y,degree=2]
+\SemioVizTransform{r3}{points}[regression=log:x:y]
+\SemioVizTransform{r4}{points}[regression=pow:x:y]
+\SemioVizTransform{r5}{points}[regression=exp:x:y]
+\probecolumn{regression/linear}{r1}{coefficient}
+\probecolumn{regression/poly}{r2}{coefficient}
+\probecolumn{regression/log}{r3}{coefficient}
+\probecolumn{regression/pow}{r4}{coefficient}
+\probecolumn{regression/exp}{r5}{coefficient}
+
+\SemioVizProbePage
+\end{document}

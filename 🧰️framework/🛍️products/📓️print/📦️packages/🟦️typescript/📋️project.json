@@ -23,6 +23,13 @@
       ],
       "cache": true
     },
+    "generate-viz": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts generate viz"
+      }
+    },
     "preview-generated": {
       "executor": "nx:run-commands",
       "options": {
@@ -97,6 +104,13 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test"
+      }
+    },
+    "test-fundamental": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test fundamental"
       }
     },
     "test-quick": {
@@ -293,6 +307,15 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
         "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/📚️bundle/📜️script.ts prepare"
+      }
+    },
+    "test-viz-fixtures": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test viz fixtures",
+        "forwardAllArgs": true
       }
     }
   },

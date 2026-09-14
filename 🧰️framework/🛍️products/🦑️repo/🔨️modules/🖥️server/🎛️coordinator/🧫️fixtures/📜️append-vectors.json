@@ -1,0 +1,8 @@
+{
+  "inputs": [
+    { "stream": "coordinator", "id": "evt-1", "generation": 7, "type": "ticket.recorded", "payload": { "id": "T-1", "status": "open" } },
+    { "stream": "coordinator", "id": "evt-2", "generation": 1, "type": "warnings.recorded", "payload": { "warnings": [] } },
+    { "stream": "coordinator", "id": "evt-3", "generation": 2, "type": "claim.recorded", "payload": { "at": "2026-09-06T00:00:00Z", "claim_type": "touched", "scope_id": "s-1", "ticket_id": "T-1" } }
+  ],
+  "sequences": [1, 2, 3]
+}

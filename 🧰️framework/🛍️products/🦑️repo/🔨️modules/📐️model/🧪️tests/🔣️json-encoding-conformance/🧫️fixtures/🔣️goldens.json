@@ -1,0 +1,256 @@
+{
+  "$comment": "🏅️ One golden JSON document per domain type. `json` is the EXACT text a conforming encoder must reproduce after decoding it: members in declaration order, map keys sorted, and no member present that an `omitempty` tag would drop, so decode then encode is byte-identical in every implementation and against the oracle. Goal and Interaction still carry a hand-written Go (Un)MarshalJSON that rewrites identity ids and are deliberately absent; they belong to the modules that own those codecs. Ticket no longer does, and its golden pins that.",
+  "schemaVersion": 1,
+  "goldens": [
+    {
+      "type": "Statute",
+      "json": "\"code/section/empty\""
+    },
+    {
+      "type": "Range",
+      "json": "{\"start\":1,\"end\":9}"
+    },
+    {
+      "type": "LineMetrics",
+      "json": "{\"added\":1,\"removed\":2}"
+    },
+    {
+      "type": "CountMetrics",
+      "json": "{\"added\":1,\"updated\":2,\"removed\":3}"
+    },
+    {
+      "type": "PriorityCount",
+      "json": "{\"high\":4,\"medium\":5,\"low\":6}"
+    },
+    {
+      "type": "AnalyzeMetrics",
+      "json": "{\"total\":15,\"byPriority\":{\"high\":4,\"medium\":5,\"low\":6},\"autofixable\":2}"
+    },
+    {
+      "type": "Package",
+      "json": "{\"name\":\"semio-tech/repo-model-rs\",\"version\":\"0.1.0\",\"path\":\"packages/rust\",\"kind\":\"cargo\"}"
+    },
+    {
+      "type": "Bundle",
+      "json": "{\"name\":\"repo/model\",\"root\":\"modules/model\",\"sourceRoot\":\"modules/model/src\",\"technologyName\":\"repo\",\"tags\":[\"rust\",\"go\"],\"kind\":\"library\",\"emoji\":\"📐️\",\"packages\":[{\"name\":\"semio-tech/repo-model-rs\",\"version\":\"0.1.0\",\"path\":\"packages/rust\",\"kind\":\"cargo\"}]}"
+    },
+    {
+      "type": "Technology",
+      "json": "{\"name\":\"repo\",\"root\":\"modules\",\"kind\":\"🧰️\",\"emoji\":\"🧰️\",\"bundles\":[{\"name\":\"repo/model\",\"root\":\"modules/model\",\"sourceRoot\":\"modules/model/src\",\"technologyName\":\"repo\",\"tags\":[\"rust\",\"go\"],\"kind\":\"library\",\"emoji\":\"📐️\",\"packages\":[{\"name\":\"semio-tech/repo-model-rs\",\"version\":\"0.1.0\",\"path\":\"packages/rust\",\"kind\":\"cargo\"}]}]}"
+    },
+    {
+      "type": "Repo",
+      "json": "{\"id\":\"\",\"name\":\"semio\",\"path\":\"/repo\",\"technologies\":[],\"bundles\":null}"
+    },
+    {
+      "type": "Folder",
+      "json": "{\"id\":\"f1\",\"path\":\"a/b\",\"uri\":\"repo://folder/f1\",\"name\":\"b\",\"parentId\":\"f0\",\"bundleId\":\"b1\",\"kind\":\"required\",\"emoji\":\"🛅️\",\"ignored\":false,\"generated\":false}"
+    },
+    {
+      "type": "File",
+      "json": "{\"id\":\"x\",\"path\":\"a/b.rs\",\"uri\":\"repo://file/x\",\"name\":\"b.rs\",\"extension\":\".rs\",\"folderId\":\"f1\",\"bundleId\":\"b1\",\"kind\":\"code\",\"emoji\":\"💻️\",\"ignored\":false,\"generated\":true}"
+    },
+    {
+      "type": "Definition",
+      "json": "{\"id\":\"d1\",\"name\":\"slugify\",\"kind\":\"implementation\",\"filePath\":\"a/b.rs\",\"sectionPath\":\"🔖️Slugs\",\"emoji\":\"🛠️\",\"startLine\":1,\"endLine\":9,\"startIndex\":0,\"endIndex\":120}"
+    },
+    {
+      "type": "Section",
+      "json": "{\"id\":\"s1\",\"name\":\"Slugs\",\"path\":\"🔖️Slugs\",\"filePath\":\"a/b.rs\",\"emoji\":\"🔖️\",\"startLine\":1,\"endLine\":40,\"startIndex\":0,\"endIndex\":900,\"definitions\":[{\"id\":\"d1\",\"name\":\"slugify\",\"kind\":\"implementation\",\"filePath\":\"a/b.rs\",\"sectionPath\":\"🔖️Slugs\",\"emoji\":\"🛠️\",\"startLine\":1,\"endLine\":9,\"startIndex\":0,\"endIndex\":120}]}"
+    },
+    {
+      "type": "ContributorIcons",
+      "json": "{\"avatar\":\"a.png\",\"avatarRound\":\"ar.png\",\"github\":\"gh\"}"
+    },
+    {
+      "type": "ContributorLink",
+      "json": "{\"name\":\"home\",\"url\":\"https://semio.tech\"}"
+    },
+    {
+      "type": "ContributorTicket",
+      "json": "{\"year\":26,\"month\":9,\"day\":6,\"slug\":\"REPO-RUST\",\"status\":\"open\",\"filePath\":\"x.json\"}"
+    },
+    {
+      "type": "ContributorCheckpoint",
+      "json": "{\"title\":\"t\",\"sha\":\"abc\"}"
+    },
+    {
+      "type": "ContributorContributionsStorage",
+      "json": "{\"bundles\":[\"b\"],\"folders\":[\"f\"],\"files\":[\"x\"],\"regions\":[\"r\"],\"definitions\":[\"d\"],\"tickets\":[{\"year\":26,\"month\":9,\"day\":6,\"slug\":\"REPO-RUST\",\"status\":\"open\",\"filePath\":\"x.json\"}],\"checkpoints\":[{\"title\":\"t\",\"sha\":\"abc\"}],\"lines\":{\"added\":1,\"removed\":0}}"
+    },
+    {
+      "type": "Contributor",
+      "json": "{\"alias\":\"ueli\",\"aliases\":[\"u\"],\"emoji\":\"🧑️‍💻️\",\"github\":\"usalu\",\"githubs\":[\"usalu\"],\"name\":\"Ueli\",\"names\":[\"Ueli Saluz\"],\"email\":\"a@b.c\",\"emails\":[\"a@b.c\"],\"links\":{\"home\":\"h\",\"zenodo\":\"z\"},\"fingerprint\":\"fp\",\"fingerprints\":[\"fp\"],\"contributions\":{}}"
+    },
+    {
+      "type": "Checkpoint",
+      "json": "{\"id\":\"c1\",\"sha\":\"deadbeef\",\"title\":\"t\",\"authorId\":\"a\",\"date\":\"2026-09-06T04:00:00Z\"}"
+    },
+    {
+      "type": "Checkpoint",
+      "json": "{\"id\":\"c2\",\"sha\":\"cafebabe\",\"title\":\"t\",\"date\":\"2026-09-06 06:00:00\"}",
+      "$comment": "📅️ The checkpoint date is the raw log text, never a parsed instant: this value is what git --date=default prints and no timestamp type can round-trip it."
+    },
+    {
+      "type": "CheckpointDiffRename",
+      "json": "{\"from\":\"x\",\"to\":\"y\"}"
+    },
+    {
+      "type": "CheckpointDiffStats",
+      "json": "{\"deleted\":[\"a\"],\"renamed\":[{\"from\":\"x\",\"to\":\"y\"}],\"modified\":[\"m\"],\"created\":[\"c\"]}"
+    },
+    {
+      "type": "InteractionFile",
+      "json": "{\"path\":\"p\",\"id\":\"i\",\"uri\":\"u\"}"
+    },
+    {
+      "type": "TicketPlan",
+      "json": "{\"client\":\"claude-code\",\"id\":\"p1\",\"source\":\"s\",\"local\":\"l\"}"
+    },
+    {
+      "type": "TicketAgentPlanStep",
+      "json": "{\"id\":\"1\",\"name\":\"n\",\"description\":\"d\",\"status\":\"done\",\"ideated\":\"a\",\"started\":\"b\",\"completed\":\"c\",\"abandoned\":\"e\"}"
+    },
+    {
+      "type": "TicketAgent",
+      "json": "{\"session\":\"s1\",\"contributor\":\"ueli\",\"system\":\"win\",\"client\":\"claude-code\",\"llm\":\"opus-4-7\",\"effort\":\"max\",\"transcript\":\"t\",\"plan\":{\"steps\":[{\"id\":\"1\",\"name\":\"n\"}]}}"
+    },
+    {
+      "type": "TicketManagementData",
+      "json": "{\"issue\":\"u\"}"
+    },
+    {
+      "type": "Ticket",
+      "json": "{\"title\":\"Repo Rust Implementation\",\"emoji\":\"🧬️\",\"status\":\"open\",\"description\":\"d\",\"summary\":\"s\",\"goal\":\"🎯aioptimizedrepo🎯repocli\",\"sessions\":[\"⚪s1\"]}",
+      "$comment": "🎫️ Every member is read and written exactly as stated: the goal reference stays in its compose form and the summary is never back-filled from an interaction, so a decode never depends on the developer's own checkout."
+    },
+    {
+      "type": "TicketData",
+      "json": "{\"title\":\"T\",\"status\":\"closed\",\"summary\":\"s\",\"github\":{\"issue\":\"u\"},\"goal\":\"g\",\"parent\":\"p\"}"
+    },
+    {
+      "type": "TicketFile",
+      "json": "{\"path\":\"p\",\"lines\":{\"added\":1,\"removed\":2}}"
+    },
+    {
+      "type": "TicketFileRenamed",
+      "json": "{\"from\":\"a\",\"to\":\"b\",\"lines\":{\"added\":1,\"removed\":1}}"
+    },
+    {
+      "type": "TicketDiffSet",
+      "json": "{\"deleted\":[],\"renamed\":null,\"modified\":[{\"path\":\"p\",\"lines\":{\"added\":1,\"removed\":2}}],\"added\":null}"
+    },
+    {
+      "type": "TicketSectionMetrics",
+      "json": "{\"range\":{\"start\":1,\"end\":2},\"definitions\":[\"d\"],\"lines\":{\"added\":1,\"removed\":0}}"
+    },
+    {
+      "type": "TicketFileMetricsEntry",
+      "json": "{\"path\":\"p\",\"lines\":{\"added\":1,\"removed\":0},\"sections\":{\"alpha\":{\"range\":{\"start\":1,\"end\":2},\"definitions\":[\"d\"],\"lines\":{\"added\":1,\"removed\":0}},\"beta\":{\"range\":{\"start\":1,\"end\":2},\"definitions\":[\"d\"],\"lines\":{\"added\":1,\"removed\":0}}}}"
+    },
+    {
+      "type": "GoalDates",
+      "json": "{\"due\":\"2026-12-31\"}"
+    },
+    {
+      "type": "GoalManagementData",
+      "json": "{\"milestone\":\"m\",\"issue\":\"i\"}"
+    },
+    {
+      "type": "Draft",
+      "json": "{\"id\":\"d\"}"
+    },
+    {
+      "type": "Location",
+      "json": "{\"filePath\":\"f\",\"line\":3,\"column\":7}"
+    },
+    {
+      "type": "Todo",
+      "json": "{\"id\":\"t\",\"name\":\"n\",\"description\":\"d\",\"parentId\":\"p\",\"location\":{\"filePath\":\"f\",\"line\":3,\"column\":7}}"
+    },
+    {
+      "type": "Territory",
+      "json": "{\"name\":\"code\",\"description\":\"the code policy\",\"scopes\":[\"**/*.rs\"],\"groups\":[{\"name\":\"file\",\"description\":\"nested\",\"kinds\":[\"code/file/missing-docs\"]}],\"kinds\":[\"code/section/empty\"]}"
+    },
+    {
+      "type": "StatuteMeta",
+      "json": "{\"kind\":\"code/section/empty\",\"policyId\":\"p\",\"priority\":\"high\",\"reason\":\"r\",\"solution\":\"s\",\"autofixable\":true}"
+    },
+    {
+      "type": "Breach",
+      "json": "{\"id\":\"b1\",\"summary\":\"s\",\"kind\":\"code/section/empty\",\"scope\":\"a.rs\",\"line\":4,\"column\":2,\"excerpt\":\"e\",\"priority\":\"medium\",\"autofixable\":false,\"reason\":\"r\",\"solution\":\"s\"}"
+    },
+    {
+      "type": "RangePosition",
+      "json": "{\"line\":1,\"column\":2}"
+    },
+    {
+      "type": "FileRange",
+      "json": "{\"start\":{\"line\":1,\"column\":2},\"end\":{\"line\":3,\"column\":4}}"
+    },
+    {
+      "type": "BreachFile",
+      "json": "{\"id\":\"i\",\"path\":\"p\",\"uri\":\"u\",\"range\":{\"start\":{\"line\":1,\"column\":2},\"end\":{\"line\":3,\"column\":4}}}"
+    },
+    {
+      "type": "BreachFolder",
+      "json": "{\"id\":\"i\",\"path\":\"p\",\"uri\":\"u\"}"
+    },
+    {
+      "type": "CodebaseBreach",
+      "json": "{\"id\":\"b\",\"folders\":[{\"id\":\"i\",\"path\":\"p\",\"uri\":\"u\"}],\"files\":[{\"id\":\"i\",\"path\":\"p\",\"uri\":\"u\",\"range\":{\"start\":{\"line\":1,\"column\":2},\"end\":{\"line\":3,\"column\":4}}}],\"kind\":\"code/file/missing-docs\",\"priority\":\"low\",\"autofixable\":true,\"reason\":\"r\",\"solution\":\"s\"}"
+    },
+    {
+      "type": "BundleMetricsInternal",
+      "json": "{\"folders\":1,\"files\":2,\"sections\":3,\"definitions\":4,\"lines\":5,\"breachs\":6}"
+    },
+    {
+      "type": "CodebaseFile",
+      "json": "{\"id\":\"i\",\"path\":\"p\",\"uri\":\"u\",\"metrics\":{\"sections\":1,\"definitions\":2,\"lines\":3},\"breachs\":[{\"kind\":\"code/section/empty\",\"priority\":\"high\",\"autofixable\":false,\"solution\":\"s\"}]}"
+    },
+    {
+      "type": "CbTreeNode",
+      "json": "{\"kind\":\"bundle\",\"children\":{\"a\":{\"kind\":\"folder\"},\"b\":{\"kind\":\"file\"}}}"
+    },
+    {
+      "type": "Codebase",
+      "json": "{\"bundles\":[],\"folders\":[],\"files\":[],\"sections\":[],\"definitions\":[],\"contributors\":[],\"tickets\":[],\"policies\":[],\"breachs\":[],\"tree\":{}}"
+    },
+    {
+      "type": "TreeNode",
+      "json": "{\"Kind\":\"ticket\",\"ID\":\"🎫️x\",\"Label\":\"L\",\"URI\":\"repo://ticket/x\",\"SubKind\":\"\",\"Description\":\"d\",\"Summary\":\"s\",\"Year\":26,\"Month\":9,\"Day\":6,\"Status\":\"open\",\"Contributor\":\"ueli\",\"Data\":{\"a\":1,\"b\":\"two\"},\"Children\":null}"
+    },
+    {
+      "type": "TicketNode",
+      "json": "{\"ID\":\"i\",\"Slug\":\"s\",\"Status\":\"open\",\"Title\":\"t\",\"URI\":\"u\",\"GoalID\":\"g\",\"ParentID\":\"p\",\"Children\":null,\"Created\":\"c\",\"Finished\":\"f\",\"Description\":\"d\",\"Summary\":\"su\"}"
+    },
+    {
+      "type": "GoalNode",
+      "json": "{\"ID\":\"i\",\"Title\":\"t\",\"Status\":\"open\",\"DueDate\":\"d\",\"CreatedAt\":\"c\",\"Description\":\"de\",\"Children\":null,\"Tickets\":[{\"ID\":\"i\",\"Slug\":\"s\",\"Status\":\"open\",\"Title\":\"t\",\"URI\":\"u\",\"GoalID\":\"g\",\"ParentID\":\"p\",\"Children\":null,\"Created\":\"c\",\"Finished\":\"f\",\"Description\":\"d\",\"Summary\":\"su\"}]}"
+    },
+    {
+      "type": "SemanticChange",
+      "json": "{\"Kind\":\"file\",\"Status\":\"modified\",\"Path\":\"p\",\"FromPath\":\"\",\"ToPath\":\"\",\"Lines\":{\"added\":1,\"removed\":2}}"
+    },
+    {
+      "type": "DiffLines",
+      "json": "{\"Added\":[1,2],\"Removed\":null}"
+    },
+    {
+      "type": "FileListInput",
+      "json": "{\"updated\":[\"u\"],\"created\":[\"c\"],\"removed\":[\"r\"]}"
+    },
+    {
+      "type": "TicketOpenInput",
+      "json": "{\"emoji\":\"🎫️\",\"title\":\"T\",\"prompt\":\"p\",\"llm\":\"opus-4-7\",\"effort\":\"max\",\"client\":\"claude-code\",\"noIssue\":true,\"draft\":\"d\",\"goal\":\"g\",\"parent\":\"pa\",\"noManagement\":true,\"issue\":\"i\",\"planId\":\"pl\",\"specId\":\"sp\"}"
+    },
+    {
+      "type": "TicketCloseInput",
+      "json": "{\"year\":26,\"month\":9,\"day\":6,\"slug\":\"s\",\"summary\":\"su\",\"files\":[\"a\"],\"title\":\"t\",\"noManagement\":true,\"all\":true}"
+    },
+    {
+      "type": "FilterInput",
+      "json": "{\"filter\":\"f\",\"regex\":true,\"matchCase\":false,\"matchWholeWord\":true,\"showIgnored\":false,\"showGenerated\":true,\"excludeKinds\":[\"a\"],\"includeKinds\":[\"b\"]}"
+    }
+  ]
+}

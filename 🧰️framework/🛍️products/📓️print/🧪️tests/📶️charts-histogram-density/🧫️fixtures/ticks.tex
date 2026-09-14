@@ -1,0 +1,14 @@
+\documentclass{article}
+\usepackage{semio-viz-charts-distribution}
+\usepackage{semio-viz-transform}
+\begin{document}
+\ExplSyntaxOn
+\SemioVizProbeBegin{charts-histogram-density}{ticks}
+\semio_viz_tr_stat_ticks:nnn { 0 } { 12 } { 10 }
+\semio_viz_probe_values:nx { ticks-a } { \seq_use:Nn \g_semio_viz_tr_stat_ticks_seq { , } }
+\semio_viz_tr_stat_ticks:nnn { 2.4 } { 11.3 } { 7 }
+\semio_viz_probe_values:nx { ticks-b } { \seq_use:Nn \g_semio_viz_tr_stat_ticks_seq { , } }
+\semio_viz_tr_stat_ticks:nnn { 0 } { 1 } { 5 }
+\semio_viz_probe_values:nx { ticks-c } { \seq_use:Nn \g_semio_viz_tr_stat_ticks_seq { , } }
+\ExplSyntaxOff
+\end{document}

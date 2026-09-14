@@ -1,0 +1,460 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-infographic}[2026/09/05 v0.2.0 semio viz infographic families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-diagram-flowchart}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys-infographic-number
+% 🗝️ `infographic-number` is the big-number card row: one figure, unit and caption per entry.
+%   data     tl   entry table (default demo-infographic), columns label/value/unit/tone/icon
+%   value    tl   headline number column (default value)
+%   unit     tl   suffix column drawn next to the number (default unit)
+%   columns  int  cards per row (default 3)
+%   rule     bool draw a separating rule under each card (default true)
+%   align    choice center|left (default center)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-infographic-number
+\tl_new:N \l_semio_viz_ig_value_tl
+\tl_new:N \l_semio_viz_ig_unit_tl
+\tl_new:N \l_semio_viz_ig_align_tl
+\tl_new:N \l_semio_viz_ig_icon_tl
+\int_new:N \l_semio_viz_ig_columns_int
+\int_new:N \l_semio_viz_ig_n_int
+\int_new:N \l_semio_viz_ig_rows_int
+\int_new:N \l_semio_viz_ig_i_int
+\bool_new:N \l_semio_viz_ig_rule_bool
+\fp_new:N \l_semio_viz_ig_cw_fp
+\fp_new:N \l_semio_viz_ig_ch_fp
+\tl_new:N \l_semio_viz_ig_val_tl
+
+% 🔑 Binds the big-number card options, reusing the flowchart node table's label and tone columns.
+\keys_define:nn { semio / viz / family / infographic-number } {
+  data    .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  label   .tl_set:N = \l_semio_viz_dg_col_label_tl,
+  tone    .tl_set:N = \l_semio_viz_dg_col_tone_tl,
+  value   .tl_set:N = \l_semio_viz_ig_value_tl,
+  unit    .tl_set:N = \l_semio_viz_ig_unit_tl,
+  columns .int_set:N = \l_semio_viz_ig_columns_int,
+  rule    .bool_set:N = \l_semio_viz_ig_rule_bool,
+  align   .tl_set:N = \l_semio_viz_ig_align_tl,
+  width   .fp_set:N = \l_semio_viz_dg_w_fp,
+  height  .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 🔢 infographic-number — sets the card-row defaults, reads the option list and hands over the entry table.
+\cs_new_protected:Npn \semio_viz_ig_number:n #1 {
+  \semio_viz_frame_require:n { infographic-number }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-infographic }
+  \tl_set:Nn \l_semio_viz_ig_value_tl { value }
+  \tl_set:Nn \l_semio_viz_ig_unit_tl { unit }
+  \tl_set:Nn \l_semio_viz_ig_align_tl { center }
+  \int_set:Nn \l_semio_viz_ig_columns_int { 3 }
+  \bool_set_true:N \l_semio_viz_ig_rule_bool
+  \keys_set:nn { semio / viz / family / infographic-number } {#1}
+  \exp_args:NV \semio_viz_ig_number_run:n \l_semio_viz_dg_nodes_tl
+}
+
+% 📐 Divides the frame into a card grid from the row count and the clamped column count, then draws every card.
+\cs_new_protected:Npn \semio_viz_ig_number_run:n #1 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_ig_n_int
+  \int_compare:nNnT { \l_semio_viz_ig_columns_int } < { 1 } { \int_set:Nn \l_semio_viz_ig_columns_int { 1 } }
+  \int_set:Nn \l_semio_viz_ig_rows_int
+    { \int_div_truncate:nn { \l_semio_viz_ig_n_int + \l_semio_viz_ig_columns_int - 1 } { \l_semio_viz_ig_columns_int } }
+  \int_compare:nNnT { \l_semio_viz_ig_rows_int } < { 1 } { \int_set:Nn \l_semio_viz_ig_rows_int { 1 } }
+  \fp_set:Nn \l_semio_viz_ig_cw_fp { ( \l_semio_viz_dg_w_fp - 2 ) / \l_semio_viz_ig_columns_int }
+  \fp_set:Nn \l_semio_viz_ig_ch_fp { ( \l_semio_viz_dg_h_fp - 2 ) / \l_semio_viz_ig_rows_int }
+  \int_step_inline:nn { \l_semio_viz_ig_n_int } { \semio_viz_ig_number_card:nn {#1} {##1} }
+}
+
+% 🃏 One card in its grid slot: the mono headline with its unit, the wrapped caption, the optional rule and the probe.
+\cs_new_protected:Npn \semio_viz_ig_number_card:nn #1#2 {
+  \int_set:Nn \l_semio_viz_ig_i_int { \int_mod:nn { (#2) - 1 } { \l_semio_viz_ig_columns_int } }
+  \int_set:Nn \l_semio_viz_dg_ia_int { \int_div_truncate:nn { (#2) - 1 } { \l_semio_viz_ig_columns_int } }
+  \fp_set:Nn \l_semio_viz_dg_x_fp { 1 + ( \l_semio_viz_ig_i_int + 0.5 ) * \l_semio_viz_ig_cw_fp }
+  \fp_set:Nn \l_semio_viz_dg_y_fp
+    { \l_semio_viz_dg_h_fp - 1 - ( \l_semio_viz_dg_ia_int + 0.5 ) * \l_semio_viz_ig_ch_fp }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_tone_tl } \l_semio_viz_dg_cell_tl
+  \tl_if_empty:NTF \l_semio_viz_dg_cell_tl
+    { \semio_viz_dg_tone:n {#2} } { \exp_args:NV \semio_viz_dg_tone:n \l_semio_viz_dg_cell_tl }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_ig_value_tl } \l_semio_viz_ig_val_tl
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_ig_unit_tl } \l_semio_viz_dg_ta_tl
+  \node [ font=\SemioMono\fontsize{15pt}{16pt}\selectfont , text=\l_semio_viz_dg_draw_tl ,
+          anchor= \str_if_eq:VnTF \l_semio_viz_ig_align_tl { left } { west } { center } , inner~sep=0pt ]
+    at ( \fp_eval:n { \str_if_eq:VnTF \l_semio_viz_ig_align_tl { left }
+                        { \l_semio_viz_dg_x_fp - \l_semio_viz_ig_cw_fp / 2 + 1 } { \l_semio_viz_dg_x_fp } } ,
+         \fp_eval:n { \l_semio_viz_dg_y_fp + 2 } )
+    { \tl_use:N \l_semio_viz_ig_val_tl \tl_use:N \l_semio_viz_dg_ta_tl } ;
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+  \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-text-normal ,
+          anchor= \str_if_eq:VnTF \l_semio_viz_ig_align_tl { left } { north~west } { north } ,
+          align= \str_if_eq:VnTF \l_semio_viz_ig_align_tl { left } { left } { center } ,
+          inner~sep=0pt , text~width=\fp_eval:n { \l_semio_viz_ig_cw_fp - 2 } mm ]
+    at ( \fp_eval:n { \str_if_eq:VnTF \l_semio_viz_ig_align_tl { left }
+                        { \l_semio_viz_dg_x_fp - \l_semio_viz_ig_cw_fp / 2 + 1 } { \l_semio_viz_dg_x_fp } } ,
+         \fp_eval:n { \l_semio_viz_dg_y_fp - 2 } )
+    { \tl_use:N \l_semio_viz_dg_label_tl } ;
+  \bool_if:NT \l_semio_viz_ig_rule_bool {
+    \draw [ \l_semio_viz_dg_draw_tl , line~width=\semio@stroke@default ]
+      ( \fp_eval:n { \l_semio_viz_dg_x_fp - \l_semio_viz_ig_cw_fp / 2 + 1 } , \fp_eval:n { \l_semio_viz_dg_y_fp + 0.6 } ) --
+      ( \fp_eval:n { \l_semio_viz_dg_x_fp - \l_semio_viz_ig_cw_fp / 2 + 5 } , \fp_eval:n { \l_semio_viz_dg_y_fp + 0.6 } ) ;
+  }
+  \semio_viz_probe_geometry:nx { diagram-card }
+    {
+      \semio_viz_format_mm:n { \l_semio_viz_dg_x_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_y_fp } ,
+      \semio_viz_format_mm:n { \l_semio_viz_ig_cw_fp } , \semio_viz_format_mm:n { \l_semio_viz_ig_ch_fp }
+    }
+}
+% 🗂️ Registers the `infographic-number` catalogue entry on the card-row renderer.
+\SemioVizFamily { infographic-number } { \semio_viz_ig_number:n {#1} }
+
+%region 🔖️Keys-infographic-list
+% 🗝️ `infographic-list` is the numbered or bulleted list block with a leading badge per item.
+%   data     tl   item table (default demo-infographic), columns label/value/tone
+%   badge    choice number|bullet|icon  leading marker (default number)
+%   detail   tl   optional second-line column (default value)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-infographic-list
+\tl_new:N \l_semio_viz_ig_badge_tl
+\tl_new:N \l_semio_viz_ig_detail_tl
+
+% 🔑 Binds the list-block options: the badge kind and the optional second-line detail column.
+\keys_define:nn { semio / viz / family / infographic-list } {
+  data   .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  label  .tl_set:N = \l_semio_viz_dg_col_label_tl,
+  tone   .tl_set:N = \l_semio_viz_dg_col_tone_tl,
+  badge  .tl_set:N = \l_semio_viz_ig_badge_tl,
+  detail .tl_set:N = \l_semio_viz_ig_detail_tl,
+  width  .fp_set:N = \l_semio_viz_dg_w_fp,
+  height .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 📝 infographic-list — sets the numbered-badge defaults, reads the option list and hands over the item table.
+\cs_new_protected:Npn \semio_viz_ig_list:n #1 {
+  \semio_viz_frame_require:n { infographic-list }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-infographic }
+  \tl_set:Nn \l_semio_viz_ig_badge_tl { number }
+  \tl_set:Nn \l_semio_viz_ig_detail_tl { value }
+  \keys_set:nn { semio / viz / family / infographic-list } {#1}
+  \exp_args:NV \semio_viz_ig_list_run:n \l_semio_viz_dg_nodes_tl
+}
+
+% 📃 Stacks the items down the frame, each with its badge — dot, cross or numbered disc — its label and its detail line.
+\cs_new_protected:Npn \semio_viz_ig_list_run:n #1 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_ig_n_int
+  \int_compare:nNnT { \l_semio_viz_ig_n_int } < { 1 } { \int_set:Nn \l_semio_viz_ig_n_int { 1 } }
+  \fp_set:Nn \l_semio_viz_ig_ch_fp { ( \l_semio_viz_dg_h_fp - 2 ) / \l_semio_viz_ig_n_int }
+  \int_step_inline:nn { \l_semio_viz_ig_n_int } {
+    \fp_set:Nn \l_semio_viz_dg_y_fp
+      { \l_semio_viz_dg_h_fp - 1 - ( ##1 - 0.5 ) * \l_semio_viz_ig_ch_fp }
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_tone_tl } \l_semio_viz_dg_cell_tl
+    \tl_if_empty:NTF \l_semio_viz_dg_cell_tl
+      { \semio_viz_dg_tone:n { ##1 } } { \exp_args:NV \semio_viz_dg_tone:n \l_semio_viz_dg_cell_tl }
+    \str_case:VnF \l_semio_viz_ig_badge_tl {
+      { bullet } {
+        \fill [ \l_semio_viz_dg_draw_tl ] ( 3 , \fp_eval:n { \l_semio_viz_dg_y_fp } ) circle [ radius=1.2 ] ;
+      }
+      { icon } {
+        \draw [ \l_semio_viz_dg_draw_tl , line~width=\semio@stroke@default ]
+          ( 1.6 , \fp_eval:n { \l_semio_viz_dg_y_fp } ) -- ( 4.4 , \fp_eval:n { \l_semio_viz_dg_y_fp } )
+          ( 3 , \fp_eval:n { \l_semio_viz_dg_y_fp - 1.4 } ) -- ( 3 , \fp_eval:n { \l_semio_viz_dg_y_fp + 1.4 } ) ;
+      }
+    }
+    {
+      \draw [ \l_semio_viz_dg_draw_tl , fill=\l_semio_viz_dg_fill_tl , line~width=\semio@stroke@hairline ]
+        ( 3 , \fp_eval:n { \l_semio_viz_dg_y_fp } ) circle [ radius=2.2 ] ;
+      \node [ font=\c_semio_viz_theme_font_chip_tl , text=\l_semio_viz_dg_draw_tl , anchor=center , inner~sep=0pt ]
+        at ( 3 , \fp_eval:n { \l_semio_viz_dg_y_fp } ) { ##1 } ;
+    }
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+    \node [ font=\c_semio_viz_theme_font_cell_tl , text=semio-chrome-foreground , anchor=west , inner~sep=0pt ]
+      at ( 7 , \fp_eval:n { \l_semio_viz_dg_y_fp + 1 } ) { \tl_use:N \l_semio_viz_dg_label_tl } ;
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_ig_detail_tl } \l_semio_viz_dg_ta_tl
+    \tl_if_empty:NF \l_semio_viz_dg_ta_tl {
+      \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-text-normal , anchor=west , inner~sep=0pt ]
+        at ( 7 , \fp_eval:n { \l_semio_viz_dg_y_fp - 1.8 } ) { \tl_use:N \l_semio_viz_dg_ta_tl } ;
+    }
+    \semio_viz_probe_geometry:nx { diagram-badge }
+      {
+        3 , \semio_viz_format_mm:n { \l_semio_viz_dg_y_fp } ,
+        \str_case:VnF \l_semio_viz_ig_badge_tl { { bullet } { 1 } { icon } { 2 } } { 3 }
+      }
+  }
+}
+% 📋 Registers the `infographic-list` catalogue entry on the badge-list renderer.
+\SemioVizFamily { infographic-list } { \semio_viz_ig_list:n {#1} }
+
+%region 🔖️Keys-infographic-icon
+% 🗝️ `infographic-icon` is the unit-chart: one glyph per unit, wrapped into a matrix.
+%   data     tl   category table (default demo-infographic), columns label/value/tone
+%   value    tl   count column (default value)
+%   unit-value fp units represented by one glyph (default 1)
+%   columns  int  glyphs per row (default 10)
+%   glyph    choice square|circle|person  (default square)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-infographic-icon
+\tl_new:N \l_semio_viz_ig_glyph_tl
+\fp_new:N \l_semio_viz_ig_unitvalue_fp
+\int_new:N \l_semio_viz_ig_k_int
+\int_new:N \l_semio_viz_ig_wrap_int
+
+% 🔑 Binds the unit-chart options: the count column, how much one glyph stands for, the wrap width and the glyph shape.
+\keys_define:nn { semio / viz / family / infographic-icon } {
+  data       .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  label      .tl_set:N = \l_semio_viz_dg_col_label_tl,
+  tone       .tl_set:N = \l_semio_viz_dg_col_tone_tl,
+  value      .tl_set:N = \l_semio_viz_ig_value_tl,
+  unit-value .fp_set:N = \l_semio_viz_ig_unitvalue_fp,
+  columns    .int_set:N = \l_semio_viz_ig_columns_int,
+  glyph      .tl_set:N = \l_semio_viz_ig_glyph_tl,
+  width      .fp_set:N = \l_semio_viz_dg_w_fp,
+  height     .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 🧊 infographic-icon — sets the square-glyph defaults, reads the option list and hands over the category table.
+\cs_new_protected:Npn \semio_viz_ig_icon:n #1 {
+  \semio_viz_frame_require:n { infographic-icon }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-infographic }
+  \tl_set:Nn \l_semio_viz_ig_value_tl { value }
+  \tl_set:Nn \l_semio_viz_ig_glyph_tl { square }
+  \fp_set:Nn \l_semio_viz_ig_unitvalue_fp { 1 }
+  \int_set:Nn \l_semio_viz_ig_columns_int { 10 }
+  \keys_set:nn { semio / viz / family / infographic-icon } {#1}
+  \exp_args:NV \semio_viz_ig_icon_run:n \l_semio_viz_dg_nodes_tl
+}
+
+% 📏 A first pass finds the deepest category's wrap depth so one glyph pitch fits every band, then draws the rows.
+\cs_new_protected:Npn \semio_viz_ig_icon_run:n #1 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_ig_n_int
+  \int_compare:nNnT { \l_semio_viz_ig_n_int } < { 1 } { \int_set:Nn \l_semio_viz_ig_n_int { 1 } }
+  \int_compare:nNnT { \l_semio_viz_ig_columns_int } < { 1 } { \int_set:Nn \l_semio_viz_ig_columns_int { 1 } }
+  \fp_set:Nn \l_semio_viz_ig_ch_fp { ( \l_semio_viz_dg_h_fp - 2 ) / \l_semio_viz_ig_n_int }
+  \int_set:Nn \l_semio_viz_ig_wrap_int { 1 }
+  \int_step_inline:nn { \l_semio_viz_ig_n_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_ig_value_tl } \l_semio_viz_ig_val_tl
+    \int_set:Nn \l_semio_viz_ig_k_int
+      { \fp_to_int:n { ceil( ceil( \l_semio_viz_ig_val_tl / \l_semio_viz_ig_unitvalue_fp , 0 ) / \l_semio_viz_ig_columns_int , 0 ) } }
+    \int_compare:nNnT { \l_semio_viz_ig_k_int } > { \l_semio_viz_ig_wrap_int }
+      { \int_set_eq:NN \l_semio_viz_ig_wrap_int \l_semio_viz_ig_k_int }
+  }
+  \fp_set:Nn \l_semio_viz_ig_cw_fp
+    {
+      min(
+        ( \l_semio_viz_dg_w_fp - 20 ) / \l_semio_viz_ig_columns_int ,
+        \l_semio_viz_ig_ch_fp / \l_semio_viz_ig_wrap_int
+      )
+    }
+  \int_step_inline:nn { \l_semio_viz_ig_n_int } { \semio_viz_ig_icon_row:nn {#1} {##1} }
+}
+
+% 🧮 One category band: its caption, and one glyph per unit-value of its count, capped at sixty.
+\cs_new_protected:Npn \semio_viz_ig_icon_row:nn #1#2 {
+  \fp_set:Nn \l_semio_viz_dg_y_fp
+    { \l_semio_viz_dg_h_fp - 1 - ( (#2) - 0.5 ) * \l_semio_viz_ig_ch_fp }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_tone_tl } \l_semio_viz_dg_cell_tl
+  \tl_if_empty:NTF \l_semio_viz_dg_cell_tl
+    { \semio_viz_dg_tone:n {#2} } { \exp_args:NV \semio_viz_dg_tone:n \l_semio_viz_dg_cell_tl }
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+  \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-foreground , anchor=west , inner~sep=0pt ]
+    at ( 1 , \fp_eval:n { \l_semio_viz_dg_y_fp } ) { \tl_use:N \l_semio_viz_dg_label_tl } ;
+  \semio_viz_table_cell_opt:nnnN {#1} {#2} { \l_semio_viz_ig_value_tl } \l_semio_viz_ig_val_tl
+  \int_set:Nn \l_semio_viz_ig_k_int
+    { \fp_to_int:n { ceil( \l_semio_viz_ig_val_tl / \l_semio_viz_ig_unitvalue_fp , 0 ) } }
+  \int_compare:nNnT { \l_semio_viz_ig_k_int } > { 60 } { \int_set:Nn \l_semio_viz_ig_k_int { 60 } }
+  \int_step_inline:nn { \l_semio_viz_ig_k_int } { \semio_viz_ig_icon_glyph:n { ##1 } }
+}
+
+% 🔘 Glyph #1 of the current band, wrapped into the matrix and drawn as a disc, a figure or the default square.
+\cs_new_protected:Npn \semio_viz_ig_icon_glyph:n #1 {
+  \int_set:Nn \l_semio_viz_ig_i_int { \int_mod:nn { (#1) - 1 } { \l_semio_viz_ig_columns_int } }
+  \int_set:Nn \l_semio_viz_dg_ia_int { \int_div_truncate:nn { (#1) - 1 } { \l_semio_viz_ig_columns_int } }
+  \fp_set:Nn \l_semio_viz_dg_x_fp { 19 + ( \l_semio_viz_ig_i_int + 0.5 ) * \l_semio_viz_ig_cw_fp }
+  \fp_set:Nn \l_semio_viz_dg_ya_fp
+    { \l_semio_viz_dg_y_fp + ( \l_semio_viz_ig_wrap_int - 1 ) * \l_semio_viz_ig_cw_fp / 2 - \l_semio_viz_dg_ia_int * \l_semio_viz_ig_cw_fp }
+  \str_case:VnF \l_semio_viz_ig_glyph_tl {
+    { circle } {
+      \fill [ \l_semio_viz_dg_draw_tl ]
+        ( \fp_eval:n { \l_semio_viz_dg_x_fp } , \fp_eval:n { \l_semio_viz_dg_ya_fp } )
+        circle [ radius=\fp_eval:n { \l_semio_viz_ig_cw_fp * 0.32 } ] ;
+    }
+    { person } {
+      \fill [ \l_semio_viz_dg_draw_tl ]
+        ( \fp_eval:n { \l_semio_viz_dg_x_fp } , \fp_eval:n { \l_semio_viz_dg_ya_fp + \l_semio_viz_ig_cw_fp * 0.24 } )
+        circle [ radius=\fp_eval:n { \l_semio_viz_ig_cw_fp * 0.16 } ] ;
+      \fill [ \l_semio_viz_dg_draw_tl ]
+        ( \fp_eval:n { \l_semio_viz_dg_x_fp - \l_semio_viz_ig_cw_fp * 0.18 } , \fp_eval:n { \l_semio_viz_dg_ya_fp - \l_semio_viz_ig_cw_fp * 0.34 } )
+        rectangle ( \fp_eval:n { \l_semio_viz_dg_x_fp + \l_semio_viz_ig_cw_fp * 0.18 } , \fp_eval:n { \l_semio_viz_dg_ya_fp + \l_semio_viz_ig_cw_fp * 0.06 } ) ;
+    }
+  }
+  {
+    \fill [ \l_semio_viz_dg_draw_tl ]
+      ( \fp_eval:n { \l_semio_viz_dg_x_fp - \l_semio_viz_ig_cw_fp * 0.32 } , \fp_eval:n { \l_semio_viz_dg_ya_fp - \l_semio_viz_ig_cw_fp * 0.32 } )
+      rectangle ( \fp_eval:n { \l_semio_viz_dg_x_fp + \l_semio_viz_ig_cw_fp * 0.32 } , \fp_eval:n { \l_semio_viz_dg_ya_fp + \l_semio_viz_ig_cw_fp * 0.32 } ) ;
+  }
+  \semio_viz_probe_geometry:nx { diagram-glyph }
+    { \semio_viz_format_mm:n { \l_semio_viz_dg_x_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_ya_fp } }
+}
+% 🧱 Registers the `infographic-icon` catalogue entry on the unit-chart renderer.
+\SemioVizFamily { infographic-icon } { \semio_viz_ig_icon:n {#1} }
+
+%region 🔖️Keys-infographic-illustration
+% 🗝️ `infographic-illustration` annotates a silhouette with leader lines and captions
+%    (anatomical, cutaway, exploded, annotated illustration).
+%   data      tl   callout table (default demo-illustration), columns label/x/y/side/tone
+%   outline   tl   silhouette vertex column list `x y x y …` in model units (default empty = an ellipse)
+%   cutaway   fp   fraction of the silhouette drawn as a cut wedge, 0 for none (default 0)
+%   explode   fp   radial offset factor of the callout targets (default 0)
+%   unit      fp   millimetres per model unit, 0 fits the frame (default 0)
+%   width/height fp frame size in millimetres
+%endregion 🔖️Keys-infographic-illustration
+\tl_new:N \l_semio_viz_ig_outline_tl
+\tl_new:N \l_semio_viz_ig_side_tl
+\fp_new:N \l_semio_viz_ig_cutaway_fp
+\fp_new:N \l_semio_viz_ig_explode_fp
+\fp_new:N \l_semio_viz_ig_unit_fp
+
+% 🔑 Binds the silhouette options: the vertex list, the cut wedge, the explode factor and the model-unit scale.
+\keys_define:nn { semio / viz / family / infographic-illustration } {
+  data    .tl_set:N = \l_semio_viz_dg_nodes_tl,
+  label   .tl_set:N = \l_semio_viz_dg_col_label_tl,
+  tone    .tl_set:N = \l_semio_viz_dg_col_tone_tl,
+  side    .tl_set:N = \l_semio_viz_ig_side_tl,
+  outline .tl_set:N = \l_semio_viz_ig_outline_tl,
+  cutaway .fp_set:N = \l_semio_viz_ig_cutaway_fp,
+  explode .fp_set:N = \l_semio_viz_ig_explode_fp,
+  unit    .fp_set:N = \l_semio_viz_ig_unit_fp,
+  width   .fp_set:N = \l_semio_viz_dg_w_fp,
+  height  .fp_set:N = \l_semio_viz_dg_h_fp,
+}
+
+% 🖼️ infographic-illustration — reads the options, fits the model unit to the frame when unset, then body and callouts.
+\cs_new_protected:Npn \semio_viz_ig_illustration:n #1 {
+  \semio_viz_frame_require:n { infographic-illustration }
+  \semio_viz_dg_reset:
+  \tl_set:Nn \l_semio_viz_dg_nodes_tl { demo-illustration }
+  \tl_set:Nn \l_semio_viz_ig_side_tl { side }
+  \tl_clear:N \l_semio_viz_ig_outline_tl
+  \fp_zero:N \l_semio_viz_ig_cutaway_fp
+  \fp_zero:N \l_semio_viz_ig_explode_fp
+  \fp_zero:N \l_semio_viz_ig_unit_fp
+  \keys_set:nn { semio / viz / family / infographic-illustration } {#1}
+  \fp_compare:nT { \l_semio_viz_ig_unit_fp <= 0 }
+    { \fp_set:Nn \l_semio_viz_ig_unit_fp { min( \l_semio_viz_dg_w_fp , \l_semio_viz_dg_h_fp ) / 5 } }
+  \semio_viz_ig_illustration_body:
+  \exp_args:NV \semio_viz_ig_illustration_calls:n \l_semio_viz_dg_nodes_tl
+}
+
+% 🫙 The silhouette itself: the given vertex polygon or a fallback ellipse, with the cut wedge punched out of it.
+\cs_new_protected:Npn \semio_viz_ig_illustration_body: {
+  \semio_viz_dg_tone:n { 0 }
+  \tl_if_empty:NTF \l_semio_viz_ig_outline_tl
+    {
+      \draw [ \l_semio_viz_dg_draw_tl , fill=semio-chrome-panel , line~width=\semio@stroke@default ]
+        ( \fp_eval:n { \l_semio_viz_dg_w_fp / 2 } , \fp_eval:n { \l_semio_viz_dg_h_fp / 2 } )
+        ellipse [ x~radius=\fp_eval:n { \l_semio_viz_ig_unit_fp * 1.1 } ,
+                  y~radius=\fp_eval:n { \l_semio_viz_ig_unit_fp * 1.8 } ] ;
+    }
+    {
+      \semio_viz_dg_words:NN \l_semio_viz_dg_route_seq \l_semio_viz_ig_outline_tl
+      \int_set:Nn \l_semio_viz_ig_k_int { \seq_count:N \l_semio_viz_dg_route_seq / 2 }
+      \tl_clear:N \l_semio_viz_dg_path_tl
+      \int_step_inline:nn { \l_semio_viz_ig_k_int } {
+        \fp_set:Nn \l_semio_viz_dg_xa_fp
+          { \l_semio_viz_dg_w_fp / 2 + \l_semio_viz_ig_unit_fp * \seq_item:Nn \l_semio_viz_dg_route_seq { 2 * ##1 - 1 } }
+        \fp_set:Nn \l_semio_viz_dg_ya_fp
+          { \l_semio_viz_dg_h_fp / 2 + \l_semio_viz_ig_unit_fp * \seq_item:Nn \l_semio_viz_dg_route_seq { 2 * ##1 } }
+        \tl_if_empty:NTF \l_semio_viz_dg_path_tl
+          { \tl_set:Nx \l_semio_viz_dg_path_tl { ( \semio_viz_format_mm:n { \l_semio_viz_dg_xa_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_ya_fp } ) } }
+          { \tl_put_right:Nx \l_semio_viz_dg_path_tl { -- ( \semio_viz_format_mm:n { \l_semio_viz_dg_xa_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_ya_fp } ) } }
+        \semio_viz_probe_geometry:nx { diagram-vertex }
+          { \semio_viz_format_mm:n { \l_semio_viz_dg_xa_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_ya_fp } }
+      }
+      \tl_put_right:Nn \l_semio_viz_dg_path_tl { -- cycle }
+      \draw [ \l_semio_viz_dg_draw_tl , fill=semio-chrome-panel , line~width=\semio@stroke@default ]
+        \l_semio_viz_dg_path_tl ;
+    }
+  \fp_compare:nT { \l_semio_viz_ig_cutaway_fp > 0 } {
+    \fill [ semio-chrome-canvas ]
+      ( \fp_eval:n { \l_semio_viz_dg_w_fp / 2 } , \fp_eval:n { \l_semio_viz_dg_h_fp / 2 } ) --
+      ++( \fp_eval:n { \l_semio_viz_ig_unit_fp * 2.4 } , 0 ) arc
+        [ start~angle=0 , end~angle=\fp_eval:n { 360 * \l_semio_viz_ig_cutaway_fp } ,
+          radius=\fp_eval:n { \l_semio_viz_ig_unit_fp * 2.4 } ] -- cycle ;
+  }
+  \semio_viz_probe_geometry:nx { diagram-silhouette }
+    {
+      \semio_viz_format_mm:n { \l_semio_viz_ig_unit_fp } ,
+      \fp_to_decimal:N \l_semio_viz_ig_cutaway_fp ,
+      \fp_to_decimal:N \l_semio_viz_ig_explode_fp ,
+      \tl_if_empty:NTF \l_semio_viz_ig_outline_tl { 0 } { 1 }
+    }
+}
+
+% 🎯 Every callout: its exploded anchor dot, the horizontal leader to the chosen margin and the caption on it.
+\cs_new_protected:Npn \semio_viz_ig_illustration_calls:n #1 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_ig_n_int
+  \int_step_inline:nn { \l_semio_viz_ig_n_int } {
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { x } \l_semio_viz_ig_val_tl
+    \fp_set:Nn \l_semio_viz_dg_xa_fp
+      {
+        \l_semio_viz_dg_w_fp / 2 +
+        \l_semio_viz_ig_unit_fp * \l_semio_viz_ig_val_tl * ( 1 + \l_semio_viz_ig_explode_fp )
+      }
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { y } \l_semio_viz_ig_val_tl
+    \fp_set:Nn \l_semio_viz_dg_ya_fp
+      {
+        \l_semio_viz_dg_h_fp / 2 +
+        \l_semio_viz_ig_unit_fp * \l_semio_viz_ig_val_tl * ( 1 + \l_semio_viz_ig_explode_fp )
+      }
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_ig_side_tl } \l_semio_viz_dg_ta_tl
+    \str_if_eq:VnTF \l_semio_viz_dg_ta_tl { left }
+      { \fp_set:Nn \l_semio_viz_dg_xb_fp { 2 } } { \fp_set:Nn \l_semio_viz_dg_xb_fp { \l_semio_viz_dg_w_fp - 2 } }
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_tone_tl } \l_semio_viz_dg_cell_tl
+    \tl_if_empty:NTF \l_semio_viz_dg_cell_tl
+      { \semio_viz_dg_tone:n { ##1 } } { \exp_args:NV \semio_viz_dg_tone:n \l_semio_viz_dg_cell_tl }
+    \draw [ \l_semio_viz_dg_draw_tl , line~width=\semio@stroke@hairline ]
+      ( \fp_eval:n { \l_semio_viz_dg_xa_fp } , \fp_eval:n { \l_semio_viz_dg_ya_fp } ) --
+      ( \fp_eval:n { \l_semio_viz_dg_xb_fp } , \fp_eval:n { \l_semio_viz_dg_ya_fp } ) ;
+    \fill [ \l_semio_viz_dg_draw_tl ]
+      ( \fp_eval:n { \l_semio_viz_dg_xa_fp } , \fp_eval:n { \l_semio_viz_dg_ya_fp } ) circle [ radius=0.7 ] ;
+    \semio_viz_table_cell_opt:nnnN {#1} {##1} { \l_semio_viz_dg_col_label_tl } \l_semio_viz_dg_label_tl
+    \node [ font=\c_semio_viz_theme_font_chip_tl , text=semio-chrome-foreground ,
+            anchor= \str_if_eq:VnTF \l_semio_viz_dg_ta_tl { left } { south~west } { south~east } , inner~sep=0.3mm ]
+      at ( \fp_eval:n { \l_semio_viz_dg_xb_fp } , \fp_eval:n { \l_semio_viz_dg_ya_fp + 0.3 } )
+      { \tl_use:N \l_semio_viz_dg_label_tl } ;
+    \semio_viz_probe_geometry:nx { diagram-callout }
+      {
+        \semio_viz_format_mm:n { \l_semio_viz_dg_xa_fp } , \semio_viz_format_mm:n { \l_semio_viz_dg_ya_fp } ,
+        \semio_viz_format_mm:n { \l_semio_viz_dg_xb_fp }
+      }
+  }
+}
+% 🏗️ Registers the `infographic-illustration` catalogue entry on the annotated-silhouette renderer.
+\SemioVizFamily { infographic-illustration } { \semio_viz_ig_illustration:n {#1} }
+
+%region 🔖️DemoData
+% 🧪 Infographic fixtures.
+\cs_new_protected:Npn \semio_viz_ig_demo: {
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-infographic } {
+    \semio_viz_table_new:nn { demo-infographic } { label, value, unit, tone }
+    \semio_viz_table_row:nn { demo-infographic } { {Timber}, 42, \%, 1 }
+    \semio_viz_table_row:nn { demo-infographic } { {Concrete}, 31, \%, 2 }
+    \semio_viz_table_row:nn { demo-infographic } { {Steel}, 18, \%, 3 }
+    \semio_viz_table_row:nn { demo-infographic } { {Other}, 9, \%, 4 }
+  }
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-illustration } {
+    \semio_viz_table_new:nn { demo-illustration } { label, x, y, side, tone }
+    \semio_viz_table_row:nn { demo-illustration } { {Roof deck}, 0.2, 1.4, right, 1 }
+    \semio_viz_table_row:nn { demo-illustration } { {Insulation}, -0.5, 0.4, left, 2 }
+    \semio_viz_table_row:nn { demo-illustration } { {Slab}, 0.4, -0.6, right, 3 }
+    \semio_viz_table_row:nn { demo-illustration } { {Footing}, -0.3, -1.4, left, 4 }
+  }
+}
+\semio_viz_ig_demo:
+%endregion 🔖️DemoData
+
+\ExplSyntaxOff

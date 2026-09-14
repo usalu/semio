@@ -1,0 +1,75 @@
+{
+  "_comment": "🔁️ The GraphQL documents the read verbs of the repo CLI issue, executed against the frozen repository in 🗄️repo-records.json. A vector states the document a verb builds and the identifying members its three renderings must carry, so a drift in either the verb's document or a renderer is a red test.",
+  "vectors": [
+    {
+      "id": "ticket-list",
+      "verb": "ticket list",
+      "query": "query Tickets { repo { tickets { id slug title status prompt } } }",
+      "variables": {},
+      "mustContain": { "ndjson": "\"tickets\"", "markdown": "repo://ticket/", "human": "" }
+    },
+    {
+      "id": "goal-list",
+      "verb": "goal list",
+      "query": "query Goals { repo { goals { id title status dueDate description } } }",
+      "variables": {},
+      "mustContain": { "ndjson": "\"goals\"", "markdown": "repo://goal/", "human": "" }
+    },
+    {
+      "id": "bundle-list",
+      "verb": "bundle list",
+      "query": "query Bundles { repo { bundles { id name root sourceRoot kind } } }",
+      "variables": {},
+      "mustContain": { "ndjson": "\"bundles\"", "markdown": "repo://bundle/", "human": "" }
+    },
+    {
+      "id": "folder-list",
+      "verb": "folder list",
+      "query": "query Folders { repo { folders { id path name kind } } }",
+      "variables": {},
+      "mustContain": { "ndjson": "\"folders\"", "markdown": "repo://folder/", "human": "" }
+    },
+    {
+      "id": "file-list",
+      "verb": "file list",
+      "query": "query Files { repo { files { id path name kind extension } } }",
+      "variables": {},
+      "mustContain": { "ndjson": "\"files\"", "markdown": "repo://file/", "human": "" }
+    },
+    {
+      "id": "contributor-list",
+      "verb": "contributor list",
+      "query": "query Contributors { repo { contributors { id emails name } } }",
+      "variables": {},
+      "mustContain": { "ndjson": "\"contributors\"", "markdown": "repo://contributor/", "human": "" }
+    },
+    {
+      "id": "statute-list",
+      "verb": "statute list",
+      "query": "query Statutes { repo { statutes { id priority autofixable reason solution } } }",
+      "variables": {},
+      "mustContain": { "ndjson": "\"statutes\"", "markdown": "repo://statute/", "human": "" }
+    },
+    {
+      "id": "todo-list",
+      "verb": "todo list",
+      "query": "query Todos($filter: FilterInput) { todos(filter: $filter) { id name description } }",
+      "variables": {},
+      "mustContain": { "ndjson": "\"todos\"", "markdown": "", "human": "" }
+    },
+    {
+      "id": "analyze",
+      "verb": "analyze",
+      "query": "query Analyze($scope: String) { analyze(scope: $scope) { breachs { id summary scope line column excerpt kind { id priority autofixable reason solution } } metrics { total autofixable byPriority { high medium low } } } }",
+      "variables": {},
+      "mustContain": { "ndjson": "\"analyze\"", "markdown": "**Total Breachs**", "human": "found" }
+    },
+    {
+      "id": "unknown-field-is-refused",
+      "verb": "graphql",
+      "query": "{ repo { nope } }",
+      "variables": {},
+      "expectError": true
+    }
+  ]
+}

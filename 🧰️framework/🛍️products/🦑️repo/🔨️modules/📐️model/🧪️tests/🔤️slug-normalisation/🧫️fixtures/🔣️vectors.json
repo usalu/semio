@@ -1,0 +1,71 @@
+{
+  "$comment": "🔤️ Inputs for the LLM / reasoning-effort / client slug vocabulary. Only inputs are frozen here: the expected outputs are what the implementations must AGREE on, so writing them down by hand would let a shared misreading pass. The `error` groups carry inputs that must be rejected; `class` names the outcome class, never a rendered message.",
+  "schemaVersion": 1,
+  "llm": {
+    "normalise": [
+      "opus-4-7",
+      "Opus 4.7",
+      "claude-opus-4-7",
+      "Claude Sonnet 4.5",
+      "GPT-5.1-Codex",
+      "gpt5",
+      "  gemini 3 pro  ",
+      "SWE-1.5",
+      "cursor-grok-4-5",
+      "composerTwo",
+      "XMLHttpRequest",
+      "aBcDeF",
+      "Grüße",
+      "ß",
+      "",
+      "---",
+      "42"
+    ],
+    "resolve": [
+      "opus-4-7",
+      "Opus 4.7",
+      "anthropic/claude-opus-4-1",
+      "gpt-5-1-codex",
+      "gpt-5-1",
+      "gpt-5",
+      "o3-pro",
+      "gemini-3-7-flash",
+      "sonnet-5",
+      "haiku-3-5",
+      "swe-1-5",
+      "grok-4-5",
+      "deepseek-coder",
+      "llama-3-1"
+    ],
+    "reject": ["", "   ", "not-a-model", "gpt", "42", "🎫️"]
+  },
+  "effort": {
+    "normalise": ["low", "Medium", "HIGH", "max", "Very High", "", "  "],
+    "resolve": ["low", "Medium", "HIGH", "max", "reasoning-high", "", "   "],
+    "reject": ["extreme", "none", "0"]
+  },
+  "client": {
+    "normalise": [
+      "claude-code",
+      "Claude Code",
+      "copilot-chat",
+      "VSCode",
+      "kiro-cli",
+      "antigravity-chat",
+      "windsurf",
+      "",
+      "Cursor Chat"
+    ],
+    "resolve": [
+      "claude-code",
+      "Claude Code",
+      "copilot-chat",
+      "vscode-insiders",
+      "kiro-cli",
+      "antigravity-chat",
+      "windsurf-chat",
+      "cursor-chat"
+    ],
+    "reject": ["", "emacs", "sublime", "42"]
+  }
+}

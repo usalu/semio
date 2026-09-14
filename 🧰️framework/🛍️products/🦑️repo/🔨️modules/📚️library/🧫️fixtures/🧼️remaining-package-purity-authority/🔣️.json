@@ -134,7 +134,7 @@
       false
     ],
     [
-      "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📦️index.ts",
+      "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/🟦️.ts",
       "8c7779b3d6fc3c2d70ea12ec8356fe8306e84a1c2deb0c315cc994654b73bd14",
       "implementation",
       "unmarked:♻️mit-bestand/🎤️präsentation/📅️33.projektetage",
@@ -142,7 +142,7 @@
       "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript",
       "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript",
       "🟦️typescript",
-      "📦️index.ts",
+      "🟦️.ts",
       "extract-implementation-rewrite-library-adapter",
       "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🟦️.ts",
       72,

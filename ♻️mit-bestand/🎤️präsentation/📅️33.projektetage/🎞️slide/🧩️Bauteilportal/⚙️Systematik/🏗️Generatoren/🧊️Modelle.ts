@@ -1,4 +1,4 @@
-import type { SlideFile } from "@semio-tech/animate-presentation-core";
+import type { SlideFile } from "@semio-tech/presentation";
 
 const PARTICIPANT = "cad-modelle";
 const EMBODIMENT = "cad-modelle--iframe";

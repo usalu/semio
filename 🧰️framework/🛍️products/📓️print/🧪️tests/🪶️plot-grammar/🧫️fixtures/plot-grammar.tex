@@ -1,0 +1,97 @@
+% 🧪 Probe fixture of case plot-grammar, every scenario.
+% `\SemioVizPlot` is the one call that turns a §79 grammar specification into marks. Two things it
+% does are measurable without rasterising anything: which encoding channel a key list binds, and
+% where the two positional channels put a row. The first is read out of the channel registry before
+% a plot runs, the second out of the `plot/point` record every mapped row emits.
+\documentclass{article}
+\usepackage{tikz}
+\usetikzlibrary{calc,arrows.meta,shapes.geometric,decorations.pathreplacing,patterns}
+\usepackage{semio-viz-plot}
+\usepackage{semio-viz-probe}
+\ExplSyntaxOn
+\seq_new:N \l_probe_seq
+\tl_new:N \l_probe_cell_tl
+
+% 🎚️ Writes, for every channel of the grammar, whether the option list #2 bound it — 1 or 0, in
+% the order `semio-viz-plot` declares the channels in.
+\cs_new_protected:Npn \probebound #1#2 {
+  \semio_viz_plot_keys_reset:
+  \keys_set:nn { semio / viz / plot } {#2}
+  \seq_clear:N \l_probe_seq
+  \clist_map_inline:Nn \c_semio_viz_plot_channels_clist
+    {
+      \semio_viz_plot_channel_if_bound:nTF {##1}
+        { \seq_put_right:Nn \l_probe_seq { 1 } } { \seq_put_right:Nn \l_probe_seq { 0 } }
+    }
+  \semio_viz_probe_values:nx {#1} { \seq_use:Nn \l_probe_seq { , } }
+}
+
+% 🎚️ Writes the column and the named scale one channel of the option list #3 carries, as two
+% strings prefixed with a vertical bar so an empty binding stays visible.
+\cs_new_protected:Npn \probebinding #1#2#3 {
+  \semio_viz_plot_keys_reset:
+  \keys_set:nn { semio / viz / plot } {#3}
+  \prop_get:NnNF \l_semio_viz_plot_channel_column_prop {#2} \l_probe_cell_tl { \tl_clear:N \l_probe_cell_tl }
+  \seq_set_from_clist:Nn \l_probe_seq { }
+  \seq_put_right:Nx \l_probe_seq { { | \l_probe_cell_tl } }
+  \prop_get:NnNF \l_semio_viz_plot_channel_scale_prop {#2} \l_probe_cell_tl { \tl_clear:N \l_probe_cell_tl }
+  \seq_put_right:Nx \l_probe_seq { { | \l_probe_cell_tl } }
+  \semio_viz_probe_values:nx {#1} { \seq_use:Nn \l_probe_seq { , } }
+}
+\ExplSyntaxOff
+\begin{document}
+\ExplSyntaxOn
+\tl_set:Nn \l_semio_language_tl { en }
+\bool_set_true:N \l_semio_viz_in_figure_bool
+\ExplSyntaxOff
+
+\SemioVizProbeBegin{plot-grammar}{channel-vocabulary}
+\ExplSyntaxOn
+\probebound{channels/none}{ data = demo }
+\probebound{channels/positional}{ data = demo , x = cat , y = val }
+\probebound{channels/all}
+  {
+    data = demo , x = cat , y = val , x2 = t , y2 = val2 , angle = t , radius = val ,
+    size = val2 , shape = grp , fill = grp , stroke = grp , opacity = val ,
+    text = label , dash = grp , width = val2 , order = t , detail = cat
+  }
+\probebinding{binding/plain}{x}{ data = demo , x = cat }
+\probebinding{binding/scaled}{y}{ data = demo , y = { column = val , scale = plot-y } }
+\probebinding{binding/unbound}{fill}{ data = demo , x = cat }
+\ExplSyntaxOff
+
+\SemioVizProbeBegin{plot-grammar}{linear-mapping}
+\begin{tikzpicture}[x=1mm,y=1mm]
+\ExplSyntaxOn
+\fp_set:Nn \l_semio_viz_width_fp { 80 }
+\fp_set:Nn \l_semio_viz_height_fp { 40 }
+\ExplSyntaxOff
+\SemioVizProbeOn
+\SemioVizPlot[data=demo, x=t, y=val, mark=point]
+\SemioVizProbeOff
+\end{tikzpicture}
+
+\SemioVizProbeBegin{plot-grammar}{band-mapping}
+\begin{tikzpicture}[x=1mm,y=1mm]
+\ExplSyntaxOn
+\fp_set:Nn \l_semio_viz_width_fp { 80 }
+\fp_set:Nn \l_semio_viz_height_fp { 40 }
+\ExplSyntaxOff
+\SemioVizProbeOn
+\SemioVizPlot[data=demo, x=cat, y=val2, mark=point]
+\SemioVizProbeOff
+\end{tikzpicture}
+
+\SemioVizProbeBegin{plot-grammar}{twin-plan}
+\begin{tikzpicture}[x=1mm,y=1mm]
+\ExplSyntaxOn
+\fp_set:Nn \l_semio_viz_width_fp { 80 }
+\fp_set:Nn \l_semio_viz_height_fp { 40 }
+\ExplSyntaxOff
+\SemioVizProbeOn
+\SemioVizPlot[data=demo, x=t, y=val, mark=point]
+\SemioVizProbeOff
+\end{tikzpicture}
+
+\SemioVizProbePage
+\end{document}

@@ -4,7 +4,7 @@
 set -e
 WORKSPACE="${containerWorkspaceFolder:-/workspaces/semio}"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VSCODE_PACKAGE_ROOT="$REPO_ROOT/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript"
+VSCODE_PACKAGE_ROOT="$REPO_ROOT/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧩️vscode/📦️packages/🟦️typescript"
 VSIX_PATH="$VSCODE_PACKAGE_ROOT/🧩️repo.vsix"
 EXTENSION_PUBLISHER=""
 EXTENSION_NAME=""
@@ -383,7 +383,11 @@ fi
 
 #region 🔖️RepoConfigure
 echo "🔧️ Syncing repo hook configuration..."
-REPO_CLIENT="$REPO_ROOT/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client"
+if [ "$SEMIO_REPO_IMPLEMENTATION" = "go" ]; then
+  REPO_CLIENT="$REPO_ROOT/.🧬semio/🦑️repo/⚡️cache/🗃️bin/semio-repo"
+else
+  REPO_CLIENT="$REPO_ROOT/target/release/semio"
+fi
 if [ -x "$REPO_CLIENT" ]; then
   if "$REPO_CLIENT" configure --repo "$REPO_ROOT"; then
     echo "✅️ Repo hook configuration synced."

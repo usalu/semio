@@ -1,0 +1,132 @@
+{
+  "schema": "semio.repo.mcp.surface/1",
+  "descriptions": "asset://🧬️schema/🔣️descriptions.json",
+  "tools": [
+    {
+      "name": "ticket_open",
+      "descriptionKey": "tool_ticket_open"
+    },
+    {
+      "name": "ticket_close",
+      "descriptionKey": "tool_ticket_close"
+    },
+    {
+      "name": "ticket_reopen",
+      "descriptionKey": "tool_ticket_reopen"
+    },
+    {
+      "name": "section_move",
+      "descriptionKey": "tool_section_move"
+    },
+    {
+      "name": "file_integrate",
+      "descriptionKey": "tool_file_integrate"
+    },
+    {
+      "name": "section_extract",
+      "descriptionKey": "tool_section_extract"
+    },
+    {
+      "name": "goal_open",
+      "descriptionKey": "tool_goal_open"
+    },
+    {
+      "name": "goal_close",
+      "descriptionKey": "tool_goal_close"
+    },
+    {
+      "name": "goal_reopen",
+      "descriptionKey": "tool_goal_reopen"
+    }
+  ],
+  "resources": [
+    {
+      "uri": "repo://",
+      "name": "repo",
+      "descriptionKey": "res_root"
+    },
+    {
+      "uri": "repo://bundles",
+      "name": "bundles",
+      "descriptionKey": "res_bundles"
+    },
+    {
+      "uri": "repo://folders",
+      "name": "folders",
+      "descriptionKey": "res_folders"
+    },
+    {
+      "uri": "repo://files",
+      "name": "files",
+      "descriptionKey": "res_files"
+    },
+    {
+      "uri": "repo://tickets",
+      "name": "tickets",
+      "descriptionKey": "res_tickets"
+    },
+    {
+      "uri": "repo://goals",
+      "name": "goals",
+      "descriptionKey": "res_goals"
+    },
+    {
+      "uri": "repo://policies",
+      "name": "policies",
+      "descriptionKey": "res_policies"
+    },
+    {
+      "uri": "repo://contributors",
+      "name": "contributors",
+      "descriptionKey": "res_contributors"
+    }
+  ],
+  "prompts": [
+    {
+      "name": "enhance",
+      "descriptionKey": "prompt_enhance"
+    },
+    {
+      "name": "refactor",
+      "descriptionKey": "prompt_refactor"
+    },
+    {
+      "name": "test",
+      "descriptionKey": "prompt_test"
+    },
+    {
+      "name": "comply",
+      "descriptionKey": "prompt_comply"
+    }
+  ],
+  "profiles": [
+    {
+      "slug": "generic",
+      "extraTicketArgument": null
+    },
+    {
+      "slug": "cursor",
+      "extraTicketArgument": "plan_id"
+    },
+    {
+      "slug": "kiro",
+      "extraTicketArgument": "spec_id"
+    },
+    {
+      "slug": "copilot",
+      "extraTicketArgument": "plan_id"
+    },
+    {
+      "slug": "claude",
+      "extraTicketArgument": "plan_id"
+    },
+    {
+      "slug": "codex",
+      "extraTicketArgument": "plan_id"
+    }
+  ],
+  "ticketTools": [
+    "ticket_open",
+    "ticket_reopen"
+  ]
+}

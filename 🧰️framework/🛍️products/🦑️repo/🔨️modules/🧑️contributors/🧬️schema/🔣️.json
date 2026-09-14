@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/repo/contributors/🔣️.json",
+  "title": "🧑️ semio repo contributors",
+  "$comment": "🧬️ The wire contract of the 🧑️contributors module: the stored `🧑️‍💻️contributor.json` document, the session record derived from a session's own event files, the checkpoint parsed out of the git log, and the fixture files under 🧫️fixtures. ContributorDocument states the member names and the `omitempty` rule exactly as the Go struct tags declare them, so a real document taken out of `.🧬semio/🦑️repo/🧑️‍💻️devs` validates against it unchanged.",
+  "type": "object",
+  "$defs": {
+    "SessionKind": {
+      "$comment": "🚦️ What became of a session: still writing events, ended with an agent-ended event, or stopped without ending.",
+      "type": "string",
+      "enum": ["running", "completed", "interrupted"]
+    },
+    "ContributorDocument": {
+      "$comment": "🧑️ A stored `🧑️‍💻️contributor.json`. The directory name stands in for a blank alias or handle. `email` carries no `omitempty` tag, so the encoder always writes it, but hand-written documents in this repository omit it — only the members every stored document carries are required.",
+      "type": "object",
+      "properties": {
+        "alias": { "type": "string" },
+        "aliases": { "type": "array", "items": { "type": "string" } },
+        "emoji": { "type": "string" },
+        "github": { "type": "string" },
+        "githubs": { "type": "array", "items": { "type": "string" } },
+        "name": { "type": "string" },
+        "names": { "type": "array", "items": { "type": "string" } },
+        "email": { "type": "string" },
+        "emails": { "type": "array", "items": { "type": "string" } },
+        "links": { "type": "object", "additionalProperties": { "type": "string" } },
+        "fingerprint": { "type": "string" },
+        "fingerprints": { "type": "array", "items": { "type": "string" } },
+        "orcid": { "type": "string" },
+        "contributions": { "type": "object" }
+      },
+      "required": ["alias", "github", "name"]
+    },
+    "GitAuthor": {
+      "$comment": "✍️ A `Name <email>` author line split into its parts.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "github": { "type": "string" }
+      }
+    },
+    "Session": {
+      "$comment": "💿️ One session of one agent on one day, assembled from the session directory's own files.",
+      "type": "object",
+      "properties": {
+        "uuid": { "type": "string" },
+        "year": { "type": "integer" },
+        "month": { "type": "integer" },
+        "day": { "type": "integer" },
+        "checkpoint": { "type": "string" },
+        "kind": { "$ref": "#/$defs/SessionKind" },
+        "client": { "type": "string" },
+        "llm": { "type": "string" },
+        "startedAt": { "type": "string" },
+        "endedAt": { "type": "string" }
+      },
+      "required": ["uuid", "year", "month", "day", "kind"]
+    },
+    "Checkpoint": {
+      "$comment": "🏁️ One entry of the checkpoint log.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "sha": { "type": "string" },
+        "title": { "type": "string" },
+        "authorId": { "type": ["string", "null"] },
+        "date": { "type": "string" }
+      },
+      "required": ["id", "sha", "title", "date"]
+    },
+    "ContributorDocumentVectors": {
+      "$comment": "🧑️ 🧫️fixtures/🧑️‍💻️contributor-documents.json — real documents copied verbatim out of this repository's own devs tree, each with the directory name it sits under.",
+      "type": "object",
+      "properties": {
+        "schema": { "type": "string" },
+        "documents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": { "directory": { "type": "string" }, "json": { "type": "string" } },
+            "required": ["directory", "json"]
+          }
+        }
+      },
+      "required": ["documents"]
+    },
+    "CheckpointLogVectors": {
+      "$comment": "🏁️ 🧫️fixtures/🏁️checkpoint-log.json — real git output plus the lines a reader has to reject.",
+      "type": "object",
+      "properties": {
+        "schema": { "type": "string" },
+        "log": { "type": "string" },
+        "identities": { "type": "array", "items": { "type": "string" } },
+        "malformed": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["log", "identities", "malformed"]
+    },
+    "SessionVectors": {
+      "$comment": "📡️ 🧫️fixtures/📡️session-vectors.json — session directories stated as their own files and the age of their newest write, one per branch of the kind derivation. These are specification vectors, not recorded data: this checkout carries no session directory to copy, which the no-oracle decision states.",
+      "type": "object",
+      "properties": {
+        "schema": { "type": "string" },
+        "sessions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "year": { "type": "integer" },
+              "month": { "type": "integer" },
+              "day": { "type": "integer" },
+              "uuid": { "type": "string" },
+              "ageSeconds": { "type": ["integer", "null"] },
+              "files": { "type": "object", "additionalProperties": { "type": "string" } }
+            },
+            "required": ["year", "month", "day", "uuid", "files"]
+          }
+        }
+      },
+      "required": ["sessions"]
+    }
+  }
+}

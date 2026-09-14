@@ -1,0 +1,78 @@
+{
+  "schema": "semio.repo.events.export/1",
+  "$comment": "📤️ Export content-addressing vectors. `snapshot` is the sha256 over each id-sorted input as `id NUL kind NUL json(data)`; `inputIds` are the namespaced store ids the batch is appended with.",
+  "entities": [
+    {
+      "kind": "technology",
+      "id": "go",
+      "value": {
+        "kind": "user",
+        "name": "go",
+        "root": "go"
+      }
+    },
+    {
+      "kind": "bundle",
+      "id": "repo",
+      "value": {
+        "name": "repo",
+        "path": "modules/repo"
+      }
+    },
+    {
+      "kind": "folder",
+      "id": "a",
+      "value": {
+        "path": "a"
+      }
+    },
+    {
+      "kind": "file",
+      "id": "a/x.go",
+      "value": {
+        "path": "a/x.go"
+      }
+    },
+    {
+      "kind": "section",
+      "id": "a/x.go#Header",
+      "value": {
+        "file": "a/x.go",
+        "name": "Header"
+      }
+    },
+    {
+      "kind": "definition",
+      "id": "a/x.go#Header::Emit",
+      "value": {
+        "file": "a/x.go",
+        "name": "Emit"
+      }
+    }
+  ],
+  "sortedIds": [
+    "bundle:repo",
+    "definition:a/x.go#Header::Emit",
+    "file:a/x.go",
+    "folder:a",
+    "section:a/x.go#Header",
+    "technology:go"
+  ],
+  "snapshot": "c8fc1d7a580387eefecc074d1bfa9f4c54af00da83a1dbf301171110330b7612",
+  "inputIds": [
+    "snapshot:c8fc1d7a580387eefecc074d1bfa9f4c54af00da83a1dbf301171110330b7612:bundle:repo",
+    "snapshot:c8fc1d7a580387eefecc074d1bfa9f4c54af00da83a1dbf301171110330b7612:definition:a/x.go#Header::Emit",
+    "snapshot:c8fc1d7a580387eefecc074d1bfa9f4c54af00da83a1dbf301171110330b7612:file:a/x.go",
+    "snapshot:c8fc1d7a580387eefecc074d1bfa9f4c54af00da83a1dbf301171110330b7612:folder:a",
+    "snapshot:c8fc1d7a580387eefecc074d1bfa9f4c54af00da83a1dbf301171110330b7612:section:a/x.go#Header",
+    "snapshot:c8fc1d7a580387eefecc074d1bfa9f4c54af00da83a1dbf301171110330b7612:technology:go"
+  ],
+  "counts": {
+    "technology": 1,
+    "bundle": 1,
+    "folder": 1,
+    "file": 1,
+    "section": 1,
+    "definition": 1
+  }
+}

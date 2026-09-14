@@ -1,0 +1,64 @@
+{
+  "$comment": "🧫️ Immutable decode/round-trip vectors for the repo YAML codec. The `g1-*` vectors are the ones the retired `1️⃣g1-contract.json` fixture carried; the rest are the edge cases the hand-rolled scanner has to get right. Every vector in `vectors` must decode — and survive a decode/encode/decode round trip — identically under the npm `yaml` oracle and under both subjects. `edgeVectors` holds the documents where the owned ENCODER deliberately loses information, exercised by the sibling case `🕳️empty-container-encoding`.",
+  "schema": "semio.repo.yaml.codec-vectors/1",
+  "vectors": [
+    {
+      "name": "g1-mapping-with-sequence",
+      "source": "name: semio\npaths:\n  - a\n  - b\nenabled: true\n"
+    },
+    {
+      "name": "json-superset",
+      "source": "{\"a\": 1, \"b\": [2, 3]}"
+    },
+    {
+      "name": "scalar-kinds",
+      "source": "yes: true\nno: false\nnil: null\ntilde: ~\nint: 42\nnegative: -7\nfloat: 1.5\nplain: semio\n"
+    },
+    {
+      "name": "quoted-colon",
+      "source": "quoted: \"a: b\"\n"
+    },
+    {
+      "name": "single-quoted-apostrophe",
+      "source": "quoted: 'it''s here'\n"
+    },
+    {
+      "name": "empty-string",
+      "source": "empty: \"\"\n"
+    },
+    {
+      "name": "flow-sequence",
+      "source": "list: [x, y, z]\n"
+    },
+    {
+      "name": "comments-are-dropped",
+      "source": "# leading\nname: semio # trailing\n"
+    },
+    {
+      "name": "document-markers-are-dropped",
+      "source": "---\nname: semio\n"
+    },
+    {
+      "name": "nested-mapping",
+      "source": "outer:\n  inner:\n    leaf: value\n  sibling: 1\n"
+    },
+    {
+      "name": "sequence-of-mappings",
+      "source": "items:\n  - id: a\n    weight: 1\n  - id: b\n    weight: 2\n"
+    },
+    {
+      "name": "top-level-sequence",
+      "source": "- a\n- b\n"
+    },
+    {
+      "name": "deep-indentation",
+      "source": "a:\n    b:\n        c: 1\n"
+    }
+  ],
+  "edgeVectors": [
+    {
+      "name": "empty-flow-sequence",
+      "source": "list: []\n"
+    }
+  ]
+}

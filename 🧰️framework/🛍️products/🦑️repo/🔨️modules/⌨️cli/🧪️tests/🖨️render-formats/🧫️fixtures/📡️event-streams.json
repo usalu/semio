@@ -1,0 +1,187 @@
+{
+  "_comment": "🖨️ Specification vectors for the three stream renderers. Each vector states one event stream, one requested format and the exact stdout, stderr and exit code the renderer owes. `elapsedMs` is supplied rather than measured so the human summary line is deterministic.",
+  "vectors": [
+    {
+      "id": "ndjson-writes-the-result-payload-and-nothing-else",
+      "format": "json",
+      "isTty": false,
+      "verbose": false,
+      "elapsedMs": 0,
+      "events": [
+        { "kind": "start", "command": "analyze" },
+        { "kind": "result", "command": "analyze", "data": { "analyze": { "metrics": { "total": 0 } } } },
+        { "kind": "done", "done": { "exit_code": 0, "status": "ok" } }
+      ],
+      "expect": { "out": "{\"analyze\":{\"metrics\":{\"total\":0}}}\n", "err": "", "exitCode": 0 }
+    },
+    {
+      "id": "ndjson-writes-the-error-payload-to-standard-error",
+      "format": "json",
+      "isTty": false,
+      "verbose": false,
+      "elapsedMs": 0,
+      "events": [
+        { "kind": "start", "command": "analyze" },
+        { "kind": "error", "command": "analyze", "error": { "code": "E_INTERNAL", "message": "boom", "fatal": true } },
+        { "kind": "done", "done": { "exit_code": 1, "status": "error" } }
+      ],
+      "expect": { "out": "", "err": "{\"code\":\"E_INTERNAL\",\"message\":\"boom\",\"fatal\":true}\n", "exitCode": 1 }
+    },
+    {
+      "id": "human-prints-the-analyze-summary-and-its-breaches",
+      "format": "text",
+      "isTty": false,
+      "verbose": false,
+      "elapsedMs": 15,
+      "events": [
+        { "kind": "start", "command": "analyze" },
+        {
+          "kind": "result",
+          "command": "analyze",
+          "data": {
+            "analyze": {
+              "metrics": { "total": 2, "autofixable": 1 },
+              "breachs": [
+                { "kind": { "id": "Code#File#Missing Header Region" }, "scope": "a/b.rs", "line": 0, "summary": "Missing header region in a/b.rs" },
+                { "kind": "Code#Section#Wrong Format", "scope": "a/c.rs", "line": 12, "summary": "Wrong section format" }
+              ]
+            }
+          }
+        },
+        { "kind": "done", "command": "analyze", "done": { "exit_code": 0, "status": "ok" } }
+      ],
+      "expect": {
+        "out": "-> found 2 breachs (1 autofixable)\n  breach Code#File#Missing Header Region a/b.rs:0 Missing header region in a/b.rs\n  breach Code#Section#Wrong Format a/c.rs:12 Wrong section format\nok done  analyze  15ms\n",
+        "err": "",
+        "exitCode": 0
+      }
+    },
+    {
+      "id": "human-prints-the-failure-summary-with-its-exit-code",
+      "format": "text",
+      "isTty": false,
+      "verbose": false,
+      "elapsedMs": 1234,
+      "events": [
+        { "kind": "start", "command": "analyze" },
+        { "kind": "error", "command": "analyze", "error": { "code": "E_INTERNAL", "message": "boom", "detail": "the detail", "fatal": true } },
+        { "kind": "done", "command": "analyze", "done": { "exit_code": 1, "status": "error" } }
+      ],
+      "expect": { "out": "failed failed analyze  1.234s (exit: 1)\n", "err": "error error: boom\n", "exitCode": 1 }
+    },
+    {
+      "id": "human-prints-the-error-detail-only-when-verbose",
+      "format": "text",
+      "isTty": false,
+      "verbose": true,
+      "elapsedMs": 1000,
+      "events": [
+        { "kind": "error", "command": "analyze", "error": { "code": "E_INTERNAL", "message": "boom", "detail": "the detail", "fatal": true } },
+        { "kind": "done", "command": "analyze", "done": { "exit_code": 1, "status": "error" } }
+      ],
+      "expect": { "out": "failed failed analyze  1s (exit: 1)\n", "err": "error error: boom\nthe detail\n", "exitCode": 1 }
+    },
+    {
+      "id": "human-paints-colour-only-for-a-terminal",
+      "format": "text",
+      "isTty": true,
+      "verbose": false,
+      "elapsedMs": 0,
+      "events": [{ "kind": "done", "command": "analyze", "done": { "exit_code": 0, "status": "ok" } }],
+      "expect": { "out": "\r\u001b[K\u001b[32mok\u001b[0m done  analyze  0s\n", "err": "", "exitCode": 0 }
+    },
+    {
+      "id": "markdown-prints-the-analyze-totals-and-statute-links",
+      "format": "md",
+      "isTty": false,
+      "verbose": false,
+      "elapsedMs": 0,
+      "events": [
+        {
+          "kind": "result",
+          "command": "analyze",
+          "data": {
+            "analyze": {
+              "metrics": { "total": 1, "autofixable": 1 },
+              "breachs": [{ "kind": { "id": "Code#File#Missing Header Region" }, "scope": "a/b.rs", "line": 0, "summary": "Missing header region in a/b.rs" }]
+            }
+          }
+        },
+        { "kind": "done", "command": "analyze", "done": { "exit_code": 0, "status": "ok" } }
+      ],
+      "expect": {
+        "out": "- **Total Breachs**: 1\n- **Autofixable**: 1\n- [Code#File#Missing Header Region](repo://statute/Code#File#Missing%20Header%20Region) - a/b.rs:0 - Missing header region in a/b.rs\n",
+        "err": "",
+        "exitCode": 0
+      }
+    },
+    {
+      "id": "markdown-prints-an-error-and-its-detail",
+      "format": "md",
+      "isTty": false,
+      "verbose": false,
+      "elapsedMs": 0,
+      "events": [
+        { "kind": "error", "command": "analyze", "error": { "code": "E_INTERNAL", "message": "boom", "detail": "the detail", "fatal": true } },
+        { "kind": "done", "command": "analyze", "done": { "exit_code": 1, "status": "error" } }
+      ],
+      "expect": { "out": "", "err": "**Error: boom**\n> the detail\n", "exitCode": 1 }
+    },
+    {
+      "id": "markdown-prints-an-entity-list-as-links",
+      "format": "md",
+      "isTty": false,
+      "verbose": false,
+      "elapsedMs": 0,
+      "events": [
+        {
+          "kind": "result",
+          "command": "todo list",
+          "data": { "todos": [{ "id": "alpha", "name": "Alpha" }, { "id": "beta", "name": "Beta" }] }
+        },
+        { "kind": "done", "command": "todo list", "done": { "exit_code": 0, "status": "ok" } }
+      ],
+      "expect": { "out": "- [📝alpha](repo://todo/📝alpha) - `Alpha`\n- [📝beta](repo://todo/📝beta) - `Beta`\n", "err": "", "exitCode": 0 }
+    },
+    {
+      "id": "human-prints-an-entity-list-as-lines",
+      "format": "text",
+      "isTty": false,
+      "verbose": false,
+      "elapsedMs": 0,
+      "events": [
+        {
+          "kind": "result",
+          "command": "todo list",
+          "data": { "todos": [{ "id": "alpha", "name": "Alpha" }] }
+        },
+        { "kind": "done", "command": "todo list", "done": { "exit_code": 0, "status": "ok" } }
+      ],
+      "expect": { "out": "📝alpha Alpha\nok done  todo list  0s\n", "err": "", "exitCode": 0 }
+    },
+    {
+      "id": "a-payload-carrying-markdown-is-passed-through-unchanged",
+      "format": "md",
+      "isTty": false,
+      "verbose": false,
+      "elapsedMs": 0,
+      "events": [
+        { "kind": "result", "command": "mermaid", "data": { "markdown": "# already rendered\n" } },
+        { "kind": "done", "command": "mermaid", "done": { "exit_code": 0, "status": "ok" } }
+      ],
+      "expect": { "out": "# already rendered\n", "err": "", "exitCode": 0 }
+    },
+    {
+      "id": "an-id-and-path-payload-becomes-the-arrow-line",
+      "format": "text",
+      "isTty": false,
+      "verbose": false,
+      "elapsedMs": 0,
+      "events": [
+        { "kind": "result", "command": "folder create", "data": { "id": "someid", "path": "a/b" } },
+        { "kind": "done", "command": "folder create", "done": { "exit_code": 0, "status": "ok" } }
+      ],
+      "expect": { "out": "-> someid a/b\nok done  folder create  0s\n", "err": "", "exitCode": 0 }
+    }
+  ]
+}

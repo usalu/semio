@@ -1,0 +1,13 @@
+\documentclass{article}
+\usepackage{semio-viz-charts-statistical}
+\usepackage{semio-viz-transform}
+\begin{document}
+\ExplSyntaxOn
+\SemioVizProbeBegin{charts-evaluation-curves}{gain}
+\semio_viz_tr_stat_from_table:Nnn \l_tmpa_seq { demo-scores } { score }
+\semio_viz_tr_stat_from_table:Nnn \l_tmpb_seq { demo-scores } { label }
+\semio_viz_tr_eval_gain:NN \l_tmpa_seq \l_tmpb_seq
+\semio_viz_probe_values:nx { population } { \seq_use:Nn \g_semio_viz_tr_eval_fx_seq { , } }
+\semio_viz_probe_values:nx { captured } { \seq_use:Nn \g_semio_viz_tr_eval_fy_seq { , } }
+\ExplSyntaxOff
+\end{document}

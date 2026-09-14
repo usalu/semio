@@ -59,10 +59,23 @@
         "module": {
           "productionConsumers": [
             "framework.print.module.tectonic-template-compilation",
-            "framework.print.command.print-pipeline-verification"
+            "framework.print.command.print-pipeline-verification",
+            "framework.print.command.viz-catalog-generation"
           ]
         },
-        "responsibility": "Enumerates visualization documents and checks taxonomy coverage against the public chart catalog."
+        "responsibility": "Loads the chart-kind catalogue, generates the visualization catalogue packages and gallery documents, and checks taxonomy coverage, family registration and option vocabularies."
+      },
+      {
+        "directory": "📊️viz-kernel",
+        "id": "framework.print.module.viz-kernel",
+        "kind": "module",
+        "module": {
+          "productionConsumers": [
+            "framework.print.module.visualization-gallery",
+            "framework.print.command.viz-catalog-generation"
+          ]
+        },
+        "responsibility": "Implements the visualization kernel in TypeScript — scales, formats, transforms, marks, shapes, coordinate systems, hierarchy, network, flow, geo and spatial layouts, themes — and renders a chart specification into the 2D scene graph and into TikZ source."
       },
       {
         "directory": "📥️source-staging",
@@ -75,6 +88,17 @@
           ]
         },
         "responsibility": "Stages semantic source filenames and references for compiler-safe template and report builds."
+      },
+      {
+        "directory": "🧪️viz-probe",
+        "id": "framework.print.module.viz-probe",
+        "kind": "module",
+        "module": {
+          "productionConsumers": [
+            "framework.print.command.print-pipeline-verification"
+          ]
+        },
+        "responsibility": "Compiles a semio-viz-probe document with the repository tectonic and returns its validated numeric records as a comparable projection."
       }
     ]
   }

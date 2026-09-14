@@ -1,0 +1,15 @@
+\documentclass{article}
+\usepackage{semio-viz-charts-distribution}
+\usepackage{semio-viz-transform}
+\begin{document}
+\ExplSyntaxOn
+\SemioVizProbeBegin{charts-histogram-density}{density}
+\semio_viz_tr_stat_from_table:Nnn \l_tmpa_seq { demo-distribution } { value }
+\semio_viz_tr_stat_kde:Nnnnn \l_tmpa_seq { 0 } { 9 } { 2 } { 10 }
+\semio_viz_probe_values:nx { bandwidth } { \fp_use:N \g_semio_viz_tr_stat_band_fp }
+\semio_viz_probe_values:nx { grid } { \seq_use:Nn \g_semio_viz_tr_stat_curve_x_seq { , } }
+\semio_viz_probe_values:nx { density } { \seq_use:Nn \g_semio_viz_tr_stat_curve_y_seq { , } }
+\semio_viz_tr_stat_kde:Nnnnn \l_tmpa_seq { 0.75 } { 9 } { 2 } { 10 }
+\semio_viz_probe_values:nx { fixed-density } { \seq_use:Nn \g_semio_viz_tr_stat_curve_y_seq { , } }
+\ExplSyntaxOff
+\end{document}

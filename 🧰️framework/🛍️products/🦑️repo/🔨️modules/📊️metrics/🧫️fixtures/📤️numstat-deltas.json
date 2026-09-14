@@ -1,0 +1,254 @@
+{
+  "noMerges": [
+    {
+      "sha": "20839f5b1db78bc2765f18e09c8f2dc1b4b1b15e",
+      "author": "Ada Lovelace",
+      "author_mail": "ada@semio-tech.com",
+      "when_unix": 1767225600,
+      "files": [
+        {
+          "path": "README.md",
+          "added": 3,
+          "removed": 0,
+          "binary": false,
+          "bucket": "Markup"
+        },
+        {
+          "path": "data/config.json",
+          "added": 4,
+          "removed": 0,
+          "binary": false,
+          "bucket": "Data"
+        },
+        {
+          "path": "🧬️alpha.ts",
+          "added": 3,
+          "removed": 0,
+          "binary": false,
+          "bucket": "TypeScript"
+        }
+      ],
+      "delta": {
+        "Markup": {
+          "added": 3,
+          "removed": 0
+        },
+        "Data": {
+          "added": 4,
+          "removed": 0
+        },
+        "TypeScript": {
+          "added": 3,
+          "removed": 0
+        }
+      }
+    },
+    {
+      "sha": "6980d7974e71edd8540e1b290d8b7dd8e051b75c",
+      "author": "Grace Hopper",
+      "author_mail": "grace@semio-tech.com",
+      "when_unix": 1767232800,
+      "files": [
+        {
+          "path": "pkg/main.go",
+          "added": 3,
+          "removed": 0,
+          "binary": false,
+          "bucket": "Go"
+        },
+        {
+          "path": "🧬️alpha.ts",
+          "added": 2,
+          "removed": 1,
+          "binary": false,
+          "bucket": "TypeScript"
+        }
+      ],
+      "delta": {
+        "Go": {
+          "added": 3,
+          "removed": 0
+        },
+        "TypeScript": {
+          "added": 2,
+          "removed": 1
+        }
+      }
+    },
+    {
+      "sha": "8d1af13fc49a3015e8cc5d1048f8b6bd63a0abe8",
+      "author": "Ada Lovelace",
+      "author_mail": "ada@semio-tech.com",
+      "when_unix": 1767312000,
+      "files": [
+        {
+          "path": "src/🧬️beta.ts",
+          "added": 2,
+          "removed": 1,
+          "binary": false,
+          "rename_from": "🧬️alpha.ts",
+          "bucket": "TypeScript"
+        }
+      ],
+      "delta": {
+        "TypeScript": {
+          "added": 2,
+          "removed": 1
+        }
+      }
+    },
+    {
+      "sha": "7cb6150968ac492807305e99e703b00dbd8a6540",
+      "author": "Grace Hopper",
+      "author_mail": "grace@semio-tech.com",
+      "when_unix": 1767398400,
+      "files": [
+        {
+          "path": ".hidden/secret.ts",
+          "added": 1,
+          "removed": 0,
+          "binary": false
+        },
+        {
+          "path": ".🧬semio/🦑️repo/note.md",
+          "added": 1,
+          "removed": 0,
+          "binary": false
+        },
+        {
+          "path": "assets/logo.png",
+          "added": 0,
+          "removed": 0,
+          "binary": true
+        }
+      ],
+      "delta": {}
+    },
+    {
+      "sha": "a979b7a5c54bedf97adc1f9e7f5324139f87d5bb",
+      "author": "Ada Lovelace",
+      "author_mail": "ada@semio-tech.com",
+      "when_unix": 1769904000,
+      "files": [
+        {
+          "path": "README.md",
+          "added": 0,
+          "removed": 3,
+          "binary": false,
+          "bucket": "Markup"
+        },
+        {
+          "path": "data/config.json",
+          "added": 2,
+          "removed": 1,
+          "binary": false,
+          "bucket": "Data"
+        },
+        {
+          "path": "py/tool.py",
+          "added": 2,
+          "removed": 0,
+          "binary": false,
+          "bucket": "Python"
+        }
+      ],
+      "delta": {
+        "Markup": {
+          "added": 0,
+          "removed": 3
+        },
+        "Data": {
+          "added": 2,
+          "removed": 1
+        },
+        "Python": {
+          "added": 2,
+          "removed": 0
+        }
+      }
+    }
+  ],
+  "withMerges": [
+    {
+      "sha": "20839f5b1db78bc2765f18e09c8f2dc1b4b1b15e",
+      "when_unix": 1767225600,
+      "fileCount": 3,
+      "delta": {
+        "Markup": {
+          "added": 3,
+          "removed": 0
+        },
+        "Data": {
+          "added": 4,
+          "removed": 0
+        },
+        "TypeScript": {
+          "added": 3,
+          "removed": 0
+        }
+      }
+    },
+    {
+      "sha": "6980d7974e71edd8540e1b290d8b7dd8e051b75c",
+      "when_unix": 1767232800,
+      "fileCount": 2,
+      "delta": {
+        "Go": {
+          "added": 3,
+          "removed": 0
+        },
+        "TypeScript": {
+          "added": 2,
+          "removed": 1
+        }
+      }
+    },
+    {
+      "sha": "8d1af13fc49a3015e8cc5d1048f8b6bd63a0abe8",
+      "when_unix": 1767312000,
+      "fileCount": 1,
+      "delta": {
+        "TypeScript": {
+          "added": 2,
+          "removed": 1
+        }
+      }
+    },
+    {
+      "sha": "7cb6150968ac492807305e99e703b00dbd8a6540",
+      "when_unix": 1767398400,
+      "fileCount": 3,
+      "delta": {}
+    },
+    {
+      "sha": "a979b7a5c54bedf97adc1f9e7f5324139f87d5bb",
+      "when_unix": 1769904000,
+      "fileCount": 3,
+      "delta": {
+        "Markup": {
+          "added": 0,
+          "removed": 3
+        },
+        "Data": {
+          "added": 2,
+          "removed": 1
+        },
+        "Python": {
+          "added": 2,
+          "removed": 0
+        }
+      }
+    },
+    {
+      "sha": "83d2a2864946e2913add9779dacda359d49f6637",
+      "when_unix": 1769990400,
+      "fileCount": 1,
+      "delta": {
+        "Rust": {
+          "added": 1,
+          "removed": 0
+        }
+      }
+    }
+  ]
+}

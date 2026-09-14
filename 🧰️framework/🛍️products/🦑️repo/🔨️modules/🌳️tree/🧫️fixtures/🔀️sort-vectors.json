@@ -1,0 +1,75 @@
+{
+  "_comment": "🔀️ Child-ordering vectors. The first two restate the Go original's own `TestSortTreeChildren`; the rest pin the parts that test left open — that only the folder/non-folder split jumps the label order, that equal labels of different kinds keep a total order, and that the sort reaches every level.",
+  "vectors": [
+    {
+      "id": "sorts-alphabetically",
+      "tree": {
+        "kind": "category",
+        "label": "root",
+        "children": [
+          { "kind": "file", "label": "z.ts" },
+          { "kind": "file", "label": "a.ts" },
+          { "kind": "file", "label": "m.ts" }
+        ]
+      },
+      "outline": ["0|category||root", "1|file||a.ts", "1|file||m.ts", "1|file||z.ts"]
+    },
+    {
+      "id": "folders-before-files",
+      "tree": {
+        "kind": "category",
+        "label": "root",
+        "children": [
+          { "kind": "file", "label": "a.ts" },
+          { "kind": "folder", "label": "src" },
+          { "kind": "file", "label": "b.ts" }
+        ]
+      },
+      "outline": ["0|category||root", "1|folder||src", "1|file||a.ts", "1|file||b.ts"]
+    },
+    {
+      "id": "only-folders-jump-the-label-order",
+      "tree": {
+        "kind": "category",
+        "label": "root",
+        "children": [
+          { "kind": "file", "id": "f", "label": "a.ts" },
+          { "kind": "bundle", "id": "b", "label": "z-bundle" },
+          { "kind": "folder", "id": "d", "label": "zzz" },
+          { "kind": "technology", "id": "t", "label": "b-technology" }
+        ]
+      },
+      "outline": ["0|category||root", "1|folder|d|zzz", "1|file|f|a.ts", "1|technology|t|b-technology", "1|bundle|b|z-bundle"]
+    },
+    {
+      "id": "sorts-every-level",
+      "tree": {
+        "kind": "category",
+        "label": "root",
+        "children": [
+          {
+            "kind": "folder",
+            "id": "src",
+            "label": "src",
+            "children": [
+              { "kind": "file", "id": "z", "label": "z.ts" },
+              { "kind": "folder", "id": "core", "label": "core", "children": [{ "kind": "file", "id": "b", "label": "b.ts" }, { "kind": "file", "id": "a", "label": "a.ts" }] },
+              { "kind": "file", "id": "a2", "label": "a.ts" }
+            ]
+          },
+          { "kind": "folder", "id": "docs", "label": "docs", "children": [] }
+        ]
+      },
+      "outline": [
+        "0|category||root",
+        "1|folder|docs|docs",
+        "1|folder|src|src",
+        "2|folder|core|core",
+        "3|file|a|a.ts",
+        "3|file|b|b.ts",
+        "2|file|a2|a.ts",
+        "2|file|z|z.ts"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+% 🧪 Probe fixture of case transform-stack, every scenario.
+% The stack transform reads a long-form table `t, series, value` and writes `x, series, y0, y1`.
+% Every scenario probes the two baselines of every series separately, so a wrong order and a wrong
+% offset are different failures.
+\documentclass{article}
+\usepackage{semio-viz-transform}
+\usepackage{semio-viz-probe}
+\ExplSyntaxOn
+\seq_new:N \l_probe_seq
+\tl_new:N \l_probe_cell_tl
+
+% 🥞 Writes one column of a stacked table filtered to one series.
+\cs_new_protected:Npn \probestack #1#2#3#4 {
+  \seq_clear:N \l_probe_seq
+  \seq_map_inline:cn { g_semio_viz_table_ \tl_to_str:n {#2} _rows_seq }
+    {
+      \probecellof:nnN {##1} { series } \l_probe_cell_tl
+      \str_if_eq:VnT \l_probe_cell_tl {#3}
+        {
+          \probecellof:nnN {##1} {#4} \l_probe_cell_tl
+          \seq_put_right:NV \l_probe_seq \l_probe_cell_tl
+        }
+    }
+  \semio_viz_probe_values:nx {#1} { \seq_use:Nn \l_probe_seq { , } }
+}
+
+% 🧾 Reads a cell of a stored row by column name of the given table.
+\cs_new_protected:Npn \probecellof:nnN #1#2#3 {
+  \semio_viz_tr_get:nnN {#1} {#2} #3
+}
+
+% 🥞 Writes the series order a stacked table came out in.
+\cs_new_protected:Npn \probeorder #1#2 {
+  \seq_clear:N \l_probe_seq
+  \seq_map_inline:cn { g_semio_viz_table_ \tl_to_str:n {#2} _rows_seq }
+    {
+      \probecellof:nnN {##1} { series } \l_probe_cell_tl
+      \seq_if_in:NVF \l_probe_seq \l_probe_cell_tl
+        { \seq_put_right:NV \l_probe_seq \l_probe_cell_tl }
+    }
+  \semio_viz_probe_values:nx {#1} { \seq_use:Nn \l_probe_seq { , } }
+}
+\ExplSyntaxOff
+\begin{document}
+
+\SemioVizProbeBegin{transform-stack}{order-none}
+\SemioVizTransform{s1}{demo-series}[stack=t:series:value]
+\ExplSyntaxOn
+\semio_viz_tr_load:n { s1 }
+\ExplSyntaxOff
+\probestack{stack/none/alpha/y0}{s1}{alpha}{y0}
+\probestack{stack/none/alpha/y1}{s1}{alpha}{y1}
+\probestack{stack/none/beta/y0}{s1}{beta}{y0}
+\probestack{stack/none/beta/y1}{s1}{beta}{y1}
+\probestack{stack/none/gamma/y0}{s1}{gamma}{y0}
+\probestack{stack/none/gamma/y1}{s1}{gamma}{y1}
+\probeorder{stack/none/order}{s1}
+
+\SemioVizProbeBegin{transform-stack}{order-ascending}
+\SemioVizTransform{s2}{demo-series}[stack=t:series:value,order=ascending]
+\ExplSyntaxOn
+\semio_viz_tr_load:n { s2 }
+\ExplSyntaxOff
+\probeorder{stack/ascending/order}{s2}
+\probestack{stack/ascending/alpha/y0}{s2}{alpha}{y0}
+\probestack{stack/ascending/gamma/y1}{s2}{gamma}{y1}
+
+\SemioVizProbeBegin{transform-stack}{order-reverse}
+\SemioVizTransform{s3}{demo-series}[stack=t:series:value,order=reverse]
+\ExplSyntaxOn
+\semio_viz_tr_load:n { s3 }
+\ExplSyntaxOff
+\probeorder{stack/reverse/order}{s3}
+\probestack{stack/reverse/gamma/y1}{s3}{gamma}{y1}
+\probestack{stack/reverse/alpha/y0}{s3}{alpha}{y0}
+
+\SemioVizProbeBegin{transform-stack}{offset-expand}
+\SemioVizTransform{s4}{demo-series}[stack=t:series:value,offset=expand]
+\ExplSyntaxOn
+\semio_viz_tr_load:n { s4 }
+\ExplSyntaxOff
+\probestack{stack/expand/alpha/y1}{s4}{alpha}{y1}
+\probestack{stack/expand/beta/y0}{s4}{beta}{y0}
+\probestack{stack/expand/gamma/y1}{s4}{gamma}{y1}
+
+\SemioVizProbeBegin{transform-stack}{offset-silhouette}
+\SemioVizTransform{s5}{demo-series}[stack=t:series:value,offset=silhouette]
+\ExplSyntaxOn
+\semio_viz_tr_load:n { s5 }
+\ExplSyntaxOff
+\probestack{stack/silhouette/alpha/y0}{s5}{alpha}{y0}
+\probestack{stack/silhouette/gamma/y1}{s5}{gamma}{y1}
+
+\SemioVizProbeBegin{transform-stack}{offset-diverging}
+\SemioVizTable{signed}{t,series,value}
+\SemioVizRow{signed}{1,up,3}
+\SemioVizRow{signed}{2,up,4}
+\SemioVizRow{signed}{3,up,2}
+\SemioVizRow{signed}{1,down,-2}
+\SemioVizRow{signed}{2,down,-5}
+\SemioVizRow{signed}{3,down,-1}
+\SemioVizRow{signed}{1,mixed,1}
+\SemioVizRow{signed}{2,mixed,-3}
+\SemioVizRow{signed}{3,mixed,4}
+\SemioVizTransform{s6}{signed}[stack=t:series:value,offset=diverging]
+\ExplSyntaxOn
+\semio_viz_tr_load:n { s6 }
+\ExplSyntaxOff
+\probestack{stack/diverging/up/y0}{s6}{up}{y0}
+\probestack{stack/diverging/up/y1}{s6}{up}{y1}
+\probestack{stack/diverging/down/y0}{s6}{down}{y0}
+\probestack{stack/diverging/down/y1}{s6}{down}{y1}
+\probestack{stack/diverging/mixed/y0}{s6}{mixed}{y0}
+\probestack{stack/diverging/mixed/y1}{s6}{mixed}{y1}
+
+\SemioVizProbePage
+\end{document}

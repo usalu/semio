@@ -1,0 +1,21 @@
+[package]
+name = "semio-framework-repo-languages"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Repo language table, section/definition parsing, scope ids and file headers"
+
+[package.metadata.semio]
+role = "library"
+id = "repo-languages"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+semio-framework-repo-model = { path = "../../../📐️model/📦️packages/🦀️rust" }
