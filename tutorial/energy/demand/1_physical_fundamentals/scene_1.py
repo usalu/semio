@@ -506,8 +506,8 @@ class Beat2_KraftUndArbeit(Scene):
          "We start at the very bottom of the ladder, with force. Force is any push or pull. Its unit is the newton, and it is defined through gravity.",
          "Wir beginnen ganz unten: bei der Kraft. Ihre Einheit ist das Newton — definiert über die Schwerkraft."),
         ("newton",
-         "Hold a bar of chocolate — about one hundred grams — in your open hand. The downward pull of the Earth on it is very close to one newton. That is the reference you can feel.",
-         "Ein Riegel Schokolade, rund 100 Gramm: Die Erde zieht mit etwa einem Newton daran. Das ist das spürbare Maß."),
+         "Hold an apple — about one hundred grams — in your open hand. The downward pull of the Earth on it is very close to one newton. That is the reference you can feel.",
+         "Ein Apfel, rund 100 Gramm: Die Erde zieht mit etwa einem Newton daran. Das ist das spürbare Maß."),
         ("gravity",
          "The pull comes from the gravitational acceleration g, about nine point eight one metres per second squared. Mass times g gives the weight force — one hundred grams times g is roughly one newton.",
          "Die Erdbeschleunigung g beträgt etwa 9,81 m/s². Masse mal g ergibt die Gewichtskraft — 100 g ergeben rund 1 N."),
@@ -521,8 +521,8 @@ class Beat2_KraftUndArbeit(Scene):
          "One newton acting over one metre is one joule. The joule is the international unit of energy, and every other energy unit is just a repackaged joule.",
          "Ein Newton mal ein Meter ist ein Joule — die internationale Einheit der Energie."),
         ("feel",
-         "A joule is tiny. Lifting that chocolate bar a single metre costs about one joule. One human heartbeat releases roughly one joule. Keep that smallness in mind — it is why buildings need a bigger unit.",
-         "Ein Joule ist winzig: der Schokoriegel einen Meter hoch, ein Herzschlag — je etwa ein Joule."),
+         "A joule is tiny. Lifting that apple a single metre costs about one joule. One human heartbeat releases roughly one joule. Keep that smallness in mind — it is why buildings need a bigger unit.",
+         "Ein Joule ist winzig: den Apfel einen Meter hoch, ein Herzschlag — je etwa ein Joule."),
         ("stored",
          "And the work does not vanish. The lifted apple now holds that joule as stored energy. Let it fall and the energy comes back out, doing work again on whatever it hits.",
          "Die Arbeit ist nicht weg: Der angehobene Apfel speichert sie. Fällt er, wird sie wieder zu Arbeit."),
@@ -662,7 +662,7 @@ class Beat2_KraftUndArbeit(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "feel"))
         feel = VGroup(
-            Text("Schokoriegel 1 m hoch ≈ 1 J", font_size=LABEL_FONT_SIZE, color=P_WHITE),
+            Text("Apfel 1 m hoch ≈ 1 J", font_size=LABEL_FONT_SIZE, color=P_WHITE),
             Text("ein Herzschlag ≈ 1 J", font_size=LABEL_FONT_SIZE, color=P_WHITE),
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.2).move_to(RIGHT * 4.15 + UP * 1.25)
         self.play(LaggedStart(*[FadeIn(t, shift=DOWN * 0.1) for t in feel], lag_ratio=0.4), run_time=1.2)

@@ -295,6 +295,14 @@ class Demo_Intro_PhysikalischeGrundlagen(NGSIntro):
     series_de = "Gebäudeenergie · Grundlagen"
 
 
+class Demo_Intro_Energiebilanz(NGSIntro):
+    """📜 Series intro for EnergyBalance — regulation, losses, and the Energieausweis."""
+
+    topic_de = "Energiebilanz"
+    topic_explain_de = "Vom Bedarf über GEG und Verluste bis zum Energieausweis."
+    series_de = "Gebäudeenergie · Energiebilanz"
+
+
 class Intro_HeatingVsCooling(NGSIntro):
     """⚖️ Intro for Cooling part 1 — Heizlast vs. Kühllast."""
 

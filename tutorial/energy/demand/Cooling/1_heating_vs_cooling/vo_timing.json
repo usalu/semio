@@ -2,10 +2,22 @@
   "source": "subtitle",
   "beats": {
     "Beat1_WinterGains": {
-      "intro": 7.008,
-      "solar": 6.504,
-      "internal": 8.064,
-      "outro": 6.312
+      "intro": 6.264,
+      "solar": 6.768,
+      "internal": 7.8,
+      "outro": 5.808
+    },
+    "Beat2_SummerOverheat": {
+      "intro": 7.752,
+      "excess": 8.76,
+      "trap": 8.4,
+      "outro": 7.2
+    },
+    "Beat3_CoolingSystem": {
+      "intro": 8.16,
+      "vent": 6.768,
+      "cool_down": 8.256,
+      "outro": 7.608
     }
   }
 }

@@ -21,11 +21,14 @@ from manim_visuals import (
     convection_stream, radiation_waves, respiration_parts, symbol_token, watt_anchor,
     equation_row, formula_panel, highlight_param,
     caption_bar, swap_caption, hold_for, subtitle_text,
-    SAFE_BOTTOM, set_vo_language,
+    SAFE_BOTTOM, set_vo_language, load_vo_timing,
 )
 
-# 🗣️ Timing follows German captions (reading floor in hold_for).
+# 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
 set_vo_language("de")
+_VO_TIMING = _Path(__file__).resolve().parent / "vo_timing.json"
+if _VO_TIMING.is_file():
+    load_vo_timing(_VO_TIMING)
 
 # 🏔️ Persistent module title — written once on Beat1, self.add()'ed on later beats.
 TITLE_DE = "Interne Wärmegewinne"

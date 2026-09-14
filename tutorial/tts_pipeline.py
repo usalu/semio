@@ -133,13 +133,29 @@ def assemble_aligned_track(
     output_path: Path,
     *,
     total_duration: float,
+    min_gap: float = 0.08,
 ) -> Optional[Path]:
-    """🧩 Mix each clause's speech in at its own start time, padded to ``total_duration``."""
+    """🧩 Mix each clause's speech in at its own start time, padded to ``total_duration``.
+
+    Starts are sorted and clamped so one clause never overlays the previous
+    one's speech (bad ``hold_for(..., used=...)`` backdating used to cause
+    double-VO). Clamped speech may begin slightly after its subtitle; that is
+    preferable to two voices at once.
+    """
     usable = [(Path(p), max(0.0, float(t))) for p, t in placements if Path(p).is_file()]
     if not usable or not shutil.which("ffmpeg"):
         return None
+    usable.sort(key=lambda item: item[1])
+    clamped: list[tuple[Path, float]] = []
+    cursor = 0.0
+    for path, start in usable:
+        start = max(start, cursor)
+        clamped.append((path, start))
+        cursor = start + probe_duration(path) + min_gap
+    usable = clamped
+
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    total = max(total_duration, max(start for _, start in usable) + 0.5)
+    total = max(total_duration, max(start for _, start in usable) + 0.5, cursor)
 
     inputs: list[str] = []
     chains: list[str] = []

@@ -1,4 +1,4 @@
-"""🔊 Subtitle voiceover for Cooling Part 4 (Solarstrahlung) — synth, align, verify.
+"""🔊 Subtitle voiceover for EnergyBalance Chapter 4 (Von der Nutzenergie zur Endenergie) — synth, align, verify.
 
     synth   → one audio file per clause + vo_timing.json (measured lengths)
     trace   → VO_TRACE=1 manim run records when each subtitle appears
@@ -20,11 +20,10 @@ if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
 from scene_4 import (  # noqa: E402
-    Beat1_SolarIrradiance,
-    Beat2_FrameFactor,
-    Beat3_ShadingFactor,
-    Beat4_GlassTransmittance,
-    Beat5_SolarCoolingLoad,
+    Beat1_Verlustkette,
+    Beat2_UebergabeVerteilungSpeicherung,
+    Beat3_Erzeugung,
+    Beat4_Anlagenaufwandszahl,
 )
 from tts_pipeline import (  # noqa: E402
     assemble_aligned_track,
@@ -37,11 +36,10 @@ from tts_pipeline import (  # noqa: E402
 )
 
 BEATS = [
-    Beat1_SolarIrradiance,
-    Beat2_FrameFactor,
-    Beat3_ShadingFactor,
-    Beat4_GlassTransmittance,
-    Beat5_SolarCoolingLoad,
+    Beat1_Verlustkette,
+    Beat2_UebergabeVerteilungSpeicherung,
+    Beat3_Erzeugung,
+    Beat4_Anlagenaufwandszahl,
 ]
 
 SCENE_FILE = BASE_DIR / "scene_4.py"

@@ -1,0 +1,730 @@
+{
+  "beats": {
+    "Beat1_WinterGains": {
+      "intro": {
+        "start": 0.0,
+        "window": 6.88
+      },
+      "solar": {
+        "start": 9.233,
+        "window": 7.5
+      },
+      "internal": {
+        "start": 17.083,
+        "window": 8.12
+      },
+      "outro": {
+        "start": 25.567,
+        "window": 6.25
+      }
+    },
+    "Beat2_SummerOverheat": {
+      "intro": {
+        "start": 32.617,
+        "window": 8.75
+      },
+      "excess": {
+        "start": 41.717,
+        "window": 8.76
+      },
+      "trap": {
+        "start": 50.833,
+        "window": 8.75
+      },
+      "outro": {
+        "start": 59.95,
+        "window": 7.2
+      }
+    },
+    "Beat3_CoolingSystem": {
+      "intro": {
+        "start": 67.95,
+        "window": 8.16
+      },
+      "vent": {
+        "start": 76.467,
+        "window": 8.12
+      },
+      "cool_down": {
+        "start": 84.95,
+        "window": 8.75
+      },
+      "outro": {
+        "start": 94.067,
+        "window": 8.12
+      }
+    },
+    "Beat1_OfficeRoom": {
+      "intro": {
+        "start": 0.0,
+        "window": 7.5
+      },
+      "facade": {
+        "start": 7.867,
+        "window": 6.88
+      },
+      "interior": {
+        "start": 15.1,
+        "window": 8.208
+      },
+      "outro": {
+        "start": 23.667,
+        "window": 7.5
+      }
+    },
+    "Beat2_HumanFactor": {
+      "intro": {
+        "start": 31.967,
+        "window": 7.752
+      },
+      "modes": {
+        "start": 41.883,
+        "window": 7.5
+      },
+      "anchor": {
+        "start": 49.75,
+        "window": 8.12
+      },
+      "formula": {
+        "start": 59.133,
+        "window": 8.75
+      },
+      "n": {
+        "start": 68.7,
+        "window": 5.0
+      },
+      "qp": {
+        "start": 74.767,
+        "window": 7.104
+      },
+      "scale": {
+        "start": 84.083,
+        "window": 7.5
+      }
+    },
+    "Beat3_DevicesLighting": {
+      "intro": {
+        "start": 92.383,
+        "window": 9.768
+      },
+      "devices": {
+        "start": 105.717,
+        "window": 10.368
+      },
+      "pel": {
+        "start": 116.9,
+        "window": 5.0
+      },
+      "fn": {
+        "start": 122.967,
+        "window": 7.056
+      },
+      "lights": {
+        "start": 131.333,
+        "window": 9.912
+      },
+      "pl": {
+        "start": 142.05,
+        "window": 5.62
+      },
+      "fg": {
+        "start": 148.733,
+        "window": 8.448
+      },
+      "outro": {
+        "start": 157.783,
+        "window": 6.88
+      }
+    },
+    "Beat4_CumulativeLoad": {
+      "intro": {
+        "start": 165.45,
+        "window": 7.5
+      },
+      "sources": {
+        "start": 173.317,
+        "window": 7.5
+      },
+      "formula": {
+        "start": 181.867,
+        "window": 8.904
+      },
+      "qi": {
+        "start": 194.483,
+        "window": 7.5
+      },
+      "outro": {
+        "start": 202.583,
+        "window": 10.62
+      }
+    },
+    "Beat8_Mitigation": {
+      "intro": {
+        "start": 214.0,
+        "window": 6.25
+      },
+      "high": {
+        "start": 223.517,
+        "window": 5.064
+      },
+      "dim": {
+        "start": 230.033,
+        "window": 7.32
+      },
+      "outro": {
+        "start": 237.717,
+        "window": 5.352
+      }
+    },
+    "Beat1_TransmissionOpaque": {
+      "intro": {
+        "start": 0.0,
+        "window": 9.38
+      },
+      "sun": {
+        "start": 9.733,
+        "window": 6.88
+      },
+      "formula": {
+        "start": 16.967,
+        "window": 7.5
+      },
+      "u": {
+        "start": 24.833,
+        "window": 7.968
+      },
+      "a": {
+        "start": 33.467,
+        "window": 4.848
+      },
+      "dt": {
+        "start": 38.967,
+        "window": 7.968
+      }
+    },
+    "Beat2_TimeLag": {
+      "intro": {
+        "start": 48.033,
+        "window": 7.5
+      },
+      "clock": {
+        "start": 55.883,
+        "window": 9.38
+      },
+      "peak": {
+        "start": 65.617,
+        "window": 8.12
+      }
+    },
+    "Beat3_VentilationHeat": {
+      "intro": {
+        "start": 74.633,
+        "window": 8.112
+      },
+      "flow": {
+        "start": 83.1,
+        "window": 8.112
+      },
+      "formula": {
+        "start": 91.567,
+        "window": 9.38
+      },
+      "sens": {
+        "start": 101.3,
+        "window": 6.312
+      },
+      "lat": {
+        "start": 108.217,
+        "window": 7.752
+      }
+    },
+    "Beat4_SensibleVsLatent": {
+      "intro": {
+        "start": 117.017,
+        "window": 6.408
+      },
+      "sens_eq": {
+        "start": 123.783,
+        "window": 10.848
+      },
+      "delta_theta": {
+        "start": 134.983,
+        "window": 10.92
+      },
+      "lat_eq": {
+        "start": 146.517,
+        "window": 10.416
+      },
+      "delta_x": {
+        "start": 157.283,
+        "window": 8.76
+      }
+    },
+    "Beat1_SolarIrradiance": {
+      "intro": {
+        "start": 0.0,
+        "window": 6.864
+      },
+      "irradiance": {
+        "start": 12.117,
+        "window": 7.368
+      },
+      "chart": {
+        "start": 34.8,
+        "window": 6.96
+      }
+    },
+    "Beat2_FrameFactor": {
+      "intro": {
+        "start": 42.55,
+        "window": 4.38
+      },
+      "frame": {
+        "start": 52.983,
+        "window": 8.064
+      },
+      "aeff": {
+        "start": 62.5,
+        "window": 7.752
+      }
+    },
+    "Beat3_ShadingFactor": {
+      "intro": {
+        "start": 71.05,
+        "window": 6.408
+      },
+      "ismax": {
+        "start": 82.267,
+        "window": 10.512
+      },
+      "unshaded": {
+        "start": 93.383,
+        "window": 7.656
+      },
+      "raffstore": {
+        "start": 101.4,
+        "window": 6.88
+      },
+      "reduced": {
+        "start": 108.633,
+        "window": 6.96
+      }
+    },
+    "Beat4_GlassTransmittance": {
+      "intro": {
+        "start": 116.383,
+        "window": 5.0
+      },
+      "gtot": {
+        "start": 128.55,
+        "window": 5.304
+      },
+      "parts": {
+        "start": 137.517,
+        "window": 8.712
+      },
+      "meaning": {
+        "start": 147.083,
+        "window": 6.88
+      }
+    },
+    "Beat5_SolarCoolingLoad": {
+      "intro": {
+        "start": 154.75,
+        "window": 7.152
+      },
+      "result": {
+        "start": 167.267,
+        "window": 7.512
+      },
+      "meaning": {
+        "start": 175.133,
+        "window": 5.76
+      }
+    },
+    "Beat1_MechanicalVentilation": {
+      "intro": {
+        "start": 0.0,
+        "window": 8.75
+      },
+      "flow": {
+        "start": 15.317,
+        "window": 6.552
+      },
+      "question": {
+        "start": 26.833,
+        "window": 5.256
+      }
+    },
+    "Beat2_VolumeFlowEquation": {
+      "intro": {
+        "start": 32.883,
+        "window": 6.36
+      },
+      "formula": {
+        "start": 46.8,
+        "window": 11.25
+      },
+      "rho": {
+        "start": 59.117,
+        "window": 8.75
+      },
+      "cp": {
+        "start": 69.183,
+        "window": 10.62
+      },
+      "dth": {
+        "start": 81.117,
+        "window": 8.76
+      },
+      "qvr": {
+        "start": 91.183,
+        "window": 9.38
+      }
+    },
+    "Beat3_IsolateAirflow": {
+      "intro": {
+        "start": 104.2,
+        "window": 5.952
+      },
+      "substitute": {
+        "start": 115.517,
+        "window": 20.0
+      },
+      "qvr": {
+        "start": 136.433,
+        "window": 10.0
+      },
+      "qstr": {
+        "start": 147.6,
+        "window": 11.25
+      },
+      "rho": {
+        "start": 160.017,
+        "window": 7.656
+      },
+      "dth": {
+        "start": 168.833,
+        "window": 6.25
+      },
+      "result": {
+        "start": 175.7,
+        "window": 5.016
+      }
+    },
+    "Beat4_DuctCrossSection": {
+      "intro": {
+        "start": 181.5,
+        "window": 6.648
+      },
+      "continuity": {
+        "start": 195.9,
+        "window": 10.0
+      },
+      "qvr": {
+        "start": 206.717,
+        "window": 8.12
+      },
+      "vm": {
+        "start": 215.9,
+        "window": 10.62
+      },
+      "A_cont": {
+        "start": 227.583,
+        "window": 6.25
+      },
+      "area": {
+        "start": 236.05,
+        "window": 11.88
+      },
+      "A": {
+        "start": 254.233,
+        "window": 5.712
+      },
+      "qvr_num": {
+        "start": 261.0,
+        "window": 7.5
+      },
+      "vm_den": {
+        "start": 269.567,
+        "window": 8.75
+      }
+    },
+    "Beat5_CalculateRadius": {
+      "intro": {
+        "start": 279.367,
+        "window": 8.16
+      },
+      "flow": {
+        "start": 290.883,
+        "window": 13.12
+      },
+      "qstr": {
+        "start": 304.917,
+        "window": 8.75
+      },
+      "qvr": {
+        "start": 314.833,
+        "window": 8.12
+      },
+      "area": {
+        "start": 324.267,
+        "window": 8.75
+      },
+      "qvr_a": {
+        "start": 333.933,
+        "window": 6.25
+      },
+      "vm": {
+        "start": 341.35,
+        "window": 14.38
+      },
+      "A": {
+        "start": 356.883,
+        "window": 6.25
+      },
+      "radius": {
+        "start": 364.45,
+        "window": 8.75
+      },
+      "A_r": {
+        "start": 374.117,
+        "window": 7.704
+      },
+      "r": {
+        "start": 382.983,
+        "window": 12.5
+      }
+    },
+    "Beat1_PassivhausIdee": {
+      "intro": {
+        "start": 0.0,
+        "window": 9.38
+      },
+      "envelope": {
+        "start": 13.033,
+        "window": 10.104
+      },
+      "natural": {
+        "start": 23.5,
+        "window": 8.12
+      },
+      "reserve": {
+        "start": 31.983,
+        "window": 8.75
+      }
+    },
+    "Beat2_Fensterregeln": {
+      "intro": {
+        "start": 41.533,
+        "window": 8.304
+      },
+      "closed": {
+        "start": 53.3,
+        "window": 11.25
+      },
+      "partial": {
+        "start": 64.917,
+        "window": 8.304
+      },
+      "cooler": {
+        "start": 73.583,
+        "window": 10.0
+      },
+      "hotter": {
+        "start": 83.95,
+        "window": 8.75
+      },
+      "rule": {
+        "start": 93.067,
+        "window": 8.75
+      }
+    },
+    "Beat3_Querlueftung": {
+      "intro": {
+        "start": 102.617,
+        "window": 7.368
+      },
+      "pressure": {
+        "start": 112.55,
+        "window": 11.25
+      },
+      "formula": {
+        "start": 124.167,
+        "window": 6.88
+      },
+      "a1": {
+        "start": 131.95,
+        "window": 5.016
+      },
+      "a2": {
+        "start": 138.117,
+        "window": 5.76
+      },
+      "limit": {
+        "start": 144.483,
+        "window": 10.62
+      },
+      "passive": {
+        "start": 155.467,
+        "window": 8.75
+      }
+    },
+    "Beat4_Auftrieb": {
+      "intro": {
+        "start": 165.0,
+        "window": 11.88
+      },
+      "shaft": {
+        "start": 179.733,
+        "window": 10.0
+      },
+      "formula": {
+        "start": 190.083,
+        "window": 9.768
+      },
+      "h": {
+        "start": 200.217,
+        "window": 6.88
+      },
+      "rho": {
+        "start": 207.7,
+        "window": 8.75
+      },
+      "taller": {
+        "start": 217.05,
+        "window": 10.0
+      },
+      "comfort": {
+        "start": 227.4,
+        "window": 10.62
+      }
+    },
+    "Beat5_Nachtlueftung": {
+      "intro": {
+        "start": 238.817,
+        "window": 9.38
+      },
+      "day": {
+        "start": 253.05,
+        "window": 11.88
+      },
+      "without": {
+        "start": 265.283,
+        "window": 8.808
+      },
+      "night": {
+        "start": 274.45,
+        "window": 9.38
+      },
+      "result": {
+        "start": 284.183,
+        "window": 11.25
+      },
+      "schedule": {
+        "start": 295.8,
+        "window": 9.408
+      }
+    },
+    "Beat6_GrenzenDerFreienLueftung": {
+      "intro": {
+        "start": 306.0,
+        "window": 10.0
+      },
+      "hot": {
+        "start": 320.15,
+        "window": 9.168
+      },
+      "filter": {
+        "start": 329.683,
+        "window": 8.75
+      },
+      "control": {
+        "start": 338.8,
+        "window": 10.62
+      },
+      "recovery": {
+        "start": 349.783,
+        "window": 8.75
+      },
+      "handover": {
+        "start": 358.9,
+        "window": 9.38
+      }
+    },
+    "Beat7_MechanischeGrundtypen": {
+      "intro": {
+        "start": 369.067,
+        "window": 10.416
+      },
+      "exhaust": {
+        "start": 381.833,
+        "window": 10.0
+      },
+      "supply": {
+        "start": 392.2,
+        "window": 9.648
+      },
+      "balanced": {
+        "start": 402.2,
+        "window": 9.96
+      },
+      "verdict": {
+        "start": 412.517,
+        "window": 11.25
+      }
+    },
+    "Beat8_Waermerueckgewinnung": {
+      "intro": {
+        "start": 424.567,
+        "window": 10.0
+      },
+      "supply": {
+        "start": 436.717,
+        "window": 5.4
+      },
+      "exhaust": {
+        "start": 442.483,
+        "window": 8.12
+      },
+      "transfer": {
+        "start": 450.967,
+        "window": 13.75
+      },
+      "formula": {
+        "start": 465.083,
+        "window": 9.72
+      },
+      "value": {
+        "start": 475.417,
+        "window": 9.38
+      }
+    },
+    "Beat9_KomfortStrategie": {
+      "intro": {
+        "start": 485.583,
+        "window": 6.88
+      },
+      "question": {
+        "start": 496.617,
+        "window": 8.12
+      },
+      "yes": {
+        "start": 505.1,
+        "window": 11.016
+      },
+      "no": {
+        "start": 516.467,
+        "window": 8.75
+      },
+      "reserve": {
+        "start": 525.583,
+        "window": 7.5
+      },
+      "close": {
+        "start": 533.45,
+        "window": 6.264
+      }
+    }
+  }
+}

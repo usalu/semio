@@ -104,5 +104,9 @@ Example:
 
 - The full series is **long** — start with `-q l`.
 - Captions come from each beat’s `NARRATION`.
-- This runner does not mux external VO audio; module `build_full_video.py` scripts do that separately.
+- Synced German VO: run each part’s `generate_audio.py` (synth), then re-render with
+  `VO_TRACE=1` so `hold_for` uses measured clause lengths; align speech onto traced
+  subtitle starts and mux. The series deliverable with audio is
+  `rendered/Full_Cooling_Demand_1080p60.mp4` (also copied as
+  `Full_Cooling_Demand_WithAudio_1080p60.mp4`).
 - Do not mix Heating scenes into this playlist.

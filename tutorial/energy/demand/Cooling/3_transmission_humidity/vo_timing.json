@@ -1,0 +1,32 @@
+{
+  "source": "subtitle",
+  "beats": {
+    "Beat1_TransmissionOpaque": {
+      "intro": 8.904,
+      "sun": 6.264,
+      "formula": 7.2,
+      "u": 7.968,
+      "a": 4.848,
+      "dt": 7.968
+    },
+    "Beat2_TimeLag": {
+      "intro": 5.952,
+      "clock": 8.016,
+      "peak": 7.32
+    },
+    "Beat3_VentilationHeat": {
+      "intro": 8.112,
+      "flow": 8.112,
+      "formula": 8.4,
+      "sens": 6.312,
+      "lat": 7.752
+    },
+    "Beat4_SensibleVsLatent": {
+      "intro": 6.408,
+      "sens_eq": 10.848,
+      "delta_theta": 10.92,
+      "lat_eq": 10.416,
+      "delta_x": 8.76
+    }
+  }
+}

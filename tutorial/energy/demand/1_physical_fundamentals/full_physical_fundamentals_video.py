@@ -131,57 +131,97 @@ def compose_full_physical_fundamentals_video(
     quality_flag: str = "-ql",
     play: bool = True,
     media_dir: Path | None = None,
+    force: bool = False,
 ) -> Path:
+    """🎬 Render series intro + all beats, ffmpeg-concat, copy silent full to ``rendered/``."""
     media_dir = media_dir or (_PF_ROOT / "media")
     manim = _manim_bin()
     clips: list[Path] = []
+    folder = _quality_folder(quality_flag)
 
-    print(f"\n=== Rendering {INTRO_CLASS_NAME} ===")
-    subprocess.run(
-        [
-            str(manim),
-            quality_flag,
-            "--media_dir",
-            str(media_dir),
-            str(_INTRO_SCENE),
-            INTRO_CLASS_NAME,
-        ],
-        check=True,
-        cwd=str(_SEMIO_ROOT),
-    )
-    clips.append(_find_section_mp4(media_dir, INTRO_CLASS_NAME, quality_flag))
+    def _maybe_existing(scene_name: str) -> Path | None:
+        if force:
+            return None
+        try:
+            return _find_section_mp4(media_dir, scene_name, quality_flag)
+        except FileNotFoundError:
+            return None
+
+    intro_existing = _maybe_existing(INTRO_CLASS_NAME)
+    if intro_existing is not None:
+        print(f"\n=== Skipping intro {INTRO_CLASS_NAME} (already rendered) ===")
+        clips.append(intro_existing)
+    else:
+        print(f"\n=== Rendering {INTRO_CLASS_NAME} ===")
+        subprocess.run(
+            [
+                str(manim),
+                quality_flag,
+                "--media_dir",
+                str(media_dir),
+                str(_INTRO_SCENE),
+                INTRO_CLASS_NAME,
+            ],
+            check=True,
+            cwd=str(_SEMIO_ROOT),
+        )
+        clips.append(_find_section_mp4(media_dir, INTRO_CLASS_NAME, quality_flag))
 
     scene_cls = PhysicalFundamentals_FullSection
     name = scene_cls.__name__
-    print(f"\n=== Rendering {name} ===")
-    subprocess.run(
-        [str(manim), quality_flag, "--media_dir", str(media_dir), str(Path(__file__).resolve()), name],
-        check=True,
-        cwd=str(_SEMIO_ROOT),
-    )
-    clips.append(_find_section_mp4(media_dir, name, quality_flag))
-    folder = _quality_folder(quality_flag)
-    output = media_dir / "videos" / "full_physical_fundamentals_video" / folder / "FullPhysicalFundamentalsVideo.mp4"
-    output.parent.mkdir(parents=True, exist_ok=True)
-    print(f"\n=== Concatenating intro + body → {output} ===")
-    _ffmpeg_concat(clips, output, media_dir / "videos" / "full_physical_fundamentals_video" / folder / "concat_list.txt")
+    body_existing = _maybe_existing(name)
+    if body_existing is not None:
+        print(f"\n=== Skipping {name} (already rendered) ===")
+        clips.append(body_existing)
+    else:
+        print(f"\n=== Rendering {name} ===")
+        subprocess.run(
+            [str(manim), quality_flag, "--media_dir", str(media_dir), str(Path(__file__).resolve()), name],
+            check=True,
+            cwd=str(_SEMIO_ROOT),
+        )
+        clips.append(_find_section_mp4(media_dir, name, quality_flag))
+
+    out_dir = media_dir / "videos" / "full_physical_fundamentals_video" / folder
+    output = out_dir / "FullPhysicalFundamentalsVideo.mp4"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    print(f"\n=== Concatenating intro + body → {output.name} ===")
+    _ffmpeg_concat(clips, output, out_dir / "concat_list.txt")
+
+    rendered_dir = _PF_ROOT / "rendered"
+    rendered_dir.mkdir(parents=True, exist_ok=True)
+    rendered_copy = rendered_dir / f"Full_Physical_Fundamentals_{folder}.mp4"
+    noaudio_copy = rendered_dir / f"Full_Physical_Fundamentals_NoAudio_{folder}.mp4"
+    shutil.copy2(output, rendered_copy)
+    shutil.copy2(output, noaudio_copy)
     print(f"\n✅ Ready: {output}")
+    print(f"✅ Copy:  {rendered_copy}")
+    print(f"✅ Copy:  {noaudio_copy}")
     if play:
         opener = {"darwin": "open", "win32": "start"}.get(sys.platform, "xdg-open")
         if sys.platform == "win32":
-            subprocess.run(["cmd", "/c", "start", "", str(output)], check=False)
+            subprocess.run(["cmd", "/c", "start", "", str(rendered_copy)], check=False)
         else:
-            subprocess.run([opener, str(output)], check=False)
-    return output
+            subprocess.run([opener, str(rendered_copy)], check=False)
+    return rendered_copy
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Render the Physical Fundamentals video.")
     parser.add_argument("-q", choices=("l", "m", "h"), default="l", help="Quality: l/m/h")
     parser.add_argument("--no-play", action="store_true", help="Do not open the finished mp4")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Re-render intro and body even if mp4s already exist",
+    )
     args = parser.parse_args(argv)
     quality_flag = {"l": "-ql", "m": "-qm", "h": "-qh"}[args.q]
-    compose_full_physical_fundamentals_video(quality_flag=quality_flag, play=not args.no_play)
+    compose_full_physical_fundamentals_video(
+        quality_flag=quality_flag,
+        play=not args.no_play,
+        force=args.force,
+    )
     return 0
 
 

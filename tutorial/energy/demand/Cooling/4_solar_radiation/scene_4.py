@@ -20,11 +20,14 @@ from manim_visuals import (
     symbol_token, watt_anchor,
     equation_row, formula_panel, highlight_param,
     caption_bar, swap_caption, hold_for, subtitle_text,
-    set_vo_language,
+    set_vo_language, load_vo_timing,
 )
 
-# 🗣️ Timing follows German captions (reading floor in hold_for).
+# 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
 set_vo_language("de")
+_VO_TIMING = _Path(__file__).resolve().parent / "vo_timing.json"
+if _VO_TIMING.is_file():
+    load_vo_timing(_VO_TIMING)
 
 # 🏔️ Persistent module title — written once on Beat1, self.add()'ed on later beats.
 TITLE_DE = "Kühllast mit Sonnenschutz"
@@ -632,6 +635,10 @@ class Beat3_ShadingFactor(Scene):
         hold_for(self, self.NARRATION, "ismax", used=1.2 + 0.45 + 0.35)
         self.play(FadeOut(ring_i), run_time=0.25)
 
+        # Unshaded / Raffstore / reduced visuals belong to those captions —
+        # swap first, then animate, so ``used=`` never backdates into the
+        # previous clause (that caused overlapping VO in the muxed series).
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "unshaded"))
         self.play(FadeIn(sun, scale=0.7), run_time=0.7)
         self.play(LaggedStart(*[Create(ray) for ray in direct], lag_ratio=0.08), run_time=1.6)
         self.play(LaggedStart(*[Create(ray) for ray in interior], lag_ratio=0.1), run_time=1.4)
@@ -641,23 +648,22 @@ class Beat3_ShadingFactor(Scene):
             FadeIn(marker, shift=DOWN * 0.2), FadeIn(marker_val),
             run_time=1.4,
         )
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "unshaded"))
-        hold_for(self, self.NARRATION, "unshaded", used=9.1 + 0.35)
+        hold_for(self, self.NARRATION, "unshaded", used=0.7 + 1.6 + 1.4 + 1.4 + 0.35)
 
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "raffstore"))
         blind.shift(UP * 3.0).set_opacity(0)
         self.add(blind)
         self.play(blind.animate.shift(DOWN * 3.0).set_opacity(1.0), run_time=1.5)
         self.play(FadeIn(lbl_blind, shift=UP * 0.15), run_time=0.5)
-
         self.play(
             *[Transform(ray, cut) for ray, cut in zip(direct, blocked)],
             LaggedStart(*[GrowArrow(a) for a in reflected], lag_ratio=0.08),
             FadeOut(interior),
             run_time=1.8,
         )
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "raffstore"))
-        hold_for(self, self.NARRATION, "raffstore", used=3.8 + 0.35)
+        hold_for(self, self.NARRATION, "raffstore", used=1.5 + 0.5 + 1.8 + 0.35)
 
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "reduced"))
         self.play(
             LaggedStart(*[Create(ray) for ray in residual], lag_ratio=0.1),
             FadeIn(lbl_rest),
@@ -671,8 +677,7 @@ class Beat3_ShadingFactor(Scene):
         ring = highlight_param(eq_items, "fv", color=P_TEAL)
         self.play(Create(ring), run_time=0.7)
         self.play(Indicate(eq_items["ired"], color=P_TEAL, scale_factor=1.12), run_time=0.8)
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "reduced"))
-        hold_for(self, self.NARRATION, "reduced", used=4.9 + 0.35)
+        hold_for(self, self.NARRATION, "reduced", used=1.6 + 1.8 + 0.7 + 0.8 + 0.35)
         self.play(FadeOut(ring), FadeOut(caption), run_time=0.3)
         self.wait(0.5)
 #endregion

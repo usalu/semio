@@ -1,0 +1,76 @@
+{
+  "source": "subtitle",
+  "beats": {
+    "Beat1_PassivhausIdee": {
+      "intro": 9.048,
+      "envelope": 10.104,
+      "natural": 7.92,
+      "reserve": 8.448
+    },
+    "Beat2_Fensterregeln": {
+      "intro": 8.304,
+      "closed": 10.104,
+      "partial": 8.304,
+      "cooler": 7.8,
+      "hotter": 7.656,
+      "rule": 8.4
+    },
+    "Beat3_Querlueftung": {
+      "intro": 7.368,
+      "pressure": 9.12,
+      "formula": 6.648,
+      "a1": 5.016,
+      "a2": 5.76,
+      "limit": 10.008,
+      "passive": 7.704
+    },
+    "Beat4_Auftrieb": {
+      "intro": 9.96,
+      "shaft": 7.968,
+      "formula": 9.768,
+      "h": 5.856,
+      "rho": 8.16,
+      "taller": 9.216,
+      "comfort": 7.92
+    },
+    "Beat5_Nachtlueftung": {
+      "intro": 8.568,
+      "day": 8.448,
+      "without": 8.808,
+      "night": 8.16,
+      "result": 8.856,
+      "schedule": 9.408
+    },
+    "Beat6_GrenzenDerFreienLueftung": {
+      "intro": 8.304,
+      "hot": 9.168,
+      "filter": 8.712,
+      "control": 8.856,
+      "recovery": 8.256,
+      "handover": 8.064
+    },
+    "Beat7_MechanischeGrundtypen": {
+      "intro": 10.416,
+      "exhaust": 9.048,
+      "supply": 9.648,
+      "balanced": 9.96,
+      "verdict": 9.12
+    },
+    "Beat8_Waermerueckgewinnung": {
+      "intro": 9.72,
+      "supply": 5.4,
+      "exhaust": 7.368,
+      "transfer": 9.6,
+      "formula": 9.72,
+      "value": 7.92
+    },
+    "Beat9_KomfortStrategie": {
+      "intro": 5.904,
+      "question": 6.408,
+      "yes": 11.016,
+      "no": 8.712,
+      "reserve": 7.368,
+      "close": 6.264
+    }
+  }
+}

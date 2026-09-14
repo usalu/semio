@@ -573,6 +573,225 @@ def dim_arrow(start, end, color: str = P_YELLOW):
 #endregion
 
 
+#region Layout scaffolding
+# Placement primitives every beat composes instead of hand-typing coordinates.
+# One frame size for a whole card row, callout labels dodged apart before they
+# are drawn, notes on the one band reserved between the beat subtitle and the
+# free content area, and axes that hand back a normalized-coordinate mapper.
+# Hand-tuned per-beat coordinates are what produced the overlapping-label class
+# of bug that the layout guard at the bottom of this file now catches.
+
+# ``beat_subtitle`` bottoms out near y ≈ 2.68, so a note centred on NOTE_BAND_Y
+# clears it, and any scaffold kept below CONTENT_TOP clears the note.
+NOTE_BAND_Y: float = 2.30
+CONTENT_TOP: float = 1.98
+NOTE_MAX_WIDTH: float = 11.0
+
+
+def note_line(text: str, *, color: str = P_TEAL, font_size: int | None = None, y: float = NOTE_BAND_Y):
+    """🏷️ One-line aside on the reserved band under the beat subtitle."""
+    from manim import UP
+    from manim_fonts import LABEL_FONT_SIZE, centered_body_text
+
+    if font_size is None:
+        font_size = LABEL_FONT_SIZE
+    note = centered_body_text(text, font_size=font_size, color=color, max_width=NOTE_MAX_WIDTH)
+    note.move_to(UP * y)
+    note.set_x(0)
+    return note
+
+
+def stat_card(
+    caption: str,
+    value: str,
+    *,
+    color: str = P_TEAL,
+    value_color: str | None = None,
+    caption_color: str | None = None,
+    caption_size: int | None = None,
+    value_size: int | None = None,
+    width: float | None = None,
+    height: float | None = None,
+):
+    """🪧 Framed caption-over-value block — the one label shape for a named quantity.
+
+    Two stacked lines inside a rounded frame: a dim caption naming the thing and
+    a coloured value. Passing ``width``/``height`` forces a fixed frame so a row
+    of cards lines up — which is what ``card_grid`` does.
+    """
+    from manim import DOWN, RoundedRectangle, VGroup
+    from manim_fonts import BODY_FONT_SIZE, LABEL_FONT_SIZE, body_text
+
+    caption_size = caption_size or LABEL_FONT_SIZE
+    value_size = value_size or BODY_FONT_SIZE
+    caption_color = caption_color or P_TEAL
+    value_color = value_color or color
+
+    lines = []
+    if caption:
+        lines.append(body_text(caption, font_size=caption_size, color=caption_color))
+    if value:
+        lines.append(body_text(value, font_size=value_size, color=value_color))
+    body = VGroup(*lines).arrange(DOWN, buff=0.07)
+    frame = RoundedRectangle(
+        width=width if width is not None else body.width + 0.36,
+        height=height if height is not None else body.height + 0.30,
+        corner_radius=0.1, color=color, stroke_width=1.8,
+    )
+    body.move_to(frame.get_center())
+    return VGroup(frame, body)
+
+
+def card_grid(entries, *, rows: int = 1, cols: int | None = None, color: str = P_TEAL,
+              buff: float = 0.22, **card_kwargs):
+    """🗂️ Grid of ``stat_card``s that all share one frame size.
+
+    ``entries`` are ``(caption, value)`` or ``(caption, value, accent_colour)``.
+    Measuring every body first and then forcing one width/height is what keeps a
+    row from looking ragged and stops a long caption widening one card into its
+    neighbour.
+    """
+    from manim import VGroup
+
+    prepared = []
+    for entry in entries:
+        caption, value, *rest = entry
+        accent = rest[0] if rest and rest[0] else color
+        prepared.append((caption, value, accent))
+
+    probes = [stat_card(c, v, color=a, **card_kwargs) for c, v, a in prepared]
+    card_w = max(p.width for p in probes)
+    card_h = max(p.height for p in probes)
+    cards = VGroup(*[
+        stat_card(c, v, color=a, width=card_w, height=card_h, **card_kwargs)
+        for c, v, a in prepared
+    ])
+    if cols is None:
+        cols = -(-len(cards) // max(1, rows))
+    cards.arrange_in_grid(rows=rows, cols=cols, buff=(buff, buff))
+    return cards
+
+
+def side_labels(anchors, *, x: float, font_size: int | None = None, min_gap: float = 0.40,
+                pad: float = 0.12, leader: bool = True, align: str = "left",
+                top: float = SAFE_TOP, bottom: float = SAFE_BOTTOM):
+    """🏷️ Callout column whose labels are dodged apart before anything is drawn.
+
+    ``anchors`` are ``(point, text, colour)``. Each label starts at its anchor's
+    height, then a single top-down pass pushes the column apart until no two
+    labels are closer than half their heights plus ``pad`` — the deterministic
+    replacement for nudging a stack of ``next_to`` calls by hand. Returns
+    ``(labels, leaders)``; leaders are thin lines back to the anchors.
+    """
+    from manim import LEFT, Line, RIGHT, VGroup
+    from manim_fonts import LABEL_FONT_SIZE, body_text
+
+    if font_size is None:
+        font_size = LABEL_FONT_SIZE
+
+    labels = [body_text(text, font_size=font_size, color=colour) for _p, text, colour in anchors]
+    ys = [float(np.array(point, dtype=float)[1]) for point, _t, _c in anchors]
+
+    order = sorted(range(len(labels)), key=lambda i: -ys[i])
+    for rank in range(1, len(order)):
+        above, current = order[rank - 1], order[rank]
+        needed = (labels[above].height + labels[current].height) / 2 + pad
+        needed = max(needed, min_gap)
+        if ys[current] > ys[above] - needed:
+            ys[current] = ys[above] - needed
+
+    if order:
+        lowest = order[-1]
+        under = (bottom + labels[lowest].height / 2) - ys[lowest]
+        if under > 0:
+            ys = [y + under for y in ys]
+        highest = order[0]
+        over = ys[highest] - (top - labels[highest].height / 2)
+        if over > 0:
+            ys = [y - over for y in ys]
+
+    leaders = VGroup()
+    for label, y, (point, _t, colour) in zip(labels, ys, anchors):
+        label.move_to(np.array([x, y, 0.0]))
+        if align == "left":
+            label.align_to(np.array([x, y, 0.0]), LEFT)
+        elif align == "right":
+            label.align_to(np.array([x, y, 0.0]), RIGHT)
+        if leader:
+            start = label.get_left() + LEFT * 0.10 if align == "left" else label.get_right() + RIGHT * 0.10
+            leaders.add(Line(start, np.array(point, dtype=float), color=colour,
+                             stroke_width=1.4, stroke_opacity=0.55))
+    return VGroup(*labels), leaders
+
+
+def stacked_bar(segments, *, base, width: float = 1.0, unit: float = 1.0, opacity: float = 0.78):
+    """📊 Value segments stacked upward from ``base`` — one rectangle per ``(label, value, colour)``.
+
+    The shape the whole energy cascade is told with: every quantity is an area
+    the viewer can compare by eye instead of a number that silently swaps.
+    Returns the rectangles, each segment's mid-point (ready for ``side_labels``),
+    the stack top, and the summed value.
+    """
+    from manim import Rectangle, UP, VGroup
+
+    base = np.array(base, dtype=float)
+    bars = VGroup()
+    anchors = []
+    cursor = 0.0
+    total = 0.0
+    for _label, value, colour in segments:
+        height = max(0.02, float(value) * unit)
+        rect = Rectangle(
+            width=width, height=height, color=colour,
+            fill_color=colour, fill_opacity=opacity, stroke_width=1.2,
+        )
+        rect.move_to(base + UP * (cursor + height / 2))
+        bars.add(rect)
+        anchors.append(rect.get_center())
+        cursor += height
+        total += float(value)
+    return {
+        "bars": bars, "anchors": anchors, "top": base + UP * cursor,
+        "total": total, "height": cursor, "base": base,
+        "labels": [label for label, _v, _c in segments],
+    }
+
+
+def labeled_axes(origin, *, x_len: float, y_len: float, x_label: str | None = None,
+                 y_label: str | None = None, color: str = P_WHITE, stroke_width: float = 2.0):
+    """📐 Manual axis cross plus a normalized-coordinate mapper.
+
+    Never ``Axes(include_numbers=True)`` — that pulls in a LaTeX pipeline this
+    project deliberately avoids. ``pt(fx, fy)`` maps the unit square onto the
+    axes so curves and areas are written in fractions, not screen coordinates.
+    """
+    from manim import DOWN, LEFT, Line, PI, RIGHT, UP, VGroup
+    from manim_fonts import LABEL_FONT_SIZE, body_text
+
+    origin = np.array(origin, dtype=float)
+    x_axis = Line(origin, origin + RIGHT * x_len, color=color, stroke_width=stroke_width)
+    y_axis = Line(origin, origin + UP * y_len, color=color, stroke_width=stroke_width)
+    group = VGroup(x_axis, y_axis)
+
+    x_text = y_text = None
+    if x_label:
+        x_text = body_text(x_label, font_size=LABEL_FONT_SIZE, color=color)
+        x_text.next_to(x_axis, DOWN, buff=0.14)
+        group.add(x_text)
+    if y_label:
+        y_text = body_text(y_label, font_size=LABEL_FONT_SIZE, color=color)
+        y_text.rotate(PI / 2)
+        y_text.next_to(y_axis, LEFT, buff=0.14)
+        group.add(y_text)
+
+    def pt(fx: float, fy: float):
+        return origin + RIGHT * (float(fx) * x_len) + UP * (float(fy) * y_len)
+
+    return {"x_axis": x_axis, "y_axis": y_axis, "x_label": x_text, "y_label": y_text,
+            "group": group, "origin": origin, "x_len": x_len, "y_len": y_len, "pt": pt}
+#endregion
+
+
 #region Formula morph helpers
 def symbol_token(text: str, *, color: str = P_WHITE, font_size: int = 28):
     """🔤 Formula variable ready to receive a ``ReplacementTransform`` from a physical object."""
@@ -604,9 +823,18 @@ def equation_row(parts, *, font_size: int | None = None, color: str = P_WHITE, b
     if font_size is None:
         font_size = FORMULA_FONT_SIZE
 
+    from manim import Rectangle
+
     items: dict[str, object] = {}
     mobjs = []
     for key, text, part_color in parts:
+        if not text.strip():
+            # Pango cannot lay out a whitespace-only string — Text(" ") raises
+            # IndexError deep inside Manim. A blank spacer gives the same visual
+            # gap, stays out of the layout guard's text pass, and cannot crash.
+            mobjs.append(Rectangle(width=max(0.08, len(text) * 0.11), height=0.01,
+                                   stroke_width=0, fill_opacity=0))
+            continue
         mobj = body_text(text, font_size=font_size, color=part_color or color)
         mobjs.append(mobj)
         if key:
@@ -624,6 +852,8 @@ def formula_panel(row, *, color: str = P_TEAL, edge_buff: float = FORMULA_PANEL_
 
     row.to_edge(DOWN, buff=edge_buff)
     row.set_x(0)
+    for fragment in row.submobjects:
+        fragment._layout_zone = "formula"
     box = SurroundingRectangle(row, color=color, buff=0.22, corner_radius=0.1, stroke_width=2)
     return row, box
 
@@ -694,6 +924,8 @@ def caption_bar(text_de: str, *, font_size: int | None = None, color: str = P_WH
     group = VGroup(bg, label)
     group.to_edge(DOWN, buff=CAPTION_EDGE_BUFF)
     group.set_x(0)
+    for line in label.get_family():
+        line._layout_zone = "caption"
     return group
 
 
@@ -704,6 +936,10 @@ def swap_caption(scene, old, text_de: str, *, run_time: float = 0.35, **kwargs):
     sentences blended mid-transition render as doubled, overlapping text
     (reproduced while verifying ``Heating/1_introduction/scene_1.py``); a
     sequential fade never overlaps two different strings on screen at once.
+
+    Records ``scene._vo_caption_t0`` when the new caption is fully on screen so
+    ``hold_for`` times speech from the real subtitle appearance, not from an
+    inflated ``used=`` that backdates into the previous clause.
     """
     from manim import FadeIn, FadeOut
 
@@ -711,6 +947,7 @@ def swap_caption(scene, old, text_de: str, *, run_time: float = 0.35, **kwargs):
     half = run_time / 2
     scene.play(FadeOut(old), run_time=half)
     scene.play(FadeIn(new), run_time=half)
+    scene._vo_caption_t0 = _scene_time(scene)
     return new
 #endregion
 
@@ -812,20 +1049,14 @@ def subtitle_read_seconds(narration: list[Clause], key: str | None = None) -> fl
 
 
 def hold_for(scene, narration: list[Clause], key: str, *, used: float = 0.0, min_wait: float = 0.3) -> float:
-    """⏸️ Wait as long as this clause needs on screen, minus animation time already spent.
+    """⏸️ Wait as long as this clause needs on screen, minus time already visible.
 
-    ``used`` is the sum of ``run_time`` already spent animating this clause's
-    visuals (e.g. ``Create``ing the highlight ring) — only the remainder is
-    idle wait. The budget is the maximum of measured TTS length (when
-    ``vo_timing.json`` is loaded), the language WPS estimate, and a German
-    subtitle reading floor — so captions stay readable even when English VO
-    estimates are shorter than the on-screen German text, and even when the
-    series is watched without muxed audio.
+    Prefers ``scene._vo_caption_t0`` (set by ``swap_caption``) so speech lines up
+    with the subtitle that is actually on screen. The ``used`` argument remains
+    as a fallback for the first caption of a beat (before any swap).
 
-    A clause may be held more than once when its visuals arrive in stages. The
-    budget is spent across those calls rather than granted again each time —
-    holding it twice used to leave the voiceover finished and the animation
-    still running, which is exactly the drift this timing is meant to prevent.
+    The budget is the maximum of measured TTS length (when ``vo_timing.json`` is
+    loaded), the language WPS estimate, and a German subtitle reading floor.
     """
     beat_id = vo_beat_id(scene)
     measured = _VO_TIMING.get(beat_id, {}).get(key)
@@ -833,10 +1064,18 @@ def hold_for(scene, narration: list[Clause], key: str, *, used: float = 0.0, min
     read_need = subtitle_read_seconds(narration, key)
     budget = max(measured or 0.0, estimated, read_need)
     spent = getattr(scene, "_vo_spent", {})
-    remaining = max(min_wait, budget - spent.get(key, 0.0) - used)
-    spent[key] = spent.get(key, 0.0) + used + remaining
+    now = _scene_time(scene)
+    t0 = getattr(scene, "_vo_caption_t0", None)
+    if t0 is None:
+        t0 = max(0.0, now - used)
+        scene._vo_caption_t0 = t0
+    visible = max(0.0, now - t0)
+    charged = max(visible, spent.get(key, 0.0))
+    remaining = max(min_wait, budget - charged)
+    spent[key] = charged + remaining
     scene._vo_spent = spent
-    _trace_clause(scene, key, used=used, remaining=remaining)
+    _trace_clause(scene, key, start=t0, used=visible, remaining=remaining)
+    check_layout(scene, key)
     scene.wait(remaining)
     return remaining
 #endregion
@@ -867,6 +1106,7 @@ def begin_vo_beat(scene, beat_id: str) -> None:
     """🎬 Point the host scene at ``beat_id``'s timings and clear the previous beat's spend."""
     scene.vo_beat_id = beat_id
     scene._vo_spent = {}
+    scene._vo_caption_t0 = None
 
 
 def _scene_time(scene) -> float:
@@ -874,7 +1114,7 @@ def _scene_time(scene) -> float:
     return float(getattr(renderer, "time", 0.0) or 0.0)
 
 
-def _trace_clause(scene, key: str, *, used: float, remaining: float) -> None:
+def _trace_clause(scene, key: str, *, start: float, used: float, remaining: float) -> None:
     if not _VO_TRACE_ENABLED:
         return
     import sys as _sys
@@ -882,9 +1122,16 @@ def _trace_clause(scene, key: str, *, used: float, remaining: float) -> None:
     beat_id = vo_beat_id(scene)
     now = _scene_time(scene)
     marks = _VO_TRACE.setdefault(beat_id, {})
+    # Caption clock start; never claim overlap with an earlier clause window.
+    if marks:
+        prev_end = max(
+            (float(m.get("start", 0.0)) + float(m.get("window", 0.0)) for m in marks.values()),
+            default=0.0,
+        )
+        start = max(start, prev_end)
     mark = marks.get(key)
     if mark is None:
-        marks[key] = {"start": round(max(0.0, now - used), 3), "window": round(used + remaining, 3)}
+        marks[key] = {"start": round(max(0.0, start), 3), "window": round(used + remaining, 3)}
     else:
         mark["window"] = round(now + remaining - mark["start"], 3)
     module = _sys.modules.get(scene.__class__.__module__)
@@ -917,4 +1164,104 @@ def _dump_vo_trace() -> None:
 
 
 __import__("atexit").register(_dump_vo_trace)
+#endregion
+
+
+#region Layout guard
+# Text that overlaps other text, or text that has walked off the frame, is
+# always a bug — never an intentional composition. ``hold_for`` runs this check
+# at every clause boundary (the settled state of a beat) when the environment
+# sets ``LAYOUT_CHECK=1``, so one render prints every offending pair instead of
+# leaving them to be spotted by eye in a finished video.
+FRAME_X_LIMIT: float = 7.05
+FRAME_Y_LIMIT: float = 3.95
+# Half the ``BODY_LINE_BUFF`` gap between wrapped caption lines — the inset
+# keeps legitimately stacked lines from reading as a collision.
+_OVERLAP_INSET: float = 0.06
+_LAYOUT_CHECK_ENABLED: bool = bool(__import__("os").environ.get("LAYOUT_CHECK"))
+
+
+def _visible_texts(scene) -> list:
+    """🔍 Every on-screen ``Text`` mobject, glyph submobjects excluded."""
+    from manim import Text
+
+    found = []
+    for mob in scene.mobjects:
+        for sub in mob.get_family():
+            if not isinstance(sub, Text):
+                continue
+            if sub.width <= 0.01 or sub.get_fill_opacity() < 0.05:
+                continue
+            found.append(sub)
+    return found
+
+
+def _box(mob) -> tuple[float, float, float, float]:
+    return (mob.get_left()[0], mob.get_right()[0], mob.get_bottom()[1], mob.get_top()[1])
+
+
+# The two fixed bottom zones, measured from FORMULA_PANEL_EDGE_BUFF and
+# CAPTION_EDGE_BUFF. Beat content that reaches into either reads as touching the
+# panel border even when no two glyphs technically overlap — the near-miss the
+# pairwise test is too forgiving to catch.
+FORMULA_BAND = (-2.80, -1.84)
+CAPTION_BAND = (-4.00, -2.62)
+
+
+def _zone(mob) -> str:
+    return getattr(mob, "_layout_zone", "")
+
+
+def _in_band(box, band) -> bool:
+    _l, _r, bottom, top = box
+    return top > band[0] and bottom < band[1]
+
+
+def layout_conflicts(scene) -> list[str]:
+    """🚧 Overlapping, off-frame, or reserved-zone text in the current frame."""
+    texts = _visible_texts(scene)
+    issues: list[str] = []
+    panel_on_screen = any(_zone(m) == "formula" for m in texts)
+    for mob in texts:
+        zone = _zone(mob)
+        if zone:
+            continue
+        box = _box(mob)
+        if panel_on_screen and _in_band(box, FORMULA_BAND):
+            issues.append(
+                f"in formula zone {getattr(mob, 'text', '?')!r} "
+                f"@({mob.get_center()[0]:.2f},{mob.get_center()[1]:.2f})"
+            )
+        if _in_band(box, CAPTION_BAND):
+            issues.append(
+                f"in caption zone {getattr(mob, 'text', '?')!r} "
+                f"@({mob.get_center()[0]:.2f},{mob.get_center()[1]:.2f})"
+            )
+    for mob in texts:
+        left, right, bottom, top = _box(mob)
+        if left < -FRAME_X_LIMIT or right > FRAME_X_LIMIT or bottom < -FRAME_Y_LIMIT or top > FRAME_Y_LIMIT:
+            issues.append(f"off-frame {getattr(mob, 'text', '?')!r} at x[{left:.2f},{right:.2f}] y[{bottom:.2f},{top:.2f}]")
+    for i, first in enumerate(texts):
+        a_l, a_r, a_b, a_t = _box(first)
+        for second in texts[i + 1:]:
+            b_l, b_r, b_b, b_t = _box(second)
+            dx = min(a_r, b_r) - max(a_l, b_l) - 2 * _OVERLAP_INSET
+            dy = min(a_t, b_t) - max(a_b, b_b) - 2 * _OVERLAP_INSET
+            if dx > 0 and dy > 0:
+                issues.append(
+                    f"overlap {getattr(first, 'text', '?')!r} @({first.get_center()[0]:.2f},{first.get_center()[1]:.2f}) × "
+                    f"{getattr(second, 'text', '?')!r} @({second.get_center()[0]:.2f},{second.get_center()[1]:.2f}) "
+                    f"by {dx:.2f}×{dy:.2f} units"
+                )
+    return issues
+
+
+def check_layout(scene, label: str = "") -> list[str]:
+    """🚨 Print this frame's text collisions — only when ``LAYOUT_CHECK=1`` is set."""
+    if not _LAYOUT_CHECK_ENABLED:
+        return []
+    issues = layout_conflicts(scene)
+    for issue in issues:
+        print(f"[LAYOUT] {vo_beat_id(scene)}·{label}: {issue}")
+    return issues
 #endregion

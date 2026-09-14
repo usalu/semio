@@ -1,0 +1,43 @@
+{
+  "source": "subtitle",
+  "beats": {
+    "Beat1_OfficeRoom": {
+      "intro": 6.768,
+      "facade": 6.168,
+      "interior": 8.208,
+      "outro": 6.168
+    },
+    "Beat2_HumanFactor": {
+      "intro": 7.752,
+      "modes": 7.248,
+      "anchor": 7.56,
+      "formula": 8.4,
+      "n": 3.912,
+      "qp": 7.104,
+      "scale": 7.464
+    },
+    "Beat3_DevicesLighting": {
+      "intro": 9.768,
+      "devices": 10.368,
+      "pel": 4.008,
+      "fn": 7.056,
+      "lights": 9.912,
+      "pl": 4.92,
+      "fg": 8.448,
+      "outro": 6.12
+    },
+    "Beat4_CumulativeLoad": {
+      "intro": 7.464,
+      "sources": 7.368,
+      "formula": 8.904,
+      "qi": 7.104,
+      "outro": 9.6
+    },
+    "Beat8_Mitigation": {
+      "intro": 5.952,
+      "high": 5.064,
+      "dim": 7.32,
+      "outro": 5.352
+    }
+  }
+}
