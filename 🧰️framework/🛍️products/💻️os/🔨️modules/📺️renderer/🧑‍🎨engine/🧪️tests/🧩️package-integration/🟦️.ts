@@ -50,24 +50,82 @@ describe("framework renderer wgpu plugin bridge", () => {
     expect(created).toEqual(["s", "destroyed"]);
   });
 
-  it("unwraps handleAction's contextJson third argument down to just its viewState before calling the typed handle — ProgramBridge.rs passes {viewState, actor} JSON, not the bare view state", async () => {
+  it("unwraps handleAction's contextJson third argument down to just its decoded viewStatePack before calling the typed handle — ProgramBridge.rs passes {viewStatePack, actor} JSON, not the bare view state", async () => {
+    const { packValueToBase64 } = await import("@semio-tech/framework-os");
     let seenViewState: unknown;
     const bridge = pluginHandleForBridge(
       fakeHandle({
-        handleAction: async (_instanceId, _actionJson, viewState) => {
+        handleAction: async (_instanceId, _invocation, viewState) => {
           seenViewState = viewState;
           return { output: "ok", mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } };
         },
       }),
     );
-    const result = await bridge.handleAction(1, "{}", JSON.stringify({ viewState: { zoom: 2 }, actor: "local" }));
+    const result = await bridge.handleAction(1, packValueToBase64({}), JSON.stringify({ viewStatePack: packValueToBase64({ zoom: 2 }), actor: "local" }));
     expect(seenViewState).toEqual({ zoom: 2 });
     expect(JSON.parse(result).output).toBe("ok");
   });
 
-  it("bridges render() through JSON round-tripping", async () => {
+  /** 🔢️ The view state crosses this seam as PACK, not JSON, because JSON is lossy about integrality and
+   * the guest's `FromValue` is not: a `u64` field that arrived as `Float(1.0)` failed to decode and took
+   * the whole dispatch with it (`toolRunTraceCursorByWindowId.<window>.run`, ticket
+   * 26/09/09/PROCEDURAL-3D-END-TO-END). An integer carrier must survive the bridge as an integer, and a
+   * float that happens to be whole must stay a float. */
+  it("carries integer and float view-state fields across the bridge without collapsing either onto the other", async () => {
+    const { encodePackValue, packUInt, packValueToBase64, isPackInteger, decodePackValue } = await import("@semio-tech/framework-os");
+    let seenViewState: unknown;
+    const bridge = pluginHandleForBridge(
+      fakeHandle({
+        handleAction: async (_instanceId, _invocation, viewState) => {
+          seenViewState = viewState;
+          return { output: "ok", mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } };
+        },
+      }),
+    );
+    const cursor = { toolRunTraceCursorByWindowId: { "procedural-preview": { run: packUInt(1n), generation: packUInt(0n), page: packUInt(0n) } }, ratio: 1 };
+    await bridge.handleAction(1, packValueToBase64({}), JSON.stringify({ viewStatePack: packValueToBase64(cursor), actor: "local" }));
+    const seen = seenViewState as { readonly toolRunTraceCursorByWindowId: Record<string, Record<string, unknown>>; readonly ratio: unknown };
+    expect(isPackInteger(seen.toolRunTraceCursorByWindowId["procedural-preview"]!.run)).toBe(true);
+    expect(seen.ratio).toBe(1);
+    expect(decodePackValue(encodePackValue(seen))).toEqual(cursor);
+    const viaJson = { toolRunTraceCursorByWindowId: { "procedural-preview": { run: 1, generation: 0, page: 0 } }, ratio: 1 };
+    expect(isPackInteger(decodePackValue(encodePackValue(viaJson)).toolRunTraceCursorByWindowId["procedural-preview"].run)).toBe(false);
+  });
+
+  /** 🔢️ The INVOCATION crosses this seam as PACK too, and for the same reason: `JSON.parse` collapses
+   * `0` and `0.0` onto one JS `number`, and `encodePackValue` then writes every one of them as
+   * `TAG_F64` — so every INTEGER action argument reached the guest as a float. An import chunk
+   * envelope (`{payload, name, chunk: u32, chunkCount: u32}`) is refused outright by `FromValue`'s
+   * unsigned arm, so `Import Document…` could not have landed a single chunk on this target no matter
+   * how the picker behaved (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+  it("carries an integer action argument across the bridge as an integer — the import chunk envelope the guest decodes as u32", async () => {
+    const { encodePackValue, packUInt, packValueToBase64, isPackInteger, decodePackValue } = await import("@semio-tech/framework-os");
+    let seenInvocation: unknown;
+    const bridge = pluginHandleForBridge(
+      fakeHandle({
+        handleAction: async (_instanceId, invocation) => {
+          seenInvocation = invocation;
+          return { output: "ok", mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } };
+        },
+      }),
+    );
+    const invocation = {
+      address: { pluginId: "procedural", appId: "generation3d", modeId: "edit", windowKindId: "procedural-main", windowInstanceId: "procedural-main", actionId: "importDocument" },
+      arguments: { payload: "solid probe\n", name: "probe-triangle.stl", chunk: packUInt(0n), chunkCount: packUInt(1n) },
+    };
+    await bridge.handleAction(1, packValueToBase64(invocation), JSON.stringify({ viewStatePack: packValueToBase64({}), actor: "local" }));
+    const seen = seenInvocation as { readonly arguments: Record<string, unknown> };
+    expect(isPackInteger(seen.arguments.chunk)).toBe(true);
+    expect(isPackInteger(seen.arguments.chunkCount)).toBe(true);
+    expect(decodePackValue(encodePackValue(seen))).toEqual(invocation);
+    const viaJson = { ...invocation, arguments: { ...invocation.arguments, chunk: 0, chunkCount: 1 } };
+    expect(isPackInteger(decodePackValue(encodePackValue(viaJson)).arguments.chunk)).toBe(false);
+  });
+
+  it("bridges render() through a pack-encoded view state", async () => {
+    const { packValueToBase64 } = await import("@semio-tech/framework-os");
     const bridge = pluginHandleForBridge(fakeHandle());
-    const result = await bridge.render(1, "window", "body", JSON.stringify({}));
+    const result = await bridge.render(1, "window", "body", packValueToBase64({}));
     expect(JSON.parse(result)).toEqual({ type: "text", value: "hello" });
   });
 

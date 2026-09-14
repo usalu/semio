@@ -1,47 +1,275 @@
 use super::*;
+use semio_framework_plugin::{Locale, Terminology};
+use semio_framework_tool_run::{ToolRunId, ToolRunTick};
 
-fn render(app: u32, generation: u64) -> AppRenderOperationContext {
-    AppRenderOperationContext { app_instance_id: app, base_revision: RevisionId(9), generation: Generation(generation), canonical_base_revision: [generation as u8; 32] }
+const RUN_SCHEMA: &str = include_str!("../../../✏️editor/🧵️simulation-session/🔣️.json");
+const RUN_FIXTURE: &str = include_str!("../../../✏️editor/🧵️simulation-session/🧫️fixtures/🔣️.json");
+
+fn fixture() -> serde_json::Value {
+    serde_json::from_str(RUN_FIXTURE).expect("run fixture parses")
 }
 
-fn request(request: u64) -> EnergySimulationRequestIdentity {
-    EnergySimulationRequestIdentity { request, operation: 1, generation: 1, config_digest: EnergySimulationConfigProjection::default().digest() }
+fn number(value: &serde_json::Value) -> u64 {
+    value.as_u64().unwrap_or_else(|| panic!("fixture number expected, found {value}"))
+}
+
+/// 🧫️ The fixture scenario: the ANSI/ASHRAE 140 case model with the fixture run period and settings.
+fn scenario() -> (Arc<EnergyModelSnapshot>, SimulationConfig) {
+    let fixture = fixture();
+    let scenario = &fixture["scenario"];
+    assert_eq!(scenario["example"], "bestest-600");
+    let mut model = crate::examples::bestest_600::model();
+    let period = &scenario["runPeriod"];
+    model.run_period.start_month = number(&period["startMonth"]) as u8;
+    model.run_period.start_day = number(&period["startDay"]) as u8;
+    model.run_period.end_month = number(&period["endMonth"]) as u8;
+    model.run_period.end_day = number(&period["endDay"]) as u8;
+    let settings = &scenario["settings"];
+    let template = SimulationConfig { zone_timestep_minutes: number(&settings["zoneTimestepMinutes"]) as u32, system_timestep_minutes: number(&settings["systemTimestepMinutes"]) as u32, warmup_days: number(&settings["warmupDays"]) as u32, ..SimulationConfig::default() };
+    (Arc::new(crate::energy_snapshot_with_state(crate::ENERGY_MODEL_DOCUMENT_SCHEMA, &model, None)), template)
+}
+
+fn identity() -> ToolRunIdentity {
+    ToolRunIdentity::new(ToolRunId { app_instance_id: 7, run: 1 }, [3; 32])
+}
+
+/// 🦶️ Every observable outcome of driving a run job to settlement with a fixed fuel budget per call.
+struct Drive {
+    ticks: Vec<ToolRunTick>,
+    settled: StepOutcome,
+    calls: usize,
+}
+
+fn drive(job: &mut EnergySimulationRunJob, fuel: u64) -> Drive {
+    let (operation, generation, cancel) = (semio_framework_job::allocate_operation_id(), Generation(1), semio_framework_job::root_cancel_token());
+    let mut sequence = 0;
+    let mut ticks = Vec::new();
+    for calls in 1..=50_000_000 {
+        let now = semio_framework_job::default_now_us().expect("clock");
+        let budget = StepBudget::new(fuel, now + semio_framework_job::INTERACTIVE_LANE_WALL_US * 4);
+        let mut verdict = None;
+        match semio_framework_job::drive_step(job, "energy.simulation.run.test", operation, generation, semio_framework_job::InteractiveStage::InteractiveStep, budget, cancel.clone(), semio_framework_job::default_now_us, &mut sequence, &mut verdict) {
+            StepOutcome::Yield => {}
+            StepOutcome::PreviewReady(mut payload) => {
+                let bytes: Vec<u8> = (0..payload.page_count()).flat_map(|index| payload.page(index).expect("tick page").to_vec()).collect();
+                close_payload(&mut payload);
+                ticks.push(ToolRunTick::decode(&bytes).expect("tick decodes"));
+            }
+            StepOutcome::CheckpointReady(_) => panic!("a restart-policy run never reports a checkpoint"),
+            settled => return Drive { ticks, settled, calls },
+        }
+    }
+    panic!("the run never settled");
+}
+
+fn close(job: &mut EnergySimulationRunJob) {
+    job.begin_close();
+    for _ in 0..10_000_000 {
+        match job.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+            InteractiveJobCloseStep::Complete => {
+                assert!(job.terminal_is_empty(), "a closed run job holds no owner");
+                return;
+            }
+            InteractiveJobCloseStep::Pending { released_items, .. } => assert!(released_items <= 1),
+            InteractiveJobCloseStep::Blocked => panic!("the run job close blocked"),
+        }
+    }
+    panic!("the run job close never completed");
+}
+
+fn reason_ids(ticks: &[ToolRunTick]) -> Vec<&'static str> {
+    ticks.iter().flat_map(|tick| tick.steps.iter()).filter_map(|step| EnergySimulationRunReason::from_code(step.reason)).map(EnergySimulationRunReason::id).collect()
+}
+
+//#region ⏯️Definition
+#[test]
+fn run_definition_matches_the_schema_source_of_record() {
+    let schema: serde_json::Value = serde_json::from_str(RUN_SCHEMA).unwrap();
+    let table = &schema["x-semio-toolRun"];
+    let definition = energy_simulation_run_definition();
+    definition.validate().expect("the run definition is valid");
+    let text = |label: &LocalizedLabel, locale| label.resolve(Terminology::Native, locale).to_string();
+    assert_eq!(definition.mutating, table["mutating"].as_bool().unwrap());
+    assert_eq!(serde_json::to_value(definition.rebase).unwrap(), table["rebase"]);
+    assert_eq!(serde_json::to_value(definition.reconfigure).unwrap(), table["reconfigure"]);
+    assert_eq!(serde_json::to_value(definition.trace).unwrap(), table["trace"]);
+    assert_eq!(definition.run_job.as_str(), table["runJob"]);
+    assert!(definition.revalidate_job.is_none());
+    assert_eq!(serde_json::to_value(&definition.settings).unwrap(), table["settings"]);
+    assert_eq!((text(&definition.unit, Locale::En), text(&definition.unit, Locale::De)), (table["unit"]["en"].as_str().unwrap().to_string(), table["unit"]["de"].as_str().unwrap().to_string()));
+    let rows = |key: &str| table[key].as_array().unwrap().clone();
+    assert_eq!(definition.stages.len(), rows("stages").len());
+    for (stage, row) in definition.stages.iter().zip(rows("stages")) {
+        assert_eq!((stage.id.as_str(), text(&stage.label, Locale::En), text(&stage.label, Locale::De)), (row["id"].as_str().unwrap(), row["en"].as_str().unwrap().to_string(), row["de"].as_str().unwrap().to_string()));
+    }
+    assert_eq!(definition.counters.len(), rows("counters").len());
+    for (counter, row) in definition.counters.iter().zip(rows("counters")) {
+        assert_eq!((counter.id.as_str(), text(&counter.label, Locale::En), text(&counter.label, Locale::De)), (row["id"].as_str().unwrap(), row["en"].as_str().unwrap().to_string(), row["de"].as_str().unwrap().to_string()));
+    }
+    assert_eq!(definition.reasons.len(), rows("reasons").len());
+    for (reason, row) in definition.reasons.iter().zip(rows("reasons")) {
+        assert_eq!(u64::from(reason.code), number(&row["code"]));
+        assert_eq!(reason.id, row["id"].as_str().unwrap());
+        assert_eq!(serde_json::to_value(reason.verdict).unwrap(), row["verdict"]);
+        assert_eq!((text(&reason.template, Locale::En), text(&reason.template, Locale::De)), (row["en"].as_str().unwrap().to_string(), row["de"].as_str().unwrap().to_string()));
+        let placeholders = row["args"].as_array().unwrap().len();
+        for locale in [Locale::En, Locale::De] {
+            assert_eq!((0..4).filter(|index| text(&reason.template, locale).contains(&format!("{{{index}}}"))).count(), placeholders, "reason {} {locale:?} placeholders", reason.id);
+        }
+        assert_ne!(text(&reason.template, Locale::En), text(&reason.template, Locale::De), "reason {} is not really translated", reason.id);
+    }
 }
 
 #[test]
-fn event_log_max_plus_one_preserves_existing_chronology() {
-    let mut registry = Registry::new();
-    for index in 0..EVENT_SLOTS {
-        registry.push_event(render(1, 1), if index == 0 { EnergySimulationEventKind::Start { request: 1, config: EnergySimulationConfigProjection::default() } } else { EnergySimulationEventKind::Cancel(request(1)) }).unwrap();
+fn every_numerical_stage_maps_into_the_declared_run_pipeline_in_order() {
+    let stages = [
+        EnergyJobStage::Validate,
+        EnergyJobStage::ResolveWeather,
+        EnergyJobStage::Precompute,
+        EnergyJobStage::InitializeZones,
+        EnergyJobStage::InitializeSurfaces,
+        EnergyJobStage::InitializeWarmupHistory,
+        EnergyJobStage::WarmupTimestep,
+        EnergyJobStage::WarmupConvergence,
+        EnergyJobStage::StartRun,
+        EnergyJobStage::RunZoneTimestep,
+        EnergyJobStage::AggregateZone,
+        EnergyJobStage::AggregateFacility,
+        EnergyJobStage::PublishTimestep,
+        EnergyJobStage::Finalize,
+        EnergyJobStage::Size,
+        EnergyJobStage::FinalizeSummaries,
+        EnergyJobStage::FinalizeMetrics,
+        EnergyJobStage::FinalizeEconomics,
+        EnergyJobStage::BuildResults,
+        EnergyJobStage::PublishFinal,
+        EnergyJobStage::EncodeOutput,
+        EnergyJobStage::Complete,
+    ];
+    let mapped: Vec<u16> = stages.iter().map(|stage| EnergySimulationRunStage::of(*stage).index()).collect();
+    assert!(mapped.windows(2).all(|pair| pair[0] <= pair[1]), "run stages advance monotonically with the numerical pipeline");
+    assert_eq!(mapped.first(), Some(&EnergySimulationRunStage::Prepare.index()));
+    assert_eq!(mapped.last(), Some(&EnergySimulationRunStage::Encode.index()));
+}
+//#endregion ⏯️Definition
+
+//#region 🦶️RunJob
+#[test]
+fn the_pause_step_fuel_unit_is_one_computed_timestep() {
+    let fixture = fixture();
+    let (snapshot, template) = scenario();
+    let mut job = EnergySimulationRunJob::new(identity(), snapshot, template);
+    let run = drive(&mut job, number(&fixture["fuel"]["fuelPerStep"]));
+    assert!(matches!(run.settled, StepOutcome::Complete(_)), "the run completes");
+    let (before, last) = run.ticks.split_at(run.ticks.len() - 1);
+    assert_eq!(before.len() as u64, number(&fixture["fuel"]["ticksBeforeSettle"]));
+    let mut completed = 0;
+    for tick in before {
+        let progress = tick.progress.as_ref().expect("every tick carries progress");
+        assert_eq!(progress.completed, completed + number(&fixture["fuel"]["completedAdvancePerTick"]), "one fuel unit advanced exactly one timestep");
+        assert_eq!(progress.state, ToolRunState::Running);
+        completed = progress.completed;
     }
-    assert_eq!(registry.push_event(render(1, 1), EnergySimulationEventKind::Discard(request(1))), Err("energy.session.event-log-saturated"));
-    for expected in 1..=EVENT_SLOTS as u64 {
-        assert_eq!(registry.pop_event().unwrap().sequence, expected);
-    }
+    let settled = last[0].progress.as_ref().expect("the settling tick carries progress");
+    assert_eq!(settled.completed - completed, number(&fixture["fuel"]["settledTickCompletedAdvance"]));
+    assert_eq!(settled.state.as_str(), fixture["run"]["finalState"]);
+    assert_eq!(EnergySimulationRunStage::ALL[usize::from(settled.stage)].id(), fixture["run"]["finalStage"]);
+    let counter = |counter: EnergySimulationRunCounter| settled.counters.iter().find(|entry| entry.counter == counter.index()).map(|entry| entry.value);
+    assert_eq!(counter(EnergySimulationRunCounter::WarmupTimesteps), Some(number(&fixture["run"]["warmupTimesteps"])));
+    assert_eq!(counter(EnergySimulationRunCounter::RunTimesteps), Some(number(&fixture["run"]["runTimesteps"])));
+    let tiers: Vec<&str> = fixture["run"]["tiers"].as_array().unwrap().iter().map(|tier| tier.as_str().unwrap()).collect();
+    assert_eq!(counter(EnergySimulationRunCounter::TiersPublished), Some(tiers.len() as u64));
+    assert_eq!(reason_ids(&run.ticks), tiers, "every quality tier publishes exactly once, in order");
+    let mut visited: Vec<&str> = run.ticks.iter().map(|tick| EnergySimulationRunStage::ALL[usize::from(tick.progress.as_ref().unwrap().stage)].id()).collect();
+    visited.dedup();
+    assert_eq!(visited, fixture["run"]["stagesVisited"].as_array().unwrap().iter().map(|stage| stage.as_str().unwrap()).collect::<Vec<_>>());
+    assert!(run.calls as u64 > number(&fixture["fuel"]["ticksBeforeSettle"]), "preparation and finalization yield without a tick");
+    let StepOutcome::Complete(mut candidate) = run.settled else { unreachable!() };
+    close_payload(&mut candidate.state);
+    close_payload(&mut candidate.output);
+    close(&mut job);
+}
+
+/// 🔮️ The streamed run must agree with the batch adapter `Engine::run` — the exact engine path the
+/// ANSI/ASHRAE 140 EnergyPlus comparison (`🧪️tests/🏛️simulate-bestest-energyplus`) validates.
+#[test]
+fn run_job_results_and_final_readout_agree_with_the_batch_engine_oracle() {
+    let (snapshot, template) = scenario();
+    let config = simulation_config_for(&template, &snapshot.model);
+    let oracle = crate::Engine::run(snapshot.model.clone(), config).expect("batch engine run");
+    let mut job = EnergySimulationRunJob::new(identity(), snapshot, template);
+    let run = drive(&mut job, semio_framework_job::INTERACTIVE_LANE_FUEL);
+    let StepOutcome::Complete(mut candidate) = run.settled else { panic!("the streamed run completes") };
+    close_payload(&mut candidate.state);
+    close_payload(&mut candidate.output);
+    let results = job.numerical.as_mut().expect("numerical owner").take_results().expect("streamed results");
+    assert_eq!(results.meters, oracle.meters);
+    assert_eq!(results.summaries, oracle.summaries);
+    assert_eq!(results.time_series, oracle.time_series);
+    assert_eq!(results.run_metadata.timesteps, oracle.run_metadata.timesteps);
+    let final_step = run.ticks.iter().flat_map(|tick| tick.steps.iter()).find(|step| step.reason == EnergySimulationRunReason::Final.code()).expect("final tier step");
+    let ToolRunStepArg::Float(kwh) = final_step.args[0] else { panic!("the final readout is a kWh float") };
+    let oracle_kwh = job.numerical.as_ref().unwrap().cursor().facility_electricity_kwh;
+    assert!((kwh - (oracle_kwh * 1_000.0).round() / 1_000.0).abs() < 1e-9, "the final step reports the facility electricity meter");
+    assert_eq!(final_step.args[1], ToolRunStepArg::Unsigned(u64::from(oracle.run_metadata.timesteps)));
+    close(&mut job);
 }
 
 #[test]
-fn fixed_shell_max_plus_one_never_reuses_a_live_owner() {
-    let mut registry = Registry::new();
-    let mut shells = [0u16; SHELL_SLOTS];
-    for shell in &mut shells {
-        *shell = registry.allocate().unwrap();
+fn cancellation_mid_run_settles_cancelled_and_close_retires_every_owner() {
+    let (snapshot, template) = scenario();
+    let mut job = EnergySimulationRunJob::new(identity(), snapshot, template);
+    let cancel = semio_framework_job::root_cancel_token();
+    let (operation, generation) = (semio_framework_job::allocate_operation_id(), Generation(1));
+    let mut sequence = 0;
+    let mut ticks = 0;
+    while ticks < 3 {
+        let budget = StepBudget::new(1, u64::MAX);
+        let mut verdict = None;
+        match semio_framework_job::drive_step(&mut job, "energy.simulation.cancel.test", operation, generation, semio_framework_job::InteractiveStage::InteractiveStep, budget, cancel.clone(), semio_framework_job::default_now_us, &mut sequence, &mut verdict) {
+            StepOutcome::PreviewReady(mut payload) => {
+                close_payload(&mut payload);
+                ticks += 1;
+            }
+            StepOutcome::Yield => {}
+            _ => panic!("the run settled before it could be cancelled"),
+        }
     }
-    assert!(registry.allocate().is_none());
-    assert_eq!(shells[0], 0);
-    assert_eq!(shells[SHELL_SLOTS - 1], (SHELL_SLOTS - 1) as u16);
+    assert!(job.numerical.is_some(), "the run is simulating");
+    cancel.cancel_now();
+    let mut verdict = None;
+    assert!(matches!(semio_framework_job::drive_step(&mut job, "energy.simulation.cancel.test", operation, generation, semio_framework_job::InteractiveStage::InteractiveStep, StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut sequence, &mut verdict), StepOutcome::Cancelled));
+    close(&mut job);
 }
 
 #[test]
-fn active_app_slot_max_plus_one_rejects_without_aliasing() {
-    let mut registry = Registry::new();
-    for app in 1..=ACTIVE_SLOTS as u32 {
-        registry.push_event(render(app, 1), EnergySimulationEventKind::Cancel(request(u64::from(app)))).unwrap();
-    }
-    assert_eq!(registry.push_event(render(ACTIVE_SLOTS as u32 + 1, 1), EnergySimulationEventKind::Cancel(request(99))), Err("energy.session.active-slots-saturated"));
-    for app in 1..=ACTIVE_SLOTS as u32 {
-        assert!(registry.slot_for(app).is_some());
-    }
+fn a_model_beyond_numerical_admission_publishes_a_danger_step_before_the_fault() {
+    let (_, template) = scenario();
+    let mut model = crate::examples::bestest_600::model();
+    model.zones.clear();
+    let snapshot = Arc::new(crate::energy_snapshot_with_state(crate::ENERGY_MODEL_DOCUMENT_SCHEMA, &model, None));
+    let mut job = EnergySimulationRunJob::new(identity(), snapshot, SimulationConfig { warmup_days: 0, ..template });
+    let run = drive(&mut job, 1);
+    assert!(matches!(run.settled, StepOutcome::Fault(_)), "an unsimulatable model faults the run");
+    let last = run.ticks.last().expect("the refusal travels in a tick before the fault");
+    let step = last.steps.last().expect("danger step");
+    assert_eq!(step.kind, ToolRunStepKind::Danger);
+    assert!(matches!(EnergySimulationRunReason::from_code(step.reason), Some(EnergySimulationRunReason::AdmissionRejected | EnergySimulationRunReason::SimulationFaulted)));
+    close(&mut job);
+}
+//#endregion 🦶️RunJob
+
+//#region 🧮️Capture
+#[test]
+fn the_bounded_capture_reproduces_every_model_field_including_run_period_and_schedules() {
+    let (snapshot, _) = scenario();
+    let mut census = CaptureCensus::new();
+    while !census.step_one(&snapshot.model).expect("census admits the case model") {}
+    let mut capture = ModelCapture::new();
+    while !capture.step_one(&snapshot.model).expect("capture copies the case model") {}
+    let captured = capture.finish();
+    assert!(!captured.schedules.constants.is_empty() || !captured.schedules.daily.is_empty(), "the case model carries schedules");
+    assert_eq!(captured, snapshot.model, "the captured model equals the base document model field for field");
 }
 
 #[test]
@@ -50,52 +278,6 @@ fn capture_admission_rejects_item_and_byte_max_plus_one_before_mount() {
     assert_eq!(items.charge_backing(1, 0), Err("energy.session.capture-admission-exceeded"));
     let mut bytes = CaptureCensus { lane: 0, index: 0, items: 0, bytes: MAXIMUM_CAPTURE_BYTES };
     assert_eq!(bytes.charge_backing(1, 1), Err("energy.session.capture-admission-exceeded"));
-}
-
-#[test]
-fn retirement_max_plus_one_retains_the_rejected_shell() {
-    let mut registry = Registry::new();
-    for shell in 0..SHELL_SLOTS as u16 {
-        assert!(registry.reserve_shell_retirement(shell));
-        assert!(registry.retire_shell(shell));
-    }
-    assert!(registry.reserve_retirement().is_none());
-    assert_eq!(registry.retiring[0], Some(0));
-    assert_eq!(registry.retiring[SHELL_SLOTS - 1], Some((SHELL_SLOTS - 1) as u16));
-}
-
-#[test]
-fn checkpoint_selection_does_not_change_numerical_digest() {
-    let base = EnergySimulationConfigProjection::default();
-    let mut restored = base;
-    restored.checkpoint_token = u64::MAX;
-    assert_eq!(base.digest(), restored.digest());
-    restored.zone_timestep_minutes += 1;
-    assert_ne!(base.digest(), restored.digest());
-}
-
-#[test]
-fn invalid_config_is_rejected_before_event_owner_move() {
-    let mut invalid = EnergySimulationConfigProjection::default();
-    invalid.warmup_days = 366;
-    assert!(!invalid.validate());
-    invalid = EnergySimulationConfigProjection::default();
-    invalid.zone_timestep_minutes = 0;
-    assert!(!invalid.validate());
-}
-
-#[test]
-fn cancel_before_snapshot_admission_retires_the_exact_preflight() {
-    let mut registry = Registry::new();
-    let operation = render(4, 7);
-    registry.push_event(operation, EnergySimulationEventKind::Start { request: 7, config: EnergySimulationConfigProjection::default() }).unwrap();
-    apply_event_one(&mut registry);
-    let slot = registry.slot_for(operation.app_instance_id).unwrap();
-    assert!(registry.preflight[slot].is_some());
-    registry.push_event(operation, EnergySimulationEventKind::Cancel(request(7))).unwrap();
-    apply_event_one(&mut registry);
-    assert!(registry.preflight[slot].is_none());
-    assert_eq!(registry.free_len, SHELL_SLOTS);
 }
 
 #[test]
@@ -151,287 +333,6 @@ fn admitted_capture_source_has_no_whole_record_clone_backdoor() {
 }
 
 #[test]
-fn chronology_is_identical_for_one_two_four_and_default_fuel() {
-    let expected = [EnergyQualityTier::SteadyStateEstimate, EnergyQualityTier::DesignDay, EnergyQualityTier::CoarseTimestep, EnergyQualityTier::Final];
-    for fuel in [1u64, 2, 4, 64] {
-        let mut cursor = 0;
-        let mut observed = [EnergyQualityTier::SteadyStateEstimate; 4];
-        while cursor < expected.len() {
-            let admitted = usize::try_from(fuel.min(1)).unwrap();
-            for _ in 0..admitted {
-                observed[cursor] = expected[cursor];
-                cursor += 1;
-            }
-        }
-        assert_eq!(observed, expected);
-        assert_eq!(observed.map(quality_tier_index), [0, 1, 2, 3]);
-    }
-}
-
-#[test]
-fn lower_tier_and_stale_sequence_cannot_replace_visible_authority() {
-    let identity = MountedIdentity {
-        app_instance_id: 3,
-        request: 1,
-        document_revision: RevisionId(9),
-        document_generation: Generation(4),
-        canonical_base_revision: [4; 32],
-        operation: OperationId(7),
-        generation: Generation(2),
-        config_digest: 8,
-        operation_seed: 9,
-        job: 7,
-    };
-    let mut projection = EnergySimulationProjection::new(identity);
-    projection.latest_sequence = 9;
-    projection.latest_tier = Some(EnergyQualityTier::CoarseTimestep);
-    let tier = match EnergyQualityTier::SteadyStateEstimate {
-        EnergyQualityTier::SteadyStateEstimate => 0,
-        _ => 3,
-    };
-    assert!(tier < 2);
-    assert_eq!(projection.latest_sequence, 9);
-}
-
-#[test]
-fn process_token_rejects_stale_generation_and_tags_the_exact_job() {
-    let identity = MountedIdentity {
-        app_instance_id: 1,
-        request: 1,
-        document_revision: RevisionId(2),
-        document_generation: Generation(3),
-        canonical_base_revision: [4; 32],
-        operation: OperationId(JOB_TAG | 1),
-        generation: Generation(5),
-        config_digest: 6,
-        operation_seed: 7,
-        job: JOB_TAG | 1,
-    };
-    let bytes = encode_input(0, identity);
-    assert_eq!(decode_input(identity.job, &bytes).unwrap().1, identity);
-    assert_ne!(decode_input(identity.job + 1, &bytes).unwrap().1, identity);
-    let mut stale = bytes;
-    stale[31..39].copy_from_slice(&0u64.to_le_bytes());
-    assert!(decode_input(identity.job, &stale).is_none());
-}
-
-#[test]
-fn schema_and_accessibility_vocabulary_is_complete() {
-    let source = include_str!("../../../✏️editor/🎭️modes/✏️edit/🪟️windows/⚡️simulation/🦀️.rs");
-    for law in ["Start simulation", "Simulation starten", "Cancel simulation", "Simulation abbrechen", "aria-live", "busy", "Final result"] {
-        assert!(source.contains(law), "missing {law}");
-    }
-}
-
-#[test]
-fn artifact_read_path_has_no_process_cache_clone_or_serde_key_authority() {
-    let model = Model { name: "store-owned".into(), ..Model::default() };
-    let snapshot = crate::energy_snapshot_with_state(crate::ENERGY_MODEL_DOCUMENT_SCHEMA, &model, None);
-    assert_eq!(snapshot.model, model, "the event-sourced snapshot, not a side cache, is the exact numerical read authority");
-    let artifact = include_str!("../../../../../../../🦀️.rs");
-    for forbidden in ["ENERGY_SCRATCH", "with_energy_model_ref", "HashMap<String, EnergyWorkingScene>", "energy_scene_id"] {
-        assert!(!artifact.contains(forbidden), "process cache authority survived: {forbidden}");
-    }
-    assert!(artifact.contains("pub struct EnergyModelReadLease"));
-    assert!(artifact.contains("commit_authority_matches"));
-    assert!(artifact.contains("return_to_registry_witness"));
-}
-
-#[test]
-fn exact_request_identity_rejects_each_stale_lifecycle_dimension() {
-    let identity = MountedIdentity {
-        app_instance_id: 8,
-        request: 19,
-        document_revision: RevisionId(2),
-        document_generation: Generation(3),
-        canonical_base_revision: [4; 32],
-        operation: OperationId(5),
-        generation: Generation(6),
-        config_digest: 7,
-        operation_seed: 8,
-        job: JOB_TAG | 9,
-    };
-    let exact = EnergySimulationRequestIdentity { request: 19, operation: 5, generation: 6, config_digest: 7 };
-    assert!(identity.matches_request(exact));
-    for stale in
-        [EnergySimulationRequestIdentity { request: 20, ..exact }, EnergySimulationRequestIdentity { operation: 9, ..exact }, EnergySimulationRequestIdentity { generation: 9, ..exact }, EnergySimulationRequestIdentity { config_digest: 9, ..exact }]
-    {
-        assert!(!identity.matches_request(stale));
-    }
-}
-
-#[test]
-fn completed_capture_revalidates_every_live_authority_before_model_transfer() {
-    let mounted = MountedIdentity {
-        app_instance_id: 61,
-        request: 19,
-        document_revision: RevisionId(2),
-        document_generation: Generation(3),
-        canonical_base_revision: [4; 32],
-        operation: OperationId(5),
-        generation: Generation(6),
-        config_digest: 7,
-        operation_seed: 8,
-        job: JOB_TAG | 9,
-    };
-    let exact_render = AppRenderOperationContext { app_instance_id: mounted.app_instance_id, base_revision: mounted.document_revision, generation: mounted.document_generation, canonical_base_revision: mounted.canonical_base_revision };
-    let stale_expected = MountedIdentity { generation: Generation(99), ..mounted };
-    let stale_app = AppRenderOperationContext { app_instance_id: 62, ..exact_render };
-    let stale_revision = AppRenderOperationContext { base_revision: RevisionId(99), ..exact_render };
-    let stale_generation = AppRenderOperationContext { generation: Generation(99), ..exact_render };
-    let stale_canonical = AppRenderOperationContext { canonical_base_revision: [99; 32], ..exact_render };
-    for (expected, render, request, digest, snapshot_fresh, cancelled) in [
-        (stale_expected, exact_render, mounted.request, mounted.config_digest, true, false),
-        (mounted, stale_app, mounted.request, mounted.config_digest, true, false),
-        (mounted, stale_revision, mounted.request, mounted.config_digest, true, false),
-        (mounted, stale_generation, mounted.request, mounted.config_digest, true, false),
-        (mounted, stale_canonical, mounted.request, mounted.config_digest, true, false),
-        (mounted, exact_render, mounted.request + 1, mounted.config_digest, true, false),
-        (mounted, exact_render, mounted.request, mounted.config_digest + 1, true, false),
-        (mounted, exact_render, mounted.request, mounted.config_digest, false, false),
-        (mounted, exact_render, mounted.request, mounted.config_digest, true, true),
-    ] {
-        let mut capture = ModelCapture::new();
-        capture.model.name = "stale-capture".into();
-        capture.model.zones.push(crate::model::Zone { id: crate::model::EntityId(1), name: "retained-zone".into(), volume_m3: 1.0, multiplier: 1, conditioned: true, part_of_total_floor_area: true });
-        let mut capture = Some(capture);
-        assert!(take_captured_model_for_admission(&mut capture, mounted, expected, render, request, digest, snapshot_fresh, cancelled).is_err());
-        assert_eq!(capture.as_ref().expect("stale capture remains exact").model.zones[0].name, "retained-zone");
-        let mut close = EnergyModelCloseCursor::new(std::mem::replace(&mut capture, None).expect("retained stale capture").finish());
-        for _ in 0..128 {
-            match close.close_step(4) {
-                semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => {
-                    assert!(released_items <= 1);
-                    assert!(released_bytes <= 4);
-                }
-                semio_framework_job::InteractiveJobCloseStep::Complete => break,
-                semio_framework_job::InteractiveJobCloseStep::Blocked => panic!("stale captured Model close cannot block"),
-            }
-        }
-        assert!(close.terminal_is_empty());
-    }
-
-    let mut exact = ModelCapture::new();
-    exact.model.name = "exact-capture".into();
-    let mut exact = Some(exact);
-    let model = take_captured_model_for_admission(&mut exact, mounted, mounted, exact_render, mounted.request, mounted.config_digest, true, false).expect("only the current uncancelled capture transfers");
-    assert_eq!(model.name, "exact-capture");
-    assert!(exact.is_none());
-}
-
-#[test]
-fn adopted_projection_is_partitioned_by_application_and_rejects_every_aba_dimension() {
-    let identity = MountedIdentity {
-        app_instance_id: 71,
-        request: 29,
-        document_revision: RevisionId(12),
-        document_generation: Generation(13),
-        canonical_base_revision: [14; 32],
-        operation: OperationId(15),
-        generation: Generation(16),
-        config_digest: 17,
-        operation_seed: 18,
-        job: JOB_TAG | 19,
-    };
-    let render = AppRenderOperationContext { app_instance_id: identity.app_instance_id, base_revision: identity.document_revision, generation: identity.document_generation, canonical_base_revision: identity.canonical_base_revision };
-    let mut projection = EnergySimulationProjection::new(identity);
-    projection.adopted = true;
-    projection.status = EnergySimulationStatus::Adopted;
-    projection.tiers[0] = Some(EnergyTierProjection {
-        app_instance_id: identity.app_instance_id,
-        document_revision: identity.document_revision,
-        document_generation: identity.document_generation,
-        canonical_base_revision: identity.canonical_base_revision,
-        operation: identity.operation,
-        generation: identity.generation,
-        config_digest: identity.config_digest,
-        sequence: 1,
-        tier: EnergyQualityTier::SteadyStateEstimate,
-        stage: EnergyJobStage::Complete,
-        warmup_hour: 0,
-        timestep: 1,
-        total_timesteps: 1,
-        facility_electricity_kwh: 1.0,
-    });
-    let exact = AdoptedProjectionAuthority::new(identity, projection).expect("exact adopted authority");
-    let mut registry = Registry::new();
-    registry.apps[0] = Some(identity.app_instance_id);
-    registry.apps[1] = Some(identity.app_instance_id + 1);
-    registry.last_request[0] = identity.request;
-    registry.adopted[0] = Some(exact);
-    assert_eq!(registry.adopted_projection(render).map(|projection| projection.request), Some(identity.request));
-    let other_app_same_document = AppRenderOperationContext { app_instance_id: identity.app_instance_id + 1, ..render };
-    assert!(registry.adopted_projection(other_app_same_document).is_none(), "matching document provenance cannot cross the application partition");
-
-    for mutation in 0..5 {
-        let mut stale = exact;
-        match mutation {
-            0 => stale.projection.request += 1,
-            1 => stale.projection.operation = OperationId(stale.projection.operation.0 + 1),
-            2 => stale.projection.generation = Generation(stale.projection.generation.0 + 1),
-            3 => stale.projection.config_digest += 1,
-            _ => stale.projection.tiers[0].as_mut().expect("tier").app_instance_id += 1,
-        }
-        registry.adopted[0] = Some(stale);
-        assert!(registry.adopted_projection(render).is_none(), "ABA mutation {mutation} leaked an adopted projection");
-    }
-    registry.adopted[0] = Some(exact);
-    registry.last_request[0] += 1;
-    assert!(registry.adopted_projection(render).is_none(), "a newer request must invalidate the retained adopted authority");
-}
-
-#[test]
-fn acknowledged_numerical_complete_is_retained_then_detaches_the_process_owner() {
-    let mut retained = None;
-    let complete = StepOutcome::Complete(semio_framework_job::CommitCandidate {
-        state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-        output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-    });
-    assert!(matches!(retain_worker_outcome(&mut retained, complete), JobStep::Done(bytes) if bytes.is_empty()));
-    assert!(retained.as_ref().is_some_and(StepOutcome::is_terminal));
-    assert!(retained.as_ref().is_some_and(StepOutcome::terminal_is_empty));
-    let identity = MountedIdentity {
-        app_instance_id: 81,
-        request: 82,
-        document_revision: RevisionId(83),
-        document_generation: Generation(84),
-        canonical_base_revision: [85; 32],
-        operation: OperationId(86),
-        generation: Generation(87),
-        config_digest: 88,
-        operation_seed: 89,
-        job: JOB_TAG | 90,
-    };
-    let shell = 5;
-    drop(EnergyMountedBoundedJob { shell_index: shell, shell: Rc::new(RefCell::new(None)), identity });
-    let recovered = RECOVERY.with(|recovery| recovery.borrow_mut()[shell as usize].take()).expect("terminal process Drop publishes the exact fixed recovery witness");
-    assert_eq!(recovered, RecoveryRecord { shell, identity });
-}
-
-#[test]
-fn reused_or_older_start_request_cannot_replace_current_preflight_authority() {
-    let render = render(18, 1);
-    let mut registry = Registry::new();
-    registry.push_event(render, EnergySimulationEventKind::Start { request: 9, config: EnergySimulationConfigProjection::default() }).unwrap();
-    apply_event_one(&mut registry);
-    let slot = registry.slot_for(18).unwrap();
-    assert_eq!(registry.preflight[slot].map(|preflight| preflight.request), Some(9));
-    registry.push_event(render, EnergySimulationEventKind::Start { request: 9, config: EnergySimulationConfigProjection { warmup_days: 99, ..EnergySimulationConfigProjection::default() } }).unwrap();
-    apply_event_one(&mut registry);
-    assert_eq!(registry.preflight[slot].map(|preflight| (preflight.request, preflight.config.warmup_days)), Some((9, EnergySimulationConfigProjection::default().warmup_days)));
-    assert_eq!(registry.last_request[slot], 9);
-}
-
-#[test]
-fn retry_path_has_no_default_config_fallback_or_unrelated_preflight() {
-    let source = include_str!("../../🦀️.rs");
-    let retry = &source[source.find("EnergySimulationEventKind::Retry(request)").expect("retry")..source.find("EnergySimulationEventKind::Cancel(request)").expect("cancel")];
-    assert!(!retry.contains("unwrap_or_default"));
-    assert!(retry.contains("matches_request(request)"));
-    assert!(retry.contains("state.config"));
-}
-
-#[test]
 fn partial_capture_closes_one_nested_character_or_item_per_grant() {
     let mut capture = ModelCapture::new();
     capture.model.name = "Gebäude".into();
@@ -440,64 +341,15 @@ fn partial_capture_closes_one_nested_character_or_item_per_grant() {
     let mut turns = 0;
     while !close.terminal_is_empty() {
         match close.close_step(4) {
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => {
+            InteractiveJobCloseStep::Pending { released_items, released_bytes } => {
                 assert!(released_items <= 1);
                 assert!(released_bytes <= 4);
             }
-            semio_framework_job::InteractiveJobCloseStep::Complete => {}
-            semio_framework_job::InteractiveJobCloseStep::Blocked => panic!("owned partial model cannot block"),
+            InteractiveJobCloseStep::Complete => {}
+            InteractiveJobCloseStep::Blocked => panic!("owned partial model cannot block"),
         }
         turns += 1;
         assert!(turns < 64);
     }
 }
-
-#[test]
-fn retirement_is_reserved_before_snapshot_or_shell_owner_move() {
-    let mut registry = Registry::new();
-    let mut shells = [0u16; SHELL_SLOTS];
-    for shell in &mut shells {
-        *shell = registry.allocate().expect("fixed shell");
-        assert!(registry.reserve_shell_retirement(*shell));
-        assert!(registry.reserve_shell_recovery(*shell));
-    }
-    assert!(registry.allocate().is_none());
-    assert!(registry.retire_shell(shells[0]));
-    let source = include_str!("../../🦀️.rs");
-    let reconcile = &source[source.find("pub fn reconcile(").expect("reconcile")..source.find("pub fn with_projection").expect("projection")];
-    assert!(reconcile.find("reserve_shell_retirement").expect("reservation") < reconcile.find("take_snapshot_read").expect("snapshot move"));
-    assert!(reconcile.find("reserve_shell_recovery").expect("recovery reservation") < reconcile.find("take_snapshot_read").expect("snapshot move"));
-    assert!(reconcile.find("reserve_shell_retirement").expect("reservation") < reconcile.find("MountedState::new").expect("shell owner move"));
-}
-
-#[test]
-fn every_worker_drop_publishes_exact_fixed_recovery_identity() {
-    let identity = MountedIdentity {
-        app_instance_id: 31,
-        request: 41,
-        document_revision: RevisionId(2),
-        document_generation: Generation(3),
-        canonical_base_revision: [4; 32],
-        operation: OperationId(5),
-        generation: Generation(6),
-        config_digest: 7,
-        operation_seed: 8,
-        job: JOB_TAG | 9,
-    };
-    let shell = 3;
-    drop(EnergyMountedBoundedJob { shell_index: shell, shell: Rc::new(RefCell::new(None)), identity });
-    let recovered = RECOVERY.with(|recovery| recovery.borrow_mut()[shell as usize].take()).expect("normal, lost, panic and cancellation share one unconditional Drop publisher");
-    assert_eq!(recovered.shell, shell);
-    assert_eq!(recovered.identity, identity);
-}
-
-#[test]
-fn rejected_whole_capture_and_terminal_loss_mutations_are_absent() {
-    let source = include_str!("../../🦀️.rs");
-    for forbidden in [concat!("self.capture", ".take()"), "clean_terminal", "state.abandoned", "try_borrow_mut() {\n            if let Some(state) = owner.as_mut() {\n                state.abandoned"] {
-        assert!(!source.contains(forbidden), "owner-loss mutation survived: {forbidden}");
-    }
-    assert!(source.contains("capture_close"));
-    assert!(source.contains("RECOVERY.with"));
-    assert!(source.contains("worker_returned"));
-}
+//#endregion 🧮️Capture

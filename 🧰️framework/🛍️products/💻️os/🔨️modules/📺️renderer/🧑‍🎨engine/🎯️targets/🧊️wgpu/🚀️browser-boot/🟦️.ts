@@ -2,6 +2,7 @@
 /** @emoji 🧵️ Browser UI isolate host for the dedicated frame Worker. */
 
 import { BrowserFrameTransport, browserFrameEventFromDom, browserFrameEventIsReplaceable, type BrowserFrameDomEvent, type BrowserFrameFallbackState, type BrowserFrameIntrospectionProbe, type BrowserFrameWorkerFaultCode } from "../🚚️browser-frame-transport/🟦️.ts";
+import { createWgpuPageHostIo } from "../🚪️host-io/🟦️.ts";
 import { setInteractiveJobPort } from "../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔌️Ports/📡️interactive-jobs/🟦️.ts";
 import { TURN_DIAGNOSTICS_KEY, setTurnDiagnostics } from "../⏱️turn-budget/🟦️.ts";
 import { describeBrowserBootPhase } from "../🫀️boot-liveness/🟦️.ts";
@@ -96,10 +97,10 @@ function attachIntrospectionBindings(transport: BrowserFrameTransport): () => vo
  * a screen-reader user's own tooling) can address it. */
 export const WGPU_ACCESSIBILITY_MIRROR_ID = "semio-wgpu-accessibility";
 
-/** ♿️ How long the mirror waits after one refresh before answering another, however much input
- * arrives in between. The projection crosses the Worker seam, so refreshing per input turn would put
- * a message round-trip on every pointer move; coalescing to this floor keeps it event-driven (nothing
- * ticks while nothing happens) without paying per event. */
+/** ♿️ How long the mirror waits after one refresh before answering another, however many frames
+ * arrive in between. The projection crosses the Worker seam, so refreshing per frame would put a
+ * message round-trip on every pointer move; coalescing to this floor keeps it event-driven (nothing
+ * ticks while nothing happens) without paying per frame. */
 const ACCESSIBILITY_REFRESH_FLOOR_MS = 400;
 
 /** ♿️ One node of the renderer's published accessibility tree — `ui_contract`'s own
@@ -125,6 +126,11 @@ type AccessibilityProjectionNode = {
   readonly valueText?: string;
   readonly busy?: boolean;
 };
+
+/** ♿️ One live window's slice of the published tree. The renderer announces EVERY window (a dock
+ * mounts several, and a reader must reach all of them), so the mirror is a concatenation in the
+ * renderer's own window order and each element carries its `data-window`. */
+type AccessibilityProjectionWindow = { readonly windowId: string; readonly nodes: readonly AccessibilityProjectionNode[] };
 
 /**
  * @emoji ♿️ The ARIA subtree that gives a GPU canvas an accessibility tree at all.
@@ -155,38 +161,42 @@ function accessibilityMirror(root: HTMLElement, transport: BrowserFrameTransport
   let pending = false;
   let disposed = false;
 
-  const paint = (nodes: readonly AccessibilityProjectionNode[]): void => {
-    const elements = nodes.map((node) => {
-      const element = document.createElement("div");
-      element.setAttribute("role", node.role);
-      element.tabIndex = -1;
-      element.dataset.nodeId = String(node.nodeId);
-      element.dataset.nodeKey = node.key;
-      element.dataset.depth = String(node.depth);
-      if (node.label !== undefined) element.setAttribute("aria-label", node.label);
-      if (node.live !== "off") element.setAttribute("aria-live", node.live);
-      if (node.shortcut !== undefined) element.setAttribute("aria-keyshortcuts", node.shortcut);
-      if (node.hidden === true) element.setAttribute("aria-hidden", "true");
-      if (node.disabled === true) element.setAttribute("aria-disabled", "true");
-      if (node.valueMin !== undefined) element.setAttribute("aria-valuemin", String(node.valueMin));
-      if (node.valueMax !== undefined) element.setAttribute("aria-valuemax", String(node.valueMax));
-      if (node.valueNow !== undefined) element.setAttribute("aria-valuenow", String(node.valueNow));
-      if (node.valueText !== undefined) element.setAttribute("aria-valuetext", node.valueText);
-      if (node.busy === true) element.setAttribute("aria-busy", "true");
-      if (node.focused === true) element.dataset.focused = "true";
-      if (node.focusable === true) element.dataset.focusable = "true";
-      if (node.actionable === true) element.dataset.actionable = "true";
-      if (node.description !== undefined) {
-        const description = document.createElement("span");
-        description.id = `${WGPU_ACCESSIBILITY_MIRROR_ID}-${node.nodeId}-desc`;
-        description.textContent = node.description;
-        element.setAttribute("aria-describedby", description.id);
-        element.appendChild(description);
-      }
-      return element;
-    });
+  const element = (surface: AccessibilityProjectionWindow, node: AccessibilityProjectionNode): HTMLElement => {
+    const element = document.createElement("div");
+    element.setAttribute("role", node.role);
+    element.tabIndex = -1;
+    element.dataset.window = surface.windowId;
+    element.dataset.nodeId = String(node.nodeId);
+    element.dataset.nodeKey = node.key;
+    element.dataset.depth = String(node.depth);
+    if (node.label !== undefined) element.setAttribute("aria-label", node.label);
+    if (node.live !== "off") element.setAttribute("aria-live", node.live);
+    if (node.shortcut !== undefined) element.setAttribute("aria-keyshortcuts", node.shortcut);
+    if (node.hidden === true) element.setAttribute("aria-hidden", "true");
+    if (node.disabled === true) element.setAttribute("aria-disabled", "true");
+    if (node.valueMin !== undefined) element.setAttribute("aria-valuemin", String(node.valueMin));
+    if (node.valueMax !== undefined) element.setAttribute("aria-valuemax", String(node.valueMax));
+    if (node.valueNow !== undefined) element.setAttribute("aria-valuenow", String(node.valueNow));
+    if (node.valueText !== undefined) element.setAttribute("aria-valuetext", node.valueText);
+    if (node.busy === true) element.setAttribute("aria-busy", "true");
+    if (node.focused === true) element.dataset.focused = "true";
+    if (node.focusable === true) element.dataset.focusable = "true";
+    if (node.actionable === true) element.dataset.actionable = "true";
+    if (node.description !== undefined) {
+      const description = document.createElement("span");
+      description.id = `${WGPU_ACCESSIBILITY_MIRROR_ID}-${surface.windowId}-${node.nodeId}-desc`;
+      description.textContent = node.description;
+      element.setAttribute("aria-describedby", description.id);
+      element.appendChild(description);
+    }
+    return element;
+  };
+
+  const paint = (surfaces: readonly AccessibilityProjectionWindow[]): void => {
+    const elements = surfaces.flatMap((surface) => surface.nodes.map((node) => element(surface, node)));
     mirror.replaceChildren(...elements);
     mirror.dataset.nodeCount = String(elements.length);
+    mirror.dataset.windows = surfaces.map((surface) => surface.windowId).join(" ");
   };
 
   const pull = async (): Promise<void> => {
@@ -194,28 +204,30 @@ function accessibilityMirror(root: HTMLElement, transport: BrowserFrameTransport
     const json = await transport.introspect("accessibility");
     if (disposed || json === null || json === published) return;
     published = json;
-    let dump: { readonly nodes?: readonly AccessibilityProjectionNode[] };
+    let dump: { readonly windows?: readonly AccessibilityProjectionWindow[] };
     try {
-      dump = JSON.parse(json) as { readonly nodes?: readonly AccessibilityProjectionNode[] };
+      dump = JSON.parse(json) as { readonly windows?: readonly AccessibilityProjectionWindow[] };
     } catch {
       return;
     }
-    paint(dump.nodes ?? []);
+    paint(dump.windows ?? []);
   };
 
-  /** ♿️ Asks for a refresh, coalesced onto the floor above — an input burst produces one pull, not one per event. */
+  /** ♿️ Asks for a refresh, coalesced onto the floor above — a frame burst produces one pull, not one
+   * per frame. The pull is ALWAYS scheduled off the caller: the driving hook is the transport's own
+   * per-frame directive hook, which runs inside the UI turn's executing clock, and `introspect`
+   * flushes a batch — doing that re-entrantly from inside frame-message handling is exactly the kind
+   * of thing a production accessibility path must not do. */
   const refresh = (): void => {
     if (disposed || pending) return;
-    const waited = performance.now() - lastAt;
-    if (waited >= ACCESSIBILITY_REFRESH_FLOOR_MS) {
-      void pull();
-      return;
-    }
     pending = true;
-    window.setTimeout(() => {
-      pending = false;
-      if (!disposed) void pull();
-    }, ACCESSIBILITY_REFRESH_FLOOR_MS - waited);
+    window.setTimeout(
+      () => {
+        pending = false;
+        if (!disposed) void pull();
+      },
+      Math.max(0, ACCESSIBILITY_REFRESH_FLOOR_MS - (performance.now() - lastAt)),
+    );
   };
 
   return {
@@ -402,6 +414,10 @@ async function mount(root: HTMLElement): Promise<void> {
     boot: { bindingsModuleUrl: RENDERER_MODULE_URL, bindingsWasmUrl: RENDERER_WASM_URL, canvas: offscreen, width, height, dpr, pluginVariant: descriptor.pluginVariant, locale: locale(), appRole: descriptor.appRole, appMode: descriptor.appMode, appExample: descriptor.appExample, hub: descriptor.hub },
     requestAnimationFrame: (callback) => window.requestAnimationFrame(callback),
     cancelAnimationFrame: (handle) => window.cancelAnimationFrame(handle),
+    // 🚪️ The PAGE half of the shell's file door. The frame Worker owns the whole shell but has no
+    // `document`, so `Export Document…`'s `<a download>` and `Import Document…`'s `<input type="file">`
+    // live here (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    hostIo: createWgpuPageHostIo(),
     onProgress: (stage, progress, worker) => {
       status.textContent = `${stage} ${Math.round(progress * 100)}%${worker.degraded ? (locale() === "de" ? " · verzögerte Taktung" : " · deferred cadence") : ""}`;
       status.dataset.workerDegraded = worker.degraded ? "true" : "false";
@@ -409,7 +425,6 @@ async function mount(root: HTMLElement): Promise<void> {
     },
     onUiTurn: (outcome) => {
       canvas.dataset.uiTurn = `${outcome.verdict}:${outcome.site}:${outcome.executingMs.toFixed(3)}`;
-      accessibility?.refresh();
     },
     onReady: () => {
       status.remove();
@@ -420,10 +435,19 @@ async function mount(root: HTMLElement): Promise<void> {
       transport.enqueueReplaceable(browserFrameEventFromDom({ type: "resize", clientWidth: canvas.clientWidth, clientHeight: canvas.clientHeight }, dpr) as Extract<ReturnType<typeof browserFrameEventFromDom>, { kind: "resize" }>);
       canvas.focus({ preventScroll: true });
     },
+    // 🖼️ The FRAME channel — raised for every frame the Worker produced and this isolate accepted.
+    // 🩸️ The ARIA mirror used to refresh from `onUiTurn`, which the transport raises ONLY for a turn
+    // that breached its budget ceiling (`observeUiTurn`: `verdict !== "admitted"`). A healthy shell
+    // overruns once, at boot, so the mirror was painted exactly once — from a pull issued before the
+    // guest had published any document — and never again: `nodeCount 0` on 6118 where the lane that
+    // built it had measured 34, with no source change in between, and every later document (a locale
+    // switch, an example switch, a selection) invisible to a reader even when the boot race happened
+    // to win (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     onDirectives: ({ cursor, fullscreen }) => {
       canvas.style.cursor = cursor;
       if (fullscreen === true) void canvas.requestFullscreen().catch(() => {});
       if (fullscreen === false && document.fullscreenElement) void document.exitFullscreen().catch(() => {});
+      accessibility?.refresh();
     },
     onFault: (code: BrowserFrameWorkerFaultCode, detail, fallback) => {
       cleanupInput();

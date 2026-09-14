@@ -136,10 +136,20 @@ mod wasm_program_exchange {
         // and threaded onto `InvocationResult` so `🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`'s check-in tracking has a real
         // signal to fold, exactly like every other wire payload this module already decodes.
         let mut history_patch: Option<semio_framework::kernel::HistoryPatch> = None;
+        // 🐢️ The wire frame has always CARRIED `ui_scope` (`📡️spr/🧵️channel/🦀️.rs`'s
+        // `AppFrame::Invocation`); this decoder pattern-matched past it with `..` and handed the shell
+        // a hardcoded `UiDirtyScope::default()`, so the native shell could only ever refresh
+        // everything. An absent/undecodable field is still `Full` — the safe default the type's own
+        // `Default` names — but a scope the guest actually published now reaches the shell
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        let mut ui_scope = semio_framework::kernel::UiDirtyScope::default();
         for frame in &outcome.frames {
             match frame {
-                AppFrame::Invocation { in_reply_to, output: out_bytes, diagnostics: diag_bytes, history_patch: history_patch_bytes, mutations: mutation_bytes, inverse_group: inverse_group_bytes, .. } if *in_reply_to == seq => {
+                AppFrame::Invocation { in_reply_to, output: out_bytes, diagnostics: diag_bytes, ui_scope: ui_scope_bytes, history_patch: history_patch_bytes, mutations: mutation_bytes, inverse_group: inverse_group_bytes, .. } if *in_reply_to == seq => {
                     output = decode_wire::<DslValue>(out_bytes)?;
+                    if !ui_scope_bytes.is_empty() {
+                        ui_scope = decode_wire::<semio_framework::kernel::UiDirtyScope>(ui_scope_bytes).unwrap_or_default();
+                    }
                     diagnostics = decode_wire(diag_bytes).unwrap_or_default();
                     if !history_patch_bytes.is_empty() {
                         history_patch = decode_wire::<semio_framework::kernel::HistoryPatch>(history_patch_bytes).ok();
@@ -170,7 +180,7 @@ mod wasm_program_exchange {
             diagnostics,
             requested_effects: std::mem::take(&mut outcome.effects),
             events,
-            ui_scope: semio_framework::kernel::UiDirtyScope::default(),
+            ui_scope,
             history_patch,
         })
     }
@@ -704,12 +714,13 @@ async fn handle_action_js(handle: &Rc<JsValue>, instance_id: u32, action_json: &
         });
     };
     let context_json = serde_json::json!({
-        "viewState": view_state,
+        "viewStatePack": view_state_pack_base64(view_state)?,
         "actor": "local",
     })
     .to_string();
+    let invocation_pack = invocation_pack_base64(action_json)?;
     let result = action
-        .call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(action_json), &JsValue::from_str(&context_json))
+        .call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(&invocation_pack), &JsValue::from_str(&context_json))
         .map_err(|error| format!("handle_action failed: {}", describe_js_rejection(&error)))?;
     let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
         JsFuture::from(promise.clone()).await.map_err(|error| format!("handle_action promise failed: {}", describe_js_rejection(&error)))?
@@ -770,12 +781,13 @@ async fn push_scoped_contributions_js(handle: &Rc<JsValue>, instance_id: u32, ap
 #[cfg(target_arch = "wasm32")]
 async fn handle_command_js(handle: &Rc<JsValue>, instance_id: u32, command_json: &str, view_state: &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String> {
     let command = Reflect::get(handle.as_ref(), &JsValue::from_str("handleCommand")).map_err(|_| "handleCommand missing")?.dyn_into::<Function>().map_err(|_| "handleCommand is not callable")?;
-    let context_json = serde_json::json!({ "viewState": view_state, "actor": "local" }).to_string();
+    let context_json = serde_json::json!({ "viewStatePack": view_state_pack_base64(view_state)?, "actor": "local" }).to_string();
+    let invocation_pack = invocation_pack_base64(command_json)?;
     // 🩺️ The cause, not the verb: a swallowed rejection here reported only `handleCommand promise
     // failed` for every guest fault, command-address mistake and host-side throw alike
     // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     let result = command
-        .call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(command_json), &JsValue::from_str(&context_json))
+        .call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(&invocation_pack), &JsValue::from_str(&context_json))
         .map_err(|error| format!("handleCommand failed: {}", describe_js_rejection(&error)))?;
     let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
         JsFuture::from(promise.clone()).await.map_err(|error| format!("handleCommand promise failed: {}", describe_js_rejection(&error)))?
@@ -830,7 +842,7 @@ const BROWSER_DOCUMENT_ASSEMBLY_OPPORTUNITIES: usize = ui_contract::UI_DOCUMENT_
 #[cfg(target_arch = "wasm32")]
 async fn render_with_document_js(handle: &Rc<JsValue>, instance_id: u32, surface_id: &str, body_key: &str, view_state: &ViewModel, _document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String> {
     let render = get_fn(handle.as_ref(), "renderDocument")?;
-    let view_json = serde_json::to_string(view_state).map_err(|error| error.to_string())?;
+    let view_json = view_state_pack_base64(view_state)?;
     let result = render
         .call4(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(surface_id), &JsValue::from_str(body_key), &JsValue::from_str(&view_json))
         .map_err(|error| format!("renderDocument failed: {}", describe_js_rejection(&error)))?;
@@ -947,6 +959,47 @@ async fn window_engagements_js(handle: &Rc<JsValue>, instance_id: u32, view_stat
     let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() { JsFuture::from(promise.clone()).await.map_err(|_| "window_engagements promise failed")? } else { result };
     let json = resolved.as_string().ok_or("window_engagements not string")?;
     serde_json::from_str(&json).map_err(|err| format!("window_engagements parse: {err}"))
+}
+
+/// 📦️ The view state as the `pk:`-prefixed pack payload the JS bridge forwards to the guest verbatim.
+///
+/// `serde_json` writes a `u64` as `1` and an `f64` as `1.0`, but `JSON.parse` collapses both onto one
+/// JS `number` and `encodePackValue` then writes every one of them as `TAG_F64` — so a view state that
+/// crossed this seam as JSON reached the guest with every integer widened to a float, and the first
+/// integer-typed view-state field (`toolRunTraceCursorByWindowId.<window>.run`, a `u64`) failed
+/// `FromValue` and took the WHOLE dispatch with it: `handle_action promise failed: … expected an exact
+/// u64 integer, found Float(1.0)`. Pack carries integers losslessly and TypeScript's
+/// `packValueFromBase64` is this function's declared twin, so the JS surface stays string-in/string-out
+/// while the payload it carries stops being lossy (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+///
+/// @see `🏪️store/🦀️.rs` `pack_rt::pack_value_to_base64`, `💻️os/🟦️.ts` `packValueFromBase64`
+/// 📦️ One `ActionInvocation`/`CommandInvocation` as the `pk:`-prefixed pack payload the JS bridge
+/// forwards to the guest verbatim — the invocation half of the same seam
+/// [`view_state_pack_base64`] carries the view state across, and for the same reason.
+///
+/// `JSON.parse` collapses `0` and `0.0` onto one JS `number` and `encodePackValue` then writes every
+/// one of them as `TAG_F64`, so every INTEGER argument an action carried reached the guest as a float
+/// and failed its `FromValue` decode. That is not hypothetical: an import chunk envelope
+/// (`{payload, name, chunk: u32, chunkCount: u32}`) is refused outright by the unsigned arm
+/// (`🌱️value/🔁️codec/🦀️.rs`), so `Import Document…` could not have landed a single chunk on this
+/// target no matter how the picker behaved (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+///
+/// The repo's own JSON reader is exact about integrality where `JSON.parse` is not — it answers
+/// `Number::UInt` for `0` and `Number::Float` for `0.0` — so re-reading the invocation text HERE and
+/// handing pack onward is lossless end to end.
+///
+/// @see `🏪️store/🦀️.rs` `pack_rt::pack_value_to_base64`, `💻️os/🟦️.ts` `packValueFromBase64`
+#[cfg(target_arch = "wasm32")]
+fn invocation_pack_base64(invocation_json: &str) -> Result<String, String> {
+    let parsed = dsl::os_pack::json::parse(invocation_json).map_err(|error| error.to_string())?;
+    let value = dsl::os_pack::json::to_dsl_value(&parsed);
+    Ok(dsl::os_store::pack_rt::pack_value_to_base64(&dsl::os_store::pack_rt::encode_wire_value(&value)))
+}
+
+#[cfg(target_arch = "wasm32")]
+fn view_state_pack_base64(view_state: &ViewModel) -> Result<String, String> {
+    let value = dsl::to_dsl_value(view_state).map_err(|error| error.to_string())?;
+    Ok(dsl::os_store::pack_rt::pack_value_to_base64(&dsl::os_store::pack_rt::encode_wire_value(&value)))
 }
 
 #[cfg(target_arch = "wasm32")]

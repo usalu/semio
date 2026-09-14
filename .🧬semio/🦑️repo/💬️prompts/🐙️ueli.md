@@ -584,6 +584,13 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+All folders plural
+
+violations e.g.
+✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧪️tests
+binary
+---
+
 All tools, commands and utlities must be
 utilities can only be active when no tool or command is running.
 When a tool is active or  

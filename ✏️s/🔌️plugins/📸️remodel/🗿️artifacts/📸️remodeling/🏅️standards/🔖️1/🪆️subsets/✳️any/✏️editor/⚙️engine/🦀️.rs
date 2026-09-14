@@ -12,7 +12,7 @@
 use crate::editor::remodeling::engine::{camera as remodeling_camera, geo as remodeling_geo, mesh as remodeling_mesh, reconstruction as remodeling_engine, sfm as remodeling_sfm, video as remodeling_video};
 #[cfg(test)]
 use crate::ImageAsset;
-use crate::{CalibrationState, CameraPosePreview, DenseResolution, QcReportSnapshot, ReconstructionParams, ReconstructionStage, RobustLossKind, VideoCodec as DocumentVideoCodec, WatertightReportSnapshot};
+use crate::{CalibrationState, CameraPosePreview, DenseResolution, QcReportSnapshot, ReconstructionParams, RobustLossKind, VideoCodec as DocumentVideoCodec, WatertightReportSnapshot};
 
 //#region 🔖️EngineMapping
 /// 🔭️ The calibrated focal ratio the engine's own calibration-free intrinsics guess needs, or `None`
@@ -75,23 +75,6 @@ pub fn build_engine_params(params: &ReconstructionParams, calibration: &Calibrat
     engine_params.geo_enabled = params.geo.enabled;
     engine_params.geo_cell_size = f64::from(params.geo.dsm_cell_m);
     engine_params
-}
-
-pub fn map_engine_stage(stage: remodeling_engine::EngineStage) -> ReconstructionStage {
-    match stage {
-        remodeling_engine::EngineStage::Idle => ReconstructionStage::Idle,
-        remodeling_engine::EngineStage::ExtractingFeatures => ReconstructionStage::ExtractingFeatures,
-        remodeling_engine::EngineStage::MatchingFeatures => ReconstructionStage::MatchingFeatures,
-        remodeling_engine::EngineStage::EstimatingPoses => ReconstructionStage::EstimatingPoses,
-        remodeling_engine::EngineStage::BundleAdjusting => ReconstructionStage::BundleAdjusting,
-        remodeling_engine::EngineStage::DenseStereo => ReconstructionStage::DenseStereo,
-        remodeling_engine::EngineStage::FusingVolume => ReconstructionStage::FusingVolume,
-        remodeling_engine::EngineStage::ExtractingSurface => ReconstructionStage::ExtractingSurface,
-        remodeling_engine::EngineStage::CleaningMesh => ReconstructionStage::CleaningMesh,
-        remodeling_engine::EngineStage::Texturing => ReconstructionStage::Texturing,
-        remodeling_engine::EngineStage::Done => ReconstructionStage::Done,
-        remodeling_engine::EngineStage::Failed => ReconstructionStage::Failed,
-    }
 }
 
 /// 📍️ World-space camera center: `inverse().t` of the world→camera `Se3` (i.e. `-R⁻¹·t`).

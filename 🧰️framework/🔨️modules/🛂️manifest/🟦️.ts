@@ -72,6 +72,7 @@ import type {
   ToolRunReasonDefinition as GeneratedToolRunReasonDefinition,
   ToolRunRebasePolicy as GeneratedToolRunRebasePolicy,
   ToolRunReconfigurePolicy as GeneratedToolRunReconfigurePolicy,
+  ToolRunSettingsReads as GeneratedToolRunSettingsReads,
   ToolRunStageDefinition as GeneratedToolRunStageDefinition,
   ToolRunTraceKind as GeneratedToolRunTraceKind,
   ToolRunVerdict as GeneratedToolRunVerdict,
@@ -607,6 +608,7 @@ export type ToolRunCounterDefinition = GeneratedToolRunCounterDefinition;
 export type ToolRunReasonDefinition = GeneratedToolRunReasonDefinition;
 export type ToolRunRebasePolicy = GeneratedToolRunRebasePolicy;
 export type ToolRunReconfigurePolicy = GeneratedToolRunReconfigurePolicy;
+export type ToolRunSettingsReads = GeneratedToolRunSettingsReads;
 export type ToolRunTraceKind = GeneratedToolRunTraceKind;
 export type ToolRunVerdict = GeneratedToolRunVerdict;
 export type JobKindId = GeneratedJobKindId;

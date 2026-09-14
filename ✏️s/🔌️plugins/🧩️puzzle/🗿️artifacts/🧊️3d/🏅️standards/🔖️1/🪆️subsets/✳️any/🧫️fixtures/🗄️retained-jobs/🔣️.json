@@ -37,8 +37,6 @@
     "engagementInput",
     "engagementRepeatLast",
     "engagementSubmit",
-    "cancelFillBuild",
-    "fillBuildTick",
     "focusSelection",
     "hoverSuggestion",
     "openVortexSuggestions",
@@ -68,7 +66,7 @@
     "setVortexKindWeight",
     "setVortexShow",
     "setVoxelDims",
-    "suggestionsTick",
+    "targetBrushSuggestions",
     "toggleSun"
   ],
   "evidenceToolIds": [
@@ -85,7 +83,6 @@
     "engagementInput",
     "engagementRepeatLast",
     "engagementSubmit",
-    "fillBuildTick",
     "focusSelection",
     "hoverSuggestion",
     "openAddObjectDialog",
@@ -118,7 +115,7 @@
     "setVortexKindWeight",
     "setVortexShow",
     "setVoxelDims",
-    "suggestionsTick",
+    "targetBrushSuggestions",
     "toggleSun",
     "transformBegin",
     "transformEnd",
@@ -243,6 +240,11 @@
       "publish",
       "closeOwner"
     ],
+    "targetBrushSuggestions": [
+      "boundedFieldDecode",
+      "publish",
+      "closeOwner"
+    ],
     "hoverSuggestion": [
       "boundedFieldDecode",
       "exactTypedMutation",
@@ -353,17 +355,6 @@
       "publish",
       "closeOwner"
     ],
-    "fillBuildTick": [
-      "decode",
-      "object",
-      "vortex",
-      "attraction",
-      "objectKind",
-      "vortexKind",
-      "checkpointByte",
-      "publish",
-      "closeOwner"
-    ],
     "registerBrushMesh": [
       "decode",
       "position",
@@ -379,16 +370,6 @@
       "objectKind",
       "vortexKind",
       "checkpointByte",
-      "publish",
-      "closeOwner"
-    ],
-    "suggestionsTick": [
-      "decode",
-      "object",
-      "vortex",
-      "attraction",
-      "objectKind",
-      "vortexKind",
       "publish",
       "closeOwner"
     ],
@@ -1894,6 +1875,7 @@
         "setVortexDirection",
         "setBrushPlacementOverlapBudget",
         "closeVortexSuggestions",
+        "targetBrushSuggestions",
         "hoverSuggestion",
         "engagementControlSelect",
         "engagementInput"
@@ -1932,6 +1914,7 @@
         "setVortexShow",
         "setVortexDirection",
         "closeVortexSuggestions",
+        "targetBrushSuggestions",
         "hoverSuggestion",
         "engagementControlSelect",
         "engagementInput"
@@ -2457,10 +2440,8 @@
       "toolIds": [
         "cycleBrushCandidate",
         "cycleBrushCandidateBack",
-        "fillBuildTick",
         "registerBrushMesh",
-        "setFillCount",
-        "suggestionsTick"
+        "setFillCount"
       ],
       "boundaries": [
         "decode",
@@ -2484,10 +2465,8 @@
       "toolIds": [
         "cycleBrushCandidate",
         "cycleBrushCandidateBack",
-        "fillBuildTick",
         "registerBrushMesh",
-        "setFillCount",
-        "suggestionsTick"
+        "setFillCount"
       ],
       "boundaries": [
         "decode",
@@ -2510,7 +2489,6 @@
       "id": "precomputeStaleGeneration",
       "toolIds": [
         "acceptSuggestion",
-        "fillBuildTick",
         "setFillCount"
       ],
       "authority": {
@@ -2526,10 +2504,8 @@
       "toolIds": [
         "acceptSuggestion",
         "cycleBrushCandidate",
-        "fillBuildTick",
         "registerBrushMesh",
-        "setFillCount",
-        "suggestionsTick"
+        "setFillCount"
       ],
       "control": "faultRetryAckIncrementalCloseReplay",
       "expected": "sameSemanticDigestTerminalEmpty",

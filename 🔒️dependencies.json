@@ -1570,6 +1570,18 @@
     },
     {
       "ecosystem": "rust",
+      "name": "fdg-sim",
+      "version": "0.9.1",
+      "kinds": [
+        "test-runner"
+      ],
+      "users": [
+        "🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "productionReachable": false
+    },
+    {
+      "ecosystem": "rust",
       "name": "flate2",
       "version": "1",
       "kinds": [

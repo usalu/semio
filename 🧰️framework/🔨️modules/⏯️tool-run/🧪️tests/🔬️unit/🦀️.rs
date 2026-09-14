@@ -170,6 +170,7 @@ fn tick(value: &Value) -> ToolRunTick {
         append_ops: value["appendOps"].as_array().expect("appendOps").iter().map(hex).collect(),
         append_entities: value["appendEntities"].as_array().expect("appendEntities").iter().map(u64_of).collect(),
         retract_to: value.get("retractTo").map(u32_of),
+        payload: value.get("payload").map(hex),
     }
 }
 
@@ -406,9 +407,36 @@ fn definition_round_trips_through_serde_and_value_and_validates() {
     let mut invalid = definition.clone();
     invalid.counters = (0..9).map(|index| ToolRunCounterDefinition { id: format!("c{index}"), label: LocalizedLabel::native("C", "C") }).collect();
     assert_eq!(invalid.validate(), Err(ToolRunDefinitionError::TooManyCounters));
+    let mut invalid = definition.clone();
+    invalid.settings.window_config.insert("main".into(), vec!["/grid/~2".into()]);
+    assert_eq!(invalid.validate(), Err(ToolRunDefinitionError::InvalidSettingsPointer("/grid/~2".into())));
+    let mut undeclared = law["definition"].clone();
+    undeclared.as_object_mut().expect("definition object").remove("settings");
+    let undeclared: ToolRunDefinition = serde_json::from_value(undeclared).expect("a definition without settings deserializes");
+    assert!(undeclared.settings.is_empty(), "an absent settings declaration reads no settings");
+    assert!(serde_json::to_value(&undeclared).expect("serializes").get("settings").is_none(), "an empty declaration stays off the wire");
     let mut invalid = definition;
     invalid.stages.clear();
     assert_eq!(invalid.validate(), Err(ToolRunDefinitionError::NoStages));
+}
+
+/// ⚖️ LAW: every `settingsPointers` row resolves to its fixture value over the fixture document, exactly as the
+/// `serde_json` RFC 6901 implementation (`Value::pointer`, the oracle) resolves it; malformed pointers name nothing.
+#[test]
+fn settings_pointers_resolve_like_the_rfc_6901_oracle() {
+    let law = fixture(LIFECYCLE);
+    let cases = &law["settingsPointers"];
+    let document = dsl::DslValue::from(cases["document"].clone());
+    for row in cases["rows"].as_array().expect("rows") {
+        let pointer = text(&row["pointer"]);
+        let expected = (!row["resolves"].is_null()).then(|| dsl::DslValue::from(row["resolves"].clone()));
+        assert_eq!(tool_run_pointer_value(&document, pointer).cloned(), expected, "{pointer}");
+        assert_eq!(cases["document"].pointer(pointer).cloned().map(dsl::DslValue::from), expected, "{pointer}: the oracle agrees");
+    }
+    for pointer in cases["malformed"].as_array().expect("malformed").iter().map(text) {
+        assert_eq!(tool_run_pointer_tokens(pointer), None, "{pointer}");
+        assert_eq!(tool_run_pointer_value(&document, pointer), None, "{pointer}");
+    }
 }
 //#endregion 🔖️Definition
 
@@ -696,7 +724,22 @@ fn tick_writer_sequences_steps_pages_and_retracts_pending_appends() {
 #[test]
 fn tick_codec_enforces_the_tick_byte_cap() {
     let identity = ToolRunIdentity::new(ToolRunId { app_instance_id: 0, run: 0 }, [0; 32]);
-    let tick = ToolRunTick { identity, sequence: 0, progress: None, steps: Vec::new(), trace: Vec::new(), append_ops: vec![vec![0; TOOL_RUN_TICK_BYTES_MAX]], append_entities: Vec::new(), retract_to: None };
+    let tick = ToolRunTick { identity, sequence: 0, progress: None, steps: Vec::new(), trace: Vec::new(), append_ops: vec![vec![0; TOOL_RUN_TICK_BYTES_MAX]], append_entities: Vec::new(), retract_to: None, payload: None };
     assert_eq!(tick.encode(), Err(ToolRunCodecError::Limit("tick bytes")));
 }
 //#endregion 🔖️Tick
+
+/// ⚖️ LAW: a writer's pending payload makes a tick on its own, a later payload before `finish` replaces the earlier one,
+/// and `finish` hands it over once.
+#[test]
+fn writer_payload_is_the_latest_and_makes_a_tick() {
+    let fixture = fixture(TICKS);
+    let row = fixture["ticks"].as_array().expect("ticks").iter().find(|row| row["name"] == "payload tick").expect("payload tick");
+    let mut writer = ToolRunTickWriter::new(identity(&row["tick"]["identity"]));
+    writer.payload(b"stale".to_vec());
+    writer.payload(hex(&row["tick"]["payload"]));
+    assert!(!writer.is_empty(), "a payload alone is pending work");
+    let tick = writer.finish().expect("a payload tick");
+    assert_eq!(tick.payload.as_deref(), Some(hex(&row["tick"]["payload"]).as_slice()));
+    assert!(writer.finish().is_none(), "the payload is handed over once");
+}

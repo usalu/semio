@@ -351,6 +351,9 @@ export type World3dComputeStatusV1 = {
   readonly cancellable: boolean;
   /** 🛑️ The action id a cancel affordance dispatches; empty when the producer declares none. */
   readonly cancelAction: string;
+  /** 🛑️ The arguments the affordance dispatches `cancelAction` with — string and number values only (a
+   * tool run's `{runId, generation}`); empty when the producer declares none. */
+  readonly cancelArgs: Readonly<Record<string, string | number>>;
 };
 
 const WORLD3D_EMPTY_COMPUTE_STATUS: World3dComputeStatusV1 = Object.freeze({
@@ -365,6 +368,7 @@ const WORLD3D_EMPTY_COMPUTE_STATUS: World3dComputeStatusV1 = Object.freeze({
   ratio: 1,
   cancellable: false,
   cancelAction: "",
+  cancelArgs: Object.freeze({}),
 });
 
 function world3dComputeLabel(value: unknown): World3dComputeLabelV1 | null {
@@ -372,6 +376,11 @@ function world3dComputeLabel(value: unknown): World3dComputeLabelV1 | null {
   const { en, de } = value as { en?: unknown; de?: unknown };
   if (typeof en !== "string" || typeof de !== "string" || en.length === 0 || de.length === 0) return null;
   return { en, de };
+}
+
+function world3dComputeArgs(value: unknown): Readonly<Record<string, string | number>> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return {};
+  return Object.fromEntries(Object.entries(value).filter((entry): entry is [string, string | number] => typeof entry[1] === "string" || (typeof entry[1] === "number" && Number.isFinite(entry[1]))));
 }
 
 function world3dComputeNumber(value: unknown): number {
@@ -412,6 +421,7 @@ export function world3dComputeStatusV1(statusJson: string | undefined | null): W
     ratio: typeof progress.ratio === "number" && Number.isFinite(progress.ratio) ? Math.min(Math.max(progress.ratio, 0), 1) : unitsTotal > 0 ? unitsDone / unitsTotal : 1,
     cancellable: row.cancellable === true && cancelAction.length > 0,
     cancelAction,
+    cancelArgs: world3dComputeArgs(row.cancelArgs),
   };
 }
 //#endregion ⏳️World3dComputeStatus
@@ -528,6 +538,28 @@ export function canvas2dSceneFromLanes(spine: Canvas2dScene, laneTexts: Readonly
   return sceneFromLanes(spine, laneTexts, CANVAS2D_SCENE_LANES);
 }
 //#endregion 🚚️Canvas2dSceneLanes
+
+//#region 🚚️Board2dSceneLanes
+/** 🚚️ Reserved carrier-key namespace of the board-2d lanes. */
+export const BOARD2D_SCENE_LANE_KEY_PREFIX = "framework.scene.board2d.";
+
+/** 🚚️ The board-2d payload fields that ride OUTSIDE the fixed-capacity surface doc — mirrors the Rust
+ * `Board2dSceneLane` / `BOARD2D_SCENE_LANE_*`; both pinned against
+ * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json`. */
+export const BOARD2D_SCENE_LANES: readonly SceneLane<Board2dScene>[] = [
+  { lane: "toolRunTrace", field: "toolRunTrace", bodyKey: "framework.scene.board2d.toolRunTrace", optional: true },
+];
+
+/** 🚚️ Resolves a retained node key back to the board-2d lane it carries. */
+export function board2dSceneLaneForBodyKey(bodyKey: string): SceneLane<Board2dScene> | undefined {
+  return BOARD2D_SCENE_LANES.find((lane) => lane.bodyKey === bodyKey);
+}
+
+/** 🚚️ {@link sceneFromLanes} over {@link BOARD2D_SCENE_LANES}. */
+export function board2dSceneFromLanes(spine: Board2dScene, laneTexts: ReadonlyMap<string, string>): Board2dScene {
+  return sceneFromLanes(spine, laneTexts, BOARD2D_SCENE_LANES);
+}
+//#endregion 🚚️Board2dSceneLanes
 
 /** 🔌️ One port on a node-graph node: identity + display label (direction is implied by whether the
  * record lives in the owning node's `inputs` or `outputs` array). `code`/`abbreviation`/`fullName`/
@@ -805,6 +837,10 @@ export type Board2dScene = {
   readonly brushWeightsJson: string;
   readonly placementCompatibilityJson: string;
   readonly lodMode: string;
+  /** ⏯️ The base64url `ToolRunTraceDelta` paged to this board — carried outside the doc, see {@link BOARD2D_SCENE_LANES}. */
+  readonly toolRunTrace?: string;
+  /** 🚚️ The spine's lane manifest — see {@link BOARD2D_SCENE_LANES}. */
+  readonly lanes?: readonly SceneLaneRef[];
 };
 
 /** 🖊️ An ink-canvas surface scene payload — mirrors the wasm `componentScene` node's `inkCanvas` field. `documentJson` is opaque to the framework: the owning program defines its shape, conventionally an array of items (e.g. stroke | shape | text | image) each carrying its own transform; `selectionJson` is a `string[]` of selected item ids. */
@@ -920,7 +956,7 @@ export type ComponentSceneHostProps = {
    * returned. A background tick loop (`createInFlightSkippingInterval`) can only gate itself on the
    * previous tick if this promise means "settled": with a `void` contract the loop's own in-flight flag
    * cleared immediately and 120 ms ticks queued into the serialized guest until the per-actor turn queue
-   * overflowed (measured 2026-09-09: 252 `fillBuildTick`s in 35 s, 38 rejected with `queue is full`).
+   * overflowed (measured 2026-09-09: 252 polling ticks in 35 s, 38 rejected with `queue is full`).
    * A host with nothing to await may still return `void`. */
   readonly onAction: (action: ActionDescriptor) => void | Promise<void>;
   readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;

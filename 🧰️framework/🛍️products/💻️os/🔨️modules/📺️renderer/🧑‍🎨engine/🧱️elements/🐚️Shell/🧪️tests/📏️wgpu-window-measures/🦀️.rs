@@ -122,7 +122,7 @@ fn window_measures_overlay_paints_and_dispatches_every_gesture_like_react() {
         let rect = Rect::new(0.0, 0.0, Theme::default().window_measures_default_width, 720.0);
         let mut painted = paint_overlay(&surface, &document, rect);
         assert!(painted.instances > 0, "{name}: the overlay painted instances");
-        let targets: Vec<&str> = painted.input.hit_targets.iter().filter_map(|hit| hit.control_id.as_deref()).collect();
+        let targets: Vec<&str> = painted.input.staged_hits().iter().filter_map(|hit| hit.control_id.as_deref()).collect();
         for measure in ["puzzle3d-fill-count", "grid-opacity", "projection", "grid-visible", "distribution.header-slider"] {
             assert!(targets.contains(&format!("{window_id}/{measure}").as_str()), "{name}: `{measure}` is painted and pointer-reachable: {targets:?}");
         }
@@ -135,7 +135,7 @@ fn window_measures_overlay_paints_and_dispatches_every_gesture_like_react() {
             assert!(shell.chrome_build.content_has_focus(&surface), "{name}: keyboard focus lands in the overlay surface");
         }
         if let Some(control) = gesture["press"].as_str() {
-            let hit = painted.input.hit_targets.iter().find(|hit| hit.control_id.as_deref() == Some(control)).unwrap_or_else(|| panic!("{name}: `{control}` registered a pointer target")).rect;
+            let hit = painted.input.staged_hits().iter().find(|hit| hit.control_id.as_deref() == Some(control)).unwrap_or_else(|| panic!("{name}: `{control}` registered a pointer target")).rect;
             let (x, y) = (hit.x + hit.w * 0.5, hit.y + hit.h * 0.5);
             crate::interpreter::dispatch_ui_event(&surface, ui_wgpu::wgpu::UiEvent::PointerDown { x, y, button: ui_wgpu::wgpu::PointerButton::Primary }, &mut painted.input);
             crate::interpreter::dispatch_ui_event(&surface, ui_wgpu::wgpu::UiEvent::PointerUp { x, y, button: ui_wgpu::wgpu::PointerButton::Primary }, &mut painted.input);

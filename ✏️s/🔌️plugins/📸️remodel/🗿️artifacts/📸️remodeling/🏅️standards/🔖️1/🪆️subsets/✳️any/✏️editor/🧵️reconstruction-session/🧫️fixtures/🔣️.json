@@ -1,0 +1,134 @@
+{
+  "schema": "remodeling.reconstruction.run.v1",
+  "cases": [
+    {
+      "document": "checker",
+      "description": "Four 24×24 checker frames on one stream sampled at stride 1: every frame is accepted, all candidate matches pass, the seed pair registers two cameras and the run completes with the mesh content leaves and one commit.",
+      "final": "complete",
+      "verdictPrefix": [
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:featuresExtracted",
+        "success:featuresExtracted",
+        "success:featuresExtracted",
+        "success:featuresExtracted",
+        "success:matchAccepted",
+        "success:matchAccepted",
+        "success:matchAccepted",
+        "success:matchAccepted"
+      ],
+      "verdicts": 1490,
+      "counters": {
+        "framesAccepted": 4,
+        "framesRejected": 0,
+        "keypoints": 644,
+        "matchesAccepted": 966,
+        "matchesRejected": 0,
+        "cameras": 2,
+        "sparsePoints": 0,
+        "densePoints": 512
+      },
+      "stagesVisited": [
+        "ingest",
+        "features",
+        "matching",
+        "poses",
+        "bundle",
+        "dense",
+        "fusion",
+        "products"
+      ],
+      "appendContentOps": 6,
+      "commitReconstructionOps": 1,
+      "lastStep": {
+        "kind": "success",
+        "reason": "resultReady",
+        "args": [
+          7
+        ]
+      }
+    },
+    {
+      "document": "synthetic-orbit",
+      "description": "The committed ten-frame calibrated orbit: every frame is accepted, match candidates are accepted, rejected by the ratio test and rejected by the cross check, frames 2..9 cannot register, and surface extraction exceeds the interactive mesh envelope so the run faults with nothing provisional kept.",
+      "final": "faulted",
+      "verdictPrefix": [
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:frameAccepted",
+        "success:featuresExtracted",
+        "success:featuresExtracted",
+        "success:featuresExtracted",
+        "success:featuresExtracted",
+        "success:featuresExtracted",
+        "success:featuresExtracted",
+        "success:featuresExtracted",
+        "success:featuresExtracted",
+        "success:featuresExtracted",
+        "success:featuresExtracted",
+        "warning:matchAmbiguous",
+        "success:matchAccepted",
+        "danger:matchAsymmetric",
+        "warning:matchAmbiguous"
+      ],
+      "verdicts": 22563,
+      "counters": {
+        "framesAccepted": 10,
+        "framesRejected": 0,
+        "keypoints": 5120,
+        "matchesAccepted": 1146,
+        "matchesRejected": 21382,
+        "cameras": 2,
+        "sparsePoints": 5,
+        "densePoints": 0
+      },
+      "stagesVisited": [
+        "ingest",
+        "features",
+        "matching",
+        "poses",
+        "bundle",
+        "dense",
+        "fusion",
+        "surface"
+      ],
+      "appendContentOps": 0,
+      "commitReconstructionOps": 0,
+      "lastStep": {
+        "kind": "danger",
+        "reason": "pipelineFailed",
+        "args": [
+          8
+        ]
+      }
+    }
+  ],
+  "fuel": {
+    "document": "checker",
+    "fuelPerStep": 1,
+    "everyTickCarriesEvidence": true
+  },
+  "resume": {
+    "document": "checker",
+    "checkpointIndex": 5,
+    "firstResumedStep": "resuming"
+  },
+  "interactive": {
+    "ceilingUs": 8000,
+    "targetUs": 2000,
+    "unitDocuments": [
+      "checker",
+      "synthetic-orbit"
+    ],
+    "coldRuns": 2
+  }
+}

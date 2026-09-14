@@ -240,6 +240,55 @@ impl ToolRunTraceLayer {
             })
             .collect()
     }
+
+    /// 🎨️ One filled footprint per visible placement2d record, oldest first within each batch, faded by age; the newest
+    /// `testing` record carries `newest` so the host strokes it with the highlight.
+    pub fn placement_draws(&self, palette: &ToolRunTracePalette, visibility: ToolRunTraceVisibility) -> Vec<ToolRunTrace2dDraw> {
+        let newest_stamp = self.next_stamp.saturating_sub(1);
+        let newest_testing = self.newest_testing();
+        self.batches
+            .iter()
+            .filter(|(key, _)| key.family == ToolRunTraceFamily::Placement2d && visibility.shows(key.verdict()))
+            .flat_map(|(key, batch)| {
+                let base = palette.color(key.verdict());
+                batch.keys.iter().zip(&batch.subjects).zip(&batch.stamps).filter_map(move |((record, subject), stamp)| {
+                    let ToolRunTraceSubject::Placement2d { shape, position, rotation } = *subject else { return None };
+                    let newest = newest_testing == Some(*record);
+                    let alpha = if newest { base.a } else { base.a * tool_run_trace_fade(newest_stamp - stamp) };
+                    Some(ToolRunTrace2dDraw { shape, position, rotation, color: base.with_alpha(alpha), newest })
+                })
+            })
+            .collect()
+    }
+}
+
+/// 🔷️ The world-unit footprint a board draws for one kind of its placement2d subjects.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum ToolRunTraceShape2d {
+    Circle { radius: f64 },
+    Rectangle { width: f64, height: f64 },
+}
+
+/// 📏️ World-unit edge of a scale-1 kind footprint, the size a board fill run captures its kinds at.
+pub const BOARD2D_TOOL_RUN_TRACE_KIND_SIZE: f64 = 96.0;
+
+/// 🔷️ The footprint of every `glyphCatalogsJson.nodeKinds` row, in row order — the index a placement2d subject's
+/// `shape` names: `kindSize × scale` (a scale that is absent, non-finite or not positive reads 1), a square for
+/// shape `rectangle`, else a circle of that diameter. A malformed document has no footprints. Pinned by
+/// `🖱️ui/🎬️scene/🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json` `traceShapes`, mirrored by React's `board2dToolRunTraceShapes`.
+pub fn board2d_tool_run_trace_shapes(glyph_catalogs_json: &str) -> Vec<ToolRunTraceShape2d> {
+    let Ok(catalogs) = serde_json::from_str::<serde_json::Value>(glyph_catalogs_json) else { return Vec::new() };
+    let Some(rows) = catalogs.get("nodeKinds").and_then(serde_json::Value::as_array) else { return Vec::new() };
+    rows.iter()
+        .map(|row| {
+            let scale = row.get("scale").and_then(serde_json::Value::as_f64).filter(|scale| scale.is_finite() && *scale > 0.0).unwrap_or(1.0);
+            let size = BOARD2D_TOOL_RUN_TRACE_KIND_SIZE * scale;
+            match row.get("shape").and_then(serde_json::Value::as_str) {
+                Some("rectangle") => ToolRunTraceShape2d::Rectangle { width: size, height: size },
+                _ => ToolRunTraceShape2d::Circle { radius: size * 0.5 },
+            }
+        })
+        .collect()
 }
 
 /// 🌫️ Age fade by sequence distance: 1 for the newest record, down to the `toolRun.fadeFloorOpacity`
@@ -303,6 +352,17 @@ impl ToolRunTraceVisibility {
             ToolRunVerdict::Warning | ToolRunVerdict::Danger => self.rejected,
         }
     }
+}
+
+/// 🖌️ One placement2d footprint fill: the subject's shape index, world center and rotation, its faded verdict color,
+/// and whether it is the newest `testing` record.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ToolRunTrace2dDraw {
+    pub shape: u32,
+    pub position: [f32; 2],
+    pub rotation: f32,
+    pub color: Rgba,
+    pub newest: bool,
 }
 
 /// 🖌️ One instanced draw: every visible record of one mesh index and verdict.

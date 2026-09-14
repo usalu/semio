@@ -13,24 +13,6 @@
   },
   "publicationContracts": [
     {
-      "toolId": "runReconstruction",
-      "lanes": [
-        "Artifact"
-      ]
-    },
-    {
-      "toolId": "retryStage",
-      "lanes": [
-        "Artifact"
-      ]
-    },
-    {
-      "toolId": "runStage",
-      "lanes": [
-        "Artifact"
-      ]
-    },
-    {
       "toolId": "importFramePayload",
       "lanes": [
         "Artifact"
@@ -235,18 +217,6 @@
       ]
     },
     {
-      "toolId": "advanceReconstruction",
-      "lanes": [
-        "Artifact"
-      ]
-    },
-    {
-      "toolId": "cancelReconstruction",
-      "lanes": [
-        "Artifact"
-      ]
-    },
-    {
       "toolId": "setActiveExample",
       "lanes": [
         "Artifact"
@@ -254,21 +224,6 @@
     }
   ],
   "routes": [
-    {
-      "id": "runReconstruction",
-      "execution": "bounded",
-      "feature": "open generation-tagged reconstruction"
-    },
-    {
-      "id": "retryStage",
-      "execution": "bounded",
-      "feature": "open generation-tagged stage retry"
-    },
-    {
-      "id": "runStage",
-      "execution": "bounded",
-      "feature": "open generation-tagged stage run"
-    },
     {
       "id": "importFramePayload",
       "execution": "bounded",
@@ -438,16 +393,6 @@
       "id": "exportQcReport",
       "execution": "bounded",
       "feature": "encode QC report through retained output pages"
-    },
-    {
-      "id": "advanceReconstruction",
-      "execution": "bounded",
-      "feature": "advance exactly one reconstruction microcursor"
-    },
-    {
-      "id": "cancelReconstruction",
-      "execution": "bounded",
-      "feature": "cancel one operation-owned generation per step"
     },
     {
       "id": "setActiveExample",

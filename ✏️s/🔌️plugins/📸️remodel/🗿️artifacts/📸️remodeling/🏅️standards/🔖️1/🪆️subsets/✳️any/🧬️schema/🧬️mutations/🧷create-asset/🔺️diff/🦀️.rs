@@ -15,28 +15,8 @@ use crate::{durable_remodeling_asset, store_remodeling_asset, RemodelingSnapshot
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateAsset, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
-    if let Some((kind, staging_id, index)) = crate::remodeling_asset_stage_parts(&payload.key) {
-        match crate::stage_remodeling_asset_chunk(staging_id, kind, index, &payload.asset.data) {
-            Ok(()) => return protocol::MutationOutcome::new(RemodelingDiff::default()),
-            Err(crate::RemodelingStagingFault::Busy) => {
-                return protocol::MutationOutcome::error("mutation.asset-staging-busy", "Replayable asset staging is at its bounded capacity.", [payload.key.clone()]);
-            }
-            Err(crate::RemodelingStagingFault::Invalid) => {}
-        }
-        return protocol::MutationOutcome::error("mutation.invalid-asset-chunk", "The staged asset chunk is invalid.", [payload.key.clone()]);
-    }
-    if let Some((staging_id, index)) = crate::remodeling_mesh_stage_asset_parts(&payload.key) {
-        match crate::stage_remodeling_mesh_chunk(staging_id, index, &payload.asset.data) {
-            Ok(()) => return protocol::MutationOutcome::new(RemodelingDiff::default()),
-            Err(crate::RemodelingStagingFault::Busy) => {
-                return protocol::MutationOutcome::error("mutation.mesh-staging-busy", "Replayable mesh staging is at its bounded capacity.", [payload.key.clone()]);
-            }
-            Err(crate::RemodelingStagingFault::Invalid) => {}
-        }
-        return protocol::MutationOutcome::error("mutation.invalid-mesh-chunk", "The staged mesh chunk is invalid.", [payload.key.clone()]);
-    }
-    if crate::remodeling_asset_content_handle_parts(&payload.asset.data).is_some() {
-        return protocol::MutationOutcome::error("mutation.invalid-asset-payload", "Private reconstruction staging handles are accepted only by CommitReconstruction.", [payload.key.clone()]);
+    if crate::remodeling_content_handle_parts(&payload.asset.data).is_some() {
+        return protocol::MutationOutcome::error("mutation.invalid-asset-payload", "Durable content handles are bound only by CommitReconstruction.", [payload.key.clone()]);
     }
     let mut assets = base.assets.clone();
     let handle = store_remodeling_asset(&payload.key, &payload.asset);

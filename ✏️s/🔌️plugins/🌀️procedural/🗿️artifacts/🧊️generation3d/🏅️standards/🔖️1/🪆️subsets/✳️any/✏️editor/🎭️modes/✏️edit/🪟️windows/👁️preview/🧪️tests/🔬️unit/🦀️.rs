@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::generation3d::commands::set_active_example;
-use crate::editor::generation3d::unit_tests::context::{app_with_registry, dispatch, drain_flow_eval_ticks, render as render_body};
+use crate::editor::generation3d::unit_tests::context::{self, app_with_registry, drain_flow_eval_ticks, render as render_body};
 use crate::editor::generation3d::Generation3dCommand;
 use crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_BOX_FILLET;
 
@@ -42,8 +42,9 @@ async fn switching_active_example_changes_preview_meshes() {
     let mut app = app_with_registry().await;
     drain_flow_eval_ticks(&mut app).await;
     let before_meshes = preview_scene(&render_body(&mut app, GENERATION_3D_PLAY_BODY_PREVIEW).await).meshes_json;
-    dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: PROCEDURAL_EXAMPLE_BOX_FILLET.into() })).await;
-    drain_flow_eval_ticks(&mut app).await;
+    let (view, _) = context::preview_views("procedural-preview-test", "procedural-preview-test-other");
+    let switched = context::dispatch_with_view(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: PROCEDURAL_EXAMPLE_BOX_FILLET.into() }), view.clone()).await.expect("the switch dispatches under the preview window");
+    context::drive_preview_run(&mut app, &view, &switched.effects).await;
     let after = preview_scene(&render_body(&mut app, GENERATION_3D_PLAY_BODY_PREVIEW).await);
     assert_ne!(after.meshes_json, "[]", "box-fillet-preview must tessellate into non-empty preview meshes");
     assert_ne!(after.instances_json, "[]", "box-fillet-preview must produce non-empty preview instances");

@@ -426,6 +426,8 @@ export type ToolRunTick = {
   readonly appendOps: readonly Uint8Array[];
   readonly appendEntities: readonly bigint[];
   readonly retractTo?: number;
+  /** 📨️ Opaque plugin bytes the run's windows read back — the newest tick carrying one wins. */
+  readonly payload?: Uint8Array;
 };
 //#endregion 🔖️Tick
 
@@ -639,7 +641,7 @@ const STEP_IDS = [1, 2, 3, 4, 5, 6, 7];
 const PROGRESS_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const PAGE_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 const DELTA_IDS = [1, 2, 3, 4];
-const TICK_IDS = [1, 2, 3, 4, 5, 6, 7, 8];
+const TICK_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
 const uintValue = (v: bigint | number): PackValue => ({ t: "uint", v: BigInt(v) });
 const bytesValue = (v: Uint8Array): PackValue => ({ t: "bytes", v });
@@ -929,6 +931,7 @@ export function encodeToolRunTick(tick: ToolRunTick): Uint8Array {
     record.set(7, bytesValue(entities));
   }
   if (tick.retractTo !== undefined) record.set(8, uintValue(tick.retractTo));
+  if (tick.payload !== undefined) record.set(9, bytesValue(tick.payload));
   const bytes = encodePackBody(record);
   if (bytes.length > TOOL_RUN_TICK_BYTES_MAX) throw new ToolRunCodecError("limit", "tick bytes");
   return bytes;
@@ -943,6 +946,7 @@ export function decodeToolRunTick(bytes: Uint8Array): ToolRunTick {
   for (let offset = 0; offset < rawEntities.length; offset += 8) appendEntities.push(view(rawEntities).getBigUint64(offset, true));
   const progress = record.get(3);
   const retractTo = getOptionalUint(record, 8);
+  const payload = record.has(9) ? getBytes(record, 9) : undefined;
   return {
     identity: identityFrom(record.get(1)),
     sequence: getUint(record, 2),
@@ -952,6 +956,7 @@ export function decodeToolRunTick(bytes: Uint8Array): ToolRunTick {
     appendOps: getList(record, 6).map(itemBytes),
     appendEntities,
     ...(retractTo === undefined ? {} : { retractTo: narrow(retractTo, 0xffff_ffff, "retractTo") }),
+    ...(payload === undefined ? {} : { payload }),
   };
 }
 //#endregion 🔖️Codec
@@ -1075,6 +1080,7 @@ export function toolRunTickFromJson(json: JsonObject): ToolRunTick {
     appendOps: json.appendOps.map(toolRunHexToBytes),
     appendEntities: json.appendEntities.map((entity: number) => BigInt(entity)),
     ...(json.retractTo === undefined ? {} : { retractTo: json.retractTo }),
+    ...(json.payload === undefined ? {} : { payload: toolRunHexToBytes(json.payload) }),
   };
 }
 
@@ -1088,6 +1094,7 @@ export function toolRunTickToJson(tick: ToolRunTick): ToolRunJson {
     appendOps: tick.appendOps.map(toolRunBytesToHex),
     appendEntities: tick.appendEntities.map(u64Json),
     ...(tick.retractTo === undefined ? {} : { retractTo: tick.retractTo }),
+    ...(tick.payload === undefined ? {} : { payload: toolRunBytesToHex(tick.payload) }),
   };
 }
 //#endregion 🔖️Json

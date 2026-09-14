@@ -65,7 +65,6 @@ pub(super) fn every_command() -> Vec<DagCommand> {
         DagCommand::Disconnect(disconnect::Disconnect { edge_id: "e1".into() }),
         DagCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: "n1".into(), x: 1.0, y: 2.0 }),
         DagCommand::RenameDagNode(rename_dag_node::RenameDagNode { old_id: "n1".into(), value: "renamed".into() }),
-        DagCommand::Reorganize(reorganize::Reorganize {}),
         DagCommand::PatchDagNodes(patch_dag_nodes::PatchDagNodes { node_ids: vec!["n1".into(), "n2".into()], field: "value".into(), value: "5".into() }),
         DagCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 1.0, y: 2.0, zoom: 1.5 } }),
         DagCommand::GraphPointerDown(graph_pointer_down::GraphPointerDown {}),
@@ -77,7 +76,7 @@ pub(super) fn every_command() -> Vec<DagCommand> {
 #[semio_framework_async_macros::async_test]
 async fn command_surface_has_the_expected_row_count_and_distinct_wire_keywords() {
     let commands = every_command();
-    assert_eq!(commands.len(), 12, "every DagCommand row must be covered by every_command()");
+    assert_eq!(commands.len(), 11, "every DagCommand row must be covered by every_command()");
     let mut keywords: Vec<String> = commands.iter().map(|command| protocol::OpText::print_op(command).split(' ').next().unwrap_or_default().to_string()).collect();
     keywords.sort();
     keywords.dedup();
@@ -106,7 +105,6 @@ async fn every_printed_op_line_starts_with_the_rows_declared_wire_keyword() {
         ("disconnect", DagCommand::Disconnect(disconnect::Disconnect { edge_id: "e1".into() })),
         ("move-media-node", DagCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: "n1".into(), x: 1.0, y: 2.0 })),
         ("rename-dag-node", DagCommand::RenameDagNode(rename_dag_node::RenameDagNode { old_id: "n1".into(), value: "renamed".into() })),
-        ("reorganize", DagCommand::Reorganize(reorganize::Reorganize {})),
         ("patch-dag-nodes", DagCommand::PatchDagNodes(patch_dag_nodes::PatchDagNodes { node_ids: vec!["n1".into()], field: "value".into(), value: "5".into() })),
         ("node-graph-viewport", DagCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 1.0, y: 2.0, zoom: 1.0 } })),
         ("graph-pointer-down", DagCommand::GraphPointerDown(graph_pointer_down::GraphPointerDown {})),
@@ -154,7 +152,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
 #[semio_framework_async_macros::async_test]
 async fn every_declared_action_is_registered() {
     let definition = create_dag_app();
-    for command in ["addNode", "removeNode", "deleteSelection", "nodeGraphEdit", "connectMediaPorts", "disconnect", "moveMediaNode", "renameDagNode", "reorganize", "patchDagNodes", "nodeGraphViewport", "graphPointerDown"] {
+    for command in ["addNode", "removeNode", "deleteSelection", "nodeGraphEdit", "connectMediaPorts", "disconnect", "moveMediaNode", "renameDagNode", "patchDagNodes", "nodeGraphViewport", "graphPointerDown"] {
         assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == command), "registry declares {command}");
     }
 }

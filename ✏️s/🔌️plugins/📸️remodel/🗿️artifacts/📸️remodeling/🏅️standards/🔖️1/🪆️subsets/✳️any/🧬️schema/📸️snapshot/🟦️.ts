@@ -15,25 +15,7 @@ export type RobustLossKind = "l2" | "huber" | "cauchy";
 export type DenseResolution = "low" | "medium" | "high";
 export type MeshSource = "placeholder" | "reconstructed" | "imported";
 export type TrackClass = "static" | "moving";
-export type ReconstructionStage =
-  | "idle"
-  | "ingesting"
-  | "calibrating"
-  | "extracting-features"
-  | "matching-features"
-  | "estimating-poses"
-  | "bundle-adjusting"
-  | "georeferencing"
-  | "dense-stereo"
-  | "fusing-volume"
-  | "extracting-surface"
-  | "cleaning-mesh"
-  | "texturing"
-  | "tracking-motion"
-  | "deriving-geo-products"
-  | "reporting-qc"
-  | "done"
-  | "failed";
+export type RemodelingContentKind = "sparse" | "mesh" | "image";
 
 export const MEDIA_KINDS: readonly MediaKind[] = ["image-sequence", "video"];
 export const VIDEO_CODECS: readonly VideoCodec[] = ["avc", "hevc", "vp9", "av1", "mjpeg", "unknown"];
@@ -43,26 +25,7 @@ export const ROBUST_LOSS_KINDS: readonly RobustLossKind[] = ["l2", "huber", "cau
 export const DENSE_RESOLUTIONS: readonly DenseResolution[] = ["low", "medium", "high"];
 export const MESH_SOURCES: readonly MeshSource[] = ["placeholder", "reconstructed", "imported"];
 export const TRACK_CLASSES: readonly TrackClass[] = ["static", "moving"];
-export const RECONSTRUCTION_STAGES: readonly ReconstructionStage[] = [
-  "idle",
-  "ingesting",
-  "calibrating",
-  "extracting-features",
-  "matching-features",
-  "estimating-poses",
-  "bundle-adjusting",
-  "georeferencing",
-  "dense-stereo",
-  "fusing-volume",
-  "extracting-surface",
-  "cleaning-mesh",
-  "texturing",
-  "tracking-motion",
-  "deriving-geo-products",
-  "reporting-qc",
-  "done",
-  "failed",
-];
+export const REMODELING_CONTENT_KINDS: readonly RemodelingContentKind[] = ["sparse", "mesh", "image"];
 //#endregion 🔖️Enums
 
 //#region 🔖️Domain
@@ -262,18 +225,6 @@ export interface CameraPosePreview {
   translation: Vec3;
 }
 
-export interface ReconstructionJob {
-  id: string;
-  stage: ReconstructionStage;
-  progress01: number;
-  cancelRequested: boolean;
-  stageCursor: number;
-  startedAtMs: number | null;
-  error: string | null;
-  cameraPosesPreview: CameraPosePreview[];
-  sparsePointCloudPreview: string;
-}
-
 export interface WatertightReportSnapshot {
   vertexCount: number;
   triangleCount: number;
@@ -358,7 +309,6 @@ export interface RemodelingSnapshot {
   calibration: CalibrationState;
   params: ReconstructionParams;
   gcps: GroundControlPoint[];
-  job: ReconstructionJob;
   results: ReconstructionResults;
 }
 //#endregion 🔖️Domain
@@ -632,22 +582,6 @@ export const CAMERA_POSE_PREVIEW_SPEC: RecordSpec = {
   fields: [f("camera_id", text, () => ""), f("rotation_wxyz", tuple(4, 32), identityQuat), f("translation", tuple(3, 32), () => zeros(3))],
 };
 
-export const RECONSTRUCTION_JOB_SPEC: RecordSpec = {
-  title: "ReconstructionJob",
-  serdeDefault: true,
-  fields: [
-    f("id", text, () => ""),
-    f("stage", { k: "enum", of: RECONSTRUCTION_STAGES }, () => "idle"),
-    f("progress_0_1", f32, () => 0),
-    f("cancel_requested", bool, () => false),
-    f("stage_cursor", uint, () => 0),
-    f("started_at_ms", opt(f64), () => null),
-    f("error", opt(text), () => null),
-    f("camera_poses_preview", list(rec(() => CAMERA_POSE_PREVIEW_SPEC)), () => []),
-    f("sparse_point_cloud_preview", text, () => ""),
-  ],
-};
-
 export const WATERTIGHT_REPORT_SPEC: RecordSpec = {
   title: "WatertightReportSnapshot",
   serdeDefault: true,
@@ -766,7 +700,6 @@ export const REMODELING_SNAPSHOT_SPEC: RecordSpec = {
     f("calibration", rec(() => CALIBRATION_STATE_SPEC), () => defaultsOf(CALIBRATION_STATE_SPEC), { jsonOptional: true }),
     f("params", rec(() => RECONSTRUCTION_PARAMS_SPEC), () => defaultsOf(RECONSTRUCTION_PARAMS_SPEC), { jsonOptional: true }),
     f("gcps", list(rec(() => GROUND_CONTROL_POINT_SPEC)), () => [], { jsonOptional: true }),
-    f("job", rec(() => RECONSTRUCTION_JOB_SPEC), () => defaultsOf(RECONSTRUCTION_JOB_SPEC), { jsonOptional: true }),
     f("results", rec(() => RECONSTRUCTION_RESULTS_SPEC), () => defaultsOf(RECONSTRUCTION_RESULTS_SPEC), { jsonOptional: true }),
   ],
 };

@@ -17,7 +17,7 @@
 //! INTROSPECTION table is incomplete for this one field (matches `🖨️raster`'s/`💠️lowpoly`'s own
 //! already-accepted gap for the identical shape).
 
-use crate::{CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob, ReconstructionParams, ReconstructionResults, RemodelingAssetChild, RemodelingDurableArtifactStore, REMODELING_DOCUMENT_SCHEMA};
+use crate::{CalibrationState, GroundControlPoint, MediaStream, ReconstructionParams, ReconstructionResults, RemodelingAssetChild, RemodelingDurableArtifactStore, REMODELING_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
@@ -55,10 +55,6 @@ pub struct RemodelingSnapshot {
     #[dsl(table)]
     #[state(artifact)]
     pub gcps: Vec<GroundControlPoint>,
-    #[value(default)]
-    #[dsl(block)]
-    #[state(artifact)]
-    pub job: ReconstructionJob,
     #[value(default)]
     #[dsl(block)]
     #[state(artifact)]
@@ -117,7 +113,6 @@ impl Default for RemodelingSnapshot {
             calibration: CalibrationState::default(),
             params: ReconstructionParams::default(),
             gcps: Vec::new(),
-            job: ReconstructionJob::default(),
             results: ReconstructionResults::default(),
         }
     }

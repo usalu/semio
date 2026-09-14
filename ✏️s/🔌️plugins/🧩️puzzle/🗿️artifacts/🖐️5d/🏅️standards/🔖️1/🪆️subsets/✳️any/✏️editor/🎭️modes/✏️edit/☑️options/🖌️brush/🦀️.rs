@@ -1,18 +1,17 @@
 //! 🖌️ Edit-mode window option — the Brush utility's Utility Options group: suggestion offset, overlap
-//! budget, the part/grip distribution trees, and (only when the engine has candidates for the current
-//! target grip) the placement picker. Tagged `Some("brush")`.
+//! budget and the part/grip distribution trees; the brush suggestions run's candidates show as its trace in the
+//! windows. Tagged `Some("brush")`.
 //!
 //! 🎚️ SHARED at MODE level, not per window (TEMPLATE.md §12.2): BOTH the 2D board window and the 3D
 //! world window bind the `brush` utility and expose the identical group, so this measure is declared
 //! once here and each window's `window_measures()` collects from it.
 
-use crate::editor::puzzle5d::precompute::Puzzle5dPrecomputeSession;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::{
-    parse_brush_candidates_free, puzzle5d_action, puzzle5d_brush_target_grip, puzzle5d_kind_ids, puzzle5d_kind_weight_sum, Puzzle5dScene, PUZZLE5D_PLAY_CONTROLLER_ID, PUZZLE5D_SUGGESTION_OFFSET_MAX, PUZZLE5D_SUGGESTION_OFFSET_MIN,
+    puzzle5d_action, puzzle5d_kind_ids, puzzle5d_kind_weight_sum, Puzzle5dScene, PUZZLE5D_PLAY_CONTROLLER_ID, PUZZLE5D_SUGGESTION_OFFSET_MAX, PUZZLE5D_SUGGESTION_OFFSET_MIN,
     PUZZLE5D_SUGGESTION_OFFSET_STEP,
 };
-use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
+use semio_framework_plugin::WindowMeasure;
 use dsl::json;
 use std::collections::HashMap;
 
@@ -78,8 +77,8 @@ fn distribution_children(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> V
 
 //#region 🔖️Measure
 /// 🖌️ The Brush utility's Utility Options group, collected by both windows' `window_measures()`.
-pub fn measure(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> WindowMeasure {
-    let mut children = vec![
+pub fn measure(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowMeasure {
+    let children = vec![
         WindowMeasure::Slider {
             id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-suggestion-offset"),
             label: Some(labels.offset.into()),
@@ -122,28 +121,6 @@ pub fn measure(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession,
             children: distribution_children(envelope, labels),
         },
     ];
-    if let Some(target) = puzzle5d_brush_target_grip(envelope) {
-        let candidates = parse_brush_candidates_free(&precompute.brush_candidates(&target));
-        if !candidates.is_empty() {
-            let items: Vec<MeasureSelectItem> = candidates
-                .iter()
-                .enumerate()
-                .map(|(index, candidate)| {
-                    let label = candidate.get("objectKind").and_then(|value| value.as_str()).or_else(|| candidate.get("objectKindId").and_then(|value| value.as_str())).unwrap_or("kind");
-                    let id = format!("puzzle5d.brush.candidate.{index}");
-                    MeasureSelectItem { id: id.clone(), value: id, label: label.into() }
-                })
-                .collect();
-            let selected_index = envelope.runtime.brush_candidate_index.min(items.len().saturating_sub(1));
-            children.push(WindowMeasure::Select {
-                id: "puzzle5d-brush-placement".into(),
-                label: Some(labels.placement.into()),
-                value: format!("puzzle5d.brush.candidate.{selected_index}"),
-                items,
-                on_change: puzzle5d_action("engagementControlSelect", None),
-            });
-        }
-    }
     WindowMeasure::Group {
         id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-utility-options-brush"),
         label: labels.brush.into(),

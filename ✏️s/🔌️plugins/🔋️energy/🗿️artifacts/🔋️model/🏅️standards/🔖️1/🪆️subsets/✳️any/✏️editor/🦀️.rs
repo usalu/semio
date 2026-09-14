@@ -1,8 +1,8 @@
 //! 🔋️ Energy model editor — the authored `ArtifactEditor` surface for `s.energy.model@1/*`
 //! (tickets 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET, 26/09/06/ENERGY-PLUGIN-END-TO-END).
 //! Three windows: `structure` (framework `TreeWindowKit` over the whole `crate::model::Model`),
-//! `zones` (framework `TableWindowKit` over `Model::zones`) and `simulation` (a hand-rolled window
-//! projecting the mounted `🧵️simulation-session` worker).
+//! `zones` (framework `TableWindowKit` over `Model::zones`) and `simulation` (run settings plus the
+//! framework-reported state of the `energySimulation` tool run, whose job is `🧵️simulation-session`).
 //!
 //! 🧵️ Dispatch: every action this editor declares is `InteractiveJobClassification::Migrated` AND
 //! carries an exact app-owned bounded-first-step proof. Both halves are load-bearing —
@@ -18,20 +18,26 @@
 //! 📬️ Publication lanes: the twelve document verbs declare `ArtifactToolPublicationLane::Artifact`
 //! (`setActiveExample` does NOT — it publishes a `kernel::Effect::LoadDocument`, never a mutation)
 //! and are dispatchable only because [`EnergyModelEditor::build_artifact_store_one_item_preparation_factory`]
-//! supplies the document lane's one-item retained preparation; the six session verbs publish nothing
-//! to a store and declare `HostOnly`.
+//! supplies the document lane's one-item retained preparation; `set-simulation-settings` publishes to the
+//! config lane through [`EnergyModelEditor::build_config_store_one_item_preparation_factory`].
+//!
+//! ⏯️ The energy simulation is the `energySimulation` tool's framework `ToolRun`
+//! (`📋️tool-run-contract.md`): the framework-reserved `toolRun*` actions and chords start, pause, step,
+//! abort and finalize it, and [`EnergyModelEditor::build_tool_run_job`] supplies its run job.
 
 use crate::editor::model::modes::edit;
+use crate::editor::model::config::{ChangeSimulationSettings, EnergyModelConfig, EnergyModelConfigMutation};
+use crate::editor::model::modes::edit::tools;
 use crate::editor::model::modes::edit::windows::{simulation, structure, zones};
-use crate::energy_simulation_session::{self as simulation_session, EnergySimulationConfigProjection, EnergySimulationEventKind, EnergySimulationRequestIdentity};
+use crate::energy_simulation_session::EnergySimulationRunJob;
 use crate::model::{EntityId, Material, OutsideBoundary, ScheduleId, Site, Surface, SurfaceClass, Thermostat, Zone};
 use crate::mutations;
 use crate::{EnergyModelMutation, EnergyModelSnapshot, ENERGY_MODEL_DOCUMENT_SCHEMA, MODEL_DIALECT};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
     AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit,
-    ExampleSource, Fault, FaultCode, FaultOrigin, HistoryView, InteractiveJobClassification, Label, LocalizedLabel, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation,
-    UiAssemblyResult,
+    ExampleSource, Fault, FaultCode, FaultOrigin, HistoryView, InteractiveJobClassification, Label, LocalizedLabel, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ToolRunJob, ToolRunJobPurpose,
+    ToolRunJobRequest, UiAssemblyResult,
 };
 use semio_framework_plugin::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
@@ -77,18 +83,12 @@ pub const ENERGY_MODEL_RETAINED_TOOL_IDS: &[&str] = &[
     SET_SITE_ACTION_ID,
     SET_RUN_PERIOD_ACTION_ID,
     SET_ACTIVE_EXAMPLE_ACTION_ID,
-    simulation::START_ACTION_ID,
-    simulation::CANCEL_ACTION_ID,
-    simulation::RETRY_ACTION_ID,
-    simulation::DISCARD_ACTION_ID,
-    simulation::ADOPT_ACTION_ID,
-    simulation::CONFIGURE_ACTION_ID,
+    simulation::SET_SETTINGS_ACTION_ID,
 ];
 
 /// 📬️ The twelve verbs that publish a semantic mutation into the document store. `setActiveExample`
 /// is deliberately NOT one of them — it swaps the whole document through `kernel::Effect::LoadDocument`
-/// (outside history), so it publishes to no store lane and declares `HostOnly` like the six session
-/// verbs do.
+/// (outside history), so it publishes to no store lane and declares `HostOnly`.
 pub const ENERGY_MODEL_DOCUMENT_TOOL_IDS: &[&str] = &[
     SET_NODE_ACTION_ID,
     SET_CELL_ACTION_ID,
@@ -108,7 +108,7 @@ pub const ENERGY_MODEL_DOCUMENT_TOOL_IDS: &[&str] = &[
 //#region 🔖️Command
 /// ✏️ The editor's typed command channel. `SetStructureField`/`SetZoneCell` are the two generic
 /// window-kit edit targets; the ten authored document verbs address `crate::model::Model` entities
-/// by their own `EntityId`; the six session verbs drive the mounted simulation worker.
+/// by their own `EntityId`; `SetSimulationSettings` edits the config store's run settings.
 #[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslOps)]
 pub enum EnergyModelEditorCommand {
     #[dsl(key = "set-node")]
@@ -137,18 +137,8 @@ pub enum EnergyModelEditorCommand {
     SetRunPeriod { start_month: u32, start_day: u32, end_month: u32, end_day: u32 },
     #[dsl(key = "setActiveExample")]
     SetActiveExample { example_id: String },
-    #[dsl(key = "start-energy-simulation")]
-    StartSimulation { request: u64 },
-    #[dsl(key = "cancel-energy-simulation")]
-    CancelSimulation { request: u64, operation: u64, generation: u64, config_digest: u64 },
-    #[dsl(key = "retry-energy-simulation")]
-    RetrySimulation { request: u64, operation: u64, generation: u64, config_digest: u64 },
-    #[dsl(key = "discard-energy-simulation")]
-    DiscardSimulation { request: u64, operation: u64, generation: u64, config_digest: u64 },
-    #[dsl(key = "adopt-energy-simulation")]
-    AdoptSimulation { request: u64, operation: u64, generation: u64, config_digest: u64 },
-    #[dsl(key = "configure-energy-simulation")]
-    ConfigureSimulation { zone_timestep_minutes: u32, system_timestep_minutes: u32, warmup_days: u32 },
+    #[dsl(key = "set-simulation-settings")]
+    SetSimulationSettings { zone_timestep_minutes: u32, system_timestep_minutes: u32, warmup_days: u32 },
 }
 
 impl EnergyModelEditorCommand {
@@ -168,12 +158,7 @@ impl EnergyModelEditorCommand {
             Self::SetSite { .. } => SET_SITE_ACTION_ID,
             Self::SetRunPeriod { .. } => SET_RUN_PERIOD_ACTION_ID,
             Self::SetActiveExample { .. } => SET_ACTIVE_EXAMPLE_ACTION_ID,
-            Self::StartSimulation { .. } => simulation::START_ACTION_ID,
-            Self::CancelSimulation { .. } => simulation::CANCEL_ACTION_ID,
-            Self::RetrySimulation { .. } => simulation::RETRY_ACTION_ID,
-            Self::DiscardSimulation { .. } => simulation::DISCARD_ACTION_ID,
-            Self::AdoptSimulation { .. } => simulation::ADOPT_ACTION_ID,
-            Self::ConfigureSimulation { .. } => simulation::CONFIGURE_ACTION_ID,
+            Self::SetSimulationSettings { .. } => simulation::SET_SETTINGS_ACTION_ID,
         }
     }
 }
@@ -212,9 +197,7 @@ mod args_bridge {
         let text_or = |key: &str, fallback: &str| text(args, key).unwrap_or_else(|| fallback.to_string());
         let f64_or = |key: &str, fallback: f64| number(args, key).unwrap_or(fallback);
         let u32_or = |key: &str, fallback: u32| number(args, key).map_or(fallback, |value| value as u32);
-        let u64_or = |key: &str, fallback: u64| number(args, key).map_or(fallback, |value| value as u64);
         let bool_or = |key: &str, fallback: bool| flag(args, key).unwrap_or(fallback);
-        let identity = |command: fn(u64, u64, u64, u64) -> Command| command(u64_or("request", 0), u64_or("operation", 0), u64_or("generation", 0), u64_or("configDigest", 0));
         Ok(match action {
             super::SET_NODE_ACTION_ID => Command::SetStructureField { field: text_or("id", ""), value: text_or("value", "") },
             super::SET_CELL_ACTION_ID => Command::SetZoneCell { row: u32_or("row", 0), column: text_or("column", ""), value: text_or("value", "") },
@@ -241,12 +224,10 @@ mod args_bridge {
             },
             super::SET_RUN_PERIOD_ACTION_ID => Command::SetRunPeriod { start_month: u32_or("startMonth", 1), start_day: u32_or("startDay", 1), end_month: u32_or("endMonth", 12), end_day: u32_or("endDay", 31) },
             super::SET_ACTIVE_EXAMPLE_ACTION_ID => Command::SetActiveExample { example_id: text_or("exampleId", "") },
-            super::simulation::START_ACTION_ID => Command::StartSimulation { request: u64_or("request", 0) },
-            super::simulation::CANCEL_ACTION_ID => identity(|request, operation, generation, config_digest| Command::CancelSimulation { request, operation, generation, config_digest }),
-            super::simulation::RETRY_ACTION_ID => identity(|request, operation, generation, config_digest| Command::RetrySimulation { request, operation, generation, config_digest }),
-            super::simulation::DISCARD_ACTION_ID => identity(|request, operation, generation, config_digest| Command::DiscardSimulation { request, operation, generation, config_digest }),
-            super::simulation::ADOPT_ACTION_ID => identity(|request, operation, generation, config_digest| Command::AdoptSimulation { request, operation, generation, config_digest }),
-            super::simulation::CONFIGURE_ACTION_ID => Command::ConfigureSimulation { zone_timestep_minutes: u32_or("zoneTimestepMinutes", 60), system_timestep_minutes: u32_or("systemTimestepMinutes", 60), warmup_days: u32_or("warmupDays", 7) },
+            super::simulation::SET_SETTINGS_ACTION_ID => {
+                let defaults = super::EnergyModelConfig::default();
+                Command::SetSimulationSettings { zone_timestep_minutes: u32_or("zoneTimestepMinutes", defaults.zone_timestep_minutes), system_timestep_minutes: u32_or("systemTimestepMinutes", defaults.system_timestep_minutes), warmup_days: u32_or("warmupDays", defaults.warmup_days) }
+            }
             _ => return Err(unknown(action)),
         })
     }
@@ -324,7 +305,7 @@ impl protocol::OpBinary for EnergyModelEditorCommand {
 /// (`📓️derivation-rules.md` rule 6). Every field this vocabulary does not yet name is caught by the
 /// exhaustive `probe` comparison below and refused LOUDLY, so a group's missing kind can never be
 /// swallowed as a silent no-op.
-fn model_edit(kind: &'static str, base: &crate::model::Model, model: &crate::model::Model, description: String) -> Result<Emit<EnergyModelMutation>, Fault> {
+fn model_edit(kind: &'static str, base: &crate::model::Model, model: &crate::model::Model, description: String) -> Result<Emit<EnergyModelMutation, EnergyModelConfigMutation>, Fault> {
     let mut steps = Vec::new();
     if base.name != model.name {
         steps.push(mutations::rename_model(model.name.clone()));
@@ -553,7 +534,7 @@ fn diff_thermostats(kind: &'static str, base: &crate::model::Model, model: &crat
 fn load_document_effect(model: &crate::model::Model) -> semio_framework_plugin::kernel::Effect {
     let snapshot = crate::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, None);
     let pack = <EnergyModelSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
-    let envelope = store::create_document_envelope::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, "model", snapshot, None);
+    let envelope = store::create_document_envelope::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, "model", snapshot, None).into_owners();
     let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("energy model document spr encode is infallible for a fresh, edit-free envelope");
     semio_framework_plugin::kernel::Effect::LoadDocument { pack, spr }
 }
@@ -596,14 +577,7 @@ fn target_in_use(entity: &str, id: u32, blocker: &str) -> Fault {
 //#region 🔖️Reduce
 /// 🧩️ The one pure reducer both `ArtifactEditor::handle` and the retained bounded work step run —
 /// identical semantics on the interactive path and on the retained path by construction.
-fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModelSnapshot>) -> Result<Emit<EnergyModelMutation>, Fault> {
-    if is_session_command(command) {
-        let operation = doc.operation()?;
-        let render = simulation_session::render_identity_of(operation).ok_or_else(|| Fault::from("energy simulation command lacks a canonical document revision"))?;
-        let event = session_event(command, render)?.ok_or_else(|| Fault::from("energy session command lost its event on the way to the session"))?;
-        simulation_session::record_event(render, event).map_err(Fault::from)?;
-        return Ok(Emit { description: Some(command.action_id().into()), ..Default::default() });
-    }
+fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModelSnapshot>) -> Result<Emit<EnergyModelMutation, EnergyModelConfigMutation>, Fault> {
     let mut model = crate::energy_model(doc.snapshot);
     let (kind, description) = match command {
         EnergyModelEditorCommand::SetStructureField { field, value } => {
@@ -754,7 +728,13 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
             let loaded = example_model(example_id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("mutation.target-missing"), format!("this artifact bundles no example {example_id:?}")))?;
             return Ok(Emit { effects: vec![load_document_effect(&loaded)], description: Some(format!("Load example {example_id}")), ..Default::default() });
         }
-        _ => unreachable!("session events returned before document mutation dispatch"),
+        EnergyModelEditorCommand::SetSimulationSettings { zone_timestep_minutes, system_timestep_minutes, warmup_days } => {
+            let settings = ChangeSimulationSettings { zone_timestep_minutes: *zone_timestep_minutes, system_timestep_minutes: *system_timestep_minutes, warmup_days: *warmup_days };
+            if !settings.config().is_valid() {
+                return Err(Fault::new(FaultOrigin::App, FaultCode::new("mutation.invalid-payload"), "the simulation settings are outside the engine's admissible timestep and warmup ranges"));
+            }
+            return Ok(Emit { config_mutations: vec![EnergyModelConfigMutation::ChangeSimulationSettings(settings)], description: Some("Set simulation settings".into()), ..Default::default() });
+        }
     };
     model_edit(kind, &crate::energy_model(doc.snapshot), &model, description)
 }
@@ -808,37 +788,6 @@ fn set_material_property(material: &mut Material, property: &str, value: f64) ->
     })
 }
 
-/// ⚡️ Whether this verb drives the mounted simulation session instead of the document.
-fn is_session_command(command: &EnergyModelEditorCommand) -> bool {
-    matches!(
-        command,
-        EnergyModelEditorCommand::StartSimulation { .. }
-            | EnergyModelEditorCommand::CancelSimulation { .. }
-            | EnergyModelEditorCommand::RetrySimulation { .. }
-            | EnergyModelEditorCommand::DiscardSimulation { .. }
-            | EnergyModelEditorCommand::AdoptSimulation { .. }
-            | EnergyModelEditorCommand::ConfigureSimulation { .. }
-    )
-}
-
-/// ⚡️ Maps the six session verbs onto their `EnergySimulationEventKind`; every document verb maps to
-/// `None` and falls through to the model reducer. `start` reads the run settings a previous
-/// `configure-energy-simulation` admitted for this exact app instance rather than carrying them in
-/// its own payload, so the window and the run can never disagree about what is about to run.
-fn session_event(command: &EnergyModelEditorCommand, render: semio_framework_plugin::AppRenderOperationContext) -> Result<Option<EnergySimulationEventKind>, Fault> {
-    let identity = |request: &u64, operation: &u64, generation: &u64, config_digest: &u64| EnergySimulationRequestIdentity { request: *request, operation: *operation, generation: *generation, config_digest: *config_digest };
-    Ok(Some(match command {
-        EnergyModelEditorCommand::StartSimulation { request } => EnergySimulationEventKind::Start { request: *request, config: simulation_session::session_settings(Some(render)) },
-        EnergyModelEditorCommand::CancelSimulation { request, operation, generation, config_digest } => EnergySimulationEventKind::Cancel(identity(request, operation, generation, config_digest)),
-        EnergyModelEditorCommand::RetrySimulation { request, operation, generation, config_digest } => EnergySimulationEventKind::Retry(identity(request, operation, generation, config_digest)),
-        EnergyModelEditorCommand::DiscardSimulation { request, operation, generation, config_digest } => EnergySimulationEventKind::Discard(identity(request, operation, generation, config_digest)),
-        EnergyModelEditorCommand::AdoptSimulation { request, operation, generation, config_digest } => EnergySimulationEventKind::Adopt(identity(request, operation, generation, config_digest)),
-        EnergyModelEditorCommand::ConfigureSimulation { zone_timestep_minutes, system_timestep_minutes, warmup_days } => {
-            EnergySimulationEventKind::Configure { config: EnergySimulationConfigProjection { checkpoint_token: 0, zone_timestep_minutes: *zone_timestep_minutes, system_timestep_minutes: *system_timestep_minutes, warmup_days: *warmup_days } }
-        }
-        _ => return Ok(None),
-    }))
-}
 //#endregion 🔖️Reduce
 
 //#region 🧵️RetainedCommands
@@ -867,13 +816,13 @@ fn energy_model_extent(command: &EnergyModelEditorCommand, snapshot: &EnergyMode
 fn energy_model_reduce(
     command: &EnergyModelEditorCommand,
     snapshot: &EnergyModelSnapshot,
-    _config: &NoConfig,
+    _config: &EnergyModelConfig,
     history: &HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<EnergyModelEditor>>>,
     operation: &AppOperationContext,
-) -> Result<Emit<EnergyModelMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+) -> Result<Emit<EnergyModelMutation, EnergyModelConfigMutation, NoDraftMutation>, Fault> {
     reduce(command, &ArtifactView::with_operation(snapshot, history, operation.clone()))
 }
 
@@ -943,15 +892,13 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for EnergyModelCommandJ
         ArtifactToolPublicationContract { tool_id: SET_SITE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: SET_RUN_PERIOD_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] },
-        ArtifactToolPublicationContract { tool_id: simulation::START_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] },
-        ArtifactToolPublicationContract { tool_id: simulation::CANCEL_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] },
-        ArtifactToolPublicationContract { tool_id: simulation::RETRY_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] },
-        ArtifactToolPublicationContract { tool_id: simulation::DISCARD_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] },
-        ArtifactToolPublicationContract { tool_id: simulation::ADOPT_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] },
-        ArtifactToolPublicationContract { tool_id: simulation::CONFIGURE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: simulation::SET_SETTINGS_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Config] },
     ];
 }
 //#endregion 🧵️RetainedCommands
+
+/// 📬️ Upper bound of one encoded run-settings config record.
+const ENERGY_MODEL_CONFIG_STORE_MAXIMUM_BYTES: usize = 4_096;
 
 //#region 📬️StorePreparation
 /// 📬️ The document lane's one-item retained preparation. Without it every verb declaring
@@ -1004,7 +951,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<EnergyModelSnapshot, EnergyMo
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("the energy model store preparation rejected its lane or description envelope".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
     }
 
     fn begin(
@@ -1106,6 +1053,7 @@ impl store::ArtifactStoreOneItemPreparation<EnergyModelSnapshot, EnergyModelMuta
 }
 //#endregion 📬️StorePreparation
 
+
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]
 pub struct EnergyModelEditor;
@@ -1113,8 +1061,8 @@ pub struct EnergyModelEditor;
 impl ArtifactEditor for EnergyModelEditor {
     type Snapshot = EnergyModelSnapshot;
     type Mutation = EnergyModelMutation;
-    type Config = NoConfig;
-    type ConfigMutation = NoConfigMutation;
+    type Config = EnergyModelConfig;
+    type ConfigMutation = EnergyModelConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
     type Presence = NoPresence;
@@ -1148,12 +1096,7 @@ impl ArtifactEditor for EnergyModelEditor {
             "set-site",
             "set-run-period",
             "setActiveExample",
-            "start-energy-simulation",
-            "cancel-energy-simulation",
-            "retry-energy-simulation",
-            "discard-energy-simulation",
-            "adopt-energy-simulation",
-            "configure-energy-simulation"
+            "set-simulation-settings"
         ]
     }
 
@@ -1201,28 +1144,69 @@ impl ArtifactEditor for EnergyModelEditor {
         Ok(Some(semio_framework_plugin::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_owners())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_framework_plugin::no_presence_store_disposer())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+    }
+
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(EnergyModelStorePreparationFactory))
     }
 
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Config, Self::ConfigMutation>("energy-model-config-retained", ENERGY_MODEL_CONFIG_STORE_MAXIMUM_BYTES))
+    }
+
+    /// ⏯️ The `energySimulation` run job over the run's base snapshot and the config store's settings.
+    /// The run is read-only and declares no `revalidateJob`, so only the `Run` purpose builds a job.
+    fn build_tool_run_job(request: ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<ToolRunJob>, Fault> {
+        if request.tool_id != tools::simulation::TOOL_ID || request.purpose != ToolRunJobPurpose::Run {
+            return Ok(None);
+        }
+        Ok(Some(Box::new(EnergySimulationRunJob::new(request.identity, request.snapshot, request.config.simulation_template()))))
+    }
+
     fn initial_snapshot() -> EnergyModelSnapshot {
         EnergyModelSnapshot::default()
-    }
-
-    fn mounted_job_maintenance_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
-        Ok(simulation_session::maintenance_step(instance_id, maximum_items, maximum_bytes))
-    }
-
-    fn mounted_job_close_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
-        Ok(simulation_session::close_step(instance_id, maximum_items, maximum_bytes))
-    }
-
-    fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
-        simulation_session::terminal_is_empty(instance_id)
-    }
-
-    fn mounted_job_prepare_snapshot_read(operation: semio_framework_plugin::AppRenderOperationContext, snapshot: &Self::Snapshot) -> bool {
-        simulation_session::prepare_snapshot_read(operation, snapshot)
     }
 
     fn command_id(command: &EnergyModelEditorCommand) -> &'static str {
@@ -1247,19 +1231,11 @@ impl ArtifactEditor for EnergyModelEditor {
         reduce(command, doc)
     }
 
-    fn pending_effects(_owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, EnergyModelSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view: Option<&semio_framework_plugin::ViewModel>) -> Vec<semio_framework_plugin::kernel::Effect> {
-        simulation_session::reconcile(doc)
-    }
-
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
-        let render = doc.render_operation();
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
         let node = match body_key {
             structure::BODY_KEY => structure::render(doc.snapshot)?,
             zones::BODY_KEY => zones::render(doc.snapshot)?,
-            simulation::BODY_KEY => {
-                let settings = simulation_session::session_settings(render);
-                simulation_session::with_projection(render, |projection| simulation::render(projection, settings, &doc.snapshot.model, view_state.locale == semio_framework_plugin::Locale::De))
-            }
+            simulation::BODY_KEY => simulation::render(doc.tool_run(), *cfg.snapshot, &doc.snapshot.model, view_state.locale),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("energy.model.render", "the unknown-body label could not be assembled"))?,
         };
         Ok(semio_framework_plugin::built_to_component_tree(node))
@@ -1322,8 +1298,10 @@ fn example_options() -> Vec<semio_framework_plugin::ActionArgOption> {
 
 //#region 🔖️Manifest
 /// 🧱️ The editor's `AppDefinition`. Every id in [`ENERGY_MODEL_RETAINED_TOOL_IDS`] is classified
-/// `Migrated` here — `set-node`/`set-cell` are already stamped by their kits, the other sixteen are
+/// `Migrated` here — `set-node`/`set-cell` are already stamped by their kits, the other twelve are
 /// classified explicitly, and `EditorBuilder::try_build_definition` panics on any `Unclassified` id.
+/// The `energySimulation` tool declares its run, so the framework injects the reserved `toolRun*`
+/// actions and binds their chords; the editor binds none of its own for the simulation.
 /// Each window owns its own action list (`structure::actions`/`zones::actions`/the simulation
 /// window's `definition`), so this function never restates one.
 pub fn create_energy_model_editor() -> semio_framework_plugin::AppDefinition {
@@ -1335,14 +1313,12 @@ pub fn create_energy_model_editor() -> semio_framework_plugin::AppDefinition {
         .window_kind_def(structure::definition())
         .window_kind_def(zones::definition())
         .window_kind_def(simulation::definition())
+        .tool(tools::simulation::definition())
         .mutation(SET_ACTIVE_EXAMPLE_ACTION_ID, LocalizedLabel::native("Load example", "Beispiel laden"))
         .action_args(SET_ACTIVE_EXAMPLE_ACTION_ID, vec![semio_framework_plugin::ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), example_options()).required()])
         .keybinding("mod+shift+n", CREATE_ZONE_ACTION_ID)
         .keybinding("mod+shift+s", CREATE_SURFACE_ACTION_ID)
         .keybinding("mod+shift+g", SET_SITE_ACTION_ID)
-        .keybinding("mod+enter", simulation::START_ACTION_ID)
-        .keybinding("mod+.", simulation::CANCEL_ACTION_ID)
-        .keybinding("mod+shift+enter", simulation::ADOPT_ACTION_ID)
         .default_layout(edit::layout());
     for tool_id in ENERGY_MODEL_RETAINED_TOOL_IDS {
         builder = builder.action_interactive_job(*tool_id, InteractiveJobClassification::Migrated);

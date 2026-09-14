@@ -1,7 +1,7 @@
 //! 🧪️ `create-asset` fixture — `🚫️refuses-an-asset-cb0d4b`.
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
-//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). `create-asset-staging-handle` is this vector's scenario id in
+//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). `create-asset-content-handle` is this vector's scenario id in
 //! `../../../../🧪️tests/📸️mutate-remodeling-1/🥒️.feature`, where the same bytes are replayed against
 //! this subset's independent Python reference.
 //!

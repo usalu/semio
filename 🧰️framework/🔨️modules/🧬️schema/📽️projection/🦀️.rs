@@ -1211,7 +1211,7 @@ export type ToolRunCounterDefinition = { id: string, label: unknown, };"####,
             typescript: r####"/**
  * 📜️ Static run declaration attached to tool and utility definitions (§2.4).
  */
-export type ToolRunDefinition = { mutating: boolean, rebase: ToolRunRebasePolicy, reconfigure: ToolRunReconfigurePolicy, unit: unknown, stages: Array<ToolRunStageDefinition>, counters: Array<ToolRunCounterDefinition>, reasons: Array<ToolRunReasonDefinition>, trace: ToolRunTraceKind, runJob: JobKindId, revalidateJob?: JobKindId, };"####,
+export type ToolRunDefinition = { mutating: boolean, rebase: ToolRunRebasePolicy, reconfigure: ToolRunReconfigurePolicy, unit: unknown, stages: Array<ToolRunStageDefinition>, counters: Array<ToolRunCounterDefinition>, reasons: Array<ToolRunReasonDefinition>, trace: ToolRunTraceKind, runJob: JobKindId, revalidateJob?: JobKindId, settings?: ToolRunSettingsReads, windows?: Array<string>, };"####,
         },
         SchemaMetadata {
             name: "ToolRunReasonDefinition",
@@ -1236,6 +1236,17 @@ export type ToolRunRebasePolicy = "revalidate" | "restart" | "freeze";"####,
  * 🎚️ How a run reacts to settings changes (§3.3).
  */
 export type ToolRunReconfigurePolicy = "resume" | "restart";"####,
+        },
+        SchemaMetadata {
+            name: "ToolRunSettingsReads",
+            version: 1,
+            typescript: r####"/**
+ * 🎚️ The settings a run's jobs read (§3.3): RFC 6901 JSON Pointers into the app config document and, per
+ * window kind id, into that kind's window config documents. `settingsChanged` fires only when a value
+ * behind one of them changes; an empty declaration reads no settings, so no settings publication ever
+ * reconfigures the run.
+ */
+export type ToolRunSettingsReads = { config?: Array<string>, windowConfig?: { [key in string]?: Array<string> }, };"####,
         },
         SchemaMetadata {
             name: "ToolRunStageDefinition",

@@ -1310,14 +1310,6 @@ pub mod editor {
             pub(crate) use patch_nodes_leaf::patch_nodes;
 
             #[path = "."]
-            mod reorganize_leaf {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️reorganize/🦀️.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
-            pub(crate) use reorganize_leaf::reorganize;
-
-            #[path = "."]
             mod set_active_example_leaf {
                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️set-active-example/🦀️.rs"]
                 mod component;
@@ -1365,6 +1357,12 @@ pub mod editor {
                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
                 mod component;
                 pub use component::*;
+
+                #[path = "."]
+                pub mod tools {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🗂️reorganize/🦀️.rs"]
+                    pub mod reorganize;
+                }
 
                 #[path = "."]
                 pub mod windows {

@@ -143,5 +143,162 @@
       "unit-4",
       "unit-5"
     ]
+  },
+  "port": {
+    "toolId": "toyWait",
+    "hopAction": "toyExternalHop",
+    "hops": 3,
+    "traceRecords": 3,
+    "state": "complete"
+  },
+  "actionArgCarriers": {
+    "note": "How a §2.5 action argument (`runId`, `generation`) reads out of the wire value that carried it. A JSON number that is an exact non-negative integer IS the identity it names, whichever carrier the sender minted it with: the shell's own action arguments build `generation` as a float (`UiValue::Number`), a guest mints it with `DslValue::uint`, and a targeted action's `runId` travels as text. A reader that accepts only some of these does not reject a wrong value, it silently misreads a right one — `generation` reading `None` is `toolRun.stale`, so EVERY finalize of EVERY app was refused, runs reached `complete` and stayed there, and a start against a live run is `toolRun.busy`. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.",
+    "rows": [
+      {
+        "id": "an-exact-unsigned-integer",
+        "carrier": "uint",
+        "value": 3,
+        "reads": 3
+      },
+      {
+        "id": "a-json-float-that-is-an-exact-integer",
+        "carrier": "float",
+        "value": 3.0,
+        "reads": 3
+      },
+      {
+        "id": "zero-as-a-float",
+        "carrier": "float",
+        "value": 0.0,
+        "reads": 0
+      },
+      {
+        "id": "a-decimal-string",
+        "carrier": "string",
+        "value": "3",
+        "reads": 3
+      },
+      {
+        "id": "a-fractional-number-names-no-identity",
+        "carrier": "float",
+        "value": 2.5,
+        "reads": null
+      },
+      {
+        "id": "a-negative-number-names-no-identity",
+        "carrier": "float",
+        "value": -1.0,
+        "reads": null
+      },
+      {
+        "id": "text-that-is-not-a-number-names-no-identity",
+        "carrier": "string",
+        "value": "seven",
+        "reads": null
+      }
+    ],
+    "finalizeCarrier": "float"
+  },
+  "readOnlyRun": {
+    "toolId": "toyReadOnlyFill",
+    "units": 3,
+    "note": "A run that declares `mutating: false` authors no provisional edit, so there is nothing for a finalize to publish and nothing for a user to review: its completion IS its finalization, applied in the same driver turn that completed the job. Leaving it parked in `complete` only holds the tool's single run slot open, and a start against a non-terminal run is `toolRun.busy` — which is how a read-only preview run could run exactly once per session. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.",
+    "stateAfterJobCompletes": "finalizing",
+    "startsAgainWithoutAnyFinalizeAction": true
+  },
+  "settingsReads": {
+    "note": "The toy run declares `settings.config = [\"/selected\"]` (its target). A config publication that republishes the same value and a window-config publication (a camera move) are not settings changes; a changed target is. A run that declares no settings reads is never reconfigured by any settings publication.",
+    "config": [
+      "/selected"
+    ],
+    "undeclaredToolId": "toyUndeclared",
+    "target": 1000,
+    "changedTarget": 1200,
+    "generationAfterUnrelatedPublications": 0,
+    "generationAfterChangedTarget": 1
+  },
+  "retarget": {
+    "note": "A job built through `build_retargetable_tool_run_job` stays resident while its run is complete and is retargeted in place: a raise and a lower reconfigure it without a rebuild (its resumedFrom counter stays 0), and a base change rebinds it to the next generation without a rebuild.",
+    "toolId": "toyRetarget",
+    "initialTarget": 5,
+    "raisedTarget": 8,
+    "loweredTarget": 3,
+    "resumedFrom": 0,
+    "generationAfterRaise": 1,
+    "generationAfterLower": 2,
+    "remoteCount": 100
+  },
+  "rebind": {
+    "note": "A base change during a run hands every later tick the new identity: a plain job is rebuilt under it from its checkpoint, a retargetable job is rebound in place; either way the run keeps appending after the rebase.",
+    "target": 100000,
+    "unitsBeforeRebase": 1,
+    "remoteCount": 100,
+    "generationAfterRebase": 1
+  },
+  "chord": {
+    "note": "A §2.5 action without any identity argument — what a keyboard chord dispatches — targets the instance's live run at its generation of this dispatch; an identity argument that is stale still no-ops.",
+    "target": 1000,
+    "windowArgument": "world"
+  },
+  "compact": {
+    "note": "A retract followed by re-appends spread over several ticks keeps the previous overlay rendered until the job reaches its next checkpoint, so the renderer never shows a half re-appended overlay.",
+    "toolId": "toyCompact",
+    "initialCount": 5,
+    "compactCounts": [
+      1,
+      2,
+      3
+    ],
+    "renderedWhileCompacting": "count=5",
+    "renderedAfterCheckpoint": "count=3"
+  },
+  "traceKeys": {
+    "note": "Every job of a run shares one trace key allocator: keys it hands out lie above every key the run's ticks upserted and every key allocated before.",
+    "units": 5,
+    "nextAfterRun": 6,
+    "allocate": 3,
+    "allocated": [
+      6,
+      9
+    ],
+    "nextAfterAllocation": 9
+  },
+  "startWindow": {
+    "windowId": "world",
+    "windowKindId": "world"
+  },
+  "boardLane": {
+    "note": "A board-2d scene surface carries the toolRunTrace lane exactly like a world-3d one: the spine names the lane and the paged carrier holds the delta.",
+    "windowId": "board",
+    "bodyKey": "board",
+    "surfaceId": "board.scene",
+    "laneName": "toolRunTrace",
+    "units": 5
+  },
+  "windowSettingsReads": {
+    "note": "A run started from a window declares the window-config fields its jobs read per window kind: its job request carries that window's config snapshot, a publication on another window of the same kind or an unchanged value never reconfigures, and a changed value on the starting window does.",
+    "toolId": "toyWindowSettings",
+    "windowKindId": "world",
+    "startWindowId": "world",
+    "otherWindowId": "world-2",
+    "pointer": "/selected",
+    "target": 1000,
+    "generationAfterOtherWindow": 0,
+    "generationAfterStartWindow": 1
+  },
+  "readerWindows": {
+    "note": "A run declares the window kinds whose bodies render its state (ToolRunDefinition.windows): every tick dirties them next to the panel and the scene windows, and their render reads the run's progress, steps and the latest tick payload through ArtifactView::tool_run().",
+    "toolId": "toyReader",
+    "windows": [
+      "main"
+    ],
+    "target": 1000,
+    "windowBodies": [
+      "tool-run.main",
+      "world"
+    ],
+    "panelBodies": [
+      "framework.body.toolRun"
+    ]
   }
 }

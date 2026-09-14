@@ -1,13 +1,22 @@
 pub(crate) mod context {
     use super::super::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app as new_test_app, new_app_with_registry};
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
     use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
     pub type WiresApp = VcsArtifactApp<EditorApp<ReasoningWiresPlayApp>>;
     
-    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
+    /// 🧪️ A registry-backed app bound to the live runtime instance `meta("local")` addresses. The registry-less
+    /// `artifact_app_laws::new_app` cannot construct this app: its tool proofs need the manifest's `Migrated`
+    /// classifications, and without them construction faults with `interactive-job.catalog-authority`.
     pub async fn new_app() -> WiresApp {
-        new_test_app::<EditorApp<ReasoningWiresPlayApp>>().await
+        let mut app = app_with_registry().await;
+        app.bind_instance_id(meta("local").instance_id).await;
+        app
+    }
+    
+    /// 🧹️ Retires the app through its bounded close protocol instead of a panicking destructor.
+    pub fn close(mut app: WiresApp) {
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
     }
     
     /// 🧪️ Framework test context gap (SDK GAP, see this ticket's `📓️w0-f-report.md` handoff #3):
@@ -29,10 +38,19 @@ pub(crate) mod context {
     pub async fn metabolism_app() -> WiresApp {
         let mut app = new_app().await;
         let document = crate::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
-        let envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document, None);
+        let mut envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document, None);
+        envelope.dialect = Some(crate::WIRES_DIALECT.into());
         let files = store::print_document_pack(&envelope).await.expect("print document pack");
+        retire_envelope(envelope);
         app.load_document_pack(&files).await.expect("load metabolism");
         app
+    }
+    
+    /// ♻️ Retires a seed envelope through its bounded owner retirement; an envelope may never reach `Drop` owning.
+    pub fn retire_envelope(envelope: store::ArtifactEnvelope<WiresSnapshot, WiresMutation>) {
+        let mut retirement = store::retire_document_envelope(envelope, std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<WiresSnapshot>::default()), std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<WiresMutation>::default()));
+        while !matches!(retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("seed envelope retirement"), store::SnapshotRetirementStep::Complete) {}
+        assert!(retirement.terminal_is_empty(), "seed envelope retires completely");
     }
     
     pub async fn dispatch(app: &mut WiresApp, command: WiresCommand) -> InvocationResult {
@@ -60,7 +78,7 @@ fn retained_route_fixture_matches_the_exact_factory_and_fail_closed_census() {
     let routes = fixture.get("routes").and_then(Value::as_array).expect("routes");
     let migrated = routes.iter().filter(|route| route.get("disposition").and_then(Value::as_str) == Some("Migrated")).map(|route| route.get("id").and_then(Value::as_str).expect("route id")).collect::<Vec<_>>();
     assert_eq!(migrated, WIRES_RETAINED_TOOL_IDS);
-    assert_eq!(routes.len(), 10);
+    assert_eq!(routes.len(), 8);
     assert_eq!(<WiresRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS, WIRES_RETAINED_PUBLICATION_CONTRACTS);
     assert_eq!(WIRES_RETAINED_PUBLICATION_CONTRACTS[0].lanes, [ArtifactToolPublicationLane::WindowTransient]);
     assert_eq!(WIRES_RETAINED_PUBLICATION_CONTRACTS[1].lanes, [ArtifactToolPublicationLane::WindowTransient]);
@@ -79,7 +97,7 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 10, "every WiresCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 8, "every WiresCommand row must be covered by every_command()");
 }
 
 /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -102,8 +120,6 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         ("addNode", "add-node"),
         ("addRelationship", "add-relationship"),
         ("deleteSelection", "delete-selection"),
-        ("forceLayout", "force-layout"),
-        ("reorganize", "reorganize"),
         ("canvasPointerMove", "pointer-move"),
         ("canvasPointerDown", "pointer-down"),
         ("canvasPointerUp", "pointer-up"),
@@ -121,13 +137,14 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
 /// `🧪️wire-baseline-before.txt`) — a regression here is a real format break, not a fixture mismatch.
 /// `setSelection`/`documentSelect` dissolved into the framework's own "graph" interaction domain
 /// (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) and no longer exist as `WiresCommand`
-/// pinned hex below are updated for the new ordinals (8 and 9); `SetActiveExample` is unaffected
+/// pinned hex below are updated for the new ordinals; the synchronous `forceLayout`/`reorganize` rows dissolved into the
+/// `reorganize` tool run (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS); `SetActiveExample` is unaffected
 /// (ordinal 0, before the deleted rows).
 #[semio_framework_async_macros::async_test]
 async fn commands_keep_their_pre_migration_wire_bytes() {
     let cases: [(WiresCommand, &str, &str); 2] = [
         (WiresCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "metabolism".into() }), "active-example active-example example-id=metabolism", "0100010a6d657461626f6c69736d01000600"),
-        (WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}), "pointer-up pointer-up", "01080000"),
+        (WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}), "pointer-up pointer-up", "01060000"),
     ];
     for (command, text, hex) in cases {
         assert_eq!(protocol::OpText::print_op(&command), text);
@@ -143,8 +160,6 @@ pub(super) fn every_command() -> Vec<WiresCommand> {
         WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }),
         WiresCommand::AddRelationship(add_relationship::AddRelationship { kind: "owns".into() }),
         WiresCommand::DeleteSelection(delete_selection::DeleteSelection {}),
-        WiresCommand::ForceLayout(force_layout::ForceLayout {}),
-        WiresCommand::Reorganize(reorganize::Reorganize {}),
         WiresCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 1.5, y: -2.5 }),
         WiresCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }),
         WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}),

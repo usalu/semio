@@ -1,7 +1,7 @@
 /** 🔺️ Remodeling diff schema — TypeScript twin of `🔺️diff/🦀️.rs` plus its hand-written
  *  `MutationDiff<RemodelingSnapshot>` apply/absorb (`🔺️diff/📝️text/🦀️.rs:79`).
  *
- *  `RemodelingDiff` carries `#[serde(rename_all = "camelCase", default)]` and none of its eighteen
+ *  `RemodelingDiff` carries `#[serde(rename_all = "camelCase", default)]` and none of its ten
  *  `Option` fields has `skip_serializing_if`, so an untouched field is written as an explicit
  *  `null` — the encoder here does the same. `streams`/`gcps` travel wrapped in the two list
  *  wrappers so an optional list stays a scalar across every format.
@@ -13,7 +13,6 @@ import {
   ARTIFACT_CHILD_SPEC,
   GROUND_CONTROL_POINT_SPEC,
   MEDIA_STREAM_SPEC,
-  RECONSTRUCTION_JOB_SPEC,
   RECONSTRUCTION_PARAMS_SPEC,
   RECONSTRUCTION_RESULTS_SPEC,
   decodeRecord,
@@ -22,7 +21,6 @@ import {
   type CalibrationState,
   type GroundControlPoint,
   type MediaStream,
-  type ReconstructionJob,
   type ReconstructionParams,
   type ReconstructionResults,
   type RecordSpec,
@@ -60,7 +58,6 @@ export interface RemodelingDiff {
   calibration: CalibrationState | null;
   params: ReconstructionParams | null;
   gcps: RemodelingGcpList | null;
-  job: ReconstructionJob | null;
   results: ReconstructionResults | null;
 }
 //#endregion 🔖️Diff
@@ -99,9 +96,7 @@ export const REMODELING_DIFF_SPEC: RecordSpec = {
     f("calibration", opt(rec(() => CALIBRATION_STATE_SPEC)), nothing),
     f("params", opt(rec(() => RECONSTRUCTION_PARAMS_SPEC)), nothing),
     f("gcps", opt(rec(() => REMODELING_GCP_LIST_SPEC)), nothing),
-    f("job", opt(rec(() => RECONSTRUCTION_JOB_SPEC)), nothing),
     f("results", opt(rec(() => RECONSTRUCTION_RESULTS_SPEC)), nothing),
-    f("locale", opt(text), nothing),
   ],
 };
 //#endregion 🔖️Spec
@@ -129,7 +124,6 @@ const PERSISTENT_LANES: readonly [keyof RemodelingDiff, keyof RemodelingSnapshot
   ["calibration", "calibration", false],
   ["params", "params", false],
   ["gcps", "gcps", true],
-  ["job", "job", false],
   ["results", "results", false],
 ];
 
@@ -217,7 +211,6 @@ export interface RemodelingArtifact {
   readonly calibration: CalibrationState;
   readonly params: ReconstructionParams;
   readonly gcps: readonly GroundControlPoint[];
-  readonly job: ReconstructionJob;
   readonly results: ReconstructionResults;
 
 }

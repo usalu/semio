@@ -1,0 +1,540 @@
+{
+  "note": "⌨️ Language-neutral corpus for the two window-scope decisions the React shell and the wgpu shell must both make: which window a seeded mode layout opens active (dockSeedActiveWindowIdV1 / dock_seed_active_window_id_v1) and which window an app-wide chord addresses (resolveKeybindingTargetWindowV1 / resolve_keybinding_target_window_v1). The generation3d rows are the real editor declaration: addGeneration is owned by the Generations window alone while mod+shift+g is app-wide, and the generate layout is the 22/43/35 row the named layout seeds.",
+  "apps": {
+    "generation3d": {
+      "kinds": [
+        {
+          "id": "procedural-main",
+          "actionIds": [
+            "nodeGraphEdit",
+            "nodeGraphViewport",
+            "setLodMode",
+            "selectNextNode",
+            "selectPreviousNode",
+            "selectUpstreamNode",
+            "selectDownstreamNode",
+            "activateSelection"
+          ]
+        },
+        {
+          "id": "procedural-preview",
+          "actionIds": [
+            "setCamera",
+            "setShowMode",
+            "toggleSun",
+            "translateSelection",
+            "rotateSelection",
+            "scaleSelection"
+          ]
+        },
+        {
+          "id": "generation3d-generations",
+          "actionIds": [
+            "addGeneration",
+            "selectGeneration",
+            "renameGeneration",
+            "removeGeneration"
+          ]
+        },
+        {
+          "id": "generation3d-generate-form",
+          "actionIds": [
+            "updateGenerationValues"
+          ]
+        },
+        {
+          "id": "generation3d-generate-preview",
+          "actionIds": [
+            "setCamera",
+            "setShowMode",
+            "toggleSun",
+            "translateSelection",
+            "rotateSelection",
+            "scaleSelection"
+          ]
+        }
+      ],
+      "modes": {
+        "edit": {
+          "kind": "row",
+          "children": [
+            {
+              "kind": "stack",
+              "activeId": "procedural-main",
+              "children": [
+                {
+                  "kind": "window",
+                  "id": "procedural-main"
+                }
+              ]
+            },
+            {
+              "kind": "stack",
+              "activeId": "procedural-preview",
+              "children": [
+                {
+                  "kind": "window",
+                  "id": "procedural-preview"
+                }
+              ]
+            }
+          ]
+        },
+        "generate": {
+          "kind": "row",
+          "children": [
+            {
+              "kind": "stack",
+              "activeId": "generation3d-generations",
+              "children": [
+                {
+                  "kind": "window",
+                  "id": "generation3d-generations"
+                }
+              ]
+            },
+            {
+              "kind": "stack",
+              "activeId": "generation3d-generate-form",
+              "children": [
+                {
+                  "kind": "window",
+                  "id": "generation3d-generate-form"
+                }
+              ]
+            },
+            {
+              "kind": "stack",
+              "activeId": "generation3d-generate-preview",
+              "children": [
+                {
+                  "kind": "window",
+                  "id": "generation3d-generate-preview"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "tabbed": {
+      "kinds": [
+        {
+          "id": "left",
+          "actionIds": [
+            "leftOnly"
+          ]
+        },
+        {
+          "id": "right",
+          "actionIds": [
+            "rightOnly"
+          ]
+        },
+        {
+          "id": "hidden",
+          "actionIds": [
+            "hiddenOnly"
+          ]
+        }
+      ],
+      "modes": {
+        "stacked": {
+          "kind": "row",
+          "children": [
+            {
+              "kind": "stack",
+              "activeId": "right",
+              "children": [
+                {
+                  "kind": "window",
+                  "id": "left"
+                },
+                {
+                  "kind": "window",
+                  "id": "right"
+                }
+              ]
+            }
+          ]
+        },
+        "bare": {
+          "kind": "window",
+          "id": "left"
+        },
+        "empty": {
+          "kind": "stack",
+          "children": []
+        }
+      }
+    }
+  },
+  "stacks": [
+    {
+      "id": "edit-two-stacks",
+      "app": "generation3d",
+      "mode": "edit",
+      "expected": [
+        {
+          "windowIds": [
+            "procedural-main"
+          ],
+          "activeWindowId": "procedural-main"
+        },
+        {
+          "windowIds": [
+            "procedural-preview"
+          ],
+          "activeWindowId": "procedural-preview"
+        }
+      ]
+    },
+    {
+      "id": "generate-three-stacks",
+      "app": "generation3d",
+      "mode": "generate",
+      "expected": [
+        {
+          "windowIds": [
+            "generation3d-generations"
+          ],
+          "activeWindowId": "generation3d-generations"
+        },
+        {
+          "windowIds": [
+            "generation3d-generate-form"
+          ],
+          "activeWindowId": "generation3d-generate-form"
+        },
+        {
+          "windowIds": [
+            "generation3d-generate-preview"
+          ],
+          "activeWindowId": "generation3d-generate-preview"
+        }
+      ]
+    },
+    {
+      "id": "tabbed-one-stack",
+      "app": "tabbed",
+      "mode": "stacked",
+      "expected": [
+        {
+          "windowIds": [
+            "left",
+            "right"
+          ],
+          "activeWindowId": "right"
+        }
+      ]
+    },
+    {
+      "id": "bare-window-is-a-stack",
+      "app": "tabbed",
+      "mode": "bare",
+      "expected": [
+        {
+          "windowIds": [
+            "left"
+          ],
+          "activeWindowId": "left"
+        }
+      ]
+    },
+    {
+      "id": "empty-layout",
+      "app": "tabbed",
+      "mode": "empty",
+      "expected": [
+        {
+          "windowIds": [],
+          "activeWindowId": null
+        }
+      ]
+    }
+  ],
+  "dockSeed": [
+    {
+      "id": "edit-boot",
+      "app": "generation3d",
+      "mode": "edit",
+      "activeWindowId": null,
+      "expected": "procedural-main"
+    },
+    {
+      "id": "generate-entered",
+      "app": "generation3d",
+      "mode": "generate",
+      "activeWindowId": null,
+      "expected": "generation3d-generations"
+    },
+    {
+      "id": "generate-after-edit-window",
+      "app": "generation3d",
+      "mode": "generate",
+      "activeWindowId": "procedural-main",
+      "expected": "generation3d-generations"
+    },
+    {
+      "id": "edit-keeps-its-own",
+      "app": "generation3d",
+      "mode": "edit",
+      "activeWindowId": "procedural-preview",
+      "expected": null
+    },
+    {
+      "id": "generate-keeps-its-own",
+      "app": "generation3d",
+      "mode": "generate",
+      "activeWindowId": "generation3d-generate-preview",
+      "expected": null
+    },
+    {
+      "id": "stack-active-tab-wins",
+      "app": "tabbed",
+      "mode": "stacked",
+      "activeWindowId": null,
+      "expected": "right"
+    },
+    {
+      "id": "bare-window",
+      "app": "tabbed",
+      "mode": "bare",
+      "activeWindowId": null,
+      "expected": "left"
+    },
+    {
+      "id": "empty-layout-seeds-nothing",
+      "app": "tabbed",
+      "mode": "empty",
+      "activeWindowId": null,
+      "expected": null
+    }
+  ],
+  "chords": [
+    {
+      "id": "generate-owner-unfocused",
+      "app": "generation3d",
+      "mode": "generate",
+      "focusedWindowId": "generation3d-generate-preview",
+      "actionId": "addGeneration",
+      "expectedKind": "owner",
+      "expectedWindowId": "generation3d-generations"
+    },
+    {
+      "id": "generate-owner-at-seed",
+      "app": "generation3d",
+      "mode": "generate",
+      "focusedWindowId": "generation3d-generations",
+      "actionId": "addGeneration",
+      "expectedKind": "focused",
+      "expectedWindowId": "generation3d-generations"
+    },
+    {
+      "id": "generate-owner-with-no-focus",
+      "app": "generation3d",
+      "mode": "generate",
+      "focusedWindowId": null,
+      "actionId": "addGeneration",
+      "expectedKind": "owner",
+      "expectedWindowId": "generation3d-generations"
+    },
+    {
+      "id": "edit-has-no-owner",
+      "app": "generation3d",
+      "mode": "edit",
+      "focusedWindowId": "procedural-main",
+      "actionId": "addGeneration",
+      "expectedKind": "unowned",
+      "expectedWindowId": null
+    },
+    {
+      "id": "edit-flow-verb-is-focused",
+      "app": "generation3d",
+      "mode": "edit",
+      "focusedWindowId": "procedural-main",
+      "actionId": "selectNextNode",
+      "expectedKind": "focused",
+      "expectedWindowId": "procedural-main"
+    },
+    {
+      "id": "edit-flow-verb-from-preview",
+      "app": "generation3d",
+      "mode": "edit",
+      "focusedWindowId": "procedural-preview",
+      "actionId": "selectNextNode",
+      "expectedKind": "owner",
+      "expectedWindowId": "procedural-main"
+    },
+    {
+      "id": "generate-preview-verb-in-layout-order",
+      "app": "generation3d",
+      "mode": "generate",
+      "focusedWindowId": "generation3d-generations",
+      "actionId": "setCamera",
+      "expectedKind": "owner",
+      "expectedWindowId": "generation3d-generate-preview"
+    },
+    {
+      "id": "edit-preview-verb-in-layout-order",
+      "app": "generation3d",
+      "mode": "edit",
+      "focusedWindowId": "procedural-main",
+      "actionId": "setCamera",
+      "expectedKind": "owner",
+      "expectedWindowId": "procedural-preview"
+    },
+    {
+      "id": "unknown-verb",
+      "app": "generation3d",
+      "mode": "edit",
+      "focusedWindowId": "procedural-main",
+      "actionId": "noSuchVerb",
+      "expectedKind": "unowned",
+      "expectedWindowId": null
+    },
+    {
+      "id": "unmounted-kind-is-unowned",
+      "app": "tabbed",
+      "mode": "stacked",
+      "focusedWindowId": "left",
+      "actionId": "hiddenOnly",
+      "expectedKind": "unowned",
+      "expectedWindowId": null
+    },
+    {
+      "id": "tabbed-sibling-owner",
+      "app": "tabbed",
+      "mode": "stacked",
+      "focusedWindowId": "left",
+      "actionId": "rightOnly",
+      "expectedKind": "owner",
+      "expectedWindowId": "right"
+    },
+    {
+      "id": "stale-focus-falls-back-to-owner",
+      "app": "tabbed",
+      "mode": "stacked",
+      "focusedWindowId": "hidden",
+      "actionId": "leftOnly",
+      "expectedKind": "owner",
+      "expectedWindowId": "left"
+    }
+  ],
+  "unownedHint": [
+    {
+      "locale": "en",
+      "chord": "⌘⇧G",
+      "label": "Add Generation",
+      "text": "⌘⇧G · Add Generation — not available in this mode"
+    },
+    {
+      "locale": "de",
+      "chord": "⌘⇧G",
+      "label": "Generation hinzufügen",
+      "text": "⌘⇧G · Generation hinzufügen — in diesem Modus nicht verfügbar"
+    },
+    {
+      "locale": "fr",
+      "chord": "⌘⇧G",
+      "label": "Add Generation",
+      "text": "⌘⇧G · Add Generation — not available in this mode"
+    }
+  ],
+  "reservedChords": {
+    "note": "🛡️ Which chords the shell's own chrome keeps out of the app-keybinding loop. Only accelerator-carrying chords are reserved — the rule the wgpu shell's is_reserved_shell_chord already applies — so a bare key stays with the focused surface and a node-graph canvas keeps its bare arrows.",
+    "collision": {
+      "shellControlId": "ui.shell.mode.next",
+      "chord": "mod+alt+arrowright",
+      "alsoMintedFor": "toolRunStep"
+    },
+    "shellTable": {
+      "ui.shell.mode.next": "mod+alt+arrowright",
+      "ui.shell.mode.previous": "mod+alt+arrowleft",
+      "ui.search.toggle": "mod+p",
+      "ui.window.focus": "mod+shift+enter",
+      "ui.shell.panelAnchor.topLeft": "ctrl+b,meta+b",
+      "ui.introduction.next": "enter,arrowright",
+      "ui.introduction.skip": "escape"
+    },
+    "overrides": {
+      "ui.search.toggle": "mod+alt+s"
+    },
+    "expected": [
+      "mod+alt+arrowright",
+      "mod+alt+arrowleft",
+      "mod+alt+s",
+      "mod+shift+enter",
+      "ctrl+b",
+      "meta+b"
+    ],
+    "cases": [
+      {
+        "chord": "mod+alt+arrowright",
+        "accelerator": true,
+        "reserved": true,
+        "why": "the navbar's mode step, which `toolRunStep` is minted on too — two owners, and the chrome wins"
+      },
+      {
+        "chord": "mod+alt+arrowleft",
+        "accelerator": true,
+        "reserved": true,
+        "why": "the navbar's previous-mode step"
+      },
+      {
+        "chord": "mod+shift+enter",
+        "accelerator": true,
+        "reserved": true,
+        "why": "window focus, which `toolRunFinalize` is minted on too"
+      },
+      {
+        "chord": "arrowright",
+        "accelerator": false,
+        "reserved": false,
+        "why": "a bare arrow belongs to the focused surface — the node graph owns it"
+      },
+      {
+        "chord": "enter",
+        "accelerator": false,
+        "reserved": false,
+        "why": "bare, so the introduction's own hotkey and an app surface can both live with it"
+      },
+      {
+        "chord": "escape",
+        "accelerator": false,
+        "reserved": false,
+        "why": "bare; the shell's own Escape handling runs before the binding loop"
+      },
+      {
+        "chord": "mod+shift+g",
+        "accelerator": true,
+        "reserved": false,
+        "why": "an app chord the shell table never names"
+      },
+      {
+        "chord": "mod+p",
+        "accelerator": true,
+        "reserved": false,
+        "why": "the DEFAULT search chord, overridden away by this fixture's user"
+      },
+      {
+        "chord": "mod+alt+s",
+        "accelerator": true,
+        "reserved": true,
+        "why": "the override the user chose instead"
+      },
+      {
+        "chord": "ctrl+b",
+        "accelerator": true,
+        "reserved": true,
+        "why": "one alternative of a comma-separated shell binding"
+      },
+      {
+        "chord": "meta+b",
+        "accelerator": true,
+        "reserved": true,
+        "why": "the other alternative of the same binding"
+      }
+    ]
+  }
+}

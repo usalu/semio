@@ -2815,6 +2815,11 @@ impl EnergyJobAuthority {
     fn step_aggregate_facility(&mut self) -> bool {
         let Some(state) = &self.state else { return true };
         let dt_s = self.pre.as_ref().map_or(0.0, |pre| pre.zone_timestep_s);
+        if self.aggregate_facility_cursor > 1 {
+            self.aggregate_facility_cursor = 0;
+            self.aggregate_facility_work = None;
+            return true;
+        }
         let work = self.aggregate_facility_work.get_or_insert_with(AggregateZoneWork::new);
         if self.hour_index == 0 && work.phase == 0 {
             let source = if self.aggregate_facility_cursor == 0 { "Facility Heating" } else { "Facility PV" };

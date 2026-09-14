@@ -22,51 +22,36 @@ pub struct SetContributions {
 }
 
 /// 🧩️ Buffers this page and, on the run's last one, installs the assembled closure into the flow
-/// extension registry AND re-arms every evaluation the missing registry had already faulted.
+/// extension registry and invalidates every evaluation the missing registry had already faulted.
+/// Answers whether the session was invalidated, which is what owes the attached previews a fresh
+/// evaluation.
 ///
-/// The install alone is not delivery. The host pushes this run AFTER the example is loaded, so the
+/// The install alone is not delivery. The host pushes this run AFTER the document is loaded, so the
 /// first evaluation has already run against an EMPTY registry, cached its
-/// `flow.extension-not-contributed` miss in the session's neural cache and incremental baseline,
-/// published a `faulted` preview and given up its `flowEvalTick` chain — and installing operators
-/// into a process-wide registry publishes nothing, so without this nothing in the app ever looks
-/// again and the surface reads `faulted` forever with no user action able to change it
-/// (`📓️runtime-verification-2026-09-09.md` boot #11).
+/// `flow.extension-not-contributed` miss in the session's neural cache and incremental baseline and
+/// given up — and installing operators into a process-wide registry publishes nothing, so without the
+/// owed evaluation nothing in the app ever looks again (`📓️runtime-verification-2026-09-09.md` boot
+/// #11).
 ///
 /// The key is [`semio_framework_os_flow::flow_extension_registry_generation`], not "this was the
-/// last page": a re-push of an unchanged closure leaves the generation where it was and re-arms
-/// nothing, while ANY later contribution change — a plugin enabled, disabled or hot-swapped —
-/// bumps it and re-evaluates. Each attached preview window owns its OWN retained evaluation
-/// publication, so each gets its own chain back through the SAME addressed self-dispatch the tick
-/// uses (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-///
-/// Emits no store lane: the registry is process-wide runtime state, never a document, config or
-/// transient lane — which is why this command's publication lane is `HostOnly`, and effects are not
-/// a store lane (see `flow_eval_resolve`, `HostOnly` and self-re-arming for the same reason).
-pub fn apply(
-    payload: &SetContributions,
-    _doc: &ArtifactView<'_, Generation3dSnapshot>,
-    _cfg: &ConfigView<'_, Generation3dConfig>,
-    session: &mut FlowEvalSession,
-    preview_windows: &[(&str, &str)],
-) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
+/// last page": a re-push of an unchanged closure leaves the generation where it was and owes nothing,
+/// while ANY later contribution change re-evaluates (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub fn install(payload: &SetContributions, session: &mut FlowEvalSession) -> Result<bool, Fault> {
     let page = u32::try_from(payload.page).map_err(|_| Fault::from("flow.contributions-page-address-invalid"))?;
     let page_count = u32::try_from(payload.page_count).map_err(|_| Fault::from("flow.contributions-page-address-invalid"))?;
     semio_framework_os_flow::sync_host_flow_extension_contributions_page(page, page_count, &payload.json).map_err(Fault::from)?;
-    let generation = semio_framework_os_flow::flow_extension_registry_generation();
-    if !session.invalidate_for_flow_extension_registry(generation) {
-        return Ok(Emit::default());
-    }
-    Ok(Emit { effects: crate::preview_eval::rearm_attached_previews(session, preview_windows), ..Default::default() })
+    Ok(session.invalidate_for_flow_extension_registry(semio_framework_os_flow::flow_extension_registry_generation()))
 }
 
 /// 🧩️ The `app_commands!` row. Its `handle(payload, doc, cfg, ctx)` signature is framework-fixed and
 /// carries no attached-window roster, exactly as it carries no `interaction` for
 /// `delete_selection` — so it installs the page and invalidates the session, and the SERVED route
 /// (`Generation3dContributionsWork::step`, which is handed the shell's trusted `ViewModel`) is the
-/// one that re-arms. Reached only by the marks-free `handle`/`dispatch` fallbacks, which own no
-/// preview window to arm a chain into anyway.
-pub fn handle(payload: &SetContributions, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    apply(payload, doc, cfg, session, &[] as &[(&str, &str)])
+/// one that owes the attached previews an evaluation. Reached only by the marks-free
+/// `handle`/`dispatch` fallbacks, which own no preview window anyway.
+pub fn handle(payload: &SetContributions, _doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
+    install(payload, session)?;
+    Ok(Emit::default())
 }
 
 //#region 🧪️Tests

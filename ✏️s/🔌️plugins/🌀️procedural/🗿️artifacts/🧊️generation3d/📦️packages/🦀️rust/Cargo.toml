@@ -27,6 +27,7 @@ semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
+semio-framework-tool-run = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-gltf = { workspace = true }
@@ -70,6 +71,8 @@ semio-s-plugin-flow-extension-math = { workspace = true, default-features = fals
 # committed expected-stat is never only our own arithmetic. Test-only, never a `[dependencies]`
 # entry, never reachable from a production target (same standing as `semio-framework-3d`'s).
 parry3d = "0.17"
+# 🪪️ Third-party oracle for the preview evaluation run's node entity key (FNV-1a 64) — test-only.
+fnv = "1.0.7"
 
 # 🧪️ Emoji file names never compile as an implicit `tests/` target, so the example-geometry lane is
 # declared with an explicit ASCII name and a package-root-relative path.

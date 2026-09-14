@@ -749,6 +749,102 @@
         "nextKey",
         "inputs"
       ]
+    },
+    "Puzzle3dBrushSuggestionsRun": {
+      "title": "Puzzle3dBrushSuggestionsRun",
+      "description": "The read-only brush suggestions tool run vocabulary of `s.puzzle3d`'s ⏳️precompute/🖌️brush run job: stage and counter indices and reason codes with their tool-run verdict. Trace record keys are candidate indices into the target vortex's compatible candidate list. Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W2-C.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "stages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dBrushSuggestionsRunStage"
+          }
+        },
+        "counters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dBrushSuggestionsRunCounter"
+          }
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dFillRunReason"
+          }
+        }
+      },
+      "required": [
+        "stages",
+        "counters",
+        "reasons"
+      ],
+      "x-semio-toolRun": {
+        "stages": [
+          "prepare",
+          "target",
+          "test",
+          "idle"
+        ],
+        "counters": [
+          "tested",
+          "free",
+          "collisions"
+        ],
+        "reasons": [
+          {
+            "code": 0,
+            "id": "free",
+            "verdict": "success"
+          },
+          {
+            "code": 1,
+            "id": "collision",
+            "verdict": "danger"
+          },
+          {
+            "code": 2,
+            "id": "pose-unavailable",
+            "verdict": "warning"
+          },
+          {
+            "code": 3,
+            "id": "target-missing",
+            "verdict": "warning"
+          },
+          {
+            "code": 4,
+            "id": "suggestions-blocked",
+            "verdict": "warning"
+          },
+          {
+            "code": 5,
+            "id": "search-complete",
+            "verdict": "success"
+          }
+        ]
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    },
+    "Puzzle3dBrushSuggestionsRunStage": {
+      "type": "string",
+      "enum": [
+        "prepare",
+        "target",
+        "test",
+        "idle"
+      ]
+    },
+    "Puzzle3dBrushSuggestionsRunCounter": {
+      "type": "string",
+      "enum": [
+        "tested",
+        "free",
+        "collisions"
+      ]
     }
   }
 }

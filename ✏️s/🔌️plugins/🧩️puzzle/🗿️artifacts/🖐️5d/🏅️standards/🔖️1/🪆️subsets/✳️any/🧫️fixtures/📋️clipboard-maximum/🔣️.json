@@ -1,0 +1,8 @@
+{
+  "$schema": "semio.puzzle.puzzle5d.clipboard-maximum.fixture.v1",
+  "example": "capsule-dream",
+  "parts": 2880,
+  "selection": "every-part",
+  "pasteOffset": [10.0, 0.0, 0.0],
+  "importMedia": "not-implemented"
+}

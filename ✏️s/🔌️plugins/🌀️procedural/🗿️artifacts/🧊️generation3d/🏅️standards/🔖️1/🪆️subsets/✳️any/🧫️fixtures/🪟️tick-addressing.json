@@ -1,7 +1,7 @@
 {
   "format": "semio.generation3d.tick-addressing",
   "version": 1,
-  "note": "The window address of the self-dispatched flowEvalTick chain, declared as data — for BOTH surfaces of this subset, which run the one shared chain (`🧵️preview-eval`). `arming` is what a surface's pending_effects may put on the wire for a given attached-window roster; `dispatch` is which of those addresses that surface's retained route admits. Each row names the `surface` it governs (`editor` | `viewer`). Language-agnostic: an implementation in any language must answer these exact rows.",
+  "note": "The window address of every `flowEvalTick` hop the `previewEval` run hands the host, declared as data — for BOTH surfaces of this subset, which run the one shared run (`🧵️preview-eval`). `arming` names the windows a run started off a given attached-window roster evaluates (a roster with none starts no run); `dispatch` is which of those addresses that surface's retained route admits. Each row names the `surface` it governs (`editor` | `viewer`). Language-agnostic: an implementation in any language must answer these exact rows.",
   "windowKinds": {
     "flow": "procedural-main",
     "preview": "procedural-preview",

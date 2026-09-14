@@ -351,7 +351,7 @@ fn lane_payload(document: &UiDocumentTree, root: &UiNodeRecord) -> String {
 
 /// 🚚️ Reattaches a surface's out-of-doc payload lanes to the spine its `doc.bytes` decoded to.
 /// `lane_name` resolves a carrier key to its declared lane name (`World3dSceneLane`,
-/// `Canvas2dSceneLane`). A lane the document declares but whose carrier has not fully arrived is left
+/// `Canvas2dSceneLane`, `Board2dSceneLane`). A lane the document declares but whose carrier has not fully arrived is left
 /// at its spine value rather than guessed — a truncated `meshes` payload would parse to an EMPTY
 /// scene, which is strictly worse than the previous frame's.
 fn merge_scene_lanes<T: ui_scene::SceneDoc>(document: &UiDocumentTree, record: &UiNodeRecord, scene: &mut T, declared: &[ui_scene::SceneLaneRef], lane_name: impl Fn(&str) -> Option<&'static str>) {
@@ -431,7 +431,14 @@ fn surface_scene_node(document: &UiDocumentTree, record: &UiNodeRecord, props: &
         ui_contract::SurfaceKind::Paint2d => node.paint_2d = ui_scene::decode::<ui_scene::Paint2dScene>(props).ok(),
         ui_contract::SurfaceKind::VirtualFileSystem => node.virtual_file_system = ui_scene::decode::<ui_scene::VirtualFileSystemScene>(props).ok(),
         ui_contract::SurfaceKind::TiledMap => node.tiled_map = ui_scene::decode::<ui_scene::TiledMapScene>(props).ok(),
-        ui_contract::SurfaceKind::Board2d => node.board2d = ui_scene::decode::<ui_scene::Board2dScene>(props).ok(),
+        ui_contract::SurfaceKind::Board2d => {
+            if let Ok(mut scene) = ui_scene::decode::<ui_scene::Board2dScene>(props) {
+                let declared = std::mem::take(&mut scene.lanes);
+                merge_scene_lanes(document, record, &mut scene, &declared, |key| ui_scene::Board2dSceneLane::from_body_key(key).map(ui_scene::Board2dSceneLane::name));
+                scene.lanes = declared;
+                node.board2d = Some(scene);
+            }
+        }
         ui_contract::SurfaceKind::IconRender => node.icon_render = ui_scene::decode::<ui_scene::IconRenderScene>(props).ok(),
         ui_contract::SurfaceKind::InkCanvas => node.ink_canvas = ui_scene::decode::<ui_scene::InkCanvasScene>(props).ok(),
         ui_contract::SurfaceKind::GraphTimeline => node.graph_timeline = ui_scene::decode::<ui_scene::GraphTimelineScene>(props).ok(),

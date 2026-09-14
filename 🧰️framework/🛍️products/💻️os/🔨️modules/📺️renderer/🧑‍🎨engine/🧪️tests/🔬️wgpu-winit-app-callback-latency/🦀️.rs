@@ -10,7 +10,7 @@ fn mounted_pointer_storm_callback_p99_stays_below_two_milliseconds() {
     let pointer = PointerInfo { id: PointerId(1), kind: PointerKind::Mouse, pressure: None, tilt: None };
     let mut generation = 0;
     for sample in 0..20_000 {
-        assert_eq!(enqueue_host_event(&mut events, &mut scheduler, token, &mut generation, DispatchEvent::PointerMove { pointer, x: sample as f32, y: 0.0 },), ui_host::EnqueueOutcome::Accepted);
+        assert_eq!(enqueue_host_event(&mut events, &mut scheduler, token, &mut generation, FrameGenerationHold::Free, DispatchEvent::PointerMove { pointer, x: sample as f32, y: 0.0 },), ui_host::EnqueueOutcome::Accepted);
     }
     let (_, _, p99_us) = semio_framework_trace::site_percentiles("os_renderer_event").expect("mounted event callback samples");
     assert!(p99_us < 2_000, "mounted event callback p99 was {p99_us} µs");
@@ -24,7 +24,7 @@ fn mounted_resize_storm_callback_p99_stays_below_two_milliseconds() {
     let token = ui_host::UiThreadToken::mint_for_host();
     let mut generation = 0;
     for sample in 0..20_000 {
-        enqueue_host_metrics(&mut events, &mut scheduler, token, &mut generation, 800 + sample % 32, 600 + sample % 32, 2.0);
+        enqueue_host_metrics(&mut events, &mut scheduler, token, &mut generation, FrameGenerationHold::Free, 800 + sample % 32, 600 + sample % 32, 2.0);
     }
     let (_, _, p99_us) = semio_framework_trace::site_percentiles("os_renderer_metrics").expect("mounted resize callback samples");
     assert!(p99_us < 2_000, "mounted resize callback p99 was {p99_us} µs");

@@ -1,23 +1,29 @@
 //! 🤝️ `engagement-submit` command.
 
 use crate::editor::puzzle3d::commands::set_fill_count;
+use crate::editor::puzzle3d::modes::edit::tools::fill as fill_tool;
 use crate::editor::puzzle3d::modes::edit::windows::main::utilities;
 use crate::editor::puzzle3d::{apply_puzzle3d_focus_selection, drive_precompute, Puzzle3dActionCtx, PUZZLE3D_SELECTION_METHOD_LASSO, PUZZLE3D_SELECTION_METHOD_PICK, PUZZLE3D_SELECTION_METHOD_RECTANGLE};
 use dsl::os_pack::json::Value;
+use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::strip_engagement_prefix;
+use semio_framework_tool_run::{TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_START_ACTION_ID};
 
 /// 🗣️ Every sub-verb the engagement input accepts, in the order the window's placeholder advertises
 /// them (`🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️.rs` `engagement`). The placeholder is derived from this
 /// list, so an advertised verb that no arm below implements cannot exist.
 pub const PUZZLE3D_ENGAGEMENT_VERBS: &[&str] = &["brush", "fill <n>", "zoom", "clear", "pick", "rectangle", "lasso"];
 
+/// 🗣️ `fill <n>` arms the Fill tool, sets the shared count and starts a fill run through the framework's
+/// `toolRunStart`; the other verbs switch utilities or selection methods in place.
 pub fn engagement_submit(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     let raw = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("").trim().to_string();
-    if let Some(rest) = strip_engagement_prefix(&raw, "fill") {
-        ctx.scene.active_utility = "fill".into();
-        drive_precompute(&mut ctx.app.precompute.borrow_mut(), ctx.scene);
+    if let Some(rest) = strip_engagement_prefix(&raw, fill_tool::TOOL_ID) {
+        ctx.scene.active_utility = fill_tool::TOOL_ID.into();
         let count = rest.parse::<u32>().ok().unwrap_or(ctx.scene.runtime.fill_count);
         ctx.effects.push(set_fill_count::request(count));
+        let start = serde_json::json!({ TOOL_RUN_ARG_TOOL_ID: fill_tool::TOOL_ID });
+        ctx.effects.push(Effect::DispatchAction { req: semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0), action: TOOL_RUN_START_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(start)), delay_ms: 0 });
     } else {
         match raw.to_lowercase().as_str() {
             "brush" => {

@@ -1,3 +1,263 @@
+/* owned-wgpu:🧰️framework/🔨️modules/⏯️tool-run/🟦️.ts */
+var TOOL_RUN_STEP_RING_CAPACITY = 64;
+var TOOL_RUN_TRACE_RESIDENT_RECORDS = 1048576;
+var TOOL_RUN_TRACE_PAGE_OPS_MAX = 4096;
+var TOOL_RUN_TRACE_LOG_COMPACT_FLOOR = 4096;
+var TOOL_RUN_TRACE_PAGE_OVERHEAD_BYTES = 64;
+function isToolRunVerdictRejected(verdict) {
+  return verdict === "warning" || verdict === "danger";
+}
+function toolRunStepArgEquals(a, b) {
+  if ("unsigned" in a)
+    return "unsigned" in b && a.unsigned === b.unsigned;
+  return "float" in b && Object.is(a.float, b.float);
+}
+function toolRunStepsCoalesce(a, b) {
+  return a.kind === b.kind && a.stage === b.stage && a.reason === b.reason && a.subject === b.subject && a.args.length === b.args.length && a.args.every((arg, index) => toolRunStepArgEquals(arg, b.args[index]));
+}
+
+class ToolRunStepRing {
+  #steps = [];
+  static fromSteps(steps) {
+    if (steps.length > TOOL_RUN_STEP_RING_CAPACITY)
+      throw new ToolRunCodecError("limit", "step ring capacity");
+    const ring = new ToolRunStepRing;
+    ring.#steps = [...steps];
+    return ring;
+  }
+  push(step) {
+    const newest = this.#steps[this.#steps.length - 1];
+    if (newest !== undefined && toolRunStepsCoalesce(newest, step)) {
+      this.#steps[this.#steps.length - 1] = { ...newest, sequence: step.sequence, repeat: Math.min(newest.repeat + step.repeat, 4294967295) };
+      return;
+    }
+    if (this.#steps.length === TOOL_RUN_STEP_RING_CAPACITY)
+      this.#steps.shift();
+    this.#steps.push(step);
+  }
+  get length() {
+    return this.#steps.length;
+  }
+  steps() {
+    return this.#steps;
+  }
+  oldest() {
+    return this.#steps[0];
+  }
+  newest() {
+    return this.#steps[this.#steps.length - 1];
+  }
+}
+function toolRunTraceOpWireBytes(op) {
+  if (op.op === "clear")
+    return 1;
+  if (op.op === "retire")
+    return 9;
+  return 13 + (op.subject.kind === "instance3d" ? 36 : op.subject.kind === "placement2d" ? 16 : 8);
+}
+function toolRunTracePageWireBytes(ops) {
+  let bytes = TOOL_RUN_TRACE_PAGE_OVERHEAD_BYTES;
+  for (const op of ops)
+    bytes += toolRunTraceOpWireBytes(op);
+  return bytes;
+}
+
+class ToolRunTraceStore {
+  #identity;
+  #capacity;
+  #compactFloor;
+  #records = new Map;
+  #rejected = [];
+  #rejectedHead = 0;
+  #nextStamp = 0;
+  #log = [];
+  #logBase = 0;
+  #nextPage = 0;
+  #loggedOps = 0;
+  constructor(identity, capacity = TOOL_RUN_TRACE_RESIDENT_RECORDS, compactFloor = TOOL_RUN_TRACE_LOG_COMPACT_FLOOR) {
+    this.#identity = identity;
+    this.#capacity = Math.max(1, capacity);
+    this.#compactFloor = Math.max(1, compactFloor);
+  }
+  get identity() {
+    return this.#identity;
+  }
+  get size() {
+    return this.#records.size;
+  }
+  get logBase() {
+    return this.#logBase;
+  }
+  get nextPage() {
+    return this.#nextPage;
+  }
+  rebind(identity) {
+    if (identity.id.run !== this.#identity.id.run || identity.id.appInstanceId !== this.#identity.id.appInstanceId) {
+      this.#records.clear();
+      this.#rejected = [];
+      this.#rejectedHead = 0;
+      this.#nextStamp = 0;
+      this.#log = [];
+      this.#logBase = 0;
+      this.#nextPage = 0;
+      this.#loggedOps = 0;
+    }
+    this.#identity = identity;
+  }
+  record(key) {
+    return this.#records.get(key);
+  }
+  records() {
+    return this.#records.entries();
+  }
+  logPage(page) {
+    return this.#log[page - this.#logBase]?.ops;
+  }
+  applyPage(page) {
+    if (page.identity.id.run !== this.#identity.id.run || page.identity.id.appInstanceId !== this.#identity.id.appInstanceId || page.identity.generation !== this.#identity.generation)
+      return "toolRun.stale";
+    return this.applyOps(page.ops);
+  }
+  applyOps(ops) {
+    let evicted = 0;
+    let overflowed = 0;
+    const logged = [];
+    for (const op of ops) {
+      if (op.op === "clear") {
+        this.#records.clear();
+        this.#rejected = [];
+        this.#rejectedHead = 0;
+        logged.push(op);
+      } else if (op.op === "retire") {
+        if (this.#records.delete(op.key))
+          logged.push(op);
+      } else {
+        if (!this.#records.has(op.key) && this.#records.size >= this.#capacity) {
+          const victim = this.#evictOldestRejected();
+          if (victim !== undefined) {
+            logged.push({ op: "retire", key: victim });
+            evicted += 1;
+          } else if (isToolRunVerdictRejected(op.verdict)) {
+            evicted += 1;
+            continue;
+          } else {
+            overflowed += 1;
+            continue;
+          }
+        }
+        const stamp = this.#nextStamp++;
+        this.#records.set(op.key, { verdict: op.verdict, reason: op.reason, subject: op.subject, stamp });
+        if (isToolRunVerdictRejected(op.verdict))
+          this.#rejected.push([op.key, stamp]);
+        logged.push(op);
+      }
+    }
+    const pages = this.#logOps(logged);
+    if (this.#rejected.length - this.#rejectedHead > 2 * this.#records.size + TOOL_RUN_STEP_RING_CAPACITY)
+      this.#rebuildRejected();
+    let compacted = false;
+    if (this.#loggedOps > 2 * Math.max(this.#records.size, this.#compactFloor)) {
+      this.#compact();
+      compacted = true;
+    }
+    return { logged: pages, evicted, overflowed, compacted };
+  }
+  deltaAfter(cursor, byteBudget) {
+    const resend = cursor === null || cursor.run !== this.#identity.id.run || cursor.generation !== this.#identity.generation || cursor.page < this.#logBase || cursor.page > this.#nextPage;
+    const start = resend ? this.#logBase : cursor.page;
+    const pages = [];
+    let bytes = 0;
+    for (let index = start - this.#logBase;index < this.#log.length; index += 1) {
+      const logged = this.#log[index];
+      if (pages.length > 0 && bytes + logged.bytes > byteBudget)
+        break;
+      bytes += logged.bytes;
+      pages.push({ identity: this.#identity, page: this.#logBase + index, ops: logged.ops });
+    }
+    return { identity: this.#identity, clear: resend, next: start + pages.length, pages };
+  }
+  #logOps(ops) {
+    let pages = 0;
+    for (let offset = 0;offset < ops.length; offset += TOOL_RUN_TRACE_PAGE_OPS_MAX) {
+      const chunk = ops.slice(offset, offset + TOOL_RUN_TRACE_PAGE_OPS_MAX);
+      this.#loggedOps += chunk.length;
+      this.#log.push({ ops: chunk, bytes: toolRunTracePageWireBytes(chunk) });
+      this.#nextPage += 1;
+      pages += 1;
+    }
+    return pages;
+  }
+  #evictOldestRejected() {
+    while (this.#rejectedHead < this.#rejected.length) {
+      const [key, stamp] = this.#rejected[this.#rejectedHead++];
+      const record = this.#records.get(key);
+      if (record !== undefined && record.stamp === stamp && isToolRunVerdictRejected(record.verdict)) {
+        this.#records.delete(key);
+        return key;
+      }
+    }
+    return;
+  }
+  #liveByStamp() {
+    return [...this.#records.entries()].sort((a, b) => a[1].stamp - b[1].stamp);
+  }
+  #rebuildRejected() {
+    this.#rejected = this.#liveByStamp().filter(([, record]) => isToolRunVerdictRejected(record.verdict)).map(([key, record]) => [key, record.stamp]);
+    this.#rejectedHead = 0;
+  }
+  #compact() {
+    const live = this.#liveByStamp();
+    const snapshot = [{ op: "clear" }, ...live.map(([key, record]) => ({ op: "upsert", key, verdict: record.verdict, reason: record.reason, subject: record.subject }))];
+    this.#rejected = live.filter(([, record]) => isToolRunVerdictRejected(record.verdict)).map(([key, record]) => [key, record.stamp]);
+    this.#rejectedHead = 0;
+    this.#log = [];
+    this.#loggedOps = 0;
+    this.#logBase = this.#nextPage;
+    this.#logOps(snapshot);
+  }
+}
+
+class ToolRunCodecError extends Error {
+  kind;
+  what;
+  constructor(kind, what) {
+    super(`toolRun.codec.${kind}: ${what}`);
+    this.kind = kind;
+    this.what = what;
+  }
+}
+class PackBuffer {
+  bytes = new Uint8Array(256);
+  length = 0;
+  reserve(extra) {
+    if (this.length + extra <= this.bytes.length)
+      return;
+    const next = new Uint8Array(Math.max(this.bytes.length * 2, this.length + extra));
+    next.set(this.bytes.subarray(0, this.length));
+    this.bytes = next;
+  }
+  u8(value) {
+    this.reserve(1);
+    this.bytes[this.length++] = value;
+  }
+  varint(value) {
+    let rest = BigInt(value);
+    this.reserve(10);
+    while (rest >= 0x80n) {
+      this.bytes[this.length++] = Number(rest & 0x7fn) | 128;
+      rest >>= 7n;
+    }
+    this.bytes[this.length++] = Number(rest);
+  }
+  raw(bytes) {
+    this.reserve(bytes.length);
+    this.bytes.set(bytes, this.length);
+    this.length += bytes.length;
+  }
+  finish() {
+    return this.bytes.slice(0, this.length);
+  }
+}
 /* owned-wgpu:🧰️framework/🔨️modules/🛂️manifest/🟦️.ts */
 if (undefined) {}
 /* owned-wgpu:🧰️framework/🔨️modules/🔏️hash/🟦️.ts */
@@ -265,7 +525,8 @@ var WORLD3D_EMPTY_COMPUTE_STATUS = Object.freeze({
   inFlight: 0,
   ratio: 1,
   cancellable: false,
-  cancelAction: ""
+  cancelAction: "",
+  cancelArgs: Object.freeze({})
 });
 /* owned-wgpu:🧰️framework/🔨️modules/⏱️trace/🧮️memory/🟦️.ts */
 var GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES = 65536;
@@ -2843,6 +3104,8 @@ function finite(component) {
       return Number.isFinite(component.value) && Number.isFinite(component.step);
     case "ring":
       return Number.isFinite(component.t);
+    case "progress":
+      return Number.isFinite(component.completed) && (component.total == null || Number.isFinite(component.total));
     case "input":
       return (component.min == null || Number.isFinite(component.min)) && (component.max == null || Number.isFinite(component.max)) && (component.step == null || Number.isFinite(component.step));
     default:
@@ -3126,6 +3389,9 @@ function* componentStrings(component) {
       break;
     case "image":
       yield component.alt ?? "";
+      break;
+    case "progress":
+      yield component.valueText;
       break;
     case "extension":
       yield component.extension;
@@ -5212,6 +5478,10 @@ class Builder {
         const v = yield* this.record(value, ["type", "value", "uniform", "classifierKind"]);
         return this.fixed({ type: "iconSelect", value: text(v.value), uniform: boolean(v.uniform), classifierKind: text(v.classifierKind) });
       }
+      case "progress": {
+        const v = yield* this.record(value, ["type", "completed", "total", "valueText"]);
+        return this.fixed({ type: "progress", completed: number(v.completed), total: optional(v.total, number), valueText: text(v.valueText) });
+      }
       case "tree": {
         const v = yield* this.record(value, ["type", "interactionDomain"]);
         return this.fixed({ type: "tree", interactionDomain: optional(v.interactionDomain, text) });
@@ -7213,8 +7483,8 @@ var _catalog_default = {
     { kind: "event-feed", schema: "event-feed@1", record: "EventFeedScene" }
   ],
   records: {
-    Canvas2dScene: { fields: [["cameraX", "f64"], ["cameraY", "f64"], ["zoom", "f64"], ["layersJson", "text"], ["snapshot", "?#Canvas2dSnapshotLease"]] },
-    World3dScene: { fields: [["snapshot", "?#World3dSnapshotLease"], ["cameraJson", "text"], ["meshesJson", "text"], ["instancesJson", "text"], ["selectionJson", "text"], ["vorticesJson", "?text"], ["attractionsJson", "?text"], ["targetVolumesJson", "?text"], ["referencesJson", "?text"], ["brushPreviewJson", "?text"], ["interactionJson", "?text"], ["engagementPreviewJson", "?text"], ["lodJson", "?text"], ["chunkingJson", "?text"], ["environmentJson", "?text"], ["frameJson", "?text"], ["fitJson", "?text"], ["terrainJson", "?text"], ["pointsJson", "?text"], ["statusJson", "?text"], ["domainId", "?text"], ["domainGranularityId", "?text"]] },
+    Canvas2dScene: { fields: [["cameraX", "f64"], ["cameraY", "f64"], ["zoom", "f64"], ["layersJson", "text"], ["snapshot", "?#Canvas2dSnapshotLease"], ["toolRunTrace", "?text"]] },
+    World3dScene: { fields: [["snapshot", "?#World3dSnapshotLease"], ["cameraJson", "text"], ["meshesJson", "text"], ["instancesJson", "text"], ["selectionJson", "text"], ["vorticesJson", "?text"], ["attractionsJson", "?text"], ["targetVolumesJson", "?text"], ["referencesJson", "?text"], ["brushPreviewJson", "?text"], ["interactionJson", "?text"], ["engagementPreviewJson", "?text"], ["lodJson", "?text"], ["chunkingJson", "?text"], ["environmentJson", "?text"], ["frameJson", "?text"], ["fitJson", "?text"], ["terrainJson", "?text"], ["pointsJson", "?text"], ["statusJson", "?text"], ["toolRunTrace", "?text"], ["domainId", "?text"], ["domainGranularityId", "?text"]] },
     NodeGraphScene: { fields: [["nodes", "[#NodeGraphNodeRecord]"], ["edges", "[#NodeGraphEdgeRecord]"], ["viewport", "?#Viewport2d"], ["editable", "?bool"], ["operators", "[#NodeGraphOperatorRecord]"], ["findItems", "[#NodeGraphFindItem]"], ["selection", "[text]"], ["hover", "?#NodeGraphHover"], ["previewOffJson", "?text"], ["lodJson", "?text"], ["controlsJson", "?text"], ["clustersJson", "?text"], ["computingJson", "?text"], ["statusJson", "?text"], ["capabilitiesJson", "?text"], ["fixtureJson", "?text"], ["presencePeersJson", "?text"], ["evalJson", "?text"]], defaults: { nodes: [], edges: [], operators: [], findItems: [], selection: [] } },
     TextEditorScene: { fields: [["buffer", "text"], ["language", "?text"], ["selectionJson", "?text"], ["tokensJson", "?text"], ["diagnosticsJson", "?text"], ["completionsJson", "?text"], ["overlaysJson", "?text"], ["occurrencesJson", "?text"], ["placeholdersJson", "?text"], ["extraCaretsJson", "?text"], ["selectableSpansJson", "?text"], ["settingsJson", "?text"], ["cameraJson", "?text"], ["hoverJson", "?text"], ["newlineGatesJson", "?text"], ["renameJson", "?text"]] },
     TableScene: { fields: [["columnsJson", "text"], ["rowsJson", "text"], ["selectionJson", "?text"], ["rowDragMime", "?text"], ["dropActionJson", "?text"], ["sortJson", "?text"], ["domainId", "?text"]] },
@@ -18027,6 +18297,7 @@ class SemioFaultError extends Error {
     this.fault = fault;
   }
 }
+var IMPORT_CHUNK_BYTES = GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES / 2;
 var JOB_PLACEMENTS = Object.freeze(["inline", "isolated", "exclusive"]);
 function jobPlacementFromWireName(name) {
   return typeof name === "string" && JOB_PLACEMENTS.includes(name) ? name : undefined;
@@ -22129,6 +22400,7 @@ function mutationEnvelopeToWire(envelope, timestamp, codec) {
     timestamp
   };
 }
+var PRESENCE_TOOL_RUN_STATES = Object.freeze(["starting", "running", "paused", "complete", "finalizing", "finalized", "aborting", "aborted", "faulted"]);
 function writeVarintU64(out, value) {
   let remaining = value;
   for (;; ) {
@@ -22245,6 +22517,8 @@ function encodePresencePeer(peer) {
     flags |= 1 << 8;
   if (presencePresent(peer.ui))
     flags |= 1 << 9;
+  if (presencePresent(peer.toolRun))
+    flags |= 1 << 10;
   writeVarintU64(out, flags);
   writeVarintU64(out, peer.connectedAtMs ?? 0);
   if (presencePresent(peer.label))
@@ -22267,7 +22541,21 @@ function encodePresencePeer(peer) {
     writeVecPresenceWindowView(out, peer.views);
   if (presencePresent(peer.ui))
     writePresenceUi(out, peer.ui);
+  if (presencePresent(peer.toolRun))
+    writePresenceToolRun(out, peer.toolRun);
   return out;
+}
+function writePresenceToolRun(out, toolRun) {
+  const tag = PRESENCE_TOOL_RUN_STATES.indexOf(toolRun.state);
+  if (tag < 0)
+    throw new Error(`presence tool run state: unknown ${toolRun.state}`);
+  writeStr(out, toolRun.toolId);
+  out.push(tag);
+  writeVarintU64(out, toolRun.stage);
+  writeVarintU64(out, toolRun.completed);
+  out.push(presencePresent(toolRun.total) ? 1 : 0);
+  if (presencePresent(toolRun.total))
+    writeVarintU64(out, toolRun.total);
 }
 var PRESENCE_PEER_WIRE_LIMITS_V1 = Object.freeze({
   maximumEntryBytes: 4096,
@@ -22276,7 +22564,8 @@ var PRESENCE_PEER_WIRE_LIMITS_V1 = Object.freeze({
   maximumViews: 16,
   maximumInteractionDomains: 16,
   maximumDomainIds: 64,
-  maximumConnectedAtMs: Number.MAX_SAFE_INTEGER
+  maximumConnectedAtMs: Number.MAX_SAFE_INTEGER,
+  maximumToolRunUnits: Number.MAX_SAFE_INTEGER
 });
 function writePresenceInteraction(out, interaction) {
   writeStr(out, interaction.app_id);
@@ -22855,6 +23144,16 @@ function decodePackValue(bytes) {
   }
   return result3;
 }
+var PACK_B64_PREFIX = "pk:";
+function packValueFromBase64(encoded) {
+  if (!encoded.startsWith(PACK_B64_PREFIX))
+    throw new Error("packValueFromBase64: expected pk: prefix");
+  const binary = atob(encoded.slice(PACK_B64_PREFIX.length));
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0;index < binary.length; index += 1)
+    bytes[index] = binary.charCodeAt(index);
+  return decodePackValue(bytes);
+}
 function packValueToExactJson(value, path = "$") {
   if (isPackInteger(value)) {
     if (value.value < BigInt(Number.MIN_SAFE_INTEGER) || value.value > BigInt(Number.MAX_SAFE_INTEGER))
@@ -23398,7 +23697,7 @@ function decodeAppFrame(bytes) {
       return { Children: { in_reply_to: readVarintU64(bytes, pos), entries: readVecChildPackEntry(bytes, pos) } };
     case APP_FRAME_TAGS.Ephemeral:
       return {
-        Ephemeral: { presence: readBytes(bytes, pos), presence_generation: readVarintU64(bytes, pos), transient_generation: readVarintU64(bytes, pos), interaction: readBytes(bytes, pos) }
+        Ephemeral: { presence: readBytes(bytes, pos), presence_generation: readVarintU64(bytes, pos), transient_generation: readVarintU64(bytes, pos), interaction: readBytes(bytes, pos), tool_run: readBytes(bytes, pos) }
       };
     case APP_FRAME_TAGS.HistorySnapshot:
       return { HistorySnapshot: { in_reply_to: readVarintU64(bytes, pos), history_patch: readBytes(bytes, pos) } };
@@ -24712,6 +25011,18 @@ function wireEffectToFriendly(effect, decodePackValue2) {
       };
     case "open-plugin-instance":
       return { openPluginInstance: { pluginId: str("pluginId"), appId: str("appId"), osInstanceId: val.osInstanceId } };
+    case "request-file-open": {
+      const readAs = poptstr("readAs") ?? poptstr("read-as");
+      return {
+        requestFileOpen: {
+          req: num("req"),
+          accept: pstr("accept"),
+          ...readAs === undefined ? {} : { readAs },
+          importAction: pstr("importAction") || pstr("import-action"),
+          multiple: Boolean(some(params.multiple) ?? false)
+        }
+      };
+    }
     case "dispatch-action":
       return { dispatchAction: { req: num("req"), action: pstr("action"), args: ppack("args"), delayMs: pnum("delayMs") } };
     case "send-message": {
@@ -24854,7 +25165,7 @@ function unthrottledMacrotask() {
   });
 }
 var yieldDeadlineMs = 0;
-async function yieldWgpuUi() {
+function yieldWgpuUiIfDue() {
   const now = performance.now();
   if (yieldDeadlineMs === 0 || now < yieldDeadlineMs) {
     if (yieldDeadlineMs === 0)
@@ -24862,15 +25173,16 @@ async function yieldWgpuUi() {
     return;
   }
   yieldDeadlineMs = now + WGPU_UI_YIELD_BUDGET_MS;
-  await unthrottledMacrotask();
+  return unthrottledMacrotask();
 }
-async function nextWgpuFrame() {
-  const frame = globalThis.requestAnimationFrame;
+async function yieldWgpuUi() {
+  const pending2 = yieldWgpuUiIfDue();
+  if (pending2)
+    await pending2;
+}
+async function handBackWgpuIsolate() {
   yieldDeadlineMs = performance.now() + WGPU_UI_YIELD_BUDGET_MS;
-  if (typeof frame === "function")
-    await new Promise((resolve) => frame.call(globalThis, () => resolve()));
-  else
-    await unthrottledMacrotask();
+  await unthrottledMacrotask();
 }
 
 class WgpuUiIntakeCursor {
@@ -24882,14 +25194,11 @@ class WgpuUiIntakeCursor {
   get steps() {
     return this.#steps;
   }
-  async next(phase) {
+  next(phase) {
     this.#steps += 1;
     if (this.#steps > this.#ceiling)
       throw new Error(`wgpu-ui.intake-budget-exhausted:${phase}:${this.#steps}`);
-    if (this.#steps % RETAINED_UI_INTAKE_SLICE_STEPS === 0)
-      await nextWgpuFrame();
-    else
-      await yieldWgpuUi();
+    return this.#steps % RETAINED_UI_INTAKE_SLICE_STEPS === 0 ? handBackWgpuIsolate() : yieldWgpuUiIfDue();
   }
 }
 function ownedUiComponentToBuilt(component) {
@@ -24934,7 +25243,9 @@ class WgpuOwnedUiInstanceRoute {
       const current = this.owner.advanceMaintenance(WGPU_UI_GRANT);
       if (current.kind === "blocked" || current.kind === "rejected")
         throw new Error(`wgpu-ui.${phase}-${current.kind}:${current.phase}`);
-      await yieldWgpuUi();
+      const pending2 = yieldWgpuUiIfDue();
+      if (pending2)
+        await pending2;
     }
   }
   async#closeIntake(intake) {
@@ -24944,7 +25255,11 @@ class WgpuOwnedUiInstanceRoute {
       const current = intake.closeStep(WGPU_UI_GRANT);
       if (current.kind === "blocked" || current.kind === "rejected")
         throw new Error(`wgpu-ui.intake-close-${current.kind}:${current.phase}`);
-      await cursor.next("intake-close");
+      {
+        const pending2 = cursor.next("intake-close");
+        if (pending2)
+          await pending2;
+      }
     }
     this.#intakes.delete(intake);
   }
@@ -24975,7 +25290,11 @@ class WgpuOwnedUiInstanceRoute {
           throw new Error(`wgpu-ui.intake-rejected:${current.phase}:${intake.failure ?? "unknown"}`);
         if (current.kind === "blocked" && token2 === null)
           throw new Error(`wgpu-ui.intake-blocked:${current.phase}`);
-        await cursor.next("intake");
+        {
+          const pending2 = cursor.next("intake");
+          if (pending2)
+            await pending2;
+        }
       }
       const acknowledged = await execute(() => this.lifecycle.submitUiAcknowledgement(source, token2, DEFAULT_SHARD_BUDGET));
       if (!intake.acceptAcknowledgement(acknowledged.receipt))
@@ -24986,7 +25305,11 @@ class WgpuOwnedUiInstanceRoute {
           break;
         if (current.kind === "blocked" || current.kind === "rejected")
           throw new Error(`wgpu-ui.intake-${current.kind}:${current.phase}`);
-        await cursor.next("publication-close");
+        {
+          const pending2 = cursor.next("publication-close");
+          if (pending2)
+            await pending2;
+        }
       }
       const surface = intake.takeSurface();
       if (!surface)
@@ -25069,7 +25392,11 @@ class WgpuOwnedUiInstanceRoute {
       const current = this.owner.closeStep(WGPU_UI_GRANT);
       if (current.kind === "blocked" || current.kind === "rejected")
         throw new Error(`wgpu-ui.owner-close-${current.kind}:${current.phase}`);
-      await cursor.next("owner-close");
+      {
+        const pending2 = cursor.next("owner-close");
+        if (pending2)
+          await pending2;
+      }
     }
     const witness = this.owner.takeRetirementWitness();
     if (!witness)
@@ -25131,7 +25458,11 @@ async function retireWgpuOwnedUiInstanceLifecycle(lifecycle, route, execute) {
     }
     if (current.uiPatches.length > 0 || current.uiPatchReceipt !== undefined)
       throw new Error("wgpu-ui.patch-after-lifecycle-close");
-    await cursor.next("lifecycle-close");
+    {
+      const pending2 = cursor.next("lifecycle-close");
+      if (pending2)
+        await pending2;
+    }
   }
   lifecycle.dispose();
 }
@@ -25895,8 +26226,8 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
       retirement.then(forget, forget);
       return retirement;
     },
-    handleAction: (instanceId, actionJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(actionJson), viewState),
-    handleCommand: (instanceId, commandJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(commandJson), viewState),
+    handleAction: (instanceId, invocation, viewState) => performInvocation(requireChannel(instanceId), instanceId, invocation, viewState),
+    handleCommand: (instanceId, invocation, viewState) => performInvocation(requireChannel(instanceId), instanceId, invocation, viewState),
     render: (instanceId, surfaceId, bodyKey, viewState) => renderSurface(instanceId, surfaceId, bodyKey, viewState).then((result3) => result3.node),
     renderDocument: (instanceId, surfaceId, bodyKey, viewState) => renderSurface(instanceId, surfaceId, bodyKey, viewState).then((result3) => JSON.stringify({ document: result3.document, effects: jsonEffects(result3.effects) })),
     captureExtensionCompletion,
@@ -25926,7 +26257,8 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
 function viewStateFromContextJson(contextJson) {
   try {
     const parsed = JSON.parse(contextJson);
-    return parsed && typeof parsed === "object" && "viewState" in parsed ? parsed.viewState : parsed;
+    const packed = parsed && typeof parsed === "object" ? parsed.viewStatePack : undefined;
+    return typeof packed === "string" ? packValueFromBase64(packed) : undefined;
   } catch {
     return;
   }
@@ -25936,10 +26268,10 @@ function pluginHandleForBridge(handle) {
     manifest: () => JSON.stringify(handle.manifest),
     createApp: (appId) => handle.createApp(appId),
     destroyApp: (instanceId) => handle.destroyApp(instanceId),
-    handleAction: (instanceId, actionJson, contextJson) => handle.handleAction(instanceId, actionJson, viewStateFromContextJson(contextJson)).then(invocationResponseJson),
-    handleCommand: (instanceId, commandJson, contextJson) => handle.handleCommand(instanceId, commandJson, viewStateFromContextJson(contextJson)).then(invocationResponseJson),
-    render: (instanceId, surfaceId, bodyKey, viewStateJson) => handle.render(instanceId, surfaceId, bodyKey, JSON.parse(viewStateJson)).then((node) => JSON.stringify(node)),
-    renderDocument: (instanceId, surfaceId, bodyKey, viewStateJson) => handle.renderDocument(instanceId, surfaceId, bodyKey, JSON.parse(viewStateJson)),
+    handleAction: (instanceId, invocationPack, contextJson) => handle.handleAction(instanceId, packValueFromBase64(invocationPack), viewStateFromContextJson(contextJson)).then(invocationResponseJson),
+    handleCommand: (instanceId, invocationPack, contextJson) => handle.handleCommand(instanceId, packValueFromBase64(invocationPack), viewStateFromContextJson(contextJson)).then(invocationResponseJson),
+    render: (instanceId, surfaceId, bodyKey, viewStatePack) => handle.render(instanceId, surfaceId, bodyKey, packValueFromBase64(viewStatePack)).then((node) => JSON.stringify(node)),
+    renderDocument: (instanceId, surfaceId, bodyKey, viewStatePack) => handle.renderDocument(instanceId, surfaceId, bodyKey, packValueFromBase64(viewStatePack)),
     contextMenu: (instanceId, requestJson) => handle.contextMenu(instanceId, JSON.parse(requestJson)).then((items) => JSON.stringify(items)),
     dispatchInvokeExtension: (instanceId, extensionId, capability, requestJson, req) => handle.dispatchInvokeExtension(instanceId, extensionId, capability, requestJson, BigInt(req)).then(invocationResponseJson),
     pushScopedContributions: (instanceId, appId, reachabilityJson, viewStateJson) => handle.pushScopedContributions(instanceId, appId, reachabilityJson, viewStateJson).then(invocationResponseJson)
@@ -26298,6 +26630,10 @@ async function receive(message) {
     answerIntrospection(message);
     return;
   }
+  if (message.kind === "host-io-result") {
+    settleHostIo(message);
+    return;
+  }
   if (closed || closing || failed || quarantined)
     return;
   if (message.kind === "job-submit" || message.kind === "job-input-page" || message.kind === "job-cancel") {
@@ -26610,6 +26946,35 @@ function declareBootSubphase(phase, state7, elapsedMs) {
   declarePhase(phase, state7, elapsedMs);
 }
 globalThis.semioDeclareBootSubphase = declareBootSubphase;
+var pendingHostIo = new Map;
+var hostIoSeq = 0;
+function requestHostIo(requestJson, bytes) {
+  if (closed || closing || failed)
+    return Promise.reject(new Error("wgpu-host-io: the frame Worker is closing"));
+  hostIoSeq += 1;
+  const requestId = hostIoSeq;
+  return new Promise((resolve, reject) => {
+    pendingHostIo.set(requestId, { resolve, reject });
+    try {
+      const carried = bytes ? new Uint8Array(bytes) : null;
+      scope.postMessage({ kind: "host-io", lifecycle, requestId, request: requestJson, bytes: carried }, carried ? [carried.buffer] : []);
+    } catch (error) {
+      pendingHostIo.delete(requestId);
+      reject(error instanceof Error ? error : new Error(String(error)));
+    }
+  });
+}
+function settleHostIo(message) {
+  const pending2 = pendingHostIo.get(message.requestId);
+  if (!pending2)
+    return;
+  pendingHostIo.delete(message.requestId);
+  if (message.json === null)
+    pending2.reject(new Error(message.detail ?? "wgpu-host-io refused"));
+  else
+    pending2.resolve(message.json);
+}
+globalThis.semioWgpuHostIo = requestHostIo;
 function post(message) {
   scope.postMessage(message);
 }

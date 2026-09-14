@@ -1,5 +1,5 @@
 /** 🧬️ Remodeling mutation vocabulary — TypeScript twin of `🧬️mutations/🦀️.rs` and of all
- *  thirty-five `<slug>/🔺️diff/🦀️.rs` leaves.
+ *  thirty-six `<slug>/🔺️diff/🦀️.rs` leaves.
  *
  *  `RemodelingMutation` carries `#[serde(tag = "mutation", rename_all = "camelCase")]`, so the wire
  *  tag is the camelCase form of the Rust variant name (`createStream`), never the kebab-case
@@ -28,12 +28,12 @@ import {
   INGEST_PARAMS_SPEC,
   MATCH_PARAMS_SPEC,
   MEDIA_KINDS,
+  REMODELING_CONTENT_KINDS,
   MEDIA_STREAM_SPEC,
   MESH_PARAMS_SPEC,
   MOTION_PARAMS_SPEC,
   MOTION_TRACK_SUMMARY_SPEC,
   QC_REPORT_SPEC,
-  RECONSTRUCTION_JOB_SPEC,
   REMODELING_MESH_SPEC,
   RIG_EXTRINSIC_SPEC,
   SFM_PARAMS_SPEC,
@@ -62,11 +62,12 @@ import {
   type MotionParams,
   type MotionTrackSummary,
   type QcReportSnapshot,
-  type ReconstructionJob,
   type ReconstructionResults,
   type RecordSpec,
   type RemodelingAssetChild,
+  type RemodelingContentKind,
   type RemodelingDurableArtifact,
+  type RemodelingDurableArtifactStore,
   type RemodelingMesh,
   type RemodelingSnapshot,
   type RigExtrinsic,
@@ -163,9 +164,6 @@ export interface UpdateMotionParams {
 export interface UpdateGeoParams {
   params: GeoParams;
 }
-export interface ReplaceJob {
-  job: ReconstructionJob;
-}
 export interface ReplaceSparse {
   sparse: SparseCloud | null;
 }
@@ -187,12 +185,24 @@ export interface ReplaceGeoProducts {
 export interface ReplaceQc {
   qc: QcReportSnapshot | null;
 }
+export interface AppendContent {
+  contentId: string;
+  kind: RemodelingContentKind;
+  mime: string | null;
+  width: number;
+  height: number;
+  first: number;
+  chunks: string[];
+}
+export interface RemoveContent {
+  contentId: string;
+  from: number;
+}
 export interface ReconstructionAssetCommit {
   id: string;
-  asset: ImageAsset;
+  contentId: string | null;
 }
 export interface CommitReconstruction {
-  job: ReconstructionJob;
   sparse: SparseCloud | null;
   trajectory: CameraTrajectory | null;
   mesh: RemodelingMesh | null;
@@ -228,7 +238,6 @@ export type RemodelingMutationTag =
   | "updateMeshParams"
   | "updateMotionParams"
   | "updateGeoParams"
-  | "replaceJob"
   | "replaceSparse"
   | "replaceDense"
   | "replaceMeshResult"
@@ -236,6 +245,8 @@ export type RemodelingMutationTag =
   | "replaceTracks"
   | "replaceGeoProducts"
   | "replaceQc"
+  | "appendContent"
+  | "removeContent"
   | "commitReconstruction";
 
 export type RemodelingMutation =
@@ -265,17 +276,16 @@ export type RemodelingMutation =
   | ({ mutation: "updateMeshParams" } & UpdateMeshParams)
   | ({ mutation: "updateMotionParams" } & UpdateMotionParams)
   | ({ mutation: "updateGeoParams" } & UpdateGeoParams)
-  | ({ mutation: "replaceJob" } & ReplaceJob)
   | ({ mutation: "replaceSparse" } & ReplaceSparse)
   | ({ mutation: "replaceDense" } & ReplaceDense)
   | ({ mutation: "replaceMeshResult" } & ReplaceMeshResult)
   | ({ mutation: "replaceTrajectory" } & ReplaceTrajectory)
   | ({ mutation: "replaceTracks" } & ReplaceTracks)
   | ({ mutation: "replaceGeoProducts" } & ReplaceGeoProducts)
-  | ({ mutation: "replaceQc" } & ReplaceQc);
-
-/** 🧬️ Every tag including `commitReconstruction`, whose payload the wire union above omits. */
-export type RemodelingAnyMutation = RemodelingMutation | ({ mutation: "commitReconstruction" } & CommitReconstruction);
+  | ({ mutation: "replaceQc" } & ReplaceQc)
+  | ({ mutation: "appendContent" } & AppendContent)
+  | ({ mutation: "removeContent" } & RemoveContent)
+  | ({ mutation: "commitReconstruction" } & CommitReconstruction);
 
 export interface RemodelingMutationEnvelope {
   mutation: RemodelingMutationTag;
@@ -297,7 +307,7 @@ const required = () => {
 
 const payload = (title: string, fields: FieldSpec[]): RecordSpec => ({ title, serdeDefault: false, fields });
 
-export const RECONSTRUCTION_ASSET_COMMIT_SPEC: RecordSpec = payload("ReconstructionAssetCommit", [f("id", text, required), f("asset", rec(() => IMAGE_ASSET_SPEC), required)]);
+export const RECONSTRUCTION_ASSET_COMMIT_SPEC: RecordSpec = payload("ReconstructionAssetCommit", [f("id", text, required), f("content_id", opt(text), nothing, { jsonOptional: true })]);
 
 /** 🧬️ One `RecordSpec` per wire tag; the `mutation` tag itself is handled by the decoder. */
 export const REMODELING_MUTATION_SPECS: Record<RemodelingMutationTag, RecordSpec> = {
@@ -327,7 +337,6 @@ export const REMODELING_MUTATION_SPECS: Record<RemodelingMutationTag, RecordSpec
   updateMeshParams: payload("UpdateMeshParams", [f("params", rec(() => MESH_PARAMS_SPEC), required)]),
   updateMotionParams: payload("UpdateMotionParams", [f("params", rec(() => MOTION_PARAMS_SPEC), required)]),
   updateGeoParams: payload("UpdateGeoParams", [f("params", rec(() => GEO_PARAMS_SPEC), required)]),
-  replaceJob: payload("ReplaceJob", [f("job", rec(() => RECONSTRUCTION_JOB_SPEC), required)]),
   replaceSparse: payload("ReplaceSparse", [f("sparse", opt(rec(() => SPARSE_CLOUD_SPEC)), nothing, { jsonOptional: true })]),
   replaceDense: payload("ReplaceDense", [f("dense", opt(rec(() => DENSE_CLOUD_SPEC)), nothing, { jsonOptional: true })]),
   replaceMeshResult: payload("ReplaceMeshResult", [f("mesh", rec(() => REMODELING_MESH_SPEC), required)]),
@@ -335,8 +344,17 @@ export const REMODELING_MUTATION_SPECS: Record<RemodelingMutationTag, RecordSpec
   replaceTracks: payload("ReplaceTracks", [f("tracks", list(rec(() => MOTION_TRACK_SUMMARY_SPEC)), required)]),
   replaceGeoProducts: payload("ReplaceGeoProducts", [f("geo", opt(rec(() => GEO_PRODUCTS_SPEC)), nothing, { jsonOptional: true })]),
   replaceQc: payload("ReplaceQc", [f("qc", opt(rec(() => QC_REPORT_SPEC)), nothing, { jsonOptional: true })]),
+  appendContent: payload("AppendContent", [
+    f("content_id", text, required),
+    f("kind", { k: "enum", of: REMODELING_CONTENT_KINDS }, required),
+    f("mime", opt(text), nothing, { jsonOptional: true }),
+    f("width", uint, required),
+    f("height", uint, required),
+    f("first", uint, required),
+    f("chunks", list(text), required),
+  ]),
+  removeContent: payload("RemoveContent", [f("content_id", text, required), f("from", uint, required)]),
   commitReconstruction: payload("CommitReconstruction", [
-    f("job", rec(() => RECONSTRUCTION_JOB_SPEC), required),
     f("sparse", opt(rec(() => SPARSE_CLOUD_SPEC)), nothing),
     f("trajectory", opt(rec(() => CAMERA_TRAJECTORY_SPEC)), nothing),
     f("mesh", opt(rec(() => REMODELING_MESH_SPEC)), nothing),
@@ -349,14 +367,14 @@ export const REMODELING_MUTATION_SPECS: Record<RemodelingMutationTag, RecordSpec
 export const REMODELING_MUTATION_TAGS = Object.keys(REMODELING_MUTATION_SPECS) as RemodelingMutationTag[];
 
 /** 🦠️ Decodes a parsed RFC 8259 value into a validated tagged mutation. */
-export function decodeRemodelingMutation(json: unknown): RemodelingAnyMutation {
+export function decodeRemodelingMutation(json: unknown): RemodelingMutation {
   if (typeof json !== "object" || json === null || Array.isArray(json)) throw new Error(`mutation: expected an object, got ${JSON.stringify(json)}`);
   const source = json as Record<string, unknown>;
   const tag = source.mutation;
   if (typeof tag !== "string" || !(tag in REMODELING_MUTATION_SPECS)) throw new Error(`mutation: unknown tag ${JSON.stringify(tag)}`);
   const { mutation: _tag, ...rest } = source;
   const body = decodeRecord(rest, REMODELING_MUTATION_SPECS[tag as RemodelingMutationTag], `${tag}`);
-  return { mutation: tag, ...body } as unknown as RemodelingAnyMutation;
+  return { mutation: tag, ...body } as unknown as RemodelingMutation;
 }
 //#endregion 🔖️Spec
 
@@ -424,18 +442,116 @@ class DefaultHasher {
 }
 
 const REMODELING_DURABLE_CHUNK_RAW_BYTES = 4096;
+const REMODELING_DURABLE_CHUNK_ENCODED_BYTES = Math.floor((REMODELING_DURABLE_CHUNK_RAW_BYTES + 2) / 3) * 4;
 const REMODELING_RASTER_CONTENT_BYTES = 1_114_112;
-const ASSET_STAGE_PREFIX = "__remodeling_asset_stage__:";
-const MESH_STAGE_PREFIX = "__remodeling_mesh_stage__:";
-const CONTENT_HANDLE_PREFIX = "remodeling-content:";
-const MESH_STAGE_HANDLE_PREFIX = "mesh-stage:";
+const REMODELING_BOUNDED_MESH_VERTICES = 512;
+const REMODELING_BOUNDED_MESH_TRIANGLES = 512;
 
-/** 🚧 A path this twin deliberately does not model — the process-global staging registries. */
-export class RemodelingUnsupportedError extends Error {
-  constructor(readonly reason: string) {
-    super(reason);
-    this.name = "RemodelingUnsupportedError";
+/** 📏 `RemodelingContentKind::{max_bytes, max_chunks}` — each content lane's exact bounded envelope. */
+export const REMODELING_CONTENT_ENVELOPES: Readonly<Record<RemodelingContentKind, { maxBytes: number; maxChunks: number }>> = {
+  sparse: { maxBytes: 512 * 3 * 4, maxChunks: 2 },
+  mesh: { maxBytes: 87_552 + 30, maxChunks: 30 },
+  image: { maxBytes: REMODELING_RASTER_CONTENT_BYTES, maxChunks: 272 },
+};
+
+const parseCount = (value: string): number | null => (/^\+?[0-9]+$/.test(value) && BigInt(value) <= (1n << 64n) - 1n ? Number(value) : null);
+
+/** 🔗 `remodeling_content_handle` — the packed-buffer handle naming durable sparse content. */
+export const remodelingContentHandle = (contentId: string, chunkCount: number): string => `remodeling-content:${contentId}|${chunkCount}`;
+
+/** 🔗 `remodeling_content_handle_parts` — `[contentId, chunkCount]`, or `null` for any other string. */
+export function remodelingContentHandleParts(value: string): [string, number] | null {
+  if (!value.startsWith("remodeling-content:")) return null;
+  const tail = value.slice("remodeling-content:".length);
+  const bar = tail.lastIndexOf("|");
+  if (bar < 0) return null;
+  const count = parseCount(tail.slice(bar + 1));
+  return count === null ? null : [tail.slice(0, bar), count];
+}
+
+/** 🔗 `remodeling_mesh_content_handle` — the composed mesh child naming durable mesh content. */
+export const remodelingMeshContentHandle = (contentId: string, chunkCount: number): RemodelingAssetChild => ({
+  childId: contentId,
+  target: { artifactId: `remodeling-mesh-content:${chunkCount}`, dialect: { artifactKind: "s.stdio.semio", standard: "v1", subset: "mesh" } },
+});
+
+/** 🔗 `remodeling_mesh_content_handle_parts` — `[childId, chunkCount]` of a durable mesh content handle. */
+export function remodelingMeshContentHandleParts(handle: RemodelingAssetChild): [string, number] | null {
+  if (!handle.target.artifactId.startsWith("remodeling-mesh-content:")) return null;
+  const count = parseCount(handle.target.artifactId.slice("remodeling-mesh-content:".length));
+  return count === null ? null : [handle.childId, count];
+}
+
+/** 🖼️ `committed_remodeling_asset_handle` — the `assets` handle a reconstruction binding writes. */
+export const committedRemodelingAssetHandle = (assetId: string, contentId: string): RemodelingAssetChild => ({
+  childId: contentId,
+  target: { artifactId: `${assetId}-image`, dialect: { artifactKind: "s.stdio.semio", standard: "v1", subset: "image" } },
+});
+
+/** 🧱 `decode_remodeling_durable_chunk` — raw bytes of one leaf, `null` above the 4 KiB leaf envelope. */
+export function decodeRemodelingDurableChunk(encoded: string): Uint8Array | null {
+  if (encoded.length > REMODELING_DURABLE_CHUNK_ENCODED_BYTES) return null;
+  const bytes = base64Bytes(encoded);
+  return bytes !== null && bytes.length <= REMODELING_DURABLE_CHUNK_RAW_BYTES ? bytes : null;
+}
+
+/** 🧊 `apply_mesh_chunk` + `mesh_is_within_resolution_envelope` over field-tagged leaves. */
+function meshLeavesResolve(chunks: readonly string[]): boolean {
+  const lengths = new Array<number>(12).fill(0);
+  const indices: number[] = [];
+  const decoder = new TextDecoder("utf-8", { fatal: true });
+  const componentLimits: Record<number, number> = { 0: 1536, 1: 1536, 2: 2048, 3: 1536, 4: 1024, 5: 512, 6: 512, 7: 3072, 8: 1536, 9: 2048, 10: 1536, 11: 24_576 };
+  let lastField = -1;
+  let total = 0;
+  for (const encoded of chunks) {
+    const bytes = decodeRemodelingDurableChunk(encoded);
+    if (bytes === null) return false;
+    total += bytes.length;
+    if (total > REMODELING_CONTENT_ENVELOPES.mesh.maxBytes || bytes.length === 0) return false;
+    const field = bytes[0]!;
+    const values = bytes.subarray(1);
+    if (field > 11 || field < lastField) return false;
+    if (field <= 9 && values.length % 4 !== 0) return false;
+    if (field === 11) {
+      try {
+        decoder.decode(values);
+      } catch {
+        return false;
+      }
+    }
+    const added = field <= 9 ? values.length / 4 : values.length;
+    if (lengths[field]! + added > componentLimits[field]!) return false;
+    lengths[field]! += added;
+    if (field === 3) for (let offset = 0; offset < values.length; offset += 4) indices.push(new DataView(values.buffer, values.byteOffset + offset, 4).getUint32(0, true));
+    lastField = field;
   }
+  const [positions, normals, colors, , uvs, faceIds, vertexIds] = lengths as [number, number, number, number, number, number, number];
+  if (positions % 3 !== 0 || indices.length % 3 !== 0) return false;
+  const vertices = positions / 3;
+  const triangles = indices.length / 3;
+  return (
+    vertices <= REMODELING_BOUNDED_MESH_VERTICES &&
+    triangles <= REMODELING_BOUNDED_MESH_TRIANGLES &&
+    indices.every((index) => index < vertices) &&
+    (normals === 0 || normals === vertices * 3) &&
+    (colors === 0 || colors === vertices * 3 || colors === vertices * 4) &&
+    (uvs === 0 || uvs === vertices * 2) &&
+    (faceIds === 0 || faceIds === triangles) &&
+    (vertexIds === 0 || vertexIds === vertices)
+  );
+}
+
+/** ✅ `remodeling_content_is_complete` — exactly `chunkCount` leaves of `kind` inside the kind's envelope. */
+export function remodelingContentIsComplete(store: RemodelingDurableArtifactStore, contentId: string, kind: RemodelingContentKind, chunkCount: number): boolean {
+  const artifact = Object.hasOwn(store, contentId) ? store[contentId] : undefined;
+  if (artifact === undefined || artifact.kind !== kind || chunkCount === 0 || artifact.chunks.length !== chunkCount) return false;
+  if (kind === "mesh") return meshLeavesResolve(artifact.chunks);
+  let total = 0;
+  return artifact.chunks.every((encoded) => {
+    const bytes = decodeRemodelingDurableChunk(encoded);
+    total += bytes?.length ?? 0;
+    return bytes !== null && total <= REMODELING_CONTENT_ENVELOPES[kind].maxBytes;
+  });
 }
 
 /** 🕸️ `image_asset_child_handle` — content-addressed CHILD handle for one bounded durable asset. */
@@ -579,10 +695,7 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
       return ok({ streams: streamList(streams) });
     }
     case "createAsset": {
-      if (mutation.key.startsWith(ASSET_STAGE_PREFIX) || mutation.key.startsWith(MESH_STAGE_PREFIX))
-        throw new RemodelingUnsupportedError(`createAsset staging keys drive the plugin's process-global chunk registry, which this twin does not model (key "${mutation.key}")`);
-      if (mutation.asset.data.startsWith(CONTENT_HANDLE_PREFIX))
-        return refuse("error", "mutation.invalid-asset-payload", "Private reconstruction staging handles are accepted only by CommitReconstruction.", [mutation.key]);
+      if (remodelingContentHandleParts(mutation.asset.data) !== null) return refuse("error", "mutation.invalid-asset-payload", "Durable content handles are bound only by CommitReconstruction.", [mutation.key]);
       const artifact = durableRemodelingAsset(mutation.asset);
       if (artifact === null) return refuse("error", "mutation.invalid-asset-payload", "The asset payload is malformed or exceeds its exact bounded envelope.", [mutation.key]);
       const handle = imageAssetChildHandle(mutation.key, mutation.asset);
@@ -590,8 +703,6 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
       return ok({ assets: { ...clone(base.assets), [mutation.key]: handle }, durableArtifacts });
     }
     case "deleteAsset": {
-      if (mutation.key.startsWith(ASSET_STAGE_PREFIX) || mutation.key.startsWith(MESH_STAGE_PREFIX))
-        throw new RemodelingUnsupportedError(`deleteAsset staging keys discard from the plugin's process-global chunk registry, which this twin does not model (key "${mutation.key}")`);
       if (!(mutation.key in base.assets)) return refuse("error", "mutation.target-missing", `Asset "${mutation.key}" does not exist.`, [mutation.key]);
       const referencing = base.streams.filter((stream) => stream.frames.some((frame) => frame.assetId === mutation.key)).map((stream) => stream.id);
       if (base.results.mesh.textureAssetId === mutation.key) referencing.push("results.mesh.textureAssetId");
@@ -742,10 +853,6 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
       if (same(params, base.params.geo)) return noted(empty(), "warn", "mutation.no-op", "Geo params are unchanged.");
       return ok({ params: { ...clone(base.params), geo: clone(params) } });
     }
-    case "replaceJob": {
-      if (same(mutation.job, base.job)) return noted(empty(), "warn", "mutation.no-op", "Reconstruction job already has this value.");
-      return ok({ job: clone(mutation.job) });
-    }
     case "replaceSparse": {
       if (same(mutation.sparse, base.results.sparse)) return noted(empty(), "warn", "mutation.no-op", "Sparse results already have this value.");
       return ok({ results: { ...clone(base.results), sparse: clone(mutation.sparse) } as ReconstructionResults });
@@ -755,8 +862,9 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
       return ok({ results: { ...clone(base.results), dense: clone(mutation.dense) } as ReconstructionResults });
     }
     case "replaceMeshResult": {
-      if (mutation.mesh.mesh.target.artifactId.startsWith(MESH_STAGE_HANDLE_PREFIX))
-        return refuse("error", "mutation.incomplete-mesh", "Private reconstruction staging handles are accepted only by CommitReconstruction.", [mutation.mesh.mesh.childId]);
+      const meshContent = remodelingMeshContentHandleParts(mutation.mesh.mesh);
+      if (meshContent !== null && !remodelingContentIsComplete(base.durableArtifacts, meshContent[0], "mesh", meshContent[1]))
+        return refuse("error", "mutation.incomplete-mesh", "The mesh names durable content that is not complete.", [mutation.mesh.mesh.childId]);
       if (same(mutation.mesh, base.results.mesh)) return noted(empty(), "warn", "mutation.no-op", "Mesh result is already up to date.");
       return ok({ results: { ...clone(base.results), mesh: clone(mutation.mesh) } });
     }
@@ -779,38 +887,80 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
       if (same(mutation.qc, base.results.qc)) return noted(empty(), "warn", "mutation.no-op", "QC report is already up to date.");
       return ok({ results: { ...clone(base.results), qc: clone(mutation.qc) } as ReconstructionResults });
     }
+    case "appendContent": {
+      const target = [mutation.contentId];
+      let appendedBytes = 0;
+      for (const chunk of mutation.chunks) {
+        const bytes = decodeRemodelingDurableChunk(chunk);
+        if (bytes === null) return refuse("error", "mutation.invalid-content-chunk", "A content leaf is not base64 or exceeds the 4 KiB leaf envelope.", target);
+        appendedBytes += bytes.length;
+      }
+      if (mutation.chunks.length === 0) return refuse("error", "mutation.invalid-content-chunk", "An append carries no content leaves.", target);
+      const existing = Object.hasOwn(base.durableArtifacts, mutation.contentId) ? base.durableArtifacts[mutation.contentId] : undefined;
+      const stored = existing?.chunks ?? [];
+      if (mutation.first > stored.length) return refuse("error", "mutation.content-gap", `Leaf ${mutation.first} would leave a gap after ${stored.length} stored leaves.`, target);
+      if (existing !== undefined && (existing.kind !== mutation.kind || existing.mime !== mutation.mime || existing.width !== mutation.width || existing.height !== mutation.height))
+        return refuse("error", "mutation.content-kind-mismatch", `Content "${mutation.contentId}" is stored as another kind or presentation.`, target);
+      const overlap = Math.min(Math.max(stored.length - mutation.first, 0), mutation.chunks.length);
+      if (!same(stored.slice(mutation.first, mutation.first + overlap), mutation.chunks.slice(0, overlap)))
+        return refuse("error", "mutation.content-conflict", "An appended leaf differs from the leaf already stored at its index.", target);
+      if (overlap === mutation.chunks.length) return noted(empty(), "warn", "mutation.no-op", `Content "${mutation.contentId}" already stores these leaves.`);
+      const storedBytes = stored.slice(0, mutation.first + overlap).reduce((sum, chunk) => sum + (decodeRemodelingDurableChunk(chunk)?.length ?? 0), 0);
+      const envelope = REMODELING_CONTENT_ENVELOPES[mutation.kind];
+      if (mutation.first + mutation.chunks.length > envelope.maxChunks || storedBytes + appendedBytes > envelope.maxBytes)
+        return refuse("error", "mutation.content-capacity", `Content "${mutation.contentId}" would exceed its ${mutation.kind} envelope.`, target);
+      const entry = existing === undefined ? { kind: mutation.kind, mime: mutation.mime, width: mutation.width, height: mutation.height, chunks: [] } : clone(existing);
+      return ok({ durableArtifacts: { ...clone(base.durableArtifacts), [mutation.contentId]: { ...entry, chunks: [...entry.chunks, ...mutation.chunks.slice(overlap)] } } });
+    }
+    case "removeContent": {
+      const target = [mutation.contentId];
+      const artifact = Object.hasOwn(base.durableArtifacts, mutation.contentId) ? base.durableArtifacts[mutation.contentId] : undefined;
+      if (artifact === undefined) return refuse("error", "mutation.target-missing", `Content "${mutation.contentId}" does not exist.`, target);
+      const stored = artifact.chunks.length;
+      if (mutation.from > stored) return refuse("error", "mutation.content-gap", `Content "${mutation.contentId}" stores only ${stored} leaves.`, target);
+      if (mutation.from === stored) return noted(empty(), "warn", "mutation.no-op", `Content "${mutation.contentId}" stores no leaf from ${stored} on.`);
+      const durableArtifacts = clone(base.durableArtifacts);
+      if (mutation.from === 0) delete durableArtifacts[mutation.contentId];
+      else durableArtifacts[mutation.contentId] = { ...artifact, chunks: artifact.chunks.slice(0, mutation.from) };
+      return ok({ durableArtifacts });
+    }
+    case "commitReconstruction": {
+      const sparseContent = mutation.sparse === null ? null : remodelingContentHandleParts(mutation.sparse.points);
+      if (sparseContent !== null && !remodelingContentIsComplete(base.durableArtifacts, sparseContent[0], "sparse", sparseContent[1]))
+        return refuse("error", "mutation.invalid-reconstruction-sparse", "The sparse cloud names durable content that is not complete.", ["sparse"]);
+      const meshContent = mutation.mesh === null ? null : remodelingMeshContentHandleParts(mutation.mesh.mesh);
+      if (meshContent !== null && !remodelingContentIsComplete(base.durableArtifacts, meshContent[0], "mesh", meshContent[1]))
+        return refuse("error", "mutation.invalid-reconstruction-mesh", "The mesh names durable content that is not complete.", [meshContent[0]]);
+      const assets = clone(base.assets);
+      for (const binding of mutation.assets) {
+        if (binding.contentId === null) {
+          delete assets[binding.id];
+          continue;
+        }
+        const artifact = Object.hasOwn(base.durableArtifacts, binding.contentId) ? base.durableArtifacts[binding.contentId] : undefined;
+        if (artifact === undefined || artifact.kind !== "image" || !remodelingContentIsComplete(base.durableArtifacts, binding.contentId, "image", artifact.chunks.length))
+          return refuse("error", "mutation.invalid-reconstruction-asset", "A bound asset names durable image content that is not complete.", [binding.id]);
+        assets[binding.id] = committedRemodelingAssetHandle(binding.id, binding.contentId);
+      }
+      const results: ReconstructionResults = {
+        ...clone(base.results),
+        sparse: clone(mutation.sparse),
+        trajectory: clone(mutation.trajectory),
+        geo: clone(mutation.geo),
+        qc: clone(mutation.qc),
+        mesh: mutation.mesh === null ? clone(base.results.mesh) : clone(mutation.mesh),
+      };
+      const assetsChanged = !same(assets, base.assets);
+      if (!assetsChanged && same(results, base.results)) return noted(empty(), "warn", "mutation.no-op", "The reconstruction result is already committed.");
+      return ok({ assets: assetsChanged ? assets : null, results });
+    }
   }
 }
 
-/** 🏁 `commit-reconstruction` — only its documented refusal path is modelled here.
- *
- *  A successful commit publishes staged content out of the plugin's process-global blob registries
- *  (`commit_staged_remodeling_reconstruction`, `durable_staged_remodeling_asset`), which no
- *  document-level twin can observe. The feature file names exactly one committed vector for this
- *  kind and it is the refusal one: a `sparse` payload that is a plain point buffer rather than a
- *  `remodeling-content:` replayable handle earns `mutation.invalid-reconstruction-sparse` and
- *  leaves the scene untouched. That path — and the sibling asset/mesh handle refusals — is real
- *  here; any input that would actually commit raises `RemodelingUnsupportedError`.
- */
-export function commitReconstructionOutcome(base: RemodelingSnapshot, payload: CommitReconstruction): RemodelingMutationOutcome {
-  if (payload.sparse !== null && payload.sparse.points !== "" && !payload.sparse.points.startsWith(CONTENT_HANDLE_PREFIX))
-    return refuse("error", "mutation.invalid-reconstruction-sparse", "The terminal sparse cloud is not a replayable content handle.", ["sparse"]);
-  for (const committed of payload.assets)
-    if (!committed.asset.data.startsWith(CONTENT_HANDLE_PREFIX)) return refuse("error", "mutation.invalid-reconstruction-asset", "A terminal asset is not a replayable content handle.", [committed.id]);
-  if (payload.mesh !== null && !payload.mesh.mesh.target.artifactId.startsWith(MESH_STAGE_HANDLE_PREFIX))
-    return refuse("error", "mutation.invalid-reconstruction-mesh", "The terminal mesh is not a staged replayable handle.", [payload.mesh.mesh.childId]);
-  throw new RemodelingUnsupportedError("commitReconstruction publishes from the plugin's process-global staging registries, which this twin does not model; only its refusal paths are implemented");
-}
-
 /** ▶️ `apply_remodeling_mutation` — the outcome's diff applied; a refusal leaves `base` untouched. */
-export function applyRemodelingMutation(snapshot: RemodelingSnapshot, mutation: RemodelingAnyMutation): RemodelingSnapshot {
-  const outcome = mutation.mutation === "commitReconstruction" ? commitReconstructionOutcome(snapshot, mutation) : remodelingMutationOutcome(snapshot, mutation);
-  return applyRemodelingDiff(outcome.diff, snapshot);
+export function applyRemodelingMutation(snapshot: RemodelingSnapshot, mutation: RemodelingMutation): RemodelingSnapshot {
+  return applyRemodelingDiff(remodelingMutationOutcome(snapshot, mutation).diff, snapshot);
 }
-
-/** 🔺️ The outcome of any tag, `commitReconstruction` included. */
-export const remodelingMutationDiff = (snapshot: RemodelingSnapshot, mutation: RemodelingAnyMutation): RemodelingMutationOutcome =>
-  mutation.mutation === "commitReconstruction" ? commitReconstructionOutcome(snapshot, mutation) : remodelingMutationOutcome(snapshot, mutation);
 
 /** 🏷️ The wire tag for one kebab-case leaf slug (`create-stream` → `createStream`). */
 export const mutationTagOfSlug = (slug: string): RemodelingMutationTag => camelOf(slug.replace(/-/g, "_")) as RemodelingMutationTag;

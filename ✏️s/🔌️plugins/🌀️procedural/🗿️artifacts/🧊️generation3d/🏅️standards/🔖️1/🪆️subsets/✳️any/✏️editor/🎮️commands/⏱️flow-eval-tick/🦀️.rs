@@ -8,18 +8,13 @@ use crate::preview_eval;
 use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
 use crate::Generation3dSnapshot;
 use semio_framework_os_flow::{FlowEvalPublication, FlowEvalSession};
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 pub use crate::preview_eval::FlowEvalTick;
 
-/// 🔁️ The self-redispatch every hop of the chain arms, addressed to the SAME preview window.
-pub fn rearm(window_id: &str, window_kind_id: &str, req: u64) -> Effect {
-    preview_eval::rearm(window_id, window_kind_id, req)
-}
-
-/// 🚧️ Whether a chain may be armed for this graph at all — see [`preview_eval::may_rearm`]. The
-/// editor's `pending_effects` poll asks the SAME question the tick's own re-arm asks, so an
-/// uncontributed graph is not spun from the poll after the tick stopped spinning it itself.
+/// 🚧️ Whether the `previewEval` run may start or continue on this graph at all — see
+/// [`preview_eval::may_rearm`]. The editor's `pending_effects` asks the SAME question the hop asks
+/// before it gives an uncontributed window up.
 pub fn may_rearm(fixture: &semio_framework_artifact_flow_flow::FlowFixture) -> bool {
     preview_eval::may_rearm(fixture)
 }
@@ -48,9 +43,9 @@ pub fn evaluate(
         let mut state = doc.snapshot.generation.as_state().clone();
         state.selected_generation_id.clone_from(&cfg.snapshot.selected_generation_id);
         if semio_framework_artifact_playbook_playbook::selected_generation(&state).is_none() {
-            // 🔒️ This tick RAN — it just had nothing to evaluate. Discharging the window's arming
-            // latch here is what lets the next gesture arm a fresh chain; leaving it armed would
-            // make a generate preview that opened before any generation exists unarmable forever
+            // 🔒️ This tick RAN — it just had nothing to evaluate. Discharging the window's latch here
+            // is what lets the run settle and a later gesture owe a fresh evaluation; leaving it armed
+            // would make a generate preview that opened before any generation exists wait forever
             // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
             session.begin_window_tick(window_id);
             session.note_window_tick_outcome(window_id, false);
@@ -63,7 +58,7 @@ pub fn evaluate(
     if let Some(fixture) = patched {
         fixture.retire_cold();
     }
-    Ok((Emit { effects: outcome.effects, extension_invocations: outcome.extension_invocations, ..Default::default() }, outcome.publication))
+    Ok((Emit { extension_invocations: outcome.extension_invocations, ..Default::default() }, outcome.publication))
 }
 
 pub fn handle(payload: &FlowEvalTick, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {

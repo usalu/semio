@@ -53,6 +53,10 @@ pub(crate) const TRINITY_JACK_DEFAULT_QUERY: &str = "MATCH (a:Piece)-[r:Connecti
 
 //#region 🔖️DocumentHelpers
 /// 📦️ The default trinity graph fixture (Nakagin capsule tower) — the initial document projection.
+/// 📬️ Admission envelope of one published document mutation: the reorganize run finalizes one `move-node` per moved
+/// node, each far below one page.
+const TRINITY_JACK_ARTIFACT_MUTATION_MAXIMUM_BYTES: usize = 4_096;
+
 pub(crate) fn default_fixture() -> JackSnapshot {
     JackSnapshot::parse_dsl(NAKAGIN_FIXTURE_DSL).unwrap_or_else(|_| crate::empty_trinity_graph_fixture())
 }
@@ -209,8 +213,6 @@ pub enum TrinityJackCommand {
     DeleteSelection,
     #[dsl(key = "patch-nodes")]
     PatchNodes { node_ids: Vec<String>, field: String, value: String },
-    #[dsl(key = "reorganize")]
-    Reorganize,
     #[dsl(key = "run-query")]
     RunQuery { query: Option<String>, results_window_id: String },
     #[dsl(key = "load-example-query")]
@@ -508,6 +510,22 @@ impl ArtifactEditor for TrinityJackPlayApp {
         Some(semio_framework_plugin::no_config_store_disposer())
     }
 
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_owners())
+    }
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_framework_plugin::no_presence_store_disposer())
+    }
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+    }
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+    }
+
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
         Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
     }
@@ -655,6 +673,19 @@ impl ArtifactEditor for TrinityJackPlayApp {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("trinity-jack-artifact-retained", TRINITY_JACK_ARTIFACT_MUTATION_MAXIMUM_BYTES))
+    }
+
+    /// ⏯️ Builds the reorganize tool's layout run over the run's base (`ToolRunDefinition.runJob`); resumed from the
+    /// ledger's checkpoint and provisional moves on a settings change.
+    fn build_tool_run_job(request: semio_framework_plugin::ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<semio_framework_plugin::ToolRunJob>, Fault> {
+        if request.tool_id != edit::tools::reorganize::TOOL_ID || request.purpose != semio_framework_plugin::ToolRunJobPurpose::Run {
+            return Ok(None);
+        }
+        edit::tools::reorganize::build_job(request.identity, &request.snapshot, request.checkpoint, request.provisional).map(Some)
+    }
+
     fn initial_snapshot() -> JackSnapshot {
         default_fixture()
     }
@@ -689,7 +720,6 @@ impl ArtifactEditor for TrinityJackPlayApp {
             TrinityJackCommand::SetFixtureJson { .. } => "setFixtureJson",
             TrinityJackCommand::DeleteSelection => "deleteSelection",
             TrinityJackCommand::PatchNodes { .. } => "patchNodes",
-            TrinityJackCommand::Reorganize => "reorganize",
             TrinityJackCommand::RunQuery { .. } => "runQuery",
             TrinityJackCommand::LoadExampleQuery { .. } => "loadExampleQuery",
             TrinityJackCommand::SetActiveExample { .. } => "setActiveExample",
@@ -715,7 +745,6 @@ impl ArtifactEditor for TrinityJackPlayApp {
             TrinityJackCommand::SetFixtureJson { json } => commands::set_fixture_json(json),
             TrinityJackCommand::DeleteSelection => commands::delete_selection(fixture, &interaction.selection("ast").ids),
             TrinityJackCommand::PatchNodes { node_ids, field, value } => commands::patch_nodes(fixture, node_ids, field, value),
-            TrinityJackCommand::Reorganize => commands::reorganize(fixture),
             TrinityJackCommand::RunQuery { .. } | TrinityJackCommand::LoadExampleQuery { .. } => return Err(Fault::from("query execution requires its retained operation owner")),
             TrinityJackCommand::SetActiveExample { example_id } => commands::set_active_example(example_id),
             TrinityJackCommand::SetViewport { viewport, .. } => return commands::set_viewport(viewport, view_state),
@@ -783,7 +812,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
         // 🕹️ Selection is framework-owned now (domain "ast") — `context_menu` has no `InteractionView`,
         // so the request's own surface-carried selection groups are the only source; no config fallback.
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &[], &[]);
-        let mut menu = Menu::of(registry).action("runQuery").action("reorganize").action("formatDocument").group("mode", |m| m.action("setActiveExample")).group("open", |m| m.action("loadExampleQuery"));
+        let mut menu = Menu::of(registry).action("runQuery").action("formatDocument").group("mode", |m| m.action("setActiveExample")).group("open", |m| m.action("loadExampleQuery"));
         // 🩹️ `Direct`, not `ViaNodeGraphEdit`: jack's own `TrinityJackCommand::DeleteSelection` is a
         // real standalone command (no `nodeGraphEdit`-style JSON-operations envelope exists for jack),
         // so the context-menu row must dispatch the `deleteSelection` action id directly.
@@ -839,6 +868,7 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
     })
             .icon_id("trinity")
             .mode_def(edit::definition())
+            .tool(edit::tools::reorganize::definition())
             .default_mode_id(edit::TRINITY_JACK_MODE_EDIT)
             .window_kind(TRINITY_JACK_PLAY_WINDOW_GRAPH, LocalizedLabel::native("Nakagin Graph", "Nakagin-Graph"), TRINITY_JACK_PLAY_BODY_GRAPH, SemanticSurfaceKind::NodeGraph, "graph-dag")
             .window_kind(TRINITY_JACK_PLAY_WINDOW_EDITOR, LocalizedLabel::native("Jack Query", "Jack-Abfrage"), TRINITY_JACK_PLAY_BODY_EDITOR, SemanticSurfaceKind::TextEditor, "document-jack")
@@ -864,7 +894,6 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
             )
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
             .mutation("patchNodes", LocalizedLabel::native("Patch Nodes", "Knoten aktualisieren"))
-            .action_with(semio_framework_plugin::ActionDefinition::new("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation, "rotate-cw").with_category("transform"))
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("runQuery", LocalizedLabel::native("Run Jack Query", "Jack-Abfrage ausführen"), ActionKind::Mutation).with_category("methods"))
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("loadExampleQuery", LocalizedLabel::native("Load Example Query", "Beispielabfrage laden"), ActionKind::Mutation).with_category("open"))
             .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left").with_category("mode"))
@@ -883,7 +912,6 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setLodMode", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchNodes", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("deleteSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("reorganize", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("setActiveExample", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("setFixtureJson", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("formatDocument", InteractiveJobClassification::Migrated)

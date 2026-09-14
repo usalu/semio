@@ -55,11 +55,11 @@ fn render(node: &UiComponentSceneNode) -> InputState<ActionDescriptor> {
 }
 
 fn hit<'a>(input: &'a InputState<ActionDescriptor>, control_id: &str) -> &'a HitTarget<ActionDescriptor> {
-    input.hit_targets.iter().find(|target| target.control_id.as_deref() == Some(control_id)).unwrap_or_else(|| panic!("no hit target registered for control_id {control_id:?}"))
+    input.staged_hits().iter().find(|target| target.control_id.as_deref() == Some(control_id)).unwrap_or_else(|| panic!("no hit target registered for control_id {control_id:?}"))
 }
 
 fn find_hit<'a>(input: &'a InputState<ActionDescriptor>, control_id: &str) -> Option<&'a HitTarget<ActionDescriptor>> {
-    input.hit_targets.iter().find(|target| target.control_id.as_deref() == Some(control_id))
+    input.staged_hits().iter().find(|target| target.control_id.as_deref() == Some(control_id))
 }
 
 #[test]

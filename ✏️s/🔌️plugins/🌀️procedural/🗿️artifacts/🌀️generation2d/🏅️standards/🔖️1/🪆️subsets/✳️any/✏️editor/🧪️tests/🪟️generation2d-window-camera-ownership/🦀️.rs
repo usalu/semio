@@ -105,7 +105,7 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
         .stack_size(2 * 1024 * 1024)
         .spawn(|| {
             block_on_generation2d_window_ownership(Box::pin(async {
-                use crate::editor::generation2d::commands::{add_generation, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, node_graph_viewport};
+                use crate::editor::generation2d::commands::{add_generation, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, node_graph_viewport, remove_widget};
                 use crate::editor::generation2d::modes::edit::windows::{flow, preview as edit_preview};
                 use crate::editor::generation2d::modes::generate::windows::preview as generate_preview;
                 use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigPack};
@@ -125,6 +125,19 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                     let meta = ActionMeta { instance_id: 71, view_state: view.cloned(), ..artifact_app_laws::meta("generation2d-window-camera-ownership") };
                     Box::pin(app.dispatch_typed(command, &meta)).await.map_err(|error| format!("{error:?}"))?;
                     Box::pin(artifact_app_laws::settle_registered_typed_operation(app, 71)).await.map_err(|error| format!("{error:?}"))
+                }
+
+                /// 🧵️ A generation command authors no transient of its own: it carries the `previewEval` run start,
+                /// and the run publishes the app transient every generate preview renders. The bundled `rect`
+                /// needs the uncontributed `math.add`, so callers remove it first or no run is servable.
+                async fn populate_generate_preview(app: &mut TestApp, view: &ViewModel) -> Result<(), String> {
+                    let before = app.ephemeral_snapshot().await.transient_generation;
+                    let receipt = dispatch(app, Some(view), Generation2dCommand::AddGeneration(add_generation::AddGeneration {})).await?;
+                    if receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Transient) { return Err("AddGeneration must publish no transient of its own".into()); }
+                    let meta = ActionMeta { instance_id: 71, view_state: Some(view.clone()), ..artifact_app_laws::meta("generation2d-window-camera-ownership") };
+                    let run = Box::pin(crate::editor::generation2d::unit_tests::context::drive_preview_run(app, &meta, &receipt.effects)).await;
+                    if app.ephemeral_snapshot().await.transient_generation == before { return Err(format!("the previewEval run did not populate the app preview transient: {run:?}")); }
+                    Ok(())
                 }
 
                 async fn main_scene(app: &mut TestApp, view: &ViewModel) -> Result<semio_framework_plugin::NodeGraphScene, String> {
@@ -186,9 +199,8 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                     load_exact::<generate_preview::config::Generation2dGeneratePreviewWindowConfigOwner>(&mut app, "generate-right", generate_preview::config::Generation2dGeneratePreviewWindowConfig { viewport: generate_right_value }).await?;
                     eprintln!("[DEBUG] Generation2d exact-window law loaded four preview owners");
 
-                    let preview_receipt = dispatch(&mut app, Some(&generate_left), Generation2dCommand::AddGeneration(add_generation::AddGeneration {})).await?;
-                    if preview_receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::Transient).count() != 1 { return Err("AddGeneration did not populate the app preview transient".into()); }
-                    drop(preview_receipt);
+                    Box::pin(dispatch(&mut app, Some(&generate_left), Generation2dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: "rect".into() }))).await?;
+                    Box::pin(populate_generate_preview(&mut app, &generate_left)).await?;
                     let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                     let app_before = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
 
@@ -260,9 +272,7 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                     let reopened_left = main_scene(&mut reopened, &main_left).await?.viewport.ok_or("reopened main-left viewport missing")?;
                     let reopened_edit = canvas_scene(&mut reopened, edit_preview::GENERATION2D_PLAY_BODY_PREVIEW, &edit_right).await?;
                     if reopened_left != main_left_value || (reopened_edit.camera_x, reopened_edit.camera_y, reopened_edit.zoom) != (edit_right_value.x, edit_right_value.y, edit_right_value.zoom) { return Err("Generation2d reopened renderer lost exact viewports".into()); }
-                    let second_preview = dispatch(&mut reopened, Some(&generate_right), Generation2dCommand::AddGeneration(add_generation::AddGeneration {})).await?;
-                    if second_preview.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::Transient).count() != 1 { return Err("reopened Generation2d preview transient did not repopulate".into()); }
-                    drop(second_preview);
+                    Box::pin(populate_generate_preview(&mut reopened, &generate_right)).await?;
                     let reopened_generate = canvas_scene(&mut reopened, generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW, &generate_right).await?;
                     eprintln!("[DEBUG] Generation2d exact-window law rendered reopened scenes");
                     if (reopened_generate.camera_x, reopened_generate.camera_y, reopened_generate.zoom) != (generate_right_value.x, generate_right_value.y, generate_right_value.zoom) { return Err("Generation2d reopened generate-preview lost exact viewport".into()); }

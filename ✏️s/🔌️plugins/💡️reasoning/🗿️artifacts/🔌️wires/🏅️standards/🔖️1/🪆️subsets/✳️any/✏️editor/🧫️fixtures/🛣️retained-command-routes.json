@@ -28,18 +28,6 @@
       "reason": "selection resolution requires item-addressable graph child reads"
     },
     {
-      "id": "forceLayout",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "reason": "layout clones and scans the complete graph child before publishing"
-    },
-    {
-      "id": "reorganize",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "reason": "layout clones and scans the complete graph child before publishing"
-    },
-    {
       "id": "canvasPointerMove",
       "disposition": "Migrated",
       "lanes": [

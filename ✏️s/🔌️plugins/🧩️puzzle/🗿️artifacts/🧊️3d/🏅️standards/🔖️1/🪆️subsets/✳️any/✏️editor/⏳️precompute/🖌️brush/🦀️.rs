@@ -10,7 +10,16 @@ use crate::standards::v1::subsets::any::schema::{
     puzzle3d_vortex_full_id, AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushKindWeights, BrushPlacePayload, BrushPreviewState, CableKindCatalog, Fixture, FixtureObject, KindCatalogBundle, KindCompatEntry, ObjectKind,
     ObjectKindVortexTemplate, Quat, Vec3, VortexKindCatalog, VortexProps,
 };
-use crate::editor::puzzle3d::precompute::geometry::{compute_brush_placement_pose, normalize_vec3, quat_rotate_vec, vec3_add};
+use crate::editor::puzzle3d::precompute::geometry::{
+    collision_body_from_buffers, compute_brush_placement_pose, normalize_vec3, pose_isometry, quat_rotate_vec, vec3_add, CollisionAabb, CollisionBody, CollisionOverlapState, CollisionStepContext, CollisionStepResult, Pose3d,
+};
+use crate::standards::v1::subsets::any::schema::{BrushSuggestionsRunCounter, BrushSuggestionsRunReason, BrushSuggestionsRunStage, SceneConfig};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
+use semio_framework_plugin::{ArtifactInstanceOperationOwnerHandle, ToolRunJobPort};
+use semio_framework_tool_run::{ToolRunCounter, ToolRunIdentity, ToolRunProgress, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTickWriter, ToolRunTraceSubject, ToolRunVerdict};
+use std::collections::HashMap;
+use std::marker::PhantomData;
+use std::sync::Arc;
 
 const DEFAULT_CABLE_KIND_ID: &str = "cable.link";
 
@@ -298,6 +307,13 @@ pub(crate) fn resolve_object_kind_mesh_url(kind_id: &str, catalogs: &impl BrushC
     fixture.find_object_kind(kind_id).and_then(|object| object.mesh_url.clone())
 }
 
+/// 🥽️ The mesh identity a PLACED object renders and collides with: its own non-empty `meshUrl`, else its
+/// kind's. The same law as the renderer's `Puzzle3dKindMeshIndex::resolve`; resolving a placed object by kind
+/// alone found the first object of that kind instead, so a body carrying its own mesh was never indexed.
+pub(crate) fn resolve_placed_object_mesh_url(object: &FixtureObject, catalogs: &impl BrushCatalogView, fixture: &impl BrushFixtureView) -> Option<String> {
+    object.mesh_url.as_deref().map(str::trim).filter(|url| !url.is_empty()).map(str::to_string).or_else(|| resolve_object_kind_mesh_url(object.object_kind.as_deref().unwrap_or(""), catalogs, fixture))
+}
+
 pub(crate) fn brush_compatible_candidates(target: &AttractionVortexContext, catalogs: &KindCatalogBundle, rules: &[KindCompatEntry], host_rules: &BrushHostRules) -> Vec<BrushCompatibleCandidate> {
     let mut scored: Vec<(BrushCompatibleCandidate, i64)> = Vec::new();
     let mut seen = std::collections::HashSet::new();
@@ -549,7 +565,6 @@ pub fn apply_brush_placement_to_fixture(fixture: &Fixture, payload: &BrushPlaceP
         orientation: Some(payload.orientation),
         scale: payload.scale.clone().or(kind.scale.clone()),
         vortices,
-        reveal_index: None,
     });
     let _ = template;
     next
@@ -576,6 +591,467 @@ pub(crate) fn brush_object_id(fixture: &impl BrushFixtureView, payload: &BrushPl
     format!("puzzle3d.brush.{:016x}", hasher.finish())
 }
 //#endregion 🔖️Placement
+
+//#region ⏯️BrushSuggestionsRun
+/// 🎲️ Overlap samples one candidate × placed-body pair draws, the interactive brush's own resolution.
+const BRUSH_SUGGESTIONS_SAMPLES: usize = 1_024;
+/// 🎲️ Samples one collision unit tests before it may yield.
+const BRUSH_SUGGESTIONS_SAMPLE_BATCH: usize = 8;
+
+/// 🚥️ What the run decided about one compatible candidate of its target vortex.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BrushSuggestionVerdict {
+    Pending,
+    Free,
+    Collision,
+    Unavailable,
+}
+
+/// 🗂️ One target vortex's compatible candidates as the run resolves them: candidate `key` (the trace key)
+/// has pose `previews[key]` and verdict `verdicts[key]`. `writer` is the `(run, generation)` that published
+/// it, so a closing job never retires what its successor already published.
+#[derive(Clone, Debug, PartialEq)]
+pub struct BrushSuggestionsFound {
+    pub(crate) writer: (u64, u32),
+    pub(crate) target: String,
+    pub(crate) previews: Vec<Option<BrushPreviewState>>,
+    pub(crate) verdicts: Vec<BrushSuggestionVerdict>,
+    pub(crate) done: bool,
+}
+
+impl BrushSuggestionsFound {
+    /// 🟢️ The free candidates in candidate order — what the popup lists, a cycle walks and an accept places.
+    pub fn free(&self) -> impl Iterator<Item = &BrushPreviewState> {
+        self.previews.iter().zip(&self.verdicts).filter(|(_, verdict)| **verdict == BrushSuggestionVerdict::Free).filter_map(|(preview, _)| preview.as_ref())
+    }
+}
+
+/// 📨️ A tool run action the link asked the host for and has not seen answered yet.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BrushSuggestionsRequest {
+    Start,
+    Abort,
+}
+
+/// 🔗️ The instance-owned half of the brush suggestions run: the vortex the user points the search at (an
+/// open suggestion popup wins over the brush hover), the run's wake port, the one outstanding start or abort
+/// request, and the candidates the live run has resolved so far. Commands write the target, the run job
+/// follows it and publishes what it found, renders and accepts read it. Ephemeral local-only state.
+#[derive(Default)]
+pub struct BrushSuggestionsLink {
+    menu: Option<String>,
+    hover: Option<String>,
+    port: Option<ToolRunJobPort>,
+    pub(crate) requested: Option<(BrushSuggestionsRequest, Option<u64>)>,
+    pub(crate) retry: bool,
+    pub(crate) found: Option<BrushSuggestionsFound>,
+}
+
+impl BrushSuggestionsLink {
+    /// 🎯️ The vortex the search should be looking at right now.
+    pub fn target(&self) -> Option<&str> {
+        self.menu.as_deref().or(self.hover.as_deref())
+    }
+
+    /// 💡️ A suggestion popup opened on `vortex_full_id`.
+    pub fn open_menu(&mut self, vortex_full_id: &str) {
+        self.menu = Some(vortex_full_id.to_string()).filter(|id| !id.is_empty());
+        self.gesture();
+    }
+
+    /// 🔒️ The suggestion popup closed.
+    pub fn close_menu(&mut self) {
+        if self.menu.take().is_some() {
+            self.gesture();
+        }
+    }
+
+    /// 🖌️ The armed brush now points at `vortex_full_id`, or at nothing.
+    pub fn hover(&mut self, vortex_full_id: Option<String>) {
+        let hover = vortex_full_id.filter(|id| !id.is_empty());
+        if hover != self.hover {
+            self.hover = hover;
+            self.gesture();
+        }
+    }
+
+    /// 👆️ A gesture releases the outstanding request and wakes the run to re-read its target.
+    fn gesture(&mut self) {
+        self.requested = None;
+        self.retry = true;
+        self.wake();
+    }
+
+    pub fn wake(&self) {
+        if let Some(port) = &self.port {
+            port.wake();
+        }
+    }
+
+    /// 🗂️ What the run resolved for `target`, if it is the target the run resolved.
+    pub fn found(&self, target: &str) -> Option<&BrushSuggestionsFound> {
+        self.found.as_ref().filter(|found| found.target == target)
+    }
+
+    pub(crate) fn is_empty(&self) -> bool {
+        self.menu.is_none() && self.hover.is_none() && self.port.is_none() && self.requested.is_none() && self.found.is_none()
+    }
+
+    pub(crate) fn clear(&mut self) {
+        *self = Self::default();
+    }
+}
+
+/// 🧠️ An instance operation owner that carries a [`BrushSuggestionsLink`].
+pub(crate) trait BrushSuggestionsOwner: std::any::Any {
+    fn brush_suggestions(&mut self) -> &mut BrushSuggestionsLink;
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum BrushSuggestionsPhase {
+    Meshes(usize),
+    Placed(usize),
+    Ready,
+}
+
+/// 🧱️ One placed object's collision footprint.
+struct BrushSuggestionsPlaced {
+    object_id: String,
+    mesh_url: String,
+    world: Pose3d,
+    bounds: CollisionAabb,
+}
+
+/// 🔎️ The search over one target vortex's compatible candidates, resumable between collision units.
+struct BrushSuggestionsSearch {
+    found: BrushSuggestionsFound,
+    host: String,
+    cursor: usize,
+    pair: usize,
+    collision: Option<CollisionOverlapState>,
+    tested: u64,
+    free: u64,
+    collisions: u64,
+    settled: bool,
+}
+
+/// ⏱️ Collision units spend the step's wall clock but never its fuel: one fuel unit is one candidate verdict.
+struct BrushSuggestionsCollisionContext<'a, 'b> {
+    outer: &'a StepContext<'b>,
+}
+
+impl CollisionStepContext for BrushSuggestionsCollisionContext<'_, '_> {
+    fn is_cancelled(&self) -> bool {
+        self.outer.is_cancelled()
+    }
+
+    fn should_yield(&self) -> bool {
+        self.outer.deadline_exceeded()
+    }
+
+    fn consume_fuel(&mut self, _units: u64) {}
+}
+
+/// 📏️ The uniform trace scale of a pose: a number, else the first vector component, else 1.
+fn brush_suggestions_scale(scale: &Option<dsl::DslValue>) -> f32 {
+    scale.as_ref().and_then(|value| value.as_f64().or_else(|| value.as_array().and_then(|values| values.first()).and_then(dsl::DslValue::as_f64))).map_or(1.0, |value| value as f32)
+}
+
+/// 🥽️ Where a run reads one mesh identity's geometry: the process-wide derived mesh store in production.
+pub(crate) type BrushSuggestionsMeshSource = fn(&str) -> Option<(Vec<f32>, Vec<u32>)>;
+
+/// ⏯️ The read-only brush suggestions run job (`📋️tool-run-contract.md` §3.7): bounded preparation of the
+/// collision meshes (process-wide derived geometry, else the scaled box fallback) and placed bodies, then a
+/// search over the target vortex's compatible candidates. Every candidate is upserted `testing` with its pose,
+/// then `success/free` or `danger/collision` — one fuel unit per verdict — and every verdict is published to the
+/// instance's [`BrushSuggestionsLink`]. The job follows the link's target: a new target clears the trace and
+/// searches again, and a settled search waits on its port until a gesture wakes it.
+pub(crate) struct BrushSuggestionsRunJob<O: BrushSuggestionsOwner> {
+    owner: ArtifactInstanceOperationOwnerHandle,
+    port: ToolRunJobPort,
+    writer: ToolRunTickWriter,
+    scene: Arc<SceneConfig>,
+    catalogs: KindCatalogBundle,
+    lane: Vec<String>,
+    mesh_source: BrushSuggestionsMeshSource,
+    phase: BrushSuggestionsPhase,
+    meshes: HashMap<String, CollisionBody>,
+    fallback: CollisionBody,
+    placed: Vec<BrushSuggestionsPlaced>,
+    search: Option<BrushSuggestionsSearch>,
+    stage: BrushSuggestionsRunStage,
+    published: bool,
+    progress_sequence: u64,
+    closed: bool,
+    owner_kind: PhantomData<fn() -> O>,
+}
+
+impl<O: BrushSuggestionsOwner> BrushSuggestionsRunJob<O> {
+    /// 🌱️ A run over `scene` whose trace subjects index the published mesh `lane`; a mesh identity `mesh_source`
+    /// cannot serve collides as the `fallback` box.
+    pub(crate) fn new(owner: ArtifactInstanceOperationOwnerHandle, port: ToolRunJobPort, identity: ToolRunIdentity, scene: Arc<SceneConfig>, lane: Vec<String>, mesh_source: BrushSuggestionsMeshSource, fallback: (Vec<f32>, Vec<u32>)) -> Option<Self> {
+        let fallback = collision_body_from_buffers(&fallback.0, &fallback.1)?;
+        let catalogs = scene.kind_catalogs.clone().unwrap_or_default();
+        Some(Self {
+            owner,
+            port,
+            writer: ToolRunTickWriter::new(identity),
+            scene,
+            catalogs,
+            lane,
+            mesh_source,
+            phase: BrushSuggestionsPhase::Meshes(0),
+            meshes: HashMap::new(),
+            fallback,
+            placed: Vec::new(),
+            search: None,
+            stage: BrushSuggestionsRunStage::Prepare,
+            published: true,
+            progress_sequence: 0,
+            closed: false,
+            owner_kind: PhantomData,
+        })
+    }
+
+    fn writer_run(&self) -> (u64, u32) {
+        let identity = self.writer.identity();
+        (identity.id.run, identity.generation)
+    }
+
+    /// 🥽️ One preparation unit; `true` once every mesh and placed body is ready.
+    fn prepare_one(&mut self) -> bool {
+        match self.phase {
+            BrushSuggestionsPhase::Meshes(cursor) => {
+                self.phase = match self.lane.get(cursor) {
+                    Some(url) => {
+                        if let Some(body) = (self.mesh_source)(url).and_then(|(positions, indices)| collision_body_from_buffers(&positions, &indices)) {
+                            self.meshes.insert(url.clone(), body);
+                        }
+                        BrushSuggestionsPhase::Meshes(cursor + 1)
+                    }
+                    None => BrushSuggestionsPhase::Placed(0),
+                };
+                false
+            }
+            BrushSuggestionsPhase::Placed(cursor) => {
+                self.phase = match self.scene.fixture.objects.get(cursor) {
+                    Some(object) => {
+                        if let Some(mesh_url) = resolve_placed_object_mesh_url(object, &self.catalogs, &self.scene.fixture) {
+                            let world = pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale);
+                            let bounds = CollisionAabb::from_body(self.meshes.get(&mesh_url).unwrap_or(&self.fallback), &world);
+                            self.placed.push(BrushSuggestionsPlaced { object_id: object.id.clone(), mesh_url, world, bounds });
+                        }
+                        BrushSuggestionsPhase::Placed(cursor + 1)
+                    }
+                    None => BrushSuggestionsPhase::Ready,
+                };
+                false
+            }
+            BrushSuggestionsPhase::Ready => true,
+        }
+    }
+
+    /// 🎯️ Retargets the search: clears the trace and lists `target`'s compatible candidates with their poses.
+    fn begin_search(&mut self, target: Option<String>) {
+        self.writer.clear_trace();
+        self.published = false;
+        let Some(target) = target else {
+            self.search = None;
+            self.stage = BrushSuggestionsRunStage::Idle;
+            return;
+        };
+        let mut found = BrushSuggestionsFound { writer: self.writer_run(), target: target.clone(), previews: Vec::new(), verdicts: Vec::new(), done: true };
+        let scene = Arc::clone(&self.scene);
+        let host = scene.fixture.objects.iter().find_map(|object| object.vortices.iter().position(|vortex| puzzle3d_vortex_full_id(&object.id, &vortex.id) == target).map(|index| (object, index)));
+        let refusal = match host {
+            None => Some(BrushSuggestionsRunReason::TargetMissing),
+            Some((host, index)) if !brush_target_vortex_allows_suggestion(host.vortices[index].vortex_kind.as_deref(), &scene.weights) => Some(BrushSuggestionsRunReason::SuggestionsBlocked),
+            Some((host, index)) => match vortex_world_from_object(host, index) {
+                None => Some(BrushSuggestionsRunReason::TargetMissing),
+                Some((position, direction)) => {
+                    let context = AttractionVortexContext { object_kind: host.object_kind.clone(), vortex_kind: host.vortices[index].vortex_kind.clone() };
+                    let world = TargetVortexWorld { position, direction, reference_orientation: host.orientation };
+                    let candidates = brush_compatible_candidates(&context, &self.catalogs, &scene.kind_compatibility, &scene.host_rules);
+                    found.previews = candidates.iter().filter(|candidate| brush_candidate_suggestion_weight(candidate, &scene.weights, &self.catalogs) > 0.0).map(|candidate| brush_preview_from_candidate(&target, candidate, &context, world, &self.catalogs, &scene.fixture)).collect();
+                    found.verdicts = vec![BrushSuggestionVerdict::Pending; found.previews.len()];
+                    found.done = false;
+                    None
+                }
+            },
+        };
+        if let Some(reason) = refusal {
+            let _ = self.writer.step(ToolRunStepKind::Warning, BrushSuggestionsRunStage::Target.index(), reason.code(), None, &[]);
+        }
+        self.stage = if refusal.is_some() { BrushSuggestionsRunStage::Idle } else { BrushSuggestionsRunStage::Test };
+        self.search = Some(BrushSuggestionsSearch { found, host: host.map(|(host, _)| host.id.clone()).unwrap_or_default(), cursor: 0, pair: 0, collision: None, tested: 0, free: 0, collisions: 0, settled: refusal.is_some() });
+    }
+
+    /// 🧪️ One collision unit of the current candidate, or its verdict, or the search's completion step.
+    fn test_unit(&mut self, context: &mut StepContext<'_>) {
+        let Self { search, writer, meshes, fallback, placed, lane, scene, stage, published, .. } = self;
+        let (meshes, fallback, placed, lane) = (&*meshes, &*fallback, &*placed, &*lane);
+        let Some(search) = search.as_mut().filter(|search| !search.settled) else { return };
+        let key = search.cursor;
+        let Some(slot) = search.found.previews.get(key) else {
+            search.settled = true;
+            search.found.done = true;
+            *stage = BrushSuggestionsRunStage::Idle;
+            *published = false;
+            let _ = writer.step(ToolRunStepKind::Success, BrushSuggestionsRunStage::Test.index(), BrushSuggestionsRunReason::SearchComplete.code(), None, &[ToolRunStepArg::Unsigned(search.free), ToolRunStepArg::Unsigned(search.tested)]);
+            return;
+        };
+        let Some(preview) = slot else {
+            writer.upsert(key as u64, ToolRunVerdict::Warning, BrushSuggestionsRunReason::PoseUnavailable.code(), ToolRunTraceSubject::Entity { entity: key as u64 });
+            search.found.verdicts[key] = BrushSuggestionVerdict::Unavailable;
+            search.tested += 1;
+            search.cursor += 1;
+            *published = false;
+            context.consume_fuel(1);
+            return;
+        };
+        let subject = ToolRunTraceSubject::Instance3d {
+            mesh: lane.iter().position(|url| *url == preview.mesh_url).unwrap_or(0) as u32,
+            position: preview.origin.map(|value| value as f32),
+            rotation: preview.orientation.map(|value| value as f32),
+            scale: brush_suggestions_scale(&preview.scale),
+        };
+        if search.pair == 0 && search.collision.is_none() {
+            writer.upsert(key as u64, ToolRunVerdict::Testing, BrushSuggestionsRunReason::Free.code(), subject);
+        }
+        let body = meshes.get(&preview.mesh_url).unwrap_or(fallback);
+        let world = pose_isometry(preview.origin, preview.orientation, &preview.scale);
+        let bounds = CollisionAabb::from_body(body, &world);
+        let budget = scene.overlap_budget;
+        let collides = loop {
+            let Some(entry) = placed.get(search.pair) else { break Some(false) };
+            if search.collision.is_none() && (entry.object_id == search.host || !entry.bounds.intersects(&bounds)) {
+                search.pair += 1;
+                continue;
+            }
+            let collision = search.collision.get_or_insert_with(|| CollisionOverlapState::new(BRUSH_SUGGESTIONS_SAMPLES, BRUSH_SUGGESTIONS_SAMPLE_BATCH, budget));
+            match collision.step(&mut BrushSuggestionsCollisionContext { outer: context }, body, &world, meshes.get(&entry.mesh_url).unwrap_or(fallback), &entry.world) {
+                CollisionStepResult::Pending | CollisionStepResult::Cancelled => break None,
+                CollisionStepResult::Complete { overlap, .. } => {
+                    search.collision = None;
+                    search.pair += 1;
+                    if overlap > budget {
+                        break Some(true);
+                    }
+                }
+            }
+        };
+        let Some(collides) = collides else { return };
+        let (verdict, reason, decided) = if collides { (ToolRunVerdict::Danger, BrushSuggestionsRunReason::Collision, BrushSuggestionVerdict::Collision) } else { (ToolRunVerdict::Success, BrushSuggestionsRunReason::Free, BrushSuggestionVerdict::Free) };
+        writer.upsert(key as u64, verdict, reason.code(), subject);
+        search.found.verdicts[key] = decided;
+        search.tested += 1;
+        search.free += u64::from(!collides);
+        search.collisions += u64::from(collides);
+        search.cursor += 1;
+        search.pair = 0;
+        search.collision = None;
+        *published = false;
+        context.consume_fuel(1);
+    }
+
+    /// 📣️ Publishes an unpublished search to the link, waits on the port once the search it follows is
+    /// settled, and flushes the step's tick.
+    fn settle_step(&mut self, context: &mut StepContext<'_>, desired: Option<String>) -> StepOutcome {
+        let following = self.search.as_ref().map(|search| search.found.target.as_str()) == desired.as_deref();
+        let idle = self.phase == BrushSuggestionsPhase::Ready && following && self.search.as_ref().is_none_or(|search| search.settled);
+        let found = (!self.published).then(|| self.search.as_ref().map(|search| search.found.clone()));
+        let port = self.port.clone();
+        let exchanged = self.owner.with_mut::<O, _>(|owner| {
+            let link = owner.brush_suggestions();
+            link.port = Some(port.clone());
+            if let Some(found) = found {
+                link.found = found;
+            }
+            if idle && link.target() == desired.as_deref() {
+                port.wait();
+            }
+            Ok(())
+        });
+        if exchanged.is_ok() {
+            self.published = true;
+        }
+        self.flush(context)
+    }
+
+    fn flush(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+        if self.writer.is_empty() {
+            return StepOutcome::Yield;
+        }
+        self.progress_sequence += 1;
+        let (tested, free, collisions, total) = self.search.as_ref().map_or((0, 0, 0, None), |search| (search.tested, search.free, search.collisions, Some(search.found.previews.len() as u64)));
+        let counters = BrushSuggestionsRunCounter::ALL.iter().zip([tested, free, collisions]).map(|(counter, value)| ToolRunCounter { counter: counter.index(), value }).collect();
+        self.writer.progress(ToolRunProgress { identity: self.writer.identity(), sequence: self.progress_sequence, state: ToolRunState::Running, stage: self.stage.index(), completed: tested, total, counters, units_per_second: 0.0, conflicts: 0, steps: ToolRunStepRing::default() });
+        let Some(Ok(bytes)) = self.writer.finish().map(|tick| tick.encode()) else {
+            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+        };
+        match context.payload_from_bytes(JobPayloadStream::Preview, &bytes) {
+            Ok(payload) => StepOutcome::PreviewReady(payload),
+            Err(rejected) => {
+                drop(rejected.into_source());
+                StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) })
+            }
+        }
+    }
+}
+
+impl<O: BrushSuggestionsOwner> InteractiveJob for BrushSuggestionsRunJob<O> {
+    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+        if context.is_cancelled() || self.closed {
+            return StepOutcome::Cancelled;
+        }
+        let Ok(desired) = self.owner.with_mut::<O, _>(|owner| Ok(owner.brush_suggestions().target().map(str::to_string))) else {
+            return self.flush(context);
+        };
+        while !context.deadline_exceeded() && !context.fuel_exhausted() {
+            if !self.prepare_one() {
+                continue;
+            }
+            if self.search.as_ref().map(|search| search.found.target.as_str()) != desired.as_deref() {
+                self.begin_search(desired.clone());
+                continue;
+            }
+            if self.search.as_ref().is_none_or(|search| search.settled) {
+                break;
+            }
+            self.test_unit(context);
+        }
+        self.settle_step(context, desired)
+    }
+
+    fn begin_close(&mut self) {
+        self.closed = true;
+    }
+
+    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
+        self.closed = true;
+        let writer = self.writer_run();
+        let retired = self.owner.with_mut::<O, _>(|owner| {
+            let link = owner.brush_suggestions();
+            if link.found.as_ref().is_some_and(|found| found.writer == writer) {
+                link.found = None;
+            }
+            Ok(())
+        });
+        if retired.is_err() {
+            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        self.search = None;
+        self.meshes = HashMap::new();
+        self.placed = Vec::new();
+        let _ = self.writer.finish();
+        InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closed && self.search.is_none() && self.meshes.is_empty() && self.placed.is_empty()
+    }
+}
+//#endregion ⏯️BrushSuggestionsRun
 
 //#region 🧪️Tests
 #[cfg(test)]

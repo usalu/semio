@@ -21,9 +21,7 @@ message RemodelingSnapshot {
   // @state artifact
   repeated GroundControlPoint gcps = 8;
   // @state artifact
-  ReconstructionJob job = 9;
-  // @state artifact
-  ReconstructionResults results = 10;
+  ReconstructionResults results = 9;
 }
 
 message ArtifactDialect {
@@ -216,18 +214,6 @@ message QcReportSnapshot {
   repeated string warnings = 7;
 }
 
-message ReconstructionJob {
-  string id = 1;
-  ReconstructionStage stage = 2;
-  float progress_0_1 = 3;
-  bool cancel_requested = 4;
-  uint32 stage_cursor = 5;
-  optional double started_at_ms = 6;
-  optional string error = 7;
-  repeated CameraPosePreview camera_poses_preview = 8;
-  string sparse_point_cloud_preview = 9;
-}
-
 message ReconstructionParams {
   IngestParams ingest = 1;
   FeatureParams feature = 2;
@@ -247,27 +233,6 @@ message ReconstructionResults {
   repeated MotionTrackSummary tracks = 5;
   optional GeoProducts geo = 6;
   optional QcReportSnapshot qc = 7;
-}
-
-enum ReconstructionStage {
-  RECONSTRUCTION_STAGE_IDLE = 0;
-  RECONSTRUCTION_STAGE_INGESTING = 1;
-  RECONSTRUCTION_STAGE_CALIBRATING = 2;
-  RECONSTRUCTION_STAGE_EXTRACTING_FEATURES = 3;
-  RECONSTRUCTION_STAGE_MATCHING_FEATURES = 4;
-  RECONSTRUCTION_STAGE_ESTIMATING_POSES = 5;
-  RECONSTRUCTION_STAGE_BUNDLE_ADJUSTING = 6;
-  RECONSTRUCTION_STAGE_GEOREFERENCING = 7;
-  RECONSTRUCTION_STAGE_DENSE_STEREO = 8;
-  RECONSTRUCTION_STAGE_FUSING_VOLUME = 9;
-  RECONSTRUCTION_STAGE_EXTRACTING_SURFACE = 10;
-  RECONSTRUCTION_STAGE_CLEANING_MESH = 11;
-  RECONSTRUCTION_STAGE_TEXTURING = 12;
-  RECONSTRUCTION_STAGE_TRACKING_MOTION = 13;
-  RECONSTRUCTION_STAGE_DERIVING_GEO_PRODUCTS = 14;
-  RECONSTRUCTION_STAGE_REPORTING_QC = 15;
-  RECONSTRUCTION_STAGE_DONE = 16;
-  RECONSTRUCTION_STAGE_FAILED = 17;
 }
 
 message RemodelingAssetChild {

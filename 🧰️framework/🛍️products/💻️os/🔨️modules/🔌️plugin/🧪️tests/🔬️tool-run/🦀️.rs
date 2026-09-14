@@ -8,11 +8,11 @@
 use super::*;
 use crate::test_app_mutation_fixture::{ChangeTestConfigSelection, SetCount, SetLabel, TestConfig, TestConfigMutation, TestMutation, TestSnapshot};
 use semio_framework_tool_run::{
-    JobKindId, ToolRunCounter, ToolRunDefinition, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunStageDefinition, ToolRunState, ToolRunStepRing, ToolRunTick, ToolRunTickWriter, ToolRunTraceCursor,
-    ToolRunTraceDelta, ToolRunTraceKind, ToolRunTraceSubject, ToolRunVerdict,
+    JobKindId, ToolRunCounter, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunState, ToolRunStepRing, ToolRunTick, ToolRunTickWriter,
+    ToolRunTraceCursor, ToolRunTraceDelta, ToolRunTraceKind, ToolRunTraceSubject, ToolRunVerdict,
 };
-use crate::ViewWindowInstance;
-use semio_framework_ui_scene::World3dScene;
+use crate::{RequestId, ViewWindowInstance};
+use semio_framework_ui_scene::{Board2dScene, World3dScene};
 use store::{Backbone, BackboneMessage, MemoryBackbone};
 
 const TOOL_RUN_FIXTURE_JSON: &str = include_str!("../../🧫️fixtures/⏯️tool-run/🔣️.json");
@@ -47,6 +47,8 @@ fn toy_definition(rebase: ToolRunRebasePolicy) -> ToolRunDefinition {
         trace: ToolRunTraceKind::Entity,
         run_job: JobKindId::new("toyFill.run"),
         revalidate_job: Some(JobKindId::new("toyFill.revalidate")),
+        settings: ToolRunSettingsReads { config: fixture()["settingsReads"]["config"].as_array().expect("declared config reads").iter().map(|pointer| text(pointer).to_string()).collect(), ..ToolRunSettingsReads::default() },
+        windows: Vec::new(),
     }
 }
 
@@ -129,6 +131,7 @@ impl ToyRunJob {
             steps: ToolRunStepRing::new(),
         });
         self.checkpoint_due = true;
+        self.writer.payload(self.done.to_le_bytes().to_vec());
         let tick = self.writer.finish().expect("a pending toy tick");
         Self::emit(cx, tick)
     }
@@ -190,6 +193,183 @@ impl semio_framework_job::InteractiveJob for ToyRunJob {
     }
 }
 
+/// 🎯️ The toy run job honours the in-place retarget hooks when it is built through
+/// `build_retargetable_tool_run_job`: a rebind restamps its writer, a reconfigure adopts the new target (a lower
+/// one retracts on its next step) and wakes a job that already completed.
+impl ToolRunRetargetableJob<TestConfig> for ToyRunJob {
+    fn rebind(&mut self, identity: ToolRunIdentity) {
+        self.writer.rebind(identity);
+    }
+
+    fn reconfigure(&mut self, identity: ToolRunIdentity, config: std::sync::Arc<TestConfig>) -> bool {
+        self.writer.rebind(identity);
+        self.target = toy_target(&config);
+        true
+    }
+}
+
+/// 🗜️ A run that places `initialCount`, checkpoints, then compacts: its first compaction tick retracts everything
+/// and re-appends the first count, every later tick re-appends the next, each followed by a wait on its port, and a
+/// checkpoint ends the compaction — the shape of a layout run whose compaction spans several driver turns.
+struct ToyCompactJob {
+    port: ToolRunJobPort,
+    writer: ToolRunTickWriter,
+    stage: usize,
+    closing: bool,
+}
+
+impl semio_framework_job::InteractiveJob for ToyCompactJob {
+    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+        if cx.is_cancelled() {
+            return semio_framework_job::StepOutcome::Cancelled;
+        }
+        if self.port.is_waiting() {
+            return semio_framework_job::StepOutcome::Yield;
+        }
+        let expected = &fixture()["compact"];
+        let counts: Vec<u64> = expected["compactCounts"].as_array().expect("compact counts").iter().map(number).collect();
+        let checkpoint = |cx: &mut semio_framework_job::StepContext<'_>| match cx.payload_from_bytes(semio_framework_job::JobPayloadStream::CheckpointState, &[0]) {
+            Ok(state) => semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state, applied_progress: 0 }),
+            Err(rejected) => {
+                drop(rejected.into_source());
+                semio_framework_job::StepOutcome::Yield
+            }
+        };
+        self.stage += 1;
+        match self.stage {
+            1 => {
+                self.writer.append_op(encoded(SetCount { value: number(&expected["initialCount"]) as i32 }.into())).expect("toy op fits");
+                self.writer.append_entity(1);
+                let tick = self.writer.finish().expect("the initial tick");
+                ToyRunJob::emit(cx, tick)
+            }
+            2 => checkpoint(cx),
+            stage if stage < 3 + counts.len() => {
+                let index = stage - 3;
+                if index == 0 {
+                    self.writer.retract_to(0);
+                }
+                self.writer.append_op(encoded(SetCount { value: counts[index] as i32 }.into())).expect("toy op fits");
+                let tick = self.writer.finish().expect("a compaction tick");
+                self.port.wait();
+                ToyRunJob::emit(cx, tick)
+            }
+            stage if stage == 3 + counts.len() => checkpoint(cx),
+            _ => ToyRunJob::complete(),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if self.closing { semio_framework_job::InteractiveJobCloseStep::Complete } else { semio_framework_job::InteractiveJobCloseStep::Blocked }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing
+    }
+}
+
+thread_local! {
+    /// 🪟️ `(tool id, window id, window config present)` of every job request the toy app received on this thread.
+    static TOY_REQUEST_WINDOWS: std::cell::RefCell<Vec<(String, Option<String>, bool)>> = const { std::cell::RefCell::new(Vec::new()) };
+}
+
+/// 📮️ A job whose every unit is an external round trip: it hands the host one `DispatchAction` through its
+/// [`ToolRunJobPort`], waits, and counts the hop answered when the port is woken — the shape of a run whose
+/// algorithm units live in another component.
+struct ToyWaitJob {
+    port: ToolRunJobPort,
+    writer: ToolRunTickWriter,
+    hops: u64,
+    dispatched: u64,
+    answered: u64,
+    closing: bool,
+}
+
+impl semio_framework_job::InteractiveJob for ToyWaitJob {
+    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+        if cx.is_cancelled() {
+            return semio_framework_job::StepOutcome::Cancelled;
+        }
+        if self.dispatched > self.answered {
+            self.answered = self.dispatched;
+            self.writer.upsert(self.answered, ToolRunVerdict::Success, 1, ToolRunTraceSubject::Entity { entity: self.answered });
+            let tick = self.writer.finish().expect("an answered hop tick");
+            return ToyRunJob::emit(cx, tick);
+        }
+        if self.dispatched == self.hops {
+            return ToyRunJob::complete();
+        }
+        self.dispatched += 1;
+        cx.consume_fuel(1);
+        self.port.wait();
+        self.port.dispatch(Effect::DispatchAction { req: RequestId(self.dispatched), action: text(&fixture()["port"]["hopAction"]).into(), args: None, delay_ms: 0 });
+        semio_framework_job::StepOutcome::Yield
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if self.closing { semio_framework_job::InteractiveJobCloseStep::Complete } else { semio_framework_job::InteractiveJobCloseStep::Blocked }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing
+    }
+}
+
+/// 🧸️ The toy run or revalidate job a request describes: it continues from the request's checkpoint.
+fn toy_run_job(request: ToolRunJobRequest<'_, ToyRunApp>) -> ToyRunJob {
+    let done = request.checkpoint.and_then(|bytes| bytes.try_into().ok()).map_or(0, u32::from_le_bytes);
+    let provisional_counts = request.provisional.iter().filter_map(|op| match op {
+        TestMutation::SetCount(set) => Some(set.value),
+        TestMutation::SetLabel(_) => None,
+    });
+    ToyRunJob {
+        purpose: request.purpose,
+        writer: ToolRunTickWriter::with_provisional_base(request.identity, request.provisional.len() as u32),
+        base_count: request.snapshot.count,
+        target: toy_target(&request.config),
+        done,
+        resumed_from: done,
+        provisional_counts: match request.purpose {
+            ToolRunJobPurpose::Run => Vec::new(),
+            ToolRunJobPurpose::Revalidate => provisional_counts.collect(),
+        },
+        checkpoint_due: false,
+        finished: false,
+        closing: false,
+    }
+}
+
+/// 🪟️ The toy world window's config: the same one-field document as the app config.
+struct ToyWorldWindowConfig;
+
+impl WindowConfigOwner for ToyWorldWindowConfig {
+    const WINDOW_KIND_ID: &'static str = "world";
+    const SCHEMA: &'static str = "semio.testkit-tool-run.world-window-config/v1";
+    const MAXIMUM_PUBLICATION_BYTES: usize = 1_024;
+    type State = TestConfig;
+    type Mutation = TestConfigMutation;
+
+    fn build_store_owners() -> store::DocumentStoreOwners<Self::State, Self::Mutation> {
+        crate::app::bounded_window_config_store_owners::<Self>()
+    }
+
+    fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
+        crate::app::bounded_window_config_preparation_factory::<Self>()
+    }
+
+    fn build_store_disposer() -> Box<dyn ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
+        crate::app::bounded_window_config_store_disposer::<Self>()
+    }
+}
+
 #[derive(Default)]
 struct ToyRunApp;
 
@@ -209,28 +389,27 @@ impl ArtifactApp for ToyRunApp {
     type TransientMutation = NoTransientMutation;
     type Command = TestMutation;
 
+    fn register_window_config_owners(registry: &mut WindowConfigOwnerRegistry) -> Result<(), Fault> {
+        registry.register::<ToyWorldWindowConfig>()
+    }
+
+    fn build_retargetable_tool_run_job(request: ToolRunJobRequest<'_, Self>) -> Result<Option<Box<dyn ToolRunRetargetableJob<TestConfig>>>, Fault> {
+        if request.tool_id != text(&fixture()["retarget"]["toolId"]) {
+            return Ok(None);
+        }
+        Ok(Some(Box::new(toy_run_job(request))))
+    }
+
     fn build_tool_run_job(request: ToolRunJobRequest<'_, Self>) -> Result<Option<ToolRunJob>, Fault> {
-        let done = request.checkpoint.and_then(|bytes| bytes.try_into().ok()).map_or(0, u32::from_le_bytes);
-        let provisional_counts = request.provisional.iter().filter_map(|op| match op {
-            TestMutation::SetCount(set) => Some(set.value),
-            TestMutation::SetLabel(_) => None,
-        });
-        let job = ToyRunJob {
-            purpose: request.purpose,
-            writer: ToolRunTickWriter::with_provisional_base(request.identity, request.provisional.len() as u32),
-            base_count: request.snapshot.count,
-            target: toy_target(&request.config),
-            done,
-            resumed_from: done,
-            provisional_counts: match request.purpose {
-                ToolRunJobPurpose::Run => Vec::new(),
-                ToolRunJobPurpose::Revalidate => provisional_counts.collect(),
-            },
-            checkpoint_due: false,
-            finished: false,
-            closing: false,
-        };
-        Ok(Some(Box::new(job)))
+        TOY_REQUEST_WINDOWS.with(|windows| windows.borrow_mut().push((request.tool_id.to_string(), request.window_id.map(str::to_string), request.window_config.is_some())));
+        if request.tool_id == text(&fixture()["compact"]["toolId"]) {
+            return Ok(Some(Box::new(ToyCompactJob { port: request.port, writer: ToolRunTickWriter::with_provisional_base(request.identity, request.provisional.len() as u32), stage: 0, closing: false })));
+        }
+        if request.tool_id == text(&fixture()["port"]["toolId"]) {
+            request.instance_owner.with_mut::<EmptyArtifactInstanceOperationOwner, _>(|_| Ok(()))?;
+            return Ok(Some(Box::new(ToyWaitJob { port: request.port, writer: ToolRunTickWriter::new(request.identity), hops: number(&fixture()["port"]["hops"]), dispatched: 0, answered: 0, closing: false })));
+        }
+        Ok(Some(Box::new(toy_run_job(request))))
     }
 
     async fn initial_snapshot() -> TestSnapshot {
@@ -250,8 +429,14 @@ impl ArtifactApp for ToyRunApp {
     }
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
+        if body_key == text(&fixture()["boardLane"]["bodyKey"]) {
+            let scene = Board2dScene::base(format!("{{\"count\":{}}}", doc.snapshot.count), "{}".into(), true);
+            let surface = scene_surface(text(&fixture()["boardLane"]["surfaceId"]), SurfaceKind::Board2d, &scene)?;
+            return column().try_id("board").map_err(|_| PluginAssemblyError::new("toy", "board id"))?.try_child(surface).map_err(|_| PluginAssemblyError::new("toy", "board child"))?.try_build().map(built_to_component_tree).map_err(|_| PluginAssemblyError::new("toy", "board build"));
+        }
         if body_key != text(&fixture()["traceLane"]["bodyKey"]) {
-            return built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("count={}", doc.snapshot.count)));
+            let run = doc.tool_run().map_or_else(String::new, |run| format!(" completed={} steps={} payload={}", run.progress.completed, run.progress.steps.len(), run.payload.as_deref().and_then(|payload| payload.try_into().ok()).map_or(0, u32::from_le_bytes)));
+            return built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("count={}{run}", doc.snapshot.count)));
         }
         let provisional = |unit: i32| doc.tool_run().is_some_and(|run| run.provisional_entities.contains(&(unit as u64)));
         let instances: Vec<Value> = (1..=doc.snapshot.count).map(|unit| serde_json::json!({ "id": format!("unit-{unit}"), "meshId": "unit", "provisional": provisional(unit) })).collect();
@@ -324,13 +509,56 @@ async fn toy_manifest() -> App {
         .window_kind("main", LocalizedLabel::data("Main"), "tool-run.main", SurfaceKind::Canvas2d, IconName::AppWindow)
         .await
         .window_kind(text(&fixture["traceLane"]["windowId"]), LocalizedLabel::data("World"), text(&fixture["traceLane"]["bodyKey"]), SurfaceKind::World3d, IconName::AppWindow)
+        .await
+        .window_kind(text(&fixture["boardLane"]["windowId"]), LocalizedLabel::data("Board"), text(&fixture["boardLane"]["bodyKey"]), SurfaceKind::Board2d, IconName::AppWindow)
         .await;
     let mut tools = Vec::new();
-    for (key, rebase) in [("toolId", ToolRunRebasePolicy::Revalidate), ("freezeToolId", ToolRunRebasePolicy::Freeze)] {
-        let id = text(&fixture[key]);
+    for (id, rebase) in [
+        (text(&fixture["toolId"]), ToolRunRebasePolicy::Revalidate),
+        (text(&fixture["freezeToolId"]), ToolRunRebasePolicy::Freeze),
+        (text(&fixture["port"]["toolId"]), ToolRunRebasePolicy::Restart),
+        (text(&fixture["retarget"]["toolId"]), ToolRunRebasePolicy::Revalidate),
+        (text(&fixture["compact"]["toolId"]), ToolRunRebasePolicy::Revalidate),
+    ] {
         builder = builder.tool(ToolDefinition { run: Some(toy_definition(rebase)), ..ToolDefinition::new(id, LocalizedLabel::native("Toy fill", "Spielfüllung"), IconName::PaintBucket).await }).await;
         tools.push(ToolRef::new(id).await);
     }
+    let window_settings = &fixture["windowSettingsReads"];
+    builder = builder
+        .tool(ToolDefinition {
+            run: Some(ToolRunDefinition {
+                settings: ToolRunSettingsReads { window_config: [(text(&window_settings["windowKindId"]).to_string(), vec![text(&window_settings["pointer"]).to_string()])].into_iter().collect(), ..ToolRunSettingsReads::default() },
+                ..toy_definition(ToolRunRebasePolicy::Revalidate)
+            }),
+            ..ToolDefinition::new(text(&window_settings["toolId"]), LocalizedLabel::native("Toy fill reading window settings", "Spielfüllung mit Fenstereinstellungen"), IconName::PaintBucket).await
+        })
+        .await;
+    tools.push(ToolRef::new(text(&window_settings["toolId"])).await);
+    let reader = &fixture["readerWindows"];
+    builder = builder
+        .tool(ToolDefinition {
+            run: Some(ToolRunDefinition { windows: reader["windows"].as_array().expect("reader windows").iter().map(|window| text(window).to_string()).collect(), ..toy_definition(ToolRunRebasePolicy::Revalidate) }),
+            ..ToolDefinition::new(text(&reader["toolId"]), LocalizedLabel::native("Toy fill with a reader window", "Spielfüllung mit Lesefenster"), IconName::PaintBucket).await
+        })
+        .await;
+    tools.push(ToolRef::new(text(&reader["toolId"])).await);
+    let undeclared = text(&fixture["settingsReads"]["undeclaredToolId"]);
+    builder = builder
+        .tool(ToolDefinition {
+            run: Some(ToolRunDefinition { settings: ToolRunSettingsReads::default(), ..toy_definition(ToolRunRebasePolicy::Revalidate) }),
+            ..ToolDefinition::new(undeclared, LocalizedLabel::native("Toy fill without settings reads", "Spielfüllung ohne Einstellungen"), IconName::PaintBucket).await
+        })
+        .await;
+    tools.push(ToolRef::new(undeclared).await);
+    // 📖️ The READ-ONLY twin of the toy run: the same job, declared as publishing nothing.
+    let read_only = text(&fixture["readOnlyRun"]["toolId"]);
+    builder = builder
+        .tool(ToolDefinition {
+            run: Some(ToolRunDefinition { mutating: false, ..toy_definition(ToolRunRebasePolicy::Revalidate) }),
+            ..ToolDefinition::new(read_only, LocalizedLabel::native("Toy read-only fill", "Schreibgeschützte Spielfüllung"), IconName::PaintBucket).await
+        })
+        .await;
+    tools.push(ToolRef::new(read_only).await);
     App::from_builder(builder.mode_tools("edit", tools).await).await
 }
 
@@ -660,6 +888,7 @@ async fn tool_run_overlay_append_per_tick_stays_below_two_milliseconds_for_nakag
             append_ops: vec![encoded(SetCount { value: index as i32 + 1 }.into()), encoded(SetLabel { value: label.clone() }.into())],
             append_entities: vec![index + 1],
             retract_to: None,
+            payload: None,
         };
         let started = std::time::Instant::now();
         let receipt = app.tool_runs.apply_tick(tick).expect("tick applies");
@@ -860,4 +1089,407 @@ async fn tool_run_provisional_entities_ride_the_instance_records_the_producer_st
     assert_eq!(flagged, expected["flaggedInstances"].as_array().expect("flagged").iter().map(text).collect::<Vec<_>>(), "ArtifactView::tool_run().provisional_entities drives the provisional instance flag");
     abort_and_close(&mut app).await;
 }
+#[semio_framework_async_macros::async_test]
+async fn tool_run_job_port_hands_effects_to_the_host_and_a_waiting_job_keeps_nothing_runnable_until_woken() {
+    let fixture = fixture();
+    let expected = &fixture["port"];
+    let mut app = toy_app(1).await;
+    start(&mut app, text(&expected["toolId"])).await;
+    for hop in 1..=number(&expected["hops"]) {
+        pump_until(&mut app, "the hop is handed to the host", |app| app.tool_runs.port().is_waiting() && !app.tool_runs.port().has_effects() && app.tool_runs.trace().is_some_and(|trace| trace.len() as u64 == hop - 1)).await;
+        let mut effects = Vec::new();
+        while let Some(effect) = app.take_typed_operation_effect() {
+            effects.push(effect);
+        }
+        assert!(matches!(effects.as_slice(), [Effect::DispatchAction { req: RequestId(req), action, .. }] if *req == hop && action == text(&expected["hopAction"])), "hop {hop}: exactly the job's effect reaches the host outbox: {effects:?}");
+        for _ in 0..2 {
+            while app.take_typed_operation_ui_scope().is_some() {}
+            app.flush_tool_run_ui_dirty();
+        }
+        assert!(!app.tool_runs.has_pending_work() && !app.tool_run_has_pending_work(), "hop {hop}: a waiting job keeps its instance idle");
+        app.advance_typed_operation_publication().await.expect("an idle turn");
+        assert!(app.take_typed_operation_effect().is_none(), "hop {hop}: an unwoken job is never stepped again");
+        app.tool_runs.port().wake();
+        assert!(app.tool_runs.has_pending_work(), "hop {hop}: the wake makes the run runnable again");
+    }
+    pump_until(&mut app, "every hop answered", |app| app.tool_runs.state().map(ToolRunState::as_str) == Some(text(&expected["state"]))).await;
+    assert_eq!(app.tool_runs.trace().expect("trace").len() as u64, number(&expected["traceRecords"]), "one trace record per answered hop");
+    abort_and_close(&mut app).await;
+}
 //#endregion 🔌️IntegrationSeams
+
+//#region 🔢️ActionArgCarriers
+/// 🔢️ The wire value a fixture row names, in the carrier it names — the shapes a §2.5 action argument
+/// really arrives in: a guest's `DslValue::uint`, the shell's `UiValue::Number` float, and the text a
+/// targeted action's `runId` travels as.
+fn carrier_value(row: &Value) -> DslValue {
+    match text(&row["carrier"]) {
+        "uint" => DslValue::uint(row["value"].as_u64().expect("an unsigned fixture carrier")),
+        "float" => DslValue::float(row["value"].as_f64().expect("a float fixture carrier")),
+        "string" => DslValue::String(text(&row["value"]).to_string()),
+        other => panic!("the fixture named an unknown arg carrier {other}"),
+    }
+}
+
+/// ⚖️ LAW: every `actionArgCarriers` row — a §2.5 action argument that is an exact non-negative integer
+/// reads as that integer whichever carrier minted it, and nothing else names an identity at all.
+///
+/// 🪪️ `generation` crosses as `Number(Float(1.0))` from the shell's own action arguments and from a
+/// guest's `DslValue::uint` alike; a reader that took only an exact `u64` carrier or a numeric string
+/// answered `None`, and `(_, None)` is `ToolRunRejection::Stale`. Every `toolRunFinalize` of every app
+/// was refused, so runs reached `Complete` and stayed there — and because a start against a live run is
+/// `ToolRunRejection::Busy`, no tool could run a second time in a session. Measured on 6018 as a 3d
+/// preview that never re-evaluated after an inspector edit
+/// (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`).
+#[test]
+fn every_action_arg_carrier_of_an_exact_integer_reads_the_same_identity() {
+    for row in fixture()["actionArgCarriers"]["rows"].as_array().expect("carrier rows") {
+        let id = text(&row["id"]);
+        let args = DslValue::Object(vec![("generation".to_string(), carrier_value(row)), ("runId".to_string(), carrier_value(row))]);
+        let read = crate::app::tool_run::tool_run_arg_u64(Some(&args), "generation");
+        let expected = row["reads"].as_u64();
+        println!("[STATS] actionArgCarriers {id}: carrier={} read={read:?}", text(&row["carrier"]));
+        assert_eq!(read, expected, "{id}: generation");
+        assert_eq!(crate::app::tool_run::tool_run_arg_u64(Some(&args), "runId"), expected, "{id}: runId — one reader, both identity arguments");
+    }
+    assert_eq!(crate::app::tool_run::tool_run_arg_u64(Some(&DslValue::Object(Vec::new())), "generation"), None, "an absent argument names no identity");
+    assert_eq!(crate::app::tool_run::tool_run_arg_u64(None, "generation"), None, "an action with no arguments at all names no identity");
+}
+
+/// ⚖️ LAW: a `toolRunFinalize` whose `generation` arrives in the fixture's declared wire carrier really
+/// finalizes the complete run it names — the end-to-end reading of the law above, through the same
+/// `handle_action` door the shell dispatches through.
+#[semio_framework_async_macros::async_test]
+async fn a_finalize_in_the_wire_carrier_finalizes_the_run_it_names() {
+    let fixture = fixture();
+    let carrier = text(&fixture["actionArgCarriers"]["finalizeCarrier"]);
+    let mut app = toy_app(number(&fixture["finalize"]["units"])).await;
+    start(&mut app, text(&fixture["toolId"])).await;
+    pump_until(&mut app, "the run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete)).await;
+    let slot = app.tool_runs.slot().expect("a complete run has a slot");
+    let row = serde_json::json!({ "carrier": carrier, "value": f64::from(slot.generation) });
+    let arguments = vec![("runId".to_string(), DslValue::String(slot.run.to_string())), ("generation".to_string(), carrier_value(&row))];
+    let output = tool_run_action(&mut app, "toolRunFinalize", arguments).await;
+    println!("[STATS] finalize carrier={carrier} output={output:?}");
+    assert_eq!(output.get("rejected").and_then(DslValue::as_str), None, "a finalize naming the run's own generation is never stale, whatever carrier the number arrived in");
+    assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("beginFinalize"), "it begins the finalize");
+    assert_eq!(app.tool_runs.state(), Some(ToolRunState::Finalizing), "and the run leaves complete");
+    abort_and_close(&mut app).await;
+}
+//#endregion 🔢️ActionArgCarriers
+
+/// ⚖️ LAW: a READ-ONLY run's completion is its finalization — the driver turn that completes its job
+/// leaves `complete` on its own, and the tool can be started again without any finalize action ever
+/// being dispatched.
+///
+/// 🪪️ `complete` means "the job is done and the run awaits the finalize that publishes its provisional
+/// edits". A `mutating: false` run authors none, so there is nothing to publish and nothing to review;
+/// parking it in `complete` only holds the tool's single run slot, and a `toolRunStart` against a
+/// non-terminal run is `toolRun.busy`. Generation3d's read-only `previewEval` therefore ran exactly ONCE
+/// per session and its 3d preview stopped re-evaluating after the first evaluation
+/// (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`).
+#[semio_framework_async_macros::async_test]
+async fn a_read_only_run_finalizes_itself_and_frees_its_slot_for_the_next_start() {
+    let fixture = fixture();
+    let expected = &fixture["readOnlyRun"];
+    let tool_id = text(&expected["toolId"]);
+    let mut app = toy_app(number(&expected["units"])).await;
+    start(&mut app, tool_id).await;
+    pump_until(&mut app, "the read-only run leaves complete on its own", |app| app.tool_runs.state().is_some_and(|state| state != ToolRunState::Running && state != ToolRunState::Starting && state != ToolRunState::Complete)).await;
+    let state = app.tool_runs.state().expect("a state");
+    println!("[STATS] readOnlyRun state={} after its job completed, with no finalize action dispatched", state.as_str());
+    assert_ne!(state, ToolRunState::Complete, "a read-only run never parks in complete waiting for a finalize nobody owes it");
+    pump_until(&mut app, "the read-only run settles", |app| app.tool_runs.state().is_some_and(ToolRunState::is_terminal) && !app.tool_runs.has_pending_work()).await;
+    // ▶️ And the slot is free: the next start is admitted, with no finalize action anywhere in this test.
+    let output = tool_run_action(&mut app, "toolRunStart", vec![("toolId".into(), DslValue::String(tool_id.into()))]).await;
+    assert_eq!(output.get("rejected").and_then(DslValue::as_str), None, "the finished read-only run never refuses the next start as busy");
+    assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("spawnJob"), "and the next start really spawns a job");
+    assert_eq!(expected["startsAgainWithoutAnyFinalizeAction"].as_bool(), Some(true));
+    abort_and_close(&mut app).await;
+}
+
+//#region 🎯️RetargetAndSettings
+/// 📡️ A remote peer sets the count to `count`; `probe` forwards its mutation batch and `app` ingests it.
+async fn ingest_remote_count(app: &mut ToyApp, probe: &mut MemoryBackbone, channel: &str, count: u64) {
+    let mut remote = artifact_app_laws::new_registered_app::<ToyRunApp, _>(toy_manifest()).await;
+    let mut remote_probe = attach_probe(&mut remote, channel).await;
+    remote.store.set_local_actor_id(Some("remote".into())).expect("remote actor");
+    remote.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: count as i32 }.into()], description: None }).await.expect("remote edit");
+    for message in remote_probe.receive().await.expect("remote outbox").into_iter().filter(|message| matches!(message, BackboneMessage::Mutations { .. })) {
+        probe.send(message).await.expect("forward remote edit");
+    }
+    let generation = app.store.generation();
+    app.tick_backbone().await.expect("ingest remote edit");
+    assert_eq!(app.store.generation(), generation + 1, "the remote edit is ingested");
+    drop(remote_probe);
+    close(&mut remote);
+}
+
+/// ⚖️ LAW: a base change during a run hands every later tick the new identity — a plain job is rebuilt under it
+/// from its checkpoint, a retargetable job is rebound in place — so the run keeps appending after the rebase
+/// instead of producing ticks the ledger drops as stale.
+#[semio_framework_async_macros::async_test]
+async fn tool_run_base_change_rebinds_the_running_job_so_ticks_never_carry_a_stale_identity() {
+    let fixture = fixture();
+    let expected = &fixture["rebind"];
+    for (tool_id, rebuilt) in [(text(&fixture["toolId"]), true), (text(&fixture["retarget"]["toolId"]), false)] {
+        let mut app = toy_app(number(&expected["target"])).await;
+        let mut probe = attach_probe(&mut app, &format!("tool-run-rebind-{tool_id}")).await;
+        start(&mut app, tool_id).await;
+        pump_until(&mut app, "first checkpointed unit", |app| app.tool_runs.provisional().len() as u64 >= number(&expected["unitsBeforeRebase"]) * number(&fixture["opsPerUnit"]) && app.tool_runs.checkpoint().is_some() && app.tool_runs.state() == Some(ToolRunState::Running)).await;
+        ingest_remote_count(&mut app, &mut probe, &format!("tool-run-rebind-remote-{tool_id}"), number(&expected["remoteCount"])).await;
+        pump_until(&mut app, "rebase observed", |app| app.tool_runs.slot().is_some_and(|slot| u64::from(slot.generation) == number(&expected["generationAfterRebase"]))).await;
+        let identity = app.tool_runs.identity().expect("identity");
+        let after_rebase = app.tool_runs.provisional().len();
+        pump_until(&mut app, "the run appends after the rebase", |app| app.tool_runs.provisional().len() > after_rebase + 2 * number(&fixture["opsPerUnit"]) as usize).await;
+        assert_eq!(app.tool_runs.identity(), Some(identity), "{tool_id}: appending never moved the identity again");
+        let resumed_from = app.tool_runs.progress().expect("progress").counters.first().map_or(0, |counter| counter.value);
+        println!("[STATS] rebind {tool_id}: provisional {after_rebase} -> {} resumedFrom={resumed_from}", app.tool_runs.provisional().len());
+        assert_eq!(resumed_from > 0, rebuilt, "{tool_id}: a plain job is rebuilt from its checkpoint, a retargetable job keeps running");
+        drop(probe);
+        abort_and_close(&mut app).await;
+    }
+}
+
+/// ⚖️ LAW: a §2.5 action that names no identity (a keyboard chord) targets the instance's live run at its
+/// generation of the dispatch; an identity argument that is stale still no-ops.
+#[semio_framework_async_macros::async_test]
+async fn tool_run_chord_actions_without_an_identity_resolve_the_live_run_and_stale_identities_still_no_op() {
+    let fixture = fixture();
+    let expected = &fixture["chord"];
+    let mut app = toy_app(number(&expected["target"])).await;
+    start(&mut app, text(&fixture["toolId"])).await;
+    pump_until(&mut app, "running", |app| app.tool_runs.state() == Some(ToolRunState::Running)).await;
+    let output = app.handle_action("toolRunPause", None, &toy_meta()).await.expect("chord pause").output;
+    assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("stopScheduling"), "a chord without arguments pauses the live run");
+    let window_only = vec![("windowId".to_string(), DslValue::String(text(&expected["windowArgument"]).into()))];
+    assert_eq!(tool_run_action(&mut app, "toolRunResume", window_only).await.get("toolRun").and_then(DslValue::as_str), Some("schedule"), "arguments that name no identity resolve the live run too");
+    let slot = app.tool_runs.slot().expect("slot");
+    let stale = tool_run_action(&mut app, "toolRunPause", vec![("runId".into(), DslValue::String(slot.run.to_string())), ("generation".into(), DslValue::String(number(&fixture["stale"]["wrongGeneration"]).to_string()))]).await;
+    assert_eq!(stale.get("rejected").and_then(DslValue::as_str), Some(text(&fixture["stale"]["code"])), "a stale identity still no-ops");
+    let generation_only = tool_run_action(&mut app, "toolRunPause", vec![("generation".into(), DslValue::String(slot.generation.to_string()))]).await;
+    assert_eq!(generation_only.get("rejected").and_then(DslValue::as_str), Some(text(&fixture["stale"]["code"])), "a partial identity is checked as named, never completed from the live run");
+    assert_eq!(app.tool_runs.state(), Some(ToolRunState::Running));
+    let output = app.handle_action("toolRunAbort", None, &toy_meta()).await.expect("chord abort").output;
+    assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("closeJob"), "a chord abort aborts the live run");
+    pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work()).await;
+    let output = app.handle_action("toolRunDismiss", None, &toy_meta()).await.expect("chord dismiss").output;
+    assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("clearTrace"));
+    assert!(app.tool_runs.slot().is_none());
+    close(&mut app);
+}
+
+/// ⚖️ LAW: `settingsChanged` fires only when a value behind a declared settings pointer changes. Republishing the
+/// same target and a window-config publication (a camera move) never reconfigure — the run keeps its generation
+/// and its job — and a run that declares no settings reads is never reconfigured at all.
+#[semio_framework_async_macros::async_test]
+async fn tool_run_settings_changed_fires_only_for_the_declared_settings_reads() {
+    let fixture = fixture();
+    let expected = &fixture["settingsReads"];
+    for tool_id in [text(&fixture["toolId"]), text(&expected["undeclaredToolId"])] {
+        let declared = tool_id == text(&fixture["toolId"]);
+        let mut app = toy_app(number(&expected["target"])).await;
+        start(&mut app, tool_id).await;
+        pump_until(&mut app, "running with provisional units", |app| app.tool_runs.state() == Some(ToolRunState::Running) && !app.tool_runs.provisional().is_empty()).await;
+        let config_generation = app.config_store.generation();
+        set_target(&mut app, number(&expected["target"])).await;
+        assert!(app.config_store.generation() > config_generation, "{tool_id}: the republished target is a real config publication");
+        app.tool_runs.note_window_config_published();
+        for _ in 0..8 {
+            app.advance_typed_operation_publication().await.expect("turn");
+        }
+        assert_eq!(u64::from(app.tool_runs.slot().expect("slot").generation), number(&expected["generationAfterUnrelatedPublications"]), "{tool_id}: unrelated publications never reconfigure");
+        assert_eq!(app.tool_runs.progress().expect("progress").counters.first().map(|counter| counter.value), Some(0), "{tool_id}: the job was never rebuilt");
+        set_target(&mut app, number(&expected["changedTarget"])).await;
+        for _ in 0..8 {
+            app.advance_typed_operation_publication().await.expect("turn");
+        }
+        let generation = u64::from(app.tool_runs.slot().expect("slot").generation);
+        println!("[STATS] settingsReads {tool_id}: declared={declared} generation after the changed target={generation}");
+        assert_eq!(generation, if declared { number(&expected["generationAfterChangedTarget"]) } else { 0 }, "{tool_id}: only a declared read reconfigures");
+        abort_and_close(&mut app).await;
+    }
+}
+
+/// ⚖️ LAW: a retargetable job stays resident while its run is complete and `reconfigure: resume` retargets it in
+/// place — a raise continues and a lower retracts without any rebuild — and a base change rebinds it in place.
+#[semio_framework_async_macros::async_test]
+async fn tool_run_reconfigure_resume_retargets_a_retargetable_job_in_place() {
+    let fixture = fixture();
+    let expected = &fixture["retarget"];
+    let ops_per_unit = number(&fixture["opsPerUnit"]);
+    let mut app = toy_app(number(&expected["initialTarget"])).await;
+    let mut probe = attach_probe(&mut app, "tool-run-retarget").await;
+    start(&mut app, text(&expected["toolId"])).await;
+    pump_until(&mut app, "initial target completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete)).await;
+    assert!(!app.tool_runs.has_pending_work(), "a resident job of a complete run is no work");
+    let run = app.tool_runs.slot().expect("slot").run;
+    set_target(&mut app, number(&expected["raisedTarget"])).await;
+    pump_until(&mut app, "raised target completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && app.tool_runs.provisional().len() as u64 == number(&expected["raisedTarget"]) * ops_per_unit).await;
+    let slot = app.tool_runs.slot().expect("slot");
+    assert_eq!((slot.run, u64::from(slot.generation)), (run, number(&expected["generationAfterRaise"])));
+    assert_eq!(app.tool_runs.progress().expect("progress").counters.first().map(|counter| counter.value), Some(number(&expected["resumedFrom"])), "the raise retargeted the resident job, no rebuild replayed a checkpoint");
+    set_target(&mut app, number(&expected["loweredTarget"])).await;
+    pump_until(&mut app, "lowered target completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && app.tool_runs.provisional().len() as u64 == number(&expected["loweredTarget"]) * ops_per_unit && !app.tool_runs.is_refolding()).await;
+    assert_eq!(u64::from(app.tool_runs.slot().expect("slot").generation), number(&expected["generationAfterLower"]));
+    assert!(render_text(&mut app, "main").await.contains(&format!("count={}", number(&expected["loweredTarget"]))), "the retracted tail leaves the overlay");
+    assert_eq!(app.tool_runs.progress().expect("progress").counters.first().map(|counter| counter.value), Some(number(&expected["resumedFrom"])));
+    ingest_remote_count(&mut app, &mut probe, "tool-run-retarget-remote", number(&expected["remoteCount"])).await;
+    set_target(&mut app, number(&expected["raisedTarget"])).await;
+    pump_until(&mut app, "rebased and raised", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && app.tool_runs.provisional().len() as u64 == number(&expected["raisedTarget"]) * ops_per_unit && !app.tool_runs.is_refolding()).await;
+    assert_eq!(app.tool_runs.progress().expect("progress").counters.first().map(|counter| counter.value), Some(number(&expected["resumedFrom"])), "the rebased run was rebound and retargeted in place");
+    assert_eq!(app.snapshot().expect("committed").count, number(&expected["remoteCount"]) as i32, "reconfigure never commits");
+    drop(probe);
+    abort_and_close(&mut app).await;
+}
+
+/// ⚖️ LAW: a retract followed by re-appends spread over several ticks keeps the previous overlay rendered until the
+/// job reaches its checkpoint; only then does the refolded overlay replace it.
+#[semio_framework_async_macros::async_test]
+async fn tool_run_retract_keeps_the_previous_overlay_until_the_job_reaches_its_checkpoint() {
+    let fixture = fixture();
+    let expected = &fixture["compact"];
+    let mut app = toy_app(1).await;
+    start(&mut app, text(&expected["toolId"])).await;
+    let counts: Vec<u64> = expected["compactCounts"].as_array().expect("counts").iter().map(number).collect();
+    for (index, _) in counts.iter().enumerate() {
+        pump_until(&mut app, "a compaction page landed and was folded", |app| app.tool_runs.port().is_waiting() && app.tool_runs.provisional().len() == index + 1 && !app.tool_runs.has_pending_work()).await;
+        let body = render_text(&mut app, "main").await;
+        println!("[STATS] compact page {index}: rendered {body}");
+        assert!(app.tool_runs.is_refolding(), "page {index}: the retract refold waits for its boundary");
+        assert!(body.contains(text(&expected["renderedWhileCompacting"])), "page {index}: the previous overlay stays rendered: {body}");
+        app.tool_runs.port().wake();
+    }
+    pump_until(&mut app, "the compaction checkpoint swaps the overlay", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.is_refolding()).await;
+    let body = render_text(&mut app, "main").await;
+    assert!(body.contains(text(&expected["renderedAfterCheckpoint"])), "the refolded overlay replaces the previous one at the boundary: {body}");
+    abort_and_close(&mut app).await;
+}
+
+/// ⚖️ LAW: the run's trace key allocator hands out keys above every key its ticks upserted and every key allocated
+/// before, the request carries the entity marks, and the request names the window the run was started from.
+#[semio_framework_async_macros::async_test]
+async fn tool_run_requests_carry_trace_key_allocation_entity_marks_and_the_starting_window() {
+    let fixture = fixture();
+    let expected = &fixture["traceKeys"];
+    let window = &fixture["startWindow"];
+    let mut app = toy_app(number(&expected["units"])).await;
+    TOY_REQUEST_WINDOWS.with(|windows| windows.borrow_mut().clear());
+    let mut meta = toy_meta();
+    meta.view_state = Some(window_view(text(&window["windowId"]), None));
+    let output = app.handle_action("toolRunStart", Some(&DslValue::Object(vec![("toolId".into(), DslValue::String(text(&fixture["toolId"]).into()))])), &meta).await.expect("start").output;
+    assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("spawnJob"));
+    pump_until(&mut app, "run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete)).await;
+    assert_eq!(app.tool_runs.window(), Some((text(&window["windowId"]), text(&window["windowKindId"]))));
+    let requests = TOY_REQUEST_WINDOWS.with(|windows| windows.borrow().clone());
+    assert!(requests.iter().any(|(tool, window_id, window_config)| tool == text(&fixture["toolId"]) && window_id.as_deref() == Some(text(&window["windowId"])) && !window_config), "the job request names the starting window: {requests:?}");
+    let keys = app.tool_runs.trace_keys().expect("trace keys");
+    assert_eq!(keys.next(), number(&expected["nextAfterRun"]));
+    let allocated = keys.allocate(number(&expected["allocate"]));
+    assert_eq!([allocated.start, allocated.end], [number(&expected["allocated"][0]), number(&expected["allocated"][1])]);
+    assert_eq!(keys.next(), number(&expected["nextAfterAllocation"]));
+    let marks = app.tool_runs.entity_marks();
+    assert_eq!(marks.iter().map(|(_, entity)| *entity).collect::<Vec<_>>(), (1..=number(&expected["units"])).collect::<Vec<_>>());
+    assert!(marks.iter().all(|(end, _)| *end as usize <= app.tool_runs.provisional().len()));
+    abort_and_close(&mut app).await;
+}
+
+/// ⚖️ LAW: a board-2d scene surface carries the `toolRunTrace` lane exactly like a world-3d one — the spine names
+/// the lane with its byte length and hash, and the carrier holds the whole trace delta of the run.
+#[semio_framework_async_macros::async_test]
+async fn tool_run_board_scene_render_carries_the_trace_lane() {
+    let fixture = fixture();
+    let expected = &fixture["boardLane"];
+    let mut app = toy_app(number(&expected["units"])).await;
+    start(&mut app, text(&fixture["toolId"])).await;
+    pump_until(&mut app, "run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.is_refolding()).await;
+    let mut view = window_view(text(&expected["windowId"]), None);
+    view.window_instances.push(ViewWindowInstance { id: text(&expected["windowId"]).to_string(), window_kind_id: text(&expected["windowId"]).to_string() });
+    let tree = app.render(text(&expected["bodyKey"]), None, &view).await.unwrap_or_else(|fault| panic!("render board: {fault:?}"));
+    let scene = artifact_app_laws::observe_and_retire_fixture_tree(tree, |root| {
+        let surface = root.children.iter().find(|child| child.key.as_str() == text(&expected["surfaceId"])).expect("the board body carries its scene surface");
+        artifact_app_laws::built_surface_scene::<Board2dScene>(surface).expect("the board scene surface assembles")
+    });
+    let lane = scene.tool_run_trace.as_deref().expect("a board rendered during a run carries the toolRunTrace lane");
+    let reference = scene.lanes.iter().find(|reference| reference.lane == text(&expected["laneName"])).expect("the spine names the injected lane");
+    assert_eq!((reference.bytes as usize, reference.hash.as_str()), (lane.len(), semio_framework_ui_scene::scene_lane_hash(lane).as_str()));
+    let delta = ToolRunTraceDelta::decode(&base64_codec::base64_url_decode(lane).expect("base64url")).expect("one ToolRunTraceDelta");
+    assert!(delta.clear, "a renderer without a cursor gets clear plus the whole log");
+    assert_eq!(delta.pages.iter().map(|page| page.ops.len()).sum::<usize>() as u64, number(&expected["units"]));
+    abort_and_close(&mut app).await;
+}
+
+/// 🪟️ Publishes `selected` into the world window config of `window_id` through the production emit path.
+async fn publish_window_selection(app: &mut ToyApp, window_id: &str, selected: u64) {
+    let fixture = fixture();
+    let mut view = window_view(window_id, None);
+    view.window_instances.push(ViewWindowInstance { id: text(&fixture["windowSettingsReads"]["otherWindowId"]).to_string(), window_kind_id: text(&fixture["windowSettingsReads"]["windowKindId"]).to_string() });
+    let mut meta = toy_meta();
+    meta.view_state = Some(view);
+    let mutation = WindowConfigMutation::of::<ToyWorldWindowConfig>(window_id, ChangeTestConfigSelection { selected: Some(selected.to_string()) }.into());
+    app.dispatch_emit("setWorldSelection", Emit::<TestMutation, TestConfigMutation, NoDraftMutation> { window_config_mutations: vec![mutation], ..Default::default() }, &meta).await.unwrap_or_else(|fault| panic!("window config publication: {fault:?}"));
+}
+
+/// ⚖️ LAW: a run started from a window reads the window-config fields it declares for that window's kind from the
+/// starting window only — its job request carries that window's config snapshot, a publication on another window of the
+/// same kind or of an unchanged value never reconfigures, and a changed value on the starting window does.
+#[semio_framework_async_macros::async_test]
+async fn tool_run_window_settings_reads_follow_the_starting_window_only() {
+    let fixture = fixture();
+    let expected = &fixture["windowSettingsReads"];
+    let (start_window, other_window) = (text(&expected["startWindowId"]), text(&expected["otherWindowId"]));
+    let mut app = toy_app(number(&expected["target"])).await;
+    publish_window_selection(&mut app, start_window, 1).await;
+    TOY_REQUEST_WINDOWS.with(|windows| windows.borrow_mut().clear());
+    let mut meta = toy_meta();
+    let mut view = window_view(start_window, None);
+    view.window_instances.push(ViewWindowInstance { id: other_window.to_string(), window_kind_id: text(&expected["windowKindId"]).to_string() });
+    meta.view_state = Some(view);
+    let output = app.handle_action("toolRunStart", Some(&DslValue::Object(vec![("toolId".into(), DslValue::String(text(&expected["toolId"]).into()))])), &meta).await.expect("start").output;
+    assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("spawnJob"));
+    pump_until(&mut app, "running with provisional units", |app| app.tool_runs.state() == Some(ToolRunState::Running) && !app.tool_runs.provisional().is_empty()).await;
+    let requests = TOY_REQUEST_WINDOWS.with(|windows| windows.borrow().clone());
+    assert!(requests.iter().any(|(tool, window_id, window_config)| tool == text(&expected["toolId"]) && window_id.as_deref() == Some(start_window) && *window_config), "the job request carries the starting window's config snapshot: {requests:?}");
+    publish_window_selection(&mut app, other_window, 7).await;
+    publish_window_selection(&mut app, start_window, 1).await;
+    for _ in 0..8 {
+        app.advance_typed_operation_publication().await.expect("turn");
+    }
+    assert_eq!(u64::from(app.tool_runs.slot().expect("slot").generation), number(&expected["generationAfterOtherWindow"]), "another window and an unchanged value never reconfigure");
+    publish_window_selection(&mut app, start_window, 2).await;
+    for _ in 0..8 {
+        app.advance_typed_operation_publication().await.expect("turn");
+    }
+    assert_eq!(u64::from(app.tool_runs.slot().expect("slot").generation), number(&expected["generationAfterStartWindow"]), "a changed value on the starting window reconfigures");
+    abort_and_close(&mut app).await;
+}
+
+/// ⚖️ LAW: a tick dirties the bodies of the window kinds the run declares it renders in, next to the panel and the scene
+/// windows, and those bodies read the run's progress, step ring and latest tick payload through `ArtifactView::tool_run()`.
+#[semio_framework_async_macros::async_test]
+async fn tool_run_reader_windows_refresh_every_tick_and_read_progress_steps_and_payload() {
+    let fixture = fixture();
+    let expected = &fixture["readerWindows"];
+    let mut app = toy_app(number(&expected["target"])).await;
+    start(&mut app, text(&expected["toolId"])).await;
+    pump_until(&mut app, "job admitted", |app| app.tool_runs.state() == Some(ToolRunState::Running)).await;
+    render_world(&mut app, None).await;
+    app.flush_tool_run_ui_dirty();
+    while app.take_typed_operation_ui_scope().is_some() {}
+    let before = app.tool_runs.provisional().len();
+    pump_until(&mut app, "a tick lands", |app| app.tool_runs.provisional().len() > before).await;
+    let scope = app.take_typed_operation_ui_scope().expect("a tick owes a dirty scope");
+    let strings = |value: &Value| value.as_array().expect("strings").iter().map(|item| text(item).to_string()).collect::<Vec<_>>();
+    assert_eq!(scope, UiDirtyScope::Partial { window_bodies: strings(&expected["windowBodies"]), panel_bodies: strings(&expected["panelBodies"]), utilities: false, tools: false, engagements: false, measures: false, labels: false }, "the reader window refreshes with every tick, nothing unrelated does");
+    run_action(&mut app, "toolRunPause").await;
+    pump_until(&mut app, "paused and settled", |app| app.tool_runs.state() == Some(ToolRunState::Paused) && !app.tool_runs.has_pending_work()).await;
+    let view = app.tool_runs.view().expect("run view");
+    let payload = view.payload.as_deref().and_then(|payload| payload.try_into().ok()).map(u32::from_le_bytes).expect("the latest tick payload");
+    assert_eq!(u64::from(payload), view.progress.completed, "the payload is the latest tick's: the toy writes its completed units");
+    assert!(view.progress.total.is_some_and(|total| total == number(&expected["target"])));
+    let body = render_text(&mut app, "main").await;
+    println!("[STATS] reader body {body}");
+    assert!(body.contains(&format!("completed={} steps={} payload={payload}", view.progress.completed, view.progress.steps.len())), "the reader body renders the run state it reads: {body}");
+    abort_and_close(&mut app).await;
+}
+//#endregion 🎯️RetargetAndSettings

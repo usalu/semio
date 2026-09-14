@@ -66,21 +66,6 @@ pub fn emit(payload: &SetActiveExample, doc: &ArtifactView<'_, Generation3dSnaps
     Ok(Emit { artifact_mutations: operations, config_mutations: vec![Generation3dConfigMutation::SetSnapshot(crate::editor::generation3d::config::SetSnapshot { config })], ..Default::default() })
 }
 
-/// 🔁️ Restarts every attached preview window's evaluation chain against the FRESHLY loaded fixture,
-/// THROUGH the retained session's arming latch — a window that already owes a tick gets no second
-/// one (`FlowEvalSession::arm_window_tick`).
-///
-/// ⚠️ The switch owes this to itself and must never rely on the host asking for it: the chain is armed
-/// nowhere else but `Generation3dPlayApp::pending_effects`, which the shell reaches only through a
-/// `refresh-ui` round trip, so a switch whose refresh is narrowed, coalesced or lost leaves the preview
-/// showing the PREVIOUS example's evaluation forever and reports nothing at all
-/// (`📓️runtime-verification-2026-09-09.md` boot #11 — "picker label changes; preview unchanged, no
-/// fault"). Arming from the gesture's own emit makes the restart a consequence of the switch, not of a
-/// host refresh (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub fn rearm_attached_previews(session: &mut FlowEvalSession, windows: &[(&str, &str)]) -> Vec<semio_framework_plugin::Effect> {
-    crate::preview_eval::rearm_attached_previews(session, windows)
-}
-
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     emit(payload, doc, cfg)
 }

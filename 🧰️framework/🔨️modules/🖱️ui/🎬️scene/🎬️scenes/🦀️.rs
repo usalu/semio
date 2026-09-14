@@ -1913,6 +1913,13 @@ pub struct Board2dScene {
     pub placement_compatibility_json: String,
     #[serde(default = "board2d_default_lod_mode")]
     pub lod_mode: String,
+    /// ⏯️ The base64url `ToolRunTraceDelta` paged to this board — the board twin of
+    /// [`Canvas2dScene::tool_run_trace`], carried outside the doc as [`Board2dSceneLane::ToolRunTrace`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tool_run_trace: Option<String>,
+    /// 🚚️ The spine's lane manifest — see [`World3dScene::lanes`].
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub lanes: Vec<SceneLaneRef>,
 }
 
 scene_pack_wire!(Board2dScenePack, Board2dScene {
@@ -1930,6 +1937,9 @@ scene_pack_wire!(Board2dScenePack, Board2dScene {
     brush_weights_json: String,
     placement_compatibility_json: String,
     lod_mode: String,
+    tool_run_trace: Option<String>,
+    #[serde(default)]
+    lanes: Vec<SceneLaneRef>,
 });
 
 impl SceneDoc for Board2dScene {
@@ -1941,6 +1951,103 @@ impl SceneDoc for Board2dScene {
 
     fn decode_pack(bytes: &[u8]) -> Result<Self, crate::pack::PackError> {
         crate::pack::from_bytes::<Board2dScenePack>(bytes).map(Into::into)
+    }
+
+    fn split_lanes(&self) -> (Self, Vec<SceneLanePayload>) {
+        let mut spine = self.clone();
+        let mut lanes = Vec::new();
+        let mut refs = Vec::new();
+        for lane in Board2dSceneLane::ALL {
+            let Some(payload) = lane.take(&mut spine) else { continue };
+            refs.push(SceneLaneRef { lane: lane.name().to_string(), bytes: payload.len() as u32, hash: scene_lane_hash(&payload) });
+            lanes.push(SceneLanePayload { key: lane.body_key(), payload });
+        }
+        spine.lanes = refs;
+        (spine, lanes)
+    }
+
+    fn merge_lane(&mut self, key: &str, payload: String) -> bool {
+        let Some(lane) = Board2dSceneLane::from_body_key(key) else { return false };
+        lane.put(self, payload);
+        true
+    }
+}
+
+/// 🚚️ The board-2d payload fields that ride OUTSIDE the fixed-capacity surface doc — the board twin of
+/// [`Canvas2dSceneLane`], pinned against `🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json` on both sides.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Board2dSceneLane {
+    ToolRunTrace,
+}
+
+/// 🚚️ Reserved carrier-key namespace of the board-2d lanes.
+pub const BOARD2D_SCENE_LANE_KEY_PREFIX: &str = "framework.scene.board2d.";
+
+/// 🚚️ Wire name of each [`Board2dSceneLane`], in `Board2dSceneLane::ALL` order.
+pub const BOARD2D_SCENE_LANE_NAMES: [&str; 1] = ["toolRunTrace"];
+
+/// 🚚️ [`Board2dScene`] field each lane carries, spelled as its serialized (camelCase) name.
+pub const BOARD2D_SCENE_LANE_FIELDS: [&str; 1] = ["toolRunTrace"];
+
+/// 🚚️ Reserved carrier key of each lane.
+pub const BOARD2D_SCENE_LANE_BODY_KEYS: [&str; 1] = ["framework.scene.board2d.toolRunTrace"];
+
+/// 🚚️ Whether each lane's [`Board2dScene`] field is an `Option<String>`.
+pub const BOARD2D_SCENE_LANE_OPTIONAL: [bool; 1] = [true];
+
+impl Board2dSceneLane {
+    pub const ALL: [Self; 1] = [Self::ToolRunTrace];
+
+    /// 🏷️ See [`BOARD2D_SCENE_LANE_NAMES`].
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn name(self) -> &'static str {
+        BOARD2D_SCENE_LANE_NAMES[self as usize]
+    }
+
+    /// 🏷️ See [`BOARD2D_SCENE_LANE_FIELDS`].
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn field(self) -> &'static str {
+        BOARD2D_SCENE_LANE_FIELDS[self as usize]
+    }
+
+    /// 🪧️ See [`BOARD2D_SCENE_LANE_BODY_KEYS`].
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn body_key(self) -> &'static str {
+        BOARD2D_SCENE_LANE_BODY_KEYS[self as usize]
+    }
+
+    /// 🏷️ See [`BOARD2D_SCENE_LANE_OPTIONAL`].
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn optional(self) -> bool {
+        BOARD2D_SCENE_LANE_OPTIONAL[self as usize]
+    }
+
+    /// 🔎️ Resolves a carrier root key back to its lane.
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn from_body_key(body_key: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|lane| lane.body_key() == body_key)
+    }
+
+    /// 🔎️ Resolves a lane wire name back to its lane.
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn from_name(name: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|lane| lane.name() == name)
+    }
+
+    /// 📤️ Removes this lane's payload from `scene`; `None` when the optional lane is unset.
+    // 🚫️async: E6 sync payload construction — see this module's own header.
+    pub fn take(self, scene: &mut Board2dScene) -> Option<String> {
+        match self {
+            Self::ToolRunTrace => scene.tool_run_trace.take(),
+        }
+    }
+
+    /// 📥️ Writes this lane's payload back into `scene` — the inverse of [`Board2dSceneLane::take`].
+    // 🚫️async: E6 sync payload construction — see this module's own header.
+    pub fn put(self, scene: &mut Board2dScene, payload: String) {
+        match self {
+            Self::ToolRunTrace => scene.tool_run_trace = Some(payload),
+        }
     }
 }
 
@@ -1991,6 +2098,8 @@ impl Board2dScene {
             brush_weights_json: board2d_default_brush_weights_json(),
             placement_compatibility_json: board2d_default_placement_compatibility_json(),
             lod_mode: board2d_default_lod_mode(),
+            tool_run_trace: None,
+            lanes: Vec::new(),
         }
     }
 }
@@ -2012,6 +2121,8 @@ impl ToValue for Board2dScene {
         value_push(&mut entries, "brushWeightsJson", &self.brush_weights_json);
         value_push(&mut entries, "placementCompatibilityJson", &self.placement_compatibility_json);
         value_push(&mut entries, "lodMode", &self.lod_mode);
+        value_push_option(&mut entries, "toolRunTrace", &self.tool_run_trace);
+        value_push_if_nonempty(&mut entries, "lanes", &self.lanes);
         DslValue::Object(entries)
     }
 }
@@ -2034,6 +2145,8 @@ impl FromValue for Board2dScene {
             brush_weights_json: value_decode_default(&entries, "brushWeightsJson", board2d_default_brush_weights_json)?,
             placement_compatibility_json: value_decode_default(&entries, "placementCompatibilityJson", board2d_default_placement_compatibility_json)?,
             lod_mode: value_decode_default(&entries, "lodMode", board2d_default_lod_mode)?,
+            tool_run_trace: value_decode_option(&entries, "toolRunTrace")?,
+            lanes: value_decode_default(&entries, "lanes", Vec::new)?,
         })
     }
 }

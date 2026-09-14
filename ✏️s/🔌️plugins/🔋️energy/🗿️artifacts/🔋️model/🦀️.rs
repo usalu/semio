@@ -165,7 +165,7 @@ pub use zone_air::*;
 pub use zone_hvac::*;
 //#endregion 🔖️FlatReExports
 
-/// ⚡️ Mounted simulation session shared by the artifact's editor and viewer.
+/// ⚡️ Energy simulation tool run: definition vocabulary and run job.
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️simulation-session/🦀️.rs"]
 pub mod energy_simulation_session;
 
@@ -465,7 +465,7 @@ pub fn energy_snapshot_with_links(model: &Model, links: &EnergyModelLinkSlots) -
 pub fn energy_model_load_document_effect(document_id: &str, model: &Model, links: &EnergyModelLinkSlots) -> semio_framework_plugin::kernel::Effect {
     let snapshot = energy_snapshot_with_links(model, links);
     let pack = <EnergyModelSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
-    let envelope = store::create_document_envelope::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, document_id, snapshot, None);
+    let envelope = store::create_document_envelope::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, document_id, snapshot, None).into_owners();
     let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("energy model document spr encode is infallible for a fresh, edit-free envelope");
     semio_framework_plugin::kernel::Effect::LoadDocument { pack, spr }
 }
@@ -5485,10 +5485,8 @@ pub mod examples {
 // migrate here (contrast the pilot's `📐️cad`, which moved an existing `🎛️apps/📐️cad/` tree). Two
 // independent `#[path = "."]` trees, mirroring `🔖️Artifacts` above: `editor` mounts real
 // mutation-capable content, `viewer` mounts an independently-authored read-only twin that never
-// imports through `editor` (`policyViewerPurityBreaches`). Facet dirs that hold only
-// `📌️.empty.md` (`🎚️config`/`🎮️commands`/`👥️presence`/`🫧️transient` at every surface/mode level) need
-// no mount — nothing real lives there yet (`Config`/`Presence`/`Transient` = `NoConfig`/`NoPresence`/
-// `NoTransient`).
+// imports through `editor` (`policyViewerPurityBreaches`). The editor's `🎚️config` holds the simulation run
+// settings; facet dirs that hold only `📌️.empty.md` (`🎮️commands`/`👥️presence`/`🫧️transient`) need no mount.
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -5497,6 +5495,9 @@ pub mod editor {
         mod component;
         pub use component::*;
 
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs"]
+        pub mod config;
+
         #[path = "."]
         pub mod modes {
             #[path = "."]
@@ -5504,6 +5505,12 @@ pub mod editor {
                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
                 mod component;
                 pub use component::*;
+
+                #[path = "."]
+                pub mod tools {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/⚡️simulation/🦀️.rs"]
+                    pub mod simulation;
+                }
 
                 #[path = "."]
                 pub mod windows {

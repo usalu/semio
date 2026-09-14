@@ -1,9 +1,14 @@
 {
   "format": "semio.generation3d.contribution-gated-arming",
   "version": 1,
-  "note": "Who may arm a flowEvalTick while the live flow extension registry cannot serve the graph. An uncontributed operator kind is not slow work, it is work no tick can advance: the evaluator answers 'unknown kind', the error is never cached, and the next tick recomputes the same miss. Only setContributions resumes the chain.",
+  "note": "Whether an unfinished evaluation owes the previewEval run another hop while the live flow extension registry cannot serve the graph. An uncontributed operator kind is not slow work, it is work no hop can advance: the evaluator answers 'unknown kind', the error is never cached, and the next hop recomputes the same miss. The hop gives such a window up, and only setContributions owes it again.",
   "unservedKind": "witness.contribution-gate.absent",
-  "servedKindCandidates": ["math.add", "math.vector", "brep.curve.polygon", "brep.solid.extrude"],
+  "servedKindCandidates": [
+    "math.add",
+    "math.vector",
+    "brep.curve.polygon",
+    "brep.solid.extrude"
+  ],
   "tickStepBudget": 512,
   "cases": [
     {
@@ -12,7 +17,7 @@
       "widgets": 600,
       "unfinishedTick": true,
       "mayRearm": false,
-      "armedTicks": 0
+      "owedHops": 0
     },
     {
       "id": "served-graph-keeps-its-chain",
@@ -20,12 +25,11 @@
       "widgets": 600,
       "unfinishedTick": true,
       "mayRearm": true,
-      "armedTicks": 1
+      "owedHops": 1
     }
   ],
   "resume": {
     "command": "setContributions",
-    "rearmsPerAttachedPreview": 1,
-    "attachedPreviewWindows": 1
+    "carriedRunAction": "toolRunStart"
   }
 }

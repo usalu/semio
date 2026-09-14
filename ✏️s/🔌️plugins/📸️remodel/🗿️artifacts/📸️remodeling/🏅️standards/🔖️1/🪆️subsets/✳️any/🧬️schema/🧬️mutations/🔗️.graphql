@@ -27,7 +27,6 @@ union RemodelingMutation =
   | UpdateMeshParams
   | UpdateMotionParams
   | UpdateGeoParams
-  | ReplaceJob
   | ReplaceSparse
   | ReplaceDense
   | ReplaceMeshResult
@@ -35,6 +34,8 @@ union RemodelingMutation =
   | ReplaceTracks
   | ReplaceGeoProducts
   | ReplaceQc
+  | AppendContent
+  | RemoveContent
   | CommitReconstruction
 
 type CreateStream {
@@ -175,11 +176,6 @@ type UpdateGeoParams {
   params: GeoParams!
 }
 
-type ReplaceJob {
-  mutation: String!
-  job: ReconstructionJob!
-}
-
 type ReplaceSparse {
   mutation: String!
   sparse: SparseCloud
@@ -215,9 +211,25 @@ type ReplaceQc {
   qc: QcReportSnapshot
 }
 
+type AppendContent {
+  mutation: String!
+  contentId: String!
+  kind: RemodelingContentKind!
+  mime: String
+  width: Int!
+  height: Int!
+  first: Int!
+  chunks: [String!]!
+}
+
+type RemoveContent {
+  mutation: String!
+  contentId: String!
+  from: Int!
+}
+
 type CommitReconstruction {
   mutation: String!
-  job: ReconstructionJob!
   sparse: SparseCloud
   trajectory: CameraTrajectory
   mesh: RemodelingMesh
@@ -420,40 +432,13 @@ type QcReportSnapshot {
 
 type ReconstructionAssetCommit {
   id: String!
-  asset: ImageAsset!
+  contentId: String
 }
 
-type ReconstructionJob {
-  id: String!
-  stage: ReconstructionStage!
-  progress01: Float!
-  cancelRequested: Boolean!
-  stageCursor: Int!
-  startedAtMs: Float
-  error: String
-  cameraPosesPreview: [CameraPosePreview!]!
-  sparsePointCloudPreview: String!
-}
-
-enum ReconstructionStage {
-  Idle
-  Ingesting
-  Calibrating
-  ExtractingFeatures
-  MatchingFeatures
-  EstimatingPoses
-  BundleAdjusting
-  Georeferencing
-  DenseStereo
-  FusingVolume
-  ExtractingSurface
-  CleaningMesh
-  Texturing
-  TrackingMotion
-  DerivingGeoProducts
-  ReportingQc
-  Done
-  Failed
+enum RemodelingContentKind {
+  Sparse
+  Mesh
+  Image
 }
 
 type RemodelingMesh {

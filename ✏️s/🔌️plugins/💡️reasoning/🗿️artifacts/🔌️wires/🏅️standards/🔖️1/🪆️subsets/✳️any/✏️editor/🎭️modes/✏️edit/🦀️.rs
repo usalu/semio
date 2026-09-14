@@ -1,14 +1,15 @@
 //! ✏️ Wires play app — the `edit` mode: the sole window layout (the WIRES canvas, full width).
 
+use crate::editor::wires::modes::edit::tools::reorganize;
 use crate::editor::wires::modes::edit::windows::canvas;
-use semio_framework_plugin::{create_default_layout, LocalizedLabel, ModeDefinition, WindowLayout};
+use semio_framework_plugin::{create_default_layout, LocalizedLabel, ModeDefinition, ToolRef, WindowLayout};
 
 pub const WIRES_PLAY_MODE_EDIT: &str = "edit";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::wires::create_wires_app`.
 pub fn definition() -> ModeDefinition {
-    ModeDefinition { id: WIRES_PLAY_MODE_EDIT.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
+    ModeDefinition { id: WIRES_PLAY_MODE_EDIT.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: vec![semio_framework::io::resolve_ready(ToolRef::new(reorganize::TOOL_ID))], layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ The app's default window layout — this mode is the app's `default_mode_id`, so its layout IS the

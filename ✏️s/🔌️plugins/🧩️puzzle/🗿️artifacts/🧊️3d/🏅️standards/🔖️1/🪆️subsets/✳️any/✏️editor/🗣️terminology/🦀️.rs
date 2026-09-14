@@ -2,7 +2,7 @@
 //! terminology×locale combination is compile-checked by `semio_framework_plugin::app_labels!`
 //! (see ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND).
 
-use crate::standards::v1::subsets::any::schema::{FillRunCounter, FillRunReason, FillRunStage};
+use crate::standards::v1::subsets::any::schema::{BrushSuggestionsRunCounter, BrushSuggestionsRunReason, BrushSuggestionsRunStage, FillRunCounter, FillRunReason, FillRunStage};
 use semio_framework_plugin::{AppLabels, LabelText, Locale, LocalizedLabel, Terminology};
 use semio_framework_tool_run::{ToolRunCounterDefinition, ToolRunReasonDefinition, ToolRunStageDefinition, ToolRunVerdict};
 
@@ -107,11 +107,6 @@ semio_framework_plugin::app_labels! {
         chunk_size: native_en "Chunk Size", native_de "Blockgröße", reuse_en "Chunk Size", reuse_de "Blockgröße";
         schema: native_en "Schema", native_de "Schema", reuse_en "Schema", reuse_de "Schema";
         domain: native_en "Domain", native_de "Domäne", reuse_en "Domain", reuse_de "Domäne";
-        brush_search: native_en "Candidate search", native_de "Kandidatensuche", reuse_en "Candidate search", reuse_de "Kandidatensuche";
-        brush_search_free: native_en "free", native_de "frei", reuse_en "free", reuse_de "frei";
-        brush_search_tested: native_en "tested", native_de "getestet", reuse_en "tested", reuse_de "getestet";
-        brush_search_blocked: native_en "blocked", native_de "blockiert", reuse_en "blocked", reuse_de "blockiert";
-        brush_search_done: native_en "Search complete", native_de "Suche abgeschlossen", reuse_en "Search complete", reuse_de "Suche abgeschlossen";
     }
 }
 //#endregion 🔖️Labels
@@ -217,6 +212,44 @@ pub fn puzzle3d_fill_run_reasons() -> Vec<ToolRunReasonDefinition> {
     ]
 }
 //#endregion 🔖️FillRun
+
+//#region 🔖️BrushSuggestionsRun
+/// 🧮️ What one brush suggestions run counts its progress in: the candidates of the target vortex.
+pub fn puzzle3d_brush_suggestions_run_unit() -> LocalizedLabel {
+    LocalizedLabel::native("candidates", "Kandidaten")
+}
+
+/// 🧭️ The brush suggestions run's stages, in `BrushSuggestionsRunStage::ALL` order (`$defs.Puzzle3dBrushSuggestionsRun`).
+pub fn puzzle3d_brush_suggestions_run_stages() -> Vec<ToolRunStageDefinition> {
+    let stage = |stage: BrushSuggestionsRunStage, en: &str, de: &str| ToolRunStageDefinition { id: stage.id().into(), label: LocalizedLabel::native(en, de) };
+    vec![
+        stage(BrushSuggestionsRunStage::Prepare, "Preparing", "Vorbereiten"),
+        stage(BrushSuggestionsRunStage::Target, "Listing compatible objects", "Passende Objekte auflisten"),
+        stage(BrushSuggestionsRunStage::Test, "Testing collision", "Kollision prüfen"),
+        stage(BrushSuggestionsRunStage::Idle, "Waiting for a vortex", "Auf einen Vortex warten"),
+    ]
+}
+
+/// 🔢️ The brush suggestions run's counters, in `BrushSuggestionsRunCounter::ALL` order.
+pub fn puzzle3d_brush_suggestions_run_counters() -> Vec<ToolRunCounterDefinition> {
+    let counter = |counter: BrushSuggestionsRunCounter, en: &str, de: &str| ToolRunCounterDefinition { id: counter.id().into(), label: LocalizedLabel::native(en, de) };
+    vec![counter(BrushSuggestionsRunCounter::Tested, "Tested", "Getestet"), counter(BrushSuggestionsRunCounter::Free, "Free", "Frei"), counter(BrushSuggestionsRunCounter::Collisions, "Collisions", "Kollisionen")]
+}
+
+/// 🏷️ Every brush suggestions reason with its verdict and localized template, in `BrushSuggestionsRunReason::ALL`
+/// order. The completion step substitutes `{0}` with the free and `{1}` with the tested candidates.
+pub fn puzzle3d_brush_suggestions_run_reasons() -> Vec<ToolRunReasonDefinition> {
+    let reason = |reason: BrushSuggestionsRunReason, en: &str, de: &str| ToolRunReasonDefinition { code: reason.code(), id: reason.id().into(), verdict: reason.verdict(), template: LocalizedLabel::native(en, de) };
+    vec![
+        reason(BrushSuggestionsRunReason::Free, "Free to place", "Frei platzierbar"),
+        reason(BrushSuggestionsRunReason::Collision, "Collides with a placed object", "Kollidiert mit einem platzierten Objekt"),
+        reason(BrushSuggestionsRunReason::PoseUnavailable, "Placement pose unavailable", "Platzierungspose nicht verfügbar"),
+        reason(BrushSuggestionsRunReason::TargetMissing, "Target vortex missing", "Zielvortex fehlt"),
+        reason(BrushSuggestionsRunReason::SuggestionsBlocked, "No suggestions for this vortex kind", "Keine Vorschläge für diese Vortexart"),
+        reason(BrushSuggestionsRunReason::SearchComplete, "{0} of {1} candidates are free", "{0} von {1} Kandidaten sind frei"),
+    ]
+}
+//#endregion 🔖️BrushSuggestionsRun
 
 //#region 🧪️Tests
 #[cfg(test)]

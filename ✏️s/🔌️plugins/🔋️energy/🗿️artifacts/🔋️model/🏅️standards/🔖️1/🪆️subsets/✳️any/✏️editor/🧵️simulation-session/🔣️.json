@@ -13,6 +13,7 @@
     "unit": { "en": "timesteps", "de": "Zeitschritte" },
     "trace": "none",
     "runJob": "energy.simulation.run",
+    "settings": { "config": ["/zoneTimestepMinutes", "/systemTimestepMinutes", "/warmupDays"] },
     "stages": [
       { "id": "capture", "en": "Capturing the model", "de": "Modell wird erfasst" },
       { "id": "prepare", "en": "Preparing weather, geometry and zones", "de": "Wetter, Geometrie und Zonen werden vorbereitet" },

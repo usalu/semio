@@ -20,7 +20,7 @@ symbol        = varint *OCTET              ; length-prefixed UTF-8
 ; Entries sort by ascending field-id; Absent fields are never written.
 ; RemodelingSnapshot::__dsl_spec() field ids (DslRecord assigns id = 0-based declaration index):
 ;   0 schema Text | 1 id Text | 2 streams Table | 3 assets Map | 4 durable-artifacts Map
-;   5 calibration Block | 6 params Block | 7 gcps Table | 8 job Block | 9 results Block
+;   5 calibration Block | 6 params Block | 7 gcps Table | 8 results Block
 record-fields = field-count *field-entry
 field-count   = varint
 field-entry   = field-id tagged-value

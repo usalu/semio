@@ -1035,6 +1035,9 @@ pub struct ToolRunTick {
     pub append_ops: Vec<Vec<u8>>,
     pub append_entities: Vec<u64>,
     pub retract_to: Option<u32>,
+    /// 📨️ Opaque plugin bytes the run's windows read back through `ToolRunView::payload` — the latest intermediate
+    /// result of the run (a live readout, a partial solution); the newest tick carrying one wins.
+    pub payload: Option<Vec<u8>>,
 }
 
 impl ToolRunTick {
@@ -1061,6 +1064,9 @@ impl ToolRunTick {
         if let Some(retract_to) = self.retract_to {
             record.fields.insert(8, FieldValue::UInt(u64::from(retract_to)));
         }
+        if let Some(payload) = &self.payload {
+            record.fields.insert(9, FieldValue::Bytes64(payload.clone()));
+        }
         let bytes = encode_body(tick_spec(), &record)?;
         if bytes.len() > TOOL_RUN_TICK_BYTES_MAX {
             return Err(ToolRunCodecError::Limit("tick bytes"));
@@ -1083,7 +1089,12 @@ impl ToolRunTick {
         let append_ops = list(&record, 6)?.iter().map(|item| item_bytes(item).map(<[u8]>::to_vec)).collect::<Result<_, _>>()?;
         let append_entities = u64_column(bytes_field(&record, 7)?, "appendEntities")?;
         let retract_to = optional_uint(&record, 8)?.map(|value| narrow(value, "retractTo")).transpose()?;
-        Ok(Self { identity: identity_from_field(&record, 1)?, sequence: uint(&record, 2)?, progress, steps, trace, append_ops, append_entities, retract_to })
+        let payload = match record.get(9) {
+            None | Some(FieldValue::Absent) => None,
+            Some(FieldValue::Bytes64(payload)) => Some(payload.clone()),
+            Some(_) => return Err(ToolRunCodecError::Malformed("payload")),
+        };
+        Ok(Self { identity: identity_from_field(&record, 1)?, sequence: uint(&record, 2)?, progress, steps, trace, append_ops, append_entities, retract_to, payload })
     }
 }
 
@@ -1121,6 +1132,7 @@ pub struct ToolRunTickWriter {
     append_entities: Vec<u64>,
     entity_marks: Vec<u32>,
     retract_to: Option<u32>,
+    payload: Option<Vec<u8>>,
     pending_bytes: usize,
 }
 
@@ -1147,6 +1159,7 @@ impl ToolRunTickWriter {
             append_entities: Vec::new(),
             entity_marks: Vec::new(),
             retract_to: None,
+            payload: None,
             pending_bytes: 0,
         }
     }
@@ -1229,8 +1242,14 @@ impl ToolRunTickWriter {
         self.progress = Some(progress);
     }
 
+    /// 📨️ Sets the pending tick's plugin payload; a later call before `finish` replaces it.
+    pub fn payload(&mut self, payload: Vec<u8>) {
+        self.pending_bytes = self.pending_bytes.saturating_sub(self.payload.as_ref().map_or(0, |previous| previous.len() + 6)) + payload.len() + 6;
+        self.payload = Some(payload);
+    }
+
     pub fn is_empty(&self) -> bool {
-        self.progress.is_none() && self.steps.is_empty() && self.pages.is_empty() && self.page_ops.is_empty() && self.append_ops.is_empty() && self.append_entities.is_empty() && self.retract_to.is_none()
+        self.progress.is_none() && self.steps.is_empty() && self.pages.is_empty() && self.page_ops.is_empty() && self.append_ops.is_empty() && self.append_entities.is_empty() && self.retract_to.is_none() && self.payload.is_none()
     }
 
     /// 🌡️ Estimated encoded bytes of the pending tick.
@@ -1258,6 +1277,7 @@ impl ToolRunTickWriter {
             append_ops: std::mem::take(&mut self.append_ops),
             append_entities: std::mem::take(&mut self.append_entities),
             retract_to: self.retract_to.take(),
+            payload: self.payload.take(),
         };
         self.entity_marks.clear();
         self.provisional_base += tick.append_ops.len() as u32;
@@ -1365,6 +1385,7 @@ fn tick_spec() -> &'static RecordSpec {
             field(6, "appendOps", Shape::List(Box::new(Shape::Bytes64))).optional(),
             field(7, "appendEntities", Shape::Bytes64).optional(),
             field(8, "retractTo", Shape::UInt).optional(),
+            field(9, "payload", Shape::Bytes64).optional(),
         ])
     })
 }
@@ -1774,6 +1795,51 @@ pub struct ToolRunReasonDefinition {
     pub template: LocalizedLabel,
 }
 
+/// 🎚️ The settings a run's jobs read (§3.3): RFC 6901 JSON Pointers into the app config document and, per
+/// window kind id, into that kind's window config documents. `settingsChanged` fires only when a value
+/// behind one of them changes; an empty declaration reads no settings, so no settings publication ever
+/// reconfigures the run.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ToolRunSettingsReads {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub config: Vec<String>,
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    #[value(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    pub window_config: std::collections::BTreeMap<String, Vec<String>>,
+}
+
+impl ToolRunSettingsReads {
+    pub fn is_empty(&self) -> bool {
+        self.config.is_empty() && self.window_config.values().all(Vec::is_empty)
+    }
+
+    /// 🔎️ Every declared pointer, config first, then window config in window kind order.
+    pub fn pointers(&self) -> impl Iterator<Item = &str> {
+        self.config.iter().chain(self.window_config.values().flatten()).map(String::as_str)
+    }
+}
+
+/// 🧭️ The reference tokens of an RFC 6901 JSON Pointer (`~1` → `/`, `~0` → `~`); `None` for a malformed one.
+/// The empty pointer names the whole document.
+pub fn tool_run_pointer_tokens(pointer: &str) -> Option<Vec<String>> {
+    if pointer.is_empty() {
+        return Some(Vec::new());
+    }
+    pointer.strip_prefix('/')?.split('/').map(|token| (!token.replace("~0", "").replace("~1", "").contains('~')).then(|| token.replace("~1", "/").replace("~0", "~"))).collect()
+}
+
+/// 📍️ The value an RFC 6901 JSON Pointer names inside `document`; `None` when it is malformed or names nothing.
+pub fn tool_run_pointer_value<'a>(document: &'a dsl::DslValue, pointer: &str) -> Option<&'a dsl::DslValue> {
+    tool_run_pointer_tokens(pointer)?.iter().try_fold(document, |value, token| match value {
+        dsl::DslValue::Object(fields) => fields.iter().find(|(key, _)| key == token).map(|(_, value)| value),
+        dsl::DslValue::Array(items) => (token.bytes().all(|byte| byte.is_ascii_digit()) && (token == "0" || !token.starts_with('0'))).then(|| token.parse::<usize>().ok()).flatten().and_then(|index| items.get(index)),
+        _ => None,
+    })
+}
+
 /// 📜️ Static run declaration attached to tool and utility definitions (§2.4).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -1791,6 +1857,13 @@ pub struct ToolRunDefinition {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub revalidate_job: Option<JobKindId>,
+    #[serde(default, skip_serializing_if = "ToolRunSettingsReads::is_empty")]
+    #[value(default, skip_serializing_if = "ToolRunSettingsReads::is_empty")]
+    pub settings: ToolRunSettingsReads,    /// 🪟️ Window kind ids whose bodies render this run's state (`ArtifactView::tool_run()`): every tick refreshes them
+    /// next to the ToolRun panel, and no other window.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub windows: Vec<String>,
 }
 
 /// 🚫️ Why a `ToolRunDefinition` violates the contract.
@@ -1804,6 +1877,7 @@ pub enum ToolRunDefinitionError {
     DuplicateReasonId(String),
     DuplicateReasonCode(u16),
     ReservedReasonCode(u16),
+    InvalidSettingsPointer(String),
 }
 
 impl std::fmt::Display for ToolRunDefinitionError {
@@ -1817,6 +1891,7 @@ impl std::fmt::Display for ToolRunDefinitionError {
             Self::DuplicateReasonId(id) => write!(formatter, "toolRun.definition.duplicateReasonId: {id}"),
             Self::DuplicateReasonCode(code) => write!(formatter, "toolRun.definition.duplicateReasonCode: {code}"),
             Self::ReservedReasonCode(code) => write!(formatter, "toolRun.definition.reservedReasonCode: {code}"),
+            Self::InvalidSettingsPointer(pointer) => write!(formatter, "toolRun.definition.invalidSettingsPointer: {pointer}"),
         }
     }
 }
@@ -1855,6 +1930,9 @@ impl ToolRunDefinition {
             if !reason_ids.insert(reason.id.as_str()) {
                 return Err(ToolRunDefinitionError::DuplicateReasonId(reason.id.clone()));
             }
+        }
+        if let Some(pointer) = self.settings.pointers().find(|pointer| tool_run_pointer_tokens(pointer).is_none()) {
+            return Err(ToolRunDefinitionError::InvalidSettingsPointer(pointer.to_string()));
         }
         Ok(())
     }

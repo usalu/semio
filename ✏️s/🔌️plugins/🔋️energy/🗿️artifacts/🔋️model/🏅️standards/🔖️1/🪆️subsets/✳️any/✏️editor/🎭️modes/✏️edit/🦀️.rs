@@ -1,7 +1,8 @@
-//! ✏️ Energy model editor — the `edit` mode: a two-pane layout (structure tree left, zone table
-//! right) over the artifact's own composed `structure`/`zones` children. Nothing pane-specific lives
-//! here; each window binds its own definition/render in its own file.
+//! ✏️ Energy model editor — the `edit` mode: structure tree, zone table and simulation window side by side,
+//! with the energy simulation tool whose run the framework drives. Nothing pane-specific lives here; each
+//! window and tool binds its own definition/render in its own file.
 
+use crate::editor::model::modes::edit::tools;
 use crate::editor::model::modes::edit::windows::{simulation, structure, zones};
 use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
 
@@ -10,7 +11,7 @@ pub const ENERGY_MODEL_EDIT_MODE_ID: &str = "edit";
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::model::create_energy_model_editor`.
 pub fn definition() -> ModeDefinition {
-    ModeDefinition { id: ENERGY_MODEL_EDIT_MODE_ID.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
+    ModeDefinition { id: ENERGY_MODEL_EDIT_MODE_ID.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: vec![tools::simulation::TOOL_ID.into()], layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ One column of the split layout: a stack holding a single window kind. `size` is the column's

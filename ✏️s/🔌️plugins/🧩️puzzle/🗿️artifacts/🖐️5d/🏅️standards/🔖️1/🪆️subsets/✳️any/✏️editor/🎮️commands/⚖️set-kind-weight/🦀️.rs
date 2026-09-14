@@ -20,5 +20,4 @@ pub fn set_kind_weight(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args: Opti
     } else {
         ctx.scene.runtime.vortex_kind_weights = puzzle5d_normalize_kind_weight_group(&ctx.scene.runtime.vortex_kind_weights, &grip_ids, kind_id, value);
     }
-    ctx.app.drive_precompute(ctx.scene);
 }

@@ -11,6 +11,9 @@
       "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/add-stream-frame/schema.json"
     },
     {
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/append-content/schema.json"
+    },
+    {
       "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/change-stream-sync/schema.json"
     },
     {
@@ -47,6 +50,9 @@
       "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/delete-stream/schema.json"
     },
     {
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/remove-content/schema.json"
+    },
+    {
       "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/remove-gcp-observation/schema.json"
     },
     {
@@ -57,9 +63,6 @@
     },
     {
       "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/replace-geo-products/schema.json"
-    },
-    {
-      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/replace-job/schema.json"
     },
     {
       "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/replace-mesh-result/schema.json"

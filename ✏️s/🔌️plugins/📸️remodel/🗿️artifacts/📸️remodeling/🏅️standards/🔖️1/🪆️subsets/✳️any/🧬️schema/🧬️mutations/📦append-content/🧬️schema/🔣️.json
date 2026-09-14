@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/remodel/remodeling/mutation/append-content/schema.json",
+  "title": "AppendContent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "chunks",
+    "contentId",
+    "first",
+    "height",
+    "kind",
+    "width"
+  ],
+  "properties": {
+    "contentId": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "sparse",
+        "mesh",
+        "image"
+      ]
+    },
+    "mime": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "width": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    },
+    "height": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    },
+    "first": {
+      "type": "integer",
+      "format": "uint64",
+      "minimum": 0
+    },
+    "chunks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "contentEncoding": "base64",
+        "maxLength": 5464
+      }
+    }
+  }
+}

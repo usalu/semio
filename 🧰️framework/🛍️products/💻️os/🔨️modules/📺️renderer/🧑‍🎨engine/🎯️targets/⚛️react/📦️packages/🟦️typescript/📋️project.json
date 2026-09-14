@@ -135,6 +135,15 @@
       },
       "outputs": []
     },
+    "window-scope-check": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./📜️script.ts window-scope-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
+      },
+      "outputs": []
+    },
     "surface-retention-check": {
       "executor": "nx:run-commands",
       "cache": true,

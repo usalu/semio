@@ -3,7 +3,7 @@
 // kebab-case -> camelCase. Start rule: op.
 grammar Remodeling_remodeling_op;
 
-op: createStreamOp | deleteStreamOp | changeStreamSyncOp | addStreamFrameOp | removeStreamFrameOp | replaceStreamSourceOp | createAssetOp | deleteAssetOp | createCameraCalibrationOp | updateCameraCalibrationOp | deleteCameraCalibrationOp | createRigExtrinsicOp | deleteRigExtrinsicOp | updateRigExtrinsicOp | createGcpOp | deleteGcpOp | addGcpObservationOp | removeGcpObservationOp | updateIngestParamsOp | updateFeatureParamsOp | updateMatchParamsOp | updateSfmParamsOp | updateDenseParamsOp | updateMeshParamsOp | updateMotionParamsOp | updateGeoParamsOp | replaceJobOp | replaceSparseOp | replaceDenseOp | replaceMeshResultOp | replaceTrajectoryOp | replaceTracksOp | replaceGeoProductsOp | replaceQcOp | commitReconstructionOp ;
+op: createStreamOp | deleteStreamOp | changeStreamSyncOp | addStreamFrameOp | removeStreamFrameOp | replaceStreamSourceOp | createAssetOp | deleteAssetOp | createCameraCalibrationOp | updateCameraCalibrationOp | deleteCameraCalibrationOp | createRigExtrinsicOp | deleteRigExtrinsicOp | updateRigExtrinsicOp | createGcpOp | deleteGcpOp | addGcpObservationOp | removeGcpObservationOp | updateIngestParamsOp | updateFeatureParamsOp | updateMatchParamsOp | updateSfmParamsOp | updateDenseParamsOp | updateMeshParamsOp | updateMotionParamsOp | updateGeoParamsOp | replaceSparseOp | replaceDenseOp | replaceMeshResultOp | replaceTrajectoryOp | replaceTracksOp | replaceGeoProductsOp | replaceQcOp | appendContentOp | removeContentOp | commitReconstructionOp ;
 createStreamOp: 'create-stream' 'stream' '=' mediaStreamBlock ;
 deleteStreamOp: 'delete-stream' 'id' '=' name ;
 changeStreamSyncOp: 'change-stream-sync' 'id' '=' name 'new-sync-offset-ms' '=' num ;
@@ -30,7 +30,6 @@ updateDenseParamsOp: 'update-dense-params' 'params' '=' '{' denseField* '}' ;
 updateMeshParamsOp: 'update-mesh-params' 'params' '=' '{' meshParamsField* '}' ;
 updateMotionParamsOp: 'update-motion-params' 'params' '=' '{' motionField* '}' ;
 updateGeoParamsOp: 'update-geo-params' 'params' '=' '{' geoParamField* '}' ;
-replaceJobOp: 'replace-job' 'job' '=' jobBlock ;
 replaceSparseOp: 'replace-sparse' ('sparse' '=' sparseBlock)? ;
 replaceDenseOp: 'replace-dense' ('dense' '=' denseCloudBlock)? ;
 replaceMeshResultOp: 'replace-mesh-result' 'mesh' '=' meshResultBlock ;
@@ -38,7 +37,9 @@ replaceTrajectoryOp: 'replace-trajectory' ('trajectory' '=' trajectoryBlock)? ;
 replaceTracksOp: 'replace-tracks' 'tracks' '=' '[' trackRecord* ']' ;
 replaceGeoProductsOp: 'replace-geo-products' ('geo' '=' geoProductsBlock)? ;
 replaceQcOp: 'replace-qc' ('qc' '=' qcBlock)? ;
-commitReconstructionOp: 'commit-reconstruction' 'job' '=' jobBlock ('sparse' '=' sparseBlock)? ('trajectory' '=' trajectoryBlock)? ('mesh' '=' meshResultBlock)? ('geo' '=' geoProductsBlock)? ('qc' '=' qcBlock)? 'assets' assetCommitHeader '{' assetCommitRow* '}' ;
+appendContentOp: 'append-content' 'content-id' '=' name 'kind' '=' contentKind ('mime' '=' name)? 'width' '=' INT 'height' '=' INT 'first' '=' INT 'chunks' '=' textList ;
+removeContentOp: 'remove-content' 'content-id' '=' name 'from' '=' INT ;
+commitReconstructionOp: 'commit-reconstruction' ('sparse' '=' sparseBlock)? ('trajectory' '=' trajectoryBlock)? ('mesh' '=' meshResultBlock)? ('geo' '=' geoProductsBlock)? ('qc' '=' qcBlock)? 'assets' assetCommitHeader '{' assetCommitRow* '}' ;
 name: IDENT | TEXT ;
 num: INT | FLOAT ;
 quantity: num IDENT ;
@@ -47,6 +48,7 @@ pair: num ',' num ;
 quad: num ',' num ',' num ',' num ;
 quint: num ',' num ',' num ',' num ',' num ;
 textList: '[' name* ']' ;
+cell: PLACEHOLDER ;
 mediaKind: 'image-sequence' | 'video' ;
 videoCodec: 'avc' | 'hevc' | 'vp9' | 'av1' | 'mjpeg' | 'unknown' ;
 detector: 'orb' | 'akaze' | 'harris' ;
@@ -55,7 +57,7 @@ robustLoss: 'l2' | 'huber' | 'cauchy' ;
 denseResolution: 'low' | 'medium' | 'high' ;
 meshSource: 'placeholder' | 'reconstructed' | 'imported' ;
 trackClass: 'static' | 'moving' ;
-stage: 'idle' | 'ingesting' | 'calibrating' | 'extracting-features' | 'matching-features' | 'estimating-poses' | 'bundle-adjusting' | 'georeferencing' | 'dense-stereo' | 'fusing-volume' | 'extracting-surface' | 'cleaning-mesh' | 'texturing' | 'tracking-motion' | 'deriving-geo-products' | 'reporting-qc' | 'done' | 'failed' ;
+contentKind: 'sparse' | 'mesh' | 'image' ;
 mediaStreamBlock: '{' mediaStreamPart* '}' ;
 mediaStreamPart: 'id' '=' name | 'name' '=' name | 'kind' '=' mediaKind | 'camera-id' '=' name | 'sync-offset-ms' '=' num | 'fps-hint' '=' num | 'source' '=' videoSourceBlock | framesTable ;
 framesTable: 'frames' framesHeader '{' frameRow* '}' ;
@@ -86,9 +88,6 @@ denseField: 'resolution' '=' denseResolution | 'window-radius-px' '=' INT | 'min
 meshParamsField: 'tsdf-voxel-size-mm' '=' quantity | 'tsdf-truncation-mm' '=' quantity | 'decimate-target-triangles' '=' INT | 'smoothing-iterations' '=' INT | 'texture-enabled' '=' BOOL | 'texture-size' '=' INT | 'guarantee-watertight' '=' BOOL | 'hole-fill-max-boundary-verts' '=' INT | 'self-intersection-check' '=' BOOL ;
 motionField: 'enabled' '=' BOOL | 'max-tracks' '=' INT | 'track-window-px' '=' INT | 'min-track-quality' '=' num | 'min-track-length-frames' '=' INT ;
 geoParamField: 'enabled' '=' BOOL | 'origin-lon' '=' num | 'origin-lat' '=' num | 'origin-alt' '=' num | 'gsd-m' '=' quantity | 'dsm-cell-m' '=' quantity | 'dtm-filter-radius-m' '=' quantity | 'ortho-max-px' '=' INT ;
-jobBlock: '{' jobPart* '}' ;
-jobPart: 'id' '=' name | 'stage' '=' stage | 'progress-0-1' '=' num | 'cancel-requested' '=' BOOL | 'stage-cursor' '=' INT | 'started-at-ms' '=' num | 'error' '=' name | 'sparse-point-cloud-preview' '=' name | posesTable ;
-posesTable: 'camera-poses-preview' posesHeader '{' poseRow* '}' ;
 posesHeader: '[' 'camera-id' ':' 'TEXT' 'rotation-wxyz' ':' 'TUPLE' 'translation' ':' 'CRD' ']' ;
 poseRow: name quad coord3 ;
 sparseBlock: '{' sparseField+ '}' ;
@@ -108,8 +107,8 @@ geoProductField: 'dsm-asset-id' '=' name | 'dtm-asset-id' '=' name | 'ortho-asse
 qcBlock: '{' qcPart* '}' ;
 qcPart: 'reprojection-rms-px' '=' num | 'gcp-checkpoint-rmse' '=' num | 'mean-track-length' '=' num | 'registered-frame-ratio' '=' num | 'dense-coverage-ratio' '=' num | watertightBlock | 'warnings' '=' textList ;
 trackRecord: 'id' '=' name 'length' '=' INT 'class' '=' trackClass 'mean-speed-m-s' '=' quantity ;
-assetCommitHeader: '[' 'id' ':' 'TEXT' 'asset' ':' 'BLOCK' ']' ;
-assetCommitRow: name imageAssetBlock ;
+assetCommitHeader: '[' 'id' ':' 'TEXT' 'content-id' ':' 'TEXT' ']' ;
+assetCommitRow: name (name | cell) ;
 
 // 📐 Framework dialect-primitive terminals (only named, never defined, by the .semio itself).
 BOOL: 'true' | 'false' ;

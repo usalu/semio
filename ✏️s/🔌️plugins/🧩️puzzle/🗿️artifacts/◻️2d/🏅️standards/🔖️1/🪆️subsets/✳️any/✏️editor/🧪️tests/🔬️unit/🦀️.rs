@@ -8,12 +8,12 @@ pub(crate) mod context {
         semio_framework_plugin::artifact_app_laws::meta(actor)
     }
     
+    /// 🧰️ The registry-backed, instance-bound fixture app: `bounded_first_step_tool_proofs!` joins the manifest's
+    /// migrated declarations to the live factories, which a registry-less app cannot satisfy.
     pub fn app() -> Puzzle2dApp {
         std::sync::LazyLock::force(&crate::examples::puzzle2d::nakagin_capsule_tower::SOURCE);
         std::sync::LazyLock::force(&crate::examples::puzzle2d::concrete_forest::SOURCE);
-        let mut app = semio_framework::io::resolve_ready(semio_framework_plugin::artifact_app_laws::new_app::<EditorApp<Puzzle2dPlayApp>>());
-        semio_framework::io::resolve_ready(app.bind_instance_id(1));
-        app
+        app_with_registry()
     }
     
     /// 🧾️ `assert_declared_actions_bridge_to_commands`/`new_app_with_registry` still take a `fn() ->
@@ -70,8 +70,17 @@ pub(crate) mod context {
             }
             result.requested_effects.extend(app.take_typed_operation_effect());
             result.events.extend(app.take_typed_operation_event());
+            if let Some(completion) = semio_framework::io::resolve_ready(app.take_typed_operation_completion())? {
+                result.ui_scope = completion.ui_scope;
+            }
             if let Some(scope) = app.take_typed_operation_ui_scope() {
                 result.ui_scope = scope;
+            }
+            while let Some(reply) = app.take_local_interaction_query_reply() {
+                if let protocol::LocalInteractionQueryReply::Page { page } = reply {
+                    let token = protocol::LocalInteractionQueryToken { request_id: page.request_id, query_generation: page.query_generation, identity: page.identity.clone(), ordinal: page.ordinal };
+                    app.acknowledge_local_interaction_query(&token);
+                }
             }
         }
         Err(Fault::from("puzzle2d test operation did not settle"))
@@ -109,7 +118,7 @@ pub(crate) mod context {
                 | "setInteractionGranularity"
         ) {
             let dsl_args = args.map(dsl::DslValue::from);
-            let result = semio_framework::io::resolve_ready(app.handle_action(action, dsl_args.as_ref(), &action_meta));
+            let result = semio_framework::io::resolve_ready(app.handle_action(action, dsl_args.as_ref(), &action_meta)).and_then(|admitted| semio_framework::io::resolve_ready(semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted)));
             return settle(app, result);
         }
         let result = semio_framework::io::resolve_ready(app.dispatch_typed(Puzzle2dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta));
@@ -247,48 +256,6 @@ fn cohort_hostile_static_law_rejects_one_grant_complex_routes_and_missing_cursor
     ] {
         assert!(!cohort_routes_are_cursorized(&source.replacen(marker, "cursor-removed", 1)), "missing retained cursor was falsely accepted: {marker}");
     }
-}
-
-/// 🪣️ The fill family is retained-only: `handle` must refuse it outright, the mounted store-lease
-/// hooks the removed session registry needed must be gone, and every verb must resolve to the
-/// bespoke session work.
-fn fill_session_retained_only_contract(source: &str) -> bool {
-    let production = source.split("//#region 🧪️Tests").next().unwrap_or(source);
-    let Some(handle) = production.find("    fn handle(") else { return false };
-    let Some(fill_relative) = production[handle..].find("if set_fill_count::is_fill_session_action(action) {") else { return false };
-    let fill = handle + fill_relative;
-    let Some(normal_relative) = production[fill..].find("let before = doc.snapshot.0.clone();") else { return false };
-    let branch = &production[fill..fill + normal_relative];
-    branch.contains("puzzle2d-fill-requires-retained-job")
-        && !branch.contains("Puzzle2dFillActionCtx")
-        && !branch.contains("Puzzle2dConfigMutation")
-        && !branch.contains("artifact_mutations")
-        && !production.contains("fn mounted_job_prepare_snapshot_read")
-        && !production.contains("fn pending_effects")
-        && !production.contains("dispatch_fill_session_action")
-        && production.contains("fill if set_fill_count::is_fill_session_action(fill) => Box::new(set_fill_count::Puzzle2dFillSessionWork::new(fill))")
-        && set_fill_count::PUZZLE2D_FILL_SESSION_ACTIONS.iter().all(|action| PUZZLE2D_RETAINED_TOOL_IDS.contains(action))
-}
-
-/// 🧱️ Reviving the mounted fill dispatch path — the action context, a config mutation published
-/// from `handle`, or the store-lease hooks the process-global session registry needed — fails the
-/// retained-only law.
-#[test]
-fn mounted_fill_dispatch_revivals_are_rejected() {
-    let source = include_str!("../../🦀️.rs");
-    assert!(fill_session_retained_only_contract(source));
-    let ctx = source.replacen(
-        "            return Err(Fault::from(\"puzzle2d-fill-requires-retained-job\"));",
-        "            let ctx = set_fill_count::Puzzle2dFillActionCtx {};\n            return Err(Fault::from(\"puzzle2d-fill-requires-retained-job\"));",
-        1,
-    );
-    assert!(!fill_session_retained_only_contract(&ctx));
-    let published = source.replacen("            return Err(Fault::from(\"puzzle2d-fill-requires-retained-job\"));", "            return Ok(Emit { config_mutations: vec![Puzzle2dConfigMutation::Fill { runtime }], ..Default::default() });", 1);
-    assert!(!fill_session_retained_only_contract(&published));
-    let lease = source.replacen("    fn handle(", "    fn pending_effects(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>) -> Vec<Effect> { Vec::new() }\n\n    fn handle(", 1);
-    assert!(!fill_session_retained_only_contract(&lease));
-    let unmapped = source.replacen("fill if set_fill_count::is_fill_session_action(fill) => Box::new(set_fill_count::Puzzle2dFillSessionWork::new(fill))", "fill if false => Box::new(crate::retained_command::NoopPuzzleCommandWork::new(fill))", 1);
-    assert!(!fill_session_retained_only_contract(&unmapped));
 }
 
 /// 🎥️ Recovers the rendered pane camera `(x, y, zoom)` from a rendered `UiNode`'s embedded

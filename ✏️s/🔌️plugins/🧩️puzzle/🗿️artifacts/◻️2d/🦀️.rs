@@ -1523,6 +1523,12 @@ pub mod editor {
         }
 
         #[path = "."]
+        pub mod precompute {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🦀️.rs"]
+            pub mod fill;
+        }
+
+        #[path = "."]
         pub mod commands {
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌱️add-node/🦀️.rs"]
             pub mod add_node;
@@ -1546,12 +1552,6 @@ pub mod editor {
             pub mod engagement_input;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📨️engagement-submit/🦀️.rs"]
             pub mod engagement_submit;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏁️fill-session-begin/🦀️.rs"]
-            pub mod fill_session_begin;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧹️fill-session-clear/🦀️.rs"]
-            pub mod fill_session_clear;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👣️fill-session-step/🦀️.rs"]
-            pub mod fill_session_step;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️focus-selection/🦀️.rs"]
             pub mod focus_selection;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⚛️force-layout/🦀️.rs"]

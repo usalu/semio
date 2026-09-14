@@ -238,6 +238,7 @@ fn load_registry(ui: &Ui, window_id: &str, body: Rect) -> InputState<ActionDescr
     for registration in ui.window_hit_targets(window_id) {
         input.register_hit(registration.to_hit_target());
     }
+    input.publish_hits();
     input
 }
 
@@ -300,7 +301,7 @@ fn every_fixture_case_registers_resolves_and_orders_on_the_live_registry() {
         // 🔢️ The ordering rule: the chrome registers the window's own region before the body paints,
         // `hit_at` scans in reverse, so a pointer at ANY body entry's own centre resolves that entry
         // and never the window under it.
-        assert_eq!(input.hit_targets.first().and_then(|target| target.control_id.as_deref()), Some(window_id.as_str()), "{name}: the window's own region must be registered first");
+        assert_eq!(input.hits().first().and_then(|target| target.control_id.as_deref()), Some(window_id.as_str()), "{name}: the window's own region must be registered first");
         for (control_id, kind, _, rect) in &published {
             let hit = input.hit_at(rect[0] + rect[2] * 0.5, rect[1] + rect[3] * 0.5).unwrap_or_else(|| panic!("{name}: {control_id} centre resolved nothing"));
             assert_eq!(hit.control_id.as_deref(), Some(control_id.as_str()), "{name}: {control_id} was outranked at its own centre");
@@ -323,4 +324,123 @@ fn the_defect_point_no_longer_answers_the_window() {
     assert_eq!(hit.kind, HitKind::TreeItem);
     assert_eq!(hit.event.as_ref().map(|action| action.action.as_str()), Some("addGeneration"));
     println!("[DEBUG] retained-hit-targets: (160.696, 138) -> {:?} / addGeneration", hit.control_id);
+}
+
+/// 🎯️ The oracle's own registry for one case, loaded straight from its declared entries instead of
+/// from a live `Ui`. The buffering law is about WHEN an entry is resolvable, not about how it is
+/// minted — the replay above owns that, against the real pipeline — and `Ui`'s layout surface slots
+/// are a fixed process-wide aggregate, so a third live mount in this binary would starve itself.
+fn fixture_registry(case: &Value) -> Vec<HitTarget<ActionDescriptor>> {
+    let body = body_rect(case);
+    let window_id = case["windowId"].as_str().expect("window id").to_string();
+    let mut targets = vec![HitTarget { rect: body, event: None, control_id: Some(window_id), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None }];
+    for entry in case["expected"].as_array().expect("expected") {
+        let rect = entry["rect"].as_array().expect("rect");
+        let scalar = |index: usize| rect[index].as_f64().expect("rect scalar") as f32;
+        targets.push(HitTarget {
+            rect: Rect::new(scalar(0), scalar(1), scalar(2), scalar(3)),
+            event: entry["action"].as_str().map(|action| ActionDescriptor { controller_id: String::new(), action: action.to_string(), args: None }),
+            control_id: entry["controlId"].as_str().map(str::to_string),
+            kind: HitKind::TreeItem,
+            drag_axis: None,
+            drag_data: None,
+        });
+    }
+    targets
+}
+
+/// 🩸️ LAW: a frame build never empties what the pointer reads.
+///
+/// The whole production cycle is replayed on the REAL `InputState`: `FrameBuildPhase::InputFrame`
+/// retires the previous generation one entry per boundary step, the chrome walk re-mints the next
+/// one entry at a time, and the walk's end publishes. A press is replayed at EVERY instant of that
+/// cycle — 100 consecutive presses, each at a different point inside a build — and every one must
+/// resolve the same row the preceding move resolved, carrying the same action.
+///
+/// ⚖️ The counter-model in the same test is today's production shape: ONE vector, drained by the
+/// build and scanned by `hit_at`. It misses, which is what makes this law discriminating rather than
+/// decorative (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️wgpu-end-to-end-verification-2026-09-14.md` §D).
+#[test]
+fn a_frame_build_never_empties_what_the_pointer_reads() {
+    let law = law();
+    let cycle = &law["frameCycle"];
+    let case_name = cycle["case"].as_str().expect("case");
+    let case = law["cases"].as_array().expect("cases").iter().find(|entry| entry["name"] == case_name).expect("frame cycle case");
+    let presses = cycle["presses"].as_u64().expect("presses") as usize;
+    let retire_steps_per_frame = cycle["retireStepsPerFrame"].as_u64().expect("retire steps") as usize;
+    let (x, y) = (number(&cycle["point"], "x"), number(&cycle["point"], "y"));
+    let want_control = cycle["controlId"].as_str().expect("control id");
+    let want_action = cycle["action"].as_str().expect("action");
+    let targets = fixture_registry(case);
+
+    let mut input = InputState::<ActionDescriptor>::default();
+    for target in &targets {
+        input.register_hit(target.clone());
+    }
+    assert!(input.hit_at(x, y).is_none(), "a registry that was never published must resolve nothing");
+    assert_eq!(input.publish_hits(), 1);
+    let move_hit = input.hit_at(x, y).expect("the move must resolve the row").control_id.clone();
+    assert_eq!(move_hit.as_deref(), Some(want_control), "the preceding move resolved another row");
+    // 🌀️ One more complete build, so the measured cycle starts in production steady state: a full
+    // registry resolvable AND the outgoing one staged for the next build's retirement.
+    for target in &targets {
+        input.register_hit(target.clone());
+    }
+    let move_generation = input.publish_hits();
+    assert_eq!(input.staged_hits().len(), targets.len(), "steady state stages the outgoing registry");
+
+    let mut resolved = 0usize;
+    let mut missed = 0usize;
+    let press = |input: &InputState<ActionDescriptor>, resolved: &mut usize, missed: &mut usize, at: &str| match input.hit_at(x, y) {
+        Some(hit) if hit.control_id.as_deref() == Some(want_control) && hit.event.as_ref().map(|action| action.action.as_str()) == Some(want_action) => *resolved += 1,
+        other => {
+            *missed += 1;
+            panic!("press at {at} resolved {:?} instead of {want_control}/{want_action}", other.map(|hit| hit.control_id.clone()));
+        }
+    };
+
+    for frame in 0..presses {
+        press(&input, &mut resolved, &mut missed, "the instant before the build's first retirement");
+        let mut retired = 0usize;
+        while input.retire_hit_step() {
+            retired += retire_steps_per_frame;
+            assert_eq!(input.staged_hits().len(), targets.len() - retired, "retirement must drop exactly {retire_steps_per_frame} entry per boundary step");
+            press(&input, &mut resolved, &mut missed, "mid-retirement");
+        }
+        assert_eq!(retired, targets.len(), "the build must retire the whole previous generation");
+        assert!(input.staged_hits().is_empty(), "the staged buffer is empty when the chrome walk starts");
+        for target in &targets {
+            input.register_hit(target.clone());
+            press(&input, &mut resolved, &mut missed, "mid chrome walk");
+        }
+        assert_eq!(input.hits().len(), targets.len(), "the resolvable registry must never change size during a build");
+        let generation = input.publish_hits();
+        assert_eq!(generation, move_generation + frame as u64 + 1, "every completed build publishes exactly one generation");
+        press(&input, &mut resolved, &mut missed, "the instant after the publish");
+    }
+
+    let expected = &cycle["expected"];
+    assert_eq!(missed, expected["doubleBufferedMissed"].as_u64().expect("missed") as usize);
+    assert_eq!(resolved, presses * (2 + targets.len() * 2), "every press of every frame must resolve");
+    assert!(resolved >= expected["doubleBufferedResolved"].as_u64().expect("resolved") as usize);
+
+    // ⚖️ The counter-model: ONE vector, drained by the build and scanned by the pointer — the shape
+    // the renderer had before this law. The same cycle, the same points, and it MISSES.
+    let mut single = targets.clone();
+    let mut single_missed = 0usize;
+    let mut single_resolved = 0usize;
+    let resolve = |registry: &[HitTarget<ActionDescriptor>]| registry.iter().rev().find(|target| target.rect.contains(x, y)).and_then(|target| target.control_id.clone());
+    for _ in 0..presses {
+        while single.pop().is_some() {
+            if resolve(&single).as_deref() == Some(want_control) {
+                single_resolved += 1;
+            } else {
+                single_missed += 1;
+            }
+        }
+        single = targets.clone();
+    }
+    assert!(single_missed >= expected["singleBufferedMissedAtLeast"].as_u64().expect("single missed") as usize, "the single-buffer counter-model must miss, or this law proves nothing");
+    println!("[DEBUG] retained-hit-targets frame cycle: {presses} presses over {} entries — double-buffered resolved {resolved} missed {missed}; single-buffered resolved {single_resolved} missed {single_missed}", targets.len());
 }

@@ -1,7 +1,7 @@
 use super::*;
 use crate::{
-    default_remodeling_scene, CameraCalibration, CameraPosePreview, CameraTrajectory, DenseCloud, FrameRef, GcpObservation, GroundControlPoint, ImageAsset, MediaKind, MediaStream, MeshSource, PackedF32, PackedU8, QcReportSnapshot, ReconstructionJob,
-    ReconstructionStage, RemodelingMesh, RigExtrinsic, SparseCloud, TrackClass, VideoCodec, VideoSource, WatertightReportSnapshot,
+    default_remodeling_scene, CameraCalibration, CameraPosePreview, CameraTrajectory, DenseCloud, FrameRef, GcpObservation, GroundControlPoint, ImageAsset, MediaKind, MediaStream, MeshSource, PackedF32, PackedU8, QcReportSnapshot,
+    RemodelingContentKind, RemodelingMesh, RigExtrinsic, SparseCloud, TrackClass, VideoCodec, VideoSource, WatertightReportSnapshot,
 };
 use protocol::SemanticMutation;
 use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
@@ -41,12 +41,6 @@ fn populated_scene_fixture() -> RemodelingSnapshot {
     scene.gcps.push(GroundControlPoint { id: "gcp-1".into(), name: "Corner".into(), world_position: [1.0, 2.0, 3.0], observations: vec![GcpObservation { stream_id: "stream-1".into(), frame_index: 0, pixel: [10.0, 20.0] }] });
     scene.params.ingest.min_sharpness = 0.4;
     scene.params.mesh.texture_size = 4096;
-    scene.job.stage = ReconstructionStage::BundleAdjusting;
-    scene.job.progress_0_1 = 0.42;
-    scene.job.started_at_ms = Some(1000.0);
-    scene.job.error = Some("retry needed".into());
-    scene.job.camera_poses_preview.push(CameraPosePreview { camera_id: "cam-1".into(), ..CameraPosePreview::default() });
-    scene.job.sparse_point_cloud_preview = PackedF32::from_f32_slice(&[0.1, 0.2, 0.3]);
     scene.results.sparse = Some(SparseCloud { points: PackedF32::from_f32_slice(&[0.0, 0.0, 0.0, 1.0, 1.0, 1.0]), colors: Some(PackedU8::from_u8_slice(&[255, 0, 0, 0, 255, 0])) });
     scene.results.dense =
         Some(DenseCloud { positions: PackedF32::from_f32_slice(&[0.0, 0.0, 0.0]), colors: Some(PackedU8::from_u8_slice(&[0, 0, 255])), confidence: Some(PackedF32::from_f32_slice(&[0.9])), classification: Some(PackedU8::from_u8_slice(&[2])) });
@@ -178,9 +172,15 @@ async fn update_params_inverse_law() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn replace_job_and_results_inverse_law() {
+async fn results_and_content_inverse_law() {
     let base = populated_scene_fixture();
-    assert_mutation_inverse_law(&base, &replace_job(ReconstructionJob { stage: ReconstructionStage::Failed, ..base.job.clone() })).await;
+    let leaf = base64_codec::base64_standard_encode([0u8; 12]);
+    let append = AppendContent { content_id: "remodeling-asset-unit".into(), kind: RemodelingContentKind::Sparse, mime: None, width: 0, height: 0, first: 0, chunks: vec![leaf.clone()] };
+    assert_mutation_inverse_law(&base, &append_content(append.clone())).await;
+    let published = apply_remodeling_mutation(&base, &append_content(append)).expect("append applies");
+    assert_mutation_inverse_law(&published, &append_content(AppendContent { content_id: "remodeling-asset-unit".into(), kind: RemodelingContentKind::Sparse, mime: None, width: 0, height: 0, first: 1, chunks: vec![leaf] })).await;
+    assert_mutation_inverse_law(&published, &remove_content("remodeling-asset-unit".into(), 0)).await;
+    assert_mutation_inverse_law(&published, &commit_reconstruction(CommitReconstruction { sparse: Some(SparseCloud { points: PackedF32(crate::remodeling_content_handle("remodeling-asset-unit", 1)), colors: None }), trajectory: None, mesh: None, geo: None, qc: None, assets: Vec::new() })).await;
     assert_mutation_inverse_law(&base, &replace_sparse(None)).await;
     assert_mutation_inverse_law(&base, &replace_dense(None)).await;
     assert_mutation_inverse_law(&base, &replace_mesh_result(Box::new(RemodelingMesh::default()))).await;
@@ -290,7 +290,9 @@ async fn every_mutation_variant_roundtrips_through_op_text() {
     store::os_store::test_support::assert_op_line_round_trip(&update_mesh_params(scene.params.mesh.clone()));
     store::os_store::test_support::assert_op_line_round_trip(&update_motion_params(scene.params.motion.clone()));
     store::os_store::test_support::assert_op_line_round_trip(&update_geo_params(scene.params.geo.clone()));
-    store::os_store::test_support::assert_op_line_round_trip(&replace_job(scene.job.clone()));
+    store::os_store::test_support::assert_op_line_round_trip(&append_content(AppendContent { content_id: "remodeling-asset-unit".into(), kind: RemodelingContentKind::Image, mime: Some("image/png".into()), width: 2, height: 3, first: 4, chunks: vec!["AAEC".into()] }));
+    store::os_store::test_support::assert_op_line_round_trip(&remove_content("remodeling-asset-unit".into(), 2));
+    store::os_store::test_support::assert_op_line_round_trip(&commit_reconstruction(CommitReconstruction { sparse: scene.results.sparse.clone(), trajectory: scene.results.trajectory.clone(), mesh: Some(Box::new(scene.results.mesh.clone())), geo: scene.results.geo.clone(), qc: scene.results.qc.clone(), assets: vec![ReconstructionAssetCommit { id: "dsm".into(), content_id: Some("remodeling-asset-unit".into()) }, ReconstructionAssetCommit { id: "dtm".into(), content_id: None }] }));
     store::os_store::test_support::assert_op_line_round_trip(&replace_sparse(scene.results.sparse.clone()));
     store::os_store::test_support::assert_op_line_round_trip(&replace_sparse(None));
     store::os_store::test_support::assert_op_line_round_trip(&replace_dense(scene.results.dense.clone()));

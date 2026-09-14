@@ -27,6 +27,10 @@ semio-framework-hash = { path = "../../🔨️modules/🔏️hash/📦️package
 # ⬇️ `kernel::media_export_bytes` — the first-party RFC 4648 codec that turns a
 # `Effect::DownloadMediaExport` envelope into the bytes a shell saves. No runtime `base64` crate.
 semio-framework-io-base64 = { path = "../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
+# 📥️ `kernel::IMPORT_CHUNK_BYTES` derives the import chunk extent from the guest's own contiguous
+# request ceiling rather than restating it. `semio-framework-trace` is a zero-dependency pure-std
+# crate of exactly such bounds. Workspace-internal — the external dependency count is unchanged.
+semio-framework-trace = { workspace = true }
 semio-framework-mesh-engine = { path = "../../🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust", package = "semio-framework-mesh-engine" }
 # 🎯️ OS kernel owns spr/dsl types — aliases avoid dual trees / cycle with old implementations.
 semio-framework-os-kernel = { path = "../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }

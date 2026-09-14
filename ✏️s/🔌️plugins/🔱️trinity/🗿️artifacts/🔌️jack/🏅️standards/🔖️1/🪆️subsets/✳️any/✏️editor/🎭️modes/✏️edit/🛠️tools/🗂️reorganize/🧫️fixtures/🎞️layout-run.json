@@ -1,0 +1,170 @@
+{
+  "$comment": "Trinity jack `reorganize` tool run law: the tool declaration, the language-neutral graph document to layout-graph mapping, the Nakagin run expectations (fuel = one iteration per step), the fdg-sim oracle parameters, the interactive step law and the finalize/abort lifecycle. Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W3-F1.",
+  "tool": {
+    "id": "reorganize",
+    "runJob": "trinity.jack.layoutRun",
+    "iconId": "rotate-cw",
+    "mutating": true,
+    "rebase": "restart",
+    "reconfigure": "resume",
+    "trace": "entity"
+  },
+  "config": {
+    "maxIterations": 120
+  },
+  "mapping": {
+    "nodes": [
+      {
+        "id": "a",
+        "x": 0.0,
+        "y": 0.0,
+        "width": 60.0,
+        "height": 10.0
+      },
+      {
+        "id": "b",
+        "x": 100.0,
+        "y": 50.0,
+        "width": 0.0,
+        "height": 0.0
+      },
+      {
+        "id": "c",
+        "x": -40.0,
+        "y": 90.0,
+        "width": 100.0,
+        "height": 80.0
+      },
+      {
+        "id": "a",
+        "x": 9.0,
+        "y": 9.0,
+        "width": 10.0,
+        "height": 10.0
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1",
+        "source": "a@out",
+        "target": "b@in"
+      },
+      {
+        "id": "e2",
+        "source": "b",
+        "target": "a@in"
+      },
+      {
+        "id": "e3",
+        "source": "c@out",
+        "target": "c@in"
+      },
+      {
+        "id": "e4",
+        "source": "c@out",
+        "target": "missing@in"
+      },
+      {
+        "id": "e5",
+        "source": "c@out",
+        "target": "b@in"
+      }
+    ],
+    "expected": {
+      "nodes": [
+        {
+          "id": "a",
+          "origin": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "radius": 21.0
+        },
+        {
+          "id": "b",
+          "origin": {
+            "x": 100.0,
+            "y": 50.0
+          },
+          "radius": 18.0
+        },
+        {
+          "id": "c",
+          "origin": {
+            "x": -40.0,
+            "y": 90.0
+          },
+          "radius": 45.0
+        }
+      ],
+      "edges": [
+        {
+          "source": 0,
+          "target": 1,
+          "weight": 1.0
+        },
+        {
+          "source": 1,
+          "target": 2,
+          "weight": 1.0
+        }
+      ]
+    }
+  },
+  "run": {
+    "example": "nakagin",
+    "nodes": 9,
+    "edges": 6,
+    "stop": "iterationLimit",
+    "iterations": 120,
+    "checkpoints": 1,
+    "movedNodes": 9,
+    "finalVerdicts": {
+      "warning": 9
+    },
+    "verdictPrefix": [
+      "0:testing/moving",
+      "1:testing/moving",
+      "2:testing/moving",
+      "3:testing/moving",
+      "4:testing/moving",
+      "5:testing/moving",
+      "6:testing/moving",
+      "7:testing/moving",
+      "8:testing/moving",
+      "0:testing/moving",
+      "1:testing/moving",
+      "2:testing/moving",
+      "3:testing/moving",
+      "4:testing/moving",
+      "5:testing/moving",
+      "6:testing/moving",
+      "7:testing/moving",
+      "8:testing/moving",
+      "0:testing/moving",
+      "1:testing/moving",
+      "2:testing/moving",
+      "3:testing/moving",
+      "4:testing/moving",
+      "5:testing/moving"
+    ],
+    "positionsDigest": "8b754fec81d05db0"
+  },
+  "oracle": {
+    "fdgScale": 45,
+    "fdgCooloff": 0.975,
+    "fdgDt": 0.035,
+    "fdgUpdates": 1500,
+    "stressRatioMax": 1.05,
+    "improvementMin": 0.3
+  },
+  "interactive": {
+    "example": "nakagin",
+    "attempts": 5,
+    "budgetUs": 2000
+  },
+  "lifecycle": {
+    "historyEntriesAdded": 1,
+    "abortAfterIterations": 2
+  }
+}

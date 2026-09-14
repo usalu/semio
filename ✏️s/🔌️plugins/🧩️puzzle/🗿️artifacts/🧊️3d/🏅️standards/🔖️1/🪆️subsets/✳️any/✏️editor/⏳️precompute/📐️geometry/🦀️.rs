@@ -233,6 +233,7 @@ impl<T, const N: usize> FixedOwnerVec<T, N> {
         self.pages.first().map(|page| page.as_ptr())
     }
 
+    #[cfg(test)]
     pub(crate) fn backing_credit(&self) -> Option<(usize, usize)> {
         (!self.pages.is_empty()).then(|| (self.pages.len(), self.pages.iter().map(|page| page.len() * size_of::<MaybeUninit<T>>()).sum()))
     }
@@ -411,6 +412,7 @@ impl<K, V, const N: usize> FixedOwnerMap<K, V, N> {
         if self.sealed { self.backed_slots() } else { N }
     }
 
+    #[cfg(test)]
     pub(crate) fn backing_credit(&self) -> Option<(usize, usize)> {
         (!self.pages.is_empty()).then(|| (self.pages.len(), self.pages.iter().map(|page| page.len() * size_of::<Option<(K, V)>>()).sum()))
     }
@@ -459,6 +461,7 @@ impl<K, V, const N: usize> FixedOwnerMap<K, V, N> {
         self.iter().map(|(key, _)| key)
     }
 
+    #[cfg(test)]
     pub(crate) fn values(&self) -> impl Iterator<Item = &V> {
         self.iter().map(|(_, value)| value)
     }
@@ -593,6 +596,7 @@ impl<K, const N: usize> FixedOwnerSet<K, N> {
         self.values.capacity()
     }
 
+    #[cfg(test)]
     pub(crate) fn backing_credit(&self) -> Option<(usize, usize)> {
         self.values.backing_credit()
     }
@@ -780,21 +784,12 @@ impl Pose3d {
 #[derive(Clone)]
 pub(crate) struct CollisionShape {
     shape: std::sync::Arc<collision::TriMesh>,
-    retained_items: usize,
-    retained_bytes: usize,
-    page_bounded: bool,
 }
 
 impl CollisionShape {
     pub(crate) fn from_triangle_mesh(vertices: &[Point3d], indices: Vec<[u32; 3]>) -> Self {
         let verts: Vec<rigid::Point3> = vertices.iter().map(|p| p.0).collect();
-        let vertex_bytes = verts.capacity().saturating_mul(size_of::<rigid::Point3>());
-        let index_bytes = indices.capacity().saturating_mul(size_of::<[u32; 3]>());
-        let retained_items = usize::from(vertex_bytes != 0) + usize::from(index_bytes != 0);
-        let retained_bytes = vertex_bytes.saturating_add(index_bytes);
-        let page_bounded = vertex_bytes <= 16 * 1024 && index_bytes <= 16 * 1024;
-        let mesh = collision::TriMesh::new(verts, indices);
-        Self { shape: std::sync::Arc::new(mesh), retained_items, retained_bytes, page_bounded }
+        Self { shape: std::sync::Arc::new(collision::TriMesh::new(verts, indices)) }
     }
     pub(crate) fn contains_point(&self, pose: &Pose3d, point: &Point3d) -> bool {
         collision::contains_point(pose.0, &self.shape, point.0)
@@ -939,18 +934,6 @@ pub(crate) struct CollisionBody {
     pub(crate) parts: Vec<CollisionMeshPart>,
     pub(crate) local_bounds_min: Point3d,
     pub(crate) local_bounds_max: Point3d,
-}
-
-impl CollisionBody {
-    pub(crate) fn retained_parts_backing_credit(&self) -> Option<(usize, usize)> {
-        let bytes = self.parts.capacity().checked_mul(size_of::<CollisionMeshPart>())?;
-        (self.parts.capacity() <= 32 && bytes <= 16 * 1024).then_some((usize::from(bytes != 0), bytes))
-    }
-
-    pub(crate) fn retained_part_credit(&self, index: usize) -> Option<(usize, usize)> {
-        let part = self.parts.get(index)?;
-        part.shape.page_bounded.then_some((part.shape.retained_items, part.shape.retained_bytes))
-    }
 }
 
 pub(crate) fn collision_body_from_buffers(positions: &[f32], indices: &[u32]) -> Option<CollisionBody> {
@@ -1250,6 +1233,7 @@ impl CollisionQueryCursor {
         self.candidates.len()
     }
 
+    #[cfg(test)]
     pub(crate) fn truncated(&self) -> bool {
         self.truncated
     }
@@ -1307,6 +1291,7 @@ impl CollisionIndexRemoval {
     }
 }
 
+#[cfg(test)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum CollisionIndexOwnerCensusStep {
     Pending { items: usize, bytes: usize },
@@ -1314,6 +1299,7 @@ pub(crate) enum CollisionIndexOwnerCensusStep {
     Rejected,
 }
 
+#[cfg(test)]
 #[derive(Default)]
 pub(crate) struct CollisionIndexOwnerCensusCursor {
     section: u8,
@@ -1321,10 +1307,12 @@ pub(crate) struct CollisionIndexOwnerCensusCursor {
     inner: usize,
 }
 
+#[cfg(test)]
 fn collision_index_string_credit(value: &String) -> Option<(usize, usize)> {
     (value.capacity() <= 16 * 1024).then_some((usize::from(value.capacity() != 0), value.capacity()))
 }
 
+#[cfg(test)]
 /// 📏️ Credit for a fixed page that may already have been handed back: a container whose backing was
 /// retired owns nothing and costs nothing. Only a semantic owner over its declared byte cap is a
 /// census refusal, so an index walked WHILE it retires (the close census does exactly that) must not
@@ -1679,6 +1667,7 @@ impl CollisionSpatialIndex {
         ]
     }
 
+    #[cfg(test)]
     pub(crate) fn census_one_owner(&self, cursor: &mut CollisionIndexOwnerCensusCursor) -> CollisionIndexOwnerCensusStep {
         let credit = match cursor.section {
             0 => Some(collision_index_backing_credit(self.entries.backing_credit())),

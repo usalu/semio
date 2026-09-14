@@ -147,6 +147,8 @@ fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane: &st
         brush_weights_json,
         placement_compatibility_json,
         lod_mode,
+        tool_run_trace: None,
+        lanes: Vec::new(),
     }
 }
 

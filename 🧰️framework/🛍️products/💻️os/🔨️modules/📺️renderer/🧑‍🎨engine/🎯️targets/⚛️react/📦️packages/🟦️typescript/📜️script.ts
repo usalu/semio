@@ -614,6 +614,15 @@ class SurfaceSwitchCheckScript extends BundleScript {
   }
 }
 
+/** ⌨️ Executes the window-scope laws over the language-neutral dock-seed/chord-owner fixture. */
+class WindowScopeCheckScript extends BundleScript {
+  run(segments: string[]): void {
+    if (segments.length !== 0) throw new Error("window-scope-check accepts no arguments");
+    process.env.SEMIO_TEST_LEVEL = "long";
+    runVitest(this.root, ["../../../../🧪️tests/⌨️window-scope/🟦️.ts", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
+  }
+}
+
 /** 📌️ Runs the view-state carriage laws: contributions are not a view-state field, and `panelJson`
  * is the one long field, bounded at the schema capacity. */
 class ViewStateCarriageCheckScript extends BundleScript {
@@ -887,6 +896,7 @@ const router = new ScriptRouter(fileURLToPath(new URL(".", import.meta.url)))
   .register("scoped-presence-check", ScopedPresenceCheckScript)
   .register("world3d-interaction-check", World3dInteractionCheckScript)
   .register("surface-switch-check", SurfaceSwitchCheckScript)
+  .register("window-scope-check", WindowScopeCheckScript)
   .register("surface-retention-check", SurfaceRetentionCheckScript)
   .register("document-opening-scope-check", DocumentOpeningScopeCheckScript)
   .register("view-state-carriage-check", ViewStateCarriageCheckScript);

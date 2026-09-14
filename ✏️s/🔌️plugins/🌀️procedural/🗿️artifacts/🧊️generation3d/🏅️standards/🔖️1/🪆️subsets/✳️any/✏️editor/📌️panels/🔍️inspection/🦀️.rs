@@ -4,7 +4,7 @@ use crate::editor::generation3d::terminology::Generation3dLabels;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
 use crate::widget_id;
 use semio_framework_artifact_flow_flow::{FlowFixture, Widget};
-use semio_framework_plugin::plugin_app_close_prelude::{field, input, Buildable, HasBase, HasChildren, InputKind, Trigger, UiAssemblyResult, UiListBuilder, UiValue};
+use semio_framework_plugin::plugin_app_close_prelude::{input, Buildable, HasBase, HasChildren, InputKind, Trigger, UiAssemblyResult, UiListBuilder, UiValue};
 use semio_framework_plugin::{tree_item, ActionFactory, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
@@ -63,14 +63,23 @@ pub fn render(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Gene
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.control-binding", "fixed UI inspector admission failed"))?
             .try_build()
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.control", "fixed UI inspector admission failed"))?;
-        let field = field(crate::ui_label(labels.value_field.as_str())?)
+        // 🪪️ The editable control rides as the CHILD OF A TREE ROW, not as a bare `field` beside the
+        // rows. A panel section keeps only `treeItem` children (`collectTreeItems`,
+        // `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🟦️.tsx`);
+        // a row's NON-`treeItem` children are what the renderer mounts as that row's inline controls
+        // (`collectTreeItemControls`, same file). Authored as a sibling `field`, the one editable
+        // control this panel owns was dropped on the way to the DOM: the panel painted `Id: height`
+        // and `Range: 0..10` with no number input at all, so a slider parameter could not be edited
+        // from the inspector (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `🐍️react-gap-probe.mjs`
+        // step `inspection-edit`).
+        let row = semio_framework_ui_contract::tree_item(crate::ui_label(labels.value_field.as_str())?)
             .try_id("procedural-play-inspector.value")
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.field-id", "fixed UI inspector admission failed"))?
-            .try_child(control)
+            .try_children([control])
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.field-child", "fixed UI inspector admission failed"))?
             .try_build()
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.field", "fixed UI inspector admission failed"))?;
-        fields.try_push(field).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
+        fields.try_push(row).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
         fields
             .try_push(tree_item("procedural-play-inspector.range", format!("{}: {min}..{max}", labels.range_field.as_str()))?)
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;

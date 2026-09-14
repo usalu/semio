@@ -38,10 +38,9 @@
     "Puzzle5dBoardWindowConfig": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["camera2d", "fillCount", "lodMode", "suggestionOffset", "gridSnapEnabled", "gridFactor"],
+      "required": ["camera2d", "lodMode", "suggestionOffset", "gridSnapEnabled", "gridFactor"],
       "properties": {
         "camera2d": { "$ref": "#/definitions/Puzzle5dCamera2d" },
-        "fillCount": { "type": "integer", "minimum": 0, "default": 100 },
         "lodMode": { "type": "string" },
         "suggestionOffset": { "type": "number" },
         "gridSnapEnabled": { "type": "boolean" },

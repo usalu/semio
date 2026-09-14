@@ -9,14 +9,6 @@ use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DeleteAsset, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
-    if let Some((_, staging_id, _)) = crate::remodeling_asset_stage_parts(&payload.key) {
-        crate::discard_staged_remodeling_asset(staging_id);
-        return protocol::MutationOutcome::new(RemodelingDiff::default());
-    }
-    if let Some((staging_id, _)) = crate::remodeling_mesh_stage_asset_parts(&payload.key) {
-        crate::discard_staged_remodeling_mesh(staging_id);
-        return protocol::MutationOutcome::new(RemodelingDiff::default());
-    }
     if !base.assets.contains_key(&payload.key) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Asset \"{}\" does not exist.", payload.key), [payload.key.clone()]);
     }

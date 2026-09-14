@@ -1113,6 +1113,10 @@ fn world_gumball_commit_builds_one_flat_node_per_grant_then_retires_tokens() {
     let actions = take_actions(&mut input);
     assert_eq!(actions.len(), 1);
     assert_eq!(actions[0].action, "translateSelection");
+    // 🪟️ A transform verb is window-owned: it addresses its own window instance rather than
+    // whatever has focus — see `WorldGumballCommitJob::step`'s `windowId` stage.
+    assert_eq!(actions[0].args.as_ref().and_then(|args| args.get("windowId")).and_then(|value| value.as_str()), Some(state.surface_id.as_str()));
+    assert_eq!(actions[0].args.as_ref().and_then(|args| args.get("surfaceId")).and_then(|value| value.as_str()), Some(state.surface_id.as_str()));
     assert!(turns > 8);
 }
 
@@ -1135,7 +1139,9 @@ fn world_gumball_commit_saturation_aba_and_interrupted_close_retain_claim_author
     let mut replacement = Mat4::identity();
     replacement.cols[3][0] = 1.0;
     state.interaction_objects.admit(3, WorldInteractionObjectKind::Instance, "selected", None, replacement, [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0]).expect("ABA replacement");
-    for _ in 0..4 {
+    // 🪟️ Five staged nodes precede the first selected-id resolve: `{`, `surfaceId`, `windowId`,
+    // `mode`, `ids[`.
+    for _ in 0..5 {
         let _ = with_world_step_context(1, |context| job.step(&state, 8, &mut input, context));
     }
     assert!(matches!(with_world_step_context(1, |context| job.step(&state, 8, &mut input, context)), Err(ui_wgpu::wgpu::BoundedActionFault::Structure)));
@@ -2786,12 +2792,12 @@ fn sync_world3d_state_captures_scene_bound_domain() {
 /// `provenance` block, and the twin assertion in that harness that keeps this file from rotting.
 const SCENE_BRIDGE_FIXTURE: &str = include_str!("../../🧫️fixtures/🌉️scene-bridge/🔣️.json");
 
-fn scene_bridge_fixture() -> serde_json::Value {
+pub(super) fn scene_bridge_fixture() -> serde_json::Value {
     serde_json::from_str(SCENE_BRIDGE_FIXTURE).expect("scene bridge fixture parses")
 }
 
 /// 🎬️ Builds the exact `World3dScene` the generation3d preview window publishes for the fixture.
-fn scene_from_bridge_fixture(fixture: &serde_json::Value) -> UiComponentSceneNode {
+pub(super) fn scene_from_bridge_fixture(fixture: &serde_json::Value) -> UiComponentSceneNode {
     let mut scene = scene_with_selection_and_domain("{}", Some((fixture["domainId"].as_str().expect("domain"), fixture["domainGranularityId"].as_str().expect("granularity"))));
     let world = scene.world_3d.as_mut().expect("world scene");
     world.meshes_json = fixture["meshesJson"].to_string();
@@ -2803,7 +2809,7 @@ fn scene_from_bridge_fixture(fixture: &serde_json::Value) -> UiComponentSceneNod
 }
 
 /// 🌉️ Drives the staged bridge to its sealed lease, then the snapshot apply ladder to `Complete`.
-fn drive_scene_bridge(state: &mut World3dState, scene: &UiComponentSceneNode, bounds: Rect) {
+pub(super) fn drive_scene_bridge(state: &mut World3dState, scene: &UiComponentSceneNode, bounds: Rect) {
     sync_world3d_state(state, scene, bounds);
     for turn in 0..4_096 {
         match with_world_step_context(64, |context| step_world3d_scene_bridge(state, context)) {

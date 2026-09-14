@@ -1,14 +1,23 @@
 //! 🧬️ Generation2d play app — the `generate` mode: generations list + input form + output preview.
 
 use crate::editor::generation2d::modes::generate::windows::{form, generations, preview};
-use semio_framework_plugin::{create_default_layout, create_named_layout, LocalizedLabel, ModeDefinition, NamedLayout};
+use semio_framework_plugin::{create_default_layout, create_named_layout, LocalizedLabel, ModeDefinition, NamedLayout, ToolRef};
 
 pub const GENERATION2D_PLAY_MODE_GENERATE: &str = "generate";
 pub const GENERATION2D_PLAY_LAYOUT_GENERATE: &str = "generation2d-generate";
 
 //#region 🔖️Definition
+/// ⏯️ This mode mounts the generate preview, which starts the same `previewEval` run the edit preview
+/// does — so it references the tool for the same reason `🎭️modes/✏️edit` does.
 pub fn definition() -> ModeDefinition {
-    ModeDefinition { id: GENERATION2D_PLAY_MODE_GENERATE.into(), label: LocalizedLabel::native("Generate", "Generieren"), icon_id: "sparkles".into(), tools: Vec::new(), layout_id: Some(GENERATION2D_PLAY_LAYOUT_GENERATE.into()), commands: Vec::new() }
+    ModeDefinition {
+        id: GENERATION2D_PLAY_MODE_GENERATE.into(),
+        label: LocalizedLabel::native("Generate", "Generieren"),
+        icon_id: "sparkles".into(),
+        tools: vec![semio_framework::io::resolve_ready(ToolRef::new(crate::preview_eval::PREVIEW_EVAL_TOOL_ID))],
+        layout_id: Some(GENERATION2D_PLAY_LAYOUT_GENERATE.into()),
+        commands: Vec::new(),
+    }
 }
 
 pub fn layout() -> NamedLayout {

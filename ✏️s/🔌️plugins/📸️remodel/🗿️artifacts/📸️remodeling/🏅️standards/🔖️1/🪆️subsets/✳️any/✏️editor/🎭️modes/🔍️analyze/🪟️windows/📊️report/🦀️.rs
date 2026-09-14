@@ -99,7 +99,14 @@ fn report_table_json(scene: &RemodelingSnapshot, table: &str) -> (String, String
                 })
                 .collect(),
         ),
-        "qcStages" => (vec![column("stage", "Stage"), column("status", "Status")], vec![row([("stage", JsonValue::from(format!("{:?}", scene.job.stage))), ("status", JsonValue::from(if scene.job.error.is_some() { "error" } else { "ok" }))])]),
+        "qcStages" => (
+            vec![column("check", "Check"), column("value", "Value")],
+            scene.results.qc.as_ref().map_or_else(Vec::new, |qc| {
+                let mut rows = vec![row([("check", JsonValue::from("reprojectionRmsPx")), ("value", JsonValue::from(qc.reprojection_rms_px))]), row([("check", JsonValue::from("registeredFrameRatio")), ("value", JsonValue::from(f64::from(qc.registered_frame_ratio)))])];
+                rows.extend(qc.warnings.iter().map(|warning| row([("check", JsonValue::from("warning")), ("value", JsonValue::from(warning.as_str()))])));
+                rows
+            }),
+        ),
         "matches" => (vec![column("note", "Note")], vec![row([("note", JsonValue::from("Pairwise match data is reconstruction-runtime scratch, never distilled into durable document state."))])]),
         _ => (
             vec![column("streamId", "Stream"), column("index", "Index"), column("timestampMs", "Timestamp (ms)"), column("assetId", "Asset")],

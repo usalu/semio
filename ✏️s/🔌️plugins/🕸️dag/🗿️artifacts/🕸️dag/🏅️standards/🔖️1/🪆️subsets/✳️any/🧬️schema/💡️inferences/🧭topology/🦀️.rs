@@ -2,7 +2,7 @@
 //! own node/edge graph (topological order, per-node longest-path depth, cycle-freedom, node count).
 
 use crate::{DagFixtureEdge, DagNodeSpec};
-use std::collections::{BTreeMap, BTreeSet, VecDeque};
+use std::collections::{BTreeMap, VecDeque};
 
 //#region 🔖️Topology
 /// 🧭 Whole-snapshot topology summary — a plain scalar inference (no per-entity `InferredField`
@@ -24,58 +24,45 @@ impl Default for DagTopology {
     }
 }
 
-/// 🧭 Kahn's algorithm over `nodes`/`edges`, deterministic via `BTreeMap`/sorted-adjacency
-/// iteration order; nodes left over after the queue drains (a cycle) are appended in id order so
-/// `topo_order` always stays a total permutation of every node id.
-pub fn compute_dag_topology(nodes: &[DagNodeSpec], edges: &[DagFixtureEdge]) -> DagTopology {
-    let ids: BTreeSet<String> = nodes.iter().map(|node| node.id.clone()).collect();
-    let mut indegree: BTreeMap<String, u32> = ids.iter().cloned().map(|id| (id, 0)).collect();
-    let mut adjacency: BTreeMap<String, Vec<String>> = ids.iter().cloned().map(|id| (id, Vec::new())).collect();
+/// 🧭 Kahn's algorithm over `nodes`/`edges` (endpoints `node@port` resolve to their node) on dense id-ordered indices,
+/// O((V + E) log V): ties break by node id and children are visited in id order; nodes left over after the queue
+/// drains (a cycle) are appended in id order so `topo_order` always stays a total permutation of every node id.
+pub fn compute_dag_topology<'a>(nodes: &'a [DagNodeSpec], edges: &'a [DagFixtureEdge]) -> DagTopology {
+    let mut ids: Vec<&str> = nodes.iter().map(|node| node.id.as_str()).collect();
+    ids.sort_unstable();
+    ids.dedup();
+    let index = |id: &str| ids.binary_search(&id).ok();
+    let mut indegree = vec![0_u32; ids.len()];
+    let mut adjacency: Vec<Vec<u32>> = vec![Vec::new(); ids.len()];
     for edge in edges {
-        if ids.contains(&edge.source) && ids.contains(&edge.target) {
-            adjacency.get_mut(&edge.source).expect("source tracked in adjacency").push(edge.target.clone());
-            *indegree.get_mut(&edge.target).expect("target tracked in indegree") += 1;
+        let node_of = |endpoint: &'a str| endpoint.split_once('@').map_or(endpoint, |(node, _)| node);
+        if let (Some(source), Some(target)) = (index(node_of(&edge.source)), index(node_of(&edge.target))) {
+            adjacency[source].push(target as u32);
+            indegree[target] += 1;
         }
     }
-    for children in adjacency.values_mut() {
-        children.sort();
+    for children in &mut adjacency {
+        children.sort_unstable();
     }
-
-    let mut remaining = indegree.clone();
-    let mut queue: VecDeque<String> = indegree.iter().filter(|(_, &degree)| degree == 0).map(|(id, _)| id.clone()).collect();
-    let mut depth: BTreeMap<String, u32> = queue.iter().map(|id| (id.clone(), 0)).collect();
-    let mut topo_order = Vec::new();
-
-    while let Some(id) = queue.pop_front() {
-        topo_order.push(id.clone());
-        let current_depth = *depth.get(&id).unwrap_or(&0);
-        if let Some(children) = adjacency.get(&id) {
-            for child in children {
-                let entry = remaining.get_mut(child).expect("child tracked in remaining");
-                *entry -= 1;
-                let slot = depth.entry(child.clone()).or_insert(0);
-                if current_depth + 1 > *slot {
-                    *slot = current_depth + 1;
-                }
-                if *entry == 0 {
-                    queue.push_back(child.clone());
-                }
+    let mut depth = vec![0_u32; ids.len()];
+    let mut visited = vec![false; ids.len()];
+    let mut queue: VecDeque<u32> = (0..ids.len() as u32).filter(|at| indegree[*at as usize] == 0).collect();
+    let mut order: Vec<u32> = Vec::with_capacity(ids.len());
+    while let Some(at) = queue.pop_front() {
+        order.push(at);
+        visited[at as usize] = true;
+        for &child in &adjacency[at as usize] {
+            let child = child as usize;
+            indegree[child] -= 1;
+            depth[child] = depth[child].max(depth[at as usize] + 1);
+            if indegree[child] == 0 {
+                queue.push_back(child as u32);
             }
         }
     }
-
-    let cycle_free = topo_order.len() == ids.len();
-    if !cycle_free {
-        let visited: BTreeSet<String> = topo_order.iter().cloned().collect();
-        for id in &ids {
-            if !visited.contains(id) {
-                depth.entry(id.clone()).or_insert(0);
-                topo_order.push(id.clone());
-            }
-        }
-    }
-
-    DagTopology { topo_order, depth, cycle_free, node_count: ids.len() as u32 }
+    let cycle_free = order.len() == ids.len();
+    order.extend((0..ids.len() as u32).filter(|at| !visited[*at as usize]));
+    DagTopology { topo_order: order.iter().map(|at| ids[*at as usize].to_string()).collect(), depth: ids.iter().zip(&depth).map(|(id, depth)| ((*id).to_string(), *depth)).collect(), cycle_free, node_count: ids.len() as u32 }
 }
 //#endregion 🔖️Topology
 

@@ -37,7 +37,12 @@ const record = (id, ok, detail) => {
 
 const browser = await chromium.launch({ headless: true, args: wgpu ? ["--enable-unsafe-webgpu", "--ignore-gpu-blocklist", "--use-angle=metal"] : [] });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-page.on("console", (m) => lines.push(`${at()} ${m.type()} ${m.text().slice(0, 4000)}`));
+// 📏️ 32 000, not 4 000: the node-graph geometry census is ONE console line carrying every node and
+// handle rect, and `hexagonal-mushroom-column` publishes ~7 kB of it. A 4 000-char slice truncated the
+// JSON mid-object, `censusRows()`'s `JSON.parse` threw, and every handle assertion below answered `[]`
+// against a census the same run had actually received (measured 2026-09-14: 14 handle rows in the
+// truncated line alone).
+page.on("console", (m) => lines.push(`${at()} ${m.type()} ${m.text().slice(0, 32000)}`));
 page.on("pageerror", (e) => lines.push(`${at()} pageerror ${String(e).slice(0, 600)}`));
 await page.goto(url, { waitUntil: "domcontentloaded", timeout: 120000 });
 
@@ -60,8 +65,12 @@ const nudge = async (ticks) => {
 if (wgpu) {
   const booted = await waitFor("boot_shell leave", 420);
   record("wgpu.boot", booted, booted ? "boot_shell left" : "the shell never left boot");
-  await nudge(10);
-  await settle(3000);
+  // ⏳️ `boot_shell leave` is not a walked graph. Boot now lands in ~7 s where this probe was written
+  // against a ~28 s one, so 5 s of settling read a shell whose node-graph geometry census had not been
+  // published yet and every handle assertion answered `[]` — measured 2026-09-14 against a census that
+  // the same build publishes with 19 handles (`🗑️generated/wgpu-verify/node-gestures/verdict.json`)
+  // once settled. The tick is input-driven, so the floor NUDGES rather than sleeps.
+  await nudge(Math.max(10, Math.round((Number(process.env.SEMIO_PROBE_SETTLE ?? 45) * 1000) / 220)));
 
   const dock = () => {
     const line = [...lines].reverse().find((entry) => entry.includes("wgpu-shell dock plan"));
@@ -191,45 +200,140 @@ if (wgpu) {
 
 //#region ⚛️React
 if (!wgpu) {
-  const booted = await waitFor("[DEBUG]", 240).catch(() => false);
-  await settle(6000);
-  const surface = await page.evaluate(() => {
-    const nodes = [...document.querySelectorAll("[data-node-id]")].map((el) => {
-      const r = el.getBoundingClientRect();
-      return { id: el.getAttribute("data-node-id"), x: r.x, y: r.y, w: r.width, h: r.height };
-    });
-    const ports = [...document.querySelectorAll("[data-port-id],[data-handle-id]")].map((el) => {
-      const r = el.getBoundingClientRect();
-      return { id: el.getAttribute("data-port-id") ?? el.getAttribute("data-handle-id"), side: el.getAttribute("data-port-side") ?? el.getAttribute("data-direction"), x: r.x, y: r.y, w: r.width, h: r.height };
-    });
-    const canvases = [...document.querySelectorAll("canvas")].map((el) => {
-      const r = el.getBoundingClientRect();
-      return { x: r.x, y: r.y, w: r.width, h: r.height };
-    });
-    return { nodes, ports, canvases, title: document.title };
-  });
-  record("react.boot", surface.canvases.length > 0 || surface.nodes.length > 0, `title=${surface.title} nodes=${surface.nodes.length} ports=${surface.ports.length} canvases=${surface.canvases.length}`);
-  writeFileSync(join(outDir, "react-surface.json"), JSON.stringify(surface, null, 2));
+  // 🪟️ React paints its node graph on ONE canvas, so the ports are not in the DOM. The host publishes
+  // its own geometry through `window.__semioFlowGraphProbe[surfaceId]` — `entity(domain, id)`,
+  // `fixtureJson()`, `rect()` — the same door the wire-drag lane aimed through
+  // (`📓️node-graph-wire-drag-2026-09-13.md` §4). Entity warm-up is asynchronous, so every read polls.
+  await waitFor("converged", 90).catch(() => false);
+  await settle(12000);
+  const surfaces = await page.evaluate(() => Object.keys(globalThis.__semioFlowGraphProbe ?? {}));
+  record("react.probeDoor", surfaces.length > 0, `__semioFlowGraphProbe surfaces: ${JSON.stringify(surfaces)}`);
+  const surfaceId = surfaces.find((id) => id.includes("main")) ?? surfaces[0];
 
-  const axis = surface.ports.filter((p) => (p.id ?? "").startsWith("extrusion-axis@"));
-  record("react.ports.present", axis.length > 0, `extrusion-axis ports in the DOM: ${JSON.stringify(axis.map((p) => `${p.id}/${p.side}`))}`);
-  const ids = axis.map((p) => p.id);
-  record("react.ports.unique", ids.length === new Set(ids).size, `${ids.length} handles, ${new Set(ids).size} distinct ids`);
-
-  const fitBefore = lines.length;
-  const graphCanvas = surface.canvases.sort((a, b) => b.w * b.h - a.w * a.h)[0];
-  if (graphCanvas) {
-    await page.mouse.move(graphCanvas.x + graphCanvas.w / 2, graphCanvas.y + graphCanvas.h / 2);
-    for (let i = 0; i < 5; i += 1) {
-      await page.mouse.wheel(0, 130);
-      await settle(240);
+  const fixture = async () =>
+    page.evaluate((id) => {
+      try {
+        return JSON.parse(globalThis.__semioFlowGraphProbe?.[id]?.fixtureJson() ?? "null");
+      } catch {
+        return null;
+      }
+    }, surfaceId);
+  const paneRect = async () => page.evaluate((id) => globalThis.__semioFlowGraphProbe?.[id]?.rect() ?? null, surfaceId);
+  // 🔬️ `entity` answers `{ point, rect: { x, y, width, height }, visible }` in VIEWPORT pixels — the
+  // resolver`s own units, already absolute — and warms up asynchronously, so every read polls.
+  const entity = async (domain, entityId, tries = 14) => {
+    for (let i = 0; i < tries; i += 1) {
+      const value = await page.evaluate(([id, d, e]) => globalThis.__semioFlowGraphProbe?.[id]?.entity(d, e) ?? null, [surfaceId, domain, entityId]);
+      if (value && value.rect && typeof value.rect.width === "number") return value;
+      await settle(500);
     }
-    await settle(1200);
-    await page.keyboard.press("f");
+    return null;
+  };
+
+  const doc = await fixture();
+  const widgets = Array.isArray(doc?.widgets) ? doc.widgets.map((w) => w.id ?? Object.values(w)[0]?.id).filter(Boolean) : [];
+  record("react.graph", widgets.length > 0, `widgets ${JSON.stringify(widgets)}`);
+  const wires = Array.isArray(doc?.synapses) ? doc.synapses.map((s) => `${s.from}@${s.fromPort}->${s.to}@${s.toPort}`) : [];
+  const axisWire = wires.find((w) => w.startsWith("extrusion-axis@"));
+  record("react.graph.wiredFromTheOutput", Boolean(axisWire) && axisWire.startsWith("extrusion-axis@vectorOut"), `the published document's extrusion-axis wire: ${axisWire ?? "none"}`);
+  writeFileSync(join(outDir, "react-fixture.json"), JSON.stringify({ widgets, wires, camera: doc?.camera }, null, 2));
+
+  const pane = await paneRect();
+  record("react.canvas", Boolean(pane), pane ? `${Math.round(pane.width)}x${Math.round(pane.height)}+${Math.round(pane.x)},${Math.round(pane.y)}` : "no pane rect");
+
+  //#region 🔌️PortSides
+  const candidates = ["extrusion-axis@vectorOut", "extrusion-axis@vector", "extrusion-axis@xOut", "extrusion-axis@x", "extrusion-axis@z"];
+  const geometries = {};
+  for (const handle of candidates) geometries[handle] = await entity("handle", handle, 4);
+  writeFileSync(join(outDir, "react-handles.json"), JSON.stringify(geometries, null, 2));
+  const known = Object.entries(geometries).filter(([, g]) => g && g.rect && typeof g.rect.width === "number");
+  record("react.handles.published", known.length > 0, `handles the host publishes a rect for: ${JSON.stringify(known.map(([k, g]) => `${k}=${Math.round(g.rect.x)},${Math.round(g.rect.y)} ${Math.round(g.rect.width)}x${Math.round(g.rect.height)} visible=${g.visible}`))}`);
+
+  const outHandle = known.find(([k]) => k.endsWith("Out"));
+  const inHandle = known.find(([k]) => k === "extrusion-axis@z" || k === "extrusion-axis@x");
+  record(
+    "react.handles.sidesDiffer",
+    Boolean(outHandle && inHandle) && Math.round(outHandle[1].rect.x) !== Math.round(inHandle[1].rect.x),
+    outHandle && inHandle ? `${outHandle[0]} x=${Math.round(outHandle[1].rect.x)} vs ${inHandle[0]} x=${Math.round(inHandle[1].rect.x)} — one id per side, one rect per id` : "one of the two sides has no rect",
+  );
+  const stale = geometries["extrusion-axis@vector"];
+  const staleInput = stale && inHandle && Math.round(stale.rect?.x ?? -1) === Math.round(inHandle[1].rect.x);
+  record("react.handles.staleIdIsTheInput", Boolean(stale) === Boolean(staleInput), stale ? `the pre-fix id extrusion-axis@vector now resolves to the INPUT column (x=${Math.round(stale.rect.x)}), which is exactly what it is: an input id and nothing else` : "extrusion-axis@vector resolves to nothing");
+
+  if (outHandle && pane) {
+    const rect = outHandle[1].rect;
+    const px = Math.round(rect.x + rect.width / 2);
+    const py = Math.round(rect.y + rect.height / 2);
+    const before = lines.length;
+    await page.mouse.move(px, py);
+    await settle(400);
+    await page.mouse.down();
+    await settle(500);
+    await page.mouse.move(px + 70, py + 34, { steps: 8 });
+    await settle(500);
+    await page.mouse.up();
     await settle(2500);
+    const pressLines = lines.slice(before).filter((l) => l.includes("dag port press"));
+    const named = pressLines.find((l) => l.includes(`"${outHandle[0]}"`));
+    record("react.press.resolvesOutput", Boolean(named), named ? named.slice(0, 320) : `press lines: ${JSON.stringify(pressLines.slice(0, 3).map((l) => l.slice(0, 200)))}`);
+  } else {
+    record("react.press.resolvesOutput", false, "no OUTPUT handle rect to press");
   }
-  const fitLines = lines.slice(fitBefore).filter((l) => /fit|viewport|camera/iu.test(l));
-  record("react.fit.reacted", fitLines.length > 0, fitLines.length > 0 ? fitLines[fitLines.length - 1].slice(0, 300) : "no camera/viewport line after F");
+  //#endregion 🔌️PortSides
+
+  //#region 📷️Fit
+  if (pane) {
+    const cameraOf = async () => (await fixture())?.camera ?? null;
+    const opening = await cameraOf();
+    await page.mouse.move(pane.x + pane.width / 2, pane.y + pane.height / 2);
+    for (let i = 0; i < 6; i += 1) {
+      await page.mouse.wheel(0, 130);
+      await settle(300);
+    }
+    await settle(2000);
+    const zoomed = await cameraOf();
+    // 📐️ `fixtureJson().camera` is the DOCUMENT camera — the guest republishes it, so it does not move
+    // under a live wheel. What moves is where the host places the nodes, so the fit is measured on the
+    // NODE RECTS the host resolves, before and after.
+    const rectOf = async (widget) => (await entity("node", widget, 6))?.rect ?? null;
+    const zoomedRect = await rectOf("extrude");
+    const mark = lines.length;
+    const fitControl = page.getByLabel("Fit graph").first();
+    await fitControl.click({ timeout: 15000 }).catch(async () => {
+      await page.keyboard.press("f");
+    });
+    await settle(3500);
+    const fitted = await cameraOf();
+    const viewportLines = lines.slice(mark).filter((l) => l.includes("nodeGraphViewport"));
+    record("react.fit.dispatched", viewportLines.length > 0, viewportLines.length > 0 ? viewportLines[viewportLines.length - 1].slice(0, 240) : "no nodeGraphViewport after F");
+    const fittedRect = await rectOf("extrude");
+    // 📷️ The LIVE camera, as the host itself journals it: every `nodeGraphViewport` the surface
+    // publishes lands in the history as `camera camera { x=… y=… zoom=… }`. The wheel's last entry is
+    // the camera the fit had to correct; the entry after the `Fit graph` press is what it published.
+    const journalled = lines.filter((l) => l.includes("camera camera {")).map((l) => l.slice(l.indexOf("camera camera {")));
+    const zoomedCamera = journalled.slice(0, journalled.length - (lines.slice(mark).filter((l) => l.includes("camera camera {")).length || 1)).pop() ?? null;
+    const fittedCamera = journalled[journalled.length - 1] ?? null;
+    record("react.fit.publishedANewCamera", Boolean(fittedCamera && zoomedCamera) && fittedCamera !== zoomedCamera, `the wheel left ${zoomedCamera}; Fit graph published ${fittedCamera}`);
+    // 🪧️ NOT a camera reading: `entity()` answers from the resolver's warmed cache, which is why both
+    // rects below are identical across a wheel that the journal above shows moved the camera. The live
+    // camera is `react.fit.publishedANewCamera`; this row only records that the read-back resolves.
+    record(
+      "react.fit.nodeReadBackResolves",
+      Boolean(zoomedRect && fittedRect),
+      `extrude rect (resolver cache, not a camera) zoomed=${zoomedRect ? `${Math.round(zoomedRect.x)},${Math.round(zoomedRect.y)}` : "none"} fitted=${fittedRect ? `${Math.round(fittedRect.x)},${Math.round(fittedRect.y)}` : "none"}; the DOCUMENT camera the guest republishes is opening=${JSON.stringify(opening)} after=${JSON.stringify(fitted)}`,
+    );
+
+    const framed = [];
+    for (const widget of widgets) {
+      const geometry = await entity("node", widget, 6);
+      framed.push({ id: widget, visible: geometry?.visible ?? null, rect: geometry?.rect ?? null });
+    }
+    writeFileSync(join(outDir, "react-framed.json"), JSON.stringify(framed, null, 2));
+    const measured = framed.filter((row) => row.rect && typeof row.rect.width === "number");
+    const off = measured.filter((row) => row.rect.x < pane.x || row.rect.y < pane.y || row.rect.x + row.rect.width > pane.x + pane.width || row.rect.y + row.rect.height > pane.y + pane.height);
+    record("react.fit.framesEveryNode", measured.length > 0 && off.length === 0, `${measured.length}/${widgets.length} nodes measured, ${off.length} outside the ${Math.round(pane.width)}x${Math.round(pane.height)} pane: ${JSON.stringify(off.map((r) => r.id))}`);
+  }
+  //#endregion 📷️Fit
 }
 //#endregion ⚛️React
 

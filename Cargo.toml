@@ -194,6 +194,7 @@ members = [
     "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust",
@@ -306,6 +307,7 @@ semio-framework-geometry = { path = "🧰️framework/🔨️modules/📐️geom
 semio-framework-raster = { path = "🧰️framework/🔨️modules/🖌️raster/📦️packages/🦀️rust" }
 semio-framework-typeset = { path = "🧰️framework/🔨️modules/🔤️typeset/📦️packages/🦀️rust" }
 semio-framework-graph = { path = "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust" }
+semio-framework-graph-layout-run = { path = "🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/📦️packages/🦀️rust" }
 semio-framework-actor = { path = "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust" }
 semio-framework-replication = { path = "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust" }
 semio-framework-value-resident = { path = "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust" }

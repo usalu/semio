@@ -6657,6 +6657,17 @@
       }
     },
     {
+      "name": "⚖️gate⌨️window-scope🌐️shell",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-react:window-scope-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.0998456
+      }
+    },
+    {
       "name": "⚖️gate🎥️tutorial-interaction🌐️renderer",
       "type": "node-terminal",
       "request": "launch",

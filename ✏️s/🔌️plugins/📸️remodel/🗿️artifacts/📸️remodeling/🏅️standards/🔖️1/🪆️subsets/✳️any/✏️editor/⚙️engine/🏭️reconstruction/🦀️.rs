@@ -315,6 +315,26 @@ pub enum EngineStatus {
     Failed(String),
 }
 
+/// 🔭️ One decision the pipeline took while observed ([`ReconstructionEngine::observe`]): every feature set,
+/// match candidate verdict, pair, camera registration, triangulated or pruned point, depth map, fused cloud
+/// and extracted mesh. A run job turns each into a visible trace record or step.
+#[derive(Clone, Debug, PartialEq)]
+pub enum EngineObservation {
+    FeaturesExtracted { frame: usize, keypoints: usize },
+    MatchAccepted { frame_a: usize, frame_b: usize, query: u32, candidate: u32, distance: u32 },
+    MatchRatioRejected { frame_a: usize, frame_b: usize, query: u32, best: u32, second: u32 },
+    MatchCrossCheckRejected { frame_a: usize, frame_b: usize, query: u32, candidate: u32 },
+    PairMatched { frame_a: usize, frame_b: usize, matches: usize },
+    TracksBuilt { tracks: usize },
+    CameraRegistered { frame: usize, pose: remodeling_camera::CameraPose },
+    CameraRejected { frame: usize },
+    PointTriangulated { track: usize, point: [f64; 3] },
+    PointPruned { track: usize, point: [f64; 3] },
+    DepthMapEstimated { view: usize, samples: usize },
+    DenseCloudFused { points: usize },
+    MeshExtracted { vertices: usize, triangles: usize },
+}
+
 /// 🔢️ Ordinal of a non-terminal stage in the fixed 9-stage pipeline, for [`ReconstructionEngine::progress`].
 fn stage_ordinal(stage: EngineStage) -> usize {
     match stage {
@@ -437,6 +457,7 @@ pub struct ReconstructionEngine {
     watertight_report: Option<remodeling_mesh::WatertightReport>,
 
     failure: Option<String>,
+    recorded: Option<Vec<EngineObservation>>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -693,7 +714,54 @@ impl ReconstructionEngine {
             mesh_data: None,
             watertight_report: None,
             failure: None,
+            recorded: None,
         }
+    }
+
+    /// 🔭️ Starts recording [`EngineObservation`]s; an unobserved engine records nothing.
+    pub fn observe(&mut self) {
+        self.recorded.get_or_insert_with(Vec::new);
+    }
+
+    /// 📤️ Moves every recorded observation into `into`, oldest first.
+    pub fn drain_observations(&mut self, into: &mut Vec<EngineObservation>) {
+        if let (Some(sfm), Some(observations)) = (self.sfm.as_mut(), self.recorded.as_mut()) {
+            sfm.drain_point_events(|track, point, kept| observations.push(if kept { EngineObservation::PointTriangulated { track, point } } else { EngineObservation::PointPruned { track, point } }));
+        }
+        if let Some(observations) = self.recorded.as_mut() {
+            into.append(observations);
+        }
+    }
+
+    fn record(&mut self, observation: EngineObservation) {
+        if let Some(observations) = self.recorded.as_mut() {
+            observations.push(observation);
+        }
+    }
+
+    /// 📏️ `(completed, total)` units of the current stage; `total` is absent where the stage has no
+    /// countable extent.
+    pub fn stage_progress(&self) -> (u64, Option<u64>) {
+        let count = |value: usize| value as u64;
+        match self.stage {
+            EngineStage::ExtractingFeatures => (count(self.cursor), Some(count(self.frames.len()))),
+            EngineStage::MatchingFeatures if self.match_pairs_ready => (count(self.pair_cursor), Some(count(self.match_pairs.len()))),
+            EngineStage::EstimatingPoses => (count(self.pose_cursor.min(self.frames.len())), Some(count(self.frames.len()))),
+            EngineStage::DenseStereo | EngineStage::FusingVolume => (count(self.stage_cursor.min(self.dense_camera_indices.len())), Some(count(self.dense_camera_indices.len()))),
+            _ => (0, None),
+        }
+    }
+
+    /// 🔬️ The raw matching inputs an independent match oracle recomputes verdicts from: descriptor words
+    /// per frame, the scheduled pairs, the ratio and whether the cross check runs.
+    #[cfg(test)]
+    pub fn match_oracle_inputs(&self) -> (Vec<Vec<[u64; 4]>>, Vec<(usize, usize)>, f32, bool) {
+        (self.descriptors_per_frame.iter().map(|frame| frame.iter().map(|descriptor| descriptor.0).collect()).collect(), self.match_pairs.clone(), self.params.match_ratio, self.params.match_mutual)
+    }
+
+    /// ☁️ The fused dense cloud positions once [`EngineStage::FusingVolume`] finished, else empty.
+    pub fn dense_positions(&self) -> &[[f64; 3]] {
+        self.dense_cloud.as_ref().map_or(&[], |cloud| cloud.positions.as_slice())
     }
 
     /// 📥️ Delegates to the internal [`FrameSource::push_frame`].
@@ -822,6 +890,7 @@ impl ReconstructionEngine {
                 preparation.cursor = end;
                 if end == preparation.keypoints.len() {
                     let complete = self.feature_preparation.take().expect("completed feature preparation");
+                    self.record(EngineObservation::FeaturesExtracted { frame: complete.frame, keypoints: complete.keypoints.len() });
                     self.keypoints_per_frame.push(complete.keypoints);
                     self.descriptors_per_frame.push(complete.descriptors);
                     self.cursor += 1;
@@ -900,12 +969,14 @@ impl ReconstructionEngine {
             preparation.query = preparation.query.saturating_add(COMPARISONS_PER_STEP).min(desc_a.len());
             if preparation.query == desc_a.len() {
                 let complete = self.pair_match_preparation.take().expect("completed empty pair match");
+                self.record(EngineObservation::PairMatched { frame_a: complete.frame_a, frame_b: complete.frame_b, matches: 0 });
                 self.pairwise_matches.push((complete.frame_a, complete.frame_b, complete.matches));
                 self.pair_cursor += 1;
             }
             return self.pair_cursor < self.match_pairs.len();
         }
         let mut remaining = COMPARISONS_PER_STEP;
+        let observations = &mut self.recorded;
         while remaining > 0 && preparation.query < desc_a.len() {
             if let Some((distance, best_index)) = preparation.pending {
                 while remaining > 0 && preparation.reverse_candidate < desc_a.len() {
@@ -919,8 +990,14 @@ impl ReconstructionEngine {
                     remaining -= 1;
                 }
                 if preparation.reverse_candidate == desc_a.len() {
-                    if preparation.reverse_best_index == preparation.query as u32 {
-                        preparation.matches.push(remodeling_feature::Match { a: preparation.query as u32, b: best_index, distance });
+                    let (frame_a, frame_b, query) = (preparation.frame_a, preparation.frame_b, preparation.query as u32);
+                    if preparation.reverse_best_index == query {
+                        preparation.matches.push(remodeling_feature::Match { a: query, b: best_index, distance });
+                        if let Some(recorded) = observations.as_mut() {
+                            recorded.push(EngineObservation::MatchAccepted { frame_a, frame_b, query, candidate: best_index, distance });
+                        }
+                    } else if let Some(recorded) = observations.as_mut() {
+                        recorded.push(EngineObservation::MatchCrossCheckRejected { frame_a, frame_b, query, candidate: best_index });
                     }
                     reset_pair_query(preparation);
                 }
@@ -941,6 +1018,7 @@ impl ReconstructionEngine {
             }
             if preparation.candidate == desc_b.len() {
                 let passes = preparation.best_index != u32::MAX && (preparation.second_distance == u32::MAX || (preparation.best_distance as f32) < self.params.match_ratio * preparation.second_distance as f32);
+                let (frame_a, frame_b, query) = (preparation.frame_a, preparation.frame_b, preparation.query as u32);
                 if passes && self.params.match_mutual {
                     preparation.pending = Some((preparation.best_distance, preparation.best_index));
                     preparation.reverse_candidate = 0;
@@ -948,7 +1026,14 @@ impl ReconstructionEngine {
                     preparation.reverse_best_index = u32::MAX;
                 } else {
                     if passes {
-                        preparation.matches.push(remodeling_feature::Match { a: preparation.query as u32, b: preparation.best_index, distance: preparation.best_distance });
+                        preparation.matches.push(remodeling_feature::Match { a: query, b: preparation.best_index, distance: preparation.best_distance });
+                        if let Some(recorded) = observations.as_mut() {
+                            recorded.push(EngineObservation::MatchAccepted { frame_a, frame_b, query, candidate: preparation.best_index, distance: preparation.best_distance });
+                        }
+                    } else if preparation.best_index != u32::MAX {
+                        if let Some(recorded) = observations.as_mut() {
+                            recorded.push(EngineObservation::MatchRatioRejected { frame_a, frame_b, query, best: preparation.best_distance, second: preparation.second_distance });
+                        }
                     }
                     reset_pair_query(preparation);
                 }
@@ -956,6 +1041,7 @@ impl ReconstructionEngine {
         }
         if preparation.query == desc_a.len() {
             let complete = self.pair_match_preparation.take().expect("completed pair match");
+            self.record(EngineObservation::PairMatched { frame_a: complete.frame_a, frame_b: complete.frame_b, matches: complete.matches.len() });
             self.pairwise_matches.push((complete.frame_a, complete.frame_b, complete.matches));
             self.pair_cursor += 1;
         }
@@ -1031,9 +1117,12 @@ impl ReconstructionEngine {
     fn step_estimating_poses(&mut self) -> Result<bool, String> {
         if self.sfm.is_none() {
             let intr = default_intrinsics(self.frames[0].image.width, self.frames[0].image.height, self.params.assumed_focal_ratio);
-            let tracks = self.tracks.take().expect("tracks built before EstimatingPoses");
-            let keypoints = std::mem::take(&mut self.keypoints_per_frame);
+            let tracks = self.tracks.clone().expect("tracks built before EstimatingPoses");
+            let keypoints = self.keypoints_per_frame.clone();
             let mut sfm = remodeling_sfm::IncrementalSfm::new(intr, tracks, keypoints, self.params.sfm.clone());
+            if self.recorded.is_some() {
+                sfm.observe_points();
+            }
             let pair01 = self.pairwise_matches.iter().find(|&&(a, b, _)| a == 0 && b == 1).map(|(_, _, matches)| remodeling_sfm::SeedPairPreparation::new(0, 1, matches)).ok_or_else(|| "no matches between frame 0 and 1".to_string())?;
             sfm.set_pairwise_matches(std::mem::take(&mut self.pairwise_matches));
             self.sfm = Some(sfm);
@@ -1043,6 +1132,11 @@ impl ReconstructionEngine {
             if self.sfm.as_mut().expect("seed SfM").advance_seed_pair(preparation, 1).map_err(|error| error.to_string())? {
                 self.seed_pair_preparation = None;
                 self.pose_cursor = 2;
+                for frame in [0, 1] {
+                    if let Some(pose) = self.sfm.as_ref().and_then(|sfm| sfm.camera_pose(frame)) {
+                        self.record(EngineObservation::CameraRegistered { frame, pose });
+                    }
+                }
             }
             return Ok(true);
         }
@@ -1059,8 +1153,18 @@ impl ReconstructionEngine {
             self.registration_preparation = Some(remodeling_sfm::RegistrationPreparation::new(self.pose_cursor));
         }
         let result = sfm.advance_registration(self.registration_preparation.as_mut().expect("registration preparation"), 1);
+        let frame = self.pose_cursor;
+        let registered = sfm.camera_pose(frame);
         match result {
-            Ok(true) | Err(_) => {
+            Ok(true) => {
+                if let Some(pose) = registered {
+                    self.record(EngineObservation::CameraRegistered { frame, pose });
+                }
+                self.registration_preparation = None;
+                self.pose_cursor += 1;
+            }
+            Err(_) => {
+                self.record(EngineObservation::CameraRejected { frame });
                 self.registration_preparation = None;
                 self.pose_cursor += 1;
             }
@@ -1226,6 +1330,7 @@ impl ReconstructionEngine {
                 if patch_match.advance(&preparation.reference_gray, &preparation.reference_camera, &preparation.source_grays, &self.params.dense, PATCH_PIXELS_PER_STEP) {
                     let complete = self.dense_preparation.take().expect("completed dense preparation");
                     let map = complete.patch_match.expect("completed patch match").finish().expect("finished depth map");
+                    self.record(EngineObservation::DepthMapEstimated { view: slot, samples: map.depth.iter().filter(|depth| depth.is_finite() && **depth > 0.0).count() });
                     self.fusion_capacity = self.fusion_capacity.saturating_add(map.depth.len());
                     self.depth_maps.push(map);
                     self.stage_cursor += 1;
@@ -1276,6 +1381,8 @@ impl ReconstructionEngine {
             if preparation.advance(&self.fusion_views, &self.depth_maps, &remodeling_dense::FusionConfig::default(), FUSION_COMPARISONS_PER_STEP) {
                 self.dense_cloud = self.fusion_preparation.take().and_then(remodeling_dense::FusionPreparation::finish);
                 self.fusion_finalized = true;
+                let points = self.dense_positions().len();
+                self.record(EngineObservation::DenseCloudFused { points });
                 return false;
             }
             return true;
@@ -1387,6 +1494,7 @@ impl ReconstructionEngine {
                         self.match_pairs_ready = self.step_build_match_pairs(64);
                     } else if !self.step_matching_features() {
                         if let Some(tracks) = self.step_build_tracks() {
+                            self.record(EngineObservation::TracksBuilt { tracks: tracks.tracks.len() });
                             self.tracks = Some(tracks);
                             self.stage = EngineStage::EstimatingPoses;
                         }
@@ -1425,6 +1533,8 @@ impl ReconstructionEngine {
                     MeshStepOutcome::Done => {
                         self.mesh_data = self.mesh_pipeline.as_ref().and_then(remodeling_mesh::MeshPipeline::result).cloned();
                         self.watertight_report = self.mesh_pipeline.as_ref().and_then(remodeling_mesh::MeshPipeline::report).cloned();
+                        let (vertices, triangles) = self.mesh_data.as_ref().map_or((0, 0), |mesh| (mesh.positions.len() / 3, mesh.indices.len() / 3));
+                        self.record(EngineObservation::MeshExtracted { vertices, triangles });
                         self.stage = EngineStage::Done;
                         return EngineStatus::Done;
                     }

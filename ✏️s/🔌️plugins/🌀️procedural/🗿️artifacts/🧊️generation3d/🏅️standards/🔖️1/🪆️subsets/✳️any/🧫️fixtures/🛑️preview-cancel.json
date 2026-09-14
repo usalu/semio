@@ -2,7 +2,7 @@
   "format": "semio.generation3d.preview-cancel",
   "version": 1,
   "note": "The CANCELLATION law of the self-dispatched flowEvalTick chain. `🔒️tick-latch.json` says whether a tick may be armed; this says what an explicit cancelPreviewEval gesture does to work already in flight — in this process, in the geometry extension's process, and in the status object the preview window publishes. Language-agnostic: an implementation in any language must replay these sequences and answer the same statuses, the same emitted invocations and the same resumability.",
-  "cancelAction": "cancelPreviewEval",
+  "cancelAction": "toolRunAbort",
   "cancelCapability": [
     "evaluateCancel",
     "tessellateCancel"
@@ -376,22 +376,22 @@
       {
         "surface": "editor",
         "windowKindId": "procedural-preview",
-        "cancelAction": "cancelPreviewEval",
-        "declaresCancelCommand": true,
+        "cancelAction": "toolRunAbort",
+        "frameworkReservedVerb": true,
         "offersCancelOnWindow": true
       },
       {
         "surface": "generate",
         "windowKindId": "generation3d-generate-preview",
-        "cancelAction": "cancelPreviewEval",
-        "declaresCancelCommand": true,
+        "cancelAction": "toolRunAbort",
+        "frameworkReservedVerb": true,
         "offersCancelOnWindow": true
       },
       {
         "surface": "viewer",
         "windowKindId": "procedural-view-preview",
-        "cancelAction": "cancelPreviewEval",
-        "declaresCancelCommand": true,
+        "cancelAction": "toolRunAbort",
+        "frameworkReservedVerb": true,
         "offersCancelOnWindow": true
       }
     ],

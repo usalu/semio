@@ -15,10 +15,11 @@
 #![allow(clippy::result_large_err)]
 
 use crate::editor::dag::commands::{add_node, patch_dag_nodes, remove_node, rename_dag_node};
-use crate::editor::dag::commands::{connect_media_ports, delete_selection, disconnect, move_media_node, node_graph_edit, reorganize};
+use crate::editor::dag::commands::{connect_media_ports, delete_selection, disconnect, move_media_node, node_graph_edit};
 use crate::editor::dag::commands::{graph_pointer_down, node_graph_viewport};
 use crate::editor::dag::config::{dag_config_camera, DagConfig, DagConfigMutation};
 use crate::editor::dag::modes::edit;
+use crate::editor::dag::modes::edit::tools::reorganize;
 use crate::editor::dag::modes::edit::windows::{compiled, main};
 use crate::editor::dag::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::dag::terminology::{dag_play_labels, is_de_locale};
@@ -113,7 +114,6 @@ semio_framework_plugin::app_commands! {
         "disconnect" as "disconnect" => disconnect::Disconnect,
         "moveMediaNode" as "move-media-node" => move_media_node::MoveMediaNode,
         "renameDagNode" as "rename-dag-node" => rename_dag_node::RenameDagNode,
-        "reorganize" as "reorganize" => reorganize::Reorganize,
         "patchDagNodes" as "patch-dag-nodes" => patch_dag_nodes::PatchDagNodes,
         "nodeGraphViewport" as "node-graph-viewport" => node_graph_viewport::NodeGraphViewport,
         "graphPointerDown" as "graph-pointer-down" => graph_pointer_down::GraphPointerDown,
@@ -128,13 +128,13 @@ fn dag_context_menu_items(registry: &AppActionRegistry, labels: &crate::editor::
     let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), selected, &[]);
     let hit_edge_id = request.surface.as_ref().and_then(|target| target.hits.iter().find(|hit| hit.domain == "edge")).map(|hit| hit.id.clone());
 
-    // 🗂️ Grouped disclosure: `addNode`/`reorganize` stay top-level (the most frequent verbs);
+    // 🗂️ Grouped disclosure: `addNode` stays top-level (the most frequent verb; reorganize is the edit mode's tool run);
     // `renameDagNode` joins them only for a single-node selection; `disconnect` folds into the
     // "transfer" taxonomy group when an edge is hit — `organize_context_menu` (applied automatically at
     // the `VcsArtifactApp::context_menu` funnel) sorts groups into `RIBBON_PARENT_CATEGORIES` order and
     // inserts the pre-destructive separator itself, so no `.separator()` call is needed ahead of the
     // `deleteSelection`/`nodeGraphEdit` destructive row below.
-    let mut menu = Menu::of(registry).action_args("addNode", dsl::DslValue::object([("kind".to_string(), dsl::DslValue::String("computation".to_string()))])).action("reorganize");
+    let mut menu = Menu::of(registry).action_args("addNode", dsl::DslValue::object([("kind".to_string(), dsl::DslValue::String("computation".to_string()))]));
     if nodes.len() == 1 {
         menu = menu.action("renameDagNode");
     }
@@ -158,6 +158,9 @@ pub struct DagPlayApp;
 const DAG_RETAINED_CONFIG_TOOL_IDS: &[&str] = &["nodeGraphViewport"];
 const DAG_RETAINED_COMMAND_SCHEMA: &str = "dag.dag/v1.tool-command.v1";
 const DAG_RETAINED_RAW_BYTES: usize = 8_192;
+/// 📬️ Admission envelope of one published document mutation: the reorganize run finalizes one `move-node` per moved
+/// node, each far below one page.
+const DAG_ARTIFACT_MUTATION_MAXIMUM_BYTES: usize = 4_096;
 
 #[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 fn dag_retained_config_reduce(
@@ -463,6 +466,64 @@ impl ArtifactEditor for DagPlayApp {
         Some(std::sync::Arc::new(DagConfigPreparationFactory))
     }
 
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_owners())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+    }
+
+    /// 👥️ DAG presence is three inline camera scalars, so the default root is its exact empty terminal.
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |_| true).expect("default DAG presence is the exact empty terminal")))
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+    }
+
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("dag-artifact-retained", DAG_ARTIFACT_MUTATION_MAXIMUM_BYTES))
+    }
+
+    /// ⏯️ Builds the reorganize tool's layout run over the run's base (`ToolRunDefinition.runJob`); resumed from the
+    /// ledger's checkpoint and provisional moves on a settings change.
+    fn build_tool_run_job(request: semio_framework_plugin::ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<semio_framework_plugin::ToolRunJob>, Fault> {
+        if request.tool_id != reorganize::TOOL_ID || request.purpose != semio_framework_plugin::ToolRunJobPurpose::Run {
+            return Ok(None);
+        }
+        reorganize::build_job(request.identity, &request.snapshot, &request.config, request.checkpoint, request.provisional).map(Some)
+    }
+
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
         registry.register(DagConfigCommandJobFactory::new(&controller))
@@ -615,6 +676,7 @@ pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
             .artifact_kind(crate::artifact_kind())
             .icon_id("dag")
             .mode_def(edit::definition())
+            .tool(reorganize::definition())
             .default_mode_id(edit::DAG_PLAY_MODE_EDIT)
             .window_kind_def(main::definition())
             .window_kind_def(compiled::definition())
@@ -632,7 +694,6 @@ pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition::bounded_catalog("disconnect", LocalizedLabel::native("Disconnect", "Trennen"), ActionKind::Mutation).with_category("transfer"))
             .mutation("moveMediaNode", LocalizedLabel::native("Move Node", "Knoten verschieben"))
             .action_with(ActionDefinition::bounded_catalog("renameDagNode", LocalizedLabel::native("Rename Node", "Knoten umbenennen"), ActionKind::Mutation).with_category("actions"))
-            .action_with(ActionDefinition::new("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation, "rotate-cw").with_category("transform"))
             .mutation("patchDagNodes", LocalizedLabel::native("Patch Nodes", "Knoten patchen"))
             // 👁️ Ephemeral view state — camera/viewport. Selection/hover no longer declared here: the
             // framework auto-injects interactionSelect/interactionHover/clearSelection/selectAll/
@@ -693,7 +754,6 @@ pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("disconnect", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("moveMediaNode", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("renameDagNode", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("reorganize", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("patchDagNodes", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("nodeGraphViewport", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("graphPointerDown", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)

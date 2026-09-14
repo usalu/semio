@@ -15,7 +15,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🐍️ No third-party library reads or writes s.remodel.remodeling's .dsl.semio carrier or its own document shape -- COLMAP/OpenMVG/Meshroom, LAS/LAZ and PLY libraries were surveyed and declined because this artifact is a reconstruction JOB document (streams, calibrations, GCPs, eight parameter blocks, engine results) not a point cloud or mesh file; a reader of their output would be judging a different artifact. The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution. The implementation is ../../../🧪️tests/mutate-remodeling-1/🐍️component.py, covering 34 of this vocabulary's 35 kinds (commit-reconstruction excluded -- its diff reads process-global staging state a static fixture cannot carry, exactly as the Rust adapter already treats it specially), written from this subset's own committed ../🧬️schema/🔣️.json document shape, each kind's own committed (before, mutation, after) leaf fixture, and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's verb table. It imports nothing from the Rust it judges and transliterates none of it -- create-asset's minted childId is an unspecified Rust DefaultHasher digest, compared only for shape (documented honestly, not fabricated); delete-stream's inverse independently derives full cascade restoration (stream plus every severed GCP observation) from taxonomy.md rule 5, which production's own single-step inverse does not attempt. All 34 kinds' forward and inverse scenarios were executed standalone via the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py host against a hand-built plan -- all 68 passed on the first run.",
+      "rationale": "🐍️ No third-party library reads or writes s.remodel.remodeling's .dsl.semio carrier or its own document shape -- COLMAP/OpenMVG/Meshroom, LAS/LAZ and PLY libraries were surveyed and declined because this artifact is a reconstruction project document (streams, calibrations, GCPs, eight parameter blocks, durable content leaves, engine results) not a point cloud or mesh file; a reader of their output would be judging a different artifact. The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution. The implementation is ../🧪️tests/📸️mutate-remodeling-1/🐍️.py, covering all 36 of this vocabulary's kinds -- commit-reconstruction included as an ordinary kind: it binds durable content the BASE document already stores through append-content, so its refusals, no-op, forward application and inverse are all decided from the committed (before, mutation, after) triple -- written from this subset's own committed ../🧬️schema/🔣️.json document shape, each kind's own committed leaf fixture, and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's verb table. It imports nothing from the Rust it judges and transliterates none of it -- create-asset's minted childId is an unspecified Rust DefaultHasher digest, compared only for shape (documented honestly, not fabricated). All 274 planned mutate and inverse rows of the feature were executed through the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🖥️host/🐍️.py Context against hand-built plans (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️13/INTERACTIVE-TOOLS-VISIBLE-PROCESS/🐍️w3-4-mirror-check.py) and all passed, and the reference agrees with the TypeScript twin on 28 synthesized append-content, remove-content, commit-reconstruction, replace-mesh-result and create-asset cases.",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -33,15 +33,15 @@
           "candidatesConsidered": [
             {
               "package": "COLMAP / OpenMVG / Meshroom (SfM pipeline outputs)",
-              "reason": "These read/write point clouds, camera poses and meshes but have no notion of a reconstruction JOB document -- streams, calibrations, GCPs and eight typed parameter blocks bundled with engine results -- which is what this artifact actually is; a reader of their output would be judging a different artifact entirely."
+              "reason": "These read/write point clouds, camera poses and meshes but have no notion of a reconstruction project document -- streams, calibrations, GCPs and eight typed parameter blocks bundled with durable content and engine results -- which is what this artifact actually is; a reader of their output would be judging a different artifact entirely."
             },
             {
               "package": "LAS/LAZ point cloud libraries (laspy, PDAL)",
-              "reason": "Point-cloud-only formats; this artifact is a pipeline JOB document that happens to carry point buffers as ONE of many typed sections, not a point cloud file."
+              "reason": "Point-cloud-only formats; this artifact is a reconstruction project document that happens to carry point buffers as ONE of many typed sections, not a point cloud file."
             },
             {
               "package": "PLY mesh libraries (plyfile, open3d)",
-              "reason": "Mesh-only formats; same structural mismatch as LAS -- no notion of streams/calibration/GCPs/params/job stage."
+              "reason": "Mesh-only formats; same structural mismatch as LAS -- no notion of streams/calibration/GCPs/params/durable content."
             }
           ]
         },
@@ -49,7 +49,7 @@
         "secondImplementationLanguage": "python",
         "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md; ../🧬️schema/🔣️.json; each mutation's own 🧬️.schema.json and ↩️inverse/🦀️.rs (read for convention only, not transliterated)",
         "fixtureCoverage": {
-          "vectors": 134,
+          "vectors": 136,
           "capabilitiesCovered": [
             "remodeling-1-mutate"
           ]
@@ -122,6 +122,25 @@
             {
               "id": "appends-an-0c2164",
               "directoryName": "🎞️appends-an-0c2164"
+            }
+          ]
+        },
+        {
+          "mutationId": "append-content",
+          "sourceMutationDirectoryName": "📦append-content",
+          "mutationDirectoryName": "📦append-content",
+          "scenarios": [
+            {
+              "id": "appends-sparse-leaves",
+              "directoryName": "🧱️appends-sparse-leaves"
+            },
+            {
+              "id": "refuses-a-gap",
+              "directoryName": "🚫️refuses-a-gap"
+            },
+            {
+              "id": "warns-that-the-leaves-exist",
+              "directoryName": "🔁️warns-that-the-leaves-exist"
             }
           ]
         },
@@ -402,6 +421,21 @@
           ]
         },
         {
+          "mutationId": "remove-content",
+          "sourceMutationDirectoryName": "🔪remove-content",
+          "mutationDirectoryName": "🔪remove-content",
+          "scenarios": [
+            {
+              "id": "drops-the-content",
+              "directoryName": "🗑️drops-the-content"
+            },
+            {
+              "id": "refuses-missing-content",
+              "directoryName": "🚫️refuses-missing-content"
+            }
+          ]
+        },
+        {
           "mutationId": "remove-gcp-observation",
           "sourceMutationDirectoryName": "🚷remove-gcp-observation",
           "mutationDirectoryName": "🚷remove-gcp-observation",
@@ -486,25 +520,6 @@
             {
               "id": "records-a-dtm-6e132a",
               "directoryName": "🗺️records-a-dtm-6e132a"
-            }
-          ]
-        },
-        {
-          "mutationId": "replace-job",
-          "sourceMutationDirectoryName": "🏗️replace-job",
-          "mutationDirectoryName": "🏗️replace-job",
-          "scenarios": [
-            {
-              "id": "advances-the-job-c1e878",
-              "directoryName": "🎨️advances-the-job-c1e878"
-            },
-            {
-              "id": "warns-that-the-bdf2e9",
-              "directoryName": "🔁️warns-that-the-bdf2e9"
-            },
-            {
-              "id": "advances-the-555298",
-              "directoryName": "🎨️advances-the-555298"
             }
           ]
         },
@@ -884,7 +899,6 @@
         "update-mesh-params",
         "update-motion-params",
         "update-geo-params",
-        "replace-job",
         "replace-sparse",
         "replace-dense",
         "replace-mesh-result",
@@ -892,6 +906,8 @@
         "replace-tracks",
         "replace-geo-products",
         "replace-qc",
+        "append-content",
+        "remove-content",
         "commit-reconstruction"
       ]
     }
@@ -946,6 +962,26 @@
           ]
         },
         {
+          "id": "append-content",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "append-content",
+            "bridgeVersion": 1,
+            "variant": "AppendContent"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
           "id": "change-stream-sync",
           "capability": "remodeling-1-mutate",
           "payloadSchema": "🧬️.schema.json",
@@ -976,7 +1012,7 @@
           "productionDispatch": {
             "operation": "commit-reconstruction",
             "bridgeVersion": 1,
-            "variant": "ReconstructionAssetCommit"
+            "variant": "CommitReconstruction"
           },
           "oracleRequirements": [
             {
@@ -1182,6 +1218,26 @@
           ]
         },
         {
+          "id": "remove-content",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-content",
+            "bridgeVersion": 1,
+            "variant": "RemoveContent"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
           "id": "remove-gcp-observation",
           "capability": "remodeling-1-mutate",
           "payloadSchema": "🧬️.schema.json",
@@ -1252,25 +1308,6 @@
             "operation": "replace-geo-products",
             "bridgeVersion": 1,
             "variant": "ReplaceGeoProducts"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "remodeling-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "replace-job",
-          "capability": "remodeling-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "replace-job",
-            "bridgeVersion": 1,
-            "variant": "ReplaceJob"
           },
           "oracleRequirements": [
             {
@@ -1613,22 +1650,22 @@
           "role": "expected-before",
           "path": "../🧫️fixtures/🏁️commit-reconstruction/⬅️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:18933fd33733c9e2afc5e6fdfc1e82e02d516b28c749f22693c03a6d532f3e97",
-          "bytes": 8280
+          "sha256": "sha256:89482afc5f77a7a0194387b6642d7718050dcdf1199f6c13cbe4002dad378935",
+          "bytes": 7786
         },
         {
           "role": "mutation-payload",
           "path": "../🧫️fixtures/🏁️commit-reconstruction/🦠️mutation.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3b6e981be94e941828cae41e5904f812fbcd4455c57b20b2e97c8a1599333998",
-          "bytes": 749
+          "sha256": "sha256:51c2ef1fc294dc74b5bb9a5c221ce041578b5a57966a1dd5d9dc589015641df5",
+          "bytes": 242
         },
         {
           "role": "expected-after",
           "path": "../🧫️fixtures/🏁️commit-reconstruction/➡️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:18933fd33733c9e2afc5e6fdfc1e82e02d516b28c749f22693c03a6d532f3e97",
-          "bytes": 8280
+          "sha256": "sha256:89482afc5f77a7a0194387b6642d7718050dcdf1199f6c13cbe4002dad378935",
+          "bytes": 7786
         }
       ],
       "provenance": {
@@ -1641,7 +1678,7 @@
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "remodeling-carrier",
-      "notes": "CommitReconstruction{job,sparse,trajectory,mesh,geo,qc,assets} publishes what a staged reconstruction produced, so every result argument it accepts must be a replayable `remodeling-content:` staging handle. This vector's `sparse` argument is a plain point buffer, which names no staged run and is therefore refused with mutation.invalid-reconstruction-sparse; a refused commit leaves the scene untouched, so ⬅️before.json and ➡️after.json are the same document. Both are this subset's own committed replace-job before-snapshot, and the payload pairs that leaf's committed job with ⭐replace-sparse's committed sparse buffer — no byte of this vector is hand-typed. The kind's three OTHER guards (invalid-reconstruction-asset, invalid-reconstruction-mesh and the sparse guard again on the real-world survey) ship as ordinary leaf vectors under 🧬️schema/🧬️mutations/🏁commit-reconstruction/🧪️tests/."
+      "notes": "CommitReconstruction{sparse,trajectory,mesh,geo,qc,assets} replaces the reconstruction result lanes and binds assets, naming durable content by id only, and every content handle it names must address content the BASE document already stores complete. This vector's `sparse` argument is the `remodeling-content:remodeling-asset-orbit-sparse-unpublished|1` handle of content the document never received through append-content, and is therefore refused with mutation.invalid-reconstruction-sparse; a refused commit leaves the scene untouched, so ⬅️before.json and ➡️after.json are the same document, the two-stream unit scene every toy vector of this subset starts from. The kind's other guards (invalid-reconstruction-asset, invalid-reconstruction-mesh and the sparse guard again on the real-world survey) ship as ordinary leaf vectors under 🧫️fixtures/🧬️mutations/🏁commit-reconstruction/."
     }
   ]
 }

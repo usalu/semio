@@ -1,0 +1,215 @@
+{
+  "why": "How one `Effect::RequestFileOpen` becomes real bytes in a guest, stated once for every renderer. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END: the wgpu door had no `request-file-open` case in `wireEffectToFriendly` at all (`unmapped effect \"request-file-open\" dropped`, measured on 6118), its shell read `requestFileOpen` out of a MUTATION payload no producer emits, its wasm32 `request_file_open` was a stub returning nothing, and — had it returned something — it dispatched `{json, payload}` in ONE unchunked invocation while React dispatched `{payload, name, chunk, chunkCount}` per chunk. Four spellings of one journey. This fixture is the one spelling: the wire shapes the effect really arrives in, the chunk slicing both hosts owe the guest, and the exact argument envelope one chunk is dispatched with.",
+  "importChunkBytes": 32768,
+  "importChunkBytesWhy": "`GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES / 2` (65 536 / 2). Derived in both twins from the guest's own per-request contiguous ceiling, never restated as a literal — this number is here only so a fixture reader can check the twins agree on it.",
+  "wireCases": [
+    {
+      "id": "request-file-open-tagged-option-read-as",
+      "why": "The shape the ACTOR boundary hands a renderer door: a WIT `option<string>` as its tagged variant record. These are the exact `generation3d` values recorded on 6118 — request id 131, the accept filter the artifact derives from its own importable formats, `dataUrl`, and `importDocument` as the verb the shell re-dispatches.",
+      "effect": {
+        "tag": "request-file-open",
+        "val": {
+          "req": 131,
+          "params": {
+            "accept": ".stl,.obj,.ply,.gltf,.dwg,.json,.txt",
+            "readAs": { "tag": "some", "val": "dataUrl" },
+            "importAction": "importDocument",
+            "multiple": false
+          }
+        }
+      },
+      "friendly": {
+        "requestFileOpen": {
+          "req": 131,
+          "accept": ".stl,.obj,.ply,.gltf,.dwg,.json,.txt",
+          "readAs": "dataUrl",
+          "importAction": "importDocument",
+          "multiple": false
+        }
+      },
+      "warns": false
+    },
+    {
+      "id": "request-file-open-bare-option-read-as",
+      "why": "The shape jco's DIRECT binding hands over for the same field — the bare value. Both are real on the same field, which is exactly how `download-media-export.encoding` was lost; one decoder must read both.",
+      "effect": {
+        "tag": "request-file-open",
+        "val": {
+          "req": 131,
+          "params": {
+            "accept": ".stl",
+            "readAs": "dataUrl",
+            "importAction": "importDocument",
+            "multiple": false
+          }
+        }
+      },
+      "friendly": {
+        "requestFileOpen": {
+          "req": 131,
+          "accept": ".stl",
+          "readAs": "dataUrl",
+          "importAction": "importDocument",
+          "multiple": false
+        }
+      },
+      "warns": false
+    },
+    {
+      "id": "request-file-open-kebab-wit-field-names",
+      "why": "The WIT record spells these `read-as`/`import-action`; jco lowers them to camelCase, but a boundary that hands the record through verbatim keeps the kebab spelling — the same two-real-shapes situation `download-media-export.mime-type` already carries a reader for. A door that reads only one of them re-dispatches nothing, which is indistinguishable from a cancelled picker.",
+      "effect": {
+        "tag": "request-file-open",
+        "val": {
+          "req": 131,
+          "params": {
+            "accept": ".stl",
+            "read-as": "dataUrl",
+            "import-action": "importDocument",
+            "multiple": false
+          }
+        }
+      },
+      "friendly": {
+        "requestFileOpen": {
+          "req": 131,
+          "accept": ".stl",
+          "readAs": "dataUrl",
+          "importAction": "importDocument",
+          "multiple": false
+        }
+      },
+      "warns": false
+    },
+    {
+      "id": "request-file-open-absent-read-as-and-multiple",
+      "why": "`read_as: None` means the shell hands back the file's own text rather than a data URL, and `multiple` is a plain WIT `bool`. `process3d`/`home` pick this shape.",
+      "effect": {
+        "tag": "request-file-open",
+        "val": {
+          "req": 111,
+          "params": {
+            "accept": "application/json,.json",
+            "readAs": { "tag": "none" },
+            "importAction": "importFixture",
+            "multiple": true
+          }
+        }
+      },
+      "friendly": {
+        "requestFileOpen": {
+          "req": 111,
+          "accept": "application/json,.json",
+          "importAction": "importFixture",
+          "multiple": true
+        }
+      },
+      "warns": false
+    },
+    {
+      "id": "request-file-open-flat-params-is-not-guessed",
+      "why": "W0 nested every `req`-bearing effect's payload into its own `…-params` record. A door that reads this effect FLAT gets an empty `importAction` and re-dispatches nothing — the same defect `dispatch-action` already carries a note about. An effect with no `params` therefore decodes to empty strings rather than to a guessed top-level read.",
+      "effect": {
+        "tag": "request-file-open",
+        "val": {
+          "req": 131,
+          "accept": ".stl",
+          "importAction": "importDocument"
+        }
+      },
+      "friendly": {
+        "requestFileOpen": {
+          "req": 131,
+          "accept": "",
+          "importAction": "",
+          "multiple": false
+        }
+      },
+      "warns": false
+    }
+  ],
+  "chunkCases": [
+    {
+      "id": "empty-pick-is-still-one-chunk",
+      "why": "A picked empty file is a real pick. One chunk of zero bytes, never zero chunks, or the guest is never told the run happened.",
+      "payload": "",
+      "chunks": [""]
+    },
+    {
+      "id": "one-ascii-stl-triangle",
+      "why": "The probe's own file, well under the ceiling: exactly one chunk whose envelope names itself 0 of 1.",
+      "payload": "solid probe\nfacet normal 0 0 1\nendsolid probe\n",
+      "chunks": ["solid probe\nfacet normal 0 0 1\nendsolid probe\n"]
+    },
+    {
+      "id": "exactly-the-chunk-extent",
+      "why": "A payload of exactly `importChunkBytes` ASCII characters is ONE chunk — the bound is inclusive.",
+      "payloadRepeat": { "character": "a", "count": 32768 },
+      "chunkLengths": [32768]
+    },
+    {
+      "id": "one-byte-past-the-chunk-extent",
+      "why": "One character more is two chunks, the second carrying exactly one character.",
+      "payloadRepeat": { "character": "a", "count": 32769 },
+      "chunkLengths": [32768, 1]
+    },
+    {
+      "id": "multibyte-never-splits-a-code-point",
+      "why": "`ō` is 2 UTF-8 bytes and 1 UTF-16 unit. Counted in code units the page would overrun the guest's byte cap; counted in bytes the last character that no longer fits starts the next page, and no page ever ends mid-code-point. 16 385 of them are 32 770 bytes, so the first page holds 16 384 and the second holds 1.",
+      "payloadRepeat": { "character": "ō", "count": 16385 },
+      "chunkLengths": [16384, 1],
+      "chunkByteLengths": [32768, 2]
+    },
+    {
+      "id": "four-byte-code-point-boundary",
+      "why": "An emoji is 4 UTF-8 bytes and 2 UTF-16 units — the case a UTF-16 slice overruns by 2×. 8 193 of them are 32 772 bytes: 8 192 fit the first page exactly, the last starts the second.",
+      "payloadRepeat": { "character": "🧊", "count": 8193 },
+      "chunkLengths": [8192, 1],
+      "chunkByteLengths": [32768, 4]
+    }
+  ],
+  "argumentCases": [
+    {
+      "id": "single-file-single-chunk",
+      "why": "The shape every small pick takes, and the only one `generation3d`'s session-free `importDocument` entry point admits. `chunk`/`chunkCount` are INTEGERS: the guest decodes them as `u32` and `FromValue`'s unsigned arm refuses a float, which is how an integer widened on a lossy JSON hop kills the whole dispatch.",
+      "name": "probe-triangle.stl",
+      "chunk": { "payload": "solid probe\n", "chunk": 0, "chunkCount": 1 },
+      "fanOut": null,
+      "arguments": {
+        "payload": "solid probe\n",
+        "name": "probe-triangle.stl",
+        "chunk": 0,
+        "chunkCount": 1
+      }
+    },
+    {
+      "id": "single-file-second-chunk-of-three",
+      "why": "A chunked run names its own position. The guest's staging refuses a gap rather than resuming into bytes nobody can account for, so the position is the contract, not a hint.",
+      "name": "nakagin.json",
+      "chunk": { "payload": "…", "chunk": 1, "chunkCount": 3 },
+      "fanOut": null,
+      "arguments": {
+        "payload": "…",
+        "name": "nakagin.json",
+        "chunk": 1,
+        "chunkCount": 3
+      }
+    },
+    {
+      "id": "multi-file-pick-adds-the-fan-out",
+      "why": "`index`/`total` are added ONLY when the picker was opened with `multiple`, so a single-file pick's args are byte-for-byte the pre-fan-out shape.",
+      "name": "b.stl",
+      "chunk": { "payload": "solid b\n", "chunk": 0, "chunkCount": 1 },
+      "fanOut": { "index": 1, "total": 2 },
+      "arguments": {
+        "payload": "solid b\n",
+        "name": "b.stl",
+        "chunk": 0,
+        "chunkCount": 1,
+        "index": 1,
+        "total": 2
+      }
+    }
+  ],
+  "integerArgumentsWhy": "`chunk`, `chunkCount`, `index` and `total` MUST reach the guest as exact unsigned integers. Both twins mint them as integer carriers (Rust `Number::UInt`, TypeScript `packUInt`) rather than letting them widen onto a float on a JSON hop — the defect that took every wgpu dispatch down once the view state first carried a `u64` (`📓️wgpu-end-to-end-verification-2026-09-14.md` §A)."
+}

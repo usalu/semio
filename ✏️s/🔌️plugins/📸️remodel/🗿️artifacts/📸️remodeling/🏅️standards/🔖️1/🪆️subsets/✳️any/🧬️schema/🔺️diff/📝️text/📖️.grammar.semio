@@ -10,13 +10,13 @@ start diff
 # every lane present as an explicit `null` when unset. That notation is `🗣️dsl/🧬️schema/🦀️.rs`'s
 # `print_dsl_value`, which is PRIVATE and reachable only as the payload of a printed record field of
 # `Shape::Value` — the framework exposes no standalone `DslValue -> String` entry point today, so a
-# test must print a one-field `Shape::Value` record and drop the leading `value=` key token. This grammar therefore pins the 17 real lane keys (camelCase, per
+# test must print a one-field `Shape::Value` record and drop the leading `value=` key token. This grammar therefore pins the 10 real lane keys (camelCase, per
 # `#[value(rename_all = "camelCase")]`) at the top level and models each lane payload as the
 # generic value notation the bridge emits, rather than inventing a hand-written syntax the code
 # does not print. See 📓️w10-grammars.md for the follow-up that would make this a real `DslDiff`.
 
 diff = "{" lane* "}"
-lane = artifact-lane | schema-lane | id-lane | streams-lane | assets-lane | durable-artifacts-lane | calibration-lane | params-lane | gcps-lane | job-lane | results-lane | selection-lane | active-utility-id-lane | report-table-lane | frame-cursor-lane | camera-lane | layers-lane | locale-lane
+lane = artifact-lane | schema-lane | id-lane | streams-lane | assets-lane | durable-artifacts-lane | calibration-lane | params-lane | gcps-lane | results-lane
 
 artifact-lane = "artifact" "=" value
 schema-lane = "schema" "=" value
@@ -27,14 +27,7 @@ durable-artifacts-lane = "durableArtifacts" "=" value
 calibration-lane = "calibration" "=" value
 params-lane = "params" "=" value
 gcps-lane = "gcps" "=" value
-job-lane = "job" "=" value
 results-lane = "results" "=" value
-selection-lane = "selection" "=" value
-report-table-lane = "reportTable" "=" value
-frame-cursor-lane = "frameCursor" "=" value
-camera-lane = "camera" "=" value
-layers-lane = "layers" "=" value
-locale-lane = "locale" "=" value
 
 value = "null" | "true" | "false" | number | TEXT | array | object
 number = INT | FLOAT

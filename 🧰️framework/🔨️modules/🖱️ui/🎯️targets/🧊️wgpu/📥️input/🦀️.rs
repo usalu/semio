@@ -195,6 +195,67 @@ impl FixedKeyQueue {
     }
 }
 
+/// 🎯️ The pointer's hit authority, double-buffered. `resolved` is the LAST COMPLETE frame's
+/// registry and the only buffer `hit_at` ever scans; `staging` is the one a frame build in progress
+/// retires entry by entry and then re-mints. A build therefore never empties what the pointer reads,
+/// and a pointer event landing at any point inside a build resolves the last complete registry
+/// instead of a half-drained one.
+///
+/// 🩸️ One buffer meant the frame build's bounded retirement (one entry per boundary step,
+/// `FrameBuildPhase::InputFrame`) drained the SAME vector `hit_at` resolved against. Measured on
+/// `http://127.0.0.1:6118/?plugin=generation3d&mode=generate`, 2026-09-14: a move answered
+/// `targets=42 hit=Some((TreeItem, "…add-generation"))` and the press 295 ms later, with the pointer
+/// never moving, answered `targets=0 hit=None` — so `addGeneration` dispatched nothing and roughly
+/// every second real click on a retained row was lost (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️wgpu-end-to-end-verification-2026-09-14.md` §D).
+///
+/// ⚖️ Retirement stays bounded: `retire_step` drops exactly one entry per call, and the two buffers
+/// swap on `publish`, so the frame that completes hands its predecessor's entries to the next
+/// frame's retirement rather than freeing a whole registry in one step.
+pub struct HitRegistry<E> {
+    staging: Vec<HitTarget<E>>,
+    resolved: Vec<HitTarget<E>>,
+    generation: u64,
+}
+
+impl<E> Default for HitRegistry<E> {
+    fn default() -> Self {
+        Self { staging: Vec::with_capacity(HIT_TARGET_CAPACITY), resolved: Vec::with_capacity(HIT_TARGET_CAPACITY), generation: 0 }
+    }
+}
+
+impl<E> HitRegistry<E> {
+    fn register(&mut self, target: HitTarget<E>) -> bool {
+        if self.staging.len() == HIT_TARGET_CAPACITY {
+            return false;
+        }
+        self.staging.push(target);
+        true
+    }
+
+    fn resolve(&self, x: f32, y: f32) -> Option<&HitTarget<E>> {
+        self.resolved.iter().rev().find(|target| target.rect.contains(x, y))
+    }
+
+    fn publish(&mut self) -> u64 {
+        std::mem::swap(&mut self.staging, &mut self.resolved);
+        self.generation = self.generation.wrapping_add(1);
+        self.generation
+    }
+
+    fn retire_step(&mut self) -> bool {
+        self.staging.pop().is_some()
+    }
+
+    fn close_step(&mut self) -> bool {
+        self.staging.pop().is_some() || self.resolved.pop().is_some()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.staging.is_empty() && self.resolved.is_empty()
+    }
+}
+
 pub struct InputState<E> {
     pub pointer_x: f32,
     pub pointer_y: f32,
@@ -212,7 +273,7 @@ pub struct InputState<E> {
     text_fault: Option<ui_contract::TextEditFault>,
     action_fault: Option<BoundedActionFault>,
     pub cursor_pos: usize,
-    pub hit_targets: Vec<HitTarget<E>>,
+    hits: HitRegistry<E>,
     pending_actions: BoundedActionQueue,
     pending_keys: FixedKeyQueue,
     pub right_click_pos: Option<(f32, f32)>,
@@ -237,7 +298,7 @@ impl<E> Default for InputState<E> {
             text_fault: None,
             action_fault: None,
             cursor_pos: 0,
-            hit_targets: Vec::with_capacity(HIT_TARGET_CAPACITY),
+            hits: HitRegistry::default(),
             pending_actions: BoundedActionQueue::default(),
             pending_keys: FixedKeyQueue::default(),
             right_click_pos: None,
@@ -246,22 +307,44 @@ impl<E> Default for InputState<E> {
 }
 
 impl<E: Clone> InputState<E> {
-    pub fn clear_frame(&mut self) {
-        self.hit_targets.clear();
-        self.wheel_delta = 0.0;
-        self.right_click_pos = None;
+    /// 🎨️ Mints one entry into the registry the CURRENT frame build is assembling. It becomes
+    /// resolvable only at `publish_hits`, so a half-walked chrome pass never answers a pointer.
+    pub fn register_hit(&mut self, target: HitTarget<E>) {
+        if !self.hits.register(target) {
+            self.text_fault = Some(ui_contract::TextEditFault::ItemCredits);
+        }
     }
 
-    pub fn register_hit(&mut self, target: HitTarget<E>) {
-        if self.hit_targets.len() == HIT_TARGET_CAPACITY {
-            self.text_fault = Some(ui_contract::TextEditFault::ItemCredits);
-            return;
-        }
-        self.hit_targets.push(target);
+    /// 🏁️ Promotes the frame build's freshly minted registry to the pointer's authority and hands
+    /// the outgoing one to the next build's retirement. Answers the new generation stamp.
+    pub fn publish_hits(&mut self) -> u64 {
+        self.hits.publish()
+    }
+
+    /// ♻️ Retires exactly ONE entry of the registry the previous build left behind — the bounded
+    /// step `FrameBuildPhase::InputFrame` drives. Answers `false` once nothing is left to retire.
+    pub fn retire_hit_step(&mut self) -> bool {
+        self.hits.retire_step()
+    }
+
+    /// 🎯️ The last COMPLETE frame's registry — what `hit_at` scans, and what a host reports.
+    pub fn hits(&self) -> &[HitTarget<E>] {
+        &self.hits.resolved
+    }
+
+    /// 🏗️ What the frame build in progress has minted so far. Never resolvable: a walk that is still
+    /// running has not laid out everything the pointer could land on.
+    pub fn staged_hits(&self) -> &[HitTarget<E>] {
+        &self.hits.staging
+    }
+
+    /// 🔢️ How many complete registries the pointer authority has published.
+    pub fn hit_generation(&self) -> u64 {
+        self.hits.generation
     }
 
     pub fn hit_at(&self, x: f32, y: f32) -> Option<&HitTarget<E>> {
-        self.hit_targets.iter().rev().find(|target| target.rect.contains(x, y))
+        self.hits.resolve(x, y)
     }
 
     pub fn update_hover(&mut self, x: f32, y: f32) {
@@ -486,7 +569,7 @@ impl<E: Clone> InputState<E> {
     }
 
     pub fn close_step(&mut self) -> Result<bool, ui_contract::TextEditFault> {
-        if self.hit_targets.pop().is_some() {
+        if self.hits.close_step() {
             return Ok(false);
         }
         if self.pending_actions.pop_back().is_some() {
@@ -518,7 +601,7 @@ impl<E: Clone> InputState<E> {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.hit_targets.is_empty()
+        self.hits.is_empty()
             && self.pending_actions.is_empty()
             && self.pending_keys.is_empty()
             && self.drag.points.is_empty()

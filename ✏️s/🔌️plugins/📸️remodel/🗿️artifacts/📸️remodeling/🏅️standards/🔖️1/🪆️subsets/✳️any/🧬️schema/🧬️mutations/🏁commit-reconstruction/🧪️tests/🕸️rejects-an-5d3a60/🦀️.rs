@@ -5,7 +5,7 @@
 //! `../../../../🧪️tests/📸️mutate-remodeling-1/🥒️.feature`, where the same bytes are replayed against
 //! this subset's independent Python reference.
 //!
-//! 🏞️ the mesh guard runs last of the three, and reports the mesh's own child id rather than a slot name
+//! 🏞️ a durable mesh handle naming unpublished content is refused with the mesh's own child id as its path
 
 use crate::mutations::{apply_remodeling_mutation, inverse_remodeling_mutation, RemodelingMutation};
 use crate::{RemodelingDiff, RemodelingSnapshot};

@@ -13,6 +13,7 @@
 use crate::editor::remodeling::engine::images as remodeling_image;
 use crate::editor::remodeling::modes::{analyze, capture, model};
 use crate::editor::remodeling::panels::{calibration as calibration_panel, document, media, parameters, quality, results, tracks};
+use crate::editor::remodeling::reconstruction_session::{ReconstructionRevalidateJob, ReconstructionRunJob};
 use crate::editor::remodeling::terminology::remodeling_labels;
 use crate::op::RemodelingMutation;
 use crate::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot, REMODELING_DOCUMENT_SCHEMA};
@@ -22,7 +23,8 @@ use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactReta
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppDefinition, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp,
     Emit, Fault, FaultCode, FaultOrigin, GlbExporter, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
-    MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, MeshExporter, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UtilityCategory, UtilityDefinition, WindowMeasure,
+    MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, MeshExporter, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, ToolRunJob, ToolRunJobPurpose, ToolRunJobRequest, UtilityCategory,
+    UtilityDefinition, WindowMeasure,
 };
 use std::collections::HashMap;
 use store::ArtifactPack;
@@ -189,10 +191,6 @@ semio_framework_plugin::app_commands! {
     /// kebab-case `#[dsl(key = ..)]` the codec uses) — genuinely different vocabularies:
     /// **Row order is the binary variant ordinal: appending is safe, reordering is a wire-format break.**
     pub enum RemodelingCommand for RemodelingSnapshot, RemodelingMutation, NoConfig, NoConfigMutation {
-        // 🚀️ Generation-tagged reconstruction; the hidden row is appended to preserve ordinals.
-        "runReconstruction" as "run-reconstruction" => run_reconstruction::RunReconstruction,
-        "retryStage" as "retry-stage" => retry_stage::RetryStage,
-        "runStage" as "run-stage" => run_stage::RunStage,
         // 📥️ Ingestion.
         "importFramePayload" as "import-frame-payload" => import_frame_payload::ImportFramePayload,
         "importVideoFramePayload" as "import-video-frame-payload" => import_video_frame_payload::ImportVideoFramePayload,
@@ -233,9 +231,7 @@ semio_framework_plugin::app_commands! {
         "importFrames" as "import-frames" => import_frames::ImportFrames,
         "importVideo" as "import-video" => import_video::ImportVideo,
         "exportQcReport" as "export-qc-report" => export_qc_report::ExportQcReport,
-        "advanceReconstruction" as "advance-reconstruction" => advance_reconstruction::AdvanceReconstruction,
-        "cancelReconstruction" as "cancel-reconstruction" => cancel_reconstruction::CancelReconstruction,
-        // 🎬️ Example picker — appended last, preserving every existing variant ordinal.
+        // 🎬️ Example picker.
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
     }
 }
@@ -244,7 +240,6 @@ semio_framework_plugin::app_commands! {
 // payload module is imported here under its own flat name.
 use crate::editor::remodeling::commands::{add_gcp, calibrate_cameras, edit_calibration, place_gcp_observation, remove_gcp};
 use crate::editor::remodeling::commands::{add_stream, import_frame_payload, import_video_bytes_payload, import_video_done, import_video_frame_payload, remove_stream, set_stream_sync};
-use crate::editor::remodeling::commands::{advance_reconstruction, cancel_reconstruction, retry_stage, run_reconstruction, run_stage};
 use crate::editor::remodeling::commands::{clear_dense, clear_geo_products, clear_mesh_result, clear_result, clear_sparse, clear_tracks, reset_placeholder_mesh};
 use crate::editor::remodeling::commands::{export_qc_report, import_frames, import_video};
 use crate::editor::remodeling::commands::{set_active_example, set_camera, set_frame_cursor, set_layer_visibility, set_report_table};
@@ -295,23 +290,8 @@ mod args_bridge {
         let f64_or = |key: &str, fallback: f64| number(args, key).unwrap_or(fallback);
         let f32_or = |key: &str, fallback: f32| number(args, key).map_or(fallback, |value| value as f32);
         let u32_or = |key: &str, fallback: u32| number(args, key).map_or(fallback, |value| value as u32);
-        let u64_or = |key: &str, fallback: u64| number(args, key).map_or(fallback, |value| value as u64);
         let bool_or = |key: &str, fallback: bool| flag(args, key).unwrap_or(fallback);
         Ok(match action {
-            "runReconstruction" => RemodelingCommand::RunReconstruction(run_reconstruction::RunReconstruction {}),
-            "retryStage" => RemodelingCommand::RetryStage(retry_stage::RetryStage { stage: text_or("stage", "extracting-features") }),
-            "runStage" => RemodelingCommand::RunStage(run_stage::RunStage { stage: text_or("stage", "extracting-features") }),
-            "advanceReconstruction" => RemodelingCommand::AdvanceReconstruction(advance_reconstruction::AdvanceReconstruction {
-                generation: u64_or("generation", 0),
-                job_id: text_or("jobId", ""),
-                requested_stage: text_or("requestedStage", "full"),
-                phase: text_or("phase", "pipeline"),
-                stream_index: u32_or("streamIndex", 0),
-                frame_index: u32_or("frameIndex", 0),
-                terminal_cursor: u64_or("terminalCursor", 0),
-                tick: u32_or("tick", 0),
-            }),
-            "cancelReconstruction" => RemodelingCommand::CancelReconstruction(cancel_reconstruction::CancelReconstruction {}),
             "importFramePayload" => RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload: text_or("payload", ""), name: text_or("name", ""), index: u32_or("index", 0) }),
             "importVideoFramePayload" => RemodelingCommand::ImportVideoFramePayload(import_video_frame_payload::ImportVideoFramePayload {
                 payload: text_or("payload", ""),
@@ -466,9 +446,6 @@ pub struct RemodelingPlayApp;
 /// must equal the proof set, else `interactive-job.catalog-incomplete`), so all three are kept in one
 /// order and asserted equal by `retained_route_dispositions_are_exact_and_exhaustive`.
 const REMODELING_RETAINED_TOOL_IDS: &[&str] = &[
-    "runReconstruction",
-    "retryStage",
-    "runStage",
     "importFramePayload",
     "importVideoFramePayload",
     "importVideoDone",
@@ -503,8 +480,6 @@ const REMODELING_RETAINED_TOOL_IDS: &[&str] = &[
     "importFrames",
     "importVideo",
     "exportQcReport",
-    "advanceReconstruction",
-    "cancelReconstruction",
     "setActiveExample",
 ];
 const REMODELING_RETAINED_PAYLOAD_SCHEMA: &str = "remodeling.scene.tool-command.v1";
@@ -512,16 +487,13 @@ const REMODELING_RETAINED_RAW_BYTES: usize = 65_536;
 const REMODELING_RETAINED_WORK_ITEMS: usize = 4_096;
 
 /// 🛣️ One publication lane per route, read off each handler's own `Emit` in `🎮️commands/*/🦀️.rs`:
-/// every reconstruction, ingestion, calibration, parameter and clear verb builds
-/// `Emit::mutations(..)`/`Emit::amend(..)`/`Emit { artifact_mutations, .. }` over `RemodelingMutation`
+/// every ingestion, calibration, parameter and clear verb builds
+/// `Emit::mutations(..)`/`Emit { artifact_mutations, .. }` over `RemodelingMutation`
 /// (`Artifact`); the four view verbs publish to their exact concrete `WindowConfig` owner; the three shell verbs build `Emit::effect(..)` only — `RequestFileOpen`,
 /// `RequestMediaFrames`, `DownloadMediaExport` — and never touch a store (`HostOnly`). No remodeling
 /// handler emits two store lanes, a draft, a presence or a transient mutation, so no route declares
 /// more than one lane.
 const REMODELING_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
-    artifact_route("runReconstruction"),
-    artifact_route("retryStage"),
-    artifact_route("runStage"),
     artifact_route("importFramePayload"),
     artifact_route("importVideoFramePayload"),
     artifact_route("importVideoDone"),
@@ -556,8 +528,6 @@ const REMODELING_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPu
     host_route("importFrames"),
     host_route("importVideo"),
     host_route("exportQcReport"),
-    artifact_route("advanceReconstruction"),
-    artifact_route("cancelReconstruction"),
     artifact_route("setActiveExample"),
 ];
 
@@ -966,15 +936,27 @@ impl ArtifactEditor for RemodelingPlayApp {
         factory_type: RemodelingRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
         tools: [
-            "runReconstruction", "retryStage", "runStage",
             "importFramePayload", "importVideoFramePayload", "importVideoDone", "importVideoBytesPayload",
             "addStream", "removeStream", "setStreamSync",
             "editCalibration", "calibrateCameras", "addGcp", "removeGcp", "placeGcpObservation",
             "setIngestParams", "setFeatureParams", "setMatchParams", "setSfmParams", "setDenseParams", "setMeshParams", "setMotionParams", "setGeoParams",
             "resetPlaceholderMesh", "clearSparse", "clearDense", "clearMeshResult", "clearTracks", "clearGeoProducts", "clearResult",
             "setCamera", "setLayerVisibility", "setFrameCursor", "setReportTable", "importFrames", "importVideo", "exportQcReport",
-            "advanceReconstruction", "cancelReconstruction", "setActiveExample"
+            "setActiveExample"
         ]
+    }
+
+    /// ⏯️ The reconstruction tool's run job over the run's base, and its finalize revalidation over the head
+    /// (`📋️tool-run-contract.md` §3.7).
+    fn build_tool_run_job(request: ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<ToolRunJob>, Fault> {
+        if request.tool_id != model::tools::reconstruction::TOOL_ID {
+            return Ok(None);
+        }
+        let provisional = u32::try_from(request.provisional.len()).map_err(|_| Fault::from("remodeling.reconstruction.provisional-count"))?;
+        Ok(Some(match request.purpose {
+            ToolRunJobPurpose::Run => Box::new(ReconstructionRunJob::new(request.identity, request.snapshot, request.checkpoint, provisional)),
+            ToolRunJobPurpose::Revalidate => Box::new(ReconstructionRevalidateJob::new(request.identity, request.snapshot, request.checkpoint, provisional)),
+        }))
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -1136,7 +1118,7 @@ impl ArtifactEditor for RemodelingPlayApp {
             capture::windows::frames::REMODELING_PLAY_BODY_FRAMES => capture::windows::frames::render(scene, &capture::windows::frames::config::current(cfg)),
             analyze::windows::report::REMODELING_PLAY_BODY_REPORT => analyze::windows::report::render(scene, &analyze::windows::report::config::current(cfg)),
             media::REMODELING_PLAY_BODY_MEDIA => media::render(scene, labels),
-            document::REMODELING_PLAY_BODY_PIPELINE => document::render(scene, view_state.active_utility_id.as_deref().unwrap_or("select"), labels),
+            document::REMODELING_PLAY_BODY_PIPELINE => document::render(scene, doc.tool_run(), view_state.locale),
             results::REMODELING_PLAY_BODY_RESULTS => results::render(scene, labels),
             parameters::REMODELING_PLAY_BODY_PARAMETERS => parameters::render(scene, labels),
             calibration_panel::REMODELING_PLAY_BODY_CALIBRATION => calibration_panel::render(scene, labels),
@@ -1207,42 +1189,9 @@ pub fn create_remodeling_app() -> AppDefinition {
             .panel_tab_def(calibration_panel::definition())
             .panel_tab_def(tracks::definition())
             .panel_tab_def(quality::definition())
-            // 🚀️ Public starts plus the non-palette host continuation.
-            .mutation("runReconstruction", LocalizedLabel::native("Run Reconstruction", "Rekonstruktion starten"))
-            .mutation("cancelReconstruction", LocalizedLabel::native("Cancel Reconstruction", "Rekonstruktion abbrechen"))
-            .mutation("retryStage", LocalizedLabel::native("Retry", "Wiederholen"))
-            .mutation("runStage", LocalizedLabel::native("Run Stage", "Stufe ausführen"))
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(run_reconstruction::ADVANCE_RECONSTRUCTION_ACTION_ID, LocalizedLabel::native("Advance Reconstruction", "Rekonstruktion fortsetzen"), ActionKind::Mutation) })
-            .action_args("runStage", vec![ActionArgDef::select(
-                "stage",
-                LocalizedLabel::native("Stage", "Stufe"),
-                vec![
-                    ActionArgOption::new("extracting-features", LocalizedLabel::native("Extracting Features", "Merkmale extrahieren")),
-                    ActionArgOption::new("matching-features", LocalizedLabel::native("Matching Features", "Merkmale zuordnen")),
-                    ActionArgOption::new("estimating-poses", LocalizedLabel::native("Estimating Poses", "Posen schätzen")),
-                    ActionArgOption::new("bundle-adjusting", LocalizedLabel::native("Bundle Adjusting", "Bündelausgleich")),
-                    ActionArgOption::new("dense-stereo", LocalizedLabel::native("Dense Stereo", "Dense-Stereo")),
-                    ActionArgOption::new("fusing-volume", LocalizedLabel::native("Fusing Volume", "Volumen fusionieren")),
-                    ActionArgOption::new("extracting-surface", LocalizedLabel::native("Extracting Surface", "Oberfläche extrahieren")),
-                    ActionArgOption::new("texturing", LocalizedLabel::native("Texturing", "Texturierung")),
-                ],
-            )
-            .default_value(&"extracting-features")])
-            .action_args("retryStage", vec![ActionArgDef::select(
-                "stage",
-                LocalizedLabel::native("Stage", "Stufe"),
-                vec![
-                    ActionArgOption::new("extracting-features", LocalizedLabel::native("Extracting Features", "Merkmale extrahieren")),
-                    ActionArgOption::new("matching-features", LocalizedLabel::native("Matching Features", "Merkmale zuordnen")),
-                    ActionArgOption::new("estimating-poses", LocalizedLabel::native("Estimating Poses", "Posen schätzen")),
-                    ActionArgOption::new("bundle-adjusting", LocalizedLabel::native("Bundle Adjusting", "Bündelausgleich")),
-                    ActionArgOption::new("dense-stereo", LocalizedLabel::native("Dense Stereo", "Dense-Stereo")),
-                    ActionArgOption::new("fusing-volume", LocalizedLabel::native("Fusing Volume", "Volumen fusionieren")),
-                    ActionArgOption::new("extracting-surface", LocalizedLabel::native("Extracting Surface", "Oberfläche extrahieren")),
-                    ActionArgOption::new("texturing", LocalizedLabel::native("Texturing", "Texturierung")),
-                ],
-            )
-            .default_value(&"extracting-features")])
+            // 🏗️ The reconstruction tool: a framework ToolRun, started, paused, stepped, aborted and finalized
+            // only through the reserved tool-run actions.
+            .tool(model::tools::reconstruction::definition())
             // 📥️ Ingestion.
             .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new("importFrames", LocalizedLabel::native("Import Frames", "Frames importieren"), ActionKind::Shell, "hard-drive") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importFramePayload", LocalizedLabel::native("Import Frame Payload", "Bild-Payload importieren"), ActionKind::Mutation) })
@@ -1408,11 +1357,6 @@ pub fn create_remodeling_app() -> AppDefinition {
             // EQUALITY here: `validate_tool_job_rows` computes `expected = TOOL_JOB_IDS ∩ migrated` and
             // faults `interactive-job.catalog-incomplete` unless it equals the proof set.
             //
-            .action_interactive_job("runReconstruction", InteractiveJobClassification::Migrated)
-            .action_interactive_job("retryStage", InteractiveJobClassification::Migrated)
-            .action_interactive_job("runStage", InteractiveJobClassification::Migrated)
-            .action_interactive_job("advanceReconstruction", InteractiveJobClassification::Migrated)
-            .action_interactive_job("cancelReconstruction", InteractiveJobClassification::Migrated)
             .action_interactive_job("importFrames", InteractiveJobClassification::Migrated)
             .action_interactive_job("importFramePayload", InteractiveJobClassification::Migrated)
             .action_interactive_job("importVideo", InteractiveJobClassification::Migrated)

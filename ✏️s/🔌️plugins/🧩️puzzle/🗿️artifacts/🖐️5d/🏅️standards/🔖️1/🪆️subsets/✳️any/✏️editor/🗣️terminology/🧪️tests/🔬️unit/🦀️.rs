@@ -28,10 +28,44 @@ fn an_unauthored_locale_or_terminology_fails_closed_instead_of_defaulting() {
     }
 }
 
+/// 🧾️ The language-neutral fill run vocabulary of the 3d planner 5d's fill runs: `$defs.Puzzle3dFillRun`.
+const PUZZLE3D_SCHEMA: &str = include_str!("../../../../../../../../../🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json");
+
 #[test]
-fn the_fill_progress_status_label_is_authored_in_both_languages_and_both_terminologies() {
-    assert_eq!(puzzle5d_label_axes("en", "native").map(|(l, t)| Puzzle5dLabels::labels(l, t).fill_progress.as_str()), Some("Fill progress"));
-    assert_eq!(puzzle5d_label_axes("de-DE", "native").map(|(l, t)| Puzzle5dLabels::labels(l, t).fill_progress.as_str()), Some("Füllfortschritt"));
-    assert_eq!(puzzle5d_label_axes("en-US", "reuse").map(|(l, t)| Puzzle5dLabels::labels(l, t).fill_progress.as_str()), Some("Fill progress"));
-    assert_eq!(puzzle5d_label_axes("de", "reuse").map(|(l, t)| Puzzle5dLabels::labels(l, t).fill_progress.as_str()), Some("Füllfortschritt"));
+fn the_fill_run_vocabulary_equals_the_planner_schema_table_and_is_authored_for_every_label_axis() {
+    let schema: serde_json::Value = serde_json::from_str(PUZZLE3D_SCHEMA).expect("puzzle 3d schema parses");
+    let table = &schema["$defs"]["Puzzle3dFillRun"]["x-semio-toolRun"];
+    let stages: Vec<String> = puzzle5d_fill_run_stages().into_iter().map(|stage| stage.id).collect();
+    assert_eq!(serde_json::json!(stages), table["stages"]);
+    let counters: Vec<String> = puzzle5d_fill_run_counters().into_iter().map(|counter| counter.id).collect();
+    assert_eq!(serde_json::json!(counters), table["counters"]);
+    let reasons: Vec<serde_json::Value> = puzzle5d_fill_run_reasons().iter().map(|reason| serde_json::json!({ "code": reason.code, "id": reason.id, "verdict": serde_json::to_value(reason.verdict).expect("verdict serializes") })).collect();
+    assert_eq!(serde_json::json!(reasons), table["reasons"]);
+    let labels = puzzle5d_fill_run_stages().into_iter().map(|stage| stage.label).chain(puzzle5d_fill_run_counters().into_iter().map(|counter| counter.label)).chain(puzzle5d_fill_run_reasons().into_iter().map(|reason| reason.template)).chain([puzzle5d_fill_run_unit()]);
+    for label in labels {
+        for terminology in [Terminology::Native, Terminology::Reuse] {
+            let (en, de) = (label.resolve(terminology, Locale::En), label.resolve(terminology, Locale::De));
+            assert!(!en.is_empty() && !de.is_empty() && en != de, "every fill run label is authored in both languages: {en} / {de}");
+        }
+    }
+    assert_eq!(puzzle5d_fill_run_reasons()[1].template.resolve(Terminology::Reuse, Locale::En), "Collides with a placed building component");
+}
+
+#[test]
+fn the_brush_suggestions_run_vocabulary_equals_the_search_schema_table_and_is_authored_for_every_label_axis() {
+    let schema: serde_json::Value = serde_json::from_str(PUZZLE3D_SCHEMA).expect("puzzle 3d schema parses");
+    let table = &schema["$defs"]["Puzzle3dBrushSuggestionsRun"]["x-semio-toolRun"];
+    let stages: Vec<String> = puzzle5d_brush_suggestions_run_stages().into_iter().map(|stage| stage.id).collect();
+    assert_eq!(serde_json::json!(stages), table["stages"]);
+    let counters: Vec<String> = puzzle5d_brush_suggestions_run_counters().into_iter().map(|counter| counter.id).collect();
+    assert_eq!(serde_json::json!(counters), table["counters"]);
+    let reasons: Vec<serde_json::Value> = puzzle5d_brush_suggestions_run_reasons().iter().map(|reason| serde_json::json!({ "code": reason.code, "id": reason.id, "verdict": serde_json::to_value(reason.verdict).expect("verdict serializes") })).collect();
+    assert_eq!(serde_json::json!(reasons), table["reasons"]);
+    let labels = puzzle5d_brush_suggestions_run_stages().into_iter().map(|stage| stage.label).chain(puzzle5d_brush_suggestions_run_counters().into_iter().map(|counter| counter.label)).chain(puzzle5d_brush_suggestions_run_reasons().into_iter().map(|reason| reason.template)).chain([puzzle5d_brush_suggestions_run_unit()]);
+    for label in labels {
+        for terminology in [Terminology::Native, Terminology::Reuse] {
+            let (en, de) = (label.resolve(terminology, Locale::En), label.resolve(terminology, Locale::De));
+            assert!(!en.is_empty() && !de.is_empty() && en != de, "every brush suggestions run label is authored in both languages: {en} / {de}");
+        }
+    }
 }

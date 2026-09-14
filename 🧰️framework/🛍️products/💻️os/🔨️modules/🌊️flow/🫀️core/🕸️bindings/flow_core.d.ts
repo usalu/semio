@@ -104,21 +104,20 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
+    readonly flowAttachSurfaceCanvas: (a: number, b: any, c: number, d: number, e: number) => any;
+    readonly flowDetachSurfaceCanvas: (a: number) => void;
+    readonly flowResizeSurfaceCanvas: (a: number, b: number, c: number, d: number) => void;
+    readonly flowSurfaceCanvasPresentsOnGpu: (a: number) => number;
+    readonly brep_invoke: (a: number, b: number, c: number, d: number) => [number, number];
+    readonly dispose: (a: number, b: number) => void;
+    readonly tessellate: (a: number, b: number, c: number) => [number, number];
     readonly flow_bridge_allocate: (a: number) => number;
     readonly flow_bridge_begin_close: () => void;
     readonly flow_bridge_poll: (a: number, b: number, c: number, d: bigint, e: bigint) => number;
     readonly flow_bridge_release: (a: number, b: number) => void;
     readonly flow_bridge_send: (a: number, b: number, c: number, d: bigint, e: bigint) => number;
     readonly flow_bridge_terminal_is_empty: () => number;
-    readonly brep_invoke: (a: number, b: number, c: number, d: number) => [number, number];
-    readonly dispose: (a: number, b: number) => void;
-    readonly flowAttachSurfaceCanvas: (a: number, b: any, c: number, d: number, e: number) => any;
-    readonly flowDetachSurfaceCanvas: (a: number) => void;
-    readonly flowResizeSurfaceCanvas: (a: number, b: number, c: number, d: number) => void;
-    readonly flowSurfaceCanvasPresentsOnGpu: (a: number) => number;
-    readonly tessellate: (a: number, b: number, c: number) => [number, number];
     readonly __wbg_dagsession_free: (a: number, b: number) => void;
-    readonly __wbg_dagsnapshotvcs_free: (a: number, b: number) => void;
     readonly dagsession_attachCanvas: (a: number, b: any, c: number, d: number, e: number) => any;
     readonly dagsession_drawLodLabel: (a: number) => [number, number];
     readonly dagsession_fixtureJson: (a: number) => [number, number, number, number];
@@ -141,6 +140,7 @@ export interface InitOutput {
     readonly dagsession_setSize: (a: number, b: number, c: number, d: number) => void;
     readonly dagsession_setWheelZoomActive: (a: number, b: number) => void;
     readonly dagsession_takePendingOpenInstanceId: (a: number) => [number, number];
+    readonly __wbg_dagsnapshotvcs_free: (a: number, b: number) => void;
     readonly dagsnapshotvcs_create: () => any;
     readonly dagsnapshotvcs_dispatchBinary: (a: number, b: number, c: number) => any;
     readonly dagsnapshotvcs_dispatchText: (a: number, b: number, c: number) => any;

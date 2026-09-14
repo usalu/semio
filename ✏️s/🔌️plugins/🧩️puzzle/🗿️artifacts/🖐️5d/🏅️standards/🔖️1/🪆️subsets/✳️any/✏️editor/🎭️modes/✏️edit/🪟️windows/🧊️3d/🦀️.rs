@@ -11,15 +11,15 @@ use crate::editor::puzzle5d::modes::edit;
 use crate::editor::puzzle5d::modes::edit::options as mode_options;
 use crate::editor::puzzle5d::modes::edit::windows::board2d;
 use crate::editor::puzzle5d::modes::edit::windows::world3d::{options, utilities};
-use crate::editor::puzzle5d::precompute::Puzzle5dPrecomputeSession;
+use crate::editor::puzzle5d::precompute::{puzzle5d_placement_entity, PUZZLE5D_WORLD_MESH_KINDS};
 use crate::editor::puzzle5d::terminology::{puzzle5d_localized, Puzzle5dLabels};
 use crate::editor::puzzle5d::{
-    collect_mesh_urls, part_scale_json, puzzle5d_brush_target_grip, puzzle5d_grip_full_id, puzzle5d_gumball_active, puzzle5d_scene_mode, puzzle5d_transform_handle, resolve_grip_world_position, resolve_part_mesh_url, world_grip_direction,
+    part_scale_json, puzzle5d_grip_full_id, puzzle5d_gumball_active, puzzle5d_scene_mode, puzzle5d_transform_handle, resolve_grip_world_position, resolve_part_mesh_url, world_grip_direction,
     world_grip_position, Puzzle5dDocument, Puzzle5dScene, PUZZLE5D_FALLBACK_MESH_KIND,
 };
 use semio_framework_plugin::{
-    world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_urls, World3dScene, world3d_selection_json, SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure,
-    WindowOptions,
+    world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, World3dScene, world3d_selection_json, SurfaceKind, ToolRunView, WindowEngagement, WindowEngagementSlot, WindowKindDefinition,
+    WindowMeasure, WindowOptions,
 };
 use semio_framework_ui_contract::BuiltNode;
 use serde_json::{json, Value};
@@ -36,14 +36,14 @@ pub const SURFACE_ID: &str = "puzzle.5d.play.3d";
 /// 🔁️ The `brush`/`fill` utility ids it binds resolve to the definitions declared once under the 2D
 /// window (`🪟️windows/◻️2d/🪛️utilities/{🖌️brush,🪣️fill}`) — both windows expose the identical utility,
 /// so it is never duplicated here.
-pub fn definition(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> WindowKindDefinition {
+pub fn definition(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: puzzle5d_localized(|l| l.window_3d),
         body_key: BODY_KEY.into(),
         surface_kind: SurfaceKind::World3d,
         icon_id: "puzzle5d-3d".into(),
-        options: WindowOptions { measures: window_measures(envelope, precompute, labels), engagement: WindowEngagementSlot::Some(engagement(envelope, labels)) },
+        options: WindowOptions { measures: window_measures(envelope, labels, None), engagement: WindowEngagementSlot::Some(engagement(envelope, labels)) },
         actions: Vec::new(),
         utilities: vec![
             utilities::transform::MOVE_UTILITY_ID.into(),
@@ -64,12 +64,12 @@ pub fn definition(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSessi
 
 /// 🎚️ The live chrome measures for this window: its own sun group plus the mode-level brush/fill
 /// Utility Options groups it shares with the 2D window.
-pub fn window_measures(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> Vec<WindowMeasure> {
-    vec![options::sun::measure(&envelope.runtime), mode_options::fill::measure(envelope, precompute, labels), mode_options::brush::measure(envelope, precompute, labels)]
+pub fn window_measures(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, tool_run: Option<&ToolRunView>) -> Vec<WindowMeasure> {
+    vec![options::sun::measure(&envelope.runtime), mode_options::fill::measure(envelope, labels, tool_run), mode_options::brush::measure(envelope, labels)]
 }
 
 pub fn engagement(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowEngagement {
-    edit::puzzle5d_engagement(envelope, WINDOW_KIND_ID, labels)
+    edit::puzzle5d_engagement(envelope, WINDOW_KIND_ID, labels, None)
 }
 //#endregion 🔖️Definition
 
@@ -80,8 +80,8 @@ pub fn camera3d_json(camera: &Puzzle5dCamera3d) -> String {
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: `selected`/`hovered` per
 /// instance always read `false` now — see `world_selection_json_ex`'s doc comment for why (`render`
-/// has no `InteractionView`).
-fn world_instances_json(document: &Puzzle5dDocument, _runtime: &Puzzle5dRuntime) -> String {
+/// has no `InteractionView`). A part a tool run holds provisionally carries `provisional: true`.
+fn world_instances_json(document: &Puzzle5dDocument, tool_run: Option<&ToolRunView>) -> String {
     let instances: Vec<Value> = document
         .parts
         .iter()
@@ -97,14 +97,17 @@ fn world_instances_json(document: &Puzzle5dDocument, _runtime: &Puzzle5dRuntime)
                 "selected": false,
                 "hovered": false,
                 "disabled": part.part_2d.locked.unwrap_or(false),
+                "provisional": tool_run.is_some_and(|run| run.provisional_entities.contains(&puzzle5d_placement_entity(&part.id))),
             })
         })
         .collect();
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-fn world_meshes_json(document: &Puzzle5dDocument) -> String {
-    world3d_meshes_json_from_urls(&collect_mesh_urls(document))
+/// 🧵️ `meshesJson` from the world mesh lane, in exactly the order the fill run's trace subjects index.
+fn world_meshes_json(mesh_lane: &[String]) -> String {
+    let kinds = PUZZLE5D_WORLD_MESH_KINDS.min(mesh_lane.len());
+    world3d_meshes_json_from_kinds_and_urls(&mesh_lane[..kinds], &mesh_lane[kinds..])
 }
 
 fn grip_color(kind_catalogs: Option<&Value>, grip_kind: &str) -> String {
@@ -114,14 +117,6 @@ fn grip_color(kind_catalogs: Option<&Value>, grip_kind: &str) -> String {
         .and_then(|entries| entries.iter().find(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(grip_kind)))
         .and_then(|entry| entry.get("color").and_then(|value| value.as_str()).map(str::to_string))
         .unwrap_or_else(|| "#38bdf8".into())
-}
-
-fn part_color(kind_catalogs: Option<&Value>, part_kind: Option<&str>) -> String {
-    part_kind
-        .and_then(|part_kind| kind_catalogs.and_then(|catalogs| catalogs.get("parts")).and_then(Value::as_array).and_then(|entries| entries.iter().find(|entry| entry.get("id").and_then(Value::as_str) == Some(part_kind))))
-        .and_then(|entry| entry.get("color").and_then(Value::as_str))
-        .unwrap_or("#38bdf8")
-        .to_string()
 }
 
 fn world_grips_json(document: &Puzzle5dDocument) -> String {
@@ -185,32 +180,13 @@ fn world_interaction_json(runtime: &Puzzle5dRuntime, active_utility: &str) -> St
     .to_string()
 }
 
-/// 👻️ Ghost placement for the brush utility — only while the brush utility is actually active.
-fn world_brush_preview_json(session: &Puzzle5dPrecomputeSession, envelope: &Puzzle5dScene) -> Option<String> {
-    if envelope.active_utility != board2d::utilities::brush::UTILITY_ID {
-        return None;
-    }
-    let full_id = puzzle5d_brush_target_grip(envelope)?;
-    session.brush_preview_json(&full_id, envelope.runtime.brush_candidate_index)
-}
-
-/// 🪣️ The 5d world consumes the same retained, generation-fenced fill page as puzzle3d.
-fn world_fill_preview_json(session: &Puzzle5dPrecomputeSession, envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> Option<String> {
-    if envelope.active_utility != board2d::utilities::fill::UTILITY_ID {
-        return None;
-    }
-    let object_kind = session.fill_preview_object_kind();
-    session.fill_preview_json_page(&part_color(envelope.document.kind_catalogs.as_ref(), object_kind.as_deref()), labels.fill_progress.as_str())
-}
 //#endregion 🔖️SceneJson
 
 //#region 🔖️Render
-pub fn render(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let brush_preview = world_fill_preview_json(precompute, envelope, labels).or_else(|| world_brush_preview_json(precompute, envelope));
-    let mut scene = World3dScene::base(camera3d_json(&envelope.runtime.camera3d), world_meshes_json(&envelope.document), world_instances_json(&envelope.document, &envelope.runtime), world_selection_json_ex(envelope));
+pub fn render(envelope: &Puzzle5dScene, tool_run: Option<&ToolRunView>, mesh_lane: &[String]) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let mut scene = World3dScene::base(camera3d_json(&envelope.runtime.camera3d), world_meshes_json(mesh_lane), world_instances_json(&envelope.document, tool_run), world_selection_json_ex(envelope));
     scene.vortices_json = Some(world_grips_json(&envelope.document));
     scene.attractions_json = Some(world_fasteners_json(&envelope.document));
-    scene.brush_preview_json = brush_preview;
     scene.interaction_json = Some(world_interaction_json(&envelope.runtime, &envelope.active_utility));
     scene.chunking_json = Some(world3d_chunking_json(256.0, 8000.0));
     scene.environment_json = Some(world3d_environment_json(&envelope.runtime.sun));

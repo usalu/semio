@@ -1,0 +1,310 @@
+{
+  "schema": "generation3d.preview-eval.run.v1",
+  "note": "Source of record of the read-only `previewEval` tool run both generation3d surfaces run (`🧵️preview-eval/🦀️.rs`). The Rust declaration deserializes `definition` verbatim; the enums the job writes with are asserted equal to these ids and codes by `🧵️preview-eval/🧪️tests/🔬️unit`. Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS.",
+  "toolId": "previewEval",
+  "label": {
+    "native": {
+      "en": "Preview evaluation",
+      "de": "Vorschauauswertung"
+    },
+    "reuse": {
+      "en": "Preview evaluation",
+      "de": "Vorschauauswertung"
+    }
+  },
+  "iconId": "eye",
+  "definition": {
+    "mutating": false,
+    "rebase": "restart",
+    "reconfigure": "restart",
+    "unit": {
+      "native": {
+        "en": "nodes and meshes",
+        "de": "Knoten und Netze"
+      },
+      "reuse": {
+        "en": "nodes and meshes",
+        "de": "Knoten und Netze"
+      }
+    },
+    "stages": [
+      {
+        "id": "evaluate",
+        "label": {
+          "native": {
+            "en": "Evaluating nodes",
+            "de": "Knoten werden ausgewertet"
+          },
+          "reuse": {
+            "en": "Evaluating nodes",
+            "de": "Knoten werden ausgewertet"
+          }
+        }
+      },
+      {
+        "id": "tessellate",
+        "label": {
+          "native": {
+            "en": "Tessellating meshes",
+            "de": "Netze werden tesselliert"
+          },
+          "reuse": {
+            "en": "Tessellating meshes",
+            "de": "Netze werden tesselliert"
+          }
+        }
+      }
+    ],
+    "counters": [
+      {
+        "id": "evaluated",
+        "label": {
+          "native": {
+            "en": "Evaluated",
+            "de": "Ausgewertet"
+          },
+          "reuse": {
+            "en": "Evaluated",
+            "de": "Ausgewertet"
+          }
+        }
+      },
+      {
+        "id": "failed",
+        "label": {
+          "native": {
+            "en": "Failed",
+            "de": "Fehlgeschlagen"
+          },
+          "reuse": {
+            "en": "Failed",
+            "de": "Fehlgeschlagen"
+          }
+        }
+      },
+      {
+        "id": "blocked",
+        "label": {
+          "native": {
+            "en": "Blocked",
+            "de": "Blockiert"
+          },
+          "reuse": {
+            "en": "Blocked",
+            "de": "Blockiert"
+          }
+        }
+      },
+      {
+        "id": "tessellated",
+        "label": {
+          "native": {
+            "en": "Meshes tessellated",
+            "de": "Netze tesselliert"
+          },
+          "reuse": {
+            "en": "Meshes tessellated",
+            "de": "Netze tesselliert"
+          }
+        }
+      },
+      {
+        "id": "hops",
+        "label": {
+          "native": {
+            "en": "Hops",
+            "de": "Schritte"
+          },
+          "reuse": {
+            "en": "Hops",
+            "de": "Schritte"
+          }
+        }
+      }
+    ],
+    "reasons": [
+      {
+        "code": 0,
+        "id": "queued",
+        "verdict": "testing",
+        "template": {
+          "native": {
+            "en": "Queued",
+            "de": "In Warteschlange"
+          },
+          "reuse": {
+            "en": "Queued",
+            "de": "In Warteschlange"
+          }
+        }
+      },
+      {
+        "code": 1,
+        "id": "computing",
+        "verdict": "testing",
+        "template": {
+          "native": {
+            "en": "Evaluating",
+            "de": "Wird ausgewertet"
+          },
+          "reuse": {
+            "en": "Evaluating",
+            "de": "Wird ausgewertet"
+          }
+        }
+      },
+      {
+        "code": 2,
+        "id": "evaluated",
+        "verdict": "success",
+        "template": {
+          "native": {
+            "en": "Evaluated",
+            "de": "Ausgewertet"
+          },
+          "reuse": {
+            "en": "Evaluated",
+            "de": "Ausgewertet"
+          }
+        }
+      },
+      {
+        "code": 3,
+        "id": "blocked",
+        "verdict": "warning",
+        "template": {
+          "native": {
+            "en": "Blocked by missing inputs",
+            "de": "Durch fehlende Eingänge blockiert"
+          },
+          "reuse": {
+            "en": "Blocked by missing inputs",
+            "de": "Durch fehlende Eingänge blockiert"
+          }
+        }
+      },
+      {
+        "code": 4,
+        "id": "failed",
+        "verdict": "danger",
+        "template": {
+          "native": {
+            "en": "Evaluation failed",
+            "de": "Auswertung fehlgeschlagen"
+          },
+          "reuse": {
+            "en": "Evaluation failed",
+            "de": "Auswertung fehlgeschlagen"
+          }
+        }
+      },
+      {
+        "code": 5,
+        "id": "tessellating",
+        "verdict": "testing",
+        "template": {
+          "native": {
+            "en": "Tessellating",
+            "de": "Wird tesselliert"
+          },
+          "reuse": {
+            "en": "Tessellating",
+            "de": "Wird tesselliert"
+          }
+        }
+      },
+      {
+        "code": 6,
+        "id": "tessellated",
+        "verdict": "success",
+        "template": {
+          "native": {
+            "en": "Tessellated",
+            "de": "Tesselliert"
+          },
+          "reuse": {
+            "en": "Tessellated",
+            "de": "Tesselliert"
+          }
+        }
+      },
+      {
+        "code": 7,
+        "id": "meshDiagnostics",
+        "verdict": "warning",
+        "template": {
+          "native": {
+            "en": "Mesh has diagnostics",
+            "de": "Netz hat Diagnosen"
+          },
+          "reuse": {
+            "en": "Mesh has diagnostics",
+            "de": "Netz hat Diagnosen"
+          }
+        }
+      },
+      {
+        "code": 8,
+        "id": "meshMissing",
+        "verdict": "warning",
+        "template": {
+          "native": {
+            "en": "No mesh",
+            "de": "Kein Netz"
+          },
+          "reuse": {
+            "en": "No mesh",
+            "de": "Kein Netz"
+          }
+        }
+      },
+      {
+        "code": 9,
+        "id": "settled",
+        "verdict": "success",
+        "template": {
+          "native": {
+            "en": "{0} nodes evaluated, {1} meshes tessellated",
+            "de": "{0} Knoten ausgewertet, {1} Netze tesselliert"
+          },
+          "reuse": {
+            "en": "{0} nodes evaluated, {1} meshes tessellated",
+            "de": "{0} Knoten ausgewertet, {1} Netze tesselliert"
+          }
+        }
+      },
+      {
+        "code": 10,
+        "id": "settledWithFailures",
+        "verdict": "warning",
+        "template": {
+          "native": {
+            "en": "{0} of {1} nodes did not evaluate",
+            "de": "{0} von {1} Knoten nicht ausgewertet"
+          },
+          "reuse": {
+            "en": "{0} of {1} nodes did not evaluate",
+            "de": "{0} von {1} Knoten nicht ausgewertet"
+          }
+        }
+      },
+      {
+        "code": 11,
+        "id": "extensionFault",
+        "verdict": "danger",
+        "template": {
+          "native": {
+            "en": "The geometry extension refused an evaluation",
+            "de": "Die Geometrie-Erweiterung hat eine Auswertung abgelehnt"
+          },
+          "reuse": {
+            "en": "The geometry extension refused an evaluation",
+            "de": "Die Geometrie-Erweiterung hat eine Auswertung abgelehnt"
+          }
+        }
+      }
+    ],
+    "trace": "entity",
+    "runJob": "generation3d.previewEval.run"
+  }
+}

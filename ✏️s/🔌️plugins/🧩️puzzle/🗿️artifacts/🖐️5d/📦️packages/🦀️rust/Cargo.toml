@@ -22,11 +22,14 @@ component-app-assembly = ["dep:semio-framework-os-infinite", "semio-framework-pl
 wasm-bindgen = { workspace = true, optional = true }
 semio-framework = { workspace = true }
 semio-framework-graph = { workspace = true }
+semio-framework-hash = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-os-infinite = { workspace = true, optional = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
+# ⏯️ Tool run contract: the fill run job translates the 3d planner's `ToolRunTick` pages into 5d ones.
+semio-framework-tool-run = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-puzzle-3d = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
@@ -52,3 +55,6 @@ semio-framework-os-kernel = { workspace = true, features = ["protocol-laws"] }
 semio-framework-async-macros = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-io-base64 = { path = "../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
+# ⚖️ Third-party spatial index oracle for the grip grid radius and nearest queries. Test-only.
+rstar = "0.12"

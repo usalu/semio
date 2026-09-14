@@ -1,0 +1,87 @@
+{
+  "title": "wgpu frame generation hold and shared presentation authority",
+  "why": "The frame generation names the INPUT STATE a frame build is answering. `FrameBuildHandle::poll_runtime_and_resubmit` supersedes a live build the moment the requested generation differs from the one it was admitted at, so every callback that renumbers it underneath a live build CANCELS that build from phase 0 — 28 supersessions per converging edit on 6118, a measured 26 % tax on a chain the input had nothing to do with (10.69 s with the pointer still against 14.51 s with it moving 5×/s; ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-edit-convergence-perf-2026-09-14.md` §6). Holding the number alone is not enough and was measured to be actively worse: a build that now runs to completion reaches the presenter, whose admission gate re-read a MOVING authority (`mark_scene_changed` fires from every runtime completion the host pumps, several per tick) and refused the packet as `prepared render revision is stale: live=35, packet=27` → `worker-present-failed`, a dead surface. The hold and the presenter's freshness gate are ONE decision and this oracle pins both halves of it.",
+  "authority": "There is exactly one presentation authority. It has a LIVE pair (`sceneRevision`, `inputGeneration`) that moves whenever the app state or the input state moves, and an ADMITTED pair that ONE frame build writes when it mints its build cursor. The build decides its own freshness — it supersedes itself the moment its own witness moves — and the presenter admits against the ADMITTED pair, never against the live one. One writer, one reader, and no race: at most one build is admitted at a time, and the host tick that takes a finished frame also takes its first present step before any later build can write.",
+  "consumers": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔢️frame-generation-hold/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔢️frame-generation-hold/🟦️.ts"
+  ],
+  "operations": {
+    "input": "One mounted input callback (`enqueue_host_event`). The event is ALWAYS enqueued and the scheduler ALWAYS invalidated; only the generation NUMBER is held while a build is live.",
+    "metrics": "One mounted resize callback (`enqueue_host_metrics`) — the same hold, the same delivery.",
+    "sceneChange": "One runtime completion enqueued or finished (`mark_scene_changed`): the live scene revision advances.",
+    "redraw": "One redraw opportunity. It renumbers only when it finds no build to invalidate, then republishes the generation onto the authority's live input generation.",
+    "buildAdmit": "A frame build is admitted at the current generation and writes the ADMITTED pair it will build against.",
+    "buildComplete": "The build finishes. A build whose admitted generation no longer matches the requested one is superseded and its frame discarded.",
+    "present": "The presenter admits the finished packet. A packet whose pair differs from the ADMITTED pair is refused, and a refused admission quarantines the surface."
+  },
+  "rows": [
+    {
+      "id": "a-hundred-input-events-during-a-build-neither-supersede-it-nor-quarantine-the-surface",
+      "why": "The lane's law, verbatim. Input storms are the normal case during a converging edit, and neither the build nor the surface is theirs to end.",
+      "steps": [
+        { "op": "buildAdmit" },
+        { "op": "input", "repeat": 100 },
+        { "op": "sceneChange", "repeat": 8 },
+        { "op": "buildComplete" },
+        { "op": "present" }
+      ],
+      "expect": { "generation": 0, "delivered": 100, "supersessions": 0, "framesPresented": 1, "quarantines": 0 },
+      "quarantinesIfPresenterRereadsLiveAuthority": 1
+    },
+    {
+      "id": "the-presenter-admits-against-the-build-s-witness-not-the-live-one",
+      "why": "The measured regression when the hold was made alone: eight runtime completions land between the build's last step and its first present step — routine, the host pumps up to eight applies per tick — and a presenter re-reading the live authority turns a correctly-built packet into `worker-present-failed`.",
+      "steps": [
+        { "op": "buildAdmit" },
+        { "op": "sceneChange", "repeat": 8 },
+        { "op": "buildComplete" },
+        { "op": "present" }
+      ],
+      "expect": { "generation": 0, "delivered": 0, "supersessions": 0, "framesPresented": 1, "quarantines": 0 },
+      "quarantinesIfPresenterRereadsLiveAuthority": 1
+    },
+    {
+      "id": "metrics-during-a-build-are-delivered-without-renumbering",
+      "why": "A resize is an input like any other: the surface lane still gets its newest scalar owner, the build still gets to finish.",
+      "steps": [
+        { "op": "buildAdmit" },
+        { "op": "metrics", "repeat": 40 },
+        { "op": "buildComplete" },
+        { "op": "present" }
+      ],
+      "expect": { "generation": 0, "delivered": 40, "supersessions": 0, "framesPresented": 1, "quarantines": 0 }
+    },
+    {
+      "id": "input-between-builds-still-renumbers",
+      "why": "The hold is NOT a freeze. With no build to invalidate the generation must advance on every event, or the next build answers an input state that is already gone — which is the defect the hold's own law was written against.",
+      "steps": [{ "op": "input", "repeat": 3 }, { "op": "redraw" }],
+      "expect": { "generation": 4, "delivered": 3, "supersessions": 0, "framesPresented": 0, "quarantines": 0 }
+    },
+    {
+      "id": "a-build-admitted-before-an-un-held-renumber-is-still-superseded",
+      "why": "The supersede rule itself is untouched — only its INPUT is. A generation that legitimately moved (a redraw with no live build, then a new build at the newer number) still ends the older build rather than presenting its stale frame.",
+      "steps": [
+        { "op": "input", "repeat": 2 },
+        { "op": "buildAdmit" },
+        { "op": "forceRenumber" },
+        { "op": "buildComplete" },
+        { "op": "present" }
+      ],
+      "expect": { "generation": 3, "delivered": 2, "supersessions": 1, "framesPresented": 0, "quarantines": 0 }
+    },
+    {
+      "id": "a-redraw-during-a-live-build-does-not-renumber-either",
+      "why": "`redraw_core` has always honoured this half (`else if !self.frame_build.has_live_session()`); the input callbacks did not, which is what made the law true in one writer and false in the other.",
+      "steps": [{ "op": "buildAdmit" }, { "op": "redraw", "repeat": 5 }, { "op": "buildComplete" }, { "op": "present" }],
+      "expect": { "generation": 0, "delivered": 0, "supersessions": 0, "framesPresented": 1, "quarantines": 0 }
+    }
+  ],
+  "laws": [
+    "an-input-event-never-renumbers-the-frame-generation-underneath-a-live-build",
+    "an-input-event-is-always-delivered-whether-or-not-its-number-was-held",
+    "the-generation-still-advances-on-every-event-when-no-build-is-live",
+    "the-presenter-admits-a-packet-against-the-pair-its-build-was-admitted-under",
+    "a-scene-change-between-build-completion-and-presentation-never-quarantines-the-surface"
+  ]
+}

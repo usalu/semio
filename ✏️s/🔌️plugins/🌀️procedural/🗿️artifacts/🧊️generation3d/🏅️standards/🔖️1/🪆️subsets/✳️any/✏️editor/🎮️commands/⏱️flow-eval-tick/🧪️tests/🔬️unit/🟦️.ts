@@ -3,8 +3,8 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 /** ⚖️ Third-party twin of the contribution-gated arming fixture: `JSON.parse` must see the same two
- * arms the Rust law drives — an uncontributed graph arming nothing, a served graph keeping exactly
- * one re-arm — and `setContributions` as the one route that resumes a gated chain. */
+ * arms the Rust law drives — an uncontributed graph owing the run no hop, a served graph owing exactly
+ * one — and `setContributions` as the one route that carries a settled preview its restart. */
 export function testGeneration3dContributionGatedArmingContract(): void {
   const here = fileURLToPath(new URL(".", import.meta.url));
   const fixture = JSON.parse(readFileSync(`${here}/../../../../🧫️fixtures/🚧️contribution-gated-arming.json`, "utf8")) as {
@@ -13,192 +13,184 @@ export function testGeneration3dContributionGatedArmingContract(): void {
     unservedKind: string;
     servedKindCandidates: string[];
     tickStepBudget: number;
-    cases: Array<{ id: string; kindSource: string; widgets: number; unfinishedTick: boolean; mayRearm: boolean; armedTicks: number }>;
-    resume: { command: string; rearmsPerAttachedPreview: number; attachedPreviewWindows: number };
+    cases: Array<{ id: string; kindSource: string; widgets: number; unfinishedTick: boolean; mayRearm: boolean; owedHops: number }>;
+    resume: { command: string; carriedRunAction: string };
   };
   assert.equal(fixture.format, "semio.generation3d.contribution-gated-arming");
   assert.equal(fixture.version, 1);
   const blocked = fixture.cases.find((row) => row.kindSource === "unservedKind");
   const served = fixture.cases.find((row) => row.kindSource === "servedKindCandidates");
   assert.equal(blocked?.mayRearm, false);
-  assert.equal(blocked?.armedTicks, 0);
+  assert.equal(blocked?.owedHops, 0);
   assert.equal(served?.mayRearm, true);
-  assert.equal(served?.armedTicks, 1);
+  assert.equal(served?.owedHops, 1);
   for (const row of [blocked, served]) {
-    assert.equal(row?.unfinishedTick, true, "both arms must outrun one tick, or the re-arm decision is never reached");
-    assert.ok((row?.widgets ?? 0) > fixture.tickStepBudget, "a graph that fits in one tick never asks for a re-arm");
+    assert.equal(row?.unfinishedTick, true, "both arms must outrun one tick, or the continuation decision is never reached");
+    assert.ok((row?.widgets ?? 0) > fixture.tickStepBudget, "a graph that fits in one tick never owes a continuation");
   }
   assert.equal(fixture.resume.command, "setContributions");
-  assert.equal(fixture.resume.rearmsPerAttachedPreview, 1);
-  console.log(`generation3d contribution-gated arming blocked=${blocked?.armedTicks} served=${served?.armedTicks} resume=${fixture.resume.command} budget=${fixture.tickStepBudget}`);
+  assert.equal(fixture.resume.carriedRunAction, "toolRunStart");
+  console.log(`generation3d contribution-gated arming blocked=${blocked?.owedHops} served=${served?.owedHops} resume=${fixture.resume.command}->${fixture.resume.carriedRunAction} budget=${fixture.tickStepBudget}`);
 }
 
-/** 🔒️ One preview window's arming latch, re-implemented from the fixture's own prose — the
- * independent half of the language-agnostic law. Rust drives the identical rows against the real
- * `FlowEvalSession`; both must answer the same `armed` lists. */
-interface TickLatch {
+/** 🔒️ One preview window's latch, re-implemented from `⏯️preview-eval-run.json`'s own prose — the
+ * independent half of the scheduling law. Rust drives the identical rows against the real
+ * `FlowEvalSession`; both must answer the same hop. */
+interface Latch {
   armed: boolean;
   inFlight: number;
-  owed: boolean;
   unfinished: boolean;
 }
 
-type TickLatchEvent = { event: string; window?: string; parks?: number; more?: boolean; ok?: boolean };
+class LatchTable {
+  readonly latches = new Map<string, Latch>();
 
-class TickLatchTable {
-  private readonly latches = new Map<string, TickLatch>();
-
-  private at(windowId: string): TickLatch {
+  at(windowId: string): Latch {
     let latch = this.latches.get(windowId);
     if (!latch) {
-      latch = { armed: false, inFlight: 0, owed: false, unfinished: false };
+      latch = { armed: false, inFlight: 0, unfinished: false };
       this.latches.set(windowId, latch);
     }
     return latch;
   }
 
-  arm(windowId: string): boolean {
-    const latch = this.at(windowId);
-    if (latch.armed) return false;
-    if (latch.inFlight > 0) {
-      latch.owed = true;
-      return false;
-    }
-    latch.armed = true;
-    latch.owed = false;
-    return true;
-  }
-
   owes(windowId: string): boolean {
     const latch = this.latches.get(windowId);
-    if (!latch) return true;
-    return latch.unfinished && !latch.armed && latch.inFlight === 0;
+    return latch === undefined || (latch.unfinished && !latch.armed && latch.inFlight === 0);
   }
+}
 
-  armOwed(windowId: string): boolean {
-    return this.owes(windowId) && this.arm(windowId);
-  }
+type Step = { step: string; window: string; more?: boolean; parked?: number; count?: number };
 
-  begin(windowId: string): void {
-    this.at(windowId).armed = false;
-  }
-
-  noteOutcome(windowId: string, unfinished: boolean): void {
-    this.at(windowId).unfinished = unfinished;
-  }
-
-  noteInFlight(windowId: string, count: number): void {
-    this.at(windowId).inFlight += count;
-  }
-
-  settle(windowId: string): boolean {
-    const latch = this.at(windowId);
-    latch.inFlight = Math.max(0, latch.inFlight - 1);
-    if (latch.inFlight === 0 && latch.owed && !latch.armed) {
+function replay(table: LatchTable, step: Step): void {
+  const latch = table.at(step.window);
+  switch (step.step) {
+    case "arm":
+      assert.ok(!latch.armed && latch.inFlight === 0, `${step.window}: arming needs a quiet latch`);
       latch.armed = true;
-      latch.owed = false;
-      return true;
-    }
-    return false;
-  }
-
-  abandon(windowId: string): void {
-    const latch = this.at(windowId);
-    latch.unfinished = false;
-    latch.owed = false;
-  }
-
-  retain(windowIds: readonly string[]): void {
-    for (const key of [...this.latches.keys()]) if (!windowIds.includes(key)) this.latches.delete(key);
-  }
-}
-
-function replayTickLatchEvent(table: TickLatchTable, attached: readonly string[], event: TickLatchEvent, rowId: string): string[] {
-  const named = (): string => {
-    assert.ok(event.window, `${rowId}: a ${event.event} event names its window`);
-    return event.window as string;
-  };
-  switch (event.event) {
-    case "refresh":
-      table.retain(attached);
-      return attached.filter((windowId) => table.armOwed(windowId));
-    case "gesture":
-      return attached.filter((windowId) => table.arm(windowId));
-    case "tick": {
-      const windowId = named();
-      table.begin(windowId);
-      table.noteOutcome(windowId, event.more === true);
-      if ((event.parks ?? 0) > 0) {
-        table.noteInFlight(windowId, event.parks ?? 0);
-        return [];
-      }
-      return event.more === true && table.arm(windowId) ? [windowId] : [];
-    }
-    case "resolve": {
-      const windowId = named();
-      if (event.ok !== true) table.abandon(windowId);
-      const discharged = table.settle(windowId);
-      const armed = event.ok === true && event.more === true && table.arm(windowId);
-      return discharged || armed ? [windowId] : [];
-    }
-    case "invalidate":
-      table.retain([]);
-      return [];
-    case "detach": {
-      const windowId = named();
-      table.retain(attached.filter((candidate) => candidate !== windowId));
-      return [];
-    }
+      return;
+    case "begin":
+      latch.armed = false;
+      return;
+    case "outcome":
+      latch.unfinished = step.more === true || (step.parked ?? 0) > 0;
+      return;
+    case "inFlight":
+      latch.inFlight += step.count ?? 0;
+      return;
+    case "settle":
+      latch.inFlight = Math.max(0, latch.inFlight - 1);
+      return;
+    case "owe":
+      latch.unfinished = true;
+      return;
+    case "abort":
+      for (const key of [...table.latches.keys()]) table.latches.set(key, { armed: false, inFlight: 0, unfinished: false });
+      table.latches.set(step.window, { armed: false, inFlight: 0, unfinished: false });
+      return;
     default:
-      throw new Error(`${rowId}: unknown tick-latch event ${event.event}`);
+      throw new Error(`unknown latch step ${step.step}`);
   }
 }
 
-/** ⚖️ Third-party twin of the tick-latch fixture: an independent TypeScript implementation of the
- * declared arming state machine must replay every row to the same `armed` lists the Rust law gets
- * from the real `FlowEvalSession`, and no event may ever arm a window twice. */
-export function testGeneration3dTickLatchContract(): void {
-  const here = fileURLToPath(new URL(".", import.meta.url));
-  const fixture = JSON.parse(readFileSync(`${here}/../../../../../🧫️fixtures/🔒️tick-latch.json`, "utf8")) as {
-    format: string;
-    version: number;
-    windowKinds: Record<string, string>;
-    rows: Array<{ id: string; surface: string; attached: Array<{ id: string; kind: string }>; sequence: TickLatchEvent[]; armed: string[][] }>;
+function nextHop(table: LatchTable, windows: readonly string[]): { hop: string; window?: string } {
+  const owed = windows.find((windowId) => table.owes(windowId));
+  if (owed !== undefined) return { hop: "dispatch", window: owed };
+  return windows.some((windowId) => table.at(windowId).armed || table.at(windowId).inFlight > 0) ? { hop: "wait" } : { hop: "settled" };
+}
+
+/** 🪪️ FNV-1a 64 over UTF-8, written out independently of the Rust key function. */
+function fnv1a64(text: string): bigint {
+  let hash = 0xcbf29ce484222325n;
+  for (const byte of new TextEncoder().encode(text)) {
+    hash ^= BigInt(byte);
+    hash = (hash * 0x100000001b3n) & 0xffffffffffffffffn;
+  }
+  return hash;
+}
+
+type Observation = { nodes: Record<string, string>; meshes: number; tessellated: number; stage: string; progress: [number, number] };
+
+function observe(statusJson: unknown, evalJson: Record<string, unknown>, previewWidgetIds: readonly string[], meshStates: Record<string, string>, settled: boolean): Observation {
+  const observation: Observation = { nodes: {}, meshes: 0, tessellated: 0, stage: "evaluate", progress: [0, 0] };
+  let status: unknown = statusJson;
+  if (typeof statusJson === "string") {
+    try {
+      status = JSON.parse(statusJson);
+    } catch {
+      return observation;
+    }
+  }
+  if (typeof status !== "object" || status === null || Array.isArray(status)) return observation;
+  const handlesOf = (value: unknown, found: string[]): void => {
+    if (Array.isArray(value)) return value.forEach((entry) => handlesOf(entry, found));
+    if (typeof value !== "object" || value === null) return;
+    const record = value as Record<string, unknown>;
+    if (typeof record.handle === "string" && /^(solid|shell|face|wire|edge|vertex|compound|curve|surface)-/.test(record.handle)) {
+      found.push(record.handle);
+      return;
+    }
+    if (record.$schema === "list") {
+      Object.keys(record).filter((key) => /^\d+$/.test(key)).sort((a, b) => Number(a) - Number(b)).forEach((key) => handlesOf(record[key], found));
+    }
   };
-  assert.equal(fixture.format, "semio.generation3d.tick-latch");
-  assert.equal(fixture.version, 1);
-  assert.equal(fixture.windowKinds.preview, "procedural-preview");
-  assert.equal(fixture.windowKinds.generatePreview, "generation3d-generate-preview");
-  assert.equal(fixture.windowKinds.viewPreview, "procedural-view-preview");
-  const surfaces = new Set(fixture.rows.map((row) => row.surface));
-  assert.ok(surfaces.has("editor") && surfaces.has("viewer"), "the shared chain's law must cover both surfaces");
-
-  let totalArms = 0;
-  for (const row of fixture.rows) {
-    assert.equal(row.sequence.length, row.armed.length, `${row.id}: every event owes exactly one armed answer`);
-    for (const window of row.attached) assert.ok(Object.values(fixture.windowKinds).includes(window.kind) || window.kind in fixture.windowKinds, `${row.id}: ${window.kind} is not a declared window kind`);
-    const table = new TickLatchTable();
-    const attached = row.attached.map((window) => window.id);
-    const observed = row.sequence.map((event) => replayTickLatchEvent(table, attached, event, row.id));
-    assert.deepEqual(observed, row.armed, `tick-latch row ${row.id}`);
-    // 🔒️ The invariant itself, not just the table: no window is armed twice without a tick running
-    // or an answer landing in between.
-    const pending = new Map<string, number>();
-    row.sequence.forEach((event, index) => {
-      for (const windowId of observed[index]) pending.set(windowId, (pending.get(windowId) ?? 0) + 1);
-      if (event.event === "tick" && event.window) pending.set(event.window, Math.max(0, (pending.get(event.window) ?? 0) - 1));
-      // 🧹️ A tick armed at a window that then leaves the roster is discarded by the shell with it,
-      // and a registry replacement abandons every chain — neither leaves a pending tick behind.
-      if (event.event === "detach" && event.window) pending.set(event.window, 0);
-      if (event.event === "invalidate") pending.clear();
-      for (const [windowId, count] of pending) assert.ok(count <= 1, `${row.id}: ${windowId} has ${count} pending ticks after event ${index}`);
-    });
-    totalArms += observed.reduce((sum, armed) => sum + armed.length, 0);
+  for (const [node, entry] of Object.entries(status as Record<string, { status?: string }>)) {
+    let reason = ({ ok: "evaluated", computing: "computing", error: "failed", blocked: "blocked" } as Record<string, string>)[entry.status ?? ""] ?? "queued";
+    if (reason === "evaluated" && previewWidgetIds.includes(node)) {
+      const widget = evalJson[node] as { out?: Record<string, unknown>; in?: Record<string, unknown> } | undefined;
+      const channels = widget?.out ?? widget?.in ?? {};
+      const handles: string[] = [];
+      for (const key of Object.keys(channels).sort()) handlesOf(channels[key], handles);
+      const states = handles.map((handle) => meshStates[handle] ?? "pending");
+      observation.meshes += states.length;
+      observation.tessellated += states.filter((state) => state === "ready").length;
+      if (states.length > 0) reason = states.includes("diagnostics") ? "meshDiagnostics" : states.every((state) => state === "ready") ? "tessellated" : settled ? "meshMissing" : "tessellating";
+    }
+    observation.nodes[node] = reason;
   }
-  console.log(`generation3d tick-latch rows=${fixture.rows.length} surfaces=${[...surfaces].sort().join("+")} arms=${totalArms}`);
+  const reasons = Object.values(observation.nodes);
+  const unsettled = reasons.filter((reason) => reason === "queued" || reason === "computing").length;
+  observation.stage = unsettled > 0 || observation.meshes === observation.tessellated ? "evaluate" : "tessellate";
+  observation.progress = [reasons.length - unsettled + observation.tessellated, reasons.length + observation.meshes];
+  return observation;
 }
 
-if (import.meta.main) {
-  testGeneration3dContributionGatedArmingContract();
-  testGeneration3dTickLatchContract();
+/** ⚖️ Independent TypeScript twin of `⏯️preview-eval-run.json`: the scheduling law over the per-window
+ * latches, the node verdict observation, the FNV-1a entity keys, the abort affordance and what a
+ * surface's pending_effects owes the run — nothing shared with Rust but the fixture. */
+export function testGeneration3dPreviewEvalRunContract(): void {
+  const here = fileURLToPath(new URL(".", import.meta.url));
+  const fixture = JSON.parse(readFileSync(`${here}/../../../../../🧫️fixtures/⏯️preview-eval-run.json`, "utf8"));
+  assert.equal(fixture.format, "semio.generation3d.preview-eval-run");
+  assert.equal(fixture.version, 1);
+  for (const row of fixture.entityKeys) assert.equal(fnv1a64(row.nodeId).toString(), row.entity, `entity key of ${JSON.stringify(row.nodeId)}`);
+  for (const row of fixture.observations) {
+    const observed = observe(row.statusJson, row.evalJson, row.previewWidgetIds, row.meshStates, row.settled);
+    assert.deepEqual(observed.nodes, row.expected.nodes, `${row.id}: nodes`);
+    assert.deepEqual([observed.meshes, observed.tessellated, observed.stage], [row.expected.meshes, row.expected.tessellated, row.expected.stage], `${row.id}: census`);
+    assert.deepEqual(observed.progress, row.expected.progress, `${row.id}: progress`);
+  }
+  for (const row of fixture.scheduling) {
+    const table = new LatchTable();
+    for (const step of row.steps as Step[]) replay(table, step);
+    assert.deepEqual(nextHop(table, row.windows), row.expected, `${row.id}: hop`);
+  }
+  const abortable = new Set(["starting", "running", "paused"]);
+  for (const row of fixture.status) {
+    const run = row.run;
+    const cancellable = run !== null && run.toolId === fixture.toolId && abortable.has(run.state);
+    assert.equal(cancellable, row.expected.cancellable, `${row.id}: cancellable`);
+    assert.deepEqual(cancellable ? { runId: String(run.run), generation: run.generation } : null, row.expected.cancelArgs, `${row.id}: cancelArgs`);
+  }
+  for (const row of fixture.runEffects) {
+    const servable = row.servable ?? true;
+    const actions: string[] = [];
+    if (row.windows.length > 0 && servable) {
+      const state = row.run?.state ?? null;
+      if (state === "complete") actions.push("toolRunFinalize");
+      else if ((state === null || state === "finalized" || state === "aborted" || state === "faulted") && (row.owed || row.restartOwed === true)) actions.push("toolRunStart");
+    }
+    assert.deepEqual(actions, row.expected, `${row.id}: owed run actions`);
+  }
+  console.log(`generation3d preview-eval-run entityKeys=${fixture.entityKeys.length} observations=${fixture.observations.length} scheduling=${fixture.scheduling.length} status=${fixture.status.length} runEffects=${fixture.runEffects.length}`);
 }

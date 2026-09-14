@@ -619,7 +619,7 @@ impl BrowserRendererBootstrap {
                 pointer_down: false,
                 pointer_button: 0,
                 modifiers: PointerModifiers::default(),
-                wheel_delta: 0.0,
+                wheel: crate::AppWheel::default(),
                 space_pressed: false,
                 wheel_zoom_deadline_ms: 0.0,
                 caret_blink_at_ms: 0.0,

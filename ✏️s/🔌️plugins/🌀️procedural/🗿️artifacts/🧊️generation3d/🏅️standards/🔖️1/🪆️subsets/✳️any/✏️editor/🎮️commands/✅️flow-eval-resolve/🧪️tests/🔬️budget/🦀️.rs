@@ -8,7 +8,7 @@
 
 use super::*;
 use crate::editor::generation3d::unit_tests::context::{empty_history_view, retire_flow_eval_session};
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect};
+use semio_framework_plugin::{ArtifactView, ConfigView};
 
 const EVALUATE_BUDGET_FIXTURE_JSON: &str = include_str!("../../../../../🧫️fixtures/⏱️evaluate-budget.json");
 const GEOMETRY_EXTENSION_PLUGIN_ID: &str = "flow-extension-brep";
@@ -47,7 +47,7 @@ struct EvaluateBudgetRow {
     seeds: bool,
     #[serde(default)]
     seeded_output_json: Option<String>,
-    rearms_ticks: usize,
+    owes_hop: bool,
     status: ExpectedStatus,
 }
 
@@ -59,7 +59,6 @@ struct ExpectedStatus {
     eval_units_done: u64,
     eval_units_total: u64,
     ratio: f64,
-    cancellable: bool,
 }
 
 #[derive(serde::Deserialize)]
@@ -80,11 +79,20 @@ fn fixture() -> EvaluateBudgetFixture {
 /// 📈️ The status object the preview window would publish right now, through the same pure
 /// projection the surface uses.
 fn observed_status(session: &FlowEvalSession) -> serde_json::Value {
-    serde_json::from_str(&crate::editor::generation3d::preview_progress_status_json_for(Some(session), Ok(GEOMETRY_EXTENSION_PLUGIN_ID.to_string()))).expect("status json")
+    serde_json::from_str(&crate::editor::generation3d::preview_progress_status_json_for(Some(session), None, Ok(GEOMETRY_EXTENSION_PLUGIN_ID.to_string()))).expect("status json")
 }
 
-/// ⚖️ LAW: every row of the fixture, folded through the real command handler — what it seeds, what
-/// it arms, and the exact status the preview window publishes afterwards.
+/// ⏱️ The hop the run dispatched before an answer can land: armed, begun, recorded unfinished, one
+/// answer outstanding — the latch state every `flowEvalResolve` folds into.
+fn park_one_evaluate_hop(session: &mut FlowEvalSession) {
+    assert!(session.arm_window_tick(BUDGET_WINDOW_ID), "the run arms the hop");
+    session.begin_window_tick(BUDGET_WINDOW_ID);
+    session.note_window_tick_outcome(BUDGET_WINDOW_ID, crate::preview_eval::tick_is_unfinished(true, 1));
+    session.note_window_extensions_in_flight(BUDGET_WINDOW_ID, 1);
+}
+
+/// ⚖️ LAW: every row of the fixture, folded through the real command handler — what it seeds, whether
+/// the window still owes the run a hop, and the exact status the preview window publishes afterwards.
 #[test]
 fn the_evaluate_budget_envelope_obeys_its_fixture_end_to_end() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
@@ -100,6 +108,7 @@ fn the_evaluate_budget_envelope_obeys_its_fixture_end_to_end() {
         let cfg = ConfigView { snapshot: &config, window: None };
         let mut session = FlowEvalSession::new();
         let cache = session.neural_cache();
+        park_one_evaluate_hop(&mut session);
         let output_json = match (&row.envelope, &row.bare_output_json) {
             (Some(envelope), _) => serde_json::to_string(envelope).expect("envelope json"),
             (None, Some(bare)) => bare.clone(),
@@ -130,12 +139,8 @@ fn the_evaluate_budget_envelope_obeys_its_fixture_end_to_end() {
             semio_framework_os_flow::neural::ColdRetire::retire_cold(cached);
         }
         drop(cache);
-        let rearmed = emit
-            .effects
-            .iter()
-            .filter(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "flowEvalTick"))
-            .count();
-        assert_eq!(rearmed, row.rearms_ticks, "{}: re-armed tick count ({} outcome)", row.id, row.outcome);
+        assert!(emit.effects.is_empty(), "{}: a fold dispatches nothing itself", row.id);
+        assert_eq!(session.window_tick_owed(BUDGET_WINDOW_ID), row.owes_hop, "{}: the window owes the run a hop ({} outcome)", row.id, row.outcome);
         let status = observed_status(&session);
         assert_eq!(status["phase"].as_str(), Some(row.status.phase.as_str()), "{}: published phase", row.id);
         let labels = fixture.phase_labels.get(&row.status.phase).unwrap_or_else(|| panic!("{}: the fixture declares a label for every phase it expects", row.id));
@@ -146,8 +151,7 @@ fn the_evaluate_budget_envelope_obeys_its_fixture_end_to_end() {
         assert_eq!(status["progress"]["evalUnitsTotal"].as_u64(), Some(row.status.eval_units_total), "{}: evalUnitsTotal", row.id);
         let ratio = status["progress"]["ratio"].as_f64().unwrap_or_else(|| panic!("{}: ratio", row.id));
         assert!((ratio - row.status.ratio).abs() < 1e-9, "{}: ratio {ratio} != {}", row.id, row.status.ratio);
-        assert_eq!(status["cancellable"].as_bool(), Some(row.status.cancellable), "{}: cancellable", row.id);
-        assert_eq!(status["cancelAction"].as_str(), Some("cancelPreviewEval"), "{}: the surface always names the verb that would stop it", row.id);
+        assert_eq!(status["cancelAction"].as_str(), Some(semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID), "{}: the surface always names the framework abort", row.id);
         retire_flow_eval_session(session);
     }
 }
@@ -206,6 +210,7 @@ fn progress_is_monotone_across_the_round_trips_of_one_evaluation() {
             "unitsTotal": total_steps as u64,
             "outputJson": if done { "{\"solid\":\"brep:solid-9\"}" } else { "" },
         });
+        park_one_evaluate_hop(&mut session);
         let emit = handle(
             &FlowEvalResolve {
                 window_id: BUDGET_WINDOW_ID.into(),
@@ -231,19 +236,11 @@ fn progress_is_monotone_across_the_round_trips_of_one_evaluation() {
             assert!(!cache.contains(BUDGET_NODE_HASH), "`{phase}` is still working, so nothing may be seeded");
             assert!(observed_done >= previous_done, "unitsDone never decreases ({previous_done} -> {observed_done} at `{phase}`)");
             assert_eq!(status["progress"]["inFlight"].as_u64(), Some(1), "`{phase}` is live work, and the surface must say so");
-            assert_eq!(status["cancellable"].as_bool(), Some(true), "`{phase}` is stoppable");
             assert_ne!(status["phase"].as_str(), Some("idle"), "`{phase}` must never publish as idle");
             previous_done = observed_done;
         }
-        assert_eq!(
-            emit.effects.iter().filter(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "flowEvalTick")).count(),
-            1,
-            "`{phase}` owes exactly one continuation"
-        );
-        // ▶️ The armed tick actually RUNS between two round trips of the real chain, which is what
-        // frees the window's latch for the next one. Replaying the answers without it would assert
-        // against a latch state the chain never has.
-        session.begin_window_tick(BUDGET_WINDOW_ID);
+        assert!(emit.effects.is_empty(), "`{phase}`: a fold dispatches nothing itself");
+        assert!(session.window_tick_owed(BUDGET_WINDOW_ID), "`{phase}` owes the run exactly one continuation");
     }
     if let Some(cached) = cache.get(BUDGET_NODE_HASH) {
         semio_framework_os_flow::neural::ColdRetire::retire_cold(cached);
@@ -252,18 +249,15 @@ fn progress_is_monotone_across_the_round_trips_of_one_evaluation() {
     retire_flow_eval_session(session);
 }
 
-/// ⚖️ LAW: the gesture that stops a preview reaches BOTH retained-work registries in the geometry
+/// ⚖️ LAW: the release a closed run owes reaches BOTH retained-work registries in the geometry
 /// extension — the parked budgeted evaluations and the mesh jobs — because a boolean stopped
 /// mid-validation lives only in the first.
 #[test]
-fn the_cancel_gesture_reaches_the_evaluation_registry_too() {
-    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+fn the_kernel_release_reaches_the_evaluation_registry_too() {
     let fixture = fixture();
-    let mut session = FlowEvalSession::new();
-    let payload = crate::preview_eval::CancelPreviewEval { window_id: BUDGET_WINDOW_ID.into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into() };
-    let invocations = crate::preview_eval::cancel_preview_eval_for(&payload, &mut session, Ok(GEOMETRY_EXTENSION_PLUGIN_ID.to_string()));
+    let payload = crate::preview_eval::FlowEvalRelease { window_id: BUDGET_WINDOW_ID.into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into() };
+    let invocations = crate::preview_eval::release_invocations_for(&payload, Ok(GEOMETRY_EXTENSION_PLUGIN_ID.to_string()));
     let capabilities: Vec<&str> = invocations.iter().map(|invocation| invocation.capability.as_str()).collect();
-    assert!(capabilities.contains(&fixture.cancel_capability.as_str()), "the gesture emits the fixture's evaluation-cancel capability, got {capabilities:?}");
-    assert!(capabilities.contains(&"tessellateCancel"), "the gesture still emits the mesh-job cancel, got {capabilities:?}");
-    retire_flow_eval_session(session);
+    assert!(capabilities.contains(&fixture.cancel_capability.as_str()), "the release emits the fixture's evaluation-cancel capability, got {capabilities:?}");
+    assert!(capabilities.contains(&"tessellateCancel"), "the release still emits the mesh-job cancel, got {capabilities:?}");
 }

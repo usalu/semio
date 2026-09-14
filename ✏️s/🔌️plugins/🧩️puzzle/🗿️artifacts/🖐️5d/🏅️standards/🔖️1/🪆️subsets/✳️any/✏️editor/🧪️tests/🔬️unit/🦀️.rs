@@ -13,12 +13,6 @@ pub(crate) mod context {
         semio_framework_plugin::artifact_app_laws::meta(actor)
     }
     
-    pub fn app() -> Puzzle5dApp {
-        let mut app = semio_framework::io::resolve_ready(semio_framework_plugin::artifact_app_laws::new_app::<EditorApp<Puzzle5dPlayApp>>());
-        semio_framework::io::resolve_ready(app.bind_instance_id(1));
-        app
-    }
-    
     /// ✏️ Adapts `create_puzzle5d_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
     /// examples }` shape `context::new_app_with_registry` still expects — framework test context gap, not
     /// modifiable here (`🧰️framework/**` is outside this packet's lease).
@@ -26,6 +20,13 @@ pub(crate) mod context {
         semio_framework_plugin::App { definition: create_puzzle5d_app(), examples: Vec::new() }
     }
     
+    /// 🧰️ The registry-backed app every test drives: the tool proof catalog joins the migrated declarations to live
+    /// factories only with a manifest, so kind discipline and the utility contract are enforced exactly as in
+    /// production.
+    pub fn app() -> Puzzle5dApp {
+        app_with_registry()
+    }
+
     /// 🧰️ A registry-backed app so kind discipline (View actions must emit no operations) and the
     /// utility contract are enforced exactly as in production.
     pub fn app_with_registry() -> Puzzle5dApp {
@@ -76,6 +77,7 @@ pub(crate) mod context {
             }
             result.requested_effects.extend(app.take_typed_operation_effect());
             result.events.extend(app.take_typed_operation_event());
+            let _ = semio_framework::io::resolve_ready(app.take_typed_operation_completion())?;
             if let Some(scope) = app.take_typed_operation_ui_scope() {
                 result.ui_scope = scope;
             }
@@ -114,13 +116,23 @@ pub(crate) mod context {
                 | "setInteractionGranularity"
         ) {
             let dsl_args = args.map(dsl::os_pack::json::to_dsl_value);
-            let result = semio_framework::io::resolve_ready(app.handle_action(action, dsl_args.as_ref(), &action_meta));
+            let result = semio_framework::io::resolve_ready(app.handle_action(action, dsl_args.as_ref(), &action_meta)).and_then(|admitted| semio_framework::io::resolve_ready(semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted)));
             return settle(app, result);
         }
         let result = semio_framework::io::resolve_ready(app.dispatch_typed(Puzzle5dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta));
         settle(app, result)
     }
     
+    /// 🎛️ Dispatches an app command from `window_id` with `utility_id` armed in that window, as a host whose
+    /// window instance view state carries the armed utility does.
+    pub fn dispatch_armed(app: &mut Puzzle5dApp, action: &str, args: Option<&Value>, window_id: &str, utility_id: &str) -> Result<InvocationResult, Fault> {
+        let mut view = window_view(window_id, window_id);
+        view.active_utility_by_window_id.insert(window_id.to_string(), utility_id.to_string());
+        let action_meta = ActionMeta { view_state: Some(view), ..meta("local") };
+        let result = semio_framework::io::resolve_ready(app.dispatch_typed(Puzzle5dCommand::from_action(action, args.cloned(), Some(window_id.to_string())), &action_meta));
+        settle(app, result)
+    }
+
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches `interactionSelect`
     /// for one `(granularity, id)` pair in the `vortex` domain — the test-side replacement for the
     /// deleted `setSelection` action.
@@ -201,7 +213,6 @@ pub(crate) mod context {
     }
 }
 
-
 use context::*;
 use semio_framework::SET_ACTIVE_UTILITY_ACTION_ID;
 use super::*;
@@ -223,15 +234,6 @@ fn retained_publication_contracts_are_an_exact_nonempty_tool_bijection() {
     let copied = duplicate[1];
     duplicate[0] = copied;
     assert!(!exact(&duplicate));
-    let reserved = [
-        <Puzzle5dCopyJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS[0],
-        <Puzzle5dCutJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS[0],
-        <Puzzle5dPasteJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS[0],
-        <Puzzle5dImportJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS[0],
-    ];
-    assert_eq!(reserved.iter().map(|contract| contract.tool_id).collect::<Vec<_>>(), vec!["copy", "cut", "paste", "import-media"]);
-    assert_eq!(reserved[0].lanes, &[ArtifactToolPublicationLane::HostOnly]);
-    assert!(reserved[1..].iter().all(|contract| contract.lanes == &[ArtifactToolPublicationLane::Artifact]));
 }
 
 #[test]
@@ -835,25 +837,24 @@ async fn engagements_expose_no_utility_switch_options_for_either_window() {
 #[semio_framework_async_macros::async_test]
 async fn fill_and_brush_params_are_tagged_utility_options_not_engagement_controls() {
     let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::default()).expect("admitted host axis");
-    let session = Puzzle5dPrecomputeSession::new();
     // 🪣️ Fill utility: the fill-count slider lives in a "fill"-tagged Utility Options group (per window),
     // NOT the engagement HUD.
     let fill_runtime = Puzzle5dRuntime { fill_count: 3, ..Default::default() };
     let fill_scene = Puzzle5dScene { document: default_document(), runtime: fill_runtime, active_utility: "fill".into() };
     for window in [board2d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID] {
-        let measures = if window == board2d::WINDOW_KIND_ID { board2d::window_measures(&fill_scene, &session, labels) } else { world3d::window_measures(&fill_scene, &session, labels) };
+        let measures = if window == board2d::WINDOW_KIND_ID { board2d::window_measures(&fill_scene, labels, None) } else { world3d::window_measures(&fill_scene, labels, None) };
         assert_eq!(measure_group_tag(&measures, "puzzle5d-play-utility-options-fill"), Some(Some("fill".into())), "{window} fill Utility Options must be tagged for the fill utility");
         assert!(find_measure_number(&measures, "puzzle5d-fill-count").is_some(), "{window} fill Utility Options must carry the fill-count entry");
-        let fill_hud = edit::puzzle5d_engagement(&fill_scene, window, labels);
+        let fill_hud = edit::puzzle5d_engagement(&fill_scene, window, labels, None);
         assert!(fill_hud.control.is_none() && fill_hud.controls.is_none(), "{window} fill engagement HUD must no longer carry the relocated control");
     }
     // 🖌️ Brush utility: with no candidates to place, the "brush"-tagged group still surfaces (matching the
     // old gate), and the engagement HUD is likewise bare.
     let brush_scene = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime::default(), active_utility: "brush".into() };
     for window in [board2d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID] {
-        let measures = if window == board2d::WINDOW_KIND_ID { board2d::window_measures(&brush_scene, &session, labels) } else { world3d::window_measures(&brush_scene, &session, labels) };
+        let measures = if window == board2d::WINDOW_KIND_ID { board2d::window_measures(&brush_scene, labels, None) } else { world3d::window_measures(&brush_scene, labels, None) };
         assert_eq!(measure_group_tag(&measures, "puzzle5d-play-utility-options-brush"), Some(Some("brush".into())), "{window} brush Utility Options surfaces even without candidates");
-        let brush_hud = edit::puzzle5d_engagement(&brush_scene, window, labels);
+        let brush_hud = edit::puzzle5d_engagement(&brush_scene, window, labels, None);
         assert!(brush_hud.control.is_none() && brush_hud.controls.is_none(), "{window} brush engagement HUD must no longer carry the relocated control");
     }
 }
@@ -863,71 +864,21 @@ async fn fill_and_brush_params_are_tagged_utility_options_not_engagement_control
 #[semio_framework_async_macros::async_test]
 async fn fill_count_entry_is_unbounded_and_defaults_to_one_hundred() {
     let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::default()).expect("admitted host axis");
-    let session = Puzzle5dPrecomputeSession::new();
     assert_eq!(PUZZLE5D_DEFAULT_FILL_COUNT, 100);
     assert_eq!(Puzzle5dRuntime::default().fill_count, 100);
-    assert_eq!(crate::editor::puzzle5d::window::Puzzle5dWindowConfig::default().fill_count, 100);
+    assert_eq!(Puzzle5dConfig::default().fill_count, 100);
 
     let default_scene = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime::default(), active_utility: "fill".into() };
-    let measures = board2d::window_measures(&default_scene, &session, labels);
+    let measures = board2d::window_measures(&default_scene, labels, None);
     assert!(matches!(find_measure_number(&measures, "puzzle5d-fill-count"), Some(WindowMeasure::Number { value, .. }) if *value == 100.0));
 
     let large_scene = Puzzle5dScene { runtime: Puzzle5dRuntime { fill_count: 5_000, ..Default::default() }, ..default_scene };
-    let measures = world3d::window_measures(&large_scene, &session, labels);
+    let measures = world3d::window_measures(&large_scene, labels, None);
     let Some(WindowMeasure::Number { value, min, max, step, .. }) = find_measure_number(&measures, "puzzle5d-fill-count") else { panic!("fill count entry") };
     assert_eq!(*value, 5_000.0);
     assert_eq!(*min, Some(0.0));
     assert_eq!(*max, None, "the fill count must carry no ceiling");
     assert_eq!(*step, Some(1.0));
-}
-
-/// 🧮️ A count far past the deleted 1000-pin survives the dispatch verbatim, and the planner is
-/// retargeted to it rather than merely projected onto a plan held to its own target.
-#[semio_framework_async_macros::async_test]
-async fn set_fill_count_carries_a_large_count_and_retargets_the_planner() {
-    let mut app = app_with_registry();
-    dispatch(&mut app, "setFillCount", Some(&dsl::json!({ "count": 5_000 })), Some(board2d::WINDOW_KIND_ID)).expect("a count far past the deleted 1000-pin must not be refused");
-    let mut session = Puzzle5dPrecomputeSession::new();
-    session.set_fill_requested_count(5_000);
-    assert_eq!(session.fill_requested_count(), 5_000, "the planner is retargeted, not merely projected onto");
-}
-
-/// ⏳️ The 5d fill cancel toggle reads the wrapped 3d session's own summary — same locked count, same
-/// requested count, same stage — and it disappears exactly when that session reports itself done.
-#[semio_framework_async_macros::async_test]
-async fn fill_cancel_toggle_reflects_the_wrapped_session_summary() {
-    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::default()).expect("admitted host axis");
-    let idle = Puzzle5dPrecomputeSession::new();
-    assert_eq!(crate::editor::puzzle5d::modes::edit::options::fill::fill_cancel_measure(&idle, labels).is_none(), idle.fill_progress().done, "the toggle exists exactly while the planner has work");
-
-    let scene = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime { fill_count: 40, ..Default::default() }, active_utility: "fill".into() };
-    let mut live = Puzzle5dPrecomputeSession::new();
-    live.set_scene(&scene_config_json(&scene)).expect("scene");
-    live.set_fill_requested_count(40);
-    live.precompute_step(8);
-    let progress = live.fill_progress();
-    match crate::editor::puzzle5d::modes::edit::options::fill::fill_cancel_measure(&live, labels) {
-        Some(WindowMeasure::Toggle { id, label, text, pressed, on_change, .. }) => {
-            assert!(!progress.done, "a published toggle implies the planner still has work");
-            assert_eq!(id, "puzzle5d-play-fill-cancel");
-            assert_eq!(label.as_deref(), Some("Cancel fill"));
-            let stage = crate::editor::puzzle5d::terminology::puzzle5d_fill_stage_label(labels, progress.stage.as_str(), progress.stall_reason.as_deref());
-            assert_eq!(text, Some(format!("{stage} · {} / {} locked", progress.applied_count, progress.requested_count)));
-            assert!(!pressed);
-            assert_eq!(on_change.action, "cancelFillBuild");
-        }
-        Some(other) => panic!("fill cancel must be a Toggle measure, found {other:?}"),
-        None => assert!(progress.done, "a withheld toggle implies the planner is done"),
-    }
-}
-
-/// 🛑️ Cancelling pins the requested count to what the document already holds, so the operator keeps
-/// exactly the parts they can see; a stale identity kills nothing.
-#[semio_framework_async_macros::async_test]
-async fn cancel_fill_build_pins_the_count_to_what_is_locked() {
-    let mut app = app_with_registry();
-    dispatch(&mut app, "setFillCount", Some(&dsl::json!({ "count": 12 })), Some(board2d::WINDOW_KIND_ID)).expect("setFillCount");
-    dispatch(&mut app, "cancelFillBuild", Some(&dsl::json!({ "job": 0, "operation": 0, "generation": 0 })), Some(board2d::WINDOW_KIND_ID)).expect("cancelFillBuild");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1103,3 +1054,31 @@ async fn kit_in_port_is_declared_on_the_app_io() {
     assert!(matches!(design_out.multiplicity, PortMultiplicity::Many));
 }
 //#endregion 🔖️KitInPort
+
+//#region 🔖️ClipboardMaximum
+const CLIPBOARD_MAXIMUM_FIXTURE: &str = include_str!("../../../🧫️fixtures/📋️clipboard-maximum/🔣️.json");
+
+/// 📋️ LAW (language-neutral fixture): on the largest shipped example with every part selected, the copy fragment
+/// carries every part, the cut removes every copied part and the paste of that fragment creates every part again.
+/// Each verb runs as one step of its framework-reserved job (cost in `📓️wave-W2-B.md` §5); `import-media` is not
+/// implemented by puzzle 5d (only the retained `kit:in` import is).
+#[test]
+fn clipboard_verbs_cover_every_part_of_the_largest_example() {
+    let fixture: serde_json::Value = serde_json::from_str(CLIPBOARD_MAXIMUM_FIXTURE).expect("clipboard fixture parses");
+    assert_eq!(fixture["example"], PUZZLE5D_EXAMPLE_CAPSULE_DREAM);
+    let offset = fixture["pasteOffset"].as_array().expect("offset").iter().map(|axis| axis.as_f64().expect("axis")).collect::<Vec<_>>();
+    let document = capsule_dream_example_document();
+    assert_eq!(document.parts.len() as u64, fixture["parts"].as_u64().expect("parts"));
+    let snapshot = Puzzle5dPlaySnapshot(serde_json::to_value(&document).expect("document serializes"));
+    let history = semio_framework_plugin::HistoryView::empty();
+    let view = ArtifactView::new(&snapshot, &history);
+    let part_ids: Vec<String> = document.parts.iter().map(|part| part.id.clone()).collect();
+    let placement = PastePlacement { anchor: PasteAnchor::Original, position: Some([offset[0], offset[1], offset[2]]) };
+    let fragment = puzzle5d_copy_fragment(&snapshot, &part_ids, &[]).expect("copy every part");
+    let cut_operations = puzzle5d_cut_operations(&snapshot, &part_ids, &[]);
+    let paste_operations = <Puzzle5dPlayApp as ArtifactEditor>::paste_operations(&view, &fragment, &placement).expect("paste every part");
+    assert_eq!(fragment.label, format!("{} part(s)", document.parts.len()));
+    assert_eq!(cut_operations.iter().filter(|operation| matches!(operation, Puzzle5dMutation::DeletePart(_))).count(), document.parts.len(), "the cut removes every copied part");
+    assert_eq!(paste_operations.iter().filter(|operation| matches!(operation, Puzzle5dMutation::CreatePart(_))).count(), document.parts.len(), "the paste creates every fragment part");
+}
+//#endregion 🔖️ClipboardMaximum

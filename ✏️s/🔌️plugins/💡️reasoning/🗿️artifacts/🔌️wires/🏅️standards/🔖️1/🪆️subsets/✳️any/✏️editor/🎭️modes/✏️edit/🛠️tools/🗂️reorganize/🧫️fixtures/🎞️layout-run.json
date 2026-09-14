@@ -1,0 +1,218 @@
+{
+  "$comment": "Reasoning wires `reorganize` tool run law: the tool declaration, the language-neutral wires-board to layout-graph mapping, the metabolism run expectations (fuel = one iteration per step), the fdg-sim oracle parameters, the interactive step law and the finalize/abort lifecycle. Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W3-F1.",
+  "tool": {
+    "id": "reorganize",
+    "runJob": "reasoning.wires.layoutRun",
+    "iconId": "rotate-cw",
+    "label": {
+      "en": "Reorganize",
+      "de": "Neu anordnen"
+    },
+    "mutating": true,
+    "rebase": "restart",
+    "reconfigure": "resume",
+    "trace": "entity",
+    "removedActions": [
+      "forceLayout"
+    ]
+  },
+  "mapping": {
+    "nodes": [
+      {
+        "id": "a",
+        "shape": "circle",
+        "x": 0.0,
+        "y": 0.0,
+        "radius": 24.0,
+        "handles": [
+          {
+            "id": "a-out"
+          }
+        ]
+      },
+      {
+        "id": "b",
+        "shape": "rectangle",
+        "x": 120.0,
+        "y": 40.0,
+        "width": 60.0,
+        "height": 80.0,
+        "handles": []
+      },
+      {
+        "id": "c",
+        "shape": "circle",
+        "x": -80.0,
+        "y": 90.0,
+        "locked": true,
+        "handles": []
+      },
+      {
+        "id": "hidden",
+        "shape": "circle",
+        "x": 5.0,
+        "y": 5.0,
+        "radius": 12.0,
+        "hidden": true,
+        "handles": []
+      },
+      {
+        "id": "d",
+        "shape": "circle",
+        "radius": 18.0,
+        "handles": []
+      },
+      {
+        "id": "a",
+        "shape": "circle",
+        "x": 9.0,
+        "y": 9.0,
+        "radius": 9.0,
+        "handles": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1",
+        "source": "a-out",
+        "target": "b"
+      },
+      {
+        "id": "e2",
+        "source": "b",
+        "target": "a"
+      },
+      {
+        "id": "e3",
+        "source": "c",
+        "target": "c"
+      },
+      {
+        "id": "e4",
+        "source": "c",
+        "target": "hidden"
+      },
+      {
+        "id": "e5",
+        "source": "d",
+        "target": "c"
+      },
+      {
+        "id": "e6",
+        "source": "b",
+        "target": "missing"
+      },
+      {
+        "id": "e7",
+        "source": "c",
+        "target": "a",
+        "hidden": true
+      }
+    ],
+    "expected": {
+      "nodes": [
+        {
+          "id": "a",
+          "origin": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "radius": 24.0,
+          "pinned": false
+        },
+        {
+          "id": "b",
+          "origin": {
+            "x": 120.0,
+            "y": 40.0
+          },
+          "radius": 50.0,
+          "pinned": false
+        },
+        {
+          "id": "c",
+          "origin": {
+            "x": -80.0,
+            "y": 90.0
+          },
+          "radius": 32.0,
+          "pinned": true
+        },
+        {
+          "id": "d",
+          "origin": null,
+          "radius": 18.0,
+          "pinned": false
+        }
+      ],
+      "edges": [
+        {
+          "source": 0,
+          "target": 1,
+          "weight": 1.0
+        },
+        {
+          "source": 2,
+          "target": 3,
+          "weight": 1.0
+        }
+      ]
+    }
+  },
+  "run": {
+    "example": "metabolism",
+    "nodes": 7,
+    "edges": 7,
+    "stop": "converged",
+    "iterations": 164,
+    "checkpoints": 2,
+    "movedNodes": 7,
+    "finalVerdicts": {
+      "success": 7
+    },
+    "verdictPrefix": [
+      "0:testing/moving",
+      "1:testing/moving",
+      "2:testing/moving",
+      "3:success/settled",
+      "4:testing/moving",
+      "5:testing/moving",
+      "6:testing/moving",
+      "0:testing/moving",
+      "1:testing/moving",
+      "2:testing/moving",
+      "4:testing/moving",
+      "5:testing/moving",
+      "6:testing/moving",
+      "0:testing/moving",
+      "1:testing/moving",
+      "2:testing/moving",
+      "4:testing/moving",
+      "5:testing/moving",
+      "6:testing/moving",
+      "0:testing/moving",
+      "1:testing/moving",
+      "2:testing/moving",
+      "4:testing/moving",
+      "5:testing/moving"
+    ],
+    "positionsDigest": "de00acc369a8e484"
+  },
+  "oracle": {
+    "fdgScale": 45,
+    "fdgCooloff": 0.975,
+    "fdgDt": 0.035,
+    "fdgUpdates": 1500,
+    "stressRatioMax": 1.05,
+    "improvementMin": 0.3
+  },
+  "interactive": {
+    "example": "metabolism",
+    "attempts": 5,
+    "budgetUs": 2000
+  },
+  "lifecycle": {
+    "historyEntriesAdded": 1,
+    "abortAfterIterations": 2
+  }
+}

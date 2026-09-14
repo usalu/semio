@@ -110,8 +110,8 @@ mod winit_app;
 pub mod parallel_runtime;
 
 use infinite_world::world::{
-    begin_world3d_dynamic_retirement, enqueue_world3d_event, finish_world3d_asset, publish_world3d_asset_mesh_lease, reserve_world3d_asset_response, retire_cancelled_world3d_asset_step, return_world3d_asset, seal_world3d_asset_response,
-    step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction, step_world3d_scene_bridge, step_world3d_snapshot, take_next_completed_world3d_asset_step,
+    begin_world3d_dynamic_retirement, close_world3d_draw_rebuild_step, enqueue_world3d_event, finish_world3d_asset, publish_world3d_asset_mesh_lease, reserve_world3d_asset_response, retire_cancelled_world3d_asset_step, return_world3d_asset,
+    seal_world3d_asset_response, step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction, step_world3d_scene_bridge, step_world3d_snapshot, take_next_completed_world3d_asset_step,
     take_next_world3d_asset, world3d_dynamic_retirement_terminal_is_empty, world3d_interaction_front_generation, World3dSceneBridgeStep, World3dSnapshotApplyStep, WorldAssetFault, WorldAssetFetchOwner, WorldAssetIoAuthority, WorldAssetMetadataId, WorldAssetRequestKind, WorldAssetRequestToken,
     WorldAssetResponsePage, WorldDrawRebuildStep, WorldDynamicFault, WorldInteractionAuthorityStep, WorldInteractionIntent, WORLD_ASSET_RESPONSE_PAGE_BYTES, WORLD_ASSET_RESPONSE_PAGE_CAPACITY,
 };
@@ -9051,6 +9051,12 @@ mod async_boundary_tests;
 mod frame_action_ledger_tests;
 //#endregion 🔖️FrameActionLedgerTests
 
+//#region 🔖️WheelApplicationPointTests
+#[cfg(test)]
+#[path = "../../../🧪️tests/🖱️wheel-application-point/🦀️.rs"]
+mod wheel_application_point_tests;
+//#endregion 🔖️WheelApplicationPointTests
+
 //#region 📮️RuntimeMailbox
 
 struct RuntimeDispatchCursor {
@@ -9693,6 +9699,9 @@ struct RuntimePresentationWitness {
 struct RuntimePresentationAuthorityInner {
     scene_revision: AtomicU64,
     input_generation: AtomicU64,
+    admitted_scene_revision: AtomicU64,
+    admitted_input_generation: AtomicU64,
+    admitted: AtomicBool,
 }
 
 #[derive(Clone)]
@@ -9700,7 +9709,38 @@ struct RuntimePresentationAuthority(Arc<RuntimePresentationAuthorityInner>);
 
 impl RuntimePresentationAuthority {
     fn new() -> Self {
-        Self(Arc::new(RuntimePresentationAuthorityInner { scene_revision: AtomicU64::new(1), input_generation: AtomicU64::new(0) }))
+        Self(Arc::new(RuntimePresentationAuthorityInner { scene_revision: AtomicU64::new(1), input_generation: AtomicU64::new(0), admitted_scene_revision: AtomicU64::new(0), admitted_input_generation: AtomicU64::new(0), admitted: AtomicBool::new(false) }))
+    }
+
+    /// 🎟️ The witness ONE frame build was admitted under, written by that build when it mints its
+    /// `FrameBuildCursor` and read by `AppPresenter::present_step`'s admission gate.
+    ///
+    /// **This is what makes the build and the presenter one authority instead of two.** `current()`
+    /// is a moving target by design — `mark_scene_changed` fires from every runtime completion the
+    /// host pumps, several per tick — so a presenter that re-read it at admission refused a packet
+    /// that had been built, correctly, against the authority as it stood when the build started, and
+    /// turned it into a SURFACE FAULT (`offscreen prepared frame admission: prepared render revision
+    /// is stale: live=35, packet=27` → `worker-present-failed`, ticket
+    /// 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-edit-convergence-perf-2026-09-14.md` §6). Freshness
+    /// is the BUILD's decision — it supersedes itself the moment its own witness moves — and the
+    /// presenter's gate is there to refuse a packet from some OTHER build, which this pair still
+    /// catches exactly.
+    ///
+    /// One writer, one reader, no race: `poll_runtime_and_resubmit` admits at most one build at a
+    /// time, and `redraw_core` admits the finished frame and takes its `BeginGpu` step inside the
+    /// SAME host tick, before any later build can write here.
+    fn admit_build(&self, witness: RuntimePresentationWitness) {
+        self.0.admitted_scene_revision.store(witness.scene_revision, Ordering::Release);
+        self.0.admitted_input_generation.store(witness.input_generation, Ordering::Release);
+        self.0.admitted.store(true, Ordering::Release);
+    }
+
+    /// 🎟️ The pair a presentation must be admitted against — the live one until a build has ever run.
+    fn admitted(&self) -> RuntimePresentationWitness {
+        if !self.0.admitted.load(Ordering::Acquire) {
+            return self.current();
+        }
+        RuntimePresentationWitness { scene_revision: self.0.admitted_scene_revision.load(Ordering::Acquire), input_generation: self.0.admitted_input_generation.load(Ordering::Acquire) }
     }
 
     fn mark_scene_changed(&self) {
@@ -10037,6 +10077,10 @@ impl RuntimeMailbox {
 
     pub(crate) fn observe_presentation_input_generation(&self, generation: u64) {
         self.0.presentation_authority.observe_input_generation(generation);
+    }
+
+    fn admit_build_presentation_witness(&self, witness: RuntimePresentationWitness) {
+        self.0.presentation_authority.admit_build(witness);
     }
 
     pub(crate) fn acknowledge_world_cursor_wake(&self, token: &infinite_world::world::WorldCursorWakeToken) -> bool {
@@ -10778,6 +10822,43 @@ struct AppRuntime {
     native_reload_pending: bool,
 }
 
+/// 🖱️ The wheel a frame has yet to apply, AT THE POINT the wheel events carried — never at wherever
+/// the pointer has since wandered.
+///
+/// 🩸️ `DispatchEvent::Scroll { x, y, delta_x, delta_y }` carries its own position all the way from
+/// the browser wire (`🎮️input-wire`) and from winit, and `dispatch_normalized_event` dropped it
+/// (`Scroll { delta_y, .. } => app.wheel_delta += delta_y`). The frame then applied the accumulated
+/// delta at `last_pointer_x/y`. The wgpu tick is input-driven, so a wheel is normally drained by the
+/// NEXT pointer event — by which time the pointer is somewhere else, and both the scene-surface gate
+/// and `state.bounds.contains` answer for that other point. Measured on 6118: four wheel notches over
+/// the preview centre arrived as one `wheel gate x=5 y=5 delta=-480 … worlds=[("procedural-preview",
+/// false)]`, so the World3d authority saw `wheel=0` on every one of its intents and the camera never
+/// moved (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️wgpu-end-to-end-verification-2026-09-14.md` §5.1).
+#[derive(Clone, Copy, Default)]
+pub(crate) struct AppWheel {
+    delta: f32,
+    x: f32,
+    y: f32,
+}
+
+impl AppWheel {
+    /// 🖱️ Coalesces one wheel event into the pending wheel; the newest event's point is the point the
+    /// whole coalesced delta is applied at, which is what a browser's own wheel stream means.
+    pub(crate) fn accumulate(&mut self, x: f32, y: f32, delta_y: f32) {
+        self.delta += delta_y;
+        self.x = x;
+        self.y = y;
+    }
+
+    /// 🖱️ Takes the pending wheel and its point, leaving none. `None` when nothing is pending.
+    pub(crate) fn take(&mut self) -> Option<(f32, f32, f32)> {
+        let pending = (self.delta, self.x, self.y);
+        *self = Self::default();
+        (pending.0.abs() > 0.0).then_some(pending)
+    }
+}
+
 pub(crate) struct AppInteractionState {
     shell: ShellState,
     input: InputState<ActionDescriptor>,
@@ -10788,7 +10869,7 @@ pub(crate) struct AppInteractionState {
     pointer_down: bool,
     pointer_button: i16,
     modifiers: PointerModifiers,
-    wheel_delta: f32,
+    wheel: AppWheel,
     space_pressed: bool,
     wheel_zoom_deadline_ms: f64,
     caret_blink_at_ms: f64,
@@ -11435,6 +11516,7 @@ impl FrameTransaction {
                         self.phase = AppFrameTransactionPhase::Terminal;
                         return AppFrameTransactionStep::Fault;
                     };
+                    runtime.admit_build_presentation_witness(presentation_witness);
                     self.build_cursor = Some(FrameBuildCursor::new(presentation_witness));
                     return AppFrameTransactionStep::Pending;
                 }
@@ -11628,6 +11710,7 @@ impl FrameTransaction {
                 match step_world3d_scene_bridge(state, context) {
                     World3dSceneBridgeStep::Pending => return AppFrameTransactionStep::Pending,
                     World3dSceneBridgeStep::Fault => {
+                        log_debug(&format!("[DEBUG] world3d bridge fault surface={surface_id} {}", state.ingest_census()));
                         runtime.record_frame_fault("world3d scene mesh-wire bridge faulted");
                         self.phase = AppFrameTransactionPhase::Terminal;
                         return AppFrameTransactionStep::Fault;
@@ -11648,7 +11731,23 @@ impl FrameTransaction {
                 // exactly this order, unconditionally; this host was the one place that diverged.
                 match step_world3d_draw_rebuild(state, context) {
                     WorldDrawRebuildStep::Pending | WorldDrawRebuildStep::Complete => {}
-                    WorldDrawRebuildStep::Stale | WorldDrawRebuildStep::Fault => {
+                    // 🧹️ `Stale` is NOT a fault: it means the rebuild cursor was begun for a revision
+                    // or generation the state has since moved past, and the owning module's own rule
+                    // (`♾️infinite/🌍️world` §`retained_draw_rebuild_stale_and_interrupted_close_never_publish`)
+                    // is to CLOSE that cursor down its stepped ladder and let the next rebuild begin.
+                    // The reference driver `⚙️EngineCanvas/🧪️tests/🧩️wgpu-engine-surfaces/🦀️.rs:191`
+                    // faults on `Fault` alone; this host was the one place that also faulted on `Stale`,
+                    // and the fault code is fatal — `record_frame_fault` quarantines the surface for
+                    // good. Measured on 6118: a hover on the ELEVENTH gesture of a session published
+                    // `seq=3751 frame-credits: world3d retained draw rebuild faulted` and the frame
+                    // wire froze at 3 751 batches for the remaining nine gestures, with the page
+                    // showing "Surface: quarantined · input accepted: no"
+                    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+                    WorldDrawRebuildStep::Stale => {
+                        close_world3d_draw_rebuild_step(state, context);
+                        return AppFrameTransactionStep::Pending;
+                    }
+                    WorldDrawRebuildStep::Fault => {
                         runtime.record_frame_fault("world3d retained draw rebuild faulted");
                         self.phase = AppFrameTransactionPhase::Terminal;
                         return AppFrameTransactionStep::Fault;
@@ -11715,15 +11814,11 @@ impl FrameTransaction {
                 }
             }
             AppFrameTransactionPhase::WheelStart => {
-                let delta = app.wheel_delta;
-                app.wheel_delta = 0.0;
-                if delta.abs() == 0.0 {
+                let Some((delta, x, y)) = app.wheel.take() else {
                     self.stage = FrameTransactionStage::ReconcileTree;
                     self.phase = AppFrameTransactionPhase::RasterUploads;
                     return AppFrameTransactionStep::Pending;
-                }
-                let x = app.last_pointer_x;
-                let y = app.last_pointer_y;
+                };
                 let ctrl = app.modifiers.ctrl;
                 let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
                 interaction.shell.handle_pointer_wheel(x, y, delta, &interaction.input);
@@ -12809,7 +12904,10 @@ impl AppPresenter {
             }
             AppPresentPhase::BeginGpu => {
                 let packet = cursor.frame.packet.as_ref().ok_or_else(|| "prepared frame packet was transferred before admission".to_string())?;
-                let expected = self.presentation_authority.current();
+                // 🎟️ The pair the BUILD was admitted under, never `current()` — see
+                // `RuntimePresentationAuthority::admit_build` for the surface fault that re-reading a
+                // moving authority here produced.
+                let expected = self.presentation_authority.admitted();
                 #[cfg(not(target_arch = "wasm32"))]
                 {
                     let token = ui_wgpu::wgpu::UiPresentToken::mint_for_current_thread();
@@ -13269,7 +13367,10 @@ impl AppRuntime {
                 cursor.phase = FrameBuildPhase::InputFrame;
             }
             FrameBuildPhase::InputFrame => {
-                if self.input.hit_targets.pop().is_some() {
+                // ♻️ Retires the registry the PREVIOUS build left staged, one entry per boundary
+                // step. The pointer's own authority is the last COMPLETE frame's buffer, which this
+                // never touches — see `ui_wgpu::wgpu::HitRegistry`.
+                if self.input.retire_hit_step() {
                     return FrameBuildBoundaryStep::Pending;
                 }
                 self.input.wheel_delta = 0.0;
@@ -13841,7 +13942,7 @@ impl AppInteractionState {
         self.pointer_button = button;
         self.modifiers = modifiers.clone();
         self.shell.handle_pointer_move(x, y, down, &mut self.input, &self.theme);
-        log_debug(&format!("[DEBUG] os_host pointer hit x={x} y={y} targets={} hit={:?}", self.input.hit_targets.len(), self.input.hit_at(x, y).map(|target| (target.kind, target.control_id.clone()))));
+        log_debug(&format!("[DEBUG] os_host pointer hit x={x} y={y} targets={} staged={} gen={} hit={:?}", self.input.hits().len(), self.input.staged_hits().len(), self.input.hit_generation(), self.input.hit_at(x, y).map(|target| (target.kind, target.control_id.clone()))));
         if let Err(err) = self.shell.flush_deferred_actions().await {
             log_debug(&format!("deferred actions: {err}"));
         }
@@ -14042,7 +14143,7 @@ async fn boot_runtime(
             pointer_down: false,
             pointer_button: 0,
             modifiers: PointerModifiers::default(),
-            wheel_delta: 0.0,
+            wheel: AppWheel::default(),
             space_pressed: false,
             wheel_zoom_deadline_ms: 0.0,
             caret_blink_at_ms: 0.0,
@@ -14432,7 +14533,7 @@ pub async fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::Path
         }
         std::thread::sleep(std::time::Duration::from_millis(100));
     }
-    let _ = shell.refresh_ui().await;
+    let _ = shell.refresh_ui(semio_framework::kernel::UiDirtyScope::Full).await;
     let identity_summary = shell.identity.as_ref().map(|identity| serde_json::json!({ "userId": identity.user_id, "email": identity.email, "hubBaseUrl": identity.hub_base_url }));
     let window_documents: Vec<_> = shell.window_ui.iter().map(|(window, document)| serde_json::json!({ "window": window, "generation": document.generation() })).collect();
     let report = serde_json::json!({

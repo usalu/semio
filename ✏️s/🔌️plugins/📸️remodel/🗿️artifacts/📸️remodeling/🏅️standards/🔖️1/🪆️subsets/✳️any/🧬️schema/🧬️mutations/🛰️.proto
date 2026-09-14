@@ -31,15 +31,16 @@ message RemodelingMutation {
     UpdateMeshParams update_mesh_params = 24;
     UpdateMotionParams update_motion_params = 25;
     UpdateGeoParams update_geo_params = 26;
-    ReplaceJob replace_job = 27;
-    ReplaceSparse replace_sparse = 28;
-    ReplaceDense replace_dense = 29;
-    ReplaceMeshResult replace_mesh_result = 30;
-    ReplaceTrajectory replace_trajectory = 31;
-    ReplaceTracks replace_tracks = 32;
-    ReplaceGeoProducts replace_geo_products = 33;
-    ReplaceQc replace_qc = 34;
-    CommitReconstruction commit_reconstruction = 35;
+    ReplaceSparse replace_sparse = 27;
+    ReplaceDense replace_dense = 28;
+    ReplaceMeshResult replace_mesh_result = 29;
+    ReplaceTrajectory replace_trajectory = 30;
+    ReplaceTracks replace_tracks = 31;
+    ReplaceGeoProducts replace_geo_products = 32;
+    ReplaceQc replace_qc = 33;
+    AppendContent append_content = 34;
+    RemoveContent remove_content = 35;
+    CommitReconstruction commit_reconstruction = 36;
   }
 }
 
@@ -181,11 +182,6 @@ message UpdateGeoParams {
   GeoParams params = 2;
 }
 
-message ReplaceJob {
-  string mutation = 1;
-  ReconstructionJob job = 2;
-}
-
 message ReplaceSparse {
   string mutation = 1;
   optional SparseCloud sparse = 2;
@@ -221,15 +217,31 @@ message ReplaceQc {
   optional QcReportSnapshot qc = 2;
 }
 
+message AppendContent {
+  string mutation = 1;
+  string content_id = 2;
+  RemodelingContentKind kind = 3;
+  optional string mime = 4;
+  uint32 width = 5;
+  uint32 height = 6;
+  uint64 first = 7;
+  repeated string chunks = 8;
+}
+
+message RemoveContent {
+  string mutation = 1;
+  string content_id = 2;
+  uint64 from = 3;
+}
+
 message CommitReconstruction {
   string mutation = 1;
-  ReconstructionJob job = 2;
-  optional SparseCloud sparse = 3;
-  optional CameraTrajectory trajectory = 4;
-  optional RemodelingMesh mesh = 5;
-  optional GeoProducts geo = 6;
-  optional QcReportSnapshot qc = 7;
-  repeated ReconstructionAssetCommit assets = 8;
+  optional SparseCloud sparse = 2;
+  optional CameraTrajectory trajectory = 3;
+  optional RemodelingMesh mesh = 4;
+  optional GeoProducts geo = 5;
+  optional QcReportSnapshot qc = 6;
+  repeated ReconstructionAssetCommit assets = 7;
 }
 
 message ArtifactDialect {
@@ -426,40 +438,13 @@ message QcReportSnapshot {
 
 message ReconstructionAssetCommit {
   string id = 1;
-  ImageAsset asset = 2;
+  optional string content_id = 2;
 }
 
-message ReconstructionJob {
-  string id = 1;
-  ReconstructionStage stage = 2;
-  float progress_0_1 = 3;
-  bool cancel_requested = 4;
-  uint32 stage_cursor = 5;
-  optional double started_at_ms = 6;
-  optional string error = 7;
-  repeated CameraPosePreview camera_poses_preview = 8;
-  string sparse_point_cloud_preview = 9;
-}
-
-enum ReconstructionStage {
-  RECONSTRUCTION_STAGE_IDLE = 0;
-  RECONSTRUCTION_STAGE_INGESTING = 1;
-  RECONSTRUCTION_STAGE_CALIBRATING = 2;
-  RECONSTRUCTION_STAGE_EXTRACTING_FEATURES = 3;
-  RECONSTRUCTION_STAGE_MATCHING_FEATURES = 4;
-  RECONSTRUCTION_STAGE_ESTIMATING_POSES = 5;
-  RECONSTRUCTION_STAGE_BUNDLE_ADJUSTING = 6;
-  RECONSTRUCTION_STAGE_GEOREFERENCING = 7;
-  RECONSTRUCTION_STAGE_DENSE_STEREO = 8;
-  RECONSTRUCTION_STAGE_FUSING_VOLUME = 9;
-  RECONSTRUCTION_STAGE_EXTRACTING_SURFACE = 10;
-  RECONSTRUCTION_STAGE_CLEANING_MESH = 11;
-  RECONSTRUCTION_STAGE_TEXTURING = 12;
-  RECONSTRUCTION_STAGE_TRACKING_MOTION = 13;
-  RECONSTRUCTION_STAGE_DERIVING_GEO_PRODUCTS = 14;
-  RECONSTRUCTION_STAGE_REPORTING_QC = 15;
-  RECONSTRUCTION_STAGE_DONE = 16;
-  RECONSTRUCTION_STAGE_FAILED = 17;
+enum RemodelingContentKind {
+  REMODELING_CONTENT_KIND_SPARSE = 0;
+  REMODELING_CONTENT_KIND_MESH = 1;
+  REMODELING_CONTENT_KIND_IMAGE = 2;
 }
 
 message RemodelingMesh {

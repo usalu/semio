@@ -5,7 +5,7 @@
 //! `../../../../🧪️tests/📸️mutate-remodeling-1/🥒️.feature`, where the same bytes are replayed against
 //! this subset's independent Python reference.
 //!
-//! 🏞️ a plain point buffer names no staged run, so there is nothing to publish
+//! 🏞️ a sparse content handle naming content no `append-content` published is refused
 
 use crate::mutations::{apply_remodeling_mutation, inverse_remodeling_mutation, RemodelingMutation};
 use crate::{RemodelingDiff, RemodelingSnapshot};

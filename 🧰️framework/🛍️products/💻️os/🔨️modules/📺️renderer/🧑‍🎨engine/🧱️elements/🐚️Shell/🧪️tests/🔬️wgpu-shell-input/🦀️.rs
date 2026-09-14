@@ -208,3 +208,67 @@ fn only_the_press_half_of_a_body_click_moves_the_active_window() {
     semio_framework_async::block_on(shell.route_retained_pointer_press("generation3d-generations", body, 255.0, 90.0, false, 0, HitKind::Input, None, &mut input)).expect("a retained body release routes");
     assert_eq!(shell.active_window_id.as_deref(), Some("procedural-main"), "a release alone never activates — the press already did, or nothing did");
 }
+
+//#region 🔎️QuickSearchPaletteKeyboard
+/// ⌨️ `mod+p`, as the browser delivers it.
+fn palette_chord() -> (ui_wgpu::wgpu::KeyAction, PointerModifiers) {
+    (ui_wgpu::wgpu::KeyAction::Char("p".into()), PointerModifiers { shift: false, ctrl: true, alt: false, meta: false })
+}
+
+/// ⚖️ LAW: the shell's own overlay query fields are CHROME, not content.
+///
+/// The gate every hardcoded shell chord sits behind used to be a bare `focused_id.is_some()`, and
+/// the chord that opens the quick-search palette focuses the palette's own query field — so opening
+/// the palette disabled the chord that closes it (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[test]
+fn the_shells_own_overlay_fields_do_not_count_as_the_user_typing() {
+    assert!(!ShellState::content_is_editing(None, false), "nothing focused is not editing");
+    assert!(!ShellState::content_is_editing(Some("shell.search.input"), false), "the palette's own query field is chrome");
+    assert!(!ShellState::content_is_editing(Some("shell.find.input"), false), "so is the find overlay's");
+    assert!(ShellState::content_is_editing(Some("generation3d.height"), false), "an app content field IS the user typing");
+    assert!(ShellState::content_is_editing(None, true), "and so is the sync-attach draft buffer");
+}
+
+/// ⚖️ LAW: `mod+p` TOGGLES the quick-search palette, and the palette owns every key while it is open.
+///
+/// Measured on 6118 before this fix: the second `mod+p` did not close the palette, it fell through
+/// to the open palette's own `Char` arm and typed a literal `p` into the query — which then made
+/// every later keystroke search for `p<whatever the user meant>` and `Enter` activate nothing at all.
+#[test]
+fn the_palette_chord_toggles_and_never_types_itself_into_the_query() {
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut input = InputState::<ActionDescriptor>::default();
+    let (action, modifiers) = palette_chord();
+
+    shell.handle_keyboard(action.clone(), &modifiers, &mut input);
+    assert_eq!(shell.overlay_state, OverlayState::Search, "the chord opens the palette");
+    assert_eq!(input.focused_id.as_deref(), Some("shell.search.input"), "and focuses its query field");
+
+    for key in ["D", "e"] {
+        shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Char(key.into()), &PointerModifiers::default(), &mut input);
+    }
+    assert_eq!(shell.search_query, "De", "plain keys type into the palette's query");
+
+    shell.handle_keyboard(action, &modifiers, &mut input);
+    assert_eq!(shell.overlay_state, OverlayState::None, "the same chord closes it");
+    assert!(!shell.search_open);
+    assert_eq!(input.focused_id, None, "and hands focus back to the canvas");
+    assert_eq!(shell.search_query, "", "a closed palette holds no query — least of all a literal `p`");
+    println!("[DEBUG] wgpu-shell palette chord: open -> typed \"De\" -> closed, query cleared, focus released");
+}
+
+/// ⚖️ LAW: Escape closes the palette. It used to be claimed by the focused-input commit first, which
+/// left the palette with no keyboard route out at all once the toggle was broken too.
+#[test]
+fn escape_closes_the_palette_rather_than_committing_its_query_field() {
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut input = InputState::<ActionDescriptor>::default();
+    let (action, modifiers) = palette_chord();
+    shell.handle_keyboard(action, &modifiers, &mut input);
+    assert_eq!(shell.overlay_state, OverlayState::Search);
+
+    semio_framework_async::block_on(shell.handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &mut input)).expect("escape routes");
+    assert_eq!(shell.overlay_state, OverlayState::None, "escape closes the topmost overlay");
+    assert_eq!(input.focused_id, None);
+}
+//#endregion 🔎️QuickSearchPaletteKeyboard

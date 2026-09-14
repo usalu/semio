@@ -19,7 +19,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { decodeRemodelingSnapshot, defaultRemodelingScene, remodelingSnapshotToJsonText, type RemodelingSnapshot } from "../../📸️snapshot/🟦️.ts";
 import { applyRemodelingDiff, decodeRemodelingDiff, remodelingDiffLanes, remodelingDiffToJsonText } from "../../🔺️diff/🟦️.ts";
-import { REMODELING_MUTATION_TAGS, applyRemodelingMutation, decodeRemodelingMutation, remodelingMutationDiff, type RemodelingAnyMutation } from "../../🧬️mutations/🟦️.ts";
+import { REMODELING_MUTATION_TAGS, applyRemodelingMutation, decodeRemodelingMutation, remodelingMutationOutcome } from "../../🧬️mutations/🟦️.ts";
 import { remodelingArtifactFromSnapshot, remodelingArtifactToSnapshot } from "../../🟦️.ts";
 import { remodelingSnapshotFromDslText } from "../../../🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🟦️.ts";
 
@@ -81,7 +81,7 @@ describe("remodeling fixture oracle", () => {
     for (const vector of VECTORS) expect(existsSync(join(mutationsRoot, vector.slug, "🧪️tests", vector.caseName, "🦀️.rs"))).toBe(true);
   });
 
-  it("covers every wire tag, commitReconstruction now included", () => {
+  it("covers every wire tag", () => {
     const covered = new Set(VECTORS.map((vector) => (vector.mutation as { mutation: string }).mutation));
     expect(REMODELING_MUTATION_TAGS.filter((tag) => !covered.has(tag))).toEqual([]);
   });
@@ -97,7 +97,7 @@ describe("remodeling fixture oracle", () => {
 
 describe.each(VECTORS.map((vector) => [`${vector.slug}/${vector.caseName}`, vector] as const))("%s", (_label, vector) => {
   const before = () => decodeRemodelingSnapshot(vector.before);
-  const mutation = () => decodeRemodelingMutation(vector.mutation) as RemodelingAnyMutation;
+  const mutation = () => decodeRemodelingMutation(vector.mutation);
   const refused = vector.outcome.status === "rejected";
 
   it("decodes its committed quartet under total validation", () => {
@@ -112,7 +112,7 @@ describe.each(VECTORS.map((vector) => [`${vector.slug}/${vector.caseName}`, vect
   });
 
   it("produces the committed diff, or commits no diff at all when it refuses", () => {
-    const produced = remodelingMutationDiff(before(), mutation());
+    const produced = remodelingMutationOutcome(before(), mutation());
     if (refused) {
       expect(vector.diff).toBeNull();
       expect(remodelingDiffLanes(produced.diff)).toEqual([]);
@@ -122,7 +122,7 @@ describe.each(VECTORS.map((vector) => [`${vector.slug}/${vector.caseName}`, vect
   });
 
   it("declares the committed outcome status and every diagnostic it names", () => {
-    const produced = remodelingMutationDiff(before(), mutation());
+    const produced = remodelingMutationOutcome(before(), mutation());
     const isRefusal = produced.messages.some((message) => message.severity === "error" || message.severity === "fatal");
     expect(isRefusal ? "rejected" : "applied").toBe(vector.outcome.status);
     if (isRefusal) {
@@ -142,7 +142,7 @@ describe.each(VECTORS.map((vector) => [`${vector.slug}/${vector.caseName}`, vect
   });
 
   it("writes only the lanes the committed diff writes", () => {
-    const produced = remodelingMutationDiff(before(), mutation());
+    const produced = remodelingMutationOutcome(before(), mutation());
     const committed = vector.diff === null ? [] : remodelingDiffLanes(decodeRemodelingDiff(vector.diff));
     expect(remodelingDiffLanes(produced.diff)).toEqual(committed);
   });
@@ -164,7 +164,7 @@ describe.each(VECTORS.map((vector) => [`${vector.slug}/${vector.caseName}`, vect
   it("re-emits the committed diff bytes exactly", () => {
     if (refused) return;
     const path = join(vectorsRoot, vector.slug, vector.caseName, "🔺️diff", "🔣️.json");
-    expect(remodelingDiffToJsonText(remodelingMutationDiff(before(), mutation()).diff)).toBe(readFileSync(path, "utf8").trimEnd());
+    expect(remodelingDiffToJsonText(remodelingMutationOutcome(before(), mutation()).diff)).toBe(readFileSync(path, "utf8").trimEnd());
   });
 
   it("survives the artifact/snapshot round trip", () => {
@@ -176,22 +176,20 @@ describe.each(VECTORS.map((vector) => [`${vector.slug}/${vector.caseName}`, vect
 describe("commit-reconstruction shared vector", () => {
   const fixtures = join(subset, "🧫️fixtures/🏁️commit-reconstruction");
 
-  /** 🏁️ The one kind whose diff reads process-global staging state a `(before, mutation, after)`
-   *  triple cannot carry, committed as the refusal its own guard raises. All three documents are
-   *  schema-valid, the pair really is unchanged across the refusal, and the payload the feature file
-   *  names is on disk — the three counts on which this fixture used to be stale. */
+  /** 🏁️ The feature file's shared commit vector: a sparse cloud naming durable content the document
+   *  does not store, committed as the refusal its own guard raises. All three documents are schema-valid
+   *  and the pair is unchanged across the refusal. */
   it("ships a schema-valid, self-consistent refusal triple", () => {
     for (const name of ["⬅️before.json", "🦠️mutation.json", "➡️after.json"]) expect(existsSync(join(fixtures, name))).toBe(true);
     const base = decodeRemodelingSnapshot(readJson(join(fixtures, "⬅️before.json")));
     expect(readJson(join(fixtures, "➡️after.json"))).toEqual(readJson(join(fixtures, "⬅️before.json")));
-    expect(base.job.stage).toBe("bundle-adjusting");
     expect(base.results.mesh).not.toBeNull();
   });
 
-  it("refuses a plain sparse buffer with mutation.invalid-reconstruction-sparse and moves nothing", () => {
+  it("refuses an unpublished sparse content handle with mutation.invalid-reconstruction-sparse and moves nothing", () => {
     const base = decodeRemodelingSnapshot(readJson(join(fixtures, "⬅️before.json")));
     const commit = decodeRemodelingMutation(readJson(join(fixtures, "🦠️mutation.json")));
-    const outcome = remodelingMutationDiff(base, commit);
+    const outcome = remodelingMutationOutcome(base, commit);
     expect(outcome.messages.map((message) => message.code)).toEqual(["mutation.invalid-reconstruction-sparse"]);
     expect(applyRemodelingMutation(base, commit)).toEqual(base);
   });

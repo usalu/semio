@@ -10,14 +10,23 @@
  *                        assert the wire comes BACK in the fixture (punchlist gap #4).
  *   doc-panel-select   — the Document (artifact) panel's tree row is clicked and the framework
  *                        selection it is supposed to publish is read back.
- *   inspection-edit    — with that selection standing, `procedural-play-inspector.value.input`
- *                        dispatches `patchFlowWidgets` and the preview RE-EVALUATES.
+ *   inspection-edit    — with that selection standing, `procedural-play-inspector.value.input` exists
+ *                        and its edit dispatches `patchFlowWidgets` into the DOCUMENT.
+ *   inspection-preview-rearm — and the edit preview then re-evaluates. Split from the step above
+ *                        because it is a different owner (`🧵️preview-eval`'s run lifecycle) and a
+ *                        different failure: the payload's own DIGEST, not merely its length, decides.
  *   catalogue-add      — a Catalogue OPERATOR row (`…catalogue.neuron.…`) dispatches `addWidget`.
  *   actions-pane-de    — the locale is switched to German and the Actions pane's own row labels read.
  *
- * 🪪️ Order matters: every Actions-pane step runs BEFORE the side panels are opened. With the
- * top-left/top-right panels expanded the window chrome's pane toggles stop accepting a click
- * (recorded by `🐍️react-gap-recon.mjs`), so a probe that opens the panels first can never reach them.
+ * 🪪️ Order matters, twice. (a) Every Actions-pane step needs the window chrome's own pane toggles
+ * uncovered, so any step that opens a side panel folds it again afterwards — an expanded panel sits on
+ * top of those toggles (recorded by `🐍️react-gap-recon.mjs`, re-measured by `🐍️actions-pane-recon.mjs`),
+ * and a panel TAB folds its panel only on a re-press of the tab that is already active, never on a
+ * fresh pick. (b) `inspection-edit` reads "the preview re-evaluated" as a change in the preview's
+ * published mesh payload, which an EMPTY preview cannot express — so it first RESTORES that
+ * precondition by re-picking the same example from the navbar (the one gesture this app guarantees
+ * re-arms every attached preview, `setActiveExample` → `rearm_attached_previews`), and records
+ * `previewArmed:false` rather than blaming the inspector if the preview stays empty anyway.
  * 🪪️ A step that finds nothing to act on records `ok:false` with what it saw — that IS the finding.
  *
  * Usage: cd <ticket> && SEMIO_PROBE_OUT=react-verify/gaps bun 🐍️react-gap-probe.mjs
@@ -52,21 +61,7 @@ const note = async (step, ok, detail) => {
   await page.screenshot({ path: join(outDir, `${shot}-${step}.png`) }).catch(() => {});
   results.steps.push({ step, ok, detail, t: Date.now() - t0 });
   console.log(`[DEBUG] ${step} ok=${ok} ${JSON.stringify(detail).slice(0, 1100)}`);
-  // ── 9. The addGeneration chord, in the mode whose window declares it ────────
-{
-  await page.keyboard.press("Meta+Alt+ArrowRight");
-  await page.waitForTimeout(6000);
-  const before = await snap();
-  const mark = lines.length;
-  await page.keyboard.press("Meta+Shift+g");
-  const after = await until(snap, (s) => s.previews.some((p) => /generate/.test(p.surfaceId ?? "") && p.meshes > 0), 90);
-  const chordInvoked = invoked(mark);
-  await page.keyboard.press("Meta+Alt+ArrowLeft");
-  await page.waitForTimeout(4000);
-  await note("generate-chord", chordInvoked.includes("addGeneration"), { chord: "mod+shift+g", chordInvoked, previewsBefore: before.previews, previewsAfter: after.previews });
-}
-
-writeFileSync(join(outDir, "results.json"), JSON.stringify(results, null, 2));
+  writeFileSync(join(outDir, "results.json"), JSON.stringify(results, null, 2));
   writeFileSync(join(outDir, "console.txt"), lines.join("\n"));
 };
 /** 📣️ The action ids the shell invoked since `mark` — the only honest answer to "did the click reach
@@ -80,7 +75,11 @@ const snap = () => page.evaluate(([surface]) => {
   const raw = main?.getAttribute("data-fixture-json") ?? window.__semioFlowGraphProbe?.[surface]?.fixtureJson?.() ?? null;
   const fx = parse(raw);
   const widgets = Array.isArray(fx?.widgets) ? fx.widgets.map((w) => { const key = w && typeof w === "object" ? Object.keys(w)[0] : null; const inner = key && typeof w[key] === "object" ? w[key] : null; return { kind: w?.kind ?? key ?? null, id: w?.id ?? inner?.id ?? null, value: w?.value ?? inner?.value ?? null }; }) : [];
-  const previews = [...document.querySelectorAll("[data-meshes-json]")].map((el) => ({ surfaceId: el.getAttribute("data-surface-id"), bytes: (el.getAttribute("data-meshes-json") ?? "").length, meshes: (() => { const v = parse(el.getAttribute("data-meshes-json")); return Array.isArray(v) ? v.length : 0; })(), phase: parse(el.getAttribute("data-status-json"))?.phase ?? null }));
+  /** 🔢️ A payload's own CONTENT, not merely its length: two different meshes of the same topology
+   * serialize to the same number of characters (a column whose height changes keeps every digit
+   * count), so a byte-length comparison reports "nothing happened" for a real re-evaluation. */
+  const digest = (text) => { let hash = 2166136261; for (let index = 0; index < text.length; index += 1) { hash ^= text.charCodeAt(index); hash = Math.imul(hash, 16777619); } return (hash >>> 0).toString(16); };
+  const previews = [...document.querySelectorAll("[data-meshes-json]")].map((el) => ({ surfaceId: el.getAttribute("data-surface-id"), bytes: (el.getAttribute("data-meshes-json") ?? "").length, digest: digest(el.getAttribute("data-meshes-json") ?? ""), meshes: (() => { const v = parse(el.getAttribute("data-meshes-json")); return Array.isArray(v) ? v.length : 0; })(), phase: parse(el.getAttribute("data-status-json"))?.phase ?? null }));
   return {
     widgets, widgetIds: widgets.map((w) => w.id).filter(Boolean), synapses: fx?.synapses ?? [],
     previews,
@@ -94,8 +93,21 @@ const snap = () => page.evaluate(([surface]) => {
 }, [SURFACE]);
 
 const wires = (s) => (s.synapses ?? []).map((x) => `${x.from}@${x.fromPort ?? x.from_port}->${x.to}@${x.toPort ?? x.to_port}`).sort();
-const previewBytes = (s) => Object.fromEntries(s.previews.map((p) => [p.surfaceId, p.bytes]));
+const previewBytes = (s) => Object.fromEntries(s.previews.map((p) => [p.surfaceId, `${p.bytes}:${p.digest}`]));
 const clickId = (id, timeout = 8000) => page.locator(`[id="${id}"]`).first().click({ timeout });
+/** 🪟️ Whether the flow window's Actions pane is folded right now — the only honest precondition for
+ * pressing its toggle, which toggles rather than opens. */
+const paneFolded = () => page.evaluate(() => document.getElementById("framework.window.proceduralMain.engagement")?.getAttribute("data-folded") === "true");
+/** 🧹️ Drops every standing selection so a step that needs ONE selected widget really has one. The
+ * interaction domain binds `escape` to `clearSelection`; the surface must hold focus for it. */
+const clearSelection = async () => {
+  // 🎯️ Empty canvas, low and centre: the graph paints its nodes around the middle band and the top-left
+  // corner is where a side panel overlaps the surface, so a click there is a click on the panel.
+  const host = await page.evaluate((id) => { const r = document.querySelector(`[data-surface-id="${id}"]`)?.getBoundingClientRect(); return r ? { x: r.x, y: r.y, width: r.width, height: r.height } : null; }, SURFACE);
+  if (host) await page.mouse.click(host.x + host.width * 0.5, host.y + host.height - 40);
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(1200);
+};
 const hasId = async (id) => (await page.locator(`[id="${id}"]`).count()) > 0;
 /** ⏳️ Poll `read` until `pred`, then hand back the last reading — never a single blind sample. */
 const until = async (read, pred, seconds) => { let v = await read(); for (let i = 0; i < seconds && !pred(v); i++) { await page.waitForTimeout(1000); v = await read(); } return v; };
@@ -143,7 +155,9 @@ const slider = afterBoot.widgets.find((w) => /slider/i.test(String(w.kind ?? "")
   try {
     await page.locator(`[data-surface-id="${SURFACE}"]`).first().click({ position: { x: 20, y: 20 } });
     await page.waitForTimeout(1500);
-    await clickId("framework.window.proceduralMain.engagement.toggle");
+    // 🪟️ The toggle TOGGLES: a pane left open by an earlier step is folded by an unconditional click,
+    // and every row this step needs then disappears. Only unfold a pane that is actually folded.
+    if (await paneFolded()) await clickId("framework.window.proceduralMain.engagement.toggle");
     await page.waitForTimeout(2000);
     for (let attempt = 0; attempt < 3 && (await page.locator("#format").count()) === 0; attempt += 1) { await clickId("action.exportDocument").catch(() => {}); await page.waitForTimeout(1800); }
     await page.locator("#format").click({ timeout: 8000 });
@@ -215,6 +229,11 @@ const slider = afterBoot.widgets.find((w) => /slider/i.test(String(w.kind ?? "")
 // ── 5. Inspection panel: the slider field → patchFlowWidgets → re-evaluate ───
 {
   const readInspector = () => page.evaluate(() => [...document.querySelectorAll('[data-slot="panel"] [id*="procedural-play-inspector"]')].map((el) => ({ id: el.id, tag: el.tagName, value: el.value ?? null, text: (el.textContent ?? "").trim().slice(0, 60) })));
+  // 🗂️ BOTH panels: the slider is selected from the Document panel's own row and the answer is read
+  // from the Inspection panel, so a step that opens only one of them can never establish its own
+  // precondition (measured: `tabOk:true, present:false` with the inspector on its empty branch).
+  const docTabOk = (await hasId("framework.panel.artifact")) ? await clickId("framework.panel.artifact").then(() => true).catch(() => false) : false;
+  await page.waitForTimeout(1800);
   let tabOk = false;
   let inspectorRows = await readInspector();
   for (let attempt = 0; attempt < 3 && inspectorRows.length === 0; attempt += 1) {
@@ -222,9 +241,51 @@ const slider = afterBoot.widgets.find((w) => /slider/i.test(String(w.kind ?? "")
     await page.waitForTimeout(2500);
     inspectorRows = await readInspector();
   }
+  // 🎯️ The inspector reads the FIRST selected node, so this step must really leave the slider — and
+  // only the slider — selected. The wire-cut two steps up leaves a handle standing in the graph
+  // domain, and a `replace` merge in the `node` granularity does not clear the `handle` one, so the
+  // inspector was answering about a neuron and truthfully painting no value control for it.
+  let selectedSlider = null;
+  for (let attempt = 0; attempt < 3 && slider && selectedSlider === null; attempt += 1) {
+    await clearSelection();
+    await page.locator(`[data-slot="panel"] [id="panel:procedural-play-document/${slider.id}"]`).first().click({ timeout: 8000 }).catch((e) => lines.push(`inspector row click ${String(e).slice(0, 160)}`));
+    await page.waitForTimeout(2500);
+    inspectorRows = await readInspector();
+    selectedSlider = inspectorRows.some((row) => row.id.endsWith("procedural-play-inspector.id") && row.text.includes(slider.id)) ? slider.id : null;
+  }
   const field = page.locator('[data-slot="panel"] [id$="procedural-play-inspector.value.input"], [id="procedural-play-inspector.value.input"]').first();
   const present = (await field.count()) > 0;
-  const before = await snap();
+  // 🖼️ "The preview RE-EVALUATES" is read as a change in its published mesh payload, which an EMPTY
+  // preview cannot express: the earlier mode round trip and wire cut leave the edit preview's
+  // `data-meshes-json` at `[]` for a while, and two empty payloads compare equal however well the
+  // edit landed. Wait for the preview to carry geometry again before typing, and say so if it never
+  // does rather than blaming the inspector for it.
+  const editMeshes = (s) => s.previews.filter((p) => !/generate/.test(p.surfaceId ?? "")).reduce((sum, p) => sum + p.meshes, 0);
+  let armed = await until(snap, (s) => editMeshes(s) > 0, 20);
+  // 🔁️ Re-pick the SAME example from the navbar when the preview is empty. That is the one gesture
+  // this app guarantees re-arms every attached preview (`setActiveExample` →
+  // `rearm_attached_previews`), and the journey probe proves it for all eight examples — so an empty
+  // preview here is a precondition this step can restore by itself rather than a reason to give up.
+  let rearmed = false;
+  if (editMeshes(armed) === 0) {
+    // 🔁️ TWO hops, not one: re-picking the option the picker already shows dispatches nothing at all
+    // (measured — no second `setActiveExample` reached the guest), so the example has to actually
+    // change and change back for `rearm_attached_previews` to run.
+    const pick = async (match) => {
+      const opened = await page.locator('[id="playground.navbar.fixture"]').first().click({ timeout: 8000 }).then(() => true).catch((e) => { lines.push(`example picker ${String(e).slice(0, 160)}`); return false; });
+      if (!opened) return false;
+      await page.waitForTimeout(1200);
+      const option = page.locator('[role="option"]').filter({ hasText: match }).first();
+      if (!(await option.count())) { await page.keyboard.press("Escape"); lines.push(`example option missing ${match}`); return false; }
+      await option.click({ timeout: 8000 }).catch((e) => lines.push(`example option ${String(e).slice(0, 160)}`));
+      await page.waitForTimeout(6000);
+      return true;
+    };
+    rearmed = (await pick(/Rectangle Extrude|Rechteck/)) && (await pick(/Hexagonal|Sechseckige/));
+    if (rearmed) armed = await until(snap, (s) => editMeshes(s) > 0, 120);
+  }
+  const previewArmed = editMeshes(armed) > 0;
+  const before = armed;
   let after = before; let typed = null; const mark = lines.length;
   if (present) {
     const old = Number(await field.inputValue().catch(() => "0"));
@@ -232,12 +293,20 @@ const slider = afterBoot.widgets.find((w) => /slider/i.test(String(w.kind ?? "")
     await field.fill(String(typed), { timeout: 8000 }).catch(() => {});
     await page.keyboard.press("Enter");
     await field.blur().catch(() => {});
-    after = await until(snap, (s) => { const w = s.widgets.find((x) => x.id === (slider?.id ?? "")); return Boolean(w) && Number(w.value) === typed && JSON.stringify(previewBytes(s)) !== JSON.stringify(previewBytes(before)); }, 60);
+    // 🖼️ "The preview re-evaluated" is a NEW payload that still carries geometry: the first thing a
+    // re-armed chain publishes is the emptied preview it is about to refill, and stopping there would
+    // call a preview that merely went blank a success.
+    after = await until(snap, (s) => { const w = s.widgets.find((x) => x.id === (slider?.id ?? "")); return Boolean(w) && Number(w.value) === typed && JSON.stringify(previewBytes(s)) !== JSON.stringify(previewBytes(before)) && editMeshes(s) > 0; }, 120);
   }
   const widgetAfter = after.widgets.find((x) => x.id === (slider?.id ?? "")) ?? null;
   const valueMoved = widgetAfter != null && typed != null && Number(widgetAfter.value) === typed;
-  const previewMoved = JSON.stringify(previewBytes(after)) !== JSON.stringify(previewBytes(before));
-  await note("inspection-edit", present && valueMoved && previewMoved, { tabOk, present, inspectorRows, sliderId: slider?.id ?? null, typed, widgetAfter, invoked: invoked(mark), bytesBefore: previewBytes(before), bytesAfter: previewBytes(after), valueMoved, previewMoved });
+  const previewMoved = JSON.stringify(previewBytes(after)) !== JSON.stringify(previewBytes(before)) && editMeshes(after) > 0;
+  // ✏️ TWO subjects, two verdicts. The inspector's own subject is that its number control exists and
+  // EDITS THE DOCUMENT; whether the preview then re-evaluates belongs to the preview-evaluation
+  // pipeline, which is a different owner (`🧵️preview-eval`) and a different failure. Reporting them as
+  // one line made a green inspector read as a red one and hid which half was broken.
+  await note("inspection-edit", present && valueMoved, { tabOk, docTabOk, present, selectedSlider, inspectorRows, sliderId: slider?.id ?? null, typed, widgetAfter, invoked: invoked(mark), valueMoved });
+  await note("inspection-preview-rearm", previewArmed && previewMoved, { previewArmed, rearmed, valueMoved, typed, bytesBefore: previewBytes(before), bytesAfter: previewBytes(after), previewMoved, toolRunStarts: lines.filter((line) => line.includes('"actionId":"toolRunStart"')).length });
 }
 
 // ── 6. Catalogue panel: an operator row dispatches addWidget ─────────────────
@@ -267,7 +336,15 @@ const slider = afterBoot.widgets.find((w) => /slider/i.test(String(w.kind ?? "")
 {
   // 🪟️ Fold the side panels away first: an expanded panel makes the window chrome's pane toggles
   // unclickable, which would hide the i18n answer behind a layout problem.
-  for (const tab of ["framework.panel.catalogue", "framework.panel.inspection", "framework.panel.artifact"]) await clickId(tab).catch(() => {});
+  // 🪟️ A panel tab re-press folds its panel, but only when that tab is already the ACTIVE one — a
+  // single pass over three tabs is three fresh PICKS and folds nothing, which is how this step used to
+  // run with all three panels still covering the window chrome it then tried to click.
+  for (const tab of ["framework.panel.catalogue", "framework.panel.inspection", "framework.panel.artifact"]) {
+    await clickId(tab).catch(() => {});
+    await page.waitForTimeout(900);
+    await clickId(tab).catch(() => {});
+    await page.waitForTimeout(900);
+  }
   await page.waitForTimeout(2500);
   const readPane = () => page.evaluate(() => {
     const pane = document.querySelector('[id="framework.window.proceduralMain.engagement"]');
@@ -313,6 +390,36 @@ const slider = afterBoot.widgets.find((w) => /slider/i.test(String(w.kind ?? "")
   const ok = onMain.activeWindow === "procedural-main" && onPreview.activeWindow === "procedural-preview"
     && onPreview.dockTabs.some((t) => t.id === "procedural-preview" && t.active);
   await note("window-focus", ok, { atBoot: before.activeWindow, afterMainClick: onMain.activeWindow, afterPreviewClick: onPreview.activeWindow, dockTabs: onPreview.dockTabs });
+}
+
+// ── 9. The addGeneration chord, in the mode whose window declares it ────────
+{
+  await page.keyboard.press("Meta+Alt+ArrowRight");
+  await page.waitForTimeout(6000);
+  // 🎯️ Focus the window that DECLARES the verb first: `addGeneration` sits in
+  // `window_kind_action_refs(GENERATIONS, …)`, so a chord pressed while another window holds focus
+  // has no owner to resolve against. Clicking the Generations window's own dock tab is what a user
+  // does before reaching for its shortcut.
+  // 🎯️ The Generations window is a TREE, not a canvas: a user focuses it by clicking a row inside it.
+  // Its window root carries no `data-surface-id`, only the DOM id `generation3d-generations`.
+  const focusTargets = ['[id="generation3d-generations"] [role="treeitem"]', '[id="generation3d-generations"] [data-slot="tree-item-row"]', '[id="generation3d-generations"]'];
+  let focused = false;
+  for (const selector of focusTargets) {
+    if (!(await page.locator(selector).count())) continue;
+    focused = await page.locator(selector).first().click({ timeout: 8000, force: true }).then(() => true).catch((e) => { lines.push(`focus ${selector} ${String(e).slice(0, 120)}`); return false; });
+    if (focused) break;
+  }
+  await page.waitForTimeout(2500);
+  const activeWindow = (await snap()).activeWindow;
+  const mountedWindows = await page.evaluate(() => ({ surfaces: [...document.querySelectorAll("[data-surface-id]")].map((el) => el.getAttribute("data-surface-id")), windows: [...document.querySelectorAll('[data-slot="window"]')].map((el) => el.id), tabs: [...document.querySelectorAll('[data-slot="mode-dock-tab"]')].map((el) => el.getAttribute("data-window-id")) }));
+  const before = await snap();
+  const mark = lines.length;
+  await page.keyboard.press("Meta+Shift+g");
+  const after = await until(snap, (s) => s.previews.some((p) => /generate/.test(p.surfaceId ?? "") && p.meshes > 0), 90);
+  const chordInvoked = invoked(mark);
+  await page.keyboard.press("Meta+Alt+ArrowLeft");
+  await page.waitForTimeout(4000);
+  await note("generate-chord", chordInvoked.includes("addGeneration"), { chord: "mod+shift+g", focusedGenerations: focused, activeWindow, mountedWindows, chordInvoked, previewsBefore: before.previews, previewsAfter: after.previews });
 }
 
 writeFileSync(join(outDir, "results.json"), JSON.stringify(results, null, 2));

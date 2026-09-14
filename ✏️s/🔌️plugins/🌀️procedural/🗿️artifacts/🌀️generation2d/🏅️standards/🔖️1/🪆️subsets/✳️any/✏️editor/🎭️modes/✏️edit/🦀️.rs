@@ -2,14 +2,23 @@
 //! preview).
 
 use crate::editor::generation2d::modes::edit::windows::{flow, preview};
-use semio_framework_plugin::{create_default_layout, LocalizedLabel, ModeDefinition, WindowLayout};
+use semio_framework_plugin::{create_default_layout, LocalizedLabel, ModeDefinition, ToolRef, WindowLayout};
 
 pub const GENERATION2D_PLAY_MODE_EDIT: &str = "edit";
 
 //#region 🔖️Definition
-/// 🧱️ Stitched into the app manifest by `crate::editor::generation2d::create_generation2d_app`.
+/// 🧱️ Stitched into the app manifest by `crate::editor::generation2d::create_generation2d_app`. References
+/// the `previewEval` run because this mode mounts the edit preview that starts it — a declared tool no
+/// mode references is refused by `build_definition`.
 pub fn definition() -> ModeDefinition {
-    ModeDefinition { id: GENERATION2D_PLAY_MODE_EDIT.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
+    ModeDefinition {
+        id: GENERATION2D_PLAY_MODE_EDIT.into(),
+        label: LocalizedLabel::native("Edit", "Bearbeiten"),
+        icon_id: "pencil".into(),
+        tools: vec![semio_framework::io::resolve_ready(ToolRef::new(crate::preview_eval::PREVIEW_EVAL_TOOL_ID))],
+        layout_id: None,
+        commands: Vec::new(),
+    }
 }
 
 /// 🪟️ The app's default window layout — this mode is the app's `default_mode_id`, so its layout IS the

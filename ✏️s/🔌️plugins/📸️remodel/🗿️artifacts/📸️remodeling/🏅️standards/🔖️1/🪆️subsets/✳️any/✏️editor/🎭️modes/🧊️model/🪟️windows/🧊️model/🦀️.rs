@@ -3,6 +3,7 @@
 
 use crate::editor::remodeling::modes::model::windows::model::config::RemodelingModelWindowConfig;
 use crate::editor::remodeling::modes::model::windows::model::options::layers;
+use crate::editor::remodeling::reconstruction_session::{RECONSTRUCTION_TRACE_CAMERA_MESH, RECONSTRUCTION_TRACE_MESH_LANE, RECONSTRUCTION_TRACE_POINT_MESH};
 use crate::editor::remodeling::terminology::RemodelingLabels;
 use crate::{PackedF32, RemodelingSnapshot};
 use semio_framework_plugin::{world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions, WorldSunConfig};
@@ -51,11 +52,31 @@ pub fn window_measures(config: &RemodelingModelWindowConfig, labels: &Remodeling
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`) — resolves only fixed constants or committed
 /// reconstruction content inside the production 512/512 mesh envelope; unavailable content renders
 /// no mesh entity rather than treating the handle's opaque address as geometry.
+/// 🧊️ The mesh lane: the reconstruction trace markers first, at the indices `instance3d` trace records
+/// name (`RECONSTRUCTION_TRACE_MESH_LANE`), then the stored result mesh.
 fn world_meshes_json(scene: &RemodelingSnapshot) -> String {
-    let Some(mesh) = crate::resolve_bounded_remodeling_mesh(&scene.durable_artifacts, &scene.results.mesh.mesh) else {
-        return "[]".into();
-    };
-    serde_json::to_string(&vec![json!({ "id": REMODELING_MESH_ID, "data": mesh_data_json(&mesh) })]).unwrap_or_else(|_| "[]".into())
+    let mut meshes = vec![
+        json!({ "id": RECONSTRUCTION_TRACE_MESH_LANE[RECONSTRUCTION_TRACE_POINT_MESH as usize], "data": mesh_data_json(&trace_point_marker()) }),
+        json!({ "id": RECONSTRUCTION_TRACE_MESH_LANE[RECONSTRUCTION_TRACE_CAMERA_MESH as usize], "data": mesh_data_json(&trace_camera_marker()) }),
+    ];
+    if let Some(mesh) = crate::resolve_bounded_remodeling_mesh(&scene.durable_artifacts, &scene.results.mesh.mesh) {
+        meshes.push(json!({ "id": REMODELING_MESH_ID, "data": mesh_data_json(&mesh) }));
+    }
+    serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
+}
+
+/// 🔹️ Unit octahedron a traced point instances.
+fn trace_point_marker() -> semio_framework::MeshData {
+    semio_framework::MeshData {
+        positions: vec![1.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, -1.0],
+        indices: vec![0, 2, 4, 2, 1, 4, 1, 3, 4, 3, 0, 4, 2, 0, 5, 1, 2, 5, 3, 1, 5, 0, 3, 5],
+        ..Default::default()
+    }
+}
+
+/// 📷️ Unit viewing pyramid a traced camera instances: apex at the camera center, base along +z.
+fn trace_camera_marker() -> semio_framework::MeshData {
+    semio_framework::MeshData { positions: vec![0.0, 0.0, 0.0, -0.6, -0.45, 1.0, 0.6, -0.45, 1.0, 0.6, 0.45, 1.0, -0.6, 0.45, 1.0], indices: vec![0, 2, 1, 0, 3, 2, 0, 4, 3, 0, 1, 4, 1, 2, 3, 1, 3, 4], ..Default::default() }
 }
 
 /// 🧊️ The World3d wire shape of one mesh. `semio_framework::MeshData` derives `Serialize` only under
@@ -87,11 +108,10 @@ fn world_instances_json(config: &RemodelingModelWindowConfig) -> String {
     .unwrap_or_else(|_| "[]".into())
 }
 
-/// ☁️ `World3dScene.points_json` layers: the finished sparse/dense clouds once a run has produced them,
-/// and every recovered camera pose as its own (small, unattenuated) point layer — a documented
-/// simplification standing in for a real camera-frustum gizmo, which `points_json` alone cannot express.
-/// GCP world positions are a fourth, always-static layer. There is no in-progress live sparse preview
-/// layer: a synchronous run only ever publishes the FINAL sparse cloud, never an interior one.
+/// ☁️ `World3dScene.points_json` layers: the stored sparse/dense clouds, every stored trajectory camera
+/// as its own (small, unattenuated) point layer, and the GCP world positions. A running reconstruction
+/// shows its cameras and points through the framework `toolRunTrace` lane instead, and its provisional
+/// result through the overlay document this window already renders.
 /// `PackedF32`/`PackedU8`'s inner string is already a base64 little-endian buffer, matching
 /// `positionsB64`/`colorsB64`'s wire shape byte-for-byte — no decode/re-encode round trip needed.
 fn world_points_json(scene: &RemodelingSnapshot, config: &RemodelingModelWindowConfig) -> Option<String> {
@@ -101,7 +121,7 @@ fn world_points_json(scene: &RemodelingSnapshot, config: &RemodelingModelWindowC
             if !sparse.points.is_empty() {
                 layers.push(json!({
                     "id": "remodeling-sparse",
-                    "positionsB64": sparse.points.0,
+                    "positionsB64": PackedF32::from_f32_slice(&sparse.points.to_f32_vec_from(&scene.durable_artifacts)).0,
                     "colorsB64": sparse.colors.as_ref().map(|colors| colors.0.clone()),
                     "size": 3.0,
                     "sizeAttenuation": true,
@@ -122,8 +142,8 @@ fn world_points_json(scene: &RemodelingSnapshot, config: &RemodelingModelWindowC
             }
         }
     }
-    if config.layers.cameras && !scene.job.camera_poses_preview.is_empty() {
-        let positions: Vec<f32> = scene.job.camera_poses_preview.iter().flat_map(|pose| pose.translation).collect();
+    if let Some(trajectory) = scene.results.trajectory.as_ref().filter(|trajectory| config.layers.cameras && !trajectory.poses.is_empty()) {
+        let positions: Vec<f32> = trajectory.poses.iter().flat_map(|pose| pose.translation).collect();
         layers.push(json!({
             "id": "remodeling-camera-poses",
             "positionsB64": PackedF32::from_f32_slice(&positions).0,

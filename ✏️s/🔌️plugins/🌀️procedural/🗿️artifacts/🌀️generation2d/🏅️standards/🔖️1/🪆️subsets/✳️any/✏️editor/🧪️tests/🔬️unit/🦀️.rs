@@ -68,6 +68,95 @@ pub(crate) mod context {
         close_flow_session(&mut session);
     }
     
+    /// 🏛️ The edit layout's shell roster — flow window current, edit preview attached — and the preview's own view.
+    pub fn edit_shell_views() -> (ViewModel, ViewModel) {
+        let roster = vec![
+            semio_framework::ViewWindowInstance { id: "flow-1".into(), window_kind_id: flow_window::GENERATION2D_PLAY_WINDOW_MAIN.into() },
+            semio_framework::ViewWindowInstance { id: "preview-1".into(), window_kind_id: edit_preview::GENERATION2D_PLAY_WINDOW_PREVIEW.into() },
+        ];
+        let view = ViewModel { window_instances: roster, ..Default::default() };
+        (view.for_window_instance("flow-1").expect("flow window instance"), view.for_window_instance("preview-1").expect("preview window instance"))
+    }
+
+    /// 🏛️ The generate layout's shell roster with TWO generate previews — generations window current —
+    /// and each preview's own view.
+    pub fn generate_shell_views() -> (ViewModel, Vec<ViewModel>) {
+        let roster = vec![
+            semio_framework::ViewWindowInstance { id: "generations-1".into(), window_kind_id: generations::GENERATION2D_PLAY_WINDOW_GENERATIONS.into() },
+            semio_framework::ViewWindowInstance { id: "preview-a".into(), window_kind_id: generate_preview::GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW.into() },
+            semio_framework::ViewWindowInstance { id: "preview-b".into(), window_kind_id: generate_preview::GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW.into() },
+        ];
+        let view = ViewModel { window_instances: roster, ..Default::default() };
+        (view.for_window_instance("generations-1").expect("generations window instance"), ["preview-a", "preview-b"].iter().map(|id| view.for_window_instance(id).expect("generate preview window instance")).collect())
+    }
+
+    /// 🧾️ What one driven `previewEval` run did: its hops and their windows, the run actions fed back and
+    /// the state it rests in.
+    #[derive(Clone, Debug, Default)]
+    pub struct PreviewRunReceipt {
+        pub hops: usize,
+        pub hop_windows: Vec<String>,
+        pub run_actions: Vec<String>,
+        pub state: Option<String>,
+    }
+
+    /// 🚦️ The framework run actions an effect list carries.
+    pub fn run_actions(effects: &[semio_framework_plugin::Effect]) -> Vec<String> {
+        effects.iter().filter_map(|effect| match effect {
+            semio_framework_plugin::Effect::DispatchAction { action, .. } if semio_framework_plugin::is_tool_run_action_id(action) => Some(action.clone()),
+            _ => None,
+        }).collect()
+    }
+
+    /// 🔁️ The served `previewEval` loop, nothing hand-addressed: `pending_effects` off the shell roster,
+    /// every run action fed back through `PluginApp::handle_action`, every hop the run's port hands the
+    /// host redispatched as the typed command the shell sends. The demo operators are uncontributed in a
+    /// test binary, so no hop parks an extension invocation. Stops once nothing is owed or pending and
+    /// the run rests. `action_meta` names the shell view the roster is read off and the bound instance.
+    pub async fn drive_preview_run(app: &mut Generation2dApp, action_meta: &semio_framework_plugin::ActionMeta, initial: &[semio_framework_plugin::Effect]) -> PreviewRunReceipt {
+        use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
+        use semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation;
+        let shell_view = action_meta.view_state.as_ref();
+        let mut receipt = PreviewRunReceipt::default();
+        let mut effects: Vec<semio_framework_plugin::Effect> = initial.to_vec();
+        for _ in 0..100_000 {
+            effects.extend(Box::pin(app.pending_effects(shell_view)).await);
+            if app.has_pending_typed_operations() {
+                effects.extend(Box::pin(settle_registered_typed_operation(app, action_meta.instance_id)).await.expect("the run's driver turns settle").effects);
+            }
+            let dispatches: Vec<(String, Option<dsl::DslValue>)> = std::mem::take(&mut effects).into_iter().filter_map(|effect| match effect {
+                semio_framework_plugin::Effect::DispatchAction { action, args, .. } => Some((action, args)),
+                _ => None,
+            }).collect();
+            receipt.state = app.tool_run_presence().map(|presence| presence.state.wire_name().to_string());
+            if dispatches.is_empty() && !app.has_pending_typed_operations() && receipt.state.as_deref().is_none_or(|state| matches!(state, "complete" | "aborted" | "faulted" | "finalized")) {
+                return receipt;
+            }
+            for (action, args) in dispatches {
+                if semio_framework_plugin::is_tool_run_action_id(&action) {
+                    receipt.run_actions.push(action.clone());
+                    Box::pin(app.handle_action(&action, args.as_ref(), action_meta)).await.unwrap_or_else(|fault| panic!("{action} dispatch: {fault:?}"));
+                    continue;
+                }
+                if action == "flowEvalTick" {
+                    receipt.hops += 1;
+                    receipt.hop_windows.push(args.as_ref().and_then(|args| args.get("windowId")).and_then(dsl::DslValue::as_str).unwrap_or_default().to_string());
+                }
+                let arguments = match args.as_ref() {
+                    Some(dsl::DslValue::Object(entries)) => entries.iter().cloned().collect(),
+                    _ => std::collections::BTreeMap::new(),
+                };
+                let app_id = app.app_id().await.to_string();
+                let invocation = CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: String::new(), app_id }, command_id: action.clone() }, arguments };
+                Box::pin(app.handle_command(&invocation, None, action_meta)).await.unwrap_or_else(|fault| panic!("the shell redispatches the run's {action} hop: {fault:?}"));
+                let hop = Box::pin(settle_registered_typed_operation(app, action_meta.instance_id)).await.expect("retained publication");
+                assert!(!hop.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault), "the run's {action} hop faulted: args={args:?}");
+                effects.extend(hop.effects);
+            }
+        }
+        panic!("the previewEval run did not settle within 100 000 host turns; last state {:?}", receipt.state);
+    }
+
     /// 📜️ The empty `HistoryView` a command-handler unit test hands `ArtifactView::new` — built here once
     /// because `HistoryView` (`🧰️framework/…/🔌️plugin/🦀️.rs`) derives no `Default`.
     pub fn empty_history_view() -> semio_framework_plugin::HistoryView {
@@ -321,37 +410,58 @@ async fn drive_preview_operation(app: &mut semio_framework_plugin::VcsArtifactAp
     Ok((count(TypedOperationResultLane::Artifact), count(TypedOperationResultLane::Config), count(TypedOperationResultLane::Transient)))
 }
 
+/// ⚖️ LAW: a generation command authors its document and selection lanes and NOTHING else — no tick loop
+/// and no transient of its own. The generate preview's evaluation is the `previewEval` run's, so the
+/// command carries exactly one run start on its own emit for the attached generate preview, and the run
+/// publishes the evaluation into the ONE app transient every generate preview window renders.
 #[semio_framework_async_macros::async_test]
-async fn generation_preview_is_one_app_transient_shared_by_two_generation_windows() {
+async fn a_generation_command_carries_the_run_start_and_the_run_publishes_the_shared_generate_preview() {
     let mut app = app_with_registry().await;
     let result: Result<(), String> = async {
-        let before_document = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(app.snapshot().map_err(|error| format!("{error:?}"))?);
-        let before_generation = app.ephemeral_snapshot().await.transient_generation;
-        app.dispatch_typed(Generation2dCommand::AddGeneration(add_generation::AddGeneration {}), &semio_framework_plugin::artifact_app_laws::meta("preview-owner")).await.map_err(|error| format!("{error:?}"))?;
-        if drive_preview_operation(&mut app).await? != (1, 1, 1) {
-            return Err("preview command did not publish artifact, selection config, and app transient exactly once".into());
+        let (generations_view, previews) = context::generate_shell_views();
+        let before_generations = snapshot_read(&app).generation.as_state().generations.len();
+        let action_meta = semio_framework_plugin::ActionMeta { view_state: Some(generations_view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("preview-owner") };
+        app.dispatch_typed(Generation2dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: "rect".into() }), &action_meta).await.map_err(|error| format!("{error:?}"))?;
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
+        let settled = context::drive_preview_run(&mut app, &action_meta, &[]).await;
+        let before_transient = app.ephemeral_snapshot().await.transient_generation;
+        app.dispatch_typed(Generation2dCommand::AddGeneration(add_generation::AddGeneration {}), &action_meta).await.map_err(|error| format!("{error:?}"))?;
+        let receipt = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
+        let count = |wanted: semio_framework_plugin::app::TypedOperationResultLane| receipt.lanes.iter().filter(|lane| **lane == wanted).count();
+        let lanes = (count(semio_framework_plugin::app::TypedOperationResultLane::Artifact), count(semio_framework_plugin::app::TypedOperationResultLane::Config), count(semio_framework_plugin::app::TypedOperationResultLane::Transient));
+        if lanes != (1, 1, 0) {
+            return Err(format!("addGeneration must publish its artifact and selection lanes only, got {lanes:?}"));
         }
-        if app.ephemeral_snapshot().await.transient_generation != before_generation + 1 {
-            return Err("preview app transient generation did not advance exactly once".into());
+        let carried = context::run_actions(&receipt.effects);
+        if carried != vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()] {
+            return Err(format!("addGeneration must carry exactly one run start, got {carried:?} (the boot run settled as {settled:?})"));
         }
-        if snapshot_read(&app).generation.as_state().generations.len() != before_document.generation.as_state().generations.len() + 1 {
+        if app.ephemeral_snapshot().await.transient_generation != before_transient {
+            return Err("the gesture itself must publish no transient".into());
+        }
+        let run = context::drive_preview_run(&mut app, &action_meta, &receipt.effects).await;
+        if !run.hop_windows.iter().any(|window| window == "preview-a" || window == "preview-b") {
+            return Err(format!("the run must evaluate the generate previews: {run:?}"));
+        }
+        if run.state.as_deref() != Some("finalized") && run.state.as_deref() != Some("complete") {
+            return Err(format!("the run must settle: {run:?}"));
+        }
+        if app.ephemeral_snapshot().await.transient_generation == before_transient {
+            return Err("the run must publish the generate preview into the app transient".into());
+        }
+        if snapshot_read(&app).generation.as_state().generations.len() != before_generations + 1 {
             return Err("addGeneration did not preserve its document behavior".into());
         }
-        let view = semio_framework_plugin::ViewModel {
-            window_instances: vec![
-                semio_framework::ViewWindowInstance { id: "preview-a".into(), window_kind_id: generate_preview::GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW.into() },
-                semio_framework::ViewWindowInstance { id: "preview-b".into(), window_kind_id: generate_preview::GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW.into() },
-            ],
-            ..Default::default()
-        };
         let mut rendered = Vec::new();
-        for window_id in ["preview-a", "preview-b"] {
-            let context = view.for_window_instance(window_id).ok_or("missing generation preview window")?;
-            let tree = app.render(generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW, None, &context).await.map_err(|error| format!("{error:?}"))?;
+        for context_view in &previews {
+            let tree = app.render(generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW, None, context_view).await.map_err(|error| format!("{error:?}"))?;
             rendered.push(semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)?);
         }
         if rendered[0] != rendered[1] {
             return Err("generation windows did not consume the same app-transient preview".into());
+        }
+        if rendered[0].contains(generation2d_labels(&previews[0]).preview_hint.as_str()) {
+            return Err(format!("the generate preview still shows its hint after the run evaluated: {}", rendered[0]));
         }
         if include_str!("../../🎚️config/🧬️schema/🔣️.json").contains("generationPreviewText") {
             return Err("config schema still owns computed preview output".into());
@@ -360,7 +470,204 @@ async fn generation_preview_is_one_app_transient_shared_by_two_generation_window
     }
     .await;
     close(app);
-    result.expect("Generation2d preview ownership runtime");
+    result.expect("Generation2d generate preview run");
+}
+
+/// ⚖️ LAW (brief: start → complete → finalize, abort leaves the document byte-identical): the read-only
+/// `previewEval` run started by the edit preview's first poll settles, is finalized (a read-only run is
+/// finalized by the framework as soon as it completes) into NO document edit,
+/// and an abort raised while it is running leaves the document pack, the config pack and the history
+/// exactly as they were.
+#[semio_framework_async_macros::async_test]
+async fn the_preview_eval_run_finalizes_nothing_and_an_abort_leaves_the_document_byte_identical() {
+    let mut app = app_with_registry().await;
+    let result: Result<(), String> = async {
+        let (flow_view, _) = context::edit_shell_views();
+        let action_meta = semio_framework_plugin::ActionMeta { view_state: Some(flow_view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("local") };
+        app.dispatch_typed(Generation2dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: "rect".into() }), &action_meta).await.map_err(|error| format!("{error:?}"))?;
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
+        let document = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
+        let config = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
+        let history = app.artifact_generation_now();
+        let run = context::drive_preview_run(&mut app, &action_meta, &[]).await;
+        if run.hops == 0 || run.state.as_deref() != Some("finalized") {
+            return Err(format!("the run must hop, complete and finalize: {run:?}"));
+        }
+        let after = (app.document_pack().await.map_err(|error| format!("{error:?}"))?, app.config_pack().await.map_err(|error| format!("{error:?}"))?, app.artifact_generation_now());
+        if (after.0.pack.as_slice(), after.1.pack.as_slice(), after.2) != (document.pack.as_slice(), config.pack.as_slice(), history) {
+            return Err("a finalized read-only run must author no document, config or history entry".into());
+        }
+        app.dispatch_typed(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: None, y: None }), &action_meta).await.map_err(|error| format!("{error:?}"))?;
+        let receipt = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
+        let edited = (app.document_pack().await.map_err(|error| format!("{error:?}"))?, app.artifact_generation_now());
+        for effect in &receipt.effects {
+            if let Effect::DispatchAction { action, args, .. } = effect {
+                app.handle_action(action, args.as_ref(), &action_meta).await.map_err(|error| format!("{action}: {error:?}"))?;
+            }
+        }
+        let view = app.tool_run_ledger().view().ok_or("the gesture's run start must open a run")?;
+        app.handle_action(
+            semio_framework_plugin::TOOL_RUN_ABORT_ACTION_ID,
+            Some(&dsl::DslValue::object([
+                (semio_framework_tool_run::TOOL_RUN_ARG_RUN_ID.to_string(), dsl::DslValue::String(view.identity.id.run.to_string())),
+                (semio_framework_tool_run::TOOL_RUN_ARG_GENERATION.to_string(), dsl::DslValue::uint(u64::from(view.identity.generation))),
+            ])),
+            &action_meta,
+        )
+        .await
+        .map_err(|error| format!("toolRunAbort: {error:?}"))?;
+        let aborted = context::drive_preview_run(&mut app, &action_meta, &[]).await;
+        if aborted.state.as_deref() != Some("aborted") {
+            return Err(format!("the abort must end the run aborted and the poll must not restart it: {aborted:?}"));
+        }
+        let after_abort = (app.document_pack().await.map_err(|error| format!("{error:?}"))?, app.artifact_generation_now());
+        if (after_abort.0.pack.as_slice(), after_abort.0.spr.as_slice(), after_abort.1) != (edited.0.pack.as_slice(), edited.0.spr.as_slice(), edited.1) {
+            return Err("an aborted read-only run must leave the document byte-identical".into());
+        }
+        app.handle_action(semio_framework_tool_run::TOOL_RUN_DISMISS_ACTION_ID, Some(&dsl::DslValue::object([(semio_framework_tool_run::TOOL_RUN_ARG_RUN_ID.to_string(), dsl::DslValue::String(view.identity.id.run.to_string()))])), &action_meta).await.map_err(|error| format!("toolRunDismiss: {error:?}"))?;
+        Ok(())
+    }
+    .await;
+    close(app);
+    result.expect("Generation2d previewEval lifecycle");
+}
+
+/// 🧳️ A standalone instance owner handle with the demo's edit preview attached through the real
+/// `pending_effects` law, retired through its own close ladder by [`retire_owner`].
+fn demo_owner(window: (&str, &'static str)) -> semio_framework_plugin::ArtifactInstanceOperationOwnerHandle {
+    let handle = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::new(<Generation2dPlayApp as ArtifactEditor>::build_instance_operation_owner());
+    handle
+        .with_mut::<Generation2dInstanceOperationOwner, _>(|owner| {
+            let (sessions, link) = owner.parts()?;
+            let windows = [(window.0, window.1, PreviewEvalTarget::Document)];
+            crate::preview_eval::preview_eval_run_effects(sessions, link, &windows, &Default::default(), None, true);
+            Ok(())
+        })
+        .expect("the demo owner attaches its preview");
+    handle
+}
+
+fn retire_owner(handle: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) {
+    use semio_framework_plugin::ArtifactInstanceOperationOwner;
+    for _ in 0..1_000_000 {
+        if handle.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| Ok(matches!(ArtifactInstanceOperationOwner::close_step(owner, usize::MAX, usize::MAX), Ok(semio_framework_plugin::PluginCloseStep::Complete)))).expect("the owner lends itself to its close ladder") {
+            return;
+        }
+    }
+    panic!("the demo owner did not reach terminal-empty");
+}
+
+fn close_job(job: &mut crate::preview_eval::PreviewEvalRunJob<Generation2dInstanceOperationOwner>) {
+    use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep};
+    job.begin_close();
+    for _ in 0..1_000 {
+        if matches!(job.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), InteractiveJobCloseStep::Complete) {
+            assert!(job.terminal_is_empty());
+            return;
+        }
+    }
+    panic!("the run job close never completed");
+}
+
+/// ⚖️ LAW (`⏯️preview-eval-run.json` `demoRun`): the run job over the bundled demo — every hop performed by
+/// the real `flowEvalTick` hop core, nothing contributed — traces every node it observes with its verdict,
+/// counts one hop per unit of fuel, settles with the declared settle step, and no single `drive_step`
+/// overruns the interactive ceiling.
+#[test]
+fn the_demo_run_job_traces_every_node_settles_and_stays_under_the_interactive_ceiling() {
+    use semio_framework_job::{Generation, InteractiveStage, OperationId, StepBudget, StepOutcome};
+    use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunTick, ToolRunTraceOp};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/⏯️preview-eval-run.json")).expect("run fixture");
+    let row = &fixture["demoRun"];
+    let expected = &row["expected"];
+    let (window_id, kind) = (row["window"]["id"].as_str().unwrap(), edit_preview::GENERATION2D_PLAY_WINDOW_PREVIEW);
+    assert_eq!(row["window"]["kind"].as_str(), Some(kind));
+    let handle = demo_owner((window_id, kind));
+    let port = semio_framework_plugin::ToolRunJobPort::default();
+    let identity = ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 1 }, [0; 32]);
+    let mut job = crate::preview_eval::PreviewEvalRunJob::<Generation2dInstanceOperationOwner>::new(handle.clone(), port.clone(), identity).expect("the run job attaches");
+    let snapshot = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(crate::standards::v1::subsets::any::schema::default_snapshot());
+    let history = context::empty_history_view();
+    let config = Generation2dConfig::default();
+    let tick = Generation2dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: window_id.into(), window_kind_id: kind.into() });
+    let (mut sequence, mut worst_us, mut hops_performed) = (0_u64, 0_u64, 0_usize);
+    let mut ticks: Vec<ToolRunTick> = Vec::new();
+    let settled = loop {
+        let started = semio_framework_job::default_now_us().expect("clock");
+        let mut verdict = None;
+        let outcome = semio_framework_job::drive_step(&mut job, "generation2d.preview-eval.run.test", OperationId(1), Generation(0), InteractiveStage::InteractiveStep, StepBudget::new(1, started + semio_framework_job::INTERACTIVE_LANE_WALL_US * 8), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence, &mut verdict);
+        worst_us = worst_us.max(semio_framework_job::default_now_us().expect("clock").saturating_sub(started));
+        match outcome {
+            StepOutcome::Yield => {}
+            StepOutcome::PreviewReady(mut payload) => {
+                let bytes: Vec<u8> = (0..payload.page_count()).flat_map(|index| payload.page(index).expect("tick page").to_vec()).collect();
+                while !payload.terminal_is_empty() {
+                    let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                }
+                ticks.push(ToolRunTick::decode(&bytes).expect("tick decodes"));
+            }
+            other => break other,
+        }
+        let armed = handle.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| Ok(owner.parts()?.0.document.window_tick_is_armed(window_id))).expect("owner");
+        if armed {
+            hops_performed += 1;
+            let doc = ArtifactView::new(&*snapshot, &history);
+            let cfg = ConfigView { snapshot: &config, window: None };
+            let (emit, transient) = handle.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| generation2d_flow_eval_hop(owner, &tick, &doc, &cfg)).expect("the hop runs");
+            assert!(emit.extension_invocations.is_empty() && transient.is_empty(), "an uncontributed document target parks nothing and publishes no transient");
+        }
+        assert!(ticks.len() < 10_000, "the run must settle");
+    };
+    let mut final_nodes: std::collections::BTreeMap<u64, &'static str> = std::collections::BTreeMap::new();
+    let mut verdicts = std::collections::BTreeSet::new();
+    for op in ticks.iter().flat_map(|tick| tick.trace.iter()).flat_map(|page| page.ops.iter()) {
+        if let ToolRunTraceOp::Upsert { key, verdict, reason, .. } = op {
+            verdicts.insert(format!("{verdict:?}"));
+            final_nodes.insert(*key, crate::preview_eval::PreviewEvalRunReason::ALL[usize::from(*reason)].id());
+        }
+    }
+    let expected_nodes: std::collections::BTreeMap<u64, &str> = expected["finalNodes"].as_object().unwrap().iter().map(|(node, reason)| (crate::preview_eval::preview_eval_node_entity(node), reason.as_str().unwrap())).collect();
+    let settle_reasons: Vec<&str> = ticks.iter().flat_map(|tick| tick.steps.iter()).map(|step| crate::preview_eval::PreviewEvalRunReason::ALL[usize::from(step.reason)].id()).collect();
+    let hops_counted = ticks.last().and_then(|tick| tick.progress.as_ref()).and_then(|progress| progress.counters.iter().find(|counter| counter.counter == crate::preview_eval::PreviewEvalRunCounter::Hops.index())).map_or(0, |counter| counter.value);
+    println!("[STATS] demoRun ticks={} hops_performed={hops_performed} hops_counted={hops_counted} worst_drive_step_us={worst_us} verdicts={verdicts:?} steps={settle_reasons:?}", ticks.len());
+    assert!(matches!(settled, StepOutcome::Complete(_)), "the run completes: {:?}", std::mem::discriminant(&settled));
+    assert_eq!(final_nodes, expected_nodes, "every node's final traced verdict");
+    assert_eq!(settle_reasons.last().copied(), expected["settleReason"].as_str(), "the settle step");
+    assert!(hops_counted >= expected["hopsAtLeast"].as_u64().unwrap() && hops_counted as usize == hops_performed, "one counted hop per performed hop");
+    assert!(worst_us <= expected["ceilingMicros"].as_u64().unwrap(), "worst drive_step {worst_us} µs overran the interactive ceiling");
+    close_job(&mut job);
+    drop(snapshot);
+    retire_owner(&handle);
+}
+
+/// ⚖️ LAW: closing an UNSETTLED run job — the host-driven abort — quiesces the sessions it was running: its
+/// armed window owes nothing afterwards, so no poll restarts what the user stopped.
+#[test]
+fn closing_an_unsettled_run_job_quiesces_its_window() {
+    use semio_framework_job::{Generation, InteractiveStage, OperationId, StepBudget};
+    use semio_framework_tool_run::{ToolRunId, ToolRunIdentity};
+    let window_id = "preview-1";
+    let handle = demo_owner((window_id, edit_preview::GENERATION2D_PLAY_WINDOW_PREVIEW));
+    let port = semio_framework_plugin::ToolRunJobPort::default();
+    let mut job = crate::preview_eval::PreviewEvalRunJob::<Generation2dInstanceOperationOwner>::new(handle.clone(), port, ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 1 }, [0; 32])).expect("the run job attaches");
+    let mut sequence = 0;
+    let mut verdict = None;
+    let started = semio_framework_job::default_now_us().expect("clock");
+    let outcome = semio_framework_job::drive_step(&mut job, "generation2d.preview-eval.close.test", OperationId(1), Generation(0), InteractiveStage::InteractiveStep, StepBudget::new(1, started + semio_framework_job::INTERACTIVE_LANE_WALL_US * 8), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence, &mut verdict);
+    if let semio_framework_job::StepOutcome::PreviewReady(mut payload) = outcome {
+        while !payload.terminal_is_empty() {
+            let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        }
+    }
+    let armed = handle.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| Ok(owner.parts()?.0.document.window_tick_is_armed(window_id))).expect("owner");
+    assert!(armed, "the first step dispatches the first hop");
+    close_job(&mut job);
+    let (owed, still_armed) = handle.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| {
+        let (sessions, _) = owner.parts()?;
+        Ok((sessions.document.window_tick_owed(window_id), sessions.document.window_tick_is_armed(window_id)))
+    }).expect("owner");
+    assert_eq!((owed, still_armed), (false, false), "an aborted run leaves its window quiescent");
+    retire_owner(&handle);
 }
 
 #[test]
@@ -440,8 +747,8 @@ pub(super) fn every_command() -> Vec<Generation2dCommand> {
         Generation2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}),
         Generation2dCommand::CanvasWheel(canvas_wheel::CanvasWheel {}),
         Generation2dCommand::SelectGeneration(select_generation::SelectGeneration { id: Some("g1".into()) }),
-        Generation2dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {}),
-        Generation2dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { node_hash: 7, output_json: "{}".into() }),
+        Generation2dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: "preview-1".into(), window_kind_id: edit_preview::GENERATION2D_PLAY_WINDOW_PREVIEW.into() }),
+        Generation2dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { window_id: "preview-1".into(), window_kind_id: edit_preview::GENERATION2D_PLAY_WINDOW_PREVIEW.into(), node_hash: 7, output_json: "{}".into(), ..Default::default() }),
         Generation2dCommand::SetContributions(set_contributions::SetContributions { json: "[]".into(), page: 0, page_count: 1 }),
     ]
 }
@@ -474,6 +781,23 @@ fn the_manifest_stitches_every_taxonomy_node() {
 #[semio_framework_async_macros::async_test]
 async fn declared_actions_bridge_to_commands() {
     semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Generation2dPlayApp>>(context::generation2d_manifest_for_tests).await;
+}
+
+/// 🎥️ LAW: `nodeGraphViewport` declares no args, so the shell stages nothing for it. An absent `viewport`
+/// decodes to the identity camera instead of refusing the bridge, while a present but malformed one still
+/// faults. The generic bridge law only exercises the absent half.
+#[test]
+fn node_graph_viewport_decodes_an_absent_viewport_as_identity_and_refuses_a_malformed_one() {
+    let decode = |args: dsl::DslValue| <Generation2dPlayApp as ArtifactEditor>::command_from_action("nodeGraphViewport", Some(&args));
+    let identity = semio_framework_os_kernel::Viewport2d::default();
+    assert_eq!(decode(dsl::DslValue::Object(Vec::new())).expect("an argless invocation bridges"), Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: identity }));
+    let authored = semio_framework_os_kernel::Viewport2d { x: 12.0, y: -8.0, zoom: 2.0 };
+    assert_eq!(
+        decode(dsl::DslValue::object([("viewport".into(), protocol::ToValue::to_value(&authored))])).expect("an authored viewport bridges"),
+        Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: authored })
+    );
+    let refused = decode(dsl::DslValue::object([("viewport".into(), dsl::DslValue::object([("x".into(), dsl::DslValue::float(1.0)), ("y".into(), dsl::DslValue::float(2.0)), ("zoom".into(), dsl::DslValue::float(0.0))]))]));
+    assert!(refused.is_err(), "a zoom the graph cannot express must fault instead of being replaced by the identity camera");
 }
 
 /// 🧩️ `addWidget` is a MIGRATED interactive job now, so `dispatch_typed` only ENQUEUES it — the
@@ -751,3 +1075,4 @@ async fn every_emitted_action_is_declared_on_its_window_kind() {
     }
 }
 //#endregion 📇️WindowActionLawTests
+

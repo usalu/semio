@@ -28,9 +28,6 @@ snap = (ZIPA / '🧬️schema' / '📸️snapshot' / '🦀️component.rs').read
 print('snapshot has entries', 'pub entries' in snap, 'ZipEntry' in snap)
 
 # write deflate export IO (may be missing/corrupt)
-w(ZIPA / '�, 'ZipEntry' in snap)
-
-# write deflate export IO (may be missing/corrupt)
 w(ZIPA / '🚪️io' / '📤️export' / SER / '🗿️artifacts' / DEF_DIR / '🦀️component.rs',
 """//! Serialize stdio.zip to stdio.deflate (encode ZIP then zlib-compress).
 
@@ -78,24 +75,9 @@ for side, folder, peer in [
     ('📤️export', SER, DEF_DIR),
 ]:
     w(ZIPA / '🚪️io' / side / folder / '🗿️artifacts' / peer / '🟦️component.ts',
-      '/** IO bridge stdio.zip */
-export {};
-')
+      '/** IO bridge stdio.zip */\nexport {};\n')
 
 # verify IO rust heads
-for side, folder, peer in [
-    ('�
-export {};
-')
-
-# verify IO rust heads
-for side, folder, peer in [
-    ('📥️import', DESER, BIN_DIR),
-    ('📤️export', SER, BIN_DIR),
-    ('📥️import', DESER, DEF_DIR),
-    ('�<|control37|>export', SER, DEF_DIR),
-]:
-    pass
 for side, folder, peer in [
     ('📥️import', DESER, BIN_DIR),
     ('📤️export', SER, BIN_DIR),

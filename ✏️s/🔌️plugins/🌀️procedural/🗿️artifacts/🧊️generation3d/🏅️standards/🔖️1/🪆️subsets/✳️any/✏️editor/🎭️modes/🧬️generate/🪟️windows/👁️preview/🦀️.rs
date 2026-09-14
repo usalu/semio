@@ -51,7 +51,8 @@ pub fn window_measures(config: &Generation3dConfig, procedural_action: impl Fn(&
 /// 📈 The ONE status object this window publishes, in every state — the generate-mode ENTRY state
 /// included. It carries the session's tessellation `phase`/`progress` (so the shell's world host can
 /// show and cancel an evaluation the same way edit-mode preview does), the `debug` counters the
-/// browser probe reads back off `data-status-json`, and — only while there is nothing to show — the
+/// browser probe reads back off `data-status-json`, the `previewEval` run's abort affordance, and — only
+/// while there is nothing to show — the
 /// authored `hint`.
 ///
 /// 🐛️ Why the window is a world host even with nothing evaluated: falling back to a `TextEditor`
@@ -59,8 +60,8 @@ pub fn window_measures(config: &Generation3dConfig, procedural_action: impl Fn(&
 /// `hosts=[]` and no window a status could ever appear on — measured on 6018 as 189 s of
 /// `[data-status-json]`-less generate mode (`🗑️generated/journey-3/results.json`, ticket
 /// 26/09/09/PROCEDURAL-3D-END-TO-END). A hint is a state of this window, not a different window.
-fn generate_preview_status_json(session: &FlowEvalSession, eval_json: &str, payload: &PreviewPayload, preview_status: Option<String>, hint: Option<&str>) -> Option<String> {
-    preview_window_status_json(Some(session), preview_status, &PreviewStatusDebug { meshes_json: &payload.meshes_json, instances_json: &payload.instances_json }, hint)
+fn generate_preview_status_json(session: &FlowEvalSession, run: Option<&semio_framework_plugin::ToolRunView>, eval_json: &str, payload: &PreviewPayload, preview_status: Option<String>, hint: Option<&str>) -> Option<String> {
+    preview_window_status_json(Some(session), run, preview_status, &PreviewStatusDebug { meshes_json: &payload.meshes_json, instances_json: &payload.instances_json }, hint)
 }
 
 //#region 🔖️Render
@@ -74,6 +75,7 @@ pub fn render(
     active_utility: &str,
     marks: &PreviewInteractionMarks,
     session: &FlowEvalSession,
+    run: Option<&semio_framework_plugin::ToolRunView>,
 ) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let eval_json = generation_preview_text.unwrap_or_default();
     let (payload, preview_status) = match generation_by_id(generation, selected_id) {
@@ -92,7 +94,7 @@ pub fn render(
         None => (PreviewPayload::default(), None),
     };
     let empty = payload.meshes_json == "[]" && payload.instances_json == "[]";
-    let status_json = generate_preview_status_json(session, eval_json, &payload, preview_status, empty.then(|| labels.preview_hint.as_str()));
+    let status_json = generate_preview_status_json(session, run, eval_json, &payload, preview_status, empty.then(|| labels.preview_hint.as_str()));
     let sun = cfg.sun();
     let selection_json = preview_selection_json(cfg, active_utility, &payload);
     let _ = GENERATION_3D_PLAY_APP_ID;

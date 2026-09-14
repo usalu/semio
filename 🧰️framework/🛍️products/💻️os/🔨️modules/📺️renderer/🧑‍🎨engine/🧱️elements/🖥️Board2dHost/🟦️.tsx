@@ -29,6 +29,9 @@ import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 import { parseSelectionIds } from "../🖋️InkCanvasHost/🟦️.tsx";
 // 🐢️ Direct element-to-element imports — `World3dHost`/`🟦️Interpreter` already landed in a prior batch.
 import { WindowInstanceIdContext } from "../🌐️World3dHost/🟦️.tsx";
+import { useToolRunTraceCursorEcho } from "../🌐️World3dHost/⏯️tool-run-trace/🟦️.tsx";
+import { ToolRunTrace2dLayer } from "../📐️Canvas2dHost/⏯️tool-run-trace/🟦️.tsx";
+import { board2dToolRunTracePathForShape, board2dToolRunTraceShapes } from "./⏯️tool-run-trace/🟦️.tsx";
 import { useShellContextMenuFallback, openSurfaceContextMenu, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -1013,6 +1016,10 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   }, [peerScope, node.controllerId]);
   //#endregion FixtureDropHandlers
 
+  const toolRunTraceCamera = useMemo(() => parseBoardCamera(scene?.cameraJson ?? "") ?? { x: 0, y: 0, zoom: 1 }, [scene?.cameraJson]);
+  const toolRunTracePathForShape = useMemo(() => board2dToolRunTracePathForShape(board2dToolRunTraceShapes(scene?.glyphCatalogsJson ?? "")), [scene?.glyphCatalogsJson]);
+  const onToolRunTraceCursor = useToolRunTraceCursorEcho(windowInstanceId);
+
   if (sessionError) throw sessionError;
   if (!scene) return <div className="semio-board-2d-empty text-muted-foreground p-2 text-xs">{emptySceneLabel}</div>;
 
@@ -1028,6 +1035,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       onDrop={onDrop}
     >
       <canvas ref={canvasRef} className="absolute inset-0 block size-full touch-none outline-none focus:outline-none" />
+      <ToolRunTrace2dLayer lane={scene.toolRunTrace} camera={toolRunTraceCamera} pathForShape={toolRunTracePathForShape} onCursor={onToolRunTraceCursor} />
       <ContextMenuController
         title={contextMenuTitleLabel}
         open={contextMenu != null}

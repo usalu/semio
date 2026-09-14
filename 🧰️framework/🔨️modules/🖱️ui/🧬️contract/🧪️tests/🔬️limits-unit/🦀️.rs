@@ -183,5 +183,6 @@ fn retained_ui_intake_budget_matches_the_shared_fixture() {
     let laws: Vec<&str> = fixture["laws"].as_array().expect("laws").iter().filter_map(|law| law.as_str()).collect();
     assert!(laws.contains(&"budget-scales-with-node-quota"));
     assert!(laws.contains(&"budget-slice-is-resumable"));
+    assert!(laws.contains(&"slice-yield-is-a-task-not-a-frame"), "a slice boundary is a task hand-back; an animation frame costs ~16 ms of sleep per 4 096 steps");
     assert!(RETAINED_UI_INTAKE_SLICE_STEPS < UiDocumentLimits { max_nodes: 1, ..UiDocumentLimits::default() }.retained_ui_intake_step_ceiling());
 }

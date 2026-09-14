@@ -21,6 +21,7 @@ use crate::scenes::{toggle_vfs_row_expanded, vfs_selection_for_click, AdmittedSu
 use infinite_world::world::{enqueue_world3d_events, world3d_catalogue_drop_origin, world3d_clear_catalogue_drop_preview, world3d_update_catalogue_drop_preview, World3dState, WorldInteractionIntent, WorldInteractionPhase};
 #[cfg(test)]
 use ui_wgpu::wgpu::draw_text;
+use semio_framework::kernel::{UiDirtyScope, UiDirtySection};
 use semio_framework::{AppDefinition, PanelGroup, PanelTabDefinition, ViewModel, ViewSessionIdentity};
 use semio_framework_os_config::opening_config::{
     apply_ui_preferences_config_mutation, decode_ui_preferences_config_mutation_json,
@@ -912,6 +913,13 @@ pub enum OverlayState {
     Find,
     Dropdown(String),
 }
+
+/// ⌨️ The shell's OWN overlay query fields. Keyboard focus on one of these is the shell typing into
+/// its own chrome, NOT the user typing into app content, so the hardcoded shell chords (and the
+/// focused-input Enter/Escape commit) must look straight through them — otherwise the chord that
+/// opens the quick-search palette disables every route out of it, including its own toggle and
+/// Escape (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub(crate) const SHELL_OVERLAY_INPUT_IDS: [&str; 2] = ["shell.search.input", "shell.find.input"];
 
 #[derive(Clone, Debug, Default)]
 pub struct RightClickState {
@@ -2364,6 +2372,21 @@ struct PendingExtensionInvocation {
     request_json: String,
 }
 
+/// 📤️ One parked `Effect::RequestFileOpen`, awaiting the flush that can open a real picker.
+///
+/// ⚖️ Parked rather than opened inline for the same reason an extension invocation is: opening a
+/// picker is asynchronous (it ends on a user gesture) and `queue_host_effects` is deliberately a
+/// plain `fn`. `drain_deferred_actions` owns `&mut self`, so it can await the pick AND dispatch the
+/// import chunks it produces through the normal action path, folding each one's own effects back in.
+#[cfg(target_arch = "wasm32")]
+struct PendingFileOpen {
+    controller_id: String,
+    accept: String,
+    read_as: Option<String>,
+    import_action: String,
+    multiple: bool,
+}
+
 pub struct ShellState {
     pub plugins: Vec<ProgramBridgeEntry>,
     pub plugin_filter: String,
@@ -2484,10 +2507,20 @@ pub struct ShellState {
     /// dispatched action itself asks for) stays a plain drain so the outer loop keeps the single
     /// authority over how many times the window bodies are re-entered.
     settling: bool,
+    /// 🐢️ The union of every [`UiDirtyScope`] declared since the last refresh pass drained it — this
+    /// shell's half of React's `createUiRefreshCoalescerV1` owed slot. Producers (a dispatched
+    /// action's `InvocationResult::ui_scope`, a command's, an extension answer's, plus whatever the
+    /// HOST dirtied by applying that pass's own effects) only DECLARE dirt here; `refresh_ui` is the
+    /// one place that takes it. Starts [`UiDirtyScope::None`], so a refresh nobody owes anything to
+    /// re-renders nothing at all.
+    owed_refresh_scope: UiDirtyScope,
     /// 📥️ Extension invocations the guest asked for, parked until a flush that owns `&mut self`
     /// can run them AND fold their answers' own effects back in — see `flush_deferred_actions`.
     #[cfg(target_arch = "wasm32")]
     pending_extension_invocations: Vec<PendingExtensionInvocation>,
+    /// 📤️ File-open requests the guest asked for, parked on the SAME flush for the same reason.
+    #[cfg(target_arch = "wasm32")]
+    pending_file_opens: Vec<PendingFileOpen>,
     #[cfg(not(target_arch = "wasm32"))]
     shell_io_pending: std::collections::VecDeque<PendingShellIo>,
     pub fullscreen_toggle_requested: bool,
@@ -2651,7 +2684,13 @@ pub struct ShellState {
     /// coordinates) from a chrome hit (route it through the shell's own handlers). Panels and dock
     /// windows are one map: both paint a retained document, and only their rect differs
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    ///
+    /// 🎯️ Double-buffered against `ui_wgpu::wgpu::HitRegistry` and published in the same step: this
+    /// is the owner map of the last COMPLETE chrome walk, so an id `InputState::hit_at` resolves is
+    /// always one this map can name. `retained_hit_windows_staging` is the map the walk in progress
+    /// is filling.
     pub retained_hit_windows: HashMap<String, (String, Rect)>,
+    retained_hit_windows_staging: HashMap<String, (String, Rect)>,
     /// 👋️ The retained body a pointer move was last routed into, so the move that LEAVES it is
     /// routed there too. `events::EventRouter` is edge-triggered on the moves it receives, so a body
     /// that stops receiving them keeps `NodeFlags::HOVERED` on whatever it last resolved.
@@ -2850,6 +2889,19 @@ fn save_panel_layout_to_store(layout: &PanelLayoutPersisted) {
 /// suffix can never collide with an app-authored surface.
 pub(crate) fn window_measures_surface_id(window_id: &str) -> String {
     format!("{window_id}/{}", semio_framework::UiRefreshSection::Measures.body_key())
+}
+
+/// 🩺️ One refresh pass's scope, short enough to read in a console line — which surfaces a settle
+/// asked for is the only thing that separates "the guest re-rendered the previous document" from
+/// "this pass never looked at that surface".
+fn refresh_scope_label(scope: &UiDirtyScope) -> String {
+    match scope {
+        UiDirtyScope::Full => "full".to_string(),
+        UiDirtyScope::None => "none".to_string(),
+        UiDirtyScope::Partial { window_bodies, panel_bodies, utilities, tools, engagements, measures, labels } => {
+            format!("partial windows=[{}] panels=[{}] utilities={utilities} tools={tools} engagements={engagements} measures={measures} labels={labels}", window_bodies.join(","), panel_bodies.join(","))
+        }
+    }
 }
 
 /// 🪟️ The window instance a Measures overlay surface belongs to, `None` for every other surface.
@@ -3367,8 +3419,11 @@ impl ShellState {
             measures_resize_window_id: None,
             deferred_actions: Vec::new(),
             settling: false,
+            owed_refresh_scope: UiDirtyScope::None,
             #[cfg(target_arch = "wasm32")]
             pending_extension_invocations: Vec::new(),
+            #[cfg(target_arch = "wasm32")]
+            pending_file_opens: Vec::new(),
             #[cfg(not(target_arch = "wasm32"))]
             shell_io_pending: std::collections::VecDeque::new(),
             fullscreen_toggle_requested: false,
@@ -3448,6 +3503,7 @@ impl ShellState {
             contributor_instances: HashMap::new(),
             window_content_rects: HashMap::new(),
             retained_hit_windows: HashMap::new(),
+            retained_hit_windows_staging: HashMap::new(),
             retained_hover_window: None,
             window_silhouettes: HashMap::new(),
             tutorial: None,
@@ -3929,7 +3985,7 @@ impl ShellState {
         self.apply_boot_example().await?;
         Self::declare_boot_subphase("shell-boot:refresh-ui", "enter", 0.0);
         let refresh_started = Self::instant_now_ms();
-        self.refresh_ui().await?;
+        self.refresh_ui(UiDirtyScope::Full).await?;
         Self::declare_boot_subphase("shell-boot:refresh-ui", "leave", (Self::instant_now_ms() - refresh_started).max(0.0));
         Self::declare_boot_subphase("shell-boot:flush-deferred", "enter", 0.0);
         let flush_started = Self::instant_now_ms();
@@ -4112,6 +4168,7 @@ impl ShellState {
         view_state.window_instances = Self::session_window_instances(session, &self.dock);
         view_state.active_utility_by_window_id = self.active_utility_by_window.clone();
         view_state.tool_run_trace_cursor_by_window_id = infinite_world::world::world3d_tool_run_trace_cursors(self.world3d_states.values());
+        view_state.tool_run_trace_cursor_by_window_id.extend(crate::engine_canvas::board2d_tool_run_trace_cursors());
         view_state.focused_window_id = self.active_window_id.clone();
         view_state.session_identity = self.session_identity_view();
         view_state
@@ -4161,7 +4218,64 @@ impl ShellState {
 
 
 
-    pub async fn refresh_ui(&mut self) -> Result<(), String> {
+    /// 🐢️ Declares dirt without taking a refresh pass — the ONE way a producer (a dispatched action's
+    /// `InvocationResult::ui_scope`, a command's, an extension answer's, or a host-effect fold) says
+    /// what it invalidated. The next [`Self::refresh_ui`] drains the union.
+    fn owe_refresh(&mut self, scope: UiDirtyScope) {
+        self.owed_refresh_scope = core::mem::replace(&mut self.owed_refresh_scope, UiDirtyScope::None).merged_with(scope);
+    }
+
+    /// 🧰️ The scope a host-effect pass owes ON TOP of what its dispatch declared — the Rust twin of
+    /// `🛠️ShellHelpers/🟦️.tsx`'s `hostEffectRefreshScopeV1`, and unioned with the guest's own scope,
+    /// never substituted for it.
+    ///
+    /// `SetPanel`/`LoadDocument` name no body of their own and the panel payload feeds every section,
+    /// so the only honest answer for those is the widest one. `SetActiveUtility`/`SetActiveTool`
+    /// rewrite a render input the guest reads back, so they earn every window body plus the
+    /// host-derived sections — the defect measured on the puzzle 3d editor, where an armed utility's
+    /// `UiDirtyScope::None` meant the armed body was never fetched at all
+    /// (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B37).
+    fn host_effect_earned_scope(&self, effects: &[semio_framework::kernel::Effect]) -> UiDirtyScope {
+        use semio_framework::kernel::Effect;
+        if effects.iter().any(|effect| matches!(effect, Effect::LoadDocument { .. })) {
+            return UiDirtyScope::Full;
+        }
+        if !effects.iter().any(|effect| matches!(effect, Effect::SetActiveUtility { .. })) {
+            return UiDirtyScope::None;
+        }
+        let Some(session) = self.session.as_ref() else { return UiDirtyScope::Full };
+        UiDirtyScope::Partial {
+            window_bodies: session.app.window_kinds.iter().map(|kind| kind.body_key.clone()).collect(),
+            panel_bodies: Vec::new(),
+            utilities: true,
+            tools: true,
+            engagements: false,
+            measures: true,
+            labels: false,
+        }
+    }
+
+    /// 🐢️ One refresh pass, restricted to the union of `ask` and whatever was already owed.
+    ///
+    /// **A settle re-renders exactly the surfaces its scope names.** This used to walk every live
+    /// window and then every panel leaf unconditionally, throwing `InvocationResult::ui_scope` away
+    /// while React threaded the same field through `resolveUiDirtyScope`: 116 of 137 renders per
+    /// converging edit answered `patched=0`, and the flow window was re-minted eight times at
+    /// ~525 000 intake phases each — ≈1.7 s of a 5.4 s `flush-deferred`
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-edit-convergence-perf-2026-09-14.md` §7).
+    /// The selection itself is the kernel's ([`UiDirtyScope::wants_window_body`] and siblings), whose
+    /// TypeScript twin the React shell reads from the same fixture.
+    ///
+    /// ⚠️ A skipped surface keeps the EXACT document it already owns: the retirement (`window_ui`
+    /// remove → `retire_one_surface_document`) happens per surface INSIDE the selection, never ahead
+    /// of it, or a scoped pass would retire the very documents it then refuses to re-mint and leave
+    /// the shell with blank bodies. `retire_documents_outside` is unaffected — it retires the
+    /// surfaces the LAYOUT dropped, which no scope has a say in.
+    pub async fn refresh_ui(&mut self, ask: UiDirtyScope) -> Result<(), String> {
+        let scope = core::mem::replace(&mut self.owed_refresh_scope, UiDirtyScope::None).merged_with(ask);
+        if scope.asks_for_nothing() {
+            return Ok(());
+        }
         let Some(session) = self.session.clone() else {
             return Ok(());
         };
@@ -4172,15 +4286,24 @@ impl ShellState {
         let measure_windows: Vec<String> = live_windows.iter().map(|(window_id, _)| window_id.clone()).collect();
         let mut refresh_effects = Vec::new();
         let mut faults: Vec<(String, String, String)> = Vec::new();
+        let mut rendered = 0usize;
+        let mut skipped = 0usize;
+        let mut visited: Vec<String> = Vec::new();
         {
             let program = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id).cloned().ok_or("session program missing")?;
             let retained: Vec<String> = live_windows.iter().map(|(window_id, _)| window_id.clone()).collect();
             self.retire_documents_outside(&retained, true)?;
             for (window_id, window_kind_id) in live_windows {
                 let kind = session.app.window_kinds.iter().find(|kind| kind.id == window_kind_id).ok_or_else(|| format!("window kind '{}' is absent from the app", window_kind_id))?;
+                if !scope.wants_window_body(&kind.body_key) {
+                    skipped += 1;
+                    continue;
+                }
                 let window_view = view_state.for_window_instance(&window_id).ok_or_else(|| format!("window '{}' is absent from the live view", window_id))?;
                 let previous = self.window_ui.remove(&window_id);
                 self.retire_one_surface_document(previous)?;
+                rendered += 1;
+                visited.push(window_id.clone());
                 Self::debug_log(&format!("[DEBUG] wgpu-shell render begin surface={window_id} body={}", kind.body_key));
                 let render_started = Self::instant_now_ms();
                 Self::declare_boot_subphase(&format!("shell-boot:render:{window_id}"), "enter", 0.0);
@@ -4201,8 +4324,14 @@ impl ShellState {
         let retained: Vec<String> = panel_leaves.iter().map(|(id, _)| id.clone()).collect();
         self.retire_documents_outside(&retained, false)?;
         for (tab_id, body_key) in panel_leaves {
+            if !scope.wants_panel_body(&body_key) {
+                skipped += 1;
+                continue;
+            }
             let previous = self.panel_documents.remove(&tab_id);
             self.retire_one_surface_document(previous)?;
+            rendered += 1;
+            visited.push(tab_id.clone());
             Self::debug_log(&format!("[DEBUG] wgpu-shell render begin surface={tab_id} body={body_key}"));
             let render_started = Self::instant_now_ms();
             Self::declare_boot_subphase(&format!("shell-boot:render:{tab_id}"), "enter", 0.0);
@@ -4221,10 +4350,23 @@ impl ShellState {
         // `find_active_utility_id` "first pressed toggle" heuristic are gone (Architecture Decision 5).
         self.active_utilities = self.derive_utility_nodes(&session);
         self.active_utilities.extend(framework_sync_utilities(self.sync_backbone_uri.as_deref()));
+        // 🛍️ Deliberately unscoped: the GUEST fetch inside is already claimed to once per app
+        // instance, and what remains is the local republish onto every live node-graph engine host —
+        // the moment a surface minted by THIS pass gets its palette. Skipping that on a partial scope
+        // is how a spotlight silently opens empty.
         self.refresh_app_catalogue(&program, session.instance_id, &panel_view).await;
-        self.window_engagements = program.window_engagements(session.instance_id, &view_state).await.unwrap_or_default();
-        self.refresh_window_measures(&program, session.instance_id, &view_state, &measure_windows, &mut faults).await?;
-        if self.space_mode {
+        if scope.wants_section(UiDirtySection::Engagements) {
+            self.window_engagements = program.window_engagements(session.instance_id, &view_state).await.unwrap_or_default();
+        }
+        if scope.wants_section(UiDirtySection::Measures) {
+            visited.push(semio_framework::UiRefreshSection::Measures.body_key().to_string());
+            visited.extend(measure_windows.iter().map(|window_id| window_measures_surface_id(window_id)));
+            self.refresh_window_measures(&program, session.instance_id, &view_state, &measure_windows, &mut faults).await?;
+        }
+        // 🪐️ The spawned space pane belongs to a DIFFERENT app, so no window-body key in this
+        // session's scope can name it — only a full scope (a session/panel change, which the
+        // `setPanel` widening always makes full) re-mints it.
+        if self.space_mode && matches!(scope, UiDirtyScope::Full) {
             if let Some(panel) = Self::panel_state_from_view(&session.view_state)? {
                 if let Some(spawned) = panel.active_spawned_id.as_ref().and_then(|id| panel.spawned_apps.iter().find(|app| &app.id == id)) {
                     if let Some(spawn_plugin) = self.plugins.iter().find(|p| p.plugin_id == spawned.plugin_id).cloned() {
@@ -4252,6 +4394,7 @@ impl ShellState {
                                     return Err("shell: spawned document retirement registry refused the exact prior owner".to_string());
                                 }
                             }
+                            visited.push(spawned.id.clone());
                             match spawn_plugin.render(spawned.instance_id, &spawned.id, &body_key, &view_state).await {
                                 Ok(document) => self.spawned_ui = Some(document),
                                 Err(error) => faults.push((spawned.id.clone(), body_key.clone(), error)),
@@ -4268,17 +4411,24 @@ impl ShellState {
                 }
             }
         }
+        let earned = self.host_effect_earned_scope(&refresh_effects);
         self.queue_host_effects(&session.app.controller_id, refresh_effects);
-        self.settle_surface_faults(faults);
+        self.owe_refresh(earned);
+        self.settle_surface_faults(faults, &visited);
+        Self::debug_log(&format!("[DEBUG] wgpu-shell refresh scope={} rendered={rendered} skipped={skipped}", refresh_scope_label(&scope)));
         Ok(())
     }
 
-    /// 🧯 Replaces the live per-surface fault set with the one THIS refresh produced, so a surface that
+    /// 🧯 Replaces the per-surface fault set FOR THE SURFACES THIS PASS VISITED, so a surface that
     /// recovered stops showing a card and one that faulted keeps showing the same typed card. The
     /// refresh itself always succeeds: an unreadable surface is that surface's failure, never the
     /// renderer's — see [`ShellSurfaceFault`].
-    fn settle_surface_faults(&mut self, faults: Vec<(String, String, String)>) {
-        self.surface_faults.clear();
+    ///
+    /// ⚠️ `visited`, not `clear()`: a scoped pass re-renders only what its `UiDirtyScope` named, and
+    /// clearing the whole set would silently dismiss the fault card of every surface it never looked
+    /// at — a broken body that repairs itself the moment an unrelated window settles.
+    fn settle_surface_faults(&mut self, faults: Vec<(String, String, String)>, visited: &[String]) {
+        self.surface_faults.retain(|fault| !visited.contains(&fault.surface_id));
         for (surface_id, body_key, detail) in faults {
             self.record_surface_fault(&surface_id, &body_key, detail);
         }
@@ -4356,6 +4506,39 @@ impl ShellState {
         }
         let live_worlds: Vec<String> = self.world3d_states.keys().cloned().collect();
         self.world3d_status.retain(|surface_id, _| live_worlds.contains(surface_id));
+        self.sync_world3d_declared_actions();
+    }
+
+    /// 📇️ Republishes, onto every live World3d surface, the action ids its WINDOW KIND declares.
+    ///
+    /// A World3d surface is keyed by its window instance id (the same identity `setCamera`'s
+    /// `windowId` argument addresses), so its owning kind is exactly what the dock says that instance
+    /// is, and the kind's `actions` are `window_kind_action_refs` after `build_definition` resolved
+    /// them. This is the ONE declaration of which verbs a surface may emit: the world module offers
+    /// no gumball handle whose verb is absent from it
+    /// (`infinite_world::world::world3d_offers_transform_gumball`), rather than guessing per role.
+    fn sync_world3d_declared_actions(&mut self) {
+        let Some(session) = self.session.clone() else { return };
+        let declarations: Vec<(String, Vec<String>)> = self
+            .world3d_states
+            .keys()
+            .map(|surface_id| {
+                let kind_id = self.live_window_kind_id(&session, surface_id);
+                let action_ids = session
+                    .app
+                    .window_kinds
+                    .iter()
+                    .find(|kind| Some(kind.id.as_str()) == kind_id)
+                    .map(|kind| kind.actions.iter().map(|action| action.id.clone()).collect())
+                    .unwrap_or_default();
+                (surface_id.clone(), action_ids)
+            })
+            .collect();
+        for (surface_id, action_ids) in declarations {
+            if let Some(state) = self.world3d_states.get_mut(&surface_id) {
+                infinite_world::world::set_world3d_declared_actions(state, &action_ids);
+            }
+        }
     }
 
     /// 🩺️ One line per chrome-walk sync, naming the surfaces a DRAIN-eviction rule would have retired
@@ -4647,6 +4830,24 @@ impl ShellState {
                 semio_framework::kernel::Effect::DownloadMediaExport { filename, mime_type, data, encoding } => {
                     download_media_export(&filename, &mime_type, &data, encoding.as_deref());
                 }
+                // 📤️ Every plugin's IMPORT door. This arm did not exist either, and the only
+                // `requestFileOpen` reader this shell had read it out of a document MUTATION payload
+                // no producer in the repo emits — so `Import Document…` reached the guest, the guest
+                // emitted its effect, and the user never saw a picker (ticket
+                // 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-end-to-end-verification-2026-09-14.md` §C).
+                // Parked, never opened here: a picker ends on a user gesture and this funnel is a
+                // plain `fn`; `drain_deferred_actions` owns the `&mut self` the pick needs.
+                semio_framework::kernel::Effect::RequestFileOpen { accept, read_as, import_action, multiple, .. } => {
+                    #[cfg(target_arch = "wasm32")]
+                    self.pending_file_opens.push(PendingFileOpen { controller_id: controller_id.to_string(), accept, read_as, import_action, multiple });
+                    #[cfg(not(target_arch = "wasm32"))]
+                    {
+                        let controller_id = controller_id.to_string();
+                        self.submit_shell_io_future(async move {
+                            ShellIoCompletion::Actions(file_open_import_actions(&controller_id, &import_action, request_file_open(&accept, read_as.as_deref(), multiple).await, multiple))
+                        });
+                    }
+                }
                 other => {
                     Self::debug_log(&format!("[DEBUG] wgpu-shell effect dropped tag={other:?}"));
                 }
@@ -4839,10 +5040,6 @@ mod panel_anchor_model_tests;
 //#endregion ShellLifecycle
 
 //#region ShellActions
-fn patch_ops_from_action_result(result: &semio_framework::kernel::InvocationResult) -> Vec<String> {
-    result.mutations.iter().filter_map(|operation| serde_json::to_string(&operation.diff.payload).ok()).collect()
-}
-
 impl ShellState {
     #[cfg(not(target_arch = "wasm32"))]
     fn sync_document_id(&self) -> Option<String> {
@@ -5006,7 +5203,7 @@ impl ShellState {
             }
         }
         if changed {
-            let _ = self.refresh_ui().await;
+            let _ = self.refresh_ui(UiDirtyScope::Full).await;
         }
         changed
     }
@@ -5336,7 +5533,7 @@ impl ShellState {
             self.sync_card_kind = None;
             Self::debug_log(&format!("[DEBUG] wgpu shell attached backbone {}", self.sync_backbone_uri.as_deref().unwrap_or_default()));
             self.refresh_history_snapshot().await;
-            self.refresh_ui().await?;
+            self.refresh_ui(UiDirtyScope::Full).await?;
             Ok(())
         }
         #[cfg(target_arch = "wasm32")]
@@ -5381,7 +5578,7 @@ impl ShellState {
         self.sync_status = Some(ArtifactSyncStatus::default());
         self.sync_card_kind = None;
         self.refresh_history_snapshot().await;
-        self.refresh_ui().await
+        self.refresh_ui(UiDirtyScope::Full).await
     }
 
     /// 📇️ Default bindings for a document opened against the CURRENTLY mounted session's own
@@ -5509,6 +5706,7 @@ impl ShellState {
                         if let Some(status) = self.plugin_fault_status() {
                             self.error = Some(status);
                         }
+                        self.trace_resolved_locale("setLocale");
                         self.note_shell_setting_command("os.setLocale", Some(value)).await?;
                     }
                     return Ok(());
@@ -5601,7 +5799,7 @@ impl ShellState {
             arguments,
         };
         let action_json = dsl::os_pack::json::to_json_string(&invocation);
-        let result = program.handle_action(session.instance_id, &action_json, &live_view_state).await?;
+        let mut result = program.handle_action(session.instance_id, &action_json, &live_view_state).await?;
         // 🧾️ ticket §C5 — fold this dispatch's own `history_patch` into the check-in projection (idle
         // clock, checkpoint-landed detection + `TouchArtifact`) before anything else touches `self`.
         #[cfg(not(target_arch = "wasm32"))]
@@ -5612,87 +5810,37 @@ impl ShellState {
         // 🎓️ Advance-by-doing: this action was actually performed (the plugin call above succeeded), so
         // a tour step whose `advance` targets it moves on now — see `chrome_tour_note_action_performed`.
         self.chrome_tour_note_action_performed(&action.action);
-        // 🧰️ A program may programmatically switch the active utility via `Effect::SetActiveUtility`
-        // (Architecture Decision 4/9) — routed through `apply_set_active_utility` (rather than writing
-        // `active_utility_by_window` directly) so the tour's advance-by-doing funnel sees this activation
-        // too, exactly like a user click would.
-        for effect in &result.requested_effects {
+        // 🧾️ ONE host-effect funnel, byte for byte the fold `dispatch_command` performs. This arm used
+        // to be a SECOND, shorter, hand-rolled match ending in `_ => {}`, and every effect it did not
+        // name was dropped WITHOUT A TRACE — not even the funnel's own `effect dropped` line. That is
+        // how `Export Document…` ended: the guest ran it, answered `DownloadMediaExport`, the bridge
+        // handed it back as `requested_effects`, and this silent arm threw it away, so no plugin could
+        // export anything through an ACTION on this renderer while the command path exported fine
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-end-to-end-verification-2026-09-14.md` §C).
+        // Only the two effects `queue_host_effects` cannot own stay here — a `Navigate` that must also
+        // RESOLVE the uri, and the native replay relay — because both are `async` and that funnel is
+        // deliberately a plain `fn`.
+        let mut queued = Vec::with_capacity(result.requested_effects.len());
+        for effect in core::mem::take(&mut result.requested_effects) {
             match effect {
-                semio_framework::kernel::Effect::SetActiveUtility { window_id, utility_id } => {
-                    self.apply_set_active_utility(window_id, utility_id);
-                }
                 semio_framework::kernel::Effect::Navigate { uri } => {
                     self.push_uri(uri.clone());
-                    if let Err(error) = self.apply_shell_uri(uri).await {
+                    if let Err(error) = self.apply_shell_uri(&uri).await {
                         Self::debug_log(&format!("[DEBUG] wgpu shell navigate effect failed: {error}"));
                     }
                 }
-                semio_framework::kernel::Effect::LoadDocument { pack, spr } => {
-                    if let Some(session) = self.session.clone() {
-                        if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) {
-                            // 🎠️ H3-wgpu-native — `load_app_document_pack` is now async.
-                            if let Err(error) = plugin.load_app_document_pack(session.instance_id, pack, spr).await {
-                                Self::debug_log(&format!("[DEBUG] wgpu shell loadDocument effect failed: {error}"));
-                            }
-                        }
-                    }
-                }
-                // 🔁️ Self re-dispatch (D2): queues `action` onto the same `deferred_actions` mechanism
-                // tree-hover/selection follow-ups already use, which `flush_deferred_actions` drains every
-                // event-loop tick — so, natively, any `delay_ms` collapses to "next tick" (no timer wheel
-                // exists in this shell yet; the real wall-clock delay is honored by the React shell's own
-                // `setTimeout` handling of the same effect). The dispatched action reuses the originating
-                // `action.controller_id`, i.e. re-invokes the same plugin instance that emitted the effect.
-                semio_framework::kernel::Effect::DispatchAction { action: dispatch_action_id, args, .. } => {
-                    self.deferred_actions.push(ActionDescriptor { controller_id: action.controller_id.clone(), action: dispatch_action_id.clone(), args: args.clone() });
-                }
-                // 🎞️ D5: native counterpart of `request_file_open`, beside it below — builds one
-                // `ActionDescriptor` per sampled frame (+one for `done_action`, or a single
-                // `fallback_action` one on failure) via `request_media_frames`, then queues them onto the
-                // same `deferred_actions` mechanism `DispatchAction` above uses so `flush_deferred_actions`
-                // dispatches them through the normal `dispatch_action` path (including its own nested
-                // `requested_effects`) in order, one per tick's drain.
-                semio_framework::kernel::Effect::RequestMediaFrames { accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args, .. } => {
-                    #[cfg(not(target_arch = "wasm32"))]
-                    {
-                        let controller_id = action.controller_id.clone();
-                        let accept = accept.clone();
-                        let frame_action = frame_action.clone();
-                        let done_action = done_action.clone();
-                        let fallback_action = fallback_action.clone();
-                        let (sample_stride, max_frames, max_long_edge_px, fps_hint) = (*sample_stride, *max_frames, *max_long_edge_px, *fps_hint);
-                        let payload = payload.clone();
-                        let args = optional_dsl_value_as_json(args.clone());
-                        self.submit_shell_io_future(async move {
-                            ShellIoCompletion::Actions(request_media_frames(&controller_id, &accept, &frame_action, &done_action, &fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload.as_deref(), args).await)
-                        });
-                    }
-                    #[cfg(target_arch = "wasm32")]
-                    for descriptor in
-                        request_media_frames(&action.controller_id, accept, frame_action, done_action, fallback_action, *sample_stride, *max_frames, *max_long_edge_px, *fps_hint, payload.as_deref(), optional_dsl_value_as_json(args.clone()))
-                    {
-                        self.deferred_actions.push(descriptor);
-                    }
-                }
-                // 📇️ ticket §C6/§3/§4 — the `os.directory.*` funnel and the `os.open-artifact`/
-                // `os.open-artifact-with` opening relay (§3-B: `documentId`/`spaceId` riding inside
-                // the existing args, no channel tag added). Every other `ReplayShellCommand` action id
-                // (e.g. `os.setThemeId`'s undo replay) has no handler in this lease, same pre-existing
-                // gap the React shell's own report documents.
                 #[cfg(not(target_arch = "wasm32"))]
                 semio_framework::kernel::Effect::ReplayShellCommand { action_id, args } => {
-                    self.handle_replay_shell_command(action_id, args.as_ref()).await;
+                    self.handle_replay_shell_command(&action_id, args.as_ref()).await;
                 }
-                // 💡️ Slice D — same host-owned inference port funnel as `queue_host_effects`.
-                #[cfg(not(target_arch = "wasm32"))]
-                semio_framework::kernel::Effect::RequestInferenceProposal { .. } => {
-                    self.open_inference_port();
-                }
-                _ => {}
+                other => queued.push(other),
             }
         }
+        let scope = result.ui_scope.clone().merged_with(self.host_effect_earned_scope(&queued));
+        Self::debug_log(&format!("[DEBUG] wgpu-shell dispatch action={} scope={}", action.action, refresh_scope_label(&scope)));
+        self.queue_host_effects(&action.controller_id.clone(), queued);
         let operations: Vec<String> = result.mutations.iter().filter_map(|operation| serde_json::to_string(&operation.diff.payload).ok()).collect();
-        self.apply_mutations(&operations).await
+        self.apply_mutations(&operations, scope).await
     }
 
     /// 🎛️ Sends one owner-qualified non-OS command through the program command boundary.
@@ -5748,9 +5896,11 @@ impl ShellState {
                 other => queued.push(other),
             }
         }
+        let scope = result.ui_scope.clone().merged_with(self.host_effect_earned_scope(&queued));
+        Self::debug_log(&format!("[DEBUG] wgpu-shell dispatch command={} scope={}", invocation.address.command_id, refresh_scope_label(&scope)));
         self.queue_host_effects(&session.app.controller_id.clone(), queued);
         let operations: Vec<String> = result.mutations.iter().filter_map(|operation| serde_json::to_string(&operation.diff.payload).ok()).collect();
-        self.apply_mutations(&operations).await
+        self.apply_mutations(&operations, scope).await
     }
 
     //#region 🔖️DirectoryAndIdentity
@@ -6323,20 +6473,21 @@ impl ShellState {
     }
     //#endregion 🔖️DirectoryAndIdentity
 
-    pub async fn apply_mutations(&mut self, operations: &[String]) -> Result<(), String> {
-        self.apply_ops_inner(operations, true).await
+    /// 🐢️ `scope` is what the dispatch that produced these mutations declared it dirtied, unioned
+    /// with what applying its own effects dirtied — [`UiDirtyScope::Full`] for every host-owned
+    /// caller that speaks for no guest.
+    pub async fn apply_mutations(&mut self, operations: &[String], scope: UiDirtyScope) -> Result<(), String> {
+        self.apply_ops_inner(operations, true, scope).await
     }
 
-    async fn apply_ops_inner(&mut self, operations: &[String], allow_navigate: bool) -> Result<(), String> {
+    async fn apply_ops_inner(&mut self, operations: &[String], allow_navigate: bool, scope: UiDirtyScope) -> Result<(), String> {
         let mut pending: Vec<String> = operations.to_vec();
         let mut view_state = self.session.as_ref().map(|s| s.view_state.clone());
         let mut document_changed = false;
+        let mut panel_rewritten = false;
         let mut navigate_uri: Option<String> = None;
         while !pending.is_empty() {
             let batch = std::mem::take(&mut pending);
-            let follow_up_operations: Vec<String> = Vec::new();
-            #[cfg(target_arch = "wasm32")]
-            let mut follow_up_operations = follow_up_operations;
             for operation_json in batch {
                 let operation: Value = serde_json::from_str(&operation_json).unwrap_or(Value::Null);
                 if operation.get("operation").and_then(|v| v.as_str()) == Some("setDocument") {
@@ -6346,6 +6497,10 @@ impl ShellState {
                     document_changed = true;
                 }
                 if operation.get("operation").and_then(|v| v.as_str()) == Some("setPanel") {
+                    // 🪟️ `setPanel` names no body of its own and `panel_json` feeds EVERY section, so
+                    // the widest scope is the only honest one — the same widening React's
+                    // `hostEffectRefreshScopeV1` performs for the `setPanel`/`loadDocument` effects.
+                    panel_rewritten = true;
                     if let Some(panel) = operation.get("panel") {
                         if let Some(mut vs) = view_state.take() {
                             vs.panel_json = Some(panel.to_string());
@@ -6353,86 +6508,13 @@ impl ShellState {
                         }
                     }
                 }
-                if operation.get("operation").and_then(|v| v.as_str()) == Some("downloadMediaExport") {
-                    if let (Some(filename), Some(mime_type), Some(data)) = (operation.get("filename").and_then(|v| v.as_str()), operation.get("mimeType").and_then(|v| v.as_str()), operation.get("data").and_then(|v| v.as_str())) {
-                        let encoding = operation.get("encoding").and_then(|v| v.as_str());
-                        #[cfg(not(target_arch = "wasm32"))]
-                        {
-                            let (filename, mime_type, data, encoding) = (filename.to_string(), mime_type.to_string(), data.to_string(), encoding.map(str::to_string));
-                            self.submit_shell_io_future(async move {
-                                download_media_export_worker(&filename, &mime_type, &data, encoding.as_deref()).await;
-                                ShellIoCompletion::Finished
-                            });
-                        }
-                        #[cfg(target_arch = "wasm32")]
-                        download_media_export(filename, mime_type, data, encoding);
-                    }
-                }
-                if operation.get("operation").and_then(|v| v.as_str()) == Some("requestFileOpen") {
-                    if let Some(import_action) = operation.get("importAction").and_then(|v| v.as_str()) {
-                        let accept = operation.get("accept").and_then(|v| v.as_str()).unwrap_or(".json");
-                        let read_as = operation.get("readAs").and_then(|v| v.as_str());
-                        // 📤️ D3: `multiple` opens a multi-select native dialog;
-                        // single-file behavior (one dialog call, one `handleAction` with `{json, payload}`) is
-                        // byte-for-byte unchanged when absent/false since `request_file_open` then returns at
-                        // most one entry and this loop runs exactly once with the same args shape as before.
-                        let multiple = operation.get("multiple").and_then(|v| v.as_bool()).unwrap_or(false);
-                        #[cfg(not(target_arch = "wasm32"))]
-                        if let Some(session) = self.session.clone() {
-                            let accept = accept.to_string();
-                            let read_as = read_as.map(str::to_string);
-                            let import_action = import_action.to_string();
-                            let base_args = operation.get("args").cloned().unwrap_or_else(|| serde_json::json!({}));
-                            self.submit_shell_io_future(async move {
-                                let opened = request_file_open(&accept, read_as.as_deref(), multiple).await;
-                                let total = opened.len();
-                                let actions = opened
-                                    .into_iter()
-                                    .enumerate()
-                                    .map(|(index, contents)| {
-                                        let payload = serde_json::from_str::<Value>(&contents).unwrap_or_else(|_| Value::String(contents.clone()));
-                                        let mut args = base_args.clone();
-                                        if let Some(obj) = args.as_object_mut() {
-                                            obj.insert("json".into(), Value::String(contents));
-                                            obj.insert("payload".into(), payload);
-                                            if multiple {
-                                                obj.insert("index".into(), serde_json::json!(index));
-                                                obj.insert("total".into(), serde_json::json!(total));
-                                            }
-                                        }
-                                        ActionDescriptor { controller_id: session.app.controller_id.clone(), action: import_action.clone(), args: semio_framework::optional_json_to_dsl(Some(args)) }
-                                    })
-                                    .collect();
-                                ShellIoCompletion::Actions(actions)
-                            });
-                        }
-                        #[cfg(target_arch = "wasm32")]
-                        if let Some(session) = self.session.clone() {
-                            let opened = request_file_open(accept, read_as, multiple);
-                            let total = opened.len();
-                            for (index, contents) in opened.into_iter().enumerate() {
-                                let payload = serde_json::from_str::<Value>(&contents).unwrap_or_else(|_| Value::String(contents.clone()));
-                                let mut args = operation.get("args").cloned().unwrap_or_else(|| serde_json::json!({}));
-                                if let Some(obj) = args.as_object_mut() {
-                                    obj.insert("json".into(), Value::String(contents));
-                                    obj.insert("payload".into(), payload);
-                                    if multiple {
-                                        obj.insert("index".into(), serde_json::json!(index));
-                                        obj.insert("total".into(), serde_json::json!(total));
-                                    }
-                                }
-                                let action = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: import_action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) };
-                                if let Some(program) = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id) {
-                                    if let Ok(action_json) = serde_json::to_string(&action) {
-                                        if let Ok(import_result) = program.handle_action(session.instance_id, &action_json, &session.view_state).await {
-                                            follow_up_operations.extend(patch_ops_from_action_result(&import_result));
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                // 🗑️ The `downloadMediaExport`/`requestFileOpen` MUTATION arms lived here — two CRUD-era
+                // document operations no producer in the repo emits (`grep -rn '"requestFileOpen"'`
+                // answered this shell and nothing else). They were the only reader this renderer had
+                // for either journey, so `Export Document…` and `Import Document…` looked wired and
+                // reached nobody; both are now real `Effect` arms of the ONE host-effect funnel
+                // (`queue_host_effects`), which every dispatch path feeds
+                // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
                 if operation.get("operation").and_then(|v| v.as_str()) == Some("requestFileSave") {
                     #[cfg(not(target_arch = "wasm32"))]
                     if let (Some(filename), Some(data), Some(space_id)) = (operation.get("filename").and_then(|v| v.as_str()), operation.get("data").and_then(|v| v.as_str()), operation.get("spaceId").and_then(|v| v.as_str())) {
@@ -6480,10 +6562,6 @@ impl ShellState {
                     }
                 }
             }
-            if !follow_up_operations.is_empty() {
-                pending.extend(follow_up_operations);
-                document_changed = true;
-            }
         }
         if allow_navigate {
             if let Some(uri) = navigate_uri.take() {
@@ -6495,14 +6573,17 @@ impl ShellState {
                 return Ok(());
             }
         }
+        let scope = if panel_rewritten { UiDirtyScope::Full } else { scope };
         if let (Some(mut session), Some(vs)) = (self.session.take(), view_state) {
             session.view_state = vs;
             self.session = Some(session);
             self.sync_session_chrome();
-            self.refresh_ui().await?;
+            self.refresh_ui(scope).await?;
         } else if document_changed {
             self.sync_session_chrome();
-            self.refresh_ui().await?;
+            self.refresh_ui(scope).await?;
+        } else {
+            self.owe_refresh(scope);
         }
         Ok(())
     }
@@ -6519,7 +6600,7 @@ impl ShellState {
                     if let Some(mut current) = self.session.take() {
                         current.view_state = next_view_state;
                         self.session = Some(current);
-                        self.refresh_ui().await?;
+                        self.refresh_ui(UiDirtyScope::Full).await?;
                     }
                 }
                 return Ok(());
@@ -6535,7 +6616,7 @@ impl ShellState {
                 self.active_window_id = Some(session.app.window_kinds.first().id.clone());
                 self.open_space_id = None;
                 self.session = Some(session);
-                return self.refresh_ui().await;
+                return self.refresh_ui(UiDirtyScope::Full).await;
             }
         }
         #[cfg(not(target_arch = "wasm32"))]
@@ -6567,7 +6648,7 @@ impl ShellState {
             self.open_space_id = None;
         }
         self.session = Some(ActiveSession { plugin_id: semio_s_plugin_space.plugin_id.clone(), instance_id, app, view_state: next_view_state });
-        self.refresh_ui().await
+        self.refresh_ui(UiDirtyScope::Full).await
     }
 
     /// 👁️✏️ Opens the sibling surface of the OPEN document's dialect — the wgpu twin of React's
@@ -6629,7 +6710,7 @@ impl ShellState {
         self.sync_dock();
         self.push_contributions().await?;
         Self::debug_log(&format!("[DEBUG] shell session switch {}", serde_json::json!({ "step": "publish", "app": self.session.as_ref().map(|session| session.app.id.clone()) })));
-        self.refresh_ui().await?;
+        self.refresh_ui(UiDirtyScope::Full).await?;
         Self::debug_log(&format!("[DEBUG] shell session switch {}", serde_json::json!({ "step": "refresh", "app": self.session.as_ref().map(|session| session.app.id.clone()), "role": self.session.as_ref().map(|session| session.app.role.as_str()) })));
         Ok(())
     }
@@ -6689,7 +6770,7 @@ impl ShellState {
                 self.active_window_id = self.dock.active_window_id.clone();
             }
         }
-        self.refresh_ui().await
+        self.refresh_ui(UiDirtyScope::Full).await
     }
 
     /// 📇️ ticket §6 — generic app switch by definition (not the host's landing/host app via
@@ -6727,7 +6808,7 @@ impl ShellState {
         };
         self.active_window_id = Some(app.window_kinds.first().id.clone());
         self.session = Some(ActiveSession { plugin_id: plugin_id.to_string(), instance_id, app, view_state });
-        self.refresh_ui().await
+        self.refresh_ui(UiDirtyScope::Full).await
     }
 
     async fn apply_shell_uri(&mut self, uri: &str) -> Result<(), String> {
@@ -6788,7 +6869,7 @@ impl ShellState {
             }
         }
         self.sync_session_chrome();
-        self.refresh_ui().await
+        self.refresh_ui(UiDirtyScope::Full).await
     }
 
     pub async fn apply_pending_shell_uri(&mut self) -> Result<(), String> {
@@ -6866,7 +6947,7 @@ fn ui_event_from_key_action(action: &ui_wgpu::wgpu::KeyAction, modifiers: &Point
 
 impl ShellState {
     pub async fn handle_pointer_button(&mut self, x: f32, y: f32, down: bool, button: i16, input: &mut InputState<ActionDescriptor>, theme: &Theme) -> Result<(), String> {
-        Self::debug_log(&format!("[DEBUG] wgpu-shell pointer button x={x} y={y} down={down} button={button} targets={} hit={:?}", input.hit_targets.len(), input.hit_at(x, y).map(|target| (target.kind, target.control_id.clone(), target.event.as_ref().map(|descriptor| descriptor.action.clone())))));
+        Self::debug_log(&format!("[DEBUG] wgpu-shell pointer button x={x} y={y} down={down} button={button} targets={} staged={} gen={} hit={:?}", input.hits().len(), input.staged_hits().len(), input.hit_generation(), input.hit_at(x, y).map(|target| (target.kind, target.control_id.clone(), target.event.as_ref().map(|descriptor| descriptor.action.clone())))));
         input.pointer_x = x;
         input.pointer_y = y;
         input.pointer_down = down;
@@ -7230,8 +7311,17 @@ impl ShellState {
     /// registered before it.
     fn register_retained_body_hits(&mut self, window_id: &str, body: Rect, input: &mut InputState<ActionDescriptor>) {
         for control_id in crate::interpreter::register_retained_hit_targets(window_id, input) {
-            self.retained_hit_windows.insert(control_id, (window_id.to_string(), body));
+            self.retained_hit_windows_staging.insert(control_id, (window_id.to_string(), body));
         }
+    }
+
+    /// 🏁️ Promotes the registry this chrome walk minted — and the owner map minted with it — to the
+    /// pointer's authority, in ONE step so the two can never disagree. Called only when a walk ran to
+    /// the end: an abandoned walk leaves the previous complete frame resolvable, which is the whole
+    /// point of the double buffer (`ui_wgpu::wgpu::HitRegistry`).
+    fn publish_retained_hit_registry(&mut self, input: &mut InputState<ActionDescriptor>) {
+        std::mem::swap(&mut self.retained_hit_windows, &mut self.retained_hit_windows_staging);
+        input.publish_hits();
     }
 
     /// 🖱️ DOM-standard `MouseEvent.button` code onto the retained event's own button identity.
@@ -7468,7 +7558,9 @@ impl ShellState {
                 let controller_id = self.world3d_states.get(&surface_id).map(|world| world.controller_id.clone());
                 if let (true, Some(controller_id)) = (action.cancellable, controller_id) {
                     Self::debug_log(&format!("[DEBUG] shell world3d cancel {}", serde_json::json!({ "surface": surface_id, "action": action.cancel_action })));
-                    self.dispatch_action(ActionDescriptor { controller_id, action: action.cancel_action, args: crate::action_args_json!({ "surfaceId": surface_id }) }).await?;
+                    let mut args = action.cancel_args;
+                    args.insert("surfaceId".to_string(), Value::String(surface_id));
+                    self.dispatch_action(ActionDescriptor { controller_id, action: action.cancel_action, args: semio_framework::optional_json_to_dsl(Some(Value::Object(args))) }).await?;
                 }
                 return Ok(true);
             }
@@ -7862,7 +7954,12 @@ impl ShellState {
             if self.session.is_none() {
                 return Ok(());
             }
-            self.refresh_ui().await?;
+            // 🐢️ The round's own pass asks for NOTHING of its own: every action it drained already
+            // declared what it dirtied (`owe_refresh`), and a round whose work dirtied nothing is a
+            // round that owes no render. This used to be an unconditional whole-shell refresh — the
+            // dominant half of the 116-of-137 `patched=0` renders per converging edit
+            // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-edit-convergence-perf-2026-09-14.md` §7).
+            self.refresh_ui(UiDirtyScope::None).await?;
         }
         Self::debug_log(&format!("[DEBUG] wgpu-shell ui chain exhausted {SHELL_SETTLE_ROUNDS} settle round(s) with {} action(s) left", self.deferred_actions.len()));
         self.drain_deferred_actions().await?;
@@ -7882,10 +7979,14 @@ impl ShellState {
             let invocations = std::mem::take(&mut self.pending_extension_invocations);
             #[cfg(not(target_arch = "wasm32"))]
             let invocations: Vec<()> = Vec::new();
-            if actions.is_empty() && invocations.is_empty() {
+            #[cfg(target_arch = "wasm32")]
+            let file_opens = std::mem::take(&mut self.pending_file_opens);
+            #[cfg(not(target_arch = "wasm32"))]
+            let file_opens: Vec<()> = Vec::new();
+            if actions.is_empty() && invocations.is_empty() && file_opens.is_empty() {
                 break;
             }
-            worked = worked.saturating_add(actions.len()).saturating_add(invocations.len());
+            worked = worked.saturating_add(actions.len()).saturating_add(invocations.len()).saturating_add(file_opens.len());
             for action in actions {
                 // 🧯 One program action's failure is that action's failure, never the shell's: React's
                 // `applyHostEffects` logs a dropped dispatch and carries on, and this loop runs inside
@@ -7900,6 +8001,10 @@ impl ShellState {
             for invocation in invocations {
                 self.run_extension_invocation(invocation).await;
             }
+            #[cfg(target_arch = "wasm32")]
+            for request in file_opens {
+                self.run_file_open_request(request).await;
+            }
         }
         if !self.deferred_actions.is_empty() {
             Self::debug_log(&format!("[DEBUG] wgpu-shell deferred chain exhausted {SHELL_DEFERRED_CHAIN_ROUNDS} rounds with {} action(s) left", self.deferred_actions.len()));
@@ -7910,6 +8015,28 @@ impl ShellState {
             worked = worked.saturating_add(1);
         }
         Ok(worked)
+    }
+
+    /// 📤️ One file-open round trip: opens a REAL browser picker, then dispatches the picked files as
+    /// import chunks through the normal action path — so each chunk's own effects, mutations and
+    /// history patch are folded in exactly as a user-pressed action's are.
+    ///
+    /// 🧯 The chunks of one file go IN ORDER, one awaited at a time: the guest's staging refuses a gap
+    /// rather than resuming into bytes nobody can account for, so a concurrent fan-out costs the whole
+    /// file. A cancelled picker dispatches nothing and is not an error.
+    #[cfg(target_arch = "wasm32")]
+    async fn run_file_open_request(&mut self, request: PendingFileOpen) {
+        let PendingFileOpen { controller_id, accept, read_as, import_action, multiple } = request;
+        let opened = request_file_open(&accept, read_as.as_deref(), multiple).await;
+        Self::debug_log(&format!("[DEBUG] wgpu-shell file open accept={accept} action={import_action} files={} bytes={}", opened.len(), opened.iter().map(|file| file.contents.len()).sum::<usize>()));
+        let actions = file_open_import_actions(&controller_id, &import_action, opened, multiple);
+        Self::debug_log(&format!("[DEBUG] wgpu-shell file open chunks={} action={import_action}", actions.len()));
+        for action in actions {
+            if let Err(error) = self.dispatch_action(action).await {
+                Self::debug_log(&format!("[DEBUG] wgpu-shell import chunk {import_action} failed: {error}"));
+                return;
+            }
+        }
     }
 
     /// 📥️ One extension round trip, with its answer's own effects folded back into this shell —
@@ -7925,9 +8052,10 @@ impl ShellState {
             Ok(result) => {
                 Self::debug_log(&format!("[DEBUG] wgpu-shell invokeExtension answered req={req} extension={extension_id} capability={capability} effects={}", result.requested_effects.len()));
                 let controller_id = session.app.controller_id.clone();
+                let scope = result.ui_scope.clone().merged_with(self.host_effect_earned_scope(&result.requested_effects));
                 self.queue_host_effects(&controller_id, result.requested_effects);
                 let operations: Vec<String> = result.mutations.iter().filter_map(|operation| serde_json::to_string(&operation.diff.payload).ok()).collect();
-                if let Err(error) = self.apply_mutations(&operations).await {
+                if let Err(error) = self.apply_mutations(&operations, scope).await {
                     Self::debug_log(&format!("[DEBUG] wgpu-shell invokeExtension mutations req={req} failed: {error}"));
                 }
             }
@@ -8409,6 +8537,13 @@ impl ShellState {
 
     pub async fn activate_search_item(&mut self, index: usize) -> Result<(), String> {
         let items = self.filtered_search_items();
+        Self::debug_log(&format!(
+            "[DEBUG] wgpu-shell palette activate index={index} query={:?} items={} offered={:?} chose={:?}",
+            self.search_query,
+            items.len(),
+            items.iter().take(8).map(|item| item.id.as_str()).collect::<Vec<_>>(),
+            items.get(index).map(|item| (item.id.as_str(), item.action.as_deref()))
+        ));
         let Some(item) = items.get(index) else {
             return Ok(());
         };
@@ -8466,6 +8601,22 @@ impl ShellState {
         self.find_query.clear();
         self.find_selected = 0;
         Ok(())
+    }
+
+    /// ⌨️ Whether the USER is typing into app CONTENT — the one gate the hardcoded shell chords and
+    /// the focused-input Enter/Escape commit both sit behind. React expresses it as
+    /// `isEditableEventTarget` (react-hotkeys-hook: "hotkeys never fire while the user is typing").
+    ///
+    /// 🩸️ It used to be a bare `focused_id.is_some()`, and the chord that OPENS the quick-search
+    /// palette focuses the palette's own query field — so opening it disabled every keyboard route
+    /// out of it: `mod+p` no longer toggled (it fell through to the open palette's `Char` arm and
+    /// typed a literal `p` into the query) and Escape was claimed by the focused-input commit before
+    /// the palette's own Escape arm could run. The shell's own overlay fields are chrome, not
+    /// content (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    ///
+    /// `Self`-less so its law drives the real body without a `ShellState` fixture.
+    pub(crate) fn content_is_editing(focused_id: Option<&str>, sync_card_open: bool) -> bool {
+        focused_id.is_some_and(|id| !SHELL_OVERLAY_INPUT_IDS.contains(&id)) || sync_card_open
     }
 
     pub fn handle_keyboard(&mut self, action: ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers, input: &mut InputState<ActionDescriptor>) {
@@ -8528,23 +8679,22 @@ impl ShellState {
         // react-hotkeys-hook, which by default does not fire on form tags): "hotkeys never fire while
         // the user is typing". Previously these six chords fired unconditionally, so e.g. Ctrl+B while
         // typing in a focused Input would silently toggle the left panel instead of inserting "b".
-        let editing = input.focused_id.is_some() || self.sync_card_kind.is_some();
+        let editing = Self::content_is_editing(input.focused_id.as_deref(), self.sync_card_kind.is_some());
         if !editing && meta && matches!(action, ui_wgpu::wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("p")) {
             self.search_open = !self.search_open;
             self.find_open = false;
             self.overlay_state = if self.search_open { OverlayState::Search } else { OverlayState::None };
-            if self.search_open {
-                input.focused_id = Some("shell.search.input".into());
-            }
+            self.search_query.clear();
+            self.search_selected = 0;
+            input.focused_id = self.search_open.then(|| "shell.search.input".into());
+            Self::debug_log(&format!("[DEBUG] wgpu-shell palette chord search-open={} overlay={:?} focused={:?}", self.search_open, self.overlay_state, input.focused_id));
             return;
         }
         if !editing && meta && matches!(action, ui_wgpu::wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("f")) {
             self.find_open = !self.find_open;
             self.search_open = false;
             self.overlay_state = if self.find_open { OverlayState::Find } else { OverlayState::None };
-            if self.find_open {
-                input.focused_id = Some("shell.find.input".into());
-            }
+            input.focused_id = self.find_open.then(|| "shell.find.input".into());
             return;
         }
         if !editing && meta && matches!(action, ui_wgpu::wgpu::KeyAction::Char(ref c) if c == "[") {
@@ -8735,7 +8885,10 @@ impl ShellState {
             self.activate_find_item(self.find_selected).await?;
             return Ok(());
         }
-        if input.focused_id.is_some() {
+        // 🩸️ A CONTENT field's Enter/Escape commits it. The shell's own overlay query fields are not
+        // content: claiming Escape here swallowed the quick-search palette's own Escape arm, so the
+        // palette — already unable to close on its opening chord — had no keyboard route out at all.
+        if Self::content_is_editing(input.focused_id.as_deref(), false) {
             match action {
                 ui_wgpu::wgpu::KeyAction::Enter | ui_wgpu::wgpu::KeyAction::Escape => {
                     self.commit_focused_input(input).await?;
@@ -8826,7 +8979,7 @@ impl ShellState {
         if idle && action == ui_wgpu::wgpu::KeyAction::Escape {
             if let Some(window_id) = self.active_window_id.clone() {
                 if self.active_utility_by_window.remove(&window_id).is_some() {
-                    self.refresh_ui().await?;
+                    self.refresh_ui(UiDirtyScope::Full).await?;
                     return Ok(());
                 }
             }
@@ -8856,8 +9009,31 @@ impl ShellState {
         let Some(session) = self.session.clone() else {
             return Ok(());
         };
-        let window_id = self.active_window_id.clone().or_else(|| session.view_state.active_window_kind_id.clone()).unwrap_or_else(|| session.app.window_kinds.first().id.clone());
-        let action_def = window_action_definition(&session.app, &window_id, &descriptor.action).cloned();
+        // ⌨️ An app-wide chord for a WINDOW-OWNED verb addresses the window of the ACTIVE MODE that owns
+        // it, focused or not; a verb no mounted window owns is a HINTED no-op, never a dispatch at a
+        // window whose kind never declared it (`resolve_keybinding_target_window_v1`, ticket
+        // 26/09/09/PROCEDURAL-3D-END-TO-END).
+        let mounted: Vec<WindowScopeInstanceV1> = self.dock.window_instances().into_iter().map(|(id, window_kind_id)| WindowScopeInstanceV1 { id, window_kind_id }).collect();
+        let focused = self.active_window_id.clone().or_else(|| session.view_state.active_window_kind_id.clone());
+        let (target_kind, target_window_id) = resolve_keybinding_target_window_v1(&session.app, &mounted, focused.as_deref(), &descriptor.action);
+        let Some(window_id) = target_window_id else {
+            let label = session
+                .app
+                .window_kinds
+                .iter()
+                .flat_map(|kind| kind.actions.iter())
+                .find(|action| action.id == descriptor.action)
+                .map_or_else(|| descriptor.action.clone(), |action| action.label.resolve(self.active_terminology(), self.active_locale()).to_string());
+            let chord = session.app.keybindings.iter().find(|binding| binding.action.action == descriptor.action).map_or_else(String::new, |binding| binding.keys.clone());
+            self.error = Some(keybinding_unowned_text_v1(self.active_locale().as_str(), &chord, &label));
+            return Ok(());
+        };
+        if target_kind == WindowScopeTargetKindV1::Owner {
+            self.dock.sync_active_window(&window_id);
+            self.active_window_id = Some(window_id.clone());
+        }
+        let window_kind_id = mounted.iter().find(|instance| instance.id == window_id).map_or_else(|| window_id.clone(), |instance| instance.window_kind_id.clone());
+        let action_def = window_action_definition(&session.app, &window_kind_id, &descriptor.action).cloned();
         let has_args = action_def.as_ref().is_some_and(|action| !action.args.is_empty());
         if !has_args {
             return self.dispatch_action(descriptor).await;
@@ -8870,7 +9046,7 @@ impl ShellState {
             self.active_window_id = Some(window_id.clone());
             self.action_panel_folded.insert(window_id.clone(), false);
             self.action_panel_expanded.insert(window_id, action_id);
-            self.refresh_ui().await
+            self.refresh_ui(UiDirtyScope::Full).await
         }
     }
 
@@ -9870,6 +10046,7 @@ pub(crate) fn shell_mode_step_chord(action: &ui_wgpu::wgpu::KeyAction, modifiers
 pub(crate) struct World3dCancelAffordance {
     pub cancellable: bool,
     pub cancel_action: String,
+    pub cancel_args: serde_json::Map<String, Value>,
 }
 
 /// ⏳️ The FULL declared shape of a `World3dScene.statusJson` — the Rust twin of
@@ -9895,11 +10072,12 @@ pub(crate) struct World3dComputeStatus {
     pub ratio: f64,
     pub cancellable: bool,
     pub cancel_action: String,
+    pub cancel_args: serde_json::Map<String, Value>,
 }
 
 impl Default for World3dComputeStatus {
     fn default() -> Self {
-        Self { computing: false, phase: "idle".to_string(), phase_label: None, units_done: 0.0, units_total: 0.0, faces_done: 0.0, faces_total: 0.0, in_flight: 0.0, ratio: 1.0, cancellable: false, cancel_action: String::new() }
+        Self { computing: false, phase: "idle".to_string(), phase_label: None, units_done: 0.0, units_total: 0.0, faces_done: 0.0, faces_total: 0.0, in_flight: 0.0, ratio: 1.0, cancellable: false, cancel_action: String::new(), cancel_args: serde_json::Map::new() }
     }
 }
 
@@ -10009,7 +10187,7 @@ pub(crate) fn surface_overlay_controls_for(graphs: &[(&str, Rect)], worlds: &[(&
 /// whatever id `cancelAction` names is what the control dispatches.
 pub(crate) fn world3d_cancel_affordance(status_json: Option<&str>) -> World3dCancelAffordance {
     let status = world3d_compute_status(status_json);
-    World3dCancelAffordance { cancellable: status.cancellable, cancel_action: status.cancel_action }
+    World3dCancelAffordance { cancellable: status.cancellable, cancel_action: status.cancel_action, cancel_args: status.cancel_args }
 }
 
 /// ⏳️ A producer's own non-negative finite count, or `0` — the Rust twin of the TypeScript
@@ -10059,6 +10237,7 @@ pub(crate) fn world3d_compute_status(status_json: Option<&str>) -> World3dComput
         },
         cancellable: row.get("cancellable") == Some(&Value::Bool(true)) && !cancel_action.is_empty(),
         cancel_action,
+        cancel_args: row.get("cancelArgs").and_then(Value::as_object).map(|args| args.iter().filter(|(_, value)| value.is_string() || value.as_f64().is_some_and(f64::is_finite)).map(|(key, value)| (key.clone(), value.clone())).collect()).unwrap_or_default(),
     }
 }
 //#endregion 🔀️ChromeParity
@@ -10089,6 +10268,123 @@ fn command_host_platform() -> semio_framework::manifest::Platform {
         }
     }
 }
+
+//#region ⌨️WindowScope
+/// 🪟️ One tab stack of a seeded mode layout, in layout order — the Rust twin of React's
+/// `WindowScopeStackV1` (`🏛️ShellHost/⌨️window-scope/🟦️.ts`), driven by the same fixture
+/// (`🏛️ShellHost/🧫️fixtures/⌨️window-scope/🔣️.json`).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct WindowScopeStackV1 {
+    pub window_ids: Vec<String>,
+    pub active_window_id: Option<String>,
+}
+
+/// 🪟️ A live window instance of the active mode, with the kind whose declaration owns its verbs.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct WindowScopeInstanceV1 {
+    pub id: String,
+    pub window_kind_id: String,
+}
+
+/// ⌨️ Where an app-wide chord lands — twin of React's `WindowScopeTargetKindV1`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum WindowScopeTargetKindV1 {
+    Focused,
+    Owner,
+    Unowned,
+}
+
+/// 🪟️ Flattens a dock tree into its tab stacks, in layout order — twin of `modeLayoutStacksV1`.
+pub(crate) fn mode_layout_stacks_v1(node: &crate::dock::DockNode) -> Vec<WindowScopeStackV1> {
+    match node {
+        crate::dock::DockNode::Stack { windows, active } => {
+            let window_ids: Vec<String> = windows.iter().map(|tab| tab.window_id.clone()).collect();
+            let active_window_id = if active.is_empty() { window_ids.first().cloned() } else { Some(active.clone()) };
+            vec![WindowScopeStackV1 { window_ids, active_window_id }]
+        }
+        crate::dock::DockNode::Row(children) | crate::dock::DockNode::Column(children) => children.iter().flat_map(|(child, _)| mode_layout_stacks_v1(child)).collect(),
+    }
+}
+
+/// 🪟️ The window a freshly seeded mode layout opens ACTIVE, or `None` when the seed must be left
+/// alone — twin of `dockSeedActiveWindowIdV1`. A mode with windows always has exactly one active
+/// window, so every window-scoped verb, chord badge and Actions rail has an owner before the user's
+/// first click.
+pub(crate) fn dock_seed_active_window_id_v1(stacks: &[WindowScopeStackV1], active_window_id: Option<&str>) -> Option<String> {
+    let all: Vec<&String> = stacks.iter().flat_map(|stack| stack.window_ids.iter()).collect();
+    if all.is_empty() {
+        return None;
+    }
+    if let Some(active) = active_window_id {
+        if all.iter().any(|id| id.as_str() == active) {
+            return None;
+        }
+    }
+    for stack in stacks {
+        let candidate = stack.active_window_id.clone().or_else(|| stack.window_ids.first().cloned());
+        if let Some(candidate) = candidate {
+            if stack.window_ids.contains(&candidate) {
+                return Some(candidate);
+            }
+        }
+    }
+    all.first().map(|id| (*id).clone())
+}
+
+/// ⌨️ Resolves the window an app-wide chord addresses — twin of `resolveKeybindingTargetWindowV1`.
+/// `mounted` is the ACTIVE MODE's window instances in layout order, never every declared kind: a verb
+/// owned by a window this mode does not mount has no reachable owner and must say so.
+pub(crate) fn resolve_keybinding_target_window_v1(app: &AppDefinition, mounted: &[WindowScopeInstanceV1], focused_window_id: Option<&str>, action_id: &str) -> (WindowScopeTargetKindV1, Option<String>) {
+    let declares = |window_kind_id: &str| app.window_kinds.iter().any(|kind| kind.id == window_kind_id && kind.actions.iter().any(|action| action.id == action_id));
+    if let Some(focused) = focused_window_id.and_then(|id| mounted.iter().find(|instance| instance.id == id)) {
+        if declares(&focused.window_kind_id) {
+            return (WindowScopeTargetKindV1::Focused, Some(focused.id.clone()));
+        }
+    }
+    if let Some(owner) = mounted.iter().find(|instance| declares(&instance.window_kind_id)) {
+        return (WindowScopeTargetKindV1::Owner, Some(owner.id.clone()));
+    }
+    (WindowScopeTargetKindV1::Unowned, None)
+}
+
+/// 🚦️ The hint the user SEES when a chord's verb is owned by no window of the active mode — twin of
+/// `KEYBINDING_UNOWNED_LABEL`. No default language: `locale` picks, and only an unknown locale falls
+/// back to English, which is the one case where a choice has not been made.
+pub(crate) const KEYBINDING_UNOWNED_LABEL_EN: &str = "not available in this mode";
+pub(crate) const KEYBINDING_UNOWNED_LABEL_DE: &str = "in diesem Modus nicht verfügbar";
+pub(crate) const KEYBINDING_UNOWNED_CODE: &str = "shell.window-scope.unowned-chord";
+
+/// 🚦️ `⌘⇧G · Add Generation — not available in this mode`, in the reader's language.
+pub(crate) fn keybinding_unowned_text_v1(locale: &str, chord: &str, label: &str) -> String {
+    let tail = if locale == "de" { KEYBINDING_UNOWNED_LABEL_DE } else { KEYBINDING_UNOWNED_LABEL_EN };
+    format!("{chord} · {label} — {tail}")
+}
+
+/// 🛡️ Whether a chord carries the platform ACCELERATOR (`mod`/`ctrl`/`meta`) — twin of React's
+/// `chordCarriesAcceleratorV1`. The rule the wgpu shell's own [`is_reserved_shell_chord`] already
+/// applies: a bare key belongs to whichever surface has focus, an accelerator chord the shell's
+/// chrome answers is never an app's to shadow.
+pub(crate) fn chord_carries_accelerator_v1(chord: &str) -> bool {
+    let lowered = chord.to_ascii_lowercase();
+    let segments: Vec<&str> = lowered.split('+').collect();
+    segments.split_last().map(|(_, modifiers)| modifiers.iter().any(|segment| matches!(*segment, "mod" | "ctrl" | "meta" | "cmd"))).unwrap_or(false)
+}
+
+/// 🛡️ The chords the shell's own chrome keeps out of the app-keybinding loop, after the user's
+/// overrides — twin of React's `reservedShellChordsV1`.
+pub(crate) fn reserved_shell_chords_v1(shell_table: &[(String, String)], overrides: &[(String, String)]) -> std::collections::BTreeSet<String> {
+    let mut reserved = std::collections::BTreeSet::new();
+    for (control_id, keys) in shell_table {
+        let keys = overrides.iter().find(|(id, _)| id == control_id).map_or(keys.as_str(), |(_, keys)| keys.as_str());
+        for chord in keys.split(',').map(|key| key.trim().to_ascii_lowercase()).filter(|key| !key.is_empty()) {
+            if chord_carries_accelerator_v1(&chord) {
+                reserved.insert(chord);
+            }
+        }
+    }
+    reserved
+}
+//#endregion ⌨️WindowScope
 
 /// ⌨️ Whether a key event matches a keybinding chord such as `"mod+shift+z"`, `"ctrl+k"`, or `"escape"`.
 /// `"mod"` is the platform accelerator (meta OR ctrl). Declared modifiers must be present and no
@@ -10481,7 +10777,39 @@ impl ShellState {
     /// existing `"framework"` controller `dispatch_action` switch (`setAppearance`/`setDriver`/
     /// `setLocale`/`setTerminology`) that already backs the Settings panel's selects, so this
     /// never invents a new mutation path.
+    /// 🗣️ The resolved locale, and what it actually resolves the chrome, the app's own window labels
+    /// and the os command registry TO.
+    ///
+    /// This is the ONE runtime witness of a locale on a GPU canvas. Every translated string this
+    /// target renders is painted into pixels: it is not in the retained document (which carries the
+    /// user's own node names, identical in every tongue) and not in the DOM, so two lanes in a row
+    /// could neither prove nor disprove a German session from outside the canvas
+    /// (`📓️wgpu-status-a11y-i18n-2026-09-13.md` §5.3, ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    /// Printed once per RESOLUTION — a preferences load and a `setLocale` — never per frame.
+    pub(crate) fn trace_resolved_locale(&self, reason: &str) {
+        let is_de = self.locale_id == "de";
+        let chrome = ["overlay.search.title", "overlay.find.title", "example.overlay.title", "common.cancel", "common.close", "common.focus", "common.loading", "nodeGraph.fitGraph", "contextMenu.goHome"]
+            .iter()
+            .map(|key| format!("{key}={}", shell_chrome_string(key, is_de)))
+            .collect::<Vec<_>>();
+        let windows = self
+            .session
+            .as_ref()
+            .map(|session| session.app.window_kinds.iter().map(|kind| format!("{}={}", kind.id, kind.label.resolve(self.active_terminology(), self.active_locale()))).collect::<Vec<_>>())
+            .unwrap_or_default();
+        let commands = self.build_os_commands().into_iter().map(|definition| format!("{}={}", definition.id, definition.label.resolve(self.active_terminology(), self.active_locale()))).collect::<Vec<_>>();
+        Self::debug_log(&format!(
+            "[DEBUG] wgpu-shell locale resolved={} terminology={} reason={reason} chrome=[{}] windows=[{}] commands=[{}]",
+            self.locale_id,
+            self.terminology_id,
+            chrome.join(", "),
+            windows.join(", "),
+            commands.join(", ")
+        ));
+    }
+
     pub(crate) async fn apply_os_command(&mut self, command_id: &str, option_value: Option<&str>) -> Result<(), String> {
+        Self::debug_log(&format!("[DEBUG] wgpu-shell os command id={command_id} value={option_value:?}"));
         match command_id {
             "os.toggleFullscreen" => {
                 self.fullscreen_toggle_requested = true;
@@ -11902,7 +12230,7 @@ impl ShellState {
                     Self::debug_log(&format!("[DEBUG] tutorial load document (json) not wired to the pack-only plugin bridge"));
                 }
                 TutorialPendingDocOp::ApplyOperations(operations) => {
-                    if let Err(err) = self.apply_mutations(&operations).await {
+                    if let Err(err) = self.apply_mutations(&operations, UiDirtyScope::Full).await {
                         Self::debug_log(&format!("[DEBUG] tutorial apply operations failed: {err}"));
                     }
                 }
@@ -12067,11 +12395,11 @@ impl ShellState {
                 match cursor.setup {
                     0 => {
                         draw.set_screen_height(h);
-                        // 🎯️ One chrome walk mints one pointer registry. `FrameBuildPhase::InputFrame`
-                        // has already drained `InputState::hit_targets` for this build, so the owner
-                        // map is dropped with them — otherwise a retired body's ids would keep
-                        // claiming document routing for points nothing paints any more.
-                        self.retained_hit_windows.clear();
+                        // 🎯️ One chrome walk mints one pointer registry, into the STAGING buffer
+                        // `FrameBuildPhase::InputFrame` has just retired — so the owner map this walk
+                        // fills is cleared with it, while the last complete registry and ITS owner map
+                        // stay resolvable until `publish_retained_hit_registry` swaps both in.
+                        self.retained_hit_windows_staging.clear();
                     }
                     1 => overlay.set_screen_height(h),
                     2 => draw.push_solid([0.0, 0.0, w, h], theme.background),
@@ -12264,6 +12592,7 @@ impl ShellState {
             }
             ShellChromeFramePhase::PersistPreferences => {
                 self.request_chrome_preferences_persist();
+                self.publish_retained_hit_registry(input);
                 cursor.phase = ShellChromeFramePhase::Complete;
             }
             ShellChromeFramePhase::Complete => return true,
@@ -12350,6 +12679,7 @@ impl ShellState {
                 self.chrome_build.preferences.theme_id = env_lock("SEMIO_LOCKED_THEME").or(preferences.theme_id).unwrap_or_else(|| "semio".to_string());
                 self.chrome_build.preferences.custom_themes = custom_themes;
                 self.chrome_build.preferences.keybinding_overrides = preferences.keybinding_overrides;
+                self.trace_resolved_locale("preferences");
                 let loaded = self.chrome_build.preferences.clone();
                 with_chrome_prefs(|current| *current = loaded);
             }
@@ -15159,17 +15489,8 @@ mod chrome_overlays_tour_tests;
 /// answer to (`🎠️kernel/🧫️fixtures/⬇️media-export-encoding/🔣️.json`).
 #[cfg(target_arch = "wasm32")]
 fn download_media_export(filename: &str, mime_type: &str, data: &str, encoding: Option<&str>) {
-    use wasm_bindgen::JsCast;
-    use web_sys::{Blob, HtmlAnchorElement, Url};
-
-    let window = match web_sys::window() {
-        Some(window) => window,
-        None => return,
-    };
-    let document = match window.document() {
-        Some(document) => document,
-        None => return,
-    };
+    // ⬇️ The bytes are decided HERE, by the kernel contract both renderers answer to; only the
+    // presentation crosses to the page.
     let bytes = match semio_framework::kernel::media_export_bytes(data, encoding) {
         Ok(bytes) => bytes,
         Err(error) => {
@@ -15177,16 +15498,15 @@ fn download_media_export(filename: &str, mime_type: &str, data: &str, encoding: 
             return;
         }
     };
-    let parts = js_sys::Array::new();
-    parts.push(&js_sys::Uint8Array::from(bytes.as_slice()));
-    let blob = Blob::new_with_u8_array_sequence(&parts).unwrap();
-    let url = Url::create_object_url_with_blob(&blob).unwrap();
-    let anchor: HtmlAnchorElement = document.create_element("a").unwrap().dyn_into().unwrap();
-    anchor.set_href(&url);
-    anchor.set_download(filename);
-    anchor.set_attribute("type", mime_type).ok();
-    anchor.click();
-    Url::revoke_object_url(&url).ok();
+    let request = serde_json::json!({ "op": "download-media-export", "filename": filename, "mimeType": mime_type }).to_string();
+    let filename = filename.to_string();
+    let length = bytes.len();
+    crate::spawn_app_task(async move {
+        match host_io_call(&request, Some(&bytes)).await {
+            Ok(_) => ShellState::debug_log(&format!("[DEBUG] wgpu-shell download presented name={filename} bytes={length}")),
+            Err(error) => ShellState::debug_log(&format!("[DEBUG] wgpu-shell download {filename} not presented: {error}")),
+        }
+    });
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -15225,32 +15545,116 @@ async fn pick_folder() -> Option<String> {
 }
 
 
+//#region 📤️FileOpenImport
+/// 📤️ One file a picker handed back. The NAME is half the payload, not decoration: every import leaf
+/// in the repo resolves the file's format from its extension (`document_io::import_row_for_name`),
+/// so a shell that hands over contents alone can only guess.
+pub struct OpenedFile {
+    pub name: String,
+    pub contents: String,
+}
+
+/// 📥️ Turns one picker answer into the actions a shell dispatches — one per
+/// [`semio_framework::kernel::import_payload_chunks`] chunk of each file, in order, with the exact
+/// argument envelope the effect contract owns.
+///
+/// ⚖️ The chunking and the envelope are the kernel's, never this shell's: this target used to send
+/// `{json, payload}` in ONE unchunked invocation while React sent `{payload, name, chunk,
+/// chunkCount}` per chunk, and a plugin could satisfy only one of them. An unchunked import also asks
+/// the fixed guest heap for a contiguous block the size of the whole file
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+fn file_open_import_actions(controller_id: &str, import_action: &str, opened: Vec<OpenedFile>, multiple: bool) -> Vec<ActionDescriptor> {
+    let total = opened.len();
+    let mut actions = Vec::new();
+    for (index, file) in opened.into_iter().enumerate() {
+        for chunk in semio_framework::kernel::import_payload_chunks(&file.contents) {
+            let args = semio_framework::kernel::import_chunk_arguments(&file.name, &chunk, multiple.then_some((index, total)));
+            actions.push(ActionDescriptor { controller_id: controller_id.to_string(), action: import_action.to_string(), args: Some(args) });
+        }
+    }
+    actions
+}
+
 /// 📤️ Opens the native file picker; one entry per selected file, in selection order.
 #[cfg(not(target_arch = "wasm32"))]
-async fn request_file_open(accept: &str, read_as: Option<&str>, multiple: bool) -> Vec<String> {
+async fn request_file_open(accept: &str, read_as: Option<&str>, multiple: bool) -> Vec<OpenedFile> {
     use std::fs as system_fs;
     let extensions: Vec<String> = accept.split(',').filter_map(|entry| entry.trim().strip_prefix('.').map(str::to_string)).collect();
     let paths = ui_host::select_native_paths(ui_host::NativeFileDialogRequest::open(extensions.clone(), multiple)).await;
     paths
         .into_iter()
         .filter_map(|path| {
+            let name = path.file_name().map(|name| name.to_string_lossy().to_string()).unwrap_or_default();
             if read_as == Some("dataUrl") {
-                use base64::Engine;
                 let bytes = system_fs::read(&path).ok()?;
                 let mime = extensions.first().map(|ext| format!("application/{ext}")).unwrap_or_else(|| "application/octet-stream".into());
-                return Some(format!("data:{mime};base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes)));
+                return Some(OpenedFile { name, contents: format!("data:{mime};base64,{}", semio_framework_io_base64::base64_standard_encode(&bytes)) });
             }
-            system_fs::read_to_string(path).ok()
+            system_fs::read_to_string(path).ok().map(|contents| OpenedFile { name, contents })
         })
         .collect()
 }
 
-/// 🕸️ wasm32 has no native file-dialog surface — the browser shell handles `RequestFileOpen` itself
-/// (see `framework/renderer/react/index.tsx`'s `requestFileOpen`); this native fallback stays empty.
+/// 🚪️ Calls the ONE file-door binding the host environment installs (`semioWgpuHostIo`,
+/// `🎯️targets/🧊️wgpu/🚪️host-io/🟦️.ts`). The PAGE installs it directly; the frame Worker installs a
+/// `postMessage` bridge to the same implementation running on the page.
+///
+/// 🐛️ Why this indirection is the fix and not an indirection: this shell runs inside a dedicated Worker
+/// (the one that owns the `OffscreenCanvas`), and a Worker has NO `window` and NO `document`. Both
+/// browser halves here used to start with `web_sys::window()?` and return silently — so `Export
+/// Document…` produced real bytes and handed them to nobody, and `Import Document…` opened nothing at
+/// all, while every other hop of both journeys was already correct
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-end-to-end-verification-2026-09-14.md` §C).
 #[cfg(target_arch = "wasm32")]
-fn request_file_open(_accept: &str, _read_as: Option<&str>, _multiple: bool) -> Vec<String> {
-    Vec::new()
+async fn host_io_call(request_json: &str, bytes: Option<&[u8]>) -> Result<String, String> {
+    use wasm_bindgen::JsCast;
+    let global = js_sys::global();
+    let door = js_sys::Reflect::get(&global, &wasm_bindgen::JsValue::from_str("semioWgpuHostIo"))
+        .ok()
+        .and_then(|value| value.dyn_into::<js_sys::Function>().ok())
+        .ok_or_else(|| "this isolate installs no semioWgpuHostIo door".to_string())?;
+    let payload = match bytes {
+        Some(bytes) => js_sys::Uint8Array::from(bytes).into(),
+        None => wasm_bindgen::JsValue::NULL,
+    };
+    let result = door.call2(&wasm_bindgen::JsValue::NULL, &wasm_bindgen::JsValue::from_str(request_json), &payload).map_err(|error| format!("{error:?}"))?;
+    let resolved = match result.dyn_ref::<js_sys::Promise>() {
+        Some(promise) => semio_framework_async::browser::JsFuture::from(promise.clone()).await.map_err(|error| format!("{error:?}"))?,
+        None => result,
+    };
+    resolved.as_string().ok_or_else(|| "semioWgpuHostIo answered a non-string".to_string())
 }
+
+/// 📤️ Opens the browser file picker through the page-owned door; one entry per selected file, in
+/// selection order, EMPTY on cancel or on a refusal (which is logged, never swallowed).
+#[cfg(target_arch = "wasm32")]
+async fn request_file_open(accept: &str, read_as: Option<&str>, multiple: bool) -> Vec<OpenedFile> {
+    let request = serde_json::json!({ "op": "request-file-open", "accept": accept, "readAs": read_as, "multiple": multiple }).to_string();
+    let answer = match host_io_call(&request, None).await {
+        Ok(answer) => answer,
+        Err(error) => {
+            ShellState::debug_log(&format!("[DEBUG] wgpu-shell file picker refused: {error}"));
+            return Vec::new();
+        }
+    };
+    #[derive(serde::Deserialize)]
+    struct PickedFile {
+        name: String,
+        contents: String,
+    }
+    match serde_json::from_str::<Vec<PickedFile>>(&answer) {
+        Ok(files) => files.into_iter().map(|file| OpenedFile { name: file.name, contents: file.contents }).collect(),
+        Err(error) => {
+            ShellState::debug_log(&format!("[DEBUG] wgpu-shell file picker answer unreadable: {error}"));
+            Vec::new()
+        }
+    }
+}
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../🧪️tests/📤️wgpu-file-open-import/🦀️.rs"]
+mod file_open_import_tests;
+//#endregion 📤️FileOpenImport
 
 //#region RequestMediaFrames
 /// 🔓️ Decodes a `data:<mime>;base64,<data>` URL's payload; `None` for anything malformed or missing a

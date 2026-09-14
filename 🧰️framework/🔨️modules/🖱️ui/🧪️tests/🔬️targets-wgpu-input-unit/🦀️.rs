@@ -8,6 +8,8 @@ fn hit_at_prefers_content_registered_after_scroll_region() {
     let row = Rect::new(0.0, 24.0, 200.0, 24.0);
     input.register_hit(HitTarget { rect: scroll, event: None, control_id: Some("scroll".into()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
     input.register_hit(HitTarget { rect: row, event: None, control_id: Some("tree.label.item-1".into()), kind: HitKind::TreeItem, drag_axis: None, drag_data: None });
+    assert!(input.hit_at(10.0, 36.0).is_none(), "a registry the frame build has not published yet resolves nothing");
+    input.publish_hits();
     let hit = input.hit_at(10.0, 36.0).expect("row point should hit");
     assert_eq!(hit.control_id.as_deref(), Some("tree.label.item-1"));
     assert_eq!(hit.kind, HitKind::TreeItem);

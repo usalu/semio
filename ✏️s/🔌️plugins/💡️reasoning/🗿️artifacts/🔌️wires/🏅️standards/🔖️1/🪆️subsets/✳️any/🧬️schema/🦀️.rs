@@ -229,18 +229,6 @@ pub fn wires_relationships(wires: &DslValue) -> &[DslValue] {
 pub fn node_position(node: &DslValue) -> (f64, f64) {
     (node.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0), node.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0))
 }
-
-/// 🕸️ Re-lays out the board with the neutral `infinite_board_port_directed` force-graph solver — the
-/// same shared mechanism `puzzle/2d`'s `forceLayout`/`reorganize` uses, depended on directly rather
-/// than through puzzle's app program (mindmap's board schema is on its allowlist).
-pub fn force_layout_board(board: &mut DslValue) {
-    let Ok(layout_json) = infinite_board_port_directed::apply_force_graph_layout_to_fixture_v1_json(&fixture_json_string(board), r#"{"mode":"force-graph"}"#) else {
-        return;
-    };
-    if let Ok(parsed) = dsl::os_pack::json::from_json_str::<DslValue>(&layout_json) {
-        *board = parsed;
-    }
-}
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️ExampleFixture

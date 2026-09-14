@@ -4,10 +4,11 @@
 //! brush/fill utilities live in `☑️options/*`; genuinely per-window chrome lives under that window's
 //! own `☑️options/`.
 
+use crate::editor::puzzle5d::modes::edit::windows::board2d::utilities::fill;
 use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::{puzzle5d_action, Puzzle5dScene};
-use semio_framework_plugin::{create_default_layout, LocalizedLabel, ModeDefinition, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowLayout};
+use semio_framework_plugin::{create_default_layout, LocalizedLabel, ModeDefinition, ToolRunView, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowLayout};
 use dsl::json;
 
 pub const PUZZLE5D_PLAY_MODE_EDIT: &str = "edit";
@@ -40,7 +41,8 @@ fn puzzle5d_engagement_session_active(window: &str, active_utility: &str) -> boo
 /// utility bar (declared via `.utility` + each window's `utilities` binding); the fill-count slider
 /// and brush placement picker live as tagged [`semio_framework_plugin::WindowMeasure::Group`]s in the
 /// dedicated "Utility Options" rail, so what is left here is a bare command input plus a status line.
-pub fn puzzle5d_engagement(envelope: &Puzzle5dScene, window: &str, labels: &Puzzle5dLabels) -> WindowEngagement {
+/// Escape aborts the live fill run of this document instance, and otherwise disarms the utility.
+pub fn puzzle5d_engagement(envelope: &Puzzle5dScene, window: &str, labels: &Puzzle5dLabels, tool_run: Option<&ToolRunView>) -> WindowEngagement {
     let part_count = envelope.document.parts.len();
     let fastener_count = envelope.document.fasteners.len();
     let active_utility = envelope.active_utility.as_str();
@@ -60,7 +62,7 @@ pub fn puzzle5d_engagement(envelope: &Puzzle5dScene, window: &str, labels: &Puzz
             on_change: Some(puzzle5d_action("engagementInput", Some(json!({ "window": window })))),
             on_submit: Some(puzzle5d_action("engagementSubmit", Some(json!({ "window": window })))),
             on_repeat_last: None,
-            on_abort: Some(puzzle5d_action("engagementAbort", Some(json!({ "window": window })))),
+            on_abort: Some(fill::abort_action(tool_run).unwrap_or_else(|| puzzle5d_action("engagementAbort", Some(json!({ "window": window }))))),
         }),
         control: None,
         controls: None,

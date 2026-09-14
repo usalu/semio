@@ -4,6 +4,7 @@ use semio_framework_graph::dsl::Completion as JackCompletion;
 use semio_framework_graph::manifest::PropertyValue;
 use semio_s_artifact_trinity_jack::editor::jack::lod::trinity_lod_scale_json;
 use semio_s_artifact_trinity_jack::lexer::TokenSpan as JackTokenSpan;
+use semio_s_artifact_trinity_jack::JackSnapshot;
 use store::ArtifactDsl;
 
 #[test]
@@ -104,15 +105,6 @@ async fn trinity_host_rebuilds_engine() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn trinity_host_reorganize_moves_nodes() {
-    let mut host = TrinityBridge::from_graph(&nakagin_graph()).await;
-    let before: Vec<(f64, f64)> = host.graph.nodes.values().map(|n| (n.x, n.y)).collect();
-    host.reorganize().await;
-    let after: Vec<(f64, f64)> = host.graph.nodes.values().map(|n| (n.x, n.y)).collect();
-    assert_ne!(before, after);
-}
-
-#[semio_framework_async_macros::async_test]
 async fn trinity_host_tokenize_jack_json() {
     let host = TrinityBridge::from_graph(&nakagin_graph()).await;
     let json = host.tokenize_jack_json("MATCH (a:Piece)").unwrap();
@@ -208,22 +200,6 @@ async fn trinity_graph_to_board_fixture_includes_handles_and_edges() {
     assert_eq!(fixture["edges"].as_array().unwrap().len(), 6);
     let root_node = fixture["nodes"].as_array().unwrap().iter().find(|n| n["id"] == "7dc5b737-3b6b-4068-b315-b7bacc91c2e1").unwrap();
     assert!(!root_node["handles"].as_array().unwrap().is_empty());
-}
-
-#[semio_framework_async_macros::async_test]
-async fn force_layout_reposition_operations_produces_repositions() {
-    let fixture = nakagin_graph().to_fixture();
-    let operations = force_layout_reposition_operations(&fixture).unwrap();
-    assert!(!operations.is_empty());
-    assert!(operations.iter().all(|op| matches!(op, TrinityGraphMutation::MoveNode(_))));
-}
-
-#[semio_framework_async_macros::async_test]
-async fn apply_force_layout_positions_errors_when_nodes_missing() {
-    let mut g = nakagin_graph();
-    let fixture = pack::json!({});
-    let err = apply_force_layout_positions_to_trinity_graph(&mut g, &fixture).unwrap_err();
-    assert!(matches!(err, TrinityRewritingError::ForceLayoutFixtureMissingNodes));
 }
 
 #[semio_framework_async_macros::async_test]

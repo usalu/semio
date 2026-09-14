@@ -66,6 +66,9 @@ semio-framework-plugin = { path = "../../../../../../🔌️plugin/📦️packag
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 base64 = "0.22.1"
+# 🔤️ The first-party RFC 4648 codec `request_file_open` encodes a picked file with. Workspace-internal;
+# it is what replaces the third-party `base64` crate on this crate's remaining data-url paths.
+semio-framework-io-base64 = { path = "../../../../../../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
 image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
 vello = { version = "0.9.0", default-features = false, features = ["wgpu"] }
 winit = { version = "0.30.12", default-features = false, features = ["rwh_06"] }

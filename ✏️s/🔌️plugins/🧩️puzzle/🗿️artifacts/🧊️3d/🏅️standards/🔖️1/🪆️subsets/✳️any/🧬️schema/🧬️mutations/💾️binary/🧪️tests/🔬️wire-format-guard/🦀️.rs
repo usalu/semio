@@ -32,8 +32,6 @@ fn engine_commands() -> Vec<Puzzle3dEngineCommand> {
     let mut object_weights = std::collections::BTreeMap::new();
     object_weights.insert("Host".to_string(), 0.5);
     vec![
-        Puzzle3dEngineCommand::ApplyFillCount { count: 7 },
-        Puzzle3dEngineCommand::ComposeFillDisplay { count: 9 },
         Puzzle3dEngineCommand::UpdateKindWeights { object_weights, vortex_weights: std::collections::BTreeMap::new() },
         Puzzle3dEngineCommand::BrushPreview { vortex_full_id: "host:v0".to_string(), candidate_index: 2 },
     ]
@@ -41,8 +39,6 @@ fn engine_commands() -> Vec<Puzzle3dEngineCommand> {
 
 /// 🔒️ Same frozen capture for the headless engine-command codec.
 const PRE_MIGRATION_ENGINE_COMMAND_WIRE: &[&str] = &[
-    "apply-fill-count count=7 | 7 | 01020001000407",
-    "compose-fill-display count=9 | 7 | 01030001000409",
     "update-kind-weights object-weights={ Host=0.5 } vortex-weights={ } | 26 | 01040104486f737402001001060005000000000000e03f011000",
     "brush-preview vortex-full-id=\"host:v0\" candidate-index=2 | 18 | 01050107686f73743a763002000600010402",
 ];

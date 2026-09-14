@@ -705,6 +705,25 @@ export function wireEffectToFriendly(effect: WireVariant, decodePackValue: (byte
       };
     case "open-plugin-instance":
       return { openPluginInstance: { pluginId: str("pluginId"), appId: str("appId"), osInstanceId: val.osInstanceId as string | undefined } };
+    // 📤️ Every plugin's IMPORT door. This case did not exist, so `Import Document…` reached the
+    // guest, the guest emitted its effect, and the wgpu door answered
+    // `unmapped effect "request-file-open" dropped` — no picker, ever (ticket
+    // 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-end-to-end-verification-2026-09-14.md` §C).
+    // `readAs` is a WIT `option<string>` and is OMITTED rather than carried as `undefined`: the
+    // friendly `Effect` union declares it optional, and a shell reads "absent" as "hand me the
+    // file's own text".
+    case "request-file-open": {
+      const readAs = poptstr("readAs") ?? poptstr("read-as");
+      return {
+        requestFileOpen: {
+          req: num("req"),
+          accept: pstr("accept"),
+          ...(readAs === undefined ? {} : { readAs }),
+          importAction: pstr("importAction") || pstr("import-action"),
+          multiple: Boolean(some(params.multiple) ?? false),
+        },
+      };
+    }
     case "dispatch-action":
       return { dispatchAction: { req: num("req"), action: pstr("action"), args: ppack("args"), delayMs: pnum("delayMs") } };
     // 📨️ Transport, never a friendly `Effect`: a `Shell{instance}` send-message IS the `AppFrame`

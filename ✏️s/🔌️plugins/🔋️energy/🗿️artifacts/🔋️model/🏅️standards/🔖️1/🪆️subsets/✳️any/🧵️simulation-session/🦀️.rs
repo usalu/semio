@@ -9,7 +9,7 @@ use crate::{EnergyAdmissionRejected, EnergyJob, EnergyJobCursor, EnergyJobStage,
 use semio_framework_job::{Generation, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, OperationId, RetainedJobPayload, StepBudget, StepContext, StepOutcome};
 use semio_framework_plugin::LocalizedLabel;
 use semio_framework_tool_run::{
-    JobKindId, ToolRunCounter, ToolRunCounterDefinition, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunStageDefinition, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing,
+    JobKindId, ToolRunCounter, ToolRunCounterDefinition, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunStageDefinition, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunSettingsReads, ToolRunStepRing,
     ToolRunTickWriter, ToolRunTraceKind, ToolRunVerdict,
 };
 use std::sync::Arc;
@@ -17,8 +17,11 @@ use std::sync::Arc;
 //#region 🔖️Contract
 pub const ENERGY_SIMULATION_RUN_JOB_KIND: &str = "energy.simulation.run";
 pub const ENERGY_SIMULATION_RUN_SCHEMA: &str = "energy.simulation.run.v1";
+/// 🎚️ The editor config fields a run reads; a publication changing one of them reconfigures a live run.
+pub const ENERGY_SIMULATION_RUN_SETTINGS: [&str; 3] = ["/zoneTimestepMinutes", "/systemTimestepMinutes", "/warmupDays"];
 const MAXIMUM_CAPTURE_ITEMS: usize = 4_194_304;
 const MAXIMUM_CAPTURE_BYTES: usize = 512 * 1_024 * 1_024;
+const CAPTURE_LAST_LANE: u8 = 45;
 
 /// 🧭️ Stages of the run as the panel names them: the plugin capture, then the numerical pipeline grouped by tier.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -175,7 +178,8 @@ impl EnergySimulationRunReason {
     }
 }
 
-/// ⏯️ The simulation run declaration: read-only, restarted on any base or settings change, no trace subjects.
+/// ⏯️ The simulation run declaration: read-only, restarted on any base or settings change, no trace subjects,
+/// reading the three run settings of the editor config.
 pub fn energy_simulation_run_definition() -> ToolRunDefinition {
     ToolRunDefinition {
         mutating: false,
@@ -188,6 +192,8 @@ pub fn energy_simulation_run_definition() -> ToolRunDefinition {
         trace: ToolRunTraceKind::None,
         run_job: JobKindId::new(ENERGY_SIMULATION_RUN_JOB_KIND),
         revalidate_job: None,
+        settings: ToolRunSettingsReads { config: ENERGY_SIMULATION_RUN_SETTINGS.iter().map(|pointer| pointer.to_string()).collect(), window_config: Default::default() },
+        windows: Vec::new(),
     }
 }
 
@@ -240,19 +246,19 @@ impl CaptureCensus {
 
     fn step_one(&mut self, source: &Model) -> Result<bool, &'static str> {
         macro_rules! vector {
-            ($field:ident) => {{
-                let (capacity, bytes) = vector_credit(&source.$field);
+            ($($field:ident).+) => {{
+                let (capacity, bytes) = vector_credit(&source.$($field).+);
                 self.charge(capacity, bytes)?;
             }};
         }
         macro_rules! nested {
-            ($field:ident, $backing:expr) => {{
-                if let Some(item) = source.$field.get(self.index) {
+            ($($field:ident).+, $backing:expr) => {{
+                if let Some(item) = source.$($field).+.get(self.index) {
                     let (items, bytes) = $backing(item);
                     self.charge_observed(items, bytes)?;
                     self.index += 1;
                 } else {
-                    let (capacity, bytes) = vector_credit(&source.$field);
+                    let (capacity, bytes) = vector_credit(&source.$($field).+);
                     self.charge(capacity, bytes)?;
                 }
             }};
@@ -330,9 +336,17 @@ impl CaptureCensus {
             37 => vector!(daylight_zones),
             38 => vector!(room_air_models),
             39 => self.charge(1, size_of_val(&source.ground_temperature))?,
+            40 => self.charge(1, size_of_val(&source.run_period))?,
+            41 => vector!(schedules.constants),
+            42 => vector!(schedules.daily),
+            43 => vector!(schedules.weekly),
+            44 => nested!(schedules.annual, |item: &crate::schedule::AnnualSchedule| {
+                (item.rules.capacity().saturating_add(item.holiday_dates.capacity()), item.rules.capacity().saturating_mul(size_of::<crate::schedule::CompactScheduleRule>()).saturating_add(item.holiday_dates.capacity().saturating_mul(size_of::<(u16, u8, u8)>())))
+            }),
+            45 => nested!(schedules.time_series, |item: &crate::schedule::TimeSeriesSchedule| (item.values.capacity(), item.values.capacity().saturating_mul(size_of::<f64>()))),
             _ => return Ok(true),
         }
-        Ok(self.lane > 39)
+        Ok(self.lane > CAPTURE_LAST_LANE)
     }
 }
 
@@ -387,14 +401,26 @@ impl ModelCapture {
         Ok(true)
     }
 
+    fn copy_rules(target: &mut Vec<crate::schedule::CompactScheduleRule>, source: &Vec<crate::schedule::CompactScheduleRule>) -> Result<bool, &'static str> {
+        if target.capacity() == 0 && source.capacity() != 0 {
+            target.try_reserve_exact(source.capacity()).map_err(|_| "energy.session.capture-nested-vector-reserve")?;
+            return Ok(false);
+        }
+        if let Some(rule) = source.get(target.len()) {
+            target.push(crate::schedule::CompactScheduleRule { start_month: rule.start_month, start_day: rule.start_day, end_month: rule.end_month, end_day: rule.end_day, daily_schedule_id: rule.daily_schedule_id });
+            return Ok(false);
+        }
+        Ok(true)
+    }
+
     fn step_one(&mut self, source: &Model) -> Result<bool, &'static str> {
         macro_rules! plain {
-            ($field:ident, $value:expr) => {{
-                if self.model.$field.capacity() == 0 && source.$field.capacity() != 0 {
-                    self.model.$field.try_reserve_exact(source.$field.capacity()).map_err(|_| "energy.session.capture-vector-reserve")?;
-                } else if let Some(item) = source.$field.get(self.index) {
+            ($($field:ident).+, $value:expr) => {{
+                if self.model.$($field).+.capacity() == 0 && source.$($field).+.capacity() != 0 {
+                    self.model.$($field).+.try_reserve_exact(source.$($field).+.capacity()).map_err(|_| "energy.session.capture-vector-reserve")?;
+                } else if let Some(item) = source.$($field).+.get(self.index) {
                     let value = $value(item);
-                    self.model.$field.push(value);
+                    self.model.$($field).+.push(value);
                     self.index += 1;
                 } else {
                     self.next_lane();
@@ -403,20 +429,20 @@ impl ModelCapture {
             }};
         }
         macro_rules! dynamic {
-            ($field:ident, $source_item:ident, $target_item:ident, $empty:expr, $body:block) => {{
-                if self.model.$field.capacity() == 0 && source.$field.capacity() != 0 {
-                    self.model.$field.try_reserve_exact(source.$field.capacity()).map_err(|_| "energy.session.capture-vector-reserve")?;
+            ($($field:ident).+, $source_item:ident, $target_item:ident, $empty:expr, $body:block) => {{
+                if self.model.$($field).+.capacity() == 0 && source.$($field).+.capacity() != 0 {
+                    self.model.$($field).+.try_reserve_exact(source.$($field).+.capacity()).map_err(|_| "energy.session.capture-vector-reserve")?;
                     return Ok(false);
                 }
-                let Some($source_item) = source.$field.get(self.index) else {
+                let Some($source_item) = source.$($field).+.get(self.index) else {
                     self.next_lane();
                     return Ok(false);
                 };
-                if self.model.$field.len() == self.index {
-                    self.model.$field.push($empty($source_item));
+                if self.model.$($field).+.len() == self.index {
+                    self.model.$($field).+.push($empty($source_item));
                     return Ok(false);
                 }
-                let $target_item = self.model.$field.get_mut(self.index).ok_or("energy.session.capture-record-missing")?;
+                let $target_item = self.model.$($field).+.get_mut(self.index).ok_or("energy.session.capture-record-missing")?;
                 $body
                 return Ok(false);
             }};
@@ -838,9 +864,39 @@ impl ModelCapture {
                 self.model.ground_temperature = crate::model::GroundTemperatureConfig { building_surface_c: source.ground_temperature.building_surface_c, shallow_c: source.ground_temperature.shallow_c, deep_c: source.ground_temperature.deep_c };
                 self.next_lane();
             }
+            40 => {
+                self.model.run_period = source.run_period;
+                self.next_lane();
+            }
+            41 => plain!(schedules.constants, |item: &crate::schedule::ConstantSchedule| crate::schedule::ConstantSchedule { id: item.id, value: item.value }),
+            42 => plain!(schedules.daily, |item: &crate::schedule::DailySchedule| crate::schedule::DailySchedule { id: item.id, hourly_values: item.hourly_values, interpolation: item.interpolation, limits: item.limits }),
+            43 => plain!(schedules.weekly, |item: &crate::schedule::WeeklySchedule| crate::schedule::WeeklySchedule { id: item.id, daily_schedule_ids: item.daily_schedule_ids }),
+            44 => dynamic!(
+                schedules.annual,
+                source_item,
+                target_item,
+                |item: &crate::schedule::AnnualSchedule| crate::schedule::AnnualSchedule { id: item.id, rules: Vec::new(), default_daily_schedule_id: item.default_daily_schedule_id, holiday_daily_schedule_id: item.holiday_daily_schedule_id, holiday_dates: Vec::new() },
+                {
+                    match self.substage {
+                        0 => {
+                            if Self::copy_rules(&mut target_item.rules, &source_item.rules)? {
+                                self.substage += 1;
+                            }
+                        }
+                        1 => items!(&mut target_item.holiday_dates, &source_item.holiday_dates),
+                        _ => finish_record!(),
+                    }
+                }
+            ),
+            45 => dynamic!(schedules.time_series, source_item, target_item, |item: &crate::schedule::TimeSeriesSchedule| crate::schedule::TimeSeriesSchedule { id: item.id, values: Vec::new(), timestep_seconds: item.timestep_seconds }, {
+                match self.substage {
+                    0 => items!(&mut target_item.values, &source_item.values),
+                    _ => finish_record!(),
+                }
+            }),
             _ => return Ok(true),
         }
-        Ok(self.lane > 39)
+        Ok(self.lane > CAPTURE_LAST_LANE)
     }
 
     fn finish(self) -> Model {
@@ -1048,15 +1104,16 @@ impl EnergySimulationRunJob {
         }
     }
 
-    /// 🦶️ Steps the numerical job until one timestep is computed, the run settles or the caller must yield.
+    /// 🦶️ Steps the numerical job until one timestep is computed, the run settles or the caller must yield. Each
+/// numerical step gets its own context, because a step context grants at most one payload page.
     fn simulate(&mut self, cx: &StepContext<'_>) -> EnergyRunGrant {
         let Self { numerical, numerical_sequence, operation, generation, cursor, writer, phase, .. } = self;
         let Some(job) = numerical.as_mut() else { return EnergyRunGrant::Settled(fault_outcome()) };
-        let mut inner = StepContext::new(*operation, *generation, StepBudget::new(u64::MAX, cx.deadline_us()), cx.cancel_token(), semio_framework_job::default_now_us, numerical_sequence);
         loop {
             if cx.should_yield() {
                 return EnergyRunGrant::Continue;
             }
+            let mut inner = StepContext::new(*operation, *generation, StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, cx.deadline_us()), cx.cancel_token(), semio_framework_job::default_now_us, numerical_sequence);
             let settled = match job.step(&mut inner) {
                 StepOutcome::Yield => None,
                 StepOutcome::PreviewReady(mut payload) => {

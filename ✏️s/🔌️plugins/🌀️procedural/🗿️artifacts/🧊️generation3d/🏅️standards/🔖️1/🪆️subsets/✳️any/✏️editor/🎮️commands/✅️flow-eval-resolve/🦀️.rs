@@ -11,7 +11,8 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 pub use crate::preview_eval::FlowEvalResolve;
 
 pub fn handle(payload: &FlowEvalResolve, _doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    Ok(Emit { effects: preview_eval::resolve_eval(payload, session), ..Default::default() })
+    preview_eval::resolve_eval(payload, session);
+    Ok(Emit::default())
 }
 
 //#region 🧪️Tests

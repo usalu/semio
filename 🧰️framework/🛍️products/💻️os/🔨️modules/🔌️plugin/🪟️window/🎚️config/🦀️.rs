@@ -369,6 +369,8 @@ trait ErasedWindowConfigStoreOwner: Send {
     fn commit_retained_load(&mut self, registry_lifetime: u64, load: &mut dyn retained::ErasedWindowConfigPackLoad) -> Result<WindowConfigPackLoadStep, WindowConfigPackLoadDiagnostic>;
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;
     fn terminal_is_empty(&self) -> bool;
+    fn pointer_values(&self, pointers: &[String]) -> Vec<(String, Vec<Option<protocol::DslValue>>)>;
+    fn snapshot(&self, window_id: &str) -> Option<WindowConfigSnapshot>;
 }
 
 struct TypedWindowConfigStoreOwner<O: WindowConfigOwner> {
@@ -476,6 +478,21 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
         retained::commit_typed_window_config_pack_load::<O>(registry_lifetime, &mut self.partitions, load)
     }
 
+    fn snapshot(&self, window_id: &str) -> Option<WindowConfigSnapshot> {
+        let partition = self.partitions.get(window_id)?;
+        Some(WindowConfigSnapshot { window_id: window_id.to_string(), window_kind_id: O::WINDOW_KIND_ID, generation: partition.store.generation(), revision: partition.store.content_revision_now(), snapshot: partition.store.snapshot_root() })
+    }
+
+    fn pointer_values(&self, pointers: &[String]) -> Vec<(String, Vec<Option<protocol::DslValue>>)> {
+        self.partitions
+            .iter()
+            .map(|(window_id, partition)| {
+                let document = protocol::ToValue::to_value(partition.store.snapshot_owner().as_ref());
+                (window_id.clone(), pointers.iter().map(|pointer| semio_framework_tool_run::tool_run_pointer_value(&document, pointer).cloned()).collect())
+            })
+            .collect()
+    }
+
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
         let Some(window_id) = self.partitions.keys().next().cloned() else { return Ok(PluginCloseStep::Complete) };
         let partition = self.partitions.get_mut(&window_id).expect("selected window config partition remains owned");
@@ -521,6 +538,17 @@ impl WindowConfigOwnerRegistry {
 
     pub fn is_empty(&self) -> bool {
         self.owners.is_empty()
+    }
+
+    /// 📸️ The current config snapshot of window `window_id` of kind `window_kind_id`, without creating its partition.
+    pub fn snapshot(&self, window_kind_id: &str, window_id: &str) -> Option<WindowConfigSnapshot> {
+        self.owners.get(window_kind_id)?.snapshot(window_id)
+    }
+
+    /// ⏯️ The values `pointers` (RFC 6901) name in every window config partition of `window_kind_id`, by window id
+    /// in window id order — what a tool run's declared window config reads compare across publications.
+    pub fn pointer_values(&self, window_kind_id: &str, pointers: &[String]) -> Vec<(String, Vec<Option<protocol::DslValue>>)> {
+        self.owners.get(window_kind_id).map_or_else(Vec::new, |owner| owner.pointer_values(pointers))
     }
 
     /// 🪟️ The window whose config this call speaks for: the addressed instance, and for a PANEL

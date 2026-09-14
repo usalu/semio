@@ -27,11 +27,11 @@
   "acceptFilter": ".stl,.obj,.ply,.gltf,.dwg,.json,.txt",
   "editorActions": [
     { "id": "importDocumentRequest", "kind": "Shell", "inPalette": true, "labelEn": "Import Document…", "labelDe": "Dokument importieren…", "chord": "mod+o" },
-    { "id": "exportDocument", "kind": "Shell", "inPalette": true, "labelEn": "Export Document…", "labelDe": "Dokument exportieren…", "chord": "mod+shift+e" },
+    { "id": "exportDocument", "kind": "Shell", "inPalette": true, "labelEn": "Export Document", "labelDe": "Dokument exportieren", "chord": "mod+shift+e" },
     { "id": "importDocument", "kind": "Mutation", "inPalette": false, "labelEn": "Import Document File", "labelDe": "Dokumentdatei importieren" }
   ],
   "viewerActions": [
-    { "id": "exportDocument", "kind": "View", "inPalette": true, "labelEn": "Export Document…", "labelDe": "Dokument exportieren…", "chord": "mod+shift+e" }
+    { "id": "exportDocument", "kind": "View", "inPalette": true, "labelEn": "Export Document", "labelDe": "Dokument exportieren", "chord": "mod+shift+e" }
   ],
   "publicationLanes": {
     "editor": { "importDocumentRequest": ["HostOnly"], "importDocument": ["Artifact", "Config"], "exportDocument": ["HostOnly"] },

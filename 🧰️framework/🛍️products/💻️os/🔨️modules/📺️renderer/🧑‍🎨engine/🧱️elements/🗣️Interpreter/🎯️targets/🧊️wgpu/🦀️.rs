@@ -112,6 +112,9 @@ pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPla
         check_json_payload(&format!("{scene_label} canvas2d.layers"), &canvas.layers_json, limits)?;
         check_tool_run_trace(&format!("{scene_label} canvas2d.toolRunTrace"), &canvas.tool_run_trace, limits)?;
     }
+    if let Some(board) = &scene.board2d {
+        check_tool_run_trace(&format!("{scene_label} board2d.toolRunTrace"), &board.tool_run_trace, limits)?;
+    }
     if let Some(world) = &scene.world_3d {
         check_json_payload(&format!("{scene_label} world3d.camera"), &world.camera_json, limits)?;
         check_json_payload(&format!("{scene_label} world3d.meshes"), &world.meshes_json, limits)?;
@@ -1755,17 +1758,32 @@ struct DumpStructure {
     nodes: Vec<DumpNode>,
 }
 
-/// ♿️ The wire shape `dumpAccessibility()` answers: one window's accessibility tree in reading
-/// order, plus the windows a caller could ask for instead. `nodes` is `ui_contract`'s own
+/// ♿️ One window's accessibility tree in reading order. `nodes` is `ui_contract`'s own
 /// `AccessibilityProjectionNode` verbatim — the host mirror consumes the CONTRACT's shape, not a
 /// renderer-private one, so a second renderer publishing the same tree needs no new consumer.
-#[cfg(target_arch = "wasm32")]
+#[cfg(any(target_arch = "wasm32", test))]
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DumpAccessibilityWindow {
+    window_id: String,
+    nodes: Vec<ui_contract::AccessibilityProjectionNode>,
+}
+
+/// ♿️ The wire shape `dumpAccessibility()` answers.
+///
+/// 🩸️ Unlike its two `dumpStructure`/`dumpFrameStats` neighbours this is NOT a diagnostic that may
+/// answer for "the window a caller probably meant". It is the production accessibility path, and an
+/// app whose mode layout mounts several windows must announce ALL of them: a reader that can only
+/// reach the largest pane cannot reach the preview beside it. A caller that NAMES a window still
+/// gets exactly that window (`window_id` echoes it); a caller that names none gets every live
+/// window, in the order the engine tracks them, which is the reading order across the dock.
+#[cfg(any(target_arch = "wasm32", test))]
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct DumpAccessibility {
     window_id: Option<String>,
     window_ids: Vec<String>,
-    nodes: Vec<ui_contract::AccessibilityProjectionNode>,
+    windows: Vec<DumpAccessibilityWindow>,
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -2022,7 +2040,7 @@ fn dump_window_id(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> Option
 
 /// 🪟️ Every window this engine currently tracks, so a dump that answers for one window can still
 /// name the others a caller could ask for.
-#[cfg(target_arch = "wasm32")]
+#[cfg(any(target_arch = "wasm32", test))]
 fn dump_window_ids(engine: &ui_wgpu::wgpu::Ui) -> Vec<String> {
     engine.window_ids().map(str::to_string).collect()
 }
@@ -2063,17 +2081,28 @@ fn is_glyph_instance(instance: &ui_wgpu::wgpu::draw::UiInstance) -> bool {
     instance.params[2] == ui_wgpu::wgpu::draw::KIND_GLYPH
 }
 
-/// ♿️ The accessibility tree ONE window publishes, plus the windows a caller could ask for instead —
-/// the same window-selection rule `build_structure_dump` uses, so a two-pane mode layout is
-/// addressable pane by pane rather than only by its largest.
-#[cfg(target_arch = "wasm32")]
+/// ♿️ The accessibility tree the app publishes: the ONE window a caller named, or — when it named
+/// none — EVERY live window, each with its own tree, in the order the engine tracks them.
+///
+/// 🩸️ This used to reuse `build_structure_dump`'s "largest viewport" selection. That rule is right
+/// for a diagnostic and wrong for the accessibility path: on generation3d it announced
+/// `procedural-main` and silently dropped `procedural-preview` and both measure panels, so 26 of the
+/// app's 64 announced nodes were unreachable to a reader (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[cfg(any(target_arch = "wasm32", test))]
 fn build_accessibility_dump(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> DumpAccessibility {
     let window_ids = dump_window_ids(engine);
-    let Some(window_id) = dump_window_id(engine, requested) else {
-        return DumpAccessibility { window_id: None, window_ids, nodes: Vec::new() };
+    let announced: Vec<String> = match requested.filter(|id| !id.is_empty()) {
+        Some(id) => window_ids.iter().filter(|live| live.as_str() == id).cloned().collect(),
+        None => window_ids.clone(),
     };
-    let nodes = engine.tree(&window_id).map(ui_wgpu::wgpu::accessibility::accessibility_projection).unwrap_or_default();
-    DumpAccessibility { window_id: Some(window_id), window_ids, nodes }
+    let windows = announced
+        .into_iter()
+        .map(|window_id| {
+            let nodes = engine.tree(&window_id).map(ui_wgpu::wgpu::accessibility::accessibility_projection).unwrap_or_default();
+            DumpAccessibilityWindow { window_id, nodes }
+        })
+        .collect();
+    DumpAccessibility { window_id: requested.filter(|id| !id.is_empty()).map(str::to_string), window_ids, windows }
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -2153,8 +2182,9 @@ pub fn dump_frame_stats(window_id: Option<String>) -> String {
     serde_json::to_string(&stats).unwrap_or_else(|_| "{}".to_string())
 }
 
-/// ♿️📤️ `dumpAccessibility()` — the accessibility tree of one window, for the host to MIRROR into a
-/// real ARIA subtree beside the canvas (`🚀️browser-boot/🟦️.ts`'s `accessibilityMirror`).
+/// ♿️📤️ `dumpAccessibility()` — the app's accessibility tree (every live window, or the one a caller
+/// names), for the host to MIRROR into a real ARIA subtree beside the canvas
+/// (`🚀️browser-boot/🟦️.ts`'s `accessibilityMirror`).
 ///
 /// This is not a test probe like its two neighbours: it is the wgpu target's production
 /// accessibility path. A DOM renderer gets `aria-label`/`aria-describedby`/`aria-live` for free,

@@ -27,6 +27,7 @@ semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
+semio-framework-tool-run = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-dxf = { workspace = true }
@@ -50,3 +51,5 @@ semio-framework-os-kernel = { workspace = true, features = ["protocol-laws"] }
 semio-framework-async-macros = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+# 🪪️ Third-party oracle for the preview evaluation run's node entity key (FNV-1a 64) — test-only.
+fnv = "1.0.7"

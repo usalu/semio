@@ -208,11 +208,11 @@ fn dock_stack_glass_and_hits_exist_only_on_owned_chips() {
     dock.paint_chrome(&mut ctx, bounds, false);
     assert_eq!(draw.glass_regions.len(), 1, "one top-left corner group chip for both tabs");
     assert!(!draw.glass_regions.iter().any(|region| Rect::new(region.rect[0], region.rect[1], region.rect[2], region.rect[3]).contains(gap_point.0, gap_point.1)));
-    assert!(input.hit_targets.iter().any(|hit| hit.control_id.as_deref() == Some("dock.tab..a")));
-    assert!(input.hit_targets.iter().any(|hit| hit.control_id.as_deref() == Some("dock.tab..a.close")));
-    assert!(input.hit_targets.iter().any(|hit| hit.control_id.as_deref() == Some("dock.tab..a.focus")));
-    assert!(!input.hit_targets.iter().any(|hit| hit.control_id.as_deref().is_some_and(|id| id.starts_with("dock.focus.") || id.starts_with("dock.close."))));
-    assert!(!input.hit_targets.iter().any(|hit| hit.control_id.as_deref().is_some_and(|id| id.starts_with("dock.stack."))));
+    assert!(input.staged_hits().iter().any(|hit| hit.control_id.as_deref() == Some("dock.tab..a")));
+    assert!(input.staged_hits().iter().any(|hit| hit.control_id.as_deref() == Some("dock.tab..a.close")));
+    assert!(input.staged_hits().iter().any(|hit| hit.control_id.as_deref() == Some("dock.tab..a.focus")));
+    assert!(!input.staged_hits().iter().any(|hit| hit.control_id.as_deref().is_some_and(|id| id.starts_with("dock.focus.") || id.starts_with("dock.close."))));
+    assert!(!input.staged_hits().iter().any(|hit| hit.control_id.as_deref().is_some_and(|id| id.starts_with("dock.stack."))));
     let _ = layout;
 }
 

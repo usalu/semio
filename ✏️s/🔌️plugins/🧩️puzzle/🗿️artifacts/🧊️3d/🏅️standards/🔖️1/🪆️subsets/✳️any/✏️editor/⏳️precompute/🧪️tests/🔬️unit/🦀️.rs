@@ -1,11 +1,8 @@
 use super::*;
-use crate::editor::puzzle3d::precompute::fill::FillJobStage;
 use crate::standards::v1::subsets::any::schema::precompute_model_tests::context::*;
 use crate::standards::v1::subsets::any::schema::{BrushHostRules, BrushKindWeights, CableKindCatalog, FixtureObject, KindCompatEntry, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexKindCatalog, VortexProps};
 
-use std::time::{Duration, Instant};
-
-fn fill_capable_engine() -> Puzzle3dCollision {
+fn catalog_host_engine() -> Puzzle3dCollision {
     let mut engine = Puzzle3dCollision::new();
     let (positions, indices) = unit_cube_mesh_buffers();
     engine.register_mesh("/test/host.glb".to_string(), &positions, &indices);
@@ -23,7 +20,6 @@ fn fill_capable_engine() -> Puzzle3dCollision {
                 orientation: Some([0.0, 0.0, 0.0, 1.0]),
                 scale: None,
                 vortices: vec![VortexProps { id: "v0".to_string(), vortex_kind: Some("port-a".to_string()), position: [4.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) }],
-                reveal_index: None,
             }],
         },
         kind_catalogs: Some(KindCatalogBundle {
@@ -50,25 +46,8 @@ fn fill_capable_engine() -> Puzzle3dCollision {
         host_rules: BrushHostRules::default(),
         weights: BrushKindWeights::default(),
     };
-    engine.set_scene(&serde_json::to_string(&scene).expect("fill scene")).expect("set fill scene");
-    engine.set_fill_requested_count(1);
+    engine.set_scene(&serde_json::to_string(&scene).expect("catalog host scene")).expect("set catalog host scene");
     engine
-}
-
-/// 🎚️ What a hand-built test plan is requested to reach. Every law below either stays under it or
-/// retargets the builder explicitly — there is no planner ceiling constant left to inherit.
-const FILL_TEST_REQUESTED_COUNT: usize = 1000;
-
-fn fill_builder_for_test(base: Fixture, seed: u32, catalogs: &KindCatalogBundle) -> FillBuilder {
-    let scene = Arc::new(SceneConfig { fixture: base, kind_catalogs: Some(catalogs.clone()), kind_compatibility: Vec::new(), overlap_budget: 0.0, seed, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() });
-    let mut fill = FillBuilder::begin_preparation(FillPreparationRoots::new(scene, Arc::new(HashMap::new())), Operation::new(semio_framework_job::allocate_operation_id(), RevisionId(1), Generation(1), seed as u64), FILL_TEST_REQUESTED_COUNT);
-    while matches!(
-        fill.stage,
-        FillJobStage::PrepareFixture | FillJobStage::PrepareCatalogs | FillJobStage::PrepareMeshes | FillJobStage::PrepareEntries | FillJobStage::PrepareSpatial | FillJobStage::PrepareLookup | FillJobStage::PrepareConfiguration
-    ) {
-        fill.prepare_one();
-    }
-    fill
 }
 
 #[test]
@@ -92,7 +71,6 @@ fn brush_candidates_allow_separated_boxes() {
                     orientation: Some([0.0, 0.0, 0.0, 1.0]),
                     scale: None,
                     vortices: vec![VortexProps { id: "v0".to_string(), vortex_kind: Some("port-a".to_string()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) }],
-                    reveal_index: None,
                 },
                 FixtureObject {
                     id: "host".to_string(),
@@ -103,7 +81,6 @@ fn brush_candidates_allow_separated_boxes() {
                     orientation: Some([0.0, 0.0, 0.0, 1.0]),
                     scale: None,
                     vortices: vec![VortexProps { id: "v0".to_string(), vortex_kind: Some("port-a".to_string()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) }],
-                    reveal_index: None,
                 },
             ],
         },
@@ -129,204 +106,13 @@ fn brush_candidates_allow_separated_boxes() {
     assert_eq!(result.free.len(), 1, "expected one collision-free candidate");
 }
 
-/// 🪪️ Regression: `set_scene` used to unconditionally `rebuild_queue()`, wiping `brush_cache`/`fill`
-/// progress on every resync — the app's `sync_precompute_session` calls `set_scene` on *every*
-/// action, so this made suggestion/fill precompute restart from zero on every single tick, freezing
-/// the UI. A resync with byte-identical scene JSON must be a no-operation.
-#[test]
-fn compose_fill_display_is_read_only_and_matches_apply_prefix() {
-    let base = Fixture { objects: vec![fill_plan_object("base")], attractions: vec![], target_volumes: vec![] };
-    let catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
-    let mut fill = fill_builder_for_test(base, 7, &catalogs);
-    fill.applied_count = 2;
-    fill.sequence = (0..5).map(fill_plan_payload).collect();
-    fill.appended_objects = (0..5).map(|index| fill_plan_object(&format!("p{index}"))).collect();
-    fill.appended_attractions = (0..5).map(fill_plan_attraction).collect();
-    let mut engine = Puzzle3dCollision::new();
-    engine.fill = Some(Arc::new(Mutex::new(fill)));
-
-    let display = engine.compose_fill_display(4).expect("semio_compose_rs display");
-    assert_eq!(display.objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["base", "p0", "p1", "p2", "p3"]);
-    assert_eq!(engine.fill.as_ref().expect("fill").lock().expect("fill lock").applied_count, 2, "semio_compose_rs must not mutate applied_count");
-
-    let applied = engine.apply_fill_count(4).expect("apply fill count");
-    assert_eq!(applied.objects.len(), display.objects.len());
-    assert_eq!(engine.fill.as_ref().expect("fill").lock().expect("fill lock").applied_count, 4);
-}
-
-#[test]
-fn fill_options_paths_are_millisecond_scale() {
-    let base = Fixture { objects: vec![fill_plan_object("base")], attractions: vec![], target_volumes: vec![] };
-    let catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
-    let mut fill = fill_builder_for_test(base.clone(), 7, &catalogs);
-    fill.applied_count = 0;
-    fill.sequence = (0..10).map(fill_plan_payload).collect();
-    fill.appended_objects = (0..10).map(|index| fill_plan_object(&format!("p{index}"))).collect();
-    fill.appended_attractions = (0..10).map(fill_plan_attraction).collect();
-
-    let mut engine = Puzzle3dCollision::new();
-    let base_scene = SceneConfig { fixture: base, kind_catalogs: Some(catalogs), kind_compatibility: vec![], overlap_budget: 0.0, seed: 7, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() };
-    engine.set_scene(&serde_json::to_string(&base_scene).unwrap()).expect("seed");
-    engine.fill = Some(Arc::new(Mutex::new(fill)));
-
-    let count_start = Instant::now();
-    let _ = engine.apply_fill_count(5).expect("apply fill count");
-    let count_ms = count_start.elapsed().as_secs_f64() * 1000.0;
-    assert!(count_ms < 5.0, "fill count apply took {count_ms}ms");
-    assert_eq!(engine.fill.as_ref().expect("fill").lock().expect("fill lock").applied_count, 5);
-
-    let weight_start = Instant::now();
-    let mut object_weights = std::collections::BTreeMap::new();
-    object_weights.insert("Placed".to_string(), 1.0);
-    let mut vortex_weights = std::collections::BTreeMap::new();
-    vortex_weights.insert("c-b".to_string(), 0.5);
-    vortex_weights.insert("b-s".to_string(), 0.5);
-    engine.update_kind_weights(object_weights, vortex_weights);
-    let weight_ms = weight_start.elapsed().as_secs_f64() * 1000.0;
-    assert!(weight_ms < 50.0, "weight update took {weight_ms}ms");
-    let fill_owner = engine.fill.as_ref().expect("fill").clone();
-    let fill = fill_owner.lock().expect("fill lock");
-    let fill_steps = engine.fill_steps_pending_for_test();
-    assert_eq!(fill_steps, fill.max_count - fill.applied_count, "weight update must soft-replan the tail without a full queue wipe");
-    assert_eq!(fill.applied_count, 5, "applied fill objects must survive weight edits");
-}
-
-/// 🧾️ A session whose plan is already `plan` placements long and whose document holds none of them —
-/// where every locked-chunk law starts. The plan rows are hand-built so the law describes the cursor
-/// arithmetic between document and plan, never the planner's own choices.
-fn session_with_planned_fill(plan: usize, requested: u32) -> Puzzle3dPrecomputeSession {
-    let base = Fixture { objects: vec![fill_plan_object("base")], attractions: vec![], target_volumes: vec![] };
-    let catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
-    let mut fill = fill_builder_for_test(base.clone(), 7, &catalogs);
-    fill.sequence = (0..plan).map(fill_plan_payload).collect();
-    fill.appended_objects = (0..plan).map(|index| fill_plan_object(&format!("p{index}"))).collect();
-    fill.appended_attractions = (0..plan).map(fill_plan_attraction).collect();
-    let mut engine = Puzzle3dCollision::new();
-    let scene = SceneConfig { fixture: base, kind_catalogs: Some(catalogs), kind_compatibility: vec![], overlap_budget: 0.0, seed: 7, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() };
-    engine.set_scene(&serde_json::to_string(&scene).expect("scene json")).expect("seed scene");
-    engine.fill = Some(Arc::new(Mutex::new(fill)));
-    let mut session = Puzzle3dPrecomputeSession {
-        engine,
-        fill_job: None,
-        fill_admission: None,
-        fill_terminal: None,
-        fill_observation: FillObservation::default(),
-        fill_applied_count: 0,
-        fill_faulted: false,
-        fill_fault_notice: false,
-        last_emitted_fill_checkpoint: RefCell::new(Vec::new()),
-        brush_live_target: None,
-    };
-    session.set_fill_requested_count(requested);
-    session
-}
-
-/// 🔽️ Moving the count DOWN deletes the document tail FIRST and only then lets the builder discard
-/// the plan rows behind it. The order is the whole law: a plan row is the only thing that can name
-/// the document object it produced, so discarding the plan first would strand those objects, and
-/// truncating the plan on a jittery dip would force a replan on the way back up.
-#[test]
-fn apply_fill_count_downward_move_keeps_the_plan_intact() {
-    let mut session = session_with_planned_fill(10, 8);
-    let locked = session.take_fill_locked_chunk(FILL_LOCK_PLACEMENTS_PER_TICK).expect("first locked chunk");
-    assert_eq!(locked.applied_count, 8);
-    assert_eq!(locked.added_objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["p0", "p1", "p2", "p3", "p4", "p5", "p6", "p7"]);
-    assert_eq!(locked.added_attractions.len(), 8, "every locked placement commits its attraction in the same chunk");
-    let planned = session.fill_available_count();
-
-    session.set_fill_requested_count(3);
-    assert_eq!(
-        session.read_fill(|fill| (fill.requested_count(), fill.applied_count)).expect("builder"),
-        (8, 8),
-        "the builder is held at the LOCKED count while the document still shows it — the plan tail it may discard stops there"
-    );
-
-    let removed = session.take_fill_locked_chunk(FILL_LOCK_PLACEMENTS_PER_TICK).expect("downward chunk");
-    assert_eq!(removed.applied_count, 3);
-    assert_eq!(removed.removed_object_ids, vec!["p7", "p6", "p5", "p4", "p3"], "the document tail is deleted newest first");
-    assert!(removed.added_objects.is_empty() && removed.added_attractions.is_empty());
-    assert_eq!(session.fill_available_count(), planned, "deleting from the document never truncates the plan under it");
-    assert_eq!(
-        session.read_fill(|fill| (fill.requested_count(), fill.applied_count, fill.stage)).expect("builder"),
-        (3, 3, FillJobStage::DiscardTail),
-        "only once the document is back at the requested count is the builder told to discard its planned tail"
-    );
-
-    session.set_fill_requested_count(8);
-    let relocked = session.take_fill_locked_chunk(FILL_LOCK_PLACEMENTS_PER_TICK).expect("upward chunk");
-    assert_eq!(relocked.applied_count, 8, "moving back up is instant — the plan was never discarded");
-    assert_eq!(relocked.added_objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["p3", "p4", "p5", "p6", "p7"]);
-}
-
-/// 🔒️ One tick commits at most [`FILL_LOCK_PLACEMENTS_PER_TICK`] placements, and repeated ticks reach
-/// the requested count exactly — locking IS committing, so this is the whole pace at which a plan
-/// becomes a document.
-#[test]
-fn take_fill_locked_chunk_commits_eight_placements_per_tick_up_to_the_requested_count() {
-    let mut session = session_with_planned_fill(20, 20);
-    let mut committed = Vec::new();
-    for _ in 0..8 {
-        let chunk = session.take_fill_locked_chunk(FILL_LOCK_PLACEMENTS_PER_TICK).expect("locked chunk");
-        assert!(chunk.added_objects.len() <= FILL_LOCK_PLACEMENTS_PER_TICK, "a tick may never commit more than its declared batch");
-        committed.extend(chunk.added_objects.into_iter().map(|object| object.id));
-        if session.fill_progress_summary().applied_count == 20 {
-            break;
-        }
-    }
-    assert_eq!(committed.len(), 20, "three ticks of eight reach the requested count and stop there");
-    assert_eq!(committed.first().map(String::as_str), Some("p0"));
-    assert_eq!(committed.last().map(String::as_str), Some("p19"));
-    let settled = session.take_fill_locked_chunk(FILL_LOCK_PLACEMENTS_PER_TICK).expect("settled chunk");
-    assert!(settled.added_objects.is_empty() && settled.removed_object_ids.is_empty(), "a document already at the requested count owes nothing");
-    assert_eq!(session.fill_progress_summary().max_count, 20, "the summary reports the requested count, never a planner ceiling");
-}
-
-/// 🚧️ A stall is always visible: the declared reasons survive the fixed observation channel
-/// round-trip, and one nobody declared still reads back AS a stall instead of vanishing.
-#[test]
-fn every_stall_reason_survives_the_fixed_observation_channel() {
-    for reason in ["no-open-vortex", "document-capacity", "no-compatible-kind"] {
-        assert_eq!(fill_stall_label(fill_stall_code(Some(reason))).as_deref(), Some(reason));
-    }
-    assert_eq!(fill_stall_label(fill_stall_code(None)), None);
-    assert_eq!(fill_stall_label(fill_stall_code(Some("brand-new-reason"))).as_deref(), Some("stalled"));
-    assert_eq!(fill_stage_label(fill_stage_code("test-collision")), "test-collision");
-    assert_eq!(fill_stage_label(fill_stage_code("not-a-stage")), "");
-}
-
-#[test]
-fn update_kind_weights_soft_replans_tail_without_rebuilding_queue() {
-    let mut engine = Puzzle3dCollision::new();
-    let json = single_object_scene_json();
-    engine.set_scene(&json).expect("seed scene");
-    let progress_after_seed = engine.precompute_progress_for_test();
-    let queue_len_after_seed = engine.work_pending_for_test();
-    engine.precompute_step(8);
-    let queue_len_after_step = engine.work_pending_for_test();
-    assert!(engine.precompute_progress_for_test() > progress_after_seed, "a precompute turn must complete work in at least one lane");
-    assert_eq!(queue_len_after_seed, FILL_REQUESTED_COUNT_DEFAULT, "the seed arms one fill step per REQUESTED placement — no plan-ahead constant");
-
-    let mut object_weights = std::collections::BTreeMap::new();
-    object_weights.insert("Host".to_string(), 0.25);
-    object_weights.insert("Placed".to_string(), 0.75);
-    let mut vortex_weights = std::collections::BTreeMap::new();
-    vortex_weights.insert("c-b".to_string(), 0.5);
-    vortex_weights.insert("b-s".to_string(), 0.5);
-    engine.update_kind_weights(object_weights, vortex_weights);
-
-    assert_eq!(engine.fill.as_ref().and_then(|fill| fill.lock().ok()).map_or(0, |fill| fill.applied_count), 0, "weight-only edits must not change applied count");
-    assert_eq!(engine.fill.as_ref().and_then(|fill| fill.lock().ok()).map_or(0, |fill| fill.sequence.len()), 0, "planned tail must be discarded for replanning");
-    assert!(engine.work_pending_for_test() >= queue_len_after_step, "fill steps must be re-enqueued without a full queue wipe");
-    assert!(engine.fill_steps_pending_for_test() > 0, "fill planning must continue after weight edits");
-}
-
 /// 🗺️ A scene sync invalidates the brush derivation PER OBJECT: an identical scene invalidates nothing,
-/// a new object enqueues exactly its own targets and nothing else, and only a fill-plan member change
-/// invalidates every candidate.
+/// a new object enqueues exactly its own targets and nothing else, and only a change to what every
+/// candidate is derived from (overlap budget, catalogs, weights) invalidates every candidate.
 ///
 /// 🧾️ This law used to read `assert_ne!(work_pending, before)` for "a changed scene must rebuild the
 /// queue" — it pinned the whole-document wipe itself, which is the defect: on the 340-object
-/// brush-painted document every sync (and the 120 ms `suggestionsTick`/`fillBuildTick` cadence behind an
+/// brush-painted document every sync (and the 120 ms `suggestionsTick` cadence behind an
 /// interactive mutation) threw away every resolved candidate and re-walked the whole object × vortex
 /// product (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B54).
 #[test]
@@ -335,7 +121,7 @@ fn a_scene_sync_invalidates_the_brush_derivation_per_object() {
     let json = single_object_scene_json();
     engine.set_scene(&json).expect("first set_scene should succeed");
     let queue_len_before = engine.work_pending_for_test();
-    assert!(queue_len_before > 0, "the first sync arms at least the fill steps");
+    assert!(queue_len_before > 0 || engine.brush_lane_active(), "the first sync arms the brush lane");
     let progress_before = engine.precompute_progress_for_test();
     engine.precompute_step(4);
     let queue_len_after_step = engine.work_pending_for_test();
@@ -353,69 +139,7 @@ fn a_scene_sync_invalidates_the_brush_derivation_per_object() {
     let mut replanned: serde_json::Value = serde_json::from_str(&grown_json).unwrap();
     replanned["overlapBudget"] = serde_json::json!(0.5);
     engine.set_scene(&serde_json::to_string(&replanned).unwrap()).expect("set_scene with a new overlap budget should succeed");
-    assert_eq!(engine.work_pending_for_test(), engine.fill_steps_pending_for_test(), "a fill-plan member change invalidates every candidate and clears the queue for a whole-scene rebuild");
-}
-
-/// 🔽️ A downward move never rewinds the random stream: the plan for any count is the prefix of the
-/// plan for a larger one, so lowering is a document edit plus an armed tail discard — never a replan.
-#[test]
-fn decreasing_fill_count_keeps_the_plan_intact_and_does_not_replan() {
-    let mut session = session_with_planned_fill(3, 3);
-    session.take_fill_locked_chunk(FILL_LOCK_PLACEMENTS_PER_TICK).expect("lock the whole plan");
-    let rng_state = session.read_fill(|fill| fill.rng_state).expect("builder");
-
-    session.set_fill_requested_count(1);
-    let removed = session.take_fill_locked_chunk(FILL_LOCK_PLACEMENTS_PER_TICK).expect("downward chunk");
-    assert_eq!(removed.removed_object_ids, vec!["p2", "p1"]);
-    assert_eq!(session.fill_progress_summary().applied_count, 1);
-    assert_eq!(session.read_fill(|fill| fill.appended_objects.iter().map(|object| object.id.clone()).collect::<Vec<_>>()).expect("builder"), vec!["p0", "p1", "p2"], "the planned tail is still there until the builder spends its own discard turns");
-    assert_eq!(session.read_fill(|fill| fill.rng_state).expect("builder"), rng_state, "no replanning happens, so the random stream is untouched");
-    assert_eq!(session.read_fill(|fill| (fill.requested_count(), fill.stage)).expect("builder"), (1, FillJobStage::DiscardTail));
-
-    session.set_fill_requested_count(0);
-    let cleared = session.take_fill_locked_chunk(FILL_LOCK_PLACEMENTS_PER_TICK).expect("zero chunk");
-    assert_eq!(cleared.removed_object_ids, vec!["p0"], "zero applies nothing to the document");
-    assert_eq!(session.fill_progress_summary().applied_count, 0);
-    assert_eq!(session.fill_available_count(), 3, "even at count 0 the plan is preserved for instant re-apply");
-}
-
-#[test]
-fn set_scene_with_applied_fill_projection_preserves_slider_session() {
-    let base = Fixture { objects: vec![fill_plan_object("base")], attractions: vec![], target_volumes: vec![] };
-    let catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
-    let mut fill = fill_builder_for_test(base.clone(), 7, &catalogs);
-    fill.applied_count = 3;
-    fill.sequence = (0..3).map(fill_plan_payload).collect();
-    fill.appended_objects = (0..3).map(|index| fill_plan_object(&format!("p{index}"))).collect();
-    fill.appended_attractions = (0..3).map(fill_plan_attraction).collect();
-    fill.stalled = true;
-
-    let mut engine = Puzzle3dCollision::new();
-    let base_scene = SceneConfig { fixture: base, kind_catalogs: Some(catalogs), kind_compatibility: vec![], overlap_budget: 0.0, seed: 7, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() };
-    let base_json = serde_json::to_string(&base_scene).unwrap();
-    engine.set_scene(&base_json).expect("seed base scene");
-    // 🪣️ Replace the fresh FillBuilder from rebuild_queue with the already-applied session under test.
-    engine.fill = Some(Arc::new(Mutex::new(fill)));
-
-    let mut applied_scene = base_scene;
-    applied_scene.fixture.objects.extend((0..3).map(|index| fill_plan_object(&format!("p{index}"))));
-    applied_scene.fixture.attractions.extend((0..3).map(fill_plan_attraction));
-    // 🪪️ Pose drift on the base object (attraction rederive) must not count as a new scene.
-    applied_scene.fixture.objects[0].origin = [1.0, 2.0, 3.0];
-    let applied_json = serde_json::to_string(&applied_scene).unwrap();
-    engine.set_scene(&applied_json).expect("re-syncing the applied fill projection must succeed");
-
-    let fill_owner = engine.fill.as_ref().expect("fill session must survive the applied-projection re-sync").clone();
-    let fill = fill_owner.lock().expect("fill lock");
-    assert_eq!(fill.applied_count, 3, "applied fill count must survive incidental set_scene syncs");
-    assert_eq!(fill.sequence.len(), 3, "planned fill sequence must survive incidental set_scene syncs");
-    assert_eq!(fill.base.objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["base"]);
-    drop(fill);
-
-    let reduced = engine.apply_fill_count(1).expect("decreasing after sync");
-    assert_eq!(reduced.objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["base", "p0"], "slider must still be able to remove fill objects after a document re-sync");
-    let cleared = engine.apply_fill_count(0).expect("clear after sync");
-    assert_eq!(cleared.objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["base"]);
+    assert_eq!(engine.work_pending_for_test(), 0, "a candidate-derivation change invalidates every candidate and clears the queue for a whole-scene rebuild");
 }
 
 /// 🪪️ Regression: registering a mesh must invalidate any cached brush candidates computed against a
@@ -426,19 +150,16 @@ fn set_scene_with_applied_fill_projection_preserves_slider_session() {
 fn register_mesh_invalidates_cached_precompute_state() {
     let mut engine = Puzzle3dCollision::new();
     engine.set_scene(&single_object_scene_json()).expect("set_scene should succeed");
-    let applied_before = engine.fill.as_ref().and_then(|fill| fill.lock().ok()).map_or(0, |fill| fill.applied_count);
     let positions: Vec<f32> = vec![-1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0];
     let indices: Vec<u32> = vec![0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 0, 4, 5, 0, 5, 1, 2, 6, 7, 2, 7, 3, 0, 3, 7, 0, 7, 4, 1, 5, 6, 1, 6, 2];
     engine.register_mesh("/test/host.glb".to_string(), &positions, &indices);
     assert!(engine.brush_cache.is_empty(), "mesh registration must invalidate stale brush cache entries");
-    assert_eq!(engine.fill.as_ref().and_then(|fill| fill.lock().ok()).map(|fill| fill.applied_count), Some(applied_before), "mesh registration must not reset applied fill count");
 }
 
 #[test]
 fn engine_precompute_step_is_false_with_no_scene() {
     let mut engine = Puzzle3dCollision::new();
     assert!(!engine.precompute_step(10));
-    assert!(engine.fill.is_none());
 }
 
 #[test]
@@ -480,7 +201,6 @@ fn precompute_session_native_wrapper_exercises_public_methods() {
     let (positions, indices) = unit_cube_mesh_buffers();
     session.register_mesh("/test/host.glb", &positions, &indices);
     assert!(session.has_mesh("/test/host.glb"));
-    assert!(!session.fill_is_done(), "a freshly (re)seeded fill session has not stalled or hit max_count yet");
 
     session.precompute_step(50);
     session.invalidate_brush_target("host:v0");
@@ -488,679 +208,19 @@ fn precompute_session_native_wrapper_exercises_public_methods() {
     let _candidates: BrushCollisionFreeResult = session.brush_candidates("host:v0");
     assert!(session.brush_preview("host:v0", 0).is_none());
 
-    assert_eq!(session.fill_requested_count(), FILL_REQUESTED_COUNT_DEFAULT as u32, "an unsynced session plans toward the config default, never a planner ceiling");
-    session.set_fill_requested_count(37);
-    assert_eq!((session.fill_requested_count(), session.fill_progress().max_count, session.fill_progress_summary().max_count), (37, 37, 37));
-    assert_eq!(session.fill_available_count(), 0);
-
     let mut object_weights = std::collections::BTreeMap::new();
     object_weights.insert("Host".to_string(), 1.0);
     session.dispatch(Puzzle3dEngineCommand::UpdateKindWeights { object_weights, vortex_weights: std::collections::BTreeMap::new() }).expect("update kind weights");
 
     let missing_payload = BrushPlacePayload { target_vortex_full_id: "missing:v0".to_string(), object_kind_id: "Nonexistent".to_string(), source_vortex_index: 0, origin: [0.0, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
     assert!(session.dispatch(Puzzle3dEngineCommand::ApplyBrushPlacement { payload: missing_payload }).is_err());
-
-    let outcome = session.dispatch(Puzzle3dEngineCommand::ApplyFillCount { count: 0 }).expect("fill session available");
-    let Puzzle3dEngineOutcome::Fixture(fixture) = outcome else { panic!("expected a Fixture outcome") };
-    assert!(fixture.objects.iter().any(|object| object.id == "host"));
-    let outcome = session.dispatch(Puzzle3dEngineCommand::ComposeFillDisplay { count: 0 }).expect("fill session available");
-    let Puzzle3dEngineOutcome::Fixture(fixture) = outcome else { panic!("expected a Fixture outcome") };
-    assert!(fixture.objects.iter().any(|object| object.id == "host"));
-}
-
-/// ⏳️ Drives the fill lane until the planner's cursorized preparation has copied the scene into the
-/// builder's fixed pages and stops there — the state every admission law below describes. A builder
-/// straight out of `set_scene` still owns its preparation roots and holds EMPTY catalog/base pages,
-/// so admitting one measures nothing and the nested-owner injections have no row to reach.
-fn drive_fill_preparation(engine: &mut Puzzle3dCollision) {
-    for _ in 0..FILL_PREPARATION_DRIVE_TURNS {
-        let preparing = engine.fill.as_ref().and_then(|fill| fill.try_lock().ok()).is_some_and(|fill| {
-            matches!(
-                fill.stage,
-                FillJobStage::PrepareFixture | FillJobStage::PrepareCatalogs | FillJobStage::PrepareMeshes | FillJobStage::PrepareEntries | FillJobStage::PrepareSpatial | FillJobStage::PrepareLookup | FillJobStage::PrepareConfiguration
-            )
-        });
-        // 🧵️ The lane leaves the last outcome checked out of the worker session; admission refuses a
-        // session in that state, so the drive only stops on a fully handed-back worker.
-        if !preparing && engine.fill_worker_outcome.is_none() {
-            return;
-        }
-        engine.precompute_step_lane(PrecomputeLane::Fill, 1);
-    }
-    panic!("fill preparation must finish within its own bounded turns");
-}
-
-/// 📏️ Turns the widest test scene's cursorized preparation needs, with an order of magnitude of
-/// headroom: one turn per fixture/catalog/mesh/entry/placement/weight row plus one per stage
-/// transition, each one job step behind three lane turns (step, outcome close, resume).
-const FILL_PREPARATION_DRIVE_TURNS: usize = 4096;
-
-fn fill_worker_session(seed: u32) -> Puzzle3dPrecomputeSession {
-    let mut engine = fill_capable_engine();
-    if seed != 1 {
-        let mut scene = (*engine.scene.clone().expect("scene")).clone();
-        scene.seed = seed;
-        engine.set_scene(&serde_json::to_string(&scene).expect("scene json")).expect("reseed scene");
-    }
-    drive_fill_preparation(&mut engine);
-    engine.set_fill_requested_count(FILL_TEST_REQUESTED_COUNT);
-    Puzzle3dPrecomputeSession { engine, fill_job: None, fill_admission: None, fill_terminal: None, fill_observation: FillObservation::default(), fill_applied_count: 0, fill_faulted: false, fill_fault_notice: false, last_emitted_fill_checkpoint: RefCell::new(Vec::new()), brush_live_target: None }
-}
-
-fn close_fill_envelope(session: &mut Puzzle3dPrecomputeSession) {
-    let request = session.fill_job.clone().expect("fill request");
-    let _ = session.cancel_fill_job();
-    request_fill_envelope_terminal(&request, FillEnvelopeTerminalReason::Closed);
-    let _ = session.drive_fill_job(&request);
-    let mut terminal = session.take_terminal_fill_job().expect("terminal handle");
-    while !matches!(terminal.close_step(), FillEnvelopeCloseStep::Complete) {}
-    assert!(terminal.terminal_is_empty());
-}
-
-fn enqueue_measured_fill_job(session: &mut Puzzle3dPrecomputeSession) -> Option<(u64, Vec<u8>)> {
-    for _ in 0..FILL_ENVELOPE_MAX_ITEMS {
-        if let Some(admitted) = session.enqueue_fill_job() {
-            return Some(admitted);
-        }
-    }
-    None
-}
-
-/// 📏️ Close grants one envelope spends before the admitted fill reaches its own retirement cursor:
-/// `FillEnvelopeTerminalHandle::close_step` retires the last worker outcome (stage 0) and then the
-/// whole worker session — its job shell, batch params and payload pages (stage 1) — one owner per
-/// grant, before stage 2 can unwrap the fill. Measured at exactly nine; doubled as headroom for one
-/// more owner in either stage.
-const FILL_ENVELOPE_CLOSE_GRANTS_TO_RETIREMENT: usize = 18;
-
-/// ♻️ Grants close steps until the admitted fill has moved into its own retirement cursor, asserting
-/// every grant stays incremental, and answers how many that took.
-fn close_until_fill_retirement(terminal: &mut FillEnvelopeTerminalHandle, request: &FillJobRequest) -> usize {
-    for grant in 1..=FILL_ENVELOPE_CLOSE_GRANTS_TO_RETIREMENT {
-        assert_eq!(terminal.close_step(), FillEnvelopeCloseStep::Pending, "one close grant retires one owner and never bulk-closes");
-        if fill_envelope_registry().lock().expect("registry").authority_mut(request).is_some_and(|authority| authority.fill_retirement.is_some()) {
-            return grant;
-        }
-    }
-    panic!("the admitted fill must reach its retirement cursor within the declared close grants");
-}
-
-/// ♻️ Retires one abandoned envelope the way PRODUCTION does — through the process-wide reaper the
-/// framework's maintenance ladder grants one unit per turn — and states that the named slot came back
-/// and that nothing finished is left standing. A session's `Drop` only ASKS for the terminal (ticket
-/// 26/09/02/PUZZLE-3D-END-TO-END wave B42): draining a plan-sized ladder inside a `Drop` is the
-/// unyielding turn the host watchdog killed a shard over, so the drain is no longer the dying session's.
-///
-/// 🔓️ The registry lock is released before every assertion on purpose: an assert that fires while
-/// holding it POISONS the process-wide mutex, and one failing law then failed twelve more with
-/// `try_lock` errors instead of their own verdicts.
-fn drain_orphaned_fill_envelope(request: &FillJobRequest) {
-    let grants = crate::editor::puzzle3d::precompute::reap_fill_envelopes_for_test();
-    let standing = fill_envelope_registry().lock().expect("registry").slots[usize::from(request.slot)].is_some();
-    assert!(!standing, "the granted reaper retires the exact orphan to terminal empty within {grants} grants");
-    assert!(crate::editor::puzzle3d::precompute::fill_envelope_terminal_is_empty(), "the same terminal intent cannot mount twice after readiness is cleared");
-}
-
-/// 🧾️ An admitted session whose plan is already exactly as long as it was asked for — the state a
-/// completed run leaves behind, built without waiting on the planner's own choices.
-fn admitted_completed_fill_session(plan: usize) -> Puzzle3dPrecomputeSession {
-    let mut session = session_with_planned_fill(plan, plan as u32);
-    let Ok(mounted) = mount_fill_worker(Arc::clone(session.engine.fill.as_ref().expect("fill owner")), session.read_fill(|fill| fill.operation).expect("operation"), session.engine.fill_cancel.clone()) else {
-        panic!("the hand-built plan must admit its own worker");
-    };
-    session.engine.fill_worker = Some(mounted);
-    session
-}
-
-/// ▶️ Raising the count past a plan that already reported itself done RESUMES that very run: the
-/// envelope, its builder and its whole locked prefix are still standing, so the deterministic sequence
-/// continues instead of replanning from zero — and the `done` the HUD reads flips back through the
-/// ordinary poll, not through a side channel.
-#[test]
-fn raising_the_requested_count_resumes_a_completed_fill_job_on_its_own_envelope() {
-    let _guard = fill_envelope_test_guard();
-    let mut session = admitted_completed_fill_session(4);
-    let (job, _) = enqueue_measured_fill_job(&mut session).expect("fill job");
-    let request = session.fill_job.clone().expect("admitted request");
-    session.drive_enqueued_fill_job_for_test(1);
-    session.poll_fill_job();
-    assert!(session.fill_progress_summary().done, "a plan that reached the requested count is done");
-
-    session.set_fill_requested_count(6);
-    let (resumed_job, token) = session.enqueue_fill_job().expect("a completed plan resumes on its own envelope");
-    assert_eq!((resumed_job, token.len()), (job, FILL_ENVELOPE_TOKEN_BYTES), "the resumed run keeps its envelope identity instead of admitting a fresh plan");
-    assert!(session.poll_fill_job(), "poll_fill_job reports the resumed observation");
-    let summary = session.fill_progress_summary();
-    assert!(!summary.done, "the done observation flips back to false the moment the ask grows past the plan");
-    assert_eq!((summary.max_count, summary.count), (6, 4), "the locked prefix survives — only the target moved");
-    assert_eq!(fill_envelope_registry().lock().expect("registry").slots[usize::from(request.slot)].as_ref().map(|authority| authority.requested_count), Some(6), "the worker reads the new target off the envelope authority");
-    close_fill_envelope(&mut session);
-}
-
-#[test]
-fn fill_worker_token_reopens_the_exact_retained_owner_and_drives_one_turn() {
-    let _guard = fill_envelope_test_guard();
-    let mut admitted = fill_worker_session(7);
-    let source = admitted.engine.fill.as_ref().expect("fill owner").clone();
-    let source_pointer = Arc::as_ptr(&source);
-    let (_, input) = enqueue_measured_fill_job(&mut admitted).expect("fill job");
-    assert_eq!(input.len(), FILL_ENVELOPE_TOKEN_BYTES);
-    let request = decode_fill_envelope_token(&input).expect("fixed token");
-    let registry = fill_envelope_registry().lock().expect("registry");
-    let retained = registry.slots[usize::from(request.slot)].as_ref().and_then(|authority| authority.fill.as_ref()).expect("retained fill owner");
-    assert_eq!(Arc::as_ptr(retained), source_pointer, "admission moves the same FillBuilder authority without a whole-state clone");
-    drop(registry);
-    let mut reopened = Puzzle3dPrecomputeSession::new();
-    assert!(reopened.restore_persisted_fill(&input));
-    assert!(reopened.engine.fill.is_none(), "restore mounts only the immutable registry authority and cannot recreate a mutable engine alias");
-    let before = reopened.fill_observation;
-    let slice = reopened.drive_fill_job(&request).expect("one retained worker turn");
-    assert!(slice.progress.is_none() || reopened.poll_fill_job() || reopened.fill_observation != before);
-    drop(source);
-    close_fill_envelope(&mut reopened);
-}
-
-#[test]
-fn fill_worker_cross_generation_restore_rejects_measuring_and_every_live_terminal_phase() {
-    let _guard = fill_envelope_test_guard();
-    let mut measuring = fill_worker_session(45);
-    assert!(measuring.enqueue_fill_job_spending(1).is_none(), "one census unit leaves a multi-owner envelope in Measuring");
-    assert!(measuring.fill_admission.is_some(), "the 4096-unit production grant is what finishes the census, not the first owner");
-    let measuring_request = measuring.fill_job.clone().expect("measuring request");
-    let measuring_cursor = measuring.fill_admission.as_ref().map(|admission| admission.request.clone()).expect("measurement cursor");
-    let mut producer = fill_worker_session(47);
-    let (_, producer_token) = enqueue_measured_fill_job(&mut producer).expect("producer request");
-    let producer_request = decode_fill_envelope_token(&producer_token).expect("producer identity");
-    assert!(!measuring.restore_persisted_fill(&producer_token));
-    assert_eq!(measuring.fill_job.as_ref(), Some(&measuring_request));
-    assert_eq!(measuring.fill_admission.as_ref().map(|admission| &admission.request), Some(&measuring_cursor));
-    drop(measuring);
-    drop(producer);
-    drain_orphaned_fill_envelope(&measuring_request);
-    drain_orphaned_fill_envelope(&producer_request);
-
-    for phase in [
-        FillEnvelopePhase::Admitted,
-        FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Complete),
-        FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Cancelled),
-        FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Fault),
-        FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Closed),
-    ] {
-        let mut mounted = fill_worker_session(49);
-        let (_, mounted_token) = enqueue_measured_fill_job(&mut mounted).expect("mounted request");
-        let mounted_request = decode_fill_envelope_token(&mounted_token).expect("mounted identity");
-        let mut other = fill_worker_session(51);
-        let (_, other_token) = enqueue_measured_fill_job(&mut other).expect("other request");
-        let other_request = decode_fill_envelope_token(&other_token).expect("other identity");
-        let aggregate_before = {
-            let mut registry = fill_envelope_registry().lock().expect("registry");
-            let authority = registry.authority_mut(&mounted_request).expect("mounted authority");
-            authority.phase = phase;
-            if matches!(phase, FillEnvelopePhase::Terminal(_)) {
-                authority.observation.done = true;
-            }
-            registry.aggregate_bytes
-        };
-        // 🪪️ The session's OWN observation is what a rejected restore must not disturb; the registry's
-        // copy is forced above precisely to prove the rejection never adopts it.
-        let mounted_observation = mounted.fill_observation;
-        assert!(!mounted.restore_persisted_fill(&other_token));
-        assert_eq!(mounted.fill_job.as_ref(), Some(&mounted_request), "restore cannot replace the exact mounted producer");
-        assert_eq!(mounted.fill_observation, mounted_observation, "restore rejection leaves mounted observation unchanged");
-        let registry = fill_envelope_registry().lock().expect("registry");
-        let authority = registry.slots[usize::from(mounted_request.slot)].as_ref().expect("mounted authority remains registered");
-        assert_eq!(authority.request, mounted_request);
-        assert_eq!(authority.phase, phase);
-        assert_eq!(registry.aggregate_bytes, aggregate_before, "restore rejection neither reserves nor releases credit");
-        drop(registry);
-        drop(mounted);
-        drop(other);
-        drain_orphaned_fill_envelope(&mounted_request);
-        drain_orphaned_fill_envelope(&other_request);
-        let registry = fill_envelope_registry().lock().expect("registry");
-        assert!(registry.slots.iter().all(Option::is_none));
-        assert_eq!(registry.aggregate_bytes, 0, "both producers close once to exact zero aggregate credit");
-    }
-}
-
-#[test]
-fn fill_worker_cross_generation_restore_preserves_dropped_closing_handle_and_zero_credit() {
-    let _guard = fill_envelope_test_guard();
-    let mut mounted = fill_worker_session(53);
-    let (_, mounted_token) = enqueue_measured_fill_job(&mut mounted).expect("mounted request");
-    let mounted_request = decode_fill_envelope_token(&mounted_token).expect("mounted identity");
-    let mut other = fill_worker_session(55);
-    let (_, other_token) = enqueue_measured_fill_job(&mut other).expect("other request");
-    let other_request = decode_fill_envelope_token(&other_token).expect("other identity");
-    terminalize_fill_envelope(&mounted_request, FillEnvelopeTerminalReason::Closed);
-    let mut terminal = mounted.take_terminal_fill_job().expect("mounted terminal");
-    close_until_fill_retirement(&mut terminal, &mounted_request);
-    let retirement_pointer =
-        fill_envelope_registry().lock().expect("registry").authority_mut(&mounted_request).and_then(|authority| authority.fill_retirement.as_ref()).map(|cursor| cursor as *const FillBuilderRetirementCursor as usize).expect("retained close cursor");
-    drop(terminal);
-    assert!(!mounted.restore_persisted_fill(&other_token));
-    let registry = fill_envelope_registry().lock().expect("registry");
-    let authority = registry.slots[usize::from(mounted_request.slot)].as_ref().expect("closing authority");
-    assert_eq!(authority.request, mounted_request);
-    assert!(matches!(authority.phase, FillEnvelopePhase::Closing));
-    assert!(!authority.checked_out.load(Ordering::Acquire));
-    assert_eq!(authority.fill_retirement.as_ref().map(|cursor| cursor as *const FillBuilderRetirementCursor as usize), Some(retirement_pointer));
-    drop(registry);
-    drop(mounted);
-    drop(other);
-    drain_orphaned_fill_envelope(&mounted_request);
-    drain_orphaned_fill_envelope(&other_request);
-    let registry = fill_envelope_registry().lock().expect("registry");
-    assert!(registry.slots.iter().all(Option::is_none));
-    assert_eq!(registry.aggregate_bytes, 0);
-}
-
-#[test]
-fn fill_worker_fixed_cap_rejects_plus_one_and_reused_slot_rejects_aba() {
-    let _guard = fill_envelope_test_guard();
-    let mut sessions = [fill_worker_session(11), fill_worker_session(13), fill_worker_session(17), fill_worker_session(19), fill_worker_session(23)];
-    let tokens = [0, 1, 2, 3].map(|index| enqueue_measured_fill_job(&mut sessions[index]).expect("within fixed operation cap").1);
-    let rejected_pointer = Arc::as_ptr(sessions[4].engine.fill.as_ref().expect("rejected source remains in session"));
-    assert!(enqueue_measured_fill_job(&mut sessions[4]).is_none(), "operation cap + 1 is rejected before ownership transfer");
-    assert_eq!(Arc::as_ptr(sessions[4].engine.fill.as_ref().expect("exact rejected owner")), rejected_pointer);
-
-    let first = decode_fill_envelope_token(&tokens[0]).expect("first token");
-    assert!(sessions[0].cancel_fill_job());
-    let _ = sessions[0].drive_fill_job(&first);
-    let returned = sessions[0].take_terminal_fill_job().expect("cancelled terminal owner");
-    assert_eq!(returned.reason(), Some("cancelled"));
-    drop(returned);
-    let mut terminal = sessions[0].take_terminal_fill_job().expect("Drop atomically returns the checked-out terminal authority");
-    while !matches!(terminal.close_step(), FillEnvelopeCloseStep::Complete) {}
-
-    let replacement = enqueue_measured_fill_job(&mut sessions[4]).expect("capacity re-arms after exact close").1;
-    let replacement = decode_fill_envelope_token(&replacement).expect("replacement token");
-    assert_eq!(replacement.slot, first.slot);
-    assert_ne!(replacement.registry_generation, first.registry_generation);
-    assert!(matches!(drive_fill_envelope(&first), FillEnvelopeDrive::Stale), "a stale generation cannot consume the reused slot");
-    close_fill_envelope(&mut sessions[1]);
-    close_fill_envelope(&mut sessions[2]);
-    close_fill_envelope(&mut sessions[3]);
-    close_fill_envelope(&mut sessions[4]);
-}
-
-#[test]
-fn fill_worker_item_and_byte_plus_one_reject_before_owner_transfer() {
-    let mut engine = fill_capable_engine();
-    let fill = engine.fill.take().expect("fill owner");
-    let pointer = Arc::as_ptr(&fill);
-    let operation = fill.lock().expect("fill lock").operation;
-    let mut registry = FillEnvelopeRegistry::default();
-    let fill = registry.reserve(1, operation, FILL_ENVELOPE_MAX_ITEMS + 1, FILL_ENVELOPE_MAX_BYTES, fill, root_cancel_token(), 1, 0, FillObservation::default()).expect_err("item cap + 1");
-    assert_eq!(Arc::as_ptr(&fill), pointer);
-    let fill = registry.reserve(2, operation, FILL_ENVELOPE_MAX_ITEMS, FILL_ENVELOPE_MAX_BYTES + 1, fill, root_cancel_token(), 1, 0, FillObservation::default()).expect_err("byte cap + 1");
-    assert_eq!(Arc::as_ptr(&fill), pointer, "both preflight failures return the exact source authority");
-}
-
-#[test]
-fn fill_worker_actual_owner_census_rejects_cap_plus_one_with_exact_handback() {
-    let _guard = fill_envelope_test_guard();
-    let mut session = fill_worker_session(29);
-    let source = session.engine.fill.as_ref().expect("fill owner").clone();
-    let pointer = Arc::as_ptr(&source);
-    source.lock().expect("fill lock").inject_nested_owner_page_plus_one_for_test();
-    assert!(enqueue_measured_fill_job(&mut session).is_none());
-    assert!(session.engine.fill.is_none(), "registered fault ownership cannot recreate a mutable engine alias");
-    assert!(session.fill_admission.is_none(), "rejected census cannot strand a partially measured owner");
-    let request = session.fill_job.clone().expect("rejected registered owner");
-    let mut registry = fill_envelope_registry().lock().expect("registry");
-    let rejected = registry.authority_mut(&request).and_then(|authority| authority.fill.as_ref()).expect("registered rejected owner");
-    assert_eq!(Arc::as_ptr(rejected), pointer, "nested ObjectKind backing cap + 1 keeps the exact source authority in the registered fault owner");
-    drop(registry);
-    drop(source);
-    drop(session);
-    drain_orphaned_fill_envelope(&request);
-}
-
-#[test]
-fn fill_worker_admitted_fixed_pages_survive_replan_and_mesh_supersession_until_retained_close() {
-    let _guard = fill_envelope_test_guard();
-    let mut session = fill_worker_session(43);
-    let (_, token) = enqueue_measured_fill_job(&mut session).expect("fill job");
-    let request = decode_fill_envelope_token(&token).expect("request");
-    let (admitted_pointer, admitted_credit, admitted_backing) = {
-        let registry = fill_envelope_registry().lock().expect("registry");
-        let authority = registry.slots[usize::from(request.slot)].as_ref().filter(|authority| authority.request == request).expect("admitted authority");
-        let fill = authority.fill.as_ref().expect("exclusive fill").lock().expect("fill lock");
-        (Arc::as_ptr(authority.fill.as_ref().expect("fill")), (authority.reserved_items, authority.reserved_bytes), fill.fixed_backing_witness_for_test())
-    };
-    assert!(session.engine.fill.is_none(), "admission removes the last mutable session alias");
-
-    let mut object_weights = std::collections::BTreeMap::new();
-    object_weights.insert("Host".to_string(), 3.0);
-    session.dispatch(Puzzle3dEngineCommand::UpdateKindWeights { object_weights, vortex_weights: std::collections::BTreeMap::new() }).expect("superseding weights");
-    let weight_replacement_pointer = Arc::as_ptr(session.engine.fill.as_ref().expect("separate weight replacement candidate"));
-    assert_ne!(weight_replacement_pointer, admitted_pointer, "weight supersession builds a distinct unadmitted candidate");
-    let (positions, indices) = unit_cube_mesh_buffers();
-    session.register_mesh("/test/superseding.glb", &positions, &indices);
-    let replacement_pointer = Arc::as_ptr(session.engine.fill.as_ref().expect("separate mesh replacement candidate"));
-    assert_ne!(replacement_pointer, weight_replacement_pointer, "mesh supersession replaces the unadmitted weight candidate without touching the admitted owner");
-
-    let registry = fill_envelope_registry().lock().expect("registry");
-    let authority = registry.slots[usize::from(request.slot)].as_ref().filter(|authority| authority.request == request).expect("old admitted authority");
-    let fill = authority.fill.as_ref().expect("old exclusive fill").lock().expect("fill lock");
-    assert_eq!(Arc::as_ptr(authority.fill.as_ref().expect("fill")), admitted_pointer);
-    assert_eq!((authority.reserved_items, authority.reserved_bytes), admitted_credit, "the old exact admission credit remains assigned until close");
-    assert_eq!(fill.fixed_backing_witness_for_test(), admitted_backing, "weight and mesh refresh cannot clear, replace, or drop any admitted fixed page or semantic entry");
-    drop(fill);
-    drop(registry);
-
-    close_fill_envelope(&mut session);
-    assert_eq!(Arc::as_ptr(session.engine.fill.as_ref().expect("replacement survives old close")), replacement_pointer);
-    let (_, replacement_token) = enqueue_measured_fill_job(&mut session).expect("replacement is independently re-censused and admitted");
-    let replacement = decode_fill_envelope_token(&replacement_token).expect("replacement request");
-    assert_ne!(replacement, request, "the 4096-unit re-census admits a new identity, not the closed owner");
-    if replacement.slot == request.slot {
-        assert!(replacement.registry_generation > request.registry_generation, "same-slot reuse must bump the per-slot generation");
-    }
-    close_fill_envelope(&mut session);
-}
-
-#[test]
-fn fill_worker_session_drop_during_measurement_mounts_the_same_terminal_once() {
-    let _guard = fill_envelope_test_guard();
-    let mut session = fill_worker_session(31);
-    assert!(session.enqueue_fill_job_spending(1).is_none(), "one census unit only begins exact owner measurement");
-    let request = session.fill_job.clone().expect("measurement has a registered exact owner");
-    assert!(session.fill_admission.is_some());
-    let registry = fill_envelope_registry().lock().expect("registry contention");
-    drop(session);
-    assert_eq!(fill_envelope_terminal_intents()[usize::from(request.slot)].reason.load(Ordering::Acquire), FillEnvelopeTerminalReason::Closed.code());
-    drop(registry);
-    drain_orphaned_fill_envelope(&request);
-}
-
-#[test]
-fn fill_admission_census_one_unit_is_pending_and_4096_units_spawn_once() {
-    let _guard = fill_envelope_test_guard();
-    let mut pending = fill_worker_session(33);
-    assert!(pending.enqueue_fill_job_spending(1).is_none(), "one owner-census unit cannot finish a prepared fill envelope");
-    assert!(pending.fill_admission.is_some());
-    let measuring = pending.fill_job.clone().expect("measuring identity");
-    assert_eq!(FILL_ENVELOPE_CENSUS_UNITS_PER_TURN, 4_096, "production census spend is the 4096-unit rule");
-    assert!(pending.enqueue_fill_job().is_some(), "one production turn of 4096 census units admits and spawns exactly once");
-    assert!(pending.fill_admission.is_none(), "the finished census hands the envelope to its bounded job");
-    assert_eq!(pending.fill_job.as_ref(), Some(&measuring), "the spawn keeps the measuring identity — it does not re-admit");
-    let mut second = fill_worker_session(35);
-    assert!(second.enqueue_fill_job().is_some(), "a fresh session on the same registry gets its own spawn under the four-slot cap");
-    drop(pending);
-    drop(second);
-}
-
-#[test]
-fn fill_worker_completed_before_session_drop_is_reclassified_and_mounted_once() {
-    let _guard = fill_envelope_test_guard();
-    let mut session = fill_worker_session(33);
-    let (_, token) = enqueue_measured_fill_job(&mut session).expect("fill job");
-    let request = decode_fill_envelope_token(&token).expect("request");
-    {
-        let mut registry = fill_envelope_registry().lock().expect("registry");
-        let authority = registry.authority_mut(&request).expect("authority");
-        authority.phase = FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Complete);
-        authority.observation.done = true;
-    }
-    drop(session);
-    // ♻️ The dying session ASKS for the `Closed` terminal and stops there — draining the ladder inside
-    // a `Drop` is the unyielding turn of wave B42. What reclassifies the completed envelope and returns
-    // its slot is the granted reaper, exactly once, and a fresh session must not race it.
-    let standing = fill_envelope_registry().lock().expect("registry").slots[usize::from(request.slot)].is_some();
-    assert!(standing, "a dying session may only ASK for the terminal; the slot comes back on a granted turn");
-    drain_orphaned_fill_envelope(&request);
-    let mut mounted = Puzzle3dPrecomputeSession::new();
-    assert!(!mounted.poll_fill_job(), "the same terminal cannot mount a second time");
-    assert!(mounted.fill_terminal.is_none());
-    drop(mounted);
-}
-
-#[test]
-fn fill_worker_session_drop_during_partial_close_rearms_the_same_cursor_once() {
-    let _guard = fill_envelope_test_guard();
-    let mut session = fill_worker_session(34);
-    let (_, token) = enqueue_measured_fill_job(&mut session).expect("fill job");
-    let request = decode_fill_envelope_token(&token).expect("request");
-    terminalize_fill_envelope(&request, FillEnvelopeTerminalReason::Closed);
-    let mut terminal = session.take_terminal_fill_job().expect("terminal handle");
-    close_until_fill_retirement(&mut terminal, &request);
-    let registry = fill_envelope_registry().lock().expect("registry contention");
-    let authority = registry.slots[usize::from(request.slot)].as_ref().expect("closing authority");
-    assert!(matches!(authority.phase, FillEnvelopePhase::Closing));
-    let retirement_pointer = authority.fill_retirement.as_ref().map(|cursor| cursor as *const FillBuilderRetirementCursor as usize).expect("partial retirement cursor");
-    session.fill_terminal = Some(terminal);
-    drop(session);
-    drop(registry);
-
-    let mut mounted = Puzzle3dPrecomputeSession::new();
-    assert!(mounted.poll_fill_job(), "the durable close intent re-arms the abandoned Closing generation");
-    assert_eq!(mounted.fill_terminal.as_ref().map(|terminal| &terminal.request), Some(&request));
-    let registry = fill_envelope_registry().lock().expect("registry");
-    let authority = registry.slots[usize::from(request.slot)].as_ref().expect("same closing authority");
-    assert_eq!(authority.fill_retirement.as_ref().map(|cursor| cursor as *const FillBuilderRetirementCursor as usize), Some(retirement_pointer), "reclamation resumes rather than resets or duplicates the cursor");
-    drop(registry);
-    for _ in 0..FILL_ENVELOPE_MAX_ITEMS {
-        mounted.poll_fill_job();
-        if fill_envelope_registry().lock().expect("registry").slots[usize::from(request.slot)].is_none() {
-            break;
-        }
-    }
-    let mut registry = fill_envelope_registry().lock().expect("registry");
-    assert!(registry.slots[usize::from(request.slot)].is_none(), "the resumed close reaches terminal empty");
-    assert!(registry.take_closed().is_none(), "the same Closing generation is never rediscovered twice");
-}
-
-#[test]
-fn fill_worker_terminal_resume_contention_returns_then_rearms_the_exact_owner() {
-    let _guard = fill_envelope_test_guard();
-    let mut session = fill_worker_session(35);
-    let (_, token) = enqueue_measured_fill_job(&mut session).expect("fill job");
-    let request = decode_fill_envelope_token(&token).expect("request");
-    terminalize_fill_envelope(&request, FillEnvelopeTerminalReason::Fault);
-    let terminal = session.take_terminal_fill_job().expect("terminal owner");
-    let registry = fill_envelope_registry().lock().expect("contended registry");
-    let terminal = terminal.resume().expect_err("contention returns the same checked-out terminal handle");
-    assert_eq!(terminal.request, request);
-    drop(registry);
-    let resumed = match terminal.resume() {
-        Ok(token) => token,
-        Err(_) => panic!("capacity change must re-arm the exact owner once"),
-    };
-    assert_eq!(resumed, token);
-    terminalize_fill_envelope(&request, FillEnvelopeTerminalReason::Closed);
-    drop(session);
-    drain_orphaned_fill_envelope(&request);
-}
-
-#[test]
-fn fill_worker_malformed_token_faults_exact_raw_owner_not_wrong_context_owner() {
-    let _guard = fill_envelope_test_guard();
-    let mut session = fill_worker_session(39);
-    let (_, token) = enqueue_measured_fill_job(&mut session).expect("fill job");
-    let request = decode_fill_envelope_token(&token).expect("request");
-    let mut unrelated = fill_worker_session(57);
-    let (_, unrelated_token) = enqueue_measured_fill_job(&mut unrelated).expect("unrelated job");
-    let unrelated_request = decode_fill_envelope_token(&unrelated_token).expect("unrelated request");
-    let mut malformed = token;
-    malformed[0] ^= 0xff;
-    let mut entry = FillEnvelopeJobEntryCursor::new(unrelated_request.job, malformed);
-    assert_eq!(entry.step(), Err("fill worker token header is malformed"));
-    drop(entry);
-    assert_eq!(session.take_terminal_fill_job().and_then(|terminal| terminal.reason()), Some("fault"), "malformed production ingress preserves the exact registered owner before returning the fault");
-    let registry = fill_envelope_registry().lock().expect("registry");
-    assert!(matches!(registry.slots[usize::from(unrelated_request.slot)].as_ref().map(|authority| authority.phase), Some(FillEnvelopePhase::Admitted)), "malformed ingress cannot fault the wrong context owner");
-    drop(registry);
-    drop(session);
-    drop(unrelated);
-    drain_orphaned_fill_envelope(&request);
-    drain_orphaned_fill_envelope(&unrelated_request);
-}
-
-#[test]
-fn fill_worker_wrong_context_identity_faults_decoded_producer_before_drive() {
-    let _guard = fill_envelope_test_guard();
-    let mut producer = fill_worker_session(59);
-    let (_, token) = enqueue_measured_fill_job(&mut producer).expect("producer job");
-    let request = decode_fill_envelope_token(&token).expect("producer request");
-    let mut unrelated = fill_worker_session(61);
-    let (_, unrelated_token) = enqueue_measured_fill_job(&mut unrelated).expect("unrelated job");
-    let unrelated_request = decode_fill_envelope_token(&unrelated_token).expect("unrelated request");
-    let mut entry = FillEnvelopeJobEntryCursor::new(unrelated_request.job, token);
-    let decoded = loop {
-        if let Some(decoded) = entry.step().expect("one-field decode") {
-            break decoded;
-        }
-    };
-    assert_eq!(decoded, request);
-    assert_eq!(entry.bind(&decoded), Err("fill worker context job does not match the decoded request owner"));
-    drop(entry);
-    assert_eq!(producer.take_terminal_fill_job().and_then(|terminal| terminal.reason()), Some("fault"));
-    let registry = fill_envelope_registry().lock().expect("registry");
-    assert!(matches!(registry.slots[usize::from(unrelated_request.slot)].as_ref().map(|authority| authority.phase), Some(FillEnvelopePhase::Admitted)), "wrong context identity cannot transition another producer");
-    drop(registry);
-    drop(producer);
-    drop(unrelated);
-    drain_orphaned_fill_envelope(&request);
-    drain_orphaned_fill_envelope(&unrelated_request);
-}
-
-#[test]
-fn fill_worker_stale_envelope_identity_is_rejected_without_faulting_replacement() {
-    let _guard = fill_envelope_test_guard();
-    let mut stale = fill_worker_session(63);
-    let (_, stale_token) = enqueue_measured_fill_job(&mut stale).expect("stale job");
-    let stale_request = decode_fill_envelope_token(&stale_token).expect("stale request");
-    close_fill_envelope(&mut stale);
-    let mut replacement = fill_worker_session(65);
-    let (_, replacement_token) = enqueue_measured_fill_job(&mut replacement).expect("replacement job");
-    let replacement_request = decode_fill_envelope_token(&replacement_token).expect("replacement request");
-    let mut entry = FillEnvelopeJobEntryCursor::new(stale_request.job, stale_token);
-    let decoded = loop {
-        if let Some(decoded) = entry.step().expect("one-field decode") {
-            break decoded;
-        }
-    };
-    assert_eq!(entry.bind(&decoded), Err("fill worker envelope owner is stale"));
-    drop(entry);
-    let registry = fill_envelope_registry().lock().expect("registry");
-    assert!(matches!(registry.slots[usize::from(replacement_request.slot)].as_ref().map(|authority| authority.phase), Some(FillEnvelopePhase::Admitted)), "stale identity cannot fault the live replacement or any no-owner slot");
-    drop(registry);
-    close_fill_envelope(&mut replacement);
-}
-
-#[test]
-fn fill_worker_mounted_terminal_pump_closes_completed_slot_and_rearms_capacity() {
-    let _guard = fill_envelope_test_guard();
-    let mut session = fill_worker_session(37);
-    let (_, token) = enqueue_measured_fill_job(&mut session).expect("fill job");
-    let request = decode_fill_envelope_token(&token).expect("request");
-    assert!(session.cancel_fill_job());
-    let _ = session.drive_fill_job(&request);
-    for _ in 0..4096 {
-        session.poll_fill_job();
-        if session.fill_job.is_none() && session.fill_terminal.is_none() {
-            break;
-        }
-    }
-    assert!(session.fill_job.is_none());
-    assert!(session.fill_terminal.is_none());
-    assert!(fill_envelope_registry().lock().expect("registry").slots[usize::from(request.slot)].is_none());
-}
-
-#[test]
-fn fill_worker_early_fault_guard_terminalizes_and_deep_retirement_is_incremental() {
-    let _guard = fill_envelope_test_guard();
-    let mut session = fill_worker_session(41);
-    let (_, token) = enqueue_measured_fill_job(&mut session).expect("fill job");
-    let request = decode_fill_envelope_token(&token).expect("request");
-    {
-        let _fault = FillEnvelopeWorkerFaultGuard::new(&token);
-    }
-    let mut terminal = session.take_terminal_fill_job().expect("fault terminal");
-    assert_eq!(terminal.reason(), Some("fault"));
-    assert_eq!(terminal.close_step(), FillEnvelopeCloseStep::Pending, "the first close grant only transfers the final builder authority into its retirement cursor");
-    assert!(!terminal.terminal_is_empty());
-    let mut grants = 1;
-    while !matches!(terminal.close_step(), FillEnvelopeCloseStep::Complete) {
-        grants += 1;
-    }
-    assert!(grants > 8, "a populated builder cannot be bulk-dropped by one close grant");
-    assert!(terminal.terminal_is_empty());
-    assert!(fill_envelope_registry().lock().expect("registry").slots[usize::from(request.slot)].is_none());
-}
-
-#[test]
-fn fill_worker_token_decode_advances_exactly_one_field_per_grant() {
-    let request = FillJobRequest { job: 3, operation: 5, generation: 7, base_revision: 11, slot: 1, registry_generation: 13 };
-    let mut cursor = FillEnvelopeTokenCursor::new(fill_envelope_token(&request).to_vec());
-    assert_eq!(cursor.step().expect("header"), None);
-    assert_eq!(cursor.step().expect("registry generation"), None);
-    assert_eq!(cursor.step().expect("job"), None);
-    assert_eq!(cursor.step().expect("operation"), None);
-    assert_eq!(cursor.step().expect("generation"), None);
-    assert_eq!(cursor.step().expect("base revision"), None);
-    assert_eq!(cursor.step().expect("publish"), Some(request));
-}
-
-#[test]
-fn fill_operation_identity_checked_nonzero_exhaustion_permanently_refuses_aba() {
-    let mut generation_engine = Puzzle3dCollision::new();
-    assert_eq!(generation_engine.allocate_fill_identity(true), Some((RevisionId(1), Generation(1))), "zero counters allocate the first exact nonzero identity");
-    generation_engine.fill_generation = u64::MAX - 1;
-    assert_eq!(generation_engine.allocate_fill_identity(false), Some((RevisionId(1), Generation(u64::MAX))));
-    assert_eq!(generation_engine.allocate_fill_identity(false), None, "generation max + 1 is permanently refused");
-    assert_eq!(generation_engine.allocate_fill_identity(false), None);
-    assert_eq!((generation_engine.fill_revision, generation_engine.fill_generation), (1, u64::MAX));
-
-    let mut revision_engine = Puzzle3dCollision::new();
-    revision_engine.fill_revision = u64::MAX - 1;
-    revision_engine.fill_generation = 1;
-    assert_eq!(revision_engine.allocate_fill_identity(true), Some((RevisionId(u64::MAX), Generation(2))));
-    assert_eq!(revision_engine.allocate_fill_identity(true), None, "revision max + 1 is permanently refused without consuming a generation");
-    assert_eq!(revision_engine.allocate_fill_identity(true), None);
-    assert_eq!((revision_engine.fill_revision, revision_engine.fill_generation), (u64::MAX, 2));
-}
-
-#[test]
-fn fill_worker_zero_semantic_counters_and_exhausted_stale_tokens_never_alias() {
-    let request = FillJobRequest { job: 3, operation: 5, generation: u64::MAX, base_revision: u64::MAX, slot: 1, registry_generation: 13 };
-    let exhausted = fill_envelope_token(&request);
-    assert_eq!(decode_fill_envelope_token(&exhausted), Some(request.clone()));
-    let mut zero_generation = exhausted;
-    zero_generation[40..48].copy_from_slice(&0_u64.to_le_bytes());
-    assert!(decode_fill_envelope_token(&zero_generation).is_none());
-    let mut zero_revision = exhausted;
-    zero_revision[48..56].copy_from_slice(&0_u64.to_le_bytes());
-    assert!(decode_fill_envelope_token(&zero_revision).is_none());
-    assert_ne!(zero_generation, exhausted, "exhaustion cannot reset to a zero token that aliases the permanent max identity");
-    assert_ne!(zero_revision, exhausted);
 }
 
 #[test]
 fn precompute_session_native_wrapper_errors_without_scene() {
     let mut session = Puzzle3dPrecomputeSession::new();
-    assert!(session.dispatch(Puzzle3dEngineCommand::ApplyFillCount { count: 0 }).is_err());
-    assert!(session.dispatch(Puzzle3dEngineCommand::ComposeFillDisplay { count: 0 }).is_err());
     let payload = BrushPlacePayload { target_vortex_full_id: "a:v0".to_string(), object_kind_id: "b".to_string(), source_vortex_index: 0, origin: [0.0, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
     assert!(session.dispatch(Puzzle3dEngineCommand::ApplyBrushPlacement { payload }).is_err());
-    assert!(session.fill_is_done());
-    assert_eq!(session.fill_available_count(), 0);
-}
-
-#[test]
-fn fill_lane_advances_while_brush_targets_remain_queued() {
-    let mut engine = Puzzle3dCollision::new();
-    engine.set_scene(&single_object_scene_json()).expect("seed");
-    assert!(engine.fill_steps_pending_for_test() > 0, "seed scene must schedule fill steps");
-    assert!(engine.brush_lane_active(), "seed scene must schedule brush targets — the queue itself fills from the preparation cursor, one target per lane turn");
-    let before = engine.fill_progress_summary().count;
-    for _ in 0..24 {
-        engine.precompute_step_lane(PrecomputeLane::Fill, 4);
-    }
-    let after = engine.fill_progress_summary().count;
-    assert!(after > before || engine.fill_progress_summary().done, "fill lane must make planning progress without draining brush first");
 }
 
 #[test]
@@ -1199,57 +259,10 @@ fn the_5d_facing_precompute_surface_stays_public() {
     assert!(!session.precompute_step(1));
     let _: BrushCollisionFreeResult = session.brush_candidates("probe:v0");
     let _: Option<BrushPreviewState> = session.brush_preview("probe:v0", 0);
-    let _: FillBuildProgress = session.fill_progress();
-    assert!(session.precompute_step_lane(PrecomputeLane::Brush, 1) || true);
     let payload = BrushPlacePayload { target_vortex_full_id: "probe:v0".into(), object_kind_id: "Kind".into(), source_vortex_index: 0, origin: [0.0, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
     let rejected: Result<Puzzle3dEngineOutcome, GuardError> = session.dispatch(Puzzle3dEngineCommand::ApplyBrushPlacement { payload });
     assert!(matches!(rejected, Err(GuardError::BrushPlacementRejected)));
-    assert!(session.dispatch(Puzzle3dEngineCommand::ApplyFillCount { count: 0 }).is_err());
     let _: fn(&Fixture, &BrushPlacePayload, &KindCatalogBundle) -> Fixture = apply_brush_placement_to_fixture;
-}
-
-/// 🔗️ Minimal scene JSON matching `SceneConfig`'s real wire shape (camelCase, per its
-/// `#[serde(rename = ...)]` attrs) — relocated from `🧬️mutations/💾️binary/🦀️.rs`'s own
-/// `sample_scene_config` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): that file's
-/// own copy stays for the pure-data wire-format-guard tests that need no session, and this copy feeds
-/// the two dispatch tests below, since a schema-side test module must not depend on the app.
-fn sample_scene_config() -> SceneConfig {
-    let json = r#"{
-            "fixture": {
-                "objects": [{"id": "host", "objectKind": "Host", "meshUrl": "/test/host.glb", "origin": [0,0,0], "orientation": [0,0,0,1], "vortices": [{"id": "v0", "vortexKind": "port-a", "position": [0,0,0], "direction": [0,0,-1]}]}],
-                "attractions": [],
-                "targetVolumes": []
-            },
-            "kindCatalogs": {"objects": [{"id": "Host", "representations": [{"id": "r0", "name": "default", "url": "/test/host.glb"}], "vortices": []}], "vortices": [{"id": "port-a"}], "cables": []},
-            "kindCompatibility": [],
-            "overlapBudget": 0.02,
-            "seed": 1
-        }"#;
-    serde_json::from_str(json).expect("sample scene config parses")
-}
-
-/// 🎯️ Behavioral parity: `dispatch` must reach the exact same engine logic the old JSON-string
-/// wasm-bindgen methods delegated to — `SetScene` seeds a fill session, `ApplyFillCount`/
-/// `ComposeFillDisplay` read/apply its prefix, matching what this module's own
-/// `precompute_session_native_wrapper_exercises_public_methods` test already asserts for the
-/// pre-dispatch API. Relocated from `🧬️mutations/💾️binary/🦀️.rs`'s
-/// `dispatch_set_scene_then_apply_and_compose_fill_count_round_trip` — that test constructed
-/// `Puzzle3dPrecomputeSession` directly, which is now an app type a schema test file must not reach.
-#[test]
-fn dispatch_set_scene_then_apply_and_compose_fill_count_round_trip() {
-    let mut session = Puzzle3dPrecomputeSession::new();
-    session.dispatch(Puzzle3dEngineCommand::SetScene { scene: sample_scene_config() }).expect("set scene");
-    assert!(!session.fill_is_done(), "a freshly seeded fill session has not stalled or hit max_count yet");
-
-    session.precompute_step(50);
-
-    let outcome = session.dispatch(Puzzle3dEngineCommand::ComposeFillDisplay { count: 0 }).expect("compose fill display");
-    let Puzzle3dEngineOutcome::Fixture(fixture) = outcome else { panic!("expected a Fixture outcome") };
-    assert!(fixture.objects.iter().any(|object| object.id == "host"), "the base scene's host object must survive compose_fill_display(0)");
-
-    let outcome = session.dispatch(Puzzle3dEngineCommand::ApplyFillCount { count: 0 }).expect("apply fill count");
-    let Puzzle3dEngineOutcome::Fixture(fixture) = outcome else { panic!("expected a Fixture outcome") };
-    assert!(fixture.objects.iter().any(|object| object.id == "host"));
 }
 
 /// 🎯️ Relocated from `🧬️mutations/💾️binary/🦀️.rs`'s
@@ -1259,47 +272,6 @@ fn dispatch_brush_preview_without_scene_returns_none() {
     let mut session = Puzzle3dPrecomputeSession::new();
     let outcome = session.dispatch(Puzzle3dEngineCommand::BrushPreview { vortex_full_id: "host:v0".to_string(), candidate_index: 0 }).expect("brush preview never errors");
     assert_eq!(outcome, Puzzle3dEngineOutcome::BrushPreview(None), "no scene means no cached brush candidates yet");
-}
-
-#[test]
-fn fill_job_checkpoint_is_a_fixed_generation_token_not_a_whole_state_buffer() {
-    let _guard = fill_envelope_test_guard();
-    let mut session = fill_worker_session(31);
-    let (_, token) = enqueue_measured_fill_job(&mut session).expect("fill envelope");
-    assert_eq!(token.len(), FILL_ENVELOPE_TOKEN_BYTES);
-    assert_eq!(session.fill_checkpoint_bytes(), token);
-    assert!(serde_json::from_slice::<SceneConfig>(&token).is_err(), "the job checkpoint cannot regress to whole-scene serde");
-    close_fill_envelope(&mut session);
-}
-
-#[test]
-fn fill_first_substantive_preview_arrives_below_fifty_ms_and_every_step_below_eight_ms() {
-    let mut engine = fill_capable_engine();
-    let started = Instant::now();
-    let mut first_preview = None;
-    let mut completed = false;
-    let mut max_step = Duration::ZERO;
-    for _ in 0..10_000 {
-        let step_started = Instant::now();
-        let active = engine.precompute_step_lane(PrecomputeLane::Fill, 1);
-        let step_elapsed = step_started.elapsed();
-        max_step = max_step.max(step_elapsed);
-        assert!(step_elapsed < Duration::from_millis(8), "fill resume step reached the 8ms ceiling");
-        if first_preview.is_none() && engine.fill.as_ref().and_then(|fill| fill.lock().ok()).is_some_and(|fill| fill.preview.candidate_ghost.is_some()) {
-            first_preview = Some(started.elapsed());
-        }
-        if !active {
-            completed = true;
-            break;
-        }
-    }
-    assert!(
-        first_preview.is_some_and(|elapsed| elapsed < Duration::from_millis(50)),
-        "first substantive fill preview exceeded 50ms: {first_preview:?}; stage={:?}; rejected={}",
-        engine.fill.as_ref().and_then(|fill| fill.lock().ok()).map(|fill| fill.stage),
-        engine.fill.as_ref().and_then(|fill| fill.lock().ok()).map_or(0, |fill| fill.preview.rejected_count)
-    );
-    assert!(completed, "fill did not complete within the bounded resume budget");
 }
 
 /// 🗺️ Wave W-P: a Nakagin-scale scene (180 objects, one per spatial cell) driven through the persistent
@@ -1324,7 +296,6 @@ fn nakagin_scale_brush_broad_phase_visits_only_the_queried_cells() {
             orientation: Some([0.0, 0.0, 0.0, 1.0]),
             scale: None,
             vortices: vec![VortexProps { id: "v0".to_string(), vortex_kind: Some("port-a".to_string()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) }],
-            reveal_index: None,
         })
         .collect::<Vec<_>>();
     let scene = SceneConfig {
@@ -1377,7 +348,7 @@ fn nakagin_scale_brush_broad_phase_visits_only_the_queried_cells() {
 /// entry follows it and every other entry stays put — instead of rebuilding the whole scene.
 #[test]
 fn brush_broad_phase_follows_one_moved_object_without_a_rebuild() {
-    let mut engine = fill_capable_engine();
+    let mut engine = catalog_host_engine();
     while engine.step_brush_index() {}
     let before = *engine.brush_index.entry_bounds("host").expect("host entry");
     let mut scene = (*engine.scene.clone().expect("scene")).clone();
@@ -1391,13 +362,10 @@ fn brush_broad_phase_follows_one_moved_object_without_a_rebuild() {
 }
 
 /// 🗑️ Wave W-P: an owner the new scene no longer carries must leave the broad phase through the
-/// production `CollisionIndexRemoval` path — the same withdrawal that used to be `#[cfg(test)]`-gated. The
-/// object is re-identified rather than deleted outright, because a fixture that drops to zero objects is
-/// indistinguishable from an already-applied fill projection to `set_scene`'s own heuristic and would not
-/// install a new scene at all.
+/// production `CollisionIndexRemoval` path — the same withdrawal that used to be `#[cfg(test)]`-gated.
 #[test]
 fn brush_broad_phase_withdraws_an_owner_the_scene_dropped() {
-    let mut engine = fill_capable_engine();
+    let mut engine = catalog_host_engine();
     while engine.step_brush_index() {}
     assert!(engine.brush_index.entry_bounds("host").is_some(), "the original owner is indexed");
     let mut scene = (*engine.scene.clone().expect("scene")).clone();
@@ -1425,34 +393,6 @@ fn a_registered_mesh_is_shared_by_id_across_sessions() {
     assert!(fresh.adopt_shared_mesh(url, None), "the id alone is enough to install real geometry");
     assert!(fresh.has_mesh(url), "the adopted mesh is live in the collision engine");
     assert!(derive_brush_mesh(url, &positions[..6], &indices).is_none(), "a malformed upload is refused by the kernel, not cached");
-}
-
-/// 🛑 Wave W-P: the user-facing fill cancel is identity-guarded. A cancel naming a superseded run must
-/// not touch the live job; the exact `(job, operation, generation)` triple must stop it and drive its
-/// envelope to terminal-empty. `cancel_fill_job` had zero callers before `cancelFillBuild`.
-#[test]
-fn fill_cancel_stops_only_the_named_job_and_a_stale_cancel_is_a_no_operation() {
-    let _guard = fill_envelope_test_guard();
-    let mut session = fill_worker_session(37);
-    let (_, token) = enqueue_measured_fill_job(&mut session).expect("fill envelope");
-    let request = decode_fill_envelope_token(&token).expect("request");
-    let identity = session.fill_job_identity().expect("live fill identity");
-    assert_eq!(identity, (request.job, request.operation, request.generation));
-    let (job, operation, generation) = identity;
-    assert!(!session.cancel_fill_job_for(job.wrapping_add(1), operation, generation), "a stale job id must not cancel the live run");
-    assert!(!session.cancel_fill_job_for(job, operation.wrapping_add(1), generation), "a stale operation must not cancel the live run");
-    assert!(!session.cancel_fill_job_for(job, operation, generation.wrapping_add(1)), "a stale generation must not cancel the live run");
-    let live = {
-        let registry = fill_envelope_registry().lock().expect("registry");
-        registry.slots[usize::from(request.slot)].as_ref().and_then(|authority| authority.cancel.clone()).expect("live cancel token")
-    };
-    assert!(!live.is_cancelled_now(), "every stale cancel left the live job running");
-    assert!(session.cancel_fill_job_for(job, operation, generation), "the exact identity cancels the live run");
-    assert!(live.is_cancelled_now(), "the named cancel reached the job's own cancel token");
-    let _ = session.drive_fill_job(&request);
-    let mut terminal = session.take_terminal_fill_job().expect("terminal handle");
-    while !matches!(terminal.close_step(), FillEnvelopeCloseStep::Complete) {}
-    assert!(terminal.terminal_is_empty());
 }
 
 //#region 🧩️PagedBrushMeshUploads
@@ -1734,17 +674,17 @@ fn the_residency_counter_only_climbs_and_the_request_set_is_bounded() {
     assert!(!session.adopt_shared_mesh("/test/residency-0.glb", Some(&"0".repeat(64))), "a stale digest is refused even for a resident identity");
     assert_eq!(shared_brush_mesh_installs(), residency, "a refusal derives nothing, so the counter stands still");
     let mut bounded = Puzzle3dPrecomputeSession::new();
-    for identity in 0..(FILL_WORKER_MAX_MESHES + 8) {
+    for identity in 0..(COLLISION_MESH_MAX_MESHES + 8) {
         let recorded = bounded.request_mesh_reupload(&format!("/test/bounded-{identity:04}.glb"));
-        assert_eq!(recorded, identity < FILL_WORKER_MAX_MESHES, "identity {identity} may only claim a republication while the bounded set still has room for it");
+        assert_eq!(recorded, identity < COLLISION_MESH_MAX_MESHES, "identity {identity} may only claim a republication while the bounded set still has room for it");
     }
-    assert_eq!(bounded.mesh_reupload_requests().len(), FILL_WORKER_MAX_MESHES, "the request set stops at the mesh ceiling instead of growing with the client's noise");
+    assert_eq!(bounded.mesh_reupload_requests().len(), COLLISION_MESH_MAX_MESHES, "the request set stops at the mesh ceiling instead of growing with the client's noise");
     let published: Vec<String> = bounded.mesh_reupload_requests().to_vec();
     let mut sorted = published.clone();
     sorted.sort();
     assert_eq!(published, sorted, "requests publish in a stable order, so an unchanged set hashes to an unchanged world-body lane");
-    assert!(!bounded.request_mesh_reupload(&"x".repeat(FILL_WORKER_MAX_URL_BYTES + 1)), "an over-long id records nothing and therefore claims no republication");
-    assert_eq!(bounded.mesh_reupload_requests().len(), FILL_WORKER_MAX_MESHES, "an id longer than the engine admits is never recorded");
+    assert!(!bounded.request_mesh_reupload(&"x".repeat(COLLISION_MESH_MAX_URL_BYTES + 1)), "an over-long id records nothing and therefore claims no republication");
+    assert_eq!(bounded.mesh_reupload_requests().len(), COLLISION_MESH_MAX_MESHES, "an id longer than the engine admits is never recorded");
 }
 
 /// 🧾️ Wave W-M2: the paged wire is one contract, written down once. Every constant, fault code, page
@@ -1793,164 +733,3 @@ fn an_abandoned_page_run_is_retired_and_a_live_one_survives() {
     assert!(matches!(stage_brush_mesh_page(live, &digest, 1, 2, &[], &indices), Ok(Puzzle3dMeshUploadStep::Complete(_, _))), "the surviving run still closes");
 }
 //#endregion 🧩️PagedBrushMeshUploads
-
-//#region 💼️BoundedFillJob
-use semio_framework_plugin::reactor::jobs as reactor_jobs;
-
-/// 📏️ The smallest budget the host can grant. The bounded fill owner spends exactly one cursor
-/// field or one `drive_fill_envelope` call per `step-job` regardless of it, which is precisely what
-/// makes it sliceable; a law that passed only on a fat budget would prove nothing.
-const FILL_JOB_LAW_BUDGET: JobBudget = JobBudget { fuel: 1, deadline_ms: 1 };
-
-/// 📏️ Slices one fill run may spend before a law calls it non-terminating. The measured run on the
-/// single-host fixture stalls in far fewer; this is an order of magnitude of headroom.
-const FILL_JOB_LAW_SLICES: usize = 8192;
-
-/// 📏️ Ticks one law drives through the tick path — more than four times the ≈115 the browser needed
-/// to exhaust the guest heap on 2026-09-09.
-const FILL_TICK_LAW_TICKS: usize = 512;
-
-const FILL_JOB_LAW_EXPLICIT_KIND: &str = "semio.puzzle3d.fill-law-explicit";
-
-/// 🧪️ A deliberately plain `JobFn` registration — the exact shape `FILL_JOB_KIND` used to have. It
-/// is the negative control for `fill_job_kind_is_bounded_and_a_plain_job_fn_is_not`: without it the
-/// bounded assertion could pass against a runtime that never rejected anything.
-fn explicit_control_job(_context: reactor_jobs::JobCtx, _input: Vec<u8>, _restored: Option<Vec<u8>>) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
-    Box::pin(async move { Ok(Vec::new()) })
-}
-
-/// 🧩️ W-J law (b). `semio-framework-plugin` is NOT built in `cfg(test)` when this crate's tests run,
-/// so `spawn_job` takes exactly the production branch: a kind with no `BoundedJobFactory` becomes
-/// `JobBody::ExplicitStateMachineRequired` and every `step-job` answers
-/// `job.explicit-state-machine-required`. That is the whole defect this wave fixes — the fill tool's
-/// planned count sat at zero in the browser because its kind took that branch on every one of the
-/// 120 ms tick loop's spawns.
-#[semio_framework_async_macros::async_test]
-async fn fill_job_kind_is_bounded_and_a_plain_job_fn_is_not() {
-    let _guard = fill_envelope_test_guard();
-    initialize();
-    let mut admitted = fill_worker_session(61);
-    let (job, input) = enqueue_measured_fill_job(&mut admitted).expect("fill job");
-    reactor_jobs::start_job(job, FILL_JOB_KIND, &input).await;
-    let bounded = reactor_jobs::step_job(job, FILL_JOB_LAW_BUDGET).await;
-    assert!(matches!(bounded, JobStep::Running(_)), "the registered fill kind must step as a bounded state machine");
-
-    reactor_jobs::register_job_kind(FILL_JOB_LAW_EXPLICIT_KIND, explicit_control_job as reactor_jobs::JobFn);
-    let control = job.checked_add(1).expect("control job identity");
-    reactor_jobs::start_job(control, FILL_JOB_LAW_EXPLICIT_KIND, &input).await;
-    let JobStep::Failed(refusal) = reactor_jobs::step_job(control, FILL_JOB_LAW_BUDGET).await else {
-        panic!("a plain JobFn registration must never step in a production build");
-    };
-    assert!(String::from_utf8_lossy(&refusal).contains("explicit-state-machine-required"), "the control proves the runtime really does refuse un-bounded kinds");
-
-    reactor_jobs::cancel_job(job).await;
-    close_fill_envelope(&mut admitted);
-}
-
-/// 🧩️ W-J law (a) + the checkpoint half of the restore contract. `BoundedJobFactory` receives only
-/// `(job, input)` — `restore_job`'s `restored` bytes never reach it — so the fill kind's checkpoint
-/// MUST equal its own spawn input for a restored actor to rebind the identical envelope. Pinned
-/// here rather than assumed.
-#[semio_framework_async_macros::async_test]
-async fn bounded_fill_job_reaches_done_publishing_its_envelope_token_as_progress_and_checkpoint() {
-    let _guard = fill_envelope_test_guard();
-    initialize();
-    let mut admitted = fill_worker_session(63);
-    let (job, input) = enqueue_measured_fill_job(&mut admitted).expect("fill job");
-    reactor_jobs::start_job(job, FILL_JOB_KIND, &input).await;
-    let mut progress = 0_usize;
-    let mut done: Option<Vec<u8>> = None;
-    let mut checkpointed = false;
-    for _ in 0..FILL_JOB_LAW_SLICES {
-        match reactor_jobs::step_job(job, FILL_JOB_LAW_BUDGET).await {
-            JobStep::Running(Some(bytes)) => {
-                assert_eq!(bytes, input, "published progress is the envelope token the host already holds");
-                progress += 1;
-            }
-            JobStep::Running(None) => {}
-            JobStep::Done(bytes) => {
-                done = Some(bytes);
-                break;
-            }
-            JobStep::Failed(bytes) => panic!("bounded fill job failed: {}", String::from_utf8_lossy(&bytes)),
-        }
-        if !checkpointed {
-            if let Some(entry) = reactor_jobs::checkpoint_jobs().await.into_iter().find(|entry| entry.job == job) {
-                assert_eq!(entry.input, input, "the checkpoint pack carries the spawn input verbatim");
-                if entry.checkpoint.is_some() {
-                    assert_eq!(entry.checkpoint.as_deref(), Some(input.as_slice()), "the fill checkpoint must equal its spawn input, because a bounded factory only ever sees the input");
-                    checkpointed = true;
-                }
-            }
-        }
-    }
-    assert_eq!(done.as_deref(), Some(input.as_slice()), "a bounded fill run terminates on its own envelope token");
-    assert!(progress > 0, "a bounded fill run publishes at least one progress slice");
-    assert!(checkpointed, "a live bounded fill run always offers a checkpoint");
-    let request = decode_fill_envelope_token(&input).expect("fill identity");
-    let published = fill_envelope_registry().lock().expect("registry").observation(&request).expect("the finished envelope still publishes its observation");
-    assert!(published.done, "the registry publication the session reads is what marks the plan finished");
-    assert!(fill_envelope_registry().lock().expect("registry").slots[usize::from(request.slot)].is_some(), "Complete stays readable until the session closes it");
-    close_fill_envelope(&mut admitted);
-    assert!(fill_envelope_registry().lock().expect("registry").slots[usize::from(request.slot)].is_none(), "an explicit close vacates the slot the 4096-unit spawn occupied");
-}
-
-/// ♻️ Pumps ONE session's own terminal cursor until its envelope slot is empty — the mounted
-/// counterpart of `drain_orphaned_fill_envelope`, for a run whose terminal this session already
-/// checked out through `poll_fill_job`.
-fn drain_fill_envelope(session: &mut Puzzle3dPrecomputeSession, request: &FillJobRequest) {
-    for _ in 0..FILL_ENVELOPE_MAX_ITEMS {
-        session.poll_fill_job();
-        if fill_envelope_registry().lock().expect("registry").slots[usize::from(request.slot)].is_none() {
-            return;
-        }
-    }
-    panic!("a terminal fill envelope must reach an empty slot within its own bounded close turns");
-}
-
-/// 🧯️ W-J law (c), first half. A job the host never steps — exactly what the React target did to
-/// every isolated job — must cost ONE spawn and ONE envelope, no matter how long the 120 ms tick
-/// loop runs.
-#[test]
-fn an_unstepped_fill_job_is_enqueued_once_across_five_hundred_ticks() {
-    let _guard = fill_envelope_test_guard();
-    let mut session = fill_worker_session(65);
-    let mut spawns = 0_usize;
-    let mut admitted_bytes = None;
-    for _ in 0..FILL_TICK_LAW_TICKS {
-        session.poll_fill_job();
-        if session.enqueue_fill_job().is_some() {
-            spawns += 1;
-            admitted_bytes = Some(fill_envelope_registry().lock().expect("registry").aggregate_bytes);
-        }
-    }
-    assert_eq!(spawns, 1, "a live fill job must never be re-enqueued by a later tick");
-    assert_eq!(fill_envelope_registry().lock().expect("registry").aggregate_bytes, admitted_bytes.expect("one admission"), "an unstepped fill job reserves no further process bytes per tick");
-    close_fill_envelope(&mut session);
-}
-
-/// 🧯️ W-J law (c), second half. A FAULTED envelope used to be closed and immediately re-measured by
-/// the next tick — an unbounded measure→admit→spawn→fault→close cycle, each turn rebuilding a whole
-/// `FillBuilder` preparation, which is what exhausted the guest heap. It must now stop, once, and
-/// say so.
-#[test]
-fn a_faulted_fill_envelope_latches_one_notice_and_never_silently_retries() {
-    let _guard = fill_envelope_test_guard();
-    let mut session = fill_worker_session(67);
-    let (_, input) = enqueue_measured_fill_job(&mut session).expect("fill job");
-    let request = decode_fill_envelope_token(&input).expect("fill identity");
-    terminalize_fill_envelope(&request, FillEnvelopeTerminalReason::Fault);
-    let mut spawns = 0_usize;
-    for _ in 0..FILL_TICK_LAW_TICKS {
-        session.poll_fill_job();
-        if session.enqueue_fill_job().is_some() {
-            spawns += 1;
-        }
-    }
-    assert_eq!(spawns, 0, "a faulted fill job must never be silently re-enqueued");
-    assert!(session.fill_is_faulted(), "the fault latches until an edit supersedes the plan");
-    assert!(session.take_fill_fault_notice(), "the fault surfaces as exactly one user-visible notice");
-    assert!(!session.take_fill_fault_notice(), "the notice is taken once, never repeated per tick");
-    assert_eq!(fill_envelope_registry().lock().expect("registry").aggregate_bytes, 0, "the faulted envelope returns its whole process byte credit");
-}
-//#endregion 💼️BoundedFillJob

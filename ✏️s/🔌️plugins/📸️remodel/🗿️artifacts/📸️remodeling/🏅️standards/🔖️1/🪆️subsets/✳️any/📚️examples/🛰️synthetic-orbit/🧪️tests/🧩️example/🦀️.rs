@@ -9,15 +9,12 @@
 //! decoded rasters do not, and that equality is what these tests assert.
 
 use super::{CAMERA_ID, FRAMES, FRAME_MIME, GROUND_TRUTH_JSON, ID, PRIMARY_TEXT, STREAM_ID};
-use crate::editor::remodeling::commands::cancel_reconstruction::CancelReconstruction;
 use crate::editor::remodeling::commands::import_frame_payload::ImportFramePayload;
-use crate::editor::remodeling::commands::run_reconstruction::{AdvanceReconstruction, RunReconstruction, ADVANCE_RECONSTRUCTION_ACTION_ID};
 use crate::editor::remodeling::engine::images as remodeling_image;
-use crate::editor::remodeling::unit_tests::context::{app_with_registry, dispatch, RemodelingApp};
+use crate::editor::remodeling::unit_tests::context::{app_with_registry, dispatch, durable, pump_run, run_action, run_arguments, start_reconstruction, RemodelingApp};
 use crate::editor::remodeling::RemodelingCommand;
 use crate::lie::{umeyama, Quatd, Sim3, So3};
 use crate::{CameraCalibration, FrameRef, MediaKind, MediaStream, RemodelingSnapshot};
-use semio_framework_plugin::Effect;
 
 //#region 🔖️FixtureConstants
 /// 🎲 splitmix64 seed shared with the Python reference generator.
@@ -40,10 +37,6 @@ const FPS_HINT: f64 = 2.0;
 const BACKGROUND: [u8; 3] = [35, 35, 40];
 const FACE_BASE_COLORS: [[u8; 3]; 6] = [[150, 60, 60], [60, 60, 150], [60, 150, 60], [150, 150, 60], [150, 60, 150], [60, 150, 150]];
 const MARKER_COLORS: [[u8; 3]; 6] = [[250, 250, 250], [15, 15, 15], [245, 190, 40], [40, 200, 245], [245, 60, 130], [120, 245, 90]];
-
-/// ⏱️ Local mirror of `run_reconstruction`'s private `MAX_RECONSTRUCTION_TICKS`: the continuation is
-/// required to reach a terminal phase strictly inside this budget.
-const TICK_CAP: u32 = 200_000;
 
 /// ☁️ At least this share of the 140 ground-truth world points must be recovered into the committed
 /// sparse cloud. Deliberately modest: the pipeline triangulates AKAZE keypoints, not the fixture's
@@ -455,41 +448,28 @@ async fn imported_app() -> RemodelingApp {
     app
 }
 
-fn continuation(effect: &Effect) -> Option<AdvanceReconstruction> {
-    let Effect::DispatchAction { action, args, .. } = effect else { return None };
-    if action != ADVANCE_RECONSTRUCTION_ACTION_ID {
-        return None;
-    }
-    let value: serde_json::Value = serde_json::from_str(&dsl::json::from_dsl_value(args.as_ref()?).to_string()).expect("continuation oracle");
-    Some(AdvanceReconstruction {
-        generation: value["generation"].as_u64().expect("generation"),
-        job_id: value["jobId"].as_str().expect("job id").to_string(),
-        requested_stage: value["requestedStage"].as_str().expect("requested stage").to_string(),
-        phase: value["phase"].as_str().expect("phase").to_string(),
-        stream_index: value["streamIndex"].as_u64().expect("stream index") as u32,
-        frame_index: value["frameIndex"].as_u64().expect("frame index") as u32,
-        terminal_cursor: value["terminalCursor"].as_u64().expect("terminal cursor"),
-        tick: value["tick"].as_u64().expect("tick") as u32,
-    })
-}
-
-/// 🏁️ One reconstruction run: `(terminal snapshot, per-tick progress, tick count)`. `interrupt_at`
-/// dispatches `cancel-reconstruction` once that tick is reached, which is how the cancel test sets
-/// `job.cancel_requested` mid-flight.
-async fn drive(app: &mut RemodelingApp, interrupt_at: Option<u32>) -> (RemodelingSnapshot, Vec<f32>, u32) {
-    let mut result = dispatch(app, RemodelingCommand::RunReconstruction(RunReconstruction {})).await;
-    let mut progress = Vec::new();
-    for tick in 0..TICK_CAP {
-        let snapshot = app.snapshot().expect("worker-applied remodeling snapshot");
-        progress.push(snapshot.job.progress_0_1);
-        let next = result.requested_effects.iter().find_map(continuation);
-        let Some(payload) = next else { return (snapshot, progress, tick) };
-        if interrupt_at == Some(tick) {
-            dispatch(app, RemodelingCommand::CancelReconstruction(CancelReconstruction {})).await;
+/// 🏁️ One reconstruction tool run through the framework actions: start, pump to `complete`, finalize, and
+/// pump to `finalized`. Answers the finalized document and every stage the run reported, in order.
+async fn finalize_reconstruction(app: &mut RemodelingApp) -> (RemodelingSnapshot, Vec<u16>) {
+    start_reconstruction(app).await;
+    let mut stages = Vec::new();
+    let complete = loop {
+        let run = pump_run(app, "reconstruction progresses", |_| true).await;
+        if stages.last() != Some(&run.stage) {
+            stages.push(run.stage);
         }
-        result = dispatch(app, RemodelingCommand::AdvanceReconstruction(payload)).await;
-    }
-    panic!("reconstruction did not terminate inside {TICK_CAP} ticks")
+        match run.state.wire_name() {
+            "complete" => break run,
+            "faulted" | "aborted" => panic!("the reconstruction run ended {:?}", run),
+            _ => semio_framework_plugin::PluginApp::advance_typed_operation_publication(app).await.expect("driver turn"),
+        }
+    };
+    assert_eq!(complete.state.wire_name(), "complete");
+    let arguments = run_arguments(app).await;
+    let output = run_action(app, semio_framework_plugin::TOOL_RUN_FINALIZE_ACTION_ID, arguments).await;
+    assert_eq!(output.get("toolRun").and_then(semio_framework_plugin::DslValue::as_str), Some("beginFinalize"));
+    pump_run(app, "finalize settles", |run| run.state.wire_name() == "finalized").await;
+    (app.snapshot().expect("finalized snapshot"), stages)
 }
 //#endregion 🚚️Driver
 
@@ -552,10 +532,9 @@ async fn reconstructs_the_synthetic_orbit_against_ground_truth() {
     let imported = app.snapshot().expect("imported snapshot");
     assert_eq!(imported.streams.iter().map(|stream| stream.frames.len()).sum::<usize>(), FRAMES.len(), "every committed frame must reach the document");
 
-    let (scene, progress, ticks) = drive(&mut app, None).await;
-    assert!(ticks > 0, "a populated document must not short-circuit the way every other shipped example does");
-    assert!(progress.windows(2).all(|pair| pair[1] >= pair[0]), "reported progress must never move backwards: {progress:?}");
-    assert_ne!(scene.job.stage, crate::ReconstructionStage::Failed, "reconstruction failed: {:?}", scene.job.error);
+    let (scene, stages) = finalize_reconstruction(&mut app).await;
+    assert!(stages.windows(2).all(|pair| pair[1] >= pair[0]), "reported stages must never move backwards: {stages:?}");
+    assert!(stages.len() >= 3, "a populated document runs through the pipeline stages, got {stages:?}");
 
     let sparse = scene.results.sparse.as_ref().expect("commit-reconstruction must carry a sparse cloud");
     let recovered_points = sparse.points.to_f32_vec_from(&scene.durable_artifacts).len() / 3;
@@ -581,15 +560,21 @@ async fn reconstructs_the_synthetic_orbit_against_ground_truth() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn cancel_requested_mid_run_terminates_the_synthetic_orbit_reconstruction() {
+async fn aborting_the_synthetic_orbit_reconstruction_mid_run_leaves_the_document_byte_identical() {
     let mut app = imported_app().await;
-    let (scene, progress, ticks) = drive(&mut app, Some(3)).await;
-    assert!(ticks >= 3, "the run must have been interrupted after it started, not before");
-    assert!(ticks < TICK_CAP, "a cancelled run must stop emitting continuations rather than run to the tick ceiling");
-    assert!(progress.windows(2).all(|pair| pair[1] >= pair[0]), "progress must stay monotonic through cancellation: {progress:?}");
-    assert!(scene.job.cancel_requested, "cancel-reconstruction must record the request on the job");
-    assert!(scene.results.sparse.is_none(), "a cancelled run must not commit reconstruction results");
-    assert_eq!(scene.results.mesh.source, crate::MeshSource::Placeholder, "a cancelled run must leave the seeded placeholder mesh in place");
+    let before = durable(&mut app).await;
+    start_reconstruction(&mut app).await;
+    pump_run(&mut app, "the run reaches feature extraction", |run| run.stage >= 1).await;
+    let arguments = run_arguments(&mut app).await;
+    let output = run_action(&mut app, semio_framework_plugin::TOOL_RUN_ABORT_ACTION_ID, arguments).await;
+    assert_eq!(output.get("toolRun").and_then(semio_framework_plugin::DslValue::as_str), Some("closeJob"));
+    pump_run(&mut app, "abort settles", |run| run.state.wire_name() == "aborted").await;
+    let after = durable(&mut app).await;
+    assert!(before.0 == after.0 && before.1 == after.1, "an aborted reconstruction leaves the document pack byte-identical");
+    assert_eq!(before.2, after.2, "an aborted reconstruction leaves no history trace");
+    let scene = app.snapshot().expect("aborted snapshot");
+    assert!(scene.results.sparse.is_none(), "an aborted run commits no sparse cloud");
+    assert_eq!(scene.results.mesh.source, crate::MeshSource::Placeholder, "an aborted run leaves the seeded placeholder mesh in place");
 }
 //#endregion 🧪️EndToEnd
 

@@ -3,6 +3,7 @@
 
 use crate::editor::remodeling::modes::analyze::windows::report;
 use crate::editor::remodeling::modes::model::windows::model;
+use crate::editor::remodeling::modes::model::tools::reconstruction;
 use semio_framework_plugin::{create_default_layout, create_named_layout, LocalizedLabel, ModeDefinition, NamedLayout};
 
 pub const REMODELING_PLAY_MODE_ANALYZE: &str = "analyze";
@@ -10,7 +11,7 @@ pub const REMODELING_PLAY_LAYOUT_ANALYZE: &str = "remodeling-analyze";
 
 //#region 🔖️Definition
 pub fn definition() -> ModeDefinition {
-    ModeDefinition { id: REMODELING_PLAY_MODE_ANALYZE.into(), label: LocalizedLabel::native("Analyze", "Analyse"), icon_id: "search".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
+    ModeDefinition { id: REMODELING_PLAY_MODE_ANALYZE.into(), label: LocalizedLabel::native("Analyze", "Analyse"), icon_id: "search".into(), tools: vec![reconstruction::TOOL_ID.into()], layout_id: None, commands: Vec::new() }
 }
 
 pub fn layout() -> NamedLayout {

@@ -39,15 +39,14 @@ struct ArmingCase {
     widgets: usize,
     unfinished_tick: bool,
     may_rearm: bool,
-    armed_ticks: usize,
+    owed_hops: usize,
 }
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ResumeCase {
     command: String,
-    rearms_per_attached_preview: usize,
-    attached_preview_windows: usize,
+    carried_run_action: String,
 }
 
 fn contribution_gated_arming_fixture() -> ContributionGatedArmingFixture {
@@ -82,8 +81,8 @@ fn single_kind_graph(kind: &str, widgets: usize) -> FlowFixture {
     }
 }
 
-/// ⚖️ LAW: who may arm the next `flowEvalTick` while the live flow extension registry cannot serve
-/// the graph.
+/// ⚖️ LAW: whether a window still owes the `previewEval` run another hop while the live flow extension
+/// registry cannot serve the graph.
 ///
 /// An uncontributed operator kind is not slow work. `Evaluator::dispatch` answers
 /// `EvalError::UnknownKind`, the node publishes an error dictionary, the error is never cached, and
@@ -94,8 +93,8 @@ fn single_kind_graph(kind: &str, widgets: usize) -> FlowFixture {
 /// (`🗑️generated/console-dump/console.txt`, ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 ///
 /// The law is measured on BOTH arms off one fixture: the same oversized graph, once with a kind
-/// nothing serves (0 armed ticks) and once with a kind the live registry does serve (exactly 1), so
-/// the gate is proven to block the uncontributed chain WITHOUT blocking a legitimate one.
+/// nothing serves (0 owed hops) and once with a kind the live registry does serve (exactly 1), so
+/// the gate is proven to give the uncontributed window up WITHOUT giving up a legitimate one.
 #[test]
 fn an_uncontributed_graph_arms_no_tick_while_a_served_one_keeps_its_chain() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
@@ -123,27 +122,30 @@ fn an_uncontributed_graph_arms_no_tick_while_a_served_one_keeps_its_chain() {
         let mut session = semio_framework_os_flow::FlowEvalSession::new();
         let outcome = crate::preview_eval::evaluate_tick("procedural-preview-gate", crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW, &graph, 0.1, &mut session, None);
         assert_eq!(session.pending(), case.unfinished_tick, "{}: the graph must be big enough that one tick cannot finish it", case.id);
-        let armed = outcome.effects.iter().filter(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "flowEvalTick")).count();
-        assert_eq!(armed, case.armed_ticks, "{}: armed {armed} ticks, fixture says {}", case.id, case.armed_ticks);
-        println!("[STATS] {}: kind={kind} unserved={unserved:?} pending={} armed={armed}", case.id, session.pending());
+        assert!(outcome.extension_invocations.is_empty(), "{}: an in-guest graph parks no extension work", case.id);
+        let owed = usize::from(session.window_tick_owed("procedural-preview-gate"));
+        assert_eq!(owed, case.owed_hops, "{}: owes {owed} hops, fixture says {}", case.id, case.owed_hops);
+        println!("[STATS] {}: kind={kind} unserved={unserved:?} pending={} owed={owed}", case.id, session.pending());
         crate::editor::generation3d::unit_tests::context::retire_flow_eval_session(session);
         graph.retire_cold();
     }
     assert_eq!(fixture.resume.command, "setContributions", "the ONE route that may resume a gated chain");
 }
 
-/// ⚖️ LAW: the resume. A gated chain is not abandoned — the host's `setContributions` push is what
-/// restarts it, through the same addressed self-dispatch every other hop uses, once per attached
-/// preview window. This is the other half of the gate above: without it the app would simply stop
+/// ⚖️ LAW: the resume. A given-up window is not abandoned forever — the host's `setContributions` push
+/// owes the attached previews an evaluation again, and a settled run is finalized so the next refresh
+/// starts a fresh one. This is the other half of the gate above: without it the app would simply stop
 /// evaluating forever. The end-to-end recovery (faulted preview → painted mesh, no user action) is
 /// `a_late_contributions_install_re_arms_the_evaluation_the_empty_registry_faulted`
-/// (`✏️editor/🧪️tests/🔬️unit`); this law states the re-arm COUNT the gate depends on.
+/// (`✏️editor/🧪️tests/🔬️unit`).
 #[semio_framework_async_macros::async_test]
-async fn a_later_set_contributions_re_arms_the_chain_the_gate_stopped() {
+async fn a_later_set_contributions_owes_the_settled_run_a_restart() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let fixture = contribution_gated_arming_fixture();
     let mut app = crate::editor::generation3d::unit_tests::context::app_with_registry().await;
     let (flow_view, _preview_view) = crate::editor::generation3d::unit_tests::context::shell_views("procedural-gate-main", "procedural-gate-preview");
+    let settled = crate::editor::generation3d::unit_tests::context::drive_preview_run(&mut app, &flow_view, &[]).await;
+    assert_eq!(settled.state.as_deref(), Some("finalized"), "the preview settles before the push: {settled:?}");
     // 🪪️ A closure the registry does NOT already hold, so the push really moves the registry
     // generation — an unchanged closure is a no-op by design (`re_pushing_an_unchanged_closure_…`).
     let contributions = crate::editor::generation3d::unit_tests::context::staged_flow_extension_contributions_json(&[(
@@ -151,7 +153,7 @@ async fn a_later_set_contributions_re_arms_the_chain_the_gate_stopped() {
         crate::editor::generation3d::unit_tests::context::contributions_witness_manifest_json(),
     )]);
     let pages = semio_framework::public_invocation_string_pages(&contributions);
-    let mut rearms = 0;
+    let mut carried = Vec::new();
     for (index, page) in pages.iter().enumerate() {
         let receipt = dispatch_with_view(
             &mut app,
@@ -160,181 +162,43 @@ async fn a_later_set_contributions_re_arms_the_chain_the_gate_stopped() {
         )
         .await
         .expect("contributions page");
-        rearms += receipt.effects.iter().filter(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "flowEvalTick")).count();
+        carried.extend(receipt.effects);
     }
-    assert_eq!(rearms, fixture.resume.rearms_per_attached_preview * fixture.resume.attached_preview_windows, "the install owes one re-arm per attached preview window");
-    println!("[STATS] setContributions resumed the chain with {rearms} re-arm(s) across {} page(s)", pages.len());
+    let owed = crate::editor::generation3d::unit_tests::context::run_actions(&carried);
+    assert_eq!(owed, vec![fixture.resume.carried_run_action.clone()], "the install carries the settled preview exactly one restart on its own emit");
+    let restarted = crate::editor::generation3d::unit_tests::context::drive_preview_run(&mut app, &flow_view, &carried).await;
+    assert!(restarted.hops > 0 && restarted.state.as_deref() == Some("finalized"), "the restarted run evaluates again: {restarted:?}");
+    println!("[STATS] setContributions carried {owed:?} across {} page(s); restart ran {} hops", pages.len(), restarted.hops);
     semio_framework_os_flow::uninstall_flow_extension(crate::editor::generation3d::unit_tests::context::CONTRIBUTIONS_WITNESS_EXTENSION_ID).expect("the witness leaves the process-wide registry as it found it");
 }
 //#endregion 🚧️ContributionGatedArming
 
-//#region 🔒️TickLatch
-const TICK_LATCH_FIXTURE_JSON: &str = include_str!("../../../../../🧫️fixtures/🔒️tick-latch.json");
-
-#[derive(serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct TickLatchFixture {
-    format: String,
-    version: u8,
-    window_kinds: std::collections::BTreeMap<String, String>,
-    rows: Vec<TickLatchRow>,
-}
-
-#[derive(serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct TickLatchRow {
-    id: String,
-    surface: String,
-    attached: Vec<TickLatchWindow>,
-    sequence: Vec<TickLatchEvent>,
-    armed: Vec<Vec<String>>,
-}
-
-#[derive(serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct TickLatchWindow {
-    id: String,
-    kind: String,
-}
-
-#[derive(serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct TickLatchEvent {
-    event: String,
-    #[serde(default)]
-    window: Option<String>,
-    #[serde(default)]
-    parks: usize,
-    #[serde(default)]
-    more: bool,
-    #[serde(default)]
-    ok: bool,
-}
-
-fn tick_latch_fixture() -> TickLatchFixture {
-    let fixture: TickLatchFixture = serde_json::from_str(TICK_LATCH_FIXTURE_JSON).expect("tick latch fixture");
-    assert_eq!(fixture.format, "semio.generation3d.tick-latch");
-    assert_eq!(fixture.version, 1);
-    for (name, declared) in [
-        ("preview", crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW),
-        ("generatePreview", crate::editor::generation3d::modes::generate::windows::preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW),
-        ("viewPreview", crate::viewer::generation3d::modes::view::windows::preview::WINDOW_KIND_ID),
-    ] {
-        assert_eq!(fixture.window_kinds.get(name).map(String::as_str), Some(declared), "the fixture's {name} window kind must be the id the surface actually registers");
-    }
-    fixture
-}
-
-/// ⚖️ LAW: **at most ONE pending `flowEvalTick` per (app instance, preview window)**, replayed row by
-/// row against the RETAINED `FlowEvalSession`'s own latch — the single gate every arming source goes
-/// through (the host refresh poll, `setContributions`, `setActiveExample`, every view command, and
-/// the chain's own continuations).
-///
-/// 🪟️ The latch is per WINDOW, not per session: two preview windows on one instance each own their
-/// retained evaluation publication, and generate-mode evaluates a patched fixture of its own.
-///
-/// 🧪️ The fixture is the LAW, in any language — `contract.ts` replays the identical rows against an
-/// independent TypeScript implementation of the same state machine and must answer the same `armed`
-/// lists (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-#[test]
-fn every_arming_source_passes_through_one_latch_per_preview_window() {
-    let fixture = tick_latch_fixture();
-    assert!(fixture.rows.iter().any(|row| row.surface == "viewer"), "the shared chain's law must cover BOTH surfaces");
-    for row in &fixture.rows {
-        assert_eq!(row.sequence.len(), row.armed.len(), "{}: every event owes exactly one armed answer", row.id);
-        let mut session = semio_framework_os_flow::FlowEvalSession::new();
-        let attached: Vec<&str> = row.attached.iter().map(|window| window.id.as_str()).collect();
-        let mut observed: Vec<Vec<String>> = Vec::new();
-        for event in &row.sequence {
-            observed.push(replay_tick_latch_event(&mut session, &attached, event, &row.id));
-        }
-        assert_eq!(observed, row.armed, "tick-latch row {}", row.id);
-        for window in &attached {
-            assert!(session.window_extensions_in_flight(window) <= 1 || row.sequence.iter().any(|event| event.parks > 1), "{}: in-flight bookkeeping leaked on {window}", row.id);
-        }
-        println!("[STATS] tick-latch {}: surface={} armed={:?}", row.id, row.surface, observed);
-        crate::editor::generation3d::unit_tests::context::retire_flow_eval_session(session);
-    }
-}
-
-/// 🔁️ One fixture event against the real latch API — the ONE place the declared state machine is
-/// bound to `FlowEvalSession`, so the law reads as data and the binding is auditable in one glance.
-fn replay_tick_latch_event(session: &mut semio_framework_os_flow::FlowEvalSession, attached: &[&str], event: &TickLatchEvent, row_id: &str) -> Vec<String> {
-    match event.event.as_str() {
-        "refresh" => {
-            session.retain_window_tick_latches(attached);
-            attached.iter().filter(|window| session.arm_owed_window_tick(window)).map(|window| (*window).to_string()).collect()
-        }
-        "gesture" => attached.iter().filter(|window| session.arm_window_tick(window)).map(|window| (*window).to_string()).collect(),
-        "tick" => {
-            let window = event.window.as_deref().unwrap_or_else(|| panic!("{row_id}: a tick event names its window"));
-            session.begin_window_tick(window);
-            session.note_window_tick_outcome(window, event.more);
-            if event.parks > 0 {
-                session.note_window_extensions_in_flight(window, event.parks);
-                Vec::new()
-            } else if event.more && session.arm_window_tick(window) {
-                vec![window.to_string()]
-            } else {
-                Vec::new()
-            }
-        }
-        "resolve" => {
-            let window = event.window.as_deref().unwrap_or_else(|| panic!("{row_id}: a resolve event names its window"));
-            if !event.ok {
-                session.abandon_window_tick(window);
-            }
-            let discharged = session.settle_window_extension(window);
-            let armed = event.ok && event.more && session.arm_window_tick(window);
-            if discharged || armed {
-                vec![window.to_string()]
-            } else {
-                Vec::new()
-            }
-        }
-        "invalidate" => {
-            session.clear_window_tick_latches();
-            Vec::new()
-        }
-        "detach" => {
-            let window = event.window.as_deref().unwrap_or_else(|| panic!("{row_id}: a detach event names its window"));
-            let roster: Vec<&str> = attached.iter().copied().filter(|candidate| *candidate != window).collect();
-            session.retain_window_tick_latches(&roster);
-            Vec::new()
-        }
-        other => panic!("{row_id}: unknown tick-latch event {other}"),
-    }
-}
-
-/// ⚖️ LAW: the REAL editor, through the REAL poll. Two `refreshUi` passes in a row leave exactly ONE
-/// pending `flowEvalTick` per attached preview window, and a third adds none — the defect this lane
-/// closes was the poll running on a THROWAWAY `FlowEvalSession` whose latch was always clear, so
-/// every host refresh stacked another chain on the running one (298 invocations / 111 settles in 80 s
-/// of live console, each extension answer waiting ~16 s behind the queue).
+//#region 🔒️RunStart
+/// ⚖️ LAW: the REAL editor, through the REAL poll. A gesture carries exactly ONE `previewEval` run start,
+/// no refresh over the owed preview asks for a second while that request stands, and a settled run owes
+/// nothing — the defect the per-window latch closed was a poll stacking another evaluation chain on the
+/// running one at every host refresh (298 invocations / 111 settles in 80 s of live console).
 #[semio_framework_async_macros::async_test]
-async fn a_second_refresh_arms_no_second_tick_for_the_same_preview_window() {
+async fn a_second_refresh_starts_no_second_run() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let mut app = crate::editor::generation3d::unit_tests::context::app_with_registry().await;
     let (flow_view, preview_view) = crate::editor::generation3d::unit_tests::context::shell_views("procedural-latch-main", "procedural-latch-preview");
-    let armed_ticks = |effects: &[Effect]| effects.iter().filter(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "flowEvalTick")).count();
-
-    // 1️⃣ The gesture owes the preview window exactly one chain.
-    let receipt = dispatch_with_view(&mut app, Generation3dCommand::SetActiveExample(crate::editor::generation3d::commands::set_active_example::SetActiveExample { example_id: crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_RECT_EXTRUDE.into() }), flow_view.clone()).await.expect("example");
-    let armed_by_gesture = armed_ticks(&receipt.effects);
-    assert_eq!(armed_by_gesture, 1, "the example switch owes one tick per attached preview window");
-
-    // 2️⃣ Three host refreshes on top of that pending tick add NOTHING.
-    let mut armed_per_refresh = Vec::new();
+    let switched = dispatch_with_view(&mut app, Generation3dCommand::SetActiveExample(crate::editor::generation3d::commands::set_active_example::SetActiveExample { example_id: crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_RECT_EXTRUDE.into() }), flow_view.clone()).await.expect("example");
+    let first = crate::editor::generation3d::unit_tests::context::run_actions(&switched.effects);
+    assert_eq!(first, vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()], "the gesture carries one run start");
     for _ in 0..3 {
-        armed_per_refresh.push(armed_ticks(&semio_framework_plugin::PluginApp::pending_effects(&mut *app, Some(&preview_view)).await));
+        let polled = crate::editor::generation3d::unit_tests::context::owed_run_actions(&mut app, &preview_view).await;
+        assert!(polled.is_empty(), "a refresh must not ask again while the gesture's start stands, got {polled:?}");
     }
-    assert_eq!(armed_per_refresh, vec![0, 0, 0], "the poll must never stack a chain on a window that already owes a tick, got {armed_per_refresh:?}");
-
-    // 3️⃣ Once the chain converges the poll still arms nothing — idle turns cost no evaluation.
-    let ticks = crate::editor::generation3d::unit_tests::context::drain_armed_flow_eval_ticks_from(&mut app, &flow_view, &receipt.effects).await;
-    let settled = armed_ticks(&semio_framework_plugin::PluginApp::pending_effects(&mut *app, Some(&preview_view)).await);
-    assert_eq!(settled, 0, "a settled evaluation owes no continuation");
-    println!("[STATS] latch: gesture={armed_by_gesture} refreshes={armed_per_refresh:?} ticks={ticks} settled={settled}");
+    let receipt = crate::editor::generation3d::unit_tests::context::drive_preview_run(&mut app, &flow_view, &switched.effects).await;
+    let mut owed_per_refresh = Vec::new();
+    for _ in 0..3 {
+        owed_per_refresh.push(crate::editor::generation3d::unit_tests::context::owed_run_actions(&mut app, &preview_view).await);
+    }
+    assert!(owed_per_refresh.iter().all(Vec::is_empty), "a settled run owes nothing to any later refresh, got {owed_per_refresh:?}");
+    assert_eq!(receipt.run_actions.iter().filter(|action| *action == semio_framework_plugin::TOOL_RUN_START_ACTION_ID).count(), 1, "one run start in the whole drive: {receipt:?}");
+    assert_eq!(receipt.state.as_deref(), Some("finalized"));
+    println!("[STATS] run start: first={first:?} hops={} answered={} refreshes={owed_per_refresh:?}", receipt.hops, receipt.answered);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
-//#endregion 🔒️TickLatch
+//#endregion 🔒️RunStart

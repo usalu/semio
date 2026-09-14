@@ -1,7 +1,6 @@
 //! 🧩️ Puzzle 5d artifact — the `puzzle.5d` document schema: the `Puzzle5dSnapshot` (schema/domain/
 //! label/meta/kindCatalogs/kindCompatibility/parts/fasteners), its unified 2d+3d part/grip/fastener
-//! records, the `Puzzle5dScale` scalar-or-triple pose scale, the `Puzzle5dError` that delegates to
-//! the 3d artifact's own precompute-session error, and the `artifact_kind()` spec the play app's
+//! records, the `Puzzle5dScale` scalar-or-triple pose scale, and the `artifact_kind()` spec the play app's
 //! manifest binds. Sibling nodes: `🔺️diff`, `🔧️op`, `🗣️dsl`, `🎒️pack`, `📡️spr`. No `⚙️engine` node —
 //! per ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, an artifact is a `🧬️schema` +
 //! `🚪️io` system only; behaviour lives in the sibling editor module, `crate::editor::puzzle5d`.
@@ -21,36 +20,6 @@ pub mod retained_command;
 fn retained_command_test_catalog() -> (&'static str, &'static str, &'static [&'static str], &'static str) {
     ("puzzle5d", "puzzle.5d", editor::puzzle5d::PUZZLE5D_RETAINED_TOOL_IDS, include_str!("🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🗄️retained-jobs/🔣️.json"))
 }
-
-//#region ⚠️ Errors
-/// 🧯️ Puzzle 5d precompute session errors — delegates entirely to `puzzle_3d`'s own precompute-session error.
-#[derive(Debug)]
-pub enum Puzzle5dError {
-    Puzzle3d(semio_s_artifact_puzzle_3d::Puzzle3dError),
-}
-
-impl std::fmt::Display for Puzzle5dError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Puzzle3d(error) => write!(formatter, "{error}"),
-        }
-    }
-}
-
-impl std::error::Error for Puzzle5dError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Self::Puzzle3d(error) => std::error::Error::source(error),
-        }
-    }
-}
-
-impl From<semio_s_artifact_puzzle_3d::Puzzle3dError> for Puzzle5dError {
-    fn from(error: semio_s_artifact_puzzle_3d::Puzzle3dError) -> Self {
-        Self::Puzzle3d(error)
-    }
-}
-//#endregion ⚠️ Errors
 
 pub const PUZZLE_5D_SCHEMA: &str = "puzzle.5d";
 
@@ -1941,6 +1910,12 @@ pub mod editor {
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧠️precompute/🦀️.rs"]
             mod component;
             pub use component::*;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧠️precompute/🪣️fill/🦀️.rs"]
+            pub mod fill;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧠️precompute/📐️geometry/🦀️.rs"]
+            pub mod geometry;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧠️precompute/🖌️brush/🦀️.rs"]
+            pub mod brush;
         }
 
         #[path = "."]
@@ -1959,6 +1934,8 @@ pub mod editor {
             pub mod create_fastener;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔁️cycle-brush-candidate/🦀️.rs"]
             pub mod cycle_brush_candidate;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎣️target-brush-suggestions/🦀️.rs"]
+            pub mod target_brush_suggestions;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💔️delete-fastener/🦀️.rs"]
             pub mod delete_fastener;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️delete-selection/🦀️.rs"]
@@ -2003,8 +1980,6 @@ pub mod editor {
             pub mod set_camera_2d;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎦️set-camera-3d/🦀️.rs"]
             pub mod set_camera_3d;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🛑️cancel-fill-build/🦀️.rs"]
-            pub mod cancel_fill_build;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️set-fill-count/🦀️.rs"]
             pub mod set_fill_count;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️set-fixture-json/🦀️.rs"]

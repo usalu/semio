@@ -430,7 +430,7 @@ fn a_pose_edit_keeps_the_brush_candidates_of_every_object_it_did_not_touch() {
     let mut session = Puzzle3dPrecomputeSession::new();
     sync_precompute_session(&mut session, &large);
     for _ in 0..2_048 {
-        session.precompute_step_lane(crate::standards::v1::subsets::any::schema::PrecomputeLane::Brush, 8);
+        session.precompute_step(8);
     }
     let warmed = session.brush_candidate_cache_len();
     assert!(warmed > 0, "the brush lane must resolve at least one candidate before the law can measure what a sync keeps");

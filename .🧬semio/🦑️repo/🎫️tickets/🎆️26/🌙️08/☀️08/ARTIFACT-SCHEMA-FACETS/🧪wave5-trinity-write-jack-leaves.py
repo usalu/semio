@@ -8,4 +8,4 @@ DIFF = JACK / "🔺️diff" / "🧬️schema"
 ART.mkdir(parents=True, exist_ok=True)
 DIFF.mkdir(parents=True, exist_ok=True)
 
-art_rs = Path("/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/�<|control37|>08/☀️08/ARTIFACT-SCHEMA-FACETS")
+art_rs = Path(__file__).resolve().parent

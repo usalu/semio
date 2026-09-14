@@ -39,6 +39,7 @@ default = ["plugin-entry"]
 plugin-entry = []
 
 [dependencies]
+semio-framework-tool-run = { workspace = true }
 semio-s-artifact-trinity-jack = { workspace = true, features = ["component-app-assembly"] }
 semio-s-artifact-trinity-rewriting = { workspace = true, features = ["component-app-assembly"] }
 semio-framework-dispatch-macros = { workspace = true }

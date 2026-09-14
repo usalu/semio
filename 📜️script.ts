@@ -3595,22 +3595,13 @@ function toolJobSegmentedTerminalDrainExact(source: string): boolean {
 }
 
 function toolJobPuzzleReservedRoutesExact(source: string, host: string): boolean {
-  const declarations = [...source.matchAll(/puzzle5d_reserved_factory!\(\s*([A-Za-z0-9_]+),\s*"([^"]+)",\s*"([^"]+)"\s*\);/g)].map((match) => ({ factory: match[1]!, id: match[2]!, schema: match[3]! }));
-  const ids = new Set(declarations.map((declaration) => declaration.id));
-  if (declarations.length !== TOOL_JOB_PLUGIN_RESERVED_IDS.length || ids.size !== TOOL_JOB_PLUGIN_RESERVED_IDS.length || TOOL_JOB_PLUGIN_RESERVED_IDS.some((id) => !ids.has(id))) return false;
   const implStart = source.indexOf("impl ArtifactEditor for Puzzle5dPlayApp");
   const implOpen = implStart < 0 ? -1 : source.indexOf("{", implStart);
   const implementation = implOpen < 0 ? undefined : toolJobRustBlock(source, implOpen);
   if (!implementation) return false;
-  const exactFactories = declarations.every(
-    ({ factory, id, schema }) =>
-      schema === `puzzle.5d.reserved.${id}.v1` &&
-      implementation.body.includes(`registry.register(${factory}::new(&controller_id))`) &&
-      implementation.body.includes(`"${id}" =>`) &&
-      source.includes(`impl ArtifactOwnedToolJobFactory for $factory`) &&
-      source.includes("type Owner = EditorApp<Puzzle5dPlayApp>") &&
-      source.includes("const DOCUMENT_SCHEMA: &'static str = PUZZLE5D_SCHEMA"),
-  );
+  // 🧳️ The framework registers every reserved route's factory for every app and builds the job through
+  // `build_reserved_tool_job`; an app-owned factory under the same key refuses app construction.
+  const exactFactories = !/puzzle5d_reserved_factory!|Puzzle5d(?:Copy|Cut|Paste|Import)JobFactory/.test(source) && TOOL_JOB_PLUGIN_RESERVED_IDS.every((id) => implementation.body.includes(`"${id}" =>`));
   const routeJobs = ["Puzzle5dCopyJob", "Puzzle5dCutJob", "Puzzle5dPasteJob", "Puzzle5dImportJob"];
   const routeBlocks = routeJobs.map((job) => {
     const start = source.indexOf(`impl InteractiveJob for ${job}`);
@@ -3642,7 +3633,6 @@ function toolJobPuzzleReservedRoutesExact(source: string, host: string): boolean
     implementation.body.includes("Err((fault, rejected))") &&
     implementation.body.includes("drop(rejected)");
   const retainedProtocol =
-    source.includes("keys: [ToolFactoryKey; 1]") &&
     source.includes("struct Puzzle5dCommitEnvelope") &&
     source.includes("RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput)") &&
     source.includes("writer.write_slice_page(cx, raw, &mut self.cursor)") &&
@@ -7805,6 +7795,30 @@ export class VerifyScript extends Script {
       }
       return;
     }
+    if (segments[0] === "file-open-import") {
+      const { testFileOpenImportContract } = await import("./🧰️framework/🔨️modules/🎠️kernel/🧪️tests/📤️file-open-import/🟦️.ts");
+      testFileOpenImportContract();
+      // 🧬️ `tsc --strict` over the PAGE half alone: it imports nothing, which is the whole point — it is
+      // the one module allowed to name `document` on this target, and it must type-check against the DOM
+      // lib without dragging the renderer graph (and its unrelated diagnostics) into this lane's verdict.
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--lib", "ESNext,DOM", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚪️host-io")}/🟦️.ts`], { cwd: this.root });
+      if (segments[1] === "native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework", "--lib", "file_open_import", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-renderer-wgpu", "--lib", "file_open_import", "--", "--nocapture"], this.root);
+      }
+      return;
+    }
+    if (segments[0] === "ui-dirty-scope") {
+      const { testUiDirtyScopeContract } = await import("./🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🐢️ui-dirty-scope/🟦️.ts");
+      testUiDirtyScopeContract();
+      if (segments[1] === "native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework", "--lib", "ui_dirty_scope", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-renderer-wgpu", "--lib", "ui_dirty_scope", "--", "--nocapture"], this.root);
+      }
+      return;
+    }
     if (segments[0] === "spawned-job-drive") {
       const { testSpawnedJobDriveContract } = await import("./🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧵️spawned-job-drive/🟦️.ts");
       await testSpawnedJobDriveContract();
@@ -9726,33 +9740,34 @@ const INTERACTIVITY_TOOL_RUN_ANY = "🏅️standards/🔖️1/🪆️subsets/✳
 /**
  * ⏯️ Every `algorithmic-mutating` tool of the phase-4 inventory with its plugin path; each must declare a
  * `ToolRunDefinition` (`📋️tool-run-contract.md` §2.4). Read-only runs (layout/shooting exports, architect
- * report/validation/search, generation3d preview eval, puzzle 3d brush suggestions), the param-only draw trace and
- * the inner `WfcJob` capability (covered by the assembly row) are deliberately absent. A converting lane edits its row.
+ * report/validation/search, puzzle 3d brush suggestions), the param-only draw trace, generation3d `importDocument` (a
+ * host-driven chunk transfer closed by one bounded parse that already publishes one staged edit) and the inner
+ * `WfcJob` capability (covered by the assembly row) are deliberately absent; the read-only generation3d and generation2d
+ * `previewEval` runs are listed because they converted. A converting lane edits its row.
  */
 export const INTERACTIVITY_TOOL_RUN_REQUIREMENTS: readonly InteractivityToolRunRequirement[] = [
   { toolId: "fill", root: `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎭️modes/✏️edit/🛠️tools/🪣️fill", "✏️editor/🎮️commands/🪣️fill-build-tick", "✏️editor/🎮️commands/🧮️set-fill-count", "✏️editor/⏳️precompute/🪣️fill"], actions: ["setFillCount", "fillBuildTick"], verbs: ["fillBuildTick", "fill_build_tick", "cancelFillBuild", "cancel_fill_build", "take_locked_into_fixture", "FILL_LOCK_PLACEMENTS_PER_TICK", "enqueue_fill_job", "fill_job_identity"], measures: ["cancel_measure", "progress_measure"], lane: "W1-B", inventory: "§1.1" },
   { toolId: "importFixture", root: `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/📥️import-fixture"], actions: ["importFixture"], verbs: [], measures: [], lane: "unassigned", inventory: "§1.1" },
-  { toolId: "fill", root: `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎭️modes/✏️edit/🛠️tools/🪣️fill", "✏️editor/🎮️commands/🏁️fill-session-begin", "✏️editor/🎮️commands/👣️fill-session-step", "✏️editor/🎮️commands/🧹️fill-session-clear", "✏️editor/🎮️commands/🧮️set-fill-count"], actions: ["setFillCount", "brushFillSessionBegin", "brushFillSessionStep"], verbs: ["brushFillSessionBegin", "brushFillSessionStep", "brushFillSessionCancel", "brushFillSessionDiscard", "brushFillSessionAdopt", "fill_session_begin", "fill_session_step", "fill_session_clear", "Puzzle2dFillLifecycle"], measures: ["cancel_measure", "progress_measure"], lane: "W2-A", inventory: "§1.2" },
+  { toolId: "fill", root: `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎭️modes/✏️edit/🛠️tools/🪣️fill", "✏️editor/🎮️commands/🧮️set-fill-count", "✏️editor/⏳️precompute/🪣️fill"], actions: ["setFillCount"], verbs: ["brushFillSessionBegin", "brushFillSessionStep", "brushFillSessionCancel", "brushFillSessionDiscard", "brushFillSessionAdopt", "fill_session_begin", "fill_session_step", "fill_session_clear", "Puzzle2dFillLifecycle"], measures: ["cancel_measure", "progress_measure"], lane: "W2-A", inventory: "§1.2" },
   { toolId: "fill", root: `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎭️modes/✏️edit/☑️options/🪣️fill", "✏️editor/🎭️modes/✏️edit/🪟️windows/◻️2d/🪛️utilities/🪣️fill", "✏️editor/🎮️commands/🧮️set-fill-count", "✏️editor/🎮️commands/🛑️cancel-fill-build", "✏️editor/🧠️precompute"], actions: ["setFillCount"], verbs: ["cancelFillBuild", "cancel_fill_build"], measures: ["fill_cancel_measure", "fill_progress_measure"], lane: "W2-B", inventory: "§1.3" },
-  { toolId: "importDocument", root: `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/📥️import-document"], actions: ["importDocument"], verbs: [], measures: [], lane: "unassigned", inventory: "§2.1" },
+  { toolId: "previewEval", root: `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["🧵️preview-eval/⏯️tool-run"], actions: [], verbs: ["cancelPreviewEval", "cancel_preview_eval", "CancelPreviewEval", "PREVIEW_CANCEL_ACTION_ID", "rearm_attached_previews"], measures: [], lane: "W3-2 procedural preview eval", inventory: "§2.1" },
   { toolId: "reorganize", root: `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🗺️reorganize"], actions: ["reorganize"], verbs: [], measures: [], lane: "unassigned", inventory: "§2.1" },
+  { toolId: "previewEval", root: `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["🧵️preview-eval/⏯️tool-run"], actions: [], verbs: ["rearm", "Generation2dPreviewCommandWork", "generation2d-preview-evaluation"], measures: [], lane: "W3-2b generation2d preview eval", inventory: "§2.2" },
   { toolId: "reorganize", root: `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🗺️reorganize"], actions: ["reorganize"], verbs: [], measures: [], lane: "unassigned", inventory: "§2.2" },
   { toolId: "s.assembly.solve", root: `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["🧬️schema/💡️inferences"], actions: [], verbs: [], measures: [], lane: "W3 (3) assembly", inventory: "§2.3" },
   { toolId: "energySimulation", root: `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["🧵️simulation-session", "✏️editor/🎭️modes/✏️edit/🪟️windows/⚡️simulation"], actions: [], verbs: ["start-energy-simulation", "cancel-energy-simulation", "retry-energy-simulation", "discard-energy-simulation", "adopt-energy-simulation", "EnergySimulationStatus"], measures: [], lane: "W3 (1) energy", inventory: "§3.1" },
-  { toolId: "reconstruction", root: `✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🏗️run-reconstruction", "✏️editor/🎮️commands/⏩️advance-reconstruction", "✏️editor/🎮️commands/🛑️cancel-reconstruction", "✏️editor/🎮️commands/🔁️retry-stage"], actions: ["runReconstruction", "advanceReconstruction"], verbs: ["advanceReconstruction", "cancelReconstruction", "retryStage"], measures: [], lane: "W3 (4) remodel", inventory: "§3.3" },
+  { toolId: "reconstruction", root: `✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🧵️reconstruction-session", "✏️editor/🎭️modes/🧊️model/🛠️tools/🏗️reconstruction", "✏️editor/📌️panels/🗿️artifact"], actions: ["runReconstruction", "advanceReconstruction", "retryStage", "runStage"], verbs: ["runReconstruction", "advanceReconstruction", "cancelReconstruction", "retryStage", "runStage"], measures: [], lane: "W3 (4) remodel", inventory: "§3.3" },
   { toolId: "decimate", root: `✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🔷️mesh-edit", "🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🦀️.rs"], actions: ["decimate"], verbs: [], measures: [], lane: "W3 (15) lowpoly", inventory: "§3.4" },
   { toolId: "formatDocument", root: `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🧹️format-document"], actions: ["formatDocument"], verbs: [], measures: [], lane: "unassigned", inventory: "§4.1" },
   { toolId: "reorganize", root: `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🗺️reorganize"], actions: ["reorganize"], verbs: [], measures: [], lane: "W3-F layout-run", inventory: "§4.3" },
   { toolId: "reorganize", root: `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🔄️layout"], actions: ["reorganize"], verbs: [], measures: [], lane: "W3-F layout-run", inventory: "§4.7" },
   { toolId: "runAnalysis", root: `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🔬️analysis"], actions: ["runAnalysis"], verbs: [], measures: [], lane: "W3 (12) architect", inventory: "§4.8" },
   { toolId: "importProgram", root: `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/📤️exchange"], actions: ["importProgram"], verbs: [], measures: [], lane: "W3 (12) architect", inventory: "§4.8" },
-  { toolId: "forceLayout", root: `✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/⚛️force-layout"], actions: ["forceLayout"], verbs: [], measures: [], lane: "W3-F layout-run", inventory: "§5.1" },
-  { toolId: "reorganize", root: `✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🗂️reorganize"], actions: ["reorganize"], verbs: [], measures: [], lane: "W3-F layout-run", inventory: "§5.1" },
+  { toolId: "reorganize", root: `✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎭️modes/✏️edit/🛠️tools/🗂️reorganize"], actions: ["reorganize", "forceLayout"], verbs: ["forceLayout", "force-layout"], measures: [], lane: "W3-F1 layout-run consumers", inventory: "§5.1" },
   { toolId: "importCadFile", root: `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/📥️io"], actions: ["importCadFile"], verbs: [], measures: [], lane: "unassigned", inventory: "§5.4" },
   { toolId: "run", root: `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🏃️run"], actions: ["run"], verbs: [], measures: [], lane: "W3 (10) imperative", inventory: "§5.7" },
-  { toolId: "reorganize", root: `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: [], actions: ["reorganize"], verbs: [], measures: [], lane: "W3-F layout-run", inventory: "§5.8" },
-  { toolId: "reorganize", root: `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🧭️reorganize"], actions: ["reorganize"], verbs: [], measures: [], lane: "W3-F layout-run", inventory: "§5.8" },
-  { toolId: "reorganize", root: `✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🗂️reorganize"], actions: ["reorganize"], verbs: [], measures: [], lane: "W3-F layout-run", inventory: "§5.9" },
+  { toolId: "reorganize", root: `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎭️modes/✏️edit/🛠️tools/🗂️reorganize"], actions: ["reorganize"], verbs: [], measures: [], lane: "W3-F1 layout-run consumers", inventory: "§5.8" },
+  { toolId: "reorganize", root: `✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎭️modes/✏️edit/🛠️tools/🗂️reorganize"], actions: ["reorganize"], verbs: [], measures: [], lane: "W3-F1 layout-run consumers", inventory: "§5.9" },
   { toolId: "combineBoolean", root: `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🔀️combine-boolean"], actions: ["combineBoolean"], verbs: [], measures: [], lane: "unassigned", inventory: "§6.1" },
   { toolId: "inkApplyEvents", root: `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🖊️ink-apply-events"], actions: ["inkApplyEvents"], verbs: [], measures: [], lane: "W3 (14) note", inventory: "§6.2" },
   { toolId: "exportStudioPack", root: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space", scope: ["🎮️commands/📦️export-studio-pack"], actions: ["exportStudioPack"], verbs: [], measures: [], lane: "W3 (13) space", inventory: "§6.4" },

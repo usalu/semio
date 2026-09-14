@@ -10,7 +10,7 @@ use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::editor::remodeling::decode_still_image;
 use crate::editor::remodeling::examples::example_text;
 use crate::mutations::{
-    create_asset, create_camera_calibration, create_gcp, create_stream, delete_camera_calibration, delete_gcp, delete_stream, replace_job, update_dense_params, update_feature_params, update_geo_params, update_ingest_params, update_match_params,
+    create_asset, create_camera_calibration, create_gcp, create_stream, delete_camera_calibration, delete_gcp, delete_stream, update_dense_params, update_feature_params, update_geo_params, update_ingest_params, update_match_params,
     update_mesh_params, update_motion_params, update_sfm_params,
 };
 use crate::op::RemodelingMutation;
@@ -64,7 +64,7 @@ fn example_media_operations(example_id: &str, current: &RemodelingSnapshot) -> V
 }
 
 /// 🔁️ The field-granular replace set: every declared collection is emptied and refilled, and all eight
-/// parameter groups plus the job record are overwritten. `results` and `assets` are deliberately NOT
+/// parameter groups are overwritten. `results` and `assets` are deliberately NOT
 /// transplanted — results are engine-derived (a fresh run rebuilds them) and assets are media bytes an
 /// example binds through `importFramePayload`, not document state a DSL carries.
 pub fn replace_document_operations(current: &RemodelingSnapshot, next: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
@@ -95,7 +95,6 @@ pub fn replace_document_operations(current: &RemodelingSnapshot, next: &Remodeli
     mutations.push(update_mesh_params(next.params.mesh.clone()));
     mutations.push(update_motion_params(next.params.motion.clone()));
     mutations.push(update_geo_params(next.params.geo.clone()));
-    mutations.push(replace_job(next.job.clone()));
     mutations
 }
 //#endregion 🔖️Handler

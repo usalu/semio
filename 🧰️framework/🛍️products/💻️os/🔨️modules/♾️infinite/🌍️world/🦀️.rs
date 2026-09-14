@@ -1313,6 +1313,18 @@ pub struct World3dState {
     #[cfg(test)]
     drag_last_position: Option<[f32; 3]>,
     selected_ids: Vec<String>,
+    /// 📇️ The action ids the WINDOW KIND hosting this surface declares — the app manifest's
+    /// `window_kind_action_refs`, republished by the shell on every engine-surface sync
+    /// ([`set_world3d_declared_actions`]). A surface may only mint a verb that appears here.
+    ///
+    /// 🩸️ Without it the gumball was an unconditional affordance of every World3d surface, so the
+    /// procedural VIEWER — whose `procedural-view-preview` kind declares only `exportDocument` and
+    /// the camera verbs — offered a translate gizmo and published `translateSelection` into a window
+    /// that refuses it, measured verbatim on 6118 as `handle_action promise failed: window kind
+    /// procedural-view-preview does not own action translateSelection`
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-end-to-end-verification-2026-09-14.md` §5.2).
+    /// Empty means "no window kind has declared anything for this surface yet", which offers nothing.
+    declared_action_ids: Vec<String>,
     transform_mode: String,
     #[cfg(test)]
     gumball_handle: Option<GumballHandle>,
@@ -1559,6 +1571,7 @@ impl World3dState {
             #[cfg(test)]
             drag_last_position: None,
             selected_ids: Vec::new(),
+            declared_action_ids: Vec::new(),
             transform_mode: "translate".into(),
             #[cfg(test)]
             gumball_handle: None,
@@ -1674,6 +1687,30 @@ impl World3dState {
     pub fn mesh_lease(&self, mesh_key: &str) -> Option<Mesh3dLease> {
         self.meshes.get(mesh_key).copied()
     }
+}
+
+/// 📇️ Republishes the action ids the window kind hosting this surface declares. Idempotent: an
+/// unchanged declaration rewrites nothing, so a host may call it on every frame.
+///
+/// 🔗️ The one source is the app manifest (`window_kind_action_refs` → `WindowKindDefinition.actions`);
+/// see [`World3dState::declared_action_ids`] for what a lost declaration cost on 6118.
+pub fn set_world3d_declared_actions(state: &mut World3dState, action_ids: &[String]) {
+    if state.declared_action_ids.len() == action_ids.len() && state.declared_action_ids.iter().zip(action_ids).all(|(held, declared)| held == declared) {
+        return;
+    }
+    state.declared_action_ids.clear();
+    state.declared_action_ids.extend_from_slice(action_ids);
+}
+
+/// 📇️ Whether this surface's window kind declares `action_id`, i.e. whether the surface may mint it.
+pub fn world3d_declares_action(state: &World3dState, action_id: &str) -> bool {
+    state.declared_action_ids.iter().any(|declared| declared == action_id)
+}
+
+/// 🎚️ Whether this surface may offer a transform gumball at all — true when its window kind declares
+/// at least one of the three verbs a gumball handle commits as.
+pub fn world3d_offers_transform_gumball(state: &World3dState) -> bool {
+    [TRANSLATE_SELECTION_ACTION_ID, ROTATE_SELECTION_ACTION_ID, SCALE_SELECTION_ACTION_ID].iter().any(|action_id| world3d_declares_action(state, action_id))
 }
 
 #[cfg(not(test))]
@@ -4607,6 +4644,23 @@ struct WorldGumballUpdate {
     y: f32,
 }
 
+pub const TRANSLATE_SELECTION_ACTION_ID: &str = "translateSelection";
+pub const ROTATE_SELECTION_ACTION_ID: &str = "rotateSelection";
+pub const SCALE_SELECTION_ACTION_ID: &str = "scaleSelection";
+
+/// 🎚️ The verb one gumball handle commits as — the single handle→action mapping, read by the pick
+/// (which never offers a handle whose verb the window kind does not declare) and by the commit job
+/// that mints it.
+fn gumball_handle_action_id(handle: GumballHandle) -> &'static str {
+    if handle.is_translate() {
+        TRANSLATE_SELECTION_ACTION_ID
+    } else if handle.is_rotate() {
+        ROTATE_SELECTION_ACTION_ID
+    } else {
+        SCALE_SELECTION_ACTION_ID
+    }
+}
+
 impl WorldGumballPickCursor {
     fn new(state: &World3dState, generation: u64, x: f32, y: f32) -> Self {
         Self {
@@ -4718,6 +4772,10 @@ impl WorldGumballPickCursor {
             return WorldInteractionStep::Pending;
         };
         self.handle += 1;
+        if !world3d_declares_action(state, gumball_handle_action_id(handle)) {
+            context.consume_fuel(1);
+            return WorldInteractionStep::Pending;
+        }
         let pivot = self.pivot.expect("gumball pivot resolved");
         let pick_radius = self.extent * 0.08;
         let candidate = if handle.is_translate() && handle.axis_dir().is_some() {
@@ -5118,24 +5176,18 @@ impl WorldGumballCommitJob {
     }
 
     fn action_id(&self) -> &'static str {
-        if self.gesture.handle.is_translate() {
-            "translateSelection"
-        } else if self.gesture.handle.is_rotate() {
-            "rotateSelection"
-        } else {
-            "scaleSelection"
-        }
+        gumball_handle_action_id(self.gesture.handle)
     }
 
     fn string_bytes(&self, state: &World3dState) -> Result<usize, ui_wgpu::wgpu::BoundedActionFault> {
         let keys: &[&str] = if self.gesture.handle.is_translate() {
-            &["surfaceId", "mode", "ids", "dx", "dy", "dz"]
+            &["surfaceId", "windowId", "mode", "ids", "dx", "dy", "dz"]
         } else if self.gesture.handle.is_rotate() {
-            &["surfaceId", "mode", "ids", "ax", "ay", "az", "angle"]
+            &["surfaceId", "windowId", "mode", "ids", "ax", "ay", "az", "angle"]
         } else {
-            &["surfaceId", "mode", "ids", "sx", "sy", "sz"]
+            &["surfaceId", "windowId", "mode", "ids", "sx", "sy", "sz"]
         };
-        let mut bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&state.controller_id, self.action_id(), &state.surface_id, "mesh"])?;
+        let mut bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&state.controller_id, self.action_id(), &state.surface_id, &state.surface_id, "mesh"])?;
         for key in keys {
             bytes = bytes.checked_add(key.len()).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
         }
@@ -5185,9 +5237,9 @@ impl WorldGumballCommitJob {
             context.consume_fuel(1);
             return Ok(WorldInteractionStep::Pending);
         }
-        let selected_end = 4 + u16::from(self.gesture.selected_len);
-        let selected = if self.stage >= 4 && self.stage < selected_end {
-            let token = self.gesture.selected[usize::from(self.stage - 4)].expect("gumball selected token");
+        let selected_end = 5 + u16::from(self.gesture.selected_len);
+        let selected = if self.stage >= 5 && self.stage < selected_end {
+            let token = self.gesture.selected[usize::from(self.stage - 5)].expect("gumball selected token");
             Some(state.interaction_objects.resolve(token).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?.id)
         } else {
             None
@@ -5197,12 +5249,21 @@ impl WorldGumballCommitJob {
         match self.stage {
             0 => draft.builder().begin_object(None)?,
             1 => draft.builder().string(Some("surfaceId"), &state.surface_id)?,
-            2 => draft.builder().string(Some("mode"), "mesh")?,
-            3 => draft.builder().begin_array(Some("ids"))?,
-            stage if usize::from(stage - 4) < usize::from(self.gesture.selected_len) => {
+            // 🪟️ A transform verb is WINDOW-OWNED, exactly like `setCamera`: the app declares it on
+            // its preview window kinds only, and the shell resolves `ActionAddress::window_instance_id`
+            // from this argument before it falls back to the focused window
+            // (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`'s `dispatch_action`). A World3d surface is keyed BY its
+            // window instance, so its own id is that address. Without it a gumball drag in a
+            // multi-window mode was addressed to whatever had focus, measured verbatim on 6118 as
+            // `handle_action promise failed: window kind generation3d-generate-form does not own
+            // action translateSelection` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+            2 => draft.builder().string(Some("windowId"), &state.surface_id)?,
+            3 => draft.builder().string(Some("mode"), "mesh")?,
+            4 => draft.builder().begin_array(Some("ids"))?,
+            stage if usize::from(stage - 5) < usize::from(self.gesture.selected_len) => {
                 draft.builder().string(None, selected.expect("selected id resolved").as_str())?;
             }
-            stage if stage == 4 + u16::from(self.gesture.selected_len) => draft.builder().end_container()?,
+            stage if stage == 5 + u16::from(self.gesture.selected_len) => draft.builder().end_container()?,
             _ => {
                 if let Some((key, value)) = numeric {
                     draft.builder().number(Some(key), value)?;
@@ -5542,7 +5603,7 @@ impl WorldInteractionAuthority {
             context.consume_fuel(1);
             return WorldInteractionAuthorityStep::Pending;
         }
-        if intent.phase == WorldInteractionPhase::PointerButton && intent.button == 0 && intent.down && state.active_utility == "select" && !component_mode_active(state) && self.gumball.is_none() {
+        if intent.phase == WorldInteractionPhase::PointerButton && intent.button == 0 && intent.down && state.active_utility == "select" && !component_mode_active(state) && self.gumball.is_none() && world3d_offers_transform_gumball(state) {
             self.active = Some(WorldInteractionActive::GumballPick { cursor: WorldGumballPickCursor::new(state, generation, intent.x, intent.y), retirement: None });
             context.consume_fuel(1);
             return WorldInteractionAuthorityStep::Pending;
@@ -8995,6 +9056,7 @@ fn gumball_commit_action(state: &World3dState) -> Option<ActionDescriptor> {
             action: "translateSelection".into(),
             args: action_args(json!({
                 "surfaceId": state.surface_id,
+                "windowId": state.surface_id,
                 "mode": selection_mode_label(state),
                 "ids": ids,
                 "dx": delta.x as f64,
@@ -9010,6 +9072,7 @@ fn gumball_commit_action(state: &World3dState) -> Option<ActionDescriptor> {
             action: "rotateSelection".into(),
             args: action_args(json!({
                 "surfaceId": state.surface_id,
+                "windowId": state.surface_id,
                 "mode": selection_mode_label(state),
                 "ids": ids,
                 "ax": axis.x as f64,
@@ -9029,6 +9092,7 @@ fn gumball_commit_action(state: &World3dState) -> Option<ActionDescriptor> {
         if (scale - 1.0).abs() > 1e-6 {
             let mut args = json!({
                 "surfaceId": state.surface_id,
+                "windowId": state.surface_id,
                 "mode": selection_mode_label(state),
                 "ids": ids,
                 "sx": 1.0,
@@ -9797,6 +9861,13 @@ pub fn step_world3d_scene_bridge(state: &mut World3dState, context: &mut semio_f
                 }
             }
         }
+        World3dSceneBridgePhase::Pages if !world3d_scene_bridge_has_pages(state, &cursor) => {
+            state.scene_bridge_digest = Some(cursor.digest);
+            if cursor.camera_changed {
+                state.scene_camera_digest = Some(cursor.camera_digest);
+            }
+            World3dSceneBridgeStep::Complete
+        }
         World3dSceneBridgePhase::Pages => match publish_world3d_scene_bridge_snapshot(state, &cursor) {
             Ok(lease) => {
                 if let Some(previous) = state.scene_bridge_lease.replace(lease) {
@@ -9869,6 +9940,28 @@ fn step_world_placeholder_mesh_batch(state: &mut World3dState, budget: u32) {
 /// carrying both this draw's and the whole snapshot's credits) followed by that draw's `Instance`
 /// pages, then a `Camera` page when the window's camera measure itself changed. Every page is built
 /// and validated BEFORE the store is touched, so admission can only fail on a bug.
+/// 🌉️ Whether a staged build has anything a snapshot can carry: at least one published mesh with at
+/// least one instance, or a camera page. A snapshot is at least one page by construction
+/// (`world3d_snapshot_begin` refuses `page_count == 0`), so a build with neither publishes NOTHING —
+/// it is not a capacity fault.
+///
+/// 🩸️ It used to go straight to [`publish_world3d_scene_bridge_snapshot`], whose `pages.is_empty()`
+/// guard answers `World3dSnapshotFault::Capacity`, and the wgpu host quarantines the surface on any
+/// bridge fault. Every mesh update that momentarily published no DRAWABLE geometry therefore killed
+/// the preview for good: measured on 6118 after the third Form slider edit, where the guest's
+/// intermediate wire was `meshes=169b instances=267b` — mesh records the parse phase drops for
+/// carrying no triangles — against `3644b`/`4786b` for every settled sample, and the surface
+/// quarantined with `fault=Some(Capacity) state-meshes=3`
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-end-to-end-verification-2026-09-14.md` §5.3).
+/// The first build of a surface survived only by accident: its camera digest is always new, so it
+/// always had a camera page.
+fn world3d_scene_bridge_has_pages(state: &World3dState, cursor: &World3dSceneBridgeCursor) -> bool {
+    if cursor.camera_changed && cursor.camera.is_some() {
+        return true;
+    }
+    cursor.meshes.iter().any(|mesh| state.meshes.contains_key(&mesh.id) && cursor.instances.iter().any(|instance| instance.mesh_id == mesh.id))
+}
+
 fn publish_world3d_scene_bridge_snapshot(state: &mut World3dState, cursor: &World3dSceneBridgeCursor) -> Result<World3dSnapshotLease, World3dSnapshotFault> {
     let neutral = scene_bridge_neutral_color(state);
     state.instance_interaction_ids.clear();
@@ -10348,7 +10441,7 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
     if !state.meshes.contains_key(GUMBALL_PLANE_MESH) {
         begin_world_placeholder_mesh(state, GUMBALL_PLANE_MESH, WorldPlaceholderKind::Plane);
     }
-    if !state.selected_ids.is_empty() && state.active_utility == "select" {
+    if !state.selected_ids.is_empty() && state.active_utility == "select" && world3d_offers_transform_gumball(state) {
         append_gumball_geometry(&mut line_vertices, &mut translucent_draws, gpu, state, &camera, &state.meshes, &state.mesh_versions);
     }
     culled_draws.extend(extra_draws);
@@ -12346,3 +12439,15 @@ mod tests;
 #[cfg(test)]
 #[path = "🧪️tests/🖱️pointer-gestures/🦀️.rs"]
 mod pointer_gesture_tests;
+
+/// 📇️ Which verbs a surface may emit, read from
+/// `🌐️World3dHost/🧫️fixtures/📇️surface-verbs.json` — the oracle its TypeScript twin answers too.
+#[cfg(test)]
+#[path = "🧪️tests/📇️surface-verbs/🦀️.rs"]
+mod surface_verb_tests;
+
+/// 🌉️ A mesh update never quarantines the surface, over
+/// `🧫️fixtures/🌉️bridge-empty-build/🔣️.json` applied to the committed `🌉️scene-bridge` payload.
+#[cfg(test)]
+#[path = "🧪️tests/🌉️bridge-empty-build/🦀️.rs"]
+mod bridge_empty_build_tests;

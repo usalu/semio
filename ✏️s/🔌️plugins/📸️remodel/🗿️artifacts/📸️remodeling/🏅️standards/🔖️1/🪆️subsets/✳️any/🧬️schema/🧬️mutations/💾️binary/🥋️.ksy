@@ -5,7 +5,7 @@ meta:
 doc: |
   `RemodelingMutation::encode_op` (protocol::OpBinary) — the container-less operation frame:
   a format byte (`OP_BINARY_FORMAT = 1`), an LEB128 variant ordinal into
-  `<RemodelingMutation as dsl::DslVariants>::variants()` (0..=34, declaration order), then
+  `<RemodelingMutation as dsl::DslVariants>::variants()` (0..=35, declaration order), then
   `os_pack::encode_record_body` of that variant's payload against its own `RecordSpec`:
   a varint symbol count, that many length-prefixed UTF-8 symbols, then the record's fields as
   `field_count varint, field_count*(field_id varint, tagged value)` — entries sorted by ascending
@@ -40,15 +40,16 @@ doc: |
   23: update-mesh-params
   24: update-motion-params
   25: update-geo-params
-  26: replace-job
-  27: replace-sparse
-  28: replace-dense
-  29: replace-mesh-result
-  30: replace-trajectory
-  31: replace-tracks
-  32: replace-geo-products
-  33: replace-qc
-  34: commit-reconstruction
+  26: replace-sparse
+  27: replace-dense
+  28: replace-mesh-result
+  29: replace-trajectory
+  30: replace-tracks
+  31: replace-geo-products
+  32: replace-qc
+  33: append-content
+  34: remove-content
+  35: commit-reconstruction
 
   `decode_op` re-encodes and byte-compares, so this layout is canonicality-checked in Rust.
 seq:

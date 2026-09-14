@@ -4,6 +4,7 @@
 
 import { ICON_NAMES, ICONS } from "@semio-tech/assets";
 import { loadPluginModule, pluginHandleForBridge } from "../🐚️plugin-bridge/🟦️.ts";
+import { installWgpuPageHostIo } from "../🚪️host-io/🟦️.ts";
 
 export type FrameworkOsWgpuBootOptions = {
   readonly rootId?: string;
@@ -118,6 +119,10 @@ export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = 
   const rootId = options.rootId ?? "root";
   const root = document.getElementById(rootId);
   if (!root) throw new Error(`missing #${rootId}`);
+  // 🚪️ This variant mounts the shell on the PAGE, so it installs the file door directly rather than
+  // through the Worker bridge — one `semioWgpuHostIo` binding, two installs, so neither io journey can
+  // work on one variant and vanish on the other (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+  installWgpuPageHostIo();
 
   const canvas = document.createElement("canvas");
   canvas.style.display = "block";

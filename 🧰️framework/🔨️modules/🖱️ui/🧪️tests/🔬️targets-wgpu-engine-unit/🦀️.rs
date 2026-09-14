@@ -1345,7 +1345,7 @@ fn render_widget_tree_row_actions_register_hits_without_hover() {
     };
     let node = WidgetNode::<ActionDescriptor>::Tree { sections: vec![TreeSection { id: "s".into(), label: None, default_open: true, items: vec![item] }], selected_ids: vec![], highlighted_ids: vec![], selection_change: None };
     render_widget(&node, VIEWPORT, &mut h.ctx());
-    let action_hits = h.input.hit_targets.iter().filter(|t| t.control_id.as_deref() == Some("tree.action.i1.0")).count();
+    let action_hits = h.input.staged_hits().iter().filter(|t| t.control_id.as_deref() == Some("tree.action.i1.0")).count();
     assert_eq!(action_hits, 1, "row-placement actions must register a hit target even when the row is unhovered");
 }
 
@@ -1372,7 +1372,7 @@ fn render_widget_tree_menu_placement_skips_row_action_hits() {
     };
     let node = WidgetNode::<ActionDescriptor>::Tree { sections: vec![TreeSection { id: "s".into(), label: None, default_open: true, items: vec![item] }], selected_ids: vec![], highlighted_ids: vec![], selection_change: None };
     render_widget(&node, VIEWPORT, &mut h.ctx());
-    let action_hits = h.input.hit_targets.iter().filter(|t| t.control_id.as_deref() == Some("tree.action.i1.0")).count();
+    let action_hits = h.input.staged_hits().iter().filter(|t| t.control_id.as_deref() == Some("tree.action.i1.0")).count();
     assert_eq!(action_hits, 0, "menu-placement actions must not register row hit targets");
 }
 
@@ -1399,7 +1399,7 @@ fn render_widget_tree_marks_selected_and_highlighted_ids_via_ids_list() {
     };
     let node = WidgetNode::<ActionDescriptor>::Tree { sections: vec![TreeSection { id: "s".into(), label: None, default_open: true, items: vec![item] }], selected_ids: vec!["i1".into()], highlighted_ids: vec![], selection_change: None };
     render_widget(&node, VIEWPORT, &mut h.ctx());
-    let hit = h.input.hit_targets.iter().find(|t| t.control_id.as_deref() == Some("tree.label.i1")).expect("tree item label must register a hit target");
+    let hit = h.input.staged_hits().iter().find(|t| t.control_id.as_deref() == Some("tree.label.i1")).expect("tree item label must register a hit target");
     assert_eq!(hit.event, Some(action()));
 }
 
@@ -1423,7 +1423,7 @@ fn render_scroll_region_registers_a_scroll_region_hit_target() {
         let mut ctx = h.ctx();
         render_scroll_region("myscroll", bounds, 400.0, &mut ctx, |_content, _ctx| {});
     }
-    assert!(h.input.hit_targets.iter().any(|t| t.control_id.as_deref() == Some("myscroll")));
+    assert!(h.input.staged_hits().iter().any(|t| t.control_id.as_deref() == Some("myscroll")));
 }
 
 #[test]

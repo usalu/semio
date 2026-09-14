@@ -5,7 +5,7 @@ use crate::standards::v1::subsets::any::schema::{
 };
 use crate::viewer::generation3d::modes::view::windows::preview;
 use crate::viewer::generation3d::unit_tests::context;
-use crate::viewer::generation3d::unit_tests::context::{app, armed_window_ids, dispatch_with_view, view_shell_view};
+use crate::viewer::generation3d::unit_tests::context::{app, dispatch_with_view, run_actions, view_shell_view};
 use crate::viewer::generation3d::Generation3dViewCommand;
 use semio_framework_plugin::app::TypedOperationResultLane;
 use semio_framework_plugin::ArtifactViewer;
@@ -106,13 +106,12 @@ fn every_bundled_example_switches_the_viewed_document() {
 }
 
 /// 👁️ The gesture really dispatches through the interactive-job pipeline, publishes on the CONFIG
-/// lane only, leaves the document byte-identical, and re-arms the attached preview's chain from its
-/// own emit rather than waiting for a host `refresh-ui`.
+/// lane only, leaves the document byte-identical, and carries the attached preview's `previewEval` run
+/// start on its own emit rather than waiting for a host `refresh-ui`.
 ///
-/// 🧵️ One FRESH surface per example, deliberately: `preview_eval::rearm_attached_previews` arms
-/// through the retained session's per-window latch, so a second switch on a session whose first tick
-/// is still outstanding correctly arms NOTHING — that is the peer lane's own contract, pinned
-/// separately by `consecutive_switches_arm_once_until_the_chain_answers` below.
+/// 🧵️ One FRESH surface per example, deliberately: the run start is requested through the link's
+/// one-request latch, so a second switch while the first start stands correctly carries NOTHING —
+/// pinned separately by `consecutive_switches_request_one_start_until_the_run_answers` below.
 #[semio_framework_async_macros::async_test]
 async fn every_bundled_example_dispatches_live_rearms_the_preview_and_never_mutates_the_document() {
     let _serial = context::lock();
@@ -127,26 +126,29 @@ async fn every_bundled_example_dispatches_live_rearms_the_preview_and_never_muta
         assert!(!receipt.lanes.contains(&TypedOperationResultLane::Artifact), "a viewer example switch must never publish on the artifact lane");
         assert!(!receipt.lanes.contains(&TypedOperationResultLane::Draft), "a viewer example switch must never publish on the draft lane");
         assert!(receipt.lanes.contains(&TypedOperationResultLane::Config), "the picked example must land on the viewer's own config lane: {:?}", receipt.lanes);
-        let armed = armed_window_ids(&receipt.effects);
-        println!("[STATS] viewer setActiveExample {example_id:?} lanes={:?} armed={armed:?}", receipt.lanes);
-        assert_eq!(armed, vec!["view-preview".to_string()], "the switch owes the attached preview its own re-armed tick ({example_id})");
+        let carried = run_actions(&receipt.effects);
+        println!("[STATS] viewer setActiveExample {example_id:?} lanes={:?} carried={carried:?}", receipt.lanes);
+        assert_eq!(carried, vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()], "the switch carries the attached preview its own run start ({example_id})");
         assert_eq!(context::snapshot(&app), before, "viewer setActiveExample({example_id}) must not mutate the document");
     }
 }
 
-/// 🧵️ The re-arm is LATCHED per window: a switch arms the attached preview once, and a second switch
-/// dispatched before that tick is answered adds no duplicate — otherwise every pick through the
-/// navbar would stack another chain on a surface that already owes one.
+/// 🧵️ One gesture costs at most ONE run start: each switch carries its own, and the framework admits
+/// exactly one run for both — the second start meets the live run (`toolRun.busy`) and the run it
+/// joins evaluates the example picked last.
 #[semio_framework_async_macros::async_test]
-async fn consecutive_switches_arm_once_until_the_chain_answers() {
+async fn consecutive_switches_carry_one_start_each_and_settle_one_run() {
     let _serial = context::lock();
     let mut app = app().await;
     let shell_view = view_shell_view("view-preview");
     let first = dispatch_with_view(&mut app, Generation3dViewCommand::SetActiveExample(SetActiveExample { example_id: PROCEDURAL_EXAMPLE_BOX_SHELL.into() }), shell_view.clone()).await.expect("first switch");
-    let second = dispatch_with_view(&mut app, Generation3dViewCommand::SetActiveExample(SetActiveExample { example_id: PROCEDURAL_EXAMPLE_RECTANGLE_WIRE.into() }), shell_view).await.expect("second switch");
-    println!("[STATS] viewer switch latch first={:?} second={:?}", armed_window_ids(&first.effects), armed_window_ids(&second.effects));
-    assert_eq!(armed_window_ids(&first.effects), vec!["view-preview".to_string()]);
-    assert!(armed_window_ids(&second.effects).is_empty(), "an outstanding tick is not armed twice");
+    let second = dispatch_with_view(&mut app, Generation3dViewCommand::SetActiveExample(SetActiveExample { example_id: PROCEDURAL_EXAMPLE_RECTANGLE_WIRE.into() }), shell_view.clone()).await.expect("second switch");
+    println!("[STATS] viewer switch latch first={:?} second={:?}", run_actions(&first.effects), run_actions(&second.effects));
+    assert_eq!(run_actions(&first.effects), vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()]);
+    assert_eq!(run_actions(&second.effects), vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()], "the second gesture carries at most its own one start");
+    let effects: Vec<_> = first.effects.iter().chain(&second.effects).cloned().collect();
+    let run = crate::viewer::generation3d::unit_tests::context::drive_preview_run(&mut app, &shell_view, &effects).await;
+    assert_eq!(run.state.as_deref(), Some("finalized"), "both starts settle into one finalized run: {run:?}");
     assert!(second.lanes.contains(&TypedOperationResultLane::Config), "the second switch still lands its own config edit");
 }
 
@@ -170,16 +172,15 @@ async fn an_unpublished_example_id_is_refused() {
     assert_eq!(context::snapshot(&app), before, "a refused example switch leaves the document untouched");
 }
 
-/// 🪟️ The window the switch re-arms is the one the SHELL says is attached; with no roster at all
-/// there is nothing to publish into and the switch arms nothing rather than spinning a chain that
-/// cannot land.
+/// 🪟️ The windows the switch owes are the ones the SHELL says are attached; with no roster at all there
+/// is nothing to publish into and the switch starts nothing rather than spinning a run that cannot land.
 #[semio_framework_async_macros::async_test]
-async fn an_unattached_surface_arms_no_tick() {
+async fn an_unattached_surface_starts_no_run() {
     let _serial = context::lock();
     let mut app = app().await;
     let receipt = dispatch_with_view(&mut app, Generation3dViewCommand::SetActiveExample(SetActiveExample { example_id: PROCEDURAL_EXAMPLE_BOX_SHELL.into() }), semio_framework_plugin::ViewModel::default())
         .await
         .expect("the switch settles without an attached preview");
-    assert!(armed_window_ids(&receipt.effects).is_empty(), "no attached preview window means no armed tick");
+    assert!(run_actions(&receipt.effects).is_empty(), "no attached preview window means no run start");
     assert_eq!(preview::WINDOW_KIND_ID, "procedural-view-preview");
 }

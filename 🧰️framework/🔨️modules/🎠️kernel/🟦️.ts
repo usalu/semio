@@ -1,5 +1,6 @@
 import { dialectCoordinate, parseDialectCoordinate, type ArtifactDialect } from "../🚪️io/🧬️schema/🟦️.ts";
 import { base64StandardDecode } from "../🚪️io/🔤️base64/🟦️.ts";
+import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES } from "../⏱️trace/🧮️memory/🟦️.ts";
 import { surfaceAppId, parseSurfaceAppId, type AppRole, type AppRef } from "../🛂️manifest/🧬️schema/🟦️.ts";
 // #region 🎠️Kernel
 /// <reference types="vitest/importMeta" />
@@ -1428,6 +1429,79 @@ export function mediaExportBytes(data: string, encoding?: string): Uint8Array {
 }
 //#endregion ⬇️MediaExportEncoding
 
+//#region 📤️FileOpenImport
+/** 📥️ Bytes ONE import chunk may carry to the guest — TS twin of Rust `kernel::IMPORT_CHUNK_BYTES`.
+ *
+ * 🧊️ Derived from the guest's per-request contiguous ceiling, never a literal: an import's `payload`
+ * crosses as ONE string and every guest hop that carries it asks for one contiguous block, so a whole
+ * document sent as a single invocation asks the fixed guest heap for a block several times that
+ * ceiling. Half the ceiling leaves the other half for the invocation envelope the chunk rides in. */
+export const IMPORT_CHUNK_BYTES = GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES / 2;
+
+/** 📥️ The argument names one import chunk is dispatched with — TS twins of Rust
+ * `kernel::IMPORT_ARGUMENT_*`. Declared beside the effect so no shell invents a second spelling of
+ * the same envelope: the wgpu shell used to send `{json, payload}` in one unchunked invocation while
+ * React sent `{payload, name, chunk, chunkCount}` per chunk, and a plugin could satisfy only one
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+export const IMPORT_ARGUMENT_PAYLOAD = "payload";
+export const IMPORT_ARGUMENT_NAME = "name";
+export const IMPORT_ARGUMENT_CHUNK = "chunk";
+export const IMPORT_ARGUMENT_CHUNK_COUNT = "chunkCount";
+export const IMPORT_ARGUMENT_INDEX = "index";
+export const IMPORT_ARGUMENT_TOTAL = "total";
+
+/** 📥️ One chunk of one opened file, positioned in its own run — TS twin of Rust `kernel::ImportChunk`. */
+export type ImportChunk = { readonly payload: string; readonly chunk: number; readonly chunkCount: number };
+
+/** 📥️ Slices one opened file's contents into the chunks a shell dispatches, so no single import
+ * invocation asks the guest for a contiguous block above its own per-request ceiling.
+ *
+ * 🔤️ Sliced by UTF-8 EXTENT, not by code units: the guest measures `text.len()` in bytes, so a slice
+ * counted in UTF-16 units would overrun the cap by up to 3× on non-ASCII text. No slice ever splits a
+ * code point, and an empty payload still yields exactly one chunk — a picked empty file is a real pick
+ * the guest must be told about.
+ *
+ * Twin of Rust `kernel::import_payload_chunks`; both drive `🧫️fixtures/📤️file-open-import/🔣️.json`. */
+export function importPayloadChunks(payload: string): readonly ImportChunk[] {
+  const pages: string[] = [];
+  let page = "";
+  let pageBytes = 0;
+  for (const character of payload) {
+    const code = character.codePointAt(0) ?? 0;
+    const characterBytes = code < 0x80 ? 1 : code < 0x800 ? 2 : code < 0x10000 ? 3 : 4;
+    if (pageBytes + characterBytes > IMPORT_CHUNK_BYTES) {
+      pages.push(page);
+      page = "";
+      pageBytes = 0;
+    }
+    page += character;
+    pageBytes += characterBytes;
+  }
+  if (page.length > 0 || pages.length === 0) pages.push(page);
+  return pages.map((text, chunk) => ({ payload: text, chunk, chunkCount: pages.length }));
+}
+
+/** 📥️ The arguments ONE import chunk is dispatched with — `fanOut` is present only when the picker
+ * was opened with `multiple`, so a single-file pick's args stay byte-for-byte the pre-fan-out shape.
+ * Twin of Rust `kernel::import_chunk_arguments`.
+ *
+ * 🔢️ `chunk`/`chunkCount`/`index`/`total` are exact integers: the guest decodes them as `u32` and
+ * `FromValue`'s unsigned arm refuses a float outright. */
+export function importChunkArguments(name: string, chunk: ImportChunk, fanOut?: { readonly index: number; readonly total: number }): Record<string, string | number> {
+  const args: Record<string, string | number> = {
+    [IMPORT_ARGUMENT_PAYLOAD]: chunk.payload,
+    [IMPORT_ARGUMENT_NAME]: name,
+    [IMPORT_ARGUMENT_CHUNK]: chunk.chunk,
+    [IMPORT_ARGUMENT_CHUNK_COUNT]: chunk.chunkCount,
+  };
+  if (fanOut) {
+    args[IMPORT_ARGUMENT_INDEX] = fanOut.index;
+    args[IMPORT_ARGUMENT_TOTAL] = fanOut.total;
+  }
+  return args;
+}
+//#endregion 📤️FileOpenImport
+
 //#region 🧵️SpawnedJobDrive
 /** 🚦 Where a spawned job runs — the WIT `enum job-placement`, which jco lowers to a BARE string
  * rather than a `{tag}` record. TS twin of Rust `kernel::JobPlacement`. */
@@ -1514,6 +1588,60 @@ export type UiDirtyScope =
 /** @emoji 🐢️ Normalizes a possibly-absent `UiDirtyScope` — missing (older program, or a response built without one) means `full`. */
 export function resolveUiDirtyScope(scope: UiDirtyScope | undefined): UiDirtyScope {
   return scope ?? { kind: "full" };
+}
+
+/** @emoji 🔖️ One flag-addressed section of a batched `refresh-ui`, mirrored from Rust `UiDirtySection`. */
+export type UiDirtySection = "utilities" | "tools" | "engagements" | "measures" | "labels";
+
+/**
+ * @emoji 🐢️ The selection law both shells answer to — the TypeScript twin of Rust
+ * `UiDirtyScope::wants_window_body` and siblings, driven by the same fixture
+ * `🧫️fixtures/🐢️ui-dirty-scope/🔣️.json`.
+ *
+ * React has always read a scope; the wgpu shell's `refresh_ui` walked every window and panel leaf on
+ * every settle and threw `InvocationResult.uiScope` away — 116 of 137 renders per converging edit
+ * answered `patched=0` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+ * `📓️wgpu-edit-convergence-perf-2026-09-14.md` §7).
+ */
+export function uiDirtyScopeWantsWindowBody(scope: UiDirtyScope, bodyKey: string): boolean {
+  return scope.kind === "full" || (scope.kind === "partial" && (scope.windowBodies ?? []).includes(bodyKey));
+}
+
+/** @emoji 🐢️ Twin of Rust `UiDirtyScope::wants_panel_body`. */
+export function uiDirtyScopeWantsPanelBody(scope: UiDirtyScope, bodyKey: string): boolean {
+  return scope.kind === "full" || (scope.kind === "partial" && (scope.panelBodies ?? []).includes(bodyKey));
+}
+
+/** @emoji 🐢️ Twin of Rust `UiDirtyScope::wants_section`. */
+export function uiDirtyScopeWantsSection(scope: UiDirtyScope, section: UiDirtySection): boolean {
+  return scope.kind === "full" || (scope.kind === "partial" && scope[section] === true);
+}
+
+/** @emoji 🛍️ Twin of Rust `UiDirtyScope::wants_catalogue` — the app-static catalogue carries no flag of its own, so only a full scope asks the guest for it. */
+export function uiDirtyScopeWantsCatalogue(scope: UiDirtyScope): boolean {
+  return scope.kind === "full";
+}
+
+/** @emoji 🚫️ Twin of Rust `UiDirtyScope::asks_for_nothing` — no pass may be opened at all. */
+export function uiDirtyScopeAsksForNothing(scope: UiDirtyScope): boolean {
+  return scope.kind === "none";
+}
+
+/** @emoji 🤝️ Twin of Rust `UiDirtyScope::merged_with` — the union one coalesced pass owes, in first-seen body-key order. */
+export function mergeUiDirtyScopes(first: UiDirtyScope, second: UiDirtyScope): UiDirtyScope {
+  if (first.kind === "full" || second.kind === "full") return { kind: "full" };
+  if (first.kind === "none") return second;
+  if (second.kind === "none") return first;
+  return {
+    kind: "partial",
+    windowBodies: [...new Set([...(first.windowBodies ?? []), ...(second.windowBodies ?? [])])],
+    panelBodies: [...new Set([...(first.panelBodies ?? []), ...(second.panelBodies ?? [])])],
+    utilities: Boolean(first.utilities || second.utilities),
+    tools: Boolean(first.tools || second.tools),
+    engagements: Boolean(first.engagements || second.engagements),
+    measures: Boolean(first.measures || second.measures),
+    labels: Boolean(first.labels || second.labels),
+  };
 }
 
 /** @emoji 🧾️ One host-projectable command-history row, mirrored from Rust `HistoryEntry`. */

@@ -1,0 +1,308 @@
+{
+  "schema": "s.puzzle2d.fill-run.v1",
+  "description": "Language-neutral law of the puzzle 2d fill tool run job (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W2-A): a document (a shipped example, optionally reduced to its first `keepNodes` nodes or with every edge detached so its handles are open), a run id (the search seed) and a requested count yield an exact final verdict prefix (key:verdict:reason), counters, provisional op and entity counts, checkpoint count and stall reason.",
+  "opsPerPlacement": 2,
+  "cases": [
+    {
+      "id": "nakagin-first-node-run-1-requested-5",
+      "document": {
+        "example": "nakagin-capsule-tower",
+        "keepNodes": 1
+      },
+      "run": 1,
+      "requested": 5,
+      "expected": {
+        "accepted": 5,
+        "appendEntities": 5,
+        "appendOps": 10,
+        "checkpoints": 5,
+        "collisions": 28,
+        "decisionPrefix": [
+          "80:success:fits",
+          "187:success:fits",
+          "298:danger:host-collision",
+          "299:danger:host-collision",
+          "406:danger:host-collision",
+          "407:danger:host-collision",
+          "408:danger:host-collision",
+          "409:danger:host-collision",
+          "410:danger:host-collision",
+          "411:danger:host-collision",
+          "522:success:fits",
+          "629:success:fits",
+          "722:danger:virtual-collision",
+          "723:danger:virtual-collision",
+          "724:danger:virtual-collision",
+          "725:danger:virtual-collision",
+          "726:danger:virtual-collision",
+          "727:danger:virtual-collision",
+          "728:danger:virtual-collision",
+          "729:danger:virtual-collision",
+          "730:danger:virtual-collision",
+          "731:danger:virtual-collision",
+          "732:danger:virtual-collision",
+          "733:danger:virtual-collision"
+        ],
+        "rejected": 820,
+        "stall": null,
+        "tested": 853,
+        "verdictPrefix": [
+          "0:warning:kind-incompatible",
+          "1:warning:kind-incompatible",
+          "2:warning:kind-incompatible",
+          "3:warning:kind-incompatible",
+          "4:warning:kind-incompatible",
+          "5:warning:kind-incompatible",
+          "6:warning:kind-incompatible",
+          "7:warning:kind-incompatible",
+          "8:warning:kind-incompatible",
+          "9:warning:kind-incompatible",
+          "10:warning:kind-incompatible",
+          "11:warning:kind-incompatible",
+          "12:warning:kind-incompatible",
+          "13:warning:kind-incompatible",
+          "14:warning:kind-incompatible",
+          "15:warning:kind-incompatible",
+          "16:warning:kind-incompatible",
+          "17:warning:kind-incompatible",
+          "18:warning:kind-incompatible",
+          "19:warning:kind-incompatible",
+          "20:warning:kind-incompatible",
+          "21:warning:kind-incompatible",
+          "22:warning:kind-incompatible",
+          "23:warning:kind-incompatible"
+        ]
+      }
+    },
+    {
+      "id": "nakagin-first-node-run-1-requested-12",
+      "document": {
+        "example": "nakagin-capsule-tower",
+        "keepNodes": 1
+      },
+      "run": 1,
+      "requested": 12,
+      "expected": {
+        "accepted": 9,
+        "appendEntities": 9,
+        "appendOps": 18,
+        "checkpoints": 10,
+        "collisions": 519,
+        "decisionPrefix": [
+          "80:success:fits",
+          "187:success:fits",
+          "298:danger:host-collision",
+          "299:danger:host-collision",
+          "406:danger:host-collision",
+          "407:danger:host-collision",
+          "408:danger:host-collision",
+          "409:danger:host-collision",
+          "410:danger:host-collision",
+          "411:danger:host-collision",
+          "522:success:fits",
+          "629:success:fits",
+          "722:danger:virtual-collision",
+          "723:danger:virtual-collision",
+          "724:danger:virtual-collision",
+          "725:danger:virtual-collision",
+          "726:danger:virtual-collision",
+          "727:danger:virtual-collision",
+          "728:danger:virtual-collision",
+          "729:danger:virtual-collision",
+          "730:danger:virtual-collision",
+          "731:danger:virtual-collision",
+          "732:danger:virtual-collision",
+          "733:danger:virtual-collision"
+        ],
+        "rejected": 4869,
+        "stall": "no-free-placement",
+        "tested": 5397,
+        "verdictPrefix": [
+          "0:warning:kind-incompatible",
+          "1:warning:kind-incompatible",
+          "2:warning:kind-incompatible",
+          "3:warning:kind-incompatible",
+          "4:warning:kind-incompatible",
+          "5:warning:kind-incompatible",
+          "6:warning:kind-incompatible",
+          "7:warning:kind-incompatible",
+          "8:warning:kind-incompatible",
+          "9:warning:kind-incompatible",
+          "10:warning:kind-incompatible",
+          "11:warning:kind-incompatible",
+          "12:warning:kind-incompatible",
+          "13:warning:kind-incompatible",
+          "14:warning:kind-incompatible",
+          "15:warning:kind-incompatible",
+          "16:warning:kind-incompatible",
+          "17:warning:kind-incompatible",
+          "18:warning:kind-incompatible",
+          "19:warning:kind-incompatible",
+          "20:warning:kind-incompatible",
+          "21:warning:kind-incompatible",
+          "22:warning:kind-incompatible",
+          "23:warning:kind-incompatible"
+        ]
+      }
+    },
+    {
+      "id": "nakagin-detached-run-3-requested-40",
+      "document": {
+        "example": "nakagin-capsule-tower",
+        "detachEdges": true
+      },
+      "run": 3,
+      "requested": 40,
+      "expected": {
+        "accepted": 11,
+        "appendEntities": 11,
+        "appendOps": 22,
+        "checkpoints": 12,
+        "collisions": 29022,
+        "decisionPrefix": [
+          "80:danger:host-collision",
+          "81:danger:host-collision",
+          "82:danger:host-collision",
+          "83:danger:host-collision",
+          "84:danger:host-collision",
+          "85:danger:host-collision",
+          "86:danger:host-collision",
+          "87:danger:host-collision",
+          "88:danger:host-collision",
+          "89:danger:host-collision",
+          "90:danger:host-collision",
+          "91:danger:host-collision",
+          "92:danger:host-collision",
+          "93:danger:host-collision",
+          "94:danger:host-collision",
+          "95:danger:host-collision",
+          "96:danger:host-collision",
+          "97:danger:host-collision",
+          "98:danger:host-collision",
+          "99:danger:host-collision",
+          "100:danger:host-collision",
+          "101:danger:host-collision",
+          "102:danger:host-collision",
+          "103:danger:host-collision"
+        ],
+        "rejected": 136747,
+        "stall": "no-free-placement",
+        "tested": 165780,
+        "verdictPrefix": [
+          "0:warning:kind-incompatible",
+          "1:warning:kind-incompatible",
+          "2:warning:kind-incompatible",
+          "3:warning:kind-incompatible",
+          "4:warning:kind-incompatible",
+          "5:warning:kind-incompatible",
+          "6:warning:kind-incompatible",
+          "7:warning:kind-incompatible",
+          "8:warning:kind-incompatible",
+          "9:warning:kind-incompatible",
+          "10:warning:kind-incompatible",
+          "11:warning:kind-incompatible",
+          "12:warning:kind-incompatible",
+          "13:warning:kind-incompatible",
+          "14:warning:kind-incompatible",
+          "15:warning:kind-incompatible",
+          "16:warning:kind-incompatible",
+          "17:warning:kind-incompatible",
+          "18:warning:kind-incompatible",
+          "19:warning:kind-incompatible",
+          "20:warning:kind-incompatible",
+          "21:warning:kind-incompatible",
+          "22:warning:kind-incompatible",
+          "23:warning:kind-incompatible"
+        ]
+      }
+    },
+    {
+      "id": "concrete-forest-run-1-requested-5",
+      "document": {
+        "example": "concrete-forest"
+      },
+      "run": 1,
+      "requested": 5,
+      "expected": {
+        "accepted": 0,
+        "appendEntities": 0,
+        "appendOps": 0,
+        "checkpoints": 1,
+        "collisions": 0,
+        "decisionPrefix": [],
+        "rejected": 0,
+        "stall": "no-compatible-kind",
+        "tested": 0,
+        "verdictPrefix": []
+      }
+    },
+    {
+      "id": "empty-board-run-1-requested-5",
+      "document": {
+        "example": "empty"
+      },
+      "run": 1,
+      "requested": 5,
+      "expected": {
+        "accepted": 0,
+        "appendEntities": 0,
+        "appendOps": 0,
+        "checkpoints": 1,
+        "collisions": 0,
+        "decisionPrefix": [],
+        "rejected": 0,
+        "stall": "no-open-handle",
+        "tested": 0,
+        "verdictPrefix": []
+      }
+    }
+  ],
+  "verdictPrefix": 24,
+  "geoOracle": {
+    "document": {
+      "example": "nakagin-capsule-tower",
+      "detachEdges": true
+    },
+    "run": 7,
+    "requested": 60
+  },
+  "resume": {
+    "document": {
+      "example": "nakagin-capsule-tower",
+      "keepNodes": 1
+    },
+    "run": 2,
+    "first": 6,
+    "raise": 9,
+    "lower": 3
+  },
+  "interactive": {
+    "document": {
+      "example": "nakagin-capsule-tower",
+      "detachEdges": true
+    },
+    "run": 1,
+    "requested": 120,
+    "coldRuns": 5,
+    "minimumTurns": 50,
+    "budgetUs": 2000
+  },
+  "finalize": {
+    "document": {
+      "example": "nakagin-capsule-tower",
+      "keepNodes": 1
+    },
+    "requested": 8,
+    "historyEntriesAdded": 1,
+    "abortAfterPlacements": 2
+  },
+  "revalidate": {
+    "document": {
+      "example": "nakagin-capsule-tower",
+      "keepNodes": 1
+    },
+    "run": 1,
+    "requested": 6,
+    "conflicted": 3
+  }
+}

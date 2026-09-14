@@ -9,7 +9,6 @@ type RemodelingSnapshot {
   calibration: CalibrationState! @state(class: ARTIFACT)
   params: ReconstructionParams! @state(class: ARTIFACT)
   gcps: [GroundControlPoint!]! @state(class: ARTIFACT)
-  job: ReconstructionJob! @state(class: ARTIFACT)
   results: ReconstructionResults! @state(class: ARTIFACT)
 }
 
@@ -203,18 +202,6 @@ type QcReportSnapshot {
   warnings: [String!]!
 }
 
-type ReconstructionJob {
-  id: String!
-  stage: ReconstructionStage!
-  progress01: Float!
-  cancelRequested: Boolean!
-  stageCursor: Int!
-  startedAtMs: Float
-  error: String
-  cameraPosesPreview: [CameraPosePreview!]!
-  sparsePointCloudPreview: String!
-}
-
 type ReconstructionParams {
   ingest: IngestParams!
   feature: FeatureParams!
@@ -234,27 +221,6 @@ type ReconstructionResults {
   tracks: [MotionTrackSummary!]!
   geo: GeoProducts
   qc: QcReportSnapshot
-}
-
-enum ReconstructionStage {
-  Idle
-  Ingesting
-  Calibrating
-  ExtractingFeatures
-  MatchingFeatures
-  EstimatingPoses
-  BundleAdjusting
-  Georeferencing
-  DenseStereo
-  FusingVolume
-  ExtractingSurface
-  CleaningMesh
-  Texturing
-  TrackingMotion
-  DerivingGeoProducts
-  ReportingQc
-  Done
-  Failed
 }
 
 type RemodelingAssetChild {

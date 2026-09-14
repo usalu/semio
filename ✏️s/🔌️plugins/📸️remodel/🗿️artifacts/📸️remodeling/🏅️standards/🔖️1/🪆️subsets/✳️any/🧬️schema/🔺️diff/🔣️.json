@@ -95,17 +95,6 @@
       ],
       "x-semio-state": "artifact"
     },
-    "job": {
-      "anyOf": [
-        {
-          "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/ReconstructionJob"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
     "results": {
       "anyOf": [
         {
@@ -132,7 +121,6 @@
         "calibration",
         "params",
         "gcps",
-        "job",
         "results"
       ],
       "properties": {
@@ -171,9 +159,6 @@
           "items": {
             "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/GroundControlPoint"
           }
-        },
-        "job": {
-          "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/ReconstructionJob"
         },
         "results": {
           "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/ReconstructionResults"

@@ -11,10 +11,11 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 pub use crate::preview_eval::FlowTessellateResolve;
 
 /// ✅️ Folds one budgeted `tessellate` round trip into the retained session. A step that neither
-/// finished the mesh nor received its last body chunk re-arms the tick chain, which is what turns
-/// the formerly one-shot synchronous tessellation into a resumable job the user can watch and stop.
+/// finished the mesh nor received its last body chunk leaves its window unfinished, so the
+/// `previewEval` run schedules the next hop — a resumable tessellation the user can watch and abort.
 pub fn handle(payload: &FlowTessellateResolve, _doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    Ok(Emit { effects: preview_eval::resolve_tessellate(payload, session), ..Default::default() })
+    preview_eval::resolve_tessellate(payload, session);
+    Ok(Emit::default())
 }
 
 //#region 🧪️Tests

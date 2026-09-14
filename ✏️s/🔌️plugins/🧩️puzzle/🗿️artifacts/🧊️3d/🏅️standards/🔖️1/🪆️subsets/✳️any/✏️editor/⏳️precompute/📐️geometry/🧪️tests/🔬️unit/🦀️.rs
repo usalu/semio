@@ -353,10 +353,11 @@ fn spatial_resumable_query_narrows_sparse_cells_without_visiting_distant_populat
 fn spatial_capacity_plus_one_refusal_preserves_exact_old_state() {
     let mut index = CollisionSpatialIndex::new(8.0);
     let bounds = CollisionAabb { min: [0.0; 3], max: [0.5; 3] };
-    for value in 0..FIXED_OWNER_SLOTS {
-        assert!(index.install_for_test(&format!("entry-{value:02}"), bounds));
+    for value in 0..DOCUMENT_OBJECT_SLOTS {
+        assert!(index.install_for_test(&format!("entry-{value:04}"), bounds), "one cell admits entry {value}: only the document's object capacity bounds a cell");
     }
     let before = index.candidates_for_test(bounds);
+    assert_eq!(before.len(), DOCUMENT_OBJECT_SLOTS);
     assert!(!index.install_for_test("entry-plus-one", bounds));
     assert_eq!(index.candidates_for_test(bounds), before);
 }

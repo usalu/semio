@@ -93,14 +93,7 @@ pub(crate) mod context {
     /// (`🛠️ShellHelpers/🟦️.tsx`) does: an action id the app declares as a COMMAND re-enters the typed
     /// command channel with the shell's own live view attached, never the scoped action channel.
     pub async fn dispatch_effect_command(app: &mut Generation3dViewerHarness, command_id: &str, args: Option<&dsl::DslValue>, action_meta: &ActionMeta) -> Result<(), semio_framework_plugin::Fault> {
-        use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
-        let arguments = match args {
-            Some(dsl::DslValue::Object(entries)) => entries.iter().cloned().collect(),
-            _ => std::collections::BTreeMap::new(),
-        };
-        let app_id = app.app_id().await.to_string();
-        let invocation = CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: String::new(), app_id }, command_id: command_id.to_string() }, arguments };
-        app.handle_command(&invocation, None, action_meta).await.map(|_| ())
+        crate::brep_extension::dispatch_effect_command(app, command_id, args, action_meta).await
     }
     
     pub async fn dispatch_with_view(app: &mut Generation3dViewerHarness, command: Generation3dViewCommand, view_state: ViewModel) -> Result<TypedOperationFixtureReceipt, semio_framework_plugin::Fault> {
@@ -109,55 +102,42 @@ pub(crate) mod context {
         settle_registered_typed_operation(app, action_meta.instance_id).await
     }
     
-    /// 🎯️ Every `flowEvalTick` an effect list armed, as the `args` object the shell would redispatch.
-    pub fn armed_ticks(effects: &[Effect]) -> Vec<Option<dsl::DslValue>> {
+    pub use crate::brep_extension::{run_actions, PreviewRunReceipt};
+
+    /// 🚦️ The framework run actions a refresh over `shell_view` owes the `previewEval` run right now.
+    pub async fn owed_run_actions(app: &mut Generation3dViewerHarness, shell_view: &ViewModel) -> Vec<String> {
+        crate::brep_extension::owed_run_actions(app, shell_view).await
+    }
+
+    /// 🔁️ The served `previewEval` loop on the read-only surface, answered by the in-process kernel
+    /// ([`crate::brep_extension::drive_preview_run`]).
+    pub async fn drive_preview_run(app: &mut Generation3dViewerHarness, shell_view: &ViewModel, initial: &[Effect]) -> PreviewRunReceipt {
+        crate::brep_extension::drive_preview_run(app, shell_view, initial, &mut crate::brep_extension::serve).await
+    }
+
+    pub async fn drain_armed_flow_eval_ticks(app: &mut Generation3dViewerHarness, shell_view: &ViewModel) -> usize {
+        drive_preview_run(app, shell_view, &[]).await.hops
+    }
+
+    /// 🔁️ The same loop, started from an effect list a caller already has in hand — the twin of
+    /// [`drain_armed_flow_eval_ticks`] for a gesture's own receipt.
+    pub async fn drain_armed_flow_eval_ticks_from(app: &mut Generation3dViewerHarness, shell_view: &ViewModel, initial: &[Effect]) -> usize {
+        drive_preview_run(app, shell_view, initial).await.hops
+    }
+
+    /// 🎯️ The window every `flowEvalTick` in an effect list was addressed to, in order — what a law
+    /// asserting "this gesture armed exactly these previews" reads. Pure over the effects, so it says
+    /// nothing about how the chain is driven.
+    pub fn armed_window_ids(effects: &[Effect]) -> Vec<String> {
         effects
             .iter()
             .filter_map(|effect| match effect {
-                Effect::DispatchAction { action, args, .. } if action == "flowEvalTick" => Some(args.clone()),
+                Effect::DispatchAction { action, args, .. } if action == "flowEvalTick" => Some(args.as_ref().and_then(|args| args.get("windowId")).and_then(dsl::DslValue::as_str).unwrap_or_default().to_string()),
                 _ => None,
             })
             .collect()
     }
-    
-    pub fn armed_window_ids(effects: &[Effect]) -> Vec<String> {
-        armed_ticks(effects).into_iter().map(|args| args.as_ref().and_then(|args| args.get("windowId")).and_then(dsl::DslValue::as_str).unwrap_or_default().to_string()).collect()
-    }
-    
-    fn arm(armed: &mut Vec<Option<dsl::DslValue>>, more: Vec<Option<dsl::DslValue>>) {
-        for entry in more {
-            if !armed.contains(&entry) {
-                armed.push(entry);
-            }
-        }
-    }
-    
-    /// 🔁️ The REAL served chain, end to end: `pending_effects` arms the first tick off the host's
-    /// attached-window roster, and every following tick is the `action`+`args` of an
-    /// `Effect::DispatchAction` the app itself emitted, replayed through `PluginApp::handle_command`
-    /// the way `ShellHost` feeds `requestedEffects` back — with the in-process `brep` extension
-    /// answering every `Effect::InvokeExtension` the way the shell does in production.
-    pub async fn drain_armed_flow_eval_ticks(app: &mut Generation3dViewerHarness, shell_view: &ViewModel) -> usize {
-        let armed = app.pending_effects(Some(shell_view)).await;
-        drain_armed_flow_eval_ticks_from(app, shell_view, &armed).await
-    }
-    
-    pub async fn drain_armed_flow_eval_ticks_from(app: &mut Generation3dViewerHarness, shell_view: &ViewModel, initial: &[Effect]) -> usize {
-        let action_meta = ActionMeta { view_state: Some(shell_view.clone()), ..meta("local") };
-        let mut armed = armed_ticks(initial);
-        let mut ticks = 0;
-        for _ in 0..1000 {
-            let Some(args) = armed.pop() else { return ticks };
-            dispatch_effect_command(app, "flowEvalTick", args.as_ref(), &action_meta).await.expect("the shell redispatches an armed flowEvalTick effect");
-            let receipt = settle_registered_typed_operation(app, action_meta.instance_id).await.expect("retained publication");
-            assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "an armed flowEvalTick faulted in the retained job ladder: args={args:?}");
-            ticks += 1;
-            arm(&mut armed, armed_ticks(&receipt.effects));
-            arm(&mut armed, armed_ticks(&crate::brep_extension::settle_with_meta(app, action_meta.instance_id, &action_meta).await.effects));
-        }
-        panic!("the armed flowEvalTick chain did not converge within 1000 dispatches");
-    }
-    
+
     pub async fn render_with_view(app: &mut Generation3dViewerHarness, body_key: &str, view_state: &ViewModel) -> String {
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, view_state).await.expect("render")).expect("render json")
     }

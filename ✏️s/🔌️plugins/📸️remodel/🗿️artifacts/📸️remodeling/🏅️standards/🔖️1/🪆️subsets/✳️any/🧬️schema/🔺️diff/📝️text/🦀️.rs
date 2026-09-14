@@ -44,9 +44,6 @@ impl RemodelingDiff {
             if let Some(list) = &self.gcps {
                 next.gcps = list.values.clone();
             }
-            if let Some(job) = &self.job {
-                next.job = job.clone();
-            }
             if let Some(results) = &self.results {
                 next.results = results.clone();
             }
@@ -86,9 +83,6 @@ impl MutationDiff<RemodelingSnapshot> for RemodelingDiff {
             if let Some(list) = &self.gcps {
                 next.gcps = list.values.clone();
             }
-            if let Some(job) = &self.job {
-                next.job = job.clone();
-            }
             if let Some(results) = &self.results {
                 next.results = results.clone();
             }
@@ -115,7 +109,6 @@ impl MutationDiff<RemodelingSnapshot> for RemodelingDiff {
         take!(calibration);
         take!(params);
         take!(gcps);
-        take!(job);
         take!(results);
     }
 }

@@ -10,11 +10,8 @@ use dsl::os_pack::json::Value;
 /// `puzzle3d_brush_target_vortex`'s doc comment); the client should pair this with an
 /// `interactionSelect` on the same target if it still wants the vortex to read as selected.
 ///
-/// 🔎️ Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS wave G: opening the popup no longer races to
-/// a finished `Select` list behind eight silent slices. It invalidates the target so the search
-/// starts clean, then spends one bounded turn on it (`advance_brush_search`); whatever that turn
-/// resolved is already streamed into the popup, and the rest arrives tick by tick with a live
-/// tested/free/blocked readout instead of an empty menu.
+/// 🔎️ Opening the popup points the read-only brush suggestions run at the vortex; the popup lists the free
+/// candidates as the run finds them and the viewport paints every tested candidate with its verdict.
 pub fn open_vortex_suggestions(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     let Some(full_id) = args.and_then(|value| value.get("fullId")).and_then(|value| value.as_str()).map(str::to_string) else {
         return;
@@ -24,7 +21,5 @@ pub fn open_vortex_suggestions(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Va
     let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
     let window_id = args.and_then(|value| value.get("windowId")).and_then(|value| value.as_str()).filter(|id| !id.is_empty()).unwrap_or(ctx.window_id).to_string();
     ctx.scene.runtime.suggestion_menu = Some(Puzzle3dSuggestionMenu { x, y, window_id, vortex_full_id: full_id.clone() });
-    let mut precompute = ctx.app.precompute.borrow_mut();
-    precompute.invalidate_brush_target(&full_id);
-    precompute.advance_brush_search(&full_id);
+    ctx.brush_suggestions(|link| link.open_menu(&full_id));
 }

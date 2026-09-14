@@ -5,17 +5,17 @@
 //! §2.7, §3.7).
 
 use crate::editor::puzzle3d::precompute::brush::{
-    brush_fill_candidate_at, brush_object_id, brush_preview_from_candidate, brush_stack_mate_pair, fill_candidate_diversity_score, fill_rng, resolve_object_kind_mesh_url, vortex_world_from_object, AttractionVortexContext, BrushCatalogView,
+    brush_fill_candidate_at, brush_object_id, brush_preview_from_candidate, brush_stack_mate_pair, fill_candidate_diversity_score, fill_rng, resolve_object_kind_mesh_url, resolve_placed_object_mesh_url, vortex_world_from_object, AttractionVortexContext, BrushCatalogView,
     BrushFillVortexTarget, BrushFixtureView, TargetVortexWorld,
 };
 use crate::editor::puzzle3d::precompute::geometry::{
-    pose_isometry, world_bounds, world_volumes_contain_aabb, CollisionAabb, CollisionBody, CollisionIndexMutation, CollisionStepContext, CollisionIndexOwner, CollisionIndexOwnerCensusCursor, CollisionIndexOwnerCensusStep, CollisionIndexRejectedOwner,
+    pose_isometry, world_bounds, world_volumes_contain_aabb, CollisionAabb, CollisionBody, CollisionIndexMutation, CollisionStepContext, CollisionIndexOwner, CollisionIndexRejectedOwner,
     CollisionIndexRemoval, CollisionMutationStep, CollisionOverlapState, CollisionQueryCursor, CollisionQueryStep, CollisionSpatialIndex, CollisionStepResult, FixedOwnerMap, FixedOwnerMapInsert, FixedOwnerSet, FixedOwnerSetInsert, FixedOwnerVec,
-    Pose3d, DOCUMENT_ATTRACTION_SLOTS, DOCUMENT_CANDIDATE_SLOTS, DOCUMENT_KIND_SLOTS, DOCUMENT_OBJECT_SLOTS, DOCUMENT_OWNER_PAGE_BYTES, DOCUMENT_VOLUME_SLOTS, DOCUMENT_VORTEX_SLOTS,
+    Pose3d, DOCUMENT_ATTRACTION_SLOTS, DOCUMENT_CANDIDATE_SLOTS, DOCUMENT_KIND_SLOTS, DOCUMENT_OBJECT_SLOTS, DOCUMENT_VOLUME_SLOTS, DOCUMENT_VORTEX_SLOTS,
 };
 use crate::standards::v1::subsets::any::schema::{
-    puzzle3d_vortex_full_id, AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushPlacePayload, BrushPreviewState, CableKindCatalog, Fixture, FixtureObject, FillRunCheckpoint, FillRunCounter, FillRunReason, FillRunStage, KindCompatEntry,
-    ObjectKind, SceneConfig, VortexKindCatalog, VortexProps, WorldVolumeProps,
+    puzzle3d_vortex_full_id, AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushPlacePayload, BrushPreviewState, CableKindCatalog, FixtureObject, FillRunCheckpoint, FillRunCounter, FillRunReason, FillRunStage, KindCompatEntry,
+    KindCatalogBundle, ObjectKind, SceneConfig, VortexKindCatalog, VortexProps, WorldVolumeProps,
 };
 use semio_framework_job::{CommitCandidate, Generation, InteractiveJob, JobFault, JobPayloadStream, Operation, OperationId, RetainedJobPayload, StepContext, StepOutcome};
 use semio_framework_tool_run::{
@@ -58,7 +58,10 @@ impl FillStepContext for StepContext<'_> {
     }
 
     fn fault_payload(&mut self, bytes: &[u8]) -> RetainedJobPayload {
-        self.payload_from_bytes(JobPayloadStream::Fault, bytes).unwrap_or_else(|_| RetainedJobPayload::empty(JobPayloadStream::Fault))
+        self.payload_from_bytes(JobPayloadStream::Fault, bytes).unwrap_or_else(|rejected| {
+            drop(rejected.into_source());
+            RetainedJobPayload::empty(JobPayloadStream::Fault)
+        })
     }
 }
 
@@ -77,7 +80,6 @@ pub(crate) enum FillRunEvent {
 fn fill_run_scale(scale: &Option<dsl::DslValue>) -> f32 {
     scale.as_ref().and_then(|value| value.as_f64().or_else(|| value.as_array().and_then(|values| values.first()).and_then(dsl::DslValue::as_f64))).map_or(1.0, |value| value as f32)
 }
-
 
 /// 🧱️ One already-placed object's collision footprint, kept alongside the plan so each new fill step
 /// only has to test the candidate against bodies it can actually hit.
@@ -142,7 +144,7 @@ fn weighted_pick(weights: &mut [f64], tree: &mut [f64], remaining: usize, rng_st
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum FillJobStage {
-    DiscardTail,
+    RetractTail,
     PrepareFixture,
     PrepareCatalogs,
     PrepareMeshes,
@@ -219,9 +221,6 @@ impl FixedFixtureOwner {
         Self { objects: FixedOwnerVec::new(), attractions: FixedOwnerVec::new(), target_volumes: FixedOwnerVec::new() }
     }
 
-    pub(crate) fn snapshot(&self) -> Fixture {
-        Fixture { objects: self.objects.iter().cloned().collect(), attractions: self.attractions.iter().cloned().collect(), target_volumes: self.target_volumes.iter().cloned().collect() }
-    }
 }
 
 #[derive(Debug)]
@@ -938,7 +937,6 @@ fn fixture_terminal_owners_empty(value: &FixedFixtureOwner) -> bool {
     value.objects.terminal_owners_empty() && value.attractions.terminal_owners_empty() && value.target_volumes.terminal_owners_empty()
 }
 
-
 impl FillBuilder {
     #[cfg(test)]
     fn preparation_refusal_owner_for_test(&self) -> Option<(&'static str, usize, String, Option<f64>)> {
@@ -963,34 +961,6 @@ impl FillBuilder {
             }
         };
         Some((refusal.branch.label(), refusal.omitted_index, owner, weight))
-    }
-
-    #[cfg(test)]
-    pub(crate) fn inject_nested_owner_page_plus_one_for_test(&mut self) {
-        let mut owner = String::with_capacity(FILL_BUILDER_OWNER_PAGE_BYTES + 1);
-        owner.push_str("nested-owner");
-        self.catalogs.objects.get_mut(0).expect("a catalog object kind").representations[0].tags.push(owner);
-    }
-
-    #[cfg(test)]
-    pub(crate) fn fixed_backing_witness_for_test(&self) -> [(usize, usize, usize); 13] {
-        let mut witness = [
-            (self.placed_lookup.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, usize, DOCUMENT_OBJECT_SLOTS>::page_bytes(), self.placed_lookup.len()),
-            (self.candidate_cache.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, Vec<BrushCompatibleCandidate>>::page_bytes(), self.candidate_cache.len()),
-            (self.seed_object_ids.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, (), DOCUMENT_OBJECT_SLOTS>::page_bytes(), self.seed_object_ids.len()),
-            (self.weights.object_weights.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, f64, DOCUMENT_KIND_SLOTS>::page_bytes(), self.weights.object_weights.len()),
-            (self.weights.vortex_weights.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, f64, DOCUMENT_KIND_SLOTS>::page_bytes(), self.weights.vortex_weights.len()),
-            (self.meshes.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, CollisionBody, DOCUMENT_KIND_SLOTS>::page_bytes(), self.meshes.len()),
-            (self.blocked_vortex_ids.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, (), DOCUMENT_VORTEX_SLOTS>::page_bytes(), self.blocked_vortex_ids.len()),
-            (self.candidate_seen.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, (), DOCUMENT_CANDIDATE_SLOTS>::page_bytes(), self.candidate_seen.len()),
-            (self.candidate_cross.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, BrushCompatibleCandidate, DOCUMENT_CANDIDATE_SLOTS>::page_bytes(), self.candidate_cross.len()),
-            (self.candidate_same.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, BrushCompatibleCandidate, DOCUMENT_CANDIDATE_SLOTS>::page_bytes(), self.candidate_same.len()),
-            (0, 0, 0),
-            (0, 0, 0),
-            (0, 0, 0),
-        ];
-        witness[10..].copy_from_slice(&self.spatial_index.fixed_backing_witness_for_test());
-        witness
     }
 
     /// 🔎️ The FIRST retained-owner clause this builder still fails, BY NAME. A close ladder that wedges
@@ -1174,16 +1144,6 @@ impl FillBuilder {
         }
     }
 
-    /// 🧊️ Fixture the fill projection layers its applied prefix on. Until preparation releases them,
-    /// the authority is the still-owned preparation roots — the fixed `base` page is only partially
-    /// copied, and projecting from it would hand the document a fixture with its own objects missing.
-    pub(crate) fn base_fixture(&self) -> Fixture {
-        match self.preparation_roots.as_ref() {
-            Some(roots) => roots.scene.fixture.clone(),
-            None => self.base.snapshot(),
-        }
-    }
-
     fn retire_one_close_owner(&mut self) -> bool {
         if let Some(current) = self.close_current.as_mut() {
             if retire_retained_owner(current) {
@@ -1311,27 +1271,6 @@ impl FillBuilder {
         FillFixtureView { base: &self.base, appended: &self.appended_objects }
     }
 
-    /// 🎚️ Weight-only replan: the applied prefix, the prepared base/catalog/mesh pages and the
-    /// spatial index all stay; only the unapplied planning tail is withdrawn — one placement per
-    /// turn through [`FillJobStage::DiscardTail`] — before the planner rewinds to target selection
-    /// under the new distribution. Rebuilding the whole builder instead is what dropped every
-    /// already-applied fill object the moment a distribution slider moved.
-    pub(crate) fn begin_soft_replan(&mut self, object_weights: &std::collections::BTreeMap<String, f64>, vortex_weights: &std::collections::BTreeMap<String, f64>) {
-        self.weights = RetainedBrushKindWeights::new();
-        for (id, weight) in object_weights {
-            let _ = self.weights.object_weights.try_insert(id.clone(), *weight);
-        }
-        for (id, weight) in vortex_weights {
-            let _ = self.weights.vortex_weights.try_insert(id.clone(), *weight);
-        }
-        self.abandon_run_candidate();
-        self.applied_count = self.applied_count.min(self.sequence.len());
-        self.tail_floor = self.applied_count;
-        self.stalled = false;
-        self.last_rejection = None;
-        self.stage = FillJobStage::DiscardTail;
-    }
-
     /// 🎯️ What the user is asking for right now.
     pub(crate) fn requested_count(&self) -> usize {
         self.max_count
@@ -1340,7 +1279,7 @@ impl FillBuilder {
     /// 🎚️ Retargets the live plan without ever rewinding its RNG stream. Raising simply lifts the
     /// ceiling and wakes a planner that had reached it, so the longer plan keeps the shorter one as
     /// its exact prefix. Lowering hands the surplus tail back through the same one-placement-per-turn
-    /// [`FillJobStage::DiscardTail`] walk that a weight replan uses, stopping at whatever is already
+    /// [`FillJobStage::RetractTail`] walk that a weight replan uses, stopping at whatever is already
     /// applied to the document.
     pub(crate) fn set_requested_count(&mut self, requested: usize) {
         if requested == self.max_count {
@@ -1362,7 +1301,7 @@ impl FillBuilder {
         self.applied_count = self.applied_count.min(self.sequence.len());
         self.tail_floor = self.max_count.max(self.applied_count);
         self.stalled = false;
-        self.stage = FillJobStage::DiscardTail;
+        self.stage = FillJobStage::RetractTail;
     }
 
     /// ♻️ One unapplied placement per turn: withdraw its spatial owner, drop its lookup and placement
@@ -1526,7 +1465,7 @@ impl FillBuilder {
             }
         }
         let fixture = FillFixtureView { base: &self.base, appended: &self.appended_objects };
-        let Some(mesh_url) = resolve_object_kind_mesh_url(object.object_kind.as_deref().unwrap_or(""), &self.catalogs, &fixture) else {
+        let Some(mesh_url) = resolve_placed_object_mesh_url(object, &self.catalogs, &fixture) else {
             return;
         };
         if self.meshes.get(&mesh_url).is_none() {
@@ -1875,10 +1814,10 @@ impl FillBuilder {
     }
 
     fn select_candidate(&mut self) {
-        let Some(candidate) = self.candidates.get(self.candidate_cursor) else {
+        if self.candidate_cursor >= self.candidates.len() {
             self.reject_target("candidates-exhausted");
             return;
-        };
+        }
         self.stage = FillJobStage::ConstructPreview;
     }
 
@@ -2336,7 +2275,7 @@ impl FillBuilder {
 
     pub(crate) fn stage_label(&self) -> &'static str {
         match self.stage {
-            FillJobStage::DiscardTail => "discard-tail",
+            FillJobStage::RetractTail => "retract-tail",
             FillJobStage::PrepareFixture => "prepare-fixture",
             FillJobStage::PrepareCatalogs => "prepare-catalogs",
             FillJobStage::PrepareMeshes => "prepare-meshes",
@@ -2375,7 +2314,7 @@ impl FillBuilder {
         context.set_stage(self.stage_label());
         let stage = self.stage;
         let outcome = match stage {
-            FillJobStage::DiscardTail => {
+            FillJobStage::RetractTail => {
                 self.discard_tail_one();
                 None
             }
@@ -2421,7 +2360,7 @@ impl FillBuilder {
         if stage == self.stage
             && matches!(
                 stage,
-                FillJobStage::DiscardTail
+                FillJobStage::RetractTail
                     | FillJobStage::PrepareFixture
                     | FillJobStage::PrepareCatalogs
                     | FillJobStage::PrepareMeshes
@@ -2489,14 +2428,11 @@ pub(crate) fn fill_run_ops(object: &FixtureObject, attraction: &AttractionProps)
     Some([create, connect])
 }
 
-/// 🔑️ Trace keys a revalidation gives placements it rebuilds from provisional ops alone: the run's own
-/// candidate keys are not recoverable from ops, so revalidation records live above every candidate key.
-pub(crate) const FILL_REVALIDATE_KEY_BASE: u64 = 1 << 63;
-
 /// 🧱️ The placements a provisional op list holds, in op order (`create_object` then `connect_vortices`
-/// per placement), keyed from [`FILL_REVALIDATE_KEY_BASE`] with subjects indexing `mesh_lane`; `None`
-/// when the list is not a whole sequence of fill placements.
-pub(crate) fn fill_run_placements(provisional: &[crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation], mesh_lane: &[String]) -> Option<Vec<FillRunPlacement>> {
+/// per placement), keyed consecutively from `first_key` — a key range the run's trace key allocator handed out
+/// (`ToolRunJobRequest::trace_keys`), since the run's own candidate keys are not recoverable from ops — with
+/// subjects indexing `mesh_lane`; `None` when the list is not a whole sequence of fill placements.
+pub(crate) fn fill_run_placements(provisional: &[crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation], mesh_lane: &[String], first_key: u64) -> Option<Vec<FillRunPlacement>> {
     use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
     provisional
         .chunks(FILL_RUN_OPS_PER_PLACEMENT as usize)
@@ -2507,7 +2443,7 @@ pub(crate) fn fill_run_placements(provisional: &[crate::standards::v1::subsets::
             let mesh = object.mesh_url.as_ref().and_then(|url| mesh_lane.iter().position(|entry| entry == url)).unwrap_or(0) as u32;
             let subject = ToolRunTraceSubject::Instance3d { mesh, position: object.origin.map(|value| value as f32), rotation: object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]).map(|value| value as f32), scale: fill_run_scale(&object.scale) };
             let attraction = AttractionProps { id: connect.id.clone(), attracting: connect.attracting.clone(), attracted: connect.attracted.clone(), gap: connect.gap, shift: connect.shift, rise: connect.rise, rotation: connect.rotation, turn: connect.turn, tilt: connect.tilt, x: connect.x, y: connect.y };
-            Some(FillRunPlacement { key: FILL_REVALIDATE_KEY_BASE | index as u64, subject, entity: fill_run_entity(&object.id), object, attraction })
+            Some(FillRunPlacement { key: first_key + index as u64, subject, entity: fill_run_entity(&object.id), object, attraction })
         })
         .collect()
 }
@@ -2526,7 +2462,7 @@ impl FillRunStage {
     /// 🧭️ The run stage a planner stage belongs to.
     fn of(stage: FillJobStage) -> Option<Self> {
         match stage {
-            FillJobStage::DiscardTail => Some(Self::Retract),
+            FillJobStage::RetractTail => Some(Self::Retract),
             FillJobStage::PrepareFixture | FillJobStage::PrepareCatalogs | FillJobStage::PrepareMeshes | FillJobStage::PrepareEntries | FillJobStage::PrepareSpatial | FillJobStage::PrepareLookup | FillJobStage::PrepareConfiguration => Some(Self::Prepare),
             FillJobStage::PrepareTargets | FillJobStage::SelectTarget | FillJobStage::PrepareCandidates | FillJobStage::SelectCandidate => Some(Self::Search),
             FillJobStage::ConstructPreview | FillJobStage::QueryBroadPhase | FillJobStage::TestCollision => Some(Self::Test),
@@ -2637,6 +2573,7 @@ struct FillRunReplay {
     provisional: u32,
 }
 
+#[cfg(test)]
 /// 🚫️ A checkpoint that does not belong to this resident run.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum FillRunResumeError {
@@ -2645,6 +2582,17 @@ pub(crate) enum FillRunResumeError {
 }
 
 impl FillRunJob {
+    /// 🚦️ The one production construction path of a fill run: begins the cooperative preparation and picks
+    /// replay (a `checkpoint` with the same `inputs`), restart (a predecessor left `provisional` ops or was
+    /// reconfigured) or a fresh run.
+    pub(crate) fn start(roots: FillPreparationRoots, operation: Operation, identity: ToolRunIdentity, mesh_lane: Vec<String>, inputs: [u8; 32], requested: usize, checkpoint: Option<FillRunCheckpoint>, provisional: u32) -> Self {
+        match checkpoint.filter(|checkpoint| checkpoint.inputs == inputs) {
+            Some(checkpoint) => Self::replaying(FillBuilder::begin_preparation(roots, operation, checkpoint.requested as usize), identity, mesh_lane, checkpoint, requested, provisional),
+            None if provisional > 0 || identity.generation > 0 => Self::restarting(FillBuilder::begin_preparation(roots, operation, requested), identity, mesh_lane, inputs, provisional),
+            None => Self::new(FillBuilder::begin_preparation(roots, operation, requested), identity, mesh_lane, inputs),
+        }
+    }
+
     /// 🎬️ Wraps a freshly begun planner; `mesh_lane` is the plugin mesh lane trace subjects index into
     /// (a url missing from it is appended and reported through [`FillRunJob::mesh_lane`]).
     pub(crate) fn new(builder: FillBuilder, identity: ToolRunIdentity, mesh_lane: Vec<String>, inputs: [u8; 32]) -> Self {
@@ -2699,23 +2647,17 @@ impl FillRunJob {
         }
     }
 
+    #[cfg(test)]
     pub(crate) fn builder(&self) -> &FillBuilder {
         &self.builder
     }
 
+    #[cfg(test)]
     pub(crate) fn operation(&self) -> Operation {
         self.builder.operation
     }
 
-    pub(crate) fn identity(&self) -> ToolRunIdentity {
-        self.writer.identity()
-    }
-
-    /// 🪢️ Stamps later ticks with a new run generation.
-    pub(crate) fn rebind(&mut self, identity: ToolRunIdentity) {
-        self.writer.rebind(identity);
-    }
-
+    #[cfg(test)]
     pub(crate) fn mesh_lane(&self) -> &[String] {
         &self.mesh_lane
     }
@@ -2725,15 +2667,12 @@ impl FillRunJob {
         [self.tested, self.placement_keys.len() as u64, self.collisions, self.rejected]
     }
 
-    pub(crate) fn stage(&self) -> FillRunStage {
-        self.stage
-    }
-
     /// 📸️ Where this run stands right now.
     pub(crate) fn checkpoint(&self) -> FillRunCheckpoint {
         FillRunCheckpoint { requested: self.builder.requested_count() as u64, placements: self.placement_keys.len() as u64, provisional_ops: self.writer.provisional_len(), tested: self.tested, next_key: self.next_key, inputs: self.inputs }
     }
 
+    #[cfg(test)]
     /// 🧱️ The provisional placements in op order, for finalize revalidation.
     pub(crate) fn provisional_placements(&self) -> Vec<FillRunPlacement> {
         self.placement_keys
@@ -2743,12 +2682,31 @@ impl FillRunJob {
             .collect()
     }
 
+    #[cfg(test)]
     /// ⏩️ Resumes this resident run from one of its own checkpoints with a new requested count.
     pub(crate) fn resume(&mut self, checkpoint: &[u8], requested: usize) -> Result<(), FillRunResumeError> {
         let checkpoint = FillRunCheckpoint::decode(checkpoint).ok_or(FillRunResumeError::Malformed)?;
         let current = self.checkpoint();
         if checkpoint.inputs != self.inputs || checkpoint.next_key > current.next_key || checkpoint.tested > current.tested || checkpoint.placements > self.builder.sequence.len() as u64 {
             return Err(FillRunResumeError::Foreign);
+        }
+        self.retarget(self.writer.identity(), requested);
+        Ok(())
+    }
+
+    /// 🪢️ Every later tick carries `identity` (the framework rebound the run after a base change).
+    pub(crate) fn rebind(&mut self, identity: ToolRunIdentity) {
+        self.writer.rebind(identity);
+    }
+
+    /// 🎯️ Retargets this resident run in place (framework `reconfigure: resume`): later ticks carry `identity` and
+    /// the plan heads for `requested` — a raise continues the same deterministic sequence, a lower retracts its
+    /// tail, and a completed run wakes up again; a run still replaying adopts `requested` on arrival.
+    pub(crate) fn retarget(&mut self, identity: ToolRunIdentity, requested: usize) {
+        self.writer.rebind(identity);
+        if let Some(replay) = self.replay.as_mut() {
+            replay.requested = requested;
+            return;
         }
         self.builder.set_requested_count(requested);
         if self.builder.stage != FillJobStage::Complete {
@@ -2758,7 +2716,6 @@ impl FillRunJob {
                 self.owed = None;
             }
         }
-        Ok(())
     }
 
     fn mesh(&mut self, url: &str) -> u32 {
@@ -3094,6 +3051,12 @@ impl FillRevalidateJob {
         }
     }
 
+    /// 🪢️ Every later tick carries `identity`.
+    pub(crate) fn rebind(&mut self, identity: ToolRunIdentity) {
+        self.identity = identity;
+    }
+
+    #[cfg(test)]
     /// ⚖️ `true` per placement that conflicts with the head, in op order.
     pub(crate) fn conflicts(&self) -> &[bool] {
         &self.conflicts
@@ -3109,10 +3072,8 @@ impl FillRevalidateJob {
         for vortex in &object.vortices {
             self.vortex_owners.insert(puzzle3d_vortex_full_id(&object.id, &vortex.id), object.id.clone());
         }
-        let mesh_url = match self.scene.kind_catalogs.as_ref() {
-            Some(catalogs) => resolve_object_kind_mesh_url(object.object_kind.as_deref().unwrap_or(""), catalogs, &self.scene.fixture),
-            None => object.mesh_url.clone(),
-        };
+        let empty = KindCatalogBundle::default();
+        let mesh_url = resolve_placed_object_mesh_url(object, self.scene.kind_catalogs.as_ref().unwrap_or(&empty), &self.scene.fixture);
         if let Some(mesh_url) = mesh_url.filter(|url| self.meshes.contains_key(url)) {
             self.head.push(PlacedCollisionEntry { object_id: object.id.clone(), mesh_url, world: pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale) });
         }
@@ -3192,7 +3153,7 @@ impl FillRevalidateJob {
             conflicts: conflicts as u32,
             steps: ToolRunStepRing::default(),
         };
-        let tick = ToolRunTick { identity: self.identity, sequence: self.sequence, progress: Some(progress), steps: std::mem::take(&mut self.steps), trace, append_ops, append_entities, retract_to };
+        let tick = ToolRunTick { identity: self.identity, sequence: self.sequence, progress: Some(progress), steps: std::mem::take(&mut self.steps), trace, append_ops, append_entities, retract_to, payload: None };
         self.sequence += 1;
         match tick.encode().ok().map(|bytes| context.payload_from_bytes(JobPayloadStream::Preview, &bytes)) {
             Some(Ok(payload)) => StepOutcome::PreviewReady(payload),

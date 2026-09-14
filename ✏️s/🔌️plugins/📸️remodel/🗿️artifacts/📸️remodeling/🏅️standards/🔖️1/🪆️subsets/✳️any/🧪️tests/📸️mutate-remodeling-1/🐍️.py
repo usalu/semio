@@ -1,8 +1,9 @@
-"""🐍️ `s.remodel.remodeling`'s second, independent implementation of all 35 of its mutation kinds.
+"""🐍️ `s.remodel.remodeling`'s second, independent implementation of all 36 of its mutation kinds.
 
-`s.remodel.remodeling` is a semio-NATIVE reconstruction JOB document — streams, calibrations,
-ground control points, the eight `ReconstructionParams` sub-records a pipeline runs under, and the
-engine-owned results — not a point cloud or a mesh file. A reader of COLMAP, LAS or PLY output would
+`s.remodel.remodeling` is a semio-NATIVE reconstruction project document — streams, calibrations,
+ground control points, the eight `ReconstructionParams` sub-records a pipeline runs under, the
+durable content leaves a run publishes, and the engine-owned results — not a point cloud or a mesh
+file. A reader of COLMAP, LAS or PLY output would
 be judging a different artifact, and nothing reads `.dsl.semio`. This subset's own no-oracle decision
 (`remodeling-mutation-semantics`) records that survey. The reference is therefore a second
 IMPLEMENTATION, written from this subset's own committed
@@ -18,8 +19,8 @@ this payload is REFUSED (or warned as a no-op) and that the document therefore d
 reference then states, from the verb's own meaning, WHICH diagnostic that payload earns and requires
 the committed after-document to be the before-document unchanged. Every other vector is applied and
 compared field by field. The refusal statements below are derived from what each verb MEANS — a
-stream may not be created twice, a frame index must address a frame that exists, a commit publishes
-only what a staged run produced — not from production's control flow, and they carry none of
+stream may not be created twice, a frame index must address a frame that exists, a commit binds only
+content the document already stores complete — not from production's control flow, and they carry none of
 production's diagnostic prose.
 
 📍️ WHERE A VECTOR LIVES IS THE FEATURE'S ANSWER, not this module's. Every scenario carries a doc
@@ -46,7 +47,14 @@ frame, texture or geo product references, all earn `mutation.referenced` instead
 collection is held in ascending key order, so a `create`/`add` puts a member back exactly where a
 `delete`/`remove` took it from. Together those make every kind's inverse a single step of this same
 vocabulary that restores the committed BEFORE-document exactly — this module needs no synthetic
-"move" step to state it, and it asserts that for all 134 committed vectors.
+"move" step to state it, and it asserts that for all 136 committed vectors.
+
+📦️ DURABLE CONTENT is ordinary document state. A reconstruction run publishes every sparse cloud, mesh
+and raster as bounded 4 KiB leaves through `append-content` (removed again by `remove-content`), and
+`commit-reconstruction` then names that content by id: a `remodeling-content:<id>|<leaves>` point
+buffer, a `remodeling-mesh-content:<leaves>` mesh child, or an asset binding. Completeness of named
+content is therefore decidable from the BASE document alone, so the commit is modelled in full here —
+its refusals, its no-op, its forward application and its inverse.
 """
 
 from __future__ import annotations
@@ -55,6 +63,7 @@ from __future__ import annotations
 import base64
 import copy
 import json
+import re
 
 from semio_repo_test import Adapter, Context, Outcome
 
@@ -92,7 +101,6 @@ TAGS = {
     "update-mesh-params": "updateMeshParams",
     "update-motion-params": "updateMotionParams",
     "update-geo-params": "updateGeoParams",
-    "replace-job": "replaceJob",
     "replace-sparse": "replaceSparse",
     "replace-dense": "replaceDense",
     "replace-mesh-result": "replaceMeshResult",
@@ -100,6 +108,8 @@ TAGS = {
     "replace-tracks": "replaceTracks",
     "replace-geo-products": "replaceGeoProducts",
     "replace-qc": "replaceQc",
+    "append-content": "appendContent",
+    "remove-content": "removeContent",
     "commit-reconstruction": "commitReconstruction",
 }
 
@@ -127,11 +137,29 @@ RESULT_SLOT = {
 # 🔑 The argument key each `replace-*` verb carries its replacement under.
 RESULT_ARG = dict(RESULT_SLOT, **{"replace-mesh-result": "mesh"})
 
-# 🚧 A private staging handle, which only `commit-reconstruction` may publish.
-CONTENT_HANDLE_PREFIX = "remodeling-content:"
-MESH_STAGE_HANDLE_PREFIX = "mesh-stage:"
 DURABLE_CHUNK_RAW_BYTES = 4096
 RASTER_CONTENT_BYTES = 1_114_112
+U64_MAX = (1 << 64) - 1
+
+# 📏 Each durable content kind's envelope: the most raw bytes and leaves one entry may hold.
+CONTENT_ENVELOPE = {"sparse": (512 * 12, 2), "mesh": (87_552 + 30, 30), "image": (RASTER_CONTENT_BYTES, 272)}
+
+# 🧊 Mesh leaves are `[field, values...]`; each field's element width (4 for f32/u32 lanes, 1 for raw
+# bytes and UTF-8 text) and the most elements the 512-vertex/512-triangle envelope admits.
+MESH_FIELDS = {
+    0: (4, 512 * 3),
+    1: (4, 512 * 3),
+    2: (4, 512 * 4),
+    3: (4, 512 * 3),
+    4: (4, 512 * 2),
+    5: (4, 512),
+    6: (4, 512),
+    7: (4, 512 * 6),
+    8: (4, 512 * 3),
+    9: (4, 512 * 4),
+    10: (1, 512 * 3),
+    11: (1, 24_576),
+}
 # endregion 🔖️Vocabulary
 
 
@@ -250,6 +278,101 @@ def durable_leaf(asset):
     assert len(raw) <= RASTER_CONTENT_BYTES, "a durable raster leaf is bounded"
     chunks = [base64.b64encode(raw[offset : offset + DURABLE_CHUNK_RAW_BYTES]).decode("ascii") for offset in range(0, len(raw), DURABLE_CHUNK_RAW_BYTES)]
     return {"kind": "image", "mime": asset["mime"], "width": asset["width"], "height": asset["height"], "chunks": chunks}
+
+
+def _count(text):
+    """🔢 A decimal leaf count as an unsigned 64-bit integer, or `None`."""
+    return int(text) if re.fullmatch(r"\+?[0-9]+", text) and int(text) <= U64_MAX else None
+
+
+def content_handle(points):
+    """🔗 `(contentId, leafCount)` a `remodeling-content:<id>|<leaves>` point buffer names, else `None`."""
+    if not isinstance(points, str) or not points.startswith("remodeling-content:"):
+        return None
+    content_id, bar, leaves = points[len("remodeling-content:") :].rpartition("|")
+    count = _count(leaves)
+    return (content_id, count) if bar and count is not None else None
+
+
+def mesh_content_handle(child):
+    """🔗 `(contentId, leafCount)` a `remodeling-mesh-content:<leaves>` mesh child names, else `None`."""
+    artifact_id = child["target"]["artifactId"]
+    if not artifact_id.startswith("remodeling-mesh-content:"):
+        return None
+    count = _count(artifact_id[len("remodeling-mesh-content:") :])
+    return None if count is None else (child["childId"], count)
+
+
+def leaf(encoded):
+    """🧱 One durable leaf's raw bytes, or `None` when it is not base64 or exceeds 4 KiB."""
+    if not isinstance(encoded, str) or len(encoded) > (DURABLE_CHUNK_RAW_BYTES + 2) // 3 * 4:
+        return None
+    try:
+        raw = base64.b64decode(encoded, validate=True)
+    except ValueError:
+        return None
+    return raw if len(raw) <= DURABLE_CHUNK_RAW_BYTES else None
+
+
+def mesh_resolves(leaves):
+    """🧊 Whether field-tagged mesh leaves decode, in ascending field order, into a mesh inside the
+    512-vertex/512-triangle envelope with consistent per-vertex and per-triangle lanes."""
+    counts = dict.fromkeys(MESH_FIELDS, 0)
+    indices = []
+    previous = -1
+    total = 0
+    for encoded in leaves:
+        raw = leaf(encoded)
+        if raw is None or not raw:
+            return False
+        total += len(raw)
+        field, values = raw[0], raw[1:]
+        if total > CONTENT_ENVELOPE["mesh"][0] or field not in MESH_FIELDS or field < previous:
+            return False
+        width, cap = MESH_FIELDS[field]
+        if len(values) % width:
+            return False
+        if field == 11:
+            try:
+                values.decode("utf-8")
+            except UnicodeDecodeError:
+                return False
+        counts[field] += len(values) // width
+        if counts[field] > cap:
+            return False
+        if field == 3:
+            indices.extend(int.from_bytes(values[offset : offset + 4], "little") for offset in range(0, len(values), 4))
+        previous = field
+    if counts[0] % 3 or len(indices) % 3:
+        return False
+    vertices, triangles = counts[0] // 3, len(indices) // 3
+    return (
+        vertices <= 512
+        and triangles <= 512
+        and all(index < vertices for index in indices)
+        and counts[1] in (0, vertices * 3)
+        and counts[2] in (0, vertices * 3, vertices * 4)
+        and counts[4] in (0, vertices * 2)
+        and counts[5] in (0, triangles)
+        and counts[6] in (0, vertices)
+    )
+
+
+def content_complete(store, content_id, kind, leaf_count):
+    """✅ Whether the document stores `content_id` as complete content of `kind`: exactly `leaf_count`
+    (at least one) leaves inside the kind's byte envelope, a mesh additionally resolving."""
+    entry = store.get(content_id)
+    if entry is None or entry["kind"] != kind or leaf_count == 0 or len(entry["chunks"]) != leaf_count:
+        return False
+    if kind == "mesh":
+        return mesh_resolves(entry["chunks"])
+    raws = [leaf(encoded) for encoded in entry["chunks"]]
+    return all(raw is not None for raw in raws) and sum(len(raw) for raw in raws) <= CONTENT_ENVELOPE[kind][0]
+
+
+def bound_asset_handle(asset_id, content_id):
+    """🖼️ The `assets` handle a reconstruction binding writes: the content id is the child id."""
+    return {"childId": content_id, "target": {"artifactId": f"{asset_id}-image", "dialect": {"artifactKind": "s.stdio.semio", "standard": "v1", "subset": "image"}}}
 
 
 def apply_create_asset(doc, p):
@@ -378,9 +501,44 @@ def _apply_update_params(doc, p, key):
     return after
 
 
-def apply_replace_job(doc, p):
+def apply_append_content(doc, p):
+    """📦 Places the payload's leaves at leaf index `first`, creating the entry with the payload's kind
+    and presentation when the document holds none; leaves already stored are not written twice."""
     after = copy.deepcopy(doc)
-    after["job"] = copy.deepcopy(p["job"])
+    store = after["durableArtifacts"]
+    entry = store.setdefault(p["contentId"], {"kind": p["kind"], "mime": p["mime"], "width": p["width"], "height": p["height"], "chunks": []})
+    if p["first"] + len(p["chunks"]) > len(entry["chunks"]):
+        entry["chunks"] = entry["chunks"][: p["first"]] + list(p["chunks"])
+    after["durableArtifacts"] = {key: store[key] for key in sorted(store)}
+    return after
+
+
+def apply_remove_content(doc, p):
+    """🔪 Keeps the leaves before `from`; keeping none removes the entry itself."""
+    after = copy.deepcopy(doc)
+    store = after["durableArtifacts"]
+    if p["from"] == 0:
+        del store[p["contentId"]]
+    else:
+        store[p["contentId"]]["chunks"] = store[p["contentId"]]["chunks"][: p["from"]]
+    return after
+
+
+def apply_commit_reconstruction(doc, p):
+    """🏁 Replaces the sparse, trajectory, geo and QC results outright, the mesh only when one is given,
+    and binds or unbinds every named asset — all in one step."""
+    after = copy.deepcopy(doc)
+    for slot in ("sparse", "trajectory", "geo", "qc"):
+        after["results"][slot] = copy.deepcopy(p[slot])
+    if p["mesh"] is not None:
+        after["results"]["mesh"] = copy.deepcopy(p["mesh"])
+    assets = after["assets"]
+    for binding in p["assets"]:
+        if binding.get("contentId") is None:
+            assets.pop(binding["id"], None)
+        else:
+            assets[binding["id"]] = bound_asset_handle(binding["id"], binding["contentId"])
+    after["assets"] = {key: assets[key] for key in sorted(assets)}
     return after
 
 
@@ -410,7 +568,9 @@ APPLIERS = {
     "delete-gcp": apply_delete_gcp,
     "add-gcp-observation": apply_add_gcp_observation,
     "remove-gcp-observation": apply_remove_gcp_observation,
-    "replace-job": apply_replace_job,
+    "append-content": apply_append_content,
+    "remove-content": apply_remove_content,
+    "commit-reconstruction": apply_commit_reconstruction,
 }
 for _kind, _key in PARAMS_KEY.items():
     APPLIERS[_kind] = (lambda key: lambda doc, p: _apply_update_params(doc, p, key))(_key)
@@ -431,9 +591,10 @@ def refusal_of(kind, base, payload):
     a record may not be created under an id the document already holds (`mutation.duplicate-id`); a
     verb may only address a member that exists, index included (`mutation.target-missing`); a value a
     verb constrains must satisfy that constraint (`mutation.invariant`); resubmitting the value a
-    document already holds changes nothing (`mutation.no-op`); a private staging handle belongs to the
-    commit that produced it and to nothing else (`mutation.incomplete-mesh`,
-    `mutation.invalid-asset-payload`, `mutation.invalid-reconstruction-*`)."""
+    document already holds changes nothing (`mutation.no-op`); a content handle names only content the
+    document stores complete, and only a reconstruction commit binds one (`mutation.incomplete-mesh`,
+    `mutation.invalid-asset-payload`, `mutation.invalid-reconstruction-*`); a content leaf is bounded,
+    contiguous and never rewritten (`mutation.invalid-content-chunk`, `mutation.content-*`)."""
     streams, gcps = base["streams"], base["gcps"]
     cameras, rig = base["calibration"]["cameras"], base["calibration"]["rig"]
     params, results = base["params"], base["results"]
@@ -474,7 +635,14 @@ def refusal_of(kind, base, payload):
             return "mutation.target-missing"
         return None
     if kind == "create-asset":
-        return "mutation.invalid-asset-payload" if payload["asset"]["data"].startswith(CONTENT_HANDLE_PREFIX) else None
+        # 🔗 Durable content is bound by a reconstruction commit; an imported raster carries its own bytes.
+        if content_handle(payload["asset"]["data"]) is not None:
+            return "mutation.invalid-asset-payload"
+        try:
+            raw = base64.b64decode(payload["asset"]["data"], validate=True)
+        except ValueError:
+            return "mutation.invalid-asset-payload"
+        return "mutation.invalid-asset-payload" if len(raw) > RASTER_CONTENT_BYTES else None
     if kind == "delete-asset":
         if payload["key"] not in base["assets"]:
             return "mutation.target-missing"
@@ -555,10 +723,9 @@ def refusal_of(kind, base, payload):
         if invalid(incoming):
             return "mutation.invariant"
         return "mutation.no-op" if incoming == params[slot] else None
-    if kind == "replace-job":
-        return "mutation.no-op" if payload["job"] == base["job"] else None
     if kind == "replace-mesh-result":
-        if payload["mesh"]["mesh"]["target"]["artifactId"].startswith(MESH_STAGE_HANDLE_PREFIX):
+        named = mesh_content_handle(payload["mesh"]["mesh"])
+        if named is not None and not content_complete(base["durableArtifacts"], named[0], "mesh", named[1]):
             return "mutation.incomplete-mesh"
         return "mutation.no-op" if payload["mesh"] == results["mesh"] else None
     if kind in RESULT_SLOT:
@@ -567,27 +734,65 @@ def refusal_of(kind, base, payload):
         if clearable and payload[arg] is None and results[slot] is None:
             return "mutation.target-missing"
         return "mutation.no-op" if payload[arg] == results[slot] else None
+    if kind == "append-content":
+        return refuses_append(base["durableArtifacts"], payload)
+    if kind == "remove-content":
+        entry = base["durableArtifacts"].get(payload["contentId"])
+        if entry is None:
+            return "mutation.target-missing"
+        if payload["from"] > len(entry["chunks"]):
+            return "mutation.content-gap"
+        return "mutation.no-op" if payload["from"] == len(entry["chunks"]) else None
     if kind == "commit-reconstruction":
-        return refuses_commit(payload)
+        return refuses_commit(base, payload)
     raise AssertionError(f"no refusal rule for kind {kind!r}")
 
 
-def refuses_commit(payload):
-    """🚧 `commit-reconstruction` PUBLISHES what a staged reconstruction produced, so every result
-    argument it accepts must be a replayable staging handle — a `remodeling-content:` address for a
-    point buffer or a raster, a `mesh-stage:` artifact id for a mesh. An inline buffer names no staged
-    run and cannot be published. Derived from the verb's own meaning; the order below is the order the
-    three arguments are published in, sparse cloud first and mesh last."""
-    sparse = payload.get("sparse")
-    if isinstance(sparse, dict) and sparse.get("points") and not sparse["points"].startswith(CONTENT_HANDLE_PREFIX):
-        return "mutation.invalid-reconstruction-sparse"
-    for committed in payload.get("assets", []):
-        if not committed["asset"]["data"].startswith(CONTENT_HANDLE_PREFIX):
-            return "mutation.invalid-reconstruction-asset"
-    mesh = payload.get("mesh")
-    if isinstance(mesh, dict) and not mesh["mesh"]["target"]["artifactId"].startswith(MESH_STAGE_HANDLE_PREFIX):
-        return "mutation.invalid-reconstruction-mesh"
+def refuses_append(store, payload):
+    """📦 A leaf is a base64 string of at most 4 KiB and an append carries at least one; leaves are
+    contiguous, so the first may not start past the stored count; one entry keeps one kind and
+    presentation; a stored leaf is immutable, so an overlapping leaf must equal it; an append that
+    only repeats stored leaves changes nothing; and the entry stays inside its kind's envelope."""
+    raws = [leaf(encoded) for encoded in payload["chunks"]]
+    if not raws or any(raw is None for raw in raws):
+        return "mutation.invalid-content-chunk"
+    entry = store.get(payload["contentId"])
+    stored = [] if entry is None else entry["chunks"]
+    first = payload["first"]
+    if first > len(stored):
+        return "mutation.content-gap"
+    if entry is not None and (entry["kind"], entry["mime"], entry["width"], entry["height"]) != (payload["kind"], payload["mime"], payload["width"], payload["height"]):
+        return "mutation.content-kind-mismatch"
+    repeated = stored[first : first + len(payload["chunks"])]
+    if repeated != payload["chunks"][: len(repeated)]:
+        return "mutation.content-conflict"
+    if len(repeated) == len(payload["chunks"]):
+        return "mutation.no-op"
+    max_bytes, max_leaves = CONTENT_ENVELOPE[payload["kind"]]
+    kept = sum(len(leaf(encoded) or b"") for encoded in stored[: first + len(repeated)])
+    if first + len(payload["chunks"]) > max_leaves or kept + sum(len(raw) for raw in raws) > max_bytes:
+        return "mutation.content-capacity"
     return None
+
+
+def refuses_commit(base, payload):
+    """🏁 `commit-reconstruction` binds content by id, so every handle it names must address content
+    the BASE document already stores complete: the sparse point buffer, then the mesh child, then each
+    asset binding in payload order. Inline buffers and constant meshes name no content. A commit that
+    changes neither a result nor a binding is a no-op."""
+    store = base["durableArtifacts"]
+    sparse = payload["sparse"]
+    named = None if sparse is None else content_handle(sparse["points"])
+    if named is not None and not content_complete(store, named[0], "sparse", named[1]):
+        return "mutation.invalid-reconstruction-sparse"
+    named = None if payload["mesh"] is None else mesh_content_handle(payload["mesh"]["mesh"])
+    if named is not None and not content_complete(store, named[0], "mesh", named[1]):
+        return "mutation.invalid-reconstruction-mesh"
+    for binding in payload["assets"]:
+        content_id = binding.get("contentId")
+        if content_id is not None and not (content_id in store and content_complete(store, content_id, "image", len(store[content_id]["chunks"]))):
+            return "mutation.invalid-reconstruction-asset"
+    return "mutation.no-op" if apply_commit_reconstruction(base, payload) == base else None
 # endregion 🔖️Vocabulary — refusal rules
 
 
@@ -653,10 +858,22 @@ def inverse_mutation(kind, base, payload):
         return [("add-gcp-observation", {"id": payload["id"], "observation": observation})]
     if kind in PARAMS_KEY:
         return [(kind, {"params": base["params"][PARAMS_KEY[kind]]})]
-    if kind == "replace-job":
-        return [("replace-job", {"job": base["job"]})]
     if kind in RESULT_SLOT:
         return [(kind, {RESULT_ARG[kind]: base["results"][RESULT_SLOT[kind]]})]
+    if kind == "append-content":
+        entry = base["durableArtifacts"].get(payload["contentId"])
+        stored = 0 if entry is None else len(entry["chunks"])
+        return [] if payload["first"] + len(payload["chunks"]) <= stored else [("remove-content", {"contentId": payload["contentId"], "from": stored})]
+    if kind == "remove-content":
+        entry = base["durableArtifacts"][payload["contentId"]]
+        if entry["kind"] not in CONTENT_ENVELOPE or payload["from"] >= len(entry["chunks"]):
+            return []
+        restored = {"contentId": payload["contentId"], "kind": entry["kind"], "mime": entry["mime"], "width": entry["width"], "height": entry["height"], "first": payload["from"], "chunks": entry["chunks"][payload["from"] :]}
+        return [("append-content", restored)]
+    if kind == "commit-reconstruction":
+        results = base["results"]
+        bindings = [{"id": binding["id"], "contentId": base["assets"][binding["id"]]["childId"] if binding["id"] in base["assets"] else None} for binding in payload["assets"]]
+        return [("commit-reconstruction", {"sparse": results["sparse"], "trajectory": results["trajectory"], "mesh": results["mesh"], "geo": results["geo"], "qc": results["qc"], "assets": bindings})]
     raise AssertionError(f"no inverse rule for kind {kind!r}")
 
 
@@ -752,6 +969,9 @@ MUTATE_SCENARIOS: list[str] = [
     "add-stream-frame-missing",
     "add-stream-frame-noop",
     "add-stream-frame-realworld",
+    "append-content",
+    "append-content-gap",
+    "append-content-noop",
     "change-stream-sync",
     "change-stream-sync-missing",
     "change-stream-sync-noop",
@@ -761,8 +981,8 @@ MUTATE_SCENARIOS: list[str] = [
     "commit-reconstruction-mesh",
     "commit-reconstruction-sparse",
     "create-asset",
+    "create-asset-content-handle",
     "create-asset-realworld",
-    "create-asset-staging-handle",
     "create-asset-upsert",
     "create-camera-calibration",
     "create-camera-calibration-duplicate",
@@ -801,6 +1021,8 @@ MUTATE_SCENARIOS: list[str] = [
     "delete-stream-missing",
     "delete-stream-realworld",
     "delete-stream-referenced",
+    "remove-content",
+    "remove-content-missing",
     "remove-gcp-observation",
     "remove-gcp-observation-first",
     "remove-gcp-observation-out-of-range",
@@ -816,13 +1038,10 @@ MUTATE_SCENARIOS: list[str] = [
     "replace-geo-products-absent",
     "replace-geo-products-clears",
     "replace-geo-products-realworld",
-    "replace-job",
-    "replace-job-noop",
-    "replace-job-realworld",
     "replace-mesh-result",
     "replace-mesh-result-noop",
     "replace-mesh-result-realworld",
-    "replace-mesh-result-staged",
+    "replace-mesh-result-unpublished",
     "replace-qc",
     "replace-qc-absent",
     "replace-qc-clears",
@@ -893,6 +1112,9 @@ INVERSE_SCENARIOS: list[str] = [
     "add-stream-frame-missing",
     "add-stream-frame-noop",
     "add-stream-frame-realworld",
+    "append-content",
+    "append-content-gap",
+    "append-content-noop",
     "change-stream-sync",
     "change-stream-sync-missing",
     "change-stream-sync-noop",
@@ -902,8 +1124,8 @@ INVERSE_SCENARIOS: list[str] = [
     "commit-reconstruction-mesh",
     "commit-reconstruction-sparse",
     "create-asset",
+    "create-asset-content-handle",
     "create-asset-realworld",
-    "create-asset-staging-handle",
     "create-asset-upsert",
     "create-camera-calibration",
     "create-camera-calibration-duplicate",
@@ -942,6 +1164,8 @@ INVERSE_SCENARIOS: list[str] = [
     "delete-stream-missing",
     "delete-stream-realworld",
     "delete-stream-referenced",
+    "remove-content",
+    "remove-content-missing",
     "remove-gcp-observation",
     "remove-gcp-observation-first",
     "remove-gcp-observation-out-of-range",
@@ -957,13 +1181,10 @@ INVERSE_SCENARIOS: list[str] = [
     "replace-geo-products-absent",
     "replace-geo-products-clears",
     "replace-geo-products-realworld",
-    "replace-job",
-    "replace-job-noop",
-    "replace-job-realworld",
     "replace-mesh-result",
     "replace-mesh-result-noop",
     "replace-mesh-result-realworld",
-    "replace-mesh-result-staged",
+    "replace-mesh-result-unpublished",
     "replace-qc",
     "replace-qc-absent",
     "replace-qc-clears",

@@ -3478,6 +3478,41 @@ impl FlowEvalSession {
         status
     }
 
+    /// ⛓️ The CHAIN's own progress — the ledger that is live for the WHOLE of an evaluation, which
+    /// neither finer ledger is.
+    ///
+    /// 🩸️ [`FlowEvalSession::preview_tessellate_status`] reads `pending_tessellate_by_hash` and
+    /// [`FlowEvalSession::preview_eval_status`] reads `eval_progress_by_hash`. Both are empty at
+    /// every hop boundary of a `flowEvalTick` chain: a tessellation is admitted and answered inside
+    /// one hop, and a budgeted evaluation only lands in its ledger once an extension has already
+    /// answered `done: false`. An `evaluate` round trip parked at the geometry extension — which is
+    /// where a boolean preview spends its whole slow half — is recorded in NEITHER. So every status
+    /// a preview window published between hops was byte-identical `phase: "idle", inFlight: 0,
+    /// ratio: 1.0` while the kernel was busy, on both renderers: 54 identical publications across a
+    /// 23 s evaluation, no pill text, no progress, nothing to read
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-progress-visibility-2026-09-14.md`).
+    ///
+    /// ⛓️ What IS live throughout is the per-window tick latch — `armed` (a hop is outstanding),
+    /// `in_flight` (an extension answer is owed), `owed` (an answer asked for a continuation) and
+    /// `unfinished` (the window's own last tick said there is more) — plus `tick_scheduled`. The
+    /// monotone denominator is the session's own published per-node census: a node leaves
+    /// `queued`/`computing`/`stale` exactly once per chain and never returns to it, so
+    /// `nodes_done / nodes_total` only ever grows while one evaluation runs.
+    pub fn preview_chain_status(&self) -> PreviewChainStatus {
+        let in_flight: u32 = self.window_tick_latches.values().map(|latch| latch.in_flight).sum();
+        let working = self.tick_scheduled || self.window_tick_latches.values().any(|latch| latch.armed || latch.owed || latch.unfinished || latch.in_flight > 0);
+        let mut status = PreviewChainStatus { in_flight, working, ..PreviewChainStatus::default() };
+        if let Some(widgets) = crate::os_pack::json::parse(&self.status_json).ok().and_then(|value| value.as_object().cloned()) {
+            for (_, entry) in widgets.iter() {
+                status.nodes_total = status.nodes_total.saturating_add(1);
+                if !matches!(entry.get("status").and_then(crate::os_pack::json::Value::as_str), Some("queued" | "computing" | "stale")) {
+                    status.nodes_done = status.nodes_done.saturating_add(1);
+                }
+            }
+        }
+        status
+    }
+
     /// 🛑 The `evaluateCancel` request body the cancelling command sends to the geometry extension.
     /// Whole-registry, for the same reason [`FlowEvalSession::preview_cancel_invocation_request_json`]
     /// is: a session cancels its preview, not one named operator hop.
@@ -3913,6 +3948,33 @@ impl PreviewEvalStatus {
     /// 🛑 True while an explicit cancel would still retire something.
     pub fn is_cancellable(&self) -> bool {
         self.in_flight > 0 || self.phase.is_cancellable()
+    }
+}
+
+/// ⛓️ The whole preview evaluation chain's state, as the status object reports it when no finer
+/// ledger has anything to say — see [`FlowEvalSession::preview_chain_status`] for why the finer two
+/// are structurally silent at every hop boundary.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct PreviewChainStatus {
+    /// 📈 Nodes this chain has settled (anything but `queued`/`computing`/`stale`).
+    pub nodes_done: u32,
+    /// 📈 Nodes the published census knows about at all.
+    pub nodes_total: u32,
+    /// ⏳️ Extension answers outstanding across every attached preview window.
+    pub in_flight: u32,
+    /// ⏳️ Whether ANY window still owes, awaits or is running a hop.
+    pub working: bool,
+}
+
+impl PreviewChainStatus {
+    /// 📈 Fraction of the chain's nodes already settled, in `[0, 1]`. A chain that is working with
+    /// nothing yet published reports `0`, never `1`: "done" is the one answer a live evaluation may
+    /// never give.
+    pub fn ratio(&self) -> f64 {
+        if self.nodes_total == 0 {
+            return if self.working { 0.0 } else { 1.0 };
+        }
+        (f64::from(self.nodes_done) / f64::from(self.nodes_total)).clamp(0.0, 1.0)
     }
 }
 

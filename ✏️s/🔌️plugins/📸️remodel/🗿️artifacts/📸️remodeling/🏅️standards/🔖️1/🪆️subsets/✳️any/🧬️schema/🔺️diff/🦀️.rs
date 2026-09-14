@@ -1,6 +1,6 @@
 //! 🧬️ Remodeling diff schema — sparse field delta over the artifact.
 
-use crate::{CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob, ReconstructionParams, ReconstructionResults, RemodelingAssetChild, RemodelingDurableArtifactStore};
+use crate::{CalibrationState, GroundControlPoint, MediaStream, ReconstructionParams, ReconstructionResults, RemodelingAssetChild, RemodelingDurableArtifactStore};
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
@@ -30,8 +30,6 @@ pub struct RemodelingDiff {
     pub params: Option<ReconstructionParams>,
     #[state(artifact)]
     pub gcps: Option<RemodelingGcpList>,
-    #[state(artifact)]
-    pub job: Option<ReconstructionJob>,
     #[state(artifact)]
     pub results: Option<ReconstructionResults>,
 }

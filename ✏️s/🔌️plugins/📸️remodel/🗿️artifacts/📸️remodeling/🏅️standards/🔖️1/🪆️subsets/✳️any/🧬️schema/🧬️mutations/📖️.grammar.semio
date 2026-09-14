@@ -37,7 +37,6 @@ op = create-stream-op
    | update-mesh-params-op
    | update-motion-params-op
    | update-geo-params-op
-   | replace-job-op
    | replace-sparse-op
    | replace-dense-op
    | replace-mesh-result-op
@@ -45,6 +44,8 @@ op = create-stream-op
    | replace-tracks-op
    | replace-geo-products-op
    | replace-qc-op
+   | append-content-op
+   | remove-content-op
    | commit-reconstruction-op
 
 create-stream-op = "create-stream" "stream" "=" BLOCK
@@ -73,7 +74,6 @@ update-dense-params-op = "update-dense-params" "params" "=" BLOCK
 update-mesh-params-op = "update-mesh-params" "params" "=" BLOCK
 update-motion-params-op = "update-motion-params" "params" "=" BLOCK
 update-geo-params-op = "update-geo-params" "params" "=" BLOCK
-replace-job-op = "replace-job" "job" "=" BLOCK
 replace-sparse-op = "replace-sparse" "sparse" "=" BLOCK?
 replace-dense-op = "replace-dense" "dense" "=" BLOCK?
 replace-mesh-result-op = "replace-mesh-result" "mesh" "=" BLOCK
@@ -81,4 +81,6 @@ replace-trajectory-op = "replace-trajectory" "trajectory" "=" BLOCK?
 replace-tracks-op = "replace-tracks" "tracks" "=" TABLE
 replace-geo-products-op = "replace-geo-products" "geo" "=" BLOCK?
 replace-qc-op = "replace-qc" "qc" "=" BLOCK?
-commit-reconstruction-op = "commit-reconstruction" "job" "=" BLOCK "sparse" "=" BLOCK? "trajectory" "=" BLOCK? "mesh" "=" BLOCK? "geo" "=" BLOCK? "qc" "=" BLOCK? "assets" "=" TABLE
+append-content-op = "append-content" "content-id" "=" TEXT "kind" "=" ENUM "mime" "=" TEXT? "width" "=" UINT "height" "=" UINT "first" "=" UINT "chunks" "=" "[" TEXT* "]"
+remove-content-op = "remove-content" "content-id" "=" TEXT "from" "=" UINT
+commit-reconstruction-op = "commit-reconstruction" "sparse" "=" BLOCK? "trajectory" "=" BLOCK? "mesh" "=" BLOCK? "geo" "=" BLOCK? "qc" "=" BLOCK? "assets" "=" TABLE

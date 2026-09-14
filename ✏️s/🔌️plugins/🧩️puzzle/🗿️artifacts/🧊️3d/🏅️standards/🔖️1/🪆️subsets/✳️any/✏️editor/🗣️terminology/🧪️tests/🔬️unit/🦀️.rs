@@ -47,3 +47,21 @@ fn the_fill_run_vocabulary_equals_the_schema_table_and_is_authored_in_english_an
         assert!(!en.is_empty() && !de.is_empty() && en != de, "every fill run label is authored in both languages: {en} / {de}");
     }
 }
+
+/// 🧾️ The read-only brush suggestions vocabulary equals `$defs.Puzzle3dBrushSuggestionsRun` and is authored in both languages.
+#[test]
+fn the_brush_suggestions_run_vocabulary_equals_the_schema_table_and_is_authored_in_english_and_german() {
+    let schema: serde_json::Value = serde_json::from_str(PUZZLE3D_SCHEMA).expect("schema parses");
+    let table = &schema["$defs"]["Puzzle3dBrushSuggestionsRun"]["x-semio-toolRun"];
+    let stages: Vec<String> = puzzle3d_brush_suggestions_run_stages().into_iter().map(|stage| stage.id).collect();
+    assert_eq!(serde_json::json!(stages), table["stages"]);
+    let counters: Vec<String> = puzzle3d_brush_suggestions_run_counters().into_iter().map(|counter| counter.id).collect();
+    assert_eq!(serde_json::json!(counters), table["counters"]);
+    let reasons: Vec<serde_json::Value> = puzzle3d_brush_suggestions_run_reasons().iter().map(|reason| serde_json::json!({ "code": reason.code, "id": reason.id, "verdict": serde_json::to_value(reason.verdict).expect("verdict serializes") })).collect();
+    assert_eq!(serde_json::json!(reasons), table["reasons"]);
+    let labels = puzzle3d_brush_suggestions_run_stages().into_iter().map(|stage| stage.label).chain(puzzle3d_brush_suggestions_run_counters().into_iter().map(|counter| counter.label)).chain(puzzle3d_brush_suggestions_run_reasons().into_iter().map(|reason| reason.template)).chain([puzzle3d_brush_suggestions_run_unit()]);
+    for label in labels {
+        let (en, de) = (label.resolve(Terminology::Native, Locale::En), label.resolve(Terminology::Native, Locale::De));
+        assert!(!en.is_empty() && !de.is_empty() && en != de, "every brush suggestions label is authored in both languages: {en} / {de}");
+    }
+}

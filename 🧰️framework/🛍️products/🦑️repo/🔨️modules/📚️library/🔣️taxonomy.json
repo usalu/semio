@@ -9049,7 +9049,7 @@
         "🧷️set-brush-vortex-kind",
         "🖼️set-active-example",
         "↔️set-spacing",
-        "⏱️suggestions-tick",
+        "🎣️target-brush-suggestions",
         "☑️set-selectable-kind",
         "⚖️set-brush-kind-weights",
         "⚖️set-kind-weight",
@@ -9640,7 +9640,6 @@
         "🛍️set-active-example",
         "🛍️set-catalogue-sections",
         "🛍️set-fixture-json",
-        "🛑️cancel-reconstruction",
         "🛝️playground-development-session",
         "🛠️workshop",
         "🤝️engagement",
@@ -9824,10 +9823,6 @@
         "📼️import-video-frame-payload",
         "🪓️remove-stream",
         "🔄️set-stream-sync",
-        "⏩️advance-reconstruction",
-        "🔁️retry-stage",
-        "🏗️run-reconstruction",
-        "▶️run-stage",
         "☁️clear-dense",
         "🗾️clear-geo-products",
         "🧱️clear-mesh-result",
@@ -9972,7 +9967,8 @@
         "🧪️fixtures",
         "🧭️view",
         "🧵️session",
-        "🧵️simulation-session"
+        "🧵️simulation-session",
+        "🧵️reconstruction-session"
       ],
       "source": "registry"
     },
@@ -11233,7 +11229,8 @@
         "🔗️backbone",
         "👀️file-watcher",
         "🚪️native-io",
-        "🚪️entrypoint"
+        "🚪️entrypoint",
+        "⏯️layout-run"
       ],
       "source": "registry"
     },
@@ -14622,7 +14619,9 @@
         "tools"
       ],
       "memberNames": [
-        "🪣️fill"
+        "🪣️fill",
+        "🏗️reconstruction",
+        "🗂️reorganize"
       ],
       "source": "registry"
     },
@@ -14911,6 +14910,7 @@
         "🟦️typescript",
         "🚀️browser-boot",
         "🚚️browser-frame-transport",
+        "🚪️host-io",
         "🔌️browser-interactive-job-port",
         "🌐️browser-worker",
         "🧵️frame-job",
@@ -28289,6 +28289,7 @@
           },
           "sourceModulePaths": [
             "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+            "🧰️framework/🔨️modules/⏯️tool-run/🟦️.ts",
             "🧰️framework/🔨️modules/⏱️trace/🧮️memory/🟦️.ts",
             "🧰️framework/🔨️modules/⏳️async/🎟️lease-pool/🟦️.ts",
             "🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts",
@@ -28374,6 +28375,7 @@
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🗄️wasm-module-cache/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚪️host-io/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🫀️boot-liveness/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/💾️resident/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts",
@@ -28504,6 +28506,7 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🗄️wasm-module-cache/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚪️host-io/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧪️tests/🎮️browser-interactive-job-port.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧪️tests/📨️browser-frame-transport.ts",

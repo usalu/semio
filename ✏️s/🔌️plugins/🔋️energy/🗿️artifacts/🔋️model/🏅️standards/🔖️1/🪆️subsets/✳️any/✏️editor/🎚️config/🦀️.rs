@@ -86,86 +86,9 @@ impl store::ArtifactPack for EnergyModelConfig {
 store::impl_whole_record_config!(EnergyModelConfig);
 //#endregion 🔖️Config
 
-//#region 🧬️Mutations
-/// ⏱️ `change-simulation-settings`: replaces the three run settings at once; its inverse restores the base's.
-#[derive(Clone, Debug, PartialEq, Eq, ToValueDerive, FromValueDerive, dsl::DslRecord, dsl::MutationLeaf)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
-#[dsl(keyword = "change-simulation-settings")]
-#[mutation_leaf(contract = ::protocol)]
-pub struct ChangeSimulationSettings {
-    pub zone_timestep_minutes: u32,
-    pub system_timestep_minutes: u32,
-    pub warmup_days: u32,
-}
-
-impl ChangeSimulationSettings {
-    fn of(config: EnergyModelConfig) -> Self {
-        Self { zone_timestep_minutes: config.zone_timestep_minutes, system_timestep_minutes: config.system_timestep_minutes, warmup_days: config.warmup_days }
-    }
-
-    /// 🎚️ The settings this change installs.
-    pub fn config(&self) -> EnergyModelConfig {
-        EnergyModelConfig { zone_timestep_minutes: self.zone_timestep_minutes, system_timestep_minutes: self.system_timestep_minutes, warmup_days: self.warmup_days }
-    }
-}
-
-impl protocol::MutationKind<EnergyModelConfig, EnergyModelConfigMutation> for ChangeSimulationSettings {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "simulation-settings", kind: "change-simulation-settings", record: "ChangedSimulationSettings" };
-    fn diff(&self, _base: &EnergyModelConfig) -> protocol::MutationOutcome<EnergyModelConfig> {
-        protocol::MutationOutcome::new(self.config())
-    }
-    fn inverse(&self, base: &EnergyModelConfig) -> Vec<EnergyModelConfigMutation> {
-        vec![EnergyModelConfigMutation::ChangeSimulationSettings(Self::of(*base))]
-    }
-    fn label(&self) -> String {
-        format!("Change simulation settings to {} / {} min, {} warmup days", self.zone_timestep_minutes, self.system_timestep_minutes, self.warmup_days)
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["simulation-settings".into()]
-    }
-}
-
-/// 🧬️ `EnergyModelEditor::ConfigMutation`.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslOps, dsl::Mutations)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
-#[cfg_attr(test, serde(tag = "mutation", content = "payload", rename_all = "camelCase"))]
-#[mutations(snapshot = EnergyModelConfig, diff = EnergyModelConfig, schema = "energy.model.config")]
-pub enum EnergyModelConfigMutation {
-    ChangeSimulationSettings(ChangeSimulationSettings),
-}
-
-impl protocol::OpText for EnergyModelConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(candidate, _)| candidate == &keyword).map(|(_, spec)| *spec).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
-    }
-}
-
-impl protocol::OpBinary for EnergyModelConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
-    }
-}
-//#endregion 🧬️Mutations
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+pub mod mutations;
+pub use mutations::*;
 
 //#region 🧪️Tests
 #[cfg(test)]

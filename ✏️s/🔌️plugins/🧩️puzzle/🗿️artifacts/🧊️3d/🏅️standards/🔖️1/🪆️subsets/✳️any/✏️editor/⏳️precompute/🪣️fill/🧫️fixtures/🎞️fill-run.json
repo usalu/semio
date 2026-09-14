@@ -1,11 +1,30 @@
 {
   "$comment": "🎞️ Language-neutral fill tool run law of s.puzzle3d's ⏳️precompute/🪣️fill run job (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W1-A). A case seeds a shipped example document (scaled box fallback for every mesh identity, as the app registers before real GLBs arrive) and a requested count; `expected` is the verdict prefix as `verdict:reasonId`, the run counters, provisional op and entity counts, checkpoints and the stall reason id.",
   "laws": {
+    "documentCapacities": { "bookkeepingSlots": 32, "bookkeepingPageBytes": 16384, "documentPageBytes": 1048576, "objectSlots": 2048, "attractionSlots": 2048, "vortexSlots": 4096, "volumeSlots": 256, "kindSlots": 256, "candidateSlots": 1024, "cellSlots": 8192, "nakagin": { "objects": 180, "vortices": 358, "objectKinds": 12, "vortexKinds": 18, "compatibilityRows": 14, "attractions": 358 } },
     "opsPerPlacement": 2,
     "parryOracle": {
       "document": "concrete-forest",
       "seed": 7,
-      "requested": 60
+      "requested": 60,
+      "ownMeshVariants": [
+        { "document": "concrete-forest", "seed": 7, "requested": 60, "scale": 1.5, "records": 2000 },
+        { "document": "nakagin", "seed": 1, "requested": 12, "scale": 0.5, "records": 600 }
+      ]
+    },
+    "ownMesh": {
+      "$comment": "A placed body collides with the mesh it renders: its own meshUrl first, else its kind's (ticket lane W1-G). One host vortex, two compatible kinds; `blocker` parks a body of the host's kind carrying its own mesh where both candidates dock, while the kind's mesh is the same cube shifted `kindMeshOffset` along x. Revalidation re-tests the clear case's placements against each case's head.",
+      "kindMeshOffset": 40,
+      "cases": [
+        { "name": "clear", "blocker": false, "requested": 1, "expected": { "verdicts": ["success:fits"], "locked": 1, "collisions": 0, "stall": null, "revalidateConflicts": [false] } },
+        { "name": "own-mesh-blocker", "blocker": true, "requested": 1, "expected": { "verdicts": ["danger:solid-overlap", "danger:solid-overlap"], "locked": 0, "collisions": 2, "stall": "no-free-placement", "revalidateConflicts": [true] } }
+      ]
+    },
+    "visibleEnd": {
+      "$comment": "🏁️ Every fill run ends where the user can see why (ticket lane W1-H): its last step is `success:requested-reached` over a met request or a `warning` step naming a declared stall reason, and a run that tested nothing always names its stall. Each case is an own-mesh variant (every second document body carries its own mesh, `ownMeshScale` times its kind's box), which packs more than one bookkeeping page of bodies into one 8-unit spatial cell. `expected` holds the run counters and the stall reason id.",
+      "cases": [
+        { "document": "nakagin", "seed": 1, "requested": 12, "ownMeshScale": 1.5, "expected": { "tested": 0, "locked": 0, "collisions": 0, "rejected": 0, "stall": "document-capacity" } }
+      ]
     },
     "delivery": {
       "document": "concrete-forest",

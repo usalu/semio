@@ -2182,6 +2182,120 @@
     ],
     "trace": "instance3d",
     "runJob": "fillRun",
-    "revalidateJob": "fillRevalidate"
+    "revalidateJob": "fillRevalidate",
+    "settings": {
+      "config": [
+        "/fillCount",
+        "/weights/crate"
+      ],
+      "windowConfig": {
+        "main": [
+          "/grid/spacing"
+        ]
+      }
+    },
+    "windows": [
+      "main"
+    ]
+  },
+  "settingsPointers": {
+    "document": {
+      "fillCount": 12,
+      "weights": {
+        "crate": 0.5,
+        "a/b": 2,
+        "m~n": 3
+      },
+      "camera": {
+        "position": [
+          1.5,
+          2.5,
+          3.5
+        ]
+      },
+      "": "empty key",
+      "flags": [
+        true,
+        false
+      ]
+    },
+    "rows": [
+      {
+        "pointer": "",
+        "resolves": {
+          "fillCount": 12,
+          "weights": {
+            "crate": 0.5,
+            "a/b": 2,
+            "m~n": 3
+          },
+          "camera": {
+            "position": [
+              1.5,
+              2.5,
+              3.5
+            ]
+          },
+          "": "empty key",
+          "flags": [
+            true,
+            false
+          ]
+        }
+      },
+      {
+        "pointer": "/fillCount",
+        "resolves": 12
+      },
+      {
+        "pointer": "/weights/crate",
+        "resolves": 0.5
+      },
+      {
+        "pointer": "/weights/a~1b",
+        "resolves": 2
+      },
+      {
+        "pointer": "/weights/m~0n",
+        "resolves": 3
+      },
+      {
+        "pointer": "/camera/position/1",
+        "resolves": 2.5
+      },
+      {
+        "pointer": "/camera/position/01",
+        "resolves": null
+      },
+      {
+        "pointer": "/camera/position/3",
+        "resolves": null
+      },
+      {
+        "pointer": "/camera/position/-",
+        "resolves": null
+      },
+      {
+        "pointer": "/",
+        "resolves": "empty key"
+      },
+      {
+        "pointer": "/missing",
+        "resolves": null
+      },
+      {
+        "pointer": "/fillCount/deeper",
+        "resolves": null
+      },
+      {
+        "pointer": "/flags/0",
+        "resolves": true
+      }
+    ],
+    "malformed": [
+      "fillCount",
+      "/weights/~2",
+      "/a~"
+    ]
   }
 }

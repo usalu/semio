@@ -1,6 +1,8 @@
 /** 🧬️ Shared Puzzle 5D generator preferences. */
 export interface Puzzle5dConfig {
   /** @state config */
+  fillCount: number;
+  /** @state config */
   overlapBudget: number;
   /** @state config */
   objectKindWeights: Record<string, number>;
@@ -22,9 +24,14 @@ const finite = (value: unknown, at: string): number => {
   return value;
 };
 
+const count = (value: unknown, at: string): number => {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0) throw new Puzzle5dConfigGuardRefusal(at, "value is not a non-negative integer");
+  return value;
+};
+
 const weights = (value: unknown, at: string): Record<string, number> => Object.fromEntries(Object.entries(record(value, at)).map(([key, item]) => [key, finite(item, `${at}.${key}`)]));
 
 export function parsePuzzle5dConfig(value: unknown, at = "$"): Puzzle5dConfig {
   const row = record(value, at);
-  return { overlapBudget: finite(row.overlapBudget, `${at}.overlapBudget`), objectKindWeights: weights(row.objectKindWeights, `${at}.objectKindWeights`), vortexKindWeights: weights(row.vortexKindWeights, `${at}.vortexKindWeights`) };
+  return { fillCount: count(row.fillCount, `${at}.fillCount`), overlapBudget: finite(row.overlapBudget, `${at}.overlapBudget`), objectKindWeights: weights(row.objectKindWeights, `${at}.objectKindWeights`), vortexKindWeights: weights(row.vortexKindWeights, `${at}.vortexKindWeights`) };
 }

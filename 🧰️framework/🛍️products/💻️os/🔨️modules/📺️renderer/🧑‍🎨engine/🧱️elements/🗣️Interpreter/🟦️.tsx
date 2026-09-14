@@ -68,9 +68,11 @@ import {
   type UiMenuRef,
   type SceneLane,
   type SceneLaneRef,
+  BOARD2D_SCENE_LANES,
   CANVAS2D_SCENE_LANES,
   WORLD3D_SCENE_LANES,
   WORLD3D_SCENE_LANE_KEY_PREFIX,
+  board2dSceneFromLanes,
   canvas2dSceneFromLanes,
   sceneFromLanes,
   world3dSceneFromLanes,
@@ -1444,7 +1446,7 @@ function ImageView({ record }: { readonly record: UiNodeRecord }) {
   return <img id={`node-${record.id}`} src={component.src} alt={component.alt ?? ""} className="max-h-64 max-w-full rounded-md object-contain" data-ui-node-id={record.id} data-ui-node-key={record.key} />;
 }
 
-/** 🚚️ A surface whose scene declares out-of-doc payload lanes (`world-3d`, `canvas-2d`). Its `doc.bytes` carry only
+/** 🚚️ A surface whose scene declares out-of-doc payload lanes (`world-3d`, `canvas-2d`, `board-2d`). Its `doc.bytes` carry only
  * the spine; the lanes are retained text-leaf subtrees hanging off this very node, so this view — and
  * only this view — subscribes to the whole document's revision: a lane leaf changing does NOT change
  * this node's own record, and a tree larger than one reconcile page arrives across several patches. */
@@ -1489,7 +1491,7 @@ function PagedSurfaceView({ record, component, context }: { readonly record: UiN
   const store = context.store;
   const revision = useUiDocumentRevision(store);
   const carrierEpoch = useSurfaceCarrierEpoch(store, record);
-  const lanes = (component.kind === "canvas-2d" ? CANVAS2D_SCENE_LANES : WORLD3D_SCENE_LANES) as readonly SceneLane<Record<string, unknown>>[];
+  const lanes = (component.kind === "canvas-2d" ? CANVAS2D_SCENE_LANES : component.kind === "board-2d" ? BOARD2D_SCENE_LANES : WORLD3D_SCENE_LANES) as readonly SceneLane<Record<string, unknown>>[];
   const assemble = useCallback(
     (spine: Record<string, unknown>): Record<string, unknown> => {
       void revision;
@@ -1554,7 +1556,7 @@ function SurfaceAccessibilityShell({ record, context, children }: { readonly rec
 
 function SurfaceView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "surface" }>;
-  const body = component.kind === "world-3d" || component.kind === "canvas-2d" ? <PagedSurfaceView record={record} component={component} context={context} /> : <>{renderComponentSceneHost(record, component, context.onAction, context.store.getState().surface, context.requestContextMenu)}</>;
+  const body = component.kind === "world-3d" || component.kind === "canvas-2d" || component.kind === "board-2d" ? <PagedSurfaceView record={record} component={component} context={context} /> : <>{renderComponentSceneHost(record, component, context.onAction, context.store.getState().surface, context.requestContextMenu)}</>;
   return (
     <SurfaceAccessibilityShell record={record} context={context}>
       {body}
@@ -1727,10 +1729,13 @@ if (import.meta.vitest) {
       utf8ByteLength,
       world3dSurfaceLaneTexts: (record: UiNodeRecord, state: UiDocumentState, declared: readonly SceneLaneRef[]) => surfaceLaneTexts(record, state, declared, WORLD3D_SCENE_LANES),
       canvas2dSurfaceLaneTexts: (record: UiNodeRecord, state: UiDocumentState, declared: readonly SceneLaneRef[]) => surfaceLaneTexts(record, state, declared, CANVAS2D_SCENE_LANES),
+      board2dSurfaceLaneTexts: (record: UiNodeRecord, state: UiDocumentState, declared: readonly SceneLaneRef[]) => surfaceLaneTexts(record, state, declared, BOARD2D_SCENE_LANES),
       world3dSceneFromLanes,
       canvas2dSceneFromLanes,
+      board2dSceneFromLanes,
       WORLD3D_SCENE_LANES,
       CANVAS2D_SCENE_LANES,
+      BOARD2D_SCENE_LANES,
       WORLD3D_SCENE_LANE_KEY_PREFIX,
       world3dSceneLaneForBodyKey,
     },

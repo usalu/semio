@@ -20,27 +20,23 @@ pub struct SetContributions {
     pub page_count: u64,
 }
 
-/// 🧩️ Buffers this page and, on the run's last one, installs the assembled closure AND re-arms the
-/// evaluation the missing registry had already faulted — the exact twin of generation3d's row,
-/// minus its window addressing (this editor's tick publishes on the app-wide `HostOnly` lane, so
-/// its re-arm names no window).
-///
-/// The host pushes this run AFTER the document is loaded, so the first evaluation already ran
-/// against an EMPTY registry and cached its `flow.extension-not-contributed` miss; installing
-/// operators into a process-wide registry publishes nothing, so without the invalidation nothing in
-/// the app ever looks again. The key is
-/// [`semio_framework_os_flow::flow_extension_registry_generation`], so a re-push of an unchanged
-/// closure re-arms nothing while any later contribution change does
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-///
-/// Emits no store lane: the flow extension registry is process-wide runtime state, and effects are
-/// not a store lane.
-pub fn handle(payload: &SetContributions, _doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
+/// 🧩️ Buffers this page and, on the run's last one, installs the assembled closure into the flow
+/// extension registry and invalidates every `sessions` evaluation the missing registry had already
+/// faulted. Answers whether any session was invalidated, which is what owes the attached previews a
+/// fresh evaluation. The key is [`semio_framework_os_flow::flow_extension_registry_generation`], so a
+/// re-push of an unchanged closure owes nothing while any later contribution change re-evaluates.
+pub fn install(payload: &SetContributions, sessions: &mut [&mut FlowEvalSession]) -> Result<bool, Fault> {
     let page = u32::try_from(payload.page).map_err(|_| Fault::from("flow.contributions-page-address-invalid"))?;
     let page_count = u32::try_from(payload.page_count).map_err(|_| Fault::from("flow.contributions-page-address-invalid"))?;
     semio_framework_os_flow::sync_host_flow_extension_contributions_page(page, page_count, &payload.json).map_err(Fault::from)?;
-    if !session.invalidate_for_flow_extension_registry(semio_framework_os_flow::flow_extension_registry_generation()) {
-        return Ok(Emit::default());
-    }
-    Ok(Emit { effects: vec![super::flow_eval_tick::rearm(105)], ..Default::default() })
+    let generation = semio_framework_os_flow::flow_extension_registry_generation();
+    Ok(sessions.iter_mut().fold(false, |invalidated, session| session.invalidate_for_flow_extension_registry(generation) | invalidated))
+}
+
+/// 🧩️ The `app_commands!` row. Its framework-fixed signature carries no attached-window roster, so it
+/// installs the page and invalidates the session it is handed; the SERVED route
+/// (`Generation2dContributionsWork::step`) is the one that owes the attached previews an evaluation.
+pub fn handle(payload: &SetContributions, _doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
+    install(payload, &mut [session])?;
+    Ok(Emit::default())
 }

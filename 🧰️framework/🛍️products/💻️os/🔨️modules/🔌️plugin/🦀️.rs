@@ -6487,7 +6487,7 @@ pub mod app {
 
     #[path = "⏯️tool-run/🦀️.rs"]
     pub mod tool_run;
-    pub use tool_run::{is_tool_run_action_id, ToolRunActionOutcome, ToolRunDriver, ToolRunJob, ToolRunJobPurpose, ToolRunJobRequest, ToolRunLedger, ToolRunTickReceipt, ToolRunView, FRAMEWORK_TOOL_RUN_BODY_KEY};
+    pub use tool_run::{is_tool_run_action_id, ToolRunActionOutcome, ToolRunDriver, ToolRunJob, ToolRunJobPort, ToolRunJobPurpose, ToolRunJobRequest, ToolRunLedger, ToolRunRetargetableJob, ToolRunTickReceipt, ToolRunTraceKeys, ToolRunView, FRAMEWORK_TOOL_RUN_BODY_KEY};
 
     #[cfg(test)]
     #[path = "🧪️tests/🔬️tool-run/🦀️.rs"]
@@ -6981,7 +6981,7 @@ pub mod app {
                 "setInteractionGranularity",
             ];
             for action in definition.window_kinds.iter().flat_map(|window| &window.actions) {
-                if skip.contains(&action.id.as_str()) {
+                if skip.contains(&action.id.as_str()) || crate::is_tool_run_action_id(&action.id) {
                     continue;
                 }
                 let empty_args = DslValue::Object(Vec::new());
@@ -11143,6 +11143,11 @@ pub mod app {
         fn build_tool_run_job(_request: ToolRunJobRequest<'_, Self>) -> Result<Option<ToolRunJob>, Fault> {
             Ok(None)
         }
+        /// 🎯️ Builds a job that honours the in-place retarget hooks (`ToolRunRetargetableJob`); the driver asks
+        /// this first and falls back to `build_tool_run_job` on `None`.
+        fn build_retargetable_tool_run_job(_request: ToolRunJobRequest<'_, Self>) -> Result<Option<Box<dyn ToolRunRetargetableJob<Self::Config>>>, Fault> {
+            Ok(None)
+        }
         fn register_window_transient_owners(_registry: &mut WindowTransientOwnerRegistry) -> Result<(), Fault> {
             Ok(())
         }
@@ -12195,6 +12200,8 @@ pub mod app {
         /// ⏯️ Every tool and utility that declares a `ToolRunDefinition`, with its label, keyed by id —
         /// the manifest is the run's source of record (tool run contract §2.4).
         tool_runs: HashMap<String, (LocalizedLabel, semio_framework::ToolRunDefinition)>,
+        /// 🪟️ Every declared window kind's body key — how a run's declared `windows` resolve to the bodies a tick dirties.
+        window_body_keys: HashMap<String, String>,
     }
 
     fn validate_ui_dispatch_classification(owner: &str, id: &str, classification: semio_framework::InteractiveJobClassification) -> Result<(), Fault> {
@@ -12241,7 +12248,8 @@ pub mod app {
                 .filter_map(|tool| tool.run.clone().map(|run| (tool.id.clone(), (tool.label.clone(), run))))
                 .chain(definition.utilities.iter().filter_map(|utility| utility.run.clone().map(|run| (utility.id.clone(), (utility.label.clone(), run)))))
                 .collect();
-            Self { actions, window_actions, app_commands, mode_commands, controller_id: definition.controller_id.clone(), interactions: definition.interactions.iter().map(|interaction| (interaction.id.clone(), interaction.clone())).collect(), tool_runs }
+            let window_body_keys = definition.window_kinds.iter().map(|window| (window.id.clone(), window.body_key.clone())).collect();
+            Self { actions, window_actions, app_commands, mode_commands, controller_id: definition.controller_id.clone(), interactions: definition.interactions.iter().map(|interaction| (interaction.id.clone(), interaction.clone())).collect(), tool_runs, window_body_keys }
         }
 
         /// 🧹 Releases one catalog row or one empty nested catalog owner.
@@ -12323,6 +12331,15 @@ pub mod app {
                 drop(self.interactions.remove(&key));
                 return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
             }
+            if let Some(key) = self.window_body_keys.keys().next() {
+                let bytes = key.len();
+                if bytes > maximum_bytes {
+                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                let key = key.clone();
+                drop(self.window_body_keys.remove(&key));
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+            }
             if !self.controller_id.is_empty() {
                 let bytes = self.controller_id.len();
                 if bytes > maximum_bytes {
@@ -12336,7 +12353,12 @@ pub mod app {
 
         /// 🧺 Proves that every catalog row and nested catalog owner was retired.
         pub(crate) fn terminal_is_empty(&self) -> bool {
-            self.actions.is_empty() && self.window_actions.is_empty() && self.app_commands.is_empty() && self.mode_commands.is_empty() && self.controller_id.is_empty() && self.interactions.is_empty() && self.tool_runs.is_empty()
+            self.actions.is_empty() && self.window_actions.is_empty() && self.app_commands.is_empty() && self.mode_commands.is_empty() && self.controller_id.is_empty() && self.interactions.is_empty() && self.tool_runs.is_empty() && self.window_body_keys.is_empty()
+        }
+
+        /// 🪟️ The body key of a declared window kind.
+        pub(crate) fn window_body_key(&self, window_kind_id: &str) -> Option<&str> {
+            self.window_body_keys.get(window_kind_id).map(String::as_str)
         }
 
         /// ⏯️ The declared label and `ToolRunDefinition` of one tool or utility.
@@ -13814,6 +13836,7 @@ pub mod app {
         pub window_config: Option<WindowConfigSnapshot>,
         pub window_transient: Option<WindowTransientSnapshot>,
         identity_digest: u64,
+        tool_run: Option<ToolRunView>,
     }
 
     fn artifact_owned_tool_job_context_identity_digest(
@@ -13881,11 +13904,23 @@ pub mod app {
             let ArtifactOwnedToolJobSnapshots { children, draft, transient, window_config, window_transient } = snapshots;
             let identity_digest =
                 artifact_owned_tool_job_context_identity_digest(app_instance_id, view_state.as_ref(), canonical_base_revision, draft_generation, transient_generation, children.identity_digest(), (window_config.as_ref(), window_transient.as_ref()));
-            Self { app_instance_id, view_state, canonical_base_revision, draft_generation, transient_generation, children, draft, transient, window_config, window_transient, identity_digest }
+            Self { app_instance_id, view_state, canonical_base_revision, draft_generation, transient_generation, children, draft, transient, window_config, window_transient, identity_digest, tool_run: None }
         }
 
         pub fn identity_digest(&self) -> u64 {
             self.identity_digest
+        }
+
+        /// ⏯️ Binds the instance's tool run as of command admission (identity, state, provisional entities).
+        pub fn with_tool_run(mut self, tool_run: Option<ToolRunView>) -> Self {
+            self.tool_run = tool_run;
+            self
+        }
+
+        /// ⏯️ The instance's tool run as of command admission, the identity a command targets a run action at —
+        /// never a renderer-echoed cursor. Ephemeral local state, so it is not part of the identity digest.
+        pub fn tool_run(&self) -> Option<&ToolRunView> {
+            self.tool_run.as_ref()
         }
     }
 
@@ -20058,6 +20093,14 @@ pub mod app {
         pub(crate) tool_runs: ToolRunLedger<A>,
     }
 
+    impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
+        /// 🔍️ Read-only inspection of this instance's tool run ledger for app-level tests.
+        #[cfg(feature = "artifact-app-testing")]
+        pub fn tool_run_ledger(&self) -> &ToolRunLedger<A> {
+            &self.tool_runs
+        }
+    }
+
     /// 🆔️ Deterministic session-local `ArtifactHandle` for a CHILD's real (string) artifact id.
     /// `result_from_last_edit`'s own `ArtifactHandle(meta.instance_id as u128)` only identifies the
     /// ONE wasm-hosted document this plugin instance runs (the parent) — a child pulled in through
@@ -25733,7 +25776,8 @@ pub mod app {
                     window_config: window_config_authority.as_ref().map(|authority| authority.snapshot.clone()),
                     window_transient: window_transient_authority.as_ref().map(|authority| authority.snapshot.clone()),
                 },
-            ));
+            )
+            .with_tool_run(self.tool_runs.view()));
             let operation_spec = match admission.proof.clone() {
                 QualifiedToolProof::Bounded(_) => {
                     let job = TypedCommandFullOperationJob::<A> {
@@ -28442,9 +28486,19 @@ pub mod app {
             // it re-arms an already-pending chain once per refresh
             // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
             let instance_operation_owner = self.instance_operation_owner.clone();
-            let VcsArtifactApp { app: _, cache, child_content_root, .. } = self;
+            let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, snapshot_read).await;
+            // ⏯️ The poll sees the LIVE RUN, exactly as the four render and measure passes above do.
+            // `ArtifactApp::pending_effects` is where a surface starts a run once its work is owed and
+            // finalizes a complete one, and that whole ladder is written over `doc.tool_run()` — handed a
+            // view that always answered `None` it could only ever read "no run": the generation3d preview
+            // run started, ticked, completed and was never finalized, so the next `toolRunStart` a gesture
+            // asked for was a no-op against a run the framework still held and the 3d preview stopped
+            // re-evaluating for the rest of the session
+            // (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`, contract §3.7). The document itself
+            // stays the COMMITTED snapshot: a poll decides about work over what has landed, never over a
+            // run's own provisional overlay.
+            let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, snapshot_read).await.with_tool_run(tool_runs.view());
             let cfg = ConfigView { snapshot: config.as_ref(), window: None };
             A::pending_effects(&instance_operation_owner, &doc, &cfg, view).await
         }
@@ -29493,6 +29547,10 @@ pub mod app {
         fn build_tool_run_job(_request: ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<ToolRunJob>, Fault> {
             Ok(None)
         }
+        /// 🎯️ Author-owned retargetable run/revalidate job builder whose runtime owner is `EditorApp<Self>`.
+        fn build_retargetable_tool_run_job(_request: ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<Box<dyn ToolRunRetargetableJob<Self::Config>>>, Fault> {
+            Ok(None)
+        }
         fn register_window_transient_owners(_registry: &mut WindowTransientOwnerRegistry) -> Result<(), Fault> {
             Ok(())
         }
@@ -29969,6 +30027,16 @@ pub mod app {
             Ok(())
         }
 
+        /// ⏯️ Author-owned read-only run job builder whose runtime owner is `ViewerApp<Self>` (contract §3.7).
+        fn build_tool_run_job(_request: ToolRunJobRequest<'_, ViewerApp<Self>>) -> Result<Option<ToolRunJob>, Fault> {
+            Ok(None)
+        }
+
+        /// 🎯️ Author-owned retargetable read-only run job builder whose runtime owner is `ViewerApp<Self>`.
+        fn build_retargetable_tool_run_job(_request: ToolRunJobRequest<'_, ViewerApp<Self>>) -> Result<Option<Box<dyn ToolRunRetargetableJob<Self::Config>>>, Fault> {
+            Ok(None)
+        }
+
         fn retained_window_transient_target(_command: &Self::Command) -> Option<(&str, &'static str)> {
             None
         }
@@ -30246,6 +30314,9 @@ pub mod app {
         }
         fn build_tool_run_job(request: ToolRunJobRequest<'_, Self>) -> Result<Option<ToolRunJob>, Fault> {
             E::build_tool_run_job(request)
+        }
+        fn build_retargetable_tool_run_job(request: ToolRunJobRequest<'_, Self>) -> Result<Option<Box<dyn ToolRunRetargetableJob<Self::Config>>>, Fault> {
+            E::build_retargetable_tool_run_job(request)
         }
         fn register_window_transient_owners(registry: &mut WindowTransientOwnerRegistry) -> Result<(), Fault> {
             E::register_window_transient_owners(registry)
@@ -30593,6 +30664,12 @@ pub mod app {
         }
         fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, Self>) -> Result<(), Fault> {
             V::register_tool_job_factories(registry)
+        }
+        fn build_tool_run_job(request: ToolRunJobRequest<'_, Self>) -> Result<Option<ToolRunJob>, Fault> {
+            V::build_tool_run_job(request)
+        }
+        fn build_retargetable_tool_run_job(request: ToolRunJobRequest<'_, Self>) -> Result<Option<Box<dyn ToolRunRetargetableJob<Self::Config>>>, Fault> {
+            V::build_retargetable_tool_run_job(request)
         }
         fn retained_window_transient_target(command: &Self::Command) -> Option<(&str, &'static str)> {
             V::retained_window_transient_target(command)
@@ -37343,7 +37420,7 @@ pub mod plugin_app_close_prelude {
 
 #[cfg(any(test, feature = "artifact-app-testing"))]
 pub use app::artifact_app_laws;
-pub use app::tool_run::{is_tool_run_action_id, ToolRunActionOutcome, ToolRunDriver, ToolRunJob, ToolRunJobPurpose, ToolRunJobRequest, ToolRunLedger, ToolRunTickReceipt, ToolRunView, FRAMEWORK_TOOL_RUN_BODY_KEY};
+pub use app::tool_run::{is_tool_run_action_id, ToolRunActionOutcome, ToolRunDriver, ToolRunJob, ToolRunJobPort, ToolRunJobPurpose, ToolRunJobRequest, ToolRunLedger, ToolRunRetargetableJob, ToolRunTickReceipt, ToolRunTraceKeys, ToolRunView, FRAMEWORK_TOOL_RUN_BODY_KEY};
 pub use app::ActionFactory;
 pub use app::{
     artifact_inference_service,

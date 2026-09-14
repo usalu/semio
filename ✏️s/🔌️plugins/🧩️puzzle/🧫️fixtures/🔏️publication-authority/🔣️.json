@@ -42,7 +42,8 @@
             "config"
           ],
           "routes": [
-            "setBrushKindWeights"
+            "setBrushKindWeights",
+            "setFillCount"
           ]
         },
         {
@@ -51,10 +52,6 @@
             "window-config"
           ],
           "routes": [
-            "brushFillSessionAdopt",
-            "brushFillSessionCancel",
-            "brushFillSessionClear",
-            "brushFillSessionDiscard",
             "focusSelection",
             "setCamera",
             "setGridFactor",
@@ -88,19 +85,6 @@
           "routes": [
             "brushCommitSlot"
           ]
-        },
-        {
-          "status": "migrated",
-          "lanes": [
-            "artifact",
-            "window-config"
-          ],
-          "routes": [
-            "brushFillSessionBegin",
-            "brushFillSessionRetry",
-            "brushFillSessionStep",
-            "setFillCount"
-          ]
         }
       ]
     },
@@ -114,11 +98,11 @@
             "host-only"
           ],
           "routes": [
-            "cancelFillBuild",
             "exportFixture",
             "openAddObjectDialog",
             "openImportFixture",
             "registerBrushMesh",
+            "targetBrushSuggestions",
             "transformBegin",
             "transformEnd",
             "worldPointerDown"
@@ -131,6 +115,7 @@
           ],
           "routes": [
             "setBrushPlacementOverlapBudget",
+            "setFillCount",
             "setObjectKindWeight",
             "setVortexKindWeight"
           ]
@@ -156,7 +141,6 @@
             "createAttraction",
             "deleteAttraction",
             "deleteTargetVolume",
-            "fillBuildTick",
             "importFixture",
             "patchInspector",
             "relocateTargetVolume",
@@ -214,8 +198,7 @@
             "engagementInput",
             "engagementRepeatLast",
             "hoverSuggestion",
-            "openVortexSuggestions",
-            "suggestionsTick"
+            "openVortexSuggestions"
           ]
         },
         {
@@ -258,16 +241,6 @@
           "routes": [
             "engagementSubmit"
           ]
-        },
-        {
-          "status": "migrated",
-          "lanes": [
-            "artifact",
-            "config"
-          ],
-          "routes": [
-            "setFillCount"
-          ]
         }
       ]
     },
@@ -285,6 +258,7 @@
             "copy",
             "importComposeKit",
             "selectSameKindSelection",
+            "targetBrushSuggestions",
             "worldPointerDown"
           ]
         },
@@ -301,6 +275,15 @@
             "paste",
             "setFixtureJson",
             "setSelectionFlag"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "config"
+          ],
+          "routes": [
+            "setFillCount"
           ]
         },
         {
@@ -383,7 +366,6 @@
             "setCamera",
             "setCamera2d",
             "setCamera3d",
-            "setFillCount",
             "setGridFactor",
             "setGridSnapEnabled",
             "setLodMode",

@@ -825,8 +825,6 @@ pub mod editor {
             pub mod remove_node;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏷️rename-dag-node/🦀️.rs"]
             pub mod rename_dag_node;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️reorganize/🦀️.rs"]
-            pub mod reorganize;
         }
 
         #[path = "."]
@@ -836,6 +834,12 @@ pub mod editor {
                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
                 mod component;
                 pub use component::*;
+
+                #[path = "."]
+                pub mod tools {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🗂️reorganize/🦀️.rs"]
+                    pub mod reorganize;
+                }
 
                 #[path = "."]
                 pub mod windows {

@@ -625,72 +625,92 @@ pub struct BrushCollisionFreeResult {
     pub resume_candidate_index: usize,
 }
 
-//#region 🔖️BrushSearchProgress
-/// 🔎️ Live readout of ONE vortex's collision-free candidate search — the observable that turns the
-/// brush's hidden precompute into a visible process. Counters describe the CURRENT pass over the
-/// compatible list: `free` is cumulative (partial results survive a resumed pass and are published
-/// the moment they are known), `blocked` counts the candidates this pass refused on overlap, and
-/// `tested = free + blocked` is how many reached a verdict out of `total_candidates`. `done` flips
-/// the instant a pass exhausts the list with nothing left owed. `current_*` is whatever the last
-/// slice was looking at, so the viewport can paint that one candidate as a ghost with its verdict —
-/// and it SURVIVES completion, so a vortex where everything collided keeps showing the refused ghost
-/// instead of falling silently back to nothing.
-/// Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS wave G.
-#[derive(Debug, Clone, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct BrushSearchProgress {
-    pub target_vortex_full_id: String,
-    pub tested: usize,
-    pub free: usize,
-    pub blocked: usize,
-    pub total_candidates: usize,
-    pub done: bool,
-    #[value(default)]
-    pub current_candidate_kind: Option<String>,
-    /// ⚖️ Shares the fill planner's verdict vocabulary on purpose: one `"verdict"` wire spelling for
-    /// every ghost the viewport paints, so `testing`/`free`/`collision` mean the same thing whether
-    /// the brush or the fill lane produced them (master plan §2.1). The brush never reaches
-    /// `Rejected`/`Accepted` — accepting a candidate is a document mutation, not a search verdict.
-    #[value(default)]
-    pub current_verdict: FillCandidateVerdict,
-    #[value(default)]
-    pub current_ghost: Option<BrushPreviewState>,
+/// 🧭️ Stage of a brush suggestions tool run, the index into `ToolRunDefinition.stages`
+/// (`$defs.Puzzle3dBrushSuggestionsRun`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BrushSuggestionsRunStage {
+    Prepare,
+    Target,
+    Test,
+    Idle,
 }
 
-impl BrushSearchProgress {
-    /// 🌱️ A pass that has not decided anything yet for `target_vortex_full_id`.
-    pub fn begin(target_vortex_full_id: &str) -> Self {
-        Self { target_vortex_full_id: target_vortex_full_id.to_string(), ..Self::default() }
+impl BrushSuggestionsRunStage {
+    pub const ALL: [Self; 4] = [Self::Prepare, Self::Target, Self::Test, Self::Idle];
+
+    pub fn index(self) -> u16 {
+        self as u16
+    }
+
+    pub fn id(self) -> &'static str {
+        match self {
+            Self::Prepare => "prepare",
+            Self::Target => "target",
+            Self::Test => "test",
+            Self::Idle => "idle",
+        }
     }
 }
-//#endregion 🔖️BrushSearchProgress
 
-/// ⚖️ What the planner currently knows about one candidate placement: it is being tested, it came
-/// through broad and narrow phase clean, it overlapped a placed body beyond the budget, it was
-/// refused for another reason, or it became a real placement.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub enum FillCandidateVerdict {
-    #[default]
-    Testing,
+/// 🔢️ Counter of a brush suggestions tool run, the index into `ToolRunDefinition.counters`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BrushSuggestionsRunCounter {
+    Tested,
     Free,
-    Collision,
-    Rejected,
-    Accepted,
+    Collisions,
 }
 
-impl FillCandidateVerdict {
-    /// 🔤️ The one wire spelling of a verdict, so the camelCase `value` rename and the brush ghost encoder
-    /// never drift apart.
-    pub fn wire(self) -> &'static str {
+impl BrushSuggestionsRunCounter {
+    pub const ALL: [Self; 3] = [Self::Tested, Self::Free, Self::Collisions];
+
+    pub fn index(self) -> u16 {
+        self as u16
+    }
+
+    pub fn id(self) -> &'static str {
         match self {
-            Self::Testing => "testing",
+            Self::Tested => "tested",
+            Self::Free => "free",
+            Self::Collisions => "collisions",
+        }
+    }
+}
+
+/// 🏷️ Reason code of a brush suggestions trace record or step.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BrushSuggestionsRunReason {
+    Free,
+    Collision,
+    PoseUnavailable,
+    TargetMissing,
+    SuggestionsBlocked,
+    SearchComplete,
+}
+
+impl BrushSuggestionsRunReason {
+    pub const ALL: [Self; 6] = [Self::Free, Self::Collision, Self::PoseUnavailable, Self::TargetMissing, Self::SuggestionsBlocked, Self::SearchComplete];
+
+    pub fn code(self) -> u16 {
+        self as u16
+    }
+
+    pub fn id(self) -> &'static str {
+        match self {
             Self::Free => "free",
             Self::Collision => "collision",
-            Self::Rejected => "rejected",
-            Self::Accepted => "accepted",
+            Self::PoseUnavailable => "pose-unavailable",
+            Self::TargetMissing => "target-missing",
+            Self::SuggestionsBlocked => "suggestions-blocked",
+            Self::SearchComplete => "search-complete",
+        }
+    }
+
+    /// 🚥️ A free candidate and a finished search succeed, an overlap is a collision, the rest warn.
+    pub fn verdict(self) -> semio_framework_tool_run::ToolRunVerdict {
+        match self {
+            Self::Free | Self::SearchComplete => semio_framework_tool_run::ToolRunVerdict::Success,
+            Self::Collision => semio_framework_tool_run::ToolRunVerdict::Danger,
+            Self::PoseUnavailable | Self::TargetMissing | Self::SuggestionsBlocked => semio_framework_tool_run::ToolRunVerdict::Warning,
         }
     }
 }

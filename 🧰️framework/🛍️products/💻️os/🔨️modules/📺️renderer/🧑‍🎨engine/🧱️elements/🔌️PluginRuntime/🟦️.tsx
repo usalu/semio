@@ -1598,24 +1598,6 @@ export function leftoverInspectionPanelHash(selectedIds: readonly string[], cach
   return selectedIds.length > 0 ? undefined : cachedHash;
 }
 
-/** 🖌️ Leftover vortex hover under an armed brush must omit the cached world-body hash — B4's
- * hash-conditional skip keeps the boot tree (`preview=null`) while the guest already published
- * a 250–313 byte preview on the same suggestionsTick. */
-export function leftoverBrushPreviewWindowHash(activeUtility: string | null | undefined, hoveredVortexFullId: string | null | undefined, cachedHash: string | undefined): string | undefined {
-  return activeUtility === "brush" && Boolean(hoveredVortexFullId?.includes(":")) ? undefined : cachedHash;
-}
-
-export function leftoverBrushPreviewRefreshScope(activeUtility: string | null | undefined, hoveredVortexFullId: string | null | undefined): { readonly kind: "full" } | null {
-  return leftoverBrushPreviewWindowHash(activeUtility, hoveredVortexFullId, "cached") === undefined ? { kind: "full" } : null;
-}
-
-/** 🖌️ Leftover world refresh waits for suggestionsTick (or leftover-published preview JSON), not the first empty hover leftover. */
-export function leftoverBrushPreviewRefreshReady(actionId: string | null | undefined, activeUtility: string | null | undefined, hoveredVortexFullId: string | null | undefined, leftoverPreviewJson?: string | null): boolean {
-  if (leftoverBrushPreviewWindowHash(activeUtility, hoveredVortexFullId, "cached") !== undefined) return false;
-  if (typeof leftoverPreviewJson === "string" && leftoverPreviewJson.length > 0) return true;
-  return actionId === "suggestionsTick";
-}
-
 /** 🪟 Binds each authored window instance the host view actually carries to its own host view.
  *
  * 🐛️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B56: this also appended a synthetic

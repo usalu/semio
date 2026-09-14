@@ -9,7 +9,6 @@ use semio_framework_plugin::WorldSunConfig;
 pub struct Puzzle5dWindowConfig {
     pub camera2d: Puzzle5dCamera2d,
     pub camera3d: Puzzle5dCamera3d,
-    pub fill_count: u32,
     pub lod_mode: String,
     pub suggestion_offset: f64,
     pub grid_snap_enabled: bool,
@@ -22,7 +21,6 @@ impl Default for Puzzle5dWindowConfig {
         Self {
             camera2d: Puzzle5dCamera2d { x: 0.0, y: 0.0, zoom: 1.0 },
             camera3d: Puzzle5dCamera3d { position: [8.0, -8.0, 8.0], target: [0.0, 0.0, 0.0], zoom: 1.0 },
-            fill_count: crate::editor::puzzle5d::PUZZLE5D_DEFAULT_FILL_COUNT,
             lod_mode: crate::editor::puzzle5d::PUZZLE5D_LOD_MODE_AUTOMATIC.into(),
             suggestion_offset: crate::editor::puzzle5d::PUZZLE5D_DEFAULT_SUGGESTION_OFFSET,
             grid_snap_enabled: true,
@@ -42,7 +40,6 @@ impl Default for Puzzle5dWindowConfig {
 pub struct Puzzle5dBoardWindowConfig {
     #[dsl(block)]
     pub camera2d: Puzzle5dCamera2d,
-    pub fill_count: u32,
     pub lod_mode: String,
     pub suggestion_offset: f64,
     pub grid_snap_enabled: bool,
@@ -52,7 +49,7 @@ pub struct Puzzle5dBoardWindowConfig {
 impl Default for Puzzle5dBoardWindowConfig {
     fn default() -> Self {
         let value = Puzzle5dWindowConfig::default();
-        Self { camera2d: value.camera2d, fill_count: value.fill_count, lod_mode: value.lod_mode, suggestion_offset: value.suggestion_offset, grid_snap_enabled: value.grid_snap_enabled, grid_factor: value.grid_factor }
+        Self { camera2d: value.camera2d, lod_mode: value.lod_mode, suggestion_offset: value.suggestion_offset, grid_snap_enabled: value.grid_snap_enabled, grid_factor: value.grid_factor }
     }
 }
 
@@ -269,7 +266,7 @@ pub fn register_transient(registry: &mut semio_framework_plugin::WindowTransient
 
 pub fn config_from_view(view: &semio_framework_plugin::ConfigView<'_, crate::editor::puzzle5d::config::Puzzle5dConfig>) -> Puzzle5dWindowConfig {
     if let Some(value) = view.window::<Puzzle5dBoardWindowConfigOwner>() {
-        return Puzzle5dWindowConfig { camera2d: value.camera2d.clone(), fill_count: value.fill_count, lod_mode: value.lod_mode.clone(), suggestion_offset: value.suggestion_offset, grid_snap_enabled: value.grid_snap_enabled, grid_factor: value.grid_factor, ..Default::default() };
+        return Puzzle5dWindowConfig { camera2d: value.camera2d.clone(), lod_mode: value.lod_mode.clone(), suggestion_offset: value.suggestion_offset, grid_snap_enabled: value.grid_snap_enabled, grid_factor: value.grid_factor, ..Default::default() };
     }
     if let Some(value) = view.window::<Puzzle5dWorldWindowConfigOwner>() {
         return Puzzle5dWindowConfig { camera3d: value.camera3d.clone(), sun: value.sun.clone(), ..Default::default() };
@@ -279,7 +276,7 @@ pub fn config_from_view(view: &semio_framework_plugin::ConfigView<'_, crate::edi
 
 pub fn config_from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConfigSnapshot>) -> Puzzle5dWindowConfig {
     if let Some(value) = snapshot.and_then(|snapshot| snapshot.get::<Puzzle5dBoardWindowConfigOwner>()) {
-        return Puzzle5dWindowConfig { camera2d: value.camera2d.clone(), fill_count: value.fill_count, lod_mode: value.lod_mode.clone(), suggestion_offset: value.suggestion_offset, grid_snap_enabled: value.grid_snap_enabled, grid_factor: value.grid_factor, ..Default::default() };
+        return Puzzle5dWindowConfig { camera2d: value.camera2d.clone(), lod_mode: value.lod_mode.clone(), suggestion_offset: value.suggestion_offset, grid_snap_enabled: value.grid_snap_enabled, grid_factor: value.grid_factor, ..Default::default() };
     }
     if let Some(value) = snapshot.and_then(|snapshot| snapshot.get::<Puzzle5dWorldWindowConfigOwner>()) {
         return Puzzle5dWindowConfig { camera3d: value.camera3d.clone(), sun: value.sun.clone(), ..Default::default() };
@@ -312,7 +309,7 @@ pub fn runtime(
     runtime.vortex_kind_weights = shared.vortex_kind_weights.clone();
     runtime.camera2d = window.camera2d.clone();
     runtime.camera3d = window.camera3d.clone();
-    runtime.fill_count = window.fill_count;
+    runtime.fill_count = shared.fill_count;
     runtime.lod_mode = window.lod_mode.clone();
     runtime.suggestion_offset = window.suggestion_offset;
     runtime.grid_snap_enabled = window.grid_snap_enabled;
@@ -326,6 +323,7 @@ pub fn runtime(
 
 pub fn shared(runtime: &crate::editor::puzzle5d::config::Puzzle5dRuntime) -> crate::editor::puzzle5d::config::Puzzle5dConfig {
     let mut config = crate::editor::puzzle5d::config::Puzzle5dConfig::default();
+    config.fill_count = runtime.fill_count;
     config.overlap_budget = runtime.overlap_budget;
     config.object_kind_weights = runtime.object_kind_weights.clone();
     config.vortex_kind_weights = runtime.vortex_kind_weights.clone();
@@ -336,7 +334,6 @@ pub fn config_from_runtime(runtime: &crate::editor::puzzle5d::config::Puzzle5dRu
     Puzzle5dWindowConfig {
         camera2d: runtime.camera2d.clone(),
         camera3d: runtime.camera3d.clone(),
-        fill_count: runtime.fill_count,
         lod_mode: runtime.lod_mode.clone(),
         suggestion_offset: runtime.suggestion_offset,
         grid_snap_enabled: runtime.grid_snap_enabled,
@@ -352,7 +349,7 @@ pub fn transient_from_runtime(runtime: &crate::editor::puzzle5d::config::Puzzle5
 pub fn addressed_config(view: &semio_framework_plugin::ViewModel, config: Puzzle5dWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
     let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("puzzle5d-window-required"))?;
     match kind_for_view(view) {
-        Some(board2d::WINDOW_KIND_ID) => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle5dBoardWindowConfigOwner>(id, Puzzle5dBoardWindowConfigMutation::Snapshot { config: Puzzle5dBoardWindowConfig { camera2d: config.camera2d, fill_count: config.fill_count, lod_mode: config.lod_mode, suggestion_offset: config.suggestion_offset, grid_snap_enabled: config.grid_snap_enabled, grid_factor: config.grid_factor } })),
+        Some(board2d::WINDOW_KIND_ID) => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle5dBoardWindowConfigOwner>(id, Puzzle5dBoardWindowConfigMutation::Snapshot { config: Puzzle5dBoardWindowConfig { camera2d: config.camera2d, lod_mode: config.lod_mode, suggestion_offset: config.suggestion_offset, grid_snap_enabled: config.grid_snap_enabled, grid_factor: config.grid_factor } })),
         Some(world3d::WINDOW_KIND_ID) => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle5dWorldWindowConfigOwner>(id, Puzzle5dWorldWindowConfigMutation::Snapshot { config: Puzzle5dWorldWindowConfig { camera3d: config.camera3d, sun: config.sun } })),
         _ => Err(semio_framework_plugin::Fault::from("puzzle5d-window-kind-required")),
     }

@@ -22,7 +22,7 @@
   },
   "lifecycle": {
     "adoptBeforeToolRun": { "mutations": 0, "historyPatch": false, "documentPackUnchanged": true, "historyUnchanged": true },
-    "finalize": { "documentPackUnchanged": true, "historyUnchanged": true, "state": "finalized" },
+    "finalize": { "automatic": true, "documentPackUnchanged": true, "historyUnchanged": true, "state": "finalized" },
     "abort": { "documentPackUnchanged": true, "historyUnchanged": true, "state": "aborted" },
     "reservedChords": { "toolRunStart": "mod+enter", "toolRunAbort": "mod+.", "toolRunFinalize": "mod+shift+enter" },
     "removedActions": ["start-energy-simulation", "cancel-energy-simulation", "retry-energy-simulation", "discard-energy-simulation", "adopt-energy-simulation"]

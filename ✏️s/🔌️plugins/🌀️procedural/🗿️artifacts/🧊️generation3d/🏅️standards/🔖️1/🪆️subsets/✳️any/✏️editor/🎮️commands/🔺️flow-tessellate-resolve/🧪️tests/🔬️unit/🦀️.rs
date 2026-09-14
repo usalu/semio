@@ -37,10 +37,10 @@ fn tessellate_result_resolves_the_pending_handle() {
     retire_flow_eval_session(session);
 }
 
-/// ⚖️ LAW: an unfinished budgeted step re-arms the tick chain instead of dropping the tessellation,
-/// and reports monotone progress on the way.
+/// ⚖️ LAW: an unfinished budgeted step leaves its window owing the run another hop instead of dropping
+/// the tessellation, and reports monotone progress on the way.
 #[test]
-fn a_partial_step_re_arms_the_tick_chain_with_progress() {
+fn a_partial_step_owes_the_run_another_hop_with_progress() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let snapshot = Generation3dSnapshot::default();
     let history = empty_history_view();
@@ -50,9 +50,13 @@ fn a_partial_step_re_arms_the_tick_chain_with_progress() {
     let mut session = FlowEvalSession::new();
     let node_hash = semio_framework_os_flow::preview_tessellate_node_hash("brep:solid-2", 0.01_f64.to_bits());
     assert!(session.note_pending_tessellate(node_hash, "brep:solid-2".into()));
+    assert!(session.arm_window_tick("procedural-preview-test"), "the run arms the hop");
+    session.begin_window_tick("procedural-preview-test");
+    session.note_window_tick_outcome("procedural-preview-test", crate::preview_eval::tick_is_unfinished(false, 1));
+    session.note_window_extensions_in_flight("procedural-preview-test", 1);
     let working = r#"{"done":false,"cancellable":true,"phase":"meshingFaces","unitsDone":12,"unitsTotal":30,"facesDone":4,"facesTotal":6}"#;
     let emit = handle(&FlowTessellateResolve { window_id: "procedural-preview-test".into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), node_hash, output_json: working.into() }, &doc, &cfg, &mut session).expect("flowTessellateResolve");
-    assert_eq!(emit.effects.len(), 1, "an unfinished tessellation must re-arm the tick chain");
+    assert!(emit.effects.is_empty() && session.window_tick_owed("procedural-preview-test"), "an unfinished tessellation leaves its window owing the run another hop");
     let status = session.preview_tessellate_status();
     assert_eq!((status.units_done, status.units_total), (12, 30));
     assert_eq!((status.faces_done, status.faces_total), (4, 6));
@@ -62,7 +66,7 @@ fn a_partial_step_re_arms_the_tick_chain_with_progress() {
 }
 
 /// ⚖️ LAW: a mesh body split across chunks only lands once its last chunk arrives; every earlier
-/// chunk re-arms one more round trip and advances the chunk cursor.
+/// chunk owes the run one more hop and advances the chunk cursor.
 #[test]
 fn a_chunked_mesh_body_only_lands_on_its_last_chunk() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
@@ -76,9 +80,13 @@ fn a_chunked_mesh_body_only_lands_on_its_last_chunk() {
     let split = pack.len() / 2;
     let node_hash = semio_framework_os_flow::preview_tessellate_node_hash("brep:solid-3", 0.01_f64.to_bits());
     assert!(session.note_pending_tessellate(node_hash, "brep:solid-3".into()));
+    assert!(session.arm_window_tick("procedural-preview-test"), "the run arms the hop");
+    session.begin_window_tick("procedural-preview-test");
+    session.note_window_tick_outcome("procedural-preview-test", crate::preview_eval::tick_is_unfinished(false, 1));
+    session.note_window_extensions_in_flight("procedural-preview-test", 1);
     let first = format!(r#"{{"done":true,"phase":"complete","unitsDone":3,"unitsTotal":3,"facesDone":1,"facesTotal":1,"chunk":0,"chunks":2,"meshPack":"{}"}}"#, &pack[..split]);
     let emit = handle(&FlowTessellateResolve { window_id: "procedural-preview-test".into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), node_hash, output_json: first }, &doc, &cfg, &mut session).expect("first chunk");
-    assert_eq!(emit.effects.len(), 1, "a partial mesh body must ask for the next chunk");
+    assert!(emit.effects.is_empty() && session.window_tick_owed("procedural-preview-test"), "a partial mesh body owes the run the hop that asks for the next chunk");
     assert_eq!(session.next_tessellate_chunk(node_hash), 1);
     assert!(session.preview_mesh_pack("brep:solid-3").is_none());
     assert!(session.note_pending_tessellate(node_hash, "brep:solid-3".into()), "the continuation re-admits the handle");

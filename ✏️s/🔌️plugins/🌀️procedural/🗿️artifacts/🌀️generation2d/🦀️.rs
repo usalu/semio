@@ -617,6 +617,12 @@ pub mod examples {
     }
 }
 
+/// 🧵️ The read-only `previewEval` tool run the editor's previews evaluate through — mounted at the
+/// subset level, exactly where generation3d mounts its twin (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS).
+#[cfg(feature = "component-app-assembly")]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/🦀️.rs"]
+pub mod preview_eval;
+
 #[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {

@@ -12,7 +12,6 @@
 //! (`array_mut`/`entity_id`/JSON-patch-style ops) via [`wires_working_board`], the single accessor
 //! every call site that used to read `snapshot.board_fixture` now goes through.
 
-extern crate infinite_canvas as infinite_board_port_directed;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
@@ -842,12 +841,8 @@ pub mod editor {
             pub mod canvas_pointer_up;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️delete-selection/🦀️.rs"]
             pub mod delete_selection;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⚛️force-layout/🦀️.rs"]
-            pub mod force_layout;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️node-graph-viewport/🦀️.rs"]
             pub mod node_graph_viewport;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️reorganize/🦀️.rs"]
-            pub mod reorganize;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️set-active-example/🦀️.rs"]
             pub mod set_active_example;
         }
@@ -859,6 +854,12 @@ pub mod editor {
                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
                 mod component;
                 pub use component::*;
+
+                #[path = "."]
+                pub mod tools {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🗂️reorganize/🦀️.rs"]
+                    pub mod reorganize;
+                }
 
                 #[path = "."]
                 pub mod windows {

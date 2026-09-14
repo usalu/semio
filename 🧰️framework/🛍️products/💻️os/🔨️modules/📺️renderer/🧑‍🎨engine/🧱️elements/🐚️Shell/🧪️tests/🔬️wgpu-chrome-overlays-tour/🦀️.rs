@@ -479,7 +479,7 @@ fn render_footer_utility_nodes_recurses_at_least_two_levels_deep() {
     let theme = Theme::light();
     render_footer_utility_nodes(&mut ShellChromeBuildState::default(), &mut draw, &mut atlas, &icons, &mut input, &theme, 0.0, 0.0, theme.control_height, &utilities, &collection_expanded);
 
-    assert!(input.hit_targets.iter().any(|hit| hit.control_id.as_deref() == Some("framework.utility.toggle.leaf")), "a toggle nested two Collection levels deep must still get a real hit target once both ancestors are expanded");
+    assert!(input.staged_hits().iter().any(|hit| hit.control_id.as_deref() == Some("framework.utility.toggle.leaf")), "a toggle nested two Collection levels deep must still get a real hit target once both ancestors are expanded");
 }
 //#endregion RibbonActivePath
 

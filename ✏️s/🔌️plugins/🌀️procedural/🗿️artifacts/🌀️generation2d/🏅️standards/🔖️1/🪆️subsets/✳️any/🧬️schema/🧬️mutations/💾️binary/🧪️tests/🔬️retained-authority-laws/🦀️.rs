@@ -338,3 +338,59 @@ fn retained_pack_outer_oversized_nested_snapshot_is_returned_for_close_before_vc
         assert!(closed.load(std::sync::atomic::Ordering::Acquire));
     }
 }
+
+//#region 🧹️FlowFrontierOwnership
+/// 🚪️ The exact driver every framework close ladder is: one item, one 4 KiB page, and no channel to
+/// ask the owner for a bigger grant. `close_registered_fixture_app`
+/// (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`) yields and asks again with the same grant
+/// until its deadline, so for a retirement this app owns `Blocked` is a permanent stall that surfaces as
+/// "document store close awaits a retained reader or owner".
+fn drive_under_the_frameworks_fixed_page_grant(retirement: &mut dyn store::ErasedSnapshotRetirement, owner: &str) -> usize {
+    let mut released = 0usize;
+    for _ in 0..GENERATION2D_MAXIMUM_DOMAIN_ITEMS {
+        match retirement.close_step(1, GENERATION2D_OWNER_BYTES).unwrap_or_else(|reason| panic!("{owner} retirement faulted: {reason}")) {
+            store::SnapshotRetirementStep::Complete => {
+                assert!(retirement.terminal_is_empty(), "{owner} reported Complete without its exact terminal-empty witness");
+                return released;
+            }
+            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
+                assert!(released_items <= 1, "{owner} released {released_items} items under a one-item grant");
+                assert!(released_bytes <= GENERATION2D_OWNER_BYTES, "{owner} released {released_bytes} bytes under a {GENERATION2D_OWNER_BYTES}-byte grant");
+                released += released_bytes;
+            }
+            store::SnapshotRetirementStep::Blocked => panic!("{owner} answered Blocked under the framework's exact one-page close grant; paying the Flow frontier's own reserve-then-close demand is this retirement's business"),
+        }
+    }
+    panic!("{owner} did not reach its terminal-empty close witness")
+}
+
+/// 🧊️ Both document retirement routes pay their own `FlowRetirement` reserve-then-close demand. The
+/// oracle is the framework's generic `Arc` route (`store::SnapshotRetirementFactory`), which must release
+/// byte-for-byte what the owned route releases.
+#[test]
+fn every_document_retirement_pays_its_own_flow_frontier_under_the_fixed_page_grant() {
+    let mut owned = generation2d_retire_owned_snapshot(Generation2dSnapshot::default());
+    let owned_bytes = drive_under_the_frameworks_fixed_page_grant(owned.as_mut(), "owned document snapshot");
+    let mut aliased = store::SnapshotRetirementFactory::retire(&Generation2dRetainedSnapshotRetirementFactory, std::sync::Arc::new(Generation2dSnapshot::default()));
+    let aliased_bytes = drive_under_the_frameworks_fixed_page_grant(aliased.as_mut(), "aliased document snapshot");
+    assert_eq!(owned_bytes, aliased_bytes, "the owned and Arc retirement routes must release the same exact document backing");
+    assert!(owned_bytes > 0, "a populated document fixture owns real backing");
+}
+
+/// 🔁️ The same law for every replay displacement `generation2d_apply_initialization_mutation` hands the
+/// store's displaced-retirement ladder.
+#[test]
+fn every_displaced_replay_owner_pays_its_own_flow_frontier_under_the_fixed_page_grant() {
+    let mut snapshot = Generation2dSnapshot::default();
+    let mutations = generation2d_all_retained_mutation_fixtures_for_test();
+    let mut displaced = 0usize;
+    for mutation in &mutations {
+        let Ok(Some(mut retirement)) = generation2d_apply_initialization_mutation(&mut snapshot, mutation) else { continue };
+        drive_under_the_frameworks_fixed_page_grant(retirement.as_mut(), "displaced replay owner");
+        displaced += 1;
+    }
+    generation2d_retire_mutations_cold(mutations);
+    assert!(displaced > 0, "the retained mutation fixtures must displace at least one owner");
+    drive_under_the_frameworks_fixed_page_grant(generation2d_retire_owned_snapshot(snapshot).as_mut(), "replayed document snapshot");
+}
+//#endregion 🧹️FlowFrontierOwnership

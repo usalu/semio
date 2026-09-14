@@ -308,3 +308,65 @@ fn canvas2d_scene_splits_into_the_declared_lanes_and_merges_back() {
     assert_eq!(merged, assembled);
 }
 //#endregion 🚚️Canvas2dSceneLanes
+
+//#region 🚚️Board2dSceneLanes
+/// 🚚️ The board-2d twin of [`CANVAS2D_SCENE_LANE_CONTRACT`].
+const BOARD2D_SCENE_LANE_CONTRACT: &str = include_str!("../../🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json");
+
+fn board2d_lane_contract() -> Value {
+    serde_json::from_str(BOARD2D_SCENE_LANE_CONTRACT).expect("board-2d lane contract parses")
+}
+
+#[test]
+fn board2d_scene_lanes_mirror_the_language_neutral_declaration() {
+    let contract = board2d_lane_contract();
+    assert_eq!(contract["schema"].as_str(), Some(Board2dScene::SCHEMA));
+    assert_eq!(contract["laneKeyPrefix"].as_str(), Some(BOARD2D_SCENE_LANE_KEY_PREFIX));
+    let declared = contract["lanes"].as_array().expect("lanes array");
+    assert_eq!(declared.len(), Board2dSceneLane::ALL.len());
+    for (lane, entry) in Board2dSceneLane::ALL.into_iter().zip(declared) {
+        assert_eq!(entry["lane"].as_str(), Some(lane.name()));
+        assert_eq!(entry["field"].as_str(), Some(lane.field()));
+        assert_eq!(entry["bodyKey"].as_str(), Some(lane.body_key()));
+        assert_eq!(entry["optional"].as_bool(), Some(lane.optional()));
+        assert_eq!(lane.body_key(), format!("{BOARD2D_SCENE_LANE_KEY_PREFIX}{}", lane.name()));
+        assert_eq!(Board2dSceneLane::from_body_key(lane.body_key()), Some(lane));
+        assert_eq!(Board2dSceneLane::from_name(lane.name()), Some(lane));
+    }
+    assert_eq!(Board2dSceneLane::from_body_key(Canvas2dSceneLane::ToolRunTrace.body_key()), None);
+    let spine_fields: Vec<&str> = contract["spineFields"].as_array().expect("spineFields").iter().map(|field| field.as_str().expect("spine field")).collect();
+    let mut probe = Board2dScene::base("{}".into(), "{}".into(), true);
+    probe.hovered_id = Some(String::new());
+    probe.active_utility = Some(String::new());
+    probe.tool_run_trace = Some(String::new());
+    probe.lanes = vec![SceneLaneRef::default()];
+    for key in serde_json::to_value(&probe).expect("serialize probe").as_object().expect("object").keys() {
+        assert!(spine_fields.contains(&key.as_str()) || BOARD2D_SCENE_LANE_FIELDS.contains(&key.as_str()), "scene field {key} is declared neither spine nor lane");
+    }
+}
+
+#[test]
+fn board2d_scene_splits_into_the_declared_lanes_and_merges_back() {
+    let contract = board2d_lane_contract();
+    let round_trip = &contract["roundTrip"];
+    let assembled: Board2dScene = serde_json::from_value(round_trip["assembled"].clone()).expect("assembled scene");
+    let (spine, lanes) = assembled.split_lanes();
+    let expected_texts = round_trip["laneTexts"].as_object().expect("laneTexts object");
+    assert_eq!(lanes.len(), expected_texts.len());
+    for lane in &lanes {
+        assert_eq!(Some(lane.payload.as_str()), expected_texts.get(lane.key).and_then(Value::as_str), "lane {} payload", lane.key);
+    }
+    assert_eq!(serde_json::to_value(&spine).expect("serialize spine"), round_trip["spine"]);
+    assert_eq!(Board2dScene::decode_pack(&spine.encode_pack().expect("spine packs")).expect("spine unpacks"), spine);
+    assert_eq!(Board2dScene::from_value(assembled.to_value()).expect("value round trip"), assembled);
+    let mut merged = spine.clone();
+    for lane in &lanes {
+        assert!(merged.merge_lane(lane.key, lane.payload.clone()));
+    }
+    assert!(!merged.merge_lane(Canvas2dSceneLane::ToolRunTrace.body_key(), String::new()));
+    merged.lanes = Vec::new();
+    assert_eq!(merged, assembled);
+    let idle = Board2dScene::base("{}".into(), "{}".into(), false);
+    assert!(idle.split_lanes().1.is_empty(), "an idle board publishes no trace carrier");
+}
+//#endregion 🚚️Board2dSceneLanes

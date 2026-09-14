@@ -1,0 +1,7 @@
+{
+  "status": "rejected",
+  "code": "mutation.target-missing",
+  "path": [
+    "remodeling-asset-3583f57e5be8856bdf3e1db4318032b0f9a3abdfa3847e14e81208e3dbd6f80b-0000000000000024"
+  ]
+}

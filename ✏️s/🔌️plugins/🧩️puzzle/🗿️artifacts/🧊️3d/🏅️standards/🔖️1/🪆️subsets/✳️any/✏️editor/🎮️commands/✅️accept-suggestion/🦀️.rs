@@ -1,7 +1,7 @@
 //! 🖌️ `accept-suggestion` command.
 
 use crate::standards::v1::subsets::any::schema::{BrushPlacePayload, Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
-use crate::editor::puzzle3d::drive_precompute;
+use crate::editor::puzzle3d::sync_precompute_session;
 use crate::editor::puzzle3d::fixture_from_engine_fixture;
 use crate::editor::puzzle3d::puzzle3d_brush_target_vortex;
 use crate::editor::puzzle3d::puzzle3d_rederive_all_attractions;
@@ -10,13 +10,13 @@ use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use crate::editor::puzzle3d::PUZZLE3D_GRANULARITY_OBJECT;
 use dsl::os_pack::json::Value;
 
-/// ✅️ Accepts the hovered (or explicitly indexed) candidate. Always dismisses the one-shot picker
+/// ✅️ Accepts the hovered (or explicitly indexed) free candidate the brush suggestions run found. Always dismisses the one-shot picker
 /// FIRST — a failed preview/place must not leave `suggestionMenu.open` gating every split pane's
 /// regular context menu. 🕹️ The placed object is re-selected through `Emit.interaction_writes` (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), applied by the framework once the document
 /// mutations have landed.
 pub fn accept_suggestion(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
-    drive_precompute(&mut ctx.app.precompute.borrow_mut(), ctx.scene);
+    sync_precompute_session(&mut ctx.app.precompute.borrow_mut(), ctx.scene);
     let index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).unwrap_or(ctx.scene.runtime.brush_candidate_index as u64) as usize;
     let vortex_id = args
         .and_then(|value| value.get("fullId"))
@@ -33,7 +33,13 @@ pub fn accept_suggestion(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) 
     let Some(vortex_id) = vortex_id else {
         return ctx.notice(|labels| labels.placement_unavailable.as_str());
     };
-    let preview = ctx.app.precompute.borrow().brush_preview(&vortex_id, index);
+    let preview = ctx
+        .brush_suggestions(|link| {
+            let free: Vec<_> = link.found(&vortex_id).into_iter().flat_map(|found| found.free()).cloned().collect();
+            link.close_menu();
+            (!free.is_empty()).then(|| free[index % free.len()].clone())
+        })
+        .flatten();
     let Some(preview) = preview else {
         return ctx.notice(|labels| labels.placement_unavailable.as_str());
     };

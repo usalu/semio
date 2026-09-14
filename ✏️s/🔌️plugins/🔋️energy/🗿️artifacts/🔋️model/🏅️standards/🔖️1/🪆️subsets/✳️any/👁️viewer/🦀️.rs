@@ -70,7 +70,7 @@ impl ArtifactViewer for EnergyModelViewer {
         let node = match body_key {
             structure::BODY_KEY => structure::render(doc.snapshot)?,
             zones::BODY_KEY => zones::render(doc.snapshot)?,
-            simulation::BODY_KEY => crate::energy_simulation_session::with_adopted_projection(doc.render_operation(), |projection| simulation::render(projection, &doc.snapshot.model)),
+            simulation::BODY_KEY => simulation::render(&doc.snapshot.model),
             _ => {
                 semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("energy.model.viewer.render", "the unknown-body label could not be assembled"))?
             }

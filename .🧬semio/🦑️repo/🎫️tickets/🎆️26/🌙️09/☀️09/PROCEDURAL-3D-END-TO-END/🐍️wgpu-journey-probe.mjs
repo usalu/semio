@@ -136,7 +136,7 @@ const world3dTraces = () => {
 const hitLines = (fromIndex = 0) => {
   const parsed = [];
   for (const line of lines.slice(fromIndex)) {
-    const match = /os_host pointer hit x=([-\d.]+) y=([-\d.]+) targets=(\d+) hit=(.*)$/.exec(line);
+    const match = /os_host pointer hit x=([-\d.]+) y=([-\d.]+) targets=(\d+)(?:\s+(?!hit=)\w+=\S+)*\s+hit=(.*)$/.exec(line);
     if (!match) continue;
     const tail = match[4];
     const some = /Some\(\((\w+), Some\("([^"]+)"\)\)\)/.exec(tail);

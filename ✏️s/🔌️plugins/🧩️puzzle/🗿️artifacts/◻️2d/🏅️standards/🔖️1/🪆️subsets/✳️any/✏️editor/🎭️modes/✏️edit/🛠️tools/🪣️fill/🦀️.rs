@@ -1,95 +1,71 @@
-//! 🪣️ Edit-mode tool — Fill: a whole-document generator (not a window utility), so its count entry
-//! is a mode-level *tool* measure keyed by the tool id rather than a window utility-options group.
-//! The count has no ceiling — the operator asks for a number and the session searches toward it —
-//! and a live run offers a real stop button, a stopped one a retry.
+//! 🪣️ Edit-mode tool — Fill: a whole-document generator (not a window utility) declared as a tool run. Its
+//! count is a mode-level tool measure over the shared config; progress, pause, single step, abort and finalize
+//! are the framework ToolRun panel and actions (`📋️tool-run-contract.md` §2.4–§2.6), and tested candidates are
+//! `placement2d` trace records.
 
-use crate::editor::puzzle2d::config::Puzzle2dFillLifecycle;
-use crate::editor::puzzle2d::terminology::{puzzle2d_fill_stage_label, Puzzle2dLabels};
+use crate::editor::puzzle2d::precompute::fill::{FillRunCounter, FillRunReason, FillRunStage};
+use crate::editor::puzzle2d::terminology::{puzzle2d_localized, Puzzle2dLabels};
 use crate::editor::puzzle2d::{puzzle2d_action, Puzzle2dScene};
 use semio_framework_plugin::{LocalizedLabel, ToolDefinition, WindowMeasure};
+use semio_framework_tool_run::{JobKindId, ToolRunCounterDefinition, ToolRunDefinition, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunTraceKind};
 
 //#region 🔖️Constants
 pub const TOOL_ID: &str = "fill";
 /// 🎯️ The count a fresh 2d document offers: a batch large enough to be worth watching, small enough
 /// that a first run finishes while the operator is still looking at it.
 pub const PUZZLE2D_DEFAULT_FILL_COUNT: u32 = 100;
+/// 🧵️ Job kind of the fill run job (`ToolRunDefinition.runJob`).
+pub const PUZZLE2D_FILL_RUN_JOB: &str = "puzzle2d.fill.run";
+/// 🔍️ Job kind of the fill revalidation job (`ToolRunDefinition.revalidateJob`).
+pub const PUZZLE2D_FILL_REVALIDATE_JOB: &str = "puzzle2d.fill.revalidate";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle2d::create_puzzle2d_app`.
 pub fn definition(label: LocalizedLabel) -> ToolDefinition {
-    semio_framework::io::resolve_ready(ToolDefinition::new(TOOL_ID, label, "paint-bucket"))
+    ToolDefinition { run: Some(run_definition()), ..semio_framework::io::resolve_ready(ToolDefinition::new(TOOL_ID, label, "paint-bucket")) }
 }
 
-/// 🔎️ Whether the session is still doing work the operator can cancel.
-fn is_running(lifecycle: Puzzle2dFillLifecycle) -> bool {
-    matches!(
-        lifecycle,
-        Puzzle2dFillLifecycle::Capturing
-            | Puzzle2dFillLifecycle::Queued
-            | Puzzle2dFillLifecycle::Running
-            | Puzzle2dFillLifecycle::CheckpointReady
-            | Puzzle2dFillLifecycle::Applying
-            | Puzzle2dFillLifecycle::AwaitingAdoption
-            | Puzzle2dFillLifecycle::Closing
-    )
+/// ⏯️ The fill run declaration (`$defs.Puzzle2dFillRun`): a mutating run revalidated at finalize and resumed on a
+/// count change, reporting `placement2d` trace records.
+pub fn run_definition() -> ToolRunDefinition {
+    ToolRunDefinition {
+        mutating: true,
+        rebase: ToolRunRebasePolicy::Revalidate,
+        reconfigure: ToolRunReconfigurePolicy::Resume,
+        unit: puzzle2d_localized(|labels| labels.fill_unit),
+        stages: FillRunStage::ALL.iter().map(|stage| ToolRunStageDefinition { id: stage.id().into(), label: puzzle2d_localized(stage.label()) }).collect(),
+        counters: FillRunCounter::ALL.iter().map(|counter| ToolRunCounterDefinition { id: counter.id().into(), label: puzzle2d_localized(counter.label()) }).collect(),
+        reasons: FillRunReason::ALL.iter().map(|reason| ToolRunReasonDefinition { code: reason.code(), id: reason.id().into(), verdict: reason.verdict(), template: puzzle2d_localized(reason.label()) }).collect(),
+        trace: ToolRunTraceKind::Placement2d,
+        run_job: JobKindId::new(PUZZLE2D_FILL_RUN_JOB),
+        revalidate_job: Some(JobKindId::new(PUZZLE2D_FILL_REVALIDATE_JOB)),
+        settings: ToolRunSettingsReads { config: vec!["/fillCount".into()], ..ToolRunSettingsReads::default() },
+        windows: Vec::new(),
+    }
 }
 
-/// ⌛️ Stages where the session is parked on someone else — the leaf shows the dashed waiting ring.
-fn is_waiting(lifecycle: Puzzle2dFillLifecycle) -> bool {
-    matches!(
-        lifecycle,
-        Puzzle2dFillLifecycle::Capturing | Puzzle2dFillLifecycle::Queued | Puzzle2dFillLifecycle::CheckpointReady | Puzzle2dFillLifecycle::AwaitingAdoption | Puzzle2dFillLifecycle::Closing
-    )
-}
-
-/// 🔢️ Fill-count entry — the fill tool's core parameter (`setFillCount` reads `count`-or-`value`, so a
-/// numeric measure's `{value}` payload preserves the action semantics). `max: None` is the product
-/// decision, not an oversight: the session searches toward whatever the operator types, and a board
-/// that cannot hold that many reports it as a visible outcome rather than as a silent clamp. `ready`
-/// is the accepted count — what the document already holds.
+/// 🔢️ Fill-count entry — the fill tool's core parameter (`setFillCount` reads `count`-or-`value`). `max: None`
+/// is the product decision: the run searches toward whatever the operator types, and a board that cannot hold
+/// that many ends the run with a visible stall step rather than a silent clamp.
 pub fn count_measure(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> WindowMeasure {
-    let lifecycle = envelope.runtime.fill_job_lifecycle;
-    let running = is_running(lifecycle);
     WindowMeasure::Number {
         id: "puzzle2d-fill-count".into(),
         label: Some(labels.count.into()),
-        value: envelope.runtime.fill_count as f64,
+        value: f64::from(envelope.runtime.fill_count),
         min: Some(0.0),
         max: None,
         step: Some(1.0),
-        ready: running.then_some(envelope.runtime.fill_job_accepted_count as f64),
-        loading: running.then_some(!is_waiting(lifecycle)),
-        waiting: running.then_some(is_waiting(lifecycle)),
+        ready: None,
+        loading: None,
+        waiting: None,
         disabled: None,
         on_change: puzzle2d_action("setFillCount", None),
     }
 }
 
-/// 🧭️ The session's phase in the reader's own language, fault code included, carried as the text of the
-/// cancel and retry toggles until the framework ToolRun panel takes the run over
-/// (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS §3.6).
-fn stage_text(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> String {
-    puzzle2d_fill_stage_label(labels, envelope.runtime.fill_job_lifecycle, envelope.runtime.fill_job_fault_code.as_ref().map(|code| code.as_str()))
-}
-
 /// 🎚️ The fill tool's measure group, surfaced in the mode-level tool panel while the fill tool is active.
 pub fn measures(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> WindowMeasure {
-    let lifecycle = envelope.runtime.fill_job_lifecycle;
-    let mut children = vec![count_measure(envelope, labels)];
-    if is_running(lifecycle) {
-        children.push(WindowMeasure::Toggle {
-            id: "puzzle2d-fill-cancel".into(),
-            icon_id: "x".into(),
-            label: Some(labels.fill_cancel.into()),
-            pressed: false,
-            text: Some(stage_text(envelope, labels)),
-            on_change: puzzle2d_action("brushFillSessionCancel", Some(serde_json::json!({ "generation": envelope.runtime.fill_job_generation }))),
-        });
-    }
-    if matches!(lifecycle, Puzzle2dFillLifecycle::Faulted | Puzzle2dFillLifecycle::Cancelled) {
-        children.push(WindowMeasure::Toggle { id: "puzzle2d-fill-retry".into(), icon_id: "refresh-cw".into(), label: Some(labels.fill_retry.into()), pressed: false, text: Some(stage_text(envelope, labels)), on_change: puzzle2d_action("brushFillSessionRetry", None) });
-    }
     WindowMeasure::Group {
         id: "puzzle2d-tool-options-fill".into(),
         label: labels.fill.into(),
@@ -103,7 +79,7 @@ pub fn measures(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> WindowMeas
         loading: None,
         waiting: None,
         on_change: None,
-        children,
+        children: vec![count_measure(envelope, labels)],
     }
 }
 //#endregion 🔖️Definition

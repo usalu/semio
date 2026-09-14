@@ -83,7 +83,7 @@ export const GroundControlPoints: Story = { args: { initialTable: "gcps" } };
 /** 🏃️ `"tracks"` — the single `track-a` motion track, its `Debug`-formatted class and mean speed. */
 export const Tracks: Story = { args: { initialTable: "tracks" } };
 
-/** 🚦️ `"qcStages"` — the one-row stage/status projection of the document's mid-run `bundle-adjusting` job. */
+/** 🚦️ `"qcStages"` — the check/value projection of `results.qc`: reprojection RMS, registered frame ratio, then one `warning` row per QC warning. */
 export const QcStages: Story = { args: { initialTable: "qcStages" } };
 
 /** 🗒️ `"matches"` — the documented gap row: pairwise match data is reconstruction-runtime scratch and is never distilled into durable document state. */

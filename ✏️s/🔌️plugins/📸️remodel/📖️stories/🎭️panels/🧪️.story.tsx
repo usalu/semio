@@ -79,7 +79,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** 🗿️ The framework `document` tab — job stage/progress (`Bundle Adjusting (50%)`), the derived running status, and the active utility. */
+/** 🗿️ The framework `document` tab's Reconstruction section without a live run — `No reconstruction run`, the stored trajectory's two cameras, and the five tool-run chords. */
 export const DocumentPipeline: Story = { args: { panelId: "pipeline" } };
 
 /** 🗂️ The media tab — the `importFramePayload` drop zone (a `dropOverlay` container bound to `Trigger::Drop`), stream/asset counts, and one line per stream plus its decoded container facts. */

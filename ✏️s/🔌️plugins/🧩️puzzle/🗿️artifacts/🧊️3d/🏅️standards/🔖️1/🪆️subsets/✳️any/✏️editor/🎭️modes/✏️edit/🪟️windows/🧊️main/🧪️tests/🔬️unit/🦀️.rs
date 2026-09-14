@@ -76,47 +76,52 @@
         assert_eq!(transform.len(), 0);
     }
 
+    /// 🖌️ The suggestion popup lists exactly the free candidates the brush suggestions run published for the
+    /// popup's vortex, in candidate order, and reads pending only while that search has found nothing yet.
     #[test]
-    fn brush_preview_target_falls_back_to_session_live_target() {
-        let mut session = Puzzle3dPrecomputeSession::new();
-        session.set_brush_live_target(Some("seed-left-001:v0".into()));
-        let envelope = Puzzle3dScene { fixture: forest_store(), runtime: Puzzle3dRuntime::default(), active_utility: utilities::brush::UTILITY_ID.into() };
-        assert_eq!(world_brush_preview_target(&session, &envelope, &Puzzle3dInteractionSnapshot::default()).as_deref(), Some("seed-left-001:v0"));
+    fn the_suggestion_popup_lists_the_free_candidates_the_brush_run_published_for_its_vortex() {
+        use crate::editor::puzzle3d::config::Puzzle3dSuggestionMenu;
+        use crate::editor::puzzle3d::precompute::brush::{BrushSuggestionVerdict, BrushSuggestionsFound};
+        use crate::standards::v1::subsets::any::schema::BrushPreviewState;
+        let session = Puzzle3dPrecomputeSession::new();
+        let runtime = Puzzle3dRuntime { suggestion_menu: Some(Puzzle3dSuggestionMenu { x: 1.0, y: 2.0, window_id: WINDOW_KIND_ID.into(), vortex_full_id: "seed-left-001:v0".into() }), ..Puzzle3dRuntime::default() };
+        let envelope = Puzzle3dScene { fixture: forest_store(), runtime, active_utility: "select".into() };
+        let preview = |kind: &str, source: usize| Some(BrushPreviewState { target_vortex_full_id: "seed-left-001:v0".into(), object_kind_id: kind.into(), source_vortex_index: source, mesh_url: "/box.glb".into(), origin: [0.0; 3], orientation: [0.0, 0.0, 0.0, 1.0], scale: None });
+        let menu = |found: Option<&BrushSuggestionsFound>| serde_json::from_str::<Value>(&world_interaction_json(&envelope, &session, &Puzzle3dInteractionSnapshot::default(), found)).expect("interactionJson")["suggestionMenu"].clone();
+        let mut found = BrushSuggestionsFound { writer: (1, 0), target: "seed-left-001:v0".into(), previews: vec![preview("A", 0), preview("B", 1), preview("C", 0)], verdicts: vec![BrushSuggestionVerdict::Collision, BrushSuggestionVerdict::Pending, BrushSuggestionVerdict::Pending], done: false };
+        assert_eq!(menu(Some(&found))["pending"], json!(true), "nothing free yet while the search runs reads pending");
+        found.verdicts[1] = BrushSuggestionVerdict::Free;
+        let listed = menu(Some(&found));
+        assert_eq!(listed["pending"], json!(false), "a free candidate is listed the moment it is known");
+        assert_eq!(listed["candidates"].as_array().map(|rows| rows.iter().map(|row| row["objectLabel"].clone()).collect::<Vec<_>>()), Some(vec![json!("B")]));
+        found.verdicts[2] = BrushSuggestionVerdict::Free;
+        found.done = true;
+        assert_eq!(menu(Some(&found))["candidates"].as_array().map(Vec::len), Some(2));
+        let other = BrushSuggestionsFound { target: "seed-left-001:v1".into(), ..found.clone() };
+        assert_eq!(menu(Some(&other))["candidates"], json!([]), "another vortex's candidates never reach this popup");
+        assert_eq!(menu(None)["pending"], json!(true), "a popup whose run has not published yet is pending");
+        assert_eq!(menu(Some(&BrushSuggestionsFound { verdicts: vec![BrushSuggestionVerdict::Collision; 3], ..found })), json!({ "open": true, "x": 1.0, "y": 2.0, "windowId": WINDOW_KIND_ID, "vortexFullId": "seed-left-001:v0", "pending": false, "candidates": [] }), "a finished search with nothing free is an empty, settled popup");
     }
 
     #[test]
-    fn world_interaction_json_publishes_fill_counters_and_no_reveal_cutoffs() {
+    fn world_interaction_json_carries_no_fill_run_state() {
         let session = Puzzle3dPrecomputeSession::new();
         let envelope = Puzzle3dScene { fixture: forest_store(), runtime: Puzzle3dRuntime::default(), active_utility: "fill".into() };
         let value: Value = serde_json::from_str(&world_interaction_json(&envelope, &session, &Puzzle3dInteractionSnapshot::default(), None)).expect("interactionJson");
-        assert!(value.get("revealCutoffs").is_none(), "a locked piece is an ordinary document object now — there is no reveal cutoff channel left to publish");
-        let fill = value.get("fillBuild").and_then(Value::as_object).expect("fillBuild block");
-        let mut keys: Vec<&str> = fill.keys().map(String::as_str).collect();
-        keys.sort_unstable();
-        assert_eq!(keys, ["appliedCount", "collisions", "count", "done", "rejected", "requestedCount", "stage", "stallReason", "tested"]);
-        assert!(fill["stage"].is_string(), "stage travels as the planner's own machine identity");
-        assert!(fill["stallReason"].is_null() || fill["stallReason"].is_string());
-        assert!(fill["tested"].is_u64() && fill["rejected"].is_u64() && fill["collisions"].is_u64());
+        for retired in ["fillBuild", "revealCutoffs", "brushPreviewJson"] {
+            assert!(value.get(retired).is_none(), "{retired}: a fill run shows its process through the framework tool run lane and panel only");
+        }
     }
 
     #[test]
-    fn fill_stage_labels_answer_in_english_and_german_with_no_default_locale() {
-        use crate::editor::puzzle3d::terminology::puzzle3d_fill_stage_label;
-        use semio_framework_plugin::{AppLabels, Locale, Terminology};
-        let english = Puzzle3dLabels::labels(Locale::En, Terminology::Native);
-        let german = Puzzle3dLabels::labels(Locale::De, Terminology::Native);
-        for stage in ["prepare-spatial", "select-target", "select-candidate", "test-collision", "accept-candidate", "complete"] {
-            let en = puzzle3d_fill_stage_label(english, stage, None);
-            let de = puzzle3d_fill_stage_label(german, stage, None);
-            assert!(!en.is_empty() && !de.is_empty(), "stage {stage} must answer in both authored locales");
-            assert_ne!(en, de, "stage {stage} must be translated, never an English fallback");
-        }
-        assert_eq!(
-            puzzle3d_fill_stage_label(english, "discard-tail", None),
-            puzzle3d_fill_stage_label(english, "prepare-fixture", None),
-            "every preparation stage reads as one phase"
-        );
-        assert!(puzzle3d_fill_stage_label(german, "select-target", Some("no-open-vortex")).contains("kein offener Vortex"));
-        assert!(puzzle3d_fill_stage_label(english, "select-target", Some("document-capacity")).contains("document capacity reached"));
-        assert!(puzzle3d_fill_stage_label(english, "select-target", Some("mystery")).contains("mystery"), "an unlabelled stall reason is surfaced verbatim, never swallowed");
+    fn meshes_json_is_published_in_exactly_the_mesh_lane_order_trace_subjects_index() {
+        let snapshot = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT).expect("example parses");
+        let fixture = crate::editor::puzzle3d::puzzle3d_fixture_from_snapshot(&snapshot);
+        let lane = mesh_lane(&fixture);
+        assert_eq!(&lane[..2], [PUZZLE3D_FALLBACK_MESH_KIND, VORTEX_MARKER_MESH_KIND]);
+        assert!(lane[2..].windows(2).all(|pair| pair[0] < pair[1]), "mesh urls follow in one stable sorted order");
+        let meshes: Vec<Value> = serde_json::from_str(&world_meshes_json(&fixture)).expect("meshesJson");
+        let published: Vec<String> = meshes.iter().map(|mesh| mesh.get("url").or_else(|| mesh.get("kind")).and_then(Value::as_str).expect("mesh identity").to_string()).collect();
+        assert_eq!(published, lane, "a trace subject's mesh index must name meshesJson[index]");
+        assert_eq!(mesh_lane(&fixture), lane, "the lane is deterministic across calls");
     }

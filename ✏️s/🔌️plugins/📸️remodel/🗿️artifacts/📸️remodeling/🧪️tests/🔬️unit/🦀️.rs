@@ -36,12 +36,6 @@ fn populated_scene_fixture() -> RemodelingSnapshot {
     scene.gcps.push(GroundControlPoint { id: "gcp-1".into(), name: "Corner".into(), world_position: [1.0, 2.0, 3.0], observations: vec![GcpObservation { stream_id: "stream-1".into(), frame_index: 0, pixel: [10.0, 20.0] }] });
     scene.params.ingest.min_sharpness = 0.4;
     scene.params.mesh.texture_size = 4096;
-    scene.job.stage = ReconstructionStage::BundleAdjusting;
-    scene.job.progress_0_1 = 0.42;
-    scene.job.started_at_ms = Some(1000.0);
-    scene.job.error = Some("retry needed".into());
-    scene.job.camera_poses_preview.push(CameraPosePreview { camera_id: "cam-1".into(), ..CameraPosePreview::default() });
-    scene.job.sparse_point_cloud_preview = PackedF32::from_f32_slice(&[0.1, 0.2, 0.3]);
     scene.results.sparse = Some(SparseCloud { points: PackedF32::from_f32_slice(&[0.0, 0.0, 0.0, 1.0, 1.0, 1.0]), colors: Some(PackedU8::from_u8_slice(&[255, 0, 0, 0, 255, 0])) });
     scene.results.dense =
         Some(DenseCloud { positions: PackedF32::from_f32_slice(&[0.0, 0.0, 0.0]), colors: Some(PackedU8::from_u8_slice(&[0, 0, 255])), confidence: Some(PackedF32::from_f32_slice(&[0.9])), classification: Some(PackedU8::from_u8_slice(&[2])) });
@@ -99,7 +93,6 @@ async fn default_scene_has_placeholder_mesh() {
     assert!(scene.streams.is_empty());
     assert!(scene.assets.is_empty());
     assert!(scene.gcps.is_empty());
-    assert_eq!(scene.job, ReconstructionJob::default());
     assert_eq!(scene.results.sparse, None);
     assert_eq!(scene.results.dense, None);
     assert_eq!(scene.results.trajectory, None);
@@ -154,29 +147,3 @@ async fn packed_u8_roundtrips_exactly() {
     assert_eq!(empty.to_u8_vec(), Vec::<u8>::new());
 }
 
-#[semio_framework_async_macros::async_test]
-async fn reconstruction_stage_serde_is_stable() {
-    let cases: [(ReconstructionStage, &str); 18] = [
-        (ReconstructionStage::Idle, "\"idle\""),
-        (ReconstructionStage::Ingesting, "\"ingesting\""),
-        (ReconstructionStage::Calibrating, "\"calibrating\""),
-        (ReconstructionStage::ExtractingFeatures, "\"extracting-features\""),
-        (ReconstructionStage::MatchingFeatures, "\"matching-features\""),
-        (ReconstructionStage::EstimatingPoses, "\"estimating-poses\""),
-        (ReconstructionStage::BundleAdjusting, "\"bundle-adjusting\""),
-        (ReconstructionStage::Georeferencing, "\"georeferencing\""),
-        (ReconstructionStage::DenseStereo, "\"dense-stereo\""),
-        (ReconstructionStage::FusingVolume, "\"fusing-volume\""),
-        (ReconstructionStage::ExtractingSurface, "\"extracting-surface\""),
-        (ReconstructionStage::CleaningMesh, "\"cleaning-mesh\""),
-        (ReconstructionStage::Texturing, "\"texturing\""),
-        (ReconstructionStage::TrackingMotion, "\"tracking-motion\""),
-        (ReconstructionStage::DerivingGeoProducts, "\"deriving-geo-products\""),
-        (ReconstructionStage::ReportingQc, "\"reporting-qc\""),
-        (ReconstructionStage::Done, "\"done\""),
-        (ReconstructionStage::Failed, "\"failed\""),
-    ];
-    for (stage, expected) in cases {
-        assert_eq!(serde_json::to_string(&stage).expect("serialize"), expected);
-    }
-}

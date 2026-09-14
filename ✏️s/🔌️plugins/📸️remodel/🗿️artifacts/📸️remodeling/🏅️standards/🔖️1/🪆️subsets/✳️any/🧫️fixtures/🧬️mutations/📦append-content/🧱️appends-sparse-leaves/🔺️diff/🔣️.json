@@ -1,0 +1,49 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "streams": null,
+  "assets": null,
+  "durableArtifacts": {
+    "remodeling-asset-3583f57e5be8856bdf3e1db4318032b0f9a3abdfa3847e14e81208e3dbd6f80b-0000000000000024": {
+      "kind": "sparse",
+      "mime": null,
+      "width": 0,
+      "height": 0,
+      "chunks": [
+        "AAAAPwAAgD8AAIC+AADAPwAAAAAAAABAAACAvwAAgD4AAEA/"
+      ]
+    },
+    "remodeling-asset-45070beb0101de64": {
+      "kind": "image",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 480,
+      "chunks": [
+        "ZnJhbWUtYQ=="
+      ]
+    },
+    "remodeling-asset-84ec1bd76bb83a25": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 64,
+      "height": 64,
+      "chunks": [
+        "c3BhcmUtcmFzdGVy"
+      ]
+    },
+    "remodeling-asset-a462ec9257d3fccf": {
+      "kind": "image",
+      "mime": "image/tiff",
+      "width": 128,
+      "height": 128,
+      "chunks": [
+        "dG95LWRzbS10aWxl"
+      ]
+    }
+  },
+  "calibration": null,
+  "params": null,
+  "gcps": null,
+  "results": null
+}

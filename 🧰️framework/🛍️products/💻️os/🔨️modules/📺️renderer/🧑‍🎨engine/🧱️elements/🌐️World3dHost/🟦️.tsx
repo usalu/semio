@@ -120,7 +120,7 @@ import { CAMERA_SYNC_DEBOUNCE_MS } from "../📐️Canvas2dHost/🟦️.tsx";
 import { openSurfaceContextMenu, useShellContextMenuFallback, wireLabel, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
 import { WorldTerrainLayer } from "../🗺️WorldTerrainLayer/🟦️.tsx";
 import { base64ToBytes } from "../🖌️Paint2dHost/🟦️.tsx";
-import { contextMenuGroupLabel, createCoalescingActionDispatcher, declareSurfaceCancelAction, createInFlightSkippingInterval, world3dMarqueeOverlayShape, type Puzzle3dBrushMeshPage, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, drainPuzzle3dBrushMeshQueue, PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES, puzzle3dBrushMeshRegistry, NOTE_WORLD_NAVIGATION_ACTION_ID, shellLabel, leftoverWorldGumballPoseV1 } from "../🛠️ShellHelpers/🟦️.tsx";
+import { contextMenuGroupLabel, createCoalescingActionDispatcher, declareSurfaceCancelAction, world3dMarqueeOverlayShape, type Puzzle3dBrushMeshPage, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, drainPuzzle3dBrushMeshQueue, PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES, puzzle3dBrushMeshRegistry, NOTE_WORLD_NAVIGATION_ACTION_ID, shellLabel, leftoverWorldGumballPoseV1 } from "../🛠️ShellHelpers/🟦️.tsx";
 import { SetWindowIconContext, SetWindowTitleContext, useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -252,7 +252,6 @@ type WorldInteractionRecord = {
   readonly activeUtility?: string;
   readonly brushCandidateIndex?: number;
   readonly hoveredVortexFullId?: string;
-  readonly brushPreviewJson?: string;
   readonly voxelDims?: readonly [number, number, number];
   readonly gridFactor?: number;
   readonly suggestionMenu?: WorldSuggestionMenuRecord | null;
@@ -314,23 +313,6 @@ type WorldReferenceRecord = World3dMarkerInteractionFields & {
   readonly opacity?: number;
 };
 
-/** ⚖️ What the brush search decided about the ghost it shows: `testing` is still being examined, `free`
- * passed, `collision` overlaps. Absent means `testing`. */
-type WorldBrushVerdict = "testing" | "free" | "collision";
-
-type WorldBrushPreviewRecord = {
-  readonly targetVortexFullId?: string;
-  readonly objectKindId?: string;
-  readonly sourceVortexIndex?: number;
-  readonly meshUrl?: string;
-  readonly origin?: readonly [number, number, number];
-  readonly orientation?: readonly [number, number, number, number];
-  readonly scale?: readonly [number, number, number] | number;
-  readonly color?: string;
-  readonly opacity?: number;
-  readonly verdict?: WorldBrushVerdict;
-};
-
 /** ☁️ One point-cloud rendering layer (`World3dScene.pointsJson` entries) — the cheap path for
  * 10^5-10^6 points, distinct from per-point meshes. `positionsB64` is base64 of little-endian f32 xyz
  * interleaved; `colorsB64` (optional) is base64 of u8 rgb interleaved, one triplet per point. */
@@ -374,7 +356,7 @@ type WorldEngagementPreviewItem = WorldEngagementPreviewPoint | WorldEngagementP
 
 //#region WorldMeshPaint
 /** 🎨️ Mesh style kinds, in {@link resolveMeshStyle} priority order (highest first). */
-type MeshStyleKind = "disabled" | "danger" | "provisional" | "celebrated" | "selected" | "highlighted" | "hovered" | "neutral";
+type MeshStyleKind = "disabled" | "provisional" | "celebrated" | "selected" | "highlighted" | "hovered" | "neutral";
 
 type MeshStyleColors = {
   readonly meshColor: string;
@@ -392,9 +374,6 @@ const MESH_STYLE_PAINT: Readonly<Record<MeshStyleKind, { readonly fill: string; 
   selected: { fill: tokenVar("primary"), line: tokenVar("primary"), emissiveIntensity: 0.35, opacity: 1 },
   highlighted: { fill: tokenVar("secondary"), line: tokenVar("secondary"), emissiveIntensity: 0.2, opacity: 1 },
   // 🎉️ Transient drop/completion paint — solid fallback for lines; shaded meshes use {@link CelebratingConicMaterial}.
-  // 🛑️ Refusal paint — a pose the algorithm just proved impossible (a brush ghost that collides).
-  // It outranks every other kind because "this cannot be" is the one thing a viewer must not misread.
-  danger: { fill: tokenVar("danger"), line: tokenVar("danger"), emissiveIntensity: 0.35, opacity: 0.72 },
   // 🟩️ The `provisional` style token: a running tool's not-yet-finalized placement (dashed outline via `ToolRunProvisionalOutline`).
   provisional: { fill: TOOL_RUN_PROVISIONAL_PAINT.fill, line: TOOL_RUN_PROVISIONAL_PAINT.line, emissiveIntensity: 0.2, opacity: TOOL_RUN_PROVISIONAL_PAINT.opacity },
   celebrated: { fill: tokenVar("primary"), line: tokenVar("primary"), emissiveIntensity: 0.55, opacity: 1 },
@@ -436,10 +415,9 @@ export function worldMeshMaterialRevision(kind: MeshStyleKind): MeshStyleKind {
   return kind;
 }
 
-/** 🎨️ Resolves the effective style kind for an instance/component, priority: disabled → danger → provisional → celebrated → selected → highlighted → hovered → neutral. */
+/** 🎨️ Resolves the effective style kind for an instance/component, priority: disabled → provisional → celebrated → selected → highlighted → hovered → neutral. */
 export function resolveMeshStyle(state: {
   readonly disabled?: boolean;
-  readonly danger?: boolean;
   readonly provisional?: boolean;
   readonly celebrating?: boolean;
   readonly selected?: boolean;
@@ -447,7 +425,6 @@ export function resolveMeshStyle(state: {
   readonly hovered?: boolean;
 }): MeshStyleKind {
   if (state.disabled) return "disabled";
-  if (state.danger) return "danger";
   if (state.provisional) return "provisional";
   if (state.celebrating) return "celebrated";
   if (state.selected) return "selected";
@@ -1247,14 +1224,13 @@ export type LeftoverWorldSelectionOverlayV1 = {
   readonly gumballAnchorId: string | null;
   readonly activeUtility?: string | null;
   readonly activeToolId?: string | null;
-  readonly brushPreviewJson?: string | null;
 };
 
 /** 🪟️ The overlay fields ONE pane owns. Everything else in the overlay is the document's, shared by
  * every pane of it: `ids`/`gumball*` are a document selection (B20) and `activeToolId` is a
- * mode-level tool. Hover, the armed window utility and its brush preview belong to the window
+ * mode-level tool. Hover and the armed window utility belong to the window
  * INSTANCE that resolved them (wave B9), so one pane arming Brush must never read back in another. */
-const LEFTOVER_WORLD_WINDOW_FIELDS = ["hoveredId", "hoveredDomain", "activeUtility", "brushPreviewJson"] as const;
+const LEFTOVER_WORLD_WINDOW_FIELDS = ["hoveredId", "hoveredDomain", "activeUtility"] as const;
 
 /** 🪟️ Where ONE leftover publication has authority: a single pane, the document's shared fields only,
  * or every pane at once — the last is what a mode-level tool activation is (it clears every window's
@@ -1336,9 +1312,7 @@ export function leftoverOverlayCarryingUtilityV1(next: LeftoverWorldSelectionOve
   const nextUtility = next.activeUtility === undefined ? prior?.activeUtility ?? null : next.activeUtility;
   const activeUtility = nextUtility === "select" && leftoverOverlayArmedBrushUtilityV1(prior?.activeUtility) ? prior?.activeUtility : nextUtility;
   const carried = nextUtility === next.activeUtility && activeUtility === next.activeUtility ? next : { ...next, activeUtility };
-  const withTool = carried.activeToolId === undefined ? { ...carried, activeToolId: prior?.activeToolId ?? null } : carried;
-  const preview = typeof withTool.brushPreviewJson === "string" && withTool.brushPreviewJson.length > 0 ? withTool.brushPreviewJson : prior?.brushPreviewJson ?? null;
-  return preview === withTool.brushPreviewJson ? withTool : { ...withTool, brushPreviewJson: preview };
+  return carried.activeToolId === undefined ? { ...carried, activeToolId: prior?.activeToolId ?? null } : carried;
 }
 
 /** 🕹️ Hover leftover publishes empty `ids` — a first pick must keep leftover.ids, never fall back to hoveredId. */
@@ -1579,16 +1553,6 @@ function parseLod(lodJson: string | undefined): WorldLodRecord {
   }
 }
 
-export function parseWorldBrushPreview(brushPreviewJson: string | undefined): WorldBrushPreviewRecord | null {
-  if (!brushPreviewJson) return null;
-  try {
-    const parsed = JSON.parse(brushPreviewJson) as WorldBrushPreviewRecord;
-    return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed) ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
 type WorldContextMenuTarget = { readonly kind: "vortex" | "object" | "reference"; readonly id: string };
 
 /** @emoji 🖱️ Resolves which entity a plain right-click should select-then-open a menu for, by priority: hovered vortex, object component, reference, then object. */
@@ -1654,38 +1618,9 @@ export function resolveVortexPointerDownIntent(brushMode: boolean, selectionMode
   return brushMode || selectionMode === "vertex" ? "select" : "click-or-drag";
 }
 
-/** @emoji 🧱️ Builds the `addBrushObject` action args from a parsed brush preview, or `null` if there is nothing to place yet. */
-export function brushObjectPlacementArgs(preview: WorldBrushPreviewRecord | null): Record<string, unknown> | null {
-  if (!preview) return null;
-  return {
-    targetVortexFullId: preview.targetVortexFullId,
-    objectKindId: preview.objectKindId,
-    sourceVortexIndex: preview.sourceVortexIndex ?? 0,
-    origin: preview.origin,
-    orientation: preview.orientation,
-    scale: preview.scale,
-  };
-}
-
-/** 🖼️ Guest may publish `brushPreviewJson` then wipe it on a hover-empty body (`gate reason=no-target`). Keep the last JSON per vortex while leftover/local hover still names that target. */
-export function retainWorldBrushPreviewJsonV1(published: string | undefined, hoverId: string | null | undefined, retained: Readonly<Record<string, string>>): { readonly json: string; readonly retained: Record<string, string> } {
-  const next: Record<string, string> = { ...retained };
-  const parsed = parseWorldBrushPreview(published);
-  if (parsed?.targetVortexFullId && published) next[parsed.targetVortexFullId] = published;
-  if (parsed && published) return { json: published, retained: next };
-  if (hoverId && next[hoverId]) return { json: next[hoverId], retained: next };
-  return { json: "", retained: next };
-}
-
 
 function parseEngagementPreview(engagementPreviewJson: string | undefined): readonly WorldEngagementPreviewItem[] {
   return parseJsonArray<WorldEngagementPreviewItem>(engagementPreviewJson);
-}
-
-function scaleTuple(scale: WorldBrushPreviewRecord["scale"]): [number, number, number] {
-  if (typeof scale === "number") return [scale, scale, scale];
-  if (Array.isArray(scale) && scale.length >= 3) return [scale[0]!, scale[1]!, scale[2]!];
-  return [1, 1, 1];
 }
 
 function geometryFromMesh(mesh: WorldMeshData) {
@@ -3511,14 +3446,14 @@ function WorldAttractionLines({ attractions }: { readonly attractions: readonly 
   );
 }
 
-/** @emoji 👻️ GLB URL for a brush/suggestion ghost — scene mesh match when present, else the preview's own `meshUrl` (catalogue-drop parity so one-shot suggestions still render kinds not yet placed). */
-export function brushPreviewGhostMeshUrl(preview: Pick<WorldBrushPreviewRecord, "meshUrl">, meshes: readonly Pick<WorldMeshRecord, "url">[]): string | undefined {
+/** @emoji 👻️ GLB URL for a catalogue-drop ghost — scene mesh match when present, else the preview's own `meshUrl`, so a kind not placed yet still renders. */
+export function worldGhostMeshUrl(preview: { readonly meshUrl?: string }, meshes: readonly Pick<WorldMeshRecord, "url">[]): string | undefined {
   const meshUrl = preview.meshUrl;
   if (!meshUrl) return undefined;
   return meshes.find((mesh) => mesh.url === meshUrl)?.url ?? meshUrl;
 }
 
-/** @emoji 🎞️ Demand-frameloop kick when a token changes — box fallbacks and already-cached GLBs otherwise leave the suggestion ghost invisible until the next orbit tick. */
+/** @emoji 🎞️ Demand-frameloop kick when a token changes — box fallbacks and already-cached GLBs otherwise leave a ghost invisible until the next orbit tick. */
 function DemandInvalidateOnToken({ token }: { readonly token: string }) {
   const invalidate = useThree((state) => state.invalidate);
   useLayoutEffect(() => {
@@ -3534,50 +3469,6 @@ function CatalogueDropPreviewInvalidate({ preview }: { readonly preview: Puzzle3
     if (preview) invalidate();
   }, [invalidate, preview]);
   return null;
-}
-
-/** 👻️ The style ONE ghost is painted in. A collision is the single verdict that overrides the object
- * kind's own catalogue colour: a refusal the viewer might read as "a piece of that kind goes here" is
- * worse than no ghost at all, so danger red wins over the hue. Everything else keeps today's
- * highlighted paint, tinted by the kind. */
-function brushGhostPaint(preview: WorldBrushPreviewRecord, palette: MeshStylePalette): { readonly style: MeshStyleColors; readonly meshColor: string; readonly revision: MeshStyleKind } {
-  const danger = preview.verdict === "collision";
-  const style = danger ? palette.danger : palette.highlighted;
-  return { style, meshColor: danger ? style.meshColor : (preview.color ?? style.meshColor), revision: danger ? "danger" : "highlighted" };
-}
-
-function BrushPreviewGhost({
-  preview,
-  meshes,
-  palette,
-}: {
-  readonly preview: WorldBrushPreviewRecord;
-  readonly meshes: readonly WorldMeshRecord[];
-  readonly palette: MeshStylePalette;
-}) {
-  if (!preview.origin) return null;
-  const { style, meshColor, revision } = brushGhostPaint(preview, palette);
-  const url = brushPreviewGhostMeshUrl(preview, meshes);
-  const position = preview.origin as [number, number, number];
-  const rotation = preview.orientation as [number, number, number, number] | undefined;
-  const scale = scaleTuple(preview.scale);
-  const quaternion = rotation ? new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]) : undefined;
-  const invalidateToken = `${preview.objectKindId ?? ""}:${preview.targetVortexFullId ?? ""}:${preview.sourceVortexIndex ?? 0}:${url ?? ""}:${position.join(",")}:${revision}`;
-  return (
-    <group position={position} scale={scale} quaternion={quaternion} raycast={() => null}>
-      <DemandInvalidateOnToken token={invalidateToken} />
-      {url ? (
-        <Suspense fallback={null}>
-          <GlbInstanceMesh url={url} color={meshColor} emissive={meshColor} emissiveIntensity={style.emissiveIntensity + 0.25} opacity={0.72} borderColor={palette.neutral.lineColor} revision={revision} pickEnabled={false} />
-        </Suspense>
-      ) : (
-        <mesh raycast={() => null}>
-          <boxGeometry args={[1, 1, 1]} />
-          <meshBasicMaterial color={meshColor} transparent opacity={0.42} depthWrite={false} />
-        </mesh>
-      )}
-    </group>
-  );
 }
 
 /**
@@ -4442,7 +4333,7 @@ export function worldCatalogueDropHostContainsPoint(controllerId: string, client
 
 function CatalogueDropGhost({ preview, meshes, palette }: { readonly preview: Puzzle3dCatalogueDropPreview; readonly meshes: readonly WorldMeshRecord[]; readonly palette: MeshStylePalette }) {
   const style = palette.highlighted;
-  const url = brushPreviewGhostMeshUrl(preview, meshes);
+  const url = worldGhostMeshUrl(preview, meshes);
   const position = preview.origin as [number, number, number];
   const invalidateToken = `${preview.objectKind}:${url ?? ""}:${position.join(",")}`;
   return (
@@ -4736,21 +4627,6 @@ function useWorldInstanceChrome(
   return { selected, hovered, highlighted, previewSelected };
 }
 
-let interactivePluginActionsInFlight = 0;
-
-/** @emoji 🖱️ Marks the start of a user-driven plugin action so background ticks can yield the WASM queue. */
-export function beginInteractivePluginAction(): void {
-  interactivePluginActionsInFlight += 1;
-}
-
-/** @emoji 🖱️ Marks the end of a user-driven plugin action so background ticks can resume. */
-export function endInteractivePluginAction(): void {
-  interactivePluginActionsInFlight = Math.max(0, interactivePluginActionsInFlight - 1);
-}
-
-function interactivePluginActionInFlight(): boolean {
-  return interactivePluginActionsInFlight > 0;
-}
 //#endregion WorldInstanceChromeStore
 
 /** @emoji 🖱️➡️ Signed distance along `axis` (unit vector) from `origin` to the point on that line closest to the
@@ -5106,18 +4982,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const interaction = useMemo(() => mergeWorldInteractionWithLeftoverV1(parseInteraction(scene?.interactionJson), leftoverWorldWindowOverlayV1(windowInstanceId)), [leftoverSelectionEpoch, scene?.interactionJson, windowInstanceId]);
   const lod = useMemo(() => parseLod(scene?.lodJson), [scene?.lodJson]);
   const engagementPreview = useMemo(() => parseEngagementPreview(scene?.engagementPreviewJson), [scene?.engagementPreviewJson]);
-  const retainedBrushPreviewByVortexRef = useRef<Record<string, string>>({});
-  const brushPreviewJson = useMemo(() => {
-    const interaction = parseInteraction(scene?.interactionJson);
-    const paneLeftover = leftoverWorldWindowOverlayV1(windowInstanceId);
-    const hover = leftoverHoveredVortexFullIdV1(paneLeftover) ?? interaction.hoveredVortexFullId;
-    const leftoverPreview = paneLeftover?.brushPreviewJson;
-    const published = leftoverPreview || scene?.brushPreviewJson || interaction.brushPreviewJson;
-    const decided = retainWorldBrushPreviewJsonV1(published, hover, retainedBrushPreviewByVortexRef.current);
-    retainedBrushPreviewByVortexRef.current = decided.retained;
-    return decided.json;
-  }, [leftoverSelectionEpoch, scene?.brushPreviewJson, scene?.interactionJson, windowInstanceId]);
-  const brushPreview = useMemo(() => parseWorldBrushPreview(brushPreviewJson || undefined), [brushPreviewJson]);
   const environment = useMemo(() => parseEnvironment(scene?.environmentJson), [scene?.environmentJson]);
   const frame = useMemo(() => parseFrame(scene?.frameJson), [scene?.frameJson]);
   const fit = useMemo(() => parseFit(scene?.fitJson), [scene?.fitJson]);
@@ -5261,12 +5125,12 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     [node.controllerId, node.surfaceId, onAction, windowInstanceId],
   );
 
-  /** 🏁️ `dispatch`'s awaitable twin for every SELF-GATING lane — the coalescing hover dispatchers and the
-   * two background tick intervals. `dispatch` discards `onAction`'s promise, and `onAction` is what settles
+  /** 🏁️ `dispatch`'s awaitable twin for every SELF-GATING lane — the coalescing hover and brush target
+   * dispatchers. `dispatch` discards `onAction`'s promise, and `onAction` is what settles
    * on the guest's `OperationCompleted` frame, so each gate built on "at most one round trip outstanding"
    * (`createCoalescingActionDispatcher`, `createInFlightSkippingInterval`) cleared itself on the next
    * microtask and gated NOTHING. Wave B33 measured one 70-move brush hover storm enqueuing 72
-   * `interactionHover` + 85 `suggestionsTick` turns with 11/10 of them settled, after which the next user
+   * `interactionHover` + 85 background tick turns with 11/10 of them settled, after which the next user
    * action (`addTargetVolume`) waited behind the backlog past its 30 s budget
    * (`📓️2026-09-12-wave-B33-full-run-vs-fresh-lane.md` §3). Same envelope as `dispatch`, awaitable — the
    * shape `dispatchBrushMesh` already uses for the mesh page lane. */
@@ -5530,9 +5394,9 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     });
   }, [meshResidency, meshReuploadUrls]);
 
-  // 👻️ Include the live brush/suggestion ghost URL so collision precompute can register kinds that are
-  // not yet placed in the scene — otherwise suggestions stay pending and never emit a 3D preview.
-  const brushMeshUrls = useMemo(() => [...new Set([...meshes.map((mesh) => mesh.url).filter((url): url is string => Boolean(url)), ...(brushPreview?.meshUrl ? [brushPreview.meshUrl] : [])])], [brushPreview?.meshUrl, meshes]);
+  // 🥽️ Every mesh the scene lane names — placed kinds and catalogue kinds alike — is uploaded for collision, so
+  // the brush suggestions run tests a candidate against its real geometry.
+  const brushMeshUrls = useMemo(() => [...new Set(meshes.map((mesh) => mesh.url).filter((url): url is string => Boolean(url)))], [meshes]);
 
   const handleFrameVisibleInstances = useCallback(() => {
     const group = instancesGroupRef.current;
@@ -5633,23 +5497,19 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   useEffect(() => {
     hoveredVortexFullIdRef.current = world3dRetainLocalVortexHover(hoveredVortexFullIdRef.current, interaction.hoveredVortexFullId);
   }, [interaction.hoveredVortexFullId]);
-  /** 🕰️ Every per-gesture brush-preview tick travels ONE single-flight lane: at most one `suggestionsTick`
-   * outstanding, and however many gestures ask while it is crossing, exactly one follow-up tick. A hover, its
-   * reply and a refused brush place each used to enqueue their own tick straight into the serialized guest
-   * queue, so one 70-move hover storm left 85 of them pending and the next user command (`addTargetVolume`)
-   * waited behind the whole backlog past its 30 s budget (wave B33 §3). The sequence number is what makes
-   * two successive requests distinct values for the coalescer — a constant would dedupe to the FIRST tick and
-   * never ask again. Preview latency is unchanged: the next tick still leaves the moment the guest answers. */
-  const suggestionsTickSeqRef = useRef(0);
-  const sendSuggestionsTick = useMemo(() => createCoalescingActionDispatcher<number>(() => dispatchSettled("suggestionsTick")), [dispatchSettled]);
-  const requestSuggestionsTick = useCallback(() => {
-    suggestionsTickSeqRef.current += 1;
-    sendSuggestionsTick(suggestionsTickSeqRef.current);
-  }, [sendSuggestionsTick]);
+  /** 🎣️ The armed brush points the read-only brush suggestions run at the vortex under the pointer, and at
+   * nothing once it leaves every vortex or the brush is disarmed. Only a CHANGE travels, through one
+   * single-flight lane (at most one `targetBrushSuggestions` outstanding plus the latest follow-up), so a hover
+   * storm never queues guest turns; the command only writes the target, and the run's own trace lane paints
+   * every candidate it tests. */
+  const brushSuggestionsTarget = brushMode ? interaction.hoveredVortexFullId ?? null : null;
+  const brushSuggestionsTargetSentRef = useRef<string | null>(null);
+  const sendBrushSuggestionsTarget = useMemo(() => createCoalescingActionDispatcher<string | null>((fullId) => dispatchSettled("targetBrushSuggestions", fullId ? { fullId } : {})), [dispatchSettled]);
   useEffect(() => {
-    if (!brushMode || !interaction.hoveredVortexFullId) return;
-    requestSuggestionsTick();
-  }, [brushMode, interaction.hoveredVortexFullId, requestSuggestionsTick]);
+    if (brushSuggestionsTargetSentRef.current === brushSuggestionsTarget) return;
+    brushSuggestionsTargetSentRef.current = brushSuggestionsTarget;
+    sendBrushSuggestionsTarget(brushSuggestionsTarget);
+  }, [brushSuggestionsTarget, sendBrushSuggestionsTarget]);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Alt" || event.key === "AltGraph") altHeldRef.current = event.type === "keydown";
@@ -5669,7 +5529,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     (event: PointerEvent) => {
       const alt = world3dSuggestionsAltHeld(event.altKey, altHeldRef.current);
       const brushArmed = Boolean(brushMode && hoveredVortexFullIdRef.current);
-      console.warn(`[DEBUG] suggestions-rightdown hop alt=${event.altKey} held=${altHeldRef.current} brush=${brushMode} hover=${hoveredVortexFullIdRef.current ?? "null"}`);
       if (world3dSuggestionsGestureArmed(alt, hoveredVortexFullIdRef.current) || brushArmed) {
         setVortexPointerArm(null);
         setConnectDragSource(null);
@@ -5722,25 +5581,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [handleSuggestionClose, suggestionMenuOpen, suggestionMenuOwnsThisWindow]);
-
-  // 🐢️ Background suggestion ticks must not pile into the serialized plugin WASM queue — a blind
-  // `setInterval` every 120ms while each tick+refresh still runs turns ~15s of idle search into an
-  // unbounded backlog that starves every other utility action.
-  //
-  // 🏁️ `createInFlightSkippingInterval` gates on the promise `run` RETURNS, so the tick must return the
-  // dispatch — a `run` that swallowed it cleared the in-flight flag on the same microtask and the gate
-  // did nothing (measured 2026-09-09 20:55: 252 background ticks enqueued in 35 s, 38 rejected with
-  // `serializePerActor: queue is full (>256 pending turns)`). `onAction` settles on the dispatched
-  // action's own `OperationCompleted` frame (`ComponentSceneHostProps.onAction`), so exactly one tick is
-  // ever outstanding and the cadence degrades to the guest's real turn time instead of overflowing.
-  useEffect(() => {
-    const menuPending = Boolean(interaction.suggestionMenu?.open && interaction.suggestionMenu.pending);
-    if (!(menuPending || brushMode)) return;
-    return createInFlightSkippingInterval(() => {
-      if (interactivePluginActionInFlight()) return undefined;
-      return dispatchSettled("suggestionsTick");
-    }, 120);
-  }, [brushMode, dispatchSettled, interaction.suggestionMenu?.open, interaction.suggestionMenu?.pending]);
 
   const selectionArgs = useCallback(() => world3dGumballSelectionArgsV1(selection), [selection]);
 
@@ -5823,13 +5663,9 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const handleVortexHover = useCallback(
     (fullId: string | null) => {
       if (fullId) hoveredVortexFullIdRef.current = fullId;
-      console.warn(`[DEBUG] vortex-hover hop fullId=${fullId ?? "null"} keep=${hoveredVortexFullIdRef.current ?? "null"} brush=${brushMode}`);
-      if (fullId) {
-        dispatchVortexHover(fullId);
-        if (brushMode) requestSuggestionsTick();
-      }
+      if (fullId) dispatchVortexHover(fullId);
     },
-    [brushMode, dispatchVortexHover, requestSuggestionsTick],
+    [dispatchVortexHover],
   );
 
   const handleVortexSelect = useCallback(
@@ -5946,28 +5782,12 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     if (!volumeBrushMode) setVoxelHoverOrigin(null);
   }, [volumeBrushMode]);
 
-  const pendingBrushPlaceRef = useRef(false);
+  /** ✅️ A brush click places the current free candidate the brush suggestions run found for the vortex under the
+   * pointer — the one-shot `acceptSuggestion`, which answers with a notice when nothing free is known yet. */
   const handleBrushPlace = useCallback(() => {
-    const args = brushObjectPlacementArgs(brushPreview);
-    console.warn(`[DEBUG] brush-place hop preview=${args ? args.targetVortexFullId : "null"} utility=${interaction.activeUtility ?? "none"} hover=${hoveredVortexFullIdRef.current ?? "null"}`);
-    if (!args) {
-      pendingBrushPlaceRef.current = true;
-      const keep = hoveredVortexFullIdRef.current;
-      if (keep) dispatchVortexHover(keep);
-      if (brushMode) requestSuggestionsTick();
-      return;
-    }
-    pendingBrushPlaceRef.current = false;
-    dispatch("addBrushObject", args);
-  }, [brushMode, brushPreview, dispatch, dispatchVortexHover, interaction.activeUtility, requestSuggestionsTick]);
-  useEffect(() => {
-    if (!pendingBrushPlaceRef.current) return;
-    const args = brushObjectPlacementArgs(brushPreview);
-    if (!args) return;
-    pendingBrushPlaceRef.current = false;
-    console.warn(`[DEBUG] brush-place deferred addBrushObject ${args.targetVortexFullId}`);
-    dispatch("addBrushObject", args);
-  }, [brushPreview, dispatch]);
+    const fullId = hoveredVortexFullIdRef.current;
+    if (fullId) dispatch("acceptSuggestion", { fullId });
+  }, [dispatch]);
 
   const handleWorldPick = useCallback(
     (args: { granularity: string; id: number; merge: string; objectId?: string }) => {
@@ -6644,7 +6464,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       data-camera-json={world3dCameraDomJson(sceneCamera)}
       data-viewport-camera-json={world3dCameraDomJson(cameraState)}
       data-vortices-json={scene.vorticesJson ?? undefined}
-      data-brush-preview-json={brushPreviewJson}
       data-suggestion-menu-json={interaction.suggestionMenu ? JSON.stringify(interaction.suggestionMenu) : ""}
       data-interaction-json={JSON.stringify(interaction)}
       data-status-json={scene.statusJson ?? undefined}
@@ -6722,7 +6541,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
               >
                 {shellLabel("ui.host.frameVisible")}
               </button>
-              <WorldComputeStatusPane status={computeStatus} glassClass={glassClass} locale={shellScope?.i18n.language} onCancel={() => dispatch(computeStatus.cancelAction)} />
+              <WorldComputeStatusPane status={computeStatus} glassClass={glassClass} locale={shellScope?.i18n.language} onCancel={() => dispatch(computeStatus.cancelAction, computeStatus.cancelArgs)} />
             </div>
           </>
         }
@@ -6843,7 +6662,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
             />
             {connectDragSource && connectDragHoverPosition ? <WorldConnectRubberBand from={connectDragSource.position} to={connectDragHoverPosition} /> : null}
             <WorldAttractionLines attractions={previewAttractions} />
-            {catalogueDropPreview ? <CatalogueDropGhost preview={catalogueDropPreview} meshes={meshes} palette={meshStylePalette} /> : brushPreview ? <BrushPreviewGhost preview={brushPreview} meshes={meshes} palette={meshStylePalette} /> : null}
+            {catalogueDropPreview ? <CatalogueDropGhost preview={catalogueDropPreview} meshes={meshes} palette={meshStylePalette} /> : null}
             <WorldToolRunTrace lane={scene.toolRunTrace} meshes={meshes} trace={toolRunTrace} />
             {engagementPreview.length > 0 ? <EngagementPreviewLayer items={engagementPreview} color={colors.hover} /> : null}
             <WorldVolumeLayer

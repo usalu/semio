@@ -16,9 +16,10 @@ use super::*;
         let shared = crate::editor::puzzle5d::config::Puzzle5dConfig::default();
         let spr = dsl::json::to_json_string(&shared);
         let oracle: serde_json::Value = serde_json::from_str(&spr).expect("serde_json oracle accepts the neutral config");
-        assert_eq!(oracle.as_object().map(serde_json::Map::len), Some(3));
+        assert_eq!(oracle.as_object().map(serde_json::Map::len), Some(4));
+        assert_eq!(oracle["fillCount"], serde_json::json!(crate::editor::puzzle5d::PUZZLE5D_DEFAULT_FILL_COUNT), "the fill count is document-instance configuration the fill run reads");
         let pack = store::ArtifactPack::encode_pack(&shared);
-        for forbidden in ["camera2d", "camera3d", "engagementInput", "brushCandidateIndex", "fillCount", "sun"] {
+        for forbidden in ["camera2d", "camera3d", "engagementInput", "brushCandidateIndex", "sun"] {
             assert!(!spr.contains(forbidden));
             assert!(!pack.windows(forbidden.len()).any(|bytes| bytes == forbidden.as_bytes()));
         }
@@ -94,7 +95,6 @@ use super::*;
     fn window_configs_pack_round_trip_every_persisted_option() {
         let board = Puzzle5dBoardWindowConfig {
             camera2d: Puzzle5dCamera2d { x: 3.5, y: -7.25, zoom: 2.5 },
-            fill_count: 17,
             lod_mode: "manual".into(),
             suggestion_offset: 4.75,
             grid_snap_enabled: false,

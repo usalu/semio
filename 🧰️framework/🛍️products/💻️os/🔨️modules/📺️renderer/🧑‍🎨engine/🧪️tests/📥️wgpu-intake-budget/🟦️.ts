@@ -48,15 +48,64 @@ describe("wgpu retained-UI intake budget", () => {
 
   it("resumes across the slice boundary with the retained cursor instead of faulting", async () => {
     const cursor = new WgpuUiIntakeCursor();
-    for (let step = 0; step < RETAINED_UI_INTAKE_SLICE_STEPS * 3; step += 1) await cursor.next("intake");
+    for (let step = 0; step < RETAINED_UI_INTAKE_SLICE_STEPS * 3; step += 1) {
+      const pending = cursor.next("intake");
+      if (pending) await pending;
+    }
     expect(cursor.steps, "exhausting a slice is a yield, so the same cursor keeps counting past it").toBe(RETAINED_UI_INTAKE_SLICE_STEPS * 3);
+  });
+
+  it("owes the isolate NOTHING for a step inside its hold budget, and a task only at the slice boundary", async () => {
+    const cursor = new WgpuUiIntakeCursor();
+    let awaited = 0;
+    for (let step = 0; step < RETAINED_UI_INTAKE_SLICE_STEPS - 1; step += 1) {
+      const pending = cursor.next("intake");
+      if (pending) {
+        awaited += 1;
+        await pending;
+      }
+    }
+    expect(awaited, "a whole slice of sub-microsecond phases fits inside one 8 ms hold, so it costs at most one hand-back").toBeLessThanOrEqual(2);
+    const boundary = cursor.next("intake");
+    expect(boundary, "the slice boundary itself is always a hand-back").toBeInstanceOf(Promise);
+    await boundary;
+  });
+
+  it("crosses a slice boundary with a TASK and never with an animation frame", async () => {
+    const host = globalThis as { requestAnimationFrame?: (callback: (timestampMs: number) => void) => number };
+    const previous = host.requestAnimationFrame;
+    let frames = 0;
+    host.requestAnimationFrame = (callback) => {
+      frames += 1;
+      return Number(setTimeout(() => callback(0), 0));
+    };
+    try {
+      const cursor = new WgpuUiIntakeCursor();
+      for (let step = 0; step < RETAINED_UI_INTAKE_SLICE_STEPS * 3; step += 1) {
+        const pending = cursor.next("intake");
+        if (pending) await pending;
+      }
+      expect(cursor.steps, "the drive really crossed three slice boundaries").toBe(RETAINED_UI_INTAKE_SLICE_STEPS * 3);
+      expect(frames, "an animation frame costs ~16 ms of pure sleep in the frame Worker, and a 525 k-step publication crosses 128 slices").toBe(0);
+    } finally {
+      if (previous) host.requestAnimationFrame = previous;
+      else delete host.requestAnimationFrame;
+    }
+  });
+
+  it("declares the slice-yield law language-agnostically", () => {
+    expect(intakeFixture.laws).toContain("budget-slice-is-resumable");
+    expect(intakeFixture.laws).toContain("slice-yield-is-a-task-not-a-frame");
   });
 
   it("faults only past the whole-document ceiling, and names the phase and the step that crossed it", async () => {
     const ceiling = RETAINED_UI_INTAKE_SLICE_STEPS * 2;
     const cursor = new WgpuUiIntakeCursor(ceiling);
-    for (let step = 0; step < ceiling; step += 1) await cursor.next("intake");
+    for (let step = 0; step < ceiling; step += 1) {
+      const pending = cursor.next("intake");
+      if (pending) await pending;
+    }
     expect(cursor.steps, "two whole slices are spent without a fault").toBe(ceiling);
-    await expect(cursor.next("intake")).rejects.toThrow(`wgpu-ui.intake-budget-exhausted:intake:${ceiling + 1}`);
+    expect(() => cursor.next("intake"), "the ceiling is terminal, and it names the phase and the step that crossed it").toThrow(`wgpu-ui.intake-budget-exhausted:intake:${ceiling + 1}`);
   });
 });

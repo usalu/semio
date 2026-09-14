@@ -1,7 +1,7 @@
 
 use super::*;
-use crate::editor::puzzle3d::precompute::{Puzzle3dCollision, Puzzle3dPrecomputeSession};
-use crate::standards::v1::subsets::any::schema::{BrushSearchProgress, FillCandidateVerdict, ObjectKindRepresentation, SceneConfig};
+use crate::editor::puzzle3d::precompute::Puzzle3dCollision;
+use crate::standards::v1::subsets::any::schema::ObjectKindRepresentation;
 
 #[test]
 fn fill_distribution_excludes_zero_weight_vortices() {
@@ -287,7 +287,6 @@ fn resolve_object_kind_mesh_url_prefers_catalog_then_falls_back_to_fixture() {
             orientation: None,
             scale: None,
             vortices: vec![],
-            reveal_index: None,
         }],
     };
     assert_eq!(resolve_object_kind_mesh_url("Kind", &empty_catalogs, &fixture_with_object), Some("/fixture.glb".to_string()));
@@ -366,7 +365,6 @@ fn blocked_vortex_full_ids_and_enumeration_excludes_them() {
                 orientation: None,
                 scale: None,
                 vortices: vec![VortexProps { id: "v0".into(), vortex_kind: None, position: [0.0, 0.0, 0.0], direction: None }],
-                reveal_index: None,
             },
             FixtureObject {
                 id: "free".into(),
@@ -377,7 +375,6 @@ fn blocked_vortex_full_ids_and_enumeration_excludes_them() {
                 orientation: None,
                 scale: None,
                 vortices: vec![VortexProps { id: "v0".into(), vortex_kind: None, position: [0.0, 0.0, 0.0], direction: None }],
-                reveal_index: None,
             },
         ],
     };
@@ -388,7 +385,7 @@ fn blocked_vortex_full_ids_and_enumeration_excludes_them() {
 
 #[test]
 fn vortex_world_from_object_none_for_missing_index() {
-    let object = FixtureObject { id: "o".into(), object_kind: None, anchor: Default::default(), mesh_url: None, origin: [1.0, 2.0, 3.0], orientation: None, scale: None, vortices: vec![], reveal_index: None };
+    let object = FixtureObject { id: "o".into(), object_kind: None, anchor: Default::default(), mesh_url: None, origin: [1.0, 2.0, 3.0], orientation: None, scale: None, vortices: vec![] };
     assert!(vortex_world_from_object(&object, 0).is_none());
 }
 
@@ -515,9 +512,15 @@ fn apply_brush_placement_to_fixture_rejects_duplicate_attraction_target() {
     assert_eq!(next.objects.len(), 0, "a target vortex that is already attracting must reject the placement");
 }
 
-//#region 🔎️BrushSearchVisibleProcess
-/// 🔎️ Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS wave G — the candidate search is a process
-/// the user watches, not an outcome that appears. These laws pin the readout it publishes.
+//#region ⏯️BrushSuggestionsRun
+/// ⏯️ Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W2-C — the brush candidate search is a read-only
+/// tool run: every candidate it tests is a trace record, every verdict reaches the instance's link, and the job
+/// follows the link's target. The scene and the laws are read from `🧫️fixtures/🎞️brush-suggestions-run.json`.
+use crate::editor::puzzle3d::Puzzle3dInstanceOperationOwner;
+use semio_framework_job::{root_cancel_token, Generation, OperationId, StepBudget};
+use semio_framework_tool_run::{ToolRunId, ToolRunStep, ToolRunTick, ToolRunTraceOp, ToolRunTraceStore};
+
+const BRUSH_SUGGESTIONS_RUN_FIXTURE: &str = include_str!("../../🧫️fixtures/🎞️brush-suggestions-run.json");
 const BRUSH_SEARCH_TARGET: &str = "host:v0";
 
 fn brush_search_cube() -> (Vec<f32>, Vec<u32>) {
@@ -536,9 +539,8 @@ fn brush_search_kind(id: &str, url: &str) -> ObjectKind {
     }
 }
 
-/// 🧪️ Two compatible kinds on one host vortex. `blocker` parks a registered body exactly where both
-/// candidates dock, so every candidate reaches a `collision` verdict; `late_mesh` decides whether the
-/// second kind's geometry has arrived yet, which is how a search is held open mid-list.
+/// 🧪️ The fixture scene: one host vortex, two compatible kinds, and optionally a body of the host's own kind
+/// carrying its own mesh parked exactly where both candidates dock.
 fn brush_search_scene(blocker: bool) -> SceneConfig {
     let mut objects = vec![FixtureObject {
         id: "host".to_string(),
@@ -549,20 +551,9 @@ fn brush_search_scene(blocker: bool) -> SceneConfig {
         orientation: Some([0.0, 0.0, 0.0, 1.0]),
         scale: None,
         vortices: vec![VortexProps { id: "v0".to_string(), vortex_kind: Some("port-a".to_string()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) }],
-        reveal_index: None,
     }];
     if blocker {
-        objects.push(FixtureObject {
-            id: "blocker".to_string(),
-            object_kind: Some("Host".to_string()),
-            anchor: Default::default(),
-            mesh_url: Some("/test/blocker.glb".to_string()),
-            origin: [12.0, 0.0, 0.0],
-            orientation: Some([0.0, 0.0, 0.0, 1.0]),
-            scale: None,
-            vortices: vec![],
-            reveal_index: None,
-        });
+        objects.push(FixtureObject { id: "blocker".to_string(), mesh_url: Some("/test/blocker.glb".to_string()), vortices: vec![], ..objects[0].clone() });
     }
     SceneConfig {
         fixture: Fixture { attractions: vec![], target_volumes: vec![], objects },
@@ -579,133 +570,381 @@ fn brush_search_scene(blocker: bool) -> SceneConfig {
     }
 }
 
-fn brush_search_engine(blocker: bool, late_mesh: bool) -> Puzzle3dCollision {
-    let (positions, indices) = brush_search_cube();
-    let mut engine = Puzzle3dCollision::new();
-    engine.register_mesh("/test/near.glb".to_string(), &positions, &indices);
-    engine.register_mesh("/test/blocker.glb".to_string(), &positions, &indices);
-    if late_mesh {
-        engine.register_mesh("/test/late.glb".to_string(), &positions, &indices);
+/// 🥽️ The fixture's mesh store: every registered test mesh is the cube, the host's own mesh is unknown.
+fn brush_search_meshes(url: &str) -> Option<(Vec<f32>, Vec<u32>)> {
+    (url != "/test/unregistered.glb").then(brush_search_cube)
+}
+
+fn brush_search_lane() -> Vec<String> {
+    ["box", "/test/blocker.glb", "/test/late.glb", "/test/near.glb", "/test/unregistered.glb"].map(str::to_string).to_vec()
+}
+
+fn brush_run_identity(generation: u32) -> ToolRunIdentity {
+    ToolRunIdentity { generation, ..ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 1 }, [0; 32]) }
+}
+
+fn brush_run_owner(target: Option<&str>) -> ArtifactInstanceOperationOwnerHandle {
+    let owner = ArtifactInstanceOperationOwnerHandle::new(Box::new(Puzzle3dInstanceOperationOwner::default()));
+    brush_run_link(&owner, |link| link.hover(target.map(str::to_string)));
+    owner
+}
+
+fn brush_run_link<R>(owner: &ArtifactInstanceOperationOwnerHandle, apply: impl FnOnce(&mut BrushSuggestionsLink) -> R) -> R {
+    owner.with_mut::<Puzzle3dInstanceOperationOwner, _>(|owner| Ok(apply(&mut owner.brush_suggestions))).expect("the brush suggestions link")
+}
+
+fn brush_run_job(owner: &ArtifactInstanceOperationOwnerHandle, port: &ToolRunJobPort, scene: SceneConfig, lane: Vec<String>, meshes: BrushSuggestionsMeshSource, generation: u32) -> BrushSuggestionsRunJob<Puzzle3dInstanceOperationOwner> {
+    BrushSuggestionsRunJob::new(owner.clone(), port.clone(), brush_run_identity(generation), Arc::new(scene), lane, meshes, crate::editor::puzzle3d::puzzle3d_fallback_mesh_buffers()).expect("fallback body")
+}
+
+fn brush_run_never() -> Option<u64> {
+    Some(0)
+}
+
+/// 🚦️ One job step with `fuel` units and no deadline, its retained tick page decoded and returned to its ledger.
+fn brush_run_step(job: &mut BrushSuggestionsRunJob<Puzzle3dInstanceOperationOwner>, fuel: u64) -> Option<ToolRunTick> {
+    let mut sequence = 0;
+    let mut context = StepContext::new(OperationId(91), Generation(1), StepBudget::new(fuel, u64::MAX), root_cancel_token(), brush_run_never, &mut sequence);
+    brush_run_settle(job.step(&mut context))
+}
+
+fn brush_run_settle(outcome: StepOutcome) -> Option<ToolRunTick> {
+    match outcome {
+        StepOutcome::PreviewReady(mut payload) => {
+            let page = payload.single_page().expect("a tick is one payload page").to_vec();
+            while !payload.terminal_is_empty() {
+                payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            }
+            Some(ToolRunTick::decode(&page).expect("tick decodes"))
+        }
+        StepOutcome::Yield => None,
+        other => panic!("a brush suggestions run only yields ticks: {other:?}"),
     }
-    engine.scene = Some(std::sync::Arc::new(brush_search_scene(blocker)));
-    engine
 }
 
-/// 🧪️ The same fixture behind the public session surface the window layer reads.
-fn brush_search_session(blocker: bool) -> Puzzle3dPrecomputeSession {
-    let (positions, indices) = brush_search_cube();
-    let mut session = Puzzle3dPrecomputeSession::new();
-    session.register_mesh("/test/near.glb", &positions, &indices);
-    session.register_mesh("/test/blocker.glb", &positions, &indices);
-    session.register_mesh("/test/late.glb", &positions, &indices);
-    assert!(session.set_scene_config(brush_search_scene(blocker)).is_ok(), "the brush search fixture is a valid scene");
-    session
+/// 🪞️ The ledger side of a brush suggestions run: the resident trace, every record in order, the steps.
+struct BrushRunMirror {
+    trace: ToolRunTraceStore,
+    records: Vec<(u64, ToolRunVerdict, u16)>,
+    clears: usize,
+    steps: Vec<ToolRunStep>,
+    progress: Option<ToolRunProgress>,
 }
 
-/// 🔁️ Drives the lane the way one `suggestionsTick` does and keeps every readout it passed through.
-fn brush_search_trace(engine: &mut Puzzle3dCollision, slices: usize) -> Vec<BrushSearchProgress> {
-    let mut seen = Vec::new();
-    for _ in 0..slices {
-        engine.refresh_brush_candidates(BRUSH_SEARCH_TARGET);
-        let progress = engine.brush_search_progress(BRUSH_SEARCH_TARGET);
-        let done = progress.done;
-        seen.push(progress);
-        if done {
-            break;
+impl BrushRunMirror {
+    fn new(generation: u32) -> Self {
+        Self { trace: ToolRunTraceStore::new(brush_run_identity(generation)), records: Vec::new(), clears: 0, steps: Vec::new(), progress: None }
+    }
+
+    fn apply(&mut self, tick: ToolRunTick) {
+        for page in &tick.trace {
+            for op in &page.ops {
+                match op {
+                    ToolRunTraceOp::Upsert { key, verdict, reason, .. } => self.records.push((*key, *verdict, *reason)),
+                    ToolRunTraceOp::Clear => self.clears += 1,
+                    ToolRunTraceOp::Retire { .. } => {}
+                }
+            }
+            self.trace.apply_page(page).expect("pages of the one run and generation");
+        }
+        self.steps.extend(tick.steps);
+        if tick.progress.is_some() {
+            self.progress = tick.progress;
         }
     }
-    seen
-}
 
-fn assert_brush_search_never_regresses(seen: &[BrushSearchProgress]) {
-    for pair in seen.windows(2) {
-        assert!(pair[1].tested >= pair[0].tested, "tested went backwards: {:?} then {:?}", pair[0].tested, pair[1].tested);
-        assert!(pair[1].free >= pair[0].free, "free went backwards: {:?} then {:?}", pair[0].free, pair[1].free);
-        assert!(pair[1].blocked >= pair[0].blocked, "blocked went backwards: {:?} then {:?}", pair[0].blocked, pair[1].blocked);
-        assert!(!pair[0].done || pair[1].done, "done never un-flips inside one search");
+    /// 🔁️ Steps until the job waits on its port; answers the steps it took.
+    fn drive(&mut self, job: &mut BrushSuggestionsRunJob<Puzzle3dInstanceOperationOwner>, port: &ToolRunJobPort, fuel: u64) -> usize {
+        for step in 0..100_000 {
+            if port.is_waiting() {
+                return step;
+            }
+            if let Some(tick) = brush_run_step(job, fuel) {
+                self.apply(tick);
+            }
+        }
+        panic!("the brush suggestions run never settled");
+    }
+
+    fn finals(&self) -> Vec<(u64, ToolRunVerdict, u16)> {
+        self.records.iter().copied().filter(|(_, verdict, _)| *verdict != ToolRunVerdict::Testing).collect()
+    }
+
+    fn words(&self) -> Vec<String> {
+        self.finals().iter().map(|(_, verdict, reason)| format!("{}:{}", verdict.as_str(), BrushSuggestionsRunReason::ALL[usize::from(*reason)].id())).collect()
+    }
+
+    fn step_words(&self) -> Vec<String> {
+        self.steps
+            .iter()
+            .map(|step| {
+                let args = step.args.iter().map(|arg| arg.to_plain_string()).collect::<Vec<_>>().join(",");
+                let base = format!("{}:{}", step.kind.as_str(), BrushSuggestionsRunReason::ALL[usize::from(step.reason)].id());
+                if args.is_empty() { base } else { format!("{base}:{args}") }
+            })
+            .collect()
     }
 }
 
+/// ⚖️ LANGUAGE-NEUTRAL LAW: every fixture case reaches exactly its verdicts, free kinds, counters and steps; every
+/// candidate is first upserted `testing` and then decided exactly once; the link holds the same result.
 #[test]
-fn brush_search_progress_counts_every_free_candidate_and_flips_done_when_the_list_is_exhausted() {
-    let mut engine = brush_search_engine(false, true);
-    let seen = brush_search_trace(&mut engine, 8);
-    assert_brush_search_never_regresses(&seen);
-    let last = seen.last().expect("at least one slice");
-    assert!(last.done, "a search with every mesh resident owes nothing after eight slices");
-    assert_eq!(last.target_vortex_full_id, BRUSH_SEARCH_TARGET);
-    assert_eq!(last.total_candidates, 2, "both compatible kinds are counted, not only the surviving ones");
-    assert_eq!(last.free, 2);
-    assert_eq!(last.blocked, 0);
-    assert_eq!(last.tested, last.free + last.blocked, "tested is exactly what reached a verdict");
-    assert_eq!(last.current_verdict, FillCandidateVerdict::Free);
+fn brush_suggestions_run_matches_the_language_neutral_fixture() {
+    let fixture: serde_json::Value = serde_json::from_str(BRUSH_SUGGESTIONS_RUN_FIXTURE).expect("brush suggestions run fixture");
+    for case in fixture["cases"].as_array().expect("cases") {
+        let name = case["name"].as_str().expect("name");
+        let mut scene = brush_search_scene(case["blocker"].as_bool().expect("blocker"));
+        for (kind, weight) in case["vortexWeights"].as_object().expect("vortex weights") {
+            scene.weights.vortex_weights.insert(kind.clone(), weight.as_f64().expect("weight"));
+        }
+        let target = case["target"].as_str().expect("target");
+        let (owner, port) = (brush_run_owner(Some(target)), ToolRunJobPort::default());
+        let mut job = brush_run_job(&owner, &port, scene, brush_search_lane(), brush_search_meshes, 0);
+        let mut mirror = BrushRunMirror::new(0);
+        mirror.drive(&mut job, &port, u64::MAX);
+        let expect_words = |key: &str| case[key].as_array().expect(key).iter().map(|word| word.as_str().expect("word").to_string()).collect::<Vec<_>>();
+        assert_eq!(mirror.words(), expect_words("verdicts"), "{name}: verdicts");
+        assert_eq!(mirror.step_words(), expect_words("steps"), "{name}: steps");
+        let progress = mirror.progress.as_ref().expect("a settled search reports its progress");
+        assert_eq!(progress.counters.iter().map(|counter| counter.value).collect::<Vec<_>>(), case["counters"].as_array().expect("counters").iter().map(|value| value.as_u64().expect("counter")).collect::<Vec<_>>(), "{name}: counters");
+        assert_eq!(progress.stage, BrushSuggestionsRunStage::Idle.index(), "{name}: a settled search waits in the idle stage");
+        for (key, _, _) in mirror.finals() {
+            let upserts: Vec<ToolRunVerdict> = mirror.records.iter().filter(|(record, _, _)| *record == key).map(|(_, verdict, _)| *verdict).collect();
+            assert_eq!(upserts.first(), Some(&ToolRunVerdict::Testing), "{name}: candidate {key} is shown under test before it is decided");
+            assert_eq!(upserts.iter().filter(|verdict| **verdict != ToolRunVerdict::Testing).count(), 1, "{name}: candidate {key} is decided exactly once");
+            assert_eq!(mirror.trace.record(key).map(|record| record.verdict), mirror.finals().iter().find(|(record, _, _)| *record == key).map(|(_, verdict, _)| *verdict), "{name}: the resident trace keeps the verdict");
+        }
+        let free = brush_run_link(&owner, |link| link.found(target).map(|found| found.free().map(|preview| preview.object_kind_id.clone()).collect::<Vec<_>>()).unwrap_or_default());
+        assert_eq!(free, expect_words("free"), "{name}: the link lists exactly the free candidates");
+        assert!(brush_run_link(&owner, |link| link.found(target).is_some_and(|found| found.done)), "{name}: the link reads the search as done");
+    }
 }
 
+/// 🐛️ Red→green (`📓️wave-W1-B.md` §6, `📓️wave-W0-C2.md` §3): a placed body of the host's kind that carries its OWN
+/// mesh was resolved by kind — to the host's unregistered mesh — so it was never a collision body and every candidate
+/// docking into it read free. Both the run and the precompute lane puzzle 5d still reads resolve a placed object's own
+/// mesh first, the renderer's law.
 #[test]
-fn brush_search_progress_counts_blocked_candidates_as_a_verdict_not_a_silence() {
-    let mut engine = brush_search_engine(true, true);
-    let seen = brush_search_trace(&mut engine, 8);
-    assert_brush_search_never_regresses(&seen);
-    let last = seen.last().expect("at least one slice");
-    assert!(last.done);
-    assert_eq!(last.free, 0, "every candidate docks into the parked body");
-    assert_eq!(last.blocked, 2);
-    assert_eq!(last.tested, 2);
-    assert_eq!(last.current_verdict, FillCandidateVerdict::Collision);
-    assert!(last.current_ghost.is_some(), "a refused candidate stays paintable — that is the whole point of showing it");
-}
-
-#[test]
-fn brush_search_publishes_free_candidates_before_the_search_is_done() {
-    let mut engine = brush_search_engine(false, false);
-    let seen = brush_search_trace(&mut engine, 8);
-    assert_brush_search_never_regresses(&seen);
-    let partial = seen.last().expect("at least one slice");
-    assert!(!partial.done, "a candidate whose mesh has not arrived leaves the search owed");
-    assert_eq!(partial.free, 1, "the resolved candidate is published while the other is still unknown");
-    assert_eq!(partial.total_candidates, 2);
-    assert_eq!(engine.brush_cache.get(BRUSH_SEARCH_TARGET).expect("cache entry").free.len(), 1, "the picker's own list already holds the partial result");
+fn a_body_carrying_its_own_mesh_where_every_candidate_docks_collides_them_all() {
+    let (owner, port) = (brush_run_owner(Some(BRUSH_SEARCH_TARGET)), ToolRunJobPort::default());
+    let mut job = brush_run_job(&owner, &port, brush_search_scene(true), brush_search_lane(), brush_search_meshes, 0);
+    let mut mirror = BrushRunMirror::new(0);
+    mirror.drive(&mut job, &port, u64::MAX);
+    assert_eq!(mirror.words(), vec!["danger:collision", "danger:collision"]);
     let (positions, indices) = brush_search_cube();
-    engine.register_mesh("/test/late.glb".to_string(), &positions, &indices);
-    let complete = brush_search_trace(&mut engine, 8);
-    let complete = complete.last().expect("at least one slice");
-    assert!(complete.done, "the late mesh completes the search");
-    assert_eq!(complete.free, 2, "the list grew instead of starting over");
+    let mut engine = Puzzle3dCollision::new();
+    for url in ["/test/near.glb", "/test/late.glb", "/test/blocker.glb"] {
+        engine.register_mesh(url.to_string(), &positions, &indices);
+    }
+    engine.scene = Some(Arc::new(brush_search_scene(true)));
+    let result = (0..64).map(|_| engine.compute_brush_cache_entry(BRUSH_SEARCH_TARGET)).find(|result| !result.unknown_pending).expect("the precompute lane settles");
+    assert!(result.free.is_empty(), "every candidate docks into the parked body: {:?}", result.free);
+    let mut clear = Puzzle3dCollision::new();
+    for url in ["/test/near.glb", "/test/late.glb", "/test/blocker.glb"] {
+        clear.register_mesh(url.to_string(), &positions, &indices);
+    }
+    clear.scene = Some(Arc::new(brush_search_scene(false)));
+    let result = (0..64).map(|_| clear.compute_brush_cache_entry(BRUSH_SEARCH_TARGET)).find(|result| !result.unknown_pending).expect("the precompute lane settles");
+    assert_eq!(result.free.len(), 2, "with nothing parked there both candidates are free");
 }
 
+/// ⛽️ LAW: one fuel unit is one candidate verdict, so a single `toolRunStep` shows exactly one decided candidate.
 #[test]
-fn brush_ghost_json_carries_the_verdict_of_the_candidate_it_shows() {
-    use crate::editor::puzzle3d::config::Puzzle3dRuntime;
-    use crate::editor::puzzle3d::modes::edit::windows::main::world_brush_preview_json;
-    use crate::editor::puzzle3d::{empty_fixture, Puzzle3dInteractionSnapshot, Puzzle3dScene};
-    let ghost_verdict = |blocker: bool| {
-        let mut session = brush_search_session(blocker);
-        session.set_brush_live_target(Some(BRUSH_SEARCH_TARGET.to_string()));
-        session.advance_brush_search(BRUSH_SEARCH_TARGET);
-        let envelope = Puzzle3dScene { fixture: empty_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: "brush".to_string() };
-        let json = world_brush_preview_json(&session, &envelope, &Puzzle3dInteractionSnapshot::default()).expect("a hovered vortex always publishes a ghost once its search ran");
-        let value: serde_json::Value = serde_json::from_str(&json).expect("ghost json");
-        value.get("verdict").and_then(serde_json::Value::as_str).map(str::to_string).expect("every ghost carries a verdict")
+fn brush_suggestions_run_step_with_one_unit_of_fuel_decides_at_most_one_candidate() {
+    let (owner, port) = (brush_run_owner(Some(BRUSH_SEARCH_TARGET)), ToolRunJobPort::default());
+    let mut job = brush_run_job(&owner, &port, brush_search_scene(false), brush_search_lane(), brush_search_meshes, 0);
+    let mut mirror = BrushRunMirror::new(0);
+    let mut decided_ticks = 0;
+    for _ in 0..10_000 {
+        if port.is_waiting() {
+            break;
+        }
+        let Some(tick) = brush_run_step(&mut job, 1) else { continue };
+        let decided = tick.trace.iter().flat_map(|page| &page.ops).filter(|op| matches!(op, ToolRunTraceOp::Upsert { verdict, .. } if *verdict != ToolRunVerdict::Testing)).count();
+        assert!(decided <= 1, "a one-unit step decided {decided} candidates");
+        decided_ticks += decided;
+        mirror.apply(tick);
+    }
+    assert!(port.is_waiting(), "the search settles one unit at a time");
+    assert_eq!(decided_ticks, 2, "both candidates are decided, one per unit");
+}
+
+/// 🎯️ LAW: the run follows the link's target. A settled search waits on its port and costs no step; a new target
+/// clears the trace and searches it; no target clears the trace, the link's result and waits again. A gesture wakes it.
+#[test]
+fn brush_suggestions_run_follows_the_link_target_and_waits_while_settled() {
+    let (owner, port) = (brush_run_owner(Some(BRUSH_SEARCH_TARGET)), ToolRunJobPort::default());
+    let mut scene = brush_search_scene(false);
+    scene.fixture.objects[0].vortices.push(VortexProps { id: "v1".to_string(), vortex_kind: Some("port-a".to_string()), position: [0.0, 40.0, 0.0], direction: Some([0.0, 0.0, -1.0]) });
+    let mut job = brush_run_job(&owner, &port, scene, brush_search_lane(), brush_search_meshes, 0);
+    let mut mirror = BrushRunMirror::new(0);
+    mirror.drive(&mut job, &port, u64::MAX);
+    brush_run_link(&owner, |link| assert_eq!(link.port.is_some(), true, "the job hands the link its wake port"));
+    assert!(brush_run_step(&mut job, u64::MAX).is_none(), "a settled search on an unchanged target emits nothing");
+    assert!(port.is_waiting());
+    brush_run_link(&owner, |link| link.hover(Some("host:v1".to_string())));
+    assert!(!port.is_waiting(), "a gesture wakes the run");
+    let before = mirror.clears;
+    mirror.drive(&mut job, &port, u64::MAX);
+    assert_eq!(mirror.clears, before + 1, "a new target clears the trace first");
+    assert_eq!(mirror.trace.len(), 2, "the trace now holds only the new target's candidates");
+    assert!(brush_run_link(&owner, |link| link.found("host:v1").is_some_and(|found| found.done && found.free().count() == 2)));
+    assert!(brush_run_link(&owner, |link| link.found(BRUSH_SEARCH_TARGET).is_none()), "the link holds one target's result");
+    brush_run_link(&owner, |link| link.hover(None));
+    mirror.drive(&mut job, &port, u64::MAX);
+    assert_eq!(mirror.trace.len(), 0, "no target, no trace");
+    assert!(brush_run_link(&owner, |link| link.found("host:v1").is_none()), "no target, no result");
+}
+
+/// 🧹️ LAW: a closing job retires the link result it published and never one its successor (the next generation)
+/// already published.
+#[test]
+fn a_closing_brush_suggestions_job_retires_only_its_own_result() {
+    let (owner, port) = (brush_run_owner(Some(BRUSH_SEARCH_TARGET)), ToolRunJobPort::default());
+    let mut first = brush_run_job(&owner, &port, brush_search_scene(false), brush_search_lane(), brush_search_meshes, 0);
+    BrushRunMirror::new(0).drive(&mut first, &port, u64::MAX);
+    port.wake();
+    let mut second = brush_run_job(&owner, &port, brush_search_scene(false), brush_search_lane(), brush_search_meshes, 1);
+    BrushRunMirror::new(1).drive(&mut second, &port, u64::MAX);
+    first.begin_close();
+    assert_eq!(first.close_step(64, 1 << 16), InteractiveJobCloseStep::Complete);
+    assert!(first.terminal_is_empty());
+    assert_eq!(brush_run_link(&owner, |link| link.found(BRUSH_SEARCH_TARGET).map(|found| found.writer)), Some((1, 1)), "the successor's result survives");
+    second.begin_close();
+    assert_eq!(second.close_step(64, 1 << 16), InteractiveJobCloseStep::Complete);
+    assert!(brush_run_link(&owner, |link| link.found(BRUSH_SEARCH_TARGET).is_none()), "the last writer's close retires its result");
+}
+
+fn brush_run_example_scene(document: &str) -> (SceneConfig, Vec<String>, Vec<String>) {
+    let text = match document {
+        "nakagin" => crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT,
+        "concrete-forest" => crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT,
+        other => panic!("unknown example document {other}"),
     };
-    assert_eq!(ghost_verdict(false), "free", "a collision-free pick is published as free, which the host paints highlighted");
-    assert_eq!(ghost_verdict(true), "collision", "a vortex where everything collides shows the refused candidate, not nothing");
+    let snapshot = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(text).expect("example parses");
+    let envelope = crate::editor::puzzle3d::scene_from_snapshot(&snapshot, Default::default(), "brush");
+    let scene = crate::editor::puzzle3d::scene_config(&envelope).expect("scene config");
+    let targets = scene.fixture.objects.iter().flat_map(|object| object.vortices.iter().map(|vortex| puzzle3d_vortex_full_id(&object.id, &vortex.id))).collect();
+    (scene, crate::editor::puzzle3d::modes::edit::windows::main::mesh_lane(&envelope.fixture), targets)
 }
 
-#[test]
-fn brush_search_captions_answer_in_english_and_german_with_no_default_locale() {
-    use crate::editor::puzzle3d::modes::edit::windows::main::utilities::brush::{brush_search_stage, brush_search_summary};
-    use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
-    use semio_framework_plugin::{AppLabels, Locale, Terminology};
-    let english = Puzzle3dLabels::labels(Locale::En, Terminology::Native);
-    let german = Puzzle3dLabels::labels(Locale::De, Terminology::Native);
-    let running = BrushSearchProgress { target_vortex_full_id: BRUSH_SEARCH_TARGET.to_string(), tested: 7, free: 3, blocked: 4, total_candidates: 12, done: false, ..Default::default() };
-    assert_eq!(brush_search_summary(&running, english), "3 free · 7 / 12 tested");
-    assert_eq!(brush_search_summary(&running, german), "3 frei · 7 / 12 getestet");
-    assert!(brush_search_stage(&running, english).contains("4 blocked"));
-    assert!(brush_search_stage(&running, german).contains("4 blockiert"));
-    let done = BrushSearchProgress { done: true, ..running };
-    assert!(brush_search_stage(&done, english).starts_with("Search complete"));
-    assert!(brush_search_stage(&done, german).starts_with("Suche abgeschlossen"));
-    assert_ne!(brush_search_stage(&done, english), brush_search_stage(&done, german), "every caption is translated, never an English fallback");
+fn brush_run_no_meshes(_url: &str) -> Option<(Vec<f32>, Vec<u32>)> {
+    None
 }
-//#endregion 🔎️BrushSearchVisibleProcess
+
+/// ⚖️ ORACLE (`parry3d`): on Concrete Forest with the app's box fallback, every candidate the run decided for the
+/// fixture's targets is recomputed as an exact convex hull against every placed body except the docking host; the
+/// overlap volume comes from parry point containment. A decisive overlap (at least twice the budget, enough
+/// expected samples) must be a collision, a decisive clearance (at most half the budget, or separated hulls) must be
+/// free. Every decisive verdict must agree.
+#[test]
+fn brush_suggestions_run_collision_verdicts_agree_with_the_parry3d_oracle() {
+    use parry3d::query::PointQuery;
+    use parry3d::shape::Shape;
+    let fixture: serde_json::Value = serde_json::from_str(BRUSH_SUGGESTIONS_RUN_FIXTURE).expect("brush suggestions run fixture");
+    let law = &fixture["laws"]["parryOracle"];
+    let (samples, decisive_hits, cells) = (law["samples"].as_f64().expect("samples"), law["decisiveHits"].as_f64().expect("decisive hits"), law["gridCells"].as_u64().expect("grid cells") as usize);
+    let identity = parry3d::math::Isometry::identity();
+    let (mut decisive, mut ambiguous, mut collisions, mut frees) = (0usize, 0usize, 0usize, 0usize);
+    let mut disagreements = Vec::new();
+    for document in law["documents"].as_array().expect("documents") {
+        let (scene, lane, targets) = brush_run_example_scene(document["document"].as_str().expect("document"));
+        let budget = scene.overlap_budget;
+        let (positions, _) = crate::editor::puzzle3d::puzzle3d_fallback_mesh_buffers();
+        let hull = |pose: &Pose3d| {
+            let points: Vec<parry3d::math::Point<f32>> = positions.chunks(3).map(|vertex| pose.transform_point(&crate::editor::puzzle3d::precompute::geometry::Point3d::new(vertex[0], vertex[1], vertex[2]))).map(|world| parry3d::math::Point::new(world.x(), world.y(), world.z())).collect();
+            parry3d::shape::ConvexPolyhedron::from_convex_hull(&points).expect("box hull")
+        };
+        let catalogs = scene.kind_catalogs.clone().unwrap_or_default();
+        let placed: Vec<(String, parry3d::shape::ConvexPolyhedron)> = scene.fixture.objects.iter().filter(|object| resolve_placed_object_mesh_url(object, &catalogs, &scene.fixture).is_some()).map(|object| (object.id.clone(), hull(&pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale)))).collect();
+        let (owner, port) = (brush_run_owner(None), ToolRunJobPort::default());
+        let mut job = brush_run_job(&owner, &port, scene.clone(), lane, brush_run_no_meshes, 0);
+        for target in targets.iter().take(document["targets"].as_u64().expect("targets") as usize) {
+            brush_run_link(&owner, |link| link.hover(Some(target.clone())));
+            BrushRunMirror::new(0).drive(&mut job, &port, u64::MAX);
+            let Some(found) = brush_run_link(&owner, |link| link.found(target).cloned()) else { continue };
+            let host = target.split(':').next().expect("host id");
+            for (key, (preview, verdict)) in found.previews.iter().zip(&found.verdicts).enumerate() {
+                let (Some(preview), BrushSuggestionVerdict::Free | BrushSuggestionVerdict::Collision) = (preview, verdict) else { continue };
+                let candidate = hull(&pose_isometry(preview.origin, preview.orientation, &preview.scale));
+                let (mut collides, mut uncertain) = (false, false);
+                for (_, other) in placed.iter().filter(|(id, _)| id != host) {
+                    let (left, right) = (candidate.compute_local_aabb(), other.compute_local_aabb());
+                    if !parry3d::bounding_volume::BoundingVolume::intersects(&left, &right) || parry3d::query::distance(&identity, &candidate, &identity, other).expect("convex distance") > 0.0 {
+                        continue;
+                    }
+                    let (min, max) = (left.mins.sup(&right.mins), left.maxs.inf(&right.maxs));
+                    let size = max - min;
+                    let box_volume = f64::from(size.x) * f64::from(size.y) * f64::from(size.z);
+                    let mut inside = 0usize;
+                    for x in 0..cells {
+                        for y in 0..cells {
+                            for z in 0..cells {
+                                let at = |index: usize, axis: usize| min[axis] + size[axis] * ((index as f32 + 0.5) / cells as f32);
+                                let point = parry3d::math::Point::new(at(x, 0), at(y, 1), at(z, 2));
+                                inside += usize::from(candidate.contains_local_point(&point) && other.contains_local_point(&point));
+                            }
+                        }
+                    }
+                    let volume = box_volume * inside as f64 / (cells * cells * cells) as f64;
+                    let (expected_hits, threshold_hits) = (samples * volume / box_volume.max(f64::MIN_POSITIVE), samples * budget / box_volume.max(f64::MIN_POSITIVE));
+                    if volume >= 2.0 * budget && expected_hits >= decisive_hits {
+                        collides = true;
+                    } else if !(volume <= 0.5 * budget && threshold_hits >= decisive_hits) {
+                        uncertain = true;
+                    }
+                }
+                let ours = *verdict == BrushSuggestionVerdict::Collision;
+                collisions += usize::from(ours);
+                frees += usize::from(!ours);
+                if !collides && uncertain {
+                    ambiguous += 1;
+                    continue;
+                }
+                decisive += 1;
+                if ours != collides {
+                    disagreements.push(format!("{target} candidate {key} ({}) ours={verdict:?} parry collides={collides}", preview.object_kind_id));
+                }
+            }
+        }
+    }
+    assert!(disagreements.is_empty(), "{} of {decisive} decisive verdicts disagree with parry3d:\n{}", disagreements.len(), disagreements.join("\n"));
+    assert!(collisions > 0 && frees > 0, "the oracle must decide both collisions ({collisions}) and free candidates ({frees})");
+    assert!(ambiguous * 10 <= decisive, "at most one in ten verdicts may fall inside the sampling band: {ambiguous} of {decisive}");
+}
+
+/// ⏱️ LAW: hovering never blocks. On Nakagin, the largest example, every real-clock step of the run under the
+/// interactive lane budget stays below 2 ms — preparation, target listing and collision units alike — across the
+/// fixture's targets. The best of the fixture's cold runs is taken, so concurrent builds cannot fake a regression.
+#[test]
+fn brush_suggestions_run_step_stays_below_the_interactive_ceiling_for_nakagin() {
+    let fixture: serde_json::Value = serde_json::from_str(BRUSH_SUGGESTIONS_RUN_FIXTURE).expect("brush suggestions run fixture");
+    let law = &fixture["laws"]["interactive"];
+    let (scene, lane, targets) = brush_run_example_scene(law["document"].as_str().expect("document"));
+    let budget_us = law["budgetUs"].as_u64().expect("budget");
+    let worst_runs: Vec<(u128, usize)> = (0..law["runs"].as_u64().expect("runs"))
+        .map(|_| {
+            let (owner, port) = (brush_run_owner(None), ToolRunJobPort::default());
+            let mut job = brush_run_job(&owner, &port, scene.clone(), lane.clone(), brush_run_no_meshes, 0);
+            let (mut worst, mut steps) = (0u128, 0usize);
+            for target in targets.iter().take(law["targets"].as_u64().expect("targets") as usize) {
+                brush_run_link(&owner, |link| link.hover(Some(target.clone())));
+                while !port.is_waiting() {
+                    let mut sequence = 0;
+                    let now = semio_framework_job::default_now_us().expect("clock");
+                    let budget = StepBudget::from_duration(semio_framework_job::INTERACTIVE_LANE_FUEL, now, semio_framework_job::INTERACTIVE_LANE_WALL_US).expect("budget");
+                    let mut context = StepContext::new(OperationId(92), Generation(1), budget, root_cancel_token(), semio_framework_job::default_now_us, &mut sequence);
+                    let started = std::time::Instant::now();
+                    let outcome = job.step(&mut context);
+                    worst = worst.max(started.elapsed().as_micros());
+                    drop(brush_run_settle(outcome));
+                    steps += 1;
+                }
+            }
+            (worst, steps)
+        })
+        .collect();
+    let (best, steps) = worst_runs.iter().copied().min().expect("runs");
+    assert!(best < u128::from(budget_us), "the worst step of the best run took {best} µs over {steps} steps against {budget_us} µs (runs: {worst_runs:?})");
+}
+//#endregion ⏯️BrushSuggestionsRun

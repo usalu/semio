@@ -12,7 +12,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 🧮️ Semantic remodeling document mutation vocabulary: id-keyed create/delete/change/add/remove per
 /// collection (streams, assets, camera calibrations, rig extrinsics, GCPs), `update` for the 8
 /// inseparable `ReconstructionParams` sub-facets and the calibration/rig full-record replace, and
-/// `replace` for the engine-owned job/results large structured sub-payloads.
+/// `replace` for the engine-owned result sub-payloads, `append`/`truncate` for durable content leaves and
+/// the atomic `commit-reconstruction` result.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslEnum, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = RemodelingSnapshot, diff = RemodelingDiff, schema = "remodeling.scene")]
@@ -43,7 +44,6 @@ pub enum RemodelingMutation {
     UpdateMeshParams(UpdateMeshParams),
     UpdateMotionParams(UpdateMotionParams),
     UpdateGeoParams(UpdateGeoParams),
-    ReplaceJob(ReplaceJob),
     ReplaceSparse(ReplaceSparse),
     ReplaceDense(ReplaceDense),
     /// 📦️ Boxed: `RemodelingMesh` (a full `MeshData` plus an optional watertight snapshot) is far larger
@@ -54,11 +54,14 @@ pub enum RemodelingMutation {
     ReplaceTracks(ReplaceTracks),
     ReplaceGeoProducts(ReplaceGeoProducts),
     ReplaceQc(ReplaceQc),
+    AppendContent(AppendContent),
+    RemoveContent(RemoveContent),
     CommitReconstruction(CommitReconstruction),
 }
 //#endregion 🔖️Mutations
 
 //#region 🔖️Reexports
+pub use super::append_content::{append_content, AppendContent};
 pub use super::add_gcp_observation::{add_gcp_observation, AddGcpObservation};
 pub use super::add_stream_frame::{add_stream_frame, AddStreamFrame};
 pub use super::change_stream_sync::{change_stream_sync, ChangeStreamSync};
@@ -77,7 +80,6 @@ pub use super::remove_gcp_observation::{remove_gcp_observation, RemoveGcpObserva
 pub use super::remove_stream_frame::{remove_stream_frame, RemoveStreamFrame};
 pub use super::replace_dense::{replace_dense, ReplaceDense};
 pub use super::replace_geo_products::{replace_geo_products, ReplaceGeoProducts};
-pub use super::replace_job::{replace_job, ReplaceJob};
 pub use super::replace_mesh_result::{replace_mesh_result, ReplaceMeshResult};
 pub use super::replace_qc::{replace_qc, ReplaceQc};
 pub use super::replace_sparse::{replace_sparse, ReplaceSparse};
@@ -93,6 +95,7 @@ pub use super::update_match_params::{update_match_params, UpdateMatchParams};
 pub use super::update_mesh_params::{update_mesh_params, UpdateMeshParams};
 pub use super::update_motion_params::{update_motion_params, UpdateMotionParams};
 pub use super::update_rig_extrinsic::{update_rig_extrinsic, UpdateRigExtrinsic};
+pub use super::remove_content::{remove_content, RemoveContent};
 pub use super::update_sfm_params::{update_sfm_params, UpdateSfmParams};
 //#endregion 🔖️Reexports
 
@@ -213,8 +216,8 @@ pub fn round_trip_remodeling_dsl(text: &str) -> Result<String, String> {
 /// the `remodeling-1-any` catalog (`../../🔣️oracle.json`) declares and the
 /// `📸️mutate-remodeling-1` exhaustive case measures itself against. The order groups the three families:
 /// id-keyed create/delete/change over the five referential pools, then the eight `update-*-params`
-/// whole-record replacements, then the engine-owned `replace-*` results, and finally the atomic
-/// `commit-reconstruction` terminal. `kinds_match_the_enum_and_the_catalog` below is what keeps this
+/// whole-record replacements, then the engine-owned `replace-*` results, the durable content leaves, and
+/// finally the atomic `commit-reconstruction` result. `kinds_match_the_enum_and_the_catalog` below is what keeps this
 /// list honest against the enum, since the framework never parses Rust.
 pub const KINDS: &[&str] = &[
     "create-stream",
@@ -243,7 +246,6 @@ pub const KINDS: &[&str] = &[
     "update-mesh-params",
     "update-motion-params",
     "update-geo-params",
-    "replace-job",
     "replace-sparse",
     "replace-dense",
     "replace-mesh-result",
@@ -251,6 +253,8 @@ pub const KINDS: &[&str] = &[
     "replace-tracks",
     "replace-geo-products",
     "replace-qc",
+    "append-content",
+    "remove-content",
     "commit-reconstruction",
 ];
 //#endregion 🔖️Kinds

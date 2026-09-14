@@ -373,9 +373,10 @@ fn the_cancel_contract_is_read_the_way_the_shared_fixture_declares() {
         let affordance = world3d_cancel_affordance(case["statusJson"].as_str());
         assert_eq!(affordance.cancellable, case["expected"]["cancellable"].as_bool().expect("fixture cancellable"), "{}", case["id"]);
         assert_eq!(affordance.cancel_action, case["expected"]["cancelAction"].as_str().expect("fixture cancelAction"), "{}", case["id"]);
+        assert_eq!(Value::Object(affordance.cancel_args), case["expected"]["cancelArgs"], "{}", case["id"]);
         rows += 1;
     }
-    assert_eq!(rows, 9, "the fixture's nine cancel-contract rows");
+    assert_eq!(rows, 11, "the fixture's eleven cancel-contract rows");
     eprintln!("[DEBUG] wgpu world3d cancel contract: {rows} fixture rows, hostile payloads included, degrade to no affordance");
 }
 
@@ -498,6 +499,56 @@ fn the_status_pill_leads_the_row_the_cancel_control_follows() {
     let tiny = [("window:procedural-view-preview", Rect::new(24.0, 40.0, 24.0, 12.0), Some(computing))];
     assert!(surface_status_pills_for(&tiny, &theme, false).is_empty(), "a collapsed pane carries no pill either");
     eprintln!("[DEBUG] wgpu world3d status pill: leads the overlay row at {:?}, cancel anchored at {:?}", [rect.x, rect.y], controls[0].1);
+}
+
+/// ⏳️⛓️ The TIMELINE law — the one no single row can state. A long evaluation must publish a RUN of
+/// non-idle frames whose ratio never decreases and whose every frame both paints a pill and offers
+/// the cancel its producer names, and must end settled. A producer that publishes `idle` throughout
+/// passes every row assertion above and fails this one, which is exactly the defect it exists for:
+/// 54 identical `phase:"idle" inFlight:0 ratio:1.0` publications across one 23 s evaluation, on both
+/// renderers (`📓️wgpu-progress-visibility-2026-09-14.md`).
+#[test]
+fn a_long_evaluation_publishes_a_monotone_run_of_non_idle_frames_and_then_settles() {
+    let fixture: Value = serde_json::from_str(SURFACE_CONTROLS_FIXTURE).expect("⏳️ the surface-controls fixture parses");
+    let timeline = &fixture["progressTimeline"];
+    let minimum = timeline["minimumNonIdleFrames"].as_u64().expect("fixture minimum non-idle frames") as usize;
+    let theme = crate::resolve_theme("light");
+    let bounds = Rect::new(480.0, 40.0, 480.0, 320.0);
+    for lane in ["evaluation", "cancelled"] {
+        let frames = timeline[lane].as_array().unwrap_or_else(|| panic!("fixture {lane} frames"));
+        let mut non_idle = 0usize;
+        let mut previous_ratio = f64::NEG_INFINITY;
+        for frame in frames {
+            let id = frame["id"].as_str().expect("frame id");
+            let status = world3d_compute_status(frame["statusJson"].as_str());
+            let expected = &frame["expected"];
+            assert_eq!(status.phase, expected["phase"].as_str().expect("frame phase"), "{lane}/{id}: phase");
+            assert!((status.ratio - expected["ratio"].as_f64().expect("frame ratio")).abs() < 1e-9, "{lane}/{id}: ratio is {}", status.ratio);
+            assert_eq!(world3d_status_is_visible(&status), expected["visible"].as_bool().expect("frame visible"), "{lane}/{id}: visibility");
+            let pills = surface_status_pills_for(&[("window:procedural-preview", bounds, frame["statusJson"].as_str())], &theme, false);
+            let controls = surface_overlay_controls_for(&[], &[("window:procedural-preview", bounds, frame["statusJson"].as_str())], &theme, false);
+            if !expected["visible"].as_bool().expect("frame visible") {
+                assert!(pills.is_empty() && controls.is_empty(), "{lane}/{id}: a settled frame annotates nothing");
+                continue;
+            }
+            assert_eq!(pills.len(), 1, "{lane}/{id}: an unsettled frame paints its pill");
+            assert_eq!(pills[0].0.progress_text.as_deref(), expected["progressText"].as_str(), "{lane}/{id}: progress text");
+            if status.phase != "cancelled" {
+                non_idle += 1;
+                assert_ne!(status.phase, "idle", "{lane}/{id}: a frame that annotates the viewport may not call itself idle");
+                assert!(status.ratio >= previous_ratio - 1e-9, "{lane}/{id}: ratio went backwards, {previous_ratio} → {}", status.ratio);
+                previous_ratio = status.ratio;
+                assert_eq!(controls.len(), 1, "{lane}/{id}: work in flight offers a cancel");
+            }
+        }
+        let last = world3d_compute_status(frames.last().expect("a timeline has frames")["statusJson"].as_str());
+        assert!(!world3d_status_is_visible(&last), "{lane}: the timeline ends settled");
+        if lane == "evaluation" {
+            assert!(non_idle >= minimum, "{lane}: {non_idle} non-idle frames, the law needs at least {minimum}");
+        }
+        eprintln!("[DEBUG] wgpu world3d status timeline {lane}: {non_idle} non-idle frame(s), ratio monotone up to {previous_ratio}, settled at the end");
+    }
+    assert!(timeline["cancelled"].as_array().is_some_and(|frames| frames.iter().any(|frame| frame["expected"]["phase"] == "cancelled")), "the cancelled lane settles on `cancelled`, not on `idle`");
 }
 
 //#endregion ⏳️ComputeStatusPane
@@ -668,3 +719,164 @@ fn asking_for_the_role_already_mounted_creates_and_retires_nothing() {
 }
 
 //#endregion 🔀️SwitchOrder
+
+//#region ⌨️WindowScope
+
+const WINDOW_SCOPE_FIXTURE: &str = include_str!("../../../🏛️ShellHost/🧫️fixtures/⌨️window-scope/🔣️.json");
+
+/// 🪟️ Rebuilds a fixture layout node as the wgpu dock tree. The fixture is authored in the React
+/// shell's own layout vocabulary (`window` / `stack` + `activeId` / `row` / `column`), which is the
+/// point: ONE corpus, two renderers.
+fn window_scope_node(value: &Value) -> crate::dock::DockNode {
+    match value["kind"].as_str().expect("⌨️ fixture layout node kind") {
+        "window" => {
+            let id = value["id"].as_str().expect("⌨️ fixture window id").to_string();
+            crate::dock::DockNode::Stack { windows: vec![DockStackTab::new(id.clone())], active: id }
+        }
+        "stack" => {
+            let windows: Vec<DockStackTab> = value["children"].as_array().expect("⌨️ fixture stack children").iter().map(|child| DockStackTab::new(child["id"].as_str().expect("⌨️ fixture window id"))).collect();
+            let active = value["activeId"].as_str().map(str::to_string).or_else(|| windows.first().map(|tab| tab.window_id.clone())).unwrap_or_default();
+            crate::dock::DockNode::Stack { windows, active }
+        }
+        "row" => crate::dock::DockNode::Row(value["children"].as_array().expect("⌨️ fixture row children").iter().map(|child| (window_scope_node(child), 1.0)).collect()),
+        "column" => crate::dock::DockNode::Column(value["children"].as_array().expect("⌨️ fixture column children").iter().map(|child| (window_scope_node(child), 1.0)).collect()),
+        other => panic!("⌨️ unknown fixture layout node kind {other}"),
+    }
+}
+
+/// 📇️ An app whose window kinds declare exactly the fixture's per-kind action ids — the shape
+/// `window_kind_action_refs` produces in a plugin manifest.
+fn window_scope_app(fixture: &Value, app_id: &str) -> AppDefinition {
+    let kinds: Vec<WindowKindDefinition> = fixture["apps"][app_id]["kinds"]
+        .as_array()
+        .expect("⌨️ fixture app kinds")
+        .iter()
+        .map(|kind| WindowKindDefinition {
+            id: kind["id"].as_str().expect("⌨️ fixture kind id").into(),
+            label: LocalizedLabel::native(kind["id"].as_str().expect("⌨️ fixture kind id"), kind["id"].as_str().expect("⌨️ fixture kind id")),
+            body_key: format!("{}.body", kind["id"].as_str().expect("⌨️ fixture kind id")),
+            surface_kind: ui_wgpu::wgpu::SurfaceKind::Canvas2d,
+            icon_id: "app-window".into(),
+            options: Default::default(),
+            actions: kind["actionIds"]
+                .as_array()
+                .expect("⌨️ fixture kind actionIds")
+                .iter()
+                .map(|id| {
+                    let id = id.as_str().expect("⌨️ fixture action id");
+                    semio_framework::ActionDefinition::new(id, LocalizedLabel::native(id, id), semio_framework::ActionKind::Mutation, "create")
+                })
+                .collect(),
+            utilities: vec![],
+            interactions: vec![],
+            params_schema: None,
+            artifact_snapshot_schema: None,
+            input_event_schema: None,
+            output_schema: None,
+            capabilities: vec![],
+        })
+        .collect();
+    let mut app = parity_app(app_id, AppRole::Editor, dialectless(), app_id, app_id, &["edit"]);
+    app.window_kinds = WindowKinds::try_from(kinds).expect("⌨️ a fixture app declares at least one window kind");
+    app
+}
+
+#[test]
+fn a_seeded_mode_layout_always_opens_with_one_window_active() {
+    let fixture: Value = serde_json::from_str(WINDOW_SCOPE_FIXTURE).expect("⌨️ the shared window-scope fixture parses");
+    let mut projections = 0;
+    for case in fixture["stacks"].as_array().expect("⌨️ fixture stack rows") {
+        let node = window_scope_node(&fixture["apps"][case["app"].as_str().expect("⌨️ fixture app")]["modes"][case["mode"].as_str().expect("⌨️ fixture mode")]);
+        let stacks = mode_layout_stacks_v1(&node);
+        let expected: Vec<WindowScopeStackV1> = case["expected"]
+            .as_array()
+            .expect("⌨️ fixture expected stacks")
+            .iter()
+            .map(|stack| WindowScopeStackV1 {
+                window_ids: stack["windowIds"].as_array().expect("⌨️ fixture windowIds").iter().map(|id| id.as_str().expect("⌨️ fixture window id").to_string()).collect(),
+                active_window_id: stack["activeWindowId"].as_str().map(str::to_string),
+            })
+            .collect();
+        assert_eq!(stacks, expected, "{}: the dock flattens to the same stacks the React dock does", case["id"]);
+        projections += 1;
+    }
+    let mut seeds = 0;
+    for case in fixture["dockSeed"].as_array().expect("⌨️ fixture dock-seed rows") {
+        let node = window_scope_node(&fixture["apps"][case["app"].as_str().expect("⌨️ fixture app")]["modes"][case["mode"].as_str().expect("⌨️ fixture mode")]);
+        let seeded = dock_seed_active_window_id_v1(&mode_layout_stacks_v1(&node), case["activeWindowId"].as_str());
+        assert_eq!(seeded.as_deref(), case["expected"].as_str(), "{}: the seeded active window", case["id"]);
+        if let Some(seeded) = seeded {
+            assert_eq!(dock_seed_active_window_id_v1(&mode_layout_stacks_v1(&node), Some(seeded.as_str())), None, "{}: re-seeding over its own answer is a no-operation", case["id"]);
+        }
+        seeds += 1;
+    }
+    assert!(seeds >= 6 && projections >= 3, "⌨️ the shared corpus must stay populated");
+    eprintln!("[DEBUG] window-scope: {projections} stack projections, {seeds} dock seeds agree with the React twin");
+}
+
+#[test]
+fn an_app_wide_chord_resolves_to_the_window_that_owns_its_verb_in_the_active_mode() {
+    let fixture: Value = serde_json::from_str(WINDOW_SCOPE_FIXTURE).expect("⌨️ the shared window-scope fixture parses");
+    let mut owners = 0;
+    let mut unowned = 0;
+    for case in fixture["chords"].as_array().expect("⌨️ fixture chord rows") {
+        let app_id = case["app"].as_str().expect("⌨️ fixture app");
+        let app = window_scope_app(&fixture, app_id);
+        let node = window_scope_node(&fixture["apps"][app_id]["modes"][case["mode"].as_str().expect("⌨️ fixture mode")]);
+        let mounted: Vec<WindowScopeInstanceV1> = mode_layout_stacks_v1(&node).into_iter().flat_map(|stack| stack.window_ids).map(|id| WindowScopeInstanceV1 { id: id.clone(), window_kind_id: id }).collect();
+        let action_id = case["actionId"].as_str().expect("⌨️ fixture action id");
+        let (kind, window_id) = resolve_keybinding_target_window_v1(&app, &mounted, case["focusedWindowId"].as_str(), action_id);
+        let expected_kind = match case["expectedKind"].as_str().expect("⌨️ fixture expected kind") {
+            "focused" => WindowScopeTargetKindV1::Focused,
+            "owner" => WindowScopeTargetKindV1::Owner,
+            other => {
+                assert_eq!(other, "unowned", "⌨️ the fixture's only three outcomes");
+                WindowScopeTargetKindV1::Unowned
+            }
+        };
+        assert_eq!(kind, expected_kind, "{}: outcome", case["id"]);
+        assert_eq!(window_id.as_deref(), case["expectedWindowId"].as_str(), "{}: target window", case["id"]);
+        match kind {
+            WindowScopeTargetKindV1::Unowned => unowned += 1,
+            WindowScopeTargetKindV1::Owner => owners += 1,
+            WindowScopeTargetKindV1::Focused => {}
+        }
+        // 🎯️ A resolved target always names a MOUNTED window whose kind declares the verb — anything
+        // else dies on the undeclared-action gate instead of reaching the plugin.
+        if let Some(window_id) = window_id {
+            assert!(mounted.iter().any(|instance| instance.id == window_id), "{}: the target is mounted", case["id"]);
+            assert!(window_action_definition(&app, &window_id, action_id).is_some(), "{}: the target declares the verb", case["id"]);
+        }
+    }
+    for case in fixture["unownedHint"].as_array().expect("⌨️ fixture hint rows") {
+        let text = keybinding_unowned_text_v1(case["locale"].as_str().expect("⌨️ fixture locale"), case["chord"].as_str().expect("⌨️ fixture chord"), case["label"].as_str().expect("⌨️ fixture label"));
+        assert_eq!(text, case["text"].as_str().expect("⌨️ fixture hint text"), "⌨️ the hint text in {}", case["locale"]);
+    }
+    assert_ne!(KEYBINDING_UNOWNED_LABEL_EN, KEYBINDING_UNOWNED_LABEL_DE, "🇩🇪️ the two languages are authored, not copied");
+    assert!(owners >= 4 && unowned >= 2, "⌨️ the corpus must pin both the owner hop and the hinted no-operation");
+    eprintln!("[DEBUG] window-scope chords: {owners} owner hops, {unowned} hinted no-operations, {} hint locales, code {KEYBINDING_UNOWNED_CODE}", fixture["unownedHint"].as_array().expect("⌨️ fixture hint rows").len());
+}
+/// ⚖️ LAW: the shell's own chrome chords stay out of the app-keybinding loop, and only
+/// accelerator-carrying ones do — a bare key belongs to whichever surface has focus, which is what
+/// lets the node-graph canvas own bare arrows. The collision the fixture names is REAL: the chord the
+/// navbar's mode step owns is the chord `build_definition` mints for `toolRunStep` on every app that
+/// declares a tool run, so without this rule one keystroke had two owners.
+#[test]
+fn the_shells_own_accelerator_chords_are_reserved_from_the_app_keybinding_loop() {
+    let fixture: Value = serde_json::from_str(WINDOW_SCOPE_FIXTURE).expect("⌨️ the shared window-scope fixture parses");
+    let block = &fixture["reservedChords"];
+    let pairs = |value: &Value| -> Vec<(String, String)> { value.as_object().expect("⌨️ fixture chord table").iter().map(|(id, keys)| (id.clone(), keys.as_str().expect("⌨️ fixture chord").to_string())).collect() };
+    let reserved = reserved_shell_chords_v1(&pairs(&block["shellTable"]), &pairs(&block["overrides"]));
+    let expected: std::collections::BTreeSet<String> = block["expected"].as_array().expect("⌨️ fixture expected").iter().map(|chord| chord.as_str().expect("⌨️ fixture chord").to_string()).collect();
+    assert_eq!(reserved, expected, "🛡️ the reserved set agrees with the React twin");
+    for case in block["cases"].as_array().expect("⌨️ fixture reserved-chord rows") {
+        let chord = case["chord"].as_str().expect("⌨️ fixture chord");
+        assert_eq!(chord_carries_accelerator_v1(chord), case["accelerator"].as_bool().expect("⌨️ fixture accelerator"), "{chord}: accelerator");
+        assert_eq!(reserved.contains(chord), case["reserved"].as_bool().expect("⌨️ fixture reserved"), "{chord}: reserved");
+    }
+    assert_eq!(semio_framework::ToolRunAction::Step.chord(), block["collision"]["chord"].as_str().expect("⌨️ fixture collision chord"), "the tool-run step chord still collides with the shell's mode step");
+    assert_eq!(block["collision"]["alsoMintedFor"].as_str(), Some(semio_framework::ToolRunAction::Step.id()), "the fixture names the action the chord is minted for");
+    eprintln!("[DEBUG] reserved shell chords: {} of {} fixture rows reserved, collision {}", block["cases"].as_array().expect("rows").iter().filter(|case| case["reserved"].as_bool() == Some(true)).count(), block["cases"].as_array().expect("rows").len(), block["collision"]["chord"]);
+}
+
+//#endregion ⌨️WindowScope

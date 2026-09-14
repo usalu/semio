@@ -1,0 +1,42 @@
+{
+  "schema": "framework.world3d.scene-bridge-empty-build/v1",
+  "$comment": "🌉️ The mesh-wire republications a producer emits between two settled previews. Each one parses, none of them yields a single drawable mesh, and none of them changes the camera — which is exactly the shape `publish_world3d_scene_bridge_snapshot` used to answer `World3dSnapshotFault::Capacity` for, quarantining the surface for good. Held against the settled payload in `🌉️scene-bridge/🔣️.json`, which every case is applied AFTER.",
+  "provenance": {
+    "measuredOn": "http://127.0.0.1:6118/?plugin=generation3d&mode=generate&example=hexagonal-mushroom-column",
+    "reading": "[DEBUG] world3d surface=generation3d-generate-preview … meshes=169b instances=267b … against meshes=3644b/4646b/4786b for every settled sample, followed by `world3d bridge fault … fault=Some(Capacity) state-meshes=3` and `frame fault recorded: world3d scene mesh-wire bridge faulted`",
+    "gesture": "Add Generation, then 20 world3d gestures interleaved with 3 Form slider drags (updateGenerationValues); the fault fired on the third",
+    "ticket": "26/09/09/PROCEDURAL-3D-END-TO-END",
+    "probe": "🐍️wgpu-world3d-gaps-probe.mjs"
+  },
+  "expect": {
+    "bridgeStep": "Complete",
+    "snapshotFault": null,
+    "keepsLastGeometry": true
+  },
+  "cases": [
+    {
+      "name": "meshes-without-triangles",
+      "why": "The measured shape: the producer names its meshes before it has tessellated them, so every record carries no positions and no indices. The parse phase's own `vertex_count() > 0 && indices.len() >= 3` retain drops them all, and the instance retain then drops every instance that referenced them.",
+      "meshesJson": [{ "id": "eval-extrude@solid#0", "data": { "positions": [], "indices": [] } }],
+      "instancesJson": [{ "id": "extrude@solid#0", "meshId": "eval-extrude@solid#0", "interactionId": "extrude@solid", "position": [0.0, 0.0, 0.0] }]
+    },
+    {
+      "name": "a-degenerate-mesh-with-too-few-indices",
+      "why": "Two indices is not a triangle. The retain is a geometry predicate, not an emptiness one, so a non-empty record can still leave the build with nothing to draw.",
+      "meshesJson": [{ "id": "eval-extrude@solid#0", "data": { "positions": [0.0, 0.0, 0.0, 1.0, 0.0, 0.0], "indices": [0, 1] } }],
+      "instancesJson": [{ "id": "extrude@solid#0", "meshId": "eval-extrude@solid#0", "interactionId": "extrude@solid", "position": [0.0, 0.0, 0.0] }]
+    },
+    {
+      "name": "instances-referencing-a-mesh-the-payload-does-not-carry",
+      "why": "A republication whose instance lane is ahead of its mesh lane. Every instance is dropped by the parse phase's own `meshes.any(id == mesh_id)` retain, so there is no mesh with an instance and therefore no page.",
+      "meshesJson": [],
+      "instancesJson": [{ "id": "extrude@solid#0", "meshId": "eval-extrude@solid#7", "interactionId": "extrude@solid", "position": [0.0, 0.0, 0.0] }]
+    },
+    {
+      "name": "an-empty-wire",
+      "why": "Both lanes empty. This is the case the very first build of a surface survives by accident — its camera digest is new, so it always has a camera page — and every later one did not.",
+      "meshesJson": [],
+      "instancesJson": []
+    }
+  ]
+}

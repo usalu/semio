@@ -103,7 +103,7 @@ fn world_points_json(scene: &RemodelingSnapshot) -> Option<String> {
         if !sparse.points.is_empty() {
             layers.push(json!({
                 "id": "remodeling-sparse",
-                "positionsB64": sparse.points.0,
+                "positionsB64": PackedF32::from_f32_slice(&sparse.points.to_f32_vec_from(&scene.durable_artifacts)).0,
                 "colorsB64": sparse.colors.as_ref().map(|colors| colors.0.clone()),
                 "size": 3.0,
                 "sizeAttenuation": true,
@@ -121,8 +121,8 @@ fn world_points_json(scene: &RemodelingSnapshot) -> Option<String> {
             }));
         }
     }
-    if !scene.job.camera_poses_preview.is_empty() {
-        let positions: Vec<f32> = scene.job.camera_poses_preview.iter().flat_map(|pose| pose.translation).collect();
+    if let Some(trajectory) = scene.results.trajectory.as_ref().filter(|trajectory| !trajectory.poses.is_empty()) {
+        let positions: Vec<f32> = trajectory.poses.iter().flat_map(|pose| pose.translation).collect();
         layers.push(json!({
             "id": "remodeling-camera-poses",
             "positionsB64": PackedF32::from_f32_slice(&positions).0,

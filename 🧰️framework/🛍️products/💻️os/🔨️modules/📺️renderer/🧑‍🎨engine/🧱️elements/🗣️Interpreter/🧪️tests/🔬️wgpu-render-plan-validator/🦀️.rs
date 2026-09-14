@@ -55,7 +55,7 @@ fn validate_component_scene_rejects_oversized_mesh_count() {
 }
 
 #[test]
-fn validate_component_scene_bounds_the_tool_run_trace_lane_on_both_scene_kinds() {
+fn validate_component_scene_bounds_the_tool_run_trace_lane_on_every_scene_kind() {
     assert_eq!(RenderPlanLimits::default().max_tool_run_trace_bytes, infinite_world::world::tool_run_trace::TOOL_RUN_TRACE_LANE_BYTES_MAX);
     let limits = RenderPlanLimits { max_tool_run_trace_bytes: 8, ..RenderPlanLimits::default() };
     let mut world = World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into());
@@ -68,6 +68,9 @@ fn validate_component_scene_bounds_the_tool_run_trace_lane_on_both_scene_kinds()
     let node = ui_wgpu::wgpu::build_canvas_2d_scene("canvas", "controller", canvas);
     let error = validate_ui_node(&node, &limits).expect_err("oversized canvas trace lane should be rejected");
     assert!(error.contains("canvas2d.toolRunTrace has 9 bytes (max 8)"), "{error}");
+    let board = ui_wgpu::wgpu::Board2dScene { tool_run_trace: Some("A".repeat(9)), ..ui_wgpu::wgpu::Board2dScene::base("{}".into(), "{}".into(), true) };
+    let error = validate_ui_node(&ui_wgpu::wgpu::build_board2d_scene("board", "controller", board), &limits).expect_err("oversized board trace lane should be rejected");
+    assert!(error.contains("board2d.toolRunTrace has 9 bytes (max 8)"), "{error}");
 }
 
 #[test]

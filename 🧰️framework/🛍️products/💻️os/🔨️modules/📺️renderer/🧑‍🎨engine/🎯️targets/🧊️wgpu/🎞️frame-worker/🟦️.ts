@@ -272,6 +272,10 @@ async function receive(message: BrowserFrameUiMessage): Promise<void> {
     answerIntrospection(message);
     return;
   }
+  if (message.kind === "host-io-result") {
+    settleHostIo(message);
+    return;
+  }
   if (closed || closing || failed || quarantined) return;
   if (message.kind === "job-submit" || message.kind === "job-input-page" || message.kind === "job-cancel") {
     if (!interactiveJobs) {
@@ -613,6 +617,48 @@ function declareBootSubphase(phase: string, state: "enter" | "leave", elapsedMs:
 }
 
 (globalThis as { semioDeclareBootSubphase?: typeof declareBootSubphase }).semioDeclareBootSubphase = declareBootSubphase;
+
+//#region 🚪️HostIo
+/** 🚪️ The shell's file door, bridged to the isolate that owns a `document`.
+ *
+ * 🐛️ This Worker owns the `OffscreenCanvas` and therefore the whole wgpu shell — but it has no `window`
+ * and no `document`, so the shell's own `<a download>`/`<input type="file">` halves answered
+ * `web_sys::window() == None` and returned silently. `Export Document…` produced real bytes and handed
+ * them to nobody; `Import Document…` opened nothing at all (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+ * `📓️wgpu-end-to-end-verification-2026-09-14.md` §C). The page half is `🚪️host-io/🟦️.ts`, installed by
+ * `🚀️browser-boot/🟦️.ts` on the transport; the shell calls the SAME `semioWgpuHostIo` global in both
+ * isolates and never learns which one it is in.
+ *
+ * 📤️ The download's bytes are TRANSFERRED, never copied: an export is the whole document. */
+const pendingHostIo = new Map<number, { readonly resolve: (json: string) => void; readonly reject: (error: Error) => void }>();
+let hostIoSeq = 0;
+
+function requestHostIo(requestJson: string, bytes: Uint8Array | null): Promise<string> {
+  if (closed || closing || failed) return Promise.reject(new Error("wgpu-host-io: the frame Worker is closing"));
+  hostIoSeq += 1;
+  const requestId = hostIoSeq;
+  return new Promise<string>((resolve, reject) => {
+    pendingHostIo.set(requestId, { resolve, reject });
+    try {
+      const carried = bytes ? new Uint8Array(bytes) : null;
+      scope.postMessage({ kind: "host-io", lifecycle, requestId, request: requestJson, bytes: carried }, carried ? [carried.buffer] : []);
+    } catch (error) {
+      pendingHostIo.delete(requestId);
+      reject(error instanceof Error ? error : new Error(String(error)));
+    }
+  });
+}
+
+function settleHostIo(message: Extract<BrowserFrameUiMessage, { readonly kind: "host-io-result" }>): void {
+  const pending = pendingHostIo.get(message.requestId);
+  if (!pending) return;
+  pendingHostIo.delete(message.requestId);
+  if (message.json === null) pending.reject(new Error(message.detail ?? "wgpu-host-io refused"));
+  else pending.resolve(message.json);
+}
+
+(globalThis as { semioWgpuHostIo?: typeof requestHostIo }).semioWgpuHostIo = requestHostIo;
+//#endregion 🚪️HostIo
 
 function post(message: BrowserFrameWorkerMessage): void {
   scope.postMessage(message);

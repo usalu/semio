@@ -1837,8 +1837,8 @@ pub mod editor {
             pub mod set_vortex_show;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📐️set-voxel-dims/🦀️.rs"]
             pub mod set_voxel_dims;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⏱️suggestions-tick/🦀️.rs"]
-            pub mod suggestions_tick;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎣️target-brush-suggestions/🦀️.rs"]
+            pub mod target_brush_suggestions;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚀️translate-selection/🦀️.rs"]
             pub mod translate_selection;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌍️world-relocate/🦀️.rs"]

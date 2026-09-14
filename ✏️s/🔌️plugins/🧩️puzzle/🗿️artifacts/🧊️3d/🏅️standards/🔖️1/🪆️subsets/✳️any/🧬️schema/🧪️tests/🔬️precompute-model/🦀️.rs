@@ -46,7 +46,6 @@ pub(crate) mod context {
                     orientation: Some([0.0, 0.0, 0.0, 1.0]),
                     scale: None,
                     vortices: vec![VortexProps { id: "v0".to_string(), vortex_kind: Some("port-a".to_string()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) }],
-                    reveal_index: None,
                 }],
             },
             kind_catalogs: Some(KindCatalogBundle {
@@ -67,32 +66,8 @@ pub(crate) mod context {
         };
         serde_json::to_string(&scene).unwrap()
     }
-    
-    /// 🪣️ One synthetic already-planned fill object / attraction / placement payload, for the fill-plan
-    /// prefix-stability laws in the app's own precompute session tests.
-    pub(crate) fn fill_plan_object(id: &str) -> FixtureObject {
-        FixtureObject {
-            id: id.to_string(),
-            object_kind: Some("Placed".to_string()),
-            anchor: Default::default(),
-            mesh_url: Some("/test/placed.glb".to_string()),
-            origin: [0.0, 0.0, 0.0],
-            orientation: Some([0.0, 0.0, 0.0, 1.0]),
-            scale: None,
-            vortices: vec![],
-            reveal_index: None,
-        }
-    }
-    
-    pub(crate) fn fill_plan_attraction(index: usize) -> AttractionProps {
-        AttractionProps { id: format!("a{index}"), attracting: format!("p{index}:v0"), attracted: format!("p{}:v0", index + 1), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 }
-    }
-    
-    pub(crate) fn fill_plan_payload(index: usize) -> BrushPlacePayload {
-        BrushPlacePayload { target_vortex_full_id: format!("p{index}:v0"), object_kind_id: "Placed".to_string(), source_vortex_index: 0, origin: [index as f64, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None }
-    }
-}
 
+}
 
 use super::*;
 

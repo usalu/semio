@@ -12,6 +12,7 @@
   "diffParticipation": "detect",
   "outcomeClasses": [
     "error",
+    "warning",
     "applied"
   ],
   "composition": "atomic",

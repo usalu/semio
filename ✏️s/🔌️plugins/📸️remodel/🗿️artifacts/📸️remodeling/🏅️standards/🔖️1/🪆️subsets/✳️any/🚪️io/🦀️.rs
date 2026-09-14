@@ -17,7 +17,7 @@
 //! engine behaviour.
 
 use crate::{
-    default_remodeling_scene, image_asset_child_handle, remodeling_asset, replayable_remodeling_mesh_handle, resolve_bounded_remodeling_mesh, FrameRef, ImageAsset, MediaKind, MediaStream, MeshSource, PackedF32, PackedU8, RemodelingDurableArtifact,
+    default_remodeling_scene, image_asset_child_handle, remodeling_asset, remodeling_mesh_content_handle, resolve_bounded_remodeling_mesh, FrameRef, ImageAsset, MediaKind, MediaStream, MeshSource, PackedF32, PackedU8, RemodelingDurableArtifact,
     RemodelingMesh, RemodelingSnapshot, SparseCloud,
 };
 use semio_framework::{io_dispatch, resolve_ready, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
@@ -140,9 +140,6 @@ const REMODELING_IMPORT_MESH_TRIANGLES: usize = 512;
 /// 🧱️ One durable chunk is at most 4096 raw bytes: a one-byte field tag plus 4092 payload bytes
 /// (the largest 4-byte-aligned remainder), matching `apply_mesh_chunk`'s framing exactly.
 const REMODELING_MESH_CHUNK_VALUE_BYTES: usize = 4_092;
-/// 🧱️ Staging identity every io-seeded durable mesh handle carries, so a replayed import is
-/// distinguishable from a reconstruction commit in `durable_artifacts`.
-pub const REMODELING_IO_MESH_STAGING_ID: &str = "io-import";
 
 /// 🧊️ The scene's own reconstructed/imported mesh as flat buffers, or a reason it is unavailable.
 pub fn scene_mesh_data(scene: &RemodelingSnapshot) -> Result<MeshData, String> {
@@ -239,8 +236,8 @@ fn mesh_content_id(chunks: &[String]) -> String {
 }
 
 /// 🧱️ Admits an imported mesh into the scene as REAL durable content: content-addressed chunks in
-/// `durable_artifacts` plus a replayable `results.mesh.mesh` handle, exactly the shape a committed
-/// reconstruction produces (`🏗️run-reconstruction`'s `TerminalPhase::Mesh`). A mesh outside the
+/// `durable_artifacts` plus a replayable `results.mesh.mesh` handle, exactly the shape a finalized
+/// reconstruction run publishes through `append-content`. A mesh outside the
 /// bounded envelope is rejected with its measured size rather than stored unreadable.
 pub fn seed_remodeling_mesh(scene: &mut RemodelingSnapshot, mesh: &MeshData) -> Result<(), String> {
     let vertices = mesh.positions.len() / 3;
@@ -252,7 +249,7 @@ pub fn seed_remodeling_mesh(scene: &mut RemodelingSnapshot, mesh: &MeshData) -> 
     let chunk_count = u64::try_from(chunks.len()).map_err(|error| error.to_string())?;
     let content_id = mesh_content_id(&chunks);
     scene.durable_artifacts.insert(content_id.clone(), RemodelingDurableArtifact { kind: "mesh".into(), mime: None, width: 0, height: 0, chunks });
-    scene.results.mesh = RemodelingMesh { mesh: replayable_remodeling_mesh_handle(&content_id, REMODELING_IO_MESH_STAGING_ID, chunk_count), source: MeshSource::Imported, texture_asset_id: None, watertight: None };
+    scene.results.mesh = RemodelingMesh { mesh: remodeling_mesh_content_handle(&content_id, chunk_count), source: MeshSource::Imported, texture_asset_id: None, watertight: None };
     Ok(())
 }
 

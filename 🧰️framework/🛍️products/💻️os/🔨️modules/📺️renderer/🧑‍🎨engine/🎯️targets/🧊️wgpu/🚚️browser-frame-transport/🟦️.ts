@@ -205,7 +205,12 @@ export type BrowserFrameWorkerIntrospect = { readonly kind: "introspect"; readon
  * never constructs a shard `Worker` itself — see `shardWorkerPortBridge` in the wgpu plugin bridge. */
 export type BrowserFrameShardPort = { readonly kind: "shard-port"; readonly shardIndex: number; readonly port: MessagePort };
 
-export type BrowserFrameUiMessage = BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | { readonly kind: "close"; readonly lifecycle: number };
+/** @emoji 🚪️ The page's answer to one {@link BrowserFrameWorkerHostIo} request — the JSON the shell's
+ * `semioWgpuHostIo` call resolves with, or a `detail` the shell refuses on. Addressed by `requestId`
+ * alone, exactly like `introspection`, so no host-side request table beyond the pending map exists. */
+export type BrowserFrameHostIoResult = { readonly kind: "host-io-result"; readonly lifecycle: number; readonly requestId: number; readonly json: string | null; readonly detail?: string };
+
+export type BrowserFrameUiMessage = BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | BrowserFrameHostIoResult | { readonly kind: "close"; readonly lifecycle: number };
 
 /** @emoji 🧵️ The frame Worker's own step ledger, as the UI isolate sees it. The Worker prices its steps
  * against `WORKER_STEP_BUDGET_MS` with the same executing-span law the UI isolate uses for its turns
@@ -251,6 +256,11 @@ export type BrowserFrameWorkerMessage =
   | { readonly kind: "closed"; readonly lifecycle: number }
   | { readonly kind: "shard-spawn"; readonly shardIndex: number; readonly url: string }
   | { readonly kind: "shard-terminate"; readonly shardIndex: number }
+  /** @emoji 🚪️ The Worker asking the PAGE for the one thing it cannot do itself: a `<a download>` or an
+   * `<input type="file">`. A dedicated Worker has no `window` and no `document`, so the shell's own
+   * browser halves used to answer `None` and return silently — an export produced its bytes and handed
+   * them to nobody, an import opened nothing (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+  | { readonly kind: "host-io"; readonly lifecycle: number; readonly requestId: number; readonly request: string; readonly bytes: Uint8Array | null }
   | InteractiveJobWorkerMessage;
 
 export interface BrowserFrameWorkerPort {
@@ -282,6 +292,11 @@ export type BrowserFrameTransportOptions = {
   readonly onUiTurn?: (outcome: TurnOutcome) => void;
   readonly requestAnimationFrame?: (callback: FrameRequestCallback) => number;
   readonly cancelAnimationFrame?: (handle: number) => void;
+  /** @emoji 🚪️ The PAGE half of the shell's file door (`🚪️host-io/🟦️.ts`). A dedicated Worker has no
+   * `document`, so the shell's `<a download>` and `<input type="file">` live on this side of the wire.
+   * Absent, a `host-io` request is refused with a named detail rather than silently ignored — a silent
+   * ignore is exactly how both io journeys died on this renderer. */
+  readonly hostIo?: (requestJson: string, bytes: Uint8Array | null) => Promise<string>;
 };
 
 type QueuedLossless = {
@@ -307,6 +322,7 @@ export class BrowserFrameTransport {
   private readonly setTimer: (callback: () => void, delayMs: number) => number;
   private readonly onReady?: () => void;
   private readonly onProgress?: (stage: string, progress: number, worker: BrowserFrameWorkerStepReport) => void;
+  private readonly hostIo?: (requestJson: string, bytes: Uint8Array | null) => Promise<string>;
   /** @emoji 🧵️ The frame Worker's last reported step ledger — a measurement the boot UI renders. */
   private workerSteps: BrowserFrameWorkerStepReport = { degraded: false, recordedOverruns: 0, sustainedOverruns: 0, worstStepMs: 0, worstStepSite: "" };
   /** @emoji 🧵️ Frame steps the Worker attributed to its OWN work (a sustained run, not one wall sample). */
@@ -363,6 +379,7 @@ export class BrowserFrameTransport {
     this.uiTurnClock = new TurnClock(this.now);
     this.requestRaf = options.requestAnimationFrame;
     this.cancelRaf = options.cancelAnimationFrame;
+    this.hostIo = options.hostIo;
     this.interactiveJobs = new BrowserInteractiveJobPort(this.lifecycle, (message) => this.worker.postMessage(message), this.now, (detail) => this.quarantine("interactive-job-violation", detail), (callback) => void this.setTimer(callback, 0));
     this.worker.onmessage = (event) => this.receive(event.data);
     this.worker.onerror = (event) => this.fail("worker-message-failed", event.message || "Worker error");
@@ -639,6 +656,25 @@ export class BrowserFrameTransport {
     existing.terminate();
   }
 
+  /** 🚪️ Runs one Worker-issued file-door request on THIS isolate — the only one with a `document` — and
+   * answers it by `requestId`. A refusal is named on the wire so the shell can log why the user saw
+   * nothing, instead of the silent `None` its own `web_sys::window()` used to return inside the Worker. */
+  private answerHostIo(message: Extract<BrowserFrameWorkerMessage, { readonly kind: "host-io" }>): void {
+    const reply = (json: string | null, detail?: string): void => {
+      try {
+        this.worker.postMessage({ kind: "host-io-result", lifecycle: this.lifecycle, requestId: message.requestId, json, detail });
+      } catch {}
+    };
+    if (!this.hostIo) {
+      reply(null, "wgpu-host-io: this transport was constructed without a page host-io door");
+      return;
+    }
+    void this.hostIo(message.request, message.bytes).then(
+      (json) => reply(json),
+      (error: unknown) => reply(null, error instanceof Error ? error.message : String(error)),
+    );
+  }
+
   private receive(message: BrowserFrameWorkerMessage): void {
     if (message.kind === "shard-spawn") {
       this.spawnShardWorker(message.shardIndex, message.url);
@@ -651,6 +687,10 @@ export class BrowserFrameTransport {
     if (message.lifecycle !== this.lifecycle) return;
     if (message.kind === "job-input-pull" || message.kind === "job-output-page" || message.kind === "job-terminal") {
       this.interactiveJobs.receive(message);
+      return;
+    }
+    if (message.kind === "host-io") {
+      this.answerHostIo(message);
       return;
     }
     if (message.kind === "introspection") {

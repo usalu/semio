@@ -45,6 +45,9 @@ semio-framework-plugin = { workspace = true, features = ["component-guest"] }
 # 🧵️ The retained command factory names `semio_framework_job::Operation` in its `ToolJobFactory`
 # signatures, so the job crate has to be linked here the same way `🖨️raster` and `🌍️gis` link it.
 semio-framework-job = { workspace = true }
+# ⏯️ The reconstruction tool run declares its `ToolRunDefinition` and writes `ToolRunTick`s through the
+# domain-neutral writer.
+semio-framework-tool-run = { workspace = true }
 # 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY: `scene_surface`/`PanelTreeBuilder` speak the semantic
 # contract's own `SurfaceKind`/`BuiltNode`, a different type from the retained `ui_wgpu` spelling the SDK
 # root re-exports — the same explicit dependency `🧱️block` and `🌊️flow` carry for their window scenes.
@@ -67,3 +70,6 @@ semio-framework-async-macros = { path = "../../../../../../../🧰️framework/�
 # 🔬️ Test oracle only (never `[dependencies]`): validates that our own encoded/decoded PNG bytes
 # are readable by/match the reference decoder/encoder — see 🖼️images/🦀️.rs's test module.
 png = "0.17.16"
+# 🔬️ Test oracle only: an independent Hamming distance over bit vectors recomputes every traced match
+# candidate verdict of the reconstruction tool run.
+bitvec = "1.0.1"

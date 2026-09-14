@@ -1,9 +1,8 @@
-//! ⚡️ Read-only Energy result window for the viewer surface — the adopted final result only. A
-//! viewer declares no actions and owns no locale switch, so every row carries both authored
-//! languages side by side (English then German) rather than picking a default.
+//! ⚡️ Read-only Energy simulation window for the viewer surface. A simulation is a read-only framework
+//! tool run of the editor (`energySimulation`): it never writes the document, so a viewer has no result
+//! to show beyond the run period the model carries. A viewer declares no actions and owns no locale
+//! switch, so every row carries both authored languages side by side (English then German).
 
-use crate::energy_simulation_session::EnergySimulationProjection;
-use crate::EnergyQualityTier;
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 
@@ -27,51 +26,28 @@ pub fn definition() -> WindowKindDefinition {
         params_schema: None,
         artifact_snapshot_schema: Some(crate::ENERGY_MODEL_DOCUMENT_SCHEMA.into()),
         input_event_schema: None,
-        output_schema: Some("SMENERGY/1".into()),
+        output_schema: None,
         capabilities: Vec::new(),
     }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-const TIER_LABELS: [(EnergyQualityTier, &str); 4] = [
-    (EnergyQualityTier::SteadyStateEstimate, "Steady-state estimate / Stationäre Schätzung"),
-    (EnergyQualityTier::DesignDay, "Design day / Auslegungstag"),
-    (EnergyQualityTier::CoarseTimestep, "Coarse timestep / Grober Zeitschritt"),
-    (EnergyQualityTier::Final, "Final / Endgültig"),
-];
-
 fn leaf(id: impl Into<String>, label: String) -> TreeNodeView {
     TreeNodeView { id: id.into(), label, children: Vec::new() }
 }
 
-/// 👁️ Pure read: the adopted projection's per-tier meters plus the run period the model itself
-/// carries, so a reader can tell which period the numbers belong to without opening the editor.
-pub fn render(projection: Option<&EnergySimulationProjection>, model: &crate::model::Model) -> BuiltNode {
+/// 👁️ Pure read of the model: the run period a simulation in the editor would cover.
+pub fn render(model: &crate::model::Model) -> BuiltNode {
     let run_period = &model.run_period;
-    let period = leaf("energy-viewer-run-period", format!("Run period / Simulationszeitraum: {:02}-{:02} → {:02}-{:02}", run_period.start_month, run_period.start_day, run_period.end_month, run_period.end_day));
-    let roots = match projection {
-        Some(projection) => {
-            let tiers = TIER_LABELS
-                .iter()
-                .enumerate()
-                .map(|(index, (_, label))| {
-                    let value = projection.tiers[index].map_or_else(|| format!("{label}: —"), |tier| format!("{label}: {} / {} · {:.3} kWh", tier.timestep, tier.total_timesteps, tier.facility_electricity_kwh));
-                    leaf(format!("energy-viewer-tier-{index}"), value)
-                })
-                .collect();
-            vec![TreeNodeView { id: "energy-viewer-result-status".into(), label: "role=status · aria-live=polite · Adopted final result / Übernommenes Endergebnis".into(), children: tiers }, period]
-        }
-        None => vec![
-            TreeNodeView { id: "energy-viewer-result-status".into(), label: "role=status · aria-live=polite · No adopted final result · Kein übernommenes Endergebnis".into(), children: Vec::new() },
-            TreeNodeView {
-                id: "energy-viewer-result-help".into(),
-                label: "Start a simulation in the editor and explicitly adopt the final result. · Eine Simulation im Editor starten und das Endergebnis ausdrücklich übernehmen.".into(),
-                children: Vec::new(),
-            },
-            period,
-        ],
-    };
+    let roots = vec![
+        TreeNodeView {
+            id: "energy-viewer-result-status".into(),
+            label: "role=status · aria-live=polite · Simulations run in the editor and never change the document · Simulationen laufen im Editor und ändern das Dokument nie".into(),
+            children: Vec::new(),
+        },
+        leaf("energy-viewer-run-period", format!("Run period / Simulationszeitraum: {:02}-{:02} → {:02}-{:02}", run_period.start_month, run_period.start_day, run_period.end_month, run_period.end_day)),
+    ];
     TreeWindowKit::render(&TreeView { roots }).unwrap_or_else(|_| semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data("Energy results unavailable")).expect("static label is valid"))
 }
 //#endregion 🔖️Render

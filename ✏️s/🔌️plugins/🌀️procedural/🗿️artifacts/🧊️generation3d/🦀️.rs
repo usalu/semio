@@ -714,8 +714,8 @@ pub mod editor {
             pub mod flow_eval_tick;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔺️flow-tessellate-resolve/🦀️.rs"]
             pub mod flow_tessellate_resolve;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🛑️cancel-preview-eval/🦀️.rs"]
-            pub mod cancel_preview_eval;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔓️flow-eval-release/🦀️.rs"]
+            pub mod flow_eval_release;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧯️flow-tessellate-cancel-resolve/🦀️.rs"]
             pub mod flow_tessellate_cancel_resolve;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️.rs"]
@@ -863,8 +863,8 @@ pub mod viewer {
             pub mod flow_eval_tick;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🔺️flow-tessellate-resolve/🦀️.rs"]
             pub mod flow_tessellate_resolve;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🛑️cancel-preview-eval/🦀️.rs"]
-            pub mod cancel_preview_eval;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🔓️flow-eval-release/🦀️.rs"]
+            pub mod flow_eval_release;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🧯️flow-tessellate-cancel-resolve/🦀️.rs"]
             pub mod flow_tessellate_cancel_resolve;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🎨️set-active-example/🦀️.rs"]

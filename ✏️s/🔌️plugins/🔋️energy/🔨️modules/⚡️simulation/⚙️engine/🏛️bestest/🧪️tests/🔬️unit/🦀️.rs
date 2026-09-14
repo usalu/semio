@@ -292,6 +292,36 @@ fn bestest_cases_compared_with_energyplus() {
     assert!(failures.is_empty(), "{} metric(s) outside tolerance:\n  {}", failures.len(), failures.join("\n  "));
 }
 
+/// 🐞️ [DEBUG] W3-1b bisection probe: `SEMIO_ENERGY_PROBE="case;flags;out"` with flags from windows,gains,infiltration,hvac,gainscale=<f>.
+#[test]
+#[ignore = "[DEBUG] W3-1b probe"]
+fn debug_w3_1b_probe() {
+    let spec = std::env::var("SEMIO_ENERGY_PROBE").expect("[DEBUG] probe spec");
+    let weather = weather_fixture().expect("[DEBUG] weather");
+    for entry in spec.split('+') {
+        let parts: Vec<&str> = entry.split(';').collect();
+        let mut built = model(parts[0]).expect("[DEBUG] case");
+        for flag in parts[1].split(',').filter(|flag| !flag.is_empty()) {
+            match flag {
+                "windows" => built.fenestrations.clear(),
+                "gains" => built.equipment.clear(),
+                "infiltration" => built.infiltrations.clear(),
+                "hvac" => {
+                    built.thermostats.clear();
+                    built.ideal_loads.clear();
+                }
+                other if other.starts_with("gainscale=") => built.equipment.iter_mut().for_each(|gain| gain.watts_per_area *= other[10..].parse::<f64>().unwrap()),
+                other => panic!("[DEBUG] unknown flag {other}"),
+            }
+        }
+        let config = simulation_config(&built, Some(EpwWeather::parse(&weather).unwrap()), 7);
+        let results = crate::sim::Engine::run(built, config).expect("[DEBUG] run");
+        let projected = project(parts[0], &results);
+        println!("[DEBUG] {entry}: heating {:.1} cooling {:.1} T min {:.2} max {:.2} mean {:.2}", projected.annual_heating_kwh, projected.annual_cooling_kwh, projected.free_float_min_c, projected.free_float_max_c, projected.free_float_mean_c);
+        std::fs::write(parts[2], report_json(&projected, "probe", "")).expect("[DEBUG] write");
+    }
+}
+
 /// 📏️ `📓️bestest-contract.md` amendment 2026-09-06: heating 20 %, cooling 10 %. The cooling
 /// band is tighter because the whole-assembly simple-glazing window both producers consume
 /// (U 3.0 / SHGC 0.787) already sits a documented +5.7…+8.1 % above a layer-by-layer EnergyPlus

@@ -147,30 +147,18 @@ pub(crate) mod context {
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, view_state).await.expect("render")).expect("render json")
     }
     
-    /// 🧵️ A `flowEvalTick` chain self-dispatches via `requestedEffects`, which only the JS renderer
-    /// drains in production — a test has to do that draining itself. It also declares its geometry work
-    /// through `Emit::extension_invocations`, which only the SHELL answers in production: every
-    /// preview handle is tessellated inside the `brep` extension, and until the answer comes back the
-    /// session holds no mesh pack. Both halves are driven here, so the chain converges on a REAL
-    /// preview instead of on an empty one (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    /// 🧵️ The `previewEval` run hands its hops to the host through `requestedEffects` and the typed
+    /// effect outbox, which only the JS renderer drains in production — a test has to do that draining
+    /// itself. Its hops declare their geometry work through `Emit::extension_invocations`, which only
+    /// the SHELL answers in production. Both halves are driven by [`drive_preview_run`], so the run
+    /// converges on a REAL preview instead of on an empty one (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     pub async fn drain_flow_eval_ticks(app: &mut Generation3dApp) {
         let (view, _) = preview_views("procedural-preview-test", "procedural-preview-test-other");
         drain_flow_eval_ticks_with_view(app, &view).await;
     }
-    
+
     pub async fn drain_flow_eval_ticks_with_view(app: &mut Generation3dApp, view: &ViewModel) {
-        let window_id = view.window_id.clone().expect("a drained tick view is narrowed to one preview window");
-        app.pending_effects(Some(view)).await;
-        for _ in 0..1000 {
-            let window_kind_id = view.active_window_kind_id.clone().unwrap_or_else(|| crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into());
-            let receipt = dispatch_with_view(app, Generation3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: window_id.clone(), window_kind_id }), view.clone()).await.expect("flowEvalTick");
-            let answered = crate::brep_extension::settle(app, meta("local").instance_id).await;
-            let rearmed = receipt.effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "flowEvalTick"));
-            if !rearmed && answered == 0 {
-                return;
-            }
-        }
-        panic!("flowEvalTick chain did not converge within 1000 ticks");
+        drive_preview_run(app, view, &[]).await;
     }
     
     /// 🏛️ The SHELL's own roster: the flow window is current (that is the window a served boot focuses,
@@ -199,61 +187,37 @@ pub(crate) mod context {
     /// is why `handle_action("flowEvalTick", …)` is answered with `interactive-job.unknown-key`
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     pub async fn dispatch_effect_command(app: &mut Generation3dApp, command_id: &str, args: Option<&dsl::DslValue>, action_meta: &ActionMeta) -> Result<(), semio_framework_plugin::Fault> {
-        use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
-        let arguments = match args {
-            Some(dsl::DslValue::Object(entries)) => entries.iter().cloned().collect(),
-            _ => std::collections::BTreeMap::new(),
-        };
-        let app_id = app.app_id().await.to_string();
-        let invocation = CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: String::new(), app_id }, command_id: command_id.to_string() }, arguments };
-        app.handle_command(&invocation, None, action_meta).await.map(|_| ())
+        crate::brep_extension::dispatch_effect_command(app, command_id, args, action_meta).await
     }
     
     pub async fn drain_armed_flow_eval_ticks(app: &mut Generation3dApp, shell_view: &ViewModel) -> usize {
-        let armed = app.pending_effects(Some(shell_view)).await;
-        drain_armed_flow_eval_ticks_from(app, shell_view, &armed).await
+        drive_preview_run(app, shell_view, &[]).await.hops
     }
-    
-    /// 🔁️ The same drain, started from effects some OTHER route already armed — the shape a law needs
-    /// when the claim under test is that a route re-arms a chain nothing else would
-    /// (`setContributions` installing a registry the first evaluation ran without), rather than that
-    /// `pending_effects` arms the first one (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+
+    /// 🔁️ The same drive, started from effects some OTHER route already handed back — the shape a law
+    /// needs when the claim under test is what a route owes the run.
     pub async fn drain_armed_flow_eval_ticks_from(app: &mut Generation3dApp, shell_view: &ViewModel, initial: &[Effect]) -> usize {
-        let action_meta = ActionMeta { view_state: Some(shell_view.clone()), ..meta("local") };
-        let mut armed = armed_ticks(initial);
-        let mut ticks = 0;
-        for _ in 0..1000 {
-            let Some(args) = armed.pop() else { return ticks };
-            dispatch_effect_command(app, "flowEvalTick", args.as_ref(), &action_meta).await.expect("the shell redispatches an armed flowEvalTick effect");
-            let receipt = settle_registered_typed_operation(app, action_meta.instance_id).await.expect("retained publication");
-            assert!(!receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault), "an armed flowEvalTick faulted in the retained job ladder: args={args:?}");
-            ticks += 1;
-            arm(&mut armed, armed_ticks(&receipt.effects));
-            arm(&mut armed, armed_ticks(&crate::brep_extension::settle_with_meta(app, action_meta.instance_id, &action_meta).await.effects));
-        }
-        panic!("the armed flowEvalTick chain did not converge within 1000 dispatches");
+        drive_preview_run(app, shell_view, initial).await.hops
     }
-    
-    /// 🔁️ Coalesces re-arms the way a shell effect queue does — a tick that both re-arms itself and
-    /// parks an extension continuation would otherwise double the queue on every hop.
-    fn arm(armed: &mut Vec<Option<dsl::DslValue>>, more: Vec<Option<dsl::DslValue>>) {
-        for entry in more {
-            if !armed.contains(&entry) {
-                armed.push(entry);
-            }
-        }
+
+    pub use crate::brep_extension::{run_actions, PreviewRunReceipt};
+
+    /// 🚦️ The framework run actions a refresh over `shell_view` owes the `previewEval` run right now.
+    pub async fn owed_run_actions(app: &mut Generation3dApp, shell_view: &ViewModel) -> Vec<String> {
+        crate::brep_extension::owed_run_actions(app, shell_view).await
     }
-    
-    fn armed_ticks(effects: &[Effect]) -> Vec<Option<dsl::DslValue>> {
-        effects
-            .iter()
-            .filter_map(|effect| match effect {
-                Effect::DispatchAction { action, args, .. } if action == "flowEvalTick" => Some(args.clone()),
-                _ => None,
-            })
-            .collect()
+
+    /// 🔁️ The served `previewEval` loop on this surface, answered by the in-process kernel
+    /// ([`crate::brep_extension::drive_preview_run`]).
+    pub async fn drive_preview_run(app: &mut Generation3dApp, shell_view: &ViewModel, initial: &[Effect]) -> PreviewRunReceipt {
+        crate::brep_extension::drive_preview_run(app, shell_view, initial, &mut crate::brep_extension::serve).await
     }
-    
+
+    /// 🔁️ [`drive_preview_run`] with the host's extension answers served by `serve`.
+    pub async fn drive_preview_run_serving(app: &mut Generation3dApp, shell_view: &ViewModel, initial: &[Effect], serve: &mut dyn FnMut(&semio_framework_plugin::artifact_app_laws::PendingExtensionInvocation) -> Result<Vec<u8>, semio_framework_plugin::Fault>) -> PreviewRunReceipt {
+        crate::brep_extension::drive_preview_run(app, shell_view, initial, serve).await
+    }
+
     /// 🧳️ A standalone retained-operation owner handle of THIS app's concrete type, for a law that
     /// drives one piece of retained work directly instead of through a live instance. Its session is a
     /// real one, so anything the work arms lands on a real latch.
@@ -387,7 +351,8 @@ async fn preview_eval_exact_window_transient_isolates_and_resets_in_the_register
     let mut app = Box::new(app_with_registry().await);
     let (left, right) = preview_views("generation3d-preview-left", "generation3d-preview-right");
     let config_before = app.config_pack().await.expect("Generation3d app config before preview evaluation");
-    drain_flow_eval_ticks_with_view(&mut app, &left).await;
+    let left_only = semio_framework_plugin::ViewModel { window_instances: left.window_instances.iter().filter(|window| Some(&window.id) == left.window_id.as_ref()).cloned().collect(), ..left.clone() };
+    drain_flow_eval_ticks_with_view(&mut app, &left_only).await;
     {
         let left_state = app.window_transient_snapshot(&left).expect("left preview transient snapshot").expect("left preview owner");
         let right_state = app.window_transient_snapshot(&right).expect("right preview transient snapshot").expect("right preview owner");
@@ -846,7 +811,7 @@ fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         "flow-eval-tick",
         "flow-eval-resolve",
         "flow-tessellate-resolve",
-        "cancel-preview-eval",
+        "flow-eval-release",
         "flow-tessellate-cancel-resolve",
         "set-contributions",
         "import-document-request",
@@ -904,7 +869,7 @@ pub(super) fn every_command() -> Vec<Generation3dCommand> {
         Generation3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: "procedural-preview-test".into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into() }),
         Generation3dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { window_id: "procedural-preview-test".into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), node_hash: 7, output_json: "{}".into(), extension_id: String::new(), ok: true, fault_code: String::new(), fault_message: String::new() }),
         Generation3dCommand::FlowTessellateResolve(flow_tessellate_resolve::FlowTessellateResolve { window_id: "procedural-preview-test".into(), window_kind_id: crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), node_hash: 9, output_json: "{}".into() }),
-        Generation3dCommand::CancelPreviewEval(cancel_preview_eval::CancelPreviewEval { window_id: "w1".into(), window_kind_id: "procedural-preview".into() }),
+        Generation3dCommand::FlowEvalRelease(flow_eval_release::FlowEvalRelease { window_id: "w1".into(), window_kind_id: "procedural-preview".into() }),
         Generation3dCommand::FlowTessellateCancelResolve(flow_tessellate_cancel_resolve::FlowTessellateCancelResolve { window_id: "w1".into(), window_kind_id: "procedural-preview".into(), output_json: "{\"ok\":true,\"retired\":1}".into(), ok: true }),
         Generation3dCommand::SetContributions(set_contributions::SetContributions { json: "[]".into(), page: 0, page_count: 1 }),
         Generation3dCommand::ImportDocumentRequest(import_document_request::ImportDocumentRequest {}),
@@ -1045,6 +1010,72 @@ fn the_editor_binds_every_keyboard_verb_the_fixture_names() {
         let chord = row["chord"].as_str().expect("chord");
         assert!(!definition.keybindings.iter().any(|binding| binding.keys == chord), "{chord} belongs to the shell's own chrome; the app must not re-bind it");
     }
+}
+
+/// 🪟️ Every window kind a mode's layout mounts, in layout order — the set `ShellHost`'s keybinding
+/// loop scopes an app-wide chord against (`🏛️ShellHost/⌨️window-scope/🟦️.ts`, `mounted`).
+fn mode_window_kind_ids(definition: &semio_framework_plugin::AppDefinition, mode_id: &str) -> Vec<String> {
+    use semio_framework_plugin::{WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode};
+    fn stack(node: &WindowLayoutStackNode, out: &mut Vec<String>) {
+        out.extend(node.children.iter().map(|window| window.window_kind_id.clone()));
+    }
+    fn axis(node: &WindowLayoutAxisNode, out: &mut Vec<String>) {
+        for child in &node.children {
+            match child {
+                WindowLayoutChild::Axis(node) => axis(node, out),
+                WindowLayoutChild::Stack(node) => stack(node, out),
+            }
+        }
+    }
+    let mut out = Vec::new();
+    if let Some(layout) = semio_framework::resolve_layout_for_mode(definition, mode_id) {
+        match &layout.root {
+            WindowLayoutRoot::Axis(node) => axis(node, &mut out),
+            WindowLayoutRoot::Stack(node) => stack(node, &mut out),
+        }
+    }
+    out
+}
+
+/// ⚖️ LAW: every WINDOW-SCOPED chord the fixture names has exactly ONE owning window kind, that kind
+/// is the one the fixture names, and the modes whose layouts mount it are exactly the fixture's
+/// `liveInModes`. This is the app half of the chord contract the shell's resolver implements: the
+/// resolver targets the owner whether or not it is focused, so an app-wide chord for a window-owned
+/// verb is live in exactly the modes that mount its owner and a hinted no-operation everywhere else.
+///
+/// 🐛️ Regression guard: `mod+shift+g` reached NOTHING in either mode — `addGeneration` was declared
+/// only on the Generations window (`window_kind_action_refs`) while the chord was app-wide, and the
+/// shell resolved a chord against the focused window kind alone, with no window active at all until
+/// the user clicked one (`📓️react-generate-chord-restage-2026-09-14.md`).
+#[test]
+fn every_window_scoped_chord_names_its_owning_window_kind_and_the_modes_that_mount_it() {
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let fixture: serde_json::Value = serde_json::from_str(KEYBOARD_REACHABILITY_FIXTURE_JSON).expect("keyboard fixture");
+    let definition = create_generation3d_app();
+    let mode_ids: Vec<String> = definition.modes.iter().map(|mode| mode.id.clone()).collect();
+    let mut scoped = 0;
+    for row in fixture["bindings"].as_array().expect("bindings") {
+        let chord = row["chord"].as_str().expect("chord");
+        let id = row["action"].as_str().expect("action");
+        if row["windowScoped"].as_bool() != Some(true) {
+            assert!(row["ownerWindowKindId"].is_null(), "{chord}: only a window-scoped chord names an owner");
+            continue;
+        }
+        scoped += 1;
+        let owner = row["ownerWindowKindId"].as_str().unwrap_or_else(|| panic!("{chord}: a window-scoped chord must name its owning window kind"));
+        let declaring: Vec<&str> = definition.window_kinds.iter().filter(|window| window.actions.iter().any(|action| action.id == id)).map(|window| window.id.as_str()).collect();
+        assert_eq!(declaring, vec![owner], "{chord}: {id} must be declared by exactly the window kind the fixture names");
+        let live: Vec<&String> = mode_ids.iter().filter(|mode_id| mode_window_kind_ids(&definition, mode_id).iter().any(|kind| kind == owner)).collect();
+        let expected: Vec<&str> = row["liveInModes"].as_array().unwrap_or_else(|| panic!("{chord}: a window-scoped chord must name the modes it is live in")).iter().map(|value| value.as_str().expect("mode id")).collect();
+        assert_eq!(live.iter().map(|id| id.as_str()).collect::<Vec<_>>(), expected, "{chord}: the modes whose layout mounts {owner}");
+        assert!(!expected.is_empty(), "{chord}: a chord no mode can ever reach is a dead key, not a scope");
+        let dead: Vec<&String> = mode_ids.iter().filter(|mode_id| !expected.contains(&mode_id.as_str())).collect();
+        for mode_id in dead {
+            assert!(!mode_window_kind_ids(&definition, mode_id).iter().any(|kind| kind == owner), "{chord}: {mode_id} must not mount {owner}, or the fixture under-states liveInModes");
+        }
+    }
+    assert!(scoped >= 5, "the fixture must keep stating the window-scoped chords: {scoped}");
+    eprintln!("[DEBUG] window-scoped chords: {scoped} rows, modes {mode_ids:?}");
 }
 
 /// ⚖️ LAW: the example picker offers exactly the eight flow-fixture examples, and never the
@@ -1252,14 +1283,15 @@ async fn each_example_loads_distinct_fixture_and_preview_geometry() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn refresh_pending_effects_arms_flow_eval_tick_chain() {
+async fn refresh_pending_effects_starts_the_preview_eval_run() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let mut app = app().await;
     context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_SPHERE_TORUS.into() })).await;
     let (_, preview_view) = context::preview_views("procedural-preview-test", "procedural-preview-test-other");
     let effects = app.pending_effects(Some(&preview_view)).await;
-    assert!(effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "flowEvalTick")));
-    drain_flow_eval_ticks(&mut app).await;
+    assert!(effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, args: Some(args), .. } if action == semio_framework_plugin::TOOL_RUN_START_ACTION_ID && args.get("toolId").and_then(dsl::DslValue::as_str) == Some(crate::preview_eval::PREVIEW_EVAL_TOOL_ID))), "a refresh over a never-evaluated preview starts the previewEval run: {effects:?}");
+    let receipt = context::drive_preview_run(&mut app, &preview_view, &effects).await;
+    assert_eq!(receipt.state.as_deref(), Some("finalized"), "the read-only run settles and finalizes itself: {receipt:?}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1890,7 +1922,7 @@ fn every_window_and_panel_surface_fits_the_resident_surface_bound() {
         let snapshot = crate::standards::v1::subsets::any::schema::example_snapshot(&example_id).unwrap_or_else(|| panic!("{example_id}: missing projection"));
         for body_key in GENERATION3D_BODY_KEYS {
             let session = FlowEvalSession::new();
-            let tree = generation3d_render_body(body_key, &snapshot, &config, None, &view_state, &PreviewInteractionMarks::default(), &session).expect("render");
+            let tree = generation3d_render_body(body_key, &snapshot, &config, None, &view_state, &PreviewInteractionMarks::default(), &session, None).expect("render");
             context::retire_flow_eval_session(session);
             let rendered = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("render json");
             println!("[STATS] surface example={example_id} body={body_key} bytes={} bound={bound}", rendered.len());
@@ -2239,22 +2271,12 @@ async fn extension_invocations_address_the_contributing_plugin_and_a_missing_con
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let mut app = app_with_registry().await;
     let (view, _) = preview_views("procedural-address-test", "procedural-address-test-other");
-    let window_id = view.window_id.clone().expect("the addressed tick view names one preview window");
     let mut addresses: Vec<(String, String)> = Vec::new();
-    app.pending_effects(Some(&view)).await;
-    for _ in 0..1000 {
-        let receipt = context::dispatch_with_view(&mut app, Generation3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: window_id.clone(), window_kind_id: view.active_window_kind_id.clone().unwrap_or_else(|| crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into()) }), view.clone()).await.expect("flowEvalTick");
-        let settled = semio_framework_plugin::artifact_app_laws::settle_extension_invocations(&mut *app, semio_framework_plugin::artifact_app_laws::meta("local").instance_id, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut |pending| {
-            addresses.push((pending.extension_id.clone(), pending.capability.clone()));
-            crate::brep_extension::serve(pending)
-        })
-        .await
-        .expect("in-process extension round trip");
-        let rearmed = receipt.effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "flowEvalTick"));
-        if !rearmed && settled.answered == 0 {
-            break;
-        }
-    }
+    context::drive_preview_run_serving(&mut app, &view, &[], &mut |pending| {
+        addresses.push((pending.extension_id.clone(), pending.capability.clone()));
+        crate::brep_extension::serve(pending)
+    })
+    .await;
     assert!(!addresses.is_empty(), "the hex column boot must cross the extension boundary at least once");
     for (extension_id, capability) in &addresses {
         assert!(extension_id == BREP_EXTENSION_PLUGIN_ID || extension_id == MATH_EXTENSION_PLUGIN_ID, "invocation address {extension_id:?} (capability {capability:?}) is not a contributing plugin id");
@@ -2268,7 +2290,7 @@ async fn extension_invocations_address_the_contributing_plugin_and_a_missing_con
     let miss = semio_framework_os_flow::flow_extension_invocation_address("not-contributed-by-anything").expect_err("an uncontributed flow extension id has no invocation address");
     let mut owner = Generation3dInstanceOperationOwner::new();
     let faulted: serde_json::Value = owner
-        .with_session(|session| serde_json::from_str(&crate::editor::generation3d::preview_progress_status_json_for(Some(session), Err(miss))).expect("preview status json"))
+        .with_session(|session| serde_json::from_str(&crate::editor::generation3d::preview_progress_status_json_for(Some(session), None, Err(miss))).expect("preview status json"))
         .expect("the retained evaluation-session owner lends its session");
     for _ in 0..1_000_000 {
         if matches!(semio_framework_plugin::ArtifactInstanceOperationOwner::close_step(&mut owner, usize::MAX, usize::MAX), Ok(semio_framework_plugin::PluginCloseStep::Complete)) {
@@ -2280,7 +2302,7 @@ async fn extension_invocations_address_the_contributing_plugin_and_a_missing_con
     let label = faulted.get("phaseLabel").expect("the faulted phase carries its own label pair");
     assert!(label.get("en").and_then(serde_json::Value::as_str).is_some_and(|text| !text.is_empty()));
     assert!(label.get("de").and_then(serde_json::Value::as_str).is_some_and(|text| !text.is_empty()));
-    assert_eq!(faulted.get("cancellable").and_then(serde_json::Value::as_bool), Some(false), "a preview that never invoked anything offers no cancel");
+    assert_eq!(faulted.get("cancellable").and_then(serde_json::Value::as_bool), Some(false), "a preview that never invoked anything offers no abort");
     let fault = faulted.get("fault").expect("the faulted status names the miss");
     assert_eq!(fault.get("code").and_then(serde_json::Value::as_str), Some(semio_framework_os_flow::FlowExtensionAddressMiss::CODE));
     assert_eq!(fault.get("extensionId").and_then(serde_json::Value::as_str), Some("not-contributed-by-anything"));
@@ -2306,11 +2328,10 @@ async fn extension_invocations_address_the_contributing_plugin_and_a_missing_con
 /// publishes nothing, so boot #11 sat at `faulted` for 2.5 minutes with no user action able to move
 /// it (`📓️runtime-verification-2026-09-09.md`).
 ///
-/// This law drives that exact order and asserts the recovery is AUTOMATIC: the run's last page
+/// This law drives that exact order and asserts the recovery is AUTOMATIC: the page run's last page
 /// invalidates the retained session against the new
-/// `semio_framework_os_flow::flow_extension_registry_generation` and re-arms the `flowEvalTick`
-/// chain for every attached preview window, and NOTHING ELSE runs afterwards — the drain below is
-/// started from the install's own effects, never from `pending_effects`.
+/// `semio_framework_os_flow::flow_extension_registry_generation` and owes every attached preview
+/// window an evaluation, which the surface's own `pending_effects` turns into a `previewEval` run.
 ///
 /// 🧪️ A `--lib` binary LINKS both extension packs (`🔬️flow-operators`), and a linked pack shadows
 /// the contributed stub — so an empty contribution table alone still evaluates, and would prove
@@ -2338,6 +2359,7 @@ async fn a_late_contributions_install_re_arms_the_evaluation_the_empty_registry_
     .await
     .expect("the example loads before any contribution arrives, exactly as ShellHost orders it");
     context::drain_armed_flow_eval_ticks(&mut app, &flow_view).await;
+    let mut install_effects = Vec::new();
 
     let faulted_preview = context::render_with_view(&mut app, edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW, &preview_view).await;
     assert_eq!(preview_phase(&faulted_preview), "faulted", "an unaddressable geometry kernel must fault the preview");
@@ -2349,7 +2371,6 @@ async fn a_late_contributions_install_re_arms_the_evaluation_the_empty_registry_
     let contributions = context::staged_flow_extension_contributions_json(&[]);
     let pages = semio_framework::public_invocation_string_pages(&contributions);
     println!("[STATS] late install: pages={} page-bound={}", pages.len(), semio_framework::PUBLIC_INVOCATION_STRING_BYTES);
-    let mut install_effects: Vec<Effect> = Vec::new();
     for (index, page) in pages.iter().enumerate() {
         let receipt = context::dispatch_with_view(
             &mut app,
@@ -2359,11 +2380,11 @@ async fn a_late_contributions_install_re_arms_the_evaluation_the_empty_registry_
         .await
         .expect("contributions page");
         assert!(!receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault), "contributions page {index} faulted in the retained job ladder");
-        let rearms = receipt.effects.iter().filter(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "flowEvalTick")).count();
+        let carried = context::run_actions(&receipt.effects);
         if index + 1 < pages.len() {
-            assert_eq!(rearms, 0, "page {index} installs nothing yet, so it owes no re-arm");
+            assert!(carried.is_empty(), "page {index} installs nothing yet, so it carries nothing: {carried:?}");
         } else {
-            assert_eq!(rearms, 1, "the run's last page owes exactly one re-arm per attached preview window");
+            assert_eq!(carried, vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()], "the last page carries the attached preview exactly one run start");
             install_effects = receipt.effects.clone();
         }
     }
@@ -2373,7 +2394,7 @@ async fn a_late_contributions_install_re_arms_the_evaluation_the_empty_registry_
     );
 
     let ticks = context::drain_armed_flow_eval_ticks_from(&mut app, &flow_view, &install_effects).await;
-    assert!(ticks > 0, "the install's own effects must be the thing that restarts the chain");
+    assert!(ticks > 0, "the run the install carried must evaluate the graph again");
     let status_json = flow_status_json(&context::render_with_view(&mut app, flow_window::GENERATION_3D_PLAY_BODY_MAIN, &flow_view).await);
     for widget_id in ["profile", "extrusion-axis", "extrude", "column-preview"] {
         assert_eq!(node_eval_status(&status_json, widget_id), "ok", "{widget_id} never re-evaluated after the late install: {status_json}");
@@ -2382,15 +2403,15 @@ async fn a_late_contributions_install_re_arms_the_evaluation_the_empty_registry_
     assert_ne!(preview_phase(&preview), "faulted", "the install must clear the preview fault without any user action");
     let meshes = preview_mesh_count(&preview);
     assert!(meshes >= 1, "the re-armed chain must reach a painted preview, got {meshes}");
-    println!("[STATS] late install re-armed {ticks} ticks and painted meshes={meshes}");
+    println!("[STATS] late install ran {ticks} hops and painted meshes={meshes}");
 }
 
 /// ⚖️ LAW: the invalidation KEY is the registry generation, not "a page run finished". A re-push of
-/// an unchanged closure leaves the generation where it was, invalidates nothing and re-arms nothing
-/// — otherwise every host refresh would restart a settled evaluation
+/// an unchanged closure leaves the generation where it was, invalidates nothing and owes the settled
+/// run nothing — otherwise every host refresh would restart a settled evaluation
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[semio_framework_async_macros::async_test]
-async fn re_pushing_an_unchanged_closure_re_arms_nothing() {
+async fn re_pushing_an_unchanged_closure_owes_the_settled_run_nothing() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let mut app = app_with_registry().await;
     let (flow_view, _preview_view) = context::shell_views("procedural-repush-main", "procedural-repush-preview");
@@ -2400,9 +2421,11 @@ async fn re_pushing_an_unchanged_closure_re_arms_nothing() {
     let pages = semio_framework::public_invocation_string_pages(&contributions);
     let before = semio_framework_os_flow::flow_extension_registry_generation();
     let mut generations = Vec::new();
-    let mut rearms_per_run = Vec::new();
+    let mut owed_per_run = Vec::new();
     for _ in 0..2 {
-        let mut rearms = 0;
+        let settled = context::drive_preview_run(&mut app, &flow_view, &[]).await;
+        assert_eq!(settled.state.as_deref(), Some("finalized"), "the preview settles before each push: {settled:?}");
+        let mut carried = Vec::new();
         for (index, page) in pages.iter().enumerate() {
             let receipt = context::dispatch_with_view(
                 &mut app,
@@ -2411,16 +2434,17 @@ async fn re_pushing_an_unchanged_closure_re_arms_nothing() {
             )
             .await
             .expect("contributions page");
-            rearms += receipt.effects.iter().filter(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "flowEvalTick")).count();
+            carried.extend(receipt.effects);
         }
         generations.push(semio_framework_os_flow::flow_extension_registry_generation());
-        rearms_per_run.push(rearms);
+        owed_per_run.push(context::run_actions(&carried));
+        context::drive_preview_run(&mut app, &flow_view, &carried).await;
     }
     assert!(generations[0] > before, "a closure the registry did not hold must burn a registry replacement");
-    assert_eq!(rearms_per_run[0], 1, "a changed closure owes one re-arm per attached preview window");
+    assert_eq!(owed_per_run[0], vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()], "a changed closure carries the settled preview one restart");
     assert_eq!(generations[0], generations[1], "an unchanged closure must not burn a registry replacement");
-    assert_eq!(rearms_per_run[1], 0, "an unchanged closure must re-arm nothing on the second push");
-    println!("[STATS] re-push generations={before} -> {generations:?} rearms={rearms_per_run:?}");
+    assert!(owed_per_run[1].is_empty(), "an unchanged closure must owe the settled run nothing on the second push: {:?}", owed_per_run[1]);
+    println!("[STATS] re-push generations={before} -> {generations:?} owed={owed_per_run:?}");
     semio_framework_os_flow::uninstall_flow_extension(context::CONTRIBUTIONS_WITNESS_EXTENSION_ID).expect("the witness leaves the process-wide registry as it found it");
 }
 
@@ -2468,35 +2492,56 @@ async fn rendered_preview_mesh_count(app: &mut context::Generation3dApp, view: &
     serde_json::from_str::<serde_json::Value>(&world.meshes_json).ok().and_then(|value| value.as_array().map(Vec::len)).unwrap_or_default()
 }
 
-/// 📈️ Drives the boot sequence one guest turn at a time, timing ONLY the guest turn — the extension
+/// 📈️ Drives the boot sequence's `previewEval` run one hop at a time, timing ONLY the guest hop — the extension
 /// capability runs in its own actor under its own budget, so folding it into the turn measurement
 /// would measure the brep kernel, not the reactor.
 async fn measure_hex_column_boot(app: &mut context::Generation3dApp, view: &semio_framework_plugin::ViewModel) -> BootBudget {
     semio_framework_job::set_runtime_diagnostics(true);
     semio_framework_os_flow::reset_flow_eval_publication_ledger();
     semio_framework_os_flow::reset_flow_eval_step_ledger();
-    let window_id = view.window_id.clone().expect("the measured view addresses one preview window");
-    app.pending_effects(Some(view)).await;
     let mut budget = BootBudget { turns: 0, turns_to_first_mesh: None, worst_turn_us: 0, total_turn_us: 0, round_trips: 0, ledger: semio_framework_os_flow::FlowEvalPublicationLedger::default(), steps: semio_framework_os_flow::FlowEvalStepLedger::default(), meshes: 0 };
-    for _ in 0..1000 {
-        let started = semio_framework_job::default_now_us().expect("a native monotonic microsecond clock");
-        let receipt = context::dispatch_with_view(app, Generation3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: window_id.clone(), window_kind_id: view.active_window_kind_id.clone().unwrap_or_else(|| crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into()) }), view.clone()).await.expect("flowEvalTick");
-        let elapsed = semio_framework_job::default_now_us().expect("a native monotonic microsecond clock").saturating_sub(started);
-        budget.turns += 1;
-        budget.worst_turn_us = budget.worst_turn_us.max(elapsed);
-        budget.total_turn_us += elapsed;
-        let answered = crate::brep_extension::settle(app, semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
-        budget.round_trips += answered;
-        if budget.turns_to_first_mesh.is_none() {
-            let meshes = rendered_preview_mesh_count(app, view).await;
-            if meshes > 0 {
-                budget.turns_to_first_mesh = Some(budget.turns);
-                budget.meshes = meshes;
-            }
+    let action_meta = semio_framework_plugin::ActionMeta { view_state: Some(view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("local") };
+    let mut owed = app.pending_effects(Some(view)).await;
+    for _ in 0..100_000 {
+        if app.has_pending_typed_operations() {
+            owed.extend(context::settle(app).await.effects);
         }
-        let rearmed = receipt.effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "flowEvalTick"));
-        if !rearmed && answered == 0 {
-            break;
+        let answered = crate::brep_extension::settle(app, action_meta.instance_id).await;
+        budget.round_trips += answered;
+        let dispatches: Vec<(String, Option<dsl::DslValue>)> = std::mem::take(&mut owed).into_iter().filter_map(|effect| match effect {
+            Effect::DispatchAction { action, args, .. } => Some((action, args)),
+            _ => None,
+        }).collect();
+        if dispatches.is_empty() && answered == 0 && !app.has_pending_typed_operations() {
+            owed.extend(app.pending_effects(Some(view)).await);
+            if owed.is_empty() {
+                break;
+            }
+            continue;
+        }
+        for (action, args) in dispatches {
+            if semio_framework_plugin::is_tool_run_action_id(&action) {
+                app.handle_action(&action, args.as_ref(), &action_meta).await.expect("the run's framework action");
+                continue;
+            }
+            let started = semio_framework_job::default_now_us().expect("a native monotonic microsecond clock");
+            context::dispatch_effect_command(app, &action, args.as_ref(), &action_meta).await.expect("the run's hop");
+            let receipt = context::settle(app).await;
+            let elapsed = semio_framework_job::default_now_us().expect("a native monotonic microsecond clock").saturating_sub(started);
+            owed.extend(receipt.effects);
+            if action != "flowEvalTick" {
+                continue;
+            }
+            budget.turns += 1;
+            budget.worst_turn_us = budget.worst_turn_us.max(elapsed);
+            budget.total_turn_us += elapsed;
+            if budget.turns_to_first_mesh.is_none() {
+                let meshes = rendered_preview_mesh_count(app, view).await;
+                if meshes > 0 {
+                    budget.turns_to_first_mesh = Some(budget.turns);
+                    budget.meshes = meshes;
+                }
+            }
         }
     }
     budget.ledger = semio_framework_os_flow::flow_eval_publication_ledger();
@@ -2509,7 +2554,7 @@ async fn measure_hex_column_boot(app: &mut context::Generation3dApp, view: &semi
 }
 
 /// ⚖️ LAW: booting the hexagonal-mushroom-column stays inside the interactive turn budget, and the
-/// tick chain publishes the evaluation ONLY when it changed.
+/// `previewEval` run dispatches no idle hop.
 ///
 /// 🐛️ Regression guard for the stage-22 stall (`📓️runtime-hotpath-audit-2026-09-10.md` §2/§3): every
 /// `flowEvalTick` used to re-serialize the WHOLE eval session into a fresh `String` and republish it
@@ -2560,17 +2605,21 @@ async fn hex_column_boot_stays_inside_the_interactive_turn_budget() {
         budget.steps.worst_us,
         budget.steps.steps
     );
+    // 🦶️ The `previewEval` run dispatches a hop only when a window owes one, so no hop is idle: every
+    // tick after the first pays exactly one settled extension answer. The self-re-arming chain this
+    // replaced spent most of its ticks re-publishing an unchanged evaluation, which is why the gate
+    // used to be asserted to halve publications; with no idle hop left, a tick publishes at most once.
     assert!(
-        budget.ledger.published * 2 <= budget.ledger.considered,
-        "at most half the considered ticks may publish a new evaluation, got {} of {}",
-        budget.ledger.published,
-        budget.ledger.considered
+        turns <= budget.round_trips as u64 + 1,
+        "the run may dispatch no idle hop: {turns} ticks for {} extension answers",
+        budget.round_trips
     );
     assert!(
-        budget.ledger.published_bytes * 2 <= budget.ledger.considered_bytes,
-        "the gate must halve the bytes an ungated tick chain would have published: {} of {}",
-        budget.ledger.published_bytes,
-        budget.ledger.considered_bytes
+        budget.ledger.published <= budget.ledger.considered && budget.ledger.considered == budget.steps.steps,
+        "every tick is considered once and publishes at most once: published {} considered {} steps {}",
+        budget.ledger.published,
+        budget.ledger.considered,
+        budget.steps.steps
     );
     // ⏱️ The ceiling asserted above is only ENFORCEABLE while the dag walk carries a wall-clock
     // deadline. `FLOW_EVAL_TICK_STEP_BUDGET` counts NODES, and this seven-node fixture is three
@@ -2636,7 +2685,7 @@ async fn every_emitted_action_is_declared_on_its_window_kind() {
         crate::seed_law_generations(&mut snapshot.generation);
         for (kind_id, body_key, _) in &windows {
             let session = FlowEvalSession::new();
-            let tree = generation3d_render_body(body_key, &snapshot, &config, None, &view_state, &PreviewInteractionMarks::default(), &session).expect("render");
+            let tree = generation3d_render_body(body_key, &snapshot, &config, None, &view_state, &PreviewInteractionMarks::default(), &session, None).expect("render");
             context::retire_flow_eval_session(session);
             let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("render json");
             emitted.get_mut(kind_id).expect("window bucket").extend(crate::emitted_action_ids(&projection));
@@ -2698,7 +2747,7 @@ async fn an_evaluate_fault_outranks_the_addressing_miss_and_a_contribution_insta
                     fault_message: answer["faultMessage"].as_str().expect("faultMessage").to_string(),
                 };
                 crate::preview_eval::resolve_eval(&resolve, session);
-                let status: serde_json::Value = serde_json::from_str(&crate::editor::generation3d::preview_progress_status_json_for(Some(session), address())).expect("preview status json");
+                let status: serde_json::Value = serde_json::from_str(&crate::editor::generation3d::preview_progress_status_json_for(Some(session), None, address())).expect("preview status json");
                 rows.push((answer["name"].as_str().expect("name").to_string(), answer["phase"].as_str().expect("phase").to_string(), answer["publishesFault"].as_bool().expect("publishesFault"), status));
             }
             // 🧩️ The install clears the retained fault before any later tick settles.
@@ -2715,7 +2764,7 @@ async fn an_evaluate_fault_outranks_the_addressing_miss_and_a_contribution_insta
             crate::preview_eval::resolve_eval(&resolve, session);
             assert!(session.extension_evaluate_fault().is_some(), "the refused answer must be retained before the install clears it");
             assert!(session.invalidate_for_flow_extension_registry(session.flow_extension_generation() + 1), "a moved registry generation invalidates");
-            let cleared: serde_json::Value = serde_json::from_str(&crate::editor::generation3d::preview_progress_status_json_for(Some(session), address())).expect("preview status json");
+            let cleared: serde_json::Value = serde_json::from_str(&crate::editor::generation3d::preview_progress_status_json_for(Some(session), None, address())).expect("preview status json");
             (rows, cleared)
         })
         .expect("the retained evaluation-session owner lends its session");
@@ -2733,7 +2782,7 @@ async fn an_evaluate_fault_outranks_the_addressing_miss_and_a_contribution_insta
         if !publishes_fault {
             continue;
         }
-        assert_eq!(status["cancellable"].as_bool(), Some(false), "{name}: a refused evaluation offers no cancel");
+        assert_eq!(status["cancellable"].as_bool(), Some(false), "{name}: a refused evaluation without a live run offers no abort");
         for language in ["en", "de"] {
             let label = status["phaseLabel"][language].as_str().unwrap_or_default();
             assert!(!label.is_empty(), "{name} {language}: the faulted phase carries its own label, never the superseded one");

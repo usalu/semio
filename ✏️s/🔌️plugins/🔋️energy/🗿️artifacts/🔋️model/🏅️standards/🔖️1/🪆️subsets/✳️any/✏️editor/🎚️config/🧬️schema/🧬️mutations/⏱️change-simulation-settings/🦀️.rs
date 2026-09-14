@@ -1,0 +1,44 @@
+//! ⏱️ Change the simulation run settings in the energy model editor config.
+
+use super::{EnergyModelConfig, EnergyModelConfigMutation};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+
+/// ⏱️ `change-simulation-settings`: replaces the three run settings at once; its inverse restores the base's.
+#[derive(Clone, Debug, PartialEq, Eq, ToValueDerive, FromValueDerive, dsl::DslRecord, dsl::MutationLeaf)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
+#[dsl(keyword = "change-simulation-settings")]
+#[mutation_leaf(contract = ::protocol)]
+pub struct ChangeSimulationSettings {
+    pub zone_timestep_minutes: u32,
+    pub system_timestep_minutes: u32,
+    pub warmup_days: u32,
+}
+
+impl ChangeSimulationSettings {
+    fn of(config: EnergyModelConfig) -> Self {
+        Self { zone_timestep_minutes: config.zone_timestep_minutes, system_timestep_minutes: config.system_timestep_minutes, warmup_days: config.warmup_days }
+    }
+
+    /// 🎚️ The settings this change installs.
+    pub fn config(&self) -> EnergyModelConfig {
+        EnergyModelConfig { zone_timestep_minutes: self.zone_timestep_minutes, system_timestep_minutes: self.system_timestep_minutes, warmup_days: self.warmup_days }
+    }
+}
+
+impl protocol::MutationKind<EnergyModelConfig, EnergyModelConfigMutation> for ChangeSimulationSettings {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "simulation-settings", kind: "change-simulation-settings", record: "ChangedSimulationSettings" };
+    fn diff(&self, _base: &EnergyModelConfig) -> protocol::MutationOutcome<EnergyModelConfig> {
+        protocol::MutationOutcome::new(self.config())
+    }
+    fn inverse(&self, base: &EnergyModelConfig) -> Vec<EnergyModelConfigMutation> {
+        vec![EnergyModelConfigMutation::ChangeSimulationSettings(Self::of(*base))]
+    }
+    fn label(&self) -> String {
+        format!("Change simulation settings to {} / {} min, {} warmup days", self.zone_timestep_minutes, self.system_timestep_minutes, self.warmup_days)
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["simulation-settings".into()]
+    }
+}

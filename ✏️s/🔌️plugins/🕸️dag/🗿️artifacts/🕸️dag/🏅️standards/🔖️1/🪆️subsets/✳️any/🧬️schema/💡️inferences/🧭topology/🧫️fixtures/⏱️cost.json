@@ -1,0 +1,7 @@
+{
+  "$comment": "DAG topology inference cost law: a layered DAG of `layers` × `width` nodes, every node wired to two nodes of the next layer through ports, recomputed `attempts` times; the best wall time must stay below the 8 ms interactive ceiling (`ceilingUs`), so the inference needs no stepped run (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W3-F1, inventory cost flag).",
+  "layers": 64,
+  "width": 64,
+  "attempts": 5,
+  "ceilingUs": 8000
+}

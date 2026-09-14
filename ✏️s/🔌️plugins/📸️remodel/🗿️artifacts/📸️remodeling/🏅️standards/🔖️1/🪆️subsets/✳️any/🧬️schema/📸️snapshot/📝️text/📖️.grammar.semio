@@ -17,7 +17,7 @@ document = artifact-mark snapshot-body
 snapshot-body = schema-line id-line snapshot-part*
 schema-line = "schema" "=" "remodeling.scene"
 id-line = "id" "=" name
-snapshot-part = assets-map | durable-artifacts-map | calibration-block | params-block | job-block | results-block | streams-table | gcps-table
+snapshot-part = assets-map | durable-artifacts-map | calibration-block | params-block | results-block | streams-table | gcps-table
 
 name = IDENT | TEXT
 num = INT | FLOAT
@@ -85,11 +85,6 @@ motion-field = "enabled" "=" BOOL | "max-tracks" "=" INT | "track-window-px" "="
 geo-block = "geo" "{" geo-param-field* "}"
 geo-param-field = "enabled" "=" BOOL | "origin-lon" "=" num | "origin-lat" "=" num | "origin-alt" "=" num | "gsd-m" "=" quantity | "dsm-cell-m" "=" quantity | "dtm-filter-radius-m" "=" quantity | "ortho-max-px" "=" INT
 
-job-block = "job" "{" job-part* "}"
-job-part = job-field | poses-table
-job-field = "id" "=" name | "stage" "=" stage | "progress-0-1" "=" num | "cancel-requested" "=" BOOL | "stage-cursor" "=" INT | "started-at-ms" "=" num | "error" "=" name | "sparse-point-cloud-preview" "=" name
-stage = "idle" | "ingesting" | "calibrating" | "extracting-features" | "matching-features" | "estimating-poses" | "bundle-adjusting" | "georeferencing" | "dense-stereo" | "fusing-volume" | "extracting-surface" | "cleaning-mesh" | "texturing" | "tracking-motion" | "deriving-geo-products" | "reporting-qc" | "done" | "failed"
-poses-table = "camera-poses-preview" poses-header "{" pose-row* "}"
 poses-header = "[" "camera-id" ":" "TEXT" "rotation-wxyz" ":" "TUPLE" "translation" ":" "CRD" "]"
 pose-row = name quad coord3
 

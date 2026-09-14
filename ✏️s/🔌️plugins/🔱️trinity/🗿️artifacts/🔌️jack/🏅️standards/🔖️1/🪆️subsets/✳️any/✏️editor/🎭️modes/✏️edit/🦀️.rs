@@ -3,15 +3,16 @@
 //! The app itself has no other mode; this is the only `ModeDefinition` `create_trinity_jack_app`
 //! registers.
 
+use crate::editor::jack::modes::edit::tools::reorganize;
 use crate::editor::jack::{TRINITY_JACK_PLAY_WINDOW_EDITOR, TRINITY_JACK_PLAY_WINDOW_GRAPH, TRINITY_JACK_PLAY_WINDOW_RESULTS};
-use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+use semio_framework_plugin::{LocalizedLabel, ModeDefinition, ToolRef, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
 
 pub const TRINITY_JACK_MODE_EDIT: &str = "edit";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::jack::create_trinity_jack_app`.
 pub fn definition() -> ModeDefinition {
-    ModeDefinition { id: TRINITY_JACK_MODE_EDIT.into(), label: LocalizedLabel::native("Explore", "Erkunden"), icon_id: "focus".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
+    ModeDefinition { id: TRINITY_JACK_MODE_EDIT.into(), label: LocalizedLabel::native("Explore", "Erkunden"), icon_id: "focus".into(), tools: vec![semio_framework::io::resolve_ready(ToolRef::new(reorganize::TOOL_ID))], layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ One quadrant of the layout: a stack holding a single window kind.

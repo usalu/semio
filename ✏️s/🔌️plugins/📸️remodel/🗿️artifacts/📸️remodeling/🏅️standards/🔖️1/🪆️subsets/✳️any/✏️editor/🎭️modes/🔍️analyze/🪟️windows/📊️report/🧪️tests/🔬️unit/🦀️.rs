@@ -7,7 +7,7 @@ use crate::editor::remodeling::RemodelingCommand;
 #[semio_framework_async_macros::async_test]
 async fn every_dataset_name_yields_its_own_column_set_and_unknown_falls_back_to_frames() {
     let scene = default_remodeling_scene();
-    for (table, marker) in [("cameras", "RMS (px)"), ("tracks", "Mean Speed (m/s)"), ("gcps", "Observations"), ("qcStages", "Status"), ("matches", "Note"), ("nonsense", "Timestamp (ms)")] {
+    for (table, marker) in [("cameras", "RMS (px)"), ("tracks", "Mean Speed (m/s)"), ("gcps", "Observations"), ("qcStages", "Value"), ("matches", "Note"), ("nonsense", "Timestamp (ms)")] {
         let (columns, _rows) = report_table_json(&scene, table);
         assert!(columns.contains(marker), "table {table} must expose {marker}: {columns}");
     }

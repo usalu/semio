@@ -1,0 +1,79 @@
+{
+  "defaultConfig": {
+    "maxIterations": 420,
+    "idealEdgeLength": 140,
+    "repulsionStrength": 49,
+    "repulsionFalloff": "inverse",
+    "springStrength": 1,
+    "springLaw": "quadratic",
+    "gravity": 0,
+    "center": null,
+    "anchorStrength": 1,
+    "timeStep": 0.85,
+    "velocityDamping": 0.88,
+    "maxSpeed": 48,
+    "coolingFloor": 0.08,
+    "seed": 1,
+    "barnesHutTheta": 0.78,
+    "pairwiseMaxBodies": 56,
+    "settleDisplacement": 0.5,
+    "settleIterations": 8,
+    "emitDisplacement": 0.25,
+    "checkpointIterations": 64,
+    "compactOps": 16384
+  },
+  "cases": [
+    {
+      "id": "grid-6x6-seed-7",
+      "generator": { "kind": "grid", "columns": 6, "rows": 6, "radius": 24, "pins": [] },
+      "config": { "maxIterations": 420, "idealEdgeLength": 140, "repulsionStrength": 49, "repulsionFalloff": "inverse", "springStrength": 1, "springLaw": "quadratic", "gravity": 0, "center": null, "anchorStrength": 1, "timeStep": 0.85, "velocityDamping": 0.88, "maxSpeed": 48, "coolingFloor": 0.08, "seed": 7, "barnesHutTheta": 0.78, "pairwiseMaxBodies": 16, "settleDisplacement": 0.5, "settleIterations": 8, "emitDisplacement": 0.25, "checkpointIterations": 64, "compactOps": 16384 },
+      "expect": { "stop": "converged", "iterations": 290, "positionsDigest": "78cfc6be5ac7edb3", "movedOps": 36, "settled": 36, "checkpoints": 4, "verdictPrefix": ["0:testing/moving", "1:testing/moving", "2:testing/moving", "3:testing/moving", "4:testing/moving", "5:testing/moving", "6:testing/moving", "7:testing/moving", "8:testing/moving", "9:testing/moving", "10:testing/moving", "11:testing/moving", "12:testing/moving", "13:testing/moving", "14:testing/moving", "15:testing/moving", "16:testing/moving", "17:testing/moving", "18:testing/moving", "19:testing/moving", "20:testing/moving", "21:testing/moving", "22:testing/moving", "23:testing/moving"] }
+    },
+    {
+      "id": "ring-24-seed-3",
+      "generator": { "kind": "ring", "count": 24, "radius": 20, "pins": [] },
+      "config": { "maxIterations": 420, "idealEdgeLength": 140, "repulsionStrength": 49, "repulsionFalloff": "inverse", "springStrength": 1, "springLaw": "quadratic", "gravity": 0, "center": null, "anchorStrength": 1, "timeStep": 0.85, "velocityDamping": 0.88, "maxSpeed": 48, "coolingFloor": 0.08, "seed": 3, "barnesHutTheta": 0.78, "pairwiseMaxBodies": 56, "settleDisplacement": 0.5, "settleIterations": 8, "emitDisplacement": 0.25, "checkpointIterations": 16, "compactOps": 16384 },
+      "expect": { "stop": "converged", "iterations": 249, "positionsDigest": "b8e498f1ae393c15", "movedOps": 24, "settled": 24, "checkpoints": 15, "verdictPrefix": ["0:testing/moving", "1:testing/moving", "2:testing/moving", "3:testing/moving", "4:testing/moving", "5:testing/moving", "6:testing/moving", "7:testing/moving", "8:testing/moving", "9:testing/moving", "10:testing/moving", "11:testing/moving", "12:testing/moving", "13:testing/moving", "14:testing/moving", "15:testing/moving", "16:testing/moving", "17:testing/moving", "18:testing/moving", "19:testing/moving", "20:testing/moving", "21:testing/moving", "22:testing/moving", "23:testing/moving"] }
+    },
+    {
+      "id": "tree-31-pinned-root-seed-11",
+      "generator": { "kind": "tree", "count": 31, "radius": 16, "pins": [{ "node": 0, "at": { "x": 0, "y": 0 } }] },
+      "config": { "maxIterations": 300, "idealEdgeLength": 90, "repulsionStrength": 49, "repulsionFalloff": "inverse", "springStrength": 1, "springLaw": "quadratic", "gravity": 0.01, "center": { "x": 0, "y": 0 }, "anchorStrength": 1, "timeStep": 0.85, "velocityDamping": 0.88, "maxSpeed": 48, "coolingFloor": 0.08, "seed": 11, "barnesHutTheta": 0.78, "pairwiseMaxBodies": 8, "settleDisplacement": 0.5, "settleIterations": 8, "emitDisplacement": 0.25, "checkpointIterations": 64, "compactOps": 16384 },
+      "expect": { "stop": "converged", "iterations": 248, "positionsDigest": "b7b009d895285b44", "movedOps": 30, "settled": 31, "checkpoints": 3, "verdictPrefix": ["1:testing/moving", "2:testing/moving", "3:testing/moving", "4:testing/moving", "5:testing/moving", "6:testing/moving", "7:testing/moving", "8:testing/moving", "9:testing/moving", "10:testing/moving", "11:testing/moving", "12:testing/moving", "13:testing/moving", "14:testing/moving", "15:testing/moving", "16:testing/moving", "17:testing/moving", "18:testing/moving", "19:testing/moving", "20:testing/moving", "21:testing/moving", "22:testing/moving", "23:testing/moving", "24:testing/moving"] }
+    },
+    {
+      "id": "anchored-chain",
+      "graph": {
+        "nodes": [
+          { "entity": 101, "origin": { "x": 0, "y": 0 }, "radius": 24, "pinned": true, "anchor": null },
+          { "entity": 102, "origin": { "x": 10, "y": 0 }, "radius": 24, "pinned": false, "anchor": null },
+          { "entity": 103, "origin": null, "radius": 24, "pinned": false, "anchor": { "x": 300, "y": 0 } },
+          { "entity": 104, "origin": { "x": 20, "y": 5 }, "radius": 24, "pinned": false, "anchor": { "x": 300, "y": 150 } },
+          { "entity": 105, "origin": null, "radius": 12, "pinned": false, "anchor": null }
+        ],
+        "edges": [
+          { "source": 0, "target": 1, "weight": 1 },
+          { "source": 1, "target": 2, "weight": 1 },
+          { "source": 2, "target": 3, "weight": 2 },
+          { "source": 3, "target": 4, "weight": 0.5 }
+        ]
+      },
+      "config": { "maxIterations": 60, "idealEdgeLength": 120, "repulsionStrength": 49, "repulsionFalloff": "inverse", "springStrength": 1, "springLaw": "quadratic", "gravity": 0, "center": null, "anchorStrength": 1, "timeStep": 0.85, "velocityDamping": 0.88, "maxSpeed": 48, "coolingFloor": 0.08, "seed": 5, "barnesHutTheta": 0.78, "pairwiseMaxBodies": 56, "settleDisplacement": 0.001, "settleIterations": 8, "emitDisplacement": 0.25, "checkpointIterations": 32, "compactOps": 16384 },
+      "expect": { "stop": "iterationLimit", "iterations": 60, "positionsDigest": "eb45e04e7ef6a91d", "movedOps": 4, "settled": 1, "checkpoints": 1, "verdictPrefix": ["1:testing/moving", "2:testing/moving", "3:testing/moving", "4:testing/moving", "1:testing/moving", "2:testing/moving", "3:testing/moving", "4:testing/moving", "1:testing/moving", "2:testing/moving", "3:testing/moving", "4:testing/moving", "1:testing/moving", "2:testing/moving", "3:testing/moving", "4:testing/moving", "1:testing/moving", "2:testing/moving", "3:testing/moving", "4:testing/moving", "1:testing/moving", "2:testing/moving", "3:testing/moving", "4:testing/moving"] }
+    }
+  ],
+  "stepLaw": { "columns": 100, "rows": 50, "iterations": 3, "worstStepMicros": 2000, "attempts": 5 },
+  "oracle": {
+    "cases": [
+      { "kind": "grid", "columns": 6, "rows": 6, "radius": 20, "pins": [] },
+      { "kind": "ring", "count": 30, "radius": 20, "pins": [] },
+      { "kind": "tree", "count": 31, "radius": 20, "pins": [] }
+    ],
+    "fdgScale": 45,
+    "fdgCooloff": 0.975,
+    "fdgDt": 0.035,
+    "fdgUpdates": 1500,
+    "stressRatioMax": 1.05,
+    "improvementMin": 0.3
+  }
+}

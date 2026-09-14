@@ -1,0 +1,1097 @@
+{
+  "format": "semio.generation3d.preview-eval-run",
+  "version": 1,
+  "note": "The read-only `previewEval` tool run both generation3d surfaces run (`🧵️preview-eval`), declared as data: its vocabulary, the entity key a trace record names a flow node by, the verdict law an observation of the retained evaluation session answers, the scheduling law over the per-window latches, the kernel release a closed run owes, the abort affordance a preview window publishes what a surface's pending_effects owes the run, and what a LANDED GESTURE owes the attached previews. Language-agnostic: an implementation in any language must answer these exact rows. Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS.",
+  "toolId": "previewEval",
+  "vocabulary": {
+    "mutating": false,
+    "rebase": "restart",
+    "reconfigure": "restart",
+    "trace": "entity",
+    "stages": [
+      "evaluate",
+      "tessellate"
+    ],
+    "counters": [
+      "evaluated",
+      "failed",
+      "blocked",
+      "tessellated",
+      "hops"
+    ],
+    "reasons": [
+      {
+        "code": 0,
+        "id": "queued",
+        "verdict": "testing"
+      },
+      {
+        "code": 1,
+        "id": "computing",
+        "verdict": "testing"
+      },
+      {
+        "code": 2,
+        "id": "evaluated",
+        "verdict": "success"
+      },
+      {
+        "code": 3,
+        "id": "blocked",
+        "verdict": "warning"
+      },
+      {
+        "code": 4,
+        "id": "failed",
+        "verdict": "danger"
+      },
+      {
+        "code": 5,
+        "id": "tessellating",
+        "verdict": "testing"
+      },
+      {
+        "code": 6,
+        "id": "tessellated",
+        "verdict": "success"
+      },
+      {
+        "code": 7,
+        "id": "meshDiagnostics",
+        "verdict": "warning"
+      },
+      {
+        "code": 8,
+        "id": "meshMissing",
+        "verdict": "warning"
+      },
+      {
+        "code": 9,
+        "id": "settled",
+        "verdict": "success"
+      },
+      {
+        "code": 10,
+        "id": "settledWithFailures",
+        "verdict": "warning"
+      },
+      {
+        "code": 11,
+        "id": "extensionFault",
+        "verdict": "danger"
+      }
+    ]
+  },
+  "entityKeys": [
+    {
+      "nodeId": "width",
+      "entity": "15842200671275313599"
+    },
+    {
+      "nodeId": "height",
+      "entity": "1689425963507806754"
+    },
+    {
+      "nodeId": "extrude",
+      "entity": "1766709815546687554"
+    },
+    {
+      "nodeId": "volume",
+      "entity": "2435851363804836047"
+    },
+    {
+      "nodeId": "brep_prim3d_sphere_3",
+      "entity": "5165194028610920340"
+    },
+    {
+      "nodeId": "",
+      "entity": "14695981039346656037"
+    },
+    {
+      "nodeId": "Ünicode-Knoten",
+      "entity": "11054395264707086580"
+    }
+  ],
+  "hopRequest": {
+    "tickAction": "flowEvalTick",
+    "releaseAction": "flowEvalRelease",
+    "args": [
+      "windowId",
+      "windowKindId"
+    ]
+  },
+  "observations": [
+    {
+      "id": "queued-computing-and-evaluated-nodes",
+      "statusJson": {
+        "width": {
+          "status": "ok"
+        },
+        "height": {
+          "status": "computing"
+        },
+        "extrude": {
+          "status": "queued"
+        },
+        "volume": {
+          "status": "stale"
+        }
+      },
+      "evalJson": {},
+      "previewWidgetIds": [
+        "volume"
+      ],
+      "meshStates": {},
+      "settled": false,
+      "expected": {
+        "nodes": {
+          "width": "evaluated",
+          "height": "computing",
+          "extrude": "queued",
+          "volume": "queued"
+        },
+        "meshes": 0,
+        "tessellated": 0,
+        "stage": "evaluate",
+        "progress": [
+          1,
+          4
+        ]
+      }
+    },
+    {
+      "id": "failures-and-blocked-inputs",
+      "statusJson": {
+        "a": {
+          "status": "error",
+          "message": "unknown kind"
+        },
+        "b": {
+          "status": "blocked",
+          "ports": [
+            "in"
+          ]
+        },
+        "c": {
+          "status": "ok"
+        }
+      },
+      "evalJson": {},
+      "previewWidgetIds": [],
+      "meshStates": {},
+      "settled": true,
+      "expected": {
+        "nodes": {
+          "a": "failed",
+          "b": "blocked",
+          "c": "evaluated"
+        },
+        "meshes": 0,
+        "tessellated": 0,
+        "stage": "evaluate",
+        "progress": [
+          3,
+          3
+        ]
+      }
+    },
+    {
+      "id": "a-preview-node-refines-into-its-meshes",
+      "statusJson": {
+        "rect": {
+          "status": "ok"
+        },
+        "volume": {
+          "status": "ok"
+        },
+        "shell": {
+          "status": "ok"
+        }
+      },
+      "evalJson": {
+        "volume": {
+          "out": {
+            "solid": {
+              "handle": "solid-1"
+            },
+            "faces": {
+              "$schema": "list",
+              "0": {
+                "handle": "face-1"
+              },
+              "1": {
+                "handle": "face-2"
+              }
+            }
+          }
+        },
+        "shell": {
+          "out": {
+            "solid": {
+              "handle": "solid-9"
+            }
+          }
+        },
+        "rect": {
+          "out": {
+            "wire": {
+              "handle": "wire-1"
+            }
+          }
+        }
+      },
+      "previewWidgetIds": [
+        "volume",
+        "shell"
+      ],
+      "meshStates": {
+        "solid-1": "ready",
+        "face-1": "ready",
+        "face-2": "pending",
+        "solid-9": "diagnostics"
+      },
+      "settled": false,
+      "expected": {
+        "nodes": {
+          "rect": "evaluated",
+          "volume": "tessellating",
+          "shell": "meshDiagnostics"
+        },
+        "meshes": 4,
+        "tessellated": 2,
+        "stage": "tessellate",
+        "progress": [
+          5,
+          7
+        ]
+      }
+    },
+    {
+      "id": "a-settled-run-names-a-mesh-that-never-arrived",
+      "statusJson": {
+        "volume": {
+          "status": "ok"
+        }
+      },
+      "evalJson": {
+        "volume": {
+          "out": {
+            "solid": {
+              "handle": "solid-1"
+            }
+          }
+        }
+      },
+      "previewWidgetIds": [
+        "volume"
+      ],
+      "meshStates": {
+        "solid-1": "pending"
+      },
+      "settled": true,
+      "expected": {
+        "nodes": {
+          "volume": "meshMissing"
+        },
+        "meshes": 1,
+        "tessellated": 0,
+        "stage": "tessellate",
+        "progress": [
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "id": "every-mesh-ready-is-tessellated",
+      "statusJson": {
+        "volume": {
+          "status": "ok"
+        }
+      },
+      "evalJson": {
+        "volume": {
+          "out": {
+            "solid": {
+              "handle": "solid-1"
+            }
+          }
+        }
+      },
+      "previewWidgetIds": [
+        "volume"
+      ],
+      "meshStates": {
+        "solid-1": "ready"
+      },
+      "settled": true,
+      "expected": {
+        "nodes": {
+          "volume": "tessellated"
+        },
+        "meshes": 1,
+        "tessellated": 1,
+        "stage": "evaluate",
+        "progress": [
+          2,
+          2
+        ]
+      }
+    },
+    {
+      "id": "malformed-status-observes-nothing",
+      "statusJson": "{not json",
+      "evalJson": {},
+      "previewWidgetIds": [],
+      "meshStates": {},
+      "settled": false,
+      "expected": {
+        "nodes": {},
+        "meshes": 0,
+        "tessellated": 0,
+        "stage": "evaluate",
+        "progress": [
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "scheduling": [
+    {
+      "id": "a-window-that-never-ticked-owes-its-first-hop",
+      "windows": [
+        "left"
+      ],
+      "steps": [],
+      "expected": {
+        "hop": "dispatch",
+        "window": "left"
+      }
+    },
+    {
+      "id": "an-armed-hop-is-waited-for",
+      "windows": [
+        "left"
+      ],
+      "steps": [
+        {
+          "step": "arm",
+          "window": "left"
+        }
+      ],
+      "expected": {
+        "hop": "wait"
+      }
+    },
+    {
+      "id": "a-hop-that-parked-answers-is-waited-for",
+      "windows": [
+        "left"
+      ],
+      "steps": [
+        {
+          "step": "arm",
+          "window": "left"
+        },
+        {
+          "step": "begin",
+          "window": "left"
+        },
+        {
+          "step": "outcome",
+          "window": "left",
+          "more": false,
+          "parked": 2
+        },
+        {
+          "step": "inFlight",
+          "window": "left",
+          "count": 2
+        }
+      ],
+      "expected": {
+        "hop": "wait"
+      }
+    },
+    {
+      "id": "the-last-answer-owes-the-terminal-hop",
+      "windows": [
+        "left"
+      ],
+      "steps": [
+        {
+          "step": "arm",
+          "window": "left"
+        },
+        {
+          "step": "begin",
+          "window": "left"
+        },
+        {
+          "step": "outcome",
+          "window": "left",
+          "more": false,
+          "parked": 1
+        },
+        {
+          "step": "inFlight",
+          "window": "left",
+          "count": 1
+        },
+        {
+          "step": "settle",
+          "window": "left"
+        }
+      ],
+      "expected": {
+        "hop": "dispatch",
+        "window": "left"
+      }
+    },
+    {
+      "id": "a-finished-window-settles-the-run",
+      "windows": [
+        "left"
+      ],
+      "steps": [
+        {
+          "step": "arm",
+          "window": "left"
+        },
+        {
+          "step": "begin",
+          "window": "left"
+        },
+        {
+          "step": "outcome",
+          "window": "left",
+          "more": false,
+          "parked": 0
+        }
+      ],
+      "expected": {
+        "hop": "settled"
+      }
+    },
+    {
+      "id": "one-busy-window-keeps-a-finished-sibling-waiting",
+      "windows": [
+        "left",
+        "right"
+      ],
+      "steps": [
+        {
+          "step": "arm",
+          "window": "left"
+        },
+        {
+          "step": "begin",
+          "window": "left"
+        },
+        {
+          "step": "outcome",
+          "window": "left",
+          "more": false,
+          "parked": 0
+        },
+        {
+          "step": "arm",
+          "window": "right"
+        }
+      ],
+      "expected": {
+        "hop": "wait"
+      }
+    },
+    {
+      "id": "a-second-window-is-dispatched-after-the-first-settles",
+      "windows": [
+        "left",
+        "right"
+      ],
+      "steps": [
+        {
+          "step": "arm",
+          "window": "left"
+        },
+        {
+          "step": "begin",
+          "window": "left"
+        },
+        {
+          "step": "outcome",
+          "window": "left",
+          "more": false,
+          "parked": 0
+        }
+      ],
+      "expected": {
+        "hop": "dispatch",
+        "window": "right"
+      }
+    },
+    {
+      "id": "a-gesture-owes-a-settled-window-again",
+      "windows": [
+        "left"
+      ],
+      "steps": [
+        {
+          "step": "arm",
+          "window": "left"
+        },
+        {
+          "step": "begin",
+          "window": "left"
+        },
+        {
+          "step": "outcome",
+          "window": "left",
+          "more": false,
+          "parked": 0
+        },
+        {
+          "step": "owe",
+          "window": "left"
+        }
+      ],
+      "expected": {
+        "hop": "dispatch",
+        "window": "left"
+      }
+    },
+    {
+      "id": "an-abort-quiesces-every-window",
+      "windows": [
+        "left"
+      ],
+      "steps": [
+        {
+          "step": "arm",
+          "window": "left"
+        },
+        {
+          "step": "begin",
+          "window": "left"
+        },
+        {
+          "step": "outcome",
+          "window": "left",
+          "more": true,
+          "parked": 1
+        },
+        {
+          "step": "inFlight",
+          "window": "left",
+          "count": 1
+        },
+        {
+          "step": "abort",
+          "window": "left"
+        }
+      ],
+      "expected": {
+        "hop": "settled"
+      }
+    },
+    {
+      "id": "no-attached-window-settles",
+      "windows": [],
+      "steps": [],
+      "expected": {
+        "hop": "settled"
+      }
+    }
+  ],
+  "release": {
+    "capabilities": [
+      "evaluateCancel",
+      "tessellateCancel"
+    ],
+    "responseAction": "flowTessellateCancelResolve",
+    "unaddressableEmits": 0
+  },
+  "status": [
+    {
+      "id": "no-run-offers-no-abort",
+      "run": null,
+      "expected": {
+        "cancellable": false,
+        "cancelAction": "toolRunAbort",
+        "cancelArgs": null
+      }
+    },
+    {
+      "id": "a-running-preview-offers-its-own-abort",
+      "run": {
+        "toolId": "previewEval",
+        "run": 7,
+        "generation": 2,
+        "state": "running"
+      },
+      "expected": {
+        "cancellable": true,
+        "cancelAction": "toolRunAbort",
+        "cancelArgs": {
+          "runId": "7",
+          "generation": 2
+        }
+      }
+    },
+    {
+      "id": "a-paused-preview-can-still-be-aborted",
+      "run": {
+        "toolId": "previewEval",
+        "run": 7,
+        "generation": 0,
+        "state": "paused"
+      },
+      "expected": {
+        "cancellable": true,
+        "cancelAction": "toolRunAbort",
+        "cancelArgs": {
+          "runId": "7",
+          "generation": 0
+        }
+      }
+    },
+    {
+      "id": "a-complete-preview-has-nothing-left-to-stop",
+      "run": {
+        "toolId": "previewEval",
+        "run": 7,
+        "generation": 0,
+        "state": "complete"
+      },
+      "expected": {
+        "cancellable": false,
+        "cancelAction": "toolRunAbort",
+        "cancelArgs": null
+      }
+    },
+    {
+      "id": "another-tools-run-is-not-this-previews",
+      "run": {
+        "toolId": "importDocument",
+        "run": 3,
+        "generation": 0,
+        "state": "running"
+      },
+      "expected": {
+        "cancellable": false,
+        "cancelAction": "toolRunAbort",
+        "cancelArgs": null
+      }
+    }
+  ],
+  "runEffects": [
+    {
+      "id": "no-roster-starts-nothing",
+      "windows": [],
+      "owed": true,
+      "run": null,
+      "expected": []
+    },
+    {
+      "id": "an-owed-window-starts-the-run",
+      "windows": [
+        "left"
+      ],
+      "owed": true,
+      "run": null,
+      "expected": [
+        "toolRunStart"
+      ]
+    },
+    {
+      "id": "an-unservable-graph-starts-nothing",
+      "windows": [
+        "left"
+      ],
+      "owed": true,
+      "servable": false,
+      "run": null,
+      "expected": []
+    },
+    {
+      "id": "a-live-run-is-only-woken",
+      "windows": [
+        "left"
+      ],
+      "owed": true,
+      "run": {
+        "state": "running",
+        "generation": 0
+      },
+      "expected": []
+    },
+    {
+      "id": "a-settled-complete-run-is-finalized",
+      "windows": [
+        "left"
+      ],
+      "owed": false,
+      "run": {
+        "state": "complete",
+        "generation": 0,
+        "settledGeneration": 0
+      },
+      "expected": [
+        "toolRunFinalize"
+      ],
+      "note": "A complete run is finalized as soon as it is seen, owed or not: `complete` means the job is done and the run awaits its finalize, and a run left standing in it makes every later `toolRunStart` a no-op against the run already there (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`)."
+    },
+    {
+      "id": "a-complete-run-whose-document-moved-is-finalized",
+      "windows": [
+        "left"
+      ],
+      "owed": false,
+      "run": {
+        "state": "complete",
+        "generation": 1,
+        "settledGeneration": 0
+      },
+      "expected": [
+        "toolRunFinalize"
+      ]
+    },
+    {
+      "id": "a-complete-run-with-an-owed-window-is-finalized-first",
+      "windows": [
+        "left"
+      ],
+      "owed": true,
+      "run": {
+        "state": "complete",
+        "generation": 0,
+        "settledGeneration": 0
+      },
+      "expected": [
+        "toolRunFinalize"
+      ],
+      "note": "The start follows on the poll that first sees the finalized run — never paired into this one: the host schedules a poll's effects independently, so a start beside a finalize lands while the run is still complete and is dropped."
+    },
+    {
+      "id": "a-finalized-run-restarts-once",
+      "windows": [
+        "left"
+      ],
+      "owed": false,
+      "restartOwed": true,
+      "run": {
+        "state": "finalized",
+        "generation": 1
+      },
+      "expected": [
+        "toolRunStart"
+      ]
+    },
+    {
+      "id": "an-aborted-run-stays-down",
+      "windows": [
+        "left"
+      ],
+      "owed": false,
+      "run": {
+        "state": "aborted",
+        "generation": 0
+      },
+      "expected": []
+    },
+    {
+      "id": "an-aborted-run-restarts-when-a-gesture-owes-it",
+      "windows": [
+        "left"
+      ],
+      "owed": true,
+      "run": {
+        "state": "aborted",
+        "generation": 0
+      },
+      "expected": [
+        "toolRunStart"
+      ]
+    }
+  ],
+  "gestureRearm": {
+    "note": "What a LANDED GESTURE owes the attached preview windows, and what that debt may cost in run actions. A gesture that MOVED THE DOCUMENT owes every attached window exactly one fresh evaluation; one that authored no artifact mutation owes a settled run nothing. Recording the debt is only half of paying it: a LIVE run is woken through its port, but a surface whose run has settled and been finalized holds nothing that would ask the host for another `pending_effects` poll — the host polls once per refresh and refreshes on ACTIVITY — so such a gesture carries the run start on its OWN emit (`gestureEffects`). `startLagPolls` is how many further polls the host takes before its run view reports what a request created: a request is not a state change, so an implementation that re-reads only `owed` asks again on every refresh. However long the lag, one gesture costs at most ONE `toolRunStart`, counting the one its emit carried. `runIsLive` is a link holding a job port and `runHasSettled` whether that job already reached its terminal hop: only an UNSETTLED job can be woken into more work, so a settled one leaves the gesture carrying the start itself.",
+    "rows": [
+      {
+        "id": "a-landed-document-mutation-re-arms-one-tick-per-attached-preview",
+        "windows": [
+          "left",
+          "right"
+        ],
+        "windowsSettled": true,
+        "artifactMutations": 1,
+        "servable": true,
+        "runIsLive": false,
+        "polls": 6,
+        "startLagPolls": 3,
+        "pollStartView": "finalized",
+        "expected": {
+          "owes": true,
+          "owedWindows": [
+            "left",
+            "right"
+          ],
+          "hops": [
+            "left",
+            "right"
+          ],
+          "starts": 1,
+          "gestureEffects": [
+            "toolRunStart"
+          ]
+        },
+        "runHasSettled": true
+      },
+      {
+        "id": "a-gesture-that-moved-no-document-owes-the-settled-run-nothing",
+        "windows": [
+          "left",
+          "right"
+        ],
+        "windowsSettled": true,
+        "artifactMutations": 0,
+        "servable": true,
+        "runIsLive": false,
+        "polls": 6,
+        "startLagPolls": 3,
+        "pollStartView": "finalized",
+        "expected": {
+          "owes": false,
+          "owedWindows": [],
+          "hops": [],
+          "starts": 0,
+          "gestureEffects": []
+        },
+        "runHasSettled": true
+      },
+      {
+        "id": "a-mutation-with-no-attached-preview-starts-nothing",
+        "windows": [],
+        "windowsSettled": true,
+        "artifactMutations": 2,
+        "servable": true,
+        "runIsLive": false,
+        "polls": 6,
+        "startLagPolls": 3,
+        "pollStartView": "finalized",
+        "expected": {
+          "owes": true,
+          "owedWindows": [],
+          "hops": [],
+          "starts": 0,
+          "gestureEffects": []
+        },
+        "runHasSettled": true
+      },
+      {
+        "id": "a-slow-run-view-still-costs-one-start",
+        "windows": [
+          "left"
+        ],
+        "windowsSettled": true,
+        "artifactMutations": 1,
+        "servable": true,
+        "runIsLive": false,
+        "polls": 12,
+        "startLagPolls": 9,
+        "pollStartView": "finalized",
+        "expected": {
+          "owes": true,
+          "owedWindows": [
+            "left"
+          ],
+          "hops": [
+            "left"
+          ],
+          "starts": 1,
+          "gestureEffects": [
+            "toolRunStart"
+          ]
+        },
+        "runHasSettled": true
+      },
+      {
+        "id": "an-unservable-graph-carries-no-start",
+        "windows": [
+          "left"
+        ],
+        "windowsSettled": true,
+        "artifactMutations": 1,
+        "servable": false,
+        "runIsLive": false,
+        "polls": 6,
+        "startLagPolls": 3,
+        "pollStartView": "finalized",
+        "expected": {
+          "owes": true,
+          "owedWindows": [
+            "left"
+          ],
+          "hops": [
+            "left"
+          ],
+          "starts": 0,
+          "gestureEffects": []
+        },
+        "runHasSettled": true
+      },
+      {
+        "id": "a-live-run-is-woken-not-restarted",
+        "windows": [
+          "left"
+        ],
+        "windowsSettled": true,
+        "artifactMutations": 1,
+        "servable": true,
+        "runIsLive": true,
+        "polls": 6,
+        "startLagPolls": 3,
+        "pollStartView": "running",
+        "expected": {
+          "owes": true,
+          "owedWindows": [
+            "left"
+          ],
+          "hops": [
+            "left"
+          ],
+          "starts": 0,
+          "gestureEffects": []
+        },
+        "runHasSettled": false
+      },
+      {
+        "id": "a-boot-poll-ladder-costs-one-start",
+        "windows": [
+          "left"
+        ],
+        "windowsSettled": false,
+        "artifactMutations": 0,
+        "servable": true,
+        "runIsLive": false,
+        "polls": 6,
+        "startLagPolls": 3,
+        "pollStartView": "none",
+        "expected": {
+          "owes": false,
+          "owedWindows": [
+            "left"
+          ],
+          "hops": [
+            "left"
+          ],
+          "starts": 1,
+          "gestureEffects": []
+        },
+        "runHasSettled": true
+      },
+      {
+        "id": "a-complete-run-poll-ladder-finalizes-and-starts-once",
+        "windows": [
+          "left"
+        ],
+        "windowsSettled": false,
+        "artifactMutations": 0,
+        "servable": true,
+        "runIsLive": false,
+        "polls": 12,
+        "startLagPolls": 3,
+        "pollStartView": "complete",
+        "expected": {
+          "owes": false,
+          "owedWindows": [
+            "left"
+          ],
+          "hops": [
+            "left"
+          ],
+          "starts": 1,
+          "gestureEffects": []
+        },
+        "runHasSettled": true
+      },
+      {
+        "id": "a-settled-job-cannot-be-woken-so-the-gesture-carries-the-start",
+        "windows": [
+          "left"
+        ],
+        "windowsSettled": true,
+        "artifactMutations": 1,
+        "servable": true,
+        "runIsLive": true,
+        "runHasSettled": true,
+        "polls": 6,
+        "startLagPolls": 3,
+        "pollStartView": "finalized",
+        "expected": {
+          "owes": true,
+          "owedWindows": [
+            "left"
+          ],
+          "hops": [
+            "left"
+          ],
+          "starts": 1,
+          "gestureEffects": [
+            "toolRunStart"
+          ]
+        }
+      }
+    ]
+  },
+  "jobSupersession": {
+    "note": "Which closing run job may quiesce the session. A `toolRunStart` retires the previous entry, so the OLD job's close runs after the NEW job has already installed its own port and reset the link's settled marker — and a closing job that reads the new run's markers as its own cancels the evaluation the new run is in the middle of, which paints the fresh preview `cancelled` and empties it. Only the job the link currently belongs to closes the session; a superseded one closes quietly, touching nothing. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.",
+    "rows": [
+      {
+        "id": "the-owning-job-closes-the-session",
+        "linkRun": 1,
+        "closingRun": 1,
+        "settled": false,
+        "expected": {
+          "owns": true,
+          "cancels": true,
+          "clearsPort": true
+        }
+      },
+      {
+        "id": "a-settled-owning-job-closes-without-cancelling",
+        "linkRun": 1,
+        "closingRun": 1,
+        "settled": true,
+        "expected": {
+          "owns": true,
+          "cancels": false,
+          "clearsPort": true
+        }
+      },
+      {
+        "id": "a-superseded-job-closes-quietly",
+        "linkRun": 1,
+        "closingRun": 2,
+        "settled": false,
+        "expected": {
+          "owns": false,
+          "cancels": false,
+          "clearsPort": false
+        }
+      },
+      {
+        "id": "a-job-whose-link-holds-no-run-closes-quietly",
+        "linkRun": null,
+        "closingRun": 1,
+        "settled": false,
+        "expected": {
+          "owns": false,
+          "cancels": false,
+          "clearsPort": false
+        }
+      }
+    ]
+  }
+}

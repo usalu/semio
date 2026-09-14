@@ -1,0 +1,12 @@
+{
+  "mutation": "appendContent",
+  "contentId": "remodeling-asset-3583f57e5be8856bdf3e1db4318032b0f9a3abdfa3847e14e81208e3dbd6f80b-0000000000000024",
+  "kind": "sparse",
+  "mime": null,
+  "width": 0,
+  "height": 0,
+  "first": 2,
+  "chunks": [
+    "AAAAPwAAgD8AAIC+AADAPwAAAAAAAABAAACAvwAAgD4AAEA/"
+  ]
+}

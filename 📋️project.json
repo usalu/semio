@@ -288,6 +288,34 @@
         "command": "bun ./📜️script.ts verify media-export-encoding native"
       }
     },
+    "file-open-import": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify file-open-import"
+      }
+    },
+    "file-open-import-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify file-open-import native"
+      }
+    },
+    "ui-dirty-scope": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify ui-dirty-scope"
+      }
+    },
+    "ui-dirty-scope-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify ui-dirty-scope native"
+      }
+    },
     "spawned-job-drive": {
       "executor": "nx:run-commands",
       "cache": false,

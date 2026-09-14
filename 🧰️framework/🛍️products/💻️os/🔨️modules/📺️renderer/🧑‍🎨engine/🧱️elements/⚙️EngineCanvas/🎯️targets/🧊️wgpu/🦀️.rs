@@ -13,7 +13,7 @@ use framework_editor::EditorHost;
 use framework_surface_node_graph::node_graph::GraphHost;
 use framework_surface_tiled_map::tiled_map::{MapHost, MapInteractionIntent};
 use infinite_canvas as canvas;
-use infinite_world::world::{WorldAssetFault, WorldAssetRequestKind};
+use infinite_world::world::{tool_run_trace, WorldAssetFault, WorldAssetRequestKind};
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
 use std::mem::ManuallyDrop;
@@ -64,6 +64,11 @@ struct EngineSurface {
     board_pointer_inside: bool,
     board_pointer_claim: Option<ui_wgpu::wgpu::BoundedActionClaim>,
     board_pointer_controller_id: Option<String>,
+    /// ⏯️ The board's resident tool run trace (`Board2dScene.tool_run_trace`), its placement footprints by kind index and
+    /// the theme verdict palette it paints with. Every column is plain data, so retirement drops it in O(batches).
+    board_trace: tool_run_trace::ToolRunTraceLayer,
+    board_trace_shapes: Vec<tool_run_trace::ToolRunTraceShape2d>,
+    board_trace_palette: Option<tool_run_trace::ToolRunTracePalette>,
     editor: Option<EditorHost>,
     editor_scene_pack: Option<Vec<u8>>,
     width: u32,
@@ -374,6 +379,9 @@ impl EngineSurfaceRetirement {
             board_pointer_inside: _,
             board_pointer_claim,
             board_pointer_controller_id,
+            board_trace: _,
+            board_trace_shapes: _,
+            board_trace_palette: _,
             editor: editor_source,
             editor_scene_pack,
             width: _,
@@ -485,6 +493,7 @@ impl EngineSurfaceRetirement {
             || Self::close_string(&mut cache.brush_weights_json)
             || Self::close_string(&mut cache.lod_mode)
             || Self::close_string(&mut cache.size_key)
+            || Self::close_string(&mut cache.tool_run_trace_window_id)
         {
             return false;
         }
@@ -1515,6 +1524,7 @@ struct BoardSyncCache {
     brush_weights_json: Option<String>,
     lod_mode: Option<String>,
     size_key: Option<String>,
+    tool_run_trace_window_id: Option<String>,
 }
 
 fn node_graph_sync_terminal(cache: &NodeGraphSyncCache) -> bool {
@@ -1561,6 +1571,7 @@ fn board_sync_terminal(cache: &BoardSyncCache) -> bool {
         && cache.brush_weights_json.is_none()
         && cache.lod_mode.is_none()
         && cache.size_key.is_none()
+        && cache.tool_run_trace_window_id.is_none()
 }
 
 /// 🧵️ Worker-safe retained cell whose existing `with`/`borrow` call shape keeps scene code concise.
@@ -1667,6 +1678,9 @@ fn empty_engine_surface(pw: u32, ph: u32) -> EngineSurface {
         board_pointer_inside: false,
         board_pointer_claim: None,
         board_pointer_controller_id: None,
+        board_trace: tool_run_trace::ToolRunTraceLayer::default(),
+        board_trace_shapes: Vec::new(),
+        board_trace_palette: None,
         editor: None,
         editor_scene_pack: None,
         width: pw.max(1),
@@ -2368,8 +2382,83 @@ fn sync_board_engine(host: &mut infinite_canvas::BoardHost, cache: &mut BoardSyn
     changed
 }
 
+/// ⏯️ Feeds a board's `toolRunTrace` lane into its resident trace layer, refreshes the placement footprints when the kind
+/// catalogs change and the verdict palette from `theme`, and remembers the window its cursor is echoed for. A malformed lane
+/// keeps the previous records.
+fn sync_board_tool_run_trace(entry: &mut EngineSurface, board: &ui_wgpu::wgpu::Board2dScene, window_id: &str, theme: &Theme, catalogs_changed: bool) -> bool {
+    let applied = entry.board_trace.apply_lane(board.tool_run_trace.as_deref()).is_ok_and(|applied| applied.pages > 0 || applied.cleared);
+    if catalogs_changed || entry.board_trace_shapes.is_empty() {
+        entry.board_trace_shapes = tool_run_trace::board2d_tool_run_trace_shapes(&board.glyph_catalogs_json);
+    }
+    entry.board_trace_palette = Some(tool_run_trace::ToolRunTracePalette::from_theme(theme));
+    if entry.board_sync_cache.tool_run_trace_window_id.as_deref() != Some(window_id) {
+        entry.board_sync_cache.tool_run_trace_window_id = Some(window_id.to_string());
+    }
+    applied
+}
+
+/// 🖌️ Paints the board's placement2d trace over its vector scene: one filled footprint per visible record at the host's
+/// live camera, the newest `testing` record outlined. Mirrors React's `ToolRunTrace2dLayer`.
+fn append_board_tool_run_trace(painted: &mut canvas::Scene, host: &infinite_canvas::BoardHost, entry: &EngineSurface) {
+    let Some(palette) = entry.board_trace_palette.as_ref() else { return };
+    if entry.board_trace.is_empty() {
+        return;
+    }
+    let origin = host.world_to_screen(canvas::Point::new(0.0, 0.0));
+    let unit = host.world_to_screen(canvas::Point::new(1.0, 0.0));
+    let zoom = (unit.x - origin.x).hypot(unit.y - origin.y);
+    let highlight = palette.testing.with_alpha(1.0);
+    for draw in entry.board_trace.placement_draws(palette, tool_run_trace::ToolRunTraceVisibility::default()) {
+        let Some(shape) = entry.board_trace_shapes.get(draw.shape as usize) else { continue };
+        let center = host.world_to_screen(canvas::Point::new(f64::from(draw.position[0]), f64::from(draw.position[1])));
+        let (sin, cos) = f64::from(draw.rotation).sin_cos();
+        let transform = canvas::Affine::new([zoom * cos, zoom * sin, -zoom * sin, zoom * cos, center.x, center.y]);
+        let color = canvas::Color::new([draw.color.r, draw.color.g, draw.color.b, draw.color.a]);
+        let outline = draw.newest.then(|| (canvas::Stroke::new(ui_styling::metrics::tool_run::TESTING_OUTLINE_WIDTH / zoom.max(f64::EPSILON)), canvas::Color::new([highlight.r, highlight.g, highlight.b, highlight.a])));
+        match *shape {
+            tool_run_trace::ToolRunTraceShape2d::Circle { radius } => {
+                let circle = canvas::Circle::new(canvas::Point::new(0.0, 0.0), radius);
+                painted.fill(canvas::FillRule::NonZero, transform, color, None, &circle);
+                if let Some((stroke, stroke_color)) = outline.as_ref() {
+                    painted.stroke(stroke, transform, *stroke_color, None, &circle);
+                }
+            }
+            tool_run_trace::ToolRunTraceShape2d::Rectangle { width, height } => {
+                let rect = canvas::Rect::new(-width * 0.5, -height * 0.5, width * 0.5, height * 0.5);
+                painted.fill(canvas::FillRule::NonZero, transform, color, None, &rect);
+                if let Some((stroke, stroke_color)) = outline.as_ref() {
+                    painted.stroke(stroke, transform, *stroke_color, None, &rect);
+                }
+            }
+        }
+    }
+}
+
+/// 🧭️ The `toolRunTraceCursor` every board surface echoes, keyed by the window it paints into — merged into the live view
+/// state next to `world3d_tool_run_trace_cursors`.
+pub fn board2d_tool_run_trace_cursors() -> HashMap<String, semio_framework::ToolRunTraceCursor> {
+    ENGINE_SURFACES.with(|cell| {
+        cell.borrow_mut()
+            .values_mut()
+            .filter(|entry| entry.board_host.is_some())
+            .filter_map(|entry| Some((entry.board_sync_cache.tool_run_trace_window_id.clone()?, entry.board_trace.cursor()?)))
+            .collect()
+    })
+}
+
+/// 🔍️ Resident trace records and footprints of one board surface, for the attach law.
+#[cfg(test)]
+pub(crate) fn board2d_tool_run_trace_state(surface_id: &str) -> Option<(usize, usize, usize)> {
+    ENGINE_SURFACES.with(|cell| {
+        let registry = cell.borrow_mut();
+        let entry = registry.get(surface_id)?;
+        let palette = entry.board_trace_palette?;
+        Some((entry.board_trace.len(), entry.board_trace_shapes.len(), entry.board_trace.placement_draws(&palette, tool_run_trace::ToolRunTraceVisibility::default()).len()))
+    })
+}
+
 /// 🎲️ Attaches — and drives — the `BoardHost` behind one `SurfaceKind::Board2d` scene.
-pub fn sync_board2d_scene(scene: &UiComponentSceneNode, window_id: &str, bounds: Rect) -> bool {
+pub fn sync_board2d_scene(scene: &UiComponentSceneNode, window_id: &str, bounds: Rect, theme: &Theme) -> bool {
     let Some(board) = scene.board2d.as_ref() else {
         return false;
     };
@@ -2385,8 +2474,11 @@ pub fn sync_board2d_scene(scene: &UiComponentSceneNode, window_id: &str, bounds:
         if created {
             entry.board_host = Some(ManuallyDrop::new(infinite_canvas::BoardHost::default()));
         }
+        let catalogs_changed = entry.board_sync_cache.glyph_catalogs_json.as_deref() != Some(board.glyph_catalogs_json.as_str());
         let host = entry.board_host.as_mut()?;
-        if sync_board_engine(host, &mut entry.board_sync_cache, board, width, height) || created {
+        let engine_changed = sync_board_engine(host, &mut entry.board_sync_cache, board, width, height);
+        let trace_changed = sync_board_tool_run_trace(entry, board, window_id, theme, catalogs_changed);
+        if engine_changed || trace_changed || created {
             entry.scene_revision = entry.scene_revision.wrapping_add(1);
         }
         Some(created)
@@ -2410,7 +2502,7 @@ pub fn sync_engine_scene(scene: &UiComponentSceneNode, window_id: &str, bounds: 
     match scene.component_kind {
         SurfaceKind::NodeGraph => sync_node_graph_scene(scene, window_id, bounds, theme.panel),
         SurfaceKind::TiledMap => sync_tiled_map_scene(scene, window_id, bounds, theme),
-        SurfaceKind::Board2d => sync_board2d_scene(scene, window_id, bounds),
+        SurfaceKind::Board2d => sync_board2d_scene(scene, window_id, bounds, theme),
         _ => false,
     }
 }
@@ -2442,7 +2534,12 @@ pub fn stage_engine_scene_paint(scene: &UiComponentSceneNode, bounds: Rect, clea
                 host.prepare_visible_tiles();
                 host.build_vector_scene()
             }
-            SurfaceKind::Board2d => entry.board_host.as_ref()?.build_vector_scene(),
+            SurfaceKind::Board2d => {
+                let host = entry.board_host.as_ref()?;
+                let mut painted = host.build_vector_scene();
+                append_board_tool_run_trace(&mut painted, host, entry);
+                painted
+            }
             _ => return None,
         };
         Some(StagedEngineScene {

@@ -119,6 +119,8 @@ impl Default for Puzzle5dRuntime {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dConfig {
+    #[value(default = "default_fill_count")]
+    pub fill_count: u32,
     #[value(default = "default_overlap_budget")]
     pub overlap_budget: f64,
     #[value(default)]
@@ -129,7 +131,7 @@ pub struct Puzzle5dConfig {
 
 impl Default for Puzzle5dConfig {
     fn default() -> Self {
-        Self { overlap_budget: default_overlap_budget(), object_kind_weights: HashMap::new(), vortex_kind_weights: HashMap::new() }
+        Self { fill_count: default_fill_count(), overlap_budget: default_overlap_budget(), object_kind_weights: HashMap::new(), vortex_kind_weights: HashMap::new() }
     }
 }
 

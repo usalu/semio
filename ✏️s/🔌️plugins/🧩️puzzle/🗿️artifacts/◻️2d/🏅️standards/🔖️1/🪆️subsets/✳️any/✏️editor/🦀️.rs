@@ -7,8 +7,8 @@
 //!
 //! 🌉️ `ArtifactApp::Snapshot` is the `Puzzle2dPlaySnapshot` newtype over a bare
 //! `serde_json::Value` fixture (see `crate::standards::v1::subsets::any::schema::mutations::text`'s `🔖️ValueBridge`), not the typed
-//! `Puzzle2dSnapshot`. Ordinary commands derive granular typed deltas; mounted fill continuations
-//! bypass whole fixture materialization and publish their already-prepared typed mutations directly.
+//! `Puzzle2dSnapshot`. Ordinary commands derive granular typed deltas; the fill tool run appends its
+//! typed placement mutations to the framework tool run ledger and finalize publishes them as one edit.
 
 use crate::editor::puzzle2d::commands::{
     add_node, apply_board_events, cancel_slot, commit_slot, cycle_candidate, delete_selection, duplicate_selection, engagement_abort, engagement_control_select, engagement_input, engagement_submit, focus_selection, force_layout, lod_scale_json,
@@ -20,6 +20,7 @@ use crate::editor::puzzle2d::engine::board_host::puzzle_board_host;
 use crate::editor::puzzle2d::engine::{BoardHost, Puzzle2dExtension};
 use crate::editor::puzzle2d::modes::edit;
 use crate::editor::puzzle2d::modes::edit::tools::fill;
+use crate::editor::puzzle2d::precompute::fill as fill_run;
 use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::{brush as brush_utility, select as select_utility};
 use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
 use crate::editor::puzzle2d::panels::{catalogue, document, inspection};
@@ -845,11 +846,6 @@ puzzle2d_command_variants! {
     Reorganize = "reorganize",
     ApplyBoardEvents = "applyBoardEvents",
     SetFillCount = "setFillCount",
-    BrushFillSessionStep = "brushFillSessionStep",
-    BrushFillSessionAdopt = "brushFillSessionAdopt",
-    BrushFillSessionCancel = "brushFillSessionCancel",
-    BrushFillSessionRetry = "brushFillSessionRetry",
-    BrushFillSessionDiscard = "brushFillSessionDiscard",
     BrushCommitSlot = "brushCommitSlot",
     SetCamera = "setCamera",
     EngagementInput = "engagementInput",
@@ -866,12 +862,11 @@ puzzle2d_command_variants! {
     BrushSetCandidateIndex = "brushSetCandidateIndex",
     BrushOpenSlot = "brushOpenSlot",
     BrushCancelSlot = "brushCancelSlot",
-    BrushFillSessionBegin = "brushFillSessionBegin",
-    BrushFillSessionClear = "brushFillSessionClear",
     LodScaleJson = "lodScaleJson",
 }
 
 impl protocol::OpBinary for Puzzle2dCommand {
+    const TOOL_JOB_IDS: &'static [&'static str] = PUZZLE2D_RETAINED_TOOL_IDS;
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
     }
@@ -1027,13 +1022,6 @@ pub(crate) const PUZZLE2D_RETAINED_TOOL_IDS: &[&str] = &[
     "brushCancelSlot",
     "brushCommitSlot",
     "brushCycleCandidate",
-    "brushFillSessionAdopt",
-    "brushFillSessionBegin",
-    "brushFillSessionCancel",
-    "brushFillSessionClear",
-    "brushFillSessionDiscard",
-    "brushFillSessionRetry",
-    "brushFillSessionStep",
     "brushOpenSlot",
     "brushSetCandidateIndex",
     "deleteSelection",
@@ -1062,7 +1050,7 @@ const PUZZLE2D_RETAINED_PAYLOAD_SCHEMA: &str = "puzzle.2d.fixture.tool-command.v
 /// 🎬️ The retained verbs whose whole completion is [`puzzle2d_dispatch_emit`] — one `🎮️commands/*`
 /// arm run over a rebuilt scene/board host, then the same document delta and config snapshot
 /// `handle` derives. Everything outside this list carries a bespoke `Work` (`setActiveExample`,
-/// `forceLayout`/`reorganize`, the fill session) or an isolated reducer (`addNode`).
+/// `forceLayout`/`reorganize`) or an isolated reducer (`addNode`).
 const PUZZLE2D_GENERIC_TOOL_IDS: &[&str] = &[
     "brushCancelSlot",
     "brushCommitSlot",
@@ -1080,6 +1068,7 @@ const PUZZLE2D_GENERIC_TOOL_IDS: &[&str] = &[
     "setBrushKindWeights",
     "setBrushNodeSize",
     "setCamera",
+    "setFillCount",
     "setGridFactor",
     "setGridSnapEnabled",
     "setLodModeForPane",
@@ -1176,18 +1165,11 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle2dRetainedCom
         ArtifactToolPublicationContract { tool_id: "setSuggestionOffset", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "applyBoardEvents", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "brushCommitSlot", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
-        ArtifactToolPublicationContract { tool_id: "brushFillSessionAdopt", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
-        ArtifactToolPublicationContract { tool_id: "brushFillSessionBegin", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig] },
-        ArtifactToolPublicationContract { tool_id: "brushFillSessionCancel", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
-        ArtifactToolPublicationContract { tool_id: "brushFillSessionClear", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
-        ArtifactToolPublicationContract { tool_id: "brushFillSessionDiscard", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
-        ArtifactToolPublicationContract { tool_id: "brushFillSessionRetry", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig] },
-        ArtifactToolPublicationContract { tool_id: "brushFillSessionStep", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "duplicateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "patchInspectorNodes", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] },
-        ArtifactToolPublicationContract { tool_id: "setFillCount", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "setFillCount", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setSelectionFlag", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "lodScaleJson", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "selectSameKind", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -1685,6 +1667,7 @@ fn puzzle2d_dispatch_emit(
             "setBrushKindWeights" => set_brush_kind_weights::set_brush_kind_weights(ctx, args),
             "setBrushNodeSize" => set_brush_node_size::set_brush_node_size(ctx, args),
             "setSuggestionOffset" => set_suggestion_offset::set_suggestion_offset(ctx, args),
+            "setFillCount" => set_fill_count::set_fill_count(ctx, args),
             "brushCycleCandidate" => cycle_candidate::cycle_candidate(ctx, args),
             "brushSetCandidateIndex" => set_candidate_index::set_candidate_index(ctx, args),
             "brushOpenSlot" => open_slot::open_slot(ctx, args),
@@ -2852,77 +2835,21 @@ use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault,
 use semio_framework_plugin::app::ArtifactToolCompletionRejection;
 use semio_framework_plugin::{ArtifactReservedJob, ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, ArtifactToolCompletion, MediaPayload, PluginCloseStep};
 
-/// 🔌️ `import-media`'s own route cap. A `Media` reserved-tool input never travels through
-/// `RetainedToolWireInput` — the framework builds it with an empty `raw_wire` — so this bounds the
-/// admitted structured fragment rather than a wire payload, and is unrelated to the 8,192-byte
-/// `crate::retained_command::PUZZLE_COMMAND_RAW_BYTES` the four retained verbs share.
-const PUZZLE2D_IMPORT_RAW_BYTES: usize = 65_536;
 /// 🔢️ Fixed per-collection descriptor budget for one `kit:in` fragment — an oversized collection is
 /// refused outright rather than silently truncated.
 const PUZZLE2D_IMPORT_SEMANTIC_ITEMS: usize = 64;
 const PUZZLE2D_IMPORT_DECODED_ITEMS: usize = 4_096;
-const PUZZLE2D_IMPORT_WORK_UNITS: u64 = 4_096;
-const PUZZLE2D_IMPORT_OUTPUT_BYTES: usize = 1_048_576;
 /// 🧬️ At most one `connect-kind-compatibility` per admitted relation row, plus the single
 /// `replace-kind-catalogs` that carries the merged bundle.
 const PUZZLE2D_IMPORT_MUTATION_ITEMS: usize = PUZZLE2D_IMPORT_SEMANTIC_ITEMS + 1;
 const PUZZLE2D_IMPORT_TOOL_ID: &str = "import-media";
 const PUZZLE2D_IMPORT_PORT: &str = "kit:in";
-const PUZZLE2D_IMPORT_PAYLOAD_SCHEMA: &str = "puzzle.2d.reserved.import-media.v1";
 /// 🗂️ The exact root keys a `kit.catalog` fragment may carry — the shape
 /// `Block2dPlayApp::export_media("catalog:out")` produces via
 /// `crate::standards::v1::subsets::any::schema::inferences::puzzle2d_manifest_fragment`, which is puzzle2d's
 /// own manifest vocabulary (`s/plugin/puzzle/app/2d/manifest/🔣️.json`), not block3d's.
 const PUZZLE2D_IMPORT_ROOT_KEYS: &[&str] = &["schema", "id", "name", "axes", "portKinds", "wireKinds", "edgeKinds", "nodeKinds", "kindCompatibility"];
 const PUZZLE2D_IMPORT_COLLECTIONS: &[&str] = &["portKinds", "wireKinds", "edgeKinds", "nodeKinds", "kindCompatibility"];
-
-/// 🏭️ puzzle2d's app-owned `import-media` factory — the root policy's importer-cohort census
-/// (`📊️p8yj-importer-cohorts.json`) requires every `ArtifactApp` owning an inbound media port to own
-/// an explicit resumable importer; the framework registers none on an app's behalf, so without this
-/// registration `qualified_tool_proof("import-media")` never resolves and every `kit:in` delivery
-/// fails closed.
-struct Puzzle2dImportJobFactory {
-    keys: [ToolFactoryKey; 1],
-}
-
-impl Puzzle2dImportJobFactory {
-    fn new(controller_id: &str) -> Self {
-        Self { keys: [ToolFactoryKey::new(controller_id, PUZZLE2D_IMPORT_TOOL_ID)] }
-    }
-}
-
-impl ToolJobFactory for Puzzle2dImportJobFactory {
-    type Payload = ArtifactReservedToolJob;
-    type Job = ArtifactReservedToolJob;
-
-    fn keys(&self) -> &[ToolFactoryKey] {
-        &self.keys
-    }
-
-    fn payload_schema_id(&self) -> &str {
-        PUZZLE2D_IMPORT_PAYLOAD_SCHEMA
-    }
-
-    fn classification(&self) -> InteractiveJobClassification {
-        InteractiveJobClassification::Migrated
-    }
-
-    fn execution_contract(&self) -> semio_framework::ToolExecutionContract {
-        semio_framework::ToolExecutionContract::resumable(PUZZLE2D_IMPORT_RAW_BYTES, PUZZLE2D_IMPORT_DECODED_ITEMS, PUZZLE2D_IMPORT_WORK_UNITS, PUZZLE2D_IMPORT_OUTPUT_BYTES, 7_500, 1, 1)
-    }
-
-    fn create_job(&mut self, operation: semio_framework_job::Operation, mut payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        payload.bind_operation(operation)?;
-        Ok(payload)
-    }
-}
-
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle2dImportJobFactory {
-    type Owner = EditorApp<Puzzle2dPlayApp>;
-    const TOOL_IDS: &'static [&'static str] = &[PUZZLE2D_IMPORT_TOOL_ID];
-    const DOCUMENT_SCHEMA: &'static str = PUZZLE2D_FIXTURE_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: PUZZLE2D_IMPORT_TOOL_ID, lanes: &[ArtifactToolPublicationLane::Artifact] }];
-}
 
 fn puzzle2d_job_payload(cx: &mut StepContext<'_>, stream: JobPayloadStream, bytes: &[u8]) -> RetainedJobPayload {
     match cx.payload_from_bytes(stream, bytes) {
@@ -3541,6 +3468,31 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<NoDraft, NoDraftMutation>())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+    }
+
+    /// 👥️ Puzzle 2d presence is three inline camera scalars, so the default root is its exact empty terminal.
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |_| true).expect("default Puzzle2d presence is the exact empty terminal")))
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
     fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         window::register_config(registry)
     }
@@ -3574,9 +3526,8 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         Puzzle2dCommand::try_from_action(action, args, window_id).ok_or_else(|| Fault::from(format!("unknown Puzzle 2D action '{action}'")))
     }
 
-    /// 🎬️ Routes the example load through its own `Work` and mounted fill continuations through the
-    /// fill runtime, both before document materialization; every other command runs the one shared
-    /// [`puzzle2d_dispatch_emit`] pipeline the retained generic reduce runs.
+    /// 🎬️ Routes the example load through its own `Work` before document materialization; every other
+    /// command runs the one shared [`puzzle2d_dispatch_emit`] pipeline the retained generic reduce runs.
     fn handle(
         command: &Puzzle2dCommand,
         doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>,
@@ -3590,13 +3541,6 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         let (action, _args) = (command.action_id(), command.args());
         if action == "setActiveExample" {
             return puzzle2d_active_example_emit(command, doc.snapshot, config);
-        }
-        // 🪣️ Every fill verb is `Migrated`: the session lives inside `Puzzle2dFillSessionWork`, which
-        // owns the capture ingress, the search job and the placement cursor across its own steps. There
-        // is nothing a single synchronous `handle` call could run that would match it, so this path
-        // refuses rather than silently diverging (see `🎮️commands/🧮️set-fill-count/🦀️.rs`).
-        if set_fill_count::is_fill_session_action(action) {
-            return Err(Fault::from("puzzle2d-fill-requires-retained-job"));
         }
         let window_config = window::config_from_view_or_document(cfg, &doc.snapshot.0);
         let window_transient = Puzzle2dWindowTransient::default();
@@ -3622,13 +3566,6 @@ impl ArtifactEditor for Puzzle2dPlayApp {
             "brushCancelSlot",
             "brushCommitSlot",
             "brushCycleCandidate",
-            "brushFillSessionAdopt",
-            "brushFillSessionBegin",
-            "brushFillSessionCancel",
-            "brushFillSessionClear",
-            "brushFillSessionDiscard",
-            "brushFillSessionRetry",
-            "brushFillSessionStep",
             "brushOpenSlot",
             "brushSetCandidateIndex",
             "deleteSelection",
@@ -3656,7 +3593,6 @@ impl ArtifactEditor for Puzzle2dPlayApp {
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
-        registry.register(Puzzle2dImportJobFactory::new(&controller))?;
         registry.register(Puzzle2dRetainedCommandJobFactory::new(&controller))
     }
 
@@ -3676,7 +3612,6 @@ impl ArtifactEditor for Puzzle2dPlayApp {
             generic if PUZZLE2D_GENERIC_TOOL_IDS.contains(&generic) => Box::new(Puzzle2dWindowCommandWork::new(generic, puzzle2d_generic_extent)),
             host_only if PUZZLE2D_HOST_ONLY_TOOL_IDS.contains(&host_only) => Box::new(crate::retained_command::NoopPuzzleCommandWork::new(host_only)),
             "redrawHandles" => Box::new(Puzzle2dRedrawHandlesWork::default()),
-            fill if set_fill_count::is_fill_session_action(fill) => Box::new(set_fill_count::Puzzle2dFillSessionWork::new(fill)),
             _ => return Err(Fault::from("puzzle2d-command-tool-unmapped")),
         };
         work.bind_view_state(request.context.view_state.clone());
@@ -3694,6 +3629,21 @@ impl ArtifactEditor for Puzzle2dPlayApp {
             work,
         };
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
+
+    /// ⏯️ Builds the fill tool run's jobs (`ToolRunDefinition.runJob` / `.revalidateJob`): the run job over the run's
+    /// base with the config's requested count, resuming from the ledger's checkpoint and provisional ops, and the
+    /// revalidate job over the committed head.
+    fn build_tool_run_job(request: semio_framework_plugin::ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<semio_framework_plugin::ToolRunJob>, Fault> {
+        if request.tool_id != fill::TOOL_ID {
+            return Ok(None);
+        }
+        Ok(Some(match request.purpose {
+            semio_framework_plugin::ToolRunJobPurpose::Run => {
+                Box::new(fill_run::Puzzle2dFillRunJob::new(request.identity, request.snapshot, crate::editor::puzzle2d::config::PUZZLE2D_DEFAULT_SUGGESTION_OFFSET, request.config.fill_count, request.checkpoint, request.provisional).map_err(Fault::from)?)
+            }
+            semio_framework_plugin::ToolRunJobPurpose::Revalidate => Box::new(fill_run::Puzzle2dFillRevalidateJob::new(request.identity, request.snapshot, request.provisional, request.checkpoint)),
+        }))
     }
 
     /// 🔌️ Declares puzzle2d's typed media I/O surface — the implicit document ports plus `kit:in` and
@@ -3910,12 +3860,7 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(puzzle2d_internal_action("redrawHandles", LocalizedLabel::native("Redraw Handles", "Anschlüsse neu zeichnen"), ActionKind::Mutation))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation, "rotate-cw") })
             .action_with(puzzle2d_internal_action("applyBoardEvents", LocalizedLabel::native("Apply Board Events", "Board-Ereignisse anwenden"), ActionKind::Mutation))
-            .action_with(puzzle2d_internal_action("setFillCount", LocalizedLabel::native("Set Fill Count", "Füllanzahl festlegen"), ActionKind::Mutation))
-            .action_with(puzzle2d_internal_action("brushFillSessionStep", LocalizedLabel::native("Brush Fill Session Step", "Pinsel-Füllsitzung-Schritt"), ActionKind::Mutation))
-            .action_with(puzzle2d_internal_action("brushFillSessionAdopt", LocalizedLabel::native("Adopt Fill Result", "Füllergebnis übernehmen"), ActionKind::Mutation))
-            .action_with(puzzle2d_internal_action("brushFillSessionCancel", LocalizedLabel::native("Cancel Fill", "Füllen abbrechen"), ActionKind::Mutation))
-            .action_with(puzzle2d_internal_action("brushFillSessionRetry", LocalizedLabel::native("Retry Fill", "Füllen erneut versuchen"), ActionKind::Mutation))
-            .action_with(puzzle2d_internal_action("brushFillSessionDiscard", LocalizedLabel::native("Discard Fill Session", "Füllsitzung verwerfen"), ActionKind::Mutation))
+            .action_with(puzzle2d_internal_action("setFillCount", LocalizedLabel::native("Set Fill Count", "Füllanzahl festlegen"), ActionKind::View))
             .action_with(puzzle2d_internal_action("brushCommitSlot", LocalizedLabel::native("Brush Commit Slot", "Pinsel-Platz übernehmen"), ActionKind::Mutation))
             // 🖱️ Internal pointer/gesture/engagement view vocabulary — pure runtime/host state, emit no operations.
             // 🎥️ `setCamera` is session-only view state, so it belongs in this View-kind group.
@@ -3934,8 +3879,6 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(puzzle2d_internal_action("brushSetCandidateIndex", LocalizedLabel::native("Brush Set Candidate Index", "Pinselkandidatenindex festlegen"), ActionKind::View))
             .action_with(puzzle2d_internal_action("brushOpenSlot", LocalizedLabel::native("Brush Open Slot", "Pinsel-Platz öffnen"), ActionKind::View))
             .action_with(puzzle2d_internal_action("brushCancelSlot", LocalizedLabel::native("Brush Cancel Slot", "Pinsel-Platz abbrechen"), ActionKind::View))
-            .action_with(puzzle2d_internal_action("brushFillSessionBegin", LocalizedLabel::native("Brush Fill Session Begin", "Pinsel-Füllsitzung beginnen"), ActionKind::Mutation))
-            .action_with(puzzle2d_internal_action("brushFillSessionClear", LocalizedLabel::native("Brush Fill Session Clear", "Pinsel-Füllsitzung leeren"), ActionKind::Mutation))
             .action_with(puzzle2d_internal_action("lodScaleJson", LocalizedLabel::native("LOD Scale Json", "LOD-Skalierung-Json"), ActionKind::View))
             // 📝️ Staged palette args for the two content commands that need a target.
             .action_args("addNode", vec![
@@ -3952,13 +3895,6 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("brushCancelSlot", InteractiveJobClassification::Migrated)
             .action_interactive_job("brushCommitSlot", InteractiveJobClassification::Migrated)
             .action_interactive_job("brushCycleCandidate", InteractiveJobClassification::Migrated)
-            .action_interactive_job("brushFillSessionAdopt", InteractiveJobClassification::Migrated)
-            .action_interactive_job("brushFillSessionBegin", InteractiveJobClassification::Migrated)
-            .action_interactive_job("brushFillSessionCancel", InteractiveJobClassification::Migrated)
-            .action_interactive_job("brushFillSessionClear", InteractiveJobClassification::Migrated)
-            .action_interactive_job("brushFillSessionDiscard", InteractiveJobClassification::Migrated)
-            .action_interactive_job("brushFillSessionRetry", InteractiveJobClassification::Migrated)
-            .action_interactive_job("brushFillSessionStep", InteractiveJobClassification::Migrated)
             .action_interactive_job("brushOpenSlot", InteractiveJobClassification::Migrated)
             .action_interactive_job("brushSetCandidateIndex", InteractiveJobClassification::Migrated)
             .action_interactive_job("deleteSelection", InteractiveJobClassification::Migrated)

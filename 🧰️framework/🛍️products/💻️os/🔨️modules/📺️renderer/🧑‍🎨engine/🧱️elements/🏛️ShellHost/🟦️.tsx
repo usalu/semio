@@ -191,6 +191,7 @@ import {
 import { DOCUMENT_BACKBONE_RETENTION_LIMITS, type LocalInteractionState, type MutationEnvelope } from "@semio-tech/framework-replication";
 import { scopedPresencePeersV1 } from "./👥️presence-scope/🟦️.ts";
 import { MODE_STEP_CONTROL_IDS, SURFACE_ROLE_CONTROL_IDS, SURFACE_ROLE_ORDER, createSealedInstanceLedgerV1, createSessionAppSwitchGateV1, createSessionWorkLedgerV1, quiesceSessionWorkV1, resolveBootPrimaryAppV1, roleSwitchTargetV1, sealedInstanceDropTextV1, sealedInstanceDropV1, stepModeIdV1, surfaceRoleAppsV1, surfaceSwitchBusyTextV1 } from "./🔀️surface-switch/🟦️.ts";
+import { KEYBINDING_UNOWNED_CODE, dockSeedActiveWindowIdV1, keybindingUnownedTextV1, modeLayoutStacksV1, reservedShellChordsV1, resolveKeybindingTargetWindowV1, type WindowScopeInstanceV1, type WindowScopeKindV1, type WindowScopeLayoutNodeV1 } from "./⌨️window-scope/🟦️.ts";
 
 
 function scopeRuntimeKey(message: { readonly documentId: string; readonly scope?: DocumentScope }): string | null {
@@ -259,6 +260,7 @@ import {
   cn,
   ariaKeyshortcutsText,
   composeControlKeybindings,
+  SHELL_KEYBINDINGS,
   composeTutorialUi,
   ContextMenuController,
   type ContextMenuItem,
@@ -275,6 +277,7 @@ import {
   findPanelTabInDock,
   findPanelTabNode,
   findPanelTabPath,
+  formatKeybindingShortcut,
   Footer,
   getTutorialCameraDriver,
   Icon,
@@ -402,9 +405,7 @@ import {
   type ViewModel,
 } from "../🐚️Shell/🟦️.tsx";
 import {
-  beginInteractivePluginAction,
   clearPendingWorldProjection,
-  endInteractivePluginAction,
   mapContextMenuSpecs,
   registerPendingWorldProjection,
   leftoverOverlayCarryingSelectionV1,
@@ -413,7 +414,6 @@ import {
   leftoverWorldSelectionOverlayV1,
   leftoverWorldWindowOverlayV1,
   publishLeftoverWorldSelectionV1,
-  subscribeLeftoverWorldSelectionV1,
   WindowInstanceIdContext,
 } from "../🌐️World3dHost/🟦️.tsx";
 import { toolRunTraceCursorViewState } from "../🌐️World3dHost/⏯️tool-run-trace/🟦️.tsx";
@@ -525,6 +525,7 @@ import {
   resolveKeybindingIntent,
   clipboardWriteFragmentFromEffect,
   pasteActionWithRetainedFragment,
+  type ClipboardActionDescriptor,
   pasteArgsFragment,
   resolveManifestLabel,
   resolvePanelTabLabel,
@@ -602,7 +603,7 @@ import {
   ShellRouteNotFoundPage,
   useNamedLayoutHost,
 } from "../📌️ChromePanels/🟦️.tsx";
-import { onPluginInstancesLost, PluginBootShardLostError, leftoverInspectionRefreshScope, leftoverInspectionPanelHash, leftoverBrushPreviewWindowHash, leftoverBrushPreviewRefreshScope, leftoverBrushPreviewRefreshReady, type PluginWasmHandle, type PluginExtensionCompletion, serializePerActor, setPluginRuntimeActor } from "../🔌️PluginRuntime/🟦️.tsx";
+import { onPluginInstancesLost, PluginBootShardLostError, leftoverInspectionRefreshScope, leftoverInspectionPanelHash, type PluginWasmHandle, type PluginExtensionCompletion, serializePerActor, setPluginRuntimeActor } from "../🔌️PluginRuntime/🟦️.tsx";
 import { documentBackboneEffectV1, type ActorDocumentMessagePortV1 } from "../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
 import { BrowserActorActionMailboxV1 } from "../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts";
 import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION } from "../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
@@ -879,6 +880,15 @@ export function useAppKeybindingsByActionId(): ReadonlyMap<string, string> {
 export function useMapContextMenuSpecs(dispatch: (action: string, args?: Record<string, unknown>) => void) {
   const keysByActionId = useAppKeybindingsByActionId();
   return useCallback((specs: readonly ContextMenuItemSpec[]) => mapContextMenuSpecs(specs, dispatch, keysByActionId), [dispatch, keysByActionId]);
+}
+
+/** 🪟️ The window a freshly seeded mode layout opens ACTIVE. Every layout seed below routes through
+ * this instead of dispatching `null`: a mode with windows always has exactly one active window, so a
+ * window-scoped verb, its chord and its Actions rail have an owner before the user's first click —
+ * the wgpu shell has always seeded `active_window_id` this way, the React shell never did
+ * (`⌨️window-scope/🟦️.ts`, ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+function seededActiveWindowId(modeLayout: WindowLayoutNode): string | null {
+  return dockSeedActiveWindowIdV1(modeLayoutStacksV1(modeLayout as WindowScopeLayoutNodeV1), null);
 }
 
 /** 🪟️ Builds the sole action wire shape from the exact target window instance and its owner chain. */
@@ -1991,8 +2001,6 @@ function FrameworkOsShellInner({
   const leftoverInspectionIdsRef = useRef<readonly string[]>([]);
   const leftoverReplaceRefreshBodiesV1 = (): boolean => {
     const leftover = leftoverWorldArmedWindowOverlayV1();
-    const hoverVortex = leftover?.hoveredId && (leftover.hoveredDomain === "vortex" || leftover.hoveredId.includes(":")) ? leftover.hoveredId : null;
-    if (leftoverBrushPreviewWindowHash(leftover?.activeUtility, hoverVortex, "cached") === undefined) return leftoverBrushTickSettledRef.current;
     const leftoverIds = leftoverInspectionIdsRef.current.length > 0 ? leftoverInspectionIdsRef.current : leftover?.ids ?? [];
     return leftoverInspectionPanelHash(leftoverIds, "cached") === undefined;
   };
@@ -2005,40 +2013,18 @@ function FrameworkOsShellInner({
     }
     storeCache.flushPendingReloads();
   };
-  const leftoverBrushHoverKeyRef = useRef<string | null>(null);
-  const leftoverBrushTickSettledRef = useRef(false);
-  const leftoverBrushRefreshInFlightRef = useRef(false);
-  const leftoverBrushRefreshPendingRef = useRef(false);
-  const leftoverBrushPreviewEpochRef = useRef(0);
-  const [leftoverBrushPreviewEpoch, setLeftoverBrushPreviewEpoch] = useState(0);
   // 🪟️ `windowId` is the pane the action that produced `output` addressed. A leftover carries per-window
-  // state (hover, the armed utility, its brush preview), so it is published under THAT pane and never
+  // state (hover, the armed utility), so it is published under THAT pane and never
   // over every pane's record (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B39); a windowless action
   // publishes the document's shared fields only and leaves every pane's own fields untouched.
-  const applyLeftoverInteractionView = useCallback((output: unknown, actionId?: string, addressedWindowId?: string) => {
+  const applyLeftoverInteractionView = useCallback((output: unknown, addressedWindowId?: string) => {
     const published = interactionViewFromLeftoverOutput(output);
     const windowId = addressedWindowId ?? published?.windowId ?? undefined;
-    const armLeftoverBrushPreview = (utility: string | null | undefined, hoverVortex: string | null, previewJson?: string | null) => {
-      if (leftoverBrushPreviewRefreshReady(actionId, utility, hoverVortex, previewJson)) leftoverBrushTickSettledRef.current = true;
-      else if (leftoverBrushPreviewWindowHash(utility, hoverVortex, "cached") !== undefined) leftoverBrushTickSettledRef.current = false;
-      if (!leftoverBrushTickSettledRef.current) return;
-      leftoverBrushHoverKeyRef.current = hoverVortex;
-      leftoverBrushRefreshPendingRef.current = true;
-      if (!leftoverBrushRefreshInFlightRef.current) {
-        leftoverBrushPreviewEpochRef.current += 1;
-        setLeftoverBrushPreviewEpoch(leftoverBrushPreviewEpochRef.current);
-      }
-    };
-    if (!published) {
-      const leftover = windowId ? leftoverWorldWindowOverlayV1(windowId) : leftoverWorldArmedWindowOverlayV1();
-      const hoverVortex = leftover?.hoveredId && (leftover.hoveredDomain === "vortex" || leftover.hoveredId.includes(":")) ? leftover.hoveredId : null;
-      armLeftoverBrushPreview(leftover?.activeUtility, hoverVortex, leftover?.brushPreviewJson);
-      return;
-    }
+    if (!published) return;
     const priorLeftover = windowId ? leftoverWorldWindowOverlayV1(windowId) : leftoverWorldSelectionOverlayV1();
     const overlay = leftoverOverlayCarryingSelectionV1(
       leftoverOverlayCarryingUtilityV1(
-        { ids: published.selectedIds, hoveredId: published.hoverTarget?.id ?? null, hoveredDomain: published.hoverTarget?.domain ?? null, gumballActive: published.gumballActive, gumballAnchorId: published.gumballAnchorId, ...(published.activeUtility !== undefined ? { activeUtility: published.activeUtility } : {}), ...(published.brushPreviewJson ? { brushPreviewJson: published.brushPreviewJson } : {}) },
+        { ids: published.selectedIds, hoveredId: published.hoverTarget?.id ?? null, hoveredDomain: published.hoverTarget?.domain ?? null, gumballActive: published.gumballActive, gumballAnchorId: published.gumballAnchorId, ...(published.activeUtility !== undefined ? { activeUtility: published.activeUtility } : {}) },
         priorLeftover,
       ),
       priorLeftover,
@@ -2053,9 +2039,6 @@ function FrameworkOsShellInner({
       leftoverInspectionEpochRef.current += 1;
       setLeftoverInspectionEpoch(leftoverInspectionEpochRef.current);
     }
-    const hoverVortex = overlay.hoveredId && (overlay.hoveredDomain === "vortex" || overlay.hoveredId.includes(":")) ? overlay.hoveredId : null;
-    const utility = overlay.activeUtility ?? priorLeftover?.activeUtility;
-    armLeftoverBrushPreview(utility, hoverVortex, published.brushPreviewJson);
   }, []);
   const refreshHistorySnapshot = useCallback((instanceId: number) => {
     const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === sessionRef.current?.pluginId)?.handle;
@@ -3479,7 +3462,7 @@ function FrameworkOsShellInner({
         dispatch({ type: "SET_SESSION", value: { pluginId: handle.pluginId, instanceId, app: sApp, viewState } });
         dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
         dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
-        dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
+        dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(seeded.modeLayout) });
         dispatch({ type: "SET_ERROR", value: null });
         return;
       }
@@ -3504,7 +3487,7 @@ function FrameworkOsShellInner({
       });
       dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
       dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
-      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
+      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(seeded.modeLayout) });
       dispatch({ type: "SET_ERROR", value: null });
     },
     [hostConfig, hostApp, appId, appRole, pluginFilter],
@@ -4156,6 +4139,10 @@ function FrameworkOsShellInner({
   toolMeasuresByToolIdRef.current = toolMeasuresByToolId;
   const activeWindowIdRef = useRef(activeWindowId);
   activeWindowIdRef.current = activeWindowId;
+  /** 🪟️ The layout the dock is actually rendering — the ONLY honest answer to "which windows does the
+   * active mode mount", which is what scopes an app-wide chord to a window that exists right now.
+   * Assigned from `effectiveModeLayout` further down (a `useMemo` declared after the keyboard loop). */
+  const effectiveModeLayoutRef = useRef<WindowLayoutNode | null>(null);
   const actionPaneExpandedByWindowIdRef = useRef(actionPaneExpandedByWindowId);
   actionPaneExpandedByWindowIdRef.current = actionPaneExpandedByWindowId;
   const actionPaneStagedArgsByKeyRef = useRef(actionPaneStagedArgsByKey);
@@ -4759,15 +4746,6 @@ function FrameworkOsShellInner({
         focusedWindowId: activeWindowIdRef.current ?? undefined,
       });
       const panelTabLeaves = flattenPanelTabLeaves(nextSession.app.panelTabs);
-      if (replaceBodies) {
-        const leftover = leftoverWorldArmedWindowOverlayV1();
-        const hoverVortex = leftover?.hoveredId && (leftover.hoveredDomain === "vortex" || leftover.hoveredId.includes(":")) ? leftover.hoveredId : null;
-        if (leftoverBrushPreviewWindowHash(leftover?.activeUtility, hoverVortex, "cached") === undefined) {
-          for (const key of [...cache.keys()]) {
-            if (key.startsWith("window:")) cache.delete(key);
-          }
-        }
-      }
       // 🐢️ One batched, hash-conditional round trip replaces the old ~12 sequential
       // render/utilities/windowEngagements/windowMeasures/appLabels calls — the plugin omits payloads for
       // any section whose hash still matches what `cache` already holds.
@@ -4872,7 +4850,7 @@ function FrameworkOsShellInner({
         extraWindowCounterRef.current = layoutSeed.extraInstances.length;
         dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: layoutSeed.extraInstances });
         dispatch({ type: "SET_SHELL_LAYOUT", value: layoutSeed.modeLayout });
-        dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
+        dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(layoutSeed.modeLayout) });
       }
       // 🧩️ The contributions unit started at the top of this refresh. `await`ing it HERE, and not
       // running it here, is what keeps `pendingRefreshEffects` (an early `flowEvalTick`) waiting until
@@ -5172,7 +5150,7 @@ function FrameworkOsShellInner({
               extraWindowCounterRef.current = seeded.extraInstances.length;
               dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
               dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
-              dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
+              dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(seeded.modeLayout) });
               if (hostMode && app.id === landingAppId) {
                 openSpaceIdRef.current = null;
                 openInstanceIdRef.current = null;
@@ -5324,7 +5302,7 @@ function FrameworkOsShellInner({
     // reached the world lane at +12 s in the browser (wave B6 §3). `browserActorDispatchUiScopeV1`
     // answers `none` for a refusal or a zero-mutation action, and `refreshUi` returns immediately on it.
     const actionId = "actionId" in invocation.address ? invocation.address.actionId : undefined;
-    applyLeftoverInteractionView(("output" in result ? (result as { output?: unknown }).output : undefined) ?? null, actionId);
+    applyLeftoverInteractionView(("output" in result ? (result as { output?: unknown }).output : undefined) ?? null);
     const dirty = browserActorWindowConfigDispatchUiScopeV1(result, actionId);
     if (dirty.kind !== "none" && current()) {
       await refreshUi({ ...entry.session, viewState }, dirty, undefined, leftoverReplaceRefreshBodiesV1());
@@ -6290,7 +6268,7 @@ function FrameworkOsShellInner({
             .handleAction(session.instanceId, encodeWindowActionInvocation({ ...session, viewState }, forwarded, extraWindowInstancesRef.current, windowId), viewState)
             .then((response) => {
               applyHistoryPatch(response.historyPatch);
-            applyLeftoverInteractionView(response.output, forwarded.action, windowId);
+            applyLeftoverInteractionView(response.output, windowId);
               if (!isCurrentEffectOwner(primaryActionOwner)) return;
               return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope), primaryActionOwner);
             })
@@ -6345,7 +6323,7 @@ function FrameworkOsShellInner({
             .handleAction(session.instanceId, encodeWindowActionInvocation({ ...session, viewState }, forwarded, extraWindowInstancesRef.current, toolWindowId), viewState)
             .then((response) => {
               applyHistoryPatch(response.historyPatch);
-            applyLeftoverInteractionView(response.output, forwarded.action);
+            applyLeftoverInteractionView(response.output);
               if (!isCurrentEffectOwner(primaryActionOwner)) return;
               return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, { kind: "full" }, primaryActionOwner);
             })
@@ -6552,7 +6530,6 @@ function FrameworkOsShellInner({
           .catch((error) => console.error("[DEBUG] import-picker host-arm failed", error));
         return;
       }
-      const interactiveAction = action.action !== "suggestionsTick" && action.action !== "fillBuildTick";
       let directBrowserActor: ReturnType<typeof directBrowserActorForSession>;
       try {
         directBrowserActor = directBrowserActorForSession(targetSession);
@@ -6563,7 +6540,6 @@ function FrameworkOsShellInner({
       }
       if (directBrowserActor !== null) {
         if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] history route action=" + action.action);
-        if (interactiveAction) beginInteractivePluginAction();
         return dispatchDirectBrowserActorCommand(
           directBrowserActor,
           windowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, extraWindowInstancesRef.current, dispatchWindowId),
@@ -6572,12 +6548,9 @@ function FrameworkOsShellInner({
           if (propagateFailure) throw actionError;
           console.error("[DEBUG] authenticated browser actor action failed", action.action, action.args, actionError);
           showTransientNotice(shellLabel("ui.common.renderError"), "error");
-        }).finally(() => {
-          if (interactiveAction) endInteractivePluginAction();
         });
       }
       if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] history route fallback handleAction", JSON.stringify({ action: action.action }));
-      if (interactiveAction) beginInteractivePluginAction();
       // ⏳️ The whole round trip — admitting turn, host-effect pass and the `OperationCompleted` frame
       // `awaitOperationSettle` waits for — is what a switch has to outlive, so the ledger entry spans
       // the entire chain, not just `handleAction`'s own promise.
@@ -6587,7 +6560,7 @@ function FrameworkOsShellInner({
         .then(async (response) => {
           if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] undo handleAction resolved", JSON.stringify({ uiScope: response.uiScope, effects: (response.requestedEffects ?? []).length, historyUpserts: response.historyPatch?.upserts?.length ?? 0, historyCanUndo: response.historyPatch?.canUndo ?? null }));
           applyHistoryPatch(response.historyPatch);
-            applyLeftoverInteractionView(response.output, action.action, dispatchWindowId);
+            applyLeftoverInteractionView(response.output, dispatchWindowId);
           const navbarExample = navbarExampleIdFromHistoryUpserts(response.historyPatch?.upserts, lastDispatchedExampleIdRef.current, resolveBootExampleId("", exampleOptionsRef.current, defaults.exampleId));
           if (navbarExample !== undefined) dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: navbarExample });
           const needsHistoryRefresh = historyRefreshNeededV1(action.action, response.historyPatch);
@@ -6619,7 +6592,6 @@ function FrameworkOsShellInner({
         })
         .finally(() => {
           releaseActionWork();
-          if (interactiveAction) endInteractivePluginAction();
         });
     },
     [
@@ -6699,7 +6671,6 @@ function FrameworkOsShellInner({
       const opening = openDocumentSessionsRef.current.get(runtimeKey);
       return live?.actions === captured.actions && live.identity !== null && opening?.clientInstanceId === captured.clientInstanceId && opening.session.instanceId === captured.sessionInstanceId && shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, opening.session);
     };
-    beginInteractivePluginAction();
     void retained.actions.dispatchIntent({
       scope: retained.scope,
       verifiedSurfaceId: retained.verifiedSurfaceId,
@@ -6716,7 +6687,7 @@ function FrameworkOsShellInner({
       if (browserActorUiByRuntimeKeyRef.current.get(runtimeKey)?.actions !== captured.actions) return;
       console.error("[DEBUG] authenticated browser actor intent failed", error);
       showTransientNotice(shellLabel("ui.common.renderError"), "error");
-    }).finally(endInteractivePluginAction);
+    });
   }, [requestInferenceProposal]);
   const refuseBrowserActorActionDescriptor = useCallback(() => {
     console.error("[DEBUG] authenticated browser actor requires the complete UI intent");
@@ -7357,7 +7328,7 @@ function FrameworkOsShellInner({
       extraWindowCounterRef.current = seeded.extraInstances.length;
       dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
       dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
-      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
+      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(seeded.modeLayout) });
       // 🪟️ Hand the just-computed instance list straight to the fetch rather than reading `extraWindowInstances`
       // state (which wouldn't reflect this dispatch until the next render) — every newly-seeded pane's own
       // body/measures/engagement gets fetched immediately instead of showing "missing window" until later.
@@ -7383,7 +7354,7 @@ function FrameworkOsShellInner({
             extraWindowCounterRef.current = seeded.extraInstances.length;
             dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
             dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
-            dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
+            dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(seeded.modeLayout) });
             void refreshUi(nextSession, { kind: "full" }, seeded.extraInstances);
           }
           return nextSession;
@@ -7638,7 +7609,7 @@ function FrameworkOsShellInner({
     dispatch({ type: "SET_SESSION", value: nextSession });
     dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
     dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
-    dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
+    dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(seeded.modeLayout) });
     try {
       void (target.plugin as PendingAppChannelMethods).openArtifact?.(canonicalSurfaceId(dialect, role), role === "editor" ? 1 : 0, nextSession.pluginId, nextSession.app.id)
         ?.catch((commandError) => console.error("[DEBUG] openArtifact failed", commandError));
@@ -8358,9 +8329,19 @@ function FrameworkOsShellInner({
         if (target.isContentEditable) return true;
         return target.closest("[contenteditable='true'], [role='textbox']") != null;
       };
-      const focusedWindowId = activeWindowIdRef.current ?? session.viewState.windowId ?? session.viewState.activeWindowKindId;
-      const focusedWindowKindId = sessionWindowInstances(session.app, extraWindowInstancesRef.current).find((instance) => instance.id === focusedWindowId)?.windowKindId ?? focusedWindowId;
-      const actionById = new Map((session.app.windowKinds.find((kind) => kind.id === focusedWindowKindId)?.actions ?? []).map((action) => [action.id, action]));
+      const focusedWindowId = activeWindowIdRef.current ?? session.viewState.windowId ?? session.viewState.activeWindowKindId ?? null;
+      const instances = sessionWindowInstances(session.app, extraWindowInstancesRef.current);
+      // 🪟️ Only the windows the ACTIVE MODE mounts, in layout order. A verb owned by a window this mode
+      // does not show has no reachable owner and must say so rather than dispatch into a dead address.
+      const mounted: readonly WindowScopeInstanceV1[] = modeLayoutStacksV1(effectiveModeLayoutRef.current as WindowScopeLayoutNodeV1 | null)
+        .flatMap((stack) => [...stack.windowIds])
+        .map((id) => ({ id, windowKindId: instances.find((instance) => instance.id === id)?.windowKindId ?? id }));
+      const scopeKinds: readonly WindowScopeKindV1[] = session.app.windowKinds.map((kind) => ({ id: kind.id, actionIds: (kind.actions ?? []).map((action) => action.id) }));
+      // 🛡️ The shell's own chrome chords are never an app's to shadow. `build_definition` mints a
+      // keybinding for each reserved `toolRun*` action a declared tool run injects, and `toolRunStep`'s
+      // is `mod+alt+arrowright` — the navbar's own mode-step chord.
+      const reservedChords = reservedShellChordsV1(SHELL_KEYBINDINGS, uiKeybindingOverrides);
+      const actionDefinition = (windowKindId: string, actionId: string) => (session.app.windowKinds.find((kind) => kind.id === windowKindId)?.actions ?? []).find((action) => action.id === actionId);
       if (isEditableTarget(event.target)) return;
       // 🧰️🛠️ Escape deactivates the active window's active utility (P5), or — when no utility is active —
       // the active mode-level tool, when nothing is being typed.
@@ -8380,31 +8361,48 @@ function FrameworkOsShellInner({
       for (const binding of session.app.keybindings) {
         for (const chord of parseKeys(binding.keys)) {
           if (!keyboardEventMatchesChord(event, chord)) continue;
-          const definition = actionById.get(binding.action.action);
-          if (!definition) continue;
+          if (reservedChords.has(chord)) continue;
+          // ⌨️ An app-wide chord for a WINDOW-OWNED verb resolves to the window that owns it in the
+          // active mode, focused or not — which is what makes `mod+shift+g` reach `addGeneration` on the
+          // Generations window without the user first clicking it, and what kept it dead before
+          // (`⌨️window-scope/🟦️.ts`, ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+          const target = resolveKeybindingTargetWindowV1({ kinds: scopeKinds, mounted, focusedWindowId, actionId: binding.action.action });
           event.preventDefault();
+          if (target.windowId === null) {
+            // 🚦️ No window of this mode owns the verb: a deliberate, HINTED no-op. A chord that silently
+            // does nothing is indistinguishable from a broken keyboard, which is exactly how
+            // `mod+shift+g` read in edit mode.
+            const anyDefinition = session.app.windowKinds.flatMap((kind) => kind.actions ?? []).find((action) => action.id === binding.action.action);
+            const label = anyDefinition ? resolveAppLabel(appLabelsOverlay, "action", anyDefinition.id, resolveManifestLabel(anyDefinition.label as LocalizedLabel | string, uiTerminology, uiLocale)) : binding.action.action;
+            showTransientNotice(keybindingUnownedTextV1(uiLocale, formatKeybindingShortcut(chord), label), "info", KEYBINDING_UNOWNED_CODE);
+            return;
+          }
+          const targetWindowId = target.windowId;
+          const targetKindId = mounted.find((instance) => instance.id === targetWindowId)?.windowKindId ?? targetWindowId;
+          const definition = actionDefinition(targetKindId, binding.action.action);
+          if (!definition) return;
+          if (target.kind === "owner") dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: targetWindowId });
           // ✍️ Arg-carrying hotkeys never silent-fire defaults (P4): open the staged form, or — if that
-          // form is already expanded in the active window — treat the hotkey as Execute (with validation).
+          // form is already expanded in the target window — treat the hotkey as Execute (with validation).
           if (actionRequiresStagedForm(definition)) {
-            const retainedPaste = pasteActionWithRetainedFragment({ action: definition.id }, clipboardFragmentRef.current);
+            const retainedPaste = pasteActionWithRetainedFragment<ClipboardActionDescriptor>({ action: definition.id }, clipboardFragmentRef.current);
+            const retainedArgs = retainedPaste.args;
             if (pasteArgsFragment(retainedPaste) !== undefined) {
-              onAction({ controllerId: session.app.controllerId, action: retainedPaste.action, args: retainedPaste.args });
+              onAction({ controllerId: session.app.controllerId, action: retainedPaste.action, args: { ...(typeof retainedArgs === "object" && retainedArgs !== null ? retainedArgs : {}), windowId: targetWindowId } });
               return;
             }
-            const windowId = activeWindowIdRef.current;
-            if (!windowId) return;
-            const expanded = actionPaneExpandedByWindowIdRef.current[windowId] ?? null;
-            const staged = actionPaneStagedArgsByKeyRef.current[actionStageKey(windowId, definition.id)] ?? {};
+            const expanded = actionPaneExpandedByWindowIdRef.current[targetWindowId] ?? null;
+            const staged = actionPaneStagedArgsByKeyRef.current[actionStageKey(targetWindowId, definition.id)] ?? {};
             const intent = resolveKeybindingIntent(definition, expanded, staged);
             if (intent.kind === "execute") {
-              onAction({ controllerId: session.app.controllerId, action: intent.actionId, args: intent.args });
+              onAction({ controllerId: session.app.controllerId, action: intent.actionId, args: { ...(typeof intent.args === "object" && intent.args !== null ? intent.args : {}), windowId: targetWindowId } });
             } else if (intent.kind === "open") {
-              dispatch({ type: "SET_ACTION_PANE_FOLDED", windowId, value: false });
-              dispatch({ type: "SET_ACTION_PANE_EXPANDED", windowId, value: intent.actionId });
+              dispatch({ type: "SET_ACTION_PANE_FOLDED", windowId: targetWindowId, value: false });
+              dispatch({ type: "SET_ACTION_PANE_EXPANDED", windowId: targetWindowId, value: intent.actionId });
             }
             return;
           }
-          onAction(binding.action);
+          onAction({ ...binding.action, args: { ...(typeof binding.action.args === "object" && binding.action.args !== null ? (binding.action.args as Record<string, unknown>) : {}), windowId: targetWindowId } });
           return;
         }
       }
@@ -8422,7 +8420,7 @@ function FrameworkOsShellInner({
         return;
       }
     },
-    [onAction, session],
+    [onAction, session, appLabelsOverlay, showTransientNotice, uiKeybindingOverrides, uiLocale, uiTerminology],
   );
   useShellKeydown(scope.rootRef, handleAppKeydown, [handleAppKeydown]);
 
@@ -9103,7 +9101,7 @@ function FrameworkOsShellInner({
         .then((response) => {
           if (!isCurrentEffectOwner(commandOwner)) return;
           applyHistoryPatch(response.historyPatch);
-            applyLeftoverInteractionView(response.output, "actionId" in invocation.address ? invocation.address.actionId : undefined);
+            applyLeftoverInteractionView(response.output);
           return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope), commandOwner);
         })
         .catch((error) => {
@@ -9590,55 +9588,6 @@ function FrameworkOsShellInner({
       };
     }
   }, [leftoverInspectionEpoch, refreshUi]);
-
-  useEffect(() => {
-    return subscribeLeftoverWorldSelectionV1(() => {
-      const leftover = leftoverWorldArmedWindowOverlayV1();
-      const hoverVortex = leftover?.hoveredId && (leftover.hoveredDomain === "vortex" || leftover.hoveredId.includes(":")) ? leftover.hoveredId : null;
-      const utility = leftover?.activeUtility;
-      if (leftoverBrushTickSettledRef.current && leftoverBrushPreviewWindowHash(utility, hoverVortex, "cached") === undefined) {
-        leftoverBrushHoverKeyRef.current = hoverVortex;
-        leftoverBrushRefreshPendingRef.current = true;
-        if (!leftoverBrushRefreshInFlightRef.current) {
-          leftoverBrushPreviewEpochRef.current += 1;
-          setLeftoverBrushPreviewEpoch(leftoverBrushPreviewEpochRef.current);
-        }
-      }
-    });
-  }, []);
-
-  useEffect(() => {
-    const leftover = leftoverWorldArmedWindowOverlayV1();
-    const hoverVortex = leftover?.hoveredId && (leftover.hoveredDomain === "vortex" || leftover.hoveredId.includes(":")) ? leftover.hoveredId : null;
-    const scope = leftoverBrushPreviewRefreshScope(leftover?.activeUtility, hoverVortex);
-    if (leftoverBrushPreviewEpoch === 0 || !scope || !leftoverBrushTickSettledRef.current) return;
-    for (const key of [...uiRefreshCacheRef.current.keys()]) {
-      if (key.startsWith("window:")) uiRefreshCacheRef.current.delete(key);
-    }
-    leftoverBrushRefreshPendingRef.current = true;
-    if (leftoverBrushRefreshInFlightRef.current) return;
-    leftoverBrushRefreshInFlightRef.current = true;
-    void (async () => {
-      try {
-        while (leftoverBrushRefreshPendingRef.current) {
-          leftoverBrushRefreshPendingRef.current = false;
-          const live = leftoverWorldArmedWindowOverlayV1();
-          const liveHover = live?.hoveredId && (live.hoveredDomain === "vortex" || live.hoveredId.includes(":")) ? live.hoveredId : null;
-          const liveSignal = leftoverBrushPreviewRefreshScope(live?.activeUtility, liveHover);
-          const liveSession = sessionRef.current;
-          if (!liveSignal || !liveSession) continue;
-          const windowBodies = sessionWindowInstances(liveSession.app, extraWindowInstancesRef.current).map((instance) => instance.bodyKey).filter((key): key is string => Boolean(key));
-          const liveScope = windowBodies.length > 0 ? { kind: "partial" as const, windowBodies } : liveSignal;
-          for (const key of [...uiRefreshCacheRef.current.keys()]) {
-            if (key.startsWith("window:")) uiRefreshCacheRef.current.delete(key);
-          }
-          await refreshUi(liveSession, liveScope, undefined, true);
-        }
-      } finally {
-        leftoverBrushRefreshInFlightRef.current = false;
-      }
-    })();
-  }, [leftoverBrushPreviewEpoch, refreshUi]);
 
   // 🎯️ Moving focus between panes changes what every app-level panel body is addressed at
   // (`ViewModel::focused_window_id`), so the panel bodies are re-fetched for the newly focused pane.
@@ -10169,6 +10118,7 @@ function FrameworkOsShellInner({
       (session ? resolveFrameworkLayoutSeed(session.app.defaultLayout, withLocalizedWindowKindLabels(session.app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale).modeLayout : { kind: "stack" as const, children: [] }),
     [appLabelsOverlay, session, shellLayout, uiTerminology, uiLocale],
   );
+  effectiveModeLayoutRef.current = effectiveModeLayout;
 
   const handleActiveWindowChange = useCallback(
     (value: string | null) => {

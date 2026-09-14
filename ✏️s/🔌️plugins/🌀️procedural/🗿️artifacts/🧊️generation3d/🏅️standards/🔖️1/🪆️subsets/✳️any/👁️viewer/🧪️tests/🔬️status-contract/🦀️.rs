@@ -52,7 +52,7 @@ struct SurfaceRow {
     surface: String,
     window_kind_id: String,
     cancel_action: String,
-    declares_cancel_command: bool,
+    framework_reserved_verb: bool,
 }
 
 #[derive(serde::Deserialize)]
@@ -169,8 +169,13 @@ fn replay(state: &StatusState, session: &mut FlowEvalSession) {
                 preview_eval::resolve_eval(&resolve, session);
             }
             "cancel" => {
-                let payload = preview_eval::CancelPreviewEval { window_id: VIEW_PREVIEW_WINDOW_ID.to_string(), window_kind_id: preview::WINDOW_KIND_ID.to_string() };
-                let invocations = preview_eval::cancel_preview_eval_for(&payload, session, address(state.addressable));
+                // 🛑 The gesture is the framework's `toolRunAbort` on the run; the kernel RELEASE below is
+                // how that abort's close reaches the two extension registries the guest cannot see
+                // (`preview_eval::release_invocations_for`). The session latch is what turns the published
+                // phase into `cancelled`.
+                session.cancel_preview_evaluation(VIEW_PREVIEW_WINDOW_ID);
+                let payload = preview_eval::FlowEvalRelease { window_id: VIEW_PREVIEW_WINDOW_ID.to_string(), window_kind_id: preview::WINDOW_KIND_ID.to_string() };
+                let invocations = preview_eval::release_invocations_for(&payload, address(state.addressable));
                 // 🚪️ HOW MANY doors the gesture knocks on is the cancellation lane's own law
                 // (`rows[].invocations`); this law only states the half the STATUS depends on — an
                 // addressable kernel is told, an unaddressable one has no actor to tell.
@@ -182,6 +187,19 @@ fn replay(state: &StatusState, session: &mut FlowEvalSession) {
 }
 
 const VIEW_PREVIEW_WINDOW_ID: &str = "window:procedural-view-preview";
+
+/// ⏯️ The run a fixture state implies: the abort affordance is the RUN's, so a state the fixture calls
+/// `cancellable` is a state with a live `previewEval` run and every other state has none. Mirrors
+/// `🧵️preview-eval/🧪️tests/🔬️unit`'s own `run_view`.
+fn run_view(cancellable: bool) -> Option<semio_framework_plugin::ToolRunView> {
+    cancellable.then(|| {
+        semio_framework_plugin::ToolRunView::new(
+            preview_eval::PREVIEW_EVAL_TOOL_ID,
+            semio_framework_tool_run::ToolRunIdentity { id: semio_framework_tool_run::ToolRunId { app_instance_id: 1, run: 1 }, generation: 1, base_revision: [0; 32] },
+            semio_framework_tool_run::ToolRunState::Running,
+        )
+    })
+}
 
 fn assert_contract_shape(status: &serde_json::Value, contract: &StatusContract, labels: &std::collections::BTreeMap<String, PhaseLabel>, cancel_action: &str, where_: &str) {
     for key in &contract.object_keys {
@@ -210,12 +228,12 @@ fn the_viewer_preview_status_obeys_the_shared_contract_in_every_state() {
     let contract = &fixture.status_contract;
     let viewer = contract.surfaces.iter().find(|row| row.surface == VIEWER_SURFACE_ID).expect("the fixture declares the viewer surface");
     assert_eq!(viewer.window_kind_id, preview::WINDOW_KIND_ID, "the fixture's viewer window kind must be the one this surface declares");
-    assert_eq!(viewer.cancel_action, preview_eval::PREVIEW_CANCEL_ACTION_ID);
+    assert_eq!(viewer.cancel_action, semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID);
     assert_eq!(viewer.cancel_action, fixture.cancel_action);
     for state in &contract.states {
         let mut session = FlowEvalSession::new();
         replay(state, &mut session);
-        let published = preview_eval::preview_progress_status_json_for(Some(&session), address(state.addressable));
+        let published = preview_eval::preview_progress_status_json_for(Some(&session), run_view(state.status.cancellable).as_ref(), address(state.addressable));
         crate::flow_operators::retire_flow_eval_session(session);
         let status: serde_json::Value = serde_json::from_str(&published).expect("the viewer preview status is one JSON object");
         assert_contract_shape(&status, contract, &fixture.phase_labels, &viewer.cancel_action, &state.id);
@@ -254,7 +272,7 @@ fn the_viewer_preview_status_obeys_the_shared_contract_in_every_state() {
 fn a_sessionless_viewer_preview_still_publishes_the_contract() {
     let _serial = context::lock();
     let fixture = preview_cancel_fixture();
-    let status: serde_json::Value = serde_json::from_str(&preview_eval::preview_progress_status_json_for(None, address(true))).expect("status json");
+    let status: serde_json::Value = serde_json::from_str(&preview_eval::preview_progress_status_json_for(None, None, address(true))).expect("status json");
     assert_contract_shape(&status, &fixture.status_contract, &fixture.phase_labels, &fixture.cancel_action, "sessionless");
     assert_eq!(status["phase"].as_str(), Some("idle"));
     assert_eq!(status["cancellable"].as_bool(), Some(false));
@@ -282,52 +300,59 @@ async fn the_rendered_viewer_preview_scene_carries_the_status_contract() {
     eprintln!("[DEBUG] rendered viewer preview status={published}");
 }
 
-/// ⚖️ LAW: the cancel verb the status names is a verb this surface actually DECLARES, is a `View`
-/// action, is `Migrated`, and never publishes on a document or draft lane. The shell learns the verb
-/// from the published status alone, so an undeclared one is dropped by `ShellHost`'s `declaredAction`
-/// gate before `plugin.handleAction` and the button does nothing.
+/// ⚖️ LAW: the verb the status names is the FRAMEWORK-RESERVED run abort, and the viewer earns it by
+/// declaring the `previewEval` tool run — `build_definition` injects the seven `toolRun*` actions onto
+/// every window kind exactly when an app declares a run. A plugin cancel command of its own would be a
+/// second contract for one gesture, which is why this surface declares none (ticket
+/// 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS moved cancellation onto the run).
 #[test]
-fn the_viewer_declares_the_cancel_verb_its_status_names() {
+fn the_viewer_publishes_the_framework_run_abort_it_earns_by_declaring_the_run() {
     let fixture = preview_cancel_fixture();
     let viewer = fixture.status_contract.surfaces.iter().find(|row| row.surface == VIEWER_SURFACE_ID).expect("viewer surface row");
-    assert!(viewer.declares_cancel_command, "the fixture states the viewer declares its cancel command");
+    assert!(viewer.framework_reserved_verb, "the fixture states the published verb is framework-reserved");
+    assert_eq!(viewer.cancel_action, semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID);
     let definition = create_generation3d_viewer();
-    let command = definition.commands.iter().find(|command| command.id == viewer.cancel_action).unwrap_or_else(|| panic!("the viewer must declare {}", viewer.cancel_action));
-    assert_eq!(command.kind, ActionKind::View, "a cancel retires ephemeral runtime work, never the document");
-    assert_eq!(command.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "an unclassified command is rejected with interactive-job.not-ui-safe");
-    assert!(GENERATION3D_VIEW_FLOW_EVAL_TOOL_IDS.contains(&viewer.cancel_action.as_str()), "the cancel verb needs a retained route");
+    assert!(definition.tools.iter().any(|tool| tool.id == preview_eval::PREVIEW_EVAL_TOOL_ID && tool.run.is_some()), "the viewer declares the preview-evaluation RUN, which is what injects the abort");
+    assert!(definition.modes.iter().any(|mode| mode.tools.iter().any(|tool_ref| tool_ref.as_str() == preview_eval::PREVIEW_EVAL_TOOL_ID)), "a declared tool no mode references is refused outright by the builder");
+    assert!(!definition.commands.iter().any(|command| command.id == viewer.cancel_action), "the abort is injected, never a plugin command");
+    // 🧯️ The kernel RELEASE the abort's close hands the extensions is the plugin's own retained verb,
+    // and it is the one that still needs a route and a host-only lane.
+    assert!(GENERATION3D_VIEW_FLOW_EVAL_TOOL_IDS.contains(&"flowEvalRelease"), "the release hop needs a retained route");
+    let release = definition.commands.iter().find(|command| command.id == "flowEvalRelease").expect("the viewer declares the release hop");
+    assert_eq!(release.kind, ActionKind::View, "a release retires ephemeral runtime work, never the document");
+    assert_eq!(release.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "an unclassified command is rejected with interactive-job.not-ui-safe");
     let contract = <Generation3dViewFlowEvalJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS
         .iter()
-        .find(|contract| contract.tool_id == viewer.cancel_action)
-        .expect("the cancel verb needs an exact publication contract");
-    assert_eq!(contract.lanes, &[ArtifactToolPublicationLane::HostOnly], "a cancel publishes no store lane at all");
+        .find(|contract| contract.tool_id == "flowEvalRelease")
+        .expect("the release hop needs an exact publication contract");
+    assert_eq!(contract.lanes, &[ArtifactToolPublicationLane::HostOnly], "a release publishes no store lane at all");
 }
 
-/// ⚖️ LAW: the cancel really dispatches through the live interactive-job pipeline on the read-only
-/// surface and really leaves the document untouched — the viewer half of
-/// `every_viewer_action_dispatches_live_and_never_mutates_the_document`, kept here because the verb
-/// is a hidden runtime command rather than a window chrome action.
+/// ⚖️ LAW: the kernel release an abort's close hands the extensions really dispatches through the live
+/// interactive-job pipeline on the read-only surface and really leaves the document untouched — the
+/// viewer half of `every_viewer_action_dispatches_live_and_never_mutates_the_document`, kept here
+/// because the verb is a hidden runtime command rather than a window chrome action.
 #[semio_framework_async_macros::async_test]
-async fn a_viewer_cancel_dispatches_live_and_never_mutates_the_document() {
+async fn a_viewer_kernel_release_dispatches_live_and_never_mutates_the_document() {
     let _serial = context::lock();
     let mut app = app().await;
     let before = context::snapshot(&app);
     let shell_view = context::view_shell_view(VIEW_PREVIEW_WINDOW_ID);
     let action_meta = semio_framework_plugin::ActionMeta { view_state: Some(shell_view), ..semio_framework_plugin::artifact_app_laws::meta("local") };
     let args = preview_eval::window_args(VIEW_PREVIEW_WINDOW_ID, preview::WINDOW_KIND_ID);
-    context::dispatch_effect_command(&mut app, preview_eval::PREVIEW_CANCEL_ACTION_ID, Some(&args), &action_meta).await.expect("the shell dispatches the declared cancel verb");
+    context::dispatch_effect_command(&mut app, "flowEvalRelease", Some(&args), &action_meta).await.expect("the shell dispatches the declared release verb");
     let receipt = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *app, action_meta.instance_id).await.expect("the cancel settles through the retained ladder");
-    assert!(!receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault), "the viewer cancel faulted in the retained job ladder");
-    assert_eq!(context::snapshot(&app), before, "a cancel must not mutate the document");
-    eprintln!("[DEBUG] viewer cancel settled lanes={:?} effects={}", receipt.lanes, receipt.effects.len());
+    assert!(!receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault), "the viewer kernel release faulted in the retained job ladder");
+    assert_eq!(context::snapshot(&app), before, "a kernel release must not mutate the document");
+    eprintln!("[DEBUG] viewer kernel release settled lanes={:?} effects={}", receipt.lanes, receipt.effects.len());
     let _ = app.pending_effects(None).await;
 }
 
-/// ⚖️ LAW: the viewer's preview window offers the cancel verb itself. This surface already declared
-/// the `cancelPreviewEval` COMMAND and already published `cancelAction` in its status, but the
-/// window kind withheld the verb — so `World3dHost`'s cancel button was dropped by `ShellHost`'s
-/// `declaredAction` gate and a long read-only evaluation had no cancel affordance at all
-/// (`📓️audit-user-journey-gaps-2026-09-13.md` §1.3 gap #9, §5 row "Flow eval (viewer)").
+/// ⚖️ LAW: the viewer's preview window offers the verb its status names. The window kind used to
+/// withhold it — so `World3dHost`'s cancel button was dropped by `ShellHost`'s `declaredAction` gate
+/// and a long read-only evaluation had no cancel affordance at all
+/// (`📓️audit-user-journey-gaps-2026-09-13.md` §1.3 gap #9, §5 row "Flow eval (viewer)"). It now comes
+/// from the framework's own injection pass over the declared run, which is the point of the move.
 #[test]
 fn the_viewer_preview_window_offers_the_cancel_verb_the_fixture_names() {
     let fixture: serde_json::Value = serde_json::from_str(PREVIEW_CANCEL_FIXTURE_JSON).expect("preview-cancel fixture");

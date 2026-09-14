@@ -3,6 +3,8 @@
 //! (see ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND).
 
 use semio_framework_plugin::{AppLabels, LabelText, Locale, LocalizedLabel, Terminology};
+use semio_framework_tool_run::{ToolRunCounterDefinition, ToolRunReasonDefinition, ToolRunStageDefinition};
+use semio_s_artifact_puzzle_3d::standards::v1::subsets::any::schema::{BrushSuggestionsRunCounter, BrushSuggestionsRunReason, BrushSuggestionsRunStage, FillRunCounter, FillRunReason, FillRunStage};
 
 //#region 🔖️Labels
 semio_framework_plugin::app_labels! {
@@ -17,22 +19,53 @@ semio_framework_plugin::app_labels! {
         select: native_en "Select", native_de "Auswählen", reuse_en "Select", reuse_de "Auswählen";
         brush: native_en "Brush", native_de "Pinsel", reuse_en "Brush", reuse_de "Pinsel";
         fill: native_en "Fill", native_de "Füllen", reuse_en "Fill", reuse_de "Füllen";
-        fill_progress: native_en "Fill progress", native_de "Füllfortschritt", reuse_en "Fill progress", reuse_de "Füllfortschritt";
-        fill_cancel: native_en "Cancel fill", native_de "Füllen abbrechen", reuse_en "Cancel fill", reuse_de "Füllen abbrechen";
-        fill_stage_preparing: native_en "Preparing", native_de "Vorbereiten", reuse_en "Preparing", reuse_de "Vorbereiten";
-        fill_stage_selecting_target: native_en "Selecting grip", native_de "Griff wählen", reuse_en "Selecting connection point", reuse_de "Verbindungspunkt wählen";
-        fill_stage_selecting_candidate: native_en "Selecting part", native_de "Teil wählen", reuse_en "Selecting building component", reuse_de "Baukomponente wählen";
-        fill_stage_testing_collision: native_en "Testing collision", native_de "Kollision prüfen", reuse_en "Testing collision", reuse_de "Kollision prüfen";
-        fill_stage_locking: native_en "Locking", native_de "Festsetzen", reuse_en "Locking", reuse_de "Festsetzen";
-        fill_stage_done: native_en "Done", native_de "Fertig", reuse_en "Done", reuse_de "Fertig";
-        fill_stage_stalled: native_en "Stalled", native_de "Angehalten", reuse_en "Stalled", reuse_de "Angehalten";
-        fill_stall_no_open_vortex: native_en "no open grip", native_de "kein offener Griff", reuse_en "no open connection point", reuse_de "kein offener Verbindungspunkt";
-        fill_stall_document_capacity: native_en "document capacity reached", native_de "Dokumentkapazität erreicht", reuse_en "document capacity reached", reuse_de "Dokumentkapazität erreicht";
-        fill_stall_no_compatible_kind: native_en "no compatible kind", native_de "keine passende Art", reuse_en "no compatible building component", reuse_de "keine passende Baukomponente";
-        fill_tested: native_en "tested", native_de "getestet", reuse_en "tested", reuse_de "getestet";
-        fill_locked: native_en "locked", native_de "festgesetzt", reuse_en "locked", reuse_de "festgesetzt";
-        fill_rejected: native_en "rejected", native_de "abgelehnt", reuse_en "rejected", reuse_de "abgelehnt";
-        fill_collision: native_en "collision", native_de "Kollision", reuse_en "collision", reuse_de "Kollision";
+        fill_run_unit: native_en "parts", native_de "Teile", reuse_en "building components", reuse_de "Baukomponenten";
+        fill_stage_prepare: native_en "Preparing", native_de "Vorbereiten", reuse_en "Preparing", reuse_de "Vorbereiten";
+        fill_stage_search: native_en "Choosing grip and part", native_de "Griff und Teil wählen", reuse_en "Choosing connection point and building component", reuse_de "Verbindungspunkt und Baukomponente wählen";
+        fill_stage_test: native_en "Testing collision", native_de "Kollision prüfen", reuse_en "Testing collision", reuse_de "Kollision prüfen";
+        fill_stage_place: native_en "Placing", native_de "Platzieren", reuse_en "Placing", reuse_de "Platzieren";
+        fill_stage_retract: native_en "Retracting", native_de "Zurücknehmen", reuse_en "Retracting", reuse_de "Zurücknehmen";
+        fill_counter_tested: native_en "Tested", native_de "Getestet", reuse_en "Tested", reuse_de "Getestet";
+        fill_counter_placed: native_en "Placed", native_de "Platziert", reuse_en "Placed", reuse_de "Platziert";
+        fill_counter_collisions: native_en "Collisions", native_de "Kollisionen", reuse_en "Collisions", reuse_de "Kollisionen";
+        fill_counter_rejected: native_en "Rejected", native_de "Abgelehnt", reuse_en "Rejected", reuse_de "Abgelehnt";
+        fill_reason_fits: native_en "Fits", native_de "Passt", reuse_en "Fits", reuse_de "Passt";
+        fill_reason_solid_overlap: native_en "Collides with a placed part", native_de "Kollidiert mit einem platzierten Teil", reuse_en "Collides with a placed building component", reuse_de "Kollidiert mit einer platzierten Baukomponente";
+        fill_reason_outside_target_volume: native_en "Outside the target volume", native_de "Außerhalb des Zielvolumens", reuse_en "Outside the target volume", reuse_de "Außerhalb des Zielvolumens";
+        fill_reason_mesh_unavailable: native_en "Mesh geometry unavailable", native_de "Mesh-Geometrie nicht verfügbar", reuse_en "Mesh geometry unavailable", reuse_de "Mesh-Geometrie nicht verfügbar";
+        fill_reason_missing_preview: native_en "Candidate pose missing", native_de "Kandidatenpose fehlt", reuse_en "Candidate pose missing", reuse_de "Kandidatenpose fehlt";
+        fill_reason_missing_target: native_en "Target grip missing", native_de "Zielgriff fehlt", reuse_en "Target connection point missing", reuse_de "Zielverbindungspunkt fehlt";
+        fill_reason_broad_phase_entry_missing: native_en "Broad-phase entry missing", native_de "Grobphasen-Eintrag fehlt", reuse_en "Broad-phase entry missing", reuse_de "Grobphasen-Eintrag fehlt";
+        fill_reason_placed_mesh_unavailable: native_en "Mesh of a placed part unavailable", native_de "Mesh eines platzierten Teils nicht verfügbar", reuse_en "Mesh of a placed building component unavailable", reuse_de "Mesh einer platzierten Baukomponente nicht verfügbar";
+        fill_reason_stale_spatial_query: native_en "Spatial query outdated", native_de "Räumliche Abfrage veraltet", reuse_en "Spatial query outdated", reuse_de "Räumliche Abfrage veraltet";
+        fill_reason_placement_kind_missing: native_en "Part kind missing", native_de "Teilart fehlt", reuse_en "Building component kind missing", reuse_de "Baukomponentenart fehlt";
+        fill_reason_placement_grip_missing: native_en "Grip missing", native_de "Griff fehlt", reuse_en "Connection point missing", reuse_de "Verbindungspunkt fehlt";
+        fill_reason_placement_mesh_missing: native_en "Placement mesh missing", native_de "Platzierungs-Mesh fehlt", reuse_en "Placement mesh missing", reuse_de "Platzierungs-Mesh fehlt";
+        fill_reason_placement_rejected: native_en "Placement rejected", native_de "Platzierung abgelehnt", reuse_en "Placement rejected", reuse_de "Platzierung abgelehnt";
+        fill_reason_placement_state_missing: native_en "Placement state missing", native_de "Platzierungszustand fehlt", reuse_en "Placement state missing", reuse_de "Platzierungszustand fehlt";
+        fill_reason_placement_spatial_state_missing: native_en "Spatial placement state missing", native_de "Räumlicher Platzierungszustand fehlt", reuse_en "Spatial placement state missing", reuse_de "Räumlicher Platzierungszustand fehlt";
+        fill_reason_stale_spatial_mutation: native_en "Spatial update outdated", native_de "Räumliche Aktualisierung veraltet", reuse_en "Spatial update outdated", reuse_de "Räumliche Aktualisierung veraltet";
+        fill_reason_rejected: native_en "Rejected", native_de "Abgelehnt", reuse_en "Rejected", reuse_de "Abgelehnt";
+        fill_reason_no_open_grip: native_en "Stopped after {0}: no open grip", native_de "Nach {0} angehalten: kein offener Griff", reuse_en "Stopped after {0}: no open connection point", reuse_de "Nach {0} angehalten: kein offener Verbindungspunkt";
+        fill_reason_no_compatible_kind: native_en "Stopped after {0}: no compatible kind", native_de "Nach {0} angehalten: keine passende Art", reuse_en "Stopped after {0}: no compatible building component", reuse_de "Nach {0} angehalten: keine passende Baukomponente";
+        fill_reason_no_free_placement: native_en "Stopped after {0}: no free placement", native_de "Nach {0} angehalten: kein freier Platz", reuse_en "Stopped after {0}: no free placement", reuse_de "Nach {0} angehalten: kein freier Platz";
+        fill_reason_document_capacity: native_en "Document capacity reached at {0}", native_de "Dokumentkapazität bei {0} erreicht", reuse_en "Document capacity reached at {0}", reuse_de "Dokumentkapazität bei {0} erreicht";
+        fill_reason_requested_reached: native_en "Placed all {0} requested parts", native_de "Alle {0} angeforderten Teile platziert", reuse_en "Placed all {0} requested building components", reuse_de "Alle {0} angeforderten Baukomponenten platziert";
+        fill_reason_retracted: native_en "Retracted placements above the new count", native_de "Platzierungen über der neuen Anzahl zurückgenommen", reuse_en "Retracted placements above the new count", reuse_de "Platzierungen über der neuen Anzahl zurückgenommen";
+        brush_run_unit: native_en "candidates", native_de "Kandidaten", reuse_en "candidates", reuse_de "Kandidaten";
+        brush_stage_prepare: native_en "Preparing", native_de "Vorbereiten", reuse_en "Preparing", reuse_de "Vorbereiten";
+        brush_stage_target: native_en "Listing compatible parts", native_de "Passende Teile auflisten", reuse_en "Listing compatible building components", reuse_de "Passende Baukomponenten auflisten";
+        brush_stage_test: native_en "Testing collision", native_de "Kollision prüfen", reuse_en "Testing collision", reuse_de "Kollision prüfen";
+        brush_stage_idle: native_en "Waiting for a grip", native_de "Auf einen Griff warten", reuse_en "Waiting for a connection point", reuse_de "Auf einen Verbindungspunkt warten";
+        brush_counter_tested: native_en "Tested", native_de "Getestet", reuse_en "Tested", reuse_de "Getestet";
+        brush_counter_free: native_en "Free", native_de "Frei", reuse_en "Free", reuse_de "Frei";
+        brush_counter_collisions: native_en "Collisions", native_de "Kollisionen", reuse_en "Collisions", reuse_de "Kollisionen";
+        brush_reason_free: native_en "Free to place", native_de "Frei platzierbar", reuse_en "Free to place", reuse_de "Frei platzierbar";
+        brush_reason_collision: native_en "Collides with a placed part", native_de "Kollidiert mit einem platzierten Teil", reuse_en "Collides with a placed building component", reuse_de "Kollidiert mit einer platzierten Baukomponente";
+        brush_reason_pose_unavailable: native_en "Placement pose unavailable", native_de "Platzierungspose nicht verfügbar", reuse_en "Placement pose unavailable", reuse_de "Platzierungspose nicht verfügbar";
+        brush_reason_target_missing: native_en "Target grip missing", native_de "Zielgriff fehlt", reuse_en "Target connection point missing", reuse_de "Zielverbindungspunkt fehlt";
+        brush_reason_suggestions_blocked: native_en "No suggestions for this grip kind", native_de "Keine Vorschläge für diese Griffart", reuse_en "No suggestions for this connection point kind", reuse_de "Keine Vorschläge für diese Verbindungspunktart";
+        brush_reason_search_complete: native_en "{0} of {1} candidates are free", native_de "{0} von {1} Kandidaten sind frei", reuse_en "{0} of {1} candidates are free", reuse_de "{0} von {1} Kandidaten sind frei";
         count: native_en "Count", native_de "Anzahl", reuse_en "Count", reuse_de "Anzahl";
         placement: native_en "Placement", native_de "Platzierung", reuse_en "Placement", reuse_de "Platzierung";
         duplicate: native_en "Duplicate", native_de "Duplizieren", reuse_en "Duplicate", reuse_de "Duplizieren";
@@ -116,38 +149,90 @@ pub fn puzzle5d_localized(field: fn(&Puzzle5dLabels) -> LabelText) -> LocalizedL
 }
 //#endregion 🔖️Locale
 
-//#region 🔖️FillStage
-/// 🧭️ The phase caption of a fill run, in the reader's own language. 5d's fill IS the 3d planner, so
-/// the machine tokens it reports are the 3d planner's own — mapped here to 5d's part/grip vocabulary
-/// rather than to the 3d artifact's object/vortex one.
-pub fn puzzle5d_fill_stage_label(labels: &Puzzle5dLabels, stage: &str, stall_reason: Option<&str>) -> String {
-    if let Some(reason) = stall_reason {
-        return format!("{} — {}", labels.fill_stage_stalled.as_str(), puzzle5d_fill_stall_reason_label(labels, reason));
-    }
-    match stage {
-        "select-target" => labels.fill_stage_selecting_target,
-        "prepare-candidates" | "select-candidate" => labels.fill_stage_selecting_candidate,
-        "construct-preview" | "query-broad-phase" | "test-collision" => labels.fill_stage_testing_collision,
-        "accept-candidate" => labels.fill_stage_locking,
-        "complete" => labels.fill_stage_done,
-        _ => labels.fill_stage_preparing,
-    }
-    .as_str()
-    .to_string()
+//#region 🔖️FillRun
+/// 🧮️ What one fill run counts its progress in: placed parts of the requested count.
+pub fn puzzle5d_fill_run_unit() -> LocalizedLabel {
+    puzzle5d_localized(|labels| labels.fill_run_unit)
 }
 
-/// 🛑️ The user-facing reason a fill run stopped short of the requested count. An unknown reason is
-/// surfaced verbatim rather than swallowed: a visible machine token beats a silently wrong sentence,
-/// and it names exactly the string the planner has to grow a label for.
-pub fn puzzle5d_fill_stall_reason_label(labels: &Puzzle5dLabels, reason: &str) -> String {
-    match reason {
-        "no-open-vortex" => labels.fill_stall_no_open_vortex.as_str().to_string(),
-        "document-capacity" => labels.fill_stall_document_capacity.as_str().to_string(),
-        "no-compatible-kind" => labels.fill_stall_no_compatible_kind.as_str().to_string(),
-        other => other.to_string(),
-    }
+/// 🧭️ The fill run's stages in `FillRunStage::ALL` order. 5d's fill runs the 3d planner, so the ids are the
+/// planner's (`$defs.Puzzle3dFillRun`) while the labels speak 5d's part/grip vocabulary.
+pub fn puzzle5d_fill_run_stages() -> Vec<ToolRunStageDefinition> {
+    let label = [puzzle5d_localized(|labels| labels.fill_stage_prepare), puzzle5d_localized(|labels| labels.fill_stage_search), puzzle5d_localized(|labels| labels.fill_stage_test), puzzle5d_localized(|labels| labels.fill_stage_place), puzzle5d_localized(|labels| labels.fill_stage_retract)];
+    FillRunStage::ALL.iter().zip(label).map(|(stage, label)| ToolRunStageDefinition { id: stage.id().into(), label }).collect()
 }
-//#endregion 🔖️FillStage
+
+/// 🔢️ The fill run's counters in `FillRunCounter::ALL` order.
+pub fn puzzle5d_fill_run_counters() -> Vec<ToolRunCounterDefinition> {
+    let label = [puzzle5d_localized(|labels| labels.fill_counter_tested), puzzle5d_localized(|labels| labels.fill_counter_placed), puzzle5d_localized(|labels| labels.fill_counter_collisions), puzzle5d_localized(|labels| labels.fill_counter_rejected)];
+    FillRunCounter::ALL.iter().zip(label).map(|(counter, label)| ToolRunCounterDefinition { id: counter.id().into(), label }).collect()
+}
+
+/// 🏷️ Every fill run reason in `FillRunReason::ALL` order with the planner's code and verdict and a 5d template;
+/// steps substitute `{0}` with their first argument.
+pub fn puzzle5d_fill_run_reasons() -> Vec<ToolRunReasonDefinition> {
+    let template: [fn(&Puzzle5dLabels) -> LabelText; 23] = [
+        |labels| labels.fill_reason_fits,
+        |labels| labels.fill_reason_solid_overlap,
+        |labels| labels.fill_reason_outside_target_volume,
+        |labels| labels.fill_reason_mesh_unavailable,
+        |labels| labels.fill_reason_missing_preview,
+        |labels| labels.fill_reason_missing_target,
+        |labels| labels.fill_reason_broad_phase_entry_missing,
+        |labels| labels.fill_reason_placed_mesh_unavailable,
+        |labels| labels.fill_reason_stale_spatial_query,
+        |labels| labels.fill_reason_placement_kind_missing,
+        |labels| labels.fill_reason_placement_grip_missing,
+        |labels| labels.fill_reason_placement_mesh_missing,
+        |labels| labels.fill_reason_placement_rejected,
+        |labels| labels.fill_reason_placement_state_missing,
+        |labels| labels.fill_reason_placement_spatial_state_missing,
+        |labels| labels.fill_reason_stale_spatial_mutation,
+        |labels| labels.fill_reason_rejected,
+        |labels| labels.fill_reason_no_open_grip,
+        |labels| labels.fill_reason_no_compatible_kind,
+        |labels| labels.fill_reason_no_free_placement,
+        |labels| labels.fill_reason_document_capacity,
+        |labels| labels.fill_reason_requested_reached,
+        |labels| labels.fill_reason_retracted,
+    ];
+    FillRunReason::ALL.iter().zip(template).map(|(reason, template)| ToolRunReasonDefinition { code: reason.code(), id: reason.id().into(), verdict: reason.verdict(), template: puzzle5d_localized(template) }).collect()
+}
+//#endregion 🔖️FillRun
+
+//#region 🔖️BrushSuggestionsRun
+/// 🧮️ What one brush suggestions run counts its progress in: the candidates of the target grip.
+pub fn puzzle5d_brush_suggestions_run_unit() -> LocalizedLabel {
+    puzzle5d_localized(|labels| labels.brush_run_unit)
+}
+
+/// 🧭️ The brush suggestions run's stages in `BrushSuggestionsRunStage::ALL` order: the 3d search's ids
+/// (`$defs.Puzzle3dBrushSuggestionsRun`) in 5d's part/grip vocabulary.
+pub fn puzzle5d_brush_suggestions_run_stages() -> Vec<ToolRunStageDefinition> {
+    let label = [puzzle5d_localized(|labels| labels.brush_stage_prepare), puzzle5d_localized(|labels| labels.brush_stage_target), puzzle5d_localized(|labels| labels.brush_stage_test), puzzle5d_localized(|labels| labels.brush_stage_idle)];
+    BrushSuggestionsRunStage::ALL.iter().zip(label).map(|(stage, label)| ToolRunStageDefinition { id: stage.id().into(), label }).collect()
+}
+
+/// 🔢️ The brush suggestions run's counters in `BrushSuggestionsRunCounter::ALL` order.
+pub fn puzzle5d_brush_suggestions_run_counters() -> Vec<ToolRunCounterDefinition> {
+    let label = [puzzle5d_localized(|labels| labels.brush_counter_tested), puzzle5d_localized(|labels| labels.brush_counter_free), puzzle5d_localized(|labels| labels.brush_counter_collisions)];
+    BrushSuggestionsRunCounter::ALL.iter().zip(label).map(|(counter, label)| ToolRunCounterDefinition { id: counter.id().into(), label }).collect()
+}
+
+/// 🏷️ Every brush suggestions reason in `BrushSuggestionsRunReason::ALL` order with the search's code and verdict;
+/// the completion step substitutes `{0}` with the free and `{1}` with the tested candidates.
+pub fn puzzle5d_brush_suggestions_run_reasons() -> Vec<ToolRunReasonDefinition> {
+    let template: [fn(&Puzzle5dLabels) -> LabelText; 6] = [
+        |labels| labels.brush_reason_free,
+        |labels| labels.brush_reason_collision,
+        |labels| labels.brush_reason_pose_unavailable,
+        |labels| labels.brush_reason_target_missing,
+        |labels| labels.brush_reason_suggestions_blocked,
+        |labels| labels.brush_reason_search_complete,
+    ];
+    BrushSuggestionsRunReason::ALL.iter().zip(template).map(|(reason, template)| ToolRunReasonDefinition { code: reason.code(), id: reason.id().into(), verdict: reason.verdict(), template: puzzle5d_localized(template) }).collect()
+}
+//#endregion 🔖️BrushSuggestionsRun
 
 //#region 🧪️Tests
 #[cfg(test)]

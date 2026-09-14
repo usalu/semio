@@ -148,23 +148,53 @@ fn plugin_fault_status_reads_in_both_languages() {
 /// (`📓️wgpu-intake-budget-2026-09-10.md`, wgpu boot #4).
 #[test]
 fn a_poisoned_surface_faults_alone() {
+    let both: Vec<String> = vec!["flow-window".into(), "preview".into()];
     let mut shell = ShellState::new(Vec::new(), "generation3d".into());
-    shell.settle_surface_faults(vec![
-        ("flow-window".into(), "flow.body".into(), "renderDocument promise failed: wgpu-ui.intake-budget-exhausted:intake:163840001".into()),
-        ("preview".into(), "preview.body".into(), "wgpu-ui.surface-not-published:preview".into()),
-    ]);
+    shell.settle_surface_faults(
+        vec![
+            ("flow-window".into(), "flow.body".into(), "renderDocument promise failed: wgpu-ui.intake-budget-exhausted:intake:163840001".into()),
+            ("preview".into(), "preview.body".into(), "wgpu-ui.surface-not-published:preview".into()),
+        ],
+        &both,
+    );
     assert_eq!(shell.surface_faults.len(), 2);
     assert_eq!(shell.surface_faults[0].surface_id, "flow-window");
     assert!(shell.plugin_faults.is_empty(), "a surface fault never blames a plugin's activation");
     assert_eq!(shell.error, shell.fault_status());
 
-    shell.settle_surface_faults(vec![("preview".into(), "preview.body".into(), "wgpu-ui.surface-not-published:preview".into())]);
+    shell.settle_surface_faults(vec![("preview".into(), "preview.body".into(), "wgpu-ui.surface-not-published:preview".into())], &both);
     assert_eq!(shell.surface_faults.len(), 1, "a surface that recovered stops showing a card");
     assert_eq!(shell.surface_faults[0].surface_id, "preview");
 
-    shell.settle_surface_faults(Vec::new());
+    shell.settle_surface_faults(Vec::new(), &both);
     assert!(shell.surface_faults.is_empty());
     assert!(shell.error.is_none(), "no fault leaves no card");
+}
+
+/// 🧪️ A SCOPED refresh may only settle the surfaces it actually looked at. A `UiDirtyScope` that names
+/// one window makes `refresh_ui` skip every other body, and clearing the whole fault set there would
+/// dismiss a broken surface's card because an unrelated window settled — a body that silently
+/// "repairs itself" while still showing nothing (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[test]
+fn a_scoped_refresh_settles_only_the_surfaces_it_visited() {
+    let mut shell = ShellState::new(Vec::new(), "generation3d".into());
+    shell.settle_surface_faults(
+        vec![
+            ("flow-window".into(), "flow.body".into(), "renderDocument promise failed: wgpu-ui.intake-budget-exhausted:intake:163840001".into()),
+            ("preview".into(), "preview.body".into(), "wgpu-ui.surface-not-published:preview".into()),
+        ],
+        &["flow-window".to_string(), "preview".to_string()],
+    );
+    assert_eq!(shell.surface_faults.len(), 2);
+
+    shell.settle_surface_faults(Vec::new(), &["preview".to_string()]);
+    assert_eq!(shell.surface_faults.len(), 1, "only the visited surface's card is settled");
+    assert_eq!(shell.surface_faults[0].surface_id, "flow-window");
+    assert!(shell.error.is_some(), "the surface this pass never looked at keeps its card");
+
+    shell.settle_surface_faults(Vec::new(), &["flow-window".to_string()]);
+    assert!(shell.surface_faults.is_empty());
+    assert!(shell.error.is_none());
 }
 
 /// 🧪️ The per-surface status renders in English and in German, with no default language, carries the

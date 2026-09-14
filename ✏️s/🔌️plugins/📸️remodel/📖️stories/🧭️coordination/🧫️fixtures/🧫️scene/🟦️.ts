@@ -37,28 +37,6 @@ const REMODEL_SURFACE_VIEW = "remodeling.view.scene3d/model";
 /** 📥️ `REMODELING_MEDIA_ACCEPT` (`✏️editor/🎮️commands/🎞️import-frames/🦀️.rs`) — the media panel drop zone's accept list, verbatim. */
 const REMODEL_MEDIA_ACCEPT = "image/png,image/jpeg,video/mp4,video/quicktime,video/webm,video/x-msvideo,.png,.jpg,.jpeg,.mp4,.mov,.webm,.avi";
 
-/** 🚦️ `stage_display` (`🧬️schema/🦀️.rs`) — the kebab wire tag → its display string. */
-const REMODEL_STAGE_DISPLAY: Readonly<Record<string, string>> = {
-  idle: "Idle",
-  ingesting: "Ingesting",
-  calibrating: "Calibrating",
-  "extracting-features": "Extracting Features",
-  "matching-features": "Matching Features",
-  "estimating-poses": "Estimating Poses",
-  "bundle-adjusting": "Bundle Adjusting",
-  georeferencing: "Georeferencing",
-  "dense-stereo": "Dense Stereo",
-  "fusing-volume": "Fusing Volume",
-  "extracting-surface": "Extracting Surface",
-  "cleaning-mesh": "Cleaning Mesh",
-  texturing: "Texturing",
-  "tracking-motion": "Tracking Motion",
-  "deriving-geo-products": "Deriving Geo Products",
-  "reporting-qc": "Reporting QC",
-  done: "Done",
-  failed: "Failed",
-};
-
 /** 🕒️ The three modes `create_remodeling_app` declares, each with the window kind its layout puts in the main slot. */
 export const REMODEL_MODES = [
   { id: "capture", windowKindId: "remodeling-frames" },
@@ -101,7 +79,7 @@ export function remodelActionArgs(args: ActionDescriptor["args"]): Record<string
 //#endregion 🔖️Formatting
 
 //#region 🔖️WindowScenes
-/** ☁️ `world_points_json` — the sparse/dense clouds, the recovered camera poses and the GCP world positions, each gated on its own `config.layers` toggle. `positionsB64`/`colorsB64` are already base64 LE-f32 / u8-rgb buffers on the document, so no re-encode happens here either. */
+/** ☁️ `world_points_json` — the sparse/dense clouds, the stored trajectory's camera poses and the GCP world positions, each gated on its own `config.layers` toggle. `positionsB64`/`colorsB64` are already base64 LE-f32 / u8-rgb buffers on the document, so no re-encode happens here either. */
 function remodelWorldPointsJson(scene: RemodelScene, layers: RemodelConfig["layers"], gateOnConfig: boolean): string | undefined {
   const out: Record<string, unknown>[] = [];
   if ((!gateOnConfig || layers.sparse) && scene.results.sparse && scene.results.sparse.points.length > 0) {
@@ -110,8 +88,8 @@ function remodelWorldPointsJson(scene: RemodelScene, layers: RemodelConfig["laye
   if ((!gateOnConfig || layers.dense) && scene.results.dense && scene.results.dense.positions.length > 0) {
     out.push({ id: "remodeling-dense", positionsB64: scene.results.dense.positions, colorsB64: scene.results.dense.colors, size: 2, sizeAttenuation: true });
   }
-  if ((!gateOnConfig || layers.cameras) && scene.job.cameraPosesPreview.length > 0) {
-    out.push({ id: "remodeling-camera-poses", positionsB64: packF32(scene.job.cameraPosesPreview.flatMap((pose) => [...pose.translation])), colorsB64: null, size: 9, sizeAttenuation: false });
+  if ((!gateOnConfig || layers.cameras) && scene.results.trajectory && scene.results.trajectory.poses.length > 0) {
+    out.push({ id: "remodeling-camera-poses", positionsB64: packF32(scene.results.trajectory.poses.flatMap((pose) => [...pose.translation])), colorsB64: null, size: 9, sizeAttenuation: false });
   }
   if ((!gateOnConfig || layers.gcps) && scene.gcps.length > 0) {
     out.push({ id: "remodeling-gcps", positionsB64: packF32(scene.gcps.flatMap((gcp) => [...gcp.worldPosition])), colorsB64: null, size: 10, sizeAttenuation: false });
@@ -233,14 +211,20 @@ export function remodelReportTableJson(scene: RemodelScene, table: string): { re
         ]),
         rowsJson: JSON.stringify(scene.gcps.map((gcp) => ({ id: gcp.id, name: gcp.name, x: gcp.worldPosition[0], y: gcp.worldPosition[1], z: gcp.worldPosition[2], observations: gcp.observations.length }))),
       };
-    case "qcStages":
+    case "qcStages": {
+      const qc = scene.results.qc;
       return {
         columnsJson: JSON.stringify([
-          { id: "stage", label: "Stage" },
-          { id: "status", label: "Status" },
+          { id: "check", label: "Check" },
+          { id: "value", label: "Value" },
         ]),
-        rowsJson: JSON.stringify([{ stage: debugEnum(scene.job.stage), status: scene.job.error !== null ? "error" : "ok" }]),
+        rowsJson: JSON.stringify(
+          qc === null
+            ? []
+            : [{ check: "reprojectionRmsPx", value: qc.reprojectionRmsPx }, { check: "registeredFrameRatio", value: qc.registeredFrameRatio }, ...qc.warnings.map((warning) => ({ check: "warning", value: warning }))],
+        ),
       };
+    }
     case "matches":
       return { columnsJson: JSON.stringify([{ id: "note", label: "Note" }]), rowsJson: JSON.stringify([{ note: "Pairwise match data is reconstruction-runtime scratch, never distilled into durable document state." }]) };
     default:
@@ -320,12 +304,25 @@ function panelDropZone(key: string, title: string, hint: string, accept: string)
   };
 }
 
-/** 🗿️ `📌️panels/🗿️artifact` — the document/pipeline tab: job stage + progress (+ error), derived running status, active utility. */
-function pipelinePanel(scene: RemodelScene, config: RemodelConfig, labels: RemodelLabels): BuiltNode {
-  const stage = REMODEL_STAGE_DISPLAY[scene.job.stage] ?? scene.job.stage;
-  const jobLabel = `${labels.reconstruction}: ${stage} (${fixed(scene.job.progress01 * 100, 0)}%)${scene.job.error === null ? "" : ` - ${labels.error}: ${scene.job.error}`}`;
-  const running = !["idle", "done", "failed"].includes(scene.job.stage);
-  return panelStack("pipeline", [panelText("pipeline-job", jobLabel), panelText("pipeline-status", `${labels.status}: ${running ? labels.running : labels.idle}`), panelText("pipeline-utility", `${labels.utility}: ${config.activeUtilityId}`)]);
+/** ⏯️ `ToolRunAction::{chord, label}` for the five actions the Reconstruction section lists, in both native locales. */
+const REMODEL_TOOL_RUN_ACTIONS = [
+  { id: "start", chord: "mod+enter", en: "Start", de: "Starten" },
+  { id: "pause", chord: "mod+alt+enter", en: "Pause", de: "Pausieren" },
+  { id: "step", chord: "mod+alt+arrowright", en: "Step", de: "Einzelschritt" },
+  { id: "abort", chord: "mod+.", en: "Abort", de: "Abbrechen" },
+  { id: "finalize", chord: "mod+shift+enter", en: "Finalize", de: "Abschließen" },
+] as const;
+
+/** 🗿️ `📌️panels/🗿️artifact` — the Reconstruction section as it renders without a live run: "No reconstruction run", the stored trajectory's camera count, and the tool-run chords. A live run is framework tool-run state no story owns. */
+function pipelinePanel(scene: RemodelScene, config: RemodelConfig): BuiltNode {
+  const german = config.locale.toLowerCase().startsWith("de");
+  const say = (en: string, de: string): string => (german ? de : en);
+  return panelStack("remodeling-pipeline", [
+    panelText("remodeling-pipeline.reconstruction", say("Reconstruction", "Rekonstruktion")),
+    panelText("remodeling-pipeline.run", say("No reconstruction run", "Kein Rekonstruktionslauf")),
+    panelText("remodeling-pipeline.result", `${say("Stored cameras", "Gespeicherte Kameras")}: ${scene.results.trajectory?.poses.length ?? 0}`),
+    ...REMODEL_TOOL_RUN_ACTIONS.map((action) => panelText(`remodeling-pipeline.keys.${action.id}`, `${action.chord} — ${german ? action.de : action.en}`)),
+  ]);
 }
 
 /** 🗂️ `📌️panels/🗂️media` — the import drop zone, the stream/asset counts, and one line per stream (plus its decoded container facts). */
@@ -430,7 +427,7 @@ export function remodelPanelDocument(panelId: RemodelPanelId, scene: RemodelScen
     case "quality":
       return qualityPanel(scene, labels);
     default:
-      return pipelinePanel(scene, config, labels);
+      return pipelinePanel(scene, config);
   }
 }
 //#endregion 🔖️PanelDocuments
@@ -439,7 +436,7 @@ export function remodelPanelDocument(panelId: RemodelPanelId, scene: RemodelScen
 /**
  * 🎮️ Story-local mirror of `command_from_action` → `RemodelingCommand::dispatch` for the config-only subset a
  * host surface can reach without a plugin runtime. Document-mutating commands (`addGcp`, `importFramePayload`,
- * `runReconstruction`, …) are deliberately NOT emulated: they emit artifact mutations through the event-sourced
+ * the reconstruction tool run, …) are deliberately NOT emulated: they emit artifact mutations through the event-sourced
  * store, which no story owns. An unrecognized action is ignored, exactly as `command_from_action` returning
  * `None` leaves the dispatch a no-op.
  */

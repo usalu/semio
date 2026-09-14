@@ -40,17 +40,27 @@ import { join } from "node:path";
 const origin = process.env.SEMIO_PROBE_ORIGIN ?? "http://127.0.0.1:6118";
 const outRoot = join(import.meta.dir, "🗑️generated", process.env.SEMIO_PROBE_OUT ?? "wgpu-examples/matrix");
 const budgetSeconds = Number(process.env.SEMIO_PROBE_BUDGET ?? 150);
+/** ⏲️ A FLOOR on observation. Convergence answers the first sample that carries a drawable, and the
+ * generation3d preview publishes its port-preview WIRES seconds before the guest finishes tessellating
+ * the solid — so a run that stops at first convergence reports a census the user has not finished
+ * seeing. `timeToMeshSeconds` is still the FIRST convergence (comparable with React's own per-example
+ * seconds); the census fields are the LAST sample, so a floor makes them the settled ones. */
+const minSeconds = Number(process.env.SEMIO_PROBE_MIN_SECONDS ?? 0);
 const viewport = { width: 1440, height: 900 };
 
-/** 📚️ The eight bundled examples of `s.procedural.generation3d@1/*`, by their own `pub const ID`. */
+/** 📚️ The eight bundled examples of `s.procedural.generation3d@1/*`, by their own `pub const ID`.
+ * `(none)` is the ninth lane React's journey probe calls `No example`: the plugin booted with no
+ * `?example=` at all, whose preview must carry NOTHING. */
 const ALL_EXAMPLES = ["hexagonal-mushroom-column", "rectangle-extrude-volume", "rectangle-wire-preview", "box-shell-preview", "box-fillet-preview", "sphere-cut-with-torus", "sphere-box-fuse", "face-sweep-extrude"];
+const NO_EXAMPLE = "(none)";
 
 /** 🛣️ One lane = one url shape. `generate` opens the three-pane generate layout, whose preview window
  * is the surface `addGeneration` publishes into. */
+const axis = (example) => (example === NO_EXAMPLE ? "" : `&example=${encodeURIComponent(example)}`);
 const LANES = {
-  edit: (example) => `${origin}/?plugin=generation3d&mode=edit&example=${encodeURIComponent(example)}`,
-  viewer: (example) => `${origin}/?plugin=generation3d&role=viewer&example=${encodeURIComponent(example)}`,
-  generate: (example) => `${origin}/?plugin=generation3d&mode=generate&example=${encodeURIComponent(example)}`,
+  edit: (example) => `${origin}/?plugin=generation3d&mode=edit${axis(example)}`,
+  viewer: (example) => `${origin}/?plugin=generation3d&role=viewer${axis(example)}`,
+  generate: (example) => `${origin}/?plugin=generation3d&mode=generate${axis(example)}`,
 };
 
 const examples = (process.env.SEMIO_PROBE_EXAMPLES ?? ALL_EXAMPLES.join(",")).split(",").filter(Boolean);
@@ -181,7 +191,7 @@ for (const lane of lanes) {
     let stable = 0;
     let firstConvergedMs = null;
     let flip = 0;
-    for (let elapsed = 0; elapsed < budgetSeconds && stable < 2; elapsed += 1) {
+    for (let elapsed = 0; elapsed < budgetSeconds && (stable < 2 || elapsed < minSeconds); elapsed += 1) {
       for (let nudge = 0; nudge < 5; nudge += 1) {
         await page.waitForTimeout(200);
         flip = 1 - flip;

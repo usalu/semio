@@ -43,7 +43,7 @@ class FakeWorker implements BrowserFrameWorkerPort {
   }
 }
 
-function transport(worker: FakeWorker, hooks: { directives?: number[]; faults?: string[] } = {}): BrowserFrameTransport {
+function transport(worker: FakeWorker, hooks: { directives?: number[]; faults?: string[]; turns?: string[] } = {}): BrowserFrameTransport {
   return new BrowserFrameTransport({
     worker,
     boot: {
@@ -62,6 +62,7 @@ function transport(worker: FakeWorker, hooks: { directives?: number[]; faults?: 
     setTimer: () => 1,
     clearTimer: () => {},
     onDirectives: (value) => hooks.directives?.push(value.generation),
+    onUiTurn: (outcome) => hooks.turns?.push(`${outcome.verdict}:${outcome.site}`),
     onFault: (code) => hooks.faults?.push(code),
   });
 }
@@ -326,6 +327,42 @@ describe("browser frame worker transport", () => {
     subject.close();
     for (const answer of inFlight) await expect(answer).resolves.toBeNull();
     expect(faults).toEqual([]);
+  });
+
+  /** ♿️ LAW: the two host channels are not interchangeable. `onDirectives` is the FRAME channel and
+   * fires for every accepted frame; `onUiTurn` is the BUDGET channel and fires only for a turn that
+   * breached its ceiling. A healthy shell overruns once at boot and never again, so anything hung on
+   * `onUiTurn` runs exactly once in a healthy session — which is how the ARIA mirror came to carry
+   * whatever a single boot-time race captured (`nodeCount 0` on 6118). */
+  it("raises the frame channel for every accepted frame while the budget channel stays silent", () => {
+    const worker = new FakeWorker();
+    const directives: number[] = [];
+    const turns: string[] = [];
+    const subject = transport(worker, { directives, turns });
+    worker.reply({ kind: "booted", lifecycle: 1 });
+    subject.enqueueLossless({ kind: "text", text: "x" });
+    for (let sequence = 1; sequence <= 5; sequence++) {
+      subject.requestFrame();
+      expect(subject.flush(sequence)).toBe(true);
+      worker.reply({ kind: "frame", lifecycle: 1, sequence, generation: 1, cursor: "default", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
+    }
+    expect(directives).toEqual([1, 1, 1, 1, 1]);
+    expect(turns).toEqual([]);
+  });
+
+  /** ♿️ LAW: the ARIA mirror is driven by the frame channel, and the pull never runs inside the hook. */
+  it("refreshes the accessibility mirror from the frame channel, never from the overrun channel", () => {
+    const root = dirname(fileURLToPath(import.meta.url));
+    const bootSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), "utf8");
+    const directiveHook = bootSource.slice(bootSource.indexOf("onDirectives: ({ cursor, fullscreen })"), bootSource.indexOf("onFault:"));
+    const turnHook = bootSource.slice(bootSource.indexOf("onUiTurn: (outcome)"), bootSource.indexOf("onReady: () =>"));
+    expect(directiveHook).toContain("accessibility?.refresh()");
+    expect(turnHook).not.toContain("accessibility");
+    const refresh = bootSource.slice(bootSource.indexOf("const refresh = (): void =>"), bootSource.indexOf("return {\n    refresh,"));
+    expect(refresh).toContain("window.setTimeout");
+    expect(refresh).not.toMatch(/\n\s*void pull\(\);\n\s*return;/);
+    expect(bootSource).toContain("paint(dump.windows ?? [])");
+    expect(bootSource).toContain('element.dataset.window = surface.windowId');
   });
 
   it("publishes the introspection hooks on the UI isolate only after the Worker reports booted", () => {

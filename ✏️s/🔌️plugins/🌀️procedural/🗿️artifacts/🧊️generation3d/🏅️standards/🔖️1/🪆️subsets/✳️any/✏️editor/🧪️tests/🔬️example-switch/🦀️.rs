@@ -97,20 +97,12 @@ async fn a_shell_dispatched_example_switch_republishes_both_windows_and_rearms_t
     assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "a shell-dispatched setActiveExample published a fault lane");
     let published = published_node_ids(&context::render_with_view(&mut app, flow_window::GENERATION_3D_PLAY_BODY_MAIN, &flow_view).await);
     assert_eq!(published, authored_node_ids(PROCEDURAL_EXAMPLE_BOX_SHELL), "the shell-dispatched switch did not republish the flow window's graph");
-    // 🔒️ The switch arms from its OWN emit, and the retained session's per-window latch is what
-    // keeps the following refresh poll from stacking a SECOND chain on top of it — one pending tick
-    // per (instance, preview window), whoever asked for it.
+    // 🔒️ The switch carries the run start on its OWN emit, and the link's one-request latch is what
+    // keeps the following refresh poll from asking for a SECOND run on top of it.
     let polled = app.pending_effects(Some(&flow_view)).await;
     eprintln!("[DEBUG] shell switch: lanes={:?} ui_scope={:?} own effects={} polled after switch={}", receipt.lanes, receipt.ui_scope, receipt.effects.len(), polled.len());
-    assert!(
-        receipt.effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "flowEvalTick")),
-        "the switched document must leave the preview window's evaluation chain armed, got {:?}",
-        receipt.effects
-    );
-    assert!(
-        !polled.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "flowEvalTick")),
-        "the refresh poll must add no second chain to a window that already owes a tick, got {polled:?}"
-    );
+    assert_eq!(context::run_actions(&receipt.effects), vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()], "the switched document must start the preview's evaluation run, got {:?}", receipt.effects);
+    assert!(context::run_actions(&polled).is_empty(), "the refresh poll must ask for no second run, got {polled:?}");
     context::drain_armed_flow_eval_ticks_from(&mut app, &flow_view, &receipt.effects).await;
     let after = app
         .window_transient_snapshot(&preview_view)
@@ -122,28 +114,22 @@ async fn a_shell_dispatched_example_switch_republishes_both_windows_and_rearms_t
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
 
-/// ⚖️ LAW: the switch arms its OWN evaluation restart. Before this law the gesture published
-/// `effects=0` and the preview's recovery depended entirely on the host reaching
+/// ⚖️ LAW: the switch starts its OWN evaluation run. Before this law the gesture published `effects=0`
+/// and the preview's recovery depended entirely on the host reaching
 /// `Generation3dPlayApp::pending_effects` through a later `refresh-ui` — a dependency that fails
 /// silently, with no fault anywhere, the moment that refresh is narrowed or lost.
 #[semio_framework_async_macros::async_test]
-async fn set_active_example_arms_every_attached_preview_windows_evaluation_chain() {
+async fn set_active_example_starts_the_run_that_evaluates_every_attached_preview_window() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let mut app = app_with_registry().await;
     let (flow_view, _preview_view) = context::shell_views(flow_window::GENERATION_3D_PLAY_WINDOW_MAIN, edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW);
     let action_meta = semio_framework_plugin::ActionMeta { view_state: Some(flow_view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("local") };
     app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_SHELL }).into()), &action_meta).await.expect("setActiveExample dispatches");
     let receipt = context::settle(&mut app).await;
-    let armed: Vec<&str> = receipt
-        .effects
-        .iter()
-        .filter_map(|effect| match effect {
-            Effect::DispatchAction { action, args, .. } if action == "flowEvalTick" => args.as_ref().and_then(|args| args.get("windowId")).and_then(|value| value.as_str()),
-            _ => None,
-        })
-        .collect();
-    eprintln!("[DEBUG] setActiveExample armed ticks for {armed:?} out of {} published effects", receipt.effects.len());
-    assert_eq!(armed, vec![edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW], "the switch must arm the attached preview window's own evaluation chain");
+    assert_eq!(context::run_actions(&receipt.effects), vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()], "the switch carries exactly one run start");
+    let run = context::drive_preview_run(&mut app, &flow_view, &receipt.effects).await;
+    eprintln!("[DEBUG] setActiveExample run {run:?}");
+    assert_eq!(run_windows(&run), vec![edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.to_string()], "the run must evaluate the attached preview window");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
 
@@ -209,14 +195,9 @@ fn example_switch_views(fixture: &ExampleSwitchFixture, attached: &[ExampleSwitc
     (flow, first_preview)
 }
 
-fn armed_window_ids(effects: &[Effect]) -> Vec<String> {
-    effects
-        .iter()
-        .filter_map(|effect| match effect {
-            Effect::DispatchAction { action, args, .. } if action == "flowEvalTick" => args.as_ref().and_then(|args| args.get("windowId")).and_then(|value| value.as_str()).map(str::to_string),
-            _ => None,
-        })
-        .collect()
+/// 🪟️ The distinct preview windows a driven run evaluated, sorted.
+fn run_windows(run: &context::PreviewRunReceipt) -> Vec<String> {
+    run.hop_windows.iter().cloned().collect::<std::collections::BTreeSet<_>>().into_iter().collect()
 }
 
 fn preview_eval_text(app: &mut crate::editor::generation3d::unit_tests::context::Generation3dApp, preview_view: &semio_framework_plugin::ViewModel) -> Option<String> {
@@ -242,8 +223,7 @@ async fn every_example_switch_row_of_the_fixture_holds() {
             app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": pick }).into()), &action_meta).await.expect("setActiveExample dispatches");
             let receipt = context::settle(&mut app).await;
             assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "{}: picking {pick:?} published a fault lane", row.id);
-            armed = armed_window_ids(&receipt.effects);
-            context::drain_armed_flow_eval_ticks_from(&mut app, &flow_view, &receipt.effects).await;
+            armed = run_windows(&context::drive_preview_run(&mut app, &flow_view, &receipt.effects).await);
         }
         let published = published_node_ids(&context::render_with_view(&mut app, flow_window::GENERATION_3D_PLAY_BODY_MAIN, &flow_view).await);
         let expected: std::collections::BTreeSet<String> = row.published.iter().cloned().collect();
@@ -252,13 +232,9 @@ async fn every_example_switch_row_of_the_fixture_holds() {
         for leaked in &row.retired {
             assert!(!published.contains(leaked), "{}: the previous example's widget {leaked} survived the switch", row.id);
         }
-        // 🔁️ WHICH windows, not in which order: the retained ladder drains `Emit::effects` with
-        // `pop()`, so the published order is the roster's reverse and carries no meaning.
-        let mut armed_sorted = armed.clone();
-        armed_sorted.sort();
         let mut expected_armed = row.armed.clone();
         expected_armed.sort();
-        assert_eq!(armed_sorted, expected_armed, "{}: the switch armed the wrong preview chains", row.id);
+        assert_eq!(armed, expected_armed, "{}: the run the switch started evaluated the wrong preview windows", row.id);
         if !row.picks.is_empty() {
             let after_eval = preview_eval_text(&mut app, &preview_view);
             if row.preview_evaluation_changed {

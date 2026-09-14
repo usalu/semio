@@ -23,11 +23,10 @@ message Puzzle5dWorldSunConfig {
 
 message Puzzle5dBoardWindowConfig {
   Puzzle5dCamera2d camera2d = 1;
-  uint32 fill_count = 2;
-  string lod_mode = 3;
-  double suggestion_offset = 4;
-  bool grid_snap_enabled = 5;
-  double grid_factor = 6;
+  string lod_mode = 2;
+  double suggestion_offset = 3;
+  bool grid_snap_enabled = 4;
+  double grid_factor = 5;
 }
 
 message Puzzle5dWorldWindowConfig {

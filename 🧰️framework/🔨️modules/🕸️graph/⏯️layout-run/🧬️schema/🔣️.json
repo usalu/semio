@@ -1,0 +1,240 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/graph/layout-run/schema.json",
+  "title": "LayoutRunSchema",
+  "description": "Source of record for the ⏯️layout-run graph module: the domain-neutral, stepped, cancellable force-directed layout run a ToolRun `runJob` drives. One iteration per fuel unit; per-node trace records (entity subjects) with displacement verdicts; counters iterations/energy/max displacement/settled; stages initialize/iterate/settle; provisional move ops through a caller encoder; a 44-byte checkpoint. Wire names are camelCase; u64 values are JSON integers.",
+  "x-semio-toolRun": {
+    "stages": [
+      { "index": 0, "id": "initialize", "label": { "en": "Initialize", "de": "Initialisieren" } },
+      { "index": 1, "id": "iterate", "label": { "en": "Iterate", "de": "Iterieren" } },
+      { "index": 2, "id": "settle", "label": { "en": "Settle", "de": "Stabilisieren" } }
+    ],
+    "counters": [
+      { "index": 0, "id": "iterations", "fixedPoint": 1, "label": { "en": "Iterations", "de": "Iterationen" } },
+      { "index": 1, "id": "energy", "fixedPoint": 1000, "label": { "en": "Kinetic energy (thousandths)", "de": "Kinetische Energie (Tausendstel)" } },
+      { "index": 2, "id": "maxDisplacement", "fixedPoint": 1000, "label": { "en": "Largest displacement (thousandths)", "de": "Größte Verschiebung (Tausendstel)" } },
+      { "index": 3, "id": "settled", "fixedPoint": 1, "label": { "en": "Settled nodes", "de": "Ruhende Knoten" } }
+    ],
+    "reasons": [
+      { "code": 0, "id": "moving", "verdict": "testing", "template": { "en": "Moving", "de": "In Bewegung" } },
+      { "code": 1, "id": "settled", "verdict": "success", "template": { "en": "Settled", "de": "Zur Ruhe gekommen" } },
+      { "code": 2, "id": "pinned", "verdict": "success", "template": { "en": "Pinned", "de": "Fixiert" } },
+      { "code": 3, "id": "diverged", "verdict": "danger", "template": { "en": "{0} nodes diverged and were reset to their last finite position", "de": "{0} Knoten divergierten und wurden auf ihre letzte endliche Position zurückgesetzt" } },
+      { "code": 4, "id": "unsettled", "verdict": "warning", "template": { "en": "Still moving when the iteration limit was reached", "de": "Beim Erreichen der Iterationsgrenze noch in Bewegung" } },
+      { "code": 5, "id": "initialized", "verdict": "testing", "template": { "en": "{0} nodes and {1} edges prepared", "de": "{0} Knoten und {1} Kanten vorbereitet" } },
+      { "code": 6, "id": "converged", "verdict": "success", "template": { "en": "Converged after {0} iterations (largest displacement {1}, energy {2})", "de": "Nach {0} Iterationen konvergiert (größte Verschiebung {1}, Energie {2})" } },
+      { "code": 7, "id": "iterationLimit", "verdict": "warning", "template": { "en": "Iteration limit {0} reached (largest displacement {1}, energy {2})", "de": "Iterationsgrenze {0} erreicht (größte Verschiebung {1}, Energie {2})" } },
+      { "code": 8, "id": "resumed", "verdict": "testing", "template": { "en": "Resumed at iteration {0}", "de": "Bei Iteration {0} fortgesetzt" } }
+    ],
+    "unit": { "en": "iteration", "de": "Iteration" },
+    "trace": "entity",
+    "mutating": true,
+    "rebase": "restart",
+    "reconfigure": "resume",
+    "checkpoint": {
+      "bytes": 44,
+      "endianness": "little",
+      "fields": [
+        { "name": "magic", "type": "u32", "value": 1280459569 },
+        { "name": "nodeCount", "type": "u32" },
+        { "name": "graphDigest", "type": "u64" },
+        { "name": "iteration", "type": "u32" },
+        { "name": "settleStreak", "type": "u32" },
+        { "name": "provisionalLen", "type": "u32" },
+        { "name": "centerX", "type": "f64" },
+        { "name": "centerY", "type": "f64" }
+      ]
+    },
+    "limits": { "nodesMax": 32768, "opBytesMax": 2048, "tickFlushBytes": 12288, "compactThreshold": "max(compactOps, 2·nodeCount), at most 65536" },
+    "graphDigest": "FNV-1a 64 over, in order: nodeCount u32; per node entity u64, pinned u8, origin present u8 then x f64 y f64, radius f64, anchor present u8 then x f64 y f64; edgeCount u32; per edge source u32, target u32, weight f64 (all little-endian, f64 as IEEE-754 bits)",
+    "positionsDigest": "FNV-1a 64 over every final position x f64 then y f64 (IEEE-754 bits, little-endian), node order"
+  },
+  "$defs": {
+    "U32": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+    "U64": { "type": "integer", "minimum": 0 },
+    "Finite": { "type": "number" },
+    "Hex16": { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+    "LayoutRunPoint": {
+      "title": "LayoutRunPoint",
+      "description": "A world position.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": { "x": { "$ref": "#/$defs/Finite" }, "y": { "$ref": "#/$defs/Finite" } }
+    },
+    "LayoutRunNode": {
+      "title": "LayoutRunNode",
+      "description": "One body. `entity` keys the provisional entity set and the trace subject; `origin` is the committed position (null = unplaced, seeded from `seed`); a pinned node never moves and needs an origin; `anchor` adds a spring toward a target (layered consumers relax toward their layer positions).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entity", "origin", "radius", "pinned", "anchor"],
+      "properties": {
+        "entity": { "$ref": "#/$defs/U64" },
+        "origin": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/LayoutRunPoint" }] },
+        "radius": { "type": "number", "exclusiveMinimum": 0 },
+        "pinned": { "type": "boolean" },
+        "anchor": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/LayoutRunPoint" }] }
+      }
+    },
+    "LayoutRunEdge": {
+      "title": "LayoutRunEdge",
+      "description": "One undirected spring between node indices.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "target", "weight"],
+      "properties": { "source": { "$ref": "#/$defs/U32" }, "target": { "$ref": "#/$defs/U32" }, "weight": { "type": "number", "minimum": 0 } }
+    },
+    "LayoutRunGraph": {
+      "title": "LayoutRunGraph",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodes", "edges"],
+      "properties": {
+        "nodes": { "type": "array", "items": { "$ref": "#/$defs/LayoutRunNode" }, "maxItems": 32768 },
+        "edges": { "type": "array", "items": { "$ref": "#/$defs/LayoutRunEdge" } }
+      }
+    },
+    "LayoutRunConfig": {
+      "title": "LayoutRunConfig",
+      "description": "Every knob of the run. Physics: repulsion `repulsionStrength·cool·max(rᵢ·rⱼ, 1)/f(d)` with `f(d) = d` (`inverse`) or `d²` (`inverseSquare`) (Barnes-Hut, aggregates use rᵢ·Σrⱼ, above `pairwiseMaxBodies` with opening angle `barnesHutTheta`, exact pairwise at or below it or when the angle is 0), springs `springStrength·cool·s(d)·weight` with `s(d) = d²/idealEdgeLength` (`quadratic`) or `d − idealEdgeLength` (`linear`), gravity `gravity·cool` toward `center` (null = centroid of the initial positions), anchors `anchorStrength·cool·a(d)` toward the anchor with `a(d) = d²/idealEdgeLength` (`quadratic`) or `d` (`linear`); `cool = max(1 − iteration/maxIterations, coolingFloor)`, `dt = timeStep·√cool`, velocity damped by `velocityDamping` and clamped to `maxSpeed`. Convergence: the largest displacement stays below `settleDisplacement` for `settleIterations` consecutive iterations. Emission: a node's move op is emitted once it drifted `emitDisplacement` from its last emitted position. Every `checkpointIterations` iterations, or once the provisional list holds `compactOps` ops, the provisional list is compacted to one op per moved node, velocities are quenched and a checkpoint is reported.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxIterations", "idealEdgeLength", "repulsionStrength", "repulsionFalloff", "springStrength", "springLaw", "gravity", "center", "anchorStrength",
+        "timeStep", "velocityDamping", "maxSpeed", "coolingFloor", "seed", "barnesHutTheta", "pairwiseMaxBodies",
+        "settleDisplacement", "settleIterations", "emitDisplacement", "checkpointIterations", "compactOps"
+      ],
+      "properties": {
+        "maxIterations": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+        "idealEdgeLength": { "type": "number", "exclusiveMinimum": 0 },
+        "repulsionStrength": { "type": "number", "minimum": 0 },
+        "repulsionFalloff": { "$ref": "#/$defs/LayoutRunFalloff" },
+        "springStrength": { "type": "number", "minimum": 0 },
+        "springLaw": { "$ref": "#/$defs/LayoutRunSpringLaw" },
+        "gravity": { "type": "number", "minimum": 0 },
+        "center": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/LayoutRunPoint" }] },
+        "anchorStrength": { "type": "number", "minimum": 0 },
+        "timeStep": { "type": "number", "exclusiveMinimum": 0 },
+        "velocityDamping": { "type": "number", "minimum": 0, "maximum": 1 },
+        "maxSpeed": { "type": "number", "exclusiveMinimum": 0 },
+        "coolingFloor": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "seed": { "$ref": "#/$defs/U64" },
+        "barnesHutTheta": { "type": "number", "minimum": 0, "maximum": 2 },
+        "pairwiseMaxBodies": { "$ref": "#/$defs/U32" },
+        "settleDisplacement": { "type": "number", "exclusiveMinimum": 0 },
+        "settleIterations": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+        "emitDisplacement": { "type": "number", "minimum": 0 },
+        "checkpointIterations": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+        "compactOps": { "type": "integer", "minimum": 1, "maximum": 65536 }
+      }
+    },
+    "LayoutRunFalloff": { "title": "LayoutRunFalloff", "description": "Repulsion decay: `inverse` (1/d, long-range, Fruchterman-Reingold; the default) or `inverseSquare` (1/d², local).", "type": "string", "enum": ["inverse", "inverseSquare"] },
+    "LayoutRunSpringLaw": { "title": "LayoutRunSpringLaw", "description": "Spring pull: `quadratic` (d²/idealEdgeLength, Fruchterman-Reingold; the default) or `linear` (Hooke, d − idealEdgeLength).", "type": "string", "enum": ["quadratic", "linear"] },
+    "LayoutRunStage": { "title": "LayoutRunStage", "type": "string", "enum": ["initialize", "iterate", "settle"] },
+    "LayoutRunCounter": { "title": "LayoutRunCounter", "type": "string", "enum": ["iterations", "energy", "maxDisplacement", "settled"] },
+    "LayoutRunReason": { "title": "LayoutRunReason", "type": "string", "enum": ["moving", "settled", "pinned", "diverged", "unsettled", "initialized", "converged", "iterationLimit", "resumed"] },
+    "LayoutRunStop": { "title": "LayoutRunStop", "type": "string", "enum": ["converged", "iterationLimit"] },
+    "LayoutRunGenerator": {
+      "title": "LayoutRunGenerator",
+      "description": "Language-neutral graph generators. `grid`: row-major nodes, edges to the right and below. `ring`: node i to (i+1) mod count. `tree`: heap order, node i to 2i+1 and 2i+2. All nodes: entity = index + 1, radius, unplaced (origin null), not pinned, no anchor, weight 1; `pins` lists node indices pinned at the origin given with them.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "radius", "pins"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["grid", "ring", "tree"] },
+        "columns": { "type": "integer", "minimum": 1 },
+        "rows": { "type": "integer", "minimum": 1 },
+        "count": { "type": "integer", "minimum": 1 },
+        "radius": { "type": "number", "exclusiveMinimum": 0 },
+        "pins": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["node", "at"],
+            "properties": { "node": { "$ref": "#/$defs/U32" }, "at": { "$ref": "#/$defs/LayoutRunPoint" } }
+          }
+        }
+      },
+      "allOf": [
+        { "if": { "properties": { "kind": { "const": "grid" } }, "required": ["kind"] }, "then": { "properties": { "columns": { "type": "integer" }, "rows": { "type": "integer" } }, "required": ["columns", "rows"] } },
+        { "if": { "properties": { "kind": { "enum": ["ring", "tree"] } }, "required": ["kind"] }, "then": { "properties": { "count": { "type": "integer" } }, "required": ["count"] } }
+      ]
+    },
+    "LayoutRunExpectation": {
+      "title": "LayoutRunExpectation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stop", "iterations", "positionsDigest", "movedOps", "settled", "checkpoints", "verdictPrefix"],
+      "properties": {
+        "stop": { "$ref": "#/$defs/LayoutRunStop" },
+        "iterations": { "$ref": "#/$defs/U32" },
+        "positionsDigest": { "$ref": "#/$defs/Hex16" },
+        "movedOps": { "$ref": "#/$defs/U32" },
+        "settled": { "$ref": "#/$defs/U32" },
+        "checkpoints": { "$ref": "#/$defs/U32" },
+        "verdictPrefix": {
+          "description": "The first trace upserts of the run as `<key>:<verdict>/<reason id>`.",
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[0-9]+:(testing|success|warning|danger)/[a-zA-Z]+$" },
+          "maxItems": 32
+        }
+      }
+    },
+    "LayoutRunFixtureCase": {
+      "title": "LayoutRunFixtureCase",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "config", "expect"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "generator": { "$ref": "#/$defs/LayoutRunGenerator" },
+        "graph": { "$ref": "#/$defs/LayoutRunGraph" },
+        "config": { "$ref": "#/$defs/LayoutRunConfig" },
+        "expect": { "$ref": "#/$defs/LayoutRunExpectation" }
+      },
+      "oneOf": [
+        { "properties": { "generator": { "$ref": "#/$defs/LayoutRunGenerator" } }, "required": ["generator"] },
+        { "properties": { "graph": { "$ref": "#/$defs/LayoutRunGraph" } }, "required": ["graph"] }
+      ]
+    },
+    "LayoutRunFixture": {
+      "title": "LayoutRunFixture",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["defaultConfig", "cases", "stepLaw", "oracle"],
+      "properties": {
+        "defaultConfig": { "$ref": "#/$defs/LayoutRunConfig" },
+        "cases": { "type": "array", "items": { "$ref": "#/$defs/LayoutRunFixtureCase" }, "minItems": 1 },
+        "stepLaw": {
+          "description": "Step bound law: a grid of `columns`×`rows` nodes driven with the interactive lane wall; the worst drive_step stays under `worstStepMicros` over `iterations` iterations (best of `attempts` runs).",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["columns", "rows", "iterations", "worstStepMicros", "attempts"],
+          "properties": {
+            "columns": { "type": "integer", "minimum": 1 },
+            "rows": { "type": "integer", "minimum": 1 },
+            "iterations": { "type": "integer", "minimum": 1 },
+            "worstStepMicros": { "type": "integer", "minimum": 1 },
+            "attempts": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "oracle": {
+          "description": "Third-party oracle: fdg-sim Fruchterman-Reingold from the same initial positions; the run's normalized stress must not exceed the oracle's by more than `stressRatioMax`, and must improve the initial stress by at least `improvementMin`.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["cases", "fdgScale", "fdgCooloff", "fdgDt", "fdgUpdates", "stressRatioMax", "improvementMin"],
+          "properties": {
+            "cases": { "type": "array", "items": { "$ref": "#/$defs/LayoutRunGenerator" }, "minItems": 1 },
+            "fdgScale": { "type": "number", "exclusiveMinimum": 0 },
+            "fdgCooloff": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+            "fdgDt": { "type": "number", "exclusiveMinimum": 0 },
+            "fdgUpdates": { "type": "integer", "minimum": 1 },
+            "stressRatioMax": { "type": "number", "exclusiveMinimum": 0 },
+            "improvementMin": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        }
+      }
+    }
+  }
+}

@@ -9,10 +9,9 @@ use crate::editor::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dRuntime};
 use crate::editor::puzzle5d::modes::edit;
 use crate::editor::puzzle5d::modes::edit::options as mode_options;
 use crate::editor::puzzle5d::modes::edit::windows::board2d::{options, utilities};
-use crate::editor::puzzle5d::precompute::Puzzle5dPrecomputeSession;
 use crate::editor::puzzle5d::terminology::{puzzle5d_localized, Puzzle5dLabels};
 use crate::editor::puzzle5d::{puzzle5d_grip_full_id, puzzle5d_scene_mode, Puzzle5dDocument, Puzzle5dPart, Puzzle5dScene, PUZZLE5D_BOARD_FIXTURE_SCHEMA, PUZZLE5D_DEFAULT_PART_RADIUS};
-use semio_framework_plugin::{Board2dScene, SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::{Board2dScene, SurfaceKind, ToolRunView, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 use semio_framework_ui_contract::BuiltNode;
 use serde_json::{json, Value};
 
@@ -27,14 +26,14 @@ pub const SURFACE_ID: &str = "puzzle.5d.play.2d";
 /// puzzle5d freezes the first `window_measures()` frame into `options.measures` so the shell has LOD
 /// and utility chrome before the first `refreshUi` tick; every later frame comes from
 /// `ArtifactApp::window_measures`.
-pub fn definition(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> WindowKindDefinition {
+pub fn definition(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: puzzle5d_localized(|l| l.window_2d),
         body_key: BODY_KEY.into(),
         surface_kind: SurfaceKind::Board2d,
         icon_id: "layout-grid".into(),
-        options: WindowOptions { measures: window_measures(envelope, precompute, labels), engagement: WindowEngagementSlot::Some(engagement(envelope, labels)) },
+        options: WindowOptions { measures: window_measures(envelope, labels, None), engagement: WindowEngagementSlot::Some(engagement(envelope, labels)) },
         actions: Vec::new(),
         utilities: vec![utilities::select::UTILITY_ID.into(), utilities::brush::UTILITY_ID.into(), utilities::fill::UTILITY_ID.into()],
         interactions: vec![semio_framework_plugin::InteractionRef::new(crate::editor::puzzle5d::PUZZLE5D_INTERACTION_DOMAIN)],
@@ -48,12 +47,12 @@ pub fn definition(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSessi
 
 /// 🎚️ The live chrome measures for this window: its own LOD select plus the mode-level brush/fill
 /// Utility Options groups it shares with the 3D window.
-pub fn window_measures(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> Vec<WindowMeasure> {
-    vec![options::lod::measure(&envelope.runtime, labels), mode_options::fill::measure(envelope, precompute, labels), mode_options::brush::measure(envelope, precompute, labels)]
+pub fn window_measures(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, tool_run: Option<&ToolRunView>) -> Vec<WindowMeasure> {
+    vec![options::lod::measure(&envelope.runtime, labels), mode_options::fill::measure(envelope, labels, tool_run), mode_options::brush::measure(envelope, labels)]
 }
 
 pub fn engagement(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowEngagement {
-    edit::puzzle5d_engagement(envelope, WINDOW_KIND_ID, labels)
+    edit::puzzle5d_engagement(envelope, WINDOW_KIND_ID, labels, None)
 }
 //#endregion 🔖️Definition
 
@@ -166,6 +165,8 @@ fn puzzle5d_board_scene(envelope: &Puzzle5dScene) -> Board2dScene {
         brush_weights_json: board_brush_weights_json(&envelope.runtime),
         placement_compatibility_json: envelope.document.kind_compatibility.clone().unwrap_or(json!([])).to_string(),
         lod_mode: envelope.runtime.lod_mode.clone(),
+        tool_run_trace: None,
+        lanes: Vec::new(),
     }
 }
 //#endregion 🔖️BoardJson

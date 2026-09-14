@@ -39,13 +39,9 @@ pub enum TrinityRewritingError {
     /// 🔤️ Jack query parse/execute failure (the shared `🫀️core` jack-query kernel's own API is not
     /// yet expressed as an owned error type).
     Jack(String),
-    /// 📐️ Force-directed layout failure (`infinite_board_port_directed`'s own API is not yet
-    /// expressed as an owned error type).
-    Layout(String),
     /// 🎨️ Canvas theme merge failure (`infinite_board_port_directed`'s own API is not yet
     /// expressed as an owned error type).
     CanvasTheme(String),
-    ForceLayoutFixtureMissingNodes,
 }
 
 impl std::fmt::Display for TrinityRewritingError {
@@ -54,8 +50,7 @@ impl std::fmt::Display for TrinityRewritingError {
             Self::Graph(error) => write!(formatter, "{error}"),
             Self::Vcs(error) => write!(formatter, "{error}"),
             Self::Json(error) => write!(formatter, "{error}"),
-            Self::Jack(message) | Self::Layout(message) | Self::CanvasTheme(message) => formatter.write_str(message),
-            Self::ForceLayoutFixtureMissingNodes => formatter.write_str("force layout fixture missing nodes"),
+            Self::Jack(message) | Self::CanvasTheme(message) => formatter.write_str(message),
         }
     }
 }
@@ -66,7 +61,7 @@ impl std::error::Error for TrinityRewritingError {
             Self::Graph(error) => std::error::Error::source(error),
             Self::Vcs(error) => std::error::Error::source(error),
             Self::Json(error) => std::error::Error::source(error),
-            Self::Jack(_) | Self::Layout(_) | Self::CanvasTheme(_) | Self::ForceLayoutFixtureMissingNodes => None,
+            Self::Jack(_) | Self::CanvasTheme(_) => None,
         }
     }
 }

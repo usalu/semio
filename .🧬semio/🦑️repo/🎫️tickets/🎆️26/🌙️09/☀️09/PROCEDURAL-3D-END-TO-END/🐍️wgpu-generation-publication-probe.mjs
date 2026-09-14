@@ -107,21 +107,36 @@ const locate = (snapshot, plan, needle) => {
   return null;
 };
 
+/** 🎯️ Settles the pointer on one point and reports what the shell's own `pointer hit` trace resolved
+ * there — an OBSERVATION, not an arming loop.
+ *
+ * 🩸️ This used to JIGGLE 0.25 px up to 60 times until the trace answered the row, because the retained
+ * hit registry was one vector the frame build drained while `hit_at` scanned it: consecutive samples at
+ * the SAME point alternated `targets=42 hit=Some(TreeItem, "…add-generation")` and `targets=0 hit=None`.
+ * `📓️wgpu-hit-registry-drain-2026-09-14.md` made the registry a retained authority (the last COMPLETE
+ * frame stays resolvable while a build retires and re-mints a second buffer), so a user's single move is
+ * enough again — and a probe that kept arming would hide the next regression of exactly this defect. */
+const settleHit = async (x, y, needle, tries = 20) => {
+  await page.mouse.move(x, y);
+  for (let attempt = 0; attempt < tries; attempt += 1) {
+    await page.waitForTimeout(110);
+    const last = has("os_host pointer hit").at(-1) ?? "";
+    if (last.includes("hit=Some(") && last.includes(needle)) return attempt + 1;
+  }
+  return 0;
+};
+
 /** 🖱️ Presses one published node and lets the shell settle. Answers the target it pressed. */
 const press = async (needle, settle = 6) => {
   const plan = dockPlan();
   const target = locate(await dumpAll(), plan, needle);
   if (!target) return null;
-  // 🖱️ The retained hit registry is DRAINED one entry per frame-build boundary step and rebuilt by
-  // the chrome walk, so a press into a shell that has been idle since the last frame resolves an
-  // empty registry (`targets=0 hit=None`, measured). Pumping first is what guarantees a frame — and
-  // therefore a registry — exists under the pointer.
   await pump(2);
-  await page.mouse.move(target.page[0], target.page[1]);
-  await page.waitForTimeout(300);
+  const armed = await settleHit(target.page[0], target.page[1], needle.split("/").at(-1) ?? needle);
+  lines.push(`${at()} PROBE settled ${needle} samples=${armed}`);
   await page.mouse.click(target.page[0], target.page[1]);
   await pump(settle);
-  return target;
+  return { ...target, armed };
 };
 
 /** 🗂️ The roster the way a user reads it: one entry per generation row, with the name its inline

@@ -4,6 +4,7 @@
 grammar Remodeling_remodeling_diff;
 
 diff: '{' lane* '}' ;
+lane: artifactLane | schemaLane | idLane | streamsLane | assetsLane | durableArtifactsLane | calibrationLane | paramsLane | gcpsLane | resultsLane ;
 artifactLane: 'artifact' '=' value ;
 schemaLane: 'schema' '=' value ;
 idLane: 'id' '=' value ;
@@ -13,14 +14,7 @@ durableArtifactsLane: 'durableArtifacts' '=' value ;
 calibrationLane: 'calibration' '=' value ;
 paramsLane: 'params' '=' value ;
 gcpsLane: 'gcps' '=' value ;
-jobLane: 'job' '=' value ;
 resultsLane: 'results' '=' value ;
-selectionLane: 'selection' '=' value ;
-reportTableLane: 'reportTable' '=' value ;
-frameCursorLane: 'frameCursor' '=' value ;
-cameraLane: 'camera' '=' value ;
-layersLane: 'layers' '=' value ;
-localeLane: 'locale' '=' value ;
 value: 'null' | 'true' | 'false' | number | TEXT | array | object ;
 number: INT | FLOAT ;
 array: '[' value* ']' ;

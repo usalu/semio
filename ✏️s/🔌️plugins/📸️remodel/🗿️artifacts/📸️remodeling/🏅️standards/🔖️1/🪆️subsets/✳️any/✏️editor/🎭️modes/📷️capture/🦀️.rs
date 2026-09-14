@@ -3,6 +3,7 @@
 
 use crate::editor::remodeling::modes::capture::windows::frames;
 use crate::editor::remodeling::modes::model::windows::model;
+use crate::editor::remodeling::modes::model::tools::reconstruction;
 use semio_framework_plugin::{create_default_layout, create_named_layout, LocalizedLabel, ModeDefinition, NamedLayout};
 
 pub const REMODELING_PLAY_MODE_CAPTURE: &str = "capture";
@@ -10,7 +11,7 @@ pub const REMODELING_PLAY_LAYOUT_CAPTURE: &str = "remodeling-capture";
 
 //#region 🔖️Definition
 pub fn definition() -> ModeDefinition {
-    ModeDefinition { id: REMODELING_PLAY_MODE_CAPTURE.into(), label: LocalizedLabel::native("Capture", "Aufnahme"), icon_id: "camera".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
+    ModeDefinition { id: REMODELING_PLAY_MODE_CAPTURE.into(), label: LocalizedLabel::native("Capture", "Aufnahme"), icon_id: "camera".into(), tools: vec![reconstruction::TOOL_ID.into()], layout_id: None, commands: Vec::new() }
 }
 
 pub fn layout() -> NamedLayout {

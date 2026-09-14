@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/energy/model/config/mutation/change-simulation-settings/schema.json",
+  "title": "ChangeSimulationSettings",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zoneTimestepMinutes",
+    "systemTimestepMinutes",
+    "warmupDays"
+  ],
+  "properties": {
+    "zoneTimestepMinutes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60
+    },
+    "systemTimestepMinutes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60
+    },
+    "warmupDays": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 365
+    }
+  }
+}

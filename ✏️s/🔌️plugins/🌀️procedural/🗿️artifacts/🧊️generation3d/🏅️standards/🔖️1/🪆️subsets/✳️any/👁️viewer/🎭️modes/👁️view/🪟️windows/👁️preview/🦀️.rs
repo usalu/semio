@@ -357,16 +357,17 @@ pub fn preview_selection_json(config: &Generation3dViewConfig, payload: &ViewPre
 /// 👁️ Pure `(Generation3dSnapshot, Generation3dViewConfig, marks) -> BuiltNode` read: the camera,
 /// shading mode, LOD and sun all come from the viewer's own config, hover/selection from the
 /// framework-owned `graph` domain, geometry from the ephemeral evaluation when one exists.
-pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, eval_json: Option<&str>, session: Option<&semio_framework_os_flow::FlowEvalSession>, marks: &Generation3dViewMarks, labels: &crate::editor::generation3d::terminology::Generation3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, eval_json: Option<&str>, session: Option<&semio_framework_os_flow::FlowEvalSession>, run: Option<&semio_framework_plugin::ToolRunView>, marks: &Generation3dViewMarks, labels: &crate::editor::generation3d::terminology::Generation3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let eval_json = eval_json.unwrap_or_default();
     let payload = preview_payload(eval_json, &document.fixture, config, session, marks);
     let selection_json = preview_selection_json(config, &payload);
     // 📈️ The SAME projection both editor preview windows publish — the surface-neutral
     // `🧵️preview-eval` one, reached at the artifact level and never through `::editor::`. A viewer
-    // that published no status left the shell with no phase to show and no cancel affordance to
+    // that published no status left the shell with no phase to show and no abort affordance to
     // offer, while its meshes rendered fine (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     let status_json = preview_eval::preview_window_status_json(
         session,
+        run,
         preview_eval::preview_status_json(eval_json, &document.fixture),
         &preview_eval::PreviewStatusDebug { meshes_json: &payload.meshes_json, instances_json: &payload.instances_json },
         None,

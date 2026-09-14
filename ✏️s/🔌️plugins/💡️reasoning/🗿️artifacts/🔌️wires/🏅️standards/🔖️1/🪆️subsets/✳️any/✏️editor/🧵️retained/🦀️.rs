@@ -310,7 +310,7 @@ impl ArtifactStoreOneItemPreparationFactory<WiresSnapshot, crate::op::WiresMutat
         {
             return Err("Wires MoveNode exceeds its retained publication envelope".into());
         }
-        Ok(ArtifactStoreOneItemFootprint { work_items: MAXIMUM_WORK_ITEMS, retained_bytes: MAXIMUM_RETAINED_BYTES })
+        Ok(ArtifactStoreOneItemFootprint::for_one_invertible_item(MAXIMUM_RETAINED_BYTES))
     }
 
     fn begin(

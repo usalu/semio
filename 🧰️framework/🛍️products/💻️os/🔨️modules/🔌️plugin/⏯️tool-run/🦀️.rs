@@ -8,11 +8,11 @@
 
 use super::*;
 use semio_framework_tool_run::{
-    tool_run_format, ToolRunAction, ToolRunCounter, ToolRunDefinition, ToolRunEffect, ToolRunEvent, ToolRunId, ToolRunIdentity, ToolRunLabel, ToolRunMachine, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunRejection, ToolRunSlot, ToolRunState,
+    tool_run_format, tool_run_pointer_value, ToolRunAction, ToolRunCounter, ToolRunDefinition, ToolRunEffect, ToolRunEvent, ToolRunId, ToolRunIdentity, ToolRunLabel, ToolRunMachine, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunRejection, ToolRunSettingsReads, ToolRunSlot, ToolRunState,
     ToolRunStep, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTick, ToolRunTraceCursor, ToolRunTraceDelta, ToolRunTraceOp, ToolRunTraceStore, ToolRunVerdict, TOOL_RUN_ACTION_IDS, TOOL_RUN_ARG_GENERATION, TOOL_RUN_ARG_RUN_ID,
-    TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_PROVISIONAL_OPS_MAX, TOOL_RUN_REASON_CONFLICT, TOOL_RUN_REASON_PROVISIONAL_CAP, TOOL_RUN_REASON_REBASING, TOOL_RUN_REASON_TRACE_TRUNCATED, TOOL_RUN_STATUS_ANNOUNCE_INTERVAL_MS, TOOL_RUN_TICK_BYTES_MAX,
+    TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_ARG_WINDOW_ID, TOOL_RUN_PROVISIONAL_OPS_MAX, TOOL_RUN_REASON_CONFLICT, TOOL_RUN_REASON_PROVISIONAL_CAP, TOOL_RUN_REASON_REBASING, TOOL_RUN_REASON_TRACE_TRUNCATED, TOOL_RUN_STATUS_ANNOUNCE_INTERVAL_MS, TOOL_RUN_TICK_BYTES_MAX,
 };
-use semio_framework_ui_scene::{scene_lane_hash, Canvas2dScene, Canvas2dSceneLane, SceneDoc, SceneLaneRef, World3dScene, World3dSceneLane};
+use semio_framework_ui_scene::{scene_lane_hash, Board2dScene, Board2dSceneLane, Canvas2dScene, Canvas2dSceneLane, SceneDoc, SceneLaneRef, World3dScene, World3dSceneLane};
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
@@ -54,8 +54,16 @@ pub type ToolRunJob = Box<dyn semio_framework_job::InteractiveJob + Send>;
 /// 🧳️ Everything an app needs to build one run or revalidate job (§3.7).
 ///
 /// - `snapshot` is the run's base for `Run` and the committed head for `Revalidate`.
+/// - `window_id` is the window instance the run was started from (`toolRunStart`'s `windowId`, else the
+///   dispatching view's window), and `window_config` that window's config snapshot as of this build.
 /// - `checkpoint` is the last `StepOutcome::CheckpointReady` state of this run (reconfigure `resume`).
 /// - `provisional` is the provisional op list the job continues from or revalidates.
+/// - `instance_owner` is the instance's retained operation owner, shared with its commands.
+/// - `port` carries the host effects the job asks for and the wake of a job waiting on them.
+/// - `trace_keys` allocates trace keys no record of this run uses, e.g. one per placement a revalidate job
+///   re-tests; every job of the run shares it, so keys never collide across rebuilds and purposes.
+/// - `entity_marks` holds `(provisional length at the end of the tick that appended it, entity)` per entity, in
+///   append order: which provisional op prefix each placement's entity belongs to.
 pub struct ToolRunJobRequest<'a, A: ArtifactApp> {
     pub tool_id: &'a str,
     pub definition: &'a ToolRunDefinition,
@@ -63,17 +71,122 @@ pub struct ToolRunJobRequest<'a, A: ArtifactApp> {
     pub identity: ToolRunIdentity,
     pub snapshot: Arc<A::Snapshot>,
     pub config: Arc<A::Config>,
+    pub window_id: Option<&'a str>,
+    pub window_config: Option<WindowConfigSnapshot>,
     pub checkpoint: Option<&'a [u8]>,
     pub provisional: &'a [A::Mutation],
+    pub instance_owner: ArtifactInstanceOperationOwnerHandle,
+    pub port: ToolRunJobPort,
+    pub trace_keys: ToolRunTraceKeys,
+    pub entity_marks: &'a [(u32, u64)],
 }
 
-/// 🪟️ What a renderer learns about the run on this document instance (§4.1 layer 1).
+/// 🔑️ The trace key allocator every job of one run shares: keys handed out lie above every key the run's
+/// ticks have upserted and every key allocated before.
+#[derive(Clone, Debug, Default)]
+pub struct ToolRunTraceKeys {
+    next: Arc<std::sync::atomic::AtomicU64>,
+}
+
+impl ToolRunTraceKeys {
+    /// 🔢️ The first key neither upserted by this run nor allocated.
+    pub fn next(&self) -> u64 {
+        self.next.load(std::sync::atomic::Ordering::SeqCst)
+    }
+
+    /// 🎟️ Reserves `count` consecutive unused keys.
+    pub fn allocate(&self, count: u64) -> std::ops::Range<u64> {
+        let start = self.next.try_update(std::sync::atomic::Ordering::SeqCst, std::sync::atomic::Ordering::SeqCst, |next| Some(next.saturating_add(count))).unwrap_or_else(|next| next);
+        start..start.saturating_add(count)
+    }
+
+    fn observe(&self, key: u64) {
+        self.next.fetch_max(key.saturating_add(1), std::sync::atomic::Ordering::SeqCst);
+    }
+}
+
+/// 🎯️ The in-place retarget hooks of the tool run job protocol (§3.3). A job built through
+/// `ArtifactApp::build_retargetable_tool_run_job` stays resident across a base change and a settings change —
+/// and while its run is `complete` — instead of being closed and rebuilt from its checkpoint.
+pub trait ToolRunRetargetableJob<C>: semio_framework_job::InteractiveJob + Send {
+    /// 🪢️ Every tick after this call carries `identity` (base changed: new generation and base revision).
+    fn rebind(&mut self, identity: ToolRunIdentity);
+    /// 🎚️ Retargets the job to `config` under `identity`; `false` when it cannot continue in place, and the
+    /// driver then closes it and rebuilds it from its checkpoint.
+    fn reconfigure(&mut self, identity: ToolRunIdentity, config: Arc<C>) -> bool;
+}
+
+/// 📮️ What a run job shares with its app instance across turns: the host effects it hands the driver (an
+/// extension round trip whose answer returns as an app command cannot happen inside `step`) and the external
+/// wake of a job waiting on such work. A waiting job is never stepped and keeps its instance idle, so waiting
+/// costs no turn; whoever folds the awaited answer calls [`ToolRunJobPort::wake`].
+#[derive(Clone, Default)]
+pub struct ToolRunJobPort {
+    inner: Arc<ToolRunJobPortState>,
+}
+
+#[derive(Default)]
+struct ToolRunJobPortState {
+    effects: std::sync::Mutex<std::collections::VecDeque<Effect>>,
+    waiting: std::sync::atomic::AtomicBool,
+}
+
+impl ToolRunJobPort {
+    /// 📨️ Queues one effect the driver hands the host on its next turn, in order.
+    pub fn dispatch(&self, effect: Effect) {
+        if let Ok(mut effects) = self.inner.effects.lock() {
+            effects.push_back(effect);
+        }
+    }
+
+    /// ⏸️ The job's next step makes no progress until [`ToolRunJobPort::wake`]; set it while holding whatever
+    /// lock the waker folds its answer under, so no wake can slip between the decision and the flag.
+    pub fn wait(&self) {
+        self.inner.waiting.store(true, std::sync::atomic::Ordering::SeqCst);
+    }
+
+    /// ⏰️ Makes a waiting job runnable again.
+    pub fn wake(&self) {
+        self.inner.waiting.store(false, std::sync::atomic::Ordering::SeqCst);
+    }
+
+    pub fn is_waiting(&self) -> bool {
+        self.inner.waiting.load(std::sync::atomic::Ordering::SeqCst)
+    }
+
+    pub fn has_effects(&self) -> bool {
+        self.inner.effects.lock().is_ok_and(|effects| !effects.is_empty())
+    }
+
+    fn pop_effect(&self) -> Option<Effect> {
+        self.inner.effects.lock().ok()?.pop_front()
+    }
+
+    fn restore_effect(&self, effect: Effect) {
+        if let Ok(mut effects) = self.inner.effects.lock() {
+            effects.push_front(effect);
+        }
+    }
+}
+
+/// 🪟️ What a renderer learns about the run on this document instance (§4.1 layer 1): its identity and state, the
+/// provisional entities, the §2.3 progress (stage, counters, step ring) and the latest plugin payload a tick carried.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ToolRunView {
     pub tool_id: String,
     pub identity: ToolRunIdentity,
     pub state: ToolRunState,
     pub provisional_entities: Arc<BTreeSet<u64>>,
+    pub progress: semio_framework_tool_run::ToolRunProgress,
+    pub payload: Option<Arc<[u8]>>,
+}
+
+impl ToolRunView {
+    /// 🏗️ A view of a run with no provisional entities, no progress yet and no payload.
+    pub fn new(tool_id: impl Into<String>, identity: ToolRunIdentity, state: ToolRunState) -> Self {
+        let progress = semio_framework_tool_run::ToolRunProgress { identity, sequence: 0, state, stage: 0, completed: 0, total: None, counters: Vec::new(), units_per_second: 0.0, conflicts: 0, steps: ToolRunStepRing::new() };
+        Self { tool_id: tool_id.into(), identity, state, provisional_entities: Arc::new(BTreeSet::new()), progress, payload: None }
+    }
 }
 
 /// 🔖️ True for the seven framework-reserved tool run action ids (§2.5).
@@ -83,8 +196,13 @@ pub fn is_tool_run_action_id(action: &str) -> bool {
 //#endregion 🔖️Request
 
 //#region 🔖️Job
-struct ToolRunJobSlot {
-    job: ToolRunJob,
+enum ToolRunJobHandle<C> {
+    Plain(ToolRunJob),
+    Retargetable(Box<dyn ToolRunRetargetableJob<C>>),
+}
+
+struct ToolRunJobSlot<C> {
+    job: ToolRunJobHandle<C>,
     purpose: ToolRunJobPurpose,
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
@@ -93,25 +211,46 @@ struct ToolRunJobSlot {
     closing: bool,
 }
 
-impl ToolRunJobSlot {
-    fn new(job: ToolRunJob, purpose: ToolRunJobPurpose, generation: u32) -> Self {
+impl<C> ToolRunJobSlot<C> {
+    fn new(job: ToolRunJobHandle<C>, purpose: ToolRunJobPurpose, generation: u32) -> Self {
         Self { job, purpose, operation: semio_framework_job::allocate_operation_id(), generation: semio_framework_job::Generation(u64::from(generation)), cancel: semio_framework_job::CancelToken::root_now(), preview_sequence: 0, closing: false }
+    }
+
+    fn interactive(&mut self) -> &mut dyn semio_framework_job::InteractiveJob {
+        match &mut self.job {
+            ToolRunJobHandle::Plain(job) => job.as_mut(),
+            ToolRunJobHandle::Retargetable(job) => job.as_mut(),
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        match &self.job {
+            ToolRunJobHandle::Plain(job) => job.terminal_is_empty(),
+            ToolRunJobHandle::Retargetable(job) => job.terminal_is_empty(),
+        }
+    }
+
+    fn retargetable(&mut self) -> Option<&mut dyn ToolRunRetargetableJob<C>> {
+        match &mut self.job {
+            ToolRunJobHandle::Retargetable(job) if !self.closing => Some(job.as_mut()),
+            _ => None,
+        }
     }
 
     fn begin_close(&mut self) {
         if !self.closing {
             self.cancel.cancel_now();
-            self.job.begin_close();
+            self.interactive().begin_close();
             self.closing = true;
         }
     }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<Option<PluginCloseStep>, Fault> {
         self.begin_close();
-        match self.job.close_step(maximum_items.max(1), maximum_bytes) {
+        match self.interactive().close_step(maximum_items.max(1), maximum_bytes) {
             semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => Ok(Some(PluginCloseStep::Pending { released_items, released_bytes })),
             semio_framework_job::InteractiveJobCloseStep::Blocked => Ok(Some(PluginCloseStep::Blocked { reason: "tool run job close is blocked" })),
-            semio_framework_job::InteractiveJobCloseStep::Complete if self.job.terminal_is_empty() => Ok(None),
+            semio_framework_job::InteractiveJobCloseStep::Complete if self.terminal_is_empty() => Ok(None),
             semio_framework_job::InteractiveJobCloseStep::Complete => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.job-close"), "tool run job reported Complete without its terminal-empty witness")),
         }
     }
@@ -140,9 +279,9 @@ fn tool_run_trace_lane_text(delta: &ToolRunTraceDelta) -> Option<String> {
     delta.encode().ok().map(base64_codec::base64_url_encode)
 }
 
-/// 🔎️ The first World3d or Canvas2d scene surface of a rendered body, depth first.
+/// 🔎️ The first World3d, Canvas2d or Board2d scene surface of a rendered body, depth first.
 fn tool_run_scene_surface(node: &mut BuiltNode) -> Option<&mut BuiltNode> {
-    let is_scene = matches!(&node.component, Component::Surface(props) if props.doc_schema.as_str() == World3dScene::SCHEMA || props.doc_schema.as_str() == Canvas2dScene::SCHEMA);
+    let is_scene = matches!(&node.component, Component::Surface(props) if [World3dScene::SCHEMA, Canvas2dScene::SCHEMA, Board2dScene::SCHEMA].contains(&props.doc_schema.as_str()));
     if is_scene {
         return Some(node);
     }
@@ -154,19 +293,31 @@ fn tool_run_scene_surface(node: &mut BuiltNode) -> Option<&mut BuiltNode> {
 /// A surface whose producer already carries the lane is left untouched.
 fn inject_tool_run_trace_lane_into(surface: &mut BuiltNode, lane: &str) -> UiAssemblyResult<()> {
     let Component::Surface(props) = &mut surface.component else { return Ok(()) };
-    let (name, key) = if props.doc_schema.as_str() == World3dScene::SCHEMA { (World3dSceneLane::ToolRunTrace.name(), World3dSceneLane::ToolRunTrace.body_key()) } else { (Canvas2dSceneLane::ToolRunTrace.name(), Canvas2dSceneLane::ToolRunTrace.body_key()) };
+    let (name, key) = match props.doc_schema.as_str() {
+        World3dScene::SCHEMA => (World3dSceneLane::ToolRunTrace.name(), World3dSceneLane::ToolRunTrace.body_key()),
+        Board2dScene::SCHEMA => (Board2dSceneLane::ToolRunTrace.name(), Board2dSceneLane::ToolRunTrace.body_key()),
+        _ => (Canvas2dSceneLane::ToolRunTrace.name(), Canvas2dSceneLane::ToolRunTrace.body_key()),
+    };
     if surface.children.iter().any(|child| child.key.as_str() == key) {
         return Ok(());
     }
     let reference = SceneLaneRef { lane: name.to_string(), bytes: lane.len() as u32, hash: scene_lane_hash(lane) };
-    let encoded = if props.doc_schema.as_str() == World3dScene::SCHEMA {
-        let mut spine: World3dScene = semio_framework_ui_scene::decode(props).map_err(|error| ui_assembly_error_because("tool-run-trace.decode", error))?;
-        spine.lanes.push(reference);
-        semio_framework_ui_scene::encode(props.kind, &spine)
-    } else {
-        let mut spine: Canvas2dScene = semio_framework_ui_scene::decode(props).map_err(|error| ui_assembly_error_because("tool-run-trace.decode", error))?;
-        spine.lanes.push(reference);
-        semio_framework_ui_scene::encode(props.kind, &spine)
+    let encoded = match props.doc_schema.as_str() {
+        World3dScene::SCHEMA => {
+            let mut spine: World3dScene = semio_framework_ui_scene::decode(props).map_err(|error| ui_assembly_error_because("tool-run-trace.decode", error))?;
+            spine.lanes.push(reference);
+            semio_framework_ui_scene::encode(props.kind, &spine)
+        }
+        Board2dScene::SCHEMA => {
+            let mut spine: Board2dScene = semio_framework_ui_scene::decode(props).map_err(|error| ui_assembly_error_because("tool-run-trace.decode", error))?;
+            spine.lanes.push(reference);
+            semio_framework_ui_scene::encode(props.kind, &spine)
+        }
+        _ => {
+            let mut spine: Canvas2dScene = semio_framework_ui_scene::decode(props).map_err(|error| ui_assembly_error_because("tool-run-trace.decode", error))?;
+            spine.lanes.push(reference);
+            semio_framework_ui_scene::encode(props.kind, &spine)
+        }
     };
     let mut encoded = encoded.map_err(|error| ui_assembly_error_because("tool-run-trace.encode", error))?;
     let carrier = paged_text_carrier(key, lane)?;
@@ -184,9 +335,30 @@ fn close_step_outcome(outcome: &mut semio_framework_job::StepOutcome) {
 //#endregion 🔖️Job
 
 //#region 🔖️Ledger
+/// 🔁️ A bounded refold of the provisional ops from `base`. `boundary` is whether the job reached a point where
+/// the refolded overlay is whole: a retract refold waits for the job's next checkpoint, completion or close,
+/// so a retract followed by re-appends spread over several ticks never renders a half re-appended overlay —
+/// the previous overlay stays rendered until then.
 struct ToolRunRefold<P> {
     running: Option<P>,
     cursor: usize,
+    boundary: bool,
+}
+
+/// 🚦️ Where one refold turn left the overlay.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ToolRunRefoldTurn {
+    Pending,
+    AwaitingBoundary,
+    Swapped,
+}
+
+/// 🎚️ The values a run's declared settings reads named when last observed: config pointers, then per declared
+/// window kind the `(window id, values)` of every partition it reads.
+#[derive(Clone, Debug, Default, PartialEq)]
+struct ToolRunSettingsValues {
+    config: Vec<Option<DslValue>>,
+    window_config: Vec<(String, String, Vec<Option<DslValue>>)>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -213,6 +385,11 @@ struct ToolRunEntry<A: ArtifactApp> {
     base: Arc<A::Snapshot>,
     base_generation: u64,
     settings_generation: (u64, u64),
+    settings_values: ToolRunSettingsValues,
+    window: Option<(String, String)>,
+    window_bodies: Vec<String>,
+    payload: Option<Arc<[u8]>>,
+    trace_keys: ToolRunTraceKeys,
     provisional: Vec<A::Mutation>,
     entity_marks: Vec<(u32, u64)>,
     entities: Arc<BTreeSet<u64>>,
@@ -230,7 +407,7 @@ struct ToolRunEntry<A: ArtifactApp> {
     conflicts: u32,
     rate_origin: Option<(u64, u64)>,
     units_per_second: f32,
-    job: Option<ToolRunJobSlot>,
+    job: Option<ToolRunJobSlot<A::Config>>,
     checkpoint: Option<Vec<u8>>,
     pending_step: bool,
     finalize: Option<ToolRunFinalize<A>>,
@@ -243,8 +420,19 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
         self.steps.push(ToolRunStep { sequence: self.step_sequence, kind, stage: self.stage, reason, subject: None, repeat: 1, args: args.to_vec() });
     }
 
-    fn begin_refold(&mut self) {
-        self.refold = Some(ToolRunRefold { running: None, cursor: 0 });
+    fn begin_refold(&mut self, boundary: bool) {
+        self.refold = Some(ToolRunRefold { running: None, cursor: 0, boundary });
+    }
+
+    /// 🏁️ The job reached a point where the refolded overlay is whole.
+    fn settle_refold(&mut self) {
+        if let Some(refold) = self.refold.as_mut() {
+            refold.boundary = true;
+        }
+    }
+
+    fn refold_is_work(&self) -> bool {
+        self.refold.as_ref().is_some_and(|refold| refold.boundary || refold.cursor < self.provisional.len())
     }
 
     fn rebind(&mut self) {
@@ -266,9 +454,10 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
         outcome.diff().apply(snapshot).ok()
     }
 
-    /// 🔁️ Folds provisional ops from `base` until the wall deadline; `true` once the overlay was replaced.
-    fn refold_turn(&mut self, deadline_us: u64) -> bool {
-        let Some(mut refold) = self.refold.take() else { return true };
+    /// 🔁️ Folds provisional ops from `base` until the wall deadline; the overlay is replaced once every op is
+    /// folded and the refold reached its boundary.
+    fn refold_turn(&mut self, deadline_us: u64) -> ToolRunRefoldTurn {
+        let Some(mut refold) = self.refold.take() else { return ToolRunRefoldTurn::Swapped };
         while refold.cursor < self.provisional.len() {
             let source = refold.running.as_ref().unwrap_or(&self.base);
             match Self::fold_one(source, &self.provisional[refold.cursor]) {
@@ -278,26 +467,33 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
             refold.cursor += 1;
             if refold.cursor % TOOL_RUN_REFOLD_CHECK_OPS == 0 && semio_framework_job::default_now_us().is_none_or(|now| now >= deadline_us) {
                 self.refold = Some(refold);
-                return false;
+                return ToolRunRefoldTurn::Pending;
             }
         }
+        if !refold.boundary {
+            self.refold = Some(refold);
+            return ToolRunRefoldTurn::AwaitingBoundary;
+        }
         self.overlay = refold.running.map_or_else(|| Arc::clone(&self.base), Arc::new);
-        true
+        ToolRunRefoldTurn::Swapped
     }
 
     /// 🧬️ Applies one tick of the current identity: retract, append (O(k) fold), entities, steps, progress, trace.
-    fn apply_tick(&mut self, tick: ToolRunTick, discarded: &mut Vec<A::Mutation>) -> Result<ToolRunTickReceipt, Fault> {
+    fn apply_tick(&mut self, mut tick: ToolRunTick, discarded: &mut Vec<A::Mutation>) -> Result<ToolRunTickReceipt, Fault> {
         let mut receipt = ToolRunTickReceipt::default();
         if tick.identity.id != self.identity.id || tick.identity.generation != self.identity.generation {
             receipt.stale = true;
             return Ok(receipt);
+        }
+        if let Some(payload) = tick.payload.take() {
+            self.payload = Some(payload.into());
         }
         self.sequence = self.sequence.max(tick.sequence);
         if let Some(retract) = tick.retract_to.map(|length| length as usize).filter(|length| *length < self.provisional.len()) {
             receipt.retracted = (self.provisional.len() - retract) as u32;
             discarded.extend(self.provisional.drain(retract..));
             self.rebuild_entities();
-            self.begin_refold();
+            self.begin_refold(false);
         }
         let mut appended = Vec::with_capacity(tick.append_ops.len());
         for bytes in &tick.append_ops {
@@ -347,6 +543,7 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
             for op in &page.ops {
                 match op {
                     ToolRunTraceOp::Upsert { key, .. } => {
+                        self.trace_keys.observe(*key);
                         if self.recent_trace.len() == TOOL_RUN_PANEL_TRACE_ROWS {
                             self.recent_trace.pop_front();
                         }
@@ -401,13 +598,14 @@ pub struct ToolRunLedger<A: ArtifactApp> {
     next_run: u64,
     entry: Option<Box<ToolRunEntry<A>>>,
     driver: ToolRunDriver,
-    retired_jobs: Vec<ToolRunJobSlot>,
+    retired_jobs: Vec<ToolRunJobSlot<A::Config>>,
     retired_publications: Vec<store::ArtifactStoreBatchPublication<A::Snapshot, A::Mutation>>,
     discarded: Vec<A::Mutation>,
     closing: bool,
     trace_windows: BTreeMap<String, ToolRunTraceWindow>,
     ui_dirty: bool,
     document_dirty: bool,
+    port: ToolRunJobPort,
 }
 
 /// 🪟️ One scene window the trace lane was delivered to: its body key and what its renderer last echoed.
@@ -420,7 +618,7 @@ struct ToolRunTraceWindow {
 
 impl<A: ArtifactApp> Default for ToolRunLedger<A> {
     fn default() -> Self {
-        Self { next_run: 1, entry: None, driver: ToolRunDriver::default(), retired_jobs: Vec::new(), retired_publications: Vec::new(), discarded: Vec::new(), closing: false, trace_windows: BTreeMap::new(), ui_dirty: false, document_dirty: false }
+        Self { next_run: 1, entry: None, driver: ToolRunDriver::default(), retired_jobs: Vec::new(), retired_publications: Vec::new(), discarded: Vec::new(), closing: false, trace_windows: BTreeMap::new(), ui_dirty: false, document_dirty: false, port: ToolRunJobPort::default() }
     }
 }
 
@@ -439,6 +637,11 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
 
     pub fn tool_id(&self) -> Option<&str> {
         self.entry.as_ref().map(|entry| entry.tool_id.as_str())
+    }
+
+    /// 📮️ The port every job of this ledger shares with its app instance.
+    pub fn port(&self) -> &ToolRunJobPort {
+        &self.port
     }
 
     pub fn provisional(&self) -> &[A::Mutation] {
@@ -463,6 +666,26 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
 
     pub fn is_refolding(&self) -> bool {
         self.entry.as_ref().is_some_and(|entry| entry.refold.is_some())
+    }
+
+    /// 📸️ The current run's last `StepOutcome::CheckpointReady` state, the one a rebuilt job continues from.
+    pub fn checkpoint(&self) -> Option<&[u8]> {
+        self.entry.as_ref()?.checkpoint.as_deref()
+    }
+
+    /// 🔑️ The trace key allocator every job of the current run shares.
+    pub fn trace_keys(&self) -> Option<&ToolRunTraceKeys> {
+        self.entry.as_ref().map(|entry| &entry.trace_keys)
+    }
+
+    /// 🏷️ `(provisional length at the end of the appending tick, entity)` per provisional entity, in append order.
+    pub fn entity_marks(&self) -> &[(u32, u64)] {
+        self.entry.as_ref().map_or(&[], |entry| entry.entity_marks.as_slice())
+    }
+
+    /// 🪟️ `(window instance id, window kind id)` the current run was started from.
+    pub fn window(&self) -> Option<(&str, &str)> {
+        self.entry.as_ref()?.window.as_ref().map(|(window_id, window_kind_id)| (window_id.as_str(), window_kind_id.as_str()))
     }
 
     /// 📊️ Progress snapshot derived from the ledger (§2.3); the step ring is the framework's own.
@@ -490,7 +713,8 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     }
 
     pub fn view(&self) -> Option<ToolRunView> {
-        self.entry.as_ref().map(|entry| ToolRunView { tool_id: entry.tool_id.clone(), identity: entry.identity, state: entry.slot.state, provisional_entities: Arc::clone(&entry.entities) })
+        let progress = self.progress()?;
+        self.entry.as_ref().map(|entry| ToolRunView { tool_id: entry.tool_id.clone(), identity: entry.identity, state: entry.slot.state, provisional_entities: Arc::clone(&entry.entities), progress, payload: entry.payload.clone() })
     }
 
     /// 🧊️ `freeze` rebase policy: local artifact emits fail with `toolRun.busy` while a run is non-terminal.
@@ -498,16 +722,21 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         self.entry.as_ref().is_some_and(|entry| entry.definition.rebase == ToolRunRebasePolicy::Freeze && !entry.slot.state.is_terminal())
     }
 
-    /// 🏃️ Whether a driver turn has work: a stepping job, a refold, a close, a finalize or cold retirement.
+    /// 🏃️ Whether a driver turn has work: a stepping job, a refold, a close, a finalize, cold retirement or port
+    /// effects. A job waiting on its port is not work.
     pub fn has_pending_work(&self) -> bool {
+        let stepping = |entry: &ToolRunEntry<A>| entry.job.is_none() || !self.port.is_waiting();
         !self.retired_jobs.is_empty()
             || !self.retired_publications.is_empty()
             || !self.discarded.is_empty()
+            || self.port.has_effects()
             || self.entry.as_ref().is_some_and(|entry| {
-                entry.refold.is_some()
+                entry.refold_is_work()
                     || match entry.slot.state {
-                        ToolRunState::Starting | ToolRunState::Running | ToolRunState::Finalizing | ToolRunState::Aborting => true,
-                        ToolRunState::Paused => entry.pending_step,
+                        ToolRunState::Running => stepping(entry),
+                        ToolRunState::Starting | ToolRunState::Finalizing | ToolRunState::Aborting => true,
+                        ToolRunState::Paused => entry.pending_step && stepping(entry),
+                        ToolRunState::Complete => false,
                         _ => entry.job.is_some(),
                     }
             })
@@ -582,10 +811,11 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         self.trace_windows.retain(|window_id, _| live(window_id));
     }
 
-    /// 🎯️ The minimal UI scope a run change dirties: the ToolRun panel body plus the body of every scene
-    /// window its trace lane rides in — never unrelated windows or panels.
+    /// 🎯️ The minimal UI scope a run change dirties: the ToolRun panel body, the body of every scene window its trace
+    /// lane rides in and the body of every window kind the run declares it renders in (`ToolRunDefinition::windows`) —
+    /// never unrelated windows or panels.
     pub fn dirty_scope(&self) -> UiDirtyScope {
-        let mut window_bodies: Vec<String> = self.trace_windows.values().map(|window| window.body_key.clone()).collect();
+        let mut window_bodies: Vec<String> = self.trace_windows.values().map(|window| window.body_key.clone()).chain(self.entry.iter().flat_map(|entry| entry.window_bodies.iter().cloned())).collect();
         window_bodies.sort_unstable();
         window_bodies.dedup();
         UiDirtyScope::Partial { window_bodies, panel_bodies: vec![FRAMEWORK_TOOL_RUN_BODY_KEY.to_string()], utilities: false, tools: false, engagements: false, measures: false, labels: false }
@@ -620,7 +850,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         self.retire_owners(job, provisional, finalize);
     }
 
-    fn retire_owners(&mut self, job: Option<ToolRunJobSlot>, mut provisional: Vec<A::Mutation>, finalize: Option<ToolRunFinalize<A>>) {
+    fn retire_owners(&mut self, job: Option<ToolRunJobSlot<A::Config>>, mut provisional: Vec<A::Mutation>, finalize: Option<ToolRunFinalize<A>>) {
         if let Some(mut job) = job {
             job.begin_close();
             self.retired_jobs.push(job);
@@ -632,9 +862,24 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     }
 
     fn close_current_job(&mut self) {
-        if let Some(mut job) = self.entry.as_mut().and_then(|entry| entry.job.take()) {
+        let Some(entry) = self.entry.as_mut() else { return };
+        entry.settle_refold();
+        if let Some(mut job) = entry.job.take() {
             job.begin_close();
             self.retired_jobs.push(job);
+        }
+    }
+
+    /// 🎯️ Hands the current job the entry's identity through `retarget`; a job that is not retargetable, or
+    /// declines, is closed so the driver rebuilds it from its checkpoint.
+    fn retarget_current_job(&mut self, retarget: impl FnOnce(&mut dyn ToolRunRetargetableJob<A::Config>, ToolRunIdentity) -> bool) {
+        let Some(entry) = self.entry.as_mut() else { return };
+        let identity = entry.identity;
+        let Some(slot) = entry.job.as_mut() else { return };
+        if slot.retargetable().is_some_and(|job| retarget(job, identity)) {
+            slot.generation = semio_framework_job::Generation(u64::from(identity.generation));
+        } else {
+            self.close_current_job();
         }
     }
 
@@ -646,6 +891,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         entry.refold = None;
         entry.overlay = Arc::clone(&entry.base);
         entry.checkpoint = None;
+        entry.payload = None;
     }
 
     /// 🧹️ Advances the owners that outlived their slot by one bounded unit; `None` when nothing is retiring.
@@ -711,9 +957,23 @@ pub enum ToolRunActionOutcome {
     Rejected(ToolRunRejection),
 }
 
-fn tool_run_arg_u64(args: Option<&DslValue>, key: &str) -> Option<u64> {
+/// 🔢️ One §2.5 action argument read as a `u64`, in every shape the wire can hand it over.
+///
+/// 🪪️ A JSON number that is an exact non-negative integer IS a `u64` here, and reading it as anything
+/// else is not strictness, it is a silent refusal. `toolRunFinalize`'s `generation` crosses as
+/// `Number(Float(1.0))` — the shell's own action arguments build it with `UiValue::Number(f64)`, and a
+/// guest that mints it with `DslValue::uint` arrives the same way — so accepting only an exact `u64`
+/// carrier or a numeric string made `generation` read `None`, and `(_, None)` is
+/// `ToolRunRejection::Stale`. EVERY finalize of EVERY app was rejected: runs reached `Complete` and
+/// stayed there, and because a start against a live run is `ToolRunRejection::Busy`, no tool run could
+/// ever be started a second time. Measured on 6018 as a 3d preview that never re-evaluated after the
+/// first evaluation of a session (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`).
+pub(crate) fn tool_run_arg_u64(args: Option<&DslValue>, key: &str) -> Option<u64> {
     let value = args?.get(key)?;
-    value.as_u64().or_else(|| value.as_str().and_then(|text| text.parse().ok()))
+    value
+        .as_u64()
+        .or_else(|| value.as_str().and_then(|text| text.parse().ok()))
+        .or_else(|| value.as_f64().filter(|number| number.is_finite() && *number >= 0.0 && number.fract() == 0.0 && *number < 18_446_744_073_709_551_616.0).map(|number| number as u64))
 }
 
 impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
@@ -748,7 +1008,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         Ok(result)
     }
 
-    /// ⚖️ Applies one §2.5 action to the ledger and performs the transition's immediate effect.
+    /// ⚖️ Applies one §2.5 action to the ledger and performs the transition's immediate effect. An action that
+    /// names no identity at all (neither `runId` nor `generation`, as a keyboard chord dispatches it) targets
+    /// the instance's live run at its generation of this dispatch; an identity it does name is checked as is.
     pub async fn apply_tool_run_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta) -> Result<ToolRunActionOutcome, Fault> {
         let Some(action) = ToolRunAction::from_id(action) else {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.unknown-action"), format!("'{action}' is not a tool run action")));
@@ -756,8 +1018,10 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         if action == ToolRunAction::Start {
             return self.start_tool_run(args, meta).await;
         }
-        let run = tool_run_arg_u64(args, TOOL_RUN_ARG_RUN_ID).unwrap_or(0);
-        let generation = tool_run_arg_u64(args, TOOL_RUN_ARG_GENERATION).and_then(|value| u32::try_from(value).ok());
+        let names_identity = args.is_some_and(|args| args.get(TOOL_RUN_ARG_RUN_ID).is_some() || args.get(TOOL_RUN_ARG_GENERATION).is_some());
+        let live = if names_identity { None } else { self.tool_runs.slot() };
+        let run = live.map_or_else(|| tool_run_arg_u64(args, TOOL_RUN_ARG_RUN_ID).unwrap_or(0), |slot| slot.run);
+        let generation = live.map(|slot| slot.generation).or_else(|| tool_run_arg_u64(args, TOOL_RUN_ARG_GENERATION).and_then(|value| u32::try_from(value).ok()));
         let event = match (action, generation) {
             (ToolRunAction::Dismiss, _) => ToolRunEvent::Dismiss { run },
             (_, None) => return Ok(ToolRunActionOutcome::Rejected(ToolRunRejection::Stale)),
@@ -818,9 +1082,18 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         let (base, _, _) = self.command_cache_inputs();
         let identity = ToolRunIdentity::new(ToolRunId { app_instance_id: self.live_runtime_instance_id.unwrap_or(meta.instance_id), run }, self.store.content_revision());
         let settings_generation = self.tool_run_settings_generation();
+        let window_id = args.and_then(|args| args.get(TOOL_RUN_ARG_WINDOW_ID)).and_then(DslValue::as_str).map(str::to_string).or_else(|| view_state.and_then(|view| view.window_id.clone().or_else(|| view.focused_window_id.clone())));
+        let window = window_id.and_then(|window_id| view_state?.window_instances.iter().find(|window| window.id == window_id).map(|window| (window.id.clone(), window.window_kind_id.clone())));
+        let settings_values = self.tool_run_settings_values(&definition.settings, window.as_ref());
+        let window_bodies = definition.windows.iter().filter_map(|window_kind_id| self.registry.window_body_key(window_kind_id).map(str::to_string)).collect();
         self.tool_runs.entry = Some(Box::new(ToolRunEntry {
             tool_id,
             actor: meta.actor.clone(),
+            settings_values,
+            window,
+            window_bodies,
+            payload: None,
+            trace_keys: ToolRunTraceKeys::default(),
             definition,
             slot,
             identity,
@@ -853,26 +1126,67 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         Ok(ToolRunActionOutcome::Applied(transition.effect))
     }
 
-    fn build_tool_run_job_slot(&self, entry: &ToolRunEntry<A>, purpose: ToolRunJobPurpose) -> Result<Option<ToolRunJobSlot>, Fault> {
-        let snapshot = match purpose {
-            ToolRunJobPurpose::Run => Arc::clone(&entry.base),
-            ToolRunJobPurpose::Revalidate => self.store.snapshot_owner(),
-        };
-        let request = ToolRunJobRequest::<A> {
+    /// 🧵️ Builds the run's job for `purpose`: the app's retargetable job when it builds one, else its plain job.
+    fn build_tool_run_job_slot(&self, entry: &ToolRunEntry<A>, purpose: ToolRunJobPurpose) -> Result<Option<ToolRunJobSlot<A::Config>>, Fault> {
+        let request = || ToolRunJobRequest::<A> {
             tool_id: &entry.tool_id,
             definition: &entry.definition,
             purpose,
             identity: entry.identity,
-            snapshot,
+            snapshot: match purpose {
+                ToolRunJobPurpose::Run => Arc::clone(&entry.base),
+                ToolRunJobPurpose::Revalidate => self.store.snapshot_owner(),
+            },
             config: self.config_store.snapshot_owner(),
+            window_id: entry.window.as_ref().map(|(window_id, _)| window_id.as_str()),
+            window_config: entry.window.as_ref().and_then(|(window_id, window_kind_id)| self.window_config_store.snapshot(window_kind_id, window_id)),
             checkpoint: entry.checkpoint.as_deref(),
             provisional: &entry.provisional,
+            instance_owner: self.instance_operation_owner.clone(),
+            port: self.tool_runs.port.clone(),
+            trace_keys: entry.trace_keys.clone(),
+            entity_marks: &entry.entity_marks,
         };
-        Ok(A::build_tool_run_job(request)?.map(|job| ToolRunJobSlot::new(job, purpose, entry.identity.generation)))
+        let generation = entry.identity.generation;
+        if let Some(job) = A::build_retargetable_tool_run_job(request())? {
+            return Ok(Some(ToolRunJobSlot::new(ToolRunJobHandle::Retargetable(job), purpose, generation)));
+        }
+        Ok(A::build_tool_run_job(request())?.map(|job| ToolRunJobSlot::new(ToolRunJobHandle::Plain(job), purpose, generation)))
+    }
+
+    /// 🎚️ What the run's declared settings reads name right now. A declared window kind that is the starting
+    /// window's reads only that window's config, the one its jobs receive; any other declared kind reads every
+    /// partition of that kind.
+    fn tool_run_settings_values(&self, reads: &ToolRunSettingsReads, window: Option<&(String, String)>) -> ToolRunSettingsValues {
+        let config = if reads.config.is_empty() {
+            Vec::new()
+        } else {
+            let document = protocol::ToValue::to_value(self.config_store.snapshot_owner().as_ref());
+            reads.config.iter().map(|pointer| tool_run_pointer_value(&document, pointer).cloned()).collect()
+        };
+        let window_config = reads
+            .window_config
+            .iter()
+            .flat_map(|(window_kind_id, pointers)| {
+                let started = window.filter(|(_, kind)| kind == window_kind_id).map(|(window_id, _)| window_id.as_str());
+                self.window_config_store.pointer_values(window_kind_id, pointers).into_iter().filter(move |(window_id, _)| started.is_none_or(|started| started == window_id)).map(move |(window_id, values)| (window_kind_id.clone(), window_id, values))
+            })
+            .collect();
+        ToolRunSettingsValues { config, window_config }
     }
 
     fn apply_tool_run_driver_event(&mut self, event: ToolRunEvent) -> Option<ToolRunEffect> {
         self.tool_runs.apply_event(event).ok()
+    }
+
+    /// 📮️ Hands the host every effect jobs queued on the port, in order, while the typed effect outbox has room.
+    fn drain_tool_run_port(&mut self) {
+        while let Some(effect) = self.tool_runs.port.pop_effect() {
+            if let Err(effect) = self.typed_effect_outbox.push(effect) {
+                self.tool_runs.port.restore_effect(effect);
+                return;
+            }
+        }
     }
 
     /// 🎯️ A tick-sized change: progress, steps, trace and provisional appends reach the panel and the scene
@@ -902,7 +1216,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         }
     }
 
-    /// 🎬️ Scene lane injection (§3.2, §4.1 layer 2): the first World3d or Canvas2d scene surface a window body
+    /// 🎬️ Scene lane injection (§3.2, §4.1 layer 2): the first World3d, Canvas2d or Board2d scene surface a window body
     /// renders carries the `toolRunTrace` lane answered for the cursor that window's renderer echoed.
     /// Panel bodies, override renders and bodies without a scene surface carry nothing.
     pub(crate) fn inject_tool_run_trace_lane(&mut self, tree: &mut ComponentTree, body_key: &str, view_state: &ViewModel) -> Result<(), Fault> {
@@ -918,13 +1232,20 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 
     /// 👀️ Store and settings watch (§3.3): emits `baseChanged` / `settingsChanged` with their policies.
+    ///
+    /// - A base change rebinds a retargetable job to the new identity in place; any other job is closed and
+    ///   rebuilt under the new identity (`restart` also discards the provisional ops), so no tick of the old
+    ///   identity is ever produced.
+    /// - A config or window-config publication is only a settings change when a value behind one of the run's
+    ///   declared `settings` pointers changed; `resume` then retargets a retargetable job in place and rebuilds
+    ///   any other from its checkpoint.
     fn watch_tool_run_generations(&mut self) {
         let store_generation = self.store.generation();
         let settings_generation = self.tool_run_settings_generation();
         let Some(entry) = self.tool_runs.entry.as_ref() else { return };
         let (run, state, rebase, reconfigure) = (entry.slot.run, entry.slot.state, entry.definition.rebase, entry.definition.reconfigure);
         let base_changed = entry.base_generation != store_generation;
-        let settings_changed = entry.settings_generation != settings_generation;
+        let settings_moved = entry.settings_generation != settings_generation;
         if !matches!(state, ToolRunState::Running | ToolRunState::Paused | ToolRunState::Complete) {
             return;
         }
@@ -943,20 +1264,41 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             if restart {
                 entry.overlay = Arc::clone(&entry.base);
             } else {
-                entry.begin_refold();
+                entry.begin_refold(true);
             }
             entry.framework_step(ToolRunStepKind::Warning, TOOL_RUN_REASON_REBASING, &[]);
+            if !restart {
+                self.tool_runs.retarget_current_job(|job, identity| {
+                    job.rebind(identity);
+                    true
+                });
+            }
             self.mark_tool_run_document_dirty();
         }
-        if settings_changed && self.apply_tool_run_driver_event(ToolRunEvent::SettingsChanged { run }) == Some(ToolRunEffect::Reconfigure) {
-            self.tool_runs.close_current_job();
-            if reconfigure == ToolRunReconfigurePolicy::Restart {
+        if !settings_moved {
+            return;
+        }
+        let entry = self.tool_runs.entry.as_ref().expect("the watch keeps the slot");
+        let values = self.tool_run_settings_values(&entry.definition.settings, entry.window.as_ref());
+        let entry = self.tool_runs.entry.as_mut().expect("the watch keeps the slot");
+        entry.settings_generation = settings_generation;
+        if values == entry.settings_values {
+            return;
+        }
+        entry.settings_values = values;
+        if self.apply_tool_run_driver_event(ToolRunEvent::SettingsChanged { run }) != Some(ToolRunEffect::Reconfigure) {
+            return;
+        }
+        match reconfigure {
+            ToolRunReconfigurePolicy::Restart => {
+                self.tool_runs.close_current_job();
                 self.tool_runs.discard_provisional();
-            }
-            let entry = self.tool_runs.entry.as_mut().expect("reconfigure keeps the slot");
-            entry.settings_generation = settings_generation;
-            if reconfigure == ToolRunReconfigurePolicy::Restart {
                 self.mark_tool_run_document_dirty();
+            }
+            ToolRunReconfigurePolicy::Resume => {
+                let config = self.config_store.snapshot_owner();
+                self.tool_runs.retarget_current_job(|job, identity| job.reconfigure(identity, config));
+                self.mark_tool_run_ui_dirty();
             }
         }
     }
@@ -965,6 +1307,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// job steps, finalize.
     pub(crate) async fn drive_tool_run_turn(&mut self) -> Result<(), Fault> {
         self.flush_tool_run_ui_dirty();
+        self.drain_tool_run_port();
         let started = semio_framework_job::default_now_us().unwrap_or(0);
         let deadline = started.saturating_add(self.tool_runs.driver.turn_wall_us);
         if let Some(step) = self.tool_runs.retire_step(&mut self.store, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)? {
@@ -1013,19 +1356,26 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         }
     }
 
-    /// 🔁️ `true` while a refold still owns this turn.
+    /// 🔁️ `true` while a refold still owns this turn; a refold waiting only for its job's boundary lets the job step.
     fn refold_tool_run(&mut self, deadline: u64) -> bool {
         let Some(entry) = self.tool_runs.entry.as_mut().filter(|entry| entry.refold.is_some()) else { return false };
-        let done = entry.refold_turn(deadline);
-        if done {
-            self.mark_tool_run_document_dirty();
+        if entry.job.is_none() {
+            entry.settle_refold();
         }
-        !done
+        match entry.refold_turn(deadline) {
+            ToolRunRefoldTurn::Pending => true,
+            ToolRunRefoldTurn::AwaitingBoundary => false,
+            ToolRunRefoldTurn::Swapped => {
+                self.mark_tool_run_document_dirty();
+                false
+            }
+        }
     }
 
     async fn admit_tool_run_job(&mut self) -> Result<(), Fault> {
         let Some(entry) = self.tool_runs.entry.as_ref() else { return Ok(()) };
         let (run, generation, state) = (entry.slot.run, entry.slot.generation, entry.slot.state);
+        self.tool_runs.port.wake();
         match self.build_tool_run_job_slot(entry, ToolRunJobPurpose::Run) {
             Ok(Some(job)) => {
                 self.tool_runs.entry.as_mut().expect("live slot").job = Some(job);
@@ -1061,7 +1411,11 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             let fuel = if single { 1 } else { semio_framework_job::INTERACTIVE_LANE_FUEL };
             let budget = semio_framework_job::StepBudget::from_duration(fuel, now, semio_framework_job::INTERACTIVE_LANE_WALL_US).unwrap_or(semio_framework_job::StepBudget::new(fuel, u64::MAX));
             let mut verdict = None;
-            let mut outcome = semio_framework_job::drive_step(job.job.as_mut(), TOOL_RUN_JOB_SITE, job.operation, job.generation, semio_framework_job::InteractiveStage::InteractiveStep, budget, job.cancel.clone(), semio_framework_job::default_now_us, &mut job.preview_sequence, &mut verdict);
+            let interactive: &mut dyn semio_framework_job::InteractiveJob = match &mut job.job {
+                ToolRunJobHandle::Plain(job) => job.as_mut(),
+                ToolRunJobHandle::Retargetable(job) => job.as_mut(),
+            };
+            let mut outcome = semio_framework_job::drive_step(interactive, TOOL_RUN_JOB_SITE, job.operation, job.generation, semio_framework_job::InteractiveStage::InteractiveStep, budget, job.cancel.clone(), semio_framework_job::default_now_us, &mut job.preview_sequence, &mut verdict);
             if single && !matches!(outcome, semio_framework_job::StepOutcome::Yield | semio_framework_job::StepOutcome::CheckpointReady(_)) {
                 entry.pending_step = false;
             }
@@ -1096,9 +1450,11 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 semio_framework_job::StepOutcome::CheckpointReady(checkpoint) => {
                     entry.checkpoint = job_payload_bytes(&checkpoint.state, semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES);
                     close_job_payload(&mut checkpoint.state);
+                    entry.settle_refold();
                 }
                 semio_framework_job::StepOutcome::Complete(_) => {
                     close_step_outcome(&mut outcome);
+                    entry.settle_refold();
                     match purpose {
                         Some(ToolRunJobPurpose::Revalidate) => self.complete_tool_run_revalidation(),
                         _ => self.complete_tool_run_job(run, generation),
@@ -1111,7 +1467,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                     terminal = true;
                 }
             }
-            if terminal || single || semio_framework_job::default_now_us().is_none_or(|now| now >= deadline) {
+            self.drain_tool_run_port();
+            if terminal || single || self.tool_runs.port.is_waiting() || semio_framework_job::default_now_us().is_none_or(|now| now >= deadline) {
                 return Ok(());
             }
             if !self.tool_runs.entry.as_ref().is_some_and(|entry| entry.job.is_some() && matches!(entry.slot.state, ToolRunState::Running | ToolRunState::Finalizing)) {
@@ -1120,11 +1477,37 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         }
     }
 
+    /// 🏁️ A finished job's completion — and, for a READ-ONLY run, its finalization too.
+    ///
+    /// 🪪️ `Complete` means "the job is done and the run awaits the finalize that publishes its
+    /// provisional edits". A run that declares `mutating: false` authors no provisional edit at all, so
+    /// there is nothing for a finalize to publish and nothing for a user to review: leaving it parked in
+    /// `Complete` only holds the tool's single run slot open, and a `toolRunStart` against a non-terminal
+    /// run is `ToolRunRejection::Busy`. That is how generation3d's read-only `previewEval` ran exactly
+    /// ONCE per session — every later start, whether a poll's or a gesture's own, was refused by the
+    /// finished run still sitting in the slot, and the 3d preview stopped re-evaluating
+    /// (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`, `📋️tool-run-contract.md` §2.2). Asking a
+    /// read-only run's owner to dispatch a finalize it has nothing to finalize is a round trip the host
+    /// can always lose: it happens on the host's own refresh cadence, and a run action that publishes
+    /// nothing moves no UI that would provoke the next pass.
     fn complete_tool_run_job(&mut self, run: u64, generation: u32) {
-        self.tool_runs.close_current_job();
+        let resident = self.tool_runs.entry.as_mut().is_some_and(|entry| entry.definition.mutating && entry.job.as_mut().is_some_and(|job| job.retargetable().is_some()));
+        if resident {
+            self.tool_runs.entry.as_mut().expect("a resident job has a slot").settle_refold();
+        } else {
+            self.tool_runs.close_current_job();
+        }
         self.apply_tool_run_driver_event(ToolRunEvent::JobComplete { run, generation });
         if let Some(entry) = self.tool_runs.entry.as_mut() {
             entry.pending_step = false;
+        }
+        if self.tool_runs.entry.as_ref().is_some_and(|entry| !entry.definition.mutating && entry.slot.state == ToolRunState::Complete) {
+            let (run, generation) = self.tool_runs.slot().map(|slot| (slot.run, slot.generation)).expect("a complete run has a slot");
+            if let Some(ToolRunEffect::BeginFinalize) = self.apply_tool_run_driver_event(ToolRunEvent::Finalize { run, generation }) {
+                if let Some(entry) = self.tool_runs.entry.as_mut() {
+                    entry.finalize = Some(ToolRunFinalize { phase: ToolRunFinalizePhase::Pending, publication: None, retracted: 0, published: false });
+                }
+            }
         }
         self.mark_tool_run_document_dirty();
     }
@@ -1156,7 +1539,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         if entry.base_generation != store_generation && matches!(phase, ToolRunFinalizePhase::Pending | ToolRunFinalizePhase::Revalidating) {
             entry.base = self.store.snapshot_owner();
             entry.base_generation = store_generation;
-            entry.begin_refold();
+            entry.begin_refold(true);
             entry.framework_step(ToolRunStepKind::Warning, TOOL_RUN_REASON_REBASING, &[]);
             if let Some(finalize) = entry.finalize.as_mut() {
                 finalize.phase = ToolRunFinalizePhase::Pending;
@@ -1170,6 +1553,10 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         }
         match phase {
             ToolRunFinalizePhase::Pending => {
+                if self.tool_runs.entry.as_ref().is_some_and(|entry| entry.job.as_ref().is_some_and(|job| job.purpose == ToolRunJobPurpose::Run)) {
+                    self.tool_runs.close_current_job();
+                    return Ok(());
+                }
                 let entry = self.tool_runs.entry.as_ref().expect("finalizing slot");
                 let (run, generation) = (entry.slot.run, entry.slot.generation);
                 let next = if entry.definition.revalidate_job.is_some() && !entry.provisional.is_empty() {

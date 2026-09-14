@@ -74,7 +74,7 @@ import {
   type SpawnedJobCompletion,
   type TurnOutcome,
 } from "@semio-tech/framework";
-import { AppChannelClient, AppChannelRequestSequence, type WindowConfigPackEntry, decodeFaultFromWire, decodeInvocationResultPacks, decodePackValue, decodePackWire, encodeAppCommand, encodePackValue, faultDisplayMessage, packWireNatural } from "@semio-tech/framework-os";
+import { AppChannelClient, AppChannelRequestSequence, type WindowConfigPackEntry, decodeFaultFromWire, decodeInvocationResultPacks, decodePackValue, decodePackWire, encodeAppCommand, encodePackValue, faultDisplayMessage, packValueFromBase64, packWireNatural } from "@semio-tech/framework-os";
 import { createShardCommandIngressPages, settleFailedInstanceOpen, ShardClient, SHARD_COMMAND_MAXIMUM_PAGES, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { createPooledActorRuntime, DEFAULT_SHARD_BUDGET, type PooledActorRuntime } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts"
 import { SHARD_WORKER_URL } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
@@ -310,42 +310,68 @@ function unthrottledMacrotask(): Promise<void> {
  * browser and pure scheduling on Node. Deadline-driven, a document costs one yield per 8 ms of real work
  * and the isolate is still never held longer than one frame step. */
 let yieldDeadlineMs = 0;
-async function yieldWgpuUi(): Promise<void> {
+
+/** @emoji ⏳️ The same decision, reported as NOTHING TO AWAIT while the drive is still inside its hold
+ * budget — the shape a per-phase caller needs.
+ *
+ * 🩸️ What this replaces: `await yieldWgpuUi()` on every step. An `async` function allocates a promise
+ * and `await` costs a microtask tick even when the body returns immediately, and the retained intake
+ * advances ONE decoder phase per call — so generation3d's flow window paid 525 k promise allocations
+ * and 1.05 M microtask ticks to re-publish one document, 265 ms of which ~0.20 ms is the decoding
+ * itself. A caller that awaits only what this returns pays for a yield exactly when the budget really
+ * is spent (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+ * `📓️wgpu-edit-convergence-perf-2026-09-14.md`). */
+function yieldWgpuUiIfDue(): Promise<void> | undefined {
   const now = performance.now();
   if (yieldDeadlineMs === 0 || now < yieldDeadlineMs) {
     if (yieldDeadlineMs === 0) yieldDeadlineMs = now + WGPU_UI_YIELD_BUDGET_MS;
-    return;
+    return undefined;
   }
   yieldDeadlineMs = now + WGPU_UI_YIELD_BUDGET_MS;
-  await unthrottledMacrotask();
+  return unthrottledMacrotask();
 }
 
-/** 🎞️ Hands the frame back. `requestAnimationFrame` where the target has one (the worker's
- * `OffscreenCanvas` context does), an UNTHROTTLED macrotask otherwise — never a timer, for the clamp
- * {@link unthrottledMacrotask} documents. */
-async function nextWgpuFrame(): Promise<void> {
-  const frame = (globalThis as { requestAnimationFrame?: (callback: () => void) => unknown }).requestAnimationFrame;
+async function yieldWgpuUi(): Promise<void> {
+  const pending = yieldWgpuUiIfDue();
+  if (pending) await pending;
+}
+
+/** @emoji 🚏️ Hands the ISOLATE back at a slice boundary and restarts the hold budget — one task, and
+ * the intake resumes on the very next one.
+ *
+ * 🩸️ What this replaces: an `await requestAnimationFrame(…)`. Nothing in the frame Worker is
+ * animation-frame driven — the shell paints inside `tick()`, which arrives as a `postMessage` TASK from
+ * the UI isolate — so awaiting a frame let nothing run that a task does not, and cost a full display
+ * interval. Measured inside the live `semio-frame-worker` isolate on 6118: an animation frame is
+ * **15.46 ms**, an {@link unthrottledMacrotask} is **0.0115 ms** — 1 345×. At one frame per
+ * {@link RETAINED_UI_INTAKE_SLICE_STEPS}, generation3d's 525 k-step surface publication crossed 128
+ * slices and therefore SLEPT 2.13 s per published surface: seven such blocks (2 881 / 2 376 / 2 148 /
+ * 2 144 / 2 142 / 2 136 / 2 134 ms) made 16.0 s of the 21.6 s `shell-boot:flush-deferred` in edit mode,
+ * with the worker's own CPU profile 87.6 % IDLE
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-edit-convergence-perf-2026-09-14.md`). */
+async function handBackWgpuIsolate(): Promise<void> {
   yieldDeadlineMs = performance.now() + WGPU_UI_YIELD_BUDGET_MS;
-  if (typeof frame === "function") await new Promise<void>((resolve) => frame.call(globalThis, () => resolve()));
-  else await unthrottledMacrotask();
+  await unthrottledMacrotask();
 }
 
 /** 🎞️ One RESUMABLE drive cursor for a single retained intake. Exhausting a slice
  * ({@link RETAINED_UI_INTAKE_SLICE_STEPS}) is a yield, not a fault: the cursor is retained across the
- * frame boundary and the very same intake continues where it stopped, so a document larger than one
- * slice publishes over several frames. Only {@link WGPU_UI_INTAKE_STEP_CEILING} — the whole-document
- * backstop — is terminal, and a genuine stall is caught earlier and more precisely by the intake's own
- * 32-consecutive-zero-progress rejection. */
+ * boundary and the very same intake continues where it stopped, so a document larger than one slice
+ * publishes across several turns of the isolate. Only {@link WGPU_UI_INTAKE_STEP_CEILING} — the
+ * whole-document backstop — is terminal, and a genuine stall is caught earlier and more precisely by
+ * the intake's own 32-consecutive-zero-progress rejection. Both yields are TASKS
+ * ({@link handBackWgpuIsolate}, {@link yieldWgpuUi}): the slice is a resumption point, never a sleep. */
 export class WgpuUiIntakeCursor {
   #steps = 0;
   readonly #ceiling: number;
   constructor(ceiling: number = WGPU_UI_INTAKE_STEP_CEILING) { this.#ceiling = ceiling; }
   get steps(): number { return this.#steps; }
-  async next(phase: string): Promise<void> {
+  /** ⏳️ Returns what the caller must await, and `undefined` when this step owes the isolate nothing —
+   * `await cursor.next(…)` on every phase is itself the cost, see {@link yieldWgpuUiIfDue}. */
+  next(phase: string): Promise<void> | undefined {
     this.#steps += 1;
     if (this.#steps > this.#ceiling) throw new Error(`wgpu-ui.intake-budget-exhausted:${phase}:${this.#steps}`);
-    if (this.#steps % RETAINED_UI_INTAKE_SLICE_STEPS === 0) await nextWgpuFrame();
-    else await yieldWgpuUi();
+    return this.#steps % RETAINED_UI_INTAKE_SLICE_STEPS === 0 ? handBackWgpuIsolate() : yieldWgpuUiIfDue();
   }
 }
 
@@ -384,7 +410,8 @@ export class WgpuOwnedUiInstanceRoute {
       if (++budget.steps > DEFAULT_UI_DOCUMENT_LIMITS.maxNodes * 64) throw new Error(`wgpu-ui.${phase}-budget-exhausted`);
       const current = this.owner.advanceMaintenance(WGPU_UI_GRANT);
       if (current.kind === "blocked" || current.kind === "rejected") throw new Error(`wgpu-ui.${phase}-${current.kind}:${current.phase}`);
-      await yieldWgpuUi();
+      const pending = yieldWgpuUiIfDue();
+      if (pending) await pending;
     }
   }
 
@@ -394,7 +421,7 @@ export class WgpuOwnedUiInstanceRoute {
     while (!intake.terminalIsEmpty()) {
       const current = intake.closeStep(WGPU_UI_GRANT);
       if (current.kind === "blocked" || current.kind === "rejected") throw new Error(`wgpu-ui.intake-close-${current.kind}:${current.phase}`);
-      await cursor.next("intake-close");
+      { const pending = cursor.next("intake-close"); if (pending) await pending; }
     }
     this.#intakes.delete(intake);
   }
@@ -420,7 +447,7 @@ export class WgpuOwnedUiInstanceRoute {
         token = intake.peekAcknowledgement();
         if (current.kind === "rejected") throw new Error(`wgpu-ui.intake-rejected:${current.phase}:${intake.failure ?? "unknown"}`);
         if (current.kind === "blocked" && token === null) throw new Error(`wgpu-ui.intake-blocked:${current.phase}`);
-        await cursor.next("intake");
+        { const pending = cursor.next("intake"); if (pending) await pending; }
       }
       const acknowledged = await execute(() => this.lifecycle.submitUiAcknowledgement(source, token, DEFAULT_SHARD_BUDGET));
       if (!intake.acceptAcknowledgement(acknowledged.receipt)) throw new Error("wgpu-ui.acknowledgement-refused");
@@ -428,7 +455,7 @@ export class WgpuOwnedUiInstanceRoute {
         const current = intake.advance(WGPU_UI_GRANT);
         if (current.kind === "ready") break;
         if (current.kind === "blocked" || current.kind === "rejected") throw new Error(`wgpu-ui.intake-${current.kind}:${current.phase}`);
-        await cursor.next("publication-close");
+        { const pending = cursor.next("publication-close"); if (pending) await pending; }
       }
       const surface = intake.takeSurface();
       if (!surface) throw new Error("wgpu-ui.surface-missing");
@@ -496,7 +523,7 @@ export class WgpuOwnedUiInstanceRoute {
     while (!this.owner.terminalIsEmpty()) {
       const current = this.owner.closeStep(WGPU_UI_GRANT);
       if (current.kind === "blocked" || current.kind === "rejected") throw new Error(`wgpu-ui.owner-close-${current.kind}:${current.phase}`);
-      await cursor.next("owner-close");
+      { const pending = cursor.next("owner-close"); if (pending) await pending; }
     }
     const witness = this.owner.takeRetirementWitness();
     if (!witness) throw new Error("wgpu-ui.retirement-witness-missing");
@@ -561,7 +588,7 @@ export async function retireWgpuOwnedUiInstanceLifecycle(lifecycle: ShardInstanc
       current = coerceTurnResult(await execute(() => progress.kind === "closing" ? lifecycle.close(DEFAULT_SHARD_BUDGET) : lifecycle.poll(DEFAULT_SHARD_BUDGET)));
     }
     if (current.uiPatches.length > 0 || current.uiPatchReceipt !== undefined) throw new Error("wgpu-ui.patch-after-lifecycle-close");
-    await cursor.next("lifecycle-close");
+    { const pending = cursor.next("lifecycle-close"); if (pending) await pending; }
   }
   lifecycle.dispose();
 }
@@ -902,8 +929,8 @@ export interface WgpuPluginHandle {
   readonly manifest: PluginManifest;
   readonly createApp: (appId: string) => Promise<number>;
   readonly destroyApp: (instanceId: number) => Promise<void>;
-  readonly handleAction: (instanceId: number, actionJson: string, viewState: unknown) => Promise<InvocationResponse>;
-  readonly handleCommand: (instanceId: number, commandJson: string, viewState: unknown) => Promise<InvocationResponse>;
+  readonly handleAction: (instanceId: number, invocation: unknown, viewState: unknown) => Promise<InvocationResponse>;
+  readonly handleCommand: (instanceId: number, invocation: unknown, viewState: unknown) => Promise<InvocationResponse>;
   readonly render: (instanceId: number, surfaceId: string, bodyKey: string, viewState: unknown) => Promise<unknown>;
   readonly renderDocument: (instanceId: number, surfaceId: string, bodyKey: string, viewState: unknown) => Promise<string>;
   readonly contextMenu: (instanceId: number, request: unknown) => Promise<unknown>;
@@ -1507,8 +1534,8 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       void retirement.then(forget, forget);
       return retirement;
     },
-    handleAction: (instanceId, actionJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(actionJson), viewState),
-    handleCommand: (instanceId, commandJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(commandJson), viewState),
+    handleAction: (instanceId, invocation, viewState) => performInvocation(requireChannel(instanceId), instanceId, invocation, viewState),
+    handleCommand: (instanceId, invocation, viewState) => performInvocation(requireChannel(instanceId), instanceId, invocation, viewState),
     render: (instanceId, surfaceId, bodyKey, viewState) => renderSurface(instanceId, surfaceId, bodyKey, viewState).then((result) => result.node),
     renderDocument: (instanceId, surfaceId, bodyKey, viewState) => renderSurface(instanceId, surfaceId, bodyKey, viewState).then((result) => JSON.stringify({ document: result.document, effects: jsonEffects(result.effects) })),
     captureExtensionCompletion,
@@ -1546,24 +1573,38 @@ export interface WgpuJsBridge {
   readonly manifest: () => string;
   readonly createApp: (appId: string) => Promise<number>;
   readonly destroyApp: (instanceId: number) => Promise<void>;
-  readonly handleAction: (instanceId: number, actionJson: string, contextJson: string) => Promise<string>;
-  readonly handleCommand: (instanceId: number, commandJson: string, contextJson: string) => Promise<string>;
-  readonly render: (instanceId: number, surfaceId: string, bodyKey: string, viewStateJson: string) => Promise<string>;
-  readonly renderDocument: (instanceId: number, surfaceId: string, bodyKey: string, viewStateJson: string) => Promise<string>;
+  readonly handleAction: (instanceId: number, invocationPack: string, contextJson: string) => Promise<string>;
+  readonly handleCommand: (instanceId: number, invocationPack: string, contextJson: string) => Promise<string>;
+  readonly render: (instanceId: number, surfaceId: string, bodyKey: string, viewStatePack: string) => Promise<string>;
+  readonly renderDocument: (instanceId: number, surfaceId: string, bodyKey: string, viewStatePack: string) => Promise<string>;
   readonly contextMenu: (instanceId: number, requestJson: string) => Promise<string>;
   readonly dispatchInvokeExtension: (instanceId: number, extensionId: string, capability: string, requestJson: string, req: number) => Promise<string>;
   readonly pushScopedContributions: (instanceId: number, appId: string, reachabilityJson: string, viewStateJson: string) => Promise<string>;
 }
 
-/** 📥️ `🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s `handle_action_js`/`handle_command_js` pass a THIRD argument
- * that is `{"viewState": ..., "actor": "local"}` JSON (its own `context_json`, not the bare view
- * state) — this unwraps `.viewState` from it. The pre-rewrite `🟦️.ts` fed that whole context
- * object straight through as "viewState" without unwrapping it first (a latent double-wrap bug this
- * rewrite fixes in passing, not something this packet was asked to hunt for). */
+/** 📦️ `handle_action_js`/`handle_command_js` pass the INVOCATION as `pk:`-prefixed pack too, for the
+ * same reason the view state crosses that way: `JSON.parse` collapses `0` and `0.0` onto one JS
+ * `number` and {@link encodePackValue} then writes every one of them as `TAG_F64`, so every INTEGER
+ * argument an action carried reached the guest as a float and failed its `FromValue` decode — an
+ * import chunk envelope (`{payload, name, chunk: u32, chunkCount: u32}`) is refused outright by the
+ * unsigned arm (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). A decoded {@link PackValue} keeps its
+ * integer carriers and re-encodes through `encodePackValue` unchanged.
+ *
+ * 📥️ `🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s `handle_action_js`/`handle_command_js` pass a THIRD argument
+ * that is `{"viewStatePack": "pk:…", "actor": "local"}` JSON (its own `context_json`, not the bare view
+ * state) — this unwraps and DECODES `.viewStatePack` from it.
+ *
+ * ⚖️ The payload is pack, not JSON, because JSON is lossy about integrality here and pack is not: the
+ * Rust producer writes a `u64` as `1` and an `f64` as `1.0`, `JSON.parse` collapses both onto one JS
+ * `number`, and {@link encodePackValue} then writes every one of them as `TAG_F64` — so the guest saw
+ * `toolRunTraceCursorByWindowId.<window>.run` as `Float(1.0)`, failed its `u64` decode, and every
+ * dispatch on this target died with it (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). A decoded
+ * {@link PackValue} keeps its integer carriers and re-encodes through `encodePackValue` unchanged. */
 function viewStateFromContextJson(contextJson: string): unknown {
   try {
-    const parsed = JSON.parse(contextJson) as { readonly viewState?: unknown } | null;
-    return parsed && typeof parsed === "object" && "viewState" in parsed ? parsed.viewState : parsed;
+    const parsed = JSON.parse(contextJson) as { readonly viewStatePack?: unknown } | null;
+    const packed = parsed && typeof parsed === "object" ? parsed.viewStatePack : undefined;
+    return typeof packed === "string" ? packValueFromBase64(packed) : undefined;
   } catch {
     return undefined;
   }
@@ -1574,10 +1615,10 @@ export function pluginHandleForBridge(handle: WgpuPluginHandle): WgpuJsBridge {
     manifest: () => JSON.stringify(handle.manifest),
     createApp: (appId) => handle.createApp(appId),
     destroyApp: (instanceId) => handle.destroyApp(instanceId),
-    handleAction: (instanceId, actionJson, contextJson) => handle.handleAction(instanceId, actionJson, viewStateFromContextJson(contextJson)).then(invocationResponseJson),
-    handleCommand: (instanceId, commandJson, contextJson) => handle.handleCommand(instanceId, commandJson, viewStateFromContextJson(contextJson)).then(invocationResponseJson),
-    render: (instanceId, surfaceId, bodyKey, viewStateJson) => handle.render(instanceId, surfaceId, bodyKey, JSON.parse(viewStateJson)).then((node) => JSON.stringify(node)),
-    renderDocument: (instanceId, surfaceId, bodyKey, viewStateJson) => handle.renderDocument(instanceId, surfaceId, bodyKey, JSON.parse(viewStateJson)),
+    handleAction: (instanceId, invocationPack, contextJson) => handle.handleAction(instanceId, packValueFromBase64(invocationPack), viewStateFromContextJson(contextJson)).then(invocationResponseJson),
+    handleCommand: (instanceId, invocationPack, contextJson) => handle.handleCommand(instanceId, packValueFromBase64(invocationPack), viewStateFromContextJson(contextJson)).then(invocationResponseJson),
+    render: (instanceId, surfaceId, bodyKey, viewStatePack) => handle.render(instanceId, surfaceId, bodyKey, packValueFromBase64(viewStatePack)).then((node) => JSON.stringify(node)),
+    renderDocument: (instanceId, surfaceId, bodyKey, viewStatePack) => handle.renderDocument(instanceId, surfaceId, bodyKey, packValueFromBase64(viewStatePack)),
     contextMenu: (instanceId, requestJson) => handle.contextMenu(instanceId, JSON.parse(requestJson)).then((items) => JSON.stringify(items)),
     dispatchInvokeExtension: (instanceId, extensionId, capability, requestJson, req) => handle.dispatchInvokeExtension(instanceId, extensionId, capability, requestJson, BigInt(req)).then(invocationResponseJson),
     pushScopedContributions: (instanceId, appId, reachabilityJson, viewStateJson) => handle.pushScopedContributions(instanceId, appId, reachabilityJson, viewStateJson).then(invocationResponseJson),

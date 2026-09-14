@@ -1,0 +1,116 @@
+{
+  "$comment": "🚚️ The one language-neutral declaration of the board-2d scene lane carrier — the board twin of 🚚️canvas2d-scene-lanes. Rust pins Board2dSceneLane / BOARD2D_SCENE_LANE_* (🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🦀️.rs) against it; TypeScript pins BOARD2D_SCENE_LANES / board2dSceneFromLanes (🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts) against it. The roundTrip toolRunTrace payload is the base64url of ⏯️tool-run/🧫️fixtures/📼️trace-pages.json deltas[0].",
+  "schema": "board-2d@1",
+  "laneKeyPrefix": "framework.scene.board2d.",
+  "spineFields": [
+    "fixtureJson",
+    "cameraJson",
+    "glyphCatalogsJson",
+    "selectionJson",
+    "interactive",
+    "hoveredId",
+    "activeUtility",
+    "selectionMethod",
+    "gridSnapEnabled",
+    "gridFactor",
+    "suggestionOffset",
+    "brushWeightsJson",
+    "placementCompatibilityJson",
+    "lodMode",
+    "lanes"
+  ],
+  "lanes": [
+    {
+      "lane": "toolRunTrace",
+      "field": "toolRunTrace",
+      "bodyKey": "framework.scene.board2d.toolRunTrace",
+      "optional": true
+    }
+  ],
+  "roundTrip": {
+    "assembled": {
+      "fixtureJson": "{\"nodes\":[]}",
+      "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+      "glyphCatalogsJson": "{}",
+      "selectionJson": "[]",
+      "interactive": true,
+      "selectionMethod": "rectangle",
+      "gridSnapEnabled": false,
+      "gridFactor": 1.0,
+      "suggestionOffset": 0.25,
+      "brushWeightsJson": "{}",
+      "placementCompatibilityJson": "[]",
+      "lodMode": "automatic",
+      "toolRunTrace": "AAQBDQQBBAMCBCoDBAEECCAACBAYICgwOEBIUFhgaHB4gIiQmKCosLjAyNDY4Ojw-AICAwQCBAwCCEwABAENBAEEAwIEKgMEAQQIIAAIEBggKDA4QEhQWGBocHiAiJCYoKiwuMDI0Njg6PD4AgQAAwgCAQEECBABAAAAAAAAAAIAAAAAAAAACFsACAENBAEEAwIEKgMEAQQIIAAIEBggKDA4QEhQWGBocHiAiJCYoKiwuMDI0Njg6PD4AgQBAwgBAAQICAMAAAAAAAAABQgBAgYIAgkABwgBAgoICOsDAAAAAAAA"
+    },
+    "laneTexts": {
+      "framework.scene.board2d.toolRunTrace": "AAQBDQQBBAMCBCoDBAEECCAACBAYICgwOEBIUFhgaHB4gIiQmKCosLjAyNDY4Ojw-AICAwQCBAwCCEwABAENBAEEAwIEKgMEAQQIIAAIEBggKDA4QEhQWGBocHiAiJCYoKiwuMDI0Njg6PD4AgQAAwgCAQEECBABAAAAAAAAAAIAAAAAAAAACFsACAENBAEEAwIEKgMEAQQIIAAIEBggKDA4QEhQWGBocHiAiJCYoKiwuMDI0Njg6PD4AgQBAwgBAAQICAMAAAAAAAAABQgBAgYIAgkABwgBAgoICOsDAAAAAAAA"
+    },
+    "spine": {
+      "fixtureJson": "{\"nodes\":[]}",
+      "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+      "glyphCatalogsJson": "{}",
+      "selectionJson": "[]",
+      "interactive": true,
+      "selectionMethod": "rectangle",
+      "gridSnapEnabled": false,
+      "gridFactor": 1.0,
+      "suggestionOffset": 0.25,
+      "brushWeightsJson": "{}",
+      "placementCompatibilityJson": "[]",
+      "lodMode": "automatic",
+      "lanes": [
+        {
+          "lane": "toolRunTrace",
+          "bytes": 304,
+          "hash": "83e0ab7ead42f955"
+        }
+      ]
+    },
+    "traceDeltaFixture": "deltas[0]"
+  },
+  "traceShapes": {
+    "$comment": "🔷️ How a board renders the placement2d subjects of its toolRunTrace lane: a subject's shape index is the index into glyphCatalogsJson.nodeKinds (the order the fill run captured its kinds in), and the footprint is kindSize × scale (scale absent, non-finite or not positive reads 1) — a square for shape \"rectangle\", else a circle of that diameter — centered on the subject position. Rust pins board2d_tool_run_trace_shapes (♾️infinite/🌍️world/⏯️tool-run-trace), TypeScript pins board2dToolRunTraceShapes (🖥️Board2dHost/⏯️tool-run-trace).",
+    "kindSize": 96,
+    "glyphCatalogsJson": "{\"nodeKinds\":[{\"id\":\"capsule\",\"shape\":\"circle\",\"scale\":1},{\"id\":\"slab\",\"shape\":\"rectangle\",\"scale\":0.5},{\"id\":\"plain\"},{\"id\":\"broken\",\"shape\":\"rectangle\",\"scale\":-2}]}",
+    "shapes": [
+      {
+        "kind": "circle",
+        "radius": 48
+      },
+      {
+        "kind": "rectangle",
+        "width": 48,
+        "height": 48
+      },
+      {
+        "kind": "circle",
+        "radius": 48
+      },
+      {
+        "kind": "rectangle",
+        "width": 96,
+        "height": 96
+      }
+    ],
+    "malformed": [
+      "",
+      "not json",
+      "{\"nodeKinds\":3}"
+    ],
+    "placementLane": "AAQBDQQBBAECBAcDBAAECCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAICAwQBBAwBCLgBAAoBDQQBBAECBAcDBAAECCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIEAAMIBAAAAAAECCABAAAAAAAAAAIAAAAAAAAAAwAAAAAAAAAEAAAAAAAAAAUIBAEDAAIGCAgBAAIAAQADAAcIBAEBAQIJCAwAAAAAAQAAAAIAAAAKCAgJAAAAAAAAAAsIJAAAIEEAACDBAAAAAAAAoEEAAKDBAAAAAAAA8EEAAPDBAAAAAA",
+    "placementLaneRecords": {
+      "run": 7,
+      "generation": 0,
+      "page": 1,
+      "placements": 3,
+      "newestTesting": {
+        "shape": 2,
+        "position": [
+          30,
+          -30
+        ]
+      }
+    }
+  }
+}

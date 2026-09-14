@@ -337,7 +337,7 @@ mod app_builder_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn declaring_a_tool_run_injects_the_reserved_actions_and_their_chords_without_stealing_escape() {
-        use semio_framework::{JobKindId, ToolDefinition, ToolRef, ToolRunDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunStageDefinition, ToolRunTraceKind, TOOL_RUN_ACTION_IDS};
+        use semio_framework::{JobKindId, ToolDefinition, ToolRef, ToolRunDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunTraceKind, TOOL_RUN_ACTION_IDS};
         let run = ToolRunDefinition {
             mutating: true,
             rebase: ToolRunRebasePolicy::Revalidate,
@@ -349,6 +349,8 @@ mod app_builder_tests {
             trace: ToolRunTraceKind::Instance3d,
             run_job: JobKindId::new("fill.run"),
             revalidate_job: None,
+            settings: ToolRunSettingsReads::default(),
+            windows: Vec::new(),
         };
         let plain = minimal_app("tool-without-run-app").await.tool(ToolDefinition::new("fill", LocalizedLabel::data("Fill"), IconName::PaintBucket).await).await.mode_tools("edit", vec![ToolRef::new("fill").await]).await.build_definition();
         assert!(!plain.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| TOOL_RUN_ACTION_IDS.contains(&action.id.as_str())));

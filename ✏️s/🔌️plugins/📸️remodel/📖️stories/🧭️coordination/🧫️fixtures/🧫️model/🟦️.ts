@@ -5,8 +5,8 @@
 // Summary: `REMODEL_POPULATED_SCENE` is a verbatim transcription of the shared mutation-fixture document
 // `🗿️artifacts/📸️remodeling/…/🧬️schema/🧬️mutations/*/🧪️tests/<toy case>/📸️snapshot/⬅️before/🔣️.json` (the shared
 // toy scene every `toy`-role vector starts from — two streams, three assets with their durable leaves, two
-// calibrated cameras, two GCPs in canonical id order, a mid-run `bundle-adjusting` job with a camera-pose
-// preview, and finished sparse/dense/trajectory/tracks/geo/qc results). It is copied rather than
+// calibrated cameras, two GCPs in canonical id order, and finished sparse/dense/trajectory/tracks/geo/qc
+// results; a reconstruction run is framework tool-run state, never document state). It is copied rather than
 // imported because a `?raw`/`?json` import of a plugin-owned asset would couple this scope to that plugin
 // directory's layout, which is actively being renamed. `REMODEL_EMPTY_SCENE` mirrors `default_remodeling_scene()`
 // (`🗿️artifacts/📸️remodeling/🦀️.rs`) — everything empty, the placeholder mesh handle seeded — which is also what
@@ -89,21 +89,8 @@ export type RemodelGcp = {
   readonly observations: readonly { readonly streamId: string; readonly frameIndex: number; readonly pixel: readonly [number, number] }[];
 };
 
-/** @emoji 🧭️ A recovered camera pose — `job.cameraPosesPreview[]` and `results.trajectory.poses[]`. */
+/** @emoji 🧭️ A recovered camera pose — one `results.trajectory.poses[]` entry. */
 export type RemodelPose = { readonly cameraId: string; readonly rotationWxyz: readonly number[]; readonly translation: readonly [number, number, number] };
-
-/** @emoji 🚦️ The reconstruction job's persisted continuation state — `job`. */
-export type RemodelJob = {
-  readonly id: string;
-  readonly stage: string;
-  readonly progress01: number;
-  readonly cancelRequested: boolean;
-  readonly stageCursor: number;
-  readonly startedAtMs: number | null;
-  readonly error: string | null;
-  readonly cameraPosesPreview: readonly RemodelPose[];
-  readonly sparsePointCloudPreview: string;
-};
 
 /** @emoji 📸️ The remodeling document — a story-local mirror of `RemodelingSnapshot`'s camelCase wire shape. */
 export type RemodelScene = {
@@ -124,7 +111,6 @@ export type RemodelScene = {
     readonly geo: { readonly enabled: boolean; readonly originLon: number | null; readonly originLat: number | null; readonly originAlt: number | null; readonly gsdM: number; readonly dsmCellM: number; readonly dtmFilterRadiusM: number; readonly orthoMaxPx: number };
   };
   readonly gcps: readonly RemodelGcp[];
-  readonly job: RemodelJob;
   readonly results: {
     readonly sparse: { readonly points: string; readonly colors: string | null } | null;
     readonly dense: { readonly positions: string; readonly colors: string | null; readonly confidence: string | null; readonly classification: string | null } | null;
@@ -359,21 +345,6 @@ export const REMODEL_POPULATED_SCENE: RemodelScene = {
     worldPosition: [4, 5, 6],
     observations: []
   }],
-  job: {
-    id: "job-a",
-    stage: "bundle-adjusting",
-    progress01: 0.5,
-    cancelRequested: false,
-    stageCursor: 3,
-    startedAtMs: 1000,
-    error: null,
-    cameraPosesPreview: [{
-      cameraId: "cam-a",
-      rotationWxyz: [1, 0, 0, 0],
-      translation: [0, 0, 0]
-    }],
-    sparsePointCloudPreview: "AAAAPwAAgD4AAAA+"
-  },
   results: {
     sparse: {
       points: "AAAAAAAAAAAAAAAAAACAPwAAgD8AAIA/",
@@ -461,7 +432,6 @@ export const REMODEL_EMPTY_SCENE: RemodelScene = {
   durableArtifacts: {},
   calibration: { cameras: [], rig: [] },
   gcps: [],
-  job: { id: "", stage: "idle", progress01: 0, cancelRequested: false, stageCursor: 0, startedAtMs: null, error: null, cameraPosesPreview: [], sparsePointCloudPreview: "" },
   results: { sparse: null, dense: null, mesh: { mesh: REMODEL_POPULATED_SCENE.results.mesh.mesh, source: "placeholder", textureAssetId: null, watertight: null }, trajectory: null, tracks: [], geo: null, qc: null },
 };
 //#endregion 🔖️Documents

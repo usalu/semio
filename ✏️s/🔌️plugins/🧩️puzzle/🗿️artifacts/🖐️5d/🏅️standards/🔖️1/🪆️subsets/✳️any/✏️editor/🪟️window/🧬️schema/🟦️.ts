@@ -20,7 +20,6 @@ export interface Puzzle5dWorldSunConfig {
 
 export interface Puzzle5dBoardWindowConfig {
   camera2d: Puzzle5dCamera2d;
-  fillCount: number;
   lodMode: string;
   suggestionOffset: number;
   gridSnapEnabled: boolean;

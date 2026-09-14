@@ -26,7 +26,9 @@ pub(crate) mod context {
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub async fn app_with_registry() -> RemodelingApp {
-        new_app_with_registry::<EditorApp<RemodelingPlayApp>>(remodeling_app_manifest_for_tests).await
+        let mut app = new_app_with_registry::<EditorApp<RemodelingPlayApp>>(remodeling_app_manifest_for_tests).await;
+        app.bind_instance_id(meta("local").instance_id).await;
+        app
     }
     
     pub async fn dispatch(app: &mut RemodelingApp, command: RemodelingCommand) -> InvocationResult {
@@ -48,6 +50,71 @@ pub(crate) mod context {
     /// `Debug` projection is what body assertions match against.
     pub async fn render(app: &mut RemodelingApp, body_key: &str) -> String {
         format!("{:?}", app.render(body_key, None, &ViewModel::default()).await.expect("render"))
+    }
+
+    /// 🪧️ The rendered tree as its JSON projection, with the projected tree retired.
+    pub async fn render_json(app: &mut RemodelingApp, body_key: &str) -> serde_json::Value {
+        let tree = app.render(body_key, None, &ViewModel::default()).await.unwrap_or_else(|fault| panic!("render {body_key}: {fault:?}"));
+        serde_json::from_str(&semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).unwrap_or_else(|error| panic!("project {body_key}: {error}"))).expect("projection parses")
+    }
+
+    /// 👥️ The reconstruction run as the framework ledger summarizes it.
+    pub fn run_presence(app: &RemodelingApp) -> Option<protocol::PresenceToolRun> {
+        app.tool_run_presence()
+    }
+
+    /// ⏯️ Dispatches one framework tool-run action and answers its output.
+    pub async fn run_action(app: &mut RemodelingApp, action: &str, arguments: Vec<(String, semio_framework_plugin::DslValue)>) -> semio_framework_plugin::DslValue {
+        app.handle_action(action, Some(&semio_framework_plugin::DslValue::Object(arguments)), &meta("local")).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
+    }
+
+    /// ▶️ Starts the reconstruction tool run.
+    pub async fn start_reconstruction(app: &mut RemodelingApp) {
+        let output = run_action(app, semio_framework_plugin::TOOL_RUN_START_ACTION_ID, vec![("toolId".into(), semio_framework_plugin::DslValue::String(model::tools::reconstruction::TOOL_ID.into()))]).await;
+        assert_eq!(output.get("toolRun").and_then(semio_framework_plugin::DslValue::as_str), Some("spawnJob"), "the framework starts the reconstruction run");
+    }
+
+    /// 🪪️ The `{runId, generation}` the framework run panel's buttons carry now.
+    pub async fn run_arguments(app: &mut RemodelingApp) -> Vec<(String, semio_framework_plugin::DslValue)> {
+        fn find(value: &serde_json::Value) -> Option<(String, u64)> {
+            if let Some(object) = value.as_object() {
+                if let (Some(run), Some(generation)) = (object.get("runId"), object.get("generation")) {
+                    let run = run.as_str().map(str::to_string).or_else(|| run.get("text").and_then(serde_json::Value::as_str).map(str::to_string)).or_else(|| run.as_u64().map(|value| value.to_string()))?;
+                    let generation = generation.as_u64().or_else(|| generation.as_f64().map(|value| value as u64)).or_else(|| generation.get("number").and_then(serde_json::Value::as_f64).map(|value| value as u64))?;
+                    return Some((run, generation));
+                }
+                return object.values().find_map(find);
+            }
+            value.as_array()?.iter().find_map(find)
+        }
+        let panel = render_json(app, semio_framework_plugin::FRAMEWORK_TOOL_RUN_BODY_KEY).await;
+        let (run, generation) = find(&panel).unwrap_or_else(|| panic!("the run panel carries run arguments: {panel}"));
+        vec![("runId".into(), semio_framework_plugin::DslValue::String(run)), ("generation".into(), semio_framework_plugin::DslValue::String(generation.to_string()))]
+    }
+
+    /// 🔁️ Pumps driver turns until the run reaches `state` with no pending work, or `done` holds.
+    pub async fn pump_run(app: &mut RemodelingApp, what: &str, done: impl Fn(&protocol::PresenceToolRun) -> bool) -> protocol::PresenceToolRun {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(3_600);
+        while std::time::Instant::now() < deadline {
+            if let Some(run) = run_presence(app).filter(|run| done(run)) {
+                if !app.has_pending_typed_operations() || !matches!(run.state.wire_name(), "starting" | "finalizing" | "aborting") {
+                    return run;
+                }
+            }
+            app.advance_typed_operation_publication().await.unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
+        }
+        panic!("{what} never settled; run {:?}", run_presence(app));
+    }
+
+    /// 🚪️ Closes a registry-backed fixture app through its bounded close protocol.
+    pub fn close(mut app: RemodelingApp) {
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    }
+
+    /// 🧾️ Everything durable a run may only change by finalizing: document pack and history.
+    pub async fn durable(app: &mut RemodelingApp) -> (Vec<u8>, Vec<u8>, String) {
+        let pack = app.document_pack().await.expect("document pack");
+        (pack.pack, pack.spr, format!("{:?}", app.history_snapshot().await.expect("history")))
     }
 }
 
@@ -118,7 +185,7 @@ async fn retained_command_catalog_matches_the_serde_json_oracle() {
         host_only_ids,
     };
     let expected_host_only = ["exportQcReport", "importFrames", "importVideo"].iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
-    assert_eq!(oracle, RemodelingRetainedCatalogSummary { routes: 40, bounded: 40, resumable: 0, unique: true, bounded_ids: bounded_owned, host_only_ids: expected_host_only });
+    assert_eq!(oracle, RemodelingRetainedCatalogSummary { routes: 35, bounded: 35, resumable: 0, unique: true, bounded_ids: bounded_owned, host_only_ids: expected_host_only });
     assert_eq!(subject, oracle);
 }
 
@@ -141,9 +208,6 @@ async fn retained_publication_oracle_rejects_hostile_tool_and_lane_fixtures() {
 /// `remodeling_protocol` baseline (see this ticket's `🧪️wire-baseline-before.txt`).
 fn every_command() -> Vec<RemodelingCommand> {
     vec![
-        RemodelingCommand::RunReconstruction(run_reconstruction::RunReconstruction {}),
-        RemodelingCommand::RetryStage(retry_stage::RetryStage { stage: "extracting-features".into() }),
-        RemodelingCommand::RunStage(run_stage::RunStage { stage: "dense-stereo".into() }),
         RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload: "data:image/png;base64,abc".into(), name: "frame.png".into(), index: 0 }),
         RemodelingCommand::ImportVideoFramePayload(import_video_frame_payload::ImportVideoFramePayload { payload: "data:image/jpeg;base64,abc".into(), name: "clip.mp4".into(), index: 1, frame_index: 1, timestamp_ms: 33.3 }),
         RemodelingCommand::ImportVideoDone(import_video_done::ImportVideoDone { name: "clip.mp4".into(), duration_ms: 400.0, frame_count: 4, width: 24, height: 24, codec: "mjpeg".into() }),
@@ -204,17 +268,6 @@ fn every_command() -> Vec<RemodelingCommand> {
         RemodelingCommand::ImportFrames(import_frames::ImportFrames {}),
         RemodelingCommand::ImportVideo(import_video::ImportVideo {}),
         RemodelingCommand::ExportQcReport(export_qc_report::ExportQcReport {}),
-        RemodelingCommand::AdvanceReconstruction(advance_reconstruction::AdvanceReconstruction {
-            generation: 1,
-            job_id: "job-1".into(),
-            requested_stage: "full".into(),
-            phase: "pipeline".into(),
-            stream_index: 0,
-            frame_index: 1,
-            terminal_cursor: 0,
-            tick: 2,
-        }),
-        RemodelingCommand::CancelReconstruction(cancel_reconstruction::CancelReconstruction {}),
         RemodelingCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo".into() }),
     ]
 }
@@ -314,9 +367,6 @@ async fn remodel_window_ownership_one_item_preparation_transfers_its_candidate_o
 #[semio_framework_async_macros::async_test]
 async fn every_command_variant_roundtrips_and_prints_its_wire_keyword() {
     let keywords: Vec<&str> = vec![
-        "run-reconstruction",
-        "retry-stage",
-        "run-stage",
         "import-frame-payload",
         "import-video-frame-payload",
         "import-video-done",
@@ -349,13 +399,10 @@ async fn every_command_variant_roundtrips_and_prints_its_wire_keyword() {
         "frame-cursor",
         "frame-cursor",
         "report-table",
-        "active-utility",
-        "locale",
         "import-frames",
         "import-video",
         "export-qc-report",
-        "advance-reconstruction",
-        "cancel-reconstruction",
+        "active-example",
     ];
     let commands = every_command();
     assert_eq!(commands.len(), keywords.len(), "the keyword list must cover every row");
@@ -366,20 +413,20 @@ async fn every_command_variant_roundtrips_and_prints_its_wire_keyword() {
 }
 
 /// 📌️ Pinned hex for the rows whose `Option` fields make `None`/`Some` distinct wire cases, plus the
-/// two fieldless-variant shapes. `SetFrameCursor`'s ordinal shifted 33→32 (ticket
-/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM deleted the `setSelection` row ahead of it) —
+/// two fieldless-variant shapes. The reconstruction run verbs left the command channel for the framework
+/// tool run (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS), shifting every later ordinal by three —
 /// a legitimate wire break on this greenfield repo, not a bug. A reordered row or a changed field
 /// order breaks these immediately.
 #[semio_framework_async_macros::async_test]
 async fn optional_field_rows_keep_their_pre_migration_bytes() {
     let hex = |command: &RemodelingCommand| command.encode_op().expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-    assert_eq!(hex(&RemodelingCommand::RunReconstruction(run_reconstruction::RunReconstruction {})), "01000000", "fieldless row 0");
-    assert_eq!(hex(&RemodelingCommand::ClearResult(clear_result::ClearResult {})), "011d0000", "fieldless row 29");
-    assert_eq!(hex(&RemodelingCommand::SetFrameCursor(set_frame_cursor::SetFrameCursor { stream_id: None, frame_index: 0 })), "01200001010400", "Option field absent");
-    assert_eq!(hex(&RemodelingCommand::SetFrameCursor(set_frame_cursor::SetFrameCursor { stream_id: Some("stream-1".into()), frame_index: 2 })), "0120010873747265616d2d3102000600010402", "Option field present");
+    assert_eq!(hex(&RemodelingCommand::CalibrateCameras(calibrate_cameras::CalibrateCameras {})), "01080000", "fieldless row 8");
+    assert_eq!(hex(&RemodelingCommand::ClearResult(clear_result::ClearResult {})), "011a0000", "fieldless row 26");
+    assert_eq!(hex(&RemodelingCommand::SetFrameCursor(set_frame_cursor::SetFrameCursor { stream_id: None, frame_index: 0 })), "011d0001010400", "Option field absent");
+    assert_eq!(hex(&RemodelingCommand::SetFrameCursor(set_frame_cursor::SetFrameCursor { stream_id: Some("stream-1".into()), frame_index: 2 })), "011d010873747265616d2d3102000600010402", "Option field present");
     assert_eq!(
         hex(&RemodelingCommand::SetGeoParams(set_geo_params::SetGeoParams { enabled: false, origin_lon: None, origin_lat: Some(1.0), origin_alt: None, gsd_m: 0.05, dsm_cell_m: 0.1, dtm_filter_radius_m: 2.0, ortho_max_px: 4096 })),
-        "0116000600010205000000000000f03f0405000000a09999a93f0505000000a09999b93f0605000000000000004007048020",
+        "0113000600010205000000000000f03f0405000000a09999a93f0505000000a09999b93f0605000000000000004007048020",
         "three interleaved Option fields, only the middle one present"
     );
 }
@@ -392,12 +439,12 @@ async fn command_ids_and_wire_keywords_are_unique_per_row() {
     let mut ids: Vec<&str> = every_command().iter().map(RemodelingCommand::command_id).collect();
     ids.sort_unstable();
     ids.dedup();
-    assert_eq!(ids.len(), 41, "41 distinct manifest action ids");
+    assert_eq!(ids.len(), 35, "35 distinct manifest action ids");
 
     let mut keywords: Vec<String> = every_command().iter().map(|command| command.print_op().split_whitespace().next().unwrap_or_default().to_string()).collect();
     keywords.sort();
     keywords.dedup();
-    assert_eq!(keywords.len(), 41, "41 distinct wire keywords");
+    assert_eq!(keywords.len(), 35, "35 distinct wire keywords");
 }
 /// 🌉️ The action bridge covers every action the manifest declares (framework-injected ones aside)
 /// and rejects anything else — the gap this migration closed (see `command_from_action`'s doc).

@@ -18,7 +18,6 @@ async fn trinity_jack_command_text_and_binary_round_trip() {
         TrinityJackCommand::SetFixtureJson { json: "{}".into() },
         TrinityJackCommand::DeleteSelection,
         TrinityJackCommand::PatchNodes { node_ids: vec!["a".into()], field: "name".into(), value: "Renamed".into() },
-        TrinityJackCommand::Reorganize,
         TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) RETURN a".into()), results_window_id: "results".into() },
         TrinityJackCommand::RunQuery { query: None, results_window_id: "results".into() },
         TrinityJackCommand::LoadExampleQuery { query: "MATCH (a:Piece) RETURN a.name".into(), results_window_id: "results".into() },

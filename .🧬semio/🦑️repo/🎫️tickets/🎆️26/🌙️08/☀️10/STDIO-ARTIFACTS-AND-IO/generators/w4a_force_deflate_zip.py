@@ -95,10 +95,7 @@ def retarget_io_to_binary(dst: Path, mid: str, name: str) -> None:
 def finalize_deflate_io(dst: Path) -> None:
     """deflate IO: binary peer + our DeflateSnapshot."""
     # import: BinarySnapshot -> DeflateSnapshot (compress)
-    imp = dst / f"🚪️io/�    # import: BinarySnapshot -> DeflateSnapshot (compress)
     imp = dst / f"🚪️io/📥️import/{DESER}/🗿️artifacts/{BIN_DIR}/🦀️component.rs"
-    exp = dst / f"🚪️io/�<|control37|>export/{SER}/🗿️artifacts/{BIN_DIR}/🦀️component.rs"
-    # fix typo path
     exp = dst / f"🚪️io/📤️export/{SER}/🗿️artifacts/{BIN_DIR}/🦀️component.rs"
     imp.write_text(
         """//! Deserialize stdio.deflate from stdio.binary (zlib-compress payload).
@@ -158,7 +155,6 @@ pub fn serialize_bytes(from: &DeflateSnapshot) -> Result<Vec<u8>, store::PackErr
     )
     # TS stubs
     for side, folder in [("📥️import", DESER), ("📤️export", SER)]:
-        ts = dst / f"🚪️io/{side}/{folder}/�import", DESER), ("📤️export", SER)]:
         ts = dst / f"🚪️io/{side}/{folder}/🗿️artifacts/{BIN_DIR}/🟦️component.ts"
         ts.write_text("/** IO bridge stdio.deflate ↔ stdio.binary */\nexport {};\n", encoding="utf-8")
 
@@ -192,7 +188,6 @@ pub fn deserialize_bytes(bytes: &[u8]) -> Result<ZipSnapshot, store::PackError> 
 """,
         encoding="utf-8",
     )
-    (dst / f"🚪️io/�<|control37|>export/{SER}/🗿️artifacts/{BIN_DIR}/🦀️component.rs").write_text("x", encoding="utf-8")
     (dst / f"🚪️io/📤️export/{SER}/🗿️artifacts/{BIN_DIR}/🦀️component.rs").write_text(
         """//! Serialize stdio.zip to stdio.binary (encode ZIP bytes).
 
@@ -288,9 +283,6 @@ pub fn serialize_bytes(from: &ZipSnapshot) -> Result<Vec<u8>, store::PackError> 
         ("📥️import", DESER, BIN_DIR),
         ("📤️export", SER, BIN_DIR),
         ("📥️import", DESER, DEF_DIR),
-        ("📤️export", SER, DEF_DIR),
-    ]:
-        ts = dst / f"�import", DESER, DEF_DIR),
         ("📤️export", SER, DEF_DIR),
     ]:
         ts = dst / f"🚪️io/{side}/{folder}/🗿️artifacts/{peer}/🟦️component.ts"

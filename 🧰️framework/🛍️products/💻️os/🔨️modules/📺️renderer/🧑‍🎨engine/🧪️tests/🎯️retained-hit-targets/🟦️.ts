@@ -31,6 +31,16 @@ type FixtureNode =
   | { readonly kind: "text"; readonly value?: string };
 type FixtureEntry = { readonly controlId: string; readonly kind: string; readonly action: string | null; readonly rect: readonly [number, number, number, number] };
 type FixtureProbe = { readonly x: number; readonly y: number; readonly controlId: string; readonly kind: string; readonly action: string | null; readonly wheelPropagatesToScene?: boolean };
+type FixtureCycle = {
+  readonly case: string;
+  readonly point: { readonly x: number; readonly y: number };
+  readonly controlId: string;
+  readonly action: string;
+  readonly presses: number;
+  readonly retireStepsPerFrame: number;
+  readonly phases: readonly string[];
+  readonly expected: { readonly doubleBufferedResolved: number; readonly doubleBufferedMissed: number; readonly singleBufferedMissedAtLeast: number };
+};
 type FixtureCase = {
   readonly name: string;
   readonly windowId: string;
@@ -43,6 +53,7 @@ type FixtureCase = {
 const law = JSON.parse(readFileSync(resolve(uiRoot, "🧫️fixtures/🎯️retained-hit-targets/🔣️.json"), "utf8")) as {
   readonly metrics: { readonly rowHeightPx: number };
   readonly cases: readonly FixtureCase[];
+  readonly frameCycle: FixtureCycle;
 };
 
 /** 📏️ The row metric React's own `Tree` presents rows on — the one number this registry's tree bands share with layout and paint. */
@@ -145,6 +156,91 @@ describe("🎯️ retained hit targets", () => {
         expect(hit!.kind).toBe(row.kind);
       }
     }
+  });
+
+  /**
+   * 🎯️ The frame-build buffering law, re-derived independently: a registry the pointer resolves against
+   * and a second one the build assembles, swapped only when the build completes. The same 100-press
+   * cycle the Rust law drives on the real `InputState`, over the same fixture.
+   */
+  it("resolves every press of every frame build, and the single-buffer model does not", () => {
+    const cycle = law.frameCycle;
+    const entry = law.cases.find((candidate) => candidate.name === cycle.case)!;
+    const scan: Registration[] = [{ controlId: entry.windowId, kind: "scrollRegion", action: null, rect: [entry.body.x, entry.body.y, entry.body.w, entry.body.h] }, ...registrations(entry)];
+    const { x, y } = cycle.point;
+    const topmost = (registry: readonly Registration[]): Registration | undefined => {
+      for (let index = registry.length - 1; index >= 0; index -= 1) {
+        const [rx, ry, rw, rh] = registry[index]!.rect;
+        if (x >= rx && x < rx + rw && y >= ry && y < ry + rh) return registry[index];
+      }
+      return undefined;
+    };
+
+    let staging: Registration[] = [...scan];
+    let resolved: Registration[] = [];
+    let generation = 0;
+    const publish = (): number => {
+      const outgoing = resolved;
+      resolved = staging;
+      staging = outgoing;
+      generation += 1;
+      return generation;
+    };
+
+    expect(topmost(resolved), "a registry that was never published must resolve nothing").toBeUndefined();
+    expect(publish()).toBe(1);
+    expect(topmost(resolved)!.controlId, "the preceding move must resolve the row").toBe(cycle.controlId);
+    // 🌀️ One more complete build, so the measured cycle starts in production steady state: a full
+    // registry resolvable AND the outgoing one staged for the next build's retirement.
+    for (const row of scan) staging.push(row);
+    expect(publish()).toBe(2);
+    expect(staging.length, "steady state stages the outgoing registry").toBe(scan.length);
+
+    let hits = 0;
+    let misses = 0;
+    const press = (at: string): void => {
+      const hit = topmost(resolved);
+      if (hit?.controlId === cycle.controlId && hit.action === cycle.action) hits += 1;
+      else {
+        misses += 1;
+        throw new Error(`press at ${at} resolved ${hit?.controlId ?? "nothing"} instead of ${cycle.controlId}/${cycle.action}`);
+      }
+    };
+
+    for (let frame = 0; frame < cycle.presses; frame += 1) {
+      press("the instant before the build's first retirement");
+      let retired = 0;
+      while (staging.length > 0) {
+        staging.splice(staging.length - cycle.retireStepsPerFrame, cycle.retireStepsPerFrame);
+        retired += cycle.retireStepsPerFrame;
+        expect(staging.length).toBe(scan.length - retired);
+        press("mid-retirement");
+      }
+      expect(retired).toBe(scan.length);
+      for (const row of scan) {
+        staging.push(row);
+        press("mid chrome walk");
+      }
+      expect(resolved.length, "the resolvable registry must never change size during a build").toBe(scan.length);
+      expect(publish()).toBe(frame + 3);
+      press("the instant after the publish");
+    }
+
+    expect(misses).toBe(cycle.expected.doubleBufferedMissed);
+    expect(hits).toBe(cycle.presses * (2 + scan.length * 2));
+    expect(hits).toBeGreaterThanOrEqual(cycle.expected.doubleBufferedResolved);
+
+    // ⚖️ The counter-model: ONE registry, drained by the build and scanned by the pointer.
+    let single: Registration[] = [...scan];
+    let singleMissed = 0;
+    for (let frame = 0; frame < cycle.presses; frame += 1) {
+      while (single.length > 0) {
+        single.pop();
+        if (topmost(single)?.controlId !== cycle.controlId) singleMissed += 1;
+      }
+      single = [...scan];
+    }
+    expect(singleMissed, "the single-buffer counter-model must miss, or this law proves nothing").toBeGreaterThanOrEqual(cycle.expected.singleBufferedMissedAtLeast);
   });
 
   it("refuses the defect: the derived row point never answers the window", () => {

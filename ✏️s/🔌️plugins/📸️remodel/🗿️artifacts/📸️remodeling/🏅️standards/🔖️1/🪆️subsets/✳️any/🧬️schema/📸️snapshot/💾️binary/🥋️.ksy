@@ -33,8 +33,7 @@ doc: |
   | 5  | calibration        | calibration          | Block(Record)            | 0x0E block -> 0x0D record |
   | 6  | params             | params               | Block(Record)            | 0x0E -> 0x0D |
   | 7  | gcps               | gcps                 | Table(GroundControlPoint)| 0x14 table-soa |
-  | 8  | job                | job                  | Block(Record)            | 0x0E -> 0x0D |
-  | 9  | results            | results              | Block(Record)            | 0x0E -> 0x0D |
+  | 8  | results            | results              | Block(Record)            | 0x0E -> 0x0D |
 
   A `0x0D` record value is itself a nested `record_fields` body (same 0-based per-struct field ids),
   so the whole document is this one production applied recursively.

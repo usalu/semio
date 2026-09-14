@@ -11,7 +11,7 @@ start op
 # entirely — modelled below as an optional group, never as a `none` placeholder keyword.
 # One production per variant, in `RemodelingMutation` declaration order.
 
-op = create-stream-op | delete-stream-op | change-stream-sync-op | add-stream-frame-op | remove-stream-frame-op | replace-stream-source-op | create-asset-op | delete-asset-op | create-camera-calibration-op | update-camera-calibration-op | delete-camera-calibration-op | create-rig-extrinsic-op | delete-rig-extrinsic-op | update-rig-extrinsic-op | create-gcp-op | delete-gcp-op | add-gcp-observation-op | remove-gcp-observation-op | update-ingest-params-op | update-feature-params-op | update-match-params-op | update-sfm-params-op | update-dense-params-op | update-mesh-params-op | update-motion-params-op | update-geo-params-op | replace-job-op | replace-sparse-op | replace-dense-op | replace-mesh-result-op | replace-trajectory-op | replace-tracks-op | replace-geo-products-op | replace-qc-op | commit-reconstruction-op
+op = create-stream-op | delete-stream-op | change-stream-sync-op | add-stream-frame-op | remove-stream-frame-op | replace-stream-source-op | create-asset-op | delete-asset-op | create-camera-calibration-op | update-camera-calibration-op | delete-camera-calibration-op | create-rig-extrinsic-op | delete-rig-extrinsic-op | update-rig-extrinsic-op | create-gcp-op | delete-gcp-op | add-gcp-observation-op | remove-gcp-observation-op | update-ingest-params-op | update-feature-params-op | update-match-params-op | update-sfm-params-op | update-dense-params-op | update-mesh-params-op | update-motion-params-op | update-geo-params-op | replace-sparse-op | replace-dense-op | replace-mesh-result-op | replace-trajectory-op | replace-tracks-op | replace-geo-products-op | replace-qc-op | append-content-op | remove-content-op | commit-reconstruction-op
 
 create-stream-op = "create-stream" "stream" "=" media-stream-block
 delete-stream-op = "delete-stream" "id" "=" name
@@ -39,7 +39,6 @@ update-dense-params-op = "update-dense-params" "params" "=" "{" dense-field* "}"
 update-mesh-params-op = "update-mesh-params" "params" "=" "{" mesh-params-field* "}"
 update-motion-params-op = "update-motion-params" "params" "=" "{" motion-field* "}"
 update-geo-params-op = "update-geo-params" "params" "=" "{" geo-param-field* "}"
-replace-job-op = "replace-job" "job" "=" job-block
 replace-sparse-op = "replace-sparse" {"sparse" "=" sparse-block}?
 replace-dense-op = "replace-dense" {"dense" "=" dense-cloud-block}?
 replace-mesh-result-op = "replace-mesh-result" "mesh" "=" mesh-result-block
@@ -47,7 +46,9 @@ replace-trajectory-op = "replace-trajectory" {"trajectory" "=" trajectory-block}
 replace-tracks-op = "replace-tracks" "tracks" "=" "[" track-record* "]"
 replace-geo-products-op = "replace-geo-products" {"geo" "=" geo-products-block}?
 replace-qc-op = "replace-qc" {"qc" "=" qc-block}?
-commit-reconstruction-op = "commit-reconstruction" "job" "=" job-block {"sparse" "=" sparse-block}? {"trajectory" "=" trajectory-block}? {"mesh" "=" mesh-result-block}? {"geo" "=" geo-products-block}? {"qc" "=" qc-block}? "assets" asset-commit-header "{" asset-commit-row* "}"
+append-content-op = "append-content" "content-id" "=" name "kind" "=" content-kind {"mime" "=" name}? "width" "=" INT "height" "=" INT "first" "=" INT "chunks" "=" text-list
+remove-content-op = "remove-content" "content-id" "=" name "from" "=" INT
+commit-reconstruction-op = "commit-reconstruction" {"sparse" "=" sparse-block}? {"trajectory" "=" trajectory-block}? {"mesh" "=" mesh-result-block}? {"geo" "=" geo-products-block}? {"qc" "=" qc-block}? "assets" asset-commit-header "{" asset-commit-row* "}"
 
 name = IDENT | TEXT
 num = INT | FLOAT
@@ -57,6 +58,7 @@ pair = num "," num
 quad = num "," num "," num "," num
 quint = num "," num "," num "," num "," num
 text-list = "[" name* "]"
+cell = PLACEHOLDER
 
 media-kind = "image-sequence" | "video"
 video-codec = "avc" | "hevc" | "vp9" | "av1" | "mjpeg" | "unknown"
@@ -66,7 +68,7 @@ robust-loss = "l2" | "huber" | "cauchy"
 dense-resolution = "low" | "medium" | "high"
 mesh-source = "placeholder" | "reconstructed" | "imported"
 track-class = "static" | "moving"
-stage = "idle" | "ingesting" | "calibrating" | "extracting-features" | "matching-features" | "estimating-poses" | "bundle-adjusting" | "georeferencing" | "dense-stereo" | "fusing-volume" | "extracting-surface" | "cleaning-mesh" | "texturing" | "tracking-motion" | "deriving-geo-products" | "reporting-qc" | "done" | "failed"
+content-kind = "sparse" | "mesh" | "image"
 
 media-stream-block = "{" media-stream-part* "}"
 media-stream-part = "id" "=" name | "name" "=" name | "kind" "=" media-kind | "camera-id" "=" name | "sync-offset-ms" "=" num | "fps-hint" "=" num | "source" "=" video-source-block | frames-table
@@ -100,9 +102,6 @@ mesh-params-field = "tsdf-voxel-size-mm" "=" quantity | "tsdf-truncation-mm" "="
 motion-field = "enabled" "=" BOOL | "max-tracks" "=" INT | "track-window-px" "=" INT | "min-track-quality" "=" num | "min-track-length-frames" "=" INT
 geo-param-field = "enabled" "=" BOOL | "origin-lon" "=" num | "origin-lat" "=" num | "origin-alt" "=" num | "gsd-m" "=" quantity | "dsm-cell-m" "=" quantity | "dtm-filter-radius-m" "=" quantity | "ortho-max-px" "=" INT
 
-job-block = "{" job-part* "}"
-job-part = "id" "=" name | "stage" "=" stage | "progress-0-1" "=" num | "cancel-requested" "=" BOOL | "stage-cursor" "=" INT | "started-at-ms" "=" num | "error" "=" name | "sparse-point-cloud-preview" "=" name | poses-table
-poses-table = "camera-poses-preview" poses-header "{" pose-row* "}"
 poses-header = "[" "camera-id" ":" "TEXT" "rotation-wxyz" ":" "TUPLE" "translation" ":" "CRD" "]"
 pose-row = name quad coord3
 sparse-block = "{" sparse-field+ "}"
@@ -122,5 +121,5 @@ geo-product-field = "dsm-asset-id" "=" name | "dtm-asset-id" "=" name | "ortho-a
 qc-block = "{" qc-part* "}"
 qc-part = "reprojection-rms-px" "=" num | "gcp-checkpoint-rmse" "=" num | "mean-track-length" "=" num | "registered-frame-ratio" "=" num | "dense-coverage-ratio" "=" num | watertight-block | "warnings" "=" text-list
 track-record = "id" "=" name "length" "=" INT "class" "=" track-class "mean-speed-m-s" "=" quantity
-asset-commit-header = "[" "id" ":" "TEXT" "asset" ":" "BLOCK" "]"
-asset-commit-row = name image-asset-block
+asset-commit-header = "[" "id" ":" "TEXT" "content-id" ":" "TEXT" "]"
+asset-commit-row = name {name | cell}

@@ -146,13 +146,28 @@ for (const example of examples) {
   if (targets.length > 0) {
     const point = targets[0].page;
     const downsBefore = await page.evaluate(() => globalThis.__semioProbePointer?.downs ?? 0).catch(() => 0);
+    // 🎯️ ONE settling move, then click — a user cannot jiggle, so neither does this probe.
+    //
+    // 🩸️ This used to ARM the hit: jiggle 0.25 px up to 60 times until the shell's own trace answered
+    // the row, then click immediately. It was necessary because the retained hit registry was one
+    // vector the frame build drained while `hit_at` scanned it — measured 2026-09-14, the MOVE reported
+    // `targets=42 hit=Some((TreeItem, "…add-generation"))` and the `PointerDown` 295 ms later reported
+    // `targets=0 hit=None`, so the row resolved perfectly and dispatched nothing.
+    // `📓️wgpu-hit-registry-drain-2026-09-14.md` made the registry a retained authority, and a probe
+    // that kept arming would hide the next regression of exactly that defect.
     await page.mouse.move(point[0], point[1]);
-    await page.waitForTimeout(250);
+    let settled = 0;
+    for (let sample = 0; sample < 20; sample += 1) {
+      await page.waitForTimeout(110);
+      const last = has("os_host pointer hit").at(-1) ?? "";
+      if (last.includes("hit=Some(") && last.includes(rowNeedle)) { settled = sample + 1; break; }
+    }
     const hitUnderPointer = has("os_host pointer hit").at(-1) ?? null;
+    lines.push(`${at()} PROBE settled samples=${settled}`);
     await page.mouse.click(point[0], point[1]);
     await page.waitForTimeout(600);
     const downsAfter = await page.evaluate(() => globalThis.__semioProbePointer?.downs ?? 0).catch(() => 0);
-    clicked = { point, delivered: downsAfter - downsBefore, hitUnderPointer: hitUnderPointer ? hitUnderPointer.slice(hitUnderPointer.indexOf("os_host")) : null };
+    clicked = { point, settled, delivered: downsAfter - downsBefore, hitUnderPointer: hitUnderPointer ? hitUnderPointer.slice(hitUnderPointer.indexOf("os_host")) : null };
     lines.push(`${at()} PROBE click ${JSON.stringify(clicked)}`);
   }
 

@@ -5,13 +5,13 @@
 use crate::standards::v1::subsets::any::schema::{self, ApplyRuleResult, Rule};
 pub use semio_framework_os_infinite::canvas;
 use semio_framework_os_infinite::BoardHost;
-use semio_framework_os_infinite::{compute_edge_bezier_points, distance_between, force_graph::apply_force_graph_layout_to_fixture_v1_json, BoardEngine, CanvasPalette, HandleRole};
+use semio_framework_os_infinite::{compute_edge_bezier_points, distance_between, BoardEngine, CanvasPalette, HandleRole};
 use semio_s_artifact_trinity_jack::ast::QueryResult;
 use semio_s_artifact_trinity_jack::executor::execute;
 use semio_s_artifact_trinity_jack::language_service::{complete as complete_jack, parse};
 use semio_s_artifact_trinity_jack::lexer::tokenize as tokenize_jack;
 use semio_s_artifact_trinity_jack::{move_node, TrinityGraphMutation};
-use semio_s_artifact_trinity_jack::{port_key, Graph, JackSnapshot, Node, PortDirection};
+use semio_s_artifact_trinity_jack::{port_key, Graph, Node, PortDirection};
 use std::cell::Cell;
 use std::collections::HashMap;
 
@@ -173,77 +173,6 @@ fn trinity_graph_to_board_fixture(graph: &Graph) -> pack::JsonValue {
     })
 }
 
-fn trinity_graph_to_force_layout_fixture(graph: &Graph) -> pack::JsonValue {
-    let nodes: Vec<pack::JsonValue> = graph
-        .nodes
-        .values()
-        .map(|node| {
-            let radius = trinity_node_radius(node);
-            let handles: Vec<pack::JsonValue> = node.ports.iter().map(|port| pack::json!({ "id": port_key(&node.id, &port.id) })).collect();
-            pack::json!({
-                "id": node.id,
-                "x": node.x,
-                "y": node.y,
-                "radius": radius,
-                "shape": "circle",
-                "handles": handles,
-            })
-        })
-        .collect();
-    let edges: Vec<pack::JsonValue> = graph.edges.values().map(|edge| pack::json!({ "source": edge.source, "target": edge.target })).collect();
-    pack::json!({
-        "schema": JackSnapshot::SCHEMA,
-        "nodes": nodes,
-        "edges": edges,
-    })
-}
-
-fn apply_force_layout_positions_to_trinity_graph(graph: &mut Graph, fixture: &pack::JsonValue) -> Result<(), TrinityRewritingError> {
-    let nodes = fixture.get("nodes").and_then(|v| v.as_array()).ok_or(TrinityRewritingError::ForceLayoutFixtureMissingNodes)?;
-    for node in nodes {
-        let Some(obj) = node.as_object() else {
-            continue;
-        };
-        let Some(id) = obj.get("id").and_then(|v| v.as_str()) else {
-            continue;
-        };
-        let Some(entry) = graph.nodes.get_mut(id) else {
-            continue;
-        };
-        if let Some(x) = obj.get("x").and_then(|v| v.as_f64()) {
-            entry.x = x;
-        }
-        if let Some(y) = obj.get("y").and_then(|v| v.as_f64()) {
-            entry.y = y;
-        }
-    }
-    Ok(())
-}
-
-fn force_layout_reposition_operations(fixture: &JackSnapshot) -> Result<Vec<TrinityGraphMutation>, TrinityRewritingError> {
-    let mut graph = Graph::from_fixture(fixture.clone())?;
-    apply_force_layout_to_trinity_graph(&mut graph)?;
-    let next = graph.to_fixture();
-    let next_nodes = next.nodes();
-    let prev_nodes = fixture.nodes();
-    let mut operations = Vec::new();
-    for node in &next_nodes {
-        let Some(prev) = prev_nodes.iter().find(|entry| entry.id == node.id) else {
-            continue;
-        };
-        if (prev.x - node.x).abs() > 1e-6 || (prev.y - node.y).abs() > 1e-6 {
-            operations.push(move_node(node.id.clone(), node.x, node.y));
-        }
-    }
-    Ok(operations)
-}
-
-fn apply_force_layout_to_trinity_graph(graph: &mut Graph) -> Result<(), TrinityRewritingError> {
-    let fixture = trinity_graph_to_force_layout_fixture(graph);
-    let positioned = apply_force_graph_layout_to_fixture_v1_json(&pack::json_to_string(&fixture), "").map_err(TrinityRewritingError::Layout)?;
-    let fixture = pack::parse_json(&positioned).map_err(|error| TrinityRewritingError::Layout(error.to_string()))?;
-    apply_force_layout_positions_to_trinity_graph(graph, &fixture)
-}
 //#endregion 🔖️Lod
 
 //#region 🔖️TrinityBridge
@@ -373,20 +302,6 @@ impl TrinityBridge {
             eprintln!("[DEBUG] trinity drag commit failed: {err}");
         }
         self.rebuild_engine();
-    }
-
-    pub async fn reorganize(&mut self) {
-        match force_layout_reposition_operations(&self.store.snapshot().unwrap_or_else(|_| self.graph.to_fixture())) {
-            Ok(operations) if !operations.is_empty() => {
-                if let Err(err) = self.dispatch(operations).await {
-                    eprintln!("[DEBUG] trinity reorganize dispatch failed: {err}");
-                    return;
-                }
-                self.rebuild_engine();
-            }
-            Ok(_) => {}
-            Err(err) => eprintln!("[DEBUG] trinity reorganize force layout failed: {err}"),
-        }
     }
 
     pub async fn run_jack(&mut self, query: &str) -> Result<QueryResult, TrinityRewritingError> {

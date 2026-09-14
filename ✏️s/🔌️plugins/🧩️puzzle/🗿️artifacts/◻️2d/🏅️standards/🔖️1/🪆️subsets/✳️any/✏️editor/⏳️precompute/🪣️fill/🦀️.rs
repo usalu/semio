@@ -6,7 +6,9 @@
 //! finalize, where the revalidate job re-tests the provisional placements against the head.
 //! Vocabulary source of record: `$defs.Puzzle2dFillRun` in `✳️any/🧬️schema/🔣️.json`.
 
-use crate::editor::puzzle2d::engine::{BoardFillCandidateEvent, BoardFillCandidateVerdict, BoardFillJob, BoardFillPlacement, BoardFillSnapshot, BoardFillSnapshotIngress, BoardFillStage};
+use crate::editor::puzzle2d::engine::{
+    BoardFillCandidateEvent, BoardFillCandidateVerdict, BoardFillCaptureFault, BoardFillIngressHandleText, BoardFillIngressKindText, BoardFillIngressRuleText, BoardFillIngressTemplateText, BoardFillJob, BoardFillPlacement, BoardFillSnapshot, BoardFillSnapshotIngress, BoardFillStage,
+};
 use crate::standards::v1::subsets::any::schema::mutations::text::{Puzzle2dMutation, Puzzle2dPlaySnapshot};
 use crate::standards::v1::subsets::any::schema::mutations::{connect_handles, create_node};
 use semio_framework_job::{Checkpoint, CommitCandidate, Generation, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, Operation, OperationId, RetainedJobPayload, RevisionId, StepBudget, StepContext, StepOutcome, JOB_PAYLOAD_PAGE_BYTES};
@@ -274,6 +276,15 @@ pub(crate) fn fill_run_entity(node_id: &str) -> u64 {
     u64::from_le_bytes(semio_framework_hash::hash(node_id.as_bytes()).as_bytes()[..8].try_into().expect("eight digest bytes"))
 }
 
+/// 🗂️ The node kind rows a fill places: the document's own `meta.kindCatalogs.nodes`, else the engine catalog
+/// rows of its manifest (`board_kind_catalogs_json`), which is where every shipped document's kinds come from.
+fn fill_kind_rows(document: &Value) -> Vec<Value> {
+    match crate::editor::puzzle2d::kind_catalog_entries(document, "nodes").filter(|rows| !rows.is_empty()) {
+        Some(rows) => rows.to_vec(),
+        None => crate::editor::puzzle2d::board_kind_catalogs_json(document).and_then(|json| serde_json::from_str::<Value>(&json).ok()).and_then(|catalogs| catalogs.get("nodeKinds").and_then(Value::as_array).cloned()).unwrap_or_default(),
+    }
+}
+
 /// 🔢️ The first engine serial a run may mint without reusing a fill node id `id` already holds.
 fn fill_serial_after(id: &str) -> u64 {
     id.strip_prefix(FILL_RUN_NODE_ID_PREFIX).and_then(|serial| serial.parse::<u64>().ok()).map_or(1, |serial| serial.saturating_add(1))
@@ -524,23 +535,25 @@ fn capture_fault_code(fault: BoardFillCaptureFault) -> &'static str {
 //#endregion 🔬️CaptureCursor
 
 /// 🔬️ The staged document capture of one run: the field cursor, the engine ingress it feeds, the suggestion
-/// offset every open handle's slot is pushed out by, and the first engine serial past the document's fill ids.
+/// offset every open handle's slot is pushed out by, the first engine serial past the document's fill ids and the
+/// number of open handles it streamed.
 struct FillCapture {
     capture: ArtifactFillCaptureCursor,
     ingress: Option<BoardFillSnapshotIngress>,
     suggestion_offset: f64,
     serial: u64,
+    open_handles: u64,
 }
 
 impl FillCapture {
     fn new(suggestion_offset: f64) -> Self {
-        Self { capture: ArtifactFillCaptureCursor::new(), ingress: Some(BoardFillSnapshotIngress::new(suggestion_offset)), suggestion_offset, serial: 1 }
+        Self { capture: ArtifactFillCaptureCursor::new(), ingress: Some(BoardFillSnapshotIngress::new(suggestion_offset)), suggestion_offset, serial: 1, open_handles: 0 }
     }
 
     /// 🔬️ Up to `units` capture units; the captured snapshot once the document is fully streamed.
-    fn advance(&mut self, document: &Value, units: usize) -> Result<Option<BoardFillSnapshot>, &'static str> {
+    fn advance(&mut self, document: &Value, kinds: &[Value], units: usize) -> Result<Option<BoardFillSnapshot>, &'static str> {
         for _ in 0..units {
-            if let Some(snapshot) = self.capture_one(document)? {
+            if let Some(snapshot) = self.capture_one(document, kinds)? {
                 return Ok(Some(snapshot));
             }
         }
@@ -568,10 +581,6 @@ impl FillCapture {
 
     fn edges(document: &Value) -> Result<&[Value], &'static str> {
         document.get("edges").and_then(Value::as_array).map(Vec::as_slice).ok_or("puzzle2d-fill-capture-edges")
-    }
-
-    fn node_kinds(document: &Value) -> Result<&[Value], &'static str> {
-        document.get("meta").and_then(|meta| meta.get("kindCatalogs")).and_then(|catalogs| catalogs.get("nodes")).and_then(Value::as_array).map(Vec::as_slice).ok_or("puzzle2d-fill-capture-node-kinds")
     }
 
     fn rules(document: &Value) -> Option<&[Value]> {
@@ -779,6 +788,7 @@ impl FillCapture {
             }
             ArtifactHandleCaptureField::Publish => {
                 self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.publish_handle().map_err(capture_fault_code)?;
+                self.open_handles += u64::from(self.capture.handle_node_visible && self.capture.handle_visible && !self.capture.handle_connected);
                 self.capture.handle += 1;
                 self.capture.handle_edge = 0;
                 self.capture.handle_connected = false;
@@ -788,8 +798,7 @@ impl FillCapture {
         Ok(())
     }
 
-    fn capture_kind_one(&mut self, document: &Value) -> Result<(), &'static str> {
-        let kinds = Self::node_kinds(document)?;
+    fn capture_kind_one(&mut self, kinds: &[Value]) -> Result<(), &'static str> {
         let Some(kind) = kinds.get(self.capture.kind) else {
             if self.capture.kind_field != ArtifactKindCaptureField::Begin {
                 return Err("puzzle2d-fill-capture-stale-kind");
@@ -797,7 +806,7 @@ impl FillCapture {
             self.capture.stage = ArtifactFillCaptureStage::Rules;
             return Ok(());
         };
-        let templates = kind.get("handles").and_then(Value::as_array).ok_or("puzzle2d-fill-capture-kind-handles")?;
+        let templates = kind.get("handles").and_then(Value::as_array).map_or(&[][..], Vec::as_slice);
         let template = templates.get(self.capture.template);
         match self.capture.kind_field {
             ArtifactKindCaptureField::Begin => {
@@ -971,11 +980,11 @@ impl FillCapture {
         Ok(())
     }
 
-    fn capture_one(&mut self, document: &Value) -> Result<Option<BoardFillSnapshot>, &'static str> {
+    fn capture_one(&mut self, document: &Value, kinds: &[Value]) -> Result<Option<BoardFillSnapshot>, &'static str> {
         match self.capture.stage {
             ArtifactFillCaptureStage::Nodes => self.capture_node_one(document).map(|()| None),
             ArtifactFillCaptureStage::Handles => self.capture_handle_one(document).map(|()| None),
-            ArtifactFillCaptureStage::Kinds => self.capture_kind_one(document).map(|()| None),
+            ArtifactFillCaptureStage::Kinds => self.capture_kind_one(kinds).map(|()| None),
             ArtifactFillCaptureStage::Rules => self.capture_rule_one(document).map(|()| None),
             ArtifactFillCaptureStage::Complete => self.ingress.as_mut().and_then(BoardFillSnapshotIngress::take_snapshot).map(Some).ok_or("puzzle2d-fill-capture-snapshot"),
         }
@@ -1012,6 +1021,8 @@ struct FillRunReplay {
 /// the rest and continues live — so a raised count continues and a lowered one retracts the tail.
 pub(crate) struct Puzzle2dFillRunJob {
     document: Arc<Puzzle2dPlaySnapshot>,
+    kinds: Vec<Value>,
+    open_handles: u64,
     writer: ToolRunTickWriter,
     requested: u64,
     seed: u64,
@@ -1026,11 +1037,11 @@ pub(crate) struct Puzzle2dFillRunJob {
     collisions: u64,
     rejected: u64,
     decided_since_placement: u64,
-    ruled_since_placement: u64,
     placements: Vec<FillRunPlacementKey>,
     stage: FillRunStage,
     stall: Option<FillRunReason>,
     finished: bool,
+    settled: bool,
     owed: Option<FillRunOwed>,
     progress_sequence: u64,
     closing: bool,
@@ -1046,7 +1057,10 @@ impl Puzzle2dFillRunJob {
             None => Vec::new(),
         };
         let provisional_placements = expected.len() / FILL_RUN_OPS_PER_PLACEMENT;
+        let kinds = fill_kind_rows(&document.0);
         let mut job = Self {
+            kinds,
+            open_handles: 0,
             document,
             writer: ToolRunTickWriter::with_provisional_base(identity, expected.len() as u32),
             requested: u64::from(requested),
@@ -1062,11 +1076,11 @@ impl Puzzle2dFillRunJob {
             collisions: 0,
             rejected: 0,
             decided_since_placement: 0,
-            ruled_since_placement: 0,
             placements: Vec::new(),
             stage: FillRunStage::Capture,
             stall: None,
             finished: false,
+            settled: false,
             owed: None,
             progress_sequence: 0,
             closing: false,
@@ -1134,7 +1148,6 @@ impl Puzzle2dFillRunJob {
                 match reason {
                     Some(reason) => {
                         self.rejected += 1;
-                        self.ruled_since_placement += 1;
                         self.decide(context, live, reason);
                     }
                     None => self.live = Some(live),
@@ -1178,7 +1191,6 @@ impl Puzzle2dFillRunJob {
         };
         let index = self.placements.len();
         self.decided_since_placement = 0;
-        self.ruled_since_placement = 0;
         if let Some(replay) = self.replay.as_ref() {
             let offset = index * FILL_RUN_OPS_PER_PLACEMENT;
             if replay.expected.get(offset..offset + FILL_RUN_OPS_PER_PLACEMENT) == Some(&ops[..]) {
@@ -1198,14 +1210,15 @@ impl Puzzle2dFillRunJob {
         self.placements.push(FillRunPlacementKey { key: live.key, shape });
         if self.placements.len() as u64 >= self.requested {
             self.finished = true;
+            self.settle();
         }
         Ok(true)
     }
 
     fn stall_reason(&self) -> FillRunReason {
-        match (self.decided_since_placement, self.ruled_since_placement) {
-            (0, 0) => FillRunReason::NoOpenHandle,
-            (0, _) => FillRunReason::NoCompatibleKind,
+        match self.decided_since_placement {
+            _ if self.open_handles == 0 && self.placements.is_empty() => FillRunReason::NoOpenHandle,
+            0 => FillRunReason::NoCompatibleKind,
             _ => FillRunReason::NoFreePlacement,
         }
     }
@@ -1221,6 +1234,9 @@ impl Puzzle2dFillRunJob {
     }
 
     fn settle(&mut self) {
+        if std::mem::replace(&mut self.settled, true) {
+            return;
+        }
         let placed = [ToolRunStepArg::Unsigned(self.placements.len() as u64)];
         let reason = self.stall.unwrap_or(FillRunReason::RequestedReached);
         let kind = if self.stall.is_some() { ToolRunStepKind::Warning } else { ToolRunStepKind::Success };
@@ -1335,10 +1351,11 @@ impl InteractiveJob for Puzzle2dFillRunJob {
                 return self.flush(context).unwrap_or(StepOutcome::Yield);
             }
             if let Some(capture) = self.capture.as_mut() {
-                match capture.advance(&self.document.0, FILL_RUN_CAPTURE_UNITS) {
+                match capture.advance(&self.document.0, &self.kinds, FILL_RUN_CAPTURE_UNITS) {
                     Ok(None) => {}
                     Ok(Some(snapshot)) => {
                         let serial = capture.serial;
+                        self.open_handles = capture.open_handles;
                         self.capture = None;
                         self.search = Some(BoardFillJob::with_operation(snapshot, u32::MAX, Operation::new(OperationId(serial), RevisionId(0), Generation(0), self.seed)));
                         self.stage = FillRunStage::Search;
@@ -1453,11 +1470,6 @@ impl Puzzle2dFillRevalidateJob {
             completed: false,
             closed: false,
         }
-    }
-
-    /// ⚖️ `true` per provisional placement that conflicts with the head, in op order.
-    pub(crate) fn conflicts(&self) -> &[bool] {
-        &self.conflicts
     }
 
     fn placement(&self, index: usize) -> Option<(&crate::Puzzle2dNode, &str)> {

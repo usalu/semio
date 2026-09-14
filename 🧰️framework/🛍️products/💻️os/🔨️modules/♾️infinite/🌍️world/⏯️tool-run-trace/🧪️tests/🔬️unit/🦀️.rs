@@ -209,3 +209,53 @@ fn fade_starts_opaque_and_bottoms_out_at_the_floor_token() {
     assert_eq!(tool_run_provisional_color(&Theme::light())[3], tool_run::PROVISIONAL_OPACITY as f32);
     assert!(TOOL_RUN_TRACE_LANE_BYTES_MAX >= TOOL_RUN_TRACE_PAGE_BYTES_MAX * 16 * 4 / 3);
 }
+
+/// 🎲️ The board-2d lane contract: its `traceShapes` footprints and its round-trip lane text.
+const BOARD2D_SCENE_LANES: &str = include_str!("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json");
+
+/// ⚖️ LAW: a board's placement2d footprints are exactly the `traceShapes` rows of the board-2d lane contract, a malformed
+/// catalog has none, and every placement2d record of the contract's lane becomes one footprint draw with its record's
+/// verdict color, the newest `testing` record flagged.
+#[test]
+fn board2d_placement_draws_follow_the_board_lane_contract() {
+    let contract: Value = serde_json::from_str(BOARD2D_SCENE_LANES).expect("board-2d lane contract parses");
+    let shapes = &contract["traceShapes"];
+    assert_eq!(shapes["kindSize"].as_f64(), Some(BOARD2D_TOOL_RUN_TRACE_KIND_SIZE));
+    let expected: Vec<ToolRunTraceShape2d> = shapes["shapes"]
+        .as_array()
+        .expect("shapes")
+        .iter()
+        .map(|row| match row["kind"].as_str().expect("kind") {
+            "rectangle" => ToolRunTraceShape2d::Rectangle { width: row["width"].as_f64().expect("width"), height: row["height"].as_f64().expect("height") },
+            _ => ToolRunTraceShape2d::Circle { radius: row["radius"].as_f64().expect("radius") },
+        })
+        .collect();
+    assert_eq!(board2d_tool_run_trace_shapes(shapes["glyphCatalogsJson"].as_str().expect("catalogs")), expected);
+    for malformed in shapes["malformed"].as_array().expect("malformed") {
+        assert!(board2d_tool_run_trace_shapes(malformed.as_str().expect("text")).is_empty(), "{malformed}");
+    }
+    let identity = ToolRunIdentity { id: ToolRunId { app_instance_id: 1, run: 7 }, generation: 0, base_revision: [0; 32] };
+    let mut store = ToolRunTraceStore::new(identity);
+    let placement = |shape: u32, x: f32| ToolRunTraceSubject::Placement2d { shape, position: [x, -x], rotation: 0.0 };
+    store.apply_ops(&[
+        ToolRunTraceOp::Upsert { key: 1, verdict: ToolRunVerdict::Success, reason: 1, subject: placement(0, 10.0) },
+        ToolRunTraceOp::Upsert { key: 2, verdict: ToolRunVerdict::Danger, reason: 2, subject: placement(1, 20.0) },
+        ToolRunTraceOp::Upsert { key: 3, verdict: ToolRunVerdict::Testing, reason: 1, subject: placement(2, 30.0) },
+        ToolRunTraceOp::Upsert { key: 4, verdict: ToolRunVerdict::Warning, reason: 3, subject: ToolRunTraceSubject::Entity { entity: 9 } },
+    ]);
+    let placement_lane = lane(&store.delta_after(None, usize::MAX));
+    println!("[STATS] board2d placementLane {placement_lane}");
+    assert_eq!(shapes["placementLane"].as_str(), Some(placement_lane.as_str()), "the contract pins the placement lane every board host paints");
+    let mut layer = ToolRunTraceLayer::default();
+    layer.apply_lane(Some(&placement_lane)).expect("the board lane applies");
+    let palette = ToolRunTracePalette { testing: Rgba::new(0.1, 0.2, 0.3, 0.5), success: Rgba::new(0.0, 1.0, 0.0, 1.0), warning: Rgba::new(1.0, 1.0, 0.0, 1.0), danger: Rgba::new(1.0, 0.0, 0.0, 1.0) };
+    let placements: usize = layer.batches().filter(|(key, _)| key.family == ToolRunTraceFamily::Placement2d).map(|(_, batch)| batch.keys.len()).sum();
+    let draws = layer.placement_draws(&palette, ToolRunTraceVisibility::default());
+    println!("[STATS] board2d placement draws {} of {} resident records", draws.len(), layer.len());
+    assert!(placements > 0, "the contract lane carries placement2d records");
+    assert_eq!(draws.len(), placements);
+    assert_eq!(draws.iter().filter(|draw| draw.newest).map(|draw| (draw.shape, draw.position)).collect::<Vec<_>>(), vec![(2, [30.0, -30.0])], "the newest testing record is flagged");
+    assert!(draws.iter().any(|draw| draw.shape == 1 && draw.color.r == palette.danger.r && draw.color.g == palette.danger.g), "a rejected record draws in the danger tone");
+    let hidden = layer.placement_draws(&palette, ToolRunTraceVisibility { testing: false, accepted: false, rejected: false });
+    assert!(hidden.is_empty(), "visibility toggles hide every footprint");
+}

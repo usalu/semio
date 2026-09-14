@@ -26,6 +26,8 @@ semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-xml = { workspace = true }
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-job.workspace = true
+semio-framework-graph-layout-run.workspace = true
+semio-framework-tool-run.workspace = true
 infinite_canvas = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
 semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 ui_wgpu = {path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"]}
@@ -35,6 +37,7 @@ semio-framework-schema = { path = "../../../../../../../🧰️framework/🔨️
 graph = { path = "../../../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
 
 [dev-dependencies]
+semio-framework-graph-layout-run = { workspace = true, features = ["testing"] }
 semio-framework-plugin = { workspace = true, features = ["component-guest", "artifact-app-testing"] }
 semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["protocol-laws"] }
 semio-framework-ui-scene = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }

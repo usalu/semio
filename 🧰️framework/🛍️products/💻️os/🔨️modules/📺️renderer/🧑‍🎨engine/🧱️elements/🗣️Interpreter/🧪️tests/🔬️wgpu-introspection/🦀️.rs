@@ -54,6 +54,34 @@ fn focus_path_is_recorded_for_the_focused_node() {
     assert_eq!(focus_path, Some("stack[0]#root/text[0]".to_string()));
 }
 
+/// ♿️ LAW: `dumpAccessibility()` with no window named answers EVERY live window, not the largest.
+///
+/// The accessibility dump is this target's production accessibility path, not a diagnostic: the
+/// host mirrors exactly what it answers into the ARIA subtree beside the canvas, so a selection
+/// rule that picks one window makes every other window unreachable to a reader. On generation3d the
+/// "largest viewport" rule announced `procedural-main` alone and dropped `procedural-preview` and
+/// both measure panels — 26 of 64 announced nodes (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[test]
+fn the_accessibility_dump_announces_every_live_window_unless_one_is_named() {
+    let mut engine = ui_wgpu::wgpu::Ui::new();
+    engine.set_viewport("procedural-main", 975.0, 814.0);
+    engine.set_viewport("procedural-preview", 459.0, 814.0);
+    engine.set_viewport("procedural-main/framework.section.measures", 300.0, 807.0);
+
+    let all = build_accessibility_dump(&engine, None);
+    let announced: std::collections::BTreeSet<&str> = all.windows.iter().map(|window| window.window_id.as_str()).collect();
+    assert_eq!(announced, ["procedural-main", "procedural-main/framework.section.measures", "procedural-preview"].into_iter().collect::<std::collections::BTreeSet<_>>(), "an unnamed dump announces every live window");
+    assert_eq!(all.window_id, None, "no window was named, so none is echoed");
+
+    let named = build_accessibility_dump(&engine, Some("procedural-preview"));
+    assert_eq!(named.windows.iter().map(|window| window.window_id.as_str()).collect::<Vec<_>>(), vec!["procedural-preview"], "a named dump answers exactly that window");
+    assert_eq!(named.window_id.as_deref(), Some("procedural-preview"));
+    assert_eq!(named.window_ids.len(), 3, "and still names every window a caller could ask for instead");
+
+    let absent = build_accessibility_dump(&engine, Some("never-mounted"));
+    assert!(absent.windows.is_empty(), "a window that is not live announces nothing, so a reader can tell it from an empty one");
+}
+
 #[test]
 fn kind_tags_match_the_ui_node_wire_format_tag() {
     // 🔒️ Guards path-grammar drift against `UiNode`'s own `#[serde(tag = "type")]` wire format.

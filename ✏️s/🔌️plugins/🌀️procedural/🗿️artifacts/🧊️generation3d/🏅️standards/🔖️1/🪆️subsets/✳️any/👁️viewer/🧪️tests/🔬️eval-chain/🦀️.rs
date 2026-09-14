@@ -68,23 +68,26 @@ fn roster(fixture: &TickAddressingFixture, attached: &[AttachedWindow]) -> ViewM
     ViewModel { window_instances, ..Default::default() }
 }
 
-/// ⚖️ LAW: what the READ-ONLY surface's `pending_effects` may put on the wire for a given attached
-/// roster. Every armed tick names a concrete preview window, and a roster with none arms NOTHING —
-/// the same law the sibling surface answers, read off the same fixture rows.
+/// ⚖️ LAW: which windows the READ-ONLY surface's `previewEval` run evaluates for a given attached roster.
+/// Every hop names a concrete preview window, and a roster with none starts NO run — the same law the
+/// sibling surface answers, read off the same fixture rows.
 #[semio_framework_async_macros::async_test]
-async fn every_armed_tick_names_a_viewer_preview_window_that_is_actually_attached() {
+async fn every_run_hop_names_a_viewer_preview_window_that_is_actually_attached() {
     let _serial = context::lock();
     let fixture = fixture();
-    let mut app = app().await;
     for case in fixture.arming.iter().filter(|case| case.surface == "viewer") {
+        let mut app = app().await;
         let view = roster(&fixture, &case.attached);
-        let armed = context::armed_window_ids(&app.pending_effects(Some(&view)).await);
-        assert_eq!(armed, case.armed_window_ids, "arming case {}", case.id);
-        eprintln!("[DEBUG] viewer tick arming {}: attached={:?} armed={armed:?}", case.id, view.window_instances.iter().map(|window| window.id.as_str()).collect::<Vec<_>>());
+        let owed = app.pending_effects(Some(&view)).await;
+        let started = context::run_actions(&owed);
+        assert_eq!(started.is_empty(), case.armed_window_ids.is_empty(), "arming case {}: a run starts exactly when a preview window is attached, got {started:?}", case.id);
+        let run = context::drive_preview_run(&mut app, &view, &owed).await;
+        let hops: Vec<String> = run.hop_windows.iter().cloned().collect::<std::collections::BTreeSet<_>>().into_iter().collect();
+        eprintln!("[DEBUG] viewer run hops {}: attached={:?} hops={:?}", case.id, view.window_instances.iter().map(|window| window.id.as_str()).collect::<Vec<_>>(), run.hop_windows);
+        assert_eq!(hops, case.armed_window_ids, "arming case {}", case.id);
+        assert!(context::owed_run_actions(&mut app, &semio_framework_plugin::ViewModel::default()).await.is_empty(), "no roster at all starts nothing");
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
     }
-    let empty = context::armed_window_ids(&app.pending_effects(None).await);
-    assert!(empty.is_empty(), "no roster at all must arm nothing, got {empty:?}");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
 
 /// ⚖️ LAW: which of those addresses the REAL retained route admits, driven through
@@ -112,9 +115,9 @@ async fn only_a_viewer_preview_addressed_tick_passes_the_retained_preflight() {
     }
 }
 
-/// ⚖️ LAW: an admitted viewer tick either declares extension work or re-arms the chain. It must
-/// NEVER complete as a host-local synchronous tick with no continuation — that shape is exactly
-/// what made the viewer unable to paint a brep-bearing document.
+/// ⚖️ LAW: an admitted viewer tick either declares extension work or leaves its window owing the run
+/// another hop. It must NEVER complete as a host-local synchronous tick with no continuation — that shape
+/// is exactly what made the viewer unable to paint a brep-bearing document.
 #[semio_framework_async_macros::async_test]
 async fn a_viewer_tick_emits_extension_work_or_re_arms_but_never_settles_silently() {
     let _serial = context::lock();
@@ -126,9 +129,9 @@ async fn a_viewer_tick_emits_extension_work_or_re_arms_but_never_settles_silentl
     let tick = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *app, action_meta.instance_id).await.expect("retained publication");
     assert!(!tick.lanes.contains(&TypedOperationResultLane::Fault), "viewer preview tick faulted: {:?}", tick.lanes);
     let answered = crate::brep_extension::settle(&mut *app, action_meta.instance_id).await;
-    let rearmed = context::armed_window_ids(&tick.effects);
-    eprintln!("[DEBUG] viewer preview tick: rearmed={rearmed:?} answered={answered}");
-    assert!(answered > 0 || rearmed.iter().any(|id| id == "view-preview"), "the viewer evaluation must emit ExtensionInvocation or re-arm flowEvalTick, not a dead sync tick");
+    let owed = context::owed_run_actions(&mut app, &view).await;
+    eprintln!("[DEBUG] viewer preview tick: owed={owed:?} answered={answered}");
+    assert!(answered > 0 || !owed.is_empty(), "the viewer evaluation must emit ExtensionInvocation or owe the run another hop, not a dead sync tick");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
 
@@ -156,13 +159,14 @@ async fn a_late_contributions_install_re_arms_the_viewer_evaluation_the_empty_re
 
     let mut app = app().await;
     let view = context::view_shell_view("view-preview");
-    context::drain_armed_flow_eval_ticks(&mut app, &view).await;
     let faulted = context::render_with_view(&mut app, preview::BODY_KEY, &view).await;
     assert_eq!(context::preview_mesh_count(&faulted), 0, "an unaddressable geometry kernel paints nothing");
 
     let contributions = crate::flow_operators::staged_flow_extension_contributions_json(&[]);
     let pages = semio_framework::public_invocation_string_pages(&contributions);
     let mut install_effects = Vec::new();
+    let settled = context::drive_preview_run(&mut app, &view, &[]).await;
+    assert_eq!((settled.state.as_deref(), settled.hops), (None, 0), "a graph the empty registry cannot serve starts no run: {settled:?}");
     for (index, page) in pages.iter().enumerate() {
         let receipt = context::dispatch_with_view(
             &mut app,
@@ -172,11 +176,11 @@ async fn a_late_contributions_install_re_arms_the_viewer_evaluation_the_empty_re
         .await
         .expect("contributions page");
         assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "contributions page {index} faulted in the retained job ladder");
-        let rearms = context::armed_window_ids(&receipt.effects);
+        let carried = context::run_actions(&receipt.effects);
         if index + 1 < pages.len() {
-            assert!(rearms.is_empty(), "page {index} installs nothing yet, so it owes no re-arm");
+            assert!(carried.is_empty(), "page {index} installs nothing yet, so it carries nothing");
         } else {
-            assert_eq!(rearms, vec!["view-preview".to_string()], "the run's last page owes exactly one re-arm per attached preview window");
+            assert_eq!(carried, vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()], "the last page carries the attached preview exactly one run start");
             install_effects = receipt.effects.clone();
         }
     }
@@ -185,7 +189,7 @@ async fn a_late_contributions_install_re_arms_the_viewer_evaluation_the_empty_re
         "the pushed closure must make the geometry kernel addressable"
     );
 
-    let ticks = context::drain_armed_flow_eval_ticks_from(&mut app, &view, &install_effects).await;
+    let ticks = context::drive_preview_run(&mut app, &view, &install_effects).await.hops;
     assert!(ticks > 0, "the install's own effects must be the thing that restarts the read-only chain");
     let preview_body = context::render_with_view(&mut app, preview::BODY_KEY, &view).await;
     let meshes = context::preview_mesh_count(&preview_body);

@@ -55,13 +55,18 @@ async fn every_declared_action_is_classified_and_resolves_to_a_command() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn document_verbs_publish_to_the_artifact_lane_and_session_verbs_do_not() {
+async fn document_verbs_publish_to_the_artifact_lane_settings_to_the_config_lane_and_examples_to_the_host() {
     use semio_framework_plugin::ArtifactOwnedToolJobFactory;
     for contract in <EnergyModelCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS {
-        let expected = if ENERGY_MODEL_DOCUMENT_TOOL_IDS.contains(&contract.tool_id) { ArtifactToolPublicationLane::Artifact } else { ArtifactToolPublicationLane::HostOnly };
+        let expected = match contract.tool_id {
+            id if ENERGY_MODEL_DOCUMENT_TOOL_IDS.contains(&id) => ArtifactToolPublicationLane::Artifact,
+            simulation::SET_SETTINGS_ACTION_ID => ArtifactToolPublicationLane::Config,
+            _ => ArtifactToolPublicationLane::HostOnly,
+        };
         assert_eq!(contract.lanes, &[expected], "wrong publication lane for {}", contract.tool_id);
     }
     assert!(<EnergyModelEditor as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().is_some(), "the artifact lane needs its one-item preparation factory");
+    assert!(<EnergyModelEditor as ArtifactEditor>::build_config_store_one_item_preparation_factory().is_some(), "the config lane needs its one-item preparation factory");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -316,6 +321,8 @@ async fn every_declared_verb_dispatches_without_an_interactive_job_fault() {
         }
     }
     assert_eq!(reached, ENERGY_MODEL_RETAINED_TOOL_IDS.len());
+    let _ = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 
 /// 🧵️ The positive half of the law: a verb addressing real document state dispatches with NO
@@ -329,6 +336,259 @@ async fn renaming_the_model_dispatches_cleanly_through_the_real_action_route() {
     let args = DslValue::Object(vec![("id".to_string(), DslValue::String("name".to_string())), ("value".to_string(), DslValue::String("BESTEST 600".to_string()))]);
     let result = app.handle_action(SET_NODE_ACTION_ID, Some(&args), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("set-node dispatches without a fault");
     assert!(!result.mutations.is_empty() || app.has_pending_typed_operations(), "the rename neither published nor retained an operation");
+    let _ = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+//#region ⏯️SimulationToolRun
+const RUN_FIXTURE: &str = include_str!("../../🧵️simulation-session/🧫️fixtures/🔣️.json");
+
+fn run_fixture() -> serde_json::Value {
+    serde_json::from_str(RUN_FIXTURE).expect("run fixture parses")
+}
+
+type EnergyEditorApp = semio_framework_plugin::VcsArtifactApp<EditorApp<EnergyModelEditor>>;
+
+/// 🧫️ A registry-backed editor over the fixture scenario: the ANSI/ASHRAE 140 case with the fixture run
+/// period, and the fixture settings published through `set-simulation-settings`.
+async fn simulation_app() -> EnergyEditorApp {
+    use semio_framework_plugin::PluginApp as _;
+    let fixture = run_fixture();
+    let scenario = &fixture["scenario"];
+    let mut model = crate::examples::bestest_600::model();
+    let period = &scenario["runPeriod"];
+    model.run_period.start_month = period["startMonth"].as_u64().unwrap() as u8;
+    model.run_period.start_day = period["startDay"].as_u64().unwrap() as u8;
+    model.run_period.end_month = period["endMonth"].as_u64().unwrap() as u8;
+    model.run_period.end_day = period["endDay"].as_u64().unwrap() as u8;
+    let snapshot = snapshot_of(&model);
+    let pack = <EnergyModelSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
+    let envelope = store::create_document_envelope::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, "model", snapshot, None).into_owners();
+    let spr = store::print_document_spr(&envelope).await.expect("fixture spr");
+    let mut app = dispatchable_app().await;
+    app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("fixture document loads");
+    let settings = &scenario["settings"];
+    let args = semio_framework_plugin::DslValue::Object(["zoneTimestepMinutes", "systemTimestepMinutes", "warmupDays"].iter().map(|key| (key.to_string(), semio_framework_plugin::DslValue::String(settings[key].to_string()))).collect());
+    app.handle_action(simulation::SET_SETTINGS_ACTION_ID, Some(&args), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("settings dispatch");
+    settle(&mut app).await;
+    let expected = format!("Warmup days: {}", settings["warmupDays"]);
+    pump(&mut app, "settings publish", |text| text.contains(&expected), simulation::BODY_KEY).await;
+    app
+}
+
+async fn render_text(app: &mut EnergyEditorApp, body_key: &str) -> String {
+    use semio_framework_plugin::PluginApp as _;
+    let tree = app.render(body_key, None, &semio_framework_plugin::ViewModel::default()).await.unwrap_or_else(|fault| panic!("render {body_key}: {fault:?}"));
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).unwrap_or_else(|error| panic!("project {body_key}: {error}"))
+}
+
+fn presence(app: &EnergyEditorApp) -> Option<protocol::PresenceToolRun> {
+    use semio_framework_plugin::PluginApp as _;
+    app.tool_run_presence()
+}
+
+fn state_of(app: &EnergyEditorApp) -> Option<&'static str> {
+    presence(app).map(|presence| presence.state.wire_name())
+}
+
+async fn pump(app: &mut EnergyEditorApp, what: &str, done: impl Fn(&str) -> bool, body_key: &str) {
+    use semio_framework_plugin::PluginApp as _;
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(600);
+    while std::time::Instant::now() < deadline {
+        if done(&render_text(app, body_key).await) {
+            return;
+        }
+        for _ in 0..32 {
+            app.advance_typed_operation_publication().await.unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
+        }
+    }
+    panic!("{what} never settled; run {:?}", presence(app));
+}
+
+async fn pump_state(app: &mut EnergyEditorApp, what: &str, state: &str) {
+    use semio_framework_plugin::PluginApp as _;
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(600);
+    while std::time::Instant::now() < deadline {
+        if state_of(app) == Some(state) {
+            settle(app).await;
+            return;
+        }
+        app.advance_typed_operation_publication().await.unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
+    }
+    panic!("{what} never reached {state}; run {:?}", presence(app));
+}
+
+/// 🪪️ The `{runId, generation}` the framework panel's buttons carry for the current run.
+async fn run_arguments(app: &mut EnergyEditorApp) -> Vec<(String, semio_framework_plugin::DslValue)> {
+    fn find(value: &serde_json::Value) -> Option<(String, u64)> {
+        if let Some(object) = value.as_object() {
+            if let (Some(run), Some(generation)) = (object.get("runId"), object.get("generation")) {
+                let run = run.as_str().map(str::to_string).or_else(|| run.get("text").and_then(serde_json::Value::as_str).map(str::to_string)).or_else(|| run.as_u64().map(|value| value.to_string()))?;
+                let generation = generation.as_u64().or_else(|| generation.as_f64().map(|value| value as u64)).or_else(|| generation.get("number").and_then(serde_json::Value::as_f64).map(|value| value as u64))?;
+                return Some((run, generation));
+            }
+            return object.values().find_map(find);
+        }
+        value.as_array()?.iter().find_map(find)
+    }
+    let panel: serde_json::Value = serde_json::from_str(&render_text(app, semio_framework_plugin::FRAMEWORK_TOOL_RUN_BODY_KEY).await).expect("panel projection parses");
+    let (run, generation) = find(&panel).unwrap_or_else(|| panic!("the run panel carries run arguments: {panel}"));
+    vec![("runId".into(), semio_framework_plugin::DslValue::String(run)), ("generation".into(), semio_framework_plugin::DslValue::String(generation.to_string()))]
+}
+
+async fn run_action(app: &mut EnergyEditorApp, action: &str, arguments: Vec<(String, semio_framework_plugin::DslValue)>) -> semio_framework_plugin::DslValue {
+    use semio_framework_plugin::PluginApp as _;
+    app.handle_action(action, Some(&semio_framework_plugin::DslValue::Object(arguments)), &semio_framework_plugin::artifact_app_laws::meta("local")).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
+}
+
+async fn start(app: &mut EnergyEditorApp) {
+    let output = run_action(app, semio_framework_plugin::TOOL_RUN_START_ACTION_ID, vec![("toolId".into(), semio_framework_plugin::DslValue::String(tools::simulation::TOOL_ID.into()))]).await;
+    assert_eq!(output.get("toolRun").and_then(semio_framework_plugin::DslValue::as_str), Some("spawnJob"), "the framework starts the simulation run");
+}
+
+/// 🧾️ Everything durable a run may never touch unless it finalizes a mutating result.
+async fn durable(app: &mut EnergyEditorApp) -> (Vec<u8>, Vec<u8>, String) {
+    use semio_framework_plugin::PluginApp as _;
+    let pack = app.document_pack().await.expect("document pack");
+    (pack.pack, pack.spr, format!("{:?}", app.history_snapshot().await.expect("history")))
+}
+
+/// 🔁️ Settles the retained settings operation through the host's exact continuation and ACK protocol.
+async fn settle(app: &mut EnergyEditorApp) {
+    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await.expect("the retained settings operation settles");
+}
+
+fn close(mut app: EnergyEditorApp) {
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_simulation_is_driven_by_the_framework_tool_run_actions_and_chords_only() {
+    let fixture = run_fixture();
+    let def = definition();
+    let tool = def.tools.iter().find(|tool| tool.id == tools::simulation::TOOL_ID).expect("the energy simulation tool is declared");
+    assert!(tool.run.as_ref().is_some_and(|run| !run.mutating), "the simulation run is declared read-only");
+    assert!(def.modes.iter().all(|mode| mode.tools.iter().any(|tool| tool.as_str() == tools::simulation::TOOL_ID)));
+    for (action, chord) in fixture["lifecycle"]["reservedChords"].as_object().unwrap() {
+        let binding = def.keybindings.iter().find(|binding| binding.keys == chord.as_str().unwrap()).unwrap_or_else(|| panic!("chord {chord} is bound"));
+        assert_eq!(&binding.action.action, action, "chord {chord} drives the framework action");
+    }
+    for removed in fixture["lifecycle"]["removedActions"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()) {
+        assert!(!ENERGY_MODEL_RETAINED_TOOL_IDS.contains(&removed), "{removed} is still a retained tool");
+        assert!(def.window_kinds.iter().flat_map(|window| window.actions.iter()).all(|action| action.id != removed), "{removed} is still declared");
+        assert!(<EnergyModelEditor as ArtifactEditor>::command_from_action(removed, None).is_err(), "{removed} still resolves to a command");
+    }
+}
+
+/// 🏁️ A read-only run has nothing to review or publish, so the framework finalizes it as soon as its job
+/// completes; the final tier readout stays in the run's steps and the document never changes.
+#[semio_framework_async_macros::async_test]
+async fn a_completed_simulation_run_finalizes_without_changing_the_document_or_history() {
+    let fixture = run_fixture();
+    let expected = &fixture["lifecycle"]["finalize"];
+    let mut app = simulation_app().await;
+    let before = durable(&mut app).await;
+    start(&mut app).await;
+    pump_state(&mut app, "run finalizes", expected["state"].as_str().unwrap()).await;
+    let run = presence(&app).expect("finalized run");
+    assert_eq!((run.completed, run.total), (fixture["fuel"]["ticksBeforeSettle"].as_u64().unwrap(), Some(fixture["fuel"]["ticksBeforeSettle"].as_u64().unwrap())));
+    let window = render_text(&mut app, simulation::BODY_KEY).await;
+    assert!(window.contains("The final result is accepted"), "the window reads the finalized run from the framework: {window}");
+    let panel = render_text(&mut app, semio_framework_plugin::FRAMEWORK_TOOL_RUN_BODY_KEY).await;
+    assert!(panel.contains("Final: "), "the final quality tier readout is published into the run steps: {panel}");
+    let arguments = run_arguments(&mut app).await;
+    let output = run_action(&mut app, semio_framework_plugin::TOOL_RUN_FINALIZE_ACTION_ID, arguments).await;
+    assert!(output.get("rejected").is_some(), "a finalized run accepts no second finalize");
+    let after = durable(&mut app).await;
+    assert_eq!(expected["documentPackUnchanged"].as_bool(), Some(before.0 == after.0 && before.1 == after.1), "finalizing a read-only run publishes no document edit");
+    assert_eq!(expected["historyUnchanged"].as_bool(), Some(before.2 == after.2), "finalizing a read-only run adds no undo entry");
+    close(app);
+}
+
+async fn pump_presence(app: &mut EnergyEditorApp, what: &str, done: impl Fn(&protocol::PresenceToolRun) -> bool) {
+    use semio_framework_plugin::PluginApp as _;
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(600);
+    while std::time::Instant::now() < deadline {
+        if presence(app).as_ref().is_some_and(&done) {
+            return;
+        }
+        app.advance_typed_operation_publication().await.unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
+    }
+    panic!("{what} never settled; run {:?}", presence(app));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn aborting_a_simulation_run_leaves_the_document_byte_identical() {
+    let fixture = run_fixture();
+    let expected = &fixture["lifecycle"]["abort"];
+    let mut app = simulation_app().await;
+    let before = durable(&mut app).await;
+    start(&mut app).await;
+    pump_presence(&mut app, "first timesteps", |run| run.completed > 0).await;
+    let arguments = run_arguments(&mut app).await;
+    let output = run_action(&mut app, semio_framework_plugin::TOOL_RUN_ABORT_ACTION_ID, arguments).await;
+    assert_eq!(output.get("toolRun").and_then(semio_framework_plugin::DslValue::as_str), Some("closeJob"));
+    pump_state(&mut app, "abort settles", expected["state"].as_str().unwrap()).await;
+    let after = durable(&mut app).await;
+    assert_eq!(expected["documentPackUnchanged"].as_bool(), Some(before.0 == after.0 && before.1 == after.1), "abort leaves the document byte-identical");
+    assert_eq!(expected["historyUnchanged"].as_bool(), Some(before.2 == after.2), "abort leaves no history trace");
+    assert!(render_text(&mut app, simulation::BODY_KEY).await.contains("No result was accepted"));
+    close(app);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_paused_simulation_run_steps_exactly_one_timestep_per_step() {
+    let fixture = run_fixture();
+    let mut app = simulation_app().await;
+    start(&mut app).await;
+    pump_presence(&mut app, "first timesteps", |run| run.completed > 0).await;
+    let arguments = run_arguments(&mut app).await;
+    assert_eq!(run_action(&mut app, semio_framework_plugin::TOOL_RUN_PAUSE_ACTION_ID, arguments).await.get("toolRun").and_then(semio_framework_plugin::DslValue::as_str), Some("stopScheduling"));
+    pump_state(&mut app, "pause settles", "paused").await;
+    let mut completed = presence(&app).expect("paused run").completed;
+    for _ in 0..3 {
+        let arguments = run_arguments(&mut app).await;
+        assert_eq!(run_action(&mut app, semio_framework_plugin::TOOL_RUN_STEP_ACTION_ID, arguments).await.get("toolRun").and_then(semio_framework_plugin::DslValue::as_str), Some("driveOneUnit"));
+        pump_state(&mut app, "single step settles", "paused").await;
+        let after = presence(&app).expect("paused run").completed;
+        assert_eq!(after - completed, fixture["fuel"]["completedAdvancePerTick"].as_u64().unwrap(), "one step computes exactly one timestep");
+        completed = after;
+    }
+    let arguments = run_arguments(&mut app).await;
+    run_action(&mut app, semio_framework_plugin::TOOL_RUN_ABORT_ACTION_ID, arguments).await;
+    pump_state(&mut app, "abort settles", "aborted").await;
+    close(app);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn changing_the_simulation_settings_restarts_a_live_run_in_its_next_generation() {
+    use semio_framework_plugin::DslValue;
+    let mut app = simulation_app().await;
+    start(&mut app).await;
+    pump_presence(&mut app, "first timesteps", |run| run.completed > 1).await;
+    let arguments = run_arguments(&mut app).await;
+    run_action(&mut app, semio_framework_plugin::TOOL_RUN_PAUSE_ACTION_ID, arguments).await;
+    pump_state(&mut app, "pause settles", "paused").await;
+    let generation = run_arguments(&mut app).await[1].1.clone();
+    run_action(&mut app, simulation::SET_SETTINGS_ACTION_ID, vec![("zoneTimestepMinutes".into(), DslValue::String("30".into())), ("systemTimestepMinutes".into(), DslValue::String("30".into())), ("warmupDays".into(), DslValue::String("1".into()))]).await;
+    settle(&mut app).await;
+    assert!(render_text(&mut app, simulation::BODY_KEY).await.contains("Zone timestep: 30 min"), "the settings reach the config store");
+    let mut arguments = run_arguments(&mut app).await;
+    for _ in 0..256 {
+        if arguments[1].1 != generation {
+            break;
+        }
+        semio_framework_plugin::PluginApp::advance_typed_operation_publication(&mut app).await.expect("reconfigure turn");
+        arguments = run_arguments(&mut app).await;
+    }
+    assert_ne!(arguments[1].1, generation, "a settings change moves the run to its next generation");
+    assert_eq!(state_of(&app), Some("paused"), "reconfigure keeps the paused state");
+    run_action(&mut app, semio_framework_plugin::TOOL_RUN_STEP_ACTION_ID, arguments).await;
+    pump_state(&mut app, "restarted step settles", "paused").await;
+    assert_eq!(presence(&app).expect("restarted run").completed, 1, "reconfigure: restart recomputes from the first timestep");
+    let arguments = run_arguments(&mut app).await;
+    run_action(&mut app, semio_framework_plugin::TOOL_RUN_ABORT_ACTION_ID, arguments).await;
+    pump_state(&mut app, "abort settles", "aborted").await;
+    close(app);
 }
 //#endregion 🧵️DispatchLaw
 
@@ -344,8 +604,8 @@ async fn every_keybinding_uses_canonical_punctuation_key_tokens() {
             assert!(!FORBIDDEN.iter().any(|name| *name == key), "dead chord token `{key}` in `{binding}`", binding = binding.keys);
         }
     }
-    let cancel = def.keybindings.iter().find(|binding| binding.action.action == simulation::CANCEL_ACTION_ID).expect("cancel simulation chord");
-    assert_eq!(cancel.keys, "mod+.");
+    let abort = def.keybindings.iter().find(|binding| binding.keys == "mod+.").expect("the abort chord is bound");
+    assert_eq!(abort.action.action, semio_framework_plugin::TOOL_RUN_ABORT_ACTION_ID, "mod+. aborts the framework tool run, never a plugin verb");
 }
 
 #[semio_framework_async_macros::async_test]

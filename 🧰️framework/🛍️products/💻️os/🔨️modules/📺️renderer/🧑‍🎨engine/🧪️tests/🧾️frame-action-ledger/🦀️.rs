@@ -138,3 +138,28 @@ fn the_ledger_is_the_runtimes_and_no_frame_candidate_owns_one() {
     assert!(!RENDERER_SOURCE.contains("deferred_actions.pop_front()"), "no close ladder retires a user's commit as a retirement unit");
     assert!(FRAME_JOB_SOURCE.contains("AppFrameTransactionStep::Superseded => {\n                        self.phase = ActiveFramePhase::Terminal;"), "a superseded candidate is still dropped rather than closed, which is what makes the ledger's owner load-bearing");
 }
+
+/// 🧹️ A STALE world3d draw rebuild is closed, never recorded as a frame fault.
+///
+/// `record_frame_fault` is terminal on this target — `BrowserFrameTransport.quarantine()` closes the
+/// surface for good — so every arm that reaches it decides whether a session survives. The world
+/// module's own rule is that `WorldDrawRebuildStep::Stale` means "this cursor's revision/generation
+/// was overtaken; close it down its ladder and begin the next one"
+/// (`♾️infinite/🌍️world` §`retained_draw_rebuild_stale_and_interrupted_close_never_publish`), and the
+/// reference driver `⚙️EngineCanvas/🧪️tests/🧩️wgpu-engine-surfaces/🦀️.rs` faults on `Fault` alone.
+/// This host once faulted on both: measured on 6118, a hover on the ELEVENTH gesture of a session
+/// published `frame-credits: world3d retained draw rebuild faulted` and froze the frame wire at
+/// 3 751 batches for the remaining nine gestures (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[test]
+fn a_stale_world3d_draw_rebuild_is_closed_and_never_quarantines_the_surface() {
+    let start = RENDERER_SOURCE.find("match step_world3d_draw_rebuild(state, context) {").expect("the host steps the retained draw rebuild");
+    let arm = &RENDERER_SOURCE[start..start + RENDERER_SOURCE[start..].find("\n                }").expect("the match ends")];
+    assert!(arm.contains("WorldDrawRebuildStep::Stale => {"), "`Stale` has its own arm");
+    assert!(arm.contains("close_world3d_draw_rebuild_step(state, context)"), "a stale rebuild is CLOSED down the module's own ladder");
+    assert!(
+        !arm.contains("WorldDrawRebuildStep::Stale | WorldDrawRebuildStep::Fault"),
+        "`Stale` is never lumped in with `Fault` — `record_frame_fault` quarantines the surface for good"
+    );
+    let fault_arm = &arm[arm.find("WorldDrawRebuildStep::Fault").expect("`Fault` still faults")..];
+    assert!(fault_arm.contains("record_frame_fault(\"world3d retained draw rebuild faulted\")"), "a real `Fault` still records the frame fault");
+}

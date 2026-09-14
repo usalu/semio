@@ -24,14 +24,13 @@ interface Row {
   outcome: string;
   seeds: boolean;
   seededOutputJson?: string;
-  rearmsTicks: number;
+  owesHop: boolean;
   status: {
     phase: string;
     inFlight: number;
     evalUnitsDone: number;
     evalUnitsTotal: number;
     ratio: number;
-    cancellable: boolean;
   };
 }
 
@@ -64,15 +63,12 @@ function surfacePhaseFor(jobTag: string): string {
   return "computing";
 }
 
-const CANCELLABLE_SURFACE_PHASES = new Set(["computing", "imprinting", "splitting", "classifying", "stitching", "validating"]);
-
 /** ⏱️ The independent model: one node-cache seed slot, one evaluation progress row keyed by node
- * hash, one per-window arming latch, and the continuation each fold owes. */
+ * hash, and whether the window still owes the run a hop after the fold (`answersArmNothing`). */
 class BudgetSession {
   seeded: string | null = null;
   progress: { unitsDone: number; unitsTotal: number; phase: string } | null = null;
-  armed = false;
-  rearms = 0;
+  owesHop = true;
 
   /** ✅️ Folds one answer body. `laws.aBareDictionaryIsAFinishedEvaluation`: a body that is not an
    * envelope is a finished evaluation whose output IS that body. */
@@ -92,12 +88,12 @@ class BudgetSession {
       // 🚧️ `workingSeedsNothing` + `oneRequestOneStep`: park the progress and owe one more identical
       // round trip.
       this.progress = { unitsDone: envelope.unitsDone ?? 0, unitsTotal: envelope.unitsTotal ?? 0, phase };
-      this.owe();
       return "working";
     }
     this.progress = null;
     if (phase === "cancelled") {
       // 🛑️ `cancelledOwesNothing`.
+      this.owesHop = false;
       return "cancelled";
     }
     return this.complete(envelope.outputJson ?? "");
@@ -105,29 +101,17 @@ class BudgetSession {
 
   private complete(outputJson: string): string {
     this.seeded = outputJson;
-    this.owe();
     return "complete";
   }
 
-  private owe(): void {
-    if (this.armed) return;
-    this.armed = true;
-    this.rearms += 1;
-  }
-
-  /** ▶️ The armed tick actually runs, freeing the latch for the next round trip. */
-  beginTick(): void {
-    this.armed = false;
-  }
-
   /** 📈️ The status a preview window publishes right now. */
-  status(): { phase: string; inFlight: number; evalUnitsDone: number; evalUnitsTotal: number; ratio: number; cancellable: boolean } {
+  status(): { phase: string; inFlight: number; evalUnitsDone: number; evalUnitsTotal: number; ratio: number } {
     const inFlight = this.progress ? 1 : 0;
     const unitsDone = this.progress?.unitsDone ?? 0;
     const unitsTotal = this.progress?.unitsTotal ?? 0;
     const ratio = unitsTotal === 0 ? (inFlight === 0 ? 1 : 0) : Math.min(1, Math.max(0, unitsDone / unitsTotal));
     const phase = this.progress ? this.progress.phase : "idle";
-    return { phase, inFlight, evalUnitsDone: unitsDone, evalUnitsTotal: unitsTotal, ratio, cancellable: inFlight > 0 || CANCELLABLE_SURFACE_PHASES.has(phase) };
+    return { phase, inFlight, evalUnitsDone: unitsDone, evalUnitsTotal: unitsTotal, ratio };
   }
 }
 
@@ -165,14 +149,13 @@ export function testGeneration3dEvaluateBudgetContract(): void {
     if (row.seededOutputJson !== undefined) {
       assert.deepEqual(JSON.parse(session.seeded ?? "null"), JSON.parse(row.seededOutputJson), `${row.id}: seeded output`);
     }
-    assert.equal(session.rearms, row.rearmsTicks, `${row.id}: re-armed tick count`);
+    assert.equal(session.owesHop, row.owesHop, `${row.id}: the window owes the run a hop`);
     const status = session.status();
     assert.equal(status.phase, row.status.phase, `${row.id}: published phase`);
     assert.equal(status.inFlight, row.status.inFlight, `${row.id}: inFlight`);
     assert.equal(status.evalUnitsDone, row.status.evalUnitsDone, `${row.id}: evalUnitsDone`);
     assert.equal(status.evalUnitsTotal, row.status.evalUnitsTotal, `${row.id}: evalUnitsTotal`);
     assert.ok(Math.abs(status.ratio - row.status.ratio) < 1e-9, `${row.id}: ratio ${status.ratio} != ${row.status.ratio}`);
-    assert.equal(status.cancellable, row.status.cancellable, `${row.id}: cancellable`);
     const labels = loaded.phaseLabels[row.status.phase];
     assert.ok(labels, `${row.id}: the fixture declares a label for ${row.status.phase}`);
     assert.ok(labels.en.length > 0 && labels.de.length > 0, `${row.id}: both languages, with no default`);
@@ -194,11 +177,9 @@ export function testGeneration3dEvaluateBudgetContract(): void {
       assert.equal(session.seeded, null, `${phase} is still working, so nothing may be seeded`);
       assert.ok(status.evalUnitsDone >= previousDone, `unitsDone never decreases (${previousDone} -> ${status.evalUnitsDone} at ${phase})`);
       assert.equal(status.inFlight, 1, `${phase} is live work`);
-      assert.equal(status.cancellable, true, `${phase} is stoppable`);
       assert.notEqual(status.phase, "idle", `${phase} must never publish as idle`);
       previousDone = status.evalUnitsDone;
     }
-    assert.equal(session.rearms, index + 1, `${phase} owes exactly one continuation`);
-    session.beginTick();
+    assert.equal(session.owesHop, true, `${phase} owes exactly one continuation`);
   }
 }

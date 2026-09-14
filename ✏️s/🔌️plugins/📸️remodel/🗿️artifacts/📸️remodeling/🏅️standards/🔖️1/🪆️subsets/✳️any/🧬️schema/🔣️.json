@@ -13,7 +13,6 @@
     "calibration",
     "params",
     "gcps",
-    "job",
     "results"
   ],
   "properties": {
@@ -59,10 +58,6 @@
       "items": {
         "$ref": "#/$defs/GroundControlPoint"
       },
-      "x-semio-state": "artifact"
-    },
-    "job": {
-      "$ref": "#/$defs/ReconstructionJob",
       "x-semio-state": "artifact"
     },
     "results": {
@@ -875,66 +870,6 @@
         }
       }
     },
-    "ReconstructionJob": {
-      "type": "object",
-      "title": "ReconstructionJob",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "stage",
-        "progress01",
-        "cancelRequested",
-        "stageCursor",
-        "startedAtMs",
-        "error",
-        "cameraPosesPreview",
-        "sparsePointCloudPreview"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "stage": {
-          "$ref": "#/$defs/ReconstructionStage"
-        },
-        "progress01": {
-          "type": "number",
-          "format": "float"
-        },
-        "cancelRequested": {
-          "type": "boolean"
-        },
-        "stageCursor": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
-        },
-        "startedAtMs": {
-          "type": [
-            "number",
-            "null"
-          ],
-          "format": "double"
-        },
-        "error": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "cameraPosesPreview": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/CameraPosePreview"
-          }
-        },
-        "sparsePointCloudPreview": {
-          "type": "string",
-          "format": "base64",
-          "description": "base64 of little-endian f32 lanes (semio_s_plugin_remodel PackedF32)"
-        }
-      }
-    },
     "ReconstructionParams": {
       "type": "object",
       "title": "ReconstructionParams",
@@ -1051,30 +986,6 @@
         }
       }
     },
-    "ReconstructionStage": {
-      "type": "string",
-      "title": "ReconstructionStage",
-      "enum": [
-        "idle",
-        "ingesting",
-        "calibrating",
-        "extracting-features",
-        "matching-features",
-        "estimating-poses",
-        "bundle-adjusting",
-        "georeferencing",
-        "dense-stereo",
-        "fusing-volume",
-        "extracting-surface",
-        "cleaning-mesh",
-        "texturing",
-        "tracking-motion",
-        "deriving-geo-products",
-        "reporting-qc",
-        "done",
-        "failed"
-      ]
-    },
     "RemodelingAssetChild": {
       "type": "object",
       "title": "RemodelingAssetChild",
@@ -1092,6 +1003,15 @@
           "$ref": "#/$defs/ArtifactRef"
         }
       }
+    },
+    "RemodelingContentKind": {
+      "type": "string",
+      "title": "RemodelingContentKind",
+      "enum": [
+        "sparse",
+        "mesh",
+        "image"
+      ]
     },
     "RemodelingDurableArtifact": {
       "type": "object",

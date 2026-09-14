@@ -9,14 +9,17 @@ export const ENERGY_MODEL_EDITOR_DIALECT = { artifactKind: "s.energy.model", sta
 
 export const ENERGY_MODEL_EDIT_MODE_ID = "edit" as const;
 
-export const ENERGY_SIMULATION_EVENT_SCHEMA = "semio.energy.simulation-event.v1" as const;
+export const ENERGY_SIMULATION_RUN_SCHEMA = "energy.simulation.run.v1" as const;
 
-export type EnergySimulationLocale = "en" | "de";
+/** ⏯️ The energy simulation tool whose read-only framework `ToolRun` the reserved `toolRun*` actions drive. */
+export const ENERGY_SIMULATION_TOOL_ID = "energySimulation" as const;
 
-export type EnergySimulationEvent =
-  | { kind: "start"; request: bigint }
-  | { kind: "configure"; locale: EnergySimulationLocale; zoneTimestepMinutes: number; systemTimestepMinutes: number; warmupDays: number }
-  | { kind: "cancel" | "retry" | "discard" | "adopt"; request: bigint; operation: bigint; generation: bigint; configDigest: bigint };
+/** 🎚️ The editor config record (`🎚️config/🧬️schema/🔣️.json`): the run settings a simulation run uses. */
+export interface EnergyModelConfig {
+  readonly zoneTimestepMinutes: number;
+  readonly systemTimestepMinutes: number;
+  readonly warmupDays: number;
+}
 
 /** 🧵️ Every retained tool id of this editor, in `ENERGY_MODEL_RETAINED_TOOL_IDS` order. The Rust
  * surface asserts set equality between this roster, the typed command schema's `TOOL_JOB_IDS`, the
@@ -35,18 +38,13 @@ export const ENERGY_MODEL_RETAINED_TOOL_IDS = [
   "set-site",
   "set-run-period",
   "setActiveExample",
-  "start-energy-simulation",
-  "cancel-energy-simulation",
-  "retry-energy-simulation",
-  "discard-energy-simulation",
-  "adopt-energy-simulation",
-  "configure-energy-simulation",
+  "set-simulation-settings",
 ] as const;
 
 /** 📬️ The twelve verbs that publish a semantic mutation into the document store. `setActiveExample`
  * is NOT one of them — a whole-document swap has no mutation representative in this artifact's
  * vocabulary, so it emits a `LoadDocument` effect (the host's `ArtifactStore::reset` route, outside
- * undo history) and declares the `HostOnly` publication lane like the six session verbs. */
+ * undo history) and declares the `HostOnly` publication lane; `set-simulation-settings` publishes to the config lane. */
 export const ENERGY_MODEL_DOCUMENT_TOOL_IDS = ENERGY_MODEL_RETAINED_TOOL_IDS.slice(0, 12);
 
 /** 📚️ The bundled examples the plugin root registers through `editor_with_examples`. */
@@ -67,18 +65,6 @@ export const ENERGY_MODEL_EXAMPLE_IDS = [
   "bestest-940",
   "bestest-950",
 ] as const;
-
-export interface EnergySimulationTierProjection {
-  readonly operation: bigint;
-  readonly generation: bigint;
-  readonly configDigest: bigint;
-  readonly sequence: bigint;
-  readonly tier: "steadyStateEstimate" | "designDay" | "coarseTimestep" | "final";
-  readonly stage: string;
-  readonly timestep: number;
-  readonly totalTimesteps: number;
-  readonly facilityElectricityKwh: number;
-}
 
 export * as structureWindow from "./🎭️modes/✏️edit/🪟️windows/🌳️structure/🟦️";
 export * as zonesWindow from "./🎭️modes/✏️edit/🪟️windows/📊️zones/🟦️";

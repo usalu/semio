@@ -1,11 +1,11 @@
 //! 📸️ Remodeling scene document — schema-only photogrammetry/videogrammetry project state (media
-//! streams, calibration, ground control points, reconstruction params/job/results) shared as CRDT
+//! streams, calibration, ground control points, reconstruction params/results) shared as event-sourced
 //! operations. The actual algorithms live in the editor surface's own `✏️editor/⚙️engine/` topic files
 //! (`images`/`video`/`camera`/`feature`/`sfm`/`dense`/`mesh`/`motion`/`geo`/`reconstruction`,
 //! relocated out of this artifact tree by 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES,
 //! #2553 — an artifact is a schema plus IO, never an engine), none of which this node references:
 //! heavier runtime types (`Se3`, `Intrinsics`, `Distortion`, `WatertightReport`, decoded pyramids,
-//! match graphs, depth maps, TSDF volumes) are not designed for durable CRDT persistence, so every
+//! match graphs, depth maps, TSDF volumes) are not designed for durable persistence, so every
 //! reference to their shape below is a plain-JSON (or `Packed*`) snapshot the app fills in, never the
 //! library type itself.
 
@@ -34,7 +34,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapsho
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::Arc;
 
 //#region 🔖️ArtifactKind
 /// 🗿️ The `3d.remodeling` artifact kind — lifted verbatim out of the manifest builder's
@@ -195,14 +195,13 @@ pub struct RemodelingDurableArtifact {
 
 pub type RemodelingDurableArtifactStore = BTreeMap<String, RemodelingDurableArtifact>;
 
-const REMODELING_DURABLE_CHUNK_RAW_BYTES: usize = 4_096;
-const REMODELING_MAX_STAGED_BLOBS: usize = 32;
+pub const REMODELING_DURABLE_CHUNK_RAW_BYTES: usize = 4_096;
 const REMODELING_SPARSE_CONTENT_BYTES: usize = 512 * 3 * 4;
-const REMODELING_SPARSE_CONTENT_CHUNKS: u64 = 2;
+const REMODELING_SPARSE_CONTENT_CHUNKS: usize = 2;
 const REMODELING_RASTER_CONTENT_BYTES: usize = 1_114_112;
-const REMODELING_RASTER_CONTENT_CHUNKS: u64 = 272;
+const REMODELING_RASTER_CONTENT_CHUNKS: usize = 272;
 const REMODELING_MESH_CONTENT_BYTES: usize = 87_552 + 30;
-const REMODELING_MESH_CONTENT_CHUNKS: u64 = 30;
+const REMODELING_MESH_CONTENT_CHUNKS: usize = 30;
 const REMODELING_EMPTY_MESH_CHILD_ID: &str = "remodeling-mesh-constant-empty";
 const REMODELING_BOX_MESH_CHILD_ID: &str = "remodeling-mesh-constant-box";
 const REMODELING_BOUNDED_MESH_VERTICES: usize = 512;
@@ -294,166 +293,139 @@ pub fn durable_remodeling_asset(asset: &ImageAsset) -> Option<RemodelingDurableA
     })
 }
 
-pub fn durable_staged_remodeling_asset(staging_id: &str, kind: &str, mime: Option<String>, width: u32, height: u32) -> Option<RemodelingDurableArtifact> {
-    let content = remodeling_asset_content().lock().expect("remodeling asset content lock");
-    let blob = content.get(staging_id)?;
-    Some(RemodelingDurableArtifact { kind: kind.into(), mime, width, height, chunks: (0..u64::try_from(blob.chunks.len()).ok()?).map(|index| base64_codec::base64_standard_encode(blob.chunks.get(&index).expect("contiguous staged asset"))).collect() })
-}
-
-//#region 🔖️ReplayableAssetBlobs
-struct RemodelingAssetBlob {
-    chunks: BTreeMap<u64, Arc<[u8]>>,
-    kind: Option<RemodelingAssetContentKind>,
-    byte_count: usize,
-    digest: [u64; 4],
-    digest_len: u64,
-}
-
-impl Default for RemodelingAssetBlob {
-    fn default() -> Self {
-        Self { chunks: BTreeMap::new(), kind: None, byte_count: 0, digest: [0x6c62272e07bb0142, 0x62b821756295c58d, 0x9e3779b185ebca87, 0xc2b2ae3d27d4eb4f], digest_len: 0 }
-    }
-}
-
-/// 🛡️ Typed bounded-admission result shared by durable asset and mesh staging.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum RemodelingStagingFault {
-    Busy,
-    Invalid,
-}
-
-/// 🏷️ Exact durable asset envelope selected before the first chunk is retained.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum RemodelingAssetContentKind {
+//#region 🔖️DurableContent
+/// 🏷️ Durable content lanes a reconstruction publishes through `append-content`, each with its exact
+/// bounded envelope. The wire spelling is the `RemodelingDurableArtifact.kind` it writes.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, dsl::DslScalar)]
+#[value(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case")]
+pub enum RemodelingContentKind {
+    #[default]
     Sparse,
-    Raster,
+    Mesh,
+    Image,
 }
 
-impl RemodelingAssetContentKind {
-    fn wire(self) -> &'static str {
+impl RemodelingContentKind {
+    pub const ALL: [Self; 3] = [Self::Sparse, Self::Mesh, Self::Image];
+
+    pub fn wire(self) -> &'static str {
         match self {
             Self::Sparse => "sparse",
-            Self::Raster => "raster",
+            Self::Mesh => "mesh",
+            Self::Image => "image",
         }
     }
 
-    fn parse(value: &str) -> Option<Self> {
-        match value {
-            "sparse" => Some(Self::Sparse),
-            "raster" => Some(Self::Raster),
-            _ => None,
-        }
+    pub fn parse(value: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|kind| kind.wire() == value)
     }
 
-    fn max_bytes(self) -> usize {
+    pub fn max_bytes(self) -> usize {
         match self {
             Self::Sparse => REMODELING_SPARSE_CONTENT_BYTES,
-            Self::Raster => REMODELING_RASTER_CONTENT_BYTES,
+            Self::Mesh => REMODELING_MESH_CONTENT_BYTES,
+            Self::Image => REMODELING_RASTER_CONTENT_BYTES,
         }
     }
 
-    fn max_chunks(self) -> u64 {
+    pub fn max_chunks(self) -> usize {
         match self {
             Self::Sparse => REMODELING_SPARSE_CONTENT_CHUNKS,
-            Self::Raster => REMODELING_RASTER_CONTENT_CHUNKS,
+            Self::Mesh => REMODELING_MESH_CONTENT_CHUNKS,
+            Self::Image => REMODELING_RASTER_CONTENT_CHUNKS,
+        }
+    }
+
+    fn digest_prefix(self) -> &'static str {
+        match self {
+            Self::Mesh => "remodeling-mesh",
+            Self::Sparse | Self::Image => "remodeling-asset",
         }
     }
 }
 
-fn record_content_digest(digest: &mut [u64; 4], digest_len: &mut u64, bytes: &[u8]) -> Result<(), RemodelingStagingFault> {
-    for byte in bytes {
-        *digest_len = (*digest_len).checked_add(1).ok_or(RemodelingStagingFault::Busy)?;
-        digest[0] = (digest[0] ^ u64::from(*byte)).wrapping_mul(0x00000100000001b3);
-        digest[1] = (digest[1] ^ digest[0].rotate_left(17) ^ *digest_len).wrapping_mul(0x9e3779b185ebca87);
-        digest[2] = (digest[2] ^ digest[1].rotate_left(29) ^ u64::from(*byte)).wrapping_mul(0xc2b2ae3d27d4eb4f);
-        digest[3] = (digest[3] ^ digest[2].rotate_left(41) ^ (*digest_len).rotate_left(7)).wrapping_mul(0x165667b19e3779f9);
+/// #️⃣️ Streaming content digest a run folds over every raw leaf it publishes; the resulting id names
+/// the durable content, so identical reconstruction output lands on the identical durable entry.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RemodelingContentDigest {
+    digest: [u64; 4],
+    len: u64,
+}
+
+impl Default for RemodelingContentDigest {
+    fn default() -> Self {
+        Self { digest: [0x6c62272e07bb0142, 0x62b821756295c58d, 0x9e3779b185ebca87, 0xc2b2ae3d27d4eb4f], len: 0 }
     }
-    Ok(())
 }
 
-fn content_digest_id(prefix: &str, digest: [u64; 4], digest_len: u64) -> String {
-    format!("{prefix}-{:016x}{:016x}{:016x}{:016x}-{digest_len:016x}", digest[0], digest[1], digest[2], digest[3])
-}
-
-static REMODELING_PRIVATE_ASSET_STAGING: OnceLock<Mutex<BTreeMap<String, RemodelingAssetBlob>>> = OnceLock::new();
-
-fn remodeling_asset_content() -> &'static Mutex<BTreeMap<String, RemodelingAssetBlob>> {
-    REMODELING_PRIVATE_ASSET_STAGING.get_or_init(|| Mutex::new(BTreeMap::new()))
-}
-
-pub fn stage_remodeling_asset_chunk(staging_id: &str, kind: RemodelingAssetContentKind, index: u64, encoded: &str) -> Result<(), RemodelingStagingFault> {
-    let Some(bytes) = decode_remodeling_durable_chunk(encoded) else { return Err(RemodelingStagingFault::Invalid) };
-    let next_count = index.checked_add(1).ok_or(RemodelingStagingFault::Busy)?;
-    let mut content = remodeling_asset_content().lock().expect("remodeling asset content lock");
-    if !content.contains_key(staging_id) && content.len() >= REMODELING_MAX_STAGED_BLOBS {
-        return Err(RemodelingStagingFault::Busy);
+impl RemodelingContentDigest {
+    pub fn record(&mut self, bytes: &[u8]) {
+        for byte in bytes {
+            self.len = self.len.wrapping_add(1);
+            self.digest[0] = (self.digest[0] ^ u64::from(*byte)).wrapping_mul(0x00000100000001b3);
+            self.digest[1] = (self.digest[1] ^ self.digest[0].rotate_left(17) ^ self.len).wrapping_mul(0x9e3779b185ebca87);
+            self.digest[2] = (self.digest[2] ^ self.digest[1].rotate_left(29) ^ u64::from(*byte)).wrapping_mul(0xc2b2ae3d27d4eb4f);
+            self.digest[3] = (self.digest[3] ^ self.digest[2].rotate_left(41) ^ self.len.rotate_left(7)).wrapping_mul(0x165667b19e3779f9);
+        }
     }
-    let blob = content.entry(staging_id.into()).or_default();
-    if let Some(existing) = blob.chunks.get(&index) {
-        return (blob.kind == Some(kind) && existing.as_ref() == bytes).then_some(()).ok_or(RemodelingStagingFault::Invalid);
+
+    pub fn byte_len(&self) -> u64 {
+        self.len
     }
-    let next_bytes = blob.byte_count.checked_add(bytes.len()).ok_or(RemodelingStagingFault::Busy)?;
-    if u64::try_from(blob.chunks.len()).ok() != Some(index) || blob.kind.is_some_and(|existing| existing != kind) || next_count > kind.max_chunks() || next_bytes > kind.max_bytes() {
-        content.remove(staging_id);
-        return Err(RemodelingStagingFault::Invalid);
+
+    pub fn parts(&self) -> ([u64; 4], u64) {
+        (self.digest, self.len)
     }
-    let mut digest = blob.digest;
-    let mut digest_len = blob.digest_len;
-    if let Err(fault) = record_content_digest(&mut digest, &mut digest_len, &bytes) {
-        content.remove(staging_id);
-        return Err(fault);
+
+    pub fn from_parts(digest: [u64; 4], len: u64) -> Self {
+        Self { digest, len }
     }
-    blob.kind = Some(kind);
-    blob.digest = digest;
-    blob.digest_len = digest_len;
-    blob.byte_count = next_bytes;
-    blob.chunks.insert(index, Arc::from(bytes));
-    Ok(())
+
+    pub fn content_id(&self, kind: RemodelingContentKind) -> String {
+        format!("{}-{:016x}{:016x}{:016x}{:016x}-{:016x}", kind.digest_prefix(), self.digest[0], self.digest[1], self.digest[2], self.digest[3], self.len)
+    }
 }
 
-#[cfg(test)]
-pub fn staged_remodeling_asset_chunk_count(staging_id: &str) -> u64 {
-    remodeling_asset_content().lock().expect("remodeling asset content lock").get(staging_id).and_then(|blob| u64::try_from(blob.chunks.len()).ok()).unwrap_or(0)
+/// 🔗️ The packed-buffer handle a durable sparse cloud publishes in place of inline point bytes.
+pub fn remodeling_content_handle(content_id: &str, chunk_count: u64) -> String {
+    format!("remodeling-content:{content_id}|{chunk_count}")
 }
 
-fn staged_asset_commit_is_valid(content: &BTreeMap<String, RemodelingAssetBlob>, staging_id: &str, content_id: &str, chunk_count: u64, expected_kind: Option<RemodelingAssetContentKind>) -> bool {
-    let Some(blob) = content.get(staging_id) else { return false };
-    let Some(kind) = blob.kind else { return false };
-    chunk_count != 0
-        && expected_kind.is_none_or(|expected| expected == kind)
-        && chunk_count <= kind.max_chunks()
-        && blob.byte_count <= kind.max_bytes()
-        && u64::try_from(blob.chunks.len()).ok() == Some(chunk_count)
-        && blob.digest_len == u64::try_from(blob.byte_count).unwrap_or(u64::MAX)
-        && content_digest_id("remodeling-asset", blob.digest, blob.digest_len) == content_id
+pub fn remodeling_content_handle_parts(value: &str) -> Option<(&str, u64)> {
+    let (content_id, chunk_count) = value.strip_prefix("remodeling-content:")?.rsplit_once('|')?;
+    Some((content_id, chunk_count.parse().ok()?))
 }
 
-pub fn discard_staged_remodeling_asset(staging_id: &str) {
-    remodeling_asset_content().lock().expect("remodeling asset content lock").remove(staging_id);
+/// 🧱️ Raw bytes of one durable leaf, refusing anything above the 4 KiB leaf envelope.
+pub fn decode_remodeling_durable_chunk(encoded: &str) -> Option<Vec<u8>> {
+    let encoded_limit = REMODELING_DURABLE_CHUNK_RAW_BYTES.checked_add(2)?.checked_div(3)?.checked_mul(4)?;
+    if encoded.len() > encoded_limit {
+        return None;
+    }
+    let bytes = base64_codec::base64_standard_decode(encoded).ok()?;
+    (bytes.len() <= REMODELING_DURABLE_CHUNK_RAW_BYTES).then_some(bytes)
 }
 
-pub fn remodeling_asset_stage_key(staging_id: &str, kind: RemodelingAssetContentKind, index: u64) -> String {
-    format!("__remodeling_asset_stage__:{}|{staging_id}:{index}", kind.wire())
+/// ✅️ Whether `content_id` names complete durable content of `kind` with exactly `chunk_count` leaves
+/// inside the kind's envelope; a mesh must additionally resolve inside the 512/512 resolution envelope.
+pub fn remodeling_content_is_complete(store: &RemodelingDurableArtifactStore, content_id: &str, kind: RemodelingContentKind, chunk_count: u64) -> bool {
+    let Some(artifact) = store.get(content_id).filter(|artifact| artifact.kind == kind.wire()) else { return false };
+    if chunk_count == 0 || u64::try_from(artifact.chunks.len()).ok() != Some(chunk_count) {
+        return false;
+    }
+    match kind {
+        RemodelingContentKind::Mesh => mesh_from_durable_chunks(&artifact.chunks).is_some(),
+        RemodelingContentKind::Sparse | RemodelingContentKind::Image => {
+            let mut bytes = 0usize;
+            artifact.chunks.iter().all(|encoded| decode_remodeling_durable_chunk(encoded).and_then(|chunk| bytes.checked_add(chunk.len())).is_some_and(|total| {
+                bytes = total;
+                total <= kind.max_bytes()
+            }))
+        }
+    }
 }
-
-pub fn remodeling_asset_stage_parts(key: &str) -> Option<(RemodelingAssetContentKind, &str, u64)> {
-    let tail = key.strip_prefix("__remodeling_asset_stage__:")?;
-    let (staging_id, index) = tail.rsplit_once(':')?;
-    let (kind, staging_id) = staging_id.split_once('|')?;
-    Some((RemodelingAssetContentKind::parse(kind)?, staging_id, index.parse().ok()?))
-}
-
-pub fn remodeling_asset_content_handle(content_id: &str, staging_id: &str, chunk_count: u64) -> String {
-    format!("remodeling-content:{content_id}|{staging_id}|{chunk_count}")
-}
-
-pub fn remodeling_asset_content_handle_parts(value: &str) -> Option<(&str, &str, u64)> {
-    let tail = value.strip_prefix("remodeling-content:")?;
-    let (tail, chunk_count) = tail.rsplit_once('|')?;
-    let (content_id, staging_id) = tail.split_once('|')?;
-    Some((content_id, staging_id, chunk_count.parse().ok()?))
-}
-//#endregion 🔖️ReplayableAssetBlobs
+//#endregion 🔖️DurableContent
 //#endregion 🔖️AssetHandles
 
 //#region 🔖️MeshHandle
@@ -463,56 +435,17 @@ fn mesh_child_handle(child_id: String, artifact_id: String) -> RemodelingMeshChi
     store::ArtifactChild::new(child_id, target)
 }
 
-fn decode_remodeling_durable_chunk(encoded: &str) -> Option<Vec<u8>> {
-    let encoded_limit = REMODELING_DURABLE_CHUNK_RAW_BYTES.checked_add(2)?.checked_div(3)?.checked_mul(4)?;
-    if encoded.len() > encoded_limit {
-        return None;
-    }
-    let bytes = base64_codec::base64_standard_decode(encoded).ok()?;
-    (bytes.len() <= REMODELING_DURABLE_CHUNK_RAW_BYTES).then_some(bytes)
-}
-
 #[cfg(test)]
 fn mesh_digest_bytes(chunks: impl IntoIterator<Item = impl AsRef<[u8]>>) -> String {
-    let mut digest = [0x6c62272e07bb0142u64, 0x62b821756295c58d, 0x9e3779b185ebca87, 0xc2b2ae3d27d4eb4f];
-    let mut len = 0u64;
-    for byte in chunks.into_iter().flat_map(|chunk| chunk.as_ref().to_vec()) {
-        len = len.checked_add(1).expect("bounded test mesh digest");
-        digest[0] = (digest[0] ^ u64::from(byte)).wrapping_mul(0x00000100000001b3);
-        digest[1] = (digest[1] ^ digest[0].rotate_left(17) ^ len).wrapping_mul(0x9e3779b185ebca87);
-        digest[2] = (digest[2] ^ digest[1].rotate_left(29) ^ u64::from(byte)).wrapping_mul(0xc2b2ae3d27d4eb4f);
-        digest[3] = (digest[3] ^ digest[2].rotate_left(41) ^ len.rotate_left(7)).wrapping_mul(0x165667b19e3779f9);
+    let mut digest = RemodelingContentDigest::default();
+    for chunk in chunks {
+        digest.record(chunk.as_ref());
     }
-    format!("remodeling-mesh-{:016x}{:016x}{:016x}{:016x}-{len:016x}", digest[0], digest[1], digest[2], digest[3])
+    digest.content_id(RemodelingContentKind::Mesh)
 }
 
-struct RemodelingMeshBlob {
-    chunks: BTreeMap<u64, Arc<[u8]>>,
-    digest: [u64; 4],
-    digest_len: u64,
-    byte_count: usize,
-    last_field: Option<u8>,
-}
-
-impl Default for RemodelingMeshBlob {
-    fn default() -> Self {
-        Self { chunks: BTreeMap::new(), digest: [0x6c62272e07bb0142, 0x62b821756295c58d, 0x9e3779b185ebca87, 0xc2b2ae3d27d4eb4f], digest_len: 0, byte_count: 0, last_field: None }
-    }
-}
-
-impl RemodelingMeshBlob {
-    fn content_id(&self) -> String {
-        format!("remodeling-mesh-{:016x}{:016x}{:016x}{:016x}-{:016x}", self.digest[0], self.digest[1], self.digest[2], self.digest[3], self.digest_len)
-    }
-}
-
-static REMODELING_PRIVATE_MESH_STAGING: OnceLock<Mutex<BTreeMap<String, RemodelingMeshBlob>>> = OnceLock::new();
-
-fn remodeling_mesh_blobs() -> &'static Mutex<BTreeMap<String, RemodelingMeshBlob>> {
-    REMODELING_PRIVATE_MESH_STAGING.get_or_init(|| Mutex::new(BTreeMap::new()))
-}
-
-fn apply_mesh_chunk(mesh: &mut MeshData, last_field: Option<u8>, bytes: &[u8]) -> bool {
+/// 🧱️ Folds one field-tagged mesh leaf (`[field, values…]`, fields in ascending order) into `mesh`.
+pub fn apply_mesh_chunk(mesh: &mut MeshData, last_field: Option<u8>, bytes: &[u8]) -> bool {
     let Some((&field, values)) = bytes.split_first() else { return false };
     if field > 11 || last_field.is_some_and(|previous| field < previous) {
         return false;
@@ -576,118 +509,29 @@ fn apply_mesh_chunk(mesh: &mut MeshData, last_field: Option<u8>, bytes: &[u8]) -
     true
 }
 
-fn mesh_from_blob(blob: &RemodelingMeshBlob) -> Option<MeshData> {
+fn mesh_from_durable_chunks(chunks: &[String]) -> Option<MeshData> {
     let mut mesh = MeshData::default();
     let mut last_field = None;
-    for index in 0..u64::try_from(blob.chunks.len()).ok()? {
-        let chunk = blob.chunks.get(&index)?;
-        if !apply_mesh_chunk(&mut mesh, last_field, chunk) {
+    let mut bytes = 0usize;
+    for encoded in chunks {
+        let chunk = decode_remodeling_durable_chunk(encoded)?;
+        bytes = bytes.checked_add(chunk.len()).filter(|total| *total <= REMODELING_MESH_CONTENT_BYTES)?;
+        if !apply_mesh_chunk(&mut mesh, last_field, &chunk) {
             return None;
         }
         last_field = chunk.first().copied();
     }
-    Some(mesh)
+    mesh_is_within_resolution_envelope(&mesh).then_some(mesh)
 }
 
-/// 🧱️ Replays one fixed-size full-fidelity mesh chunk into process-wide owned staging.
-pub fn stage_remodeling_mesh_chunk(staging_id: &str, index: u64, encoded: &str) -> Result<(), RemodelingStagingFault> {
-    let Some(bytes) = decode_remodeling_durable_chunk(encoded) else { return Err(RemodelingStagingFault::Invalid) };
-    let next_count = index.checked_add(1).ok_or(RemodelingStagingFault::Busy)?;
-    let mut blobs = remodeling_mesh_blobs().lock().expect("remodeling mesh blob lock");
-    if !blobs.contains_key(staging_id) && blobs.len() >= REMODELING_MAX_STAGED_BLOBS {
-        return Err(RemodelingStagingFault::Busy);
-    }
-    let blob = blobs.entry(staging_id.into()).or_default();
-    if let Some(existing) = blob.chunks.get(&index) {
-        return (existing.as_ref() == bytes).then_some(()).ok_or(RemodelingStagingFault::Invalid);
-    }
-    let next_bytes = blob.byte_count.checked_add(bytes.len()).ok_or(RemodelingStagingFault::Busy)?;
-    let mut digest = blob.digest;
-    let mut digest_len = blob.digest_len;
-    let mut candidate = match mesh_from_blob(blob) {
-        Some(mesh) => mesh,
-        None => {
-            blobs.remove(staging_id);
-            return Err(RemodelingStagingFault::Invalid);
-        }
-    };
-    if record_content_digest(&mut digest, &mut digest_len, &bytes).is_err()
-        || u64::try_from(blob.chunks.len()).ok() != Some(index)
-        || next_count > REMODELING_MESH_CONTENT_CHUNKS
-        || next_bytes > REMODELING_MESH_CONTENT_BYTES
-        || !apply_mesh_chunk(&mut candidate, blob.last_field, &bytes)
-    {
-        blobs.remove(staging_id);
-        return Err(RemodelingStagingFault::Invalid);
-    }
-    blob.last_field = bytes.first().copied();
-    blob.byte_count = next_bytes;
-    blob.digest = digest;
-    blob.digest_len = digest_len;
-    blob.chunks.insert(index, Arc::from(bytes));
-    Ok(())
+/// 🔗️ The composed mesh child a durable reconstructed or imported mesh publishes.
+pub fn remodeling_mesh_content_handle(content_id: &str, chunk_count: u64) -> RemodelingMeshChild {
+    mesh_child_handle(content_id.into(), format!("remodeling-mesh-content:{chunk_count}"))
 }
 
-pub fn discard_staged_remodeling_mesh(staging_id: &str) {
-    remodeling_mesh_blobs().lock().expect("remodeling mesh blob lock").remove(staging_id);
-}
-
-pub fn staged_remodeling_mesh_chunk_count(staging_id: &str) -> u64 {
-    remodeling_mesh_blobs().lock().expect("remodeling mesh blob lock").get(staging_id).and_then(|blob| u64::try_from(blob.chunks.len()).ok()).unwrap_or(0)
-}
-
-fn staged_mesh_commit_is_valid(blobs: &BTreeMap<String, RemodelingMeshBlob>, staging_id: &str, content_id: &str, chunk_count: u64) -> bool {
-    let Some(blob) = blobs.get(staging_id) else { return false };
-    chunk_count != 0
-        && chunk_count <= REMODELING_MESH_CONTENT_CHUNKS
-        && blob.byte_count <= REMODELING_MESH_CONTENT_BYTES
-        && u64::try_from(blob.chunks.len()).ok() == Some(chunk_count)
-        && blob.digest_len == u64::try_from(blob.byte_count).unwrap_or(u64::MAX)
-        && mesh_from_blob(blob).is_some_and(|mesh| mesh_is_within_resolution_envelope(&mesh))
-        && blob.content_id() == content_id
-}
-
-/// 🏁️ Validates every terminal artifact before publishing any staged content, then applies all
-/// promotions while both bounded stores remain exclusively held.
-pub fn commit_staged_remodeling_reconstruction(assets: &[(&str, &str, u64, RemodelingAssetContentKind)], mesh: Option<(&str, &str, u64)>) -> bool {
-    let mut asset_content = remodeling_asset_content().lock().expect("remodeling asset content lock");
-    let mut mesh_content = remodeling_mesh_blobs().lock().expect("remodeling mesh blob lock");
-    if !assets.iter().all(|(staging_id, content_id, chunk_count, kind)| staged_asset_commit_is_valid(&asset_content, staging_id, content_id, *chunk_count, Some(*kind)))
-        || mesh.is_some_and(|(staging_id, content_id, chunk_count)| !staged_mesh_commit_is_valid(&mesh_content, staging_id, content_id, chunk_count))
-    {
-        return false;
-    }
-    for (staging_id, _, _, _) in assets {
-        asset_content.remove(*staging_id);
-    }
-    if let Some((staging_id, _, _)) = mesh {
-        mesh_content.remove(staging_id);
-    }
-    true
-}
-
-pub fn remodeling_mesh_stage_asset_key(staging_id: &str, index: u64) -> String {
-    format!("__remodeling_mesh_stage__:{staging_id}:{index}")
-}
-
-pub fn remodeling_mesh_stage_asset_parts(key: &str) -> Option<(&str, u64)> {
-    let tail = key.strip_prefix("__remodeling_mesh_stage__:")?;
-    let (staging_id, index) = tail.rsplit_once(':')?;
-    Some((staging_id, index.parse().ok()?))
-}
-
-pub fn staged_remodeling_mesh_handle(content_id: &str, staging_id: &str) -> RemodelingMeshChild {
-    mesh_child_handle(content_id.into(), format!("mesh-stage:{staging_id}"))
-}
-
-pub fn replayable_remodeling_mesh_handle(content_id: &str, staging_id: &str, chunk_count: u64) -> RemodelingMeshChild {
-    mesh_child_handle(content_id.into(), format!("remodeling-mesh-log:{staging_id}:{chunk_count}"))
-}
-
-pub fn replayable_remodeling_mesh_handle_parts(handle: &RemodelingMeshChild) -> Option<(&str, &str, u64)> {
-    let tail = handle.target.artifact_id.strip_prefix("remodeling-mesh-log:")?;
-    let (staging_id, chunk_count) = tail.rsplit_once(':')?;
-    Some((&handle.child_id, staging_id, chunk_count.parse().ok()?))
+pub fn remodeling_mesh_content_handle_parts(handle: &RemodelingMeshChild) -> Option<(&str, u64)> {
+    let chunk_count = handle.target.artifact_id.strip_prefix("remodeling-mesh-content:")?;
+    Some((&handle.child_id, chunk_count.parse().ok()?))
 }
 
 /// 🧊️ Stable empty-mesh handle with no process-owned payload.
@@ -700,7 +544,7 @@ pub fn placeholder_remodeling_mesh_handle() -> RemodelingMeshChild {
     mesh_child_handle(REMODELING_BOX_MESH_CHILD_ID.into(), "remodeling-mesh-constant:box".into())
 }
 
-fn mesh_is_within_resolution_envelope(mesh: &MeshData) -> bool {
+pub fn mesh_is_within_resolution_envelope(mesh: &MeshData) -> bool {
     let vertices = mesh.positions.len().checked_div(3);
     let triangles = mesh.indices.len().checked_div(3);
     let Some(vertices) = vertices.filter(|_| mesh.positions.len().is_multiple_of(3)) else { return false };
@@ -727,55 +571,40 @@ fn mesh_is_within_resolution_envelope(mesh: &MeshData) -> bool {
 
 /// 🧱️ Returns the durable raw chunk count without reconstructing or cloning mesh fields.
 pub fn bounded_remodeling_mesh_chunk_count(store: &RemodelingDurableArtifactStore, handle: &RemodelingMeshChild) -> Option<u64> {
-    let (content_id, _, chunk_count) = replayable_remodeling_mesh_handle_parts(handle)?;
+    let (content_id, chunk_count) = remodeling_mesh_content_handle_parts(handle)?;
     let artifact = store.get(content_id).filter(|artifact| artifact.kind == "mesh")?;
     (u64::try_from(artifact.chunks.len()).ok() == Some(chunk_count)).then_some(chunk_count)
 }
 
 /// 🧱️ Resolves one admitted durable mesh chunk without cloning the reconstructed mesh.
 pub fn bounded_remodeling_mesh_chunk(store: &RemodelingDurableArtifactStore, handle: &RemodelingMeshChild, index: u64) -> Option<Arc<[u8]>> {
-    let (content_id, _, chunk_count) = replayable_remodeling_mesh_handle_parts(handle)?;
+    let chunk_count = bounded_remodeling_mesh_chunk_count(store, handle)?;
     if index >= chunk_count {
         return None;
     }
-    let artifact = store.get(content_id).filter(|artifact| artifact.kind == "mesh")?;
-    if u64::try_from(artifact.chunks.len()).ok() != Some(chunk_count) {
-        return None;
-    }
+    let artifact = store.get(&handle.child_id)?;
     Some(Arc::from(decode_remodeling_durable_chunk(artifact.chunks.get(usize::try_from(index).ok()?)?)?))
 }
 
-/// 🧱️ Resolves only fixed constants or reconstruction output admitted by the 512/512 envelope.
+/// 🧱️ Resolves only fixed constants or durable content admitted by the 512/512 envelope.
 pub fn resolve_bounded_remodeling_mesh(store: &RemodelingDurableArtifactStore, handle: &RemodelingMeshChild) -> Option<MeshData> {
     match handle.child_id.as_str() {
         REMODELING_EMPTY_MESH_CHILD_ID => Some(MeshData::default()),
         REMODELING_BOX_MESH_CHILD_ID => Some(semio_framework::mesh_from_kind("box")),
         _ => {
-            let (content_id, _, chunk_count) = replayable_remodeling_mesh_handle_parts(handle)?;
-            let artifact = store.get(content_id).filter(|artifact| artifact.kind == "mesh")?;
-            if u64::try_from(artifact.chunks.len()).ok() != Some(chunk_count) {
-                return None;
-            }
-            let mut mesh = MeshData::default();
-            let mut last_field = None;
-            for encoded in &artifact.chunks {
-                let chunk = decode_remodeling_durable_chunk(encoded)?;
-                if !apply_mesh_chunk(&mut mesh, last_field, &chunk) {
-                    return None;
-                }
-                last_field = chunk.first().copied();
-            }
-            mesh_is_within_resolution_envelope(&mesh).then_some(mesh)
+            let chunk_count = bounded_remodeling_mesh_chunk_count(store, handle)?;
+            let artifact = store.get(&handle.child_id)?;
+            (u64::try_from(artifact.chunks.len()).ok() == Some(chunk_count)).then(|| mesh_from_durable_chunks(&artifact.chunks)).flatten()
         }
     }
 }
 
 #[cfg(test)]
-static REMODELING_TEST_MESHES: OnceLock<Mutex<BTreeMap<String, MeshData>>> = OnceLock::new();
+static REMODELING_TEST_MESHES: std::sync::OnceLock<std::sync::Mutex<BTreeMap<String, MeshData>>> = std::sync::OnceLock::new();
 
 #[cfg(test)]
-fn remodeling_test_meshes() -> &'static Mutex<BTreeMap<String, MeshData>> {
-    REMODELING_TEST_MESHES.get_or_init(|| Mutex::new(BTreeMap::new()))
+fn remodeling_test_meshes() -> &'static std::sync::Mutex<BTreeMap<String, MeshData>> {
+    REMODELING_TEST_MESHES.get_or_init(|| std::sync::Mutex::new(BTreeMap::new()))
 }
 
 #[cfg(test)]
@@ -795,31 +624,6 @@ pub fn remodeling_mesh_workspace(handle: &RemodelingMeshChild) -> Option<MeshDat
         return Some(semio_framework::mesh_from_kind("box"));
     }
     remodeling_test_meshes().lock().expect("remodeling test mesh lock").get(&handle.child_id).cloned()
-}
-
-pub fn durable_staged_remodeling_mesh(staging_id: &str) -> Option<RemodelingDurableArtifact> {
-    let blobs = remodeling_mesh_blobs().lock().expect("remodeling mesh blob lock");
-    let blob = blobs.get(staging_id)?;
-    Some(RemodelingDurableArtifact {
-        kind: "mesh".into(),
-        mime: None,
-        width: 0,
-        height: 0,
-        chunks: (0..u64::try_from(blob.chunks.len()).ok()?).map(|index| base64_codec::base64_standard_encode(blob.chunks.get(&index).expect("contiguous staged mesh"))).collect(),
-    })
-}
-
-#[cfg(test)]
-pub fn forget_remodeling_mesh_content_for_test(content_id: &str, staging_id: &str) {
-    remodeling_mesh_blobs().lock().expect("remodeling mesh blob lock").remove(staging_id);
-    remodeling_test_meshes().lock().expect("remodeling test mesh lock").remove(content_id);
-}
-
-#[cfg(test)]
-pub fn forget_all_remodeling_content_for_test() {
-    remodeling_asset_content().lock().expect("remodeling asset content lock").clear();
-    remodeling_mesh_blobs().lock().expect("remodeling mesh blob lock").clear();
-    remodeling_test_meshes().lock().expect("remodeling test mesh lock").clear();
 }
 //#endregion 🔖️MeshHandle
 //#endregion 🧩️Composition
@@ -854,7 +658,7 @@ impl PackedF32 {
     }
 
     pub fn to_f32_vec_from(&self, store: &RemodelingDurableArtifactStore) -> Vec<f32> {
-        let Some((content_id, _, chunk_count)) = remodeling_asset_content_handle_parts(&self.0) else { return self.to_f32_vec() };
+        let Some((content_id, chunk_count)) = remodeling_content_handle_parts(&self.0) else { return self.to_f32_vec() };
         let Some(artifact) = store.get(content_id).filter(|artifact| artifact.kind == "sparse" && u64::try_from(artifact.chunks.len()).ok() == Some(chunk_count)) else { return Vec::new() };
         let mut values = Vec::new();
         for encoded in &artifact.chunks {
@@ -1328,36 +1132,8 @@ pub struct ReconstructionParams {
     pub geo: GeoParams,
 }
 
-/// 🚦️ Mirrors `remodeling_engine`'s pipeline lifecycle so the document can render progress without
-/// polling internals directly.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, dsl::DslScalar)]
-#[value(rename_all = "kebab-case")]
-#[serde(rename_all = "kebab-case")]
-pub enum ReconstructionStage {
-    #[default]
-    Idle,
-    Ingesting,
-    Calibrating,
-    ExtractingFeatures,
-    MatchingFeatures,
-    EstimatingPoses,
-    BundleAdjusting,
-    Georeferencing,
-    DenseStereo,
-    FusingVolume,
-    ExtractingSurface,
-    CleaningMesh,
-    Texturing,
-    TrackingMotion,
-    DerivingGeoProducts,
-    ReportingQc,
-    Done,
-    Failed,
-}
-
-/// 📷️ A single recovered camera pose — streamed early into `ReconstructionJob.camera_poses_preview`
-/// for live preview during sparse reconstruction, and reused verbatim as `CameraTrajectory.poses` once
-/// the run finishes (no separate heavier pose type: both are the same lightweight snapshot).
+/// 📷️ A single recovered camera pose — one `CameraTrajectory.poses` entry a finalized reconstruction run
+/// publishes; while the run is live the same poses stream as `reconstruction` tool-run trace records.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
@@ -1372,27 +1148,6 @@ impl Default for CameraPosePreview {
     fn default() -> Self {
         Self { camera_id: String::new(), rotation_wxyz: [1.0, 0.0, 0.0, 0.0], translation: [0.0; 3] }
     }
-}
-
-/// 🚧️ Live reconstruction run state — deliberately holds no algorithm scratch (descriptors, match
-/// graphs, depth maps, TSDF volumes; those stay in the plugin's `PipelineScratch`), only what the UI
-/// needs to render progress and what undo/redo needs to restore. `native_port` (a phantom pointer at
-/// a `remodeling-native` service that was never implemented) has been removed entirely — there is no
-/// out-of-process reconstruction backend, only in-process WASM-safe classical algorithms.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
-#[value(rename_all = "camelCase", default)]
-#[serde(rename_all = "camelCase", default)]
-pub struct ReconstructionJob {
-    pub id: String,
-    pub stage: ReconstructionStage,
-    pub progress_0_1: f32,
-    pub cancel_requested: bool,
-    pub stage_cursor: u32,
-    pub started_at_ms: Option<f64>,
-    pub error: Option<String>,
-    #[dsl(table)]
-    pub camera_poses_preview: Vec<CameraPosePreview>,
-    pub sparse_point_cloud_preview: PackedF32,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, dsl::DslScalar)]
@@ -1585,7 +1340,6 @@ pub fn default_remodeling_scene() -> RemodelingSnapshot {
         calibration: CalibrationState::default(),
         params: ReconstructionParams::default(),
         gcps: Vec::new(),
-        job: ReconstructionJob::default(),
         results: ReconstructionResults { mesh: RemodelingMesh { mesh: placeholder_remodeling_mesh_handle(), source: MeshSource::Placeholder, ..RemodelingMesh::default() }, ..ReconstructionResults::default() },
     }
 }
@@ -2254,23 +2008,39 @@ pub mod standards {
                             mod tests_warns_that_the_efc6e8;
                         }
                         #[path = "."]
-                        pub mod replace_job {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️replace-job/🦀️.rs"]
+                        pub mod append_content {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦append-content/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️replace-job/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦append-content/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️replace-job/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦append-content/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️replace-job/🧪️tests/🎨️advances-the-555298/🦀️.rs"]
-                            mod tests_advances_the_555298;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦append-content/🧪️tests/🧱️appends-sparse-leaves/🦀️.rs"]
+                            mod tests_appends_sparse_leaves;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️replace-job/🧪️tests/🎨️advances-the-job-c1e878/🦀️.rs"]
-                            mod tests_advances_the_job_c1e878;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦append-content/🧪️tests/🚫️refuses-a-gap/🦀️.rs"]
+                            mod tests_refuses_a_gap;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️replace-job/🧪️tests/🔁️warns-that-the-bdf2e9/🦀️.rs"]
-                            mod tests_warns_that_the_bdf2e9;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦append-content/🧪️tests/🔁️warns-that-the-leaves-exist/🦀️.rs"]
+                            mod tests_warns_that_the_leaves_exist;
+                        }
+                        #[path = "."]
+                        pub mod remove_content {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔪remove-content/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔪remove-content/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔪remove-content/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔪remove-content/🧪️tests/🗑️drops-the-content/🦀️.rs"]
+                            mod tests_drops_the_content;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔪remove-content/🧪️tests/🚫️refuses-missing-content/🦀️.rs"]
+                            mod tests_refuses_missing_content;
                         }
                         #[path = "."]
                         pub mod commit_reconstruction {
@@ -2769,6 +2539,8 @@ pub mod editor {
         pub mod examples;
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs"]
         pub mod terminology;
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️reconstruction-session/🦀️.rs"]
+        pub mod reconstruction_session;
 
         #[path = "."]
         pub mod commands {
@@ -2776,12 +2548,8 @@ pub mod editor {
             pub mod add_gcp;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌱️add-stream/🦀️.rs"]
             pub mod add_stream;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⏩️advance-reconstruction/🦀️.rs"]
-            pub mod advance_reconstruction;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔭️calibrate-cameras/🦀️.rs"]
             pub mod calibrate_cameras;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🛑️cancel-reconstruction/🦀️.rs"]
-            pub mod cancel_reconstruction;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☁️clear-dense/🦀️.rs"]
             pub mod clear_dense;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗾️clear-geo-products/🦀️.rs"]
@@ -2818,12 +2586,6 @@ pub mod editor {
             pub mod remove_stream;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/♻️reset-placeholder-mesh/🦀️.rs"]
             pub mod reset_placeholder_mesh;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔁️retry-stage/🦀️.rs"]
-            pub mod retry_stage;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏗️run-reconstruction/🦀️.rs"]
-            pub mod run_reconstruction;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/▶️run-stage/🦀️.rs"]
-            pub mod run_stage;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎬️set-active-example/🦀️.rs"]
             pub mod set_active_example;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📷️set-camera/🦀️.rs"]
@@ -2879,6 +2641,12 @@ pub mod editor {
                             pub mod layers;
                         }
                     }
+                }
+
+                #[path = "."]
+                pub mod tools {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧊️model/🛠️tools/🏗️reconstruction/🦀️.rs"]
+                    pub mod reconstruction;
                 }
             }
 

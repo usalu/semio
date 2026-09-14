@@ -20,31 +20,6 @@ pub fn next_remodeling_id(prefix: &str) -> String {
 //#endregion 🔖️Ids
 
 //#region 🔖️Codecs
-/// 🏷️ Display label for one `ReconstructionStage` — pure document-enum formatting, no engine
-/// dependency (relocated from `⚙️engine/🦀️.rs`, #2553).
-pub fn stage_display(stage: ReconstructionStage) -> &'static str {
-    match stage {
-        ReconstructionStage::Idle => "Idle",
-        ReconstructionStage::Ingesting => "Ingesting",
-        ReconstructionStage::Calibrating => "Calibrating",
-        ReconstructionStage::ExtractingFeatures => "Extracting Features",
-        ReconstructionStage::MatchingFeatures => "Matching Features",
-        ReconstructionStage::EstimatingPoses => "Estimating Poses",
-        ReconstructionStage::BundleAdjusting => "Bundle Adjusting",
-        ReconstructionStage::Georeferencing => "Georeferencing",
-        ReconstructionStage::DenseStereo => "Dense Stereo",
-        ReconstructionStage::FusingVolume => "Fusing Volume",
-        ReconstructionStage::ExtractingSurface => "Extracting Surface",
-        ReconstructionStage::CleaningMesh => "Cleaning Mesh",
-        ReconstructionStage::Texturing => "Texturing",
-        ReconstructionStage::TrackingMotion => "Tracking Motion",
-        ReconstructionStage::DerivingGeoProducts => "Deriving Geo Products",
-        ReconstructionStage::ReportingQc => "Reporting QC",
-        ReconstructionStage::Done => "Done",
-        ReconstructionStage::Failed => "Failed",
-    }
-}
-
 /// 🎞️ Label → document `VideoCodec` — pure string parsing, no engine dependency (relocated from
 /// `⚙️engine/🦀️.rs`, #2553).
 pub fn video_codec_from_label(label: &str) -> VideoCodec {
@@ -82,8 +57,6 @@ pub struct RemodelingArtifact {
     #[state(artifact)]
     pub gcps: Vec<GroundControlPoint>,
     #[state(artifact)]
-    pub job: ReconstructionJob,
-    #[state(artifact)]
     pub results: ReconstructionResults,
 }
 //#endregion 🔖️Artifact
@@ -107,7 +80,6 @@ impl RemodelingArtifact {
             calibration: self.calibration.clone(),
             params: self.params.clone(),
             gcps: self.gcps.clone(),
-            job: self.job.clone(),
             results: self.results.clone(),
         }
     }
@@ -123,7 +95,6 @@ impl RemodelingArtifact {
             calibration: snapshot.calibration,
             params: snapshot.params,
             gcps: snapshot.gcps,
-            job: snapshot.job,
             results: snapshot.results,
         }
     }
@@ -138,7 +109,6 @@ impl RemodelingArtifact {
         self.calibration = snapshot.calibration;
         self.params = snapshot.params;
         self.gcps = snapshot.gcps;
-        self.job = snapshot.job;
         self.results = snapshot.results;
     }
 }
@@ -301,10 +271,8 @@ mod tests;
 pub use crate::CalibrationState;
 pub use crate::GroundControlPoint;
 pub use crate::MediaStream;
-pub use crate::ReconstructionJob;
 pub use crate::ReconstructionParams;
 pub use crate::ReconstructionResults;
-pub use crate::ReconstructionStage;
 pub use crate::RemodelingAssetChild;
 pub use crate::VideoCodec;
 //#endregion 🔁️Re-exports

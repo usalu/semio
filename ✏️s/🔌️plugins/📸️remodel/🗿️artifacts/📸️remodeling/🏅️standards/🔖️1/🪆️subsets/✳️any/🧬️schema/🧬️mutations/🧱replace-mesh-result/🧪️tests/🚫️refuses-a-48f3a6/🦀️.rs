@@ -1,11 +1,11 @@
 //! 🧪️ `replace-mesh-result` fixture — `🚫️refuses-a-48f3a6`.
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
-//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). `replace-mesh-result-staged` is this vector's scenario id in
+//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). `replace-mesh-result-unpublished` is this vector's scenario id in
 //! `../../../../🧪️tests/📸️mutate-remodeling-1/🥒️.feature`, where the same bytes are replayed against
 //! this subset's independent Python reference.
 //!
-//! 🏞️ a `mesh-stage:` artifact id is accepted only by commit-reconstruction
+//! 🏞️ a durable mesh content handle naming unpublished content is refused
 
 use crate::mutations::{apply_remodeling_mutation, inverse_remodeling_mutation, RemodelingMutation};
 use crate::{RemodelingDiff, RemodelingSnapshot};

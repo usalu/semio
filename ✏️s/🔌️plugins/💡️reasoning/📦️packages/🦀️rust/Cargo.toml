@@ -26,6 +26,7 @@ crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-tool-run = { workspace = true }
 semio-s-artifact-reasoning-wires = { workspace = true }
 semio-framework-ui-contract.workspace = true
 semio-framework-job.workspace = true

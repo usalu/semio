@@ -1190,7 +1190,7 @@ pub fn interaction_action_definitions(app: &AppDefinition) -> Vec<ActionDefiniti
 
 //#region 🔖️ToolRun
 pub use semio_framework_tool_run::{
-    JobKindId, ToolRunAction, ToolRunCounterDefinition, ToolRunDefinition, ToolRunDefinitionError, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunStageDefinition, ToolRunTraceKind, ToolRunVerdict, TOOL_RUN_ABORT_ACTION_ID,
+    JobKindId, ToolRunAction, ToolRunCounterDefinition, ToolRunDefinition, ToolRunDefinitionError, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunTraceCursor, ToolRunTraceKind, ToolRunVerdict, TOOL_RUN_ABORT_ACTION_ID,
     TOOL_RUN_ACTION_IDS, TOOL_RUN_DISMISS_ACTION_ID, TOOL_RUN_DISMISS_CHORD, TOOL_RUN_FINALIZE_ACTION_ID, TOOL_RUN_PAUSE_ACTION_ID, TOOL_RUN_RESUME_ACTION_ID, TOOL_RUN_START_ACTION_ID, TOOL_RUN_STEP_ACTION_ID,
 };
 

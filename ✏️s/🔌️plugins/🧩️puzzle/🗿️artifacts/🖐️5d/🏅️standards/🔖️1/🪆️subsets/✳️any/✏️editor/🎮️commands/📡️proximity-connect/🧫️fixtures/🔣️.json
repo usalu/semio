@@ -1,0 +1,11 @@
+{
+  "$schema": "semio.puzzle.puzzle5d.proximity.fixture.v1",
+  "radius": 0.75,
+  "budgetUs": 8000,
+  "rounds": 5,
+  "cases": [
+    { "example": "concrete-forest", "partStride": 1, "moved": 1, "proximityPeers": 0, "relocatePeers": 0 },
+    { "example": "nakagin-capsule-tower", "partStride": 1, "moved": 180, "proximityPeers": 112, "relocatePeers": 112 },
+    { "example": "capsule-dream", "partStride": 16, "moved": 180, "proximityPeers": 0, "relocatePeers": 0 }
+  ]
+}

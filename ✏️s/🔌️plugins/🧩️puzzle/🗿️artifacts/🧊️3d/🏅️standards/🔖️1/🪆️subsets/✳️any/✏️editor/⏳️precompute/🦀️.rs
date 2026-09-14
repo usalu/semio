@@ -13,16 +13,6 @@ pub use crate::editor::puzzle3d::precompute::brush::apply_brush_placement_to_fix
 //#endregion 🔖️Reexports
 
 //#region 🔖️Constants
-/// 🖌️ Slices ONE command may spend advancing the hovered vortex's candidate search inside its own
-/// turn. Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS wave G.
-pub const BRUSH_SEARCH_SLICES_PER_TICK: u32 = 8;
-
-/// ⏱️ …and the wall clock those slices may not run past, whatever their count. The audited
-/// user-visible lane budget is 2 000 µs (`INTERACTIVE_LANE_WALL_US`'s sibling,
-/// `📓️audit-progress-primitives.md` §3.1) and the hard interactive ceiling is 8 000 µs, so a tick
-/// that finds eight cheap slices still leaves three quarters of its step to the rest of the turn.
-pub const BRUSH_SEARCH_WALL_BUDGET_US: u64 = 2_000;
-
 /// 🥽️ Collision mesh identities one session holds.
 pub(crate) const COLLISION_MESH_MAX_MESHES: usize = 64;
 /// 🥽️ Values (positions or indices) one collision mesh may carry.
@@ -32,7 +22,7 @@ pub(crate) const COLLISION_MESH_MAX_URL_BYTES: usize = 4 * 1024;
 //#endregion 🔖️Constants
 
 use crate::editor::puzzle3d::precompute::brush::{
-    brush_candidate_suggestion_weight, brush_compatible_candidates, brush_preview_from_candidate, brush_target_vortex_allows_suggestion, resolve_object_kind_mesh_url, vortex_world_from_object, AttractionVortexContext, TargetVortexWorld,
+    brush_candidate_suggestion_weight, brush_compatible_candidates, brush_preview_from_candidate, brush_target_vortex_allows_suggestion, resolve_placed_object_mesh_url, vortex_world_from_object, AttractionVortexContext, TargetVortexWorld,
 };
 use crate::editor::puzzle3d::precompute::fill::PlacedCollisionEntry;
 use crate::editor::puzzle3d::precompute::geometry::{
@@ -40,12 +30,13 @@ use crate::editor::puzzle3d::precompute::geometry::{
     CollisionStepResult,
 };
 use crate::standards::v1::subsets::any::schema::{
-    puzzle3d_vortex_full_id, BrushCollisionFreeResult, BrushCompatibleCandidate, BrushPlacePayload, BrushPreviewState, BrushSearchProgress, FillCandidateVerdict, Fixture, FixtureObject, KindCatalogBundle, Puzzle3dEngineCommand, Puzzle3dEngineOutcome,
+    puzzle3d_vortex_full_id, BrushCollisionFreeResult, BrushCompatibleCandidate, BrushPlacePayload, BrushPreviewState, Fixture, FixtureObject, KindCatalogBundle, Puzzle3dEngineCommand, Puzzle3dEngineOutcome,
     SceneConfig,
 };
 use crate::Puzzle3dError;
 use semio_framework_job::default_now_us;
 use std::collections::{HashMap, VecDeque};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 
 /// 🥽️ The source buffers of one installed collision mesh, kept so the session census can bound them.
@@ -177,7 +168,7 @@ pub fn shared_brush_mesh_installs() -> u64 {
 
 /// 🧮️ Derives one uploaded mesh into the process-wide store and hands back the validated geometry —
 /// a second document registering the same identity hits the cache instead of decoding again.
-pub(crate) fn derive_brush_mesh(url: &str, positions: &[f32], indices: &[u32]) -> Option<(Vec<f32>, Vec<u32>)> {
+pub fn derive_brush_mesh(url: &str, positions: &[f32], indices: &[u32]) -> Option<(Vec<f32>, Vec<u32>)> {
     let request = encode_brush_mesh_request(url, positions, indices)?;
     let digest = brush_mesh_digest(positions, indices);
     let mut store = brush_mesh_store().try_lock().ok()?;
@@ -522,10 +513,6 @@ pub(crate) struct Puzzle3dCollision {
     /// set is empty in every steady state and a refusal can never become a standing request.
     mesh_reupload_requests: Vec<String>,
     pub(crate) brush_cache: HashMap<String, BrushCollisionFreeResult>,
-    /// 🔎️ Live per-target readout of the candidate search the cache only ever shows the OUTCOME of.
-    /// Written by every `brush_collision_free_until` slice, dropped together with the cache entry it
-    /// describes. Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS wave G.
-    brush_progress: HashMap<String, BrushSearchProgress>,
     pub(crate) brush_queue: VecDeque<String>,
     brush_prepare_object_cursor: usize,
     brush_prepare_vortex_cursor: usize,
@@ -552,7 +539,6 @@ impl Puzzle3dCollision {
             mesh_sources: HashMap::new(),
             mesh_reupload_requests: Vec::new(),
             brush_cache: HashMap::new(),
-            brush_progress: HashMap::new(),
             brush_queue: VecDeque::new(),
             brush_prepare_object_cursor: 0,
             brush_prepare_vortex_cursor: 0,
@@ -569,6 +555,7 @@ impl Puzzle3dCollision {
         self.brush_queue_preparing || !self.brush_queue.is_empty()
     }
 
+    #[cfg(test)]
     /// 📊️ How many resolved brush candidates the engine still holds — the observable that says whether a
     /// scene sync invalidated per object or per document.
     pub(crate) fn brush_candidate_cache_len(&self) -> usize {
@@ -656,7 +643,7 @@ impl Puzzle3dCollision {
         sync.object_cursor += 1;
         let empty_catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
         let catalogs = scene.kind_catalogs.as_ref().unwrap_or(&empty_catalogs);
-        let Some(mesh_url) = resolve_object_kind_mesh_url(object.object_kind.as_deref().unwrap_or(""), catalogs, &scene.fixture) else { return true };
+        let Some(mesh_url) = resolve_placed_object_mesh_url(object, catalogs, &scene.fixture) else { return true };
         let world = pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale);
         let Some(bounds) = self.meshes.get(&mesh_url).map(|body| CollisionAabb::from_body(body, &world)) else { return true };
         sync.seen.insert(object.id.clone());
@@ -708,7 +695,6 @@ impl Puzzle3dCollision {
     fn rebuild_queue(&mut self) {
         self.brush_queue.clear();
         self.brush_cache.clear();
-        self.brush_progress.clear();
         self.re_enqueue_brush_targets();
     }
 
@@ -722,6 +708,7 @@ impl Puzzle3dCollision {
         self.rebuild_queue();
     }
 
+    #[cfg(test)]
     pub(crate) fn set_scene(&mut self, json: &str) -> Result<(), Puzzle3dError> {
         self.set_scene_config(dsl::os_pack::json::from_json_str(json)?);
         Ok(())
@@ -736,10 +723,6 @@ impl Puzzle3dCollision {
         self.replace_scene(scene);
     }
 
-    fn scene_is_synced(&self, scene: &SceneConfig) -> bool {
-        self.scene_synced.as_deref() == Some(scene)
-    }
-
     /// 🗺️ Invalidates the brush derivation for exactly the objects one sync changed. The cached
     /// collision-free candidates of the changed and removed objects are evicted by their own vortex
     /// ids, the changed objects' vortices are re-queued, and the persistent broad phase is re-armed — it
@@ -748,7 +731,6 @@ impl Puzzle3dCollision {
     fn invalidate_scene_objects(&mut self, invalidation: Puzzle3dSceneInvalidation) {
         for full_id in &invalidation.stale {
             self.brush_cache.remove(full_id);
-            self.brush_progress.remove(full_id);
         }
         self.brush_queue.retain(|full_id| !invalidation.stale.contains(full_id));
         self.brush_queue.extend(invalidation.pending);
@@ -881,7 +863,6 @@ impl Puzzle3dCollision {
     /// suggestion popup is not stuck on a stale empty / pending result.
     pub(crate) fn invalidate_brush_target(&mut self, vortex_full_id: &str) {
         self.brush_cache.remove(vortex_full_id);
-        self.brush_progress.remove(vortex_full_id);
         self.brush_queue.retain(|id| id != vortex_full_id);
         self.brush_queue.push_front(vortex_full_id.to_string());
     }
@@ -951,98 +932,50 @@ impl Puzzle3dCollision {
         Some(false)
     }
 
-    /// 📣️ Latest-wins publication of one target's search readout — the ONE place a slice's counters
-    /// become observable, so no caller has to remember to mirror them.
-    fn publish_brush_progress(&mut self, progress: BrushSearchProgress) {
-        self.brush_progress.insert(progress.target_vortex_full_id.clone(), progress);
-    }
-
-    /// 🔎️ What the brush lane currently knows about one target's search — empty (and not `done`) for a
-    /// vortex no slice has touched yet, which reads as "still to come" rather than "nothing here".
-    pub(crate) fn brush_search_progress(&self, target_full_id: &str) -> BrushSearchProgress {
-        self.brush_progress.get(target_full_id).cloned().unwrap_or_else(|| BrushSearchProgress::begin(target_full_id))
-    }
-
-    /// 🔎️ One resumable slice of ONE vortex's collision-free search, publishing what it saw as it
-    /// goes: every candidate that reaches a verdict updates the target's [`BrushSearchProgress`]
-    /// before the slice returns, so the picker streams partial `free` results and the viewport can
-    /// paint the candidate under test with its verdict instead of waiting for the whole list. A
-    /// candidate already held free is never pushed twice, so a pass that restarts at 0 (a mesh only
+    /// 🔎️ One resumable slice of ONE vortex's collision-free search, the background lane puzzle 5d still
+    /// reads. A candidate already held free is never pushed twice, so a pass that restarts at 0 (a mesh only
     /// arrived later) refines the same list instead of duplicating it.
     fn brush_collision_free_until(&mut self, target_full_id: &str, candidates: &[BrushCompatibleCandidate], overlap_budget: f64, resume_from: usize, mut free: Vec<BrushCompatibleCandidate>, deadline_us: u64) -> BrushCollisionFreeResult {
-        let mut progress = if resume_from == 0 { BrushSearchProgress::begin(target_full_id) } else { self.brush_progress.get(target_full_id).cloned().unwrap_or_else(|| BrushSearchProgress::begin(target_full_id)) };
-        progress.total_candidates = candidates.len();
-        progress.free = free.len();
-        progress.tested = progress.free + progress.blocked;
-        progress.done = false;
         self.reconcile_brush_index_until(deadline_us);
         let Some(scene) = self.scene.clone() else {
-            self.publish_brush_progress(progress);
             return BrushCollisionFreeResult { free: vec![], unknown_pending: true, resume_candidate_index: resume_from };
         };
         let empty_catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
         let catalogs = scene.kind_catalogs.as_ref().unwrap_or(&empty_catalogs);
-        let target_obj = scene.fixture.objects.iter().find_map(|o| {
-            o.vortices.iter().enumerate().find_map(|(i, v)| {
-                let full_id = puzzle3d_vortex_full_id(&o.id, &v.id);
-                if full_id == target_full_id {
-                    Some((o, i, v))
-                } else {
-                    None
-                }
-            })
-        });
-        let Some((host, vortex_index, _)) = target_obj else {
-            self.publish_brush_progress(BrushSearchProgress { done: true, ..BrushSearchProgress::begin(target_full_id) });
+        let target = scene.fixture.objects.iter().find_map(|object| object.vortices.iter().position(|vortex| puzzle3d_vortex_full_id(&object.id, &vortex.id) == target_full_id).map(|index| (object, index)));
+        let Some((host, vortex_index)) = target else {
             return BrushCollisionFreeResult { free: vec![], unknown_pending: false, resume_candidate_index: 0 };
         };
         let Some((position, direction)) = vortex_world_from_object(host, vortex_index) else {
-            self.publish_brush_progress(BrushSearchProgress { done: true, ..BrushSearchProgress::begin(target_full_id) });
             return BrushCollisionFreeResult { free: vec![], unknown_pending: false, resume_candidate_index: 0 };
         };
         let target_ctx = AttractionVortexContext { object_kind: host.object_kind.clone(), vortex_kind: host.vortices[vortex_index].vortex_kind.clone() };
-        let host_id = host.id.clone();
         if !self.brush_index_ready {
-            self.publish_brush_progress(progress);
             return BrushCollisionFreeResult { free, unknown_pending: true, resume_candidate_index: resume_from };
         }
         let mut unknown_pending = false;
         for (index, candidate) in candidates.iter().enumerate().skip(resume_from) {
             if default_now_us().is_none_or(|now| now >= deadline_us) {
-                self.publish_brush_progress(progress);
                 return BrushCollisionFreeResult { free, unknown_pending: true, resume_candidate_index: index };
             }
             let world = TargetVortexWorld { position, direction, reference_orientation: host.orientation };
             let Some(preview) = brush_preview_from_candidate(target_full_id, candidate, &target_ctx, world, catalogs, &scene.fixture) else {
                 continue;
             };
-            progress.current_candidate_kind = Some(candidate.object_kind_id.clone());
-            progress.current_verdict = FillCandidateVerdict::Testing;
-            progress.current_ghost = Some(preview.clone());
             if !self.meshes.contains_key(&preview.mesh_url) {
                 unknown_pending = true;
                 continue;
             }
-            match self.preview_collides_indexed(&preview, &host_id, overlap_budget, 1024, deadline_us) {
+            match self.preview_collides_indexed(&preview, &host.id, overlap_budget, 1024, deadline_us) {
                 None => unknown_pending = true,
-                Some(true) => {
-                    progress.current_verdict = FillCandidateVerdict::Collision;
-                    progress.blocked += 1;
-                }
+                Some(true) => {}
                 Some(false) => {
-                    progress.current_verdict = FillCandidateVerdict::Free;
                     if !free.iter().any(|held| held.object_kind_id == candidate.object_kind_id && held.source_vortex_index == candidate.source_vortex_index) {
                         free.push(candidate.clone());
                     }
                 }
             }
-            progress.free = free.len();
-            progress.tested = progress.free + progress.blocked;
         }
-        progress.free = free.len();
-        progress.tested = progress.free + progress.blocked;
-        progress.done = !unknown_pending;
-        self.publish_brush_progress(progress);
         BrushCollisionFreeResult { free, unknown_pending, resume_candidate_index: 0 }
     }
 
@@ -1082,7 +1015,7 @@ impl Puzzle3dCollision {
     }
 
     #[cfg(test)]
-    fn compute_brush_cache_entry(&mut self, target_full_id: &str) -> BrushCollisionFreeResult {
+    pub(crate) fn compute_brush_cache_entry(&mut self, target_full_id: &str) -> BrushCollisionFreeResult {
         let Some(scene) = &self.scene else {
             return BrushCollisionFreeResult { free: vec![], unknown_pending: true, resume_candidate_index: 0 };
         };
@@ -1303,7 +1236,6 @@ impl Puzzle3dCollisionSession {
 //#region 🔖️Session
 pub struct Puzzle3dPrecomputeSession {
     engine: Puzzle3dCollision,
-    brush_live_target: Option<String>,
 }
 
 impl Default for Puzzle3dPrecomputeSession {
@@ -1313,13 +1245,14 @@ impl Default for Puzzle3dPrecomputeSession {
 }
 
 impl Puzzle3dPrecomputeSession {
+    #[cfg(test)]
     /// 📊️ See [`Puzzle3dCollision::brush_candidate_cache_len`].
     pub(crate) fn brush_candidate_cache_len(&self) -> usize {
         self.engine.brush_candidate_cache_len()
     }
 
     pub fn new() -> Self {
-        Self { engine: Puzzle3dCollision::new(), brush_live_target: None }
+        Self { engine: Puzzle3dCollision::new() }
     }
 
     pub fn set_scene(&mut self, json: &str) -> Result<(), Puzzle3dError> {
@@ -1411,44 +1344,10 @@ impl Puzzle3dPrecomputeSession {
         self.engine.refresh_brush_candidates(vortex_full_id);
     }
 
-    /// 🔎️ The brush lane's live search readout for one target — tested/free/blocked out of the whole
-    /// compatible list, plus the candidate the last slice was looking at and the verdict it reached.
-    /// This is what turns the suggestion picker from an outcome into a visible process.
-    pub fn brush_search_progress(&self, vortex_full_id: &str) -> BrushSearchProgress {
-        self.engine.brush_search_progress(vortex_full_id)
-    }
-
-    /// ⏱️ Advances ONE target's candidate search inside the caller's own turn, bounded twice over:
-    /// at most [`BRUSH_SEARCH_SLICES_PER_TICK`] slices, and never past
-    /// [`BRUSH_SEARCH_WALL_BUDGET_US`] of wall clock. It no longer stops at the first free candidate
-    /// — the whole point is that the user watches the list fill in — but a finished search costs
-    /// nothing, so a resolved target is free to re-drive every tick.
-    pub fn advance_brush_search(&mut self, vortex_full_id: &str) -> BrushSearchProgress {
-        let deadline = default_now_us().map(|now| now.saturating_add(BRUSH_SEARCH_WALL_BUDGET_US));
-        for _ in 0..BRUSH_SEARCH_SLICES_PER_TICK {
-            if self.engine.brush_search_progress(vortex_full_id).done {
-                break;
-            }
-            self.engine.refresh_brush_candidates(vortex_full_id);
-            if deadline.is_none_or(|deadline| default_now_us().is_none_or(|now| now >= deadline)) {
-                break;
-            }
-        }
-        self.engine.brush_search_progress(vortex_full_id)
-    }
-
     /// 🎯️ Typed readout — was a JSON string before the headless-engine-law fix; the app now reads
     /// `.free`/`.unknown_pending` directly.
     pub fn brush_candidates(&self, vortex_full_id: &str) -> BrushCollisionFreeResult {
         self.engine.brush_cache.get(vortex_full_id).cloned().unwrap_or(BrushCollisionFreeResult { free: vec![], unknown_pending: true, resume_candidate_index: 0 })
-    }
-
-    pub fn set_brush_live_target(&mut self, vortex_full_id: Option<String>) {
-        self.brush_live_target = vortex_full_id.filter(|id| !id.is_empty());
-    }
-
-    pub fn brush_live_target(&self) -> Option<&str> {
-        self.brush_live_target.as_deref()
     }
 
     pub fn brush_preview(&self, vortex_full_id: &str, candidate_index: usize) -> Option<BrushPreviewState> {

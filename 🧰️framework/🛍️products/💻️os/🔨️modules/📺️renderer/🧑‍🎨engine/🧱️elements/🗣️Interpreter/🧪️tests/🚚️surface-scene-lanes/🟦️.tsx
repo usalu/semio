@@ -4,12 +4,13 @@ type TestSource = { readonly url: string };
  * declaration the Rust producer is pinned against
  * (`🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json`). */
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
-  const { UiDocumentStore, surfaceSceneLaneCache, utf8ByteLength, world3dSurfaceLaneTexts, canvas2dSurfaceLaneTexts, world3dSceneFromLanes, canvas2dSceneFromLanes, WORLD3D_SCENE_LANES, CANVAS2D_SCENE_LANES, WORLD3D_SCENE_LANE_KEY_PREFIX, world3dSceneLaneForBodyKey } = dependencies;
+  const { UiDocumentStore, surfaceSceneLaneCache, utf8ByteLength, world3dSurfaceLaneTexts, canvas2dSurfaceLaneTexts, board2dSurfaceLaneTexts, world3dSceneFromLanes, canvas2dSceneFromLanes, board2dSceneFromLanes, WORLD3D_SCENE_LANES, CANVAS2D_SCENE_LANES, BOARD2D_SCENE_LANES, WORLD3D_SCENE_LANE_KEY_PREFIX, world3dSceneLaneForBodyKey } = dependencies;
   const { describe, expect, it } = vitest;
   void source;
 
   const { default: contract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json");
   const { default: canvas2dContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️canvas2d-scene-lanes/🔣️.json");
+  const { default: board2dContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json");
 
   type AnyRecord = Record<string, any>;
 
@@ -334,6 +335,19 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(Object.fromEntries(collected)).toEqual(laneTexts);
       expect(world3dSurfaceLaneTexts(record, store.getState(), spine.lanes).size).toBe(0);
       expect(canvas2dSceneFromLanes(spine, collected)).toEqual({ ...assembled, lanes: spine.lanes });
+    });
+  });
+
+  describe("board-2d paged scene carrier", () => {
+    it("mirrors the language-neutral board-2d lane declaration and walks the tool run trace lane back", () => {
+      expect(BOARD2D_SCENE_LANES).toEqual(board2dContract.lanes);
+      const { spine, laneTexts, assembled } = board2dContract.roundTrip;
+      surfaceSceneLaneCache.clear();
+      const { store, record } = surfaceWithLanes(laneTexts, "board-2d", board2dContract.schema);
+      const collected = board2dSurfaceLaneTexts(record, store.getState(), spine.lanes);
+      expect(Object.fromEntries(collected)).toEqual(laneTexts);
+      expect(canvas2dSurfaceLaneTexts(record, store.getState(), spine.lanes).size).toBe(0);
+      expect(board2dSceneFromLanes(spine, collected)).toEqual({ ...assembled, lanes: spine.lanes });
     });
   });
 }

@@ -1,0 +1,68 @@
+{
+  "schema": "framework.wgpu.wheel-application-point/v1",
+  "$comment": "🖱️ A wheel is applied at the point ITS OWN events carried, never at wherever the pointer has since moved. `🎮️wgpu-browser-input-wire/🔣️.json` already pins that a DOM wheel's position survives both hops into `DispatchEvent::Scroll { x, y, delta_x, delta_y }`; this oracle pins the hop AFTER it — what the frame does with that position. The wgpu tick is input-driven, so a wheel is normally drained by a LATER event, and the frame's scene-surface gate plus `World3dState::bounds.contains` both answer for whatever point it applies at.",
+  "rule": {
+    "id": "appWheelApplicationPoint",
+    "statement": "Scroll events coalesce their deltas between frames; the newest scroll's own point is where the whole coalesced delta is applied. A pointer event moves the pointer and never the pending wheel's point. Taking the wheel leaves none, and a frame with no pending wheel applies nothing.",
+    "rust": "🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs::AppWheel",
+    "producer": "🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs::dispatch_normalized_event",
+    "consumer": "🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs::AppFrameTransactionPhase::WheelStart",
+    "ticket": "26/09/09/PROCEDURAL-3D-END-TO-END"
+  },
+  "cases": [
+    {
+      "name": "one-notch-applies-at-its-own-point",
+      "why": "The baseline: a single wheel over the preview centre.",
+      "events": [{ "kind": "scroll", "x": 1207.5, "y": 461, "deltaY": -120 }],
+      "applied": { "x": 1207.5, "y": 461, "delta": -120 }
+    },
+    {
+      "name": "a-later-pointer-move-does-not-move-the-pending-wheel",
+      "why": "The live defect, verbatim. The probe wheels over the preview centre and then nudges the pointer to the top-left corner to make the input-driven tick run. Measured on 6118 before the fix: `wheel gate x=5 y=5 delta=-480 hit=None control=None propagates=true worlds=[(\"procedural-preview\", false)]` — four notches coalesced and applied 1200 px away from where the user scrolled, so the World3d authority saw `wheel=0` on every one of its 335 intents and the camera was byte-identical before and after (📓️wgpu-end-to-end-verification-2026-09-14.md §5.1).",
+      "events": [
+        { "kind": "scroll", "x": 1207.5, "y": 461, "deltaY": -120 },
+        { "kind": "scroll", "x": 1207.5, "y": 461, "deltaY": -120 },
+        { "kind": "scroll", "x": 1207.5, "y": 461, "deltaY": -120 },
+        { "kind": "scroll", "x": 1207.5, "y": 461, "deltaY": -120 },
+        { "kind": "pointer-move", "x": 5, "y": 5 }
+      ],
+      "applied": { "x": 1207.5, "y": 461, "delta": -480 },
+      "baselineApplied": { "x": 5, "y": 5, "delta": -480 }
+    },
+    {
+      "name": "coalesced-notches-apply-at-the-newest-point",
+      "why": "A wheel stream that genuinely travels — trackpad momentum under a moving cursor. The newest event's point is where the whole coalesced delta lands, which is what a browser's own wheel stream means.",
+      "events": [
+        { "kind": "scroll", "x": 100, "y": 100, "deltaY": 40 },
+        { "kind": "pointer-move", "x": 140, "y": 160 },
+        { "kind": "scroll", "x": 140, "y": 160, "deltaY": 40 }
+      ],
+      "applied": { "x": 140, "y": 160, "delta": 80 }
+    },
+    {
+      "name": "taking-the-wheel-leaves-none",
+      "why": "A second frame with no new scroll applies nothing — the accumulator is not a level, it is a pending delta.",
+      "events": [{ "kind": "scroll", "x": 300, "y": 220, "deltaY": 120 }],
+      "applied": { "x": 300, "y": 220, "delta": 120 },
+      "appliedAgain": null
+    },
+    {
+      "name": "opposite-notches-cancel-and-apply-nothing",
+      "why": "Zero delta is not a wheel. The frame must fall through without gating a surface or publishing a camera verb.",
+      "events": [
+        { "kind": "scroll", "x": 300, "y": 220, "deltaY": 120 },
+        { "kind": "scroll", "x": 300, "y": 220, "deltaY": -120 }
+      ],
+      "applied": null
+    },
+    {
+      "name": "pointer-events-alone-apply-nothing",
+      "why": "Moving the pointer must never invent a wheel.",
+      "events": [
+        { "kind": "pointer-move", "x": 700, "y": 400 },
+        { "kind": "pointer-move", "x": 5, "y": 5 }
+      ],
+      "applied": null
+    }
+  ]
+}

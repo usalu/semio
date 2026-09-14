@@ -69,3 +69,96 @@ pub async fn settle_with_meta<P: PluginApp>(app: &mut P, receiver: u32, action_m
     .await
     .expect("in-process brep extension round trip")
 }
+
+/// 🏛️ Redispatches one `Effect::DispatchAction` naming an app COMMAND exactly the way
+/// `makeEffectDispatchOne` (`🛠️ShellHelpers/🟦️.tsx`) does: through the typed command channel with the
+/// shell's own live view attached, never the scoped action channel.
+pub async fn dispatch_effect_command<P: PluginApp>(app: &mut P, command_id: &str, args: Option<&dsl::DslValue>, action_meta: &ActionMeta) -> Result<(), Fault> {
+    use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
+    let arguments = match args {
+        Some(dsl::DslValue::Object(entries)) => entries.iter().cloned().collect(),
+        _ => std::collections::BTreeMap::new(),
+    };
+    let app_id = app.app_id().await.to_string();
+    let invocation = CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: String::new(), app_id }, command_id: command_id.to_string() }, arguments };
+    app.handle_command(&invocation, None, action_meta).await.map(|_| ())
+}
+
+/// 🧾️ What one driven `previewEval` run did: the hops it dispatched (and to which windows), the
+/// extension answers served, the release hops a closed run owed, the run actions the host fed back and
+/// the state the run settled in.
+#[derive(Clone, Debug, Default)]
+pub struct PreviewRunReceipt {
+    pub hops: usize,
+    pub hop_windows: Vec<String>,
+    pub answered: usize,
+    pub releases: usize,
+    pub run_actions: Vec<String>,
+    pub state: Option<String>,
+}
+
+/// 🔁️ The REAL served loop for EITHER surface, with nothing hand-addressed: `pending_effects` off the
+/// host's attached-window roster, every framework-reserved run action fed back through
+/// `PluginApp::handle_action`, every hop the run's port hands the host redispatched as the typed command
+/// the shell sends, every extension invocation answered by `serve`. Stops once nothing is owed, pending
+/// or outstanding and the run rests in a terminal or complete state.
+pub async fn drive_preview_run<P: PluginApp>(app: &mut P, shell_view: &semio_framework_plugin::ViewModel, initial: &[semio_framework_plugin::Effect], serve: &mut dyn FnMut(&PendingExtensionInvocation) -> Result<Vec<u8>, Fault>) -> PreviewRunReceipt {
+    use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
+    use semio_framework_plugin::Effect;
+    let action_meta = ActionMeta { view_state: Some(shell_view.clone()), ..meta("local") };
+    let mut receipt = PreviewRunReceipt::default();
+    let mut effects: Vec<Effect> = initial.to_vec();
+    for _ in 0..100_000 {
+        effects.extend(app.pending_effects(Some(shell_view)).await);
+        if app.has_pending_typed_operations() {
+            effects.extend(settle_registered_typed_operation(app, action_meta.instance_id).await.expect("the run's driver turns settle").effects);
+        }
+        let settled = settle_extension_invocations(app, action_meta.instance_id, &action_meta, serve).await.expect("in-process extension round trip");
+        receipt.answered += settled.answered;
+        effects.extend(settled.effects);
+        let dispatches: Vec<(String, Option<dsl::DslValue>)> = std::mem::take(&mut effects)
+            .into_iter()
+            .filter_map(|effect| match effect {
+                Effect::DispatchAction { action, args, .. } => Some((action, args)),
+                _ => None,
+            })
+            .collect();
+        receipt.state = app.tool_run_presence().map(|presence| presence.state.wire_name().to_string());
+        if dispatches.is_empty() && settled.answered == 0 && !app.has_pending_typed_operations() && receipt.state.as_deref().is_none_or(|state| matches!(state, "complete" | "aborted" | "faulted" | "finalized")) {
+            return receipt;
+        }
+        for (action, args) in dispatches {
+            if semio_framework_plugin::is_tool_run_action_id(&action) {
+                receipt.run_actions.push(action.clone());
+                app.handle_action(&action, args.as_ref(), &action_meta).await.unwrap_or_else(|fault| panic!("{action} dispatch: {fault:?}"));
+                continue;
+            }
+            if action == "flowEvalTick" {
+                receipt.hops += 1;
+                receipt.hop_windows.push(args.as_ref().and_then(|args| args.get("windowId")).and_then(dsl::DslValue::as_str).unwrap_or_default().to_string());
+            }
+            receipt.releases += usize::from(action == "flowEvalRelease");
+            dispatch_effect_command(app, &action, args.as_ref(), &action_meta).await.unwrap_or_else(|fault| panic!("the shell redispatches the run's {action} hop: {fault:?}"));
+            let hop = settle_registered_typed_operation(app, action_meta.instance_id).await.expect("retained publication");
+            assert!(!hop.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault), "the run's {action} hop faulted in the retained job ladder: args={args:?}");
+            effects.extend(hop.effects);
+        }
+    }
+    panic!("the previewEval run did not settle within 100 000 host turns; last state {:?}", receipt.state);
+}
+
+/// 🚦️ The framework run actions a refresh over `shell_view` owes the `previewEval` run right now.
+pub async fn owed_run_actions<P: PluginApp>(app: &mut P, shell_view: &semio_framework_plugin::ViewModel) -> Vec<String> {
+    run_actions(&app.pending_effects(Some(shell_view)).await)
+}
+
+/// 🚦️ The framework run actions an effect list carries.
+pub fn run_actions(effects: &[semio_framework_plugin::Effect]) -> Vec<String> {
+    effects
+        .iter()
+        .filter_map(|effect| match effect {
+            semio_framework_plugin::Effect::DispatchAction { action, .. } if semio_framework_plugin::is_tool_run_action_id(action) => Some(action.clone()),
+            _ => None,
+        })
+        .collect()
+}

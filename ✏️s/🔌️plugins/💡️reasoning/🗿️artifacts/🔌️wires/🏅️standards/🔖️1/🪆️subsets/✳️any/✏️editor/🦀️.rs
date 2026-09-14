@@ -10,8 +10,8 @@ use crate::editor::wires::commands::add_relationship;
 use crate::editor::wires::commands::delete_selection;
 use crate::editor::wires::commands::set_active_example;
 use crate::editor::wires::commands::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, node_graph_viewport};
-use crate::editor::wires::commands::{force_layout, reorganize};
 use crate::editor::wires::modes::edit;
+use crate::editor::wires::modes::edit::tools::reorganize;
 use crate::editor::wires::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::op::WiresMutation;
 use crate::WiresSnapshot;
@@ -142,8 +142,6 @@ semio_framework_plugin::app_commands! {
         "addNode" as "add-node" => add_node::AddNode,
         "addRelationship" as "add-relationship" => add_relationship::AddRelationship,
         "deleteSelection" as "delete-selection" => delete_selection::DeleteSelection,
-        "forceLayout" as "force-layout" => force_layout::ForceLayout,
-        "reorganize" as "reorganize" => reorganize::Reorganize,
         "canvasPointerMove" as "pointer-move" => canvas_pointer_move::CanvasPointerMove,
         "canvasPointerDown" as "pointer-down" => canvas_pointer_down::CanvasPointerDown,
         "canvasPointerUp" as "pointer-up" => canvas_pointer_up::CanvasPointerUp,
@@ -527,6 +525,15 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
+    /// ⏯️ Builds the reorganize tool's layout run over the run's base (`ToolRunDefinition.runJob`); resumed from the
+    /// ledger's checkpoint and provisional moves on a settings change.
+    fn build_tool_run_job(request: semio_framework_plugin::ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<semio_framework_plugin::ToolRunJob>, Fault> {
+        if request.tool_id != reorganize::TOOL_ID || request.purpose != semio_framework_plugin::ToolRunJobPurpose::Run {
+            return Ok(None);
+        }
+        reorganize::build_job(request.identity, &request.snapshot, request.checkpoint, request.provisional).map(Some)
+    }
+
     fn initial_snapshot() -> WiresSnapshot {
         crate::empty_wires_snapshot()
     }
@@ -630,6 +637,7 @@ pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
         .artifact_kind(crate::artifact_kind())
         .icon_id("reasoning-wires")
         .mode_def(edit::definition())
+        .tool(reorganize::definition())
         .default_mode_id(edit::WIRES_PLAY_MODE_EDIT)
         .window_kind_def(edit::windows::canvas::definition())
         .default_layout(edit::layout())
@@ -641,8 +649,6 @@ pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
         .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
         .mutation("addRelationship", LocalizedLabel::native("Add Relationship", "Beziehung hinzufügen"))
         .mutation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
-        .mutation("forceLayout", LocalizedLabel::native("Force Layout", "Kraftbasiertes Layout"))
-        .action_with(semio_framework_plugin::ActionDefinition::new("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), semio_framework_plugin::ActionKind::Mutation, "rotate-cw"))
         .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegt"), semio_framework_plugin::ActionKind::View, "mouse-pointer"))
         // 👁️ Ephemeral view state — in-flight drag. Selection/hover are framework-owned now
         // (domain "graph") — no app-declared verbs; `interactionSelect`/`interactionHover`/
@@ -656,8 +662,6 @@ pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("addNode", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("addRelationship", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("deleteSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("forceLayout", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("reorganize", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("canvasPointerMove", InteractiveJobClassification::Migrated)
         .action_interactive_job("canvasPointerDown", InteractiveJobClassification::Migrated)
         .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)

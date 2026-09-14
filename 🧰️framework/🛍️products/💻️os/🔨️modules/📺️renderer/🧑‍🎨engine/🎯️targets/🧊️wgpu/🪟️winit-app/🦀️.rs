@@ -43,11 +43,32 @@ fn advance_frame_generation(generation: &mut u64) -> bool {
     true
 }
 
+/// 🔢️ Whether THIS enqueue may renumber the frame generation.
+///
+/// The generation names the INPUT STATE a build is answering, and a build, its presentation witness
+/// and its raster witness are all pinned to it — so it may advance freely while nothing is building
+/// ([`FrameGenerationHold::Free`]) and must not move at all while a build is live
+/// ([`FrameGenerationHold::UnderLiveBuild`]).
+///
+/// 🩸️ Every pointer move used to renumber it unconditionally. `FrameBuildHandle::poll_runtime_and_resubmit`
+/// reads a moved generation as `frame build superseded` and CANCELS the in-flight build from phase 0
+/// — 28 supersessions per converging edit, a measured 26 % tax on a chain the input had nothing to do
+/// with (10.69 s with the pointer still against 14.51 s with it moving 5×/s, ticket
+/// 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-edit-convergence-perf-2026-09-14.md` §6). The event is
+/// still enqueued and the scheduler still invalidated either way: holding the NUMBER is not dropping
+/// the INPUT, and the build that finishes is immediately followed by one admitted at the newest
+/// generation.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum FrameGenerationHold {
+    Free,
+    UnderLiveBuild,
+}
+
 /// 📥️ The exact mounted event-callback core, split from `OsHost` only so its latency contract can
 /// be stress-tested without constructing a platform window or GPU surface.
-fn enqueue_host_event(events: &mut ui_host::EventQueue, scheduler: &mut ui_render::FrameScheduler, ui_token: ui_host::UiThreadToken, frame_generation: &mut u64, event: DispatchEvent) -> ui_host::EnqueueOutcome {
+fn enqueue_host_event(events: &mut ui_host::EventQueue, scheduler: &mut ui_render::FrameScheduler, ui_token: ui_host::UiThreadToken, frame_generation: &mut u64, hold: FrameGenerationHold, event: DispatchEvent) -> ui_host::EnqueueOutcome {
     let _watchdog = semio_framework_trace::Watchdog::start("os_renderer_event", render_frame_operation_id(), semio_framework_trace::Generation(*frame_generation), semio_framework_trace::InteractiveStage::UiEvent);
-    if !advance_frame_generation(frame_generation) {
+    if hold == FrameGenerationHold::Free && !advance_frame_generation(frame_generation) {
         return ui_host::EnqueueOutcome::Overflow;
     }
     scheduler.invalidate(InvalidationReason::INPUT_STATE);
@@ -56,9 +77,9 @@ fn enqueue_host_event(events: &mut ui_host::EventQueue, scheduler: &mut ui_rende
 
 /// 📐️ The mounted resize-callback core, isolated for the same window-free latency proof as
 /// [`enqueue_host_event`]. GPU surface reconfiguration remains the immediate platform-only step.
-fn enqueue_host_metrics(events: &mut ui_host::EventQueue, scheduler: &mut ui_render::FrameScheduler, ui_token: ui_host::UiThreadToken, frame_generation: &mut u64, physical_width: u32, physical_height: u32, scale_factor: f32) {
+fn enqueue_host_metrics(events: &mut ui_host::EventQueue, scheduler: &mut ui_render::FrameScheduler, ui_token: ui_host::UiThreadToken, frame_generation: &mut u64, hold: FrameGenerationHold, physical_width: u32, physical_height: u32, scale_factor: f32) {
     let _watchdog = semio_framework_trace::Watchdog::start("os_renderer_metrics", render_frame_operation_id(), semio_framework_trace::Generation(*frame_generation), semio_framework_trace::InteractiveStage::UiEvent);
-    if !advance_frame_generation(frame_generation) {
+    if hold == FrameGenerationHold::Free && !advance_frame_generation(frame_generation) {
         return;
     }
     scheduler.invalidate(InvalidationReason::VIEWPORT);
@@ -87,7 +108,8 @@ impl WindowDelegate for OsHost {
     // async exception U1 itself carves out.
     fn handle_event(&mut self, event: DispatchEvent) {
         crate::log_debug(&format!("[DEBUG] os_host handle_event {event:?} gen={}", self.frame_generation));
-        if enqueue_host_event(&mut self.events, &mut self.scheduler, self.ui_token, &mut self.frame_generation, event) == ui_host::EnqueueOutcome::Overflow {
+        let hold = self.frame_generation_hold();
+        if enqueue_host_event(&mut self.events, &mut self.scheduler, self.ui_token, &mut self.frame_generation, hold, event) == ui_host::EnqueueOutcome::Overflow {
             crate::log_debug("os_host: discrete input queue overflow — a redraw has not drained in a while");
         }
     }
@@ -97,7 +119,8 @@ impl WindowDelegate for OsHost {
     /// one UI-capability surface step advance from redraw opportunities.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn handle_metrics(&mut self, metrics: WindowMetrics) {
-        enqueue_host_metrics(&mut self.events, &mut self.scheduler, self.ui_token, &mut self.frame_generation, metrics.physical.width, metrics.physical.height, metrics.scale_factor);
+        let hold = self.frame_generation_hold();
+        enqueue_host_metrics(&mut self.events, &mut self.scheduler, self.ui_token, &mut self.frame_generation, hold, metrics.physical.width, metrics.physical.height, metrics.scale_factor);
         let (width, height) = metrics.logical_size();
         let _ = self.surface_resize.enqueue(metrics.physical.width, metrics.physical.height, metrics.scale_factor);
         let dpr = metrics.scale_factor;
@@ -121,6 +144,18 @@ impl WindowDelegate for OsHost {
 }
 
 impl OsHost {
+    /// 🔢️ The one place that answers whether an input callback may renumber the frame generation —
+    /// the same `has_live_session()` predicate `redraw_core` already honours below, so the law
+    /// ("it advances when input changes, and when a redraw finds no build to invalidate — never
+    /// underneath a live one") is enforced at BOTH of its two writers instead of one.
+    fn frame_generation_hold(&self) -> FrameGenerationHold {
+        if self.frame_build.has_live_session() {
+            FrameGenerationHold::UnderLiveBuild
+        } else {
+            FrameGenerationHold::Free
+        }
+    }
+
     #[cfg(target_arch = "wasm32")]
     pub(crate) fn redraw_offscreen_worker(&mut self) -> RedrawOutcome {
         let _watchdog = semio_framework_trace::Watchdog::start("os_renderer_offscreen_worker", render_frame_operation_id(), semio_framework_trace::Generation(self.frame_generation), semio_framework_trace::InteractiveStage::InteractiveStep);
@@ -314,8 +349,9 @@ pub(crate) async fn dispatch_normalized_event(app: &mut AppInteractionState, eve
             let modifiers = app.modifiers.clone();
             app.handle_pointer_button(x, y, false, pointer_button_to_i16(button), modifiers).await;
         }
-        DispatchEvent::Scroll { delta_y, .. } => {
-            app.wheel_delta += delta_y;
+        // 🖱️ The wheel's OWN point, not the pointer's last known one — see `AppWheel`.
+        DispatchEvent::Scroll { x, y, delta_y, .. } => {
+            app.wheel.accumulate(x, y, delta_y);
         }
         // ⌨️ `DispatchEvent`'s POINTER variants carry no modifier state — only the key variants do
         // (`PointerDown/Up/Move { pointer, x, y, button }`). This is therefore the one place the
@@ -916,3 +952,7 @@ pub(crate) use native::{HostUserEvent, WinitApp};
 #[cfg(test)]
 #[path = "../../../🧪️tests/🔬️wgpu-winit-app-callback-latency/🦀️.rs"]
 mod callback_latency_tests;
+
+#[cfg(test)]
+#[path = "../../../🧪️tests/🔢️frame-generation-hold/🦀️.rs"]
+mod frame_generation_hold_tests;

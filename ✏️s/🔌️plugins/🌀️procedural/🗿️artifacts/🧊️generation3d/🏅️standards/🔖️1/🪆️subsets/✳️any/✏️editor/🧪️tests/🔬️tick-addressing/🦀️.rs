@@ -62,35 +62,34 @@ fn roster(fixture: &TickAddressingFixture, attached: &[AttachedWindow]) -> ViewM
     ViewModel { window_instances, ..Default::default() }
 }
 
-fn armed_window_ids(effects: &[Effect]) -> Vec<String> {
-    effects
-        .iter()
-        .filter_map(|effect| match effect {
-            Effect::DispatchAction { action, args, .. } if action == "flowEvalTick" => Some(args.as_ref().and_then(|args| args.get("windowId")).and_then(dsl::DslValue::as_str).unwrap_or_default().to_string()),
-            _ => None,
-        })
-        .collect()
+/// 🪟️ The distinct windows a driven run's hops addressed, sorted.
+fn hop_windows(receipt: &context::PreviewRunReceipt) -> Vec<String> {
+    receipt.hop_windows.iter().cloned().collect::<std::collections::BTreeSet<_>>().into_iter().collect()
 }
 
-/// ⚖️ LAW: what `pending_effects` may put on the wire for a given attached-window roster. Every armed
-/// tick names a concrete preview window, and a roster with no preview window arms NOTHING — which is
-/// what keeps a not-yet-mounted surface from spinning a chain that can never land
+/// ⚖️ LAW: which windows the `previewEval` run started off a given attached-window roster evaluates.
+/// Every hop names a concrete preview window, and a roster with no preview window starts NO run — which
+/// is what keeps a not-yet-mounted surface from spinning work that can never land
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[semio_framework_async_macros::async_test]
-async fn every_armed_tick_names_a_preview_window_that_is_actually_attached() {
+async fn every_run_hop_names_a_preview_window_that_is_actually_attached() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let fixture = fixture();
-    let mut app = app_with_registry().await;
-    context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: PROCEDURAL_EXAMPLE_RECT_EXTRUDE.into() })).await;
     for case in fixture.arming.iter().filter(|case| case.surface == "editor") {
+        let mut app = app_with_registry().await;
+        context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: PROCEDURAL_EXAMPLE_RECT_EXTRUDE.into() })).await;
         let view = roster(&fixture, &case.attached);
-        let armed = armed_window_ids(&app.pending_effects(Some(&view)).await);
-        assert_eq!(armed, case.armed_window_ids, "arming case {}", case.id);
-        eprintln!("[DEBUG] tick arming {}: attached={:?} armed={armed:?}", case.id, view.window_instances.iter().map(|window| window.id.as_str()).collect::<Vec<_>>());
+        let owed = app.pending_effects(Some(&view)).await;
+        let started = context::run_actions(&owed);
+        assert_eq!(started.is_empty(), case.armed_window_ids.is_empty(), "arming case {}: a run starts exactly when a preview window is attached, got {started:?}", case.id);
+        let receipt = context::drive_preview_run(&mut app, &view, &owed).await;
+        let mut expected = case.armed_window_ids.clone();
+        expected.sort();
+        eprintln!("[DEBUG] run hops {}: attached={:?} hops={:?}", case.id, view.window_instances.iter().map(|window| window.id.as_str()).collect::<Vec<_>>(), receipt.hop_windows);
+        assert_eq!(hop_windows(&receipt), expected, "arming case {}", case.id);
+        assert!(context::owed_run_actions(&mut app, &semio_framework_plugin::ViewModel::default()).await.is_empty(), "no roster at all starts nothing");
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
     }
-    let empty = armed_window_ids(&app.pending_effects(None).await);
-    assert!(empty.is_empty(), "no roster at all must arm nothing, got {empty:?}");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
 
 /// ⚖️ LAW: which of those addresses the REAL retained route admits, driven through
@@ -142,11 +141,11 @@ async fn set_active_example_drives_the_self_dispatched_tick_chain_to_a_rendered_
     let receipt = context::settle(&mut app).await;
     assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "setActiveExample faulted: {:?}", receipt.lanes);
 
-    // 🔒️ The switch arms the chain from its OWN emit, and the shell feeds those `requestedEffects`
-    // back — exactly what is replayed here. The refresh poll adds nothing on top because the
-    // retained session's per-window latch already holds one pending tick for that window.
+    // 🔒️ The switch carries the run start on its OWN emit, and the shell feeds those `requestedEffects`
+    // back — exactly what is replayed here, together with every hop the run hands the host.
+    assert_eq!(context::run_actions(&receipt.effects), vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()], "setActiveExample carries exactly one run start");
     let ticks = context::drain_armed_flow_eval_ticks_from(&mut app, &flow_view, &receipt.effects).await;
-    assert!(ticks > 0, "setActiveExample must arm at least one addressed flowEvalTick");
+    assert!(ticks > 0, "the run setActiveExample started must dispatch at least one addressed flowEvalTick");
 
     let graph = context::render_with_view(&mut app, flow_window::GENERATION_3D_PLAY_BODY_MAIN, &flow_view).await;
     let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::NodeGraphScene>(&graph).expect("node-graph scene decodes off the rendered flow surface");
@@ -164,39 +163,28 @@ async fn set_active_example_drives_the_self_dispatched_tick_chain_to_a_rendered_
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
 
-/// ⚖️ LAW: generate-mode preview evaluation is the SAME addressed tick chain as edit preview, never
-/// a dead synchronous `FlowEvalSession::tick` inside `Generation3dPreviewCommandWork`.
+/// ⚖️ LAW: generate-mode preview evaluation is the SAME `previewEval` run as edit preview, never a dead
+/// synchronous `FlowEvalSession::tick` inside `Generation3dPreviewCommandWork`: `addGeneration` carries the
+/// run start on its own emit, and the run's hops address the generate preview window.
 #[semio_framework_async_macros::async_test]
-async fn generate_preview_eval_emits_extension_or_rearms_flow_eval_tick() {
+async fn generate_preview_eval_is_the_run_addressed_at_the_generate_preview() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let mut app = app_with_registry().await;
-    let (generations_view, preview_view) = context::generate_shell_views("generation3d-generations", "generation3d-generate-form", "generation3d-generate-preview");
+    let (generations_view, _preview_view) = context::generate_shell_views("generation3d-generations", "generation3d-generate-form", "generation3d-generate-preview");
     let action_meta = ActionMeta { view_state: Some(generations_view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("local") };
     app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_RECT_EXTRUDE }).into()), &action_meta).await.expect("setActiveExample");
     let receipt = context::settle(&mut app).await;
     assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "setActiveExample faulted: {:?}", receipt.lanes);
-    // 🔒️ Drain the chain the example switch itself armed first: while a tick is still pending for
-    // that window the latch (correctly) refuses a second one, and this law is about what
-    // `addGeneration` owes a SETTLED window.
-    context::drain_armed_flow_eval_ticks_from(&mut app, &generations_view, &receipt.effects).await;
+    let settled = context::drive_preview_run(&mut app, &generations_view, &receipt.effects).await;
+    assert_eq!(settled.state.as_deref(), Some("finalized"), "the switch's run settles: {settled:?}");
     app.handle_action("addGeneration", None, &action_meta).await.expect("addGeneration");
     let receipt = context::settle(&mut app).await;
     assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "addGeneration faulted: {:?}", receipt.lanes);
-    let armed = armed_window_ids(&receipt.effects);
-    let pending = armed_window_ids(&app.pending_effects(Some(&generations_view)).await);
-    assert!(
-        armed.iter().any(|id| id == "generation3d-generate-preview") || pending.iter().any(|id| id == "generation3d-generate-preview"),
-        "addGeneration / pending_effects must re-arm flowEvalTick at the generate preview window, armed={armed:?} pending={pending:?}"
-    );
-    let args = flow_eval_tick::window_args("generation3d-generate-preview", generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW);
-    context::dispatch_effect_command(&mut app, "flowEvalTick", Some(&args), &action_meta).await.expect("generate preview tick");
-    let tick = context::settle(&mut app).await;
-    assert!(!tick.lanes.contains(&TypedOperationResultLane::Fault), "generate preview tick faulted: {:?}", tick.lanes);
-    let answered = crate::brep_extension::settle(&mut *app, action_meta.instance_id).await;
-    let rearmed = armed_window_ids(&tick.effects);
-    eprintln!("[DEBUG] generate preview tick: rearmed={rearmed:?} answered={answered}");
-    assert!(answered > 0 || rearmed.iter().any(|id| id == "generation3d-generate-preview"), "generate preview eval must emit ExtensionInvocation or re-arm flowEvalTick, not a dead sync tick");
-    let _ = preview_view;
+    assert_eq!(context::run_actions(&receipt.effects), vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()], "addGeneration carries exactly one run start on its own emit");
+    let run = context::drive_preview_run(&mut app, &generations_view, &receipt.effects).await;
+    eprintln!("[DEBUG] generate preview run: {run:?}");
+    assert!(run.hop_windows.iter().any(|window| window == "generation3d-generate-preview"), "the run must evaluate the generate preview window: {run:?}");
+    assert!(run.answered > 0, "generate preview eval must cross the extension boundary, not settle as a dead sync tick: {run:?}");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
 

@@ -78,7 +78,7 @@ interface StatusContract {
   debugKeys: string[];
   evaluateFaultCode: string;
   addressMissCode: string;
-  surfaces: Array<{ surface: string; windowKindId: string; cancelAction: string; declaresCancelCommand: boolean; offersCancelOnWindow: boolean }>;
+  surfaces: Array<{ surface: string; windowKindId: string; cancelAction: string; frameworkReservedVerb: boolean; offersCancelOnWindow: boolean }>;
   states: StatusState[];
 }
 
@@ -238,7 +238,7 @@ export function testGeneration3dPreviewStatusContract(): void {
   );
   for (const surface of contract.surfaces) {
     assert.equal(surface.cancelAction, fixture.cancelAction, `${surface.surface}: every surface names the same cancel verb`);
-    assert.equal(surface.declaresCancelCommand, true, `${surface.surface}: a surface that publishes cancelAction must declare that command or the gesture is dropped`);
+    assert.equal(surface.frameworkReservedVerb, true, `${surface.surface}: the verb a surface publishes is the framework-reserved run abort, injected with the declared tool run — a plugin cancel command of its own would be a second contract`);
     // 🛑️ Declaring the COMMAND is only half of it: `ShellHost`'s `declaredAction` gate resolves the
     // verb against the FOCUSED window kind's own action refs, so a window that publishes
     // `cancelAction` without listing the verb paints a button whose click is dropped before

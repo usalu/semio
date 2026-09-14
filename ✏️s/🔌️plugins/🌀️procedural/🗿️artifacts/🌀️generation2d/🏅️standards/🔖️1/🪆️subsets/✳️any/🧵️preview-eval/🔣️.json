@@ -1,0 +1,224 @@
+{
+  "schema": "generation2d.preview-eval.run.v1",
+  "note": "Source of record of the read-only `previewEval` tool run the generation2d editor runs over its edit and generate previews (`🧵️preview-eval/🦀️.rs`). The Rust declaration deserializes `definition` verbatim; the enums the job writes with are asserted equal to these ids and codes by `🧵️preview-eval/🧪️tests/🔬️unit`. Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS.",
+  "toolId": "previewEval",
+  "label": {
+    "native": {
+      "en": "Preview evaluation",
+      "de": "Vorschauauswertung"
+    },
+    "reuse": {
+      "en": "Preview evaluation",
+      "de": "Vorschauauswertung"
+    }
+  },
+  "iconId": "eye",
+  "definition": {
+    "mutating": false,
+    "rebase": "restart",
+    "reconfigure": "restart",
+    "unit": {
+      "native": {
+        "en": "nodes",
+        "de": "Knoten"
+      },
+      "reuse": {
+        "en": "nodes",
+        "de": "Knoten"
+      }
+    },
+    "stages": [
+      {
+        "id": "evaluate",
+        "label": {
+          "native": {
+            "en": "Evaluating nodes",
+            "de": "Knoten werden ausgewertet"
+          },
+          "reuse": {
+            "en": "Evaluating nodes",
+            "de": "Knoten werden ausgewertet"
+          }
+        }
+      }
+    ],
+    "counters": [
+      {
+        "id": "evaluated",
+        "label": {
+          "native": {
+            "en": "Evaluated",
+            "de": "Ausgewertet"
+          },
+          "reuse": {
+            "en": "Evaluated",
+            "de": "Ausgewertet"
+          }
+        }
+      },
+      {
+        "id": "failed",
+        "label": {
+          "native": {
+            "en": "Failed",
+            "de": "Fehlgeschlagen"
+          },
+          "reuse": {
+            "en": "Failed",
+            "de": "Fehlgeschlagen"
+          }
+        }
+      },
+      {
+        "id": "blocked",
+        "label": {
+          "native": {
+            "en": "Blocked",
+            "de": "Blockiert"
+          },
+          "reuse": {
+            "en": "Blocked",
+            "de": "Blockiert"
+          }
+        }
+      },
+      {
+        "id": "hops",
+        "label": {
+          "native": {
+            "en": "Hops",
+            "de": "Schritte"
+          },
+          "reuse": {
+            "en": "Hops",
+            "de": "Schritte"
+          }
+        }
+      }
+    ],
+    "reasons": [
+      {
+        "code": 0,
+        "id": "queued",
+        "verdict": "testing",
+        "template": {
+          "native": {
+            "en": "Queued",
+            "de": "In Warteschlange"
+          },
+          "reuse": {
+            "en": "Queued",
+            "de": "In Warteschlange"
+          }
+        }
+      },
+      {
+        "code": 1,
+        "id": "computing",
+        "verdict": "testing",
+        "template": {
+          "native": {
+            "en": "Evaluating",
+            "de": "Wird ausgewertet"
+          },
+          "reuse": {
+            "en": "Evaluating",
+            "de": "Wird ausgewertet"
+          }
+        }
+      },
+      {
+        "code": 2,
+        "id": "evaluated",
+        "verdict": "success",
+        "template": {
+          "native": {
+            "en": "Evaluated",
+            "de": "Ausgewertet"
+          },
+          "reuse": {
+            "en": "Evaluated",
+            "de": "Ausgewertet"
+          }
+        }
+      },
+      {
+        "code": 3,
+        "id": "blocked",
+        "verdict": "warning",
+        "template": {
+          "native": {
+            "en": "Blocked by missing inputs",
+            "de": "Durch fehlende Eingänge blockiert"
+          },
+          "reuse": {
+            "en": "Blocked by missing inputs",
+            "de": "Durch fehlende Eingänge blockiert"
+          }
+        }
+      },
+      {
+        "code": 4,
+        "id": "failed",
+        "verdict": "danger",
+        "template": {
+          "native": {
+            "en": "Evaluation failed",
+            "de": "Auswertung fehlgeschlagen"
+          },
+          "reuse": {
+            "en": "Evaluation failed",
+            "de": "Auswertung fehlgeschlagen"
+          }
+        }
+      },
+      {
+        "code": 5,
+        "id": "settled",
+        "verdict": "success",
+        "template": {
+          "native": {
+            "en": "{0} nodes evaluated",
+            "de": "{0} Knoten ausgewertet"
+          },
+          "reuse": {
+            "en": "{0} nodes evaluated",
+            "de": "{0} Knoten ausgewertet"
+          }
+        }
+      },
+      {
+        "code": 6,
+        "id": "settledWithFailures",
+        "verdict": "warning",
+        "template": {
+          "native": {
+            "en": "{0} of {1} nodes did not evaluate",
+            "de": "{0} von {1} Knoten nicht ausgewertet"
+          },
+          "reuse": {
+            "en": "{0} of {1} nodes did not evaluate",
+            "de": "{0} von {1} Knoten nicht ausgewertet"
+          }
+        }
+      },
+      {
+        "code": 7,
+        "id": "extensionFault",
+        "verdict": "danger",
+        "template": {
+          "native": {
+            "en": "The drawing extension refused an evaluation",
+            "de": "Die Zeichnungs-Erweiterung hat eine Auswertung abgelehnt"
+          },
+          "reuse": {
+            "en": "The drawing extension refused an evaluation",
+            "de": "Die Zeichnungs-Erweiterung hat eine Auswertung abgelehnt"
+          }
+        }
+      }
+    ],
+    "trace": "entity",
+    "runJob": "generation2d.previewEval.run"
+  }
+}

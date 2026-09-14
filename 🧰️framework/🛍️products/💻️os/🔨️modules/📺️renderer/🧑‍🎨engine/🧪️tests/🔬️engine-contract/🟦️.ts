@@ -1729,7 +1729,7 @@ import {
 import { ENTWERFEN_MIT_BESTAND_BRAND_IDS, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🪧️brand.ts";
 import { Footer, navbarFillItem, progressPanelTabSelection, resolvePanelBranchBodyLeaf, resolveTranslationLabel, SelectionMarquee, uiDataLabel, formatKeybindingShortcut, buildKeysByActionId, type PanelTabNode, type TreeDataSection } from "@semio-tech/ui-react";
 import { renderUiControl } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
-import { WorldOrbitProjectionSwitchPane, world3dProjectionPaneElementId, parseWorldBrushPreview, resolveClickInstanceIdFromProjected, world3dInstancePickUsesInteractionDomain, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick, world3dFrameCameraFromBounds, world3dFrameCameraFromInstances, world3dSuggestionsGestureArmed, world3dRetainLocalVortexHover, leftoverHoveredVortexFullIdV1, leftoverOverlayCarryingSelectionV1, leftoverSelectIdsMustNameHoverPickV1, leftoverOverlayCarryingUtilityV1, leftoverOverlayArmedBrushUtilityV1, leftoverTreeItemSelectedV1, leftoverWorldOverlayAppliesV1, retainWorldBrushPreviewJsonV1, mergeWorldInteractionWithLeftoverV1, mergeWorldSelectionWithLeftoverV1, gumballPreviewWorldPoint, world3dSuggestionsGestureConsumesContextMenu, world3dSuggestionsRightDownRoutesOnWindowCapture, worldVortexHitProxy, worldInstanceMeshRaycast, applyWorldInstanceMeshRaycast } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { WorldOrbitProjectionSwitchPane, world3dProjectionPaneElementId, resolveClickInstanceIdFromProjected, world3dInstancePickUsesInteractionDomain, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick, world3dFrameCameraFromBounds, world3dFrameCameraFromInstances, world3dSuggestionsGestureArmed, world3dRetainLocalVortexHover, leftoverHoveredVortexFullIdV1, leftoverOverlayCarryingSelectionV1, leftoverSelectIdsMustNameHoverPickV1, leftoverOverlayCarryingUtilityV1, leftoverOverlayArmedBrushUtilityV1, leftoverTreeItemSelectedV1, leftoverWorldOverlayAppliesV1, mergeWorldInteractionWithLeftoverV1, mergeWorldSelectionWithLeftoverV1, gumballPreviewWorldPoint, world3dSuggestionsGestureConsumesContextMenu, world3dSuggestionsRightDownRoutesOnWindowCapture, worldVortexHitProxy, worldInstanceMeshRaycast, applyWorldInstanceMeshRaycast } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 import { leftoverInspectionPanelHash, leftoverInspectionRefreshScope, uiRefreshSectionUnchanged } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem, LUH_LOGO_URL, LUH_URL, UDK_LOGO_URL, UDK_URL, ZUKUNFT_BAU_PROJECT_URL } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
@@ -1801,8 +1801,7 @@ import {
   lineRangeAt,
   multiSpanReplace,
   World3dHost,
-  brushObjectPlacementArgs,
-  brushPreviewGhostMeshUrl,
+  worldGhostMeshUrl,
   parsePuzzle3dCatalogueDragPayload,
   mergeWorldViewportCamera,
   raycastGroundPoint,
@@ -5836,37 +5835,12 @@ describe("framework renderer hosts", () => {
     expect(resolveMeshSelectionPreviewStyle({ selected: true, disabled: true }, false)).toBe("disabled");
   });
 
-  it("builds addBrushObject args from a parsed brush preview, or null when there is nothing to place", () => {
-    expect(brushObjectPlacementArgs(null)).toBeNull();
-    const args = brushObjectPlacementArgs({
-      targetVortexFullId: "seed-left-001:v0",
-      objectKindId: "hex-concrete",
-      sourceVortexIndex: 2,
-      origin: [1, 2, 3],
-      orientation: [0, 0, 0, 1],
-      scale: 1,
-    });
-    expect(args).toMatchObject({
-      targetVortexFullId: "seed-left-001:v0",
-      objectKindId: "hex-concrete",
-      sourceVortexIndex: 2,
-      origin: [1, 2, 3],
-      orientation: [0, 0, 0, 1],
-      scale: 1,
-    });
-  });
-
-  it("defaults sourceVortexIndex to 0 when the brush preview omits it", () => {
-    const args = brushObjectPlacementArgs({ targetVortexFullId: "seed-left-001:v0", objectKindId: "hex-concrete" });
-    expect(args).toMatchObject({ sourceVortexIndex: 0 });
-  });
-
-  it("resolves brush/suggestion ghost mesh URLs even when the kind is not yet among scene meshes", () => {
-    // 👻️ One-shot suggestion ghosts must load the preview meshUrl directly (catalogue-drop parity) —
-    // requiring a scene mesh match left suggested objects invisible in 3D.
-    expect(brushPreviewGhostMeshUrl({ meshUrl: "/meshes/new-kind.glb" }, [])).toBe("/meshes/new-kind.glb");
-    expect(brushPreviewGhostMeshUrl({ meshUrl: "/meshes/placed.glb" }, [{ url: "/meshes/placed.glb" }])).toBe("/meshes/placed.glb");
-    expect(brushPreviewGhostMeshUrl({}, [{ url: "/meshes/placed.glb" }])).toBeUndefined();
+  it("resolves catalogue-drop ghost mesh URLs even when the kind is not yet among scene meshes", () => {
+    // 👻️ A dragged catalogue kind must load its own meshUrl directly — requiring a scene mesh match left a
+    // kind not placed yet invisible in 3D.
+    expect(worldGhostMeshUrl({ meshUrl: "/meshes/new-kind.glb" }, [])).toBe("/meshes/new-kind.glb");
+    expect(worldGhostMeshUrl({ meshUrl: "/meshes/placed.glb" }, [{ url: "/meshes/placed.glb" }])).toBe("/meshes/placed.glb");
+    expect(worldGhostMeshUrl({}, [{ url: "/meshes/placed.glb" }])).toBeUndefined();
   });
 
   it("resolves the right-click context menu target by priority: vortex, then object, then reference", () => {
@@ -7990,7 +7964,7 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(world3dRelocateDispatchArgsV1("obj-1", [1, 2, 3], [10, 10, 0], [10.0000001, 10, 0])).toBeNull();
   });
 
-  // 🏁️ Wave B33: EVERY hover and background-tick lane of the world host hands its gate the awaitable twin
+  // 🏁️ Wave B33: EVERY hover and brush target lane of the world host hands its gate the awaitable twin
   // (`dispatchSettled`), because `dispatch` drops the `onAction` promise the gate measures. Measured on wasm
   // #51: one 70-move brush hover storm enqueued 72 `interactionHover` + 85 `suggestionsTick` guest turns with
   // 11/10 settled, and the `addTargetVolume` behind them lost its 30 s budget while the queue drained at
@@ -8013,23 +7987,31 @@ describe("registry-derived utilities and activation (P5)", () => {
     for (const site of [
       'return dispatchSettled("interactionHover", world3dHoverActionArgs(interactionDomainId, interactionGranularity, target));',
       'return dispatchSettled("interactionHover", args);',
-      'return dispatchSettled("suggestionsTick");',
+      'createCoalescingActionDispatcher<string | null>((fullId) => dispatchSettled("targetBrushSuggestions", fullId ? { fullId } : {}))',
     ]) {
       expect(source.includes(site), `[DEBUG] a gated lane must read: ${site}`).toBe(true);
     }
-    for (const swallowed of ['void dispatch("suggestionsTick")', 'return dispatch("suggestionsTick")', 'dispatch("interactionHover"']) {
+    for (const swallowed of ['dispatch("targetBrushSuggestions"', 'dispatch("interactionHover"']) {
       expect(source.includes(swallowed), `[DEBUG] ${swallowed} hands the in-flight gate a discarded promise — use dispatchSettled`).toBe(false);
     }
-    // 🕰️ A per-gesture tick may only be REQUESTED on the single-flight lane, never dispatched straight into
-    // the serialized guest queue — and the request must carry a distinct value, or the coalescer dedupes
-    // every later gesture onto the first tick and the preview stops updating.
-    expect(source).toContain("const sendSuggestionsTick = useMemo(() => createCoalescingActionDispatcher<number>(() => dispatchSettled(\"suggestionsTick\")), [dispatchSettled]);");
-    const request = source.indexOf("const requestSuggestionsTick = useCallback(");
-    expect(request).toBeGreaterThan(0);
-    const requestBody = source.slice(request, request + 240);
-    expect(requestBody).toContain("suggestionsTickSeqRef.current += 1;");
-    expect(requestBody).toContain("sendSuggestionsTick(suggestionsTickSeqRef.current);");
-    for (const site of ["if (brushMode) requestSuggestionsTick();"]) expect(source.includes(site), `[DEBUG] a per-gesture tick must read: ${site}`).toBe(true);
+  });
+
+  // 🖌️ Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W2-C: the brush candidate search is a read-only
+  // framework tool run whose trace layer paints every tested candidate, so the host keeps neither a polling
+  // tick nor a ghost of its own. Only a change of the armed brush's vortex travels to the guest.
+  it("the world host has no brush suggestion tick and no brush ghost; the tool run trace replaces both", async () => {
+    const { readFileSync, existsSync } = await import("node:fs");
+    const { resolve } = await import("node:path");
+    const relative = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx";
+    let root = process.cwd();
+    for (let hop = 0; hop < 12 && !existsSync(resolve(root, relative)); hop += 1) root = resolve(root, "..");
+    const source = readFileSync(resolve(root, relative), "utf8");
+    for (const retired of ["suggestionsTick", "createInFlightSkippingInterval(", "brushPreviewJson", "BrushPreviewGhost", "WorldBrushPreviewRecord", "addBrushObject"]) {
+      expect(source.includes(retired), `[DEBUG] ${retired} is the retired brush ghost path`).toBe(false);
+    }
+    expect(source).toContain("<WorldToolRunTrace lane={scene.toolRunTrace}");
+    expect(source).toContain('if (brushSuggestionsTargetSentRef.current === brushSuggestionsTarget) return;');
+    expect(source).toContain('if (fullId) dispatch("acceptSuggestion", { fullId });');
   });
 
   it("Volume-Brush Alt+click reads the ground through the host, not an occludable canvas plane", () => {
@@ -8654,14 +8636,14 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
 
     const idle = { ids: [] as readonly string[], hoveredId: null, gumballActive: false, gumballAnchorId: null, activeUtility: "select", activeToolId: null };
     world.publishLeftoverWorldSelectionV1(idle, { kind: "allWindows" });
-    world.publishLeftoverWorldSelectionV1({ ...idle, activeUtility: "brush", hoveredId: "seed-left-001:v0", hoveredDomain: "vortex", brushPreviewJson: '{"targetVortexFullId":"seed-left-001:v0"}' }, { kind: "window", windowId: perspective });
+    world.publishLeftoverWorldSelectionV1({ ...idle, activeUtility: "brush", hoveredId: "seed-left-001:v0", hoveredDomain: "vortex" }, { kind: "window", windowId: perspective });
 
     const paneRecord = (windowId: string) => world.worldSurfaceSelectionDomV1({ method: "rectangle", ids: [] }, mergeWorldInteractionWithLeftoverV1({ activeUtility: "select" }, world.leftoverWorldWindowOverlayV1(windowId)));
     expect(paneRecord(perspective).activeUtility, "the armed pane's own record").toBe("brush");
     expect(paneRecord(top).activeUtility, "its sibling must NOT read the arm back — one shared overlay is what made both panes publish one value").toBe("select");
     expect(paneRecord(perspective)).not.toEqual(paneRecord(top));
-    expect(world.leftoverWorldWindowOverlayV1(top)?.brushPreviewJson ?? null, "nor the armed pane's brush preview").toBeNull();
-    expect(world.leftoverWorldArmedWindowOverlayV1()?.activeUtility, "the host's brush-preview lane still finds the one armed pane").toBe("brush");
+    expect(world.leftoverWorldWindowOverlayV1(top)?.hoveredId ?? null, "nor the armed pane's hover").toBeNull();
+    expect(world.leftoverWorldArmedWindowOverlayV1()?.activeUtility, "the host still finds the one armed pane").toBe("brush");
 
     world.publishLeftoverWorldSelectionV1({ ...idle, ids: ["seed-left-001"], gumballActive: true, gumballAnchorId: "seed-left-001" }, { kind: "document" });
     expect(paneRecord(perspective).activeUtility, "a windowless leftover carries the document selection, never another pane's utility").toBe("brush");
@@ -8855,17 +8837,6 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
       labels: false,
     });
     console.warn("[DEBUG] b37 effect scope", JSON.stringify({ declared, earned }));
-  });
-
-  it("retains last brush preview JSON for the leftover hover after a guest no-target wipe", () => {
-    const published = JSON.stringify({ targetVortexFullId: "seed-left-001:v3", objectKindId: "Capsule", origin: [0, 0, 0], orientation: [0, 0, 0, 1] });
-    const warm = retainWorldBrushPreviewJsonV1(published, "seed-left-001:v3", {});
-    expect(warm.json).toBe(published);
-    expect(warm.retained["seed-left-001:v3"]).toBe(published);
-    const wiped = retainWorldBrushPreviewJsonV1("", "seed-left-001:v3", warm.retained);
-    expect(wiped.json).toBe(published);
-    const other = retainWorldBrushPreviewJsonV1("", "seed-left-001:v7", warm.retained);
-    expect(other.json).toBe("");
   });
 
   // 📚️ The language-agnostic half of the picker: which examples a surface may offer at all. Rust
@@ -11359,7 +11330,7 @@ describe("🛑️ world3d cancel contract", () => {
           properties: {
             id: { type: "string" },
             statusJson: { type: ["string", "null"] },
-            expected: { type: "object", required: ["cancellable", "cancelAction"], properties: { cancellable: { type: "boolean" }, cancelAction: { type: "string" } } },
+            expected: { type: "object", required: ["cancellable", "cancelAction", "cancelArgs"], properties: { cancellable: { type: "boolean" }, cancelAction: { type: "string" }, cancelArgs: { type: "object" } } },
           },
         },
       },
@@ -11379,6 +11350,7 @@ describe("🛑️ world3d cancel contract", () => {
       const status = world3dComputeStatusV1(row.statusJson);
       expect(status.cancellable, row.id).toBe(row.expected.cancellable);
       expect(status.cancelAction, row.id).toBe(row.expected.cancelAction);
+      expect(status.cancelArgs, row.id).toEqual(row.expected.cancelArgs);
     }
     console.log("[DEBUG] world3d cancel contract reproduced all %s shared fixture rows", rows.length);
   });

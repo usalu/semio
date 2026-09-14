@@ -12,10 +12,9 @@ fn faulted(outcome: StepOutcome) -> bool {
     true
 }
 
-use crate::editor::puzzle3d::precompute::geometry::{collision_body_from_buffers, OwnerReservationLimit, DOCUMENT_CELL_SLOTS, FIXED_OWNER_PAGE_BYTES, FIXED_OWNER_SLOTS};
+use crate::editor::puzzle3d::precompute::geometry::{collision_body_from_buffers, OwnerReservationLimit, DOCUMENT_CELL_SLOTS, DOCUMENT_OWNER_PAGE_BYTES, FIXED_OWNER_PAGE_BYTES, FIXED_OWNER_SLOTS};
 use semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES;
-use crate::editor::puzzle3d::precompute::{FILL_ENVELOPE_MAX_BYTES, FILL_ENVELOPE_MAX_ITEMS};
-use crate::standards::v1::subsets::any::schema::{BrushKindWeights, KindCatalogBundle, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexProps};
+use crate::standards::v1::subsets::any::schema::{BrushKindWeights, Fixture, KindCatalogBundle, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexProps};
 use semio_framework_job::{root_cancel_token, Generation, OperationId, RevisionId, StepBudget};
 use std::time::{Duration, Instant};
 
@@ -42,666 +41,6 @@ fn test_context<'a>(builder: &FillBuilder, cancel: semio_framework_job::CancelTo
     StepContext::new(builder.operation.operation, builder.operation.generation, StepBudget::new(100, 10), cancel, now, sequence)
 }
 
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-struct OracleGhost<'a> {
-    target_vortex_full_id: &'a str,
-    object_kind_id: &'a str,
-    source_vortex_index: usize,
-    mesh_url: &'a str,
-    origin: [f64; 3],
-    orientation: [f64; 4],
-}
-
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-struct OracleTried<'a> {
-    sequence: u64,
-    verdict: &'a str,
-    reason: Option<&'a str>,
-    ghost: OracleGhost<'a>,
-}
-
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-struct OracleDiagnostic<'a> {
-    operation: u64,
-    base_revision: u64,
-    registry_generation: u64,
-    sequence: u64,
-    generation: u64,
-    stage: &'a str,
-    status_label: &'a str,
-    target_vortex_full_id: Option<&'a str>,
-    candidate_object_kind_id: Option<&'a str>,
-    candidate_ghost: Option<OracleGhost<'a>>,
-    current_pair_object_id: Option<&'a str>,
-    collision_count: usize,
-    sample_cursor: usize,
-    inside_both: usize,
-    last_sample: Option<[f32; 3]>,
-    candidate_page: &'a [Option<String>; 8],
-    truncated: bool,
-    rejection_reason: Option<&'a str>,
-    target_cursor: usize,
-    candidate_cursor: usize,
-    accepted_count: usize,
-    requested_count: usize,
-    search_count: u64,
-    rejected_count: u64,
-    verdict: &'a str,
-    tested_count: u64,
-    stall_reason: Option<&'a str>,
-    tried: Vec<Option<OracleTried<'a>>>,
-}
-
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-struct OracleRoot<'a> {
-    target_vortex_full_id: &'a str,
-    object_kind_id: &'a str,
-    source_vortex_index: usize,
-    mesh_url: &'a str,
-    origin: [f64; 3],
-    orientation: [f64; 4],
-    color: &'a str,
-    opacity: f64,
-    verdict: &'a str,
-    fill_build_preview: OracleDiagnostic<'a>,
-}
-
-fn oracle_ghost(ghost: &BrushPreviewState) -> OracleGhost<'_> {
-    OracleGhost { target_vortex_full_id: &ghost.target_vortex_full_id, object_kind_id: &ghost.object_kind_id, source_vortex_index: ghost.source_vortex_index, mesh_url: &ghost.mesh_url, origin: ghost.origin, orientation: ghost.orientation }
-}
-
-fn oracle_tried(entry: &FillTriedCandidate) -> OracleTried<'_> {
-    OracleTried { sequence: entry.sequence, verdict: entry.verdict.wire(), reason: entry.reason.as_deref(), ghost: oracle_ghost(&entry.ghost) }
-}
-
-fn oracle_json_scalar_admits(preview: &FillBuildPreview, color: &str, status_label: &str) -> bool {
-    let safe_u64 = |value: u64, minimum: u64| value >= minimum && value <= 9_007_199_254_740_991;
-    let safe_usize = |value: usize| value as u128 <= 9_007_199_254_740_991;
-    let source_authority = preview.candidate_ghost.as_ref().map_or(true, |ghost| {
-        let root_source_vortex_index = ghost.source_vortex_index as u128;
-        let candidate_ghost_source_vortex_index = ghost.source_vortex_index as u128;
-        root_source_vortex_index <= 9_007_199_254_740_991 && candidate_ghost_source_vortex_index <= 9_007_199_254_740_991
-    });
-    let tried_authority = preview.tried.iter().flatten().all(|entry| entry.ghost.source_vortex_index as u128 <= 9_007_199_254_740_991 && safe_u64(entry.sequence, 0));
-    tried_authority
-        && safe_u64(preview.tested_count, 0)
-        && safe_usize(preview.requested_count)
-        && color.len() <= 128
-        && !status_label.is_empty()
-        && status_label.len() <= 256
-        && source_authority
-        && safe_u64(preview.operation, 1)
-        && safe_u64(preview.base_revision, 1)
-        && safe_u64(preview.registry_generation, 1)
-        && safe_u64(preview.sequence, 0)
-        && safe_u64(preview.generation, 1)
-        && safe_usize(preview.collision_count)
-        && safe_usize(preview.sample_cursor)
-        && safe_usize(preview.inside_both)
-        && safe_usize(preview.target_cursor)
-        && safe_usize(preview.candidate_cursor)
-        && safe_usize(preview.accepted_count)
-        && safe_u64(preview.search_count, 0)
-        && safe_u64(preview.rejected_count, 0)
-}
-
-fn oracle_json_unfenced(preview: &FillBuildPreview, color: &str, status_label: &str) -> String {
-    let ghost = preview.candidate_ghost.as_ref().expect("oracle case ghost");
-    serde_json::to_string(&OracleRoot {
-        target_vortex_full_id: &ghost.target_vortex_full_id,
-        object_kind_id: &ghost.object_kind_id,
-        source_vortex_index: ghost.source_vortex_index,
-        mesh_url: &ghost.mesh_url,
-        origin: ghost.origin,
-        orientation: ghost.orientation,
-        color,
-        opacity: 0.35,
-        verdict: preview.verdict.wire(),
-        fill_build_preview: OracleDiagnostic {
-            operation: preview.operation,
-            base_revision: preview.base_revision,
-            registry_generation: preview.registry_generation,
-            sequence: preview.sequence,
-            generation: preview.generation,
-            stage: &preview.stage,
-            status_label,
-            target_vortex_full_id: preview.target_vortex_full_id.as_deref(),
-            candidate_object_kind_id: preview.candidate_object_kind_id.as_deref(),
-            candidate_ghost: preview.candidate_ghost.as_ref().map(oracle_ghost),
-            current_pair_object_id: preview.current_pair_object_id.as_deref(),
-            collision_count: preview.collision_count,
-            sample_cursor: preview.sample_cursor,
-            inside_both: preview.inside_both,
-            last_sample: preview.last_sample,
-            candidate_page: &preview.candidate_page,
-            truncated: preview.truncated,
-            rejection_reason: preview.rejection_reason.as_deref(),
-            target_cursor: preview.target_cursor,
-            candidate_cursor: preview.candidate_cursor,
-            accepted_count: preview.accepted_count,
-            requested_count: preview.requested_count,
-            search_count: preview.search_count,
-            rejected_count: preview.rejected_count,
-            verdict: preview.verdict.wire(),
-            tested_count: preview.tested_count,
-            stall_reason: preview.stall_reason.as_deref(),
-            tried: preview.tried.iter().map(|entry| entry.as_ref().map(oracle_tried)).collect(),
-        },
-    })
-    .expect("test-only serde oracle")
-}
-
-fn oracle_json_admits(preview: &FillBuildPreview, color: &str, status_label: &str) -> bool {
-    oracle_json_scalar_admits(preview, color, status_label) && oracle_json_unfenced(preview, color, status_label).len() <= FILL_PREVIEW_JSON_MAX_BYTES
-}
-
-fn oracle_json(preview: &FillBuildPreview, color: &str, status_label: &str) -> String {
-    assert!(oracle_json_scalar_admits(preview, color, status_label), "owned scalar schema semantics guard the test-only serde oracle");
-    let text = oracle_json_unfenced(preview, color, status_label);
-    assert!(text.len() <= FILL_PREVIEW_JSON_MAX_BYTES, "owned full-wire byte semantics guard the test-only serde oracle");
-    text
-}
-
-/// 📏️ Two one-byte-per-grant passes (census then encode) over a page that may hold the whole wire
-/// cap, plus the phase transitions between them — the bound is a terminal-observation guard, not a
-/// budget.
-const PREVIEW_JSON_GRANT_CEILING: usize = 4 * FILL_PREVIEW_JSON_MAX_BYTES;
-
-fn drive_preview_json(builder: &mut FillBuilder, color: &str, status_label: &str) -> FillPreviewJsonStep {
-    for _ in 0..PREVIEW_JSON_GRANT_CEILING {
-        let mut fuel = 1;
-        let step = builder.preview_json_step(color, status_label, &mut fuel, false, false);
-        if !matches!(step, FillPreviewJsonStep::Pending { .. }) {
-            return step;
-        }
-    }
-    panic!("preview cursor did not reach a bounded terminal observation")
-}
-
-fn fixture_preview() -> (FillBuildPreview, String, String, String, String, String) {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("language-neutral law fixture");
-    let preview = serde_json::from_value(law["preview"].clone()).expect("schema-first preview");
-    let color = law["color"].as_str().expect("color").to_string();
-    let english = law["locales"]["en"]["statusLabel"].as_str().expect("English status label").to_string();
-    let german = law["locales"]["de"]["statusLabel"].as_str().expect("German status label").to_string();
-    let expected_english = law["locales"]["en"]["expected"].as_str().expect("English expected bytes").to_string();
-    let expected_german = law["locales"]["de"]["expected"].as_str().expect("German expected bytes").to_string();
-    (preview, color, english, german, expected_english, expected_german)
-}
-
-fn assert_preview_ready_matches_oracle(preview: FillBuildPreview, color: &str, status_label: &str) {
-    assert!(oracle_json_admits(&preview, color, status_label));
-    let expected = oracle_json(&preview, color, status_label);
-    let mut builder = empty_builder();
-    builder.preview = preview;
-    assert_eq!(drive_preview_json(&mut builder, color, status_label), FillPreviewJsonStep::Ready);
-    assert_eq!(builder.preview_json_ready(), Some(expected.as_str()));
-}
-
-fn assert_preflight_rejection_preserves_ready(builder: &mut FillBuilder, color: &str, status_label: &str) {
-    let ready_pointer = builder.preview_json.ready.as_ref().expect("retained page").as_ptr();
-    let ready_page = builder.preview_json_ready().expect("retained page").to_string();
-    let ready_identity = builder.preview_json_ready_identity();
-    let color_pointer = builder.preview_json.color.as_ptr();
-    let retained_color = builder.preview_json.color.clone();
-    let status_label_pointer = builder.preview_json.status_label.as_ptr();
-    let retained_status_label = builder.preview_json.status_label.clone();
-    let checkpoint = builder.preview_json.checkpoint();
-    let phase = builder.preview_json.phase;
-    let mut fuel = 1;
-    assert_eq!(builder.preview_json_step(color, status_label, &mut fuel, false, false), FillPreviewJsonStep::Rejected);
-    assert_eq!(fuel, 1, "preflight rejects before consuming a semantic grant");
-    assert_eq!(builder.preview_json.checkpoint(), checkpoint);
-    assert_eq!(builder.preview_json.phase, phase);
-    assert_eq!(builder.preview_json.ready.as_ref().expect("same owner").as_ptr(), ready_pointer);
-    assert_eq!(builder.preview_json_ready(), Some(ready_page.as_str()));
-    assert_eq!(builder.preview_json_ready_identity(), ready_identity);
-    assert_eq!(builder.preview_json.color.as_ptr(), color_pointer);
-    assert_eq!(builder.preview_json.color, retained_color);
-    assert_eq!(builder.preview_json.status_label.as_ptr(), status_label_pointer);
-    assert_eq!(builder.preview_json.status_label, retained_status_label);
-    assert!(
-        builder.preview_json.output.is_none() && builder.preview_json.retiring_bytes.is_none() && builder.preview_json.retiring_ready.is_none() && builder.preview_json.retiring_color.is_none() && builder.preview_json.retiring_status_label.is_none()
-    );
-}
-
-#[test]
-fn retained_preview_json_matches_language_neutral_fixture_and_test_only_serde_oracle() {
-    let module: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧬️schema/🔣️.json")).expect("s.puzzle3d owner schema module");
-    let schema = &module["$defs"]["Puzzle3dFillPreviewJson"];
-    let diagnostic = &module["$defs"]["Puzzle3dFillPreviewDiagnostic"];
-    let ghost = &module["$defs"]["Puzzle3dFillPreviewGhost"];
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("language-neutral law fixture");
-    assert!(diagnostic["required"].as_array().is_some_and(|fields| fields.iter().any(|field| field.as_str() == Some("statusLabel"))));
-    assert_eq!(schema["properties"]["sourceVortexIndex"]["maximum"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_SOURCE_VORTEX_INDEX));
-    assert_eq!(ghost["properties"]["sourceVortexIndex"]["maximum"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_SOURCE_VORTEX_INDEX));
-    assert_eq!(schema["properties"]["color"]["maxLength"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_COLOR_BYTES as u64));
-    assert_eq!(schema["properties"]["color"]["x-semio-maxUtf8Bytes"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_COLOR_BYTES as u64));
-    assert_eq!(schema["x-semio-maxEncodedUtf8Bytes"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_BYTES as u64));
-    assert_eq!(diagnostic["properties"]["statusLabel"]["x-semio-maxUtf8Bytes"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_STATUS_LABEL_BYTES as u64));
-    assert_eq!(law["limits"]["maximumSourceVortexIndex"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_SOURCE_VORTEX_INDEX));
-    assert_eq!(law["limits"]["maximumDiagnosticInteger"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_DIAGNOSTIC_INTEGER));
-    assert_eq!(law["limits"]["maximumColorBytes"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_COLOR_BYTES as u64));
-    assert_eq!(law["limits"]["maximumStatusLabelBytes"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_STATUS_LABEL_BYTES as u64));
-    assert_eq!(law["limits"]["maximumBytes"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_BYTES as u64));
-    let tried = &module["$defs"]["Puzzle3dFillPreviewTried"];
-    let verdict = &module["$defs"]["Puzzle3dFillPreviewVerdict"];
-    assert_eq!(law["limits"]["triedItems"].as_u64(), Some(FILL_TRIED_RING as u64));
-    assert_eq!(diagnostic["properties"]["tried"]["minItems"].as_u64(), Some(FILL_TRIED_RING as u64));
-    assert_eq!(diagnostic["properties"]["tried"]["maxItems"].as_u64(), Some(FILL_TRIED_RING as u64));
-    assert_eq!(tried["properties"]["ghost"]["$ref"].as_str(), Some("#/$defs/Puzzle3dFillPreviewGhost"));
-    let declared_verdicts = verdict["enum"].as_array().expect("verdict enum").iter().map(|value| value.as_str().expect("verdict")).collect::<Vec<_>>();
-    let owned_verdicts = [FillCandidateVerdict::Testing, FillCandidateVerdict::Free, FillCandidateVerdict::Collision, FillCandidateVerdict::Rejected, FillCandidateVerdict::Accepted].map(FillCandidateVerdict::wire);
-    assert_eq!(declared_verdicts, owned_verdicts, "the schema enum and the owned wire spellings are one law");
-    assert_eq!(law["boundaryLaws"]["verdicts"].as_array().expect("verdict laws").iter().map(|value| value.as_str().expect("verdict")).collect::<Vec<_>>(), owned_verdicts);
-    let numeric_fields = law["diagnosticNumericFields"].as_array().expect("diagnostic numeric laws");
-    assert_eq!(numeric_fields.len(), 15);
-    for field in numeric_fields {
-        let name = field["field"].as_str().expect("numeric field");
-        assert_eq!(diagnostic["properties"][name]["minimum"], field["minimum"]);
-        assert_eq!(diagnostic["properties"][name]["maximum"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_DIAGNOSTIC_INTEGER));
-    }
-    let (preview, color, english, german, expected_english, expected_german) = fixture_preview();
-    assert_eq!(oracle_json(&preview, &color, &english), expected_english, "English fixture and third-party oracle are byte-identical");
-    assert_eq!(oracle_json(&preview, &color, &german), expected_german, "German fixture and third-party oracle are byte-identical");
-    let mut builder = empty_builder();
-    builder.preview = preview;
-    assert_eq!(drive_preview_json(&mut builder, &color, &english), FillPreviewJsonStep::Ready);
-    assert_eq!(builder.preview_json_ready(), Some(expected_english.as_str()));
-    assert_eq!(builder.preview_json_ready().map(str::len), Some(expected_english.len()));
-    assert_eq!(drive_preview_json(&mut builder, &color, &german), FillPreviewJsonStep::Ready);
-    assert_eq!(builder.preview_json_ready(), Some(expected_german.as_str()));
-}
-
-#[test]
-fn retained_preview_json_safe_index_boundary_is_schema_first_portable_and_preflighted() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("language-neutral law fixture");
-    let boundaries = law["boundaryLaws"]["sourceVortexIndex"].as_array().expect("source index laws");
-    let safe_maximum = boundaries[0]["value"].as_u64().expect("safe maximum");
-    let maximum_plus_one = boundaries[1]["value"].as_u64().expect("safe maximum plus one");
-    assert_eq!((boundaries[0]["admitted"].as_bool(), boundaries[1]["admitted"].as_bool()), (Some(true), Some(false)));
-    assert_eq!(safe_maximum, FILL_PREVIEW_JSON_MAX_SOURCE_VORTEX_INDEX);
-    assert_eq!(maximum_plus_one, FILL_PREVIEW_JSON_MAX_SOURCE_VORTEX_INDEX + 1);
-
-    if let Ok(source_vortex_index) = usize::try_from(safe_maximum) {
-        let (mut preview, color, english, _, _, _) = fixture_preview();
-        preview.candidate_ghost.as_mut().expect("fixture ghost").source_vortex_index = source_vortex_index;
-        assert!(oracle_json_admits(&preview, &color, &english));
-        let expected = oracle_json(&preview, &color, &english);
-        let mut builder = empty_builder();
-        builder.preview = preview;
-        assert_eq!(drive_preview_json(&mut builder, &color, &english), FillPreviewJsonStep::Ready);
-        assert_eq!(builder.preview_json_ready(), Some(expected.as_str()));
-    } else {
-        assert!((usize::MAX as u128) <= safe_maximum as u128, "narrow usize platforms admit every representable source index");
-    }
-
-    if let Ok(source_vortex_index) = usize::try_from(maximum_plus_one) {
-        let (preview, color, english, _, _, _) = fixture_preview();
-        let mut builder = empty_builder();
-        builder.preview = preview;
-        assert_eq!(drive_preview_json(&mut builder, &color, &english), FillPreviewJsonStep::Ready);
-        let ready_pointer = builder.preview_json.ready.as_ref().expect("retained page").as_ptr();
-        let ready_page = builder.preview_json_ready().expect("retained page").to_string();
-        let ready_identity = builder.preview_json_ready_identity();
-        let color_pointer = builder.preview_json.color.as_ptr();
-        let status_label_pointer = builder.preview_json.status_label.as_ptr();
-        let checkpoint = builder.preview_json.checkpoint();
-        let phase = builder.preview_json.phase;
-        builder.preview.candidate_ghost.as_mut().expect("fixture ghost").source_vortex_index = source_vortex_index;
-        assert!(!oracle_json_admits(&builder.preview, &color, &english));
-        let mut fuel = 1;
-        assert_eq!(builder.preview_json_step("#000", "Füllfortschritt", &mut fuel, false, false), FillPreviewJsonStep::Rejected);
-        assert_eq!(fuel, 1, "preflight rejects before consuming a semantic grant");
-        assert_eq!(builder.preview_json.checkpoint(), checkpoint);
-        assert_eq!(builder.preview_json.phase, phase);
-        assert_eq!(builder.preview_json.ready.as_ref().expect("same owner").as_ptr(), ready_pointer);
-        assert_eq!(builder.preview_json_ready(), Some(ready_page.as_str()));
-        assert_eq!(builder.preview_json_ready_identity(), ready_identity);
-        assert_eq!(builder.preview_json.color.as_ptr(), color_pointer);
-        assert_eq!(builder.preview_json.status_label.as_ptr(), status_label_pointer);
-        assert!(builder.preview_json.output.is_none() && builder.preview_json.retiring_bytes.is_none() && builder.preview_json.retiring_ready.is_none());
-    } else {
-        assert!((usize::MAX as u128) <= safe_maximum as u128, "maximum plus one is unrepresentable only where every usize is wire-safe");
-    }
-}
-
-#[test]
-fn retained_preview_json_all_diagnostic_numeric_boundaries_are_preflighted() {
-    type U64Setter = fn(&mut FillBuildPreview, u64);
-    type UsizeSetter = fn(&mut FillBuildPreview, usize);
-    let u64_fields: [(&str, U64Setter); 8] = [
-        ("operation", |preview, value| preview.operation = value),
-        ("baseRevision", |preview, value| preview.base_revision = value),
-        ("registryGeneration", |preview, value| preview.registry_generation = value),
-        ("sequence", |preview, value| preview.sequence = value),
-        ("generation", |preview, value| preview.generation = value),
-        ("searchCount", |preview, value| preview.search_count = value),
-        ("rejectedCount", |preview, value| preview.rejected_count = value),
-        ("testedCount", |preview, value| preview.tested_count = value),
-    ];
-    let usize_fields: [(&str, UsizeSetter); 7] = [
-        ("collisionCount", |preview, value| preview.collision_count = value),
-        ("sampleCursor", |preview, value| preview.sample_cursor = value),
-        ("insideBoth", |preview, value| preview.inside_both = value),
-        ("targetCursor", |preview, value| preview.target_cursor = value),
-        ("candidateCursor", |preview, value| preview.candidate_cursor = value),
-        ("acceptedCount", |preview, value| preview.accepted_count = value),
-        ("requestedCount", |preview, value| preview.requested_count = value),
-    ];
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("language-neutral law fixture");
-    let mut declared = law["diagnosticNumericFields"].as_array().expect("diagnostic numeric laws").iter().map(|field| field["field"].as_str().expect("field")).collect::<Vec<_>>();
-    let mut tested = u64_fields.iter().map(|(field, _)| *field).chain(usize_fields.iter().map(|(field, _)| *field)).collect::<Vec<_>>();
-    declared.sort_unstable();
-    tested.sort_unstable();
-    assert_eq!(tested, declared);
-    let maximum = law["limits"]["maximumDiagnosticInteger"].as_u64().expect("diagnostic maximum");
-    let maximum_plus_one = maximum + 1;
-
-    for (_, set) in u64_fields {
-        let (mut preview, color, english, _, _, _) = fixture_preview();
-        set(&mut preview, maximum);
-        assert_preview_ready_matches_oracle(preview, &color, &english);
-
-        let (preview, color, english, _, _, _) = fixture_preview();
-        let mut builder = empty_builder();
-        builder.preview = preview;
-        assert_eq!(drive_preview_json(&mut builder, &color, &english), FillPreviewJsonStep::Ready);
-        set(&mut builder.preview, maximum_plus_one);
-        assert!(!oracle_json_admits(&builder.preview, &color, &english));
-        assert_preflight_rejection_preserves_ready(&mut builder, "#000", "Füllfortschritt");
-    }
-
-    if let Ok(maximum) = usize::try_from(maximum) {
-        for (_, set) in usize_fields {
-            let (mut preview, color, english, _, _, _) = fixture_preview();
-            set(&mut preview, maximum);
-            assert_preview_ready_matches_oracle(preview, &color, &english);
-        }
-    } else {
-        assert!((usize::MAX as u128) <= FILL_PREVIEW_JSON_MAX_DIAGNOSTIC_INTEGER as u128);
-        for (_, set) in usize_fields {
-            let (mut preview, color, english, _, _, _) = fixture_preview();
-            set(&mut preview, usize::MAX);
-            assert_preview_ready_matches_oracle(preview, &color, &english);
-        }
-    }
-
-    if let Ok(maximum_plus_one) = usize::try_from(maximum_plus_one) {
-        for (_, set) in usize_fields {
-            let (preview, color, english, _, _, _) = fixture_preview();
-            let mut builder = empty_builder();
-            builder.preview = preview;
-            assert_eq!(drive_preview_json(&mut builder, &color, &english), FillPreviewJsonStep::Ready);
-            set(&mut builder.preview, maximum_plus_one);
-            assert!(!oracle_json_admits(&builder.preview, &color, &english));
-            assert_preflight_rejection_preserves_ready(&mut builder, "#000", "Füllfortschritt");
-        }
-    } else {
-        assert!((usize::MAX as u128) <= FILL_PREVIEW_JSON_MAX_DIAGNOSTIC_INTEGER as u128, "unrepresentable plus one means every usize is wire-safe");
-    }
-}
-
-#[test]
-fn retained_preview_json_status_label_byte_boundary_matches_owned_serde_oracle() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("language-neutral law fixture");
-    for boundary in law["boundaryLaws"]["statusLabel"].as_array().expect("status label laws") {
-        let unit = boundary["unit"].as_str().expect("status label unit");
-        let repeat = boundary["repeat"].as_u64().and_then(|value| usize::try_from(value).ok()).expect("status label repeat");
-        let expected_bytes = boundary["utf8Bytes"].as_u64().and_then(|value| usize::try_from(value).ok()).expect("status label bytes");
-        let admitted = boundary["admitted"].as_bool().expect("status label admission");
-        let status_label = unit.repeat(repeat);
-        assert_eq!(status_label.len(), expected_bytes, "fixture declares UTF-8 bytes");
-        let (preview, color, english, _, _, _) = fixture_preview();
-        assert_eq!(oracle_json_admits(&preview, &color, &status_label), admitted);
-        if admitted {
-            assert_preview_ready_matches_oracle(preview, &color, &status_label);
-        } else {
-            let mut builder = empty_builder();
-            builder.preview = preview;
-            assert_eq!(drive_preview_json(&mut builder, &color, &english), FillPreviewJsonStep::Ready);
-            assert_preflight_rejection_preserves_ready(&mut builder, &color, &status_label);
-        }
-    }
-}
-
-#[test]
-fn retained_preview_json_color_byte_boundary_matches_owned_serde_oracle() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("language-neutral law fixture");
-    for boundary in law["boundaryLaws"]["color"].as_array().expect("color laws") {
-        let unit = boundary["unit"].as_str().expect("color unit");
-        let repeat = boundary["repeat"].as_u64().and_then(|value| usize::try_from(value).ok()).expect("color repeat");
-        let expected_bytes = boundary["utf8Bytes"].as_u64().and_then(|value| usize::try_from(value).ok()).expect("color bytes");
-        let admitted = boundary["admitted"].as_bool().expect("color admission");
-        let color = unit.repeat(repeat);
-        assert_eq!(color.len(), expected_bytes, "fixture declares UTF-8 bytes");
-        let (preview, _, english, _, _, _) = fixture_preview();
-        assert_eq!(oracle_json_admits(&preview, &color, &english), admitted);
-        let mut builder = empty_builder();
-        builder.preview = preview;
-        let step = drive_preview_json(&mut builder, &color, &english);
-        if admitted {
-            assert_eq!(step, FillPreviewJsonStep::Ready);
-            let expected = oracle_json(&builder.preview, &color, &english);
-            assert_eq!(builder.preview_json_ready(), Some(expected.as_str()));
-        } else {
-            assert_eq!(step, FillPreviewJsonStep::Rejected);
-            assert!(builder.preview_json.output.is_none() && builder.preview_json.ready().is_none(), "oversized color never reserves or publishes");
-        }
-    }
-}
-
-#[test]
-fn retained_preview_json_exact_cap_and_plus_one_fail_closed_before_reserve() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("language-neutral law fixture");
-    let boundaries = law["boundaryLaws"]["fullWire"].as_array().expect("full-wire laws");
-    let maximum_bytes = boundaries[0]["utf8Bytes"].as_u64().and_then(|value| usize::try_from(value).ok()).expect("maximum bytes");
-    let maximum_plus_one_bytes = boundaries[1]["utf8Bytes"].as_u64().and_then(|value| usize::try_from(value).ok()).expect("maximum plus one bytes");
-    assert_eq!((boundaries[0]["admitted"].as_bool(), boundaries[1]["admitted"].as_bool()), (Some(true), Some(false)));
-    assert_eq!((boundaries[0]["sourceField"].as_str(), boundaries[1]["sourceField"].as_str()), (Some("stage"), Some("stage")));
-    assert_eq!(boundaries[0]["oracle"].as_str(), Some("serde_json"));
-    assert_eq!(
-        boundaries[1]["preserves"].as_array().expect("plus-one preservation law").iter().map(|owner| owner.as_str().expect("preserved owner")).collect::<Vec<_>>(),
-        ["fuel", "checkpoint", "phase", "ready", "readyIdentity", "colorOwner", "statusLabelOwner", "transientOwners"]
-    );
-    assert_eq!((maximum_bytes, maximum_plus_one_bytes), (FILL_PREVIEW_JSON_MAX_BYTES, FILL_PREVIEW_JSON_MAX_BYTES + 1));
-    let (mut maximum, color, english, _, _, _) = fixture_preview();
-    maximum.stage.clear();
-    let fixed_bytes = oracle_json_unfenced(&maximum, &color, &english).len();
-    maximum.stage = "x".repeat(maximum_bytes - fixed_bytes);
-    let maximum_oracle = oracle_json_unfenced(&maximum, &color, &english);
-    assert_eq!(maximum_oracle.len(), maximum_bytes);
-    assert_eq!(fill_preview_json_wire_bytes(&maximum, &color, &english), Ok(maximum_bytes));
-    assert_preview_ready_matches_oracle(maximum, &color, &english);
-
-    let (preview, color, english, _, _, _) = fixture_preview();
-    let mut retained = empty_builder();
-    retained.preview = preview;
-    assert_eq!(drive_preview_json(&mut retained, &color, &english), FillPreviewJsonStep::Ready);
-    retained.preview.stage.clear();
-    let fixed_bytes = oracle_json_unfenced(&retained.preview, &color, &english).len();
-    retained.preview.stage = "x".repeat(maximum_plus_one_bytes - fixed_bytes);
-    assert!(oracle_json_scalar_admits(&retained.preview, &color, &english));
-    assert_eq!(oracle_json_unfenced(&retained.preview, &color, &english).len(), maximum_plus_one_bytes);
-    assert!(!oracle_json_admits(&retained.preview, &color, &english));
-    assert_eq!(fill_preview_json_wire_bytes(&retained.preview, &color, &english), Err(()));
-    assert_preflight_rejection_preserves_ready(&mut retained, &color, &english);
-}
-
-#[test]
-fn retained_preview_json_all_native_string_sources_enforce_wire_cap_before_mutation() {
-    type Setter = fn(&mut FillBuildPreview, String);
-    let setters: [(&str, Setter); 14] = [
-        ("stage", |preview, value| preview.stage = value),
-        ("targetVortexFullId", |preview, value| preview.target_vortex_full_id = Some(value)),
-        ("candidateObjectKindId", |preview, value| preview.candidate_object_kind_id = Some(value)),
-        ("candidateGhost.targetVortexFullId", |preview, value| preview.candidate_ghost.as_mut().expect("fixture ghost").target_vortex_full_id = value),
-        ("candidateGhost.objectKindId", |preview, value| preview.candidate_ghost.as_mut().expect("fixture ghost").object_kind_id = value),
-        ("candidateGhost.meshUrl", |preview, value| preview.candidate_ghost.as_mut().expect("fixture ghost").mesh_url = value),
-        ("currentPairObjectId", |preview, value| preview.current_pair_object_id = Some(value)),
-        ("candidatePage[0]", |preview, value| preview.candidate_page[0] = Some(value)),
-        ("rejectionReason", |preview, value| preview.rejection_reason = Some(value)),
-        ("stallReason", |preview, value| preview.stall_reason = Some(value)),
-        ("tried[0].reason", |preview, value| preview.tried[0].as_mut().expect("fixture ring entry").reason = Some(value)),
-        ("tried[0].ghost.targetVortexFullId", |preview, value| preview.tried[0].as_mut().expect("fixture ring entry").ghost.target_vortex_full_id = value),
-        ("tried[0].ghost.objectKindId", |preview, value| preview.tried[0].as_mut().expect("fixture ring entry").ghost.object_kind_id = value),
-        ("tried[0].ghost.meshUrl", |preview, value| preview.tried[0].as_mut().expect("fixture ring entry").ghost.mesh_url = value),
-    ];
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("language-neutral law fixture");
-    let mut declared = law["boundaryLaws"]["aggregateSourceStrings"].as_array().expect("aggregate source strings").iter().map(|field| field.as_str().expect("source string")).collect::<Vec<_>>();
-    let mut covered = setters.iter().map(|(field, _)| *field).chain(["color", "statusLabel"]).collect::<Vec<_>>();
-    declared.sort_unstable();
-    covered.sort_unstable();
-    assert_eq!(covered, declared);
-
-    for (_, set) in setters {
-        let (preview, color, english, _, _, _) = fixture_preview();
-        let mut retained = empty_builder();
-        retained.preview = preview;
-        assert_eq!(drive_preview_json(&mut retained, &color, &english), FillPreviewJsonStep::Ready);
-        set(&mut retained.preview, "x".repeat(FILL_PREVIEW_JSON_MAX_BYTES + 1));
-        assert!(oracle_json_scalar_admits(&retained.preview, &color, &english));
-        assert!(oracle_json_unfenced(&retained.preview, &color, &english).len() > FILL_PREVIEW_JSON_MAX_BYTES);
-        assert_eq!(fill_preview_json_wire_bytes(&retained.preview, &color, &english), Err(()));
-        assert_preflight_rejection_preserves_ready(&mut retained, &color, &english);
-    }
-}
-
-#[test]
-fn retained_preview_json_rejects_malformed_and_omitted_schema_fields() {
-    assert!(serde_json::from_str::<FillBuildPreview>(r#"{"operation":1}"#).is_err());
-    let mut nine_items = serde_json::to_value(fixture_preview().0).expect("fixture value");
-    nine_items["candidatePage"].as_array_mut().expect("candidate page").push(serde_json::Value::Null);
-    assert!(serde_json::from_value::<FillBuildPreview>(nine_items).is_err());
-    let mut malformed = empty_builder();
-    malformed.preview.last_sample = Some([f32::NAN, 0.0, 0.0]);
-    assert_eq!(drive_preview_json(&mut malformed, "#fff", "Fill progress"), FillPreviewJsonStep::Rejected);
-    assert!(malformed.preview_json.ready().is_none());
-    let mut missing_locale = empty_builder();
-    assert_eq!(drive_preview_json(&mut missing_locale, "#fff", ""), FillPreviewJsonStep::Rejected);
-    let mut oversized_locale = empty_builder();
-    assert_eq!(drive_preview_json(&mut oversized_locale, "#fff", &"x".repeat(FILL_PREVIEW_JSON_MAX_STATUS_LABEL_BYTES + 1)), FillPreviewJsonStep::Rejected);
-}
-
-#[test]
-fn retained_preview_json_zero_fuel_deadline_and_stale_generation_make_no_publication() {
-    let mut builder = empty_builder();
-    let mut fuel = 0;
-    let before = builder.preview_json.checkpoint();
-    assert!(matches!(builder.preview_json_step("#fff", "Fill progress", &mut fuel, false, false), FillPreviewJsonStep::Pending { .. }));
-    assert_eq!(builder.preview_json.checkpoint(), before);
-    fuel = 1;
-    assert!(matches!(builder.preview_json_step("#fff", "Fill progress", &mut fuel, false, true), FillPreviewJsonStep::Pending { .. }));
-    assert_eq!(builder.preview_json.checkpoint(), before);
-    for _ in 0..32 {
-        fuel = 1;
-        let _ = builder.preview_json_step("#fff", "Fill progress", &mut fuel, false, false);
-    }
-    assert!(matches!(builder.preview_json.phase, FillPreviewJsonPhase::Census | FillPreviewJsonPhase::Reserve | FillPreviewJsonPhase::Encode));
-    builder.preview.sequence += 1;
-    fuel = 1;
-    let _ = builder.preview_json_step("#fff", "Fill progress", &mut fuel, false, false);
-    assert!(builder.preview_json.ready().is_none());
-    assert_eq!(builder.preview_json.identity.map(|identity| identity.sequence), Some(builder.preview.sequence));
-}
-
-#[test]
-fn retained_preview_json_cancellation_at_each_transfer_preserves_last_valid_page() {
-    for target in [FillPreviewJsonPhase::Census, FillPreviewJsonPhase::Reserve, FillPreviewJsonPhase::Encode, FillPreviewJsonPhase::Validate] {
-        let mut builder = empty_builder();
-        for _ in 0..PREVIEW_JSON_GRANT_CEILING {
-            if builder.preview_json.phase == target {
-                break;
-            }
-            let mut fuel = 1;
-            let _ = builder.preview_json_step("#fff", "Fill progress", &mut fuel, false, false);
-        }
-        let mut fuel = 1;
-        assert_eq!(builder.preview_json_step("#fff", "Fill progress", &mut fuel, true, false), FillPreviewJsonStep::Cancelled);
-        assert!(builder.preview_json.ready().is_none());
-    }
-    let mut builder = empty_builder();
-    assert_eq!(drive_preview_json(&mut builder, "#fff", "Fill progress"), FillPreviewJsonStep::Ready);
-    let ready = builder.preview_json_ready().expect("ready page").to_string();
-    builder.preview.sequence += 1;
-    let mut fuel = 1;
-    assert_eq!(builder.preview_json_step("#fff", "Fill progress", &mut fuel, true, false), FillPreviewJsonStep::Cancelled);
-    assert_eq!(builder.preview_json_ready(), Some(ready.as_str()));
-}
-
-#[test]
-fn retained_preview_json_reuses_exact_ready_page_during_locale_invalidated_encode_and_closes_idempotently() {
-    let mut builder = empty_builder();
-    assert_eq!(drive_preview_json(&mut builder, "#fff", "Fill progress"), FillPreviewJsonStep::Ready);
-    let old_pointer = builder.preview_json.ready.as_ref().expect("ready").as_ptr();
-    let old_page = builder.preview_json_ready().expect("English page").to_string();
-    assert!(old_page.contains("\"statusLabel\":\"Fill progress\""));
-    let old_identity = builder.preview_json_ready_identity().expect("identity");
-    for _ in 0..32 {
-        let mut fuel = 1;
-        assert!(matches!(builder.preview_json_step("#fff", "Füllfortschritt", &mut fuel, false, false), FillPreviewJsonStep::Pending { .. }));
-        assert_eq!(builder.preview_json.ready.as_ref().expect("last valid page retained").as_ptr(), old_pointer);
-        assert_eq!(builder.preview_json_ready(), Some(old_page.as_str()));
-        assert_eq!(builder.preview_json_ready_identity(), Some(old_identity));
-    }
-    assert_eq!(drive_preview_json(&mut builder, "#fff", "Füllfortschritt"), FillPreviewJsonStep::Ready);
-    assert!(builder.preview_json_ready().is_some_and(|page| page.contains("\"statusLabel\":\"Füllfortschritt\"")));
-    assert_eq!(builder.preview_json_ready_identity(), Some(old_identity), "locale invalidates bytes without inventing a fill generation");
-    assert!(!builder.preview_json.close_step(), "interrupted close releases one owner");
-    for _ in 0..8 {
-        if builder.preview_json.close_step() {
-            break;
-        }
-    }
-    assert!(builder.preview_json.close_step());
-    assert!(builder.preview_json.close_step(), "terminal close is idempotent");
-    assert!(builder.preview_json.terminal_owners_empty());
-}
-
-#[test]
-fn retained_owner_census_advances_one_fixed_unit_and_rejects_collection_cap_plus_one() {
-    let mut builder = empty_builder();
-    let mut tags = Vec::with_capacity(FILL_BUILDER_NESTED_ITEMS);
-    tags.extend((0..FILL_BUILDER_NESTED_ITEMS).map(|index| format!("tag-{index}")));
-    let _ = builder.catalogs.objects.try_push(ObjectKind {
-        id: "bounded-kind".into(),
-        representations: vec![ObjectKindRepresentation { id: "r".into(), name: "n".into(), url: "u".into(), mime: "m".into(), tags, lod: Some("l".into()), description: "d".into() }],
-        scale: Some(dsl::DslValue::Array(vec![dsl::DslValue::String("nested".into())])),
-        vortices: Vec::new(),
-    });
-    let mut cursor = FillBuilderOwnerCensusCursor::default();
-    let mut grants = 0;
-    loop {
-        let before = cursor.credit;
-        match cursor.step(&builder, usize::MAX, usize::MAX) {
-            FillBuilderOwnerCensusStep::Pending => {
-                assert!(cursor.credit.items.saturating_sub(before.items) <= 7, "one grant visits one entry or fixed schema unit");
-                assert!(cursor.credit.bytes.saturating_sub(before.bytes) <= DOCUMENT_OWNER_PAGE_BYTES, "one grant accounts at most one exact page");
-                grants += 1;
-            }
-            FillBuilderOwnerCensusStep::Complete(_) => break,
-            FillBuilderOwnerCensusStep::Rejected => panic!("fixed boundary must admit"),
-        }
-    }
-    assert!(grants > FILL_BUILDER_NESTED_ITEMS, "max-cardinality tags and nested DSL cannot be scanned in one admission grant");
-
-    let mut rejected = empty_builder();
-    let mut tags = Vec::with_capacity(FILL_BUILDER_NESTED_ITEMS + 1);
-    tags.extend((0..=FILL_BUILDER_NESTED_ITEMS).map(|index| format!("tag-{index}")));
-    let _ = rejected.catalogs.objects.try_push(ObjectKind {
-        id: "rejected-kind".into(),
-        representations: vec![ObjectKindRepresentation { id: String::new(), name: String::new(), url: String::new(), mime: String::new(), tags, lod: None, description: String::new() }],
-        scale: None,
-        vortices: Vec::new(),
-    });
-    let mut cursor = FillBuilderOwnerCensusCursor::default();
-    assert!((0..256).any(|_| matches!(cursor.step(&rejected, usize::MAX, usize::MAX), FillBuilderOwnerCensusStep::Rejected)), "collection cap + 1 rejects before admission credit publication");
-}
-
 #[test]
 fn constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently() {
     #[derive(Clone, Copy)]
@@ -717,7 +56,7 @@ fn constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently() {
         ObjectWeights,
         VortexWeights,
     }
-    let object = |index| FixtureObject { id: format!("object-{index:02}"), object_kind: None, anchor: Default::default(), mesh_url: None, origin: [0.0; 3], orientation: None, scale: None, vortices: Vec::new(), reveal_index: None };
+    let object = |index| FixtureObject { id: format!("object-{index:02}"), object_kind: None, anchor: Default::default(), mesh_url: None, origin: [0.0; 3], orientation: None, scale: None, vortices: Vec::new() };
     let body = collision_body_from_buffers(&[0.0, 0.0, 0.0, 4.0, 0.0, 0.0, 0.0, 4.0, 0.0], &[0, 1, 2]).expect("body");
     let roots = |branch: HostileRoot, count| {
         let mut scene =
@@ -803,12 +142,10 @@ fn constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently() {
         );
         let mut preview_sequence = 0;
         let mut context = test_context(&rejected, root_cancel_token(), &mut preview_sequence);
-        assert!(matches!(rejected.step(&mut context), StepOutcome::PreviewReady(_)));
-        assert_eq!(rejected.preview.rejection_reason.as_deref(), Some(format!("preparation-capacity:{expected_branch}:{cap}").as_str()));
-        assert_eq!(rejected.preview.stall_reason.as_deref(), Some(FILL_STALL_DOCUMENT_CAPACITY));
-        assert!(rejected.preview.candidate_ghost.is_none());
-        assert!(matches!(rejected.step(&mut context), StepOutcome::Complete(_)), "a full document page stalls visibly instead of faulting");
-        assert!(rejected.stalled && rejected.stage == FillJobStage::Complete);
+        let StepOutcome::Fault(fault) = rejected.step(&mut context) else { panic!("{expected_branch} cap + 1 faults the planner before it installs anything") };
+        assert_eq!(fault.detail.single_page(), Some(format!("preparation-capacity:{expected_branch}:{cap}").as_bytes()));
+        assert!(faulted(StepOutcome::Fault(fault)));
+        assert!(faulted(rejected.step(&mut context)), "the refusal is permanent: every later step faults again");
         assert_eq!(
             (
                 rejected.base.objects.len(),
@@ -828,35 +165,6 @@ fn constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently() {
 }
 
 #[test]
-fn capacity_refusal_publishes_generation_qualified_no_ghost_diagnostic_before_stalling() {
-    let objects = (0..=DOCUMENT_OBJECT_SLOTS)
-        .map(|index| FixtureObject { id: format!("rejected-{index:04}"), object_kind: None, anchor: Default::default(), mesh_url: None, origin: [0.0; 3], orientation: None, scale: None, vortices: Vec::new(), reveal_index: None })
-        .collect();
-    let scene = Arc::new(SceneConfig {
-        fixture: Fixture { objects, attractions: Vec::new(), target_volumes: Vec::new() },
-        kind_catalogs: Some(KindCatalogBundle::default()),
-        kind_compatibility: Vec::new(),
-        overlap_budget: 0.0,
-        seed: 37,
-        host_rules: BrushHostRules::default(),
-        weights: BrushKindWeights::default(),
-    });
-    let mut builder = FillBuilder::begin_preparation(FillPreparationRoots::new(scene, Arc::new(HashMap::new())), Operation::new(OperationId(37), RevisionId(9), Generation(11), 37), TEST_REQUESTED_COUNT);
-    builder.preview.registry_generation = 13;
-    let mut sequence = 0;
-    let mut context = test_context(&builder, root_cancel_token(), &mut sequence);
-    assert!(matches!(builder.step(&mut context), StepOutcome::PreviewReady(_)));
-    assert_eq!((builder.preview.operation, builder.preview.base_revision, builder.preview.registry_generation, builder.preview.generation), (37, 9, 13, 11));
-    assert_eq!(builder.preview.rejection_reason.as_deref(), Some(format!("preparation-capacity:fixture-objects:{DOCUMENT_OBJECT_SLOTS}").as_str()));
-    assert!(builder.preview.candidate_ghost.is_none());
-    assert_eq!(builder.preview.stall_reason.as_deref(), Some(FILL_STALL_DOCUMENT_CAPACITY));
-    assert_eq!(builder.preview.sequence, 0, "the refusal is published under the operation's own first preview sequence");
-    assert!(matches!(builder.step(&mut context), StepOutcome::Complete(_)));
-    drop(context);
-    assert_eq!(sequence, 1, "publishing the refusal consumed exactly one preview sequence, and the completion that follows consumes none");
-}
-
-#[test]
 fn stale_generation_stops_preparation_before_installing_any_entry() {
     let mut builder = empty_builder();
     let before = (builder.base.objects.len(), builder.placed.len(), builder.placed_lookup.len());
@@ -864,32 +172,6 @@ fn stale_generation_stops_preparation_before_installing_any_entry() {
     let mut context = StepContext::new(builder.operation.operation, Generation(builder.operation.generation.0 + 1), StepBudget::new(1, 1), root_cancel_token(), || Some(0), &mut sequence);
     assert!(faulted(builder.step(&mut context)));
     assert_eq!((builder.base.objects.len(), builder.placed.len(), builder.placed_lookup.len()), before);
-}
-
-#[test]
-fn retained_owner_census_credits_each_actual_fixed_slot_page_not_a_layout_heuristic() {
-    let builder = empty_builder();
-    let expected = [
-        builder.placed_lookup.backing_credit().expect("placed page").1,
-        builder.candidate_cache.backing_credit().expect("cache page").1,
-        builder.seed_object_ids.backing_credit().expect("seed page").1,
-        builder.weights.object_weights.backing_credit().expect("object-weight page").1,
-        builder.weights.vortex_weights.backing_credit().expect("vortex-weight page").1,
-        builder.meshes.backing_credit().expect("mesh page").1,
-        builder.blocked_vortex_ids.backing_credit().expect("blocked page").1,
-        builder.candidate_seen.backing_credit().expect("seen page").1,
-        builder.candidate_cross.backing_credit().expect("cross page").1,
-        builder.candidate_same.backing_credit().expect("same page").1,
-    ];
-    let mut cursor = FillBuilderOwnerCensusCursor::default();
-    assert_eq!(cursor.step(&builder, usize::MAX, usize::MAX), FillBuilderOwnerCensusStep::Pending);
-    for (page, expected_bytes) in expected.into_iter().enumerate() {
-        let before = cursor.credit;
-        assert_eq!(cursor.step(&builder, usize::MAX, usize::MAX), FillBuilderOwnerCensusStep::Pending);
-        assert_eq!(cursor.credit.items - before.items, 1, "fixed backing page {page} has one exact owner");
-        assert_eq!(cursor.credit.bytes - before.bytes, expected_bytes, "fixed backing credit equals the actual slot array allocation");
-        assert!(expected_bytes <= DOCUMENT_OWNER_PAGE_BYTES);
-    }
 }
 
 #[test]
@@ -1027,30 +309,6 @@ fn cancellation_is_observed_before_the_next_transition() {
 }
 
 #[test]
-fn preview_payload_is_typed_revisioned_and_bounded() {
-    let mut builder = empty_builder();
-    builder.operation = Operation::new(OperationId(41), RevisionId(7), Generation(3), 17);
-    builder.current_preview =
-        Some(BrushPreviewState { target_vortex_full_id: "host:v0".into(), object_kind_id: "candidate".into(), source_vortex_index: 2, mesh_url: "/candidate.glb".into(), origin: [1.0, 2.0, 3.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None });
-    builder.preview.candidate_ghost = builder.current_preview.clone();
-    builder.preview.candidate_page[0] = Some("a".into());
-    builder.preview.candidate_page[1] = Some("b".into());
-    builder.preview.current_pair_object_id = Some("a".into());
-    builder.preview.collision_count = 1;
-    builder.preview.rejection_reason = Some("solid-overlap".into());
-    builder.transition_count = 23;
-    builder.rejected_count = 4;
-    let mut sequence = 0;
-    let mut context = test_context(&builder, root_cancel_token(), &mut sequence);
-    let StepOutcome::PreviewReady(bytes) = builder.publish_preview(&mut context) else { panic!("preview") };
-    assert!(bytes.is_empty(), "the retained envelope observes the shared preview without serializing it");
-    assert_eq!((builder.preview.operation, builder.preview.base_revision, builder.preview.generation), (41, 7, 3));
-    assert_eq!(builder.preview.candidate_ghost.as_ref().map(|ghost| ghost.mesh_url.as_str()), Some("/candidate.glb"));
-    assert_eq!(builder.preview.collision_count, 1);
-    assert_eq!((builder.preview.search_count, builder.preview.rejected_count), (23, 4));
-}
-
-#[test]
 fn stale_generation_faults_without_progress() {
     fn now() -> Option<u64> {
         Some(0)
@@ -1107,7 +365,6 @@ fn adversarial_broad_phase_fill_is_end_to_end_resumable_below_eight_ms() {
         orientation: Some([0.0, 0.0, 0.0, 1.0]),
         scale: None,
         vortices: vec![VortexProps { id: "v0".into(), vortex_kind: Some("port-a".into()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) }],
-        reveal_index: None,
     };
     let mut objects = vec![host];
     objects.extend((0..30).map(|index| FixtureObject {
@@ -1119,7 +376,6 @@ fn adversarial_broad_phase_fill_is_end_to_end_resumable_below_eight_ms() {
         orientation: Some([0.0, 0.0, 0.0, 1.0]),
         scale: None,
         vortices: Vec::new(),
-        reveal_index: None,
     }));
     let positions = [-4.0, -4.0, 0.0, 4.0, -4.0, 0.0, 0.0, 4.0, 0.0, 0.0, 0.0, 8.0];
     let indices = [0, 1, 2, 0, 1, 3, 1, 2, 3, 2, 0, 3];
@@ -1146,7 +402,7 @@ fn adversarial_broad_phase_fill_is_end_to_end_resumable_below_eight_ms() {
         let step_elapsed = step_started.elapsed();
         max_step = max_step.max(step_elapsed);
         assert!(step_elapsed < Duration::from_millis(8), "stage {:?} reached the 8ms ceiling", builder.stage);
-        if first_candidate.is_none() && builder.preview.candidate_ghost.is_some() {
+        if first_candidate.is_none() && builder.current_preview.is_some() {
             first_candidate = Some(started.elapsed());
         }
         if outcome.is_terminal() {
@@ -1160,8 +416,8 @@ fn adversarial_broad_phase_fill_is_end_to_end_resumable_below_eight_ms() {
 
 #[test]
 fn document_capacities_match_the_language_neutral_capacity_law() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("language-neutral law fixture");
-    let capacities = &law["documentCapacities"];
+    let law: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("language-neutral fill run law");
+    let capacities = &law["laws"]["documentCapacities"];
     let declared = |field: &str| capacities[field].as_u64().unwrap_or_else(|| panic!("{field} capacity")) as usize;
     assert_eq!([declared("bookkeepingSlots"), declared("bookkeepingPageBytes"), declared("documentPageBytes")], [FIXED_OWNER_SLOTS, FIXED_OWNER_PAGE_BYTES, DOCUMENT_OWNER_PAGE_BYTES]);
     assert_eq!(
@@ -1174,24 +430,6 @@ fn document_capacities_match_the_language_neutral_capacity_law() {
     assert!(nakagin("vortices") <= DOCUMENT_VORTEX_SLOTS && nakagin("objects") <= nakagin("vortices"), "the measured vortices-per-object ratio backs the vortex capacity");
     assert!(nakagin("objectKinds").max(nakagin("vortexKinds")).max(nakagin("compatibilityRows")) <= DOCUMENT_KIND_SLOTS);
     assert!(DOCUMENT_CELL_SLOTS > FIXED_OWNER_SLOTS && DOCUMENT_OBJECT_SLOTS > FIXED_OWNER_SLOTS, "document capacities are never the bookkeeping batch");
-}
-
-#[test]
-fn document_scale_fixed_pages_are_admitted_by_the_fill_envelope_reservation() {
-    let builder = empty_builder();
-    for (page, (_, bytes, _)) in builder.fixed_backing_witness_for_test().into_iter().enumerate() {
-        assert!(bytes <= DOCUMENT_OWNER_PAGE_BYTES, "document page {page} claims {bytes} bytes beyond the declared page ceiling");
-    }
-    let mut cursor = FillBuilderOwnerCensusCursor::default();
-    let credit = loop {
-        match cursor.step(&builder, FILL_ENVELOPE_MAX_ITEMS, FILL_ENVELOPE_MAX_BYTES) {
-            FillBuilderOwnerCensusStep::Pending => {}
-            FillBuilderOwnerCensusStep::Complete(credit) => break credit,
-            FillBuilderOwnerCensusStep::Rejected => panic!("a document-scale builder must fit one fill envelope reservation"),
-        }
-    };
-    assert!(credit.items <= FILL_ENVELOPE_MAX_ITEMS && credit.bytes <= FILL_ENVELOPE_MAX_BYTES);
-    assert!(credit.bytes > 10 * FIXED_OWNER_PAGE_BYTES, "document pages are actually credited, not silently absent: {credit:?}");
 }
 
 const NAKAGIN_OBJECTS: usize = 180;
@@ -1230,7 +468,6 @@ fn nakagin_scale_roots() -> FillPreparationRoots {
                 VortexProps { id: "v0".into(), vortex_kind: Some("port-00".into()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) },
                 VortexProps { id: "v1".into(), vortex_kind: Some("port-00".into()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, 1.0]) },
             ],
-            reveal_index: None,
         })
         .collect();
     let attraction = |index: usize, vortex: &str| AttractionProps {
@@ -1267,7 +504,7 @@ fn nakagin_scale_roots() -> FillPreparationRoots {
 /// fault, a capacity refusal, or a terminal outcome that placed nothing.
 fn drive_nakagin_scale_fill() -> FillBuilder {
     let mut builder = FillBuilder::begin_preparation(nakagin_scale_roots(), Operation::new(OperationId(43), RevisionId(1), Generation(1), 43), TEST_REQUESTED_COUNT);
-    assert_eq!(builder.preview.rejection_reason, None, "a Nakagin-scale document must not be refused before preparation starts");
+    assert!(builder.preparation_capacity_refusal.is_none(), "a Nakagin-scale document must not be refused before preparation starts");
     let mut sequence = 0;
     let mut turns = 0;
     while builder.sequence.is_empty() {
@@ -1275,9 +512,8 @@ fn drive_nakagin_scale_fill() -> FillBuilder {
         let outcome = builder.step(&mut context);
         turns += 1;
         let terminal = outcome.is_terminal();
-        assert!(!faulted(outcome), "Nakagin-scale fill faulted at stage {:?} after {turns} turns: {:?}", builder.stage, builder.preview.rejection_reason);
-        assert!(builder.preview.rejection_reason.as_deref().is_none_or(|reason| !reason.starts_with("preparation-capacity")), "document scale must not publish a capacity refusal: {:?}", builder.preview.rejection_reason);
-        assert!(!terminal || !builder.sequence.is_empty(), "Nakagin-scale fill ended after {turns} turns without placing an object: {:?}", builder.preview.rejection_reason);
+        assert!(!faulted(outcome), "Nakagin-scale fill faulted at stage {:?} after {turns} turns: {:?}", builder.stage, builder.last_rejection);
+        assert!(!terminal || !builder.sequence.is_empty(), "Nakagin-scale fill ended after {turns} turns without placing an object: {:?}", builder.last_rejection);
         assert!(turns < 400_000, "Nakagin-scale fill did not place an object in bounded turns");
     }
     builder
@@ -1310,7 +546,7 @@ fn nakagin_scale_fill_places_an_object_under_a_fragmented_guest_reservation_ceil
     let builder = drive_nakagin_scale_fill();
     assert_eq!((builder.base.objects.len(), builder.base.attractions.len()), (NAKAGIN_OBJECTS, 2 * NAKAGIN_OBJECTS));
     assert_eq!(builder.appended_objects.len(), 1, "the fragmented guest still places its first object");
-    assert_eq!(builder.preview.rejection_reason, None);
+    assert!(builder.preparation_capacity_refusal.is_none());
 }
 
 /// 🔁️ Drives a planner until it settles — either it reached what was asked for or it named a stall.
@@ -1322,7 +558,7 @@ fn drive_until_settled(builder: &mut FillBuilder, turns: usize) {
         }
         let mut context = test_context(builder, root_cancel_token(), &mut sequence);
         let outcome = builder.step(&mut context);
-        assert!(!faulted(outcome), "a settled planner never faults: {:?} / {:?}", builder.preview.rejection_reason, builder.preview.stall_reason);
+        assert!(!faulted(outcome), "a settled planner never faults: {:?} / stalled {}", builder.last_rejection, builder.stalled);
     }
     panic!("planner did not settle in {turns} turns at stage {:?} with {} placements", builder.stage, builder.sequence.len());
 }
@@ -1347,7 +583,6 @@ fn raising_the_requested_count_continues_the_plan_as_an_exact_prefix() {
     let mut raised = nakagin_plan(SHORT, 4_000_000);
     assert_eq!(raised.sequence.len(), SHORT, "the short plan stops exactly at what was asked for");
     assert_eq!(raised.requested_count(), SHORT);
-    assert_eq!(raised.preview.requested_count, SHORT);
     let short_identity = plan_identity(&raised);
     let short_rng = raised.rng_state;
 
@@ -1375,10 +610,9 @@ fn lowering_the_requested_count_discards_the_planned_tail_and_raising_continues(
     let owners_before = builder.placed_lookup.len();
 
     builder.set_requested_count(LOWERED);
-    assert_eq!((builder.requested_count(), builder.stage), (LOWERED, FillJobStage::DiscardTail));
+    assert_eq!((builder.requested_count(), builder.stage), (LOWERED, FillJobStage::RetractTail));
     drive_until_settled(&mut builder, 4_000_000);
     assert_eq!((builder.sequence.len(), builder.appended_objects.len(), builder.appended_attractions.len()), (LOWERED, LOWERED, LOWERED));
-    assert_eq!(builder.preview.accepted_count, LOWERED);
     assert_eq!(builder.placed_lookup.len(), owners_before - (PLANNED - LOWERED), "every discarded placement withdrew its own spatial owner");
     assert_eq!(builder.stage, FillJobStage::Complete, "a plan that already holds what was asked for stops there");
 
@@ -1387,76 +621,8 @@ fn lowering_the_requested_count_discards_the_planned_tail_and_raising_continues(
     assert_eq!(builder.sequence.len(), RAISED, "raising after a discard keeps planning instead of stalling");
 }
 
-/// ⚖️ LAW: every candidate the planner builds a pose for reaches the tried ring, and the verdict it
-/// carries is the one the pipeline actually reached — a collision never reads as a plain rejection,
-/// and an accepted placement never stays "testing".
-#[test]
-fn every_tried_candidate_reaches_the_ring_with_its_own_verdict() {
-    let mut builder = drive_nakagin_scale_fill();
-    let mut sequence = 0;
-    for _ in 0..200_000 {
-        if builder.tested_count as usize > FILL_TRIED_RING && builder.sequence.len() >= 2 {
-            break;
-        }
-        if builder.stage == FillJobStage::Complete {
-            break;
-        }
-        let mut context = test_context(&builder, root_cancel_token(), &mut sequence);
-        let outcome = builder.step(&mut context);
-        assert!(!faulted(outcome));
-    }
-    let entries: Vec<&FillTriedCandidate> = builder.preview.tried.iter().flatten().collect();
-    assert_eq!(entries.len(), (builder.tested_count as usize).min(FILL_TRIED_RING), "the ring holds every constructed candidate up to its own width");
-    assert!(builder.tested_count as usize > FILL_TRIED_RING, "this run constructed more candidates than the ring is wide, so the ring actually wrapped");
-    assert!(entries.iter().all(|entry| entry.sequence > 0 && entry.sequence <= builder.preview.sequence), "each entry carries the preview sequence it was published under");
-    for entry in &entries {
-        match entry.verdict {
-            FillCandidateVerdict::Collision => assert_eq!(entry.reason.as_deref(), Some("solid-overlap"), "a collision names the overlap that caused it"),
-            FillCandidateVerdict::Rejected => assert!(entry.reason.as_deref().is_some_and(|reason| reason != "solid-overlap"), "a plain rejection names its own reason"),
-            FillCandidateVerdict::Free | FillCandidateVerdict::Accepted => assert_eq!(entry.reason, None, "a clean candidate carries no refusal reason"),
-            FillCandidateVerdict::Testing => assert_eq!(Some(entry.ghost.clone()), builder.preview.candidate_ghost, "only the live ghost is still under test"),
-        }
-        assert!(!entry.ghost.mesh_url.is_empty() && !entry.ghost.target_vortex_full_id.is_empty());
-    }
-    let accepted = entries.iter().filter(|entry| entry.verdict == FillCandidateVerdict::Accepted).count();
-    assert!(accepted > 0, "a run that placed objects shows them accepted in the ring");
-    assert!(accepted <= builder.sequence.len());
-    assert!(builder.collisions <= builder.rejected_count, "every collision is also counted as a refusal");
-}
-
-/// ⚖️ LAW: the tried ring is exactly [`FILL_TRIED_RING`] wide on the wire, the verdict vocabulary is
-/// the declared one, and an arbitrarily large ask still encodes — the count is unbounded now.
-#[test]
-fn retained_preview_json_tried_ring_and_unbounded_request_match_the_language_neutral_law() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("language-neutral law fixture");
-    let ring = law["boundaryLaws"]["triedRing"].as_array().expect("tried ring laws");
-    assert_eq!((ring[0]["items"].as_u64(), ring[0]["admitted"].as_bool()), (Some(FILL_TRIED_RING as u64), Some(true)));
-    assert_eq!((ring[1]["items"].as_u64(), ring[1]["admitted"].as_bool()), (Some(FILL_TRIED_RING as u64 + 1), Some(false)));
-    let mut oversized = serde_json::to_value(fixture_preview().0).expect("fixture value");
-    oversized["tried"].as_array_mut().expect("tried ring").push(serde_json::Value::Null);
-    assert!(serde_json::from_value::<FillBuildPreview>(oversized).is_err(), "a thirteenth ring slot is refused by the schema itself");
-
-    let (preview, color, english, _, _, _) = fixture_preview();
-    assert_eq!(preview.tried.iter().flatten().count(), FILL_TRIED_RING, "the law fixture publishes a full ring");
-    let declared: Vec<&str> = law["boundaryLaws"]["verdicts"].as_array().expect("verdict laws").iter().map(|value| value.as_str().expect("verdict")).collect();
-    for verdict in [FillCandidateVerdict::Testing, FillCandidateVerdict::Free, FillCandidateVerdict::Collision, FillCandidateVerdict::Rejected, FillCandidateVerdict::Accepted] {
-        assert!(declared.contains(&verdict.wire()));
-        let mut owned = preview.clone();
-        owned.verdict = verdict;
-        assert_preview_ready_matches_oracle(owned, &color, &english);
-    }
-
-    for boundary in law["boundaryLaws"]["requestedCount"].as_array().expect("requested count laws") {
-        let requested = boundary["value"].as_u64().expect("requested count");
-        assert_eq!(boundary["admitted"].as_bool(), Some(true), "no requested count is refused any more");
-        let Ok(requested) = usize::try_from(requested) else { continue };
-        let mut owned = preview.clone();
-        owned.requested_count = requested;
-        assert_preview_ready_matches_oracle(owned, &color, &english);
-    }
-}
-
 //#region ⏯️FillRunJob
+use crate::standards::v1::subsets::any::schema::mutations::text::Puzzle3dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
 use semio_framework_tool_run::{ToolRunId, ToolRunTraceCursor, ToolRunTraceStore, TOOL_RUN_TRACE_PAGE_BYTES_MAX};
 
@@ -1495,7 +661,7 @@ fn example_fill_roots(document: &str, seed: u32) -> (FillPreparationRoots, Vec<S
 }
 
 fn fill_run_job(roots: FillPreparationRoots, lane: Vec<String>, seed: u64, requested: usize) -> FillRunJob {
-    FillRunJob::new(FillBuilder::begin_preparation(roots, Operation::new(OperationId(71), RevisionId(1), Generation(1), seed), requested), fill_run_identity(), lane)
+    FillRunJob::new(FillBuilder::begin_preparation(roots, Operation::new(OperationId(71), RevisionId(1), Generation(1), seed), requested), fill_run_identity(), lane, [0; 32])
 }
 
 fn close_payload(mut payload: RetainedJobPayload) {
@@ -1715,37 +881,74 @@ fn parry_overlap(a: &parry3d::shape::ConvexPolyhedron, b: &parry3d::shape::Conve
     (box_volume * inside as f64 / (cells * cells * cells) as f64, box_volume)
 }
 
-/// ⚖️ ORACLE (`parry3d`): every candidate the run marked `danger` (solid overlap) or `success` (fits) is
-/// recomputed against every body placed before it — the document's own bodies plus the run's earlier
-/// placements, the docking host excluded — as exact convex hulls whose pairwise overlap volume
-/// `parry3d` measures by point containment. The planner collides when one pair overlaps beyond the
-/// scene's overlap budget, estimated from `COLLISION_SAMPLES` samples of the pair's bounding-box
-/// intersection; a verdict is decisive when the true overlap is at least twice (collision) or at most
-/// half (fit) the budget and the sample estimate cannot plausibly land across it, or when parry
-/// separates the hulls outright. Every decisive verdict must agree.
-#[test]
-fn fill_run_job_collision_verdicts_agree_with_the_parry3d_oracle() {
+/// 🧥️ The mesh identity every second body of an own-mesh document variant carries instead of its kind's.
+const FILL_RUN_OWN_MESH_URL: &str = "/own-mesh/body.glb";
+
+/// 🧥️ A shipped example document in which every second body carries its own mesh `FILL_RUN_OWN_MESH_URL`, `scale`
+/// times the box its kind renders; answers the roots, the mesh lane and each mesh identity's raw positions.
+fn own_mesh_fill_roots(document: &str, seed: u32, scale: f32) -> (FillPreparationRoots, Vec<String>, HashMap<String, Vec<f32>>) {
+    let (roots, mut lane, positions) = example_fill_roots(document, seed);
+    let mut scene = (*roots.scene).clone();
+    for object in scene.fixture.objects.iter_mut().step_by(2) {
+        object.mesh_url = Some(FILL_RUN_OWN_MESH_URL.into());
+    }
+    let own: Vec<f32> = positions.iter().map(|value| value * scale).collect();
+    let fallback = semio_framework_plugin::mesh_from_kind(crate::editor::puzzle3d::PUZZLE3D_FALLBACK_MESH_KIND);
+    let mut meshes = (*roots.meshes).clone();
+    meshes.insert(FILL_RUN_OWN_MESH_URL.into(), collision_body_from_buffers(&own, &fallback.indices).expect("own mesh body"));
+    lane.push(FILL_RUN_OWN_MESH_URL.into());
+    lane.sort();
+    lane.dedup();
+    let mut by_url: HashMap<String, Vec<f32>> = lane.iter().map(|url| (url.clone(), positions.clone())).collect();
+    by_url.insert(FILL_RUN_OWN_MESH_URL.into(), own);
+    (FillPreparationRoots::new(Arc::new(scene), Arc::new(meshes)), lane, by_url)
+}
+
+/// ⚖️ What one oracle comparison decided.
+#[derive(Default)]
+struct FillRunOracleTally {
+    decisive: usize,
+    ambiguous: usize,
+    collisions: usize,
+    fits: usize,
+    disagreements: Vec<String>,
+}
+
+/// ⚖️ ORACLE (`parry3d`): every candidate the run marked `danger` (solid overlap) or `success` (fits) — the first
+/// `records` of them — is recomputed against every body placed before it — the document's own bodies plus the run's
+/// earlier placements, the docking host excluded — as exact convex hulls whose pairwise overlap volume `parry3d`
+/// measures by point containment. A document body's hull is built from the mesh it renders, its own `meshUrl` first,
+/// independently of the planner's resolution. The planner collides when one pair overlaps beyond the scene's overlap
+/// budget, estimated from `COLLISION_SAMPLES` samples of the pair's bounding-box intersection; a verdict is decisive
+/// when the true overlap is at least twice (collision) or at most half (fit) the budget and the sample estimate cannot
+/// plausibly land across it, or when parry separates the hulls outright.
+fn fill_run_parry3d_tally(roots: FillPreparationRoots, lane: Vec<String>, positions: &HashMap<String, Vec<f32>>, seed: u64, requested: usize, records: usize) -> FillRunOracleTally {
     const COLLISION_SAMPLES: f64 = 512.0;
     const DECISIVE_HITS: f64 = 16.0;
     const GRID_CELLS: usize = 16;
-    let fixture: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run fixture");
-    let oracle = &fixture["laws"]["parryOracle"];
-    let seed = oracle["seed"].as_u64().expect("seed");
-    let (roots, lane, positions) = example_fill_roots(oracle["document"].as_str().expect("document"), seed as u32);
-    let budget = roots.scene.overlap_budget;
-    let mut job = fill_run_job(roots, lane, seed, oracle["requested"].as_u64().expect("requested") as usize);
+    let scene = roots.scene.clone();
+    let budget = scene.overlap_budget;
+    let mut job = fill_run_job(roots, lane, seed, requested);
     let mut mirror = FillRunMirror::new();
     mirror.drive(&mut job, u64::MAX, 1_000_000);
     let placed = &job.builder().placed;
     let base = placed.len() - job.builder().sequence.len();
+    assert_eq!(base, scene.fixture.objects.len(), "every document body is a collision body");
+    let box_positions = &positions[crate::editor::puzzle3d::PUZZLE3D_FALLBACK_MESH_KIND];
+    let rendered = |url: Option<&str>| url.map(str::trim).filter(|url| !url.is_empty()).and_then(|url| positions.get(url)).unwrap_or(box_positions);
+    let bodies: Vec<(String, parry3d::shape::ConvexPolyhedron)> = scene
+        .fixture
+        .objects
+        .iter()
+        .map(|object| (object.id.clone(), parry_hull(&pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale), rendered(object.mesh_url.as_deref()))))
+        .chain(placed[base..].iter().map(|entry| (entry.object_id.clone(), parry_hull(&entry.world, rendered(Some(&entry.mesh_url))))))
+        .collect();
     let identity = parry3d::math::Isometry::identity();
-    let hulls: Vec<parry3d::shape::ConvexPolyhedron> = placed.iter().map(|entry| parry_hull(&entry.world, &positions)).collect();
-    let (mut decisive, mut ambiguous, mut collisions, mut fits) = (0usize, 0usize, 0usize, 0usize);
-    let mut disagreements = Vec::new();
-    for record in job.verdicts.iter().filter(|record| matches!(record.reason, FillRunReason::SolidOverlap | FillRunReason::Fits)) {
-        let candidate = parry_hull(&pose_isometry(record.origin, record.orientation, &None), &positions);
+    let mut tally = FillRunOracleTally::default();
+    for record in job.verdicts.iter().filter(|record| matches!(record.reason, FillRunReason::SolidOverlap | FillRunReason::Fits)).take(records) {
+        let candidate = parry_hull(&pose_isometry(record.origin, record.orientation, &None), rendered(Some(&record.mesh_url)));
         let (mut collides, mut uncertain) = (false, false);
-        for (_, other) in placed[..base + record.placements_before].iter().zip(&hulls).filter(|(entry, _)| Some(&entry.object_id) != record.host.as_ref()) {
+        for (_, other) in bodies[..base + record.placements_before].iter().filter(|(id, _)| Some(id) != record.host.as_ref()) {
             if !parry3d::bounding_volume::BoundingVolume::intersects(&parry3d::shape::Shape::compute_local_aabb(&candidate), &parry3d::shape::Shape::compute_local_aabb(other)) || parry3d::query::distance(&identity, &candidate, &identity, other).expect("convex distance") > 0.0 {
                 continue;
             }
@@ -1759,20 +962,48 @@ fn fill_run_job_collision_verdicts_agree_with_the_parry3d_oracle() {
             }
         }
         let ours = record.reason == FillRunReason::SolidOverlap;
-        collisions += usize::from(ours);
-        fits += usize::from(!ours);
+        tally.collisions += usize::from(ours);
+        tally.fits += usize::from(!ours);
         if !collides && uncertain {
-            ambiguous += 1;
+            tally.ambiguous += 1;
             continue;
         }
-        decisive += 1;
+        tally.decisive += 1;
         if ours != collides {
-            disagreements.push(format!("candidate {} ours={:?} parry collides={collides}", record.key, record.reason));
+            tally.disagreements.push(format!("candidate {} ours={:?} parry collides={collides}", record.key, record.reason));
         }
     }
-    assert!(disagreements.is_empty(), "{} of {decisive} decisive verdicts disagree with parry3d:\n{}", disagreements.len(), disagreements.join("\n"));
-    assert!(collisions > 0 && fits > 0, "the oracle run must decide both collisions ({collisions}) and fits ({fits})");
-    assert!(ambiguous * 10 <= decisive, "at most one in ten verdicts may fall inside the sampling band: {ambiguous} of {decisive}");
+    tally
+}
+
+/// ⚖️ ORACLE (`parry3d`, see [`fill_run_parry3d_tally`]): the shipped Concrete Forest law and the own-mesh variants
+/// of Concrete Forest and Nakagin, whose bodies render meshes that differ from their kinds'. Every decisive verdict
+/// of every document agrees, each document keeps at most one in ten verdicts inside the sampling band, and the
+/// documents together decide both collisions and fits.
+#[test]
+fn fill_run_job_collision_verdicts_agree_with_the_parry3d_oracle() {
+    let fixture: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run fixture");
+    let oracle = &fixture["laws"]["parryOracle"];
+    let (mut collisions, mut fits) = (0, 0);
+    let mut documents = vec![(oracle, false)];
+    documents.extend(oracle["ownMeshVariants"].as_array().expect("own mesh variants").iter().map(|variant| (variant, true)));
+    for (law, own_mesh) in documents {
+        let (document, seed, requested) = (law["document"].as_str().expect("document"), law["seed"].as_u64().expect("seed"), law["requested"].as_u64().expect("requested") as usize);
+        let (roots, lane, positions) = if own_mesh {
+            own_mesh_fill_roots(document, seed as u32, law["scale"].as_f64().expect("own mesh scale") as f32)
+        } else {
+            let (roots, lane, positions) = example_fill_roots(document, seed as u32);
+            let by_url = lane.iter().map(|url| (url.clone(), positions.clone())).collect();
+            (roots, lane, by_url)
+        };
+        let tally = fill_run_parry3d_tally(roots, lane, &positions, seed, requested, law["records"].as_u64().map_or(usize::MAX, |records| records as usize));
+        let name = format!("{document} seed {seed}{}", if own_mesh { " own-mesh" } else { "" });
+        assert!(tally.disagreements.is_empty(), "{name}: {} of {} decisive verdicts disagree with parry3d:\n{}", tally.disagreements.len(), tally.decisive, tally.disagreements.join("\n"));
+        assert!(tally.decisive > 0 && tally.ambiguous * 10 <= tally.decisive, "{name}: at most one in ten verdicts may fall inside the sampling band: {} of {}", tally.ambiguous, tally.decisive);
+        collisions += tally.collisions;
+        fits += tally.fits;
+    }
+    assert!(collisions > 0 && fits > 0, "the oracle documents must decide both collisions ({collisions}) and fits ({fits})");
 }
 
 /// ⚖️ LAW: a run of at least 5 000 tested candidates delivers every trace record — the ledger's resident
@@ -1878,12 +1109,26 @@ fn fill_run_replaying_clock() -> Option<u64> {
     })
 }
 
-/// ⏱️ LAW (red→green row 1, part a): on the shipped Nakagin document every `drive_step` of the fill run
-/// job under the interactive lane's wall slice stays below the artifact's 2 ms budget over at least 771
-/// turns. Like the artifact's other interactive laws it takes each turn's best of several cold runs;
-/// the first run slices by the real clock and the others replay its slice boundaries exactly.
+/// 🪞️ The tool run ledger's overlay append of one op (`📋️tool-run-contract.md` §2.7.2): decode, diff against the
+/// running overlay, apply — `None` for an op the overlay no longer admits.
+fn fold_overlay_op(overlay: &Puzzle3dPlaySnapshot, bytes: &[u8]) -> Option<Puzzle3dPlaySnapshot> {
+    use protocol::MutationDiff;
+    let op = <Puzzle3dMutation as protocol::OpBinary>::decode_op(bytes).ok()?;
+    let outcome = protocol::Mutation::<Puzzle3dPlaySnapshot>::diff(&op, overlay);
+    if !outcome.is_applicable(protocol::MergePolicy::default()) {
+        return None;
+    }
+    outcome.diff().apply(overlay).ok()
+}
+
+/// ⏱️ LAW (red→green row 1, the successor of the deleted `fillBuildTick` law): on the shipped Nakagin document,
+/// over at least 771 turns, (a) every `drive_step` of the fill run job under the interactive lane's wall slice
+/// and (b) every overlay append of one tick's `appendOps` — the O(k) fold the tool run ledger performs — stay
+/// below the artifact's unchanged 2 ms budget. Like the artifact's other interactive laws it takes each turn's
+/// best of several cold runs; the first run slices by the real clock and the others replay its slice
+/// boundaries exactly, so every run yields the same ticks in the same order.
 #[test]
-fn fill_run_job_step_stays_below_the_interactive_ceiling_for_nakagin() {
+fn fill_run_job_step_and_overlay_append_stay_below_the_interactive_ceiling_for_nakagin() {
     let fixture: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run fixture");
     let law = &fixture["laws"]["interactive"];
     let minimum_turns = law["turns"].as_u64().expect("turns") as usize;
@@ -1892,9 +1137,12 @@ fn fill_run_job_step_stays_below_the_interactive_ceiling_for_nakagin() {
     let seed = law["seed"].as_u64().expect("seed");
     let mut expiries: Vec<Option<u64>> = Vec::new();
     let mut best: Vec<Duration> = Vec::new();
+    let mut best_appends: Vec<Duration> = Vec::new();
     let mut counters = [0; 4];
     for run in 0..runs {
         let (roots, lane, _) = example_fill_roots(law["document"].as_str().expect("document"), seed as u32);
+        let mut overlay = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT).expect("example parses"))).into());
+        let mut append = 0;
         let mut job = fill_run_job(roots, lane, seed, law["requested"].as_u64().expect("requested") as usize);
         let operation = job.operation();
         let mut sequence = 0;
@@ -1919,13 +1167,32 @@ fn fill_run_job_step_stays_below_the_interactive_ceiling_for_nakagin() {
             } else {
                 best[turn] = best[turn].min(elapsed);
             }
-            if matches!(settle_fill_run_outcome(outcome), FillRunTurn::Complete) {
-                assert!(recording || turn + 1 == expiries.len(), "cold run {run} completed after {} turns, the recorded run after {}", turn + 1, expiries.len());
-                break;
+            match settle_fill_run_outcome(outcome) {
+                FillRunTurn::Complete => {
+                    assert!(recording || turn + 1 == expiries.len(), "cold run {run} completed after {} turns, the recorded run after {}", turn + 1, expiries.len());
+                    break;
+                }
+                FillRunTurn::Tick(tick) if !tick.append_ops.is_empty() => {
+                    let started = Instant::now();
+                    for bytes in &tick.append_ops {
+                        overlay = fold_overlay_op(&overlay, bytes).expect("every appended op applies onto the overlay it was planned against");
+                    }
+                    let elapsed = started.elapsed();
+                    if recording {
+                        best_appends.push(elapsed);
+                    } else {
+                        best_appends[append] = best_appends[append].min(elapsed);
+                    }
+                    append += 1;
+                }
+                _ => {}
             }
         }
         counters = job.counters();
     }
+    let worst_append = best_appends.iter().max().copied().unwrap_or(Duration::ZERO);
+    assert!(!best_appends.is_empty(), "the measured run appended at least one tick of provisional ops");
+    assert!(worst_append < budget, "the worst overlay append of one tick's appendOps took {worst_append:?}, over {budget:?}");
     let (turn, worst) = best.iter().enumerate().max_by_key(|(_, elapsed)| **elapsed).map_or((0, Duration::ZERO), |(turn, elapsed)| (turn + 1, *elapsed));
     assert!(best.len() >= minimum_turns, "the law measures at least {minimum_turns} turns, the run took {}", best.len());
     assert!(counters[1] > 0 && counters[0] > counters[1], "the measured run tested and placed objects: {counters:?}");
@@ -1936,7 +1203,7 @@ fn fill_run_job_step_stays_below_the_interactive_ceiling_for_nakagin() {
 /// that candidate's `testing` and final upsert under one key — except the final tick of a completed run.
 #[test]
 fn fill_run_job_step_with_one_unit_of_fuel_reaches_exactly_one_candidate_verdict() {
-    let mut job = FillRunJob::new(FillBuilder::begin_preparation(nakagin_scale_roots(), Operation::new(OperationId(73), RevisionId(1), Generation(1), 43), 24), fill_run_identity(), vec![NAKAGIN_MESH_URL.to_string()]);
+    let mut job = FillRunJob::new(FillBuilder::begin_preparation(nakagin_scale_roots(), Operation::new(OperationId(73), RevisionId(1), Generation(1), 43), 24), fill_run_identity(), vec![NAKAGIN_MESH_URL.to_string()], [0; 32]);
     let mut sequence = 0;
     let (mut ticks, mut verdicts) = (0usize, 0u64);
     for _ in 0..1_000_000 {
@@ -1969,7 +1236,7 @@ fn fill_run_job_step_with_one_unit_of_fuel_reaches_exactly_one_candidate_verdict
 }
 
 fn nakagin_scale_run(requested: usize) -> (FillRunJob, FillRunMirror) {
-    let mut job = FillRunJob::new(FillBuilder::begin_preparation(nakagin_scale_roots(), Operation::new(OperationId(79), RevisionId(1), Generation(1), 43), requested), fill_run_identity(), vec![NAKAGIN_MESH_URL.to_string()]);
+    let mut job = FillRunJob::new(FillBuilder::begin_preparation(nakagin_scale_roots(), Operation::new(OperationId(79), RevisionId(1), Generation(1), 43), requested), fill_run_identity(), vec![NAKAGIN_MESH_URL.to_string()], [0; 32]);
     let mut mirror = FillRunMirror::new();
     mirror.drive(&mut job, u64::MAX, 1_000_000);
     (job, mirror)
@@ -2014,6 +1281,100 @@ fn fill_run_job_resume_raise_continues_the_sequence_and_lower_retracts_the_tail(
     assert_eq!(lowered.resume(&foreign.encode(), SHORT), Err(FillRunResumeError::Foreign));
     assert_eq!(lowered.resume(&checkpoint[..8], SHORT), Err(FillRunResumeError::Malformed));
 }
+
+fn nakagin_scale_builder(operation: u64, requested: usize) -> FillBuilder {
+    FillBuilder::begin_preparation(nakagin_scale_roots(), Operation::new(OperationId(operation), RevisionId(1), Generation(1), 43), requested)
+}
+
+/// ⏪️ LAW: a run job rebuilt from its predecessor's last checkpoint — the framework closes a run's job on
+/// every settings change and builds a new one, whose tick sequence starts over under the newer generation —
+/// replays silently to that checkpoint, with no tick leaving it
+/// on the way, and then continues exactly like the resident job: a raise appends the long run's ops and
+/// verdicts, a lower retracts to the lowered count. A job whose inputs differ restarts instead: its first tick
+/// clears the trace and retracts every provisional op, and it then runs like a fresh run.
+#[test]
+fn fill_run_job_rebuilt_from_a_checkpoint_replays_silently_and_continues_like_the_resident_job() {
+    const SHORT: usize = 30;
+    const LONG: usize = 45;
+    const LOWERED: usize = 12;
+    let lane = || vec![NAKAGIN_MESH_URL.to_string()];
+    let (_, mut raised) = nakagin_scale_run(SHORT);
+    let checkpoint = FillRunCheckpoint::decode(raised.checkpoints.last().expect("checkpoint")).expect("checkpoint decodes");
+    let provisional = raised.ops.len() as u32;
+    let mut rebuilt = FillRunJob::replaying(nakagin_scale_builder(81, checkpoint.requested as usize), fill_run_identity(), lane(), checkpoint, LONG, provisional);
+    raised.last_sequence = None;
+    raised.drive(&mut rebuilt, u64::MAX, 1_000_000);
+    let (long, long_mirror) = nakagin_scale_run(LONG);
+    assert!(raised.retractions.is_empty(), "a raise retracts nothing");
+    assert_eq!(raised.ops, long_mirror.ops, "the rebuilt run appends exactly the long run's ops after its predecessor's");
+    assert_eq!(raised.entities, long_mirror.entities);
+    assert_eq!(raised.verdicts, long_mirror.verdicts, "the replay published no verdict twice and missed none");
+    assert_eq!(rebuilt.counters(), long.counters());
+
+    let (_, mut lowered) = nakagin_scale_run(SHORT);
+    let before = lowered.ops.clone();
+    let mut rebuilt = FillRunJob::replaying(nakagin_scale_builder(82, checkpoint.requested as usize), fill_run_identity(), lane(), checkpoint, LOWERED, provisional);
+    lowered.last_sequence = None;
+    lowered.drive(&mut rebuilt, u64::MAX, 1_000_000);
+    assert_eq!(lowered.retractions.iter().min().copied(), Some(LOWERED as u32 * FILL_RUN_OPS_PER_PLACEMENT), "the rebuilt lower retracts to exactly the lowered count");
+    assert_eq!(lowered.ops.as_slice(), &before[..LOWERED * FILL_RUN_OPS_PER_PLACEMENT as usize]);
+    assert_eq!(lowered.trace.records().filter(|(_, record)| record.verdict == ToolRunVerdict::Success).count(), LOWERED, "every retracted placement's success record was retired");
+
+    let (_, mut restarted) = nakagin_scale_run(SHORT);
+    let mut foreign = checkpoint;
+    foreign.inputs = [9; 32];
+    let mut rebuilt = FillRunJob::restarting(nakagin_scale_builder(83, LOWERED), fill_run_identity(), lane(), foreign.inputs, provisional);
+    restarted.last_sequence = None;
+    restarted.drive(&mut rebuilt, u64::MAX, 1_000_000);
+    let (_, fresh) = nakagin_scale_run(LOWERED);
+    assert_eq!(restarted.retractions.first().copied(), Some(0), "a restart retracts every provisional op first");
+    assert_eq!((restarted.ops.clone(), restarted.entities.clone()), (fresh.ops.clone(), fresh.entities.clone()), "and then runs like a fresh run");
+    assert_eq!(restarted.trace.len(), fresh.trace.len(), "its first tick cleared the predecessor's trace");
+}
+
+/// 🚧️ LAW (P4e): a document too large for the planner's fixed pages publishes ONE `danger` step naming the
+/// refused capacity through the run's tick, and the next step faults the run — nothing was placed.
+#[test]
+fn fill_run_job_capacity_refusal_publishes_a_danger_step_before_faulting() {
+    let objects = (0..=DOCUMENT_OBJECT_SLOTS).map(|index| FixtureObject { id: format!("rejected-{index:04}"), object_kind: None, anchor: Default::default(), mesh_url: None, origin: [0.0; 3], orientation: None, scale: None, vortices: Vec::new() }).collect();
+    let scene = Arc::new(SceneConfig { fixture: Fixture { objects, attractions: Vec::new(), target_volumes: Vec::new() }, kind_catalogs: Some(KindCatalogBundle::default()), kind_compatibility: Vec::new(), overlap_budget: 0.0, seed: 37, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() });
+    let builder = FillBuilder::begin_preparation(FillPreparationRoots::new(scene, Arc::new(HashMap::new())), Operation::new(OperationId(37), RevisionId(9), Generation(11), 37), TEST_REQUESTED_COUNT);
+    let mut job = FillRunJob::new(builder, fill_run_identity(), Vec::new(), [0; 32]);
+    let mut sequence = 0;
+    let FillRunTurn::Tick(tick) = fill_run_turn(&mut job, u64::MAX, &mut sequence) else { panic!("the refusal is published as a tick first") };
+    assert!(tick.append_ops.is_empty(), "nothing is placed");
+    assert_eq!(tick.steps.iter().map(|step| (step.kind, step.reason, step.args.clone())).collect::<Vec<_>>(), vec![(ToolRunStepKind::Danger, FillRunReason::DocumentCapacity.code(), vec![ToolRunStepArg::Unsigned(DOCUMENT_OBJECT_SLOTS as u64)])]);
+    let operation = job.operation();
+    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), root_cancel_token(), never, &mut sequence);
+    let StepOutcome::Fault(fault) = job.step(&mut context) else { panic!("the step after the danger step faults the run") };
+    assert_eq!(fault.detail.single_page(), Some(format!("preparation-capacity:fixture-objects:{DOCUMENT_OBJECT_SLOTS}").as_bytes()));
+    assert!(faulted(StepOutcome::Fault(fault)));
+}
+
+/// 🧱️ LAW: the placements a finalize revalidation rebuilds from the ledger's provisional ops alone are the
+/// run's own placements, in op order — same object, attraction, entity and mesh-lane subject — keyed
+/// consecutively from the allocated first key; a list that is not whole placements is refused.
+#[test]
+fn fill_run_placements_rebuild_the_provisional_placements_from_their_ops() {
+    let (roots, lane, _) = example_fill_roots("concrete-forest", 7);
+    let mut job = fill_run_job(roots, lane.clone(), 7, 5);
+    let mut mirror = FillRunMirror::new();
+    mirror.drive(&mut job, u64::MAX, 1_000_000);
+    let ops: Vec<Puzzle3dMutation> = mirror.ops.iter().map(|bytes| <Puzzle3dMutation as protocol::OpBinary>::decode_op(bytes).expect("op decodes")).collect();
+    let rebuilt = fill_run_placements(&ops, job.mesh_lane(), REVALIDATE_FIRST_KEY).expect("whole placements");
+    let original = job.provisional_placements();
+    assert_eq!(rebuilt.len(), 5);
+    for (index, (rebuilt, original)) in rebuilt.iter().zip(&original).enumerate() {
+        assert_eq!((&rebuilt.object.id, &rebuilt.attraction, rebuilt.entity), (&original.object.id, &original.attraction, original.entity));
+        assert_eq!(rebuilt.key, REVALIDATE_FIRST_KEY + index as u64, "placements take consecutive keys from the allocated range");
+        let (ToolRunTraceSubject::Instance3d { mesh: rebuilt_mesh, .. }, ToolRunTraceSubject::Instance3d { mesh: original_mesh, .. }) = (rebuilt.subject, original.subject) else { panic!("instance subjects") };
+        assert_eq!(rebuilt_mesh, original_mesh, "the rebuilt subject indexes the same mesh lane entry");
+    }
+    assert!(fill_run_placements(&ops[..ops.len() - 1], job.mesh_lane(), REVALIDATE_FIRST_KEY).is_none(), "half a placement is refused");
+}
+
+/// 🔑️ The first key of the range a revalidation's trace key allocator hands the placement law.
+const REVALIDATE_FIRST_KEY: u64 = 4_096;
 
 fn drive_revalidation(job: &mut FillRevalidateJob, operation: Operation) -> Vec<ToolRunTick> {
     let mut ticks = Vec::new();
@@ -2070,6 +1431,96 @@ fn fill_revalidate_job_retracts_conflicting_placements_and_reappends_survivors()
     }).collect();
     assert_eq!(danger, conflicts.iter().zip(&placements).filter(|(conflict, _)| **conflict).map(|(_, placement)| placement.key).collect::<Vec<_>>());
 }
+
+/// 🧊️ A cube of half extent 4 shifted `offset` along x, as raw positions and indices.
+fn own_mesh_cube(offset: f32) -> (Vec<f32>, Vec<u32>) {
+    (
+        [-1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0].iter().enumerate().map(|(index, unit)| unit * 4.0 + if index % 3 == 0 { offset } else { 0.0 }).collect(),
+        vec![0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 0, 4, 5, 0, 5, 1, 2, 6, 7, 2, 7, 3, 0, 3, 7, 0, 7, 4, 1, 5, 6, 1, 6, 2],
+    )
+}
+
+fn own_mesh_kind(id: &str, url: &str, vortices: Vec<ObjectKindVortexTemplate>) -> ObjectKind {
+    ObjectKind { id: id.into(), representations: vec![ObjectKindRepresentation { id: id.to_lowercase(), name: String::new(), url: url.into(), mime: String::new(), tags: vec![], lod: None, description: String::new() }], scale: None, vortices }
+}
+
+/// 🧥️ The `ownMesh` law's scene (`🎞️fill-run.json`): one host vortex, two compatible kinds, and with `blocker` a
+/// body of the host's kind carrying its own mesh where both candidates dock, while the kind's mesh is the same cube
+/// shifted `kind_offset` away.
+fn own_mesh_roots(blocker: bool, kind_offset: f32) -> FillPreparationRoots {
+    let host = FixtureObject {
+        id: "host".into(),
+        object_kind: Some("Host".into()),
+        anchor: Default::default(),
+        mesh_url: None,
+        origin: [12.0, 0.0, 0.0],
+        orientation: Some([0.0, 0.0, 0.0, 1.0]),
+        scale: None,
+        vortices: vec![VortexProps { id: "v0".into(), vortex_kind: Some("port-a".into()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) }],
+    };
+    let mut objects = vec![host.clone()];
+    if blocker {
+        objects.push(FixtureObject { id: "blocker".into(), mesh_url: Some("/test/blocker.glb".into()), vortices: Vec::new(), ..host });
+    }
+    let port = || vec![ObjectKindVortexTemplate { vortex_kind: Some("port-b".into()), point: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]), ..Default::default() }];
+    let scene = SceneConfig {
+        fixture: Fixture { attractions: Vec::new(), target_volumes: Vec::new(), objects },
+        kind_catalogs: Some(KindCatalogBundle {
+            objects: vec![own_mesh_kind("Host", "/test/host-kind.glb", Vec::new()), own_mesh_kind("Near", "/test/near.glb", port()), own_mesh_kind("Late", "/test/late.glb", port())],
+            vortices: vec![VortexKindCatalog { id: "port-a".into(), default_cable_kind: None, ..Default::default() }, VortexKindCatalog { id: "port-b".into(), default_cable_kind: None, ..Default::default() }],
+            cables: vec![CableKindCatalog { id: "cable.link".into(), default_attraction_kind: None, ..Default::default() }],
+        }),
+        kind_compatibility: vec![KindCompatEntry { source: "port-b".into(), target: "port-a".into(), bidirectional: true, important: false, specificity: Some("vortex".into()) }],
+        overlap_budget: 0.02,
+        seed: 1,
+        host_rules: BrushHostRules::default(),
+        weights: BrushKindWeights::default(),
+    };
+    let body = |offset: f32| {
+        let (positions, indices) = own_mesh_cube(offset);
+        collision_body_from_buffers(&positions, &indices).expect("cube body")
+    };
+    let meshes = [("/test/host-kind.glb", body(kind_offset)), ("/test/blocker.glb", body(0.0)), ("/test/near.glb", body(0.0)), ("/test/late.glb", body(0.0))].into_iter().map(|(url, body)| (url.to_string(), body)).collect();
+    FillPreparationRoots::new(Arc::new(scene), Arc::new(meshes))
+}
+
+fn own_mesh_lane() -> Vec<String> {
+    ["/test/blocker.glb", "/test/host-kind.glb", "/test/late.glb", "/test/near.glb"].map(str::to_string).to_vec()
+}
+
+/// 🐛️ Red→green (`📓️wave-W2-C.md` §7.2, language-neutral law `ownMesh` of `🎞️fill-run.json`): a placed body carrying
+/// its own mesh collides with that mesh, not its kind's. The fill planner resolved document bodies by kind, so a body
+/// whose kind renders a different (here shifted) mesh never blocked the candidates docking into it and they read `fits`;
+/// the revalidation job re-tested provisional placements against the same wrong body. Both now resolve a placed
+/// object's own mesh first, the renderer's law.
+#[test]
+fn fill_run_and_revalidation_collide_with_a_placed_body_carrying_its_own_mesh() {
+    let fixture: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run fixture");
+    let law = &fixture["laws"]["ownMesh"];
+    let kind_offset = law["kindMeshOffset"].as_f64().expect("kind mesh offset") as f32;
+    let run = |blocker: bool, requested: usize| {
+        let mut job = FillRunJob::new(FillBuilder::begin_preparation(own_mesh_roots(blocker, kind_offset), Operation::new(OperationId(97), RevisionId(1), Generation(1), 1), requested), fill_run_identity(), own_mesh_lane(), [0; 32]);
+        let mut mirror = FillRunMirror::new();
+        mirror.drive(&mut job, u64::MAX, 1_000_000);
+        (job, mirror)
+    };
+    let (clear, _) = run(false, 1);
+    let placements = clear.provisional_placements();
+    for case in law["cases"].as_array().expect("cases") {
+        let name = case["name"].as_str().expect("name");
+        let blocker = case["blocker"].as_bool().expect("blocker");
+        let expected = &case["expected"];
+        let (job, mirror) = run(blocker, case["requested"].as_u64().expect("requested") as usize);
+        let [_, locked, collisions, _] = job.counters();
+        let stall = mirror.steps.iter().rev().find(|step| step.kind == ToolRunStepKind::Warning).and_then(|step| FillRunReason::from_code(step.reason)).map(FillRunReason::id);
+        let mut actual = serde_json::json!({ "verdicts": mirror.verdict_words(), "locked": locked, "collisions": collisions, "stall": stall });
+        let operation = Operation::new(OperationId(98), RevisionId(2), Generation(1), 1);
+        let mut revalidation = FillRevalidateJob::new(operation, fill_run_identity(), own_mesh_roots(blocker, kind_offset), placements.clone(), 1_000);
+        drive_revalidation(&mut revalidation, operation);
+        actual["revalidateConflicts"] = serde_json::json!(revalidation.conflicts());
+        assert_eq!(&actual, expected, "{name}");
+    }
+}
 //#endregion ⏯️FillRunJob
 
 /// ⚖️ LAW: a rule refusal is a `warning` record, never a collision — a document whose target volume
@@ -2080,7 +1531,7 @@ fn fill_run_job_reports_rule_refusals_as_warnings_and_the_stall_as_a_warning_ste
     let roots = nakagin_scale_roots();
     let mut scene = (*roots.scene).clone();
     scene.fixture.target_volumes.push(WorldVolumeProps { id: "elsewhere".into(), origin: [1.0e6, 1.0e6, 1.0e6], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None });
-    let mut job = FillRunJob::new(FillBuilder::begin_preparation(FillPreparationRoots::new(Arc::new(scene), roots.meshes.clone()), Operation::new(OperationId(89), RevisionId(1), Generation(1), 43), 10), fill_run_identity(), vec![NAKAGIN_MESH_URL.to_string()]);
+    let mut job = FillRunJob::new(FillBuilder::begin_preparation(FillPreparationRoots::new(Arc::new(scene), roots.meshes.clone()), Operation::new(OperationId(89), RevisionId(1), Generation(1), 43), 10), fill_run_identity(), vec![NAKAGIN_MESH_URL.to_string()], [0; 32]);
     let mut mirror = FillRunMirror::new();
     mirror.drive(&mut job, u64::MAX, 1_000_000);
     let [tested, locked, collisions, rejected] = job.counters();
@@ -2090,4 +1541,86 @@ fn fill_run_job_reports_rule_refusals_as_warnings_and_the_stall_as_a_warning_ste
     let last = mirror.steps.last().expect("stall step");
     assert_eq!((last.kind, last.reason, last.args.clone()), (ToolRunStepKind::Warning, FillRunReason::NoFreePlacement.code(), vec![ToolRunStepArg::Unsigned(0)]));
     assert_eq!(mirror.progress.as_ref().map(|progress| progress.state), Some(ToolRunState::Complete));
+}
+
+
+/// 🏁️ How a run ended as its ledger saw it: `None` when the last step is `success:requested-reached` over a met request, else
+/// the declared stall reason its `warning` step names. A run that ended without a step, with an undeclared reason, or with
+/// zero verdicts and no stall reason fails the law.
+fn fill_run_visible_end(name: &str, job: &FillRunJob, mirror: &FillRunMirror, requested: usize) -> Option<&'static str> {
+    let [tested, locked, _, _] = job.counters();
+    assert_eq!(mirror.progress.as_ref().map(|progress| progress.state), Some(ToolRunState::Complete), "{name}: the run's last progress is complete");
+    let last = mirror.steps.last().unwrap_or_else(|| panic!("{name}: the run ended with counters {:?} and no step", job.counters()));
+    assert_eq!(last.args, vec![ToolRunStepArg::Unsigned(locked)], "{name}: the terminal step carries the placement count");
+    let stalls = [FillRunReason::NoOpenVortex, FillRunReason::NoCompatibleKind, FillRunReason::NoFreePlacement, FillRunReason::DocumentCapacity];
+    match (last.kind, FillRunReason::from_code(last.reason)) {
+        (ToolRunStepKind::Success, Some(FillRunReason::RequestedReached)) => {
+            assert!(locked >= requested as u64 && tested >= locked && requested > 0, "{name}: requested-reached with {locked} of {requested} placed and {tested} tested");
+            None
+        }
+        (ToolRunStepKind::Warning, Some(reason)) if stalls.contains(&reason) => Some(reason.id()),
+        (kind, reason) => panic!("{name}: the run ended with {kind:?} {reason:?} after {tested} verdicts instead of a declared terminal reason"),
+    }
+}
+
+/// 🏁️ LAW (language-neutral fixture `🎞️fill-run.json` `laws.visibleEnd`, ticket lane W1-H): every fill run ends where the user
+/// can see why — every shipped case and every own-mesh variant ends with `success:requested-reached` or a `warning` step
+/// naming a declared stall reason, never with zero verdicts and no reason. The own-mesh Nakagin variant packs more bodies
+/// into one spatial cell than one bookkeeping page holds; it must still be planned and match its declared outcome.
+#[test]
+fn fill_run_ends_visibly_with_a_declared_reason_for_every_case_and_own_mesh_variant() {
+    let fixture: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run fixture");
+    for case in fixture["cases"].as_array().expect("cases") {
+        let (document, seed, requested) = (case["document"].as_str().expect("document"), case["seed"].as_u64().expect("seed"), case["requested"].as_u64().expect("requested") as usize);
+        let (roots, lane, _) = example_fill_roots(document, seed as u32);
+        let mut job = fill_run_job(roots, lane, seed, requested);
+        let mut mirror = FillRunMirror::new();
+        mirror.drive(&mut job, u64::MAX, 1_000_000);
+        let name = format!("{document} seed {seed} requested {requested}");
+        assert_eq!(fill_run_visible_end(&name, &job, &mirror, requested), case["expected"]["stall"].as_str(), "{name}");
+    }
+    let mut disagreements = Vec::new();
+    for case in fixture["laws"]["visibleEnd"]["cases"].as_array().expect("visible end cases") {
+        let (document, seed, requested, scale) = (case["document"].as_str().expect("document"), case["seed"].as_u64().expect("seed"), case["requested"].as_u64().expect("requested") as usize, case["ownMeshScale"].as_f64().expect("own mesh scale") as f32);
+        let (roots, lane, _) = own_mesh_fill_roots(document, seed as u32, scale);
+        let mut job = fill_run_job(roots, lane, seed, requested);
+        let mut mirror = FillRunMirror::new();
+        mirror.drive(&mut job, u64::MAX, 1_000_000);
+        let name = format!("{document} seed {seed} requested {requested} own-mesh {scale}");
+        let stall = fill_run_visible_end(&name, &job, &mirror, requested);
+        let [tested, locked, collisions, rejected] = job.counters();
+        assert!(tested > 0 || stall.is_some(), "{name}: zero verdicts always name their stall");
+        let actual = serde_json::json!({ "tested": tested, "locked": locked, "collisions": collisions, "rejected": rejected, "stall": stall });
+        if actual != case["expected"] {
+            disagreements.push(format!("{name}: actual {actual}"));
+        }
+    }
+    assert!(disagreements.is_empty(), "the visible-end law disagrees:\n{}", disagreements.join("\n"));
+}
+
+/// 🚧️ LAW (ticket lane W1-H): a document page that fills mid-plan ends the run with the `document-capacity` warning step over
+/// what was already placed, the candidate under test reaching its verdict first — never a bare `Complete` the ledger cannot
+/// explain.
+#[test]
+fn fill_run_job_mid_plan_capacity_stall_ends_with_a_visible_warning_step() {
+    let (roots, lane, _) = example_fill_roots("concrete-forest", 7);
+    let mut job = fill_run_job(roots, lane, 7, 8);
+    let mut mirror = FillRunMirror::new();
+    let mut sequence = 0;
+    loop {
+        match fill_run_turn(&mut job, u64::MAX, &mut sequence) {
+            FillRunTurn::Tick(tick) => mirror.apply(tick),
+            FillRunTurn::Checkpoint(bytes) => {
+                mirror.checkpoints.push(bytes);
+                break;
+            }
+            FillRunTurn::Complete => panic!("the run completed before its first placement"),
+            FillRunTurn::Yield => {}
+        }
+    }
+    job.builder.collection_over_capacity = true;
+    mirror.drive(&mut job, u64::MAX, 1_000);
+    assert_eq!(fill_run_visible_end("mid-plan capacity", &job, &mirror, 8), Some(FillRunReason::DocumentCapacity.id()));
+    let [tested, locked, _, _] = job.counters();
+    assert_eq!((locked, mirror.verdicts.len() as u64), (1, tested), "one placement, and every tested candidate reached its verdict");
 }

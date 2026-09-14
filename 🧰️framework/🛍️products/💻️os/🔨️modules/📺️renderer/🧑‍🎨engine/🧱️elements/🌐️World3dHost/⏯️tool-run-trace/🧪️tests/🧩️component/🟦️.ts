@@ -208,9 +208,8 @@ describe("tool run trace record store", () => {
     expect(toolRunTraceCursorViewState(["world-left"])).toEqual({});
   });
 
-  it("ranks the provisional mesh style below refusal and lock but above every interaction state", () => {
+  it("ranks the provisional mesh style below lock but above every interaction state", () => {
     expect(resolveMeshStyle({ provisional: true, selected: true, hovered: true, highlighted: true, celebrating: true })).toBe("provisional");
-    expect(resolveMeshStyle({ provisional: true, danger: true })).toBe("danger");
     expect(resolveMeshStyle({ provisional: true, disabled: true })).toBe("disabled");
     expect(resolveMeshStyle({ provisional: false, selected: true })).toBe("selected");
   });

@@ -119,8 +119,7 @@ import {
 import { type UiPreferencesConfigMutation, setAppearance, setDriver, setLayout, setLocale, setTerminology, setTheme } from "../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
 import type { DomainSelection, InteractionState } from "../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
 import { hostContinuations, type ContinuationCancel, type ContinuationScheduler } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
-import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES } from "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🟦️.ts";
-import { mediaExportBytes } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { mediaExportBytes, IMPORT_CHUNK_BYTES, importPayloadChunks, importChunkArguments, type ImportChunk, mergeUiDirtyScopes, uiDirtyScopeWantsWindowBody, uiDirtyScopeWantsPanelBody, uiDirtyScopeWantsSection, uiDirtyScopeWantsCatalogue } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
 import { wireMediaExportEncoding } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import {
   decodeWorldProjectionTemplateId,
@@ -292,8 +291,6 @@ export const FRAMEWORK_RESERVED_ACTION_IDS: ReadonlySet<string> = new Set([
   "startTutorial",
   "setActiveUtility",
   "setActiveTool",
-  "suggestionsTick",
-  "fillBuildTick",
 ]);
 
 /** 🪟️ The shape `undeclaredActionDiagnostic` reads a session app's window kinds through — the manifest's
@@ -390,7 +387,6 @@ export type LeftoverInteractionViewV1 = {
   readonly activeMode: Readonly<Record<string, string>>;
   readonly activeGranularity: Readonly<Record<string, string>>;
   readonly activeUtility?: string | null;
-  readonly brushPreviewJson?: string | null;
   /** 🪟️ The window INSTANCE the action that produced this leftover addressed, straight from the
    * guest's own encode (`leftover_interaction_view_from`, `🔌️plugin/🦀️.rs`). `null` is a windowless,
    * document-scoped action — never a synthetic window surface (wave B56). */
@@ -433,11 +429,10 @@ function leftoverHoverRecord(value: unknown): LeftoverInteractionViewV1["hover"]
 /** 🕹️ Peels leftover `Invocation.output.interactionView` — same leftover lane as history_patch. */
 export function interactionViewFromLeftoverOutput(output: unknown): LeftoverInteractionViewV1 | null {
   if (!output || typeof output !== "object" || Array.isArray(output)) return null;
-  const envelope = output as { interactionView?: unknown; brushPreviewJson?: unknown };
+  const envelope = output as { interactionView?: unknown };
   const raw = envelope.interactionView;
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const view = raw as Record<string, unknown>;
-  if (typeof envelope.brushPreviewJson === "string" && envelope.brushPreviewJson.length > 0) view.brushPreviewJson = envelope.brushPreviewJson;
   const selectedIds = Array.isArray(view.selectedIds) ? view.selectedIds.filter((id): id is string => typeof id === "string") : [];
   const hoverRaw = view.hoverTarget;
   const hoverTarget =
@@ -461,7 +456,6 @@ export function interactionViewFromLeftoverOutput(output: unknown): LeftoverInte
     activeMode: leftoverStringRecord(view.activeMode),
     activeGranularity: leftoverStringRecord(view.activeGranularity),
     ...(typeof view.activeUtility === "string" ? { activeUtility: view.activeUtility } : {}),
-    ...(typeof view.brushPreviewJson === "string" && view.brushPreviewJson.length > 0 ? { brushPreviewJson: view.brushPreviewJson } : {}),
   };
 }
 
@@ -765,48 +759,25 @@ export function makeEffectDispatchOne(
 }
 
 //#region 📥️ChunkedImport
-/** 📏️ UTF-8 bytes ONE import chunk may carry — the INBOUND mirror of
- * `📤️SegmentedDownload`'s chunk contract, and the host half of `PUZZLE3D_IMPORT_CHUNK_BYTES`
+/** 📏️ UTF-8 bytes ONE import chunk may carry, and the slicing that produces them — both now owned by
+ * the effect contract itself (`🎠️kernel/🟦️.ts`, beside `Effect.requestFileOpen`, with the Rust twin
+ * `kernel::import_payload_chunks` and the shared fixture `🧫️fixtures/📤️file-open-import/🔣️.json`).
+ *
+ * 🧊️ They used to live here, where only the React shell could reach them — so the wgpu shell dispatched
+ * `{json, payload}` in ONE unchunked invocation while this one dispatched `{payload, name, chunk,
+ * chunkCount}` per chunk, and a plugin could satisfy only one of the two
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Re-exported rather than re-declared: this module is the
+ * name every renderer call site already imports, and one slicing rule is the whole point.
+ *
+ * 📏️ It is also the host half of `PUZZLE3D_IMPORT_CHUNK_BYTES`
  * (`✏️s/🔌️plugins/🧩️puzzle/…/🎮️commands/📥️import-fixture/🦀️.rs`), held equal to it by the engine
- * contract's own law.
- *
- * 🧊️ Derived from the guest's per-request contiguous ceiling, never a literal: an import's `payload`
- * crosses as ONE string, and every guest hop that carries it asks for one contiguous block — the channel's
- * `read_bounded_bytes` reserves the whole `AppCommand::Command` field exactly
- * (`📡️spr/🧵️channel/🦀️.rs`), and the retained tool job allocates its wire owner at the declared extent.
- * A 145 924-byte document sent as ONE command therefore asked the fixed guest heap for a 146 KB block,
- * 2.2× the ceiling. Half the ceiling leaves the other half for the JSON-escaped op envelope the chunk
- * rides in (measured 1.10× on the Nakagin export). */
-export const IMPORT_CHUNK_BYTES = GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES / 2;
-
-/** 📥️ One opened file's text as the chunk sequence the import lane carries: `chunk`/`chunkCount` name the
- * position, and a file that fits one chunk yields exactly one entry whose envelope a plugin may ignore.
- *
- * 🔤️ Sliced by UTF-8 EXTENT, not by code units: the guest measures `text.len()` in bytes, so a slice
- * counted in UTF-16 units would overrun the cap by up to 3× on non-ASCII labels (`·`, `ō`) — and the
- * Nakagin fixture has them. No slice ever splits a code point. */
-export function importPayloadChunks(payload: string): readonly { readonly payload: string; readonly chunk: number; readonly chunkCount: number }[] {
-  const pages: string[] = [];
-  let page = "";
-  let pageBytes = 0;
-  for (const character of payload) {
-    const code = character.codePointAt(0) ?? 0;
-    const characterBytes = code < 0x80 ? 1 : code < 0x800 ? 2 : code < 0x10000 ? 3 : 4;
-    if (pageBytes + characterBytes > IMPORT_CHUNK_BYTES) {
-      pages.push(page);
-      page = "";
-      pageBytes = 0;
-    }
-    page += character;
-    pageBytes += characterBytes;
-  }
-  if (page.length > 0 || pages.length === 0) pages.push(page);
-  return pages.map((text, chunk) => ({ payload: text, chunk, chunkCount: pages.length }));
-}
+ * contract's own law. */
+export { IMPORT_CHUNK_BYTES, importPayloadChunks, importChunkArguments };
+export type { ImportChunk };
 //#endregion 📥️ChunkedImport
 
 /** 📤️ D3 fan-out: one {@link EffectDispatchOne} call per opened file, and — since wave B59 — one call per
- * {@link importPayloadChunks} CHUNK of each file, so no single import command asks the guest for a
+ * `importPayloadChunks` CHUNK of each file, so no single import command asks the guest for a
  * contiguous block above its own per-request ceiling. A file that fits one chunk dispatches exactly one
  * call whose args are the pre-B59 `{payload, name}` plus the chunk envelope naming itself as `0` of `1`.
  *
@@ -823,8 +794,7 @@ export async function dispatchOpenedFiles(
   for (let index = 0; index < opened.length; index += 1) {
     const file = opened[index]!;
     for (const page of importPayloadChunks(file.contents)) {
-      const envelope = { payload: page.payload, name: file.name, chunk: page.chunk, chunkCount: page.chunkCount };
-      await dispatchOne(importAction, multiple ? { ...envelope, index, total } : envelope);
+      await dispatchOne(importAction, importChunkArguments(file.name, page, multiple ? { index, total } : undefined));
     }
   }
 }
@@ -2871,8 +2841,8 @@ export function isDeclaredSurfaceCancelAction(actionId: string): boolean {
 
 /**
  * @emoji 🚦️ Fires `run` at most once at a time — interval ticks that arrive while a previous run is still
- * in flight are dropped (not queued). Used by World3dHost's `suggestionsTick`/`fillBuildTick` loops so a
- * slow program tick cannot unbounded-queue into the serialized WASM handle and starve the fill utility.
+ * in flight are dropped (not queued), so a slow program tick cannot unbounded-queue into the serialized
+ * WASM handle.
  */
 export function createInFlightSkippingInterval<Timer>(run: () => unknown, delayMs: number, setIntervalFn?: (callback: () => void, delayMs: number) => Timer, clearIntervalFn?: (timer: Timer) => void): () => void {
   let cancelled = false;
@@ -3921,7 +3891,7 @@ export type ActionPaneSlice = Pick<ActionPaneState, "expandedByWindowId" | "stag
  *
  * 🧹️ Panel-eligible means `inPalette` — the SAME curation `resolveCommands` gives the palette and
  * `buildShellContextMenuItems` gives the shell fallback menu: an app declares its raw dispatch verbs
- * (`worldPointerDown`, `registerBrushMesh`, `suggestionsTick`, …) and the framework declares its reserved
+ * (`worldPointerDown`, `registerBrushMesh`, `targetBrushSuggestions`, …) and the framework declares its reserved
  * ones (`interactionSelect`, `noteShellCommand`, `setActiveUtility`, …) as window actions purely so a
  * surface can dispatch them, and a rail that renders them buries the user's own verbs: the puzzle3d
  * perspective rail carried 96 rows and put `Export` at y=1990 inside an 807 px band, which is what
@@ -4771,19 +4741,7 @@ export function hostEffectRefreshScopeV1(effects: readonly unknown[], declared: 
  * `FlowEvalSession` latch admits at most one pending tick per window.
  */
 export function mergeUiDirtyScopeV1(first: UiDirtyScope, second: UiDirtyScope): UiDirtyScope {
-  if (first.kind === "full" || second.kind === "full") return { kind: "full" };
-  if (first.kind === "none") return second;
-  if (second.kind === "none") return first;
-  return {
-    kind: "partial",
-    windowBodies: [...new Set([...(first.windowBodies ?? []), ...(second.windowBodies ?? [])])],
-    panelBodies: [...new Set([...(first.panelBodies ?? []), ...(second.panelBodies ?? [])])],
-    utilities: Boolean(first.utilities || second.utilities),
-    tools: Boolean(first.tools || second.tools),
-    engagements: Boolean(first.engagements || second.engagements),
-    measures: Boolean(first.measures || second.measures),
-    labels: Boolean(first.labels || second.labels),
-  };
+  return mergeUiDirtyScopes(first, second);
 }
 
 /** 🤝️ One ui-refresh lane: at most ONE pass running, at most ONE owed follow-up carrying the union of
@@ -4872,22 +4830,13 @@ export function createUiRefreshCoalescerV1<TRequest extends { readonly scope: Ui
   };
 }
 
-function uiRefreshWantsWindow(scope: UiDirtyScope, bodyKey: string): boolean {
-  return scope.kind === "full" || (scope.kind === "partial" && (scope.windowBodies ?? []).includes(bodyKey));
-}
-function uiRefreshWantsPanel(scope: UiDirtyScope, bodyKey: string): boolean {
-  return scope.kind === "full" || (scope.kind === "partial" && (scope.panelBodies ?? []).includes(bodyKey));
-}
-function uiRefreshWantsFlag(scope: UiDirtyScope, flag: "engagements" | "measures" | "tools" | "labels"): boolean {
-  return scope.kind === "full" || (scope.kind === "partial" && scope[flag] === true);
-}
-/** 🛍️ The app-static operator/palette catalogue never goes stale within an app instance, so it has no
- * `UiDirtyScope` flag of its own: only a full scope (a session switch, or the first fetch) asks for it,
- * and even then the cached hash means an unchanged catalogue costs one hash compare instead of a
- * ~100 KB re-serialize. See `ArtifactApp::app_catalogue_json`. */
-function uiRefreshWantsCatalogue(scope: UiDirtyScope): boolean {
-  return scope.kind === "full";
-}
+/** 🐢️ The four selection predicates are the KERNEL's (`🎠️kernel/🟦️.ts`), whose Rust twin the wgpu
+ * shell's `refresh_ui` reads from the same fixture — one implementation per language, never one per
+ * renderer, so the two shells cannot drift into different ideas of what a settle dirtied. */
+const uiRefreshWantsWindow = uiDirtyScopeWantsWindowBody;
+const uiRefreshWantsPanel = uiDirtyScopeWantsPanelBody;
+const uiRefreshWantsFlag = uiDirtyScopeWantsSection;
+const uiRefreshWantsCatalogue = uiDirtyScopeWantsCatalogue;
 
 /**
  * 🪟️ Every live window instance for a session — one per base `AppDefinition.windowKinds` entry (id ==

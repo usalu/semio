@@ -101,7 +101,7 @@ async function validateWindowOwnershipSchemas(puzzleRoot: string): Promise<numbe
     {
       path: "🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🧬️schema/🔣️.json",
       cases: [
-        { definition: "Puzzle2dWindowConfig", value: { cameraX: 0, cameraY: 0, cameraZoom: 1, lodMode: "automatic", fillCount: 0, gridSnapEnabled: false, gridFactor: 1, suggestionOffset: 80 }, keys: ["cameraX", "cameraY", "cameraZoom", "lodMode", "fillCount", "gridSnapEnabled", "gridFactor", "suggestionOffset"] },
+        { definition: "Puzzle2dWindowConfig", value: { cameraX: 0, cameraY: 0, cameraZoom: 1, lodMode: "automatic", gridSnapEnabled: false, gridFactor: 1, suggestionOffset: 80 }, keys: ["cameraX", "cameraY", "cameraZoom", "lodMode", "gridSnapEnabled", "gridFactor", "suggestionOffset"] },
         { definition: "Puzzle2dWindowTransient", value: { engagementInput: "", brushCandidateIndex: 0, brushCandidates: [], brushCandidateSourceHandleId: "" }, keys: ["engagementInput", "brushCandidateIndex", "brushCandidates", "brushCandidateSourceHandleId"] },
       ],
     },
@@ -119,7 +119,7 @@ async function validateWindowOwnershipSchemas(puzzleRoot: string): Promise<numbe
     {
       path: "🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🧬️schema/🔣️.json",
       cases: [
-        { definition: "Puzzle5dBoardWindowConfig", value: { camera2d: { x: 0, y: 0, zoom: 1 }, fillCount: 0, lodMode: "automatic", suggestionOffset: 80, gridSnapEnabled: true, gridFactor: 1 }, keys: ["camera2d", "fillCount", "lodMode", "suggestionOffset", "gridSnapEnabled", "gridFactor"] },
+        { definition: "Puzzle5dBoardWindowConfig", value: { camera2d: { x: 0, y: 0, zoom: 1 }, lodMode: "automatic", suggestionOffset: 80, gridSnapEnabled: true, gridFactor: 1 }, keys: ["camera2d", "lodMode", "suggestionOffset", "gridSnapEnabled", "gridFactor"] },
         { definition: "Puzzle5dWorldWindowConfig", value: { camera3d: { position: [8, -8, 8], target: [0, 0, 0], zoom: 1 }, sun }, keys: ["camera3d", "sun"] },
         { definition: "Puzzle5dWindowTransient", value: { engagementInput: "", brushCandidateIndex: 0 }, keys: ["engagementInput", "brushCandidateIndex"] },
       ],
@@ -269,21 +269,16 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
   if (owner.owner !== "Puzzle5dPlayApp") return true;
   const guard = production.indexOf('if !["copy", "cut", "paste", "import-media"].contains(&request.tool_id.as_str())');
   const decode = production.indexOf("puzzle5d_preflight_reserved_wire", guard);
-  return [
-    'puzzle5d_reserved_factory!(Puzzle5dCopyJobFactory, "copy", "puzzle.5d.reserved.copy.v1")',
-    'puzzle5d_reserved_factory!(Puzzle5dCutJobFactory, "cut", "puzzle.5d.reserved.cut.v1")',
-    'puzzle5d_reserved_factory!(Puzzle5dPasteJobFactory, "paste", "puzzle.5d.reserved.paste.v1")',
-    'puzzle5d_reserved_factory!(Puzzle5dImportJobFactory, "import-media", "puzzle.5d.reserved.import-media.v1")',
-  ].every((anchor) => production.includes(anchor))
-    && ["Puzzle5dCopyJobFactory", "Puzzle5dCutJobFactory", "Puzzle5dPasteJobFactory", "Puzzle5dImportJobFactory"].every((factory) => production.includes(`registry.register(${factory}::new(&controller_id))`))
-    && production.includes("impl ArtifactOwnedToolJobFactory for $factory")
+  // 🧳️ The framework registers the reserved copy/cut/paste/import-media factories for every app and builds
+  // their jobs through `build_reserved_tool_job`; a second app-owned factory under the same key refuses app
+  // construction, so none may exist.
+  return !production.includes("Puzzle5dCopyJobFactory")
+    && !production.includes("puzzle5d_reserved_factory!")
     && production.includes("type Owner = EditorApp<Puzzle5dPlayApp>;")
     && production.includes("fn build_artifact_store_one_item_preparation_factory()")
     && production.includes("Some(std::sync::Arc::new(Puzzle5dStorePreparationFactory))")
     && production.includes("fn build_config_store_one_item_preparation_factory()")
     && production.includes("Some(std::sync::Arc::new(Puzzle5dConfigStorePreparationFactory))")
-    && production.includes('tool_id: "copy", lanes: &[ArtifactToolPublicationLane::HostOnly]')
-    && ["cut", "paste", "import-media"].every((route) => production.includes(`tool_id: "${route}", lanes: &[ArtifactToolPublicationLane::Artifact]`))
     && guard >= 0 && decode > guard;
 }
 
@@ -325,11 +320,11 @@ class PublicationAuthorityAuditScript extends BundleScript {
         }
       }
       if (owner.owner === "Puzzle5dPlayApp") {
-        const missingReserved = source.replace('puzzle5d_reserved_factory!(Puzzle5dCutJobFactory, "cut", "puzzle.5d.reserved.cut.v1");', "");
+        const missingReserved = `puzzle5d_reserved_factory!(Puzzle5dCutJobFactory, "cut", "puzzle.5d.reserved.cut.v1");\n${source}`;
         const missingPreparation = source.replace("Some(std::sync::Arc::new(Puzzle5dStorePreparationFactory))", "None");
         const decodeBeforeAuthority = source.replace('        if !["copy", "cut", "paste", "import-media"].contains(&request.tool_id.as_str()) {\n            return Ok(None);\n        }\n', "");
         if (ownerOracle(owner, missingReserved) || ownerOracle(owner, missingPreparation) || ownerOracle(owner, decodeBeforeAuthority)) {
-          throw new Error("Puzzle5d accepted a missing reserved factory, missing Store preparation, or decode before route authority");
+          throw new Error("Puzzle5d accepted an app-owned reserved factory, missing Store preparation, or decode before route authority");
         }
       }
     }

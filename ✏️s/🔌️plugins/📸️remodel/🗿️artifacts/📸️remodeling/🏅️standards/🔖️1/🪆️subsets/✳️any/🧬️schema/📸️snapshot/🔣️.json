@@ -13,7 +13,6 @@
     "calibration",
     "params",
     "gcps",
-    "job",
     "results"
   ],
   "properties": {
@@ -59,10 +58,6 @@
       "items": {
         "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/GroundControlPoint"
       },
-      "x-semio-state": "artifact"
-    },
-    "job": {
-      "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/ReconstructionJob",
       "x-semio-state": "artifact"
     },
     "results": {

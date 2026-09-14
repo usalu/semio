@@ -98,16 +98,18 @@ const locate = (snapshot, plan, needle) => {
   return null;
 };
 
-/** 🎯️ Jiggles at one point until the shell's own `pointer hit` trace resolves `needle` there.
+/** 🎯️ Settles the pointer on one point and reports whether the shell's own `pointer hit` trace
+ * resolved `needle` there — an OBSERVATION, not an arming loop.
  *
- * 🩸️ The retained hit registry is DRAINED one entry per frame-build boundary step and rebuilt by the
- * chrome walk, so consecutive pointer samples at the SAME point alternate `targets=40 hit=Some(..)`
- * and `targets=0 hit=None`. A press issued blind lands on the empty half about half the time, the
- * shell routes no retained press at all, and a `PointerDown`-seeded gesture (Slider, Ring) never
- * seats its capture — measured in `🗑️generated/wgpu-deferred/commit-1`. */
-const armHit = async (x, y, needle, tries = 60) => {
-  for (let attempt = 0; attempt < tries; attempt += 1) {
-    await page.mouse.move(x + (attempt % 2 === 0 ? -0.25 : 0.25), y);
+ * 🩸️ This used to JIGGLE 0.25 px up to 60 times, because the retained hit registry was one vector the
+ * frame build drained while `hit_at` scanned it: consecutive samples at the SAME point alternated
+ * `targets=40 hit=Some(..)` and `targets=0 hit=None`, a blind press landed on the empty half about half
+ * the time, and a `PointerDown`-seeded gesture (Slider, Ring) never seated its capture (measured in
+ * `🗑️generated/wgpu-deferred/commit-1`). `📓️wgpu-hit-registry-drain-2026-09-14.md` made the registry a
+ * retained authority, and a probe that kept arming would hide the next regression of that defect. */
+const armHit = async (x, y, needle, tries = 20) => {
+  await page.mouse.move(x, y);
+  for (let sample = 0; sample < tries; sample += 1) {
     await page.waitForTimeout(110);
     const last = has("os_host pointer hit").at(-1) ?? "";
     if (last.includes("hit=Some(") && last.includes(needle)) return true;

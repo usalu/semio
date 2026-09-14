@@ -22,14 +22,15 @@ use crate::standards::v1::subsets::any::schema::mutations::text::Generation2dMut
 use crate::{artifact_kind, Generation2dSnapshot, GENERATION2D_DIALECT, GENERATION_2D_SCHEMA};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
-use semio_framework_os_flow::{FlowEvalSession, FlowHost};
+use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, ArtifactRetainedWorkCapacity};
 use semio_framework_plugin::{
     app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane,
     ArtifactReservedJob, ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, ArtifactToolCompletion,
     ArtifactView, CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, EditorApp, Effect, Emit, EphemeralEmit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef,
-    InteractionTopology, Label, LocalizedLabel, MediaClass, MediaForm, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
+    InteractionTopology, Label, LocalizedLabel, MediaClass, MediaForm, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, ToolRunJob, ToolRunJobPurpose, ToolRunJobRequest, TopologyNode,
 };
+use crate::preview_eval::{PreviewEvalRunLink, PreviewEvalRunOwner, PreviewEvalSessions, PreviewEvalTarget, PreviewEvalWindow};
 use store::EngineHandles;
 
 //#region 🔖️Constants
@@ -54,18 +55,21 @@ fn migrated_command(mut definition: CommandDefinition) -> CommandDefinition {
     definition
 }
 
-/// 🧠️ The ONE `FlowEvalSession` this app instance retains across turns. Every entry point used to
-/// build a throwaway `FlowEvalSession::new()`, so `flowEvalResolve`'s `seed_node_cache` would have
-/// landed on a cache destroyed before the next tick could read it. Mirrors
+/// 🧠️ The retained evaluation state of one app instance: the document session the flow and edit
+/// preview windows render, the generation session the generate preview evaluates the selected
+/// generation into, and the `previewEval` run's surface-owned link. Two sessions, because a generation
+/// is a patched fixture of its own and one session holds one evaluation. Mirrors
 /// `Generation3dInstanceOperationOwner` and the framework's reference `FlowInstanceOperationOwner`.
-struct Generation2dInstanceOperationOwner {
+pub(crate) struct Generation2dInstanceOperationOwner {
     eval_session: Option<FlowEvalSession>,
+    generation_session: Option<FlowEvalSession>,
+    run_link: PreviewEvalRunLink,
     closing: bool,
 }
 
 impl Generation2dInstanceOperationOwner {
     fn new() -> Self {
-        Self { eval_session: Some(FlowEvalSession::new()), closing: false }
+        Self { eval_session: Some(FlowEvalSession::new()), generation_session: Some(FlowEvalSession::new()), run_link: PreviewEvalRunLink::default(), closing: false }
     }
 
     fn with_session<R>(&mut self, body: impl FnOnce(&mut FlowEvalSession) -> R) -> Result<R, Fault> {
@@ -73,6 +77,35 @@ impl Generation2dInstanceOperationOwner {
             return Err(Fault::from("generation2d-eval-session-closing"));
         }
         self.eval_session.as_mut().map(body).ok_or_else(|| Fault::from("generation2d-eval-session-owner-missing"))
+    }
+
+    /// 🧳️ Both sessions and the run link, while the instance is live.
+    fn parts(&mut self) -> Result<(PreviewEvalSessions<'_>, &mut PreviewEvalRunLink), Fault> {
+        let Self { eval_session, generation_session, run_link, closing } = self;
+        match (eval_session.as_mut(), generation_session.as_mut()) {
+            (Some(document), Some(generation)) if !*closing => Ok((PreviewEvalSessions { document, generation }, run_link)),
+            _ => Err(Fault::from("generation2d-eval-session-closing")),
+        }
+    }
+
+    /// 🩹️ Owes the attached previews exactly what this gesture's own emit says it owes them, and puts
+    /// the run start that debt needs on that same emit when no run is live to be woken instead.
+    fn owe_attached_previews_for_mutations(&mut self, windows: &[PreviewEvalWindow<'_>], servable: bool, emit: &mut Emit<Generation2dMutation, Generation2dConfigMutation, NoDraftMutation>) -> Result<bool, Fault> {
+        let (sessions, link) = self.parts()?;
+        Ok(crate::preview_eval::owe_attached_previews_for_mutations(sessions, link, windows, servable, emit))
+    }
+
+    /// 🚦️ Owes the attached previews an evaluation unconditionally and carries the run start the debt needs.
+    fn owe_attached_previews_carrying(&mut self, windows: &[PreviewEvalWindow<'_>], servable: bool, emit: &mut Emit<Generation2dMutation, Generation2dConfigMutation, NoDraftMutation>) -> Result<(), Fault> {
+        let (sessions, link) = self.parts()?;
+        crate::preview_eval::owe_attached_previews_carrying(sessions, link, windows, servable, emit);
+        Ok(())
+    }
+}
+
+impl PreviewEvalRunOwner for Generation2dInstanceOperationOwner {
+    fn preview_eval_parts(&mut self) -> Option<(PreviewEvalSessions<'_>, &mut PreviewEvalRunLink)> {
+        self.parts().ok()
     }
 }
 
@@ -91,10 +124,14 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation2dInst
         if maximum_items == 0 || maximum_bytes == 0 {
             return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        let Some(session) = self.eval_session.as_mut() else { return Ok(semio_framework_plugin::PluginCloseStep::Complete) };
+        let Some(slot) = [&mut self.eval_session, &mut self.generation_session].into_iter().find(|slot| slot.is_some()) else { return Ok(semio_framework_plugin::PluginCloseStep::Complete) };
+        let Some(session) = slot.as_mut() else { return Ok(semio_framework_plugin::PluginCloseStep::Complete) };
         let step = session.close_step(maximum_items, maximum_bytes);
         if session.terminal_is_empty() {
-            self.eval_session = None;
+            *slot = None;
+            if matches!(step, semio_framework_job::InteractiveJobCloseStep::Complete) {
+                return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
         }
         Ok(match step {
             semio_framework_job::InteractiveJobCloseStep::Blocked => semio_framework_plugin::PluginCloseStep::Blocked { reason: "Generation2d evaluation session awaits its exact close grant" },
@@ -105,14 +142,15 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation2dInst
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
         self.closing = true;
-        if let Some(session) = self.eval_session.as_mut() {
+        self.run_link.wake();
+        for session in [self.eval_session.as_mut(), self.generation_session.as_mut()].into_iter().flatten() {
             session.begin_close();
         }
         self.maintenance_step(maximum_items, maximum_bytes)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.eval_session.is_none()
+        self.closing && self.eval_session.is_none() && self.generation_session.is_none()
     }
 }
 
@@ -213,6 +251,20 @@ const GENERATION2D_BOUNDED_TOOL_IDS: &[&str] = &[
     "setEvalOutputs",
 ];
 const GENERATION2D_PREVIEW_TOOL_IDS: &[&str] = &["addGeneration", "removeGeneration", "renameGeneration", "updateGenerationValues", "selectGeneration"];
+/// ⏱️ The `previewEval` run's hop routes, answered by [`Generation2dFlowEvalWork`].
+const GENERATION2D_FLOW_EVAL_TOOL_IDS: &[&str] = &["flowEvalTick", "flowEvalResolve"];
+/// 🎯️ Which session each preview window kind evaluates — the editor's roster for the `previewEval` run.
+const GENERATION2D_PREVIEW_TARGETS: &[(&str, PreviewEvalTarget)] = &[(edit_preview::GENERATION2D_PLAY_WINDOW_PREVIEW, PreviewEvalTarget::Document), (generate_preview::GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW, PreviewEvalTarget::Generation)];
+
+/// 🎯️ The target a preview window kind evaluates, or `None` for every other kind.
+pub(crate) fn generation2d_preview_target(kind: &str) -> Option<PreviewEvalTarget> {
+    GENERATION2D_PREVIEW_TARGETS.iter().find(|(candidate, _)| *candidate == kind).map(|(_, target)| *target)
+}
+
+/// 🪟️ Every attached preview window, in roster order — the windows the `previewEval` run evaluates.
+pub(crate) fn generation2d_preview_windows(view: Option<&semio_framework_plugin::ViewModel>) -> Vec<PreviewEvalWindow<'_>> {
+    crate::preview_eval::attached_preview_windows(view, GENERATION2D_PREVIEW_TARGETS)
+}
 const GENERATION2D_RETAINED_PAYLOAD_SCHEMA: &str = "generation.2d.tool-command.v1";
 const GENERATION2D_RETAINED_RAW_BYTES: usize = 8_192;
 /// 🧮️ The ONE declared quantity of every generation2d retained route: at most 32 point-invertible
@@ -301,32 +353,101 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dSession
             return Err(Fault::from("generation2d-session-command-work-repeated"));
         }
         self.consumed = true;
+        let windows = generation2d_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
+        let servable = crate::preview_eval::may_rearm(&input.snapshot.fixture);
         let emit = self.instance_owner.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| {
-            owner.with_session(|session| generation2d_retained_reduce(input.command, input.snapshot, input.config, input.history, input.interaction, input.hover, input.context, input.operation, session))?
+            let mut emit = owner.with_session(|session| generation2d_retained_reduce(input.command, input.snapshot, input.config, input.history, input.interaction, input.hover, input.context, input.operation, session))??;
+            owner.owe_attached_previews_for_mutations(&windows, servable, &mut emit)?;
+            Ok(emit)
         })?;
         Ok(ArtifactCommandWorkStep::Complete(emit))
     }
 }
 
-struct Generation2dPreviewCommandWork {
+/// ⏱️ The `previewEval` run's two hops against the instance's RETAINED sessions: `flowEvalTick`
+/// evaluates the target its window kind names and records the digest it evaluated, `flowEvalResolve`
+/// folds one extension answer into that target's session. Both wake the run job. The generate
+/// preview's evaluation is published into the app transient its window renders.
+struct Generation2dFlowEvalWork {
     tool_id: &'static str,
-    initialized: bool,
-    emit: Option<Emit<Generation2dMutation, Generation2dConfigMutation, NoDraftMutation>>,
-    host: Option<FlowHost>,
-    /// 🧹️ The host's explicit retirement ladder — a bare `Option<FlowHost>::take()`-and-drop panics
-    /// on the cloned fixture's `OrderedMap<WidgetLayout>` root, so it is drained under the grant.
-    host_retirement: Option<semio_framework_os_flow::FlowHostRetirement>,
-    session: Option<FlowEvalSession>,
-    closing: bool,
+    instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    consumed: bool,
 }
 
-impl Generation2dPreviewCommandWork {
-    fn new(tool_id: &'static str) -> Self {
-        Self { tool_id, initialized: false, emit: None, host: None, host_retirement: None, session: None, closing: false }
+impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dFlowEvalWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(
+        &self,
+        command: &Generation2dCommand,
+        snapshot: &Generation2dSnapshot,
+        interaction: &protocol::InteractionState,
+        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation2dPlayApp>>>,
+    ) -> Option<usize> {
+        let kind = match command {
+            Generation2dCommand::FlowEvalTick(payload) => payload.window_kind_id.as_str(),
+            Generation2dCommand::FlowEvalResolve(payload) => payload.window_kind_id.as_str(),
+            _ => return None,
+        };
+        generation2d_preview_target(kind).and_then(|_| generation2d_bounded_extent(command, snapshot, interaction))
+    }
+
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
+        if self.consumed {
+            return Err(Fault::from("generation2d-flow-eval-work-repeated"));
+        }
+        self.consumed = true;
+        let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
+        let cfg = ConfigView { snapshot: input.config, window: None };
+        let (emit, transient) = self.instance_owner.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| generation2d_flow_eval_hop(owner, input.command, &doc, &cfg))?;
+        Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { transient, ..Default::default() } })
     }
 }
 
-impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dPreviewCommandWork {
+/// ⏱️ One `previewEval` hop against `owner`: the tick or the answer fold `command` names, over the
+/// session of the target its window kind evaluates. Answers the hop's emit and the app transient the
+/// generate preview's changed evaluation owes.
+pub(crate) fn generation2d_flow_eval_hop(
+    owner: &mut Generation2dInstanceOperationOwner,
+    command: &Generation2dCommand,
+    doc: &ArtifactView<'_, Generation2dSnapshot>,
+    cfg: &ConfigView<'_, Generation2dConfig>,
+) -> Result<(Emit<Generation2dMutation, Generation2dConfigMutation, NoDraftMutation>, Vec<Generation2dTransientMutation>), Fault> {
+    let (mut sessions, link) = owner.parts()?;
+    let result = match command {
+        Generation2dCommand::FlowEvalTick(payload) => {
+            let target = generation2d_preview_target(&payload.window_kind_id).ok_or_else(|| Fault::from("generation2d-flow-eval-window-kind-unknown"))?;
+            let (emit, publication) = flow_eval_tick::evaluate(&payload.window_id, &payload.window_kind_id, target, doc, cfg, sessions.get_mut(target));
+            link.note_evaluated(target, flow_eval_tick::target_digest(target, doc, cfg));
+            let transient = match (target, publication) {
+                (PreviewEvalTarget::Generation, semio_framework_os_flow::FlowEvalPublication::Changed(preview_text)) => vec![SetGenerationPreview { preview_text }.into()],
+                _ => Vec::new(),
+            };
+            Ok((emit, transient))
+        }
+        Generation2dCommand::FlowEvalResolve(payload) => {
+            let target = generation2d_preview_target(&payload.window_kind_id).ok_or_else(|| Fault::from("generation2d-flow-eval-window-kind-unknown"))?;
+            crate::preview_eval::resolve_eval(payload, sessions.get_mut(target));
+            Ok((Emit::default(), Vec::new()))
+        }
+        _ => Err(Fault::from("generation2d-flow-eval-route-rejected")),
+    };
+    link.wake();
+    result
+}
+
+/// 🧬️ The generation commands against the instance's retained owner: the one-shot reduce, and every
+/// attached preview owed a fresh evaluation carried on the gesture's own emit — the generate preview
+/// is evaluated by the `previewEval` run, never by a tick loop inside this command.
+struct Generation2dGenerationCommandWork {
+    tool_id: &'static str,
+    instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    consumed: bool,
+}
+
+impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dGenerationCommandWork {
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
@@ -342,70 +463,20 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dPreview
     }
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
-        if !self.initialized {
-            let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
-            let cfg = ConfigView { snapshot: input.config, window: None };
-            let result = generation::prepare_command(input.command, &doc, &cfg).ok_or_else(|| Fault::from("generation2d-preview-command-route-rejected"))?;
-            self.initialized = true;
-            if !result.publishes_preview {
-                return Ok(ArtifactCommandWorkStep::Complete(result.emit));
-            }
-            let Some(values) = result.preview_values else {
-                return Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit: result.emit, ephemeral: EphemeralEmit { transient: vec![SetGenerationPreview { preview_text: None }.into()], ..Default::default() } });
-            };
-            let host = crate::standards::v1::subsets::any::schema::generation_preview_host(&input.snapshot.fixture, &values);
-            let mut session = FlowEvalSession::new();
-            session.sync(&host);
-            self.emit = Some(result.emit);
-            self.host = Some(host);
-            self.session = Some(session);
-            return Ok(ArtifactCommandWorkStep::Progress { stage: "generation2d-preview-evaluation", preview: br#"{"en":"Evaluating preview","de":"Vorschau wird ausgewertet"}"# });
+        if self.consumed {
+            return Err(Fault::from("generation2d-generation-command-work-repeated"));
         }
-        let host = self.host.as_mut().ok_or_else(|| Fault::from("generation2d-preview-host-owner-missing"))?;
-        let session = self.session.as_mut().ok_or_else(|| Fault::from("generation2d-preview-session-owner-missing"))?;
-        if session.tick(host) {
-            return Ok(ArtifactCommandWorkStep::Progress { stage: "generation2d-preview-evaluation", preview: br#"{"en":"Evaluating preview","de":"Vorschau wird ausgewertet"}"# });
+        self.consumed = true;
+        let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
+        let cfg = ConfigView { snapshot: input.config, window: None };
+        let result = generation::prepare_command(input.command, &doc, &cfg).ok_or_else(|| Fault::from("generation2d-generation-command-route-rejected"))?;
+        let mut emit = result.emit;
+        if result.publishes_preview {
+            let windows = generation2d_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
+            let servable = crate::preview_eval::may_rearm(&input.snapshot.fixture);
+            self.instance_owner.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| owner.owe_attached_previews_carrying(&windows, servable, &mut emit))?;
         }
-        let preview_text = session.eval_json().to_string();
-        let emit = self.emit.take().ok_or_else(|| Fault::from("generation2d-preview-emit-owner-missing"))?;
-        Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { transient: vec![SetGenerationPreview { preview_text: Some(preview_text) }.into()], ..Default::default() } })
-    }
-
-    fn begin_close(&mut self) {
-        self.closing = true;
-        if let Some(session) = self.session.as_mut() {
-            session.begin_close();
-        }
-    }
-
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        use semio_framework_job::InteractiveJobCloseStep;
-        if let Some(session) = self.session.as_mut() {
-            let step = session.close_step(maximum_items, maximum_bytes);
-            if matches!(step, InteractiveJobCloseStep::Complete) && session.terminal_is_empty() {
-                self.session.take();
-                if let Some(host) = self.host.take() {
-                    self.host_retirement = Some(semio_framework_os_flow::FlowHostRetirement::new(host));
-                }
-                return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-            }
-            return step;
-        }
-        if let Some(retirement) = self.host_retirement.as_mut() {
-            return match retirement.close_page(maximum_items, maximum_bytes) {
-                Ok(false) => InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
-                Ok(true) => {
-                    self.host_retirement = None;
-                    InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-                Err(_) => InteractiveJobCloseStep::Blocked,
-            };
-        }
-        InteractiveJobCloseStep::Complete
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.session.is_none() && self.host.is_none() && self.host_retirement.is_none()
+        Ok(ArtifactCommandWorkStep::Complete(emit))
     }
 }
 
@@ -469,12 +540,14 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation2dBounded
         ArtifactToolPublicationContract { tool_id: "canvasPointerMove", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "canvasPointerUp", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "canvasWheel", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-        ArtifactToolPublicationContract { tool_id: "addGeneration", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Transient] },
-        ArtifactToolPublicationContract { tool_id: "removeGeneration", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Transient] },
-        ArtifactToolPublicationContract { tool_id: "renameGeneration", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Transient] },
-        ArtifactToolPublicationContract { tool_id: "updateGenerationValues", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Transient] },
-        ArtifactToolPublicationContract { tool_id: "selectGeneration", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Transient] },
-        ArtifactToolPublicationContract { tool_id: "flowEvalTick", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "addGeneration", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "removeGeneration", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "renameGeneration", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "updateGenerationValues", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "selectGeneration", lanes: &[ArtifactToolPublicationLane::Config] },
+        // ⏱️ The tick's one store lane is the app transient the generate preview renders; its extension
+        // invocations are no store lane at all.
+        ArtifactToolPublicationContract { tool_id: "flowEvalTick", lanes: &[ArtifactToolPublicationLane::Transient] },
         ArtifactToolPublicationContract { tool_id: "flowEvalResolve", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "moveMediaNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -534,9 +607,19 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dContrib
         let Generation2dCommand::SetContributions(payload) = input.command else {
             return Err(Fault::from("generation2d-contributions-route-rejected"));
         };
-        let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
-        let cfg = ConfigView { snapshot: input.config, window: None };
-        let emit = self.instance_owner.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| owner.with_session(|session| set_contributions::handle(payload, &doc, &cfg, session))?)?;
+        let windows = generation2d_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
+        let servable = crate::preview_eval::may_rearm(&input.snapshot.fixture);
+        let emit = self.instance_owner.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| {
+            let mut emit = Emit::default();
+            let invalidated = {
+                let (sessions, _) = owner.parts()?;
+                set_contributions::install(payload, &mut [sessions.document, sessions.generation])?
+            };
+            if invalidated {
+                owner.owe_attached_previews_carrying(&windows, servable, &mut emit)?;
+            }
+            Ok(emit)
+        })?;
         Ok(ArtifactCommandWorkStep::Complete(emit))
     }
 }
@@ -1213,6 +1296,16 @@ impl ArtifactReservedJob for Generation2dImportJob {
 #[derive(Default)]
 pub struct Generation2dPlayApp;
 
+/// 🎥️ Parses the flow-graph camera out of `command_from_action`'s nested `{viewport: {x, y, zoom}}` args
+/// (`nodeGraphViewportActionArgs`, `🧱️elements/🕸️NodeGraph/🟦️.tsx`). An absent `viewport` decodes to the
+/// identity camera, because `ActionDefinition::new("nodeGraphViewport", …)` declares no args and every
+/// declared action must bridge from its own id under the shell's staged args alone. A present but malformed
+/// one still faults: a camera the graph cannot express is never silently replaced by one it can.
+fn parse_flow_viewport(args: &dsl::DslValue) -> Result<semio_framework_os_kernel::Viewport2d, Fault> {
+    let Some(value) = args.get("viewport").cloned() else { return Ok(semio_framework_os_kernel::Viewport2d::default()) };
+    dsl::from_dsl_value(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))
+}
+
 impl ArtifactEditor for Generation2dPlayApp {
     /// 🛍️ Publishes the whole registered flow operator catalogue once per app instance on the reserved
     /// `framework.section.catalogue` retained surface — never on the node-graph scene, whose fixed
@@ -1368,8 +1461,10 @@ impl ArtifactEditor for Generation2dPlayApp {
         let contributions = GENERATION2D_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id);
         let work: Box<dyn ArtifactCommandWork<EditorApp<Generation2dPlayApp>>> = if contributions {
             Box::new(Generation2dContributionsWork { instance_owner: request.instance_operation_owner, consumed: false })
+        } else if GENERATION2D_FLOW_EVAL_TOOL_IDS.contains(&tool_id) {
+            Box::new(Generation2dFlowEvalWork { tool_id, instance_owner: request.instance_operation_owner, consumed: false })
         } else if GENERATION2D_PREVIEW_TOOL_IDS.contains(&tool_id) {
-            Box::new(Generation2dPreviewCommandWork::new(tool_id))
+            Box::new(Generation2dGenerationCommandWork { tool_id, instance_owner: request.instance_operation_owner, consumed: false })
         } else {
             Box::new(Generation2dSessionCommandWork::new(tool_id, request.instance_operation_owner))
         };
@@ -1449,11 +1544,7 @@ impl ArtifactEditor for Generation2dPlayApp {
                     value,
                 }))
             }
-            "nodeGraphViewport" => {
-                let value = args.get("viewport").cloned().ok_or_else(|| Fault::from("nodeGraphViewport requires viewport"))?;
-                let viewport = dsl::from_dsl_value::<semio_framework_os_kernel::Viewport2d>(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))?;
-                Ok(Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport }))
-            }
+            "nodeGraphViewport" => Ok(Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: parse_flow_viewport(&args)? })),
             "setShowMode" => Ok(Generation2dCommand::SetShowMode(set_show_mode::SetShowMode { value: str_arg(&["value", "showMode"]).unwrap_or_default() })),
             "generate" => Ok(Generation2dCommand::Generate(enter_generate::Generate {})),
             "setEvalOutputs" => Ok(Generation2dCommand::SetEvalOutputs(set_eval_outputs::SetEvalOutputs { outputs_json: str_arg(&["outputsJson", "outputs_json", "evalJson"]).unwrap_or_else(|| "{}".into()) })),
@@ -1462,10 +1553,19 @@ impl ArtifactEditor for Generation2dPlayApp {
             "canvasPointerUp" => Ok(Generation2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {})),
             "canvasWheel" => Ok(Generation2dCommand::CanvasWheel(canvas_wheel::CanvasWheel {})),
             "selectGeneration" => Ok(Generation2dCommand::SelectGeneration(select_generation::SelectGeneration { id: str_arg(&["id"]) })),
-            "flowEvalTick" => Ok(Generation2dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {})),
+            "flowEvalTick" => Ok(Generation2dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {
+                window_id: str_arg(&["windowId", "window_id"]).unwrap_or_default(),
+                window_kind_id: str_arg(&["windowKindId", "window_kind_id"]).unwrap_or_default(),
+            })),
             "flowEvalResolve" => Ok(Generation2dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve {
+                window_id: str_arg(&["windowId", "window_id"]).unwrap_or_default(),
+                window_kind_id: str_arg(&["windowKindId", "window_kind_id"]).unwrap_or_default(),
                 node_hash: u64_arg(&["nodeHash", "node_hash"]).unwrap_or_default(),
                 output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_default(),
+                extension_id: str_arg(&["extensionId", "extension_id"]).unwrap_or_default(),
+                ok: args.get("ok").and_then(dsl::DslValue::as_bool).unwrap_or(false),
+                fault_code: str_arg(&["faultCode", "fault_code"]).unwrap_or_default(),
+                fault_message: str_arg(&["faultMessage", "fault_message"]).unwrap_or_default(),
             })),
             "setContributions" => Ok(Generation2dCommand::SetContributions(set_contributions::SetContributions {
                 json: str_arg(&["json"]).unwrap_or_default(),
@@ -1534,24 +1634,33 @@ impl ArtifactEditor for Generation2dPlayApp {
         InteractionTopology { domains }
     }
 
-    /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes —
-    /// covers every mutation path (edits, undo/redo, remote operations) in one place instead of each
-    /// action re-checking.
-    ///
-    /// 🪟️ Unlike generation3d's, this tick is a `HostOnly` route: it publishes into no window
-    /// transient, declares no `retained_window_transient_target`, and therefore carries no window id
-    /// — but it is still pointless before the first `Event::SurfaceVisible`, when `view` is `None`
-    /// and nothing is mounted to render what it computes, so the chain waits instead of spinning
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    fn pending_effects(_owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
-        if view.is_none_or(|view| view.window_instances.is_empty()) {
-            return Vec::new();
+    /// ⏯️ Starts, finalizes or wakes the `previewEval` run for the attached preview windows
+    /// ([`crate::preview_eval::preview_eval_run_effects`]), and owes every window whose target moved
+    /// since it last evaluated — an undo, a redo or a remote edit lands with no local gesture to owe it.
+    /// Before the first `Event::SurfaceVisible` the host has no roster (`view` is `None`), so nothing
+    /// starts; a graph the live registry cannot serve starts nothing either, because only
+    /// `setContributions` can move it.
+    fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
+        let windows = generation2d_preview_windows(view);
+        let servable = crate::preview_eval::may_rearm(&doc.snapshot.fixture);
+        let mut targets: Vec<PreviewEvalTarget> = windows.iter().map(|(_, _, target)| *target).collect();
+        targets.sort_unstable();
+        targets.dedup();
+        let current: std::collections::BTreeMap<PreviewEvalTarget, u64> = targets.into_iter().map(|target| (target, flow_eval_tick::target_digest(target, doc, cfg))).collect();
+        owner
+            .with_mut::<Generation2dInstanceOperationOwner, _>(|owner| {
+                let (sessions, link) = owner.parts()?;
+                Ok(crate::preview_eval::preview_eval_run_effects(sessions, link, &windows, &current, doc.tool_run(), servable))
+            })
+            .unwrap_or_default()
+    }
+
+    /// ⏯️ The `previewEval` run job: its hops read the retained sessions this instance's commands fold into.
+    fn build_tool_run_job(request: ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<ToolRunJob>, Fault> {
+        if request.tool_id != crate::preview_eval::PREVIEW_EVAL_TOOL_ID || request.purpose != ToolRunJobPurpose::Run {
+            return Ok(None);
         }
-        let mut session = FlowEvalSession::new();
-        let pending = crate::standards::v1::subsets::any::schema::with_host_session(&doc.snapshot.fixture, &mut session, |host, session| session.sync(host));
-        let effects = if pending { vec![flow_eval_tick::rearm(101)] } else { Vec::new() };
-        close_flow_session(&mut session);
-        effects
+        Ok(Some(Box::new(crate::preview_eval::PreviewEvalRunJob::<Generation2dInstanceOperationOwner>::new(request.instance_owner, request.port, request.identity)?)))
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
@@ -1680,6 +1789,9 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
         .window_kind_def(generations::definition())
         .window_kind_def(form::definition())
         .window_kind_def(generate_preview::definition())
+        // ⏯️ The read-only preview evaluation run: declared so the framework owns its lifecycle and
+        // injects its reserved actions; both modes reference it because both mount a preview that starts it.
+        .tool(crate::preview_eval::preview_eval_tool_definition())
         .default_layout(edit::layout())
         .named_layout(generate::layout())
         .panel_tab_def(document_panel::definition())
@@ -1709,7 +1821,6 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
         .action_with(ActionDefinition::new("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Canvas-Zeiger losgelassen"), ActionKind::View, "mouse-pointer"))
         .view_action("canvasWheel", LocalizedLabel::native("Canvas Wheel", "Canvas-Mausrad"))
         .action_with(categorized_action("selectGeneration", LocalizedLabel::native("Select Generation", "Generation auswählen"), ActionKind::View, "methods"))
-        .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), ActionKind::View) })
         .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::Migrated)
         .action_interactive_job("moveMediaNode", InteractiveJobClassification::Migrated)
         .action_interactive_job("addWidget", InteractiveJobClassification::Migrated)
@@ -1729,6 +1840,7 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("canvasPointerUp", InteractiveJobClassification::Migrated)
         .action_interactive_job("canvasWheel", InteractiveJobClassification::Migrated)
         .action_interactive_job("selectGeneration", InteractiveJobClassification::Migrated)
+        .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) }))
         .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalResolve", LocalizedLabel::native("Resolve Flow Evaluation", "Flow-Auswertung aufnehmen"), "runtime", ActionKind::View) }))
         .action_interactive_job("flowEvalTick", InteractiveJobClassification::Migrated)
         .action_interactive_job("flowEvalResolve", InteractiveJobClassification::Migrated)

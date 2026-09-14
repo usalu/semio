@@ -47,7 +47,7 @@ fn render(node: &UiComponentSceneNode) -> InputState<ActionDescriptor> {
 }
 
 fn hit<'a>(input: &'a InputState<ActionDescriptor>, control_id: &str) -> &'a HitTarget<ActionDescriptor> {
-    input.hit_targets.iter().find(|target| target.control_id.as_deref() == Some(control_id)).unwrap_or_else(|| panic!("no hit target registered for control_id {control_id:?}"))
+    input.staged_hits().iter().find(|target| target.control_id.as_deref() == Some(control_id)).unwrap_or_else(|| panic!("no hit target registered for control_id {control_id:?}"))
 }
 
 fn columns_json(entries: &[(&str, &str, bool)]) -> String {
@@ -105,7 +105,7 @@ fn non_sortable_column_registers_no_header_hit() {
     let table = TableScene::base(columns_json(&[("name", "Name", false)]), "[]".to_string());
     let node = table_scene("s1", table);
     let input = render(&node);
-    assert!(input.hit_targets.iter().all(|target| target.control_id.as_deref() != Some("s1.header.name")), "a non-sortable column must not register a header sort hit target");
+    assert!(input.staged_hits().iter().all(|target| target.control_id.as_deref() != Some("s1.header.name")), "a non-sortable column must not register a header sort hit target");
 }
 
 #[test]

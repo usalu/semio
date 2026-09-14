@@ -2953,20 +2953,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
   });
 
 
-  describe("leftover brushPreview hash-bust", () => {
-    it("omits the cached world-body hash when leftover brush hover is a vortex", async () => {
-      const { leftoverBrushPreviewWindowHash, leftoverBrushPreviewRefreshScope, leftoverBrushPreviewRefreshReady } = await import("../../🧱️elements/🔌️PluginRuntime/🟦️.tsx");
-      expect(leftoverBrushPreviewWindowHash("brush", "seed-left-001:v0", "abc")).toBeUndefined();
-      expect(leftoverBrushPreviewWindowHash("select", "seed-left-001:v0", "abc")).toBe("abc");
-      expect(leftoverBrushPreviewWindowHash("brush", null, "abc")).toBe("abc");
-      expect(leftoverBrushPreviewRefreshScope("brush", "seed-left-001:v0")).toEqual({ kind: "full" });
-      expect(leftoverBrushPreviewRefreshScope("select", "seed-left-001:v0")).toBeNull();
-      expect(leftoverBrushPreviewRefreshReady("interactionHover", "brush", "seed-left-001:v0")).toBe(false);
-      expect(leftoverBrushPreviewRefreshReady("suggestionsTick", "brush", "seed-left-001:v0")).toBe(true);
-      expect(leftoverBrushPreviewRefreshReady("interactionHover", "brush", "seed-left-001:v0", '{"targetVortexFullId":"seed-left-001:v0"}')).toBe(true);
-    });
-  });
-
   describe("leftover brush guest hover retain", () => {
     it("keeps the leftover vortex id on an armed brush window", async () => {
       const { leftoverBrushRetainGuestHoverV1 } = await import("../../🧱️elements/🌐️World3dHost/🟦️.tsx");

@@ -2014,6 +2014,7 @@ pub struct IncrementalSfm {
     cfg: SfmConfig,
     cameras: Vec<(usize, CameraPose)>,
     points: std::collections::BTreeMap<usize, [f64; 3]>,
+    point_events: Option<Vec<(usize, [f64; 3], bool)>>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -2093,7 +2094,24 @@ pub struct ReconstructionSnapshotPreparation {
 impl IncrementalSfm {
     /// 🆕️ Starts an empty incremental reconstruction over a shared calibration, precomputed feature tracks and per-frame keypoints.
     pub fn new(intrinsics: Intrinsics, tracks: FeatureTracks, keypoints_per_frame: Vec<Vec<Keypoint>>, cfg: SfmConfig) -> Self {
-        Self { intrinsics, tracks, keypoints_per_frame, pairwise_matches: Vec::new(), cfg, cameras: Vec::new(), points: std::collections::BTreeMap::new() }
+        Self { intrinsics, tracks, keypoints_per_frame, pairwise_matches: Vec::new(), cfg, cameras: Vec::new(), points: std::collections::BTreeMap::new(), point_events: None }
+    }
+
+    /// 🔭️ Starts recording every triangulated (`true`) and pruned (`false`) point by track id.
+    pub fn observe_points(&mut self) {
+        self.point_events.get_or_insert_with(Vec::new);
+    }
+
+    /// 📤️ Hands every recorded point event to `sink`, oldest first.
+    pub fn drain_point_events(&mut self, mut sink: impl FnMut(usize, [f64; 3], bool)) {
+        for (track, point, kept) in self.point_events.as_mut().map(std::mem::take).unwrap_or_default() {
+            sink(track, point, kept);
+        }
+    }
+
+    /// 📷️ The registered pose of `frame`, if any.
+    pub fn camera_pose(&self, frame: usize) -> Option<CameraPose> {
+        self.pose_of(frame)
     }
 
     /// 🕸️ Attaches the pairwise match table used for two-view registration fallbacks (track union-find alone
@@ -2373,6 +2391,9 @@ impl IncrementalSfm {
         }
         if let Some(point) = triangulate_and_validate(&poses, &observations, self.cfg.min_triangulation_angle_rad, self.cfg.ransac_threshold_px * 3.0) {
             self.points.insert(track_id, point);
+            if let Some(events) = self.point_events.as_mut() {
+                events.push((track_id, point, true));
+            }
         }
     }
 
@@ -2674,6 +2695,9 @@ impl IncrementalSfm {
                     }
                     if visible < 2 || maximum > self.cfg.ransac_threshold_px * 3.0 {
                         self.points.remove(&track_id);
+                        if let Some(events) = self.point_events.as_mut() {
+                            events.push((track_id, point, false));
+                        }
                     }
                 }
             }

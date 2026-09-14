@@ -62,6 +62,9 @@ pub trait PuzzleCommandWork<A: ArtifactApp>: Send {
     /// both reach the app through its own `build_tool_job`. Default no-op: a work object that keeps no
     /// per-instance session simply ignores it.
     fn bind_instance(&mut self, _app_instance_id: u32, _parent_document_id: &str) {}
+    /// 🧠️ The document instance's retained operation owner, bound next to [`Self::bind_instance`] on every
+    /// construction. Default no-op: a work object that reads no instance-retained state ignores it.
+    fn bind_instance_owner(&mut self, _owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) {}
     fn bind_view_state(&mut self, _view_state: Option<ViewModel>) {}
     fn bind_window_owners(&mut self, _config: Option<WindowConfigSnapshot>, _transient: Option<WindowTransientSnapshot>) {}
     fn take_ephemeral(&mut self) -> EphemeralEmit<A> {

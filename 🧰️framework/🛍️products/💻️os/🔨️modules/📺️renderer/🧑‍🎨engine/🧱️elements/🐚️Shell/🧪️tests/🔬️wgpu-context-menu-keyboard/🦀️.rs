@@ -38,8 +38,8 @@ fn render_context_menu_level_renders_a_labeled_separator_as_a_header_without_a_h
     let mut input = InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     ShellState::render_context_menu_level(&mut draw, &mut atlas, &icons, &mut input, &theme, &menu, &menu.items, &[], 0.0, 0.0, 800.0, 600.0);
-    assert!(input.hit_targets.iter().all(|hit| hit.control_id.as_deref() != Some("header-1")), "a labeled separator must stay non-interactive");
-    assert!(input.hit_targets.iter().any(|hit| hit.control_id.as_deref() == Some("leaf-1")), "the leaf row after the header must still register a hit");
+    assert!(input.staged_hits().iter().all(|hit| hit.control_id.as_deref() != Some("header-1")), "a labeled separator must stay non-interactive");
+    assert!(input.staged_hits().iter().any(|hit| hit.control_id.as_deref() == Some("leaf-1")), "the leaf row after the header must still register a hit");
 }
 
 #[test]
@@ -56,14 +56,14 @@ fn render_context_menu_level_clips_to_viewport_height_and_scrolls_hidden_rows_in
     let mut input = InputState::<ActionDescriptor>::default();
     let menu = menu_at(0.0);
     ShellState::render_context_menu_level(&mut draw, &mut atlas, &icons, &mut input, &theme, &menu, &menu.items, &[], 0.0, 0.0, 800.0, viewport_h);
-    let visible_ids: Vec<String> = input.hit_targets.iter().filter_map(|hit| hit.control_id.clone()).collect();
+    let visible_ids: Vec<String> = input.staged_hits().iter().filter_map(|hit| hit.control_id.clone()).collect();
     assert!(visible_ids.len() < items.len(), "expected the viewport clip to hide some rows, got {} of {}", visible_ids.len(), items.len());
     assert!(!visible_ids.contains(&"item-19".to_string()), "the last row should be scrolled out of view without scrolling");
 
     let mut input2 = InputState::<ActionDescriptor>::default();
     let menu2 = menu_at(row_h * 16.0);
     ShellState::render_context_menu_level(&mut draw, &mut atlas, &icons, &mut input2, &theme, &menu2, &menu2.items, &[], 0.0, 0.0, 800.0, viewport_h);
-    let scrolled_ids: Vec<String> = input2.hit_targets.iter().filter_map(|hit| hit.control_id.clone()).collect();
+    let scrolled_ids: Vec<String> = input2.staged_hits().iter().filter_map(|hit| hit.control_id.clone()).collect();
     assert!(scrolled_ids.contains(&"item-19".to_string()), "scrolling down should bring the last row into view");
 }
 
@@ -80,6 +80,6 @@ fn render_context_menu_level_flips_a_submenu_left_when_it_would_overflow_the_rig
     let viewport_w = 220.0;
     ShellState::render_context_menu_level(&mut draw, &mut atlas, &icons, &mut input, &theme, &menu, &menu.items, &[], 0.0, 0.0, viewport_w, 600.0);
     let parent_w = ShellState::context_menu_level_width(&parent_items, &theme);
-    let child_hit = input.hit_targets.iter().find(|hit| hit.control_id.as_deref() == Some("child-1")).expect("submenu row registers a hit");
+    let child_hit = input.staged_hits().iter().find(|hit| hit.control_id.as_deref() == Some("child-1")).expect("submenu row registers a hit");
     assert!(child_hit.rect.x < parent_w, "expected the submenu to flip left of the parent row, got x={}", child_hit.rect.x);
 }

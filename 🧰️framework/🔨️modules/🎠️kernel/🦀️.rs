@@ -895,6 +895,85 @@ pub fn media_export_bytes(data: &str, encoding: Option<&str>) -> Result<Vec<u8>,
 #[path = "🧪️tests/⬇️media-export-encoding/🦀️.rs"]
 mod media_export_encoding_tests;
 //#endregion ⬇️MediaExportEncoding
+
+//#region 📤️FileOpenImport
+/// 📥️ Bytes ONE import chunk may carry to the guest.
+///
+/// 🧊️ Derived from the guest's per-request contiguous ceiling, never a literal: an import's
+/// `payload` crosses as one string, and every guest hop that carries it asks for one contiguous
+/// block, so a whole document sent as a single invocation asks the fixed guest heap for a block
+/// several times that ceiling. Half the ceiling leaves the other half for the invocation envelope
+/// the chunk rides in.
+pub const IMPORT_CHUNK_BYTES: usize = semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES / 2;
+
+/// 📥️ The argument names one import chunk is dispatched with. Declared here, beside
+/// [`Effect::RequestFileOpen`], so no shell can invent a second spelling of the same envelope —
+/// the wgpu shell used to send `{json, payload}` and React `{payload, name, chunk, chunkCount}`,
+/// and a plugin could satisfy only one of them.
+pub const IMPORT_ARGUMENT_PAYLOAD: &str = "payload";
+pub const IMPORT_ARGUMENT_NAME: &str = "name";
+pub const IMPORT_ARGUMENT_CHUNK: &str = "chunk";
+pub const IMPORT_ARGUMENT_CHUNK_COUNT: &str = "chunkCount";
+pub const IMPORT_ARGUMENT_INDEX: &str = "index";
+pub const IMPORT_ARGUMENT_TOTAL: &str = "total";
+
+/// 📥️ One chunk of one opened file, positioned in its own run.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ImportChunk {
+    pub payload: String,
+    pub chunk: usize,
+    pub chunk_count: usize,
+}
+
+/// 📥️ Slices one opened file's contents into the chunks a shell dispatches, so no single import
+/// invocation asks the guest for a contiguous block above its own per-request ceiling.
+///
+/// 🔤️ Sliced by UTF-8 EXTENT, not by code units: the guest measures `text.len()` in bytes, so a
+/// slice counted in UTF-16 units would overrun the cap by up to 3× on non-ASCII text. No slice ever
+/// splits a code point, and an empty payload still yields exactly one chunk — a picked empty file is
+/// a real pick the guest must be told about.
+///
+/// TypeScript twin: `importPayloadChunks` in `🎠️kernel/🟦️.ts`; both drive
+/// `🧫️fixtures/📤️file-open-import/🔣️.json`.
+pub fn import_payload_chunks(payload: &str) -> Vec<ImportChunk> {
+    let mut pages: Vec<String> = Vec::new();
+    let mut page = String::new();
+    for character in payload.chars() {
+        if page.len() + character.len_utf8() > IMPORT_CHUNK_BYTES {
+            pages.push(core::mem::take(&mut page));
+        }
+        page.push(character);
+    }
+    if !page.is_empty() || pages.is_empty() {
+        pages.push(page);
+    }
+    let chunk_count = pages.len();
+    pages.into_iter().enumerate().map(|(chunk, payload)| ImportChunk { payload, chunk, chunk_count }).collect()
+}
+
+/// 📥️ The arguments ONE import chunk is dispatched with — `fan_out` is `Some((index, total))` only
+/// when the picker was opened with `multiple`, exactly as React's `dispatchOpenedFiles` extends a
+/// multi-file pick. Integers are minted as [`Number::UInt`] carriers, never floats: the guest decodes
+/// `chunk`/`chunk_count` as `u32` and `FromValue`'s unsigned arm refuses a `Float` by design.
+pub fn import_chunk_arguments(name: &str, chunk: &ImportChunk, fan_out: Option<(usize, usize)>) -> DslValue {
+    let uint = |value: usize| DslValue::Number(dsl::os_dsl::schema::Number::UInt(value as u64));
+    let mut entries = vec![
+        (IMPORT_ARGUMENT_PAYLOAD.to_string(), DslValue::String(chunk.payload.clone())),
+        (IMPORT_ARGUMENT_NAME.to_string(), DslValue::String(name.to_string())),
+        (IMPORT_ARGUMENT_CHUNK.to_string(), uint(chunk.chunk)),
+        (IMPORT_ARGUMENT_CHUNK_COUNT.to_string(), uint(chunk.chunk_count)),
+    ];
+    if let Some((index, total)) = fan_out {
+        entries.push((IMPORT_ARGUMENT_INDEX.to_string(), uint(index)));
+        entries.push((IMPORT_ARGUMENT_TOTAL.to_string(), uint(total)));
+    }
+    DslValue::Object(entries)
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/📤️file-open-import/🦀️.rs"]
+mod file_open_import_tests;
+//#endregion 📤️FileOpenImport
 //#endregion 🔖️Effect
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
@@ -1007,6 +1086,117 @@ pub enum UiDirtyScope {
         labels: bool,
     },
 }
+
+/// 🔖️ One flag-addressed section of a batched `refresh-ui` — the boolean fields of
+/// [`UiDirtyScope::Partial`] named by value so ONE predicate serves all of them, on both renderers.
+/// Windows and panels are addressed by body key instead ([`UiDirtyScope::wants_window_body`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum UiDirtySection {
+    Utilities,
+    Tools,
+    Engagements,
+    Measures,
+    Labels,
+}
+
+/// 🐢️ The selection law both shells answer to, and the union one coalesced refresh pass owes.
+///
+/// The React shell has always read a scope (`🛠️ShellHelpers/🟦️.tsx`'s `uiRefreshWants*` +
+/// `buildUiRefreshRequest`); the wgpu shell's `refresh_ui` walked EVERY window and panel on every
+/// settle and threw `InvocationResult::ui_scope` away — 116 of 137 renders per converging edit
+/// answered `patched=0`, and the flow window was re-minted eight times for nothing
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-edit-convergence-perf-2026-09-14.md` §7).
+/// These predicates are that shell's half of the same law, driven by the same fixture
+/// (`🧫️fixtures/🐢️ui-dirty-scope/🔣️.json`) as the TypeScript twin in `🎠️kernel/🟦️.ts`.
+impl UiDirtyScope {
+    /// 🚫️ Nothing to re-render at all — the caller must not even open a refresh pass.
+    pub fn asks_for_nothing(&self) -> bool {
+        matches!(self, Self::None)
+    }
+
+    pub fn wants_window_body(&self, body_key: &str) -> bool {
+        match self {
+            Self::Full => true,
+            Self::None => false,
+            Self::Partial { window_bodies, .. } => window_bodies.iter().any(|body| body == body_key),
+        }
+    }
+
+    pub fn wants_panel_body(&self, body_key: &str) -> bool {
+        match self {
+            Self::Full => true,
+            Self::None => false,
+            Self::Partial { panel_bodies, .. } => panel_bodies.iter().any(|body| body == body_key),
+        }
+    }
+
+    pub fn wants_section(&self, section: UiDirtySection) -> bool {
+        match self {
+            Self::Full => true,
+            Self::None => false,
+            Self::Partial { utilities, tools, engagements, measures, labels, .. } => match section {
+                UiDirtySection::Utilities => *utilities,
+                UiDirtySection::Tools => *tools,
+                UiDirtySection::Engagements => *engagements,
+                UiDirtySection::Measures => *measures,
+                UiDirtySection::Labels => *labels,
+            },
+        }
+    }
+
+    /// 🛍️ The app-static operator/palette catalogue never goes stale inside an app instance, so it
+    /// carries no flag of its own: only a full scope — a session switch, or the first fetch — asks
+    /// for it. Mirrors `uiRefreshWantsCatalogue`.
+    pub fn wants_catalogue(&self) -> bool {
+        matches!(self, Self::Full)
+    }
+
+    /// 🤝️ The scope ONE pass must cover when a second was asked for while the first was crossing
+    /// into the guest — the union, never the newer alone. Twin of `mergeUiDirtyScopeV1`.
+    pub fn merged_with(self, other: Self) -> Self {
+        match (self, other) {
+            (Self::Full, _) | (_, Self::Full) => Self::Full,
+            (Self::None, scope) | (scope, Self::None) => scope,
+            (
+                Self::Partial { window_bodies, panel_bodies, utilities, tools, engagements, measures, labels },
+                Self::Partial {
+                    window_bodies: other_window_bodies,
+                    panel_bodies: other_panel_bodies,
+                    utilities: other_utilities,
+                    tools: other_tools,
+                    engagements: other_engagements,
+                    measures: other_measures,
+                    labels: other_labels,
+                },
+            ) => Self::Partial {
+                window_bodies: union_body_keys(window_bodies, other_window_bodies),
+                panel_bodies: union_body_keys(panel_bodies, other_panel_bodies),
+                utilities: utilities || other_utilities,
+                tools: tools || other_tools,
+                engagements: engagements || other_engagements,
+                measures: measures || other_measures,
+                labels: labels || other_labels,
+            },
+        }
+    }
+}
+
+/// 🤝️ First-seen order, no duplicates — the `[...new Set([...first, ...second])]` the TypeScript
+/// twin builds, spelled without a hash set so the two orders cannot drift.
+fn union_body_keys(first: Vec<String>, second: Vec<String>) -> Vec<String> {
+    let mut union = first;
+    for key in second {
+        if !union.contains(&key) {
+            union.push(key);
+        }
+    }
+    union
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🐢️ui-dirty-scope/🦀️.rs"]
+mod ui_dirty_scope_tests;
 
 /// 🧾️ One host-projectable row in the session command timeline. The payload is deliberately
 /// presentation-neutral: the host owns windowing and retains entries beyond any visible range.

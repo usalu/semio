@@ -6,9 +6,8 @@
 //! against the reference cannot reach.
 //!
 //! **Where a vector lives is the FEATURE's answer, not this file's.** Every scenario carries a doc
-//! string naming its `(before, mutation, after)` triple as `asset://` (or, for
-//! `commit-reconstruction`, `shared://`) URIs, and they are resolved through the test context at RUN
-//! time. Nothing here transcribes a fixture path: the 2026-09-05 repo-wide path-shortening pass
+//! string naming its `(before, mutation, after)` triple as `shared://` URIs, and they are resolved
+//! through the test context at RUN time. Nothing here transcribes a fixture path: the 2026-09-05 repo-wide path-shortening pass
 //! renamed every case directory under this subset and left 107 compile-time `include_str!` literals
 //! addressing names that no longer existed, which is exactly the drift runtime resolution cannot
 //! repeat. The plan pins each file's digest, so a silently edited vector changes the plan rather
@@ -19,12 +18,12 @@
 //! a kind that moved nothing, `law::inverse_restores` is the inverse law itself, and
 //! `law::round_trip_preserves` plus `law::carrier_is_exact` are the identity law's two halves.
 //!
-//! **`commit-reconstruction` is the one kind with no committed leaf triple**, because its diff reads
-//! process-global staging state (`commit_staged_remodeling_reconstruction`) that a triple cannot
-//! carry. Its vector lives in this case's own `🧫️fixtures/`, its provenance is written into
-//! `component.feature`, and it exercises the kind's documented refusal path: the doc string names
-//! the diagnostic the vector declares, so a vector that stopped raising it fails here rather than
-//! passing as a mutation that quietly did nothing.
+//! **`commit-reconstruction` is an ordinary document kind.** It binds durable content the BASE
+//! document already stores through `append-content`, so its leaf triples carry everything its diff
+//! reads. It additionally keeps one shared vector in this owner's `🧫️fixtures/🏁️commit-reconstruction/`
+//! — a sparse cloud naming unpublished content — whose doc string names the diagnostic it declares,
+//! so a vector that stopped raising it fails here rather than passing as a mutation that quietly did
+//! nothing.
 //!
 //! **How the fixture reaches typed values.** The generated host links only `semio_repo_test_host`,
 //! the law module and — behind `sut` — this plugin's crate, whose `protocol`/`store` extern-crate
@@ -41,6 +40,7 @@ use semio_repo_test_host::Adapter;
 const KINDS: &[&str] = &[
     "add-gcp-observation",
     "add-stream-frame",
+    "append-content",
     "change-stream-sync",
     "commit-reconstruction",
     "create-asset",
@@ -53,11 +53,11 @@ const KINDS: &[&str] = &[
     "delete-gcp",
     "delete-rig-extrinsic",
     "delete-stream",
+    "remove-content",
     "remove-gcp-observation",
     "remove-stream-frame",
     "replace-dense",
     "replace-geo-products",
-    "replace-job",
     "replace-mesh-result",
     "replace-qc",
     "replace-sparse",
@@ -89,6 +89,9 @@ const MUTATE_SCENARIOS: &[&str] = &[
     "add-stream-frame-missing",
     "add-stream-frame-noop",
     "add-stream-frame-realworld",
+    "append-content",
+    "append-content-gap",
+    "append-content-noop",
     "change-stream-sync",
     "change-stream-sync-missing",
     "change-stream-sync-noop",
@@ -98,8 +101,8 @@ const MUTATE_SCENARIOS: &[&str] = &[
     "commit-reconstruction-mesh",
     "commit-reconstruction-sparse",
     "create-asset",
+    "create-asset-content-handle",
     "create-asset-realworld",
-    "create-asset-staging-handle",
     "create-asset-upsert",
     "create-camera-calibration",
     "create-camera-calibration-duplicate",
@@ -138,6 +141,8 @@ const MUTATE_SCENARIOS: &[&str] = &[
     "delete-stream-missing",
     "delete-stream-realworld",
     "delete-stream-referenced",
+    "remove-content",
+    "remove-content-missing",
     "remove-gcp-observation",
     "remove-gcp-observation-first",
     "remove-gcp-observation-out-of-range",
@@ -153,13 +158,10 @@ const MUTATE_SCENARIOS: &[&str] = &[
     "replace-geo-products-absent",
     "replace-geo-products-clears",
     "replace-geo-products-realworld",
-    "replace-job",
-    "replace-job-noop",
-    "replace-job-realworld",
     "replace-mesh-result",
     "replace-mesh-result-noop",
     "replace-mesh-result-realworld",
-    "replace-mesh-result-staged",
+    "replace-mesh-result-unpublished",
     "replace-qc",
     "replace-qc-absent",
     "replace-qc-clears",
@@ -230,6 +232,9 @@ const INVERSE_SCENARIOS: &[&str] = &[
     "add-stream-frame-missing",
     "add-stream-frame-noop",
     "add-stream-frame-realworld",
+    "append-content",
+    "append-content-gap",
+    "append-content-noop",
     "change-stream-sync",
     "change-stream-sync-missing",
     "change-stream-sync-noop",
@@ -239,8 +244,8 @@ const INVERSE_SCENARIOS: &[&str] = &[
     "commit-reconstruction-mesh",
     "commit-reconstruction-sparse",
     "create-asset",
+    "create-asset-content-handle",
     "create-asset-realworld",
-    "create-asset-staging-handle",
     "create-asset-upsert",
     "create-camera-calibration",
     "create-camera-calibration-duplicate",
@@ -279,6 +284,8 @@ const INVERSE_SCENARIOS: &[&str] = &[
     "delete-stream-missing",
     "delete-stream-realworld",
     "delete-stream-referenced",
+    "remove-content",
+    "remove-content-missing",
     "remove-gcp-observation",
     "remove-gcp-observation-first",
     "remove-gcp-observation-out-of-range",
@@ -294,13 +301,10 @@ const INVERSE_SCENARIOS: &[&str] = &[
     "replace-geo-products-absent",
     "replace-geo-products-clears",
     "replace-geo-products-realworld",
-    "replace-job",
-    "replace-job-noop",
-    "replace-job-realworld",
     "replace-mesh-result",
     "replace-mesh-result-noop",
     "replace-mesh-result-realworld",
-    "replace-mesh-result-staged",
+    "replace-mesh-result-unpublished",
     "replace-qc",
     "replace-qc-absent",
     "replace-qc-clears",
@@ -419,7 +423,7 @@ mod subject {
 
     /// 🚨️ A vector that declares a refusal must raise exactly the diagnostic it names.
     /// 🏭️ Bridge version every scenario reports beside its operation. It is the `bridgeVersion` the
-    /// oracle registry's own `productionDispatch` rows declare for all 35 kinds; a subject result
+    /// oracle registry's own `productionDispatch` rows declare for all 36 kinds; a subject result
     /// without this record is treated as a vector replay and refused by `vectorReplayBreaches`.
     const PRODUCTION_BRIDGE_VERSION: u32 = 1;
 

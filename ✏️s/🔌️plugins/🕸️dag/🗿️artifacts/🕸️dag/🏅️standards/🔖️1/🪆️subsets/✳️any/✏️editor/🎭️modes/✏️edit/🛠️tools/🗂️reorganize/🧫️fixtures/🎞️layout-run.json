@@ -1,0 +1,185 @@
+{
+  "$comment": "DAG `reorganize` tool run law: the tool declaration, the language-neutral document to layout-graph mapping (layered targets as anchors), the demo run expectations (fuel = one iteration per step), the petgraph longest-path layering oracle, the interactive step law and the finalize/abort lifecycle. Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W3-F1.",
+  "tool": {
+    "id": "reorganize",
+    "runJob": "dag.dag.layoutRun",
+    "iconId": "rotate-cw",
+    "mutating": true,
+    "rebase": "restart",
+    "reconfigure": "resume",
+    "trace": "entity"
+  },
+  "config": {
+    "repulsionStrength": 0.0,
+    "springStrength": 0.0,
+    "springLaw": "linear",
+    "anchorStrength": 1.0,
+    "settleDisplacement": 0.01
+  },
+  "mapping": {
+    "nodes": [
+      {
+        "id": "a",
+        "x": 0.0,
+        "y": 0.0,
+        "width": 60.0,
+        "height": 80.0
+      },
+      {
+        "id": "b",
+        "x": 200.0,
+        "y": 10.0,
+        "width": 6.0,
+        "height": 8.0
+      },
+      {
+        "id": "c",
+        "x": 50.0,
+        "y": 300.0,
+        "width": 120.0,
+        "height": 50.0
+      },
+      {
+        "id": "a",
+        "x": 9.0,
+        "y": 9.0,
+        "width": 10.0,
+        "height": 10.0
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1",
+        "source": "a@out",
+        "target": "b@in"
+      },
+      {
+        "id": "e2",
+        "source": "b",
+        "target": "a@in"
+      },
+      {
+        "id": "e3",
+        "source": "c@out",
+        "target": "c@in"
+      },
+      {
+        "id": "e4",
+        "source": "c@out",
+        "target": "missing@in"
+      },
+      {
+        "id": "e5",
+        "source": "c@out",
+        "target": "b@in"
+      }
+    ],
+    "targets": {
+      "a": {
+        "x": 1.0,
+        "y": 2.0
+      },
+      "c": {
+        "x": 3.0,
+        "y": 4.0
+      }
+    },
+    "expected": {
+      "nodes": [
+        {
+          "id": "a",
+          "origin": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "radius": 50.0,
+          "anchor": {
+            "x": 1.0,
+            "y": 2.0
+          }
+        },
+        {
+          "id": "b",
+          "origin": {
+            "x": 200.0,
+            "y": 10.0
+          },
+          "radius": 8.0,
+          "anchor": null
+        },
+        {
+          "id": "c",
+          "origin": {
+            "x": 50.0,
+            "y": 300.0
+          },
+          "radius": 65.0,
+          "anchor": {
+            "x": 3.0,
+            "y": 4.0
+          }
+        }
+      ],
+      "edges": [
+        {
+          "source": 0,
+          "target": 1,
+          "weight": 1.0
+        },
+        {
+          "source": 1,
+          "target": 2,
+          "weight": 1.0
+        }
+      ]
+    }
+  },
+  "run": {
+    "example": "demo",
+    "nodes": 5,
+    "edges": 4,
+    "stop": "converged",
+    "iterations": 122,
+    "checkpoints": 1,
+    "movedNodes": 5,
+    "finalVerdicts": {
+      "success": 5
+    },
+    "verdictPrefix": [
+      "0:testing/moving",
+      "1:testing/moving",
+      "2:testing/moving",
+      "3:testing/moving",
+      "4:testing/moving",
+      "0:testing/moving",
+      "1:testing/moving",
+      "2:testing/moving",
+      "3:testing/moving",
+      "4:testing/moving",
+      "0:testing/moving",
+      "1:testing/moving",
+      "2:testing/moving",
+      "3:testing/moving",
+      "4:testing/moving",
+      "0:testing/moving",
+      "1:testing/moving",
+      "2:testing/moving",
+      "3:testing/moving",
+      "4:testing/moving",
+      "0:testing/moving",
+      "1:testing/moving",
+      "2:testing/moving",
+      "3:testing/moving"
+    ],
+    "layeredToleranceWorld": 0.5
+  },
+  "interactive": {
+    "example": "demo",
+    "attempts": 5,
+    "budgetUs": 2000
+  },
+  "lifecycle": {
+    "historyEntriesAdded": 1,
+    "abortAfterIterations": 2
+  }
+}

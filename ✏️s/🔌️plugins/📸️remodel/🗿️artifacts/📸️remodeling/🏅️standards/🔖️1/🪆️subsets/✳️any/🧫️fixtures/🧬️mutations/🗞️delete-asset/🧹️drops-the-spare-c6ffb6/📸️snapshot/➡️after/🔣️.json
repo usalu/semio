@@ -246,32 +246,6 @@
       "observations": []
     }
   ],
-  "job": {
-    "id": "job-a",
-    "stage": "bundle-adjusting",
-    "progress01": 0.5,
-    "cancelRequested": false,
-    "stageCursor": 3,
-    "startedAtMs": 1000,
-    "error": null,
-    "cameraPosesPreview": [
-      {
-        "cameraId": "cam-a",
-        "rotationWxyz": [
-          1,
-          0,
-          0,
-          0
-        ],
-        "translation": [
-          0,
-          0,
-          0
-        ]
-      }
-    ],
-    "sparsePointCloudPreview": "AAAAPwAAgD4AAAA+"
-  },
   "results": {
     "sparse": {
       "points": "AAAAAAAAAAAAAAAAAACAPwAAgD8AAIA/",

@@ -7,9 +7,9 @@
  *
  *  Drift against the committed `🔣️.json` JSON Schema leaf is recorded in
  *  `📓️w3-ts-codec-oracle.md`: that leaf declares `MediaStream`/`ImageAsset`/`CalibrationState`/
- *  `ReconstructionParams`/`GroundControlPoint`/`ReconstructionJob`/`ReconstructionResults` as bare
+ *  `ReconstructionParams`/`GroundControlPoint`/`ReconstructionResults` as bare
  *  `{ "type": "object" }` with no properties and omits `durableArtifacts` entirely, so it is NOT
- *  authoritative for those seven types — Rust is, and Rust is what this file mirrors.
+ *  authoritative for those six types — Rust is, and Rust is what this file mirrors.
  */
 
 import {
@@ -18,7 +18,6 @@ import {
   DURABLE_ARTIFACT_SPEC,
   GROUND_CONTROL_POINT_SPEC,
   MEDIA_STREAM_SPEC,
-  RECONSTRUCTION_JOB_SPEC,
   RECONSTRUCTION_PARAMS_SPEC,
   RECONSTRUCTION_RESULTS_SPEC,
   decodeRecord,
@@ -26,7 +25,6 @@ import {
   type CalibrationState,
   type GroundControlPoint,
   type MediaStream,
-  type ReconstructionJob,
   type ReconstructionParams,
   type ReconstructionResults,
   type RecordSpec,
@@ -62,8 +60,6 @@ export interface RemodelingArtifact {
   /** @state artifact */
   gcps: GroundControlPoint[];
   /** @state artifact */
-  job: ReconstructionJob;
-  /** @state artifact */
   results: ReconstructionResults;
 }
 //#endregion 🔖️Artifact
@@ -92,14 +88,12 @@ export const REMODELING_ARTIFACT_SPEC: RecordSpec = {
     f("calibration", rec(() => CALIBRATION_STATE_SPEC), () => defaultsOf(CALIBRATION_STATE_SPEC)),
     f("params", rec(() => RECONSTRUCTION_PARAMS_SPEC), () => defaultsOf(RECONSTRUCTION_PARAMS_SPEC)),
     f("gcps", list(rec(() => GROUND_CONTROL_POINT_SPEC)), () => []),
-    f("job", rec(() => RECONSTRUCTION_JOB_SPEC), () => defaultsOf(RECONSTRUCTION_JOB_SPEC)),
     f("results", rec(() => RECONSTRUCTION_RESULTS_SPEC), () => defaultsOf(RECONSTRUCTION_RESULTS_SPEC)),
-    f("locale", text, () => "en-US"),
   ],
 };
 
 /** 🔑 The nine artifact-lane field names shared by the artifact, the snapshot and the diff. */
-export const REMODELING_SNAPSHOT_FIELDS: readonly string[] = ["schema", "id", "streams", "assets", "durableArtifacts", "calibration", "params", "gcps", "job", "results"];
+export const REMODELING_SNAPSHOT_FIELDS: readonly string[] = ["schema", "id", "streams", "assets", "durableArtifacts", "calibration", "params", "gcps", "results"];
 //#endregion 🔖️Spec
 
 //#region 🔖️Conversions
@@ -180,7 +174,6 @@ export function parseRemodelingArtifact(value: unknown, at = "$"): RemodelingArt
     calibration: parseCalibrationState(row["calibration"], `${at}.calibration`),
     params: parseReconstructionParams(row["params"], `${at}.params`),
     gcps: remodelRemodelingArtifactGuardArray(row["gcps"], `${at}.gcps`).map((item, index) => parseGroundControlPoint(item, `${at}.gcps[${index}]`)),
-    job: parseReconstructionJob(row["job"], `${at}.job`),
     results: parseReconstructionResults(row["results"], `${at}.results`),
   };
 }
@@ -489,12 +482,6 @@ export function parseReconstructionParams(value: unknown, at = "$"): Reconstruct
     motion: parseMotionParams(row["motion"], `${at}.motion`),
     geo: parseGeoParams(row["geo"], `${at}.geo`),
   };
-}
-
-export type ReconstructionStage = "idle" | "ingesting" | "calibrating" | "extracting-features" | "matching-features" | "estimating-poses" | "bundle-adjusting" | "georeferencing" | "dense-stereo" | "fusing-volume" | "extracting-surface" | "cleaning-mesh" | "texturing" | "tracking-motion" | "deriving-geo-products" | "reporting-qc" | "done" | "failed";
-
-export function parseReconstructionStage(value: unknown, at = "$"): ReconstructionStage {
-  return remodelRemodelingArtifactGuardMember(value, `${at}`, ["idle", "ingesting", "calibrating", "extracting-features", "matching-features", "estimating-poses", "bundle-adjusting", "georeferencing", "dense-stereo", "fusing-volume", "extracting-surface", "cleaning-mesh", "texturing", "tracking-motion", "deriving-geo-products", "reporting-qc", "done", "failed"] as const);
 }
 
 export interface RemodelingAssetChild {

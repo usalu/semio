@@ -1,4 +1,5 @@
 type Puzzle5dConfig {
+  fillCount: Int! @state(class: CONFIG)
   overlapBudget: Float! @state(class: CONFIG)
   objectKindWeights: [FloatEntry!]! @state(class: CONFIG)
   vortexKindWeights: [FloatEntry!]! @state(class: CONFIG)

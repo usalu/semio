@@ -784,6 +784,10 @@
         },
         "retractTo": {
           "$ref": "#/$defs/U32"
+        },
+        "payload": {
+          "description": "Opaque plugin bytes the run's windows read back through the run view; the newest tick carrying one wins.",
+          "$ref": "#/$defs/Hex"
         }
       }
     },
@@ -937,6 +941,17 @@
         },
         "revalidateJob": {
           "$ref": "#/$defs/JobKindId"
+        },
+        "settings": {
+          "$ref": "#/$defs/ToolRunSettingsReads"
+        },
+        "windows": {
+          "description": "Window kind ids whose bodies render this run's state; every tick refreshes them next to the ToolRun panel, and no other window.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     },
@@ -996,7 +1011,8 @@
         "reservedReasons",
         "templates",
         "limits",
-        "definition"
+        "definition",
+        "settingsPointers"
       ],
       "properties": {
         "schema": {
@@ -1383,6 +1399,46 @@
         },
         "definition": {
           "$ref": "#/$defs/ToolRunDefinition"
+        },
+        "settingsPointers": {
+          "description": "Settings pointer resolution (RFC 6901) over one document: every row names the value the pointer resolves to, or null when it names nothing; malformed pointers are refused by `ToolRunDefinition.validate`.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "document",
+            "rows",
+            "malformed"
+          ],
+          "properties": {
+            "document": {
+              "type": "object"
+            },
+            "rows": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "pointer",
+                  "resolves"
+                ],
+                "properties": {
+                  "pointer": {
+                    "$ref": "#/$defs/ToolRunSettingsPointer"
+                  },
+                  "resolves": {}
+                }
+              }
+            },
+            "malformed": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
         }
       }
     },
@@ -1957,6 +2013,35 @@
                   }
                 }
               }
+            }
+          }
+        }
+      }
+    },
+    "ToolRunSettingsPointer": {
+      "title": "ToolRunSettingsPointer",
+      "description": "RFC 6901 JSON Pointer into a settings document: empty, or `/`-separated reference tokens where `~` only appears as `~0` or `~1`.",
+      "type": "string",
+      "pattern": "^(/([^~/]|~[01])*)*$"
+    },
+    "ToolRunSettingsReads": {
+      "title": "ToolRunSettingsReads",
+      "description": "The settings a run's jobs read (§3.3): pointers into the app config document and, per window kind id, into that kind's window config documents. `settingsChanged` fires only when a value behind one of them changes; absent or empty reads no settings.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "config": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ToolRunSettingsPointer"
+          }
+        },
+        "windowConfig": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/ToolRunSettingsPointer"
             }
           }
         }

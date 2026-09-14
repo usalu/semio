@@ -429,6 +429,36 @@ fn tiled_map_and_board_windows_attach_their_engines_on_the_same_production_seam(
     }
 }
 
+/// 🎲️ The board-2d lane contract whose `traceShapes.placementLane` every board host paints.
+const BOARD2D_SCENE_LANES: &str = include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json");
+
+/// ⚖️ LAW: a board window's `toolRunTrace` lane reaches its engine surface on the production paint seam — the resident
+/// layer holds the lane's records, every placement draws against a footprint of its kind catalogs — and the surface
+/// echoes the cursor for the window it paints into.
+#[test]
+fn a_board_window_paints_its_tool_run_trace_lane_and_echoes_the_cursor() {
+    let fixture = fixture();
+    let contract: Value = serde_json::from_str(BOARD2D_SCENE_LANES).expect("board-2d lane contract parses");
+    let shapes = &contract["traceShapes"];
+    let expected = &shapes["placementLaneRecords"];
+    let surface_id = "board2d-trace";
+    drop_engine_surface(surface_id);
+    let mut scene = board2d_scene(surface_id, &fixture);
+    let board = scene.board2d.as_mut().expect("board scene");
+    board.glyph_catalogs_json = shapes["glyphCatalogsJson"].as_str().expect("catalogs").to_string();
+    board.tool_run_trace = Some(shapes["placementLane"].as_str().expect("placement lane").to_string());
+    let frame = paint_scene(&scene, Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, crate::scenes::AdmittedSurfaceMap::default());
+    drop_world3d_states(frame.world3d_states);
+    let (records, footprints, draws) = board2d_tool_run_trace_state(surface_id).expect("the painted board holds its trace layer");
+    println!("[STATS] board2d trace records={records} footprints={footprints} draws={draws}");
+    assert_eq!(footprints, shapes["shapes"].as_array().expect("shapes").len(), "the footprints follow the scene's kind catalogs");
+    assert_eq!(draws, expected["placements"].as_u64().expect("placements") as usize, "every placement record paints");
+    let cursor = board2d_tool_run_trace_cursors().get("law-window").copied().expect("the board echoes its cursor for the window it paints into");
+    assert_eq!((cursor.run, u64::from(cursor.generation), u64::from(cursor.page)), (expected["run"].as_u64().expect("run"), expected["generation"].as_u64().expect("generation"), expected["page"].as_u64().expect("page")));
+    let _ = take_engine_surface_registrations();
+    drop_engine_surface(surface_id);
+}
+
 /// 🧱️ The `boxed_fixed_slots` law for this module's fixed slot tables, against the one committed
 /// budget every implementation of it reads (`the committed fixed-slot fixture`).
 ///

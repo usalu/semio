@@ -6,7 +6,8 @@
   "toolIds": [
     "canvasPointerDown", "cycleBrushCandidate", "worldPointerDown", "deleteSelection", "duplicateSelection",
     "engagementAbort", "engagementControlSelect", "engagementInput", "engagementSubmit", "importComposeKit",
-    "selectSameKindSelection", "setFixtureJson", "setSelectionFlag", "zoomToSelection"
+    "selectSameKindSelection", "setFillCount", "setFixtureJson", "setSelectionFlag", "targetBrushSuggestions",
+    "zoomToSelection"
   ],
   "evidenceToolIds": [
     "addBrushObject", "addBrushPart", "addNode", "addPartKind", "applyBoardEvents", "canvasPointerDown",
@@ -15,7 +16,8 @@
     "registerBrushMesh", "retargetFastener", "rotateSelection", "scaleSelection", "selectSameKind", "setActiveExample",
     "setBrushPlacementOverlapBudget", "setCamera", "setCamera2d", "setCamera3d", "setFillCount", "setGridFactor",
     "setGridSnapEnabled", "setLodMode", "setObjectKindWeight", "setSuggestionOffset", "setSunAzimuth", "setSunElevation",
-    "setSunIntensity", "setVortexKindWeight", "toggleSun", "translateSelection", "worldPointerDown", "worldRelocate"
+    "setSunIntensity", "setVortexKindWeight", "targetBrushSuggestions", "toggleSun", "translateSelection", "worldPointerDown",
+    "worldRelocate"
   ],
   "capacities": {"rawBytes": 8192, "decodedItems": 512, "workItems": 4096, "outputBytes": 262144, "stepMicros": 7500, "semanticUnitsPerGrant": 1, "checkpointBytes": 120},
   "semanticCursors": {
@@ -48,7 +50,8 @@
     "worldRelocate": ["sourcePart", "moveMutation", "existingFastener", "candidatePart", "candidateGrip", "distanceMeasure", "fastenerPublish", "closeOwner"],
     "cycleBrushCandidate": ["decode", "part", "grip", "fastener", "partKind", "gripKind", "publish", "closeOwner"],
     "registerBrushMesh": ["decode", "position", "index", "publish", "closeOwner"],
-    "setFillCount": ["decode", "part", "grip", "fastener", "partKind", "gripKind", "fillCount", "boardUtility", "worldUtility", "publish", "closeOwner"],
+    "setFillCount": ["boundedScalarDecode", "exactConfigMutation", "closeOwner"],
+    "targetBrushSuggestions": ["boundedTargetDecode", "instanceLinkWrite", "closeOwner"],
     "addNode": ["catalogKind", "gripTemplate", "partPublish", "closeOwner"],
     "canvasPointerDown": ["boundedPointerBoundary", "publishEmpty", "closeOwner"],
     "createFastener": ["sourcePart", "sourceGrip", "targetPart", "targetGrip", "existingFastener", "compatibility", "publish", "closeOwner"],

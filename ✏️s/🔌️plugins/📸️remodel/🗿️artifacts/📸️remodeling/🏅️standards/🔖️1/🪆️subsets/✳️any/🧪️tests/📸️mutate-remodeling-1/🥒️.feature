@@ -4,8 +4,9 @@
 @mutations-remodeling-1-any
 Feature: Apply every typed remodeling-scene mutation to its committed specification vector and against an independent Python implementation
   `s.remodel.remodeling` is a semio-NATIVE artifact, and the document is a reconstruction
-  JOB — streams, calibrations, ground control points, the eight parameter blocks a pipeline runs
-  under, and the engine-owned results — not a point cloud or a mesh file. A reader of COLMAP, LAS or
+  PROJECT — streams, calibrations, ground control points, the eight parameter blocks a pipeline runs
+  under, the durable content leaves a run publishes, and the engine-owned results — not a point cloud
+  or a mesh file. A reader of COLMAP, LAS or
   PLY output would therefore be judging a different artifact, and nothing reads `.dsl.semio`. That is
   recorded as the `remodeling-mutation-semantics` no-oracle decision in
   `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`. That decision is narrowed to an empty
@@ -14,8 +15,8 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
   appended recording that the `asset://` blocker it named is now resolved.
 
   🐍️ `🐍️component.py` beside this file is the second IMPLEMENTATION that decision named as the
-  remaining debt: all 35 of this vocabulary's kinds — 34 as applied mutations and
-  `commit-reconstruction` as the refusal its own vector declares — written in Python from this subset's own
+  remaining debt: all 36 of this vocabulary's kinds, `commit-reconstruction` included as an ordinary
+  kind with its refusals, its no-op, its forward application and its inverse — written in Python from this subset's own
   committed `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json` document shape and each kind's own
   committed `(before, mutation, after)` leaf fixture, and from
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md`'s
@@ -46,7 +47,7 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
   addressing the stream, a stream binding or rig entry naming the camera, a frame, texture or geo
   product naming the asset. And every keyed collection is held in ascending key order, so a
   `create-*`/`add-*` puts a member back exactly where a `delete-*`/`remove-*` took it from. Together
-  they make every one of the 35 kinds' inverses a single step of this same vocabulary that restores
+  they make every one of the 36 kinds' inverses a single step of this same vocabulary that restores
   the committed BEFORE-document exactly, member positions included (`taxonomy.md` rule 5): the
   `inverse-` scenario below is planned for EVERY committed vector, with no exceptions.
 
@@ -60,27 +61,29 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
   the `mutation.no-op` Warning it raises instead. A refusal ships no `🔺️diff/🔣️.json`: the
   `🚫️.absent` marker beside it is this repository's own way of committing that there is no delta.
 
-  📄️ `commit-reconstruction` additionally keeps a case-local vector, and the reason is
-  structural rather than an oversight: its diff reads process-global staging state
-  (`commit_staged_remodeling_reconstruction`, `durable_staged_remodeling_asset`) that a
-  `(before, mutation, after)` triple cannot carry. This case exercises it through its own documented
-  refusal path instead, using a vector assembled ONCE from committed sibling content and kept in this
-  owner's shared fixtures — shared://🏁️commit-reconstruction/⬅️before.json is a byte copy of
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️replace-job/🎨️advances-the-job-c1e878/📸️snapshot/⬅️before/🔣️.json`,
-  shared://🏁️commit-reconstruction/🦠️mutation.json pairs that leaf's committed `job` payload with
-  `⭐replace-sparse`'s committed `sparse` payload (a plain point buffer, deliberately NOT a replayable
-  staging handle), and shared://🏁️commit-reconstruction/➡️after.json is the before-document unchanged,
+  📦️ DURABLE CONTENT is ordinary document state. A reconstruction run publishes every sparse cloud,
+  mesh and raster it produced as bounded 4 KiB base64 leaves into `durableArtifacts` through
+  `append-content`, whose exact inverse is `remove-content`; leaves are contiguous, immutable once
+  stored, kept to one kind and presentation per entry and bounded by that kind's envelope, and an
+  append that only repeats stored leaves is warned as a no-op. `commit-reconstruction` is then a PURE
+  document mutation: it replaces the sparse, trajectory, geo and QC results (and the mesh when one is
+  given) and binds or unbinds assets, naming content by id only — a `remodeling-content:<id>|<leaves>`
+  sparse buffer, a `remodeling-mesh-content:<leaves>` mesh child, or an asset binding's `contentId`.
+  Each named handle must address content the BEFORE-document already stores complete, which is what
+  its three refusal vectors under `🧬️schema/🧬️mutations/🏁commit-reconstruction/` pin; a commit that
+  changes neither a result nor a binding is a no-op, and its inverse is one commit carrying the BASE
+  result lanes and the BASE binding of every asset id it named. Both halves decide all of that from the
+  committed `(before, mutation, after)` triple alone.
+
+  📄️ `commit-reconstruction` additionally keeps one shared vector in this owner's fixtures:
+  shared://🏁️commit-reconstruction/⬅️before.json is the two-stream unit scene every toy vector
+  starts from, shared://🏁️commit-reconstruction/🦠️mutation.json commits a sparse cloud naming content
+  that scene never published, and shared://🏁️commit-reconstruction/➡️after.json is the before-document unchanged,
   because the documented answer is `mutation.invalid-reconstruction-sparse` and a refused commit must
-  leave the scene untouched. Note also that `commit-reconstruction`'s own inverse restores only `job`
-  and the six result slots — never `assets` or `durable_artifacts` — so the inverse law holds for this
-  refusal vector and would NOT hold for a commit that published new assets; that is a real weakness of
-  the kind, recorded here rather than hidden by the vector that dodges it. Its OTHER three guards — invalid-reconstruction-asset, invalid-reconstruction-mesh and the sparse
-  guard again on the real-world survey — need no staging state at all and ship as ordinary leaf
-  vectors under `🧬️schema/🧬️mutations/🏁commit-reconstruction/`. This vector's own two scenarios
-  address that vector by the same doc-string mechanism as every other row — three `shared://` URIs in
-  place of the `asset://` triple a `<vector>` builds — so both halves resolve it at run time and both
-  halves answer for it, the reference deriving the refusal from the payload's own shape rather than
-  adopting production's verdict.
+  leave the scene untouched. Its two scenarios address that vector by the same doc-string mechanism as
+  every other row — three `shared://` URIs in place of the triple a `<vector>` builds — so both halves
+  resolve it at run time and both halves answer for it, the reference deriving the refusal from the
+  payload and the base document rather than adopting production's verdict.
 
   🔁 `identity-round-trip` compares the two halves on the PRINTED CARRIER rather than on a parsed
   document, because the reference cannot parse `.dsl.semio`: this subset's committed text grammar is
@@ -111,6 +114,7 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | add-gcp-observation-realworld       | add-gcp-observation       | 🔎add-gcp-observation/🔎️picks-the-south-eb0c4d        |
       | add-stream-frame                    | add-stream-frame          | ➕add-stream-frame/🎞️appends-a-third-8ac259           |
       | add-stream-frame-realworld          | add-stream-frame          | ➕add-stream-frame/🎞️appends-an-0c2164                |
+      | append-content                      | append-content            | 📦append-content/🧱️appends-sparse-leaves              |
       | change-stream-sync                  | change-stream-sync        | ⏱️change-stream-sync/⏱️shifts-stream-a-5b442c        |
       | change-stream-sync-realworld        | change-stream-sync        | ⏱️change-stream-sync/⏱️retimes-the-50dd75            |
       | create-asset                        | create-asset              | 🧷create-asset/🖼️stores-a-new-d56283                  |
@@ -138,6 +142,7 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | delete-rig-extrinsic-realworld      | delete-rig-extrinsic      | ✂️delete-rig-extrinsic/✂️unplaces-the-a39356         |
       | delete-stream                       | delete-stream             | 🪓delete-stream/⏮️removes-the-first-c0fc2a            |
       | delete-stream-realworld             | delete-stream             | 🪓delete-stream/🪓removes-the-spare-556d1d             |
+      | remove-content                      | remove-content            | 🔪remove-content/🗑️drops-the-content                  |
       | remove-gcp-observation              | remove-gcp-observation    | 🚷remove-gcp-observation/🚫️removes-the-only-f82e64    |
       | remove-gcp-observation-first        | remove-gcp-observation    | 🚷remove-gcp-observation/⏮️drops-the-first-9ebf0b     |
       | remove-gcp-observation-realworld    | remove-gcp-observation    | 🚷remove-gcp-observation/🚷drops-the-middle-282fb7     |
@@ -149,8 +154,6 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | replace-geo-products                | replace-geo-products      | 🗾replace-geo-products/🗺️adds-the-dtm-and-64d5bb      |
       | replace-geo-products-clears         | replace-geo-products      | 🗾replace-geo-products/🧹️clears-the-geo-f4886e        |
       | replace-geo-products-realworld      | replace-geo-products      | 🗾replace-geo-products/🗺️records-a-dtm-6e132a         |
-      | replace-job                         | replace-job               | 🏗️replace-job/🎨️advances-the-job-c1e878              |
-      | replace-job-realworld               | replace-job               | 🏗️replace-job/🎨️advances-the-555298                  |
       | replace-mesh-result                 | replace-mesh-result       | 🧱replace-mesh-result/🕸️swaps-in-an-f23e71            |
       | replace-mesh-result-realworld       | replace-mesh-result       | 🧱replace-mesh-result/🕸️swaps-the-c43d9c              |
       | replace-qc                          | replace-qc                | 🧾replace-qc/📋️records-a-qc-f5caf4                    |
@@ -209,11 +212,12 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | add-gcp-observation-missing          | add-gcp-observation       | 🔎add-gcp-observation/🚫️refuses-to-pick-3c0570         | mutation.target-missing                |
       | add-stream-frame-kind                | add-stream-frame          | ➕add-stream-frame/🎬️refuses-a-frame-81beea            | mutation.invariant                     |
       | add-stream-frame-missing             | add-stream-frame          | ➕add-stream-frame/🚫️refuses-to-c93e98                 | mutation.target-missing                |
+      | append-content-gap                   | append-content            | 📦append-content/🚫️refuses-a-gap                       | mutation.content-gap                   |
       | change-stream-sync-missing           | change-stream-sync        | ⏱️change-stream-sync/🚫️refuses-to-8095d3              | mutation.target-missing                |
       | commit-reconstruction-asset          | commit-reconstruction     | 🏁commit-reconstruction/🖼️rejects-an-e9fa51            | mutation.invalid-reconstruction-asset  |
       | commit-reconstruction-mesh           | commit-reconstruction     | 🏁commit-reconstruction/🕸️rejects-an-5d3a60            | mutation.invalid-reconstruction-mesh   |
       | commit-reconstruction-sparse         | commit-reconstruction     | 🏁commit-reconstruction/⭐️rejects-an-2e5568            | mutation.invalid-reconstruction-sparse |
-      | create-asset-staging-handle          | create-asset              | 🧷create-asset/🚫️refuses-an-asset-cb0d4b               | mutation.invalid-asset-payload         |
+      | create-asset-content-handle          | create-asset              | 🧷create-asset/🚫️refuses-an-asset-cb0d4b               | mutation.invalid-asset-payload         |
       | create-camera-calibration-duplicate  | create-camera-calibration | 🔭create-camera-calibration/🚫️refuses-a-camera-e92a02  | mutation.duplicate-id                  |
       | create-gcp-duplicate                 | create-gcp                | 🧿create-gcp/🚫️refuses-a-19c1ab                        | mutation.duplicate-id                  |
       | create-rig-extrinsic-duplicate       | create-rig-extrinsic      | ⛓️create-rig-extrinsic/🚫️refuses-a-second-95e04d      | mutation.duplicate-id                  |
@@ -229,10 +233,11 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | delete-rig-extrinsic-missing         | delete-rig-extrinsic      | ✂️delete-rig-extrinsic/🚫️refuses-to-1805df            | mutation.target-missing                |
       | delete-stream-missing                | delete-stream             | 🪓delete-stream/🚫️refuses-to-3c20ff                    | mutation.target-missing                |
       | delete-stream-referenced             | delete-stream             | 🪓delete-stream/⛓️refuses-to-remove-422a37             | mutation.referenced                    |
+      | remove-content-missing               | remove-content            | 🔪remove-content/🚫️refuses-missing-content             | mutation.target-missing                |
       | remove-gcp-observation-out-of-range  | remove-gcp-observation    | 🚷remove-gcp-observation/🚫️refuses-an-109cf1           | mutation.target-missing                |
       | remove-stream-frame-out-of-range     | remove-stream-frame       | ➖remove-stream-frame/🚫️refuses-a-frame-e7c374         | mutation.target-missing                |
       | replace-geo-products-absent          | replace-geo-products      | 🗾replace-geo-products/🚫️refuses-to-clear-b8c54a       | mutation.target-missing                |
-      | replace-mesh-result-staged           | replace-mesh-result       | 🧱replace-mesh-result/🚫️refuses-a-48f3a6               | mutation.incomplete-mesh               |
+      | replace-mesh-result-unpublished      | replace-mesh-result       | 🧱replace-mesh-result/🚫️refuses-a-48f3a6               | mutation.incomplete-mesh               |
       | replace-qc-absent                    | replace-qc                | 🧾replace-qc/🚫️refuses-to-clear-30cbb5                 | mutation.target-missing                |
       | replace-stream-source-missing        | replace-stream-source     | 🔁replace-stream-source/🚫️refuses-to-f7f40d            | mutation.target-missing                |
       | replace-trajectory-absent            | replace-trajectory        | 🛣️replace-trajectory/🚫️refuses-to-clear-524569        | mutation.target-missing                |
@@ -263,9 +268,9 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | id                             | kind                      | vector                                                      | code           |
       | add-gcp-observation-noop       | add-gcp-observation       | 🔎add-gcp-observation/🔁️warns-that-this-dca661       | mutation.no-op |
       | add-stream-frame-noop          | add-stream-frame          | ➕add-stream-frame/🔁️warns-that-the-1e8abe           | mutation.no-op |
+      | append-content-noop            | append-content            | 📦append-content/🔁️warns-that-the-leaves-exist       | mutation.no-op |
       | change-stream-sync-noop        | change-stream-sync        | ⏱️change-stream-sync/🔁️warns-that-the-a98c13        | mutation.no-op |
       | replace-dense-noop             | replace-dense             | ☁️replace-dense/🔁️warns-that-the-675b6e             | mutation.no-op |
-      | replace-job-noop               | replace-job               | 🏗️replace-job/🔁️warns-that-the-bdf2e9               | mutation.no-op |
       | replace-mesh-result-noop       | replace-mesh-result       | 🧱replace-mesh-result/🔁️warns-that-the-b39bab        | mutation.no-op |
       | replace-sparse-noop            | replace-sparse            | ⭐replace-sparse/🔁️warns-that-the-56a3a9             | mutation.no-op |
       | replace-tracks-noop            | replace-tracks            | 🚂replace-tracks/🔁️warns-that-the-8dbf82             | mutation.no-op |
@@ -283,7 +288,7 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
   @id-mutate
   @level-exhaustive
   @mode-error
-  Scenario Outline: Applying <id> is refused by the case-local staging vector it declares
+  Scenario Outline: Applying <id> is refused by the shared commit vector it declares
     Given the case-local refusal vector for the <id> kind
       """
       {
@@ -321,6 +326,7 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | add-gcp-observation-realworld       | add-gcp-observation       | 🔎add-gcp-observation/🔎️picks-the-south-eb0c4d        |
       | add-stream-frame                    | add-stream-frame          | ➕add-stream-frame/🎞️appends-a-third-8ac259           |
       | add-stream-frame-realworld          | add-stream-frame          | ➕add-stream-frame/🎞️appends-an-0c2164                |
+      | append-content                      | append-content            | 📦append-content/🧱️appends-sparse-leaves              |
       | change-stream-sync                  | change-stream-sync        | ⏱️change-stream-sync/⏱️shifts-stream-a-5b442c        |
       | change-stream-sync-realworld        | change-stream-sync        | ⏱️change-stream-sync/⏱️retimes-the-50dd75            |
       | create-asset                        | create-asset              | 🧷create-asset/🖼️stores-a-new-d56283                  |
@@ -348,6 +354,7 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | delete-rig-extrinsic-realworld      | delete-rig-extrinsic      | ✂️delete-rig-extrinsic/✂️unplaces-the-a39356         |
       | delete-stream                       | delete-stream             | 🪓delete-stream/⏮️removes-the-first-c0fc2a            |
       | delete-stream-realworld             | delete-stream             | 🪓delete-stream/🪓removes-the-spare-556d1d             |
+      | remove-content                      | remove-content            | 🔪remove-content/🗑️drops-the-content                  |
       | remove-gcp-observation              | remove-gcp-observation    | 🚷remove-gcp-observation/🚫️removes-the-only-f82e64    |
       | remove-gcp-observation-first        | remove-gcp-observation    | 🚷remove-gcp-observation/⏮️drops-the-first-9ebf0b     |
       | remove-gcp-observation-realworld    | remove-gcp-observation    | 🚷remove-gcp-observation/🚷drops-the-middle-282fb7     |
@@ -359,8 +366,6 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | replace-geo-products                | replace-geo-products      | 🗾replace-geo-products/🗺️adds-the-dtm-and-64d5bb      |
       | replace-geo-products-clears         | replace-geo-products      | 🗾replace-geo-products/🧹️clears-the-geo-f4886e        |
       | replace-geo-products-realworld      | replace-geo-products      | 🗾replace-geo-products/🗺️records-a-dtm-6e132a         |
-      | replace-job                         | replace-job               | 🏗️replace-job/🎨️advances-the-job-c1e878              |
-      | replace-job-realworld               | replace-job               | 🏗️replace-job/🎨️advances-the-555298                  |
       | replace-mesh-result                 | replace-mesh-result       | 🧱replace-mesh-result/🕸️swaps-in-an-f23e71            |
       | replace-mesh-result-realworld       | replace-mesh-result       | 🧱replace-mesh-result/🕸️swaps-the-c43d9c              |
       | replace-qc                          | replace-qc                | 🧾replace-qc/📋️records-a-qc-f5caf4                    |
@@ -421,12 +426,14 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | add-stream-frame-kind                | add-stream-frame          | ➕add-stream-frame/🎬️refuses-a-frame-81beea            | mutation.invariant                     |
       | add-stream-frame-missing             | add-stream-frame          | ➕add-stream-frame/🚫️refuses-to-c93e98                 | mutation.target-missing                |
       | add-stream-frame-noop                | add-stream-frame          | ➕add-stream-frame/🔁️warns-that-the-1e8abe             | mutation.no-op                         |
+      | append-content-gap                   | append-content            | 📦append-content/🚫️refuses-a-gap                       | mutation.content-gap                   |
+      | append-content-noop                  | append-content            | 📦append-content/🔁️warns-that-the-leaves-exist         | mutation.no-op                         |
       | change-stream-sync-missing           | change-stream-sync        | ⏱️change-stream-sync/🚫️refuses-to-8095d3              | mutation.target-missing                |
       | change-stream-sync-noop              | change-stream-sync        | ⏱️change-stream-sync/🔁️warns-that-the-a98c13          | mutation.no-op                         |
       | commit-reconstruction-asset          | commit-reconstruction     | 🏁commit-reconstruction/🖼️rejects-an-e9fa51            | mutation.invalid-reconstruction-asset  |
       | commit-reconstruction-mesh           | commit-reconstruction     | 🏁commit-reconstruction/🕸️rejects-an-5d3a60            | mutation.invalid-reconstruction-mesh   |
       | commit-reconstruction-sparse         | commit-reconstruction     | 🏁commit-reconstruction/⭐️rejects-an-2e5568            | mutation.invalid-reconstruction-sparse |
-      | create-asset-staging-handle          | create-asset              | 🧷create-asset/🚫️refuses-an-asset-cb0d4b               | mutation.invalid-asset-payload         |
+      | create-asset-content-handle          | create-asset              | 🧷create-asset/🚫️refuses-an-asset-cb0d4b               | mutation.invalid-asset-payload         |
       | create-camera-calibration-duplicate  | create-camera-calibration | 🔭create-camera-calibration/🚫️refuses-a-camera-e92a02  | mutation.duplicate-id                  |
       | create-gcp-duplicate                 | create-gcp                | 🧿create-gcp/🚫️refuses-a-19c1ab                        | mutation.duplicate-id                  |
       | create-rig-extrinsic-duplicate       | create-rig-extrinsic      | ⛓️create-rig-extrinsic/🚫️refuses-a-second-95e04d      | mutation.duplicate-id                  |
@@ -442,13 +449,13 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | delete-rig-extrinsic-missing         | delete-rig-extrinsic      | ✂️delete-rig-extrinsic/🚫️refuses-to-1805df            | mutation.target-missing                |
       | delete-stream-missing                | delete-stream             | 🪓delete-stream/🚫️refuses-to-3c20ff                    | mutation.target-missing                |
       | delete-stream-referenced             | delete-stream             | 🪓delete-stream/⛓️refuses-to-remove-422a37             | mutation.referenced                    |
+      | remove-content-missing               | remove-content            | 🔪remove-content/🚫️refuses-missing-content             | mutation.target-missing                |
       | remove-gcp-observation-out-of-range  | remove-gcp-observation    | 🚷remove-gcp-observation/🚫️refuses-an-109cf1           | mutation.target-missing                |
       | remove-stream-frame-out-of-range     | remove-stream-frame       | ➖remove-stream-frame/🚫️refuses-a-frame-e7c374         | mutation.target-missing                |
       | replace-dense-noop                   | replace-dense             | ☁️replace-dense/🔁️warns-that-the-675b6e               | mutation.no-op                         |
       | replace-geo-products-absent          | replace-geo-products      | 🗾replace-geo-products/🚫️refuses-to-clear-b8c54a       | mutation.target-missing                |
-      | replace-job-noop                     | replace-job               | 🏗️replace-job/🔁️warns-that-the-bdf2e9                 | mutation.no-op                         |
       | replace-mesh-result-noop             | replace-mesh-result       | 🧱replace-mesh-result/🔁️warns-that-the-b39bab          | mutation.no-op                         |
-      | replace-mesh-result-staged           | replace-mesh-result       | 🧱replace-mesh-result/🚫️refuses-a-48f3a6               | mutation.incomplete-mesh               |
+      | replace-mesh-result-unpublished      | replace-mesh-result       | 🧱replace-mesh-result/🚫️refuses-a-48f3a6               | mutation.incomplete-mesh               |
       | replace-qc-absent                    | replace-qc                | 🧾replace-qc/🚫️refuses-to-clear-30cbb5                 | mutation.target-missing                |
       | replace-sparse-noop                  | replace-sparse            | ⭐replace-sparse/🔁️warns-that-the-56a3a9               | mutation.no-op                         |
       | replace-stream-source-missing        | replace-stream-source     | 🔁replace-stream-source/🚫️refuses-to-f7f40d            | mutation.target-missing                |
