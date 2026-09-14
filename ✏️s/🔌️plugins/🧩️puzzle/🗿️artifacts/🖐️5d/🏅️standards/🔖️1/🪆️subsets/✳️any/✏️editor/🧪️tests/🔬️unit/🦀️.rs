@@ -23,16 +23,42 @@ pub(crate) mod context {
     /// 🧰️ The registry-backed app every test drives: the tool proof catalog joins the migrated declarations to live
     /// factories only with a manifest, so kind discipline and the utility contract are enforced exactly as in
     /// production.
-    pub fn app() -> Puzzle5dApp {
+    pub fn app() -> Puzzle5dTestApp {
         app_with_registry()
+    }
+
+    /// 🧹️ A registered app that closes itself to terminal-empty ownership when the test drops it, so a test that
+    /// never reaches `close_app` still retires its stores exactly.
+    pub struct Puzzle5dTestApp(Puzzle5dApp);
+
+    impl std::ops::Deref for Puzzle5dTestApp {
+        type Target = Puzzle5dApp;
+
+        fn deref(&self) -> &Puzzle5dApp {
+            &self.0
+        }
+    }
+
+    impl std::ops::DerefMut for Puzzle5dTestApp {
+        fn deref_mut(&mut self) -> &mut Puzzle5dApp {
+            &mut self.0
+        }
+    }
+
+    impl Drop for Puzzle5dTestApp {
+        fn drop(&mut self) {
+            if !std::thread::panicking() {
+                close_app(&mut self.0);
+            }
+        }
     }
 
     /// 🧰️ A registry-backed app so kind discipline (View actions must emit no operations) and the
     /// utility contract are enforced exactly as in production.
-    pub fn app_with_registry() -> Puzzle5dApp {
+    pub fn app_with_registry() -> Puzzle5dTestApp {
         let mut app = semio_framework::io::resolve_ready(semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<Puzzle5dPlayApp>>(puzzle5d_app_manifest_for_tests));
         semio_framework::io::resolve_ready(app.bind_instance_id(1));
-        app
+        Puzzle5dTestApp(app)
     }
     
     fn action_window_kind(action: &str) -> &'static str {
@@ -268,7 +294,7 @@ fn apply_board_events_hostile_static_law_rejects_the_old_one_grant_reducer() {
         .replace("\"applyBoardEvents\" => Box::new(Puzzle5dBoardEventsWork::default())", "\"applyBoardEvents\" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))");
     assert!(!complex_retained_route_is_cursorized(&direct), "hostile old-reducer replacement must fail closed");
     for marker in ["self.scan_one(source)?", "Puzzle5dBoardEventsStage::FindMovePart", "Puzzle5dBoardEventsStage::ScanEdge", "Puzzle5dBoardEventsStage::ScanDeleteEdges", "Puzzle5dBoardEventsStage::CloseBrush"] {
-        assert!(!complex_retained_route_is_cursorized(&source.replacen(marker, "cursor-removed", 1)), "missing cursor marker was falsely accepted: {marker}");
+        assert!(!complex_retained_route_is_cursorized(&source.replace(marker, "cursor-removed")), "missing cursor marker was falsely accepted: {marker}");
     }
 }
 
@@ -289,7 +315,7 @@ fn focus_selection_hostile_static_law_rejects_whole_selection_reducers() {
         .replace(r#""focusSelection" => Box::new(Puzzle5dFocusSelectionWork::default())"#, r#""focusSelection" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#);
     assert!(!focus_selection_route_is_cursorized(&direct));
     for marker in ["Puzzle5dFocusSelectionStage::Selection", "Puzzle5dFocusSelectionStage::Parts", "Puzzle5dFocusSelectionStage::Publish", "self.part_cursor += 1"] {
-        assert!(!focus_selection_route_is_cursorized(&source.replacen(marker, "cursor-removed", 1)), "missing focus cursor marker was falsely accepted: {marker}");
+        assert!(!focus_selection_route_is_cursorized(&source.replace(marker, "cursor-removed")), "missing focus cursor marker was falsely accepted: {marker}");
     }
 }
 
@@ -384,7 +410,7 @@ fn kind_weight_hostile_static_law_rejects_whole_normalizer_and_missing_cursors()
 }
 
 fn engagement_submit_route_is_cursorized(source: &str) -> bool {
-    source.contains(r#"const PUZZLE5D_WINDOW_TOOL_IDS: &[&str] = &["cycleBrushCandidate", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementSubmit", "zoomToSelection"]"#)
+    source.contains(r#"const PUZZLE5D_WINDOW_TOOL_IDS: &[&str] = &["cycleBrushCandidate", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementSubmit", "setFillCount", "targetBrushSuggestions", "zoomToSelection"]"#)
         && source.contains("window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => Box::new(Puzzle5dWindowCommandWork::new(window))")
         && source.contains("transient_from_snapshot(self.window_transient.as_ref())")
         && source.contains("addressed_transient(view, transient_after)")
@@ -428,7 +454,7 @@ fn world_relocate_hostile_static_law_rejects_whole_proximity_scans() {
         source.replace(r#""worldRelocate" => Box::new(Puzzle5dWorldRelocateWork::default())"#, r#""worldRelocate" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#);
     assert!(!world_relocate_route_is_cursorized(&direct), "hostile old-reducer replacement must fail closed");
     for marker in ["Puzzle5dWorldRelocateStage::ExistingFasteners", "Puzzle5dWorldRelocateStage::CandidatePart", "Puzzle5dWorldRelocateStage::CandidateGrip", "Puzzle5dWorldRelocateStage::PublishFastener", "PUZZLE5D_RELOCATE_GRIPS_PER_PART"] {
-        assert!(!world_relocate_route_is_cursorized(&source.replacen(marker, "cursor-removed", 1)), "missing world-relocate marker was falsely accepted: {marker}");
+        assert!(!world_relocate_route_is_cursorized(&source.replace(marker, "cursor-removed")), "missing world-relocate marker was falsely accepted: {marker}");
     }
 }
 
@@ -536,17 +562,18 @@ async fn patch_fastener_updates_transform_offsets_and_undoes() {
 /// impl (not its `Mutation<Value>` bridge impl) is what the CW7 law is about.
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-    use crate::standards::v1::subsets::any::schema::mutations::binary::Puzzle5dStore;
+    use crate::standards::v1::subsets::any::schema::mutations::binary::{close_puzzle5d_store, puzzle5d_store};
     use crate::{PUZZLE_5D_SCHEMA, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d};
     use protocol::{ArtifactId, Edit, SchemaId};
     use store::create_document_envelope;
 
-    let mut store = semio_framework::io::resolve_ready(Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None))).expect("store");
+    let mut store = puzzle5d_store(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None)).await.expect("store");
     let part = Puzzle5dPart { id: "p1".into(), part_kind: None, anchor: Default::default(), part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };
     semio_framework::io::resolve_ready(store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_part(part, None)], description: None })).expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<Puzzle5dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
     semio_framework::io::resolve_ready(semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())));
+    close_puzzle5d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
 }
 //#endregion 🔖️CommandEnvelopeTests
 

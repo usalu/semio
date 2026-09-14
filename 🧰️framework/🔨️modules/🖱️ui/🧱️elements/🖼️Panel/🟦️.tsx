@@ -22,7 +22,7 @@ import { FlowProvider, useFlow } from "../../🔨️modules/🧭️flow-directio
 import { LevelProvider, getLevelZClass, useSurfaceActive } from "../🌈️Surface/🟦️.tsx";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
-import { type Anchor, PANEL_TREE_UNIT_MIME, PanelGhostRoot, WindowChrome, anchorHorizontal, anchorPositionStyle, beginPanelTreeUnitDrag, chromeHostedOpenPanelPositionStyle, endPanelTreeUnitDrag, flowFromAnchor, publishShellDockRightColumnLeftPx, readActivePanelTreeUnitDrag, shellNavbarTrailingEndReserveStyle, useNativeDragArm, usePanelDockContext, usePanelTreeUnitDragActive, useShellNavbarTrailingEndWidthPx, useUiDriverDragSurface, type UiStatus } from "../../🎯️targets/⚛️react/🟦️";
+import { type Anchor, PANEL_TREE_UNIT_MIME, PanelGhostRoot, WindowChrome, anchorHorizontal, anchorPositionStyle, anchorVertical, beginPanelTreeUnitDrag, chromeHostedOpenPanelPositionStyle, endPanelTreeUnitDrag, flowFromAnchor, publishShellDockRightColumnLeftPx, readActivePanelTreeUnitDrag, shellNavbarTrailingEndReserveStyle, useNativeDragArm, usePanelDockContext, usePanelTreeUnitDragActive, useShellNavbarTrailingEndWidthPx, useUiDriverDragSurface, type UiStatus } from "../../🎯️targets/⚛️react/🟦️";
 import { PanelTabBar, type PanelTabNode, type PanelTabSelectionOptions, type PanelTreeUnit, findPanelTabNode, progressPanelTabSelection, resolvePanelBranchBodyLeaf, usePanelTabSelection } from "../🧭️PanelTabBar/🟦️.tsx";
 import { CloseIcon, Icon } from "../🔣️Icons/🟦️.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
@@ -461,12 +461,17 @@ const Panel: React.FC<PanelProps> = ({
   useFirstDraggableElementAlias(panelContentRef, firstDraggableAlias);
 
   // Positioned within the region between navbar and footer (Layout's middle flex row), not the whole display — spacing is relative to that region's edges only, like a window's options rail over its canvas.
-  // Height hugs content up to that same region bound (`maxHeight`, not a fixed `bottom`) — taller content scrolls internally instead of forcing the box to fill the region. A corner or edge-middle panel grows in one horizontal direction and is resizable only on its inner (canvas-facing) edge; a top/bottom-middle panel is centered and grows both ways, resizable from either edge.
-  const positionStyle = {
+  // Corner panels pin both vertical edges while open so viewport-filling bodies (chat feed, interpreted trees) get a definite height; edge-middle panels stay content-sized and centered on their middle axis.
+  const positionStyle: React.CSSProperties = {
     ...(isChromeHosted && visible ? chromeHostedOpenPanelPositionStyle(anchor) : anchorPositionStyle(anchor)),
     width: visible ? `${size}px` : undefined,
     ...(zIndex !== undefined ? { zIndex } : {}),
   };
+  const cornerAnchor = anchorHorizontal(anchor) !== "middle" && anchorVertical(anchor) !== "middle";
+  if (visible && cornerAnchor) {
+    if (anchorVertical(anchor) === "top") positionStyle.bottom = "var(--spacing-single)";
+    else if (anchorVertical(anchor) === "bottom") positionStyle.top = "var(--spacing-single)";
+  }
   const panelZClass = getLevelZClass("panel");
   const panelFoldControl =
     visible && onVisibleChange
@@ -544,7 +549,10 @@ const Panel: React.FC<PanelProps> = ({
                 body={
                   <div data-slot="panel-body-stack" className={cn("relative flex min-h-0 min-w-0 w-full flex-1", isBottom ? "flex-col-reverse" : "flex-col")}>
                     <PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} startDepth={1} showActiveColor={visible} />
-                    <Scrollable className="relative flex-1 min-h-0" viewportClassName={isBottom ? "flex min-h-full flex-col justify-end" : undefined}>
+                    <Scrollable
+                      className="relative flex-1 min-h-0"
+                      viewportClassName={isBottom ? "flex min-h-full flex-col justify-end" : "flex min-h-full flex-col"}
+                    >
                       {activeTabTrees && bodyLeaf ? (
                         <PanelTreeUnitsPane anchor={anchor} tabId={bodyLeaf.id} units={activeTabTrees} treeOpenStates={treeOpenStates} onTreeOpenStateChange={onTreeOpenStateChange} treeContentRevision={treeContentRevision} />
                       ) : null}

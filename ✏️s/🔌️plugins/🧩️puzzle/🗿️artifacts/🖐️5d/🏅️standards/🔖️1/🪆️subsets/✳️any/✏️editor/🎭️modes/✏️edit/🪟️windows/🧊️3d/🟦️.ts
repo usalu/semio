@@ -1,7 +1,7 @@
 /** 🧊️ Puzzle 5D editor — World3d window: typed twin of `🦀️.rs`'s view-model. Mirrors the
- * pane's `render(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession)` boundary — the 3D
- * world-scene projection plus the live brush/fill precompute session state a mutation-capable
- * surface carries (absent entirely from the viewer's read-only twin, see `👁️viewer/…/🟦️.ts`). */
+ * pane's `render(envelope: &Puzzle5dScene, tool_run: Option<&ToolRunView>, mesh_lane: &[String])` boundary —
+ * the 3D world-scene projection plus the live fill/brush tool run a mutation-capable surface carries (absent
+ * entirely from the viewer's read-only twin, see `👁️viewer/…/🟦️.ts`). */
 
 /** ✏️ The World3d window's typed view-model — mirrors the Rust `render()` boundary's inputs. */
 export interface Puzzle5dWorld3dViewModel {

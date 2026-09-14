@@ -1,13 +1,28 @@
 //! 💧️ Physical property functions: moist air, water, steam, refrigerants, glycol.
 
-use crate::num::newton_raphson;
 use crate::units::{c_to_k, CP_DRY_AIR, H_FG_0C, P_STD, R_DRY_AIR, R_WATER_VAPOR};
 
 // #region 🔖️Psychrometrics
-/// 💧️ Saturation pressure of water [Pa] (Magnus-type, valid ~0–50°C).
+/// 💧️ Saturation pressure of water [Pa] over ice below 0 °C and over liquid water above, from the
+/// Hyland–Wexler correlations (ASHRAE Handbook — Fundamentals, Psychrometrics, eqs. 5–6).
 pub fn saturation_pressure_pa(t_c: f64) -> f64 {
-    let t = t_c.clamp(-50.0, 100.0);
-    611.657 * ((17.2799 * t) / (t + 237.3)).exp()
+    let t = c_to_k(t_c.clamp(-100.0, 200.0));
+    if t_c < 0.0 {
+        (-5.674_535_9e3 / t + 6.392_524_7 - 9.677_843e-3 * t + 6.221_570_1e-7 * t * t + 2.074_782_5e-9 * t.powi(3) - 9.484_024e-13 * t.powi(4) + 4.163_501_9 * t.ln()).exp()
+    } else {
+        (-5.800_220_6e3 / t + 1.391_499_3 - 4.864_023_9e-2 * t + 4.176_476_8e-5 * t * t - 1.445_209_3e-8 * t.powi(3) + 6.545_967_3 * t.ln()).exp()
+    }
+}
+
+/// 💧️ Humidity ratio W [kg_water/kg_dry_air] of air whose dew point is `dew_point_c`.
+pub fn humidity_ratio_from_dew_point(dew_point_c: f64, p_atm: f64) -> f64 {
+    let p_w = saturation_pressure_pa(dew_point_c);
+    0.621_945 * p_w / (p_atm - p_w).max(1.0)
+}
+
+/// 🔥️ Moist air specific heat [J/(kg_dry_air·K)] at humidity ratio `w`.
+pub fn moist_air_cp_j_per_kg_k(w: f64) -> f64 {
+    1.004_84e3 + 1.858_95e3 * w
 }
 
 /// 💧️ Humidity ratio W [kg_water/kg_dry_air] from dry-bulb and relative humidity.
@@ -24,15 +39,27 @@ pub fn rh_from_humidity_ratio(t_c: f64, w: f64, p_atm: f64) -> f64 {
     (p_w / p_ws).clamp(0.0, 1.0)
 }
 
-/// 🌡️ Wet-bulb temperature [°C] via iterative psychrometric balance.
+/// 🌡️ Thermodynamic wet-bulb temperature [°C] by bisection on the psychrometric energy balance
+/// (ASHRAE Handbook — Fundamentals, Psychrometrics, eqs. 33 and 35).
 pub fn wet_bulb_c(t_db_c: f64, w: f64, p_atm: f64) -> f64 {
-    let target = w;
-    let f = |t_wb: f64| humidity_ratio_from_rh(t_wb, 1.0, p_atm) - target;
-    let df = |t_wb: f64| {
-        let eps = 0.01;
-        (f(t_wb + eps) - f(t_wb - eps)) / (2.0 * eps)
+    let implied_humidity_ratio = |t_wb: f64| {
+        let w_s = humidity_ratio_from_rh(t_wb, 1.0, p_atm);
+        if t_wb >= 0.0 {
+            ((2501.0 - 2.326 * t_wb) * w_s - 1.006 * (t_db_c - t_wb)) / (2501.0 + 1.86 * t_db_c - 4.186 * t_wb)
+        } else {
+            ((2830.0 - 0.24 * t_wb) * w_s - 1.006 * (t_db_c - t_wb)) / (2830.0 + 1.86 * t_db_c - 2.1 * t_wb)
+        }
     };
-    newton_raphson(t_db_c, f, df, 30, 1e-6).unwrap_or(t_db_c)
+    let (mut low, mut high) = (-100.0_f64, t_db_c);
+    for _ in 0..60 {
+        let middle = 0.5 * (low + high);
+        if implied_humidity_ratio(middle) > w {
+            high = middle;
+        } else {
+            low = middle;
+        }
+    }
+    0.5 * (low + high)
 }
 
 /// 🔥️ Moist air enthalpy [J/kg dry air].
@@ -42,9 +69,17 @@ pub fn moist_air_enthalpy_j_per_kg(t_c: f64, w: f64) -> f64 {
 
 /// 🌡️ Dew point [°C] from humidity ratio.
 pub fn dew_point_c(w: f64, p_atm: f64) -> f64 {
-    let p_w = w * p_atm / (0.621_945 + w);
-    let ln_pw = (p_w / 611.657).ln();
-    237.3 * ln_pw / (17.2799 - ln_pw)
+    let p_w = w.max(0.0) * p_atm / (0.621_945 + w.max(0.0));
+    let (mut low, mut high) = (-100.0_f64, 200.0_f64);
+    for _ in 0..60 {
+        let middle = 0.5 * (low + high);
+        if saturation_pressure_pa(middle) > p_w {
+            high = middle;
+        } else {
+            low = middle;
+        }
+    }
+    0.5 * (low + high)
 }
 
 /// 💨️ Moist air density [kg/m³].

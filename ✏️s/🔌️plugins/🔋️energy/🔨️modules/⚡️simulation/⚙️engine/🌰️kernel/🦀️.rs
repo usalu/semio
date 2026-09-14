@@ -1,26 +1,42 @@
-//! 🔄️ Simulation kernel: calendar, multi-rate loops, warmup, predictor-corrector coupling.
+//! 🔄️ Simulation kernel: the hourly timestep cursor machine and its coupled surface/zone heat
+//! balance.
+//!
+//! Each hour first resolves every zone's schedules, gains, infiltration and setpoints, then advances
+//! the building through `3600 s / Δt` implicit heat-balance steps. One step of one zone solves the
+//! EnergyPlus heat-balance method simultaneously rather than by lagged iteration: every construction
+//! is an implicit finite-difference chain reduced to its inside face, every window a massless
+//! glazing chain, the inside faces exchange long wave through the enclosure's gray-body factors, and
+//! the zone air stores heat by the third-order backward difference. The thermostat pins the air at
+//! its active setpoint and the ideal loads deliver exactly the heat that keeps it there.
 
-use crate::air_exchange::{infiltration_flow_m3_s, ventilation_load_w, InfiltrationSpec};
+use crate::air_exchange::{infiltration_flow_m3_s, InfiltrationSpec};
 use crate::calendar::{RunPeriod, SimDate};
-use crate::controls::{evaluate_controls, predict_zone_load, HumidistatSpec, ThermostatSpec};
+use crate::controls::{HumidistatSpec, ThermostatSpec};
 use crate::curves::PerformanceCurve;
 use crate::daylight::{dimmed_lighting_power_w, lighting_dimming_fraction, reference_point_illuminance_lux, simplified_daylight_factor};
 use crate::electrical::{grid_balance, PvSystem, Transformer};
-use crate::envelope::{solve_exterior_surface_temp, solve_interior_surface_temp, ConductionState, ExteriorConvectionModel, InteriorConvectionModel};
+use crate::envelope::{eliminate_chain, exterior_convection_w_m2k, exterior_radiation_w_m2k, interior_convection_w_m2k, is_windward, substitute_chain, wind_speed_at_height};
 use crate::error::Error;
+use crate::fenestration::{gap_conductance_w_m2k, glazing_interior_convection_w_m2k, MAX_PANES};
 use crate::gains::{compute_equipment_gain_w, compute_lighting_gain_w, compute_people_gain_w, ActivityLevel, GainDecomposition};
 use crate::ideal_hvac::{ideal_loads_deliver, IdealLoadsConfig, IdealLoadsInput};
 use crate::model::{EntityId, FixedTable, Model, OutsideBoundary};
+use crate::num::solve_dense_in_place;
 use crate::plant::{PlantLoopSimulation, PlantStream, Pump};
-use crate::precompute::PrecomputedModel;
-use crate::props::saturation_pressure_pa;
+use crate::precompute::{EnclosureFace, EnclosureRadiation, PrecomputedModel};
+use crate::props::{moist_air_cp_j_per_kg_k, moist_air_density};
 use crate::schedule::{ScheduleContext, ScheduleSet};
-use crate::site::{GroundTemperatureModel, WeatherRecord};
-use crate::solar::{surface_solar_absorption, window_shading, WindowProjections};
-use crate::zone_air::{advance_zone_air, commit_zone_air, required_system_sensible_w, HumiditySolutionMethod, ZoneAirBalance, ZoneAirState};
+use crate::site::{sun_direction, GroundTemperatureModel, TimestepWeather, WeatherRecord};
+use crate::solar::{beam_overlap_m2, incidence_cosine, sunlit_fraction, SkyState};
+use crate::units::STEFAN_BOLTZMANN;
+use crate::zone_air::ZoneAirState;
 use crate::zone_hvac::{ZoneEquipment, ZoneEquipmentRequest};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use serde::{Deserialize, Serialize};
+
+const KELVIN: f64 = 273.15;
+const FIXED_TEMPERATURE_CONDUCTANCE_W_M2K: f64 = 1.0e9;
+const GROUND_REFLECTANCE: f64 = 0.2;
 
 // #region 🔖️Config
 /// ⚙️ Simulation environment type.
@@ -48,7 +64,10 @@ impl Default for ConvergenceTolerances {
     }
 }
 
-/// ⚙️ Simulation configuration.
+/// ⚙️ Simulation configuration. `zone_timestep_minutes` is the interval at which weather, sun
+/// position, shading and exterior film coefficients are refreshed; `system_timestep_minutes` the
+/// implicit step of the coupled surface/air balance and its HVAC control (never longer than the
+/// zone timestep). Both divide the hour.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct SimulationConfig {
     pub environment: SimulationEnvironment,
@@ -105,35 +124,125 @@ impl DeliveredEnergy {
     pub fn total_electric_w(&self) -> f64 {
         self.heating_w + self.cooling_w + self.fan_w + self.pump_w + self.compressor_w + self.shw_electric_w + self.refrigeration_w + self.water_pump_w - self.pv_generation_w + self.battery_charge_w
     }
+
+    fn scaled(&self, factor: f64) -> Self {
+        Self {
+            heating_w: self.heating_w * factor,
+            cooling_w: self.cooling_w * factor,
+            fan_w: self.fan_w * factor,
+            pump_w: self.pump_w * factor,
+            compressor_w: self.compressor_w * factor,
+            gas_w: self.gas_w * factor,
+            pv_generation_w: self.pv_generation_w * factor,
+            battery_charge_w: self.battery_charge_w * factor,
+            shw_electric_w: self.shw_electric_w * factor,
+            shw_gas_w: self.shw_gas_w * factor,
+            refrigeration_w: self.refrigeration_w * factor,
+            water_pump_w: self.water_pump_w * factor,
+        }
+    }
 }
 // #endregion 🔖️DeliveredEnergy
 
 // #region 🔖️State
-/// 🔄️ Per-zone simulation state.
+/// 🔄️ Per-zone simulation state. `mean_air_temp_c` and `delivered` are the averages over the last
+/// completed hour; `air` is the state after the last heat-balance step.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ZoneState {
     pub air: ZoneAirState,
+    pub mean_air_temp_c: f64,
+    pub mean_radiant_temp_c: f64,
     pub heating_demand_w: f64,
     pub cooling_demand_w: f64,
     pub unmet_heating_w: f64,
     pub unmet_cooling_w: f64,
     pub delivered: DeliveredEnergy,
+    pub hour_temperature_sum_c: f64,
+    pub hour_delivered: DeliveredEnergy,
+    pub hour_steps: u32,
 }
 
 impl ZoneState {
-    pub(crate) fn empty() -> Self {
-        Self { air: ZoneAirState::new(20.0, 0.01), heating_demand_w: 0.0, cooling_demand_w: 0.0, unmet_heating_w: 0.0, unmet_cooling_w: 0.0, delivered: DeliveredEnergy::default() }
+    pub(crate) fn new(temp_c: f64, humidity_ratio: f64) -> Self {
+        Self {
+            air: ZoneAirState::new(temp_c, humidity_ratio),
+            mean_air_temp_c: temp_c,
+            mean_radiant_temp_c: temp_c,
+            heating_demand_w: 0.0,
+            cooling_demand_w: 0.0,
+            unmet_heating_w: 0.0,
+            unmet_cooling_w: 0.0,
+            delivered: DeliveredEnergy::default(),
+            hour_temperature_sum_c: 0.0,
+            hour_delivered: DeliveredEnergy::default(),
+            hour_steps: 0,
+        }
     }
 }
 
-/// 🔄️ Surface thermal history for CTF conduction.
-#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+/// 🧱️ Node temperatures of an opaque surface, outside face first, and its last room-side film.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct SurfaceState {
-    pub inside_temp_c: f64,
-    pub outside_temp_c: f64,
-    pub heat_flux_w: f64,
-    pub ctf: ConductionState,
-    pub convection_to_zone_w: f64,
+    pub temperatures_c: Vec<f64>,
+    pub inside_convection_w_m2k: f64,
+}
+
+impl SurfaceState {
+    /// 🧱️ Inside-face temperature.
+    pub fn inside_temp_c(&self) -> f64 {
+        self.temperatures_c.last().copied().unwrap_or(0.0)
+    }
+}
+
+/// 🪟️ Glazing face temperatures of a window, outside face first.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct WindowState {
+    pub face_temperatures_c: [f64; 2 * MAX_PANES],
+    pub inside_convection_w_m2k: f64,
+}
+
+/// 🧮️ Reserved scratch of the zone heat-balance solver, sized once for the largest enclosure.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct SolverWorkspace {
+    pub faces: usize,
+    pub nodes: usize,
+    pub matrix: Vec<f64>,
+    pub scratch: Vec<f64>,
+    pub rhs: Vec<f64>,
+    pub solution: Vec<f64>,
+    pub inside_absorbed_w_m2: Vec<f64>,
+    pub pane_absorbed_w_m2: Vec<f64>,
+    pub inside_convection_w_m2k: Vec<f64>,
+    pub reduction: Vec<f64>,
+    pub chain_a: Vec<f64>,
+    pub chain_b: Vec<f64>,
+}
+
+impl SolverWorkspace {
+    /// 🧮️ Reserves every buffer for enclosures of up to `faces` faces and chains of `nodes` nodes.
+    pub(crate) fn reserve(&mut self, faces: usize, nodes: usize) -> Result<(), Error> {
+        let order = faces + 1;
+        let reject = || Error::severe("energy heat-balance workspace backing rejected");
+        let exact = faces.min(crate::precompute::EXACT_ENCLOSURE_FACES) + 1;
+        for (buffer, length) in [
+            (&mut self.matrix, exact * exact),
+            (&mut self.scratch, exact * exact),
+            (&mut self.rhs, order),
+            (&mut self.solution, order),
+            (&mut self.inside_absorbed_w_m2, faces),
+            (&mut self.pane_absorbed_w_m2, faces * MAX_PANES),
+            (&mut self.inside_convection_w_m2k, faces),
+            (&mut self.reduction, faces * 3),
+            (&mut self.chain_a, faces * nodes.max(2 * MAX_PANES)),
+            (&mut self.chain_b, faces * nodes.max(2 * MAX_PANES)),
+        ] {
+            buffer.try_reserve_exact(length).map_err(|_| reject())?;
+            buffer.resize(length, 0.0);
+        }
+        self.faces = faces;
+        self.nodes = nodes.max(2 * MAX_PANES);
+        Ok(())
+    }
 }
 
 /// 🔄️ Full simulation state.
@@ -141,6 +250,8 @@ pub struct SurfaceState {
 pub struct SimulationModel {
     pub(crate) zones: FixedTable<EntityId, ZoneState>,
     pub(crate) surfaces: FixedTable<EntityId, SurfaceState>,
+    pub(crate) windows: FixedTable<EntityId, WindowState>,
+    pub(crate) solver: SolverWorkspace,
     pub(crate) warmup_complete: bool,
     pub(crate) hour: u32,
     pub(crate) delivered_total: DeliveredEnergy,
@@ -150,19 +261,27 @@ pub struct SimulationModel {
 
 impl Default for SimulationModel {
     fn default() -> Self {
-        Self { zones: FixedTable::default(), surfaces: FixedTable::default(), warmup_complete: false, hour: 0, delivered_total: DeliveredEnergy::default(), battery_soc: 0.5, plant_supply_c: 55.0 }
+        Self {
+            zones: FixedTable::default(),
+            surfaces: FixedTable::default(),
+            windows: FixedTable::default(),
+            solver: SolverWorkspace::default(),
+            warmup_complete: false,
+            hour: 0,
+            delivered_total: DeliveredEnergy::default(),
+            battery_soc: 0.5,
+            plant_supply_c: 55.0,
+        }
     }
 }
 // #endregion 🔖️State
 
 // #region 🔖️TimestepJob
-/// 🧭️ Bounded phase of one persistent zone timestep.
+/// 🧭️ Bounded phase of one persistent hourly timestep.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub(crate) enum TimestepStage {
-    Surface,
-    Fenestration,
     Zone,
-    SystemSubstep,
+    Balance,
     ZoneCommit,
     SecondaryPlant,
     SecondaryPv,
@@ -216,6 +335,20 @@ struct ZonePreparationWork {
     thermostat_schedule: u8,
     thermostat: ThermostatSpec,
     humidistat: Option<HumidistatSpec>,
+    controlled: bool,
+}
+
+/// 🌡️ One zone's hourly boundary conditions resolved from its schedules.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub(crate) struct ZoneLoads {
+    convective_w: f64,
+    radiant_w: f64,
+    latent_w: f64,
+    outdoor_air_m3_s: f64,
+    heating_setpoint_c: f64,
+    cooling_setpoint_c: f64,
+    floor_area_m2: f64,
+    controlled: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
@@ -230,12 +363,28 @@ pub(crate) enum ScheduleLookupStage {
     TimeSeries,
 }
 
+/// 🧭️ Bounded phase of one zone's heat-balance step.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub(crate) enum BalanceStage {
+    Weather,
+    Clear,
+    WindowSolar,
+    BeamPatches,
+    DiffuseSolar,
+    Faces,
+    Solve,
+    IdealLoad,
+    Fault,
+    ApplyIdealLoad,
+    ZoneEquipment,
+    Settle,
+    Commit,
+}
+
 #[cfg(test)]
-pub(crate) const P7C1_TIMESTEP_STAGES: [TimestepStage; 12] = [
-    TimestepStage::Surface,
-    TimestepStage::Fenestration,
+pub(crate) const P7C1_TIMESTEP_STAGES: [TimestepStage; 10] = [
     TimestepStage::Zone,
-    TimestepStage::SystemSubstep,
+    TimestepStage::Balance,
     TimestepStage::ZoneCommit,
     TimestepStage::SecondaryPlant,
     TimestepStage::SecondaryPv,
@@ -266,8 +415,21 @@ pub(crate) const P7C1_ZONE_PREPARATION_STAGES: [ZonePreparationStage; 15] = [
 ];
 
 #[cfg(test)]
-pub(crate) const P7C1_SYSTEM_SUBSTEP_STAGES: [SystemSubstepStage; 6] =
-    [SystemSubstepStage::Predict, SystemSubstepStage::IdealLoad, SystemSubstepStage::Fault, SystemSubstepStage::ApplyIdealLoad, SystemSubstepStage::ZoneEquipment, SystemSubstepStage::Complete];
+pub(crate) const P7C1_BALANCE_STAGES: [BalanceStage; 13] = [
+    BalanceStage::Weather,
+    BalanceStage::Clear,
+    BalanceStage::WindowSolar,
+    BalanceStage::BeamPatches,
+    BalanceStage::DiffuseSolar,
+    BalanceStage::Faces,
+    BalanceStage::Solve,
+    BalanceStage::IdealLoad,
+    BalanceStage::Fault,
+    BalanceStage::ApplyIdealLoad,
+    BalanceStage::ZoneEquipment,
+    BalanceStage::Settle,
+    BalanceStage::Commit,
+];
 
 #[cfg(test)]
 pub(crate) const P7C1_PLANT_STAGES: [PlantStage; 4] = [PlantStage::ReduceZoneLoad, PlantStage::BuildPriority, PlantStage::Dispatch, PlantStage::Simulate];
@@ -292,27 +454,6 @@ struct ScheduleLookupWork {
     annual_index: Option<usize>,
     daily_id: Option<crate::model::ScheduleId>,
     daily_fallback: ScheduleLookupStage,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
-pub(crate) enum SystemSubstepStage {
-    Predict,
-    IdealLoad,
-    Fault,
-    ApplyIdealLoad,
-    ZoneEquipment,
-    Complete,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
-struct SystemSubstepWork {
-    stage: SystemSubstepStage,
-    ideal_cursor: usize,
-    fault_cursor: usize,
-    equipment_cursor: usize,
-    selected_ideal: Option<usize>,
-    fault_factor: f64,
-    balance: Option<ZoneAirBalance>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
@@ -341,48 +482,92 @@ struct BatteryWork {
     net_load_w: f64,
 }
 
+/// 🧮️ Cursor of one zone's heat-balance step.
 #[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
-struct ZoneTimestepWork {
-    zone_index: usize,
-    zone_id: EntityId,
-    floor_area_m2: f64,
-    zone_rh: f64,
-    internal_gain: GainDecomposition,
-    infiltration_sensible_w: f64,
-    infiltration_latent_w: f64,
-    surface_convection_w: f64,
-    sensible_gain_w: f64,
-    heating_setpoint_c: f64,
-    cooling_setpoint_c: f64,
-    thermostat: ThermostatSpec,
-    humidistat: Option<HumidistatSpec>,
+struct BalanceWork {
+    stage: BalanceStage,
+    zone_cursor: usize,
+    face_cursor: usize,
+    back_cursor: usize,
+    zone_diffuse_w: f64,
+    air_diagonal_w_k: f64,
+    air_rhs_w: f64,
+    mean_radiant_sums: [f64; 6],
+    free_temp_c: f64,
+    target_temp_c: Option<f64>,
+    required_w: f64,
+    delivered_w: f64,
+    remaining_heating_w: f64,
+    remaining_cooling_w: f64,
+    fault_factor: f64,
+    ideal_cursor: usize,
+    fault_cursor: usize,
+    equipment_cursor: usize,
+    selected_ideal: Option<usize>,
     delivered: DeliveredEnergy,
-    system: SystemSubstepWork,
 }
 
-/// ⏱️ Cursor-owned execution state for one zone timestep.
+impl BalanceWork {
+    fn new() -> Self {
+        Self {
+            stage: BalanceStage::Weather,
+            zone_cursor: 0,
+            face_cursor: 0,
+            back_cursor: 0,
+            zone_diffuse_w: 0.0,
+            air_diagonal_w_k: 0.0,
+            air_rhs_w: 0.0,
+            mean_radiant_sums: [0.0; 6],
+            free_temp_c: 0.0,
+            target_temp_c: None,
+            required_w: 0.0,
+            delivered_w: 0.0,
+            remaining_heating_w: 0.0,
+            remaining_cooling_w: 0.0,
+            fault_factor: 1.0,
+            ideal_cursor: 0,
+            fault_cursor: 0,
+            equipment_cursor: 0,
+            selected_ideal: None,
+            delivered: DeliveredEnergy::default(),
+        }
+    }
+
+    fn next_zone(&mut self) {
+        let zone_cursor = self.zone_cursor + 1;
+        *self = Self { stage: BalanceStage::Clear, zone_cursor, ..Self::new() };
+    }
+}
+
+/// 🌦️ The three hourly weather records one hour interpolates between.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub(crate) struct HourWeather {
+    pub(crate) previous: WeatherRecord,
+    pub(crate) current: WeatherRecord,
+    pub(crate) next: WeatherRecord,
+}
+
+/// ⏱️ Cursor-owned execution state for one hourly timestep.
 #[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub(crate) struct TimestepWork {
     stage: TimestepStage,
     context: ScheduleContext,
-    weather: WeatherRecord,
+    weather: HourWeather,
     date: SimDate,
     hour: f64,
     dt_s: f64,
-    system_dt_s: f64,
-    sub_steps: u32,
+    substeps: u32,
+    substep_cursor: u32,
+    zone_steps: u32,
+    step_weather: TimestepWeather,
+    sky: SkyState,
     sun_alt: f64,
     sun_az: f64,
-    surface_cursor: usize,
-    fenestration_cursor: usize,
     zone_cursor: usize,
-    system_substep_cursor: u32,
     secondary_cursor: usize,
-    zone_envelope_w: Vec<f64>,
-    zone_solar_w: Vec<f64>,
-    zone_surface_conv_w: Vec<f64>,
+    zone_loads: Vec<ZoneLoads>,
     zone_preparation: Option<ZonePreparationWork>,
-    zone_work: Option<ZoneTimestepWork>,
+    balance: Option<BalanceWork>,
     plant_work: Option<PlantWork>,
     battery_work: Option<BatteryWork>,
     schedule_lookup: Option<ScheduleLookupWork>,
@@ -395,38 +580,30 @@ pub(crate) struct TimestepBuilder {
     stage: u8,
     cursor: usize,
     context: ScheduleContext,
-    weather: WeatherRecord,
+    weather: HourWeather,
     date: SimDate,
     hour: f64,
-    dt_s: f64,
-    system_dt_s: f64,
-    zone_envelope_w: Vec<f64>,
-    zone_solar_w: Vec<f64>,
-    zone_surface_conv_w: Vec<f64>,
+    zone_loads: Vec<ZoneLoads>,
 }
 
 #[cfg(test)]
-pub(crate) const P7C1_TIMESTEP_BUILDER_STAGES: [u8; 7] = [0, 1, 2, 3, 4, 5, 6];
+pub(crate) const P7C1_TIMESTEP_BUILDER_STAGES: [u8; 3] = [0, 1, 2];
 
 impl TimestepBuilder {
     pub(crate) fn retained_wire_signature(&self) -> [u64; 6] {
-        [self.stage as u64, self.cursor as u64, self.zone_envelope_w.len() as u64, self.zone_solar_w.len() as u64, self.zone_surface_conv_w.len() as u64, self.hour.to_bits()]
+        [self.stage as u64, self.cursor as u64, self.zone_loads.len() as u64, self.zone_loads.capacity() as u64, self.date.day_of_year() as u64, self.hour.to_bits()]
     }
 
-    pub(crate) fn new(pre: &PrecomputedModel, weather: WeatherRecord, date: SimDate, hour: f64, dt_s: f64) -> Self {
-        let system_dt_s = pre.system_timestep_s.min(dt_s);
+    pub(crate) fn new(weather: HourWeather, date: SimDate, hour: f64) -> Self {
+        let current = weather.current;
         Self {
             stage: 0,
             cursor: 0,
-            context: ScheduleContext { year: date.year, month: date.month, day: date.day, hour: weather.hour, day_of_week: date.day_of_week(), timestep_index: hour as u32, is_dst: false },
+            context: ScheduleContext { year: date.year, month: date.month, day: date.day, hour: current.hour, day_of_week: date.day_of_week(), timestep_index: hour as u32, is_dst: false },
             weather,
             date,
             hour,
-            dt_s,
-            system_dt_s,
-            zone_envelope_w: Vec::new(),
-            zone_solar_w: Vec::new(),
-            zone_surface_conv_w: Vec::new(),
+            zone_loads: Vec::new(),
         }
     }
 
@@ -434,66 +611,40 @@ impl TimestepBuilder {
         let zones = pre.zone_order.len();
         match self.stage {
             0 => {
-                self.zone_envelope_w.try_reserve_exact(zones).map_err(|_| Error::severe("energy timestep envelope backing rejected"))?;
+                self.zone_loads.try_reserve_exact(zones).map_err(|_| Error::severe("energy timestep zone-load backing rejected"))?;
                 self.stage = 1;
             }
             1 => {
                 if self.cursor < zones {
-                    self.zone_envelope_w.push(0.0);
+                    self.zone_loads.push(ZoneLoads::default());
                     self.cursor += 1;
                 } else {
                     self.stage = 2;
-                    self.cursor = 0;
-                }
-            }
-            2 => {
-                self.zone_solar_w.try_reserve_exact(zones).map_err(|_| Error::severe("energy timestep solar backing rejected"))?;
-                self.stage = 3;
-            }
-            3 => {
-                if self.cursor < zones {
-                    self.zone_solar_w.push(0.0);
-                    self.cursor += 1;
-                } else {
-                    self.stage = 4;
-                    self.cursor = 0;
-                }
-            }
-            4 => {
-                self.zone_surface_conv_w.try_reserve_exact(zones).map_err(|_| Error::severe("energy timestep convection backing rejected"))?;
-                self.stage = 5;
-            }
-            5 => {
-                if self.cursor < zones {
-                    self.zone_surface_conv_w.push(0.0);
-                    self.cursor += 1;
-                } else {
-                    self.stage = 6;
                 }
             }
             _ => {
-                let (sun_alt, sun_az) = pre.solar_at(model, self.date.day_of_year(), self.weather.hour as f64 + 0.5);
+                let midpoint = sun_direction(model.site.latitude_deg, model.site.longitude_deg, model.site.time_zone_hours, self.date.day_of_year(), self.weather.current.hour as f64 + 0.5);
+                let zone_steps = (3600.0 / pre.zone_timestep_s).round().max(1.0) as u32;
+                let substeps = (3600.0 / pre.balance_step_s()).round().max(1.0) as u32;
                 return Ok(Some(TimestepWork {
-                    stage: TimestepStage::Surface,
+                    stage: TimestepStage::Zone,
                     context: self.context,
                     weather: self.weather,
                     date: self.date,
                     hour: self.hour,
-                    dt_s: self.dt_s,
-                    system_dt_s: self.system_dt_s,
-                    sub_steps: (self.dt_s / self.system_dt_s).ceil() as u32,
-                    sun_alt,
-                    sun_az,
-                    surface_cursor: 0,
-                    fenestration_cursor: 0,
+                    dt_s: 3600.0 / substeps as f64,
+                    substeps,
+                    substep_cursor: 0,
+                    zone_steps,
+                    step_weather: TimestepWeather::interpolate(&self.weather.previous, &self.weather.current, &self.weather.next, 1, zone_steps),
+                    sky: SkyState::default(),
+                    sun_alt: midpoint[2].clamp(-1.0, 1.0).asin().to_degrees(),
+                    sun_az: midpoint[0].atan2(midpoint[1]).to_degrees().rem_euclid(360.0),
                     zone_cursor: 0,
-                    system_substep_cursor: 0,
                     secondary_cursor: 0,
-                    zone_envelope_w: std::mem::take(&mut self.zone_envelope_w),
-                    zone_solar_w: std::mem::take(&mut self.zone_solar_w),
-                    zone_surface_conv_w: std::mem::take(&mut self.zone_surface_conv_w),
+                    zone_loads: std::mem::take(&mut self.zone_loads),
                     zone_preparation: None,
-                    zone_work: None,
+                    balance: None,
                     plant_work: None,
                     battery_work: None,
                     schedule_lookup: None,
@@ -518,7 +669,7 @@ impl TimestepBuilder {
         if maximum_items == 0 {
             return false;
         }
-        self.zone_envelope_w.pop().is_none() && self.zone_solar_w.pop().is_none() && self.zone_surface_conv_w.pop().is_none()
+        self.zone_loads.pop().is_none()
     }
 }
 
@@ -526,27 +677,27 @@ impl TimestepWork {
     pub(crate) fn retained_wire_signature(&self) -> [u64; 16] {
         [
             self.stage as u64,
-            self.surface_cursor as u64,
-            self.fenestration_cursor as u64,
+            self.substep_cursor as u64,
+            self.substeps as u64,
             self.zone_cursor as u64,
-            self.system_substep_cursor as u64,
             self.secondary_cursor as u64,
-            self.zone_envelope_w.len() as u64,
-            self.zone_solar_w.len() as u64,
-            self.zone_surface_conv_w.len() as u64,
+            self.zone_loads.len() as u64,
+            self.balance.as_ref().map_or(0, |work| work.stage as u64 + 1),
+            self.balance.as_ref().map_or(0, |work| work.zone_cursor as u64),
+            self.balance.as_ref().map_or(0, |work| work.face_cursor as u64),
             self.zone_preparation.is_some() as u64,
-            self.zone_work.is_some() as u64,
             self.plant_work.is_some() as u64,
             self.battery_work.is_some() as u64,
             self.schedule_lookup.is_some() as u64,
+            self.zone_steps as u64,
             self.hour.to_bits(),
             self.pv_generation_w.to_bits(),
         ]
     }
 
     #[cfg(test)]
-    pub(crate) fn new(model: &Model, pre: &PrecomputedModel, weather: WeatherRecord, date: SimDate, hour: f64, dt_s: f64) -> Self {
-        let mut builder = TimestepBuilder::new(pre, weather, date, hour, dt_s);
+    pub(crate) fn new(model: &Model, pre: &PrecomputedModel, weather: HourWeather, date: SimDate, hour: f64) -> Self {
+        let mut builder = TimestepBuilder::new(weather, date, hour);
         loop {
             if let Some(work) = builder.step(model, pre).expect("headless timestep admission") {
                 return work;
@@ -565,8 +716,8 @@ impl TimestepWork {
     }
 
     #[cfg(test)]
-    pub(crate) fn system_substep_stage(&self) -> Option<SystemSubstepStage> {
-        self.zone_work.as_ref().map(|work| work.system.stage)
+    pub(crate) fn balance_stage(&self) -> Option<BalanceStage> {
+        self.balance.as_ref().map(|work| work.stage)
     }
 
     #[cfg(test)]
@@ -592,9 +743,9 @@ impl TimestepWork {
     }
 
     #[cfg(test)]
-    pub(crate) fn set_system_substep_stage_for_gate(&mut self, stage: SystemSubstepStage) -> bool {
-        let Some(work) = self.zone_work.as_mut() else { return false };
-        work.system.stage = stage;
+    pub(crate) fn set_balance_stage_for_gate(&mut self, stage: BalanceStage) -> bool {
+        let Some(work) = self.balance.as_mut() else { return false };
+        work.stage = stage;
         true
     }
 
@@ -620,11 +771,11 @@ impl TimestepWork {
         if maximum_items == 0 {
             return false;
         }
-        if self.zone_envelope_w.pop().is_some() || self.zone_solar_w.pop().is_some() || self.zone_surface_conv_w.pop().is_some() {
+        if self.zone_loads.pop().is_some() {
             return false;
         }
         self.zone_preparation = None;
-        self.zone_work = None;
+        self.balance = None;
         self.plant_work = None;
         self.battery_work = None;
         true
@@ -632,11 +783,9 @@ impl TimestepWork {
 
     pub(crate) fn step(&mut self, model: &Model, config: &SimulationConfig, pre: &PrecomputedModel, state: &mut SimulationModel) {
         match self.stage {
-            TimestepStage::Surface => self.step_surface(model, pre, state),
-            TimestepStage::Fenestration => self.step_fenestration(model, pre, state),
             TimestepStage::Zone => self.step_zone_preparation(model, config, pre, state),
-            TimestepStage::SystemSubstep => self.step_system_substep_bounded(model, pre, state),
-            TimestepStage::ZoneCommit => self.commit_zone(state),
+            TimestepStage::Balance => self.step_balance(model, pre, state),
+            TimestepStage::ZoneCommit => self.step_zone_commit(pre, state),
             TimestepStage::SecondaryPlant => self.step_plant_bounded(model, pre, state),
             TimestepStage::SecondaryPv => self.step_pv(model, state),
             TimestepStage::SecondaryBattery => self.step_battery_bounded(model, pre, state),
@@ -647,99 +796,22 @@ impl TimestepWork {
         }
     }
 
-    fn step_surface(&mut self, model: &Model, pre: &PrecomputedModel, state: &mut SimulationModel) {
-        if self.surface_cursor == 0 {
-            // ⏱️ `delivered_total` is a PER-TIMESTEP roll-up across zones and secondary systems, and
-            // the facility meters integrate it once per hour. Without this reset it accumulated
-            // across the whole run and the facility meters integrated a running total, growing
-            // quadratically with the run length.
-            state.delivered_total = DeliveredEnergy::default();
-        }
-        let Some(sid) = pre.surface_order.get(self.surface_cursor).copied() else {
-            self.stage = TimestepStage::Fenestration;
-            return;
-        };
-        self.surface_cursor += 1;
-        let Some(sp) = pre.surfaces.get(&sid) else { return };
-        let surface = pre.surface_indices.get(&sid).and_then(|index| model.surfaces.get(*index));
-        let outside_temp = match surface.map(|surface| surface.outside_boundary_condition) {
-            Some(OutsideBoundary::Ground) => GroundTemperatureModel::Monthly { temperatures_c: model.ground_temperature.building_surface_c }.temperature_c(self.date.day_of_year()),
-            Some(OutsideBoundary::OutdoorAir) | None => self.weather.dry_bulb_c,
-            Some(OutsideBoundary::OtherSideTemperature) => self.weather.dry_bulb_c - 5.0,
-            Some(OutsideBoundary::Adiabatic) | Some(OutsideBoundary::Interzone(_)) => state.surfaces.get(&sid).map_or(self.weather.dry_bulb_c, |surface| surface.outside_temp_c),
-        };
-        let zone_t = state.zones.get(&sp.zone_id).map_or(self.weather.dry_bulb_c, |zone| zone.air.temp_c);
-        let solar_w_m2 = if sp.sun_exposed && self.sun_alt > 0.0 {
-            let incidence = crate::solar::beam_incidence_cosine(sp.normal, self.sun_alt, self.sun_az);
-            surface_solar_absorption(self.weather.direct_normal_irradiance_w_m2, self.weather.diffuse_horizontal_irradiance_w_m2, incidence, 1.0, sp.solar_absorptance, sp.tilt_deg).total_w_m2
-        } else {
-            0.0
-        };
-        let sky_temp_k = crate::site::sky_temperature_k(self.weather.dry_bulb_c, self.weather.dew_point_c);
-        let Some(surface_state) = state.surfaces.get_mut(&sid) else { return };
-        // 🌡️ The CTF is driven by the OUTSIDE FACE temperature, not by outside air: the exterior
-        // balance (absorbed solar, longwave to sky, wind convection) is solved first with the
-        // previous step's conduction and its solution becomes this step's driving temperature —
-        // the sol-air construction. Before this, the exterior solve's answer was discarded and the
-        // absorbed exterior solar was instead injected straight into the zone air, which both
-        // double-counted it and gave opaque walls no sol-air lift at all.
-        let previous_flux_w_m2 = if sp.area_m2 > 0.0 { surface_state.heat_flux_w / sp.area_m2 } else { 0.0 };
-        let driving_temp = if matches!(surface.map(|surface| surface.outside_boundary_condition), Some(OutsideBoundary::OutdoorAir) | None) && sp.sun_exposed {
-            solve_exterior_surface_temp(outside_temp, sky_temp_k, self.weather.wind_speed_m_s, solar_w_m2, -previous_flux_w_m2, sp.emissivity, &ExteriorConvectionModel::default())
-        } else {
-            outside_temp
-        };
-        let conduction_w_m2 = surface_state.ctf.heat_flux_w_m2(driving_temp, zone_t);
-        let balance = solve_interior_surface_temp(zone_t, conduction_w_m2, 0.0, &InteriorConvectionModel::default());
-        let conv_w = balance.convection_w_m2 * sp.area_m2;
-        let cond_w = conduction_w_m2 * sp.area_m2;
-        surface_state.inside_temp_c = balance.surface_temp_c;
-        surface_state.outside_temp_c = driving_temp;
-        surface_state.heat_flux_w = cond_w;
-        surface_state.convection_to_zone_w = conv_w;
-        surface_state.ctf.advance(driving_temp);
-        if let Some(index) = pre.zone_indices.get(&sp.zone_id).copied() {
-            self.zone_envelope_w[index] += cond_w;
-            self.zone_surface_conv_w[index] += conv_w;
-        }
-    }
-
-    fn step_fenestration(&mut self, model: &Model, pre: &PrecomputedModel, state: &SimulationModel) {
-        let Some(fid) = pre.fenestration_order.get(self.fenestration_cursor).copied() else {
-            self.stage = TimestepStage::Zone;
-            return;
-        };
-        self.fenestration_cursor += 1;
-        let Some(fp) = pre.fenestrations.get(&fid) else { return };
-        let Some(surface) = pre.surface_indices.get(&fp.surface_id).and_then(|index| model.surfaces.get(*index)) else { return };
-        let zone_t = state.zones.get(&surface.zone_id).map_or(self.weather.dry_bulb_c, |zone| zone.air.temp_c);
-        let Some(zone_index) = pre.zone_indices.get(&surface.zone_id).copied() else { return };
-        // 🪟️ A window has no surface node in this model, so its conduction lands directly on the
-        // zone-air bucket the balance already sums (`surface_convection_w`) — never on the opaque
-        // `zone_envelope_w` diagnostic, which the balance must not add a second time.
-        self.zone_surface_conv_w[zone_index] += fp.u_value_w_m2k * fp.area_m2 * (self.weather.dry_bulb_c - zone_t);
-        if self.sun_alt > 0.0 {
-            let projections = WindowProjections { width_m: fp.width_m, height_m: fp.height_m, overhang_depth_m: fp.overhang_depth_m, overhang_offset_m: fp.overhang_offset_m, fin_depth_m: fp.fin_depth_m, fin_offset_m: fp.fin_offset_m };
-            let shading = window_shading(&projections, fp.azimuth_deg, self.sun_alt, self.sun_az);
-            let incidence = crate::solar::beam_incidence_cosine(fp.normal, self.sun_alt, self.sun_az);
-            let sky_view_factor = (1.0 + crate::units::deg_to_rad(fp.tilt_deg).cos()) * 0.5;
-            let beam = self.weather.direct_normal_irradiance_w_m2 * incidence * shading.beam_sunlit_fraction;
-            let diffuse = self.weather.diffuse_horizontal_irradiance_w_m2 * sky_view_factor * shading.diffuse_sky_fraction;
-            self.zone_solar_w[zone_index] += (beam + diffuse) * fp.shgc * fp.area_m2;
-        }
-    }
-
-    fn step_zone_preparation(&mut self, model: &Model, config: &SimulationConfig, pre: &PrecomputedModel, state: &SimulationModel) {
+    fn step_zone_preparation(&mut self, model: &Model, config: &SimulationConfig, pre: &PrecomputedModel, state: &mut SimulationModel) {
         let Some(zone) = model.zones.get(self.zone_cursor) else {
-            self.secondary_cursor = 0;
-            self.stage = TimestepStage::SecondaryPlant;
+            self.zone_cursor = 0;
+            self.substep_cursor = 0;
+            self.balance = Some(BalanceWork::new());
+            self.stage = TimestepStage::Balance;
             return;
         };
         if self.zone_preparation.is_none() {
+            if self.zone_cursor == 0 {
+                state.delivered_total = DeliveredEnergy::default();
+            }
             let geometry = pre.zone_geometry.get(&zone.id).cloned().unwrap_or_default();
             let zone_state = state.zones.get(&zone.id);
-            let zone_temp_c = zone_state.map_or(self.weather.dry_bulb_c, |value| value.air.temp_c);
-            let zone_humidity_ratio = zone_state.map_or(self.weather.humidity_ratio(), |value| value.air.humidity_ratio);
+            let zone_temp_c = zone_state.map_or(self.weather.current.dry_bulb_c, |value| value.air.temp_c);
+            let zone_humidity_ratio = zone_state.map_or(self.step_weather.humidity_ratio, |value| value.air.humidity_ratio);
             let setpoints = pre.default_setpoints.get(&zone.id).copied().unwrap_or_default();
             self.zone_preparation = Some(ZonePreparationWork {
                 stage: ZonePreparationStage::Begin,
@@ -770,6 +842,7 @@ impl TimestepWork {
                     max_cooling_setpoint_c: 35.0,
                 },
                 humidistat: None,
+                controlled: false,
             });
             return;
         }
@@ -801,7 +874,7 @@ impl TimestepWork {
             ZonePreparationStage::DaylightEvaluate => {
                 if work.daylight_target_lux > 0.0 {
                     let factor = simplified_daylight_factor(work.daylight_area_m2, work.floor_area_m2, work.daylight_transmittance);
-                    let lux = reference_point_illuminance_lux(self.weather.diffuse_horizontal_irradiance_w_m2 * 120.0, self.weather.direct_normal_irradiance_w_m2 * 120.0, self.sun_alt.max(0.0) / 90.0, work.daylight_transmittance, factor, 1.0);
+                    let lux = reference_point_illuminance_lux(self.weather.current.diffuse_horizontal_irradiance_w_m2 * 120.0, self.weather.current.direct_normal_irradiance_w_m2 * 120.0, self.sun_alt.max(0.0) / 90.0, work.daylight_transmittance, factor, 1.0);
                     work.lighting_dim = lighting_dimming_fraction(lux, work.daylight_target_lux, 0.1);
                 }
                 advance_zone_preparation(work, ZonePreparationStage::People);
@@ -867,7 +940,7 @@ impl TimestepWork {
                             velocity_squared_coefficient: infiltration.velocity_squared_term_coefficient,
                             stack_height_m: infiltration.stack_height_m,
                         };
-                        work.infiltration_flow_m3_s += infiltration_flow_m3_s(&specification, zone.volume_m3, geometry.exterior_area_m2, self.weather.dry_bulb_c, work.zone_temp_c, self.weather.wind_speed_m_s, self.weather.atmospheric_pressure_pa);
+                        work.infiltration_flow_m3_s += infiltration_flow_m3_s(&specification, zone.volume_m3, geometry.exterior_area_m2, self.weather.current.dry_bulb_c, work.zone_temp_c, self.weather.current.wind_speed_m_s, self.weather.current.atmospheric_pressure_pa);
                     }
                     work.cursor += 1;
                 } else {
@@ -896,8 +969,8 @@ impl TimestepWork {
             ZonePreparationStage::AirflowSolve => {
                 if work.cursor < config.tolerances.max_iterations.max(1) as usize {
                     if work.cursor == 0 && work.airflow_zone_node.is_some() {
-                        let stack = (work.zone_temp_c - self.weather.dry_bulb_c).abs().sqrt();
-                        work.airflow_flow_m3_s = 0.01 * (self.weather.wind_speed_m_s + stack).powf(0.65);
+                        let stack = (work.zone_temp_c - self.weather.current.dry_bulb_c).abs().sqrt();
+                        work.airflow_flow_m3_s = 0.01 * (self.weather.current.wind_speed_m_s + stack).powf(0.65);
                     }
                     work.cursor += 1;
                 } else {
@@ -920,6 +993,7 @@ impl TimestepWork {
             ZonePreparationStage::Thermostat => {
                 if let Some(thermostat) = model.thermostats.get(work.cursor) {
                     if thermostat.zone_id == work.zone_id {
+                        work.controlled = true;
                         if work.thermostat_schedule == 0 {
                             let Some(schedule) = schedule_lookup_step(&mut self.schedule_lookup, &config.schedules, thermostat.heating_setpoint_schedule_id, &self.context) else {
                                 return;
@@ -957,138 +1031,140 @@ impl TimestepWork {
                 }
             }
             ZonePreparationStage::Publish => {
-                let (infiltration_sensible_w, infiltration_latent_w) = ventilation_load_w(
-                    work.infiltration_flow_m3_s + work.airflow_flow_m3_s + work.mechanical_flow_m3_s,
-                    work.zone_temp_c,
-                    work.zone_humidity_ratio,
-                    self.weather.dry_bulb_c,
-                    self.weather.humidity_ratio(),
-                    self.weather.atmospheric_pressure_pa,
-                    0.0,
-                );
                 let zone_index = pre.zone_indices.get(&work.zone_id).copied().unwrap_or(work.zone_index);
-                let surface_convection_w = self.zone_surface_conv_w.get(zone_index).copied().unwrap_or(0.0);
-                let sensible_gain_w = work.internal_gain.sensible_w + self.zone_solar_w.get(zone_index).copied().unwrap_or(0.0);
-                self.zone_work = Some(ZoneTimestepWork {
-                    zone_index: work.zone_index,
-                    zone_id: work.zone_id,
-                    floor_area_m2: work.floor_area_m2,
-                    zone_rh: relative_humidity_from_w(work.zone_humidity_ratio, work.zone_temp_c, self.weather.atmospheric_pressure_pa),
-                    internal_gain: work.internal_gain,
-                    infiltration_sensible_w,
-                    infiltration_latent_w,
-                    surface_convection_w,
-                    sensible_gain_w,
+                self.zone_loads[zone_index] = ZoneLoads {
+                    convective_w: work.internal_gain.convective_w,
+                    radiant_w: work.internal_gain.radiant_w,
+                    latent_w: work.internal_gain.latent_w,
+                    outdoor_air_m3_s: work.infiltration_flow_m3_s + work.airflow_flow_m3_s + work.mechanical_flow_m3_s,
                     heating_setpoint_c: work.heating_setpoint_c,
                     cooling_setpoint_c: work.cooling_setpoint_c,
-                    thermostat: work.thermostat,
-                    humidistat: work.humidistat,
-                    delivered: DeliveredEnergy::default(),
-                    system: SystemSubstepWork { stage: SystemSubstepStage::Predict, ideal_cursor: 0, fault_cursor: 0, equipment_cursor: 0, selected_ideal: None, fault_factor: 1.0, balance: None },
-                });
+                    floor_area_m2: work.floor_area_m2,
+                    controlled: work.controlled,
+                };
                 self.zone_preparation = None;
-                self.system_substep_cursor = 0;
-                self.stage = TimestepStage::SystemSubstep;
+                self.zone_cursor += 1;
             }
         }
     }
 
-    fn step_system_substep_bounded(&mut self, model: &Model, pre: &PrecomputedModel, state: &mut SimulationModel) {
-        let Some(work) = self.zone_work.as_mut() else {
-            self.stage = TimestepStage::Zone;
-            return;
-        };
-        if self.system_substep_cursor >= self.sub_steps.max(1) {
+    fn step_balance(&mut self, model: &Model, pre: &PrecomputedModel, state: &mut SimulationModel) {
+        let mut work = self.balance.take().unwrap_or_else(BalanceWork::new);
+        let finished = self.balance_unit(&mut work, model, pre, state);
+        if finished {
+            self.zone_cursor = 0;
             self.stage = TimestepStage::ZoneCommit;
-            return;
+        } else {
+            self.balance = Some(work);
         }
-        let zone = &model.zones[work.zone_index];
-        let Some(zone_state) = state.zones.get_mut(&zone.id) else { return };
-        match work.system.stage {
-            SystemSubstepStage::Predict => {
-                let balance = ZoneAirBalance {
-                    volume_m3: zone.volume_m3,
-                    conditioned: zone.conditioned,
-                    sensible_gain_w: work.sensible_gain_w,
-                    latent_gain_w: work.internal_gain.latent_w,
-                    infiltration_sensible_w: work.infiltration_sensible_w,
-                    infiltration_latent_w: work.infiltration_latent_w,
-                    ventilation_sensible_w: 0.0,
-                    ventilation_latent_w: 0.0,
-                    system_sensible_w: 0.0,
-                    system_latent_w: 0.0,
-                    surface_convection_w: work.surface_convection_w,
-                    mass_flow_in_kg_s: 0.0,
-                    supply_humidity_ratio: self.weather.humidity_ratio(),
-                    outdoor_humidity_ratio: self.weather.humidity_ratio(),
-                    heating_setpoint_c: Some(work.heating_setpoint_c),
-                    cooling_setpoint_c: Some(work.cooling_setpoint_c),
-                    max_heating_w: None,
-                    max_cooling_w: None,
-                };
-                // 🎯️ Real predictor/corrector. The free-float answer is computed WITHOUT committing
-                // it to the BDF3 history (the history now advances exactly once per substep, in
-                // `Complete`), then the load that would land the zone exactly on the active setpoint
-                // is inverted out of the same integrator. Previously this stage both pushed a
-                // predictor temperature into the history and predicted the load from a residual that
-                // omitted infiltration entirely and subtracted the PREVIOUS substep's demand.
-                let free_float = advance_zone_air(&zone_state.air, &balance, self.system_dt_s, HumiditySolutionMethod::ThirdOrderBackward, self.weather.atmospheric_pressure_pa);
-                let controls = evaluate_controls(&work.thermostat, work.humidistat.as_ref(), free_float.temp_c, work.zone_rh);
-                let required_w = if free_float.temp_c < work.heating_setpoint_c {
-                    required_system_sensible_w(&zone_state.air, &balance, self.system_dt_s, work.heating_setpoint_c, self.weather.atmospheric_pressure_pa)
-                } else if free_float.temp_c > work.cooling_setpoint_c {
-                    required_system_sensible_w(&zone_state.air, &balance, self.system_dt_s, work.cooling_setpoint_c, self.weather.atmospheric_pressure_pa)
-                } else {
-                    0.0
-                };
-                let predicted = predict_zone_load(-required_w, work.internal_gain.latent_w, &controls, f64::INFINITY, f64::INFINITY, 5000.0, 5000.0);
-                zone_state.heating_demand_w = predicted.heating_w;
-                zone_state.cooling_demand_w = predicted.cooling_w;
-                work.system.balance = Some(balance);
-                work.system.stage = SystemSubstepStage::IdealLoad;
+    }
+
+    fn balance_unit(&mut self, work: &mut BalanceWork, model: &Model, pre: &PrecomputedModel, state: &mut SimulationModel) -> bool {
+        match work.stage {
+            BalanceStage::Weather => {
+                let zone_step = self.substep_cursor * self.zone_steps / self.substeps.max(1) + 1;
+                let weather = TimestepWeather::interpolate(&self.weather.previous, &self.weather.current, &self.weather.next, zone_step, self.zone_steps);
+                let hour_of_day = self.weather.current.hour as f64 + zone_step as f64 / self.zone_steps as f64;
+                let sun = sun_direction(model.site.latitude_deg, model.site.longitude_deg, model.site.time_zone_hours, self.date.day_of_year(), hour_of_day);
+                self.sky = SkyState::new(sun, weather.beam_normal_w_m2, weather.diffuse_horizontal_w_m2, model.site.elevation_m, GROUND_REFLECTANCE);
+                self.step_weather = weather;
+                *work = BalanceWork { stage: BalanceStage::Clear, ..BalanceWork::new() };
             }
-            SystemSubstepStage::IdealLoad => {
-                if let Some(ideal) = model.ideal_loads.get(work.system.ideal_cursor) {
-                    if ideal.zone_id == zone.id {
-                        work.system.selected_ideal = Some(work.system.ideal_cursor);
-                        work.system.fault_cursor = 0;
-                        work.system.fault_factor = 1.0;
-                        work.system.stage = SystemSubstepStage::Fault;
+            BalanceStage::Clear => {
+                let Some(zone_id) = pre.zone_order.get(work.zone_cursor).copied() else {
+                    self.substep_cursor += 1;
+                    if self.substep_cursor >= self.substeps {
+                        return true;
+                    }
+                    *work = BalanceWork::new();
+                    return false;
+                };
+                let faces = pre.enclosures.get(&zone_id).map_or(0, |enclosure| enclosure.faces.len());
+                let solver = &mut state.solver;
+                solver.inside_absorbed_w_m2[..faces].fill(0.0);
+                solver.pane_absorbed_w_m2[..faces * MAX_PANES].fill(0.0);
+                solver.inside_convection_w_m2k[..faces].fill(0.0);
+                solver.reduction[..faces * 3].fill(0.0);
+                if faces <= crate::precompute::EXACT_ENCLOSURE_FACES {
+                    let order = faces + 1;
+                    solver.matrix[..order * order].fill(0.0);
+                    solver.rhs[..order].fill(0.0);
+                }
+                work.stage = BalanceStage::WindowSolar;
+            }
+            BalanceStage::WindowSolar => self.unit_window_solar(work, pre, state),
+            BalanceStage::BeamPatches => self.unit_beam_patch(work, pre, state),
+            BalanceStage::DiffuseSolar => {
+                let zone_id = pre.zone_order[work.zone_cursor];
+                let Some(enclosure) = pre.enclosures.get(&zone_id) else {
+                    work.stage = BalanceStage::Faces;
+                    return false;
+                };
+                let flux = work.zone_diffuse_w * enclosure.diffuse_solar_multiplier;
+                for (index, face) in enclosure.faces.iter().enumerate() {
+                    match face {
+                        EnclosureFace::Opaque(id) => state.solver.inside_absorbed_w_m2[index] += flux * pre.surfaces.get(id).map_or(0.0, |s| s.inside_solar_absorptance),
+                        EnclosureFace::Window(id) => {
+                            if let Some(window) = pre.windows.get(id) {
+                                for pane in 0..window.glazing.panes {
+                                    state.solver.pane_absorbed_w_m2[index * MAX_PANES + pane] += flux * window.glazing.diffuse_back_absorptance[pane];
+                                }
+                            }
+                        }
+                    }
+                }
+                work.stage = BalanceStage::Faces;
+                work.face_cursor = 0;
+            }
+            BalanceStage::Faces => self.unit_face(work, model, pre, state),
+            BalanceStage::Solve => {
+                let loads = self.zone_loads[work.zone_cursor];
+                self.unit_solve(work, model, loads, pre, state);
+            }
+            BalanceStage::IdealLoad => {
+                let zone_id = pre.zone_order[work.zone_cursor];
+                if let Some(ideal) = model.ideal_loads.get(work.ideal_cursor) {
+                    if ideal.zone_id == zone_id {
+                        work.selected_ideal = Some(work.ideal_cursor);
+                        work.fault_cursor = 0;
+                        work.fault_factor = 1.0;
+                        work.stage = BalanceStage::Fault;
                     } else {
-                        work.system.ideal_cursor += 1;
+                        work.ideal_cursor += 1;
                     }
                 } else {
-                    work.system.stage = SystemSubstepStage::ZoneEquipment;
+                    work.stage = BalanceStage::ZoneEquipment;
                 }
             }
-            SystemSubstepStage::Fault => {
-                let ideal = &model.ideal_loads[work.system.selected_ideal.expect("selected ideal load")];
-                if let Some(fault) = model.faults.get(work.system.fault_cursor) {
+            BalanceStage::Fault => {
+                let ideal = &model.ideal_loads[work.selected_ideal.expect("selected ideal load")];
+                if let Some(fault) = model.faults.get(work.fault_cursor) {
                     if fault.target_equipment_id == ideal.id {
-                        let severity = pre.fault_severity.get(&ideal.id).copied().unwrap_or(fault.severity);
-                        work.system.fault_factor = 1.0 - severity;
-                        work.system.stage = SystemSubstepStage::ApplyIdealLoad;
+                        work.fault_factor = 1.0 - pre.fault_severity.get(&ideal.id).copied().unwrap_or(fault.severity);
+                        work.stage = BalanceStage::ApplyIdealLoad;
                     } else {
-                        work.system.fault_cursor += 1;
+                        work.fault_cursor += 1;
                     }
                 } else {
-                    work.system.stage = SystemSubstepStage::ApplyIdealLoad;
+                    work.stage = BalanceStage::ApplyIdealLoad;
                 }
             }
-            SystemSubstepStage::ApplyIdealLoad => {
-                let ideal = &model.ideal_loads[work.system.selected_ideal.expect("selected ideal load")];
+            BalanceStage::ApplyIdealLoad => {
+                let ideal = &model.ideal_loads[work.selected_ideal.expect("selected ideal load")];
+                let loads = self.zone_loads[work.zone_cursor];
+                let zone_state = state.zones.get(&pre.zone_order[work.zone_cursor]);
                 let output = ideal_loads_deliver(
                     &IdealLoadsInput {
-                        zone_temp_c: zone_state.air.temp_c,
-                        zone_humidity_ratio: zone_state.air.humidity_ratio,
-                        outdoor_temp_c: self.weather.dry_bulb_c,
-                        outdoor_humidity_ratio: self.weather.humidity_ratio(),
-                        heating_setpoint_c: work.heating_setpoint_c,
-                        cooling_setpoint_c: work.cooling_setpoint_c,
-                        zone_heating_demand_w: zone_state.heating_demand_w * work.system.fault_factor,
-                        zone_cooling_demand_w: zone_state.cooling_demand_w * work.system.fault_factor,
+                        zone_temp_c: zone_state.map_or(work.free_temp_c, |zone| zone.air.temp_c),
+                        zone_humidity_ratio: zone_state.map_or(self.step_weather.humidity_ratio, |zone| zone.air.humidity_ratio),
+                        outdoor_temp_c: self.step_weather.dry_bulb_c,
+                        outdoor_humidity_ratio: self.step_weather.humidity_ratio,
+                        heating_setpoint_c: loads.heating_setpoint_c,
+                        cooling_setpoint_c: loads.cooling_setpoint_c,
+                        zone_heating_demand_w: work.remaining_heating_w * work.fault_factor,
+                        zone_cooling_demand_w: work.remaining_cooling_w * work.fault_factor,
                         occupancy: 1.0,
-                        floor_area_m2: work.floor_area_m2,
+                        floor_area_m2: loads.floor_area_m2,
                     },
                     &IdealLoadsConfig {
                         max_heating_supply_air_temp_c: ideal.max_heating_supply_air_temp_c,
@@ -1099,19 +1175,19 @@ impl TimestepWork {
                         outdoor_air_per_area_m3_s_m2: ideal.outdoor_air_per_area_m3_s_m2,
                     },
                 );
-                let balance = work.system.balance.as_mut().expect("predicted zone balance");
-                balance.system_sensible_w += output.sensible_delivered_w;
+                work.delivered_w += output.sensible_heating_w - output.sensible_cooling_w;
+                work.remaining_heating_w = (work.remaining_heating_w - output.sensible_heating_w).max(0.0);
+                work.remaining_cooling_w = (work.remaining_cooling_w - output.sensible_cooling_w).max(0.0);
                 work.delivered.heating_w += output.sensible_heating_w;
                 work.delivered.cooling_w += output.sensible_cooling_w;
-                zone_state.unmet_heating_w = output.unmet_heating_w;
-                zone_state.unmet_cooling_w = output.unmet_cooling_w;
-                work.system.ideal_cursor += 1;
-                work.system.selected_ideal = None;
-                work.system.stage = SystemSubstepStage::IdealLoad;
+                work.ideal_cursor += 1;
+                work.selected_ideal = None;
+                work.stage = BalanceStage::IdealLoad;
             }
-            SystemSubstepStage::ZoneEquipment => {
-                if let Some(assignment) = model.zone_equipment.get(work.system.equipment_cursor) {
-                    if assignment.zone_id == zone.id {
+            BalanceStage::ZoneEquipment => {
+                let zone_id = pre.zone_order[work.zone_cursor];
+                if let Some(assignment) = model.zone_equipment.get(work.equipment_cursor) {
+                    if assignment.zone_id == zone_id && (work.remaining_heating_w > 0.0 || work.remaining_cooling_w > 0.0) {
                         let equipment = match assignment.equipment_type {
                             crate::model::ZoneEquipmentType::FanCoil => ZoneEquipment::FanCoil {
                                 heating: None,
@@ -1129,57 +1205,503 @@ impl TimestepWork {
                             },
                             _ => ZoneEquipment::Baseboard { heating: crate::coils::HeatingCoil::Electric { capacity_w: assignment.heating_capacity_w, efficiency: 1.0 } },
                         };
+                        let zone_state = state.zones.get(&zone_id);
                         let output = equipment.simulate(&ZoneEquipmentRequest {
-                            zone_temperature_c: zone_state.air.temp_c,
-                            zone_humidity_ratio: zone_state.air.humidity_ratio,
-                            heating_load_w: zone_state.heating_demand_w,
-                            cooling_load_w: zone_state.cooling_demand_w,
-                            outdoor_temperature_c: self.weather.dry_bulb_c,
-                            outdoor_humidity_ratio: self.weather.humidity_ratio(),
-                            outdoor_pressure_pa: self.weather.atmospheric_pressure_pa,
+                            zone_temperature_c: zone_state.map_or(work.free_temp_c, |zone| zone.air.temp_c),
+                            zone_humidity_ratio: zone_state.map_or(self.step_weather.humidity_ratio, |zone| zone.air.humidity_ratio),
+                            heating_load_w: work.remaining_heating_w,
+                            cooling_load_w: work.remaining_cooling_w,
+                            outdoor_temperature_c: self.step_weather.dry_bulb_c,
+                            outdoor_humidity_ratio: self.step_weather.humidity_ratio,
+                            outdoor_pressure_pa: self.step_weather.pressure_pa,
                             supply_air_temp_c: 16.0,
-                            supply_air_humidity_ratio: self.weather.humidity_ratio(),
+                            supply_air_humidity_ratio: self.step_weather.humidity_ratio,
                             supply_mass_flow_kg_s: 0.1,
                         });
-                        if let Some(balance) = work.system.balance.as_mut() {
-                            balance.system_sensible_w += output.delivered_heating_w - output.delivered_cooling_w;
-                        }
-                        work.delivered.heating_w += output.delivered_heating_w;
-                        work.delivered.cooling_w += output.delivered_cooling_w;
+                        let heating = output.delivered_heating_w.clamp(0.0, work.remaining_heating_w);
+                        let cooling = output.delivered_cooling_w.clamp(0.0, work.remaining_cooling_w);
+                        work.delivered_w += heating - cooling;
+                        work.remaining_heating_w -= heating;
+                        work.remaining_cooling_w -= cooling;
+                        work.delivered.heating_w += heating;
+                        work.delivered.cooling_w += cooling;
                         work.delivered.fan_w += output.fan_power_w;
                         work.delivered.compressor_w += output.compressor_power_w;
                         work.delivered.gas_w += output.gas_consumption_w;
                     }
-                    work.system.equipment_cursor += 1;
+                    work.equipment_cursor += 1;
                 } else {
-                    work.system.stage = SystemSubstepStage::Complete;
+                    work.stage = BalanceStage::Settle;
                 }
             }
-            SystemSubstepStage::Complete => {
-                // 🔄️ THE single commit of the zone-air history per substep, with the balance the
-                // system stages actually delivered into. Every earlier stage is free of history
-                // side effects, so the BDF3 history advances once and only once.
-                if let Some(balance) = work.system.balance.as_ref() {
-                    let corrected = advance_zone_air(&zone_state.air, balance, self.system_dt_s, HumiditySolutionMethod::ThirdOrderBackward, self.weather.atmospheric_pressure_pa);
-                    commit_zone_air(&mut zone_state.air, corrected);
+            BalanceStage::Settle => self.unit_settle(work, model, pre, state),
+            BalanceStage::Commit => self.unit_commit(work, model, pre, state),
+        }
+        false
+    }
+
+    fn unit_window_solar(&mut self, work: &mut BalanceWork, pre: &PrecomputedModel, state: &mut SimulationModel) {
+        let zone_id = pre.zone_order[work.zone_cursor];
+        let Some(enclosure) = pre.enclosures.get(&zone_id) else {
+            work.stage = BalanceStage::BeamPatches;
+            return;
+        };
+        let Some(face) = enclosure.faces.get(work.face_cursor).copied() else {
+            work.stage = BalanceStage::BeamPatches;
+            work.face_cursor = 0;
+            work.back_cursor = 0;
+            return;
+        };
+        let index = work.face_cursor;
+        work.face_cursor += 1;
+        let EnclosureFace::Window(id) = face else { return };
+        let Some(window) = pre.windows.get(&id) else { return };
+        if !window.sun_exposed || self.sky.sun[2] <= 0.0 {
+            return;
+        }
+        let cosine = incidence_cosine(window.normal, self.sky.sun);
+        let lit = if cosine <= 0.0 { 0.0 } else if window.casters.is_empty() { 1.0 } else { sunlit_fraction(&window.polygon, window.normal, std::iter::empty(), window.casters.iter().map(|caster| pre.casters[*caster].as_slice()), self.sky.sun) };
+        state.solver.reduction[index * 3] = lit;
+        let incident = self.sky.incident(window.normal, lit, window.sky_isotropic_ratio, window.sky_horizon_ratio);
+        let glazing = &window.glazing;
+        for pane in 0..glazing.panes {
+            state.solver.pane_absorbed_w_m2[index * MAX_PANES + pane] += incident.beam_w_m2 * glazing.beam_front_absorptance(pane, cosine) + incident.diffuse_w_m2() * glazing.diffuse_front_absorptance[pane];
+        }
+        let transmitted_w = incident.diffuse_w_m2() * glazing.diffuse_transmittance * window.area_m2;
+        let n = enclosure.faces.len();
+        match &enclosure.radiation {
+            EnclosureRadiation::Exchange { view_factors, .. } => {
+                for (back_index, back) in enclosure.faces.iter().enumerate() {
+                    let part = transmitted_w * view_factors[index * n + back_index];
+                    if part <= 0.0 {
+                        continue;
+                    }
+                    match back {
+                        EnclosureFace::Opaque(back_id) => {
+                            let Some(surface) = pre.surfaces.get(back_id) else { continue };
+                            if surface.area_m2 > 0.0 {
+                                state.solver.inside_absorbed_w_m2[back_index] += part * surface.inside_solar_absorptance / surface.area_m2;
+                            }
+                            work.zone_diffuse_w += part * (1.0 - surface.inside_solar_absorptance);
+                        }
+                        EnclosureFace::Window(back_id) => {
+                            let Some(other) = pre.windows.get(back_id) else { continue };
+                            for pane in 0..other.glazing.panes {
+                                state.solver.pane_absorbed_w_m2[back_index * MAX_PANES + pane] += part * other.glazing.diffuse_back_absorptance[pane] / other.area_m2;
+                            }
+                            work.zone_diffuse_w += part * other.glazing.diffuse_back_reflectance;
+                        }
+                    }
                 }
-                self.system_substep_cursor += 1;
-                work.system = SystemSubstepWork { stage: SystemSubstepStage::Predict, ideal_cursor: 0, fault_cursor: 0, equipment_cursor: 0, selected_ideal: None, fault_factor: 1.0, balance: None };
+            }
+            EnclosureRadiation::MeanRadiant { .. } => work.zone_diffuse_w += transmitted_w,
+        }
+    }
+
+    fn unit_beam_patch(&mut self, work: &mut BalanceWork, pre: &PrecomputedModel, state: &mut SimulationModel) {
+        let zone_id = pre.zone_order[work.zone_cursor];
+        let Some(enclosure) = pre.enclosures.get(&zone_id) else {
+            work.stage = BalanceStage::DiffuseSolar;
+            return;
+        };
+        let Some(face) = enclosure.faces.get(work.face_cursor).copied() else {
+            work.stage = BalanceStage::DiffuseSolar;
+            work.face_cursor = 0;
+            return;
+        };
+        let lit = state.solver.reduction[work.face_cursor * 3];
+        let window = match face {
+            EnclosureFace::Window(id) => pre.windows.get(&id).filter(|window| window.sun_exposed && lit > 0.0 && self.sky.beam_normal_w_m2 > 0.0 && incidence_cosine(window.normal, self.sky.sun) > 0.0),
+            EnclosureFace::Opaque(_) => None,
+        };
+        let Some(window) = window else {
+            work.face_cursor += 1;
+            work.back_cursor = 0;
+            return;
+        };
+        let Some(back) = enclosure.faces.get(work.back_cursor).copied() else {
+            work.face_cursor += 1;
+            work.back_cursor = 0;
+            return;
+        };
+        let back_index = work.back_cursor;
+        work.back_cursor += 1;
+        let sun = self.sky.sun;
+        let cosine = incidence_cosine(window.normal, sun);
+        let beam_w_m2 = self.sky.beam_normal_w_m2 * window.glazing.beam_transmittance(cosine) * cosine * lit;
+        match back {
+            EnclosureFace::Opaque(id) => {
+                let Some(surface) = pre.surfaces.get(&id) else { return };
+                let mut overlap = beam_overlap_m2(&window.polygon, window.normal, &surface.polygon, surface.normal, sun);
+                for hosted in &surface.windows {
+                    if let Some(opening) = pre.windows.get(hosted) {
+                        overlap -= beam_overlap_m2(&window.polygon, window.normal, &opening.polygon, opening.normal, sun);
+                    }
+                }
+                let absorbed_w = beam_w_m2 * overlap.max(0.0);
+                if surface.area_m2 > 0.0 {
+                    state.solver.inside_absorbed_w_m2[back_index] += absorbed_w * surface.inside_solar_absorptance / surface.area_m2;
+                }
+                work.zone_diffuse_w += absorbed_w * (1.0 - surface.inside_solar_absorptance);
+            }
+            EnclosureFace::Window(id) => {
+                let Some(other) = pre.windows.get(&id) else { return };
+                let arriving_w = beam_w_m2 * beam_overlap_m2(&window.polygon, window.normal, &other.polygon, other.normal, sun);
+                if arriving_w <= 0.0 {
+                    return;
+                }
+                let back_cosine = incidence_cosine(other.normal, sun).abs();
+                let mut absorbed = 0.0;
+                for pane in 0..other.glazing.panes {
+                    let fraction = other.glazing.beam_back_absorptance(pane, back_cosine);
+                    absorbed += fraction;
+                    state.solver.pane_absorbed_w_m2[back_index * MAX_PANES + pane] += arriving_w * fraction / other.area_m2;
+                }
+                work.zone_diffuse_w += arriving_w * (1.0 - absorbed - other.glazing.beam_back_transmittance(back_cosine)).max(0.0);
             }
         }
     }
 
-    fn commit_zone(&mut self, state: &mut SimulationModel) {
-        let Some(work) = self.zone_work.take() else {
-            self.stage = TimestepStage::Zone;
+    fn unit_face(&mut self, work: &mut BalanceWork, model: &Model, pre: &PrecomputedModel, state: &mut SimulationModel) {
+        let zone_id = pre.zone_order[work.zone_cursor];
+        let Some(enclosure) = pre.enclosures.get(&zone_id) else {
+            work.stage = BalanceStage::Solve;
             return;
         };
-        if let Some(zone_state) = state.zones.get_mut(&work.zone_id) {
-            zone_state.delivered = work.delivered;
+        let n = enclosure.faces.len();
+        let Some(face) = enclosure.faces.get(work.face_cursor).copied() else {
+            work.stage = BalanceStage::Solve;
+            return;
+        };
+        let index = work.face_cursor;
+        work.face_cursor += 1;
+        let loads = self.zone_loads[work.zone_cursor];
+        let air_c = state.zones.get(&zone_id).map_or(self.step_weather.dry_bulb_c, |zone| zone.air.temp_c);
+        let humidity_ratio = state.zones.get(&zone_id).map_or(self.step_weather.humidity_ratio, |zone| zone.air.humidity_ratio);
+        let weather = self.step_weather;
+        let dt = self.dt_s;
+        let radiant_w_m2 = if enclosure.radiant_weight_total_m2 > 0.0 { loads.radiant_w * enclosure.emissivities[index] / enclosure.radiant_weight_total_m2 } else { 0.0 };
+        let nodes = state.solver.nodes;
+        let (inside_c, diagonal, rhs, inside_h, area) = match face {
+            EnclosureFace::Opaque(id) => {
+                let (Some(surface), Some(surface_state)) = (pre.surfaces.get(&id), state.surfaces.get(&id)) else { return };
+                let chain = &surface.chain;
+                let count = chain.nodes();
+                let outside_c = surface_state.temperatures_c[0];
+                let (h_outside, q_outside) = match surface.boundary {
+                    OutsideBoundary::OutdoorAir => {
+                        let cosine = incidence_cosine(surface.normal, self.sky.sun);
+                        let solar_w_m2 = if surface.sun_exposed && self.sky.sun[2] > 0.0 {
+                            let openings = surface.windows.iter().filter_map(|window| pre.windows.get(window)).map(|window| window.polygon.as_slice());
+                            let lit = if cosine <= 0.0 { 0.0 } else if surface.casters.is_empty() { 1.0 } else { sunlit_fraction(&surface.polygon, surface.normal, openings, surface.casters.iter().map(|caster| pre.casters[*caster].as_slice()), self.sky.sun) };
+                            self.sky.incident(surface.normal, lit, surface.sky_isotropic_ratio, surface.sky_horizon_ratio).total_w_m2()
+                        } else {
+                            0.0
+                        };
+                        let wet = weather.raining && surface.wind_exposed;
+                        let exterior_c = if wet { weather.wet_bulb_c } else { weather.dry_bulb_c };
+                        let wind = if surface.wind_exposed { wind_speed_at_height(weather.wind_speed_m_s, surface.centroid_height_m) } else { 0.0 };
+                        let h_convection = if wet { 1000.0 } else { exterior_convection_w_m2k(outside_c, weather.dry_bulb_c, surface.normal[2], wind, is_windward(surface.normal[2], surface.azimuth_deg, weather.wind_direction_deg), surface.roughness_multiplier) };
+                        let (h_sky, h_air, h_ground) = exterior_radiation_w_m2k(outside_c, weather.dry_bulb_c, weather.sky_temperature_c, surface.outside_emissivity, surface.normal[2]);
+                        (h_convection + h_air + h_sky + h_ground, (h_convection + h_air) * exterior_c + h_sky * weather.sky_temperature_c + h_ground * weather.dry_bulb_c + surface.outside_solar_absorptance * solar_w_m2)
+                    }
+                    OutsideBoundary::Ground => (FIXED_TEMPERATURE_CONDUCTANCE_W_M2K, FIXED_TEMPERATURE_CONDUCTANCE_W_M2K * GroundTemperatureModel::Monthly { temperatures_c: model.ground_temperature.building_surface_c }.temperature_c(self.date.day_of_year())),
+                    OutsideBoundary::OtherSideTemperature => (FIXED_TEMPERATURE_CONDUCTANCE_W_M2K, FIXED_TEMPERATURE_CONDUCTANCE_W_M2K * air_c),
+                    OutsideBoundary::Adiabatic => (0.0, 0.0),
+                    OutsideBoundary::Interzone(partner) => {
+                        let partner_c = state.surfaces.get(&partner).map_or(air_c, SurfaceState::inside_temp_c);
+                        (FIXED_TEMPERATURE_CONDUCTANCE_W_M2K, FIXED_TEMPERATURE_CONDUCTANCE_W_M2K * partner_c)
+                    }
+                };
+                let offset = index * nodes;
+                let (a, b) = (&mut state.solver.chain_a[offset..offset + count - 1], &mut state.solver.chain_b[offset..offset + count - 1]);
+                eliminate_chain(&chain.conductance_w_m2k, &chain.capacitance_j_m2k, &surface_state.temperatures_c, |_| 0.0, dt, h_outside, q_outside, a, b);
+                let inside_c = surface_state.inside_temp_c();
+                let inside_h = interior_convection_w_m2k(inside_c, air_c, surface.normal[2]);
+                let storage = chain.capacitance_j_m2k[count - 1] / dt;
+                let last = chain.conductance_w_m2k[count - 2];
+                let diagonal = storage + last * (1.0 - b[count - 2]) + inside_h;
+                let rhs = storage * inside_c + last * a[count - 2] + state.solver.inside_absorbed_w_m2[index] + radiant_w_m2;
+                (inside_c, diagonal, rhs, inside_h, surface.area_m2)
+            }
+            EnclosureFace::Window(id) => {
+                let (Some(window), Some(window_state)) = (pre.windows.get(&id), state.windows.get(&id)) else { return };
+                let glazing = &window.glazing;
+                let count = glazing.faces();
+                let faces_c = window_state.face_temperatures_c;
+                let ratio = window.coefficient_adjustment;
+                let wet = weather.raining && window.wind_exposed;
+                let exterior_c = if wet { weather.wet_bulb_c } else { weather.dry_bulb_c };
+                let wind = if window.wind_exposed { wind_speed_at_height(weather.wind_speed_m_s, window.centroid_height_m) } else { 0.0 };
+                let h_convection = ratio * if wet { 1000.0 } else { exterior_convection_w_m2k(faces_c[0], weather.dry_bulb_c, window.normal[2], wind, is_windward(window.normal[2], window.azimuth_deg, weather.wind_direction_deg), 1.0) };
+                let view_sky = 0.5 * (1.0 + window.normal[2]);
+                let split = view_sky.sqrt();
+                let ambient_emission = STEFAN_BOLTZMANN * (exterior_c + KELVIN).powi(4);
+                let incoming = view_sky * (split * STEFAN_BOLTZMANN * (weather.sky_temperature_c + KELVIN).powi(4) + (1.0 - split) * ambient_emission) + (1.0 - view_sky) * ambient_emission;
+                let outside_k = faces_c[0] + KELVIN;
+                let emissivity = glazing.emissivity_front[0];
+                let h_linear = 4.0 * emissivity * STEFAN_BOLTZMANN * outside_k.powi(3);
+                let h_outside = h_convection + h_linear;
+                let q_outside = h_convection * exterior_c + emissivity * incoming + 3.0 * emissivity * STEFAN_BOLTZMANN * outside_k.powi(4) - h_linear * KELVIN;
+                let mut conductance = [0.0; 2 * MAX_PANES];
+                for pane in 0..glazing.panes {
+                    conductance[2 * pane] = glazing.pane_conductance_w_m2k[pane];
+                    if pane + 1 < glazing.panes {
+                        let (outer_k, inner_k) = (faces_c[2 * pane + 1] + KELVIN, faces_c[2 * pane + 2] + KELVIN);
+                        let (e1, e2) = (glazing.emissivity_back[pane], glazing.emissivity_front[pane + 1]);
+                        let effective = e1 * e2 / (1.0 - (1.0 - e1) * (1.0 - e2));
+                        conductance[2 * pane + 1] = gap_conductance_w_m2k(outer_k, inner_k, glazing.gap_width_m[pane], window.height_m, window.tilt_deg, glazing.gap_gas[pane]) + STEFAN_BOLTZMANN * effective * (outer_k * outer_k + inner_k * inner_k) * (outer_k + inner_k);
+                    }
+                }
+                let sources = |node: usize| state_pane_source(&state.solver.pane_absorbed_w_m2, index, node);
+                let capacitance = [0.0; 2 * MAX_PANES];
+                let offset = index * nodes;
+                let mut a = [0.0; 2 * MAX_PANES];
+                let mut b = [0.0; 2 * MAX_PANES];
+                eliminate_chain(&conductance[..count - 1], &capacitance[..count], &faces_c[..count], sources, dt, h_outside, q_outside, &mut a[..count - 1], &mut b[..count - 1]);
+                state.solver.chain_a[offset..offset + count - 1].copy_from_slice(&a[..count - 1]);
+                state.solver.chain_b[offset..offset + count - 1].copy_from_slice(&b[..count - 1]);
+                let inside_c = faces_c[count - 1];
+                let inside_h = ratio * glazing_interior_convection_w_m2k(inside_c, air_c, humidity_ratio, weather.pressure_pa, window.height_m, window.tilt_deg);
+                let last = conductance[count - 2];
+                let diagonal = last * (1.0 - b[count - 2]) + inside_h;
+                let rhs = last * a[count - 2] + state_pane_source(&state.solver.pane_absorbed_w_m2, index, count - 1) + radiant_w_m2;
+                (inside_c, diagonal, rhs, inside_h, window.area_m2)
+            }
+        };
+        state.solver.inside_convection_w_m2k[index] = inside_h;
+        work.air_diagonal_w_k += area * inside_h;
+        match &enclosure.radiation {
+            EnclosureRadiation::Exchange { exchange_factors, .. } => {
+                let order = n + 1;
+                let inside_k = inside_c + KELVIN;
+                let mut diagonal = diagonal;
+                for (other_index, other) in enclosure.faces.iter().enumerate() {
+                    if other_index == index {
+                        continue;
+                    }
+                    let other_k = face_inside_c(state, pre, *other, air_c) + KELVIN;
+                    let h_radiation = STEFAN_BOLTZMANN * exchange_factors[index * n + other_index] * (inside_k * inside_k + other_k * other_k) * (inside_k + other_k);
+                    diagonal += h_radiation;
+                    state.solver.matrix[index * order + other_index] = -h_radiation;
+                }
+                state.solver.matrix[index * order + index] = diagonal;
+                state.solver.matrix[index * order + n] = -inside_h;
+                state.solver.matrix[n * order + index] = -area * inside_h;
+                state.solver.rhs[index] = rhs;
+            }
+            EnclosureRadiation::MeanRadiant { participation } => {
+                let mean_k = state.zones.get(&zone_id).map_or(air_c, |zone| zone.mean_radiant_temp_c) + KELVIN;
+                let inside_k = inside_c + KELVIN;
+                let h_radiation = participation[index] * (mean_k * mean_k + inside_k * inside_k) * (mean_k + inside_k);
+                let total = diagonal + h_radiation;
+                let (alpha, beta, gamma) = (rhs / total, inside_h / total, h_radiation / total);
+                state.solver.reduction[index * 3] = alpha;
+                state.solver.reduction[index * 3 + 1] = beta;
+                state.solver.reduction[index * 3 + 2] = gamma;
+                let sums = &mut work.mean_radiant_sums;
+                sums[0] += area * inside_h * (1.0 - beta);
+                sums[1] += area * inside_h * gamma;
+                sums[2] += area * inside_h * alpha;
+                sums[3] += area * h_radiation * (1.0 - gamma);
+                sums[4] += area * h_radiation * beta;
+                sums[5] += area * h_radiation * alpha;
+            }
         }
-        state.delivered_total = accumulate_delivered(&state.delivered_total, &work.delivered);
+    }
+
+    fn unit_solve(&mut self, work: &mut BalanceWork, model: &Model, loads: ZoneLoads, pre: &PrecomputedModel, state: &mut SimulationModel) {
+        let zone_id = pre.zone_order[work.zone_cursor];
+        let zone = &model.zones[work.zone_cursor];
+        let n = pre.enclosures.get(&zone_id).map_or(0, |enclosure| enclosure.faces.len());
+        let exact = pre.enclosures.get(&zone_id).is_none_or(|enclosure| matches!(enclosure.radiation, EnclosureRadiation::Exchange { .. }));
+        let weather = self.step_weather;
+        let Some(zone_state) = state.zones.get(&zone_id) else { return };
+        let capacity = zone_state.air.capacity_rate_w_k(zone.volume_m3 * zone.multiplier.max(1) as f64, weather.pressure_pa, self.dt_s);
+        let (storage, history) = zone_state.air.storage_terms(capacity);
+        let outdoor_capacity = loads.outdoor_air_m3_s * moist_air_density(weather.dry_bulb_c, weather.humidity_ratio, weather.pressure_pa) * moist_air_cp_j_per_kg_k(weather.humidity_ratio);
+        let base_diagonal = storage + outdoor_capacity;
+        work.air_rhs_w = history + outdoor_capacity * weather.dry_bulb_c + loads.convective_w;
+        let solver = &mut state.solver;
+        let order = n + 1;
+        let sums = work.mean_radiant_sums;
+        let free = if exact {
+            solver.matrix[n * order + n] = base_diagonal + work.air_diagonal_w_k;
+            solver.rhs[n] = work.air_rhs_w;
+            work.air_diagonal_w_k = base_diagonal + work.air_diagonal_w_k;
+            solver.scratch[..order * order].copy_from_slice(&solver.matrix[..order * order]);
+            solver.solution[..order].copy_from_slice(&solver.rhs[..order]);
+            if solve_dense_in_place(&mut solver.scratch[..order * order], &mut solver.solution[..order], order) { solver.solution[n] } else { zone_state.air.temp_c }
+        } else {
+            work.air_diagonal_w_k = base_diagonal + sums[0];
+            let determinant = work.air_diagonal_w_k * sums[3] - sums[1] * sums[4];
+            if determinant.abs() > 1e-12 { ((work.air_rhs_w + sums[2]) * sums[3] + sums[1] * sums[5]) / determinant } else { zone_state.air.temp_c }
+        };
+        work.free_temp_c = free;
+        work.target_temp_c = if !loads.controlled {
+            None
+        } else if free < loads.heating_setpoint_c {
+            Some(loads.heating_setpoint_c)
+        } else if free > loads.cooling_setpoint_c {
+            Some(loads.cooling_setpoint_c)
+        } else {
+            None
+        };
+        work.required_w = match work.target_temp_c {
+            None => 0.0,
+            Some(target) if exact => {
+                for row in 0..n {
+                    for column in 0..n {
+                        solver.scratch[row * n + column] = solver.matrix[row * order + column];
+                    }
+                    solver.solution[row] = solver.rhs[row] - solver.matrix[row * order + n] * target;
+                }
+                if solve_dense_in_place(&mut solver.scratch[..n * n], &mut solver.solution[..n], n) {
+                    work.air_diagonal_w_k * target + (0..n).map(|column| solver.matrix[n * order + column] * solver.solution[column]).sum::<f64>() - work.air_rhs_w
+                } else {
+                    0.0
+                }
+            }
+            Some(target) => {
+                let mean = if sums[3].abs() > 1e-12 { (sums[5] + sums[4] * target) / sums[3] } else { target };
+                work.air_diagonal_w_k * target - sums[1] * mean - work.air_rhs_w - sums[2]
+            }
+        };
+        work.remaining_heating_w = work.required_w.max(0.0);
+        work.remaining_cooling_w = (-work.required_w).max(0.0);
+        work.delivered_w = 0.0;
+        work.ideal_cursor = 0;
+        work.equipment_cursor = 0;
+        work.stage = BalanceStage::IdealLoad;
+    }
+
+    fn unit_settle(&mut self, work: &mut BalanceWork, model: &Model, pre: &PrecomputedModel, state: &mut SimulationModel) {
+        let _ = model;
+        let zone_id = pre.zone_order[work.zone_cursor];
+        let n = pre.enclosures.get(&zone_id).map_or(0, |enclosure| enclosure.faces.len());
+        let exact = pre.enclosures.get(&zone_id).is_none_or(|enclosure| matches!(enclosure.radiation, EnclosureRadiation::Exchange { .. }));
+        let met = work.target_temp_c.is_some() && (work.delivered_w - work.required_w).abs() <= 1e-9 * work.required_w.abs().max(1.0);
+        let solver = &mut state.solver;
+        let order = n + 1;
+        let sums = work.mean_radiant_sums;
+        let air_c = if exact {
+            if met {
+                let target = work.target_temp_c.expect("met target");
+                solver.solution[n] = target;
+                target
+            } else {
+                solver.scratch[..order * order].copy_from_slice(&solver.matrix[..order * order]);
+                solver.solution[..order].copy_from_slice(&solver.rhs[..order]);
+                solver.solution[n] += work.delivered_w;
+                if solve_dense_in_place(&mut solver.scratch[..order * order], &mut solver.solution[..order], order) {
+                    solver.solution[n]
+                } else {
+                    work.free_temp_c
+                }
+            }
+        } else {
+            let air = if met {
+                work.target_temp_c.expect("met target")
+            } else {
+                let determinant = work.air_diagonal_w_k * sums[3] - sums[1] * sums[4];
+                if determinant.abs() > 1e-12 { ((work.air_rhs_w + sums[2] + work.delivered_w) * sums[3] + sums[1] * sums[5]) / determinant } else { work.free_temp_c }
+            };
+            solver.solution[0] = air;
+            solver.solution[1] = if sums[3].abs() > 1e-12 { (sums[5] + sums[4] * air) / sums[3] } else { air };
+            air
+        };
+        work.free_temp_c = air_c;
+        if let Some(zone_state) = state.zones.get_mut(&zone_id) {
+            zone_state.heating_demand_w = work.required_w.max(0.0);
+            zone_state.cooling_demand_w = (-work.required_w).max(0.0);
+            zone_state.unmet_heating_w = work.remaining_heating_w;
+            zone_state.unmet_cooling_w = work.remaining_cooling_w;
+        }
+        work.face_cursor = 0;
+        work.stage = BalanceStage::Commit;
+    }
+
+    fn unit_commit(&mut self, work: &mut BalanceWork, model: &Model, pre: &PrecomputedModel, state: &mut SimulationModel) {
+        let zone_id = pre.zone_order[work.zone_cursor];
+        let enclosure = pre.enclosures.get(&zone_id);
+        let n = enclosure.map_or(0, |enclosure| enclosure.faces.len());
+        let nodes = state.solver.nodes;
+        if let Some(face) = enclosure.and_then(|enclosure| enclosure.faces.get(work.face_cursor)).copied() {
+            let index = work.face_cursor;
+            work.face_cursor += 1;
+            let inside_c = match &enclosure.expect("enclosure").radiation {
+                EnclosureRadiation::Exchange { .. } => state.solver.solution[index],
+                EnclosureRadiation::MeanRadiant { .. } => {
+                    let reduction = &state.solver.reduction[index * 3..index * 3 + 3];
+                    reduction[0] + reduction[1] * state.solver.solution[0] + reduction[2] * state.solver.solution[1]
+                }
+            };
+            let offset = index * nodes;
+            let inside_h = state.solver.inside_convection_w_m2k[index];
+            match face {
+                EnclosureFace::Opaque(id) => {
+                    let count = pre.surfaces.get(&id).map_or(0, |surface| surface.chain.nodes());
+                    let solver = &state.solver;
+                    if let Some(surface_state) = state.surfaces.get_mut(&id) {
+                        substitute_chain(&solver.chain_a[offset..offset + count - 1], &solver.chain_b[offset..offset + count - 1], inside_c, &mut surface_state.temperatures_c[..count]);
+                        surface_state.inside_convection_w_m2k = inside_h;
+                    }
+                }
+                EnclosureFace::Window(id) => {
+                    let count = pre.windows.get(&id).map_or(0, |window| window.glazing.faces());
+                    let solver = &state.solver;
+                    if let Some(window_state) = state.windows.get_mut(&id) {
+                        substitute_chain(&solver.chain_a[offset..offset + count - 1], &solver.chain_b[offset..offset + count - 1], inside_c, &mut window_state.face_temperatures_c[..count]);
+                        window_state.inside_convection_w_m2k = inside_h;
+                    }
+                }
+            }
+            return;
+        }
+        let exact = enclosure.is_none_or(|enclosure| matches!(enclosure.radiation, EnclosureRadiation::Exchange { .. }));
+        let air_c = work.free_temp_c;
+        let mean_radiant_c = if exact {
+            let enclosure = enclosure.map(|enclosure| (enclosure.areas_m2.as_slice(), enclosure.emissivities.as_slice()));
+            enclosure.map_or(air_c, |(areas, emissivities)| {
+                let weight: f64 = (0..n).map(|i| areas[i] * emissivities[i]).sum();
+                if weight > 0.0 { (0..n).map(|i| areas[i] * emissivities[i] * state.solver.solution[i]).sum::<f64>() / weight } else { air_c }
+            })
+        } else {
+            state.solver.solution[1]
+        };
+        let zone = &model.zones[work.zone_cursor];
+        let loads = self.zone_loads[work.zone_cursor];
+        let weather = self.step_weather;
+        let outdoor_mass_flow = loads.outdoor_air_m3_s * moist_air_density(weather.dry_bulb_c, weather.humidity_ratio, weather.pressure_pa);
+        let delivered = work.delivered;
+        if let Some(zone_state) = state.zones.get_mut(&zone_id) {
+            let humidity = zone_state.air.next_humidity_ratio(zone.volume_m3 * zone.multiplier.max(1) as f64, weather.pressure_pa, self.dt_s, outdoor_mass_flow, weather.humidity_ratio, loads.latent_w);
+            zone_state.air.commit(air_c, humidity);
+            zone_state.mean_radiant_temp_c = mean_radiant_c;
+            zone_state.hour_temperature_sum_c += air_c;
+            zone_state.hour_steps += 1;
+            zone_state.hour_delivered = accumulate_delivered(&zone_state.hour_delivered, &delivered);
+        }
+        work.next_zone();
+    }
+
+    fn step_zone_commit(&mut self, pre: &PrecomputedModel, state: &mut SimulationModel) {
+        let Some(zone_id) = pre.zone_order.get(self.zone_cursor).copied() else {
+            self.secondary_cursor = 0;
+            self.stage = TimestepStage::SecondaryPlant;
+            return;
+        };
+        if let Some(zone_state) = state.zones.get_mut(&zone_id) {
+            let steps = zone_state.hour_steps.max(1) as f64;
+            zone_state.mean_air_temp_c = if zone_state.hour_steps == 0 { zone_state.air.temp_c } else { zone_state.hour_temperature_sum_c / steps };
+            zone_state.delivered = zone_state.hour_delivered.scaled(1.0 / steps);
+            zone_state.hour_temperature_sum_c = 0.0;
+            zone_state.hour_delivered = DeliveredEnergy::default();
+            zone_state.hour_steps = 0;
+            let delivered = zone_state.delivered;
+            state.delivered_total = accumulate_delivered(&state.delivered_total, &delivered);
+        }
         self.zone_cursor += 1;
-        self.stage = TimestepStage::Zone;
     }
 
     fn step_plant_bounded(&mut self, model: &Model, pre: &PrecomputedModel, state: &mut SimulationModel) {
@@ -1245,8 +1767,8 @@ impl TimestepWork {
         self.secondary_cursor += 1;
         let system =
             PvSystem { dc_capacity_w: pv.dc_capacity_w, module_efficiency: pv.module_efficiency, area_m2: pv.area_m2, inverter_efficiency: pv.inverter_efficiency, temperature_coefficient: -0.004, tilt_deg: pv.tilt_deg, azimuth_deg: pv.azimuth_deg };
-        let plane_irradiance = (self.weather.direct_normal_irradiance_w_m2 + self.weather.diffuse_horizontal_irradiance_w_m2) * system.orientation_factor(self.sun_alt, self.sun_az);
-        self.pv_generation_w += system.simulate(plane_irradiance, self.weather.dry_bulb_c + 10.0);
+        let plane_irradiance = (self.weather.current.direct_normal_irradiance_w_m2 + self.weather.current.diffuse_horizontal_irradiance_w_m2) * system.orientation_factor(self.sun_alt, self.sun_az);
+        self.pv_generation_w += system.simulate(plane_irradiance, self.weather.current.dry_bulb_c + 10.0);
     }
 
     fn step_battery_bounded(&mut self, model: &Model, pre: &PrecomputedModel, state: &mut SimulationModel) {
@@ -1265,7 +1787,7 @@ impl TimestepWork {
             return;
         }
         let charge_w = if self.pv_generation_w > work.net_load_w { (self.pv_generation_w - work.net_load_w).min(battery.max_charge_w) } else { -(work.net_load_w - self.pv_generation_w).min(battery.max_discharge_w) };
-        state.battery_soc = (state.battery_soc + charge_w * self.dt_s / (battery.capacity_kwh * 3_600_000.0)).clamp(0.0, 1.0);
+        state.battery_soc = (state.battery_soc + charge_w * 3600.0 / (battery.capacity_kwh * 3_600_000.0)).clamp(0.0, 1.0);
         state.delivered_total.battery_charge_w += charge_w.max(0.0);
         let transformer = Transformer { rated_kva: 100.0, no_load_loss_w: 50.0, load_loss_w: 200.0, impedance_fraction: 0.02 };
         let _ = grid_balance(work.net_load_w, self.pv_generation_w, 0.0, 0.0, charge_w, &transformer);
@@ -1470,19 +1992,24 @@ impl SimulationKernel {
         let mut state = SimulationModel::default();
         state.zones.admit(model.zones.len()).expect("test zone state backing");
         state.surfaces.admit(pre.surfaces.len()).expect("test surface state backing");
+        state.windows.admit(pre.windows.len()).expect("test window state backing");
+        state.solver.reserve(pre.maximum_enclosure_faces, pre.maximum_nodes).expect("test solver backing");
         for zone in &model.zones {
-            let _ = state.zones.insert(zone.id, ZoneState { air: ZoneAirState::new(weather.dry_bulb_c, weather.humidity_ratio()), ..ZoneState::empty() });
+            let _ = state.zones.insert(zone.id, ZoneState::new(weather.dry_bulb_c, weather.humidity_ratio()));
         }
-        for (sid, sp) in pre.surfaces.iter() {
-            let _ = state.surfaces.insert(*sid, SurfaceState { inside_temp_c: weather.dry_bulb_c, outside_temp_c: weather.dry_bulb_c, heat_flux_w: 0.0, ctf: sp.ctf.clone(), convection_to_zone_w: 0.0 });
+        for (id, surface) in pre.surfaces.iter() {
+            let _ = state.surfaces.insert(*id, SurfaceState { temperatures_c: vec![weather.dry_bulb_c; surface.chain.nodes()], inside_convection_w_m2k: 0.0 });
+        }
+        for (id, _) in pre.windows.iter() {
+            let _ = state.windows.insert(*id, WindowState { face_temperatures_c: [weather.dry_bulb_c; 2 * MAX_PANES], inside_convection_w_m2k: 0.0 });
         }
         state
     }
 
-    /// 🔄️ Advance one zone timestep through the same bounded cursor machine used by EnergyJob.
+    /// 🔄️ Advance one hour through the same bounded cursor machine used by EnergyJob.
     #[cfg(test)]
-    pub(crate) fn advance_timestep(model: &Model, config: &SimulationConfig, pre: &PrecomputedModel, state: &mut SimulationModel, weather: &WeatherRecord, date: &SimDate, hour: f64, dt_s: f64) -> Result<(), Error> {
-        let mut work = TimestepWork::new(model, pre, *weather, *date, hour, dt_s);
+    pub(crate) fn advance_timestep(model: &Model, config: &SimulationConfig, pre: &PrecomputedModel, state: &mut SimulationModel, weather: &WeatherRecord, date: &SimDate, hour: f64) -> Result<(), Error> {
+        let mut work = TimestepWork::new(model, pre, HourWeather { previous: *weather, current: *weather, next: *weather }, *date, hour);
         while !work.is_complete() {
             work.step(model, config, pre, state);
         }
@@ -1518,13 +2045,18 @@ fn accumulate_delivered(total: &DeliveredEnergy, step: &DeliveredEnergy) -> Deli
     }
 }
 
-fn relative_humidity_from_w(w: f64, t_c: f64, p_atm: f64) -> f64 {
-    let p_ws = saturation_pressure_pa(t_c);
-    if p_ws <= 0.0 {
-        return 0.5;
+fn state_pane_source(pane_absorbed_w_m2: &[f64], face: usize, node: usize) -> f64 {
+    0.5 * pane_absorbed_w_m2[face * MAX_PANES + node / 2]
+}
+
+fn face_inside_c(state: &SimulationModel, pre: &PrecomputedModel, face: EnclosureFace, fallback_c: f64) -> f64 {
+    match face {
+        EnclosureFace::Opaque(id) => state.surfaces.get(&id).map_or(fallback_c, SurfaceState::inside_temp_c),
+        EnclosureFace::Window(id) => match (state.windows.get(&id), pre.windows.get(&id)) {
+            (Some(window_state), Some(window)) => window_state.face_temperatures_c[window.glazing.faces() - 1],
+            _ => fallback_c,
+        },
     }
-    let p_w = w * p_atm / (0.62198 + w);
-    (p_w / p_ws).clamp(0.0, 1.0)
 }
 
 #[cfg(test)]

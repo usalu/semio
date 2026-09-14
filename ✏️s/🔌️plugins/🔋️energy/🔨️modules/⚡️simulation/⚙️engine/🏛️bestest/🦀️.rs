@@ -14,7 +14,7 @@
 use crate::air_exchange::InfiltrationMethod;
 use crate::error::{Diagnostics, Error};
 use crate::kernel::{SimulationConfig, SimulationEnvironment};
-use crate::model::{Construction, EntityId, EquipmentGain, Fenestration, IdealLoadsSystem, Infiltration, Material, MechanicalVentilation, Model, OutsideBoundary, ScheduleId, Site, Surface, SurfaceClass, Thermostat, Zone};
+use crate::model::{Construction, EntityId, EquipmentGain, Fenestration, GasKind, GasMaterial, GlazingMaterial, IdealLoadsSystem, Infiltration, Material, MechanicalVentilation, Model, OutsideBoundary, ScheduleId, ShadingSurface, Site, Surface, SurfaceClass, SurfaceRoughness, Thermostat, Zone};
 use crate::results::Results;
 use crate::schedule::{ConstantSchedule, DailySchedule, ScheduleInterpolation, ScheduleSet};
 use crate::site::EpwWeather;
@@ -67,10 +67,13 @@ const CONCRETE_BLOCK: EntityId = EntityId(18);
 const FOAM_INSULATION: EntityId = EntityId(19);
 const CONCRETE_SLAB: EntityId = EntityId(20);
 const HIGH_MASS_FLOOR_INSULATION: EntityId = EntityId(21);
+const CLEAR_GLASS: EntityId = EntityId(22);
+const AIR_GAP: EntityId = EntityId(23);
 
 const WALL_CONSTRUCTION: EntityId = EntityId(30);
 const FLOOR_CONSTRUCTION: EntityId = EntityId(31);
 const ROOF_CONSTRUCTION: EntityId = EntityId(32);
+const WINDOW_CONSTRUCTION: EntityId = EntityId(33);
 
 const SOUTH_WALL: EntityId = EntityId(40);
 const EAST_WALL: EntityId = EntityId(41);
@@ -87,6 +90,7 @@ const INFILTRATION: EntityId = EntityId(61);
 const THERMOSTAT: EntityId = EntityId(62);
 const IDEAL_LOADS: EntityId = EntityId(63);
 const NIGHT_VENTILATION: EntityId = EntityId(64);
+const SOUTH_OVERHANG: EntityId = EntityId(65);
 
 const ALWAYS_ON: ScheduleId = ScheduleId(1);
 const HEATING_SETPOINT: ScheduleId = ScheduleId(2);
@@ -108,8 +112,6 @@ const FLOOR_AREA_M2: f64 = WIDTH_M * DEPTH_M;
 const INTERNAL_GAIN_W: f64 = 200.0;
 /// 💨️ 0.5 air changes per hour, constant (§5.2.1.6).
 const INFILTRATION_ACH: f64 = 0.5;
-/// 🌡️ Ground below the floor is held at a constant 10 °C (§5.2.1.5).
-const GROUND_TEMPERATURE_C: f64 = 10.0;
 /// 🌬️ Case 650/950 night ventilation: 1703.16 m³/h.
 const NIGHT_VENTILATION_M3_S: f64 = 1703.16 / 3600.0;
 /// 🪟️ Window sill 0.2 m above the floor, 2.0 m of glazing height (§5.2.1.4).
@@ -118,13 +120,41 @@ const WINDOW_HEIGHT_M: f64 = 2.0;
 const WINDOW_WIDTH_M: f64 = 3.0;
 /// 🌳️ Cases 610/630/910/930 attach a 1.0 m projection.
 const PROJECTION_DEPTH_M: f64 = 1.0;
-/// 🌳️ The case 610 overhang sits at roof level, 0.5 m above the window head.
-const OVERHANG_OFFSET_M: f64 = HEIGHT_M - (WINDOW_SILL_M + WINDOW_HEIGHT_M);
 // #endregion 🔖️Dimensions
 
 // #region 🔖️Catalogue
 fn material(id: EntityId, name: &str, thickness_m: f64, conductivity_w_m_k: f64, density_kg_m3: f64, specific_heat_j_kg_k: f64) -> Material {
-    Material { id, name: name.into(), thickness_m, conductivity_w_m_k, density_kg_m3, specific_heat_j_kg_k, thermal_absorptance: 0.9, solar_absorptance: 0.6, visible_absorptance: 0.6 }
+    Material { id, name: name.into(), roughness: SurfaceRoughness::Rough, thickness_m, conductivity_w_m_k, density_kg_m3, specific_heat_j_kg_k, thermal_absorptance: 0.9, solar_absorptance: 0.6, visible_absorptance: 0.6 }
+}
+
+/// 🪟️ The §5.2 window pane: 3.048 mm clear glass, solar transmittance 0.834, solar reflectance
+/// 0.075 both sides, visible 0.91325/0.082, long-wave emissivity 0.84, conductivity 1.0 W/(m·K).
+fn clear_glass() -> GlazingMaterial {
+    GlazingMaterial {
+        id: CLEAR_GLASS,
+        name: "Clear Glass 3 mm".into(),
+        thickness_m: 0.003048,
+        conductivity_w_m_k: 1.0,
+        solar_transmittance: 0.834,
+        solar_reflectance_front: 0.075,
+        solar_reflectance_back: 0.075,
+        visible_transmittance: 0.91325,
+        visible_reflectance_front: 0.082,
+        visible_reflectance_back: 0.082,
+        infrared_transmittance: 0.0,
+        infrared_emissivity_front: 0.84,
+        infrared_emissivity_back: 0.84,
+    }
+}
+
+/// 🌫️ The §5.2 window's 12 mm air gap.
+fn air_gap() -> GasMaterial {
+    GasMaterial { id: AIR_GAP, name: "Air Gap 12 mm".into(), thickness_m: 0.012, gas: GasKind::Air }
+}
+
+/// 🪟️ Double clear glazing: pane, gap, pane.
+fn window_construction() -> Construction {
+    Construction { id: WINDOW_CONSTRUCTION, name: "Double Clear Glazing".into(), layer_material_ids: vec![CLEAR_GLASS, AIR_GAP, CLEAR_GLASS] }
 }
 
 /// 🧱️ Every §5.2 material, both the lightweight (600-series) and the high-mass (900-series) set.
@@ -152,6 +182,7 @@ fn light_constructions() -> Vec<Construction> {
         Construction { id: WALL_CONSTRUCTION, name: "Lightweight Exterior Wall".into(), layer_material_ids: vec![WOOD_SIDING, FIBERGLASS_QUILT, PLASTERBOARD] },
         Construction { id: FLOOR_CONSTRUCTION, name: "Lightweight Floor".into(), layer_material_ids: vec![FLOOR_INSULATION, TIMBER_FLOORING] },
         Construction { id: ROOF_CONSTRUCTION, name: "Roof".into(), layer_material_ids: vec![ROOF_DECK, ROOF_QUILT, ROOF_PLASTERBOARD] },
+        window_construction(),
     ]
 }
 
@@ -161,6 +192,7 @@ fn heavy_constructions() -> Vec<Construction> {
         Construction { id: WALL_CONSTRUCTION, name: "High Mass Exterior Wall".into(), layer_material_ids: vec![WOOD_SIDING, FOAM_INSULATION, CONCRETE_BLOCK] },
         Construction { id: FLOOR_CONSTRUCTION, name: "High Mass Floor".into(), layer_material_ids: vec![HIGH_MASS_FLOOR_INSULATION, CONCRETE_SLAB] },
         Construction { id: ROOF_CONSTRUCTION, name: "Roof".into(), layer_material_ids: vec![ROOF_DECK, ROOF_QUILT, ROOF_PLASTERBOARD] },
+        window_construction(),
     ]
 }
 
@@ -195,7 +227,7 @@ fn surfaces() -> Vec<Surface> {
             class: SurfaceClass::Floor,
             vertices_m: vec![[0.0, 0.0, 0.0], [0.0, DEPTH_M, 0.0], [WIDTH_M, DEPTH_M, 0.0], [WIDTH_M, 0.0, 0.0]],
             construction_id: FLOOR_CONSTRUCTION,
-            outside_boundary_condition: OutsideBoundary::Ground,
+            outside_boundary_condition: OutsideBoundary::OutdoorAir,
             sun_exposed: false,
             wind_exposed: false,
             multiplier: 1,
@@ -203,7 +235,8 @@ fn surfaces() -> Vec<Surface> {
     ]
 }
 
-/// 🪟️ One §5.2 window: 3 m × 2 m of double clear glazing, U = 3.0 W/(m²·K), SHGC 0.787.
+/// 🪟️ One §5.2 window: 3 m × 2 m of the double clear glazing stack, whose rated whole-window
+/// U = 3.0 W/(m²·K) and SHGC 0.787 stay on the record as the standard's quoted summary values.
 fn window(id: EntityId, name: &str, surface_id: EntityId) -> Fenestration {
     Fenestration {
         id,
@@ -221,7 +254,7 @@ fn window(id: EntityId, name: &str, surface_id: EntityId) -> Fenestration {
         overhang_offset_m: 0.0,
         fin_depth_m: 0.0,
         fin_offset_m: 0.0,
-        glazing_construction_id: None,
+        glazing_construction_id: Some(WINDOW_CONSTRUCTION),
     }
 }
 
@@ -247,6 +280,8 @@ fn base_model(name: &str) -> Model {
         zones: vec![Zone { id: ZONE, name: "Zone".into(), volume_m3: VOLUME_M3, multiplier: 1, conditioned: true, part_of_total_floor_area: true }],
         surfaces: surfaces(),
         materials: materials(),
+        glazing_materials: vec![clear_glass()],
+        gas_materials: vec![air_gap()],
         constructions: light_constructions(),
         equipment: vec![EquipmentGain { id: INTERNAL_GAIN, zone_id: ZONE, schedule_id: ALWAYS_ON, watts_per_area: INTERNAL_GAIN_W / FLOOR_AREA_M2, radiant_fraction: 0.6, latent_fraction: 0.0 }],
         infiltrations: vec![Infiltration {
@@ -275,7 +310,6 @@ fn base_model(name: &str) -> Model {
             outdoor_air_per_person_m3_s: 0.0,
             outdoor_air_per_area_m3_s_m2: 0.0,
         }],
-        ground_temperature: crate::model::GroundTemperatureConfig { building_surface_c: [GROUND_TEMPERATURE_C; 12], shallow_c: [GROUND_TEMPERATURE_C; 12], deep_c: GROUND_TEMPERATURE_C },
         schedules: base_schedules(),
         ..Model::default()
     }
@@ -294,10 +328,12 @@ fn case_600() -> Model {
 fn case_610() -> Model {
     let mut built = case_600();
     built.name = "BESTEST 610".into();
-    for fenestration in &mut built.fenestrations {
-        fenestration.overhang_depth_m = PROJECTION_DEPTH_M;
-        fenestration.overhang_offset_m = OVERHANG_OFFSET_M;
-    }
+    built.shading_surfaces = vec![ShadingSurface {
+        id: SOUTH_OVERHANG,
+        name: "South Overhang".into(),
+        vertices_m: vec![[0.0, 0.0, HEIGHT_M], [0.0, -PROJECTION_DEPTH_M, HEIGHT_M], [WIDTH_M, -PROJECTION_DEPTH_M, HEIGHT_M], [WIDTH_M, 0.0, HEIGHT_M]],
+        transmittance_schedule_id: None,
+    }];
     built
 }
 
@@ -373,7 +409,7 @@ fn free_float(mut built: Model, name: &str) -> Model {
 // #endregion 🔖️Cases
 
 // #region 🔖️Run
-/// ⚙️ The §5.2 run: a full Denver year at an hourly zone timestep after a warmup.
+/// ⚙️ The §5.2 run: a full Denver year at six heat-balance steps per hour after a warmup.
 ///
 /// `schedules` is copied out of the model, which is the authority: [`SimulationConfig`] still owns
 /// its own `ScheduleSet` because the kernel's admission census and close-step pump read it there,
@@ -381,8 +417,8 @@ fn free_float(mut built: Model, name: &str) -> Model {
 pub fn simulation_config(model: &Model, weather: Option<EpwWeather>, warmup_days: u32) -> SimulationConfig {
     SimulationConfig {
         environment: SimulationEnvironment::WeatherRunPeriod,
-        zone_timestep_minutes: 60,
-        system_timestep_minutes: 60,
+        zone_timestep_minutes: 10,
+        system_timestep_minutes: 10,
         warmup_days,
         run_period_start_month: 1,
         run_period_start_day: 1,
@@ -583,7 +619,6 @@ pub fn case_parameters_json(case: &str) -> Option<String> {
         ("infiltrationAch".to_string(), pack::json::Value::from(built.infiltrations.first().map_or(0.0, |infiltration| infiltration.design_flow_ach))),
         ("internalGainW".to_string(), pack::json::Value::from(built.equipment.iter().map(|gain| gain.watts_per_area * FLOOR_AREA_M2).sum::<f64>())),
         ("conditioned".to_string(), pack::json::Value::Bool(!built.ideal_loads.is_empty())),
-        ("groundTemperatureC".to_string(), pack::json::Value::from(built.ground_temperature.building_surface_c[0])),
         ("surfaces".to_string(), surfaces),
         ("windows".to_string(), windows),
     ]);

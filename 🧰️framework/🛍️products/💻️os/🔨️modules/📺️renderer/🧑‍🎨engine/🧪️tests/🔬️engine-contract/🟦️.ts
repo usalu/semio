@@ -1826,6 +1826,7 @@ import {
   snapWorldPointToGrid,
   world3dViewportCameraSeedKey,
   world3dFitProjectionContent,
+  world3dFrameVisibleOverlayOffered,
   world3dProjectionContentFrameMounted,
   world3dCameraDomJson,
   worldInstancePickBlocked,
@@ -5614,6 +5615,12 @@ describe("framework renderer hosts", () => {
     expect(world3dProjectionContentFrameMounted(false, true, false)).toBe(true);
   });
 
+  it("world3dFrameVisibleOverlayOffered defers to an enabled fit lane", () => {
+    expect(world3dFrameVisibleOverlayOffered(null)).toBe(true);
+    expect(world3dFrameVisibleOverlayOffered({ enabled: false })).toBe(true);
+    expect(world3dFrameVisibleOverlayOffered({ enabled: true, revision: 1, padding: 1.25 })).toBe(false);
+  });
+
   it("buildWorldCameraDispatchArgs carries position/target/zoom/up but never a projection field", () => {
     const withUp = buildWorldCameraDispatchArgs({ position: [1, 2, 3], target: [0, 0, 0], zoom: 2, up: [0, 0, 1], projection: "orthographic" });
     expect(withUp).toEqual({ position: [1, 2, 3], target: [0, 0, 0], zoom: 2, up: [0, 0, 1] });
@@ -8528,6 +8535,21 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(published?.gumballAnchorId).toBe("seed-left-001");
     expect(leftoverInteractionStateV1(published!).selection.vortex?.ids).toEqual(["seed-left-001"]);
     expect(interactionViewFromLeftoverOutput(null)).toBeNull();
+    const selectOnly = interactionViewFromLeftoverOutput({
+      interactionView: {
+        selectedIds: ["seed-left-001"],
+        hoverTarget: null,
+        locked: {},
+        gumball: { active: false, anchorId: null },
+        selection: { vortex: { granularity: "object", ids: ["seed-left-001"] } },
+        hover: {},
+        activeMode: { vortex: "single" },
+        activeGranularity: { vortex: "object" },
+        activeUtility: "select",
+      },
+    });
+    expect(selectOnly?.gumballActive).toBe(false);
+    expect(leftoverWorldGumballPoseV1({ gumballActive: false, gumballAnchorId: null, ids: ["seed-left-001"] }, [{ id: "seed-left-001", position: [1, 2, 3] }]).transformMode).toBeUndefined();
     const pose = leftoverWorldGumballPoseV1({ gumballActive: true, gumballAnchorId: "seed-left-001", ids: ["seed-left-001"] }, [{ id: "seed-left-001", position: [1, 2, 3] }]);
     expect(pose.transformMode).toBe("transform");
     expect(pose.gumballTarget).toEqual([1, 2, 3]);
@@ -8689,8 +8711,9 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     const priorPick = { ids: ["seed-left-001"], hoveredId: null, gumballActive: true, gumballAnchorId: "seed-left-001" };
     const carried = leftoverOverlayCarryingSelectionV1(hoverOnly, priorPick);
     expect(carried.ids).toEqual(["seed-left-001"]);
-    const emptyNoHover = leftoverOverlayCarryingSelectionV1({ ids: [] as const, hoveredId: null, hoveredDomain: null, gumballActive: false, gumballAnchorId: null }, priorPick);
-    expect(emptyNoHover.ids).toEqual(["seed-left-001"]);
+    const emptyNoHover = leftoverOverlayCarryingSelectionV1({ ids: [] as const, hoveredId: null, hoveredDomain: null, gumballActive: false, gumballAnchorId: null }, priorPick, true);
+    expect(emptyNoHover.ids).toEqual([]);
+    expect(mergeWorldSelectionWithLeftoverV1({ ids: ["seed-left-001"], activeObjectId: "seed-left-001", gumballActive: true }, { ids: [], hoveredId: null, gumballActive: false, gumballAnchorId: null, selectionCleared: true }).ids).toEqual([]);
     expect(leftoverTreeItemSelectedV1("seed-left-001", carried.ids)).toBe(true);
     expect(leftoverTreeItemSelectedV1("surface/seed-left-001", carried.ids)).toBe(true);
     expect(leftoverTreeItemSelectedV1("other", carried.ids)).toBe(false);
@@ -9727,6 +9750,18 @@ describe("per-window element ids", () => {
     expect(all).toContain(world3dProjectionPaneElementId("puzzle3d-main-top"));
     expect(all).toContain(world3dProjectionPaneElementId("puzzle3d-main-perspective"));
     expect(all.every((id) => isElementId(id))).toBe(true);
+    cleanup();
+  });
+
+  it("styles the projection pane body like window options — transparent payload, no nested ribbon glass", () => {
+    mountUnfoldedPane("puzzle3d-main-top");
+    const paneId = world3dProjectionPaneElementId("puzzle3d-main-top");
+    const body = document.querySelector(`#${CSS.escape(paneId)} [data-slot="pane-body"]`) as HTMLElement | null;
+    const switchRoot = document.querySelector("[data-world-projection-kind-switch]") as HTMLElement | null;
+    expect(body?.className).toContain("p-tiny");
+    expect(body?.hasAttribute("data-window-silhouette-content")).toBe(true);
+    expect(switchRoot?.getAttribute("data-level")).toBeNull();
+    expect(switchRoot?.className.includes("rounded-md")).toBe(false);
     cleanup();
   });
 
@@ -11439,6 +11474,41 @@ describe("⏳️ world3d compute status pane", () => {
     expect(world3dComputeStatusV1(halved!.statusJson).phaseLabel).toBeNull();
     const paired = world3dComputeStatusV1(rows[0].statusJson).phaseLabel;
     expect(paired?.en).not.toBe(paired?.de);
+  });
+
+  /** ⏳️⛓️ The TIMELINE law — the TypeScript twin of the Rust
+   * `a_long_evaluation_publishes_a_monotone_run_of_non_idle_frames_and_then_settles`, over the same
+   * `progressTimeline` frames. No single row can state it: a producer that publishes `idle`
+   * throughout satisfies every row assertion above and fails this one, which is exactly what BOTH
+   * renderers were showing — one 23 s evaluation, 54 publications, every one of them
+   * `phase:"idle" inFlight:0 ratio:1.0` (`📓️wgpu-progress-visibility-2026-09-14.md`). */
+  type TimelineFrame = { readonly id: string; readonly statusJson: string; readonly expected: { readonly visible: boolean; readonly phase: string; readonly ratio: number; readonly progressText: string | null } };
+  const timeline = surfaceControlsFixture.progressTimeline as { readonly minimumNonIdleFrames: number; readonly evaluation: readonly TimelineFrame[]; readonly cancelled: readonly TimelineFrame[] };
+
+  it("publishes a monotone run of non-idle frames while a long evaluation is in flight, then settles", () => {
+    for (const lane of ["evaluation", "cancelled"] as const) {
+      const frames = timeline[lane];
+      let nonIdle = 0;
+      let previousRatio = Number.NEGATIVE_INFINITY;
+      for (const frame of frames) {
+        const status = world3dComputeStatusV1(frame.statusJson);
+        expect(status.phase, `${lane}/${frame.id}`).toBe(frame.expected.phase);
+        expect(status.ratio, `${lane}/${frame.id}`).toBeCloseTo(frame.expected.ratio, 9);
+        expect(isVisible(status), `${lane}/${frame.id}`).toBe(frame.expected.visible);
+        if (!frame.expected.visible) continue;
+        expect(progressText(status), `${lane}/${frame.id}`).toBe(frame.expected.progressText);
+        if (status.phase === "cancelled") continue;
+        expect(status.phase, `${lane}/${frame.id}: a frame that annotates the viewport may not call itself idle`).not.toBe("idle");
+        expect(status.ratio, `${lane}/${frame.id}: ratio went backwards`).toBeGreaterThanOrEqual(previousRatio - 1e-9);
+        expect(status.cancellable, `${lane}/${frame.id}: work in flight offers a cancel`).toBe(true);
+        previousRatio = status.ratio;
+        nonIdle += 1;
+      }
+      expect(isVisible(world3dComputeStatusV1(frames[frames.length - 1].statusJson)), `${lane}: the timeline ends settled`).toBe(false);
+      if (lane === "evaluation") expect(nonIdle, `${lane}: non-idle frames`).toBeGreaterThanOrEqual(timeline.minimumNonIdleFrames);
+      console.log("[DEBUG] world3d status timeline %s: %s non-idle frame(s), ratio monotone up to %s, settled at the end", lane, nonIdle, previousRatio);
+    }
+    expect(timeline.cancelled.some((frame) => frame.expected.phase === "cancelled"), "the cancelled lane settles on `cancelled`, not on `idle`").toBe(true);
   });
 });
 //#endregion ⏳️ComputeStatusPaneTwin

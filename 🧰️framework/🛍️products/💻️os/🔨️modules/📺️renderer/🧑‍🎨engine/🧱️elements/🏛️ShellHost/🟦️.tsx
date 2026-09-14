@@ -73,6 +73,7 @@ import {
   FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
   FRAMEWORK_PANEL_TAB_HISTORY_ID,
   FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+  FRAMEWORK_PANEL_TAB_TOOL_RUN_ID,
   type Effect,
   type HistoryEntry,
   type HistoryPatch,
@@ -577,6 +578,7 @@ import {
   type TutorialUiBridgeContext,
   type UiRefreshCache,
 } from "../🛠️ShellHelpers/🟦️.tsx";
+import { toolRunPanelReveal } from "../🛠️ShellHelpers/⏯️tool-run-panel/🟦️.ts";
 import { createContributionsPublisher, type ContributionsOperatorScope, type ContributionsPublishOutcome, type ContributionsSessionKey } from "../🛠️ShellHelpers/🧩️contributions/🟦️.ts";
 
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
@@ -586,7 +588,6 @@ import {
   createFrameworkDisplayPanelTabs,
   createFrameworkMarketplacePanelTab,
   createFrameworkSettingsPanelTab,
-  FRAMEWORK_CHAT_PANEL_ID,
   DEFAULT_APP_NONE_VALUE,
   type ConflictsHostApi,
   type DefaultAppRow,
@@ -2024,16 +2025,30 @@ function FrameworkOsShellInner({
     const priorLeftover = windowId ? leftoverWorldWindowOverlayV1(windowId) : leftoverWorldSelectionOverlayV1();
     const overlay = leftoverOverlayCarryingSelectionV1(
       leftoverOverlayCarryingUtilityV1(
-        { ids: published.selectedIds, hoveredId: published.hoverTarget?.id ?? null, hoveredDomain: published.hoverTarget?.domain ?? null, gumballActive: published.gumballActive, gumballAnchorId: published.gumballAnchorId, ...(published.activeUtility !== undefined ? { activeUtility: published.activeUtility } : {}) },
+        {
+          ids: published.selectedIds,
+          hoveredId: published.hoverTarget?.id ?? null,
+          hoveredDomain: published.hoverTarget?.domain ?? null,
+          gumballActive: published.gumballActive,
+          gumballAnchorId: published.gumballAnchorId,
+          ...(published.selectionCleared ? { selectionCleared: true } : {}),
+          ...(published.activeUtility !== undefined ? { activeUtility: published.activeUtility } : {}),
+        },
         priorLeftover,
       ),
       priorLeftover,
+      published.selectionCleared === true,
     );
     publishLeftoverWorldSelectionV1(overlay, windowId ? { kind: "window", windowId } : { kind: "document" });
-    dispatch({ type: "INTERACTION_STATE_OBSERVED", state: leftoverInteractionStateV1({ ...published, selectedIds: overlay.ids }) });
-    leftoverInspectionHasSelectionRef.current = overlay.ids.length > 0;
-    const selectedKey = overlay.ids.join("\0");
-    if (overlay.ids.length > 0 && leftoverInspectionSelectedKeyRef.current !== selectedKey) {
+    dispatch({ type: "INTERACTION_STATE_OBSERVED", state: leftoverInteractionStateV1({ ...published, selectedIds: overlay.selectionCleared ? [] : overlay.ids }) });
+    leftoverInspectionHasSelectionRef.current = overlay.selectionCleared ? false : overlay.ids.length > 0;
+    const selectedKey = overlay.selectionCleared ? "" : overlay.ids.join("\0");
+    if (overlay.selectionCleared || (overlay.ids.length === 0 && leftoverInspectionIdsRef.current.length > 0)) {
+      leftoverInspectionSelectedKeyRef.current = "";
+      leftoverInspectionIdsRef.current = [];
+      leftoverInspectionEpochRef.current += 1;
+      setLeftoverInspectionEpoch(leftoverInspectionEpochRef.current);
+    } else if (overlay.ids.length > 0 && leftoverInspectionSelectedKeyRef.current !== selectedKey) {
       leftoverInspectionSelectedKeyRef.current = selectedKey;
       leftoverInspectionIdsRef.current = overlay.ids;
       leftoverInspectionEpochRef.current += 1;
@@ -9177,7 +9192,7 @@ function FrameworkOsShellInner({
     }
     bottomLeft.push(...displayBottomLeftTabs);
     if (frameworkSyncTab) bottomLeft.push(frameworkSyncTab);
-    const topRight: PanelTabNode[] = [...detailsRightTabs];
+    const topRight: PanelTabNode[] = [...detailsRightTabs, frameworkChatTab];
     // 🧭️ App Settings-group tabs nest inside the framework Settings branch (document-first child order)
     // so the anchor carries one Settings toggle; Marketplace stays a sibling leaf beside that branch.
     const bottomRight: PanelTabNode[] = [settingsBottomRightDockTab, frameworkMarketplaceTab];
@@ -9196,7 +9211,7 @@ function FrameworkOsShellInner({
         "top-left": topLeft,
         "top-middle": [],
         "top-right": topRight,
-        "right-middle": [frameworkChatTab],
+        "right-middle": [],
         "bottom-right": bottomRight,
         "bottom-middle": bottomMiddle,
         "bottom-left": bottomLeft,
@@ -9554,6 +9569,18 @@ function FrameworkOsShellInner({
     if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: studioOverrideAnchor, value: resolved });
   }, [hostOverrideTabId, studioOverrideAnchor, dock, panels, mobile, mobilePanelTabs, mobilePanelPath]);
 
+  const toolRunPanelRunsRef = useRef<ReadonlySet<bigint>>(new Set());
+  useEffect(() => {
+    const { runs, added } = toolRunPanelReveal(toolRunPanelRunsRef.current, panelUiByKey[FRAMEWORK_PANEL_TAB_TOOL_RUN_ID]);
+    toolRunPanelRunsRef.current = runs;
+    if (added.length === 0) return;
+    const located = findPanelTabInDock(dock, FRAMEWORK_PANEL_TAB_TOOL_RUN_ID);
+    if (!located) return;
+    const resolved = findPanelTabPath(dock.anchors[located.anchor], FRAMEWORK_PANEL_TAB_TOOL_RUN_ID);
+    if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: located.anchor, value: resolved });
+    dispatch({ type: "SET_PANEL_VISIBLE", anchor: located.anchor, value: true });
+  }, [panelUiByKey, dock]);
+
   useEffect(() => {
     const leftoverIds = leftoverInspectionIdsRef.current.length > 0 ? leftoverInspectionIdsRef.current : leftoverWorldSelectionOverlayV1()?.ids ?? [];
     if (leftoverInspectionEpoch === 0 || leftoverIds.length === 0) return;
@@ -9782,24 +9809,6 @@ function FrameworkOsShellInner({
     [activeToolId, closePeerRightDockAnchors, dock, onAction, panelActivePaths, panelPathMemory, panels, session, hostMode, hostAppId, noteShellCommand, toolTabs],
   );
   //#endregion 🎛️PanelTabBarHosting
-
-  const chatNavbarToggle = useMemo(() => {
-    if (mobile) return null;
-    const chatPanelOpen = panels["right-middle"].visible;
-    return (
-      <Toggle
-        id="ui.panelToggle.chat"
-        pressed={chatPanelOpen}
-        onPressedChange={(pressed) => {
-          if (pressed) closePeerRightDockAnchors("right-middle");
-          dispatch({ type: "SET_PANEL_VISIBLE", anchor: "right-middle", value: pressed });
-          if (pressed) dispatch({ type: "SET_PANEL_PATH", anchor: "right-middle", value: [FRAMEWORK_CHAT_PANEL_ID] });
-          noteShellCommand("shell.panelToggle", shellLabel("ui.shellCommand.panelToggle"), { panel: "chat", visible: pressed });
-        }}
-        icon="message-square"
-      />
-    );
-  }, [closePeerRightDockAnchors, mobile, noteShellCommand, panels]);
 
   const navbarItems = useMemo((): NavbarItem[] => {
     if (!session) return [];
@@ -10687,7 +10696,6 @@ function FrameworkOsShellInner({
               navbar={
                 <Navbar
                   items={navbarItems}
-                  trailingBeforeFullscreen={chatNavbarToggle}
                   showFullscreenToggle={!mobile}
                   onFullscreenToggle={() => onCommand({ owner: "os", commandId: "os.toggleFullscreen" })}
                 />

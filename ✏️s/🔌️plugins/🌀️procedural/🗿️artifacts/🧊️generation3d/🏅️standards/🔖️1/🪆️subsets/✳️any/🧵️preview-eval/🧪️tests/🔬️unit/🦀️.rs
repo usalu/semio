@@ -430,3 +430,110 @@ fn every_job_supersession_row_lets_only_the_owning_job_quiesce_the_session() {
         assert_eq!(link.port.is_none(), clears_port, "{id}: a superseded job may never take the live run's port away");
     }
 }
+
+/// 📜️ The SHARED, language-neutral status-timeline fixture — the very rows the wgpu shell's Rust law
+/// (`🔬️wgpu-shell-chrome-parity`) and the TypeScript `world3dComputeStatusV1` twin
+/// (`🔬️engine-contract`) answer. This law closes the third side of the triangle: that the PRODUCER
+/// actually emits a timeline of that shape, which is the half neither renderer can assert.
+const SURFACE_CONTROLS_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/🛑️surface-controls/🔣️.json");
+
+fn published(session: &FlowEvalSession, run: Option<&ToolRunView>) -> serde_json::Value {
+    serde_json::from_str(&preview_progress_status_json_for(Some(session), run, Ok(GENERATION_3D_GEOMETRY_EXTENSION_ID.to_string()))).expect("the projection publishes json")
+}
+
+/// ⚖️ LAW: a live evaluation publishes a RUN of non-idle frames with a monotone ratio and an offered
+/// abort, and only a settled one publishes `idle` — at least as many non-idle frames as the shared
+/// `progressTimeline` fixture declares.
+///
+/// 🩸️ Before the chain ledger this projection read only `pending_tessellate_by_hash` and
+/// `eval_progress_by_hash`, both of which are EMPTY at every hop boundary — so every status a
+/// preview window published during an evaluation was byte-identical
+/// `phase: "idle", inFlight: 0, ratio: 1.0`, on wgpu and on React alike. No renderer can show
+/// progress for work whose producer never says it is working
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-progress-visibility-2026-09-14.md`).
+#[test]
+fn a_live_evaluation_publishes_non_idle_frames_with_a_monotone_ratio_and_an_offered_abort() {
+    let shared: serde_json::Value = serde_json::from_str(SURFACE_CONTROLS_FIXTURE_JSON).expect("the shared surface-controls fixture parses");
+    let minimum = shared["progressTimeline"]["minimumNonIdleFrames"].as_u64().expect("the shared fixture declares a minimum") as usize;
+    let run = run_view(&serde_json::json!({ "run": 1, "generation": 0, "state": "running" }));
+    let mut host = semio_framework_os_flow::FlowHost::default();
+    let mut session = FlowEvalSession::new();
+
+    let idle = published(&session, None);
+    assert_eq!(idle["phase"], "idle", "a session with nothing to do is idle");
+    assert_eq!(idle["progress"]["ratio"], serde_json::json!(1.0));
+
+    assert!(session.sync(&host), "the default demo graph has pending nodes, so a chain is armed");
+    session.note_window_tick_outcome("preview-1", true);
+
+    // ⛓️ The hop ladder the run job actually drives, sampled at every boundary a preview window
+    // publishes at: arm the hop, park its `evaluate`/`tessellate` request, fold the answer, arm the
+    // next. ONE tick chain spans many round trips — a budgeted operator answers `done: false`
+    // several times for the same node before it produces anything — and the measured 6118 chain for
+    // `sphere-cut-with-torus` is exactly that shape: five round trips, one settle
+    // (`📓️wgpu-progress-visibility-2026-09-14.md`). Every one of these boundaries is a status the
+    // surface published, and every one of them used to read `idle`.
+    let mut frames = Vec::new();
+    for round in 0..minimum {
+        session.arm_window_tick("preview-1");
+        session.begin_window_tick("preview-1");
+        session.note_window_extensions_in_flight("preview-1", 1);
+        frames.push(published(&session, run.as_ref()));
+        let more = if round + 1 == minimum { session.tick(&mut host) } else { true };
+        session.settle_window_extension("preview-1");
+        session.note_window_tick_outcome("preview-1", more);
+        frames.push(published(&session, run.as_ref()));
+    }
+    while session.tick(&mut host) {
+        frames.push(published(&session, run.as_ref()));
+    }
+    session.note_window_tick_outcome("preview-1", false);
+
+    let non_idle: Vec<&serde_json::Value> = frames.iter().filter(|frame| frame["phase"] != "idle").collect();
+    let mut previous = f64::NEG_INFINITY;
+    for frame in &non_idle {
+        assert_eq!(frame["phase"], "computing", "a live chain names the phase it is in");
+        assert_eq!(frame["phaseLabel"]["en"], "Computing");
+        assert_eq!(frame["phaseLabel"]["de"], "Berechnen", "both tongues, no default language");
+        assert_eq!(frame["cancellable"], true, "work in flight offers its abort");
+        assert_eq!(frame["cancelAction"], "toolRunAbort");
+        let ratio = frame["progress"]["ratio"].as_f64().expect("a published ratio");
+        assert!(ratio >= previous - 1e-9, "the published ratio went backwards: {previous} → {ratio}");
+        assert!(ratio < 1.0, "a live evaluation may never publish a complete ratio");
+        assert!(frame["progress"]["nodesTotal"].as_u64().unwrap_or(0) > 0, "a live chain publishes the denominator its pill needs");
+        previous = ratio;
+    }
+    assert!(non_idle.len() >= minimum, "{} non-idle frames, the shared fixture needs at least {minimum}", non_idle.len());
+
+    let settled = published(&session, None);
+    assert_eq!(settled["phase"], "idle", "the timeline ends settled");
+    assert_eq!(settled["progress"]["ratio"], serde_json::json!(1.0));
+    println!("[STATS] progress timeline: {} frames, {} non-idle, ratios {:?}", frames.len(), non_idle.len(), non_idle.iter().map(|frame| frame["progress"]["ratio"].as_f64().unwrap_or(-1.0)).collect::<Vec<_>>());
+    session.retire_cold();
+    host.retire_cold();
+}
+
+/// ⚖️ LAW: an abort taken while the chain is live settles on `cancelled`, never back on `idle` — the
+/// `cancelled` lane of the same shared timeline fixture.
+#[test]
+fn an_abort_while_the_chain_is_live_settles_on_cancelled() {
+    let run = run_view(&serde_json::json!({ "run": 1, "generation": 0, "state": "running" }));
+    let mut host = semio_framework_os_flow::FlowHost::default();
+    let mut session = FlowEvalSession::new();
+    assert!(session.sync(&host));
+    session.arm_window_tick("preview-1");
+    session.begin_window_tick("preview-1");
+    session.note_window_extensions_in_flight("preview-1", 1);
+    let live = published(&session, run.as_ref());
+    assert_eq!(live["phase"], "computing");
+    assert_eq!(live["cancellable"], true);
+
+    session.cancel_preview_evaluation("preview-1");
+    let cancelled = published(&session, run.as_ref());
+    assert_eq!(cancelled["phase"], "cancelled", "the gesture's own verdict outranks every ledger");
+    assert_eq!(cancelled["phaseLabel"]["en"], "Cancelled");
+    assert_eq!(cancelled["phaseLabel"]["de"], "Abgebrochen");
+    println!("[STATS] abort timeline: live={} cancelled={}", live["phase"], cancelled["phase"]);
+    session.retire_cold();
+    host.retire_cold();
+}

@@ -1,7 +1,7 @@
 {
   "$comment": "🎞️ Language-neutral fill tool run law of s.puzzle3d's ⏳️precompute/🪣️fill run job (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W1-A). A case seeds a shipped example document (scaled box fallback for every mesh identity, as the app registers before real GLBs arrive) and a requested count; `expected` is the verdict prefix as `verdict:reasonId`, the run counters, provisional op and entity counts, checkpoints and the stall reason id.",
   "laws": {
-    "documentCapacities": { "bookkeepingSlots": 32, "bookkeepingPageBytes": 16384, "documentPageBytes": 1048576, "objectSlots": 2048, "attractionSlots": 2048, "vortexSlots": 4096, "volumeSlots": 256, "kindSlots": 256, "candidateSlots": 1024, "cellSlots": 8192, "nakagin": { "objects": 180, "vortices": 358, "objectKinds": 12, "vortexKinds": 18, "compatibilityRows": 14, "attractions": 358 } },
+    "documentCapacities": { "bookkeepingSlots": 32, "bookkeepingPageBytes": 16384, "documentPageBytes": 1048576, "objectSlots": 2048, "attractionSlots": 2048, "vortexSlots": 4096, "volumeSlots": 256, "kindSlots": 256, "candidateSlots": 1024, "cellSlots": 8192, "cellMemberSlots": 2048, "nakagin": { "objects": 180, "vortices": 358, "objectKinds": 12, "vortexKinds": 18, "compatibilityRows": 14, "attractions": 358 } },
     "opsPerPlacement": 2,
     "parryOracle": {
       "document": "concrete-forest",
@@ -23,7 +23,7 @@
     "visibleEnd": {
       "$comment": "🏁️ Every fill run ends where the user can see why (ticket lane W1-H): its last step is `success:requested-reached` over a met request or a `warning` step naming a declared stall reason, and a run that tested nothing always names its stall. Each case is an own-mesh variant (every second document body carries its own mesh, `ownMeshScale` times its kind's box), which packs more than one bookkeeping page of bodies into one 8-unit spatial cell. `expected` holds the run counters and the stall reason id.",
       "cases": [
-        { "document": "nakagin", "seed": 1, "requested": 12, "ownMeshScale": 1.5, "expected": { "tested": 0, "locked": 0, "collisions": 0, "rejected": 0, "stall": "document-capacity" } }
+        { "document": "nakagin", "seed": 1, "requested": 12, "ownMeshScale": 1.5, "expected": { "tested": 3344, "locked": 1, "collisions": 3343, "rejected": 0, "stall": "no-free-placement" } }
       ]
     },
     "delivery": {

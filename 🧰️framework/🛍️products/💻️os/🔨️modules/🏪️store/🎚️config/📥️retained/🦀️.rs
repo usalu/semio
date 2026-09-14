@@ -134,6 +134,18 @@ where
         }
     }
 
+    fn metadata_retained_bytes(source: &crate::os_spr::HistoryOpMeta) -> usize {
+        source.op_id.as_ref().map_or(0, String::len)
+            + source.dependencies.iter().map(String::len).sum::<usize>()
+            + source.author_id.as_ref().map_or(0, String::len)
+            + source.group_id.as_ref().map_or(0, String::len)
+            + source.messages.iter().map(|message| message.code.len() + message.message.len() + message.target.iter().map(String::len).sum::<usize>()).sum::<usize>()
+    }
+
+    fn payload_bytes(payload: &crate::os_spr::OpPayload) -> usize {
+        payload.binary.as_ref().map_or_else(|| payload.text.as_ref().map_or(0, String::len), Vec::len)
+    }
+
     fn decode_operation(payload: &crate::os_spr::OpPayload) -> Result<M, ConfigStoreHydrationDiagnostic> {
         match (&payload.binary, &payload.text) {
             (Some(bytes), _) => M::decode_op(bytes).map_err(|_| ConfigStoreHydrationDiagnostic::Replay),
@@ -172,6 +184,19 @@ where
     pub fn request_cancel(&mut self) {
         self.diagnostic.get_or_insert(ConfigStoreHydrationDiagnostic::Cancelled);
         self.phase = Phase::Rejected;
+    }
+
+    /// 🎟️ The exact byte grant the next `advance` turn gates on: the schema-bounded value ceiling to begin, then each
+    /// retained record's own admission; zero once no turn gates on bytes.
+    pub fn demand_bytes(&self) -> usize {
+        match self.phase {
+            Phase::Begin => self.maximum_value_bytes,
+            Phase::BeginEdit => self.source_edits.as_ref().and_then(|edits| edits.as_slice().first()).map_or(0, |edit| edit.id.len().saturating_mul(2)),
+            Phase::DecodeForward | Phase::DecodeInverse => self.pending_payload.as_ref().map_or(0, Self::payload_bytes).max(size_of::<M>()),
+            Phase::DecodeMetadata => size_of::<crate::os_spr::MutationMeta>().max(self.pending_metadata.as_ref().map_or(0, Self::metadata_retained_bytes)),
+            Phase::FinishEdit => self.pending_edit.as_ref().map_or(0, |edit| edit.id.len()),
+            _ => 0,
+        }
     }
 
     pub fn advance(&mut self, maximum_items: usize, maximum_bytes: usize) -> ConfigStoreHydrationStep<P, M> {
@@ -272,11 +297,11 @@ where
                     *self.pending_payload = payloads.expect("config operation source remains retained").next();
                 }
                 if let Some(payload) = self.pending_payload.as_ref() {
-                    let payload_bytes = payload.binary.as_ref().map_or_else(|| payload.text.as_ref().map_or(0, String::len), Vec::len);
+                    let payload_bytes = Self::payload_bytes(payload);
                     if payload_bytes == 0 || payload_bytes > self.maximum_value_bytes {
                         return self.reject(ConfigStoreHydrationDiagnostic::Capacity);
                     }
-                    if maximum_bytes < payload_bytes.max(std::mem::size_of::<M>()) {
+                    if maximum_bytes < payload_bytes.max(size_of::<M>()) {
                         return ConfigStoreHydrationStep::Pending(self.progress());
                     }
                     let operation = match Self::decode_operation(payload) {
@@ -312,15 +337,11 @@ where
                     *self.pending_metadata = self.source_metadata.as_mut().expect("config metadata source remains retained").next();
                 }
                 if let Some(source) = self.pending_metadata.as_ref() {
-                    let retained_bytes = source.op_id.as_ref().map_or(0, String::len)
-                        + source.dependencies.iter().map(String::len).sum::<usize>()
-                        + source.author_id.as_ref().map_or(0, String::len)
-                        + source.group_id.as_ref().map_or(0, String::len)
-                        + source.messages.iter().map(|message| message.code.len() + message.message.len() + message.target.iter().map(String::len).sum::<usize>()).sum::<usize>();
+                    let retained_bytes = Self::metadata_retained_bytes(source);
                     if retained_bytes > self.maximum_value_bytes {
                         return self.reject(ConfigStoreHydrationDiagnostic::Capacity);
                     }
-                    if maximum_bytes < retained_bytes.max(std::mem::size_of::<crate::os_spr::MutationMeta>()) {
+                    if maximum_bytes < retained_bytes.max(size_of::<crate::os_spr::MutationMeta>()) {
                         return ConfigStoreHydrationStep::Pending(self.progress());
                     }
                     let source = self.pending_metadata.take().expect("bounded config metadata remains retained");

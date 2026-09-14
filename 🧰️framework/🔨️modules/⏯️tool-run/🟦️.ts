@@ -98,7 +98,23 @@ const TOOL_RUN_TABLE: Readonly<Partial<Record<ToolRunState, Partial<Record<ToolR
   faulted: { dismiss: [null, "clearTrace", false] },
 };
 
-/** ⚙️ The pure §2.2 reducer. */
+/** 🛣️ What a run occupies on its document instance for its local actor (§2.2 invariant 5). */
+export type ToolRunLane = { readonly mutating: boolean; readonly toolId: string; readonly windowId?: string };
+
+/** 🤝️ Two mutating runs always share a lane; two read-only runs share it on the same tool and window; a mutating and a read-only run never do. */
+export function toolRunLanesShare(left: ToolRunLane, right: ToolRunLane): boolean {
+  if (left.mutating !== right.mutating) return false;
+  return left.mutating || (left.toolId === right.toolId && left.windowId === right.windowId);
+}
+
+/** 🚦️ `toolRun.busy` while a run on the same lane is non-terminal, else the indices of the terminal runs the start replaces. */
+export function toolRunAdmit(lane: ToolRunLane, live: readonly (readonly [ToolRunLane, ToolRunState])[]): { readonly ok: true; readonly replaces: readonly number[] } | { readonly ok: false; readonly rejection: ToolRunRejection } {
+  const shared = live.flatMap(([other], index) => (toolRunLanesShare(other, lane) ? [index] : []));
+  if (shared.some((index) => !isToolRunTerminal(live[index]![1]))) return { ok: false, rejection: "toolRun.busy" };
+  return { ok: true, replaces: shared };
+}
+
+/** ⚙️ The pure §2.2 reducer of one run slot; {@link toolRunAdmit} decides which slot a start may take. */
 export const ToolRunMachine = {
   /** ⚖️ Staleness guard first, then the transition table. */
   apply(slot: ToolRunSlot | null, event: ToolRunEvent): ToolRunApplyResult {
@@ -1098,6 +1114,32 @@ export function toolRunTickToJson(tick: ToolRunTick): ToolRunJson {
   };
 }
 //#endregion 🔖️Json
+
+//#region 🔖️Panel
+/** 🪧️ Key of the framework ToolRun panel root; each run is one child group {@link toolRunPanelGroupId}. */
+export const TOOL_RUN_PANEL_ID = "framework.toolRun";
+
+/** 🪧️ The key of run `run`'s group in the ToolRun panel. */
+export function toolRunPanelGroupId(run: bigint): string {
+  return `${TOOL_RUN_PANEL_ID}.${run}`;
+}
+
+/** 🔎️ The run a ToolRun panel group key names; `null` for any other key. */
+export function toolRunPanelGroupRun(key: string): bigint | null {
+  const digits = key.startsWith(`${TOOL_RUN_PANEL_ID}.`) ? key.slice(TOOL_RUN_PANEL_ID.length + 1) : "";
+  return /^(0|[1-9][0-9]*)$/.test(digits) ? BigInt(digits) : null;
+}
+
+/** 📣️ The runs a rendered ToolRun panel holds and those of them not in `previous`. */
+export function toolRunPanelNewRuns(previous: ReadonlySet<bigint>, keys: Iterable<string>): { readonly current: ReadonlySet<bigint>; readonly added: readonly bigint[] } {
+  const current = new Set<bigint>();
+  for (const key of keys) {
+    const run = toolRunPanelGroupRun(key);
+    if (run !== null) current.add(run);
+  }
+  return { current, added: [...current].filter((run) => !previous.has(run)).sort((left, right) => (left < right ? -1 : left > right ? 1 : 0)) };
+}
+//#endregion 🔖️Panel
 
 //#region 🔖️Actions
 export const TOOL_RUN_START_ACTION_ID = "toolRunStart";

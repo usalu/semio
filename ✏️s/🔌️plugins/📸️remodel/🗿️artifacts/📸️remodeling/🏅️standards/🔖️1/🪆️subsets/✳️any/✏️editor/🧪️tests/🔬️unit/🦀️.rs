@@ -92,16 +92,54 @@ pub(crate) mod context {
         vec![("runId".into(), semio_framework_plugin::DslValue::String(run)), ("generation".into(), semio_framework_plugin::DslValue::String(generation.to_string()))]
     }
 
-    /// 🔁️ Pumps driver turns until the run reaches `state` with no pending work, or `done` holds.
+    /// 🖥️ One plugin-host turn, exactly as the host drives it: one maintenance grant, one publication
+    /// turn, every presented result page acknowledged, every outbox drained. Every tool-run action the
+    /// run hands the shell is dispatched back, the way the shell answers its own port.
+    pub async fn host_turn(app: &mut RemodelingApp) {
+        let meta = meta("local");
+        app.maintenance_step(1, semio_framework_os_kernel::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("maintenance grant");
+        app.advance_typed_operation_publication().await.unwrap_or_else(|fault| panic!("driver turn faulted: {fault:?}"));
+        while let Some(page) = app.take_typed_operation_result_page(meta.instance_id) {
+            assert!(page.lane != semio_framework_plugin::app::TypedOperationResultLane::Fault, "typed operation fault: {}", String::from_utf8_lossy(page.bytes()));
+            assert!(app.acknowledge_typed_operation_result(page.token).expect("result ACK"), "the exact result ACK is admitted");
+        }
+        let mut effects = app.pending_effects(None).await;
+        while let Some(effect) = app.take_typed_operation_effect() {
+            effects.push(effect);
+        }
+        while app.take_typed_operation_event().is_some() {}
+        while app.take_typed_operation_ui_scope().is_some() {}
+        while app.take_typed_operation_completion().await.expect("completion").is_some() {}
+        while app.take_local_interaction_query_reply().is_some() {}
+        for effect in effects {
+            if let semio_framework_plugin::Effect::DispatchAction { action, args, .. } = effect {
+                if semio_framework_plugin::is_tool_run_action_id(&action) {
+                    Box::pin(app.handle_action(&action, args.as_ref(), &meta)).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"));
+                }
+            }
+        }
+    }
+
+    /// 📥️ Host turns until no typed operation is pending, bounded so a wedged operation fails loudly.
+    pub async fn settle(app: &mut RemodelingApp, what: &str) {
+        for _ in 0..100_000 {
+            if !app.has_pending_typed_operations() {
+                return;
+            }
+            host_turn(app).await;
+        }
+        panic!("{what} never retired its typed operations");
+    }
+
+    /// 🔁️ Host turns until the run satisfies `done` and rests outside a transitional state.
     pub async fn pump_run(app: &mut RemodelingApp, what: &str, done: impl Fn(&protocol::PresenceToolRun) -> bool) -> protocol::PresenceToolRun {
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(3_600);
-        while std::time::Instant::now() < deadline {
+        for _ in 0..50_000_000u64 {
             if let Some(run) = run_presence(app).filter(|run| done(run)) {
                 if !app.has_pending_typed_operations() || !matches!(run.state.wire_name(), "starting" | "finalizing" | "aborting") {
                     return run;
                 }
             }
-            app.advance_typed_operation_publication().await.unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
+            host_turn(app).await;
         }
         panic!("{what} never settled; run {:?}", run_presence(app));
     }

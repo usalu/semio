@@ -124,6 +124,7 @@ fn populated_model() -> crate::model::Model {
     model.materials.push(Material {
         id: EntityId(1),
         name: "Concrete".into(),
+        roughness: crate::model::SurfaceRoughness::MediumRough,
         thickness_m: 0.1,
         conductivity_w_m_k: 1.0,
         density_kg_m3: 2000.0,
@@ -252,6 +253,7 @@ async fn out_of_range_payloads_are_refused_before_they_reach_the_vocabulary() {
     model.materials.push(Material {
         id: EntityId(1),
         name: "Concrete".into(),
+        roughness: crate::model::SurfaceRoughness::MediumRough,
         thickness_m: 0.1,
         conductivity_w_m_k: 1.0,
         density_kg_m3: 2000.0,

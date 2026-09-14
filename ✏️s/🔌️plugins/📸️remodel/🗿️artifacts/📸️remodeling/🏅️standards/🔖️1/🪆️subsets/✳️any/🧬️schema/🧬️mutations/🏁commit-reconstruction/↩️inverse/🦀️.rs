@@ -5,7 +5,7 @@ use crate::mutations::{commit_reconstruction, CommitReconstruction, Reconstructi
 use crate::RemodelingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::CommitReconstruction, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
+pub fn inverse(payload: &CommitReconstruction, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
     vec![commit_reconstruction(CommitReconstruction {
         sparse: base.results.sparse.clone(),
         trajectory: base.results.trajectory.clone(),

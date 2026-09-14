@@ -130,7 +130,7 @@
   ],
   "retention": {
     "fixtureOwnerSegments": ["🧪️tests"],
-    "transactionTicketSegments": [".🧬semio", "🦑️repo", "🎫️tickets", "🎆️26", "🌙️08", "☀️27", "DRAW-SOURCE-SCENARIOS"],
+    "transactionTicketSegments": ["🎫️ticket"],
     "parentSegments": ["📓️draw-source-scenarios", "🧪️runs"],
     "recordFilename": "📝️.md",
     "disposition": "retain-all-until-reviewed",

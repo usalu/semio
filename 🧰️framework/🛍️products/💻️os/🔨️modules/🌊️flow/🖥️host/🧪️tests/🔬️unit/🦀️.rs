@@ -477,6 +477,61 @@ fn flow_eval_session_sync_and_tick_state_machine() {
     host.retire_cold();
 }
 
+/// ⚖️ LAW: the CHAIN ledger stays live for the whole of an evaluation, including at the hop
+/// boundaries where both finer ledgers are structurally empty, and its node census only ever grows.
+///
+/// 🩸️ This is the law the whole progress defect needed. A window parked on an extension answer is
+/// marked `owed`, not `armed`, and `tick_scheduled` is false — so `FlowEvalSession::pending`, the
+/// tessellation ledger and the budgeted-eval ledger ALL report nothing, and the status a preview
+/// published at that moment said `phase: "idle", inFlight: 0, ratio: 1.0` while the kernel was busy.
+/// Measured on 6118 as 54 byte-identical publications across one 23 s evaluation
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-progress-visibility-2026-09-14.md`).
+#[test]
+fn the_chain_ledger_is_live_at_a_hop_boundary_and_its_census_only_grows() {
+    let (mut host, _pass_id) = host_with_two_node_chain();
+    let mut session = FlowEvalSession::new();
+    session.capture_baseline_from(&host);
+    let settled = session.preview_chain_status();
+    assert!(!settled.working && settled.in_flight == 0, "a quiesced session owes nothing");
+    assert!((settled.ratio() - 1.0).abs() < 1e-9, "a quiesced session is complete, not at zero");
+
+    host.set_slider_value("slider", 12.0);
+    assert!(session.sync(&host), "a changed slider arms the chain");
+    let armed = session.preview_chain_status();
+    assert!(armed.working && armed.nodes_total > 0, "an armed chain publishes a census to measure against");
+    assert!(armed.nodes_done < armed.nodes_total, "an armed chain has not settled every node");
+
+    // ⏳️ THE HOP BOUNDARY: the window is waiting on an extension answer, so nothing is armed and no
+    // finer ledger holds a row. Only the latch knows, and the chain ledger is what reads it.
+    session.arm_window_tick("preview-1");
+    session.begin_window_tick("preview-1");
+    session.note_window_extensions_in_flight("preview-1", 1);
+    session.note_window_tick_outcome("preview-1", true);
+    let parked = session.preview_chain_status();
+    assert!(!session.window_tick_is_armed("preview-1"), "a parked window is owed, never armed — the state that made every ledger read idle");
+    assert_eq!(session.preview_tessellate_status().in_flight, 0, "the tessellation ledger is empty at a hop boundary");
+    assert_eq!(session.preview_eval_status().in_flight, 0, "the budgeted-eval ledger is empty at a hop boundary");
+    assert!(parked.working, "the chain ledger still reports the work the other two cannot see");
+    assert_eq!(parked.in_flight, 1, "one extension answer is outstanding");
+
+    let mut ratios = vec![parked.ratio()];
+    while session.tick(&mut host) {
+        ratios.push(session.preview_chain_status().ratio());
+    }
+    session.settle_window_extension("preview-1");
+    session.note_window_tick_outcome("preview-1", false);
+    ratios.push(session.preview_chain_status().ratio());
+    for pair in ratios.windows(2) {
+        assert!(pair[1] >= pair[0] - 1e-9, "the census ratio went backwards: {ratios:?}");
+    }
+    let done = session.preview_chain_status();
+    assert!(!done.working && done.in_flight == 0, "a settled chain owes nothing again");
+    assert!((done.ratio() - 1.0).abs() < 1e-9, "a settled chain reports complete");
+    eprintln!("[DEBUG] flow chain ledger: parked={parked:?} ratios={ratios:?} settled={done:?}");
+    session.retire_cold();
+    host.retire_cold();
+}
+
 /// ⚖️ LAW: the flow extension registry GENERATION is a session's invalidation key.
 ///
 /// A node whose operator no plugin has contributed yet does not merely stall — its miss is cached in

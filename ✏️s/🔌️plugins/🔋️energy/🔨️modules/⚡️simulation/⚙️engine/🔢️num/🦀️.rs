@@ -103,6 +103,80 @@ pub fn newton_raphson(mut x: f64, f: impl Fn(f64) -> f64, df: impl Fn(f64) -> f6
     }
 }
 
+/// 🧮️ Solves the dense row-major system `matrix · x = rhs` of order `n` in place by Gaussian
+/// elimination with partial pivoting; `rhs` holds `x` on success, `false` for a singular matrix.
+pub fn solve_dense_in_place(matrix: &mut [f64], rhs: &mut [f64], n: usize) -> bool {
+    for pivot in 0..n {
+        let best = (pivot..n).max_by(|&a, &b| matrix[a * n + pivot].abs().total_cmp(&matrix[b * n + pivot].abs())).unwrap_or(pivot);
+        if matrix[best * n + pivot].abs() < 1e-300 {
+            return false;
+        }
+        if best != pivot {
+            for column in 0..n {
+                matrix.swap(best * n + column, pivot * n + column);
+            }
+            rhs.swap(best, pivot);
+        }
+        let diagonal = matrix[pivot * n + pivot];
+        for row in pivot + 1..n {
+            let factor = matrix[row * n + pivot] / diagonal;
+            if factor == 0.0 {
+                continue;
+            }
+            for column in pivot..n {
+                matrix[row * n + column] -= factor * matrix[pivot * n + column];
+            }
+            rhs[row] -= factor * rhs[pivot];
+        }
+    }
+    for row in (0..n).rev() {
+        let tail: f64 = (row + 1..n).map(|column| matrix[row * n + column] * rhs[column]).sum();
+        rhs[row] = (rhs[row] - tail) / matrix[row * n + row];
+    }
+    true
+}
+
+/// 🧮️ Inverts the dense row-major matrix of order `n` into `inverse` by Gauss–Jordan elimination
+/// with partial pivoting, using `work` (length `n²`) as scratch; `false` for a singular matrix.
+pub fn invert_dense(matrix: &[f64], inverse: &mut [f64], work: &mut [f64], n: usize) -> bool {
+    work[..n * n].copy_from_slice(&matrix[..n * n]);
+    inverse[..n * n].fill(0.0);
+    for diagonal in 0..n {
+        inverse[diagonal * n + diagonal] = 1.0;
+    }
+    for pivot in 0..n {
+        let best = (pivot..n).max_by(|&a, &b| work[a * n + pivot].abs().total_cmp(&work[b * n + pivot].abs())).unwrap_or(pivot);
+        if work[best * n + pivot].abs() < 1e-300 {
+            return false;
+        }
+        if best != pivot {
+            for column in 0..n {
+                work.swap(best * n + column, pivot * n + column);
+                inverse.swap(best * n + column, pivot * n + column);
+            }
+        }
+        let scale = 1.0 / work[pivot * n + pivot];
+        for column in 0..n {
+            work[pivot * n + column] *= scale;
+            inverse[pivot * n + column] *= scale;
+        }
+        for row in 0..n {
+            if row == pivot {
+                continue;
+            }
+            let factor = work[row * n + pivot];
+            if factor == 0.0 {
+                continue;
+            }
+            for column in 0..n {
+                work[row * n + column] -= factor * work[pivot * n + column];
+                inverse[row * n + column] -= factor * inverse[pivot * n + column];
+            }
+        }
+    }
+    true
+}
+
 /// 🔍️ Gauss-Seidel iterative solver for Ax = b (dense).
 pub fn gauss_seidel(a: &[Vec<f64>], b: &[f64], x: &mut [f64], max_iter: usize, tol: f64) -> bool {
     let n = b.len();

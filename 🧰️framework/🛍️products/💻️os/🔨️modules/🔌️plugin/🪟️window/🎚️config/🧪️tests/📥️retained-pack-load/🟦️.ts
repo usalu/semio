@@ -34,8 +34,14 @@ export function testWindowConfigRetainedPackLoadFixture(): void {
       "cancel-ready-candidate",
       "publication-load-race",
       "same-kind-and-cross-kind-reopen",
+      "saved-camera-round-trip",
+      "over-bound-pack",
+      "turn-bound-exhausted",
       "app-close",
     ]),
   );
+  assert.equal(fixture.grant.derivation, "exact-next-allocation-or-release-demand");
+  assert.equal(fixture.grant.exhaustionFault, "window-config.load-bound");
+  assert.ok(fixture.owners.some((owner) => owner.kind === fixture.savedCamera.kind && owner.windowIds.includes(fixture.savedCamera.windowId)));
   console.log(`[DEBUG] Window retained-load fixture: owners=${fixture.owners.length} packs=${fixture.owners.flatMap((owner) => owner.windowIds).length} requiredScenarios=${fixture.requiredScenarios.length}`);
 }

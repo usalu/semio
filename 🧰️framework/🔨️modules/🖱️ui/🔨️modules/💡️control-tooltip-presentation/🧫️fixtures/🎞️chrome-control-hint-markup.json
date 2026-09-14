@@ -1,0 +1,7 @@
+{
+  "description": "Chrome control hints must not paint native title tooltips when driver tooltips are enabled.",
+  "triggerSlot": "drag-handle",
+  "wrapperSlot": "chrome-control-hint",
+  "tooltipContentSlot": "tooltip-content",
+  "forbiddenOnTrigger": "title="
+}

@@ -9297,6 +9297,7 @@ dependencies = [
  "semio-framework-pixels",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-tool-run",
  "semio-framework-ui-contract",
  "semio-framework-value-derive",
  "semio-s-artifact-remodel-remodeling",

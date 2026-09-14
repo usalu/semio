@@ -32,6 +32,10 @@ fn base_case_geometry_matches_the_standard() {
     let glazing: f64 = built.fenestrations.iter().map(|window| window.area_m2).sum();
     assert!((glazing - 12.0).abs() < 1e-9, "south glazing was {glazing} m²");
     assert!(built.fenestrations.iter().all(|window| window.surface_id == SOUTH_WALL));
+    let floor = built.surfaces.iter().find(|surface| surface.id == FLOOR).expect("floor");
+    assert_eq!(floor.outside_boundary_condition, OutsideBoundary::OutdoorAir, "ASHRAE 140 §5.2.1.10: the floor is exposed to outdoor air");
+    assert!(!floor.sun_exposed && !floor.wind_exposed, "…with no sun and no wind");
+    assert!(built.fenestrations.iter().all(|window| window.glazing_construction_id == Some(WINDOW_CONSTRUCTION)), "windows are the layered double pane");
 }
 
 #[test]
@@ -46,9 +50,12 @@ fn high_mass_cases_swap_only_the_wall_and_floor() {
 
 #[test]
 fn shaded_cases_carry_their_projections() {
-    assert!(model("610").expect("610").fenestrations.iter().all(|window| window.overhang_depth_m > 0.0 && window.fin_depth_m == 0.0));
+    let overhang = model("610").expect("610");
+    assert_eq!(overhang.shading_surfaces.len(), 1, "610 carries one full-width overhang");
+    assert!(overhang.shading_surfaces[0].vertices_m.iter().all(|vertex| (vertex[2] - HEIGHT_M).abs() < 1e-9), "the overhang sits at roof level");
+    assert!(overhang.fenestrations.iter().all(|window| window.overhang_depth_m == 0.0));
     assert!(model("630").expect("630").fenestrations.iter().all(|window| window.overhang_depth_m > 0.0 && window.fin_depth_m > 0.0));
-    assert!(model("600").expect("600").fenestrations.iter().all(|window| window.overhang_depth_m == 0.0));
+    assert!(model("600").expect("600").shading_surfaces.is_empty());
 }
 
 #[test]
@@ -169,6 +176,20 @@ fn free_float_case_delivers_no_hvac_energy() {
     assert_eq!(projected.annual_cooling_kwh, 0.0);
     assert_eq!(projected.zone_air_temperature_c.len(), 8760);
     assert!(projected.free_float_max_c > projected.free_float_min_c, "a free-floating zone must actually swing");
+}
+
+/// 🐛️ Free-float stability and thermal mass defects: the explicit air-only integrator swung case
+/// 600FF between −118 °C and 156 °C and made 900FF identical to 600FF. The coupled implicit balance
+/// must stay physical, and the heavy case must swing less and never peak above the light one.
+#[test]
+fn free_float_is_stable_and_mass_damps_the_swing() {
+    let light = project("600FF", &annual_results("600FF"));
+    let heavy = project("900FF", &annual_results("900FF"));
+    for projected in [&light, &heavy] {
+        assert!(projected.free_float_min_c > -40.0 && projected.free_float_max_c < 90.0, "free float left the physical range: {:.1}…{:.1} °C", projected.free_float_min_c, projected.free_float_max_c);
+    }
+    assert!(heavy.free_float_max_c - heavy.free_float_min_c < light.free_float_max_c - light.free_float_min_c - 5.0, "light {:.1}…{:.1} °C, heavy {:.1}…{:.1} °C", light.free_float_min_c, light.free_float_max_c, heavy.free_float_min_c, heavy.free_float_max_c);
+    assert!((heavy.free_float_mean_c - light.free_float_mean_c).abs() < 3.0);
 }
 
 /// 🎛️ An ideal-loads case with unlimited capacity must hold its own setpoints: at least 99 % of

@@ -1,157 +1,185 @@
-//! 🧱️ Opaque envelope heat transfer: convection, conduction CTF, and surface balance.
+//! 🧱️ Opaque envelope heat transfer: surface convection correlations, exterior long-wave
+//! exchange, and implicit finite-difference conduction through layered constructions.
+//!
+//! Convection follows the EnergyPlus defaults (Engineering Reference, "Outside Surface Heat
+//! Balance" and "Inside Heat Balance"): TARP/Walton natural convection on both faces, the DOE-2
+//! forced correlation (MoWiTT smooth-surface coefficients scaled by the roughness multiplier)
+//! outside, and wind at the surface centroid from the power-law boundary layer.
 
-use crate::material::{R_FILM_EXTERIOR_M2K_W, R_FILM_INTERIOR_M2K_W};
-use crate::num::newton_raphson;
 use crate::units::STEFAN_BOLTZMANN;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use serde::{Deserialize, Serialize};
 
-// #region 🔖️ConvectionModels
-/// 🌬️ Exterior convection correlation (wind-adaptive McAdams-type).
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct ExteriorConvectionModel {
-    pub base_h_w_m2k: f64,
-    pub wind_coefficient: f64,
-}
+// #region 🔖️Convection
+/// 🌬️ Lower bound of any convection coefficient [W/(m²·K)].
+pub const MINIMUM_CONVECTION_W_M2K: f64 = 0.1;
+/// 🌬️ Wind-profile exponent and boundary-layer thickness [m] of open country, which is also the
+/// exposure of the meteorological station a TMY record is measured at (10 m mast).
+pub const COUNTRY_WIND_EXPONENT: f64 = 0.14;
+pub const COUNTRY_BOUNDARY_LAYER_M: f64 = 270.0;
+pub const WEATHER_STATION_HEIGHT_M: f64 = 10.0;
 
-impl Default for ExteriorConvectionModel {
-    fn default() -> Self {
-        Self { base_h_w_m2k: 5.7, wind_coefficient: 3.8 }
+/// 🌬️ TARP natural convection [W/(m²·K)] for a surface `delta_k = T_surface − T_air` warmer than
+/// the air whose outward normal has vertical component `cos_tilt` (pass the negated value for the
+/// room side of a surface).
+pub fn natural_convection_w_m2k(delta_k: f64, cos_tilt: f64) -> f64 {
+    let magnitude = delta_k.abs().cbrt();
+    if delta_k == 0.0 || cos_tilt == 0.0 {
+        1.31 * magnitude
+    } else if (delta_k < 0.0 && cos_tilt < 0.0) || (delta_k > 0.0 && cos_tilt > 0.0) {
+        9.482 * magnitude / (7.238 - cos_tilt.abs())
+    } else {
+        1.810 * magnitude / (1.382 + cos_tilt.abs())
     }
 }
 
-impl ExteriorConvectionModel {
-    /// 🌬️ Exterior convection coefficient [W/(m²·K)].
-    pub fn h_w_m2k(&self, wind_speed_m_s: f64) -> f64 {
-        self.base_h_w_m2k + self.wind_coefficient * wind_speed_m_s.max(0.0)
+/// 🌬️ Room-side convection coefficient of an opaque surface [W/(m²·K)].
+pub fn interior_convection_w_m2k(surface_c: f64, air_c: f64, cos_tilt: f64) -> f64 {
+    natural_convection_w_m2k(surface_c - air_c, -cos_tilt).max(MINIMUM_CONVECTION_W_M2K)
+}
+
+/// 🧭️ A surface faces into the wind when the wind blows within 90° of its outward normal; near
+/// horizontal surfaces are always windward.
+pub fn is_windward(cos_tilt: f64, azimuth_deg: f64, wind_direction_deg: f64) -> bool {
+    if cos_tilt.abs() >= 0.98 {
+        return true;
     }
-}
-
-/// 🌬️ Interior convection correlation (adaptive natural convection).
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct InteriorConvectionModel {
-    pub h_min_w_m2k: f64,
-    pub delta_t_exponent: f64,
-    pub delta_t_coefficient: f64,
-}
-
-impl Default for InteriorConvectionModel {
-    fn default() -> Self {
-        Self { h_min_w_m2k: 3.0, delta_t_coefficient: 5.1, delta_t_exponent: 0.25 }
+    let mut difference = (wind_direction_deg - azimuth_deg).abs();
+    if difference - 180.0 > 0.001 {
+        difference -= 360.0;
     }
+    difference.abs() - 90.0 <= 0.001
 }
 
-impl InteriorConvectionModel {
-    /// 🌬️ Interior convection coefficient [W/(m²·K)] from |T_s − T_a|.
-    pub fn h_w_m2k(&self, surface_temp_c: f64, air_temp_c: f64) -> f64 {
-        let dt = (surface_temp_c - air_temp_c).abs();
-        self.h_min_w_m2k + self.delta_t_coefficient * dt.powf(self.delta_t_exponent)
+/// 🌬️ Wind speed [m/s] at `height_m` above ground from the station wind speed, for an open-country
+/// site and an open-country station; zero at or below ground.
+pub fn wind_speed_at_height(station_wind_m_s: f64, height_m: f64) -> f64 {
+    if height_m <= 0.0 {
+        return 0.0;
     }
-}
-// #endregion 🔖️ConvectionModels
-
-// #region 🔖️ConductionState
-/// 🌡️ Simplified first-order CTF conduction state (one history state per surface).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
-pub struct ConductionState {
-    pub ctf_c0_w_m2k: f64,
-    pub ctf_c1_w_m2k: f64,
-    pub previous_outside_temp_c: f64,
+    station_wind_m_s * (COUNTRY_BOUNDARY_LAYER_M / WEATHER_STATION_HEIGHT_M).powf(COUNTRY_WIND_EXPONENT) * (height_m / COUNTRY_BOUNDARY_LAYER_M).powf(COUNTRY_WIND_EXPONENT)
 }
 
-impl ConductionState {
-    /// 🌡️ Initialize CTF from construction U-value and thermal mass [J/(m²·K)].
-    pub fn from_u_and_capacitance(u_value_w_m2k: f64, capacitance_j_m2k: f64, time_step_s: f64) -> Self {
-        let tau = capacitance_j_m2k / u_value_w_m2k.max(0.01);
-        let alpha = (-time_step_s / tau.max(1.0)).exp();
-        Self { ctf_c0_w_m2k: u_value_w_m2k * (1.0 - alpha), ctf_c1_w_m2k: u_value_w_m2k * alpha, previous_outside_temp_c: 20.0 }
-    }
-
-    /// 🔥️ Conduction heat flux to zone [W/m²] (positive = heat into zone).
-    pub fn heat_flux_w_m2(&self, outside_temp_c: f64, inside_temp_c: f64) -> f64 {
-        self.ctf_c0_w_m2k * (outside_temp_c - inside_temp_c) + self.ctf_c1_w_m2k * (self.previous_outside_temp_c - inside_temp_c)
-    }
-
-    /// 🔄️ Advance history after a timestep.
-    pub fn advance(&mut self, outside_temp_c: f64) {
-        self.previous_outside_temp_c = outside_temp_c;
-    }
-}
-// #endregion 🔖️ConductionState
-
-// #region 🔖️SurfaceHeatBalance
-/// ⚖️ Surface heat balance terms [W/m²].
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct SurfaceHeatBalance {
-    pub convection_w_m2: f64,
-    pub conduction_w_m2: f64,
-    pub solar_absorbed_w_m2: f64,
-    pub longwave_net_w_m2: f64,
-    pub surface_temp_c: f64,
+/// 🌬️ DOE-2 exterior convection [W/(m²·K)]: TARP natural convection plus the roughness-scaled
+/// excess of the MoWiTT windward/leeward combined coefficient over its natural part.
+pub fn exterior_convection_w_m2k(surface_c: f64, air_c: f64, cos_tilt: f64, wind_at_surface_m_s: f64, windward: bool, roughness_multiplier: f64) -> f64 {
+    let natural = natural_convection_w_m2k(surface_c - air_c, cos_tilt);
+    let smooth_forced = if windward { 3.26 * wind_at_surface_m_s.powf(0.89) } else { 3.55 * wind_at_surface_m_s.powf(0.617) };
+    natural + roughness_multiplier * ((natural * natural + smooth_forced * smooth_forced).sqrt() - natural)
 }
 
-impl SurfaceHeatBalance {
-    /// ⚖️ Net flux into surface (should approach zero at convergence).
-    pub fn residual_w_m2(&self) -> f64 {
-        self.solar_absorbed_w_m2 + self.longwave_net_w_m2 + self.conduction_w_m2 - self.convection_w_m2
-    }
-}
-// #endregion 🔖️SurfaceHeatBalance
-
-// #region 🔖️Longwave
-/// 🌡️ Net longwave exchange [W/m²] (surface ↔ sky/ground).
-pub fn longwave_net_w_m2(surface_temp_c: f64, exterior_temp_k: f64, emissivity: f64) -> f64 {
-    let t_s_k = surface_temp_c + 273.15;
-    emissivity * STEFAN_BOLTZMANN * (exterior_temp_k.powi(4) - t_s_k.powi(4))
-}
-// #endregion 🔖️Longwave
-
-// #region 🔖️Solve
-/// 🌡️ Solve exterior surface temperature [°C] for heat balance.
-pub fn solve_exterior_surface_temp(outside_air_c: f64, sky_temp_k: f64, wind_speed_m_s: f64, solar_absorbed_w_m2: f64, conduction_from_inside_w_m2: f64, emissivity: f64, ext_conv: &ExteriorConvectionModel) -> f64 {
-    let h = ext_conv.h_w_m2k(wind_speed_m_s);
-    let f = |t_s: f64| {
-        let conv = h * (outside_air_c - t_s);
-        let lw = longwave_net_w_m2(t_s, sky_temp_k, emissivity);
-        solar_absorbed_w_m2 + lw - conv - conduction_from_inside_w_m2
+/// 🌌️ Linearized long-wave exchange coefficients [W/(m²·K)] of an exterior face at `surface_c`
+/// with the sky, the air (the near-horizon part of the sky hemisphere) and the ground (taken at
+/// air temperature): `(h_sky, h_air, h_ground)`.
+pub fn exterior_radiation_w_m2k(surface_c: f64, air_c: f64, sky_c: f64, emissivity: f64, cos_tilt: f64) -> (f64, f64, f64) {
+    let surface_k = surface_c + 273.15;
+    let view_sky = 0.5 * (1.0 + cos_tilt);
+    let view_ground = 0.5 * (1.0 - cos_tilt);
+    let sky_split = view_sky.sqrt();
+    let secant = |other_c: f64| {
+        let other_k = other_c + 273.15;
+        if (surface_k - other_k).abs() < 1e-9 {
+            4.0 * surface_k.powi(3)
+        } else {
+            (surface_k.powi(4) - other_k.powi(4)) / (surface_k - other_k)
+        }
     };
-    let df = |t_s: f64| {
-        let eps = 0.1;
-        (f(t_s + eps) - f(t_s - eps)) / (2.0 * eps)
-    };
-    newton_raphson(outside_air_c, f, df, 30, 1e-4).unwrap_or(outside_air_c)
+    let sigma_emissivity = STEFAN_BOLTZMANN * emissivity;
+    (sigma_emissivity * view_sky * sky_split * secant(sky_c), sigma_emissivity * view_sky * (1.0 - sky_split) * secant(air_c), sigma_emissivity * view_ground * secant(air_c))
+}
+// #endregion 🔖️Convection
+
+// #region 🔖️Conduction
+/// 🧱️ One layer of an opaque construction, outside first.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ConductionLayer {
+    pub thickness_m: f64,
+    pub conductivity_w_m_k: f64,
+    pub volumetric_heat_capacity_j_m3k: f64,
 }
 
-/// 🌡️ Solve interior surface temperature [°C] for heat balance.
+/// 🧱️ Finite-difference node chain of a construction per unit area: `conductance_w_m2k[k]`
+/// couples node `k` and `k + 1`, `capacitance_j_m2k[k]` is node `k`'s lumped heat capacity. Node
+/// `0` is the outside face, the last node the inside face.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct NodeChain {
+    pub conductance_w_m2k: Vec<f64>,
+    pub capacitance_j_m2k: Vec<f64>,
+}
+
+/// 🧱️ Most sub-layers any single material layer is divided into.
+pub const MAXIMUM_SUBLAYERS: usize = 16;
+
+/// 🧮️ Number of equal sub-layers a massive layer needs so each is no thicker than the thermal
+/// penetration depth `√(α·Δt)` of one time step; massless layers stay one resistance.
+pub fn sublayer_count(layer: &ConductionLayer, time_step_s: f64) -> usize {
+    if layer.volumetric_heat_capacity_j_m3k <= 0.0 {
+        return 1;
+    }
+    let penetration = (layer.conductivity_w_m_k / layer.volumetric_heat_capacity_j_m3k * time_step_s).sqrt();
+    ((layer.thickness_m / penetration).ceil() as usize).clamp(1, MAXIMUM_SUBLAYERS)
+}
+
+impl NodeChain {
+    /// 🔢️ Node count of `layers` discretized for `time_step_s`.
+    pub fn node_count(layers: &[ConductionLayer], time_step_s: f64) -> usize {
+        layers.iter().map(|layer| sublayer_count(layer, time_step_s)).sum::<usize>() + 1
+    }
+
+    /// 🧱️ Appends one layer's sub-layers to a chain whose node vectors are already reserved.
+    pub fn push_layer(&mut self, layer: &ConductionLayer, time_step_s: f64) {
+        if self.capacitance_j_m2k.is_empty() {
+            self.capacitance_j_m2k.push(0.0);
+        }
+        let count = sublayer_count(layer, time_step_s);
+        let thickness = layer.thickness_m / count as f64;
+        let half_capacity = 0.5 * layer.volumetric_heat_capacity_j_m3k.max(0.0) * thickness;
+        for _ in 0..count {
+            self.conductance_w_m2k.push(layer.conductivity_w_m_k / thickness.max(1e-12));
+            *self.capacitance_j_m2k.last_mut().expect("chain has a node") += half_capacity;
+            self.capacitance_j_m2k.push(half_capacity);
+        }
+    }
+
+    /// 🔥️ Steady-state face-to-face conductance [W/(m²·K)].
+    pub fn conductance_w_m2k(&self) -> f64 {
+        1.0 / self.conductance_w_m2k.iter().map(|g| 1.0 / g).sum::<f64>().max(1e-12)
+    }
+
+    /// 🔢️ Node count.
+    pub fn nodes(&self) -> usize {
+        self.capacitance_j_m2k.len()
+    }
+}
+
+/// ➗️ Thomas forward elimination of an implicit chain from its outside face, returning for every
+/// node but the inside face the relation `T_k = a_k + b_k·T_{k+1}` written into `a`/`b`.
 ///
-/// Sign convention, stated because it used to be inverted: `conduction_from_outside_w_m2` and the
-/// returned `convection_w_m2` are both POSITIVE INTO THE ZONE, so a surface delivering heat to the
-/// room is warmer than the room air, not colder.
-pub fn solve_interior_surface_temp(zone_air_c: f64, conduction_from_outside_w_m2: f64, solar_absorbed_w_m2: f64, int_conv: &InteriorConvectionModel) -> SurfaceHeatBalance {
-    let mut t_s = zone_air_c;
-    for _ in 0..20 {
-        let h = int_conv.h_w_m2k(t_s, zone_air_c);
-        t_s = zone_air_c + (solar_absorbed_w_m2 + conduction_from_outside_w_m2) / h.max(0.1);
+/// The outside face exchanges `h_outside·(T_equivalent − T_0)` with its environment, written as the
+/// linear source `q_outside = h_outside·T_equivalent`; `source(k)` is heat deposited at node `k`.
+pub fn eliminate_chain(conductance: &[f64], capacitance: &[f64], previous: &[f64], source: impl Fn(usize) -> f64, time_step_s: f64, h_outside: f64, q_outside: f64, a: &mut [f64], b: &mut [f64]) {
+    let nodes = capacitance.len();
+    for k in 0..nodes - 1 {
+        let storage = capacitance[k] / time_step_s;
+        let (diagonal, rhs) = if k == 0 {
+            (storage + h_outside + conductance[0], storage * previous[0] + q_outside + source(0))
+        } else {
+            (storage + conductance[k - 1] + conductance[k] - conductance[k - 1] * b[k - 1], storage * previous[k] + conductance[k - 1] * a[k - 1] + source(k))
+        };
+        a[k] = rhs / diagonal;
+        b[k] = conductance[k] / diagonal;
     }
-    let h = int_conv.h_w_m2k(t_s, zone_air_c);
-    SurfaceHeatBalance { convection_w_m2: h * (t_s - zone_air_c), conduction_w_m2: conduction_from_outside_w_m2, solar_absorbed_w_m2, longwave_net_w_m2: 0.0, surface_temp_c: t_s }
 }
 
-/// 🔥️ Steady-state opaque conduction flux [W/m²] through construction.
-pub fn steady_opaque_flux_w_m2(outside_temp_c: f64, inside_temp_c: f64, u_value_w_m2k: f64) -> f64 {
-    u_value_w_m2k * (outside_temp_c - inside_temp_c)
-}
-
-/// 🔥️ Film-inclusive U-value from construction U and film resistances.
-pub fn overall_u_value_w_m2k(construction_u: f64) -> f64 {
-    let r_total = 1.0 / construction_u.max(1e-6);
-    let r_construction = r_total - R_FILM_INTERIOR_M2K_W - R_FILM_EXTERIOR_M2K_W;
-    if r_construction <= 0.0 {
-        return construction_u;
+/// ➗️ Back substitution after [`eliminate_chain`] once the inside-face temperature is known.
+pub fn substitute_chain(a: &[f64], b: &[f64], inside_c: f64, temperatures: &mut [f64]) {
+    let nodes = temperatures.len();
+    temperatures[nodes - 1] = inside_c;
+    for k in (0..nodes - 1).rev() {
+        temperatures[k] = a[k] + b[k] * temperatures[k + 1];
     }
-    1.0 / (R_FILM_INTERIOR_M2K_W + r_construction + R_FILM_EXTERIOR_M2K_W)
 }
-// #endregion 🔖️Solve
+// #endregion 🔖️Conduction
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

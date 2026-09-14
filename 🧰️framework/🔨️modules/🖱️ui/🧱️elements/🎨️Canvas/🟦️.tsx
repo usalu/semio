@@ -970,7 +970,7 @@ interface ModeDockTabBarProps {
 
 const modeDockTabDomId = (stackPath: ModeLayoutPath, windowId: string) => `mode-dock-tab-${encodeURIComponent(stackPath || "root")}-${encodeURIComponent(windowId)}`;
 const modeDockPanelDomId = (stackPath: ModeLayoutPath) => `mode-dock-panel-${encodeURIComponent(stackPath || "root")}`;
-const modeDockTabActionClass = "flex h-medium w-medium shrink-0 items-center justify-center border-0 bg-transparent text-muted-foreground transition-colors hover:text-foreground";
+const modeDockTabActionClass = "flex h-medium w-medium shrink-0 items-center justify-center border-0 bg-transparent transition-colors";
 
 const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarProps>(({ stackPath, corner, tabs, activeId, activeWindowId, onSelectTab, mobile = false, showMaximize = false, isMaximized = false }, ref) => {
   const dock = reactHostPort.useContext(ModeDockContext);
@@ -1028,6 +1028,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
 
   const renderTab = (tab: (typeof tabs)[number], stackIndex: number) => {
     const tabActive = activeId === tab.id && stackGloballyActive;
+    const tabWindowActive = activeWindowId === tab.id;
     const controlPath = stackPath || "root";
     return (
       <div
@@ -1071,7 +1072,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
           </div>
         </button>
         {!mobile && showMaximize ? (
-          <ChromeControlHint id={`framework.modeDock.${controlPath}.tab.${tab.id}.focus`} text={isMaximized ? unfocusLabel : focusLabel}>
+          <ChromeControlHint id={`framework.modeDock.${controlPath}.tab.${tab.id}.focus`} text={isMaximized ? unfocusLabel : focusLabel} always>
             <button
               type="button"
               data-slot="mode-dock-tab-focus"
@@ -1087,7 +1088,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
           </ChromeControlHint>
         ) : null}
         {!mobile && dock?.openWindowInNewWindow ? (
-          <ChromeControlHint id={`framework.modeDock.${controlPath}.tab.${tab.id}.newWindow`} text={newWindowLabel}>
+          <ChromeControlHint id={`framework.modeDock.${controlPath}.tab.${tab.id}.newWindow`} text={newWindowLabel} always>
             <button
               type="button"
               data-slot="mode-dock-tab-new-window"
@@ -1101,7 +1102,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
             </button>
           </ChromeControlHint>
         ) : null}
-        <ChromeControlHint id={`framework.modeDock.${controlPath}.tab.${tab.id}.close`} text={closeLabel}>
+        <ChromeControlHint id={`framework.modeDock.${controlPath}.tab.${tab.id}.close`} text={closeLabel} always>
           <button
             type="button"
             data-slot="mode-dock-tab-close"
@@ -1114,7 +1115,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
             <CloseIcon className="size-small" />
           </button>
         </ChromeControlHint>
-        <DragHandle labelId="ui.tree.drag.sort" subject={tab.title} onPointerDown={(event) => dock?.startTabDrag(tab.id, stackPath, stackIndex, tab.title, event)} onClick={(event) => event.stopPropagation()} emphasized={tabActive} />
+        <DragHandle labelId="ui.tree.drag.sort" subject={tab.title} onPointerDown={(event) => dock?.startTabDrag(tab.id, stackPath, stackIndex, tab.title, event)} onClick={(event) => event.stopPropagation()} emphasized={tabWindowActive} />
       </div>
     );
   };

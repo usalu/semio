@@ -199,6 +199,43 @@ fn releasing_off_the_captured_button_does_not_fire_its_action() {
     assert!(commands.iter().all(|cmd| !matches!(cmd, UiCommand::App { .. })), "release outside the pressed button must not fire its action");
 }
 
+fn disabled_button_ui(id: &str) -> UiNode {
+    let UiNode::Button(mut button) = button_ui(id) else { unreachable!("button_ui builds a button") };
+    button.presence.state = crate::wgpu::component::ui::UiState::Disabled;
+    UiNode::Button(button)
+}
+
+#[test]
+fn a_disabled_button_neither_takes_focus_nor_fires_on_click() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 40.0));
+    let enabled = leaf(&mut tree, Some(root), 1, button_ui("enabled"), (0.0, 0.0, 50.0, 40.0));
+    leaf(&mut tree, Some(root), 2, disabled_button_ui("disabled"), (50.0, 0.0, 50.0, 40.0));
+    let mut router = EventRouter::new("main");
+
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 60.0, y: 10.0, button: PointerButton::Primary });
+    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 60.0, y: 10.0, button: PointerButton::Primary });
+    assert!(commands.iter().all(|cmd| !matches!(cmd, UiCommand::App { .. } | UiCommand::FocusChanged { node: Some(_), .. })), "a disabled button is inert to the pointer: {commands:?}");
+    router.focus.focus_next(&mut tree, root);
+    router.focus.focus_next(&mut tree, root);
+    assert_eq!(router.focus.focused, Some(enabled), "Tab skips the disabled button");
+}
+
+#[test]
+fn enter_and_space_activate_the_focused_button_like_a_click() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 40.0));
+    leaf(&mut tree, Some(root), 1, button_ui("go"), (0.0, 0.0, 50.0, 40.0));
+    let mut router = EventRouter::new("main");
+    let expected = action();
+    let fired = |commands: &[UiCommand]| commands.iter().filter(|cmd| matches!(cmd, UiCommand::App { action, .. } if *action == expected)).count();
+
+    assert_eq!(fired(&router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "Enter".into(), modifiers: EventModifiers::default() })), 0, "Enter with nothing focused activates nothing");
+    router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "Tab".into(), modifiers: EventModifiers::default() });
+    assert_eq!(fired(&router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "Enter".into(), modifiers: EventModifiers::default() })), 1, "Enter activates the focused button");
+    assert_eq!(fired(&router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: " ".into(), modifiers: EventModifiers::default() })), 1, "Space activates the focused button");
+}
+
 #[test]
 fn bubble_stops_when_a_handler_returns_true() {
     let mut tree = UiTree::new();

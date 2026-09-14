@@ -408,11 +408,38 @@ pub struct Fenestration {
 // #endregion 🔖️Surface
 
 // #region 🔖️Material
+/// 🪨️ Surface roughness class of an exterior face, which scales the forced part of its outside
+/// convection (EnergyPlus `Material` roughness keys).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+pub enum SurfaceRoughness {
+    VeryRough,
+    Rough,
+    MediumRough,
+    MediumSmooth,
+    Smooth,
+    VerySmooth,
+}
+
+impl SurfaceRoughness {
+    /// 🌬️ Multiplier of the smooth-surface forced convection excess.
+    pub fn forced_convection_multiplier(self) -> f64 {
+        match self {
+            Self::VeryRough => 2.17,
+            Self::Rough => 1.67,
+            Self::MediumRough => 1.52,
+            Self::MediumSmooth => 1.13,
+            Self::Smooth => 1.11,
+            Self::VerySmooth => 1.0,
+        }
+    }
+}
+
 /// 🧱️ Opaque material layer.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Material {
     pub id: EntityId,
     pub name: String,
+    pub roughness: SurfaceRoughness,
     pub thickness_m: f64,
     pub conductivity_w_m_k: f64,
     pub density_kg_m3: f64,
@@ -422,7 +449,44 @@ pub struct Material {
     pub visible_absorptance: f64,
 }
 
-/// 🧱️ Layered construction.
+/// 🪟️ One glass pane of a layered glazing construction, by its normal-incidence spectral averages.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct GlazingMaterial {
+    pub id: EntityId,
+    pub name: String,
+    pub thickness_m: f64,
+    pub conductivity_w_m_k: f64,
+    pub solar_transmittance: f64,
+    pub solar_reflectance_front: f64,
+    pub solar_reflectance_back: f64,
+    pub visible_transmittance: f64,
+    pub visible_reflectance_front: f64,
+    pub visible_reflectance_back: f64,
+    pub infrared_transmittance: f64,
+    pub infrared_emissivity_front: f64,
+    pub infrared_emissivity_back: f64,
+}
+
+/// 🌫️ Fill gas of a glazing gap.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+pub enum GasKind {
+    Air,
+    Argon,
+    Krypton,
+    Xenon,
+}
+
+/// 🌫️ Gas-filled gap between two panes of a layered glazing construction.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct GasMaterial {
+    pub id: EntityId,
+    pub name: String,
+    pub thickness_m: f64,
+    pub gas: GasKind,
+}
+
+/// 🧱️ Layered construction. An opaque construction names [`Material`]s outside first; a glazing
+/// construction alternates [`GlazingMaterial`] panes and [`GasMaterial`] gaps, outside pane first.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Construction {
     pub id: EntityId,
@@ -882,6 +946,8 @@ pub struct Model {
     pub surfaces: Vec<Surface>,
     pub fenestrations: Vec<Fenestration>,
     pub materials: Vec<Material>,
+    pub glazing_materials: Vec<GlazingMaterial>,
+    pub gas_materials: Vec<GasMaterial>,
     pub constructions: Vec<Construction>,
     pub people: Vec<PeopleGain>,
     pub lighting: Vec<LightingGain>,
@@ -978,13 +1044,23 @@ impl Model {
             }
         }
 
+        let glazing_ids: HashSet<_> = self.glazing_materials.iter().map(|m| m.id).collect();
+        let gas_ids: HashSet<_> = self.gas_materials.iter().map(|m| m.id).collect();
+        let glazing_construction_ids: HashSet<_> = self.fenestrations.iter().filter_map(|fen| fen.glazing_construction_id).collect();
         for construction in &self.constructions {
             if construction.layer_material_ids.is_empty() {
                 diag.push(Error::severe(format!("construction {} has no layers", construction.name)));
             }
-            for mid in &construction.layer_material_ids {
-                if !material_ids.contains(mid) {
-                    diag.push(Error::severe(format!("construction {} references unknown material", construction.name)));
+            if glazing_construction_ids.contains(&construction.id) {
+                let alternates = construction.layer_material_ids.iter().enumerate().all(|(index, id)| if index % 2 == 0 { glazing_ids.contains(id) } else { gas_ids.contains(id) });
+                if !alternates || construction.layer_material_ids.len() % 2 == 0 || construction.layer_material_ids.len() > 2 * crate::fenestration::MAX_PANES - 1 {
+                    diag.push(Error::severe(format!("glazing construction {} must alternate one to {} glazing panes with gas gaps", construction.name, crate::fenestration::MAX_PANES)));
+                }
+            } else {
+                for mid in &construction.layer_material_ids {
+                    if !material_ids.contains(mid) {
+                        diag.push(Error::severe(format!("construction {} references unknown material", construction.name)));
+                    }
                 }
             }
         }
@@ -992,6 +1068,19 @@ impl Model {
         for material in &self.materials {
             if material.thickness_m <= 0.0 || material.conductivity_w_m_k <= 0.0 {
                 diag.push(Error::severe(format!("material {} has invalid thermal properties", material.name)));
+            }
+        }
+
+        for glazing in &self.glazing_materials {
+            let optics = [glazing.solar_transmittance, glazing.solar_reflectance_front, glazing.solar_reflectance_back, glazing.infrared_transmittance, glazing.infrared_emissivity_front, glazing.infrared_emissivity_back];
+            if glazing.thickness_m <= 0.0 || glazing.conductivity_w_m_k <= 0.0 || optics.iter().any(|value| !(0.0..=1.0).contains(value)) || glazing.solar_transmittance + glazing.solar_reflectance_front > 1.0 || glazing.solar_transmittance + glazing.solar_reflectance_back > 1.0 {
+                diag.push(Error::severe(format!("glazing material {} has invalid thermal or optical properties", glazing.name)));
+            }
+        }
+
+        for gas in &self.gas_materials {
+            if gas.thickness_m <= 0.0 {
+                diag.push(Error::severe(format!("gas material {} has non-positive thickness", gas.name)));
             }
         }
 

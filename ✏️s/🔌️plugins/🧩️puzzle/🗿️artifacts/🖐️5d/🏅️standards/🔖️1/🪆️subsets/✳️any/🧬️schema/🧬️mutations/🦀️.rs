@@ -521,4 +521,8 @@ impl protocol::SemanticMutation<Puzzle5dPlaySnapshot> for Puzzle5dMutation {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️committed-fixtures/🦀️.rs"]
+mod committed_fixtures;
 //#endregion 🧪️Tests

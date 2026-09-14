@@ -260,6 +260,19 @@ fn decode_schedules(root: &Object, model: &mut Model, diagnostics: &mut Vec<EpJs
     }
 }
 
+/// 🪨️ EnergyPlus roughness key of a material, `MediumRough` when absent or unrecognized.
+fn roughness(fields: &Object) -> crate::model::SurfaceRoughness {
+    use crate::model::SurfaceRoughness;
+    match fields.get("roughness").and_then(|value| value.as_str()) {
+        Some("VeryRough") => SurfaceRoughness::VeryRough,
+        Some("Rough") => SurfaceRoughness::Rough,
+        Some("MediumSmooth") => SurfaceRoughness::MediumSmooth,
+        Some("Smooth") => SurfaceRoughness::Smooth,
+        Some("VerySmooth") => SurfaceRoughness::VerySmooth,
+        _ => SurfaceRoughness::MediumRough,
+    }
+}
+
 fn decode_materials(root: &Object, model: &mut Model) -> Vec<String> {
     let mut names = Vec::new();
     let mut next = MATERIAL_BASE;
@@ -271,6 +284,7 @@ fn decode_materials(root: &Object, model: &mut Model) -> Vec<String> {
         let material = Material {
             id: EntityId(next),
             name: name.to_string(),
+            roughness: roughness(fields),
             thickness_m: number_or(fields, "thickness", 0.0),
             conductivity_w_m_k: number_or(fields, "conductivity", 0.0),
             density_kg_m3: number_or(fields, "density", 0.0),
@@ -287,6 +301,7 @@ fn decode_materials(root: &Object, model: &mut Model) -> Vec<String> {
         let material = Material {
             id: EntityId(next),
             name: name.to_string(),
+            roughness: roughness(fields),
             thickness_m: resistance * NO_MASS_CONDUCTIVITY_W_M_K,
             conductivity_w_m_k: NO_MASS_CONDUCTIVITY_W_M_K,
             density_kg_m3: 0.0,

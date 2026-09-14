@@ -2,11 +2,11 @@ use super::*;
 use crate::model::EntityId;
 
 fn brick() -> Material {
-    Material { id: EntityId(1), name: "Brick".into(), thickness_m: 0.1, conductivity_w_m_k: 0.72, density_kg_m3: 1920.0, specific_heat_j_kg_k: 840.0, thermal_absorptance: 0.9, solar_absorptance: 0.6, visible_absorptance: 0.6 }
+    Material { id: EntityId(1), name: "Brick".into(), roughness: crate::model::SurfaceRoughness::MediumRough, thickness_m: 0.1, conductivity_w_m_k: 0.72, density_kg_m3: 1920.0, specific_heat_j_kg_k: 840.0, thermal_absorptance: 0.9, solar_absorptance: 0.6, visible_absorptance: 0.6 }
 }
 
 fn insulation() -> Material {
-    Material { id: EntityId(2), name: "EPS".into(), thickness_m: 0.14, conductivity_w_m_k: 0.035, density_kg_m3: 30.0, specific_heat_j_kg_k: 1400.0, thermal_absorptance: 0.9, solar_absorptance: 0.4, visible_absorptance: 0.4 }
+    Material { id: EntityId(2), name: "EPS".into(), roughness: crate::model::SurfaceRoughness::MediumRough, thickness_m: 0.14, conductivity_w_m_k: 0.035, density_kg_m3: 30.0, specific_heat_j_kg_k: 1400.0, thermal_absorptance: 0.9, solar_absorptance: 0.4, visible_absorptance: 0.4 }
 }
 
 #[test]

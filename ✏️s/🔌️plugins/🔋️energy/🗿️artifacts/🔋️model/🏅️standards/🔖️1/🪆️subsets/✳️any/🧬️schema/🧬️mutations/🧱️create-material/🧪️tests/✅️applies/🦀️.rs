@@ -26,6 +26,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.materials.push(crate::model::Material {
         id: crate::model::EntityId(1),
         name: "PLASTERBOARD".into(),
+        roughness: crate::model::SurfaceRoughness::MediumRough,
         thickness_m: 0.012,
         conductivity_w_m_k: 0.16,
         density_kg_m3: 950.0,
@@ -37,6 +38,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.materials.push(crate::model::Material {
         id: crate::model::EntityId(2),
         name: "FIBERGLASS QUILT".into(),
+        roughness: crate::model::SurfaceRoughness::MediumRough,
         thickness_m: 0.066,
         conductivity_w_m_k: 0.04,
         density_kg_m3: 12.0,
@@ -45,7 +47,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
         solar_absorptance: 0.6,
         visible_absorptance: 0.6,
     });
-    (snapshot(model), super::create_material(2, crate::model::EntityId(3), "CONCRETE SLAB".into(), 0.08, 1.13, 1400.0, 1000.0, 0.9, 0.6, 0.6))
+    (snapshot(model), super::create_material(2, crate::model::EntityId(3), "CONCRETE SLAB".into(), crate::model::SurfaceRoughness::MediumRough, 0.08, 1.13, 1400.0, 1000.0, 0.9, 0.6, 0.6))
 }
 
 fn case() -> Case {

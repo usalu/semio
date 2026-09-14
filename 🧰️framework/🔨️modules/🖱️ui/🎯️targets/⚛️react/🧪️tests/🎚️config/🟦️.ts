@@ -23,6 +23,7 @@ export default defineConfig({
     environment: "jsdom",
     include: [
       "../../../../🧱️elements/☑️Checkbox/🧪️tests/🧩️component/🟦️.tsx",
+      "../../../../🧱️elements/💡️ChromeControlHint/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/🔽️Select/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/🕸️Diagram/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/↕️Collapsible/🧪️tests/🧩️component/🟦️.tsx",

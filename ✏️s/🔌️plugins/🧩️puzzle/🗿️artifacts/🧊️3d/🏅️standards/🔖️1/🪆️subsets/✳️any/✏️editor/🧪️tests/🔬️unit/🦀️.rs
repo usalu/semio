@@ -4907,6 +4907,30 @@ async fn delete_selection_shrinks_the_world_census_and_drops_the_deleted_id() {
 //#endregion 🔖️WorldSelection
 
 //#region 🔖️Gumball
+/// 🕹️ Framework leftover `interactionView` must not arm the gumball on a bare pick — only the guest
+/// `selectionJson` lane may set `gumballActive`, and only when the transform utility is active.
+#[semio_framework_async_macros::async_test]
+async fn interaction_select_leftover_does_not_arm_gumball_without_transform_utility() {
+    let mut app = app().await;
+    let object_id = first_object_id(&app);
+    let targets = to_json_string(&vec![InteractionTarget { granularity: PUZZLE3D_GRANULARITY_OBJECT.into(), id: object_id.clone() }]);
+    let admitted = dispatch_reserved_unsettled(
+        &mut app,
+        "interactionSelect",
+        Some(&json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })),
+        Some(main::WINDOW_KIND_ID),
+    )
+    .await
+    .expect("interactionSelect admit");
+    let settled = settle_reserved(&mut app, admitted).await.expect("interactionSelect settle");
+    let gumball = settled
+        .output
+        .get("interactionView")
+        .and_then(|view| view.get("gumball"))
+        .expect("leftover gumball");
+    assert_eq!(gumball.get("active").and_then(dsl::DslValue::as_bool), Some(false));
+}
+
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `gumballActive` requires BOTH the
 /// transform utility active AND a live object (or target-volume) selection — the live read
 /// `render_with_request_context` threads in. `transformMode`/`gumballConfig` depend only on the

@@ -513,14 +513,17 @@ fn document_scale_capacities_are_derived_from_the_flagship_fixture_not_the_bookk
         (DOCUMENT_ATTRACTION_SLOTS, FixedOwnerVec::<crate::standards::v1::subsets::any::schema::AttractionProps, DOCUMENT_ATTRACTION_SLOTS>::page_bytes()),
         (DOCUMENT_VOLUME_SLOTS, FixedOwnerVec::<WorldVolumeProps, DOCUMENT_VOLUME_SLOTS>::page_bytes()),
         (DOCUMENT_OBJECT_SLOTS, FixedOwnerMap::<String, CollisionAabb, DOCUMENT_OBJECT_SLOTS>::page_bytes()),
-        (DOCUMENT_CELL_SLOTS, FixedOwnerMap::<(i32, i32, i32), FixedOwnerSet<String>, DOCUMENT_CELL_SLOTS>::page_bytes()),
+        (DOCUMENT_CELL_SLOTS, FixedOwnerMap::<(i32, i32, i32), CollisionCellMembers, DOCUMENT_CELL_SLOTS>::page_bytes()),
+        (DOCUMENT_CELL_MEMBER_SLOTS, FixedOwnerMap::<String, (), DOCUMENT_CELL_MEMBER_SLOTS>::page_bytes()),
         (DOCUMENT_VORTEX_SLOTS, FixedOwnerMap::<String, (), DOCUMENT_VORTEX_SLOTS>::page_bytes()),
     ] {
         assert!(page > 0 && page <= DOCUMENT_OWNER_PAGE_BYTES, "a {slots}-slot document page claims {page} bytes beyond the declared ceiling");
     }
+    assert_eq!(DOCUMENT_CELL_MEMBER_SLOTS, DOCUMENT_OBJECT_SLOTS, "a cell never refuses a body the entry map admits");
+    assert_eq!(FixedOwnerMap::<String, (), DOCUMENT_CELL_MEMBER_SLOTS, FIXED_OWNER_SLOTS>::sub_page_bytes(), FixedOwnerMap::<String, ()>::page_bytes(), "a cell's member bucket grows one bookkeeping page at a time");
     assert!(
-        FixedOwnerMap::<(i32, i32, i32), FixedOwnerSet<String>, DOCUMENT_CELL_SLOTS>::page_bytes() + DOCUMENT_CELL_SLOTS * FixedOwnerMap::<String, ()>::page_bytes() <= 8 * 1024 * 1024,
-        "fully occupied cells keep their lazily allocated member buckets bounded"
+        FixedOwnerMap::<(i32, i32, i32), CollisionCellMembers, DOCUMENT_CELL_SLOTS>::page_bytes() + DOCUMENT_CELL_SLOTS * FixedOwnerMap::<String, (), DOCUMENT_CELL_MEMBER_SLOTS, FIXED_OWNER_SLOTS>::sub_page_bytes() <= 8 * 1024 * 1024,
+        "every cell occupied by one member page keeps the lazily claimed member buckets bounded"
     );
 }
 
@@ -595,8 +598,8 @@ fn every_fixed_owner_sub_page_request_stays_under_the_guest_contiguous_ceiling()
         ("candidate classification", FixedOwnerMap::<String, BrushCompatibleCandidate, DOCUMENT_CANDIDATE_SLOTS>::sub_page_bytes()),
         ("kind weights", FixedOwnerMap::<String, f64, DOCUMENT_KIND_SLOTS>::sub_page_bytes()),
         ("collision entries", FixedOwnerMap::<String, CollisionAabb, DOCUMENT_OBJECT_SLOTS>::sub_page_bytes()),
-        ("collision cells", FixedOwnerMap::<(i32, i32, i32), FixedOwnerSet<String>, DOCUMENT_CELL_SLOTS>::sub_page_bytes()),
-        ("collision cell members", FixedOwnerMap::<String, ()>::sub_page_bytes()),
+        ("collision cells", FixedOwnerMap::<(i32, i32, i32), CollisionCellMembers, DOCUMENT_CELL_SLOTS>::sub_page_bytes()),
+        ("collision cell members", FixedOwnerMap::<String, (), DOCUMENT_CELL_MEMBER_SLOTS, FIXED_OWNER_SLOTS>::sub_page_bytes()),
         ("collision oversized", FixedOwnerMap::<String, (), DOCUMENT_KIND_SLOTS>::sub_page_bytes()),
         ("collision query candidates", FixedOwnerMap::<String, (), DOCUMENT_OBJECT_SLOTS>::sub_page_bytes()),
     ] {

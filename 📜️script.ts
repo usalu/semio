@@ -7915,6 +7915,13 @@ export class VerifyScript extends Script {
       await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", segments[1] === "menu" ? "context_menu_wire" : "surface_context", "--", "--nocapture"], join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"));
       return;
     }
+    if (segments[0] === "view-context-integer-carriers") {
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework", "--lib", "view_context_integer_carrier", "--", "--nocapture"], this.root);
+      if (segments[1] === "native") return;
+      runCmd("bun", ["nx", "run", "@semio-tech/framework-renderer-react:view-state-carriage-check"], { cwd: this.root });
+      return;
+    }
     if (segments[0] === "window-view-context") {
       if (segments[1] === "native") {
         const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
@@ -9612,7 +9619,7 @@ export function interactivityPuzzleFillP4eFailures(precomputeSource: string, fil
     ![precompute, fill].some((source) => source.includes("FillBuilder::begin_preparation(")) ||
     !fill.includes("pub(crate) struct FillPreparationRoots") ||
     !preparationStages.every((stage) => fill.includes(`FillJobStage::${stage}`)) ||
-    !fill.includes("self.prepare_one();")
+    !fill.includes("self.prepare_one()")
   ) failures.push("P4e fill construction/reconfiguration is not one generation-owned cooperative preparation path");
   const preparationBranches = ["FixtureObjects", "FixtureAttractions", "FixtureTargetVolumes", "Meshes", "CatalogObjects", "CatalogVortices", "CatalogCables", "KindCompatibility", "ObjectWeights", "VortexWeights"];
   const preparationLengths = [
@@ -9671,7 +9678,7 @@ export function interactivityPuzzleFillP4eFailures(precomputeSource: string, fil
   const refusal = fill.slice(refusalStart, fill.indexOf("if self.collection_over_capacity", refusalStart));
   if (refusalStart < 0 || !refusal.includes("ToolRunStepKind::Danger") || !refusal.includes("StepOutcome::Fault") || refusal.indexOf("ToolRunStepKind::Danger") > refusal.indexOf("StepOutcome::Fault") || refusal.includes("candidate_ghost")) failures.push("P4e capacity refusal does not publish a danger step before the terminal fault");
   if (
-    !geometry.includes("cells: FixedOwnerMap<(i32, i32, i32), FixedOwnerSet<String>, DOCUMENT_CELL_SLOTS>") ||
+    !geometry.includes("cells: FixedOwnerMap<(i32, i32, i32), CollisionCellMembers, DOCUMENT_CELL_SLOTS>") ||
     !geometry.includes("struct CollisionCellSpan") ||
     !geometry.includes("pub(crate) struct CollisionIndexMutation") ||
     !geometry.includes("pub(crate) struct CollisionIndexRemoval") ||

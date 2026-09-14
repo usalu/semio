@@ -367,6 +367,9 @@ mod app_builder_tests {
         assert_eq!(bound("mod+shift+enter").as_deref(), Some("toolRunFinalize"));
         assert!(interactive.keybindings.iter().all(|binding| binding.action.action != "toolRunDismiss" && binding.action.action != "toolRunResume"));
         assert_ne!(bound("escape").as_deref(), Some("toolRunDismiss"), "escape dismisses only with the run panel focused");
+        let tool_run_tab = |definition: &AppDefinition| definition.panel_tabs.iter().find(|tab| matches!(&tab.kind, PanelTabKind::App(id) if id == ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_TOOL_RUN_ID)).map(|tab| (tab.group, tab.body_key.clone()));
+        assert_eq!(tool_run_tab(&plain), None, "an app without a tool run gets no ToolRun panel tab");
+        assert_eq!(tool_run_tab(&interactive), Some((PanelGroup::Details, Some(crate::FRAMEWORK_TOOL_RUN_BODY_KEY.to_string()))), "an app declaring a tool run mounts the framework ToolRun panel as a details tab");
     }
 
     #[semio_framework_async_macros::async_test]

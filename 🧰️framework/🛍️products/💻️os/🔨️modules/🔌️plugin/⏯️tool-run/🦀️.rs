@@ -8,7 +8,7 @@
 
 use super::*;
 use semio_framework_tool_run::{
-    tool_run_format, tool_run_pointer_value, ToolRunAction, ToolRunCounter, ToolRunDefinition, ToolRunEffect, ToolRunEvent, ToolRunId, ToolRunIdentity, ToolRunLabel, ToolRunMachine, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunRejection, ToolRunSettingsReads, ToolRunSlot, ToolRunState,
+    tool_run_format, tool_run_pointer_value, ToolRunAction, ToolRunCounter, ToolRunDefinition, ToolRunEffect, ToolRunEvent, ToolRunId, ToolRunIdentity, ToolRunLabel, ToolRunLane, ToolRunMachine, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunRejection, ToolRunSettingsReads, ToolRunSlot, ToolRunState,
     ToolRunStep, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTick, ToolRunTraceCursor, ToolRunTraceDelta, ToolRunTraceOp, ToolRunTraceStore, ToolRunVerdict, TOOL_RUN_ACTION_IDS, TOOL_RUN_ARG_GENERATION, TOOL_RUN_ARG_RUN_ID,
     TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_ARG_WINDOW_ID, TOOL_RUN_PROVISIONAL_OPS_MAX, TOOL_RUN_REASON_CONFLICT, TOOL_RUN_REASON_PROVISIONAL_CAP, TOOL_RUN_REASON_REBASING, TOOL_RUN_REASON_TRACE_TRUNCATED, TOOL_RUN_STATUS_ANNOUNCE_INTERVAL_MS, TOOL_RUN_TICK_BYTES_MAX,
 };
@@ -37,6 +37,25 @@ pub const TOOL_RUN_TRACE_STALL_REFRESHES: u8 = 4;
 const TOOL_RUN_JOB_SITE: &str = "tool-run.step";
 const TOOL_RUN_PUBLICATION_GRANT: store::ArtifactStoreOneItemGrant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: TYPED_OPERATION_RESULT_PAGE_BYTES };
 //#endregion 🔖️Limits
+
+//#region 🔖️Selection
+/// 🎯️ The run the ledger currently operates on (`ToolRunLedger::selected`), borrowing only `entries`.
+macro_rules! selected_entry {
+    ($ledger:expr) => {
+        $ledger.selected.and_then(|index| $ledger.entries.get(index)).map(|entry| &**entry)
+    };
+}
+
+/// 🎯️ The run the ledger currently operates on, mutably, borrowing only `entries`.
+macro_rules! selected_entry_mut {
+    ($ledger:expr) => {
+        match $ledger.selected {
+            Some(index) => $ledger.entries.get_mut(index).map(|entry| &mut **entry),
+            None => None,
+        }
+    };
+}
+//#endregion 🔖️Selection
 
 //#region 🔖️Request
 /// 🎯️ Which job of a run the app builds.
@@ -412,9 +431,48 @@ struct ToolRunEntry<A: ArtifactApp> {
     pending_step: bool,
     finalize: Option<ToolRunFinalize<A>>,
     announced: Option<(ToolRunState, u64, String)>,
+    port: ToolRunJobPort,
 }
 
 impl<A: ArtifactApp> ToolRunEntry<A> {
+    /// 🛣️ The lane this run occupies: the mutating lane, or its tool on its starting window when read-only.
+    fn lane(&self) -> ToolRunLane {
+        ToolRunLane { mutating: self.definition.mutating, tool_id: self.tool_id.clone(), window_id: if self.definition.mutating { None } else { self.window.as_ref().map(|(window_id, _)| window_id.clone()) } }
+    }
+
+    fn view(&self) -> ToolRunView {
+        ToolRunView { tool_id: self.tool_id.clone(), identity: self.identity, state: self.slot.state, provisional_entities: Arc::clone(&self.entities), progress: self.progress(), payload: self.payload.clone() }
+    }
+
+    fn progress(&self) -> semio_framework_tool_run::ToolRunProgress {
+        semio_framework_tool_run::ToolRunProgress {
+            identity: self.identity,
+            sequence: self.sequence,
+            state: self.slot.state,
+            stage: self.stage,
+            completed: self.completed,
+            total: self.total,
+            counters: self.counters.clone(),
+            units_per_second: self.units_per_second,
+            conflicts: self.conflicts,
+            steps: self.steps.clone(),
+        }
+    }
+
+    /// 🏃️ Whether a driver turn has work for this run; a job waiting on its port is not work.
+    fn has_pending_work(&self) -> bool {
+        let stepping = self.job.is_none() || !self.port.is_waiting();
+        self.port.has_effects()
+            || self.refold_is_work()
+            || match self.slot.state {
+                ToolRunState::Running => stepping,
+                ToolRunState::Starting | ToolRunState::Finalizing | ToolRunState::Aborting => true,
+                ToolRunState::Paused => self.pending_step && stepping,
+                ToolRunState::Complete => false,
+                _ => self.job.is_some(),
+            }
+    }
+
     fn framework_step(&mut self, kind: ToolRunStepKind, reason: u16, args: &[ToolRunStepArg]) {
         self.step_sequence = self.step_sequence.saturating_add(1);
         self.steps.push(ToolRunStep { sequence: self.step_sequence, kind, stage: self.stage, reason, subject: None, repeat: 1, args: args.to_vec() });
@@ -593,10 +651,17 @@ impl Default for ToolRunDriver {
     }
 }
 
-/// 🗄️ At most one tool run per document instance per local actor, plus the owners still retiring.
+/// 🗄️ The tool runs of one document instance for its local actor (§2.2 invariant 5): at most one non-terminal
+/// mutating run, and concurrent read-only runs, one per tool and window ([`ToolRunLane`]); plus the owners still
+/// retiring.
+///
+/// 🎯️ The ledger operates on one *selected* run. Outside its own calls the selection is the primary run — the
+/// non-terminal mutating run, else the most recent one — so the single-run accessors (`state`, `slot`, `view`, …)
+/// answer for it; [`ToolRunLedger::select_run`] addresses another.
 pub struct ToolRunLedger<A: ArtifactApp> {
     next_run: u64,
-    entry: Option<Box<ToolRunEntry<A>>>,
+    entries: Vec<Box<ToolRunEntry<A>>>,
+    selected: Option<usize>,
     driver: ToolRunDriver,
     retired_jobs: Vec<ToolRunJobSlot<A::Config>>,
     retired_publications: Vec<store::ArtifactStoreBatchPublication<A::Snapshot, A::Mutation>>,
@@ -605,7 +670,6 @@ pub struct ToolRunLedger<A: ArtifactApp> {
     trace_windows: BTreeMap<String, ToolRunTraceWindow>,
     ui_dirty: bool,
     document_dirty: bool,
-    port: ToolRunJobPort,
 }
 
 /// 🪟️ One scene window the trace lane was delivered to: its body key and what its renderer last echoed.
@@ -618,134 +682,140 @@ struct ToolRunTraceWindow {
 
 impl<A: ArtifactApp> Default for ToolRunLedger<A> {
     fn default() -> Self {
-        Self { next_run: 1, entry: None, driver: ToolRunDriver::default(), retired_jobs: Vec::new(), retired_publications: Vec::new(), discarded: Vec::new(), closing: false, trace_windows: BTreeMap::new(), ui_dirty: false, document_dirty: false, port: ToolRunJobPort::default() }
+        Self { next_run: 1, entries: Vec::new(), selected: None, driver: ToolRunDriver::default(), retired_jobs: Vec::new(), retired_publications: Vec::new(), discarded: Vec::new(), closing: false, trace_windows: BTreeMap::new(), ui_dirty: false, document_dirty: false }
     }
 }
 
 impl<A: ArtifactApp> ToolRunLedger<A> {
+    /// 👑️ The primary run: the non-terminal mutating run, else the most recent run.
+    fn primary_index(&self) -> Option<usize> {
+        self.entries.iter().position(|entry| entry.definition.mutating && !entry.slot.state.is_terminal()).or_else(|| self.entries.iter().enumerate().max_by_key(|(_, entry)| entry.slot.run).map(|(index, _)| index))
+    }
+
+    /// 👑️ Selects the primary run.
+    pub fn select_primary(&mut self) {
+        self.selected = self.primary_index();
+    }
+
+    /// 🎯️ Selects run `run`; `false` (and no selection) when this instance holds no such run.
+    pub fn select_run(&mut self, run: u64) -> bool {
+        self.selected = self.entries.iter().position(|entry| entry.slot.run == run);
+        self.selected.is_some()
+    }
+
+    /// 🗂️ Every run this instance holds, oldest first.
+    pub fn views(&self) -> Vec<ToolRunView> {
+        self.entries.iter().map(|entry| entry.view()).collect()
+    }
+
+    /// 🪟️ The run a window renders: the most recent read-only run started from `window_id`, else the primary run.
+    pub fn view_for(&self, window_id: Option<&str>) -> Option<ToolRunView> {
+        self.window_index(window_id).or_else(|| self.primary_index()).map(|index| self.entries[index].view())
+    }
+
+    fn window_index(&self, window_id: Option<&str>) -> Option<usize> {
+        let window_id = window_id?;
+        self.entries.iter().enumerate().filter(|(_, entry)| !entry.definition.mutating && entry.window.as_ref().is_some_and(|(id, _)| id == window_id)).max_by_key(|(_, entry)| entry.slot.run).map(|(index, _)| index)
+    }
+
     pub fn state(&self) -> Option<ToolRunState> {
-        self.entry.as_ref().map(|entry| entry.slot.state)
+        selected_entry!(self).map(|entry| entry.slot.state)
     }
 
     pub fn slot(&self) -> Option<ToolRunSlot> {
-        self.entry.as_ref().map(|entry| entry.slot)
+        selected_entry!(self).map(|entry| entry.slot)
     }
 
     pub fn identity(&self) -> Option<ToolRunIdentity> {
-        self.entry.as_ref().map(|entry| entry.identity)
+        selected_entry!(self).map(|entry| entry.identity)
     }
 
     pub fn tool_id(&self) -> Option<&str> {
-        self.entry.as_ref().map(|entry| entry.tool_id.as_str())
+        selected_entry!(self).map(|entry| entry.tool_id.as_str())
     }
 
-    /// 📮️ The port every job of this ledger shares with its app instance.
-    pub fn port(&self) -> &ToolRunJobPort {
-        &self.port
+    /// 📮️ The port every job of the selected run shares with its app instance.
+    pub fn port(&self) -> Option<&ToolRunJobPort> {
+        selected_entry!(self).map(|entry| &entry.port)
     }
 
     pub fn provisional(&self) -> &[A::Mutation] {
-        self.entry.as_ref().map_or(&[], |entry| entry.provisional.as_slice())
+        selected_entry!(self).map_or(&[], |entry| entry.provisional.as_slice())
     }
 
     pub fn provisional_entities(&self) -> Option<&BTreeSet<u64>> {
-        self.entry.as_ref().map(|entry| entry.entities.as_ref())
+        selected_entry!(self).map(|entry| entry.entities.as_ref())
     }
 
     pub fn steps(&self) -> Option<&ToolRunStepRing> {
-        self.entry.as_ref().map(|entry| &entry.steps)
+        selected_entry!(self).map(|entry| &entry.steps)
     }
 
     pub fn trace(&self) -> Option<&ToolRunTraceStore> {
-        self.entry.as_ref().map(|entry| &entry.trace)
+        selected_entry!(self).map(|entry| &entry.trace)
     }
 
     pub fn conflicts(&self) -> u32 {
-        self.entry.as_ref().map_or(0, |entry| entry.conflicts)
+        selected_entry!(self).map_or(0, |entry| entry.conflicts)
     }
 
     pub fn is_refolding(&self) -> bool {
-        self.entry.as_ref().is_some_and(|entry| entry.refold.is_some())
+        selected_entry!(self).is_some_and(|entry| entry.refold.is_some())
     }
 
     /// 📸️ The current run's last `StepOutcome::CheckpointReady` state, the one a rebuilt job continues from.
     pub fn checkpoint(&self) -> Option<&[u8]> {
-        self.entry.as_ref()?.checkpoint.as_deref()
+        selected_entry!(self)?.checkpoint.as_deref()
     }
 
     /// 🔑️ The trace key allocator every job of the current run shares.
     pub fn trace_keys(&self) -> Option<&ToolRunTraceKeys> {
-        self.entry.as_ref().map(|entry| &entry.trace_keys)
+        selected_entry!(self).map(|entry| &entry.trace_keys)
     }
 
     /// 🏷️ `(provisional length at the end of the appending tick, entity)` per provisional entity, in append order.
     pub fn entity_marks(&self) -> &[(u32, u64)] {
-        self.entry.as_ref().map_or(&[], |entry| entry.entity_marks.as_slice())
+        selected_entry!(self).map_or(&[], |entry| entry.entity_marks.as_slice())
     }
 
     /// 🪟️ `(window instance id, window kind id)` the current run was started from.
     pub fn window(&self) -> Option<(&str, &str)> {
-        self.entry.as_ref()?.window.as_ref().map(|(window_id, window_kind_id)| (window_id.as_str(), window_kind_id.as_str()))
+        selected_entry!(self)?.window.as_ref().map(|(window_id, window_kind_id)| (window_id.as_str(), window_kind_id.as_str()))
     }
 
     /// 📊️ Progress snapshot derived from the ledger (§2.3); the step ring is the framework's own.
     pub fn progress(&self) -> Option<semio_framework_tool_run::ToolRunProgress> {
-        self.entry.as_ref().map(|entry| semio_framework_tool_run::ToolRunProgress {
-            identity: entry.identity,
-            sequence: entry.sequence,
-            state: entry.slot.state,
-            stage: entry.stage,
-            completed: entry.completed,
-            total: entry.total,
-            counters: entry.counters.clone(),
-            units_per_second: entry.units_per_second,
-            conflicts: entry.conflicts,
-            steps: entry.steps.clone(),
-        })
+        selected_entry!(self).map(ToolRunEntry::progress)
     }
 
-    /// 🪞️ The document a renderer reads: the overlay while a run holds provisional state, else `committed`.
+    /// 🪞️ The document a renderer reads: the mutating run's overlay while it holds provisional state, else `committed`.
+    /// Read-only runs author no provisional edit, so their overlays never compose.
     pub fn overlay_or<'a>(&'a self, committed: &'a Arc<A::Snapshot>) -> &'a Arc<A::Snapshot> {
-        match self.entry.as_ref() {
+        match self.entries.iter().find(|entry| entry.definition.mutating && !entry.slot.state.is_terminal()) {
             Some(entry) if matches!(entry.slot.state, ToolRunState::Starting | ToolRunState::Running | ToolRunState::Paused | ToolRunState::Complete | ToolRunState::Finalizing) && !Arc::ptr_eq(&entry.overlay, &entry.base) => &entry.overlay,
             _ => committed,
         }
     }
 
     pub fn view(&self) -> Option<ToolRunView> {
-        let progress = self.progress()?;
-        self.entry.as_ref().map(|entry| ToolRunView { tool_id: entry.tool_id.clone(), identity: entry.identity, state: entry.slot.state, provisional_entities: Arc::clone(&entry.entities), progress, payload: entry.payload.clone() })
+        selected_entry!(self).map(ToolRunEntry::view)
     }
 
-    /// 🧊️ `freeze` rebase policy: local artifact emits fail with `toolRun.busy` while a run is non-terminal.
+    /// 🧊️ `freeze` rebase policy: local artifact emits fail with `toolRun.busy` while a freezing run is non-terminal.
     pub fn freezes_local_emits(&self) -> bool {
-        self.entry.as_ref().is_some_and(|entry| entry.definition.rebase == ToolRunRebasePolicy::Freeze && !entry.slot.state.is_terminal())
+        self.entries.iter().any(|entry| entry.definition.rebase == ToolRunRebasePolicy::Freeze && !entry.slot.state.is_terminal())
     }
 
-    /// 🏃️ Whether a driver turn has work: a stepping job, a refold, a close, a finalize, cold retirement or port
-    /// effects. A job waiting on its port is not work.
+    /// 🏃️ Whether a driver turn has work: any run's stepping job, refold, close, finalize or port effects, or cold
+    /// retirement. A job waiting on its port is not work.
     pub fn has_pending_work(&self) -> bool {
-        let stepping = |entry: &ToolRunEntry<A>| entry.job.is_none() || !self.port.is_waiting();
-        !self.retired_jobs.is_empty()
-            || !self.retired_publications.is_empty()
-            || !self.discarded.is_empty()
-            || self.port.has_effects()
-            || self.entry.as_ref().is_some_and(|entry| {
-                entry.refold_is_work()
-                    || match entry.slot.state {
-                        ToolRunState::Running => stepping(entry),
-                        ToolRunState::Starting | ToolRunState::Finalizing | ToolRunState::Aborting => true,
-                        ToolRunState::Paused => entry.pending_step && stepping(entry),
-                        ToolRunState::Complete => false,
-                        _ => entry.job.is_some(),
-                    }
-            })
+        !self.retired_jobs.is_empty() || !self.retired_publications.is_empty() || !self.discarded.is_empty() || self.entries.iter().any(|entry| entry.has_pending_work())
     }
 
     /// 🧬️ Applies one decoded tick to the current run (the driver's per-tick O(k) overlay append);
     /// ticks of another run or generation are stale no-ops.
     pub fn apply_tick(&mut self, tick: ToolRunTick) -> Result<ToolRunTickReceipt, Fault> {
-        let Some(entry) = self.entry.as_mut() else { return Ok(ToolRunTickReceipt { stale: true, ..ToolRunTickReceipt::default() }) };
+        let Some(entry) = selected_entry_mut!(self) else { return Ok(ToolRunTickReceipt { stale: true, ..ToolRunTickReceipt::default() }) };
         entry.apply_tick(tick, &mut self.discarded)
     }
 
@@ -756,7 +826,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
 
     /// 👥️ Ephemeral-shared presence summary (§3.4), `completed ≤ total` by construction.
     pub fn presence(&self) -> Option<protocol::PresenceToolRun> {
-        let entry = self.entry.as_ref()?;
+        let entry = &self.entries[self.primary_index()?];
         Some(protocol::PresenceToolRun {
             tool_id: entry.tool_id.clone(),
             state: protocol::PresenceToolRunState::from_wire_name(entry.slot.state.as_str())?,
@@ -773,7 +843,8 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     /// - Without a run (dismissed or retired), a renderer still holding pages (`page > 0`) gets one empty
     ///   `clear` delta; `page == 0` already means an empty layer.
     pub fn trace_delta(&self, cursor: Option<ToolRunTraceCursor>, byte_budget: usize) -> Option<String> {
-        let delta = match self.entry.as_ref() {
+        let index = cursor.and_then(|cursor| self.entries.iter().position(|entry| entry.slot.run == cursor.run)).or_else(|| self.primary_index());
+        let delta = match index.map(|index| &self.entries[index]) {
             Some(entry) => entry.trace.delta_after(cursor, byte_budget),
             None => {
                 let cursor = cursor.filter(|cursor| cursor.page > 0)?;
@@ -787,7 +858,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     /// bookkeeping that keeps a delivery backlog moving: pages left after the byte budget mark the ledger
     /// UI-dirty until the renderer's cursor stands still for `TOOL_RUN_TRACE_STALL_REFRESHES` refreshes.
     pub fn trace_lane(&mut self, window_id: &str, body_key: &str, cursor: Option<ToolRunTraceCursor>, byte_budget: usize) -> Option<String> {
-        let Some(entry) = self.entry.as_ref() else {
+        let Some(entry) = self.window_index(Some(window_id)).or_else(|| self.primary_index()).map(|index| &self.entries[index]) else {
             self.trace_windows.remove(window_id);
             return self.trace_delta(cursor, byte_budget);
         };
@@ -815,7 +886,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     /// lane rides in and the body of every window kind the run declares it renders in (`ToolRunDefinition::windows`) —
     /// never unrelated windows or panels.
     pub fn dirty_scope(&self) -> UiDirtyScope {
-        let mut window_bodies: Vec<String> = self.trace_windows.values().map(|window| window.body_key.clone()).chain(self.entry.iter().flat_map(|entry| entry.window_bodies.iter().cloned())).collect();
+        let mut window_bodies: Vec<String> = self.trace_windows.values().map(|window| window.body_key.clone()).chain(self.entries.iter().flat_map(|entry| entry.window_bodies.iter().cloned())).collect();
         window_bodies.sort_unstable();
         window_bodies.dedup();
         UiDirtyScope::Partial { window_bodies, panel_bodies: vec![FRAMEWORK_TOOL_RUN_BODY_KEY.to_string()], utilities: false, tools: false, engagements: false, measures: false, labels: false }
@@ -828,17 +899,19 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
 
     fn apply_event(&mut self, event: ToolRunEvent) -> Result<ToolRunEffect, ToolRunRejection> {
         let transition = ToolRunMachine::apply(self.slot(), event)?;
-        match (self.entry.as_mut(), transition.slot) {
-            (Some(entry), Some(slot)) => {
+        match (self.selected, transition.slot) {
+            (Some(index), Some(slot)) => {
+                let entry = &mut self.entries[index];
                 let generation_changed = entry.slot.generation != slot.generation;
                 entry.slot = slot;
                 if generation_changed {
                     entry.rebind();
                 }
             }
-            (Some(_), None) => {
-                let entry = self.entry.take().expect("slot present");
+            (Some(index), None) => {
+                let entry = self.entries.remove(index);
                 self.retire_entry(*entry);
+                self.select_primary();
             }
             (None, _) => {}
         }
@@ -862,7 +935,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     }
 
     fn close_current_job(&mut self) {
-        let Some(entry) = self.entry.as_mut() else { return };
+        let Some(entry) = selected_entry_mut!(self) else { return };
         entry.settle_refold();
         if let Some(mut job) = entry.job.take() {
             job.begin_close();
@@ -873,7 +946,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     /// 🎯️ Hands the current job the entry's identity through `retarget`; a job that is not retargetable, or
     /// declines, is closed so the driver rebuilds it from its checkpoint.
     fn retarget_current_job(&mut self, retarget: impl FnOnce(&mut dyn ToolRunRetargetableJob<A::Config>, ToolRunIdentity) -> bool) {
-        let Some(entry) = self.entry.as_mut() else { return };
+        let Some(entry) = selected_entry_mut!(self) else { return };
         let identity = entry.identity;
         let Some(slot) = entry.job.as_mut() else { return };
         if slot.retargetable().is_some_and(|job| retarget(job, identity)) {
@@ -884,7 +957,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     }
 
     fn discard_provisional(&mut self) {
-        let Some(entry) = self.entry.as_mut() else { return };
+        let Some(entry) = selected_entry_mut!(self) else { return };
         self.discarded.append(&mut entry.provisional);
         entry.entity_marks.clear();
         entry.entities = Arc::new(BTreeSet::new());
@@ -934,7 +1007,11 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
             return;
         }
         self.closing = true;
-        let _ = self.apply_event(ToolRunEvent::Closed);
+        while !self.entries.is_empty() {
+            self.selected = Some(self.entries.len() - 1);
+            let _ = self.apply_event(ToolRunEvent::Closed);
+        }
+        self.selected = None;
     }
 
     /// 🧹️ One bounded close unit of every retiring owner.
@@ -944,7 +1021,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.entry.is_none() && self.retired_jobs.is_empty() && self.retired_publications.is_empty() && self.discarded.is_empty()
+        self.entries.is_empty() && self.retired_jobs.is_empty() && self.retired_publications.is_empty() && self.discarded.is_empty()
     }
 }
 //#endregion 🔖️Ledger
@@ -981,7 +1058,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     pub(crate) fn tool_run_has_pending_work(&self) -> bool {
         self.tool_runs.has_pending_work()
             || self.tool_runs.is_ui_dirty()
-            || self.tool_runs.entry.as_ref().is_some_and(|entry| {
+            || self.tool_runs.entries.iter().any(|entry| {
                 matches!(entry.slot.state, ToolRunState::Running | ToolRunState::Paused | ToolRunState::Complete | ToolRunState::Finalizing) && (entry.base_generation != self.store.generation() || entry.settings_generation != self.tool_run_settings_generation())
             })
     }
@@ -1012,6 +1089,13 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// names no identity at all (neither `runId` nor `generation`, as a keyboard chord dispatches it) targets
     /// the instance's live run at its generation of this dispatch; an identity it does name is checked as is.
     pub async fn apply_tool_run_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta) -> Result<ToolRunActionOutcome, Fault> {
+        let outcome = self.apply_selected_tool_run_action(action, args, meta).await;
+        self.tool_runs.select_primary();
+        outcome
+    }
+
+    /// ⚖️ [`Self::apply_tool_run_action`] on the run the action addresses: its `runId`, else the primary run.
+    async fn apply_selected_tool_run_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta) -> Result<ToolRunActionOutcome, Fault> {
         let Some(action) = ToolRunAction::from_id(action) else {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.unknown-action"), format!("'{action}' is not a tool run action")));
         };
@@ -1019,6 +1103,12 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             return self.start_tool_run(args, meta).await;
         }
         let names_identity = args.is_some_and(|args| args.get(TOOL_RUN_ARG_RUN_ID).is_some() || args.get(TOOL_RUN_ARG_GENERATION).is_some());
+        match tool_run_arg_u64(args, TOOL_RUN_ARG_RUN_ID) {
+            Some(run) => {
+                self.tool_runs.select_run(run);
+            }
+            None => self.tool_runs.select_primary(),
+        }
         let live = if names_identity { None } else { self.tool_runs.slot() };
         let run = live.map_or_else(|| tool_run_arg_u64(args, TOOL_RUN_ARG_RUN_ID).unwrap_or(0), |slot| slot.run);
         let generation = live.map(|slot| slot.generation).or_else(|| tool_run_arg_u64(args, TOOL_RUN_ARG_GENERATION).and_then(|value| u32::try_from(value).ok()));
@@ -1031,26 +1121,26 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             (ToolRunAction::Step, Some(generation)) => ToolRunEvent::Step { run, generation },
             (ToolRunAction::Finalize, Some(generation)) => ToolRunEvent::Finalize { run, generation },
             (ToolRunAction::Abort, Some(generation)) => {
-                let publishing = self.tool_runs.entry.as_ref().and_then(|entry| entry.finalize.as_ref()).is_some_and(|finalize| finalize.published || finalize.publication.as_ref().is_some_and(|publication| !matches!(publication.phase(), store::ArtifactStoreOneItemPublicationPhase::Preparing | store::ArtifactStoreOneItemPublicationPhase::PreparingCursor | store::ArtifactStoreOneItemPublicationPhase::PreflightingCommit)));
+                let publishing = selected_entry!(self.tool_runs).and_then(|entry| entry.finalize.as_ref()).is_some_and(|finalize| finalize.published || finalize.publication.as_ref().is_some_and(|publication| !matches!(publication.phase(), store::ArtifactStoreOneItemPublicationPhase::Preparing | store::ArtifactStoreOneItemPublicationPhase::PreparingCursor | store::ArtifactStoreOneItemPublicationPhase::PreflightingCommit)));
                 ToolRunEvent::Abort { run, generation, publishing }
             }
             (ToolRunAction::Start, _) => unreachable!("start handled above"),
         };
-        if let Some(entry) = self.tool_runs.entry.as_mut().filter(|entry| action == ToolRunAction::Finalize && entry.slot.run == run) {
+        if let Some(entry) = selected_entry_mut!(self.tool_runs).filter(|entry| action == ToolRunAction::Finalize && entry.slot.run == run) {
             entry.actor = meta.actor.clone();
         }
         let effect = match self.tool_runs.apply_event(event) {
             Ok(effect) => effect,
             Err(rejection) => return Ok(ToolRunActionOutcome::Rejected(rejection)),
         };
-        match (effect, self.tool_runs.entry.as_mut()) {
+        match (effect, selected_entry_mut!(self.tool_runs)) {
             (ToolRunEffect::DriveOneUnit, Some(entry)) => entry.pending_step = true,
             (ToolRunEffect::StopScheduling, Some(entry)) => entry.pending_step = false,
             (ToolRunEffect::BeginFinalize, Some(entry)) => entry.finalize = Some(ToolRunFinalize { phase: ToolRunFinalizePhase::Pending, publication: None, retracted: 0, published: false }),
             (ToolRunEffect::CloseJob, _) => self.tool_runs.close_current_job(),
             (ToolRunEffect::CancelBatch, _) => {
                 self.tool_runs.close_current_job();
-                if let Some(publication) = self.tool_runs.entry.as_mut().and_then(|entry| entry.finalize.as_mut()).and_then(|finalize| finalize.publication.as_mut()) {
+                if let Some(publication) = selected_entry_mut!(self.tool_runs).and_then(|entry| entry.finalize.as_mut()).and_then(|finalize| finalize.publication.as_mut()) {
                     self.store.cancel_apply_batch(publication);
                 }
             }
@@ -1068,25 +1158,32 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             .or_else(|| view_state.and_then(|view| view.active_utility_id.clone().filter(|id| self.registry.tool_run(id).is_some()).or_else(|| view.active_tool_id.clone())))
             .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.tool-id"), "toolRunStart needs a toolId argument or an active tool"))?;
         let definition = self.registry.tool_run(&tool_id).map(|(_, definition)| definition.clone()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.unknown-tool"), format!("tool '{tool_id}' declares no ToolRunDefinition")))?;
+        let window_id = args.and_then(|args| args.get(TOOL_RUN_ARG_WINDOW_ID)).and_then(DslValue::as_str).map(str::to_string).or_else(|| view_state.and_then(|view| view.window_id.clone().or_else(|| view.focused_window_id.clone())));
+        let lane = ToolRunLane { mutating: definition.mutating, tool_id: tool_id.clone(), window_id: if definition.mutating { None } else { window_id.clone() } };
+        let live: Vec<(ToolRunLane, ToolRunState)> = self.tool_runs.entries.iter().map(|entry| (entry.lane(), entry.slot.state)).collect();
+        let replaced = match lane.admit(&live) {
+            Ok(replaced) => replaced,
+            Err(rejection) => return Ok(ToolRunActionOutcome::Rejected(rejection)),
+        };
         let run = self.tool_runs.next_run;
-        let transition = match ToolRunMachine::apply(self.tool_runs.slot(), ToolRunEvent::Start { run }) {
+        let transition = match ToolRunMachine::apply(None, ToolRunEvent::Start { run }) {
             Ok(transition) => transition,
             Err(rejection) => return Ok(ToolRunActionOutcome::Rejected(rejection)),
         };
         let slot = transition.slot.expect("start yields a slot");
         self.tool_runs.next_run = run.wrapping_add(1);
-        if let Some(previous) = self.tool_runs.entry.take() {
+        for index in replaced.into_iter().rev() {
+            let previous = self.tool_runs.entries.remove(index);
             self.tool_runs.retire_entry(*previous);
         }
         self.refresh_cache().await?;
         let (base, _, _) = self.command_cache_inputs();
         let identity = ToolRunIdentity::new(ToolRunId { app_instance_id: self.live_runtime_instance_id.unwrap_or(meta.instance_id), run }, self.store.content_revision());
         let settings_generation = self.tool_run_settings_generation();
-        let window_id = args.and_then(|args| args.get(TOOL_RUN_ARG_WINDOW_ID)).and_then(DslValue::as_str).map(str::to_string).or_else(|| view_state.and_then(|view| view.window_id.clone().or_else(|| view.focused_window_id.clone())));
         let window = window_id.and_then(|window_id| view_state?.window_instances.iter().find(|window| window.id == window_id).map(|window| (window.id.clone(), window.window_kind_id.clone())));
         let settings_values = self.tool_run_settings_values(&definition.settings, window.as_ref());
         let window_bodies = definition.windows.iter().filter_map(|window_kind_id| self.registry.window_body_key(window_kind_id).map(str::to_string)).collect();
-        self.tool_runs.entry = Some(Box::new(ToolRunEntry {
+        self.tool_runs.entries.push(Box::new(ToolRunEntry {
             tool_id,
             actor: meta.actor.clone(),
             settings_values,
@@ -1122,6 +1219,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             pending_step: false,
             finalize: None,
             announced: None,
+            port: ToolRunJobPort::default(),
         }));
         Ok(ToolRunActionOutcome::Applied(transition.effect))
     }
@@ -1143,7 +1241,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             checkpoint: entry.checkpoint.as_deref(),
             provisional: &entry.provisional,
             instance_owner: self.instance_operation_owner.clone(),
-            port: self.tool_runs.port.clone(),
+            port: entry.port.clone(),
             trace_keys: entry.trace_keys.clone(),
             entity_marks: &entry.entity_marks,
         };
@@ -1181,10 +1279,12 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
 
     /// 📮️ Hands the host every effect jobs queued on the port, in order, while the typed effect outbox has room.
     fn drain_tool_run_port(&mut self) {
-        while let Some(effect) = self.tool_runs.port.pop_effect() {
-            if let Err(effect) = self.typed_effect_outbox.push(effect) {
-                self.tool_runs.port.restore_effect(effect);
-                return;
+        for index in 0..self.tool_runs.entries.len() {
+            while let Some(effect) = self.tool_runs.entries[index].port.pop_effect() {
+                if let Err(effect) = self.typed_effect_outbox.push(effect) {
+                    self.tool_runs.entries[index].port.restore_effect(effect);
+                    return;
+                }
             }
         }
     }
@@ -1242,7 +1342,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     fn watch_tool_run_generations(&mut self) {
         let store_generation = self.store.generation();
         let settings_generation = self.tool_run_settings_generation();
-        let Some(entry) = self.tool_runs.entry.as_ref() else { return };
+        let Some(entry) = selected_entry!(self.tool_runs) else { return };
         let (run, state, rebase, reconfigure) = (entry.slot.run, entry.slot.state, entry.definition.rebase, entry.definition.reconfigure);
         let base_changed = entry.base_generation != store_generation;
         let settings_moved = entry.settings_generation != settings_generation;
@@ -1256,7 +1356,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 self.tool_runs.close_current_job();
                 self.tool_runs.discard_provisional();
             }
-            let entry = self.tool_runs.entry.as_mut().expect("refold keeps the slot");
+            let entry = selected_entry_mut!(self.tool_runs).expect("refold keeps the slot");
             entry.base = head;
             entry.base_generation = store_generation;
             entry.identity.base_revision = self.store.content_revision();
@@ -1278,9 +1378,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         if !settings_moved {
             return;
         }
-        let entry = self.tool_runs.entry.as_ref().expect("the watch keeps the slot");
+        let entry = selected_entry!(self.tool_runs).expect("the watch keeps the slot");
         let values = self.tool_run_settings_values(&entry.definition.settings, entry.window.as_ref());
-        let entry = self.tool_runs.entry.as_mut().expect("the watch keeps the slot");
+        let entry = selected_entry_mut!(self.tool_runs).expect("the watch keeps the slot");
         entry.settings_generation = settings_generation;
         if values == entry.settings_values {
             return;
@@ -1315,12 +1415,29 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 return Ok(());
             }
         }
+        let runs: Vec<u64> = self.tool_runs.entries.iter().map(|entry| entry.slot.run).collect();
+        let mut outcome = Ok(());
+        for run in runs {
+            if !self.tool_runs.select_run(run) {
+                continue;
+            }
+            outcome = self.drive_selected_tool_run(deadline).await;
+            if outcome.is_err() || semio_framework_job::default_now_us().is_none_or(|now| now >= deadline) {
+                break;
+            }
+        }
+        self.tool_runs.select_primary();
+        outcome
+    }
+
+    /// ⏯️ The selected run's share of one driver turn.
+    async fn drive_selected_tool_run(&mut self, deadline: u64) -> Result<(), Fault> {
         let Some(state) = self.tool_runs.state() else { return Ok(()) };
         match state {
             ToolRunState::Aborting => {
                 if self.tool_runs.retired_jobs.is_empty() && self.tool_runs.retired_publications.is_empty() {
                     let (run, generation) = self.tool_runs.slot().map(|slot| (slot.run, slot.generation)).expect("aborting slot");
-                    if let Some(finalize) = self.tool_runs.entry.as_mut().and_then(|entry| entry.finalize.take()) {
+                    if let Some(finalize) = selected_entry_mut!(self.tool_runs).and_then(|entry| entry.finalize.take()) {
                         self.tool_runs.retire_owners(None, Vec::new(), Some(finalize));
                         return Ok(());
                     }
@@ -1337,7 +1454,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 if self.refold_tool_run(deadline) {
                     return Ok(());
                 }
-                let entry = self.tool_runs.entry.as_ref().expect("live slot");
+                let entry = selected_entry!(self.tool_runs).expect("live slot");
                 let wants_job = match entry.slot.state {
                     ToolRunState::Running => true,
                     ToolRunState::Paused => entry.pending_step,
@@ -1358,7 +1475,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
 
     /// 🔁️ `true` while a refold still owns this turn; a refold waiting only for its job's boundary lets the job step.
     fn refold_tool_run(&mut self, deadline: u64) -> bool {
-        let Some(entry) = self.tool_runs.entry.as_mut().filter(|entry| entry.refold.is_some()) else { return false };
+        let Some(entry) = selected_entry_mut!(self.tool_runs).filter(|entry| entry.refold.is_some()) else { return false };
         if entry.job.is_none() {
             entry.settle_refold();
         }
@@ -1373,12 +1490,12 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 
     async fn admit_tool_run_job(&mut self) -> Result<(), Fault> {
-        let Some(entry) = self.tool_runs.entry.as_ref() else { return Ok(()) };
+        let Some(entry) = selected_entry!(self.tool_runs) else { return Ok(()) };
         let (run, generation, state) = (entry.slot.run, entry.slot.generation, entry.slot.state);
-        self.tool_runs.port.wake();
+        entry.port.wake();
         match self.build_tool_run_job_slot(entry, ToolRunJobPurpose::Run) {
             Ok(Some(job)) => {
-                self.tool_runs.entry.as_mut().expect("live slot").job = Some(job);
+                selected_entry_mut!(self.tool_runs).expect("live slot").job = Some(job);
                 if state == ToolRunState::Starting {
                     self.apply_tool_run_driver_event(ToolRunEvent::JobAdmitted { run, generation });
                 }
@@ -1393,7 +1510,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         if self.apply_tool_run_driver_event(ToolRunEvent::JobFault { run, generation }) == Some(ToolRunEffect::DiscardProvisional) {
             self.tool_runs.close_current_job();
             self.tool_runs.discard_provisional();
-            if let Some(entry) = self.tool_runs.entry.as_mut() {
+            if let Some(entry) = selected_entry_mut!(self.tool_runs) {
                 entry.framework_step(ToolRunStepKind::Danger, TOOL_RUN_REASON_CONFLICT, &[ToolRunStepArg::Unsigned(0)]);
             }
             self.mark_tool_run_document_dirty();
@@ -1403,7 +1520,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// 🦶️ Drives the current job until the turn deadline, a pause, a single step or a terminal outcome.
     fn step_tool_run_job(&mut self, deadline: u64) -> Result<(), Fault> {
         loop {
-            let Some(entry) = self.tool_runs.entry.as_mut() else { return Ok(()) };
+            let Some(entry) = selected_entry_mut!(self.tool_runs) else { return Ok(()) };
             let single = entry.slot.state == ToolRunState::Paused;
             let (run, generation, purpose) = (entry.slot.run, entry.slot.generation, entry.job.as_ref().map(|job| job.purpose));
             let Some(job) = entry.job.as_mut() else { return Ok(()) };
@@ -1468,10 +1585,10 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 }
             }
             self.drain_tool_run_port();
-            if terminal || single || self.tool_runs.port.is_waiting() || semio_framework_job::default_now_us().is_none_or(|now| now >= deadline) {
+            if terminal || single || selected_entry!(self.tool_runs).is_none_or(|entry| entry.port.is_waiting()) || semio_framework_job::default_now_us().is_none_or(|now| now >= deadline) {
                 return Ok(());
             }
-            if !self.tool_runs.entry.as_ref().is_some_and(|entry| entry.job.is_some() && matches!(entry.slot.state, ToolRunState::Running | ToolRunState::Finalizing)) {
+            if !selected_entry!(self.tool_runs).is_some_and(|entry| entry.job.is_some() && matches!(entry.slot.state, ToolRunState::Running | ToolRunState::Finalizing)) {
                 return Ok(());
             }
         }
@@ -1491,20 +1608,20 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// can always lose: it happens on the host's own refresh cadence, and a run action that publishes
     /// nothing moves no UI that would provoke the next pass.
     fn complete_tool_run_job(&mut self, run: u64, generation: u32) {
-        let resident = self.tool_runs.entry.as_mut().is_some_and(|entry| entry.definition.mutating && entry.job.as_mut().is_some_and(|job| job.retargetable().is_some()));
+        let resident = selected_entry_mut!(self.tool_runs).is_some_and(|entry| entry.definition.mutating && entry.job.as_mut().is_some_and(|job| job.retargetable().is_some()));
         if resident {
-            self.tool_runs.entry.as_mut().expect("a resident job has a slot").settle_refold();
+            selected_entry_mut!(self.tool_runs).expect("a resident job has a slot").settle_refold();
         } else {
             self.tool_runs.close_current_job();
         }
         self.apply_tool_run_driver_event(ToolRunEvent::JobComplete { run, generation });
-        if let Some(entry) = self.tool_runs.entry.as_mut() {
+        if let Some(entry) = selected_entry_mut!(self.tool_runs) {
             entry.pending_step = false;
         }
-        if self.tool_runs.entry.as_ref().is_some_and(|entry| !entry.definition.mutating && entry.slot.state == ToolRunState::Complete) {
+        if selected_entry!(self.tool_runs).is_some_and(|entry| !entry.definition.mutating && entry.slot.state == ToolRunState::Complete) {
             let (run, generation) = self.tool_runs.slot().map(|slot| (slot.run, slot.generation)).expect("a complete run has a slot");
             if let Some(ToolRunEffect::BeginFinalize) = self.apply_tool_run_driver_event(ToolRunEvent::Finalize { run, generation }) {
-                if let Some(entry) = self.tool_runs.entry.as_mut() {
+                if let Some(entry) = selected_entry_mut!(self.tool_runs) {
                     entry.finalize = Some(ToolRunFinalize { phase: ToolRunFinalizePhase::Pending, publication: None, retracted: 0, published: false });
                 }
             }
@@ -1514,7 +1631,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
 
     fn complete_tool_run_revalidation(&mut self) {
         self.tool_runs.close_current_job();
-        let Some(entry) = self.tool_runs.entry.as_mut() else { return };
+        let Some(entry) = selected_entry_mut!(self.tool_runs) else { return };
         let (run, generation) = (entry.slot.run, entry.slot.generation);
         let retracted = entry.finalize.as_ref().map_or(0, |finalize| finalize.retracted);
         if retracted == 0 {
@@ -1534,7 +1651,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// 🏁️ Finalize (§2.7.4): freshness refold on the head, optional revalidate job, one outbound batched `Edit`.
     async fn finalize_tool_run_turn(&mut self, deadline: u64) -> Result<(), Fault> {
         let store_generation = self.store.generation();
-        let entry = self.tool_runs.entry.as_mut().expect("finalizing slot");
+        let entry = selected_entry_mut!(self.tool_runs).expect("finalizing slot");
         let phase = entry.finalize.as_ref().map_or(ToolRunFinalizePhase::Pending, |finalize| finalize.phase);
         if entry.base_generation != store_generation && matches!(phase, ToolRunFinalizePhase::Pending | ToolRunFinalizePhase::Revalidating) {
             entry.base = self.store.snapshot_owner();
@@ -1553,16 +1670,16 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         }
         match phase {
             ToolRunFinalizePhase::Pending => {
-                if self.tool_runs.entry.as_ref().is_some_and(|entry| entry.job.as_ref().is_some_and(|job| job.purpose == ToolRunJobPurpose::Run)) {
+                if selected_entry!(self.tool_runs).is_some_and(|entry| entry.job.as_ref().is_some_and(|job| job.purpose == ToolRunJobPurpose::Run)) {
                     self.tool_runs.close_current_job();
                     return Ok(());
                 }
-                let entry = self.tool_runs.entry.as_ref().expect("finalizing slot");
+                let entry = selected_entry!(self.tool_runs).expect("finalizing slot");
                 let (run, generation) = (entry.slot.run, entry.slot.generation);
                 let next = if entry.definition.revalidate_job.is_some() && !entry.provisional.is_empty() {
                     match self.build_tool_run_job_slot(entry, ToolRunJobPurpose::Revalidate) {
                         Ok(Some(job)) => {
-                            self.tool_runs.entry.as_mut().expect("finalizing slot").job = Some(job);
+                            selected_entry_mut!(self.tool_runs).expect("finalizing slot").job = Some(job);
                             ToolRunFinalizePhase::Revalidating
                         }
                         Ok(None) | Err(_) => return self.reject_tool_run_publication(run, generation),
@@ -1570,7 +1687,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 } else {
                     ToolRunFinalizePhase::Publishing
                 };
-                if let Some(finalize) = self.tool_runs.entry.as_mut().and_then(|entry| entry.finalize.as_mut()) {
+                if let Some(finalize) = selected_entry_mut!(self.tool_runs).and_then(|entry| entry.finalize.as_mut()) {
                     finalize.phase = next;
                 }
                 Ok(())
@@ -1582,7 +1699,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 
     fn reject_tool_run_publication(&mut self, run: u64, generation: u32) -> Result<(), Fault> {
-        let Some(entry) = self.tool_runs.entry.as_mut() else { return Ok(()) };
+        let Some(entry) = selected_entry_mut!(self.tool_runs) else { return Ok(()) };
         entry.framework_step(ToolRunStepKind::Danger, TOOL_RUN_REASON_CONFLICT, &[ToolRunStepArg::Unsigned(entry.provisional.len() as u64)]);
         let finalize = entry.finalize.take();
         self.tool_runs.close_current_job();
@@ -1593,7 +1710,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 
     async fn publish_tool_run(&mut self, deadline: u64) -> Result<(), Fault> {
-        let entry = self.tool_runs.entry.as_mut().expect("finalizing slot");
+        let entry = selected_entry_mut!(self.tool_runs).expect("finalizing slot");
         let (run, generation) = (entry.slot.run, entry.slot.generation);
         if entry.provisional.is_empty() {
             entry.finalize.as_mut().expect("finalize owner").phase = ToolRunFinalizePhase::Closing;
@@ -1608,7 +1725,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             }
         }
         loop {
-            let entry = self.tool_runs.entry.as_mut().expect("finalizing slot");
+            let entry = selected_entry_mut!(self.tool_runs).expect("finalizing slot");
             let publication = entry.finalize.as_mut().and_then(|finalize| finalize.publication.as_mut()).expect("admitted publication");
             match self.store.advance_apply_batch(publication, TOOL_RUN_PUBLICATION_GRANT) {
                 Ok(store::ArtifactStoreOneItemAdvance::Published(_)) => {
@@ -1616,14 +1733,14 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                     let tool_id = entry.tool_id.clone();
                     let actor = entry.actor.clone();
                     self.store.stamp_tail_group_id(&group_id).await.map_err(|error| error.into_fault())?;
-                    let publication = self.tool_runs.entry.as_mut().and_then(|entry| entry.finalize.as_mut()).and_then(|finalize| finalize.publication.as_mut()).expect("published publication");
+                    let publication = selected_entry_mut!(self.tool_runs).and_then(|entry| entry.finalize.as_mut()).and_then(|finalize| finalize.publication.as_mut()).expect("published publication");
                     self.store.flush_published_apply_batch(publication).await.map_err(|error| error.into_fault())?;
                     publication.acknowledge();
                     let description = self.store.envelope().vcs.edits.last().and_then(|edit| edit.description.clone());
                     let edit_id = self.store.envelope().vcs.edits.last().map(|edit| edit.id.clone());
                     self.record_command(&tool_id, ActionKind::Mutation, description, edit_id, None, None).await;
                     self.revalidate_interaction_state_after_document_change(&ActionMeta { actor, instance_id: self.live_runtime_instance_id.unwrap_or(1), view_state: None }).await?;
-                    let entry = self.tool_runs.entry.as_mut().expect("finalizing slot");
+                    let entry = selected_entry_mut!(self.tool_runs).expect("finalizing slot");
                     let finalize = entry.finalize.as_mut().expect("finalize owner");
                     finalize.published = true;
                     finalize.phase = ToolRunFinalizePhase::Closing;
@@ -1640,7 +1757,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 
     fn close_tool_run_publication(&mut self) -> Result<(), Fault> {
-        let entry = self.tool_runs.entry.as_mut().expect("finalizing slot");
+        let entry = selected_entry_mut!(self.tool_runs).expect("finalizing slot");
         let (run, generation) = (entry.slot.run, entry.slot.generation);
         let finalize = entry.finalize.as_mut().expect("finalize owner");
         if let Some(publication) = finalize.publication.as_mut() {
@@ -1656,7 +1773,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             let store_generation = self.store.generation();
             let head = self.store.snapshot_owner();
             self.tool_runs.discard_provisional();
-            let entry = self.tool_runs.entry.as_mut().expect("finalized slot");
+            let entry = selected_entry_mut!(self.tool_runs).expect("finalized slot");
             entry.base = head;
             entry.overlay = Arc::clone(&entry.base);
             entry.base_generation = store_generation;
@@ -1704,13 +1821,24 @@ fn tool_run_state_label(state: ToolRunState) -> ToolRunLabel {
 }
 
 impl<A: ArtifactApp> ToolRunLedger<A> {
-    /// 🪧️ The framework ToolRun panel (§2.6) as a `ComponentTree` root: group, polite status, progressbar,
-    /// real buttons with `aria-keyshortcuts`, step log (live off) and a keyboard-navigable trace list.
-    pub fn panel(&mut self, controller_id: &str, locale: Locale, tool_label: Option<String>) -> UiAssemblyResult<BuiltNode> {
+    /// 🪧️ The framework ToolRun panel (§2.6) as a `ComponentTree` root `framework.toolRun`: one group
+    /// `framework.toolRun.<run>` per run this instance holds, oldest first, labelled by `tool_label` of its tool.
+    pub fn panel(&mut self, controller_id: &str, locale: Locale, tool_label: impl Fn(&str) -> Option<String>) -> UiAssemblyResult<BuiltNode> {
         let error = ui_assembly_error;
-        let Some(entry) = self.entry.as_mut() else {
-            return column().try_id("framework.toolRun").map_err(|_| error("tool-run-panel.id"))?.try_build().map_err(|_| error("tool-run-panel.build"));
-        };
+        let mut groups = BuiltChildren::default();
+        for entry in &mut self.entries {
+            let label = tool_label(&entry.tool_id).unwrap_or_else(|| entry.tool_id.clone());
+            groups.try_push(tool_run_panel_group(entry, controller_id, locale, &label)?).map_err(|_| error("tool-run-panel.groups"))?;
+        }
+        column().try_label(if locale == Locale::De { "Werkzeugläufe" } else { "Tool runs" }).map_err(|_| error("tool-run-panel.label"))?.try_id(semio_framework_tool_run::TOOL_RUN_PANEL_ID).map_err(|_| error("tool-run-panel.id"))?.try_children(groups).map_err(|_| error("tool-run-panel.groups"))?.try_build().map_err(|_| error("tool-run-panel.build"))
+    }
+}
+
+/// 🪧️ One run's panel group (§2.6): polite status, progressbar, real buttons with `aria-keyshortcuts` addressing the
+/// run by id, step log (live off) and a keyboard-navigable trace list; every id is scoped `framework.toolRun.<run>.`.
+fn tool_run_panel_group<A: ArtifactApp>(entry: &mut ToolRunEntry<A>, controller_id: &str, locale: Locale, label: &str) -> UiAssemblyResult<BuiltNode> {
+        let error = ui_assembly_error;
+        let scope = semio_framework_tool_run::tool_run_panel_group_id(entry.slot.run);
         let state = entry.slot.state;
         let stage_count = entry.definition.stages.len();
         let stage_label = entry.definition.stage(entry.stage).map_or_else(String::new, |stage| stage.label.resolve(Terminology::Native, locale).to_string());
@@ -1725,7 +1853,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         }
         let status = entry.announced.as_ref().map(|(_, _, text)| text.clone()).unwrap_or_default();
         let live = if state == ToolRunState::Faulted || entry.conflicts > 0 { Liveness::Assertive } else { Liveness::Polite };
-        let status_node = text(Label(UiText::clipped(&status))).live(live).try_id("framework.toolRun.status").map_err(|_| error("tool-run-panel.status-id"))?.try_build().map_err(|_| error("tool-run-panel.status"))?;
+        let status_node = text(Label(UiText::clipped(&status))).live(live).try_id(format!("{scope}.status")).map_err(|_| error("tool-run-panel.status-id"))?.try_build().map_err(|_| error("tool-run-panel.status"))?;
         let unit = entry.definition.unit.resolve(Terminology::Native, locale).to_string();
         let value_text = match entry.total {
             Some(total) => {
@@ -1747,7 +1875,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         if let Some(total) = entry.total {
             bar = bar.total(total as f64);
         }
-        let bar = bar.try_id("framework.toolRun.progress").map_err(|_| error("tool-run-panel.progress-id"))?.try_build().map_err(|_| error("tool-run-panel.progress"))?;
+        let bar = bar.try_id(format!("{scope}.progress")).map_err(|_| error("tool-run-panel.progress-id"))?.try_build().map_err(|_| error("tool-run-panel.progress"))?;
         let (run, generation) = (entry.slot.run, entry.slot.generation);
         let mut buttons = BuiltChildren::default();
         let toggle = if state == ToolRunState::Paused { ToolRunAction::Resume } else { ToolRunAction::Pause };
@@ -1764,7 +1892,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
             let action_id = ActionId::try_v1(controller_id, action.id()).ok_or_else(|| error("tool-run-panel.action-id"))?;
             let legal = action.is_legal_in(Some(state));
             let mut builder = button(Label(UiText::clipped(action.label().text(locale)))).disabled(!legal);
-            builder = builder.try_id(format!("framework.toolRun.{}", action.id())).map_err(|_| error("tool-run-panel.button-id"))?;
+            builder = builder.try_id(format!("{scope}.{}", action.id())).map_err(|_| error("tool-run-panel.button-id"))?;
             builder = builder.try_shortcut(action.chord()).map_err(|_| error("tool-run-panel.button-shortcut"))?;
             if action == ToolRunAction::Finalize && !legal {
                 builder = builder.try_describe(ToolRunLabel::FinalizeDisabled.text(locale)).map_err(|_| error("tool-run-panel.finalize-description"))?;
@@ -1772,18 +1900,18 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
             let node = builder.try_on_with(Trigger::Activate, action_id, UiValue::Map(arguments.finish())).map_err(|_| error("tool-run-panel.button-binding"))?.try_build().map_err(|_| error("tool-run-panel.button"))?;
             buttons.try_push(node).map_err(|_| error("tool-run-panel.buttons"))?;
         }
-        let toolbar = row().try_id("framework.toolRun.actions").map_err(|_| error("tool-run-panel.actions-id"))?.try_children(buttons).map_err(|_| error("tool-run-panel.actions"))?.try_build().map_err(|_| error("tool-run-panel.actions-build"))?;
+        let toolbar = row().try_id(format!("{scope}.actions")).map_err(|_| error("tool-run-panel.actions-id"))?.try_children(buttons).map_err(|_| error("tool-run-panel.actions"))?.try_build().map_err(|_| error("tool-run-panel.actions-build"))?;
         let mut step_rows = BuiltChildren::default();
         let newest_steps: Vec<&ToolRunStep> = entry.steps.iter().collect();
         for step in newest_steps.into_iter().rev().take(TOOL_RUN_PANEL_STEP_ROWS) {
-            let row = text(Label(UiText::clipped(&tool_run_step_text(&entry.definition, step, locale)))).tone(tool_run_step_tone(step.kind)).try_id(format!("framework.toolRun.step.{}", step.sequence)).map_err(|_| error("tool-run-panel.step-id"))?.try_build().map_err(|_| error("tool-run-panel.step"))?;
+            let row = text(Label(UiText::clipped(&tool_run_step_text(&entry.definition, step, locale)))).tone(tool_run_step_tone(step.kind)).try_id(format!("{scope}.step.{}", step.sequence)).map_err(|_| error("tool-run-panel.step-id"))?.try_build().map_err(|_| error("tool-run-panel.step"))?;
             step_rows.try_push(row).map_err(|_| error("tool-run-panel.steps"))?;
         }
         let steps = column()
             .live(Liveness::Off)
             .try_label(if locale == Locale::De { "Schritte" } else { "Steps" })
             .map_err(|_| error("tool-run-panel.steps-label"))?
-            .try_id("framework.toolRun.steps")
+            .try_id(format!("{scope}.steps"))
             .map_err(|_| error("tool-run-panel.steps-id"))?
             .try_children(step_rows)
             .map_err(|_| error("tool-run-panel.steps-children"))?
@@ -1793,16 +1921,14 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         for key in entry.recent_trace.iter().rev() {
             let Some(record) = entry.trace.record(*key) else { continue };
             let reason = ToolRunStep { sequence: 0, kind: ToolRunStepKind::Info, stage: entry.stage, reason: record.reason, subject: Some(*key), repeat: 1, args: Vec::new() };
-            let item = ui::tree_item(Label(UiText::clipped(&tool_run_step_text(&entry.definition, &reason, locale)))).tone(tool_run_verdict_tone(record.verdict)).try_id(format!("framework.toolRun.trace.{key}")).map_err(|_| error("tool-run-panel.trace-id"))?.try_build().map_err(|_| error("tool-run-panel.trace-item"))?;
+            let item = ui::tree_item(Label(UiText::clipped(&tool_run_step_text(&entry.definition, &reason, locale)))).tone(tool_run_verdict_tone(record.verdict)).try_id(format!("{scope}.trace.{key}")).map_err(|_| error("tool-run-panel.trace-id"))?.try_build().map_err(|_| error("tool-run-panel.trace-item"))?;
             trace_rows.try_push(item).map_err(|_| error("tool-run-panel.trace-rows"))?;
         }
-        let trace = tree().try_label(if locale == Locale::De { "Versuche" } else { "Attempts" }).map_err(|_| error("tool-run-panel.trace-label"))?.try_id("framework.toolRun.trace").map_err(|_| error("tool-run-panel.trace-id"))?.try_children(trace_rows).map_err(|_| error("tool-run-panel.trace"))?.try_build().map_err(|_| error("tool-run-panel.trace-build"))?;
+        let trace = tree().try_label(if locale == Locale::De { "Versuche" } else { "Attempts" }).map_err(|_| error("tool-run-panel.trace-label"))?.try_id(format!("{scope}.trace")).map_err(|_| error("tool-run-panel.trace-id"))?.try_children(trace_rows).map_err(|_| error("tool-run-panel.trace"))?.try_build().map_err(|_| error("tool-run-panel.trace-build"))?;
         let mut children = BuiltChildren::default();
         for child in [status_node, bar, toolbar, steps, trace] {
             children.try_push(child).map_err(|_| error("tool-run-panel.children"))?;
         }
-        let label = tool_label.unwrap_or_else(|| entry.tool_id.clone());
-        column().try_label(&label).map_err(|_| error("tool-run-panel.label"))?.try_id("framework.toolRun").map_err(|_| error("tool-run-panel.id"))?.try_children(children).map_err(|_| error("tool-run-panel.children"))?.try_build().map_err(|_| error("tool-run-panel.build"))
-    }
+        column().try_label(label).map_err(|_| error("tool-run-panel.label"))?.try_id(scope).map_err(|_| error("tool-run-panel.id"))?.try_children(children).map_err(|_| error("tool-run-panel.children"))?.try_build().map_err(|_| error("tool-run-panel.build"))
 }
 //#endregion 🔖️Panel

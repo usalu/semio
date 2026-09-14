@@ -121,6 +121,11 @@ export function testUiDirtyScopeContract(): void {
     assert.ok(deepEqual(normalize(merged), normalize(oracle)), `lodash disagreed with our union for ${merge.id}: ${JSON.stringify(merged)} vs ${JSON.stringify(oracle)}`);
   }
 
+  // 🩸️ The shell this oracle was written against — one that renders EVERY surface on every settle —
+  // must fail it. Without this the suite would stay green against the exact defect it forbids.
+  const discriminating = fixture.selections.filter((selection) => selection.windowBodies.length !== fixture.surfaces.windowBodies.length).length;
+  assert.ok(discriminating >= 3, `only ${discriminating} scope(s) select less than the whole census — the oracle would not catch a shell that renders everything`);
+
   assert.deepEqual(resolveUiDirtyScope(undefined), { kind: "full" });
   assert.equal(uiDirtyScopeAsksForNothing(resolveUiDirtyScope(undefined)), false);
   console.log(`[DEBUG] ui-dirty-scope contract: ${fixture.selections.length} selections, ${fixture.unions.length} unions, ${fixture.laws.length} laws`);

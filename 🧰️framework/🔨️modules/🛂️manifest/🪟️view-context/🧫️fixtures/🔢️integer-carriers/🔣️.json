@@ -1,0 +1,17 @@
+{
+  "note": "🔢️ The ONE shared vector for integer-typed host→guest view-context fields. Both renderer doors must hand the guest the SAME pack bytes for this context, and the guest must decode them into the same ViewModel. `toolRunTraceCursorByWindowId.<window>.run` is a u64: a whole float in that slot is refused, never rounded.",
+  "viewContext": {
+    "locale": "en",
+    "terminology": "native",
+    "windowInstances": [{ "id": "procedural-preview", "windowKindId": "world" }],
+    "toolRunTraceCursorByWindowId": { "procedural-preview": { "run": 1, "generation": 0, "page": 0 } }
+  },
+  "integerPaths": [
+    ["toolRunTraceCursorByWindowId", "procedural-preview", "run"],
+    ["toolRunTraceCursorByWindowId", "procedural-preview", "generation"],
+    ["toolRunTraceCursorByWindowId", "procedural-preview", "page"]
+  ],
+  "packHex": "0402656e066e61746976651270726f6365647572616c2d7072657669657705776f726c64010111100407066c6f63616c650600070b7465726d696e6f6c6f67790601071c746f6f6c52756e5472616365437572736f72427957696e646f7749641001071270726f6365647572616c2d707265766965771003070a67656e65726174696f6e04000704706167650400070372756e0401070f77696e646f77496e7374616e6365730c011002070269640602070c77696e646f774b696e6449640603",
+  "guestRefusal": "toolRunTraceCursorByWindowId.procedural-preview.run.expected an exact u64 integer, found Float(1.0)",
+  "nonIntegral": 1.5
+}

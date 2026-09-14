@@ -205,7 +205,7 @@ async fn dispatch_registers_semantic_descriptors() {
     for kind in RemodelingMutation::kinds() {
         assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
     }
-    assert_eq!(RemodelingMutation::kinds().len(), 34);
+    assert_eq!(RemodelingMutation::kinds().len(), 36);
 }
 //#endregion 🔖️MutationLaws
 

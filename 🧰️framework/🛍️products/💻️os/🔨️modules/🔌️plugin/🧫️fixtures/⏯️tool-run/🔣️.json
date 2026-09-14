@@ -31,24 +31,28 @@
     "bodyKey": "framework.body.toolRun",
     "rootId": "framework.toolRun",
     "status": {
-      "id": "framework.toolRun.status",
+      "id": "framework.toolRun.{run}.status",
       "live": "polite"
     },
     "progress": {
-      "id": "framework.toolRun.progress",
+      "id": "framework.toolRun.{run}.progress",
       "type": "progress",
       "completed": 5,
       "total": 5
     },
     "finalize": {
-      "id": "framework.toolRun.toolRunFinalize",
+      "id": "framework.toolRun.{run}.toolRunFinalize",
       "shortcut": "mod+shift+enter"
     },
     "abort": {
-      "id": "framework.toolRun.toolRunAbort",
+      "id": "framework.toolRun.{run}.toolRunAbort",
       "shortcut": "mod+."
     },
-    "runningFinalizeDescription": "Available once the run is complete"
+    "runningFinalizeDescription": "Available once the run is complete",
+    "groupId": "framework.toolRun.{run}",
+    "step": {
+      "id": "framework.toolRun.{run}.toolRunStep"
+    }
   },
   "abort": {
     "target": 1000,
@@ -300,5 +304,17 @@
     "panelBodies": [
       "framework.body.toolRun"
     ]
+  },
+  "concurrentReadOnly": {
+    "note": "Read-only runs run concurrently, one per (tool, window), each with its own run id, trace and panel group; a second mutating start while a mutating run is non-terminal is toolRun.busy; actions address a run by its runId; presence follows the mutating run, else the most recent run.",
+    "readOnlyToolId": "toyReadOnlyWait",
+    "windows": [
+      "world",
+      "main"
+    ],
+    "target": 1000,
+    "mutatingToolId": "toyFill",
+    "secondMutatingToolId": "toyFreeze",
+    "busy": "toolRun.busy"
   }
 }

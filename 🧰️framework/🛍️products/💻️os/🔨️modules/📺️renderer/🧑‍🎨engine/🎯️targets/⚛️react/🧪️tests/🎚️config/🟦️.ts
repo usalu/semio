@@ -52,6 +52,7 @@ const engineTestSuites = [
   engineSuite("🪟️app-mode-layouts"),
   engineSuite("🎟️resident-refresh-budget"),
   elementSuite("🛠️ShellHelpers", "🧩️component"),
+  elementSuite("🛠️ShellHelpers/⏯️tool-run-panel", "🧩️component", "tsx"),
   elementSuite("🧭️TiledMapHost", "🧩️component"),
   elementSuite("🌐️World3dHost", "🧩️component", "tsx"),
   elementSuite("🌐️World3dHost/⏯️tool-run-trace", "🧩️component"),

@@ -78,7 +78,7 @@ use ui_wgpu::wgpu::{
 };
 use ui_wgpu::wgpu::{
     ActionDescriptor, Locale, LocalizedLabel, Terminology, UtilityCategory, UtilityNode, WindowEngagement,
-    WindowMeasure, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    WindowMeasure, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_TOOL_RUN_ID,
 };
 
 const FRAMEWORK_DISPLAY_WINDOWS_TAB_ID: &str = "framework.display.windows";
@@ -2394,6 +2394,7 @@ pub struct ShellState {
     pub session: Option<ActiveSession>,
     pub window_ui: HashMap<String, UiDocumentLease>,
     pub panel_documents: HashMap<String, UiDocumentLease>,
+    tool_run_panel_runs: std::collections::BTreeSet<u64>,
     pub spawned_ui: Option<UiDocumentLease>,
     closing_documents: ShellDocumentRetirementRegistry,
     pub active_window_id: Option<String>,
@@ -3191,6 +3192,28 @@ impl ShellState {
 mod window_measures_tests;
 //#endregion 📏️WindowMeasures
 
+//#region ⏯️ToolRunPanel
+/// ⏯️ Whether the freshly rendered framework ToolRun panel `document` holds a run `seen` has not — the moment the shell
+/// reveals the panel, exactly as the React `ShellHost` does through `toolRunPanelReveal`. The group-key law is
+/// [`semio_framework::tool_run_panel_new_runs`], pinned by the `⏯️tool-run` lifecycle fixture.
+fn tool_run_panel_reveals(seen: &mut std::collections::BTreeSet<u64>, document: &UiDocumentLease) -> Result<bool, String> {
+    let header = document.header().map_err(|error| format!("the ToolRun panel header is unreadable: {error:?}"))?;
+    let mut keys = Vec::with_capacity(header.node_count);
+    for index in 0..header.node_count {
+        if let Some(page) = document.read_node_page(index).map_err(|error| format!("the ToolRun panel node {index} is unreadable: {error:?}"))? {
+            keys.push(page.record().key.as_str().to_string());
+        }
+    }
+    let (runs, added) = semio_framework::tool_run_panel_new_runs(seen, keys.iter().map(String::as_str));
+    *seen = runs;
+    Ok(!added.is_empty())
+}
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../🧪️tests/⏯️wgpu-tool-run-panel/🦀️.rs"]
+mod tool_run_panel_tests;
+//#endregion ⏯️ToolRunPanel
+
 //#region 🛍️AppCatalogueAttempt
 /// 🛍️ The "fetch the app-static catalogue once per app instance" rule, owned in ONE place because it
 /// has to hold on BOTH outcomes.
@@ -3338,6 +3361,7 @@ impl ShellState {
             session: None,
             window_ui: HashMap::new(),
             panel_documents: HashMap::new(),
+            tool_run_panel_runs: std::collections::BTreeSet::new(),
             spawned_ui: None,
             closing_documents: ShellDocumentRetirementRegistry::default(),
             active_window_id: None,
@@ -4255,27 +4279,45 @@ impl ShellState {
         }
     }
 
-    /// 🐢️ One refresh pass, restricted to the union of `ask` and whatever was already owed.
+    /// 🐢️ One refresh pass. `ask` is the [`UiDirtyScope`] the dispatch that caused it declared,
+    /// unioned with everything owed since the last pass ([`Self::owe_refresh`]).
     ///
-    /// **A settle re-renders exactly the surfaces its scope names.** This used to walk every live
-    /// window and then every panel leaf unconditionally, throwing `InvocationResult::ui_scope` away
-    /// while React threaded the same field through `resolveUiDirtyScope`: 116 of 137 renders per
-    /// converging edit answered `patched=0`, and the flow window was re-minted eight times at
-    /// ~525 000 intake phases each — ≈1.7 s of a 5.4 s `flush-deferred`
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-edit-convergence-perf-2026-09-14.md` §7).
-    /// The selection itself is the kernel's ([`UiDirtyScope::wants_window_body`] and siblings), whose
-    /// TypeScript twin the React shell reads from the same fixture.
+    /// **The scope is threaded, measured and traced here — and deliberately NOT yet used to skip a
+    /// surface.** React narrows its own refresh on exactly this field (`🛠️ShellHelpers/🟦️.tsx`'s
+    /// `uiRefreshWants*` + `buildUiRefreshRequest`, over the same kernel predicates and the same
+    /// fixture as this shell), and on this renderer the same narrowing is a STALL, because a window
+    /// body's render is also the guest CROSSING that funds the guest's own background evaluation:
+    /// `render_with_document` submits a turn, and that turn is what pumps the guest's worker pool, so
+    /// the brep solve advances roughly in proportion to how many surfaces the host re-renders.
     ///
-    /// ⚠️ A skipped surface keeps the EXACT document it already owns: the retirement (`window_ui`
-    /// remove → `retire_one_surface_document`) happens per surface INSIDE the selection, never ahead
-    /// of it, or a scoped pass would retire the very documents it then refuses to re-mint and leave
-    /// the shell with blank bodies. `retire_documents_outside` is unaffected — it retires the
-    /// surfaces the LAYOUT dropped, which no scope has a say in.
+    /// Measured on 6118, one build apart, nothing else changed (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+    /// `📓️wgpu-dirty-scope-refresh-2026-09-14.md` §4):
+    ///
+    /// * honouring the scope took a converging edit from 137 renders to 48 and the hexagonal column
+    ///   from 13.49 s to 8.46 s — and froze **14 of 16 battery examples mid-solve** (`ratio` 0.19-0.8,
+    ///   `facesDone < facesTotal`, `scenePasses=1`, no fault and no alert anywhere: they simply never
+    ///   finished). `box-fillet-preview` did not converge in 180 s at 36 renders
+    ///   (`🗑️generated/wgpu-dirty-scope/solo-fillet-long/`); the same build with the scope forced to
+    ///   `Full` converged it in 21.13 s at 96 renders (`…/ab-fillet-fullscope/`).
+    /// * narrowing per surface instead — keeping the render turn of whichever preview is still
+    ///   computing — does not help (`…/owes-box-fillet-preview/`, 36 renders, still no convergence):
+    ///   the solve is funded by crossings to ANY surface, not only to the one that is working.
+    /// * stepping aside while a producer reports `computing` does not help either, because most
+    ///   examples never publish that status at all (`…/aside-box-fillet-preview/`: `evaluating=false`
+    ///   on every pass, zero `"computing":true` lines in the whole run).
+    ///
+    /// So the blocking dependency is named rather than papered over: the guest's evaluation needs a
+    /// pump of its own — the frame loop's, not the refresh's. The moment it has one, the three
+    /// predicates below ([`UiDirtyScope::wants_window_body`] and siblings, whose TypeScript twins
+    /// React already runs) are what this loop should gate on, and the `[DEBUG] wgpu-shell refresh
+    /// scope=` / `dispatch … scope=` traces are the evidence that it is safe: on a converging edit
+    /// the guest declares `none` for all seven `flowEvalTick` hops and `full` only for `toolRunStart`.
+    ///
+    /// ⚠️ A surface's retirement (`window_ui` remove → `retire_one_surface_document`) stays INSIDE the
+    /// per-surface loop, never ahead of it, so the day this does narrow, a skipped surface keeps the
+    /// exact document it already owns instead of being retired and never re-minted.
     pub async fn refresh_ui(&mut self, ask: UiDirtyScope) -> Result<(), String> {
         let scope = core::mem::replace(&mut self.owed_refresh_scope, UiDirtyScope::None).merged_with(ask);
-        if scope.asks_for_nothing() {
-            return Ok(());
-        }
         let Some(session) = self.session.clone() else {
             return Ok(());
         };
@@ -4287,7 +4329,6 @@ impl ShellState {
         let mut refresh_effects = Vec::new();
         let mut faults: Vec<(String, String, String)> = Vec::new();
         let mut rendered = 0usize;
-        let mut skipped = 0usize;
         let mut visited: Vec<String> = Vec::new();
         {
             let program = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id).cloned().ok_or("session program missing")?;
@@ -4295,10 +4336,6 @@ impl ShellState {
             self.retire_documents_outside(&retained, true)?;
             for (window_id, window_kind_id) in live_windows {
                 let kind = session.app.window_kinds.iter().find(|kind| kind.id == window_kind_id).ok_or_else(|| format!("window kind '{}' is absent from the app", window_kind_id))?;
-                if !scope.wants_window_body(&kind.body_key) {
-                    skipped += 1;
-                    continue;
-                }
                 let window_view = view_state.for_window_instance(&window_id).ok_or_else(|| format!("window '{}' is absent from the live view", window_id))?;
                 let previous = self.window_ui.remove(&window_id);
                 self.retire_one_surface_document(previous)?;
@@ -4324,10 +4361,6 @@ impl ShellState {
         let retained: Vec<String> = panel_leaves.iter().map(|(id, _)| id.clone()).collect();
         self.retire_documents_outside(&retained, false)?;
         for (tab_id, body_key) in panel_leaves {
-            if !scope.wants_panel_body(&body_key) {
-                skipped += 1;
-                continue;
-            }
             let previous = self.panel_documents.remove(&tab_id);
             self.retire_one_surface_document(previous)?;
             rendered += 1;
@@ -4337,7 +4370,11 @@ impl ShellState {
             Self::declare_boot_subphase(&format!("shell-boot:render:{tab_id}"), "enter", 0.0);
             match program.render_with_document(session.instance_id, &tab_id, &body_key, &panel_view, None, Some(&mut refresh_effects)).await {
                 Ok(document) => {
+                    let reveal = tab_id == FRAMEWORK_PANEL_TAB_TOOL_RUN_ID && tool_run_panel_reveals(&mut self.tool_run_panel_runs, &document)?;
                     self.panel_documents.insert(tab_id.clone(), document);
+                    if reveal {
+                        self.chrome_tour_reveal_panel_tab(&session, &tab_id);
+                    }
                 }
                 Err(error) => faults.push((tab_id.clone(), body_key.clone(), error)),
             }
@@ -4355,18 +4392,11 @@ impl ShellState {
         // the moment a surface minted by THIS pass gets its palette. Skipping that on a partial scope
         // is how a spotlight silently opens empty.
         self.refresh_app_catalogue(&program, session.instance_id, &panel_view).await;
-        if scope.wants_section(UiDirtySection::Engagements) {
-            self.window_engagements = program.window_engagements(session.instance_id, &view_state).await.unwrap_or_default();
-        }
-        if scope.wants_section(UiDirtySection::Measures) {
-            visited.push(semio_framework::UiRefreshSection::Measures.body_key().to_string());
-            visited.extend(measure_windows.iter().map(|window_id| window_measures_surface_id(window_id)));
-            self.refresh_window_measures(&program, session.instance_id, &view_state, &measure_windows, &mut faults).await?;
-        }
-        // 🪐️ The spawned space pane belongs to a DIFFERENT app, so no window-body key in this
-        // session's scope can name it — only a full scope (a session/panel change, which the
-        // `setPanel` widening always makes full) re-mints it.
-        if self.space_mode && matches!(scope, UiDirtyScope::Full) {
+        self.window_engagements = program.window_engagements(session.instance_id, &view_state).await.unwrap_or_default();
+        visited.push(semio_framework::UiRefreshSection::Measures.body_key().to_string());
+        visited.extend(measure_windows.iter().map(|window_id| window_measures_surface_id(window_id)));
+        self.refresh_window_measures(&program, session.instance_id, &view_state, &measure_windows, &mut faults).await?;
+        if self.space_mode {
             if let Some(panel) = Self::panel_state_from_view(&session.view_state)? {
                 if let Some(spawned) = panel.active_spawned_id.as_ref().and_then(|id| panel.spawned_apps.iter().find(|app| &app.id == id)) {
                     if let Some(spawn_plugin) = self.plugins.iter().find(|p| p.plugin_id == spawned.plugin_id).cloned() {
@@ -4415,7 +4445,7 @@ impl ShellState {
         self.queue_host_effects(&session.app.controller_id, refresh_effects);
         self.owe_refresh(earned);
         self.settle_surface_faults(faults, &visited);
-        Self::debug_log(&format!("[DEBUG] wgpu-shell refresh scope={} rendered={rendered} skipped={skipped}", refresh_scope_label(&scope)));
+        Self::debug_log(&format!("[DEBUG] wgpu-shell refresh scope={} rendered={rendered}", refresh_scope_label(&scope)));
         Ok(())
     }
 
@@ -7436,6 +7466,27 @@ impl ShellState {
             HitKind::ScrollRegion => hit.control_id.as_deref().is_some_and(Self::scroll_region_is_scene_surface),
             _ => false,
         }
+    }
+
+    /// 🛑️🖱️ Whether a PRESS at this hit belongs to the shell's own chrome rather than to the engine
+    /// surface underneath it.
+    ///
+    /// 🩸️ The World3d overlay row — the compute-status pill and the cancel control
+    /// ([`surface_overlay_controls_for`]) — is painted INSIDE the surface's own rect, and the
+    /// renderer's press path claimed a point for a World3d surface on `bounds.contains` alone and
+    /// returned before the shell ever saw it (`🧊️renderer/🦀️.rs`, the `world_consumed` guard). The
+    /// RELEASE path calls the shell first, but `handle_shell_hit` deliberately fires on the press —
+    /// so the only pointer phase that reached the shell over a World3d surface was the one it
+    /// ignores. Measured on 6118: the cancel control paints, hit-tests as
+    /// `NavbarItem("shell.world3d.cancel::procedural-preview")`, and a click on it dispatched
+    /// NOTHING, every time (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+    /// `📓️wgpu-progress-visibility-2026-09-14.md`). A cancel that cannot be pressed is not a cancel.
+    ///
+    /// ⚖️ Chrome KINDS only, never a control-id list: the shell must not learn which overlay controls
+    /// exist, and the same rule already decides an overlay dismiss (`dismiss_overlays`'s own
+    /// `on_overlay`).
+    pub fn pointer_press_belongs_to_shell_chrome(hit: Option<&HitTarget<ActionDescriptor>>) -> bool {
+        hit.is_some_and(|hit| matches!(hit.kind, HitKind::NavbarItem | HitKind::DropdownItem | HitKind::ContextMenu | HitKind::Select))
     }
 
     pub fn handle_pointer_wheel(&mut self, x: f32, y: f32, delta: f32, input: &InputState<ActionDescriptor>) -> bool {

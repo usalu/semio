@@ -1,7 +1,7 @@
 {
   "format": "semio.generation3d.evaluate-budget",
   "version": 1,
-  "note": "The BUDGET law of the `evaluate` capability. `⏯️preview-eval-run.json` says how the `previewEval` run schedules hops and what its abort releases; this says how a long operator's evaluation is CUT into interactive steps in the first place, so that there is a boundary for the abort — and for a liveness watchdog — to land on at all. Language-agnostic: an implementation in any language must fold these envelopes and answer the same outcomes, the same published status and the same continuation.",
+  "note": "The BUDGET law of the `evaluate` capability. `⏯️preview-eval-run.json` says how the `previewEval` run schedules hops and what its abort releases; this says how a long operator's evaluation is CUT into interactive steps in the first place, so that there is a boundary for the abort — and for a liveness watchdog — to land on at all. Language-agnostic: an implementation in any language must fold these envelopes and answer the same outcomes, the same published status and the same continuation. ⛓️ 2026-09-14: three rows declared `phase: \"idle\", ratio: 1.0` while their own `owesHop` was TRUE — the defect written down. A surface that says `idle` for a window it knows owes another hop is the reason a whole 23 s evaluation published nothing to show (`📓️wgpu-progress-visibility-2026-09-14.md`). They now declare the chain phase. ⚠️ These rows drive a session with NO published node census (no `FlowHost` is synced), so the ratio they pin is the best a session without a denominator can give: `0.0` while working, never `1.0`. The census-present case — the monotone `n/m` a pill prints — is pinned by `a_live_evaluation_publishes_non_idle_frames_with_a_monotone_ratio_and_an_offered_abort` and by the shared `🛑️surface-controls/🔣️.json` `progressTimeline` rows both renderers answer.",
   "capability": "evaluate",
   "cancelCapability": "evaluateCancel",
   "responseAction": "flowEvalResolve",
@@ -133,7 +133,7 @@
     },
     {
       "id": "complete-envelope-seeds-the-output",
-      "why": "The terminal case: the job finished inside this round trip.",
+      "why": "The terminal case: the job finished inside this round trip. A window that still OWES a hop is not idle and is certainly not complete: the round trip ended, the evaluation did not.",
       "envelope": {
         "done": true,
         "cancellable": false,
@@ -147,16 +147,16 @@
       "seededOutputJson": "{\"solid\":\"brep:solid-9\"}",
       "owesHop": true,
       "status": {
-        "phase": "idle",
+        "phase": "computing",
         "inFlight": 0,
         "evalUnitsDone": 0,
         "evalUnitsTotal": 0,
-        "ratio": 1.0
+        "ratio": 0.0
       }
     },
     {
       "id": "a-refused-evaluation-still-completes",
-      "why": "The error body travels inside the output exactly as an unbudgeted refusal always did.",
+      "why": "The error body travels inside the output exactly as an unbudgeted refusal always did. A window that still OWES a hop is not idle and is certainly not complete: the round trip ended, the evaluation did not.",
       "envelope": {
         "done": true,
         "cancellable": false,
@@ -170,11 +170,11 @@
       "seededOutputJson": "{\"error\":\"unknown kind: brep.bool.nope\"}",
       "owesHop": true,
       "status": {
-        "phase": "idle",
+        "phase": "computing",
         "inFlight": 0,
         "evalUnitsDone": 0,
         "evalUnitsTotal": 0,
-        "ratio": 1.0
+        "ratio": 0.0
       }
     },
     {
@@ -201,18 +201,18 @@
     },
     {
       "id": "a-bare-output-dictionary-is-a-finished-evaluation",
-      "why": "An answer that predates the envelope contract must still be an answer, never a lost one.",
+      "why": "An answer that predates the envelope contract must still be an answer, never a lost one. A window that still OWES a hop is not idle and is certainly not complete: the round trip ended, the evaluation did not.",
       "bareOutputJson": "{\"solid\":\"brep:solid-3\"}",
       "outcome": "complete",
       "seeds": true,
       "seededOutputJson": "{\"solid\":\"brep:solid-3\"}",
       "owesHop": true,
       "status": {
-        "phase": "idle",
+        "phase": "computing",
         "inFlight": 0,
         "evalUnitsDone": 0,
         "evalUnitsTotal": 0,
-        "ratio": 1.0
+        "ratio": 0.0
       }
     }
   ],

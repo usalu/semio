@@ -743,3 +743,38 @@ fn writer_payload_is_the_latest_and_makes_a_tick() {
     assert_eq!(tick.payload.as_deref(), Some(hex(&row["tick"]["payload"]).as_slice()));
     assert!(writer.finish().is_none(), "the payload is handed over once");
 }
+
+/// ⚖️ LAW: every `admission` row — one non-terminal mutating run per actor, concurrent read-only runs keyed by tool and
+/// window, and a start replacing exactly the terminal runs on its lane.
+#[test]
+fn start_admission_follows_the_lane_law() {
+    let law = fixture(LIFECYCLE);
+    let lane = |value: &Value| -> ToolRunLane { serde_json::from_value(value.clone()).expect("lane") };
+    for row in law["admission"].as_array().expect("admission") {
+        let live: Vec<(ToolRunLane, ToolRunState)> = row["live"].as_array().expect("live").iter().map(|entry| (lane(&entry["lane"]), ToolRunState::parse(text(&entry["state"])).expect("state"))).collect();
+        let expected = match row.get("rejection") {
+            Some(rejection) => Err(text(rejection).to_string()),
+            None => Ok(row["replaces"].as_array().expect("replaces").iter().map(|index| index.as_u64().expect("index") as usize).collect::<Vec<_>>()),
+        };
+        assert_eq!(lane(&row["lane"]).admit(&live).map_err(|rejection| rejection.code().to_string()), expected, "{}", text(&row["name"]));
+    }
+}
+
+/// ⚖️ LAW: `panelGroups` — which keys name a run's panel group, and which runs a rendered panel adds for a host to reveal.
+#[test]
+fn panel_group_keys_and_reveals_follow_the_fixture() {
+    let law = fixture(LIFECYCLE);
+    let cases = &law["panelGroups"];
+    assert_eq!(text(&cases["rootId"]), TOOL_RUN_PANEL_ID);
+    for row in cases["keys"].as_array().expect("keys") {
+        assert_eq!(tool_run_panel_group_run(text(&row["key"])), row["run"].as_u64(), "{}", row["key"]);
+        if let Some(run) = row["run"].as_u64() {
+            assert_eq!(tool_run_panel_group_id(run), text(&row["key"]));
+        }
+    }
+    let runs = |value: &Value| value.as_array().expect("runs").iter().map(u64_of).collect::<std::collections::BTreeSet<u64>>();
+    for row in cases["reveals"].as_array().expect("reveals") {
+        let (current, added) = tool_run_panel_new_runs(&runs(&row["previous"]), row["keys"].as_array().expect("keys").iter().map(text));
+        assert_eq!((current, added.into_iter().collect::<std::collections::BTreeSet<u64>>()), (runs(&row["current"]), runs(&row["added"])), "{}", text(&row["name"]));
+    }
+}

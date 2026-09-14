@@ -310,3 +310,41 @@ describe("tick codec and step ring", () => {
     }
   });
 });
+
+describe("start admission", () => {
+  test("every admission row follows the lane law", () => {
+    for (const row of law.admission) {
+      const live = row.live.map((entry: any) => [entry.lane, entry.state] as const);
+      const result = M.toolRunAdmit(row.lane, live);
+      expect(result, row.name).toEqual(row.rejection === undefined ? { ok: true, replaces: row.replaces } : { ok: false, rejection: row.rejection });
+    }
+  });
+
+  test("fast-check: a start is busy exactly when a non-terminal run on its lane exists, and never admits a second non-terminal mutating run", () => {
+    const lane = fc.record({ mutating: fc.boolean(), toolId: fc.constantFrom("fill", "preview"), windowId: fc.constantFrom("a", "b") });
+    fc.assert(
+      fc.property(fc.array(fc.tuple(lane, fc.constantFrom(...M.TOOL_RUN_STATES)), { maxLength: 6 }), lane, (live, next) => {
+        const result = M.toolRunAdmit(next, live);
+        const blocking = live.some(([other, state]) => !M.isToolRunTerminal(state) && (next.mutating && other.mutating ? true : !next.mutating && !other.mutating && other.toolId === next.toolId && other.windowId === next.windowId));
+        expect(result.ok).toBe(!blocking);
+        if (result.ok && next.mutating) expect(live.filter(([other, state]) => other.mutating && !M.isToolRunTerminal(state)).length).toBe(0);
+      }),
+      { numRuns: 2000 },
+    );
+  });
+});
+
+describe("tool run panel groups", () => {
+  test("group keys and reveals follow the fixture", () => {
+    const cases = law.panelGroups;
+    expect(M.TOOL_RUN_PANEL_ID).toBe(cases.rootId);
+    for (const row of cases.keys) {
+      expect(M.toolRunPanelGroupRun(row.key), row.key).toBe(row.run === null ? null : BigInt(row.run));
+      if (row.run !== null) expect(M.toolRunPanelGroupId(BigInt(row.run))).toBe(row.key);
+    }
+    for (const row of cases.reveals) {
+      const { current, added } = M.toolRunPanelNewRuns(new Set(row.previous.map(BigInt)), row.keys);
+      expect([[...current].sort(), added], row.name).toEqual([row.current.map(BigInt), row.added.map(BigInt)]);
+    }
+  });
+});

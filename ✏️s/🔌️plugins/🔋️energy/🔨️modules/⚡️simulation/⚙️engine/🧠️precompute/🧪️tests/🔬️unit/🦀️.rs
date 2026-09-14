@@ -2,35 +2,11 @@ use super::*;
 use crate::model::*;
 
 #[test]
-fn precompute_builds_surface_ctf() {
+fn precompute_builds_surface_chains() {
     let model = crate::sim::test_model_single_zone();
     let pre = PrecomputedModel::build(&model, 60, 60);
-    assert!(!pre.surfaces.is_empty());
+    assert!(pre.surfaces.get(&EntityId(30)).is_some_and(|surface| surface.chain.nodes() >= 2));
     assert!(pre.zone_geometry.contains_key(&EntityId(1)));
-}
-
-#[test]
-fn surface_incidence_is_zero_for_unknown_surface() {
-    let model = crate::sim::test_model_single_zone();
-    let pre = PrecomputedModel::build(&model, 60, 60);
-    assert_eq!(pre.surface_incidence(EntityId(999), 45.0, 180.0), 0.0);
-}
-
-#[test]
-fn surface_incidence_matches_known_surface_normal() {
-    let model = crate::sim::test_model_single_zone();
-    let pre = PrecomputedModel::build(&model, 60, 60);
-    let incidence = pre.surface_incidence(EntityId(30), 45.0, 180.0);
-    assert!((-1.0..=1.0).contains(&incidence));
-}
-
-#[test]
-fn solar_at_returns_altitude_and_azimuth() {
-    let model = crate::sim::test_model_single_zone();
-    let pre = PrecomputedModel::build(&model, 60, 60);
-    let (alt, az) = pre.solar_at(&model, 172, 12.0);
-    assert!(alt > -90.0 && alt < 90.0);
-    assert!((0.0..360.0).contains(&az));
 }
 
 #[test]
@@ -43,29 +19,70 @@ fn thermostat_overrides_default_setpoints() {
     assert!((sp.cooling_throttle_k - 4.0).abs() < 1e-9);
 }
 
+/// 🐛️ Floor-area defect: the zone floor area is the area of its floors only. Summing every surface
+/// made case 600's 48 m² into 171.6 m², multiplying its 200 W of equipment to 715 W.
 #[test]
-fn fenestration_precompute_derives_from_host_surface() {
-    let mut model = crate::sim::test_model_single_zone();
-    model.fenestrations.push(Fenestration {
-        id: EntityId(40),
-        name: "Win".into(),
-        surface_id: EntityId(30),
-        u_value_w_m2k: 2.0,
-        shgc: 0.4,
-        vlt: 0.6,
-        area_m2: 2.0,
-        height_m: 1.0,
-        sill_height_m: 0.8,
-        frame_conductance_w_k: 0.0,
-        divider_conductance_w_k: 0.0,
-        overhang_depth_m: 0.0,
-        overhang_offset_m: 0.0,
-        fin_depth_m: 0.0,
-        fin_offset_m: 0.0,
-        glazing_construction_id: None,
-    });
-    let pre = PrecomputedModel::build(&model, 60, 60);
-    let fen = pre.fenestrations.get(&EntityId(40)).unwrap();
-    assert_eq!(fen.surface_id, EntityId(30));
-    assert!((fen.shgc - 0.4).abs() < 1e-9);
+fn bestest_floor_area_counts_only_floors() {
+    let model = crate::bestest::model("600").expect("case 600");
+    let pre = PrecomputedModel::build(&model, 10, 10);
+    let zone = model.zones[0].id;
+    assert!((pre.zone_geometry.get(&zone).expect("zone geometry").floor_area_m2 - 48.0).abs() < 1e-9);
+}
+
+/// 🧪️ Windows are cut out of their host: two 6 m² windows on the 21.6 m² south wall leave 9.6 m²
+/// of opaque wall, and the enclosure carries both window faces.
+#[test]
+fn windows_are_placed_on_and_subtracted_from_their_host() {
+    let model = crate::bestest::model("600").expect("case 600");
+    let pre = PrecomputedModel::build(&model, 10, 10);
+    assert_eq!(pre.windows.len(), 2);
+    let south = pre.windows.iter().next().expect("window").1.surface_id;
+    let wall = pre.surfaces.get(&south).expect("host");
+    assert!((wall.gross_area_m2 - 21.6).abs() < 1e-5 && (wall.area_m2 - 9.6).abs() < 1e-5, "gross {} net {}", wall.gross_area_m2, wall.area_m2);
+    for (_, window) in pre.windows.iter() {
+        assert!((surface_area_m2(&window.polygon) - 6.0).abs() < 1e-5);
+        assert!((window.glazing.beam_transmittance(1.0) - 0.6995).abs() < 2e-3, "BESTEST windows are the layered double pane");
+    }
+    let enclosure = pre.enclosures.get(&model.zones[0].id).expect("enclosure");
+    assert_eq!(enclosure.faces.len(), 8);
+}
+
+/// 🧪️ Mass defect: the heavy case's wall and floor chains store an order of magnitude more heat.
+#[test]
+fn heavy_constructions_carry_more_capacitance() {
+    let capacity = |case: &str| {
+        let model = crate::bestest::model(case).expect("case");
+        let pre = PrecomputedModel::build(&model, 10, 10);
+        pre.surfaces.iter().map(|(_, surface)| surface.area_m2 * surface.chain.capacitance_j_m2k.iter().sum::<f64>()).sum::<f64>()
+    };
+    assert!(capacity("900") > 5.0 * capacity("600"));
+}
+
+/// 🧪️ Radiant exchange: approximate view factors are reciprocal and complete, and for black
+/// faces the gray-body exchange factors reduce to the view factors.
+#[test]
+fn enclosure_factors_are_reciprocal_complete_and_black_body_consistent() {
+    let model = crate::bestest::model("600").expect("case 600");
+    let pre = PrecomputedModel::build(&model, 10, 10);
+    let enclosure = pre.enclosures.get(&model.zones[0].id).expect("enclosure");
+    let EnclosureRadiation::Exchange { view_factors, .. } = &enclosure.radiation else { panic!("an 8-face enclosure uses exact factors") };
+    let n = enclosure.faces.len();
+    for i in 0..n {
+        let row: f64 = (0..n).map(|j| view_factors[i * n + j]).sum();
+        assert!((row - 1.0).abs() < 1e-2, "row {i} summed to {row}");
+        for j in 0..n {
+            let (a, b) = (enclosure.areas_m2[i] * view_factors[i * n + j], enclosure.areas_m2[j] * view_factors[j * n + i]);
+            assert!((a - b).abs() < 1e-6 * enclosure.areas_m2[i].max(1.0), "A F not reciprocal between {i} and {j}");
+        }
+    }
+    let black = vec![0.99999; n];
+    let descriptors: Vec<(f64, f64, bool)> = (0..n).map(|i| (i as f64 * 45.0, 90.0, false)).collect();
+    let (view, exchange) = enclosure_factors(&enclosure.areas_m2, &black, &descriptors).expect("factors");
+    for index in 0..n * n {
+        if index % (n + 1) != 0 {
+            assert!((exchange[index] - view[index]).abs() < 1e-3, "black exchange {} vs view {}", exchange[index], view[index]);
+        }
+    }
+    let participation = mean_radiant_participation(&enclosure.areas_m2, &enclosure.emissivities).expect("participation");
+    assert!(participation.iter().all(|p| *p > 0.0));
 }

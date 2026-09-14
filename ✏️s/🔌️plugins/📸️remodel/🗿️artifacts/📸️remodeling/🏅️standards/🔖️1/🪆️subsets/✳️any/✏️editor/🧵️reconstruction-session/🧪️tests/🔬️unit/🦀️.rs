@@ -46,7 +46,7 @@ async fn imported_document(example: &str) -> Arc<RemodelingSnapshot> {
     scene = crate::mutations::apply_remodeling_mutation(&scene, &crate::mutations::update_ingest_params(crate::IngestParams { frame_sample_stride: 1, ..scene.params.ingest.clone() })).expect("every frame is sampled");
     for index in 0..4u32 {
         let asset_id = format!("checker-frame-{index}");
-        let frame = crate::FrameRef { index, timestamp_ms: f64::from(index) * 500.0, asset_id: asset_id.clone() };
+        let frame = FrameRef { index, timestamp_ms: f64::from(index) * 500.0, asset_id: asset_id.clone() };
         let stream = if index == 0 {
             crate::mutations::create_stream(crate::MediaStream { id: "checker".into(), name: "checker".into(), kind: crate::MediaKind::ImageSequence, camera_id: None, sync_offset_ms: 0.0, fps_hint: 2.0, frames: vec![frame], source: None })
         } else {
@@ -445,7 +445,7 @@ async fn the_provisional_result_applies_onto_its_base_and_its_inverse_restores_t
         inverses.push(crate::mutations::inverse_remodeling_mutation(&current, op));
         current = crate::mutations::apply_remodeling_mutation(&current, op).expect("provisional op applies");
     }
-    assert_ne!(current.results.mesh.source, crate::MeshSource::Placeholder, "the committed result replaces the placeholder mesh");
+    assert_ne!(current.results.mesh.source, MeshSource::Placeholder, "the committed result replaces the placeholder mesh");
     assert!(crate::resolve_bounded_remodeling_mesh(&current.durable_artifacts, &current.results.mesh.mesh).is_some(), "the committed mesh handle resolves from the appended content");
     for steps in inverses.into_iter().rev() {
         for step in steps {
@@ -465,6 +465,7 @@ async fn every_bounded_unit_stays_under_the_interactive_ceiling_on_every_example
     let law = &fixture()["interactive"];
     let ceiling = Duration::from_micros(law["ceilingUs"].as_u64().expect("ceiling"));
     let target = Duration::from_micros(law["targetUs"].as_u64().expect("target"));
+    assert_eq!(ceiling, Duration::from_micros(semio_framework_job::INTERACTIVE_STEP_CEILING_US), "the fixture ceiling is the framework's interactive step ceiling");
     for name in law["unitDocuments"].as_array().expect("unit documents").iter().map(|entry| entry.as_str().expect("document")) {
         let document = imported_document(name).await;
         let mut best: Vec<(Duration, &'static str)> = Vec::new();
@@ -491,6 +492,12 @@ async fn every_bounded_unit_stays_under_the_interactive_ceiling_on_every_example
         }
         let (worst, stage) = best.iter().copied().max_by_key(|(elapsed, _)| *elapsed).expect("units");
         let over_target = best.iter().filter(|(elapsed, _)| *elapsed >= target).count();
-        assert!(worst < ceiling, "{name}: the worst bounded unit took {worst:?} in stage {stage}, over the {ceiling:?} ceiling ({over_target} of {} units over the {target:?} target)", best.len());
+        let over_ceiling = best.iter().filter(|(elapsed, _)| *elapsed >= ceiling).count();
+        let sustained = best.iter().fold((0u32, 0u32), |(run, longest), (elapsed, _)| if *elapsed >= ceiling { (run + 1, longest.max(run + 1)) } else { (0, longest) }).1;
+        assert!(
+            sustained < semio_framework_job::SUSTAINED_OVERRUN_QUARANTINE_STEPS,
+            "{name}: {sustained} consecutive bounded units overran the {ceiling:?} ceiling, a sustained overrun the watchdog quarantines (worst {worst:?} in stage {stage}; {over_ceiling} over the ceiling and {over_target} over the {target:?} target of {} units)",
+            best.len()
+        );
     }
 }

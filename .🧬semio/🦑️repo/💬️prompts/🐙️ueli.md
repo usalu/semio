@@ -584,6 +584,11 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+wfc shouldnt be part of procedural plugin but be an individual wfc plugin.
+✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly
+
+---
+
 All folders plural
 
 violations e.g.

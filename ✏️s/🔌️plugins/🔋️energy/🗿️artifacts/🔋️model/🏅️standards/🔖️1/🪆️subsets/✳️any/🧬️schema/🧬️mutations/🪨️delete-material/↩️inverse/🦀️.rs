@@ -18,6 +18,7 @@ pub fn inverse(payload: &super::DeleteMaterial, base: &EnergyModelSnapshot) -> V
         index as u32,
         existing.id,
         existing.name.clone(),
+        existing.roughness,
         existing.thickness_m,
         existing.conductivity_w_m_k,
         existing.density_kg_m3,

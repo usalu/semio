@@ -527,7 +527,7 @@ fn adversarial_timestep_work_unit_stays_below_watchdog() {
     let weather = design_day_hour(12, 35.0);
     let date = crate::calendar::SimDate::new(weather.year, weather.month, weather.day);
     let mut state = SimulationKernel::initialize(&model, &pre, &weather);
-    let mut work = TimestepWork::new(&model, &pre, weather, date, 12.0, pre.zone_timestep_s);
+    let mut work = TimestepWork::new(&model, &pre, HourWeather { previous: weather, current: weather, next: weather }, date, 12.0);
     let start = Instant::now();
     work.step(&model, &SimulationConfig::default(), &pre, &mut state);
     assert!(start.elapsed() < std::time::Duration::from_millis(8), "one adversarial energy work unit exceeded watchdog: {:?}", start.elapsed());
@@ -885,8 +885,8 @@ fn p7c1_cancel_and_deadline_gate_every_declared_numerical_substage_before_mutati
 
 #[test]
 fn p7c1_live_nested_authorities_gate_cancel_deadline_and_stale_before_mutation() {
-    use crate::kernel::{P7C1_PLANT_STAGES, P7C1_SCHEDULE_LOOKUP_STAGES, P7C1_SYSTEM_SUBSTEP_STAGES, P7C1_TIMESTEP_BUILDER_STAGES, P7C1_TIMESTEP_STAGES, P7C1_ZONE_PREPARATION_STAGES};
-    use crate::precompute::{P7C1_PRECOMPUTE_STAGES, P7C1_SURFACE_PRECOMPUTE_STAGES};
+    use crate::kernel::{P7C1_PLANT_STAGES, P7C1_SCHEDULE_LOOKUP_STAGES, P7C1_BALANCE_STAGES, P7C1_TIMESTEP_BUILDER_STAGES, P7C1_TIMESTEP_STAGES, P7C1_ZONE_PREPARATION_STAGES};
+    use crate::precompute::P7C1_PRECOMPUTE_STAGES;
     use crate::sizing::P7C1_SIZING_STAGES;
 
     fn assert_gates(job: &mut EnergyJob, operation: Operation) {
@@ -952,7 +952,6 @@ fn p7c1_live_nested_authorities_gate_cancel_deadline_and_stale_before_mutation()
     job.encode_section = encode_section;
     let mut preview_sequence = 0;
     let mut precompute_gated = false;
-    let mut surface_precompute_gated = false;
     let mut timestep_builder_gated = false;
     let mut timestep_gated = false;
     let mut zone_gated = false;
@@ -973,15 +972,6 @@ fn p7c1_live_nested_authorities_gate_cancel_deadline_and_stale_before_mutation()
             }
             job.precompute.as_mut().expect("precompute").set_stage_for_gate(original);
             precompute_gated = true;
-        }
-        if !surface_precompute_gated && job.precompute.as_ref().and_then(PrecomputeBuilder::surface_stage_for_gate).is_some() {
-            let original = job.precompute.as_ref().and_then(PrecomputeBuilder::surface_stage_for_gate).expect("surface precompute stage");
-            for stage in P7C1_SURFACE_PRECOMPUTE_STAGES {
-                assert!(job.precompute.as_mut().expect("precompute").set_surface_stage_for_gate(stage));
-                assert_gates(&mut job, operation);
-            }
-            job.precompute.as_mut().expect("precompute").set_surface_stage_for_gate(original);
-            surface_precompute_gated = true;
         }
         if !timestep_builder_gated && job.timestep_builder.is_some() {
             let original = job.timestep_builder.as_ref().expect("timestep builder").stage_for_gate();
@@ -1011,13 +1001,13 @@ fn p7c1_live_nested_authorities_gate_cancel_deadline_and_stale_before_mutation()
                 job.timestep_work.as_mut().expect("timestep").set_zone_preparation_stage_for_gate(original);
                 zone_gated = true;
             }
-            if !system_gated && job.timestep_work.as_ref().and_then(TimestepWork::system_substep_stage).is_some() {
-                let original = job.timestep_work.as_ref().and_then(TimestepWork::system_substep_stage).expect("system stage");
-                for stage in P7C1_SYSTEM_SUBSTEP_STAGES {
-                    assert!(job.timestep_work.as_mut().expect("timestep").set_system_substep_stage_for_gate(stage));
+            if !system_gated && job.timestep_work.as_ref().and_then(TimestepWork::balance_stage).is_some() {
+                let original = job.timestep_work.as_ref().and_then(TimestepWork::balance_stage).expect("balance stage");
+                for stage in P7C1_BALANCE_STAGES {
+                    assert!(job.timestep_work.as_mut().expect("timestep").set_balance_stage_for_gate(stage));
                     assert_gates(&mut job, operation);
                 }
-                job.timestep_work.as_mut().expect("timestep").set_system_substep_stage_for_gate(original);
+                job.timestep_work.as_mut().expect("timestep").set_balance_stage_for_gate(original);
                 system_gated = true;
             }
             if !plant_gated && job.timestep_work.as_ref().and_then(TimestepWork::plant_stage).is_some() {
@@ -1075,7 +1065,7 @@ fn p7c1_live_nested_authorities_gate_cancel_deadline_and_stale_before_mutation()
             job.sizing_builder.as_mut().expect("sizing").set_stage_for_gate(original);
             sizing_gated = true;
         }
-        if precompute_gated && surface_precompute_gated && timestep_builder_gated && timestep_gated && zone_gated && system_gated && plant_gated && schedule_gated && warmup_gated && aggregate_zone_gated && aggregate_facility_gated && sizing_gated {
+        if precompute_gated && timestep_builder_gated && timestep_gated && zone_gated && system_gated && plant_gated && schedule_gated && warmup_gated && aggregate_zone_gated && aggregate_facility_gated && sizing_gated {
             InteractiveJob::begin_close(&mut job);
             for _ in 0..100_000 {
                 if matches!(InteractiveJob::close_step(&mut job, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) {

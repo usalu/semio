@@ -68,6 +68,7 @@ import {
   useShellScopeOptional,
   useUiDriver,
   windowChromeClearedTopOffset,
+  windowMeasuresBodyClass,
   type Anchor,
   type ContextMenuItem,
   type GumballConfig,
@@ -727,6 +728,11 @@ export function world3dProjectionContentFrameMounted(fitProjectionContent: boole
   return (fitProjectionContent || projectionFramePending) && !cameraNavigating;
 }
 
+/** 🎯️ Whether the host may paint the manual frame-visible-instances overlay — off when the guest publishes an enabled fit lane ({@link WorldAutoFit}). */
+export function world3dFrameVisibleOverlayOffered(fit: { readonly enabled?: boolean } | null | undefined): boolean {
+  return fit?.enabled !== true;
+}
+
 /** 📷️ Builds the `setCamera` dispatch payload from a viewport camera pose — deliberately omits `projection`
  * (the binary family string, e.g. "orthographic"/"perspective") since the Rust camera struct's `projection`
  * field expects the full taxonomy spec object; forwarding the bare family string there fails deserialization
@@ -1224,6 +1230,8 @@ export type LeftoverWorldSelectionOverlayV1 = {
   readonly gumballAnchorId: string | null;
   readonly activeUtility?: string | null;
   readonly activeToolId?: string | null;
+  /** 🧹️ Guest published an explicit emptying pick — the host must not resurrect prior overlay ids. */
+  readonly selectionCleared?: boolean;
 };
 
 /** 🪟️ The overlay fields ONE pane owns. Everything else in the overlay is the document's, shared by
@@ -1315,12 +1323,14 @@ export function leftoverOverlayCarryingUtilityV1(next: LeftoverWorldSelectionOve
   return carried.activeToolId === undefined ? { ...carried, activeToolId: prior?.activeToolId ?? null } : carried;
 }
 
-/** 🕹️ Hover leftover publishes empty `ids` — a first pick must keep leftover.ids, never fall back to hoveredId. */
-export function leftoverOverlayCarryingSelectionV1(next: LeftoverWorldSelectionOverlayV1, prior: LeftoverWorldSelectionOverlayV1 | null): LeftoverWorldSelectionOverlayV1 {
+/** 🕹️ Hover leftover may publish empty `ids` while selection stays live — unless the guest marked an explicit clear. */
+export function leftoverOverlayCarryingSelectionV1(next: LeftoverWorldSelectionOverlayV1, prior: LeftoverWorldSelectionOverlayV1 | null, selectionCleared = false): LeftoverWorldSelectionOverlayV1 {
   const carried = leftoverOverlayCarryingUtilityV1(next, prior);
   const utility = leftoverOverlayArmedBrushUtilityV1(prior?.activeUtility) && carried.hoveredId && carried.activeUtility === "select"
     ? { ...carried, activeUtility: prior?.activeUtility }
     : carried;
+  const cleared = selectionCleared || utility.selectionCleared === true;
+  if (cleared) return { ...utility, selectionCleared: true };
   if (utility.ids.length > 0 || !prior?.ids.length) return utility;
   return {
     ...utility,
@@ -1368,6 +1378,17 @@ export function leftoverBrushRetainGuestHoverV1(activeUtility: string | null | u
 export function mergeWorldSelectionWithLeftoverV1(base: WorldSelectionRecord, leftover: LeftoverWorldSelectionOverlayV1 | null, instances: readonly WorldInstanceRecord[] = []): WorldSelectionRecord {
   if (!leftoverWorldOverlayAppliesV1(leftover) || !leftover) return base;
   const pose = leftoverWorldGumballPoseV1(leftover, instances);
+  if (leftover.selectionCleared) {
+    return {
+      ...base,
+      ids: [],
+      activeObjectId: null,
+      hoveredId: leftover.hoveredId ?? base.hoveredId,
+      gumballActive: false,
+      gumballTarget: undefined,
+      transformMode: base.transformMode ?? pose.transformMode,
+    };
+  }
   return {
     ...base,
     // 🎯️ `activeObjectId` travels WITH the ids it belongs to. The overlay exists to make a pick visible
@@ -4668,7 +4689,18 @@ export function WorldOrbitProjectionSwitchPane({ spec, onSpecChange, windowEleme
   const projectionLabel = useLabel("ui.host.projection");
   const paneId = world3dProjectionPaneElementId(windowElementSegment);
   const pane = (
-    <Pane id={paneId} anchor={anchor} onAnchorChange={setAnchor} folded={folded} onFoldToggle={() => setFolded((value) => !value)} icon={worldProjectionSpecIconId(spec) as IconName} label={projectionLabel}>
+    <Pane
+      id={paneId}
+      anchor={anchor}
+      onAnchorChange={setAnchor}
+      folded={folded}
+      onFoldToggle={() => setFolded((value) => !value)}
+      icon={worldProjectionSpecIconId(spec) as IconName}
+      label={projectionLabel}
+      bodyClassName={windowMeasuresBodyClass}
+      stackDataAttrs={{ "data-level": "pane" }}
+      dimWhenOpen
+    >
       <WorldProjectionKindSwitch id={paneId} spec={spec} onSpecChange={onSpecChange} />
     </Pane>
   );
@@ -5888,6 +5920,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const hasProjectionSeed = Boolean(pendingProjectionSpecRef.current ?? cameraState.projectionSpec);
   const fitProjectionContent = world3dFitProjectionContent(viewportOwned, cameraNavigating, hasProjectionSeed);
   const projectionContentFrameMounted = world3dProjectionContentFrameMounted(fitProjectionContent, projectionFramePending, cameraNavigating);
+  const frameVisibleOverlayOffered = world3dFrameVisibleOverlayOffered(fit);
   const worldOrbitConstraints = useMemo(() => worldProjectionOrbitConstraints(cameraState.projectionSpec), [cameraState.projectionSpec]);
 
   const marqueePreview = useMemo<{ readonly mergedComponentIds: readonly number[] | null; readonly mergedInstanceIds: readonly string[] | null }>(() => {
@@ -6531,16 +6564,18 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
               className="pointer-events-none absolute z-40 flex flex-col items-end gap-single"
               style={{ top: windowChromeClearedTopOffset, right: "var(--spacing-single)" }}
             >
-              <button
-                id={`world3d-frame-instances-${windowInstanceId ?? node.surfaceId}`}
-                type="button"
-                data-slot="world-frame-instances"
-                className={cn("pointer-events-auto rounded px-single py-half text-xs shadow-sm", glassClass)}
-                data-level="pane"
-                onClick={handleFrameVisibleInstances}
-              >
-                {shellLabel("ui.host.frameVisible")}
-              </button>
+              {frameVisibleOverlayOffered ? (
+                <button
+                  id={`world3d-frame-instances-${windowInstanceId ?? node.surfaceId}`}
+                  type="button"
+                  data-slot="world-frame-instances"
+                  className={cn("pointer-events-auto rounded px-single py-half text-xs shadow-sm", glassClass)}
+                  data-level="pane"
+                  onClick={handleFrameVisibleInstances}
+                >
+                  {shellLabel("ui.host.frameVisible")}
+                </button>
+              ) : null}
               <WorldComputeStatusPane status={computeStatus} glassClass={glassClass} locale={shellScope?.i18n.language} onCancel={() => dispatch(computeStatus.cancelAction, computeStatus.cancelArgs)} />
             </div>
           </>

@@ -3,7 +3,7 @@
   "$id": "semio:window-config-retained-pack-load-fixtures",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "budgets", "owners", "candidateProtocol", "requiredScenarios"],
+  "required": ["schemaVersion", "budgets", "grant", "owners", "savedCamera", "candidateProtocol", "requiredScenarios"],
   "properties": {
     "schemaVersion": { "const": 1 },
     "budgets": {
@@ -15,6 +15,34 @@
         "typedMutationBytes": { "const": 4096 },
         "storeDecodePageConstant": { "const": "ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES" },
         "jobPayloadPageConstant": { "const": "JOB_PAYLOAD_PAGE_BYTES" }
+      }
+    },
+    "grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["derivation", "floorConstant", "turnBoundConstant", "packBound", "exhaustionFault", "capacityFault"],
+      "properties": {
+        "derivation": { "const": "exact-next-allocation-or-release-demand" },
+        "floorConstant": { "const": "ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES" },
+        "turnBoundConstant": { "const": "WINDOW_CONFIG_PACK_LOAD_TURNS" },
+        "packBound": { "const": "owner-maximum-publication-bytes" },
+        "exhaustionFault": { "const": "window-config.load-bound" },
+        "capacityFault": { "const": "window-config.capacity" }
+      }
+    },
+    "savedCamera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "windowId", "viewport"],
+      "properties": {
+        "kind": { "type": "string", "minLength": 1 },
+        "windowId": { "type": "string", "minLength": 1 },
+        "viewport": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["x", "y", "zoom"],
+          "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "zoom": { "type": "number", "exclusiveMinimum": 0 } }
+        }
       }
     },
     "owners": {
@@ -81,7 +109,7 @@
     },
     "requiredScenarios": {
       "type": "array",
-      "minItems": 9,
+      "minItems": 12,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -92,7 +120,7 @@
             "enum": ["identity", "decode", "ready", "commit-race", "reopen", "close"]
           },
           "outcome": {
-            "enum": ["rejected-before-authority-change", "retained-until-bounded-close", "one-current-generation-commits", "exact-packs-restored", "terminal-empty"]
+            "enum": ["rejected-before-authority-change", "retained-until-bounded-close", "one-current-generation-commits", "exact-packs-restored", "typed-fault-never-ok", "terminal-empty"]
           }
         }
       }

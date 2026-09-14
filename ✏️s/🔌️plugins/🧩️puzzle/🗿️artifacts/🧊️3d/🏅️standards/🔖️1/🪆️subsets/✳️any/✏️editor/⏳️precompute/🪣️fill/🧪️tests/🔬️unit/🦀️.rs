@@ -12,7 +12,7 @@ fn faulted(outcome: StepOutcome) -> bool {
     true
 }
 
-use crate::editor::puzzle3d::precompute::geometry::{collision_body_from_buffers, OwnerReservationLimit, DOCUMENT_CELL_SLOTS, DOCUMENT_OWNER_PAGE_BYTES, FIXED_OWNER_PAGE_BYTES, FIXED_OWNER_SLOTS};
+use crate::editor::puzzle3d::precompute::geometry::{collision_body_from_buffers, OwnerReservationLimit, DOCUMENT_CELL_MEMBER_SLOTS, DOCUMENT_CELL_SLOTS, DOCUMENT_OWNER_PAGE_BYTES, FIXED_OWNER_PAGE_BYTES, FIXED_OWNER_SLOTS};
 use semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES;
 use crate::standards::v1::subsets::any::schema::{BrushKindWeights, Fixture, KindCatalogBundle, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexProps};
 use semio_framework_job::{root_cancel_token, Generation, OperationId, RevisionId, StepBudget};
@@ -336,11 +336,11 @@ fn empty_fill_transition_stays_below_watchdog_ceiling() {
         let started = Instant::now();
         let _ = builder.step(&mut context);
         assert!(started.elapsed() < Duration::from_millis(8));
-        if builder.stage == FillJobStage::Complete {
+        if matches!(builder.stage, FillJobStage::Complete(_)) {
             break;
         }
     }
-    assert_eq!(builder.stage, FillJobStage::Complete);
+    assert!(matches!(builder.stage, FillJobStage::Complete(_)));
 }
 
 #[test]
@@ -410,7 +410,7 @@ fn adversarial_broad_phase_fill_is_end_to_end_resumable_below_eight_ms() {
         }
     }
     assert!(first_candidate.is_some_and(|elapsed| elapsed < Duration::from_millis(50)), "adversarial fill did not publish its first candidate within 50ms: {first_candidate:?}");
-    assert_eq!(builder.stage, FillJobStage::Complete);
+    assert!(matches!(builder.stage, FillJobStage::Complete(_)));
     assert_eq!(builder.sequence.len(), 1);
 }
 
@@ -421,8 +421,8 @@ fn document_capacities_match_the_language_neutral_capacity_law() {
     let declared = |field: &str| capacities[field].as_u64().unwrap_or_else(|| panic!("{field} capacity")) as usize;
     assert_eq!([declared("bookkeepingSlots"), declared("bookkeepingPageBytes"), declared("documentPageBytes")], [FIXED_OWNER_SLOTS, FIXED_OWNER_PAGE_BYTES, DOCUMENT_OWNER_PAGE_BYTES]);
     assert_eq!(
-        [declared("objectSlots"), declared("attractionSlots"), declared("vortexSlots"), declared("volumeSlots"), declared("kindSlots"), declared("candidateSlots"), declared("cellSlots")],
-        [DOCUMENT_OBJECT_SLOTS, DOCUMENT_ATTRACTION_SLOTS, DOCUMENT_VORTEX_SLOTS, DOCUMENT_VOLUME_SLOTS, DOCUMENT_KIND_SLOTS, DOCUMENT_CANDIDATE_SLOTS, DOCUMENT_CELL_SLOTS]
+        [declared("objectSlots"), declared("attractionSlots"), declared("vortexSlots"), declared("volumeSlots"), declared("kindSlots"), declared("candidateSlots"), declared("cellSlots"), declared("cellMemberSlots")],
+        [DOCUMENT_OBJECT_SLOTS, DOCUMENT_ATTRACTION_SLOTS, DOCUMENT_VORTEX_SLOTS, DOCUMENT_VOLUME_SLOTS, DOCUMENT_KIND_SLOTS, DOCUMENT_CANDIDATE_SLOTS, DOCUMENT_CELL_SLOTS, DOCUMENT_CELL_MEMBER_SLOTS]
     );
     let nakagin = |field: &str| capacities["nakagin"][field].as_u64().unwrap_or_else(|| panic!("nakagin {field}")) as usize;
     assert!(nakagin("objects") < DOCUMENT_OBJECT_SLOTS, "the flagship fixture leaves the object capacity room to plan into");
@@ -553,12 +553,12 @@ fn nakagin_scale_fill_places_an_object_under_a_fragmented_guest_reservation_ceil
 fn drive_until_settled(builder: &mut FillBuilder, turns: usize) {
     let mut sequence = 0;
     for _ in 0..turns {
-        if builder.stage == FillJobStage::Complete {
+        if matches!(builder.stage, FillJobStage::Complete(_)) {
             return;
         }
         let mut context = test_context(builder, root_cancel_token(), &mut sequence);
         let outcome = builder.step(&mut context);
-        assert!(!faulted(outcome), "a settled planner never faults: {:?} / stalled {}", builder.last_rejection, builder.stalled);
+        assert!(!faulted(outcome), "a settled planner never faults: {:?} / end {:?}", builder.last_rejection, builder.end());
     }
     panic!("planner did not settle in {turns} turns at stage {:?} with {} placements", builder.stage, builder.sequence.len());
 }
@@ -587,7 +587,7 @@ fn raising_the_requested_count_continues_the_plan_as_an_exact_prefix() {
     let short_rng = raised.rng_state;
 
     raised.set_requested_count(LONG);
-    assert_eq!((raised.requested_count(), raised.stage, raised.stalled), (LONG, FillJobStage::PrepareTargets, false), "a completed planner wakes up at target selection");
+    assert_eq!((raised.requested_count(), raised.stage, raised.end()), (LONG, FillJobStage::PrepareTargets, None), "a completed planner wakes up at target selection");
     assert_eq!(raised.rng_state, short_rng, "raising never rewinds the stream");
     drive_until_settled(&mut raised, 4_000_000);
     assert_eq!(raised.sequence.len(), LONG);
@@ -614,7 +614,7 @@ fn lowering_the_requested_count_discards_the_planned_tail_and_raising_continues(
     drive_until_settled(&mut builder, 4_000_000);
     assert_eq!((builder.sequence.len(), builder.appended_objects.len(), builder.appended_attractions.len()), (LOWERED, LOWERED, LOWERED));
     assert_eq!(builder.placed_lookup.len(), owners_before - (PLANNED - LOWERED), "every discarded placement withdrew its own spatial owner");
-    assert_eq!(builder.stage, FillJobStage::Complete, "a plan that already holds what was asked for stops there");
+    assert_eq!(builder.stage, FillJobStage::Complete(FillPlanEnd::Reached), "a plan that already holds what was asked for stops there");
 
     builder.set_requested_count(RAISED);
     drive_until_settled(&mut builder, 4_000_000);
@@ -1552,13 +1552,12 @@ fn fill_run_visible_end(name: &str, job: &FillRunJob, mirror: &FillRunMirror, re
     assert_eq!(mirror.progress.as_ref().map(|progress| progress.state), Some(ToolRunState::Complete), "{name}: the run's last progress is complete");
     let last = mirror.steps.last().unwrap_or_else(|| panic!("{name}: the run ended with counters {:?} and no step", job.counters()));
     assert_eq!(last.args, vec![ToolRunStepArg::Unsigned(locked)], "{name}: the terminal step carries the placement count");
-    let stalls = [FillRunReason::NoOpenVortex, FillRunReason::NoCompatibleKind, FillRunReason::NoFreePlacement, FillRunReason::DocumentCapacity];
     match (last.kind, FillRunReason::from_code(last.reason)) {
         (ToolRunStepKind::Success, Some(FillRunReason::RequestedReached)) => {
             assert!(locked >= requested as u64 && tested >= locked && requested > 0, "{name}: requested-reached with {locked} of {requested} placed and {tested} tested");
             None
         }
-        (ToolRunStepKind::Warning, Some(reason)) if stalls.contains(&reason) => Some(reason.id()),
+        (ToolRunStepKind::Warning, Some(reason)) if FillStall::ALL.iter().any(|stall| stall.reason() == reason) => Some(reason.id()),
         (kind, reason) => panic!("{name}: the run ended with {kind:?} {reason:?} after {tested} verdicts instead of a declared terminal reason"),
     }
 }

@@ -1,7 +1,7 @@
 //! 🚀️ Engine orchestration: Model + SimulationConfig → Results.
 
 use crate::error::Error;
-use crate::kernel::{SimulationConfig, SimulationEnvironment, SimulationKernel, SimulationModel, SurfaceState, TimestepBuilder, TimestepWork, ZoneState};
+use crate::kernel::{HourWeather, SimulationConfig, SimulationEnvironment, SimulationKernel, SimulationModel, SurfaceState, TimestepBuilder, TimestepWork, WindowState, ZoneState};
 use crate::meters::{EndUse, FuelType, Meter, MeterTable};
 use crate::metrics::{EmissionFactors, EnvironmentalMetrics, ResilienceMetrics, SourceEnergyFactors};
 use crate::model::{FixedTable, Model};
@@ -11,7 +11,6 @@ use crate::results::{Results, RunMetadata, SizingResult, SizingTables, SummaryRo
 use crate::site::WeatherRecord;
 use crate::sizing::{SizingBuilder, SizingConfig};
 use crate::units::Unit;
-use crate::zone_air::ZoneAirState;
 use semio_framework_job::{allocate_operation_id, default_now_us, CancelToken, Checkpoint, CommitCandidate, Generation, InteractiveJob, JobFault, Operation, RevisionId, StepContext, StepOutcome};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use serde::{Deserialize, Serialize};
@@ -21,6 +20,8 @@ use std::time::Instant;
 
 // #region 🔖️RetainedWire
 const ENERGY_WIRE_MAGIC: [u8; 8] = *b"SMENERGY";
+/// 🌡️ Temperature every zone and construction node starts from before warmup.
+const INITIAL_TEMPERATURE_C: f64 = 23.0;
 const ENERGY_WIRE_VERSION: u16 = 1;
 const ENERGY_WIRE_QUEUE_SLOTS: usize = 4;
 const ENERGY_WIRE_LEASE_SLOTS: usize = 64;
@@ -1197,6 +1198,7 @@ impl EnergyNumericalCensus {
             samples,
             history_values,
             summary_rows,
+            identifier_bytes,
         ];
         let observed_items = checked_sum(dimensions)?;
         let observed_bytes = observed_model_bytes(model, config)?.checked_add(weather_records.checked_mul(size_of::<Option<(usize, WeatherRecord)>>())?)?.checked_add(samples.checked_mul(size_of::<f64>() * 3)?)?.checked_add(identifier_bytes)?;
@@ -1325,6 +1327,8 @@ fn observed_identifier_bytes(model: &Model, config: &SimulationConfig) -> Option
     names!(&model.surfaces);
     names!(&model.fenestrations);
     names!(&model.materials);
+    names!(&model.glazing_materials);
+    names!(&model.gas_materials);
     names!(&model.constructions);
     names!(&model.setpoint_managers);
     names!(&model.air_loops);
@@ -1370,6 +1374,8 @@ fn observed_model_bytes(model: &Model, config: &SimulationConfig) -> Option<usiz
     backing!(model.surfaces);
     backing!(model.fenestrations);
     backing!(model.materials);
+    backing!(model.glazing_materials);
+    backing!(model.gas_materials);
     backing!(model.constructions);
     backing!(model.people);
     backing!(model.lighting);
@@ -2137,6 +2143,28 @@ impl EnergyJobAuthority {
         context.set_stage(stage.label());
     }
 
+    /// 🌦️ Weather-table index of the first hour of the run period.
+    fn run_start_record(&self) -> usize {
+        if self.weather.len() < 8_760 {
+            return 0;
+        }
+        let period = SimulationKernel::run_period(&self.config);
+        (crate::calendar::SimDate::new(period.year, period.start_month, period.start_day).day_of_year() as usize - 1) * 24
+    }
+
+    /// 🌦️ The hour at `index` with its neighbours the way an hourly weather file is interpolated:
+    /// the previous hour (the day's last hour when the run or the warmup day starts), the current
+    /// hour, and the next hour of the same day (the day's first hour after its last).
+    fn hour_weather(&self, index: usize, first_of_period: bool) -> HourWeather {
+        let len = self.weather.len().max(1);
+        let record = |i: usize| *self.weather.get_index(i % len).expect("admitted weather record");
+        let hour = index % 24;
+        let day_start = index - hour;
+        let previous = if hour == 0 && (first_of_period || index == 0) { record(day_start + 23) } else { record(index + len - 1) };
+        let next = if hour == 23 { record(day_start) } else { record(index + 1) };
+        HourWeather { previous, current: record(index), next }
+    }
+
     fn weather_record(&self, index: usize) -> WeatherRecord {
         if let Some(epw) = &self.config.weather {
             if let Some(record) = epw.records.get(index) {
@@ -2386,7 +2414,7 @@ impl EnergyJobAuthority {
     }
 
     fn fault(error: &Error) -> StepOutcome {
-        let _ = error;
+        eprintln!("[DEBUG] energy fault {error:?}");
         StepOutcome::Fault(JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) })
     }
 
@@ -2408,7 +2436,7 @@ impl EnergyJobAuthority {
                 advance_validation(work, ValidationStage::ReserveMaterials);
             }
             ValidationStage::ReserveMaterials => {
-                if work.material_ids.admit(self.model.materials.len()).is_err() {
+                if work.material_ids.admit(self.model.materials.len() + self.model.glazing_materials.len() + self.model.gas_materials.len()).is_err() {
                     work.fatal_code = 1;
                 }
                 advance_validation(work, ValidationStage::ReserveConstructions);
@@ -2441,8 +2469,11 @@ impl EnergyJobAuthority {
                 }
             }
             ValidationStage::IndexMaterials => {
-                if let Some(material) = self.model.materials.get(work.cursor) {
-                    match work.material_ids.insert(material.id, ()) {
+                let materials = self.model.materials.len();
+                let glazing = self.model.glazing_materials.len();
+                let layer = self.model.materials.get(work.cursor).map(|material| material.id).or_else(|| work.cursor.checked_sub(materials).and_then(|index| self.model.glazing_materials.get(index)).map(|material| material.id)).or_else(|| work.cursor.checked_sub(materials + glazing).and_then(|index| self.model.gas_materials.get(index)).map(|material| material.id));
+                if let Some(layer_id) = layer {
+                    match work.material_ids.insert(layer_id, ()) {
                         Ok(None) => {}
                         Ok(Some(_)) => work.fatal_code = 4,
                         Err(_) => work.fatal_code = 1,
@@ -2687,7 +2718,7 @@ impl EnergyJobAuthority {
         let Some(zone) = self.model.zones.get(self.aggregate_zone_cursor) else { return true };
         let Some(zone_state) = self.state.as_ref().and_then(|state| state.zones.get(&zone.id)) else { return true };
         let work = self.aggregate_zone_work.get_or_insert_with(AggregateZoneWork::new);
-        let dt_s = self.pre.as_ref().map_or(0.0, |pre| pre.zone_timestep_s);
+        let dt_s = 3600.0;
         match work.stage {
             AggregateZoneStage::Temperature => {
                 if self.hour_index == 0 && work.phase == 0 {
@@ -2742,12 +2773,12 @@ impl EnergyJobAuthority {
                     work.backing_rejected = true;
                     return false;
                 }
-                if let Err(fault) = series.append_admitted(self.hour_index as f64, zone_state.air.temp_c) {
+                if let Err(fault) = series.append_admitted(self.hour_index as f64, zone_state.mean_air_temp_c) {
                     work.series_fault = Some(fault);
                     work.backing_rejected = true;
                     return false;
                 }
-                self.zone_temperature_history.push(zone_state.air.temp_c);
+                self.zone_temperature_history.push(zone_state.mean_air_temp_c);
                 work.advance(AggregateZoneStage::Heating);
             }
             AggregateZoneStage::Heating => {
@@ -2814,7 +2845,7 @@ impl EnergyJobAuthority {
 
     fn step_aggregate_facility(&mut self) -> bool {
         let Some(state) = &self.state else { return true };
-        let dt_s = self.pre.as_ref().map_or(0.0, |pre| pre.zone_timestep_s);
+        let dt_s = 3600.0;
         if self.aggregate_facility_cursor > 1 {
             self.aggregate_facility_cursor = 0;
             self.aggregate_facility_work = None;
@@ -2908,12 +2939,14 @@ impl EnergyJobAuthority {
         if writer.staged_page_len().is_none() {
             let reservation = self.commit_reservation.as_mut().ok_or(OutputFault::BackingRejected)?;
             if self.commit_pages_mounted >= reservation.pages {
+                eprintln!("[DEBUG] mounted {} >= reserved pages {}", self.commit_pages_mounted, reservation.pages);
                 return Err(OutputFault::BackingRejected);
             }
             let source = reservation.take_source(self.commit_pages_mounted).ok_or(OutputFault::BackingRejected)?;
             match context.admit_payload_page(writer, source) {
                 Ok(page) => page.stage(),
                 Err(rejected) => {
+                    eprintln!("[DEBUG] admit_payload_page rejected at page {}", self.commit_pages_mounted);
                     reservation.restore_source(self.commit_pages_mounted, rejected.into_source());
                     return Err(OutputFault::BackingRejected);
                 }
@@ -3073,6 +3106,7 @@ impl EnergyJobAuthority {
                     || aggregate_bytes > semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES
                     || aggregate_items > self.numerical_census.observed_items
                 {
+                    eprintln!("[DEBUG] reserve rejected commits {} pages {} / {} bytes {} / {} items {} / {} output {} {} resident {} {} {}", self.publication.commits.len, aggregate_pages, self.numerical_census.pages, aggregate_bytes, self.numerical_census.observed_bytes, aggregate_items, self.numerical_census.observed_items, work.output_bytes, work.output_items, work.resident_pages, work.resident_bytes, work.resident_items);
                     return Err(OutputFault::BackingRejected);
                 }
                 self.publication.commits.reserve_push().map_err(|_| OutputFault::BackingRejected)?;
@@ -3232,7 +3266,7 @@ impl EnergyJobAuthority {
             EnergyJobStage::Validate => {
                 let complete = self.step_validation();
                 if self.validation.fatal_code != 0 {
-                    return self.begin_fault();
+                    { eprintln!("[DEBUG] begin_fault line 3268 stage {:?}", self.stage); return self.begin_fault(); }
                 }
                 if !complete {
                     return StepOutcome::Yield;
@@ -3246,7 +3280,7 @@ impl EnergyJobAuthority {
                     let record = self.weather_record(self.weather_cursor);
                     if self.weather.insert_stable(self.weather_cursor, record).is_err() {
                         self.weather_fault = Some(WeatherFault::SlotRejected);
-                        return self.begin_fault();
+                        { eprintln!("[DEBUG] begin_fault line 3282 stage {:?}", self.stage); return self.begin_fault(); }
                     }
                     self.weather_cursor += 1;
                     if self.weather_cursor.is_multiple_of(256) {
@@ -3268,7 +3302,7 @@ impl EnergyJobAuthority {
                 } else {
                     builder.step(&self.model);
                     if builder.backing_rejected() {
-                        return self.begin_fault();
+                        { eprintln!("[DEBUG] begin_fault line 3304 stage {:?}", self.stage); return self.begin_fault(); }
                     }
                 }
                 StepOutcome::Yield
@@ -3276,15 +3310,15 @@ impl EnergyJobAuthority {
             EnergyJobStage::InitializeZones => {
                 if self.initialize_backing_stage == 0 {
                     if self.state.as_mut().expect("state exists while reserving zones").zones.admit(self.model.zones.len()).is_err() {
-                        return self.begin_fault();
+                        { eprintln!("[DEBUG] begin_fault line 3312 stage {:?}", self.stage); return self.begin_fault(); }
                     }
                     self.initialize_backing_stage = 1;
                     return StepOutcome::Yield;
                 }
                 if let Some(zone) = self.model.zones.get(self.initialize_cursor) {
                     let weather = *self.weather.get_index(0).expect("admitted weather record");
-                    if self.state.as_mut().expect("state exists while initializing").zones.insert(zone.id, ZoneState { air: ZoneAirState::new(weather.dry_bulb_c, weather.humidity_ratio()), ..ZoneState::empty() }).is_err() {
-                        return self.begin_fault();
+                    if self.state.as_mut().expect("state exists while initializing").zones.insert(zone.id, ZoneState::new(INITIAL_TEMPERATURE_C, weather.humidity_ratio())).is_err() {
+                        { eprintln!("[DEBUG] begin_fault line 3320 stage {:?}", self.stage); return self.begin_fault(); }
                     }
                     self.initialize_cursor += 1;
                 } else {
@@ -3297,38 +3331,61 @@ impl EnergyJobAuthority {
             EnergyJobStage::InitializeSurfaces => {
                 if self.initialize_backing_stage == 2 {
                     if self.state.as_mut().expect("state exists while reserving surfaces").surfaces.admit(self.model.surfaces.len()).is_err() {
-                        return self.begin_fault();
+                        { eprintln!("[DEBUG] begin_fault line 3333 stage {:?}", self.stage); return self.begin_fault(); }
                     }
                     self.initialize_backing_stage = 3;
                     return StepOutcome::Yield;
                 }
-                if let Some(surface) = self.model.surfaces.get(self.initialize_cursor) {
-                    if let Some(precomputed) = self.pre.as_ref().and_then(|pre| pre.surfaces.get(&surface.id)) {
-                        let temperature = self.weather.get_index(0).expect("admitted weather record").dry_bulb_c;
-                        if self
-                            .state
-                            .as_mut()
-                            .expect("state exists while initializing")
-                            .surfaces
-                            .insert(surface.id, SurfaceState { inside_temp_c: temperature, outside_temp_c: temperature, heat_flux_w: 0.0, ctf: precomputed.ctf.clone(), convection_to_zone_w: 0.0 })
-                            .is_err()
-                        {
-                            return self.begin_fault();
+                if self.initialize_backing_stage == 3 {
+                    if let Some(surface) = self.model.surfaces.get(self.initialize_cursor) {
+                        if let Some(nodes) = self.pre.as_ref().and_then(|pre| pre.surfaces.get(&surface.id)).map(|precomputed| precomputed.chain.nodes()) {
+                            let mut temperatures_c = Vec::new();
+                            if temperatures_c.try_reserve_exact(nodes).is_err() {
+                                { eprintln!("[DEBUG] begin_fault line 3343 stage {:?}", self.stage); return self.begin_fault(); }
+                            }
+                            temperatures_c.resize(nodes, INITIAL_TEMPERATURE_C);
+                            if self.state.as_mut().expect("state exists while initializing").surfaces.insert(surface.id, SurfaceState { temperatures_c, inside_convection_w_m2k: 0.0 }).is_err() {
+                                { eprintln!("[DEBUG] begin_fault line 3347 stage {:?}", self.stage); return self.begin_fault(); }
+                            }
                         }
+                        self.initialize_cursor += 1;
+                        return StepOutcome::Yield;
                     }
-                    self.initialize_cursor += 1;
-                } else {
                     self.initialize_cursor = 0;
-                    self.set_stage(context, EnergyJobStage::InitializeWarmupHistory);
-                    return self.begin_preview(context);
+                    self.initialize_backing_stage = 4;
+                    return StepOutcome::Yield;
                 }
-                StepOutcome::Yield
+                if self.initialize_backing_stage == 4 {
+                    if self.state.as_mut().expect("state exists while reserving windows").windows.admit(self.model.fenestrations.len()).is_err() {
+                        { eprintln!("[DEBUG] begin_fault line 3359 stage {:?}", self.stage); return self.begin_fault(); }
+                    }
+                    self.initialize_backing_stage = 5;
+                    return StepOutcome::Yield;
+                }
+                if self.initialize_backing_stage == 5 {
+                    if let Some(fenestration) = self.model.fenestrations.get(self.initialize_cursor) {
+                        if self.pre.as_ref().is_some_and(|pre| pre.windows.contains_key(&fenestration.id)) && self.state.as_mut().expect("state exists while initializing").windows.insert(fenestration.id, WindowState { face_temperatures_c: [INITIAL_TEMPERATURE_C; 2 * crate::fenestration::MAX_PANES], inside_convection_w_m2k: 0.0 }).is_err() {
+                            { eprintln!("[DEBUG] begin_fault line 3367 stage {:?}", self.stage); return self.begin_fault(); }
+                        }
+                        self.initialize_cursor += 1;
+                        return StepOutcome::Yield;
+                    }
+                    self.initialize_cursor = 0;
+                    self.initialize_backing_stage = 6;
+                    return StepOutcome::Yield;
+                }
+                let (faces, nodes) = self.pre.as_ref().map_or((0, 2), |pre| (pre.maximum_enclosure_faces, pre.maximum_nodes));
+                if self.state.as_mut().expect("state exists while reserving the solver").solver.reserve(faces, nodes).is_err() {
+                    { eprintln!("[DEBUG] begin_fault line 3378 stage {:?}", self.stage); return self.begin_fault(); }
+                }
+                self.set_stage(context, EnergyJobStage::InitializeWarmupHistory);
+                self.begin_preview(context)
             }
             EnergyJobStage::InitializeWarmupHistory => {
                 let zones = self.pre.as_ref().map_or(0, |pre| pre.zone_order.len());
                 if self.previous_temperatures.capacity() < zones {
                     if self.previous_temperatures.try_reserve_exact(zones).is_err() {
-                        return self.begin_fault();
+                        { eprintln!("[DEBUG] begin_fault line 3387 stage {:?}", self.stage); return self.begin_fault(); }
                     }
                     return StepOutcome::Yield;
                 }
@@ -3338,7 +3395,7 @@ impl EnergyJobAuthority {
                 }
                 if self.previous_loads.capacity() < zones {
                     if self.previous_loads.try_reserve_exact(zones).is_err() {
-                        return self.begin_fault();
+                        { eprintln!("[DEBUG] begin_fault line 3397 stage {:?}", self.stage); return self.begin_fault(); }
                     }
                     return StepOutcome::Yield;
                 }
@@ -3360,9 +3417,10 @@ impl EnergyJobAuthority {
                 }
                 let pre = self.pre.as_ref().expect("precompute complete before warmup");
                 if self.timestep_work.is_none() && self.timestep_builder.is_none() {
-                    let weather = *self.weather.get_index(self.warmup_hour as usize % self.weather.len()).expect("admitted warmup weather record");
-                    let date = crate::calendar::SimDate::new(weather.year, weather.month, weather.day);
-                    self.timestep_builder = Some(TimestepBuilder::new(pre, weather, date, self.warmup_hour as f64, pre.zone_timestep_s));
+                    let start = self.run_start_record();
+                    let weather = self.hour_weather(start + self.warmup_hour as usize % 24, true);
+                    let date = crate::calendar::SimDate::new(weather.current.year, weather.current.month, weather.current.day);
+                    self.timestep_builder = Some(TimestepBuilder::new(weather, date, self.warmup_hour as f64));
                     return StepOutcome::Yield;
                 }
                 if self.timestep_work.is_none() {
@@ -3468,35 +3526,35 @@ impl EnergyJobAuthority {
                     }
                     1 => {
                         if self.time_series.series.admit(zones).is_err() {
-                            return self.begin_fault();
+                            { eprintln!("[DEBUG] begin_fault line 3528 stage {:?}", self.stage); return self.begin_fault(); }
                         }
                         self.result_backing.series_slots = self.time_series.series.capacity();
                     }
                     2 => {
                         if self.meters.meters.admit(meters).is_err() {
-                            return self.begin_fault();
+                            { eprintln!("[DEBUG] begin_fault line 3534 stage {:?}", self.stage); return self.begin_fault(); }
                         }
                         self.result_backing.meter_slots = self.meters.meters.capacity();
                     }
                     3 => {
                         if self.time_series_order.try_reserve_exact(zones).is_err() {
-                            return self.begin_fault();
+                            { eprintln!("[DEBUG] begin_fault line 3540 stage {:?}", self.stage); return self.begin_fault(); }
                         }
                     }
                     4 => {
                         if self.meter_order.try_reserve_exact(meters).is_err() {
-                            return self.begin_fault();
+                            { eprintln!("[DEBUG] begin_fault line 3545 stage {:?}", self.stage); return self.begin_fault(); }
                         }
                     }
                     5 => {
                         if self.zone_temperature_history.try_reserve_exact(self.numerical_census.history_values).is_err() {
-                            return self.begin_fault();
+                            { eprintln!("[DEBUG] begin_fault line 3550 stage {:?}", self.stage); return self.begin_fault(); }
                         }
                         self.result_backing.history_slots = self.zone_temperature_history.capacity();
                     }
                     6 => {
                         if self.final_summaries.annual_energy.try_reserve_exact(self.numerical_census.summary_rows).is_err() {
-                            return self.begin_fault();
+                            { eprintln!("[DEBUG] begin_fault line 3556 stage {:?}", self.stage); return self.begin_fault(); }
                         }
                         self.result_backing.summary_slots = self.final_summaries.annual_energy.capacity();
                     }
@@ -3515,12 +3573,15 @@ impl EnergyJobAuthority {
                         self.set_stage(context, EnergyJobStage::Finalize);
                         return StepOutcome::Yield;
                     };
-                    let mut weather = *self.weather.get_index(self.hour_index as usize % self.weather.len()).expect("admitted run weather record");
-                    weather.year = date.year;
-                    weather.month = date.month;
-                    weather.day = date.day;
-                    weather.hour = hour;
-                    self.timestep_builder = Some(TimestepBuilder::new(pre, weather, date, self.hour_index as f64, pre.zone_timestep_s));
+                    let record = if self.weather.len() >= 8_760 { (date.day_of_year() as usize - 1) * 24 + hour as usize } else { self.hour_index as usize };
+                    let mut weather = self.hour_weather(record, self.hour_index == 0);
+                    for record in [&mut weather.previous, &mut weather.current, &mut weather.next] {
+                        record.year = date.year;
+                        record.month = date.month;
+                        record.day = date.day;
+                    }
+                    weather.current.hour = hour;
+                    self.timestep_builder = Some(TimestepBuilder::new(weather, date, self.hour_index as f64));
                     return StepOutcome::Yield;
                 }
                 if self.timestep_work.is_none() {
@@ -3550,7 +3611,7 @@ impl EnergyJobAuthority {
                 if self.aggregate_zone_cursor < self.model.zones.len() {
                     let complete = self.step_aggregate_zone();
                     if self.aggregate_zone_work.as_ref().is_some_and(|work| work.backing_rejected) {
-                        return self.begin_fault();
+                        { eprintln!("[DEBUG] begin_fault line 3613 stage {:?}", self.stage); return self.begin_fault(); }
                     }
                     if complete {
                         self.aggregate_zone_cursor += 1;
@@ -3563,7 +3624,7 @@ impl EnergyJobAuthority {
             EnergyJobStage::AggregateFacility => {
                 let complete = self.step_aggregate_facility();
                 if self.aggregate_facility_work.as_ref().is_some_and(|work| work.backing_rejected) {
-                    return self.begin_fault();
+                    { eprintln!("[DEBUG] begin_fault line 3626 stage {:?}", self.stage); return self.begin_fault(); }
                 }
                 if complete {
                     self.hour_index = self.hour_index.saturating_add(1);
@@ -3593,7 +3654,7 @@ impl EnergyJobAuthority {
             EnergyJobStage::Size => {
                 let builder = self.sizing_builder.as_mut().expect("sizing builder exists");
                 if builder.fault().is_some() {
-                    return self.begin_fault();
+                    { eprintln!("[DEBUG] begin_fault line 3656 stage {:?}", self.stage); return self.begin_fault(); }
                 }
                 if builder.is_complete(&self.model) {
                     self.final_sizing = self.sizing_builder.take().map(SizingBuilder::finish);
@@ -3606,7 +3667,7 @@ impl EnergyJobAuthority {
             EnergyJobStage::FinalizeSummaries => {
                 let complete = self.step_finalization();
                 if self.finalization.row_backing_rejected {
-                    return self.begin_fault();
+                    { eprintln!("[DEBUG] begin_fault line 3669 stage {:?}", self.stage); return self.begin_fault(); }
                 }
                 if complete {
                     self.set_stage(context, EnergyJobStage::BuildResults);
@@ -3644,7 +3705,7 @@ impl EnergyJobAuthority {
                         Ok(true) => {}
                         Err(fault) => {
                             self.output_fault = Some(fault);
-                            return self.begin_fault();
+                            { eprintln!("[DEBUG] begin_fault line 3707 stage {:?}", self.stage); return self.begin_fault(); }
                         }
                     }
                 }
@@ -3657,14 +3718,14 @@ impl EnergyJobAuthority {
                     Ok(true) => {}
                     Err(fault) => {
                         self.output_fault = Some(fault);
-                        return self.begin_fault();
+                        { eprintln!("[DEBUG] begin_fault line 3720 stage {:?}", self.stage); return self.begin_fault(); }
                     }
                 }
                 if let Some(writer) = self.output_writer.as_mut() {
                     if writer.staged_page_len().is_some() {
                         if writer.commit_staged_page().is_err() {
                             self.output_fault = Some(OutputFault::BackingRejected);
-                            return self.begin_fault();
+                            { eprintln!("[DEBUG] begin_fault line 3727 stage {:?}", self.stage); return self.begin_fault(); }
                         }
                         return StepOutcome::Yield;
                     }
@@ -3675,7 +3736,7 @@ impl EnergyJobAuthority {
                             if payload.page_count() != reservation.pages || payload.len() != reservation.bytes || self.commit_pages_mounted != reservation.pages || self.commit_items_encoded != reservation.items {
                                 self.output_payload = Some(payload);
                                 self.output_fault = Some(OutputFault::BackingRejected);
-                                return self.begin_fault();
+                                { eprintln!("[DEBUG] begin_fault line 3738 stage {:?}", self.stage); return self.begin_fault(); }
                             }
                             self.output_payload = Some(payload);
                         }
@@ -3892,6 +3953,9 @@ impl EnergyJobAuthority {
                 return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             if state.surfaces.pop().is_some() {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if state.windows.pop().is_some() {
                 return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             self.state = None;
@@ -4407,6 +4471,8 @@ fn close_model_step(model: &mut Model, maximum_bytes: usize) -> Option<(usize, u
     }
     close_named!(model.fenestrations);
     close_named!(model.materials);
+    close_named!(model.glazing_materials);
+    close_named!(model.gas_materials);
     if let Some(construction) = model.constructions.last_mut() {
         close_plain!(construction.layer_material_ids);
         close_string!(construction.name);
@@ -4557,6 +4623,8 @@ fn model_is_terminal_empty(model: &Model) -> bool {
         && model.surfaces.is_empty()
         && model.fenestrations.is_empty()
         && model.materials.is_empty()
+        && model.glazing_materials.is_empty()
+        && model.gas_materials.is_empty()
         && model.constructions.is_empty()
         && model.people.is_empty()
         && model.lighting.is_empty()
@@ -4778,6 +4846,7 @@ pub fn test_model_single_zone() -> Model {
         materials: vec![Material {
             id: EntityId(10),
             name: "Insulation".into(),
+            roughness: SurfaceRoughness::MediumRough,
             thickness_m: 0.1,
             conductivity_w_m_k: 0.04,
             density_kg_m3: 50.0,

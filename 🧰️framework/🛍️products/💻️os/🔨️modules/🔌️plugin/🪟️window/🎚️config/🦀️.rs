@@ -514,16 +514,20 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
     }
 }
 
+/// ⏳️ Turns one registry-driven retained window config load may spend before it faults `window-config.load-bound`.
+pub const WINDOW_CONFIG_PACK_LOAD_TURNS: usize = 1_048_576;
+
 /// 🗂️ Runtime registry of heterogeneous persisted-local window config schemas.
 pub struct WindowConfigOwnerRegistry {
     owners: BTreeMap<&'static str, Box<dyn ErasedWindowConfigStoreOwner>>,
+    retiring: Vec<WindowConfigPackLoad>,
     lifetime: u64,
 }
 
 impl Default for WindowConfigOwnerRegistry {
     fn default() -> Self {
         static NEXT_LIFETIME: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
-        Self { owners: BTreeMap::new(), lifetime: NEXT_LIFETIME.fetch_add(1, std::sync::atomic::Ordering::Relaxed) }
+        Self { owners: BTreeMap::new(), retiring: Vec::new(), lifetime: NEXT_LIFETIME.fetch_add(1, std::sync::atomic::Ordering::Relaxed) }
     }
 }
 
@@ -605,43 +609,64 @@ impl WindowConfigOwnerRegistry {
     }
 
     pub async fn load(&mut self, pack: WindowConfigPack) -> Result<(), Fault> {
+        self.load_within(pack, WINDOW_CONFIG_PACK_LOAD_TURNS).await
+    }
+
+    /// ⏳️ Drives one retained load under exact per-turn demand grants for at most `turns` turns. Exhausting the bound
+    /// is a typed `window-config.load-bound` fault, never `Ok`; a load that cannot retire within the bound is
+    /// parked on the registry, whose bounded close retires it, so no load reaches `Drop` unretired.
+    pub(crate) async fn load_within(&mut self, pack: WindowConfigPack, turns: usize) -> Result<(), Fault> {
         let mut load = self.begin_retained_load(pack)?;
-        let grant = WindowConfigPackLoadGrant::one_page();
         let mut rejected = None;
-        for _ in 0..1_048_576 {
-            let step = if rejected.is_some() || matches!(load.phase(), WindowConfigPackLoadPhase::RetiringDisplacedStore) {
-                match self.close_retained_load_step(&mut load, grant)? {
-                    PluginCloseStep::Complete if load.terminal_is_empty() => break,
-                    _ => continue,
+        let mut settled = false;
+        for _ in 0..turns {
+            let grant = load.next_grant();
+            if rejected.is_some() || matches!(load.phase(), WindowConfigPackLoadPhase::RetiringDisplacedStore) {
+                match self.close_retained_load_step(&mut load, grant) {
+                    Ok(PluginCloseStep::Complete) if load.terminal_is_empty() => {
+                        settled = true;
+                        break;
+                    }
+                    Ok(_) => continue,
+                    Err(fault) => return Err(self.park_retained_load(load, fault)),
                 }
-            } else {
-                self.advance_retained_load(&mut load, grant)
-            };
-            match step {
-                WindowConfigPackLoadStep::Pending(_) => {}
-                WindowConfigPackLoadStep::Ready => match self.commit_retained_load(&mut load) {
-                    WindowConfigPackLoadStep::Rejected(diagnostic) => rejected = Some(diagnostic),
-                    _ => {}
-                },
-                WindowConfigPackLoadStep::Rejected(diagnostic) => rejected = Some(diagnostic),
-                WindowConfigPackLoadStep::Complete => break,
             }
-        }
-        if !load.terminal_is_empty() {
-            load.request_cancel();
-            for _ in 0..1_048_576 {
-                if self.close_retained_load_step(&mut load, grant)? == PluginCloseStep::Complete && load.terminal_is_empty() {
+            match self.advance_retained_load(&mut load, grant) {
+                WindowConfigPackLoadStep::Pending(_) => {}
+                WindowConfigPackLoadStep::Ready => {
+                    if let WindowConfigPackLoadStep::Rejected(diagnostic) = self.commit_retained_load(&mut load) {
+                        rejected = Some(diagnostic);
+                    }
+                }
+                WindowConfigPackLoadStep::Rejected(diagnostic) => rejected = Some(diagnostic),
+                WindowConfigPackLoadStep::Complete => {
+                    settled = true;
                     break;
                 }
             }
         }
-        if !load.terminal_is_empty() {
-            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.load-retirement"), "retained window config load did not reach terminal emptiness within its declared bound"));
+        let fault = rejected.map_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.load-bound"), "retained window config load exhausted its declared turn bound before it settled"), Self::load_fault);
+        if !settled {
+            load.request_cancel();
+            for _ in 0..turns {
+                let grant = load.next_grant();
+                match self.close_retained_load_step(&mut load, grant) {
+                    Ok(PluginCloseStep::Complete) if load.terminal_is_empty() => break,
+                    Ok(_) => {}
+                    Err(retirement) => return Err(self.park_retained_load(load, retirement)),
+                }
+            }
+            return Err(if load.terminal_is_empty() { fault } else { self.park_retained_load(load, fault) });
         }
-        if let Some(diagnostic) = rejected {
-            return Err(Self::load_fault(diagnostic));
+        match rejected {
+            Some(_) => Err(fault),
+            None => Ok(()),
         }
-        Ok(())
+    }
+
+    fn park_retained_load(&mut self, load: WindowConfigPackLoad, fault: Fault) -> Fault {
+        self.retiring.push(load);
+        fault
     }
 
     /// 📥️ Begins a retained exact-partition Pack load without changing live authority.
@@ -695,7 +720,22 @@ impl WindowConfigOwnerRegistry {
         Fault::new(FaultOrigin::Framework, FaultCode::new(code), "retained exact window config Pack load was rejected")
     }
 
+    /// ♻️ Retires parked loads first, each under its own exact release demand (paying back credits it was admitted), then owners.
     pub(crate) fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        if let Some(load) = self.retiring.last_mut() {
+            if maximum_items == 0 {
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            let grant = load.next_grant();
+            return match load.inner.close_step(grant).map_err(|message| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.load-retirement"), message))? {
+                PluginCloseStep::Complete if load.terminal_is_empty() => {
+                    self.retiring.pop();
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                PluginCloseStep::Complete => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.load-retirement"), "parked window config load reported complete without terminal emptiness")),
+                step => Ok(step),
+            };
+        }
         let Some(kind) = self.owners.keys().next().copied() else { return Ok(PluginCloseStep::Complete) };
         let owner = self.owners.get_mut(kind).expect("selected window config owner remains registered");
         let step = owner.close_step(maximum_items, maximum_bytes)?;
@@ -710,7 +750,7 @@ impl WindowConfigOwnerRegistry {
     }
 
     pub(crate) fn terminal_is_empty(&self) -> bool {
-        self.owners.is_empty()
+        self.owners.is_empty() && self.retiring.is_empty()
     }
 
     fn validate_address(&self, authority: &WindowConfigAuthority, mutation: &WindowConfigMutation) -> Result<(), Fault> {

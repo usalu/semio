@@ -1983,19 +1983,25 @@ export interface WorldProjectionKindSwitchProps {
   readonly spec: WorldProjectionSpec;
   readonly onSpecChange: (spec: WorldProjectionSpec) => void;
   readonly className?: string;
+  /** @emoji 🪟️ `"pane"` (default) renders a transparent tree inside {@link Pane} body — same silhouette as window options. `"ribbon"` keeps {@link floatingRibbonSurfaceClass} for standalone window-level overlays. */
+  readonly surface?: "pane" | "ribbon";
 }
 
 /** @emoji 🌲️ Projection-mode switcher — same Parallel/Perspective taxonomy as {@link createWorldProjectionTemplates}; cube owns spatial angles. */
 export function WorldProjectionKindSwitch(props: WorldProjectionKindSwitchProps): ReactElement {
-  const shellClass = props.className ?? cn("pointer-events-auto min-w-40 text-2xs font-medium", floatingRibbonSurfaceClass);
+  const surface = props.surface ?? "pane";
+  const shellClass =
+    props.className ??
+    (surface === "ribbon"
+      ? cn("pointer-events-auto min-w-40 text-2xs font-medium", floatingRibbonSurfaceClass)
+      : cn("pointer-events-auto w-full min-w-0 text-tiny font-medium"));
   const templates = reactHostPort.useMemo(() => createWorldProjectionTemplates({ controllerId: "projection-switch" }), []);
   const items = reactHostPort.useMemo(() => worldProjectionSwitchTreeItems(props.id, templates, props.onSpecChange, props.spec), [props.id, templates, props.onSpecChange, props.spec]);
   const selectedId = childElementId(props.id, worldProjectionTemplateSelectionId(props.spec));
+  const tree = <Tree showLines={surface === "pane"} sortableSections={false} selectionMode="single" selectedIds={[selectedId]} sections={[{ id: childElementId(props.id, "projection-modes"), items }]} />;
   return (
-    <div className={shellClass} data-world-projection-kind-switch data-level="window">
-      <LevelProvider level="window">
-        <Tree showLines={false} sortableSections={false} selectionMode="single" selectedIds={[selectedId]} sections={[{ id: childElementId(props.id, "projection-modes"), items }]} />
-      </LevelProvider>
+    <div className={shellClass} data-world-projection-kind-switch {...(surface === "ribbon" ? { "data-level": "window" as const } : {})}>
+      {surface === "ribbon" ? <LevelProvider level="window">{tree}</LevelProvider> : tree}
     </div>
   );
 }
@@ -3616,7 +3622,19 @@ export interface WorldCanvasProps {
   readonly onPointerMissed?: (event: MouseEvent) => void;
 }
 
-/** @emoji 🌍️ Generic infinite-world r3f canvas shell (`frameloop="demand"`). */
+/** @emoji 🌍️ Generic infinite-world r3f canvas shell (`frameloop="demand"`).
+ *
+ * 🎯️ The canvas is mounted into — and binds its DOM events to — a wrapper element this shell names
+ * itself, never r3f's private inner div. Left to itself, `<Canvas>` connects its handlers to that
+ * inner div inside the r3f root's OWN commit, which lands a turn after the shell has already swapped
+ * the window's surfaces away on a mode or role switch: the div is gone by then and the connect
+ * raises `Cannot read properties of null (reading 'addEventListener')` as an uncaught page error,
+ * one per switch, followed by the `Context Lost` of the canvas nobody kept
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, measured on `http://127.0.0.1:6018/?plugin=generation3d`).
+ * Naming the source removes the null rather than swallowing it — the canvas exists only once the
+ * wrapper does, and a detached element still accepts a listener. The wrapper holds the canvas and
+ * nothing else, so the event scope is exactly the one r3f's inner div had and `props.overlay` stays
+ * outside it. */
 export function WorldCanvas(props: WorldCanvasProps): ReactElement {
   const extra = props.extraRootProps ?? {};
   const frameloop = props.frameloop ?? "demand";
@@ -3624,6 +3642,7 @@ export function WorldCanvas(props: WorldCanvasProps): ReactElement {
   const ownedCamera = props.cameraPosition !== undefined;
   const onWheelRef = reactHostPort.useRef(props.onWheel);
   const wheelCleanupRef = reactHostPort.useRef<(() => void) | null>(null);
+  const [canvasEventSource, setCanvasEventSource] = reactHostPort.useState<HTMLDivElement | null>(null);
   onWheelRef.current = props.onWheel;
   reactHostPort.useEffect(() => () => wheelCleanupRef.current?.(), []);
   const setRootRef = reactHostPort.useCallback(
@@ -3644,49 +3663,54 @@ export function WorldCanvas(props: WorldCanvasProps): ReactElement {
       {...(props.dataLod ? { "data-world-lod": props.dataLod } : {})}
       {...extra}
     >
-      <Canvas
-        frameloop={frameloop}
-        style={{ height: "100%", width: "100%" }}
-        dpr={props.dpr ?? [1, 2]}
-        shadows={props.shadows}
-        camera={
-          ownedCamera
-            ? {
-                up: [...cameraUp] as [number, number, number],
-                position: [...props.cameraPosition!] as [number, number, number],
-                fov: props.cameraFov ?? 45,
-                ...(props.cameraNear !== undefined ? { near: props.cameraNear } : {}),
-                ...(props.cameraFar !== undefined ? { far: props.cameraFar } : {}),
-              }
-            : undefined
-        }
-        gl={props.gl ?? { antialias: true }}
-        onPointerDown={(event) => props.onPointerDown?.(event.nativeEvent)}
-        onPointerMove={(event) => props.onPointerMove?.(event.nativeEvent)}
-        onPointerUp={(event) => props.onPointerUp?.(event.nativeEvent)}
-        onPointerLeave={(event) => props.onPointerLeave?.(event.nativeEvent)}
-        onPointerCancel={(event) => props.onPointerCancel?.(event.nativeEvent)}
-        onWheel={(event) => props.onWheel?.(event.nativeEvent)}
-        onContextMenu={props.onContextMenu}
-        onDoubleClick={(event) => props.onDoubleClick?.(event.nativeEvent)}
-        onLostPointerCapture={(event) => props.onLostPointerCapture?.(event.nativeEvent)}
-        onPointerMissed={props.onPointerMissed}
-        onCreated={({ camera, gl: renderer }) => {
-          wheelCleanupRef.current?.();
-          const canvas = renderer.domElement;
-          const onWheel = (event: WheelEvent) => {
-            event.preventDefault();
-            onWheelRef.current?.(event);
-          };
-          canvas.addEventListener("wheel", onWheel, { passive: false });
-          wheelCleanupRef.current = () => canvas.removeEventListener("wheel", onWheel);
-          props.onCanvasReady?.({ camera, domElement: canvas });
-        }}
-      >
-        {frameloop === "demand" ? <DemandFrameloopKick /> : null}
-        {props.background ? <color attach="background" args={[props.background]} /> : null}
-        <WorldLayerStack>{props.children}</WorldLayerStack>
-      </Canvas>
+      <div ref={setCanvasEventSource} style={{ width: "100%", height: "100%" }}>
+        {canvasEventSource ? (
+          <Canvas
+            eventSource={canvasEventSource}
+            frameloop={frameloop}
+            style={{ height: "100%", width: "100%" }}
+            dpr={props.dpr ?? [1, 2]}
+            shadows={props.shadows}
+            camera={
+              ownedCamera
+                ? {
+                    up: [...cameraUp] as [number, number, number],
+                    position: [...props.cameraPosition!] as [number, number, number],
+                    fov: props.cameraFov ?? 45,
+                    ...(props.cameraNear !== undefined ? { near: props.cameraNear } : {}),
+                    ...(props.cameraFar !== undefined ? { far: props.cameraFar } : {}),
+                  }
+                : undefined
+            }
+            gl={props.gl ?? { antialias: true }}
+            onPointerDown={(event) => props.onPointerDown?.(event.nativeEvent)}
+            onPointerMove={(event) => props.onPointerMove?.(event.nativeEvent)}
+            onPointerUp={(event) => props.onPointerUp?.(event.nativeEvent)}
+            onPointerLeave={(event) => props.onPointerLeave?.(event.nativeEvent)}
+            onPointerCancel={(event) => props.onPointerCancel?.(event.nativeEvent)}
+            onWheel={(event) => props.onWheel?.(event.nativeEvent)}
+            onContextMenu={props.onContextMenu}
+            onDoubleClick={(event) => props.onDoubleClick?.(event.nativeEvent)}
+            onLostPointerCapture={(event) => props.onLostPointerCapture?.(event.nativeEvent)}
+            onPointerMissed={props.onPointerMissed}
+            onCreated={({ camera, gl: renderer }) => {
+              wheelCleanupRef.current?.();
+              const canvas = renderer.domElement;
+              const onWheel = (event: WheelEvent) => {
+                event.preventDefault();
+                onWheelRef.current?.(event);
+              };
+              canvas.addEventListener("wheel", onWheel, { passive: false });
+              wheelCleanupRef.current = () => canvas.removeEventListener("wheel", onWheel);
+              props.onCanvasReady?.({ camera, domElement: canvas });
+            }}
+          >
+            {frameloop === "demand" ? <DemandFrameloopKick /> : null}
+            {props.background ? <color attach="background" args={[props.background]} /> : null}
+            <WorldLayerStack>{props.children}</WorldLayerStack>
+          </Canvas>
+        ) : null}
+      </div>
       {props.overlay}
     </div>
   );

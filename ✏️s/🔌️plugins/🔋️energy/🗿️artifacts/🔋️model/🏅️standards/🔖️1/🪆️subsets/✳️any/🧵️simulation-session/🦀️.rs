@@ -21,7 +21,7 @@ pub const ENERGY_SIMULATION_RUN_SCHEMA: &str = "energy.simulation.run.v1";
 pub const ENERGY_SIMULATION_RUN_SETTINGS: [&str; 3] = ["/zoneTimestepMinutes", "/systemTimestepMinutes", "/warmupDays"];
 const MAXIMUM_CAPTURE_ITEMS: usize = 4_194_304;
 const MAXIMUM_CAPTURE_BYTES: usize = 512 * 1_024 * 1_024;
-const CAPTURE_LAST_LANE: u8 = 45;
+const CAPTURE_LAST_LANE: u8 = 47;
 
 /// 🧭️ Stages of the run as the panel names them: the plugin capture, then the numerical pipeline grouped by tier.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -344,6 +344,8 @@ impl CaptureCensus {
                 (item.rules.capacity().saturating_add(item.holiday_dates.capacity()), item.rules.capacity().saturating_mul(size_of::<crate::schedule::CompactScheduleRule>()).saturating_add(item.holiday_dates.capacity().saturating_mul(size_of::<(u16, u8, u8)>())))
             }),
             45 => nested!(schedules.time_series, |item: &crate::schedule::TimeSeriesSchedule| (item.values.capacity(), item.values.capacity().saturating_mul(size_of::<f64>()))),
+            46 => nested!(glazing_materials, |item: &crate::model::GlazingMaterial| (item.name.capacity(), item.name.capacity())),
+            47 => nested!(gas_materials, |item: &crate::model::GasMaterial| (item.name.capacity(), item.name.capacity())),
             _ => return Ok(true),
         }
         Ok(self.lane > CAPTURE_LAST_LANE)
@@ -561,6 +563,7 @@ impl ModelCapture {
                 |item: &crate::model::Material| crate::model::Material {
                     id: item.id,
                     name: String::new(),
+                    roughness: item.roughness,
                     thickness_m: item.thickness_m,
                     conductivity_w_m_k: item.conductivity_w_m_k,
                     density_kg_m3: item.density_kg_m3,
@@ -891,6 +894,18 @@ impl ModelCapture {
             45 => dynamic!(schedules.time_series, source_item, target_item, |item: &crate::schedule::TimeSeriesSchedule| crate::schedule::TimeSeriesSchedule { id: item.id, values: Vec::new(), timestep_seconds: item.timestep_seconds }, {
                 match self.substage {
                     0 => items!(&mut target_item.values, &source_item.values),
+                    _ => finish_record!(),
+                }
+            }),
+            46 => dynamic!(glazing_materials, source_item, target_item, |item: &crate::model::GlazingMaterial| crate::model::GlazingMaterial { id: item.id, name: String::new(), thickness_m: item.thickness_m, conductivity_w_m_k: item.conductivity_w_m_k, solar_transmittance: item.solar_transmittance, solar_reflectance_front: item.solar_reflectance_front, solar_reflectance_back: item.solar_reflectance_back, visible_transmittance: item.visible_transmittance, visible_reflectance_front: item.visible_reflectance_front, visible_reflectance_back: item.visible_reflectance_back, infrared_transmittance: item.infrared_transmittance, infrared_emissivity_front: item.infrared_emissivity_front, infrared_emissivity_back: item.infrared_emissivity_back }, {
+                match self.substage {
+                    0 => text!(&mut target_item.name, &source_item.name),
+                    _ => finish_record!(),
+                }
+            }),
+            47 => dynamic!(gas_materials, source_item, target_item, |item: &crate::model::GasMaterial| crate::model::GasMaterial { id: item.id, name: String::new(), thickness_m: item.thickness_m, gas: item.gas }, {
+                match self.substage {
+                    0 => text!(&mut target_item.name, &source_item.name),
                     _ => finish_record!(),
                 }
             }),

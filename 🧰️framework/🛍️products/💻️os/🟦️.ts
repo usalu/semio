@@ -12,8 +12,8 @@
  */
 // #endregion Header
 
-import type { AppRef, AppRole, AppRouter, ArtifactDialect, ArtifactDiff, Conflict, ConflictResolution, DispatchReport, Fault, FetchTimeoutResponse, InverseMutation, KernelMutation, MergePolicy, MergeReport, MutationMessage, OpeningPreferences, PluginWasmHandle, TurnOutcome, UndoGroup, UndoPolicy, UtilityLeaf } from "@semio-tech/framework";
-import { conflictResolutionAsU8, createTurnOutcomeBroadcast, dialectCoordinate, fetchWithTimeout, mergePolicyAsU8, parseDialectCoordinate, parseSurfaceAppId, resolveOpeningApp, retryWithJitteredBackoff } from "@semio-tech/framework";
+import type { AppRef, AppRole, AppRouter, ArtifactDialect, ArtifactDiff, Conflict, ConflictResolution, DispatchReport, Fault, FetchTimeoutResponse, InverseMutation, KernelMutation, MergePolicy, MergeReport, MutationMessage, OpeningPreferences, PluginViewState, PluginWasmHandle, TurnOutcome, UndoGroup, UndoPolicy, UtilityLeaf } from "@semio-tech/framework";
+import { conflictResolutionAsU8, createTurnOutcomeBroadcast, dialectCoordinate, fetchWithTimeout, mergePolicyAsU8, parseDialectCoordinate, parseSurfaceAppId, resolveOpeningApp, retryWithJitteredBackoff, viewContextWithIntegerCarriers } from "@semio-tech/framework";
 /** 📇️ Directory event/command/DTO types (contract-freeze §C1/§C6) — imported once here for
  * {@link BackboneWorkerRequest}/{@link BackboneWorkerResponse}'s `directory-*` variants and this
  * file's `🔖️HubBinding` region; never redeclared (lane 0-A owns the type source). */
@@ -1887,6 +1887,34 @@ export function encodePackValue(value: unknown): Uint8Array<ArrayBuffer> {
   out.push(PACK_TAG_VALUE);
   packEncodeValue(value, symbolIndex, out);
   return new Uint8Array(out);
+}
+
+/** 🪟️ ONE host→guest view context as the value its pack encoding is taken from — every
+ * exact-integer field minted as a {@link PackInteger} instead of the JavaScript `number` the host
+ * builds it with.
+ *
+ * A JS `number` is an IEEE double and nothing else, so {@link encodePackValue} writes every one of
+ * them as `TAG_F64`. The guest decodes `ToolRunTraceCursor { run: u64, … }` through `FromValue`,
+ * whose unsigned arm refuses a `Float` by design (`🌱️value/🔁️codec/🦀️.rs`) — so the first
+ * integer-typed view-state field the shell ever carried failed to decode and took EVERY guest turn
+ * with it (`toolRunTraceCursorByWindowId.procedural-preview.run.expected an exact u64 integer, found
+ * Float(1.0)`, ticket 26/09/09/PROCEDURAL-3D-END-TO-END). The wgpu door has no such hole because its
+ * producer is Rust and `ToValue` answers `Number::UInt`; this is the React door's twin of that, and
+ * the two are pinned to the same bytes by
+ * `🛂️manifest/🪟️view-context/🧫️fixtures/🔢️integer-carriers/🔣️.json`.
+ *
+ * Which fields are integers is the view-context SCHEMA's knowledge, not this layer's — it is
+ * declared once in {@link viewContextWithIntegerCarriers} (`🛂️manifest/🟦️.ts`).
+ *
+ * 🔁️ Idempotent, because the two renderer doors reach this seam holding different things. The React
+ * shell builds its context out of JavaScript numbers; the wgpu bridge decodes one straight out of
+ * pack and already holds {@link PackInteger} carriers (and, for a call with no context at all,
+ * `undefined`). Anything that is not a view-context object crosses untouched, and a value that is
+ * already a carrier is already exact — minting it twice would throw on the `BigInt` and take the
+ * dispatch with it, which is the very failure this function exists to end. */
+export function viewContextWireValue(view: unknown): unknown {
+  if (view === null || typeof view !== "object" || Array.isArray(view)) return view;
+  return viewContextWithIntegerCarriers(view as PluginViewState, (value) => (isPackInteger(value) ? value : packUInt(BigInt(value as number))));
 }
 
 /** 📥️ TS twin of `store::pack_rt::decode_wire_value` — the inverse of {@link encodePackValue}. */
@@ -3795,7 +3823,7 @@ export class AppChannelClient {
    * `UiPatch`es) — routing them is the caller's job. */
   async command(commandBytes: Uint8Array, viewState: unknown): Promise<AppFrameValue[]> {
     return this.sendCommand({
-      Command: { seq: this.nextSeq(), command: Array.from(commandBytes), view_state: Array.from(encodePackValue(viewState)) },
+      Command: { seq: this.nextSeq(), command: Array.from(commandBytes), view_state: Array.from(encodePackValue(viewContextWireValue(viewState))) },
     });
   }
 

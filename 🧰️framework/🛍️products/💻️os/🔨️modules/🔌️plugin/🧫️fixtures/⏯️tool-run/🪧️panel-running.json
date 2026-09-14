@@ -1,0 +1,322 @@
+{
+  "accessibility": {
+    "label": "Tool runs"
+  },
+  "activity": "idle",
+  "bindings": [],
+  "children": [
+    {
+      "accessibility": {
+        "label": "Toy fill"
+      },
+      "activity": "idle",
+      "bindings": [],
+      "children": [
+        {
+          "accessibility": {
+            "live": "polite"
+          },
+          "activity": "idle",
+          "bindings": [],
+          "children": [],
+          "component": {
+            "type": "text",
+            "value": "Running · Filling (1/1)"
+          },
+          "disabled": false,
+          "key": "framework.toolRun.1.status",
+          "layout": {
+            "height": "hug",
+            "kind": "leaf",
+            "width": "hug"
+          },
+          "menu": null,
+          "style": {}
+        },
+        {
+          "accessibility": {},
+          "activity": "idle",
+          "bindings": [],
+          "children": [],
+          "component": {
+            "completed": 0.0,
+            "type": "progress",
+            "valueText": "Filling (1/1): 0 units"
+          },
+          "disabled": false,
+          "key": "framework.toolRun.1.progress",
+          "layout": {
+            "height": "hug",
+            "kind": "leaf",
+            "width": "hug"
+          },
+          "menu": null,
+          "style": {}
+        },
+        {
+          "accessibility": {},
+          "activity": "idle",
+          "bindings": [],
+          "children": [
+            {
+              "accessibility": {
+                "label": "Pause",
+                "shortcut": "mod+alt+enter"
+              },
+              "activity": "idle",
+              "bindings": [
+                {
+                  "action": {
+                    "name": "toolRunPause",
+                    "scope": "s.test.tool-run@1/*#editor",
+                    "version": 1
+                  },
+                  "args": {
+                    "generation": 0.0,
+                    "runId": "1"
+                  },
+                  "trigger": "activate"
+                }
+              ],
+              "children": [],
+              "component": {
+                "icon": "",
+                "label": "Pause",
+                "type": "button"
+              },
+              "disabled": false,
+              "key": "framework.toolRun.1.toolRunPause",
+              "layout": {
+                "height": "hug",
+                "kind": "leaf",
+                "width": "hug"
+              },
+              "menu": null,
+              "style": {}
+            },
+            {
+              "accessibility": {
+                "label": "Step",
+                "shortcut": "mod+alt+arrowright"
+              },
+              "activity": "idle",
+              "bindings": [
+                {
+                  "action": {
+                    "name": "toolRunStep",
+                    "scope": "s.test.tool-run@1/*#editor",
+                    "version": 1
+                  },
+                  "args": {
+                    "generation": 0.0,
+                    "runId": "1"
+                  },
+                  "trigger": "activate"
+                }
+              ],
+              "children": [],
+              "component": {
+                "icon": "",
+                "label": "Step",
+                "type": "button"
+              },
+              "disabled": true,
+              "key": "framework.toolRun.1.toolRunStep",
+              "layout": {
+                "height": "hug",
+                "kind": "leaf",
+                "width": "hug"
+              },
+              "menu": null,
+              "style": {}
+            },
+            {
+              "accessibility": {
+                "label": "Abort",
+                "shortcut": "mod+."
+              },
+              "activity": "idle",
+              "bindings": [
+                {
+                  "action": {
+                    "name": "toolRunAbort",
+                    "scope": "s.test.tool-run@1/*#editor",
+                    "version": 1
+                  },
+                  "args": {
+                    "generation": 0.0,
+                    "runId": "1"
+                  },
+                  "trigger": "activate"
+                }
+              ],
+              "children": [],
+              "component": {
+                "icon": "",
+                "label": "Abort",
+                "type": "button"
+              },
+              "disabled": false,
+              "key": "framework.toolRun.1.toolRunAbort",
+              "layout": {
+                "height": "hug",
+                "kind": "leaf",
+                "width": "hug"
+              },
+              "menu": null,
+              "style": {}
+            },
+            {
+              "accessibility": {
+                "description": "Available once the run is complete",
+                "label": "Finalize",
+                "shortcut": "mod+shift+enter"
+              },
+              "activity": "idle",
+              "bindings": [
+                {
+                  "action": {
+                    "name": "toolRunFinalize",
+                    "scope": "s.test.tool-run@1/*#editor",
+                    "version": 1
+                  },
+                  "args": {
+                    "generation": 0.0,
+                    "runId": "1"
+                  },
+                  "trigger": "activate"
+                }
+              ],
+              "children": [],
+              "component": {
+                "icon": "",
+                "label": "Finalize",
+                "type": "button"
+              },
+              "disabled": true,
+              "key": "framework.toolRun.1.toolRunFinalize",
+              "layout": {
+                "height": "hug",
+                "kind": "leaf",
+                "width": "hug"
+              },
+              "menu": null,
+              "style": {}
+            }
+          ],
+          "component": {
+            "type": "container"
+          },
+          "disabled": false,
+          "key": "framework.toolRun.1.actions",
+          "layout": {
+            "align": "stretch",
+            "axis": "horizontal",
+            "gap": "none",
+            "grow": false,
+            "justify": "start",
+            "kind": "stack",
+            "padding": {
+              "all": "none"
+            },
+            "wrap": false
+          },
+          "menu": null,
+          "style": {}
+        },
+        {
+          "accessibility": {
+            "label": "Steps"
+          },
+          "activity": "idle",
+          "bindings": [],
+          "children": [],
+          "component": {
+            "type": "container"
+          },
+          "disabled": false,
+          "key": "framework.toolRun.1.steps",
+          "layout": {
+            "align": "stretch",
+            "axis": "vertical",
+            "gap": "none",
+            "grow": false,
+            "justify": "start",
+            "kind": "stack",
+            "padding": {
+              "all": "none"
+            },
+            "wrap": false
+          },
+          "menu": null,
+          "style": {}
+        },
+        {
+          "accessibility": {
+            "label": "Attempts"
+          },
+          "activity": "idle",
+          "bindings": [],
+          "children": [],
+          "component": {
+            "type": "tree"
+          },
+          "disabled": false,
+          "key": "framework.toolRun.1.trace",
+          "layout": {
+            "align": "stretch",
+            "axis": "vertical",
+            "gap": "none",
+            "grow": false,
+            "justify": "start",
+            "kind": "stack",
+            "padding": {
+              "all": "none"
+            },
+            "wrap": false
+          },
+          "menu": null,
+          "style": {}
+        }
+      ],
+      "component": {
+        "type": "container"
+      },
+      "disabled": false,
+      "key": "framework.toolRun.1",
+      "layout": {
+        "align": "stretch",
+        "axis": "vertical",
+        "gap": "none",
+        "grow": false,
+        "justify": "start",
+        "kind": "stack",
+        "padding": {
+          "all": "none"
+        },
+        "wrap": false
+      },
+      "menu": null,
+      "style": {}
+    }
+  ],
+  "component": {
+    "type": "container"
+  },
+  "disabled": false,
+  "key": "framework.toolRun",
+  "layout": {
+    "align": "stretch",
+    "axis": "vertical",
+    "gap": "none",
+    "grow": false,
+    "justify": "start",
+    "kind": "stack",
+    "padding": {
+      "all": "none"
+    },
+    "wrap": false
+  },
+  "menu": null,
+  "style": {}
+}

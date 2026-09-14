@@ -98,11 +98,14 @@ fn generation2d_window_camera_raw_handlers_are_explicit_no_ops() {
     retire_flow_eval_session(session);
 }
 
+/// 🪟️ Runs on a pinned 4 MiB lane: the generate previews render only what the `previewEval` run publishes,
+/// so the law drives a real run (a `removeWidget` gesture plus its hops), and the unoptimized retained
+/// reducer ladder of that path overflows 2 MiB.
 #[test]
 fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reopens() {
     std::thread::Builder::new()
         .name("generation2d-window-camera-ownership-law".into())
-        .stack_size(2 * 1024 * 1024)
+        .stack_size(4 * 1024 * 1024)
         .spawn(|| {
             block_on_generation2d_window_ownership(Box::pin(async {
                 use crate::editor::generation2d::commands::{add_generation, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, node_graph_viewport, remove_widget};
@@ -321,7 +324,7 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                 drop(app);
                 assert!(primary_terminal_empty, "Generation2d primary app was not terminal-empty after close");
                 outcome.expect("Generation2d exact-window ownership runtime law");
-                eprintln!("[DEBUG] Generation2d isolated six exact camera owners, verified retained/raw route separation, rendered/reopened every kind, preserved document/app Pack+SPR, rejected invalid contexts, and closed on a 2 MiB stack");
+                eprintln!("[DEBUG] Generation2d isolated six exact camera owners, verified retained/raw route separation, rendered/reopened every kind, preserved document/app Pack+SPR, rejected invalid contexts, and closed on a 4 MiB stack");
             }))
         })
         .expect("spawn Generation2d window ownership law")

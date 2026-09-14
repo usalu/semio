@@ -391,6 +391,7 @@ export type LeftoverInteractionViewV1 = {
    * guest's own encode (`leftover_interaction_view_from`, `🔌️plugin/🦀️.rs`). `null` is a windowless,
    * document-scoped action — never a synthetic window surface (wave B56). */
   readonly windowId: string | null;
+  readonly selectionCleared?: boolean;
 };
 
 function leftoverStringRecord(value: unknown): Record<string, string> {
@@ -426,7 +427,8 @@ function leftoverHoverRecord(value: unknown): LeftoverInteractionViewV1["hover"]
   return hover;
 }
 
-/** 🕹️ Peels leftover `Invocation.output.interactionView` — same leftover lane as history_patch. */
+/** 🕹️ Peels leftover `Invocation.output.interactionView` — same leftover lane as history_patch.
+ * Gumball visibility follows `gumball.active` only (transform utility), not bare `selectedIds`. */
 export function interactionViewFromLeftoverOutput(output: unknown): LeftoverInteractionViewV1 | null {
   if (!output || typeof output !== "object" || Array.isArray(output)) return null;
   const envelope = output as { interactionView?: unknown };
@@ -448,14 +450,15 @@ export function interactionViewFromLeftoverOutput(output: unknown): LeftoverInte
     selectedIds,
     hoverTarget,
     locked: leftoverLockedRecord(view.locked),
-    gumballActive: gumball.active === true || selectedIds.length > 0,
-    gumballAnchorId: typeof gumball.anchorId === "string" ? gumball.anchorId : selectedIds[0] ?? null,
+    gumballActive: gumball.active === true,
+    gumballAnchorId: typeof gumball.anchorId === "string" ? gumball.anchorId : gumball.active === true ? selectedIds[0] ?? null : null,
     windowId: typeof view.windowId === "string" && view.windowId.length > 0 ? view.windowId : null,
     selection: leftoverSelectionRecord(view.selection),
     hover: leftoverHoverRecord(view.hover),
     activeMode: leftoverStringRecord(view.activeMode),
     activeGranularity: leftoverStringRecord(view.activeGranularity),
     ...(typeof view.activeUtility === "string" ? { activeUtility: view.activeUtility } : {}),
+    ...(view.selectionCleared === true ? { selectionCleared: true } : {}),
   };
 }
 
@@ -486,7 +489,7 @@ export function leftoverWorldGumballPoseV1(
     inst?.position ??
     (inst && inst.x != null && inst.y != null && inst.z != null ? ([inst.x, inst.y, inst.z] as const) : undefined);
   return {
-    transformMode: leftover.gumballActive || leftover.ids.length > 0 ? "transform" : undefined,
+    transformMode: leftover.gumballActive ? "transform" : undefined,
     gumballTarget,
   };
 }

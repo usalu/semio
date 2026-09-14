@@ -44,6 +44,7 @@ import {
   gumballPointerConsumesCanvasEventRef,
   usePaneSlot,
   useLabel,
+  windowMeasuresBodyClass,
   WINDOW_SEARCH_USER,
   type Anchor,
   type CanvasPickRequest,
@@ -4779,7 +4780,18 @@ function WorldOrbitProjectionSwitchPane({ spec, onSpecChange }: { readonly spec:
   const [folded, setFolded] = reactHostPort.useState(true);
   const projectionLabel = useLabel("ui.host.projection");
   const pane = (
-    <Pane id={CAD_ORBIT_PROJECTION_PANE_ID} anchor={anchor} onAnchorChange={setAnchor} folded={folded} onFoldToggle={() => setFolded((value) => !value)} icon={worldProjectionSpecIconId(spec) as IconName} label={projectionLabel}>
+    <Pane
+      id={CAD_ORBIT_PROJECTION_PANE_ID}
+      anchor={anchor}
+      onAnchorChange={setAnchor}
+      folded={folded}
+      onFoldToggle={() => setFolded((value) => !value)}
+      icon={worldProjectionSpecIconId(spec) as IconName}
+      label={projectionLabel}
+      bodyClassName={windowMeasuresBodyClass}
+      stackDataAttrs={{ "data-level": "pane" }}
+      dimWhenOpen
+    >
       <WorldProjectionKindSwitch id={CAD_ORBIT_PROJECTION_PANE_ID} spec={spec} onSpecChange={onSpecChange} />
     </Pane>
   );

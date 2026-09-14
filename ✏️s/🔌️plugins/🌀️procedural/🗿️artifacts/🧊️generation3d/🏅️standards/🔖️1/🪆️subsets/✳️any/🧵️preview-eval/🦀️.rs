@@ -882,11 +882,21 @@ pub fn preview_progress_status_json_for(session: Option<&FlowEvalSession>, run: 
     let mut progress = dsl::json::Object::new();
     // 📈 `unitsDone`/`unitsTotal` are the UNITS OF THE WORK THIS STATUS IS ABOUT, which is what the
     // consumer contract declares them to be (`World3dComputeStatusV1`, and its Rust twin
-    // `world3d_compute_status`) and what both renderers price the pill's `n/m (x%)` off. While the
-    // chain is the only live ledger they are the chain's own node census — a denominator that exists
-    // from the first hop, against the tessellation ledger's `0/0`, which is why every pill this
-    // evaluation painted carried no progress text at all.
-    let (units_done, units_total) = if show_chain_phase { (chain.nodes_done, chain.nodes_total) } else { (status.units_done, status.units_total) };
+    // `world3d_compute_status`) and what both renderers price the pill's `n/m (x%)` off.
+    //
+    // ⚖️ The PHASE is the finest name available; the PROGRESS is the only ledger that spans the whole
+    // evaluation. The budgeted-eval ledger aggregates its LIVE rows only, so finishing a node shrinks
+    // both halves of the fraction and the published pill counted DOWN — measured on 6018 as
+    // `Computing 7/7 (100%)` → `4/6 (67%)` → `3/6 (50%)` → `2/6 (33%)` across one evaluation
+    // (`📓️wgpu-progress-visibility-2026-09-14.md`). A progress bar that runs backwards is worse than
+    // none. The chain census is monotone inside one chain, so whenever it exists it is the fraction,
+    // whatever names the phase; `evalUnitsDone`/`evalUnitsTotal` still carry the finer detail.
+    // ⚖️ The chain owns the fraction while it is working, EXCEPT where it has no census of its own
+    // and a single budgeted evaluation does — there the finer ledger is the best denominator
+    // available. A working chain may never publish `ratio: 1.0`, census or not: `Computing 0/0
+    // (100%)` is the same lie as `idle`.
+    let chain_progress = chain.working && status.in_flight == 0 && matches!(phase, semio_framework_os_flow::PreviewTessellatePhase::Idle) && (chain.nodes_total > 0 || eval_status.in_flight == 0);
+    let (units_done, units_total) = if chain_progress { chain.units() } else { (status.units_done, status.units_total) };
     progress.insert("unitsDone", dsl::json::Value::from(u64::from(units_done)));
     progress.insert("unitsTotal", dsl::json::Value::from(u64::from(units_total)));
     progress.insert("facesDone", dsl::json::Value::from(u64::from(status.faces_done)));
@@ -902,10 +912,10 @@ pub fn preview_progress_status_json_for(session: Option<&FlowEvalSession>, run: 
     progress.insert("evalUnitsTotal", dsl::json::Value::from(u64::from(eval_status.units_total)));
     progress.insert("nodesDone", dsl::json::Value::from(u64::from(chain.nodes_done)));
     progress.insert("nodesTotal", dsl::json::Value::from(u64::from(chain.nodes_total)));
-    let ratio = if show_eval_phase {
-        eval_status.ratio()
-    } else if show_chain_phase {
+    let ratio = if chain_progress {
         chain.ratio()
+    } else if show_eval_phase {
+        eval_status.ratio()
     } else {
         status.ratio()
     };

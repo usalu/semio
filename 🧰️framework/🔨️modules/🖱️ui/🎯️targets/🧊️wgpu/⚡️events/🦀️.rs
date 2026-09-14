@@ -11,7 +11,7 @@ use std::collections::HashMap;
 
 use crate::wgpu::arena::NodeId;
 use crate::wgpu::component::layout::ActionDescriptor;
-use crate::wgpu::component::ui::{SurfaceKind, UiNode, UiTreeItemNode, UiTreeSectionNode};
+use crate::wgpu::component::ui::{SurfaceKind, UiNode, UiState, UiTreeItemNode, UiTreeSectionNode};
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::layout::{number_stepper_segments, ring_t_at, slider_value_at};
 use crate::wgpu::tree::{EditState, Node, NodeFlags, NodeKey, UiTree};
@@ -287,7 +287,7 @@ impl CaptureState {
 //#region 🔖️Focus
 /// 🎯️ Which `UiNode` variants participate in Tab-order focus cycling.
 fn is_focusable(node: &UiNode) -> bool {
-    matches!(node, UiNode::Input(_) | UiNode::Button(_) | UiNode::Select(_) | UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) | UiNode::Ring(_) | UiNode::IconSelect(_))
+    matches!(node, UiNode::Input(_) | UiNode::Button(_) | UiNode::Select(_) | UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) | UiNode::Ring(_) | UiNode::IconSelect(_)) && node.presence().state != UiState::Disabled
 }
 
 fn collect_focusable(tree: &UiTree, id: NodeId, out: &mut Vec<NodeId>) {
@@ -1425,7 +1425,7 @@ impl EventRouter {
                                 self.set_drag_payload(id, item.drag_data.clone().unwrap_or_default());
                             }
                         }
-                        if tree.node(id).is_some_and(|node| commits_while_dragging(&node.spec.0)) {
+                        if tree.node(id).is_some_and(|node| commits_while_dragging(&node.spec.0) && node.spec.0.presence().state != UiState::Disabled) {
                             commands.extend(self.pointer_commit(tree, id, *x, *y));
                         }
                     }
@@ -1444,7 +1444,7 @@ impl EventRouter {
                                 node.flags.set(NodeFlags::ACTIVE, false);
                             }
                             tree.mark_dirty(active_id, NodeFlags::DIRTY_PAINT);
-                            if hit_test(tree, root, *x, *y) == Some(active_id) {
+                            if hit_test(tree, root, *x, *y) == Some(active_id) && tree.node(active_id).is_some_and(|node| node.spec.0.presence().state != UiState::Disabled) {
                                 // 🔽️🎴️ W2 wiring: `Select` toggles its popup (`toggle_select_popup`);
                                 // a `Button` (this covers `Select`'s own synthesized item rows too —
                                 // see `reconcile::children_of`'s `Select` arm — since they're plain
@@ -1514,6 +1514,8 @@ impl EventRouter {
                         commands.push(UiCommand::App { window_id: self.window_id.clone(), action });
                     }
                     commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: self.focus.focused });
+                } else if let Some(action) = self.focused_button_activation(tree, key) {
+                    commands.push(UiCommand::App { window_id: self.window_id.clone(), action });
                 } else {
                     commands.extend(self.route_edit_key(tree, key, *modifiers));
                 }
@@ -1544,6 +1546,18 @@ impl EventRouter {
         let UiNode::ComponentScene(scene) = &node.spec.0 else { return None };
         let rect = absolute_rect(tree, id)?;
         Some(UiCommand::Scene { window_id: self.window_id.clone(), node: id, surface_id: scene.surface_id.clone(), kind: scene.component_kind, rect, event: event.clone() })
+    }
+
+    /// ⏎️ The action `Enter` or `Space` activates on the focused enabled `Button` — the keyboard half of a click, as a
+    /// native `<button>` answers it ([WAI-ARIA button pattern](https://www.w3.org/WAI/ARIA/apg/patterns/button/)).
+    fn focused_button_activation(&self, tree: &UiTree, key: &str) -> Option<ActionDescriptor> {
+        if !matches!(key, "Enter" | "NumpadEnter" | " ") {
+            return None;
+        }
+        match &tree.node(self.focus.focused?)?.spec.0 {
+            UiNode::Button(button) if button.presence.state != UiState::Disabled => Some(button.action.clone()),
+            _ => None,
+        }
     }
 
     /// 👆️ The `UiCommand::App` a press/drag at `(x, y)` over `id` commits, for the pointer-valued

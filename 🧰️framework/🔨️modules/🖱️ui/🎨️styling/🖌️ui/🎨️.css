@@ -1739,6 +1739,24 @@
              var(--icon-animation-ease, ease-in-out) 1;
 }
 
+/* #region 🫨️IconAnimChromeAccessory — grips and secondary chrome actions keep their icons still
+   while the parent toggle/button/row is hovered; they micro-animate only on direct hover. */
+:where(button, a, summary, [role="button"], [role="menuitem"], [role="menuitemcheckbox"],
+       [role="menuitemradio"], [role="tab"], [role="option"], [role="treeitem"],
+       [role="combobox"]):hover
+  :is(
+    [data-slot="drag-handle"],
+    [data-slot="mode-dock-tab-focus"],
+    [data-slot="mode-dock-tab-new-window"],
+    [data-slot="mode-dock-tab-close"],
+    [data-slot="action"],
+    [data-slot="toggle-group-item-action"]
+  ):not(:hover)
+  :where([data-icon], [data-icon-kind]) {
+  animation: none !important;
+}
+/* #endregion 🫨️IconAnimChromeAccessory */
+
 @media (prefers-reduced-motion: reduce) {
   :where([data-icon], [data-icon-kind]) {
     animation: none !important;
@@ -6380,6 +6398,22 @@
 [data-icon="bell"] { --icon-animation: none; --icon-part-1-anim: icon-bell-clapper; --icon-part-1-origin: 12px 19px; --icon-part-1-duration: 650ms; --icon-part-2-anim: icon-bell-ring; --icon-part-2-origin: 50% 12%; --icon-part-2-duration: 650ms; }
 [data-icon="landmark"] { --icon-animation: none; --icon-part-6-anim: icon-landmark-col-a; --icon-part-6-duration: 550ms; --icon-part-1-anim: icon-landmark-col-b; --icon-part-1-duration: 550ms; --icon-part-3-anim: icon-landmark-col-c; --icon-part-3-duration: 550ms; --icon-part-4-anim: icon-landmark-col-d; --icon-part-4-duration: 550ms; }
 
+:where(button, a, summary, [role="button"], [role="menuitem"], [role="menuitemcheckbox"],
+       [role="menuitemradio"], [role="tab"], [role="option"], [role="treeitem"],
+       [role="combobox"]):hover
+  :is(
+    [data-slot="drag-handle"],
+    [data-slot="mode-dock-tab-focus"],
+    [data-slot="mode-dock-tab-new-window"],
+    [data-slot="mode-dock-tab-close"],
+    [data-slot="action"],
+    [data-slot="toggle-group-item-action"]
+  ):not(:hover)
+  :where([data-icon], [data-icon-kind])
+  svg > * {
+  animation: none !important;
+}
+
 /* #endregion 🔧️IconPartAnim */
 
 
@@ -7161,7 +7195,16 @@
  * Hover-scopes keep nested rows as siblings (not descendants), so this does
  * not light up parent grips while hovering a child row.
  */
-[data-hover-scope]:hover [data-slot="drag-handle"] {
+[data-hover-scope]:hover [data-slot="drag-handle"],
+[data-hover-scope]:hover :is([data-slot="mode-dock-tab-focus"], [data-slot="mode-dock-tab-new-window"], [data-slot="mode-dock-tab-close"]) {
+  color: var(--border-emphasized-color);
+}
+
+[data-slot="mode-dock-tab"] :is([data-slot="mode-dock-tab-focus"], [data-slot="mode-dock-tab-new-window"], [data-slot="mode-dock-tab-close"]) {
+  color: var(--muted-foreground);
+}
+
+[data-slot="mode-dock-tab"][data-active="true"] :is([data-slot="mode-dock-tab-focus"], [data-slot="mode-dock-tab-new-window"], [data-slot="mode-dock-tab-close"]) {
   color: var(--border-emphasized-color);
 }
 

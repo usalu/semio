@@ -1,7 +1,9 @@
 {
-  "controlId": "ui.panelToggle.chat",
-  "dockAnchor": "right-middle",
   "frameworkChatPanelId": "framework.chat",
-  "navbarSlot": "trailingBeforeFullscreen",
-  "mutuallyExclusiveAnchors": ["top-right", "bottom-right", "right-middle"]
+  "dockAnchor": "top-right",
+  "navbarHost": "topRightPanelTabs",
+  "tabBarHost": "chrome",
+  "mutuallyExclusiveAnchors": ["top-right", "bottom-right", "right-middle"],
+  "openCornerPanelPinsOppositeVerticalEdge": true,
+  "chatTreeEmptyStateHostClassName": "flex h-full min-h-0 min-w-0 w-full flex-1 flex-col"
 }

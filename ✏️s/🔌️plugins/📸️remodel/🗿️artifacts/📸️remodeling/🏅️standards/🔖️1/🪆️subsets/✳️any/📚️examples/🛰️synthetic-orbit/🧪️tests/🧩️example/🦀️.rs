@@ -11,7 +11,7 @@
 use super::{CAMERA_ID, FRAMES, FRAME_MIME, GROUND_TRUTH_JSON, ID, PRIMARY_TEXT, STREAM_ID};
 use crate::editor::remodeling::commands::import_frame_payload::ImportFramePayload;
 use crate::editor::remodeling::engine::images as remodeling_image;
-use crate::editor::remodeling::unit_tests::context::{app_with_registry, dispatch, durable, pump_run, run_action, run_arguments, start_reconstruction, RemodelingApp};
+use crate::editor::remodeling::unit_tests::context::{app_with_registry, close, dispatch, durable, host_turn, pump_run, settle, run_action, run_arguments, start_reconstruction, RemodelingApp};
 use crate::editor::remodeling::RemodelingCommand;
 use crate::lie::{umeyama, Quatd, Sim3, So3};
 use crate::{CameraCalibration, FrameRef, MediaKind, MediaStream, RemodelingSnapshot};
@@ -444,7 +444,11 @@ async fn imported_app() -> RemodelingApp {
     for (index, (_, bytes)) in FRAMES.iter().enumerate() {
         let payload = ImportFramePayload { payload: frame_payload(*bytes), name: format!("🎞️frame-{index:02}.png"), index: index as u32 };
         dispatch(&mut app, RemodelingCommand::ImportFramePayload(payload)).await;
+        settle(&mut app, "the frame import").await;
     }
+    let ingest = RemodelingCommand::SetIngestParams(crate::editor::remodeling::commands::set_ingest_params::SetIngestParams { frame_sample_stride: 1, max_frames: 32, downscale_long_edge_px: 320, min_sharpness: 0.0 });
+    dispatch(&mut app, ingest).await;
+    settle(&mut app, "the ingest parameters").await;
     app
 }
 
@@ -461,7 +465,7 @@ async fn finalize_reconstruction(app: &mut RemodelingApp) -> (RemodelingSnapshot
         match run.state.wire_name() {
             "complete" => break run,
             "faulted" | "aborted" => panic!("the reconstruction run ended {:?}", run),
-            _ => semio_framework_plugin::PluginApp::advance_typed_operation_publication(app).await.expect("driver turn"),
+            _ => host_turn(app).await,
         }
     };
     assert_eq!(complete.state.wire_name(), "complete");
@@ -469,6 +473,7 @@ async fn finalize_reconstruction(app: &mut RemodelingApp) -> (RemodelingSnapshot
     let output = run_action(app, semio_framework_plugin::TOOL_RUN_FINALIZE_ACTION_ID, arguments).await;
     assert_eq!(output.get("toolRun").and_then(semio_framework_plugin::DslValue::as_str), Some("beginFinalize"));
     pump_run(app, "finalize settles", |run| run.state.wire_name() == "finalized").await;
+    settle(app, "the finalize publication").await;
     (app.snapshot().expect("finalized snapshot"), stages)
 }
 //#endregion 🚚️Driver
@@ -557,6 +562,7 @@ async fn reconstructs_the_synthetic_orbit_against_ground_truth() {
 
     let mesh = &scene.results.mesh;
     assert_ne!(mesh.source, crate::MeshSource::Placeholder, "a completed run must replace the seeded placeholder mesh");
+    close(app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -575,6 +581,35 @@ async fn aborting_the_synthetic_orbit_reconstruction_mid_run_leaves_the_document
     let scene = app.snapshot().expect("aborted snapshot");
     assert!(scene.results.sparse.is_none(), "an aborted run commits no sparse cloud");
     assert_eq!(scene.results.mesh.source, crate::MeshSource::Placeholder, "an aborted run leaves the seeded placeholder mesh in place");
+    close(app);
+}
+#[semio_framework_async_macros::async_test]
+async fn a_finalized_reconstruction_is_one_undoable_edit() {
+    let mut app = app_with_registry().await;
+    for (index, (_, bytes)) in FRAMES.iter().enumerate() {
+        dispatch(&mut app, RemodelingCommand::ImportFramePayload(ImportFramePayload { payload: frame_payload(*bytes), name: format!("🎞️frame-{index:02}.png"), index: index as u32 })).await;
+        settle(&mut app, "the frame import").await;
+    }
+    let before = durable(&mut app).await;
+    let before_scene = app.snapshot().expect("imported snapshot");
+    start_reconstruction(&mut app).await;
+    let complete = pump_run(&mut app, "the run rests", |run| matches!(run.state.wire_name(), "complete" | "faulted")).await;
+    assert_eq!(complete.state.wire_name(), "complete", "the default two-frame sample completes without registering a camera: {complete:?}");
+    let unfinalized = durable(&mut app).await;
+    assert!(unfinalized.0 == before.0 && unfinalized.1 == before.1, "a complete but unfinalized run leaves the document pack byte-identical");
+    let arguments = run_arguments(&mut app).await;
+    let output = run_action(&mut app, semio_framework_plugin::TOOL_RUN_FINALIZE_ACTION_ID, arguments).await;
+    assert_eq!(output.get("toolRun").and_then(semio_framework_plugin::DslValue::as_str), Some("beginFinalize"));
+    pump_run(&mut app, "finalize settles", |run| run.state.wire_name() == "finalized").await;
+    settle(&mut app, "the finalize publication").await;
+    let finalized = durable(&mut app).await;
+    let finalized_scene = app.snapshot().expect("finalized snapshot");
+    assert!(finalized.1 != before.1 && finalized_scene != before_scene, "finalize publishes the reconstruction");
+    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
+    assert_eq!(app.snapshot().expect("undone snapshot"), before_scene, "one undo removes the whole finalized reconstruction");
+    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "redo", semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
+    assert_eq!(app.snapshot().expect("redone snapshot"), finalized_scene, "one redo restores it");
+    close(app);
 }
 //#endregion 🧪️EndToEnd
 

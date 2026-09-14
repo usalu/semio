@@ -54,6 +54,8 @@ semio-framework-plugin = { workspace = true, features = ["component-guest"] }
 # 🧵️ The retained command factory names `semio_framework_job::Operation` in its `ToolJobFactory`
 # signatures, so the job crate has to be linked here the same way `🖨️raster` and `🌍️gis` link it.
 semio-framework-job = { workspace = true }
+# ⏯️ `PluginApp`'s closed fleet names the tool-run contract types, so the plugin crate links the reconstruction tool run's crate.
+semio-framework-tool-run = { workspace = true }
 # 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY: `scene_surface`/`PanelTreeBuilder` speak the semantic
 # contract's own `SurfaceKind`/`BuiltNode`, a different type from the retained `ui_wgpu` spelling the SDK
 # root re-exports — the same explicit dependency `🧱️block` and `🌊️flow` carry for their window scenes.

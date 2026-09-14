@@ -5210,6 +5210,19 @@ pub mod app {
                     Vec::new(),
                 ));
             }
+            // ⏯️ The framework ToolRun panel (contract §2.6) reaches the shell only as a panel tab: every app that
+            // declares a tool run gets it, so start/pause/step/abort/finalize, the progress bar and the step log are
+            // reachable — unless the app declared the reserved id itself.
+            let declares_tool_run = self.tools.iter().any(|tool| tool.run.is_some()) || self.utilities.iter().any(|utility| utility.run.is_some());
+            if declares_tool_run && panel_tab_ids.insert(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_TOOL_RUN_ID.to_string()) {
+                self.panel_tabs.push(PanelTabSpec::framework(
+                    PanelTabKind::App(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_TOOL_RUN_ID.to_string()),
+                    LocalizedLabel::native(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_TOOL_RUN_LABEL, "Werkzeugläufe"),
+                    PanelGroup::Details,
+                    Some(FRAMEWORK_TOOL_RUN_BODY_KEY.to_string()),
+                    Vec::new(),
+                ));
+            }
             let mut layout_window_ids = Vec::new();
             if let Some(layout) = &self.default_layout {
                 layout_window_ids.extend(collect_window_kind_ids_from_layout(layout));
@@ -9392,6 +9405,15 @@ pub mod app {
             }
         }
         ids
+    }
+
+    /// 🧲️ Leftover `interactionView.gumball.active` — always false. Selection leftovers exist so
+    /// Inspection/outliner/gumball-target consumers see ids before the guest lane repaints; arming the
+    /// world gumball is app-authored on the guest `selectionJson` lane (`gumballActive` +
+    /// `transformMode` keyed off the armed utility), never inferred from bare selected ids (puzzle3d
+    /// ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+    pub(crate) fn leftover_gumball_active_v1() -> bool {
+        false
     }
 
     /// 🕹️ Read-only view of the framework-owned INTERACTION mechanism (hover + selection + active
@@ -23729,6 +23751,7 @@ pub mod app {
                 }
                 InteractionVerb::ClearSelection => {
                     retire_leftover_domains = self.registry.interactions().await.map(|def| def.id.clone()).collect();
+                    self.interaction_leftover_ids.clear();
                     for domain_id in &retire_leftover_domains {
                         state.selection.remove(domain_id);
                     }
@@ -23798,12 +23821,13 @@ pub mod app {
             let current_ids: Vec<String> = state.selection.values().flat_map(|selection| selection.ids.iter().cloned()).collect();
             if !current_ids.is_empty() {
                 self.interaction_leftover_ids = current_ids;
-            } else if !self.interaction_leftover_ids.is_empty() {
+            } else if !self.interaction_leftover_ids.is_empty() && retire_leftover_domains.is_empty() {
                 let granularity = state.active_granularity.get("vortex").cloned().or_else(|| state.selection.get("vortex").map(|selection| selection.granularity.clone())).filter(|granularity| !granularity.is_empty()).unwrap_or_else(|| "object".to_string());
                 state.selection.insert("vortex".to_string(), protocol::DomainSelection { granularity: granularity.clone(), ids: self.interaction_leftover_ids.clone(), anchor_id: None });
                 state.active_granularity.entry("vortex".to_string()).or_insert(granularity);
             }
-            let leftover = Self::leftover_interaction_view_from(&state, &self.interaction_hover, meta.view_state.as_ref().and_then(|view| view.window_id.as_deref()));
+            let selection_cleared = !retire_leftover_domains.is_empty();
+            let leftover = Self::leftover_interaction_view_from(&state, &self.interaction_hover, meta.view_state.as_ref().and_then(|view| view.window_id.as_deref()), selection_cleared);
             self.interaction_leftover_selection = Some(state.clone());
             self.validate_framework_reserved_commit(action, permit).await?;
             self.revalidate_and_persist_interaction_state(state, meta, InteractionRevalidateOrigin::Pick).await?;
@@ -23837,14 +23861,14 @@ pub mod app {
         /// it rides the encode so the host publishes the overlay under that pane rather than inferring one
         /// (`publishLeftoverWorldSelectionV1`, `🏛️ShellHost/🟦️.tsx`). `None` is the document scope of a
         /// windowless action — never a synthetic window (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B56).
-        fn leftover_interaction_view_from(state: &protocol::InteractionState, hover: &InteractionHoverState, window_id: Option<&str>) -> DslValue {
+        fn leftover_interaction_view_from(state: &protocol::InteractionState, hover: &InteractionHoverState, window_id: Option<&str>, selection_cleared: bool) -> DslValue {
             let selected_ids = leftover_selected_ids_of(state);
             let locked: Vec<(String, DslValue)> = selected_ids.iter().map(|id| (id.clone(), DslValue::Bool(false))).collect();
             let hover_target = hover.iter().find_map(|(domain, hover)| {
                 hover.ids.first().map(|id| DslValue::object([("domain".to_string(), DslValue::String(domain.clone())), ("channel".to_string(), DslValue::String(hover.channel.clone())), ("id".to_string(), DslValue::String(id.clone()))]))
             });
             let gumball = DslValue::object([
-                ("active".to_string(), DslValue::Bool(!selected_ids.is_empty())),
+                ("active".to_string(), DslValue::Bool(leftover_gumball_active_v1())),
                 ("anchorId".to_string(), selected_ids.first().cloned().map(DslValue::String).unwrap_or(DslValue::Null)),
             ]);
             DslValue::object([(
@@ -23859,6 +23883,7 @@ pub mod app {
                     ("gumball".to_string(), gumball),
                     ("hoverTarget".to_string(), hover_target.unwrap_or(DslValue::Null)),
                     ("windowId".to_string(), window_id.map(|id| DslValue::String(id.to_string())).unwrap_or(DslValue::Null)),
+                    ("selectionCleared".to_string(), DslValue::Bool(selection_cleared)),
                 ]),
             )])
         }
@@ -25777,7 +25802,7 @@ pub mod app {
                     window_transient: window_transient_authority.as_ref().map(|authority| authority.snapshot.clone()),
                 },
             )
-            .with_tool_run(self.tool_runs.view()));
+            .with_tool_run(self.tool_runs.view_for(meta.view_state.as_ref().and_then(|view| view.window_id.as_deref()))));
             let operation_spec = match admission.proof.clone() {
                 QualifiedToolProof::Bounded(_) => {
                     let job = TypedCommandFullOperationJob::<A> {
@@ -28341,8 +28366,8 @@ pub mod app {
                 return Ok(built_to_component_tree(root));
             }
             if body_key == FRAMEWORK_TOOL_RUN_BODY_KEY {
-                let tool_label = self.tool_runs.tool_id().and_then(|tool_id| self.registry.tool_run(tool_id)).map(|(label, _)| label.resolve(Terminology::Native, view_state.locale).to_string());
-                let root = self.tool_runs.panel(&self.registry.controller_id, view_state.locale, tool_label).map_err(|error| plugin_sdk_fault(error.to_string()))?;
+                let (registry, locale) = (&self.registry, view_state.locale);
+                let root = self.tool_runs.panel(&registry.controller_id, locale, |tool_id| registry.tool_run(tool_id).map(|(label, _)| label.resolve(Terminology::Native, locale).to_string())).map_err(|error| plugin_sdk_fault(error.to_string()))?;
                 return Ok(built_to_component_tree(root));
             }
             // 🕹️ Task 5: materialized once, before either branch, then used to stamp EVERY
@@ -28374,7 +28399,7 @@ pub mod app {
                 let Some((_, snapshot, config, history)) = cache.as_ref() else {
                     return Err(plugin_sdk_fault("render cache unavailable after refresh"));
                 };
-                let doc = ArtifactView::with_render_context(tool_runs.overlay_or(snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None).await.with_tool_run(tool_runs.view());
+                let doc = ArtifactView::with_render_context(tool_runs.overlay_or(snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None).await.with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()));
                 let cfg = ConfigView { snapshot: config.as_ref(), window: window_config.as_ref().map(|authority| &authority.snapshot) };
                 let transient = self.transient_store.current_root();
                 let transient = TransientView { snapshot: transient.as_ref(), window: window_transient.as_ref().map(|authority| &authority.snapshot) };
@@ -28392,7 +28417,7 @@ pub mod app {
             let render_operation = self.live_render_operation();
             let VcsArtifactApp { window_config_store, window_transient_store, cache, child_content_root, transient_store, tool_runs, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_render_context(tool_runs.overlay_or(snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None).await.with_tool_run(tool_runs.view());
+            let doc = ArtifactView::with_render_context(tool_runs.overlay_or(snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None).await.with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()));
             let mut engagements = HashMap::new();
             for window in view_state.window_instances.iter().take(UI_RESIDENT_SLOTS) {
                 let Some(window_view_state) = view_state.for_window_instance(&window.id) else { continue };
@@ -28426,7 +28451,7 @@ pub mod app {
             let render_operation = self.live_render_operation();
             let VcsArtifactApp { window_config_store, cache, child_content_root, tool_runs, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_render_context(tool_runs.overlay_or(snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None).await.with_tool_run(tool_runs.view());
+            let doc = ArtifactView::with_render_context(tool_runs.overlay_or(snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None).await.with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()));
             let mut measures = HashMap::new();
             for window in view_state.window_instances.iter().take(UI_RESIDENT_SLOTS) {
                 let Some(window_view_state) = view_state.for_window_instance(&window.id) else { continue };
@@ -28454,7 +28479,7 @@ pub mod app {
             let render_operation = self.live_render_operation();
             let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_render_context(tool_runs.overlay_or(snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None).await.with_tool_run(tool_runs.view());
+            let doc = ArtifactView::with_render_context(tool_runs.overlay_or(snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None).await.with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()));
             let cfg = ConfigView { snapshot: config.as_ref(), window: window_config.as_ref().map(|authority| &authority.snapshot) };
             A::tool_measures(&doc, &cfg, view_state).await
         }
@@ -28498,7 +28523,7 @@ pub mod app {
             // (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`, contract §3.7). The document itself
             // stays the COMMITTED snapshot: a poll decides about work over what has landed, never over a
             // run's own provisional overlay.
-            let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, snapshot_read).await.with_tool_run(tool_runs.view());
+            let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, snapshot_read).await.with_tool_run(tool_runs.view_for(view.and_then(|view| view.window_id.as_deref())));
             let cfg = ConfigView { snapshot: config.as_ref(), window: None };
             A::pending_effects(&instance_operation_owner, &doc, &cfg, view).await
         }

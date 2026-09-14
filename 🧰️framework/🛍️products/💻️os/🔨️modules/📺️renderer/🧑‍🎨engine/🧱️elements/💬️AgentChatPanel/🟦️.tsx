@@ -23,7 +23,7 @@ export function AgentChatPanel({ status, presence }: AgentChatPanelProps): React
         <span className="text-sm font-medium">{title}</span>
         <AgentPresence status={status} presence={presence} />
       </div>
-      <div className="min-h-0 flex-1">
+      <div className="flex h-full min-h-0 flex-1 flex-col">
         <BasicChatPanel id="framework.chat" title={title} />
       </div>
     </div>

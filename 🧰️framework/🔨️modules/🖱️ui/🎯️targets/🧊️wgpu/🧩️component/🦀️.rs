@@ -722,6 +722,12 @@ pub mod layout {
     /// 🕰️ Reserved `body_key` intercepted first in `VcsArtifactApp::render`, before any app-specific
     /// body-key match — both renderers fetch it like any other panel-tab body.
     pub const FRAMEWORK_HISTORY_BODY_KEY: &str = "framework.body.history";
+    /// ⏯️ Auto-injected into the `panel_tabs` of every app that declares a tool run (`ToolRunDefinition` on a tool or
+    /// utility) by `AppBuilder::build_definition`: the framework ToolRun panel, one group per run, fetched as the
+    /// reserved body `framework.body.toolRun` and revealed by the shell when a run starts.
+    pub const FRAMEWORK_PANEL_TAB_TOOL_RUN_ID: &str = "framework.panel.toolRun";
+    pub const FRAMEWORK_PANEL_TAB_TOOL_RUN_LABEL: &str = "Tool runs";
+    pub const FRAMEWORK_PANEL_TAB_TOOL_RUN_ICON_ID: &str = "framework.panel.toolRun";
 
     /// 🗣️ Resolves a well-known framework panel-tab id to its native English/German label; unknown ids resolve to None so app-specific panel tabs are left untouched.
     pub fn framework_panel_tab_label(id: &str, is_de: bool) -> Option<&'static str> {
@@ -736,6 +742,8 @@ pub mod layout {
             (FRAMEWORK_PANEL_TAB_PARAMETERS_ID, true) => Some("Parameter"),
             (FRAMEWORK_PANEL_TAB_HISTORY_ID, false) => Some(FRAMEWORK_PANEL_TAB_HISTORY_LABEL),
             (FRAMEWORK_PANEL_TAB_HISTORY_ID, true) => Some("Verlauf"),
+            (FRAMEWORK_PANEL_TAB_TOOL_RUN_ID, false) => Some(FRAMEWORK_PANEL_TAB_TOOL_RUN_LABEL),
+            (FRAMEWORK_PANEL_TAB_TOOL_RUN_ID, true) => Some("Werkzeugläufe"),
             _ => None,
         }
     }

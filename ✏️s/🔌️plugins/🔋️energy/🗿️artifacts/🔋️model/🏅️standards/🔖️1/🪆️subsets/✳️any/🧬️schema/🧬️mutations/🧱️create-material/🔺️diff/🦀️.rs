@@ -18,6 +18,7 @@ pub fn diff(payload: &super::CreateMaterial, base: &EnergyModelSnapshot) -> prot
         crate::model::Material {
             id: payload.id,
             name: payload.name.clone(),
+            roughness: payload.roughness,
             thickness_m: payload.thickness_m,
             conductivity_w_m_k: payload.conductivity_w_m_k,
             density_kg_m3: payload.density_kg_m3,

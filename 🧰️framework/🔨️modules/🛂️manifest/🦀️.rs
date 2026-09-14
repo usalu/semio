@@ -1191,7 +1191,7 @@ pub fn interaction_action_definitions(app: &AppDefinition) -> Vec<ActionDefiniti
 //#region 🔖️ToolRun
 pub use semio_framework_tool_run::{
     JobKindId, ToolRunAction, ToolRunCounterDefinition, ToolRunDefinition, ToolRunDefinitionError, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunTraceCursor, ToolRunTraceKind, ToolRunVerdict, TOOL_RUN_ABORT_ACTION_ID,
-    TOOL_RUN_ACTION_IDS, TOOL_RUN_DISMISS_ACTION_ID, TOOL_RUN_DISMISS_CHORD, TOOL_RUN_FINALIZE_ACTION_ID, TOOL_RUN_PAUSE_ACTION_ID, TOOL_RUN_RESUME_ACTION_ID, TOOL_RUN_START_ACTION_ID, TOOL_RUN_STEP_ACTION_ID,
+    tool_run_panel_new_runs, TOOL_RUN_ACTION_IDS, TOOL_RUN_DISMISS_ACTION_ID, TOOL_RUN_DISMISS_CHORD, TOOL_RUN_FINALIZE_ACTION_ID, TOOL_RUN_PAUSE_ACTION_ID, TOOL_RUN_RESUME_ACTION_ID, TOOL_RUN_START_ACTION_ID, TOOL_RUN_STEP_ACTION_ID,
 };
 
 /// ⏯️ Whether any tool or utility of `app` declares a `ToolRunDefinition`.
@@ -4624,6 +4624,10 @@ pub const MAX_SURFACE_BODY_KEY_BYTES: usize = VIEW_CONTEXT_IDENTIFIER_CHARS * VI
 #[cfg(test)]
 #[path = "🧪️tests/🔬️view-context-capacity/🦀️.rs"]
 mod view_context_capacity_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔢️integer-carriers/🦀️.rs"]
+mod view_context_integer_carrier_tests;
 //#endregion 📏️ViewContextCapacity
 
 //#region 📏️PublicInvocationCapacity

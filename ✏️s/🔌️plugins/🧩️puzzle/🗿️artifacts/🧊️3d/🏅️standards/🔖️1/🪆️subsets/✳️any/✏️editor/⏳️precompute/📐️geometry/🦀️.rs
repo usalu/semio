@@ -17,8 +17,8 @@ use std::borrow::Borrow;
 use std::mem::MaybeUninit;
 
 /// 🗜️ Bookkeeping slots: the default page width for owners the memory census walks and the
-/// retirement cursor releases one entry per close grant — a spatial cell's member bucket, the
-/// oversized-span set, the retiring hand-off slots. It bounds one interactive close step's
+/// retirement cursor releases one entry per close grant — the sub-page a spatial cell's member bucket
+/// grows by, the retiring hand-off slots. It bounds one interactive close step's
 /// retirement work, never how large a document may be: document capacities are the
 /// `DOCUMENT_*_SLOTS` constants below.
 pub(crate) const FIXED_OWNER_SLOTS: usize = 32;
@@ -59,9 +59,16 @@ pub(crate) const DOCUMENT_KIND_SLOTS: usize = 256;
 /// again before the next target, so four templates per kind slot bounds the classification maps.
 pub(crate) const DOCUMENT_CANDIDATE_SLOTS: usize = 4 * DOCUMENT_KIND_SLOTS;
 /// 🗺️ Spatial hash cells one fill session may occupy: an object's AABB straddles up to a handful of
-/// 8.0-world-unit cells, so four cells per object slot bounds the cell map while each cell's member
-/// bucket stays at `FIXED_OWNER_SLOTS`.
+/// 8.0-world-unit cells, so four cells per object slot bounds the cell map; each cell's member bucket is
+/// [`DOCUMENT_CELL_MEMBER_SLOTS`] wide.
 pub(crate) const DOCUMENT_CELL_SLOTS: usize = 4 * DOCUMENT_OBJECT_SLOTS;
+/// 🏙️ Members one spatial hash cell may hold: every object the session owns. A dense document — Nakagin's capsule tower
+/// with its bodies' own meshes at 1.5× puts 43 bodies into one 8-unit cell — must never be refused by a cell before the
+/// entry map refuses the object itself, so the only density bound is the document's object capacity. The bucket is
+/// claimed in [`FIXED_OWNER_SLOTS`]-wide sub-pages, so a sparse cell still costs one bookkeeping page.
+pub(crate) const DOCUMENT_CELL_MEMBER_SLOTS: usize = DOCUMENT_OBJECT_SLOTS;
+/// 📏️ The sub-page ceiling an owner declares when only the guest's contiguous-request ceiling sizes its sub-pages.
+pub(crate) const OWNER_SUB_PAGE_UNBOUNDED: usize = usize::MAX;
 
 //#region 🧯️Reservation
 /// 📏️ Slots ONE sub-page of an owner over `T` backs: the largest power of two whose block stays at
@@ -89,6 +96,13 @@ pub(crate) const fn owner_sub_page_slots<T>(slots: usize) -> usize {
         sub_page *= 2;
     }
     sub_page
+}
+
+/// 📏️ Slots ONE sub-page of an owner over `T` declared `slots` wide backs when it also declares a `ceiling` in slots:
+/// [`owner_sub_page_slots`] over the narrower of the two, so a document-wide owner that is usually sparse grows in
+/// bookkeeping-sized steps instead of claiming its guest-ceiling sub-page up front.
+pub(crate) const fn owner_sub_page_slots_within<T>(slots: usize, ceiling: usize) -> usize {
+    owner_sub_page_slots::<T>(if ceiling < slots { ceiling } else { slots })
 }
 
 /// 🧯️ The ONE heap request a fixed owner ever makes: one SUB-PAGE of `slots` elements. Every owner
@@ -336,7 +350,7 @@ impl<T, const N: usize> Drop for FixedOwnerVec<T, N> {
 }
 
 #[derive(Debug)]
-pub(crate) struct FixedOwnerMap<K, V, const N: usize = FIXED_OWNER_SLOTS> {
+pub(crate) struct FixedOwnerMap<K, V, const N: usize = FIXED_OWNER_SLOTS, const S: usize = OWNER_SUB_PAGE_UNBOUNDED> {
     pages: Vec<Box<[Option<(K, V)>]>>,
     sealed: bool,
     len: usize,
@@ -348,10 +362,11 @@ pub(crate) enum FixedOwnerMapInsert<K, V> {
     Occupied { input_key: K, input_value: V },
 }
 
-impl<K, V, const N: usize> FixedOwnerMap<K, V, N> {
-    /// 📏️ Slots ONE sub-page of this owner backs — see [`FixedOwnerVec::sub_page_slots`].
+impl<K, V, const N: usize, const S: usize> FixedOwnerMap<K, V, N, S> {
+    /// 📏️ Slots ONE sub-page of this owner backs — see [`FixedOwnerVec::sub_page_slots`], never more than its declared
+    /// sub-page ceiling `S`.
     pub(crate) const fn sub_page_slots() -> usize {
-        owner_sub_page_slots::<Option<(K, V)>>(N)
+        owner_sub_page_slots_within::<Option<(K, V)>>(N, S)
     }
 
     /// 📏️ Bytes of ONE contiguous sub-page request this owner makes.
@@ -570,8 +585,8 @@ impl<K, V, const N: usize> FixedOwnerMap<K, V, N> {
 }
 
 #[derive(Debug)]
-pub(crate) struct FixedOwnerSet<K, const N: usize = FIXED_OWNER_SLOTS> {
-    values: FixedOwnerMap<K, (), N>,
+pub(crate) struct FixedOwnerSet<K, const N: usize = FIXED_OWNER_SLOTS, const S: usize = OWNER_SUB_PAGE_UNBOUNDED> {
+    values: FixedOwnerMap<K, (), N, S>,
 }
 
 #[derive(Debug)]
@@ -580,7 +595,7 @@ pub(crate) enum FixedOwnerSetInsert<K> {
     Present { input: K },
 }
 
-impl<K, const N: usize> FixedOwnerSet<K, N> {
+impl<K, const N: usize, const S: usize> FixedOwnerSet<K, N, S> {
     pub(crate) fn new() -> Self {
         Self { values: FixedOwnerMap::new() }
     }
@@ -1083,14 +1098,17 @@ impl CollisionAabb {
     }
 }
 
+/// 🏙️ One spatial cell's member ids: document-wide ([`DOCUMENT_CELL_MEMBER_SLOTS`]), claimed a bookkeeping page at a time.
+pub(crate) type CollisionCellMembers = FixedOwnerSet<String, DOCUMENT_CELL_MEMBER_SLOTS, FIXED_OWNER_SLOTS>;
+
 #[derive(Debug)]
 pub(crate) struct CollisionSpatialIndex {
     cell_size: f32,
     entries: FixedOwnerMap<String, CollisionAabb, DOCUMENT_OBJECT_SLOTS>,
-    cells: FixedOwnerMap<(i32, i32, i32), FixedOwnerSet<String>, DOCUMENT_CELL_SLOTS>,
+    cells: FixedOwnerMap<(i32, i32, i32), CollisionCellMembers, DOCUMENT_CELL_SLOTS>,
     oversized: FixedOwnerSet<String, DOCUMENT_KIND_SLOTS>,
     retiring_key: Option<String>,
-    retiring_bucket: Option<FixedOwnerSet<String>>,
+    retiring_bucket: Option<CollisionCellMembers>,
 }
 
 #[derive(Clone, Debug)]
@@ -1662,7 +1680,7 @@ impl CollisionSpatialIndex {
     pub(crate) fn fixed_backing_witness_for_test(&self) -> [(usize, usize, usize); 3] {
         [
             (self.entries.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, CollisionAabb, DOCUMENT_OBJECT_SLOTS>::page_bytes(), self.entries.len()),
-            (self.cells.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<(i32, i32, i32), FixedOwnerSet<String>, DOCUMENT_CELL_SLOTS>::page_bytes(), self.cells.len()),
+            (self.cells.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<(i32, i32, i32), CollisionCellMembers, DOCUMENT_CELL_SLOTS>::page_bytes(), self.cells.len()),
             (self.oversized.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, (), DOCUMENT_KIND_SLOTS>::page_bytes(), self.oversized.len()),
         ]
     }

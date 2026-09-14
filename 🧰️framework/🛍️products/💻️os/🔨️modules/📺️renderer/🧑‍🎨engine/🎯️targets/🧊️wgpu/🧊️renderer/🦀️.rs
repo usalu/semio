@@ -13868,6 +13868,19 @@ impl AppInteractionState {
             }
             return;
         }
+        // 🛑️ The shell's OWN overlay chrome sits inside an engine surface's rect — the World3d
+        // compute-status pill and its cancel control are anchored at `bounds.x + gap`. Claiming the
+        // press for the surface on `bounds.contains` alone made every one of those controls
+        // unpressable: the release path calls the shell first, but `handle_shell_hit` fires on the
+        // PRESS, so the only phase that reached the shell was the one it ignores. Measured on 6118 as
+        // a cancel control that paints, hit-tests and dispatches nothing
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-progress-visibility-2026-09-14.md`).
+        if ShellState::pointer_press_belongs_to_shell_chrome(self.input.hit_at(x, y)) {
+            if let Err(err) = self.shell.handle_pointer_button(x, y, down, button, &mut self.input, &self.theme).await {
+                log_debug(&format!("pointer failed: {err}"));
+            }
+            return;
+        }
         let mut world_consumed = false;
         for state in self.shell.world3d_states.values_mut() {
             if !state.bounds.contains(x, y) {

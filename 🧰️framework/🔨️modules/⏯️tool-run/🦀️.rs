@@ -430,7 +430,42 @@ pub struct ToolRunTransition {
     pub effect: ToolRunEffect,
 }
 
-/// ⚙️ The pure §2.2 reducer.
+/// 🛣️ What a run occupies on its document instance for its local actor (§2.2 invariant 5): every mutating run shares
+/// the one mutating lane, and a read-only run owns the lane of its tool on its window instance.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ToolRunLane {
+    pub mutating: bool,
+    pub tool_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub window_id: Option<String>,
+}
+
+impl ToolRunLane {
+    /// 🤝️ Two runs on the same lane cannot both be non-terminal: two mutating runs always share it, two read-only runs
+    /// share it on the same tool and window, and a mutating and a read-only run never do.
+    pub fn shares(&self, other: &ToolRunLane) -> bool {
+        match (self.mutating, other.mutating) {
+            (true, true) => true,
+            (false, false) => self.tool_id == other.tool_id && self.window_id == other.window_id,
+            _ => false,
+        }
+    }
+
+    /// 🚦️ Admits a start on this lane among the instance's `live` runs: `toolRun.busy` while a run on the same lane is
+    /// non-terminal, else the indices of the terminal runs on the lane the new run replaces.
+    pub fn admit(&self, live: &[(ToolRunLane, ToolRunState)]) -> Result<Vec<usize>, ToolRunRejection> {
+        let shared: Vec<usize> = live.iter().enumerate().filter(|(_, (lane, _))| lane.shares(self)).map(|(index, _)| index).collect();
+        if shared.iter().any(|index| !live[*index].1.is_terminal()) {
+            return Err(ToolRunRejection::Busy);
+        }
+        Ok(shared)
+    }
+}
+
+/// ⚙️ The pure §2.2 reducer of one run slot; [`ToolRunLane::admit`] decides which slot a start may take.
 pub struct ToolRunMachine;
 
 impl ToolRunMachine {
@@ -1950,6 +1985,30 @@ impl ToolRunDefinition {
     }
 }
 //#endregion 🔖️Definition
+
+//#region 🔖️Panel
+/// 🪧️ Key of the framework ToolRun panel root; each run is one child group [`tool_run_panel_group_id`].
+pub const TOOL_RUN_PANEL_ID: &str = "framework.toolRun";
+
+/// 🪧️ The key of run `run`'s group in the ToolRun panel; every id inside the group is scoped under it.
+pub fn tool_run_panel_group_id(run: u64) -> String {
+    format!("{TOOL_RUN_PANEL_ID}.{run}")
+}
+
+/// 🔎️ The run a ToolRun panel group key names; `None` for any other key (a key inside a group included).
+pub fn tool_run_panel_group_run(key: &str) -> Option<u64> {
+    let digits = key.strip_prefix(TOOL_RUN_PANEL_ID)?.strip_prefix('.')?;
+    (!digits.is_empty() && digits.bytes().all(|byte| byte.is_ascii_digit()) && (digits == "0" || !digits.starts_with('0'))).then(|| digits.parse().ok()).flatten()
+}
+
+/// 📣️ The runs a rendered ToolRun panel holds and those of them not in `previous` — the runs whose start makes a
+/// host reveal the panel.
+pub fn tool_run_panel_new_runs<'a>(previous: &std::collections::BTreeSet<u64>, keys: impl IntoIterator<Item = &'a str>) -> (std::collections::BTreeSet<u64>, Vec<u64>) {
+    let current: std::collections::BTreeSet<u64> = keys.into_iter().filter_map(tool_run_panel_group_run).collect();
+    let new = current.difference(previous).copied().collect();
+    (current, new)
+}
+//#endregion 🔖️Panel
 
 //#region 🔖️Actions
 /// ▶️ Framework-reserved action id: start a run.

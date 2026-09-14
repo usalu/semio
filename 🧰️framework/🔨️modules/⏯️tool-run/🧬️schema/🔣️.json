@@ -1012,7 +1012,9 @@
         "templates",
         "limits",
         "definition",
-        "settingsPointers"
+        "settingsPointers",
+        "admission",
+        "panelGroups"
       ],
       "properties": {
         "schema": {
@@ -1436,6 +1438,163 @@
               "minItems": 1,
               "items": {
                 "type": "string"
+              }
+            }
+          }
+        },
+        "admission": {
+          "description": "Start admission among an instance's runs (§2.2 invariant 5): one non-terminal mutating run per actor; read-only runs run concurrently, one per (tool, window). A row names busy, or the indices of the terminal runs the start replaces.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "live",
+              "lane"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "live": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "lane",
+                    "state"
+                  ],
+                  "properties": {
+                    "lane": {
+                      "$ref": "#/$defs/ToolRunLane"
+                    },
+                    "state": {
+                      "$ref": "#/$defs/ToolRunState"
+                    }
+                  }
+                }
+              },
+              "lane": {
+                "$ref": "#/$defs/ToolRunLane"
+              },
+              "rejection": {
+                "$ref": "#/$defs/ToolRunRejection"
+              },
+              "replaces": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "oneOf": [
+              {
+                "properties": {
+                  "rejection": {
+                    "$ref": "#/$defs/ToolRunRejection"
+                  }
+                },
+                "required": [
+                  "rejection"
+                ]
+              },
+              {
+                "properties": {
+                  "replaces": {
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "replaces"
+                ]
+              }
+            ]
+          }
+        },
+        "panelGroups": {
+          "description": "ToolRun panel group keys: which keys name a run, and the runs a rendered panel adds to those a host has seen (it reveals the panel for them).",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rootId",
+            "keys",
+            "reveals"
+          ],
+          "properties": {
+            "rootId": {
+              "const": "framework.toolRun"
+            },
+            "keys": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "key",
+                  "run"
+                ],
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "run": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/U64"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "reveals": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "previous",
+                  "keys",
+                  "current",
+                  "added"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "previous": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/U64"
+                    }
+                  },
+                  "keys": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "current": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/U64"
+                    }
+                  },
+                  "added": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/U64"
+                    }
+                  }
+                }
               }
             }
           }
@@ -2044,6 +2203,29 @@
               "$ref": "#/$defs/ToolRunSettingsPointer"
             }
           }
+        }
+      }
+    },
+    "ToolRunLane": {
+      "title": "ToolRunLane",
+      "description": "What a run occupies on its document instance for its local actor: every mutating run shares the one mutating lane; a read-only run owns the lane of its tool on its window instance.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutating",
+        "toolId"
+      ],
+      "properties": {
+        "mutating": {
+          "type": "boolean"
+        },
+        "toolId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "windowId": {
+          "type": "string",
+          "minLength": 1
         }
       }
     }

@@ -26,6 +26,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.materials.push(crate::model::Material {
         id: crate::model::EntityId(1),
         name: "PLASTERBOARD".into(),
+        roughness: crate::model::SurfaceRoughness::MediumRough,
         thickness_m: 0.012,
         conductivity_w_m_k: 0.16,
         density_kg_m3: 950.0,
@@ -37,6 +38,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.materials.push(crate::model::Material {
         id: crate::model::EntityId(2),
         name: "FIBERGLASS QUILT".into(),
+        roughness: crate::model::SurfaceRoughness::MediumRough,
         thickness_m: 0.066,
         conductivity_w_m_k: 0.04,
         density_kg_m3: 12.0,

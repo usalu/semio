@@ -3837,6 +3837,17 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(container.querySelector('[data-slot="panel-fold"]')).toBeTruthy();
     });
 
+    it("open corner Panel pins the opposite vertical edge so viewport-filling tree bodies receive height", () => {
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
+      const { container } = render(<Panel anchor="top-right" tabBarHost="chrome" visible tabs={tabs} onVisibleChange={() => undefined} />);
+      const panel = container.querySelector('[data-slot="panel"]') as HTMLElement;
+      expect(panel.style.bottom).toBe("var(--spacing-single)");
+      const { container: middleContainer } = render(<Panel anchor="top-middle" visible tabs={tabs} onSizeChange={() => {}} />);
+      const middlePanel = middleContainer.querySelector('[data-slot="panel"]') as HTMLElement;
+      expect(middlePanel.style.bottom).toBe("");
+    });
+
     it("chromeHostedOpenPanelPositionStyle pulls top/bottom caps into the shell chrome band and leaves side-middle canvas insets alone", () => {
       const top = chromeHostedOpenPanelPositionStyle("top-left");
       expect(top.top).toBe("calc(-1 * (var(--size-large) + var(--size-medium)) / 2)");
@@ -4994,8 +5005,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(tabbar?.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeNull();
       expect([...(tabbar?.children ?? [])].map((child) => child.getAttribute("data-slot")).filter(Boolean)).toEqual(["mode-dock-tab-cap", "mode-dock-tab-gap"]);
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).not.toContain("ui-glass-chrome");
-      expect(container.querySelector('[data-slot="mode-dock-tab-focus"]')?.className).toContain("hover:text-foreground");
-      expect(container.querySelector('[data-slot="mode-dock-tab-close"]')?.className).toContain("hover:text-foreground");
+      expect(container.querySelector('[data-slot="mode-dock-tab-focus"]')?.className).not.toContain("text-muted-foreground");
+      expect(container.querySelector('[data-slot="mode-dock-tab-close"]')?.className).not.toContain("text-muted-foreground");
       expect(container.querySelector('[data-slot="mode-dock-tab"]')?.className).toContain("text-element");
       const layoutActiveStack = container.querySelector('[data-slot="window"][data-active="true"]')?.closest('[data-slot="mode-dock-stack"]') as HTMLElement;
       const layoutInactiveStack = [...container.querySelectorAll('[data-slot="mode-dock-stack"]')].find((stack) => !stack.querySelector('[data-slot="window"][data-active="true"]')) as HTMLElement;
@@ -5008,6 +5019,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(layoutActiveStack.getAttribute("data-active")).toBe("true");
         expect(layoutActiveStack.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
       });
+      expect(layoutActiveStack.querySelector('[data-slot="mode-dock-tab"][data-active="true"] [data-slot="mode-dock-tab-close"]')).toBeTruthy();
       expect(layoutInactiveStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
       expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.className).toContain("z-[40]");
       expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("border-0");
@@ -9805,13 +9817,14 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         expect(markup).toMatch(/title="Search.*\(/);
       });
   
-      it("drag handles with a subject render contextual drag instructions", () => {
+      it("drag handles expose glass chrome tooltips instead of native title attributes", () => {
         const markup = renderToStaticMarkup(
           <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
             <DragHandle subject="Perspective Window" />
           </UiDriverProvider>,
         );
-        expect(markup).toContain('title="Click and hold left click to drag Perspective Window"');
+        expect(markup).toContain('data-slot="chrome-control-hint"');
+        expect(markup).not.toMatch(/data-slot="drag-handle"[^>]*\btitle=/);
       });
     });
   
@@ -10395,7 +10408,15 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         expect(css).not.toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\]\):hover\s*\[data-slot="chrome-frame"\]/);
         expect(css).not.toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\]\):focus-within\s*\[data-slot="chrome-frame"\]/);
         expect(css).toContain('[data-hover-scope]:hover [data-slot="drag-handle"]');
-        expect(css).toMatch(/\[data-hover-scope\]:hover\s*\[data-slot="drag-handle"\]\s*\{\s*color:\s*var\(--border-emphasized-color\);/);
+        expect(css).toContain('[data-hover-scope]:hover :is([data-slot="mode-dock-tab-focus"], [data-slot="mode-dock-tab-new-window"], [data-slot="mode-dock-tab-close"])');
+        expect(css).toMatch(/\[data-hover-scope\]:hover\s*\[data-slot="drag-handle"\]\s*,\s*\n\[data-hover-scope\]:hover\s*:is\(\[data-slot="mode-dock-tab-focus"\]/);
+        expect(css).toContain("/* #region 🫨️IconAnimChromeAccessory");
+        expect(css).toMatch(
+          /\[role="combobox"\]\):hover\s*:is\(\s*\[data-slot="drag-handle"\][\s\S]*?\):not\(:hover\)\s*:where\(\[data-icon\], \[data-icon-kind\]\)\s*\{\s*animation: none !important;/,
+        );
+        expect(css).toMatch(
+          /\[role="combobox"\]\):hover\s*:is\(\s*\[data-slot="drag-handle"\][\s\S]*?\):not\(:hover\)\s*:where\(\[data-icon\], \[data-icon-kind\]\)\s*svg > \*\s*\{\s*animation: none !important;/,
+        );
         expect(css).not.toContain(':has([data-slot="mode-dock-stack-body"]:hover)');
         expect(css).not.toContain(') [data-slot="mode-dock-tab"][data-stack-active="true"]:not([data-handle-hovered="true"])');
         expect(css).not.toContain(') [data-slot="mode-dock-tab"][data-stack-active="true"] [data-slot="drag-handle"]');

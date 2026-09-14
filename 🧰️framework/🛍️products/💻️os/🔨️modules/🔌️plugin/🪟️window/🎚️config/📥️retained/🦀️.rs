@@ -15,8 +15,9 @@ pub struct WindowConfigPackLoadGrant {
 }
 
 impl WindowConfigPackLoadGrant {
-    pub const fn one_page() -> Self {
-        Self { maximum_items: 1, maximum_bytes: store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES }
+    /// 🎟️ One item under the decode page floor, widened to the exact allocation or release the next turn demands.
+    pub const fn for_demand(demand_bytes: usize) -> Self {
+        Self { maximum_items: 1, maximum_bytes: if demand_bytes > store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES { demand_bytes } else { store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES } }
     }
 }
 
@@ -66,10 +67,8 @@ pub enum WindowConfigPackLoadStep {
 
 pub(super) trait ErasedWindowConfigPackLoad: Send {
     fn as_any_mut(&mut self) -> &mut dyn Any;
-    fn window_id(&self) -> &str;
     fn window_kind_id(&self) -> &str;
     fn registry_lifetime(&self) -> u64;
-    fn partition_generation(&self) -> Option<u64>;
     fn phase(&self) -> WindowConfigPackLoadPhase;
     fn progress(&self) -> WindowConfigPackLoadProgress;
     fn diagnostic(&self) -> Option<WindowConfigPackLoadDiagnostic>;
@@ -77,6 +76,7 @@ pub(super) trait ErasedWindowConfigPackLoad: Send {
     fn request_cancel(&mut self);
     fn reject_stale(&mut self) -> WindowConfigPackLoadStep;
     fn close_step(&mut self, grant: WindowConfigPackLoadGrant) -> Result<PluginCloseStep, String>;
+    fn demand_bytes(&mut self) -> usize;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -99,6 +99,11 @@ impl WindowConfigPackLoad {
 
     pub fn request_cancel(&mut self) {
         self.inner.request_cancel();
+    }
+
+    /// 🎟️ The grant the next advance or close turn needs: never below one decode page, never below its exact demand.
+    pub fn next_grant(&mut self) -> WindowConfigPackLoadGrant {
+        WindowConfigPackLoadGrant::for_demand(self.inner.demand_bytes())
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -184,7 +189,7 @@ struct RetainedString {
 struct RetainedWindowConfigTypedState<O: WindowConfigOwner> {
     spec: store::mounted_pack_rt::RecordSpec,
     stack: Vec<ValueFrame>,
-    wrappers: Vec<ValueWrapper>,
+    wrappers: Vec<(ValueWrapper, usize)>,
     string: Option<RetainedString>,
     tag: Option<u8>,
     root: Option<O::State>,
@@ -202,20 +207,22 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
         Ok(Self { spec, stack, wrappers, string: None, tag: None, root: None, complete: false, handed_back: false })
     }
 
+    /// 🎁️ Wrappers pending at the current container depth, outermost first; deeper values never see them.
+    fn pending_wrappers(&self) -> &[(ValueWrapper, usize)] {
+        let depth = self.stack.len();
+        &self.wrappers[self.wrappers.iter().rposition(|(_, at)| *at != depth).map_or(0, |index| index + 1)..]
+    }
+
     fn expected(&self) -> Result<ExpectedValue, WindowConfigPackLoadDiagnostic> {
-        if let Some(wrapper) = self.wrappers.last() {
-            return Ok(match wrapper {
-                ValueWrapper::Block => {
-                    let outer = self.parent_expected()?;
-                    match outer.shape {
-                        Some(store::mounted_pack_rt::Shape::Block(inner)) => ExpectedValue::field(Some(*inner)),
-                        _ => ExpectedValue::field(None),
-                    }
-                }
+        self.pending_wrappers().iter().try_fold(self.parent_expected()?, |expected, (wrapper, _)| {
+            Ok(match wrapper {
+                ValueWrapper::Block => match expected.shape {
+                    Some(store::mounted_pack_rt::Shape::Block(inner)) => ExpectedValue::field(Some(*inner)),
+                    _ => ExpectedValue::field(None),
+                },
                 ValueWrapper::Dynamic => ExpectedValue::dsl(),
-            });
-        }
-        self.parent_expected()
+            })
+        })
     }
 
     fn parent_expected(&self) -> Result<ExpectedValue, WindowConfigPackLoadDiagnostic> {
@@ -330,7 +337,11 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
     }
 
     fn emit(&mut self, mut value: BuiltValue) -> Result<(), WindowConfigPackLoadDiagnostic> {
-        while let Some(wrapper) = self.wrappers.pop() {
+        while let Some(&(wrapper, at)) = self.wrappers.last() {
+            if at != self.stack.len() {
+                break;
+            }
+            self.wrappers.pop();
             value = match wrapper {
                 ValueWrapper::Block => BuiltValue::Field(store::mounted_pack_rt::FieldValue::Block(Box::new(Self::into_field(value)?))),
                 ValueWrapper::Dynamic => BuiltValue::Field(store::mounted_pack_rt::FieldValue::Value(Self::into_dsl(value)?)),
@@ -405,6 +416,9 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
     }
 
     fn end_container(&mut self, kind: store::mounted_pack_rt::RetainedValueContainer) -> Result<(), WindowConfigPackLoadDiagnostic> {
+        if !self.pending_wrappers().is_empty() {
+            return Err(WindowConfigPackLoadDiagnostic::TypedState);
+        }
         let frame = self.stack.pop().ok_or(WindowConfigPackLoadDiagnostic::TypedState)?;
         let value = match frame {
             ValueFrame::Record { kind: expected, spec, mut fields, field: None } if expected == kind => {
@@ -468,8 +482,8 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
                 self.emit(value)?;
             }
             Token::Tag { value: 0x12, .. } if self.expected()?.dsl => self.emit(BuiltValue::Dsl(store::mounted_pack_rt::DslValue::Null))?,
-            Token::Tag { value: 0x0e, .. } => self.wrappers.push(ValueWrapper::Block),
-            Token::Tag { value: 0x11, .. } => self.wrappers.push(ValueWrapper::Dynamic),
+            Token::Tag { value: 0x0e, .. } => self.wrappers.push((ValueWrapper::Block, self.stack.len())),
+            Token::Tag { value: 0x11, .. } => self.wrappers.push((ValueWrapper::Dynamic, self.stack.len())),
             Token::Tag { value, .. } if matches!(value, 0x03..=0x0d | 0x0f..=0x10 | 0x15..=0x17) => self.tag = Some(value),
             Token::Begin { kind, count } => {
                 self.tag.take();
@@ -564,7 +578,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
             | Token::TablePresence { .. }
             | Token::TableBitmap { .. }
             | Token::Tag { .. } => return Err(WindowConfigPackLoadDiagnostic::TypedState),
-            Token::Unsigned { role: Role::Count | Role::StringLength | Role::BytesLength | Role::Symbol | Role::FieldId, .. } => return Err(WindowConfigPackLoadDiagnostic::TypedState),
+            Token::Unsigned { role: Role::Count, .. } => return Err(WindowConfigPackLoadDiagnostic::TypedState),
         }
         Ok(())
     }
@@ -758,19 +772,20 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
     }
 
     fn ingress(&mut self, pack: &[u8], maximum_bytes: usize) -> Result<bool, WindowConfigPackLoadDiagnostic> {
+        let start = self.inner_start + self.admitted;
+        let remaining = pack.len().saturating_sub(start);
+        if remaining == 0 {
+            let source = self.source.as_mut().ok_or(WindowConfigPackLoadDiagnostic::Pack)?;
+            source.seal().map_err(|_| WindowConfigPackLoadDiagnostic::Pack)?;
+            self.phase = RetainedStatePhase::Replay;
+            return Ok(true);
+        }
         if self.reserve_next(maximum_bytes)? {
             return Ok(true);
         }
         let source = self.source.as_mut().ok_or(WindowConfigPackLoadDiagnostic::Pack)?;
         if !source.has_reserved_page() {
             return Ok(false);
-        }
-        let start = self.inner_start + self.admitted;
-        let remaining = pack.len().saturating_sub(start);
-        if remaining == 0 {
-            source.seal().map_err(|_| WindowConfigPackLoadDiagnostic::Pack)?;
-            self.phase = RetainedStatePhase::Replay;
-            return Ok(true);
         }
         let len = remaining.min(store::mounted_pack_rt::RETAINED_PACK_PAGE_BYTES).min(maximum_bytes);
         if len == 0 {
@@ -890,6 +905,21 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
             source.request_cancel();
         }
         self.phase = RetainedStatePhase::Closing;
+    }
+
+    /// 🎟️ The exact single allocation or release the next decode or close turn needs; zero when it needs none.
+    fn demand_bytes(&mut self) -> usize {
+        let allocation = match self.phase {
+            RetainedStatePhase::Ingress => self.source.as_ref().filter(|source| !source.has_reserved_page()).and_then(|source| source.next_allocation_bytes().ok()),
+            RetainedStatePhase::Replay => self
+                .segment
+                .as_ref()
+                .and_then(store::mounted_pack_rt::RetainedPackSegmentCursor::next_allocation_bytes)
+                .or_else(|| self.value.as_mut().and_then(|value| value.next_allocation_bytes().ok().flatten()))
+                .or_else(|| self.catalog.as_mut().and_then(|catalog| catalog.next_allocation_bytes().ok().flatten())),
+            _ => None,
+        };
+        allocation.unwrap_or(0).max(self.next_release_allocation_bytes().unwrap_or(0))
     }
 
     fn next_release_allocation_bytes(&self) -> Option<usize> {
@@ -1467,20 +1497,12 @@ impl<O: WindowConfigOwner> ErasedWindowConfigPackLoad for TypedWindowConfigPackL
         self
     }
 
-    fn window_id(&self) -> &str {
-        self.window_id.as_deref().unwrap_or("")
-    }
-
     fn window_kind_id(&self) -> &str {
         self.window_kind_id.as_deref().unwrap_or("")
     }
 
     fn registry_lifetime(&self) -> u64 {
         self.registry_lifetime
-    }
-
-    fn partition_generation(&self) -> Option<u64> {
-        self.partition_generation
     }
 
     fn phase(&self) -> WindowConfigPackLoadPhase {
@@ -1511,6 +1533,10 @@ impl<O: WindowConfigOwner> ErasedWindowConfigPackLoad for TypedWindowConfigPackL
         self.close_inner(grant)
     }
 
+    fn demand_bytes(&mut self) -> usize {
+        self.state_decode.as_mut().map_or(0, RetainedWindowConfigStateDecode::demand_bytes).max(self.hydration.as_ref().map_or(0, store::RetainedConfigStoreHydration::demand_bytes))
+    }
+
     fn terminal_is_empty(&self) -> bool {
         self.ownership_is_empty()
     }
@@ -1523,7 +1549,12 @@ impl<O: WindowConfigOwner> Drop for TypedWindowConfigPackLoad<O> {
 }
 
 pub(super) fn begin_typed_window_config_pack_load<O: WindowConfigOwner>(registry_lifetime: u64, partition_generation: Option<u64>, pack: WindowConfigPack) -> WindowConfigPackLoad {
-    WindowConfigPackLoad { inner: Box::new(TypedWindowConfigPackLoad::<O>::new(registry_lifetime, partition_generation, pack)) }
+    let over_bound = pack.files.pack.len() > O::MAXIMUM_PUBLICATION_BYTES;
+    let mut load = TypedWindowConfigPackLoad::<O>::new(registry_lifetime, partition_generation, pack);
+    if over_bound {
+        load.reject(WindowConfigPackLoadDiagnostic::Capacity);
+    }
+    WindowConfigPackLoad { inner: Box::new(load) }
 }
 
 pub(super) fn commit_typed_window_config_pack_load<O: WindowConfigOwner>(

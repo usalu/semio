@@ -607,3 +607,74 @@ fn adversarial_feature_match_and_track_worker_steps_stay_fuel_bounded() {
     .join()
     .expect("engine worker");
 }
+
+#[test]
+fn debug_probe_synthetic_orbit() {
+    let scene = <crate::RemodelingSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
+    let params = crate::editor::remodeling::engine::build_engine_params(&scene.params, &scene.calibration);
+    eprintln!("[DEBUG] params focal={} feat={} ratio={} mutual={} window={} voxel={} trunc={} sfm={:?} dense={:?} mesh={:?}", params.assumed_focal_ratio, params.target_feature_count, params.match_ratio, params.match_mutual, params.sequential_window, params.tsdf_voxel_size, params.tsdf_truncation, params.sfm, params.dense, params.mesh);
+    let mut engine = ReconstructionEngine::new(&params);
+    for (index, (_, bytes)) in crate::examples::synthetic_orbit::FRAMES.iter().enumerate() {
+        let image = crate::editor::remodeling::decode_still_image("image/png", bytes).expect("decodes");
+        engine.push_frame_with_sharpness(index as u32, image, index as f64 * 500.0, 1.0);
+    }
+    let mut last = engine.stage();
+    let mut units = 0usize;
+    loop {
+        let status = engine.advance(1);
+        units += 1;
+        if engine.stage() != last {
+            eprintln!("[DEBUG] {:?} -> {:?} after {units} units", last, engine.stage());
+            match last {
+                EngineStage::ExtractingFeatures => {
+                    let variant = std::env::var("PROBE_FEATURES").unwrap_or_default();
+                    if !variant.is_empty() {
+                        for frame in 0..engine.frames.len() {
+                            let image = &engine.frames[frame].image;
+                            let mut gray = remodeling_image::ImageGray { width: image.width, height: image.height, data: Vec::new() };
+                            let mut cursor = 0;
+                            append_luma_slice(image, &mut gray, &mut cursor, usize::MAX / 2);
+                            let target = engine.params.target_feature_count;
+                            let (k, d) = match variant.as_str() {
+                                "orb" => { let p = remodeling_image::build_pyramid(&gray, 3); let k = remodeling_feature::detect_orb_keypoints(&p, target); let d = remodeling_feature::describe_orb(&p, &k); (k, d) }
+                                "harris" => { let p = remodeling_image::build_pyramid(&gray, 1); let k = remodeling_feature::detect_harris_keypoints(&gray, target); let d = remodeling_feature::describe_orb(&p, &k); (k, d) }
+                                _ => { let s = remodeling_feature::build_akaze_scale_space(&gray, 3, 3); let k = remodeling_feature::detect_akaze_keypoints(&s, target); let d = remodeling_feature::describe_akaze(&s, &k); (k, d) }
+                            };
+                            engine.keypoints_per_frame[frame] = k;
+                            engine.descriptors_per_frame[frame] = d;
+                        }
+                    }
+                    for (frame, keypoints) in engine.keypoints_per_frame.iter().enumerate() {
+                        let max_y = keypoints.iter().map(|k| k.y as i32).max().unwrap_or(0);
+                        let _ = max_y;
+                    }
+                }
+                EngineStage::MatchingFeatures => {
+                    if let Some(sfm) = engine.sfm.as_ref() { let _ = sfm; }
+                    eprintln!("[DEBUG] tracks {}", engine.tracks.as_ref().map_or(0, |t| t.tracks.len()));
+                    eprintln!("[DEBUG] pairs {:?}", engine.pairwise_matches.iter().map(|(a, b, m)| (*a, *b, m.len())).collect::<Vec<_>>());
+                }
+                EngineStage::BundleAdjusting => {
+                    let r = engine.reconstruction.as_ref().unwrap();
+                    eprintln!("[DEBUG] cameras {:?} points {}", r.cameras.iter().map(|c| c.0).collect::<Vec<_>>(), r.points.len());
+                }
+                EngineStage::FusingVolume => {
+                    let cloud = engine.dense_positions();
+                    let mut lo = [f64::INFINITY; 3]; let mut hi = [f64::NEG_INFINITY; 3];
+                    for p in cloud { for a in 0..3 { lo[a] = lo[a].min(p[a]); hi[a] = hi[a].max(p[a]); } }
+                    eprintln!("[DEBUG] dense {} lo {lo:?} hi {hi:?} depthmaps {}", cloud.len(), engine.depth_maps.len());
+                }
+                _ => {}
+            }
+            last = engine.stage();
+        }
+        match status {
+            EngineStatus::Working { .. } => {}
+            EngineStatus::Done => { eprintln!("[DEBUG] done mesh {:?}", engine.mesh_data.as_ref().map(|m| (m.positions.len()/3, m.indices.len()/3))); break; }
+            EngineStatus::Failed(msg) => {
+                eprintln!("[DEBUG] failed {msg} mesh so far {}/{}", engine.mesh_pipeline.as_ref().map_or(0, |p| p.mesh().positions.len()), engine.mesh_pipeline.as_ref().map_or(0, |p| p.mesh().triangles.len()));
+                break;
+            }
+        }
+    }
+}

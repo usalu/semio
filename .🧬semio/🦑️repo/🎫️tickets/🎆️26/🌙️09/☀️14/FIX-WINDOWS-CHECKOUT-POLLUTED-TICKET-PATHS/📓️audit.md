@@ -25,12 +25,34 @@ Repaired ticket generator scripts that still contained corrupted `📤️export`
 
 Duplicate content (e.g. `📓️2026-09-10-wave-AA-undo-history.md`) already exists under the canonical `🌙️09/☀️02/PUZZLE-3D-END-TO-END/` tree.
 
+## Path length (MAX_PATH)
+
+Windows hits **~260 characters** on the full path (`C:\…\semio\` + relative path).
+
+### Draw-source test retention
+
+Retained runs under `END-TO-END-TAXONOMY-NORMALIZATION/📓️draw-source-scenarios/🧪️runs/` nested a full fake ticket path (`.🧬semio/🦑️repo/🎫️tickets/…/DRAW-SOURCE-SCENARIOS/📓️submitted-plans/`) inside each `🧪️s-test-*` folder — often **400+** characters. That matches `Filename too long` during checkout or `git status`.
+
+**Repo fixes:** gitignore `**/🧪️runs/`, `**/📓️progress/🧪️s-test-*/`, `**/semio-normalization/`; removed committed progress stubs; shortened fixture `transactionTicketSegments` to `["🎫️ticket"]`.
+
+**Local cleanup before checkout** (PowerShell, from repo root):
+
+```powershell
+git config --global core.longpaths true
+$base = "\\?\$((Get-Location).Path)"
+$junk = Join-Path $base ".🧬semio\🦑️repo\🎫️tickets\🎆️26\🌙️08\☀️17\END-TO-END-TAXONOMY-NORMALIZATION\📓️draw-source-scenarios"
+if (Test-Path -LiteralPath $junk) { Remove-Item -LiteralPath $junk -Recurse -Force }
+```
+
+Two din16798 mutation snapshot paths are still ~261 chars relative to repo root; long paths or a short clone root (e.g. `C:\s\semio`) avoids MAX_PATH on those alone.
+
 ## After merge
 
-On Windows: `git pull` then `git checkout` should succeed once this commit is on the branch.
+On Windows: `git config core.longpaths true`, delete any local `📓️draw-source-scenarios` junk as above, then `git pull` / `git checkout`.
 
 ## Prevention
 
 - Never create ticket month folders by string-replacing emoji; use repo MCP `ticket_open` (`🌙️MM` segments).
 - Do not commit paths containing `< > | : * ? "` or U+FFFD.
-- Optional: CI scan `git ls-files` for Windows-forbidden characters in paths.
+- Do not commit `🧪️runs` / `🧪️s-test-*` evidence under real ticket trees (use tmp + gitignore).
+- Optional: CI scan `git ls-files` for Windows-forbidden characters and path length budgets.

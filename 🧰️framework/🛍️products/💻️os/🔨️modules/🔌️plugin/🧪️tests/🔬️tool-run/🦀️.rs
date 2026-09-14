@@ -405,7 +405,7 @@ impl ArtifactApp for ToyRunApp {
         if request.tool_id == text(&fixture()["compact"]["toolId"]) {
             return Ok(Some(Box::new(ToyCompactJob { port: request.port, writer: ToolRunTickWriter::with_provisional_base(request.identity, request.provisional.len() as u32), stage: 0, closing: false })));
         }
-        if request.tool_id == text(&fixture()["port"]["toolId"]) {
+        if request.tool_id == text(&fixture()["port"]["toolId"]) || request.tool_id == text(&fixture()["concurrentReadOnly"]["readOnlyToolId"]) {
             request.instance_owner.with_mut::<EmptyArtifactInstanceOperationOwner, _>(|_| Ok(()))?;
             return Ok(Some(Box::new(ToyWaitJob { port: request.port, writer: ToolRunTickWriter::new(request.identity), hops: number(&fixture()["port"]["hops"]), dispatched: 0, answered: 0, closing: false })));
         }
@@ -534,6 +534,11 @@ async fn toy_manifest() -> App {
         })
         .await;
     tools.push(ToolRef::new(text(&window_settings["toolId"])).await);
+    let read_only_wait = text(&fixture["concurrentReadOnly"]["readOnlyToolId"]);
+    builder = builder
+        .tool(ToolDefinition { run: Some(ToolRunDefinition { mutating: false, ..toy_definition(ToolRunRebasePolicy::Revalidate) }), ..ToolDefinition::new(read_only_wait, LocalizedLabel::native("Toy read-only hops", "Schreibgeschützte Spielsprünge"), IconName::PaintBucket).await })
+        .await;
+    tools.push(ToolRef::new(read_only_wait).await);
     let reader = &fixture["readerWindows"];
     builder = builder
         .tool(ToolDefinition {
@@ -611,6 +616,11 @@ async fn render_text(app: &mut ToyApp, body_key: &str) -> String {
     artifact_app_laws::project_and_retire_fixture_tree(tree).unwrap_or_else(|error| panic!("project {body_key}: {error}"))
 }
 
+/// 🆔️ A fixture panel id template scoped to run `run` (`{run}` substituted).
+fn panel_id(template: &Value, run: u64) -> String {
+    text(template).replace("{run}", &run.to_string())
+}
+
 fn find_node<'a>(node: &'a Value, key: &str) -> Option<&'a Value> {
     if node["key"].as_str() == Some(key) {
         return Some(node);
@@ -656,15 +666,16 @@ async fn tool_run_ticks_render_the_overlay_while_the_committed_document_stays_un
     let body = render_text(&mut app, "main").await;
     assert!(body.contains(text(&expected["mainBodyText"])), "the renderer reads committed ⊕ provisional: {body}");
     let panel_expected = &fixture["panel"];
+    let run = app.tool_runs.slot().expect("slot").run;
     let panel: Value = serde_json::from_str(&render_text(&mut app, text(&panel_expected["bodyKey"])).await).expect("panel projection parses");
     assert_eq!(panel["key"], panel_expected["rootId"]);
-    let status = find_node(&panel, text(&panel_expected["status"]["id"])).expect("status line");
+    let status = find_node(&panel, &panel_id(&panel_expected["status"]["id"], run)).expect("status line");
     assert_eq!(status["accessibility"]["live"], panel_expected["status"]["live"]);
-    let bar = find_node(&panel, text(&panel_expected["progress"]["id"])).expect("progress bar");
+    let bar = find_node(&panel, &panel_id(&panel_expected["progress"]["id"], run)).expect("progress bar");
     assert_eq!(bar["component"]["type"], panel_expected["progress"]["type"]);
     assert_eq!(bar["component"]["completed"].as_f64(), Some(number(&panel_expected["progress"]["completed"]) as f64));
     assert_eq!(bar["component"]["total"].as_f64(), Some(number(&panel_expected["progress"]["total"]) as f64));
-    let finalize = find_node(&panel, text(&panel_expected["finalize"]["id"])).expect("finalize button");
+    let finalize = find_node(&panel, &panel_id(&panel_expected["finalize"]["id"], run)).expect("finalize button");
     assert_eq!(finalize["component"]["type"], "button");
     assert_eq!(finalize["accessibility"]["shortcut"], panel_expected["finalize"]["shortcut"]);
     assert!(finalize["bindings"].as_array().is_some_and(|bindings| !bindings.is_empty()), "finalize is a real bound button");
@@ -786,7 +797,7 @@ async fn tool_run_stale_generation_and_run_actions_are_silent_no_ops_and_finaliz
     let busy = tool_run_action(&mut app, "toolRunStart", vec![("toolId".into(), DslValue::String(text(&fixture["toolId"]).into()))]).await;
     assert_eq!(busy.get("rejected").and_then(DslValue::as_str), Some(text(&fixture["busy"]["code"])));
     let panel: Value = serde_json::from_str(&render_text(&mut app, FRAMEWORK_TOOL_RUN_BODY_KEY).await).expect("panel parses");
-    let finalize = find_node(&panel, text(&fixture["panel"]["finalize"]["id"])).expect("finalize button");
+    let finalize = find_node(&panel, &panel_id(&fixture["panel"]["finalize"]["id"], slot.run)).expect("finalize button");
     assert_eq!(finalize["accessibility"]["description"], fixture["panel"]["runningFinalizeDescription"], "finalize stays present and describes why it is disabled while running");
     run_action(&mut app, "toolRunAbort").await;
     pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work()).await;
@@ -1096,7 +1107,7 @@ async fn tool_run_job_port_hands_effects_to_the_host_and_a_waiting_job_keeps_not
     let mut app = toy_app(1).await;
     start(&mut app, text(&expected["toolId"])).await;
     for hop in 1..=number(&expected["hops"]) {
-        pump_until(&mut app, "the hop is handed to the host", |app| app.tool_runs.port().is_waiting() && !app.tool_runs.port().has_effects() && app.tool_runs.trace().is_some_and(|trace| trace.len() as u64 == hop - 1)).await;
+        pump_until(&mut app, "the hop is handed to the host", |app| app.tool_runs.port().is_some_and(ToolRunJobPort::is_waiting) && !app.tool_runs.port().is_some_and(ToolRunJobPort::has_effects) && app.tool_runs.trace().is_some_and(|trace| trace.len() as u64 == hop - 1)).await;
         let mut effects = Vec::new();
         while let Some(effect) = app.take_typed_operation_effect() {
             effects.push(effect);
@@ -1109,7 +1120,7 @@ async fn tool_run_job_port_hands_effects_to_the_host_and_a_waiting_job_keeps_not
         assert!(!app.tool_runs.has_pending_work() && !app.tool_run_has_pending_work(), "hop {hop}: a waiting job keeps its instance idle");
         app.advance_typed_operation_publication().await.expect("an idle turn");
         assert!(app.take_typed_operation_effect().is_none(), "hop {hop}: an unwoken job is never stepped again");
-        app.tool_runs.port().wake();
+        app.tool_runs.port().expect("the run's port").wake();
         assert!(app.tool_runs.has_pending_work(), "hop {hop}: the wake makes the run runnable again");
     }
     pump_until(&mut app, "every hop answered", |app| app.tool_runs.state().map(ToolRunState::as_str) == Some(text(&expected["state"]))).await;
@@ -1353,12 +1364,12 @@ async fn tool_run_retract_keeps_the_previous_overlay_until_the_job_reaches_its_c
     start(&mut app, text(&expected["toolId"])).await;
     let counts: Vec<u64> = expected["compactCounts"].as_array().expect("counts").iter().map(number).collect();
     for (index, _) in counts.iter().enumerate() {
-        pump_until(&mut app, "a compaction page landed and was folded", |app| app.tool_runs.port().is_waiting() && app.tool_runs.provisional().len() == index + 1 && !app.tool_runs.has_pending_work()).await;
+        pump_until(&mut app, "a compaction page landed and was folded", |app| app.tool_runs.port().is_some_and(ToolRunJobPort::is_waiting) && app.tool_runs.provisional().len() == index + 1 && !app.tool_runs.has_pending_work()).await;
         let body = render_text(&mut app, "main").await;
         println!("[STATS] compact page {index}: rendered {body}");
         assert!(app.tool_runs.is_refolding(), "page {index}: the retract refold waits for its boundary");
         assert!(body.contains(text(&expected["renderedWhileCompacting"])), "page {index}: the previous overlay stays rendered: {body}");
-        app.tool_runs.port().wake();
+        app.tool_runs.port().expect("the run's port").wake();
     }
     pump_until(&mut app, "the compaction checkpoint swaps the overlay", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.is_refolding()).await;
     let body = render_text(&mut app, "main").await;
@@ -1490,6 +1501,101 @@ async fn tool_run_reader_windows_refresh_every_tick_and_read_progress_steps_and_
     let body = render_text(&mut app, "main").await;
     println!("[STATS] reader body {body}");
     assert!(body.contains(&format!("completed={} steps={} payload={payload}", view.progress.completed, view.progress.steps.len())), "the reader body renders the run state it reads: {body}");
+    abort_and_close(&mut app).await;
+}
+
+/// ▶️ Starts `tool_id` from window `window_id` and answers the dispatch output.
+async fn start_in_window(app: &mut ToyApp, tool_id: &str, window_id: &str) -> DslValue {
+    let mut meta = toy_meta();
+    meta.view_state = Some(window_view(window_id, None));
+    app.handle_action("toolRunStart", Some(&DslValue::Object(vec![("toolId".into(), DslValue::String(tool_id.into()))])), &meta).await.unwrap_or_else(|fault| panic!("start {tool_id}: {fault:?}")).output
+}
+
+/// ⚖️ LAW: read-only runs run concurrently, one per (tool, window), each with its own run id, trace and panel group; a
+/// second mutating start while a mutating run is non-terminal is `toolRun.busy`; actions address a run by its `runId`;
+/// presence follows the mutating run.
+#[semio_framework_async_macros::async_test]
+async fn read_only_runs_in_two_windows_run_concurrently_and_a_second_mutating_start_is_busy() {
+    let fixture = fixture();
+    let expected = &fixture["concurrentReadOnly"];
+    let read_only = text(&expected["readOnlyToolId"]);
+    let windows: Vec<&str> = expected["windows"].as_array().expect("windows").iter().map(text).collect();
+    let mut app = toy_app(number(&expected["target"])).await;
+    for window in &windows {
+        assert_eq!(start_in_window(&mut app, read_only, window).await.get("toolRun").and_then(DslValue::as_str), Some("spawnJob"), "{window}: a read-only run starts beside the other window's");
+    }
+    assert_eq!(start_in_window(&mut app, read_only, windows[0]).await.get("rejected").and_then(DslValue::as_str), Some(text(&expected["busy"])), "one non-terminal read-only run per tool and window");
+    pump_until(&mut app, "both read-only runs are running and waiting on their hop", |app| {
+        let views = app.tool_runs.views();
+        views.len() == 2 && views.iter().all(|view| view.state == ToolRunState::Running)
+    })
+    .await;
+    let views = app.tool_runs.views();
+    assert_ne!(views[0].identity.id.run, views[1].identity.id.run, "each run has its own id");
+    for (window, view) in windows.iter().zip(&views) {
+        assert_eq!(app.tool_runs.view_for(Some(window)).map(|found| found.identity.id.run), Some(view.identity.id.run), "{window} renders its own run");
+    }
+    assert_eq!(start_in_window(&mut app, text(&expected["mutatingToolId"]), windows[0]).await.get("toolRun").and_then(DslValue::as_str), Some("spawnJob"), "a mutating run starts beside read-only runs");
+    assert_eq!(start_in_window(&mut app, text(&expected["secondMutatingToolId"]), windows[1]).await.get("rejected").and_then(DslValue::as_str), Some(text(&expected["busy"])), "a second mutating start is busy");
+    assert_eq!(app.tool_run_presence().map(|presence| presence.tool_id), Some(text(&expected["mutatingToolId"]).to_string()), "presence follows the mutating run");
+    let panel: Value = serde_json::from_str(&render_text(&mut app, FRAMEWORK_TOOL_RUN_BODY_KEY).await).expect("panel parses");
+    for view in app.tool_runs.views() {
+        assert!(find_node(&panel, &panel_id(&fixture["panel"]["groupId"], view.identity.id.run)).is_some(), "run {} has its own panel group", view.identity.id.run);
+        let delta = app.tool_runs.trace_delta(Some(ToolRunTraceCursor { run: view.identity.id.run, generation: view.identity.generation + 1, page: 0 }), usize::MAX).map(|lane| ToolRunTraceDelta::decode(&base64_codec::base64_url_decode(&lane).expect("base64url")).expect("delta"));
+        assert_eq!(delta.map(|delta| delta.identity.id.run), Some(view.identity.id.run), "run {} has its own trace", view.identity.id.run);
+    }
+    let first = views[0].clone();
+    let aborted = tool_run_action(&mut app, "toolRunAbort", vec![("runId".into(), DslValue::String(first.identity.id.run.to_string())), ("generation".into(), DslValue::uint(u64::from(first.identity.generation)))]).await;
+    assert_eq!(aborted.get("toolRun").and_then(DslValue::as_str), Some("closeJob"), "an action addresses its run by runId");
+    pump_until(&mut app, "the addressed run aborts alone", |app| app.tool_runs.views().iter().any(|view| view.identity.id.run == first.identity.id.run && view.state == ToolRunState::Aborted)).await;
+    let states: Vec<(u64, ToolRunState)> = app.tool_runs.views().iter().map(|view| (view.identity.id.run, view.state)).collect();
+    println!("[STATS] concurrent runs {states:?}");
+    assert!(states.iter().filter(|(run, _)| *run != first.identity.id.run).all(|(_, state)| !state.is_terminal()), "the other runs keep running: {states:?}");
+    for view in app.tool_runs.views().into_iter().filter(|view| !view.state.is_terminal()) {
+        tool_run_action(&mut app, "toolRunAbort", vec![("runId".into(), DslValue::String(view.identity.id.run.to_string())), ("generation".into(), DslValue::uint(u64::from(view.identity.generation)))]).await;
+    }
+    pump_until(&mut app, "every run settles", |app| app.tool_runs.views().iter().all(|view| view.state.is_terminal()) && !app.tool_runs.has_pending_work()).await;
+    close(&mut app);
+}
+
+/// 🧾️ A `BuiltNode` as the host wire JSON every renderer's `BuiltNode` reads — every field spelled out.
+fn built_node_wire(node: &BuiltNode) -> Value {
+    serde_json::json!({
+        "key": node.key.as_str(),
+        "component": serde_json::to_value(&node.component).expect("component"),
+        "layout": serde_json::to_value(&node.layout).expect("layout"),
+        "style": serde_json::to_value(node.style).expect("style"),
+        "activity": serde_json::to_value(node.activity).expect("activity"),
+        "disabled": node.disabled,
+        "accessibility": serde_json::to_value(&node.accessibility).expect("accessibility"),
+        "bindings": serde_json::to_value(&node.bindings).expect("bindings"),
+        "menu": serde_json::to_value(&node.menu).expect("menu"),
+        "children": node.children.iter().map(built_node_wire).collect::<Vec<_>>(),
+    })
+}
+
+/// 🪧️ The language-neutral panel every shell target mounts: the framework ToolRun panel `BuiltNode` of a running run
+/// (`🔌️plugin/🧫️fixtures/⏯️tool-run/🪧️panel-running.json`). React (`🛠️ShellHelpers` panel law) and wgpu (`🐚️Shell`
+/// panel law) render it and dispatch its buttons from this exact document.
+const TOOL_RUN_PANEL_RUNNING: &str = include_str!("../../🧫️fixtures/⏯️tool-run/🪧️panel-running.json");
+
+/// ⚖️ LAW: the ToolRun panel of a running run is exactly the committed shell fixture — one run group with a polite status,
+/// a progressbar, real buttons addressing the run by id (pause and abort enabled, step disabled, finalize disabled with
+/// its description) and an empty step log and trace list. `SEMIO_TOOL_RUN_PANEL_OUT` rewrites the fixture.
+#[semio_framework_async_macros::async_test]
+async fn tool_run_panel_of_a_running_run_is_the_shell_fixture() {
+    let fixture = fixture();
+    let mut app = toy_app(1).await;
+    start(&mut app, text(&fixture["port"]["toolId"])).await;
+    pump_until(&mut app, "the run waits on its first hop", |app| app.tool_runs.state() == Some(ToolRunState::Running) && app.tool_runs.port().is_some_and(ToolRunJobPort::is_waiting)).await;
+    while app.take_typed_operation_effect().is_some() {}
+    let tree = app.render(FRAMEWORK_TOOL_RUN_BODY_KEY, None, &ViewModel::default()).await.expect("render the panel");
+    let panel = artifact_app_laws::observe_and_retire_fixture_tree(tree, built_node_wire);
+    if let Some(path) = std::env::var_os("SEMIO_TOOL_RUN_PANEL_OUT") {
+        std::fs::write(path, format!("{}\n", serde_json::to_string_pretty(&panel).expect("pretty panel"))).expect("write the panel fixture");
+    }
+    assert_eq!(panel, serde_json::from_str::<Value>(TOOL_RUN_PANEL_RUNNING).expect("the panel fixture parses"), "the running panel is the shell fixture");
+    app.tool_runs.port().expect("the run's port").wake();
     abort_and_close(&mut app).await;
 }
 //#endregion 🎯️RetargetAndSettings

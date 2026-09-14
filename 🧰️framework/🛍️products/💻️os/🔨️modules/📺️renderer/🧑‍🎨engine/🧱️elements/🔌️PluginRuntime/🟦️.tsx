@@ -55,7 +55,7 @@ import {
   windowViewContext,
 } from "@semio-tech/framework";
 import { packedTextLeaf } from "./🧳️packed-text/🟦️.ts";
-import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, type DocumentArchivePack, type WindowConfigPackEntry, decodeAppCommand, decodeAppFrame, decodeConflictsFromWire, decodeFaultFromWire, decodeInvocationResultPacks, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, encodeAppFrame, encodePackValue, faultDisplayMessage, packWireNatural } from "@semio-tech/framework-os";
+import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, type DocumentArchivePack, type WindowConfigPackEntry, decodeAppCommand, decodeAppFrame, decodeConflictsFromWire, decodeFaultFromWire, decodeInvocationResultPacks, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, encodeAppFrame, encodePackValue, faultDisplayMessage, packWireNatural, viewContextWireValue } from "@semio-tech/framework-os";
 import {
   DOCUMENT_BACKBONE_RETENTION_LIMITS,
   decodeLocalInteractionCaptureJson,
@@ -1731,7 +1731,7 @@ function uiRefreshSurfaceEvents(instanceId: number, request: PluginUiRefreshRequ
     if (!viewState) return [];
     return [{
       kind: "surface-visible",
-      payload: { surface: binding.surface, bodyKey: binding.bodyKey, viewState: encodePackValue(viewState) },
+      payload: { surface: binding.surface, bodyKey: binding.bodyKey, viewState: encodePackValue(viewContextWireValue(viewState)) },
     } satisfies ShardEventEnvelope];
   });
   const panels = (request.panels ?? []).flatMap((target) => target.bodyKey ? [{
@@ -1739,7 +1739,7 @@ function uiRefreshSurfaceEvents(instanceId: number, request: PluginUiRefreshRequ
       payload: {
         surface: pluginSurfaceRef(instanceId, target.key),
         bodyKey: target.bodyKey,
-        viewState: encodePackValue(panelViewContext(request.viewState)),
+        viewState: encodePackValue(viewContextWireValue(panelViewContext(request.viewState))),
       },
     } satisfies ShardEventEnvelope] : []);
   const sections = uiRefreshSectionTargets(request).map((section) => ({
@@ -1747,7 +1747,7 @@ function uiRefreshSurfaceEvents(instanceId: number, request: PluginUiRefreshRequ
     payload: {
       surface: pluginSurfaceRef(instanceId, section.bodyKey),
       bodyKey: section.bodyKey,
-      viewState: encodePackValue(sectionViewContext(request.viewState)),
+      viewState: encodePackValue(viewContextWireValue(sectionViewContext(request.viewState))),
     },
   } satisfies ShardEventEnvelope));
   return [...windows, ...panels, ...sections];
@@ -2980,7 +2980,7 @@ function invocationFromFrames(frames: readonly AppFrameValue[], leftover: readon
 }
 
 async function performContextMenu(client: Pick<AppChannelClient, "contextMenu">, request: PluginContextMenuRequest, viewState: ViewModel): Promise<readonly ContextMenuItemSpec[]> {
-  const items = await client.contextMenu({ ...request, viewState: admitCrossingViewContext("context-menu", viewState) });
+  const items = await client.contextMenu({ ...request, viewState: viewContextWireValue(admitCrossingViewContext("context-menu", viewState)) });
   return Array.isArray(items) ? (items as ContextMenuItemSpec[]) : [];
 }
 

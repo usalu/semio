@@ -14,9 +14,11 @@
  * roster. */
 
 import { describe, expect, it } from "vitest";
-import { parseResolvedPluginViewState, VIEW_CONTEXT_LONG_STRING_CHARS } from "@semio-tech/framework";
+import { parseResolvedPluginViewState, VIEW_CONTEXT_LONG_STRING_CHARS, type PluginViewState } from "@semio-tech/framework";
+import { decodePackValue, encodePackValue, isPackInteger, packValueToBase64, packValueFromBase64, viewContextWireValue } from "@semio-tech/framework-os";
 import { buildSpacePanelState, isSpacePanelState, panelJsonFromState, parsePanelState } from "../../🧱️elements/🛠️ShellHelpers/📌️panel/🟦️.ts";
 import fixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/📌️panel-carriage/🔣️.json";
+import integerCarriers from "../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧫️fixtures/🔢️integer-carriers/🔣️.json";
 
 const spawnedRoster = (count: number) =>
   Array.from({ length: count }, (_, index) => ({
@@ -57,5 +59,56 @@ describe("view-state carriage", () => {
     expect(parsePanelState({ panelJson: json })?.spawnedApps.length).toBe(fixture.windowInstanceCapacity);
     expect(json.length).toBeLessThanOrEqual(fixture.capacityChars);
     expect(() => parseResolvedPluginViewState({ locale: "en", terminology: "native", panelJson: json })).not.toThrow();
+  });
+});
+
+/** 🔢️ The React door's half of the integer-carrier law, over the SAME fixture the guest half reads
+ * (`🛂️manifest/🧪️tests/🔢️integer-carriers/🦀️.rs`). A JS `number` is an IEEE double and
+ * `encodePackValue` writes every one of them as `TAG_F64`, so the first integer-typed view-state
+ * field the shell ever carried reached the guest as `Float(1.0)`, failed its `u64` `FromValue` and
+ * took EVERY guest turn with it — 608 worker faults and 0 of 23 journey steps on
+ * `http://127.0.0.1:6018/?plugin=generation3d`, 2026-09-14 (ticket
+ * 26/09/09/PROCEDURAL-3D-END-TO-END). */
+describe("view-context integer carriers", () => {
+  const hex = (bytes: Uint8Array): string => Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  const view = integerCarriers.viewContext as PluginViewState;
+
+  it("admits the carried context and reads every integer path as an exact carrier", () => {
+    expect(() => parseResolvedPluginViewState(view)).not.toThrow();
+    const wire = viewContextWireValue(view) as Record<string, unknown>;
+    for (const path of integerCarriers.integerPaths) {
+      const carrier = path.reduce<unknown>((node, key) => (node as Record<string, unknown>)[key], wire);
+      expect(isPackInteger(carrier), path.join(".")).toBe(true);
+    }
+  });
+
+  it("hands the guest the same bytes the wgpu door does", () => {
+    expect(hex(encodePackValue(viewContextWireValue(view)))).toBe(integerCarriers.packHex);
+  });
+
+  it("fails-before: the unprojected context widens every integer onto a float", () => {
+    expect(hex(encodePackValue(view))).not.toBe(integerCarriers.packHex);
+    const widened = decodePackValue(encodePackValue(view)) as Record<string, Record<string, Record<string, unknown>>>;
+    expect(isPackInteger(widened.toolRunTraceCursorByWindowId!["procedural-preview"]!.run)).toBe(false);
+  });
+
+  /** 🔁️ The wgpu bridge reaches the SAME `AppChannelClient.command` seam holding a context it decoded
+   * straight out of pack — carriers already minted — and a call with no context at all passes
+   * `undefined`. Minting a carrier twice throws on the `BigInt` and takes the dispatch with it, which
+   * is the failure this projection exists to end, so the seam must be idempotent and total. */
+  it("is idempotent over a context that already crossed as pack, and total over one that is not a context", () => {
+    const wire = viewContextWireValue(view);
+    const decoded = packValueFromBase64(packValueToBase64(wire as never));
+    const again = viewContextWireValue(decoded);
+    expect(hex(encodePackValue(again))).toBe(integerCarriers.packHex);
+    for (const value of [undefined, null, "pk:", 7]) expect(viewContextWireValue(value)).toBe(value);
+  });
+
+  it("keeps a non-integral number a float, and never mints a carrier for one", () => {
+    const fractional = { ...view, toolRunTraceCursorByWindowId: { "procedural-preview": { run: integerCarriers.nonIntegral, generation: 0, page: 0 } } };
+    expect(() => parseResolvedPluginViewState(fractional)).toThrow(/invalid tool run trace cursor/);
+    // 🚫️ The mint refuses rather than rounds: a fractional run id has no exact integer carrier, and
+    // silently truncating it would resend the wrong trace page instead of failing loudly.
+    expect(() => viewContextWireValue(fractional as PluginViewState)).toThrow();
   });
 });

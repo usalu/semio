@@ -16,6 +16,7 @@ const SURFACE_SWITCH_FIXTURE: &str = include_str!("../../../🏛️ShellHost/�
 const SURFACE_CONTROLS_FIXTURE: &str = include_str!("../../🧫️fixtures/🛑️surface-controls/🔣️.json");
 const BOOT_EXAMPLE_FIXTURE: &str = include_str!("../../🧫️fixtures/📚️boot-example/🔣️.json");
 const WGPU_SHELL_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🦀️.rs");
+const WGPU_RENDERER_SOURCE: &str = include_str!("../../../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
 
 /// 🪪️ A dialect with no coordinate at all — how this target spells the fixture's `"dialect": null`
 /// rows (`AppDefinition.dialect` is not optional in Rust, and an empty coordinate matches nothing,
@@ -549,6 +550,39 @@ fn a_long_evaluation_publishes_a_monotone_run_of_non_idle_frames_and_then_settle
         eprintln!("[DEBUG] wgpu world3d status timeline {lane}: {non_idle} non-idle frame(s), ratio monotone up to {previous_ratio}, settled at the end");
     }
     assert!(timeline["cancelled"].as_array().is_some_and(|frames| frames.iter().any(|frame| frame["expected"]["phase"] == "cancelled")), "the cancelled lane settles on `cancelled`, not on `idle`");
+}
+
+/// 🛑️🖱️ LAW: a press on the overlay chrome painted OVER an engine surface belongs to the shell, and
+/// the renderer's press path asks before letting the surface claim the point.
+///
+/// 🩸️ Without this the World3d cancel control was decorative: it paints inside the surface rect, the
+/// hit test names it, and the renderer returned on `bounds.contains` before the shell could dispatch
+/// it — while the RELEASE path, which reaches the shell, is the phase `handle_shell_hit` ignores.
+#[test]
+fn a_press_on_the_overlay_chrome_over_a_surface_belongs_to_the_shell() {
+    let theme = crate::resolve_theme("light");
+    let bounds = Rect::new(480.0, 40.0, 480.0, 320.0);
+    let computing = "{\"computing\":true,\"phase\":\"meshingFaces\",\"phaseLabel\":{\"en\":\"Meshing faces\",\"de\":\"Flächen werden vernetzt\"},\"cancellable\":true,\"cancelAction\":\"toolRunAbort\",\"progress\":{\"unitsDone\":3,\"unitsTotal\":8}}";
+    let controls = surface_overlay_controls_for(&[], &[("procedural-preview", bounds, Some(computing))], &theme, false);
+    let (control, anchor) = controls.first().expect("a computing surface offers its cancel");
+    assert!(control.control_id.starts_with("shell.world3d.cancel::"));
+    assert!(anchor[0] > bounds.x && anchor[0] < bounds.x + bounds.w && anchor[1] > bounds.y && anchor[1] < bounds.y + bounds.h, "the control is painted INSIDE the surface it annotates — which is why the press path must ask");
+
+    let hit = |kind: HitKind, control_id: &str| HitTarget::<ActionDescriptor> { rect: bounds, event: None, control_id: Some(control_id.to_string()), kind, drag_axis: None, drag_data: None };
+    let chrome = hit(HitKind::NavbarItem, &control.control_id);
+    let surface = hit(HitKind::World3d, "procedural-preview");
+    assert!(ShellState::pointer_press_belongs_to_shell_chrome(Some(&chrome)), "a press on the overlay control is the shell's");
+    assert!(!ShellState::pointer_press_belongs_to_shell_chrome(Some(&surface)), "a press on the surface body still orbits the scene");
+    assert!(!ShellState::pointer_press_belongs_to_shell_chrome(None), "a press on nothing is nobody's chrome");
+
+    // 🩺️ The renderer's press path must actually consult it, BEFORE the world3d claim — a predicate
+    // nothing calls is exactly the shape the defect had.
+    let guard = "if ShellState::pointer_press_belongs_to_shell_chrome(self.input.hit_at(x, y)) {";
+    let claim = "        let mut world_consumed = false;";
+    let press = WGPU_RENDERER_SOURCE.rfind(guard).expect("the renderer press path consults the predicate");
+    let world = WGPU_RENDERER_SOURCE[press..].find(claim).expect("the world3d claim follows it");
+    assert!(world > 0, "the shell-chrome question is asked BEFORE a surface may claim the press");
+    eprintln!("[DEBUG] wgpu overlay press routing: cancel anchored at {anchor:?} inside {bounds:?}, renderer asks the shell first");
 }
 
 //#endregion ⏳️ComputeStatusPane

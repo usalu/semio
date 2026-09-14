@@ -103,7 +103,7 @@
       "required": ["parentSegments", "recordFilename", "disposition", "cases", "fixtureOwnerSegments", "transactionTicketSegments"],
       "properties": {
         "fixtureOwnerSegments": { "const": ["🧪️tests"] },
-        "transactionTicketSegments": { "const": [".🧬semio", "🦑️repo", "🎫️tickets", "🎆️26", "🌙️08", "☀️27", "DRAW-SOURCE-SCENARIOS"] },
+        "transactionTicketSegments": { "const": ["🎫️ticket"] },
         "parentSegments": { "const": ["📓️draw-source-scenarios", "🧪️runs"] },
         "recordFilename": { "const": "📝️.md" },
         "disposition": { "const": "retain-all-until-reviewed" },

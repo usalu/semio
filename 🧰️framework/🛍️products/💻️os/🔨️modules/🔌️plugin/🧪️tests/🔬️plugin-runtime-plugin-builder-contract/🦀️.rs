@@ -5701,7 +5701,7 @@ mod plugin_builder_contract_tests {
         let locked = view.get("locked").expect("lock state included on leftover InteractionView");
         assert_eq!(locked.get("item-1").and_then(DslValue::as_bool), Some(false));
         let gumball = view.get("gumball").expect("gumball leftover");
-        assert_eq!(gumball.get("active").and_then(DslValue::as_bool), Some(true));
+        assert_eq!(gumball.get("active").and_then(DslValue::as_bool), Some(false), "leftover selection must not arm the world gumball — the guest selectionJson lane owns utility-aware gumballActive");
         assert_eq!(gumball.get("anchorId").and_then(DslValue::as_str), Some("item-1"));
         close_reserved_app(&mut app);
     }

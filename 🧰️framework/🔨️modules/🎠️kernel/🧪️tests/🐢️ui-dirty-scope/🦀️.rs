@@ -112,6 +112,18 @@ fn an_absent_scope_deserializes_to_full() {
     assert!(!parsed.ui_scope.asks_for_nothing());
 }
 
+/// 🩸️ The shell this oracle was written against — one that renders EVERY surface on every settle —
+/// must fail it. Without this the suite would stay green against the exact defect it exists to
+/// forbid: 116 of 137 renders per converging edit answering `patched=0`.
+#[test]
+fn a_shell_that_renders_every_surface_fails_this_oracle() {
+    let fixture = fixture();
+    let renders_everything = fixture.selections.iter().all(|case| case.window_bodies == fixture.surfaces.window_bodies && case.panel_bodies == fixture.surfaces.panel_bodies);
+    assert!(!renders_everything, "the oracle must contain at least one scope that selects FEWER surfaces than the census");
+    let discriminating = fixture.selections.iter().filter(|case| case.window_bodies != fixture.surfaces.window_bodies).count();
+    assert!(discriminating >= 3, "only {discriminating} scope(s) select less than the whole census");
+}
+
 /// 📜️ The fixture's own law list is the declaration both renderers answer to; an empty one would
 /// make every assertion above vacuous.
 #[test]

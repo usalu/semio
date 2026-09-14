@@ -33,7 +33,7 @@ fn advance_timestep_with_mechanical_ventilation_and_fan_coil_zone_equipment() {
     let mut state = SimulationKernel::initialize(&model, &pre, &weather);
     let date = SimDate::new(2026, 1, 1);
     let config = SimulationConfig::default();
-    let result = SimulationKernel::advance_timestep(&model, &config, &pre, &mut state, &weather, &date, 10.0, pre.zone_timestep_s);
+    let result = SimulationKernel::advance_timestep(&model, &config, &pre, &mut state, &weather, &date, 10.0);
     assert!(result.is_ok());
     assert!(state.zones.contains_key(&EntityId(1)));
 }
@@ -49,7 +49,7 @@ fn advance_timestep_with_baseboard_zone_equipment_and_humidistat() {
     let mut state = SimulationKernel::initialize(&model, &pre, &weather);
     let date = SimDate::new(2026, 1, 1);
     let config = SimulationConfig::default();
-    let result = SimulationKernel::advance_timestep(&model, &config, &pre, &mut state, &weather, &date, 10.0, pre.zone_timestep_s);
+    let result = SimulationKernel::advance_timestep(&model, &config, &pre, &mut state, &weather, &date, 10.0);
     assert!(result.is_ok());
     let zs = state.zones.get(&EntityId(1)).unwrap();
     assert!(zs.delivered.heating_w >= 0.0);
@@ -77,7 +77,7 @@ fn advance_timestep_handles_ground_and_adiabatic_surfaces() {
     let mut state = SimulationKernel::initialize(&model, &pre, &weather);
     let date = SimDate::new(2026, 1, 1);
     let config = SimulationConfig::default();
-    let result = SimulationKernel::advance_timestep(&model, &config, &pre, &mut state, &weather, &date, 10.0, pre.zone_timestep_s);
+    let result = SimulationKernel::advance_timestep(&model, &config, &pre, &mut state, &weather, &date, 10.0);
     assert!(result.is_ok());
 }
 
@@ -91,7 +91,7 @@ fn advance_timestep_with_airflow_network() {
     let mut state = SimulationKernel::initialize(&model, &pre, &weather);
     let date = SimDate::new(2026, 1, 1);
     let config = SimulationConfig::default();
-    let result = SimulationKernel::advance_timestep(&model, &config, &pre, &mut state, &weather, &date, 10.0, pre.zone_timestep_s);
+    let result = SimulationKernel::advance_timestep(&model, &config, &pre, &mut state, &weather, &date, 10.0);
     assert!(result.is_ok());
 }
 
@@ -105,6 +105,6 @@ fn advance_timestep_applies_fault_severity_to_ideal_loads() {
     let mut state = SimulationKernel::initialize(&model, &pre, &weather);
     let date = SimDate::new(2026, 1, 1);
     let config = SimulationConfig::default();
-    let result = SimulationKernel::advance_timestep(&model, &config, &pre, &mut state, &weather, &date, 10.0, pre.zone_timestep_s);
+    let result = SimulationKernel::advance_timestep(&model, &config, &pre, &mut state, &weather, &date, 10.0);
     assert!(result.is_ok());
 }

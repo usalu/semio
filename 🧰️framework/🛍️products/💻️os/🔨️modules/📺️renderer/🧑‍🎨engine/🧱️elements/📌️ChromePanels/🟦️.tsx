@@ -79,7 +79,7 @@ export const FRAMEWORK_SETTINGS_DEFAULT_APPS_TAB_ID = "framework.settings.defaul
  * CLASS-CONFLICTS` §C9) — open first-class conflicts with Accept/Discard, mirrors
  * `FRAMEWORK_SETTINGS_DEFAULT_APPS_TAB_ID`'s "omitted entirely when no host is wired" idiom. */
 export const FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID = "framework.settings.conflicts";
-/** 💬 MCP agent chat — navbar-only toggle (`ui.panelToggle.chat`), hosted on the `right-middle` dock anchor. */
+/** 💬 MCP agent chat — flat leaf on the `top-right` (Details) dock anchor beside app inspection tabs. */
 export const FRAMEWORK_CHAT_PANEL_ID = "framework.chat";
 
 function groupNamedLayoutsToTreeItems(layouts: readonly NamedLayout[], onApply: (layoutId: string) => void, onDeleteUser?: (layoutId: string) => void): TreeDataItem[] {
@@ -1378,12 +1378,12 @@ export function createFrameworkChatPanelTab(renderPanel: () => ReactElement): Pa
     id: FRAMEWORK_CHAT_PANEL_ID,
     icon: shellTabIcon("message-square"),
     name: shellLabel("ui.panelToggle.chat"),
-    order: 0,
+    order: 100,
     tree: {
       resolveTree: () => ({
         sections: [],
-        emptyState: renderPanel(),
-        className: "min-h-0 min-w-0 w-full flex-1",
+        emptyState: <div className="flex h-full min-h-0 min-w-0 w-full flex-1 flex-col">{renderPanel()}</div>,
+        className: "flex h-full min-h-0 min-w-0 w-full flex-1 flex-col",
         sortableSections: false,
       }),
     },

@@ -1578,6 +1578,22 @@
       },
       "outputs": []
     },
+    "test-view-context-integer-carriers": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify view-context-integer-carriers"
+      },
+      "outputs": []
+    },
+    "test-view-context-integer-carriers-native": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify view-context-integer-carriers native"
+      },
+      "outputs": []
+    },
     "test-window-view-context": {
       "executor": "nx:run-commands",
       "cache": true,

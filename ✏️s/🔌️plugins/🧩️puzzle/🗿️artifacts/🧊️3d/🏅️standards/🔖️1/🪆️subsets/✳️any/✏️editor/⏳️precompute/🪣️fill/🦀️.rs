@@ -25,14 +25,43 @@ use semio_framework_tool_run::{
 use std::collections::HashMap;
 use std::sync::Arc;
 
-/// 🕳️ The round enumerated no open vortex at all — every vortex is blocked or zero-weighted.
-pub(crate) const FILL_STALL_NO_OPEN_VORTEX: &str = "no-open-vortex";
-/// 🧩️ Open vortices existed, but no catalog kind is compatible with any of them.
-pub(crate) const FILL_STALL_NO_COMPATIBLE_KIND: &str = "no-compatible-kind";
-/// 🚧️ Candidates were built and every one of them was refused — the document has no room left.
-pub(crate) const FILL_STALL_NO_FREE_PLACEMENT: &str = "no-free-placement";
-/// 📄️ A fixed document page refused an owner: a visible stall, never a fault.
-pub(crate) const FILL_STALL_DOCUMENT_CAPACITY: &str = "document-capacity";
+/// 🛑️ Why a fill plan stopped below its requested count — the only reasons a plan may stall with.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum FillStall {
+    /// 🕳️ The round enumerated no open vortex at all — every vortex is blocked or zero-weighted.
+    NoOpenVortex,
+    /// 🧩️ Open vortices existed, but no catalog kind is compatible with any of them.
+    NoCompatibleKind,
+    /// 🚧️ Candidates were built and every one of them was refused — the document has no room left.
+    NoFreePlacement,
+    /// 📄️ A fixed document page refused an owner: a visible stall, never a fault.
+    DocumentCapacity,
+}
+
+impl FillStall {
+    pub(crate) const ALL: [Self; 4] = [Self::NoOpenVortex, Self::NoCompatibleKind, Self::NoFreePlacement, Self::DocumentCapacity];
+
+    /// 🏷️ The run reason the stall's `warning` step names.
+    pub(crate) const fn reason(self) -> FillRunReason {
+        match self {
+            Self::NoOpenVortex => FillRunReason::NoOpenVortex,
+            Self::NoCompatibleKind => FillRunReason::NoCompatibleKind,
+            Self::NoFreePlacement => FillRunReason::NoFreePlacement,
+            Self::DocumentCapacity => FillRunReason::DocumentCapacity,
+        }
+    }
+}
+
+/// 🏁️ How a fill plan ended: it reached its requested count, or it stalled with a declared reason. A plan cannot complete
+/// without one, because [`FillJobStage::Complete`] carries it — there is no silent end to construct.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum FillPlanEnd {
+    Reached,
+    Stalled(FillStall),
+}
+
+/// 🧊️ The planner's own spatial index answered for another owner: an invariant break the planner faults on.
+struct StaleSpatialIndex;
 
 /// 🧭️ What one planner transition needs from its caller: the collision budget seam plus identity,
 /// stage and fault payloads. The job context forwards everything; the fill run job
@@ -72,7 +101,6 @@ pub(crate) enum FillRunEvent {
     Refused(FillRunReason),
     Accepted,
     Abandoned,
-    Stalled(FillRunReason),
     Discarded,
 }
 
@@ -160,7 +188,7 @@ pub(crate) enum FillJobStage {
     QueryBroadPhase,
     TestCollision,
     AcceptCandidate,
-    Complete,
+    Complete(FillPlanEnd),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -357,7 +385,6 @@ pub(crate) struct FillBuilder {
     pub(crate) candidate_cache: FixedOwnerMap<String, Vec<BrushCompatibleCandidate>>,
     pub(crate) seed_object_ids: FixedOwnerSet<String, DOCUMENT_OBJECT_SLOTS>,
     pub(crate) rng_state: u32,
-    pub(crate) stalled: bool,
     pub(crate) max_count: usize,
     /// 🪜️ Where a running tail discard stops: the applied prefix for a weight replan, the newly
     /// requested count for a lowered ask.
@@ -1074,7 +1101,6 @@ impl FillBuilder {
             candidate_cache: FixedOwnerMap::new(),
             seed_object_ids: FixedOwnerSet::new(),
             rng_state: seed,
-            stalled: false,
             max_count: requested_count,
             tail_floor: 0,
             round_constructed: false,
@@ -1271,6 +1297,20 @@ impl FillBuilder {
         FillFixtureView { base: &self.base, appended: &self.appended_objects }
     }
 
+    /// 🏁️ How the plan ended, `None` while it still runs.
+    pub(crate) fn end(&self) -> Option<FillPlanEnd> {
+        match self.stage {
+            FillJobStage::Complete(end) => Some(end),
+            _ => None,
+        }
+    }
+
+    /// 🔁️ Where a round goes after it placed or retracted: complete as reached once the plan holds what was asked for,
+    /// else the next target round.
+    fn next_round_stage(&self) -> FillJobStage {
+        if self.sequence.len() >= self.max_count { FillJobStage::Complete(FillPlanEnd::Reached) } else { FillJobStage::PrepareTargets }
+    }
+
     /// 🎯️ What the user is asking for right now.
     pub(crate) fn requested_count(&self) -> usize {
         self.max_count
@@ -1288,8 +1328,7 @@ impl FillBuilder {
         let raising = requested > self.max_count;
         self.max_count = requested;
         if raising {
-            if self.stage == FillJobStage::Complete && self.sequence.len() < self.max_count {
-                self.stalled = false;
+            if matches!(self.stage, FillJobStage::Complete(_)) && self.sequence.len() < self.max_count {
                 self.stage = FillJobStage::PrepareTargets;
             }
             return;
@@ -1300,13 +1339,12 @@ impl FillBuilder {
         self.abandon_run_candidate();
         self.applied_count = self.applied_count.min(self.sequence.len());
         self.tail_floor = self.max_count.max(self.applied_count);
-        self.stalled = false;
         self.stage = FillJobStage::RetractTail;
     }
 
     /// ♻️ One unapplied placement per turn: withdraw its spatial owner, drop its lookup and placement
     /// rows, then pop the plan row itself. Reaching the applied prefix rewinds the planner.
-    fn discard_tail_one(&mut self) {
+    fn discard_tail_one(&mut self) -> Result<(), StaleSpatialIndex> {
         let owner = self.collision_owner();
         if let Some(removal) = self.tail_removal.as_mut() {
             match self.spatial_index.step_removal(removal, owner) {
@@ -1316,9 +1354,9 @@ impl FillBuilder {
                     self.fixed_rejection = Some(FillRetiredOwner::Spatial(rejected));
                     self.collection_over_capacity = true;
                 }
-                CollisionMutationStep::Stale => self.stalled = true,
+                CollisionMutationStep::Stale => return Err(StaleSpatialIndex),
             }
-            return;
+            return Ok(());
         }
         if self.appended_objects.len() <= self.tail_floor {
             self.targets.clear();
@@ -1329,12 +1367,12 @@ impl FillBuilder {
             self.reset_candidate();
             self.reset_collision();
             self.reset_acceptance();
-            self.stage = if self.sequence.len() >= self.max_count { FillJobStage::Complete } else { FillJobStage::PrepareTargets };
-            return;
+            self.stage = self.next_round_stage();
+            return Ok(());
         }
         let Some(object) = self.appended_objects.pop() else {
             self.stage = FillJobStage::PrepareTargets;
-            return;
+            return Ok(());
         };
         self.sequence.pop();
         self.appended_attractions.pop();
@@ -1347,24 +1385,26 @@ impl FillBuilder {
         }
         self.tail_removal = self.spatial_index.begin_removal(owner, object.id.clone());
         drop(object);
+        Ok(())
     }
 
-    pub(crate) fn prepare_one(&mut self) {
+    pub(crate) fn prepare_one(&mut self) -> Result<(), StaleSpatialIndex> {
         if self.collection_over_capacity {
             self.last_rejection = Some("preparation-capacity".into());
-            self.stall(FILL_STALL_DOCUMENT_CAPACITY);
-            return;
+            self.stall(FillStall::DocumentCapacity);
+            return Ok(());
         }
         match self.stage {
             FillJobStage::PrepareFixture => self.prepare_fixture_one(),
             FillJobStage::PrepareCatalogs => self.prepare_catalog_one(),
             FillJobStage::PrepareMeshes => self.prepare_mesh_one(),
             FillJobStage::PrepareEntries => self.prepare_entry_one(),
-            FillJobStage::PrepareSpatial => self.prepare_spatial_one(),
+            FillJobStage::PrepareSpatial => return self.prepare_spatial_one(),
             FillJobStage::PrepareLookup => self.prepare_lookup_one(),
             FillJobStage::PrepareConfiguration => self.prepare_configuration_one(),
             _ => {}
         }
+        Ok(())
     }
 
     fn prepare_fixture_one(&mut self) {
@@ -1474,37 +1514,34 @@ impl FillBuilder {
         self.placed.push(PlacedCollisionEntry { object_id: object.id.clone(), mesh_url, world: pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale) });
     }
 
-    fn prepare_spatial_one(&mut self) {
+    fn prepare_spatial_one(&mut self) -> Result<(), StaleSpatialIndex> {
         let owner = self.collision_owner();
         if let Some(mutation) = self.preparation_spatial.as_mut() {
             match self.spatial_index.step_replacement(mutation, owner) {
-                CollisionMutationStep::Pending => return,
+                CollisionMutationStep::Pending => {}
                 CollisionMutationStep::Complete => {
                     self.preparation_spatial = None;
                     self.preparation_cursor += 1;
-                    return;
                 }
                 CollisionMutationStep::Rejected(rejected) => {
                     self.fixed_rejection = Some(FillRetiredOwner::Spatial(rejected));
                     self.collection_over_capacity = true;
-                    return;
                 }
-                CollisionMutationStep::Stale => {
-                    self.stalled = true;
-                    return;
-                }
+                CollisionMutationStep::Stale => return Err(StaleSpatialIndex),
             }
+            return Ok(());
         }
         let Some(entry) = self.placed.get(self.preparation_cursor) else {
             self.preparation_cursor = 0;
             self.stage = FillJobStage::PrepareLookup;
-            return;
+            return Ok(());
         };
         let Some(body) = self.meshes.get(&entry.mesh_url) else {
             self.preparation_cursor += 1;
-            return;
+            return Ok(());
         };
         self.preparation_spatial = Some(self.spatial_index.begin_replacement(owner, entry.object_id.clone(), CollisionAabb::from_body(body, &entry.world)));
+        Ok(())
     }
 
     fn prepare_lookup_one(&mut self) {
@@ -1662,7 +1699,7 @@ impl FillBuilder {
             }
             TargetPreparePhase::Finish => {
                 if self.targets.is_empty() {
-                    self.stall(FILL_STALL_NO_OPEN_VORTEX);
+                    self.stall(FillStall::NoOpenVortex);
                     return;
                 }
                 self.target_rotation = self.sequence.len() % self.targets.len();
@@ -1674,13 +1711,13 @@ impl FillBuilder {
 
     /// 🛑️ Why a round that walked every target placed nothing: a document with no candidate pose at
     /// all is a compatibility gap, one where every pose was refused has simply run out of room.
-    fn exhausted_targets_stall(&self) -> &'static str {
+    fn exhausted_targets_stall(&self) -> FillStall {
         if self.targets.is_empty() {
-            FILL_STALL_NO_OPEN_VORTEX
+            FillStall::NoOpenVortex
         } else if self.round_constructed {
-            FILL_STALL_NO_FREE_PLACEMENT
+            FillStall::NoFreePlacement
         } else {
-            FILL_STALL_NO_COMPATIBLE_KIND
+            FillStall::NoCompatibleKind
         }
     }
 
@@ -2113,8 +2150,8 @@ impl FillBuilder {
                     self.run_event(FillRunEvent::Accepted);
                 }
                 self.reset_candidate();
-                self.stage = if self.sequence.len() >= self.max_count { FillJobStage::Complete } else { FillJobStage::PrepareTargets };
-                if self.stage == FillJobStage::Complete {
+                self.stage = self.next_round_stage();
+                if matches!(self.stage, FillJobStage::Complete(_)) {
                     return self.complete();
                 }
                 StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: RetainedJobPayload::empty(JobPayloadStream::CheckpointState), applied_progress: self.applied_count as u64 })
@@ -2124,14 +2161,11 @@ impl FillBuilder {
 
     /// 🛑️ Stops the planner below its requested count with a reason the HUD can name, instead of
     /// leaving the user with a silently finished plan.
-    fn stall(&mut self, reason: &'static str) {
-        let reason_code = FillRunReason::of_id(reason).unwrap_or(FillRunReason::Rejected);
+    fn stall(&mut self, stall: FillStall) {
         if std::mem::take(&mut self.run_candidate_live) {
-            self.run_event(FillRunEvent::Refused(reason_code));
+            self.run_event(FillRunEvent::Refused(stall.reason()));
         }
-        self.run_event(FillRunEvent::Stalled(reason_code));
-        self.stalled = true;
-        self.stage = FillJobStage::Complete;
+        self.stage = FillJobStage::Complete(FillPlanEnd::Stalled(stall));
     }
 
     fn reject_candidate(&mut self, reason: &str) {
@@ -2248,9 +2282,9 @@ impl FillBuilder {
 
     /// 🚧️ A document too large for the planner's fixed pages ends the run where the user can see it: the
     /// preparation preflight's refusal publishes one `danger` step through the run's tick writer and then
-    /// faults the run (nothing was changed), while a page that fills mid-plan is a visible
-    /// `document-capacity` stall that completes what was placed. Without a writer the refusal faults at once.
-    pub(crate) fn capacity_outcome<C: FillStepContext>(&mut self, context: &mut C, writer: Option<&mut ToolRunTickWriter>) -> Option<StepOutcome> {
+    /// faults the run (nothing was changed). Without a writer the refusal faults at once. A page that fills
+    /// mid-plan is [`FillBuilder::stall_on_capacity`] instead.
+    pub(crate) fn capacity_refusal<C: FillStepContext>(&mut self, context: &mut C, writer: Option<&mut ToolRunTickWriter>) -> Option<StepOutcome> {
         if let Some(refusal) = self.preparation_capacity_refusal.as_mut() {
             if let Some(writer) = writer.filter(|_| !refusal.published) {
                 refusal.published = true;
@@ -2259,11 +2293,19 @@ impl FillBuilder {
             }
             return Some(StepOutcome::Fault(JobFault { detail: context.fault_payload(refusal.diagnostic().as_bytes()) }));
         }
-        if self.collection_over_capacity || self.fixed_rejection.is_some() {
-            self.stall(FILL_STALL_DOCUMENT_CAPACITY);
-            return Some(self.complete());
-        }
         None
+    }
+
+    /// 📄️ A fixed page that refused an owner mid-plan stalls the plan as `document-capacity` over what was already
+    /// placed; answers whether the plan is over capacity.
+    pub(crate) fn stall_on_capacity(&mut self) -> bool {
+        if self.collection_over_capacity || self.fixed_rejection.is_some() {
+            if !matches!(self.stage, FillJobStage::Complete(_)) {
+                self.stall(FillStall::DocumentCapacity);
+            }
+            return true;
+        }
+        false
     }
 
     fn complete(&self) -> StepOutcome {
@@ -2291,7 +2333,7 @@ impl FillBuilder {
             FillJobStage::QueryBroadPhase => "query-broad-phase",
             FillJobStage::TestCollision => "test-collision",
             FillJobStage::AcceptCandidate => "accept-candidate",
-            FillJobStage::Complete => "complete",
+            FillJobStage::Complete(_) => "complete",
         }
     }
 }
@@ -2305,8 +2347,11 @@ impl FillBuilder {
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
             return StepOutcome::Fault(JobFault { detail: context.fault_payload(b"stale-fill-operation") });
         }
-        if let Some(outcome) = self.capacity_outcome(context, None) {
+        if let Some(outcome) = self.capacity_refusal(context, None) {
             return outcome;
+        }
+        if self.stall_on_capacity() {
+            return self.complete();
         }
         if context.should_yield() {
             return StepOutcome::Yield;
@@ -2315,11 +2360,15 @@ impl FillBuilder {
         let stage = self.stage;
         let outcome = match stage {
             FillJobStage::RetractTail => {
-                self.discard_tail_one();
+                if self.discard_tail_one().is_err() {
+                    return StepOutcome::Fault(JobFault { detail: context.fault_payload(b"stale-spatial-index") });
+                }
                 None
             }
             FillJobStage::PrepareFixture | FillJobStage::PrepareCatalogs | FillJobStage::PrepareMeshes | FillJobStage::PrepareEntries | FillJobStage::PrepareSpatial | FillJobStage::PrepareLookup | FillJobStage::PrepareConfiguration => {
-                self.prepare_one();
+                if self.prepare_one().is_err() {
+                    return StepOutcome::Fault(JobFault { detail: context.fault_payload(b"stale-spatial-index") });
+                }
                 None
             }
             FillJobStage::PrepareTargets => {
@@ -2348,7 +2397,7 @@ impl FillBuilder {
             }
             FillJobStage::TestCollision => self.test_collision(context),
             FillJobStage::AcceptCandidate => Some(self.accept_candidate()),
-            FillJobStage::Complete => return self.complete(),
+            FillJobStage::Complete(_) => return self.complete(),
         };
         self.transition_count += 1;
         if stage != FillJobStage::TestCollision {
@@ -2467,7 +2516,7 @@ impl FillRunStage {
             FillJobStage::PrepareTargets | FillJobStage::SelectTarget | FillJobStage::PrepareCandidates | FillJobStage::SelectCandidate => Some(Self::Search),
             FillJobStage::ConstructPreview | FillJobStage::QueryBroadPhase | FillJobStage::TestCollision => Some(Self::Test),
             FillJobStage::AcceptCandidate => Some(Self::Lock),
-            FillJobStage::Complete => None,
+            FillJobStage::Complete(_) => None,
         }
     }
 }
@@ -2553,7 +2602,6 @@ pub(crate) struct FillRunJob {
     collisions: u64,
     rejected: u64,
     stage: FillRunStage,
-    stall: Option<FillRunReason>,
     settled: bool,
     capped: bool,
     owed: Option<FillRunOwed>,
@@ -2635,7 +2683,6 @@ impl FillRunJob {
             collisions: 0,
             rejected: 0,
             stage: FillRunStage::Prepare,
-            stall: None,
             settled: false,
             capped: false,
             owed: None,
@@ -2709,9 +2756,8 @@ impl FillRunJob {
             return;
         }
         self.builder.set_requested_count(requested);
-        if self.builder.stage != FillJobStage::Complete {
+        if !matches!(self.builder.stage, FillJobStage::Complete(_)) {
             self.settled = false;
-            self.stall = None;
             if self.owed == Some(FillRunOwed::Complete) {
                 self.owed = None;
             }
@@ -2734,7 +2780,7 @@ impl FillRunJob {
         ToolRunProgress {
             identity: self.writer.identity(),
             sequence: self.progress_sequence,
-            state: if self.builder.stage == FillJobStage::Complete { ToolRunState::Complete } else { ToolRunState::Running },
+            state: if matches!(self.builder.stage, FillJobStage::Complete(_)) { ToolRunState::Complete } else { ToolRunState::Running },
             stage: self.stage.index(),
             completed: self.placement_keys.len() as u64,
             total: Some(self.builder.requested_count() as u64),
@@ -2823,7 +2869,6 @@ impl FillRunJob {
                         self.live_record = None;
                     }
                 }
-                FillRunEvent::Stalled(reason) => self.stall = Some(*reason),
                 FillRunEvent::Discarded => {
                     while self.placement_keys.len() > self.builder.sequence.len() {
                         if let Some((key, _)) = self.placement_keys.pop() {
@@ -2842,16 +2887,23 @@ impl FillRunJob {
         Ok(accepted)
     }
 
-    fn settle(&mut self) {
+    /// 🏁️ The run's one terminal step, derived from how the plan ended: a declared stall's `warning`, or `success`
+    /// `requested-reached` over a request the placements actually meet (a provisional-cap run already published its
+    /// `warning`). A completed plan that satisfies neither is refused as `fill-run-end-undeclared` — the run faults
+    /// visibly instead of ending without a reason.
+    fn settle(&mut self) -> Result<(), &'static [u8]> {
         if std::mem::replace(&mut self.settled, true) {
-            return;
+            return Ok(());
         }
-        let placed = [ToolRunStepArg::Unsigned(self.placement_keys.len() as u64)];
-        let _ = match (self.stall, self.capped) {
-            (Some(reason), _) => self.writer.step(ToolRunStepKind::Warning, self.stage.index(), reason.code(), None, &placed),
-            (None, false) => self.writer.step(ToolRunStepKind::Success, self.stage.index(), FillRunReason::RequestedReached.code(), None, &placed),
-            (None, true) => Ok(()),
+        let placements = self.placement_keys.len() as u64;
+        let placed = [ToolRunStepArg::Unsigned(placements)];
+        let _ = match self.builder.end() {
+            Some(FillPlanEnd::Stalled(stall)) => self.writer.step(ToolRunStepKind::Warning, self.stage.index(), stall.reason().code(), None, &placed),
+            Some(FillPlanEnd::Reached) if self.capped => Ok(()),
+            Some(FillPlanEnd::Reached) if placements >= self.builder.requested_count() as u64 => self.writer.step(ToolRunStepKind::Success, self.stage.index(), FillRunReason::RequestedReached.code(), None, &placed),
+            Some(FillPlanEnd::Reached) | None => return Err(b"fill-run-end-undeclared"),
         };
+        Ok(())
     }
 
     fn flush(&mut self, context: &mut StepContext<'_>) -> Option<StepOutcome> {
@@ -2866,7 +2918,7 @@ impl FillRunJob {
             Some(Ok(payload)) => StepOutcome::PreviewReady(payload),
             Some(Err(rejected)) => {
                 drop(rejected.into_source());
-                StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) })
+                StepOutcome::Fault(JobFault { detail: FillStepContext::fault_payload(context, b"fill-run-tick-page") })
             }
             None => StepOutcome::Fault(JobFault { detail: FillStepContext::fault_payload(context, b"fill-run-tick-encode") }),
         })
@@ -2914,10 +2966,9 @@ impl FillRunJob {
             }
             self.builder.set_requested_count(replay.requested);
             self.settled = false;
-            self.stall = None;
             return;
         }
-        if placements > target.placements || self.tested > target.tested || self.next_key > target.next_key || self.builder.stage == FillJobStage::Complete {
+        if placements > target.placements || self.tested > target.tested || self.next_key > target.next_key || matches!(self.builder.stage, FillJobStage::Complete(_)) {
             self.replay = None;
             self.writer = ToolRunTickWriter::with_provisional_base(self.writer.identity(), replay.provisional);
             self.writer.clear_trace();
@@ -2939,14 +2990,21 @@ impl InteractiveJob for FillRunJob {
             return self.settle_owed(context, owed);
         }
         loop {
-            if let Some(outcome) = self.builder.capacity_outcome(context, Some(&mut self.writer)) {
+            if let Some(outcome) = self.builder.capacity_refusal(context, Some(&mut self.writer)) {
                 return match outcome {
                     StepOutcome::Yield => self.flush(context).unwrap_or(StepOutcome::Yield),
                     outcome => outcome,
                 };
             }
-            if self.replay.is_none() && self.builder.stage == FillJobStage::Complete {
-                self.settle();
+            if self.builder.stall_on_capacity() {
+                if let Err(detail) = self.observe(context) {
+                    return StepOutcome::Fault(JobFault { detail: FillStepContext::fault_payload(context, detail) });
+                }
+            }
+            if self.replay.is_none() && matches!(self.builder.stage, FillJobStage::Complete(_)) {
+                if let Err(detail) = self.settle() {
+                    return StepOutcome::Fault(JobFault { detail: FillStepContext::fault_payload(context, detail) });
+                }
                 return self.flush_then(context, FillRunOwed::Complete);
             }
             if context.deadline_exceeded() || (self.replay.is_none() && (context.fuel_exhausted() || self.writer.pending_bytes() >= FILL_RUN_TICK_FLUSH_BYTES)) {
@@ -3159,7 +3217,7 @@ impl FillRevalidateJob {
             Some(Ok(payload)) => StepOutcome::PreviewReady(payload),
             Some(Err(rejected)) => {
                 drop(rejected.into_source());
-                StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) })
+                StepOutcome::Fault(JobFault { detail: FillStepContext::fault_payload(context, b"fill-revalidate-tick-page") })
             }
             None => StepOutcome::Fault(JobFault { detail: FillStepContext::fault_payload(context, b"fill-revalidate-tick-encode") }),
         }

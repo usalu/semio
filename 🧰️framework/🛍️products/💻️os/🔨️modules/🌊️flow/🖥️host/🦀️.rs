@@ -3967,14 +3967,33 @@ pub struct PreviewChainStatus {
 }
 
 impl PreviewChainStatus {
-    /// 📈 Fraction of the chain's nodes already settled, in `[0, 1]`. A chain that is working with
-    /// nothing yet published reports `0`, never `1`: "done" is the one answer a live evaluation may
-    /// never give.
-    pub fn ratio(&self) -> f64 {
-        if self.nodes_total == 0 {
-            return if self.working { 0.0 } else { 1.0 };
+    /// 📈 The units this chain owes, as `(done, total)` — the pair a surface publishes and a pill
+    /// prints as `n/m`.
+    ///
+    /// ⚖️ The denominator is the node census, raised to `done + 1` while the chain is still working:
+    /// a census that has seen every node settle can still be waiting on the answer that will produce
+    /// the mesh, and `4/4` there would say "done" about work a cancel could still stop — the same
+    /// rule [`PreviewTessellateStatus::ratio`] applies to a mesh body still crossing in chunks.
+    ///
+    /// 🩸️ The outstanding round trips are deliberately NOT in the denominator. Counting them made it
+    /// oscillate with every park and fold — `2/3` at a parked request, `2/4` the moment it settled —
+    /// so the published ratio went BACKWARDS mid-evaluation, which is worse than no progress at all.
+    /// The census is the one quantity that only ever grows inside one chain.
+    pub fn units(&self) -> (u32, u32) {
+        if !self.working {
+            return (self.nodes_total, self.nodes_total);
         }
-        (f64::from(self.nodes_done) / f64::from(self.nodes_total)).clamp(0.0, 1.0)
+        (self.nodes_done, self.nodes_total.max(self.nodes_done.saturating_add(1)))
+    }
+
+    /// 📈 Fraction of the chain's units already done, in `[0, 1]`. A working chain never reports `1`:
+    /// "done" is the one answer a live evaluation may not give.
+    pub fn ratio(&self) -> f64 {
+        let (done, total) = self.units();
+        if total == 0 {
+            return 1.0;
+        }
+        (f64::from(done) / f64::from(total)).clamp(0.0, 1.0)
     }
 }
 

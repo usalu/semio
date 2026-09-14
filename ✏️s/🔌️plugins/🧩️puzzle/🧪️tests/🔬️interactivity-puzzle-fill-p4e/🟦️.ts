@@ -131,7 +131,7 @@ pub(crate) struct FixedOwnerVec<T, const N: usize> {
 }
 
 pub(crate) struct CollisionIndex {
-    cells: FixedOwnerMap<(i32, i32, i32), FixedOwnerSet<String>, DOCUMENT_CELL_SLOTS>,
+    cells: FixedOwnerMap<(i32, i32, i32), CollisionCellMembers, DOCUMENT_CELL_SLOTS>,
 }
 
 struct CollisionCellSpan {
@@ -209,7 +209,7 @@ const CASES: readonly (readonly [name: string, expect: "report" | "silent", role
   ["silent-refusal-fault", "report", "fill", "ToolRunStepKind::Danger", "ToolRunStepKind::Info"],
   ["fault-before-danger-step", "report", "fill", "                let _ = self.writer.step(ToolRunStepKind::Danger, 0, refusal.reason(), None, &[]);\n                return StepOutcome::PreviewReady(self.page());\n            }\n            return StepOutcome::Fault(JobFault { detail: b\"fill-preparation-capacity\".to_vec() });", "                return StepOutcome::Fault(JobFault { detail: b\"fill-preparation-capacity\".to_vec() });\n            }\n            let _ = self.writer.step(ToolRunStepKind::Danger, 0, refusal.reason(), None, &[]);\n            return StepOutcome::PreviewReady(self.page());"],
   ["ghost-in-refusal", "report", "fill", "                refusal.published = true;", "                refusal.published = true;\n                self.candidate_ghost = None;"],
-  ["dynamic-bucket", "report", "geometry", "cells: FixedOwnerMap<(i32, i32, i32), FixedOwnerSet<String>, DOCUMENT_CELL_SLOTS>", "cells: FixedOwnerMap<(i32, i32, i32), Vec<String>>"],
+  ["dynamic-bucket", "report", "geometry", "cells: FixedOwnerMap<(i32, i32, i32), CollisionCellMembers, DOCUMENT_CELL_SLOTS>", "cells: FixedOwnerMap<(i32, i32, i32), Vec<String>>"],
   ["materialized-coverage", "report", "geometry", "struct CollisionCellSpan {", "fn covered_cells() -> Vec<(i32, i32, i32)> { Vec::new() }\n\nstruct CollisionCellSpan {"],
   ["stale-owner-accepted", "report", "geometry", "if mutation.owner != current {", "if false {"],
   ["direct-spatial-mutation", "report", "fill", "self.spatial_index.step_replacement(mutation, owner)", "self.spatial_index.upsert(String::new(), CollisionAabb::default())"],

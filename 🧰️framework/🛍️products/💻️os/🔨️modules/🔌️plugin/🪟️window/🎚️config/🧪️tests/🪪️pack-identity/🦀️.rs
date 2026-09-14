@@ -8,8 +8,8 @@ impl WindowConfigOwner for IdentityWindowOwner {
     const WINDOW_KIND_ID: &'static str = "identity-window";
     const SCHEMA: &'static str = "test.window.identity";
     const MAXIMUM_PUBLICATION_BYTES: usize = 16_384;
-    type State = crate::app::NoConfig;
-    type Mutation = crate::app::NoConfigMutation;
+    type State = retained_pack_load_tests::RetainedLoadCameraConfig;
+    type Mutation = retained_pack_load_tests::RetainedLoadCameraConfigMutation;
 
     fn build_store_owners() -> store::DocumentStoreOwners<Self::State, Self::Mutation> {
         bounded_window_config_store_owners::<Self>()

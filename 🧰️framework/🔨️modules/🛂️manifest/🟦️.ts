@@ -344,6 +344,12 @@ export const FRAMEWORK_PANEL_TAB_HISTORY_ICON_ID = "framework.panel.history";
 /** 🕰️ Mirrors Rust `FRAMEWORK_HISTORY_BODY_KEY` — the reserved panel body every renderer fetches for the
  * command-history list, and the one surface a completion's history patch dirties on its own. */
 export const FRAMEWORK_HISTORY_BODY_KEY = "framework.body.history";
+/** ⏯️ Mirrors Rust `FRAMEWORK_PANEL_TAB_TOOL_RUN_ID` — auto-injected into the `panelTabs` of every app that declares a tool run. */
+export const FRAMEWORK_PANEL_TAB_TOOL_RUN_ID = "framework.panel.toolRun";
+export const FRAMEWORK_PANEL_TAB_TOOL_RUN_LABEL = "Tool runs";
+export const FRAMEWORK_PANEL_TAB_TOOL_RUN_ICON_ID = "framework.panel.toolRun";
+/** ⏯️ Mirrors Rust `FRAMEWORK_TOOL_RUN_BODY_KEY` — the reserved body of the framework ToolRun panel. */
+export const FRAMEWORK_TOOL_RUN_BODY_KEY = "framework.body.toolRun";
 
 export const UI_INSPECTOR_MIXED_PLACEHOLDER = "Mixed";
 
@@ -997,6 +1003,36 @@ export function parseResolvedPluginViewState(value: unknown): ResolvedPluginView
     }
   }
   return structuredClone(row) as ResolvedPluginViewState;
+}
+
+/** 🔢️ Rewrites every EXACT-INTEGER view-context field through `mint`, so a transport whose own
+ * number type is an IEEE double still hands the guest the integer carrier its `u64`/`u32` fields
+ * decode from. The schema knows WHICH fields are integers; the crossing knows what an integer
+ * carrier looks like on ITS wire — this function is the seam between the two, and the ONE place the
+ * integer-typed fields of a view context are written down.
+ *
+ * `toolRunTraceCursorByWindowId.<window>.{run,generation,page}` is the first such field a view
+ * context ever carried: `locale`, `terminology`, `windowInstances`, `activeUtilityByWindowId` and
+ * `panelJson` are all strings, so no crossing had ever had to carry an integer and every one of them
+ * widened it silently. The guest's `FromValue` refuses a widened float by design
+ * (`🌱️value/🔁️codec/🦀️.rs`), so the WHOLE view state failed to decode and took every dispatch with
+ * it — `toolRunTraceCursorByWindowId.procedural-preview.run.expected an exact u64 integer, found
+ * Float(1.0)`, on both renderer doors (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+ *
+ * Call it on an ALREADY-admitted context ({@link parseResolvedPluginViewState}); it projects, it
+ * does not validate. A context that carries no integer field is returned untouched, and `mint`
+ * receives whatever the field actually holds — a crossing whose context is ALREADY in its own wire
+ * form (the wgpu bridge decodes one straight out of pack) recognises its carriers and passes them
+ * through rather than minting them twice. Pinned by
+ * `🪟️view-context/🧫️fixtures/🔢️integer-carriers/🔣️.json` and its Rust/TypeScript twins. */
+export function viewContextWithIntegerCarriers(view: PluginViewState, mint: (value: unknown) => unknown): Record<string, unknown> {
+  const cursors = view.toolRunTraceCursorByWindowId;
+  if (cursors === undefined) return view as unknown as Record<string, unknown>;
+  const carried: Record<string, unknown> = {};
+  for (const [windowId, cursor] of Object.entries(cursors as Readonly<Record<string, Readonly<Record<string, unknown>>>>)) {
+    carried[windowId] = { run: mint(cursor.run), generation: mint(cursor.generation), page: mint(cursor.page) };
+  }
+  return { ...view, toolRunTraceCursorByWindowId: carried };
 }
 
 /** 🎯️ Projects host-owned context onto one concrete window, preserving its own utility selection. */

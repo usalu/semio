@@ -1261,7 +1261,7 @@ pub fn wire_probes() -> Vec<EnergyModelMutation> {
         change_fenestration_overhang_offset(crate::model::EntityId(5), 0.5),
         change_fenestration_fin_depth(crate::model::EntityId(5), 1.0),
         change_fenestration_fin_offset(crate::model::EntityId(5), 0.2),
-        create_material(2, crate::model::EntityId(3), "CONCRETE SLAB".into(), 0.08, 1.13, 1400.0, 1000.0, 0.9, 0.6, 0.6),
+        create_material(2, crate::model::EntityId(3), "CONCRETE SLAB".into(), crate::model::SurfaceRoughness::MediumRough, 0.08, 1.13, 1400.0, 1000.0, 0.9, 0.6, 0.6),
         delete_material(crate::model::EntityId(1)),
         rename_material(crate::model::EntityId(1), "TIMBER FLOORING".to_string()),
         change_material_thickness(crate::model::EntityId(1), 0.02),

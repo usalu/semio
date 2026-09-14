@@ -42,6 +42,7 @@ pub fn material(id: u32, name: &str) -> crate::model::Material {
     crate::model::Material {
         id: crate::model::EntityId(id),
         name: name.to_string(),
+        roughness: crate::model::SurfaceRoughness::MediumRough,
         thickness_m: 0.012,
         conductivity_w_m_k: 0.16,
         density_kg_m3: 950.0,
